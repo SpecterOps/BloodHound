@@ -1,0 +1,179 @@
+{
+    "/api/v2/file-upload": {
+        "get": {
+            "description": "Lists available file upload jobs",
+            "tags": [
+                "Uploads",
+                "Community",
+                "Enterprise"
+            ],
+            "summary": "List File Upload Jobs",
+            "parameters": [
+                {
+                    "$ref": "#/definitions/parameters.PreferHeader"
+                }
+            ],
+            "responses": {
+                "200": {
+                    "description": "OK",
+                    "schema": {
+                        "$ref": "#/definitions/api.BasicResponse"
+                    }
+                },
+                "401": {
+                    "description": "Unauthorized",
+                    "schema": {
+                        "$ref": "#/definitions/api.ErrorWrapper"
+                    }
+                },
+                "500": {
+                    "description": "Internal Server Error",
+                    "schema": {
+                        "$ref": "#/definitions/api.ErrorWrapper"
+                    }
+                },
+                "504": {
+                    "description": "Gateway Timeout",
+                    "schema": {
+                        "$ref": "#/definitions/api.ErrorWrapper"
+                    }
+                }
+            }
+        }
+    },
+    "/api/v2/file-upload/start": {
+        "post": {
+            "description": "Creates a file upload job for sending collection files",
+            "tags": [
+                "Uploads",
+                "Community",
+                "Enterprise"
+            ],
+            "summary": "Create File Upload Job",
+            "parameters": [
+                {
+                    "$ref": "#/definitions/parameters.PreferHeader"
+                }
+            ],
+            "responses": {
+                "201": {
+                    "description": "Created",
+                    "schema": {
+                        "$ref": "#/definitions/api.BasicResponse"
+                    }
+                },
+                "401": {
+                    "description": "Unauthorized",
+                    "schema": {
+                        "$ref": "#/definitions/api.ErrorWrapper"
+                    }
+                },
+                "500": {
+                    "description": "Internal Server Error",
+                    "schema": {
+                        "$ref": "#/definitions/api.ErrorWrapper"
+                    }
+                },
+                "504": {
+                    "description": "Gateway Timeout",
+                    "schema": {
+                        "$ref": "#/definitions/api.ErrorWrapper"
+                    }
+                }
+            }
+        }
+    },
+    "/api/v2/file-upload/{file_upload_id}": {
+        "post": {
+            "description": "Saves a collection file to a file upload job",
+            "tags": [
+                "Uploads",
+                "Community",
+                "Enterprise"
+            ],
+            "summary": "Upload File To Job",
+            "parameters": [
+                {
+                    "$ref": "#/definitions/parameters.PreferHeader"
+                },
+                {
+                    "description": "File to be uploaded",
+                    "name": "file",
+                    "in": "body",
+                    "required": true
+                }
+            ],
+            "responses": {
+                "202": {
+                    "description": "Accepted"
+                },
+                "404": {
+                    "description": "Not Found",
+                    "schema": {
+                        "$ref": "#/definitions/api.ErrorWrapper"
+                    }
+                },
+                "400": {
+                    "description": "Bad Request",
+                    "schema": {
+                        "$ref": "#/definitions/api.ErrorWrapper"
+                    }
+                },
+                "401": {
+                    "description": "Unauthorized",
+                    "schema": {
+                        "$ref": "#/definitions/api.ErrorWrapper"
+                    }
+                },
+                "504": {
+                    "description": "Gateway Timeout",
+                    "schema": {
+                        "$ref": "#/definitions/api.ErrorWrapper"
+                    }
+                }
+            }
+        }
+    },
+    "/api/v2/file-upload/{file_upload_id}/end": {
+        "post": {
+            "description": "End a file upload job",
+            "tags": [
+                "Uploads",
+                "Community",
+                "Enterprise"
+            ],
+            "summary": "End File Upload Job",
+            "parameters": [
+                {
+                    "$ref": "#/definitions/parameters.PreferHeader"
+                }
+            ],
+            "responses": {
+                "200": {
+                    "description": "OK",
+                    "schema": {
+                        "$ref": "#/definitions/api.BasicResponse"
+                    }
+                },
+                "401": {
+                    "description": "Unauthorized",
+                    "schema": {
+                        "$ref": "#/definitions/api.ErrorWrapper"
+                    }
+                },
+                "500": {
+                    "description": "Internal Server Error",
+                    "schema": {
+                        "$ref": "#/definitions/api.ErrorWrapper"
+                    }
+                },
+                "504": {
+                    "description": "Gateway Timeout",
+                    "schema": {
+                        "$ref": "#/definitions/api.ErrorWrapper"
+                    }
+                }
+            }
+        }
+    }
+}

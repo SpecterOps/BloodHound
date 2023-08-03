@@ -1,0 +1,333 @@
+{
+    "style": {
+        "font-family": "sans-serif",
+        "background-color": "#ffffff",
+        "background-image": "",
+        "background-size": "100%",
+        "node-color": "#ffffff",
+        "border-width": 4,
+        "border-color": "#000000",
+        "radius": 50,
+        "node-padding": 5,
+        "node-margin": 2,
+        "outside-position": "auto",
+        "node-icon-image": "",
+        "node-background-image": "",
+        "icon-position": "inside",
+        "icon-size": 64,
+        "caption-position": "inside",
+        "caption-max-width": 200,
+        "caption-color": "#000000",
+        "caption-font-size": 50,
+        "caption-font-weight": "normal",
+        "label-position": "inside",
+        "label-display": "pill",
+        "label-color": "#000000",
+        "label-background-color": "#ffffff",
+        "label-border-color": "#000000",
+        "label-border-width": 4,
+        "label-font-size": 40,
+        "label-padding": 5,
+        "label-margin": 4,
+        "directionality": "directed",
+        "detail-position": "inline",
+        "detail-orientation": "parallel",
+        "arrow-width": 5,
+        "arrow-color": "#000000",
+        "margin-start": 5,
+        "margin-end": 5,
+        "margin-peer": 20,
+        "attachment-start": "normal",
+        "attachment-end": "normal",
+        "relationship-icon-image": "",
+        "type-color": "#000000",
+        "type-background-color": "#ffffff",
+        "type-border-color": "#000000",
+        "type-border-width": 0,
+        "type-font-size": 16,
+        "type-padding": 5,
+        "property-position": "outside",
+        "property-alignment": "colon",
+        "property-color": "#000000",
+        "property-font-size": 16,
+        "property-font-weight": "normal"
+    },
+    "nodes": [
+        {
+            "id": "n0",
+            "position": {
+                "x": 382,
+                "y": -222.6999969482422
+            },
+            "caption": "Computer1",
+            "labels": [],
+            "properties": {},
+            "style": {}
+        },
+        {
+            "id": "n1",
+            "position": {
+                "x": 14.024758994617912,
+                "y": -222.6999969482422
+            },
+            "caption": "ControllerB",
+            "labels": [],
+            "properties": {},
+            "style": {}
+        },
+        {
+            "id": "n2",
+            "position": {
+                "x": 609.9205843226152,
+                "y": -354.2900076607609
+            },
+            "caption": "Group1",
+            "labels": [],
+            "properties": {},
+            "style": {}
+        },
+        {
+            "id": "n3",
+            "position": {
+                "x": 609.9205843226152,
+                "y": -91.10998623572357
+            },
+            "caption": "Group2",
+            "labels": [],
+            "properties": {},
+            "style": {}
+        },
+        {
+            "id": "n4",
+            "position": {
+                "x": 21.92058432261524,
+                "y": 123.57391437386326
+            },
+            "caption": "Controller",
+            "labels": [],
+            "properties": {},
+            "style": {}
+        },
+        {
+            "id": "n5",
+            "position": {
+                "x": 359.43479784872477,
+                "y": 123.57391437386326
+            },
+            "caption": "Group A",
+            "labels": [],
+            "properties": {},
+            "style": {}
+        },
+        {
+            "id": "n6",
+            "position": {
+                "x": 21.92058432261524,
+                "y": -71.29000766076089
+            },
+            "caption": "User A",
+            "labels": [],
+            "properties": {},
+            "style": {}
+        },
+        {
+            "id": "n7",
+            "position": {
+                "x": 359.43479784872477,
+                "y": 318.4378364084873
+            },
+            "caption": "User C",
+            "labels": [],
+            "properties": {},
+            "style": {}
+        },
+        {
+            "id": "n8",
+            "position": {
+                "x": 683.3282988641048,
+                "y": 505.4378364084873
+            },
+            "caption": "Computer B",
+            "labels": [],
+            "properties": {},
+            "style": {}
+        },
+        {
+            "id": "n9",
+            "position": {
+                "x": 683.3282988641048,
+                "y": 123.57391437386323
+            },
+            "caption": "Group C",
+            "labels": [],
+            "properties": {},
+            "style": {}
+        },
+        {
+            "id": "n10",
+            "position": {
+                "x": 683.3282988641048,
+                "y": 310.5739143738632
+            },
+            "caption": "Computer A",
+            "labels": [],
+            "properties": {},
+            "style": {}
+        },
+        {
+            "id": "n11",
+            "position": {
+                "x": 1007.2217998794849,
+                "y": 310.5739143738633
+            },
+            "caption": "Computer C",
+            "labels": [],
+            "properties": {},
+            "style": {}
+        },
+        {
+            "id": "n12",
+            "position": {
+                "x": 359.43479784872477,
+                "y": 513.3017584431115
+            },
+            "caption": "Group B",
+            "labels": [],
+            "properties": {},
+            "style": {}
+        },
+        {
+            "id": "n13",
+            "position": {
+                "x": 21.92058432261524,
+                "y": 513.3017584431115
+            },
+            "caption": "User B",
+            "labels": [],
+            "properties": {},
+            "style": {}
+        }
+    ],
+    "relationships": [
+        {
+            "id": "n0",
+            "fromId": "n1",
+            "toId": "n0",
+            "type": "WriteAccountRestrictions",
+            "properties": {},
+            "style": {
+                "arrow-color": "#a4dd00"
+            }
+        },
+        {
+            "id": "n1",
+            "type": "MemberOf",
+            "style": {
+                "arrow-color": "#f44e3b"
+            },
+            "properties": {},
+            "fromId": "n0",
+            "toId": "n2"
+        },
+        {
+            "id": "n2",
+            "type": "MemberOf",
+            "style": {
+                "arrow-color": "#f44e3b"
+            },
+            "properties": {},
+            "fromId": "n0",
+            "toId": "n3"
+        },
+        {
+            "id": "n3",
+            "fromId": "n4",
+            "toId": "n5",
+            "type": "MemberOf",
+            "properties": {},
+            "style": {
+                "arrow-color": "#a4dd00"
+            }
+        },
+        {
+            "id": "n4",
+            "fromId": "n6",
+            "toId": "n5",
+            "type": "MemberOf",
+            "properties": {},
+            "style": {
+                "arrow-color": "#f44e3b"
+            }
+        },
+        {
+            "id": "n5",
+            "fromId": "n4",
+            "toId": "n7",
+            "type": "Control",
+            "properties": {},
+            "style": {
+                "arrow-color": "#a4dd00"
+            }
+        },
+        {
+            "id": "n6",
+            "fromId": "n7",
+            "toId": "n8",
+            "type": "Control",
+            "properties": {},
+            "style": {
+                "arrow-color": "#f44e3b"
+            }
+        },
+        {
+            "id": "n7",
+            "fromId": "n5",
+            "toId": "n9",
+            "type": "MemberOf",
+            "properties": {},
+            "style": {
+                "arrow-color": "#a4dd00"
+            }
+        },
+        {
+            "id": "n8",
+            "fromId": "n5",
+            "toId": "n10",
+            "type": "Control",
+            "properties": {},
+            "style": {
+                "arrow-color": "#a4dd00"
+            }
+        },
+        {
+            "id": "n9",
+            "fromId": "n9",
+            "toId": "n11",
+            "type": "Control",
+            "properties": {},
+            "style": {
+                "arrow-color": "#a4dd00"
+            }
+        },
+        {
+            "id": "n10",
+            "fromId": "n4",
+            "toId": "n12",
+            "type": "Control",
+            "properties": {},
+            "style": {
+                "arrow-color": "#a4dd00"
+            }
+        },
+        {
+            "id": "n11",
+            "fromId": "n13",
+            "toId": "n12",
+            "type": "MemberOf",
+            "properties": {},
+            "style": {
+                "arrow-color": "#f44e3b"
+            }
+        }
+    ]
+}

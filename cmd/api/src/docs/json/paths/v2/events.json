@@ -1,0 +1,364 @@
+{
+    "/api/v2/events": {
+        "get": {
+            "description": "Gets all Client Scheduled events.",
+            "tags": [
+                "Events",
+                "Enterprise"
+            ],
+            "summary": "List Events",
+            "parameters": [
+                {
+                    "$ref": "#/definitions/parameters.PreferHeader"
+                },
+                {
+                    "type": "integer",
+                    "description": "Paging Skip",
+                    "name": "skip",
+                    "in": "query"
+                },
+                {
+                    "type": "integer",
+                    "description": "Paging Limit",
+                    "name": "limit",
+                    "in": "query"
+                },
+                {
+                    "type": "string",
+                    "description": "Sort by column. Can be used multiple times; prepend hyphen for descending order. Sortable columns are client_id, next_scheduled_at, id, created_at, updated_at, deleted_at.",
+                    "name": "sort_by",
+                    "in": "query",
+                    "required": false
+                },
+                {
+                    "type": "string",
+                    "description": "Filter results by column value. Valid filter predicates are eq, neq, gt, gte, lt, lte",
+                    "name": "client_id",
+                    "in": "query",
+                    "required": false
+                },
+                {
+                    "type": "string",
+                    "description": "Filter results by column value. Valid filter predicates are eq, neq",
+                    "name": "rrule",
+                    "in": "query",
+                    "required": false
+                },
+                {
+                    "type": "string",
+                    "description": "Filter results by column value. Valid filter predicates are eq, neq",
+                    "name": "session_collection",
+                    "in": "query",
+                    "required": false
+                },
+                {
+                    "type": "string",
+                    "description": "Filter results by column value. Valid filter predicates are eq, neq",
+                    "name": "local_group_collection",
+                    "in": "query",
+                    "required": false
+                },
+                {
+                    "type": "string",
+                    "description": "Filter results by column value. Valid filter predicates are eq, neq",
+                    "name": "ad_structure_collection",
+                    "in": "query",
+                    "required": false
+                },
+                {
+                    "type": "string",
+                    "description": "Filter results by column value. Valid filter predicates are eq, neq, gt, gte, lt, lte",
+                    "name": "next_scheduled_at",
+                    "in": "query",
+                    "required": false
+                },
+                {
+                    "type": "string",
+                    "description": "Filter results by column value. Valid filter predicates are eq, neq, gt, gte, lt, lte",
+                    "name": "id",
+                    "in": "query",
+                    "required": false
+                },
+                {
+                    "type": "string",
+                    "description": "Filter results by column value. Valid filter predicates are eq, neq, gt, gte, lt, lte",
+                    "name": "created_at",
+                    "in": "query",
+                    "required": false
+                },
+                {
+                    "type": "string",
+                    "description": "Filter results by column value. Valid filter predicates are eq, neq, gt, gte, lt, lte",
+                    "name": "updated_at",
+                    "in": "query",
+                    "required": false
+                },
+                {
+                    "type": "string",
+                    "description": "Filter results by column value. Valid filter predicates are eq, neq, gt, gte, lt, lte",
+                    "name": "deleted_at",
+                    "in": "query",
+                    "required": false
+                },
+                {
+                    "type": "boolean",
+                    "description": "Valid values are `true` or `false` and defaults to `true`. When a value of `true` is passed, any domains associated with each scheduled job will have expanded properties including `name` and `type`. When a value of `false` is passed, these same domains will only return as a list of `objectid`s.",
+                    "name": "hydrate_domains",
+                    "in": "query",
+                    "required": false
+                },
+                {
+                    "type": "boolean",
+                    "description": "Valid values are `true` or `false` and defaults to `true`. When a value of `true` is passed, any OUs associated with each scheduled job will have expanded properties including `name` and `type`. When a value of `false` is passed, these same OUs will only return as a list of `objectid`s.",
+                    "name": "hydrate_ous",
+                    "in": "query",
+                    "required": false
+                }
+            ],
+            "responses": {
+                "200": {
+                    "description": "OK",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/definitions/api.ResponseWrapper"
+                            }
+                        }
+                    }
+                },
+                "Error": {
+                    "$ref": "#/components/responses/defaultError"
+                }
+            }
+        },
+        "post": {
+            "description": "Creates a scheduled event for data collection",
+            "tags": [
+                "Events",
+                "Enterprise"
+            ],
+            "summary": "Create Event",
+            "parameters": [
+                {
+                    "$ref": "#/definitions/parameters.PreferHeader"
+                }
+            ],
+            "requestBody": {
+                "description": "The request body for creating an event",
+                "required": true,
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "$ref": "#/definitions/v2.EventCreateRequest"
+                        }
+                    }
+                }
+            },
+            "responses": {
+                "200": {
+                    "description": "OK",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/definitions/api.BasicResponse"
+                            }
+                        }
+                    }
+                },
+                "Error": {
+                    "$ref": "#/components/responses/defaultError"
+                }
+            }
+        }
+    },
+    "/api/v2/events/{event_id}": {
+        "parameters": [
+            {
+                "type": "string",
+                "description": "Event ID",
+                "name": "event_id",
+                "in": "path",
+                "required": true
+            }
+        ],
+        "get": {
+            "description": "Gets a scheduled job event by id",
+            "tags": [
+                "Events",
+                "Enterprise"
+            ],
+            "summary": "Get Event",
+            "parameters": [
+                {
+                    "$ref": "#/definitions/parameters.PreferHeader"
+                },
+                {
+                    "type": "string",
+                    "description": "Sort by column. Can be used multiple times; prepend hyphen for descending order.",
+                    "name": "sort_by",
+                    "in": "query",
+                    "required": false
+                },
+                {
+                    "type": "string",
+                    "description": "Filter results by column value. Valid filter predicates are eq, neq",
+                    "name": "rrule",
+                    "in": "query",
+                    "required": false
+                },
+                {
+                    "type": "string",
+                    "description": "Filter results by column value. Valid filter predicates are eq, neq",
+                    "name": "session_collection",
+                    "in": "query",
+                    "required": false
+                },
+                {
+                    "type": "string",
+                    "description": "Filter results by column value. Valid filter predicates are eq, neq",
+                    "name": "ad_structure_collection",
+                    "in": "query",
+                    "required": false
+                },
+                {
+                    "type": "string",
+                    "description": "Filter results by column value. Valid filter predicates are eq, neq",
+                    "name": "domain_controller",
+                    "in": "query",
+                    "required": false
+                },
+                {
+                    "type": "string",
+                    "description": "Filter results by column value. Valid filter predicates are eq, neq",
+                    "name": "status",
+                    "in": "query",
+                    "required": false
+                },
+                {
+                    "type": "string",
+                    "description": "Filter results by column value. Valid filter predicates are eq, neq, gt, gte, lt, lte",
+                    "name": "client_id",
+                    "in": "query",
+                    "required": false
+                },
+                {
+                    "type": "string",
+                    "description": "Filter results by column value. Valid filter predicates are eq, neq, gt, gte, lt, lte",
+                    "name": "next_scheduled_at",
+                    "in": "query",
+                    "required": false
+                },
+                {
+                    "type": "string",
+                    "description": "Filter results by column value. Valid filter predicates are eq, neq, gt, gte, lt, lte",
+                    "name": "id",
+                    "in": "query",
+                    "required": false
+                },
+                {
+                    "type": "string",
+                    "description": "Filter results by column value. Valid filter predicates are eq, neq, gt, gte, lt, lte",
+                    "name": "created_at",
+                    "in": "query",
+                    "required": false
+                },
+                {
+                    "type": "string",
+                    "description": "Filter results by column value. Valid filter predicates are eq, neq, gt, gte, lt, lte",
+                    "name": "updated_at",
+                    "in": "query",
+                    "required": false
+                },
+                {
+                    "type": "string",
+                    "description": "Filter results by column value. Valid filter predicates are eq, neq, gt, gte, lt, lte",
+                    "name": "deleted_at",
+                    "in": "query",
+                    "required": false
+                }
+            ],
+            "responses": {
+                "200": {
+                    "description": "OK",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/definitions/api.BasicResponse"
+                            }
+                        }
+                    }
+                },
+                "Error": {
+                    "$ref": "#/components/responses/defaultError"
+                }
+            }
+        },
+        "put": {
+            "description": "Updates a scheduled event",
+            "tags": [
+                "Events",
+                "Enterprise"
+            ],
+            "summary": "Update Event",
+            "parameters": [
+                {
+                    "$ref": "#/definitions/parameters.PreferHeader"
+                }
+            ],
+            "requestBody": {
+                "description": "The request body for updating an event",
+                "required": true,
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "$ref": "#/definitions/v2.EventUpdateRequest"
+                        }
+                    }
+                }
+            },
+            "responses": {
+                "200": {
+                    "description": "OK",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/definitions/api.BasicResponse"
+                            }
+                        }
+                    }
+                },
+                "Error": {
+                    "$ref": "#/components/responses/defaultError"
+                }
+            }
+        },
+        "delete": {
+            "description": "Deletes a scheduled event and associated tasks by id",
+            "tags": [
+                "Events",
+                "Enterprise"
+            ],
+            "summary": "Delete Event",
+            "parameters": [
+                {
+                    "$ref": "#/definitions/parameters.PreferHeader"
+                }
+            ],
+            "responses": {
+                "200": {
+                    "description": "OK",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/definitions/api.BasicResponse"
+                            }
+                        }
+                    }
+                },
+                "Error": {
+                    "$ref": "#/components/responses/defaultError"
+                }
+            }
+        }
+    }
+}

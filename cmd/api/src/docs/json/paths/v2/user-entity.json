@@ -1,0 +1,562 @@
+{
+    "/api/v2/users/{object_id}": {
+        "parameters": [
+            {
+                "type": "string",
+                "description": "User Object ID",
+                "name": "object_id",
+                "in": "path",
+                "required": true
+            }
+        ],
+        "get": {
+            "description": "Get props and counts for the user",
+            "tags": [
+                "User Entity API",
+                "Community",
+                "Enterprise"
+            ],
+            "summary": "Get user entity info",
+            "parameters": [
+                {
+                    "$ref": "#/definitions/parameters.PreferHeader"
+                }
+            ],
+            "responses": {
+                "200": {
+                    "description": "OK",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/definitions/api.BasicResponse"
+                            }
+                        }
+                    }
+                },
+                "Error": {
+                    "$ref": "#/components/responses/defaultError"
+                }
+            }
+        }
+    },
+    "/api/v2/users/{object_id}/admin-rights": {
+        "parameters": [
+            {
+                "type": "string",
+                "description": "User Object ID",
+                "name": "object_id",
+                "in": "path",
+                "required": true
+            }
+        ],
+        "get": {
+            "description": "List the computers this user can administer",
+            "tags": [
+                "User Entity API",
+                "Community",
+                "Enterprise"
+            ],
+            "summary": "List user admin rights",
+            "parameters": [
+                {
+                    "$ref": "#/definitions/parameters.PreferHeader"
+                },
+                {
+                    "type": "integer",
+                    "description": "Paging Skip",
+                    "name": "skip",
+                    "in": "query"
+                },
+                {
+                    "type": "integer",
+                    "description": "Paging Limit",
+                    "name": "limit",
+                    "in": "query"
+                }
+            ],
+            "responses": {
+                "200": {
+                    "description": "OK",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/definitions/api.ResponseWrapper"
+                            }
+                        }
+                    }
+                },
+                "Error": {
+                    "$ref": "#/components/responses/defaultError"
+                }
+            }
+        }
+    },
+    "/api/v2/users/{object_id}/constrained-delegation-rights": {
+        "parameters": [
+            {
+                "type": "string",
+                "description": "User Object ID",
+                "name": "object_id",
+                "in": "path",
+                "required": true
+            }
+        ],
+        "get": {
+            "description": "List the computers this user can use constrained delegation rights to execute code on",
+            "tags": [
+                "User Entity API",
+                "Community",
+                "Enterprise"
+            ],
+            "summary": "List user constrained delegation rights",
+            "parameters": [
+                {
+                    "$ref": "#/definitions/parameters.PreferHeader"
+                },
+                {
+                    "type": "integer",
+                    "description": "Paging Skip",
+                    "name": "skip",
+                    "in": "query"
+                },
+                {
+                    "type": "integer",
+                    "description": "Paging Limit",
+                    "name": "limit",
+                    "in": "query"
+                }
+            ],
+            "responses": {
+                "200": {
+                    "description": "OK",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/definitions/api.ResponseWrapper"
+                            }
+                        }
+                    }
+                },
+                "Error": {
+                    "$ref": "#/components/responses/defaultError"
+                }
+            }
+        }
+    },
+    "/api/v2/users/{object_id}/controllables": {
+        "parameters": [
+            {
+                "type": "string",
+                "description": "User Object ID",
+                "name": "object_id",
+                "in": "path",
+                "required": true
+            }
+        ],
+        "get": {
+            "description": "List the principals this user can directly control",
+            "tags": [
+                "User Entity API",
+                "Community",
+                "Enterprise"
+            ],
+            "summary": "List user control",
+            "parameters": [
+                {
+                    "$ref": "#/definitions/parameters.PreferHeader"
+                },
+                {
+                    "type": "integer",
+                    "description": "Paging Skip",
+                    "name": "skip",
+                    "in": "query"
+                },
+                {
+                    "type": "integer",
+                    "description": "Paging Limit",
+                    "name": "limit",
+                    "in": "query"
+                }
+            ],
+            "responses": {
+                "200": {
+                    "description": "OK",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/definitions/api.ResponseWrapper"
+                            }
+                        }
+                    }
+                },
+                "Error": {
+                    "$ref": "#/components/responses/defaultError"
+                }
+            }
+        }
+    },
+    "/api/v2/users/{object_id}/controllers": {
+        "parameters": [
+            {
+                "type": "string",
+                "description": "User Object ID",
+                "name": "object_id",
+                "in": "path",
+                "required": true
+            }
+        ],
+        "get": {
+            "description": "Get principals that can control this user",
+            "tags": [
+                "User Entity API",
+                "Community",
+                "Enterprise"
+            ],
+            "summary": "Get user controllers",
+            "parameters": [
+                {
+                    "$ref": "#/definitions/parameters.PreferHeader"
+                },
+                {
+                    "type": "integer",
+                    "description": "Paging Skip",
+                    "name": "skip",
+                    "in": "query"
+                },
+                {
+                    "type": "integer",
+                    "description": "Paging Limit",
+                    "name": "limit",
+                    "in": "query"
+                }
+            ],
+            "responses": {
+                "200": {
+                    "description": "OK",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/definitions/api.ResponseWrapper"
+                            }
+                        }
+                    }
+                },
+                "Error": {
+                    "$ref": "#/components/responses/defaultError"
+                }
+            }
+        }
+    },
+    "/api/v2/users/{object_id}/dcom-rights": {
+        "parameters": [
+            {
+                "type": "string",
+                "description": "User Object ID",
+                "name": "object_id",
+                "in": "path",
+                "required": true
+            }
+        ],
+        "get": {
+            "description": "List the computers this user can execute COM sessions on",
+            "tags": [
+                "User Entity API",
+                "Community",
+                "Enterprise"
+            ],
+            "summary": "List user DCOM rights",
+            "parameters": [
+                {
+                    "$ref": "#/definitions/parameters.PreferHeader"
+                },
+                {
+                    "type": "integer",
+                    "description": "Paging Skip",
+                    "name": "skip",
+                    "in": "query"
+                },
+                {
+                    "type": "integer",
+                    "description": "Paging Limit",
+                    "name": "limit",
+                    "in": "query"
+                }
+            ],
+            "responses": {
+                "200": {
+                    "description": "OK",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/definitions/api.ResponseWrapper"
+                            }
+                        }
+                    }
+                },
+                "Error": {
+                    "$ref": "#/components/responses/defaultError"
+                }
+            }
+        }
+    },
+    "/api/v2/users/{object_id}/memberships": {
+        "parameters": [
+            {
+                "type": "string",
+                "description": "User Object ID",
+                "name": "object_id",
+                "in": "path",
+                "required": true
+            }
+        ],
+        "get": {
+            "description": "List the groups this user is a member of",
+            "tags": [
+                "User Entity API",
+                "Community",
+                "Enterprise"
+            ],
+            "summary": "List user group membership",
+            "parameters": [
+                {
+                    "$ref": "#/definitions/parameters.PreferHeader"
+                },
+                {
+                    "type": "integer",
+                    "description": "Paging Skip",
+                    "name": "skip",
+                    "in": "query"
+                },
+                {
+                    "type": "integer",
+                    "description": "Paging Limit",
+                    "name": "limit",
+                    "in": "query"
+                }
+            ],
+            "responses": {
+                "200": {
+                    "description": "OK",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/definitions/api.ResponseWrapper"
+                            }
+                        }
+                    }
+                },
+                "Error": {
+                    "$ref": "#/components/responses/defaultError"
+                }
+            }
+        }
+    },
+    "/api/v2/users/{object_id}/ps-remote-rights": {
+        "parameters": [
+            {
+                "type": "string",
+                "description": "User Object ID",
+                "name": "object_id",
+                "in": "path",
+                "required": true
+            }
+        ],
+        "get": {
+            "description": "List the computers this user can open a powershell session too",
+            "tags": [
+                "User Entity API",
+                "Community",
+                "Enterprise"
+            ],
+            "summary": "List user PSRemote rights",
+            "parameters": [
+                {
+                    "$ref": "#/definitions/parameters.PreferHeader"
+                },
+                {
+                    "type": "integer",
+                    "description": "Paging Skip",
+                    "name": "skip",
+                    "in": "query"
+                },
+                {
+                    "type": "integer",
+                    "description": "Paging Limit",
+                    "name": "limit",
+                    "in": "query"
+                }
+            ],
+            "responses": {
+                "200": {
+                    "description": "OK",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/definitions/api.ResponseWrapper"
+                            }
+                        }
+                    }
+                },
+                "Error": {
+                    "$ref": "#/components/responses/defaultError"
+                }
+            }
+        }
+    },
+    "/api/v2/users/{object_id}/rdp-rights": {
+        "parameters": [
+            {
+                "type": "string",
+                "description": "User Object ID",
+                "name": "object_id",
+                "in": "path",
+                "required": true
+            }
+        ],
+        "get": {
+            "description": "List the computers this user can RDP too",
+            "tags": [
+                "User Entity API",
+                "Community",
+                "Enterprise"
+            ],
+            "summary": "List user RDP rights",
+            "parameters": [
+                {
+                    "$ref": "#/definitions/parameters.PreferHeader"
+                },
+                {
+                    "type": "integer",
+                    "description": "Paging Skip",
+                    "name": "skip",
+                    "in": "query"
+                },
+                {
+                    "type": "integer",
+                    "description": "Paging Limit",
+                    "name": "limit",
+                    "in": "query"
+                }
+            ],
+            "responses": {
+                "200": {
+                    "description": "OK",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/definitions/api.ResponseWrapper"
+                            }
+                        }
+                    }
+                },
+                "Error": {
+                    "$ref": "#/components/responses/defaultError"
+                }
+            }
+        }
+    },
+    "/api/v2/users/{object_id}/sessions": {
+        "parameters": [
+            {
+                "type": "string",
+                "description": "User Object ID",
+                "name": "object_id",
+                "in": "path",
+                "required": true
+            }
+        ],
+        "get": {
+            "description": "List the computers this user is logged on to",
+            "tags": [
+                "User Entity API",
+                "Community",
+                "Enterprise"
+            ],
+            "summary": "List user sessions",
+            "parameters": [
+                {
+                    "$ref": "#/definitions/parameters.PreferHeader"
+                },
+                {
+                    "type": "integer",
+                    "description": "Paging Skip",
+                    "name": "skip",
+                    "in": "query"
+                },
+                {
+                    "type": "integer",
+                    "description": "Paging Limit",
+                    "name": "limit",
+                    "in": "query"
+                }
+            ],
+            "responses": {
+                "200": {
+                    "description": "OK",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/definitions/api.ResponseWrapper"
+                            }
+                        }
+                    }
+                },
+                "Error": {
+                    "$ref": "#/components/responses/defaultError"
+                }
+            }
+        }
+    },
+    "/api/v2/users/{object_id}/sql-admin-rights": {
+        "parameters": [
+            {
+                "type": "string",
+                "description": "User Object ID",
+                "name": "object_id",
+                "in": "path",
+                "required": true
+            }
+        ],
+        "get": {
+            "description": "List the computers with SQL databases this user can administer",
+            "tags": [
+                "User Entity API",
+                "Community",
+                "Enterprise"
+            ],
+            "summary": "List user SQL admin rights",
+            "parameters": [
+                {
+                    "$ref": "#/definitions/parameters.PreferHeader"
+                },
+                {
+                    "type": "integer",
+                    "description": "Paging Skip",
+                    "name": "skip",
+                    "in": "query"
+                },
+                {
+                    "type": "integer",
+                    "description": "Paging Limit",
+                    "name": "limit",
+                    "in": "query"
+                }
+            ],
+            "responses": {
+                "200": {
+                    "description": "OK",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/definitions/api.ResponseWrapper"
+                            }
+                        }
+                    }
+                },
+                "Error": {
+                    "$ref": "#/components/responses/defaultError"
+                }
+            }
+        }
+    }
+}

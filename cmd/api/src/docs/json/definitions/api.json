@@ -1,0 +1,116 @@
+{
+    "api.ErrorWrapper": {
+        "type": "object",
+        "properties": {
+            "http_status": {
+                "type": "integer",
+                "description": "The HTTP status code related to the error."
+            },
+            "timestamp": {
+                "$ref": "#/definitions/sql.NullTime",
+                "description": "The date and time the error occurred at."
+            },
+            "request_id": {
+                "type": "string",
+                "description": "The GUID of the request that generated the error."
+            },
+            "errors": {
+                "type": "array",
+                "items": {
+                    "$ref": "#/definitions/v2.ErrorDetails"
+                }
+            }
+        }
+    },
+    "api.BasicResponse": {
+        "type": "object",
+        "properties": {
+            "data": {
+                "type": "object"
+            }
+        }
+    },
+    "api.TimeWindowedResponse": {
+        "type": "object",
+        "properties": {
+            "start": {
+                "type": "string"
+            },
+            "end": {
+                "type": "string"
+            },
+            "data": {
+                "type": "object"
+            }
+        }
+    },
+    "api.ResponseWrapper": {
+        "type": "object",
+        "required": [
+            "count",
+            "limit",
+            "skip"
+        ],
+        "properties": {
+            "start": {
+                "type": "string"
+            },
+            "end": {
+                "type": "string"
+            },
+            "count": {
+                "type": "integer"
+            },
+            "limit": {
+                "type": "string"
+            },
+            "skip": {
+                "type": "integer"
+            },
+            "data": {
+                "type": "object"
+            }
+        }
+    },
+    "api.BinaryResponse": {
+        "type": "file"
+    },
+    "api.ErrorResponse": {
+        "type": "object",
+        "properties": {
+            "http_status": {
+                "type": "integer",
+                "description": "The HTTP status code"
+            },
+            "timestamp": {
+                "type": "string",
+                "format": "date-time",
+                "description": "The RFC-3339 timestamp in which the error response was sent"
+            },
+            "request_id": {
+                "type": "string",
+                "description": "The unique identifier of the request that failed"
+            },
+            "errors": {
+                "type": "array",
+                "items": {
+                    "$ref": "#/components/schemas/api.Error"
+                },
+                "description": "The error(s) that occurred from processing the request"
+            }
+        }
+    },
+    "api.Error": {
+        "type": "object",
+        "properties": {
+            "context": {
+                "type": "string",
+                "description": "The context in which the error took place"
+            },
+            "message": {
+                "type": "string",
+                "description": "A human-readable description of the error"
+            }
+        }
+    }
+}

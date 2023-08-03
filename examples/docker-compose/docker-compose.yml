@@ -1,0 +1,77 @@
+# Copyright 2023 Specter Ops, Inc.
+# 
+# Licensed under the Apache License, Version 2.0
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+# 
+#     http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# 
+# SPDX-License-Identifier: Apache-2.0
+
+version: '3'
+services:
+  app-db:
+    image: postgres:13.2
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER:-bloodhound}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-bloodhoundcommunityedition}
+      - POSTGRES_DATABASE=${POSTGRES_DATABASE:-bloodhound}
+    # Database ports are disabled by default. Please change your database password to something secure before uncommenting
+    # ports:
+    #   - ${POSTGRES_PORT:-5432}:5432
+    volumes:
+      - postgres-data:/var/lib/postgresql
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${POSTGRES_USER:-bloodhound} -d ${POSTGRES_DATABASE:-bloodhound} -h 127.0.0.1 -p 5432"
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  graph-db:
+    image: neo4j:4.4
+    environment:
+      - NEO4J_AUTH=${NEO4J_AUTH:-neo4j/bloodhoundcommunityedition}
+    # Database ports are disabled by default. Please change your database password to something secure before uncommenting
+    # ports:
+    #   - ${NEO4J_DB_PORT:-7687}:7687
+    #   - ${NEO4J_WEB_PORT:-7474}:7474
+    volumes:
+      - ${NEO4J_DATA_MOUNT:-neo4j-data}:/data
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget http://localhost:${NEO4J_WEB_PORT:-7474} || exit 1"
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  bloodhound:
+    image: specterops/bloodhound:${BLOODHOUND_TAG:-latest}
+    ports:
+      - ${BLOODHOUND_PORT:-8080}:8080
+    ### Uncomment to use your own bloodhound.config.json to configure the application
+    # volumes:
+    #   - ./bloodhound.config.json:/bloodhound.config.json:ro
+    depends_on:
+      app-db:
+        condition: service_healthy
+      graph-db:
+        condition: service_healthy
+
+volumes:
+  neo4j-data:
+  postgres-data:

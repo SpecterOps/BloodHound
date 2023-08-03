@@ -1,0 +1,46 @@
+{
+    "/api/version": {
+        "get": {
+          "description": "Returns the supported API versions",
+          "tags": [
+            "API Info",
+            "Community",
+            "Enterprise"
+          ],
+          "summary": "Returns the supported API versions",
+          "responses": {
+            "200": {
+              "description": "OK",
+              "content": {
+                "application/json": {
+                  "schema": {
+                      "$ref": "#/definitions/v2.VersionResponse"
+                  }
+                }
+              }
+            },
+            "Error": {
+              "$ref": "#/components/responses/defaultError"
+            }
+          }
+        }
+    },
+    "/api/v2/swagger/doc.json": {
+        "get": {
+          "description": "Returns an Open API 3.0 compatible BloodHound API spec",
+          "tags": [
+            "API Info",
+            "Community",
+            "Enterprise"
+          ],
+          "responses": {
+            "200": {
+                "description": "OK"
+            },
+            "Error": {
+              "$ref": "#/components/responses/defaultError"
+            }
+          }
+        }
+    }
+}

@@ -1,0 +1,48 @@
+{
+    "test_cases": [
+        {
+            "name": "Should reject parameters in queries",
+            "type": "negative_case",
+            "details": {
+                "queries": [
+                    "match (b) where b.name = $1 return b",
+                    "match (b $1) return b"
+                ],
+                "error_matchers": [
+                    "user-specified parameters are not supported"
+                ]
+            }
+        },
+        {
+            "name": "Should reject procedure invocation",
+            "type": "negative_case",
+            "details": {
+                "queries": [
+                    "call io.specterops.blow_up_the_world(1, 2, 3)",
+                    "call io.specterops.blow_up_the_world"
+                ],
+                "error_matchers": [
+                    "procedure invocation is not supported"
+                ]
+            }
+        },
+        {
+            "name": "Should reject update clauses",
+            "type": "negative_case",
+            "details": {
+                "queries": [
+                    "match (b) where b.name = 'test' remove b.prop return b",
+                    "match (b) where b.name = 'test' set b.prop = false return b",
+                    "match (b), (a) where b.name = 'test' merge (n)-[:MemberOf]->(b);",
+                    "create (b:Base) set b.name = 'lol' return b",
+                    "match (b), (g) where id(b) = 1 and id(g) = 2 create (b)-[:MemberOf]->(g)",
+                    "match (b:Base) where b.name = 'lol' delete b",
+                    "match (b:Base) where b.name = 'lol' detach delete b"
+                ],
+                "error_matchers": [
+                    "updating clauses are not supported"
+                ]
+            }
+        }
+    ]
+}

@@ -1,0 +1,679 @@
+{
+    "/api/v2/tasks/available": {
+        "get": {
+            "deprecated": true,
+            "description": "Gets next scheduled job for client.",
+            "tags": [
+                "Tasks",
+                "Enterprise"
+            ],
+            "summary": "Get Next Tasks",
+            "parameters": [
+                {
+                    "$ref": "#/definitions/parameters.PreferHeader"
+                },
+                {
+                    "type": "string",
+                    "description": "Client ID",
+                    "name": "id",
+                    "in": "query",
+                    "required": true
+                },
+                {
+                    "type": "string",
+                    "description": "Sort by column. Can be used multiple times; prepend hyphen for descending order. Sortable columns are client_id, event_id, execution_time, status, start_time, end_time, log_path, domain_controller, event_title, last_ingest, id, created_at, updated_at, deleted_at.",
+                    "name": "sort_by",
+                    "in": "query",
+                    "required": false
+                },
+                {
+                    "type": "string",
+                    "description": "Filter results by column value. Valid filter predicates are eq, neq",
+                    "name": "log_path",
+                    "in": "query",
+                    "required": false
+                },
+                {
+                    "type": "string",
+                    "description": "Filter results by column value. Valid filter predicates are eq, neq",
+                    "name": "session_collection",
+                    "in": "query",
+                    "required": false
+                },
+                {
+                    "type": "string",
+                    "description": "Filter results by column value. Valid filter predicates are eq, neq",
+                    "name": "ad_structure_collection",
+                    "in": "query",
+                    "required": false
+                },
+                {
+                    "type": "string",
+                    "description": "Filter results by column value. Valid filter predicates are eq, neq",
+                    "name": "domain_controller",
+                    "in": "query",
+                    "required": false
+                },
+                {
+                    "type": "string",
+                    "description": "Filter results by column value. Valid filter predicates are eq, neq",
+                    "name": "status",
+                    "in": "query",
+                    "required": false
+                },
+                {
+                    "type": "string",
+                    "description": "Filter results by column value. Valid filter predicates are eq, neq",
+                    "name": "event_title",
+                    "in": "query",
+                    "required": false
+                },
+                {
+                    "type": "string",
+                    "description": "Filter results by column value. Valid filter predicates are eq, neq, gt, gte, lt, lte",
+                    "name": "client_id",
+                    "in": "query",
+                    "required": false
+                },
+                {
+                    "type": "string",
+                    "description": "Filter results by column value. Valid filter predicates are eq, neq, gt, gte, lt, lte",
+                    "name": "event_id",
+                    "in": "query",
+                    "required": false
+                },
+                {
+                    "type": "string",
+                    "description": "Filter results by column value. Valid filter predicates are eq, neq, gt, gte, lt, lte",
+                    "name": "execution_time",
+                    "in": "query",
+                    "required": false
+                },
+                {
+                    "type": "string",
+                    "description": "Filter results by column value. Valid filter predicates are eq, neq, gt, gte, lt, lte",
+                    "name": "start_time",
+                    "in": "query",
+                    "required": false
+                },
+                {
+                    "type": "string",
+                    "description": "Filter results by column value. Valid filter predicates are eq, neq, gt, gte, lt, lte",
+                    "name": "end_time",
+                    "in": "query",
+                    "required": false
+                },
+                {
+                    "type": "string",
+                    "description": "Filter results by column value. Valid filter predicates are eq, neq, gt, gte, lt, lte",
+                    "name": "last_ingest",
+                    "in": "query",
+                    "required": false
+                },
+                {
+                    "type": "string",
+                    "description": "Filter results by column value. Valid filter predicates are eq, neq, gt, gte, lt, lte",
+                    "name": "id",
+                    "in": "query",
+                    "required": false
+                },
+                {
+                    "type": "string",
+                    "description": "Filter results by column value. Valid filter predicates are eq, neq, gt, gte, lt, lte",
+                    "name": "created_at",
+                    "in": "query",
+                    "required": false
+                },
+                {
+                    "type": "string",
+                    "description": "Filter results by column value. Valid filter predicates are eq, neq, gt, gte, lt, lte",
+                    "name": "updated_at",
+                    "in": "query",
+                    "required": false
+                },
+                {
+                    "type": "string",
+                    "description": "Filter results by column value. Valid filter predicates are eq, neq, gt, gte, lt, lte",
+                    "name": "deleted_at",
+                    "in": "query",
+                    "required": false
+                }
+            ],
+            "responses": {
+                "200": {
+                    "description": "OK",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/definitions/api.BasicResponse"
+                            }
+                        }
+                    }
+                },
+                "Error": {
+                    "$ref": "#/components/responses/defaultError"
+                }
+            }
+        }
+    },
+    "/api/v2/tasks/finished": {
+        "get": {
+            "deprecated": true,
+            "description": "Gets all finished tasks.",
+            "tags": [
+                "Tasks",
+                "Enterprise"
+            ],
+            "summary": "Get Finished Tasks",
+            "parameters": [
+                {
+                    "$ref": "#/definitions/parameters.PreferHeader"
+                },
+                {
+                    "type": "string",
+                    "description": "Sort by column. Can be used multiple times; prepend hyphen for descending order. Sortable columns are client_name, client_id, event_id, execution_time, status, start_time, end_time, log_path, domain_controller, event_title, last_ingest, id, created_at, updated_at, deleted_at.",
+                    "name": "sort_by",
+                    "in": "query",
+                    "required": false
+                },
+                {
+                    "type": "string",
+                    "description": "Filter results by column value. Valid filter predicates are eq, neq, gt, gte, lt, lte",
+                    "name": "client_id",
+                    "in": "query",
+                    "required": false
+                },
+                {
+                    "type": "string",
+                    "description": "Filter results by column value. Valid filter predicates are eq, neq",
+                    "name": "rrule",
+                    "in": "query",
+                    "required": false
+                },
+                {
+                    "type": "string",
+                    "description": "Filter results by column value. Valid filter predicates are eq, neq",
+                    "name": "session_collection",
+                    "in": "query",
+                    "required": false
+                },
+                {
+                    "type": "string",
+                    "description": "Filter results by column value. Valid filter predicates are eq, neq",
+                    "name": "local_group_collection",
+                    "in": "query",
+                    "required": false
+                },
+                {
+                    "type": "string",
+                    "description": "Filter results by column value. Valid filter predicates are eq, neq",
+                    "name": "ad_structure_collection",
+                    "in": "query",
+                    "required": false
+                },
+                {
+                    "type": "string",
+                    "description": "Filter results by column value. Valid filter predicates are eq, neq, gt, gte, lt, lte",
+                    "name": "next_scheduled_at",
+                    "in": "query",
+                    "required": false
+                },
+                {
+                    "type": "string",
+                    "description": "Filter results by column value. Valid filter predicates are eq, neq, gt, gte, lt, lte",
+                    "name": "id",
+                    "in": "query",
+                    "required": false
+                },
+                {
+                    "type": "string",
+                    "description": "Filter results by column value. Valid filter predicates are eq, neq, gt, gte, lt, lte",
+                    "name": "created_at",
+                    "in": "query",
+                    "required": false
+                },
+                {
+                    "type": "string",
+                    "description": "Filter results by column value. Valid filter predicates are eq, neq, gt, gte, lt, lte",
+                    "name": "updated_at",
+                    "in": "query",
+                    "required": false
+                },
+                {
+                    "type": "string",
+                    "description": "Filter results by column value. Valid filter predicates are eq, neq, gt, gte, lt, lte",
+                    "name": "deleted_at",
+                    "in": "query",
+                    "required": false
+                }
+            ],
+            "responses": {
+                "200": {
+                    "description": "OK",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/definitions/api.BasicResponse"
+                            }
+                        }
+                    }
+                },
+                "Error": {
+                    "$ref": "#/components/responses/defaultError"
+                }
+            }
+        }
+    },
+    "/api/v2/clients/{client_id}/tasks": {
+        "get": {
+            "deprecated": true,
+            "description": "Creates a new scheduled job.",
+            "tags": [
+                "Tasks",
+                "Enterprise"
+            ],
+            "summary": "Creates a scheduled job",
+            "parameters": [
+                {
+                    "$ref": "#/definitions/parameters.PreferHeader"
+                },
+                {
+                    "type": "string",
+                    "description": "Client ID",
+                    "name": "client_id",
+                    "in": "path",
+                    "required": true
+                }
+            ],
+            "responses": {
+                "200": {
+                    "description": "OK",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/definitions/api.BasicResponse"
+                            }
+                        }
+                    }
+                },
+                "Error": {
+                    "$ref": "#/components/responses/defaultError"
+                }
+            }
+        }
+    },
+    "/api/v2/tasks/end": {
+        "post": {
+            "deprecated": true,
+            "description": "Endpoint for clients to end a job and mark the end time.",
+            "tags": [
+                "Tasks",
+                "Enterprise"
+            ],
+            "summary": "Notifies the API of a job ending",
+            "parameters": [
+                {
+                    "$ref": "#/definitions/parameters.PreferHeader"
+                }
+            ],
+            "requestBody": {
+                "description": "The request body for endint a task",
+                "required": true,
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "$ref": "#/definitions/v2.ClientCompleteJobRequest"
+                        }
+                    }
+                }
+            },
+            "responses": {
+                "200": {
+                    "description": "OK",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/definitions/api.BasicResponse"
+                            }
+                        }
+                    }
+                },
+                "Error": {
+                    "$ref": "#/components/responses/defaultError"
+                }
+            }
+        }
+    },
+    "/api/v2/tasks/start": {
+        "post": {
+            "deprecated": true,
+            "description": "Endpoint for clients to start a new job and mark the start time.",
+            "tags": [
+                "Tasks",
+                "Enterprise"
+            ],
+            "summary": "Notifies the API of a job start",
+            "parameters": [
+                {
+                    "$ref": "#/definitions/parameters.PreferHeader"
+                }
+            ],
+            "requestBody": {
+                "description": "The request body for starting a task",
+                "required": true,
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "$ref": "#/definitions/v2.JobStartRequest"
+                        }
+                    }
+                }
+            },
+            "responses": {
+                "200": {
+                    "description": "OK",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/definitions/api.BasicResponse"
+                            }
+                        }
+                    }
+                },
+                "Error": {
+                    "$ref": "#/components/responses/defaultError"
+                }
+            }
+        }
+    },
+    "/api/v2/tasks": {
+        "get": {
+            "deprecated": true,
+            "description": "Gets client tasks.",
+            "tags": [
+                "Tasks",
+                "Enterprise"
+            ],
+            "summary": "Get Tasks",
+            "parameters": [
+                {
+                    "$ref": "#/definitions/parameters.PreferHeader"
+                },
+                {
+                    "type": "string",
+                    "description": "Sort by column. Can be used multiple times; prepend hyphen for descending order. Sortable columns are client_id, event_id, execution_time, status, start_time, end_time, log_path, domain_controller, event_title, last_ingest, id, created_at, updated_at, deleted_at.",
+                    "name": "sort_by",
+                    "in": "query",
+                    "required": false
+                },
+                {
+                    "type": "string",
+                    "description": "Filter results by column value. Valid filter predicates are eq, neq",
+                    "name": "log_path",
+                    "in": "query",
+                    "required": false
+                },
+                {
+                    "type": "string",
+                    "description": "Filter results by column value. Valid filter predicates are eq, neq",
+                    "name": "session_collection",
+                    "in": "query",
+                    "required": false
+                },
+                {
+                    "type": "string",
+                    "description": "Filter results by column value. Valid filter predicates are eq, neq",
+                    "name": "ad_structure_collection",
+                    "in": "query",
+                    "required": false
+                },
+                {
+                    "type": "string",
+                    "description": "Filter results by column value. Valid filter predicates are eq, neq",
+                    "name": "domain_controller",
+                    "in": "query",
+                    "required": false
+                },
+                {
+                    "type": "string",
+                    "description": "Filter results by column value. Valid filter predicates are eq, neq",
+                    "name": "status",
+                    "in": "query",
+                    "required": false
+                },
+                {
+                    "type": "string",
+                    "description": "Filter results by column value. Valid filter predicates are eq, neq",
+                    "name": "event_title",
+                    "in": "query",
+                    "required": false
+                },
+                {
+                    "type": "string",
+                    "description": "Filter results by column value. Valid filter predicates are eq, neq, gt, gte, lt, lte",
+                    "name": "client_id",
+                    "in": "query",
+                    "required": false
+                },
+                {
+                    "type": "string",
+                    "description": "Filter results by column value. Valid filter predicates are eq, neq, gt, gte, lt, lte",
+                    "name": "event_id",
+                    "in": "query",
+                    "required": false
+                },
+                {
+                    "type": "string",
+                    "description": "Filter results by column value. Valid filter predicates are eq, neq, gt, gte, lt, lte",
+                    "name": "execution_time",
+                    "in": "query",
+                    "required": false
+                },
+                {
+                    "type": "string",
+                    "description": "Filter results by column value. Valid filter predicates are eq, neq, gt, gte, lt, lte",
+                    "name": "start_time",
+                    "in": "query",
+                    "required": false
+                },
+                {
+                    "type": "string",
+                    "description": "Filter results by column value. Valid filter predicates are eq, neq, gt, gte, lt, lte",
+                    "name": "end_time",
+                    "in": "query",
+                    "required": false
+                },
+                {
+                    "type": "string",
+                    "description": "Filter results by column value. Valid filter predicates are eq, neq, gt, gte, lt, lte",
+                    "name": "last_ingest",
+                    "in": "query",
+                    "required": false
+                },
+                {
+                    "type": "string",
+                    "description": "Filter results by column value. Valid filter predicates are eq, neq, gt, gte, lt, lte",
+                    "name": "id",
+                    "in": "query",
+                    "required": false
+                },
+                {
+                    "type": "string",
+                    "description": "Filter results by column value. Valid filter predicates are eq, neq, gt, gte, lt, lte",
+                    "name": "created_at",
+                    "in": "query",
+                    "required": false
+                },
+                {
+                    "type": "string",
+                    "description": "Filter results by column value. Valid filter predicates are eq, neq, gt, gte, lt, lte",
+                    "name": "updated_at",
+                    "in": "query",
+                    "required": false
+                },
+                {
+                    "type": "string",
+                    "description": "Filter results by column value. Valid filter predicates are eq, neq, gt, gte, lt, lte",
+                    "name": "deleted_at",
+                    "in": "query",
+                    "required": false
+                }
+            ],
+            "responses": {
+                "200": {
+                    "description": "OK",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/definitions/api.BasicResponse"
+                            }
+                        }
+                    }
+                },
+                "Error": {
+                    "$ref": "#/components/responses/defaultError"
+                }
+            }
+        }
+    },
+    "/api/v2/tasks/{task_id}": {
+        "get": {
+            "deprecated": true,
+            "description": "Gets client job.",
+            "tags": [
+                "Tasks",
+                "Enterprise"
+            ],
+            "summary": "Get Job",
+            "parameters": [
+                {
+                    "$ref": "#/definitions/parameters.PreferHeader"
+                },
+                {
+                    "type": "string",
+                    "description": "Job ID",
+                    "name": "task_id",
+                    "in": "path",
+                    "required": true
+                }
+            ],
+            "responses": {
+                "200": {
+                    "description": "OK",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/definitions/api.BasicResponse"
+                            }
+                        }
+                    }
+                },
+                "Error": {
+                    "$ref": "#/components/responses/defaultError"
+                }
+            }
+        }
+    },
+    "/api/v2/tasks/{task_id}/cancel": {
+        "put": {
+            "deprecated": true,
+            "description": "Sets a scheduled job to cancelled.",
+            "tags": [
+                "Tasks",
+                "Enterprise"
+            ],
+            "summary": "Cancels a scheduled job",
+            "parameters": [
+                {
+                    "$ref": "#/definitions/parameters.PreferHeader"
+                },
+                {
+                    "type": "string",
+                    "description": "Job ID",
+                    "name": "task_id",
+                    "in": "path",
+                    "required": true
+                }
+            ],
+            "responses": {
+                "200": {
+                    "description": "OK",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/definitions/api.ResponseWrapper"
+                            }
+                        }
+                    }
+                },
+                "Error": {
+                    "$ref": "#/components/responses/defaultError"
+                }
+            }
+        }
+    },
+    "/api/v2/tasks/{task_id}/log": {
+        "get": {
+            "deprecated": true,
+            "description": "Get the log file from a SharpHound run.",
+            "tags": [
+                "Tasks",
+                "Enterprise"
+            ],
+            "summary": "Get Job Log File",
+            "parameters": [
+                {
+                    "$ref": "#/definitions/parameters.PreferHeader"
+                },
+                {
+                    "type": "string",
+                    "description": "Job ID",
+                    "name": "task_id",
+                    "in": "path",
+                    "required": true
+                }
+            ],
+            "responses": {
+                "200": {
+                    "description": "OK",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/definitions/api.ResponseWrapper"
+                            }
+                        }
+                    }
+                },
+                "Error": {
+                    "$ref": "#/components/responses/defaultError"
+                }
+            }
+        }
+    },
+    "api/v2/tasks/current": {
+        "get": {
+            "deprecated": true,
+            "description": "Get the status of the current client",
+            "summary": "Get client job status",
+            "tags": [
+                "Tasks",
+                "Enterprise"
+            ],
+            "responses": {
+                "200": {
+                    "description": "OK",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/definitions/model.DisplayClientScheduledJob"
+                            }
+                        }
+                    }
+                },
+                "Error": {
+                    "$ref": "#/components/responses/defaultError"
+                }
+            }
+        }
+    }
+}

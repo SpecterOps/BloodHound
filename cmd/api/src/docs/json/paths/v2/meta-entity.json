@@ -1,0 +1,77 @@
+{
+    "/api/v2/meta/{object_id}": {
+        "parameters": [
+            {
+                "type": "string",
+                "description": "Object ID",
+                "name": "object_id",
+                "in": "path",
+                "required": true
+            }
+        ],
+        "get": {
+            "description": "Get properties and counts for this meta node",
+            "tags": [
+                "Meta Entity API",
+                "Enterprise"
+            ],
+            "summary": "Get meta entity info",
+            "parameters": [
+                {
+                    "$ref": "#/definitions/parameters.PreferHeader"
+                }
+            ],
+            "responses": {
+                "200": {
+                    "description": "OK",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/definitions/api.BasicResponse"
+                            }
+                        }
+                    }
+                },
+                "Error": {
+                    "$ref": "#/components/responses/defaultError"
+                }
+            }
+        }
+    },
+    "/api/v2/meta-nodes/{domain_id}": {
+        "parameters": [
+            {
+                "type": "string",
+                "description": "Object ID",
+                "name": "domain_id",
+                "in": "path",
+                "required": true
+            }
+        ],
+        "get": {
+            "description": "Get latest tier zero combo node",
+            "tags": [
+                "Meta Entity API",
+                "Enterprise"
+            ],
+            "summary": "Get latest tier zero combo node",
+            "parameters": [
+                {
+                    "$ref": "#/definitions/parameters.PreferHeader"
+                }
+            ],
+            "responses": {
+                "200": {
+                    "description": "OK",
+                    "schema": {
+                        "type": "object",
+                        "additionalProperties": true
+                    }
+                },
+                "Error": {
+                    "$ref": "#/components/responses/defaultError"
+                }
+            }
+        }
+    }
+}

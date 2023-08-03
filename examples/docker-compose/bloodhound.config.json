@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "bind_addr": "0.0.0.0:8080",
+  "metrics_port": ":2112",
+  "root_url": "http://127.0.0.1:8080/",
+  "work_dir": "/opt/bloodhound/work",
+  "log_level": "INFO",
+  "log_path": "bloodhound.log",
+  "features": {
+    "enable_auth": true
+  },
+  "tls": {
+    "cert_file": "",
+    "key_file": ""
+  },
+  "database": {
+    "connection": "user=bloodhound password=bloodhoundcommunityedition dbname=bloodhound host=app-db"
+  },
+  "neo4j": {
+    "connection": "neo4j://neo4j:bloodhoundcommunityedition@graph-db:7687/"
+  },
+  "collectors_base_path": "/etc/bloodhound/collectors",
+  "default_admin": {
+    "principal_name": "admin",
+    "first_name": "Bloodhound",
+    "last_name": "Admin",
+    "email_address": "spam@example.com"
+  }
+}

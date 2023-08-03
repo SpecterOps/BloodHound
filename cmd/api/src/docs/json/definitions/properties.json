@@ -1,0 +1,7 @@
+{
+    "properties.LastSeen": {
+        "type": "string",
+        "format": "date-time",
+        "description": "The RFC-3339 timestamp in which this object was last collected by BloodHound"
+    }
+}

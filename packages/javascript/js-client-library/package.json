@@ -1,0 +1,36 @@
+{
+    "name": "js-client-library",
+    "type": "module",
+    "packageManager": "yarn@3.5.1",
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts",
+    "files": [
+        "dist",
+        "README.md"
+    ],
+    "scripts": {
+        "build": "rollup --config rollup.config.js",
+        "lint": "eslint src --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+        "test": "echo \"Warning: no test specified\"",
+        "check-types": "tsc --noEmit --pretty",
+        "format": "prettier --write \"src/**/*.@(js|jsx|ts|tsx|md|html|css|scss|json)\"",
+        "check-format": "prettier  --list-different \"src/**/*.@(js|jsx|ts|tsx|md|html|css|scss|json)\""
+    },
+    "dependencies": {
+        "axios": "^1.4.0"
+    },
+    "devDependencies": {
+        "@rollup/plugin-typescript": "^11.1.2",
+        "@typescript-eslint/eslint-plugin": "^5.62.0",
+        "@typescript-eslint/parser": "^5.62.0",
+        "eslint": "^8.45.0",
+        "eslint-config-prettier": "^8.8.0",
+        "prettier": "^2.8.8",
+        "rollup": "^3.26.2",
+        "rollup-plugin-delete": "^2.0.0",
+        "typescript": "^5.1.6"
+    },
+    "installConfig": {
+        "hoistingLimits": "workspaces"
+    }
+}

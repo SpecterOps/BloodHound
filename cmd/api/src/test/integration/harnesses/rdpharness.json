@@ -1,0 +1,611 @@
+{
+    "nodes": [
+        {
+            "id": "n0",
+            "position": {
+                "x": 1786.51588254551,
+                "y": 459.9701853887298
+            },
+            "caption": "John",
+            "labels": [],
+            "properties": {},
+            "style": {
+                "border-color": "#fa28ff"
+            }
+        },
+        {
+            "id": "n1",
+            "position": {
+                "x": 2.9799147476865073,
+                "y": 16.89448021221149
+            },
+            "caption": "RDPGroup",
+            "labels": [],
+            "properties": {},
+            "style": {
+                "border-color": "#000000"
+            }
+        },
+        {
+            "id": "n2",
+            "position": {
+                "x": 1434.9735534433098,
+                "y": 16.89448021221149
+            },
+            "caption": "Computer",
+            "labels": [],
+            "properties": {},
+            "style": {
+                "border-color": "#194d33"
+            }
+        },
+        {
+            "id": "n3",
+            "position": {
+                "x": 995.9367935034318,
+                "y": 864.5010523290828
+            },
+            "caption": "Group A",
+            "labels": [],
+            "properties": {},
+            "style": {
+                "border-color": "#a4dd00"
+            }
+        },
+        {
+            "id": "n4",
+            "position": {
+                "x": 1786.51588254551,
+                "y": 16.89448021221149
+            },
+            "caption": "Group B",
+            "labels": [],
+            "properties": {},
+            "style": {
+                "border-color": "#73d8ff"
+            }
+        },
+        {
+            "id": "n5",
+            "position": {
+                "x": 2138.0582116477103,
+                "y": 16.89448021221149
+            },
+            "caption": "Rohan",
+            "labels": [],
+            "properties": {},
+            "style": {
+                "border-color": "#fa28ff"
+            }
+        },
+        {
+            "id": "n6",
+            "position": {
+                "x": 2138.0582116477103,
+                "y": 481.2299266028203
+            },
+            "caption": "Domain Users",
+            "labels": [],
+            "properties": {},
+            "style": {
+                "border-color": "#fa28ff"
+            }
+        },
+        {
+            "id": "n11",
+            "position": {
+                "x": 603.4111161902686,
+                "y": 112.12294455789912
+            },
+            "caption": "Andy",
+            "labels": [],
+            "properties": {},
+            "style": {
+                "border-color": "#fa28ff"
+            }
+        },
+        {
+            "id": "n12",
+            "position": {
+                "x": 995.9367935034318,
+                "y": 352.7132856120931
+            },
+            "caption": "Group B",
+            "labels": [],
+            "properties": {},
+            "style": {
+                "border-color": "#a4dd00"
+            }
+        },
+        {
+            "id": "n13",
+            "position": {
+                "x": 995.9367935034318,
+                "y": 590.1784014555316
+            },
+            "caption": "Eli",
+            "labels": [],
+            "properties": {},
+            "style": {
+                "border-color": "#a4dd00"
+            }
+        },
+        {
+            "id": "n14",
+            "position": {
+                "x": 603.4111161902686,
+                "y": -924.5220098512921
+            },
+            "caption": "Group C",
+            "labels": [],
+            "properties": {},
+            "style": {
+                "border-color": "#a4dd00"
+            }
+        },
+        {
+            "id": "n15",
+            "position": {
+                "x": 1786.51588254551,
+                "y": -926.4660429723689
+            },
+            "caption": "Dillon",
+            "labels": [],
+            "properties": {},
+            "style": {
+                "border-color": "#a4dd00"
+            }
+        },
+        {
+            "id": "n16",
+            "position": {
+                "x": 603.4111161902686,
+                "y": -550.5691739573458
+            },
+            "caption": "Uli",
+            "labels": [],
+            "properties": {},
+            "style": {
+                "border-color": "#a4dd00"
+            }
+        },
+        {
+            "id": "n17",
+            "position": {
+                "x": 603.4111161902686,
+                "y": -148.09035732599773
+            },
+            "caption": "Local Group A",
+            "labels": [],
+            "properties": {},
+            "style": {
+                "border-color": "#73d8ff"
+            }
+        },
+        {
+            "id": "n18",
+            "position": {
+                "x": 603.4111161902686,
+                "y": -749.0663640167367
+            },
+            "caption": "Irshad",
+            "labels": [],
+            "properties": {},
+            "style": {
+                "border-color": "#a4dd00"
+            }
+        },
+        {
+            "id": "n19",
+            "position": {
+                "x": 995.9367935034318,
+                "y": -749.0663640167367
+            },
+            "caption": "Group D",
+            "labels": [],
+            "properties": {},
+            "style": {
+                "border-color": "#4d4d4d"
+            }
+        },
+        {
+            "id": "n20",
+            "position": {
+                "x": 1786.51588254551,
+                "y": -281.15208880673526
+            },
+            "caption": "Alex",
+            "labels": [],
+            "properties": {},
+            "style": {
+                "border-color": "#73d8ff"
+            }
+        },
+        {
+            "id": "n21",
+            "position": {
+                "x": 1434.9735534433098,
+                "y": -749.0663640167367
+            },
+            "caption": "Group E",
+            "labels": [],
+            "properties": {},
+            "style": {
+                "border-color": "#73d8ff"
+            }
+        }
+    ],
+    "relationships": [
+        {
+            "id": "n2",
+            "fromId": "n0",
+            "toId": "n3",
+            "type": "MemberOf",
+            "properties": {},
+            "style": {
+                "arrow-color": "#000000"
+            }
+        },
+        {
+            "id": "n3",
+            "fromId": "n3",
+            "toId": "n1",
+            "type": "MemberOfLocalGroup",
+            "properties": {},
+            "style": {
+                "arrow-color": "#000000"
+            }
+        },
+        {
+            "id": "n4",
+            "fromId": "n1",
+            "toId": "n2",
+            "type": "LocalToComputer",
+            "properties": {},
+            "style": {
+                "arrow-color": "#000000"
+            }
+        },
+        {
+            "id": "n6",
+            "fromId": "n3",
+            "toId": "n2",
+            "type": "RIL",
+            "properties": {},
+            "style": {
+                "arrow-color": "#000000"
+            }
+        },
+        {
+            "id": "n7",
+            "fromId": "n5",
+            "toId": "n4",
+            "type": "MemberOf",
+            "properties": {},
+            "style": {
+                "arrow-color": "#000000"
+            }
+        },
+        {
+            "id": "n8",
+            "fromId": "n4",
+            "toId": "n2",
+            "type": "RIL",
+            "properties": {},
+            "style": {
+                "arrow-color": "#000000"
+            }
+        },
+        {
+            "id": "n9",
+            "fromId": "n6",
+            "toId": "n3",
+            "type": "MemberOf",
+            "properties": {},
+            "style": {
+                "arrow-color": "#000000"
+            }
+        },
+        {
+            "id": "n11",
+            "fromId": "n3",
+            "toId": "n2",
+            "type": "CanRDP",
+            "properties": {},
+            "style": {
+                "arrow-color": "#f44e3b"
+            }
+        },
+        {
+            "id": "n12",
+            "fromId": "n0",
+            "toId": "n6",
+            "type": "MemberOf",
+            "properties": {},
+            "style": {
+                "arrow-color": "#000000"
+            }
+        },
+        {
+            "id": "n13",
+            "fromId": "n5",
+            "toId": "n6",
+            "type": "MemberOf",
+            "properties": {},
+            "style": {
+                "arrow-color": "#000000"
+            }
+        },
+        {
+            "id": "n17",
+            "fromId": "n11",
+            "toId": "n12",
+            "type": "MemberOf",
+            "properties": {},
+            "style": {
+                "arrow-color": "#000000"
+            }
+        },
+        {
+            "id": "n18",
+            "fromId": "n12",
+            "toId": "n1",
+            "type": "MemberOfLocalGroup",
+            "properties": {},
+            "style": {
+                "arrow-color": "#000000"
+            }
+        },
+        {
+            "id": "n19",
+            "fromId": "n12",
+            "toId": "n2",
+            "type": "RIL",
+            "properties": {},
+            "style": {
+                "arrow-color": "#000000"
+            }
+        },
+        {
+            "id": "n20",
+            "fromId": "n12",
+            "toId": "n2",
+            "type": "CanRDP",
+            "properties": {},
+            "style": {
+                "arrow-color": "#f44e3b"
+            }
+        },
+        {
+            "id": "n21",
+            "fromId": "n13",
+            "toId": "n2",
+            "type": "RIL",
+            "properties": {},
+            "style": {
+                "arrow-color": "#000000"
+            }
+        },
+        {
+            "id": "n22",
+            "fromId": "n13",
+            "toId": "n1",
+            "type": "MemberOfLocalGroup",
+            "properties": {},
+            "style": {
+                "arrow-color": "#000000"
+            }
+        },
+        {
+            "id": "n23",
+            "fromId": "n13",
+            "toId": "n2",
+            "type": "CanRDP",
+            "properties": {},
+            "style": {
+                "arrow-color": "#f44e3b"
+            }
+        },
+        {
+            "id": "n24",
+            "fromId": "n14",
+            "toId": "n1",
+            "type": "MemberOfLocalGroup",
+            "properties": {},
+            "style": {
+                "arrow-color": "#000000"
+            }
+        },
+        {
+            "id": "n25",
+            "fromId": "n15",
+            "toId": "n2",
+            "type": "RIL",
+            "properties": {},
+            "style": {
+                "arrow-color": "#000000"
+            }
+        },
+        {
+            "id": "n26",
+            "fromId": "n15",
+            "toId": "n14",
+            "type": "MemberOf",
+            "properties": {},
+            "style": {
+                "arrow-color": "#000000"
+            }
+        },
+        {
+            "id": "n27",
+            "fromId": "n16",
+            "toId": "n1",
+            "type": "MemberOfLocalGroup",
+            "properties": {},
+            "style": {
+                "arrow-color": "#000000"
+            }
+        },
+        {
+            "id": "n29",
+            "fromId": "n17",
+            "toId": "n2",
+            "type": "RIL",
+            "properties": {},
+            "style": {
+                "arrow-color": "#000000"
+            }
+        },
+        {
+            "id": "n30",
+            "fromId": "n17",
+            "toId": "n2",
+            "type": "LocalToComputer",
+            "properties": {},
+            "style": {
+                "arrow-color": "#000000"
+            }
+        },
+        {
+            "id": "n31",
+            "fromId": "n16",
+            "toId": "n17",
+            "type": "MemberOfLocalGroup",
+            "properties": {},
+            "style": {
+                "arrow-color": "#000000"
+            }
+        },
+        {
+            "id": "n32",
+            "fromId": "n16",
+            "toId": "n2",
+            "type": "CanRDP",
+            "properties": {},
+            "style": {
+                "arrow-color": "#f44e3b"
+            }
+        },
+        {
+            "id": "n33",
+            "fromId": "n15",
+            "toId": "n2",
+            "type": "CanRDP",
+            "properties": {},
+            "style": {
+                "arrow-color": "#f44e3b"
+            }
+        },
+        {
+            "id": "n34",
+            "fromId": "n18",
+            "toId": "n19",
+            "type": "MemberOf",
+            "properties": {},
+            "style": {}
+        },
+        {
+            "id": "n37",
+            "fromId": "n18",
+            "toId": "n1",
+            "type": "MemberOfLocalGroup",
+            "properties": {},
+            "style": {}
+        },
+        {
+            "id": "n38",
+            "fromId": "n18",
+            "toId": "n2",
+            "type": "CanRDP",
+            "properties": {},
+            "style": {
+                "arrow-color": "#f44e3b"
+            }
+        },
+        {
+            "id": "n39",
+            "fromId": "n20",
+            "toId": "n2",
+            "type": "RIL",
+            "properties": {},
+            "style": {}
+        },
+        {
+            "id": "n40",
+            "fromId": "n19",
+            "toId": "n21",
+            "type": "MemberOf",
+            "properties": {},
+            "style": {}
+        },
+        {
+            "id": "n41",
+            "fromId": "n21",
+            "toId": "n2",
+            "type": "RIL",
+            "properties": {},
+            "style": {}
+        },
+        {
+            "id": "n42",
+            "fromId": "n1",
+            "toId": "n2",
+            "type": "RIL",
+            "properties": {},
+            "style": {}
+        }
+    ],
+    "style": {
+        "font-family": "sans-serif",
+        "background-color": "#ffffff",
+        "background-image": "",
+        "background-size": "100%",
+        "node-color": "#ffffff",
+        "border-width": 4,
+        "border-color": "#000000",
+        "radius": 50,
+        "node-padding": 5,
+        "node-margin": 2,
+        "outside-position": "auto",
+        "node-icon-image": "",
+        "node-background-image": "",
+        "icon-position": "inside",
+        "icon-size": 64,
+        "caption-position": "inside",
+        "caption-max-width": 200,
+        "caption-color": "#000000",
+        "caption-font-size": 50,
+        "caption-font-weight": "normal",
+        "label-position": "inside",
+        "label-display": "pill",
+        "label-color": "#000000",
+        "label-background-color": "#ffffff",
+        "label-border-color": "#000000",
+        "label-border-width": 4,
+        "label-font-size": 40,
+        "label-padding": 5,
+        "label-margin": 4,
+        "directionality": "directed",
+        "detail-position": "inline",
+        "detail-orientation": "parallel",
+        "arrow-width": 5,
+        "arrow-color": "#000000",
+        "margin-start": 5,
+        "margin-end": 5,
+        "margin-peer": 20,
+        "attachment-start": "normal",
+        "attachment-end": "normal",
+        "relationship-icon-image": "",
+        "type-color": "#000000",
+        "type-background-color": "#ffffff",
+        "type-border-color": "#000000",
+        "type-border-width": 0,
+        "type-font-size": 16,
+        "type-padding": 5,
+        "property-position": "outside",
+        "property-alignment": "colon",
+        "property-color": "#000000",
+        "property-font-size": 16,
+        "property-font-weight": "normal"
+    }
+}

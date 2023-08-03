@@ -1,0 +1,42 @@
+{
+    "/api/v2/azure/{entity_type}": {
+        "parameters": [
+            {
+                "type": "string",
+                "description": "Entity Type",
+                "name": "entity_type",
+                "in": "path",
+                "required": true
+            }
+        ],
+        "get": {
+            "description": "Retrieves entity information for the given azure object ID",
+            "tags": [
+                "Azure",
+                "Community",
+                "Enterprise"
+            ],
+            "summary": "Get Azure Entity",
+            "parameters": [
+                {
+                    "$ref": "#/definitions/parameters.PreferHeader"
+                }
+            ],
+            "responses": {
+                "200": {
+                    "description": "OK",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/definitions/api.BasicResponse"
+                            }
+                        }
+                    }
+                },
+                "Error": {
+                    "$ref": "#/components/responses/defaultError"
+                }
+            }
+        }
+    }
+}

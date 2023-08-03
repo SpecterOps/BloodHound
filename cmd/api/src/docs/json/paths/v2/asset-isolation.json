@@ -1,0 +1,560 @@
+{
+    "/api/v2/asset-groups": {
+        "get": {
+            "description": "List all asset isolation groups.",
+            "tags": [
+                "Asset Isolation",
+                "Community",
+                "Enterprise"
+            ],
+            "summary": "List all asset isolation groups",
+            "parameters": [
+                {
+                    "$ref": "#/definitions/parameters.PreferHeader"
+                },
+                {
+                    "type": "string",
+                    "description": "Sort by column. Can be used multiple times; prepend hyphen for descending order. Sortable columns are name, tag, member_count",
+                    "name": "sort_by",
+                    "in": "query",
+                    "required": false
+                },
+                {
+                    "type": "string",
+                    "description": "Filter results by column value. Valid filter predicates are eq, neq",
+                    "name": "name",
+                    "in": "query",
+                    "required": false
+                },
+                {
+                    "type": "string",
+                    "description": "Filter results by column value. Valid filter predicates are eq, neq",
+                    "name": "tag",
+                    "in": "query",
+                    "required": false
+                },
+                {
+                    "type": "string",
+                    "description": "Filter results by column value. Valid filter predicates are eq, neq",
+                    "name": "system_group",
+                    "in": "query",
+                    "required": false
+                },
+                {
+                    "type": "string",
+                    "description": "Filter results by column value. Valid filter predicates are eq, neq, gt, gte, lt, lte",
+                    "name": "member_count",
+                    "in": "query",
+                    "required": false
+                },
+                {
+                    "type": "string",
+                    "description": "Filter results by column value. Valid filter predicates are eq, neq, gt, gte, lt, lte",
+                    "name": "id",
+                    "in": "query",
+                    "required": false
+                },
+                {
+                    "type": "string",
+                    "description": "Filter results by column value. Valid filter predicates are eq, neq, gt, gte, lt, lte",
+                    "name": "created_at",
+                    "in": "query",
+                    "required": false
+                },
+                {
+                    "type": "string",
+                    "description": "Filter results by column value. Valid filter predicates are eq, neq, gt, gte, lt, lte",
+                    "name": "updated_at",
+                    "in": "query",
+                    "required": false
+                },
+                {
+                    "type": "string",
+                    "description": "Filter results by column value. Valid filter predicates are eq, neq, gt, gte, lt, lte",
+                    "name": "deleted_at",
+                    "in": "query",
+                    "required": false
+                }
+            ],
+            "responses": {
+                "200": {
+                    "description": "OK",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/definitions/api.BasicResponse"
+                            }
+                        }
+                    }
+                },
+                "Error": {
+                    "$ref": "#/components/responses/defaultError"
+                }
+            }
+        },
+        "post": {
+            "description": "Creates an asset group",
+            "tags": [
+                "Asset Isolation",
+                "Community",
+                "Enterprise"
+            ],
+            "summary": "Create an asset group",
+            "parameters": [
+                {
+                    "$ref": "#/definitions/parameters.PreferHeader"
+                }
+            ],
+            "requestBody": {
+                "description": "The request body for creating an asset group",
+                "required": true,
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "$ref": "#/definitions/v2.CreateAssetGroupRequest"
+                        }
+                    }
+                }
+            },
+            "responses": {
+                "200": {
+                    "description": "OK",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/definitions/api.BasicResponse"
+                            }
+                        }
+                    }
+                },
+                "Error": {
+                    "$ref": "#/components/responses/defaultError"
+                }
+            }
+        }
+    },
+    "/api/v2/asset-groups/{asset_group_id}": {
+        "parameters": [
+            {
+                "type": "string",
+                "description": "ID of the asset_group record to retrieve",
+                "name": "asset_group_id",
+                "in": "path",
+                "required": true
+            }
+        ],
+        "get": {
+            "description": "Retrieve asset group by ID",
+            "tags": [
+                "Asset Isolation",
+                "Community",
+                "Enterprise"
+            ],
+            "summary": "Retrieve asset group by ID",
+            "parameters": [
+                {
+                    "$ref": "#/definitions/parameters.PreferHeader"
+                }
+            ],
+            "responses": {
+                "200": {
+                    "description": "OK",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/definitions/api.BasicResponse"
+                            }
+                        }
+                    }
+                },
+                "Error": {
+                    "$ref": "#/components/responses/defaultError"
+                }
+            }
+        },
+        "put": {
+            "description": "Updates an asset group",
+            "tags": [
+                "Asset Isolation",
+                "Community",
+                "Enterprise"
+            ],
+            "summary": "Update an asset group",
+            "parameters": [
+                {
+                    "$ref": "#/definitions/parameters.PreferHeader"
+                }
+            ],
+            "requestBody": {
+                "description": "The request body for updating an asset group.",
+                "required": true,
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "$ref": "#/definitions/v2.UpdateAssetGroupRequest"
+                        }
+                    }
+                }
+            },
+            "responses": {
+                "200": {
+                    "description": "OK",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/definitions/api.BasicResponse"
+                            }
+                        }
+                    }
+                },
+                "Error": {
+                    "$ref": "#/components/responses/defaultError"
+                }
+            }
+        },
+        "delete": {
+            "description": "Deletes an asset group",
+            "tags": [
+                "Asset Isolation",
+                "Community",
+                "Enterprise"
+            ],
+            "summary": "Delete an asset group",
+            "parameters": [
+                {
+                    "$ref": "#/definitions/parameters.PreferHeader"
+                }
+            ],
+            "responses": {
+                "200": {
+                    "description": ""
+                },
+                "Error": {
+                    "$ref": "#/components/responses/defaultError"
+                }
+            }
+        }
+    },
+    "/api/v2/asset-groups/{asset_group_id}/collections": {
+        "parameters": [
+            {
+                "type": "string",
+                "description": "Asset ID",
+                "name": "asset_group_id",
+                "in": "path",
+                "required": true
+            }
+        ],
+        "get": {
+            "description": "Returns all historical memberships if no URL params are specified,",
+            "tags": [
+                "Asset Isolation",
+                "Community",
+                "Enterprise"
+            ],
+            "summary": "Returns asset group collection memberships for a given group ID",
+            "parameters": [
+                {
+                    "$ref": "#/definitions/parameters.PreferHeader"
+                },
+                {
+                    "type": "string",
+                    "description": "Sort by column. Can be used multiple times; prepend hyphen for descending order. Sortable columns are id, created_at, updated_at, deleted_at.",
+                    "name": "sort_by",
+                    "in": "query",
+                    "required": false
+                },
+                {
+                    "type": "string",
+                    "description": "Filter results by column value. Valid filter predicates are eq, neq, gt, gte, lt, lte",
+                    "name": "id",
+                    "in": "query",
+                    "required": false
+                },
+                {
+                    "type": "string",
+                    "description": "Filter results by column value. Valid filter predicates are eq, neq, gt, gte, lt, lte",
+                    "name": "created_at",
+                    "in": "query",
+                    "required": false
+                },
+                {
+                    "type": "string",
+                    "description": "Filter results by column value. Valid filter predicates are eq, neq, gt, gte, lt, lte",
+                    "name": "updated_at",
+                    "in": "query",
+                    "required": false
+                },
+                {
+                    "type": "string",
+                    "description": "Filter results by column value. Valid filter predicates are eq, neq, gt, gte, lt, lte",
+                    "name": "deleted_at",
+                    "in": "query",
+                    "required": false
+                }
+            ],
+            "responses": {
+                "200": {
+                    "description": "OK",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/definitions/api.BasicResponse"
+                            }
+                        }
+                    }
+                },
+                "Error": {
+                    "$ref": "#/components/responses/defaultError"
+                }
+            }
+        }
+    },
+    "/api/v2/asset-groups/{asset_group_id}/selectors": {
+        "parameters": [
+            {
+                "type": "string",
+                "description": "Asset Group ID",
+                "name": "asset_group_id",
+                "in": "path",
+                "required": true
+            }
+        ],
+        "post": {
+            "description": "Creates an asset group selector",
+            "tags": [
+                "Asset Isolation",
+                "Community",
+                "Enterprise"
+            ],
+            "summary": "Create an asset group selector",
+            "parameters": [
+                {
+                    "$ref": "#/definitions/parameters.PreferHeader"
+                }
+            ],
+            "requestBody": {
+                "description": "The request body for creating an asset group selector",
+                "required": true,
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "$ref": "#/definitions/model.AssetGroupSelectorSpec"
+                        }
+                    }
+                }
+            },
+            "responses": {
+                "200": {
+                    "description": "OK",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/definitions/api.ResponseWrapper"
+                            }
+                        }
+                    }
+                },
+                "Error": {
+                    "$ref": "#/components/responses/defaultError"
+                }
+            }
+        }
+    },
+    "/api/v2/asset-groups/{asset_group_id}/selectors/{asset_group_selector_id}": {
+        "parameters": [
+            {
+                "type": "string",
+                "description": "Asset group ID",
+                "name": "asset_group_id",
+                "in": "path",
+                "required": true
+            },
+            {
+                "type": "string",
+                "description": "Asset group selector ID",
+                "name": "asset_group_selector_id",
+                "in": "path",
+                "required": true
+            }
+        ],
+        "delete": {
+            "description": "Deletes an asset group selector",
+            "tags": [
+                "Asset Isolation",
+                "Community",
+                "Enterprise"
+            ],
+            "summary": "Delete an asset group selector",
+            "parameters": [
+                {
+                    "$ref": "#/definitions/parameters.PreferHeader"
+                }
+            ],
+            "responses": {
+                "200": {
+                    "description": ""
+                },
+                "Error": {
+                    "$ref": "#/components/responses/defaultError"
+                }
+            }
+        }
+    },
+    "/api/v2/asset-groups/{asset_group_id}/custom-selectors": {
+        "parameters": [
+            {
+                "type": "string",
+                "description": "ID of the asset_group record to retrived selector count for",
+                "name": "asset_group_id",
+                "in": "path",
+                "required": true
+            }
+        ],
+        "get": {
+            "description": "Get asset group custom member count",
+            "tags": [
+                "Asset Isolation",
+                "Community",
+                "Enterprise"
+            ],
+            "summary": "Get asset group custom member count",
+            "parameters": [
+                {
+                    "$ref": "#/definitions/parameters.PreferHeader"
+                }
+            ],
+            "responses": {
+                "200": {
+                "description": "OK",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "custom_member_count": {
+                                    "type": "integer"
+                                }
+                            }
+                        }
+                    }
+                }
+                },
+                "Error": {
+                    "$ref": "#/components/responses/defaultError"
+                }
+            }
+        }
+    },
+    "/api/v2/asset-groups/{asset_group_id}/members": {
+        "parameters": [
+            {
+                "type": "integer",
+                "description": "Asset group ID",
+                "name": "asset_group_id",
+                "in": "path",
+                "required": true
+            }
+        ],
+        "get": {
+            "description": "List all members of an asset isolation group.",
+            "consumes": [
+                "application/json"
+            ],
+            "tags": [
+                "Asset Isolation",
+                "Community",
+                "Enterprise"
+            ],
+            "summary": "List all asset isolation group members",
+            "parameters": [
+                {
+                    "$ref": "#/definitions/parameters.PreferHeader"
+                },
+                {
+                    "type": "integer",
+                    "description": "Paging Skip",
+                    "name": "skip",
+                    "in": "query"
+                },
+                {
+                    "type": "integer",
+                    "description": "Paging Limit",
+                    "name": "limit",
+                    "in": "query"
+                },
+                {
+                    "type": "string",
+                    "description": "Sort by column. Can be used multiple times; prepend hyphen for descending order.",
+                    "name": "sort_by",
+                    "in": "query",
+                    "required": false
+                },
+                {
+                    "type": "string",
+                    "description": "Filter results by column value. Valid filter predicates are eq, neq",
+                    "name": "object_id",
+                    "in": "query",
+                    "required": false
+                },
+                {
+                    "type": "string",
+                    "description": "Filter results by column value. Valid filter predicates are eq, neq",
+                    "name": "primary_kind",
+                    "in": "query",
+                    "required": false
+                },
+                {
+                    "type": "string",
+                    "description": "Filter results by column value. Valid filter predicates are eq, neq",
+                    "name": "environment_id",
+                    "in": "query",
+                    "required": false
+                },
+                {
+                    "type": "string",
+                    "description": "Filter results by column value. Valid filter predicates are eq, neq",
+                    "name": "domainsid",
+                    "in": "query",
+                    "required": false
+                },
+                {
+                    "type": "string",
+                    "description": "Filter results by column value. Valid filter predicates are eq, neq",
+                    "name": "environment_kind",
+                    "in": "query",
+                    "required": false
+                },
+                {
+                    "type": "string",
+                    "description": "Filter results by column value. Valid filter predicates are eq, neq",
+                    "name": "name",
+                    "in": "query",
+                    "required": false
+                },
+                {
+                    "type": "string",
+                    "description": "Filter results by column value. Valid filter predicates are eq, neq",
+                    "name": "custom_member",
+                    "in": "query",
+                    "required": false
+                }
+            ],
+            "responses": {
+                "200": {
+                    "description": "OK",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/definitions/v2.ListAssetGroupMembersResponse"
+                            }
+                        }
+                    }
+                },
+                "Error": {
+                    "$ref": "#/components/responses/defaultError"
+                }
+            }
+        }
+    }
+    }

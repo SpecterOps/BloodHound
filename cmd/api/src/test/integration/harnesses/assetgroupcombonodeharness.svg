@@ -1,0 +1,18 @@
+<!--
+Copyright 2023 Specter Ops, Inc.
+
+Licensed under the Apache License, Version 2.0
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+SPDX-License-Identifier: Apache-2.0
+-->
+<svg xmlns="http://www.w3.org/2000/svg" width="645" height="108" viewBox="0 0 645 108"><defs><style type="text/css"/></defs><g transform="translate(54 54) scale(1)"><g class="relationship"><g transform="translate(0 0) rotate(0)" stroke-width="5" stroke="#000000"><path d="M 59 0 L 250.6378493822517 0"/><polygon points="-24.8621506177483,0 -27.62461179749811,9.20820393249937 0,0 -27.62461179749811,-9.20820393249937" fill="#000000" transform="translate(275.5 0) rotate(0)" stroke="none"/></g><g transform="translate(154.81892469112586 0) rotate(0) translate(0 -13)"><g transform="translate(0 0)"><g transform="translate(-42.78515625 0)" fill="#ffffff" stroke="#000000" stroke-width="0"><rect x="0" y="0" width="85.5703125" height="26" rx="5" ry="5" stroke="none"/><text xml:space="preserve" x="5" y="17.45703125" stroke="none" text-anchor="left" font-family="sans-serif" font-size="16" font-weight="normal" fill="#000000">MemberOf</text></g></g></g></g><g class="node"><g fill="#ffffff" stroke="#000000" stroke-width="4"><circle cx="0" cy="0" r="52"/></g><g transform="translate(0 0)"><g transform="scale(0.49218800781249994) translate(0 0)"><g transform="translate(0 0)"><g font-family="sans-serif" font-size="50" font-weight="normal" fill="#000000" text-anchor="middle"><text xml:space="preserve" x="0" y="13.92822265625" stroke="none">GroupA</text><text xml:space="preserve" x="0" y="73.92822265625" stroke="none" text-anchor="middle"></text></g></g></g></g></g><g class="node"><g fill="#ffffff" stroke="#000000" stroke-width="4"><circle cx="334.5" cy="0" r="52"/></g><g transform="translate(334.5 0)"><g transform="scale(0.49218800781249994) translate(0 0)"><g transform="translate(0 0)"><g font-family="sans-serif" font-size="50" font-weight="normal" fill="#000000" text-anchor="middle"><text xml:space="preserve" x="0" y="13.92822265625" stroke="none">GroupB</text><text xml:space="preserve" x="0" y="73.92822265625" stroke="none" text-anchor="middle"></text></g></g></g><g transform="translate(56 -9.6)"><g transform="translate(0 0)"><g transform="translate(0 0)" fill="white"><rect x="0" y="0" width="200.09375" height="19.2" rx="0" ry="0" stroke="none"/><g font-family="sans-serif" font-size="16" font-weight="normal" fill="#000000" text-anchor="end"><text xml:space="preserve" x="98.703125" y="14.05703125" stroke="none">system_tags:</text><text xml:space="preserve" x="103.1484375" y="14.05703125" stroke="none" text-anchor="start">admin_tier_0</text></g></g></g></g></g></g></g></svg>

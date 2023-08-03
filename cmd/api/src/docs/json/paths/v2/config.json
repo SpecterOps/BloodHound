@@ -1,0 +1,150 @@
+{
+    "/api/v2/config": {
+        "get": {
+            "description": "Lists application configuration parameters for this instance",
+            "tags": [
+                "Config",
+                "Community",
+                "Enterprise"
+            ],
+            "summary": "List application configuration parameters",
+            "parameters": [
+                {
+                    "$ref": "#/definitions/parameters.PreferHeader"
+                },
+                {
+                    "type": "string",
+                    "description": "Parameter filter. Must follow the convention: parameter=eq:<value>",
+                    "name": "parameter",
+                    "in": "query",
+                    "required": false
+                }
+            ],
+            "responses": {
+                "200": {
+                    "description": "OK",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/definitions/api.BasicResponse"
+                            }
+                        }
+                    }
+                },
+                "Error": {
+                    "$ref": "#/components/responses/defaultError"
+                }
+            }
+        },
+        "put": {
+            "description": "Writes application configuration parameters for this instance",
+            "tags": [
+                "Config",
+                "Community",
+                "Enterprise"
+            ],
+            "summary": "Write application configuration parameters",
+            "parameters": [
+                {
+                    "$ref": "#/definitions/parameters.PreferHeader"
+                }
+            ],
+            "requestBody": {
+                "description": "The request body for updating an application config parameter",
+                "required": true,
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "$ref": "#/definitions/v2.AppConfigUpdateRequest"
+                        }
+                    }
+                }
+            },
+            "responses": {
+                "200": {
+                    "description": "OK",
+                    "schema": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/definitions/api.BasicResponse"
+                        }
+                    }
+                },
+                "Error": {
+                    "$ref": "#/components/responses/defaultError"
+                }
+            }
+        }
+    },
+    "/api/v2/features": {
+        "get": {
+            "description": "Lists all feature flags for this instance",
+            "tags": [
+                "Config",
+                "Community",
+                "Enterprise"
+            ],
+            "summary": "List feature flags",
+            "parameters": [
+                {
+                    "$ref": "#/definitions/parameters.PreferHeader"
+                }
+            ],
+            "responses": {
+                "200": {
+                    "description": "OK",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/definitions/api.BasicResponse"
+                            }
+                        }
+                    }
+                },
+                "Error": {
+                    "$ref": "#/components/responses/defaultError"
+                }
+            }
+        }
+    },
+    "/api/v2/features/{feature_id}/toggle": {
+        "parameters": [
+            {
+                "type": "string",
+                "description": "Feature ID",
+                "name": "feature_id",
+                "in": "path",
+                "required": true
+            }
+        ],
+        "put": {
+            "description": "Writes application configuration parameters for this instance",
+            "tags": [
+                "Config",
+                "Community",
+                "Enterprise"
+            ],
+            "summary": "Toggle a feature flag's enabled status to either enable or disable it.",
+            "parameters": [
+                {
+                    "$ref": "#/definitions/parameters.PreferHeader"
+                }
+            ],
+            "responses": {
+                "200": {
+                    "description": "OK",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/definitions/api.BasicResponse"
+                            }
+                        }
+                    }
+                },
+                "Error": {
+                    "$ref": "#/components/responses/defaultError"
+                }
+            }
+        }
+    }
+}

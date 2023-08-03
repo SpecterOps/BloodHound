@@ -1,0 +1,208 @@
+{
+    "test_cases": [
+        {
+            "name": "Invalid queries",
+            "type": "negative_case",
+            "details": {
+                "queries": [
+                    "MERGE () WITH * RETURN DISTINCT * UNION RETURN * UNION RETURN *",
+                    "WITH * SKIP 0 RETURN DISTINCT *"
+                ],
+                "error_matchers": [
+                    "invalid input"
+                ]
+            }
+        },
+        {
+            "name": "Empty query",
+            "type": "negative_case",
+            "details": {
+                "queries": [
+                    "",
+                    "    "
+                ],
+                "error_matchers": [
+                    "invalid input"
+                ]
+            }
+        },
+        {
+            "name": "Syntax error",
+            "type": "negative_case",
+            "details": {
+                "queries": [
+                    "this () is [] not {} a valid _query_!"
+                ],
+                "error_matchers": [
+                    "line 1:0 extraneous input 'this' expecting {CYPHER, EXPLAIN, PROFILE, USING, CREATE, DROP, LOAD, WITH, OPTIONAL, MATCH, UNWIND, MERGE, SET, DETACH, DELETE, REMOVE, FOREACH, CALL, RETURN, START, SP}",
+                    "line 1:5 mismatched input '(' expecting {USING, CREATE, DROP, LOAD, WITH, OPTIONAL, MATCH, UNWIND, MERGE, SET, DETACH, DELETE, REMOVE, FOREACH, CALL, RETURN, START}",
+                    "line 1:36 token recognition error at: '!'"
+                ]
+            }
+        },
+        {
+            "name": "Syntax error: OC grammar doesnt recognize load csv clause",
+            "type": "negative_case",
+            "details": {
+                "queries": [
+                    "LOAD CSV WITH HEADERS FROM 'file:///data.csv'"
+                ],
+                "error_matchers": [
+                    "line 1:45 no viable alternative at input"
+                ]
+            }
+        },
+        {
+            "name": "Syntax error: OC grammar doesnt recognize reduce clause",
+            "type": "negative_case",
+            "details": {
+                "queries": [
+                    "START V = node(*) MATCH P = (T:Label)-[*]->(V) WHERE T.Target = true RETURN REDUCE(sum = '', X in P | sum + X.Weight)"
+                ],
+                "error_matchers": [
+                    "line 1:86 no viable alternative at input"
+                ]
+            }
+        },
+        {
+            "name": "Unsupported rule: oc_Profile",
+            "type": "negative_case",
+            "details": {
+                "queries": [
+                    "profile match(n) return n"
+                ],
+                "error_matchers": [
+                    "line 1:0 oC_Profile rule is not supported"
+                ]
+            }
+        },
+        {
+            "name": "Unsupported rule: oc_Command",
+            "type": "negative_case",
+            "details": {
+                "queries": [
+                    "CREATE INDEX ON :Label(Property)",
+                    "DROP INDEX :Label(Property)",
+                    "CREATE CONSTRAINT ON (V:Label) ASSERT V.Property IS UNIQUE",
+                    "DROP CONSTRAINT ON (V:Label) ASSERT V.Property IS UNIQUE",
+                    "CREATE CONSTRAINT ON (V:Label) ASSERT EXISTS (V.Property)",
+                    "DROP CONSTRAINT ON (V:Label) ASSERT EXISTS (V.Property)",
+                    "CREATE CONSTRAINT ON ()-[E:Label]->() ASSERT EXISTS (E.Must)",
+                    "DROP CONSTRAINT ON ()-[E:Label]->() ASSERT EXISTS (E.Must)"
+                ],
+                "error_matchers": [
+                    "line 1:0 oC_Command rule is not supported"
+                ]
+            }
+        },
+        {
+            "name": "Unsupported rule: oc_Foreach",
+            "type": "negative_case",
+            "details": {
+                "queries": [
+                    "MATCH P = (VS)-[*]->(VE) WHERE VS.Name = 'A' AND VE.Name = 'D' FOREACH (V IN nodes(P) | SET V.Marked = true)"
+                ],
+                "error_matchers": [
+                    "updating clauses are not supported",
+                    "line 1:0 oC_Foreach rule is not supported"
+                ]
+            }
+        },
+        {
+            "name": "Unsupported rule: oc_Union",
+            "type": "negative_case",
+            "details": {
+                "queries": [
+                    "MATCH (V1:LabelA) RETURN V1.Name AS v1Name UNION ALL MATCH (V2:LabelB) RETURN V2.Name AS v2Name"
+                ],
+                "error_matchers": [
+                    "line 1:43 oC_Union rule is not supported"
+                ]
+            }
+        },
+        {
+            "name": "Unsupported rule: oc_Explain",
+            "type": "negative_case",
+            "details": {
+                "queries": [
+                    "EXPLAIN MATCH (V:Label) WHERE V.Name = 'indexed name' RETURN V;"
+                ],
+                "error_matchers": [
+                    "line 1:0 oC_Explain rule is not supported"
+                ]
+            }
+        },
+        {
+            "name": "Unsupported rule: oc_Start",
+            "type": "negative_case",
+            "details": {
+                "queries": [
+                    "START V = node(*) MATCH P = (T:Label)-[*]->(V) WHERE T.Target = true RETURN P"
+                ],
+                "error_matchers": [
+                    "line 1:0 oC_Start rule is not supported"
+                ]
+            }
+        },
+        {
+            "name": "Unsupported rule: oc_CaseExpression",
+            "type": "negative_case",
+            "details": {
+                "queries": [
+                    "MATCH (V) RETURN CASE V.eyes WHEN 'blue'  THEN 1 WHEN 'brown' THEN 2 ELSE 3 END AS result"
+                ],
+                "error_matchers": [
+                    "line 1:17 oC_CaseExpression rule is not supported"
+                ]
+            }
+        },
+        {
+            "name": "Unsupported rule: oc_ExistentialSubquery",
+            "type": "negative_case",
+            "details": {
+                "queries": [
+                    "MATCH (V:Label) WHERE EXISTS {MATCH (V)-[E:EdgeLabel]->(T:TargetLabel) WHERE T.Property = 'target' return V} RETURN V"
+                ],
+                "error_matchers": [
+                    "line 1:22 oC_ExistentialSubquery rule is not supported"
+                ]
+            }
+        },
+        {
+            "name": "Unsupported rule: oC_LegacyParameter",
+            "type": "negative_case",
+            "details": {
+                "queries": [
+                    "MATCH (V) SET V.Name = {parameter}"
+                ],
+                "error_matchers": [
+                    "1:23 oC_LegacyParameter rule is not supported"
+                ]
+            }
+        },
+        {
+            "name": "Unsupported rule: oC_LegacyListExpression",
+            "type": "negative_case",
+            "details": {
+                "queries": [
+                    "MATCH (VE:Excluded) WITH COLLECT(VE) AS excluded MATCH (VI:Included) WITH excluded, COLLECT(VI) AS included WITH FILTER(VI IN included WHERE NOT VI IN excluded) as resultList UNWIND resultList as results RETURN results.property"
+                ],
+                "error_matchers": [
+                    "1:113 oC_LegacyListExpression rule is not supported"
+                ]
+            }
+        },
+        {
+            "name": "Unsupported rule: oc_PeriodicCommitHint",
+            "type": "negative_case",
+            "details": {
+                "queries": [
+                    "USING PERIODIC COMMIT 5000"
+                ],
+                "error_matchers": [
+                    "line 1:0 oC_PeriodicCommitHint rule is not supported"
+                ]
+            }
+        }
+    ]
+}

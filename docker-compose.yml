@@ -1,0 +1,173 @@
+# Copyright 2023 Specter Ops, Inc.
+# 
+# Licensed under the Apache License, Version 2.0
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+# 
+#     http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# 
+# SPDX-License-Identifier: Apache-2.0
+
+version: '3'
+
+services:
+  proxy:
+    image: traefik:latest
+    command:
+      - --api.insecure=true
+      - --providers.docker
+      - --providers.docker.exposedbydefault=false
+    ports:
+      - 80:80
+      - 8000:8080
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    extra_hosts:
+      - host.docker.internal:host-gateway
+
+  app-db:
+    image: postgres:13.2
+    environment:
+      - POSTGRES_USER=bloodhound
+      - POSTGRES_PASSWORD=bloodhoundcommunityedition
+      - POSTGRES_DATABASE=bloodhound
+    ports:
+      - 5432:5432
+    volumes:
+      - postgres-data:/var/lib/postgresql
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U bloodhound -d 'dbname=bloodhound' -h 127.0.0.1 -p 5432"
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  pgadmin:
+    build:
+      context: tools/docker-compose
+      dockerfile: pgadmin.Dockerfile
+    environment:
+      PGADMIN_DEFAULT_EMAIL: bloodhound@specterops.io
+      PGADMIN_DEFAULT_PASSWORD: bloodhoundcommunityedition
+      PGADMIN_LISTEN_PORT: 5050
+    ports:
+      - 5050:5050
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.pgadmin.rule=Host(`pgadmin.localhost`)
+      - traefik.http.routers.pgadmin.service=pgadmin
+      - traefik.http.services.pgadmin.loadbalancer.server.port=5050
+    depends_on:
+      app-db:
+        condition: service_healthy
+
+  graph-db:
+    build:
+      context: tools/docker-compose
+      dockerfile: neo4j.Dockerfile
+    environment:
+      - NEO4J_AUTH=neo4j/bloodhoundcommunityedition
+    ports:
+      - 7687:7687
+      - 7474:7474
+    volumes:
+      - neo4j-data:/data
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.neo4jbrowser.rule=Host(`neo4j.localhost`)
+      - traefik.http.routers.neo4jbrowser.service=neo4jbrowser
+      - traefik.http.services.neo4jbrowser.loadbalancer.server.port=7474
+    healthcheck:
+      test: [ "CMD-SHELL", "wget http://localhost:7474 || exit 1" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  bh-api:
+    profiles:
+      - dev
+      - api-only
+    build:
+      context: tools/docker-compose
+      dockerfile: api.Dockerfile
+    command: /file-watcher.sh -f '/\.go/ || /go.work/ || /go.mod/' -c /api-rebuild.sh
+    ports:
+      - 8080:8080
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.bhapi.rule=Host(`bloodhound.localhost`) && PathPrefix(`/api`)
+      - traefik.http.routers.bhapi.service=bhapi
+      - traefik.http.services.bhapi.loadbalancer.server.port=8080
+    volumes:
+      - .:/bloodhound:ro
+      - go-pkg-mod:/go/pkg/mod
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    depends_on:
+      app-db:
+        condition: service_healthy
+      graph-db:
+        condition: service_healthy
+
+  bh-ui:
+    profiles:
+      - dev
+      - ui-only
+      - debug-api
+    build:
+      context: .
+      dockerfile: tools/docker-compose/ui.Dockerfile
+    command: sh -c "yarn dev"
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.bhui.rule=Host(`bloodhound.localhost`)
+      - traefik.http.middlewares.add-ui.addprefix.prefix=/ui
+      - traefik.http.routers.bhui.service=bhui
+      - traefik.http.services.bhui.loadbalancer.server.port=3000
+    volumes:
+      - ./cmd/ui/src:/bloodhound/cmd/ui/src:ro
+      - ./packages/javascript/bh-shared-ui/src:/bloodhound/packages/javascript/bh-shared-ui/src:ro
+      - ./packages/javascript/js-client-library/src:/bloodhound/packages/javascript/js-client-library/src:ro
+      - ui-cache:/.cache
+
+  debug-api:
+    profiles:
+      - debug-api
+    build:
+      context: tools/docker-compose
+      dockerfile: api.Dockerfile
+    command: /file-watcher.sh -f '/\.go/ || /go.work/ || /go.mod/' -c '/delve-rebuild.sh'
+    ports:
+      - 8080:8080
+      - 2345:2345
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.debugapi.rule=Host(`bloodhound.localhost`) && PathPrefix(`/api`)
+      - traefik.http.routers.debugapi.service=debugapi
+      - traefik.http.services.debugapi.loadbalancer.server.port=8080
+    volumes:
+      - .:/bloodhound:ro
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    depends_on:
+      app-db:
+        condition: service_healthy
+      graph-db:
+        condition: service_healthy
+
+volumes:
+  neo4j-data:
+  postgres-data:
+  go-pkg-mod:
+  ui-cache:

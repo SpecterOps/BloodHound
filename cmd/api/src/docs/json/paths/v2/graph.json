@@ -1,0 +1,171 @@
+{
+    "/api/v2/meta-trees/{domain_id}": {
+        "parameters": [
+            {
+                "type": "string",
+                "description": "Domain Node Object ID",
+                "name": "domain_id",
+                "in": "path",
+                "required": true
+            }
+        ],
+        "get": {
+            "description": "Gets meta nodes and connecting edges",
+            "tags": [
+                "Graph",
+                "Enterprise"
+            ],
+            "summary": "Get the graph for meta tree",
+            "parameters": [
+                {
+                    "$ref": "#/definitions/parameters.PreferHeader"
+                }
+            ],
+            "responses": {
+                "200": {
+                    "description": "OK",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/definitions/api.BasicResponse"
+                            }
+                        }
+                    }
+                },
+                "Error": {
+                    "$ref": "#/components/responses/defaultError"
+                }
+            }
+        }
+    },
+    "/api/v2/asset-groups/{asset_group_id}/combo-node": {
+        "parameters": [
+            {
+                "type": "string",
+                "description": "Asset Group Object ID",
+                "name": "asset_group_id",
+                "in": "path",
+                "required": true
+            }
+        ],
+        "get": {
+            "deprecated": true,
+            "description": "Gets the combo tree for an asset group",
+            "tags": [
+                "Graph",
+                "Enterprise"
+            ],
+            "summary": "Get the combo tree for an asset group",
+            "parameters": [
+                {
+                    "$ref": "#/definitions/parameters.PreferHeader"
+                },
+                {
+                    "type": "string",
+                    "description": "filter by domain security identifier",
+                    "name": "domainsid",
+                    "in": "query"
+                }
+            ],
+            "responses": {
+                "200": {
+                    "description": "OK",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/definitions/api.BasicResponse"
+                            }
+                        }
+                    }
+                },
+                "Error": {
+                    "$ref": "#/components/responses/defaultError"
+                }
+            }
+        }
+    },
+    "/api/v2/pathfinding": {
+        "get": {
+            "deprecated": true,
+            "description": "Get the result of pathfinding between two nodes in graph format",
+            "tags": [
+                "Graph",
+                "Community",
+                "Enterprise"
+            ],
+            "summary": "Get pathfinding result",
+            "parameters": [
+                {
+                    "$ref": "#/definitions/parameters.PreferHeader"
+                },
+                {
+                    "type": "string",
+                    "description": "Start Node",
+                    "name": "start_node",
+                    "in": "query",
+                    "required": true
+                },
+                {
+                    "type": "string",
+                    "description": "End Node",
+                    "name": "end_node",
+                    "in": "query",
+                    "required": true
+                }
+            ],
+            "responses": {
+                "200": {
+                    "description": "OK",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/definitions/api.BasicResponse"
+                            }
+                        }
+                    }
+                },
+                "Error": {
+                    "$ref": "#/components/responses/defaultError"
+                }
+            }
+        }
+    },
+    "/api/v2/graph-search": {
+        "get": {
+            "description": "Get the result of searching a graph for a node by name",
+            "tags": [
+                "Graph",
+                "Community",
+                "Enterprise"
+            ],
+            "summary": "Get search result",
+            "parameters": [
+                {
+                    "$ref": "#/definitions/parameters.PreferHeader"
+                },
+                {
+                    "type": "string",
+                    "description": "Search query",
+                    "name": "search_query",
+                    "in": "query",
+                    "required": true
+                }
+            ],
+            "responses": {
+                "200": {
+                    "description": "OK",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/definitions/api.BasicResponse"
+                            }
+                        }
+                    }
+                },
+                "Error": {
+                    "$ref": "#/components/responses/defaultError"
+                }
+            }
+        }
+    }
+}

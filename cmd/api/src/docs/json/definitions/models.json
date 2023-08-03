@@ -1,0 +1,965 @@
+{
+  "model.AssetGroup": {
+    "type": "object",
+    "properties": {
+      "created_at": {
+        "type": "string"
+      },
+      "deleted_at": {
+        "$ref": "#/definitions/sql.NullTime"
+      },
+      "id": {
+        "type": "integer"
+      },
+      "name": {
+        "type": "string"
+      },
+      "selectors": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/model.AssetGroupSelector"
+        }
+      },
+      "system_group": {
+        "type": "boolean"
+      },
+      "tag": {
+        "type": "string"
+      },
+      "updated_at": {
+        "type": "string"
+      }
+    }
+  },
+  "model.AssetGroupSelector": {
+    "type": "object",
+    "properties": {
+      "created_at": {
+        "type": "string"
+      },
+      "deleted_at": {
+        "$ref": "#/definitions/sql.NullTime"
+      },
+      "id": {
+        "type": "integer"
+      },
+      "name": {
+        "type": "string"
+      },
+      "selector": {
+        "type": "string"
+      },
+      "system_selector": {
+        "type": "boolean"
+      },
+      "updated_at": {
+        "type": "string"
+      }
+    }
+  },
+  "model.AssetGroupSelectorSpec": {
+    "type": "object",
+    "properties": {
+      "node_label": {
+        "type": "string"
+      },
+      "selector_name": {
+        "type": "string"
+      },
+      "sid": {
+        "type": "string"
+      }
+    }
+  },
+  "model.AuthSecret": {
+    "type": "object",
+    "properties": {
+      "created_at": {
+        "type": "string"
+      },
+      "deleted_at": {
+        "$ref": "#/definitions/sql.NullTime"
+      },
+      "digest_method": {
+        "type": "string"
+      },
+      "expires_at": {
+        "type": "string"
+      },
+      "id": {
+        "type": "integer"
+      },
+      "updated_at": {
+        "type": "string"
+      }
+    }
+  },
+  "model.AuthToken": {
+    "type": "object",
+    "properties": {
+      "created_at": {
+        "type": "string"
+      },
+      "deleted_at": {
+        "$ref": "#/definitions/sql.NullTime"
+      },
+      "hmac_method": {
+        "type": "string"
+      },
+      "id": {
+        "type": "string"
+      },
+      "key": {
+        "type": "string"
+      },
+      "last_access": {
+        "type": "string"
+      },
+      "updated_at": {
+        "type": "string"
+      }
+    }
+  },
+  "model.Client": {
+    "type": "object",
+    "properties": {
+      "completed_job_count": {
+        "type": "integer"
+      },
+      "configured_user": {
+        "type": "string"
+      },
+      "created_at": {
+        "type": "string"
+      },
+      "current_job": {
+        "$ref": "#/definitions/model.responseClientScheduledJob"
+      },
+      "current_job_id": {
+        "$ref": "#/definitions/null.Int64"
+      },
+      "deleted_at": {
+        "$ref": "#/definitions/sql.NullTime"
+      },
+      "domain_controller": {
+        "$ref": "#/definitions/null.String"
+      },
+      "events": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/model.ClientSchedule"
+        }
+      },
+      "hostname": {
+        "type": "string"
+      },
+      "id": {
+        "type": "string"
+      },
+      "ingest_counter": {
+        "type": "integer"
+      },
+      "ip_address": {
+        "type": "string"
+      },
+      "last_checkin": {
+        "type": "string"
+      },
+      "name": {
+        "type": "string"
+      },
+      "token": {
+        "$ref": "#/definitions/model.AuthToken"
+      },
+      "updated_at": {
+        "type": "string"
+      }
+    }
+  },
+  "model.ClientDisplay": {
+    "type": "object",
+    "properties": {
+      "completed_job_count": {
+        "type": "integer"
+      },
+      "completed_task_count": {
+        "type": "integer"
+      },
+      "configured_user": {
+        "type": "string"
+      },
+      "current_job": {
+        "$ref": "#/definitions/model.ClientJobDisplay"
+      },
+      "current_task": {
+        "$ref": "#/definitions/model.ClientJobDisplay"
+      },
+      "current_job_id": {
+        "$ref": "#/definitions/null.Int64"
+      },
+      "current_task_id": {
+        "$ref": "#/definitions/null.Int64"
+      },
+      "domain_controller": {
+        "$ref": "#/definitions/null.String"
+      },
+      "events": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/model.ClientScheduleDisplay"
+        }
+      },
+      "hostname": {
+        "type": "string"
+      },
+      "id": {
+        "type": "string"
+      },
+      "ingest_counter": {
+        "type": "integer"
+      },
+      "ip_address": {
+        "type": "string"
+      },
+      "last_checkin": {
+        "type": "string"
+      },
+      "name": {
+        "type": "string"
+      },
+      "token": {
+        "$ref": "#/definitions/model.AuthToken"
+      }
+    }
+  },
+  "model.ClientSchedule": {
+    "type": "object",
+    "properties": {
+      "ad_structure_collection": {
+        "type": "boolean"
+      },
+      "client_id": {
+        "type": "string"
+      },
+      "created_at": {
+        "type": "string"
+      },
+      "deleted_at": {
+        "$ref": "#/definitions/sql.NullTime"
+      },
+      "id": {
+        "type": "integer"
+      },
+      "local_group_collection": {
+        "type": "boolean"
+      },
+      "next_scheduled_at": {
+        "type": "string"
+      },
+      "rrule": {
+        "type": "string"
+      },
+      "session_collection": {
+        "type": "boolean"
+      },
+      "tasks": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/model.responseClientScheduledJob"
+        }
+      },
+      "updated_at": {
+        "type": "string"
+      }
+    }
+  },
+  "model.responseClientScheduledJob": {
+    "type": "object",
+    "properties": {
+      "ad_structure_collection": {
+        "type": "boolean"
+      },
+      "client_id": {
+        "type": "string"
+      },
+      "created_at": {
+        "type": "string"
+      },
+      "deleted_at": {
+        "$ref": "#/definitions/sql.NullTime"
+      },
+      "domain_controller": {
+        "$ref": "#/definitions/null.String"
+      },
+      "end_time": {
+        "type": "string"
+      },
+      "event_id": {
+        "$ref": "#/definitions/null.Int32"
+      },
+      "event_title": {
+        "type": "string"
+      },
+      "execution_time": {
+        "type": "string"
+      },
+      "id": {
+        "type": "integer"
+      },
+      "local_group_collection": {
+        "type": "boolean"
+      },
+      "log_path": {
+        "$ref": "#/definitions/null.String"
+      },
+      "session_collection": {
+        "type": "boolean"
+      },
+      "start_time": {
+        "type": "string"
+      },
+      "status": {
+        "type": "integer"
+      },
+      "domain_results": {
+        "type": "array"
+      },
+      "updated_at": {
+        "type": "string"
+      }
+    }
+  },
+  "model.Permission": {
+    "type": "object",
+    "properties": {
+      "authority": {
+        "type": "string"
+      },
+      "created_at": {
+        "type": "string"
+      },
+      "deleted_at": {
+        "$ref": "#/definitions/sql.NullTime"
+      },
+      "id": {
+        "type": "integer"
+      },
+      "name": {
+        "type": "string"
+      },
+      "updated_at": {
+        "type": "string"
+      }
+    }
+  },
+  "model.Role": {
+    "type": "object",
+    "properties": {
+      "created_at": {
+        "type": "string"
+      },
+      "deleted_at": {
+        "$ref": "#/definitions/sql.NullTime"
+      },
+      "description": {
+        "type": "string"
+      },
+      "id": {
+        "type": "integer"
+      },
+      "name": {
+        "type": "string"
+      },
+      "permissions": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/model.Permission"
+        }
+      },
+      "updated_at": {
+        "type": "string"
+      }
+    }
+  },
+  "model.SAMLSignOnEndpoint": {
+    "type": "object",
+    "properties": {
+      "name": {
+        "type": "string"
+      },
+      "idp_url": {
+        "type": "string"
+      }
+    }
+  },
+  "model.SAMLProvider": {
+    "type": "object",
+    "properties": {
+      "created_at": {
+        "type": "string"
+      },
+      "deleted_at": {
+        "$ref": "#/definitions/sql.NullTime"
+      },
+      "id": {
+        "type": "integer"
+      },
+      "idp_url": {
+        "type": "string"
+      },
+      "initial_role": {
+        "$ref": "#/definitions/model.Role"
+      },
+      "name": {
+        "type": "string"
+      },
+      "sp_certificate": {
+        "type": "string"
+      },
+      "sp_private_key": {
+        "type": "string"
+      },
+      "updated_at": {
+        "type": "string"
+      }
+    }
+  },
+  "model.User": {
+    "type": "object",
+    "properties": {
+      "authSecret": {
+        "$ref": "#/definitions/model.AuthSecret"
+      },
+      "created_at": {
+        "type": "string"
+      },
+      "deleted_at": {
+        "$ref": "#/definitions/sql.NullTime"
+      },
+      "email_address": {
+        "$ref": "#/definitions/null.String"
+      },
+      "first_name": {
+        "$ref": "#/definitions/null.String"
+      },
+      "id": {
+        "type": "string"
+      },
+      "last_login": {
+        "type": "string"
+      },
+      "last_name": {
+        "$ref": "#/definitions/null.String"
+      },
+      "principal_name": {
+        "type": "string"
+      },
+      "roles": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/model.Role"
+        }
+      },
+      "eula_accepted": {
+        "type": "boolean"
+      },
+      "updated_at": {
+        "type": "string"
+      }
+    }
+  },
+  "model.ClientScheduleDisplay": {
+    "type": "object",
+    "required": [
+      "id",
+      "rrule",
+      "session_collection",
+      "local_group_collection",
+      "ad_structure_collection"
+    ],
+    "properties": {
+      "id": {
+        "type": "integer"
+      },
+      "rrule": {
+        "type": "string"
+      },
+      "session_collection": {
+        "type": "boolean"
+      },
+      "local_group_collection": {
+        "type": "boolean"
+      },
+      "ad_structure_collection": {
+        "type": "boolean"
+      },
+      "all_trusted_domains": {
+        "type": "boolean"
+      },
+      "domains": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "ous": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "model.ClientJobDisplay": {
+    "type": "object",
+    "required": [
+      "id",
+      "execution_time",
+      "status",
+      "session_collection",
+      "local_group_collection",
+      "ad_structure_collection"
+    ],
+    "properties": {
+      "id": {
+        "type": "integer"
+      },
+      "execution_time": {
+        "type": "string"
+      },
+      "status": {
+        "type": "integer"
+      },
+      "session_collection": {
+        "type": "boolean"
+      },
+      "local_group_collection": {
+        "type": "boolean"
+      },
+      "ad_structure_collection": {
+        "type": "boolean"
+      },
+      "all_trusted_domains": {
+        "type": "boolean"
+      },
+      "domains": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "ous": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "model.PaginatedResponse": {
+    "type": "object",
+    "required": [
+      "count",
+      "limit",
+      "skip",
+      "data"
+    ],
+    "properties": {
+      "count": {
+        "type": "integer"
+      },
+      "limit": {
+        "type": "integer"
+      },
+      "skip": {
+        "type": "integer"
+      },
+      "data": {
+        "type": "object"
+      }
+    }
+  },
+  "model.DatapipeStatusWrapper": {
+    "type": "object",
+    "properties": {
+      "status": {
+        "type": "string"
+      },
+      "updated_at": {
+        "type": "string"
+      },
+      "last_complete_analysis_at": {
+        "type": "string"
+      }
+    }
+  },
+  "model.ADDataQualityStat": {
+    "type": "object",
+    "properties": {
+      "domain_sid": {
+        "type": "string"
+      },
+      "users": {
+        "type": "integer"
+      },
+      "groups": {
+        "type": "integer"
+      },
+      "computers": {
+        "type": "integer"
+      },
+      "ous": {
+        "type": "integer"
+      },
+      "containers": {
+        "type": "integer"
+      },
+      "gpos": {
+        "type": "integer"
+      },
+      "acls": {
+        "type": "integer"
+      },
+      "sessions": {
+        "type": "integer"
+      },
+      "relationships": {
+        "type": "integer"
+      },
+      "session_completeness": {
+        "type": "float"
+      },
+      "local_group_completeness": {
+        "type": "float"
+      },
+      "run_id": {
+        "type": "string"
+      }
+    }
+  },
+  "model.ADDataQualityAggregation": {
+    "type": "object",
+    "properties": {
+      "domains": {
+        "type": "integer"
+      },
+      "users": {
+        "type": "integer"
+      },
+      "groups": {
+        "type": "integer"
+      },
+      "computers": {
+        "type": "integer"
+      },
+      "ous": {
+        "type": "integer"
+      },
+      "containers": {
+        "type": "integer"
+      },
+      "gpos": {
+        "type": "integer"
+      },
+      "acls": {
+        "type": "integer"
+      },
+      "sessions": {
+        "type": "integer"
+      },
+      "relationships": {
+        "type": "integer"
+      },
+      "session_completeness": {
+        "type": "float"
+      },
+      "local_group_completeness": {
+        "type": "float"
+      },
+      "run_id": {
+        "type": "string"
+      }
+    }
+  },
+  "model.AzureDataQualityStat": {
+    "type": "object",
+    "properties": {
+      "tenantid": {
+        "type": "string"
+      },
+      "users": {
+        "type": "integer"
+      },
+      "groups": {
+        "type": "integer"
+      },
+      "apps": {
+        "type": "integer"
+      },
+      "service_principals": {
+        "type": "integer"
+      },
+      "devices": {
+        "type": "integer"
+      },
+      "management_groups": {
+        "type": "integer"
+      },
+      "subscriptions": {
+        "type": "integer"
+      },
+      "resource_groups": {
+        "type": "integer"
+      },
+      "vms": {
+        "type": "integer"
+      },
+      "relationships": {
+        "type": "integer"
+      },
+      "run_id": {
+        "type": "string"
+      }
+    }
+  },
+  "model.AzureDataQualityAggregation": {
+    "type": "object",
+    "properties": {
+      "tenants": {
+        "type": "integer"
+      },
+      "users": {
+        "type": "integer"
+      },
+      "groups": {
+        "type": "integer"
+      },
+      "apps": {
+        "type": "integer"
+      },
+      "service_principals": {
+        "type": "integer"
+      },
+      "devices": {
+        "type": "integer"
+      },
+      "management_groups": {
+        "type": "integer"
+      },
+      "subscriptions": {
+        "type": "integer"
+      },
+      "resource_groups": {
+        "type": "integer"
+      },
+      "vms": {
+        "type": "integer"
+      },
+      "relationships": {
+        "type": "integer"
+      },
+      "run_id": {
+        "type": "string"
+      }
+    }
+  },
+    "model.DomainCollectionResult": {
+        "type": "object",
+        "properties": {
+            "job_id": {
+                "type": "integer"
+            },
+            "domain_name": {
+                "description": "Name of the domain that was enumerated",
+                "type": "string"
+            },
+            "message": {
+                "description": "A status message for a domain enumeration result",
+                "type": "string"
+            },
+            "success": {
+                "description": "A boolean value indicating whether the domain enumeration succeeded",
+                "type": "boolean"
+            },
+            "user_count": {
+                "Description": "A count of users enumerated",
+                "type": "integer"
+            },
+            "group_count": {
+                "Description": "A count of groups enumerated",
+                "type": "integer"
+            },
+            "computers": {
+                "Description": "A count of computers enumerated",
+                "type": "integer"
+            },
+            "containers": {
+                "Description": "A count of containers enumerated",
+                "type": "integer"
+            },
+            "gpos": {
+                "Description": "A count of gpos enumerated",
+                "type": "integer"
+            },
+            "ous": {
+                "Description": "A count of ous enumerated",
+                "type": "integer"
+            },
+            "deleted": {
+                "Description": "A count of deleted objects enumerated",
+                "type": "integer"
+            }
+        }
+    },
+  "model.DisplayClientScheduledJob": {
+    "type": "object",
+    "properties": {
+      "id": {
+        "type": "integer"
+      },
+      "client_id": {
+        "type": "string"
+      },
+      "client_name": {
+        "type": "string"
+      },
+      "event_id": {
+        "$ref": "#/definitions/null.Int32"
+      },
+      "execution_time": {
+        "type": "string"
+      },
+      "start_time": {
+        "type": "string"
+      },
+      "end_time": {
+        "type": "string"
+      },
+      "status": {
+        "type": "integer"
+      },
+      "status_message": {
+        "type": "string"
+      },
+      "session_collection": {
+        "type": "boolean"
+      },
+      "local_group_collection": {
+        "type": "boolean"
+      },
+      "ad_structure_collection": {
+        "type": "boolean"
+      },
+      "all_trusted_domains": {
+        "type": "boolean"
+      },
+      "domain_controller": {
+        "$ref": "#/definitions/null.String"
+      },
+      "ous": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/model.OUDetails"
+        }
+      },
+      "domains": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/model.DomainDetails"
+        }
+      },
+      "domain_results": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/model.DomainCollectionResult"
+        }
+      }
+    }
+  },
+  "model.OUDetails": {
+    "type": "object",
+    "properties": {
+      "name": {
+        "type": "string"
+      },
+      "objectid": {
+        "type": "string"
+      },
+      "exists": {
+        "type": "string"
+      },
+      "distinguishedname": {
+        "type": "string"
+      },
+      "type": {
+        "type": "string"
+      }
+    }
+  },
+  "model.DomainDetails": {
+    "type": "object",
+    "properties": {
+      "name": {
+        "type": "string"
+      },
+      "objectid": {
+        "type": "string"
+      },
+      "exists": {
+        "type": "string"
+      },
+      "type": {
+        "type": "string"
+      }
+    }
+  },
+  "model.AssetGroupCollectionEntry": {
+    "type": "object",
+    "properties": {
+      "asset_group_collection_id": {
+        "type": "integer"
+      },
+      "object_id": {
+        "type": "string"
+      },
+      "node_label": {
+        "type": "string"
+      },
+      "properties": {
+        "type": "object"
+      }
+    }
+  },
+  "model.AssetGroupMember": {
+    "type": "object",
+    "properties": {
+      "asset_group_id": {
+        "type": "integer"
+      },
+      "object_id": {
+        "type": "string"
+      },
+      "primary_kind": {
+        "type": "string"
+      },
+      "kinds": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "environment_id": {
+        "type": "string"
+      },
+      "environment_kind": {
+        "type": "string"
+      },
+      "name": {
+        "type": "string"
+      },
+      "custom_member": {
+        "type": "boolean"
+      }
+    }
+  }
+}
