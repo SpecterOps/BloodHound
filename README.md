@@ -1,8 +1,8 @@
-# BloodHound Community Edition
+<p align="center">
+    <img src="cmd/ui/public/img/logo-transparent-full.svg" alt="BloodHound Community Edition" style="width: 400px;" />
+</p>
 
-Welcome to BloodHound Community Edition!
-
-## About
+<hr />
 
 BloodHound is a monolithic web application composed of an embedded React frontend
 with [Sigma.js](https://www.sigmajs.org/)
