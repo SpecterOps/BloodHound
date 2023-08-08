@@ -76,7 +76,7 @@ simplest setup.
 
 ### Join the BloodHound Gang Slack
 
-[You may sign up for the BloodHound Slack workspace here.](https://bloodhoundgang.herokuapp.com)
+[You may sign up for the BloodHound Slack workspace here.]([https://bloodhoundgang.herokuapp.com](https://join.slack.com/t/bloodhoundhq/shared_invite/zt-1tgq6ojd2-ixpx5nz9Wjtbhc3i8AVAWw))
 
 ### BloodHound Support
 
