@@ -81,7 +81,7 @@ simplest setup.
 ### BloodHound Support
 
 If you need to contact our team directly and do not wish to use Slack you may do so by sending an email
-to support [AT] specterops.io.
+to `support [AT] specterops.io`.
 
 ## Licensing
 
