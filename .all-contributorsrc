@@ -1,6 +1,6 @@
 {
-  "projectName": "bhce",
-  "projectOwner": "BloodHoundAD",
+  "projectName": "BloodHound",
+  "projectOwner": "SpecterOps",
   "repoType": "github",
   "repoHost": "https://github.com",
   "files": [
@@ -161,6 +161,15 @@
       "profile": "https://github.com/slokie-so",
       "contributions": [
         "projectManagement"
+      ]
+    },
+    {
+      "login": "chrismaddalena",
+      "name": "Christopher Maddalena",
+      "avatar_url": "https://avatars.githubusercontent.com/u/10526228?v=4",
+      "profile": "http://www.chrismaddalena.com/",
+      "contributions": [
+        "code"
       ]
     }
   ],
