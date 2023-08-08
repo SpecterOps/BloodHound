@@ -15,7 +15,7 @@ to quickly identify. Defenders can use BloodHound to identify and eliminate thos
 can use BloodHound to easily gain a deeper understanding of privilege relationships in an Active Directory or Azure environment.
 
 BloodHound CE is created and maintained by the [BloodHound Enterprise Team](https://bloodhoundenterprise.io). The original
-BloodHound was created by [@_wald0](https://www.twitter.com/_wald0), [@CptJesus](https://twitter.com/CptJesus), and
+BloodHound was created by [@\_wald0](https://www.twitter.com/_wald0), [@CptJesus](https://twitter.com/CptJesus), and
 [@harmj0y](https://twitter.com/harmj0y).
 
 ## Quick Start
@@ -26,8 +26,9 @@ In order to get started, an example docker compose folder is provided at [exampl
 ### Prerequisites
 
 Running the example Docker Compose project requires the following:
-- [Docker](https://www.docker.com/)
-- [Docker Compose](https://docs.docker.com/compose/)
+
+-   [Docker](https://www.docker.com/)
+-   [Docker Compose](https://docs.docker.com/compose/)
 
 The simplest way to get started is to install Docker Desktop, as it will provide both prerequisites and requires no additional
 configuration: [Docker Desktop](https://www.docker.com/products/docker-desktop/)
@@ -47,7 +48,7 @@ Because BloodHound CE is distributed as a Docker image, there are many other way
 -   You'll be asked to change your password on first login
 -   To get the latest compatible collectors, simply click the gear icon in the corner and select "Download Collectors"
 -   If you restart the service before copying your random password, it will not be regenerated. Simply run `docker compose down -v`
-and then `docker compose up` to reset your databases.
+    and then `docker compose up` to reset your databases.
 -   More information, troubleshooting, and how to configure your deployments can be found in [Docker Compose Example README](./examples/docker-compose/README.md)
 
 ## Useful Links
@@ -62,7 +63,7 @@ and then `docker compose up` to reset your databases.
 
 ### Join the BloodHound Gang Slack
 
-https://bloodhoundgang.herokuapp.com
+[You may sign up for the BloodHound Slack workspace here.](https://join.slack.com/t/bloodhoundhq/shared_invite/zt-1tgq6ojd2-ixpx5nz9Wjtbhc3i8AVAWw)
 
 ### BloodHound Support
 
