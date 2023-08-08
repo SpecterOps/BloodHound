@@ -961,5 +961,37 @@
         "type": "boolean"
       }
     }
+  },
+  "model.FileUploadJob": {
+    "type": "object",
+    "properties": {
+      "id": {
+        "type": "integer"
+      },
+      "user_id": {
+        "type": "string"
+      },
+      "user_email_address": {
+        "type": "string"
+      },
+      "status": {
+        "type": "integer"
+      },
+      "status_message": {
+        "type": "string"
+      },
+      "start_time": {
+        "type": "string",
+        "format": "date-time"
+      },
+      "end_time": {
+        "type": "string",
+        "format": "date-time"
+      },
+      "last_ingest": {
+        "type": "string",
+        "format": "date-time"
+      }
+    }
   }
 }

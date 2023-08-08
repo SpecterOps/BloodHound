@@ -812,5 +812,16 @@
         "type": "object"
       }
     }
+  },
+  "v2.ListFileUploadJobsResponse": {
+    "type": "object",
+    "properties": {
+      "data": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/model.FileUploadJob"
+        }
+      }
+    }
   }
 }
