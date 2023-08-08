@@ -17,7 +17,12 @@
 export type FileUploadJob = {
     id: number;
     user_id: string;
-    user_email_address: string;
+    user: {
+        first_name: string;
+        last_name: string;
+        email_address: string;
+        id: string;
+    };
     status: FileUploadJobStatus;
     status_message: string;
     start_time: string;

@@ -350,17 +350,7 @@ class BHEAPIClient {
         this.baseClient.delete(`/api/v2/events/${eventId}`, options);
 
     /* file ingest */
-    listFileIngestJobs = (skip?: number, limit?: number, sortBy?: string) =>
-        this.baseClient.get(
-            'api/v2/file-upload',
-            Object.assign({
-                params: {
-                    skip,
-                    limit,
-                    sort_by: sortBy,
-                },
-            })
-        );
+    listFileIngestJobs = () => this.baseClient.get('api/v2/file-upload');
 
     startFileIngest = () => this.baseClient.post('/api/v2/file-upload/start');
 

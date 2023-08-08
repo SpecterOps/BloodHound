@@ -21,12 +21,7 @@ import { setEdgeInfoOpen, setSelectedEdge } from 'src/ducks/edgeinfo/edgeSlice';
 import { setEntityInfoOpen } from 'src/ducks/entityinfo/actions';
 import { bezier } from 'src/rendering/utils/bezier';
 import { AppState, useAppDispatch } from 'src/store';
-import {
-    getEdgeLabelTextLength,
-    calculateEdgeDistanceForLabel,
-    getEdgeDataFromKey,
-    getEdgeSourceAndTargetDisplayData,
-} from 'src/ducks/graph/utils';
+import { getEdgeLabelTextLength, calculateEdgeDistanceForLabel, getEdgeDataFromKey } from 'src/ducks/graph/utils';
 
 const GraphEdgeEvents: FC = () => {
     const dispatch = useAppDispatch();
@@ -76,11 +71,9 @@ const GraphEdgeEvents: FC = () => {
                     const edge: string = edges[i];
                     const attributes = graph.getEdgeAttributes(edge);
 
-                    const edgeData = getEdgeDataFromKey(edge);
-                    if (edgeData === null) continue;
-                    const nodeDisplayData = getEdgeSourceAndTargetDisplayData(edgeData.source, edgeData.target, sigma);
-                    if (nodeDisplayData === null) continue;
-                    const { source, target } = nodeDisplayData;
+                    const edgeData = getEdgeDataFromKey(edge, sigma);
+                    if (!edgeData) continue;
+                    const { source, target } = edgeData;
                     const sourceCoordinates = { x: source.x, y: source.y };
                     const targetCoordinates = { x: target.x, y: target.y };
                     const sourceCoordinatesViewport = sigma.framedGraphToViewport(sourceCoordinates);

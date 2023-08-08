@@ -29,32 +29,14 @@ const FileIngest = () => {
     const [submitDialogDisabled, setSubmitDialogDisabled] = useState<boolean>(false);
     const [uploadMessage, setUploadMessage] = useState<string>('');
     const [fileUploadDialogOpen, toggleFileUploadDialog] = useToggle(false);
-    const [page, setPage] = useState(0);
-    const [rowsPerPage, setRowsPerPage] = useState(10);
-    const [count, setCount] = useState(0);
 
     const { data: listFileIngestJobsData, refetch: refetchIngestJobs } = useQuery(
-        ['listFileIngestJobs', page, rowsPerPage],
-        () => apiClient.listFileIngestJobs(page * rowsPerPage, rowsPerPage, "-id").then((res) => {
-            setCount(res.data?.count || 0);
-            return res.data;
-        }),
+        ['listFileIngestJobs'],
+        () => apiClient.listFileIngestJobs().then((res) => res.data),
         {
             refetchInterval: 5000,
         }
     );
-
-    const handlePageChange: (event: React.MouseEvent<HTMLButtonElement> | null, page: number) => void = (
-        _event,
-        newPage
-    ) => {
-        setPage(newPage);
-    };
-
-    const handleRowsPerPageChange: React.ChangeEventHandler<HTMLTextAreaElement | HTMLInputElement> = (event) => {
-        setRowsPerPage(parseInt(event.target.value, 10));
-        setPage(0);
-    };
 
     useEffect(() => {
         const filesHaveErrors = filesForIngest.filter((file) => file.errors).length > 0;
@@ -189,16 +171,7 @@ const FileIngest = () => {
             </ContentPage>
 
             <ContentPage title='Finished Ingest Log' data-testid='finished-ingest-log'>
-                <FinishedIngestLog
-                    ingestJobs={listFileIngestJobsData?.data || []}
-                    paginationProps={{
-                        page,
-                        rowsPerPage,
-                        count,
-                        onPageChange: handlePageChange,
-                        onRowsPerPageChange: handleRowsPerPageChange,
-                    }}
-                />
+                <FinishedIngestLog ingestJobs={listFileIngestJobsData?.data || []} />
             </ContentPage>
 
             <FileUploadDialog

@@ -101,7 +101,7 @@ const FileUploadDialog: React.FC<{
                     {(fileUploadStep === FileUploadStep.CONFIRMATION || fileUploadStep === FileUploadStep.UPLOAD) && (
                         <Box fontSize={20} marginBottom={5}>
                             {uploadMessage ||
-                                'The following files will be uploaded and ingested into BloodHound. This cannot be undone.'}
+                                'The following files will be uploaded and ingested into Bloodhound. This cannot be undone.'}
                         </Box>
                     )}
 

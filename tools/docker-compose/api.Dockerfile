@@ -17,7 +17,7 @@
 ########
 # Global build args
 ################
-ARG SHARPHOUND_VERSION=v2.0.0
+ARG SHARPHOUND_VERSION=v1.1.1
 ARG AZUREHOUND_VERSION=v2.0.4
 
 
@@ -67,14 +67,16 @@ ARG SHARPHOUND_VERSION
 ARG AZUREHOUND_VERSION
 WORKDIR /bloodhound
 VOLUME [ "/go/pkg/mod" ]
+
 RUN mkdir -p /bhapi/collectors/azurehound /bhapi/collectors/sharphound /bhapi/work
 RUN go install -ldflags "-s -w -extldflags '-static'" github.com/go-delve/delve/cmd/dlv@latest
+RUN go install github.com/cosmtrek/air@v1.44.0
 RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
   && apt-get -y install --no-install-recommends entr
-# Fix for running git ls-files in this container
-RUN git config --global --add safe.directory /bloodhound
-COPY scripts/file-watcher.sh scripts/api-rebuild.sh scripts/delve-rebuild.sh /
+
 COPY --from=hound-builder /tmp/sharphound/sharphound-$SHARPHOUND_VERSION.zip /bhapi/collectors/sharphound/
 COPY --from=hound-builder /tmp/sharphound/sharphound-$SHARPHOUND_VERSION.zip.sha256 /bhapi/collectors/sharphound/
 COPY --from=hound-builder /tmp/azurehound/artifacts/azurehound-$AZUREHOUND_VERSION.zip /bhapi/collectors/azurehound/
 COPY --from=hound-builder /tmp/azurehound/artifacts/azurehound-$AZUREHOUND_VERSION.zip.sha256 /bhapi/collectors/azurehound/
+
+ENTRYPOINT ["air", "-c", ".air.toml"]

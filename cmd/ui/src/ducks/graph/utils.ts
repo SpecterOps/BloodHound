@@ -16,7 +16,7 @@
 
 import AbstractGraph, { Attributes } from 'graphology-types';
 import Sigma from 'sigma';
-import { CameraState, Coordinates, Extent, NodeDisplayData } from 'sigma/types';
+import { CameraState, Coordinates, Extent } from 'sigma/types';
 import { graphExtent } from 'sigma/utils';
 
 export const isLink = (item: any): boolean => {
@@ -31,38 +31,18 @@ export const GROUP_SPREAD = 0.06;
 export const MIN_CAMERA_RATIO = 0.5;
 export const MAX_CAMERA_RATIO = 15;
 
-export const getEdgeDataFromKey = (edgeKey: string): null | { source: string; target: string; label: string } => {
-    const keyChunks = edgeKey.split('_');
-    const source = keyChunks.shift();
-    const target = keyChunks.pop();
-    const label = keyChunks.join('_');
-
-    if (!source) {
-        console.warn('Invalid edge key. No source found');
-        return null;
-    }
-    if (!target) {
-        console.warn('Invalid edge key. No target found');
-        return null;
-    }
-    if (!label) {
-        console.warn('Invalid edge key. Unable to evaluate label');
-        return null;
-    }
-
-    return { source: source, target: target, label: label };
-};
-
-export const getEdgeSourceAndTargetDisplayData = (
-    source: string,
-    target: string,
+export const getEdgeDataFromKey = (
+    edgeKey: string,
     sigma: Sigma
-): { source: NodeDisplayData; target: NodeDisplayData } | null => {
-    const sourceDisplayData = sigma.getNodeDisplayData(source);
-    const targetDisplayData = sigma.getNodeDisplayData(target);
+): null | { source: Record<string, any>; target: Record<string, any> } => {
+    const keyChunks = edgeKey.split('_');
+    if (keyChunks.length !== 3) return null;
 
-    if (!source || !target) return null;
-    return { source: sourceDisplayData!, target: targetDisplayData! };
+    const source = sigma.getNodeDisplayData(keyChunks[0]);
+    const target = sigma.getNodeDisplayData(keyChunks[2]);
+    if (!(source && target)) return null;
+
+    return { source: source, target: target };
 };
 
 export type LinkedNode = {

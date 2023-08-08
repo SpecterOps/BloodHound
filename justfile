@@ -97,48 +97,32 @@ build-bhce-container platform='linux/amd64' tag='edge' version='v5.0.0' ARGS='':
 
 # run docker compose commands for the BH dev profile (Default: up)
 bh-dev *ARGS='up':
-  # make sure go.work.sum is updated
-  go mod download
   docker compose --profile dev {{ARGS}}
 
 # run docker compose commands for the BH debug profile (Default: up)
 bh-debug *ARGS='up':
-  # make sure go.work.sum is updated
-  go mod download
   docker compose --profile debug {{ARGS}}
 
 # run docker compose commands for the BH api-only profile (Default: up)
 bh-api-only *ARGS='up':
-  # make sure go.work.sum is updated
-  go mod download
   docker compose --profile api-only {{ARGS}}
 
 # run docker compose commands for the BH ui-only profile (Default: up)
 bh-ui-only *ARGS='up':
-  # make sure go.work.sum is updated
-  go mod download
   docker compose --profile ui-only {{ARGS}}
 
 # run docker compose commands for the BH testing databases (Default: up)
 bh-testing *ARGS='up -d':
-  # make sure go.work.sum is updated
-  go mod download
   docker compose -p bh-testing -f docker-compose.testing.yml {{ARGS}}
 
 # clear BH testing volumes
 bh-testing-clear-volumes *ARGS='':
-  # make sure go.work.sum is updated
-  go mod download
   docker compose -p bh-testing -f docker-compose.testing.yml down -v {{ARGS}}
 
 # clear BH docker compose volumes (pass --remove-orphans if troubleshooting)
 bh-clear-volumes *ARGS='':
-  # make sure go.work.sum is updated
-  go mod download
   docker compose down -v {{ARGS}}
 
 # build BH target cleanly (default profile dev with --no-cache flag)
 bh-clean-docker-build target='dev' *ARGS='':
-  # make sure go.work.sum is updated
-  go mod download
   docker compose --profile {{target}} build --no-cache {{ARGS}}
