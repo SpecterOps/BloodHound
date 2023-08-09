@@ -80,7 +80,7 @@ const COMPONENTS = {
     ),
     em: ({ node, ...props }: any) => <em {...props} />,
     hr: ({ node, ...props }: any) => <Divider {...props} />,
-    img: ({ node, ...props }: any) => <img {...props} alt={props.alt} src={`${import.meta.env.BASE_URL}/${props.src}`} style={{ maxWidth: '100%' }} />,
+    img: ({ node, ...props }: any) => <img {...props} alt={props.alt} src={props.src} style={{ maxWidth: '100%' }} />,
     li: ({ node, ordered, ...props }: any) => <li {...props} />,
     ol: ({ node, ordered, ...props }: any) => (
         <ol
