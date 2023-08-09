@@ -1,5 +1,5 @@
 <p align="center">
-    <img src="cmd/ui/public/img/logo-transparent-full.svg" alt="BloodHound Community Edition" style="width: 400px;" />
+    <img src="cmd/ui/public/img/logo-white-full.svg" alt="BloodHound Community Edition" style="width: 400px;" />
 </p>
 
 <hr />
@@ -81,7 +81,7 @@ simplest setup.
 ### BloodHound Support
 
 If you need to contact our team directly and do not wish to use Slack you may do so by sending an email
-to [support@bloodhoundengineering.io](mailto:support@bloodhoundengineering.io).
+to `support [AT] specterops.io`.
 
 ## Licensing
 
