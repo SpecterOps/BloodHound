@@ -30,6 +30,7 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/StephenHinck"><img src="https://avatars.githubusercontent.com/u/12970156?v=4?s=100" width="100px;" alt="StephenHinck"/><br /><sub><b>StephenHinck</b></sub></a><br /><a href="https://github.com/SpecterOps/BloodHound/commits?author=StephenHinck" title="Code">💻</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/slokie-so"><img src="https://avatars.githubusercontent.com/u/140854032?v=4?s=100" width="100px;" alt="slokie-so"/><br /><sub><b>slokie-so</b></sub></a><br /><a href="#projectManagement-slokie-so" title="Project Management">📆</a></td>
       <td align="center" valign="top" width="14.28%"><a href="http://www.chrismaddalena.com/"><img src="https://avatars.githubusercontent.com/u/10526228?v=4?s=100" width="100px;" alt="Christopher Maddalena"/><br /><sub><b>Christopher Maddalena</b></sub></a><br /><a href="https://github.com/SpecterOps/BloodHound/commits?author=chrismaddalena" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/nodauf"><img src="https://avatars.githubusercontent.com/u/7670696?v=4?s=100" width="100px;" alt="nodauf"/><br /><sub><b>nodauf</b></sub></a><br /><a href="https://github.com/SpecterOps/BloodHound/commits?author=nodauf" title="Code">💻</a></td>
     </tr>
   </tbody>
   <tfoot>
