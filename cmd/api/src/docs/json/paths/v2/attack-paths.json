@@ -94,7 +94,7 @@
     },
     "/api/v2/attack-paths":{
         "put":{
-            "description":"Pokes the enrichment service",
+            "description":"Pokes the analysis service",
             "tags":[
                 "Attack Paths",
                 "Enterprise"

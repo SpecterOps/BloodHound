@@ -1,17 +1,17 @@
 // Copyright 2023 Specter Ops, Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// 
+//
 // SPDX-License-Identifier: Apache-2.0
 
 package analysis
@@ -29,14 +29,14 @@ import (
 )
 
 type StatTrackedOperation[T any] struct {
-	Stats     AtomicPostProcessingStats
+	Stats     AtomicAnalysisStats
 	Operation *ops.Operation[T]
 }
 
-func NewPostRelationshipOperation(ctx context.Context, db graph.Database, operationName string) StatTrackedOperation[CreatePostRelationshipJob] {
-	operation := StatTrackedOperation[CreatePostRelationshipJob]{}
+func NewAnalysisRelationshipOperation(ctx context.Context, db graph.Database, operationName string) StatTrackedOperation[CreateAnalysisRelationshipJob] {
+	operation := StatTrackedOperation[CreateAnalysisRelationshipJob]{}
 	operation.NewOperation(ctx, db)
-	operation.Operation.SubmitWriter(func(ctx context.Context, batch graph.Batch, inC <-chan CreatePostRelationshipJob) error {
+	operation.Operation.SubmitWriter(func(ctx context.Context, batch graph.Batch, inC <-chan CreateAnalysisRelationshipJob) error {
 		defer log.Measure(log.LevelInfo, operationName)()
 
 		var (
@@ -57,7 +57,7 @@ func NewPostRelationshipOperation(ctx context.Context, db graph.Database, operat
 }
 
 func (s *StatTrackedOperation[T]) NewOperation(ctx context.Context, db graph.Database) {
-	s.Stats = NewAtomicPostProcessingStats()
+	s.Stats = NewAtomicAnalysisStats()
 	s.Operation = ops.StartNewOperation[T](ops.OperationContext{
 		Parent:     ctx,
 		DB:         db,
@@ -70,21 +70,21 @@ func (s *StatTrackedOperation[T]) Done() error {
 	return s.Operation.Done()
 }
 
-type AtomicPostProcessingStats struct {
+type AtomicAnalysisStats struct {
 	RelationshipsCreated map[graph.Kind]*int32
 	RelationshipsDeleted map[graph.Kind]*int32
 	mutex                *sync.Mutex
 }
 
-func NewAtomicPostProcessingStats() AtomicPostProcessingStats {
-	return AtomicPostProcessingStats{
+func NewAtomicAnalysisStats() AtomicAnalysisStats {
+	return AtomicAnalysisStats{
 		RelationshipsCreated: make(map[graph.Kind]*int32),
 		RelationshipsDeleted: make(map[graph.Kind]*int32),
 		mutex:                &sync.Mutex{},
 	}
 }
 
-func (s *AtomicPostProcessingStats) AddRelationshipsCreated(kind graph.Kind, numCreated int32) {
+func (s *AtomicAnalysisStats) AddRelationshipsCreated(kind graph.Kind, numCreated int32) {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 
@@ -95,7 +95,7 @@ func (s *AtomicPostProcessingStats) AddRelationshipsCreated(kind graph.Kind, num
 	}
 }
 
-func (s *AtomicPostProcessingStats) AddRelationshipsDeleted(kind graph.Kind, numDeleted int32) {
+func (s *AtomicAnalysisStats) AddRelationshipsDeleted(kind graph.Kind, numDeleted int32) {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 
@@ -106,7 +106,7 @@ func (s *AtomicPostProcessingStats) AddRelationshipsDeleted(kind graph.Kind, num
 	}
 }
 
-func (s *AtomicPostProcessingStats) Merge(other *AtomicPostProcessingStats) {
+func (s *AtomicAnalysisStats) Merge(other *AtomicAnalysisStats) {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 
@@ -127,13 +127,13 @@ func (s *AtomicPostProcessingStats) Merge(other *AtomicPostProcessingStats) {
 	}
 }
 
-func (s *AtomicPostProcessingStats) LogStats() {
+func (s *AtomicAnalysisStats) LogStats() {
 	// Only output stats during debug runs
 	if log.GlobalLevel() > log.LevelDebug {
 		return
 	}
 
-	log.Debugf("Relationships deleted before post-processing:")
+	log.Debugf("Relationships deleted before analysis:")
 
 	for _, relationship := range atomicStatsSortedKeys(s.RelationshipsDeleted) {
 		if numDeleted := int(*s.RelationshipsDeleted[relationship]); numDeleted > 0 {
@@ -141,7 +141,7 @@ func (s *AtomicPostProcessingStats) LogStats() {
 		}
 	}
 
-	log.Debugf("Relationships created after post-processing:")
+	log.Debugf("Relationships created after analysis:")
 
 	for _, relationship := range atomicStatsSortedKeys(s.RelationshipsCreated) {
 		if numCreated := int(*s.RelationshipsCreated[relationship]); numCreated > 0 {

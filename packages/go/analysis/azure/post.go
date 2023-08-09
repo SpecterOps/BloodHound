@@ -1,17 +1,17 @@
 // Copyright 2023 Specter Ops, Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// 
+//
 // SPDX-License-Identifier: Apache-2.0
 
 package azure
@@ -96,7 +96,7 @@ func PasswordAdministratorPasswordResetTargetRoles() []string {
 	}
 }
 
-func AzurePostProcessedRelationships() []graph.Kind {
+func AzureAnalyzedRelationships() []graph.Kind {
 	return []graph.Kind{
 		azure.AddSecret,
 		azure.ExecuteCommand,
@@ -447,11 +447,11 @@ func aggregateSourceReadWriteServicePrincipals(tx graph.Transaction, tenantConta
 	return sourceNodes, nil
 }
 
-func AppRoleAssignments(ctx context.Context, db graph.Database) (*analysis.AtomicPostProcessingStats, error) {
+func AppRoleAssignments(ctx context.Context, db graph.Database) (*analysis.AtomicAnalysisStats, error) {
 	if tenants, err := FetchTenants(ctx, db); err != nil {
-		return &analysis.AtomicPostProcessingStats{}, err
+		return &analysis.AtomicAnalysisStats{}, err
 	} else {
-		operation := analysis.NewPostRelationshipOperation(ctx, db, "Azure App Role Assignments Post Processing")
+		operation := analysis.NewAnalysisRelationshipOperation(ctx, db, "Azure App Role Assignments Analysis")
 		for _, tenant := range tenants {
 			if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
 
@@ -491,7 +491,7 @@ func AppRoleAssignments(ctx context.Context, db graph.Database) (*analysis.Atomi
 	}
 }
 
-func createAZMGApplicationReadWriteAllEdges(ctx context.Context, db graph.Database, operation analysis.StatTrackedOperation[analysis.CreatePostRelationshipJob], tenant *graph.Node, tenantContainsServicePrincipalRelationships []*graph.Relationship) error {
+func createAZMGApplicationReadWriteAllEdges(ctx context.Context, db graph.Database, operation analysis.StatTrackedOperation[analysis.CreateAnalysisRelationshipJob], tenant *graph.Node, tenantContainsServicePrincipalRelationships []*graph.Relationship) error {
 	if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		if tenantContainsAppRelationships, err := fetchTenantContainsRelationships(tx, tenant, azure.App); err != nil {
 			return err
@@ -500,10 +500,10 @@ func createAZMGApplicationReadWriteAllEdges(ctx context.Context, db graph.Databa
 		} else {
 			targetRelationships := append(tenantContainsServicePrincipalRelationships, tenantContainsAppRelationships...)
 
-			operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
+			operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreateAnalysisRelationshipJob) error {
 				for _, targetRelationship := range targetRelationships {
 					for _, sourceNode := range sourceNodes {
-						AZMGAddSecretRelationship := analysis.CreatePostRelationshipJob{
+						AZMGAddSecretRelationship := analysis.CreateAnalysisRelationshipJob{
 							FromID: sourceNode.ID,
 							ToID:   targetRelationship.EndID,
 							Kind:   azure.AZMGAddSecret,
@@ -513,7 +513,7 @@ func createAZMGApplicationReadWriteAllEdges(ctx context.Context, db graph.Databa
 							return nil
 						}
 
-						AZMGAddOwnerRelationship := analysis.CreatePostRelationshipJob{
+						AZMGAddOwnerRelationship := analysis.CreateAnalysisRelationshipJob{
 							FromID: sourceNode.ID,
 							ToID:   targetRelationship.EndID,
 							Kind:   azure.AZMGAddOwner,
@@ -535,15 +535,15 @@ func createAZMGApplicationReadWriteAllEdges(ctx context.Context, db graph.Databa
 	}
 }
 
-func createAZMGAppRoleAssignmentReadWriteAllEdges(ctx context.Context, db graph.Database, operation analysis.StatTrackedOperation[analysis.CreatePostRelationshipJob], tenant *graph.Node, tenantContainsServicePrincipalRelationships []*graph.Relationship) error {
+func createAZMGAppRoleAssignmentReadWriteAllEdges(ctx context.Context, db graph.Database, operation analysis.StatTrackedOperation[analysis.CreateAnalysisRelationshipJob], tenant *graph.Node, tenantContainsServicePrincipalRelationships []*graph.Relationship) error {
 	if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		if sourceNodes, err := aggregateSourceReadWriteServicePrincipals(tx, tenantContainsServicePrincipalRelationships, azure.AppRoleAssignmentReadWriteAll); err != nil {
 			return err
 		} else {
-			operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
+			operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreateAnalysisRelationshipJob) error {
 				for _, tenantContainsServicePrincipalRelationship := range tenantContainsServicePrincipalRelationships {
 					for _, sourceNode := range sourceNodes {
-						AZMGGrantAppRolesRelationship := analysis.CreatePostRelationshipJob{
+						AZMGGrantAppRolesRelationship := analysis.CreateAnalysisRelationshipJob{
 							FromID: sourceNode.ID,
 							ToID:   tenantContainsServicePrincipalRelationship.StartID, //the tenant
 							Kind:   azure.AZMGGrantAppRoles,
@@ -565,17 +565,17 @@ func createAZMGAppRoleAssignmentReadWriteAllEdges(ctx context.Context, db graph.
 	}
 }
 
-func createAZMGDirectoryReadWriteAllEdges(ctx context.Context, db graph.Database, operation analysis.StatTrackedOperation[analysis.CreatePostRelationshipJob], tenant *graph.Node, tenantContainsServicePrincipalRelationships []*graph.Relationship) error {
+func createAZMGDirectoryReadWriteAllEdges(ctx context.Context, db graph.Database, operation analysis.StatTrackedOperation[analysis.CreateAnalysisRelationshipJob], tenant *graph.Node, tenantContainsServicePrincipalRelationships []*graph.Relationship) error {
 	if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		if sourceNodes, err := aggregateSourceReadWriteServicePrincipals(tx, tenantContainsServicePrincipalRelationships, azure.DirectoryReadWriteAll); err != nil {
 			return err
 		} else if tenantContainsGroupRelationships, err := fetchTenantContainsReadWriteAllGroupRelationships(tx, tenant); err != nil {
 			return err
 		} else {
-			operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
+			operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreateAnalysisRelationshipJob) error {
 				for _, tenantContainsGroupRelationship := range tenantContainsGroupRelationships {
 					for _, sourceNode := range sourceNodes {
-						AZMGAddMemberRelationship := analysis.CreatePostRelationshipJob{
+						AZMGAddMemberRelationship := analysis.CreateAnalysisRelationshipJob{
 							FromID: sourceNode.ID,
 							ToID:   tenantContainsGroupRelationship.EndID,
 							Kind:   azure.AZMGAddMember,
@@ -585,7 +585,7 @@ func createAZMGDirectoryReadWriteAllEdges(ctx context.Context, db graph.Database
 							return nil
 						}
 
-						AZMGAddOwnerRelationship := analysis.CreatePostRelationshipJob{
+						AZMGAddOwnerRelationship := analysis.CreateAnalysisRelationshipJob{
 							FromID: sourceNode.ID,
 							ToID:   tenantContainsGroupRelationship.EndID,
 							Kind:   azure.AZMGAddOwner,
@@ -607,17 +607,17 @@ func createAZMGDirectoryReadWriteAllEdges(ctx context.Context, db graph.Database
 	}
 }
 
-func createAZMGGroupReadWriteAllEdges(ctx context.Context, db graph.Database, operation analysis.StatTrackedOperation[analysis.CreatePostRelationshipJob], tenant *graph.Node, tenantContainsServicePrincipalRelationships []*graph.Relationship) error {
+func createAZMGGroupReadWriteAllEdges(ctx context.Context, db graph.Database, operation analysis.StatTrackedOperation[analysis.CreateAnalysisRelationshipJob], tenant *graph.Node, tenantContainsServicePrincipalRelationships []*graph.Relationship) error {
 	if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		if sourceNodes, err := aggregateSourceReadWriteServicePrincipals(tx, tenantContainsServicePrincipalRelationships, azure.GroupReadWriteAll); err != nil {
 			return err
 		} else if tenantContainsGroupRelationships, err := fetchTenantContainsReadWriteAllGroupRelationships(tx, tenant); err != nil {
 			return err
 		} else {
-			operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
+			operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreateAnalysisRelationshipJob) error {
 				for _, tenantContainsGroupRelationship := range tenantContainsGroupRelationships {
 					for _, sourceNode := range sourceNodes {
-						AZMGAddMemberRelationship := analysis.CreatePostRelationshipJob{
+						AZMGAddMemberRelationship := analysis.CreateAnalysisRelationshipJob{
 							FromID: sourceNode.ID,
 							ToID:   tenantContainsGroupRelationship.EndID,
 							Kind:   azure.AZMGAddMember,
@@ -627,7 +627,7 @@ func createAZMGGroupReadWriteAllEdges(ctx context.Context, db graph.Database, op
 							return nil
 						}
 
-						AZMGAddOwnerRelationship := analysis.CreatePostRelationshipJob{
+						AZMGAddOwnerRelationship := analysis.CreateAnalysisRelationshipJob{
 							FromID: sourceNode.ID,
 							ToID:   tenantContainsGroupRelationship.EndID,
 							Kind:   azure.AZMGAddOwner,
@@ -649,17 +649,17 @@ func createAZMGGroupReadWriteAllEdges(ctx context.Context, db graph.Database, op
 	}
 }
 
-func createAZMGGroupMemberReadWriteAllEdges(ctx context.Context, db graph.Database, operation analysis.StatTrackedOperation[analysis.CreatePostRelationshipJob], tenant *graph.Node, tenantContainsServicePrincipalRelationships []*graph.Relationship) error {
+func createAZMGGroupMemberReadWriteAllEdges(ctx context.Context, db graph.Database, operation analysis.StatTrackedOperation[analysis.CreateAnalysisRelationshipJob], tenant *graph.Node, tenantContainsServicePrincipalRelationships []*graph.Relationship) error {
 	if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		if sourceNodes, err := aggregateSourceReadWriteServicePrincipals(tx, tenantContainsServicePrincipalRelationships, azure.GroupMemberReadWriteAll); err != nil {
 			return err
 		} else if tenantContainsGroupRelationships, err := fetchTenantContainsReadWriteAllGroupRelationships(tx, tenant); err != nil {
 			return err
 		} else {
-			operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
+			operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreateAnalysisRelationshipJob) error {
 				for _, tenantContainsGroupRelationship := range tenantContainsGroupRelationships {
 					for _, sourceNode := range sourceNodes {
-						AZMGAddMemberRelationship := analysis.CreatePostRelationshipJob{
+						AZMGAddMemberRelationship := analysis.CreateAnalysisRelationshipJob{
 							FromID: sourceNode.ID,
 							ToID:   tenantContainsGroupRelationship.EndID,
 							Kind:   azure.AZMGAddMember,
@@ -681,17 +681,17 @@ func createAZMGGroupMemberReadWriteAllEdges(ctx context.Context, db graph.Databa
 	}
 }
 
-func createAZMGRoleManagementReadWriteDirectoryEdgesPart1(ctx context.Context, db graph.Database, operation analysis.StatTrackedOperation[analysis.CreatePostRelationshipJob], tenant *graph.Node, tenantContainsServicePrincipalRelationships []*graph.Relationship) error {
+func createAZMGRoleManagementReadWriteDirectoryEdgesPart1(ctx context.Context, db graph.Database, operation analysis.StatTrackedOperation[analysis.CreateAnalysisRelationshipJob], tenant *graph.Node, tenantContainsServicePrincipalRelationships []*graph.Relationship) error {
 	if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		if sourceNodes, err := aggregateSourceReadWriteServicePrincipals(tx, tenantContainsServicePrincipalRelationships, azure.RoleManagementReadWriteDirectory); err != nil {
 			return err
 		} else if tenantContainsRoleRelationships, err := fetchTenantContainsRelationships(tx, tenant, azure.Role); err != nil {
 			return err
 		} else {
-			operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
+			operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreateAnalysisRelationshipJob) error {
 				for _, tenantContainsRoleRelationship := range tenantContainsRoleRelationships {
 					for _, sourceNode := range sourceNodes {
-						AZMGGrantAppRolesRelationship := analysis.CreatePostRelationshipJob{
+						AZMGGrantAppRolesRelationship := analysis.CreateAnalysisRelationshipJob{
 							FromID: sourceNode.ID,
 							ToID:   tenantContainsRoleRelationship.StartID,
 							Kind:   azure.AZMGGrantAppRoles,
@@ -713,17 +713,17 @@ func createAZMGRoleManagementReadWriteDirectoryEdgesPart1(ctx context.Context, d
 	}
 }
 
-func createAZMGRoleManagementReadWriteDirectoryEdgesPart2(ctx context.Context, db graph.Database, operation analysis.StatTrackedOperation[analysis.CreatePostRelationshipJob], tenant *graph.Node, tenantContainsServicePrincipalRelationships []*graph.Relationship) error {
+func createAZMGRoleManagementReadWriteDirectoryEdgesPart2(ctx context.Context, db graph.Database, operation analysis.StatTrackedOperation[analysis.CreateAnalysisRelationshipJob], tenant *graph.Node, tenantContainsServicePrincipalRelationships []*graph.Relationship) error {
 	if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		if sourceNodes, err := aggregateSourceReadWriteServicePrincipals(tx, tenantContainsServicePrincipalRelationships, azure.RoleManagementReadWriteDirectory); err != nil {
 			return err
 		} else if tenantContainsRoleRelationships, err := fetchTenantContainsRelationships(tx, tenant, azure.Role); err != nil {
 			return err
 		} else {
-			operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
+			operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreateAnalysisRelationshipJob) error {
 				for _, tenantContainsRoleRelationship := range tenantContainsRoleRelationships {
 					for _, sourceNode := range sourceNodes {
-						AZMGGrantRoleRelationship := analysis.CreatePostRelationshipJob{
+						AZMGGrantRoleRelationship := analysis.CreateAnalysisRelationshipJob{
 							FromID: sourceNode.ID,
 							ToID:   tenantContainsRoleRelationship.EndID,
 							Kind:   azure.AZMGGrantRole,
@@ -745,15 +745,15 @@ func createAZMGRoleManagementReadWriteDirectoryEdgesPart2(ctx context.Context, d
 	}
 }
 
-func createAZMGRoleManagementReadWriteDirectoryEdgesPart3(ctx context.Context, db graph.Database, operation analysis.StatTrackedOperation[analysis.CreatePostRelationshipJob], tenant *graph.Node, tenantContainsServicePrincipalRelationships []*graph.Relationship) error {
+func createAZMGRoleManagementReadWriteDirectoryEdgesPart3(ctx context.Context, db graph.Database, operation analysis.StatTrackedOperation[analysis.CreateAnalysisRelationshipJob], tenant *graph.Node, tenantContainsServicePrincipalRelationships []*graph.Relationship) error {
 	if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		if sourceNodes, err := aggregateSourceReadWriteServicePrincipals(tx, tenantContainsServicePrincipalRelationships, azure.RoleManagementReadWriteDirectory); err != nil {
 			return err
 		} else {
-			operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
+			operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreateAnalysisRelationshipJob) error {
 				for _, tenantContainsServicePrincipalRelationship := range tenantContainsServicePrincipalRelationships {
 					for _, sourceNode := range sourceNodes {
-						AZMGAddSecretRelationship := analysis.CreatePostRelationshipJob{
+						AZMGAddSecretRelationship := analysis.CreateAnalysisRelationshipJob{
 							FromID: sourceNode.ID,
 							ToID:   tenantContainsServicePrincipalRelationship.EndID,
 							Kind:   azure.AZMGAddSecret,
@@ -763,7 +763,7 @@ func createAZMGRoleManagementReadWriteDirectoryEdgesPart3(ctx context.Context, d
 							return nil
 						}
 
-						AZMGAddOwnerRelationship := analysis.CreatePostRelationshipJob{
+						AZMGAddOwnerRelationship := analysis.CreateAnalysisRelationshipJob{
 							FromID: sourceNode.ID,
 							ToID:   tenantContainsServicePrincipalRelationship.EndID,
 							Kind:   azure.AZMGAddOwner,
@@ -785,17 +785,17 @@ func createAZMGRoleManagementReadWriteDirectoryEdgesPart3(ctx context.Context, d
 	}
 }
 
-func createAZMGRoleManagementReadWriteDirectoryEdgesPart4(ctx context.Context, db graph.Database, operation analysis.StatTrackedOperation[analysis.CreatePostRelationshipJob], tenant *graph.Node, tenantContainsServicePrincipalRelationships []*graph.Relationship) error {
+func createAZMGRoleManagementReadWriteDirectoryEdgesPart4(ctx context.Context, db graph.Database, operation analysis.StatTrackedOperation[analysis.CreateAnalysisRelationshipJob], tenant *graph.Node, tenantContainsServicePrincipalRelationships []*graph.Relationship) error {
 	if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		if sourceNodes, err := aggregateSourceReadWriteServicePrincipals(tx, tenantContainsServicePrincipalRelationships, azure.RoleManagementReadWriteDirectory); err != nil {
 			return err
 		} else if tenantContainsAppRelationships, err := fetchTenantContainsRelationships(tx, tenant, azure.App); err != nil {
 			return err
 		} else {
-			operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
+			operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreateAnalysisRelationshipJob) error {
 				for _, tenantContainsAppRelationship := range tenantContainsAppRelationships {
 					for _, sourceNode := range sourceNodes {
-						AZMGAddSecretRelationship := analysis.CreatePostRelationshipJob{
+						AZMGAddSecretRelationship := analysis.CreateAnalysisRelationshipJob{
 							FromID: sourceNode.ID,
 							ToID:   tenantContainsAppRelationship.EndID,
 							Kind:   azure.AZMGAddSecret,
@@ -805,7 +805,7 @@ func createAZMGRoleManagementReadWriteDirectoryEdgesPart4(ctx context.Context, d
 							return nil
 						}
 
-						AZMGAddOwnerRelationship := analysis.CreatePostRelationshipJob{
+						AZMGAddOwnerRelationship := analysis.CreateAnalysisRelationshipJob{
 							FromID: sourceNode.ID,
 							ToID:   tenantContainsAppRelationship.EndID,
 							Kind:   azure.AZMGAddOwner,
@@ -827,17 +827,17 @@ func createAZMGRoleManagementReadWriteDirectoryEdgesPart4(ctx context.Context, d
 	}
 }
 
-func createAZMGRoleManagementReadWriteDirectoryEdgesPart5(ctx context.Context, db graph.Database, operation analysis.StatTrackedOperation[analysis.CreatePostRelationshipJob], tenant *graph.Node, tenantContainsServicePrincipalRelationships []*graph.Relationship) error {
+func createAZMGRoleManagementReadWriteDirectoryEdgesPart5(ctx context.Context, db graph.Database, operation analysis.StatTrackedOperation[analysis.CreateAnalysisRelationshipJob], tenant *graph.Node, tenantContainsServicePrincipalRelationships []*graph.Relationship) error {
 	if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		if sourceNodes, err := aggregateSourceReadWriteServicePrincipals(tx, tenantContainsServicePrincipalRelationships, azure.RoleManagementReadWriteDirectory); err != nil {
 			return err
 		} else if tenantContainsGroupRelationships, err := fetchTenantContainsRelationships(tx, tenant, azure.Group); err != nil {
 			return err
 		} else {
-			operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
+			operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreateAnalysisRelationshipJob) error {
 				for _, tenantContainsGroupRelationship := range tenantContainsGroupRelationships {
 					for _, sourceNode := range sourceNodes {
-						AZMGAddMemberRelationship := analysis.CreatePostRelationshipJob{
+						AZMGAddMemberRelationship := analysis.CreateAnalysisRelationshipJob{
 							FromID: sourceNode.ID,
 							ToID:   tenantContainsGroupRelationship.EndID,
 							Kind:   azure.AZMGAddMember,
@@ -847,7 +847,7 @@ func createAZMGRoleManagementReadWriteDirectoryEdgesPart5(ctx context.Context, d
 							return nil
 						}
 
-						AZMGAddOwnerRelationship := analysis.CreatePostRelationshipJob{
+						AZMGAddOwnerRelationship := analysis.CreateAnalysisRelationshipJob{
 							FromID: sourceNode.ID,
 							ToID:   tenantContainsGroupRelationship.EndID,
 							Kind:   azure.AZMGAddOwner,
@@ -869,15 +869,15 @@ func createAZMGRoleManagementReadWriteDirectoryEdgesPart5(ctx context.Context, d
 	}
 }
 
-func createAZMGServicePrincipalEndpointReadWriteAllEdges(ctx context.Context, db graph.Database, operation analysis.StatTrackedOperation[analysis.CreatePostRelationshipJob], tenant *graph.Node, tenantContainsServicePrincipalRelationships []*graph.Relationship) error {
+func createAZMGServicePrincipalEndpointReadWriteAllEdges(ctx context.Context, db graph.Database, operation analysis.StatTrackedOperation[analysis.CreateAnalysisRelationshipJob], tenant *graph.Node, tenantContainsServicePrincipalRelationships []*graph.Relationship) error {
 	if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		if sourceNodes, err := aggregateSourceReadWriteServicePrincipals(tx, tenantContainsServicePrincipalRelationships, azure.ServicePrincipalEndpointReadWriteAll); err != nil {
 			return err
 		} else {
-			operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
+			operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreateAnalysisRelationshipJob) error {
 				for _, tenantContainsServicePrincipalRelationship := range tenantContainsServicePrincipalRelationships {
 					for _, sourceNode := range sourceNodes {
-						AZMGAddOwnerRelationship := analysis.CreatePostRelationshipJob{
+						AZMGAddOwnerRelationship := analysis.CreateAnalysisRelationshipJob{
 							FromID: sourceNode.ID,
 							ToID:   tenantContainsServicePrincipalRelationship.EndID,
 							Kind:   azure.AZMGAddOwner,
@@ -899,17 +899,17 @@ func createAZMGServicePrincipalEndpointReadWriteAllEdges(ctx context.Context, db
 	}
 }
 
-func AddSecret(ctx context.Context, db graph.Database) (*analysis.AtomicPostProcessingStats, error) {
+func AddSecret(ctx context.Context, db graph.Database) (*analysis.AtomicAnalysisStats, error) {
 	if appOwnerRels, err := fetchAppOwnerRelationships(ctx, db); err != nil {
-		return &analysis.AtomicPostProcessingStats{}, err
+		return &analysis.AtomicAnalysisStats{}, err
 	} else if tenants, err := FetchTenants(ctx, db); err != nil {
-		return &analysis.AtomicPostProcessingStats{}, err
+		return &analysis.AtomicAnalysisStats{}, err
 	} else {
-		operation := analysis.NewPostRelationshipOperation(ctx, db, "AZAddSecret Post Processing")
+		operation := analysis.NewAnalysisRelationshipOperation(ctx, db, "AZAddSecret Analysis")
 
-		operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
+		operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreateAnalysisRelationshipJob) error {
 			for _, appOwner := range appOwnerRels {
-				nextJob := analysis.CreatePostRelationshipJob{
+				nextJob := analysis.CreateAnalysisRelationshipJob{
 					FromID: appOwner.StartID,
 					ToID:   appOwner.EndID,
 					Kind:   azure.AddSecret,
@@ -934,9 +934,9 @@ func AddSecret(ctx context.Context, db graph.Database) (*analysis.AtomicPostProc
 				} else {
 					for _, roleMember := range roleMembers {
 						innerRoleMember := roleMember
-						operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
+						operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreateAnalysisRelationshipJob) error {
 							for _, tenantContainsAppsRelationship := range tenantContainsAppRelationships {
-								nextJob := analysis.CreatePostRelationshipJob{
+								nextJob := analysis.CreateAnalysisRelationshipJob{
 									FromID: innerRoleMember.ID,
 									ToID:   tenantContainsAppsRelationship.EndID,
 									Kind:   azure.AddSecret,
@@ -978,23 +978,23 @@ func fetchDeviceOwnerRelationships(ctx context.Context, db graph.Database) ([]*g
 	})
 }
 
-func ExecuteCommand(ctx context.Context, db graph.Database) (*analysis.AtomicPostProcessingStats, error) {
+func ExecuteCommand(ctx context.Context, db graph.Database) (*analysis.AtomicAnalysisStats, error) {
 	if deviceOwnerRels, err := fetchDeviceOwnerRelationships(ctx, db); err != nil {
-		return &analysis.AtomicPostProcessingStats{}, err
+		return &analysis.AtomicAnalysisStats{}, err
 	} else if tenants, err := FetchTenants(ctx, db); err != nil {
-		return &analysis.AtomicPostProcessingStats{}, err
+		return &analysis.AtomicAnalysisStats{}, err
 	} else {
-		operation := analysis.NewPostRelationshipOperation(ctx, db, "AZExecuteCommand Post Processing")
+		operation := analysis.NewAnalysisRelationshipOperation(ctx, db, "AZExecuteCommand Analysis")
 		for _, deviceOwner := range deviceOwnerRels {
 			innerDeviceOwner := deviceOwner
 
-			operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
+			operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreateAnalysisRelationshipJob) error {
 				if end, err := ops.FetchNode(tx, innerDeviceOwner.EndID); err != nil {
 					return err
 				} else if isWindowsDevice, err := IsWindowsDevice(end); err != nil {
 					return err
 				} else if isWindowsDevice {
-					nextJob := analysis.CreatePostRelationshipJob{
+					nextJob := analysis.CreateAnalysisRelationshipJob{
 						FromID: innerDeviceOwner.StartID,
 						ToID:   end.ID,
 						Kind:   azure.ExecuteCommand,
@@ -1020,12 +1020,12 @@ func ExecuteCommand(ctx context.Context, db graph.Database) (*analysis.AtomicPos
 				} else {
 					for _, tenantDevice := range tenantDevices {
 						innerTenantDevice := tenantDevice
-						operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
+						operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreateAnalysisRelationshipJob) error {
 							if isWindowsDevice, err := IsWindowsDevice(innerTenantDevice); err != nil {
 								return err
 							} else if isWindowsDevice {
 								for _, intuneAdmin := range intuneAdmins {
-									nextJob := analysis.CreatePostRelationshipJob{
+									nextJob := analysis.CreateAnalysisRelationshipJob{
 										FromID: intuneAdmin.ID,
 										ToID:   innerTenantDevice.ID,
 										Kind:   azure.ExecuteCommand,
@@ -1053,7 +1053,7 @@ func ExecuteCommand(ctx context.Context, db graph.Database) (*analysis.AtomicPos
 	}
 }
 
-func resetPassword(ctx context.Context, db graph.Database, operation analysis.StatTrackedOperation[analysis.CreatePostRelationshipJob], roleAssignments RoleAssignments) error {
+func resetPassword(ctx context.Context, db graph.Database, operation analysis.StatTrackedOperation[analysis.CreateAnalysisRelationshipJob], roleAssignments RoleAssignments) error {
 	var (
 		usersWithoutRoles = roleAssignments.UsersWithoutRoles()
 	)
@@ -1109,16 +1109,16 @@ func getRoleEligibleSecurityGroupUsers(ctx context.Context, db graph.Database, r
 	})
 }
 
-func resetPasswordCases(roleAssignments RoleAssignments, operation analysis.StatTrackedOperation[analysis.CreatePostRelationshipJob], userID graph.ID, usersWithoutRoles graph.NodeSet, securityGroupUsers *roaring64.Bitmap) error {
+func resetPasswordCases(roleAssignments RoleAssignments, operation analysis.StatTrackedOperation[analysis.CreateAnalysisRelationshipJob], userID graph.ID, usersWithoutRoles graph.NodeSet, securityGroupUsers *roaring64.Bitmap) error {
 	if roleAssignments.NodeHasRole(userID, azure.CompanyAdministratorRole, azure.PrivilegedAuthenticationAdministratorRole, azure.PartnerTier2SupportRole) {
 		// GA, PAA, and PT2S roles can reset all user passwords in the tenant
-		operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
+		operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreateAnalysisRelationshipJob) error {
 			for targetID := range roleAssignments.Nodes.Get(azure.User) {
 				if userID == targetID {
 					continue
 				}
 
-				nextJob := analysis.CreatePostRelationshipJob{
+				nextJob := analysis.CreateAnalysisRelationshipJob{
 					FromID: userID,
 					ToID:   targetID,
 					Kind:   azure.ResetPassword,
@@ -1132,13 +1132,13 @@ func resetPasswordCases(roleAssignments RoleAssignments, operation analysis.Stat
 			return nil
 		})
 	} else if roleAssignments.NodeHasRole(userID, azure.HelpdeskAdministratorRole) {
-		operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
+		operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreateAnalysisRelationshipJob) error {
 			for targetID, targetNode := range roleAssignments.NodesWithRolesExclusive(HelpdeskAdministratorPasswordResetTargetRoles()...).Get(azure.User) {
 				if userID == targetID || securityGroupUsers.Contains(targetID.Uint64()) {
 					continue
 				}
 
-				nextJob := analysis.CreatePostRelationshipJob{
+				nextJob := analysis.CreateAnalysisRelationshipJob{
 					FromID: userID,
 					ToID:   targetNode.ID,
 					Kind:   azure.ResetPassword,
@@ -1152,13 +1152,13 @@ func resetPasswordCases(roleAssignments RoleAssignments, operation analysis.Stat
 			return nil
 		})
 
-		operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
+		operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreateAnalysisRelationshipJob) error {
 			for targetID := range usersWithoutRoles {
 				if userID == targetID || securityGroupUsers.Contains(targetID.Uint64()) {
 					continue
 				}
 
-				nextJob := analysis.CreatePostRelationshipJob{
+				nextJob := analysis.CreateAnalysisRelationshipJob{
 					FromID: userID,
 					ToID:   targetID,
 					Kind:   azure.ResetPassword,
@@ -1172,13 +1172,13 @@ func resetPasswordCases(roleAssignments RoleAssignments, operation analysis.Stat
 		})
 
 	} else if roleAssignments.NodeHasRole(userID, azure.AuthenticationAdministratorRole) {
-		operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
+		operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreateAnalysisRelationshipJob) error {
 			for targetID, targetNode := range roleAssignments.NodesWithRolesExclusive(AuthenticationAdministratorPasswordResetTargetRoles()...).Get(azure.User) {
 				if userID == targetID || securityGroupUsers.Contains(targetID.Uint64()) {
 					continue
 				}
 
-				nextJob := analysis.CreatePostRelationshipJob{
+				nextJob := analysis.CreateAnalysisRelationshipJob{
 					FromID: userID,
 					ToID:   targetNode.ID,
 					Kind:   azure.ResetPassword,
@@ -1192,13 +1192,13 @@ func resetPasswordCases(roleAssignments RoleAssignments, operation analysis.Stat
 			return nil
 		})
 
-		operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
+		operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreateAnalysisRelationshipJob) error {
 			for targetID := range usersWithoutRoles {
 				if userID == targetID || securityGroupUsers.Contains(targetID.Uint64()) {
 					continue
 				}
 
-				nextJob := analysis.CreatePostRelationshipJob{
+				nextJob := analysis.CreateAnalysisRelationshipJob{
 					FromID: userID,
 					ToID:   targetID,
 					Kind:   azure.ResetPassword,
@@ -1212,13 +1212,13 @@ func resetPasswordCases(roleAssignments RoleAssignments, operation analysis.Stat
 		})
 
 	} else if roleAssignments.NodeHasRole(userID, azure.UserAccountAdministratorRole) {
-		operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
+		operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreateAnalysisRelationshipJob) error {
 			for targetID, targetNode := range roleAssignments.NodesWithRolesExclusive(UserAdministratorPasswordResetTargetRoles()...).Get(azure.User) {
 				if userID == targetID || securityGroupUsers.Contains(targetID.Uint64()) {
 					continue
 				}
 
-				nextJob := analysis.CreatePostRelationshipJob{
+				nextJob := analysis.CreateAnalysisRelationshipJob{
 					FromID: userID,
 					ToID:   targetNode.ID,
 					Kind:   azure.ResetPassword,
@@ -1231,13 +1231,13 @@ func resetPasswordCases(roleAssignments RoleAssignments, operation analysis.Stat
 			return nil
 		})
 
-		operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
+		operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreateAnalysisRelationshipJob) error {
 			for targetID := range usersWithoutRoles {
 				if userID == targetID || securityGroupUsers.Contains(targetID.Uint64()) {
 					continue
 				}
 
-				nextJob := analysis.CreatePostRelationshipJob{
+				nextJob := analysis.CreateAnalysisRelationshipJob{
 					FromID: userID,
 					ToID:   targetID,
 					Kind:   azure.ResetPassword,
@@ -1251,13 +1251,13 @@ func resetPasswordCases(roleAssignments RoleAssignments, operation analysis.Stat
 			return nil
 		})
 	} else if roleAssignments.NodeHasRole(userID, azure.PasswordAdministratorRole) {
-		operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
+		operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreateAnalysisRelationshipJob) error {
 			for targetID := range roleAssignments.NodesWithRolesExclusive(PasswordAdministratorPasswordResetTargetRoles()...).Get(azure.User) {
 				if userID == targetID || securityGroupUsers.Contains(targetID.Uint64()) {
 					continue
 				}
 
-				nextJob := analysis.CreatePostRelationshipJob{
+				nextJob := analysis.CreateAnalysisRelationshipJob{
 					FromID: userID,
 					ToID:   targetID,
 					Kind:   azure.ResetPassword,
@@ -1271,13 +1271,13 @@ func resetPasswordCases(roleAssignments RoleAssignments, operation analysis.Stat
 			return nil
 		})
 
-		operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
+		operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreateAnalysisRelationshipJob) error {
 			for targetID := range usersWithoutRoles {
 				if userID == targetID || securityGroupUsers.Contains(targetID.Uint64()) {
 					continue
 				}
 
-				nextJob := analysis.CreatePostRelationshipJob{
+				nextJob := analysis.CreateAnalysisRelationshipJob{
 					FromID: userID,
 					ToID:   targetID,
 					Kind:   azure.ResetPassword,
@@ -1290,13 +1290,13 @@ func resetPasswordCases(roleAssignments RoleAssignments, operation analysis.Stat
 			return nil
 		})
 	} else if roleAssignments.NodeHasRole(userID, azure.PartnerTier1SupportRole) {
-		operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
+		operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreateAnalysisRelationshipJob) error {
 			for targetID, targetNode := range usersWithoutRoles {
 				if userID == targetID || securityGroupUsers.Contains(targetID.Uint64()) {
 					continue
 				}
 
-				nextJob := analysis.CreatePostRelationshipJob{
+				nextJob := analysis.CreateAnalysisRelationshipJob{
 					FromID: userID,
 					ToID:   targetNode.ID,
 					Kind:   azure.ResetPassword,
@@ -1315,10 +1315,10 @@ func resetPasswordCases(roleAssignments RoleAssignments, operation analysis.Stat
 	return nil
 }
 
-func globalAdmins(roleAssignments RoleAssignments, tenant *graph.Node, operation analysis.StatTrackedOperation[analysis.CreatePostRelationshipJob]) {
-	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
+func globalAdmins(roleAssignments RoleAssignments, tenant *graph.Node, operation analysis.StatTrackedOperation[analysis.CreateAnalysisRelationshipJob]) {
+	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreateAnalysisRelationshipJob) error {
 		for _, roleMember := range roleAssignments.NodesWithRole(azure.CompanyAdministratorRole).GetCombined(azure.User, azure.ServicePrincipal, azure.Group) {
-			nextJob := analysis.CreatePostRelationshipJob{
+			nextJob := analysis.CreateAnalysisRelationshipJob{
 				FromID: roleMember.ID,
 				ToID:   tenant.ID,
 				Kind:   azure.GlobalAdmin,
@@ -1333,10 +1333,10 @@ func globalAdmins(roleAssignments RoleAssignments, tenant *graph.Node, operation
 	})
 }
 
-func privilegedRoleAdmins(roleAssignments RoleAssignments, tenant *graph.Node, operation analysis.StatTrackedOperation[analysis.CreatePostRelationshipJob]) {
-	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
+func privilegedRoleAdmins(roleAssignments RoleAssignments, tenant *graph.Node, operation analysis.StatTrackedOperation[analysis.CreateAnalysisRelationshipJob]) {
+	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreateAnalysisRelationshipJob) error {
 		for _, roleMember := range roleAssignments.NodesWithRole(azure.PrivilegedRoleAdministratorRole).GetCombined(azure.User, azure.ServicePrincipal, azure.Group) {
-			nextJob := analysis.CreatePostRelationshipJob{
+			nextJob := analysis.CreateAnalysisRelationshipJob{
 				FromID: roleMember.ID,
 				ToID:   tenant.ID,
 				Kind:   azure.PrivilegedRoleAdmin,
@@ -1351,10 +1351,10 @@ func privilegedRoleAdmins(roleAssignments RoleAssignments, tenant *graph.Node, o
 	})
 }
 
-func privilegedAuthAdmins(roleAssignments RoleAssignments, tenant *graph.Node, operation analysis.StatTrackedOperation[analysis.CreatePostRelationshipJob]) {
-	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
+func privilegedAuthAdmins(roleAssignments RoleAssignments, tenant *graph.Node, operation analysis.StatTrackedOperation[analysis.CreateAnalysisRelationshipJob]) {
+	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreateAnalysisRelationshipJob) error {
 		for _, roleMember := range roleAssignments.NodesWithRole(azure.PrivilegedAuthenticationAdministratorRole).GetCombined(azure.User, azure.ServicePrincipal, azure.Group) {
-			nextJob := analysis.CreatePostRelationshipJob{
+			nextJob := analysis.CreateAnalysisRelationshipJob{
 				FromID: roleMember.ID,
 				ToID:   tenant.ID,
 				Kind:   azure.PrivilegedAuthAdmin,
@@ -1369,7 +1369,7 @@ func privilegedAuthAdmins(roleAssignments RoleAssignments, tenant *graph.Node, o
 	})
 }
 
-func addMembers(roleAssignments RoleAssignments, operation analysis.StatTrackedOperation[analysis.CreatePostRelationshipJob]) {
+func addMembers(roleAssignments RoleAssignments, operation analysis.StatTrackedOperation[analysis.CreateAnalysisRelationshipJob]) {
 	var (
 		tenantGroups = roleAssignments.Nodes.Get(azure.Group)
 	)
@@ -1377,9 +1377,9 @@ func addMembers(roleAssignments RoleAssignments, operation analysis.StatTrackedO
 	for tenantGroupID, tenantGroup := range tenantGroups {
 		innerGroupID := tenantGroupID
 		innerGroup := tenantGroup
-		operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
+		operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreateAnalysisRelationshipJob) error {
 			for _, tenantUser := range roleAssignments.NodesWithRole(AddMemberAllGroupsTargetRoles()...).Get(azure.User) {
-				nextJob := analysis.CreatePostRelationshipJob{
+				nextJob := analysis.CreateAnalysisRelationshipJob{
 					FromID: tenantUser.ID,
 					ToID:   innerGroupID,
 					Kind:   azure.AddMembers,
@@ -1393,7 +1393,7 @@ func addMembers(roleAssignments RoleAssignments, operation analysis.StatTrackedO
 			return nil
 		})
 
-		operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
+		operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreateAnalysisRelationshipJob) error {
 			if isRoleAssignable, err := innerGroup.Properties.Get(azure.IsAssignableToRole.String()).Bool(); err != nil {
 				if graph.IsErrPropertyNotFound(err) {
 					log.Errorf("Node %d is missing property %s", innerGroup.ID, azure.IsAssignableToRole)
@@ -1402,7 +1402,7 @@ func addMembers(roleAssignments RoleAssignments, operation analysis.StatTrackedO
 				}
 			} else if !isRoleAssignable {
 				for _, tenantUser := range roleAssignments.NodesWithRole(AddMemberGroupNotRoleAssignableTargetRoles()...).Get(azure.User) {
-					nextJob := analysis.CreatePostRelationshipJob{
+					nextJob := analysis.CreateAnalysisRelationshipJob{
 						FromID: tenantUser.ID,
 						ToID:   innerGroupID,
 						Kind:   azure.AddMembers,
@@ -1419,19 +1419,19 @@ func addMembers(roleAssignments RoleAssignments, operation analysis.StatTrackedO
 	}
 }
 
-func UserRoleAssignments(ctx context.Context, db graph.Database) (*analysis.AtomicPostProcessingStats, error) {
+func UserRoleAssignments(ctx context.Context, db graph.Database) (*analysis.AtomicAnalysisStats, error) {
 	if tenantNodes, err := FetchTenants(ctx, db); err != nil {
-		return &analysis.AtomicPostProcessingStats{}, err
+		return &analysis.AtomicAnalysisStats{}, err
 	} else {
-		operation := analysis.NewPostRelationshipOperation(ctx, db, "Azure User Role Assignments Post Processing")
+		operation := analysis.NewAnalysisRelationshipOperation(ctx, db, "Azure User Role Assignments Analysis")
 		for _, tenant := range tenantNodes {
 			if roleAssignments, err := TenantRoleAssignments(ctx, db, tenant); err != nil {
 				operation.Done()
-				return &analysis.AtomicPostProcessingStats{}, err
+				return &analysis.AtomicAnalysisStats{}, err
 			} else {
 				if err := resetPassword(ctx, db, operation, roleAssignments); err != nil {
 					operation.Done()
-					return &analysis.AtomicPostProcessingStats{}, err
+					return &analysis.AtomicAnalysisStats{}, err
 				} else {
 					globalAdmins(roleAssignments, tenant, operation)
 					privilegedRoleAdmins(roleAssignments, tenant, operation)
