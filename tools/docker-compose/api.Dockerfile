@@ -24,7 +24,7 @@ ARG AZUREHOUND_VERSION=v2.0.4
 ########
 # Package other assets
 ################
-FROM alpine:3.16 as hound-builder
+FROM docker.io/library/alpine:3.16 as hound-builder
 ARG SHARPHOUND_VERSION
 ARG AZUREHOUND_VERSION
 
@@ -62,7 +62,7 @@ WORKDIR /tmp/azurehound/artifacts
 RUN 7z a -tzip -mx9 azurehound-$AZUREHOUND_VERSION.zip azurehound-*
 RUN sha256sum azurehound-$AZUREHOUND_VERSION.zip > azurehound-$AZUREHOUND_VERSION.zip.sha256
 
-FROM golang:1.20
+FROM docker.io/library/golang:1.20
 ARG SHARPHOUND_VERSION
 ARG AZUREHOUND_VERSION
 WORKDIR /bloodhound

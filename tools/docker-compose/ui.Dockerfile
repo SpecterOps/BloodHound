@@ -14,7 +14,7 @@
 # 
 # SPDX-License-Identifier: Apache-2.0
 
-FROM node:18 AS base
+FROM docker.io/library/node:18 AS base
 
 # Setup
 RUN mkdir /.yarn && chmod -R go+w /.yarn
