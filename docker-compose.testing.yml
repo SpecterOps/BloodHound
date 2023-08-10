@@ -18,7 +18,7 @@ version: '3'
 services:
   testdb:
     restart: unless-stopped
-    image: postgres:13.2
+    image: docker.io/library/postgres:13.2
     environment:
       - POSTGRES_USER=bloodhound
       - POSTGRES_PASSWORD=bloodhoundcommunityedition

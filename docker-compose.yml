@@ -18,7 +18,7 @@ version: '3'
 
 services:
   proxy:
-    image: traefik:latest
+    image: docker.io/library/traefik:latest
     command:
       - --api.insecure=true
       - --providers.docker
@@ -32,7 +32,7 @@ services:
       - host.docker.internal:host-gateway
 
   app-db:
-    image: postgres:13.2
+    image: docker.io/library/postgres:13.2
     environment:
       - POSTGRES_USER=bloodhound
       - POSTGRES_PASSWORD=bloodhoundcommunityedition

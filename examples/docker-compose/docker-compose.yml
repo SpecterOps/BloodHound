@@ -17,7 +17,7 @@
 version: '3'
 services:
   app-db:
-    image: postgres:13.2
+    image: docker.io/library/postgres:13.2
     environment:
       - POSTGRES_USER=${POSTGRES_USER:-bloodhound}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-bloodhoundcommunityedition}
@@ -39,7 +39,7 @@ services:
       start_period: 30s
 
   graph-db:
-    image: neo4j:4.4
+    image: docker.io/library/neo4j:4.4
     environment:
       - NEO4J_AUTH=${NEO4J_AUTH:-neo4j/bloodhoundcommunityedition}
     # Database ports are disabled by default. Please change your database password to something secure before uncommenting
@@ -60,7 +60,7 @@ services:
       start_period: 30s
 
   bloodhound:
-    image: specterops/bloodhound:${BLOODHOUND_TAG:-latest}
+    image: docker.io/specterops/bloodhound:${BLOODHOUND_TAG:-latest}
     ports:
       - ${BLOODHOUND_PORT:-8080}:8080
     ### Uncomment to use your own bloodhound.config.json to configure the application
