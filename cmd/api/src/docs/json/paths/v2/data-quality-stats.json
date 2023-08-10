@@ -19,7 +19,7 @@
       "summary": "Time series list of data quality stats for a given AD domain",
       "parameters": [
         {
-          "$ref": "#/definitions/parameter.PreferHeader"
+          "$ref": "#/definitions/parameters.PreferHeader"
         },
         {
           "type": "string",
@@ -53,6 +53,12 @@
           "description": "Paging Limit",
           "name": "limit",
           "in": "query"
+        },
+        {
+          "type": "integer",
+          "description": "Number of records per page",
+          "name": "count",
+          "in": "query"
         }
       ],
       "responses": {
@@ -61,7 +67,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/definitions/api.ResponseWrapper"
+                "$ref": "#/definitions/v2.ListAdDataQualityStatsResponse"
               }
             }
           }
@@ -92,7 +98,7 @@
       "summary": "Time series list of data quality stats for a given Azure tenant",
       "parameters": [
         {
-          "$ref": "#/definitions/parameter.PreferHeader"
+          "$ref": "#/definitions/parameters.PreferHeader"
         },
         {
           "type": "string",
@@ -126,6 +132,12 @@
           "description": "Paging Limit",
           "name": "limit",
           "in": "query"
+        },
+        {
+          "type": "integer",
+          "description": "Number of records per page",
+          "name": "count",
+          "in": "query"
         }
       ],
       "responses": {
@@ -134,7 +146,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/definitions/api.ResponseWrapper"
+                "$ref": "#/definitions/v2.ListAzureDataQualityStatsResponse"
               }
             }
           }
@@ -145,7 +157,7 @@
       }
     }
   },
-  "/api/v2/platforms/{platform_id}/data-quality-stats": {
+  "/api/v2/platform/{platform_id}/data-quality-stats": {
     "parameters": [
       {
         "type": "string",
@@ -165,7 +177,7 @@
       "summary": "Time series list of aggregate data quality stats for a given platform",
       "parameters": [
         {
-          "$ref": "#/definitions/parameter.PreferHeader"
+          "$ref": "#/definitions/parameters.PreferHeader"
         },
         {
           "type": "string",
@@ -198,6 +210,12 @@
           "type": "integer",
           "description": "Paging Limit",
           "name": "limit",
+          "in": "query"
+        },
+        {
+          "type": "integer",
+          "description": "Number of records per page",
+          "name": "count",
           "in": "query"
         }
       ],

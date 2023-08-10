@@ -596,6 +596,29 @@
   "model.ADDataQualityStat": {
     "type": "object",
     "properties": {
+      "id": {
+        "type": "integer"
+      },
+      "created_at": {
+        "type": "string",
+        "format": "date-time"
+      },
+      "updated_at": {
+        "type": "string",
+        "format": "date-time"
+      },
+      "deleted_at": {
+        "type": "object",
+        "properties": {
+          "Time": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "Valid": {
+            "type": "boolean"
+          }
+        }
+      },
       "domain_sid": {
         "type": "string"
       },
@@ -640,6 +663,26 @@
   "model.ADDataQualityAggregation": {
     "type": "object",
     "properties": {
+      "created_at": {
+        "type": "string",
+        "format": "date-time"
+      },
+      "updated_at": {
+        "type": "string",
+        "format": "date-time"
+      },
+      "deleted_at": {
+        "type": "object",
+        "properties": {
+          "Time": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "Valid": {
+            "type": "boolean"
+          }
+        }
+      },
       "domains": {
         "type": "integer"
       },
@@ -684,6 +727,26 @@
   "model.AzureDataQualityStat": {
     "type": "object",
     "properties": {
+      "created_at": {
+        "type": "string",
+        "format": "date-time"
+      },
+      "updated_at": {
+        "type": "string",
+        "format": "date-time"
+      },
+      "deleted_at": {
+        "type": "object",
+        "properties": {
+          "Time": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "Valid": {
+            "type": "boolean"
+          }
+        }
+      },
       "tenantid": {
         "type": "string"
       },
