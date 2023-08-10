@@ -1,11 +1,11 @@
 root = "."
 testdata_dir = "testdata"
-tmp_dir = "tmp"
+tmp_dir = "../tmp"
 
 [build]
-  args_bin = ["-configfile", "local-harnesses/${BH_CONFIG_FILE:-build.config.json}"]
-  bin = "./tmp/main"
-  cmd = "go build -o ./tmp/main github.com/specterops/bloodhound/src/cmd/bhapi"
+  args_bin = ["-configfile", "/${BH_CONFIG_FILE:-build.config.json}"]
+  bin = "../tmp/main"
+  cmd = "go build -o ../tmp/main github.com/specterops/bloodhound/src/cmd/bhapi"
   delay = 0
   exclude_dir = ["assets", "tmp", "vendor", "testdata"]
   exclude_file = []

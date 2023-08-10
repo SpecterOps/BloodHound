@@ -109,7 +109,8 @@ services:
       - traefik.http.routers.bhapi.service=bhapi
       - traefik.http.services.bhapi.loadbalancer.server.port=8080
     volumes:
-      - .:/bloodhound
+      - .:/bloodhound:ro
+      - ./local-harnesses/${BH_CONFIG_FILE:-build.config.json}:/build.config.json:ro
       - go-pkg-mod:/go/pkg/mod
     extra_hosts:
       - host.docker.internal:host-gateway
@@ -157,6 +158,7 @@ services:
       - traefik.http.services.debugapi.loadbalancer.server.port=8080
     volumes:
       - .:/bloodhound:ro
+      - ./local-harnesses/${BH_CONFIG_FILE:-build.config.json}:/build.config.json:ro
     extra_hosts:
       - host.docker.internal:host-gateway
     depends_on:
