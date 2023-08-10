@@ -82,7 +82,7 @@ const getComponents = (baseURL?: string) => {
         em: ({ node, ...props }: any) => <em {...props} />,
         hr: ({ node, ...props }: any) => <Divider {...props} />,
         img: ({ node, ...props }: any) => {
-            const imgSrc = baseURL ? `${baseURL}/${props.src}` : props.src;
+            const imgSrc = baseURL ? `${baseURL}${props.src}` : props.src;
             return <img {...props} alt={props.alt} src={imgSrc} style={{ maxWidth: '100%' }} />;
         },
         li: ({ node, ordered, ...props }: any) => <li {...props} />,
