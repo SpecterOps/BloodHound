@@ -11,32 +11,123 @@
             "parameters": [
                 {
                     "$ref": "#/definitions/parameters.PreferHeader"
+                },
+                {
+                    "type": "integer",
+                    "description": "Paging Skip",
+                    "name": "skip",
+                    "in": "query"
+                },
+                {
+                    "type": "integer",
+                    "description": "Paging Limit",
+                    "name": "limit",
+                    "in": "query"
+                },
+                {
+                    "type": "integer",
+                    "description": "Number of records to return",
+                    "name": "count",
+                    "in": "query"
+                },
+                {
+                    "type": "string",
+                    "description": "Sort by column. Can be used multiple times; prepend hyphen for descending order. Sortable columns are user_id, user_email_address, status, status_message, start_time, end_time, last_ingest, id, created_at, updated_at, and deleted_at.",
+                    "name": "sort_by",
+                    "in": "query",
+                    "required": false
+                },
+                {
+                    "type": "string",
+                    "description": "Filter results by column value. Valid filter predicates are eq, neq",
+                    "name": "user_id",
+                    "in": "query",
+                    "required": false
+                },
+                {
+                    "type": "string",
+                    "description": "Filter results by column value. Valid filter predicates are eq, neq",
+                    "name": "user_email_address",
+                    "in": "query",
+                    "required": false
+                },
+                {
+                    "type": "string",
+                    "description": "Filter results by column value. Valid filter predicates are eq, neq",
+                    "name": "status",
+                    "in": "query",
+                    "required": false
+                },
+                {
+                    "type": "string",
+                    "description": "Filter results by column value. Valid filter predicates are eq, neq",
+                    "name": "status_message",
+                    "in": "query",
+                    "required": false
+                },
+                {
+                    "type": "string",
+                    "description": "Filter results by column value. Valid filter predicates are eq, neq, gt, gte, lt, lte",
+                    "name": "start_time",
+                    "in": "query",
+                    "required": false
+                },
+                {
+                    "type": "string",
+                    "description": "Filter results by column value. Valid filter predicates are eq, neq, gt, gte, lt, lte",
+                    "name": "end_time",
+                    "in": "query",
+                    "required": false
+                },
+                {
+                    "type": "string",
+                    "description": "Filter results by column value. Valid filter predicates are eq, neq, gt, gte, lt, lte",
+                    "name": "last_ingest",
+                    "in": "query",
+                    "required": false
+                },
+                {
+                    "type": "string",
+                    "description": "Filter results by column value. Valid filter predicates are eq, neq, gt, gte, lt, lte",
+                    "name": "id",
+                    "in": "query",
+                    "required": false
+                },
+                {
+                    "type": "string",
+                    "description": "Filter results by column value. Valid filter predicates are eq, neq, gt, gte, lt, lte",
+                    "name": "created_at",
+                    "in": "query",
+                    "required": false
+                },
+                {
+                    "type": "string",
+                    "description": "Filter results by column value. Valid filter predicates are eq, neq, gt, gte, lt, lte",
+                    "name": "updated_at",
+                    "in": "query",
+                    "required": false
+                },
+                {
+                    "type": "string",
+                    "description": "Filter results by column value. Valid filter predicates are eq, neq, gt, gte, lt, lte",
+                    "name": "deleted_at",
+                    "in": "query",
+                    "required": false
                 }
             ],
             "responses": {
                 "200": {
                     "description": "OK",
-                    "schema": {
-                        "$ref": "#/definitions/api.BasicResponse"
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/definitions/v2.ListFileUploadJobsResponse"
+                            }
+                        }
                     }
                 },
-                "401": {
-                    "description": "Unauthorized",
-                    "schema": {
-                        "$ref": "#/definitions/api.ErrorWrapper"
-                    }
-                },
-                "500": {
-                    "description": "Internal Server Error",
-                    "schema": {
-                        "$ref": "#/definitions/api.ErrorWrapper"
-                    }
-                },
-                "504": {
-                    "description": "Gateway Timeout",
-                    "schema": {
-                        "$ref": "#/definitions/api.ErrorWrapper"
-                    }
+                "Error": {
+                    "$ref": "#/components/responses/defaultError"
                 }
             }
         }
@@ -58,27 +149,16 @@
             "responses": {
                 "201": {
                     "description": "Created",
-                    "schema": {
-                        "$ref": "#/definitions/api.BasicResponse"
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/definitions/v2.FileUploadJobResponse"
+                            }
+                        }
                     }
                 },
-                "401": {
-                    "description": "Unauthorized",
-                    "schema": {
-                        "$ref": "#/definitions/api.ErrorWrapper"
-                    }
-                },
-                "500": {
-                    "description": "Internal Server Error",
-                    "schema": {
-                        "$ref": "#/definitions/api.ErrorWrapper"
-                    }
-                },
-                "504": {
-                    "description": "Gateway Timeout",
-                    "schema": {
-                        "$ref": "#/definitions/api.ErrorWrapper"
-                    }
+                "Error": {
+                    "$ref": "#/components/responses/defaultError"
                 }
             }
         }
@@ -107,29 +187,8 @@
                 "202": {
                     "description": "Accepted"
                 },
-                "404": {
-                    "description": "Not Found",
-                    "schema": {
-                        "$ref": "#/definitions/api.ErrorWrapper"
-                    }
-                },
-                "400": {
-                    "description": "Bad Request",
-                    "schema": {
-                        "$ref": "#/definitions/api.ErrorWrapper"
-                    }
-                },
-                "401": {
-                    "description": "Unauthorized",
-                    "schema": {
-                        "$ref": "#/definitions/api.ErrorWrapper"
-                    }
-                },
-                "504": {
-                    "description": "Gateway Timeout",
-                    "schema": {
-                        "$ref": "#/definitions/api.ErrorWrapper"
-                    }
+                "Error": {
+                    "$ref": "#/components/responses/defaultError"
                 }
             }
         }
@@ -150,28 +209,10 @@
             ],
             "responses": {
                 "200": {
-                    "description": "OK",
-                    "schema": {
-                        "$ref": "#/definitions/api.BasicResponse"
-                    }
+                    "description": "OK"
                 },
-                "401": {
-                    "description": "Unauthorized",
-                    "schema": {
-                        "$ref": "#/definitions/api.ErrorWrapper"
-                    }
-                },
-                "500": {
-                    "description": "Internal Server Error",
-                    "schema": {
-                        "$ref": "#/definitions/api.ErrorWrapper"
-                    }
-                },
-                "504": {
-                    "description": "Gateway Timeout",
-                    "schema": {
-                        "$ref": "#/definitions/api.ErrorWrapper"
-                    }
+                "Error": {
+                    "$ref": "#/components/responses/defaultError"
                 }
             }
         }
