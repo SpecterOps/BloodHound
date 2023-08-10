@@ -52,7 +52,7 @@ services:
       test:
         [
           "CMD-SHELL",
-          "wget http://localhost:${NEO4J_WEB_PORT:-7474} || exit 1"
+          "wget -O /dev/null -q http://localhost:${NEO4J_WEB_PORT:-7474} || exit 1"
         ]
       interval: 10s
       timeout: 5s

@@ -1,21 +1,23 @@
 // Copyright 2023 Specter Ops, Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// 
+//
 // SPDX-License-Identifier: Apache-2.0
 
+import { Grid, useTheme } from '@mui/material';
 import { GraphProgress } from 'bh-shared-ui';
 import { MultiDirectedGraph } from 'graphology';
+import { random } from 'graphology-layout';
 import forceAtlas2 from 'graphology-layout-forceatlas2';
 import { Attributes } from 'graphology-types';
 import { GraphEdges, GraphNodes } from 'js-client-library';
@@ -37,7 +39,6 @@ import { AppState, useAppDispatch } from 'src/store';
 import { EdgeDirection, EdgeParams, NodeParams, transformFlatGraphResponse } from 'src/utils';
 import EdgeInfoPane from 'src/views/Explore/EdgeInfo/EdgeInfoPane';
 import EntityInfoPanel from 'src/views/Explore/EntityInfo/EntityInfoPanel';
-import { random } from 'graphology-layout';
 import ExploreSearch from 'src/views/Explore/ExploreSearch';
 import usePrompt from 'src/views/Explore/NavigationAlert';
 
@@ -130,6 +131,7 @@ const initGraphEdges = (graph: MultiDirectedGraph, edges: GraphEdges) => {
 
 const GraphView: FC = () => {
     /* Hooks */
+    const theme = useTheme();
     const dispatch = useAppDispatch();
 
     const graphState: GraphState = useSelector((state: AppState) => state.explore);
@@ -207,8 +209,29 @@ const GraphView: FC = () => {
                 graph={graphologyGraph}
                 onClickNode={onClickNode}
             />
-            <ExploreSearch />
-            {edgeInfoState.open ? <EdgeInfoPane selectedEdge={edgeInfoState.selectedEdge} /> : <EntityInfoPanel />}
+            <Grid
+                container
+                direction='row'
+                justifyContent='space-between'
+                alignItems='flex-start'
+                sx={{
+                    position: 'relative',
+                    margin: theme.spacing(2, 2, 0),
+                    pointerEvents: 'none',
+                    height: '100%',
+                }}>
+                <Grid item xs={6} md={5} lg={4} sx={{ height: '100%' }}>
+                    <ExploreSearch />
+                </Grid>
+                <Grid item xs={6} md={5} lg={4} sx={{ height: '100%' }}>
+                    {edgeInfoState.open ? (
+                        <EdgeInfoPane selectedEdge={edgeInfoState.selectedEdge} />
+                    ) : (
+                        <EntityInfoPanel />
+                    )}
+                </Grid>
+            </Grid>
+
             <GraphProgress loading={graphState.loading} />
         </div>
     );

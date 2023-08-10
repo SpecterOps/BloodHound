@@ -1,40 +1,38 @@
 // Copyright 2023 Specter Ops, Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// 
+//
 // SPDX-License-Identifier: Apache-2.0
 
-import { faSearch, faDirections, faCode, faMinus, faPlus } from '@fortawesome/free-solid-svg-icons';
+import { faCode, faDirections, faMinus, faPlus, faSearch } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Box, Collapse, Paper, Tab, Tabs } from '@mui/material';
+import { Box, Collapse, Paper, Tab, Tabs, Theme, useMediaQuery, useTheme } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
+import { Icon } from 'bh-shared-ui';
 import React, { useState } from 'react';
+import { useSelector } from 'react-redux';
+import { PRIMARY_SEARCH } from 'src/ducks/searchbar/types';
+import { AppState } from 'src/store';
 import CypherInput from './CypherInput';
 import NodeSearch from './NodeSearch';
 import PathfindingSearch from './PathfindingSearch';
-import { PRIMARY_SEARCH } from 'src/ducks/searchbar/types';
-import { useSelector } from 'react-redux';
-import { AppState } from 'src/store';
-import { Icon } from 'bh-shared-ui';
 
 const useStyles = makeStyles((theme) => ({
     menuButton: {
-        minWidth: '35px',
         borderRadius: theme.shape.borderRadius,
         borderColor: 'rgba(0,0,0,0.23)',
         color: 'black',
         height: '35px',
-        width: '35px',
     },
     icon: {
         height: '40px',
@@ -47,6 +45,8 @@ const useStyles = makeStyles((theme) => ({
 
 const ExploreSearch = () => {
     const classes = useStyles();
+    const theme = useTheme();
+    const matches = useMediaQuery(theme.breakpoints.down('md'));
 
     const searchState = useSelector((state: AppState) => state.search);
 
@@ -64,14 +64,8 @@ const ExploreSearch = () => {
     };
 
     return (
-        <Box
-            sx={{
-                position: 'absolute',
-                top: '1rem',
-                left: '1rem',
-                width: activeTab === 2 && showSearchWidget ? '600px' : '410px',
-            }}>
-            <Paper sx={{ height: '40px', display: 'flex', gap: 1 }} elevation={0}>
+        <Box sx={{ pointerEvents: 'auto' }}>
+            <Paper sx={{ height: '40px', display: 'flex', flexShrink: 4, gap: 1 }} elevation={0}>
                 <Icon
                     className={classes.icon}
                     click={() => {
@@ -84,11 +78,17 @@ const ExploreSearch = () => {
                     value={activeTab}
                     onChange={handleTabChange}
                     onClick={() => setShowSearchWidget(true)}
-                    sx={{ height: '40px', minHeight: '40px' }}
+                    sx={{
+                        height: '40px',
+                        minHeight: '40px',
+                        display: 'flex',
+                        justifyContent: 'space-around',
+                        width: '100%',
+                    }}
                     TabIndicatorProps={{
                         sx: { height: 3, backgroundColor: '#6798B9' },
                     }}>
-                    {TabsContent}
+                    {getTabsContent(theme, matches)}
                 </Tabs>
             </Paper>
 
@@ -108,32 +108,41 @@ const ExploreSearch = () => {
     );
 };
 
-const TabsContent = [
-    {
-        label: 'Search',
-        icon: faSearch,
-    },
-    {
-        label: 'Pathfinding',
-        icon: faDirections,
-    },
-    {
-        label: 'Cypher',
-        icon: faCode,
-    },
-].map(({ label, icon }) => (
-    <Tab
-        label={label}
-        key={label}
-        icon={<FontAwesomeIcon icon={icon} />}
-        iconPosition='start'
-        sx={{
-            height: '40px',
-            minHeight: '40px',
-            color: 'black',
-        }}
-    />
-));
+const getTabsContent = (theme: Theme, matches: boolean) => {
+    const tabs = [
+        {
+            label: 'Search',
+            icon: faSearch,
+        },
+        {
+            label: 'Pathfinding',
+            icon: faDirections,
+        },
+        {
+            label: 'Cypher',
+            icon: faCode,
+        },
+    ];
+
+    return tabs.map(({ label, icon }) => (
+        <Tab
+            label={matches ? '' : label}
+            key={label}
+            icon={<FontAwesomeIcon icon={icon} />}
+            iconPosition='start'
+            title={label}
+            sx={{
+                height: '40px',
+                minHeight: '40px',
+                color: 'black',
+                opacity: 1,
+                padding: 0,
+                flexGrow: 1,
+                minWidth: theme.spacing(2),
+            }}
+        />
+    ));
+};
 
 interface TabPanelsProps {
     tabs: React.ReactNode[];

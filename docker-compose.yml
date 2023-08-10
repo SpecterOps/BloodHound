@@ -88,7 +88,7 @@ services:
       - traefik.http.routers.neo4jbrowser.service=neo4jbrowser
       - traefik.http.services.neo4jbrowser.loadbalancer.server.port=7474
     healthcheck:
-      test: [ "CMD-SHELL", "wget http://localhost:7474 || exit 1" ]
+      test: [ "CMD-SHELL", "wget -O /dev/null -q http://localhost:7474 || exit 1" ]
       interval: 10s
       timeout: 5s
       retries: 5

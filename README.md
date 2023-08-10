@@ -1,6 +1,6 @@
-# BloodHound Community Edition
-
-Welcome to BloodHound Community Edition!
+<p align="center">
+    <img src="cmd/ui/public/img/logo-white-full.svg" alt="BloodHound Community Edition" style="width: 400px;" />
+</p>
 
 ## About
 
@@ -67,4 +67,26 @@ Because BloodHound CE is distributed as a Docker image, there are many other way
 
 ### BloodHound Support
 
-TBD
+If you need to contact our team directly and do not wish to use Slack you may do so by sending an email
+to `support [AT] specterops.io`.
+
+## Licensing
+
+```
+Copyright 2023 Specter Ops, Inc.
+
+Licensed under the Apache License, Version 2.0
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+```
+
+Unless otherwise annotated by a lower-level LICENSE file or license header, all files in this repository are released
+under the `Apache-2.0` license. A full copy of the license may be found in the top-level [LICENSE](LICENSE) file.
