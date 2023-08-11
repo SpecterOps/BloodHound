@@ -157,6 +157,8 @@ export const GraphEvents: FC<GraphEventProps> = ({
                     newData.highlighted = true;
                 }
 
+                newData.forceLabel = true;
+                
                 return newData;
             },
             edgeReducer: (edge, data) => {
@@ -170,11 +172,11 @@ export const GraphEvents: FC<GraphEventProps> = ({
 
                 if (edge === selectedEdge?.id) {
                     newData.selected = true;
-                    newData.forceLabel = true;
                 } else {
                     newData.selected = false;
-                    newData.forceLabel = false;
                 }
+
+                newData.forceLabel = true;
 
                 // We calculate control points for all curved edges here and pass those along as edge attributes in both viewport and framed graph
                 // coordinates. We can then use those control points in our edge, edge label, and edge arrow programs.
