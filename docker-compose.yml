@@ -155,7 +155,7 @@ services:
     command: "-c .air.debug.toml ${AIR_FLAGS:-''}"
     ports:
       - ${BH_API_PORT:-8080}:8080
-      - ${DEBUG_PORT:-2345}:2345
+      - ${DEBUG_PORT:-3456}:2345
     labels:
       - traefik.enable=true
       - traefik.http.routers.debugapi.rule=Host(`${BH_HOSTNAME:-bloodhound.localhost}`) && PathPrefix(`/api`)

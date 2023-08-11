@@ -16,7 +16,7 @@
             "type": "go",
             "host": "localhost",
             "mode": "remote",
-            "port": 2345,
+            "port": 3456,
             "request": "attach",
             "substitutePath": [
                 {

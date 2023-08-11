@@ -70,14 +70,18 @@ func SystemSignalExitChannel() chan struct{} {
 }
 
 // MigrateGraph runs migrations for the graph database
-func MigrateGraph(db graph.Database) error {
+func MigrateGraph(cfg config.Configuration, db graph.Database) error {
+	if cfg.DisableMigrations {
+		log.Infof("Graph migrations are disabled per configuration")
+		return nil
+	}
 	return migrations.NewGraphMigrator(db).Migrate()
 }
 
 // MigrateDB runs database migrations on PG
 func MigrateDB(cfg config.Configuration, db database.Database, models []any) error {
 	if cfg.DisableMigrations {
-		log.Infof("Migrations are disabled per configuration")
+		log.Infof("Database migrations are disabled per configuration")
 		return nil
 	}
 
@@ -153,7 +157,7 @@ func StartServer(cfg config.Configuration, exitC chan struct{}) error {
 		return fmt.Errorf("db connection error: %w", err)
 	} else if err := MigrateDB(cfg, db, migration.ListBHModels()); err != nil {
 		return fmt.Errorf("db migration error: %w", err)
-	} else if err := MigrateGraph(graphDB); err != nil {
+	} else if err := MigrateGraph(cfg, graphDB); err != nil {
 		return fmt.Errorf("graph db migration error: %w", err)
 	} else if apiCache, err := cache.NewCache(cache.Config{MaxSize: cfg.MaxAPICacheSize}); err != nil {
 		return fmt.Errorf("failed to create in-memory cache for API: %w", err)
