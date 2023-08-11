@@ -1,17 +1,17 @@
 // Copyright 2023 Specter Ops, Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// 
+//
 // SPDX-License-Identifier: Apache-2.0
 
 package queries_test
@@ -19,22 +19,101 @@ package queries_test
 import (
 	"context"
 	"fmt"
+	"github.com/specterops/bloodhound/src/auth"
+	bhCtx "github.com/specterops/bloodhound/src/ctx"
+	"github.com/specterops/bloodhound/src/test/must"
 	"net/http"
 	"net/url"
 	"testing"
+	"time"
 
-	"github.com/specterops/bloodhound/src/api"
-	"github.com/specterops/bloodhound/src/model"
-	"github.com/specterops/bloodhound/src/queries"
-	"github.com/specterops/bloodhound/cache"
 	"github.com/gorilla/mux"
-	"github.com/stretchr/testify/require"
-	"go.uber.org/mock/gomock"
+	"github.com/specterops/bloodhound/cache"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	graphMocks "github.com/specterops/bloodhound/dawgs/graph/mocks"
 	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/graphschema/common"
+	"github.com/specterops/bloodhound/src/api"
+	"github.com/specterops/bloodhound/src/model"
+	"github.com/specterops/bloodhound/src/queries"
+	"github.com/stretchr/testify/require"
+	"go.uber.org/mock/gomock"
 )
+
+func TestGraphQuery_RawCypherSearch(t *testing.T) {
+	var (
+		mockCtrl       = gomock.NewController(t)
+		mockGraphDB    = graphMocks.NewMockDatabase(mockCtrl)
+		gq             = queries.NewGraphQuery(mockGraphDB, cache.Cache{}, 0, false)
+		outerBHCtxInst = &bhCtx.Context{
+			StartTime: time.Now(),
+			Timeout: bhCtx.RequestedWaitDuration{
+				Value:   time.Second * 5,
+				UserSet: true,
+			},
+			RequestID: must.NewUUIDv4().String(),
+			AuthCtx:   auth.Context{},
+			Host: &url.URL{
+				Scheme: "http",
+				Host:   "example.com",
+			},
+		}
+	)
+
+	// First validate that user set timeouts work
+	mockGraphDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, txDelegate graph.TransactionDelegate, options ...graph.TransactionOption) error {
+		innerBHCtxInst := bhCtx.Get(ctx)
+
+		require.Equal(t, outerBHCtxInst.Timeout.UserSet, innerBHCtxInst.Timeout.UserSet)
+		require.Equal(t, outerBHCtxInst.Timeout.Value, innerBHCtxInst.Timeout.Value)
+
+		// Validate that the options are being set correctly
+		if len(options) != 1 {
+			t.Fatalf("Expected only one transaction option for RawCypherSearch but saw: %d", len(options))
+		}
+
+		// Create a new transaction config to capture the query timeout logic
+		config := &graph.TransactionConfig{}
+		options[0](config)
+
+		require.Equal(t, outerBHCtxInst.Timeout.Value, config.Timeout)
+
+		return nil
+	})
+
+	_, err := gq.RawCypherSearch(outerBHCtxInst.ConstructGoContext(), "match (n) return n;")
+	require.Nil(t, err)
+
+	// Validate that query complexity controls are working
+	mockGraphDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, txDelegate graph.TransactionDelegate, options ...graph.TransactionOption) error {
+		// Validate that the options are being set correctly
+		if len(options) != 1 {
+			t.Fatalf("Expected only one transaction option for RawCypherSearch but saw: %d", len(options))
+		}
+
+		// Create a new transaction config to capture the query timeout logic
+		config := &graph.TransactionConfig{}
+		options[0](config)
+
+		require.Equal(t, time.Second*20, config.Timeout)
+
+		return nil
+	}).Times(2)
+
+	// Unset the user-set timeout in the BH context to validate QC runtime reduction of a complex query
+	outerBHCtxInst.Timeout.UserSet = false
+	outerBHCtxInst.Timeout.Value = time.Minute
+
+	_, err = gq.RawCypherSearch(outerBHCtxInst.ConstructGoContext(), "match ()-[:HasSession*..]->()-[:MemberOf*..]->() return n;")
+	require.Nil(t, err)
+
+	// Prove that overriding QC with a user-preference works
+	outerBHCtxInst.Timeout.UserSet = true
+	outerBHCtxInst.Timeout.Value = time.Second * 20
+
+	_, err = gq.RawCypherSearch(outerBHCtxInst.ConstructGoContext(), "match ()-[:HasSession*..]->()-[:MemberOf*..]->() return n;")
+	require.Nil(t, err)
+}
 
 func TestQueries_GetEntityObjectIDFromRequestPath(t *testing.T) {
 	req, err := http.NewRequest("GET", "/api/v2/users/S-1-5-21-570004220-2248230615-4072641716-4001/admin-rights", nil)
