@@ -99,7 +99,7 @@ bh-dev *ARGS='up':
 
 # run docker compose commands for the BH debug profile (Default: up)
 bh-debug *ARGS='up':
-  @docker compose --profile debug {{ARGS}}
+  @docker compose --profile debug-api {{ARGS}}
 
 # run docker compose commands for the BH api-only profile (Default: up)
 bh-api-only *ARGS='up':
