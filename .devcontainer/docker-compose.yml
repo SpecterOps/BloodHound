@@ -19,23 +19,12 @@ version: '3'
 services:
   # devcontainer entrypoint
   app:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: mcr.microsoft.com/devcontainers/base:bullseye
     volumes:
       # Update this to wherever you want VS Code to mount the folder of your project
       - ../..:/workspaces:cached
       - devcontainer-storage:/home/vscode
-    # Overrides default command so things don't shut down after the process ends.
-    entrypoint: /usr/local/share/docker-init.sh
     command: sleep infinity
-    # Uncomment the next four lines if you will use a ptrace-based debuggers like C++, Go, and Rust.
-    cap_add:
-      - SYS_PTRACE
-    security_opt:
-      - seccomp:unconfined
-    # extra_hosts:
-    #   - host.docker.internal:host-gateway
     ports:
       - 80:80
 

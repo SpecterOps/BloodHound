@@ -1,15 +1,15 @@
-// For format details, see https://aka.ms/devcontainer.json. For config options, see the
-// README at: https://github.com/devcontainers/templates/tree/main/src/docker-in-docker
 {
-	"name": "Docker in Docker",
-	// Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
-	"image": "mcr.microsoft.com/devcontainers/base:bullseye",
-
+	"name": "BloodHound Community Edition",
+	"dockerComposeFile": "docker-compose.yml",
+	"service": "app",
+	"workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
 	"features": {
 		"ghcr.io/devcontainers/features/docker-in-docker:2": {
 			"version": "latest",
 			"enableNonRootDocker": "true",
-			"moby": "true"
+			"azureDnsAutoDetection": true,
+			"moby": "true",
+			"dockerDashComposeVersion": "v2"
 		},
 		"ghcr.io/devcontainers/features/go:1": {
 			"version": "latest"
@@ -30,17 +30,31 @@
 		"ghcr.io/guiyomh/features/just:0": {
 			"version": "latest"
 		}
-	}
-
+	},
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
-	// "forwardPorts": [],
-
+	"forwardPorts": [
+		2112,
+		3000,
+		5432,
+		7474,
+		8000,
+		8080
+	],
 	// Use 'postCreateCommand' to run commands after the container is created.
-	// "postCreateCommand": "docker --version",
-
+	"postCreateCommand": "just init",
 	// Configure tool-specific properties.
-	// "customizations": {},
-
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"ms-python.black-formatter",
+				"jakeboone02.cypher-query-language",
+				"redhat.fabric8-analytics",
+				"tombonnike.vscode-status-bar-format-toggle",
+				"jebbs.plantuml",
+				"ms-ossdata.vscode-postgresql"
+			]
+		}
+	}
 	// Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
 	// "remoteUser": "root"
 }
