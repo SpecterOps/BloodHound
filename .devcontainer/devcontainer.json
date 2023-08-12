@@ -1,15 +1,15 @@
+// For format details, see https://aka.ms/devcontainer.json. For config options, see the
+// README at: https://github.com/devcontainers/templates/tree/main/src/docker-in-docker
 {
-	"name": "Bloodhound Community Edition",
-	"dockerComposeFile": "docker-compose.yml",
-	"service": "app",
-	"workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
-	"remoteEnv": {
-		"INTEGRATION_CONFIG_PATH": "/workspaces/${localWorkspaceFolderBasename}/local-harnesses/integration.config.json"
-	},
+	"name": "Docker in Docker",
+	// Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
+	"image": "mcr.microsoft.com/devcontainers/base:bullseye",
+
 	"features": {
-		"ghcr.io/devcontainers/features/python:1": {
-			"installTools": true,
-			"version": "latest"
+		"ghcr.io/devcontainers/features/docker-in-docker:2": {
+			"version": "latest",
+			"enableNonRootDocker": "true",
+			"moby": "true"
 		},
 		"ghcr.io/devcontainers/features/go:1": {
 			"version": "latest"
@@ -18,39 +18,29 @@
 			"nodeGypDependencies": true,
 			"version": "lts"
 		},
-		"ghcr.io/guiyomh/features/just:0": {
+		"ghcr.io/devcontainers/features/python:1": {
+			"installTools": true,
 			"version": "latest"
 		},
-		"ghcr.io/devcontainers/features/docker-outside-of-docker:1": {
-			"moby": true,
-			"installDockerBuildx": true,
-			"version": "latest",
-			"dockerDashComposeVersion": "v2"
-		}
-	},
-	// Use 'forwardPorts' to make a list of ports inside the container available locally.
-	"forwardPorts": [
-		2112,
-		3000,
-		5432,
-		7474,
-		8000,
-		8080
-	],
-	// Use 'postCreateCommand' to run commands after the container is created.
-	"postCreateCommand": "just init",
-	"customizations": {
-		"vscode": {
-			"extensions": [
-				"ms-python.black-formatter",
-				"jakeboone02.cypher-query-language",
-				"redhat.fabric8-analytics",
-				"tombonnike.vscode-status-bar-format-toggle",
-				"jebbs.plantuml",
-				"ms-ossdata.vscode-postgresql"
-			]
+		"ghcr.io/devcontainers-contrib/features/zsh-plugins:0": {
+			"plugins": "ssh-agent npm",
+			"omzPlugins": "https://github.com/zsh-users/zsh-autosuggestions",
+			"username": "vscode"
+		},
+		"ghcr.io/guiyomh/features/just:0": {
+			"version": "latest"
 		}
 	}
+
+	// Use 'forwardPorts' to make a list of ports inside the container available locally.
+	// "forwardPorts": [],
+
+	// Use 'postCreateCommand' to run commands after the container is created.
+	// "postCreateCommand": "docker --version",
+
+	// Configure tool-specific properties.
+	// "customizations": {},
+
 	// Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
 	// "remoteUser": "root"
 }
