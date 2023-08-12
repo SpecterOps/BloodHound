@@ -159,7 +159,7 @@ type Configuration struct {
 	CollectorsBasePath     string                    `json:"collectors_base_path"`
 	DatapipeInterval       int                       `json:"datapipe_interval"`
 	EnableAPILogging       bool                      `json:"enable_api_logging"`
-	DisableEnrichment      bool                      `json:"disable_enrichment"`
+	DisableAnalysis        bool                      `json:"disable_analysis"`
 	DisableCypherQC        bool                      `json:"disable_cypher_qc"`
 	DisableMigrations      bool                      `json:"disable_migrations"`
 }

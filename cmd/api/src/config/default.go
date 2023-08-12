@@ -80,7 +80,7 @@ func NewDefaultConfiguration() (Configuration, error) {
 			CollectorsBasePath: "/etc/bloodhound/collectors/",
 			DatapipeInterval:   60,
 			EnableAPILogging:   true,
-			DisableEnrichment:  false,
+			DisableAnalysis:    false,
 			DisableCypherQC:    false,
 			DisableMigrations:  false,
 		}, nil

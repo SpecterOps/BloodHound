@@ -596,6 +596,29 @@
   "model.ADDataQualityStat": {
     "type": "object",
     "properties": {
+      "id": {
+        "type": "integer"
+      },
+      "created_at": {
+        "type": "string",
+        "format": "date-time"
+      },
+      "updated_at": {
+        "type": "string",
+        "format": "date-time"
+      },
+      "deleted_at": {
+        "type": "object",
+        "properties": {
+          "Time": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "Valid": {
+            "type": "boolean"
+          }
+        }
+      },
       "domain_sid": {
         "type": "string"
       },
@@ -640,6 +663,26 @@
   "model.ADDataQualityAggregation": {
     "type": "object",
     "properties": {
+      "created_at": {
+        "type": "string",
+        "format": "date-time"
+      },
+      "updated_at": {
+        "type": "string",
+        "format": "date-time"
+      },
+      "deleted_at": {
+        "type": "object",
+        "properties": {
+          "Time": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "Valid": {
+            "type": "boolean"
+          }
+        }
+      },
       "domains": {
         "type": "integer"
       },
@@ -684,6 +727,26 @@
   "model.AzureDataQualityStat": {
     "type": "object",
     "properties": {
+      "created_at": {
+        "type": "string",
+        "format": "date-time"
+      },
+      "updated_at": {
+        "type": "string",
+        "format": "date-time"
+      },
+      "deleted_at": {
+        "type": "object",
+        "properties": {
+          "Time": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "Valid": {
+            "type": "boolean"
+          }
+        }
+      },
       "tenantid": {
         "type": "string"
       },
@@ -959,6 +1022,38 @@
       },
       "custom_member": {
         "type": "boolean"
+      }
+    }
+  },
+  "model.FileUploadJob": {
+    "type": "object",
+    "properties": {
+      "id": {
+        "type": "integer"
+      },
+      "user_id": {
+        "type": "string"
+      },
+      "user_email_address": {
+        "type": "string"
+      },
+      "status": {
+        "type": "integer"
+      },
+      "status_message": {
+        "type": "string"
+      },
+      "start_time": {
+        "type": "string",
+        "format": "date-time"
+      },
+      "end_time": {
+        "type": "string",
+        "format": "date-time"
+      },
+      "last_ingest": {
+        "type": "string",
+        "format": "date-time"
       }
     }
   }
