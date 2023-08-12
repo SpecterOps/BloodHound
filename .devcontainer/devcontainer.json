@@ -7,12 +7,8 @@
 		"INTEGRATION_CONFIG_PATH": "/workspaces/${localWorkspaceFolderBasename}/local-harnesses/integration.config.json"
 	},
 	"features": {
-		"ghcr.io/devcontainers/features/docker-in-docker:2": {
-			"version": "latest",
-			"enableNonRootDocker": "true",
-			"moby": "true"
-		},
 		"ghcr.io/devcontainers/features/python:1": {
+			"installTools": true,
 			"version": "latest"
 		},
 		"ghcr.io/devcontainers/features/go:1": {
@@ -24,6 +20,12 @@
 		},
 		"ghcr.io/guiyomh/features/just:0": {
 			"version": "latest"
+		},
+		"ghcr.io/devcontainers/features/docker-outside-of-docker:1": {
+			"moby": true,
+			"installDockerBuildx": true,
+			"version": "latest",
+			"dockerDashComposeVersion": "v2"
 		}
 	},
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
