@@ -405,3 +405,86 @@ func ParseUserRightData(userRight UserRightsAssignmentAPIResult, computer Comput
 
 	return relationships
 }
+
+func ParseEnrollmentServiceMiscData(enrollmentService EnrollmentService) []IngestibleRelationship {
+	relationships := make([]IngestibleRelationship, 0)
+	enabledCertTemplates := make([]string, 0)
+
+	for _, actor := range enrollmentService.EnabledCertTemplates {
+		enabledCertTemplates = append(enabledCertTemplates, actor.ObjectIdentifier)
+		relationships = append(relationships, IngestibleRelationship{
+			Source:     actor.ObjectIdentifier,
+			SourceType: ad.CertTemplate,
+			Target:     enrollmentService.ObjectIdentifier,
+			TargetType: ad.EnrollmentService,
+			RelType:    ad.PublishedTo,
+			RelProps:   map[string]any{"isacl": false},
+		})
+	}
+
+	if enrollmentService.HostingComputer != "" {
+		relationships = append(relationships, IngestibleRelationship{
+			Source:     enrollmentService.HostingComputer,
+			SourceType: ad.Computer,
+			Target:     enrollmentService.ObjectIdentifier,
+			TargetType: ad.EnrollmentService,
+			RelType:    ad.HostsCAService,
+			RelProps:   map[string]any{"isacl": false},
+		})
+	}
+
+	// if enrollmentService.CARegistryData != "" {
+	// 	//TODO: Handle CASecurity
+
+	// 	if enrollmentService.CARegistryData.EnrollmentAgentRestrictionsCollected {
+	// 		for _, restiction := range enrollmentService.CARegistryData.EnrollmentAgentRestrictions {
+	// 			if restiction.AccessType == "AccessAllowedCallback" {
+	// 				templates := make([]string, 0)
+	// 				if restiction.AllTemplates {
+	// 					templates = enabledCertTemplates
+	// 				} 
+	// 				else {
+	// 					templates = append(templates, restiction.Template.ObjectIdentifier)
+	// 				}
+
+	// 				// TODO: Handle Targets
+					
+	// 				for _, template := range templates {
+	// 					relationships = append(relationships, IngestibleRelationship{
+	// 						Source:     restiction.Agent.ObjectIdentifier,
+	// 						SourceType: restiction.Agent.Kind(),
+	// 						Target:     template,
+	// 						TargetType: ad.CertTemplate,
+	// 						RelType:    ad.DelegatedEnrollmentAgent,
+	// 						RelProps:   map[string]any{"isacl": false},
+	// 					})
+		
+	// 				}
+	// 			}
+	// 		}
+	// 	}
+	// }
+
+	return relationships
+}
+
+func ParseRootCAMiscData(rootCA RootCA) []IngestibleRelationship {
+	relationships := make([]IngestibleRelationship, 0)
+
+	// if domainID, err := domain.Properties.Get(common.domainID.String()).String(); err != nil {
+	// 	return nil, err
+	// } else if domainID == objectID {
+
+	// if rootCA.Properties.domainsid != "" {
+	// 	relationships = append(relationships, IngestibleRelationship{
+	// 		Source:     rootCA.ObjectIdentifier,
+	// 		SourceType: ad.RootCA,
+	// 		Target:     rootCA.Properties.domainsid,
+	// 		TargetType: ad.Domain,
+	// 		RelType:    ad.RootCAFor,
+	// 		RelProps:   map[string]any{"isacl": false},
+	// 	})
+	// }
+
+	return relationships
+}

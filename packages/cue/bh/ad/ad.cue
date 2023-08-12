@@ -299,6 +299,31 @@ Domain: types.#Kind & {
 	schema: "active_directory"
 }
 
+AIACA: types.#Kind & {
+	symbol: "AIACA"
+	schema: "active_directory"
+}
+
+RootCA: types.#Kind & {
+	symbol: "RootCA"
+	schema: "active_directory"
+}
+
+EnrollmentService: types.#Kind & {
+	symbol: "EnrollmentService"
+	schema: "active_directory"
+}
+
+NTAuthStore: types.#Kind & {
+	symbol: "NTAuthStore"
+	schema: "active_directory"
+}
+
+CertTemplate: types.#Kind & {
+	symbol: "CertTemplate"
+	schema: "active_directory"
+}
+
 NodeKinds: [
 	Entity,
 	User,
@@ -310,6 +335,11 @@ NodeKinds: [
 	Domain,
 	LocalGroup,
 	LocalUser,
+	AIACA,
+	RootCA,
+	EnrollmentService,
+	NTAuthStore,
+	CertTemplate
 ]
 
 Owns: types.#Kind & {
@@ -498,6 +528,51 @@ GetChangesInFilteredSet: types.#Kind & {
 	schema: "active_directory"
 }
 
+RootCAFor: types.#Kind & {
+	symbol: "RootCAFor"
+	schema: "active_directory"
+}
+
+PublishedTo: types.#Kind & {
+	symbol: "PublishedTo"
+	schema: "active_directory"
+}
+
+ManageCertificates: types.#Kind & {
+	symbol: "ManageCertificates"
+	schema: "active_directory"
+}
+
+ManageCA: types.#Kind & {
+	symbol: "ManageCA"
+	schema: "active_directory"
+}
+
+DelegatedEnrollmentAgent: types.#Kind & {
+	symbol: "DelegatedEnrollmentAgent"
+	schema: "active_directory"
+}
+
+Enroll: types.#Kind & {
+	symbol: "Enroll"
+	schema: "active_directory"
+}
+
+HostsCAService: types.#Kind & {
+	symbol: "HostsCAService"
+	schema: "active_directory"
+}
+
+WritePKIEnrollmentFlag: types.#Kind & {
+	symbol: "WritePKIEnrollmentFlag"
+	schema: "active_directory"
+}
+
+WritePKINameFlag: types.#Kind & {
+	symbol: "WritePKINameFlag"
+	schema: "active_directory"
+}
+
 // Relationship Kinds
 RelationshipKinds: [
 	Owns,
@@ -536,7 +611,16 @@ RelationshipKinds: [
 	MemberOfLocalGroup,
 	RemoteInteractiveLogonPrivilege,
 	SyncLAPSPassword,
-	WriteAccountRestrictions
+	WriteAccountRestrictions,
+	RootCAFor,
+	PublishedTo,
+	ManageCertificates,
+	ManageCA,
+	DelegatedEnrollmentAgent,
+	Enroll,
+	HostsCAService,
+	WritePKIEnrollmentFlag,
+	WritePKINameFlag
 ]
 
 // ACL Relationships
@@ -561,6 +645,11 @@ ACLRelationships: [
 	WriteAccountRestrictions,
 	SyncLAPSPassword,
 	DCSync,
+	ManageCertificates,
+	ManageCA,
+	Enroll,
+	WritePKIEnrollmentFlag,
+	WritePKINameFlag
 ]
 
 // Edges that are used in pathfinding
@@ -595,5 +684,7 @@ PathfindingRelationships: [
 	WriteSPN,
 	AddKeyCredentialLink,
 	SyncLAPSPassword,
-	WriteAccountRestrictions
+	WriteAccountRestrictions,
+	ManageCA,
+	HostsCAService
 ]

@@ -159,6 +159,31 @@
         "type": "integer",
         "required": true
       },
+      "aiacas": {
+        "Description": "A count of aiacas enumerated",
+        "type": "integer",
+        "required": true
+      },
+      "rootcas": {
+        "Description": "A count of rootcas enumerated",
+        "type": "integer",
+        "required": true
+      },
+      "enrollmentservices": {
+        "Description": "A count of enrollmentservices enumerated",
+        "type": "integer",
+        "required": true
+      },
+      "ntauthstores": {
+        "Description": "A count of ntauthstores enumerated",
+        "type": "integer",
+        "required": true
+      },
+      "certtemplates": {
+        "Description": "A count of certtemplates enumerated",
+        "type": "integer",
+        "required": true
+      },
       "ous": {
         "Description": "A count of ous enumerated",
         "type": "integer",

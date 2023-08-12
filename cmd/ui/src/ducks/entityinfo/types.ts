@@ -18,6 +18,36 @@ import { GraphNodeTypes } from 'src/ducks/graph/types';
 
 import { AzureNodeKind } from 'bh-shared-ui';
 
+// --- AIACA
+export interface AIACAInfo extends EntityInfo {
+    props: BasicInfo & {
+        certthumbprint: string;
+        hascrosscertificatepair: boolean;
+        description?: string;
+    };
+    controllables: number;
+    controllers: number;
+}
+
+// --- CertTemplate
+export interface CertTemplateInfo extends EntityInfo {
+    props: BasicInfo & {
+        applicationpolicies: string;
+        authorizedsignatures: number;
+        certificateapplicationpolicy: string[];
+        ekus: string[];
+        enrolleesuppliessubject: boolean;
+        issuancepolicies: string;
+        oid: string;
+        renewalperiod: string;
+        requiresmanagerapproval: boolean;
+        schemaversion: number;
+        validityperiod: string;
+    };
+    controllables: number;
+    controllers: number;
+}
+
 // --- Computer
 export interface ComputerInfoGraph extends GraphInfo {
     enabled: boolean;
@@ -86,6 +116,27 @@ export interface DomainInfo extends EntityInfo {
     containers: number;
 }
 
+// --- EnrollmentService
+export interface EnrollmentServiceInfo extends EntityInfo {
+    props: BasicInfo & {
+        basicconstraintpathlength: number;
+        caname: string;
+        casecuritycollected: boolean;
+        certchain: string[];
+        certname: string;
+        certthumbprint: string;
+        dnshostname: string;
+        enrollmentagentrestrictionscollected: boolean;
+        flags: 10;
+        hasbasicconstraints: boolean;
+        isuserspecifiessanenabled: boolean;
+        isuserspecifiessanenabledcollected: boolean;
+        description?: string;
+    };
+    controllables: number;
+    controllers: number;
+}
+
 // --- GPO
 export interface GPOInfoGraph extends GraphInfo {
     gpcpath: string;
@@ -124,6 +175,16 @@ export interface GroupInfo extends EntityInfo {
     sessions: number;
 }
 
+// --- NTAuthStore
+export interface NTAuthStoreInfo extends EntityInfo {
+    props: BasicInfo & {
+        certthumbprints: string[];
+        description?: string;
+    };
+    controllables: number;
+    controllers: number;
+}
+
 // --- OU
 export interface OUInfoGraph extends GraphInfo {
     blocksinheritance: boolean;
@@ -138,6 +199,16 @@ export interface OUInfo extends EntityInfo {
     users: number;
     groups: number;
     computers: number;
+}
+
+// --- RootCA
+export interface RootCAInfo extends EntityInfo {
+    props: BasicInfo & {
+        certthumbprint: string;
+        description?: string;
+    };
+    controllables: number;
+    controllers: number;
 }
 
 // --- User

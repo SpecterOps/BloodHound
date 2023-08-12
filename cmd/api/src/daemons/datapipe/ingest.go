@@ -133,6 +133,51 @@ func (s *Daemon) IngestWrapper(batch graph.Batch, wrapper DataWrapper) error {
 			s.IngestBasicData(batch, converted)
 		}
 
+	case DataTypeAIACA:
+		var aiacaData []ein.AIACA
+		if err := json.Unmarshal(wrapper.Payload, &aiacaData); err != nil {
+			return err
+		} else {
+			converted := convertAIACAData(aiacaData)
+			s.IngestBasicData(batch, converted)
+		}
+
+	case DataTypeRootCA:
+		var rootcaData []ein.RootCA
+		if err := json.Unmarshal(wrapper.Payload, &rootcaData); err != nil {
+			return err
+		} else {
+			converted := convertRootCAData(rootcaData)
+			s.IngestBasicData(batch, converted)
+		}
+
+	case DataTypeEnrollmentService:
+		var enrollmentserviceData []ein.EnrollmentService
+		if err := json.Unmarshal(wrapper.Payload, &enrollmentserviceData); err != nil {
+			return err
+		} else {
+			converted := convertEnrollmentServiceData(enrollmentserviceData)
+			s.IngestBasicData(batch, converted)
+		}
+
+	case DataTypeNTAuthStore:
+		var ntauthstoreData []ein.NTAuthStore
+		if err := json.Unmarshal(wrapper.Payload, &ntauthstoreData); err != nil {
+			return err
+		} else {
+			converted := convertNTAuthStoreData(ntauthstoreData)
+			s.IngestBasicData(batch, converted)
+		}
+
+	case DataTypeCertTemplate:
+		var certtemplateData []ein.CertTemplate
+		if err := json.Unmarshal(wrapper.Payload, &certtemplateData); err != nil {
+			return err
+		} else {
+			converted := convertCertTemplateData(certtemplateData)
+			s.IngestBasicData(batch, converted)
+		}
+
 	case DataTypeAzure:
 		var azureData []json.RawMessage
 		if err := json.Unmarshal(wrapper.Payload, &azureData); err != nil {

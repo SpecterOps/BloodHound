@@ -102,14 +102,23 @@ export const entityInformationEndpoints: Record<
             options
         ),
     [ActiveDirectoryNodeKind.Entity]: (id: string, options?: RequestOptions) => apiClient.getBaseV2(id, false, options),
+    [ActiveDirectoryNodeKind.AIACA]: (id: string, options?: RequestOptions) => apiClient.getAIACAV2(id, false, options),
+    [ActiveDirectoryNodeKind.CertTemplate]: (id: string, options?: RequestOptions) =>
+        apiClient.getCertTemplateV2(id, false, options),
     [ActiveDirectoryNodeKind.Computer]: (id: string, options?: RequestOptions) =>
         apiClient.getComputerV2(id, false, options),
     [ActiveDirectoryNodeKind.Container]: () => Promise.resolve(),
     [ActiveDirectoryNodeKind.Domain]: (id: string, options?: RequestOptions) =>
         apiClient.getDomainV2(id, false, options),
+    [ActiveDirectoryNodeKind.EnrollmentService]: (id: string, options?: RequestOptions) =>
+        apiClient.getEnrollmentServiceV2(id, false, options),
     [ActiveDirectoryNodeKind.GPO]: (id: string, options?: RequestOptions) => apiClient.getGPOV2(id, false, options),
     [ActiveDirectoryNodeKind.Group]: (id: string, options?: RequestOptions) => apiClient.getGroupV2(id, false, options),
+    [ActiveDirectoryNodeKind.NTAuthStore]: (id: string, options?: RequestOptions) =>
+        apiClient.getNTAuthStoreV2(id, false, options),
     [ActiveDirectoryNodeKind.OU]: (id: string, options?: RequestOptions) => apiClient.getOUV2(id, false, options),
+    [ActiveDirectoryNodeKind.RootCA]: (id: string, options?: RequestOptions) =>
+        apiClient.getRootCAV2(id, false, options),
     [ActiveDirectoryNodeKind.User]: (id: string, options?: RequestOptions) => apiClient.getUserV2(id, false, options),
 };
 
@@ -1418,6 +1427,26 @@ export const allSections: Record<GraphNodeTypes, (id: string) => EntityInfoDataT
                     .then((res) => res.data),
         },
     ],
+    [ActiveDirectoryNodeKind.AIACA]: (id) => [
+        {
+            id,
+            label: 'Inbound Object Control',
+            endpoint: ({ skip, limit, type }) =>
+                apiClient
+                    .getAIACAControllersV2(id, skip, limit, type, { signal: controller.signal })
+                    .then((res) => res.data),
+        },
+    ],
+    [ActiveDirectoryNodeKind.CertTemplate]: (id) => [
+        {
+            id,
+            label: 'Inbound Object Control',
+            endpoint: ({ skip, limit, type }) =>
+                apiClient
+                    .getCertTemplateControllersV2(id, skip, limit, type, { signal: controller.signal })
+                    .then((res) => res.data),
+        },
+    ],
     [ActiveDirectoryNodeKind.Computer]: (id) => [
         {
             id,
@@ -1611,6 +1640,16 @@ export const allSections: Record<GraphNodeTypes, (id: string) => EntityInfoDataT
                     .then((res) => res.data),
         },
     ],
+    [ActiveDirectoryNodeKind.EnrollmentService]: (id) => [
+        {
+            id,
+            label: 'Inbound Object Control',
+            endpoint: ({ skip, limit, type }) =>
+                apiClient
+                    .getEnrollmentServiceControllersV2(id, skip, limit, type, { signal: controller.signal })
+                    .then((res) => res.data),
+        },
+    ],
     [ActiveDirectoryNodeKind.GPO]: (id) => [
         {
             id,
@@ -1739,6 +1778,16 @@ export const allSections: Record<GraphNodeTypes, (id: string) => EntityInfoDataT
                     .then((res) => res.data),
         },
     ],
+    [ActiveDirectoryNodeKind.NTAuthStore]: (id) => [
+        {
+            id,
+            label: 'Inbound Object Control',
+            endpoint: ({ skip, limit, type }) =>
+                apiClient
+                    .getNTAuthStoreControllersV2(id, skip, limit, type, { signal: controller.signal })
+                    .then((res) => res.data),
+        },
+    ],
     [ActiveDirectoryNodeKind.OU]: (id) => [
         {
             id,
@@ -1765,6 +1814,16 @@ export const allSections: Record<GraphNodeTypes, (id: string) => EntityInfoDataT
             label: 'Users',
             endpoint: ({ skip, limit, type }) =>
                 apiClient.getOUUsersV2(id, skip, limit, type, { signal: controller.signal }).then((res) => res.data),
+        },
+    ],
+    [ActiveDirectoryNodeKind.RootCA]: (id) => [
+        {
+            id,
+            label: 'Inbound Object Control',
+            endpoint: ({ skip, limit, type }) =>
+                apiClient
+                    .getRootCAControllersV2(id, skip, limit, type, { signal: controller.signal })
+                    .then((res) => res.data),
         },
     ],
     [ActiveDirectoryNodeKind.User]: (id) => [

@@ -23,6 +23,11 @@ type DataQualityStat struct {
 	Computers              int     `json:"computers"`
 	Ous                    int     `json:"ous"`
 	Gpos                   int     `json:"gpos"`
+	Aiacas                 int     `json:"aiacas"`
+	Rootcas                int     `json:"rootcas"`
+	Enrollmentservices     int     `json:"enrollmentservices"`
+	Ntauthstores           int     `json:"ntauthstores"`
+	Certtemplates          int     `json:"certtemplates"`
 	Domains                int     `json:"domains"`
 	Acls                   int     `json:"acls"`
 	Sessions               int     `json:"sessions"`

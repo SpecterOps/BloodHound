@@ -69,7 +69,7 @@ func GraphStats(ctx context.Context, db graph.Database) (model.ADDataQualityStat
 		adStats     = model.ADDataQualityStats{}
 		runID       string
 
-		kinds = graph.Kinds{ad.User, ad.Group, ad.Computer, ad.Container, ad.OU, ad.GPO}
+		kinds = graph.Kinds{ad.User, ad.Group, ad.Computer, ad.Container, ad.OU, ad.GPO, ad.AIACA, ad.RootCA, ad.EnrollmentService, ad.NTAuthStore, ad.CertTemplate}
 	)
 
 	if newUUID, err := uuid.NewV4(); err != nil {
@@ -140,7 +140,28 @@ func GraphStats(ctx context.Context, db graph.Database) (model.ADDataQualityStat
 								case ad.GPO:
 									stat.GPOs = int(count)
 									aggregation.GPOs += int(count)
+
+								case ad.AIACA:
+									stat.AIACAs = int(count)
+									aggregation.AIACAs += int(count)
+
+								case ad.RootCA:
+									stat.RootCAs = int(count)
+									aggregation.RootCAs += int(count)
+
+								case ad.EnrollmentService:
+									stat.EnrollmentServices = int(count)
+									aggregation.EnrollmentServices += int(count)
+
+								case ad.NTAuthStore:
+									stat.NTAuthStores = int(count)
+									aggregation.NTAuthStores += int(count)
+
+								case ad.CertTemplate:
+									stat.CertTemplates = int(count)
+									aggregation.CertTemplates += int(count)
 								}
+
 								mutex.Unlock()
 								return nil
 							}

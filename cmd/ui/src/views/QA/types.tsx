@@ -18,6 +18,11 @@ export interface ActiveDirectoryQualityStat {
     groups: number;
     ous: number;
     gpos: number;
+    aiacas: number;
+    rootcas: number;
+    enrollmentservices: number;
+    ntauthstores: number;
+    certtemplates: number;
     acls: number;
     relationships: number;
     users: number;

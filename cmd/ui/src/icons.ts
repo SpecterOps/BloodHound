@@ -41,6 +41,9 @@ import {
     faPlus,
     faQuestion,
     faMinus,
+    faLandmark,
+    faStore,
+    faIdCard,
 } from '@fortawesome/free-solid-svg-icons';
 import { ActiveDirectoryNodeKind, AzureNodeKind } from 'bh-shared-ui';
 
@@ -92,6 +95,31 @@ export const NODE_ICON: IconDictionary = {
     [ActiveDirectoryNodeKind.GPO]: {
         icon: faList,
         color: '#998EFD',
+    },
+
+    [ActiveDirectoryNodeKind.AIACA]: {
+        icon: faBox,
+        color: '#763AAD',
+    },
+
+    [ActiveDirectoryNodeKind.RootCA]: {
+        icon: faLandmark,
+        color: '#763AAD',
+    },
+
+    [ActiveDirectoryNodeKind.EnrollmentService]: {
+        icon: faBox,
+        color: '#25724B',
+    },
+
+    [ActiveDirectoryNodeKind.NTAuthStore]: {
+        icon: faStore,
+        color: '#763AAD',
+    },
+
+    [ActiveDirectoryNodeKind.CertTemplate]: {
+        icon: faIdCard,
+        color: '#FDA1FF',
     },
 
     [ActiveDirectoryNodeKind.OU]: {

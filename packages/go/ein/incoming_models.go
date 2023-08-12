@@ -77,7 +77,71 @@ type IngestBase struct {
 	ContainedBy      TypedPrincipal
 }
 
+type Oid struct {
+	Name  string
+	Value string
+}
+
+type CertificateExtension struct {
+	Oid 	 Oid
+	Critical bool
+}
+
+type Certificate struct {
+	Thumbprint                string
+	Name                      string
+	Chain                     []string
+	HasBasicConstraints       bool
+	BasicConstraintPathLength int
+	EnhancedKeyUsageOids      []Oid
+	CertificateExtensions     []CertificateExtension
+}
+
+type EnrollmentAgentRestriction struct {
+	AccessType   string
+	Agent        TypedPrincipal
+	Targets      []TypedPrincipal
+	Template     TypedPrincipal
+	AllTemplates bool
+}
+
+type CARegistryData struct {
+	CASecurity                           []ACE
+	EnrollmentAgentRestrictions          []EnrollmentAgentRestriction
+	IsUserSpecifiesSanEnabled            bool
+	CASecurityCollected                  bool
+	EnrollmentAgentRestrictionsCollected bool
+	IsUserSpecifiesSanEnabledCollected   bool
+}
+
 type GPO IngestBase
+
+type AIACA struct {
+	IngestBase
+	CertTemplate string
+}
+
+type RootCA struct {
+	IngestBase
+	CertTemplate string
+}
+
+type EnrollmentService struct {
+	IngestBase
+	Certificate          Certificate
+	CertTemplate         string
+	EnabledCertTemplates []TypedPrincipal
+	HostingComputer      string
+}
+
+type NTAuthStore struct {
+	IngestBase
+	CertTemplates []string
+}
+
+type CertTemplate struct {
+	IngestBase
+}
 
 type Session struct {
 	ComputerSID string

@@ -25,6 +25,11 @@ export enum ActiveDirectoryNodeKind {
     Domain = 'Domain',
     LocalGroup = 'ADLocalGroup',
     LocalUser = 'ADLocalUser',
+    AIACA = 'AIACA',
+    RootCA = 'RootCA',
+    EnrollmentService = 'EnrollmentService',
+    NTAuthStore = 'NTAuthStore',
+    CertTemplate = 'CertTemplate',
 }
 export function ActiveDirectoryNodeKindToDisplay(value: ActiveDirectoryNodeKind): string | undefined {
     switch (value) {
@@ -48,6 +53,16 @@ export function ActiveDirectoryNodeKindToDisplay(value: ActiveDirectoryNodeKind)
             return 'LocalGroup';
         case ActiveDirectoryNodeKind.LocalUser:
             return 'LocalUser';
+        case ActiveDirectoryNodeKind.AIACA:
+            return 'AIACA';
+        case ActiveDirectoryNodeKind.RootCA:
+            return 'RootCA';
+        case ActiveDirectoryNodeKind.EnrollmentService:
+            return 'EnrollmentService';
+        case ActiveDirectoryNodeKind.NTAuthStore:
+            return 'NTAuthStore';
+        case ActiveDirectoryNodeKind.CertTemplate:
+            return 'CertTemplate';
         default:
             return undefined;
     }
@@ -90,6 +105,15 @@ export enum ActiveDirectoryRelationshipKind {
     RemoteInteractiveLogonPrivilege = 'RemoteInteractiveLogonPrivilege',
     SyncLAPSPassword = 'SyncLAPSPassword',
     WriteAccountRestrictions = 'WriteAccountRestrictions',
+    RootCAFor = 'RootCAFor',
+    PublishedTo = 'PublishedTo',
+    ManageCertificates = 'ManageCertificates',
+    ManageCA = 'ManageCA',
+    DelegatedEnrollmentAgent = 'DelegatedEnrollmentAgent',
+    Enroll = 'Enroll',
+    HostsCAService = 'HostsCAService',
+    WritePKIEnrollmentFlag = 'WritePKIEnrollmentFlag',
+    WritePKINameFlag = 'WritePKINameFlag',
 }
 export function ActiveDirectoryRelationshipKindToDisplay(value: ActiveDirectoryRelationshipKind): string | undefined {
     switch (value) {
@@ -167,6 +191,24 @@ export function ActiveDirectoryRelationshipKindToDisplay(value: ActiveDirectoryR
             return 'SyncLAPSPassword';
         case ActiveDirectoryRelationshipKind.WriteAccountRestrictions:
             return 'WriteAccountRestrictions';
+        case ActiveDirectoryRelationshipKind.RootCAFor:
+            return 'RootCAFor';
+        case ActiveDirectoryRelationshipKind.PublishedTo:
+            return 'PublishedTo';
+        case ActiveDirectoryRelationshipKind.ManageCertificates:
+            return 'ManageCertificates';
+        case ActiveDirectoryRelationshipKind.ManageCA:
+            return 'ManageCA';
+        case ActiveDirectoryRelationshipKind.DelegatedEnrollmentAgent:
+            return 'DelegatedEnrollmentAgent';
+        case ActiveDirectoryRelationshipKind.Enroll:
+            return 'Enroll';
+        case ActiveDirectoryRelationshipKind.HostsCAService:
+            return 'HostsCAService';
+        case ActiveDirectoryRelationshipKind.WritePKIEnrollmentFlag:
+            return 'WritePKIEnrollmentFlag';
+        case ActiveDirectoryRelationshipKind.WritePKINameFlag:
+            return 'WritePKINameFlag';
         default:
             return undefined;
     }
@@ -294,6 +336,8 @@ export function ActiveDirectoryPathfindingEdges(): ActiveDirectoryRelationshipKi
         ActiveDirectoryRelationshipKind.AddKeyCredentialLink,
         ActiveDirectoryRelationshipKind.SyncLAPSPassword,
         ActiveDirectoryRelationshipKind.WriteAccountRestrictions,
+        ActiveDirectoryRelationshipKind.ManageCA,
+        ActiveDirectoryRelationshipKind.HostsCAService,
     ];
 }
 export enum AzureNodeKind {

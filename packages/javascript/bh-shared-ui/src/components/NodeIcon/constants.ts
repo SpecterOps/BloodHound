@@ -36,6 +36,9 @@ import {
     faUsers,
     faWindowRestore,
     IconDefinition,
+    faLandmark,
+    faStore,
+    faIdCard,
 } from '@fortawesome/free-solid-svg-icons';
 
 export const NODE_ICON: { [index: string]: { icon: IconDefinition; color: string } } = {
@@ -62,6 +65,31 @@ export const NODE_ICON: { [index: string]: { icon: IconDefinition; color: string
     GPO: {
         icon: faList,
         color: '#998EFD',
+    },
+
+    AIACA: {
+        icon: faBox,
+        color: '#763AAD',
+    },
+
+    RootCA: {
+        icon: faLandmark,
+        color: '#763AAD',
+    },
+
+    EnrollmentService: {
+        icon: faBox,
+        color: '#25724B',
+    },
+
+    NTAuthStore: {
+        icon: faStore,
+        color: '#763AAD',
+    },
+
+    CertTemplate: {
+        icon: faIdCard,
+        color: '#FDA1FF',
     },
 
     OU: {

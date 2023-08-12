@@ -180,3 +180,60 @@ func convertContainerData(data []ein.Container) ConvertedData {
 
 	return converted
 }
+
+func convertAIACAData(data []ein.AIACA) ConvertedData {
+	converted := ConvertedData{}
+
+	for _, aiaca := range data {
+		converted.NodeProps = append(converted.NodeProps, ein.ConvertObjectToNode(aiaca.IngestBase, ad.AIACA))
+		converted.RelProps = append(converted.RelProps, ein.ParseACEData(aiaca.Aces, aiaca.ObjectIdentifier, ad.AIACA)...)
+	}
+
+	return converted
+}
+
+func convertRootCAData(data []ein.RootCA) ConvertedData {
+	converted := ConvertedData{}
+
+	for _, rootca := range data {
+		converted.NodeProps = append(converted.NodeProps, ein.ConvertObjectToNode(rootca.IngestBase, ad.RootCA))
+		converted.RelProps = append(converted.RelProps, ein.ParseACEData(rootca.Aces, rootca.ObjectIdentifier, ad.RootCA)...)
+		converted.RelProps = append(converted.RelProps, ein.ParseRootCAMiscData(rootca)...)
+	}
+
+	return converted
+}
+
+func convertEnrollmentServiceData(data []ein.EnrollmentService) ConvertedData {
+	converted := ConvertedData{}
+
+	for _, enrollmentservice := range data {
+		converted.NodeProps = append(converted.NodeProps, ein.ConvertObjectToNode(enrollmentservice.IngestBase, ad.EnrollmentService))
+		converted.RelProps = append(converted.RelProps, ein.ParseACEData(enrollmentservice.Aces, enrollmentservice.ObjectIdentifier, ad.EnrollmentService)...)
+		converted.RelProps = append(converted.RelProps, ein.ParseEnrollmentServiceMiscData(enrollmentservice)...)
+	}
+
+	return converted
+}
+
+func convertNTAuthStoreData(data []ein.NTAuthStore) ConvertedData {
+	converted := ConvertedData{}
+
+	for _, ntauthstore := range data {
+		converted.NodeProps = append(converted.NodeProps, ein.ConvertObjectToNode(ntauthstore.IngestBase, ad.NTAuthStore))
+		converted.RelProps = append(converted.RelProps, ein.ParseACEData(ntauthstore.Aces, ntauthstore.ObjectIdentifier, ad.NTAuthStore)...)
+	}
+
+	return converted
+}
+
+func convertCertTemplateData(data []ein.CertTemplate) ConvertedData {
+	converted := ConvertedData{}
+
+	for _, certtemplate := range data {
+		converted.NodeProps = append(converted.NodeProps, ein.ConvertObjectToNode(certtemplate.IngestBase, ad.CertTemplate))
+		converted.RelProps = append(converted.RelProps, ein.ParseACEData(certtemplate.Aces, certtemplate.ObjectIdentifier, ad.CertTemplate)...)
+	}
+
+	return converted
+}

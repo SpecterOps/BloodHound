@@ -144,6 +144,41 @@ const Layout: React.FC<{
                         />
 
                         <LoadContainer
+                            icon={<NodeIcon nodeType={'AIACA'} />}
+                            display='AIACAs'
+                            value={dbInfo?.aiacas || 0}
+                            loading={loading}
+                        />
+
+                        <LoadContainer
+                            icon={<NodeIcon nodeType={'RootCA'} />}
+                            display='RootCAs'
+                            value={dbInfo?.rootcas || 0}
+                            loading={loading}
+                        />
+
+                        <LoadContainer
+                            icon={<NodeIcon nodeType={'EnrollmentService'} />}
+                            display='EnrollmentServices'
+                            value={dbInfo?.enrollmentservices || 0}
+                            loading={loading}
+                        />
+
+                        <LoadContainer
+                            icon={<NodeIcon nodeType={'NTAuthStore'} />}
+                            display='NTAuthStores'
+                            value={dbInfo?.ntauthstores || 0}
+                            loading={loading}
+                        />
+
+                        <LoadContainer
+                            icon={<NodeIcon nodeType={'CertTemplate'} />}
+                            display='CertTemplates'
+                            value={dbInfo?.certtemplates || 0}
+                            loading={loading}
+                        />
+
+                        <LoadContainer
                             icon={<NodeIcon nodeType={'Container'} />}
                             display='Containers'
                             value={dbInfo?.containers || 0}

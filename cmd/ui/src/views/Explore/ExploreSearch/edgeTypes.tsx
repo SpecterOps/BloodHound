@@ -86,6 +86,20 @@ export const AllEdgeTypes: Category[] = [
                     ActiveDirectoryRelationshipKind.WriteSPN,
                 ],
             },
+            {
+                name: 'Active Directory Certificate Services',
+                edgeTypes: [
+                    ActiveDirectoryRelationshipKind.RootCAFor,
+                    ActiveDirectoryRelationshipKind.PublishedTo,
+                    ActiveDirectoryRelationshipKind.ManageCertificates,
+                    ActiveDirectoryRelationshipKind.ManageCA,
+                    ActiveDirectoryRelationshipKind.DelegatedEnrollmentAgent,
+                    ActiveDirectoryRelationshipKind.Enroll,
+                    ActiveDirectoryRelationshipKind.HostsCAService,
+                    ActiveDirectoryRelationshipKind.WritePKIEnrollmentFlag,
+                    ActiveDirectoryRelationshipKind.WritePKINameFlag,
+                ],
+            },
         ],
     },
     {

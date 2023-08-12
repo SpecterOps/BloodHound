@@ -28,6 +28,11 @@ type ADDataQualityStat struct {
 	OUs                    int         `json:"ous" gorm:"column:ous"`
 	Containers             int         `json:"containers"`
 	GPOs                   int         `json:"gpos" gorm:"column:gpos"`
+	AIACAs                 int         `json:"aiacas" gorm:"column:aiacas"`
+	RootCAs                int         `json:"rootcas" gorm:"column:rootcas"`
+	EnrollmentServices     int         `json:"enrollmentservices" gorm:"column:enrollmentservices"`
+	NTAuthStores           int         `json:"ntauthstores" gorm:"column:ntauthstores"`
+	CertTemplates          int         `json:"certtemplates" gorm:"column:certtemplates"`
 	ACLs                   int         `json:"acls" gorm:"column:acls"`
 	Sessions               int         `json:"sessions"`
 	Relationships          int         `json:"relationships"`
@@ -46,6 +51,11 @@ type ADDataQualityAggregation struct {
 	OUs                    int     `json:"ous" gorm:"column:ous"`
 	Containers             int     `json:"containers"`
 	GPOs                   int     `json:"gpos" gorm:"column:gpos"`
+	AIACAs                 int     `json:"aiacas" gorm:"column:aiacas"`
+	RootCAs                int     `json:"rootcas" gorm:"column:rootcas"`
+	EnrollmentServices     int     `json:"enrollmentservices" gorm:"column:enrollmentservices"`
+	NTAuthStores           int     `json:"ntauthstores" gorm:"column:ntauthstores"`
+	CertTemplates          int     `json:"certtemplates" gorm:"column:certtemplates"`
 	Acls                   int     `json:"acls" gorm:"column:acls"`
 	Sessions               int     `json:"sessions"`
 	Relationships          int     `json:"relationships"`
