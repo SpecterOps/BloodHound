@@ -1,17 +1,17 @@
 // Copyright 2023 Specter Ops, Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// 
+//
 // SPDX-License-Identifier: Apache-2.0
 
 package middleware
@@ -24,8 +24,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/require"
 	"github.com/specterops/bloodhound/headers"
+	"github.com/stretchr/testify/require"
 )
 
 func TestGetScheme(t *testing.T) {
@@ -73,9 +73,10 @@ func TestRequestWaitDuration(t *testing.T) {
 	req.Header.Set(headers.Prefer.String(), "wait=1")
 	req.URL.RawQuery = q.Encode()
 
-	timeout, err := requestWaitDuration(req, 30*time.Second)
+	requestedWaitDuration, err := requestWaitDuration(req, 30*time.Second)
 	require.Nil(t, err)
-	require.Equal(t, 1*time.Second, timeout)
+	require.Equal(t, 1*time.Second, requestedWaitDuration.Value)
+	require.True(t, requestedWaitDuration.UserSet)
 }
 
 func TestParsePreferHeaderWait(t *testing.T) {
