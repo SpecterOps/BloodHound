@@ -19,7 +19,6 @@ import { LuxonFormat, calculateJobDuration } from '../../utils/datetime';
 import { DateTime } from 'luxon';
 import DataTable from '../DataTable';
 import { Paper } from '@mui/material';
-import { useState } from 'react';
 
 const ZERO_VALUE_API_DATE = '0001-01-01T00:00:00Z';
 
@@ -32,26 +31,21 @@ const ingestTableHeaders = [
     { label: 'Status Message' },
 ];
 
-const FinishedIngestLog: React.FC<{ ingestJobs: FileUploadJob[] }> = ({ ingestJobs }) => {
-    const [page, setPage] = useState(0);
-    const [rowsPerPage, setRowsPerPage] = useState(10);
-
-    const handleChangePage: (event: React.MouseEvent<HTMLButtonElement> | null, page: number) => void = (
-        _event,
-        newPage
-    ) => {
-        setPage(newPage);
+const FinishedIngestLog: React.FC<{
+    ingestJobs: FileUploadJob[],
+    paginationProps?: {
+        page: number;
+        rowsPerPage: number;
+        count: number;
+        onPageChange: (event: React.MouseEvent<HTMLButtonElement, MouseEvent> | null, page: number) => void;
+        onRowsPerPageChange: React.ChangeEventHandler<HTMLInputElement | HTMLTextAreaElement>;
     };
-
-    const handleRowsPerPageChange: React.ChangeEventHandler<HTMLTextAreaElement | HTMLInputElement> = (event) => {
-        setRowsPerPage(parseInt(event.target.value, 10));
-        setPage(0);
-    };
+}> = ({ ingestJobs, paginationProps }) => {
 
     const ingestRows = ingestJobs
         .sort((a, b) => b.id - a.id)
         .map((job: FileUploadJob, index: number) => [
-            `${job.user.first_name} ${job.user.last_name}`,
+            job.user_email_address,
             DateTime.fromISO(job.start_time).toFormat(LuxonFormat.DATETIME_WITH_LINEBREAKS),
             job.end_time === ZERO_VALUE_API_DATE
                 ? ''
@@ -65,19 +59,9 @@ const FinishedIngestLog: React.FC<{ ingestJobs: FileUploadJob[] }> = ({ ingestJo
         <Paper>
             <DataTable
                 headers={ingestTableHeaders}
-                data={
-                    rowsPerPage > 0
-                        ? ingestRows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                        : ingestRows
-                }
+                data={ingestRows}
                 showPaginationControls={true}
-                paginationProps={{
-                    page,
-                    rowsPerPage,
-                    count: ingestJobs.length,
-                    onPageChange: handleChangePage,
-                    onRowsPerPageChange: handleRowsPerPageChange,
-                }}
+                paginationProps={paginationProps}
             />
         </Paper>
     );

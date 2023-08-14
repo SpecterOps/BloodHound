@@ -17,13 +17,13 @@
 ########
 # Global build args
 ################
-ARG SHARPHOUND_VERSION=v1.1.1
+ARG SHARPHOUND_VERSION=v2.0.0
 ARG AZUREHOUND_VERSION=v2.0.4
 
 ########
 # Builder init
 ################
-FROM --platform=$BUILDPLATFORM docker.io/library/node:18-alpine AS deps
+FROM --platform=$BUILDPLATFORM node:18-alpine AS deps
 ARG version=v999.999.999
 ARG checkout_hash=""
 ENV PYTHONUNBUFFERED=1
@@ -71,7 +71,7 @@ RUN python3 packages/python/beagle/main.py build bh -v -d
 ########
 # Package other assets
 ################
-FROM --platform=$BUILDPLATFORM docker.io/library/alpine:3.16 as hound-builder
+FROM --platform=$BUILDPLATFORM alpine:3.16 as hound-builder
 ARG SHARPHOUND_VERSION
 ARG AZUREHOUND_VERSION
 

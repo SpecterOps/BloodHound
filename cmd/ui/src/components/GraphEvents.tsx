@@ -18,11 +18,10 @@ import { useRegisterEvents, useSetSettings, useSigma } from '@react-sigma/core';
 import { AbstractGraph, Attributes } from 'graphology-types';
 import { FC, useEffect, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { resetCamera } from 'src/ducks/graph/utils';
+import { setSelectedEdge } from 'src/ducks/edgeinfo/edgeSlice';
+import { getEdgeDataFromKey, getEdgeSourceAndTargetDisplayData, resetCamera } from 'src/ducks/graph/utils';
 import { bezier } from 'src/rendering/utils/bezier';
 import { AppState, useAppDispatch } from 'src/store';
-import { setSelectedEdge } from 'src/ducks/edgeinfo/edgeSlice';
-import { getEdgeDataFromKey } from 'src/ducks/graph/utils';
 
 export interface GraphEventProps {
     onDoubleClickNode?: (id: string) => void;
@@ -180,17 +179,27 @@ export const GraphEvents: FC<GraphEventProps> = ({
                 // We calculate control points for all curved edges here and pass those along as edge attributes in both viewport and framed graph
                 // coordinates. We can then use those control points in our edge, edge label, and edge arrow programs.
                 if (data.type === 'curved') {
-                    const edgeData = getEdgeDataFromKey(edge, sigma);
-                    if (edgeData) {
-                        const { source, target } = edgeData;
-                        const sourceCoordinates = { x: source.x, y: source.y };
-                        const targetCoordinates = { x: target.x, y: target.y };
+                    const edgeData = getEdgeDataFromKey(edge);
+                    if (edgeData !== null) {
+                        const nodeDisplayData = getEdgeSourceAndTargetDisplayData(
+                            edgeData.source,
+                            edgeData.target,
+                            sigma
+                        );
+                        if (nodeDisplayData !== null) {
+                            const sourceCoordinates = { x: nodeDisplayData.source.x, y: nodeDisplayData.source.y };
+                            const targetCoordinates = { x: nodeDisplayData.target.x, y: nodeDisplayData.target.y };
 
-                        const height = bezier.calculateCurveHeight(data.groupSize, data.groupPosition, data.direction);
-                        const control = bezier.getControlAtMidpoint(height, sourceCoordinates, targetCoordinates);
+                            const height = bezier.calculateCurveHeight(
+                                data.groupSize,
+                                data.groupPosition,
+                                data.direction
+                            );
+                            const control = bezier.getControlAtMidpoint(height, sourceCoordinates, targetCoordinates);
 
-                        newData.control = control;
-                        newData.controlInViewport = sigma.framedGraphToViewport(control);
+                            newData.control = control;
+                            newData.controlInViewport = sigma.framedGraphToViewport(control);
+                        }
                     }
                 }
 

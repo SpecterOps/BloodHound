@@ -57,10 +57,7 @@ const server = setupServer(
                         id: 1,
                         start_time: '2023-08-01T22:03:20.245299Z',
                         end_time: '2023-08-01T22:04:23.097927Z',
-                        user: {
-                            first_name: 'Test',
-                            last_name: 'User',
-                        },
+                        user_email_address: 'test_email@specterops.io',
                     },
                 ],
 
@@ -114,9 +111,9 @@ describe('FileIngest', () => {
 
     it('displays a table of completed ingest logs', async () => {
         const { getByText } = render(<FileIngest />);
-        await waitFor(() => getByText('Test User'));
+        await waitFor(() => getByText('test_email@specterops.io'));
 
-        expect(getByText('Test User')).toBeInTheDocument();
+        expect(getByText('test_email@specterops.io')).toBeInTheDocument();
         expect(getByText('1 minute')).toBeInTheDocument();
     });
 });
