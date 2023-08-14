@@ -1,17 +1,17 @@
 // Copyright 2023 Specter Ops, Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// 
+//
 // SPDX-License-Identifier: Apache-2.0
 
 package queries
@@ -21,6 +21,7 @@ package queries
 import (
 	"context"
 	"fmt"
+	bhCtx "github.com/specterops/bloodhound/src/ctx"
 	"net/http"
 	"net/url"
 	"sort"
@@ -368,7 +369,10 @@ func prepareQuery(rawCypher string, disableCypherQC bool) (preparedQuery, error)
 }
 
 func (s *GraphQuery) RawCypherSearch(ctx context.Context, rawCypher string) (model.UnifiedGraph, error) {
-	graphResponse := model.NewUnifiedGraph()
+	var (
+		graphResponse = model.NewUnifiedGraph()
+		bhCtxInst     = bhCtx.Get(ctx)
+	)
 
 	if preparedQuery, err := prepareQuery(rawCypher, s.DisableCypherQC); err != nil {
 		return graphResponse, err
@@ -382,20 +386,23 @@ func (s *GraphQuery) RawCypherSearch(ctx context.Context, rawCypher string) (mod
 
 			return nil
 		}, func(config *graph.TransactionConfig) {
-			if !s.DisableCypherQC {
-				// Start at 30,000 milliseconds
-				availableRuntime := float64(30_000)
+			// Rely on the context timeout to set our query upper-bound
+			availableRuntime := bhCtxInst.Timeout.Value
 
+			log.Debugf("Available timeout for query is set to: %.2f seconds", availableRuntime.Seconds())
+
+			if !s.DisableCypherQC && !bhCtxInst.Timeout.UserSet {
 				// The weight of the query is divided by 5 to get a runtime reduction factor. This means that query weights
-				// of 5 or less will get the full 30 seconds of runtime.
-				reductionFactor := preparedQuery.complexity.Weight / 5
+				// of 5 or less will get the full runtime duration.
+				if reductionFactor := time.Duration(preparedQuery.complexity.Weight) / 5; reductionFactor > 0 {
+					availableRuntime /= reductionFactor
 
-				// Reduce the available runtime
-				availableRuntime /= reductionFactor
-
-				// Clamp to millisecond precision
-				config.Timeout = time.Millisecond * time.Duration(availableRuntime)
+					log.Infof("Cypher query cost is: %.2f. Reduction factor for query is: %d. Available timeout for query is now set to: %.2f seconds", preparedQuery.complexity.Weight, reductionFactor, availableRuntime.Seconds())
+				}
 			}
+
+			// Set a sane timeout for this DB interaction
+			config.Timeout = availableRuntime
 		})
 	}
 }

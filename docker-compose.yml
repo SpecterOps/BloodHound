@@ -40,7 +40,7 @@ services:
     ports:
       - ${BH_POSTGRES_PORT:-5432}:5432
     volumes:
-      - ${BH_POSTGRES_VOLUME:-postgres-data}:/var/lib/postgresql
+      - ${BH_POSTGRES_VOLUME:-postgres-data}:/var/lib/postgresql/data
     healthcheck:
       test:
         [
