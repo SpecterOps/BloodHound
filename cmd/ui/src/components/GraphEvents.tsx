@@ -1,17 +1,17 @@
 // Copyright 2023 Specter Ops, Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// 
+//
 // SPDX-License-Identifier: Apache-2.0
 
 import { useRegisterEvents, useSetSettings, useSigma } from '@react-sigma/core';
@@ -44,7 +44,6 @@ export const GraphEvents: FC<GraphEventProps> = ({
     const sigma = useSigma();
     const registerEvents = useRegisterEvents();
     const setSettings = useSetSettings();
-    const edgeEventsCanvasRef = useRef<HTMLCanvasElement | null>(document.querySelector('#sigma-container'));
 
     const [hoveredNode, setHoveredNode] = useState<string | null>(null);
     const [draggedNode, setDraggedNode] = useState<string | null>(null);
@@ -56,6 +55,8 @@ export const GraphEvents: FC<GraphEventProps> = ({
     const clickTimerRef = useRef<ReturnType<typeof setTimeout>>();
     const prevent = useRef(false);
 
+    const sigmaContainer = document.getElementById('sigma-container');
+
     const clearDraggedNode = () => {
         setDraggedNode(null);
         setIsDragging(false);
@@ -66,11 +67,11 @@ export const GraphEvents: FC<GraphEventProps> = ({
     useEffect(() => {
         registerEvents({
             enterNode: (event) => {
-                if (edgeEventsCanvasRef.current) edgeEventsCanvasRef.current.style.cursor = 'grab';
+                if (sigmaContainer) sigmaContainer.style.cursor = 'grab';
                 setHoveredNode(event.node);
             },
             leaveNode: () => {
-                if (edgeEventsCanvasRef.current) edgeEventsCanvasRef.current.style.cursor = 'default';
+                if (sigmaContainer) sigmaContainer.style.cursor = 'default';
                 setHoveredNode(null);
             },
             downNode: (event) => {
