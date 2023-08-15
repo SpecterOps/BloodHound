@@ -50,6 +50,7 @@ const initGraphNodes = (graph: MultiDirectedGraph, nodes: GraphNodes, nodeSize: 
             color: '#FFFFFF',
             type: 'combined',
             label: node.label,
+            forceLabel: true,
         };
 
         const icon = NODE_ICON[node.kind] || UNKNOWN_ICON;
@@ -107,6 +108,7 @@ const initGraphEdges = (graph: MultiDirectedGraph, edges: GraphEdges) => {
                 groupPosition: 0,
                 groupSize: 1,
                 exploreGraphId: edge.exploreGraphId || key,
+                forceLabel: true,
             };
 
             // Groups with odd-numbered totals should have a straight edge first, then curve the rest
