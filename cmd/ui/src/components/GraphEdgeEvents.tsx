@@ -1,17 +1,17 @@
 // Copyright 2023 Specter Ops, Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// 
+//
 // SPDX-License-Identifier: Apache-2.0
 
 import { useSigma } from '@react-sigma/core';
@@ -31,12 +31,12 @@ import {
 const GraphEdgeEvents: FC = () => {
     const dispatch = useAppDispatch();
     const graphState = useSelector((state: AppState) => state.explore);
-    const canvasRef = useRef<HTMLCanvasElement | null>(document.querySelector('#sigma-container'));
 
     const sigma = useSigma();
     const camera = sigma.getCamera();
     const ratio = camera.getState().ratio;
     const canvases = sigma.getCanvases();
+    const sigmaContainer = document.getElementById('sigma-container');
     const mouseCanvas = canvases.mouse;
     const edgeLabelsCanvas = canvases.edgeLabels;
     const { height, width } = mouseCanvas.style;
@@ -133,7 +133,7 @@ const GraphEdgeEvents: FC = () => {
                             onClickEdge(edge);
                         } else {
                             //Hover the edge label
-                            if (canvasRef.current) canvasRef.current.style.cursor = 'pointer';
+                            if (sigmaContainer) sigmaContainer.style.cursor = 'pointer';
                         }
                         //Return early so as not to propagate the event to sigma handlers
                         return;
@@ -141,8 +141,8 @@ const GraphEdgeEvents: FC = () => {
                 }
             }
 
-            if (canvasRef.current && canvasRef.current.style.cursor === 'pointer')
-                canvasRef.current.style.cursor = 'default';
+            if (sigmaContainer && sigmaContainer.style.cursor === 'pointer') sigmaContainer.style.cursor = 'default';
+
             const customEvent = new Event(event.type, { bubbles: true });
             Object.assign(customEvent, {
                 clientX: event.clientX,
