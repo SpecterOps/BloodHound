@@ -95,14 +95,17 @@ go-lint:
 
 # run docker compose commands for the BH dev profile (Default: up)
 bh-dev *ARGS='up':
+  @go run github.com/specterops/bloodhound/packages/go/stbernard
   @docker compose --profile dev {{ARGS}}
 
 # run docker compose commands for the BH debug profile (Default: up)
 bh-debug *ARGS='up':
+  @go run github.com/specterops/bloodhound/packages/go/stbernard
   @docker compose --profile debug-api {{ARGS}}
 
 # run docker compose commands for the BH api-only profile (Default: up)
 bh-api-only *ARGS='up':
+  @go run github.com/specterops/bloodhound/packages/go/stbernard
   @docker compose --profile api-only {{ARGS}}
 
 # run docker compose commands for the BH ui-only profile (Default: up)
