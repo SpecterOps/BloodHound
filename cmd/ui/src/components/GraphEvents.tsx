@@ -156,7 +156,7 @@ export const GraphEvents: FC<GraphEventProps> = ({
                 if (node === selectedNode) {
                     newData.highlighted = true;
                 }
-                
+
                 return newData;
             },
             edgeReducer: (edge, data) => {
