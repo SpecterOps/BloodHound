@@ -126,6 +126,7 @@ func BuildEntityQueryParams(request *http.Request, queryName string, pathDelegat
 
 type Graph interface {
 	GetAssetGroupComboNode(ctx context.Context, owningObjectID string, assetGroupTag string) (map[string]any, error)
+	GetAssetGroupComboNode2(ctx context.Context, owningObjectID string, assetGroupTag string) (model.ComboNode, error)
 	GetAssetGroupNodes(ctx context.Context, assetGroupTag string) (graph.NodeSet, error)
 	GetAllShortestPaths(ctx context.Context, startNodeID string, endNodeID string, filter graph.Criteria) (graph.PathSet, error)
 	SearchNodesByName(ctx context.Context, nodeKinds graph.Kinds, nameQuery string, skip int, limit int) ([]model.SearchResult, error)
@@ -206,6 +207,122 @@ func (s *GraphQuery) GetAssetGroupComboNode(ctx context.Context, owningObjectID 
 			for _, node := range assetGroupNodes {
 				node = bloodhoundgraph.SetAssetGroupPropertiesForNode(node)
 				graphData[node.ID.String()] = bloodhoundgraph.NodeToBloodHoundGraph(node)
+			}
+		}
+
+		return nil
+	})
+}
+
+//
+//type ComboNodeElement struct {
+//	AdminCount        bool      `json:"admin_count"` // WHAT IS THIS
+//	Category          string    `json:"category"`
+//	Description       string    `json:"description"`
+//	DistinguishedName string    `json:"distinguished_name"`
+//	Domain            string    `json:"domain"`
+//	DomainSID         string    `json:"domain_sid"`
+//	HighValue         bool      `json:"high_value"`
+//	LastSeen          time.Time `json:"last_seen"`
+//	Level             int       `json:"level"`
+//	Name              string    `json:"name"`
+//	Neo4jImportID     string    `json:"neo4j_import_id"`
+//	Kind          string    `json:"node_type"`
+//	ObjectID          string    `json:"object_id"`
+//	SystemTags        string    `json:"system_tags"`
+//	Type              string    `json:"type"` // THIS IS REDUNDANT
+//}
+//
+//type ComboNode []ComboNodeElement
+//
+//func nodeToComboNodeElement(node *graph.Node) (ComboNodeElement, error) {
+//	var (
+//		element ComboNodeElement
+//		err     error
+//	)
+//
+//	element.Neo4jImportID = node.ID.String()
+//	element.Kind, element.Type = analysis.GetNodeKindDisplayLabel(node), analysis.GetNodeKindDisplayLabel(node)
+//
+//	if element.Description, err = node.Properties.Get(common.Description.String()).String(); err != nil {
+//		return ComboNodeElement{}, fmt.Errorf("error type-negotiating Description: %v", err)
+//	} else if element.DistinguishedName, err = node.Properties.Get(ad.DistinguishedName.String()).String(); err != nil {
+//		return ComboNodeElement{}, fmt.Errorf("error type-negotiating DistinguishedName: %v", err)
+//	} else if element.Domain, err = node.Properties.Get(ad.Domain.String()).String(); err != nil {
+//		return ComboNodeElement{}, fmt.Errorf("error type-negotiating Domain: %v", err)
+//	} else if element.DomainSID, err = node.Properties.Get(ad.DomainSID.String()).String(); err != nil {
+//		return ComboNodeElement{}, fmt.Errorf("error type-negotiating DomainSID: %v", err)
+//	} else if element.HighValue, err = node.Properties.Get(ad.HighValue.String()).Bool(); err != nil {
+//		return ComboNodeElement{}, fmt.Errorf("error type-negotiating HighValue: %v", err)
+//	} else if element.LastSeen, err = node.Properties.Get(common.LastSeen.String()).Time(); err != nil {
+//		return ComboNodeElement{}, fmt.Errorf("error type-negotiating LastSeen: %v", err)
+//	} else if element.ObjectID, err = node.Properties.Get(common.ObjectID.String()).String(); err != nil {
+//		return ComboNodeElement{}, fmt.Errorf("error type-negotiating ObjectID: %v", err)
+//	} else if element.SystemTags, err = node.Properties.Get(common.SystemTags.String()).String(); err != nil {
+//		return ComboNodeElement{}, fmt.Errorf("error type-negotiating SystemTags: %v", err)
+//	} else if element.Category, err = node.Properties.Get("category").String(); err != nil {
+//		return ComboNodeElement{}, fmt.Errorf("error type-negotiating Category: %v", err)
+//	} else if element.Level, err = node.Properties.Get("level").Int(); err != nil {
+//		return ComboNodeElement{}, fmt.Errorf("error type-negotiating Level: %v", err)
+//	} else {
+//		return element, nil
+//	}
+//}
+
+func (s *GraphQuery) GetAssetGroupComboNode2(ctx context.Context, owningObjectID string, assetGroupTag string) (model.ComboNode, error) {
+	var (
+		graphData = map[string]any{}
+		comboNode model.ComboNode
+	)
+
+	return comboNode, s.Graph.ReadTransaction(ctx, func(tx graph.Transaction) error {
+		if assetGroupNodes, err := ops.FetchNodeSet(tx.Nodes().Filterf(func() graph.Criteria {
+			filters := []graph.Criteria{
+				query.KindIn(query.Node(), azure.Entity, ad.Entity),
+				query.StringContains(query.NodeProperty(common.SystemTags.String()), assetGroupTag),
+			}
+
+			if owningObjectID != "" {
+				filters = append(filters, query.Or(
+					query.Equals(query.NodeProperty(ad.DomainSID.String()), owningObjectID),
+					query.Equals(query.NodeProperty(azure.TenantID.String()), owningObjectID),
+				))
+			}
+
+			return query.And(filters...)
+		})); err != nil {
+			return err
+		} else {
+			if groups := assetGroupNodes.ByKind(ad.Group); groups.Len() > 0 {
+				if groupMembershipPaths, err := analysis.ExpandGroupMembershipPaths(tx, groups); err != nil {
+					return err
+				} else {
+					graphData = bloodhoundgraph.PathSetToBloodHoundGraph(groupMembershipPaths)
+
+					for key := range graphData {
+						comboNodeElement := model.ComboNodeElement{}
+						// Skip the edges/relations and only evaluate the nodes.
+						// Relations are prepended with "rel_" before the ID to distinguish them from edges. This was done
+						// because neo4j reuses IDs across different object types, causing conflicts; adding that prefix
+						// solves this issue.
+						if id, err := strconv.Atoi(key); err != nil || strings.Contains(key, "rel") {
+							continue
+						} else if err := comboNodeElement.FromNode(bloodhoundgraph.SetAssetGroupPropertiesForNode(groupMembershipPaths.AllNodes().Get(graph.ID(id)))); err != nil {
+							return err
+						} else {
+							comboNode = append(comboNode, comboNodeElement)
+						}
+					}
+				}
+			}
+
+			for _, node := range assetGroupNodes {
+				comboNodeElement := model.ComboNodeElement{}
+				if err := comboNodeElement.FromNode(bloodhoundgraph.SetAssetGroupPropertiesForNode(node)); err != nil {
+					return err
+				} else {
+					comboNode = append(comboNode, comboNodeElement)
+				}
 			}
 		}
 

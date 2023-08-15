@@ -132,6 +132,21 @@ func (mr *MockGraphMockRecorder) GetAssetGroupComboNode(arg0, arg1, arg2 interfa
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAssetGroupComboNode", reflect.TypeOf((*MockGraph)(nil).GetAssetGroupComboNode), arg0, arg1, arg2)
 }
 
+// GetAssetGroupComboNode2 mocks base method.
+func (m *MockGraph) GetAssetGroupComboNode2(arg0 context.Context, arg1, arg2 string) (model.ComboNode, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAssetGroupComboNode2", arg0, arg1, arg2)
+	ret0, _ := ret[0].(model.ComboNode)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetAssetGroupComboNode2 indicates an expected call of GetAssetGroupComboNode2.
+func (mr *MockGraphMockRecorder) GetAssetGroupComboNode2(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAssetGroupComboNode2", reflect.TypeOf((*MockGraph)(nil).GetAssetGroupComboNode2), arg0, arg1, arg2)
+}
+
 // GetAssetGroupNodes mocks base method.
 func (m *MockGraph) GetAssetGroupNodes(arg0 context.Context, arg1 string) (graph.NodeSet, error) {
 	m.ctrl.T.Helper()
