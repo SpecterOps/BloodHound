@@ -14,24 +14,22 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package frontend
+package pgsql
 
-import (
-	"bytes"
-	"github.com/stretchr/testify/require"
-	"testing"
+const (
+	cypherCountFunction         = "count"
+	cypherDateFunction          = "date"
+	cypherTimeFunction          = "time"
+	cypherLocalTimeFunction     = "localtime"
+	cypherDateTimeFunction      = "datetime"
+	cypherLocalDateTimeFunction = "localdatetime"
+	cypherDurationFunction      = "duration"
+	cypherIdentityFunction      = "id"
+	cypherToLowerFunction       = "toLower"
+	cypherNodeLabelsFunction    = "labels"
+	cypherEdgeTypeFunction      = "type"
+
+	pgsqlAnyFunction     = "any"
+	pgsqlToJSONBFunction = "to_jsonb"
+	pgsqlToLowerFunction = "lower"
 )
-
-func TestCypherEmitter_StripLiterals(t *testing.T) {
-	var (
-		buffer            = &bytes.Buffer{}
-		regularQuery, err = ParseCypher(DefaultCypherContext(), "match (n {value: 'PII'}) where n.other = 'more pii' and n.number = 411 return n.name, n")
-		emitter           = CypherEmitter{
-			StripLiterals: true,
-		}
-	)
-
-	require.Nil(t, err)
-	require.Nil(t, emitter.Write(regularQuery, buffer))
-	require.Equal(t, "match (n {value: $STRIPPED}) where n.other = $STRIPPED and n.number = $STRIPPED return n.name, n", buffer.String())
-}

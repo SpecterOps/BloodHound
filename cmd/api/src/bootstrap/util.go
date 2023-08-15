@@ -14,21 +14,21 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package server
+package bootstrap
 
 import (
+	"context"
 	"fmt"
-	"os"
-	"path/filepath"
-
 	"github.com/specterops/bloodhound/dawgs"
+	"github.com/specterops/bloodhound/dawgs/drivers/neo4j"
 	_ "github.com/specterops/bloodhound/dawgs/drivers/neo4j"
+	"github.com/specterops/bloodhound/dawgs/drivers/pg"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/dawgs/util/size"
 	"github.com/specterops/bloodhound/log"
-	"github.com/specterops/bloodhound/src/auth"
+	"github.com/specterops/bloodhound/src/api/tools"
 	"github.com/specterops/bloodhound/src/config"
-	"github.com/specterops/bloodhound/src/database"
+	"os"
 )
 
 func ensureDirectory(path string) error {
@@ -67,49 +67,40 @@ func EnsureServerDirectories(cfg config.Configuration) error {
 	return nil
 }
 
-func mustGetWorkingDirectory() string {
-	workingDirectory, err := os.Getwd()
-
-	if err != nil {
-		fmt.Printf("Unable to lookup working directory: %v", err)
-		os.Exit(1)
-	}
-
-	return workingDirectory
-}
-
 // DefaultConfigFilePath returns the location of the config file
 func DefaultConfigFilePath() string {
 	return "/etc/bhapi/bhapi.json"
 }
 
-// DefaultWorkDirPath returns the default location of the  working directory
-func DefaultWorkDirPath() string {
-	return filepath.Join(mustGetWorkingDirectory(), "work")
-}
+func ConnectGraph(ctx context.Context, cfg config.Configuration) (*graph.DatabaseSwitch, error) {
+	var connectionString string
 
-// ConnectPostgres initializes a connection to PG, and returns errors if any
-func ConnectPostgres(cfg config.Configuration) (*database.BloodhoundDB, error) {
-	if db, err := database.OpenDatabase(cfg.Database.PostgreSQLConnectionString()); err != nil {
-		return nil, fmt.Errorf("error while attempting to create database connection: %w", err)
+	if driverName, err := tools.LookupGraphDriver(ctx, cfg); err != nil {
+		return nil, err
 	} else {
-		return database.NewBloodhoundDB(db, auth.NewIdentityResolver()), nil
-	}
-}
+		switch driverName {
+		case neo4j.DriverName:
+			log.Infof("Connecting to graph using Neo4j")
+			connectionString = cfg.Neo4J.Neo4jConnectionString()
 
-// ConnectDatabases initializes connections to PG and connection, and returns errors if any
-func ConnectDatabases(cfg config.Configuration) (*database.BloodhoundDB, graph.Database, error) {
-	dawgsCfg := dawgs.Config{
-		DriverCfg:            cfg.Neo4J.Neo4jConnectionString(),
-		TraversalMemoryLimit: size.Size(cfg.TraversalMemoryLimit) * size.Gibibyte,
-	}
+		case pg.DriverName:
+			log.Infof("Connecting to graph using PostgreSQL")
+			connectionString = cfg.Database.PostgreSQLConnectionString()
 
-	if db, err := ConnectPostgres(cfg); err != nil {
-		return nil, nil, err
-	} else if graphDatabase, err := dawgs.Open("neo4j", dawgsCfg); err != nil {
-		return nil, nil, err
-	} else {
-		return db, graphDatabase, nil
+		default:
+			return nil, fmt.Errorf("unknown graphdb driver name: %s", driverName)
+		}
+
+		if connectionString == "" {
+			return nil, fmt.Errorf("graph connection requires a connection url to be set")
+		} else if graphDatabase, err := dawgs.Open(ctx, driverName, dawgs.Config{
+			TraversalMemoryLimit: size.Size(cfg.TraversalMemoryLimit) * size.Gibibyte,
+			DriverCfg:            connectionString,
+		}); err != nil {
+			return nil, err
+		} else {
+			return graph.NewDatabaseSwitch(ctx, graphDatabase), nil
+		}
 	}
 }
 

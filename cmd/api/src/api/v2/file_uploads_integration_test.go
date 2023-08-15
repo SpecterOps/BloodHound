@@ -34,7 +34,7 @@ import (
 )
 
 func Test_FileUpload(t *testing.T) {
-	testCtx := integration.NewContext(t, integration.StartBHServer)
+	testCtx := integration.NewFOSSContext(t)
 	apiClient := testCtx.AdminClient()
 	loader := testCtx.FixtureLoader
 
@@ -133,7 +133,7 @@ func Test_FileUpload(t *testing.T) {
 }
 
 func Test_FileUploadWorkFlowVersion5(t *testing.T) {
-	testCtx := integration.NewContext(t, integration.StartBHServer)
+	testCtx := integration.NewFOSSContext(t)
 
 	testCtx.SendFileIngest([]string{
 		"v5/ingest/domains.json",
@@ -152,7 +152,7 @@ func Test_FileUploadWorkFlowVersion5(t *testing.T) {
 }
 
 func Test_FileUploadWorkFlowVersion6(t *testing.T) {
-	testCtx := integration.NewContext(t, integration.StartBHServer)
+	testCtx := integration.NewFOSSContext(t)
 
 	testCtx.SendFileIngest([]string{
 		"v6/ingest/domains.json",
@@ -172,14 +172,8 @@ func Test_FileUploadWorkFlowVersion6(t *testing.T) {
 }
 
 func Test_FileUploadVersion6AllOptionADCS(t *testing.T) {
-	testCtx := integration.NewContext(t, integration.StartBHServer)
-
-	if adcsFlag, err := testCtx.DB.GetFlagByKey("adcs"); err != nil {
-		t.Fatalf("unable to get adcs flag: %v", err)
-	} else {
-		adcsFlag.Enabled = true
-		testCtx.DB.SetFlag(adcsFlag)
-	}
+	testCtx := integration.NewFOSSContext(t)
+	testCtx.ToggleFeatureFlag("adcs")
 
 	testCtx.SendFileIngest([]string{
 		"v6/all/aiacas.json",
@@ -200,7 +194,7 @@ func Test_FileUploadVersion6AllOptionADCS(t *testing.T) {
 }
 
 func Test_CompressedFileUploadWorkFlowVersion5(t *testing.T) {
-	testCtx := integration.NewContext(t, integration.StartBHServer)
+	testCtx := integration.NewFOSSContext(t)
 
 	testCtx.SendCompressedFileIngest([]string{
 		"v5/ingest/domains.json",
@@ -219,7 +213,7 @@ func Test_CompressedFileUploadWorkFlowVersion5(t *testing.T) {
 }
 
 func Test_CompressedFileUploadWorkFlowVersion6(t *testing.T) {
-	testCtx := integration.NewContext(t, integration.StartBHServer)
+	testCtx := integration.NewFOSSContext(t)
 
 	testCtx.SendCompressedFileIngest([]string{
 		"v6/ingest/domains.json",

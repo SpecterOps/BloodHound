@@ -259,7 +259,7 @@ type OUContainedHarness struct {
 }
 
 func (s *OUContainedHarness) Setup(testCtx *GraphTestContext) {
-	s.Domain = testCtx.NewActiveDirectoryDomain("Domain", RandomObjectID(testCtx.testCtrl), false, true)
+	s.Domain = testCtx.NewActiveDirectoryDomain("Domain", RandomObjectID(testCtx.testCtx), false, true)
 	s.OUA = testCtx.NewActiveDirectoryOU("OUA", testCtx.Harness.RootADHarness.ActiveDirectoryDomainSID, false)
 	s.OUB = testCtx.NewActiveDirectoryOU("OUB", testCtx.Harness.RootADHarness.ActiveDirectoryDomainSID, false)
 	s.OUC = testCtx.NewActiveDirectoryOU("OUC", testCtx.Harness.RootADHarness.ActiveDirectoryDomainSID, false)
@@ -318,8 +318,8 @@ type AssetGroupComboNodeHarness struct {
 }
 
 func (s *AssetGroupComboNodeHarness) Setup(testCtx *GraphTestContext) {
-	s.GroupA = testCtx.NewActiveDirectoryGroup("GroupA", RandomObjectID(testCtx.testCtrl))
-	s.GroupB = testCtx.NewActiveDirectoryGroup("GroupB", RandomObjectID(testCtx.testCtrl))
+	s.GroupA = testCtx.NewActiveDirectoryGroup("GroupA", RandomObjectID(testCtx.testCtx))
+	s.GroupB = testCtx.NewActiveDirectoryGroup("GroupB", RandomObjectID(testCtx.testCtx))
 	s.GroupB.Properties.Set(common.SystemTags.String(), ad.AdminTierZero)
 	testCtx.UpdateNode(s.GroupB)
 
@@ -644,13 +644,13 @@ func (s *AZBaseHarness) Setup(testCtx *GraphTestContext) {
 		numGroups = 5
 		numRoles  = 5
 	)
-	tenantID := RandomObjectID(testCtx.testCtrl)
+	tenantID := RandomObjectID(testCtx.testCtx)
 
 	s.Nodes = graph.NewNodeKindSet()
 	s.Tenant = testCtx.NewAzureTenant(tenantID)
-	s.User = testCtx.NewAzureUser(HarnessUserName, HarnessUserName, HarnessUserDescription, RandomObjectID(testCtx.testCtrl), HarnessUserLicenses, tenantID, HarnessUserMFAEnabled)
-	s.Application = testCtx.NewAzureApplication(HarnessAppName, RandomObjectID(testCtx.testCtrl), tenantID)
-	s.ServicePrincipal = testCtx.NewAzureServicePrincipal(HarnessServicePrincipalName, RandomObjectID(testCtx.testCtrl), tenantID)
+	s.User = testCtx.NewAzureUser(HarnessUserName, HarnessUserName, HarnessUserDescription, RandomObjectID(testCtx.testCtx), HarnessUserLicenses, tenantID, HarnessUserMFAEnabled)
+	s.Application = testCtx.NewAzureApplication(HarnessAppName, RandomObjectID(testCtx.testCtx), tenantID)
+	s.ServicePrincipal = testCtx.NewAzureServicePrincipal(HarnessServicePrincipalName, RandomObjectID(testCtx.testCtx), tenantID)
 	s.Nodes.Add(s.Tenant, s.User, s.Application, s.ServicePrincipal)
 	s.UserFirstDegreeGroups = graph.NewNodeSet()
 	s.NumPaths = 1287
@@ -673,7 +673,7 @@ func (s *AZBaseHarness) Setup(testCtx *GraphTestContext) {
 
 	// Create some VMs that the user has access to
 	for vmIdx := 0; vmIdx < numVMs; vmIdx++ {
-		newVM := testCtx.NewAzureVM(fmt.Sprintf("vm %d", vmIdx), RandomObjectID(testCtx.testCtrl), tenantID)
+		newVM := testCtx.NewAzureVM(fmt.Sprintf("vm %d", vmIdx), RandomObjectID(testCtx.testCtx), tenantID)
 		s.Nodes.Add(newVM)
 
 		// Tie the vm to the tenant
@@ -686,8 +686,8 @@ func (s *AZBaseHarness) Setup(testCtx *GraphTestContext) {
 	// Create some role assignments for the user
 	for roleIdx := 0; roleIdx < numRoles; roleIdx++ {
 		var (
-			objectID       = RandomObjectID(testCtx.testCtrl)
-			roleTemplateID = RandomObjectID(testCtx.testCtrl)
+			objectID       = RandomObjectID(testCtx.testCtx)
+			roleTemplateID = RandomObjectID(testCtx.testCtx)
 			newRole        = testCtx.NewAzureRole(fmt.Sprintf("AZRole_%s", objectID), objectID, roleTemplateID, tenantID)
 		)
 		s.Nodes.Add(newRole)
@@ -721,7 +721,7 @@ func (s *AZBaseHarness) CreateAzureNestedGroupChain(testCtx *GraphTestContext, t
 
 	for groupIdx := 0; groupIdx < chainDepth; groupIdx++ {
 		var (
-			objectID = RandomObjectID(testCtx.testCtrl)
+			objectID = RandomObjectID(testCtx.testCtx)
 			newGroup = testCtx.NewAzureGroup(fmt.Sprintf("AZGroup_%s", objectID), objectID, tenantID)
 		)
 
@@ -748,11 +748,11 @@ type AZGroupMembershipHarness struct {
 }
 
 func (s *AZGroupMembershipHarness) Setup(testCtx *GraphTestContext) {
-	tenantID := RandomObjectID(testCtx.testCtrl)
-	s.UserA = testCtx.NewAzureUser("UserA", "UserA", "", RandomObjectID(testCtx.testCtrl), "", tenantID, false)
-	s.UserB = testCtx.NewAzureUser("UserB", "UserB", "", RandomObjectID(testCtx.testCtrl), "", tenantID, false)
-	s.UserC = testCtx.NewAzureUser("UserC", "UserC", "", RandomObjectID(testCtx.testCtrl), "", tenantID, false)
-	s.Group = testCtx.NewAzureGroup("Group", RandomObjectID(testCtx.testCtrl), tenantID)
+	tenantID := RandomObjectID(testCtx.testCtx)
+	s.UserA = testCtx.NewAzureUser("UserA", "UserA", "", RandomObjectID(testCtx.testCtx), "", tenantID, false)
+	s.UserB = testCtx.NewAzureUser("UserB", "UserB", "", RandomObjectID(testCtx.testCtx), "", tenantID, false)
+	s.UserC = testCtx.NewAzureUser("UserC", "UserC", "", RandomObjectID(testCtx.testCtx), "", tenantID, false)
+	s.Group = testCtx.NewAzureGroup("Group", RandomObjectID(testCtx.testCtx), tenantID)
 
 	testCtx.NewRelationship(s.UserA, s.Group, azure.MemberOf)
 	testCtx.NewRelationship(s.UserB, s.Group, azure.MemberOf)
@@ -775,19 +775,19 @@ type AZEntityPanelHarness struct {
 }
 
 func (s *AZEntityPanelHarness) Setup(testCtx *GraphTestContext) {
-	tenantID := RandomObjectID(testCtx.testCtrl)
-	s.Application = testCtx.NewAzureApplication("App", RandomObjectID(testCtx.testCtrl), tenantID)
-	s.Device = testCtx.NewAzureDevice("Device", RandomObjectID(testCtx.testCtrl), RandomObjectID(testCtx.testCtrl), tenantID)
-	s.Group = testCtx.NewAzureGroup("Group", RandomObjectID(testCtx.testCtrl), tenantID)
-	s.ManagementGroup = testCtx.NewAzureResourceGroup("Mgmt Group", RandomObjectID(testCtx.testCtrl), tenantID)
-	s.ResourceGroup = testCtx.NewAzureResourceGroup("Resource Group", RandomObjectID(testCtx.testCtrl), tenantID)
-	s.KeyVault = testCtx.NewAzureKeyVault("Key Vault", RandomObjectID(testCtx.testCtrl), tenantID)
-	s.Role = testCtx.NewAzureRole("Role", RandomObjectID(testCtx.testCtrl), RandomObjectID(testCtx.testCtrl), tenantID)
-	s.ServicePrincipal = testCtx.NewAzureServicePrincipal("Service Principal", RandomObjectID(testCtx.testCtrl), tenantID)
-	s.Subscription = testCtx.NewAzureSubscription("Sub", RandomObjectID(testCtx.testCtrl), tenantID)
+	tenantID := RandomObjectID(testCtx.testCtx)
+	s.Application = testCtx.NewAzureApplication("App", RandomObjectID(testCtx.testCtx), tenantID)
+	s.Device = testCtx.NewAzureDevice("Device", RandomObjectID(testCtx.testCtx), RandomObjectID(testCtx.testCtx), tenantID)
+	s.Group = testCtx.NewAzureGroup("Group", RandomObjectID(testCtx.testCtx), tenantID)
+	s.ManagementGroup = testCtx.NewAzureResourceGroup("Mgmt Group", RandomObjectID(testCtx.testCtx), tenantID)
+	s.ResourceGroup = testCtx.NewAzureResourceGroup("Resource Group", RandomObjectID(testCtx.testCtx), tenantID)
+	s.KeyVault = testCtx.NewAzureKeyVault("Key Vault", RandomObjectID(testCtx.testCtx), tenantID)
+	s.Role = testCtx.NewAzureRole("Role", RandomObjectID(testCtx.testCtx), RandomObjectID(testCtx.testCtx), tenantID)
+	s.ServicePrincipal = testCtx.NewAzureServicePrincipal("Service Principal", RandomObjectID(testCtx.testCtx), tenantID)
+	s.Subscription = testCtx.NewAzureSubscription("Sub", RandomObjectID(testCtx.testCtx), tenantID)
 	s.Tenant = testCtx.NewAzureTenant(tenantID)
-	s.User = testCtx.NewAzureUser("User", "UserPrincipal", "Test User", RandomObjectID(testCtx.testCtrl), "Licenses", tenantID, false)
-	s.VM = testCtx.NewAzureVM("VM", RandomObjectID(testCtx.testCtrl), tenantID)
+	s.User = testCtx.NewAzureUser("User", "UserPrincipal", "Test User", RandomObjectID(testCtx.testCtx), "Licenses", tenantID, false)
+	s.VM = testCtx.NewAzureVM("VM", RandomObjectID(testCtx.testCtx), tenantID)
 
 	// Application
 	testCtx.NewRelationship(s.User, s.Application, azure.Owner)
@@ -836,13 +836,13 @@ type AZMGApplicationReadWriteAllHarness struct {
 }
 
 func (s *AZMGApplicationReadWriteAllHarness) Setup(testCtx *GraphTestContext) {
-	tenantID := RandomObjectID(testCtx.testCtrl)
+	tenantID := RandomObjectID(testCtx.testCtx)
 	s.Tenant = testCtx.NewAzureTenant(tenantID)
-	s.MicrosoftGraph = testCtx.NewAzureServicePrincipal("Microsoft Graph", RandomObjectID(testCtx.testCtrl), tenantID)
+	s.MicrosoftGraph = testCtx.NewAzureServicePrincipal("Microsoft Graph", RandomObjectID(testCtx.testCtx), tenantID)
 
-	s.Application = testCtx.NewAzureApplication("App", RandomObjectID(testCtx.testCtrl), tenantID)
-	s.ServicePrincipal = testCtx.NewAzureServicePrincipal("Service Principal", RandomObjectID(testCtx.testCtrl), tenantID)
-	s.ServicePrincipalB = testCtx.NewAzureServicePrincipal("Service Principal B", RandomObjectID(testCtx.testCtrl), tenantID)
+	s.Application = testCtx.NewAzureApplication("App", RandomObjectID(testCtx.testCtx), tenantID)
+	s.ServicePrincipal = testCtx.NewAzureServicePrincipal("Service Principal", RandomObjectID(testCtx.testCtx), tenantID)
+	s.ServicePrincipalB = testCtx.NewAzureServicePrincipal("Service Principal B", RandomObjectID(testCtx.testCtx), tenantID)
 
 	testCtx.NewRelationship(s.Tenant, s.MicrosoftGraph, azure.Contains)
 	testCtx.NewRelationship(s.Tenant, s.Application, azure.Contains)
@@ -868,11 +868,11 @@ type AZMGAppRoleManagementReadWriteAllHarness struct {
 }
 
 func (s *AZMGAppRoleManagementReadWriteAllHarness) Setup(testCtx *GraphTestContext) {
-	tenantID := RandomObjectID(testCtx.testCtrl)
+	tenantID := RandomObjectID(testCtx.testCtx)
 	s.Tenant = testCtx.NewAzureTenant(tenantID)
-	s.MicrosoftGraph = testCtx.NewAzureServicePrincipal("Microsoft Graph", RandomObjectID(testCtx.testCtrl), tenantID)
+	s.MicrosoftGraph = testCtx.NewAzureServicePrincipal("Microsoft Graph", RandomObjectID(testCtx.testCtx), tenantID)
 
-	s.ServicePrincipal = testCtx.NewAzureServicePrincipal("Service Principal", RandomObjectID(testCtx.testCtrl), tenantID)
+	s.ServicePrincipal = testCtx.NewAzureServicePrincipal("Service Principal", RandomObjectID(testCtx.testCtx), tenantID)
 
 	testCtx.NewRelationship(s.Tenant, s.MicrosoftGraph, azure.Contains)
 	testCtx.NewRelationship(s.Tenant, s.ServicePrincipal, azure.Contains)
@@ -890,12 +890,12 @@ type AZMGDirectoryReadWriteAllHarness struct {
 }
 
 func (s *AZMGDirectoryReadWriteAllHarness) Setup(testCtx *GraphTestContext) {
-	tenantID := RandomObjectID(testCtx.testCtrl)
+	tenantID := RandomObjectID(testCtx.testCtx)
 	s.Tenant = testCtx.NewAzureTenant(tenantID)
-	s.MicrosoftGraph = testCtx.NewAzureServicePrincipal("Microsoft Graph", RandomObjectID(testCtx.testCtrl), tenantID)
+	s.MicrosoftGraph = testCtx.NewAzureServicePrincipal("Microsoft Graph", RandomObjectID(testCtx.testCtx), tenantID)
 
-	s.Group = testCtx.NewAzureGroup("Group", RandomObjectID(testCtx.testCtrl), tenantID)
-	s.ServicePrincipal = testCtx.NewAzureServicePrincipal("Service Principal", RandomObjectID(testCtx.testCtrl), tenantID)
+	s.Group = testCtx.NewAzureGroup("Group", RandomObjectID(testCtx.testCtx), tenantID)
+	s.ServicePrincipal = testCtx.NewAzureServicePrincipal("Service Principal", RandomObjectID(testCtx.testCtx), tenantID)
 
 	testCtx.NewRelationship(s.Tenant, s.MicrosoftGraph, azure.Contains)
 	testCtx.NewRelationship(s.Tenant, s.Group, azure.Contains)
@@ -914,12 +914,12 @@ type AZMGGroupReadWriteAllHarness struct {
 }
 
 func (s *AZMGGroupReadWriteAllHarness) Setup(testCtx *GraphTestContext) {
-	tenantID := RandomObjectID(testCtx.testCtrl)
+	tenantID := RandomObjectID(testCtx.testCtx)
 	s.Tenant = testCtx.NewAzureTenant(tenantID)
-	s.MicrosoftGraph = testCtx.NewAzureServicePrincipal("Microsoft Graph", RandomObjectID(testCtx.testCtrl), tenantID)
+	s.MicrosoftGraph = testCtx.NewAzureServicePrincipal("Microsoft Graph", RandomObjectID(testCtx.testCtx), tenantID)
 
-	s.Group = testCtx.NewAzureGroup("Group", RandomObjectID(testCtx.testCtrl), tenantID)
-	s.ServicePrincipal = testCtx.NewAzureServicePrincipal("Service Principal", RandomObjectID(testCtx.testCtrl), tenantID)
+	s.Group = testCtx.NewAzureGroup("Group", RandomObjectID(testCtx.testCtx), tenantID)
+	s.ServicePrincipal = testCtx.NewAzureServicePrincipal("Service Principal", RandomObjectID(testCtx.testCtx), tenantID)
 
 	testCtx.NewRelationship(s.Tenant, s.MicrosoftGraph, azure.Contains)
 	testCtx.NewRelationship(s.Tenant, s.Group, azure.Contains)
@@ -938,12 +938,12 @@ type AZMGGroupMemberReadWriteAllHarness struct {
 }
 
 func (s *AZMGGroupMemberReadWriteAllHarness) Setup(testCtx *GraphTestContext) {
-	tenantID := RandomObjectID(testCtx.testCtrl)
+	tenantID := RandomObjectID(testCtx.testCtx)
 	s.Tenant = testCtx.NewAzureTenant(tenantID)
-	s.MicrosoftGraph = testCtx.NewAzureServicePrincipal("Microsoft Graph", RandomObjectID(testCtx.testCtrl), tenantID)
+	s.MicrosoftGraph = testCtx.NewAzureServicePrincipal("Microsoft Graph", RandomObjectID(testCtx.testCtx), tenantID)
 
-	s.Group = testCtx.NewAzureGroup("Group", RandomObjectID(testCtx.testCtrl), tenantID)
-	s.ServicePrincipal = testCtx.NewAzureServicePrincipal("Service Principal", RandomObjectID(testCtx.testCtrl), tenantID)
+	s.Group = testCtx.NewAzureGroup("Group", RandomObjectID(testCtx.testCtx), tenantID)
+	s.ServicePrincipal = testCtx.NewAzureServicePrincipal("Service Principal", RandomObjectID(testCtx.testCtx), tenantID)
 
 	testCtx.NewRelationship(s.Tenant, s.MicrosoftGraph, azure.Contains)
 	testCtx.NewRelationship(s.Tenant, s.Group, azure.Contains)
@@ -965,15 +965,15 @@ type AZMGRoleManagementReadWriteDirectoryHarness struct {
 }
 
 func (s *AZMGRoleManagementReadWriteDirectoryHarness) Setup(testCtx *GraphTestContext) {
-	tenantID := RandomObjectID(testCtx.testCtrl)
+	tenantID := RandomObjectID(testCtx.testCtx)
 	s.Tenant = testCtx.NewAzureTenant(tenantID)
-	s.MicrosoftGraph = testCtx.NewAzureServicePrincipal("Microsoft Graph", RandomObjectID(testCtx.testCtrl), tenantID)
+	s.MicrosoftGraph = testCtx.NewAzureServicePrincipal("Microsoft Graph", RandomObjectID(testCtx.testCtx), tenantID)
 
-	s.Application = testCtx.NewAzureApplication("App", RandomObjectID(testCtx.testCtrl), tenantID)
-	s.Group = testCtx.NewAzureGroup("Group", RandomObjectID(testCtx.testCtrl), tenantID)
-	s.Role = testCtx.NewAzureRole("Role", RandomObjectID(testCtx.testCtrl), RandomObjectID(testCtx.testCtrl), tenantID)
-	s.ServicePrincipal = testCtx.NewAzureServicePrincipal("Service Principal", RandomObjectID(testCtx.testCtrl), tenantID)
-	s.ServicePrincipalB = testCtx.NewAzureServicePrincipal("Service Principal B", RandomObjectID(testCtx.testCtrl), tenantID)
+	s.Application = testCtx.NewAzureApplication("App", RandomObjectID(testCtx.testCtx), tenantID)
+	s.Group = testCtx.NewAzureGroup("Group", RandomObjectID(testCtx.testCtx), tenantID)
+	s.Role = testCtx.NewAzureRole("Role", RandomObjectID(testCtx.testCtx), RandomObjectID(testCtx.testCtx), tenantID)
+	s.ServicePrincipal = testCtx.NewAzureServicePrincipal("Service Principal", RandomObjectID(testCtx.testCtx), tenantID)
+	s.ServicePrincipalB = testCtx.NewAzureServicePrincipal("Service Principal B", RandomObjectID(testCtx.testCtx), tenantID)
 
 	testCtx.NewRelationship(s.Tenant, s.MicrosoftGraph, azure.Contains)
 	testCtx.NewRelationship(s.Tenant, s.Application, azure.Contains)
@@ -1007,12 +1007,12 @@ type AZMGServicePrincipalEndpointReadWriteAllHarness struct {
 }
 
 func (s *AZMGServicePrincipalEndpointReadWriteAllHarness) Setup(testCtx *GraphTestContext) {
-	tenantID := RandomObjectID(testCtx.testCtrl)
+	tenantID := RandomObjectID(testCtx.testCtx)
 	s.Tenant = testCtx.NewAzureTenant(tenantID)
-	s.MicrosoftGraph = testCtx.NewAzureServicePrincipal("Microsoft Graph", RandomObjectID(testCtx.testCtrl), tenantID)
+	s.MicrosoftGraph = testCtx.NewAzureServicePrincipal("Microsoft Graph", RandomObjectID(testCtx.testCtx), tenantID)
 
-	s.ServicePrincipal = testCtx.NewAzureServicePrincipal("Service Principal", RandomObjectID(testCtx.testCtrl), tenantID)
-	s.ServicePrincipalB = testCtx.NewAzureServicePrincipal("Service Principal B", RandomObjectID(testCtx.testCtrl), tenantID)
+	s.ServicePrincipal = testCtx.NewAzureServicePrincipal("Service Principal", RandomObjectID(testCtx.testCtx), tenantID)
+	s.ServicePrincipalB = testCtx.NewAzureServicePrincipal("Service Principal B", RandomObjectID(testCtx.testCtx), tenantID)
 
 	testCtx.NewRelationship(s.Tenant, s.MicrosoftGraph, azure.Contains)
 	testCtx.NewRelationship(s.Tenant, s.ServicePrincipal, azure.Contains)
@@ -1037,15 +1037,15 @@ type AZInboundControlHarness struct {
 }
 
 func (s *AZInboundControlHarness) Setup(testCtx *GraphTestContext) {
-	tenantID := RandomObjectID(testCtx.testCtrl)
-	s.ControlledAZUser = testCtx.NewAzureUser("Controlled AZUser", "Controlled AZUser", "", RandomObjectID(testCtx.testCtrl), HarnessUserLicenses, tenantID, HarnessUserMFAEnabled)
-	s.AZAppA = testCtx.NewAzureApplication("AZAppA", RandomObjectID(testCtx.testCtrl), tenantID)
-	s.AZGroupA = testCtx.NewAzureGroup("AZGroupA", RandomObjectID(testCtx.testCtrl), tenantID)
-	s.AZGroupB = testCtx.NewAzureGroup("AZGroupB", RandomObjectID(testCtx.testCtrl), tenantID)
-	s.AZUserA = testCtx.NewAzureUser("AZUserA", "AZUserA", "", RandomObjectID(testCtx.testCtrl), HarnessUserLicenses, tenantID, HarnessUserMFAEnabled)
-	s.AZUserB = testCtx.NewAzureUser("AZUserB", "AZUserB", "", RandomObjectID(testCtx.testCtrl), HarnessUserLicenses, tenantID, HarnessUserMFAEnabled)
-	s.AZServicePrincipalA = testCtx.NewAzureServicePrincipal("AZServicePrincipalA", RandomObjectID(testCtx.testCtrl), tenantID)
-	s.AZServicePrincipalB = testCtx.NewAzureServicePrincipal("AZServicePrincipalB", RandomObjectID(testCtx.testCtrl), tenantID)
+	tenantID := RandomObjectID(testCtx.testCtx)
+	s.ControlledAZUser = testCtx.NewAzureUser("Controlled AZUser", "Controlled AZUser", "", RandomObjectID(testCtx.testCtx), HarnessUserLicenses, tenantID, HarnessUserMFAEnabled)
+	s.AZAppA = testCtx.NewAzureApplication("AZAppA", RandomObjectID(testCtx.testCtx), tenantID)
+	s.AZGroupA = testCtx.NewAzureGroup("AZGroupA", RandomObjectID(testCtx.testCtx), tenantID)
+	s.AZGroupB = testCtx.NewAzureGroup("AZGroupB", RandomObjectID(testCtx.testCtx), tenantID)
+	s.AZUserA = testCtx.NewAzureUser("AZUserA", "AZUserA", "", RandomObjectID(testCtx.testCtx), HarnessUserLicenses, tenantID, HarnessUserMFAEnabled)
+	s.AZUserB = testCtx.NewAzureUser("AZUserB", "AZUserB", "", RandomObjectID(testCtx.testCtx), HarnessUserLicenses, tenantID, HarnessUserMFAEnabled)
+	s.AZServicePrincipalA = testCtx.NewAzureServicePrincipal("AZServicePrincipalA", RandomObjectID(testCtx.testCtx), tenantID)
+	s.AZServicePrincipalB = testCtx.NewAzureServicePrincipal("AZServicePrincipalB", RandomObjectID(testCtx.testCtx), tenantID)
 
 	testCtx.NewRelationship(s.AZUserA, s.AZGroupA, azure.MemberOf)
 	testCtx.NewRelationship(s.AZServicePrincipalB, s.AZGroupB, azure.MemberOf)
@@ -1662,7 +1662,6 @@ func (s *ShortcutHarness) Setup(graphTestContext *GraphTestContext) {
 }
 
 type RootADHarness struct {
-	TierZero                                graph.NodeSet
 	ActiveDirectoryDomainSID                string
 	ActiveDirectoryDomain                   *graph.Node
 	ActiveDirectoryRDPDomainGroup           *graph.Node
@@ -1670,7 +1669,6 @@ type RootADHarness struct {
 	ActiveDirectoryUser                     *graph.Node
 	ActiveDirectoryOU                       *graph.Node
 	ActiveDirectoryGPO                      *graph.Node
-	ActiveDirectoryDCSyncMetaRelationship   *graph.Relationship
 	ActiveDirectoryDCSyncAtomicRelationship *graph.Relationship
 	NumCollectedDomains                     int
 }

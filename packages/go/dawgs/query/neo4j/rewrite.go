@@ -1,17 +1,17 @@
 // Copyright 2023 Specter Ops, Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// 
+//
 // SPDX-License-Identifier: Apache-2.0
 
 package neo4j
@@ -23,7 +23,7 @@ import (
 	"github.com/specterops/bloodhound/dawgs/query"
 )
 
-func RemoveEmptyExpressionLists(parent, element any) error {
+func RemoveEmptyExpressionLists(stack *model.WalkStack, element model.Expression) error {
 	var (
 		shouldRemove  = false
 		shouldReplace = false
@@ -52,12 +52,12 @@ func RemoveEmptyExpressionLists(parent, element any) error {
 	}
 
 	if shouldRemove {
-		switch typedParent := parent.(type) {
+		switch typedParent := stack.Trunk().(type) {
 		case model.ExpressionList:
 			typedParent.Remove(element)
 		}
 	} else if shouldReplace {
-		switch typedParent := parent.(type) {
+		switch typedParent := stack.Trunk().(type) {
 		case model.ExpressionList:
 			typedParent.Replace(typedParent.IndexOf(element), replacementExpression)
 		}
@@ -66,7 +66,7 @@ func RemoveEmptyExpressionLists(parent, element any) error {
 	return nil
 }
 
-func StringNegationRewriter(parent, element any) error {
+func StringNegationRewriter(stack *model.WalkStack, element model.Expression) error {
 	var rewritten any
 
 	switch negation := element.(type) {
@@ -94,7 +94,7 @@ func StringNegationRewriter(parent, element any) error {
 
 	// If we rewrote this element, replace it
 	if rewritten != nil {
-		switch typedParent := parent.(type) {
+		switch typedParent := stack.Trunk().(type) {
 		case model.ExpressionList:
 			for idx, expression := range typedParent.GetAll() {
 				if expression == element {
@@ -104,7 +104,7 @@ func StringNegationRewriter(parent, element any) error {
 			}
 
 		default:
-			return fmt.Errorf("unable to replace rewritten string negation operation for parent type %T", parent)
+			return fmt.Errorf("unable to replace rewritten string negation operation for parent type %T", stack.Trunk())
 		}
 	}
 
