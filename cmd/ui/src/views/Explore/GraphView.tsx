@@ -24,6 +24,7 @@ import { GraphEdges, GraphNodes } from 'js-client-library';
 import isEmpty from 'lodash/isEmpty';
 import { FC, useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
+import { GraphButtonProps } from 'src/components/GraphButton/GraphButton';
 import { GraphButtonOptions } from 'src/components/GraphButtons/GraphButtons';
 import SigmaChart from 'src/components/SigmaChart';
 import { EdgeInfoState, setEdgeInfoOpen, setSelectedEdge } from 'src/ducks/edgeinfo/edgeSlice';
@@ -199,7 +200,10 @@ const GraphView: FC = () => {
         }
     };
 
+    const handleOpenSearch = () => console.log("Opening Search modal");
+
     const options: GraphButtonOptions = { standard: true, sequential: true };
+    const nonLayoutButtons: GraphButtonProps[] = [{ onClick: handleOpenSearch, displayText: 'Search Current Results' }]
 
     return (
         <div style={{ position: 'relative', height: '100%', width: '100%', overflow: 'hidden' }} data-testid='explore'>
@@ -208,6 +212,7 @@ const GraphView: FC = () => {
                 options={options}
                 graph={graphologyGraph}
                 onClickNode={onClickNode}
+                nonLayoutButtons={nonLayoutButtons}
             />
             <Grid
                 container
@@ -231,7 +236,6 @@ const GraphView: FC = () => {
                     )}
                 </Grid>
             </Grid>
-
             <GraphProgress loading={graphState.loading} />
         </div>
     );
