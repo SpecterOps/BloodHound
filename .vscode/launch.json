@@ -12,11 +12,11 @@
             "program": "${file}"
         },
         {
-            "name": "Debug with Docker Compose",
+            "name": "Docker Compose Debug",
             "type": "go",
             "host": "localhost",
             "mode": "remote",
-            "port": 2345,
+            "port": 3456,
             "request": "attach",
             "substitutePath": [
                 {
@@ -38,7 +38,7 @@
             ]
         },
         {
-            "name": "Launch Current Package Tests",
+            "name": "Run Package Integration Tests",
             "type": "go",
             "request": "launch",
             "mode": "test",

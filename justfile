@@ -14,9 +14,11 @@ set positional-arguments
 
 # Initialize your dev environment (clone templates to local)
 init:
-  #!/usr/bin/env sh
-  cp ./local-harnesses/integration.config.json.template ./local-harnesses/integration.config.json
-  cp ./local-harnesses/build.config.json.template ./local-harnesses/build.config.json
+  # Copy configuration files for easy access
+  @cp local-harnesses/build.config.json.template local-harnesses/build.config.json
+  @cp local-harnesses/integration.config.json.template local-harnesses/integration.config.json
+  # Install additional Go tools
+  @go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.52.2
 
 # Show available targets for this context.
 show *FLAGS:
@@ -91,54 +93,43 @@ go-lint:
   golangci-lint run $(cat go.work | { cat | grep -E '\./' | awk 'NF{print $0 "/..."}'; } | tr '\n' ' ')
   echo 'done'
 
-# build local BHCE container image (ex: just build-bhce-container <linux/arm64|linux/amd64> edge v5.0.0)
-build-bhce-container platform='linux/amd64' tag='edge' version='v5.0.0' ARGS='':
-  docker buildx build -f dockerfiles/bloodhound.Dockerfile -t specterops/bloodhound:{{tag}} --platform={{platform}} --load --build-arg version={{version}}-{{tag}} {{ARGS}} .
-
 # run docker compose commands for the BH dev profile (Default: up)
 bh-dev *ARGS='up':
-  # make sure go.work.sum is updated
-  go mod download
-  docker compose --profile dev {{ARGS}}
+  @docker compose --profile dev {{ARGS}}
 
 # run docker compose commands for the BH debug profile (Default: up)
 bh-debug *ARGS='up':
-  # make sure go.work.sum is updated
-  go mod download
-  docker compose --profile debug {{ARGS}}
+  @docker compose --profile debug-api {{ARGS}}
 
 # run docker compose commands for the BH api-only profile (Default: up)
 bh-api-only *ARGS='up':
-  # make sure go.work.sum is updated
-  go mod download
-  docker compose --profile api-only {{ARGS}}
+  @docker compose --profile api-only {{ARGS}}
 
 # run docker compose commands for the BH ui-only profile (Default: up)
 bh-ui-only *ARGS='up':
-  # make sure go.work.sum is updated
-  go mod download
-  docker compose --profile ui-only {{ARGS}}
+  @docker compose --profile ui-only {{ARGS}}
 
 # run docker compose commands for the BH testing databases (Default: up)
 bh-testing *ARGS='up -d':
-  # make sure go.work.sum is updated
-  go mod download
-  docker compose -p bh-testing -f docker-compose.testing.yml {{ARGS}}
+  @docker compose --project-name bh-testing -f docker-compose.testing.yml {{ARGS}}
 
 # clear BH testing volumes
 bh-testing-clear-volumes *ARGS='':
-  # make sure go.work.sum is updated
-  go mod download
-  docker compose -p bh-testing -f docker-compose.testing.yml down -v {{ARGS}}
+  @docker compose --project-name bh-testing -f docker-compose.testing.yml down -v {{ARGS}}
 
 # clear BH docker compose volumes (pass --remove-orphans if troubleshooting)
 bh-clear-volumes *ARGS='':
-  # make sure go.work.sum is updated
-  go mod download
-  docker compose down -v {{ARGS}}
+  @docker compose down -v {{ARGS}}
 
 # build BH target cleanly (default profile dev with --no-cache flag)
 bh-clean-docker-build target='dev' *ARGS='':
-  # make sure go.work.sum is updated
-  go mod download
-  docker compose --profile {{target}} build --no-cache {{ARGS}}
+  @docker compose --profile {{target}} build --no-cache {{ARGS}}
+
+# build local BHCE container image (ex: just build-bhce-container <linux/arm64|linux/amd64> edge v5.0.0)
+build-bhce-container platform='linux/amd64' tag='edge' version='v5.0.0' *ARGS='':
+  @docker buildx build -f dockerfiles/bloodhound.Dockerfile -t specterops/bloodhound:{{tag}} --platform={{platform}} --load --build-arg version={{version}}-{{tag}} {{ARGS}} .
+
+# run local BHCE container image (ex: just build-bhce-container <linux/arm64|linux/amd64> custom v5.0.0)
+run-bhce-container platform='linux/amd64' tag='custom' version='v5.0.0' *ARGS='':
+  @just build-bhce-container {{platform}} {{tag}} {{version}} {{ARGS}}
+  @cd examples/docker-compose && BLOODHOUND_TAG={{tag}} docker compose up

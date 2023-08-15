@@ -24,8 +24,8 @@ services:
       - --providers.docker
       - --providers.docker.exposedbydefault=false
     ports:
-      - 80:80
-      - 8000:8080
+      - ${WEB_PORT:-80}:80
+      - ${TRAEFIK_PORT:-8000}:8080
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
     extra_hosts:
@@ -34,18 +34,18 @@ services:
   app-db:
     image: docker.io/library/postgres:13.2
     environment:
-      - POSTGRES_USER=bloodhound
-      - POSTGRES_PASSWORD=bloodhoundcommunityedition
-      - POSTGRES_DATABASE=bloodhound
+      - POSTGRES_USER=${BH_POSTGRES_USER:-bloodhound}
+      - POSTGRES_PASSWORD=${BH_POSTGRES_PASSWORD:-bloodhoundcommunityedition}
+      - POSTGRES_DATABASE=${BH_POSTGRES_DATABASE:-bloodhound}
     ports:
-      - 5432:5432
+      - ${BH_POSTGRES_PORT:-5432}:5432
     volumes:
-      - postgres-data:/var/lib/postgresql/data
+      - ${BH_POSTGRES_VOLUME:-postgres-data}:/var/lib/postgresql/data
     healthcheck:
       test:
         [
           "CMD-SHELL",
-          "pg_isready -U bloodhound -d 'dbname=bloodhound' -h 127.0.0.1 -p 5432"
+          "pg_isready -U ${BH_POSTGRES_USER:-bloodhound} -d 'dbname=${BH_POSTGRES_DATABASE:-bloodhound}' -h 127.0.0.1 -p 5432"
         ]
       interval: 10s
       timeout: 5s
@@ -57,14 +57,14 @@ services:
       context: tools/docker-compose
       dockerfile: pgadmin.Dockerfile
     environment:
-      PGADMIN_DEFAULT_EMAIL: bloodhound@specterops.io
-      PGADMIN_DEFAULT_PASSWORD: bloodhoundcommunityedition
+      PGADMIN_DEFAULT_EMAIL: ${BH_PG_ADMIN_EMAIL:-bloodhound@specterops.io}
+      PGADMIN_DEFAULT_PASSWORD: ${BH_PG_ADMIN_PASSWORD:-bloodhoundcommunityedition}
       PGADMIN_LISTEN_PORT: 5050
     ports:
-      - 5050:5050
+      - ${BH_PG_ADMIN_PORT:-5050}:5050
     labels:
       - traefik.enable=true
-      - traefik.http.routers.pgadmin.rule=Host(`pgadmin.localhost`)
+      - traefik.http.routers.pgadmin.rule=Host(`${BH_PG_ADMIN_HOSTNAME:-pgadmin.localhost}`)
       - traefik.http.routers.pgadmin.service=pgadmin
       - traefik.http.services.pgadmin.loadbalancer.server.port=5050
     depends_on:
@@ -76,19 +76,23 @@ services:
       context: tools/docker-compose
       dockerfile: neo4j.Dockerfile
     environment:
-      - NEO4J_AUTH=neo4j/bloodhoundcommunityedition
+      - NEO4J_AUTH=${BH_NEO4J_AUTH:-neo4j/bloodhoundcommunityedition}
     ports:
-      - 7687:7687
-      - 7474:7474
+      - ${BH_NEO4J_PORT:-7687}:7687
+      - ${BH_NEO4J_WEB_PORT:-7474}:7474
     volumes:
-      - neo4j-data:/data
+      - ${BH_NEO4J_VOLUME:-neo4j-data}:/data
     labels:
       - traefik.enable=true
-      - traefik.http.routers.neo4jbrowser.rule=Host(`neo4j.localhost`)
+      - traefik.http.routers.neo4jbrowser.rule=Host(`${BH_NEO4J_HOSTNAME:-neo4j.localhost}`)
       - traefik.http.routers.neo4jbrowser.service=neo4jbrowser
       - traefik.http.services.neo4jbrowser.loadbalancer.server.port=7474
     healthcheck:
-      test: [ "CMD-SHELL", "wget -O /dev/null -q http://localhost:7474 || exit 1" ]
+      test:
+        [
+          "CMD-SHELL",
+          "wget -O /dev/null -q http://localhost:7474 || exit 1"
+        ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -101,16 +105,17 @@ services:
     build:
       context: tools/docker-compose
       dockerfile: api.Dockerfile
-    command: /file-watcher.sh -f '/\.go/ || /go.work/ || /go.mod/' -c /api-rebuild.sh
+    command: "-c .air.toml ${AIR_FLAGS:-''}"
     ports:
-      - 8080:8080
+      - ${BH_API_PORT:-8080}:8080
     labels:
       - traefik.enable=true
-      - traefik.http.routers.bhapi.rule=Host(`bloodhound.localhost`) && PathPrefix(`/api`)
+      - traefik.http.routers.bhapi.rule=Host(`${BH_HOSTNAME:-bloodhound.localhost}`) && PathPrefix(`/api`)
       - traefik.http.routers.bhapi.service=bhapi
       - traefik.http.services.bhapi.loadbalancer.server.port=8080
     volumes:
       - .:/bloodhound:ro
+      - ./local-harnesses/${BH_CONFIG_FILE:-build.config.json}:/build.config.json:ro
       - go-pkg-mod:/go/pkg/mod
     extra_hosts:
       - host.docker.internal:host-gateway
@@ -131,8 +136,8 @@ services:
     command: sh -c "yarn dev"
     labels:
       - traefik.enable=true
-      - traefik.http.routers.bhui.rule=Host(`bloodhound.localhost`)
-      - traefik.http.middlewares.add-ui.addprefix.prefix=/ui
+      - traefik.http.routers.bhui.rule=Host(`${BH_HOSTNAME:-bloodhound.localhost}`)
+      - traefik.http.middlewares.add-bh-ui.addprefix.prefix=/ui
       - traefik.http.routers.bhui.service=bhui
       - traefik.http.services.bhui.loadbalancer.server.port=3000
     volumes:
@@ -147,17 +152,18 @@ services:
     build:
       context: tools/docker-compose
       dockerfile: api.Dockerfile
-    command: /file-watcher.sh -f '/\.go/ || /go.work/ || /go.mod/' -c '/delve-rebuild.sh'
+    command: "-c .air.debug.toml ${AIR_FLAGS:-''}"
     ports:
-      - 8080:8080
-      - 2345:2345
+      - ${BH_API_PORT:-8080}:8080
+      - ${DEBUG_PORT:-3456}:2345
     labels:
       - traefik.enable=true
-      - traefik.http.routers.debugapi.rule=Host(`bloodhound.localhost`) && PathPrefix(`/api`)
+      - traefik.http.routers.debugapi.rule=Host(`${BH_HOSTNAME:-bloodhound.localhost}`) && PathPrefix(`/api`)
       - traefik.http.routers.debugapi.service=debugapi
       - traefik.http.services.debugapi.loadbalancer.server.port=8080
     volumes:
       - .:/bloodhound:ro
+      - ./local-harnesses/${BH_CONFIG_FILE:-build.config.json}:/build.config.json:ro
     extra_hosts:
       - host.docker.internal:host-gateway
     depends_on:

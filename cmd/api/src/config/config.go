@@ -161,6 +161,7 @@ type Configuration struct {
 	EnableAPILogging       bool                      `json:"enable_api_logging"`
 	DisableAnalysis        bool                      `json:"disable_analysis"`
 	DisableCypherQC        bool                      `json:"disable_cypher_qc"`
+	DisableMigrations      bool                      `json:"disable_migrations"`
 }
 
 func (s Configuration) TempDirectory() string {

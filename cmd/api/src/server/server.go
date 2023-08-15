@@ -1,17 +1,17 @@
 // Copyright 2023 Specter Ops, Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// 
+//
 // SPDX-License-Identifier: Apache-2.0
 
 package server
@@ -70,12 +70,21 @@ func SystemSignalExitChannel() chan struct{} {
 }
 
 // MigrateGraph runs migrations for the graph database
-func MigrateGraph(db graph.Database) error {
+func MigrateGraph(cfg config.Configuration, db graph.Database) error {
+	if cfg.DisableMigrations {
+		log.Infof("Graph migrations are disabled per configuration")
+		return nil
+	}
 	return migrations.NewGraphMigrator(db).Migrate()
 }
 
 // MigrateDB runs database migrations on PG
 func MigrateDB(cfg config.Configuration, db database.Database, models []any) error {
+	if cfg.DisableMigrations {
+		log.Infof("Database migrations are disabled per configuration")
+		return nil
+	}
+
 	if err := db.MigrateModels(models); err != nil {
 		return err
 	}
@@ -148,7 +157,7 @@ func StartServer(cfg config.Configuration, exitC chan struct{}) error {
 		return fmt.Errorf("db connection error: %w", err)
 	} else if err := MigrateDB(cfg, db, migration.ListBHModels()); err != nil {
 		return fmt.Errorf("db migration error: %w", err)
-	} else if err := MigrateGraph(graphDB); err != nil {
+	} else if err := MigrateGraph(cfg, graphDB); err != nil {
 		return fmt.Errorf("graph db migration error: %w", err)
 	} else if apiCache, err := cache.NewCache(cache.Config{MaxSize: cfg.MaxAPICacheSize}); err != nil {
 		return fmt.Errorf("failed to create in-memory cache for API: %w", err)
