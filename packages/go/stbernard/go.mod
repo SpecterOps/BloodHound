@@ -14,25 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+module github.com/specterops/bloodhound/packages/go/stbernard
+
 go 1.20
 
-use (
-	./cmd/api/src
-	./packages/go/analysis
-	./packages/go/cache
-	./packages/go/conftool
-	./packages/go/crypto
-	./packages/go/cypher
-	./packages/go/dawgs
-	./packages/go/ein
-	./packages/go/errors
-	./packages/go/graphschema
-	./packages/go/headers
-	./packages/go/lab
-	./packages/go/log
-	./packages/go/mediatypes
-	./packages/go/params
-	./packages/go/schemagen
-	./packages/go/slices
-	./packages/go/stbernard
-)
+require golang.org/x/mod v0.12.0
