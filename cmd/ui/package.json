@@ -29,6 +29,8 @@
         "@mui/material": "^5.10.8",
         "@mui/styles": "^5.14.0",
         "@mui/x-date-pickers": "^5.0.20",
+        "@neo4j-cypher/editor-support": "^1.0.1",
+        "@neo4j-cypher/react-codemirror": "^1.0.3",
         "@react-sigma/core": "^3.4.1",
         "@reduxjs/toolkit": "^1.8.5",
         "bh-shared-ui": "workspace:*",

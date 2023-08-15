@@ -24,6 +24,8 @@ import { setCypherQueryTerm, startCypherSearch } from 'src/ducks/searchbar/actio
 import { AppState } from 'src/store';
 import CommonSearches from './CommonSearches';
 import { startCypherQuery } from 'src/ducks/explore/actions';
+// @ts-ignore
+import { CypherEditor } from '@neo4j-cypher/react-codemirror';
 
 const useStyles = makeStyles((theme) => ({
     button: {
@@ -38,6 +40,11 @@ const useStyles = makeStyles((theme) => ({
         fontSize: '.8rem',
     },
 }));
+
+const schema = {
+    labels: [':LabelOne', ':LabelTwo', ':Label Three'],
+    relationshipTypes: [':REL_TYPE_ONE', ':REL_TYPE_TWO', ':REL_TYPE THREE'],
+};
 
 const CypherInput = () => {
     const classes = useStyles();
@@ -94,7 +101,29 @@ const CypherInput = () => {
                     <FontAwesomeIcon icon={faFolderOpen} />
                 </Button>
 
-                <Box display='flex' flexGrow={1} flexDirection={'column'} gap={1} alignItems={'end'}>
+                <CypherEditor
+                    style={{
+                        display: 'flex',
+                        flexGrow: 1,
+                        flexDirection: 'column',
+                        border: '1px solid',
+                        borderColor: 'rgba(0,0,0,.23)',
+                        borderRadius: '4px',
+                    }}
+                    value={cypherQuery}
+                    onValueChanged={(val: string) => {
+                        setCypherQuery(val);
+                    }}
+                    onKeyDown={(e) => {
+                        // if enter and shift key is pressed, execute cypher search
+                        if (e.key === 'Enter' && e.shiftKey) {
+                            e.preventDefault();
+                            handleCypherSearch(cypherQuery);
+                        }
+                    }}
+                    schema={schema}
+                />
+                {/* <Box display='flex' flexGrow={1} flexDirection={'column'} gap={1} alignItems={'end'}>
                     <TextField
                         placeholder='Cypher Search'
                         multiline
@@ -136,7 +165,7 @@ const CypherInput = () => {
                             Search
                         </Button>
                     </Box>
-                </Box>
+                </Box> */}
             </Box>
 
             <Collapse in={showCommonQueries}>
