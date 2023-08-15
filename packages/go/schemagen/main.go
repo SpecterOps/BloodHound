@@ -34,7 +34,7 @@ type Schema struct {
 }
 
 func GenerateGolang(projectRoot string, rootSchema Schema) error {
-	if err := generator.GenerateGolangSchemaTypes("schema", filepath.Join(projectRoot, "packages/go/graphschema")); err != nil {
+	if err := generator.GenerateGolangSchemaTypes("graphschema", filepath.Join(projectRoot, "packages/go/graphschema")); err != nil {
 		return err
 	}
 

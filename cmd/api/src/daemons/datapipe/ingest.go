@@ -271,6 +271,7 @@ func IngestRelationship(batch graph.Batch, nowUTC time.Time, nodeIDKind graph.Ki
 
 		Start: graph.PrepareNode(graph.AsProperties(graph.PropertyMap{
 			common.ObjectID: nextRel.Source,
+			common.LastSeen: nowUTC,
 		}), nextRel.SourceType),
 		StartIdentityKind: nodeIDKind,
 		StartIdentityProperties: []string{
@@ -279,6 +280,7 @@ func IngestRelationship(batch graph.Batch, nowUTC time.Time, nodeIDKind graph.Ki
 
 		End: graph.PrepareNode(graph.AsProperties(graph.PropertyMap{
 			common.ObjectID: nextRel.Target,
+			common.LastSeen: nowUTC,
 		}), nextRel.TargetType),
 		EndIdentityKind: nodeIDKind,
 		EndIdentityProperties: []string{

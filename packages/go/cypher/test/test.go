@@ -1,17 +1,17 @@
 // Copyright 2023 Specter Ops, Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// 
+//
 // SPDX-License-Identifier: Apache-2.0
 
 package test
@@ -19,24 +19,25 @@ package test
 import (
 	"embed"
 	"encoding/json"
+	"github.com/specterops/bloodhound/cypher/gen"
 	"regexp"
 	"testing"
 
-	"github.com/stretchr/testify/require"
 	"github.com/specterops/bloodhound/cypher/frontend"
+	"github.com/stretchr/testify/require"
 )
 
 //go:embed cases
 var fixtureFS embed.FS
 
-type TestType = string
+type Type = string
 
 const (
-	TestTypeStringMatch  TestType = "string_match"
-	TestTypeNegativeCase TestType = "negative_case"
+	TypeStringMatch  Type = "string_match"
+	TypeNegativeCase Type = "negative_case"
 )
 
-type TestRunner interface {
+type Runner interface {
 	Run(t *testing.T, testCase Case)
 }
 
@@ -98,7 +99,7 @@ type StringMatchTest struct {
 func (s StringMatchTest) Run(t *testing.T, testCase Case) {
 	var (
 		ctx         = frontend.NewContext()
-		result, err = frontend.CypherToCypher(ctx, s.Query)
+		result, err = gen.CypherToCypher(ctx, s.Query)
 	)
 
 	if err != nil {
@@ -117,7 +118,7 @@ func (s StringMatchTest) Run(t *testing.T, testCase Case) {
 
 type Case struct {
 	Name     string          `json:"name"`
-	Type     TestType        `json:"type"`
+	Type     Type            `json:"type"`
 	Targeted bool            `json:"targeted"`
 	Ignore   bool            `json:"ignore"`
 	Details  json.RawMessage `json:"details"`
@@ -189,7 +190,7 @@ func LoadFixture(t *testing.T, filename string) Cases {
 	return fixture
 }
 
-func testRunner[T TestRunner](testCase Case) func(t *testing.T) {
+func testRunner[T Runner](testCase Case) func(t *testing.T) {
 	return func(t *testing.T) {
 		// Run the test case if it isn't ignored
 		if !testCase.Ignore {
@@ -200,10 +201,10 @@ func testRunner[T TestRunner](testCase Case) func(t *testing.T) {
 
 func testCase(test Case) func(t *testing.T) {
 	switch test.Type {
-	case TestTypeStringMatch:
+	case TypeStringMatch:
 		return testRunner[StringMatchTest](test)
 
-	case TestTypeNegativeCase:
+	case TypeNegativeCase:
 		return testRunner[NegativeTest](test)
 
 	default:

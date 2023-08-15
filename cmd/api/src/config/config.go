@@ -255,38 +255,35 @@ func SetValuesFromEnv(varPrefix string, target any, env []string) error {
 	return nil
 }
 
-func GetConfiguration(path string) (Configuration, error) {
-	cfg, err := NewDefaultConfiguration()
-	if err != nil {
-		return cfg, fmt.Errorf("failed to create default configuration: %w", err)
-	}
-
+func getConfiguration(path string, defaultConfigFunc func() (Configuration, error)) (Configuration, error) {
 	if hasCfgFile, err := HasConfigurationFile(path); err != nil {
 		return Configuration{}, err
 	} else if hasCfgFile {
 		log.Infof("Reading configuration found at %s", path)
 
-		if readCfg, err := ReadConfigurationFile(path); err != nil {
-			return Configuration{}, err
-		} else {
-			cfg = readCfg
-		}
+		return ReadConfigurationFile(path)
 	} else {
-		log.Infof("No configuration file found at %s", path)
-	}
+		log.Infof("No configuration file found at %s. Returning defaults.", path)
 
-	if err := SetValuesFromEnv(bhAPIEnvironmentVariablePrefix, &cfg, os.Environ()); err != nil {
-		return Configuration{}, err
+		return defaultConfigFunc()
 	}
+}
 
-	return cfg, nil
+func GetConfiguration(path string, defaultConfigFunc func() (Configuration, error)) (Configuration, error) {
+	if cfg, err := getConfiguration(path, defaultConfigFunc); err != nil {
+		return cfg, err
+	} else if err := SetValuesFromEnv(bhAPIEnvironmentVariablePrefix, &cfg, os.Environ()); err != nil {
+		return cfg, err
+	} else {
+		return cfg, nil
+	}
 }
 
 func (s Configuration) SaveCollectorManifests() (CollectorManifests, error) {
 	if azureHoundManifest, err := generateCollectorManifest(filepath.Join(s.CollectorsDirectory(), "azurehound")); err != nil {
-		return CollectorManifests{}, fmt.Errorf("error generating AzureHound manifest file: %w", err)
+		return CollectorManifests{}, nil //fmt.Errorf("error generating AzureHound manifest file: %w", err)
 	} else if sharpHoundManifest, err := generateCollectorManifest(filepath.Join(s.CollectorsDirectory(), "sharphound")); err != nil {
-		return CollectorManifests{}, fmt.Errorf("error generating SharpHound manifest file: %w", err)
+		return CollectorManifests{}, nil //fmt.Errorf("error generating SharpHound manifest file: %w", err)
 	} else {
 		return CollectorManifests{
 			"azurehound": azureHoundManifest,

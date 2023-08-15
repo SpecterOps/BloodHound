@@ -51,6 +51,7 @@ type Database interface {
 	appcfg.ParameterService
 	appcfg.FeatureFlagService
 
+	Close()
 	GetConfigurationParameter(parameter string) (appcfg.Parameter, error)
 	SetConfigurationParameter(appConfig appcfg.Parameter) error
 	GetAllConfigurationParameters() (appcfg.Parameters, error)
@@ -151,6 +152,14 @@ type BloodhoundDB struct {
 	idResolver auth.IdentityResolver // TODO: this really needs to be elsewhere. something something separation of concerns
 }
 
+func (s *BloodhoundDB) Close() {
+	if sqlDBRef, err := s.db.DB(); err != nil {
+		log.Errorf("Failed to fetch SQL DB reference from GORM: %v", err)
+	} else if err := sqlDBRef.Close(); err != nil {
+		log.Errorf("Failed closing database: %v", err)
+	}
+}
+
 func (s *BloodhoundDB) preload(associations []string) *gorm.DB {
 	cursor := s.db
 	for _, association := range associations {
@@ -200,7 +209,7 @@ func (s *BloodhoundDB) Wipe() error {
 	return s.db.Transaction(func(tx *gorm.DB) error {
 		var tables []string
 
-		if result := tx.Raw("select table_name from information_schema.tables where table_schema = current_schema()").Scan(&tables); result.Error != nil {
+		if result := tx.Raw("select table_name from information_schema.tables where table_schema = current_schema() and not table_name ilike '%pg_stat%'").Scan(&tables); result.Error != nil {
 			return result.Error
 		}
 

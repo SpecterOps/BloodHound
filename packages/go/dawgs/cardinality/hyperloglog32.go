@@ -26,7 +26,7 @@ import (
 var (
 	size4BufferPool = &sync.Pool{
 		New: func() any {
-			// Return a new buffer the size of a single unit32 in bytes
+			// Select a new buffer the size of a single unit32 in bytes
 			return make([]byte, 4)
 		},
 	}

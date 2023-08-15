@@ -1,17 +1,17 @@
 // Copyright 2023 Specter Ops, Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// 
+//
 // SPDX-License-Identifier: Apache-2.0
 
 package tests
@@ -24,24 +24,6 @@ import (
 
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/specterops/bloodhound/dawgs/graph"
-)
-
-type DBType int
-
-func (s DBType) String() string {
-	switch s {
-	case Neo4j:
-		return "neo4j"
-	case Postgres:
-		return "postgresql"
-	default:
-		panic(fmt.Sprintf("unknown DB type: %d", s))
-	}
-}
-
-const (
-	Neo4j DBType = iota
-	Postgres
 )
 
 type TestDelegate func(testCase *TestCase) any
@@ -92,9 +74,8 @@ func (s Samples) LongestDuration() time.Duration {
 }
 
 type TestSuite struct {
-	Name   string
-	DBType DBType
-	Cases  []*TestCase
+	Name  string
+	Cases []*TestCase
 }
 
 func (s *TestSuite) GetTestCase(testName string) *TestCase {
@@ -110,7 +91,6 @@ func (s *TestSuite) GetTestCase(testName string) *TestCase {
 func (s *TestSuite) NewTestCase(testName string, delegate TestDelegate) {
 	s.Cases = append(s.Cases, &TestCase{
 		Name:     testName,
-		DBType:   s.DBType,
 		Delegate: delegate,
 	})
 }
@@ -160,7 +140,6 @@ func (s *TestSuite) Execute(db graph.Database) error {
 
 type TestCase struct {
 	Name     string
-	DBType   DBType
 	Delegate TestDelegate
 	Samples  Samples
 	Duration time.Duration

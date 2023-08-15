@@ -17,9 +17,12 @@
 package integration
 
 import (
+	"context"
 	"github.com/specterops/bloodhound/dawgs"
 	"github.com/specterops/bloodhound/dawgs/drivers/neo4j"
+	"github.com/specterops/bloodhound/dawgs/drivers/pg"
 	"github.com/specterops/bloodhound/dawgs/graph"
+	schema "github.com/specterops/bloodhound/graphschema"
 	"github.com/specterops/bloodhound/src/config"
 	"github.com/specterops/bloodhound/src/test"
 	"github.com/specterops/bloodhound/src/test/integration/utils"
@@ -37,15 +40,23 @@ func LoadConfiguration(testCtrl test.Controller) config.Configuration {
 }
 
 func OpenPostgresqlGDB(testCtrl test.Controller) graph.Database {
-	graphDatabase, err := dawgs.Open(neo4j.DriverName, dawgs.Config{DriverCfg: LoadConfiguration(testCtrl).Database.PostgreSQLConnectionString()})
+	graphDatabase, err := dawgs.Open(context.TODO(), pg.DriverName, dawgs.Config{
+		DriverCfg: LoadConfiguration(testCtrl).Database.PostgreSQLConnectionString(),
+	})
+
 	require.Nilf(testCtrl, err, "Failed connecting to graph database: %v", err)
+	require.Nil(testCtrl, graphDatabase.AssertSchema(context.Background(), schema.DefaultGraphSchema()))
 
 	return graphDatabase
 }
 
 func OpenNeo4jGraphDB(testCtrl test.Controller) graph.Database {
-	graphDatabase, err := dawgs.Open(neo4j.DriverName, dawgs.Config{DriverCfg: LoadConfiguration(testCtrl).Neo4J.Neo4jConnectionString()})
+	graphDatabase, err := dawgs.Open(context.TODO(), neo4j.DriverName, dawgs.Config{
+		DriverCfg: LoadConfiguration(testCtrl).Neo4J.Neo4jConnectionString(),
+	})
+
 	require.Nilf(testCtrl, err, "Failed connecting to graph database: %v", err)
+	require.Nil(testCtrl, graphDatabase.AssertSchema(context.Background(), schema.DefaultGraphSchema()))
 
 	return graphDatabase
 }

@@ -93,46 +93,46 @@ var (
 	AZMGGrantRole                        = graph.StringKind("AZMGGrantRole")
 )
 
-type Property string
+type Item string
 
 const (
-	AppOwnerOrganizationID  Property = "appownerorganizationid"
-	AppDescription          Property = "appdescription"
-	AppDisplayName          Property = "appdisplayname"
-	ServicePrincipalType    Property = "serviceprincipaltype"
-	UserType                Property = "usertype"
-	TenantID                Property = "tenantid"
-	ServicePrincipalID      Property = "service_principal_id"
-	ServicePrincipalNames   Property = "service_principal_names"
-	OperatingSystemVersion  Property = "operatingsystemversion"
-	TrustType               Property = "trustype"
-	IsBuiltIn               Property = "isbuiltin"
-	AppID                   Property = "appid"
-	AppRoleID               Property = "approleid"
-	DeviceID                Property = "deviceid"
-	NodeResourceGroupID     Property = "noderesourcegroupid"
-	OnPremID                Property = "onpremid"
-	OnPremSyncEnabled       Property = "onpremsyncenabled"
-	SecurityEnabled         Property = "securityenabled"
-	SecurityIdentifier      Property = "securityidentifier"
-	EnableRBACAuthorization Property = "enablerbacauthorization"
-	Scope                   Property = "scope"
-	Offer                   Property = "offer"
-	MFAEnabled              Property = "mfaenabled"
-	License                 Property = "license"
-	Licenses                Property = "licenses"
-	MFAEnforced             Property = "mfaenforced"
-	UserPrincipalName       Property = "userprincipalname"
-	IsAssignableToRole      Property = "isassignabletorole"
-	PublisherDomain         Property = "publisherdomain"
-	SignInAudience          Property = "signinaudience"
-	RoleTemplateID          Property = "templateid"
+	AppOwnerOrganizationID  Item = "appownerorganizationid"
+	AppDescription          Item = "appdescription"
+	AppDisplayName          Item = "appdisplayname"
+	ServicePrincipalType    Item = "serviceprincipaltype"
+	UserType                Item = "usertype"
+	TenantID                Item = "tenantid"
+	ServicePrincipalID      Item = "service_principal_id"
+	ServicePrincipalNames   Item = "service_principal_names"
+	OperatingSystemVersion  Item = "operatingsystemversion"
+	TrustType               Item = "trustype"
+	IsBuiltIn               Item = "isbuiltin"
+	AppID                   Item = "appid"
+	AppRoleID               Item = "approleid"
+	DeviceID                Item = "deviceid"
+	NodeResourceGroupID     Item = "noderesourcegroupid"
+	OnPremID                Item = "onpremid"
+	OnPremSyncEnabled       Item = "onpremsyncenabled"
+	SecurityEnabled         Item = "securityenabled"
+	SecurityIdentifier      Item = "securityidentifier"
+	EnableRBACAuthorization Item = "enablerbacauthorization"
+	Scope                   Item = "scope"
+	Offer                   Item = "offer"
+	MFAEnabled              Item = "mfaenabled"
+	License                 Item = "license"
+	Licenses                Item = "licenses"
+	MFAEnforced             Item = "mfaenforced"
+	UserPrincipalName       Item = "userprincipalname"
+	IsAssignableToRole      Item = "isassignabletorole"
+	PublisherDomain         Item = "publisherdomain"
+	SignInAudience          Item = "signinaudience"
+	RoleTemplateID          Item = "templateid"
 )
 
-func AllProperties() []Property {
-	return []Property{AppOwnerOrganizationID, AppDescription, AppDisplayName, ServicePrincipalType, UserType, TenantID, ServicePrincipalID, ServicePrincipalNames, OperatingSystemVersion, TrustType, IsBuiltIn, AppID, AppRoleID, DeviceID, NodeResourceGroupID, OnPremID, OnPremSyncEnabled, SecurityEnabled, SecurityIdentifier, EnableRBACAuthorization, Scope, Offer, MFAEnabled, License, Licenses, MFAEnforced, UserPrincipalName, IsAssignableToRole, PublisherDomain, SignInAudience, RoleTemplateID}
+func AllProperties() []Item {
+	return []Item{AppOwnerOrganizationID, AppDescription, AppDisplayName, ServicePrincipalType, UserType, TenantID, ServicePrincipalID, ServicePrincipalNames, OperatingSystemVersion, TrustType, IsBuiltIn, AppID, AppRoleID, DeviceID, NodeResourceGroupID, OnPremID, OnPremSyncEnabled, SecurityEnabled, SecurityIdentifier, EnableRBACAuthorization, Scope, Offer, MFAEnabled, License, Licenses, MFAEnforced, UserPrincipalName, IsAssignableToRole, PublisherDomain, SignInAudience, RoleTemplateID}
 }
-func ParseProperty(source string) (Property, error) {
+func ParseItem(source string) (Item, error) {
 	switch source {
 	case "appownerorganizationid":
 		return AppOwnerOrganizationID, nil
@@ -200,7 +200,7 @@ func ParseProperty(source string) (Property, error) {
 		return "", errors.New("Invalid enumeration value: " + source)
 	}
 }
-func (s Property) String() string {
+func (s Item) String() string {
 	switch s {
 	case AppOwnerOrganizationID:
 		return string(AppOwnerOrganizationID)
@@ -268,7 +268,7 @@ func (s Property) String() string {
 		return "Invalid enumeration case: " + string(s)
 	}
 }
-func (s Property) Name() string {
+func (s Item) Name() string {
 	switch s {
 	case AppOwnerOrganizationID:
 		return "App Owner Organization ID"
@@ -336,9 +336,9 @@ func (s Property) Name() string {
 		return "Invalid enumeration case: " + string(s)
 	}
 }
-func (s Property) Is(others ...graph.Kind) bool {
+func (s Item) Is(others ...graph.Kind) bool {
 	for _, other := range others {
-		if value, err := ParseProperty(other.String()); err == nil && value == s {
+		if value, err := ParseItem(other.String()); err == nil && value == s {
 			return true
 		}
 	}

@@ -140,9 +140,9 @@ func TestQueryBuilder_RenderShortestPaths(t *testing.T) {
 		query.Returning(
 			query.Path(),
 		),
-	), "match p = allShortestPaths((s)-[*]->(e)) where s.objectid = $0 and (s:A or s:B) and e.objectid = $1 and e:B return p", map[string]any{
-		"0": "12345",
-		"1": "56789",
+	), "match p = allShortestPaths((s)-[*]->(e)) where s.objectid = $p0 and (s:A or s:B) and e.objectid = $p1 and e:B return p", map[string]any{
+		"p0": "12345",
+		"p1": "56789",
 	}))
 
 	t.Run("Shortest Paths with Bound Relationship", assertQueryShortestPathResult(query.SinglePartQuery(
@@ -159,9 +159,9 @@ func TestQueryBuilder_RenderShortestPaths(t *testing.T) {
 		query.Returning(
 			query.Path(),
 		),
-	), "match p = allShortestPaths((s)-[r:R1|R2*]->(e)) where s.objectid = $0 and (s:A or s:B) and e.objectid = $1 and e:B return p", map[string]any{
-		"0": "12345",
-		"1": "56789",
+	), "match p = allShortestPaths((s)-[r:R1|R2*]->(e)) where s.objectid = $p0 and (s:A or s:B) and e.objectid = $p1 and e:B return p", map[string]any{
+		"p0": "12345",
+		"p1": "56789",
 	}))
 }
 
@@ -178,11 +178,11 @@ func TestQueryBuilder_Render(t *testing.T) {
 
 		query.Limit(10),
 		query.Offset(20),
-	), "match (n) where id(n) in $0 return count(n) skip 20 limit 10", map[string]any{
-		"0": []graph.ID{1, 2, 3, 4},
+	), "match (n) where id(n) in $p0 return count(n) skip 20 limit 10", map[string]any{
+		"p0": []graph.ID{1, 2, 3, 4},
 	}))
 
-	t.Run("Node Property", assertQueryResult(query.SinglePartQuery(
+	t.Run("Node Item", assertQueryResult(query.SinglePartQuery(
 		query.Where(
 			query.In(query.NodeProperty("prop"), []int{1, 2, 3, 4}),
 		),
@@ -190,13 +190,13 @@ func TestQueryBuilder_Render(t *testing.T) {
 		query.Returning(
 			query.Count(query.Node()),
 		),
-	), "match (n) where n.prop in $0 return count(n)"))
+	), "match (n) where n.prop in $p0 return count(n)"))
 
 	// TODO: Revisit parameter reuse
 	//
 	//reusedLiteral := query3.Literal([]int{1, 2, 3, 4})
 	//
-	//t.Run("Node Property with Reused Literal", assertQueryResult(query3.Query(
+	//t.Run("Node Item with Reused Literal", assertQueryResult(query3.Query(
 	//	query3.Where(
 	//		query3.And(
 	//			query3.In(query3.NodeProperty("prop"), reusedLiteral),
@@ -207,27 +207,27 @@ func TestQueryBuilder_Render(t *testing.T) {
 	//	query3.Returning(
 	//		query3.Count(query3.Node()),
 	//	),
-	//), "match (n) where n.prop in $0 and n.other_prop in $0 return count(n)"))
+	//), "match (n) where n.prop in $p0 and n.other_prop in $p0 return count(n)"))
 
-	t.Run("Distinct Property", assertQueryResult(query.SinglePartQuery(
+	t.Run("Distinct Item", assertQueryResult(query.SinglePartQuery(
+		query.Where(
+			query.In(query.NodeProperty("prop"), []int{1, 2, 3, 4}),
+		),
+
+		query.ReturningDistinct(
+			query.NodeProperty("prop"),
+		),
+	), "match (n) where n.prop in $p0 return distinct n.prop"))
+
+	t.Run("Count Distinct Item", assertQueryResult(query.SinglePartQuery(
 		query.Where(
 			query.In(query.NodeProperty("prop"), []int{1, 2, 3, 4}),
 		),
 
 		query.Returning(
-			query.Distinct(query.NodeProperty("prop")),
+			query.CountDistinct(query.NodeProperty("prop")),
 		),
-	), "match (n) where n.prop in $0 return distinct(n.prop)"))
-
-	t.Run("Count Distinct Property", assertQueryResult(query.SinglePartQuery(
-		query.Where(
-			query.In(query.NodeProperty("prop"), []int{1, 2, 3, 4}),
-		),
-
-		query.Returning(
-			query.Count(query.Distinct(query.NodeProperty("prop"))),
-		),
-	), "match (n) where n.prop in $0 return count(distinct(n.prop))"))
+	), "match (n) where n.prop in $p0 return count(distinct n.prop)"))
 
 	t.Run("Set Node Labels", assertQueryResult(query.SinglePartQuery(
 		query.Where(
@@ -242,7 +242,7 @@ func TestQueryBuilder_Render(t *testing.T) {
 		query.Returning(
 			query.Count(query.Node()),
 		),
-	), "match (n) where n.prop in $0 set n:Domain set n:User return count(n)"))
+	), "match (n) where n.prop in $p0 set n:Domain set n:User return count(n)"))
 
 	t.Run("Remove Node Labels", assertQueryResult(query.SinglePartQuery(
 		query.Where(
@@ -257,7 +257,7 @@ func TestQueryBuilder_Render(t *testing.T) {
 		query.Returning(
 			query.Count(query.Node()),
 		),
-	), "match (n) where n.prop in $0 remove n:Domain remove n:User return count(n)"))
+	), "match (n) where n.prop in $p0 remove n:Domain remove n:User return count(n)"))
 
 	t.Run("Multiple Node ID References", assertQueryResult(query.SinglePartQuery(
 		query.Where(
@@ -274,7 +274,7 @@ func TestQueryBuilder_Render(t *testing.T) {
 
 		query.Limit(10),
 		query.Offset(20),
-	), "match (n) where n.name = $0 and id(n) in $1 return id(n), n.value skip 20 limit 10"))
+	), "match (n) where n.name = $p0 and id(n) in $p1 return id(n), n.value skip 20 limit 10"))
 
 	// Create node
 	t.Run("Create Node", assertQueryResult(query.SinglePartQuery(
@@ -291,9 +291,9 @@ func TestQueryBuilder_Render(t *testing.T) {
 			query.Identity(query.Node()),
 		),
 	),
-		"create (n:Domain:Computer $0) return id(n)",
+		"create (n:Domain:Computer $p0) return id(n)",
 		map[string]any{
-			"0": map[string]any{
+			"p0": map[string]any{
 				"prop1": 1234,
 			},
 		},
@@ -321,7 +321,7 @@ func TestQueryBuilder_Render(t *testing.T) {
 
 		query.Limit(10),
 		query.Offset(20),
-	), "match (n) where n.name = $0 and id(n) in $1 remove n.other remove n.other2 return id(n), n.value skip 20 limit 10"))
+	), "match (n) where n.name = $p0 and id(n) in $p1 remove n.other remove n.other2 return id(n), n.value skip 20 limit 10"))
 
 	properties := graph.NewProperties()
 	properties.Set("test_1", "value_1")
@@ -337,19 +337,19 @@ func TestQueryBuilder_Render(t *testing.T) {
 		),
 	), []QueryOutputAssertion{
 		{
-			Query: "match (n) where n.objectid = $0 set n.test_1 = $1, n.test_2 = $2",
+			Query: "match (n) where n.objectid = $p0 set n.test_1 = $p1, n.test_2 = $p2",
 			Parameters: map[string]any{
-				"0": "12345",
-				"1": "value_1",
-				"2": "value_2",
+				"p0": "12345",
+				"p1": "value_1",
+				"p2": "value_2",
 			},
 		},
 		{
-			Query: "match (n) where n.objectid = $0 set n.test_2 = $1, n.test_1 = $2",
+			Query: "match (n) where n.objectid = $p0 set n.test_2 = $p1, n.test_1 = $p2",
 			Parameters: map[string]any{
-				"0": "12345",
-				"1": "value_2",
-				"2": "value_1",
+				"p0": "12345",
+				"p1": "value_2",
+				"p2": "value_1",
 			},
 		},
 	}))
@@ -367,15 +367,15 @@ func TestQueryBuilder_Render(t *testing.T) {
 		),
 	), []QueryOutputAssertion{
 		{
-			Query: "match (n) where n.objectid = $0 remove n.test_2, n.test_1",
+			Query: "match (n) where n.objectid = $p0 remove n.test_2, n.test_1",
 			Parameters: map[string]any{
-				"0": "12345",
+				"p0": "12345",
 			},
 		},
 		{
-			Query: "match (n) where n.objectid = $0 remove n.test_1, n.test_2",
+			Query: "match (n) where n.objectid = $p0 remove n.test_1, n.test_2",
 			Parameters: map[string]any{
-				"0": "12345",
+				"p0": "12345",
 			},
 		},
 	}))
@@ -399,7 +399,7 @@ func TestQueryBuilder_Render(t *testing.T) {
 
 		query.Limit(10),
 		query.Offset(20),
-	), "match (n) where n.name = $0 and id(n) in $1 set n.other = $2 return id(n), n.value skip 20 limit 10"))
+	), "match (n) where n.name = $p0 and id(n) in $p1 set n.other = $p2 return id(n), n.value skip 20 limit 10"))
 
 	updatedNode := graph.NewNode(graph.ID(1), graph.NewProperties(), User, Domain, Computer)
 	updatedNode.Properties.Set("test_1", "value_1")
@@ -428,7 +428,7 @@ func TestQueryBuilder_Render(t *testing.T) {
 
 			return updateStatements
 		}),
-	), "match (n) where id(n) = $0 set n:User:Domain:Computer set n.test_1 = $1 remove n.test_2"))
+	), "match (n) where id(n) = $p0 set n:User:Domain:Computer set n.test_1 = $p1 remove n.test_2"))
 
 	t.Run("Node has Relationships", assertQueryResult(query.SinglePartQuery(
 		query.Where(
@@ -440,7 +440,7 @@ func TestQueryBuilder_Render(t *testing.T) {
 		),
 	), "match (n) where (n)<-[]->() return n"))
 
-	t.Run("Node has Relationships Order by Node Property", assertQueryResult(query.SinglePartQuery(
+	t.Run("Node has Relationships Order by Node Item", assertQueryResult(query.SinglePartQuery(
 		query.Where(
 			query.HasRelationships(query.Node()),
 		),
@@ -454,7 +454,7 @@ func TestQueryBuilder_Render(t *testing.T) {
 		),
 	), "match (n) where (n)<-[]->() return n order by n.value asc"))
 
-	t.Run("Node has Relationships Order by Node Property", assertQueryResult(query.SinglePartQuery(
+	t.Run("Node has Relationships Order by Node Item", assertQueryResult(query.SinglePartQuery(
 		query.Where(
 			query.HasRelationships(query.Node()),
 		),
@@ -469,7 +469,7 @@ func TestQueryBuilder_Render(t *testing.T) {
 		),
 	), "match (n) where (n)<-[]->() return n order by n.value_1 asc, n.value_2 desc"))
 
-	t.Run("Node has Relationships Order by Node Property with Limit and Offset", assertQueryResult(query.SinglePartQuery(
+	t.Run("Node has Relationships Order by Node Item with Limit and Offset", assertQueryResult(query.SinglePartQuery(
 		query.Where(
 			query.HasRelationships(query.Node()),
 		),
@@ -508,7 +508,7 @@ func TestQueryBuilder_Render(t *testing.T) {
 		query.Returning(
 			query.Node(),
 		),
-	), "match (n) where n.lastseen < $0 and id(n) in $1 return n"))
+	), "match (n) where n.lastseen < $p0 and id(n) in $p1 return n"))
 
 	t.Run("Node Datetime Before or Equal to", assertQueryResult(query.SinglePartQuery(
 		query.Where(
@@ -521,7 +521,7 @@ func TestQueryBuilder_Render(t *testing.T) {
 		query.Returning(
 			query.Node(),
 		),
-	), "match (n) where n.lastseen <= $0 and id(n) in $1 return n"))
+	), "match (n) where n.lastseen <= $p0 and id(n) in $p1 return n"))
 
 	t.Run("Node Datetime After", assertQueryResult(query.SinglePartQuery(
 		query.Where(
@@ -534,7 +534,7 @@ func TestQueryBuilder_Render(t *testing.T) {
 		query.Returning(
 			query.Node(),
 		),
-	), "match (n) where n.lastseen > $0 and id(n) in $1 return n"))
+	), "match (n) where n.lastseen > $p0 and id(n) in $p1 return n"))
 
 	t.Run("Node Datetime After or Equal to", assertQueryResult(query.SinglePartQuery(
 		query.Where(
@@ -547,7 +547,7 @@ func TestQueryBuilder_Render(t *testing.T) {
 		query.Returning(
 			query.Node(),
 		),
-	), "match (n) where n.lastseen >= $0 and id(n) in $1 return n"))
+	), "match (n) where n.lastseen >= $p0 and id(n) in $p1 return n"))
 
 	t.Run("Node PropertyExists", assertQueryResult(query.SinglePartQuery(
 		query.Where(
@@ -560,9 +560,9 @@ func TestQueryBuilder_Render(t *testing.T) {
 		query.Returning(
 			query.Node(),
 		),
-	), "match (n) where exists(n.lastseen) and id(n) in $0 return n"))
+	), "match (n) where n.lastseen is not null and id(n) in $p0 return n"))
 
-	t.Run("Return Node Kinds", assertQueryResult(query.SinglePartQuery(
+	t.Run("Select Node Kinds", assertQueryResult(query.SinglePartQuery(
 		query.Where(
 			query.And(
 				query.Kind(query.Node(), Domain),
@@ -574,7 +574,7 @@ func TestQueryBuilder_Render(t *testing.T) {
 		),
 	), "match (n) where n:Domain return labels(n)"))
 
-	t.Run("Return Node ID and Kinds", assertQueryResult(query.SinglePartQuery(
+	t.Run("Select Node ID and Kinds", assertQueryResult(query.SinglePartQuery(
 		query.Where(
 			query.And(
 				query.Kind(query.Node(), Domain),
@@ -611,7 +611,7 @@ func TestQueryBuilder_Render(t *testing.T) {
 		),
 	), "match (n) where (n:Domain or n:User or n:Group) return n"))
 
-	t.Run("Node String Property Contains", assertQueryResult(query.SinglePartQuery(
+	t.Run("Node String Item Contains", assertQueryResult(query.SinglePartQuery(
 		query.Where(
 			query.StringContains(query.NodeProperty("tags"), "tag_1"),
 		),
@@ -619,9 +619,9 @@ func TestQueryBuilder_Render(t *testing.T) {
 		query.Returning(
 			query.Node(),
 		),
-	), "match (n) where n.tags contains $0 return n"))
+	), "match (n) where n.tags contains $p0 return n"))
 
-	t.Run("Node String Property Starts With", assertQueryResult(query.SinglePartQuery(
+	t.Run("Node String Item Starts With", assertQueryResult(query.SinglePartQuery(
 		query.Where(
 			query.StringStartsWith(query.NodeProperty("tags"), "tag_1"),
 		),
@@ -629,9 +629,9 @@ func TestQueryBuilder_Render(t *testing.T) {
 		query.Returning(
 			query.Node(),
 		),
-	), "match (n) where n.tags starts with $0 return n"))
+	), "match (n) where n.tags starts with $p0 return n"))
 
-	t.Run("Node String Property Ends With", assertQueryResult(query.SinglePartQuery(
+	t.Run("Node String Item Ends With", assertQueryResult(query.SinglePartQuery(
 		query.Where(
 			query.StringEndsWith(query.NodeProperty("tags"), "tag_1"),
 		),
@@ -639,9 +639,9 @@ func TestQueryBuilder_Render(t *testing.T) {
 		query.Returning(
 			query.Node(),
 		),
-	), "match (n) where n.tags ends with $0 return n"))
+	), "match (n) where n.tags ends with $p0 return n"))
 
-	t.Run("Node String Property Case Insensitive Contains", assertQueryResult(query.SinglePartQuery(
+	t.Run("Node String Item Case Insensitive Contains", assertQueryResult(query.SinglePartQuery(
 		query.Where(
 			query.CaseInsensitiveStringContains(query.NodeProperty("tags"), "tag_1"),
 		),
@@ -649,9 +649,9 @@ func TestQueryBuilder_Render(t *testing.T) {
 		query.Returning(
 			query.Node(),
 		),
-	), "match (n) where toLower(n.tags) contains $0 return n"))
+	), "match (n) where toLower(n.tags) contains $p0 return n"))
 
-	t.Run("Node String Property Case Insensitive Starts With", assertQueryResult(query.SinglePartQuery(
+	t.Run("Node String Item Case Insensitive Starts With", assertQueryResult(query.SinglePartQuery(
 		query.Where(
 			query.CaseInsensitiveStringStartsWith(query.NodeProperty("tags"), "tag_1"),
 		),
@@ -659,9 +659,9 @@ func TestQueryBuilder_Render(t *testing.T) {
 		query.Returning(
 			query.Node(),
 		),
-	), "match (n) where toLower(n.tags) starts with $0 return n"))
+	), "match (n) where toLower(n.tags) starts with $p0 return n"))
 
-	t.Run("Node String Property Case Insensitive Ends With", assertQueryResult(query.SinglePartQuery(
+	t.Run("Node String Item Case Insensitive Ends With", assertQueryResult(query.SinglePartQuery(
 		query.Where(
 			query.CaseInsensitiveStringEndsWith(query.NodeProperty("tags"), "tag_1"),
 		),
@@ -669,7 +669,7 @@ func TestQueryBuilder_Render(t *testing.T) {
 		query.Returning(
 			query.Node(),
 		),
-	), "match (n) where toLower(n.tags) ends with $0 return n"))
+	), "match (n) where toLower(n.tags) ends with $p0 return n"))
 
 	t.Run("Node Delete", assertQueryResult(query.SinglePartQuery(
 		query.Where(
@@ -679,7 +679,7 @@ func TestQueryBuilder_Render(t *testing.T) {
 		query.Delete(
 			query.Node(),
 		),
-	), "match (n) where n in $0 detach delete n"))
+	), "match (n) where n in $p0 detach delete n"))
 
 	// Relationship Queries
 	t.Run("Empty Relationship Query", assertQueryResult(query.SinglePartQuery(
@@ -732,7 +732,7 @@ func TestQueryBuilder_Render(t *testing.T) {
 		),
 	), "match (s)-[r]->(e) return id(r), type(r), labels(s), labels(e)"))
 
-	t.Run("Relationship Property and ID References", assertQueryResult(query.SinglePartQuery(
+	t.Run("Relationship Item and ID References", assertQueryResult(query.SinglePartQuery(
 		query.Where(
 			query.And(
 				query.Equals(query.RelationshipProperty("name"), "name"),
@@ -746,9 +746,9 @@ func TestQueryBuilder_Render(t *testing.T) {
 		),
 
 		query.Offset(20),
-	), "match ()-[r]->() where r.name = $0 and id(r) in $1 return id(r), r.value skip 20"))
+	), "match ()-[r]->() where r.name = $p0 and id(r) in $p1 return id(r), r.value skip 20"))
 
-	t.Run("Relationship Return Start References", assertQueryResult(query.SinglePartQuery(
+	t.Run("Relationship Select Start References", assertQueryResult(query.SinglePartQuery(
 		query.Where(
 			query.And(
 				query.Equals(query.RelationshipProperty("name"), "name"),
@@ -762,7 +762,7 @@ func TestQueryBuilder_Render(t *testing.T) {
 		),
 
 		query.Offset(20),
-	), "match (s)-[r]->() where r.name = $0 and id(r) in $1 return id(s), r.value skip 20"))
+	), "match (s)-[r]->() where r.name = $p0 and id(r) in $p1 return id(s), r.value skip 20"))
 
 	t.Run("Relationship Start Node ID Reference", assertQueryResult(query.SinglePartQuery(
 		query.Where(
@@ -779,7 +779,7 @@ func TestQueryBuilder_Render(t *testing.T) {
 		),
 
 		query.Offset(20),
-	), "match (s)-[r]->() where id(s) = $0 and r.name = $1 and id(r) in $2 return id(r), r.value skip 20"))
+	), "match (s)-[r]->() where id(s) = $p0 and r.name = $p1 and id(r) in $p2 return id(r), r.value skip 20"))
 
 	t.Run("Relationship End Node ID Reference", assertQueryResult(query.SinglePartQuery(
 		query.Where(
@@ -796,7 +796,7 @@ func TestQueryBuilder_Render(t *testing.T) {
 		),
 
 		query.Offset(20),
-	), "match ()-[r]->(e) where id(e) = $0 and r.name = $1 and id(r) in $2 return id(r), r.value skip 20"))
+	), "match ()-[r]->(e) where id(e) = $p0 and r.name = $p1 and id(r) in $p2 return id(r), r.value skip 20"))
 
 	t.Run("Relationship Start and End Node ID References", assertQueryResult(query.SinglePartQuery(
 		query.Where(
@@ -812,7 +812,7 @@ func TestQueryBuilder_Render(t *testing.T) {
 			query.RelationshipID(),
 			query.Property(query.Relationship(), "value"),
 		),
-	), "match (s)-[r]->(e) where id(s) = $0 and id(e) = $1 and r.name = $2 and id(r) in $3 return id(r), r.value"))
+	), "match (s)-[r]->(e) where id(s) = $p0 and id(e) = $p1 and r.name = $p2 and id(r) in $p3 return id(r), r.value"))
 
 	t.Run("Relationship Kind Match without Joining Expression", assertQueryResult(query.SinglePartQuery(
 		query.Where(
@@ -839,7 +839,7 @@ func TestQueryBuilder_Render(t *testing.T) {
 			query.RelationshipID(),
 			query.Property(query.Relationship(), "value"),
 		),
-	), "match (s)-[r:HasSession]->() where id(s) = $0 and r.name = $1 and id(r) in $2 return id(r), r.value"))
+	), "match (s)-[r:HasSession]->() where id(s) = $p0 and r.name = $p1 and id(r) in $p2 return id(r), r.value"))
 
 	updatedRelationship := graph.NewRelationship(graph.ID(1), graph.ID(2), graph.ID(3), graph.NewProperties(), HasSession)
 	updatedRelationship.Properties.Set("test_1", "value_1")
@@ -866,7 +866,7 @@ func TestQueryBuilder_Render(t *testing.T) {
 
 			return updateStatements
 		}),
-	), "match ()-[r]->() where id(r) = $0 set r.test_1 = $1 remove r.test_2"))
+	), "match ()-[r]->() where id(r) = $p0 set r.test_1 = $p1 remove r.test_2"))
 
 	t.Run("Relationship Kind Match in", assertQueryResult(query.SinglePartQuery(
 		query.Where(
@@ -882,7 +882,7 @@ func TestQueryBuilder_Render(t *testing.T) {
 			query.RelationshipID(),
 			query.Property(query.Relationship(), "value"),
 		),
-	), "match (s)-[r:HasSession|GenericWrite]->() where id(s) = $0 and r.name = $1 and id(r) in $2 return id(r), r.value"))
+	), "match (s)-[r:HasSession|GenericWrite]->() where id(s) = $p0 and r.name = $p1 and id(r) in $p2 return id(r), r.value"))
 
 	t.Run("Relationship Kind Match in and Start Node Kind Match in", assertQueryResult(query.SinglePartQuery(
 		query.Where(
@@ -898,7 +898,7 @@ func TestQueryBuilder_Render(t *testing.T) {
 			query.RelationshipID(),
 			query.Property(query.Relationship(), "value"),
 		),
-	), "match (s)-[r:HasSession|GenericWrite]->() where (s:User or s:Computer) and r.name = $0 and id(r) in $1 return id(r), r.value"))
+	), "match (s)-[r:HasSession|GenericWrite]->() where (s:User or s:Computer) and r.name = $p0 and id(r) in $p1 return id(r), r.value"))
 
 	t.Run("Relationship Kind Match in and Delete Start Node and Relationship", assertQueryResult(query.SinglePartQuery(
 		query.Where(
@@ -957,15 +957,15 @@ func TestQueryBuilder_Render(t *testing.T) {
 			query.Identity(query.Relationship()),
 		),
 	),
-		"create (s:Computer $0)-[r:HasSession $1]->(e:User $2) return id(r)",
+		"create (s:Computer $p0)-[r:HasSession $p1]->(e:User $p2) return id(r)",
 		map[string]any{
-			"0": map[string]any{
+			"p0": map[string]any{
 				"prop1": 1234,
 			},
-			"1": map[string]any{
+			"p1": map[string]any{
 				"prop1": 1234,
 			},
-			"2": map[string]any{
+			"p2": map[string]any{
 				"prop1": 1234,
 			},
 		},
@@ -995,11 +995,11 @@ func TestQueryBuilder_Render(t *testing.T) {
 			query.Identity(query.Relationship()),
 		),
 	),
-		"match (s), (e) where id(s) = $0 and id(e) = $1 create (s)-[r:HasSession $2]->(e) return id(r)",
+		"match (s), (e) where id(s) = $p0 and id(e) = $p1 create (s)-[r:HasSession $p2]->(e) return id(r)",
 		map[string]any{
-			"0": 1,
-			"1": 2,
-			"2": map[string]any{
+			"p0": 1,
+			"p1": 2,
+			"p2": map[string]any{
 				"prop1": 1234,
 			},
 		},
@@ -1015,7 +1015,7 @@ func TestQueryBuilder_Render(t *testing.T) {
 		query.Returning(
 			query.Count(query.Node()),
 		),
-	), "match (n) where (not (n.system_tags contains $0) or n.system_tags is null) return count(n)"))
+	), "match (n) where (not (n.system_tags contains $p0) or n.system_tags is null) return count(n)"))
 
 	t.Run("Is Not Null", assertQueryResult(query.SinglePartQuery(
 		query.Where(

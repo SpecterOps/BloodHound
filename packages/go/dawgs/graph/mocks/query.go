@@ -172,11 +172,12 @@ func (mr *MockScannerMockRecorder) Scan(targets ...interface{}) *gomock.Call {
 }
 
 // Values mocks base method.
-func (m *MockScanner) Values() graph.ValueMapper {
+func (m *MockScanner) Values() (graph.ValueMapper, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Values")
 	ret0, _ := ret[0].(graph.ValueMapper)
-	return ret0
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // Values indicates an expected call of Values.
@@ -267,11 +268,12 @@ func (mr *MockResultMockRecorder) Scan(targets ...interface{}) *gomock.Call {
 }
 
 // Values mocks base method.
-func (m *MockResult) Values() graph.ValueMapper {
+func (m *MockResult) Values() (graph.ValueMapper, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Values")
 	ret0, _ := ret[0].(graph.ValueMapper)
-	return ret0
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // Values indicates an expected call of Values.
@@ -318,21 +320,6 @@ func (mr *MockNodeQueryMockRecorder) Count() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Count", reflect.TypeOf((*MockNodeQuery)(nil).Count))
 }
 
-// Debug mocks base method.
-func (m *MockNodeQuery) Debug() (string, map[string]any) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Debug")
-	ret0, _ := ret[0].(string)
-	ret1, _ := ret[1].(map[string]any)
-	return ret0, ret1
-}
-
-// Debug indicates an expected call of Debug.
-func (mr *MockNodeQueryMockRecorder) Debug() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Debug", reflect.TypeOf((*MockNodeQuery)(nil).Debug))
-}
-
 // Delete mocks base method.
 func (m *MockNodeQuery) Delete() error {
 	m.ctrl.T.Helper()
@@ -347,23 +334,22 @@ func (mr *MockNodeQueryMockRecorder) Delete() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockNodeQuery)(nil).Delete))
 }
 
-// Execute mocks base method.
-func (m *MockNodeQuery) Execute(delegate func(graph.Result) error, finalCriteria ...graph.Criteria) error {
+// Exec mocks base method.
+func (m *MockNodeQuery) Exec(finalCriteria ...graph.Criteria) error {
 	m.ctrl.T.Helper()
-	varargs := []interface{}{delegate}
+	varargs := []interface{}{}
 	for _, a := range finalCriteria {
 		varargs = append(varargs, a)
 	}
-	ret := m.ctrl.Call(m, "Execute", varargs...)
+	ret := m.ctrl.Call(m, "Exec", varargs...)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// Execute indicates an expected call of Execute.
-func (mr *MockNodeQueryMockRecorder) Execute(delegate interface{}, finalCriteria ...interface{}) *gomock.Call {
+// Exec indicates an expected call of Exec.
+func (mr *MockNodeQueryMockRecorder) Exec(finalCriteria ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]interface{}{delegate}, finalCriteria...)
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Execute", reflect.TypeOf((*MockNodeQuery)(nil).Execute), varargs...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Exec", reflect.TypeOf((*MockNodeQuery)(nil).Exec), finalCriteria...)
 }
 
 // Fetch mocks base method.
@@ -497,6 +483,25 @@ func (mr *MockNodeQueryMockRecorder) OrderBy(criteria ...interface{}) *gomock.Ca
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "OrderBy", reflect.TypeOf((*MockNodeQuery)(nil).OrderBy), criteria...)
 }
 
+// Query mocks base method.
+func (m *MockNodeQuery) Query(delegate func(graph.Result) error, finalCriteria ...graph.Criteria) error {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{delegate}
+	for _, a := range finalCriteria {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "Query", varargs...)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// Query indicates an expected call of Query.
+func (mr *MockNodeQueryMockRecorder) Query(delegate interface{}, finalCriteria ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{delegate}, finalCriteria...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Query", reflect.TypeOf((*MockNodeQuery)(nil).Query), varargs...)
+}
+
 // Update mocks base method.
 func (m *MockNodeQuery) Update(properties *graph.Properties) error {
 	m.ctrl.T.Helper()
@@ -549,21 +554,6 @@ func (mr *MockRelationshipQueryMockRecorder) Count() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Count", reflect.TypeOf((*MockRelationshipQuery)(nil).Count))
 }
 
-// Debug mocks base method.
-func (m *MockRelationshipQuery) Debug() (string, map[string]any) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Debug")
-	ret0, _ := ret[0].(string)
-	ret1, _ := ret[1].(map[string]any)
-	return ret0, ret1
-}
-
-// Debug indicates an expected call of Debug.
-func (mr *MockRelationshipQueryMockRecorder) Debug() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Debug", reflect.TypeOf((*MockRelationshipQuery)(nil).Debug))
-}
-
 // Delete mocks base method.
 func (m *MockRelationshipQuery) Delete() error {
 	m.ctrl.T.Helper()
@@ -576,25 +566,6 @@ func (m *MockRelationshipQuery) Delete() error {
 func (mr *MockRelationshipQueryMockRecorder) Delete() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockRelationshipQuery)(nil).Delete))
-}
-
-// Execute mocks base method.
-func (m *MockRelationshipQuery) Execute(delegate func(graph.Result) error, finalCriteria ...graph.Criteria) error {
-	m.ctrl.T.Helper()
-	varargs := []interface{}{delegate}
-	for _, a := range finalCriteria {
-		varargs = append(varargs, a)
-	}
-	ret := m.ctrl.Call(m, "Execute", varargs...)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// Execute indicates an expected call of Execute.
-func (mr *MockRelationshipQueryMockRecorder) Execute(delegate interface{}, finalCriteria ...interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	varargs := append([]interface{}{delegate}, finalCriteria...)
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Execute", reflect.TypeOf((*MockRelationshipQuery)(nil).Execute), varargs...)
 }
 
 // Fetch mocks base method.
@@ -768,6 +739,25 @@ func (m *MockRelationshipQuery) OrderBy(criteria ...graph.Criteria) graph.Relati
 func (mr *MockRelationshipQueryMockRecorder) OrderBy(criteria ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "OrderBy", reflect.TypeOf((*MockRelationshipQuery)(nil).OrderBy), criteria...)
+}
+
+// Query mocks base method.
+func (m *MockRelationshipQuery) Query(delegate func(graph.Result) error, finalCriteria ...graph.Criteria) error {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{delegate}
+	for _, a := range finalCriteria {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "Query", varargs...)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// Query indicates an expected call of Query.
+func (mr *MockRelationshipQueryMockRecorder) Query(delegate interface{}, finalCriteria ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{delegate}, finalCriteria...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Query", reflect.TypeOf((*MockRelationshipQuery)(nil).Query), varargs...)
 }
 
 // Update mocks base method.

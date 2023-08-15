@@ -28,31 +28,31 @@ var (
 	MigrationData = graph.StringKind("MigrationData")
 )
 
-type Property string
+type Item string
 
 const (
-	ObjectID        Property = "objectid"
-	Name            Property = "name"
-	DisplayName     Property = "displayname"
-	Description     Property = "description"
-	OwnerObjectID   Property = "owner_objectid"
-	Collected       Property = "collected"
-	OperatingSystem Property = "operatingsystem"
-	SystemTags      Property = "system_tags"
-	UserTags        Property = "user_tags"
-	LastSeen        Property = "lastseen"
-	WhenCreated     Property = "whencreated"
-	Enabled         Property = "enabled"
-	PasswordLastSet Property = "pwdlastset"
-	Title           Property = "title"
-	Email           Property = "email"
-	IsInherited     Property = "isinherited"
+	ObjectID        Item = "objectid"
+	Name            Item = "name"
+	DisplayName     Item = "displayname"
+	Description     Item = "description"
+	OwnerObjectID   Item = "owner_objectid"
+	Collected       Item = "collected"
+	OperatingSystem Item = "operatingsystem"
+	SystemTags      Item = "system_tags"
+	UserTags        Item = "user_tags"
+	LastSeen        Item = "lastseen"
+	WhenCreated     Item = "whencreated"
+	Enabled         Item = "enabled"
+	PasswordLastSet Item = "pwdlastset"
+	Title           Item = "title"
+	Email           Item = "email"
+	IsInherited     Item = "isinherited"
 )
 
-func AllProperties() []Property {
-	return []Property{ObjectID, Name, DisplayName, Description, OwnerObjectID, Collected, OperatingSystem, SystemTags, UserTags, LastSeen, WhenCreated, Enabled, PasswordLastSet, Title, Email, IsInherited}
+func AllProperties() []Item {
+	return []Item{ObjectID, Name, DisplayName, Description, OwnerObjectID, Collected, OperatingSystem, SystemTags, UserTags, LastSeen, WhenCreated, Enabled, PasswordLastSet, Title, Email, IsInherited}
 }
-func ParseProperty(source string) (Property, error) {
+func ParseItem(source string) (Item, error) {
 	switch source {
 	case "objectid":
 		return ObjectID, nil
@@ -90,7 +90,7 @@ func ParseProperty(source string) (Property, error) {
 		return "", errors.New("Invalid enumeration value: " + source)
 	}
 }
-func (s Property) String() string {
+func (s Item) String() string {
 	switch s {
 	case ObjectID:
 		return string(ObjectID)
@@ -128,7 +128,7 @@ func (s Property) String() string {
 		return "Invalid enumeration case: " + string(s)
 	}
 }
-func (s Property) Name() string {
+func (s Item) Name() string {
 	switch s {
 	case ObjectID:
 		return "Object ID"
@@ -166,9 +166,9 @@ func (s Property) Name() string {
 		return "Invalid enumeration case: " + string(s)
 	}
 }
-func (s Property) Is(others ...graph.Kind) bool {
+func (s Item) Is(others ...graph.Kind) bool {
 	for _, other := range others {
-		if value, err := ParseProperty(other.String()); err == nil && value == s {
+		if value, err := ParseItem(other.String()); err == nil && value == s {
 			return true
 		}
 	}

@@ -28,7 +28,7 @@ import (
 )
 
 func Test_ListAuditLogs(t *testing.T) {
-	testCtx := integration.NewContext(t, integration.StartBHServer)
+	testCtx := integration.NewFOSSContext(t)
 
 	t.Run("Test Getting Latest Audit Logs", func(t *testing.T) {
 		var (
