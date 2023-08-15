@@ -158,8 +158,8 @@ export default class EdgeArrowHeadProgram extends AbstractEdgeProgram {
         if (len) {
             len = 1 / Math.sqrt(len);
 
-            n1 = -dy * len * thickness * 1.2;
-            n2 = dx * len * thickness * 1.2;
+            n1 = -dy * len * thickness;
+            n2 = dx * len * thickness;
         }
 
         let i = POINTS * ATTRIBUTES * offset;

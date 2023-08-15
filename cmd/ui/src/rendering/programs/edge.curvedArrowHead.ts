@@ -175,8 +175,8 @@ export default class EdgeArrowHeadProgram extends AbstractEdgeProgram {
         const normal = bezier.getNormals(control, end);
 
         const vOffset = {
-            x: normal.x * thickness * 1.2,
-            y: -normal.y * thickness * 1.2,
+            x: normal.x * thickness,
+            y: -normal.y * thickness,
         };
 
         let i = POINTS * ATTRIBUTES * offset;
