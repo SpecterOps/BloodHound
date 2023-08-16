@@ -76,14 +76,14 @@ func (mr *MockTaskerMockRecorder) NotifyOfFileUploadJobStatus(arg0 interface{}) 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NotifyOfFileUploadJobStatus", reflect.TypeOf((*MockTasker)(nil).NotifyOfFileUploadJobStatus), arg0)
 }
 
-// RequestEnrichment mocks base method.
-func (m *MockTasker) RequestEnrichment() {
+// RequestAnalysis mocks base method.
+func (m *MockTasker) RequestAnalysis() {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "RequestEnrichment")
+	m.ctrl.Call(m, "RequestAnalysis")
 }
 
-// RequestEnrichment indicates an expected call of RequestEnrichment.
-func (mr *MockTaskerMockRecorder) RequestEnrichment() *gomock.Call {
+// RequestAnalysis indicates an expected call of RequestAnalysis.
+func (mr *MockTaskerMockRecorder) RequestAnalysis() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RequestEnrichment", reflect.TypeOf((*MockTasker)(nil).RequestEnrichment))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RequestAnalysis", reflect.TypeOf((*MockTasker)(nil).RequestAnalysis))
 }

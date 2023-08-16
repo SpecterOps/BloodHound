@@ -24,7 +24,7 @@ ARG AZUREHOUND_VERSION=v2.0.4
 ########
 # Package other assets
 ################
-FROM alpine:3.16 as hound-builder
+FROM docker.io/library/alpine:3.16 as hound-builder
 ARG SHARPHOUND_VERSION
 ARG AZUREHOUND_VERSION
 
@@ -62,19 +62,20 @@ WORKDIR /tmp/azurehound/artifacts
 RUN 7z a -tzip -mx9 azurehound-$AZUREHOUND_VERSION.zip azurehound-*
 RUN sha256sum azurehound-$AZUREHOUND_VERSION.zip > azurehound-$AZUREHOUND_VERSION.zip.sha256
 
-FROM golang:1.20
+FROM docker.io/library/golang:1.20
 ARG SHARPHOUND_VERSION
 ARG AZUREHOUND_VERSION
+ENV GOFLAGS="-buildvcs=false"
 WORKDIR /bloodhound
 VOLUME [ "/go/pkg/mod" ]
+
 RUN mkdir -p /bhapi/collectors/azurehound /bhapi/collectors/sharphound /bhapi/work
-RUN go install -ldflags "-s -w -extldflags '-static'" github.com/go-delve/delve/cmd/dlv@latest
-RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
-  && apt-get -y install --no-install-recommends entr
-# Fix for running git ls-files in this container
-RUN git config --global --add safe.directory /bloodhound
-COPY scripts/file-watcher.sh scripts/api-rebuild.sh scripts/delve-rebuild.sh /
+RUN go install github.com/go-delve/delve/cmd/dlv@v1.21.0
+RUN go install github.com/cosmtrek/air@v1.44.0
+
 COPY --from=hound-builder /tmp/sharphound/sharphound-$SHARPHOUND_VERSION.zip /bhapi/collectors/sharphound/
 COPY --from=hound-builder /tmp/sharphound/sharphound-$SHARPHOUND_VERSION.zip.sha256 /bhapi/collectors/sharphound/
 COPY --from=hound-builder /tmp/azurehound/artifacts/azurehound-$AZUREHOUND_VERSION.zip /bhapi/collectors/azurehound/
 COPY --from=hound-builder /tmp/azurehound/artifacts/azurehound-$AZUREHOUND_VERSION.zip.sha256 /bhapi/collectors/azurehound/
+
+ENTRYPOINT ["air"]

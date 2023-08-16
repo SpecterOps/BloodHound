@@ -14,6 +14,6 @@
 # 
 # SPDX-License-Identifier: Apache-2.0
 
-FROM dpage/pgadmin4
+FROM docker.io/dpage/pgadmin4
 COPY configs/pgadmin/servers.json /pgadmin4/servers.json
 COPY configs/pgadmin/pgpass /pgpass

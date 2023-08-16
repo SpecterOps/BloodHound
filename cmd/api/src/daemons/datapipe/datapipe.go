@@ -40,7 +40,7 @@ const (
 
 type Tasker interface {
 	NotifyOfFileUploadJobStatus(task model.FileUploadJob)
-	RequestEnrichment()
+	RequestAnalysis()
 	GetStatus() model.DatapipeStatusWrapper
 }
 
@@ -50,7 +50,7 @@ type Daemon struct {
 	graphdb                       graph.Database
 	cache                         cache.Cache
 	cfg                           config.Configuration
-	enrichmentRequested           bool
+	analysisRequested             bool
 	tickInterval                  time.Duration
 	status                        model.DatapipeStatusWrapper
 	ctx                           context.Context
@@ -74,7 +74,7 @@ func NewDaemon(cfg config.Configuration, db database.Database, graphdb graph.Dat
 		cfg:     cfg,
 		ctx:     context.Background(),
 
-		enrichmentRequested:    false,
+		analysisRequested:      false,
 		lock:                   &sync.Mutex{},
 		clearOrphanedFilesLock: &sync.Mutex{},
 		tickInterval:           tickInterval,
@@ -85,28 +85,28 @@ func NewDaemon(cfg config.Configuration, db database.Database, graphdb graph.Dat
 	}
 }
 
-func (s *Daemon) RequestEnrichment() {
-	s.setEnrichmentRequested(true)
+func (s *Daemon) RequestAnalysis() {
+	s.setAnalysisRequested(true)
 }
 
 func (s *Daemon) GetStatus() model.DatapipeStatusWrapper {
 	return s.status
 }
 
-func (s *Daemon) getEnrichmentRequested() bool {
+func (s *Daemon) getAnalysisRequested() bool {
 	s.lock.Lock()
 	defer s.lock.Unlock()
-	return s.enrichmentRequested
+	return s.analysisRequested
 }
 
-func (s *Daemon) setEnrichmentRequested(requested bool) {
+func (s *Daemon) setAnalysisRequested(requested bool) {
 	s.lock.Lock()
 	defer s.lock.Unlock()
-	s.enrichmentRequested = requested
+	s.analysisRequested = requested
 }
 
 func (s *Daemon) analyze() {
-	if s.cfg.DisableEnrichment {
+	if s.cfg.DisableAnalysis {
 		return
 	}
 
@@ -125,11 +125,11 @@ func (s *Daemon) analyze() {
 			resetCache(s.cache, entityPanelCachingFlag.Enabled)
 		}
 		s.clearJobsFromAnalysis()
-		log.Measure(log.LevelInfo, "Enrichment run finished")()
+		log.Measure(log.LevelInfo, "Analysis run finished")()
 		s.status.Update(model.DatapipeStatusIdle, true)
 	}
 
-	s.setEnrichmentRequested(false)
+	s.setAnalysisRequested(false)
 }
 
 func resetCache(cacher cache.Cache, cacheEnabled bool) {
@@ -170,7 +170,7 @@ func (s *Daemon) Start() {
 			if s.numAvailableCompletedFileUploadJobs() > 0 {
 				s.processCompletedFileUploadJobs()
 				s.analyze()
-			} else if s.getEnrichmentRequested() {
+			} else if s.getAnalysisRequested() {
 				s.analyze()
 			} else {
 				s.ingestAvailableTasks()

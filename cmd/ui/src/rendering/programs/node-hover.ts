@@ -21,6 +21,7 @@ import {
     HIGHLIGHTED_LABEL_BACKGROUND_COLOR,
     HIGHLIGHTED_LABEL_FONT_COLOR,
     calculateLabelOpacity,
+    getNodeRadius,
 } from 'src/rendering/utils/utils';
 
 export default function drawHover(
@@ -38,7 +39,8 @@ export default function drawHover(
     context.fillStyle = HIGHLIGHTED_LABEL_BACKGROUND_COLOR;
 
     const PADDING = 2;
-    const radius = data.size * inverseSqrtZoomRatio + (PADDING + 2) * inverseSqrtZoomRatio;
+    const radius = getNodeRadius(true, inverseSqrtZoomRatio, data.size);
+
     const nodeLabelExists = typeof data.label === 'string';
 
     context.globalAlpha = calculateLabelOpacity(inverseSqrtZoomRatio);

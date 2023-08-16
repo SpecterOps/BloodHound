@@ -31,3 +31,15 @@ export const calculateLabelOpacity = (inverseSqrtZoomRatio: number): number => {
 
     return 0;
 };
+
+export const getNodeRadius = (highlighted: boolean, inverseSqrtZoomRatio: number, size?: number): number => {
+    const PADDING = 2;
+    let radius = 1;
+
+    if (!size) return radius;
+
+    if (highlighted) radius = size * inverseSqrtZoomRatio + (PADDING + 2) * inverseSqrtZoomRatio;
+    else radius = size * inverseSqrtZoomRatio;
+
+    return radius;
+};
