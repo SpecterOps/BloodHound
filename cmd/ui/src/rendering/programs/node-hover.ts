@@ -20,6 +20,7 @@ import drawLabel from 'src/rendering/programs/node-label';
 import {
     HIGHLIGHTED_LABEL_BACKGROUND_COLOR,
     HIGHLIGHTED_LABEL_FONT_COLOR,
+    calculateLabelOpacity,
     getNodeRadius,
 } from 'src/rendering/utils/utils';
 
@@ -41,6 +42,8 @@ export default function drawHover(
     const radius = getNodeRadius(true, inverseSqrtZoomRatio, data.size);
 
     const nodeLabelExists = typeof data.label === 'string';
+
+    context.globalAlpha = calculateLabelOpacity(inverseSqrtZoomRatio);
 
     if (nodeLabelExists) {
         // Determine size of label's bounding rectangle
@@ -67,6 +70,8 @@ export default function drawHover(
         context.closePath();
         context.fill();
     }
+
+    context.globalAlpha = 1;
 
     // toggle the default text color before/after this drawLabel call so that the color is only
     // changed for hovered nodes

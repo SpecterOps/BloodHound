@@ -1,17 +1,17 @@
 // Copyright 2023 Specter Ops, Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// 
+//
 // SPDX-License-Identifier: Apache-2.0
 
 /**
@@ -24,7 +24,11 @@
 import { Settings } from 'sigma/settings';
 import { Coordinates, EdgeDisplayData, NodeDisplayData, PartialButFor } from 'sigma/types';
 import { bezier } from 'src/rendering/utils/bezier';
-import { HIGHLIGHTED_LABEL_BACKGROUND_COLOR, HIGHLIGHTED_LABEL_FONT_COLOR } from 'src/rendering/utils/utils';
+import {
+    HIGHLIGHTED_LABEL_BACKGROUND_COLOR,
+    HIGHLIGHTED_LABEL_FONT_COLOR,
+    calculateLabelOpacity,
+} from 'src/rendering/utils/utils';
 import { getEdgeLabelTextLength, calculateEdgeDistanceForLabel } from 'src/ducks/graph/utils';
 
 export default function drawEdgeLabel(
@@ -71,14 +75,15 @@ export default function drawEdgeLabel(
     // Translate canvas to that point instead of the line between the nodes' center
     context.save();
     context.translate(point.x, point.y);
+    const fadeAlphaFromZoom = calculateLabelOpacity(inverseSqrtZoomRatio);
 
     // Render label background
     if (edgeData.selected) {
         context.fillStyle = HIGHLIGHTED_LABEL_BACKGROUND_COLOR;
-        context.globalAlpha = 1.0;
+        context.globalAlpha = fadeAlphaFromZoom;
     } else {
         context.fillStyle = '#FFF';
-        context.globalAlpha = 0.8;
+        context.globalAlpha = fadeAlphaFromZoom * 0.8;
     }
 
     const xFill = (-textLength / 2) * inverseSqrtZoomRatio;
@@ -90,7 +95,8 @@ export default function drawEdgeLabel(
     const fillHeight = size * 1.4;
     context.fillRect(startX, startY, fillWidth, fillHeight);
 
-    context.globalAlpha = 1.0;
+    // Text should always be completely opaque, before factoring in fade from zoom level
+    context.globalAlpha = fadeAlphaFromZoom;
 
     // Render text
     context.fillStyle = color;

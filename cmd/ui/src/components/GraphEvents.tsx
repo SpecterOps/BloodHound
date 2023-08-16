@@ -172,10 +172,8 @@ export const GraphEvents: FC<GraphEventProps> = ({
 
                 if (edge === selectedEdge?.id) {
                     newData.selected = true;
-                    newData.forceLabel = true;
                 } else {
                     newData.selected = false;
-                    newData.forceLabel = false;
                 }
 
                 // We calculate control points for all curved edges here and pass those along as edge attributes in both viewport and framed graph
