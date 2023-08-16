@@ -129,7 +129,7 @@ const CypherInput = () => {
                     onValueChanged={(val: string) => {
                         setCypherQuery(val);
                     }}
-                    onKeyDown={(e) => {
+                    onKeyDown={(e: any) => {
                         // if enter and shift key is pressed, execute cypher search
                         if (e.key === 'Enter' && e.shiftKey) {
                             e.preventDefault();
