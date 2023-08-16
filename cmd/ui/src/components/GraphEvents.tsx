@@ -142,6 +142,7 @@ export const GraphEvents: FC<GraphEventProps> = ({
         draggedNode,
         isDragging,
         selectedNode,
+        sigmaContainer,
     ]);
 
     useEffect(() => {

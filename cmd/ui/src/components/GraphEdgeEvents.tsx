@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { useSigma } from '@react-sigma/core';
-import { FC, useCallback, useRef } from 'react';
+import { FC, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 import { setEdgeInfoOpen, setSelectedEdge } from 'src/ducks/edgeinfo/edgeSlice';
 import { setEntityInfoOpen } from 'src/ducks/entityinfo/actions';
@@ -153,7 +153,7 @@ const GraphEdgeEvents: FC = () => {
             mouseCanvas.dispatchEvent(customEvent);
             sigma.scheduleRefresh();
         },
-        [sigma, mouseCanvas, edgeLabelsCanvas, onClickEdge, ratio]
+        [sigma, mouseCanvas, edgeLabelsCanvas, onClickEdge, ratio, sigmaContainer]
     );
 
     return (
