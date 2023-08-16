@@ -81,15 +81,6 @@ declare global {
     }
 }
 
-declare module '@neo4j-cypher/react-codemirror/src/react-codemirror.d.ts' {
-    export type CypherEditor = import('@neo4j-cypher/react-codemirror/src/react-codemirror.d.ts').CypherEditor;
-
-    // export CypherEditor
-    // interface CypherEditor {
-    //     props: import('@neo4j-cypher/react-codemirror/src/react-codemirror.d.ts').CypherEditor;
-    // }
-}
-
 const theme = createTheme({
     palette: {
         primary: {

@@ -16,7 +16,7 @@
 
 import { faFolderOpen, faPlay, faQuestion } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Box, Button, Collapse, TextField } from '@mui/material';
+import { Box, Button, Collapse } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
 import { useCallback, useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
@@ -26,6 +26,14 @@ import CommonSearches from './CommonSearches';
 import { startCypherQuery } from 'src/ducks/explore/actions';
 // @ts-ignore
 import { CypherEditor } from '@neo4j-cypher/react-codemirror';
+import '@neo4j-cypher/codemirror/css/cypher-codemirror.css';
+import {
+    ActiveDirectoryNodeKind,
+    ActiveDirectoryRelationshipKind,
+    AzureNodeKind,
+    AzureRelationshipKind,
+} from 'bh-shared-ui';
+import { CommonKindProperties } from 'src/graphSchema';
 
 const useStyles = makeStyles((theme) => ({
     button: {
@@ -42,8 +50,15 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 const schema = {
-    labels: [':LabelOne', ':LabelTwo', ':Label Three'],
-    relationshipTypes: [':REL_TYPE_ONE', ':REL_TYPE_TWO', ':REL_TYPE THREE'],
+    labels: [
+        ...Object.values(ActiveDirectoryNodeKind).map((nodeLabel) => `:${nodeLabel}`),
+        ...Object.values(AzureNodeKind).map((nodeLabel) => `:${nodeLabel}`),
+    ],
+    relationshipTypes: [
+        ...Object.values(ActiveDirectoryRelationshipKind).map((relationshipType) => `:${relationshipType}`),
+        ...Object.values(AzureRelationshipKind).map((relationshipType) => `:${relationshipType}`),
+    ],
+    propertyKeys: [...Object.values(CommonKindProperties)],
 };
 
 const CypherInput = () => {
@@ -122,52 +137,28 @@ const CypherInput = () => {
                         }
                     }}
                     schema={schema}
+                    lineWrapping
+                    lint
                 />
-                {/* <Box display='flex' flexGrow={1} flexDirection={'column'} gap={1} alignItems={'end'}>
-                    <TextField
-                        placeholder='Cypher Search'
-                        multiline
-                        rows={3}
-                        fullWidth
-                        value={cypherQuery}
-                        onChange={(e) => {
-                            setCypherQuery(e.target.value);
-                        }}
-                        onKeyDown={(e) => {
-                            // if enter and shift key is pressed, execute cypher search
-                            if (e.key === 'Enter' && e.shiftKey) {
-                                e.preventDefault();
-                                handleCypherSearch(cypherQuery);
-                            }
-                        }}
-                        inputProps={{
-                            style: { fontFamily: 'monospace' },
-                            className: classes.textarea,
-                        }}
-                    />
-                    <Box display={'flex'} gap={1}>
-                        <a
-                            href='https://support.bloodhoundenterprise.io/hc/en-us/articles/16721164740251'
-                            target='_blank'
-                            rel='noreferrer'>
-                            <Button variant='outlined' className={classes.button} sx={{ padding: 0 }}>
-                                <FontAwesomeIcon icon={faQuestion} />
-                            </Button>
-                        </a>
-
-                        <Button
-                            className={classes.button}
-                            onClick={() => handleCypherSearch(cypherQuery)}
-                            variant='outlined'>
-                            <Box mr={1}>
-                                <FontAwesomeIcon icon={faPlay} />
-                            </Box>
-                            Search
-                        </Button>
-                    </Box>
-                </Box> */}
             </Box>
 
+            <Box display={'flex'} gap={1} mt={1} justifyContent={'end'}>
+                <a
+                    href='https://support.bloodhoundenterprise.io/hc/en-us/articles/16721164740251'
+                    target='_blank'
+                    rel='noreferrer'>
+                    <Button variant='outlined' className={classes.button} sx={{ padding: 0 }}>
+                        <FontAwesomeIcon icon={faQuestion} />
+                    </Button>
+                </a>
+
+                <Button className={classes.button} onClick={() => handleCypherSearch(cypherQuery)} variant='outlined'>
+                    <Box mr={1}>
+                        <FontAwesomeIcon icon={faPlay} />
+                    </Box>
+                    Search
+                </Button>
+            </Box>
             <Collapse in={showCommonQueries}>
                 <CommonSearches onClickListItem={onClickCommonSearchesListItem} />
             </Collapse>
