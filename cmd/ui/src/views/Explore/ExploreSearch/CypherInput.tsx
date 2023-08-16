@@ -18,22 +18,21 @@ import { faFolderOpen, faPlay, faQuestion } from '@fortawesome/free-solid-svg-ic
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Box, Button, Collapse } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
-import { useCallback, useEffect, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { setCypherQueryTerm, startCypherSearch } from 'src/ducks/searchbar/actions';
-import { AppState } from 'src/store';
-import CommonSearches from './CommonSearches';
-import { startCypherQuery } from 'src/ducks/explore/actions';
-// @ts-ignore
-import { CypherEditor } from '@neo4j-cypher/react-codemirror';
 import '@neo4j-cypher/codemirror/css/cypher-codemirror.css';
+import { CypherEditor } from '@neo4j-cypher/react-codemirror';
 import {
     ActiveDirectoryNodeKind,
     ActiveDirectoryRelationshipKind,
     AzureNodeKind,
     AzureRelationshipKind,
 } from 'bh-shared-ui';
+import { useCallback, useEffect, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { startCypherQuery } from 'src/ducks/explore/actions';
+import { setCypherQueryTerm, startCypherSearch } from 'src/ducks/searchbar/actions';
 import { CommonKindProperties } from 'src/graphSchema';
+import { AppState } from 'src/store';
+import CommonSearches from './CommonSearches';
 
 const useStyles = makeStyles((theme) => ({
     button: {
