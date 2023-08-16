@@ -46,6 +46,17 @@ const useStyles = makeStyles((theme) => ({
         resize: 'vertical',
         fontSize: '.8rem',
     },
+    cypherEditor: {
+        display: 'flex',
+        flexGrow: 1,
+        flexDirection: 'column',
+        border: '1px solid',
+        borderColor: 'rgba(0,0,0,.23)',
+        borderRadius: theme.shape.borderRadius,
+        backgroundColor: 'white',
+        paddingTop: '5px',
+        minHeight: '120px',
+    },
 }));
 
 const schema = {
@@ -116,14 +127,7 @@ const CypherInput = () => {
                 </Button>
 
                 <CypherEditor
-                    style={{
-                        display: 'flex',
-                        flexGrow: 1,
-                        flexDirection: 'column',
-                        border: '1px solid',
-                        borderColor: 'rgba(0,0,0,.23)',
-                        borderRadius: '4px',
-                    }}
+                    className={classes.cypherEditor}
                     value={cypherQuery}
                     onValueChanged={(val: string) => {
                         setCypherQuery(val);
@@ -138,6 +142,7 @@ const CypherInput = () => {
                     schema={schema}
                     lineWrapping
                     lint
+                    placeholder='Cypher Search'
                 />
             </Box>
 
