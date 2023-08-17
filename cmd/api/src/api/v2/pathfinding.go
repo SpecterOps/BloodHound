@@ -1,39 +1,36 @@
 // Copyright 2023 Specter Ops, Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// 
+//
 // SPDX-License-Identifier: Apache-2.0
 
 package v2
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 	"strings"
 
+	"github.com/specterops/bloodhound/dawgs/graph"
+	"github.com/specterops/bloodhound/dawgs/query"
+	"github.com/specterops/bloodhound/graphschema/ad"
+	"github.com/specterops/bloodhound/graphschema/azure"
+	"github.com/specterops/bloodhound/params"
+	"github.com/specterops/bloodhound/slices"
 	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/src/api/bloodhoundgraph"
 	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/queries"
-	"github.com/specterops/bloodhound/dawgs/graph"
-	"github.com/specterops/bloodhound/dawgs/query"
-	"github.com/specterops/bloodhound/errors"
-	"github.com/specterops/bloodhound/graphschema/ad"
-	"github.com/specterops/bloodhound/graphschema/azure"
-	"github.com/specterops/bloodhound/log"
-	"github.com/specterops/bloodhound/params"
-	"github.com/specterops/bloodhound/slices"
 )
 
 // deprecated - use GetShortestPath instead
@@ -55,34 +52,9 @@ func (s Resources) GetPathfindingResult(response http.ResponseWriter, request *h
 	}
 }
 
-func experimentalWriteErrorResponse(ctx context.Context, typedError *api.ErrorWrapper, response http.ResponseWriter) {
-	var (
-		messages = make([]string, len(typedError.Errors))
-		combined strings.Builder
-	)
-
-	for idx, err := range typedError.Errors {
-		message := err.Message
-
-		// Add to the messages array
-		messages[idx] = message
-
-		// Write to the combined string builder for the log output
-		combined.WriteString(message)
-		combined.WriteString("; ")
-	}
-
-	if errors.Is(ctx.Err(), context.DeadlineExceeded) {
-		return
-	}
-
-	log.Warnf("Writing API Error. Status: %v. Message: %v", typedError.HTTPStatus, combined.String())
-	api.WriteJSONResponse(context.Background(), typedError, typedError.HTTPStatus, response)
-}
-
 func writeShortestPathsResult(paths graph.PathSet, response http.ResponseWriter, request *http.Request) {
 	if paths.Len() == 0 {
-		experimentalWriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, "Path not found", request), response)
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, "Path not found", request), response)
 	} else {
 		graphResponse := model.NewUnifiedGraph()
 
@@ -156,13 +128,13 @@ func (s Resources) GetShortestPath(response http.ResponseWriter, request *http.R
 	)
 
 	if startNode == "" {
-		experimentalWriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "Missing query parameter: start_node", request), response)
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "Missing query parameter: start_node", request), response)
 	} else if endNode == "" {
-		experimentalWriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "Missing query parameter: end_node", request), response)
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "Missing query parameter: end_node", request), response)
 	} else if kindFilter, err := parseRelationshipKindsParamFilter(relationshipKindsParam); err != nil {
-		experimentalWriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
 	} else if paths, err := s.GraphQuery.GetAllShortestPaths(request.Context(), startNode, endNode, kindFilter); err != nil {
-		experimentalWriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, err.Error(), request), response)
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, err.Error(), request), response)
 	} else {
 		writeShortestPathsResult(paths, response, request)
 	}

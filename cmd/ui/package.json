@@ -93,6 +93,7 @@
         "redux-saga-test-plan": "^4.0.3",
         "typescript": "^5.1.6",
         "vite": "^4.4.4",
+        "vite-plugin-glsl": "^1.1.2",
         "vitest": "^0.32.0",
         "vitest-canvas-mock": "^0.3.2",
         "whatwg-fetch": "^3.6.2"

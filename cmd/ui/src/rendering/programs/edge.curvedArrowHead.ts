@@ -1,17 +1,17 @@
 // Copyright 2023 Specter Ops, Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// 
+//
 // SPDX-License-Identifier: Apache-2.0
 
 /**
@@ -21,14 +21,15 @@
  * Program rendering direction arrows as a simple triangle.
  * @module
  */
-import { NodeDisplayData } from 'sigma/types';
-import { floatColor } from 'sigma/utils';
-import { vertexShaderSource } from '../shaders/edge.arrowHead.vert';
-import { fragmentShaderSource } from '../shaders/edge.arrowHead.frag';
 import { AbstractEdgeProgram } from 'sigma/rendering/webgl/programs/common/edge';
 import { RenderParams } from 'sigma/rendering/webgl/programs/common/program';
-import { CurvedEdgeDisplayData } from './edge.curvedArrow';
-import { bezier } from '../utils/bezier';
+import { NodeDisplayData } from 'sigma/types';
+import { floatColor } from 'sigma/utils';
+import { CurvedEdgeDisplayData } from 'src/rendering/programs/edge.curvedArrow';
+import { fragmentShaderSource } from 'src/rendering/shaders/edge.arrowHead.frag';
+import { vertexShaderSource } from 'src/rendering/shaders/edge.arrowHead.vert';
+import { bezier } from 'src/rendering/utils/bezier';
+import { getNodeRadius } from 'src/rendering/utils/utils';
 
 const POINTS = 3,
     ATTRIBUTES = 9,
@@ -149,10 +150,11 @@ export default class EdgeArrowHeadProgram extends AbstractEdgeProgram {
             return;
         }
 
+        const inverseSqrtZoomRatio = data.inverseSqrtZoomRatio || 1;
         const start = { x: sourceData.x, y: sourceData.y };
         const end = { x: targetData.x, y: targetData.y };
         const thickness = data.size || 1;
-        const radius = targetData.size || 1;
+        const radius = getNodeRadius(targetData.highlighted, inverseSqrtZoomRatio, targetData.size);
         const color = floatColor(data.color);
 
         // We are going to try and approximate the intersection here
@@ -169,8 +171,7 @@ export default class EdgeArrowHeadProgram extends AbstractEdgeProgram {
             adjustedHeight *= -1;
         }
 
-        const midpoint = bezier.getMidpoint(start, end);
-        const control = bezier.getOffsetVertex(start, end, midpoint, adjustedHeight);
+        const control = bezier.getControlAtMidpoint(adjustedHeight, start, end);
         const normal = bezier.getNormals(control, end);
 
         const vOffset = {
