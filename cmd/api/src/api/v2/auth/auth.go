@@ -940,9 +940,8 @@ func (s ManagementResource) DisenrollMFA(response http.ResponseWriter, request *
 		secretToValidate := *user.AuthSecret
 		bhCtx := ctx.FromRequest(request)
 		if authedUser, isUser := auth.GetUserFromAuthCtx(bhCtx.AuthCtx); isUser {
-			log.Infof("authedUser is %v \n and user is %v \n and userId is %s", authedUser, user, userId)
-			// If the operation is being performed on a different user than who is logged in then we need to ensure they have proper permission
 			if authedUser.ID != userId {
+				// If the operation is being performed on a different user than who is logged in then we need to ensure they have proper permission
 				if s.authorizer.AllowsPermission(bhCtx.AuthCtx, auth.Permissions().AuthManageUsers) {
 					// Compare passed password against the logged in user's password instead
 					secretToValidate = *authedUser.AuthSecret
