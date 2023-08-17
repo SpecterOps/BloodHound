@@ -936,21 +936,29 @@ func (s ManagementResource) DisenrollMFA(response http.ResponseWriter, request *
 	} else if user, err := s.db.GetUser(userId); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
-
+		// Default the password to check against to the user from the path param
+		secretToValidate := *user.AuthSecret
 		bhCtx := ctx.FromRequest(request)
-		if user, isUser := auth.GetUserFromAuthCtx(bhCtx.AuthCtx); isUser {
-			if user.ID == userId {
-				// User must pass in valid password if disabling MFA for self to validate intent
-				if err := api.ValidateSecret(s.secretDigester, payload.Secret, *user.AuthSecret); err != nil {
-					// In this context an authenticated user revalidating their password for mfa enrollment should get a 400 bad request
-					// b/c the bearer token is valid despite the secret in the request payload being invalid
-					api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, ErrorResponseDetailsInvalidCurrentPassword, request), response)
+		if authedUser, isUser := auth.GetUserFromAuthCtx(bhCtx.AuthCtx); isUser {
+			log.Infof("authedUser is %v \n and user is %v \n and userId is %s", authedUser, user, userId)
+			// If the operation is being performed on a different user than who is logged in then we need to ensure they have proper permission
+			if authedUser.ID != userId {
+				if s.authorizer.AllowsPermission(bhCtx.AuthCtx, auth.Permissions().AuthManageUsers) {
+					// Compare passed password against the logged in user's password instead
+					secretToValidate = *authedUser.AuthSecret
+				} else {
+					api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusForbidden, "must be an admin to disable MFA for another user", request), response)
 					return
 				}
-			} else if !s.authorizer.AllowsPermission(bhCtx.AuthCtx, auth.Permissions().AuthManageUsers) { // TODO: Disabling MFA for self from Admin page is broken
-				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusForbidden, "must be an admin to disable MFA for another user", request), response)
-				return
 			}
+		}
+
+		// Check the password
+		if err := api.ValidateSecret(s.secretDigester, payload.Secret, secretToValidate); err != nil {
+			// In this context an authenticated user revalidating their password for mfa enrollment should get a 400 bad request
+			// b/c the bearer token is valid despite the secret in the request payload being invalid
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, ErrorResponseDetailsInvalidCurrentPassword, request), response)
+			return
 		}
 
 		user.AuthSecret.TOTPSecret = ""
