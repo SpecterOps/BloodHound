@@ -19,6 +19,7 @@ package queries
 //go:generate go run go.uber.org/mock/mockgen -copyright_file=../../../../LICENSE.header -destination=./mocks/graph.go -package=mocks . Graph
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	bhCtx "github.com/specterops/bloodhound/src/ctx"
@@ -141,18 +142,22 @@ type Graph interface {
 }
 
 type GraphQuery struct {
-	Graph              graph.Database
-	Cache              cache.Cache
-	SlowQueryThreshold int64 // Threshold in milliseconds
-	DisableCypherQC    bool
+	Graph                 graph.Database
+	Cache                 cache.Cache
+	SlowQueryThreshold    int64 // Threshold in milliseconds
+	DisableCypherQC       bool
+	cypherEmitter         frontend.Emitter
+	strippedCypherEmitter frontend.Emitter
 }
 
 func NewGraphQuery(graphDB graph.Database, cache cache.Cache, slowQueryThreshold int64, disableCypherQC bool) *GraphQuery {
 	return &GraphQuery{
-		Graph:              graphDB,
-		Cache:              cache,
-		SlowQueryThreshold: slowQueryThreshold,
-		DisableCypherQC:    disableCypherQC,
+		Graph:                 graphDB,
+		Cache:                 cache,
+		SlowQueryThreshold:    slowQueryThreshold,
+		DisableCypherQC:       disableCypherQC,
+		cypherEmitter:         frontend.NewCypherEmitter(false),
+		strippedCypherEmitter: frontend.NewCypherEmitter(true),
 	}
 }
 
@@ -345,27 +350,43 @@ func (s *GraphQuery) SearchNodesByName(ctx context.Context, nodeKinds graph.Kind
 }
 
 type preparedQuery struct {
-	cypher     string
-	complexity *analyzer.ComplexityMeasure
+	cypher         string
+	strippedCypher string
+	complexity     *analyzer.ComplexityMeasure
 }
 
-func prepareQuery(rawCypher string, disableCypherQC bool) (preparedQuery, error) {
-	parseCtx := frontend.DefaultCypherContext()
+func (s *GraphQuery) prepareGraphQuery(rawCypher string, disableCypherQC bool) (preparedQuery, error) {
+	var (
+		parseCtx   = frontend.DefaultCypherContext()
+		buffer     = &bytes.Buffer{}
+		graphQuery preparedQuery
+	)
 
 	if queryModel, err := frontend.ParseCypher(parseCtx, rawCypher); err != nil {
-		return preparedQuery{}, newQueryError(err)
+		return graphQuery, newQueryError(err)
 	} else if complexityMeasure, err := analyzer.QueryComplexity(queryModel); err != nil {
-		return preparedQuery{}, newQueryError(err)
+		return graphQuery, newQueryError(err)
 	} else if !disableCypherQC && complexityMeasure.Weight > MaxQueryComplexityWeightAllowed {
-		return preparedQuery{}, newQueryError(ErrCypherQueryToComplex)
-	} else if cypherQuery, err := frontend.FormatRegularQuery(queryModel); err != nil {
-		return preparedQuery{}, newQueryError(err)
+		return graphQuery, newQueryError(ErrCypherQueryToComplex)
 	} else {
-		return preparedQuery{
-			cypher:     cypherQuery,
-			complexity: complexityMeasure,
-		}, nil
+		graphQuery.complexity = complexityMeasure
+
+		if err := s.cypherEmitter.Write(queryModel, buffer); err != nil {
+			return graphQuery, newQueryError(err)
+		} else {
+			graphQuery.cypher = buffer.String()
+		}
+
+		buffer.Reset()
+
+		if err := s.strippedCypherEmitter.Write(queryModel, buffer); err != nil {
+			return graphQuery, newQueryError(err)
+		} else {
+			graphQuery.strippedCypher = buffer.String()
+		}
 	}
+
+	return graphQuery, nil
 }
 
 func (s *GraphQuery) RawCypherSearch(ctx context.Context, rawCypher string) (model.UnifiedGraph, error) {
@@ -374,9 +395,13 @@ func (s *GraphQuery) RawCypherSearch(ctx context.Context, rawCypher string) (mod
 		bhCtxInst     = bhCtx.Get(ctx)
 	)
 
-	if preparedQuery, err := prepareQuery(rawCypher, s.DisableCypherQC); err != nil {
+	if preparedQuery, err := s.prepareGraphQuery(rawCypher, s.DisableCypherQC); err != nil {
 		return graphResponse, err
 	} else {
+		logEvent := log.WithLevel(log.LevelInfo)
+		logEvent.Str("query", preparedQuery.strippedCypher)
+		logEvent.Msg("Executing user cypher query")
+
 		return graphResponse, s.Graph.ReadTransaction(ctx, func(tx graph.Transaction) error {
 			if pathSet, err := ops.FetchPathSetByQuery(tx, preparedQuery.cypher); err != nil {
 				return err
