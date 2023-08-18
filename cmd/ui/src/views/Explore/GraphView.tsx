@@ -34,6 +34,7 @@ import { setAssetGroupEdit } from 'src/ducks/global/actions';
 import { GlobalOptionsState } from 'src/ducks/global/types';
 import { discardChanges } from 'src/ducks/tierzero/actions';
 import { RankDirection } from 'src/hooks/useLayoutDagre/useLayoutDagre';
+import useToggle from 'src/hooks/useToggle';
 import { GLYPHS, GlyphKind, NODE_ICON, UNKNOWN_ICON } from 'src/icons';
 import { GlyphLocation } from 'src/rendering/programs/node.glyphs';
 import { AppState, useAppDispatch } from 'src/store';
@@ -142,6 +143,7 @@ const GraphView: FC = () => {
     const opts: GlobalOptionsState = useSelector((state: AppState) => state.global.options);
     const formIsDirty = Object.keys(useSelector((state: AppState) => state.tierzero).changelog).length > 0;
     const [graphologyGraph, setGraphologyGraph] = useState<MultiDirectedGraph<Attributes, Attributes, Attributes>>();
+    const [currentSearchOpen, toggleCurrentSearch] = useToggle(false);
 
     useEffect(() => {
         let items: any = graphState.chartProps.items;
@@ -202,10 +204,15 @@ const GraphView: FC = () => {
         }
     };
 
-    const handleOpenSearch = () => console.log("Opening Search modal");
+    const handleOpenSearch = () => {
+        toggleCurrentSearch();
+    };
 
     const options: GraphButtonOptions = { standard: true, sequential: true };
-    const nonLayoutButtons: GraphButtonProps[] = [{ onClick: handleOpenSearch, displayText: 'Search Current Results' }]
+
+    const nonLayoutButtons: GraphButtonProps[] = [
+        { displayText: 'Search Current Results', onClick: handleOpenSearch }
+    ];
 
     return (
         <div style={{ position: 'relative', height: '100%', width: '100%', overflow: 'hidden' }} data-testid='explore'>
@@ -215,6 +222,7 @@ const GraphView: FC = () => {
                 graph={graphologyGraph}
                 onClickNode={onClickNode}
                 nonLayoutButtons={nonLayoutButtons}
+                isCurrentSearchOpen={currentSearchOpen}
             />
             <Grid
                 container

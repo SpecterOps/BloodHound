@@ -76,7 +76,7 @@ const GraphButtons: FC<GraphButtonsProps> = ({ rankDirection, options, nonLayout
     };
 
     return (
-        <Box position={'absolute'} bottom={16} display={'flex'}>
+        <Box bottom={16} display={'flex'}>
             <GraphButton onClick={reset} displayText={<FontAwesomeIcon icon={faCropAlt} />} />
             {sequential && <GraphButton onClick={runSequentialLayout} displayText='sequential' />}
             {standard && <GraphButton onClick={runStandardLayout} displayText='standard' />}

@@ -33,11 +33,14 @@ import getNodeCombinedProgram from 'src/rendering/programs/node.combined';
 import getNodeGlyphsProgram from 'src/rendering/programs/node.glyphs';
 import { GraphButtonProps } from './GraphButton/GraphButton';
 import GraphEdgeEvents from './GraphEdgeEvents';
+import { Box } from '@mui/material';
+import SearchCurrentResults from './SearchCurrentResults';
 
 interface SigmaChartProps {
     rankDirection: RankDirection;
     options: GraphButtonOptions;
     nonLayoutButtons: GraphButtonProps[];
+    isCurrentSearchOpen: boolean;
     graph: Graph<Attributes, Attributes, Attributes>;
     onDoubleClickNode: (id: string) => void;
     onClickNode: (id: string) => void;
@@ -50,6 +53,7 @@ const SigmaChart: FC<Partial<SigmaChartProps>> = ({
     rankDirection,
     options,
     nonLayoutButtons,
+    isCurrentSearchOpen,
     graph,
     onDoubleClickNode,
     onClickNode,
@@ -93,7 +97,10 @@ const SigmaChart: FC<Partial<SigmaChartProps>> = ({
                 onClickStage={onClickStage}
                 edgeReducer={edgeReducer}
             />
-            <GraphButtons rankDirection={rankDirection} options={options} nonLayoutButtons={nonLayoutButtons} />
+            <Box position={'absolute'} bottom={16} >
+                {isCurrentSearchOpen && <SearchCurrentResults />}
+                <GraphButtons rankDirection={rankDirection} options={options} nonLayoutButtons={nonLayoutButtons} />
+            </Box>
         </SigmaContainer>
     );
 };
