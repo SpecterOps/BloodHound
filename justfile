@@ -14,11 +14,28 @@ set positional-arguments
 
 # Initialize your dev environment (clone templates to local)
 init:
-  # Copy configuration files for easy access
-  @cp local-harnesses/build.config.json.template local-harnesses/build.config.json
-  @cp local-harnesses/integration.config.json.template local-harnesses/integration.config.json
-  # Install additional Go tools
-  @go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.52.2
+  #!/usr/bin/env bash
+  echo "Make local copies of configuration files"
+  if [[ -d "./local-harnesses/build.config.json" ]]; then
+    rm -rf "./local-harnesses/build.config.json"
+    cp ./local-harnesses/build.config.json.template ./local-harnesses/build.config.json
+  elif [[ -f "./local-harnesses/build.config.json" ]]; then
+    echo "Not copying build.config.json since it already exists"
+  else \
+    cp ./local-harnesses/build.config.json.template ./local-harnesses/build.config.json
+  fi
+
+  if [[ -d "./local-harnesses/integration.config.json" ]]; then
+    rm -rf "./local-harnesses/integration.config.json"
+    cp ./local-harnesses/integration.config.json.template ./local-harnesses/integration.config.json
+  elif [[ -f "./local-harnesses/integration.config.json" ]]; then
+    echo "Not copying integration.config.json since it already exists"
+  else \
+    cp ./local-harnesses/integration.config.json.template ./local-harnesses/integration.config.json
+  fi
+
+  echo "Install additional Go tools"
+  go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.52.2
 
 # Show available targets for this context.
 show *FLAGS:
@@ -95,19 +112,19 @@ go-lint:
 
 # run docker compose commands for the BH dev profile (Default: up)
 bh-dev *ARGS='up':
-  @docker compose --profile dev {{ARGS}}
+  @docker compose --profile dev -f docker-compose.dev.yml {{ARGS}}
 
 # run docker compose commands for the BH debug profile (Default: up)
 bh-debug *ARGS='up':
-  @docker compose --profile debug-api {{ARGS}}
+  @docker compose --profile debug-api -f docker-compose.dev.yml {{ARGS}}
 
 # run docker compose commands for the BH api-only profile (Default: up)
 bh-api-only *ARGS='up':
-  @docker compose --profile api-only {{ARGS}}
+  @docker compose --profile api-only -f docker-compose.dev.yml {{ARGS}}
 
 # run docker compose commands for the BH ui-only profile (Default: up)
 bh-ui-only *ARGS='up':
-  @docker compose --profile ui-only {{ARGS}}
+  @docker compose --profile ui-only -f docker-compose.dev.yml {{ARGS}}
 
 # run docker compose commands for the BH testing databases (Default: up)
 bh-testing *ARGS='up -d':
@@ -119,11 +136,11 @@ bh-testing-clear-volumes *ARGS='':
 
 # clear BH docker compose volumes (pass --remove-orphans if troubleshooting)
 bh-clear-volumes *ARGS='':
-  @docker compose down -v {{ARGS}}
+  @docker compose -f docker-compose.dev.yml down -v {{ARGS}}
 
 # build BH target cleanly (default profile dev with --no-cache flag)
 bh-clean-docker-build target='dev' *ARGS='':
-  @docker compose --profile {{target}} build --no-cache {{ARGS}}
+  @docker compose --profile {{target}} -f docker-compose.dev.yml build --no-cache {{ARGS}}
 
 # build local BHCE container image (ex: just build-bhce-container <linux/arm64|linux/amd64> edge v5.0.0)
 build-bhce-container platform='linux/amd64' tag='edge' version='v5.0.0' *ARGS='':
