@@ -12,30 +12,38 @@ export INTEGRATION_CONFIG_PATH := env_var_or_default("INTEGRATION_CONFIG_PATH", 
 
 set positional-arguments
 
-# Initialize your dev environment (clone templates to local)
-init:
+# Initialize your dev environment (use "just init clean" to reset your config files)
+init wipe="":
   #!/usr/bin/env bash
   echo "Make local copies of configuration files"
   if [[ -d "./local-harnesses/build.config.json" ]]; then
     rm -rf "./local-harnesses/build.config.json"
     cp ./local-harnesses/build.config.json.template ./local-harnesses/build.config.json
-  elif [[ -f "./local-harnesses/build.config.json" ]]; then
+  elif [[ -f "./local-harnesses/build.config.json" ]] && [[ "{{wipe}}" != "clean" ]]; then
     echo "Not copying build.config.json since it already exists"
-  else \
+  else
     cp ./local-harnesses/build.config.json.template ./local-harnesses/build.config.json
   fi
 
   if [[ -d "./local-harnesses/integration.config.json" ]]; then
     rm -rf "./local-harnesses/integration.config.json"
     cp ./local-harnesses/integration.config.json.template ./local-harnesses/integration.config.json
-  elif [[ -f "./local-harnesses/integration.config.json" ]]; then
+  elif [[ -f "./local-harnesses/integration.config.json" ]] && [[ "{{wipe}}" != "clean" ]]; then
     echo "Not copying integration.config.json since it already exists"
-  else \
+  else
     cp ./local-harnesses/integration.config.json.template ./local-harnesses/integration.config.json
   fi
 
   echo "Install additional Go tools"
   go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.52.2
+
+  echo "Run a build to ensure go.work.sum is valid"
+  just build -vf
+
+  echo "Ensure containers have been rebuilt"
+  just bh-dev build
+
+  echo "Init Complete"
 
 # Show available targets for this context.
 show *FLAGS:
