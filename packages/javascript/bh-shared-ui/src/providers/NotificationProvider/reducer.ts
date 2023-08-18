@@ -20,7 +20,7 @@ import { Notification } from './model';
 export const notificationsReducer = (state: Notification[], action: NotificationAction): Notification[] => {
     if (action.type == ActionType.Add) {
         return [...state, action.value];
-    } else if (action.type == ActionType.Dismiss) {
+    } else if (action.type === ActionType.Dismiss) {
         return state.map((notification) => {
             return action.key === null || action.key === notification.key
                 ? { ...notification, dismissed: true }

@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { createContext, Dispatch, ReactNode, useReducer } from 'react';
-import { SnackbarProvider, useSnackbar } from 'notistack';
+import { SnackbarKey, SnackbarProvider, useSnackbar } from 'notistack';
 import { Notification } from './model';
 import { NotificationAction } from './actions';
 import { notificationsReducer } from './reducer';
@@ -26,7 +26,7 @@ import { faTimes } from '@fortawesome/free-solid-svg-icons';
 export const NotificationsContext = createContext<Notification[]>([]);
 export const NotificationsDispatchContext = createContext<Dispatch<NotificationAction> | null>(null);
 
-const dismissAction = (key: any) => {
+const useDismissAction = (key: SnackbarKey) => {
     const { closeSnackbar } = useSnackbar();
     return (
         <IconButton size='small' color='inherit' onClick={() => closeSnackbar(key)}>
@@ -47,7 +47,7 @@ const NotificationsProvider = ({ children }: NotificationProviderProps) => {
     return (
         <NotificationsContext.Provider value={notifications}>
             <NotificationsDispatchContext.Provider value={dispatch}>
-                <SnackbarProvider action={dismissAction}>{children}</SnackbarProvider>
+                <SnackbarProvider action={useDismissAction}>{children}</SnackbarProvider>
             </NotificationsDispatchContext.Provider>
         </NotificationsContext.Provider>
     );
