@@ -74,7 +74,7 @@ A: You'll need to find the full name of your Neo4J volume and then run `docker r
 will help do it all in one step:
 
 * For Bash compatible shells: `docker volume rm $(docker volume ls -q | grep neo4j-data)`
-* For PowerShell: `docker volume rm @(docker volume ls -q | Select-String go-pkg-mod)`
+* For PowerShell: `docker volume rm @(docker volume ls -q | Select-String neo4j-data)`
 
 ### Q: "One of the ports used by default conflicts with a port running on my computer. How can I change it?"
 
