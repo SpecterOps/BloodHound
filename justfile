@@ -21,7 +21,7 @@ init:
     cp ./local-harnesses/build.config.json.template ./local-harnesses/build.config.json
   elif [[ -f "./local-harnesses/build.config.json" ]]; then
     echo "Not copying build.config.json since it already exists"
-  else \
+  else
     cp ./local-harnesses/build.config.json.template ./local-harnesses/build.config.json
   fi
 
@@ -30,12 +30,19 @@ init:
     cp ./local-harnesses/integration.config.json.template ./local-harnesses/integration.config.json
   elif [[ -f "./local-harnesses/integration.config.json" ]]; then
     echo "Not copying integration.config.json since it already exists"
-  else \
+  else
     cp ./local-harnesses/integration.config.json.template ./local-harnesses/integration.config.json
   fi
 
   echo "Install additional Go tools"
   go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.52.2
+
+  echo "Check that a go.work.sum file exists and run a local build if not"
+  if [[ ! -f "go.work.sum" ]]; then
+    just build -v
+  fi
+
+  echo "Init Complete"
 
 # Show available targets for this context.
 show *FLAGS:
