@@ -812,5 +812,93 @@
         "type": "object"
       }
     }
+  },
+  "v2.FileUploadJobResponse": {
+    "type": "object",
+    "properties": {
+      "data": {
+        "$ref": "#/definitions/model.FileUploadJob"
+      }
+    }
+  },
+  "v2.ListFileUploadJobsResponse": {
+    "type": "object",
+    "properties": {
+      "count": {
+        "type": "integer"
+      },
+      "limit": {
+        "type": "integer"
+      },
+      "skip": {
+        "type": "integer"
+      },
+      "data": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/model.FileUploadJob"
+        }
+      }
+    }
+  },
+  "v2.ListAdDataQualityStatsResponse": {
+    "type": "object",
+    "properties": {
+      "count": {
+        "type": "integer"
+      },
+      "limit": {
+        "type": "integer"
+      },
+      "skip": {
+        "type": "integer"
+      },
+      "start": {
+        "type": "string",
+        "format": "date-time",
+        "description": "The beginning of the window from which the data was collected"
+      },
+      "end": {
+        "type": "string",
+        "format": "date-time",
+        "description": "The end of the window from which the data was collected"
+      },
+      "data": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/model.ADDataQualityStat"
+        }
+      }
+    }
+  },
+  "v2.ListAzureDataQualityStatsResponse": {
+    "type": "object",
+    "properties": {
+      "count": {
+        "type": "integer"
+      },
+      "limit": {
+        "type": "integer"
+      },
+      "skip": {
+        "type": "integer"
+      },
+      "start": {
+        "type": "string",
+        "format": "date-time",
+        "description": "The beginning of the window from which the data was collected"
+      },
+      "end": {
+        "type": "string",
+        "format": "date-time",
+        "description": "The end of the window from which the data was collected"
+      },
+      "data": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/model.AzureDataQualityStat"
+        }
+      }
+    }
   }
 }

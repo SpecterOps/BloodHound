@@ -1,23 +1,24 @@
 // Copyright 2023 Specter Ops, Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// 
+//
 // SPDX-License-Identifier: Apache-2.0
 
 package frontend
 
 import (
 	"fmt"
+	"io"
 	"strconv"
 	"strings"
 
@@ -25,126 +26,195 @@ import (
 	"github.com/specterops/bloodhound/dawgs/graph"
 )
 
-func joinKinds(delimiter string, kinds graph.Kinds) string {
-	output := strings.Builder{}
+const strippedLiteral = "$STRIPPED"
 
+func writeJoinedKinds(output io.Writer, delimiter string, kinds graph.Kinds) error {
 	for idx, kind := range kinds {
 		if idx > 0 {
-			output.WriteString(delimiter)
+			if _, err := io.WriteString(output, delimiter); err != nil {
+				return err
+			}
 		}
 
-		output.WriteString(kind.String())
-	}
-
-	return output.String()
-}
-
-func FormatNodePattern(output *strings.Builder, nodePattern *model.NodePattern) error {
-	output.WriteString("(")
-	output.WriteString(nodePattern.Binding)
-
-	if len(nodePattern.Kinds) > 0 {
-		output.WriteString(":")
-		output.WriteString(joinKinds(":", nodePattern.Kinds))
-	}
-
-	if nodePattern.Properties != nil {
-		output.WriteString(" ")
-
-		if err := FormatExpression(output, nodePattern.Properties); err != nil {
+		if _, err := io.WriteString(output, kind.String()); err != nil {
 			return err
 		}
 	}
 
-	output.WriteString(")")
 	return nil
 }
 
-func FormatRelationshipPattern(output *strings.Builder, relationshipPattern *model.RelationshipPattern) error {
+type Emitter interface {
+	Write(query *model.RegularQuery, writer io.Writer) error
+}
+
+type CypherEmitter struct {
+	StripLiterals bool
+}
+
+func NewCypherEmitter(stripLiterals bool) Emitter {
+	return CypherEmitter{
+		StripLiterals: stripLiterals,
+	}
+}
+
+func (s CypherEmitter) formatNodePattern(output io.Writer, nodePattern *model.NodePattern) error {
+	if _, err := io.WriteString(output, "("); err != nil {
+		return err
+	}
+
+	if _, err := io.WriteString(output, nodePattern.Binding); err != nil {
+		return err
+	}
+
+	if len(nodePattern.Kinds) > 0 {
+		if _, err := io.WriteString(output, ":"); err != nil {
+			return err
+		}
+
+		if err := writeJoinedKinds(output, ":", nodePattern.Kinds); err != nil {
+			return err
+		}
+	}
+
+	if nodePattern.Properties != nil {
+		if _, err := io.WriteString(output, " "); err != nil {
+			return err
+		}
+
+		if err := s.formatExpression(output, nodePattern.Properties); err != nil {
+			return err
+		}
+	}
+
+	if _, err := io.WriteString(output, ")"); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s CypherEmitter) formatRelationshipPattern(output io.Writer, relationshipPattern *model.RelationshipPattern) error {
 	switch relationshipPattern.Direction {
 	case graph.DirectionOutbound:
-		output.WriteString("-[")
+		if _, err := io.WriteString(output, "-["); err != nil {
+			return err
+		}
 
 	case graph.DirectionBoth:
 		fallthrough
 
 	case graph.DirectionInbound:
-		output.WriteString("<-[")
+		if _, err := io.WriteString(output, "<-["); err != nil {
+			return err
+		}
 	}
 
-	output.WriteString(relationshipPattern.Binding)
+	if _, err := io.WriteString(output, relationshipPattern.Binding); err != nil {
+		return err
+	}
 
 	if len(relationshipPattern.Kinds) > 0 {
-		output.WriteString(":")
-		output.WriteString(joinKinds("|", relationshipPattern.Kinds))
+		if _, err := io.WriteString(output, ":"); err != nil {
+			return err
+		}
+
+		if err := writeJoinedKinds(output, "|", relationshipPattern.Kinds); err != nil {
+			return err
+		}
 	}
 
 	if relationshipPattern.Range != nil {
-		output.WriteString("*")
+		if _, err := io.WriteString(output, "*"); err != nil {
+			return err
+		}
 
 		outputEllipsis := relationshipPattern.Range.StartIndex != nil || relationshipPattern.Range.EndIndex != nil
 
 		if relationshipPattern.Range.StartIndex != nil {
-			output.WriteString(strconv.FormatInt(*relationshipPattern.Range.StartIndex, 10))
+			if _, err := io.WriteString(output, strconv.FormatInt(*relationshipPattern.Range.StartIndex, 10)); err != nil {
+				return err
+			}
 		}
 
 		if outputEllipsis {
-			output.WriteString("..")
+			if _, err := io.WriteString(output, ".."); err != nil {
+				return err
+			}
 		}
 
 		if relationshipPattern.Range.EndIndex != nil {
-			output.WriteString(strconv.FormatInt(*relationshipPattern.Range.EndIndex, 10))
+			if _, err := io.WriteString(output, strconv.FormatInt(*relationshipPattern.Range.EndIndex, 10)); err != nil {
+				return err
+			}
 		}
 	}
 
 	if relationshipPattern.Properties != nil {
-		output.WriteString(" ")
+		if _, err := io.WriteString(output, " "); err != nil {
+			return err
+		}
 
-		if err := FormatExpression(output, relationshipPattern.Properties); err != nil {
+		if err := s.formatExpression(output, relationshipPattern.Properties); err != nil {
 			return err
 		}
 	}
 
 	switch relationshipPattern.Direction {
 	case graph.DirectionInbound:
-		output.WriteString("]-")
+		if _, err := io.WriteString(output, "]-"); err != nil {
+			return err
+		}
 
 	case graph.DirectionBoth:
 		fallthrough
 
 	case graph.DirectionOutbound:
-		output.WriteString("]->")
+		if _, err := io.WriteString(output, "]->"); err != nil {
+			return err
+		}
 	}
 
 	return nil
 }
 
-func FormatPatternPart(output *strings.Builder, patternPart *model.PatternPart) error {
+func (s CypherEmitter) formatPatternPart(output io.Writer, patternPart *model.PatternPart) error {
 	if patternPart.Binding != "" {
-		output.WriteString(patternPart.Binding)
-		output.WriteString(" = ")
+		if _, err := io.WriteString(output, patternPart.Binding); err != nil {
+			return err
+		}
+
+		if _, err := io.WriteString(output, " = "); err != nil {
+			return err
+		}
 	}
 
 	if patternPart.ShortestPathPattern {
-		output.WriteString("shortestPath(")
+		if _, err := io.WriteString(output, "shortestPath("); err != nil {
+			return err
+		}
 	}
 
 	if patternPart.AllShortestPathsPattern {
-		output.WriteString("allShortestPaths(")
+		if _, err := io.WriteString(output, "allShortestPaths("); err != nil {
+			return err
+		}
 	}
 
 	for idx, patternElement := range patternPart.PatternElements {
 		if nodePattern, isNodePattern := patternElement.AsNodePattern(); isNodePattern {
 			// If this is another node pattern then output a delimiter
 			if idx >= 1 && patternPart.PatternElements[idx-1].IsNodePattern() {
-				output.WriteString(", ")
+				if _, err := io.WriteString(output, ", "); err != nil {
+					return err
+				}
 			}
 
-			if err := FormatNodePattern(output, nodePattern); err != nil {
+			if err := s.formatNodePattern(output, nodePattern); err != nil {
 				return err
 			}
 		} else if relationshipPattern, isRelationshipPattern := patternElement.AsRelationshipPattern(); isRelationshipPattern {
-			if err := FormatRelationshipPattern(output, relationshipPattern); err != nil {
+			if err := s.formatRelationshipPattern(output, relationshipPattern); err != nil {
 				return err
 			}
 		} else {
@@ -153,66 +223,86 @@ func FormatPatternPart(output *strings.Builder, patternPart *model.PatternPart) 
 	}
 
 	if patternPart.ShortestPathPattern || patternPart.AllShortestPathsPattern {
-		output.WriteString(")")
+		if _, err := io.WriteString(output, ")"); err != nil {
+			return err
+		}
 	}
 
 	return nil
 }
 
-func FormatProjection(output *strings.Builder, projection *model.Projection) error {
+func (s CypherEmitter) formatProjection(output io.Writer, projection *model.Projection) error {
 	if projection.Distinct {
-		output.WriteString("distinct ")
+		if _, err := io.WriteString(output, "distinct "); err != nil {
+			return err
+		}
 	}
 
 	for idx, projectionItem := range projection.Items {
 		if idx > 0 {
-			output.WriteString(", ")
+			if _, err := io.WriteString(output, ", "); err != nil {
+				return err
+			}
 		}
 
-		if err := FormatExpression(output, projectionItem.Expression); err != nil {
+		if err := s.formatExpression(output, projectionItem.Expression); err != nil {
 			return err
 		}
 
 		if projectionItem.Binding != nil {
-			output.WriteString(" as ")
-			output.WriteString(projectionItem.Binding.Symbol)
+			if _, err := io.WriteString(output, " as "); err != nil {
+				return err
+			}
+			if _, err := io.WriteString(output, projectionItem.Binding.Symbol); err != nil {
+				return err
+			}
 		}
 	}
 
 	if projection.Order != nil {
-		output.WriteString(" order by ")
+		if _, err := io.WriteString(output, " order by "); err != nil {
+			return err
+		}
 
 		for idx := 0; idx < len(projection.Order.Items); idx++ {
 			if idx > 0 {
-				output.WriteString(", ")
+				if _, err := io.WriteString(output, ", "); err != nil {
+					return err
+				}
 			}
 
 			nextItem := projection.Order.Items[idx]
 
-			if err := FormatExpression(output, nextItem.Expression); err != nil {
+			if err := s.formatExpression(output, nextItem.Expression); err != nil {
 				return err
 			}
 
 			if nextItem.Ascending {
-				output.WriteString(" asc")
-			} else {
-				output.WriteString(" desc")
+				if _, err := io.WriteString(output, " asc"); err != nil {
+					return err
+				}
+			} else if _, err := io.WriteString(output, " desc"); err != nil {
+				return err
 			}
 		}
 	}
 
 	if projection.Skip != nil {
-		output.WriteString(" skip ")
+		if _, err := io.WriteString(output, " skip "); err != nil {
+			return err
+		}
 
-		if err := FormatExpression(output, projection.Skip); err != nil {
+		if err := s.formatExpression(output, projection.Skip); err != nil {
 			return err
 		}
 	}
 
 	if projection.Limit != nil {
-		output.WriteString(" limit ")
+		if _, err := io.WriteString(output, " limit "); err != nil {
+			return err
+		}
 
-		if err := FormatExpression(output, projection.Limit); err != nil {
+		if err := s.formatExpression(output, projection.Limit); err != nil {
 			return err
 		}
 	}
@@ -220,23 +310,27 @@ func FormatProjection(output *strings.Builder, projection *model.Projection) err
 	return nil
 }
 
-func FormatReturn(output *strings.Builder, returnClause *model.Return) error {
-	output.WriteString(" return ")
+func (s CypherEmitter) formatReturn(output io.Writer, returnClause *model.Return) error {
+	if _, err := io.WriteString(output, " return "); err != nil {
+		return err
+	}
 
 	if returnClause.Projection != nil {
-		return FormatProjection(output, returnClause.Projection)
+		return s.formatProjection(output, returnClause.Projection)
 	}
 
 	return nil
 }
 
-func FormatWhere(output *strings.Builder, whereClause *model.Where) error {
+func (s CypherEmitter) formatWhere(output io.Writer, whereClause *model.Where) error {
 	if len(whereClause.Expressions) > 0 {
-		output.WriteString(" where ")
+		if _, err := io.WriteString(output, " where "); err != nil {
+			return err
+		}
 	}
 
 	for _, expression := range whereClause.Expressions {
-		if err := FormatExpression(output, expression); err != nil {
+		if err := s.formatExpression(output, expression); err != nil {
 			return err
 		}
 	}
@@ -244,101 +338,149 @@ func FormatWhere(output *strings.Builder, whereClause *model.Where) error {
 	return nil
 }
 
-func FormatMapLiteral(output *strings.Builder, mapLiteral model.MapLiteral) error {
-	output.WriteString("{")
+func (s CypherEmitter) formatMapLiteral(output io.Writer, mapLiteral model.MapLiteral) error {
+	if _, err := io.WriteString(output, "{"); err != nil {
+		return err
+	}
 
 	first := true
 	for key, subExpression := range mapLiteral {
 		if !first {
-			output.WriteString(", ")
+			if _, err := io.WriteString(output, ", "); err != nil {
+				return err
+			}
 		} else {
 			first = false
 		}
 
-		output.WriteString(key)
-		output.WriteString(": ")
+		if _, err := io.WriteString(output, key); err != nil {
+			return err
+		}
 
-		if err := FormatExpression(output, subExpression); err != nil {
+		if _, err := io.WriteString(output, ": "); err != nil {
+			return err
+		}
+
+		if err := s.formatExpression(output, subExpression); err != nil {
 			return err
 		}
 	}
 
-	output.WriteString("}")
+	if _, err := io.WriteString(output, "}"); err != nil {
+		return err
+	}
+
 	return nil
 }
 
-func FormatLiteral(output *strings.Builder, literal *model.Literal) error {
+func (s CypherEmitter) formatLiteral(output io.Writer, literal *model.Literal) error {
 	const literalNullToken = "null"
 
 	// Check for a null literal first
 	if literal.Null {
-		output.WriteString(literalNullToken)
+		if _, err := io.WriteString(output, literalNullToken); err != nil {
+			return err
+		}
 		return nil
 	}
 
 	// Attempt to string format the literal value
 	switch typedLiteral := literal.Value.(type) {
 	case string:
-		output.WriteString(typedLiteral)
+		if _, err := io.WriteString(output, typedLiteral); err != nil {
+			return err
+		}
 
 	case int8:
-		output.WriteString(strconv.FormatInt(int64(typedLiteral), 10))
+		if _, err := io.WriteString(output, strconv.FormatInt(int64(typedLiteral), 10)); err != nil {
+			return err
+		}
 
 	case int16:
-		output.WriteString(strconv.FormatInt(int64(typedLiteral), 10))
+		if _, err := io.WriteString(output, strconv.FormatInt(int64(typedLiteral), 10)); err != nil {
+			return err
+		}
 
 	case int32:
-		output.WriteString(strconv.FormatInt(int64(typedLiteral), 10))
+		if _, err := io.WriteString(output, strconv.FormatInt(int64(typedLiteral), 10)); err != nil {
+			return err
+		}
 
 	case int64:
-		output.WriteString(strconv.FormatInt(typedLiteral, 10))
+		if _, err := io.WriteString(output, strconv.FormatInt(typedLiteral, 10)); err != nil {
+			return err
+		}
 
 	case int:
-		output.WriteString(strconv.FormatInt(int64(typedLiteral), 10))
+		if _, err := io.WriteString(output, strconv.FormatInt(int64(typedLiteral), 10)); err != nil {
+			return err
+		}
 
 	case uint8:
-		output.WriteString(strconv.FormatUint(uint64(typedLiteral), 10))
+		if _, err := io.WriteString(output, strconv.FormatUint(uint64(typedLiteral), 10)); err != nil {
+			return err
+		}
 
 	case uint16:
-		output.WriteString(strconv.FormatUint(uint64(typedLiteral), 10))
+		if _, err := io.WriteString(output, strconv.FormatUint(uint64(typedLiteral), 10)); err != nil {
+			return err
+		}
 
 	case uint32:
-		output.WriteString(strconv.FormatUint(uint64(typedLiteral), 10))
+		if _, err := io.WriteString(output, strconv.FormatUint(uint64(typedLiteral), 10)); err != nil {
+			return err
+		}
 
 	case uint64:
-		output.WriteString(strconv.FormatUint(typedLiteral, 10))
+		if _, err := io.WriteString(output, strconv.FormatUint(typedLiteral, 10)); err != nil {
+			return err
+		}
 
 	case uint:
-		output.WriteString(strconv.FormatUint(uint64(typedLiteral), 10))
+		if _, err := io.WriteString(output, strconv.FormatUint(uint64(typedLiteral), 10)); err != nil {
+			return err
+		}
 
 	case bool:
-		output.WriteString(strconv.FormatBool(typedLiteral))
+		if _, err := io.WriteString(output, strconv.FormatBool(typedLiteral)); err != nil {
+			return err
+		}
 
 	case float32:
-		output.WriteString(strconv.FormatFloat(float64(typedLiteral), 'f', -1, 64))
+		if _, err := io.WriteString(output, strconv.FormatFloat(float64(typedLiteral), 'f', -1, 64)); err != nil {
+			return err
+		}
 
 	case float64:
-		output.WriteString(strconv.FormatFloat(typedLiteral, 'f', -1, 64))
+		if _, err := io.WriteString(output, strconv.FormatFloat(typedLiteral, 'f', -1, 64)); err != nil {
+			return err
+		}
 
 	case model.MapLiteral:
-		if err := FormatMapLiteral(output, typedLiteral); err != nil {
+		if err := s.formatMapLiteral(output, typedLiteral); err != nil {
 			return err
 		}
 
 	case *model.ListLiteral:
-		output.WriteString("[")
+		if _, err := io.WriteString(output, "["); err != nil {
+			return err
+		}
 
 		for idx, subExpression := range *typedLiteral {
 			if idx > 0 {
-				output.WriteString(", ")
+				if _, err := io.WriteString(output, ", "); err != nil {
+					return err
+				}
 			}
 
-			if err := FormatExpression(output, subExpression); err != nil {
+			if err := s.formatExpression(output, subExpression); err != nil {
 				return err
 			}
 		}
 
-		output.WriteString("]")
+		if _, err := io.WriteString(output, "]"); err != nil {
+			return err
+		}
 
 	default:
 		return fmt.Errorf("unexpected literal type for string formatting: %T", literal)
@@ -347,63 +489,80 @@ func FormatLiteral(output *strings.Builder, literal *model.Literal) error {
 	return nil
 }
 
-func FormatExpression(output *strings.Builder, expression model.Expression) error {
+func (s CypherEmitter) formatExpression(output io.Writer, expression model.Expression) error {
 	switch typedExpression := expression.(type) {
 	case *model.Negation:
-		output.WriteString("not ")
+		if _, err := io.WriteString(output, "not "); err != nil {
+			return err
+		}
 
-		if err := FormatExpression(output, typedExpression.Expression); err != nil {
+		if err := s.formatExpression(output, typedExpression.Expression); err != nil {
 			return err
 		}
 
 	case *model.IDInCollection:
-		if err := FormatExpression(output, typedExpression.Variable); err != nil {
+		if err := s.formatExpression(output, typedExpression.Variable); err != nil {
 			return err
 		}
 
-		output.WriteString(" in ")
+		if _, err := io.WriteString(output, " in "); err != nil {
+			return err
+		}
 
-		if err := FormatExpression(output, typedExpression.Expression); err != nil {
+		if err := s.formatExpression(output, typedExpression.Expression); err != nil {
 			return err
 		}
 
 	case *model.FilterExpression:
-		if err := FormatExpression(output, typedExpression.Specifier); err != nil {
+		if err := s.formatExpression(output, typedExpression.Specifier); err != nil {
 			return err
 		}
 
 		if typedExpression.Where != nil {
-			if err := FormatWhere(output, typedExpression.Where); err != nil {
+			if err := s.formatWhere(output, typedExpression.Where); err != nil {
 				return err
 			}
 		}
 
 	case *model.Quantifier:
-		output.WriteString(typedExpression.Type.String())
-		output.WriteString("(")
-
-		if err := FormatExpression(output, typedExpression.Filter); err != nil {
+		if _, err := io.WriteString(output, typedExpression.Type.String()); err != nil {
 			return err
 		}
 
-		output.WriteString(")")
+		if _, err := io.WriteString(output, "("); err != nil {
+			return err
+		}
+
+		if err := s.formatExpression(output, typedExpression.Filter); err != nil {
+			return err
+		}
+
+		if _, err := io.WriteString(output, ")"); err != nil {
+			return err
+		}
 
 	case *model.Parenthetical:
-		output.WriteString("(")
-
-		if err := FormatExpression(output, typedExpression.Expression); err != nil {
+		if _, err := io.WriteString(output, "("); err != nil {
 			return err
 		}
 
-		output.WriteString(")")
+		if err := s.formatExpression(output, typedExpression.Expression); err != nil {
+			return err
+		}
+
+		if _, err := io.WriteString(output, ")"); err != nil {
+			return err
+		}
 
 	case *model.Disjunction:
 		for idx, joinedExpression := range typedExpression.Expressions {
 			if idx > 0 {
-				output.WriteString(" or ")
+				if _, err := io.WriteString(output, " or "); err != nil {
+					return err
+				}
 			}
 
-			if err := FormatExpression(output, joinedExpression); err != nil {
+			if err := s.formatExpression(output, joinedExpression); err != nil {
 				return err
 			}
 		}
@@ -411,10 +570,12 @@ func FormatExpression(output *strings.Builder, expression model.Expression) erro
 	case *model.ExclusiveDisjunction:
 		for idx, joinedExpression := range typedExpression.Expressions {
 			if idx > 0 {
-				output.WriteString(" xor ")
+				if _, err := io.WriteString(output, " xor "); err != nil {
+					return err
+				}
 			}
 
-			if err := FormatExpression(output, joinedExpression); err != nil {
+			if err := s.formatExpression(output, joinedExpression); err != nil {
 				return err
 			}
 		}
@@ -422,132 +583,200 @@ func FormatExpression(output *strings.Builder, expression model.Expression) erro
 	case *model.Conjunction:
 		for idx, joinedExpression := range typedExpression.Expressions {
 			if idx > 0 {
-				output.WriteString(" and ")
+				if _, err := io.WriteString(output, " and "); err != nil {
+					return err
+				}
 			}
 
-			if err := FormatExpression(output, joinedExpression); err != nil {
+			if err := s.formatExpression(output, joinedExpression); err != nil {
 				return err
 			}
 		}
 
 	case *model.PartialComparison:
-		output.WriteString(" ")
-		output.WriteString(typedExpression.Operator.String())
-		output.WriteString(" ")
+		if _, err := io.WriteString(output, " "); err != nil {
+			return err
+		}
 
-		if err := FormatExpression(output, typedExpression.Right); err != nil {
+		if _, err := io.WriteString(output, typedExpression.Operator.String()); err != nil {
+			return err
+		}
+
+		if _, err := io.WriteString(output, " "); err != nil {
+			return err
+		}
+
+		if err := s.formatExpression(output, typedExpression.Right); err != nil {
 			return err
 		}
 
 	case *model.Comparison:
-		if err := FormatExpression(output, typedExpression.Left); err != nil {
+		if err := s.formatExpression(output, typedExpression.Left); err != nil {
 			return err
 		}
 
 		for _, nextPart := range typedExpression.Partials {
-			if err := FormatExpression(output, nextPart); err != nil {
+			if err := s.formatExpression(output, nextPart); err != nil {
 				return err
 			}
 		}
 
 	case *model.Properties:
 		if typedExpression.Map != nil {
-			if err := FormatMapLiteral(output, typedExpression.Map); err != nil {
+			if err := s.formatMapLiteral(output, typedExpression.Map); err != nil {
 				return err
 			}
-		} else if err := FormatExpression(output, typedExpression.Parameter); err != nil {
+		} else if err := s.formatExpression(output, typedExpression.Parameter); err != nil {
 			return err
 		}
 
 	case *model.Variable:
-		output.WriteString(typedExpression.Symbol)
-
-	case *model.Parameter:
-		output.WriteString("$")
-		output.WriteString(typedExpression.Symbol)
-
-	case *model.PropertyLookup:
-		if err := FormatExpression(output, typedExpression.Atom); err != nil {
+		if _, err := io.WriteString(output, typedExpression.Symbol); err != nil {
 			return err
 		}
 
-		output.WriteString(".")
-		output.WriteString(strings.Join(typedExpression.Symbols, "."))
-
-	case *model.FunctionInvocation:
-		output.WriteString(strings.Join(typedExpression.Namespace, "."))
-		output.WriteString(typedExpression.Name)
-		output.WriteString("(")
-
-		if typedExpression.Distinct {
-			output.WriteString("distinct")
+	case *model.Parameter:
+		if _, err := io.WriteString(output, "$"); err != nil {
+			return err
 		}
 
-		for idx, subExpression := range typedExpression.Arguments {
-			if idx > 0 {
-				output.WriteString(", ")
-			}
+		if _, err := io.WriteString(output, typedExpression.Symbol); err != nil {
+			return err
+		}
 
-			if err := FormatExpression(output, subExpression); err != nil {
+	case *model.PropertyLookup:
+		if err := s.formatExpression(output, typedExpression.Atom); err != nil {
+			return err
+		}
+
+		if _, err := io.WriteString(output, "."); err != nil {
+			return err
+		}
+
+		if _, err := io.WriteString(output, strings.Join(typedExpression.Symbols, ".")); err != nil {
+			return err
+		}
+
+	case *model.FunctionInvocation:
+		if _, err := io.WriteString(output, strings.Join(typedExpression.Namespace, ".")); err != nil {
+			return err
+		}
+
+		if _, err := io.WriteString(output, typedExpression.Name); err != nil {
+			return err
+		}
+
+		if _, err := io.WriteString(output, "("); err != nil {
+			return err
+		}
+
+		if typedExpression.Distinct {
+			if _, err := io.WriteString(output, "distinct"); err != nil {
 				return err
 			}
 		}
 
-		output.WriteString(")")
+		for idx, subExpression := range typedExpression.Arguments {
+			if idx > 0 {
+				if _, err := io.WriteString(output, ", "); err != nil {
+					return err
+				}
+			}
+
+			if err := s.formatExpression(output, subExpression); err != nil {
+				return err
+			}
+		}
+
+		if _, err := io.WriteString(output, ")"); err != nil {
+			return err
+		}
 
 	case graph.Kind:
-		output.WriteString(":")
-		output.WriteString(typedExpression.String())
+		if _, err := io.WriteString(output, ":"); err != nil {
+			return err
+		}
+
+		if _, err := io.WriteString(output, typedExpression.String()); err != nil {
+			return err
+		}
 
 	case graph.Kinds:
-		output.WriteString(":")
-		output.WriteString(strings.Join(typedExpression.Strings(), ":"))
+		if _, err := io.WriteString(output, ":"); err != nil {
+			return err
+		}
+
+		if err := writeJoinedKinds(output, ":", typedExpression); err != nil {
+			return err
+		}
 
 	case *model.KindMatcher:
-		if err := FormatExpression(output, typedExpression.Reference); err != nil {
+		if err := s.formatExpression(output, typedExpression.Reference); err != nil {
 			return err
 		}
 
 		for _, matcher := range typedExpression.Kinds {
-			output.WriteString(":")
-			output.WriteString(matcher.String())
+			if _, err := io.WriteString(output, ":"); err != nil {
+				return err
+			}
+
+			if _, err := io.WriteString(output, matcher.String()); err != nil {
+				return err
+			}
 		}
 
 	case *model.RangeQuantifier:
-		output.WriteString(typedExpression.Value)
+		if _, err := io.WriteString(output, typedExpression.Value); err != nil {
+			return err
+		}
 
 	case model.Operator:
-		output.WriteString(typedExpression.String())
+		if _, err := io.WriteString(output, typedExpression.String()); err != nil {
+			return err
+		}
 
 	case *model.Skip:
-		return FormatExpression(output, typedExpression.Value)
+		return s.formatExpression(output, typedExpression.Value)
 
 	case *model.Limit:
-		return FormatExpression(output, typedExpression.Value)
+		return s.formatExpression(output, typedExpression.Value)
 
 	case *model.Literal:
-		return FormatLiteral(output, typedExpression)
+		if !s.StripLiterals {
+			return s.formatLiteral(output, typedExpression)
+		} else {
+			_, err := io.WriteString(output, strippedLiteral)
+			return err
+		}
 
 	case []*model.PatternPart:
-		return FormatPattern(output, typedExpression)
+		return s.formatPattern(output, typedExpression)
 
 	case *model.ArithmeticExpression:
-		if err := FormatExpression(output, typedExpression.Left); err != nil {
+		if err := s.formatExpression(output, typedExpression.Left); err != nil {
 			return err
 		}
 
 		for _, part := range typedExpression.Partials {
-			if err := FormatExpression(output, part); err != nil {
+			if err := s.formatExpression(output, part); err != nil {
 				return err
 			}
 		}
 
 	case *model.PartialArithmeticExpression:
-		output.WriteString(" ")
-		output.WriteString(typedExpression.Operator.String())
-		output.WriteString(" ")
+		if _, err := io.WriteString(output, " "); err != nil {
+			return err
+		}
 
-		return FormatExpression(output, typedExpression.Right)
+		if _, err := io.WriteString(output, typedExpression.Operator.String()); err != nil {
+			return err
+		}
+
+		if _, err := io.WriteString(output, " "); err != nil {
+			return err
+		}
+
+		return s.formatExpression(output, typedExpression.Right)
 
 	default:
 		return fmt.Errorf("unexpected expression type for string formatting: %T", expression)
@@ -556,12 +785,16 @@ func FormatExpression(output *strings.Builder, expression model.Expression) erro
 	return nil
 }
 
-func FormatRemove(output *strings.Builder, remove *model.Remove) error {
-	output.WriteString("remove ")
+func (s CypherEmitter) formatRemove(output io.Writer, remove *model.Remove) error {
+	if _, err := io.WriteString(output, "remove "); err != nil {
+		return err
+	}
 
 	for idx, removeItem := range remove.Items {
 		if idx > 0 {
-			output.WriteString(", ")
+			if _, err := io.WriteString(output, ", "); err != nil {
+				return err
+			}
 		}
 
 		var expression model.Expression
@@ -574,7 +807,7 @@ func FormatRemove(output *strings.Builder, remove *model.Remove) error {
 			return fmt.Errorf("empty remove item")
 		}
 
-		if err := FormatExpression(output, expression); err != nil {
+		if err := s.formatExpression(output, expression); err != nil {
 			return err
 		}
 	}
@@ -582,27 +815,39 @@ func FormatRemove(output *strings.Builder, remove *model.Remove) error {
 	return nil
 }
 
-func FormatSet(output *strings.Builder, set *model.Set) error {
-	output.WriteString("set ")
+func (s CypherEmitter) formatSet(output io.Writer, set *model.Set) error {
+	if _, err := io.WriteString(output, "set "); err != nil {
+		return err
+	}
 
 	for idx, setItem := range set.Items {
 		if idx > 0 {
-			output.WriteString(", ")
+			if _, err := io.WriteString(output, ", "); err != nil {
+				return err
+			}
 		}
 
-		if err := FormatExpression(output, setItem.Left); err != nil {
+		if err := s.formatExpression(output, setItem.Left); err != nil {
 			return err
 		}
 
 		switch setItem.Operator {
 		case model.OperatorLabelAssignment:
 		default:
-			output.WriteString(" ")
-			output.WriteString(setItem.Operator.String())
-			output.WriteString(" ")
+			if _, err := io.WriteString(output, " "); err != nil {
+				return err
+			}
+
+			if _, err := io.WriteString(output, setItem.Operator.String()); err != nil {
+				return err
+			}
+
+			if _, err := io.WriteString(output, " "); err != nil {
+				return err
+			}
 		}
 
-		if err := FormatExpression(output, setItem.Right); err != nil {
+		if err := s.formatExpression(output, setItem.Right); err != nil {
 			return err
 		}
 	}
@@ -610,19 +855,23 @@ func FormatSet(output *strings.Builder, set *model.Set) error {
 	return nil
 }
 
-func FormatDelete(output *strings.Builder, delete *model.Delete) error {
+func (s CypherEmitter) formatDelete(output io.Writer, delete *model.Delete) error {
 	if delete.Detach {
-		output.WriteString("detach delete ")
-	} else {
-		output.WriteString("delete ")
+		if _, err := io.WriteString(output, "detach delete "); err != nil {
+			return err
+		}
+	} else if _, err := io.WriteString(output, "delete "); err != nil {
+		return err
 	}
 
 	for idx, expression := range delete.Expressions {
 		if idx > 0 {
-			output.WriteString(", ")
+			if _, err := io.WriteString(output, ", "); err != nil {
+				return err
+			}
 		}
 
-		if err := FormatExpression(output, expression); err != nil {
+		if err := s.formatExpression(output, expression); err != nil {
 			return err
 		}
 	}
@@ -630,13 +879,15 @@ func FormatDelete(output *strings.Builder, delete *model.Delete) error {
 	return nil
 }
 
-func FormatPattern(output *strings.Builder, pattern []*model.PatternPart) error {
+func (s CypherEmitter) formatPattern(output io.Writer, pattern []*model.PatternPart) error {
 	for idx, patternPart := range pattern {
 		if idx > 0 {
-			output.WriteString(", ")
+			if _, err := io.WriteString(output, ", "); err != nil {
+				return err
+			}
 		}
 
-		if err := FormatPatternPart(output, patternPart); err != nil {
+		if err := s.formatPatternPart(output, patternPart); err != nil {
 			return err
 		}
 	}
@@ -644,63 +895,76 @@ func FormatPattern(output *strings.Builder, pattern []*model.PatternPart) error 
 	return nil
 }
 
-func FormatCreate(output *strings.Builder, create *model.Create) error {
-	output.WriteString("create ")
-	return FormatPattern(output, create.Pattern)
+func (s CypherEmitter) formatCreate(output io.Writer, create *model.Create) error {
+	if _, err := io.WriteString(output, "create "); err != nil {
+		return err
+	}
+
+	return s.formatPattern(output, create.Pattern)
 }
 
-func FormatUpdatingClause(output *strings.Builder, updatingClause *model.UpdatingClause) error {
+func (s CypherEmitter) formatUpdatingClause(output io.Writer, updatingClause *model.UpdatingClause) error {
 	switch typedClause := updatingClause.Clause.(type) {
 	case *model.Create:
-		return FormatCreate(output, typedClause)
+		return s.formatCreate(output, typedClause)
 
 	case *model.Remove:
-		return FormatRemove(output, typedClause)
+		return s.formatRemove(output, typedClause)
 
 	case *model.Set:
-		return FormatSet(output, typedClause)
+		return s.formatSet(output, typedClause)
 
 	case *model.Delete:
-		return FormatDelete(output, typedClause)
+		return s.formatDelete(output, typedClause)
 
 	default:
 		return fmt.Errorf("unsupported updating clause type: %T", updatingClause)
 	}
 }
 
-func FormatReadingClause(output *strings.Builder, readingClause *model.ReadingClause) error {
+func (s CypherEmitter) formatReadingClause(output io.Writer, readingClause *model.ReadingClause) error {
 	if readingClause.Match != nil {
 		if readingClause.Match.Optional {
-			output.WriteString("optional ")
+			if _, err := io.WriteString(output, "optional "); err != nil {
+				return err
+			}
 		}
 
-		output.WriteString("match ")
+		if _, err := io.WriteString(output, "match "); err != nil {
+			return err
+		}
 
 		for idx, patternPart := range readingClause.Match.Pattern {
 			if idx > 0 {
-				output.WriteString(", ")
+				if _, err := io.WriteString(output, ", "); err != nil {
+					return err
+				}
 			}
 
-			if err := FormatPatternPart(output, patternPart); err != nil {
+			if err := s.formatPatternPart(output, patternPart); err != nil {
 				return err
 			}
 		}
 
 		if readingClause.Match.Where != nil {
-			if err := FormatWhere(output, readingClause.Match.Where); err != nil {
+			if err := s.formatWhere(output, readingClause.Match.Where); err != nil {
 				return err
 			}
 		}
 	} else if readingClause.Unwind != nil {
-		output.WriteString("unwind ")
-
-		if err := FormatExpression(output, readingClause.Unwind.Expression); err != nil {
+		if _, err := io.WriteString(output, "unwind "); err != nil {
 			return err
 		}
 
-		output.WriteString(" as ")
+		if err := s.formatExpression(output, readingClause.Unwind.Expression); err != nil {
+			return err
+		}
 
-		if err := FormatExpression(output, readingClause.Unwind.Binding); err != nil {
+		if _, err := io.WriteString(output, " as "); err != nil {
+			return err
+		}
+
+		if err := s.formatExpression(output, readingClause.Unwind.Binding); err != nil {
 			return err
 		}
 	} else {
@@ -710,49 +974,57 @@ func FormatReadingClause(output *strings.Builder, readingClause *model.ReadingCl
 	return nil
 }
 
-func FormatSinglePartQuery(output *strings.Builder, singlePartQuery *model.SinglePartQuery) error {
+func (s CypherEmitter) formatSinglePartQuery(output io.Writer, singlePartQuery *model.SinglePartQuery) error {
 	for idx, readingClause := range singlePartQuery.ReadingClauses {
 		if idx > 0 {
-			output.WriteString(" ")
+			if _, err := io.WriteString(output, " "); err != nil {
+				return err
+			}
 		}
 
-		if err := FormatReadingClause(output, readingClause); err != nil {
+		if err := s.formatReadingClause(output, readingClause); err != nil {
 			return err
 		}
 	}
 
 	if len(singlePartQuery.UpdatingClauses) > 0 {
 		if len(singlePartQuery.ReadingClauses) > 0 {
-			output.WriteString(" ")
+			if _, err := io.WriteString(output, " "); err != nil {
+				return err
+			}
 		}
 
 		for idx, updatingClause := range singlePartQuery.UpdatingClauses {
 			if idx > 0 {
-				output.WriteString(" ")
+				if _, err := io.WriteString(output, " "); err != nil {
+					return err
+				}
 			}
 
-			if err := FormatUpdatingClause(output, updatingClause); err != nil {
+			if err := s.formatUpdatingClause(output, updatingClause); err != nil {
 				return err
 			}
 		}
 	}
 
 	if singlePartQuery.Return != nil {
-		return FormatReturn(output, singlePartQuery.Return)
+		return s.formatReturn(output, singlePartQuery.Return)
 	}
 
 	return nil
 }
 
-func FormatWith(output *strings.Builder, with *model.With) error {
-	output.WriteString("with ")
+func (s CypherEmitter) formatWith(output io.Writer, with *model.With) error {
+	if _, err := io.WriteString(output, "with "); err != nil {
+		return err
+	}
 
-	if err := FormatProjection(output, with.Projection); err != nil {
+	if err := s.formatProjection(output, with.Projection); err != nil {
 		return err
 	}
 
 	if with.Where != nil {
-		if err := FormatWhere(output, with.Where); err != nil {
+		if err := s.formatWhere(output, with.Where); err != nil {
 			return err
 		}
 	}
@@ -760,7 +1032,7 @@ func FormatWith(output *strings.Builder, with *model.With) error {
 	return nil
 }
 
-func FormatMultiPartQuery(output *strings.Builder, multiPartQuery *model.MultiPartQuery) error {
+func (s CypherEmitter) formatMultiPartQuery(output io.Writer, multiPartQuery *model.MultiPartQuery) error {
 	for idx, multiPartQueryPart := range multiPartQuery.Parts {
 		var (
 			numReadingClauses  = len(multiPartQueryPart.ReadingClauses)
@@ -768,30 +1040,38 @@ func FormatMultiPartQuery(output *strings.Builder, multiPartQuery *model.MultiPa
 		)
 
 		if idx > 0 {
-			output.WriteString(" ")
+			if _, err := io.WriteString(output, " "); err != nil {
+				return err
+			}
 		}
 
 		for idx, readingClause := range multiPartQueryPart.ReadingClauses {
 			if idx > 0 {
-				output.WriteString(" ")
+				if _, err := io.WriteString(output, " "); err != nil {
+					return err
+				}
 			}
 
-			if err := FormatReadingClause(output, readingClause); err != nil {
+			if err := s.formatReadingClause(output, readingClause); err != nil {
 				return err
 			}
 		}
 
 		if len(multiPartQueryPart.UpdatingClauses) > 0 {
 			if numReadingClauses > 0 {
-				output.WriteString(" ")
+				if _, err := io.WriteString(output, " "); err != nil {
+					return err
+				}
 			}
 
 			for idx, updatingClause := range multiPartQueryPart.UpdatingClauses {
 				if idx > 0 {
-					output.WriteString(" ")
+					if _, err := io.WriteString(output, " "); err != nil {
+						return err
+					}
 				}
 
-				if err := FormatUpdatingClause(output, updatingClause); err != nil {
+				if err := s.formatUpdatingClause(output, updatingClause); err != nil {
 					return err
 				}
 			}
@@ -799,10 +1079,12 @@ func FormatMultiPartQuery(output *strings.Builder, multiPartQuery *model.MultiPa
 
 		if multiPartQueryPart.With != nil {
 			if numReadingClauses+numUpdatingClauses > 0 {
-				output.WriteString(" ")
+				if _, err := io.WriteString(output, " "); err != nil {
+					return err
+				}
 			}
 
-			if err := FormatWith(output, multiPartQueryPart.With); err != nil {
+			if err := s.formatWith(output, multiPartQueryPart.With); err != nil {
 				return err
 			}
 		}
@@ -810,31 +1092,31 @@ func FormatMultiPartQuery(output *strings.Builder, multiPartQuery *model.MultiPa
 
 	if multiPartQuery.SinglePartQuery != nil {
 		if len(multiPartQuery.Parts) > 0 {
-			output.WriteString(" ")
+			if _, err := io.WriteString(output, " "); err != nil {
+				return err
+			}
 		}
 
-		return FormatSinglePartQuery(output, multiPartQuery.SinglePartQuery)
+		return s.formatSinglePartQuery(output, multiPartQuery.SinglePartQuery)
 	}
 
 	return nil
 }
 
-func FormatRegularQuery(regularQuery *model.RegularQuery) (string, error) {
-	output := &strings.Builder{}
-
+func (s CypherEmitter) Write(regularQuery *model.RegularQuery, writer io.Writer) error {
 	if regularQuery.SingleQuery != nil {
 		if regularQuery.SingleQuery.MultiPartQuery != nil {
-			if err := FormatMultiPartQuery(output, regularQuery.SingleQuery.MultiPartQuery); err != nil {
-				return "", err
+			if err := s.formatMultiPartQuery(writer, regularQuery.SingleQuery.MultiPartQuery); err != nil {
+				return err
 			}
 		}
 
 		if regularQuery.SingleQuery.SinglePartQuery != nil {
-			if err := FormatSinglePartQuery(output, regularQuery.SingleQuery.SinglePartQuery); err != nil {
-				return "", err
+			if err := s.formatSinglePartQuery(writer, regularQuery.SingleQuery.SinglePartQuery); err != nil {
+				return err
 			}
 		}
 	}
 
-	return output.String(), nil
+	return nil
 }

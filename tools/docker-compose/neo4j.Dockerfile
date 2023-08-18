@@ -14,6 +14,6 @@
 # 
 # SPDX-License-Identifier: Apache-2.0
 
-FROM neo4j:4.4.0 as neo4j
+FROM docker.io/library/neo4j:4.4.0 as neo4j
 RUN echo "dbms.security.auth_enabled=false" >> /var/lib/neo4j/conf/neo4j.conf
 RUN neo4j-admin memrec >> /var/lib/neo4j/conf/neo4j.conf

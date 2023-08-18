@@ -328,7 +328,10 @@ def generate_license_header(comment_prefix: str) -> str:
     golang_header: str = ""
 
     for line in LICENSE_HEADER.split("\n"):
-        golang_header += comment_prefix + " " + line + "\n"
+        if line.strip() == "":
+            golang_header += comment_prefix + "\n"
+        else:
+            golang_header += comment_prefix + " " + line + "\n"
 
     return golang_header
 

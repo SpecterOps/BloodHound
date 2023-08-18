@@ -1,17 +1,17 @@
 // Copyright 2023 Specter Ops, Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// 
+//
 // SPDX-License-Identifier: Apache-2.0
 
 import { FC } from 'react';
@@ -36,8 +36,8 @@ const Abuse: FC<EdgeInfoProps> = ({ sourceName, sourceType, targetName }) => {
                 from the PowerView help documentation):
             </Typography>
             <Typography component={'pre'}>
-                {"$SecPassword = ConvertTo-SecureString 'Password123!' -AsPlainText -Force\n" +
-                    "$Cred = New-Object System.Management.Automation.PSCredential('TESTLAB\\dfm.a', $SecPassword)"}
+                {`$SecPassword = ConvertTo-SecureString 'Password123!' -AsPlainText -Force
+$Cred = New-Object System.Management.Automation.PSCredential('TESTLAB\\dfm.a', $SecPassword)`}
             </Typography>
             <Typography variant='body2'>
                 Then use the New-PSSession command with the credential we just created:
@@ -57,7 +57,8 @@ const Abuse: FC<EdgeInfoProps> = ({ sourceName, sourceType, targetName }) => {
                 Cleanup of the session is done with the Disconnect-PSSession and Remove-PSSession commands.
             </Typography>
             <Typography component={'pre'}>
-                {'Disconnect-PSSession -Session $session\n' + 'Remove-PSSession -Session $session'}
+                {`Disconnect-PSSession -Session $session
+Remove-PSSession -Session $session`}
             </Typography>
             <Typography variant='body2'>
                 An example of running through this cobalt strike for lateral movement is as follows:

@@ -1,24 +1,23 @@
 // Copyright 2023 Specter Ops, Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// 
+//
 // SPDX-License-Identifier: Apache-2.0
 
 package middleware
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -38,6 +37,11 @@ import (
 	"github.com/unrolled/secure"
 )
 
+const (
+	// Default timeout for any request is thirty seconds
+	defaultTimeout = 30 * time.Second
+)
+
 // Wrapper is an iterator for middleware function application that wraps around a http.Handler.
 type Wrapper struct {
 	middleware []mux.MiddlewareFunc
@@ -54,31 +58,16 @@ func (s *Wrapper) Use(middlewareFunc ...mux.MiddlewareFunc) {
 	s.middleware = append(s.middleware, middlewareFunc...)
 }
 
-var ErrorResponseContextDeadlineExceeded = "request took longer than the configured timeout"
-
 func (s *Wrapper) ServeHTTP(response http.ResponseWriter, request *http.Request) {
-	doneChannel := make(chan struct{})
+	handler := s.handler
 
-	go func(ctx context.Context) {
-		defer close(doneChannel)
-		handler := s.handler
-		for idx := len(s.middleware) - 1; idx >= 0; idx-- {
-			handler = s.middleware[idx](handler)
-		}
-
-		if errors.Is(ctx.Err(), context.DeadlineExceeded) {
-			return
-		}
-
-		handler.ServeHTTP(response, request)
-	}(request.Context())
-
-	select {
-	case <-request.Context().Done():
-		waitDuration, _ := requestWaitDuration(request, defaultTimeout)
-		api.WriteErrorResponse(context.Background(), api.BuildErrorResponse(http.StatusGatewayTimeout, fmt.Sprintf("%s: %v second(s)", ErrorResponseContextDeadlineExceeded, waitDuration.Seconds()), request), response)
-	case <-doneChannel:
+	// Wrap the handler in its middleware
+	for idx := len(s.middleware) - 1; idx >= 0; idx-- {
+		handler = s.middleware[idx](handler)
 	}
+
+	// Route the request
+	handler.ServeHTTP(response, request)
 }
 
 func getScheme(request *http.Request) string {
@@ -93,13 +82,23 @@ func getScheme(request *http.Request) string {
 	}
 }
 
-const (
-	// Default timeout for any request is thirty seconds
-	defaultTimeout = 30 * time.Second
+func requestWaitDuration(request *http.Request, defaultWaitDuration time.Duration) (ctx.RequestedWaitDuration, error) {
+	if preferValue := request.Header.Get(headers.Prefer.String()); len(preferValue) > 0 {
+		if requestedWaitDuration, err := parsePreferHeaderWait(preferValue, defaultWaitDuration); err != nil {
+			return ctx.RequestedWaitDuration{}, err
+		} else {
+			return ctx.RequestedWaitDuration{
+				Value:   requestedWaitDuration,
+				UserSet: true,
+			}, nil
+		}
+	}
 
-	// This is set to 1 minute since intermediate load balancers may terminate requests that sit longer than 1 minute
-	maximumTimeout = time.Minute
-)
+	return ctx.RequestedWaitDuration{
+		Value:   defaultWaitDuration,
+		UserSet: false,
+	}, nil
+}
 
 // ContextMiddleware is a middleware function that sets the BloodHound context per-request. It also sets the request ID.
 func ContextMiddleware(next http.Handler) http.Handler {
@@ -116,7 +115,7 @@ func ContextMiddleware(next http.Handler) http.Handler {
 			requestID = newUUID.String()
 		}
 
-		if waitDuration, err := requestWaitDuration(request, defaultTimeout); err != nil {
+		if requestedWaitDuration, err := requestWaitDuration(request, defaultTimeout); err != nil {
 			// If there is a failure or other expectation mismatch with the client, respond right away with the relevant
 			// error information
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("Prefer header has an invalid value: %v", err), request), response)
@@ -124,41 +123,27 @@ func ContextMiddleware(next http.Handler) http.Handler {
 			// Set the request ID and applied preferences headers
 			response.Header().Set(headers.RequestID.String(), requestID)
 			response.Header().Set(headers.StrictTransportSecurity.String(), utils.HSTSSetting)
-			response.Header().Set(headers.PreferenceApplied.String(), fmt.Sprintf("wait=%f", waitDuration.Seconds()))
+			response.Header().Set(headers.PreferenceApplied.String(), fmt.Sprintf("wait=%.2f", requestedWaitDuration.Value.Seconds()))
 
 			// Create a new context with the timeout
-			requestCtx, cancel := context.WithTimeout(request.Context(), waitDuration)
+			requestCtx, cancel := context.WithTimeout(request.Context(), requestedWaitDuration.Value)
 			defer cancel()
 
-			// Chain the request context with the BloodHound context and request ID
-			requestCtx = context.WithValue(
-				requestCtx,
-				ctx.ValueKey,
-				&ctx.Context{
-					StartTime: startTime,
-					RequestID: requestID,
-					Host: &url.URL{
-						Scheme: getScheme(request),
-						Host:   request.Host,
-					},
-				})
+			// Insert the bh context
+			requestCtx = ctx.Set(requestCtx, &ctx.Context{
+				StartTime: startTime,
+				Timeout:   requestedWaitDuration,
+				RequestID: requestID,
+				Host: &url.URL{
+					Scheme: getScheme(request),
+					Host:   request.Host,
+				},
+			})
 
+			// Route the request with the embedded context
 			next.ServeHTTP(response, request.WithContext(requestCtx))
 		}
 	})
-}
-
-func requestWaitDuration(request *http.Request, defaultWaitDuration time.Duration) (time.Duration, error) {
-	waitDuration := defaultWaitDuration
-	if preferValue := request.Header.Get(headers.Prefer.String()); len(preferValue) > 0 {
-		if requestedWaitDuration, err := parsePreferHeaderWait(preferValue, defaultWaitDuration); err != nil {
-			return 0, err
-		} else if requestedWaitDuration <= maximumTimeout {
-			waitDuration = requestedWaitDuration
-		}
-	}
-
-	return waitDuration, nil
 }
 
 func ParseHeaderValues(values string) map[string]string {

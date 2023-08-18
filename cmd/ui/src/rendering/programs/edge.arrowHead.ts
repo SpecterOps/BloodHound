@@ -1,17 +1,17 @@
 // Copyright 2023 Specter Ops, Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// 
+//
 // SPDX-License-Identifier: Apache-2.0
 
 /**
@@ -22,12 +22,14 @@
  * This is pulled directly from Sigma, we are just using different shaders
  * @module
  */
-import { EdgeDisplayData, NodeDisplayData } from 'sigma/types';
-import { floatColor } from 'sigma/utils';
-import { vertexShaderSource } from '../shaders/edge.arrowHead.vert';
-import { fragmentShaderSource } from '../shaders/edge.arrowHead.frag';
 import { AbstractEdgeProgram } from 'sigma/rendering/webgl/programs/common/edge';
 import { RenderParams } from 'sigma/rendering/webgl/programs/common/program';
+import { NodeDisplayData } from 'sigma/types';
+import { floatColor } from 'sigma/utils';
+import { CurvedEdgeDisplayData } from 'src/rendering/programs/edge.curvedArrow';
+import { fragmentShaderSource } from 'src/rendering/shaders/edge.arrowHead.frag';
+import { vertexShaderSource } from 'src/rendering/shaders/edge.arrowHead.vert';
+import { getNodeRadius } from 'src/rendering/utils/utils';
 
 const POINTS = 3,
     ATTRIBUTES = 9,
@@ -126,7 +128,7 @@ export default class EdgeArrowHeadProgram extends AbstractEdgeProgram {
     process(
         sourceData: NodeDisplayData,
         targetData: NodeDisplayData,
-        data: EdgeDisplayData,
+        data: CurvedEdgeDisplayData,
         hidden: boolean,
         offset: number
     ): void {
@@ -136,13 +138,14 @@ export default class EdgeArrowHeadProgram extends AbstractEdgeProgram {
             return;
         }
 
+        const inverseSqrtZoomRatio = data.inverseSqrtZoomRatio || 1;
         const thickness = data.size || 1,
-            radius = targetData.size || 1,
             x1 = sourceData.x,
             y1 = sourceData.y,
             x2 = targetData.x,
             y2 = targetData.y,
             color = floatColor(data.color);
+        const radius = getNodeRadius(targetData.highlighted, inverseSqrtZoomRatio, targetData.size);
 
         // Computing normals
         const dx = x2 - x1,

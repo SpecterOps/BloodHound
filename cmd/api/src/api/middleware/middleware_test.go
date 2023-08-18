@@ -1,17 +1,17 @@
 // Copyright 2023 Specter Ops, Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// 
+//
 // SPDX-License-Identifier: Apache-2.0
 
 package middleware_test
@@ -24,41 +24,13 @@ import (
 	"testing"
 	"time"
 
-	"github.com/specterops/bloodhound/src/api"
-	"github.com/stretchr/testify/require"
 	"github.com/specterops/bloodhound/headers"
 	"github.com/specterops/bloodhound/mediatypes"
+	"github.com/specterops/bloodhound/src/api"
+	"github.com/stretchr/testify/require"
 
 	"github.com/specterops/bloodhound/src/api/middleware"
 )
-
-func TestServeHTTP_ContextTimeout(t *testing.T) {
-	handlerResponse := "success"
-	handlerFunc := http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
-		time.Sleep(2 * time.Second)
-		api.WriteBasicResponse(request.Context(), handlerResponse, http.StatusOK, response)
-	})
-	wrapper := middleware.NewWrapper(handlerFunc)
-
-	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
-	defer cancel()
-	req, err := http.NewRequestWithContext(ctx, "GET", "foo/bar", nil)
-	require.Nil(t, err)
-
-	req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
-	response := httptest.NewRecorder()
-
-	wrapper.ServeHTTP(response, req)
-
-	// simulate the goroutine continuing to work after context timeout.
-	time.Sleep(2 * time.Second)
-
-	require.Equal(t, http.StatusGatewayTimeout, response.Code)
-	require.Contains(t, response.Body.String(), middleware.ErrorResponseContextDeadlineExceeded)
-
-	// The response structure must only contain the context timeout body, not the handler response body
-	require.NotContains(t, response.Body.String(), handlerResponse)
-}
 
 func TestServeHTTP_Success(t *testing.T) {
 	handlerFunc := http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {

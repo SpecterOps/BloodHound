@@ -1,17 +1,17 @@
 // Copyright 2023 Specter Ops, Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// 
+//
 // SPDX-License-Identifier: Apache-2.0
 
 package ctx
@@ -32,9 +32,15 @@ type CtxKey string
 
 const ValueKey = CtxKey("ctx.bhe")
 
+type RequestedWaitDuration struct {
+	Value   time.Duration
+	UserSet bool
+}
+
 // Context holds contextual data that is passed around to functions. This is an extension to Golang's built in context.
 type Context struct {
 	StartTime time.Time
+	Timeout   RequestedWaitDuration
 	RequestID string
 	AuthCtx   auth.Context
 	Host      *url.URL
@@ -77,6 +83,11 @@ func Get(ctx context.Context) *Context {
 	} else {
 		return bhCtx
 	}
+}
+
+// Set takes the given golang context and stores the given bh context struct inside it using a well known key
+func Set(ctx context.Context, bhCtx *Context) context.Context {
+	return context.WithValue(ctx, ValueKey, bhCtx)
 }
 
 // RequestID returns the request ID of the HTTP request

@@ -405,9 +405,9 @@ Usage:
 $ yarn cool-tools [tool args/flags]
 ```
 
-## Versioning
+## Releases and Versioning
 
-The BloodHound Community Edition version specification follows [Semantic Versioning (semver)](semver.org) prefixed with the rune `'v'`.
+The BloodHound Community Edition version specification follows [Semantic Versioning (semver)](https://semver.org) prefixed with the rune `'v'`.
 
 > Given a version number MAJOR.MINOR.PATCH, increments will happen with:
 >
@@ -416,6 +416,14 @@ The BloodHound Community Edition version specification follows [Semantic Version
 > PATCH version for backwards compatible bug fixes.
 >
 > Additional labels for pre-release and build metadata are available as extensions to the MAJOR.MINOR.PATCH format.
+
+The BloodHound product family will utilize consistent versioning across all products, and some version numbers may only 
+release to a single product within the family. Bloodhound may therefore skip version numbers through releases to maintain 
+said consistency and bring it in lockstep with other product version numbers.
+
+All releases will be announced in the 
+[BloodHound Slack workspace.](https://join.slack.com/t/bloodhoundhq/shared_invite/zt-1tgq6ojd2-ixpx5nz9Wjtbhc3i8AVAWw)
+
 
 ## Adding Database Migrations
 
