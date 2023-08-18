@@ -95,19 +95,19 @@ go-lint:
 
 # run docker compose commands for the BH dev profile (Default: up)
 bh-dev *ARGS='up':
-  @docker compose --profile dev {{ARGS}}
+  @docker compose --profile dev -f docker-compose.dev.yml {{ARGS}}
 
 # run docker compose commands for the BH debug profile (Default: up)
 bh-debug *ARGS='up':
-  @docker compose --profile debug-api {{ARGS}}
+  @docker compose --profile debug-api -f docker-compose.dev.yml {{ARGS}}
 
 # run docker compose commands for the BH api-only profile (Default: up)
 bh-api-only *ARGS='up':
-  @docker compose --profile api-only {{ARGS}}
+  @docker compose --profile api-only -f docker-compose.dev.yml {{ARGS}}
 
 # run docker compose commands for the BH ui-only profile (Default: up)
 bh-ui-only *ARGS='up':
-  @docker compose --profile ui-only {{ARGS}}
+  @docker compose --profile ui-only -f docker-compose.dev.yml {{ARGS}}
 
 # run docker compose commands for the BH testing databases (Default: up)
 bh-testing *ARGS='up -d':
@@ -119,11 +119,11 @@ bh-testing-clear-volumes *ARGS='':
 
 # clear BH docker compose volumes (pass --remove-orphans if troubleshooting)
 bh-clear-volumes *ARGS='':
-  @docker compose down -v {{ARGS}}
+  @docker compose -f docker-compose.dev.yml down -v {{ARGS}}
 
 # build BH target cleanly (default profile dev with --no-cache flag)
 bh-clean-docker-build target='dev' *ARGS='':
-  @docker compose --profile {{target}} build --no-cache {{ARGS}}
+  @docker compose --profile {{target}} -f docker-compose.dev.yml build --no-cache {{ARGS}}
 
 # build local BHCE container image (ex: just build-bhce-container <linux/arm64|linux/amd64> edge v5.0.0)
 build-bhce-container platform='linux/amd64' tag='edge' version='v5.0.0' *ARGS='':
