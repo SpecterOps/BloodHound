@@ -90,22 +90,24 @@ service as additional list items for the `environment` parameter (follow the way
 
 ### Q: "How can I access the databases directly (especially Neo4j's browser)?"
 
-  A: Port forwarding is commented out by default for the databases due to a default password being used. If you change your
-  database passwords, you can easily uncomment the lines in `docker-compose.yml` to provide port forwarded access.
+A: Port forwarding is commented out by default for the databases due to a default password being used. If you change your
+database passwords, you can easily uncomment the lines in `docker-compose.yml` to provide port forwarded access.
 ### Q: "Can I run these services in the background?"
 
-  A: Absolutely, simply run `docker compose up -d` to start the services up in the background. To access the logs, you can
-  use `docker compose logs -f` to open the logs in follow mode (ignore the -f if you just want the logs as of that moment in time).
-  To stop the services, use `docker compose down`.
+A: Absolutely, simply run `docker compose up -d` to start the services up in the background. To access the logs, you can
+use `docker compose logs -f` to open the logs in follow mode (ignore the -f if you just want the logs as of that moment in time).
+To stop the services, use `docker compose down`.
+
 ### Q: "My databases persist between runs, how can I fully reset them?"
 
-  A: You can clear out all volumes by using `docker compose down --volumes`. This will lead to both databases being reset
-  the next time you run `docker compose up`. Docker Compose does not expose an easy way to reset only one volume, so deleting
-  a single volume is left as an exercise for the reader (you'll need to look at removing directly through Docker with
-  `docker volume rm` or using the Docker Desktop GUI)
+A: You can clear out all volumes by using `docker compose down --volumes`. This will lead to both databases being reset
+the next time you run `docker compose up`. Docker Compose does not expose an easy way to reset only one volume, so deleting
+a single volume is left as an exercise for the reader (you'll need to look at removing directly through Docker with
+`docker volume rm` or using the Docker Desktop GUI)
+
 ### Q: "Restarting the application requires logging in again, why?"
 
-  A: By default, we generate a secure random 256-bit key for JWT signing. Because this happens on every server restart,
-  any existing sessions will be invalidated. If you need sessions to survive a server restart, there is a configuration
-  value available that will allow you to specify your own `base64` encoded 256-bit key. It is recommended that you configure
-  this when running Bloodhound on a standalone server, alongside other security configurations.
+A: By default, we generate a secure random 256-bit key for JWT signing. Because this happens on every server restart,
+any existing sessions will be invalidated. If you need sessions to survive a server restart, there is a configuration
+value available that will allow you to specify your own `base64` encoded 256-bit key. It is recommended that you configure
+this when running Bloodhound on a standalone server, alongside other security configurations.
