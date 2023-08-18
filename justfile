@@ -18,6 +18,7 @@ init:
   echo "Make local copies of configuration files"
   if [[ -d "./local-harnesses/build.config.json" ]]; then
     rm -rf "./local-harnesses/build.config.json"
+    cp ./local-harnesses/build.config.json.template ./local-harnesses/build.config.json
   elif [[ -f "./local-harnesses/build.config.json" ]]; then
     echo "Not copying build.config.json since it already exists"
   else \
@@ -26,6 +27,7 @@ init:
 
   if [[ -d "./local-harnesses/integration.config.json" ]]; then
     rm -rf "./local-harnesses/integration.config.json"
+    cp ./local-harnesses/integration.config.json.template ./local-harnesses/integration.config.json
   elif [[ -f "./local-harnesses/integration.config.json" ]]; then
     echo "Not copying integration.config.json since it already exists"
   else \
