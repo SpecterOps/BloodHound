@@ -14,11 +14,26 @@ set positional-arguments
 
 # Initialize your dev environment (clone templates to local)
 init:
-  # Copy configuration files for easy access
-  @cp local-harnesses/build.config.json.template local-harnesses/build.config.json
-  @cp local-harnesses/integration.config.json.template local-harnesses/integration.config.json
-  # Install additional Go tools
-  @go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.52.2
+  #!/usr/bin/env bash
+  echo "Make local copies of configuration files"
+  if [[ -d "./local-harnesses/build.config.json" ]]; then
+    rm -rf "./local-harnesses/build.config.json"
+  elif [[ -f "./local-harnesses/build.config.json" ]]; then
+    echo "Not copying build.config.json since it already exists"
+  else \
+    cp ./local-harnesses/build.config.json.template ./local-harnesses/build.config.json
+  fi
+
+  if [[ -d "./local-harnesses/integration.config.json" ]]; then
+    rm -rf "./local-harnesses/integration.config.json"
+  elif [[ -f "./local-harnesses/integration.config.json" ]]; then
+    echo "Not copying integration.config.json since it already exists"
+  else \
+    cp ./local-harnesses/integration.config.json.template ./local-harnesses/integration.config.json
+  fi
+
+  echo "Install additional Go tools"
+  go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.52.2
 
 # Show available targets for this context.
 show *FLAGS:
