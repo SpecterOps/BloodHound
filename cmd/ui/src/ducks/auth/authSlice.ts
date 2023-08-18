@@ -16,7 +16,7 @@
 
 import { createAsyncThunk, createSelector, createSlice } from '@reduxjs/toolkit';
 import { DateTime } from 'luxon';
-import apiClient from 'src/api';
+import { apiClient } from 'bh-shared-ui';
 import type { AppDispatch, AppState } from 'src/store';
 import { addSnackbar } from '../global/actions';
 import * as types from './types';

@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { RequestOptions } from 'js-client-library';
-import apiClient from 'src/api';
+import { apiClient } from 'bh-shared-ui';
 import { GraphNodeTypes } from 'src/ducks/graph/types';
 import { ActiveDirectoryKind, AzureKind } from 'bh-shared-ui';
 import { EntityInfoDataTableProps } from './EntityInfoDataTable';

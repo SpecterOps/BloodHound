@@ -16,7 +16,7 @@
 
 import { RequestOptions } from 'js-client-library';
 import { useMutation, useQuery, useQueryClient } from 'react-query';
-import apiClient from 'src/api';
+import { apiClient } from 'bh-shared-ui';
 import { addSnackbar } from 'src/ducks/global/actions';
 import { useAppDispatch } from 'src/store';
 

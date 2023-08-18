@@ -14,9 +14,13 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import BHEAPIClient from './client';
-
-export * from './types';
-export * from './responses';
-
-export default BHEAPIClient;
+export const getUsername = (user: any): string | undefined => {
+    if (user?.first_name && user?.last_name) {
+        return `${user.first_name} ${user.last_name}`;
+    } else if (user?.first_name) {
+        return user.first_name;
+    } else if (user?.principal_name) {
+        return user.principal_name;
+    }
+    return undefined;
+};

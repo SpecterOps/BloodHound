@@ -16,7 +16,7 @@
 
 import { useQuery } from 'react-query';
 import { DateTime } from 'luxon';
-import apiClient from 'src/api';
+import { apiClient } from 'bh-shared-ui';
 import { ActiveDirectoryDataQualityResponse, AzureDataQualityResponse } from './types';
 
 const now = DateTime.now();

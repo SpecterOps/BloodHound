@@ -14,9 +14,16 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import BHEAPIClient from './client';
+export const passwordRegex = new RegExp('^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[^\\w\\s])(?=.{12,})', 'u');
 
-export * from './types';
-export * from './responses';
+export const testPassword = (s: string): boolean => {
+    return passwordRegex.test(s);
+};
 
-export default BHEAPIClient;
+export const PASSWD_REQS = [
+    'must have at least 12 characters',
+    'must have at least one lowercase',
+    'must have at least one uppercase',
+    'must have at least one number',
+    'must have at least one of (!@#$%^&*)',
+];

@@ -14,9 +14,11 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import BHEAPIClient from './client';
+import { OptionsObject } from 'notistack';
 
-export * from './types';
-export * from './responses';
-
-export default BHEAPIClient;
+export interface Notification {
+    message: string;
+    key: string;
+    dismissed: boolean;
+    options: OptionsObject;
+}

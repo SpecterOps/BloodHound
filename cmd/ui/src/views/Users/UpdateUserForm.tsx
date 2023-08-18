@@ -32,7 +32,7 @@ import {
 import React from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { useQuery } from 'react-query';
-import apiClient from 'src/api';
+import { apiClient } from 'bh-shared-ui';
 import { UpdatedUser } from 'src/ducks/auth/types';
 
 const UpdateUserForm: React.FC<{

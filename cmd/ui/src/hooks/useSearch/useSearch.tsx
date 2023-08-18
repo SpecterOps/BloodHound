@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { useQuery } from 'react-query';
-import apiClient from 'src/api';
+import { apiClient } from 'bh-shared-ui';
 import { ActiveDirectoryNodeKind, AzureNodeKind } from 'bh-shared-ui';
 import { validateNodeType } from 'src/utils';
 

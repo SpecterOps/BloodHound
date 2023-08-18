@@ -18,7 +18,7 @@ import { Box, Button } from '@mui/material';
 import { ContentPage, FileForIngest, FileStatus, FileUploadDialog, FinishedIngestLog } from 'bh-shared-ui';
 import { useEffect, useState } from 'react';
 import useToggle from 'src/hooks/useToggle';
-import apiClient from 'src/api';
+import { apiClient } from 'bh-shared-ui';
 import { useAppDispatch } from 'src/store';
 import { addSnackbar } from 'src/ducks/global/actions';
 import { useQuery } from 'react-query';

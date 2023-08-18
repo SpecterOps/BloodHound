@@ -16,7 +16,7 @@
 
 import { RequestOptions } from 'js-client-library';
 import { useQuery } from 'react-query';
-import apiClient from 'src/api';
+import { apiClient } from 'bh-shared-ui';
 
 export type CollectorType = 'sharphound' | 'azurehound';
 

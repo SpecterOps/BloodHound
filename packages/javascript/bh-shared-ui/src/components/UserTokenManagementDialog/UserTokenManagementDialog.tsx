@@ -1,17 +1,17 @@
 // Copyright 2023 Specter Ops, Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// 
+//
 // SPDX-License-Identifier: Apache-2.0
 
 import {
@@ -33,14 +33,12 @@ import makeStyles from '@mui/styles/makeStyles';
 import { DateTime } from 'luxon';
 import React, { useState } from 'react';
 import { useQuery } from 'react-query';
-import apiClient from 'src/api';
-import { LuxonFormat } from 'bh-shared-ui';
-import { AuthToken, NewUserToken } from 'src/ducks/auth/types';
-import { addSnackbar } from 'src/ducks/global/actions';
-import { useAppDispatch } from 'src/store';
+import { AuthToken, NewAuthToken } from 'js-client-library';
+import { LuxonFormat, apiClient } from '../../utils';
+import { useNotifications } from '../../providers';
 import CreateUserTokenDialog from './CreateUserTokenDialog';
-import TokenRevokeDialog from './TokenRevokeDialog';
 import UserTokenDialog from './UserTokenDialog';
+import TokenRevokeDialog from './TokenRevokeDialog';
 
 const useStyles = makeStyles({
     revokeButton: {
@@ -65,12 +63,13 @@ const UserTokenManagementDialog: React.FC<{
         }
     );
 
-    const dispatch = useAppDispatch();
+    const { addNotification } = useNotifications();
+
     const styles = useStyles();
 
     const [newTokenDialogOpen, setNewTokenDialogOpen] = useState<boolean>(false);
     const [tokenDialogOpen, setTokenDialogOpen] = useState<boolean>(false);
-    const [currentToken, setCurrentToken] = useState<AuthToken | null>(null);
+    const [currentToken, setCurrentToken] = useState<AuthToken | NewAuthToken | undefined>(undefined);
     const [tokenRevokeDialogOpen, setTokenRevokeDialogOpen] = useState<boolean>(false);
 
     const openRevokeTokenDialog = (token: AuthToken) => {
@@ -84,30 +83,31 @@ const UserTokenManagementDialog: React.FC<{
             await apiClient.deleteUserToken(currentToken.id);
         } catch (error) {
             console.error(error);
-            dispatch(addSnackbar(`Error deleting token: ${error}:`, 'ErrorDeleteToken'));
+            addNotification(`Error deleting token: ${error}:`, 'ErrorDeleteToken');
         }
 
         await refetch();
         clearToken();
     };
 
-    const handleNewTokenSubmit = async (newToken: NewUserToken) => {
+    const handleNewTokenSubmit = async (newToken: { token_name: string }) => {
         setNewTokenDialogOpen(false);
         try {
-            const data = await apiClient.createUserToken(userId, newToken.token_name);
-            const token = data.data.data as AuthToken;
+            const {
+                data: { data: token },
+            } = await apiClient.createUserToken(userId, newToken.token_name);
             setCurrentToken(token);
             setTokenDialogOpen(true);
         } catch (error) {
             console.error(error);
-            dispatch(addSnackbar(`Error creating token: ${error}:`, 'ErrorCreateToken'));
+            addNotification(`Error creating token: ${error}:`, 'ErrorCreateToken');
         }
 
         await refetch();
     };
 
     const clearToken = () => {
-        setCurrentToken(null);
+        setCurrentToken(undefined);
         setTokenDialogOpen(false);
         setTokenRevokeDialogOpen(false);
     };
@@ -130,7 +130,7 @@ const UserTokenManagementDialog: React.FC<{
                 </TableRow>
             );
         } else {
-            const tokens = data?.data?.data.tokens as AuthToken[];
+            const tokens = data?.data.data.tokens || [];
             if (tokens.length === 0) {
                 return (
                     <TableRow>
@@ -218,7 +218,9 @@ const UserTokenManagementDialog: React.FC<{
                     onSubmit={handleNewTokenSubmit}
                 />
             )}
-            {tokenDialogOpen && <UserTokenDialog open={tokenDialogOpen} onClose={clearToken} token={currentToken} />}
+            {tokenDialogOpen && (
+                <UserTokenDialog open={tokenDialogOpen} onClose={clearToken} token={currentToken as NewAuthToken} />
+            )}
             {tokenRevokeDialogOpen && (
                 <TokenRevokeDialog
                     open={tokenRevokeDialogOpen}

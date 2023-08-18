@@ -31,7 +31,7 @@ import {
 } from '@mui/material';
 import React, { useState } from 'react';
 import { useQuery } from 'react-query';
-import apiClient from 'src/api';
+import { apiClient } from 'bh-shared-ui';
 import { Domain } from 'src/ducks/global/types';
 
 const DataSelector: React.FC<{

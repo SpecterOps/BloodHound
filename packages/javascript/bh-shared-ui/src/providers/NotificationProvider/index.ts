@@ -14,9 +14,6 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import BHEAPIClient from './client';
-
-export * from './types';
-export * from './responses';
-
-export default BHEAPIClient;
+export * from './hooks';
+export * from './model';
+export { default as NotificationsProvider } from './NotificationsProvider';

@@ -14,9 +14,5 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import BHEAPIClient from './client';
-
-export * from './types';
-export * from './responses';
-
-export default BHEAPIClient;
+export * from './PasswordDialog';
+export { default } from './PasswordDialog';

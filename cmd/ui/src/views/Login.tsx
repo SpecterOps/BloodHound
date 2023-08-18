@@ -20,7 +20,7 @@ import LoginForm from 'src/components/LoginForm';
 import LoginViaSAMLForm from 'src/components/LoginViaSAMLForm';
 import LoginPage from 'src/components/LoginPage';
 import { useQuery } from 'react-query';
-import apiClient from 'src/api';
+import { apiClient } from 'bh-shared-ui';
 import { Box, CircularProgress } from '@mui/material';
 import { OneTimePasscodeForm } from 'bh-shared-ui';
 import { useSelector } from 'react-redux';
