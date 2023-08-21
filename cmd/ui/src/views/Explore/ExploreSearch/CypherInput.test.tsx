@@ -14,11 +14,9 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { act, fireEvent, render, screen } from 'src/test-utils';
+import { act, render, screen } from 'src/test-utils';
 import CypherInput from './CypherInput';
 import userEvent from '@testing-library/user-event';
-import * as actions from 'src/ducks/searchbar/actions';
-import { CommonSearches as commonSearchesList } from 'bh-shared-ui';
 
 describe('CypherInput', () => {
     beforeEach(async () => {
@@ -43,52 +41,5 @@ describe('CypherInput', () => {
 
         await user.click(menu);
         expect(prebuiltSearches).toBeVisible();
-    });
-
-    it.skip('when a user selects a common search, the cypher text area gets populated with the selected query', async () => {
-        const commonQueryFindAllDomainAdmins = commonSearchesList[0].queries[0];
-        const { description, cypher } = commonQueryFindAllDomainAdmins;
-
-        const menu = screen.getByRole('button', { name: /folder-open/i });
-        await user.click(menu);
-
-        const firstQueryInList = screen.getByText(description);
-        await user.click(firstQueryInList);
-
-        const cypherInput = screen.getByText(cypher);
-        expect(cypherInput).toBeInTheDocument();
-        // expect(cypherInput).toHaveValue(cypher);
-        // expect(cypher).toBeInTheDocument();
-    });
-
-    it.skip('a cypher search is executed when the user clicks the search button', async () => {
-        vi.spyOn(actions, 'startCypherSearch');
-
-        const cypherInput = screen.getByText(/cypher search/i);
-        const userSuppliedCypherQuery = 'match (u:User) return u;';
-        await user.type(cypherInput, userSuppliedCypherQuery);
-
-        expect(cypherInput).toHaveTextContent(userSuppliedCypherQuery);
-
-        const searchButton = screen.getByRole('button', { name: /search/i });
-        await user.click(searchButton);
-
-        expect(actions.startCypherSearch).toHaveBeenCalledTimes(1);
-        expect(actions.startCypherSearch).toHaveBeenCalledWith(userSuppliedCypherQuery);
-    });
-
-    it.skip('a cypher search is executed when the user presses shift+enter in the text area', async () => {
-        vi.spyOn(actions, 'startCypherSearch');
-
-        const cypherInput = screen.getByPlaceholderText(/cypher search/i);
-        const userSuppliedCypherQuery = 'match (u:User) return u;';
-        await user.type(cypherInput, userSuppliedCypherQuery);
-
-        expect(cypherInput).toHaveTextContent(userSuppliedCypherQuery);
-
-        await fireEvent.keyDown(cypherInput, { key: 'Enter', shiftKey: true });
-
-        expect(actions.startCypherSearch).toHaveBeenCalledTimes(1);
-        expect(actions.startCypherSearch).toHaveBeenCalledWith(userSuppliedCypherQuery);
     });
 });
