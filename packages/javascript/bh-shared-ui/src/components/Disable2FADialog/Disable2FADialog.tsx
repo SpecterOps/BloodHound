@@ -28,7 +28,13 @@ const Disable2FADialog: React.FC<{
     const [secret, setSecret] = useState('');
 
     const handleOnClose = () => {
+        setSecret('');
         onClose();
+    };
+
+    const handleOnCancel = () => {
+        setSecret('');
+        onCancel();
     };
 
     const handleOnSave: React.FormEventHandler = (e) => {
@@ -63,7 +69,7 @@ const Disable2FADialog: React.FC<{
                     />
                 </DialogContent>
                 <DialogActions>
-                    <Button color='inherit' onClick={onCancel}>
+                    <Button color='inherit' onClick={handleOnCancel}>
                         Cancel
                     </Button>
                     <Button color='primary' type='submit'>
