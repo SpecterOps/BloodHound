@@ -438,4 +438,7 @@ dist
 **/__pycache__
 **/.mypy_cache
 
-local-harnesses/*.config.json
+local-harnesses/*
+!local-harnesses/README.md
+!local-harnesses/collectors
+!local-harnesses/*.template
