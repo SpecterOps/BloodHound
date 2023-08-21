@@ -56,6 +56,10 @@ const useStyles = makeStyles((theme) => ({
         backgroundColor: 'white',
         paddingTop: '5px',
         minHeight: '120px',
+        // enables drag n drop resizing of editor
+        resize: 'vertical',
+        maxHeight: '500px',
+        overflow: 'auto',
     },
 }));
 
