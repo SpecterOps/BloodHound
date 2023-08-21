@@ -15,18 +15,18 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { useSigma } from '@react-sigma/core';
+import { setEdgeInfoOpen, setSelectedEdge } from 'bh-shared-ui';
 import { FC, useCallback } from 'react';
 import { useSelector } from 'react-redux';
-import { setEdgeInfoOpen, setSelectedEdge } from 'src/ducks/edgeinfo/edgeSlice';
 import { setEntityInfoOpen } from 'src/ducks/entityinfo/actions';
-import { bezier } from 'src/rendering/utils/bezier';
-import { AppState, useAppDispatch } from 'src/store';
 import {
-    getEdgeLabelTextLength,
     calculateEdgeDistanceForLabel,
     getEdgeDataFromKey,
+    getEdgeLabelTextLength,
     getEdgeSourceAndTargetDisplayData,
 } from 'src/ducks/graph/utils';
+import { bezier } from 'src/rendering/utils/bezier';
+import { AppState, useAppDispatch } from 'src/store';
 
 const GraphEdgeEvents: FC = () => {
     const dispatch = useAppDispatch();

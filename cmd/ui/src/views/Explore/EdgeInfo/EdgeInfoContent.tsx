@@ -15,13 +15,12 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Box, Divider, Typography, useTheme } from '@mui/material';
-import { EdgeInfoComponents } from 'bh-shared-ui';
-import React from 'react';
-import { EdgeSections, SelectedEdge } from 'src/ducks/edgeinfo/edgeSlice';
+import { EdgeInfoComponents, EdgeSections, SelectedEdge } from 'bh-shared-ui';
+import { FC, Fragment } from 'react';
 import EdgeInfoCollapsibleSection from 'src/views/Explore/EdgeInfo/EdgeInfoCollapsibleSection';
 import EdgeObjectInformation from 'src/views/Explore/EdgeInfo/EdgeObjectInformation';
 
-const EdgeInfoContent: React.FC<{ selectedEdge: NonNullable<SelectedEdge> }> = ({ selectedEdge }) => {
+const EdgeInfoContent: FC<{ selectedEdge: NonNullable<SelectedEdge> }> = ({ selectedEdge }) => {
     const theme = useTheme();
 
     const sections = EdgeInfoComponents[selectedEdge.name as keyof typeof EdgeInfoComponents];
@@ -35,7 +34,7 @@ const EdgeInfoContent: React.FC<{ selectedEdge: NonNullable<SelectedEdge> }> = (
                     {Object.entries(sections).map((section, index) => {
                         const Section = section[1];
                         return (
-                            <React.Fragment key={index}>
+                            <Fragment key={index}>
                                 <Box padding={1}>
                                     <Divider />
                                 </Box>
@@ -49,7 +48,7 @@ const EdgeInfoContent: React.FC<{ selectedEdge: NonNullable<SelectedEdge> }> = (
                                         haslaps={!!targetNode.data.haslaps}
                                     />
                                 </EdgeInfoCollapsibleSection>
-                            </React.Fragment>
+                            </Fragment>
                         );
                     })}
                 </>

@@ -15,10 +15,10 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { useRegisterEvents, useSetSettings, useSigma } from '@react-sigma/core';
+import { setSelectedEdge } from 'bh-shared-ui';
 import { AbstractGraph, Attributes } from 'graphology-types';
 import { FC, useEffect, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { setSelectedEdge } from 'src/ducks/edgeinfo/edgeSlice';
 import { getEdgeDataFromKey, getEdgeSourceAndTargetDisplayData, resetCamera } from 'src/ducks/graph/utils';
 import { bezier } from 'src/rendering/utils/bezier';
 import { AppState, useAppDispatch } from 'src/store';

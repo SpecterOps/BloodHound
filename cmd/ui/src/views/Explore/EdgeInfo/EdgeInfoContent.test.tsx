@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { SelectedEdge } from 'src/ducks/edgeinfo/edgeSlice';
+import { SelectedEdge } from 'bh-shared-ui';
 import { render, screen } from 'src/test-utils';
 import EdgeInfoContent from 'src/views/Explore/EdgeInfo/EdgeInfoContent';
 
