@@ -18,13 +18,14 @@
 import path from 'path';
 import { defineConfig, loadEnv, searchForWorkspaceRoot } from 'vite';
 import react from '@vitejs/plugin-react';
+import glsl from 'vite-plugin-glsl';
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
     const env = loadEnv(mode, process.cwd(), '');
 
     return {
-        plugins: [react()],
+        plugins: [react(), glsl()],
         resolve: {
             alias: {
                 src: path.resolve(__dirname, './src'),

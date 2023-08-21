@@ -1,40 +1,12 @@
-// Copyright 2023 Specter Ops, Inc.
-//
-// Licensed under the Apache License, Version 2.0
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-//
-// SPDX-License-Identifier: Apache-2.0
-
-/**
- * Sigma.js WebGL Renderer Edge Program
- * =====================================
- *
- * Program rendering edges as thick lines but with a twist: the end of edge
- * does not sit in the middle of target node but instead stays by some margin.
- *
- * This is useful when combined with arrows to draw directed edges.
- * @module
- */
 import { AbstractEdgeProgram } from 'sigma/rendering/webgl/programs/common/edge';
 import { RenderParams } from 'sigma/rendering/webgl/programs/common/program';
-import { NodeDisplayData } from 'sigma/types';
+import vertexShaderSource from 'sigma/rendering/webgl/shaders/edge.clamped.vert.glsl';
+import fragmentShaderSource from 'sigma/rendering/webgl/shaders/edge.frag.glsl';
+import { EdgeDisplayData, NodeDisplayData } from 'sigma/types';
 import { canUse32BitsIndices, floatColor } from 'sigma/utils';
-import { CurvedEdgeDisplayData } from 'src/rendering/programs/edge.curvedArrow';
-import { fragmentShaderSource } from 'src/rendering/shaders/edge.curved.frag';
-import { vertexShaderSource } from 'src/rendering/shaders/edge.curved.vert';
-import { bezier } from 'src/rendering/utils/bezier';
+import { getNodeRadius } from 'src/rendering/utils/utils';
 
-const RESOLUTION = 0.02,
-    POINTS = 2 / RESOLUTION + 2,
+const POINTS = 4,
     ATTRIBUTES = 6,
     STRIDE = POINTS * ATTRIBUTES;
 
@@ -136,7 +108,7 @@ export default class EdgeClampedProgram extends AbstractEdgeProgram {
     process(
         sourceData: NodeDisplayData,
         targetData: NodeDisplayData,
-        data: CurvedEdgeDisplayData,
+        data: EdgeDisplayData & { inverseSqrtZoomRatio: number },
         hidden: boolean,
         offset: number
     ): void {
@@ -145,94 +117,80 @@ export default class EdgeClampedProgram extends AbstractEdgeProgram {
             return;
         }
 
-        const start = { x: sourceData.x, y: sourceData.y };
-        const end = { x: targetData.x, y: targetData.y };
-        const thickness = data.size || 1;
+        const inverseSqrtZoomRatio = data.inverseSqrtZoomRatio || 1;
 
-        // 1. Calculate a control point for this edge
+        const thickness = data.size || 1,
+            x1 = sourceData.x,
+            y1 = sourceData.y,
+            x2 = targetData.x,
+            y2 = targetData.y,
+            color = floatColor(data.color);
+        const radius = getNodeRadius(targetData.highlighted, inverseSqrtZoomRatio, targetData.size);
 
-        let { control } = data;
+        // Computing normals
+        const dx = x2 - x1,
+            dy = y2 - y1;
 
-        if (!control) {
-            const height = bezier.calculateCurveHeight(data.groupSize, data.groupPosition, data.direction);
-            control = bezier.getControlAtMidpoint(height, start, end);
+        let len = dx * dx + dy * dy,
+            n1 = 0,
+            n2 = 0;
+
+        if (len) {
+            len = 1 / Math.sqrt(len);
+
+            n1 = -dy * len * thickness;
+            n2 = dx * len * thickness;
         }
-
-        // 2. Get collection of points at some constant resolution distributed on quadratic curve based on
-        // starting point, ending point, previously calculated control point
-
-        const points = [];
-
-        for (let t = 0; t <= 1; t += RESOLUTION) {
-            const pointOnCurve = bezier.getCoordinatesAlongCurve(start, end, control, t);
-            points.push(pointOnCurve);
-        }
-
-        // 3. Loop through each line segment, calculate normals so we can render each segment as two triangles, then
-        // add data to this.array
 
         let i = POINTS * ATTRIBUTES * offset;
+
         const array = this.array;
-        const color = floatColor(data.color);
 
-        for (let j = 0; j < points.length; j++) {
-            // Handle special cases, since we do not need to calculate a miter join for the endcaps
-            const isFirstPoint = j === 0;
-            const isLastPoint = j === points.length - 1;
+        // First point
+        array[i++] = x1;
+        array[i++] = y1;
+        array[i++] = n1;
+        array[i++] = n2;
+        array[i++] = color;
+        array[i++] = 0;
 
-            let normal;
+        // First point flipped
+        array[i++] = x1;
+        array[i++] = y1;
+        array[i++] = -n1;
+        array[i++] = -n2;
+        array[i++] = color;
+        array[i++] = 0;
 
-            if (isFirstPoint) {
-                normal = bezier.getNormals(points[j], points[j + 1]);
-            } else if (isLastPoint) {
-                normal = bezier.getNormals(points[j - 1], points[j]);
-            } else {
-                // average normal vectors of the two adjoining line segments
-                const firstNormal = bezier.getNormals(points[j - 1], points[j]);
-                const secondNormal = bezier.getNormals(points[j], points[j + 1]);
-                normal = bezier.getMidpoint(firstNormal, secondNormal);
-            }
+        // Second point
+        array[i++] = x2;
+        array[i++] = y2;
+        array[i++] = n1;
+        array[i++] = n2;
+        array[i++] = color;
+        array[i++] = radius;
 
-            const vOffset = {
-                x: normal.x * thickness,
-                y: -normal.y * thickness,
-            };
-
-            // First point
-            array[i++] = points[j].x;
-            array[i++] = points[j].y;
-            array[i++] = vOffset.y;
-            array[i++] = vOffset.x;
-            array[i++] = color;
-            array[i++] = 0;
-
-            // First point flipped
-            array[i++] = points[j].x;
-            array[i++] = points[j].y;
-            array[i++] = -vOffset.y;
-            array[i++] = -vOffset.x;
-            array[i++] = color;
-            array[i++] = 0;
-        }
+        // Second point flipped
+        array[i++] = x2;
+        array[i++] = y2;
+        array[i++] = -n1;
+        array[i++] = -n2;
+        array[i++] = color;
+        array[i] = -radius;
     }
 
     computeIndices(): void {
-        // Calculate index array here that allows us to share vertices between triangles and save on shader calls
         const l = this.array.length / ATTRIBUTES;
-        const size = l * 3;
+        const size = l + l / 2;
         const indices = new this.IndicesArray(size);
 
-        for (let i = 0, c = 0; i + 3 < l; i += 2) {
+        for (let i = 0, c = 0; i < l; i += 4) {
             indices[c++] = i;
             indices[c++] = i + 1;
             indices[c++] = i + 2;
             indices[c++] = i + 2;
             indices[c++] = i + 1;
             indices[c++] = i + 3;
-
-            // Disconnect if it is the last line segment in the curve
-            const isLastSegment = (c / 6) % (RESOLUTION - 1) === 0;
-            if (isLastSegment) i += 2;
         }
 
         this.indicesArray = indices;

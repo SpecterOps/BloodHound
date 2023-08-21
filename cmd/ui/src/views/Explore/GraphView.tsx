@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Grid, useTheme } from '@mui/material';
-import { GraphProgress } from 'bh-shared-ui';
+import { EdgeInfoState, GraphProgress, setEdgeInfoOpen, setSelectedEdge } from 'bh-shared-ui';
 import { MultiDirectedGraph } from 'graphology';
 import { random } from 'graphology-layout';
 import forceAtlas2 from 'graphology-layout-forceatlas2';
@@ -26,7 +26,6 @@ import { FC, useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { GraphButtonOptions } from 'src/components/GraphButtons/GraphButtons';
 import SigmaChart from 'src/components/SigmaChart';
-import { EdgeInfoState, setEdgeInfoOpen, setSelectedEdge } from 'src/ducks/edgeinfo/edgeSlice';
 import { setEntityInfoOpen, setSelectedNode } from 'src/ducks/entityinfo/actions';
 import { GraphState } from 'src/ducks/explore/types';
 import { setAssetGroupEdit } from 'src/ducks/global/actions';
@@ -50,6 +49,7 @@ const initGraphNodes = (graph: MultiDirectedGraph, nodes: GraphNodes, nodeSize: 
             color: '#FFFFFF',
             type: 'combined',
             label: node.label,
+            forceLabel: true,
         };
 
         const icon = NODE_ICON[node.kind] || UNKNOWN_ICON;
@@ -107,6 +107,7 @@ const initGraphEdges = (graph: MultiDirectedGraph, edges: GraphEdges) => {
                 groupPosition: 0,
                 groupSize: 1,
                 exploreGraphId: edge.exploreGraphId || key,
+                forceLabel: true,
             };
 
             // Groups with odd-numbered totals should have a straight edge first, then curve the rest
