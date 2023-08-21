@@ -229,7 +229,7 @@ const GraphView: FC = () => {
 
 const GridItems = () => {
     const columnsDefault = { xs: 6, md: 5, lg: 4 };
-    const cypherSearchColumns = { xs: 6, md: 6, lg: 6 };
+    const cypherSearchColumns = { xs: 6, md: 6, lg: 6, xl: 4 };
 
     const [columns, setColumns] = useState(columnsDefault);
 
