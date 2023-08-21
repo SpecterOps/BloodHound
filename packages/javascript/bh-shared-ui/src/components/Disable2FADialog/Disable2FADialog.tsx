@@ -23,7 +23,8 @@ const Disable2FADialog: React.FC<{
     onCancel: () => void;
     onSave: (secret: string) => void;
     error?: string;
-}> = ({ open, onClose, onCancel, onSave, error }) => {
+    contentText: string;
+}> = ({ open, onClose, onCancel, onSave, error, contentText }) => {
     const [secret, setSecret] = useState('');
 
     const handleOnClose = () => {
@@ -41,14 +42,14 @@ const Disable2FADialog: React.FC<{
             <form onSubmit={handleOnSave}>
                 <DialogContent>
                     <DialogContentText>
-                        To stop using two-factor authentication, please enter your password for security purposes.
+                        {contentText}
                     </DialogContentText>
 
                     <TextField
                         id='secret'
                         name='secret'
                         value={secret}
-                        onChange={(e) => {
+                        onChange={(e: any) => {
                             setSecret(e.target.value);
                         }}
                         type='password'
