@@ -43,7 +43,11 @@ const useStyles = makeStyles((theme) => ({
     },
 }));
 
-const ExploreSearch = () => {
+interface ExploreSearchProps {
+    handleColumns?: (isCypherEditorActive: boolean) => void;
+}
+
+const ExploreSearch = ({ handleColumns }: ExploreSearchProps) => {
     const classes = useStyles();
     const theme = useTheme();
     const matches = useMediaQuery(theme.breakpoints.down('md'));
@@ -61,6 +65,11 @@ const ExploreSearch = () => {
 
     const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
         setActiveTab(newValue);
+
+        const cypherTabIndex = 2;
+        if (handleColumns) {
+            handleColumns(newValue === cypherTabIndex);
+        }
     };
 
     return (
