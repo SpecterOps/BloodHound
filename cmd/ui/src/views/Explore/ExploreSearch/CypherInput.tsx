@@ -130,24 +130,33 @@ const CypherInput = () => {
                     <FontAwesomeIcon icon={faFolderOpen} />
                 </Button>
 
-                <CypherEditor
-                    className={classes.cypherEditor}
-                    value={cypherQuery}
-                    onValueChanged={(val: string) => {
-                        setCypherQuery(val);
-                    }}
-                    onKeyDown={(e: any) => {
-                        // if enter and shift key is pressed, execute cypher search
-                        if (e.key === 'Enter' && e.shiftKey) {
-                            e.preventDefault();
-                            handleCypherSearch(cypherQuery);
+                <div
+                    onClick={() => {
+                        const input = document.querySelector('.cm-content') as HTMLElement;
+                        if (input) {
+                            input.focus();
                         }
                     }}
-                    schema={schema}
-                    lineWrapping
-                    lint
-                    placeholder='Cypher Search'
-                />
+                    style={{ flex: 1 }}>
+                    <CypherEditor
+                        className={classes.cypherEditor}
+                        value={cypherQuery}
+                        onValueChanged={(val: string) => {
+                            setCypherQuery(val);
+                        }}
+                        onKeyDown={(e: any) => {
+                            // if enter and shift key is pressed, execute cypher search
+                            if (e.key === 'Enter' && e.shiftKey) {
+                                e.preventDefault();
+                                handleCypherSearch(cypherQuery);
+                            }
+                        }}
+                        schema={schema}
+                        lineWrapping
+                        lint
+                        placeholder='Cypher Search'
+                    />
+                </div>
             </Box>
 
             <Box display={'flex'} gap={1} mt={1} justifyContent={'end'}>
