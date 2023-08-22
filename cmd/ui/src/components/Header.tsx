@@ -94,6 +94,13 @@ const Header: React.FC = () => {
                         onClick={() => navigate(routes.ROUTE_EXPLORE)}
                         data-testid='global_header_nav-explore'
                     />
+                    <MenuItem
+                        title={'Set Management'}
+                        icon={<FontAwesomeIcon icon={faProjectDiagram} size='sm' />}
+                        active={location.pathname === routes.ROUTE_SET_MANAGEMENT}
+                        onClick={() => navigate(routes.ROUTE_SET_MANAGEMENT)}
+                        data-testid='global_header_nav-set-management'
+                    />
                 </div>
 
                 <div className={classes.title}></div>
