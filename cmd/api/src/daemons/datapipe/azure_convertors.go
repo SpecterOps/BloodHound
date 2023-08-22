@@ -1,17 +1,17 @@
 // Copyright 2023 Specter Ops, Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// 
+//
 // SPDX-License-Identifier: Apache-2.0
 
 package datapipe
@@ -310,7 +310,6 @@ func convertAzureGroupOwner(raw json.RawMessage, converted *ConvertedAzureData) 
 	if err := json.Unmarshal(raw, &data); err != nil {
 		log.Errorf(SerialError, "azure group owners", err)
 	} else {
-
 		converted.RelProps = append(converted.RelProps, ein.ConvertAzureGroupOwnerToRels(data)...)
 	}
 }
@@ -666,7 +665,7 @@ func convertAzureContainerRegistryRoleAssignment(raw json.RawMessage, converted 
 	if err := json.Unmarshal(raw, &data); err != nil {
 		log.Errorf(SerialError, "azure container registry role assignments", err)
 	} else {
-		converted.RelProps = ein.ConvertAzureContainerRegistryRoleAssignment(data)
+		converted.RelProps = append(converted.RelProps, ein.ConvertAzureContainerRegistryRoleAssignment(data)...)
 	}
 }
 
@@ -676,7 +675,7 @@ func convertAzureWebAppRoleAssignment(raw json.RawMessage, converted *ConvertedA
 	if err := json.Unmarshal(raw, &data); err != nil {
 		log.Errorf(SerialError, "azure web app role assignments", err)
 	} else {
-		converted.RelProps = ein.ConvertAzureWebAppRoleAssignment(data)
+		converted.RelProps = append(converted.RelProps, ein.ConvertAzureWebAppRoleAssignment(data)...)
 	}
 }
 

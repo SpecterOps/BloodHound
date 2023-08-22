@@ -32,3 +32,5 @@ export * from './utils';
 export * from './graphSchema';
 
 export * from './views';
+
+export * from './store';

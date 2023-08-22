@@ -2705,7 +2705,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@reduxjs/toolkit@npm:^1.8.5":
+"@reduxjs/toolkit@npm:^1.8.5, @reduxjs/toolkit@npm:^1.9.5":
   version: 1.9.5
   resolution: "@reduxjs/toolkit@npm:1.9.5"
   dependencies:
@@ -4405,6 +4405,7 @@ __metadata:
     "@mui/lab": ^5.0.0-alpha.136
     "@mui/material": ^5.14.0
     "@mui/styles": ^5.14.0
+    "@reduxjs/toolkit": ^1.9.5
     "@rollup/plugin-terser": ^0.4.3
     "@rollup/plugin-typescript": ^11.1.2
     "@testing-library/jest-dom": ^5.16.5

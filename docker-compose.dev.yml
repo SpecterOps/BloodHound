@@ -77,6 +77,7 @@ services:
       dockerfile: neo4j.Dockerfile
     environment:
       - NEO4J_AUTH=${BH_NEO4J_AUTH:-neo4j/bloodhoundcommunityedition}
+      - NEO4J_dbms_allow__upgrade=${BH_NEO4J_ALLOW_UPGRADE:-true}
     ports:
       - ${BH_NEO4J_PORT:-7687}:7687
       - ${BH_NEO4J_WEB_PORT:-7474}:7474
