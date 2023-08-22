@@ -31,17 +31,26 @@ type TokenString struct {
 	cksum  uint32
 }
 
-func NewTokenString(prefix string) (TokenString, error) {
+func GenerateTokenString(prefix string) (TokenString, error) {
 	if len(prefix) <= 0 {
 		return TokenString{}, fmt.Errorf("prefix must not be empty")
 	}
-	new := TokenString{Prefix: strings.ToUpper(prefix)}
 	if val, err := generateTokenValue(rand.Reader); err != nil {
-		return new, fmt.Errorf("error generating token string value: %w", err)
+		return TokenString{}, fmt.Errorf("error generating token string value: %w", err)
 	} else {
-		new.value = val
-		new.cksum = crc32.ChecksumIEEE([]byte(new.Prefix + val))
+		return CreateTokenStringWithValue(prefix, val)
 	}
+}
+
+func CreateTokenStringWithValue(prefix, value string) (TokenString, error) {
+	if len(prefix) <= 0 {
+		return TokenString{}, fmt.Errorf("prefix must not be empty")
+	}
+	if len(value) != 64 {
+		return TokenString{}, fmt.Errorf("value must be of length 64")
+	}
+	new := TokenString{Prefix: strings.ToUpper(prefix), value: value}
+	new.cksum = crc32.ChecksumIEEE([]byte(new.Prefix + new.value))
 	return new, nil
 }
 

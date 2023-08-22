@@ -39,6 +39,7 @@ func TestGenerateTokenValue_charset(t *testing.T) {
 		})
 	}
 }
+
 func TestGenerateTokenValue_sequences(t *testing.T) {
 	for _, tc := range []struct {
 		rdata []byte
@@ -61,8 +62,19 @@ func TestGenerateTokenValue_sequences(t *testing.T) {
 	}
 }
 
-func TestNewTokenString(t *testing.T) {
-	tok, err := NewTokenString("t_tok")
+func TestGenerateTokenString(t *testing.T) {
+	tok, err := GenerateTokenString("t_tok")
+	require.Nil(t, err)
+	require.Len(t, tok.value, 64)
+}
+
+func TestGenerateTokenString_badprefix(t *testing.T) {
+	_, err := GenerateTokenString("")
+	require.Error(t, err)
+}
+
+func TestCreateTokenStringWithValue(t *testing.T) {
+	tok, err := CreateTokenStringWithValue("t_tok", strings.Repeat("0", 64))
 	require.Nil(t, err)
 	require.Equal(t, "T_TOK", tok.Prefix)
 	require.NotEmpty(t, tok.value)
@@ -70,8 +82,13 @@ func TestNewTokenString(t *testing.T) {
 	require.Equal(t, crc32.ChecksumIEEE([]byte(tok.Prefix+tok.value)), tok.cksum)
 }
 
-func TestNewTokenString_badprefix(t *testing.T) {
-	_, err := NewTokenString("")
+func TestCreateTokenStringWithValue_badprefix(t *testing.T) {
+	_, err := CreateTokenStringWithValue("", strings.Repeat("0", 64))
+	require.Error(t, err)
+}
+
+func TestCreateTokenStringWithValue_badvalue(t *testing.T) {
+	_, err := CreateTokenStringWithValue("t_tok", "")
 	require.Error(t, err)
 }
 
@@ -113,7 +130,7 @@ func TestTokenString_String(t *testing.T) {
 			"max cksum value",
 			TokenString{
 				Prefix: "CKSUM",
-				value:  "0000000000000000000000000000000000000000000000000000000000000000",
+				value:  strings.Repeat("0", 64),
 				cksum:  math.MaxUint32, // 4294967295 encodes to "4GFfc3"
 			},
 			"CKSUM_00000000000000000000000000000000000000000000000000000000000000004GFfc3",
