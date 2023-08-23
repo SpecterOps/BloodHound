@@ -143,6 +143,7 @@ const GraphView: FC = () => {
     const opts: GlobalOptionsState = useSelector((state: AppState) => state.global.options);
     const formIsDirty = Object.keys(useSelector((state: AppState) => state.tierzero).changelog).length > 0;
     const [graphologyGraph, setGraphologyGraph] = useState<MultiDirectedGraph<Attributes, Attributes, Attributes>>();
+    const [currentNodes, setCurrentNodes] = useState<GraphNodes>({});
     const [currentSearchOpen, toggleCurrentSearch] = useToggle(false);
 
     useEffect(() => {
@@ -155,6 +156,8 @@ const GraphView: FC = () => {
 
         initGraphNodes(graph, items.nodes, nodeSize);
         initGraphEdges(graph, items.edges);
+
+        setCurrentNodes(items.nodes);
 
         random.assign(graph, { scale: 1000 });
 
@@ -204,14 +207,10 @@ const GraphView: FC = () => {
         }
     };
 
-    const handleOpenSearch = () => {
-        toggleCurrentSearch();
-    };
-
     const options: GraphButtonOptions = { standard: true, sequential: true };
 
     const nonLayoutButtons: GraphButtonProps[] = [
-        { displayText: 'Search Current Results', onClick: handleOpenSearch }
+        { displayText: 'Search Current Results', onClick: toggleCurrentSearch }
     ];
 
     return (
@@ -220,9 +219,11 @@ const GraphView: FC = () => {
                 rankDirection={RankDirection.LEFT_RIGHT}
                 options={options}
                 graph={graphologyGraph}
+                currentNodes={currentNodes}
                 onClickNode={onClickNode}
                 nonLayoutButtons={nonLayoutButtons}
                 isCurrentSearchOpen={currentSearchOpen}
+                toggleCurrentSearch={toggleCurrentSearch}
             />
             <Grid
                 container

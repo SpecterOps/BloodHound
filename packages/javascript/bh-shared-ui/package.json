@@ -25,6 +25,7 @@
         "@fortawesome/react-fontawesome": "^0.1.19",
         "clsx": "^1.1.1",
         "dompurify": "^2.3.0",
+        "downshift": "^6.1.7",
         "luxon": "^3.3.0",
         "memoize-one": "^6.0.0",
         "react-hook-form": "^7.45.1",

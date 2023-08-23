@@ -34,7 +34,8 @@ import getNodeGlyphsProgram from 'src/rendering/programs/node.glyphs';
 import { GraphButtonProps } from './GraphButton/GraphButton';
 import GraphEdgeEvents from './GraphEdgeEvents';
 import { Box } from '@mui/material';
-import SearchCurrentResults from './SearchCurrentResults';
+import { GraphNodes } from 'js-client-library';
+import { SearchCurrentNodes } from 'bh-shared-ui';
 
 interface SigmaChartProps {
     rankDirection: RankDirection;
@@ -42,6 +43,8 @@ interface SigmaChartProps {
     nonLayoutButtons: GraphButtonProps[];
     isCurrentSearchOpen: boolean;
     graph: Graph<Attributes, Attributes, Attributes>;
+    currentNodes: GraphNodes;
+    toggleCurrentSearch: () => void;
     onDoubleClickNode: (id: string) => void;
     onClickNode: (id: string) => void;
     onClickEdge: (id: string, relatedFindingType?: string | null) => void;
@@ -55,6 +58,8 @@ const SigmaChart: FC<Partial<SigmaChartProps>> = ({
     nonLayoutButtons,
     isCurrentSearchOpen,
     graph,
+    currentNodes,
+    toggleCurrentSearch,
     onDoubleClickNode,
     onClickNode,
     onClickEdge,
@@ -98,7 +103,7 @@ const SigmaChart: FC<Partial<SigmaChartProps>> = ({
                 edgeReducer={edgeReducer}
             />
             <Box position={'absolute'} bottom={16} >
-                {isCurrentSearchOpen && <SearchCurrentResults />}
+                {isCurrentSearchOpen && <SearchCurrentNodes currentNodes={currentNodes || {}} onBlur={toggleCurrentSearch} />}
                 <GraphButtons rankDirection={rankDirection} options={options} nonLayoutButtons={nonLayoutButtons} />
             </Box>
         </SigmaContainer>
