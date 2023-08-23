@@ -1,35 +1,38 @@
 // Copyright 2023 Specter Ops, Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// 
+//
 // SPDX-License-Identifier: Apache-2.0
 
 //go:generate go run go.uber.org/mock/mockgen -copyright_file=../../../../../LICENSE.header -destination=./mocks/mock.go -package=mocks . FileUploadData
 package fileupload
 
 import (
+	"errors"
 	"fmt"
 	"io"
+	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/src/model"
 )
 
-const (
-	jobActivityTimeout = time.Minute * 20
-)
+const jobActivityTimeout = time.Minute * 20
+
+var InvalidIngestFileType = errors.New("file is not a valid content type")
 
 type FileUploadData interface {
 	CreateFileUploadJob(job model.FileUploadJob) (model.FileUploadJob, error)
@@ -82,13 +85,22 @@ func GetFileUploadJobByID(db FileUploadData, jobID int64) (model.FileUploadJob, 
 	return db.GetFileUploadJob(jobID)
 }
 
-func SaveToTempFile(location string, fileData io.ReadCloser) (string, error) {
-	if tempFile, err := os.CreateTemp(location, "bh"); err != nil {
-		return "", fmt.Errorf("error creating temp file: %w", err)
-	} else if _, err := io.Copy(tempFile, fileData); err != nil {
-		return "", fmt.Errorf("error copying temp file: %w", err)
+func SaveIngestFile(location string, fileData io.ReadCloser) (string, error) {
+	var typeBuf = make([]byte, 512)
+	tempFile, err := os.CreateTemp(location, "bh")
+	if err != nil {
+		return "", fmt.Errorf("error creating ingest file: %w", err)
+	}
+	defer tempFile.Close()
+	if _, err := io.Copy(tempFile, fileData); err != nil {
+		return "", fmt.Errorf("error writing ingest file: %w", err)
+	} else if _, err := tempFile.Seek(0, io.SeekStart); err != nil {
+		return "", fmt.Errorf("error preparing ingest file for validation: %w", err)
+	} else if n, err := tempFile.Read(typeBuf); err != nil {
+		return "", fmt.Errorf("error reading head of ingest file: %w", err)
+	} else if fileType := http.DetectContentType(typeBuf[:n]); !strings.Contains(fileType, "text/plain") {
+		return "", InvalidIngestFileType
 	} else {
-		tempFile.Close()
 		return tempFile.Name(), nil
 	}
 }

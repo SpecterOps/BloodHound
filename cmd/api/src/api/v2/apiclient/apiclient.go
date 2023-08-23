@@ -1,17 +1,17 @@
 // Copyright 2023 Specter Ops, Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// 
+//
 // SPDX-License-Identifier: Apache-2.0
 
 package apiclient
@@ -26,11 +26,11 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/errors"
 	"github.com/specterops/bloodhound/headers"
 	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/mediatypes"
+	"github.com/specterops/bloodhound/src/api"
 )
 
 type Client struct {
@@ -130,6 +130,13 @@ func (s Client) Request(method, path string, params url.Values, body any, header
 			}
 		}
 	}
+}
+
+func (s Client) NewRequest(method string, path string, params url.Values, body io.ReadCloser) (*http.Request, error) {
+	endpoint := api.URLJoinPath(s.ServiceURL, path)
+	endpoint.RawQuery = params.Encode()
+
+	return http.NewRequest(method, endpoint.String(), body)
 }
 
 func (s Client) Raw(request *http.Request) (*http.Response, error) {
