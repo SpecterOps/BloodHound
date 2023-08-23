@@ -54,13 +54,15 @@ func CreateTokenStringWithValue(prefix, value string) (TokenString, error) {
 	return new, nil
 }
 
+func formatChecksum(cksum uint32) string {
+	return strings.ReplaceAll(fmt.Sprintf("%6s", big.NewInt(int64(cksum)).Text(62)), " ", "0")
+}
+
 func (s TokenString) String() string {
 	if s.value == "" {
 		return ""
 	} else {
-		// use big.Int to convert to base62
-		var sumint = big.NewInt(int64(s.cksum))
-		return strings.ReplaceAll(fmt.Sprintf("%s_%s%6s", s.Prefix, s.value, sumint.Text(62)), " ", "0")
+		return fmt.Sprintf("%s_%s%s", s.Prefix, s.value, formatChecksum(s.cksum))
 	}
 }
 

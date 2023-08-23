@@ -92,6 +92,23 @@ func TestCreateTokenStringWithValue_badvalue(t *testing.T) {
 	require.Error(t, err)
 }
 
+func TestFormatChecksum(t *testing.T) {
+	for _, tc := range []struct {
+		val uint32
+		exp string
+	}{
+		{0, "000000"},
+		{1, "000001"},
+		{987654, "0048VU"},
+		{2055449580, "2f6skA"},
+		{math.MaxUint32, "4GFfc3"}, // 4294967295
+	} {
+		t.Run(fmt.Sprintf("%d", tc.val), func(t *testing.T) {
+			require.Equal(t, tc.exp, formatChecksum(tc.val))
+		})
+	}
+}
+
 func TestTokenString_String(t *testing.T) {
 	for _, tc := range []struct {
 		n   string
