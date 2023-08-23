@@ -158,3 +158,34 @@ func TestTokenString_String(t *testing.T) {
 		})
 	}
 }
+
+func TestIsValidBase62(t *testing.T) {
+	for _, tc := range []struct {
+		n   string
+		val string
+		exp bool
+	}{
+		{"empty", "", true},
+		{"numbers", "0123456789", true},
+		{"lower alpha", "abcdefghijklmnopqrstuvwxyz", true},
+		{"upper alpha", "ABCDEFGHIJKLMNOPQRSTUVWXYZ", true},
+		{"alphanum", "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ", true},
+		{"invalid middle", "12345$&#$()67890", false},
+		{"invalid start", "}{:<?>}", false},
+	} {
+		t.Run(tc.n, func(t *testing.T) {
+			require.Equal(t, tc.exp, isValidBase62(tc.val))
+		})
+	}
+}
+
+func TestIsValidBase62_chars(t *testing.T) {
+	valid := "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+	for c := byte(0); ; {
+		require.Equal(t, bytes.ContainsAny([]byte{byte(c)}, valid), isValidBase62(string(c)), "char %q", string(c))
+		c++
+		if c == 0 { // continues until it wraps back to 0
+			break
+		}
+	}
+}
