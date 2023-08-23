@@ -35,7 +35,6 @@ import (
 func RegisterFossGlobalMiddleware(routerInst *router.Router, cfg config.Configuration, authenticator api.Authenticator) {
 	// Set up the middleware stack
 	routerInst.UsePrerouting(middleware.ContextMiddleware)
-	routerInst.UsePrerouting(middleware.CompressionMiddleware)
 
 	if cfg.EnableAPILogging {
 		routerInst.UsePrerouting(middleware.LoggingMiddleware(cfg, auth.NewIdentityResolver()))
@@ -46,6 +45,7 @@ func RegisterFossGlobalMiddleware(routerInst *router.Router, cfg config.Configur
 	routerInst.UsePostrouting(
 		middleware.PanicHandler,
 		middleware.AuthMiddleware(authenticator),
+		middleware.CompressionMiddleware,
 	)
 }
 
