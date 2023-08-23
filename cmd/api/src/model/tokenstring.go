@@ -2,6 +2,7 @@ package model
 
 import (
 	"crypto/rand"
+	"errors"
 	"fmt"
 	"hash/crc32"
 	"io"
@@ -77,4 +78,35 @@ func isValidBase62(val string) bool {
 		}
 	}
 	return true
+}
+
+var ErrTokenStringFormat = errors.New("invalid token format")
+var ErrTokenStringChecksum = errors.New("token checksum is invalid")
+
+func ParseTokenString(src string) (TokenString, error) {
+	// min length is prefix (1) + value (64) + cksum (6)
+	if len(src) < 1+64+6 {
+		return TokenString{}, fmt.Errorf("%w: token string is too short", ErrTokenStringFormat)
+	}
+	var src_prefix, src_val, src_cksum string
+	src_cksum = src[:len(src)-6]
+	src = src[:len(src)-6]
+	if i := strings.LastIndex(src, "_"); i < 0 {
+		return TokenString{}, fmt.Errorf("%w: token string missing prefix separator", ErrTokenStringFormat)
+	} else {
+		src_prefix = src[:i]
+		src_val = src[i+1:]
+	}
+
+	if !isValidBase62(src_cksum) {
+		return TokenString{}, fmt.Errorf("%w: token string checksum contains invalid characters", ErrTokenStringFormat)
+	}
+	tok, err := CreateTokenStringWithValue(src_prefix, src_val)
+	if err != nil {
+		return TokenString{}, err
+	}
+	if formatChecksum(tok.cksum) != src_cksum {
+		return TokenString{}, ErrTokenStringChecksum
+	}
+	return tok, nil
 }
