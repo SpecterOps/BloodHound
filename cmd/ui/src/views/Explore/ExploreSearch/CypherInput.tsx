@@ -143,7 +143,8 @@ const CypherInput = () => {
                             input.focus();
                         }
                     }}
-                    style={{ flex: 1 }}>
+                    style={{ flex: 1 }}
+                    role='textbox'>
                     <CypherEditor
                         className={classes.cypherEditor}
                         value={cypherQuery}
