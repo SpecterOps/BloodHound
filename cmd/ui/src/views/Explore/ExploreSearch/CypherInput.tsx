@@ -25,6 +25,8 @@ import {
     ActiveDirectoryRelationshipKind,
     AzureNodeKind,
     AzureRelationshipKind,
+    ActiveDirectoryKindProperties,
+    AzureKindProperties,
 } from 'bh-shared-ui';
 import { useCallback, useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
@@ -72,7 +74,11 @@ const schema = {
         ...Object.values(ActiveDirectoryRelationshipKind).map((relationshipType) => `:${relationshipType}`),
         ...Object.values(AzureRelationshipKind).map((relationshipType) => `:${relationshipType}`),
     ],
-    propertyKeys: [...Object.values(CommonKindProperties)],
+    propertyKeys: [
+        ...Object.values(CommonKindProperties),
+        ...Object.values(ActiveDirectoryKindProperties),
+        ...Object.values(AzureKindProperties),
+    ],
 };
 
 const CypherInput = () => {
