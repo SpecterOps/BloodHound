@@ -1,28 +1,28 @@
 // Copyright 2023 Specter Ops, Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// 
+//
 // SPDX-License-Identifier: Apache-2.0
 
 package fixtures
 
 import (
-	"github.com/specterops/bloodhound/src/test"
-	"github.com/stretchr/testify/require"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/dawgs/query"
 	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/graphschema/common"
+	"github.com/specterops/bloodhound/src/test"
+	"github.com/stretchr/testify/require"
 )
 
 var (
@@ -213,6 +213,12 @@ var (
 			query.Kind(query.Relationship(), ad.SQLAdmin),
 			query.Kind(query.End(), ad.Computer),
 			query.Equals(query.EndProperty(common.ObjectID.String()), "S-1-5-21-3130019616-2776909439-2417379446-12345")),
+		query.And(
+			query.Kind(query.Start(), ad.Group),
+			query.Equals(query.StartProperty(common.ObjectID.String()), "TESTLAB.LOCAL-S-1-5-32-544"),
+			query.Kind(query.Relationship(), ad.AllExtendedRights),
+			query.Kind(query.End(), ad.User),
+			query.Equals(query.EndProperty(common.ObjectID.String()), "S-1-5-21-3130019616-2776909439-2417379446-1106")),
 
 		//// SESSIONS
 		query.And(
