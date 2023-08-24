@@ -55,7 +55,7 @@ describe('ExploreSearch rendering per tab', async () => {
 
         await user.click(cypherTab);
 
-        expect(screen.getByPlaceholderText(/cypher search/i)).toBeInTheDocument();
+        expect(screen.getByText(/cypher search/i)).toBeInTheDocument();
 
         expect(screen.getByRole('button', { name: /question/i })).toBeInTheDocument();
         expect(screen.getByRole('button', { name: /search/i })).toBeInTheDocument();
