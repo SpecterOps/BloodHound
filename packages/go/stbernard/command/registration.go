@@ -1,7 +1,7 @@
 package command
 
 import (
-	"github.com/specterops/bloodhound/packages/go/stbernard/foo"
+	"github.com/specterops/bloodhound/packages/go/stbernard/envdump"
 	"github.com/specterops/bloodhound/packages/go/stbernard/modsync"
 )
 
@@ -11,7 +11,7 @@ type Command int
 const (
 	InvalidCommand Command = iota - 1
 	ModSync
-	Foo
+	EnvDump
 )
 
 // String implements Stringer for Command enum
@@ -19,22 +19,22 @@ func (s Command) String() string {
 	switch s {
 	case ModSync:
 		return modsync.Name
-	case Foo:
-		return foo.Name
+	case EnvDump:
+		return envdump.Name
 	default:
 		return "invalid command"
 	}
 }
 
 func Commands() []Command {
-	return []Command{ModSync, Foo}
+	return []Command{ModSync, EnvDump}
 }
 
 func CommandsUsage() []string {
 	var usage = make([]string, len(Commands()))
 
 	usage[ModSync] = modsync.Usage
-	usage[Foo] = foo.Usage
+	usage[EnvDump] = envdump.Usage
 
 	return usage
 }

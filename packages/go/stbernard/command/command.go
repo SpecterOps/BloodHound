@@ -7,7 +7,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/specterops/bloodhound/packages/go/stbernard/foo"
+	"github.com/specterops/bloodhound/packages/go/stbernard/envdump"
 	"github.com/specterops/bloodhound/packages/go/stbernard/modsync"
 )
 
@@ -40,9 +40,9 @@ func ParseCLI() (Commander, error) {
 			return cmd, nil
 		}
 
-	case Foo.String():
-		config := foo.Config{Environment: environment()}
-		if cmd, err := foo.CreateFooCommand(config); err != nil {
+	case EnvDump.String():
+		config := envdump.Config{Environment: environment()}
+		if cmd, err := envdump.CreateEnvDumpCommand(config); err != nil {
 			return nil, fmt.Errorf("%w: %w", FailedCreateCmdErr, err)
 		} else {
 			return cmd, nil
@@ -84,7 +84,7 @@ func environment() []string {
 	}
 
 	// Make any changes here
-	envMap["FOO"] = "foo"
+	envMap["FOO"] = "foo" // For illustrative purposes only
 
 	var envSlice = make([]string, 0, len(envMap))
 	for key, val := range envMap {
