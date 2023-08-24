@@ -40,6 +40,7 @@ const Disable2FADialog: React.FC<{
     const handleOnSave: React.FormEventHandler = (e) => {
         e.preventDefault();
         onSave(secret);
+        setSecret('');
     };
 
     return (
