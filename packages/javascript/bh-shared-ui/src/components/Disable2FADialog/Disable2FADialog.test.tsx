@@ -56,9 +56,10 @@ describe('Enable2FADialog', () => {
     const testOnCancel = vi.fn();
     const testOnClose = vi.fn();
     const testOnSave = vi.fn();
+    const testSetSecret = vi.fn();
 
     beforeEach(() => {
-        render(<Disable2FADialog open={true} onCancel={testOnCancel} onClose={testOnClose} onSave={testOnSave} />);
+        render(<Disable2FADialog open={true} onCancel={testOnCancel} onClose={testOnClose} onSave={testOnSave} secret='' setSecret={testSetSecret} contentText=''/>);
     });
 
     it('should display "Disable Two-Factor Authentication?" title', () => {
