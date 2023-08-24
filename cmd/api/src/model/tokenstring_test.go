@@ -190,6 +190,52 @@ func TestIsValidBase62_chars(t *testing.T) {
 	}
 }
 
+func TestParseTokenString_valid(t *testing.T) {
+	for _, tc := range []struct {
+		tok string
+		exp TokenString
+	}{
+		{
+			"CKSUM_00000000000000000000000000000000000000000000000000000000002fX6FA000000",
+			TokenString{
+				"CKSUM",
+				"00000000000000000000000000000000000000000000000000000000002fX6FA",
+				0,
+			},
+		},
+		{
+			"CKSUM_0000000000000000000000000000000000000000000000000000000000108dEz4GFfc3",
+			TokenString{
+				"CKSUM",
+				"0000000000000000000000000000000000000000000000000000000000108dEz",
+				math.MaxUint32,
+			},
+		},
+		{
+			"TOK1_0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef2aJnaH",
+			TokenString{
+				Prefix: "TOK1",
+				value:  "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+				cksum:  1990842859,
+			},
+		},
+		{
+			"ASDF_18kmjsbZLdgIBSjiHPCG51318yk41uNYzswMhScdartEUL2UKLP1Z4ywgiFxNBF50sEsvY",
+			TokenString{
+				Prefix: "ASDF",
+				value:  "18kmjsbZLdgIBSjiHPCG51318yk41uNYzswMhScdartEUL2UKLP1Z4ywgiFxNBF5",
+				cksum:  423380142,
+			},
+		},
+	} {
+		t.Run(tc.tok, func(t *testing.T) {
+			tok, err := ParseTokenString(tc.tok)
+			require.Nil(t, err)
+			require.Equal(t, tc.exp, tok)
+		})
+	}
+}
+
 func TestParseTokenString_invalid(t *testing.T) {
 	for _, tc := range []struct {
 		n      string
