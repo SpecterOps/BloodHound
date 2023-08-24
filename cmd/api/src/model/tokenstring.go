@@ -89,7 +89,7 @@ func ParseTokenString(src string) (TokenString, error) {
 		return TokenString{}, fmt.Errorf("%w: token string is too short", ErrTokenStringFormat)
 	}
 	var src_prefix, src_val, src_cksum string
-	src_cksum = src[:len(src)-6]
+	src_cksum = src[len(src)-6:]
 	src = src[:len(src)-6]
 	if i := strings.LastIndex(src, "_"); i < 0 {
 		return TokenString{}, fmt.Errorf("%w: token string missing prefix separator", ErrTokenStringFormat)

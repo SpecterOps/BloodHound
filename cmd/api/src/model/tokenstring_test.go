@@ -189,3 +189,51 @@ func TestIsValidBase62_chars(t *testing.T) {
 		}
 	}
 }
+
+func TestParseTokenString_invalid(t *testing.T) {
+	for _, tc := range []struct {
+		n      string
+		val    string
+		err    error
+		msg_ss string
+	}{
+		{
+			"empty",
+			"",
+			ErrTokenStringFormat,
+			"",
+		},
+		{
+			"short",
+			strings.Repeat("0", 70),
+			ErrTokenStringFormat,
+			"too short",
+		},
+		{
+			"no underscore",
+			strings.Repeat("0", 71),
+			ErrTokenStringFormat,
+			"missing prefix separator",
+		},
+		{
+			"checksum chars",
+			strings.Repeat("_", 71),
+			ErrTokenStringFormat,
+			"checksum contains invalid characters",
+		},
+		{
+			"checksum",
+			"asdf_qwer_" + strings.Repeat("0", 64) + "123456",
+			ErrTokenStringChecksum,
+			"",
+		},
+	} {
+		t.Run(tc.n, func(t *testing.T) {
+			_, err := ParseTokenString(tc.val)
+			if tc.msg_ss != "" {
+				require.ErrorContains(t, err, tc.msg_ss)
+			}
+			require.ErrorIs(t, err, tc.err)
+		})
+	}
+}
