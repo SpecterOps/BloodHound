@@ -247,6 +247,7 @@ const UserProfile = () => {
                         });
                 }}
                 error={disable2FAError}
+                contentText='To stop using two-factor authentication, please enter your password for security purposes.'
             />
         </>
     );
