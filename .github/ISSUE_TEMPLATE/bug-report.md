@@ -71,9 +71,8 @@ Docker (if using Docker): [docker version]
 
 **Contributor Checklist:**
 
-- [ ] I have searched the issue tracker to ensure this bug hasn't been reported before.
+- [ ] I have searched the issue tracker to ensure this bug hasn't been reported before or is not already being addressed.
 - [ ] I have provided clear steps to reproduce the issue.
 - [ ] I have included relevant environment information details.
 - [ ] I have attached necessary supporting documents.
-- [ ] I have checked the related issues to see if this bug is already being addressed.
 - [ ] I have checked that any JSON files I am attempting to upload to BloodHound are valid.
