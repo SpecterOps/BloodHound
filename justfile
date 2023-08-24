@@ -37,8 +37,8 @@ init wipe="":
   echo "Install additional Go tools"
   go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.52.2
 
-  echo "Run a build to ensure go.work.sum is valid"
-  just build -vf
+  echo "Run modsync to ensure workspace is up to date"
+  just modsync
 
   echo "Ensure containers have been rebuilt"
   just bh-dev build
@@ -62,6 +62,10 @@ test *FLAGS:
   #!/usr/bin/env bash
   set -euo pipefail
   python3 packages/python/beagle/main.py test {{FLAGS}}
+
+# sync modules in workspace
+modsync:
+  @go run github.com/specterops/bloodhound/packages/go/stbernard modsync
 
 # updates favicon.ico, logo192.png and logo512.png from logo.svg
 update-favicon:
