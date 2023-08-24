@@ -35,6 +35,7 @@ const UserProfile = () => {
     const [QRCode, setQRCode] = useState('');
     const [enable2FAError, setEnable2FAError] = useState('');
     const [disable2FAError, setDisable2FAError] = useState('');
+    const [disable2FASecret, setDisable2FASecret] = useState('');
 
     const getSelfQuery = useQuery(['getSelf'], ({ signal }) =>
         apiClient.getSelf({ signal }).then((res) => res.data.data)
@@ -240,6 +241,7 @@ const UserProfile = () => {
                         .then(() => {
                             setDisable2FADialogOpen(false);
                             setDisable2FAError('');
+                            setDisable2FASecret('');
                             getSelfQuery.refetch();
                         })
                         .catch(() => {
@@ -247,6 +249,8 @@ const UserProfile = () => {
                         });
                 }}
                 error={disable2FAError}
+                secret={disable2FASecret}
+                setSecret={setDisable2FASecret}
                 contentText='To stop using two-factor authentication, please enter your password for security purposes.'
             />
         </>

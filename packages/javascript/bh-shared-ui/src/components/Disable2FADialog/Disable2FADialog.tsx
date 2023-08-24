@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, TextField } from '@mui/material';
-import React, { useState } from 'react';
+import React from 'react';
 
 const Disable2FADialog: React.FC<{
     open: boolean;
@@ -23,24 +23,25 @@ const Disable2FADialog: React.FC<{
     onCancel: () => void;
     onSave: (secret: string) => void;
     error?: string;
+    secret: string;
+    setSecret: (secret: string) => void;
     contentText: string;
-}> = ({ open, onClose, onCancel, onSave, error, contentText }) => {
-    const [secret, setSecret] = useState('');
+}> = ({ open, onClose, onCancel, onSave, error, secret, setSecret, contentText }) => {
+
 
     const handleOnClose = () => {
-        setSecret('');
         onClose();
+        setSecret('');
     };
 
     const handleOnCancel = () => {
-        setSecret('');
         onCancel();
+        setSecret('');
     };
 
     const handleOnSave: React.FormEventHandler = (e) => {
         e.preventDefault();
         onSave(secret);
-        setSecret('');
     };
 
     return (

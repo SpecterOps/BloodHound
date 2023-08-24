@@ -46,6 +46,7 @@ const Users = () => {
     const [manageUserTokensDialogOpen, toggleManageUserTokensDialog] = useToggle(false);
     const [disable2FADialogOpen, setDisable2FADialogOpen] = useState(false);
     const [disable2FAError, setDisable2FAError] = useState('');
+    const [disable2FASecret, setDisable2FASecret] = useState('');
 
     const self = useSelector((state: AppState) => state.auth.user);
 
@@ -327,6 +328,7 @@ const Users = () => {
                         .then(() => {
                             setDisable2FADialogOpen(false);
                             dispatch(addSnackbar('User MFA disabled successfully!', 'disableUserMfaSuccess'));
+                            setDisable2FASecret('');
                             listUsersQuery.refetch();
                         })
                         .catch(() => {
@@ -334,6 +336,8 @@ const Users = () => {
                         });
                 }}
                 error={disable2FAError}
+                secret={disable2FASecret}
+                setSecret={setDisable2FASecret}
                 contentText="Are you sure you want to disable MFA for this user? Please enter your password to confirm."
             />
             <PasswordDialog
