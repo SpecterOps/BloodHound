@@ -42,77 +42,82 @@ func Test_FileUpload(t *testing.T) {
 
 	jobEndpoint := fmt.Sprintf("api/v2/file-upload/%d", uploadJob.ID)
 
-	// JSON input success
-	jsonInput := loader.GetReader("v6/ingest/computers.json")
-	defer jsonInput.Close()
-	req, err := apiClient.NewRequest(http.MethodPost, jobEndpoint, nil, jsonInput)
-	assert.Nil(t, err)
-	resp, err := apiClient.Raw(req)
-	assert.Nil(t, err)
-	assert.Equal(t, http.StatusAccepted, resp.StatusCode)
+	t.Run("JSON input with sucess", func(tx *testing.T) {
+		jsonInput := loader.GetReader("v6/ingest/computers.json")
+		defer jsonInput.Close()
+		req, err := apiClient.NewRequest(http.MethodPost, jobEndpoint, nil, jsonInput)
+		assert.Nil(tx, err)
+		resp, err := apiClient.Raw(req)
+		assert.Nil(tx, err)
+		assert.Equal(tx, http.StatusAccepted, resp.StatusCode)
+	})
 
-	// JSON input with incorrect compression header
-	jsonInput2 := loader.GetReader("v6/ingest/containers.json")
-	defer jsonInput2.Close()
-	req, err = apiClient.NewRequest(http.MethodPost, jobEndpoint, nil, jsonInput2)
-	assert.Nil(t, err)
-	req.Header.Set("Content-Encoding", "gzip")
-	resp, err = apiClient.Raw(req)
-	assert.Nil(t, err)
-	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
+	t.Run("JSON input with incorrect compression header", func(tx *testing.T) {
+		jsonInput := loader.GetReader("v6/ingest/containers.json")
+		defer jsonInput.Close()
+		req, err := apiClient.NewRequest(http.MethodPost, jobEndpoint, nil, jsonInput)
+		assert.Nil(tx, err)
+		req.Header.Set("Content-Encoding", "gzip")
+		resp, err := apiClient.Raw(req)
+		assert.Nil(tx, err)
+		assert.Equal(tx, http.StatusBadRequest, resp.StatusCode)
+	})
 
-	// gzip input with correct compression header
-	var (
-		body bytes.Buffer
-		gw   = gzip.NewWriter(&body)
-	)
-	jsonInput3 := loader.GetReader("v6/ingest/domains.json")
-	defer jsonInput3.Close()
-	n, err := io.Copy(gw, jsonInput3)
-	assert.Nil(t, err)
-	assert.NotEqual(t, 0, n)
-	assert.Nil(t, gw.Close())
-	req, err = apiClient.NewRequest(http.MethodPost, jobEndpoint, nil, io.NopCloser(&body))
-	assert.Nil(t, err)
-	req.Header.Set("Content-Encoding", "gzip")
-	resp, err = apiClient.Raw(req)
-	assert.Nil(t, err)
-	assert.Equal(t, http.StatusAccepted, resp.StatusCode)
+	t.Run("Gzip input with correct compression header", func(tx *testing.T) {
+		var (
+			body bytes.Buffer
+			gw   = gzip.NewWriter(&body)
+		)
+		jsonInput := loader.GetReader("v6/ingest/domains.json")
+		defer jsonInput.Close()
+		n, err := io.Copy(gw, jsonInput)
+		assert.Nil(tx, err)
+		assert.NotEqual(tx, 0, n)
+		assert.Nil(tx, gw.Close())
+		req, err := apiClient.NewRequest(http.MethodPost, jobEndpoint, nil, io.NopCloser(&body))
+		assert.Nil(tx, err)
+		req.Header.Set("Content-Encoding", "gzip")
+		resp, err := apiClient.Raw(req)
+		assert.Nil(tx, err)
+		assert.Equal(tx, http.StatusAccepted, resp.StatusCode)
+	})
 
-	// gzip input with incorrect compression header
-	var (
-		body2 bytes.Buffer
-		gw2   = gzip.NewWriter(&body2)
-	)
-	jsonInput4 := loader.GetReader("v6/ingest/gpos.json")
-	defer jsonInput3.Close()
-	n, err = io.Copy(gw2, jsonInput4)
-	assert.Nil(t, err)
-	assert.NotEqual(t, 0, n)
-	assert.Nil(t, gw.Close())
-	req, err = apiClient.NewRequest(http.MethodPost, jobEndpoint, nil, io.NopCloser(&body2))
-	assert.Nil(t, err)
-	req.Header.Set("Content-Encoding", "deflate")
-	resp, err = apiClient.Raw(req)
-	assert.Nil(t, err)
-	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
+	t.Run("Gzip input with incorrect compression header", func(tx *testing.T) {
+		var (
+			body bytes.Buffer
+			gw   = gzip.NewWriter(&body)
+		)
+		jsonInput := loader.GetReader("v6/ingest/gpos.json")
+		defer jsonInput.Close()
+		n, err := io.Copy(gw, jsonInput)
+		assert.Nil(tx, err)
+		assert.NotEqual(tx, 0, n)
+		assert.Nil(tx, gw.Close())
+		req, err := apiClient.NewRequest(http.MethodPost, jobEndpoint, nil, io.NopCloser(&body))
+		assert.Nil(tx, err)
+		req.Header.Set("Content-Encoding", "deflate")
+		resp, err := apiClient.Raw(req)
+		assert.Nil(tx, err)
+		assert.Equal(tx, http.StatusBadRequest, resp.StatusCode)
+	})
 
-	// gzip input with missing compression header
-	var (
-		body3 bytes.Buffer
-		gw3   = gzip.NewWriter(&body3)
-	)
-	jsonInput5 := loader.GetReader("v6/ingest/groups.json")
-	defer jsonInput3.Close()
-	n, err = io.Copy(gw3, jsonInput5)
-	assert.Nil(t, err)
-	assert.NotEqual(t, 0, n)
-	assert.Nil(t, gw.Close())
-	req, err = apiClient.NewRequest(http.MethodPost, jobEndpoint, nil, io.NopCloser(&body3))
-	assert.Nil(t, err)
-	resp, err = apiClient.Raw(req)
-	assert.Nil(t, err)
-	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
+	t.Run("gzip input with missing compression header", func(tx *testing.T) {
+		var (
+			body bytes.Buffer
+			gw   = gzip.NewWriter(&body)
+		)
+		jsonInput := loader.GetReader("v6/ingest/groups.json")
+		defer jsonInput.Close()
+		n, err := io.Copy(gw, jsonInput)
+		assert.Nil(tx, err)
+		assert.NotEqual(tx, 0, n)
+		assert.Nil(tx, gw.Close())
+		req, err := apiClient.NewRequest(http.MethodPost, jobEndpoint, nil, io.NopCloser(&body))
+		assert.Nil(tx, err)
+		resp, err := apiClient.Raw(req)
+		assert.Nil(tx, err)
+		assert.Equal(tx, http.StatusBadRequest, resp.StatusCode)
+	})
 }
 
 func Test_FileUploadWorkFlowVersion5(t *testing.T) {
