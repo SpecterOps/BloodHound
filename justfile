@@ -51,6 +51,12 @@ init wipe="":
   fi
 
   echo "Start integration testing services"
+  if [[ "{{wipe}}" == "clean" ]]; then
+    echo "Clear volumes and restart testing services without cache"
+    just bh-testing-clear-volumes
+    just bh-testing build --no-cache
+  fi
+
   just bh-testing
 
   echo "BloodHound CE Init Complete"
