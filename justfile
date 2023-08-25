@@ -42,7 +42,13 @@ init wipe="":
   just modsync
 
   echo "Ensure containers have been rebuilt"
-  just bh-dev build
+  if [[ "{{wipe}}" != "clean" ]]; then
+    just bh-dev build
+  else
+    echo "Clear volumes and rebuild without cache"
+    just bh-clear-volumes
+    just bh-clean-docker-build
+  fi
 
   echo "Start integration testing services"
   just bh-testing
@@ -151,8 +157,8 @@ bh-testing-clear-volumes *ARGS='':
   @docker compose --project-name bh-testing -f docker-compose.testing.yml down -v {{ARGS}}
 
 # clear BH docker compose volumes (pass --remove-orphans if troubleshooting)
-bh-clear-volumes *ARGS='':
-  @docker compose -f docker-compose.dev.yml down -v {{ARGS}}
+bh-clear-volumes target='dev' *ARGS='':
+  @docker compose --profile {{target}} -f docker-compose.dev.yml down -v {{ARGS}}
 
 # build BH target cleanly (default profile dev with --no-cache flag)
 bh-clean-docker-build target='dev' *ARGS='':
