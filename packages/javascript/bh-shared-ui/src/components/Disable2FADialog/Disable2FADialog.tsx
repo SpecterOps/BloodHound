@@ -28,22 +28,13 @@ const Disable2FADialog: React.FC<{
     contentText: string;
 }> = ({ open, onClose, onCancel, onSave, error, secret, setSecret, contentText }) => {
 
-
-    const handleOnClose = () => {
-        onClose();
-    };
-
-    const handleOnCancel = () => {
-        onCancel();
-    };
-
     const handleOnSave: React.FormEventHandler = (e) => {
         e.preventDefault();
         onSave(secret);
     };
 
     return (
-        <Dialog open={open} onClose={handleOnClose} maxWidth='sm' fullWidth>
+        <Dialog open={open} onClose={onClose} maxWidth='sm' fullWidth>
             <DialogTitle>Disable Multi-Factor Authentication?</DialogTitle>
             <form onSubmit={handleOnSave}>
                 <DialogContent>
@@ -69,7 +60,7 @@ const Disable2FADialog: React.FC<{
                     />
                 </DialogContent>
                 <DialogActions>
-                    <Button color='inherit' onClick={handleOnCancel}>
+                    <Button color='inherit' onClick={onCancel}>
                         Cancel
                     </Button>
                     <Button color='primary' type='submit'>
