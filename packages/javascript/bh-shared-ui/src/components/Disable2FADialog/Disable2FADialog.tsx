@@ -31,12 +31,10 @@ const Disable2FADialog: React.FC<{
 
     const handleOnClose = () => {
         onClose();
-        setSecret('');
     };
 
     const handleOnCancel = () => {
         onCancel();
-        setSecret('');
     };
 
     const handleOnSave: React.FormEventHandler = (e) => {

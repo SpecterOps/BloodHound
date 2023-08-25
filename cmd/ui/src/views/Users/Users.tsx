@@ -314,11 +314,13 @@ const Users = () => {
                 onClose={() => {
                     setDisable2FADialogOpen(false);
                     setDisable2FAError('');
+                    setDisable2FASecret('');
                     getSelfQuery.refetch();
                 }}
                 onCancel={() => {
                     setDisable2FADialogOpen(false);
                     setDisable2FAError('');
+                    setDisable2FASecret('');
                     getSelfQuery.refetch();
                 }}
                 onSave={(secret: string) => {

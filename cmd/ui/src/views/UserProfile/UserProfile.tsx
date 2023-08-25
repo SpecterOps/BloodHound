@@ -175,11 +175,13 @@ const UserProfile = () => {
                 onClose={() => {
                     setEnable2FADialogOpen(false);
                     setEnable2FAError('');
+                    setDisable2FASecret('');
                     getSelfQuery.refetch();
                 }}
                 onCancel={() => {
                     setEnable2FADialogOpen(false);
                     setEnable2FAError('');
+                    setDisable2FASecret('');
                     getSelfQuery.refetch();
                 }}
                 onSavePassword={(password) => {
