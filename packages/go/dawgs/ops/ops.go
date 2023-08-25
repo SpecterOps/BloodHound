@@ -140,10 +140,6 @@ func FetchNodeIDs(query graph.NodeQuery) ([]graph.ID, error) {
 	})
 }
 
-const (
-	CypherQueryMemoryLimit = size.Gibibyte
-)
-
 func FetchPathSetByQuery(tx graph.Transaction, query string) (graph.PathSet, error) {
 	var (
 		currentPath graph.Path
@@ -179,8 +175,8 @@ func FetchPathSetByQuery(tx graph.Transaction, query string) (graph.PathSet, err
 				currentPathSize := size.OfSlice(currentPath.Edges) + size.OfSlice(currentPath.Nodes)
 				pathSetSize := size.Of(pathSet)
 
-				if currentPathSize > CypherQueryMemoryLimit || pathSetSize > CypherQueryMemoryLimit {
-					return pathSet, fmt.Errorf("%s - Limit: %.2f MB", "query required more memory than allowed", CypherQueryMemoryLimit.Mebibytes())
+				if currentPathSize > tx.TraversalMemoryLimit() || pathSetSize > tx.TraversalMemoryLimit() {
+					return pathSet, fmt.Errorf("%s - Limit: %.2f MB", "query required more memory than allowed", tx.TraversalMemoryLimit().Mebibytes())
 				}
 			}
 		}

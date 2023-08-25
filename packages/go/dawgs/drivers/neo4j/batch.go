@@ -1,17 +1,17 @@
 // Copyright 2023 Specter Ops, Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// 
+//
 // SPDX-License-Identifier: Apache-2.0
 
 package neo4j
@@ -22,6 +22,7 @@ import (
 
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/specterops/bloodhound/dawgs/graph"
+	"github.com/specterops/bloodhound/dawgs/util/size"
 )
 
 type createRelationshipByIDs struct {
@@ -269,9 +270,9 @@ func (s *batchTransaction) flushNodeDeletions() error {
 	return s.innerTx.DeleteNodesBySlice(buffer)
 }
 
-func newBatchOperation(ctx context.Context, session neo4j.Session, cfg graph.TransactionConfig, writeFlushSize int, batchWriteSize int) *batchTransaction {
+func newBatchOperation(ctx context.Context, session neo4j.Session, cfg graph.TransactionConfig, writeFlushSize int, batchWriteSize int, traversalMemoryLimit size.Size) *batchTransaction {
 	return &batchTransaction{
-		innerTx:                    newTransaction(ctx, session, cfg, writeFlushSize, batchWriteSize),
+		innerTx:                    newTransaction(ctx, session, cfg, writeFlushSize, batchWriteSize, traversalMemoryLimit),
 		batchWriteSize:             batchWriteSize,
 		nodeDeletionBuffer:         make([]graph.ID, 0, batchWriteSize),
 		relationshipDeletionBuffer: make([]graph.ID, 0, batchWriteSize),

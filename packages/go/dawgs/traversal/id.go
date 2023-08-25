@@ -1,17 +1,17 @@
 // Copyright 2023 Specter Ops, Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// 
+//
 // SPDX-License-Identifier: Apache-2.0
 
 package traversal
@@ -62,7 +62,6 @@ func (s IDTraversal) BreadthFirst(ctx context.Context, plan IDPlan) error {
 		completionC  = make(chan struct{}, s.numWorkers*2)
 		descentCount = &atomic.Int64{}
 
-		memoryLimitHit                 = false
 		errors                         = util.NewErrorCollector()
 		pathTree                       = graph.NewRootIDSegment(plan.Root)
 		traversalCtx, doneFunc         = context.WithCancel(ctx)
@@ -86,7 +85,7 @@ func (s IDTraversal) BreadthFirst(ctx context.Context, plan IDPlan) error {
 				for {
 					if nextDescent, ok := channels.Receive(traversalCtx, segmentReaderC); !ok {
 						return nil
-					} else if pathTreeSize := pathTree.SizeOf(); pathTreeSize < ops.TraversalMemoryLimit {
+					} else if pathTreeSize := pathTree.SizeOf(); pathTreeSize < tx.TraversalMemoryLimit() {
 						// Traverse the descending relationships of the current segment
 						if descendingSegments, err := plan.Delegate(traversalCtx, tx, nextDescent); err != nil {
 							return err
@@ -98,8 +97,8 @@ func (s IDTraversal) BreadthFirst(ctx context.Context, plan IDPlan) error {
 							}
 						}
 					} else {
-						// Only continue descending if we haven't hit a memory limit
-						memoryLimitHit = true
+						// Did we encounter a memory limit?
+						errors.Add(fmt.Errorf("%w - Limit: %.2f MB - Memory In-Use: %.2f MB", ops.ErrTraversalMemoryLimit, tx.TraversalMemoryLimit().Mebibytes(), pathTree.SizeOf().Mebibytes()))
 					}
 
 					// Mark descent for this segment as complete
@@ -133,11 +132,6 @@ func (s IDTraversal) BreadthFirst(ctx context.Context, plan IDPlan) error {
 
 	// Wait for all workers to exit
 	workerWG.Wait()
-
-	// Did we encounter a memory limit?
-	if memoryLimitHit {
-		errors.Add(fmt.Errorf("%w - Limit: %.2f MB - Memory In-Use: %.2f MB", ops.ErrTraversalMemoryLimit, ops.TraversalMemoryLimit.Mebibytes(), pathTree.SizeOf().Mebibytes()))
-	}
 
 	return errors.Combined()
 }
