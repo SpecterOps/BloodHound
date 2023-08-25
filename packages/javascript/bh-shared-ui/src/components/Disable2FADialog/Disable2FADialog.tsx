@@ -46,7 +46,7 @@ const Disable2FADialog: React.FC<{
 
     return (
         <Dialog open={open} onClose={handleOnClose} maxWidth='sm' fullWidth>
-            <DialogTitle>Disable Two-Factor Authentication?</DialogTitle>
+            <DialogTitle>Disable Multi-Factor Authentication?</DialogTitle>
             <form onSubmit={handleOnSave}>
                 <DialogContent>
                     <DialogContentText>
@@ -75,7 +75,7 @@ const Disable2FADialog: React.FC<{
                         Cancel
                     </Button>
                     <Button color='primary' type='submit'>
-                        Disable Two-Factor Authentication
+                        Disable Multi-Factor Authentication
                     </Button>
                 </DialogActions>
             </form>

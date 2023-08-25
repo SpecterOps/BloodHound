@@ -26,7 +26,7 @@ describe('OneTimePasscodeForm', () => {
 
         render(<OneTimePasscodeForm onSubmit={testOnSubmit} onCancel={testOnCancel} />);
 
-        expect(screen.getByText(/two-factor authentication enabled/i)).toBeInTheDocument();
+        expect(screen.getByText(/multi-factor authentication enabled/i)).toBeInTheDocument();
         expect(screen.getByText(/provide the 6 digit code from your authenticator app/i)).toBeInTheDocument();
         expect(screen.getByLabelText(/6-digit code/i)).toBeInTheDocument();
         expect(screen.getByRole('button', { name: /check code/i })).toBeInTheDocument();

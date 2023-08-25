@@ -30,7 +30,7 @@ const SetupKeyDialog: React.FC<{
                 // @ts-ignore
                 'data-testid': 'setup-key-dialog',
             }}>
-            <DialogTitle>Two-Factor Authentication Setup Key</DialogTitle>
+            <DialogTitle>Multi-Factor Authentication Setup Key</DialogTitle>
             <DialogContent>
                 <DialogContentText data-testid='setup-key'>{setupKey}</DialogContentText>
             </DialogContent>

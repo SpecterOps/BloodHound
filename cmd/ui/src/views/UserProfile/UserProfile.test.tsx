@@ -63,7 +63,7 @@ describe('UserProfile with SAML User', () => {
         const authenticationEl = screen.queryByText('Authentication');
         const resetPasswordButton = screen.queryByText('Reset Password');
         const twoFactorAuthToggle = screen.queryByRole('checkbox', {
-            name: 'Two-Factor Authentication Enabled',
+            name: 'Multi-Factor Authentication Enabled',
         });
 
         expect(authenticationEl).not.toBeInTheDocument();
@@ -143,24 +143,24 @@ describe('UserProfile', () => {
         });
     });
 
-    it('should display a toggle switch to enable two-factor authentication', () => {
+    it('should display a toggle switch to enable multi-factor authentication', () => {
         expect(
             screen.getByRole('checkbox', {
-                name: 'Two-Factor Authentication Enabled',
+                name: 'Multi-Factor Authentication Enabled',
             })
         ).toBeInTheDocument();
     });
 
-    describe('"Two-Factor Authentication Enabled" switch is enabled', () => {
+    describe('"Multi-Factor Authentication Enabled" switch is enabled', () => {
         const user = userEvent.setup();
         beforeEach(async () => {
-            await user.click(screen.getByLabelText('Two-Factor Authentication Enabled'));
+            await user.click(screen.getByLabelText('Multi-Factor Authentication Enabled'));
         });
 
-        it('should display a "Configure Two-Factor Authentication" modal', () => {
+        it('should display a "Configure Multi-Factor Authentication" modal', () => {
             const modal = screen.getByRole('dialog');
             expect(modal).toBeInTheDocument();
-            expect(within(modal).getByText('Configure Two-Factor Authentication')).toBeInTheDocument();
+            expect(within(modal).getByText('Configure Multi-Factor Authentication')).toBeInTheDocument();
         });
     });
 });

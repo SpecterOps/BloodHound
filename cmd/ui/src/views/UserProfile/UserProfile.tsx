@@ -136,13 +136,13 @@ const UserProfile = () => {
                             </Grid>
 
                             <Grid item xs={3}>
-                                <Typography variant='body1'>Two-Factor Authentication</Typography>
+                                <Typography variant='body1'>Multi-Factor Authentication</Typography>
                             </Grid>
                             <Grid item xs={9}>
                                 <Box display='flex' alignItems='center'>
                                     <Switch
                                         inputProps={{
-                                            'aria-label': 'Two-Factor Authentication Enabled',
+                                            'aria-label': 'Multi-Factor Authentication Enabled',
                                         }}
                                         checked={user.AuthSecret?.totp_activated}
                                         onChange={() => {
@@ -150,7 +150,7 @@ const UserProfile = () => {
                                             else setDisable2FADialogOpen(true);
                                         }}
                                         color='primary'
-                                        data-testid='my-profile_switch-two-factor-authentication'
+                                        data-testid='my-profile_switch-multi-factor-authentication'
                                     />
                                     {user.AuthSecret?.totp_activated && (
                                         <Typography variant='body1'>Enabled</Typography>
@@ -251,7 +251,7 @@ const UserProfile = () => {
                 error={disable2FAError}
                 secret={disable2FASecret}
                 setSecret={setDisable2FASecret}
-                contentText='To stop using two-factor authentication, please enter your password for security purposes.'
+                contentText='To stop using multi-factor authentication, please enter your password for security purposes.'
             />
         </>
     );
