@@ -7,10 +7,14 @@ import (
 	"os"
 	"strings"
 
-	"github.com/specterops/bloodhound/packages/go/stbernard/envdump"
-	"github.com/specterops/bloodhound/packages/go/stbernard/modsync"
+	"github.com/specterops/bloodhound/packages/go/stbernard/command/envdump"
+	"github.com/specterops/bloodhound/packages/go/stbernard/command/modsync"
 )
 
+// Commander is an interface for commands, allowing commands to implement the minimum
+// set of requirements to observe and run the command from above. It is used as a return
+// type to allow passing a usable command to the caller after parsing and creating
+// the command implementation
 type Commander interface {
 	Name() string
 	Usage() string
@@ -21,9 +25,15 @@ var NoCmdErr = errors.New("no command specified")
 var InvalidCmdErr = errors.New("invalid command specified")
 var FailedCreateCmdErr = errors.New("failed to create command")
 
+// ParseCLI parses for a subcommand as the first argument to the calling binary,
+// and initializes the command (if it exists). It also provides the default usage
+// statement.
+//
+// It does not support flags of its own, each subcommand is responsible for parsing
+// their flags.
 func ParseCLI() (Commander, error) {
 	// Generate a nice usage message
-	flag.Usage = globalUsage
+	flag.Usage = usage
 
 	// Default usage if no arguments provided
 	if len(os.Args) < 2 {
@@ -34,7 +44,7 @@ func ParseCLI() (Commander, error) {
 	switch os.Args[1] {
 	case ModSync.String():
 		config := modsync.Config{Environment: environment()}
-		if cmd, err := modsync.CreateModSyncCommand(config); err != nil {
+		if cmd, err := modsync.Create(config); err != nil {
 			return nil, fmt.Errorf("%w: %w", FailedCreateCmdErr, err)
 		} else {
 			return cmd, nil
@@ -42,7 +52,7 @@ func ParseCLI() (Commander, error) {
 
 	case EnvDump.String():
 		config := envdump.Config{Environment: environment()}
-		if cmd, err := envdump.CreateEnvDumpCommand(config); err != nil {
+		if cmd, err := envdump.Create(config); err != nil {
 			return nil, fmt.Errorf("%w: %w", FailedCreateCmdErr, err)
 		} else {
 			return cmd, nil
@@ -55,7 +65,8 @@ func ParseCLI() (Commander, error) {
 	}
 }
 
-func globalUsage() {
+// usage creates a pretty usage message for our main command
+func usage() {
 	var longestCmdLen int
 
 	w := flag.CommandLine.Output()

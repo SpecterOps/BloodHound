@@ -1,4 +1,4 @@
-package modsync
+package workspace
 
 import (
 	"errors"
@@ -10,15 +10,15 @@ import (
 	"golang.org/x/mod/modfile"
 )
 
-// findRoot will attempt to crawl up the path until it finds a go.work file
-func findRoot() (string, error) {
+// FindRoot will attempt to crawl up the path until it finds a go.work file
+func FindRoot() (string, error) {
 	if cwd, err := os.Getwd(); err != nil {
 		return "", fmt.Errorf("could not get current working directory: %w", err)
 	} else {
 		var found bool
 
 		for !found {
-			found, err = findWorkFile(cwd)
+			found, err = WorkFileExists(cwd)
 			if err != nil {
 				return cwd, fmt.Errorf("error while trying to find go.work file: %w", err)
 			}
@@ -34,7 +34,8 @@ func findRoot() (string, error) {
 	}
 }
 
-func findWorkFile(cwd string) (bool, error) {
+// WorkFileExists checks if a go.work file exists in the given directory
+func WorkFileExists(cwd string) (bool, error) {
 	if _, err := os.Stat(filepath.Join(cwd, "go.work")); errors.Is(err, os.ErrNotExist) {
 		return false, nil
 	} else if err != nil {
@@ -44,7 +45,9 @@ func findWorkFile(cwd string) (bool, error) {
 	}
 }
 
-func parseModulesAbsPaths(cwd string) ([]string, error) {
+// ParseModulesAbsPaths parses the modules listed in the go.work file from the given
+// directory and returns a list of absolute paths to those modules
+func ParseModulesAbsPaths(cwd string) ([]string, error) {
 	var workfilePath = filepath.Join(cwd, "go.work")
 	// go.work files aren't particularly heavy, so we'll just read into memory
 	if data, err := os.ReadFile(workfilePath); err != nil {
@@ -65,7 +68,9 @@ func parseModulesAbsPaths(cwd string) ([]string, error) {
 	}
 }
 
-func downloadMods(modPaths []string, env []string) error {
+// DownloadModules runs go mod download for all module paths passed with a given
+// set of environment variables
+func DownloadModules(modPaths []string, env []string) error {
 	var errs = make([]error, 0)
 
 	for _, modPath := range modPaths {
@@ -84,7 +89,9 @@ func downloadMods(modPaths []string, env []string) error {
 	}
 }
 
-func syncWorkspace(cwd string, env []string) error {
+// SyncWorkspace runs go work sync in the given directory with a given set of environment
+// variables
+func SyncWorkspace(cwd string, env []string) error {
 	cmd := exec.Command("go", "work", "sync")
 	cmd.Env = env
 	cmd.Dir = cwd

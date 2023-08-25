@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+
+	"github.com/specterops/bloodhound/packages/go/stbernard/workspace"
 )
 
 const (
@@ -34,20 +36,20 @@ func (s command) Name() string {
 }
 
 func (s command) Run() error {
-	if cwd, err := findRoot(); err != nil {
+	if cwd, err := workspace.FindRoot(); err != nil {
 		return fmt.Errorf("could not find workspace root: %w", err)
-	} else if modPaths, err := parseModulesAbsPaths(cwd); err != nil {
+	} else if modPaths, err := workspace.ParseModulesAbsPaths(cwd); err != nil {
 		return fmt.Errorf("could not parse module absolute paths: %w", err)
-	} else if err := downloadMods(modPaths, s.config.Environment); err != nil {
+	} else if err := workspace.DownloadModules(modPaths, s.config.Environment); err != nil {
 		return fmt.Errorf("could not download modules: %w", err)
-	} else if err := syncWorkspace(cwd, s.config.Environment); err != nil {
+	} else if err := workspace.SyncWorkspace(cwd, s.config.Environment); err != nil {
 		return fmt.Errorf("could not sync workspace: %w", err)
 	} else {
 		return nil
 	}
 }
 
-func CreateModSyncCommand(config Config) (command, error) {
+func Create(config Config) (command, error) {
 	modsyncCmd := flag.NewFlagSet(Name, flag.ExitOnError)
 	modsyncCmd.BoolVar(&config.flags.verbose, "v", false, "Print verbose logs")
 

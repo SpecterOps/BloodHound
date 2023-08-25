@@ -41,7 +41,7 @@ func (s command) Run() error {
 	return nil
 }
 
-func CreateEnvDumpCommand(config Config) (command, error) {
+func Create(config Config) (command, error) {
 	envdumpCmd := flag.NewFlagSet(Name, flag.ExitOnError)
 
 	envdumpCmd.Usage = func() {

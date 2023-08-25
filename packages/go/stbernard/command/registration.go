@@ -1,8 +1,8 @@
 package command
 
 import (
-	"github.com/specterops/bloodhound/packages/go/stbernard/envdump"
-	"github.com/specterops/bloodhound/packages/go/stbernard/modsync"
+	"github.com/specterops/bloodhound/packages/go/stbernard/command/envdump"
+	"github.com/specterops/bloodhound/packages/go/stbernard/command/modsync"
 )
 
 // Command enum represents our subcommands
@@ -14,7 +14,7 @@ const (
 	EnvDump
 )
 
-// String implements Stringer for Command enum
+// String implements Stringer for the Command enum
 func (s Command) String() string {
 	switch s {
 	case ModSync:
@@ -26,10 +26,12 @@ func (s Command) String() string {
 	}
 }
 
+// Commands returns our valid set of Command options
 func Commands() []Command {
 	return []Command{ModSync, EnvDump}
 }
 
+// Commands usage returns a slice of Command usage statements indexed by their enum
 func CommandsUsage() []string {
 	var usage = make([]string, len(Commands()))
 
