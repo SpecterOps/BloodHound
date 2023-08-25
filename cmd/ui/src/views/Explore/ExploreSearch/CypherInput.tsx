@@ -16,14 +16,25 @@
 
 import { faFolderOpen, faPlay, faQuestion } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Box, Button, Collapse, TextField } from '@mui/material';
+import { Box, Button, Collapse } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
+import '@neo4j-cypher/codemirror/css/cypher-codemirror.css';
+import { CypherEditor } from '@neo4j-cypher/react-codemirror';
+import {
+    ActiveDirectoryNodeKind,
+    ActiveDirectoryRelationshipKind,
+    AzureNodeKind,
+    AzureRelationshipKind,
+    ActiveDirectoryKindProperties,
+    AzureKindProperties,
+} from 'bh-shared-ui';
 import { useCallback, useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { startCypherQuery } from 'src/ducks/explore/actions';
 import { setCypherQueryTerm, startCypherSearch } from 'src/ducks/searchbar/actions';
+import { CommonKindProperties } from 'src/graphSchema';
 import { AppState } from 'src/store';
 import CommonSearches from './CommonSearches';
-import { startCypherQuery } from 'src/ducks/explore/actions';
 
 const useStyles = makeStyles((theme) => ({
     button: {
@@ -37,7 +48,38 @@ const useStyles = makeStyles((theme) => ({
         resize: 'vertical',
         fontSize: '.8rem',
     },
+    cypherEditor: {
+        display: 'flex',
+        flexGrow: 1,
+        flexDirection: 'column',
+        border: '1px solid',
+        borderColor: 'rgba(0,0,0,.23)',
+        borderRadius: theme.shape.borderRadius,
+        backgroundColor: 'white',
+        paddingTop: '5px',
+        minHeight: '120px',
+        // enables drag n drop resizing of editor
+        resize: 'vertical',
+        maxHeight: '500px',
+        overflow: 'auto',
+    },
 }));
+
+const schema = {
+    labels: [
+        ...Object.values(ActiveDirectoryNodeKind).map((nodeLabel) => `:${nodeLabel}`),
+        ...Object.values(AzureNodeKind).map((nodeLabel) => `:${nodeLabel}`),
+    ],
+    relationshipTypes: [
+        ...Object.values(ActiveDirectoryRelationshipKind).map((relationshipType) => `:${relationshipType}`),
+        ...Object.values(AzureRelationshipKind).map((relationshipType) => `:${relationshipType}`),
+    ],
+    propertyKeys: [
+        ...Object.values(CommonKindProperties),
+        ...Object.values(ActiveDirectoryKindProperties),
+        ...Object.values(AzureKindProperties),
+    ],
+};
 
 const CypherInput = () => {
     const classes = useStyles();
@@ -94,51 +136,53 @@ const CypherInput = () => {
                     <FontAwesomeIcon icon={faFolderOpen} />
                 </Button>
 
-                <Box display='flex' flexGrow={1} flexDirection={'column'} gap={1} alignItems={'end'}>
-                    <TextField
-                        placeholder='Cypher Search'
-                        multiline
-                        rows={3}
-                        fullWidth
+                <div
+                    onClick={() => {
+                        const input = document.querySelector('.cm-content') as HTMLElement;
+                        if (input) {
+                            input.focus();
+                        }
+                    }}
+                    style={{ flex: 1 }}
+                    role='textbox'>
+                    <CypherEditor
+                        className={classes.cypherEditor}
                         value={cypherQuery}
-                        onChange={(e) => {
-                            setCypherQuery(e.target.value);
+                        onValueChanged={(val: string) => {
+                            setCypherQuery(val);
                         }}
-                        onKeyDown={(e) => {
+                        onKeyDown={(e: any) => {
                             // if enter and shift key is pressed, execute cypher search
                             if (e.key === 'Enter' && e.shiftKey) {
                                 e.preventDefault();
                                 handleCypherSearch(cypherQuery);
                             }
                         }}
-                        inputProps={{
-                            style: { fontFamily: 'monospace' },
-                            className: classes.textarea,
-                        }}
+                        schema={schema}
+                        lineWrapping
+                        lint
+                        placeholder='Cypher Search'
                     />
-                    <Box display={'flex'} gap={1}>
-                        <a
-                            href='https://support.bloodhoundenterprise.io/hc/en-us/articles/16721164740251'
-                            target='_blank'
-                            rel='noreferrer'>
-                            <Button variant='outlined' className={classes.button} sx={{ padding: 0 }}>
-                                <FontAwesomeIcon icon={faQuestion} />
-                            </Button>
-                        </a>
-
-                        <Button
-                            className={classes.button}
-                            onClick={() => handleCypherSearch(cypherQuery)}
-                            variant='outlined'>
-                            <Box mr={1}>
-                                <FontAwesomeIcon icon={faPlay} />
-                            </Box>
-                            Search
-                        </Button>
-                    </Box>
-                </Box>
+                </div>
             </Box>
 
+            <Box display={'flex'} gap={1} mt={1} justifyContent={'end'}>
+                <a
+                    href='https://support.bloodhoundenterprise.io/hc/en-us/articles/16721164740251'
+                    target='_blank'
+                    rel='noreferrer'>
+                    <Button variant='outlined' className={classes.button} sx={{ padding: 0 }}>
+                        <FontAwesomeIcon icon={faQuestion} />
+                    </Button>
+                </a>
+
+                <Button className={classes.button} onClick={() => handleCypherSearch(cypherQuery)} variant='outlined'>
+                    <Box mr={1}>
+                        <FontAwesomeIcon icon={faPlay} />
+                    </Box>
+                    Search
+                </Button>
+            </Box>
             <Collapse in={showCommonQueries}>
                 <CommonSearches onClickListItem={onClickCommonSearchesListItem} />
             </Collapse>
