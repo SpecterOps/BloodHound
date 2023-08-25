@@ -15,6 +15,7 @@ set positional-arguments
 # Initialize your dev environment (use "just init clean" to reset your config files)
 init wipe="":
   #!/usr/bin/env bash
+  echo "Init BloodHound CE"
   echo "Make local copies of configuration files"
   if [[ -d "./local-harnesses/build.config.json" ]]; then
     rm -rf "./local-harnesses/build.config.json"
@@ -43,7 +44,10 @@ init wipe="":
   echo "Ensure containers have been rebuilt"
   just bh-dev build
 
-  echo "Init Complete"
+  echo "Start integration testing services"
+  just bh-testing
+
+  echo "BloodHound CE Init Complete"
 
 # Show available targets for this context.
 show *FLAGS:
