@@ -187,7 +187,7 @@ const Users = () => {
         if (user.saml_provider_id)
             return <span>{`SAML: ${SAMLProvidersMap[user.saml_provider_id]?.name || user.saml_provider_id}`}</span>;
         if (user.AuthSecret?.totp_activated)
-            return <span style={{ whiteSpace: 'pre-wrap' }}>{'Username / Password\n2FA Enabled'}</span>;
+            return <span style={{ whiteSpace: 'pre-wrap' }}>{'Username / Password\nMFA Enabled'}</span>;
         return <span>Username / Password</span>;
     };
 
