@@ -40,6 +40,7 @@ export const GraphEvents: FC<GraphEventProps> = ({
 }) => {
     const dispatch = useAppDispatch();
     const selectedEdge = useSelector((state: AppState) => state.edgeinfo.selectedEdge);
+    const selectedNode = useSelector((state: AppState) => state.entityinfo.selectedNode);
 
     const sigma = useSigma();
     const registerEvents = useRegisterEvents();
@@ -47,7 +48,7 @@ export const GraphEvents: FC<GraphEventProps> = ({
 
     const [hoveredNode, setHoveredNode] = useState<string | null>(null);
     const [draggedNode, setDraggedNode] = useState<string | null>(null);
-    const [selectedNode, setSelectedNode] = useState<string | null>(null);
+    const [highlightedNode, setHighlightedNode] = useState<string | null>(null);
     const [isDragging, setIsDragging] = useState(false);
 
     const isLongPress = useRef(false);
@@ -119,7 +120,7 @@ export const GraphEvents: FC<GraphEventProps> = ({
                     clickTimerRef.current = setTimeout(function () {
                         if (!prevent.current) {
                             onClickNode(event.node);
-                            setSelectedNode(event.node);
+                            setHighlightedNode(event.node);
                             dispatch(setSelectedEdge(null));
                         }
                         prevent.current = false;
@@ -141,7 +142,7 @@ export const GraphEvents: FC<GraphEventProps> = ({
         sigma,
         draggedNode,
         isDragging,
-        selectedNode,
+        highlightedNode,
         sigmaContainer,
     ]);
 
@@ -155,7 +156,7 @@ export const GraphEvents: FC<GraphEventProps> = ({
                     inverseSqrtZoomRatio: 1 / Math.sqrt(camera.ratio),
                 };
 
-                if (node === selectedNode) {
+                if (node === highlightedNode) {
                     newData.highlighted = true;
                 }
 
@@ -208,7 +209,7 @@ export const GraphEvents: FC<GraphEventProps> = ({
                 return newData;
             },
         });
-    }, [hoveredNode, draggedNode, selectedNode, selectedEdge, edgeReducer, setSettings, sigma]);
+    }, [hoveredNode, draggedNode, highlightedNode, selectedEdge, edgeReducer, setSettings, sigma]);
 
     // Toggle off edge labels when dragging a node. Since these are rendered on a 2d canvas, dragging nodes with lots of edges
     // can tank performance
@@ -225,8 +226,15 @@ export const GraphEvents: FC<GraphEventProps> = ({
     }, [sigma]);
 
     useEffect(() => {
-        if (selectedEdge) setSelectedNode(null);
+        if (selectedEdge) setHighlightedNode(null);
     }, [selectedEdge]);
+
+    useEffect(() => {
+        if (selectedNode?.graphId) {
+            setSelectedEdge(null);
+            setHighlightedNode(selectedNode.graphId);
+        }
+    }, [selectedNode])
 
     return null;
 };

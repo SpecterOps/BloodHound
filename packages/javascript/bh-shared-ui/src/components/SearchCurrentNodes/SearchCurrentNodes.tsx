@@ -2,35 +2,27 @@ import { Box, List, ListItem, Paper, TextField } from "@mui/material";
 import { useCombobox } from "downshift";
 import { FC, useEffect, useRef, useState } from "react";
 import SearchResultItem from "../SearchResultItem";
-
-export type FlatNode = GraphNode & { id: string; };
-
-export type GraphNode = {
-    label: string;
-    kind: string;
-    objectId: string;
-    lastSeen: string;
-    isTierZero: boolean;
-    descendent_count?: number | null;
-};
-
-type GraphNodes = Record<string, GraphNode>;
+import { FlatNode, GraphNodes } from "./types";
 
 const SearchCurrentNodes: FC<{
     currentNodes: GraphNodes;
-    onBlur?: () => void;
-}> = ({ currentNodes, onBlur }) => {
+    onSelect: (node: FlatNode) => void;
+}> = ({ currentNodes, onSelect }) => {
     
     const inputRef = useRef<HTMLInputElement>(null);
     const [items, setItems] = useState<FlatNode[]>([]);
+    const [selectedNode, setSelectedNode] = useState<FlatNode | null | undefined>(null)
 
+    // Node data is a lot easier to work with in the combobox if we transform to an array of flat objects
     const flatNodeList: FlatNode[] = Object.entries(currentNodes).map(([key, value]) => {
         return { id: key, ...value }
     });
 
+    useEffect(() => inputRef.current?.focus(), []);
+
     useEffect(() => {
-        inputRef.current?.focus();
-    }, []);
+        if (selectedNode) onSelect(selectedNode);
+    }, [selectedNode, onSelect]);
 
     const { getInputProps, getMenuProps, getComboboxProps, getItemProps, inputValue } = useCombobox({
         items,
@@ -45,6 +37,16 @@ const SearchCurrentNodes: FC<{
                 return label.includes(lowercaseInputValue) || objectId.includes(lowercaseInputValue);
             });
             setItems(filteredNodes);
+        },
+        stateReducer: (_state, actionAndChanges) => {
+            const { changes, type } = actionAndChanges;
+            switch (type) {
+                case useCombobox.stateChangeTypes.ItemClick:
+                    if (changes.selectedItem) setSelectedNode(changes.selectedItem);
+                    return { ...changes, inputValue: '' }
+                default:
+                    return changes
+            }
         }
     });
 
@@ -58,16 +60,11 @@ const SearchCurrentNodes: FC<{
             padding={1}
             {...getComboboxProps()}
         >
-            <TextField
-                inputRef={inputRef}
-                InputProps={{ onBlur }}
-                variant="outlined"
-                size="small"
-                fullWidth
-                {...getInputProps()}
-            />
-            <Box overflow={"auto"} height={350}>
-                <List dense {...getMenuProps()}>
+            <Box overflow={"auto"} maxHeight={350} marginBottom={items.length === 0 ? 0 : 1}>
+                <List dense {...getMenuProps({
+                    hidden: items.length === 0 && !inputValue,
+                    style: { paddingTop: 0 }
+                })}>
                     {items.map((node, index) => {
                         return (
                             <SearchResultItem
@@ -83,6 +80,14 @@ const SearchCurrentNodes: FC<{
                     {items.length === 0 && inputValue && <ListItem>No Results Found</ListItem>}
                 </List>
             </Box>
+            <TextField
+                inputRef={inputRef}
+                placeholder={"Search Current Results"}
+                variant="outlined"
+                size="small"
+                fullWidth
+                {...getInputProps()}
+            />
         </Box>
     );
 }

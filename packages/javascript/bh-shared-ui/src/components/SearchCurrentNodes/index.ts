@@ -1,3 +1,3 @@
-import SearchCurrentNodes from './SearchCurrentNodes';
-
-export default SearchCurrentNodes;
+export * from './SearchCurrentNodes';
+export { default } from './SearchCurrentNodes';
+export * from './types';
