@@ -1,17 +1,17 @@
 // Copyright 2023 Specter Ops, Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// 
+//
 // SPDX-License-Identifier: Apache-2.0
 
 package auth
@@ -24,6 +24,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/specterops/bloodhound/crypto"
+	"github.com/specterops/bloodhound/log"
+	"github.com/specterops/bloodhound/slices"
 	"github.com/specterops/bloodhound/src/api"
 	v2 "github.com/specterops/bloodhound/src/api/v2"
 	"github.com/specterops/bloodhound/src/auth"
@@ -37,9 +40,6 @@ import (
 	"github.com/specterops/bloodhound/src/serde"
 	"github.com/specterops/bloodhound/src/utils"
 	"github.com/specterops/bloodhound/src/utils/validation"
-	"github.com/specterops/bloodhound/crypto"
-	"github.com/specterops/bloodhound/log"
-	"github.com/specterops/bloodhound/slices"
 
 	"github.com/crewjam/saml"
 	"github.com/crewjam/saml/samlsp"
@@ -662,10 +662,10 @@ func (s ManagementResource) PutUserAuthSecret(response http.ResponseWriter, requ
 	} else if targetUser.SAMLProviderID.Valid {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "Invalid operation, user is SSO", request), response)
 	} else if passwordExpiration, err := appcfg.GetPasswordExpiration(s.db); err != nil {
-		log.Errorf("Error while attempting to fetch password expiration window: %w", err)
+		log.Errorf("Error while attempting to fetch password expiration window: %v", err)
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseCodeInternalServerError, request), response)
 	} else if secretDigest, err := s.secretDigester.Digest(setUserSecretRequest.Secret); err != nil {
-		log.Errorf("Error while attempting to digest secret for user: %w", err)
+		log.Errorf("Error while attempting to digest secret for user: %v", err)
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
 	} else {
 		authSecret := model.AuthSecret{
