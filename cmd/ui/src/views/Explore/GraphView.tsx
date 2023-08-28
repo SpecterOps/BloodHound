@@ -257,13 +257,11 @@ const GridItems = () => {
 
     const edgeInfoState: EdgeInfoState = useSelector((state: AppState) => state.edgeinfo);
 
-    const { xs, md, lg, xl } = columns;
-
     return [
-        <Grid item xs={xs} md={md} lg={lg} xl={xl} sx={{ height: '100%' }} key={'exploreSearch'}>
+        <Grid item {...columns} sx={{ height: '100%' }} key={'exploreSearch'}>
             <ExploreSearch handleColumns={handleCypherTab} />
         </Grid>,
-        <Grid item xs={xs} md={md} lg={lg} xl={xl} sx={{ height: '100%' }} key={'info'}>
+        <Grid item {...columnsDefault} sx={{ height: '100%' }} key={'info'}>
             {edgeInfoState.open ? <EdgeInfoPane selectedEdge={edgeInfoState.selectedEdge} /> : <EntityInfoPanel />}
         </Grid>,
     ];
