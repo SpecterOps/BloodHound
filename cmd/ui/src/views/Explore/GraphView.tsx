@@ -236,10 +236,10 @@ const GraphView: FC = () => {
                     pointerEvents: 'none',
                     height: '100%',
                 }}>
-                <Grid item xs={6} md={5} lg={4} sx={{ height: '100%' }}>
+                <Grid item xs={6} md={5} lg={4} xl={3} sx={{ height: '100%', maxWidth: '400px' }}>
                     <ExploreSearch />
                 </Grid>
-                <Grid item xs={6} md={5} lg={4} sx={{ height: '100%' }}>
+                <Grid item xs={6} md={5} lg={4} xl={3} sx={{ height: '100%' }}>
                     {edgeInfoState.open ? (
                         <EdgeInfoPane selectedEdge={edgeInfoState.selectedEdge} />
                     ) : (
