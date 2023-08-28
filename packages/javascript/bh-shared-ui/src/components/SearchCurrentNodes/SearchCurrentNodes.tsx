@@ -1,13 +1,17 @@
-import { Box, List, ListItem, Paper, TextField } from "@mui/material";
+import { Box, List, ListItem, Paper, SxProps, TextField } from "@mui/material";
 import { useCombobox } from "downshift";
 import { FC, useEffect, useRef, useState } from "react";
 import SearchResultItem from "../SearchResultItem";
 import { FlatNode, GraphNodes } from "./types";
 
+export const PLACEHOLDER_TEXT = "Search Current Results";
+export const NO_RESULTS_TEXT = "Result not found in current results";
+
 const SearchCurrentNodes: FC<{
+    sx?: SxProps;
     currentNodes: GraphNodes;
     onSelect: (node: FlatNode) => void;
-}> = ({ currentNodes, onSelect }) => {
+}> = ({ sx, currentNodes, onSelect }) => {
     
     const inputRef = useRef<HTMLInputElement>(null);
     const [items, setItems] = useState<FlatNode[]>([]);
@@ -51,17 +55,9 @@ const SearchCurrentNodes: FC<{
     });
 
     return (
-        <Box
-            component={Paper}
-            borderRadius={1}
-            bgcolor={'white'}
-            width={600}
-            marginLeft={2}
-            padding={1}
-            {...getComboboxProps()}
-        >
+        <Box component={Paper} {...sx} {...getComboboxProps()}>
             <Box overflow={"auto"} maxHeight={350} marginBottom={items.length === 0 ? 0 : 1}>
-                <List dense {...getMenuProps({
+                <List data-testid={"current-results-list"} dense {...getMenuProps({
                     hidden: items.length === 0 && !inputValue,
                     style: { paddingTop: 0 }
                 })}>
@@ -77,12 +73,12 @@ const SearchCurrentNodes: FC<{
                             />
                         );
                     })}
-                    {items.length === 0 && inputValue && <ListItem>No Results Found</ListItem>}
+                    {items.length === 0 && inputValue && <ListItem>{NO_RESULTS_TEXT}</ListItem>}
                 </List>
             </Box>
             <TextField
                 inputRef={inputRef}
-                placeholder={"Search Current Results"}
+                placeholder={PLACEHOLDER_TEXT}
                 variant="outlined"
                 size="small"
                 fullWidth

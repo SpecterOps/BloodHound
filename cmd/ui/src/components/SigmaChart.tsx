@@ -121,6 +121,7 @@ const SigmaChart: FC<Partial<SigmaChartProps>> = ({
             <Box position={'absolute'} bottom={16} >
                 {isCurrentSearchOpen && (
                     <SearchCurrentNodes
+                        sx={{ marginLeft: 2, padding: 1 }}
                         currentNodes={currentNodes || {}}
                         onSelect={handleSelectNode}
                     />
