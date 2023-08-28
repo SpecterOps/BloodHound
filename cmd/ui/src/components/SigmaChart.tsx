@@ -124,6 +124,7 @@ const SigmaChart: FC<Partial<SigmaChartProps>> = ({
                         sx={{ marginLeft: 2, padding: 1 }}
                         currentNodes={currentNodes || {}}
                         onSelect={handleSelectNode}
+                        onClose={toggleCurrentSearch}
                     />
                 )}
                 <GraphButtons rankDirection={rankDirection} options={options} nonLayoutButtons={nonLayoutButtons} />

@@ -208,7 +208,11 @@ const GraphView: FC = () => {
     const options: GraphButtonOptions = { standard: true, sequential: true };
 
     const nonLayoutButtons: GraphButtonProps[] = [
-        { displayText: 'Search Current Results', onClick: toggleCurrentSearch }
+        {
+            displayText: 'Search Current Results',
+            onClick: toggleCurrentSearch,
+            disabled: currentSearchOpen
+        }
     ];
 
     return (
@@ -259,7 +263,7 @@ const GridItems = () => {
         <Grid item xs={xs} md={md} lg={lg} xl={xl} sx={{ height: '100%' }} key={'exploreSearch'}>
             <ExploreSearch handleColumns={handleCypherTab} />
         </Grid>,
-        <Grid xs={xs} md={md} lg={lg} xl={xl} sx={{ height: '100%' }} key={'info'}>
+        <Grid item xs={xs} md={md} lg={lg} xl={xl} sx={{ height: '100%' }} key={'info'}>
             {edgeInfoState.open ? <EdgeInfoPane selectedEdge={edgeInfoState.selectedEdge} /> : <EntityInfoPanel />}
         </Grid>,
     ];

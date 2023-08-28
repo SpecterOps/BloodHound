@@ -32,7 +32,14 @@ describe("SearchCurrentNodes", () => {
 
     const setup = () => {
         const testOnSelect = vi.fn();
-        const screen = render(<SearchCurrentNodes currentNodes={nodes} onSelect={testOnSelect} />);
+        const testOnClose = vi.fn();
+        const screen = render(
+            <SearchCurrentNodes
+                currentNodes={nodes}
+                onSelect={testOnSelect}
+                onClose={testOnClose}
+            />
+        );
 
         const input = screen.getByRole('textbox');
         const resultList = screen.getByTestId('current-results-list');

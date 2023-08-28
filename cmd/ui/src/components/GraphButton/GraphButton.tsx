@@ -45,14 +45,16 @@ const useStyles = makeStyles((theme) => ({
 export interface GraphButtonProps {
     onClick: () => void;
     displayText: string | JSX.Element;
+    disabled?: boolean;
 }
 
-const GraphButton: FC<GraphButtonProps> = ({ onClick, displayText }) => {
+const GraphButton: FC<GraphButtonProps> = ({ onClick, displayText, disabled }) => {
     const styles = useStyles();
 
     return (
         <Button
             onClick={onClick}
+            disabled={disabled}
             classes={{ root: styles.button }}>
             {displayText}
         </Button>
