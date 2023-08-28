@@ -5,7 +5,7 @@ import SearchResultItem from "../SearchResultItem";
 import { FlatNode, GraphNodes } from "./types";
 
 export const PLACEHOLDER_TEXT = "Search Current Results";
-export const NO_RESULTS_TEXT = "Result not found in current results";
+export const NO_RESULTS_TEXT = "No result found in current results";
 
 const SearchCurrentNodes: FC<{
     sx?: SxProps;
@@ -73,7 +73,7 @@ const SearchCurrentNodes: FC<{
                             />
                         );
                     })}
-                    {items.length === 0 && inputValue && <ListItem>{NO_RESULTS_TEXT}</ListItem>}
+                    {items.length === 0 && inputValue && <ListItem disabled sx={{ fontSize: 14 }}>{NO_RESULTS_TEXT}</ListItem>}
                 </List>
             </Box>
             <TextField
@@ -83,6 +83,7 @@ const SearchCurrentNodes: FC<{
                 size="small"
                 fullWidth
                 {...getInputProps()}
+                InputProps={{ sx: { fontSize: 14 } }}
             />
         </Box>
     );

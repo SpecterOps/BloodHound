@@ -1,4 +1,4 @@
-import { findAllByTestId, fireEvent, render, within } from "@testing-library/react";
+import {  fireEvent, render } from "@testing-library/react";
 import SearchCurrentNodes, { NO_RESULTS_TEXT } from "./SearchCurrentNodes";
 import { GraphNodes } from "./types";
 
