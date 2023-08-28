@@ -136,7 +136,6 @@ const GraphView: FC = () => {
     const dispatch = useAppDispatch();
 
     const graphState: GraphState = useSelector((state: AppState) => state.explore);
-    const edgeInfoState: EdgeInfoState = useSelector((state: AppState) => state.edgeinfo);
     const opts: GlobalOptionsState = useSelector((state: AppState) => state.global.options);
     const formIsDirty = Object.keys(useSelector((state: AppState) => state.tierzero).changelog).length > 0;
     const [graphologyGraph, setGraphologyGraph] = useState<MultiDirectedGraph<Attributes, Attributes, Attributes>>();
@@ -221,21 +220,36 @@ const GraphView: FC = () => {
                     pointerEvents: 'none',
                     height: '100%',
                 }}>
-                <Grid item xs={6} md={5} lg={4} sx={{ height: '100%' }}>
-                    <ExploreSearch />
-                </Grid>
-                <Grid item xs={6} md={5} lg={4} sx={{ height: '100%' }}>
-                    {edgeInfoState.open ? (
-                        <EdgeInfoPane selectedEdge={edgeInfoState.selectedEdge} />
-                    ) : (
-                        <EntityInfoPanel />
-                    )}
-                </Grid>
+                <GridItems />
             </Grid>
 
             <GraphProgress loading={graphState.loading} />
         </div>
     );
+};
+
+const GridItems = () => {
+    const columnsDefault = { xs: 6, md: 5, lg: 4, xl: 4 };
+    const cypherSearchColumns = { xs: 6, md: 6, lg: 6, xl: 4 };
+
+    const [columns, setColumns] = useState(columnsDefault);
+
+    const handleCypherTab = (isCypherEditorActive: boolean) => {
+        isCypherEditorActive ? setColumns(cypherSearchColumns) : setColumns(columnsDefault);
+    };
+
+    const edgeInfoState: EdgeInfoState = useSelector((state: AppState) => state.edgeinfo);
+
+    const { xs, md, lg, xl } = columns;
+
+    return [
+        <Grid item xs={xs} md={md} lg={lg} xl={xl} sx={{ height: '100%' }} key={'exploreSearch'}>
+            <ExploreSearch handleColumns={handleCypherTab} />
+        </Grid>,
+        <Grid item xs={6} md={5} lg={4} sx={{ height: '100%' }} key={'info'}>
+            {edgeInfoState.open ? <EdgeInfoPane selectedEdge={edgeInfoState.selectedEdge} /> : <EntityInfoPanel />}
+        </Grid>,
+    ];
 };
 
 export default GraphView;
