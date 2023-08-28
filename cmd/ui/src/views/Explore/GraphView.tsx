@@ -259,7 +259,7 @@ const GridItems = () => {
         <Grid item xs={xs} md={md} lg={lg} xl={xl} sx={{ height: '100%' }} key={'exploreSearch'}>
             <ExploreSearch handleColumns={handleCypherTab} />
         </Grid>,
-        <Grid item xs={6} md={5} lg={4} sx={{ height: '100%' }} key={'info'}>
+        <Grid xs={xs} md={md} lg={lg} xl={xl} sx={{ height: '100%' }} key={'info'}>
             {edgeInfoState.open ? <EdgeInfoPane selectedEdge={edgeInfoState.selectedEdge} /> : <EntityInfoPanel />}
         </Grid>,
     ];
