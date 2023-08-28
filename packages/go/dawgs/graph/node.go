@@ -19,6 +19,7 @@ package graph
 import (
 	"encoding/json"
 	"math"
+	"sync"
 
 	"github.com/RoaringBitmap/roaring"
 	"github.com/RoaringBitmap/roaring/roaring64"
@@ -249,6 +250,199 @@ func (s *NodeSet) UnmarshalJSON(input []byte) error {
 	*s = nodeSet
 
 	return nil
+}
+
+type ThreadSafeNodeSet struct {
+	nodeSet NodeSet
+	rwLock  *sync.RWMutex
+}
+
+func NewThreadSafeNodeSet() *ThreadSafeNodeSet {
+	return &ThreadSafeNodeSet{
+		nodeSet: NodeSet{},
+		rwLock:  &sync.RWMutex{},
+	}
+}
+
+// Pick returns a single Node instance from this set. Repeated calls to this function are not guaranteed to return
+// the same Node instance.
+func (s ThreadSafeNodeSet) Pick() *Node {
+	s.rwLock.RLock()
+	defer s.rwLock.RUnlock()
+
+	for _, value := range s.nodeSet {
+		return value
+	}
+
+	return nil
+}
+
+// ByKind returns a new ThreadSafeNodeSet containing only Node instances that contain any one of the given Kind instances.
+func (s ThreadSafeNodeSet) ByKind(kinds ...Kind) NodeSet {
+	s.rwLock.RLock()
+	defer s.rwLock.RUnlock()
+
+	newThreadSafeNodeSet := NewThreadSafeNodeSet()
+
+	for _, node := range s.nodeSet {
+		if node.Kinds.ContainsOneOf(kinds...) {
+			newThreadSafeNodeSet.Add(node)
+		}
+	}
+
+	return newThreadSafeNodeSet.nodeSet
+}
+
+// Remove removes a Node from this set by its database ID.
+func (s ThreadSafeNodeSet) Remove(id ID) {
+	s.rwLock.RLock()
+	defer s.rwLock.RUnlock()
+
+	delete(s.nodeSet, id)
+}
+
+// Get returns a Node from this set by its database ID.
+func (s ThreadSafeNodeSet) Get(id ID) *Node {
+	s.rwLock.RLock()
+	defer s.rwLock.RUnlock()
+
+	return s.nodeSet[id]
+}
+
+// Len returns the number of unique Node instances in this set.
+func (s ThreadSafeNodeSet) Len() int {
+	s.rwLock.RLock()
+	defer s.rwLock.RUnlock()
+
+	return len(s.nodeSet)
+}
+
+// Copy returns a shallow copy of this set.
+func (s ThreadSafeNodeSet) Copy() ThreadSafeNodeSet {
+	s.rwLock.RLock()
+	defer s.rwLock.RUnlock()
+
+	var (
+		newThreadSafeNodeSet = NewThreadSafeNodeSet()
+		newNodeSet           = make(NodeSet, len(s.nodeSet))
+	)
+
+	for k, v := range s.nodeSet {
+		newNodeSet[k] = v
+	}
+
+	newThreadSafeNodeSet.nodeSet = newNodeSet
+
+	return *NewThreadSafeNodeSet()
+}
+
+// KindSet returns a NodeKindSet constructed from the Node instances in this set.
+func (s ThreadSafeNodeSet) KindSet() NodeKindSet {
+	s.rwLock.RLock()
+	defer s.rwLock.RUnlock()
+
+	nodeKindSet := NodeKindSet{}
+
+	for _, node := range s.nodeSet {
+		nodeKindSet.Add(node)
+	}
+
+	return nodeKindSet
+}
+
+// Contains returns true if the ID of the given Node is stored within this NodeSet.
+func (s ThreadSafeNodeSet) Contains(node *Node) bool {
+	s.rwLock.RLock()
+	defer s.rwLock.RUnlock()
+
+	_, seen := s.nodeSet[node.ID]
+
+	return seen
+}
+
+// ContainsID returns true if the Node represented by the given ID is stored within this NodeSet.
+func (s ThreadSafeNodeSet) ContainsID(id ID) bool {
+	s.rwLock.RLock()
+	defer s.rwLock.RUnlock()
+
+	_, seen := s.nodeSet[id]
+
+	return seen
+}
+
+// Add adds a given Node to the NodeSet.
+func (s ThreadSafeNodeSet) Add(nodes ...*Node) {
+	s.rwLock.RLock()
+	defer s.rwLock.RUnlock()
+
+	for _, node := range nodes {
+		s.nodeSet[node.ID] = node
+	}
+}
+
+func (s ThreadSafeNodeSet) CheckedAdd(node *Node) bool {
+	s.rwLock.RLock()
+	defer s.rwLock.RUnlock()
+
+	if _, exists := s.nodeSet[node.ID]; exists {
+		return false
+	}
+
+	s.nodeSet[node.ID] = node
+
+	return true
+}
+
+// AddSet merges all Nodes from the given NodeSet into this NodeSet.
+func (s ThreadSafeNodeSet) AddSet(other NodeSet) {
+	s.rwLock.RLock()
+	defer s.rwLock.RUnlock()
+
+	for k, v := range other {
+		s.nodeSet[k] = v
+	}
+}
+
+// Slice returns a slice of the Node instances stored in this NodeSet.
+func (s ThreadSafeNodeSet) Slice() []*Node {
+	s.rwLock.RLock()
+	defer s.rwLock.RUnlock()
+
+	slice := make([]*Node, 0, len(s.nodeSet))
+
+	for _, v := range s.nodeSet {
+		slice = append(slice, v)
+	}
+
+	return slice
+}
+
+// IDs returns a slice of database IDs for all nodes in the set.
+func (s ThreadSafeNodeSet) IDs() []ID {
+	s.rwLock.RLock()
+	defer s.rwLock.RUnlock()
+
+	idList := make([]ID, 0, len(s.nodeSet))
+
+	for _, node := range s.nodeSet {
+		idList = append(idList, node.ID)
+	}
+
+	return idList
+}
+
+// IDBitmap returns a new roaring64.Bitmap instance containing all Node ID values in this NodeSet.
+func (s ThreadSafeNodeSet) IDBitmap() *roaring.Bitmap {
+	s.rwLock.RLock()
+	defer s.rwLock.RUnlock()
+
+	bitmap := roaring.New()
+
+	for id := range s.nodeSet {
+		bitmap.Add(id.Uint32())
+	}
+
+	return bitmap
 }
 
 func UintSliceToIDs(raw []uint32) []ID {
