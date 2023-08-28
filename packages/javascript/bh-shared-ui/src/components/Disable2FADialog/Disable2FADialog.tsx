@@ -33,6 +33,10 @@ const Disable2FADialog: React.FC<{
         onSave(secret);
     };
 
+    const handleSecretInput: React.FormEventHandler = (e: any) => {
+        setSecret(e.target.value);
+    };
+
     return (
         <Dialog open={open} onClose={onClose} maxWidth='sm' fullWidth>
             <DialogTitle>Disable Multi-Factor Authentication?</DialogTitle>
@@ -46,9 +50,7 @@ const Disable2FADialog: React.FC<{
                         id='secret'
                         name='secret'
                         value={secret}
-                        onChange={(e: any) => {
-                            setSecret(e.target.value);
-                        }}
+                        onChange={handleSecretInput}
                         type='password'
                         label='Password'
                         variant='outlined'
