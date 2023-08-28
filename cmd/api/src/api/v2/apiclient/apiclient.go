@@ -45,7 +45,7 @@ func NewClient(rawServiceURL string) (Client, error) {
 	} else {
 		return Client{
 			Http: &http.Client{
-				Timeout: time.Second * 15,
+				Timeout: time.Second * 5,
 				Transport: &http.Transport{
 					Proxy: http.ProxyFromEnvironment,
 					DialContext: (&net.Dialer{
@@ -90,13 +90,6 @@ func (s Client) Request(method, path string, params url.Values, body any, header
 			request.Header = header[0]
 		}
 
-		// Set our credentials either via signage or bearer token session
-		if s.Credentials != nil {
-			if err := s.Credentials.Handle(request); err != nil {
-				return nil, err
-			}
-		}
-
 		// Execute the Request and hand the response back to the user
 		const (
 			sleepInterval = time.Second * 5
@@ -117,6 +110,14 @@ func (s Client) Request(method, path string, params url.Values, body any, header
 
 				request.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
 				request.Body = io.NopCloser(buffer)
+			}
+
+			// Set our credentials either via signage or bearer token session
+			// Credentials also have to be set with every attempt due to request signing
+			if s.Credentials != nil {
+				if err := s.Credentials.Handle(request); err != nil {
+					return nil, err
+				}
 			}
 
 			if response, err := s.Http.Do(request); err != nil {
