@@ -24,17 +24,13 @@ const Disable2FADialog: React.FC<{
     onSave: (secret: string) => void;
     error?: string;
     secret: string;
-    setSecret: (secret: string) => void;
+    onSecretChange: (e: any) => void;
     contentText: string;
-}> = ({ open, onClose, onCancel, onSave, error, secret, setSecret, contentText }) => {
+}> = ({ open, onClose, onCancel, onSave, error, secret, onSecretChange, contentText }) => {
 
     const handleOnSave: React.FormEventHandler = (e) => {
         e.preventDefault();
         onSave(secret);
-    };
-
-    const handleSecretInput: React.FormEventHandler = (e: any) => {
-        setSecret(e.target.value);
     };
 
     return (
@@ -50,7 +46,7 @@ const Disable2FADialog: React.FC<{
                         id='secret'
                         name='secret'
                         value={secret}
-                        onChange={handleSecretInput}
+                        onChange={onSecretChange}
                         type='password'
                         label='Password'
                         variant='outlined'

@@ -252,7 +252,7 @@ const UserProfile = () => {
                 }}
                 error={disable2FAError}
                 secret={disable2FASecret}
-                setSecret={setDisable2FASecret}
+                onSecretChange={(e: any) => setDisable2FASecret(e.target.value)}
                 contentText='To stop using multi-factor authentication, please enter your password for security purposes.'
             />
         </>
