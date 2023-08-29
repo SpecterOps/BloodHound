@@ -22,7 +22,6 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	bhCtx "github.com/specterops/bloodhound/src/ctx"
 	"net/http"
 	"net/url"
 	"sort"
@@ -30,6 +29,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	bhCtx "github.com/specterops/bloodhound/src/ctx"
 
 	"github.com/gorilla/mux"
 	"github.com/specterops/bloodhound/analysis"
@@ -182,7 +183,7 @@ func (s *GraphQuery) GetAssetGroupComboNode(ctx context.Context, owningObjectID 
 		})); err != nil {
 			return err
 		} else {
-			if groups := assetGroupNodes.ByKind(ad.Group); groups.Len() > 0 {
+			if groups := assetGroupNodes.ContainingNodeKinds(ad.Group); groups.Len() > 0 {
 				if groupMembershipPaths, err := analysis.ExpandGroupMembershipPaths(tx, groups); err != nil {
 					return err
 				} else {

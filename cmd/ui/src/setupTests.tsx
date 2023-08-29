@@ -40,6 +40,12 @@ if (typeof window.URL.createObjectURL === 'undefined') {
     window.URL.createObjectURL = vi.fn();
 }
 
+vi.mock('@neo4j-cypher/react-codemirror', async () => {
+    return {
+        CypherEditor: () => 'cypher search',
+    };
+});
+
 // Turn off React.lazy to improve test performance
 // Call vi.unmock('react') inside a test to restore functionality
 vi.mock('react', async () => {

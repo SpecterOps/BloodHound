@@ -32,14 +32,14 @@ describe('FileValidationStatus', () => {
     it('should display a loading spinner for files that are uploading', () => {
         fileForIngest.status = FileStatus.UPLOADING;
         const container = render(<FileValidationStatus file={fileForIngest} />);
-        expect(container.getByText('sync')).toBeInTheDocument();
+        expect(container.getByText('arrows-rotate')).toBeInTheDocument();
     });
 
     it('should display an x and error messages for files that have errors', () => {
         fileForIngest.status = FileStatus.READY;
         fileForIngest.errors = ['test error'];
         const container = render(<FileValidationStatus file={fileForIngest} />);
-        expect(container.getByText('times')).toBeInTheDocument();
+        expect(container.getByText('xmark')).toBeInTheDocument();
         expect(container.getByText('test error')).toBeInTheDocument();
     });
 });
