@@ -200,6 +200,7 @@ const GraphView: FC = () => {
                     id: selectedItem.data.objectid,
                     type: selectedItem.data.nodetype,
                     name: selectedItem.data.name,
+                    graphId: id,
                 })
             );
         }
@@ -214,7 +215,7 @@ const GraphView: FC = () => {
             disabled: currentSearchOpen
         }
     ];
-
+    
     return (
         <div style={{ position: 'relative', height: '100%', width: '100%', overflow: 'hidden' }} data-testid='explore'>
             <SigmaChart

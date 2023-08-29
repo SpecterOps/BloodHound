@@ -69,18 +69,6 @@ const SigmaChart: FC<Partial<SigmaChartProps>> = ({
     onClickStage,
     edgeReducer,
 }) => {
-
-    const dispatch = useAppDispatch();
-
-    const handleSelectNode = (node: FlatNode) => {
-        dispatch(setSelectedNode({
-            id: node.objectId,
-            graphId: node.id,
-            name: node.label,
-            type: node.kind as GraphNodeTypes
-        }));
-        if (toggleCurrentSearch) toggleCurrentSearch();
-    }
     
     return (
         <SigmaContainer
@@ -123,7 +111,10 @@ const SigmaChart: FC<Partial<SigmaChartProps>> = ({
                     <SearchCurrentNodes
                         sx={{ marginLeft: 2, padding: 1 }}
                         currentNodes={currentNodes || {}}
-                        onSelect={handleSelectNode}
+                        onSelect={node => {
+                            onClickNode?.(node.id);
+                            toggleCurrentSearch?.();
+                        }}
                         onClose={toggleCurrentSearch}
                     />
                 )}
