@@ -42,7 +42,7 @@ const OneTimePasscodeForm: React.FC<OneTimePasscodeFormProps> = ({ onSubmit, onC
             <Grid container spacing={4} justifyContent='center'>
                 <Grid item xs={12}>
                     <Typography variant='body1'>
-                        <strong>Two-Factor Authentication Enabled</strong>
+                        <strong>Multi-Factor Authentication Enabled</strong>
                     </Typography>
                     <Typography variant='body1'>Provide the 6 digit code from your authenticator app.</Typography>
                 </Grid>

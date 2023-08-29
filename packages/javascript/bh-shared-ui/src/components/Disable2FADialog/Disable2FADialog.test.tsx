@@ -56,13 +56,14 @@ describe('Enable2FADialog', () => {
     const testOnCancel = vi.fn();
     const testOnClose = vi.fn();
     const testOnSave = vi.fn();
+    const testSetSecret = vi.fn();
 
     beforeEach(() => {
-        render(<Disable2FADialog open={true} onCancel={testOnCancel} onClose={testOnClose} onSave={testOnSave} />);
+        render(<Disable2FADialog open={true} onCancel={testOnCancel} onClose={testOnClose} onSave={testOnSave} secret='' setSecret={testSetSecret} contentText=''/>);
     });
 
-    it('should display "Disable Two-Factor Authentication?" title', () => {
-        expect(screen.getByText('Disable Two-Factor Authentication?')).toBeInTheDocument();
+    it('should display "Disable Multi-Factor Authentication?" title', () => {
+        expect(screen.getByText('Disable Multi-Factor Authentication?')).toBeInTheDocument();
     });
 
     it('should display "Password" input', () => {
@@ -73,10 +74,10 @@ describe('Enable2FADialog', () => {
         expect(screen.getByRole('button', { name: 'Cancel' })).toBeInTheDocument();
     });
 
-    it('should display "Disable Two-Factor Authentication" button', () => {
+    it('should display "Disable Multi-Factor Authentication" button', () => {
         expect(
             screen.getByRole('button', {
-                name: 'Disable Two-Factor Authentication',
+                name: 'Disable Multi-Factor Authentication',
             })
         ).toBeInTheDocument();
     });
@@ -98,11 +99,11 @@ describe('Enable2FADialog', () => {
 
         // TODO: it('should not display a validation error', () => {})
 
-        describe('user clicks "Disable Two-Factor Authentication" button', () => {
+        describe('user clicks "Disable Multi-Factor Authentication" button', () => {
             beforeEach(async () => {
                 await user.click(
                     screen.getByRole('button', {
-                        name: 'Disable Two-Factor Authentication',
+                        name: 'Disable Multi-Factor Authentication',
                     })
                 );
             });

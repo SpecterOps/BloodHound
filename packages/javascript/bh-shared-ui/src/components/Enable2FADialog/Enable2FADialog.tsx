@@ -105,15 +105,15 @@ const Enable2FADialog: React.FC<{
                 }}>
                 <DialogTitle>
                     {!(secretAccepted && OTPAccepted)
-                        ? 'Configure Two-Factor Authentication'
-                        : 'Two-Factor Authentication Configured Successfully'}
+                        ? 'Configure Multi-Factor Authentication'
+                        : 'Multi-Factor Authentication Configured Successfully'}
                 </DialogTitle>
                 <form onSubmit={handleOnSave}>
                     <DialogContent>
                         {!secretAccepted && !OTPAccepted && (
                             <>
                                 <DialogContentText>
-                                    To set up two-factor authentication, you'll need to download an authenticator app.
+                                    To set up multi-factor authentication, you'll need to download an authenticator app.
                                 </DialogContentText>
                                 <DialogContentText>To get started, first enter your password.</DialogContentText>
                                 <TextField
@@ -186,7 +186,7 @@ const Enable2FADialog: React.FC<{
                                                 <img
                                                     src={QRCode}
                                                     height='100%'
-                                                    alt='QR Code for Configuring Two-Factor Authentication'></img>
+                                                    alt='QR Code for Configuring Multi-Factor Authentication'></img>
                                             </BarcodeButton>
                                         </Box>
                                     </Grid>
@@ -201,7 +201,7 @@ const Enable2FADialog: React.FC<{
                                 </DialogContentText>
                                 <DialogContentText>
                                     If you lose your authentication code, you'll need to contact your account's
-                                    Administrator to reset your password and then go through the two-factor
+                                    Administrator to reset your password and then go through the multi-factor
                                     authentication setup again.
                                 </DialogContentText>
                             </>

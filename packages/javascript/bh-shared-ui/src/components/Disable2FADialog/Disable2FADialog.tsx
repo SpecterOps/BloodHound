@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, TextField } from '@mui/material';
-import React, { useState } from 'react';
+import React from 'react';
 
 const Disable2FADialog: React.FC<{
     open: boolean;
@@ -23,12 +23,10 @@ const Disable2FADialog: React.FC<{
     onCancel: () => void;
     onSave: (secret: string) => void;
     error?: string;
-}> = ({ open, onClose, onCancel, onSave, error }) => {
-    const [secret, setSecret] = useState('');
-
-    const handleOnClose = () => {
-        onClose();
-    };
+    secret: string;
+    onSecretChange: (e: any) => void;
+    contentText: string;
+}> = ({ open, onClose, onCancel, onSave, error, secret, onSecretChange, contentText }) => {
 
     const handleOnSave: React.FormEventHandler = (e) => {
         e.preventDefault();
@@ -36,21 +34,19 @@ const Disable2FADialog: React.FC<{
     };
 
     return (
-        <Dialog open={open} onClose={handleOnClose} maxWidth='sm' fullWidth>
-            <DialogTitle>Disable Two-Factor Authentication?</DialogTitle>
+        <Dialog open={open} onClose={onClose} maxWidth='sm' fullWidth>
+            <DialogTitle>Disable Multi-Factor Authentication?</DialogTitle>
             <form onSubmit={handleOnSave}>
                 <DialogContent>
                     <DialogContentText>
-                        To stop using two-factor authentication, please enter your password for security purposes.
+                        {contentText}
                     </DialogContentText>
 
                     <TextField
                         id='secret'
                         name='secret'
                         value={secret}
-                        onChange={(e) => {
-                            setSecret(e.target.value);
-                        }}
+                        onChange={onSecretChange}
                         type='password'
                         label='Password'
                         variant='outlined'
@@ -66,7 +62,7 @@ const Disable2FADialog: React.FC<{
                         Cancel
                     </Button>
                     <Button color='primary' type='submit'>
-                        Disable Two-Factor Authentication
+                        Disable Multi-Factor Authentication
                     </Button>
                 </DialogActions>
             </form>
