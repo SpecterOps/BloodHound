@@ -27,9 +27,16 @@ func FindRoot() (string, error) {
 				break
 			}
 
+			prevCwd := cwd
+
 			// Go up a directory before retrying
 			cwd = filepath.Dir(cwd)
+
+			if cwd == prevCwd {
+				return cwd, errors.New("found root path without finding go.work file")
+			}
 		}
+
 		return cwd, nil
 	}
 }
