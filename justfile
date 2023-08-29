@@ -88,6 +88,8 @@ yarn *ARGS="":
 # run the code generation from the cue schema
 schemagen:
   go run github.com/specterops/bloodhound/schemagen
+  @just check-license
+  @just yarn format
 
 # run imagemagick commands in the context of the project root
 imagemagick *ARGS:
@@ -158,3 +160,6 @@ build-bhce-container platform='linux/amd64' tag='edge' version='v5.0.0' *ARGS=''
 run-bhce-container platform='linux/amd64' tag='custom' version='v5.0.0' *ARGS='':
   @just build-bhce-container {{platform}} {{tag}} {{version}} {{ARGS}}
   @cd examples/docker-compose && BLOODHOUND_TAG={{tag}} docker compose up
+
+check-license:
+  python3 license_check.py
