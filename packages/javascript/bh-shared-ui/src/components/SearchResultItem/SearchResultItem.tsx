@@ -1,5 +1,5 @@
 import { FC } from "react";
-import { ListItem, ListItemText } from "@mui/material";
+import { Box, ListItem, ListItemText } from "@mui/material";
 import HighlightedText from "../HighlightedText";
 import NodeIcon from "../NodeIcon";
 
@@ -26,14 +26,14 @@ const SearchResultItem: FC<{
             {...getItemProps({ item, index })}>
             <ListItemText
                 primary={
-                    <div
+                    <Box
                         style={{
                             width: '100%',
                             display: 'flex',
                             alignItems: 'center',
                         }}>
                         <NodeIcon nodeType={item.kind} />
-                        <div
+                        <Box
                             style={{
                                 flexGrow: 1,
                                 marginRight: '1em',
@@ -42,8 +42,8 @@ const SearchResultItem: FC<{
                                 text={item.label || item.objectId}
                                 search={keyword}
                             />
-                        </div>
-                    </div>
+                        </Box>
+                    </Box>
                 }
                 primaryTypographyProps={{
                     style: {
