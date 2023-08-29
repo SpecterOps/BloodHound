@@ -1,17 +1,17 @@
 // Copyright 2023 Specter Ops, Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// 
+//
 // SPDX-License-Identifier: Apache-2.0
 
 //go:build integration
@@ -23,13 +23,13 @@ import (
 	"context"
 	"testing"
 
-	"github.com/specterops/bloodhound/src/test/integration"
-	"github.com/stretchr/testify/require"
 	"github.com/specterops/bloodhound/analysis"
 	adAnalysis "github.com/specterops/bloodhound/analysis/ad"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/graphschema/common"
+	"github.com/specterops/bloodhound/src/test/integration"
+	"github.com/stretchr/testify/require"
 )
 
 func TestFetchEnforcedGPOs(t *testing.T) {
@@ -91,16 +91,16 @@ func TestCreateGPOAffectedIntermediariesListDelegateAffectedContainers(t *testin
 
 		require.Nil(t, err)
 		require.Equal(t, 5, containers.Len())
-		require.Equal(t, 4, containers.ByKind(ad.OU).Len())
-		require.Equal(t, 1, containers.ByKind(ad.Domain).Len())
+		require.Equal(t, 4, containers.ContainingNodeKinds(ad.OU).Len())
+		require.Equal(t, 1, containers.ContainingNodeKinds(ad.Domain).Len())
 
 		containers, err = adAnalysis.CreateGPOAffectedIntermediariesListDelegate(adAnalysis.SelectGPOContainerCandidateFilter)(tx, harness.GPOEnforcement.GPOUnenforced, 0, 0)
 
 		require.Nil(t, err)
 		require.Equal(t, 4, containers.Len())
 		require.False(t, containers.Contains(harness.GPOEnforcement.OrganizationalUnitC))
-		require.Equal(t, 3, containers.ByKind(ad.OU).Len())
-		require.Equal(t, 1, containers.ByKind(ad.Domain).Len())
+		require.Equal(t, 3, containers.ContainingNodeKinds(ad.OU).Len())
+		require.Equal(t, 1, containers.ContainingNodeKinds(ad.Domain).Len())
 	})
 }
 
@@ -148,7 +148,7 @@ func TestCreateGPOAffectedResultsListDelegateAffectedUsers(t *testing.T) {
 
 		require.Nil(t, err)
 		require.Equal(t, 3, users.Len())
-		require.Equal(t, 3, users.ByKind(ad.User).Len())
+		require.Equal(t, 3, users.ContainingNodeKinds(ad.User).Len())
 	})
 }
 
@@ -229,13 +229,13 @@ func TestFetchGroupSessions(t *testing.T) {
 
 		require.Nil(t, err)
 		require.Equal(t, 2, computers.Len())
-		require.Equal(t, 2, computers.ByKind(ad.Computer).Len())
+		require.Equal(t, 2, computers.ContainingNodeKinds(ad.Computer).Len())
 
 		nestedComputers, err := adAnalysis.FetchGroupSessions(tx, harness.Session.GroupC, 0, 0)
 
 		require.Nil(t, err)
 		require.Equal(t, 2, nestedComputers.Len())
-		require.Equal(t, 2, nestedComputers.ByKind(ad.Computer).Len())
+		require.Equal(t, 2, nestedComputers.ContainingNodeKinds(ad.Computer).Len())
 	})
 }
 
@@ -264,7 +264,7 @@ func TestFetchUserSessions(t *testing.T) {
 
 		require.Nil(t, err)
 		require.Equal(t, 2, computers.Len())
-		require.Equal(t, 2, computers.ByKind(ad.Computer).Len())
+		require.Equal(t, 2, computers.ContainingNodeKinds(ad.Computer).Len())
 	})
 }
 
@@ -388,7 +388,7 @@ func TestCreateInboundLocalGroupListDelegate(t *testing.T) {
 
 		require.Nil(t, err)
 		require.Equal(t, 2, admins.Len())
-		require.Equal(t, 2, admins.ByKind(ad.User).Len())
+		require.Equal(t, 2, admins.ContainingNodeKinds(ad.User).Len())
 
 		admins, err = adAnalysis.CreateInboundLocalGroupListDelegate(ad.AdminTo)(tx, harness.LocalGroupSQL.ComputerC, 0, 0)
 
@@ -687,9 +687,9 @@ func TestFetchGroupMembers(t *testing.T) {
 
 		require.Nil(t, err)
 		require.Equal(t, 5, members.Len())
-		require.Equal(t, 2, members.ByKind(ad.Computer).Len())
-		require.Equal(t, 2, members.ByKind(ad.Group).Len())
-		require.Equal(t, 1, members.ByKind(ad.User).Len())
+		require.Equal(t, 2, members.ContainingNodeKinds(ad.Computer).Len())
+		require.Equal(t, 2, members.ContainingNodeKinds(ad.Group).Len())
+		require.Equal(t, 1, members.ContainingNodeKinds(ad.User).Len())
 	})
 }
 
@@ -730,12 +730,12 @@ func TestCreateForeignEntityMembershipListDelegate(t *testing.T) {
 
 		require.Nil(t, err)
 		require.Equal(t, 1, members.Len())
-		require.Equal(t, 1, members.ByKind(ad.Group).Len())
+		require.Equal(t, 1, members.ContainingNodeKinds(ad.Group).Len())
 
 		members, err = adAnalysis.CreateForeignEntityMembershipListDelegate(ad.User)(tx, harness.ForeignHarness.LocalDomain, 0, 0)
 		require.Nil(t, err)
 		require.Equal(t, 2, members.Len())
-		require.Equal(t, 2, members.ByKind(ad.User).Len())
+		require.Equal(t, 2, members.ContainingNodeKinds(ad.User).Len())
 	})
 }
 
@@ -915,7 +915,7 @@ func TestFetchForeignAdmins(t *testing.T) {
 
 		require.Nil(t, err)
 		require.Equal(t, 2, admins.Len())
-		require.Equal(t, 2, admins.ByKind(ad.User).Len())
+		require.Equal(t, 2, admins.ContainingNodeKinds(ad.User).Len())
 	})
 }
 
@@ -948,8 +948,8 @@ func TestFetchForeignGPOControllers(t *testing.T) {
 
 		require.Nil(t, err)
 		require.Equal(t, 2, admins.Len())
-		require.Equal(t, 1, admins.ByKind(ad.User).Len())
-		require.Equal(t, 1, admins.ByKind(ad.Group).Len())
+		require.Equal(t, 1, admins.ContainingNodeKinds(ad.User).Len())
+		require.Equal(t, 1, admins.ContainingNodeKinds(ad.Group).Len())
 	})
 }
 
