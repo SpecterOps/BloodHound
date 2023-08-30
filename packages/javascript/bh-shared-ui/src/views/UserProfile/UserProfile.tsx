@@ -39,6 +39,7 @@ const UserProfile = () => {
     const [QRCode, setQRCode] = useState('');
     const [enable2FAError, setEnable2FAError] = useState('');
     const [disable2FAError, setDisable2FAError] = useState('');
+    const [disable2FASecret, setDisable2FASecret] = useState('');
 
     const getSelfQuery = useQuery(['getSelf'], ({ signal }) =>
         apiClient.getSelf({ signal }).then((res) => res.data.data)
@@ -161,13 +162,13 @@ const UserProfile = () => {
 
                             <Grid container item>
                                 <Grid item xs={3}>
-                                    <Typography variant='body1'>Two-Factor Authentication</Typography>
+                                    <Typography variant='body1'>Multi-Factor Authentication</Typography>
                                 </Grid>
                                 <Grid item xs={9}>
                                     <Box display='flex' alignItems='center'>
                                         <Switch
                                             inputProps={{
-                                                'aria-label': 'Two-Factor Authentication Enabled',
+                                                'aria-label': 'Multi-Factor Authentication Enabled',
                                             }}
                                             checked={user.AuthSecret?.totp_activated}
                                             onChange={() => {
@@ -175,7 +176,7 @@ const UserProfile = () => {
                                                 else setDisable2FADialogOpen(true);
                                             }}
                                             color='primary'
-                                            data-testid='my-profile_switch-two-factor-authentication'
+                                            data-testid='my-profile_switch-multi-factor-authentication'
                                         />
                                         {user.AuthSecret?.totp_activated && (
                                             <Typography variant='body1'>Enabled</Typography>
@@ -207,11 +208,13 @@ const UserProfile = () => {
                 onClose={() => {
                     setEnable2FADialogOpen(false);
                     setEnable2FAError('');
+                    setDisable2FASecret('');
                     getSelfQuery.refetch();
                 }}
                 onCancel={() => {
                     setEnable2FADialogOpen(false);
                     setEnable2FAError('');
+                    setDisable2FASecret('');
                     getSelfQuery.refetch();
                 }}
                 onSavePassword={(password) => {
@@ -273,6 +276,7 @@ const UserProfile = () => {
                         .then(() => {
                             setDisable2FADialogOpen(false);
                             setDisable2FAError('');
+                            setDisable2FASecret('');
                             getSelfQuery.refetch();
                         })
                         .catch(() => {
@@ -280,6 +284,9 @@ const UserProfile = () => {
                         });
                 }}
                 error={disable2FAError}
+                secret={disable2FASecret}
+                onSecretChange={(e: any) => setDisable2FASecret(e.target.value)}
+                contentText='To stop using multi-factor authentication, please enter your password for security purposes.'
             />
         </>
     );

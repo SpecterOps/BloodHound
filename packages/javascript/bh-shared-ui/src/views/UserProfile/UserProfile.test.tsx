@@ -1,17 +1,17 @@
 // Copyright 2023 Specter Ops, Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// 
+//
 // SPDX-License-Identifier: Apache-2.0
 
 import { render, screen, within, waitFor } from 'src/test-utils';
@@ -63,7 +63,7 @@ describe('UserProfile with SAML User', () => {
         const authenticationEl = screen.queryByText('Authentication');
         const resetPasswordButton = screen.queryByText('Reset Password');
         const twoFactorAuthToggle = screen.queryByRole('checkbox', {
-            name: 'Two-Factor Authentication Enabled',
+            name: 'Multi-Factor Authentication Enabled',
         });
 
         expect(authenticationEl).not.toBeInTheDocument();
@@ -143,24 +143,24 @@ describe('UserProfile', () => {
         });
     });
 
-    it('should display a toggle switch to enable two-factor authentication', () => {
+    it('should display a toggle switch to enable multi-factor authentication', () => {
         expect(
             screen.getByRole('checkbox', {
-                name: 'Two-Factor Authentication Enabled',
+                name: 'Multi-Factor Authentication Enabled',
             })
         ).toBeInTheDocument();
     });
 
-    describe('"Two-Factor Authentication Enabled" switch is enabled', () => {
+    describe('"Multi-Factor Authentication Enabled" switch is enabled', () => {
         const user = userEvent.setup();
         beforeEach(async () => {
-            await user.click(screen.getByLabelText('Two-Factor Authentication Enabled'));
+            await user.click(screen.getByLabelText('Multi-Factor Authentication Enabled'));
         });
 
-        it('should display a "Configure Two-Factor Authentication" modal', () => {
+        it('should display a "Configure Multi-Factor Authentication" modal', () => {
             const modal = screen.getByRole('dialog');
             expect(modal).toBeInTheDocument();
-            expect(within(modal).getByText('Configure Two-Factor Authentication')).toBeInTheDocument();
+            expect(within(modal).getByText('Configure Multi-Factor Authentication')).toBeInTheDocument();
         });
     });
 });

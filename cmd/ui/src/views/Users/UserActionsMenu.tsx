@@ -1,17 +1,17 @@
 // Copyright 2023 Specter Ops, Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// 
+//
 // SPDX-License-Identifier: Apache-2.0
 
 import {
@@ -19,10 +19,11 @@ import {
     faCogs,
     faEdit,
     faLock,
-    faUnlock,
     faUserCheck,
     faUserLock,
-    faUserTimes,
+    faKey,
+    faTrash,
+    faUnlockAlt
 } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { IconButton, ListItemIcon, ListItemText, Menu, MenuItem, MenuProps } from '@mui/material';
@@ -53,6 +54,7 @@ interface UserActionsMenuProps {
     onOpen: (e: any, userId: string) => any;
     showPasswordOptions: boolean;
     showAuthMgmtButtons: boolean;
+    showDisableMfaButton: boolean;
     userDisabled: boolean;
     onUpdateUser: (e: any) => any;
     onDisableUser: (e: any) => any;
@@ -61,6 +63,7 @@ interface UserActionsMenuProps {
     onUpdateUserPassword: (e: any) => any;
     onExpireUserPassword: (e: any) => any;
     onManageUserTokens: (e: any) => any;
+    onDisableUserMfa: (e: any) => any;
     index: number;
 }
 
@@ -69,6 +72,7 @@ const UserActionsMenu: React.FC<UserActionsMenuProps> = ({
     onOpen,
     showPasswordOptions,
     showAuthMgmtButtons,
+    showDisableMfaButton,
     userDisabled,
     onUpdateUser,
     onDisableUser,
@@ -77,6 +81,7 @@ const UserActionsMenu: React.FC<UserActionsMenuProps> = ({
     onUpdateUserPassword,
     onExpireUserPassword,
     onManageUserTokens,
+    onDisableUserMfa,
     index,
 }) => {
     /* Hooks */
@@ -154,7 +159,7 @@ const UserActionsMenu: React.FC<UserActionsMenuProps> = ({
                             setAnchorEl(null);
                         }}>
                         <ListItemIcon>
-                            <FontAwesomeIcon icon={faUnlock} />
+                            <FontAwesomeIcon icon={faKey} />
                         </ListItemIcon>
                         <ListItemText primary='Change Password' />
                     </MenuItem>
@@ -184,6 +189,19 @@ const UserActionsMenu: React.FC<UserActionsMenuProps> = ({
                     <ListItemText primary='Generate / Revoke API Tokens' />
                 </MenuItem>
 
+                {showDisableMfaButton && (                
+                    <MenuItem
+                        onClick={(e: React.MouseEvent<HTMLLIElement>) => {
+                            onDisableUserMfa(e);
+                            setAnchorEl(null);
+                        }}>
+                        <ListItemIcon>
+                            <FontAwesomeIcon icon={faUnlockAlt} />
+                        </ListItemIcon>
+                        <ListItemText primary='Disable MFA' />
+                    </MenuItem>
+                )}
+
                 {showAuthMgmtButtons && getAbleUserComponent()}
 
                 {showAuthMgmtButtons && (
@@ -193,7 +211,7 @@ const UserActionsMenu: React.FC<UserActionsMenuProps> = ({
                             setAnchorEl(null);
                         }}>
                         <ListItemIcon>
-                            <FontAwesomeIcon icon={faUserTimes} />
+                            <FontAwesomeIcon icon={faTrash} />
                         </ListItemIcon>
                         <ListItemText primary='Delete User' />
                     </MenuItem>
