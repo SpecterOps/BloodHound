@@ -46,14 +46,22 @@
             },
             "PrivilegedSessions": {
                 "Results": [
+                    {
+                        "UserSID": "S-1-5-21-3130019616-2776909439-2417379446-1107",
+                        "ComputerSID": "S-1-5-21-3130019616-2776909439-2417379446-1104"
+                    }
                 ],
-                "Collected": false,
+                "Collected": true,
                 "FailureReason": null
             },
             "RegistrySessions": {
                 "Results": [
+                    {
+                        "UserSID": "S-1-5-21-3130019616-2776909439-2417379446-1108",
+                        "ComputerSID": "S-1-5-21-3130019616-2776909439-2417379446-1104"
+                    }
                 ],
-                "Collected": false,
+                "Collected": true,
                 "FailureReason": null
             },
             "LocalGroups": [
