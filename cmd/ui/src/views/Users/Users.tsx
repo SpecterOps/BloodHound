@@ -340,7 +340,7 @@ const Users = () => {
                 error={disable2FAError}
                 secret={disable2FASecret}
                 onSecretChange={(e: any) => setDisable2FASecret(e.target.value)}
-                contentText="Are you sure you want to disable MFA for this user? Please enter your password to confirm."
+                contentText='Are you sure you want to disable MFA for this user? Please enter your password to confirm.'
             />
             <PasswordDialog
                 open={resetUserPasswordDialogOpen}

@@ -27,7 +27,6 @@ const Disable2FADialog: React.FC<{
     onSecretChange: (e: any) => void;
     contentText: string;
 }> = ({ open, onClose, onCancel, onSave, error, secret, onSecretChange, contentText }) => {
-
     const handleOnSave: React.FormEventHandler = (e) => {
         e.preventDefault();
         onSave(secret);
@@ -38,9 +37,7 @@ const Disable2FADialog: React.FC<{
             <DialogTitle>Disable Multi-Factor Authentication?</DialogTitle>
             <form onSubmit={handleOnSave}>
                 <DialogContent>
-                    <DialogContentText>
-                        {contentText}
-                    </DialogContentText>
+                    <DialogContentText>{contentText}</DialogContentText>
 
                     <TextField
                         id='secret'
