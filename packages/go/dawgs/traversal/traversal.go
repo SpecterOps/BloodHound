@@ -113,11 +113,11 @@ func (s Traversal) BreadthFirst(ctx context.Context, plan Plan) error {
 						return nil
 					}
 				}
-			}); err != nil {
-				errors.Add(fmt.Errorf("reader %d failed: %w", workerID, err))
-
-				// A worker encountered an error, kill the traversal context
+			}); err != nil && err != graph.ErrContextTimedOut {
+				// A worker encountered a fatal error, kill the traversal context
 				doneFunc()
+
+				errors.Add(fmt.Errorf("reader %d failed: %w", workerID, err))
 			}
 		}(workerID)
 	}

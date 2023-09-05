@@ -17,7 +17,7 @@
 import identity from 'lodash/identity';
 import throttle from 'lodash/throttle';
 import { DateTime } from 'luxon';
-import apiClient from 'src/api';
+import { apiClient } from 'bh-shared-ui';
 import { FlatGraphResponse, GraphData, StyledGraphNode, StyledGraphEdge, GraphResponse } from 'js-client-library';
 import { logout } from 'src/ducks/auth/authSlice';
 import { addSnackbar } from 'src/ducks/global/actions';

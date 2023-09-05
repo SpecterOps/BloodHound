@@ -64,7 +64,7 @@ afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
 
 describe('Enable2FADialog', () => {
-    it('should display "Configure Two-Factor Authentication" title', () => {
+    it('should display "Configure Multi-Factor Authentication" title', () => {
         const testOnCancel = vi.fn();
         const testOnClose = vi.fn();
         const testOnSavePassword = vi.fn(async () => {});
@@ -84,7 +84,7 @@ describe('Enable2FADialog', () => {
             />
         );
 
-        expect(screen.getByText('Configure Two-Factor Authentication')).toBeInTheDocument();
+        expect(screen.getByText('Configure Multi-Factor Authentication')).toBeInTheDocument();
         expect(screen.getAllByText('Password')).toHaveLength(2);
         expect(screen.getByRole('button', { name: 'Cancel' })).toBeInTheDocument();
         expect(screen.getByRole('button', { name: 'Next' })).toBeInTheDocument();
@@ -145,7 +145,7 @@ describe('Enable2FADialog', () => {
         await user.click(screen.getByRole('button', { name: 'Next' }));
 
         await waitFor(() => {
-            expect(screen.getByAltText('QR Code for Configuring Two-Factor Authentication')).toBeInTheDocument();
+            expect(screen.getByAltText('QR Code for Configuring Multi-Factor Authentication')).toBeInTheDocument();
         });
         expect(screen.getAllByText('One-Time Password')).toHaveLength(2);
 

@@ -1,8 +1,8 @@
 {
-    "meta":{
-        "methods":0,
-        "type":"sessions",
-        "count":0,
+    "meta": {
+        "methods": 0,
+        "type": "sessions",
+        "count": 0,
         "version": 6
     },
     "data": [

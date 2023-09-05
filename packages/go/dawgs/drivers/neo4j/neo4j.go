@@ -18,17 +18,18 @@ package neo4j
 
 import (
 	"fmt"
-	"net/url"
-	"time"
-
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/specterops/bloodhound/dawgs"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/dawgs/util/channels"
+	"math"
+	"net/url"
 )
 
 const (
-	defaultNeo4jTransactionTimeout = time.Minute * 15
+	// defaultNeo4jTransactionTimeout is set to math.MinInt as this is what the core neo4j library defaults to when
+	// left unset. It is recommended that users set this for time-sensitive operations
+	defaultNeo4jTransactionTimeout = math.MinInt
 )
 
 func newNeo4jDB(cfg dawgs.Config) (graph.Database, error) {
