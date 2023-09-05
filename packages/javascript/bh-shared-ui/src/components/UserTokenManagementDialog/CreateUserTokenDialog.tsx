@@ -17,12 +17,11 @@
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle, Grid, TextField } from '@mui/material';
 import React from 'react';
 import { Controller, useForm } from 'react-hook-form';
-import { NewUserToken } from 'src/ducks/auth/types';
 
 const CreateUserTokenDialog: React.FC<{
     open: boolean;
     onCancel: () => void;
-    onSubmit: (newToken: NewUserToken) => void;
+    onSubmit: (newToken: { token_name: string }) => void;
 }> = ({ open, onCancel, onSubmit }) => {
     const {
         control,

@@ -25,11 +25,10 @@ import {
     Grid,
     TextField,
 } from '@mui/material';
-import DialogActions from '@mui/material/DialogActions';
-import DialogContent from '@mui/material/DialogContent';
+import { DialogActions, DialogContent } from '@mui/material';
 import React from 'react';
 import { Controller, useForm } from 'react-hook-form';
-import { PASSWD_REQS, passwordRegex } from 'src/passwdUtils';
+import { PASSWD_REQS, passwordRegex } from '../../utils';
 
 const passwdReqsList = PASSWD_REQS.map((req, i) => <li key={i}>{req}</li>);
 

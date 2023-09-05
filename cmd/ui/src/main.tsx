@@ -22,7 +22,7 @@ import '@fontsource/roboto/700.css';
 import { CssBaseline, StyledEngineProvider, ThemeProvider } from '@mui/material';
 import { createTheme, Theme } from '@mui/material/styles';
 import { createBrowserHistory } from 'history';
-import { SnackbarProvider } from 'notistack';
+import { NotificationsProvider, GenericErrorBoundaryFallback } from 'bh-shared-ui';
 import { createRoot } from 'react-dom/client';
 import { ErrorBoundary } from 'react-error-boundary';
 import { QueryClient, QueryClientProvider } from 'react-query';
@@ -30,7 +30,6 @@ import { ReactQueryDevtools } from 'react-query/devtools';
 import { Provider } from 'react-redux';
 import { unstable_HistoryRouter as BrowserRouter } from 'react-router-dom';
 import App from './App';
-import { GenericErrorBoundaryFallback } from 'bh-shared-ui';
 import { store } from './store';
 import './styles/index.scss';
 
@@ -187,11 +186,11 @@ const main = async () => {
                     <ThemeProvider theme={theme}>
                         <CssBaseline />
                         <BrowserRouter basename='/ui' history={createBrowserHistory()}>
-                            <SnackbarProvider>
+                            <NotificationsProvider>
                                 <ErrorBoundary fallbackRender={GenericErrorBoundaryFallback}>
                                     <App />
                                 </ErrorBoundary>
-                            </SnackbarProvider>
+                            </NotificationsProvider>
                         </BrowserRouter>
                     </ThemeProvider>
                 </StyledEngineProvider>
