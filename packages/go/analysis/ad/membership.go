@@ -163,7 +163,7 @@ func NodeDuplexByKinds(ctx context.Context, db graph.Database, nodes cardinality
 
 	return nodesByKind, db.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		return tx.Nodes().Filter(
-			query.InIDs(query.NodeID(), graph.UintSliceToIDs(nodes.Slice())...),
+			query.InIDs(query.NodeID(), graph.Uint32SliceToIDs(nodes.Slice())...),
 		).FetchKinds(func(cursor graph.Cursor[graph.KindsResult]) error {
 			for nextResult := range cursor.Chan() {
 				for _, kind := range nextResult.Kinds {

@@ -66,6 +66,7 @@ type Iterator[T uint32 | uint64] interface {
 type Duplex[T uint32 | uint64] interface {
 	Provider[T]
 
+	Xor(other Provider[T])
 	And(other Provider[T])
 	Remove(value T)
 	Slice() []T

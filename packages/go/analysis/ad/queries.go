@@ -1,23 +1,24 @@
 // Copyright 2023 Specter Ops, Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// 
+//
 // SPDX-License-Identifier: Apache-2.0
 
 package ad
 
 import (
 	"context"
+	"github.com/specterops/bloodhound/log"
 	"strings"
 	"time"
 
@@ -73,6 +74,51 @@ func FetchAllDomains(ctx context.Context, db graph.Database) (graph.NodeSet, err
 
 		return err
 	})
+}
+
+func FetchActiveDirectoryTierZeroRoots(tx graph.Transaction, domain *graph.Node) (graph.NodeSet, error) {
+	log.Infof("Fetching tier zero nodes for domain %d", domain.ID)
+	defer log.Measure(log.LevelInfo, "Finished fetching tier zero nodes for domain %d", domain.ID)()
+
+	if domainSID, err := domain.Properties.Get(common.ObjectID.String()).String(); err != nil {
+		return nil, err
+	} else {
+		attackPathRoots := graph.NewNodeSet()
+
+		// Add the domain as one of the critical path roots
+		attackPathRoots.Add(domain)
+
+		// Pull in custom tier zero tagged assets
+		if customTierZeroNodes, err := FetchGraphDBTierZeroTaggedAssets(tx, domainSID); err != nil {
+			return nil, err
+		} else {
+			attackPathRoots.AddSet(customTierZeroNodes)
+		}
+
+		// Pull in well known tier zero nodes by SID suffix
+		if wellKnownTierZeroNodes, err := FetchWellKnownTierZeroEntities(tx, domainSID); err != nil {
+			return nil, err
+		} else {
+			attackPathRoots.AddSet(wellKnownTierZeroNodes)
+		}
+
+		// Pull in all group members of attack path roots
+		if allGroupMembers, err := FetchAllGroupMembers(tx, attackPathRoots); err != nil {
+			return nil, err
+		} else {
+			attackPathRoots.AddSet(allGroupMembers)
+		}
+
+		// Add all enforced GPO nodes to the attack path roots
+		if enforcedGPOs, err := FetchAllEnforcedGPOs(tx, attackPathRoots); err != nil {
+			return nil, err
+		} else {
+			attackPathRoots.AddSet(enforcedGPOs)
+		}
+
+		// Find all next-tier assets
+		return attackPathRoots, nil
+	}
 }
 
 func GetCollectedDomains(ctx context.Context, db graph.Database) (graph.NodeSet, error) {
