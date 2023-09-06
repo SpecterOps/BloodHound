@@ -16,6 +16,7 @@
 
 import axios, { AxiosInstance } from 'axios';
 import * as types from './types';
+import { CreateAuthTokenResponse, ListAuthTokensResponse } from './responses';
 
 class BHEAPIClient {
     baseClient: AxiosInstance;
@@ -570,7 +571,7 @@ class BHEAPIClient {
         this.baseClient.get(`/api/v2/roles/${roleId}`, options);
 
     getUserTokens = (userId: string, options?: types.RequestOptions) =>
-        this.baseClient.get(
+        this.baseClient.get<ListAuthTokensResponse>(
             `/api/v2/tokens`,
             Object.assign(
                 {
@@ -583,7 +584,7 @@ class BHEAPIClient {
         );
 
     createUserToken = (userId: string, tokenName: string, options?: types.RequestOptions) =>
-        this.baseClient.post(
+        this.baseClient.post<CreateAuthTokenResponse>(
             `/api/v2/tokens`,
             {
                 user_id: userId,

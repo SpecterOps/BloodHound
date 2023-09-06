@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { testPassword } from './passwdUtils';
+import { testPassword } from './passwd';
 
 describe('testPassword', () => {
     it('succeeds for valid password', () => {

@@ -17,7 +17,7 @@
 import { Alert, Box, Paper, Skeleton, Typography, useTheme } from '@mui/material';
 import fileDownload from 'js-file-download';
 import { useDispatch } from 'react-redux';
-import apiClient from 'src/api';
+import { apiClient } from 'bh-shared-ui';
 import { CollectorCardList, PageWithTitle } from 'bh-shared-ui';
 import { addSnackbar } from 'src/ducks/global/actions';
 import { CollectorType, useGetCollectorsByType } from 'src/hooks/useCollectors';

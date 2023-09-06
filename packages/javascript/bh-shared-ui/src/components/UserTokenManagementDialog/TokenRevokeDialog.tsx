@@ -15,14 +15,14 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from '@mui/material';
+import { AuthToken } from 'js-client-library';
 import React from 'react';
-import { AuthToken } from 'src/ducks/auth/types';
 
 const TokenRevokeDialog: React.FC<{
     open: boolean;
     onCancel: () => void;
     onConfirm: () => void;
-    token: AuthToken | null;
+    token?: AuthToken;
 }> = ({ open, onCancel, onConfirm, token }) => {
     return (
         <Dialog

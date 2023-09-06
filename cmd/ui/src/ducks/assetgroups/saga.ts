@@ -16,7 +16,7 @@
 
 import { takeEvery, all, call, put } from 'redux-saga/effects';
 import * as actions from './actions';
-import apiClient from 'src/api';
+import { apiClient } from 'bh-shared-ui';
 import {
     GetAssetGroup,
     GetAssetGroupFailure,

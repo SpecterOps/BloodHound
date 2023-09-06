@@ -14,24 +14,5 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { defineConfig } from 'vitest/config';
-import path from 'path';
-
-export default defineConfig({
-    resolve: {
-        alias: {
-            'js-client-library': path.resolve(__dirname, '..', 'js-client-library', 'src'),
-        },
-    },
-    test: {
-        globals: true,
-        environment: 'jsdom',
-        setupFiles: ['./src/setupTests.tsx'],
-        testTimeout: 60000, // 1 minute,
-        coverage: {
-            provider: 'v8',
-            reportsDirectory: './coverage',
-            reporter: ['text-summary', 'json-summary'],
-        },
-    },
-});
+export * from './PasswordDialog';
+export { default } from './PasswordDialog';

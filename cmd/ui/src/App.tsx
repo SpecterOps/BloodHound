@@ -20,6 +20,7 @@ import React, { useEffect } from 'react';
 import { useQueryClient } from 'react-query';
 import { useSelector } from 'react-redux';
 import { useLocation } from 'react-router-dom';
+import { AppNotifications } from 'bh-shared-ui';
 import Notifier from 'src/components/Notifier';
 import { initialize } from 'src/ducks/auth/authSlice';
 import { ROUTE_EXPIRED_PASSWORD, ROUTE_LOGIN, ROUTE_USER_DISABLED } from 'src/ducks/global/routes';
@@ -86,6 +87,7 @@ const App: React.FC = () => {
                 <Box className={classes.applicationContent}>
                     <Content />
                 </Box>
+                <AppNotifications />
                 <Notifier />
             </Box>
         </>

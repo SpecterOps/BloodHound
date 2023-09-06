@@ -15,20 +15,24 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { useState } from 'react';
-import { useAppDispatch } from 'src/store';
 import { Box, Button, CircularProgress, Grid, Switch, Typography } from '@mui/material';
-import { PageWithTitle, Enable2FADialog, Disable2FADialog } from 'bh-shared-ui';
-import TextWithFallback from 'src/components/TextWithFallback';
-import PasswordDialog from '../Users/PasswordDialog';
-import { getUsername } from 'src/utils';
 import { useMutation, useQuery } from 'react-query';
-import apiClient from 'src/api';
-import { addSnackbar } from 'src/ducks/global/actions';
 import { Alert, AlertTitle } from '@mui/material';
+import { useNotifications } from '../../providers';
+import { apiClient, getUsername } from '../../utils';
+import {
+    Disable2FADialog,
+    Enable2FADialog,
+    PageWithTitle,
+    PasswordDialog,
+    TextWithFallback,
+    UserTokenManagementDialog,
+} from '../../components';
 
 const UserProfile = () => {
-    const dispatch = useAppDispatch();
+    const { addNotification } = useNotifications();
     const [changePasswordDialogOpen, setChangePasswordDialogOpen] = useState(false);
+    const [userTokenManagementDialogOpen, setUserTokenManagementDialogOpen] = useState(false);
     const [enable2FADialogOpen, setEnable2FADialogOpen] = useState(false);
     const [disable2FADialogOpen, setDisable2FADialogOpen] = useState(false);
     const [TOTPSecret, setTOTPSecret] = useState('');
@@ -49,7 +53,7 @@ const UserProfile = () => {
             }),
         {
             onSuccess: () => {
-                dispatch(addSnackbar('Password updated successfully!', 'updateUserPasswordSuccess'));
+                addNotification('Password updated successfully!', 'updateUserPasswordSuccess');
                 setChangePasswordDialogOpen(false);
             },
         }
@@ -120,42 +124,65 @@ const UserProfile = () => {
                             <Typography variant='h2'>Authentication</Typography>
                         </Box>
                         <Grid container spacing={2} alignItems='center'>
-                            <Grid item xs={3}>
-                                <Typography variant='body1'>Password</Typography>
-                            </Grid>
-                            <Grid item xs={9}>
-                                <Button
-                                    variant='contained'
-                                    color='primary'
-                                    size='small'
-                                    disableElevation
-                                    onClick={() => setChangePasswordDialogOpen(true)}
-                                    data-testid='my-profile_button-reset-password'>
-                                    Reset Password
-                                </Button>
+                            <Grid container item>
+                                <Grid item xs={3}>
+                                    <Typography variant='body1'>Password</Typography>
+                                </Grid>
+                                <Grid item xs={2}>
+                                    <Button
+                                        variant='contained'
+                                        color='primary'
+                                        size='small'
+                                        disableElevation
+                                        fullWidth
+                                        onClick={() => setChangePasswordDialogOpen(true)}
+                                        data-testid='my-profile_button-reset-password'>
+                                        Reset Password
+                                    </Button>
+                                </Grid>
                             </Grid>
 
-                            <Grid item xs={3}>
-                                <Typography variant='body1'>Multi-Factor Authentication</Typography>
-                            </Grid>
-                            <Grid item xs={9}>
-                                <Box display='flex' alignItems='center'>
-                                    <Switch
-                                        inputProps={{
-                                            'aria-label': 'Multi-Factor Authentication Enabled',
-                                        }}
-                                        checked={user.AuthSecret?.totp_activated}
-                                        onChange={() => {
-                                            if (!user.AuthSecret?.totp_activated) setEnable2FADialogOpen(true);
-                                            else setDisable2FADialogOpen(true);
-                                        }}
+                            <Grid container item>
+                                <Grid item xs={3}>
+                                    <Typography variant='body1'>API Key Management</Typography>
+                                </Grid>
+                                <Grid item xs={2}>
+                                    <Button
+                                        variant='contained'
                                         color='primary'
-                                        data-testid='my-profile_switch-multi-factor-authentication'
-                                    />
-                                    {user.AuthSecret?.totp_activated && (
-                                        <Typography variant='body1'>Enabled</Typography>
-                                    )}
-                                </Box>
+                                        size='small'
+                                        disableElevation
+                                        fullWidth
+                                        onClick={() => setUserTokenManagementDialogOpen(true)}
+                                        data-testid='my-profile_button-api-key-management'>
+                                        API Key Management
+                                    </Button>
+                                </Grid>
+                            </Grid>
+
+                            <Grid container item>
+                                <Grid item xs={3}>
+                                    <Typography variant='body1'>Multi-Factor Authentication</Typography>
+                                </Grid>
+                                <Grid item xs={9}>
+                                    <Box display='flex' alignItems='center'>
+                                        <Switch
+                                            inputProps={{
+                                                'aria-label': 'Multi-Factor Authentication Enabled',
+                                            }}
+                                            checked={user.AuthSecret?.totp_activated}
+                                            onChange={() => {
+                                                if (!user.AuthSecret?.totp_activated) setEnable2FADialogOpen(true);
+                                                else setDisable2FADialogOpen(true);
+                                            }}
+                                            color='primary'
+                                            data-testid='my-profile_switch-multi-factor-authentication'
+                                        />
+                                        {user.AuthSecret?.totp_activated && (
+                                            <Typography variant='body1'>Enabled</Typography>
+                                        )}
+                                    </Box>
+                                </Grid>
                             </Grid>
                         </Grid>
                     </>
@@ -168,6 +195,12 @@ const UserProfile = () => {
                 userId={user.id}
                 showNeedsPasswordReset={false}
                 onSave={updateUserPasswordMutation.mutate}
+            />
+
+            <UserTokenManagementDialog
+                open={userTokenManagementDialogOpen}
+                onClose={() => setUserTokenManagementDialogOpen(false)}
+                userId={user.id}
             />
 
             <Enable2FADialog

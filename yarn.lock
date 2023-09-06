@@ -4612,15 +4612,18 @@ __metadata:
     eslint: ^8.45.0
     eslint-config-prettier: ^8.8.0
     eslint-config-react-app: ^7.0.1
+    js-client-library: "workspace:*"
     jsdom: ^20.0.2
     luxon: ^3.3.0
     memoize-one: ^6.0.0
     msw: ^1.2.1
+    notistack: ^2.0.5
     prettier: ^2.8.8
     react: ^18.2.0
     react-dom: ^18.2.0
     react-hook-form: ^7.45.1
     react-markdown: ^6.0.3
+    react-query: ^3.39.3
     react-window: ^1.8.9
     react-window-infinite-loader: ^1.0.9
     rollup: ^3.26.2

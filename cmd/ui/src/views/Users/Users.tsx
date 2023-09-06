@@ -19,19 +19,25 @@ import { DateTime } from 'luxon';
 import { useState } from 'react';
 import { useMutation, useQuery } from 'react-query';
 import { useSelector } from 'react-redux';
-import apiClient from 'src/api';
-import { Disable2FADialog, ConfirmationDialog, DataTable, Header, ContentPage } from 'bh-shared-ui';
-import { LuxonFormat } from 'bh-shared-ui';
+import {
+    ConfirmationDialog,
+    DataTable,
+    Header,
+    ContentPage,
+    PasswordDialog,
+    LuxonFormat,
+    UserTokenManagementDialog,
+    apiClient,
+    Disable2FADialog,
+} from 'bh-shared-ui';
 import { NewUser, UpdatedUser } from 'src/ducks/auth/types';
 import { addSnackbar } from 'src/ducks/global/actions';
 import useToggle from 'src/hooks/useToggle';
 import { User } from 'src/hooks/useUsers';
 import { AppState, useAppDispatch } from 'src/store';
 import CreateUserDialog from 'src/views/Users/CreateUserDialog';
-import PasswordDialog from 'src/views/Users/PasswordDialog';
 import UpdateUserDialog from 'src/views/Users/UpdateUserDialog';
 import UserActionsMenu from 'src/views/Users/UserActionsMenu';
-import UserTokenManagementDialog from 'src/views/Users/UserTokenManagementDialog';
 
 const Users = () => {
     const dispatch = useAppDispatch();
@@ -340,7 +346,7 @@ const Users = () => {
                 error={disable2FAError}
                 secret={disable2FASecret}
                 onSecretChange={(e: any) => setDisable2FASecret(e.target.value)}
-                contentText="Are you sure you want to disable MFA for this user? Please enter your password to confirm."
+                contentText='Are you sure you want to disable MFA for this user? Please enter your password to confirm.'
             />
             <PasswordDialog
                 open={resetUserPasswordDialogOpen}
