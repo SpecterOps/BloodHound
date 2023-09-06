@@ -38,7 +38,8 @@ func Version_508_Migration(db graph.Database) error {
 		return batch.Relationships().Filterf(func() graph.Criteria {
 			return query.And(
 				query.Kind(query.Start(), azure.Entity),
-				query.KindIn(query.End(), azure.ManagementGroup, azure.ResourceGroup, azure.Subscription, azure.KeyVault),
+				// Not all of these node types are being changed, but theres no harm in adding them to the migration
+				query.KindIn(query.End(), azure.ManagementGroup, azure.ResourceGroup, azure.Subscription, azure.KeyVault, azure.AutomationAccount, azure.ContainerRegistry, azure.LogicApp, azure.VMScaleSet, azure.WebApp, azure.FunctionApp, azure.ManagedCluster, azure.VM),
 				query.Kind(query.Relationship(), azure.Owns),
 			)
 		}).Fetch(func(cursor graph.Cursor[*graph.Relationship]) error {
