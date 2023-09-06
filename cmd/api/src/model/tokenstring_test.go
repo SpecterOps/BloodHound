@@ -2,6 +2,7 @@ package model
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"hash/crc32"
 	"math"
@@ -155,6 +156,42 @@ func TestTokenString_String(t *testing.T) {
 	} {
 		t.Run(tc.n, func(t *testing.T) {
 			require.Equal(t, tc.exp, tc.tok.String())
+		})
+	}
+}
+
+func TestTokenString_MarshalText(t *testing.T) {
+	for _, tc := range []struct {
+		n   string
+		tok TokenString
+		exp string
+	}{
+		{
+			"zero",
+			TokenString{},
+			`{"test":""}`,
+		},
+		{
+			"novalue",
+			TokenString{Prefix: "BLAH", cksum: 12345},
+			`{"test":""}`,
+		},
+		{
+			"valid",
+			TokenString{
+				Prefix: "TOK1",
+				value:  "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+				cksum:  987654, // encodes to "48VU"
+			},
+			`{"test":"TOK1_0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0048VU"}`,
+		},
+	} {
+		t.Run(tc.n, func(t *testing.T) {
+			j, err := json.Marshal(struct {
+				Test TokenString `json:"test"`
+			}{tc.tok})
+			require.Nil(t, err)
+			require.Equal(t, tc.exp, string(j))
 		})
 	}
 }
