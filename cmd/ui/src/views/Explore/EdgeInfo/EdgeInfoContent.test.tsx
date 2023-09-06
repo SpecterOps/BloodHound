@@ -24,8 +24,13 @@ describe('EdgeInfoContent', () => {
             id: '1',
             name: 'CustomEdge',
             data: { isACL: false },
-            sourceNode: { data: { name: 'source node' } },
-            targetNode: { data: { name: 'target node' } },
+            sourceNode: {
+                name: 'source node',
+                id: '1',
+                objectId: '1',
+                type: 'User',
+            },
+            targetNode: { name: 'target node', id: '2', objectId: '2', type: 'User' },
         };
 
         render(<EdgeInfoContent selectedEdge={selectedEdge} />);

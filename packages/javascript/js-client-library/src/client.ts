@@ -53,8 +53,8 @@ class BHEAPIClient {
         );
     };
 
-    cypherSearch = (query: string, options?: types.RequestOptions) => {
-        return this.baseClient.post('/api/v2/graphs/cypher', { query }, options);
+    cypherSearch = (query: string, includeProperties?: boolean, options?: types.RequestOptions) => {
+        return this.baseClient.post('/api/v2/graphs/cypher', { query, include_properties: includeProperties }, options);
     };
 
     getAvailableDomains = (options?: types.RequestOptions) => this.baseClient.get('/api/v2/available-domains', options);

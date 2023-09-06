@@ -182,6 +182,15 @@ export type EdgeParams = {
     forceLabel?: boolean;
 };
 
+const getEdgeLastSeenValue = (edge: any) => {
+    let lastSeen = undefined;
+
+    if (edge.lastSeen) lastSeen = edge.lastSeen;
+    if (edge.data && edge.data.lastSeen) lastSeen = edge.data.lastSeen;
+
+    return lastSeen;
+};
+
 export const transformFlatGraphResponse = (graph: FlatGraphResponse): GraphData => {
     const result: GraphData = {
         nodes: {},
@@ -206,7 +215,7 @@ export const transformFlatGraphResponse = (graph: FlatGraphResponse): GraphData 
                 target: edge.id2,
                 label: edge.label.text || '',
                 kind: edge.label.text || '',
-                lastSeen: edge.data ? edge.data.lastSeen : undefined,
+                lastSeen: getEdgeLastSeenValue(edge),
                 exploreGraphId: key || `${edge.id1}_${edge.label.text}_${edge.id2}`,
                 data: edge.data,
             });
@@ -238,6 +247,7 @@ export const transformToFlatGraphResponse = (graph: GraphResponse) => {
             label: {
                 text: edge.label,
             },
+            lastSeen: edge.lastSeen,
             data: edge.data,
         };
     }
