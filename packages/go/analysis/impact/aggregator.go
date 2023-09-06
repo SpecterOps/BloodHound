@@ -143,8 +143,6 @@ func (s Aggregator) resolve(targetUint32ID uint32) cardinality.Provider[uint32] 
 		for _, nextCompletion := range nextResolution.completions {
 			nextCompletion.Or(nextResolution.impact)
 		}
-
-		s.resolved.Add(nextResolution.target)
 	}
 
 	// Second resolution pass for completion dependencies that were not fully resolved on the first pass

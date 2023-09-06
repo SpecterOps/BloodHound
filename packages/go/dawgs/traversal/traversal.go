@@ -280,11 +280,8 @@ func FilteredSkipLimit(filter SkipLimitFilter, visitorFilter SegmentVisitor, ski
 // LightweightDriver is a Driver constructor that fetches only IDs and Kind information from vertexes and
 // edges stored in the database. This cuts down on network transit and is appropriate for traversals that may involve
 // a large number of or all vertexes within a target graph.
-func LightweightDriver(direction graph.Direction, criteria graph.Criteria, filter SegmentFilter, terminalVisitors ...SegmentVisitor) Driver {
-	var (
-		cache          = graphcache.New()
-		filterProvider = newVisitorFilter(direction, criteria)
-	)
+func LightweightDriver(direction graph.Direction, cache graphcache.Cache, criteria graph.Criteria, filter SegmentFilter, terminalVisitors ...SegmentVisitor) Driver {
+	filterProvider := newVisitorFilter(direction, criteria)
 
 	return func(ctx context.Context, tx graph.Transaction, nextSegment *graph.PathSegment) ([]*graph.PathSegment, error) {
 		var (
@@ -310,7 +307,7 @@ func LightweightDriver(direction graph.Direction, criteria graph.Criteria, filte
 				}
 			}
 
-			// Shallow fetching the nodes achieves the same result as LightweightFetchRelationships(...) but with the added
+			// Shallow fetching the nodes achieves the same result as shallowFetchRelationships(...) but with the added
 			// benefit of interacting with the graph cache. Any nodes not already in the cache are fetched just-in-time
 			// from the database and stored back in the cache for later.
 			if cachedNodes, err := graphcache.ShallowFetchNodesByID(tx, cache, cardinality.DuplexToGraphIDs(nodesToFetch)); err != nil {

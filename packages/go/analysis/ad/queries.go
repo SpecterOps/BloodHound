@@ -18,6 +18,7 @@ package ad
 
 import (
 	"context"
+	"github.com/specterops/bloodhound/dawgs/graphcache"
 	"github.com/specterops/bloodhound/log"
 	"strings"
 	"time"
@@ -1112,6 +1113,7 @@ func FetchInboundADEntityControllerPaths(ctx context.Context, db graph.Database,
 		Root: node,
 		Driver: traversal.LightweightDriver(
 			graph.DirectionInbound,
+			graphcache.New(),
 			query.KindIn(query.Relationship(), append(ad.ACLRelationships(), ad.MemberOf)...),
 			InboundControllerPaths(),
 			func(next *graph.PathSegment) {
@@ -1137,6 +1139,7 @@ func FetchInboundADEntityControllers(ctx context.Context, db graph.Database, nod
 		Root: node,
 		Driver: traversal.LightweightDriver(
 			graph.DirectionInbound,
+			graphcache.New(),
 			query.KindIn(query.Relationship(), append(ad.ACLRelationships(), ad.MemberOf)...),
 			InboundControllerNodes(collector, skip, limit),
 		),
@@ -1157,6 +1160,7 @@ func FetchOutboundADEntityControlPaths(ctx context.Context, db graph.Database, n
 		Root: node,
 		Driver: traversal.LightweightDriver(
 			graph.DirectionOutbound,
+			graphcache.New(),
 			query.KindIn(query.Relationship(), append(ad.ACLRelationships(), ad.MemberOf)...),
 			OutboundControlledPaths(collector),
 		),
@@ -1177,6 +1181,7 @@ func FetchOutboundADEntityControl(ctx context.Context, db graph.Database, node *
 		Root: node,
 		Driver: traversal.LightweightDriver(
 			graph.DirectionOutbound,
+			graphcache.New(),
 			query.KindIn(query.Relationship(), append(ad.ACLRelationships(), ad.MemberOf)...),
 			OutboundControlledNodes(collector, skip, limit),
 		),
