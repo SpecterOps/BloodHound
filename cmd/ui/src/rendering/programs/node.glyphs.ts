@@ -1,17 +1,17 @@
 // Copyright 2023 Specter Ops, Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// 
+//
 // SPDX-License-Identifier: Apache-2.0
 
 /**
@@ -28,13 +28,13 @@
  *
  * @module
  */
-import { Coordinates, Dimensions, NodeDisplayData } from 'sigma/types';
-import { floatColor } from 'sigma/utils';
-import { vertexShaderSource } from '../shaders/node.glyphs.vert';
-import { fragmentShaderSource } from '../shaders/node.glyphs.frag';
 import { AbstractNodeProgram } from 'sigma/rendering/webgl/programs/common/node';
 import { RenderParams } from 'sigma/rendering/webgl/programs/common/program';
 import Sigma from 'sigma/sigma';
+import { Coordinates, Dimensions, NodeDisplayData } from 'sigma/types';
+import { floatColor } from 'sigma/utils';
+import { fragmentShaderSource } from 'src/rendering/shaders/node.glyphs.frag';
+import { vertexShaderSource } from 'src/rendering/shaders/node.glyphs.vert';
 
 const POINTS = 3,
     /*

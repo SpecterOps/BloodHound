@@ -68,28 +68,46 @@ in your `.env` file under `BLOODHOUND_TAG`.
 
 ## FAQ
 
-- Q: "One of the ports used by default conflicts with a port running on my computer. How can I change it?"  
-  A: Ports can be configured by changing the port in your `.env` file. Simply find the port you want to change and change
-  it there before restarting the docker compose services.
-- Q: "This is great, but Neo4j needs more juice. How do I configure Neo4j (the easy way)?"  
-  A: The Neo4j Docker image reads configuration parameters as environment variables with the prefix `NEO4J_`. A handy conversion
-  table for Neo4j parameters to environment variables can be found here: https://neo4j.com/docs/operations-manual/4.4/docker/ref-settings/.
-  These environment variables can be added to the `docker-compose.yml` file in this example directory under the `graph-db`
-  service as additional list items for the `environment` parameter (follow the way the NEO4J auth is passed in for an example)  
-- Q: "How can I access the databases directly (especially Neo4j's browser)?"  
-  A: Port forwarding is commented out by default for the databases due to a default password being used. If you change your
-  database passwords, you can easily uncomment the lines in `docker-compose.yml` to provide port forwarded access.
-- Q: "Can I run these services in the background?"  
-  A: Absolutely, simply run `docker compose up -d` to start the services up in the background. To access the logs, you can
-  use `docker compose logs -f` to open the logs in follow mode (ignore the -f if you just want the logs as of that moment in time).
-  To stop the services, use `docker compose down`.
-- Q: "My databases persist between runs, how can I fully reset them?"  
-  A: You can clear out all volumes by using `docker compose down --volumes`. This will lead to both databases being reset
-  the next time you run `docker compose up`. Docker Compose does not expose an easy way to reset only one volume, so deleting
-  a single volume is left as an exercise for the reader (you'll need to look at removing directly through Docker with
-  `docker volume rm` or using the Docker Desktop GUI)
-- Q: "Restarting the application requires logging in again, why?"  
-  A: By default, we generate a secure random 256-bit key for JWT signing. Because this happens on every server restart,
-  any existing sessions will be invalidated. If you need sessions to survive a server restart, there is a configuration
-  value available that will allow you to specify your own `base64` encoded 256-bit key. It is recommended that you configure
-  this when running Bloodhound on a standalone server, alongside other security configurations.
+### Q: "How do I reset my Neo4J database without affecting my application state?
+
+A: You'll need to find the full name of your Neo4J volume and then run `docker rm <volume-name>`. The following command examples
+will help do it all in one step:
+
+* For Bash compatible shells: `docker volume rm $(docker volume ls -q | grep neo4j-data)`
+* For PowerShell: `docker volume rm @(docker volume ls -q | Select-String neo4j-data)`
+
+### Q: "One of the ports used by default conflicts with a port running on my computer. How can I change it?"
+
+A: Ports can be configured by changing the port in your `.env` file. Simply find the port you want to change and change
+it there before restarting the docker compose services.
+
+### Q: "This is great, but Neo4j needs more juice. How do I configure Neo4j (the easy way)?"
+
+A: The Neo4j Docker image reads configuration parameters as environment variables with the prefix `NEO4J_`. A handy conversion
+table for Neo4j parameters to environment variables can be found here: https://neo4j.com/docs/operations-manual/4.4/docker/ref-settings/.
+These environment variables can be added to the `docker-compose.yml` file in this example directory under the `graph-db`
+service as additional list items for the `environment` parameter (follow the way the NEO4J auth is passed in for an example)  
+
+### Q: "How can I access the databases directly (especially Neo4j's browser)?"
+
+A: Port forwarding is commented out by default for the databases due to a default password being used. If you change your
+database passwords, you can easily uncomment the lines in `docker-compose.yml` to provide port forwarded access.
+### Q: "Can I run these services in the background?"
+
+A: Absolutely, simply run `docker compose up -d` to start the services up in the background. To access the logs, you can
+use `docker compose logs -f` to open the logs in follow mode (ignore the -f if you just want the logs as of that moment in time).
+To stop the services, use `docker compose down`.
+
+### Q: "My databases persist between runs, how can I fully reset them?"
+
+A: You can clear out all volumes by using `docker compose down --volumes`. This will lead to both databases being reset
+the next time you run `docker compose up`. Docker Compose does not expose an easy way to reset only one volume, so deleting
+a single volume is left as an exercise for the reader (you'll need to look at removing directly through Docker with
+`docker volume rm` or using the Docker Desktop GUI)
+
+### Q: "Restarting the application requires logging in again, why?"
+
+A: By default, we generate a secure random 256-bit key for JWT signing. Because this happens on every server restart,
+any existing sessions will be invalidated. If you need sessions to survive a server restart, there is a configuration
+value available that will allow you to specify your own `base64` encoded 256-bit key. It is recommended that you configure
+this when running Bloodhound on a standalone server, alongside other security configurations.

@@ -1,19 +1,15 @@
 {
-	"name": "Bloodhound Community Edition",
+	"name": "BloodHound Community Edition",
 	"dockerComposeFile": "docker-compose.yml",
 	"service": "app",
 	"workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
-	"remoteEnv": {
-		"INTEGRATION_CONFIG_PATH": "/workspaces/${localWorkspaceFolderBasename}/local-harnesses/integration.config.json"
-	},
 	"features": {
 		"ghcr.io/devcontainers/features/docker-in-docker:2": {
 			"version": "latest",
 			"enableNonRootDocker": "true",
-			"moby": "true"
-		},
-		"ghcr.io/devcontainers/features/python:1": {
-			"version": "latest"
+			"azureDnsAutoDetection": true,
+			"moby": "true",
+			"dockerDashComposeVersion": "v2"
 		},
 		"ghcr.io/devcontainers/features/go:1": {
 			"version": "latest"
@@ -21,6 +17,15 @@
 		"ghcr.io/devcontainers/features/node:1": {
 			"nodeGypDependencies": true,
 			"version": "lts"
+		},
+		"ghcr.io/devcontainers/features/python:1": {
+			"installTools": true,
+			"version": "latest"
+		},
+		"ghcr.io/devcontainers-contrib/features/zsh-plugins:0": {
+			"plugins": "ssh-agent npm",
+			"omzPlugins": "https://github.com/zsh-users/zsh-autosuggestions",
+			"username": "vscode"
 		},
 		"ghcr.io/guiyomh/features/just:0": {
 			"version": "latest"
@@ -36,7 +41,8 @@
 		8080
 	],
 	// Use 'postCreateCommand' to run commands after the container is created.
-	"postCreateCommand": "./.devcontainer/post-create.sh",
+	"postCreateCommand": "just init",
+	// Configure tool-specific properties.
 	"customizations": {
 		"vscode": {
 			"extensions": [

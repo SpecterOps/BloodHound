@@ -1,17 +1,17 @@
 # Copyright 2023 Specter Ops, Inc.
-# 
+#
 # Licensed under the Apache License, Version 2.0
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #     http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-# 
+#
 # SPDX-License-Identifier: Apache-2.0
 
 version: '3'
@@ -19,24 +19,12 @@ version: '3'
 services:
   # devcontainer entrypoint
   app:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: mcr.microsoft.com/devcontainers/base:bullseye
     volumes:
       # Update this to wherever you want VS Code to mount the folder of your project
       - ../..:/workspaces:cached
       - devcontainer-storage:/home/vscode
-    # Overrides default command so things don't shut down after the process ends.
-    entrypoint: /usr/local/share/docker-init.sh
     command: sleep infinity
-    # Uncomment the next four lines if you will use a ptrace-based debuggers like C++, Go, and Rust.
-    cap_add:
-      - SYS_PTRACE
-    security_opt:
-      - seccomp:unconfined
-    extra_hosts:
-      - host.docker.internal:host-gateway
-    # Explicitly forward ports (experimental, may fix issues with Clone to Dev Container on Mac)
     ports:
       - 80:80
 

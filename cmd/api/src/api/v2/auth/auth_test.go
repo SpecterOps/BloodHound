@@ -1,17 +1,17 @@
 // Copyright 2023 Specter Ops, Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// 
+//
 // SPDX-License-Identifier: Apache-2.0
 
 package auth_test
@@ -29,6 +29,12 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gofrs/uuid"
+	"github.com/gorilla/mux"
+	"github.com/pquerna/otp/totp"
+	"github.com/specterops/bloodhound/headers"
+	"github.com/specterops/bloodhound/log"
+	"github.com/specterops/bloodhound/mediatypes"
 	"github.com/specterops/bloodhound/src/api"
 	v2 "github.com/specterops/bloodhound/src/api/v2"
 	"github.com/specterops/bloodhound/src/api/v2/apitest"
@@ -45,14 +51,8 @@ import (
 	"github.com/specterops/bloodhound/src/utils"
 	"github.com/specterops/bloodhound/src/utils/test"
 	"github.com/specterops/bloodhound/src/utils/validation"
-	"github.com/gofrs/uuid"
-	"github.com/gorilla/mux"
-	"github.com/pquerna/otp/totp"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
-	"github.com/specterops/bloodhound/headers"
-	"github.com/specterops/bloodhound/log"
-	"github.com/specterops/bloodhound/mediatypes"
 )
 
 const (
@@ -2648,6 +2648,108 @@ func TestDisenrollMFA_Success(t *testing.T) {
 
 		require.Equal(t, rr.Code, http.StatusOK)
 		require.Contains(t, rr.Body.String(), auth.MFADeactivated)
+	}
+}
+
+func TestDisenrollMFA_Admin_Success(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+
+	admin := model.User{
+		FirstName:     null.String{NullString: sql.NullString{String: "Admin", Valid: true}},
+		LastName:      null.String{NullString: sql.NullString{String: "User", Valid: true}},
+		EmailAddress:  null.String{NullString: sql.NullString{String: "admin@gmail.com", Valid: true}},
+		PrincipalName: "AdminUser",
+		AuthSecret:    defaultDigestAuthSecret(t, "adminpassword"),
+	}
+
+	resources, mockDB := apitest.NewAuthManagementResource(mockCtrl)
+
+	endpoint := "/api/v2/auth/users/%s/mfa"
+	nonAdminId := test.NewUUIDv4(t)
+
+	mockDB.EXPECT().GetUser(nonAdminId).Return(model.User{AuthSecret: defaultDigestAuthSecret(t, "password")}, nil)
+	mockDB.EXPECT().UpdateAuthSecret(gomock.Any()).Return(nil)
+
+	adminContext := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
+	bhCtx := ctx.Get(adminContext)
+	bhCtx.AuthCtx.Owner = admin
+	bhCtx.AuthCtx.PermissionOverrides = authz.PermissionOverrides{
+		Enabled: true,
+		Permissions: model.Permissions{
+			authz.Permissions().AuthManageUsers,
+		},
+	}
+	_, isUser := authz.GetUserFromAuthCtx(bhCtx.AuthCtx)
+	require.True(t, isUser)
+
+	input := auth.MFAEnrollmentRequest{"adminpassword"}
+	if payload, err := json.Marshal(input); err != nil {
+		t.Fatal(err)
+	} else if req, err := http.NewRequestWithContext(adminContext, "DELETE", fmt.Sprintf(endpoint, nonAdminId.String()), bytes.NewReader(payload)); err != nil {
+		t.Fatal(err)
+	} else {
+		req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
+		router := mux.NewRouter()
+		router.HandleFunc(fmt.Sprintf(endpoint, "{user_id}"), resources.DisenrollMFA).Methods("DELETE")
+
+		rr := httptest.NewRecorder()
+		router.ServeHTTP(rr, req)
+
+		require.Equal(t, http.StatusOK, rr.Code)
+		require.Contains(t, rr.Body.String(), auth.MFADeactivated)
+	}
+}
+
+func TestDisenrollMFA_Admin_FailureIncorrectPassword(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+
+	resources, mockDB := apitest.NewAuthManagementResource(mockCtrl)
+
+	endpoint := "/api/v2/auth/users/%s/mfa"
+	nonAdminId := test.NewUUIDv4(t)
+
+	mockDB.EXPECT().GetUser(nonAdminId).Return(model.User{AuthSecret: defaultDigestAuthSecret(t, "password"), Unique: model.Unique{ID: nonAdminId}}, nil).AnyTimes()
+
+	admin := model.User{
+		FirstName:     null.String{NullString: sql.NullString{String: "Admin", Valid: true}},
+		LastName:      null.String{NullString: sql.NullString{String: "User", Valid: true}},
+		EmailAddress:  null.String{NullString: sql.NullString{String: "admin@gmail.com", Valid: true}},
+		PrincipalName: "AdminUser",
+		AuthSecret:    defaultDigestAuthSecret(t, "adminpassword"),
+	}
+
+	adminContext := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
+	bhCtx := ctx.Get(adminContext)
+	bhCtx.AuthCtx.Owner = admin
+	bhCtx.AuthCtx.PermissionOverrides = authz.PermissionOverrides{
+		Enabled: true,
+		Permissions: model.Permissions{
+			authz.Permissions().AuthManageUsers,
+		},
+	}
+	_, isUser := authz.GetUserFromAuthCtx(bhCtx.AuthCtx)
+	require.True(t, isUser)
+
+	// Make the request with the same password as the user we are are attempting to disenroll to ensure the logic remains correct
+	if payload, err := json.Marshal(auth.MFAEnrollmentRequest{"password"}); err != nil {
+		t.Fatal(err)
+	} else if req, err := http.NewRequestWithContext(adminContext, "DELETE", fmt.Sprintf(endpoint, nonAdminId.String()), bytes.NewReader(payload)); err != nil {
+		t.Fatal(err)
+	} else {
+		req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
+		test.TestV2HandlerFailure(
+			t,
+			[]string{"DELETE"},
+			fmt.Sprintf(endpoint, "{user_id}"),
+			resources.DisenrollMFA,
+			*req,
+			api.ErrorWrapper{
+				HTTPStatus: http.StatusBadRequest,
+				Errors:     []api.ErrorDetails{{Message: auth.ErrorResponseDetailsInvalidCurrentPassword}},
+			},
+		)
 	}
 }
 

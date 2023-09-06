@@ -1,17 +1,17 @@
 // Copyright 2023 Specter Ops, Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// 
+//
 // SPDX-License-Identifier: Apache-2.0
 
 /**
@@ -24,14 +24,14 @@
  * This is useful when combined with arrows to draw directed edges.
  * @module
  */
-import { Coordinates, EdgeDisplayData, NodeDisplayData } from 'sigma/types';
 import { AbstractEdgeProgram } from 'sigma/rendering/webgl/programs/common/edge';
-import { canUse32BitsIndices, floatColor } from 'sigma/utils';
-import { vertexShaderSource } from '../shaders/edge.curved.vert';
-import { fragmentShaderSource } from '../shaders/edge.curved.frag';
 import { RenderParams } from 'sigma/rendering/webgl/programs/common/program';
-import { bezier } from '../utils/bezier';
-import { EdgeDirection } from 'src/utils';
+import { NodeDisplayData } from 'sigma/types';
+import { canUse32BitsIndices, floatColor } from 'sigma/utils';
+import { CurvedEdgeDisplayData } from 'src/rendering/programs/edge.curvedArrow';
+import { fragmentShaderSource } from 'src/rendering/shaders/edge.curved.frag';
+import { vertexShaderSource } from 'src/rendering/shaders/edge.curved.vert';
+import { bezier } from 'src/rendering/utils/bezier';
 
 const RESOLUTION = 0.02,
     POINTS = 2 / RESOLUTION + 2,
@@ -136,12 +136,7 @@ export default class EdgeClampedProgram extends AbstractEdgeProgram {
     process(
         sourceData: NodeDisplayData,
         targetData: NodeDisplayData,
-        data: EdgeDisplayData & {
-            groupSize?: number;
-            groupPosition?: number;
-            direction?: EdgeDirection;
-            control?: Coordinates;
-        },
+        data: CurvedEdgeDisplayData,
         hidden: boolean,
         offset: number
     ): void {
@@ -160,8 +155,7 @@ export default class EdgeClampedProgram extends AbstractEdgeProgram {
 
         if (!control) {
             const height = bezier.calculateCurveHeight(data.groupSize, data.groupPosition, data.direction);
-            const midpoint = bezier.getMidpoint(start, end);
-            control = bezier.getOffsetVertex(start, end, midpoint, height);
+            control = bezier.getControlAtMidpoint(height, start, end);
         }
 
         // 2. Get collection of points at some constant resolution distributed on quadratic curve based on

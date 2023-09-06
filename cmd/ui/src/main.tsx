@@ -1,17 +1,17 @@
 // Copyright 2023 Specter Ops, Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// 
+//
 // SPDX-License-Identifier: Apache-2.0
 
 import '@fontsource/roboto-mono';
@@ -22,7 +22,7 @@ import '@fontsource/roboto/700.css';
 import { CssBaseline, StyledEngineProvider, ThemeProvider } from '@mui/material';
 import { createTheme, Theme } from '@mui/material/styles';
 import { createBrowserHistory } from 'history';
-import { SnackbarProvider } from 'notistack';
+import { NotificationsProvider, GenericErrorBoundaryFallback } from 'bh-shared-ui';
 import { createRoot } from 'react-dom/client';
 import { ErrorBoundary } from 'react-error-boundary';
 import { QueryClient, QueryClientProvider } from 'react-query';
@@ -30,7 +30,6 @@ import { ReactQueryDevtools } from 'react-query/devtools';
 import { Provider } from 'react-redux';
 import { unstable_HistoryRouter as BrowserRouter } from 'react-router-dom';
 import App from './App';
-import { GenericErrorBoundaryFallback } from 'bh-shared-ui';
 import { store } from './store';
 import './styles/index.scss';
 
@@ -187,11 +186,11 @@ const main = async () => {
                     <ThemeProvider theme={theme}>
                         <CssBaseline />
                         <BrowserRouter basename='/ui' history={createBrowserHistory()}>
-                            <SnackbarProvider>
+                            <NotificationsProvider>
                                 <ErrorBoundary fallbackRender={GenericErrorBoundaryFallback}>
                                     <App />
                                 </ErrorBoundary>
-                            </SnackbarProvider>
+                            </NotificationsProvider>
                         </BrowserRouter>
                     </ThemeProvider>
                 </StyledEngineProvider>

@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Grid, useTheme } from '@mui/material';
-import { GraphProgress } from 'bh-shared-ui';
+import { EdgeInfoState, GraphProgress, setEdgeInfoOpen, setSelectedEdge } from 'bh-shared-ui';
 import { MultiDirectedGraph } from 'graphology';
 import { random } from 'graphology-layout';
 import forceAtlas2 from 'graphology-layout-forceatlas2';
@@ -26,7 +26,6 @@ import { FC, useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { GraphButtonOptions } from 'src/components/GraphButtons/GraphButtons';
 import SigmaChart from 'src/components/SigmaChart';
-import { EdgeInfoState, setEdgeInfoOpen, setSelectedEdge } from 'src/ducks/edgeinfo/edgeSlice';
 import { setEntityInfoOpen, setSelectedNode } from 'src/ducks/entityinfo/actions';
 import { GraphState } from 'src/ducks/explore/types';
 import { setAssetGroupEdit } from 'src/ducks/global/actions';
@@ -50,6 +49,7 @@ const initGraphNodes = (graph: MultiDirectedGraph, nodes: GraphNodes, nodeSize: 
             color: '#FFFFFF',
             type: 'combined',
             label: node.label,
+            forceLabel: true,
         };
 
         const icon = NODE_ICON[node.kind] || UNKNOWN_ICON;
@@ -107,6 +107,7 @@ const initGraphEdges = (graph: MultiDirectedGraph, edges: GraphEdges) => {
                 groupPosition: 0,
                 groupSize: 1,
                 exploreGraphId: edge.exploreGraphId || key,
+                forceLabel: true,
             };
 
             // Groups with odd-numbered totals should have a straight edge first, then curve the rest
@@ -135,7 +136,6 @@ const GraphView: FC = () => {
     const dispatch = useAppDispatch();
 
     const graphState: GraphState = useSelector((state: AppState) => state.explore);
-    const edgeInfoState: EdgeInfoState = useSelector((state: AppState) => state.edgeinfo);
     const opts: GlobalOptionsState = useSelector((state: AppState) => state.global.options);
     const formIsDirty = Object.keys(useSelector((state: AppState) => state.tierzero).changelog).length > 0;
     const [graphologyGraph, setGraphologyGraph] = useState<MultiDirectedGraph<Attributes, Attributes, Attributes>>();
@@ -220,21 +220,36 @@ const GraphView: FC = () => {
                     pointerEvents: 'none',
                     height: '100%',
                 }}>
-                <Grid item xs={6} md={5} lg={4} sx={{ height: '100%' }}>
-                    <ExploreSearch />
-                </Grid>
-                <Grid item xs={6} md={5} lg={4} sx={{ height: '100%' }}>
-                    {edgeInfoState.open ? (
-                        <EdgeInfoPane selectedEdge={edgeInfoState.selectedEdge} />
-                    ) : (
-                        <EntityInfoPanel />
-                    )}
-                </Grid>
+                <GridItems />
             </Grid>
 
             <GraphProgress loading={graphState.loading} />
         </div>
     );
+};
+
+const GridItems = () => {
+    const columnsDefault = { xs: 6, md: 5, lg: 4, xl: 4 };
+    const cypherSearchColumns = { xs: 6, md: 6, lg: 6, xl: 4 };
+
+    const [columns, setColumns] = useState(columnsDefault);
+
+    const handleCypherTab = (isCypherEditorActive: boolean) => {
+        isCypherEditorActive ? setColumns(cypherSearchColumns) : setColumns(columnsDefault);
+    };
+
+    const edgeInfoState: EdgeInfoState = useSelector((state: AppState) => state.edgeinfo);
+
+    const { xs, md, lg, xl } = columns;
+
+    return [
+        <Grid item xs={xs} md={md} lg={lg} xl={xl} sx={{ height: '100%' }} key={'exploreSearch'}>
+            <ExploreSearch handleColumns={handleCypherTab} />
+        </Grid>,
+        <Grid item xs={6} md={5} lg={4} sx={{ height: '100%' }} key={'info'}>
+            {edgeInfoState.open ? <EdgeInfoPane selectedEdge={edgeInfoState.selectedEdge} /> : <EntityInfoPanel />}
+        </Grid>,
+    ];
 };
 
 export default GraphView;

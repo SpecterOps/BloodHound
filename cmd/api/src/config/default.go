@@ -82,6 +82,7 @@ func NewDefaultConfiguration() (Configuration, error) {
 			EnableAPILogging:   true,
 			DisableAnalysis:    false,
 			DisableCypherQC:    false,
+			DisableMigrations:  false,
 		}, nil
 	}
 }

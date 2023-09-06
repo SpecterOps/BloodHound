@@ -1,20 +1,20 @@
 // Copyright 2023 Specter Ops, Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// 
+//
 // SPDX-License-Identifier: Apache-2.0
 
-import { act, render, screen, waitFor } from '../../test-utils';
+import { render, screen, waitFor } from '../../test-utils';
 import userEvent from '@testing-library/user-event';
 
 import { rest } from 'msw';
@@ -56,13 +56,14 @@ describe('Enable2FADialog', () => {
     const testOnCancel = vi.fn();
     const testOnClose = vi.fn();
     const testOnSave = vi.fn();
+    const testSetSecret = vi.fn();
 
     beforeEach(() => {
-        render(<Disable2FADialog open={true} onCancel={testOnCancel} onClose={testOnClose} onSave={testOnSave} />);
+        render(<Disable2FADialog open={true} onCancel={testOnCancel} onClose={testOnClose} onSave={testOnSave} secret='' setSecret={testSetSecret} contentText=''/>);
     });
 
-    it('should display "Disable Two-Factor Authentication?" title', () => {
-        expect(screen.getByText('Disable Two-Factor Authentication?')).toBeInTheDocument();
+    it('should display "Disable Multi-Factor Authentication?" title', () => {
+        expect(screen.getByText('Disable Multi-Factor Authentication?')).toBeInTheDocument();
     });
 
     it('should display "Password" input', () => {
@@ -73,19 +74,17 @@ describe('Enable2FADialog', () => {
         expect(screen.getByRole('button', { name: 'Cancel' })).toBeInTheDocument();
     });
 
-    it('should display "Disable Two-Factor Authentication" button', () => {
+    it('should display "Disable Multi-Factor Authentication" button', () => {
         expect(
             screen.getByRole('button', {
-                name: 'Disable Two-Factor Authentication',
+                name: 'Disable Multi-Factor Authentication',
             })
         ).toBeInTheDocument();
     });
 
     describe('user clicks "Cancel" button', () => {
         beforeEach(async () => {
-            await act(async () => {
-                await user.click(screen.getByRole('button', { name: 'Cancel' }));
-            });
+            await user.click(screen.getByRole('button', { name: 'Cancel' }));
         });
 
         it('should call "onCancel one time"', () => {
@@ -95,22 +94,18 @@ describe('Enable2FADialog', () => {
 
     describe('user enters valid password', () => {
         beforeEach(async () => {
-            await act(async () => {
-                await user.type(screen.getByLabelText('Password'), testValidPassword);
-            });
+            await user.type(screen.getByLabelText('Password'), testValidPassword);
         });
 
         // TODO: it('should not display a validation error', () => {})
 
-        describe('user clicks "Disable Two-Factor Authentication" button', () => {
+        describe('user clicks "Disable Multi-Factor Authentication" button', () => {
             beforeEach(async () => {
-                await act(async () => {
-                    await user.click(
-                        screen.getByRole('button', {
-                            name: 'Disable Two-Factor Authentication',
-                        })
-                    );
-                });
+                await user.click(
+                    screen.getByRole('button', {
+                        name: 'Disable Multi-Factor Authentication',
+                    })
+                );
             });
 
             it('should call "onSave" one time', async () => {
