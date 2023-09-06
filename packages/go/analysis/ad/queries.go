@@ -122,22 +122,6 @@ func FetchActiveDirectoryTierZeroRoots(tx graph.Transaction, domain *graph.Node)
 	}
 }
 
-func GetCollectedDomains(ctx context.Context, db graph.Database) (graph.NodeSet, error) {
-	var domains graph.NodeSet
-	if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
-		if innerDomains, err := FetchCollectedDomains(tx); err != nil {
-			return err
-		} else {
-			domains = innerDomains
-			return nil
-		}
-	}); err != nil {
-		return nil, err
-	} else {
-		return domains, nil
-	}
-}
-
 func FetchCollectedDomains(tx graph.Transaction) (graph.NodeSet, error) {
 	return ops.FetchNodeSet(tx.Nodes().Filterf(func() graph.Criteria {
 		return query.And(
@@ -145,6 +129,19 @@ func FetchCollectedDomains(tx graph.Transaction) (graph.NodeSet, error) {
 			query.Equals(query.NodeProperty(common.Collected.String()), true),
 		)
 	}))
+}
+
+func GetCollectedDomains(ctx context.Context, db graph.Database) (graph.NodeSet, error) {
+	var domains graph.NodeSet
+
+	return domains, db.ReadTransaction(ctx, func(tx graph.Transaction) error {
+		if innerDomains, err := FetchCollectedDomains(tx); err != nil {
+			return err
+		} else {
+			domains = innerDomains
+			return nil
+		}
+	})
 }
 
 func getGPOLinks(tx graph.Transaction, node *graph.Node) ([]*graph.Relationship, error) {

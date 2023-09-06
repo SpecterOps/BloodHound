@@ -17,6 +17,7 @@
 package azure
 
 import (
+	"context"
 	"github.com/RoaringBitmap/roaring/roaring64"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/dawgs/ops"
@@ -27,6 +28,29 @@ import (
 	"github.com/specterops/bloodhound/log"
 	"strings"
 )
+
+func FetchCollectedTenants(tx graph.Transaction) (graph.NodeSet, error) {
+	return ops.FetchNodeSet(tx.Nodes().Filterf(func() graph.Criteria {
+		return query.And(
+			query.Kind(query.Node(), azure.Tenant),
+			query.Equals(query.NodeProperty(common.Collected.String()), true),
+		)
+	}))
+}
+
+func GetCollectedTenants(ctx context.Context, db graph.Database) (graph.NodeSet, error) {
+	var tenants graph.NodeSet
+
+	return tenants, db.ReadTransaction(ctx, func(tx graph.Transaction) error {
+		if collectedTenants, err := FetchCollectedTenants(tx); err != nil {
+			return err
+		} else {
+			tenants = collectedTenants
+		}
+
+		return nil
+	})
+}
 
 func FetchGraphDBTierZeroTaggedAssets(tx graph.Transaction, tenant *graph.Node) (graph.NodeSet, error) {
 	if tenantObjectID, err := tenant.Properties.Get(common.ObjectID.String()).String(); err != nil {
