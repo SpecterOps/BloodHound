@@ -25,9 +25,12 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/specterops/bloodhound/headers"
 	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/src/api"
 )
+
+var unsupportedEncodingError = errors.New("content encoding is not supported")
 
 type GzipResponseWriter struct {
 	http.ResponseWriter
@@ -56,60 +59,55 @@ func CompressionMiddleware(next http.Handler) http.Handler {
 			err error
 		)
 
-		for headerName, headerValues := range request.Header {
-
-			if headerName == "Content-Encoding" {
-
-				combinedEncodings := strings.Join(headerValues, ",") // "Content-Encoding: gzip, deflate; Content-Encoding: br;" = "gzip, deflate, br"
-				encodings := strings.Split(combinedEncodings, ",")
-
-				for _, encoding := range encodings {
-
-					request.Body, err = WrapBody(encoding, request.Body)
-					if err != nil {
-						errMsg := fmt.Sprintf("failed to create reader for %s encoding: %v", encoding, err)
-						log.Warnf(errMsg)
-						api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("Error trying to read compressed request: %s", errMsg), request), responseWriter)
-						return
+		if contentEncodingString := strings.Join(request.Header.Values(headers.ContentEncoding.String()), ","); contentEncodingString != "" { // "Content-Encoding: gzip, deflate; Content-Encoding: br;" = "gzip, deflate, br"
+			for _, encoding := range strings.Split(contentEncodingString, ",") {
+				encoding = strings.TrimSpace(encoding)
+				request.Body, err = wrapBody(encoding, request.Body)
+				if err != nil {
+					errMsg := fmt.Sprintf("failed to create reader for %s encoding: %v", encoding, err)
+					log.Warnf(errMsg)
+					if errors.Is(err, unsupportedEncodingError) {
+						api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusUnsupportedMediaType, fmt.Sprintf("Error trying to read request: %s", errMsg), request), responseWriter)
+					} else {
+						api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("Error trying to read request: %s", errMsg), request), responseWriter)
 					}
-				}
-
-			}
-
-			if headerName == "Accept-Encoding" {
-				// For simplicity, we will only honor a "gzip-or-not" compression strategy, without regard to quality values.
-				// In the future we *may* choose to support Accept-Encoding quality values:
-				// https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept-Encoding
-				// https://developer.mozilla.org/en-US/docs/Glossary/Quality_values
-				combinedEncodings := strings.Join(headerValues, ",")
-
-				if strings.Contains(combinedEncodings, "gzip") {
-					gw = NewGzipResponseWriter(responseWriter)
+					return
 				}
 			}
 		}
+
+		if acceptEncodingString := strings.Join(request.Header.Values(headers.AcceptEncoding.String()), ","); acceptEncodingString != "" {
+			// For simplicity, we will only honor a "gzip-or-not" compression strategy, without regard to quality values.
+			// In the future we *may* choose to support Accept-Encoding quality values:
+			// https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept-Encoding
+			// https://developer.mozilla.org/en-US/docs/Glossary/Quality_values
+			if strings.Contains(acceptEncodingString, "gzip") {
+				gw = NewGzipResponseWriter(responseWriter)
+			}
+		}
+
 		if gw != nil {
 			responseWriter = gw
-			responseWriter.Header().Set("Content-Encoding", "gzip")
+			responseWriter.Header().Set(headers.ContentEncoding.String(), "gzip")
 			defer gw.Close()
 		}
 		next.ServeHTTP(responseWriter, request)
 	})
 }
 
-func WrapBody(encoding string, body io.ReadCloser) (io.ReadCloser, error) {
+func wrapBody(encoding string, body io.ReadCloser) (io.ReadCloser, error) {
 	var (
 		newBody = body
 		err     error
 	)
-	switch strings.TrimSpace(encoding) {
+	switch encoding {
 	case "gzip", "x-gzip":
 		newBody, err = gzip.NewReader(body)
 	case "deflate":
 		newBody, err = zlib.NewReader(body)
 	default:
-		log.Infof("unsupported encoding detected: %s\n", encoding)
-		err = errors.New("content encoding is not supported")
+		log.Infof("unsupported encoding detected: %s", encoding)
+		err = unsupportedEncodingError
 	}
 	return newBody, err
 }

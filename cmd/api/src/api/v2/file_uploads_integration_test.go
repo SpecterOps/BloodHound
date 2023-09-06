@@ -118,6 +118,17 @@ func Test_FileUpload(t *testing.T) {
 		assert.Nil(tx, err)
 		assert.Equal(tx, http.StatusBadRequest, resp.StatusCode)
 	})
+
+	t.Run("unsupported compression type", func(tx *testing.T) {
+		jsonInput := loader.GetReader("v6/ingest/containers.json")
+		defer jsonInput.Close()
+		req, err := apiClient.NewRequest(http.MethodPost, jobEndpoint, nil, jsonInput)
+		assert.Nil(tx, err)
+		req.Header.Set("Content-Encoding", "br")
+		resp, err := apiClient.Raw(req)
+		assert.Nil(tx, err)
+		assert.Equal(tx, http.StatusUnsupportedMediaType, resp.StatusCode)
+	})
 }
 
 func Test_FileUploadWorkFlowVersion5(t *testing.T) {
