@@ -29,6 +29,7 @@ type DuplexConstructor[T uint32 | uint64] func() Duplex[T]
 type Provider[T uint32 | uint64] interface {
 	Add(value ...T)
 	Or(other Provider[T])
+	Clear()
 	Cardinality() uint64
 }
 
@@ -66,6 +67,7 @@ type Iterator[T uint32 | uint64] interface {
 type Duplex[T uint32 | uint64] interface {
 	Provider[T]
 
+	Xor(other Provider[T])
 	And(other Provider[T])
 	Remove(value T)
 	Slice() []T

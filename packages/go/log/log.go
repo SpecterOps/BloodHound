@@ -1,17 +1,17 @@
 // Copyright 2023 Specter Ops, Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// 
+//
 // SPDX-License-Identifier: Apache-2.0
 
 package log
@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"sync/atomic"
 	"time"
 
 	"github.com/rs/zerolog"
@@ -62,6 +63,9 @@ const (
 
 	// LevelDisabled defines a log verbosity level that disables the sending of logging events.
 	LevelDisabled = zerolog.Disabled
+
+	FieldElapsed       = "elapsed"
+	FieldMeasurementID = "measurement_id"
 )
 
 // The values below are configured in this manner to avoid having to rely on default values that may change throughout
@@ -214,11 +218,27 @@ func Tracef(format string, args ...any) {
 // event. The time measurement begins on instantiation of the returned deferrable function and ends upon call of said
 // function.
 func Measure(level Level, format string, args ...any) func() {
-	const elapsedKey = "elapsed"
-
 	then := time.Now()
 
 	return func() {
-		WithLevel(level).Duration(elapsedKey, time.Since(then)).Msgf(format, args...)
+		WithLevel(level).Duration(FieldElapsed, time.Since(then)).Msgf(format, args...)
+	}
+}
+
+var (
+	logMeasurePairCounter = atomic.Uint64{}
+)
+
+func LogAndMeasure(level Level, format string, args ...any) func() {
+	var (
+		pairID  = logMeasurePairCounter.Add(1)
+		message = fmt.Sprintf(format, args...)
+		then    = time.Now()
+	)
+
+	WithLevel(level).Uint64(FieldMeasurementID, pairID).Msg(message)
+
+	return func() {
+		WithLevel(level).Duration(FieldElapsed, time.Since(then)).Uint64(FieldMeasurementID, pairID).Msg(message)
 	}
 }

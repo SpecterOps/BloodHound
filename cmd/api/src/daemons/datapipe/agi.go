@@ -18,10 +18,8 @@ package datapipe
 
 import (
 	"context"
-	"strings"
 	"sync"
 
-	"github.com/RoaringBitmap/roaring/roaring64"
 	commonanalysis "github.com/specterops/bloodhound/analysis"
 	adAnalysis "github.com/specterops/bloodhound/analysis/ad"
 	azureAnalysis "github.com/specterops/bloodhound/analysis/azure"
@@ -119,7 +117,7 @@ func ParallelTagAzureTierZero(ctx context.Context, db graph.Database) error {
 
 				if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
 					for tenant := range tenantC {
-						if roots, err := FetchAzureAttackPathRoots(tx, tenant); err != nil {
+						if roots, err := azureAnalysis.FetchAzureAttackPathRoots(tx, tenant); err != nil {
 							log.Errorf("Failed fetching roots for tenant %d: %v", tenant.ID, err)
 						} else {
 							for _, root := range roots {
@@ -147,169 +145,6 @@ func ParallelTagAzureTierZero(ctx context.Context, db graph.Database) error {
 	}
 
 	return nil
-}
-
-func FetchAzureAttackPathRoots(tx graph.Transaction, tenant *graph.Node) (graph.NodeSet, error) {
-	attackPathRoots := graph.NewNodeKindSet()
-
-	// Add the tenant as one of the critical path roots
-	attackPathRoots.Add(tenant)
-
-	// Pull in custom tier zero tagged assets
-	if customTierZeroNodes, err := azureAnalysis.FetchGraphDBTierZeroTaggedAssets(tx, tenant); err != nil {
-		return nil, err
-	} else {
-		attackPathRoots.AddSets(customTierZeroNodes)
-	}
-
-	// The CompanyAdministratorRole, PrivilegedRoleAdministratorRole tenant roles are critical attack path roots
-	if adminRoles, err := azureAnalysis.TenantRoles(tx, tenant, azure.CompanyAdministratorRole, azure.PrivilegedRoleAdministratorRole, azure.PrivilegedAuthenticationAdministratorRole); err != nil {
-		return nil, err
-	} else {
-		attackPathRoots.AddSets(adminRoles)
-	}
-
-	// Find users that have CompanyAdministratorRole, PrivilegedRoleAdministratorRole
-	if adminRoleMembers, err := azureAnalysis.RoleMembersWithGrants(tx, tenant, azure.CompanyAdministratorRole, azure.PrivilegedRoleAdministratorRole, azure.PrivilegedAuthenticationAdministratorRole); err != nil {
-		return nil, err
-	} else {
-		for _, adminRoleMember := range adminRoleMembers {
-			// Add this role member as one of the critical path roots
-			attackPathRoots.Add(adminRoleMember)
-		}
-
-		// Look for any apps that may run as a critical service principal
-		if criticalServicePrincipals := adminRoleMembers.ContainingNodeKinds(azure.ServicePrincipal); criticalServicePrincipals.Len() > 0 {
-			if criticalApps, err := ops.FetchEndNodes(tx.Relationships().Filterf(func() graph.Criteria {
-				return query.And(
-					query.Kind(query.Start(), azure.App),
-					query.Kind(query.Relationship(), azure.RunsAs),
-					query.InIDs(query.EndID(), criticalServicePrincipals.IDs()...),
-				)
-			})); err != nil {
-				return nil, err
-			} else {
-				for _, criticalApp := range criticalApps {
-					// Add this app as one of the critical path roots
-					attackPathRoots.Add(criticalApp)
-				}
-			}
-		}
-	}
-
-	// Find any tenant virtual machines that are tied to an AD Admin Tier 0 security group
-	if err := ops.ForEachEndNode(tx.Relationships().Filterf(func() graph.Criteria {
-		return query.And(
-			query.Equals(query.StartID(), tenant.ID),
-			query.Kind(query.Relationship(), azure.Contains),
-			query.Kind(query.End(), azure.VM),
-		)
-	}), func(_ *graph.Relationship, tenantVM *graph.Node) error {
-		if activeDirectoryTierZeroNodes, err := ops.AcyclicTraverseTerminals(tx, ops.TraversalPlan{
-			Root:      tenantVM,
-			Direction: graph.DirectionOutbound,
-			BranchQuery: func() graph.Criteria {
-				return query.Kind(query.Relationship(), ad.MemberOf)
-			},
-			PathFilter: func(ctx *ops.TraversalContext, segment *graph.PathSegment) bool {
-				terminalSystemTags, _ := segment.Node.Properties.GetOrDefault(common.SystemTags.String(), "").String()
-				return strings.Contains(terminalSystemTags, ad.AdminTierZero)
-			},
-		}); err != nil {
-			return err
-		} else if activeDirectoryTierZeroNodes.Len() > 0 {
-			// This VM is an AD computer with membership to an AD admin tier zero group. Track it as a critical
-			// path root
-			attackPathRoots.Add(tenantVM)
-		}
-
-		return nil
-	}); err != nil {
-		return nil, err
-	}
-
-	// Any ResourceGroup that contains a critical attack path root is also a critical attack path root
-	if err := ops.ForEachStartNode(tx.Relationships().Filterf(func() graph.Criteria {
-		return query.And(
-			query.Kind(query.Start(), azure.ResourceGroup),
-			query.Kind(query.Relationship(), azure.Contains),
-			query.InIDs(query.EndID(), attackPathRoots.AllNodeIDs()...),
-		)
-	}), func(_ *graph.Relationship, node *graph.Node) error {
-		// This resource group contains a critical attack path root. Track it as a critical attack path root
-		attackPathRoots.Add(node)
-		return nil
-	}); err != nil {
-		return nil, err
-	}
-
-	// Any Subscription that contains a critical ResourceGroup is also a critical attack path root
-	if err := ops.ForEachStartNode(tx.Relationships().Filterf(func() graph.Criteria {
-		return query.And(
-			query.Kind(query.Start(), azure.Subscription),
-			query.Kind(query.Relationship(), azure.Contains),
-			query.InIDs(query.EndID(), attackPathRoots.Get(azure.ResourceGroup).IDs()...),
-		)
-	}), func(_ *graph.Relationship, node *graph.Node) error {
-		// This subscription contains a critical attack path root. Track it as a critical attack path root
-		attackPathRoots.Add(node)
-		return nil
-	}); err != nil {
-		return nil, err
-	}
-
-	// Any ManagementGroup that contains a critical Subscription is also a critical attack path root
-	for _, criticalSubscription := range attackPathRoots.Get(azure.Subscription) {
-		walkBitmap := roaring64.New()
-
-		if criticalManagementGroups, err := ops.AcyclicTraverseTerminals(tx, ops.TraversalPlan{
-			Root:      criticalSubscription,
-			Direction: graph.DirectionInbound,
-			BranchQuery: func() graph.Criteria {
-				return query.Kind(query.Relationship(), azure.Contains)
-			},
-			DescentFilter: func(ctx *ops.TraversalContext, segment *graph.PathSegment) bool {
-				if nodeID := segment.Node.ID.Uint64(); !walkBitmap.Contains(nodeID) {
-					walkBitmap.Add(nodeID)
-					return true
-				}
-
-				return false
-			},
-			PathFilter: func(ctx *ops.TraversalContext, segment *graph.PathSegment) bool {
-				return segment.Node.Kinds.ContainsOneOf(azure.ManagementGroup)
-			},
-		}); err != nil {
-			return nil, err
-		} else {
-			attackPathRoots.AddSets(criticalManagementGroups)
-		}
-	}
-
-	var (
-		inboundNodes  = graph.NewNodeSet()
-		tierZeroNodes = attackPathRoots.AllNodes()
-	)
-
-	// For each root look up collapsable inbound relationships to complete tier zero
-	for _, attackPathRoot := range attackPathRoots.AllNodes() {
-		if inboundCollapsablePaths, err := ops.TraversePaths(tx, ops.TraversalPlan{
-			Root:      attackPathRoot,
-			Direction: graph.DirectionInbound,
-			BranchQuery: func() graph.Criteria {
-				return query.KindIn(query.Relationship(), azureAnalysis.AzureNonDescentKinds()...)
-			},
-		}); err != nil {
-			return nil, err
-		} else {
-			inboundNodes.AddSet(inboundCollapsablePaths.AllNodes())
-		}
-	}
-
-	log.Infof("Collapsed an additional %d nodes into tier zero for non-descent relationships", inboundNodes.Len())
-
-	tierZeroNodes.AddSet(inboundNodes)
-	return tierZeroNodes, nil
 }
 
 func ParallelTagActiveDirectoryTierZero(ctx context.Context, db graph.Database) error {
@@ -371,7 +206,7 @@ func ParallelTagActiveDirectoryTierZero(ctx context.Context, db graph.Database) 
 
 				if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
 					for domain := range domainC {
-						if roots, err := fetchActiveDirectoryTierZeroRoots(tx, domain); err != nil {
+						if roots, err := adAnalysis.FetchActiveDirectoryTierZeroRoots(tx, domain); err != nil {
 							log.Errorf("Failed fetching tier zero for domain %d: %v", domain.ID, err)
 						} else {
 							for _, root := range roots {
@@ -399,51 +234,6 @@ func ParallelTagActiveDirectoryTierZero(ctx context.Context, db graph.Database) 
 	}
 
 	return nil
-}
-
-func fetchActiveDirectoryTierZeroRoots(tx graph.Transaction, domain *graph.Node) (graph.NodeSet, error) {
-	log.Infof("Fetching tier zero nodes for domain %d", domain.ID)
-	defer log.Measure(log.LevelInfo, "Finished fetching tier zero nodes for domain %d", domain.ID)()
-
-	if domainSID, err := domain.Properties.Get(common.ObjectID.String()).String(); err != nil {
-		return nil, err
-	} else {
-		attackPathRoots := graph.NewNodeSet()
-
-		// Add the domain as one of the critical path roots
-		attackPathRoots.Add(domain)
-
-		// Pull in custom tier zero tagged assets
-		if customTierZeroNodes, err := adAnalysis.FetchGraphDBTierZeroTaggedAssets(tx, domainSID); err != nil {
-			return nil, err
-		} else {
-			attackPathRoots.AddSet(customTierZeroNodes)
-		}
-
-		// Pull in well known tier zero nodes by SID suffix
-		if wellKnownTierZeroNodes, err := adAnalysis.FetchWellKnownTierZeroEntities(tx, domainSID); err != nil {
-			return nil, err
-		} else {
-			attackPathRoots.AddSet(wellKnownTierZeroNodes)
-		}
-
-		// Pull in all group members of attack path roots
-		if allGroupMembers, err := adAnalysis.FetchAllGroupMembers(tx, attackPathRoots); err != nil {
-			return nil, err
-		} else {
-			attackPathRoots.AddSet(allGroupMembers)
-		}
-
-		// Add all enforced GPO nodes to the attack path roots
-		if enforcedGPOs, err := adAnalysis.FetchAllEnforcedGPOs(tx, attackPathRoots); err != nil {
-			return nil, err
-		} else {
-			attackPathRoots.AddSet(enforcedGPOs)
-		}
-
-		// Find all next-tier assets
-		return attackPathRoots, nil
-	}
 }
 
 func RunAssetGroupIsolationCollections(ctx context.Context, db database.Database, graphDB graph.Database, kindGetter func(*graph.Node) string) error {
