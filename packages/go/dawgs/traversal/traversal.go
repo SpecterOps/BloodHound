@@ -168,16 +168,59 @@ func newVisitorFilter(direction graph.Direction, userFilter graph.Criteria) func
 	}
 }
 
-func shallowFetchRelationships(graphQuery graph.RelationshipQuery) ([]*graph.Relationship, error) {
-	var relationships []*graph.Relationship
+func shallowFetchRelationships(direction graph.Direction, segment *graph.PathSegment, graphQuery graph.RelationshipQuery) ([]*graph.Relationship, error) {
+	var (
+		relationships  []*graph.Relationship
+		returnCriteria graph.Criteria
+	)
 
-	if err := graphQuery.FetchKinds(func(cursor graph.Cursor[graph.RelationshipKindsResult]) error {
-		for next := range cursor.Chan() {
-			relationships = append(relationships, graph.NewRelationship(next.ID, next.StartID, next.EndID, nil, next.Kind))
+	switch direction {
+	case graph.DirectionOutbound:
+		returnCriteria = query.Returning(
+			query.EndID(),
+			query.KindsOf(query.End()),
+			query.RelationshipID(),
+			query.KindsOf(query.Relationship()),
+		)
+
+	case graph.DirectionInbound:
+		returnCriteria = query.Returning(
+			query.StartID(),
+			query.KindsOf(query.Start()),
+			query.RelationshipID(),
+			query.KindsOf(query.Relationship()),
+		)
+
+	default:
+		return nil, fmt.Errorf("bi-directional or non-directed edges are not supported")
+	}
+
+	if err := graphQuery.Execute(func(results graph.Result) error {
+		defer results.Close()
+
+		var (
+			nodeID    graph.ID
+			nodeKinds graph.Kinds
+			edgeID    graph.ID
+			edgeKind  graph.Kind
+		)
+
+		for results.Next() {
+			if err := results.Scan(&nodeID, &nodeKinds, &edgeID, &edgeKind); err != nil {
+				return err
+			}
+
+			switch direction {
+			case graph.DirectionOutbound:
+				relationships = append(relationships, graph.NewRelationship(edgeID, segment.Node.ID, nodeID, nil, edgeKind))
+
+			case graph.DirectionInbound:
+				relationships = append(relationships, graph.NewRelationship(edgeID, nodeID, segment.Node.ID, nil, edgeKind))
+			}
 		}
 
-		return cursor.Error()
-	}); err != nil {
+		return results.Error()
+	}, returnCriteria); err != nil {
 		return nil, err
 	}
 
@@ -293,7 +336,7 @@ func LightweightDriver(direction graph.Direction, cache graphcache.Cache, criter
 			)
 		)
 
-		if relationships, err := shallowFetchRelationships(nextQuery); err != nil {
+		if relationships, err := shallowFetchRelationships(direction, nextSegment, nextQuery); err != nil {
 			return nil, err
 		} else {
 			// Reconcile the start and end nodes of the fetched relationships with the graph cache

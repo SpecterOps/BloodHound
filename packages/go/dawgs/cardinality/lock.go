@@ -32,6 +32,13 @@ func ThreadSafeDuplex[T uint32 | uint64](provider Duplex[T]) Duplex[T] {
 	}
 }
 
+func (s threadSafeDuplex[T]) Clear() {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+
+	s.provider.Clear()
+}
+
 func (s threadSafeDuplex[T]) Add(values ...T) {
 	s.lock.Lock()
 	defer s.lock.Unlock()
@@ -119,6 +126,13 @@ func ThreadSafeSimplex[T uint32 | uint64](provider Simplex[T]) Simplex[T] {
 		provider: provider,
 		lock:     &sync.Mutex{},
 	}
+}
+
+func (s threadSafeSimplex[T]) Clear() {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+
+	s.provider.Clear()
 }
 
 func (s threadSafeSimplex[T]) Add(values ...T) {

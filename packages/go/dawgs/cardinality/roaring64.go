@@ -42,6 +42,10 @@ func NewBitmap64() Duplex[uint64] {
 	}
 }
 
+func (s bitmap64) Clear() {
+	s.bitmap.Clear()
+}
+
 func (s bitmap64) Each(delegate func(nextValue uint64) (bool, error)) error {
 	for itr := s.bitmap.Iterator(); itr.HasNext(); {
 		if ok, err := delegate(itr.Next()); err != nil {

@@ -29,6 +29,7 @@ type DuplexConstructor[T uint32 | uint64] func() Duplex[T]
 type Provider[T uint32 | uint64] interface {
 	Add(value ...T)
 	Or(other Provider[T])
+	Clear()
 	Cardinality() uint64
 }
 
