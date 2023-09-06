@@ -490,7 +490,7 @@ func ConvertAzureKeyVaultOwnerToRels(data models.KeyVaultOwners) []IngestibleRel
 				TargetType: azure.KeyVault,
 				Target:     strings.ToUpper(data.KeyVaultId),
 				RelProps:   map[string]any{},
-				RelType:    azure.Owns,
+				RelType:    azure.Owner,
 			})
 		}
 	}
