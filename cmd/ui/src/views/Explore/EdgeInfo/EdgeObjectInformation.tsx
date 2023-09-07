@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Box, Skeleton, Typography } from '@mui/material';
+import { Skeleton } from '@mui/material';
 import { SelectedEdge, apiClient } from 'bh-shared-ui';
 import { FC } from 'react';
 import { useQuery } from 'react-query';
@@ -38,21 +38,13 @@ const EdgeObjectInformation: FC<{ selectedEdge: NonNullable<SelectedEdge> }> = (
                 { signal }
             )
             .then((result) => {
-                if (!result.data.data) return [];
+                if (!result.data.data) return { nodes: {}, edges: [] };
                 return result.data.data;
             });
     });
 
     if (isLoading) {
         return <Skeleton variant='rectangular' sx={{}} />;
-    }
-
-    if (isError) {
-        return (
-            <Box>
-                <Typography>Unable to fetch edge information</Typography>
-            </Box>
-        );
     }
 
     const sourceNodeField: EntityField = {
@@ -65,11 +57,19 @@ const EdgeObjectInformation: FC<{ selectedEdge: NonNullable<SelectedEdge> }> = (
         value: selectedEdge.targetNode.name,
     };
 
-    const formattedObjectFields: EntityField[] = [
-        sourceNodeField,
-        targetNodeField,
-        ...formatObjectInfoFields(cypherResponse.edges[0].properties || {}),
-    ];
+    let formattedObjectFields: EntityField[] = [sourceNodeField, targetNodeField];
+
+    if (isError) {
+        formattedObjectFields = [
+            ...formattedObjectFields,
+            ...formatObjectInfoFields({ lastseen: selectedEdge.data.lastseen }),
+        ];
+    } else {
+        formattedObjectFields = [
+            ...formattedObjectFields,
+            ...formatObjectInfoFields(cypherResponse.edges[0]?.properties || {}),
+        ];
+    }
 
     return (
         <EdgeInfoCollapsibleSection section={'data'}>

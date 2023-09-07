@@ -18,7 +18,7 @@ import { ActionType, NotificationAction } from './actions';
 import { Notification } from './model';
 
 export const notificationsReducer = (state: Notification[], action: NotificationAction): Notification[] => {
-    if (action.type == ActionType.Add) {
+    if (action.type === ActionType.Add) {
         return [...state, action.value];
     } else if (action.type === ActionType.Dismiss) {
         return state.map((notification) => {
