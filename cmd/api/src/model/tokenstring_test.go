@@ -110,6 +110,58 @@ func TestFormatChecksum(t *testing.T) {
 	}
 }
 
+func TestTokenString_DigestableValue(t *testing.T) {
+	for _, tc := range []struct {
+		n   string
+		tok TokenString
+	}{
+		{
+			"zero",
+			TokenString{},
+		},
+		{
+			"missing value",
+			TokenString{Prefix: "BLAH", cksum: 12345},
+		},
+	} {
+		t.Run(tc.n, func(t *testing.T) {
+			_, err := tc.tok.DigestableValue()
+			require.Error(t, err)
+		})
+	}
+
+	for _, tc := range []struct {
+		n   string
+		tok TokenString
+		exp []byte
+	}{
+		{
+			"pattern",
+			TokenString{
+				Prefix: "TOK1",
+				value:  "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+				cksum:  987654, // encodes to "48VU"
+			},
+			[]byte("0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"),
+		},
+		{
+			"random",
+			TokenString{
+				Prefix: "ASDF",
+				value:  "18kmjsbZLdgIBSjiHPCG51318yk41uNYzswMhScdartEUL2UKLP1Z4ywgiFxNBF5",
+				cksum:  2055449580, // encodes to "2f6skA"
+			},
+			[]byte("18kmjsbZLdgIBSjiHPCG51318yk41uNYzswMhScdartEUL2UKLP1Z4ywgiFxNBF5"),
+		},
+	} {
+		t.Run(tc.n, func(t *testing.T) {
+			v, err := tc.tok.DigestableValue()
+			require.Nil(t, err)
+			require.Equal(t, tc.exp, v)
+		})
+	}
+}
+
 func TestTokenString_String(t *testing.T) {
 	for _, tc := range []struct {
 		n   string

@@ -59,6 +59,14 @@ func formatChecksum(cksum uint32) string {
 	return strings.ReplaceAll(fmt.Sprintf("%6s", big.NewInt(int64(cksum)).Text(62)), " ", "0")
 }
 
+func (s TokenString) DigestableValue() ([]byte, error) {
+	if s.value == "" {
+		return []byte{}, errors.New("token value is not set")
+	} else {
+		return []byte(s.value), nil
+	}
+}
+
 func (s TokenString) String() string {
 	if s.value == "" {
 		return ""
