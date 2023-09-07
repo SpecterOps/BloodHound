@@ -16,7 +16,7 @@
 
 import { SagaIterator } from 'redux-saga';
 import { all, call, fork, put, takeLatest } from 'redux-saga/effects';
-import apiClient from 'src/api';
+import { apiClient } from 'bh-shared-ui';
 import { putGraphData, putGraphError, putGraphVars } from 'src/ducks/explore/actions';
 import {
     AssetGroupRequest,

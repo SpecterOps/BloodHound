@@ -16,7 +16,7 @@
 
 import { Alert, AlertTitle, Box, Button, Grid, TextField } from '@mui/material';
 import React, { useState } from 'react';
-import { PASSWD_REQS, testPassword } from 'src/passwdUtils';
+import { PASSWD_REQS, testPassword } from 'bh-shared-ui';
 
 interface PasswordResetFormProps {
     onSubmit: (password: string) => void;

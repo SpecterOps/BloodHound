@@ -17,7 +17,7 @@
 import { useState } from 'react';
 import { Box, Button } from '@mui/material';
 import { useMutation, useQuery } from 'react-query';
-import apiClient from 'src/api';
+import { apiClient } from 'bh-shared-ui';
 import {
     CreateSAMLProviderDialog,
     CreateSAMLProviderFormInputs,

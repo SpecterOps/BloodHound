@@ -14,6 +14,9 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+export * from './AppNotifications';
+export { default as AppNotifications } from './AppNotifications';
+
 export * from './CheckboxGroup';
 export { default as CheckboxGroup } from './CheckboxGroup';
 
@@ -74,6 +77,9 @@ export { default as OneTimePasscodeForm } from './OneTimePasscodeForm';
 export * from './PageWithTitle';
 export { default as PageWithTitle } from './PageWithTitle';
 
+export * from './PasswordDialog';
+export { default as PasswordDialog } from './PasswordDialog';
+
 export * from './RemoteContent';
 export { default as RemoteContent } from './RemoteContent';
 
@@ -96,3 +102,6 @@ export { default as FileUploadDialog } from './FileUploadDialog';
 
 export * from './FinishedIngestLog';
 export { default as FinishedIngestLog } from './FinishedIngestLog';
+
+export * from './UserTokenManagementDialog';
+export { default as UserTokenManagementDialog } from './UserTokenManagementDialog';
