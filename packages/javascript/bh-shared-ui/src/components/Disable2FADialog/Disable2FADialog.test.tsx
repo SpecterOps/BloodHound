@@ -59,7 +59,17 @@ describe('Enable2FADialog', () => {
     const testSetSecret = vi.fn();
 
     beforeEach(() => {
-        render(<Disable2FADialog open={true} onCancel={testOnCancel} onClose={testOnClose} onSave={testOnSave} secret='' setSecret={testSetSecret} contentText=''/>);
+        render(
+            <Disable2FADialog
+                open={true}
+                onCancel={testOnCancel}
+                onClose={testOnClose}
+                onSave={testOnSave}
+                secret=''
+                setSecret={testSetSecret}
+                contentText=''
+            />
+        );
     });
 
     it('should display "Disable Multi-Factor Authentication?" title', () => {
