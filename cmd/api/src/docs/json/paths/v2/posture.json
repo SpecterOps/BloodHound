@@ -31,6 +31,62 @@
                     "name": "to",
                     "in": "query",
                     "required": false
+                },
+                {
+                    "type": "string",
+                    "description": "Filter results by column value. Valid filter predicates are eq, neq",
+                    "name": "domain_sid",
+                    "in": "query",
+                    "required": false
+                },
+                {
+                    "type": "string",
+                    "description": "Filter results by column value. Valid filter predicates are eq, neq, gt, lt, lte, gte",
+                    "name": "exposure_index",
+                    "in": "query",
+                    "required": false
+                },
+                {
+                    "type": "string",
+                    "description": "Filter results by column value. Valid filter predicates are eq, neq, gt, gte, lt, lte",
+                    "name": "tier_zero_count",
+                    "in": "query",
+                    "required": false
+                },
+                {
+                    "type": "string",
+                    "description": "Filter results by column value. Valid filter predicates are eq, neq, gt, gte, lt, lte",
+                    "name": "critical_risk_count",
+                    "in": "query",
+                    "required": false
+                },
+                {
+                    "type": "string",
+                    "description": "Filter results by column value. Valid filter predicates are eq, neq, gt, gte, lt, lte",
+                    "name": "id",
+                    "in": "query",
+                    "required": false
+                },
+                {
+                    "type": "string",
+                    "description": "Filter results by column value. Valid filter predicates are eq, neq, gt, gte, lt, lte",
+                    "name": "created_at",
+                    "in": "query",
+                    "required": false
+                },
+                {
+                    "type": "string",
+                    "description": "Filter results by column value. Valid filter predicates are eq, neq, gt, gte, lt, lte",
+                    "name": "updated_at",
+                    "in": "query",
+                    "required": false
+                },
+                {
+                    "type": "string",
+                    "description": "Filter results by column value. Valid filter predicates are eq, neq, gt, gte, lt, lte",
+                    "name": "deleted_at",
+                    "in": "query",
+                    "required": false
                 }
             ],
             "responses": {
