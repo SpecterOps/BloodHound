@@ -269,6 +269,15 @@ func (s *GraphQuery) GetAllShortestPaths(ctx context.Context, startNodeID string
 	})
 }
 
+// the following negation clause matches nodes that have both ADLocalGroup and Group labels, but excludes nodes that only have the ADLocalGroup label.
+// equivalent cypher: MATCH (n) WHERE NOT (n:ADLocalGroup AND NOT n:Group)
+var groupFilter = query.Not(
+	query.And(
+		query.Kind(query.Node(), ad.LocalGroup),
+		query.Not(query.Kind(query.Node(), ad.Group)),
+	),
+)
+
 func searchNodeByKindAndEqualsName(kind graph.Kind, name string) graph.Criteria {
 	return query.And(
 		query.Kind(query.Node(), kind),
@@ -276,11 +285,7 @@ func searchNodeByKindAndEqualsName(kind graph.Kind, name string) graph.Criteria 
 			query.Equals(query.NodeProperty(common.Name.String()), name),
 			query.Equals(query.NodeProperty(common.ObjectID.String()), name),
 		),
-		query.Not(
-			query.And(
-				query.Kind(query.Node(), ad.LocalGroup),
-				query.Not(query.Kind(query.Node(), ad.Group)),
-			)),
+		groupFilter,
 	)
 }
 
@@ -293,11 +298,8 @@ func searchNodeByKindAndContainsName(kind graph.Kind, name string) graph.Criteri
 		),
 		query.Not(query.Equals(query.NodeProperty(common.Name.String()), name)),
 		query.Not(query.Equals(query.NodeProperty(common.ObjectID.String()), name)),
-		query.Not(
-			query.And(
-				query.Kind(query.Node(), ad.LocalGroup),
-				query.Not(query.Kind(query.Node(), ad.Group)),
-			)))
+		groupFilter,
+	)
 }
 
 func formatSearchResults(exactResults []model.SearchResult, fuzzyResults []model.SearchResult, limit, skip int) []model.SearchResult {

@@ -493,11 +493,15 @@ func (s CypherEmitter) formatLiteral(output io.Writer, literal *model.Literal) e
 func (s CypherEmitter) WriteExpression(output io.Writer, expression model.Expression) error {
 	switch typedExpression := expression.(type) {
 	case *model.Negation:
-		if _, err := io.WriteString(output, "not "); err != nil {
+		if _, err := io.WriteString(output, "not ("); err != nil {
 			return err
 		}
 
 		if err := s.WriteExpression(output, typedExpression.Expression); err != nil {
+			return err
+		}
+
+		if _, err := io.WriteString(output, ")"); err != nil {
 			return err
 		}
 

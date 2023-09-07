@@ -129,7 +129,7 @@ func TestSearchNodesByName_GroupLocalGroupCorrect(t *testing.T) {
 			results, err := graphQuery.SearchNodesByName(context.Background(), graph.Kinds{azure.Entity, ad.Entity}, userWanted, skip, limit)
 
 			require.Nil(t, err)
-			require.Equal(t, 1, len(results), "ADLocalGroup nodes should return if they are also group nodes")
+			require.Equal(t, 1, len(results), ":ADLocalGroup nodes should return if they are also :Group nodes")
 
 			return nil
 		})
