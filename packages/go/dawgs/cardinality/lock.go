@@ -1,17 +1,17 @@
 // Copyright 2023 Specter Ops, Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// 
+//
 // SPDX-License-Identifier: Apache-2.0
 
 package cardinality
@@ -32,6 +32,13 @@ func ThreadSafeDuplex[T uint32 | uint64](provider Duplex[T]) Duplex[T] {
 	}
 }
 
+func (s threadSafeDuplex[T]) Clear() {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+
+	s.provider.Clear()
+}
+
 func (s threadSafeDuplex[T]) Add(values ...T) {
 	s.lock.Lock()
 	defer s.lock.Unlock()
@@ -44,6 +51,13 @@ func (s threadSafeDuplex[T]) Remove(value T) {
 	defer s.lock.Unlock()
 
 	s.provider.Remove(value)
+}
+
+func (s threadSafeDuplex[T]) Xor(other Provider[T]) {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+
+	s.provider.Xor(other)
 }
 
 func (s threadSafeDuplex[T]) And(other Provider[T]) {
@@ -112,6 +126,13 @@ func ThreadSafeSimplex[T uint32 | uint64](provider Simplex[T]) Simplex[T] {
 		provider: provider,
 		lock:     &sync.Mutex{},
 	}
+}
+
+func (s threadSafeSimplex[T]) Clear() {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+
+	s.provider.Clear()
 }
 
 func (s threadSafeSimplex[T]) Add(values ...T) {
