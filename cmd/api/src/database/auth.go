@@ -1,34 +1,34 @@
 // Copyright 2023 Specter Ops, Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// 
+//
 // SPDX-License-Identifier: Apache-2.0
 
 package database
 
 import (
-	"crypto/rand"
-	"encoding/base64"
 	"fmt"
 	"strings"
 	"time"
 
+	"github.com/gofrs/uuid"
 	"github.com/specterops/bloodhound/src/auth"
 	"github.com/specterops/bloodhound/src/database/types/null"
 	"github.com/specterops/bloodhound/src/model"
-	"github.com/gofrs/uuid"
 	"gorm.io/gorm"
 )
+
+const BHClientTokenPrefix = "BH_C"
 
 // NewClientAuthToken creates a new Client AuthToken row using the details provided
 // INSERT INTO auth_tokens (client_id, hmac_method, last_access) VALUES (...)
@@ -39,8 +39,6 @@ func NewClientAuthToken(ownerID uuid.UUID, hmacMethod string) (model.AuthToken, 
 			HmacMethod: hmacMethod,
 			LastAccess: time.Now().UTC(),
 		}
-
-		tokenBytes = make([]byte, 40)
 	)
 
 	if hmacMethod != auth.HMAC_SHA2_256 {
@@ -53,11 +51,12 @@ func NewClientAuthToken(ownerID uuid.UUID, hmacMethod string) (model.AuthToken, 
 		authToken.ID = id
 	}
 
-	if _, err := rand.Read(tokenBytes); err != nil {
+	if ts, err := model.GenerateTokenString(BHClientTokenPrefix); err != nil {
 		return authToken, nil
+	} else {
+		authToken.Key = ts
 	}
 
-	authToken.Key = base64.StdEncoding.EncodeToString(tokenBytes)
 	return authToken, nil
 }
 

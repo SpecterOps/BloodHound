@@ -1,17 +1,17 @@
 // Copyright 2023 Specter Ops, Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// 
+//
 // SPDX-License-Identifier: Apache-2.0
 
 package api
@@ -26,8 +26,9 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/specterops/bloodhound/src/auth"
 	"github.com/specterops/bloodhound/headers"
+	"github.com/specterops/bloodhound/src/auth"
+	"github.com/specterops/bloodhound/src/model"
 )
 
 // tee takes a source reader and two writers. The function reads from the source until exhaustion. Each read is written
@@ -65,7 +66,7 @@ func tee(reader io.Reader, outA, outB io.Writer) error {
 	}
 }
 
-func GenerateRequestSignature(token, datetime, hmacMethod, requestMethod, requestURI string, body io.Reader) (io.Reader, []byte, error) {
+func GenerateRequestSignature(token model.TokenString, datetime, hmacMethod, requestMethod, requestURI string, body io.Reader) (io.Reader, []byte, error) {
 	if hmacMethod != auth.HMAC_SHA2_256 {
 		return nil, nil, fmt.Errorf("unsupported HMAC method: %s", hmacMethod)
 	}
@@ -76,7 +77,11 @@ func GenerateRequestSignature(token, datetime, hmacMethod, requestMethod, reques
 	//
 	// Example: GET /api/v2/test/resource HTTP/1.1
 	// Signature Component: GET/api/v2/test/resource
-	digester := hmac.New(sha256.New, []byte(token))
+	dv, err := token.DigestableValue()
+	if err != nil {
+		return nil, nil, fmt.Errorf("token is unusable: %w", err)
+	}
+	digester := hmac.New(sha256.New, dv)
 
 	if _, err := digester.Write([]byte(requestMethod + requestURI)); err != nil {
 		return nil, nil, err
@@ -111,7 +116,7 @@ func GenerateRequestSignature(token, datetime, hmacMethod, requestMethod, reques
 
 // SignRequestAtTime signs a given HTTP request using the BHE request signature scheme. The passed-in time value is used
 // for the DateKey portion of the signature digest.
-func SignRequestAtTime(id, token, hmacMethod string, datetime time.Time, request *http.Request) error {
+func SignRequestAtTime(id string, token model.TokenString, hmacMethod string, datetime time.Time, request *http.Request) error {
 	datetimeFormatted := datetime.Format(time.RFC3339)
 
 	if readBody, signature, err := GenerateRequestSignature(token, datetimeFormatted, hmacMethod, request.Method, request.URL.Path, request.Body); err != nil {
@@ -133,7 +138,7 @@ func SignRequestAtTime(id, token, hmacMethod string, datetime time.Time, request
 
 // SignRequest signs a given HTTP request using the BHE request signature scheme. Note: signatures are time-sensitive and
 // may only be valid for a maximum period of 2 hours.
-func SignRequest(tokenID, token string, request *http.Request) error {
+func SignRequest(tokenID string, token model.TokenString, request *http.Request) error {
 	return SignRequestAtTime(tokenID, token, auth.HMAC_SHA2_256, time.Now(), request)
 }
 
