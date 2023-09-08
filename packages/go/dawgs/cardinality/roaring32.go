@@ -1,17 +1,17 @@
 // Copyright 2023 Specter Ops, Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// 
+//
 // SPDX-License-Identifier: Apache-2.0
 
 package cardinality
@@ -40,6 +40,10 @@ func NewBitmap32() Duplex[uint32] {
 	return bitmap32{
 		bitmap: roaring.New(),
 	}
+}
+
+func (s bitmap32) Clear() {
+	s.bitmap.Clear()
 }
 
 func (s bitmap32) Each(delegate func(nextValue uint32) (bool, error)) error {
@@ -80,10 +84,27 @@ func (s bitmap32) Remove(value uint32) {
 	s.bitmap.Remove(value)
 }
 
+func (s bitmap32) Xor(provider Provider[uint32]) {
+	switch typedProvider := provider.(type) {
+	case bitmap32:
+		s.bitmap.Xor(typedProvider.bitmap)
+
+	case Duplex[uint32]:
+		providerCopy := roaring.New()
+
+		typedProvider.Each(func(value uint32) (bool, error) {
+			providerCopy.Add(value)
+			return true, nil
+		})
+
+		s.bitmap.Xor(providerCopy)
+	}
+}
+
 func (s bitmap32) And(provider Provider[uint32]) {
 	switch typedProvider := provider.(type) {
 	case bitmap32:
-		s.bitmap.Or(typedProvider.bitmap)
+		s.bitmap.And(typedProvider.bitmap)
 
 	case Duplex[uint32]:
 		s.Each(func(nextValue uint32) (bool, error) {

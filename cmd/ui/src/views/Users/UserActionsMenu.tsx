@@ -23,7 +23,7 @@ import {
     faUserLock,
     faKey,
     faTrash,
-    faUnlockAlt
+    faUnlockAlt,
 } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { IconButton, ListItemIcon, ListItemText, Menu, MenuItem, MenuProps } from '@mui/material';
@@ -189,7 +189,7 @@ const UserActionsMenu: React.FC<UserActionsMenuProps> = ({
                     <ListItemText primary='Generate / Revoke API Tokens' />
                 </MenuItem>
 
-                {showDisableMfaButton && (                
+                {showDisableMfaButton && (
                     <MenuItem
                         onClick={(e: React.MouseEvent<HTMLLIElement>) => {
                             onDisableUserMfa(e);

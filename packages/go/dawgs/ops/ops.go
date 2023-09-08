@@ -112,7 +112,7 @@ func DBFetchNodesByIDBitmap(ctx context.Context, db graph.Database, nodeIDs card
 }
 
 func TXFetchNodesByIDBitmap(tx graph.Transaction, nodeIDs cardinality.Duplex[uint32]) ([]*graph.Node, error) {
-	return FetchNodes(tx.Nodes().Filter(query.InIDs(query.NodeID(), graph.UintSliceToIDs(nodeIDs.Slice())...)))
+	return FetchNodes(tx.Nodes().Filter(query.InIDs(query.NodeID(), graph.Uint32SliceToIDs(nodeIDs.Slice())...)))
 }
 
 func FetchNodes(query graph.NodeQuery) ([]*graph.Node, error) {

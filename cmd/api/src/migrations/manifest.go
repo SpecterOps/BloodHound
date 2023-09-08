@@ -1,17 +1,17 @@
 // Copyright 2023 Specter Ops, Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// 
+//
 // SPDX-License-Identifier: Apache-2.0
 
 package migrations
@@ -19,8 +19,8 @@ package migrations
 import (
 	"context"
 	"strings"
+	"time"
 
-	"github.com/specterops/bloodhound/src/version"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/dawgs/ops"
 	"github.com/specterops/bloodhound/dawgs/query"
@@ -28,7 +28,41 @@ import (
 	"github.com/specterops/bloodhound/graphschema/azure"
 	"github.com/specterops/bloodhound/graphschema/common"
 	"github.com/specterops/bloodhound/log"
+	"github.com/specterops/bloodhound/src/version"
 )
+
+func Version_508_Migration(db graph.Database) error {
+	defer log.Measure(log.LevelInfo, "Migrating Azure Owns to Owner")()
+
+	return db.BatchOperation(context.Background(), func(batch graph.Batch) error {
+		return batch.Relationships().Filterf(func() graph.Criteria {
+			return query.And(
+				query.Kind(query.Start(), azure.Entity),
+				// Not all of these node types are being changed, but theres no harm in adding them to the migration
+				query.KindIn(query.End(), azure.ManagementGroup, azure.ResourceGroup, azure.Subscription, azure.KeyVault, azure.AutomationAccount, azure.ContainerRegistry, azure.LogicApp, azure.VMScaleSet, azure.WebApp, azure.FunctionApp, azure.ManagedCluster, azure.VM),
+				query.Kind(query.Relationship(), azure.Owns),
+			)
+		}).Fetch(func(cursor graph.Cursor[*graph.Relationship]) error {
+			for rel := range cursor.Chan() {
+				startId, endId := rel.StartID, rel.EndID
+				newProperties := graph.NewProperties()
+				if lastSeen, err := rel.Properties.Get(common.LastSeen.String()).Time(); err != nil {
+					newProperties.Set(common.LastSeen.String(), time.Now().UTC())
+				} else {
+					newProperties.Set(common.LastSeen.String(), lastSeen)
+				}
+
+				if err := batch.CreateRelationshipByIDs(startId, endId, azure.Owner, newProperties); err != nil {
+					return err
+				} else if err := batch.DeleteRelationship(rel.ID); err != nil {
+					return err
+				}
+			}
+
+			return nil
+		})
+	})
+}
 
 func Version_277_Migration(db graph.Database) error {
 	defer log.Measure(log.LevelInfo, "Migrating node property casing")()
@@ -160,5 +194,9 @@ var Manifest = []Migration{
 	{
 		Version: version.Version{Major: 2, Minor: 7, Patch: 7},
 		Execute: Version_277_Migration,
+	},
+	{
+		Version: version.Version{Major: 5, Minor: 0, Patch: 8},
+		Execute: Version_508_Migration,
 	},
 }

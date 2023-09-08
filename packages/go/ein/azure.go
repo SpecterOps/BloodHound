@@ -490,7 +490,7 @@ func ConvertAzureKeyVaultOwnerToRels(data models.KeyVaultOwners) []IngestibleRel
 				TargetType: azure.KeyVault,
 				Target:     strings.ToUpper(data.KeyVaultId),
 				RelProps:   map[string]any{},
-				RelType:    azure.Owns,
+				RelType:    azure.Owner,
 			})
 		}
 	}
@@ -537,7 +537,7 @@ func ConvertAzureManagementGroupOwnerToRels(data models.ManagementGroupOwners) [
 				TargetType: azure.ManagementGroup,
 				Target:     strings.ToUpper(data.ManagementGroupId),
 				RelProps:   map[string]any{},
-				RelType:    azure.Owns,
+				RelType:    azure.Owner,
 			})
 		}
 	}
@@ -608,7 +608,7 @@ func ConvertAzureResourceGroupOwnerToRels(data models.ResourceGroupOwners) []Ing
 				TargetType: azure.ResourceGroup,
 				Target:     strings.ToUpper(data.ResourceGroupId),
 				RelProps:   map[string]any{},
-				RelType:    azure.Owns,
+				RelType:    azure.Owner,
 			})
 		}
 	}
@@ -880,7 +880,7 @@ func ConvertAzureSubscriptionOwnerToRels(data models.SubscriptionOwners) []Inges
 				TargetType: azure.Subscription,
 				Target:     strings.ToUpper(data.SubscriptionId),
 				RelProps:   map[string]any{},
-				RelType:    azure.Owns,
+				RelType:    azure.Owner,
 			})
 		}
 	}
@@ -1093,7 +1093,7 @@ func ConvertAzureVirtualMachineOwnerToRels(data models.VirtualMachineOwners) []I
 				TargetType: azure.VM,
 				Target:     strings.ToUpper(data.VirtualMachineId),
 				RelProps:   map[string]any{},
-				RelType:    azure.Owns,
+				RelType:    azure.Owner,
 			})
 		}
 	}
