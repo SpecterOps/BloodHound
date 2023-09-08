@@ -18,12 +18,13 @@ package neo4j
 
 import (
 	"fmt"
+	"math"
+	"net/url"
+
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/specterops/bloodhound/dawgs"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/dawgs/util/channels"
-	"math"
-	"net/url"
 )
 
 const (
@@ -34,7 +35,7 @@ const (
 
 func newNeo4jDB(cfg dawgs.Config) (graph.Database, error) {
 	if connectionURLStr, typeOK := cfg.DriverCfg.(string); !typeOK {
-		return nil, fmt.Errorf("expected string for configuration type but got %T", cfg)
+		return nil, fmt.Errorf("expected string for configuration type but got %T", cfg.DriverCfg)
 	} else if connectionURL, err := url.Parse(connectionURLStr); err != nil {
 		return nil, err
 	} else if connectionURL.Scheme != DriverName {
