@@ -14,76 +14,17 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Alert, Box, CircularProgress, Theme, Typography } from '@mui/material';
-import makeStyles from '@mui/styles/makeStyles';
+import { Alert, Box, CircularProgress, Typography } from '@mui/material';
+import { NodeIcon } from 'bh-shared-ui';
 import isEmpty from 'lodash/isEmpty';
 import React, { PropsWithChildren } from 'react';
-import { NodeIcon } from 'bh-shared-ui';
 import { TIER_ZERO_TAG } from 'src/constants';
 import { GraphNodeTypes } from 'src/ducks/graph/types';
 import { setSearchValue, startSearchSelected } from 'src/ducks/searchbar/actions';
 import { PRIMARY_SEARCH, SEARCH_TYPE_EXACT } from 'src/ducks/searchbar/types';
 import { useAppDispatch } from 'src/store';
 import { format } from 'src/utils';
-
-const useStyles = makeStyles((theme: Theme) => ({
-    accordionRoot: {
-        backgroundColor: 'inherit',
-        margin: 0,
-        '&.Mui-disabled': {
-            backgroundColor: 'inherit',
-        },
-        '&.Mui-expanded': {
-            margin: 0,
-        },
-    },
-    accordionSummary: {
-        padding: theme.spacing(0, 2),
-        margin: theme.spacing(0, -2),
-        '&:hover': {
-            backgroundColor: theme.palette.action.hover,
-        },
-    },
-    accordionDetails: {
-        padding: theme.spacing(1, 0),
-    },
-    accordionCount: {
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        fontWeight: 'bold',
-        fontSize: '0.9rem',
-        backgroundColor: '#d7dee3',
-        minWidth: '3rem',
-        height: '1.6rem',
-        lineHeight: '1.6em',
-        paddingX: '0.5rem',
-        borderRadius: theme.shape.borderRadius,
-    },
-    title: {
-        marginLeft: theme.spacing(2),
-        lineHeight: '3em',
-        fontSize: theme.typography.fontSize,
-    },
-    fieldsContainer: {
-        borderRadius: theme.shape.borderRadius,
-        fontSize: '0.75rem',
-        '& > :nth-child(even)': {
-            backgroundColor: theme.palette.grey[200],
-        },
-    },
-    alertRoot: {
-        display: 'flex',
-        justifyContent: 'center',
-        padding: 0,
-        minWidth: '3rem',
-        borderRadius: theme.shape.borderRadius,
-    },
-    alertIcon: {
-        padding: '4px',
-        margin: 0,
-    },
-}));
+import useCollapsibleSectionStyles from 'src/views/Explore/InfoStyles/CollapsibleSection';
 
 const exclusionList = [
     'gid',
@@ -130,7 +71,7 @@ export const SubHeader: React.FC<{ label: string; count?: number; isLoading?: bo
     isLoading = false,
     isError = false,
 }) => {
-    const styles = useStyles();
+    const styles = useCollapsibleSectionStyles();
     return (
         <Box display='flex' justifyContent='space-between' alignItems='center' width='100%'>
             <Typography variant='h6' className={styles.title}>
@@ -156,7 +97,7 @@ export const SubHeader: React.FC<{ label: string; count?: number; isLoading?: bo
 };
 
 export const FieldsContainer: React.FC<PropsWithChildren> = ({ children }) => {
-    const styles = useStyles();
+    const styles = useCollapsibleSectionStyles();
     return <div className={styles.fieldsContainer}>{children}</div>;
 };
 

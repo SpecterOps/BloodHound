@@ -33,7 +33,7 @@ func NewGraphDBFixture() *lab.Fixture[graph.Database] {
 	fixture := lab.NewFixture(func(harness *lab.Harness) (graph.Database, error) {
 		if config, ok := lab.Unpack(harness, ConfigFixture); !ok {
 			return nil, fmt.Errorf("unable to unpack ConfigFixture")
-		} else if graphdb, err := dawgs.Open(neo4j.DriverName, config.Neo4J.Neo4jConnectionString()); err != nil {
+		} else if graphdb, err := dawgs.Open(neo4j.DriverName, dawgs.Config{DriverCfg: config.Neo4J.Neo4jConnectionString()}); err != nil {
 			return graphdb, err
 		} else if err := server.MigrateGraph(config, graphdb); err != nil {
 			return graphdb, fmt.Errorf("failed migrating Graph database: %v", err)

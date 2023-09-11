@@ -19,13 +19,14 @@ package queries_test
 import (
 	"context"
 	"fmt"
-	"github.com/specterops/bloodhound/src/auth"
-	bhCtx "github.com/specterops/bloodhound/src/ctx"
-	"github.com/specterops/bloodhound/src/test/must"
 	"net/http"
 	"net/url"
 	"testing"
 	"time"
+
+	"github.com/specterops/bloodhound/src/auth"
+	bhCtx "github.com/specterops/bloodhound/src/ctx"
+	"github.com/specterops/bloodhound/src/test/must"
 
 	"github.com/gorilla/mux"
 	"github.com/specterops/bloodhound/cache"
@@ -81,7 +82,7 @@ func TestGraphQuery_RawCypherSearch(t *testing.T) {
 		return nil
 	})
 
-	_, err := gq.RawCypherSearch(outerBHCtxInst.ConstructGoContext(), "match (n) return n;")
+	_, err := gq.RawCypherSearch(outerBHCtxInst.ConstructGoContext(), "match (n) return n;", false)
 	require.Nil(t, err)
 
 	// Validate that query complexity controls are working
@@ -104,14 +105,14 @@ func TestGraphQuery_RawCypherSearch(t *testing.T) {
 	outerBHCtxInst.Timeout.UserSet = false
 	outerBHCtxInst.Timeout.Value = time.Minute
 
-	_, err = gq.RawCypherSearch(outerBHCtxInst.ConstructGoContext(), "match ()-[:HasSession*..]->()-[:MemberOf*..]->() return n;")
+	_, err = gq.RawCypherSearch(outerBHCtxInst.ConstructGoContext(), "match ()-[:HasSession*..]->()-[:MemberOf*..]->() return n;", false)
 	require.Nil(t, err)
 
 	// Prove that overriding QC with a user-preference works
 	outerBHCtxInst.Timeout.UserSet = true
 	outerBHCtxInst.Timeout.Value = time.Second * 20
 
-	_, err = gq.RawCypherSearch(outerBHCtxInst.ConstructGoContext(), "match ()-[:HasSession*..]->()-[:MemberOf*..]->() return n;")
+	_, err = gq.RawCypherSearch(outerBHCtxInst.ConstructGoContext(), "match ()-[:HasSession*..]->()-[:MemberOf*..]->() return n;", false)
 	require.Nil(t, err)
 }
 

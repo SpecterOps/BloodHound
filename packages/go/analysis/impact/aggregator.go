@@ -17,8 +17,6 @@
 package impact
 
 import (
-	"time"
-
 	"github.com/specterops/bloodhound/dawgs/cardinality"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/log"
@@ -96,8 +94,6 @@ type resolution struct {
 // resolve takes the target uint32 ID of a node and calculates the cardinality of nodes that have a path that traverse
 // it
 func (s Aggregator) resolve(targetUint32ID uint32) cardinality.Provider[uint32] {
-	const statusTickerDuration = time.Second * 5
-
 	var (
 		targetImpact = s.getImpact(targetUint32ID)
 		resolutions  = map[uint32]*resolution{
@@ -107,21 +103,10 @@ func (s Aggregator) resolve(targetUint32ID uint32) cardinality.Provider[uint32] 
 				dependencies: s.popDependencies(targetUint32ID),
 			},
 		}
-		stack                = []uint32{targetUint32ID}
-		statusTicker         = time.NewTicker(statusTickerDuration)
-		impactsResolved      = 0
-		dependenciesResolved = 0
+		stack = []uint32{targetUint32ID}
 	)
 
-	defer statusTicker.Stop()
-
 	for len(stack) > 0 {
-		select {
-		case <-statusTicker.C:
-			log.Infof("%d resolutions remaining with %d completed and %d dependencies resolved", len(stack), impactsResolved, dependenciesResolved)
-		default:
-		}
-
 		// Pick up the next resolution
 		next := resolutions[stack[len(stack)-1]]
 
@@ -129,8 +114,6 @@ func (s Aggregator) resolve(targetUint32ID uint32) cardinality.Provider[uint32] 
 		if len(next.dependencies) > 0 {
 			nextDependency := next.dependencies[len(next.dependencies)-1]
 			next.dependencies = next.dependencies[:len(next.dependencies)-1]
-
-			dependenciesResolved++
 
 			if s.resolved.Contains(nextDependency) {
 				// If this dependency has already been resolved, fetch and or it with this resolution's pathMembers
@@ -150,17 +133,25 @@ func (s Aggregator) resolve(targetUint32ID uint32) cardinality.Provider[uint32] 
 				}
 			}
 		} else {
-			impactsResolved++
-
-			// Pop the resolution and track it as resolved
+			// Pop the resolution from our dependency unwind
 			stack = stack[:len(stack)-1]
-			s.resolved.Add(next.target)
-
-			// For each dependent pathMembers, or our resolved pathMembers with them
-			for _, completion := range next.completions {
-				completion.Or(next.impact)
-			}
 		}
+	}
+
+	// First resolution pass for completion dependencies
+	for _, nextResolution := range resolutions {
+		for _, nextCompletion := range nextResolution.completions {
+			nextCompletion.Or(nextResolution.impact)
+		}
+	}
+
+	// Second resolution pass for completion dependencies that were not fully resolved on the first pass
+	for _, nextResolution := range resolutions {
+		for _, nextCompletion := range nextResolution.completions {
+			nextCompletion.Or(nextResolution.impact)
+		}
+
+		s.resolved.Add(nextResolution.target)
 	}
 
 	return targetImpact

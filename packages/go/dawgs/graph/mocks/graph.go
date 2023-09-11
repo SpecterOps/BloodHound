@@ -25,6 +25,7 @@ import (
 	reflect "reflect"
 
 	graph "github.com/specterops/bloodhound/dawgs/graph"
+	size "github.com/specterops/bloodhound/dawgs/util/size"
 	gomock "go.uber.org/mock/gomock"
 )
 
@@ -323,6 +324,20 @@ func (m *MockTransaction) Run(arg0 string, arg1 map[string]interface{}) graph.Re
 func (mr *MockTransactionMockRecorder) Run(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Run", reflect.TypeOf((*MockTransaction)(nil).Run), arg0, arg1)
+}
+
+// TraversalMemoryLimit mocks base method.
+func (m *MockTransaction) TraversalMemoryLimit() size.Size {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "TraversalMemoryLimit")
+	ret0, _ := ret[0].(size.Size)
+	return ret0
+}
+
+// TraversalMemoryLimit indicates an expected call of TraversalMemoryLimit.
+func (mr *MockTransactionMockRecorder) TraversalMemoryLimit() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TraversalMemoryLimit", reflect.TypeOf((*MockTransaction)(nil).TraversalMemoryLimit))
 }
 
 // UpdateNode mocks base method.

@@ -182,6 +182,16 @@ export type EdgeParams = {
     forceLabel?: boolean;
 };
 
+const getLastSeenValue = (object: any): string => {
+    if (object.lastSeen) return object.lastSeen;
+    if (object.data) {
+        if (object.data.lastSeen) return object.data.lastSeen;
+        if (object.data.lastseen) return object.data.lastseen;
+    }
+
+    return '';
+};
+
 export const transformFlatGraphResponse = (graph: FlatGraphResponse): GraphData => {
     const result: GraphData = {
         nodes: {},
@@ -191,24 +201,26 @@ export const transformFlatGraphResponse = (graph: FlatGraphResponse): GraphData 
     for (const [key, item] of Object.entries(graph)) {
         if (isNode(item)) {
             const node = item as StyledGraphNode;
+            const lastSeen = getLastSeenValue(node);
             result.nodes[key] = {
                 label: node.label.text || '',
                 kind: node.data.nodetype,
                 objectId: node.data.objectid,
                 isTierZero: !!(node.data.system_tags && node.data.system_tags.indexOf('admin_tier_0') !== -1),
-                lastSeen: node.data.lastSeen || undefined,
+                lastSeen: lastSeen,
             };
         } else if (isLink(item)) {
             const edge = item as StyledGraphEdge;
+            const lastSeen = getLastSeenValue(edge);
             result.edges.push({
                 impactPercent: edge.data ? edge.data.composite_risk_impact_percent : undefined,
                 source: edge.id1,
                 target: edge.id2,
                 label: edge.label.text || '',
                 kind: edge.label.text || '',
-                lastSeen: edge.data ? edge.data.lastSeen : undefined,
+                lastSeen: lastSeen,
                 exploreGraphId: key || `${edge.id1}_${edge.label.text}_${edge.id2}`,
-                data: edge.data,
+                data: { ...edge.data, lastseen: lastSeen },
             });
         }
     }
@@ -219,6 +231,7 @@ export const transformFlatGraphResponse = (graph: FlatGraphResponse): GraphData 
 export const transformToFlatGraphResponse = (graph: GraphResponse) => {
     const result: any = {};
     for (const [key, value] of Object.entries(graph.data.nodes)) {
+        const lastSeen = getLastSeenValue(value);
         result[key] = {
             label: {
                 text: value.label,
@@ -228,17 +241,20 @@ export const transformToFlatGraphResponse = (graph: GraphResponse) => {
                 name: value.label,
                 objectid: value.objectId,
                 system_tags: value.isTierZero ? 'admin_tier_0' : undefined,
+                lastseen: lastSeen,
             },
         };
     }
     for (const edge of graph.data.edges) {
+        const lastSeen = getLastSeenValue(edge);
         result[`${edge.source}_${edge.kind}_${edge.target}`] = {
             id1: edge.source,
             id2: edge.target,
             label: {
                 text: edge.label,
             },
-            data: edge.data,
+            lastSeen: lastSeen,
+            data: { ...edge.data, lastseen: lastSeen },
         };
     }
     return result;

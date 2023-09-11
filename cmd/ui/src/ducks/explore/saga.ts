@@ -190,11 +190,16 @@ function* runCypherSearchQuery(payload: CypherQueryRequest): SagaIterator {
             yield put(putGraphData(flatGraph));
         }
     } catch (error: any) {
+        const apiErrorMessage = error?.response?.data?.errors?.[0]?.message;
+
         if (error?.response?.status === 400) {
-            const apiErrorMessage = error?.response?.data?.errors?.[0]?.message;
             yield put(addSnackbar(apiErrorMessage, 'cypherSearchBadRequest'));
         } else {
-            yield put(addSnackbar('An error occured. Please try again', 'cypherSearch'));
+            if (apiErrorMessage) {
+                yield put(addSnackbar(`${apiErrorMessage}`, 'cypherSearch'));
+            } else {
+                yield put(addSnackbar('An error occured. Please try again', 'cypherSearch'));
+            }
         }
         yield put(putGraphError(error));
     }
