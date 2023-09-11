@@ -2,7 +2,7 @@
   "/api/v2/graphs/shortest-path": {
     "get": {
       "security": [],
-      "description": "Returns graph data related to the cypher query sent in the response body that contains a collection of nodes and edges",
+      "description": "A graph of the shortest path from `start_node` to `end_node`.",
       "tags": ["Graphs", "Community", "Enterprise"],
       "summary": "Get the shortest path graph",
       "parameters": [
@@ -80,7 +80,7 @@
       },
       "responses": {
         "200": {
-          "description": "A graph of the shortest path from `start_node` to `end_node`.",
+          "description": "Returns graph data related to the cypher query sent in the response body that contains a collection of nodes and edges",
           "content": {
             "application/json": {
               "schema": {
