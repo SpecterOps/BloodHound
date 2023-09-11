@@ -15,20 +15,58 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { SelectedEdge } from 'bh-shared-ui';
-import { render, screen } from 'src/test-utils';
 import EdgeInfoContent from 'src/views/Explore/EdgeInfo/EdgeInfoContent';
+import { rest } from 'msw';
+import { setupServer } from 'msw/node';
+import { render, screen } from 'src/test-utils';
+
+const server = setupServer(
+    rest.post(`/api/v2/graphs/cypher`, (req, res, ctx) => {
+        return res(
+            ctx.json({
+                data: {
+                    nodes: {},
+                    edges: [
+                        {
+                            source: '1',
+                            target: '2',
+                            label: 'CustomEdge',
+                            kind: 'CustomEdge',
+                            lastSeen: '2023-09-07T11:10:33.664596893Z',
+                            properties: {
+                                lastseen: '2023-09-07T11:10:33.664596893Z',
+                                isacl: false,
+                            },
+                        },
+                    ],
+                },
+            })
+        );
+    })
+);
+
+const selectedEdge: SelectedEdge = {
+    id: '1',
+    name: 'CustomEdge',
+    data: { isACL: false },
+    sourceNode: {
+        name: 'source node',
+        id: '1',
+        objectId: '1',
+        type: 'User',
+    },
+    targetNode: { name: 'target node', id: '2', objectId: '2', type: 'User' },
+};
+
+beforeAll(() => server.listen());
+afterEach(() => server.resetHandlers());
+afterAll(() => server.close());
 
 describe('EdgeInfoContent', () => {
-    test('Trying to view the edge info does not crash the app when selecting an unrecognized edge', () => {
-        const selectedEdge: SelectedEdge = {
-            id: '1',
-            name: 'CustomEdge',
-            data: { isACL: false },
-            sourceNode: { data: { name: 'source node' } },
-            targetNode: { data: { name: 'target node' } },
-        };
-
+    test('Trying to view the edge info does not crash the app when selecting an unrecognized edge', async () => {
         render(<EdgeInfoContent selectedEdge={selectedEdge} />);
+
+        expect(await screen.findByText(/source node/)).toBeInTheDocument();
 
         //The text is broken up into different elements because of the span that bolds the custom edge so these assertions are broken up to match that
         //The assertions use regex to avoid having to match on the white space
@@ -42,6 +80,7 @@ describe('EdgeInfoContent', () => {
         expect(screen.getByText(/Source Node:/)).toBeInTheDocument();
         expect(screen.getByText(/Target Node:/)).toBeInTheDocument();
         expect(screen.getByText(/Is ACL:/)).toBeInTheDocument();
+        expect(screen.getByText(/Last Collected by BloodHound:/)).toBeInTheDocument();
 
         //The whole app does not crash and require a refresh
         expect(

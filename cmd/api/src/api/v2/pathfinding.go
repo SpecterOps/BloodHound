@@ -59,14 +59,16 @@ func writeShortestPathsResult(paths graph.PathSet, response http.ResponseWriter,
 		graphResponse := model.NewUnifiedGraph()
 
 		for _, n := range paths.AllNodes() {
-			graphResponse.Nodes[n.ID.String()] = model.FromDAWGSNode(n)
+			graphResponse.Nodes[n.ID.String()] = model.FromDAWGSNode(n, false)
 		}
 
 		edges := slices.FlatMap(paths, func(path graph.Path) []model.UnifiedEdge {
-			return slices.Map(path.Edges, model.FromDAWGSRelationship)
+			return slices.Map(path.Edges, model.FromDAWGSRelationship(false))
 		})
 
-		graphResponse.Edges = slices.Unique(edges)
+		graphResponse.Edges = slices.UniqueBy(edges, func(edge model.UnifiedEdge) string {
+			return edge.Source + edge.Kind + edge.Target
+		})
 
 		api.WriteBasicResponse(request.Context(), graphResponse, http.StatusOK, response)
 	}

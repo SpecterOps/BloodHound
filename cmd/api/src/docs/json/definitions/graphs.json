@@ -32,14 +32,21 @@
                     "kind": "User",
                     "objectId": "abc123",
                     "isTierZero": true,
-                    "lastSeen": "2022-12-07T15:09:51.474Z"
+                    "lastSeen": "2022-12-07T15:09:51.474Z",
+                    "properties": {
+                            "lastseen": "2023-02-03T22:54:21.728Z",
+                            "system_tags": "admin_tier_0"
+                    }
                 },
                 "node2": {
                     "label": "DOMAIN USERS@TESTLAB.LOCAL",
                     "kind": "Group",
                     "objectId": "xyz789",
                     "isTierZero": false,
-                    "lastSeen": "2022-12-07T15:09:51.474Z"
+                    "lastSeen": "2022-12-07T15:09:51.474Z",
+                    "properties": {
+                        "lastseen": "2023-02-03T22:54:21.728Z"
+                    }
                 }
             },
             "edges": [
@@ -48,7 +55,11 @@
                     "target": "node2",
                     "label": "MemberOf",
                     "kind": "MemberOf",
-                    "lastSeen": "2022-12-07T15:09:51.474Z"
+                    "lastSeen": "2022-12-07T15:09:51.474Z",
+                    "properties": {
+                        "lastseen": "2023-02-03T22:54:21.728Z",
+                        "isacl": false
+                    }
                 }
             ]
         }
@@ -76,6 +87,10 @@
                 "type": "string",
                 "format": "date-time",
                 "description": "The RFC-3339 datetime of the last time BloodHound was notified of the node's existance."
+            },
+            "properties": {
+                "type": "object",
+                "description": "The node's properties that are stored in the graph database"
             }
         }
     },
@@ -99,6 +114,10 @@
             },
             "lastSeen": {
                 "$ref": "#/definitions/properties.LastSeen"
+            },
+            "properties": {
+                "type": "object",
+                "description": "The edge's properties that are stored in the graph database"
             }
         }
     }

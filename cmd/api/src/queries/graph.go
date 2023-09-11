@@ -139,7 +139,7 @@ type Graph interface {
 	FetchNodesByObjectIDs(ctx context.Context, objectIDs ...string) (graph.NodeSet, error)
 	ValidateOUs(ctx context.Context, ous []string) ([]string, error)
 	BatchNodeUpdate(ctx context.Context, nodeUpdate graph.NodeUpdate) error
-	RawCypherSearch(ctx context.Context, rawCypher string) (model.UnifiedGraph, error)
+	RawCypherSearch(ctx context.Context, rawCypher string, includeProperties bool) (model.UnifiedGraph, error)
 }
 
 type GraphQuery struct {
@@ -390,7 +390,7 @@ func (s *GraphQuery) prepareGraphQuery(rawCypher string, disableCypherQC bool) (
 	return graphQuery, nil
 }
 
-func (s *GraphQuery) RawCypherSearch(ctx context.Context, rawCypher string) (model.UnifiedGraph, error) {
+func (s *GraphQuery) RawCypherSearch(ctx context.Context, rawCypher string, includeProperties bool) (model.UnifiedGraph, error) {
 	var (
 		graphResponse = model.NewUnifiedGraph()
 		bhCtxInst     = bhCtx.Get(ctx)
@@ -407,7 +407,7 @@ func (s *GraphQuery) RawCypherSearch(ctx context.Context, rawCypher string) (mod
 			if pathSet, err := ops.FetchPathSetByQuery(tx, preparedQuery.cypher); err != nil {
 				return err
 			} else {
-				graphResponse.AddPathSet(pathSet)
+				graphResponse.AddPathSet(pathSet, includeProperties)
 			}
 
 			return nil

@@ -54,8 +54,18 @@ const GraphEdgeEvents: FC = () => {
                     id: id,
                     name: selectedItem.label?.text || '',
                     data: selectedItem.data,
-                    sourceNode: graphState.chartProps.items?.[selectedItem.id1],
-                    targetNode: graphState.chartProps.items?.[selectedItem.id2],
+                    sourceNode: {
+                        name: graphState.chartProps.items?.[selectedItem.id1].data.name,
+                        id: selectedItem.id1,
+                        objectId: graphState.chartProps.items?.[selectedItem.id1].data.objectid,
+                        type: graphState.chartProps.items?.[selectedItem.id1].data.nodetype,
+                    },
+                    targetNode: {
+                        name: graphState.chartProps.items?.[selectedItem.id2].data.name,
+                        id: selectedItem.id2,
+                        objectId: graphState.chartProps.items?.[selectedItem.id2].data.objectid,
+                        type: graphState.chartProps.items?.[selectedItem.id2].data.nodetype,
+                    },
                 })
             );
         },

@@ -40,12 +40,12 @@ const EdgeInfoContent: FC<{ selectedEdge: NonNullable<SelectedEdge> }> = ({ sele
                                 </Box>
                                 <EdgeInfoCollapsibleSection section={section[0] as keyof typeof EdgeSections}>
                                     <Section
-                                        sourceName={sourceNode.data.name}
-                                        sourceType={sourceNode.data.nodetype}
-                                        targetName={targetNode.data.name}
-                                        targetType={targetNode.data.nodetype}
-                                        targetId={targetNode.data.objectid}
-                                        haslaps={!!targetNode.data.haslaps}
+                                        sourceName={sourceNode.name}
+                                        sourceType={sourceNode.type}
+                                        targetName={targetNode.name}
+                                        targetType={targetNode.type}
+                                        targetId={targetNode.objectId}
+                                        haslaps={!!targetNode.haslaps}
                                     />
                                 </EdgeInfoCollapsibleSection>
                             </Fragment>
