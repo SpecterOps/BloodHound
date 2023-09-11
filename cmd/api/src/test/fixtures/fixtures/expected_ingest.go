@@ -17,6 +17,9 @@
 package fixtures
 
 import (
+	"bytes"
+	"github.com/specterops/bloodhound/cypher/frontend"
+	"github.com/specterops/bloodhound/cypher/model"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/dawgs/query"
 	"github.com/specterops/bloodhound/graphschema/ad"
@@ -134,6 +137,18 @@ var (
 			query.Kind(query.Relationship(), ad.HasSIDHistory),
 			query.Kind(query.End(), ad.User),
 			query.Equals(query.EndProperty(common.ObjectID.String()), "S-1-5-21-3130019616-2776909439-2417379446-12344")),
+		query.And(
+			query.Kind(query.Start(), ad.Computer),
+			query.Equals(query.StartProperty(common.ObjectID.String()), "S-1-5-21-3130019616-2776909439-2417379446-1104"),
+			query.Kind(query.Relationship(), ad.HasSession),
+			query.Kind(query.End(), ad.User),
+			query.Equals(query.EndProperty(common.ObjectID.String()), "S-1-5-21-3130019616-2776909439-2417379446-1107")),
+		query.And(
+			query.Kind(query.Start(), ad.Computer),
+			query.Equals(query.StartProperty(common.ObjectID.String()), "S-1-5-21-3130019616-2776909439-2417379446-1104"),
+			query.Kind(query.Relationship(), ad.HasSession),
+			query.Kind(query.End(), ad.User),
+			query.Equals(query.EndProperty(common.ObjectID.String()), "S-1-5-21-3130019616-2776909439-2417379446-1108")),
 
 		//// GPOs
 		query.And(
@@ -231,12 +246,22 @@ var (
 	}
 )
 
-func AssertRelationshipFound(testCtrl test.Controller, relationshipQuery graph.RelationshipQuery) {
-	_, err := relationshipQuery.First()
-	require.Nil(testCtrl, err)
+func formatQueryComponent(criteria graph.Criteria) string {
+	var (
+		emitter      = frontend.NewCypherEmitter(false)
+		stringBuffer = &bytes.Buffer{}
+	)
+
+	if err := emitter.WriteExpression(stringBuffer, criteria.(model.Expression)); err != nil {
+		return "ERROR"
+	}
+
+	return stringBuffer.String()
 }
+
 func IngestAssertions(testCtrl test.Controller, tx graph.Transaction) {
 	for _, assertionCriteria := range ingestRelationshipAssertionCriteria {
-		AssertRelationshipFound(testCtrl, tx.Relationships().Filter(assertionCriteria))
+		_, err := tx.Relationships().Filter(assertionCriteria).First()
+		require.Nilf(testCtrl, err, "Unable to find an expected relationship: %s", formatQueryComponent(assertionCriteria))
 	}
 }

@@ -1,17 +1,17 @@
 // Copyright 2023 Specter Ops, Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// 
+//
 // SPDX-License-Identifier: Apache-2.0
 
 import { Box, Button, Paper } from '@mui/material';
@@ -19,21 +19,27 @@ import { DateTime } from 'luxon';
 import { useState } from 'react';
 import { useMutation, useQuery } from 'react-query';
 import { useSelector } from 'react-redux';
-import apiClient from 'src/api';
-import { ConfirmationDialog, DataTable, Header, ContentPage } from 'bh-shared-ui';
-import { LuxonFormat } from 'bh-shared-ui';
+import {
+    ConfirmationDialog,
+    DataTable,
+    Header,
+    ContentPage,
+    PasswordDialog,
+    LuxonFormat,
+    UserTokenManagementDialog,
+    apiClient,
+    Disable2FADialog,
+} from 'bh-shared-ui';
 import { NewUser, UpdatedUser } from 'src/ducks/auth/types';
 import { addSnackbar } from 'src/ducks/global/actions';
 import useToggle from 'src/hooks/useToggle';
 import { User } from 'src/hooks/useUsers';
 import { AppState, useAppDispatch } from 'src/store';
 import CreateUserDialog from 'src/views/Users/CreateUserDialog';
-import PasswordDialog from 'src/views/Users/PasswordDialog';
 import UpdateUserDialog from 'src/views/Users/UpdateUserDialog';
 import UserActionsMenu from 'src/views/Users/UserActionsMenu';
-import UserTokenManagementDialog from 'src/views/Users/UserTokenManagementDialog';
 
-const Users: React.FC = () => {
+const Users = () => {
     const dispatch = useAppDispatch();
     const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
     const [createUserDialogOpen, toggleCreateUserDialog] = useToggle(false);
@@ -44,8 +50,15 @@ const Users: React.FC = () => {
     const [expireUserPasswordDialogOpen, toggleExpireUserPasswordDialog] = useToggle(false);
     const [resetUserPasswordDialogOpen, toggleResetUserPasswordDialog] = useToggle(false);
     const [manageUserTokensDialogOpen, toggleManageUserTokensDialog] = useToggle(false);
+    const [disable2FADialogOpen, setDisable2FADialogOpen] = useState(false);
+    const [disable2FAError, setDisable2FAError] = useState('');
+    const [disable2FASecret, setDisable2FASecret] = useState('');
 
     const self = useSelector((state: AppState) => state.auth.user);
+
+    const getSelfQuery = useQuery(['getSelf'], ({ signal }) =>
+        apiClient.getSelf({ signal }).then((res) => res.data.data)
+    );
 
     const listUsersQuery = useQuery(['listUsers'], ({ signal }) =>
         apiClient.listUsers({ signal }).then((res) => res.data.data.users)
@@ -180,7 +193,7 @@ const Users: React.FC = () => {
         if (user.saml_provider_id)
             return <span>{`SAML: ${SAMLProvidersMap[user.saml_provider_id]?.name || user.saml_provider_id}`}</span>;
         if (user.AuthSecret?.totp_activated)
-            return <span style={{ whiteSpace: 'pre-wrap' }}>{'Username / Password\n2FA Enabled'}</span>;
+            return <span style={{ whiteSpace: 'pre-wrap' }}>{'Username / Password\nMFA Enabled'}</span>;
         return <span>Username / Password</span>;
     };
 
@@ -199,6 +212,7 @@ const Users: React.FC = () => {
             }}
             showPasswordOptions={user.saml_provider_id === null || user.saml_provider_id === undefined}
             showAuthMgmtButtons={user.id !== self?.id}
+            showDisableMfaButton={user.AuthSecret?.totp_activated}
             userDisabled={user.is_disabled}
             onUpdateUser={toggleUpdateUserDialog}
             onDisableUser={toggleDisableUserDialog}
@@ -207,6 +221,7 @@ const Users: React.FC = () => {
             onUpdateUserPassword={toggleResetUserPasswordDialog}
             onExpireUserPassword={toggleExpireUserPasswordDialog}
             onManageUserTokens={toggleManageUserTokensDialog}
+            onDisableUserMfa={setDisable2FADialogOpen}
             index={index}
         />,
     ]);
@@ -299,6 +314,39 @@ const Users: React.FC = () => {
                     }
                     toggleExpireUserPasswordDialog();
                 }}
+            />
+            <Disable2FADialog
+                open={disable2FADialogOpen}
+                onClose={() => {
+                    setDisable2FADialogOpen(false);
+                    setDisable2FAError('');
+                    setDisable2FASecret('');
+                    getSelfQuery.refetch();
+                }}
+                onCancel={() => {
+                    setDisable2FADialogOpen(false);
+                    setDisable2FAError('');
+                    setDisable2FASecret('');
+                    getSelfQuery.refetch();
+                }}
+                onSave={(secret: string) => {
+                    setDisable2FAError('');
+                    apiClient
+                        .disenrollMFA(selectedUserId!, { secret })
+                        .then(() => {
+                            setDisable2FADialogOpen(false);
+                            dispatch(addSnackbar('User MFA disabled successfully!', 'disableUserMfaSuccess'));
+                            setDisable2FASecret('');
+                            listUsersQuery.refetch();
+                        })
+                        .catch(() => {
+                            setDisable2FAError('Unable to verify password. Please try again.');
+                        });
+                }}
+                error={disable2FAError}
+                secret={disable2FASecret}
+                onSecretChange={(e: any) => setDisable2FASecret(e.target.value)}
+                contentText='Are you sure you want to disable MFA for this user? Please enter your password to confirm.'
             />
             <PasswordDialog
                 open={resetUserPasswordDialogOpen}

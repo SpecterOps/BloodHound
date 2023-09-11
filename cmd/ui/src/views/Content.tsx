@@ -1,17 +1,17 @@
 // Copyright 2023 Specter Ops, Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// 
+//
 // SPDX-License-Identifier: Apache-2.0
 
 import { Box, CircularProgress } from '@mui/material';
@@ -20,8 +20,7 @@ import React, { Suspense, useEffect } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 import { useSelector } from 'react-redux';
 import { Route, Routes } from 'react-router-dom';
-import apiClient from 'src/api';
-import { GenericErrorBoundaryFallback } from 'bh-shared-ui';
+import { GenericErrorBoundaryFallback, apiClient } from 'bh-shared-ui';
 import { ListAssetGroups } from 'src/ducks/assetgroups/actionCreators';
 import { fullyAuthenticatedSelector } from 'src/ducks/auth/authSlice';
 import { fetchAssetGroups, setDomain } from 'src/ducks/global/actions';
@@ -35,7 +34,7 @@ const ExpiredPassword = React.lazy(() => import('src/views/ExpiredPassword'));
 const Home = React.lazy(() => import('src/views/Home/Home'));
 const NotFound = React.lazy(() => import('src/views/NotFound'));
 const ExploreGraphView = React.lazy(() => import('./Explore/GraphView'));
-const UserProfile = React.lazy(() => import('./UserProfile'));
+const UserProfile = React.lazy(() => import('bh-shared-ui').then((module) => ({ default: module.UserProfile })));
 const DownloadCollectors = React.lazy(() => import('./DownloadCollectors'));
 const Administration = React.lazy(() => import('./Administration'));
 const ApiExplorer = React.lazy(() => import('./ApiExplorer'));

@@ -27,8 +27,12 @@ export * from './hooks';
 
 export * from './commonSearches';
 
+export * from './providers';
+
 export * from './utils';
 
 export * from './graphSchema';
+
+export * from './views';
 
 export * from './store';

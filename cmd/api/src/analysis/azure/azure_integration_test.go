@@ -1,17 +1,17 @@
 // Copyright 2023 Specter Ops, Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// 
+//
 // SPDX-License-Identifier: Apache-2.0
 
 //go:build integration
@@ -29,11 +29,11 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/specterops/bloodhound/src/test/integration"
 	azureanalysis "github.com/specterops/bloodhound/analysis/azure"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/dawgs/ops"
 	"github.com/specterops/bloodhound/dawgs/query"
+	"github.com/specterops/bloodhound/src/test/integration"
 )
 
 func SortIDs(ids []graph.ID) []graph.ID {
@@ -64,7 +64,7 @@ func TestEntityRoles(t *testing.T) {
 		roles, err := azureanalysis.FetchEntityRoles(tx, harness.AZBaseHarness.User, 0, 0)
 
 		require.Nil(t, err)
-		assert.ElementsMatch(t, harness.AZBaseHarness.Nodes.Get(azure.Role).IDs(), roles.ByKind(azure.Role).IDs())
+		assert.ElementsMatch(t, harness.AZBaseHarness.Nodes.Get(azure.Role).IDs(), roles.ContainingNodeKinds(azure.Role).IDs())
 	})
 }
 
@@ -128,7 +128,7 @@ func TestAzureEntityGroupMembership(t *testing.T) {
 		if groupPaths, err := azureanalysis.FetchEntityGroupMembershipPaths(tx, harness.AZBaseHarness.User); err != nil {
 			t.Fatal(err)
 		} else {
-			assert.ElementsMatch(t, harness.AZBaseHarness.UserFirstDegreeGroups.IDs(), groupPaths.AllNodes().ByKind(azure.Group).IDs())
+			assert.ElementsMatch(t, harness.AZBaseHarness.UserFirstDegreeGroups.IDs(), groupPaths.AllNodes().ContainingNodeKinds(azure.Group).IDs())
 		}
 	})
 }
