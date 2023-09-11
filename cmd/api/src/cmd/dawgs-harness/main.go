@@ -1,17 +1,17 @@
 // Copyright 2023 Specter Ops, Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// 
+//
 // SPDX-License-Identifier: Apache-2.0
 
 package main
@@ -25,7 +25,6 @@ import (
 	"os"
 	"time"
 
-	"github.com/specterops/bloodhound/src/cmd/dawgs-harness/tests"
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/specterops/bloodhound/dawgs"
 	"github.com/specterops/bloodhound/dawgs/drivers/neo4j"
@@ -33,6 +32,7 @@ import (
 	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/graphschema/common"
 	"github.com/specterops/bloodhound/log"
+	"github.com/specterops/bloodhound/src/cmd/dawgs-harness/tests"
 )
 
 func fatalf(format string, args ...any) {
@@ -41,7 +41,7 @@ func fatalf(format string, args ...any) {
 }
 
 func RunNeo4jTestSuite(dbHost string) tests.TestSuite {
-	if connection, err := dawgs.Open("neo4j", fmt.Sprintf("neo4j://neo4j:neo4jj@%s:7687/neo4j", dbHost)); err != nil {
+	if connection, err := dawgs.Open("neo4j", dawgs.Config{DriverCfg: fmt.Sprintf("neo4j://neo4j:neo4jj@%s:7687/neo4j", dbHost)}); err != nil {
 		fatalf("Failed opening neo4j: %v", err)
 	} else if err := connection.WriteTransaction(context.Background(), func(tx graph.Transaction) error {
 		return tx.Nodes().Delete()

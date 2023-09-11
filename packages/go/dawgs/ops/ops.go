@@ -24,6 +24,7 @@ import (
 	"github.com/specterops/bloodhound/dawgs/cardinality"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/dawgs/query"
+	"github.com/specterops/bloodhound/dawgs/util/size"
 )
 
 func FetchNodeProperties(tx graph.Transaction, nodes graph.NodeSet, propertyNames []string) error {
@@ -169,6 +170,13 @@ func FetchPathSetByQuery(tx graph.Transaction, query string) (graph.PathSet, err
 
 				case *graph.Path:
 					pathSet = append(pathSet, *typedMapped)
+				}
+
+				currentPathSize := size.OfSlice(currentPath.Edges) + size.OfSlice(currentPath.Nodes)
+				pathSetSize := size.Of(pathSet)
+
+				if currentPathSize > tx.TraversalMemoryLimit() || pathSetSize > tx.TraversalMemoryLimit() {
+					return pathSet, fmt.Errorf("%s - Limit: %.2f MB", "query required more memory than allowed", tx.TraversalMemoryLimit().Mebibytes())
 				}
 			}
 		}

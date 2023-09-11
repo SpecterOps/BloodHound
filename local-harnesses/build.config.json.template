@@ -22,5 +22,6 @@
         "first_name": "BloodHound",
         "last_name": "Dev",
         "expire_now": false
-    }
+    },
+    "traversal_memory_limit": 1
 }
