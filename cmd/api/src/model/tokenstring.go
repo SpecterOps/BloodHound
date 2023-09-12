@@ -2,6 +2,7 @@ package model
 
 import (
 	"crypto/rand"
+	"database/sql/driver"
 	"errors"
 	"fmt"
 	"hash/crc32"
@@ -77,6 +78,27 @@ func (s TokenString) String() string {
 
 func (s TokenString) MarshalText() ([]byte, error) {
 	return []byte(s.String()), nil
+}
+
+func (s TokenString) Value() (driver.Value, error) {
+	return s.String(), nil
+}
+
+func (s *TokenString) Scan(src any) error {
+	src_str, ok := src.(string)
+	if !ok {
+		return errors.New("expected value of type string")
+	}
+	if src_str == "" {
+		*s = TokenString{}
+		return nil
+	}
+	ts, err := ParseTokenString(src_str)
+	if err != nil {
+		return fmt.Errorf("unable to parse value: %w", err)
+	}
+	*s = ts
+	return nil
 }
 
 func isValidBase62(val string) bool {
