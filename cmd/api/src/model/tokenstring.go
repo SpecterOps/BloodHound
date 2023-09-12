@@ -80,6 +80,20 @@ func (s TokenString) MarshalText() ([]byte, error) {
 	return []byte(s.String()), nil
 }
 
+func (s *TokenString) UnmarshalText(text []byte) error {
+	src_str := string(text)
+	if src_str == "" {
+		*s = TokenString{}
+		return nil
+	}
+	ts, err := ParseTokenString(src_str)
+	if err != nil {
+		return fmt.Errorf("unable to parse value: %w", err)
+	}
+	*s = ts
+	return nil
+}
+
 func (s TokenString) Value() (driver.Value, error) {
 	return s.String(), nil
 }
