@@ -42,7 +42,7 @@ import {
     faQuestion,
     faMinus,
 } from '@fortawesome/free-solid-svg-icons';
-import { ActiveDirectoryKind, AzureKind } from 'bh-shared-ui';
+import { ActiveDirectoryNodeKind, AzureNodeKind } from 'bh-shared-ui';
 
 export type IconInfo = {
     icon: IconDefinition;
@@ -69,130 +69,130 @@ const GLYPH_SCALE = '0.5';
 const DEFAULT_ICON_COLOR = '#000000';
 
 export const NODE_ICON: IconDictionary = {
-    [ActiveDirectoryKind.User]: {
+    [ActiveDirectoryNodeKind.User]: {
         icon: faUser,
         color: '#17E625',
     },
 
-    [ActiveDirectoryKind.Group]: {
+    [ActiveDirectoryNodeKind.Group]: {
         icon: faUsers,
         color: '#DBE617',
     },
 
-    [ActiveDirectoryKind.Computer]: {
+    [ActiveDirectoryNodeKind.Computer]: {
         icon: faDesktop,
         color: '#E67873',
     },
 
-    [ActiveDirectoryKind.Domain]: {
+    [ActiveDirectoryNodeKind.Domain]: {
         icon: faGlobe,
         color: '#17E6B9',
     },
 
-    [ActiveDirectoryKind.GPO]: {
+    [ActiveDirectoryNodeKind.GPO]: {
         icon: faList,
         color: '#998EFD',
     },
 
-    [ActiveDirectoryKind.OU]: {
+    [ActiveDirectoryNodeKind.OU]: {
         icon: faSitemap,
         color: '#FFAA00',
     },
 
-    [ActiveDirectoryKind.Container]: {
+    [ActiveDirectoryNodeKind.Container]: {
         icon: faBox,
         color: '#F79A78',
     },
 
-    [AzureKind.User]: {
+    [AzureNodeKind.User]: {
         icon: faUser,
         color: '#34D2EB',
     },
 
-    [AzureKind.Group]: {
+    [AzureNodeKind.Group]: {
         icon: faUsers,
         color: '#F57C9B',
     },
 
-    [AzureKind.Tenant]: {
+    [AzureNodeKind.Tenant]: {
         icon: faCloud,
         color: '#54F2F2',
     },
 
-    [AzureKind.Subscription]: {
+    [AzureNodeKind.Subscription]: {
         icon: faKey,
         color: '#D2CCA1',
     },
 
-    [AzureKind.ResourceGroup]: {
+    [AzureNodeKind.ResourceGroup]: {
         icon: faCube,
         color: '#89BD9E',
     },
 
-    [AzureKind.VM]: {
+    [AzureNodeKind.VM]: {
         icon: faDesktop,
         color: '#F9ADA0',
     },
-    [AzureKind.WebApp]: {
+    [AzureNodeKind.WebApp]: {
         icon: faObjectGroup,
         color: '#4696E9',
     },
-    [AzureKind.LogicApp]: {
+    [AzureNodeKind.LogicApp]: {
         icon: faSitemap,
         color: '#9EE047',
     },
 
-    [AzureKind.AutomationAccount]: {
+    [AzureNodeKind.AutomationAccount]: {
         icon: faCog,
         color: '#F4BA44',
     },
 
-    [AzureKind.FunctionApp]: {
+    [AzureNodeKind.FunctionApp]: {
         icon: faBolt,
         color: '#F4BA44',
     },
 
-    [AzureKind.ContainerRegistry]: {
+    [AzureNodeKind.ContainerRegistry]: {
         icon: faBoxOpen,
         color: '#0885D7',
     },
 
-    [AzureKind.ManagedCluster]: {
+    [AzureNodeKind.ManagedCluster]: {
         icon: faCubes,
         color: '#326CE5',
     },
 
-    [AzureKind.Device]: {
+    [AzureNodeKind.Device]: {
         icon: faDesktop,
         color: '#B18FCF',
     },
 
-    [AzureKind.KeyVault]: {
+    [AzureNodeKind.KeyVault]: {
         icon: faLock,
         color: '#ED658C',
     },
 
-    [AzureKind.App]: {
+    [AzureNodeKind.App]: {
         icon: faWindowRestore,
         color: '#03FC84',
     },
 
-    [AzureKind.VMScaleSet]: {
+    [AzureNodeKind.VMScaleSet]: {
         icon: faServer,
         color: '#007CD0',
     },
 
-    [AzureKind.ServicePrincipal]: {
+    [AzureNodeKind.ServicePrincipal]: {
         icon: faRobot,
         color: '#C1D6D6',
     },
 
-    [AzureKind.Role]: {
+    [AzureNodeKind.Role]: {
         icon: faClipboardList,
         color: '#ED8537',
     },
 
-    [AzureKind.ManagementGroup]: {
+    [AzureNodeKind.ManagementGroup]: {
         icon: faSitemap,
         color: '#BD93D8',
     },

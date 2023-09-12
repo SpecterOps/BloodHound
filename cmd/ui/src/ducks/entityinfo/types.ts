@@ -16,7 +16,7 @@
 
 import { GraphNodeTypes } from 'src/ducks/graph/types';
 
-import { AzureKind } from 'bh-shared-ui';
+import { AzureNodeKind } from 'bh-shared-ui';
 
 // --- Computer
 export interface ComputerInfoGraph extends GraphInfo {
@@ -245,11 +245,11 @@ export interface AZManagementGroupInfo extends AZEntityInfo {
     props: BasicInfo;
     descendents: {
         descendent_counts: {
-            [AzureKind.ManagementGroup]: number;
-            [AzureKind.Subscription]: number;
-            [AzureKind.ResourceGroup]: number;
-            [AzureKind.VM]: number;
-            [AzureKind.KeyVault]: number;
+            [AzureNodeKind.ManagementGroup]: number;
+            [AzureNodeKind.Subscription]: number;
+            [AzureNodeKind.ResourceGroup]: number;
+            [AzureNodeKind.VM]: number;
+            [AzureNodeKind.KeyVault]: number;
         };
     };
     inbound_object_control: number;
@@ -259,8 +259,8 @@ export interface AZResourceGroupInfo extends AZEntityInfo {
     props: BasicInfo;
     descendents: {
         descendent_counts: {
-            [AzureKind.VM]: number;
-            [AzureKind.KeyVault]: number;
+            [AzureNodeKind.VM]: number;
+            [AzureNodeKind.KeyVault]: number;
         };
     };
 
@@ -290,9 +290,9 @@ export interface AZSubscriptionInfo extends AZEntityInfo {
     props: BasicInfo;
     descendents: {
         descendent_counts: {
-            [AzureKind.ResourceGroup]: number;
-            [AzureKind.VM]: number;
-            [AzureKind.KeyVault]: number;
+            [AzureNodeKind.ResourceGroup]: number;
+            [AzureNodeKind.VM]: number;
+            [AzureNodeKind.KeyVault]: number;
         };
     };
     inbound_object_control: number;
@@ -304,16 +304,16 @@ export interface AZTenantInfo extends AZEntityInfo {
     };
     descendents: {
         descendent_counts: {
-            [AzureKind.User]: number;
-            [AzureKind.Group]: number;
-            [AzureKind.App]: number;
-            [AzureKind.ServicePrincipal]: number;
-            [AzureKind.Device]: number;
-            [AzureKind.ManagementGroup]: number;
-            [AzureKind.Subscription]: number;
-            [AzureKind.ResourceGroup]: number;
-            [AzureKind.VM]: number;
-            [AzureKind.KeyVault]: number;
+            [AzureNodeKind.User]: number;
+            [AzureNodeKind.Group]: number;
+            [AzureNodeKind.App]: number;
+            [AzureNodeKind.ServicePrincipal]: number;
+            [AzureNodeKind.Device]: number;
+            [AzureNodeKind.ManagementGroup]: number;
+            [AzureNodeKind.Subscription]: number;
+            [AzureNodeKind.ResourceGroup]: number;
+            [AzureNodeKind.VM]: number;
+            [AzureNodeKind.KeyVault]: number;
         };
     };
     inbound_object_control: number;

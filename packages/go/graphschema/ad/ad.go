@@ -97,10 +97,13 @@ const (
 	DontRequirePreAuth      Property = "dontreqpreauth"
 	LogonType               Property = "logontype"
 	HasURA                  Property = "hasura"
+	PasswordNeverExpires    Property = "pwdneverexpires"
+	PasswordNotRequired     Property = "passwordnotreqd"
+	FunctionalLevel         Property = "functionallevel"
 )
 
 func AllProperties() []Property {
-	return []Property{AdminCount, DistinguishedName, DomainFQDN, DomainSID, Sensitive, HighValue, BlocksInheritance, IsACL, IsACLProtected, Enforced, Department, HasSPN, UnconstrainedDelegation, LastLogon, LastLogonTimestamp, IsPrimaryGroup, HasLAPS, DontRequirePreAuth, LogonType, HasURA}
+	return []Property{AdminCount, DistinguishedName, DomainFQDN, DomainSID, Sensitive, HighValue, BlocksInheritance, IsACL, IsACLProtected, Enforced, Department, HasSPN, UnconstrainedDelegation, LastLogon, LastLogonTimestamp, IsPrimaryGroup, HasLAPS, DontRequirePreAuth, LogonType, HasURA, PasswordNeverExpires, PasswordNotRequired, FunctionalLevel}
 }
 func ParseProperty(source string) (Property, error) {
 	switch source {
@@ -144,6 +147,12 @@ func ParseProperty(source string) (Property, error) {
 		return LogonType, nil
 	case "hasura":
 		return HasURA, nil
+	case "pwdneverexpires":
+		return PasswordNeverExpires, nil
+	case "passwordnotreqd":
+		return PasswordNotRequired, nil
+	case "functionallevel":
+		return FunctionalLevel, nil
 	default:
 		return "", errors.New("Invalid enumeration value: " + source)
 	}
@@ -190,6 +199,12 @@ func (s Property) String() string {
 		return string(LogonType)
 	case HasURA:
 		return string(HasURA)
+	case PasswordNeverExpires:
+		return string(PasswordNeverExpires)
+	case PasswordNotRequired:
+		return string(PasswordNotRequired)
+	case FunctionalLevel:
+		return string(FunctionalLevel)
 	default:
 		panic("Invalid enumeration case: " + string(s))
 	}
@@ -236,6 +251,12 @@ func (s Property) Name() string {
 		return "Logon Type"
 	case HasURA:
 		return "Has User Rights Assignment Collection"
+	case PasswordNeverExpires:
+		return "Password Never Expires"
+	case PasswordNotRequired:
+		return "Password Not Required"
+	case FunctionalLevel:
+		return "Functional Level"
 	default:
 		panic("Invalid enumeration case: " + string(s))
 	}

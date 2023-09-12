@@ -25,17 +25,7 @@ export function CommonNodeKindToDisplay(value: CommonNodeKind): string | undefin
             return undefined;
     }
 }
-export enum CommonKind {
-    MigrationData = 'MigrationData',
-}
-export function CommonKindToDisplay(value: CommonKind): string | undefined {
-    switch (value) {
-        case CommonKind.MigrationData:
-            return 'MigrationData';
-        default:
-            return undefined;
-    }
-}
+export type CommonKind = AzureNodeCommonNodeKindind | CommonRelationshipKind;
 export enum CommonKindProperties {
     ObjectID = 'objectid',
     Name = 'name',
