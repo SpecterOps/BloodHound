@@ -29,7 +29,7 @@ import {
     Skeleton,
     TextField,
 } from '@mui/material';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { useQuery } from 'react-query';
 import { apiClient } from 'bh-shared-ui';
@@ -141,6 +141,7 @@ const UpdateUserFormInner: React.FC<{
     const {
         control,
         handleSubmit,
+        setValue,
         formState: { errors },
         watch,
     } = useForm({
@@ -151,6 +152,12 @@ const UpdateUserFormInner: React.FC<{
     });
 
     const authenticationMethod = watch('authenticationMethod');
+    
+    useEffect(() => {
+        if (authenticationMethod === 'password') {
+            setValue("SAMLProviderId", '');
+        }
+    }, [authenticationMethod, setValue]);
 
     return (
         <form autoComplete='off' onSubmit={handleSubmit(onSubmit)}>

@@ -77,12 +77,13 @@ func NewDefaultConfiguration() (Configuration, error) {
 				LastName:      "User",
 				ExpireNow:     true,
 			},
-			CollectorsBasePath: "/etc/bloodhound/collectors/",
-			DatapipeInterval:   60,
-			EnableAPILogging:   true,
-			DisableAnalysis:    false,
-			DisableCypherQC:    false,
-			DisableMigrations:  false,
+			CollectorsBasePath:   "/etc/bloodhound/collectors/",
+			DatapipeInterval:     60,
+			EnableAPILogging:     true,
+			DisableAnalysis:      false,
+			DisableCypherQC:      false,
+			DisableMigrations:    false,
+			TraversalMemoryLimit: 1,
 		}, nil
 	}
 }

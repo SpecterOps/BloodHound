@@ -229,7 +229,7 @@ const GraphView: FC = () => {
 };
 
 const GridItems = () => {
-    const columnsDefault = { xs: 6, md: 5, lg: 4, xl: 4 };
+    const columnsDefault = { xs: 6, md: 5, lg: 4, xl: 3 };
     const cypherSearchColumns = { xs: 6, md: 6, lg: 6, xl: 4 };
 
     const [columns, setColumns] = useState(columnsDefault);
@@ -246,7 +246,7 @@ const GridItems = () => {
         <Grid item xs={xs} md={md} lg={lg} xl={xl} sx={{ height: '100%' }} key={'exploreSearch'}>
             <ExploreSearch handleColumns={handleCypherTab} />
         </Grid>,
-        <Grid item xs={6} md={5} lg={4} sx={{ height: '100%' }} key={'info'}>
+        <Grid item xs={6} md={5} lg={4} xl={3} sx={{ height: '100%' }} key={'info'}>
             {edgeInfoState.open ? <EdgeInfoPane selectedEdge={edgeInfoState.selectedEdge} /> : <EntityInfoPanel />}
         </Grid>,
     ];

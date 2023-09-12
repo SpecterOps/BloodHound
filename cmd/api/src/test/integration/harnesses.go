@@ -1,17 +1,17 @@
 // Copyright 2023 Specter Ops, Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// 
+//
 // SPDX-License-Identifier: Apache-2.0
 
 package integration
@@ -1059,12 +1059,13 @@ func (s *AZInboundControlHarness) Setup(testCtx *GraphTestContext) {
 }
 
 type SearchHarness struct {
-	User1      *graph.Node
-	User2      *graph.Node
-	User3      *graph.Node
-	User4      *graph.Node
-	User5      *graph.Node
-	LocalGroup *graph.Node
+	User1           *graph.Node
+	User2           *graph.Node
+	User3           *graph.Node
+	User4           *graph.Node
+	User5           *graph.Node
+	LocalGroup      *graph.Node
+	GroupLocalGroup *graph.Node
 }
 
 func (s *SearchHarness) Setup(graphTestContext *GraphTestContext) {
@@ -1073,7 +1074,12 @@ func (s *SearchHarness) Setup(graphTestContext *GraphTestContext) {
 	s.User3 = graphTestContext.NewActiveDirectoryUser("USER NUMBER THREE", graphTestContext.Harness.RootADHarness.ActiveDirectoryDomainSID)
 	s.User4 = graphTestContext.NewActiveDirectoryUser("USER NUMBER FOUR", graphTestContext.Harness.RootADHarness.ActiveDirectoryDomainSID)
 	s.User5 = graphTestContext.NewActiveDirectoryUser("USER NUMBER FIVE", graphTestContext.Harness.RootADHarness.ActiveDirectoryDomainSID)
+
 	s.LocalGroup = graphTestContext.NewActiveDirectoryLocalGroup("REMOTE DESKTOP USERS", graphTestContext.Harness.RootADHarness.ActiveDirectoryDomainSID)
+
+	s.GroupLocalGroup = graphTestContext.NewActiveDirectoryLocalGroup("ACCOUNT OPERATORS", graphTestContext.Harness.RootADHarness.ActiveDirectoryDomainSID)
+	s.GroupLocalGroup.AddKinds(ad.Group)
+	graphTestContext.UpdateNode(s.GroupLocalGroup)
 }
 
 type RootADHarness struct {
