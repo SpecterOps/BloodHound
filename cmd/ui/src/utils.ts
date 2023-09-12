@@ -27,6 +27,7 @@ import { LuxonFormat } from 'bh-shared-ui';
 import { isLink, isNode } from './ducks/graph/utils';
 import { Glyph } from './rendering/programs/node.glyphs';
 import { Coordinates } from 'sigma/types';
+import { EntityField } from 'src/views/Explore/fragments';
 
 export const getDatesInRange = (startDate: Date, endDate: Date) => {
     const date = new Date(startDate.getTime());
@@ -58,39 +59,72 @@ export const validateNodeType = (type: string): ActiveDirectoryNodeKind | AzureN
     return result;
 };
 
-const formatSimple = (value: any): string => {
-    const type = typeof value;
-    if (type === 'number') {
+const formatAmbiguousTime = (ambigugousTime: any, keyprop: string): string => {
+    const unknownValue = 'UNKNOWN';
+    const neverValue = 'NEVER';
+
+    if (keyprop === 'whencreated') {
+        if (ambigugousTime === 0 || ambigugousTime === -1) return unknownValue;
+        return DateTime.fromSeconds(ambigugousTime).toFormat(LuxonFormat.DATETIME);
+    } else if (keyprop === 'lastlogontimestamp' || keyprop === 'lastlogon') {
+        if (ambigugousTime === 0) return unknownValue;
+        if (ambigugousTime === -1) return neverValue;
+        return DateTime.fromSeconds(ambigugousTime).toFormat(LuxonFormat.DATETIME);
+    } else {
+        if (ambigugousTime === 0) return 'ACCOUNT CREATED BUT NO PASSWORD SET';
+        if (ambigugousTime === -1) return neverValue;
+        return DateTime.fromSeconds(ambigugousTime).toFormat(LuxonFormat.DATETIME);
+    }
+};
+
+const formatSimple = (field: EntityField): string => {
+    const { value, keyprop, kind } = field;
+
+    //This will never happen but need the type safety
+    if (Array.isArray(value)) return '';
+
+    const isAmbiguousTimeValue =
+        keyprop === 'lastlogon' ||
+        keyprop === 'lastlogontimestamp' ||
+        keyprop === 'pwdlastset' ||
+        keyprop === 'whencreated';
+
+    if (kind === 'ad' && isAmbiguousTimeValue) return formatAmbiguousTime(value, keyprop);
+
+    if (typeof value === 'number') {
         const currentDate = Math.round(new Date().getTime() / 1000);
 
         //315536400 = January 1st, 1980. Seems like a safe bet
         if (value > 315536400 && value < currentDate) {
             return DateTime.fromSeconds(value).toFormat(LuxonFormat.DATETIME);
+        } else if (`${value}`.startsWith('0.')) {
+            return value.toFixed(2);
         } else {
             return `${value}`.toLocaleString();
         }
-    }
-
-    if (type === 'boolean') {
+    } else if (typeof value === 'boolean') {
         return value.toString().toUpperCase();
+    } else {
+        const potentialDate: any = DateTime.fromISO(value);
+
+        if (potentialDate.invalid === null && keyprop !== 'functionallevel')
+            return potentialDate.toFormat(LuxonFormat.DATETIME);
+
+        return value;
     }
-
-    const potentialDate: any = DateTime.fromISO(value);
-
-    if (potentialDate.invalid === null) return potentialDate.toFormat(LuxonFormat.DATETIME);
-
-    return value;
 };
 
-export const format = (value: any): string | string[] | null => {
+export const format = (field: EntityField): string | string[] | null => {
+    const { value } = field;
     if (Array.isArray(value)) {
         const fields: string[] = [];
         value.forEach((val) => {
-            fields.push(formatSimple(val));
+            const newField = { ...field, value: val };
+            fields.push(formatSimple(newField));
         });
         return fields;
     } else {
-        return formatSimple(value);
+        return formatSimple(field);
     }
 };
 
