@@ -16,7 +16,7 @@
 
 import { faCropAlt } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Box, Button, Menu, MenuItem } from '@mui/material';
+import { Box, Menu, MenuItem } from '@mui/material';
 import { useSigma } from '@react-sigma/core';
 import { random } from 'graphology-layout';
 import forceAtlas2 from 'graphology-layout-forceatlas2';
@@ -57,7 +57,6 @@ const GraphButtons: FC<GraphButtonsProps> = ({ rankDirection, options, nonLayout
     const runSequentialLayout = (): void => {
         assignDagre();
         resetCamera(sigma);
-        handleClose();
     };
 
     const runStandardLayout = (): void => {
@@ -70,39 +69,24 @@ const GraphButtons: FC<GraphButtonsProps> = ({ rankDirection, options, nonLayout
             },
         });
         resetCamera(sigma);
-        handleClose();
     };
 
     const reset = (): void => {
         resetCamera(sigma);
     };
 
-    const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-    const open = Boolean(anchorEl);
-    const handleClose = () => setAnchorEl(null);
     return (
         <Box position={'absolute'} bottom={16} display={'flex'}>
             <GraphButton onClick={reset} displayText={<FontAwesomeIcon icon={faCropAlt} />} />
-            <GraphButton
-                onClick={(event: React.MouseEvent<HTMLButtonElement>) => {
-                    setAnchorEl(event.currentTarget);
-                }}
-                // id='layout-button'
-                aria-controls={open ? 'layout-menu' : undefined}
-                aria-haspopup='true'
-                aria-expanded={open ? 'true' : undefined}
-                displayText={'Layout'}></GraphButton>
-            <Menu
-                id='layout-menu'
-                open={open}
-                anchorEl={anchorEl}
-                onClose={handleClose}
-                MenuListProps={{
-                    'aria-labelledby': 'layout-button',
-                }}>
-                {sequential && <MenuItem onClick={runSequentialLayout}>Sequential</MenuItem>}
-                {standard && <MenuItem onClick={runStandardLayout}>Standard</MenuItem>}
-            </Menu>
+            <MenuButton
+                menuItems={[
+                    sequential && <MenuItem onClick={runSequentialLayout}>Sequential</MenuItem>,
+                    standard && <MenuItem onClick={runStandardLayout}>Standard</MenuItem>,
+                ]}
+                label='Layout'
+            />
+            <MenuButton menuItems={[<MenuItem onClick={() => {}}>JSON</MenuItem>]} label='Export' />
+
             {nonLayoutButtons?.length && (
                 <>
                     {nonLayoutButtons.map((props, index) => (
@@ -111,6 +95,40 @@ const GraphButtons: FC<GraphButtonsProps> = ({ rankDirection, options, nonLayout
                 </>
             )}
         </Box>
+    );
+};
+
+const MenuButton: FC<{ menuItems: any; label: string }> = (props) => {
+    const { menuItems, label } = props;
+    const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+
+    const open = Boolean(anchorEl);
+
+    const handleClose = () => setAnchorEl(null);
+
+    return (
+        <>
+            <GraphButton
+                onClick={(event: React.MouseEvent<HTMLButtonElement>) => {
+                    setAnchorEl(event.currentTarget);
+                }}
+                aria-controls={open ? `${label}-menu` : undefined}
+                aria-haspopup='true'
+                aria-expanded={open ? 'true' : undefined}
+                displayText={label}></GraphButton>
+            <Menu
+                id={`${label}-menu`}
+                open={open}
+                anchorEl={anchorEl}
+                onClose={handleClose}
+                MenuListProps={{
+                    'aria-labelledby': `${label}-button`,
+                }}>
+                {menuItems.map((menuItem: any) => {
+                    return <div onClick={handleClose}>{menuItem}</div>;
+                })}
+            </Menu>
+        </>
     );
 };
 
