@@ -76,8 +76,8 @@ const SearchCurrentNodes: FC<{
             const filteredNodes = flatNodeList.filter(node => {
                 const label = node.label.toLowerCase();
                 const objectId = node.objectId.toLowerCase();
-                const lowercaseInputValue = inputValue?.toLowerCase() || '';  
-                
+                const lowercaseInputValue = inputValue?.toLowerCase() || '';
+
                 if (inputValue === '') return false;
                 return label.includes(lowercaseInputValue) || objectId.includes(lowercaseInputValue);
             });
