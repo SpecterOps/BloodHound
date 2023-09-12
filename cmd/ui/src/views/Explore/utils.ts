@@ -23,6 +23,7 @@ import {
 } from 'bh-shared-ui';
 import { CommonKindProperties, CommonKindPropertiesToDisplay } from 'src/graphSchema';
 import { EntityField } from './fragments';
+import { ZERO_VALUE_API_DATE } from 'src/constants';
 
 export let controller = new AbortController();
 
@@ -33,24 +34,28 @@ export const abortRequest = () => {
 
 export const formatObjectInfoFields = (props: any): EntityField[] => {
     let mappedFields: EntityField[] = [];
+    const propKeys = Object.keys(props);
 
-    Object.keys(props).forEach((key: string) => {
-        const validatedProperty = validateProperty(key);
+    for (let i = 0; i < propKeys.length; i++) {
+        // Don't display fields with zero date values
+        if (props[propKeys[i]] === ZERO_VALUE_API_DATE) continue;
+
+        const validatedProperty = validateProperty(propKeys[i]);
 
         if (validatedProperty.isKnownProperty) {
             mappedFields.push({
-                label: getFieldLabel(validatedProperty.kind!, key),
-                value: props[key],
-                keyprop: key,
+                label: getFieldLabel(validatedProperty.kind!, propKeys[i]),
+                value: props[propKeys[i]],
+                keyprop: propKeys[i],
             });
         } else {
             mappedFields.push({
-                label: `${startCase(key)}:`,
-                value: props[key],
-                keyprop: key,
+                label: `${startCase(propKeys[i])}:`,
+                value: props[propKeys[i]],
+                keyprop: propKeys[i],
             });
         }
-    });
+    }
 
     mappedFields = mappedFields.sort((a, b) => {
         return a.label!.localeCompare(b.label!);
