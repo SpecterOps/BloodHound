@@ -1,17 +1,17 @@
 // Copyright 2023 Specter Ops, Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// 
+//
 // SPDX-License-Identifier: Apache-2.0
 
 package traversal
@@ -67,8 +67,6 @@ func (s Traversal) BreadthFirst(ctx context.Context, plan Plan) error {
 		completionC  = make(chan struct{}, s.numWorkers*2)
 		descentCount = &atomic.Int64{}
 
-		memoryLimitHit = false
-
 		errors                         = util.NewErrorCollector()
 		pathTree                       = graph.NewTree(plan.Root)
 		traversalCtx, doneFunc         = context.WithCancel(ctx)
@@ -92,7 +90,7 @@ func (s Traversal) BreadthFirst(ctx context.Context, plan Plan) error {
 				for {
 					if nextDescent, ok := channels.Receive(traversalCtx, segmentReaderC); !ok {
 						return nil
-					} else if pathTreeSize := pathTree.SizeOf(); pathTreeSize < ops.TraversalMemoryLimit {
+					} else if pathTreeSize := pathTree.SizeOf(); pathTreeSize < tx.TraversalMemoryLimit() {
 						// Traverse the descending relationships of the current segment
 						if descendingSegments, err := plan.Driver(traversalCtx, tx, nextDescent); err != nil {
 							return err
@@ -104,8 +102,8 @@ func (s Traversal) BreadthFirst(ctx context.Context, plan Plan) error {
 							}
 						}
 					} else {
-						// Only continue descending if we haven't hit a memory limit
-						memoryLimitHit = true
+						// Did we encounter a memory limit?
+						errors.Add(fmt.Errorf("%w - Limit: %.2f MB - Memory In-Use: %.2f MB", ops.ErrTraversalMemoryLimit, tx.TraversalMemoryLimit().Mebibytes(), pathTree.SizeOf().Mebibytes()))
 					}
 
 					// Mark descent for this segment as complete
@@ -115,11 +113,11 @@ func (s Traversal) BreadthFirst(ctx context.Context, plan Plan) error {
 						return nil
 					}
 				}
-			}); err != nil {
-				errors.Add(fmt.Errorf("reader %d failed: %w", workerID, err))
-
-				// A worker encountered an error, kill the traversal context
+			}); err != nil && err != graph.ErrContextTimedOut {
+				// A worker encountered a fatal error, kill the traversal context
 				doneFunc()
+
+				errors.Add(fmt.Errorf("reader %d failed: %w", workerID, err))
 			}
 		}(workerID)
 	}
@@ -139,11 +137,6 @@ func (s Traversal) BreadthFirst(ctx context.Context, plan Plan) error {
 
 	// Wait for all workers to exit
 	workerWG.Wait()
-
-	// Did we encounter a memory limit?
-	if memoryLimitHit {
-		errors.Add(fmt.Errorf("%w - Limit: %.2f MB - Memory In-Use: %.2f MB", ops.ErrTraversalMemoryLimit, ops.TraversalMemoryLimit.Mebibytes(), pathTree.SizeOf().Mebibytes()))
-	}
 
 	return errors.Combined()
 }
@@ -168,16 +161,59 @@ func newVisitorFilter(direction graph.Direction, userFilter graph.Criteria) func
 	}
 }
 
-func shallowFetchRelationships(graphQuery graph.RelationshipQuery) ([]*graph.Relationship, error) {
-	var relationships []*graph.Relationship
+func shallowFetchRelationships(direction graph.Direction, segment *graph.PathSegment, graphQuery graph.RelationshipQuery) ([]*graph.Relationship, error) {
+	var (
+		relationships  []*graph.Relationship
+		returnCriteria graph.Criteria
+	)
 
-	if err := graphQuery.FetchKinds(func(cursor graph.Cursor[graph.RelationshipKindsResult]) error {
-		for next := range cursor.Chan() {
-			relationships = append(relationships, graph.NewRelationship(next.ID, next.StartID, next.EndID, nil, next.Kind))
+	switch direction {
+	case graph.DirectionOutbound:
+		returnCriteria = query.Returning(
+			query.EndID(),
+			query.KindsOf(query.End()),
+			query.RelationshipID(),
+			query.KindsOf(query.Relationship()),
+		)
+
+	case graph.DirectionInbound:
+		returnCriteria = query.Returning(
+			query.StartID(),
+			query.KindsOf(query.Start()),
+			query.RelationshipID(),
+			query.KindsOf(query.Relationship()),
+		)
+
+	default:
+		return nil, fmt.Errorf("bi-directional or non-directed edges are not supported")
+	}
+
+	if err := graphQuery.Execute(func(results graph.Result) error {
+		defer results.Close()
+
+		var (
+			nodeID    graph.ID
+			nodeKinds graph.Kinds
+			edgeID    graph.ID
+			edgeKind  graph.Kind
+		)
+
+		for results.Next() {
+			if err := results.Scan(&nodeID, &nodeKinds, &edgeID, &edgeKind); err != nil {
+				return err
+			}
+
+			switch direction {
+			case graph.DirectionOutbound:
+				relationships = append(relationships, graph.NewRelationship(edgeID, segment.Node.ID, nodeID, nil, edgeKind))
+
+			case graph.DirectionInbound:
+				relationships = append(relationships, graph.NewRelationship(edgeID, nodeID, segment.Node.ID, nil, edgeKind))
+			}
 		}
 
-		return cursor.Error()
-	}); err != nil {
+		return results.Error()
+	}, returnCriteria); err != nil {
 		return nil, err
 	}
 
@@ -280,11 +316,8 @@ func FilteredSkipLimit(filter SkipLimitFilter, visitorFilter SegmentVisitor, ski
 // LightweightDriver is a Driver constructor that fetches only IDs and Kind information from vertexes and
 // edges stored in the database. This cuts down on network transit and is appropriate for traversals that may involve
 // a large number of or all vertexes within a target graph.
-func LightweightDriver(direction graph.Direction, criteria graph.Criteria, filter SegmentFilter, terminalVisitors ...SegmentVisitor) Driver {
-	var (
-		cache          = graphcache.New()
-		filterProvider = newVisitorFilter(direction, criteria)
-	)
+func LightweightDriver(direction graph.Direction, cache graphcache.Cache, criteria graph.Criteria, filter SegmentFilter, terminalVisitors ...SegmentVisitor) Driver {
+	filterProvider := newVisitorFilter(direction, criteria)
 
 	return func(ctx context.Context, tx graph.Transaction, nextSegment *graph.PathSegment) ([]*graph.PathSegment, error) {
 		var (
@@ -296,7 +329,7 @@ func LightweightDriver(direction graph.Direction, criteria graph.Criteria, filte
 			)
 		)
 
-		if relationships, err := shallowFetchRelationships(nextQuery); err != nil {
+		if relationships, err := shallowFetchRelationships(direction, nextSegment, nextQuery); err != nil {
 			return nil, err
 		} else {
 			// Reconcile the start and end nodes of the fetched relationships with the graph cache
@@ -310,7 +343,7 @@ func LightweightDriver(direction graph.Direction, criteria graph.Criteria, filte
 				}
 			}
 
-			// Shallow fetching the nodes achieves the same result as LightweightFetchRelationships(...) but with the added
+			// Shallow fetching the nodes achieves the same result as shallowFetchRelationships(...) but with the added
 			// benefit of interacting with the graph cache. Any nodes not already in the cache are fetched just-in-time
 			// from the database and stored back in the cache for later.
 			if cachedNodes, err := graphcache.ShallowFetchNodesByID(tx, cache, cardinality.DuplexToGraphIDs(nodesToFetch)); err != nil {

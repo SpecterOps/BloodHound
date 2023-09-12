@@ -1,17 +1,17 @@
 // Copyright 2023 Specter Ops, Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// 
+//
 // SPDX-License-Identifier: Apache-2.0
 
 package apiclient
@@ -26,11 +26,11 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/errors"
 	"github.com/specterops/bloodhound/headers"
 	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/mediatypes"
+	"github.com/specterops/bloodhound/src/api"
 )
 
 type Client struct {
@@ -90,25 +90,6 @@ func (s Client) Request(method, path string, params url.Values, body any, header
 			request.Header = header[0]
 		}
 
-		// Serialize the Request body - we expect a JSON serializable object here
-		if body != nil {
-			buffer := &bytes.Buffer{}
-
-			if err := json.NewEncoder(buffer).Encode(body); err != nil {
-				return nil, err
-			}
-
-			request.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
-			request.Body = io.NopCloser(buffer)
-		}
-
-		// Set our credentials either via signage or bearer token session
-		if s.Credentials != nil {
-			if err := s.Credentials.Handle(request); err != nil {
-				return nil, err
-			}
-		}
-
 		// Execute the Request and hand the response back to the user
 		const (
 			sleepInterval = time.Second * 5
@@ -118,6 +99,27 @@ func (s Client) Request(method, path string, params url.Values, body any, header
 		started := time.Now()
 
 		for {
+			// Serialize the Request body - we expect a JSON serializable object here
+			// This must be done on every retry, otherwise the buffer will be empty because it had been read
+			if body != nil {
+				buffer := &bytes.Buffer{}
+
+				if err := json.NewEncoder(buffer).Encode(body); err != nil {
+					return nil, err
+				}
+
+				request.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
+				request.Body = io.NopCloser(buffer)
+			}
+
+			// Set our credentials either via signage or bearer token session
+			// Credentials also have to be set with every attempt due to request signing
+			if s.Credentials != nil {
+				if err := s.Credentials.Handle(request); err != nil {
+					return nil, err
+				}
+			}
+
 			if response, err := s.Http.Do(request); err != nil {
 				if time.Since(started) >= maxSleep {
 					return nil, fmt.Errorf("waited %f seconds while retrying - Request failure cause: %w", maxSleep.Seconds(), err)

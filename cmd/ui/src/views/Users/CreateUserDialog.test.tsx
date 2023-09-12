@@ -1,17 +1,17 @@
 // Copyright 2023 Specter Ops, Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// 
+//
 // SPDX-License-Identifier: Apache-2.0
 
 import userEvent from '@testing-library/user-event';
@@ -60,19 +60,46 @@ afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
 
 describe('CreateUserDialog', () => {
-    it('should render a create user form', async () => {
+
+    type SetupOptions = {
+        renderErrors?: boolean;
+        renderLoading?: boolean;
+    }
+
+    const setup = (options?: SetupOptions) => {
+        const user = userEvent.setup();
         const testOnClose = vi.fn();
         const testOnSave = vi.fn(() => Promise.resolve({ data: {} }));
+        const testUser = {
+            emailAddress: 'testuser@example.com',
+            principalName: 'testuser',
+            firstName: 'Test',
+            lastName: 'User',
+            password: 'adminAdmin1!',
+            forcePasswordReset: false,
+            role: testRoles[0],
+        };
 
         render(
             <CreateUserDialog
                 open={true}
                 onClose={testOnClose}
                 onSave={testOnSave}
-                isLoading={false}
-                error={undefined}
+                isLoading={options?.renderLoading || false}
+                error={options?.renderErrors}
             />
         );
+
+        return {
+            user,
+            testUser,
+            testOnClose,
+            testOnSave,
+        }
+    }
+
+    it('should render a create user form', async () => {
+        setup();
 
         expect(screen.getByText('Create User')).toBeInTheDocument();
 
@@ -98,19 +125,7 @@ describe('CreateUserDialog', () => {
     });
 
     it('should call onClose when Close button is clicked', async () => {
-        const user = userEvent.setup();
-        const testOnClose = vi.fn();
-        const testOnSave = vi.fn(() => Promise.resolve({ data: {} }));
-
-        render(
-            <CreateUserDialog
-                open={true}
-                onClose={testOnClose}
-                onSave={testOnSave}
-                isLoading={false}
-                error={undefined}
-            />
-        );
+        const { user, testOnClose } = setup();
 
         const cancelButton = await screen.findByRole('button', { name: 'Cancel' });
 
@@ -120,19 +135,7 @@ describe('CreateUserDialog', () => {
     });
 
     it('should not call onSave when Save button is clicked and form input is invalid', async () => {
-        const user = userEvent.setup();
-        const testOnClose = vi.fn();
-        const testOnSave = vi.fn();
-
-        render(
-            <CreateUserDialog
-                open={true}
-                onClose={testOnClose}
-                onSave={testOnSave}
-                isLoading={false}
-                error={undefined}
-            />
-        );
+        const { user, testOnSave } = setup();
 
         const saveButton = await screen.findByRole('button', { name: 'Save' });
 
@@ -152,28 +155,7 @@ describe('CreateUserDialog', () => {
     });
 
     it('should call onSave when Save button is clicked and form input is valid', async () => {
-        const user = userEvent.setup();
-        const testOnClose = vi.fn();
-        const testOnSave = vi.fn(() => Promise.resolve({ data: {} }));
-        const testUser = {
-            emailAddress: 'testuser@example.com',
-            principalName: 'testuser',
-            firstName: 'Test',
-            lastName: 'User',
-            password: 'adminAdmin1!',
-            forcePasswordReset: false,
-            role: testRoles[0],
-        };
-
-        render(
-            <CreateUserDialog
-                open={true}
-                onClose={testOnClose}
-                onSave={testOnSave}
-                isLoading={false}
-                error={undefined}
-            />
-        );
+        const { user, testUser, testOnSave } = setup();
 
         const saveButton = await screen.findByRole('button', { name: 'Save' });
 
@@ -193,19 +175,7 @@ describe('CreateUserDialog', () => {
     });
 
     it('should display all available roles', async () => {
-        const user = userEvent.setup();
-        const testOnClose = vi.fn();
-        const testOnSave = vi.fn(() => Promise.resolve({ data: {} }));
-
-        render(
-            <CreateUserDialog
-                open={true}
-                onClose={testOnClose}
-                onSave={testOnSave}
-                isLoading={false}
-                error={undefined}
-            />
-        );
+        const { user } = setup();
 
         await user.click(await screen.findByLabelText('Role'));
 
@@ -215,19 +185,7 @@ describe('CreateUserDialog', () => {
     });
 
     it('should display all available SAML providers', async () => {
-        const user = userEvent.setup();
-        const testOnClose = vi.fn();
-        const testOnSave = vi.fn(() => Promise.resolve({ data: {} }));
-
-        render(
-            <CreateUserDialog
-                open={true}
-                onClose={testOnClose}
-                onSave={testOnSave}
-                isLoading={false}
-                error={undefined}
-            />
-        );
+        const { user } = setup();
 
         await user.click(await screen.findByLabelText('Authentication Method'));
 
@@ -247,18 +205,7 @@ describe('CreateUserDialog', () => {
     });
 
     it('should disable Cancel and Save buttons while isLoading is true', async () => {
-        const testOnClose = vi.fn();
-        const testOnSave = vi.fn(() => Promise.resolve({ data: {} }));
-
-        render(
-            <CreateUserDialog
-                open={true}
-                onClose={testOnClose}
-                onSave={testOnSave}
-                isLoading={true}
-                error={undefined}
-            />
-        );
+        setup({ renderLoading: true });
 
         expect(await screen.findByRole('button', { name: 'Cancel' })).toBeDisabled();
 
@@ -266,19 +213,33 @@ describe('CreateUserDialog', () => {
     });
 
     it('should display error message when error prop is provided', async () => {
-        const testOnClose = vi.fn();
-        const testOnSave = vi.fn(() => Promise.resolve({ data: {} }));
-
-        render(
-            <CreateUserDialog
-                open={true}
-                onClose={testOnClose}
-                onSave={testOnSave}
-                isLoading={false}
-                error={'there was an error'}
-            />
-        );
+        setup({ renderErrors: true });
 
         expect(await screen.findByText('An unexpected error occurred. Please try again.')).toBeInTheDocument();
+    });
+
+    it("should clear out the saml provider id from submission data when the authentication method is changed", async () => {
+        const { user, testUser, testOnSave } = setup();
+
+        const saveButton = await screen.findByRole('button', { name: 'Save' });
+
+        await user.type(screen.getByLabelText('Email Address'), testUser.emailAddress);
+        await user.type(screen.getByLabelText('Principal Name'), testUser.principalName);
+        await user.type(screen.getByLabelText('First Name'), testUser.firstName);
+        await user.type(screen.getByLabelText('Last Name'), testUser.lastName);
+
+        await user.click(await screen.findByLabelText('Authentication Method'));
+        await user.click(await screen.findByRole('option', { name: 'SAML' }));
+
+        await user.click(screen.getByLabelText('SAML Provider'));
+        await user.click(await screen.findByRole('option', { name: testSAMLProviders[0].name }));
+
+        await user.click(await screen.findByLabelText('Authentication Method'));
+        await user.click(await screen.findByRole('option', { name: 'Username / Password' }));
+        await user.type(screen.getByLabelText('Initial Password'), testUser.password);
+
+        await user.click(saveButton);
+
+        expect(testOnSave).toBeCalledWith(expect.objectContaining({ SAMLProviderId: '' }));
     });
 });

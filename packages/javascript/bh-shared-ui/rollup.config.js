@@ -52,5 +52,8 @@ export default {
         'react',
         'react/jsx-runtime',
         'luxon',
+        'notistack',
+        'react-query',
+        'js-client-library',
     ],
 };

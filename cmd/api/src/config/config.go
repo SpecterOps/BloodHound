@@ -162,6 +162,7 @@ type Configuration struct {
 	DisableAnalysis        bool                      `json:"disable_analysis"`
 	DisableCypherQC        bool                      `json:"disable_cypher_qc"`
 	DisableMigrations      bool                      `json:"disable_migrations"`
+	TraversalMemoryLimit   uint16                    `json:"traversal_memory_limit"`
 }
 
 func (s Configuration) TempDirectory() string {

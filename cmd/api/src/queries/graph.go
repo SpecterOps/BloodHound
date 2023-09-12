@@ -22,7 +22,6 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	bhCtx "github.com/specterops/bloodhound/src/ctx"
 	"net/http"
 	"net/url"
 	"sort"
@@ -30,6 +29,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	bhCtx "github.com/specterops/bloodhound/src/ctx"
 
 	"github.com/gorilla/mux"
 	"github.com/specterops/bloodhound/analysis"
@@ -138,7 +139,7 @@ type Graph interface {
 	FetchNodesByObjectIDs(ctx context.Context, objectIDs ...string) (graph.NodeSet, error)
 	ValidateOUs(ctx context.Context, ous []string) ([]string, error)
 	BatchNodeUpdate(ctx context.Context, nodeUpdate graph.NodeUpdate) error
-	RawCypherSearch(ctx context.Context, rawCypher string) (model.UnifiedGraph, error)
+	RawCypherSearch(ctx context.Context, rawCypher string, includeProperties bool) (model.UnifiedGraph, error)
 }
 
 type GraphQuery struct {
@@ -182,7 +183,7 @@ func (s *GraphQuery) GetAssetGroupComboNode(ctx context.Context, owningObjectID 
 		})); err != nil {
 			return err
 		} else {
-			if groups := assetGroupNodes.ByKind(ad.Group); groups.Len() > 0 {
+			if groups := assetGroupNodes.ContainingNodeKinds(ad.Group); groups.Len() > 0 {
 				if groupMembershipPaths, err := analysis.ExpandGroupMembershipPaths(tx, groups); err != nil {
 					return err
 				} else {
@@ -268,6 +269,15 @@ func (s *GraphQuery) GetAllShortestPaths(ctx context.Context, startNodeID string
 	})
 }
 
+// the following negation clause matches nodes that have both ADLocalGroup and Group labels, but excludes nodes that only have the ADLocalGroup label.
+// equivalent cypher: MATCH (n) WHERE NOT (n:ADLocalGroup AND NOT n:Group)
+var groupFilter = query.Not(
+	query.And(
+		query.Kind(query.Node(), ad.LocalGroup),
+		query.Not(query.Kind(query.Node(), ad.Group)),
+	),
+)
+
 func searchNodeByKindAndEqualsName(kind graph.Kind, name string) graph.Criteria {
 	return query.And(
 		query.Kind(query.Node(), kind),
@@ -275,12 +285,11 @@ func searchNodeByKindAndEqualsName(kind graph.Kind, name string) graph.Criteria 
 			query.Equals(query.NodeProperty(common.Name.String()), name),
 			query.Equals(query.NodeProperty(common.ObjectID.String()), name),
 		),
-		query.Not(query.KindIn(query.Node(), ad.LocalGroup)),
+		groupFilter,
 	)
 }
 
 func searchNodeByKindAndContainsName(kind graph.Kind, name string) graph.Criteria {
-
 	return query.And(
 		query.Kind(query.Node(), kind),
 		query.Or(
@@ -289,7 +298,7 @@ func searchNodeByKindAndContainsName(kind graph.Kind, name string) graph.Criteri
 		),
 		query.Not(query.Equals(query.NodeProperty(common.Name.String()), name)),
 		query.Not(query.Equals(query.NodeProperty(common.ObjectID.String()), name)),
-		query.Not(query.KindIn(query.Node(), ad.LocalGroup)),
+		groupFilter,
 	)
 }
 
@@ -389,7 +398,7 @@ func (s *GraphQuery) prepareGraphQuery(rawCypher string, disableCypherQC bool) (
 	return graphQuery, nil
 }
 
-func (s *GraphQuery) RawCypherSearch(ctx context.Context, rawCypher string) (model.UnifiedGraph, error) {
+func (s *GraphQuery) RawCypherSearch(ctx context.Context, rawCypher string, includeProperties bool) (model.UnifiedGraph, error) {
 	var (
 		graphResponse = model.NewUnifiedGraph()
 		bhCtxInst     = bhCtx.Get(ctx)
@@ -406,7 +415,7 @@ func (s *GraphQuery) RawCypherSearch(ctx context.Context, rawCypher string) (mod
 			if pathSet, err := ops.FetchPathSetByQuery(tx, preparedQuery.cypher); err != nil {
 				return err
 			} else {
-				graphResponse.AddPathSet(pathSet)
+				graphResponse.AddPathSet(pathSet, includeProperties)
 			}
 
 			return nil
