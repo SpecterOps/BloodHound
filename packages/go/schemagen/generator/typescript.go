@@ -86,11 +86,8 @@ func GenerateTypeScriptPathfindingEdgesFn(
 }
 
 func GenerateTypeScriptCommon(root tsgen.File, schema model.Graph) {
-	var unionKinds = []string{"AzureNodeCommonNodeKindind", "CommonRelationshipKind"}
-
 	GenerateTypeScriptStringEnum(root, "CommonNodeKind", schema.NodeKinds)
 	GenerateTypeScriptStringEnum(root, "CommonRelationshipKind", schema.RelationshipKinds)
-	GenerateTypeScriptUnionType(root, "CommonKind", unionKinds...)
 
 	GenerateTypeScriptStringEnum(root, "CommonKindProperties", schema.Properties)
 }

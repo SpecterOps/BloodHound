@@ -25,7 +25,6 @@ export function CommonNodeKindToDisplay(value: CommonNodeKind): string | undefin
             return undefined;
     }
 }
-export type CommonKind = AzureNodeCommonNodeKindind | CommonRelationshipKind;
 export enum CommonKindProperties {
     ObjectID = 'objectid',
     Name = 'name',
