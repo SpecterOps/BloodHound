@@ -21,7 +21,7 @@ import { useSigma } from '@react-sigma/core';
 import { random } from 'graphology-layout';
 import forceAtlas2 from 'graphology-layout-forceatlas2';
 import isEmpty from 'lodash/isEmpty';
-import { FC, useState } from 'react';
+import { Children, FC, ReactNode, useState } from 'react';
 import GraphButton from 'src/components/GraphButton';
 import { GraphButtonProps } from 'src/components/GraphButton/GraphButton';
 import { resetCamera } from 'src/ducks/graph/utils';
@@ -78,14 +78,15 @@ const GraphButtons: FC<GraphButtonsProps> = ({ rankDirection, options, nonLayout
     return (
         <Box position={'absolute'} bottom={16} display={'flex'}>
             <GraphButton onClick={reset} displayText={<FontAwesomeIcon icon={faCropAlt} />} />
-            <MenuButton
-                menuItems={[
-                    sequential && <MenuItem onClick={runSequentialLayout}>Sequential</MenuItem>,
-                    standard && <MenuItem onClick={runStandardLayout}>Standard</MenuItem>,
-                ]}
-                label='Layout'
-            />
-            <MenuButton menuItems={[<MenuItem onClick={() => {}}>JSON</MenuItem>]} label='Export' />
+
+            <MenuButton label='Layout'>
+                {sequential && <MenuItem onClick={runSequentialLayout}>Sequential</MenuItem>}
+                {standard && <MenuItem onClick={runStandardLayout}>Standard</MenuItem>}
+            </MenuButton>
+
+            <MenuButton label='Export'>
+                <MenuItem onClick={() => {}}>JSON</MenuItem>
+            </MenuButton>
 
             {nonLayoutButtons?.length && (
                 <>
@@ -98,8 +99,8 @@ const GraphButtons: FC<GraphButtonsProps> = ({ rankDirection, options, nonLayout
     );
 };
 
-const MenuButton: FC<{ menuItems: any; label: string }> = (props) => {
-    const { menuItems, label } = props;
+const MenuButton: FC<{ label: string; children: ReactNode }> = (props) => {
+    const { label, children } = props;
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
     const open = Boolean(anchorEl);
@@ -124,8 +125,8 @@ const MenuButton: FC<{ menuItems: any; label: string }> = (props) => {
                 MenuListProps={{
                     'aria-labelledby': `${label}-button`,
                 }}>
-                {menuItems.map((menuItem: any) => {
-                    return <div onClick={handleClose}>{menuItem}</div>;
+                {Children.map(children, (child) => {
+                    return <div onClick={handleClose}>{child}</div>;
                 })}
             </Menu>
         </>
