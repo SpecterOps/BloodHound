@@ -60,11 +60,13 @@ func formatChecksum(cksum uint32) string {
 	return strings.ReplaceAll(fmt.Sprintf("%6s", big.NewInt(int64(cksum)).Text(62)), " ", "0")
 }
 
+// This method isn't really necessary anymore, but leaving it in case
+// we want to modify what part of a token is hashed in the future
 func (s TokenString) DigestableValue() ([]byte, error) {
 	if s.value == "" {
 		return []byte{}, errors.New("token value is not set")
 	} else {
-		return []byte(s.value), nil
+		return []byte(s.String()), nil
 	}
 }
 

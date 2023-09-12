@@ -142,7 +142,7 @@ func TestTokenString_DigestableValue(t *testing.T) {
 				value:  "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
 				cksum:  987654, // encodes to "48VU"
 			},
-			[]byte("0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"),
+			[]byte("TOK1_0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0048VU"),
 		},
 		{
 			"random",
@@ -151,7 +151,7 @@ func TestTokenString_DigestableValue(t *testing.T) {
 				value:  "18kmjsbZLdgIBSjiHPCG51318yk41uNYzswMhScdartEUL2UKLP1Z4ywgiFxNBF5",
 				cksum:  2055449580, // encodes to "2f6skA"
 			},
-			[]byte("18kmjsbZLdgIBSjiHPCG51318yk41uNYzswMhScdartEUL2UKLP1Z4ywgiFxNBF5"),
+			[]byte("ASDF_18kmjsbZLdgIBSjiHPCG51318yk41uNYzswMhScdartEUL2UKLP1Z4ywgiFxNBF52f6skA"),
 		},
 	} {
 		t.Run(tc.n, func(t *testing.T) {
