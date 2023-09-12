@@ -27,6 +27,7 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/specterops/bloodhound/headers"
 	"github.com/specterops/bloodhound/src/api/v2/integration"
 	"github.com/specterops/bloodhound/src/test/fixtures/fixtures"
 	"github.com/stretchr/testify/assert"
@@ -57,7 +58,7 @@ func Test_FileUpload(t *testing.T) {
 		defer jsonInput.Close()
 		req, err := apiClient.NewRequest(http.MethodPost, jobEndpoint, nil, jsonInput)
 		assert.Nil(tx, err)
-		req.Header.Set("Content-Encoding", "gzip")
+		req.Header.Set(headers.ContentEncoding.String(), "gzip")
 		resp, err := apiClient.Raw(req)
 		assert.Nil(tx, err)
 		assert.Equal(tx, http.StatusBadRequest, resp.StatusCode)
@@ -76,7 +77,7 @@ func Test_FileUpload(t *testing.T) {
 		assert.Nil(tx, gw.Close())
 		req, err := apiClient.NewRequest(http.MethodPost, jobEndpoint, nil, io.NopCloser(&body))
 		assert.Nil(tx, err)
-		req.Header.Set("Content-Encoding", "gzip")
+		req.Header.Set(headers.ContentEncoding.String(), "gzip")
 		resp, err := apiClient.Raw(req)
 		assert.Nil(tx, err)
 		assert.Equal(tx, http.StatusAccepted, resp.StatusCode)
@@ -95,7 +96,7 @@ func Test_FileUpload(t *testing.T) {
 		assert.Nil(tx, gw.Close())
 		req, err := apiClient.NewRequest(http.MethodPost, jobEndpoint, nil, io.NopCloser(&body))
 		assert.Nil(tx, err)
-		req.Header.Set("Content-Encoding", "deflate")
+		req.Header.Set(headers.ContentEncoding.String(), "deflate")
 		resp, err := apiClient.Raw(req)
 		assert.Nil(tx, err)
 		assert.Equal(tx, http.StatusBadRequest, resp.StatusCode)
@@ -124,7 +125,7 @@ func Test_FileUpload(t *testing.T) {
 		defer jsonInput.Close()
 		req, err := apiClient.NewRequest(http.MethodPost, jobEndpoint, nil, jsonInput)
 		assert.Nil(tx, err)
-		req.Header.Set("Content-Encoding", "br")
+		req.Header.Set(headers.ContentEncoding.String(), "br")
 		resp, err := apiClient.Raw(req)
 		assert.Nil(tx, err)
 		assert.Equal(tx, http.StatusUnsupportedMediaType, resp.StatusCode)

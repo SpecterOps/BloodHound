@@ -93,7 +93,7 @@ func (s Client) SendCompressedFileUploadData(jsonFile io.Reader, id int64) error
 	if err != nil {
 		return fmt.Errorf("failed to create compressed ingest request: %w", err)
 	}
-	request.Header.Set("Content-Encoding", "gzip")
+	request.Header.Set(headers.ContentEncoding.String(), "gzip")
 
 	if response, err := s.Raw(request); err != nil {
 		return fmt.Errorf("failed to send compressed ingest request: %w", err)
