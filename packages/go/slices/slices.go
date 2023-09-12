@@ -1,17 +1,17 @@
 // Copyright 2023 Specter Ops, Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// 
+//
 // SPDX-License-Identifier: Apache-2.0
 
 package slices
@@ -56,6 +56,25 @@ func Unique[T comparable](slice []T) []T {
 	for _, value := range slice {
 		if _, ok := existsMap[value]; !ok {
 			existsMap[value] = exists
+			out = append(out, value)
+		}
+	}
+
+	return out
+}
+
+// UniqueBy returns a new slice that is free of any duplicate values in the original
+func UniqueBy[T any, U comparable](slice []T, fn func(T) U) []T {
+	var (
+		exists    = struct{}{}
+		existsMap = map[U]struct{}{}
+		out       = make([]T, 0)
+	)
+
+	for _, value := range slice {
+		key := fn(value)
+		if _, ok := existsMap[key]; !ok {
+			existsMap[key] = exists
 			out = append(out, value)
 		}
 	}

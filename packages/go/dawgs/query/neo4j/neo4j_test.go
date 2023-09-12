@@ -1,17 +1,17 @@
 // Copyright 2023 Specter Ops, Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// 
+//
 // SPDX-License-Identifier: Apache-2.0
 
 package neo4j_test
@@ -25,8 +25,8 @@ import (
 	"github.com/specterops/bloodhound/dawgs/query"
 	"github.com/specterops/bloodhound/dawgs/query/neo4j"
 
-	"github.com/stretchr/testify/require"
 	"github.com/specterops/bloodhound/dawgs/graph"
+	"github.com/stretchr/testify/require"
 )
 
 var (
@@ -495,7 +495,7 @@ func TestQueryBuilder_Render(t *testing.T) {
 		query.Returning(
 			query.Node(),
 		),
-	), "match (n) where not (n)<-[]->() return n"))
+	), "match (n) where not ((n)<-[]->()) return n"))
 
 	t.Run("Node Datetime Before", assertQueryResult(query.SinglePartQuery(
 		query.Where(
@@ -1015,7 +1015,7 @@ func TestQueryBuilder_Render(t *testing.T) {
 		query.Returning(
 			query.Count(query.Node()),
 		),
-	), "match (n) where (not n.system_tags contains $0 or n.system_tags is null) return count(n)"))
+	), "match (n) where (not (n.system_tags contains $0) or n.system_tags is null) return count(n)"))
 
 	t.Run("Is Not Null", assertQueryResult(query.SinglePartQuery(
 		query.Where(
