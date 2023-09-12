@@ -17,18 +17,60 @@
 import { render, screen } from 'src/test-utils';
 import GraphButtons from 'src/components/GraphButtons';
 import { SigmaContainer } from '@react-sigma/core';
+import userEvent from '@testing-library/user-event';
 
 describe('GraphLayoutButtons', () => {
-    it('should render only the button options specified', () => {
+    const user = userEvent.setup();
+
+    it('should render', () => {
         render(
             <SigmaContainer>
                 <GraphButtons options={{ standard: false, sequential: true }} />
             </SigmaContainer>
         );
 
-        expect(screen.getByText('sequential')).toBeInTheDocument();
-        expect(screen.queryByText('standard')).not.toBeInTheDocument();
-        expect(screen.queryByText('expand all')).not.toBeInTheDocument();
-        expect(screen.queryByText('collapse all')).not.toBeInTheDocument();
+        const layoutButton = screen.getByRole('button', { name: /layout/i });
+        expect(layoutButton).toBeInTheDocument();
+
+        const exportButton = screen.getByRole('button', { name: /export/i });
+        expect(exportButton).toBeInTheDocument();
+    });
+
+    it('should render only the layout button options specified', async () => {
+        render(
+            <SigmaContainer>
+                <GraphButtons options={{ standard: false, sequential: true }} />
+            </SigmaContainer>
+        );
+
+        const layoutButton = screen.getByRole('button', { name: /layout/i });
+        expect(layoutButton).toBeInTheDocument();
+
+        await user.click(layoutButton);
+
+        const sequentialMenuItem = screen.getByRole('menuitem', { name: /sequential/i });
+        expect(sequentialMenuItem).toBeInTheDocument();
+
+        const standardMenuItem = screen.queryByRole('menuitem', { name: /standard/i });
+        expect(standardMenuItem).not.toBeInTheDocument();
+    });
+
+    it('interacting with any menu item closes the menu', async () => {
+        render(
+            <SigmaContainer>
+                <GraphButtons options={{ standard: false, sequential: true }} />
+            </SigmaContainer>
+        );
+
+        const layoutButton = screen.getByRole('button', { name: /layout/i });
+        expect(layoutButton).toBeInTheDocument();
+
+        await user.click(layoutButton);
+
+        const menuItem = screen.getByRole('menuitem', { name: /sequential/i });
+        expect(menuItem).toBeInTheDocument();
+
+        await userEvent.click(menuItem);
+        expect(menuItem).not.toBeInTheDocument();
     });
 });
