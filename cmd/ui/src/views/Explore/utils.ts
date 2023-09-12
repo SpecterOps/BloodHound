@@ -40,16 +40,18 @@ export const formatObjectInfoFields = (props: any): EntityField[] => {
         // Don't display fields with zero date values
         if (props[propKeys[i]] === ZERO_VALUE_API_DATE) continue;
 
-        const validatedProperty = validateProperty(propKeys[i]);
+        const { kind, isKnownProperty } = validateProperty(propKeys[i]);
 
-        if (validatedProperty.isKnownProperty) {
+        if (isKnownProperty) {
             mappedFields.push({
-                label: getFieldLabel(validatedProperty.kind!, propKeys[i]),
+                kind: kind,
+                label: getFieldLabel(kind!, propKeys[i]),
                 value: props[propKeys[i]],
                 keyprop: propKeys[i],
             });
         } else {
             mappedFields.push({
+                kind: kind,
                 label: `${startCase(propKeys[i])}:`,
                 value: props[propKeys[i]],
                 keyprop: propKeys[i],
@@ -76,9 +78,11 @@ const isCommonProperty = (enumValue: CommonKindProperties): boolean => {
     return Object.values(CommonKindProperties).includes(enumValue);
 };
 
+export type PropertyKind = 'ad' | 'az' | 'cm' | null;
+
 export type ValidatedProperty = {
     isKnownProperty: boolean;
-    kind: 'ad' | 'az' | 'cm' | null;
+    kind: PropertyKind;
 };
 
 export const validateProperty = (enumValue: string): ValidatedProperty => {

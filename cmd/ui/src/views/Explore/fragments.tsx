@@ -25,6 +25,7 @@ import { PRIMARY_SEARCH, SEARCH_TYPE_EXACT } from 'src/ducks/searchbar/types';
 import { useAppDispatch } from 'src/store';
 import { format } from 'src/utils';
 import useCollapsibleSectionStyles from 'src/views/Explore/InfoStyles/CollapsibleSection';
+import { PropertyKind } from 'src/views/Explore/utils';
 
 const exclusionList = [
     'gid',
@@ -101,9 +102,10 @@ export const FieldsContainer: React.FC<PropsWithChildren> = ({ children }) => {
     return <div className={styles.fieldsContainer}>{children}</div>;
 };
 
-export const Field: React.FC<EntityField> = ({ label, value, keyprop }) => {
+export const Field: React.FC<EntityField> = (entityField) => {
+    const { label, value, keyprop } = entityField;
     if (value === undefined || value === '' || (typeof value === 'object' && isEmpty(value))) return null;
-    const formattedValue = format(value);
+    const formattedValue = format(entityField);
 
     let content: React.ReactNode;
     if (typeof formattedValue === 'string') {
@@ -237,7 +239,8 @@ export const BasicObjectInfoFields: React.FC<BasicObjectInfoFieldsProps> = (prop
 
 export type EntityField = {
     label: string;
-    value: string | number | boolean | undefined | string[];
+    value: string | number | boolean | string[];
+    kind?: PropertyKind;
     keyprop?: string;
 };
 
@@ -249,10 +252,11 @@ export const ObjectInfoFields: React.FC<{ fields: EntityField[] }> = ({ fields }
             {filteredFields.map((field: EntityField) => {
                 return (
                     <Field
+                        kind={field.kind}
                         label={field.label}
                         value={field.value}
+                        keyprop={`${field.keyprop}`}
                         key={`${field.keyprop}-${field.label}`}
-                        keyprop={`${field.keyprop}-${field.label}`}
                     />
                 );
             })}
