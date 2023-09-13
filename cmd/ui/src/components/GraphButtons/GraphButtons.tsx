@@ -90,9 +90,7 @@ const GraphButtons: FC<GraphButtonsProps> = ({ rankDirection, options, nonLayout
             </GraphMenu>
 
             <GraphMenu label='Export'>
-                <MenuItem
-                    onClick={(e) => exportToJson(e, graphState.chartProps)}
-                    disabled={isEmpty(graphState.chartProps)}>
+                <MenuItem onClick={(e) => exportToJson(e, graphState.export)} disabled={isEmpty(graphState.export)}>
                     JSON
                 </MenuItem>
             </GraphMenu>

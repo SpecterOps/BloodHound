@@ -17,7 +17,7 @@
 import { SagaIterator } from 'redux-saga';
 import { all, call, fork, put, takeLatest } from 'redux-saga/effects';
 import { apiClient } from 'bh-shared-ui';
-import { putGraphData, putGraphError, putGraphVars } from 'src/ducks/explore/actions';
+import { putGraphData, putGraphError, putGraphVars, saveResponseForExport } from 'src/ducks/explore/actions';
 import {
     AssetGroupRequest,
     GraphEndpoints,
@@ -99,6 +99,7 @@ function* runSearchQuery(payload: SearchRequest): SagaIterator {
         response = yield call(apiClient.getSearchResult, payload.objectid, payload.searchType);
         const data = response.data.data;
 
+        yield put(saveResponseForExport(data));
         yield put(putGraphData(data));
     } catch (e) {
         yield put(putGraphError(e));
@@ -138,6 +139,8 @@ function* runPathfindingQuery(payload: PathfindingRequest): SagaIterator {
             payload.end,
             `${relationshipKindsFilter}`
         );
+        yield put(saveResponseForExport(data));
+
         const flatGraph = transformToFlatGraphResponse(data);
         yield put(putGraphData(flatGraph));
     } catch (error: any) {
@@ -186,6 +189,8 @@ function* runCypherSearchQuery(payload: CypherQueryRequest): SagaIterator {
             yield put(putGraphData({}));
             yield put(addSnackbar('No results match your criteria', 'cypherSearchEmptyResponse'));
         } else {
+            yield put(saveResponseForExport(data));
+
             const flatGraph = transformToFlatGraphResponse(data);
             yield put(putGraphData(flatGraph));
         }

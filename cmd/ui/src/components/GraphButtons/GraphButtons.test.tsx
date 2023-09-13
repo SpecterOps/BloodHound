@@ -73,4 +73,6 @@ describe('GraphLayoutButtons', () => {
         await userEvent.click(menuItem);
         expect(menuItem).not.toBeInTheDocument();
     });
+
+    it('export action is disabled if the canvas is empty', async () => {});
 });
