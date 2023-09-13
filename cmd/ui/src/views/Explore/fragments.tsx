@@ -16,6 +16,7 @@
 
 import { Alert, Box, CircularProgress, Typography } from '@mui/material';
 import { EntityField, NodeIcon, format } from 'bh-shared-ui';
+import { isEmpty } from 'lodash';
 import React, { PropsWithChildren } from 'react';
 import { TIER_ZERO_TAG } from 'src/constants';
 import { GraphNodeTypes } from 'src/ducks/graph/types';
@@ -100,7 +101,15 @@ export const FieldsContainer: React.FC<PropsWithChildren> = ({ children }) => {
 };
 
 export const Field: React.FC<EntityField> = (entityField) => {
-    const { label, keyprop } = entityField;
+    const { label, value, keyprop } = entityField;
+    if (
+        value === undefined ||
+        value === '' ||
+        (Array.isArray(value) && value.length === 0) ||
+        (typeof value === 'object' && isEmpty(value))
+    )
+        return null;
+
     const formattedValue = format(entityField);
 
     let content: React.ReactNode;
