@@ -14,20 +14,16 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { ActiveDirectoryNodeKind, AzureNodeKind, apiClient } from 'bh-shared-ui';
+import { FlatGraphResponse, GraphData, GraphResponse, StyledGraphEdge, StyledGraphNode } from 'js-client-library';
 import identity from 'lodash/identity';
 import throttle from 'lodash/throttle';
-import { DateTime } from 'luxon';
-import { apiClient } from 'bh-shared-ui';
-import { FlatGraphResponse, GraphData, StyledGraphNode, StyledGraphEdge, GraphResponse } from 'js-client-library';
+import { Coordinates } from 'sigma/types';
 import { logout } from 'src/ducks/auth/authSlice';
 import { addSnackbar } from 'src/ducks/global/actions';
-import { ActiveDirectoryNodeKind, AzureNodeKind } from 'bh-shared-ui';
+import { isLink, isNode } from 'src/ducks/graph/utils';
+import { Glyph } from 'src/rendering/programs/node.glyphs';
 import { store } from 'src/store';
-import { LuxonFormat } from 'bh-shared-ui';
-import { isLink, isNode } from './ducks/graph/utils';
-import { Glyph } from './rendering/programs/node.glyphs';
-import { Coordinates } from 'sigma/types';
-import { EntityField } from 'src/views/Explore/fragments';
 
 export const getDatesInRange = (startDate: Date, endDate: Date) => {
     const date = new Date(startDate.getTime());
@@ -57,75 +53,6 @@ export const validateNodeType = (type: string): ActiveDirectoryNodeKind | AzureN
     });
 
     return result;
-};
-
-const formatAmbiguousTime = (ambigugousTime: any, keyprop: string): string => {
-    const unknownValue = 'UNKNOWN';
-    const neverValue = 'NEVER';
-
-    if (keyprop === 'whencreated') {
-        if (ambigugousTime === 0 || ambigugousTime === -1) return unknownValue;
-        return DateTime.fromSeconds(ambigugousTime).toFormat(LuxonFormat.DATETIME);
-    } else if (keyprop === 'lastlogontimestamp' || keyprop === 'lastlogon') {
-        if (ambigugousTime === 0) return unknownValue;
-        if (ambigugousTime === -1) return neverValue;
-        return DateTime.fromSeconds(ambigugousTime).toFormat(LuxonFormat.DATETIME);
-    } else {
-        if (ambigugousTime === 0) return 'ACCOUNT CREATED BUT NO PASSWORD SET';
-        if (ambigugousTime === -1) return neverValue;
-        return DateTime.fromSeconds(ambigugousTime).toFormat(LuxonFormat.DATETIME);
-    }
-};
-
-const formatSimple = (field: EntityField): string => {
-    const { value, keyprop, kind } = field;
-
-    //This will never happen but need the type safety
-    if (Array.isArray(value)) return '';
-
-    const isAmbiguousTimeValue =
-        keyprop === 'lastlogon' ||
-        keyprop === 'lastlogontimestamp' ||
-        keyprop === 'pwdlastset' ||
-        keyprop === 'whencreated';
-
-    if (kind === 'ad' && isAmbiguousTimeValue) return formatAmbiguousTime(value, keyprop);
-
-    if (typeof value === 'number') {
-        const currentDate = Math.round(new Date().getTime() / 1000);
-
-        //315536400 = January 1st, 1980. Seems like a safe bet
-        if (value > 315536400 && value < currentDate) {
-            return DateTime.fromSeconds(value).toFormat(LuxonFormat.DATETIME);
-        } else if (`${value}`.startsWith('0.')) {
-            return value.toFixed(2);
-        } else {
-            return `${value}`.toLocaleString();
-        }
-    } else if (typeof value === 'boolean') {
-        return value.toString().toUpperCase();
-    } else {
-        const potentialDate: any = DateTime.fromISO(value);
-
-        if (potentialDate.invalid === null && keyprop !== 'functionallevel')
-            return potentialDate.toFormat(LuxonFormat.DATETIME);
-
-        return value;
-    }
-};
-
-export const format = (field: EntityField): string | string[] | null => {
-    const { value } = field;
-    if (Array.isArray(value)) {
-        const fields: string[] = [];
-        value.forEach((val) => {
-            const newField = { ...field, value: val };
-            fields.push(formatSimple(newField));
-        });
-        return fields;
-    } else {
-        return formatSimple(field);
-    }
 };
 
 export const getUsername = (user: any): string | undefined => {

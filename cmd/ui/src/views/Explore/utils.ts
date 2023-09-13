@@ -14,15 +14,17 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { startCase } from 'lodash';
 import {
     ActiveDirectoryKindProperties,
     ActiveDirectoryKindPropertiesToDisplay,
     AzureKindProperties,
     AzureKindPropertiesToDisplay,
+    CommonKindProperties,
+    CommonKindPropertiesToDisplay,
+    EntityField,
+    EntityPropertyKind,
 } from 'bh-shared-ui';
-import { CommonKindProperties, CommonKindPropertiesToDisplay } from 'src/graphSchema';
-import { EntityField } from './fragments';
+import { isEmpty, startCase } from 'lodash';
 import { ZERO_VALUE_API_DATE } from 'src/constants';
 
 export let controller = new AbortController();
@@ -37,8 +39,15 @@ export const formatObjectInfoFields = (props: any): EntityField[] => {
     const propKeys = Object.keys(props);
 
     for (let i = 0; i < propKeys.length; i++) {
-        // Don't display fields with zero date values
-        if (props[propKeys[i]] === ZERO_VALUE_API_DATE) continue;
+        const value = props[propKeys[i]];
+        // Don't display empty fields or fields with zero date values
+        if (
+            value === undefined ||
+            value === '' ||
+            value === ZERO_VALUE_API_DATE ||
+            (typeof value === 'object' && isEmpty(value))
+        )
+            continue;
 
         const { kind, isKnownProperty } = validateProperty(propKeys[i]);
 
@@ -46,14 +55,14 @@ export const formatObjectInfoFields = (props: any): EntityField[] => {
             mappedFields.push({
                 kind: kind,
                 label: getFieldLabel(kind!, propKeys[i]),
-                value: props[propKeys[i]],
+                value: value,
                 keyprop: propKeys[i],
             });
         } else {
             mappedFields.push({
                 kind: kind,
                 label: `${startCase(propKeys[i])}:`,
-                value: props[propKeys[i]],
+                value: value,
                 keyprop: propKeys[i],
             });
         }
@@ -78,11 +87,9 @@ const isCommonProperty = (enumValue: CommonKindProperties): boolean => {
     return Object.values(CommonKindProperties).includes(enumValue);
 };
 
-export type PropertyKind = 'ad' | 'az' | 'cm' | null;
-
 export type ValidatedProperty = {
     isKnownProperty: boolean;
-    kind: PropertyKind;
+    kind: EntityPropertyKind;
 };
 
 export const validateProperty = (enumValue: string): ValidatedProperty => {

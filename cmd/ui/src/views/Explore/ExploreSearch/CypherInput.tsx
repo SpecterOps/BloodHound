@@ -21,18 +21,18 @@ import makeStyles from '@mui/styles/makeStyles';
 import '@neo4j-cypher/codemirror/css/cypher-codemirror.css';
 import { CypherEditor } from '@neo4j-cypher/react-codemirror';
 import {
+    ActiveDirectoryKindProperties,
     ActiveDirectoryNodeKind,
     ActiveDirectoryRelationshipKind,
+    AzureKindProperties,
     AzureNodeKind,
     AzureRelationshipKind,
-    ActiveDirectoryKindProperties,
-    AzureKindProperties,
+    CommonKindProperties,
 } from 'bh-shared-ui';
 import { useCallback, useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { startCypherQuery } from 'src/ducks/explore/actions';
 import { setCypherQueryTerm, startCypherSearch } from 'src/ducks/searchbar/actions';
-import { CommonKindProperties } from 'src/graphSchema';
 import { AppState } from 'src/store';
 import CommonSearches from './CommonSearches';
 
