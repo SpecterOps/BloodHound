@@ -14,6 +14,6 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import GraphButton from './GraphButton';
+import GraphMenu from './GraphMenu';
 
-export default GraphButton;
+export default GraphMenu;

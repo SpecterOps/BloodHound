@@ -16,15 +16,14 @@
 
 import { faCropAlt } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Box, Menu, MenuItem } from '@mui/material';
+import { Box, MenuItem } from '@mui/material';
 import { useSigma } from '@react-sigma/core';
+import { GraphMenu, GraphButton, GraphButtonProps } from 'bh-shared-ui';
 import { random } from 'graphology-layout';
 import forceAtlas2 from 'graphology-layout-forceatlas2';
 import isEmpty from 'lodash/isEmpty';
-import { Children, FC, ReactNode, useState } from 'react';
+import { FC } from 'react';
 import { useSelector } from 'react-redux';
-import GraphButton from 'src/components/GraphButton';
-import { GraphButtonProps } from 'src/components/GraphButton/GraphButton';
 import { resetCamera } from 'src/ducks/graph/utils';
 import { RankDirection, layoutDagre } from 'src/hooks/useLayoutDagre/useLayoutDagre';
 import { AppState } from 'src/store';
@@ -104,39 +103,6 @@ const GraphButtons: FC<GraphButtonsProps> = ({ rankDirection, options, nonLayout
                 </>
             )}
         </Box>
-    );
-};
-
-const GraphMenu: FC<{ label: string; children: ReactNode }> = ({ children, label }) => {
-    const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-
-    const open = Boolean(anchorEl);
-
-    const handleClose = () => setAnchorEl(null);
-
-    return (
-        <>
-            <GraphButton
-                onClick={(event: React.MouseEvent<HTMLButtonElement>) => {
-                    setAnchorEl(event.currentTarget);
-                }}
-                aria-controls={open ? `${label}-menu` : undefined}
-                aria-haspopup='true'
-                aria-expanded={open ? 'true' : undefined}
-                displayText={label}></GraphButton>
-            <Menu
-                id={`${label}-menu`}
-                open={open}
-                anchorEl={anchorEl}
-                onClose={handleClose}
-                MenuListProps={{
-                    'aria-labelledby': `${label}-button`,
-                }}>
-                {Children.map(children, (child) => {
-                    return <div onClick={handleClose}>{child}</div>;
-                })}
-            </Menu>
-        </>
     );
 };
 
