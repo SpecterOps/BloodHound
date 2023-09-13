@@ -16,5 +16,6 @@
 
 export * from './api';
 export * from './datetime';
+export * from './exportGraphData';
 export * from './passwd';
 export * from './user';

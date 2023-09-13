@@ -18,7 +18,7 @@ import { faCropAlt } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Box, MenuItem } from '@mui/material';
 import { useSigma } from '@react-sigma/core';
-import { GraphMenu, GraphButton, GraphButtonProps } from 'bh-shared-ui';
+import { GraphMenu, GraphButton, GraphButtonProps, exportToJson } from 'bh-shared-ui';
 import { random } from 'graphology-layout';
 import forceAtlas2 from 'graphology-layout-forceatlas2';
 import isEmpty from 'lodash/isEmpty';
@@ -104,30 +104,6 @@ const GraphButtons: FC<GraphButtonsProps> = ({ rankDirection, options, nonLayout
             )}
         </Box>
     );
-};
-
-const downloadFile = ({ data, fileName, fileType }: { data: any; fileName: string; fileType: string }) => {
-    const blob = new Blob([data], { type: fileType });
-    // create an anchor tag and dispatch a click event on it to trigger download
-    const a = document.createElement('a');
-    a.download = fileName;
-    a.href = window.URL.createObjectURL(blob);
-    const clickEvent = new MouseEvent('click', {
-        view: window,
-        bubbles: true,
-        cancelable: true,
-    });
-    a.dispatchEvent(clickEvent);
-    a.remove();
-};
-
-const exportToJson = (e: React.MouseEvent<Element, MouseEvent>, data: any) => {
-    e.preventDefault();
-    downloadFile({
-        data: JSON.stringify(data),
-        fileName: 'bh-graph.json',
-        fileType: 'text/json',
-    });
 };
 
 export default GraphButtons;
