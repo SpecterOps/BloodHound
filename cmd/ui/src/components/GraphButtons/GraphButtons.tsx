@@ -25,7 +25,6 @@ import { Children, FC, ReactNode, useState } from 'react';
 import { useSelector } from 'react-redux';
 import GraphButton from 'src/components/GraphButton';
 import { GraphButtonProps } from 'src/components/GraphButton/GraphButton';
-import { GraphState } from 'src/ducks/explore/types';
 import { resetCamera } from 'src/ducks/graph/utils';
 import { RankDirection, layoutDagre } from 'src/hooks/useLayoutDagre/useLayoutDagre';
 import { AppState } from 'src/store';
@@ -45,7 +44,7 @@ const GraphButtons: FC<GraphButtonsProps> = ({ rankDirection, options, nonLayout
     if (isEmpty(options)) options = { standard: false, sequential: false };
     const { standard, sequential } = options;
 
-    const graphState: GraphState = useSelector((state: AppState) => state.explore);
+    const exportableGraphState = useSelector((state: AppState) => state.explore.export);
 
     const sigma = useSigma();
     const graph = sigma.getGraph();
@@ -90,7 +89,9 @@ const GraphButtons: FC<GraphButtonsProps> = ({ rankDirection, options, nonLayout
             </GraphMenu>
 
             <GraphMenu label='Export'>
-                <MenuItem onClick={(e) => exportToJson(e, graphState.export)} disabled={isEmpty(graphState.export)}>
+                <MenuItem
+                    onClick={(e) => exportToJson(e, exportableGraphState)}
+                    disabled={isEmpty(exportableGraphState)}>
                     JSON
                 </MenuItem>
             </GraphMenu>
@@ -106,8 +107,7 @@ const GraphButtons: FC<GraphButtonsProps> = ({ rankDirection, options, nonLayout
     );
 };
 
-const GraphMenu: FC<{ label: string; children: ReactNode }> = (props) => {
-    const { label, children } = props;
+const GraphMenu: FC<{ label: string; children: ReactNode }> = ({ children, label }) => {
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
     const open = Boolean(anchorEl);

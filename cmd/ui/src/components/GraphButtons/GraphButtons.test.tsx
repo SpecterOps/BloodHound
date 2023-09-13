@@ -74,5 +74,44 @@ describe('GraphLayoutButtons', () => {
         expect(menuItem).not.toBeInTheDocument();
     });
 
-    it('export action is disabled if the canvas is empty', async () => {});
+    it('export action is disabled if the canvas is empty', async () => {
+        render(
+            <SigmaContainer>
+                <GraphButtons />
+            </SigmaContainer>
+        );
+
+        const exportButton = screen.getByRole('button', { name: /export/i });
+        expect(exportButton).toBeInTheDocument();
+
+        await user.click(exportButton);
+
+        const jsonMenuItem = screen.getByRole('menuitem', { name: /json/i });
+        expect(jsonMenuItem).toHaveAttribute('aria-disabled');
+    });
+
+    it('export action is enabled if the there is graph data saved in redux', async () => {
+        render(
+            <SigmaContainer>
+                <GraphButtons />
+            </SigmaContainer>,
+            {
+                initialState: {
+                    explore: {
+                        export: {
+                            hello: 'world',
+                        },
+                    },
+                },
+            }
+        );
+
+        const exportButton = screen.getByRole('button', { name: /export/i });
+        expect(exportButton).toBeInTheDocument();
+
+        await user.click(exportButton);
+
+        const jsonMenuItem = screen.getByRole('menuitem', { name: /json/i });
+        expect(jsonMenuItem).not.toHaveAttribute('aria-disabled');
+    });
 });
