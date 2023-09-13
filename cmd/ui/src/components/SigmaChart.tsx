@@ -35,10 +35,7 @@ import { GraphButtonProps } from './GraphButton/GraphButton';
 import GraphEdgeEvents from './GraphEdgeEvents';
 import { Box } from '@mui/material';
 import { GraphNodes } from 'js-client-library';
-import { FlatNode, SearchCurrentNodes } from 'bh-shared-ui';
-import { useAppDispatch } from 'src/store';
-import { setSelectedNode } from 'src/ducks/entityinfo/actions';
-import { GraphNodeTypes } from 'src/ducks/graph/types';
+import { SearchCurrentNodes } from 'bh-shared-ui';
 
 interface SigmaChartProps {
     rankDirection: RankDirection;
@@ -69,7 +66,6 @@ const SigmaChart: FC<Partial<SigmaChartProps>> = ({
     onClickStage,
     edgeReducer,
 }) => {
-    
     return (
         <SigmaContainer
             id='sigma-container'
@@ -106,12 +102,12 @@ const SigmaChart: FC<Partial<SigmaChartProps>> = ({
                 onClickStage={onClickStage}
                 edgeReducer={edgeReducer}
             />
-            <Box position={'absolute'} bottom={16} >
+            <Box position={'absolute'} bottom={16}>
                 {isCurrentSearchOpen && (
                     <SearchCurrentNodes
                         sx={{ marginLeft: 2, padding: 1 }}
                         currentNodes={currentNodes || {}}
-                        onSelect={node => {
+                        onSelect={(node) => {
                             onClickNode?.(node.id);
                             toggleCurrentSearch?.();
                         }}
