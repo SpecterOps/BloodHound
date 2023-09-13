@@ -83,7 +83,7 @@ describe('EdgeObjectInformation', () => {
     test('Error handling for fetching edge information', async () => {
         console.error = vi.fn();
         server.use(
-            rest.get(`/api/v2/graphs/cypher`, (req, res, ctx) => {
+            rest.post(`/api/v2/graphs/cypher`, (req, res, ctx) => {
                 return res(
                     ctx.status(500),
                     ctx.json({
