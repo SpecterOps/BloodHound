@@ -469,7 +469,7 @@
             "name": "Find nodes with no relationships",
             "type": "string_match",
             "details": {
-                "query": "match (b) where not (b)<-[]->() return b",
+                "query": "match (b) where not ((b)<-[]->()) return b",
                 "complexity": 11.0
             }
         },
@@ -854,7 +854,7 @@
             "name": "Find all shortest paths to workstations where Domain Users can RDP",
             "type": "string_match",
             "details": {
-                "query": "match p = allShortestPaths((g:Group {name: 'DOMAIN USERS@DOMAIN.PAIN'})-[:CanRDP]->(c:Computer)) where not c.operatingsystem contains 'Server' return p",
+                "query": "match p = allShortestPaths((g:Group {name: 'DOMAIN USERS@DOMAIN.PAIN'})-[:CanRDP]->(c:Computer)) where not (c.operatingsystem contains 'Server') return p",
                 "complexity": 4.0
             }
         },
@@ -862,7 +862,7 @@
             "name": "Find Workstations where Domain Users can RDP",
             "type": "string_match",
             "details": {
-                "query": "match p = (g:Group {name: 'DOMAIN USERS@DOMAIN.PAIN'})-[:CanRDP]->(c:Computer) where not c.operatingsystem contains 'Server' return p",
+                "query": "match p = (g:Group {name: 'DOMAIN USERS@DOMAIN.PAIN'})-[:CanRDP]->(c:Computer) where not (c.operatingsystem contains 'Server') return p",
                 "complexity": 2.0
             }
         },
@@ -886,7 +886,7 @@
             "name": "Find Domain Admins Logons to non-Domain Controllers",
             "type": "string_match",
             "details": {
-                "query": "match (dc)-[r:MemberOf*0..]->(g:Group) where g.objectid ends with '-516' with collect(dc) as exclude match p = (c:Computer)-[n:HasSession]->(u:User)-[r2:MemberOf*1..]->(g:Group) where g.objectid ends with '-512' and not c in exclude return p",
+                "query": "match (dc)-[r:MemberOf*0..]->(g:Group) where g.objectid ends with '-516' with collect(dc) as exclude match p = (c:Computer)-[n:HasSession]->(u:User)-[r2:MemberOf*1..]->(g:Group) where g.objectid ends with '-512' and not (c in exclude) return p",
                 "complexity": 17.0
             }
         },
@@ -974,7 +974,7 @@
             "name": "Shortest Paths to Unconstrained Delegation Systems",
             "type": "string_match",
             "details": {
-                "query": "match p = shortestPath((n)-[:HasSession|AdminTo|Contains|AZLogicAppContributor*1..]->(m:Computer {unconstraineddelegation: true})) where not n = m return p",
+                "query": "match p = shortestPath((n)-[:HasSession|AdminTo|Contains|AZLogicAppContributor*1..]->(m:Computer {unconstraineddelegation: true})) where not (n = m) return p",
                 "complexity": 9.0
             }
         },
@@ -982,7 +982,7 @@
             "name": "Shortest Paths from Kerberoastable Users",
             "type": "string_match",
             "details": {
-                "query": "match p = shortestPath((n)-[:HasSession|AdminTo|Contains|AZLogicAppContributor*1..]->(m:Computer {unconstraineddelegation: true})) where not n = m return p",
+                "query": "match p = shortestPath((n)-[:HasSession|AdminTo|Contains|AZLogicAppContributor*1..]->(m:Computer {unconstraineddelegation: true})) where not (n = m) return p",
                 "complexity": 9.0
             }
         },
@@ -1030,7 +1030,7 @@
             "name": "Find Shortest Paths to Domain Admins",
             "type": "string_match",
             "details": {
-                "query": "match p = shortestPath((n)-[:HasSession|AdminTo|Contains|AZLogicAppContributor*1..]->(m:Group {name: 'DOMAIN ADMINS@DOMAIN.PAIN'})) where not n = m return p",
+                "query": "match p = shortestPath((n)-[:HasSession|AdminTo|Contains|AZLogicAppContributor*1..]->(m:Group {name: 'DOMAIN ADMINS@DOMAIN.PAIN'})) where not (n = m) return p",
                 "complexity": 9.0
             }
         },

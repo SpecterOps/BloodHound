@@ -497,8 +497,21 @@ func (s CypherEmitter) WriteExpression(output io.Writer, expression model.Expres
 			return err
 		}
 
-		if err := s.WriteExpression(output, typedExpression.Expression); err != nil {
-			return err
+		switch innerExpression := typedExpression.Expression.(type) {
+		case *model.Parenthetical:
+			if err := s.WriteExpression(output, innerExpression); err != nil {
+				return err
+			}
+		default:
+			if _, err := io.WriteString(output, "("); err != nil {
+				return err
+			}
+			if err := s.WriteExpression(output, innerExpression); err != nil {
+				return err
+			}
+			if _, err := io.WriteString(output, ")"); err != nil {
+				return err
+			}
 		}
 
 	case *model.IDInCollection:

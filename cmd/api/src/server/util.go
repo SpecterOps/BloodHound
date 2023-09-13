@@ -1,17 +1,17 @@
 // Copyright 2023 Specter Ops, Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// 
+//
 // SPDX-License-Identifier: Apache-2.0
 
 package server
@@ -21,13 +21,14 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/specterops/bloodhound/src/auth"
-	"github.com/specterops/bloodhound/src/config"
-	"github.com/specterops/bloodhound/src/database"
 	"github.com/specterops/bloodhound/dawgs"
 	_ "github.com/specterops/bloodhound/dawgs/drivers/neo4j"
 	"github.com/specterops/bloodhound/dawgs/graph"
+	"github.com/specterops/bloodhound/dawgs/util/size"
 	"github.com/specterops/bloodhound/log"
+	"github.com/specterops/bloodhound/src/auth"
+	"github.com/specterops/bloodhound/src/config"
+	"github.com/specterops/bloodhound/src/database"
 )
 
 func ensureDirectory(path string) error {
@@ -98,9 +99,14 @@ func ConnectPostgres(cfg config.Configuration) (*database.BloodhoundDB, error) {
 
 // ConnectDatabases initializes connections to PG and connection, and returns errors if any
 func ConnectDatabases(cfg config.Configuration) (*database.BloodhoundDB, graph.Database, error) {
+	dawgsCfg := dawgs.Config{
+		DriverCfg:            cfg.Neo4J.Neo4jConnectionString(),
+		TraversalMemoryLimit: size.Size(cfg.TraversalMemoryLimit) * size.Gibibyte,
+	}
+
 	if db, err := ConnectPostgres(cfg); err != nil {
 		return nil, nil, err
-	} else if graphDatabase, err := dawgs.Open("neo4j", cfg.Neo4J.Neo4jConnectionString()); err != nil {
+	} else if graphDatabase, err := dawgs.Open("neo4j", dawgsCfg); err != nil {
 		return nil, nil, err
 	} else {
 		return db, graphDatabase, nil

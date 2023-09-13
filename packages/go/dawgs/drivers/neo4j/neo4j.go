@@ -18,12 +18,13 @@ package neo4j
 
 import (
 	"fmt"
+	"math"
+	"net/url"
+
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/specterops/bloodhound/dawgs"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/dawgs/util/channels"
-	"math"
-	"net/url"
 )
 
 const (
@@ -32,8 +33,10 @@ const (
 	defaultNeo4jTransactionTimeout = math.MinInt
 )
 
-func newNeo4jDB(connectionURLStr string) (graph.Database, error) {
-	if connectionURL, err := url.Parse(connectionURLStr); err != nil {
+func newNeo4jDB(cfg dawgs.Config) (graph.Database, error) {
+	if connectionURLStr, typeOK := cfg.DriverCfg.(string); !typeOK {
+		return nil, fmt.Errorf("expected string for configuration type but got %T", cfg.DriverCfg)
+	} else if connectionURL, err := url.Parse(connectionURLStr); err != nil {
 		return nil, err
 	} else if connectionURL.Scheme != DriverName {
 		return nil, fmt.Errorf("expected connection URL scheme %s for Neo4J but got %s", DriverName, connectionURL.Scheme)
@@ -51,17 +54,14 @@ func newNeo4jDB(connectionURLStr string) (graph.Database, error) {
 				limiter:                   channels.NewConcurrencyLimiter(DefaultConcurrentConnections),
 				writeFlushSize:            DefaultWriteFlushSize,
 				batchWriteSize:            DefaultBatchWriteSize,
+				traversalMemoryLimit:      cfg.TraversalMemoryLimit,
 			}, nil
 		}
 	}
 }
 
 func init() {
-	dawgs.Register(DriverName, func(cfg any) (graph.Database, error) {
-		if connectionURLStr, typeOK := cfg.(string); !typeOK {
-			return nil, fmt.Errorf("expected string for configuration type but got %T", cfg)
-		} else {
-			return newNeo4jDB(connectionURLStr)
-		}
+	dawgs.Register(DriverName, func(cfg dawgs.Config) (graph.Database, error) {
+		return newNeo4jDB(cfg)
 	})
 }

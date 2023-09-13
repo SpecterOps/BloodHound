@@ -66,7 +66,7 @@ describe('Enable2FADialog', () => {
                 onClose={testOnClose}
                 onSave={testOnSave}
                 secret=''
-                setSecret={testSetSecret}
+                onSecretChange={testSetSecret}
                 contentText=''
             />
         );

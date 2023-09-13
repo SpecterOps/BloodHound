@@ -212,10 +212,10 @@ const GraphView: FC = () => {
         {
             displayText: 'Search Current Results',
             onClick: toggleCurrentSearch,
-            disabled: currentSearchOpen
-        }
+            disabled: currentSearchOpen,
+        },
     ];
-    
+
     return (
         <div style={{ position: 'relative', height: '100%', width: '100%', overflow: 'hidden' }} data-testid='explore'>
             <SigmaChart
