@@ -159,7 +159,7 @@ const exportToJson = (e: React.MouseEvent<Element, MouseEvent>, data: any) => {
     e.preventDefault();
     downloadFile({
         data: JSON.stringify(data),
-        fileName: 'graph.json',
+        fileName: 'bh-graph.json',
         fileType: 'text/json',
     });
 };
