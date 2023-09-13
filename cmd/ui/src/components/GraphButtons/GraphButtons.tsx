@@ -22,10 +22,13 @@ import { random } from 'graphology-layout';
 import forceAtlas2 from 'graphology-layout-forceatlas2';
 import isEmpty from 'lodash/isEmpty';
 import { Children, FC, ReactNode, useState } from 'react';
+import { useSelector } from 'react-redux';
 import GraphButton from 'src/components/GraphButton';
 import { GraphButtonProps } from 'src/components/GraphButton/GraphButton';
+import { GraphState } from 'src/ducks/explore/types';
 import { resetCamera } from 'src/ducks/graph/utils';
 import { RankDirection, layoutDagre } from 'src/hooks/useLayoutDagre/useLayoutDagre';
+import { AppState } from 'src/store';
 
 interface GraphButtonsProps {
     rankDirection?: RankDirection;
@@ -41,6 +44,8 @@ export type GraphButtonOptions = {
 const GraphButtons: FC<GraphButtonsProps> = ({ rankDirection, options, nonLayoutButtons }) => {
     if (isEmpty(options)) options = { standard: false, sequential: false };
     const { standard, sequential } = options;
+
+    const graphState: GraphState = useSelector((state: AppState) => state.explore);
 
     const sigma = useSigma();
     const graph = sigma.getGraph();
@@ -79,14 +84,18 @@ const GraphButtons: FC<GraphButtonsProps> = ({ rankDirection, options, nonLayout
         <Box position={'absolute'} bottom={16} display={'flex'}>
             <GraphButton onClick={reset} displayText={<FontAwesomeIcon icon={faCropAlt} />} />
 
-            <MenuButton label='Layout'>
+            <GraphMenu label='Layout'>
                 {sequential && <MenuItem onClick={runSequentialLayout}>Sequential</MenuItem>}
                 {standard && <MenuItem onClick={runStandardLayout}>Standard</MenuItem>}
-            </MenuButton>
+            </GraphMenu>
 
-            <MenuButton label='Export'>
-                <MenuItem onClick={() => {}}>JSON</MenuItem>
-            </MenuButton>
+            <GraphMenu label='Export'>
+                <MenuItem
+                    onClick={(e) => exportToJson(e, graphState.chartProps)}
+                    disabled={isEmpty(graphState.chartProps)}>
+                    JSON
+                </MenuItem>
+            </GraphMenu>
 
             {nonLayoutButtons?.length && (
                 <>
@@ -99,7 +108,7 @@ const GraphButtons: FC<GraphButtonsProps> = ({ rankDirection, options, nonLayout
     );
 };
 
-const MenuButton: FC<{ label: string; children: ReactNode }> = (props) => {
+const GraphMenu: FC<{ label: string; children: ReactNode }> = (props) => {
     const { label, children } = props;
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
@@ -131,6 +140,30 @@ const MenuButton: FC<{ label: string; children: ReactNode }> = (props) => {
             </Menu>
         </>
     );
+};
+
+const downloadFile = ({ data, fileName, fileType }: { data: any; fileName: string; fileType: string }) => {
+    const blob = new Blob([data], { type: fileType });
+    // create an anchor tag and dispatch a click event on it to trigger download
+    const a = document.createElement('a');
+    a.download = fileName;
+    a.href = window.URL.createObjectURL(blob);
+    const clickEvent = new MouseEvent('click', {
+        view: window,
+        bubbles: true,
+        cancelable: true,
+    });
+    a.dispatchEvent(clickEvent);
+    a.remove();
+};
+
+const exportToJson = (e: React.MouseEvent<Element, MouseEvent>, data: any) => {
+    e.preventDefault();
+    downloadFile({
+        data: JSON.stringify(data),
+        fileName: 'graph.json',
+        fileType: 'text/json',
+    });
 };
 
 export default GraphButtons;
