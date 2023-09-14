@@ -67,7 +67,11 @@ const EdgeObjectInformation: FC<{ selectedEdge: NonNullable<SelectedEdge> }> = (
     } else {
         formattedObjectFields = [
             ...formattedObjectFields,
-            ...formatObjectInfoFields(cypherResponse.edges[0]?.properties || {}),
+            ...formatObjectInfoFields(
+                { ...cypherResponse.edges[0]?.properties, lastseen: selectedEdge.data.lastseen } || {
+                    lastseen: selectedEdge.data.lastseen,
+                }
+            ),
         ];
     }
 
