@@ -14,9 +14,9 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { faFolderOpen, faPlay, faQuestion, faSave } from '@fortawesome/free-solid-svg-icons';
+import { faFolderOpen, faPlay, faQuestion } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Box, Button, Collapse, TextField } from '@mui/material';
+import { Box, Button, Collapse } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
 import '@neo4j-cypher/codemirror/css/cypher-codemirror.css';
 import { CypherEditor } from '@neo4j-cypher/react-codemirror';
@@ -35,7 +35,7 @@ import { setCypherQueryTerm, startCypherSearch } from 'src/ducks/searchbar/actio
 import { CommonKindProperties } from 'src/graphSchema';
 import { AppState } from 'src/store';
 import CommonSearches from './CommonSearches';
-import { addSnackbar } from 'src/ducks/global/actions';
+import CustomQueryInput from './CustomQueryInput';
 
 const useStyles = makeStyles((theme) => ({
     button: {
@@ -106,10 +106,6 @@ const CypherInput = () => {
 
     const [showCommonQueries, setShowCommonQueries] = useState(false);
     const [showEgg, setShowEgg] = useState(false);
-    const [showCustomQueryInput, setShowCustomQueryInput] = useState(false);
-
-    const [customQueryName, setCustomQueryName] = useState('');
-    const [saveDisabled, setSaveDisabled] = useState(false);
 
     const handleCommonSearchesListItemClick = (query: string) => {
         dispatch(setCypherQueryTerm(query));
@@ -128,19 +124,6 @@ const CypherInput = () => {
         }
     };
 
-    const handleCustomQueryOnSave = () => {
-        setShowCustomQueryInput((c) => !c);
-
-        if (showCustomQueryInput) {
-            setCustomQueryName(''); // reset input
-
-            // dispatch a save to the server
-            dispatch(addSnackbar(`${customQueryName} saved!`, 'customQuerySaved'));
-
-            // dispatch a local mutation to the custom searches tab?
-        }
-    };
-
     // work-around handler for user clicking within code-mirror <CypherEditor />
     const setFocusOnCypherEditor = () => {
         const input = document.querySelector('.cm-content') as HTMLElement;
@@ -148,19 +131,6 @@ const CypherInput = () => {
             input.focus();
         }
     };
-
-    useEffect(() => {
-        const disableSaveButtonOnEmptyInput = () => {
-            if (showCustomQueryInput) {
-                if (!customQueryName) {
-                    setSaveDisabled(true);
-                } else {
-                    setSaveDisabled(false);
-                }
-            }
-        };
-        disableSaveButtonOnEmptyInput();
-    }, [showCustomQueryInput, customQueryName, setSaveDisabled]);
 
     return (
         <>
@@ -197,39 +167,7 @@ const CypherInput = () => {
             </Box>
 
             <Box display={'flex'} gap={1} mt={1} justifyContent={'end'}>
-                {showCustomQueryInput && (
-                    <TextField
-                        label='Search Name'
-                        variant='outlined'
-                        size='small'
-                        sx={{ fontSize: '.875em' }}
-                        InputLabelProps={{
-                            style: {
-                                height: '35px',
-                                top: '-3px',
-                                // ...(!focused && { top: `${labelOffset}px` }),
-                            },
-                        }}
-                        inputProps={{
-                            style: {
-                                height: '35px',
-                                padding: '0px 3px',
-                            },
-                        }}
-                        value={customQueryName}
-                        onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
-                            setCustomQueryName(event.target.value);
-                        }}
-                    />
-                )}
-
-                <Button
-                    className={`${classes.button} ${classes.iconButton}`}
-                    onClick={handleCustomQueryOnSave}
-                    disabled={saveDisabled}
-                    variant='outlined'>
-                    <FontAwesomeIcon icon={faSave} />
-                </Button>
+                <CustomQueryInput />
 
                 <a
                     href='https://support.bloodhoundenterprise.io/hc/en-us/articles/16721164740251'
@@ -256,6 +194,7 @@ const CypherInput = () => {
         </>
     );
 };
+
 /*What is graphed will never die*/
 const EasterEgg = () => {
     return (
