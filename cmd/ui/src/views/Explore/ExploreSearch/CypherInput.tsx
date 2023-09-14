@@ -14,9 +14,9 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { faFolderOpen, faPlay, faQuestion } from '@fortawesome/free-solid-svg-icons';
+import { faFolderOpen, faPlay, faQuestion, faSave } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Box, Button, Collapse } from '@mui/material';
+import { Alert, Box, Button, Collapse, TextField } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
 import '@neo4j-cypher/codemirror/css/cypher-codemirror.css';
 import { CypherEditor } from '@neo4j-cypher/react-codemirror';
@@ -35,6 +35,7 @@ import { setCypherQueryTerm, startCypherSearch } from 'src/ducks/searchbar/actio
 import { CommonKindProperties } from 'src/graphSchema';
 import { AppState } from 'src/store';
 import CommonSearches from './CommonSearches';
+import { addSnackbar } from 'src/ducks/global/actions';
 
 const useStyles = makeStyles((theme) => ({
     button: {
@@ -44,9 +45,8 @@ const useStyles = makeStyles((theme) => ({
         borderColor: 'rgba(0,0,0,0.23)',
         color: 'black',
     },
-    textarea: {
-        resize: 'vertical',
-        fontSize: '.8rem',
+    iconButton: {
+        padding: 0,
     },
     cypherEditor: {
         display: 'flex',
@@ -106,8 +106,12 @@ const CypherInput = () => {
 
     const [showCommonQueries, setShowCommonQueries] = useState(false);
     const [showEgg, setShowEgg] = useState(false);
+    const [showCustomQueryInput, setShowCustomQueryInput] = useState(false);
 
-    const onClickCommonSearchesListItem = (query: string) => {
+    const [customQueryName, setCustomQueryName] = useState('');
+    const [saveDisabled, setSaveDisabled] = useState(false);
+
+    const handleCommonSearchesListItemClick = (query: string) => {
         dispatch(setCypherQueryTerm(query));
         dispatch(startCypherQuery(query));
     };
@@ -124,6 +128,15 @@ const CypherInput = () => {
         }
     };
 
+    const handleCustomQueryOnSave = () => {
+        setShowCustomQueryInput((c) => !c);
+        // saving
+        if (showCustomQueryInput) {
+            dispatch(addSnackbar(`${customQueryName} saved!`, 'customQuerySaved'));
+            setCustomQueryName(''); // reset input
+        }
+    };
+
     // work-around handler for user clicking within code-mirror <CypherEditor />
     const setFocusOnCypherEditor = () => {
         const input = document.querySelector('.cm-content') as HTMLElement;
@@ -132,12 +145,24 @@ const CypherInput = () => {
         }
     };
 
+    useEffect(() => {
+        const disableSaveButtonOnEmptyInput = () => {
+            if (showCustomQueryInput) {
+                if (!customQueryName) {
+                    setSaveDisabled(true);
+                } else {
+                    setSaveDisabled(false);
+                }
+            }
+        };
+        disableSaveButtonOnEmptyInput();
+    }, [showCustomQueryInput, customQueryName, setSaveDisabled]);
+
     return (
         <>
             <Box display={'flex'} gap={1}>
                 <Button
-                    className={classes.button}
-                    sx={{ padding: 0 }}
+                    className={`${classes.button} ${classes.iconButton}`}
                     onClick={() => {
                         setShowCommonQueries((v) => !v);
                     }}
@@ -168,11 +193,45 @@ const CypherInput = () => {
             </Box>
 
             <Box display={'flex'} gap={1} mt={1} justifyContent={'end'}>
+                {showCustomQueryInput && (
+                    <TextField
+                        label='Search Name'
+                        variant='outlined'
+                        size='small'
+                        sx={{ fontSize: '.875em' }}
+                        InputLabelProps={{
+                            style: {
+                                height: '35px',
+                                top: '-3px',
+                                // ...(!focused && { top: `${labelOffset}px` }),
+                            },
+                        }}
+                        inputProps={{
+                            style: {
+                                height: '35px',
+                                padding: '0px 3px',
+                            },
+                        }}
+                        value={customQueryName}
+                        onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
+                            setCustomQueryName(event.target.value);
+                        }}
+                    />
+                )}
+
+                <Button
+                    className={`${classes.button} ${classes.iconButton}`}
+                    onClick={handleCustomQueryOnSave}
+                    disabled={saveDisabled}
+                    variant='outlined'>
+                    <FontAwesomeIcon icon={faSave} />
+                </Button>
+
                 <a
                     href='https://support.bloodhoundenterprise.io/hc/en-us/articles/16721164740251'
                     target='_blank'
                     rel='noreferrer'>
-                    <Button variant='outlined' className={classes.button} sx={{ padding: 0 }}>
+                    <Button variant='outlined' className={`${classes.button} ${classes.iconButton}`}>
                         <FontAwesomeIcon icon={faQuestion} />
                     </Button>
                 </a>
@@ -186,7 +245,7 @@ const CypherInput = () => {
             </Box>
 
             <Collapse in={showCommonQueries}>
-                <CommonSearches onClickListItem={onClickCommonSearchesListItem} />
+                <CommonSearches onClickListItem={handleCommonSearchesListItemClick} />
             </Collapse>
 
             {showEgg && <EasterEgg />}
