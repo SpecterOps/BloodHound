@@ -669,6 +669,7 @@ export enum CommonKindProperties {
     PasswordLastSet = 'pwdlastset',
     Title = 'title',
     Email = 'email',
+    IsInherited = 'isinherited',
 }
 export function CommonKindPropertiesToDisplay(value: CommonKindProperties): string | undefined {
     switch (value) {
@@ -702,6 +703,8 @@ export function CommonKindPropertiesToDisplay(value: CommonKindProperties): stri
             return 'Title';
         case CommonKindProperties.Email:
             return 'Email';
+        case CommonKindProperties.IsInherited:
+            return 'Is Inherited';
         default:
             return undefined;
     }
