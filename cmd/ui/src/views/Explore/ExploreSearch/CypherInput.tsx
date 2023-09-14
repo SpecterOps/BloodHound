@@ -130,10 +130,14 @@ const CypherInput = () => {
 
     const handleCustomQueryOnSave = () => {
         setShowCustomQueryInput((c) => !c);
-        // saving
+
         if (showCustomQueryInput) {
-            dispatch(addSnackbar(`${customQueryName} saved!`, 'customQuerySaved'));
             setCustomQueryName(''); // reset input
+
+            // dispatch a save to the server
+            dispatch(addSnackbar(`${customQueryName} saved!`, 'customQuerySaved'));
+
+            // dispatch a local mutation to the custom searches tab?
         }
     };
 
