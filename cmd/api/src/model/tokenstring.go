@@ -28,9 +28,10 @@ func generateTokenValue(prng io.Reader) (string, error) {
 }
 
 type TokenString struct {
-	Prefix string
-	value  string
-	cksum  uint32
+	Prefix    string
+	value     string
+	cksum     uint32
+	is_legacy bool
 }
 
 func GenerateTokenString(prefix string) (TokenString, error) {
@@ -73,9 +74,10 @@ func (s TokenString) DigestableValue() ([]byte, error) {
 func (s TokenString) String() string {
 	if s.value == "" {
 		return ""
-	} else {
-		return fmt.Sprintf("%s_%s%s", s.Prefix, s.value, formatChecksum(s.cksum))
+	} else if s.is_legacy {
+		return s.value
 	}
+	return fmt.Sprintf("%s_%s%s", s.Prefix, s.value, formatChecksum(s.cksum))
 }
 
 func (s TokenString) MarshalText() ([]byte, error) {
@@ -145,6 +147,11 @@ var ErrTokenStringFormat = errors.New("invalid token format")
 var ErrTokenStringChecksum = errors.New("token checksum is invalid")
 
 func ParseTokenString(src string) (TokenString, error) {
+	// if legacy style token
+	if len(src) == 64 && !strings.Contains(src, "_") && isValidBase64(src) {
+		return TokenString{value: src, is_legacy: true}, nil
+	}
+
 	// min length is prefix (1) + value (64) + cksum (6)
 	if len(src) < 1+64+6 {
 		return TokenString{}, fmt.Errorf("%w: token string is too short", ErrTokenStringFormat)

@@ -428,17 +428,17 @@ func TestParseTokenString_valid(t *testing.T) {
 		{
 			"CKSUM_00000000000000000000000000000000000000000000000000000000002fX6FA000000",
 			TokenString{
-				"CKSUM",
-				"00000000000000000000000000000000000000000000000000000000002fX6FA",
-				0,
+				Prefix: "CKSUM",
+				value:  "00000000000000000000000000000000000000000000000000000000002fX6FA",
+				cksum:  0,
 			},
 		},
 		{
 			"CKSUM_0000000000000000000000000000000000000000000000000000000000108dEz4GFfc3",
 			TokenString{
-				"CKSUM",
-				"0000000000000000000000000000000000000000000000000000000000108dEz",
-				math.MaxUint32,
+				Prefix: "CKSUM",
+				value:  "0000000000000000000000000000000000000000000000000000000000108dEz",
+				cksum:  math.MaxUint32,
 			},
 		},
 		{
@@ -466,6 +466,13 @@ func TestParseTokenString_valid(t *testing.T) {
 	}
 }
 
+func TestParseTokenString_legacy(t *testing.T) {
+	in := strings.Repeat("X", 64)
+	tok, err := ParseTokenString(in)
+	require.Nil(t, err)
+	require.Equal(t, TokenString{value: in, is_legacy: true}, tok)
+}
+
 func TestParseTokenString_invalid(t *testing.T) {
 	for _, tc := range []struct {
 		n      string
@@ -478,6 +485,18 @@ func TestParseTokenString_invalid(t *testing.T) {
 			"",
 			ErrTokenStringFormat,
 			"",
+		},
+		{
+			"legacy with underscore",
+			"X_" + strings.Repeat("0", 62),
+			ErrTokenStringFormat,
+			"too short",
+		},
+		{
+			"legacy invalid base64",
+			strings.Repeat("X", 61) + "===",
+			ErrTokenStringFormat,
+			"too short",
 		},
 		{
 			"short",
