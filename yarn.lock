@@ -4730,7 +4730,7 @@ __metadata:
     graphology-layout-forceatlas2: ^0.10.1
     graphology-types: ^0.24.7
     history: 5.3.0
-    immer: ^7.0.15
+    immer: ^10.0.2
     jest-webgl-canvas-mock: ^2.5.0
     js-client-library: "workspace:*"
     js-cookie: ^3.0.1
@@ -7221,10 +7221,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"immer@npm:^7.0.15":
-  version: 7.0.15
-  resolution: "immer@npm:7.0.15"
-  checksum: d79deb76f8bce71fff95bfbfa6a614bf55dd1f500eea189d3dcc587d94ed911b048e875c810b4e1214b3a6a7c8db148628e0c62e6fd8a649e84002cba0053e34
+"immer@npm:^10.0.2":
+  version: 10.0.2
+  resolution: "immer@npm:10.0.2"
+  checksum: 525a3b14210d02ae420c3b9f6ca14f7e9bcf625611d1356e773e7739f14c7c8de50dac442e6c7de3a6e24a782f7b792b6b8666bc0b3f00269d21a95f8f68ca84
   languageName: node
   linkType: hard
 
