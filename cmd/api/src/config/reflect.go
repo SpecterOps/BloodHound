@@ -253,8 +253,9 @@ func SetValue(target any, path, value string) error {
 		cursor    = indirectOf(target)
 	)
 
-	for idx, nextPathPart := range pathParts {
+	for idx := 0; idx < len(pathParts); idx++ {
 		var (
+			nextPathPart = pathParts[idx]
 			cursorType   = cursor.Type()
 			taggedFields = parseTaggedFields(cursorType)
 		)
@@ -269,18 +270,23 @@ func SetValue(target any, path, value string) error {
 				break
 			}
 
-			if idx+1 < len(pathParts) {
-				remainingFullPath := strings.Join(append([]string{nextPathPart}, pathParts[idx+1:]...), "_")
+			lookahead := idx + 1
+
+			for lookahead < len(pathParts) {
+				remainingFullPath := strings.Join(append([]string{nextPathPart}, pathParts[lookahead]), "_")
 
 				if taggedFieldName == remainingFullPath {
 					cursor = cursor.Field(taggedField.Field)
-
-					if !cursor.CanAddr() {
-						return fmt.Errorf("type %s is not addressable from parent type %T", cursor.Type().Name(), target)
-					}
-
-					return setRawValue(cursor.Addr().Interface(), value)
+					found = true
+					idx = lookahead
+					break
 				}
+
+				lookahead++
+			}
+
+			if found {
+				break
 			}
 		}
 
