@@ -103,5 +103,11 @@ export { default as FileUploadDialog } from './FileUploadDialog';
 export * from './FinishedIngestLog';
 export { default as FinishedIngestLog } from './FinishedIngestLog';
 
+export * from './SearchCurrentNodes';
+export { default as SearchCurrentNodes } from './SearchCurrentNodes';
+
+export * from './SearchResultItem';
+export { default as SearchResultItem } from './SearchResultItem';
+
 export * from './UserTokenManagementDialog';
 export { default as UserTokenManagementDialog } from './UserTokenManagementDialog';

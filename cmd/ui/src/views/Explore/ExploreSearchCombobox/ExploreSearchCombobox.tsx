@@ -17,7 +17,7 @@
 import { List, ListItem, ListItemText, Paper, TextField, useTheme } from '@mui/material';
 import { useCombobox } from 'downshift';
 import { useState } from 'react';
-import { HighlightedText, NodeIcon } from 'bh-shared-ui';
+import {  NodeIcon, SearchResultItem } from 'bh-shared-ui';
 import { useDebouncedValue } from 'src/hooks/useDebouncedValue';
 import { getEmptyResultsText, getKeywordAndTypeValues, SearchResult, useSearch } from 'src/hooks/useSearch';
 
@@ -120,42 +120,18 @@ const ExploreSearchCombobox: React.FC<{
                         ) : (
                             data!.map((item: SearchResult, index: any) => {
                                 return (
-                                    <ListItem
-                                        button
-                                        dense
-                                        selected={highlightedIndex === index}
-                                        key={item.objectid}
-                                        data-testid='explore_search_result-list-item'
-                                        {...getItemProps({ item, index })}>
-                                        <ListItemText
-                                            primary={
-                                                <div
-                                                    style={{
-                                                        width: '100%',
-                                                        display: 'flex',
-                                                        alignItems: 'center',
-                                                    }}>
-                                                    <NodeIcon nodeType={item.type} />
-                                                    <div
-                                                        style={{
-                                                            flexGrow: 1,
-                                                            marginRight: '1em',
-                                                        }}>
-                                                        <HighlightedText
-                                                            text={item.name || item.objectid}
-                                                            search={keyword}
-                                                        />
-                                                    </div>
-                                                </div>
-                                            }
-                                            primaryTypographyProps={{
-                                                style: {
-                                                    whiteSpace: 'nowrap',
-                                                    verticalAlign: 'center',
-                                                },
-                                            }}
-                                        />
-                                    </ListItem>
+                                    <SearchResultItem
+                                        item={{
+                                            label: item.name,
+                                            objectId: item.objectid,
+                                            kind: item.type
+                                        }}
+                                        index={index}
+                                        key={index}
+                                        highlightedIndex={highlightedIndex}
+                                        keyword={keyword}
+                                        getItemProps={getItemProps}
+                                    />
                                 );
                             })
                         )}
