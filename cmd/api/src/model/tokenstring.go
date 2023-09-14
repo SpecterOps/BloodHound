@@ -121,6 +121,26 @@ func isValidBase62(val string) bool {
 	return true
 }
 
+func isValidBase64(val string) bool {
+	vlen := len(val)
+	if vlen > 0 {
+		val = strings.TrimRight(val, "=")
+		if val == "" || vlen-len(val) > 2 {
+			return false
+		}
+	}
+	for _, v := range []byte(val) {
+		if (v >= '0' && v <= '9') || (v >= 'A' && v <= 'Z') || (v >= 'a' && v <= 'z') {
+			continue
+		}
+		if v == '+' || v == '/' {
+			continue
+		}
+		return false
+	}
+	return true
+}
+
 var ErrTokenStringFormat = errors.New("invalid token format")
 var ErrTokenStringChecksum = errors.New("token checksum is invalid")
 
