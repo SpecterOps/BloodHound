@@ -262,9 +262,8 @@ func SetValue(target any, path, value string) error {
 		found := false
 		for _, taggedField := range taggedFields {
 			taggedFieldName := taggedField.Tag.Name()
-			taggedFieldCompName := strings.Replace(taggedFieldName, "_", "", -1)
 
-			if taggedFieldCompName == nextPathPart {
+			if taggedFieldName == nextPathPart {
 				cursor = cursor.Field(taggedField.Field)
 				found = true
 				break
@@ -273,7 +272,7 @@ func SetValue(target any, path, value string) error {
 			if idx+1 < len(pathParts) {
 				remainingFullPath := strings.Join(append([]string{nextPathPart}, pathParts[idx+1:]...), "_")
 
-				if taggedFieldCompName == remainingFullPath {
+				if taggedFieldName == remainingFullPath {
 					cursor = cursor.Field(taggedField.Field)
 
 					if !cursor.CanAddr() {
