@@ -248,6 +248,56 @@ func TestTokenString_MarshalText(t *testing.T) {
 	}
 }
 
+func TestTokenString_LoadFromString(t *testing.T) {
+	for _, tc := range []struct {
+		n   string
+		src string
+		exp TokenString
+	}{
+		{
+			"blank",
+			"",
+			TokenString{},
+		},
+		{
+			"valid",
+			"TOK1_0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef2aJnaH",
+			TokenString{
+				Prefix: "TOK1",
+				value:  "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+				cksum:  1990842859,
+			},
+		},
+	} {
+		t.Run(tc.n, func(t *testing.T) {
+			ts := new(TokenString)
+			err := ts.loadFromString(tc.src)
+			require.NoError(t, err)
+			require.Equal(t, tc.exp, *ts)
+		})
+	}
+
+	for _, tc := range []struct {
+		n   string
+		src string
+	}{
+		{
+			"invalid pattern",
+			"1234567890",
+		},
+		{
+			"invalid values",
+			"TOK1_0000000000000000000000000000000000000000000000000000000000000000123456",
+		},
+	} {
+		t.Run(tc.n, func(t *testing.T) {
+			ts := new(TokenString)
+			err := ts.loadFromString(tc.src)
+			require.Error(t, err)
+		})
+	}
+}
+
 func TestTokenString_Value(t *testing.T) {
 	for _, tc := range []struct {
 		n   string
@@ -285,59 +335,22 @@ func TestTokenString_Value(t *testing.T) {
 }
 
 func TestTokenString_Scan(t *testing.T) {
-	for _, tc := range []struct {
-		n   string
-		src string
-		exp TokenString
-	}{
-		{
-			"blank",
-			"",
-			TokenString{},
-		},
-		{
-			"valid",
-			"TOK1_0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef2aJnaH",
-			TokenString{
-				Prefix: "TOK1",
-				value:  "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
-				cksum:  1990842859,
-			},
-		},
-	} {
-		t.Run(tc.n, func(t *testing.T) {
-			ts := new(TokenString)
-			err := ts.Scan(tc.src)
-			require.NoError(t, err)
-			require.Equal(t, tc.exp, *ts)
-		})
-	}
+	t.Run("valid", func(t *testing.T) {
+		ts := new(TokenString)
+		err := ts.Scan("TOK1_0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef2aJnaH")
+		require.NoError(t, err)
+		require.Equal(t, TokenString{
+			Prefix: "TOK1",
+			value:  "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+			cksum:  1990842859,
+		}, *ts)
+	})
 
 	t.Run("invalid type", func(t *testing.T) {
-		var ts *TokenString
+		ts := new(TokenString)
 		err := ts.Scan([]byte{})
 		require.ErrorContains(t, err, "expected value of type string")
 	})
-
-	for _, tc := range []struct {
-		n   string
-		src string
-	}{
-		{
-			"invalid pattern",
-			"1234567890",
-		},
-		{
-			"invalid values",
-			"TOK1_0000000000000000000000000000000000000000000000000000000000000000123456",
-		},
-	} {
-		t.Run(tc.n, func(t *testing.T) {
-			var ts *TokenString
-			err := ts.Scan(tc.src)
-			require.Error(t, err)
-		})
-	}
 }
 
 func TestIsValidBase62(t *testing.T) {

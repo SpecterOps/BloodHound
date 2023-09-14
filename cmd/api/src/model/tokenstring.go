@@ -82,18 +82,21 @@ func (s TokenString) MarshalText() ([]byte, error) {
 	return []byte(s.String()), nil
 }
 
-func (s *TokenString) UnmarshalText(text []byte) error {
-	src_str := string(text)
-	if src_str == "" {
+func (s *TokenString) loadFromString(src string) error {
+	if src == "" {
 		*s = TokenString{}
 		return nil
 	}
-	ts, err := ParseTokenString(src_str)
+	ts, err := ParseTokenString(src)
 	if err != nil {
 		return fmt.Errorf("unable to parse value: %w", err)
 	}
 	*s = ts
 	return nil
+}
+
+func (s *TokenString) UnmarshalText(text []byte) error {
+	return s.loadFromString(string(text))
 }
 
 func (s TokenString) Value() (driver.Value, error) {
@@ -105,16 +108,7 @@ func (s *TokenString) Scan(src any) error {
 	if !ok {
 		return errors.New("expected value of type string")
 	}
-	if src_str == "" {
-		*s = TokenString{}
-		return nil
-	}
-	ts, err := ParseTokenString(src_str)
-	if err != nil {
-		return fmt.Errorf("unable to parse value: %w", err)
-	}
-	*s = ts
-	return nil
+	return s.loadFromString(src_str)
 }
 
 func isValidBase62(val string) bool {
