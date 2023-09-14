@@ -100,7 +100,7 @@ const CommonSearches = ({ onClickListItem }: CommonSearchesProps) => {
                     maxHeight: 300,
                     '& ul': { padding: 0 },
                 }}>
-                {activeTab === CUSTOM_TAB ? (
+                {activeTab === CUSTOM_TAB ? ( // list of user-saved queries
                     <Box>
                         <ListSubheader sx={{ fontWeight: 'bold' }}>User Saved Searches: </ListSubheader>
                         {userSavedQueries.map((query) => {
@@ -121,6 +121,7 @@ const CommonSearches = ({ onClickListItem }: CommonSearchesProps) => {
                         })}
                     </Box>
                 ) : (
+                    // lsit of pre-built queries
                     prebuiltSearchList
                         .filter(({ category }) => category === activeTab)
                         .map(({ category, subheader, queries }) => {
