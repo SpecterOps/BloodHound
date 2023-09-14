@@ -113,9 +113,10 @@ func (s *TokenString) Scan(src any) error {
 
 func isValidBase62(val string) bool {
 	for _, v := range []byte(val) {
-		if v < '0' || (v > '9' && v < 'A') || (v > 'Z' && v < 'a') || v > 'z' {
-			return false
+		if (v >= '0' && v <= '9') || (v >= 'A' && v <= 'Z') || (v >= 'a' && v <= 'z') {
+			continue
 		}
+		return false
 	}
 	return true
 }
