@@ -16,7 +16,7 @@
 
 import { faFolderOpen, faPlay, faQuestion, faSave } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Alert, Box, Button, Collapse, TextField } from '@mui/material';
+import { Box, Button, Collapse, TextField } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
 import '@neo4j-cypher/codemirror/css/cypher-codemirror.css';
 import { CypherEditor } from '@neo4j-cypher/react-codemirror';

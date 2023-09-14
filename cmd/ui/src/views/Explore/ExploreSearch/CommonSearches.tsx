@@ -14,9 +14,22 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { List, ListSubheader, ListItem, ListItemText, ListItemButton, Box, Tabs, Tab, Typography } from '@mui/material';
+import {
+    List,
+    ListSubheader,
+    ListItem,
+    ListItemText,
+    ListItemButton,
+    Box,
+    Tabs,
+    Tab,
+    Typography,
+    IconButton,
+} from '@mui/material';
 import { useState } from 'react';
 import { CommonSearches as prebuiltSearchList } from 'bh-shared-ui';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faTrash } from '@fortawesome/free-solid-svg-icons';
 
 interface CommonSearchesProps {
     onClickListItem: (query: string) => void;
@@ -24,6 +37,7 @@ interface CommonSearchesProps {
 
 const ACTIVE_DIRECTORY_TAB = 'Active Directory';
 const AZURE_TAB = 'Azure';
+const CUSTOM_TAB = 'Custom Searches';
 
 const CommonSearches = ({ onClickListItem }: CommonSearchesProps) => {
     const [activeTab, setActiveTab] = useState(ACTIVE_DIRECTORY_TAB);
@@ -65,6 +79,16 @@ const CommonSearches = ({ onClickListItem }: CommonSearchesProps) => {
                         color: 'black',
                     }}
                 />
+                <Tab
+                    label={CUSTOM_TAB}
+                    key={CUSTOM_TAB}
+                    value={CUSTOM_TAB}
+                    sx={{
+                        height: '35px',
+                        minHeight: '35px',
+                        color: 'black',
+                    }}
+                />
             </Tabs>
 
             <List
@@ -76,27 +100,61 @@ const CommonSearches = ({ onClickListItem }: CommonSearchesProps) => {
                     maxHeight: 300,
                     '& ul': { padding: 0 },
                 }}>
-                {prebuiltSearchList
-                    .filter(({ category }) => category === activeTab)
-                    .map(({ category, subheader, queries }) => {
-                        return (
-                            <Box key={`${category}-${subheader}`}>
-                                <ListSubheader sx={{ fontWeight: 'bold' }}>{subheader}: </ListSubheader>
-                                {queries.map((query) => {
-                                    return (
-                                        <ListItem disablePadding key={query.description}>
-                                            <ListItemButton onClick={() => onClickListItem(query.cypher)}>
-                                                <ListItemText primary={query.description} />
-                                            </ListItemButton>
-                                        </ListItem>
-                                    );
-                                })}
-                            </Box>
-                        );
-                    })}
+                {activeTab === CUSTOM_TAB ? (
+                    <Box>
+                        <ListSubheader sx={{ fontWeight: 'bold' }}>User Saved Searches: </ListSubheader>
+                        {userSavedQueries.map((query) => {
+                            return (
+                                <ListItem
+                                    disablePadding
+                                    key={query.query}
+                                    secondaryAction={
+                                        <IconButton size='small'>
+                                            <FontAwesomeIcon icon={faTrash} />
+                                        </IconButton>
+                                    }>
+                                    <ListItemButton onClick={() => onClickListItem(query.query)}>
+                                        <ListItemText primary={query.name} />
+                                    </ListItemButton>
+                                </ListItem>
+                            );
+                        })}
+                    </Box>
+                ) : (
+                    prebuiltSearchList
+                        .filter(({ category }) => category === activeTab)
+                        .map(({ category, subheader, queries }) => {
+                            return (
+                                <Box key={`${category}-${subheader}`}>
+                                    <ListSubheader sx={{ fontWeight: 'bold' }}>{subheader}: </ListSubheader>
+                                    {queries.map((query) => {
+                                        return (
+                                            <ListItem disablePadding key={query.description}>
+                                                <ListItemButton onClick={() => onClickListItem(query.cypher)}>
+                                                    <ListItemText primary={query.description} />
+                                                </ListItemButton>
+                                            </ListItem>
+                                        );
+                                    })}
+                                </Box>
+                            );
+                        })
+                )}
             </List>
         </Box>
     );
 };
 
+const userSavedQueries = [
+    {
+        userId: 1,
+        query: 'match (n) return n limit 11',
+        name: 'special query 1',
+    },
+    {
+        userId: 1,
+        query: 'match (n) return n limit 22',
+        name: 'special query 2',
+    },
+];
 export default CommonSearches;
