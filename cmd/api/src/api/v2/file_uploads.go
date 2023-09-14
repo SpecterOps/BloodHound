@@ -1,22 +1,23 @@
 // Copyright 2023 Specter Ops, Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// 
+//
 // SPDX-License-Identifier: Apache-2.0
 
 package v2
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -126,8 +127,12 @@ func (s Resources) ProcessFileUpload(response http.ResponseWriter, request *http
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsIDMalformed, request), response)
 	} else if fileUploadJob, err := fileupload.GetFileUploadJobByID(s.DB, int64(fileUploadJobID)); err != nil {
 		api.HandleDatabaseError(request, response, err)
-	} else if fileName, err := fileupload.SaveToTempFile(s.Config.TempDirectory(), request.Body); err != nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("Error saving ingest file: %v", err), request), response)
+	} else if fileName, err := fileupload.SaveIngestFile(s.Config.TempDirectory(), request.Body); err != nil {
+		if errors.Is(err, fileupload.InvalidIngestFileType) {
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("Error saving ingest file: %v", err), request), response)
+		} else {
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("Error saving ingest file: %v", err), request), response)
+		}
 	} else if _, err = ingest.CreateIngestTask(s.DB, fileName, requestContext.RequestID, int64(fileUploadJobID)); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else if err = fileupload.TouchFileUploadJobLastIngest(s.DB, fileUploadJob); err != nil {

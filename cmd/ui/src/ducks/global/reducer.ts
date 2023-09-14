@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import produce from 'immer';
+import { produce } from 'immer';
 import { combineReducers } from '@reduxjs/toolkit';
 import * as types from './types';
 import assign from 'lodash/assign';
