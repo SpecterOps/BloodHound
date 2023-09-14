@@ -84,7 +84,6 @@ const schema = {
 const CypherInput = () => {
     const classes = useStyles();
     const dispatch = useDispatch();
-    const [toggle, setToggle] = useState(false);
 
     const [cypherQuery, setCypherQuery] = useState('');
 
@@ -104,7 +103,9 @@ const CypherInput = () => {
     useEffect(() => {
         syncCypherQueryWithAppState();
     }, [syncCypherQueryWithAppState]);
+
     const [showCommonQueries, setShowCommonQueries] = useState(false);
+    const [showEgg, setShowEgg] = useState(false);
 
     const onClickCommonSearchesListItem = (query: string) => {
         dispatch(setCypherQueryTerm(query));
@@ -115,11 +116,19 @@ const CypherInput = () => {
         if (cypherQuery) {
             // Easter Egg Trigger
             if (cypherQuery.toLowerCase().includes('match (n) return n limit 5')) {
-                setToggle(true);
+                setShowEgg(true);
             } else {
-                setToggle(false);
+                setShowEgg(false);
             }
             dispatch(startCypherSearch(cypherQuery));
+        }
+    };
+
+    // work-around handler for user clicking within code-mirror <CypherEditor />
+    const setFocusOnCypherEditor = () => {
+        const input = document.querySelector('.cm-content') as HTMLElement;
+        if (input) {
+            input.focus();
         }
     };
 
@@ -136,15 +145,7 @@ const CypherInput = () => {
                     <FontAwesomeIcon icon={faFolderOpen} />
                 </Button>
 
-                <div
-                    onClick={() => {
-                        const input = document.querySelector('.cm-content') as HTMLElement;
-                        if (input) {
-                            input.focus();
-                        }
-                    }}
-                    style={{ flex: 1 }}
-                    role='textbox'>
+                <div onClick={setFocusOnCypherEditor} style={{ flex: 1 }} role='textbox'>
                     <CypherEditor
                         className={classes.cypherEditor}
                         value={cypherQuery}
@@ -183,22 +184,21 @@ const CypherInput = () => {
                     Search
                 </Button>
             </Box>
+
             <Collapse in={showCommonQueries}>
                 <CommonSearches onClickListItem={onClickCommonSearchesListItem} />
             </Collapse>
 
-            {
-                /*What is graphed will never die*/ toggle && (
-                    <div style={{ display: 'block', position: 'relative', bottom: 0, left: 0 }}>
-                        <img
-                            src={'img/logo-animated.gif'}
-                            alt='What is graphed will never die'
-                            style={{ width: '200px' }}
-                        />
-                    </div>
-                )
-            }
+            {showEgg && <EasterEgg />}
         </>
+    );
+};
+/*What is graphed will never die*/
+const EasterEgg = () => {
+    return (
+        <div style={{ display: 'block', position: 'relative', bottom: 0, left: 0 }}>
+            <img src={'img/logo-animated.gif'} alt='What is graphed will never die' style={{ width: '200px' }} />
+        </div>
     );
 };
 
