@@ -89,6 +89,7 @@ yarn *ARGS="":
 schemagen:
   go run github.com/specterops/bloodhound/schemagen
   @just check-license
+  @just yarn-local
   @just yarn format
 
 # run imagemagick commands in the context of the project root
