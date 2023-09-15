@@ -196,6 +196,9 @@ export enum ActiveDirectoryKindProperties {
     PasswordNeverExpires = 'pwdneverexpires',
     PasswordNotRequired = 'passwordnotreqd',
     FunctionalLevel = 'functionallevel',
+    TrustType = 'trusttype',
+    SidFiltering = 'sidfiltering',
+    TrustedToAuth = 'trustedtoauth',
 }
 export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKindProperties): string | undefined {
     switch (value) {
@@ -245,6 +248,12 @@ export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKin
             return 'Password Not Required';
         case ActiveDirectoryKindProperties.FunctionalLevel:
             return 'Functional Level';
+        case ActiveDirectoryKindProperties.TrustType:
+            return 'Trust Type';
+        case ActiveDirectoryKindProperties.SidFiltering:
+            return 'SID Filtering Enabled';
+        case ActiveDirectoryKindProperties.TrustedToAuth:
+            return 'Trusted For Constrained Delegation';
         default:
             return undefined;
     }
