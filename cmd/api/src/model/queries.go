@@ -54,7 +54,6 @@ func (s SavedQueries) GetValidFilterPredicatesAsStrings(column string) ([]string
 func (s SavedQueries) IsString(column string) bool {
 	switch column {
 	case "name",
-		"user_id",
 		"query":
 		return true
 	default:

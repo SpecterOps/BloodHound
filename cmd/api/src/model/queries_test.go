@@ -41,7 +41,7 @@ func TestSavedQueries_GetValidFilterPredicatesAsStrings(t *testing.T) {
 
 func TestSavedQueries_IsString(t *testing.T) {
 	savedQueries := model.SavedQueries{}
-	for _, column := range []string{"user_id", "name", "query"} {
+	for _, column := range []string{"name", "query"} {
 		require.True(t, savedQueries.IsString(column))
 	}
 }
