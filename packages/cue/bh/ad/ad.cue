@@ -187,6 +187,27 @@ FunctionalLevel: types.#StringEnum & {
 	representation: "functionallevel"
 }
 
+TrustType: types.#StringEnum & {
+	symbol: "TrustType"
+	schema: "ad"
+	name: "Trust Type"
+	representation: "trusttype"
+}
+
+SidFiltering: types.#StringEnum & {
+	symbol: "SidFiltering"
+	schema: "ad"
+	name: "SID Filtering Enabled"
+	representation: "sidfiltering"
+}
+
+TrustedToAuth: types.#StringEnum & {
+	symbol: "TrustedToAuth"
+	schema: "ad"
+	name: "Trusted For Constrained Delegation"
+	representation: "trustedtoauth"
+}
+
 Properties: [
 	AdminCount,
 	DistinguishedName,
@@ -210,7 +231,10 @@ Properties: [
 	HasURA,
 	PasswordNeverExpires,
 	PasswordNotRequired,
-	FunctionalLevel
+	FunctionalLevel,
+	TrustType,
+	SidFiltering,
+	TrustedToAuth
 ]
 
 // Kinds
