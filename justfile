@@ -57,8 +57,6 @@ init wipe="":
     just bh-testing build --no-cache
   fi
 
-  just bh-testing
-
   echo "BloodHound CE Init Complete"
 
 # Show available targets for this context.
