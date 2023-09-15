@@ -62,7 +62,7 @@ const SearchCurrentNodes: FC<{
     useEffect(() => {
         const resultsHeight = LIST_ITEM_HEIGHT * items.length;
         if (resultsHeight > MAX_CONTAINER_HEIGHT) {
-            setVirtualizationHeight(400);
+            setVirtualizationHeight(MAX_CONTAINER_HEIGHT - 10);
         } else {
             setVirtualizationHeight(resultsHeight);
         }
@@ -97,7 +97,7 @@ const SearchCurrentNodes: FC<{
 
     const Row = ({ index, style }: any) => {
         return (
-            <Box style={style}>
+            <Box style={style} overflow={"hidden"}>
                 <SearchResultItem
                     item={items[index]}
                     index={index}
