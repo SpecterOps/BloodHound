@@ -137,6 +137,18 @@ var (
 			query.Kind(query.Relationship(), ad.HasSIDHistory),
 			query.Kind(query.End(), ad.User),
 			query.Equals(query.EndProperty(common.ObjectID.String()), "S-1-5-21-3130019616-2776909439-2417379446-12344")),
+		query.And(
+			query.Kind(query.Start(), ad.Computer),
+			query.Equals(query.StartProperty(common.ObjectID.String()), "S-1-5-21-3130019616-2776909439-2417379446-1104"),
+			query.Kind(query.Relationship(), ad.HasSession),
+			query.Kind(query.End(), ad.User),
+			query.Equals(query.EndProperty(common.ObjectID.String()), "S-1-5-21-3130019616-2776909439-2417379446-1107")),
+		query.And(
+			query.Kind(query.Start(), ad.Computer),
+			query.Equals(query.StartProperty(common.ObjectID.String()), "S-1-5-21-3130019616-2776909439-2417379446-1104"),
+			query.Kind(query.Relationship(), ad.HasSession),
+			query.Kind(query.End(), ad.User),
+			query.Equals(query.EndProperty(common.ObjectID.String()), "S-1-5-21-3130019616-2776909439-2417379446-1108")),
 
 		//// GPOs
 		query.And(

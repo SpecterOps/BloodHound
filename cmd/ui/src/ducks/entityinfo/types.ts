@@ -375,11 +375,7 @@ export interface GraphInfo extends BasicInfo {
 // --- Entity Info Panel
 export type EntityInfoState = {
     open: boolean;
-    selectedNode: {
-        id: string;
-        type: GraphNodeTypes;
-        name: string;
-    } | null;
+    selectedNode: SelectedNode | null;
 };
 
 interface SetEntityInfoOpenAction {
@@ -387,13 +383,16 @@ interface SetEntityInfoOpenAction {
     open: boolean;
 }
 
+export type SelectedNode = {
+    id: string;
+    type: GraphNodeTypes;
+    name: string;
+    graphId?: string;
+};
+
 interface SetSelectedNodeAction {
     type: typeof SET_SELECTED_NODE;
-    selectedNode: {
-        id: string;
-        type: GraphNodeTypes;
-        name: string;
-    };
+    selectedNode: SelectedNode;
 }
 
 export type EntityInfoActionTypes = SetEntityInfoOpenAction | SetSelectedNodeAction;

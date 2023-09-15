@@ -26,8 +26,8 @@ export type SelectedEdge = {
     id: string;
     name: string;
     data: Record<string, any>;
-    sourceNode: Record<string, any>;
-    targetNode: Record<string, any>;
+    sourceNode: { name: string; id: string | number; objectId: string; type: string; haslaps?: boolean };
+    targetNode: { name: string; id: string | number; objectId: string; type: string; haslaps?: boolean };
 } | null;
 
 export type ExpandedEdgeSections = Record<keyof typeof EdgeSections, boolean>;

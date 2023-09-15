@@ -384,7 +384,7 @@ func (s ThreadSafeNodeSet) IDBitmap() *roaring.Bitmap {
 	return s.nodeSet.IDBitmap()
 }
 
-func UintSliceToIDs(raw []uint32) []ID {
+func Uint32SliceToIDs(raw []uint32) []ID {
 	ids := make([]ID, len(raw))
 
 	for idx, rawID := range raw {
@@ -394,22 +394,7 @@ func UintSliceToIDs(raw []uint32) []ID {
 	return ids
 }
 
-// BitmapToIDs converts a bitmap to a slice of IDs.
-func BitmapToIDs(bitmap *roaring.Bitmap) []ID {
-	var (
-		rawIDs      = bitmap.ToArray()
-		rawIDLength = len(rawIDs)
-		typedIDs    = make([]ID, rawIDLength)
-	)
-
-	for idx := 0; idx < rawIDLength; idx++ {
-		typedIDs[idx] = ID(rawIDs[idx])
-	}
-
-	return typedIDs
-}
-
-func IDsToUintSlice(ids []ID) []uint32 {
+func IDsToUint32Slice(ids []ID) []uint32 {
 	rawIDs := make([]uint32, len(ids))
 
 	for idx, id := range ids {
@@ -417,21 +402,6 @@ func IDsToUintSlice(ids []ID) []uint32 {
 	}
 
 	return rawIDs
-}
-
-// Bitmap64ToIDs converts a bitmap to a slice of IDs.
-func Bitmap64ToIDs(bitmap *roaring64.Bitmap) []ID {
-	var (
-		rawIDs      = bitmap.ToArray()
-		rawIDLength = len(rawIDs)
-		typedIDs    = make([]ID, rawIDLength)
-	)
-
-	for idx := 0; idx < rawIDLength; idx++ {
-		typedIDs[idx] = ID(rawIDs[idx])
-	}
-
-	return typedIDs
 }
 
 // NewNodeSet returns a new NodeSet from the given Node slice.

@@ -29,10 +29,10 @@ import {
     SelectChangeEvent,
     TextField,
 } from '@mui/material';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { useQuery } from 'react-query';
-import apiClient from 'src/api';
+import { apiClient } from 'bh-shared-ui';
 import { NewUser } from 'src/ducks/auth/types';
 
 const CreateUserForm: React.FC<{
@@ -44,6 +44,7 @@ const CreateUserForm: React.FC<{
     const {
         control,
         handleSubmit,
+        setValue,
         formState: { errors },
     } = useForm({
         defaultValues: {
@@ -59,6 +60,12 @@ const CreateUserForm: React.FC<{
     });
 
     const [authenticationMethod, setAuthenticationMethod] = React.useState<string>('password');
+
+    useEffect(() => {
+        if (authenticationMethod === 'password') {
+            setValue("SAMLProviderId", '');
+        }
+    }, [authenticationMethod, setValue]);
 
     const getRolesQuery = useQuery(['getRoles'], ({ signal }) =>
         apiClient.getRoles({ signal }).then((res) => res.data.data.roles)

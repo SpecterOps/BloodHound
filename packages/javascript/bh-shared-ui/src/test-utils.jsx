@@ -18,9 +18,17 @@ import React from 'react';
 import { createTheme } from '@mui/material/styles';
 import { CssBaseline, StyledEngineProvider, ThemeProvider } from '@mui/material';
 import { render } from '@testing-library/react';
+import { QueryClient, QueryClientProvider } from 'react-query';
 
 const customRender = (
     ui,
+    queryClient = new QueryClient({
+        defaultOptions: {
+            queries: {
+                retry: false,
+            },
+        },
+    }),
     {
         theme = createTheme({
             palette: {
@@ -52,12 +60,14 @@ const customRender = (
 ) => {
     const AllTheProviders = ({ children }) => {
         return (
-            <StyledEngineProvider injectFirst>
-                <ThemeProvider theme={theme}>
-                    <CssBaseline />
-                    {children}
-                </ThemeProvider>
-            </StyledEngineProvider>
+            <QueryClientProvider client={queryClient}>
+                <StyledEngineProvider injectFirst>
+                    <ThemeProvider theme={theme}>
+                        <CssBaseline />
+                        {children}
+                    </ThemeProvider>
+                </StyledEngineProvider>
+            </QueryClientProvider>
         );
     };
     return render(ui, { wrapper: AllTheProviders, ...renderOptions });

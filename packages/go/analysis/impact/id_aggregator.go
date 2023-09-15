@@ -1,28 +1,26 @@
 // Copyright 2023 Specter Ops, Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// 
+//
 // SPDX-License-Identifier: Apache-2.0
 
 package impact
 
 import (
-	"sync"
-	"time"
-
 	"github.com/specterops/bloodhound/dawgs/cardinality"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/log"
+	"sync"
 )
 
 type PathAggregator interface {
@@ -148,8 +146,6 @@ type idaRes struct {
 // resolve takes the target uint32 ID of a node and calculates the cardinality of nodes that have a path that traverse
 // it
 func (s IDA) resolve(targetUint32ID uint32) cardinality.Provider[uint32] {
-	const statusTickerDuration = time.Second * 5
-
 	var (
 		targetImpact = s.membership(targetUint32ID)
 		resolutions  = map[uint32]*idaRes{
@@ -159,21 +155,10 @@ func (s IDA) resolve(targetUint32ID uint32) cardinality.Provider[uint32] {
 				dependencies: s.popDependencies(targetUint32ID),
 			},
 		}
-		stack                = []uint32{targetUint32ID}
-		statusTicker         = time.NewTicker(statusTickerDuration)
-		impactsResolved      = 0
-		dependenciesResolved = 0
+		stack = []uint32{targetUint32ID}
 	)
 
-	defer statusTicker.Stop()
-
 	for len(stack) > 0 {
-		select {
-		case <-statusTicker.C:
-			log.Infof("%d resolutions remaining with %d completed and %d dependencies resolved", len(stack), impactsResolved, dependenciesResolved)
-		default:
-		}
-
 		// Pick up the next resolution
 		next := resolutions[stack[len(stack)-1]]
 
@@ -181,8 +166,6 @@ func (s IDA) resolve(targetUint32ID uint32) cardinality.Provider[uint32] {
 		if len(next.dependencies) > 0 {
 			nextDependency := next.dependencies[len(next.dependencies)-1]
 			next.dependencies = next.dependencies[:len(next.dependencies)-1]
-
-			dependenciesResolved++
 
 			if s.resolved.Contains(nextDependency) {
 				// If this dependency has already been resolved, fetch and or it with this resolution's pathMembers
@@ -202,17 +185,25 @@ func (s IDA) resolve(targetUint32ID uint32) cardinality.Provider[uint32] {
 				}
 			}
 		} else {
-			impactsResolved++
-
-			// Pop the resolution and track it as resolved
+			// Pop the resolution from our dependency unwind
 			stack = stack[:len(stack)-1]
-			s.resolved.Add(next.target)
-
-			// For each dependent pathMembers, or our resolved pathMembers with them
-			for _, completion := range next.completions {
-				completion.Or(next.pathMembers)
-			}
 		}
+	}
+
+	// First resolution pass for completion dependencies
+	for _, nextResolution := range resolutions {
+		for _, nextCompletion := range nextResolution.completions {
+			nextCompletion.Or(nextResolution.pathMembers)
+		}
+	}
+
+	// Second resolution pass for completion dependencies that were not fully resolved on the first pass
+	for _, nextResolution := range resolutions {
+		for _, nextCompletion := range nextResolution.completions {
+			nextCompletion.Or(nextResolution.pathMembers)
+		}
+
+		s.resolved.Add(nextResolution.target)
 	}
 
 	return targetImpact

@@ -16,8 +16,6 @@
 
 import BHEClient from 'js-client-library';
 
-const client = new BHEClient({
+export const apiClient = new BHEClient({
     baseURL: window.location.origin,
 });
-
-export default client;

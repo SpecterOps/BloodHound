@@ -1,17 +1,17 @@
 # Copyright 2023 Specter Ops, Inc.
-# 
+#
 # Licensed under the Apache License, Version 2.0
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #     http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-# 
+#
 # SPDX-License-Identifier: Apache-2.0
 
 import json
@@ -29,6 +29,7 @@ class YarnTestPlan(TestPlan):
         name: str,
         source_path: str,
         project_ctx: ProjectContext,
+        yarn_workspace = False,
     ) -> None:
         super().__init__(
             name=name,
@@ -37,6 +38,7 @@ class YarnTestPlan(TestPlan):
         )
 
         self.source_path = source_path
+        self.yarn_workspace = yarn_workspace,
         self.node_modules_path = os.path.join(self.source_path, "node_modules")
 
     def prepare(self) -> None:
