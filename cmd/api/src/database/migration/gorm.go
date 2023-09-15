@@ -63,6 +63,7 @@ func ListBHModels() []any {
 		&model.DomainCollectionResult{},
 
 		&model.FileUploadJob{},
+		&model.SavedQuery{},
 	}
 }
 
