@@ -14,25 +14,15 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Theme } from '@mui/material/styles';
+export type FlatNode = GraphNode & { id: string };
 
-declare module '@mui/styles/defaultTheme' {
-    // eslint-disable-next-line @typescript-eslint/no-empty-interface
-    interface DefaultTheme extends Theme {}
-}
+export type GraphNode = {
+    label: string;
+    kind: string;
+    objectId: string;
+    lastSeen: string;
+    isTierZero: boolean;
+    descendent_count?: number | null;
+};
 
-export * from './components';
-
-export * from './hooks';
-
-export * from './commonSearches';
-
-export * from './providers';
-
-export * from './utils';
-
-export * from './graphSchema';
-
-export * from './views';
-
-export * from './store';
+export type GraphNodes = Record<string, GraphNode>;
