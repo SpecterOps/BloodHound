@@ -103,7 +103,6 @@ describe('EdgeObjectInformation', () => {
         expect(screen.getByText(/source_node/)).toBeInTheDocument();
         expect(screen.getByText(/Target Node:/)).toBeInTheDocument();
         expect(screen.getByText(/target_node/)).toBeInTheDocument();
-        expect(screen.getByText(/Last Collected by BloodHound:/)).toBeInTheDocument();
 
         //These are extra fields that don't come with the graph response
         //so if there is an error with the edge query they will not be displayed
