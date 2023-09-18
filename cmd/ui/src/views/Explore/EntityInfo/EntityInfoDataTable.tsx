@@ -17,7 +17,7 @@
 import { useQuery } from 'react-query';
 import { useDispatch } from 'react-redux';
 import { InfiniteScrollingTable } from 'bh-shared-ui';
-import { putGraphData, putGraphError, setGraphLoading } from 'src/ducks/explore/actions';
+import { putGraphData, putGraphError, saveResponseForExport, setGraphLoading } from 'src/ducks/explore/actions';
 import { addSnackbar } from 'src/ducks/global/actions';
 import { setSearchValue, startSearchSelected } from 'src/ducks/searchbar/actions';
 import { PRIMARY_SEARCH, SEARCH_TYPE_EXACT } from 'src/ducks/searchbar/types';
@@ -67,6 +67,7 @@ const EntityInfoDataTable: React.FC<EntityInfoDataTableProps> = ({ id, label, en
 
             await endpoint({ type: 'graph' })
                 .then((result) => {
+                    dispatch(saveResponseForExport(result));
                     dispatch(putGraphData(result));
                 })
                 .catch((err) => {
