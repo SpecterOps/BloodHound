@@ -15,8 +15,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import {
-    AmbiguousTimeProperties,
-    formatAmbiguousTime,
+    ADSpecificTimeProperties,
+    formatADSpecificTime,
     formatNumber,
     formatBoolean,
     formatString,
@@ -26,30 +26,30 @@ import {
 
 describe('Handling value formatting for Active Directory entity properties lastlogon, lastlogontimestamp, whencreated, and pwdlastset', () => {
     test('whencreated', () => {
-        expect(formatAmbiguousTime(-1, AmbiguousTimeProperties.WHEN_CREATED)).toEqual('UNKNOWN');
-        expect(formatAmbiguousTime(0, AmbiguousTimeProperties.WHEN_CREATED)).toEqual('UNKNOWN');
-        expect(formatAmbiguousTime(1694549003, AmbiguousTimeProperties.WHEN_CREATED)).toEqual(
+        expect(formatADSpecificTime(-1, ADSpecificTimeProperties.WHEN_CREATED)).toEqual('UNKNOWN');
+        expect(formatADSpecificTime(0, ADSpecificTimeProperties.WHEN_CREATED)).toEqual('UNKNOWN');
+        expect(formatADSpecificTime(1694549003, ADSpecificTimeProperties.WHEN_CREATED)).toEqual(
             '2023-09-12 13:03 PDT (GMT-0700)'
         );
     });
     test('lastlogon, lastlogontimestamp', () => {
-        expect(formatAmbiguousTime(-1, AmbiguousTimeProperties.LAST_LOGON)).toEqual('NEVER');
-        expect(formatAmbiguousTime(-1, AmbiguousTimeProperties.LAST_LOGON_TIMESTAMP)).toEqual('NEVER');
-        expect(formatAmbiguousTime(0, AmbiguousTimeProperties.LAST_LOGON)).toEqual('UNKNOWN');
-        expect(formatAmbiguousTime(0, AmbiguousTimeProperties.LAST_LOGON_TIMESTAMP)).toEqual('UNKNOWN');
-        expect(formatAmbiguousTime(1694549003, AmbiguousTimeProperties.LAST_LOGON)).toEqual(
+        expect(formatADSpecificTime(-1, ADSpecificTimeProperties.LAST_LOGON)).toEqual('NEVER');
+        expect(formatADSpecificTime(-1, ADSpecificTimeProperties.LAST_LOGON_TIMESTAMP)).toEqual('NEVER');
+        expect(formatADSpecificTime(0, ADSpecificTimeProperties.LAST_LOGON)).toEqual('UNKNOWN');
+        expect(formatADSpecificTime(0, ADSpecificTimeProperties.LAST_LOGON_TIMESTAMP)).toEqual('UNKNOWN');
+        expect(formatADSpecificTime(1694549003, ADSpecificTimeProperties.LAST_LOGON)).toEqual(
             '2023-09-12 13:03 PDT (GMT-0700)'
         );
-        expect(formatAmbiguousTime(1694549003, AmbiguousTimeProperties.LAST_LOGON_TIMESTAMP)).toEqual(
+        expect(formatADSpecificTime(1694549003, ADSpecificTimeProperties.LAST_LOGON_TIMESTAMP)).toEqual(
             '2023-09-12 13:03 PDT (GMT-0700)'
         );
     });
     test('pwdlastset', () => {
-        expect(formatAmbiguousTime(-1, AmbiguousTimeProperties.PASSWORD_LAST_SET)).toEqual('NEVER');
-        expect(formatAmbiguousTime(0, AmbiguousTimeProperties.PASSWORD_LAST_SET)).toEqual(
+        expect(formatADSpecificTime(-1, ADSpecificTimeProperties.PASSWORD_LAST_SET)).toEqual('NEVER');
+        expect(formatADSpecificTime(0, ADSpecificTimeProperties.PASSWORD_LAST_SET)).toEqual(
             'ACCOUNT CREATED BUT NO PASSWORD SET'
         );
-        expect(formatAmbiguousTime(1694549003, AmbiguousTimeProperties.PASSWORD_LAST_SET)).toEqual(
+        expect(formatADSpecificTime(1694549003, ADSpecificTimeProperties.PASSWORD_LAST_SET)).toEqual(
             '2023-09-12 13:03 PDT (GMT-0700)'
         );
     });

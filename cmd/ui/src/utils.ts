@@ -181,7 +181,7 @@ export const transformFlatGraphResponse = (graph: FlatGraphResponse): GraphData 
                 kind: edge.label.text || '',
                 lastSeen: lastSeen,
                 exploreGraphId: key || `${edge.id1}_${edge.label.text}_${edge.id2}`,
-                data: { ...edge.data, lastseen: lastSeen },
+                data: { ...(edge.data || {}), lastseen: lastSeen },
             });
         }
     }
@@ -215,7 +215,7 @@ export const transformToFlatGraphResponse = (graph: GraphResponse) => {
                 text: edge.label,
             },
             lastSeen: lastSeen,
-            data: { ...edge.data, lastseen: lastSeen },
+            data: { ...(edge.data || {}), lastseen: lastSeen },
         };
     }
     return result;

@@ -24,7 +24,8 @@ import {
     EntityField,
     EntityPropertyKind,
 } from 'bh-shared-ui';
-import { isEmpty, startCase } from 'lodash';
+import isEmpty from 'lodash/isEmpty';
+import startCase from 'lodash/startCase';
 import { ZERO_VALUE_API_DATE } from 'src/constants';
 
 export let controller = new AbortController();

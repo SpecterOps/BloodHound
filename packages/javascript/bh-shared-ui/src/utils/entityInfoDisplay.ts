@@ -26,32 +26,36 @@ export type EntityField = {
     keyprop?: string;
 };
 
-export enum AmbiguousTimeProperties {
+export enum ADSpecificTimeProperties {
     WHEN_CREATED = 'whencreated',
     LAST_LOGON = 'lastlogon',
     LAST_LOGON_TIMESTAMP = 'lastlogontimestamp',
     PASSWORD_LAST_SET = 'pwdlastset',
 }
 
-export const formatAmbiguousTime = (ambiguousTime: number, keyprop: AmbiguousTimeProperties): string => {
+//These times are handled differently specifically for these properties as they are collected and ingested to match these values
+//Here is some related documentation:
+//https://learn.microsoft.com/en-us/windows/win32/adschema/a-lastlogon
+//https://social.technet.microsoft.com/wiki/contents/articles/22461.understanding-the-ad-account-attributes-lastlogon-lastlogontimestamp-and-lastlogondate.aspx
+export const formatADSpecificTime = (timeValue: number, keyprop: ADSpecificTimeProperties): string => {
     const unknownValue = 'UNKNOWN';
     const neverValue = 'NEVER';
 
     switch (keyprop) {
-        case AmbiguousTimeProperties.WHEN_CREATED: {
-            if (ambiguousTime === 0 || ambiguousTime === -1) return unknownValue;
-            return DateTime.fromSeconds(ambiguousTime).toFormat(LuxonFormat.DATETIME);
+        case ADSpecificTimeProperties.WHEN_CREATED: {
+            if (timeValue === 0 || timeValue === -1) return unknownValue;
+            return DateTime.fromSeconds(timeValue).toFormat(LuxonFormat.DATETIME);
         }
-        case AmbiguousTimeProperties.LAST_LOGON: //fallthrough
-        case AmbiguousTimeProperties.LAST_LOGON_TIMESTAMP: {
-            if (ambiguousTime === 0) return unknownValue;
-            if (ambiguousTime === -1) return neverValue;
-            return DateTime.fromSeconds(ambiguousTime).toFormat(LuxonFormat.DATETIME);
+        case ADSpecificTimeProperties.LAST_LOGON: //fallthrough
+        case ADSpecificTimeProperties.LAST_LOGON_TIMESTAMP: {
+            if (timeValue === 0) return unknownValue;
+            if (timeValue === -1) return neverValue;
+            return DateTime.fromSeconds(timeValue).toFormat(LuxonFormat.DATETIME);
         }
-        case AmbiguousTimeProperties.PASSWORD_LAST_SET:
-            if (ambiguousTime === 0) return 'ACCOUNT CREATED BUT NO PASSWORD SET';
-            if (ambiguousTime === -1) return neverValue;
-            return DateTime.fromSeconds(ambiguousTime).toFormat(LuxonFormat.DATETIME);
+        case ADSpecificTimeProperties.PASSWORD_LAST_SET:
+            if (timeValue === 0) return 'ACCOUNT CREATED BUT NO PASSWORD SET';
+            if (timeValue === -1) return neverValue;
+            return DateTime.fromSeconds(timeValue).toFormat(LuxonFormat.DATETIME);
         default:
             return '';
     }
@@ -59,9 +63,9 @@ export const formatAmbiguousTime = (ambiguousTime: number, keyprop: AmbiguousTim
 
 export const formatNumber = (value: number, kind?: EntityPropertyKind, keyprop?: string): string => {
     const isAmbiguousTimeValue =
-        kind === 'ad' && Object.values(AmbiguousTimeProperties).includes(keyprop as AmbiguousTimeProperties);
+        kind === 'ad' && Object.values(ADSpecificTimeProperties).includes(keyprop as ADSpecificTimeProperties);
 
-    if (isAmbiguousTimeValue) return formatAmbiguousTime(value, keyprop as AmbiguousTimeProperties);
+    if (isAmbiguousTimeValue) return formatADSpecificTime(value, keyprop as ADSpecificTimeProperties);
 
     //315536400 = January 1st, 1980. Seems like a safe bet
     const secondsLowerBound = 315536400;
