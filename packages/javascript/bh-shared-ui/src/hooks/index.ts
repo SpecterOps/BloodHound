@@ -14,25 +14,4 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Theme } from '@mui/material/styles';
-
-declare module '@mui/styles/defaultTheme' {
-    // eslint-disable-next-line @typescript-eslint/no-empty-interface
-    interface DefaultTheme extends Theme {}
-}
-
-export * from './components';
-
-export * from './hooks';
-
-export * from './commonSearches';
-
-export * from './providers';
-
-export * from './utils';
-
-export * from './graphSchema';
-
-export * from './views';
-
-export * from './store';
+export { default as useOnClickOutside } from './useOnClickOutside';

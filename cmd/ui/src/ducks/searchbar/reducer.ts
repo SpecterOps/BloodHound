@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import produce from 'immer';
+import { produce } from 'immer';
 import cloneDeep from 'lodash/cloneDeep';
 import { GraphNodeTypes } from 'src/ducks/graph/types';
 import * as types from 'src/ducks/searchbar/types';

@@ -134,6 +134,13 @@ func (s Client) Request(method, path string, params url.Values, body any, header
 	}
 }
 
+func (s Client) NewRequest(method string, path string, params url.Values, body io.ReadCloser) (*http.Request, error) {
+	endpoint := api.URLJoinPath(s.ServiceURL, path)
+	endpoint.RawQuery = params.Encode()
+
+	return http.NewRequest(method, endpoint.String(), body)
+}
+
 func (s Client) Raw(request *http.Request) (*http.Response, error) {
 	// Set our credentials either via signage or bearer token session
 	if s.Credentials != nil {

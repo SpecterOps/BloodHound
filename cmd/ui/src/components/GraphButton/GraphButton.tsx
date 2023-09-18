@@ -17,7 +17,6 @@
 import { Button } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
 import { FC } from 'react';
-import { useCamera } from '@react-sigma/core';
 
 const useStyles = makeStyles((theme) => ({
     button: {
@@ -46,18 +45,16 @@ const useStyles = makeStyles((theme) => ({
 export interface GraphButtonProps {
     onClick: () => void;
     displayText: string | JSX.Element;
+    disabled?: boolean;
 }
 
-const GraphButton: FC<GraphButtonProps> = ({ onClick, displayText }) => {
+const GraphButton: FC<GraphButtonProps> = ({ onClick, displayText, disabled }) => {
     const styles = useStyles();
-    const { reset } = useCamera();
 
     return (
         <Button
-            onClick={() => {
-                onClick();
-                reset();
-            }}
+            onClick={onClick}
+            disabled={disabled}
             classes={{ root: styles.button }}>
             {displayText}
         </Button>

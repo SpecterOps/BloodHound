@@ -14,7 +14,6 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { GraphNodeTypes } from 'src/ducks/graph/types';
 import * as types from './types';
 
 export const setEntityInfoOpen = (open: boolean): types.EntityInfoActionTypes => {
@@ -24,11 +23,7 @@ export const setEntityInfoOpen = (open: boolean): types.EntityInfoActionTypes =>
     };
 };
 
-export const setSelectedNode = (selectedNode: {
-    id: string;
-    type: GraphNodeTypes;
-    name: string;
-}): types.EntityInfoActionTypes => {
+export const setSelectedNode = (selectedNode: types.SelectedNode): types.EntityInfoActionTypes => {
     return {
         type: types.SET_SELECTED_NODE,
         selectedNode,
