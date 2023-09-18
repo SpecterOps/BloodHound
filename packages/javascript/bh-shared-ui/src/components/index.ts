@@ -111,3 +111,6 @@ export { default as SearchResultItem } from './SearchResultItem';
 
 export * from './UserTokenManagementDialog';
 export { default as UserTokenManagementDialog } from './UserTokenManagementDialog';
+
+export * from './AssetGroupMemberList';
+export { default as AssetGroupMemberList } from './AssetGroupMemberList';

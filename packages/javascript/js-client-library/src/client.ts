@@ -90,6 +90,9 @@ class BHEAPIClient {
     listAssetGroupCollections = (assetGroupId: string, options?: types.RequestOptions) =>
         this.baseClient.get(`/api/v2/asset-groups/${assetGroupId}/collections`, options);
 
+    listAssetGroupMembers = (assetGroupId: string, options?: types.RequestOptions) =>
+        this.baseClient.get(`/api/v2/asset-groups/${assetGroupId}/members`, options);
+
     listAssetGroups = (options?: types.RequestOptions) => this.baseClient.get('/api/v2/asset-groups', options);
 
     /* analysis */
