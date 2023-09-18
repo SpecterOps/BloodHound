@@ -59,16 +59,18 @@ describe('UserProfile with SAML User', () => {
         await waitFor(() => expect(screen.queryByRole('progressbar')).not.toBeInTheDocument());
     });
 
-    test('The Authentication section should not appear in profile page if the user is configured for SAML login', () => {
-        const authenticationEl = screen.queryByText('Authentication');
+    test('The reset password and two-factor authentication options should not appear in profile page if the user is configured for SAML login', () => {
         const resetPasswordButton = screen.queryByText('Reset Password');
         const twoFactorAuthToggle = screen.queryByRole('checkbox', {
             name: 'Multi-Factor Authentication Enabled',
         });
 
-        expect(authenticationEl).not.toBeInTheDocument();
         expect(resetPasswordButton).not.toBeInTheDocument();
         expect(twoFactorAuthToggle).not.toBeInTheDocument();
+    });
+
+    test('The API key management option should appear in profile page if the user is configured for SAML login', () => {
+        expect(screen.getByRole('button', { name: 'API Key Management' })).toBeInTheDocument();
     });
 });
 
