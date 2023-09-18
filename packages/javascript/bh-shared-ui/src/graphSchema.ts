@@ -199,6 +199,7 @@ export enum ActiveDirectoryKindProperties {
     TrustType = 'trusttype',
     SidFiltering = 'sidfiltering',
     TrustedToAuth = 'trustedtoauth',
+    SamAccountName = 'samaccountname',
 }
 export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKindProperties): string | undefined {
     switch (value) {
@@ -211,7 +212,7 @@ export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKin
         case ActiveDirectoryKindProperties.DomainSID:
             return 'Domain SID';
         case ActiveDirectoryKindProperties.Sensitive:
-            return 'Sensitive';
+            return 'Marked sensitive';
         case ActiveDirectoryKindProperties.HighValue:
             return 'High Value';
         case ActiveDirectoryKindProperties.BlocksInheritance:
@@ -254,6 +255,8 @@ export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKin
             return 'SID Filtering Enabled';
         case ActiveDirectoryKindProperties.TrustedToAuth:
             return 'Trusted For Constrained Delegation';
+        case ActiveDirectoryKindProperties.SamAccountName:
+            return 'SAM Account Name';
         default:
             return undefined;
     }

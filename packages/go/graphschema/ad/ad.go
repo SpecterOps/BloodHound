@@ -103,10 +103,11 @@ const (
 	TrustType               Property = "trusttype"
 	SidFiltering            Property = "sidfiltering"
 	TrustedToAuth           Property = "trustedtoauth"
+	SamAccountName          Property = "samaccountname"
 )
 
 func AllProperties() []Property {
-	return []Property{AdminCount, DistinguishedName, DomainFQDN, DomainSID, Sensitive, HighValue, BlocksInheritance, IsACL, IsACLProtected, Enforced, Department, HasSPN, UnconstrainedDelegation, LastLogon, LastLogonTimestamp, IsPrimaryGroup, HasLAPS, DontRequirePreAuth, LogonType, HasURA, PasswordNeverExpires, PasswordNotRequired, FunctionalLevel, TrustType, SidFiltering, TrustedToAuth}
+	return []Property{AdminCount, DistinguishedName, DomainFQDN, DomainSID, Sensitive, HighValue, BlocksInheritance, IsACL, IsACLProtected, Enforced, Department, HasSPN, UnconstrainedDelegation, LastLogon, LastLogonTimestamp, IsPrimaryGroup, HasLAPS, DontRequirePreAuth, LogonType, HasURA, PasswordNeverExpires, PasswordNotRequired, FunctionalLevel, TrustType, SidFiltering, TrustedToAuth, SamAccountName}
 }
 func ParseProperty(source string) (Property, error) {
 	switch source {
@@ -162,6 +163,8 @@ func ParseProperty(source string) (Property, error) {
 		return SidFiltering, nil
 	case "trustedtoauth":
 		return TrustedToAuth, nil
+	case "samaccountname":
+		return SamAccountName, nil
 	default:
 		return "", errors.New("Invalid enumeration value: " + source)
 	}
@@ -220,6 +223,8 @@ func (s Property) String() string {
 		return string(SidFiltering)
 	case TrustedToAuth:
 		return string(TrustedToAuth)
+	case SamAccountName:
+		return string(SamAccountName)
 	default:
 		panic("Invalid enumeration case: " + string(s))
 	}
@@ -235,7 +240,7 @@ func (s Property) Name() string {
 	case DomainSID:
 		return "Domain SID"
 	case Sensitive:
-		return "Sensitive"
+		return "Marked sensitive"
 	case HighValue:
 		return "High Value"
 	case BlocksInheritance:
@@ -278,6 +283,8 @@ func (s Property) Name() string {
 		return "SID Filtering Enabled"
 	case TrustedToAuth:
 		return "Trusted For Constrained Delegation"
+	case SamAccountName:
+		return "SAM Account Name"
 	default:
 		panic("Invalid enumeration case: " + string(s))
 	}
