@@ -15,11 +15,11 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Skeleton } from '@mui/material';
-import { SelectedEdge, apiClient } from 'bh-shared-ui';
+import { EntityField, SelectedEdge, apiClient } from 'bh-shared-ui';
 import { FC } from 'react';
 import { useQuery } from 'react-query';
 import EdgeInfoCollapsibleSection from 'src/views/Explore/EdgeInfo/EdgeInfoCollapsibleSection';
-import { EntityField, FieldsContainer, ObjectInfoFields } from 'src/views/Explore/fragments';
+import { FieldsContainer, ObjectInfoFields } from 'src/views/Explore/fragments';
 import { formatObjectInfoFields } from 'src/views/Explore/utils';
 
 const selectedEdgeCypherQuery = (sourceId: string | number, targetId: string | number, edgeKind: string): string =>
@@ -59,15 +59,12 @@ const EdgeObjectInformation: FC<{ selectedEdge: NonNullable<SelectedEdge> }> = (
 
     let formattedObjectFields: EntityField[] = [sourceNodeField, targetNodeField];
 
-    if (isError) {
+    if (!isError) {
         formattedObjectFields = [
             ...formattedObjectFields,
-            ...formatObjectInfoFields({ lastseen: selectedEdge.data.lastseen }),
-        ];
-    } else {
-        formattedObjectFields = [
-            ...formattedObjectFields,
-            ...formatObjectInfoFields(cypherResponse.edges[0]?.properties || {}),
+            ...formatObjectInfoFields({
+                ...(cypherResponse.edges[0]?.properties || {}),
+            }),
         ];
     }
 

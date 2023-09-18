@@ -31,7 +31,7 @@ import {
 } from 'src/ducks/explore/types';
 import { addSnackbar } from 'src/ducks/global/actions';
 import { getLinksIndex, getNodesIndex } from 'src/ducks/graph/graphutils';
-import { ActiveDirectoryKind, AzureKind } from 'bh-shared-ui';
+import { ActiveDirectoryRelationshipKind, AzureRelationshipKind } from 'bh-shared-ui';
 import { transformToFlatGraphResponse } from 'src/utils';
 
 function* graphQueryWatcher(): SagaIterator {
@@ -108,18 +108,18 @@ function* runSearchQuery(payload: SearchRequest): SagaIterator {
 
 function* runPathfindingQuery(payload: PathfindingRequest): SagaIterator {
     const standardExclusions = [
-        ActiveDirectoryKind.LocalToComputer,
-        ActiveDirectoryKind.RemoteInteractiveLogonPrivilege,
-        ActiveDirectoryKind.MemberOfLocalGroup,
-        ActiveDirectoryKind.GetChanges,
-        ActiveDirectoryKind.GetChangesAll,
-        AzureKind.ApplicationReadWriteAll,
-        AzureKind.AppRoleAssignmentReadWriteAll,
-        AzureKind.DirectoryReadWriteAll,
-        AzureKind.GroupReadWriteAll,
-        AzureKind.GroupMemberReadWriteAll,
-        AzureKind.RoleManagementReadWriteDirectory,
-        AzureKind.ServicePrincipalEndpointReadWriteAll,
+        ActiveDirectoryRelationshipKind.LocalToComputer,
+        ActiveDirectoryRelationshipKind.RemoteInteractiveLogonPrivilege,
+        ActiveDirectoryRelationshipKind.MemberOfLocalGroup,
+        ActiveDirectoryRelationshipKind.GetChanges,
+        ActiveDirectoryRelationshipKind.GetChangesAll,
+        AzureRelationshipKind.ApplicationReadWriteAll,
+        AzureRelationshipKind.AppRoleAssignmentReadWriteAll,
+        AzureRelationshipKind.DirectoryReadWriteAll,
+        AzureRelationshipKind.GroupReadWriteAll,
+        AzureRelationshipKind.GroupMemberReadWriteAll,
+        AzureRelationshipKind.RoleManagementReadWriteDirectory,
+        AzureRelationshipKind.ServicePrincipalEndpointReadWriteAll,
     ];
 
     // treat no edges selected the same as all edges selected
