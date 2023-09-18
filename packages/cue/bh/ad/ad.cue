@@ -50,7 +50,7 @@ DomainSID: types.#StringEnum & {
 Sensitive: types.#StringEnum & {
 	symbol:         "Sensitive"
 	schema:         "ad"
-	name:           "Sensitive"
+	name:           "Marked sensitive"
 	representation: "sensitive"
 }
 
@@ -187,6 +187,34 @@ FunctionalLevel: types.#StringEnum & {
 	representation: "functionallevel"
 }
 
+TrustType: types.#StringEnum & {
+	symbol: "TrustType"
+	schema: "ad"
+	name: "Trust Type"
+	representation: "trusttype"
+}
+
+SidFiltering: types.#StringEnum & {
+	symbol: "SidFiltering"
+	schema: "ad"
+	name: "SID Filtering Enabled"
+	representation: "sidfiltering"
+}
+
+TrustedToAuth: types.#StringEnum & {
+	symbol: "TrustedToAuth"
+	schema: "ad"
+	name: "Trusted For Constrained Delegation"
+	representation: "trustedtoauth"
+}
+
+SamAccountName: types.#StringEnum & {
+	symbol: "SamAccountName"
+	schema: "ad"
+	name: "SAM Account Name"
+	representation: "samaccountname"
+}
+
 Properties: [
 	AdminCount,
 	DistinguishedName,
@@ -210,7 +238,11 @@ Properties: [
 	HasURA,
 	PasswordNeverExpires,
 	PasswordNotRequired,
-	FunctionalLevel
+	FunctionalLevel,
+	TrustType,
+	SidFiltering,
+	TrustedToAuth,
+	SamAccountName
 ]
 
 // Kinds
