@@ -81,15 +81,12 @@ yarn-local *ARGS="":
   @yarn {{ARGS}}
 
 # run yarn commands in the context of the workspace root and rebuild containers
-yarn *ARGS="":
+yarn *ARGS="": && (bh-dev "build bh-ui")
   @yarn {{ARGS}}
-  @just bh-dev build bh-ui
 
 # run the code generation from the cue schema
-schemagen:
+schemagen: yarn-local && check-license (yarn "format")
   go run github.com/specterops/bloodhound/schemagen
-  @just check-license
-  @just yarn format
 
 # run imagemagick commands in the context of the project root
 imagemagick *ARGS:

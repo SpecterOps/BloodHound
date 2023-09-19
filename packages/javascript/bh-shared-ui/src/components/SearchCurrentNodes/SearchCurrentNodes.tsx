@@ -14,16 +14,16 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Box, List, ListItem, Paper, SxProps, TextField } from "@mui/material";
-import { useCombobox } from "downshift";
-import { FC, useEffect, useRef, useState } from "react";
-import SearchResultItem from "../SearchResultItem";
-import { FlatNode, GraphNodes } from "./types";
-import { useOnClickOutside } from "../../hooks";
-import { FixedSizeList } from "react-window";
+import { Box, List, ListItem, Paper, SxProps, TextField } from '@mui/material';
+import { useCombobox } from 'downshift';
+import { FC, useEffect, useRef, useState } from 'react';
+import SearchResultItem from '../SearchResultItem';
+import { FlatNode, GraphNodes } from './types';
+import { useOnClickOutside } from '../../hooks';
+import { FixedSizeList } from 'react-window';
 
-export const PLACEHOLDER_TEXT = "Search Current Results";
-export const NO_RESULTS_TEXT = "No result found in current results";
+export const PLACEHOLDER_TEXT = 'Search Current Results';
+export const NO_RESULTS_TEXT = 'No result found in current results';
 
 const LIST_ITEM_HEIGHT = 38;
 const MAX_CONTAINER_HEIGHT = 350;
@@ -34,7 +34,6 @@ const SearchCurrentNodes: FC<{
     onSelect: (node: FlatNode) => void;
     onClose?: () => void;
 }> = ({ sx, currentNodes, onSelect, onClose }) => {
-    
     const containerRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
 
@@ -46,10 +45,10 @@ const SearchCurrentNodes: FC<{
     // Node data is a lot easier to work with in the combobox if we transform to an array of flat objects
     useEffect(() => {
         const flatNodeList: FlatNode[] = Object.entries(currentNodes).map(([key, value]) => {
-            return { id: key, ...value }
+            return { id: key, ...value };
         });
         setFlatNodeList(flatNodeList);
-    }, [currentNodes])
+    }, [currentNodes]);
 
     useEffect(() => inputRef.current?.focus(), []);
 
@@ -57,7 +56,7 @@ const SearchCurrentNodes: FC<{
         if (selectedNode) onSelect(selectedNode);
     }, [selectedNode, onSelect]);
 
-    // Since we are using a virtualized results container, we need to calculate the height for shorter 
+    // Since we are using a virtualized results container, we need to calculate the height for shorter
     // lists to avoid whitespace
     useEffect(() => {
         const resultsHeight = LIST_ITEM_HEIGHT * items.length;
@@ -73,7 +72,7 @@ const SearchCurrentNodes: FC<{
     const { getInputProps, getMenuProps, getComboboxProps, getItemProps, inputValue } = useCombobox({
         items,
         onInputValueChange: ({ inputValue }) => {
-            const filteredNodes = flatNodeList.filter(node => {
+            const filteredNodes = flatNodeList.filter((node) => {
                 const label = node.label.toLowerCase();
                 const objectId = node.objectId.toLowerCase();
                 const lowercaseInputValue = inputValue?.toLowerCase() || '';
@@ -88,16 +87,16 @@ const SearchCurrentNodes: FC<{
             switch (type) {
                 case useCombobox.stateChangeTypes.ItemClick:
                     if (changes.selectedItem) setSelectedNode(changes.selectedItem);
-                    return { ...changes, inputValue: '' }
+                    return { ...changes, inputValue: '' };
                 default:
-                    return changes
+                    return changes;
             }
-        }
+        },
     });
 
     const Row = ({ index, style }: any) => {
         return (
-            <Box style={style} overflow={"hidden"}>
+            <Box style={style} overflow={'hidden'}>
                 <SearchResultItem
                     item={items[index]}
                     index={index}
@@ -107,33 +106,41 @@ const SearchCurrentNodes: FC<{
                     getItemProps={getItemProps}
                 />
             </Box>
-        )
-    }
+        );
+    };
 
     return (
         <div ref={containerRef}>
             <Box component={Paper} {...sx} {...getComboboxProps()}>
-                <Box overflow={"auto"} maxHeight={MAX_CONTAINER_HEIGHT} marginBottom={items.length === 0 ? 0 : 1}>
-                    <List data-testid={"current-results-list"} dense {...getMenuProps({
-                        hidden: items.length === 0 && !inputValue,
-                        style: { paddingTop: 0 }
-                    })}>
-                        {<FixedSizeList
-                            height={virtualizationHeight}
-                            width={"100%"}
-                            itemSize={LIST_ITEM_HEIGHT}
-                            itemCount={items.length}
-                        >
-                            {Row}
-                        </FixedSizeList>}
-                        {items.length === 0 && inputValue && <ListItem disabled sx={{ fontSize: 14 }}>{NO_RESULTS_TEXT}</ListItem>}
+                <Box overflow={'auto'} maxHeight={MAX_CONTAINER_HEIGHT} marginBottom={items.length === 0 ? 0 : 1}>
+                    <List
+                        data-testid={'current-results-list'}
+                        dense
+                        {...getMenuProps({
+                            hidden: items.length === 0 && !inputValue,
+                            style: { paddingTop: 0 },
+                        })}>
+                        {
+                            <FixedSizeList
+                                height={virtualizationHeight}
+                                width={'100%'}
+                                itemSize={LIST_ITEM_HEIGHT}
+                                itemCount={items.length}>
+                                {Row}
+                            </FixedSizeList>
+                        }
+                        {items.length === 0 && inputValue && (
+                            <ListItem disabled sx={{ fontSize: 14 }}>
+                                {NO_RESULTS_TEXT}
+                            </ListItem>
+                        )}
                     </List>
                 </Box>
                 <TextField
                     inputRef={inputRef}
                     placeholder={PLACEHOLDER_TEXT}
-                    variant="outlined"
-                    size="small"
+                    variant='outlined'
+                    size='small'
                     fullWidth
                     {...getInputProps()}
                     InputProps={{ sx: { fontSize: 14 } }}
@@ -141,6 +148,6 @@ const SearchCurrentNodes: FC<{
             </Box>
         </div>
     );
-}
+};
 
 export default SearchCurrentNodes;
