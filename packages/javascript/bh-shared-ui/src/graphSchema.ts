@@ -171,155 +171,7 @@ export function ActiveDirectoryRelationshipKindToDisplay(value: ActiveDirectoryR
             return undefined;
     }
 }
-export enum ActiveDirectoryKind {
-    Entity = 'Base',
-    User = 'User',
-    Computer = 'Computer',
-    Group = 'Group',
-    GPO = 'GPO',
-    OU = 'OU',
-    Container = 'Container',
-    Domain = 'Domain',
-    LocalGroup = 'ADLocalGroup',
-    LocalUser = 'ADLocalUser',
-    Owns = 'Owns',
-    GenericAll = 'GenericAll',
-    GenericWrite = 'GenericWrite',
-    WriteOwner = 'WriteOwner',
-    WriteDACL = 'WriteDacl',
-    MemberOf = 'MemberOf',
-    ForceChangePassword = 'ForceChangePassword',
-    AllExtendedRights = 'AllExtendedRights',
-    AddMember = 'AddMember',
-    HasSession = 'HasSession',
-    Contains = 'Contains',
-    GPLink = 'GPLink',
-    AllowedToDelegate = 'AllowedToDelegate',
-    GetChanges = 'GetChanges',
-    GetChangesAll = 'GetChangesAll',
-    GetChangesInFilteredSet = 'GetChangesInFilteredSet',
-    TrustedBy = 'TrustedBy',
-    AllowedToAct = 'AllowedToAct',
-    AdminTo = 'AdminTo',
-    CanPSRemote = 'CanPSRemote',
-    CanRDP = 'CanRDP',
-    ExecuteDCOM = 'ExecuteDCOM',
-    HasSIDHistory = 'HasSIDHistory',
-    AddSelf = 'AddSelf',
-    DCSync = 'DCSync',
-    ReadLAPSPassword = 'ReadLAPSPassword',
-    ReadGMSAPassword = 'ReadGMSAPassword',
-    DumpSMSAPassword = 'DumpSMSAPassword',
-    SQLAdmin = 'SQLAdmin',
-    AddAllowedToAct = 'AddAllowedToAct',
-    WriteSPN = 'WriteSPN',
-    AddKeyCredentialLink = 'AddKeyCredentialLink',
-    LocalToComputer = 'LocalToComputer',
-    MemberOfLocalGroup = 'MemberOfLocalGroup',
-    RemoteInteractiveLogonPrivilege = 'RemoteInteractiveLogonPrivilege',
-    SyncLAPSPassword = 'SyncLAPSPassword',
-    WriteAccountRestrictions = 'WriteAccountRestrictions',
-}
-export function ActiveDirectoryKindToDisplay(value: ActiveDirectoryKind): string | undefined {
-    switch (value) {
-        case ActiveDirectoryKind.Entity:
-            return 'Entity';
-        case ActiveDirectoryKind.User:
-            return 'User';
-        case ActiveDirectoryKind.Computer:
-            return 'Computer';
-        case ActiveDirectoryKind.Group:
-            return 'Group';
-        case ActiveDirectoryKind.GPO:
-            return 'GPO';
-        case ActiveDirectoryKind.OU:
-            return 'OU';
-        case ActiveDirectoryKind.Container:
-            return 'Container';
-        case ActiveDirectoryKind.Domain:
-            return 'Domain';
-        case ActiveDirectoryKind.LocalGroup:
-            return 'LocalGroup';
-        case ActiveDirectoryKind.LocalUser:
-            return 'LocalUser';
-        case ActiveDirectoryKind.Owns:
-            return 'Owns';
-        case ActiveDirectoryKind.GenericAll:
-            return 'GenericAll';
-        case ActiveDirectoryKind.GenericWrite:
-            return 'GenericWrite';
-        case ActiveDirectoryKind.WriteOwner:
-            return 'WriteOwner';
-        case ActiveDirectoryKind.WriteDACL:
-            return 'WriteDACL';
-        case ActiveDirectoryKind.MemberOf:
-            return 'MemberOf';
-        case ActiveDirectoryKind.ForceChangePassword:
-            return 'ForceChangePassword';
-        case ActiveDirectoryKind.AllExtendedRights:
-            return 'AllExtendedRights';
-        case ActiveDirectoryKind.AddMember:
-            return 'AddMember';
-        case ActiveDirectoryKind.HasSession:
-            return 'HasSession';
-        case ActiveDirectoryKind.Contains:
-            return 'Contains';
-        case ActiveDirectoryKind.GPLink:
-            return 'GPLink';
-        case ActiveDirectoryKind.AllowedToDelegate:
-            return 'AllowedToDelegate';
-        case ActiveDirectoryKind.GetChanges:
-            return 'GetChanges';
-        case ActiveDirectoryKind.GetChangesAll:
-            return 'GetChangesAll';
-        case ActiveDirectoryKind.GetChangesInFilteredSet:
-            return 'GetChangesInFilteredSet';
-        case ActiveDirectoryKind.TrustedBy:
-            return 'TrustedBy';
-        case ActiveDirectoryKind.AllowedToAct:
-            return 'AllowedToAct';
-        case ActiveDirectoryKind.AdminTo:
-            return 'AdminTo';
-        case ActiveDirectoryKind.CanPSRemote:
-            return 'CanPSRemote';
-        case ActiveDirectoryKind.CanRDP:
-            return 'CanRDP';
-        case ActiveDirectoryKind.ExecuteDCOM:
-            return 'ExecuteDCOM';
-        case ActiveDirectoryKind.HasSIDHistory:
-            return 'HasSIDHistory';
-        case ActiveDirectoryKind.AddSelf:
-            return 'AddSelf';
-        case ActiveDirectoryKind.DCSync:
-            return 'DCSync';
-        case ActiveDirectoryKind.ReadLAPSPassword:
-            return 'ReadLAPSPassword';
-        case ActiveDirectoryKind.ReadGMSAPassword:
-            return 'ReadGMSAPassword';
-        case ActiveDirectoryKind.DumpSMSAPassword:
-            return 'DumpSMSAPassword';
-        case ActiveDirectoryKind.SQLAdmin:
-            return 'SQLAdmin';
-        case ActiveDirectoryKind.AddAllowedToAct:
-            return 'AddAllowedToAct';
-        case ActiveDirectoryKind.WriteSPN:
-            return 'WriteSPN';
-        case ActiveDirectoryKind.AddKeyCredentialLink:
-            return 'AddKeyCredentialLink';
-        case ActiveDirectoryKind.LocalToComputer:
-            return 'LocalToComputer';
-        case ActiveDirectoryKind.MemberOfLocalGroup:
-            return 'MemberOfLocalGroup';
-        case ActiveDirectoryKind.RemoteInteractiveLogonPrivilege:
-            return 'RemoteInteractiveLogonPrivilege';
-        case ActiveDirectoryKind.SyncLAPSPassword:
-            return 'SyncLAPSPassword';
-        case ActiveDirectoryKind.WriteAccountRestrictions:
-            return 'WriteAccountRestrictions';
-        default:
-            return undefined;
-    }
-}
+export type ActiveDirectoryKind = ActiveDirectoryNodeKind | ActiveDirectoryRelationshipKind;
 export enum ActiveDirectoryKindProperties {
     AdminCount = 'admincount',
     DistinguishedName = 'distinguishedname',
@@ -341,6 +193,13 @@ export enum ActiveDirectoryKindProperties {
     DontRequirePreAuth = 'dontreqpreauth',
     LogonType = 'logontype',
     HasURA = 'hasura',
+    PasswordNeverExpires = 'pwdneverexpires',
+    PasswordNotRequired = 'passwordnotreqd',
+    FunctionalLevel = 'functionallevel',
+    TrustType = 'trusttype',
+    SidFiltering = 'sidfiltering',
+    TrustedToAuth = 'trustedtoauth',
+    SamAccountName = 'samaccountname',
 }
 export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKindProperties): string | undefined {
     switch (value) {
@@ -353,7 +212,7 @@ export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKin
         case ActiveDirectoryKindProperties.DomainSID:
             return 'Domain SID';
         case ActiveDirectoryKindProperties.Sensitive:
-            return 'Sensitive';
+            return 'Marked sensitive';
         case ActiveDirectoryKindProperties.HighValue:
             return 'High Value';
         case ActiveDirectoryKindProperties.BlocksInheritance:
@@ -384,6 +243,20 @@ export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKin
             return 'Logon Type';
         case ActiveDirectoryKindProperties.HasURA:
             return 'Has User Rights Assignment Collection';
+        case ActiveDirectoryKindProperties.PasswordNeverExpires:
+            return 'Password Never Expires';
+        case ActiveDirectoryKindProperties.PasswordNotRequired:
+            return 'Password Not Required';
+        case ActiveDirectoryKindProperties.FunctionalLevel:
+            return 'Functional Level';
+        case ActiveDirectoryKindProperties.TrustType:
+            return 'Trust Type';
+        case ActiveDirectoryKindProperties.SidFiltering:
+            return 'SID Filtering Enabled';
+        case ActiveDirectoryKindProperties.TrustedToAuth:
+            return 'Trusted For Constrained Delegation';
+        case ActiveDirectoryKindProperties.SamAccountName:
+            return 'SAM Account Name';
         default:
             return undefined;
     }
@@ -637,212 +510,7 @@ export function AzureRelationshipKindToDisplay(value: AzureRelationshipKind): st
             return undefined;
     }
 }
-export enum AzureKind {
-    Entity = 'AZBase',
-    VMScaleSet = 'AZVMScaleSet',
-    App = 'AZApp',
-    Role = 'AZRole',
-    Device = 'AZDevice',
-    FunctionApp = 'AZFunctionApp',
-    Group = 'AZGroup',
-    KeyVault = 'AZKeyVault',
-    ManagementGroup = 'AZManagementGroup',
-    ResourceGroup = 'AZResourceGroup',
-    ServicePrincipal = 'AZServicePrincipal',
-    Subscription = 'AZSubscription',
-    Tenant = 'AZTenant',
-    User = 'AZUser',
-    VM = 'AZVM',
-    ManagedCluster = 'AZManagedCluster',
-    ContainerRegistry = 'AZContainerRegistry',
-    WebApp = 'AZWebApp',
-    LogicApp = 'AZLogicApp',
-    AutomationAccount = 'AZAutomationAccount',
-    AvereContributor = 'AZAvereContributor',
-    Contains = 'AZContains',
-    Contributor = 'AZContributor',
-    GetCertificates = 'AZGetCertificates',
-    GetKeys = 'AZGetKeys',
-    GetSecrets = 'AZGetSecrets',
-    HasRole = 'AZHasRole',
-    MemberOf = 'AZMemberOf',
-    Owner = 'AZOwner',
-    RunsAs = 'AZRunsAs',
-    VMContributor = 'AZVMContributor',
-    AutomationContributor = 'AZAutomationContributor',
-    KeyVaultContributor = 'AZKeyVaultContributor',
-    VMAdminLogin = 'AZVMAdminLogin',
-    AddMembers = 'AZAddMembers',
-    AddSecret = 'AZAddSecret',
-    ExecuteCommand = 'AZExecuteCommand',
-    GlobalAdmin = 'AZGlobalAdmin',
-    PrivilegedAuthAdmin = 'AZPrivilegedAuthAdmin',
-    Grant = 'AZGrant',
-    GrantSelf = 'AZGrantSelf',
-    PrivilegedRoleAdmin = 'AZPrivilegedRoleAdmin',
-    ResetPassword = 'AZResetPassword',
-    UserAccessAdministrator = 'AZUserAccessAdministrator',
-    Owns = 'AZOwns',
-    ScopedTo = 'AZScopedTo',
-    CloudAppAdmin = 'AZCloudAppAdmin',
-    AppAdmin = 'AZAppAdmin',
-    AddOwner = 'AZAddOwner',
-    ManagedIdentity = 'AZManagedIdentity',
-    ApplicationReadWriteAll = 'AZMGApplication_ReadWrite_All',
-    AppRoleAssignmentReadWriteAll = 'AZMGAppRoleAssignment_ReadWrite_All',
-    DirectoryReadWriteAll = 'AZMGDirectory_ReadWrite_All',
-    GroupReadWriteAll = 'AZMGGroup_ReadWrite_All',
-    GroupMemberReadWriteAll = 'AZMGGroupMember_ReadWrite_All',
-    RoleManagementReadWriteDirectory = 'AZMGRoleManagement_ReadWrite_Directory',
-    ServicePrincipalEndpointReadWriteAll = 'AZMGServicePrincipalEndpoint_ReadWrite_All',
-    AKSContributor = 'AZAKSContributor',
-    NodeResourceGroup = 'AZNodeResourceGroup',
-    WebsiteContributor = 'AZWebsiteContributor',
-    LogicAppContributor = 'AZLogicAppContributor',
-    AZMGAddMember = 'AZMGAddMember',
-    AZMGAddOwner = 'AZMGAddOwner',
-    AZMGAddSecret = 'AZMGAddSecret',
-    AZMGGrantAppRoles = 'AZMGGrantAppRoles',
-    AZMGGrantRole = 'AZMGGrantRole',
-}
-export function AzureKindToDisplay(value: AzureKind): string | undefined {
-    switch (value) {
-        case AzureKind.Entity:
-            return 'Entity';
-        case AzureKind.VMScaleSet:
-            return 'VMScaleSet';
-        case AzureKind.App:
-            return 'App';
-        case AzureKind.Role:
-            return 'Role';
-        case AzureKind.Device:
-            return 'Device';
-        case AzureKind.FunctionApp:
-            return 'FunctionApp';
-        case AzureKind.Group:
-            return 'Group';
-        case AzureKind.KeyVault:
-            return 'KeyVault';
-        case AzureKind.ManagementGroup:
-            return 'ManagementGroup';
-        case AzureKind.ResourceGroup:
-            return 'ResourceGroup';
-        case AzureKind.ServicePrincipal:
-            return 'ServicePrincipal';
-        case AzureKind.Subscription:
-            return 'Subscription';
-        case AzureKind.Tenant:
-            return 'Tenant';
-        case AzureKind.User:
-            return 'User';
-        case AzureKind.VM:
-            return 'VM';
-        case AzureKind.ManagedCluster:
-            return 'ManagedCluster';
-        case AzureKind.ContainerRegistry:
-            return 'ContainerRegistry';
-        case AzureKind.WebApp:
-            return 'WebApp';
-        case AzureKind.LogicApp:
-            return 'LogicApp';
-        case AzureKind.AutomationAccount:
-            return 'AutomationAccount';
-        case AzureKind.AvereContributor:
-            return 'AvereContributor';
-        case AzureKind.Contains:
-            return 'Contains';
-        case AzureKind.Contributor:
-            return 'Contributor';
-        case AzureKind.GetCertificates:
-            return 'GetCertificates';
-        case AzureKind.GetKeys:
-            return 'GetKeys';
-        case AzureKind.GetSecrets:
-            return 'GetSecrets';
-        case AzureKind.HasRole:
-            return 'HasRole';
-        case AzureKind.MemberOf:
-            return 'MemberOf';
-        case AzureKind.Owner:
-            return 'Owner';
-        case AzureKind.RunsAs:
-            return 'RunsAs';
-        case AzureKind.VMContributor:
-            return 'VMContributor';
-        case AzureKind.AutomationContributor:
-            return 'AutomationContributor';
-        case AzureKind.KeyVaultContributor:
-            return 'KeyVaultContributor';
-        case AzureKind.VMAdminLogin:
-            return 'VMAdminLogin';
-        case AzureKind.AddMembers:
-            return 'AddMembers';
-        case AzureKind.AddSecret:
-            return 'AddSecret';
-        case AzureKind.ExecuteCommand:
-            return 'ExecuteCommand';
-        case AzureKind.GlobalAdmin:
-            return 'GlobalAdmin';
-        case AzureKind.PrivilegedAuthAdmin:
-            return 'PrivilegedAuthAdmin';
-        case AzureKind.Grant:
-            return 'Grant';
-        case AzureKind.GrantSelf:
-            return 'GrantSelf';
-        case AzureKind.PrivilegedRoleAdmin:
-            return 'PrivilegedRoleAdmin';
-        case AzureKind.ResetPassword:
-            return 'ResetPassword';
-        case AzureKind.UserAccessAdministrator:
-            return 'UserAccessAdministrator';
-        case AzureKind.Owns:
-            return 'Owns';
-        case AzureKind.ScopedTo:
-            return 'ScopedTo';
-        case AzureKind.CloudAppAdmin:
-            return 'CloudAppAdmin';
-        case AzureKind.AppAdmin:
-            return 'AppAdmin';
-        case AzureKind.AddOwner:
-            return 'AddOwner';
-        case AzureKind.ManagedIdentity:
-            return 'ManagedIdentity';
-        case AzureKind.ApplicationReadWriteAll:
-            return 'ApplicationReadWriteAll';
-        case AzureKind.AppRoleAssignmentReadWriteAll:
-            return 'AppRoleAssignmentReadWriteAll';
-        case AzureKind.DirectoryReadWriteAll:
-            return 'DirectoryReadWriteAll';
-        case AzureKind.GroupReadWriteAll:
-            return 'GroupReadWriteAll';
-        case AzureKind.GroupMemberReadWriteAll:
-            return 'GroupMemberReadWriteAll';
-        case AzureKind.RoleManagementReadWriteDirectory:
-            return 'RoleManagementReadWriteDirectory';
-        case AzureKind.ServicePrincipalEndpointReadWriteAll:
-            return 'ServicePrincipalEndpointReadWriteAll';
-        case AzureKind.AKSContributor:
-            return 'AKSContributor';
-        case AzureKind.NodeResourceGroup:
-            return 'NodeResourceGroup';
-        case AzureKind.WebsiteContributor:
-            return 'WebsiteContributor';
-        case AzureKind.LogicAppContributor:
-            return 'LogicAppContributor';
-        case AzureKind.AZMGAddMember:
-            return 'AZMGAddMember';
-        case AzureKind.AZMGAddOwner:
-            return 'AZMGAddOwner';
-        case AzureKind.AZMGAddSecret:
-            return 'AZMGAddSecret';
-        case AzureKind.AZMGGrantAppRoles:
-            return 'AZMGGrantAppRoles';
-        case AzureKind.AZMGGrantRole:
-            return 'AZMGGrantRole';
-        default:
-            return undefined;
-    }
-}
+export type AzureKind = AzureNodeKind | AzureRelationshipKind;
 export enum AzureKindProperties {
     AppOwnerOrganizationID = 'appownerorganizationid',
     AppDescription = 'appdescription',
@@ -851,6 +519,7 @@ export enum AzureKindProperties {
     UserType = 'usertype',
     TenantID = 'tenantid',
     ServicePrincipalID = 'service_principal_id',
+    ServicePrincipalNames = 'service_principal_names',
     OperatingSystemVersion = 'operatingsystemversion',
     TrustType = 'trustype',
     IsBuiltIn = 'isbuiltin',
@@ -891,6 +560,8 @@ export function AzureKindPropertiesToDisplay(value: AzureKindProperties): string
             return 'Tenant ID';
         case AzureKindProperties.ServicePrincipalID:
             return 'Service Principal ID';
+        case AzureKindProperties.ServicePrincipalNames:
+            return 'Service Principal Names';
         case AzureKindProperties.OperatingSystemVersion:
             return 'Operating System Version';
         case AzureKindProperties.TrustType:
@@ -982,4 +653,71 @@ export function AzurePathfindingEdges(): AzureRelationshipKind[] {
         AzureRelationshipKind.AZMGGrantAppRoles,
         AzureRelationshipKind.AZMGGrantRole,
     ];
+}
+export enum CommonNodeKind {
+    MigrationData = 'MigrationData',
+}
+export function CommonNodeKindToDisplay(value: CommonNodeKind): string | undefined {
+    switch (value) {
+        case CommonNodeKind.MigrationData:
+            return 'MigrationData';
+        default:
+            return undefined;
+    }
+}
+export enum CommonKindProperties {
+    ObjectID = 'objectid',
+    Name = 'name',
+    DisplayName = 'displayname',
+    Description = 'description',
+    OwnerObjectID = 'owner_objectid',
+    Collected = 'collected',
+    OperatingSystem = 'operatingsystem',
+    SystemTags = 'system_tags',
+    UserTags = 'user_tags',
+    LastSeen = 'lastseen',
+    WhenCreated = 'whencreated',
+    Enabled = 'enabled',
+    PasswordLastSet = 'pwdlastset',
+    Title = 'title',
+    Email = 'email',
+    IsInherited = 'isinherited',
+}
+export function CommonKindPropertiesToDisplay(value: CommonKindProperties): string | undefined {
+    switch (value) {
+        case CommonKindProperties.ObjectID:
+            return 'Object ID';
+        case CommonKindProperties.Name:
+            return 'Name';
+        case CommonKindProperties.DisplayName:
+            return 'Display Name';
+        case CommonKindProperties.Description:
+            return 'Description';
+        case CommonKindProperties.OwnerObjectID:
+            return 'Owner Object ID';
+        case CommonKindProperties.Collected:
+            return 'Collected';
+        case CommonKindProperties.OperatingSystem:
+            return 'Operating System';
+        case CommonKindProperties.SystemTags:
+            return 'Node System Tags';
+        case CommonKindProperties.UserTags:
+            return 'Node User Tags';
+        case CommonKindProperties.LastSeen:
+            return 'Last Collected by BloodHound';
+        case CommonKindProperties.WhenCreated:
+            return 'Created';
+        case CommonKindProperties.Enabled:
+            return 'Enabled';
+        case CommonKindProperties.PasswordLastSet:
+            return 'Password Last Set';
+        case CommonKindProperties.Title:
+            return 'Title';
+        case CommonKindProperties.Email:
+            return 'Email';
+        case CommonKindProperties.IsInherited:
+            return 'Is Inherited';
+        default:
+            return undefined;
+    }
 }
