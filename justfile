@@ -15,6 +15,7 @@ set positional-arguments
 # Initialize your dev environment (use "just init clean" to reset your config files)
 init wipe="":
   #!/usr/bin/env bash
+  echo "Init BloodHound CE"
   echo "Make local copies of configuration files"
   if [[ -d "./local-harnesses/build.config.json" ]]; then
     rm -rf "./local-harnesses/build.config.json"
@@ -37,13 +38,26 @@ init wipe="":
   echo "Install additional Go tools"
   go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.52.2
 
-  echo "Run a build to ensure go.work.sum is valid"
-  just build -vf
+  echo "Run modsync to ensure workspace is up to date"
+  just modsync
 
   echo "Ensure containers have been rebuilt"
-  just bh-dev build
+  if [[ "{{wipe}}" != "clean" ]]; then
+    just bh-dev build
+  else
+    echo "Clear volumes and rebuild without cache"
+    just bh-clear-volumes
+    just bh-clean-docker-build
+  fi
 
-  echo "Init Complete"
+  echo "Start integration testing services"
+  if [[ "{{wipe}}" == "clean" ]]; then
+    echo "Clear volumes and restart testing services without cache"
+    just bh-testing-clear-volumes
+    just bh-testing build --no-cache
+  fi
+
+  echo "BloodHound CE Init Complete"
 
 # Show available targets for this context.
 show *FLAGS:
@@ -62,6 +76,10 @@ test *FLAGS:
   #!/usr/bin/env bash
   set -euo pipefail
   python3 packages/python/beagle/main.py test {{FLAGS}}
+
+# sync modules in workspace
+modsync:
+  @go run github.com/specterops/bloodhound/packages/go/stbernard modsync
 
 # updates favicon.ico, logo192.png and logo512.png from logo.svg
 update-favicon:
@@ -142,8 +160,8 @@ bh-testing-clear-volumes *ARGS='':
   @docker compose --project-name bh-testing -f docker-compose.testing.yml down -v {{ARGS}}
 
 # clear BH docker compose volumes (pass --remove-orphans if troubleshooting)
-bh-clear-volumes *ARGS='':
-  @docker compose -f docker-compose.dev.yml down -v {{ARGS}}
+bh-clear-volumes target='dev' *ARGS='':
+  @docker compose --profile {{target}} -f docker-compose.dev.yml down -v {{ARGS}}
 
 # build BH target cleanly (default profile dev with --no-cache flag)
 bh-clean-docker-build target='dev' *ARGS='':
