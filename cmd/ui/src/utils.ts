@@ -14,19 +14,16 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { ActiveDirectoryNodeKind, AzureNodeKind, apiClient } from 'bh-shared-ui';
+import { FlatGraphResponse, GraphData, GraphResponse, StyledGraphEdge, StyledGraphNode } from 'js-client-library';
 import identity from 'lodash/identity';
 import throttle from 'lodash/throttle';
-import { DateTime } from 'luxon';
-import { apiClient } from 'bh-shared-ui';
-import { FlatGraphResponse, GraphData, StyledGraphNode, StyledGraphEdge, GraphResponse } from 'js-client-library';
+import { Coordinates } from 'sigma/types';
 import { logout } from 'src/ducks/auth/authSlice';
 import { addSnackbar } from 'src/ducks/global/actions';
-import { ActiveDirectoryNodeKind, AzureNodeKind } from 'bh-shared-ui';
+import { isLink, isNode } from 'src/ducks/graph/utils';
+import { Glyph } from 'src/rendering/programs/node.glyphs';
 import { store } from 'src/store';
-import { LuxonFormat } from 'bh-shared-ui';
-import { isLink, isNode } from './ducks/graph/utils';
-import { Glyph } from './rendering/programs/node.glyphs';
-import { Coordinates } from 'sigma/types';
 
 export const getDatesInRange = (startDate: Date, endDate: Date) => {
     const date = new Date(startDate.getTime());
@@ -56,42 +53,6 @@ export const validateNodeType = (type: string): ActiveDirectoryNodeKind | AzureN
     });
 
     return result;
-};
-
-const formatSimple = (value: any): string => {
-    const type = typeof value;
-    if (type === 'number') {
-        const currentDate = Math.round(new Date().getTime() / 1000);
-
-        //315536400 = January 1st, 1980. Seems like a safe bet
-        if (value > 315536400 && value < currentDate) {
-            return DateTime.fromSeconds(value).toFormat(LuxonFormat.DATETIME);
-        } else {
-            return `${value}`.toLocaleString();
-        }
-    }
-
-    if (type === 'boolean') {
-        return value.toString().toUpperCase();
-    }
-
-    const potentialDate: any = DateTime.fromISO(value);
-
-    if (potentialDate.invalid === null) return potentialDate.toFormat(LuxonFormat.DATETIME);
-
-    return value;
-};
-
-export const format = (value: any): string | string[] | null => {
-    if (Array.isArray(value)) {
-        const fields: string[] = [];
-        value.forEach((val) => {
-            fields.push(formatSimple(val));
-        });
-        return fields;
-    } else {
-        return formatSimple(value);
-    }
 };
 
 export const getUsername = (user: any): string | undefined => {
@@ -220,7 +181,7 @@ export const transformFlatGraphResponse = (graph: FlatGraphResponse): GraphData 
                 kind: edge.label.text || '',
                 lastSeen: lastSeen,
                 exploreGraphId: key || `${edge.id1}_${edge.label.text}_${edge.id2}`,
-                data: { ...edge.data, lastseen: lastSeen },
+                data: { ...(edge.data || {}), lastseen: lastSeen },
             });
         }
     }
@@ -254,7 +215,7 @@ export const transformToFlatGraphResponse = (graph: GraphResponse) => {
                 text: edge.label,
             },
             lastSeen: lastSeen,
-            data: { ...edge.data, lastseen: lastSeen },
+            data: { ...(edge.data || {}), lastseen: lastSeen },
         };
     }
     return result;
