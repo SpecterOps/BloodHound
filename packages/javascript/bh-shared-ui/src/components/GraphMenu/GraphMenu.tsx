@@ -42,6 +42,14 @@ const GraphMenu: FC<{ label: string; children: ReactNode }> = ({ children, label
                 onClose={handleClose}
                 MenuListProps={{
                     'aria-labelledby': `${label}-button`,
+                }}
+                anchorOrigin={{
+                    vertical: 'top',
+                    horizontal: 'left',
+                }}
+                transformOrigin={{
+                    vertical: 'bottom',
+                    horizontal: 'left',
                 }}>
                 {Children.map(children, (child) => {
                     return <div onClick={handleClose}>{child}</div>;
