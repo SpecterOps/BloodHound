@@ -60,11 +60,10 @@ afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
 
 describe('CreateUserDialog', () => {
-
     type SetupOptions = {
         renderErrors?: boolean;
         renderLoading?: boolean;
-    }
+    };
 
     const setup = (options?: SetupOptions) => {
         const user = userEvent.setup();
@@ -95,8 +94,8 @@ describe('CreateUserDialog', () => {
             testUser,
             testOnClose,
             testOnSave,
-        }
-    }
+        };
+    };
 
     it('should render a create user form', async () => {
         setup();
@@ -218,7 +217,7 @@ describe('CreateUserDialog', () => {
         expect(await screen.findByText('An unexpected error occurred. Please try again.')).toBeInTheDocument();
     });
 
-    it("should clear out the saml provider id from submission data when the authentication method is changed", async () => {
+    it('should clear out the saml provider id from submission data when the authentication method is changed', async () => {
         const { user, testUser, testOnSave } = setup();
 
         const saveButton = await screen.findByRole('button', { name: 'Save' });

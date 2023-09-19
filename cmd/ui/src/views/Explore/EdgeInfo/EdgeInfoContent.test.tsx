@@ -48,7 +48,7 @@ const server = setupServer(
 const selectedEdge: SelectedEdge = {
     id: '1',
     name: 'CustomEdge',
-    data: { isACL: false },
+    data: { isACL: false, lastseen: '2023-09-07T11:10:33.664596893Z' },
     sourceNode: {
         name: 'source node',
         id: '1',
