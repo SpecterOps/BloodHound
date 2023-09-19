@@ -188,7 +188,7 @@ class BHEAPIClient {
         );
     };
 
-    getPostureStats = (from: Date, to: Date, options?: types.RequestOptions) =>
+    getPostureStats = (from: Date, to: Date, domainSID: string, options?: types.RequestOptions) =>
         this.baseClient.get(
             '/api/v2/posture-stats',
             Object.assign(
@@ -196,6 +196,7 @@ class BHEAPIClient {
                     params: {
                         from: from.toISOString(),
                         to: to.toISOString(),
+                        domain_sid: domainSID,
                     },
                 },
                 options
