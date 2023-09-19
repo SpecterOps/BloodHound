@@ -79,7 +79,7 @@ const GraphButtons: FC<GraphButtonsProps> = ({ rankDirection, options, nonLayout
     };
 
     return (
-        <Box bottom={16} display={'flex'}>
+        <Box display={'flex'} gap={1} mt={2} ml={2}>
             <GraphButton onClick={reset} displayText={<FontAwesomeIcon icon={faCropAlt} />} />
 
             <GraphMenu label='Layout'>
@@ -95,13 +95,14 @@ const GraphButtons: FC<GraphButtonsProps> = ({ rankDirection, options, nonLayout
                 </MenuItem>
             </GraphMenu>
 
-            {nonLayoutButtons?.length && (
-                <>
-                    {nonLayoutButtons.map((props, index) => (
-                        <GraphButton key={index} onClick={props.onClick} displayText={props.displayText} disabled={props.disabled} />
-                    ))}
-                </>
-            )}
+            {nonLayoutButtons?.map((props, index) => (
+                <GraphButton
+                    key={index}
+                    onClick={props.onClick}
+                    displayText={props.displayText}
+                    disabled={props.disabled}
+                />
+            ))}
         </Box>
     );
 };
