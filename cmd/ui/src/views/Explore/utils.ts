@@ -14,15 +14,19 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { startCase } from 'lodash';
 import {
     ActiveDirectoryKindProperties,
     ActiveDirectoryKindPropertiesToDisplay,
     AzureKindProperties,
     AzureKindPropertiesToDisplay,
+    CommonKindProperties,
+    CommonKindPropertiesToDisplay,
+    EntityField,
+    EntityPropertyKind,
 } from 'bh-shared-ui';
-import { CommonKindProperties, CommonKindPropertiesToDisplay } from 'src/graphSchema';
-import { EntityField } from './fragments';
+import isEmpty from 'lodash/isEmpty';
+import startCase from 'lodash/startCase';
+import { ZERO_VALUE_API_DATE } from 'src/constants';
 
 export let controller = new AbortController();
 
@@ -33,24 +37,37 @@ export const abortRequest = () => {
 
 export const formatObjectInfoFields = (props: any): EntityField[] => {
     let mappedFields: EntityField[] = [];
+    const propKeys = Object.keys(props);
 
-    Object.keys(props).forEach((key: string) => {
-        const validatedProperty = validateProperty(key);
+    for (let i = 0; i < propKeys.length; i++) {
+        const value = props[propKeys[i]];
+        // Don't display empty fields or fields with zero date values
+        if (
+            value === undefined ||
+            value === '' ||
+            value === ZERO_VALUE_API_DATE ||
+            (typeof value === 'object' && isEmpty(value))
+        )
+            continue;
 
-        if (validatedProperty.isKnownProperty) {
+        const { kind, isKnownProperty } = validateProperty(propKeys[i]);
+
+        if (isKnownProperty) {
             mappedFields.push({
-                label: getFieldLabel(validatedProperty.kind!, key),
-                value: props[key],
-                keyprop: key,
+                kind: kind,
+                label: getFieldLabel(kind!, propKeys[i]),
+                value: value,
+                keyprop: propKeys[i],
             });
         } else {
             mappedFields.push({
-                label: `${startCase(key)}:`,
-                value: props[key],
-                keyprop: key,
+                kind: kind,
+                label: `${startCase(propKeys[i])}:`,
+                value: value,
+                keyprop: propKeys[i],
             });
         }
-    });
+    }
 
     mappedFields = mappedFields.sort((a, b) => {
         return a.label!.localeCompare(b.label!);
@@ -73,7 +90,7 @@ const isCommonProperty = (enumValue: CommonKindProperties): boolean => {
 
 export type ValidatedProperty = {
     isKnownProperty: boolean;
-    kind: 'ad' | 'az' | 'cm' | null;
+    kind: EntityPropertyKind;
 };
 
 export const validateProperty = (enumValue: string): ValidatedProperty => {

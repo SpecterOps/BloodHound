@@ -16,5 +16,6 @@
 
 export * from './api';
 export * from './datetime';
+export * from './entityInfoDisplay';
 export * from './passwd';
 export * from './user';
