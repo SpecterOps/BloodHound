@@ -52,10 +52,7 @@ const GraphButton: FC<GraphButtonProps> = ({ onClick, displayText, disabled }) =
     const styles = useStyles();
 
     return (
-        <Button
-            onClick={onClick}
-            disabled={disabled}
-            classes={{ root: styles.button }}>
+        <Button onClick={onClick} disabled={disabled} classes={{ root: styles.button }}>
             {displayText}
         </Button>
     );

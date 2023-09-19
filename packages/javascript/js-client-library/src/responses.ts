@@ -39,6 +39,16 @@ type TimestampFields = {
     };
 };
 
+type PostureStat = TimestampFields & {
+    domain_sid: string;
+    exposure_index: number;
+    tier_zero_count: number;
+    critical_risk_count: number;
+    id: number;
+};
+
+export type PostureResponse = PaginatedResponse<PostureStat[]>;
+
 export type AuthToken = TimestampFields & {
     hmac_method: string;
     id: string;
