@@ -14,23 +14,23 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { FC } from "react";
-import { Box, ListItem, ListItemText } from "@mui/material";
-import HighlightedText from "../HighlightedText";
-import NodeIcon from "../NodeIcon";
+import { FC } from 'react';
+import { Box, ListItem, ListItemText } from '@mui/material';
+import HighlightedText from '../HighlightedText';
+import NodeIcon from '../NodeIcon';
 
 type NodeSearchResult = {
     label: string;
     objectId: string;
     kind: string;
-}
+};
 
 const SearchResultItem: FC<{
     item: NodeSearchResult;
     index: number;
     highlightedIndex?: number;
     keyword: string;
-    getItemProps: (options: any) => any
+    getItemProps: (options: any) => any;
 }> = ({ item, index, highlightedIndex, keyword, getItemProps }) => {
     return (
         <ListItem
@@ -54,10 +54,7 @@ const SearchResultItem: FC<{
                                 flexGrow: 1,
                                 marginRight: '1em',
                             }}>
-                            <HighlightedText
-                                text={item.label || item.objectId}
-                                search={keyword}
-                            />
+                            <HighlightedText text={item.label || item.objectId} search={keyword} />
                         </Box>
                     </Box>
                 }
@@ -70,6 +67,6 @@ const SearchResultItem: FC<{
             />
         </ListItem>
     );
-}
+};
 
 export default SearchResultItem;

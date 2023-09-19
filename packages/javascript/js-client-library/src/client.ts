@@ -16,7 +16,7 @@
 
 import axios, { AxiosInstance } from 'axios';
 import * as types from './types';
-import { CreateAuthTokenResponse, ListAuthTokensResponse } from './responses';
+import { CreateAuthTokenResponse, ListAuthTokensResponse, PostureResponse } from './responses';
 
 class BHEAPIClient {
     baseClient: AxiosInstance;
@@ -188,19 +188,25 @@ class BHEAPIClient {
         );
     };
 
-    getPostureStats = (from: Date, to: Date, options?: types.RequestOptions) =>
-        this.baseClient.get(
+    getPostureStats = (from: Date, to: Date, domainSID?: string, sortBy?: string, options?: types.RequestOptions) => {
+        const params: types.PostureRequest = {
+            from: from.toISOString(),
+            to: to.toISOString(),
+        };
+
+        if (domainSID) params.domain_sid = `eq:${domainSID}`;
+        if (sortBy) params.sort_by = sortBy;
+
+        return this.baseClient.get<PostureResponse>(
             '/api/v2/posture-stats',
             Object.assign(
                 {
-                    params: {
-                        from: from.toISOString(),
-                        to: to.toISOString(),
-                    },
+                    params: params,
                 },
                 options
             )
         );
+    };
 
     /* ingest */
     ingestData = (options?: types.RequestOptions) => this.baseClient.post('/api/v2/ingest', options);
