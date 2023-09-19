@@ -15,7 +15,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { useSigma } from '@react-sigma/core';
-import { cloneDeep, debounce } from 'lodash';
+import cloneDeep from 'lodash/cloneDeep';
+import debounce from 'lodash/debounce';
 import { useEffect, useRef, useState } from 'react';
 
 export const GraphDiagnostics = () => {

@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import produce from 'immer';
+import { produce } from 'immer';
 import * as types from 'src/ducks/tierzero/types';
 
 const initialTierZeroState: types.ChangeLogState = {

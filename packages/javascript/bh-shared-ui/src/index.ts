@@ -23,6 +23,8 @@ declare module '@mui/styles/defaultTheme' {
 
 export * from './components';
 
+export * from './hooks';
+
 export * from './commonSearches';
 
 export * from './providers';
