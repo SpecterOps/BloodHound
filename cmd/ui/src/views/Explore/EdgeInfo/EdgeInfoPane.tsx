@@ -14,19 +14,19 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Paper } from '@mui/material';
+import { Box, Paper, SxProps } from '@mui/material';
 import { SelectedEdge } from 'bh-shared-ui';
 import React, { useState } from 'react';
 import EdgeInfoContent from 'src/views/Explore/EdgeInfo/EdgeInfoContent';
 import Header from 'src/views/Explore/EdgeInfo/EdgeInfoHeader';
 import usePaneStyles from 'src/views/Explore/InfoStyles/Pane';
 
-const EdgeInfoPane: React.FC<{ selectedEdge: SelectedEdge }> = ({ selectedEdge }) => {
+const EdgeInfoPane: React.FC<{ sx?: SxProps, selectedEdge: SelectedEdge }> = ({ sx, selectedEdge }) => {
     const styles = usePaneStyles();
     const [expanded, setExpanded] = useState(true);
 
     return (
-        <div className={styles.container} data-testid='explore_edge-information-pane'>
+        <Box sx={sx} className={styles.container} data-testid='explore_edge-information-pane'>
             <Paper elevation={0} classes={{ root: styles.headerPaperRoot }}>
                 <Header
                     name={selectedEdge?.name || 'None'}
@@ -44,7 +44,7 @@ const EdgeInfoPane: React.FC<{ selectedEdge: SelectedEdge }> = ({ selectedEdge }
                 }}>
                 {selectedEdge === null ? 'No information to display.' : <EdgeInfoContent selectedEdge={selectedEdge} />}
             </Paper>
-        </div>
+        </Box>
     );
 };
 

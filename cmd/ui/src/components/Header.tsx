@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { faCog, faGem, faProjectDiagram } from '@fortawesome/free-solid-svg-icons';
+import { faCog, faUsersRectangle, faProjectDiagram } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { AppBar, Box, IconButton, Link, Toolbar } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
@@ -95,8 +95,8 @@ const Header: React.FC = () => {
                         data-testid='global_header_nav-explore'
                     />
                     <MenuItem
-                        title={'Set Management'}
-                        icon={<FontAwesomeIcon icon={faGem} size='sm' />}
+                        title={'Group Management'}
+                        icon={<FontAwesomeIcon icon={faUsersRectangle} size='sm' />}
                         active={location.pathname === routes.ROUTE_SET_MANAGEMENT}
                         onClick={() => navigate(routes.ROUTE_SET_MANAGEMENT)}
                         data-testid='global_header_nav-set-management'
