@@ -80,25 +80,6 @@ const CommonSearches = ({ onClickListItem }: CommonSearchesProps) => {
     const adSections = getADSearches().map(({ subheader, queries }) => ({ subheader, lineItems: queries }));
     const azSections = getAZSearches().map(({ subheader, queries }) => ({ subheader, lineItems: queries }));
 
-    const [userSavedQueries, setUserSavedQueries] = useState([]);
-
-    useQuery(['userSavedQueries'], () => {
-        return apiClient
-            .getUserSavedQueries()
-            .then((result) => {
-                const userQueries = result.data.data;
-                const userQueriesToDisplay = userQueries.map((element: any) => ({
-                    description: element.name,
-                    cypher: element.query,
-                    canEdit: true,
-                }));
-                setUserSavedQueries(userQueriesToDisplay);
-            })
-            .catch((err) => {
-                setUserSavedQueries([]);
-            });
-    });
-
     return (
         <Box>
             <Typography variant='h5' sx={{ mb: 2, mt: 2 }}>
@@ -119,17 +100,7 @@ const CommonSearches = ({ onClickListItem }: CommonSearchesProps) => {
 
             {activeTab === AD_TAB && <SearchList listSections={adSections} onClickListItem={onClickListItem} />}
             {activeTab === AZ_TAB && <SearchList listSections={azSections} onClickListItem={onClickListItem} />}
-            {activeTab === CUSTOM_TAB && (
-                <SearchList
-                    listSections={[
-                        {
-                            subheader: 'User Saved Searches: ',
-                            lineItems: userSavedQueries,
-                        },
-                    ]}
-                    onClickListItem={onClickListItem}
-                />
-            )}
+            {activeTab === CUSTOM_TAB && <PersonalSearchList onClickListItem={onClickListItem} />}
         </Box>
     );
 };
@@ -176,6 +147,41 @@ const SearchList: FC<SearchListProps> = ({ listSections, onClickListItem }) => {
                 );
             })}
         </List>
+    );
+};
+
+// `PersonalSearchList` is a more specific implementation of `SearchList`.  It includes
+// additional fetching logic to fetch queries saved by the user
+const PersonalSearchList: FC<{ onClickListItem: (query: string) => void }> = ({ onClickListItem }) => {
+    const [userSavedQueries, setUserSavedQueries] = useState([]);
+
+    useQuery(['userSavedQueries'], () => {
+        return apiClient
+            .getUserSavedQueries()
+            .then((result) => {
+                const userQueries = result.data.data;
+                const userQueriesToDisplay = userQueries.map((element: any) => ({
+                    description: element.name,
+                    cypher: element.query,
+                    canEdit: true,
+                }));
+                setUserSavedQueries(userQueriesToDisplay);
+            })
+            .catch((err) => {
+                setUserSavedQueries([]);
+            });
+    });
+
+    return (
+        <SearchList
+            listSections={[
+                {
+                    subheader: 'User Saved Searches: ',
+                    lineItems: userSavedQueries,
+                },
+            ]}
+            onClickListItem={onClickListItem}
+        />
     );
 };
 
