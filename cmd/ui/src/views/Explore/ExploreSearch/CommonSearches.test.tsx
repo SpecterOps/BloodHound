@@ -46,7 +46,7 @@ describe('CommonSearches', () => {
             expect(screen.getByText(subheader)).toBeInTheDocument();
         });
     });
-    // todo:
+
     it('handles a click on each list item', async () => {
         const user = userEvent.setup();
 
