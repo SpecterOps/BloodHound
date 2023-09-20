@@ -5,6 +5,8 @@ import { useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { addSnackbar } from 'src/ducks/global/actions';
 import makeStyles from '@mui/styles/makeStyles';
+import { useMutation, useQueryClient } from 'react-query';
+import { apiClient } from 'bh-shared-ui';
 
 const useStyles = makeStyles((theme) => ({
     button: {
@@ -22,6 +24,8 @@ const useStyles = makeStyles((theme) => ({
 
 const SaveQueryInput = () => {
     const dispatch = useDispatch();
+    const queryClient = useQueryClient();
+
     const classes = useStyles();
 
     const [showCustomQueryInput, setShowCustomQueryInput] = useState(false);
@@ -29,16 +33,25 @@ const SaveQueryInput = () => {
     const [customQueryName, setCustomQueryName] = useState('');
     const [saveDisabled, setSaveDisabled] = useState(false);
 
+    const mutation = useMutation({
+        mutationFn: (newQuery: any) => {
+            return apiClient.createUserQuery(newQuery);
+        },
+        // Always refetch after error or success:
+        onSettled: () => {
+            queryClient.invalidateQueries({ queryKey: 'userSavedQueries' });
+        },
+        onSuccess: () => {
+            setCustomQueryName(''); // reset input
+            dispatch(addSnackbar(`${customQueryName} saved!`, 'userSavedQuery'));
+        },
+    });
+
     const handleCustomQueryOnSave = () => {
         setShowCustomQueryInput((c) => !c);
 
         if (showCustomQueryInput) {
-            setCustomQueryName(''); // reset input
-
-            // dispatch a save to the server
-            dispatch(addSnackbar(`${customQueryName} saved!`, 'customQuerySaved'));
-
-            // dispatch a local mutation to the custom searches tab?
+            mutation.mutate({ name: customQueryName, query: 'match (n) return n limit 100' });
         }
     };
 

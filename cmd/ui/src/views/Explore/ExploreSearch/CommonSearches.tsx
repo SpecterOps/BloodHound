@@ -155,21 +155,24 @@ const SearchList: FC<SearchListProps> = ({ listSections, onClickListItem }) => {
 const PersonalSearchList: FC<{ onClickListItem: (query: string) => void }> = ({ onClickListItem }) => {
     const [userSavedQueries, setUserSavedQueries] = useState([]);
 
-    useQuery(['userSavedQueries'], () => {
-        return apiClient
-            .getUserSavedQueries()
-            .then((result) => {
-                const userQueries = result.data.data;
-                const userQueriesToDisplay = userQueries.map((element: any) => ({
-                    description: element.name,
-                    cypher: element.query,
-                    canEdit: true,
-                }));
-                setUserSavedQueries(userQueriesToDisplay);
-            })
-            .catch((err) => {
-                setUserSavedQueries([]);
-            });
+    useQuery({
+        queryKey: 'userSavedQueries',
+        queryFn: () => {
+            return apiClient
+                .getUserSavedQueries()
+                .then((result) => {
+                    const userQueries = result.data.data;
+                    const userQueriesToDisplay = userQueries.map((element: any) => ({
+                        description: element.name,
+                        cypher: element.query,
+                        canEdit: true,
+                    }));
+                    setUserSavedQueries(userQueriesToDisplay);
+                })
+                .catch((err) => {
+                    setUserSavedQueries([]);
+                });
+        },
     });
 
     return (

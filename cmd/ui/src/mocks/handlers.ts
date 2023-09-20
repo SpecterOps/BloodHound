@@ -34,7 +34,7 @@ export const handlers = [
     rest.get('/api/v2/queries', (req, res, ctx) => {
         return res(
             ctx.json({
-                data: Array(5).fill({
+                data: Array(1).fill({
                     user_id: 'abcdefgh',
                     query: 'match (n) return n limit 5',
                     name: 'myCustomQuery1',
@@ -47,7 +47,7 @@ export const handlers = [
             ctx.json({
                 user_id: 'abcdefgh',
                 query: 'Match(n) return n;',
-                name: 'myCustomQuery1',
+                name: 'myCustomQuery 2',
             })
         );
     }),
