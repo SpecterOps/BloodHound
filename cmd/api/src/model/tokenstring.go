@@ -125,12 +125,15 @@ func isValidBase62(val string) bool {
 
 func isValidBase64(val string) bool {
 	vlen := len(val)
-	if vlen > 0 {
-		val = strings.TrimRight(val, "=")
-		if val == "" || vlen-len(val) > 2 {
-			return false
-		}
+	if vlen == 0 {
+		return true
 	}
+
+	val = strings.TrimRight(val, "=")
+	if val == "" || vlen-len(val) > 2 {
+		return false
+	}
+
 	for _, v := range []byte(val) {
 		if (v >= '0' && v <= '9') || (v >= 'A' && v <= 'Z') || (v >= 'a' && v <= 'z') {
 			continue
