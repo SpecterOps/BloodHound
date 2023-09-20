@@ -26,7 +26,7 @@ import {
     Typography,
     IconButton,
 } from '@mui/material';
-import { useState } from 'react';
+import { FC, useState } from 'react';
 import { CommonSearches as prebuiltSearchList } from 'bh-shared-ui';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTrash } from '@fortawesome/free-solid-svg-icons';
@@ -35,17 +35,53 @@ import makeStyles from '@mui/styles/makeStyles';
 const AD_TAB = 'Active Directory';
 const AZ_TAB = 'Azure';
 const CUSTOM_TAB = 'Custom Searches';
-interface CommonSearchesProps {
-    onClickListItem: (query: string) => void;
-}
 
 const useStyles = makeStyles((theme) => ({
+    tabs: {
+        height: '35px',
+        minHeight: '35px',
+        mt: 1,
+    },
     tab: {
         height: '35px',
         minHeight: '35px',
         color: 'black',
     },
+    list: {
+        position: 'relative',
+        overflow: 'auto',
+        maxHeight: 300,
+        '& ul': { padding: 0 },
+    },
 }));
+
+export const getADSearches = () => {
+    return prebuiltSearchList.filter(({ category }) => category === 'Active Directory');
+};
+
+export const getAZSearches = () => {
+    return prebuiltSearchList.filter(({ category }) => category === 'Azure');
+};
+
+const getUserSearches = () => {
+    const userSavedQueries = [
+        {
+            userId: 1,
+            query: 'match (n) return n limit 11',
+            name: 'special query 1',
+        },
+        {
+            userId: 1,
+            query: 'match (n) return n limit 22',
+            name: 'special query 2',
+        },
+    ];
+    return userSavedQueries;
+};
+
+interface CommonSearchesProps {
+    onClickListItem: (query: string) => void;
+}
 
 const CommonSearches = ({ onClickListItem }: CommonSearchesProps) => {
     const classes = useStyles();
@@ -56,6 +92,21 @@ const CommonSearches = ({ onClickListItem }: CommonSearchesProps) => {
         setActiveTab(newValue);
     };
 
+    const adSections = getADSearches().map(({ subheader, queries }) => ({ subheader, lineItems: queries }));
+    const azSections = getAZSearches().map(({ subheader, queries }) => ({ subheader, lineItems: queries }));
+    const userSections = [
+        {
+            subheader: 'User Saved Searches: ',
+            lineItems: getUserSearches().map((element) => {
+                return {
+                    description: element.name,
+                    cypher: element.query,
+                    canEdit: true,
+                };
+            }),
+        },
+    ];
+
     return (
         <Box>
             <Typography variant='h5' sx={{ mb: 2, mt: 2 }}>
@@ -65,7 +116,7 @@ const CommonSearches = ({ onClickListItem }: CommonSearchesProps) => {
             <Tabs
                 value={activeTab}
                 onChange={handleTabChange}
-                sx={{ height: '35px', minHeight: '35px', mt: 1 }}
+                className={classes.tabs}
                 TabIndicatorProps={{
                     sx: { height: 3, backgroundColor: '#6798B9' },
                 }}>
@@ -74,85 +125,56 @@ const CommonSearches = ({ onClickListItem }: CommonSearchesProps) => {
                 <Tab label={CUSTOM_TAB} key={CUSTOM_TAB} value={CUSTOM_TAB} className={classes.tab} />
             </Tabs>
 
-            <List
-                dense
-                disablePadding
-                sx={{
-                    position: 'relative',
-                    overflow: 'auto',
-                    maxHeight: 300,
-                    '& ul': { padding: 0 },
-                }}>
-                {activeTab === CUSTOM_TAB ? ( // list of user-saved queries
-                    <Box>
-                        <ListSubheader sx={{ fontWeight: 'bold' }}>User Saved Searches: </ListSubheader>
-                        {userSavedQueries.map((query) => {
+            {activeTab === AD_TAB && <SearchList listSections={adSections} onClickListItem={onClickListItem} />}
+            {activeTab === AZ_TAB && <SearchList listSections={azSections} onClickListItem={onClickListItem} />}
+            {activeTab === CUSTOM_TAB && <SearchList listSections={userSections} onClickListItem={onClickListItem} />}
+        </Box>
+    );
+};
+
+interface SearchListProps {
+    listSections: ListSection[];
+    onClickListItem: (query: string) => void;
+}
+
+type ListSection = {
+    subheader: string;
+    lineItems: { description: string; cypher: string; canEdit?: boolean }[];
+};
+
+const SearchList: FC<SearchListProps> = ({ listSections, onClickListItem }) => {
+    const classes = useStyles();
+
+    return (
+        <List dense disablePadding className={classes.list}>
+            {listSections.map((section) => {
+                const { subheader, lineItems } = section;
+                return (
+                    <Box key={subheader}>
+                        <ListSubheader sx={{ fontWeight: 'bold' }}>{subheader} </ListSubheader>
+                        {lineItems.map(({ description, cypher, canEdit = false }) => {
                             return (
                                 <ListItem
                                     disablePadding
-                                    key={query.query}
+                                    key={description}
                                     secondaryAction={
-                                        <IconButton size='small'>
-                                            <FontAwesomeIcon icon={faTrash} />
-                                        </IconButton>
+                                        canEdit && (
+                                            <IconButton size='small'>
+                                                <FontAwesomeIcon icon={faTrash} />
+                                            </IconButton>
+                                        )
                                     }>
-                                    <ListItemButton onClick={() => onClickListItem(query.query)}>
-                                        <ListItemText primary={query.name} />
+                                    <ListItemButton onClick={() => onClickListItem(cypher)}>
+                                        <ListItemText primary={description} />
                                     </ListItemButton>
                                 </ListItem>
                             );
                         })}
                     </Box>
-                ) : (
-                    // lsit of pre-built queries
-                    prebuiltSearchList
-                        .filter(({ category }) => category === activeTab)
-                        .map(({ category, subheader, queries }) => {
-                            return (
-                                <Box key={`${category}-${subheader}`}>
-                                    <ListSubheader sx={{ fontWeight: 'bold' }}>{subheader}: </ListSubheader>
-                                    {queries.map((query) => {
-                                        return (
-                                            <ListItem disablePadding key={query.description}>
-                                                <ListItemButton onClick={() => onClickListItem(query.cypher)}>
-                                                    <ListItemText primary={query.description} />
-                                                </ListItemButton>
-                                            </ListItem>
-                                        );
-                                    })}
-                                </Box>
-                            );
-                        })
-                )}
-            </List>
-        </Box>
+                );
+            })}
+        </List>
     );
 };
 
-const SearchList = () => {
-    return (
-        <List
-            dense
-            disablePadding
-            sx={{
-                position: 'relative',
-                overflow: 'auto',
-                maxHeight: 300,
-                '& ul': { padding: 0 },
-            }}></List>
-    );
-};
-
-const userSavedQueries = [
-    {
-        userId: 1,
-        query: 'match (n) return n limit 11',
-        name: 'special query 1',
-    },
-    {
-        userId: 1,
-        query: 'match (n) return n limit 22',
-        name: 'special query 2',
-    },
-];
 export default CommonSearches;
