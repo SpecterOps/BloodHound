@@ -16,19 +16,17 @@
 
 import { Box, Paper, SxProps } from '@mui/material';
 import React, { useEffect, useState } from 'react';
-import { useSelector } from 'react-redux';
 import usePreviousValue from 'src/hooks/usePreviousValue';
-import { AppState } from 'src/store';
 import EntityInfoContent from './EntityInfoContent';
 import Header from './EntityInfoHeader';
 import { EntityInfoPanelContextProvider } from './EntityInfoPanelContextProvider';
 import { useEntityInfoPanelContext } from './EntityInfoPanelContext';
 import usePaneStyles from 'src/views/Explore/InfoStyles/Pane';
+import { SelectedNode } from 'src/ducks/entityinfo/types';
 
-const EntityInfoPanel: React.FC<{ sx?: SxProps }> = ({ sx }) => {
+const EntityInfoPanel: React.FC<{ sx?: SxProps, selectedNode: SelectedNode }> = ({ sx, selectedNode }) => {
     const styles = usePaneStyles();
     const [expanded, setExpanded] = useState(true);
-    const selectedNode = useSelector((state: AppState) => state.entityinfo.selectedNode);
     const { setExpandedSections } = useEntityInfoPanelContext();
     const previousSelectedNode = usePreviousValue(selectedNode);
 
@@ -62,26 +60,26 @@ const EntityInfoPanel: React.FC<{ sx?: SxProps }> = ({ sx }) => {
     }
 
     return (
-            <Box sx={sx} className={styles.container} data-testid='explore_entity-information-panel'>
-                <Paper elevation={0} classes={{ root: styles.headerPaperRoot }}>
-                    <Header
-                        name={selectedNode?.name}
-                        nodeType={selectedNode?.type}
-                        expanded={expanded}
-                        onToggleExpanded={(expanded) => {
-                            setExpanded(expanded);
-                        }}
-                    />
-                </Paper>
-                <Paper
-                    elevation={0}
-                    classes={{ root: styles.contentPaperRoot }}
-                    style={{
-                        display: expanded ? 'initial' : 'none',
-                    }}>
-                    <EntityInfoContent id={selectedNode.id} nodeType={selectedNode.type} />
-                </Paper>
-            </Box>
+        <Box sx={sx} className={styles.container} data-testid='explore_entity-information-panel'>
+            <Paper elevation={0} classes={{ root: styles.headerPaperRoot }}>
+                <Header
+                    name={selectedNode?.name}
+                    nodeType={selectedNode?.type}
+                    expanded={expanded}
+                    onToggleExpanded={(expanded) => {
+                        setExpanded(expanded);
+                    }}
+                />
+            </Paper>
+            <Paper
+                elevation={0}
+                classes={{ root: styles.contentPaperRoot }}
+                style={{
+                    display: expanded ? 'initial' : 'none',
+                }}>
+                <EntityInfoContent id={selectedNode?.id} nodeType={selectedNode?.type} />
+            </Paper>
+        </Box>
     );
 };
 

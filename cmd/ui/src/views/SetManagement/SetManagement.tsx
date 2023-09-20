@@ -1,15 +1,14 @@
-import { Box, Grid, Paper, useTheme } from '@mui/material';
+import { Box, Grid, useTheme } from '@mui/material';
 import MenuContainer from '../Explore/Search/Menu/MenuContainer';
 import EntityInfoPanel from '../Explore/EntityInfo/EntityInfoPanel';
 import { AssetGroupMemberList, apiClient } from 'bh-shared-ui';
 import { useQuery } from 'react-query';
-import { setEntityInfoOpen, setSelectedNode } from 'src/ducks/entityinfo/actions';
-import { useAppDispatch } from 'src/store';
+import { SelectedNode } from 'src/ducks/entityinfo/types';
+import { useState } from 'react';
 
 const SetManagement = () => {
-
-    const dispatch = useAppDispatch();
     const theme = useTheme();
+    const [selectedNode, setSelectedNode] = useState<SelectedNode | null>(null);
 
     const listAssetGroupMembersQuery = useQuery(
         ["listAssetGroupMembers"],
@@ -17,12 +16,11 @@ const SetManagement = () => {
     );
 
     const handleSelectMember = (member: any) => {
-        dispatch(setEntityInfoOpen(true));
-        dispatch(setSelectedNode({
+        setSelectedNode({
             id: member.object_id,
             type: member.primary_kind,
             name: member.name
-        }))
+        });
     }
     
     return (
@@ -38,7 +36,7 @@ const SetManagement = () => {
                     />
                 </Grid>
                 <Grid item xs={4} xl={3}>
-                    <EntityInfoPanel />
+                    <EntityInfoPanel selectedNode={selectedNode} />
                 </Grid>
             </Grid>
         </Box>

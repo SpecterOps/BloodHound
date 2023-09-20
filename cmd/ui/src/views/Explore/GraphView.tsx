@@ -247,6 +247,8 @@ const GraphView: FC = () => {
 };
 
 const GridItems = () => {
+    const selectedNode = useSelector((state: AppState) => state.entityinfo.selectedNode);
+
     const columnsDefault = { xs: 6, md: 5, lg: 4, xl: 3 };
     const cypherSearchColumns = { xs: 6, md: 6, lg: 6, xl: 4 };
 
@@ -273,7 +275,7 @@ const GridItems = () => {
         <Grid item {...columnsDefault} sx={columnStyles} key={'info'}>
             {edgeInfoState.open ?
                 <EdgeInfoPane sx={infoPanelStyles} selectedEdge={edgeInfoState.selectedEdge} /> :
-                <EntityInfoPanel sx={infoPanelStyles} />}
+                <EntityInfoPanel sx={infoPanelStyles} selectedNode={selectedNode} />}
         </Grid>,
     ];
 };
