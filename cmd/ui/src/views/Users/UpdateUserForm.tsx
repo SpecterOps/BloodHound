@@ -152,10 +152,10 @@ const UpdateUserFormInner: React.FC<{
     });
 
     const authenticationMethod = watch('authenticationMethod');
-    
+
     useEffect(() => {
         if (authenticationMethod === 'password') {
-            setValue("SAMLProviderId", '');
+            setValue('SAMLProviderId', '');
         }
     }, [authenticationMethod, setValue]);
 

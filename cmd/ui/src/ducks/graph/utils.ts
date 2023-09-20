@@ -173,6 +173,8 @@ const centerCameraOnGraph = (sigma: Sigma<AbstractGraph<Attributes, Attributes, 
         if (ratio > MAX_CAMERA_RATIO) ratio = MAX_CAMERA_RATIO;
 
         newCameraState.ratio = ratio;
+        newCameraState.x = 0.5;
+        newCameraState.y = 0.5;
     }
 
     camera.animate(

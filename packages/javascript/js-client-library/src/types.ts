@@ -141,6 +141,13 @@ export interface GetCollectorsResponse {
     };
 }
 
+export type PostureRequest = {
+    from: string;
+    to: string;
+    domain_sid?: string;
+    sort_by?: string;
+};
+
 export type GraphNode = {
     label: string;
     kind: string;

@@ -24,6 +24,7 @@ import { GraphEdges, GraphNodes } from 'js-client-library';
 import isEmpty from 'lodash/isEmpty';
 import { FC, useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
+import { GraphButtonProps } from 'src/components/GraphButton/GraphButton';
 import { GraphButtonOptions } from 'src/components/GraphButtons/GraphButtons';
 import SigmaChart from 'src/components/SigmaChart';
 import { setEntityInfoOpen, setSelectedNode } from 'src/ducks/entityinfo/actions';
@@ -32,6 +33,7 @@ import { setAssetGroupEdit } from 'src/ducks/global/actions';
 import { GlobalOptionsState } from 'src/ducks/global/types';
 import { discardChanges } from 'src/ducks/tierzero/actions';
 import { RankDirection } from 'src/hooks/useLayoutDagre/useLayoutDagre';
+import useToggle from 'src/hooks/useToggle';
 import { GLYPHS, GlyphKind, NODE_ICON, UNKNOWN_ICON } from 'src/icons';
 import { GlyphLocation } from 'src/rendering/programs/node.glyphs';
 import { AppState, useAppDispatch } from 'src/store';
@@ -139,6 +141,8 @@ const GraphView: FC = () => {
     const opts: GlobalOptionsState = useSelector((state: AppState) => state.global.options);
     const formIsDirty = Object.keys(useSelector((state: AppState) => state.tierzero).changelog).length > 0;
     const [graphologyGraph, setGraphologyGraph] = useState<MultiDirectedGraph<Attributes, Attributes, Attributes>>();
+    const [currentNodes, setCurrentNodes] = useState<GraphNodes>({});
+    const [currentSearchOpen, toggleCurrentSearch] = useToggle(false);
 
     useEffect(() => {
         let items: any = graphState.chartProps.items;
@@ -150,6 +154,8 @@ const GraphView: FC = () => {
 
         initGraphNodes(graph, items.nodes, nodeSize);
         initGraphEdges(graph, items.edges);
+
+        setCurrentNodes(items.nodes);
 
         random.assign(graph, { scale: 1000 });
 
@@ -194,6 +200,7 @@ const GraphView: FC = () => {
                     id: selectedItem.data.objectid,
                     type: selectedItem.data.nodetype,
                     name: selectedItem.data.name,
+                    graphId: id,
                 })
             );
         }
@@ -201,13 +208,25 @@ const GraphView: FC = () => {
 
     const options: GraphButtonOptions = { standard: true, sequential: true };
 
+    const nonLayoutButtons: GraphButtonProps[] = [
+        {
+            displayText: 'Search Current Results',
+            onClick: toggleCurrentSearch,
+            disabled: currentSearchOpen,
+        },
+    ];
+
     return (
         <div style={{ position: 'relative', height: '100%', width: '100%', overflow: 'hidden' }} data-testid='explore'>
             <SigmaChart
                 rankDirection={RankDirection.LEFT_RIGHT}
                 options={options}
                 graph={graphologyGraph}
+                currentNodes={currentNodes}
                 onClickNode={onClickNode}
+                nonLayoutButtons={nonLayoutButtons}
+                isCurrentSearchOpen={currentSearchOpen}
+                toggleCurrentSearch={toggleCurrentSearch}
             />
             <Grid
                 container
@@ -222,7 +241,6 @@ const GraphView: FC = () => {
                 }}>
                 <GridItems />
             </Grid>
-
             <GraphProgress loading={graphState.loading} />
         </div>
     );
@@ -240,13 +258,11 @@ const GridItems = () => {
 
     const edgeInfoState: EdgeInfoState = useSelector((state: AppState) => state.edgeinfo);
 
-    const { xs, md, lg, xl } = columns;
-
     return [
-        <Grid item xs={xs} md={md} lg={lg} xl={xl} sx={{ height: '100%' }} key={'exploreSearch'}>
+        <Grid item {...columns} sx={{ height: '100%' }} key={'exploreSearch'}>
             <ExploreSearch handleColumns={handleCypherTab} />
         </Grid>,
-        <Grid item xs={6} md={5} lg={4} xl={3} sx={{ height: '100%' }} key={'info'}>
+        <Grid item {...columnsDefault} sx={{ height: '100%' }} key={'info'}>
             {edgeInfoState.open ? <EdgeInfoPane selectedEdge={edgeInfoState.selectedEdge} /> : <EntityInfoPanel />}
         </Grid>,
     ];
