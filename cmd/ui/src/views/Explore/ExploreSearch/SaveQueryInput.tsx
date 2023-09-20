@@ -20,9 +20,10 @@ const useStyles = makeStyles((theme) => ({
     },
 }));
 
-const CustomQueryInput = () => {
+const SaveQueryInput = () => {
     const dispatch = useDispatch();
     const classes = useStyles();
+
     const [showCustomQueryInput, setShowCustomQueryInput] = useState(false);
 
     const [customQueryName, setCustomQueryName] = useState('');
@@ -93,4 +94,4 @@ const CustomQueryInput = () => {
     );
 };
 
-export default CustomQueryInput;
+export default SaveQueryInput;

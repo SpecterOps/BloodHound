@@ -35,7 +35,7 @@ import { startCypherQuery } from 'src/ducks/explore/actions';
 import { setCypherQueryTerm, startCypherSearch } from 'src/ducks/searchbar/actions';
 import { AppState } from 'src/store';
 import CommonSearches from './CommonSearches';
-import CustomQueryInput from './CustomQueryInput';
+import SaveQueryInput from './SaveQueryInput';
 
 const useStyles = makeStyles((theme) => ({
     button: {
@@ -167,7 +167,7 @@ const CypherInput = () => {
             </Box>
 
             <Box display={'flex'} gap={1} mt={1} justifyContent={'end'}>
-                <CustomQueryInput />
+                <SaveQueryInput />
 
                 <a
                     href='https://support.bloodhoundenterprise.io/hc/en-us/articles/16721164740251'
