@@ -30,17 +30,27 @@ import { useState } from 'react';
 import { CommonSearches as prebuiltSearchList } from 'bh-shared-ui';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTrash } from '@fortawesome/free-solid-svg-icons';
+import makeStyles from '@mui/styles/makeStyles';
 
+const AD_TAB = 'Active Directory';
+const AZ_TAB = 'Azure';
+const CUSTOM_TAB = 'Custom Searches';
 interface CommonSearchesProps {
     onClickListItem: (query: string) => void;
 }
 
-const ACTIVE_DIRECTORY_TAB = 'Active Directory';
-const AZURE_TAB = 'Azure';
-const CUSTOM_TAB = 'Custom Searches';
+const useStyles = makeStyles((theme) => ({
+    tab: {
+        height: '35px',
+        minHeight: '35px',
+        color: 'black',
+    },
+}));
 
 const CommonSearches = ({ onClickListItem }: CommonSearchesProps) => {
-    const [activeTab, setActiveTab] = useState(ACTIVE_DIRECTORY_TAB);
+    const classes = useStyles();
+
+    const [activeTab, setActiveTab] = useState(AD_TAB);
 
     const handleTabChange = (event: React.SyntheticEvent, newValue: string) => {
         setActiveTab(newValue);
@@ -59,36 +69,9 @@ const CommonSearches = ({ onClickListItem }: CommonSearchesProps) => {
                 TabIndicatorProps={{
                     sx: { height: 3, backgroundColor: '#6798B9' },
                 }}>
-                <Tab
-                    label={ACTIVE_DIRECTORY_TAB}
-                    key={ACTIVE_DIRECTORY_TAB}
-                    value={ACTIVE_DIRECTORY_TAB}
-                    sx={{
-                        height: '35px',
-                        minHeight: '35px',
-                        color: 'black',
-                    }}
-                />
-                <Tab
-                    label={AZURE_TAB}
-                    key={AZURE_TAB}
-                    value={AZURE_TAB}
-                    sx={{
-                        height: '35px',
-                        minHeight: '35px',
-                        color: 'black',
-                    }}
-                />
-                <Tab
-                    label={CUSTOM_TAB}
-                    key={CUSTOM_TAB}
-                    value={CUSTOM_TAB}
-                    sx={{
-                        height: '35px',
-                        minHeight: '35px',
-                        color: 'black',
-                    }}
-                />
+                <Tab label={AD_TAB} key={AD_TAB} value={AD_TAB} className={classes.tab} />
+                <Tab label={AZ_TAB} key={AZ_TAB} value={AZ_TAB} className={classes.tab} />
+                <Tab label={CUSTOM_TAB} key={CUSTOM_TAB} value={CUSTOM_TAB} className={classes.tab} />
             </Tabs>
 
             <List
@@ -143,6 +126,20 @@ const CommonSearches = ({ onClickListItem }: CommonSearchesProps) => {
                 )}
             </List>
         </Box>
+    );
+};
+
+const SearchList = () => {
+    return (
+        <List
+            dense
+            disablePadding
+            sx={{
+                position: 'relative',
+                overflow: 'auto',
+                maxHeight: 300,
+                '& ul': { padding: 0 },
+            }}></List>
     );
 };
 
