@@ -213,3 +213,8 @@ export type StyledGraphEdge = {
 };
 
 export type FlatGraphResponse = Record<string, StyledGraphNode | StyledGraphEdge>;
+
+export interface CreateUserQueryRequest {
+    name: string;
+    query: string;
+}

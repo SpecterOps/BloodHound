@@ -1,6 +1,33 @@
 import { render, screen } from 'src/test-utils';
 import CommonSearches, { getADSearches, getAZSearches } from './CommonSearches';
 import userEvent from '@testing-library/user-event';
+import { setupServer } from 'msw/node';
+import { rest } from 'msw';
+
+const server = setupServer(
+    rest.get('/api/v2/queries', (req, res, ctx) => {
+        return res(
+            ctx.json({
+                data: [
+                    {
+                        user_id: 'abcdefgh',
+                        query: 'match (n) return n limit 5',
+                        name: 'me save a query 1',
+                    },
+                    {
+                        user_id: 'abcdefgh',
+                        query: 'match (n) return n limit 5',
+                        name: 'me save a query 2',
+                    },
+                ],
+            })
+        );
+    })
+);
+
+beforeAll(() => server.listen());
+afterEach(() => server.resetHandlers());
+afterAll(() => server.close());
 
 describe('CommonSearches', () => {
     const onClick = jest.fn();
@@ -45,6 +72,17 @@ describe('CommonSearches', () => {
         subheadersForAZ.forEach((subheader) => {
             expect(screen.getByText(subheader)).toBeInTheDocument();
         });
+    });
+
+    it(`fetches a user's saved queries when the 'custom searches' tab is clicked`, async () => {
+        const user = userEvent.setup();
+
+        // switch tabs to user searches
+        const userTab = screen.getByRole('tab', { name: /custom searches/i });
+        await user.click(userTab);
+
+        const firstSavedQuery = screen.getAllByRole('button', { name: /me save a query/i });
+        expect(firstSavedQuery).toHaveLength(2);
     });
 
     it('handles a click on each list item', async () => {

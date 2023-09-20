@@ -57,6 +57,24 @@ class BHEAPIClient {
         return this.baseClient.post('/api/v2/graphs/cypher', { query, include_properties: includeProperties }, options);
     };
 
+    getUserSavedQueries = (options?: types.RequestOptions) => {
+        return this.baseClient.get(
+            '/api/v2/queries',
+            Object.assign(
+                {
+                    params: {
+                        sort_by: 'name',
+                    },
+                },
+                options
+            )
+        );
+    };
+
+    createUserQuery = (payload: types.CreateUserQueryRequest, options?: types.RequestOptions) => {
+        return this.baseClient.post('/api/v2/queries', payload, options);
+    };
+
     getAvailableDomains = (options?: types.RequestOptions) => this.baseClient.get('/api/v2/available-domains', options);
 
     /* audit */

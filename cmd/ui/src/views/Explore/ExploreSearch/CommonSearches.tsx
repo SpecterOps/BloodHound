@@ -27,10 +27,11 @@ import {
     IconButton,
 } from '@mui/material';
 import { FC, useState } from 'react';
-import { CommonSearches as prebuiltSearchList } from 'bh-shared-ui';
+import { apiClient, CommonSearches as prebuiltSearchList } from 'bh-shared-ui';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTrash } from '@fortawesome/free-solid-svg-icons';
 import makeStyles from '@mui/styles/makeStyles';
+import { useQuery } from 'react-query';
 
 const AD_TAB = 'Active Directory';
 const AZ_TAB = 'Azure';
@@ -63,22 +64,6 @@ export const getAZSearches = () => {
     return prebuiltSearchList.filter(({ category }) => category === 'Azure');
 };
 
-const getUserSearches = () => {
-    const userSavedQueries = [
-        {
-            userId: 1,
-            query: 'match (n) return n limit 11',
-            name: 'special query 1',
-        },
-        {
-            userId: 1,
-            query: 'match (n) return n limit 22',
-            name: 'special query 2',
-        },
-    ];
-    return userSavedQueries;
-};
-
 interface CommonSearchesProps {
     onClickListItem: (query: string) => void;
 }
@@ -94,18 +79,25 @@ const CommonSearches = ({ onClickListItem }: CommonSearchesProps) => {
 
     const adSections = getADSearches().map(({ subheader, queries }) => ({ subheader, lineItems: queries }));
     const azSections = getAZSearches().map(({ subheader, queries }) => ({ subheader, lineItems: queries }));
-    const userSections = [
-        {
-            subheader: 'User Saved Searches: ',
-            lineItems: getUserSearches().map((element) => {
-                return {
+
+    const [userSavedQueries, setUserSavedQueries] = useState([]);
+
+    useQuery(['userSavedQueries'], () => {
+        return apiClient
+            .getUserSavedQueries()
+            .then((result) => {
+                const userQueries = result.data.data;
+                const userQueriesToDisplay = userQueries.map((element: any) => ({
                     description: element.name,
                     cypher: element.query,
                     canEdit: true,
-                };
-            }),
-        },
-    ];
+                }));
+                setUserSavedQueries(userQueriesToDisplay);
+            })
+            .catch((err) => {
+                setUserSavedQueries([]);
+            });
+    });
 
     return (
         <Box>
@@ -127,7 +119,17 @@ const CommonSearches = ({ onClickListItem }: CommonSearchesProps) => {
 
             {activeTab === AD_TAB && <SearchList listSections={adSections} onClickListItem={onClickListItem} />}
             {activeTab === AZ_TAB && <SearchList listSections={azSections} onClickListItem={onClickListItem} />}
-            {activeTab === CUSTOM_TAB && <SearchList listSections={userSections} onClickListItem={onClickListItem} />}
+            {activeTab === CUSTOM_TAB && (
+                <SearchList
+                    listSections={[
+                        {
+                            subheader: 'User Saved Searches: ',
+                            lineItems: userSavedQueries,
+                        },
+                    ]}
+                    onClickListItem={onClickListItem}
+                />
+            )}
         </Box>
     );
 };
@@ -152,7 +154,7 @@ const SearchList: FC<SearchListProps> = ({ listSections, onClickListItem }) => {
                 return (
                     <Box key={subheader}>
                         <ListSubheader sx={{ fontWeight: 'bold' }}>{subheader} </ListSubheader>
-                        {lineItems.map(({ description, cypher, canEdit = false }) => {
+                        {lineItems?.map(({ description, cypher, canEdit = false }) => {
                             return (
                                 <ListItem
                                     disablePadding
