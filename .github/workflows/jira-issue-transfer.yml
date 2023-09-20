@@ -34,7 +34,6 @@ jobs:
     - name: Jira Create
       uses: atlassian/gajira-create@v3
       env:
-        Label_Var: ${{ github.event.issue.labels }}
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         project: BP
