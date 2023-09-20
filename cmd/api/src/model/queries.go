@@ -16,7 +16,11 @@ func (s SavedQueries) IsSortable(column string) bool {
 	switch column {
 	case "user_id",
 		"name",
-		"query":
+		"query",
+		"id",
+		"created_at",
+		"updated_at",
+		"deleted_at":
 		return true
 	default:
 		return false

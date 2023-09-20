@@ -1,7 +1,6 @@
 package database
 
 import (
-	"fmt"
 	"github.com/gofrs/uuid"
 	"github.com/specterops/bloodhound/src/model"
 )
@@ -12,7 +11,7 @@ func (s *BloodhoundDB) ListSavedQueries(userID uuid.UUID, order string, filter m
 		count   int64
 	)
 
-	cursor := s.Scope(Paginate(skip, limit)).Where("user_id = ?", userID).Order(order)
+	cursor := s.Scope(Paginate(skip, limit)).Where("user_id = ?", userID)
 
 	if filter.SQLString != "" {
 		cursor = cursor.Where(filter.SQLString, filter.Params)
@@ -22,10 +21,11 @@ func (s *BloodhoundDB) ListSavedQueries(userID uuid.UUID, order string, filter m
 		cursor = cursor.Order(order)
 	}
 
-	if countResult := cursor.Count(&count); countResult.Error != nil {
-		return queries, 0, fmt.Errorf("error fetching count: %v", countResult.Error.Error())
+	result := s.db.Find(&queries).Count(&count)
+	if result.Error != nil {
+		return queries, 0, result.Error
 	}
 
-	result := cursor.Find(&queries)
+	result = cursor.Find(&queries)
 	return queries, int(count), CheckError(result)
 }

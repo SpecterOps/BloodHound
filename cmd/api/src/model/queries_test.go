@@ -9,7 +9,7 @@ import (
 
 func TestSavedQueries_IsSortable(t *testing.T) {
 	savedQueries := model.SavedQueries{}
-	for _, column := range []string{"user_id", "name", "query"} {
+	for _, column := range []string{"user_id", "name", "query", "id", "created_at", "updated_at", "deleted_at"} {
 		require.True(t, savedQueries.IsSortable(column))
 	}
 
