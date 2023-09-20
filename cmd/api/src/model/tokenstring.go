@@ -3,6 +3,7 @@ package model
 import (
 	"crypto/rand"
 	"database/sql/driver"
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"hash/crc32"
@@ -123,7 +124,7 @@ func isValidBase62(val string) bool {
 	return true
 }
 
-func isValidBase64(val string) bool {
+func isValidBase64Chars(val string) bool {
 	vlen := len(val)
 	if vlen == 0 {
 		return true
@@ -144,6 +145,16 @@ func isValidBase64(val string) bool {
 		return false
 	}
 	return true
+}
+
+func isValidBase64(val string) bool {
+	// DecodeString() will accept some character sequences that contain
+	// non base64 characters, as well as whitespace. This filters those out.
+	if !isValidBase64Chars(val) {
+		return false
+	}
+	_, err := base64.StdEncoding.DecodeString(val)
+	return err == nil
 }
 
 var ErrTokenStringFormat = errors.New("invalid token format")
