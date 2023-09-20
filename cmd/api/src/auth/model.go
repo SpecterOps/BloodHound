@@ -19,6 +19,7 @@ package auth
 import (
 	"fmt"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gofrs/uuid"
@@ -35,7 +36,11 @@ const (
 
 	SessionTTL = time.Hour * 8
 
-	BHUserTokenPrefix = "BH_U"
+	BHProductTokenPrefix  = "BH"
+	BHEProductTokenPrefix = "BHE"
+
+	BHClientTokenPrefix = "C"
+	BHUserTokenPrefix   = "U"
 )
 
 type SessionData struct {
@@ -139,7 +144,7 @@ func GetUserFromAuthCtx(ctx Context) (model.User, bool) {
 //
 // This isn't an ideal location for this function but it was determined to be the best place "for now".
 // See https://specterops.atlassian.net/browse/BED-3367
-func NewUserAuthToken(ownerId string, tokenName string, hmacMethod string) (model.AuthToken, error) {
+func NewUserAuthToken(ownerId, tokenProductPrefix, tokenName string, hmacMethod string) (model.AuthToken, error) {
 	ownerUuid, err := uuid.FromString(ownerId)
 	if err != nil {
 		return model.AuthToken{}, err
@@ -162,7 +167,7 @@ func NewUserAuthToken(ownerId string, tokenName string, hmacMethod string) (mode
 		authToken.ID = id
 	}
 
-	if ts, err := model.GenerateTokenString(BHUserTokenPrefix); err != nil {
+	if ts, err := model.GenerateTokenString(strings.Join([]string{tokenProductPrefix, BHUserTokenPrefix}, "_")); err != nil {
 		return authToken, nil
 	} else {
 		authToken.Key = ts

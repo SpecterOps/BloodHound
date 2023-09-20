@@ -28,11 +28,9 @@ import (
 	"gorm.io/gorm"
 )
 
-const BHClientTokenPrefix = "BH_C"
-
 // NewClientAuthToken creates a new Client AuthToken row using the details provided
 // INSERT INTO auth_tokens (client_id, hmac_method, last_access) VALUES (...)
-func NewClientAuthToken(ownerID uuid.UUID, hmacMethod string) (model.AuthToken, error) {
+func NewClientAuthToken(ownerID uuid.UUID, tokenProductPrefix string, hmacMethod string) (model.AuthToken, error) {
 	var (
 		authToken = model.AuthToken{
 			ClientID:   NullUUID(ownerID),
@@ -51,7 +49,7 @@ func NewClientAuthToken(ownerID uuid.UUID, hmacMethod string) (model.AuthToken, 
 		authToken.ID = id
 	}
 
-	if ts, err := model.GenerateTokenString(BHClientTokenPrefix); err != nil {
+	if ts, err := model.GenerateTokenString(strings.Join([]string{tokenProductPrefix, auth.BHClientTokenPrefix}, "_")); err != nil {
 		return authToken, nil
 	} else {
 		authToken.Key = ts
