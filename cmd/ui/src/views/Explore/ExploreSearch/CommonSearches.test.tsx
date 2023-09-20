@@ -61,4 +61,6 @@ describe('CommonSearches', () => {
         expect(onClick).toHaveBeenCalledTimes(1);
         expect(onClick).toHaveBeenCalledWith(cypher);
     });
+    // todo:
+    it('handles the secondary action (delete) on each list item', async () => {});
 });
