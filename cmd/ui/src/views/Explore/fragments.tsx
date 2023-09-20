@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Alert, Box, CircularProgress, Typography } from '@mui/material';
-import { NodeIcon } from 'bh-shared-ui';
+import { EntityField, NodeIcon, format } from 'bh-shared-ui';
 import isEmpty from 'lodash/isEmpty';
 import React, { PropsWithChildren } from 'react';
 import { TIER_ZERO_TAG } from 'src/constants';
@@ -23,7 +23,6 @@ import { GraphNodeTypes } from 'src/ducks/graph/types';
 import { setSearchValue, startSearchSelected } from 'src/ducks/searchbar/actions';
 import { PRIMARY_SEARCH, SEARCH_TYPE_EXACT } from 'src/ducks/searchbar/types';
 import { useAppDispatch } from 'src/store';
-import { format } from 'src/utils';
 import useCollapsibleSectionStyles from 'src/views/Explore/InfoStyles/CollapsibleSection';
 
 const exclusionList = [
@@ -101,9 +100,18 @@ export const FieldsContainer: React.FC<PropsWithChildren> = ({ children }) => {
     return <div className={styles.fieldsContainer}>{children}</div>;
 };
 
-export const Field: React.FC<EntityField> = ({ label, value, keyprop }) => {
-    if (value === undefined || value === '' || (typeof value === 'object' && isEmpty(value))) return null;
-    const formattedValue = format(value);
+export const Field: React.FC<EntityField> = (entityField) => {
+    const { label, value, keyprop } = entityField;
+
+    if (
+        value === undefined ||
+        value === '' ||
+        (Array.isArray(value) && value.length === 0) ||
+        (typeof value === 'object' && isEmpty(value))
+    )
+        return null;
+
+    const formattedValue = format(entityField);
 
     let content: React.ReactNode;
     if (typeof formattedValue === 'string') {
@@ -152,93 +160,65 @@ interface BasicObjectInfoFieldsProps {
     name?: string;
 }
 
-export const BasicObjectInfoFields: React.FC<BasicObjectInfoFieldsProps> = (props): JSX.Element => {
+const RelatedKindField = (fieldLabel: string, relatedKind: GraphNodeTypes, id: string, name?: string) => {
     const dispatch = useAppDispatch();
+    return (
+        <Box padding={1}>
+            <Box fontWeight='bold' mr={1}>
+                {fieldLabel}
+            </Box>
+            <br />
+            <Box display='flex' flexDirection='row' flexWrap='wrap' justifyContent='flex-start'>
+                <NodeIcon nodeType={relatedKind} />
+                <Box
+                    onClick={() => {
+                        dispatch(
+                            setSearchValue(
+                                {
+                                    objectid: id,
+                                    label: '',
+                                    type: relatedKind,
+                                    name: name || '',
+                                },
+                                PRIMARY_SEARCH,
+                                SEARCH_TYPE_EXACT
+                            )
+                        );
+                        dispatch(startSearchSelected(PRIMARY_SEARCH));
+                    }}
+                    style={{ cursor: 'pointer' }}
+                    overflow='hidden'
+                    textOverflow='ellipsis'
+                    title={id}>
+                    {id}
+                </Box>
+            </Box>
+        </Box>
+    );
+};
+
+export const BasicObjectInfoFields: React.FC<BasicObjectInfoFieldsProps> = (props): JSX.Element => {
     return (
         <>
             {props.system_tags?.includes(TIER_ZERO_TAG) && <Field label='Tier Zero:' value={true} />}
             {props.displayname && <Field label='Display Name:' value={props.displayname} />}
             <Field label='Object ID:' value={props.objectid} />
-            <>
-                {props.service_principal_id && (
-                    <Box padding={1}>
-                        <Box fontWeight='bold' mr={1}>
-                            Service Principal ID:
-                        </Box>
-                        <br />
-                        <Box display='flex' flexDirection='row' flexWrap='wrap' justifyContent='flex-start'>
-                            <NodeIcon nodeType={GraphNodeTypes.AZServicePrincipal} />
-                            <Box
-                                data-testid='explore_entity-information-panel-service-principal-id'
-                                onClick={() => {
-                                    dispatch(
-                                        setSearchValue(
-                                            {
-                                                objectid: props.service_principal_id!,
-                                                label: '',
-                                                type: GraphNodeTypes.AZServicePrincipal,
-                                                name: props.name || '',
-                                            },
-                                            PRIMARY_SEARCH,
-                                            SEARCH_TYPE_EXACT
-                                        )
-                                    );
-                                    dispatch(startSearchSelected(PRIMARY_SEARCH));
-                                }}
-                                style={{ cursor: 'pointer' }}
-                                overflow='hidden'
-                                textOverflow='ellipsis'
-                                title={props.service_principal_id}>
-                                {props.service_principal_id}
-                            </Box>
-                        </Box>
-                    </Box>
+            {props.service_principal_id &&
+                RelatedKindField(
+                    'Service Principal ID:',
+                    GraphNodeTypes.AZServicePrincipal,
+                    props.service_principal_id,
+                    props.name
                 )}
-            </>
-            <>
-                {props.noderesourcegroupid && (
-                    <Box padding={1}>
-                        <Box fontWeight='bold' mr={1}>
-                            Node Resource Group ID:
-                        </Box>
-                        <br />
-                        <Box display='flex' flexDirection='row' flexWrap='wrap' justifyContent='flex-start'>
-                            <NodeIcon nodeType={GraphNodeTypes.AZResourceGroup} />
-                            <Box
-                                data-testid='explore_entity-information-panel-node-resource-group-id'
-                                onClick={() => {
-                                    dispatch(
-                                        setSearchValue(
-                                            {
-                                                objectid: props.noderesourcegroupid!,
-                                                label: '',
-                                                type: GraphNodeTypes.AZResourceGroup,
-                                                name: props.name || '',
-                                            },
-                                            PRIMARY_SEARCH,
-                                            SEARCH_TYPE_EXACT
-                                        )
-                                    );
-                                    dispatch(startSearchSelected(PRIMARY_SEARCH));
-                                }}
-                                style={{ cursor: 'pointer' }}
-                                overflow='hidden'
-                                textOverflow='ellipsis'
-                                title={props.noderesourcegroupid}>
-                                {props.noderesourcegroupid}
-                            </Box>
-                        </Box>
-                    </Box>
+            {props.noderesourcegroupid &&
+                RelatedKindField(
+                    'Node Resource Group ID:',
+                    GraphNodeTypes.AZResourceGroup,
+                    props.noderesourcegroupid,
+                    props.name
                 )}
-            </>
         </>
     );
-};
-
-export type EntityField = {
-    label: string;
-    value: string | number | boolean | undefined | string[];
-    keyprop?: string;
 };
 
 export const ObjectInfoFields: React.FC<{ fields: EntityField[] }> = ({ fields }): JSX.Element => {
@@ -249,10 +229,11 @@ export const ObjectInfoFields: React.FC<{ fields: EntityField[] }> = ({ fields }
             {filteredFields.map((field: EntityField) => {
                 return (
                     <Field
+                        kind={field.kind}
                         label={field.label}
                         value={field.value}
+                        keyprop={`${field.keyprop}`}
                         key={`${field.keyprop}-${field.label}`}
-                        keyprop={`${field.keyprop}-${field.label}`}
                     />
                 );
             })}

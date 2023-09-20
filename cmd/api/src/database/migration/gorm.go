@@ -68,10 +68,6 @@ func ListBHModels() []any {
 
 func (s *Migrator) gormAutoMigrate(models []any) error {
 	return s.db.Transaction(func(tx *gorm.DB) error {
-		if result := tx.Exec(`alter table if exists asset_group_selectors drop constraint if exists idx_asset_group_selectors_name;`); result.Error != nil {
-			return result.Error
-		}
-
 		for _, currentModel := range models {
 			if err := tx.Migrator().AutoMigrate(currentModel); err != nil {
 				return fmt.Errorf("failed to migrate model %T: %w", currentModel, err)

@@ -46,10 +46,11 @@ const (
 	PasswordLastSet Property = "pwdlastset"
 	Title           Property = "title"
 	Email           Property = "email"
+	IsInherited     Property = "isinherited"
 )
 
 func AllProperties() []Property {
-	return []Property{ObjectID, Name, DisplayName, Description, OwnerObjectID, Collected, OperatingSystem, SystemTags, UserTags, LastSeen, WhenCreated, Enabled, PasswordLastSet, Title, Email}
+	return []Property{ObjectID, Name, DisplayName, Description, OwnerObjectID, Collected, OperatingSystem, SystemTags, UserTags, LastSeen, WhenCreated, Enabled, PasswordLastSet, Title, Email, IsInherited}
 }
 func ParseProperty(source string) (Property, error) {
 	switch source {
@@ -83,6 +84,8 @@ func ParseProperty(source string) (Property, error) {
 		return Title, nil
 	case "email":
 		return Email, nil
+	case "isinherited":
+		return IsInherited, nil
 	default:
 		return "", errors.New("Invalid enumeration value: " + source)
 	}
@@ -119,6 +122,8 @@ func (s Property) String() string {
 		return string(Title)
 	case Email:
 		return string(Email)
+	case IsInherited:
+		return string(IsInherited)
 	default:
 		panic("Invalid enumeration case: " + string(s))
 	}
@@ -155,6 +160,8 @@ func (s Property) Name() string {
 		return "Title"
 	case Email:
 		return "Email"
+	case IsInherited:
+		return "Is Inherited"
 	default:
 		panic("Invalid enumeration case: " + string(s))
 	}

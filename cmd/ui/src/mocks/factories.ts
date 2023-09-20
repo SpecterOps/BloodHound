@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { faker } from '@faker-js/faker';
-import { ActiveDirectoryKind } from 'bh-shared-ui';
+import { ActiveDirectoryNodeKind } from 'bh-shared-ui';
 
 export const createDatapipeStatus = (updated_at?: Date) => {
     return {
@@ -74,9 +74,9 @@ export const createMockSearchResult = (nodeType?: string) => {
         type:
             nodeType ||
             faker.helpers.arrayElement([
-                ActiveDirectoryKind.User,
-                ActiveDirectoryKind.Group,
-                ActiveDirectoryKind.Computer,
+                ActiveDirectoryNodeKind.User,
+                ActiveDirectoryNodeKind.Group,
+                ActiveDirectoryNodeKind.Computer,
             ]),
     };
 };

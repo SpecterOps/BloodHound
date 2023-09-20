@@ -14,13 +14,14 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import React from 'react';
 import { Box, Divider, Drawer, List, ListItem, ListItemText, ListSubheader } from '@mui/material';
 import { Theme } from '@mui/material/styles';
 import createStyles from '@mui/styles/createStyles';
 import makeStyles from '@mui/styles/makeStyles';
-import { useLocation, Link } from 'react-router-dom';
-import { find, findIndex } from 'lodash';
+import find from 'lodash/find';
+import findIndex from 'lodash/findIndex';
+import React from 'react';
+import { Link, useLocation } from 'react-router-dom';
 
 const drawerWidth = 320;
 
