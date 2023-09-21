@@ -384,42 +384,6 @@ func TestIsValidBase62_chars(t *testing.T) {
 	}
 }
 
-func TestIsValidBase64Chars(t *testing.T) {
-	for _, tc := range []struct {
-		n   string
-		val string
-		exp bool
-	}{
-		{"empty", "", true},
-		{"numbers", "0123456789", true},
-		{"lower alpha", "abcdefghijklmnopqrstuvwxyz", true},
-		{"upper alpha", "ABCDEFGHIJKLMNOPQRSTUVWXYZ", true},
-		{"alphanum", "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ", true},
-		{"other", "+/=", true},
-		{"all", "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ+/=", true},
-		{"valid padding", "ab==", true},
-		{"invalid padding", "ab===", false},
-		{"padding only", "==", false},
-		{"invalid middle", "12345$&#$()67890", false},
-		{"invalid start", "}{:<?>}", false},
-	} {
-		t.Run(tc.n, func(t *testing.T) {
-			require.Equal(t, tc.exp, isValidBase64Chars(tc.val))
-		})
-	}
-}
-
-func TestIsValidBase64Chars_chars(t *testing.T) {
-	valid := "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ+/"
-	for c := byte(0); ; {
-		require.Equal(t, bytes.ContainsAny([]byte{byte(c)}, valid), isValidBase64Chars(string(c)), "char %q", string(c))
-		c++
-		if c == 0 { // continues until it wraps back to 0
-			break
-		}
-	}
-}
-
 func TestIsValidBase64(t *testing.T) {
 	for _, tc := range []struct {
 		n   string
@@ -427,6 +391,8 @@ func TestIsValidBase64(t *testing.T) {
 		exp bool
 	}{
 		{"empty", "", true},
+		{"line chars", "\rasdf\n", false},
+		{"invalid short sequence", "1234567890", false},
 		{"valid short sequence", "1234567890==", true},
 		{"valid long sequence", "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ+/000=", true},
 		{"valid padding", "ab==", true},

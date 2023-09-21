@@ -124,33 +124,8 @@ func isValidBase62(val string) bool {
 	return true
 }
 
-func isValidBase64Chars(val string) bool {
-	vlen := len(val)
-	if vlen == 0 {
-		return true
-	}
-
-	val = strings.TrimRight(val, "=")
-	if val == "" || vlen-len(val) > 2 {
-		return false
-	}
-
-	for _, v := range []byte(val) {
-		if (v >= '0' && v <= '9') || (v >= 'A' && v <= 'Z') || (v >= 'a' && v <= 'z') {
-			continue
-		}
-		if v == '+' || v == '/' {
-			continue
-		}
-		return false
-	}
-	return true
-}
-
 func isValidBase64(val string) bool {
-	// DecodeString() will accept some character sequences that contain
-	// non base64 characters, as well as whitespace. This filters those out.
-	if !isValidBase64Chars(val) {
+	if strings.ContainsAny(val, "\r\n") {
 		return false
 	}
 	_, err := base64.StdEncoding.DecodeString(val)
