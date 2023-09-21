@@ -3,11 +3,12 @@ package model
 import "fmt"
 
 type SavedQuery struct {
-	UserID string `json:"user_id"`
-	Name   string `json:"name"`
+	UserID string `json:"user_id" gorm:"primaryKey"`
+	Name   string `json:"name" gorm:"primaryKey"`
 	Query  string `json:"query"`
 
-	BigSerial
+	ID int64 `json:"id"`
+	Basic
 }
 
 type SavedQueries []SavedQuery

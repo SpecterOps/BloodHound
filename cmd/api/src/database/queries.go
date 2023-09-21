@@ -21,7 +21,7 @@ func (s *BloodhoundDB) ListSavedQueries(userID uuid.UUID, order string, filter m
 		cursor = cursor.Order(order)
 	}
 
-	result := s.db.Find(&queries).Count(&count)
+	result := s.db.Where("user_id = ?", userID).Find(&queries).Count(&count)
 	if result.Error != nil {
 		return queries, 0, result.Error
 	}
