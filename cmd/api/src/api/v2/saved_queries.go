@@ -15,7 +15,7 @@ func (s Resources) ListSavedQueries(response http.ResponseWriter, request *http.
 		order         []string
 		queryParams   = request.URL.Query()
 		sortByColumns = queryParams[api.QueryParameterSortBy]
-		queries       model.SavedQueries
+		savedQueries  model.SavedQueries
 		userID        = ctx2.FromRequest(request).AuthCtx.Session.UserID
 	)
 
@@ -26,7 +26,7 @@ func (s Resources) ListSavedQueries(response http.ResponseWriter, request *http.
 			column = column[1:]
 		}
 
-		if !queries.IsSortable(column) {
+		if !savedQueries.IsSortable(column) {
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsNotSortable, request), response)
 			return
 		}
@@ -45,7 +45,7 @@ func (s Resources) ListSavedQueries(response http.ResponseWriter, request *http.
 		return
 	} else {
 		for name, filters := range queryFilters {
-			if validPredicates, err := queries.GetValidFilterPredicatesAsStrings(name); err != nil {
+			if validPredicates, err := savedQueries.GetValidFilterPredicatesAsStrings(name); err != nil {
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("%s: %s", api.ErrorResponseDetailsColumnNotFilterable, name), request), response)
 				return
 			} else {
@@ -55,7 +55,7 @@ func (s Resources) ListSavedQueries(response http.ResponseWriter, request *http.
 						return
 					}
 
-					queryFilters[name][i].IsStringData = queries.IsString(filter.Name)
+					queryFilters[name][i].IsStringData = savedQueries.IsString(filter.Name)
 				}
 			}
 		}

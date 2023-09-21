@@ -1,5 +1,5 @@
 {
-    "/api/v2/queries": {
+    "/api/v2/saved-queries": {
         "get": {
             "description": "Get the user saved cypher queries",
             "tags": [

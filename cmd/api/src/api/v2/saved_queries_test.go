@@ -27,7 +27,7 @@ func TestResources_ListSavedQueries_SortingError(t *testing.T) {
 	)
 	defer mockCtrl.Finish()
 
-	endpoint := "/api/v2/queries"
+	endpoint := "/api/v2/saved-queries"
 
 	if req, err := http.NewRequest("GET", endpoint, nil); err != nil {
 		t.Fatal(err)
@@ -56,7 +56,7 @@ func TestResources_ListSavedQueries_InvalidFilterColumn(t *testing.T) {
 	)
 	defer mockCtrl.Finish()
 
-	endpoint := "/api/v2/queries"
+	endpoint := "/api/v2/saved-queries"
 
 	if req, err := http.NewRequest("GET", endpoint, nil); err != nil {
 		t.Fatal(err)
@@ -85,7 +85,7 @@ func TestResources_ListSavedQueries_InvalidFilterPredicate(t *testing.T) {
 	)
 	defer mockCtrl.Finish()
 
-	endpoint := "/api/v2/queries"
+	endpoint := "/api/v2/saved-queries"
 
 	if req, err := http.NewRequest("GET", endpoint, nil); err != nil {
 		t.Fatal(err)
@@ -113,7 +113,7 @@ func TestResources_ListSavedQueries_InvalidSkip(t *testing.T) {
 	)
 	defer mockCtrl.Finish()
 
-	endpoint := "/api/v2/queries"
+	endpoint := "/api/v2/saved-queries"
 
 	if req, err := http.NewRequest("GET", endpoint, nil); err != nil {
 		t.Fatal(err)
@@ -141,7 +141,7 @@ func TestResources_ListSavedQueries_InvalidLimit(t *testing.T) {
 	)
 	defer mockCtrl.Finish()
 
-	endpoint := "/api/v2/queries"
+	endpoint := "/api/v2/saved-queries"
 
 	if req, err := http.NewRequest("GET", endpoint, nil); err != nil {
 		t.Fatal(err)
@@ -170,7 +170,7 @@ func TestResources_ListSavedQueries_DBError(t *testing.T) {
 	)
 	defer mockCtrl.Finish()
 
-	endpoint := "/api/v2/queries"
+	endpoint := "/api/v2/saved-queries"
 	userId, err := uuid2.NewV4()
 	require.Nil(t, err)
 
@@ -212,7 +212,7 @@ func TestResources_ListSavedQueries(t *testing.T) {
 	)
 	defer mockCtrl.Finish()
 
-	endpoint := "/api/v2/queries"
+	endpoint := "/api/v2/saved-queries"
 	userId, err := uuid2.NewV4()
 	require.Nil(t, err)
 
