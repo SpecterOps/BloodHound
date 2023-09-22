@@ -24,6 +24,7 @@ import { PRIMARY_SEARCH, SEARCH_TYPE_EXACT } from 'src/ducks/searchbar/types';
 import { abortRequest } from 'src/views/Explore/utils';
 import EntityInfoCollapsibleSection from './EntityInfoCollapsibleSection';
 import { NODE_GRAPH_RENDER_LIMIT } from 'src/constants';
+import { transformFlatGraphResponse } from 'src/utils';
 
 export interface EntityInfoDataTableProps {
     id: string;
@@ -67,7 +68,9 @@ const EntityInfoDataTable: React.FC<EntityInfoDataTableProps> = ({ id, label, en
 
             await endpoint({ type: 'graph' })
                 .then((result) => {
-                    dispatch(saveResponseForExport(result));
+                    const formattedData = transformFlatGraphResponse(result);
+
+                    dispatch(saveResponseForExport(formattedData));
                     dispatch(putGraphData(result));
                 })
                 .catch((err) => {
