@@ -32,7 +32,7 @@ import {
 import { addSnackbar } from 'src/ducks/global/actions';
 import { getLinksIndex, getNodesIndex } from 'src/ducks/graph/graphutils';
 import { ActiveDirectoryRelationshipKind, AzureRelationshipKind } from 'bh-shared-ui';
-import { transformForExportConsistency, transformToFlatGraphResponse } from 'src/utils';
+import { transformFlatGraphResponse, transformToFlatGraphResponse } from 'src/utils';
 
 function* graphQueryWatcher(): SagaIterator {
     yield takeLatest(GRAPH_START, graphQueryWorker);
@@ -99,7 +99,7 @@ function* runSearchQuery(payload: SearchRequest): SagaIterator {
         response = yield call(apiClient.getSearchResult, payload.objectid, payload.searchType);
         const data = response.data.data;
 
-        const formattedData = transformForExportConsistency(data);
+        const formattedData = transformFlatGraphResponse(data);
         yield put(saveResponseForExport(formattedData));
 
         yield put(putGraphData(data));
