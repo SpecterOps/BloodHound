@@ -189,6 +189,31 @@ export const transformFlatGraphResponse = (graph: FlatGraphResponse): GraphData 
     return result;
 };
 
+// this function ensures that the JSON we save for export is consistent across search experiences.
+// its primary usage is to transform the single node search api response into the same shape as other search types
+export const transformForExportConsistency = (flatGraph: FlatGraphResponse): GraphResponse => {
+    let result: GraphResponse = {
+        data: {
+            nodes: {},
+            edges: [],
+        },
+    };
+
+    for (const [key, item] of Object.entries(flatGraph)) {
+        const lastSeen = getLastSeenValue(item);
+
+        result.data.nodes[key] = {
+            kind: item.data.nodetype,
+            objectId: item.data.objectid,
+            label: item.label.text,
+            lastSeen: lastSeen,
+            isTierZero: !!(item.data.system_tags && item.data.system_tags.indexOf('admin_tier_0') !== -1),
+        };
+    }
+
+    return result;
+};
+
 export const transformToFlatGraphResponse = (graph: GraphResponse) => {
     const result: any = {};
     for (const [key, value] of Object.entries(graph.data.nodes)) {
