@@ -14,9 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { ActiveDirectoryKindProperties, AzureKindProperties, CommonKindProperties } from 'bh-shared-ui';
 import { validateProperty } from './utils';
-import { ActiveDirectoryKindProperties, AzureKindProperties } from 'bh-shared-ui';
-import { CommonKindProperties } from 'src/graphSchema';
 
 describe('validating a node property against the shared generated schema', () => {
     it('should recognize active directory properties', () => {

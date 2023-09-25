@@ -118,12 +118,30 @@ const UserProfile = () => {
                         </Typography>
                     </Grid>
                 </Grid>
-                {user.saml_provider_id === null && (
-                    <>
-                        <Box mt={2}>
-                            <Typography variant='h2'>Authentication</Typography>
-                        </Box>
-                        <Grid container spacing={2} alignItems='center'>
+
+                <Box mt={2}>
+                    <Typography variant='h2'>Authentication</Typography>
+                </Box>
+                <Grid container spacing={2} alignItems='center'>
+                    <Grid container item>
+                        <Grid item xs={3}>
+                            <Typography variant='body1'>API Key Management</Typography>
+                        </Grid>
+                        <Grid item xs={2}>
+                            <Button
+                                variant='contained'
+                                color='primary'
+                                size='small'
+                                disableElevation
+                                fullWidth
+                                onClick={() => setUserTokenManagementDialogOpen(true)}
+                                data-testid='my-profile_button-api-key-management'>
+                                API Key Management
+                            </Button>
+                        </Grid>
+                    </Grid>
+                    {user.saml_provider_id === null && (
+                        <>
                             <Grid container item>
                                 <Grid item xs={3}>
                                     <Typography variant='body1'>Password</Typography>
@@ -138,24 +156,6 @@ const UserProfile = () => {
                                         onClick={() => setChangePasswordDialogOpen(true)}
                                         data-testid='my-profile_button-reset-password'>
                                         Reset Password
-                                    </Button>
-                                </Grid>
-                            </Grid>
-
-                            <Grid container item>
-                                <Grid item xs={3}>
-                                    <Typography variant='body1'>API Key Management</Typography>
-                                </Grid>
-                                <Grid item xs={2}>
-                                    <Button
-                                        variant='contained'
-                                        color='primary'
-                                        size='small'
-                                        disableElevation
-                                        fullWidth
-                                        onClick={() => setUserTokenManagementDialogOpen(true)}
-                                        data-testid='my-profile_button-api-key-management'>
-                                        API Key Management
                                     </Button>
                                 </Grid>
                             </Grid>
@@ -184,9 +184,9 @@ const UserProfile = () => {
                                     </Box>
                                 </Grid>
                             </Grid>
-                        </Grid>
-                    </>
-                )}
+                        </>
+                    )}
+                </Grid>
             </PageWithTitle>
 
             <PasswordDialog

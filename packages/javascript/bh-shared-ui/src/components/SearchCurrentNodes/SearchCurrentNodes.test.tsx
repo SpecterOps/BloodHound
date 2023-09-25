@@ -14,9 +14,9 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import {  fireEvent, render } from "@testing-library/react";
-import SearchCurrentNodes, { NO_RESULTS_TEXT } from "./SearchCurrentNodes";
-import { GraphNodes } from "./types";
+import { fireEvent, render } from '@testing-library/react';
+import SearchCurrentNodes, { NO_RESULTS_TEXT } from './SearchCurrentNodes';
+import { GraphNodes } from './types';
 
 const nodes: GraphNodes = {
     '1': {
@@ -24,37 +24,32 @@ const nodes: GraphNodes = {
         kind: 'Computer',
         objectId: '001',
         isTierZero: false,
-        lastSeen: ''
+        lastSeen: '',
     },
     '2': {
         label: 'user_node',
         kind: 'User',
         objectId: '002',
         isTierZero: false,
-        lastSeen: ''
+        lastSeen: '',
     },
     '3': {
         label: 'group_node',
         kind: 'Group',
         objectId: '003',
         isTierZero: false,
-        lastSeen: ''
-    }
-}
+        lastSeen: '',
+    },
+};
 
 const RESULT_ID = 'explore_search_result-list-item';
 
-describe("SearchCurrentNodes", () => {
-
+describe('SearchCurrentNodes', () => {
     const setup = () => {
         const testOnSelect = vi.fn();
         const testOnClose = vi.fn();
         const screen = render(
-            <SearchCurrentNodes
-                currentNodes={nodes}
-                onSelect={testOnSelect}
-                onClose={testOnClose}
-            />
+            <SearchCurrentNodes currentNodes={nodes} onSelect={testOnSelect} onClose={testOnClose} />
         );
 
         const input = screen.getByRole('textbox');
@@ -67,10 +62,10 @@ describe("SearchCurrentNodes", () => {
             ...screen,
             input,
             resultList,
-            setInputValue
-        }
-    }
-    
+            setInputValue,
+        };
+    };
+
     it('displays an autofocused text input', () => {
         const { input } = setup();
 
@@ -87,7 +82,7 @@ describe("SearchCurrentNodes", () => {
 
     it('displays expected results when searching by label', async () => {
         const { resultList, setInputValue, queryByText, findAllByTestId } = setup();
-        
+
         setInputValue('node');
         expect(resultList).toBeInTheDocument();
         expect(queryByText(NO_RESULTS_TEXT)).not.toBeInTheDocument();
@@ -99,7 +94,7 @@ describe("SearchCurrentNodes", () => {
 
     it('displays expected results when searching by objectid', async () => {
         const { resultList, setInputValue, queryByText, findAllByTestId } = setup();
-        
+
         setInputValue('00');
         expect(resultList).toBeInTheDocument();
         expect(queryByText(NO_RESULTS_TEXT)).not.toBeInTheDocument();
@@ -109,7 +104,7 @@ describe("SearchCurrentNodes", () => {
         expect(await findAllByTestId(RESULT_ID)).toHaveLength(1);
     });
 
-    it('displays the label for each result', async () => { 
+    it('displays the label for each result', async () => {
         const { setInputValue, findByTestId } = setup();
 
         setInputValue('002');
@@ -127,4 +122,4 @@ describe("SearchCurrentNodes", () => {
         fireEvent.click(result);
         expect(testOnSelect).toHaveBeenCalled();
     });
-})
+});

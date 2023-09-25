@@ -17,7 +17,7 @@
 import { RequestOptions } from 'js-client-library';
 import { apiClient } from 'bh-shared-ui';
 import { GraphNodeTypes } from 'src/ducks/graph/types';
-import { ActiveDirectoryKind, AzureKind } from 'bh-shared-ui';
+import { ActiveDirectoryNodeKind, AzureNodeKind } from 'bh-shared-ui';
 import { EntityInfoDataTableProps } from './EntityInfoDataTable';
 import { controller } from 'src/views/Explore/utils';
 
@@ -25,21 +25,21 @@ export const entityInformationEndpoints: Record<
     GraphNodeTypes,
     (id: string, options?: RequestOptions) => Promise<any>
 > = {
-    [AzureKind.Entity]: (id: string, options?: RequestOptions) =>
+    [AzureNodeKind.Entity]: (id: string, options?: RequestOptions) =>
         apiClient.getAZEntityInfoV2('az-base', id, undefined, false, undefined, undefined, undefined, options),
-    [AzureKind.App]: (id: string, options?: RequestOptions) =>
+    [AzureNodeKind.App]: (id: string, options?: RequestOptions) =>
         apiClient.getAZEntityInfoV2('applications', id, undefined, false, undefined, undefined, undefined, options),
-    [AzureKind.VMScaleSet]: (id: string, options?: RequestOptions) =>
+    [AzureNodeKind.VMScaleSet]: (id: string, options?: RequestOptions) =>
         apiClient.getAZEntityInfoV2('vm-scale-sets', id, undefined, false, undefined, undefined, undefined, options),
-    [AzureKind.Device]: (id: string, options?: RequestOptions) =>
+    [AzureNodeKind.Device]: (id: string, options?: RequestOptions) =>
         apiClient.getAZEntityInfoV2('devices', id, undefined, false, undefined, undefined, undefined, options),
-    [AzureKind.FunctionApp]: (id: string, options?: RequestOptions) =>
+    [AzureNodeKind.FunctionApp]: (id: string, options?: RequestOptions) =>
         apiClient.getAZEntityInfoV2('function-apps', id, undefined, false, undefined, undefined, undefined, options),
-    [AzureKind.Group]: (id: string, options?: RequestOptions) =>
+    [AzureNodeKind.Group]: (id: string, options?: RequestOptions) =>
         apiClient.getAZEntityInfoV2('groups', id, undefined, false, undefined, undefined, undefined, options),
-    [AzureKind.KeyVault]: (id: string, options?: RequestOptions) =>
+    [AzureNodeKind.KeyVault]: (id: string, options?: RequestOptions) =>
         apiClient.getAZEntityInfoV2('key-vaults', id, undefined, false, undefined, undefined, undefined, options),
-    [AzureKind.ManagementGroup]: (id: string, options?: RequestOptions) =>
+    [AzureNodeKind.ManagementGroup]: (id: string, options?: RequestOptions) =>
         apiClient.getAZEntityInfoV2(
             'management-groups',
             id,
@@ -50,11 +50,11 @@ export const entityInformationEndpoints: Record<
             undefined,
             options
         ),
-    [AzureKind.ResourceGroup]: (id: string, options?: RequestOptions) =>
+    [AzureNodeKind.ResourceGroup]: (id: string, options?: RequestOptions) =>
         apiClient.getAZEntityInfoV2('resource-groups', id, undefined, false, undefined, undefined, undefined, options),
-    [AzureKind.Role]: (id: string, options?: RequestOptions) =>
+    [AzureNodeKind.Role]: (id: string, options?: RequestOptions) =>
         apiClient.getAZEntityInfoV2('roles', id, undefined, false, undefined, undefined, undefined, options),
-    [AzureKind.ServicePrincipal]: (id: string, options?: RequestOptions) =>
+    [AzureNodeKind.ServicePrincipal]: (id: string, options?: RequestOptions) =>
         apiClient.getAZEntityInfoV2(
             'service-principals',
             id,
@@ -65,17 +65,17 @@ export const entityInformationEndpoints: Record<
             undefined,
             options
         ),
-    [AzureKind.Subscription]: (id: string, options?: RequestOptions) =>
+    [AzureNodeKind.Subscription]: (id: string, options?: RequestOptions) =>
         apiClient.getAZEntityInfoV2('subscriptions', id, undefined, false, undefined, undefined, undefined, options),
-    [AzureKind.Tenant]: (id: string, options?: RequestOptions) =>
+    [AzureNodeKind.Tenant]: (id: string, options?: RequestOptions) =>
         apiClient.getAZEntityInfoV2('tenants', id, undefined, false, undefined, undefined, undefined, options),
-    [AzureKind.User]: (id: string, options?: RequestOptions) =>
+    [AzureNodeKind.User]: (id: string, options?: RequestOptions) =>
         apiClient.getAZEntityInfoV2('users', id, undefined, false, undefined, undefined, undefined, options),
-    [AzureKind.VM]: (id: string, options?: RequestOptions) =>
+    [AzureNodeKind.VM]: (id: string, options?: RequestOptions) =>
         apiClient.getAZEntityInfoV2('vms', id, undefined, false, undefined, undefined, undefined, options),
-    [AzureKind.ManagedCluster]: (id: string, options?: RequestOptions) =>
+    [AzureNodeKind.ManagedCluster]: (id: string, options?: RequestOptions) =>
         apiClient.getAZEntityInfoV2('managed-clusters', id, undefined, false, undefined, undefined, undefined, options),
-    [AzureKind.ContainerRegistry]: (id: string, options?: RequestOptions) =>
+    [AzureNodeKind.ContainerRegistry]: (id: string, options?: RequestOptions) =>
         apiClient.getAZEntityInfoV2(
             'container-registries',
             id,
@@ -86,11 +86,11 @@ export const entityInformationEndpoints: Record<
             undefined,
             options
         ),
-    [AzureKind.WebApp]: (id: string, options?: RequestOptions) =>
+    [AzureNodeKind.WebApp]: (id: string, options?: RequestOptions) =>
         apiClient.getAZEntityInfoV2('web-apps', id, undefined, false, undefined, undefined, undefined, options),
-    [AzureKind.LogicApp]: (id: string, options?: RequestOptions) =>
+    [AzureNodeKind.LogicApp]: (id: string, options?: RequestOptions) =>
         apiClient.getAZEntityInfoV2('logic-apps', id, undefined, false, undefined, undefined, undefined, options),
-    [AzureKind.AutomationAccount]: (id: string, options?: RequestOptions) =>
+    [AzureNodeKind.AutomationAccount]: (id: string, options?: RequestOptions) =>
         apiClient.getAZEntityInfoV2(
             'automation-accounts',
             id,
@@ -101,19 +101,20 @@ export const entityInformationEndpoints: Record<
             undefined,
             options
         ),
-    [ActiveDirectoryKind.Entity]: (id: string, options?: RequestOptions) => apiClient.getBaseV2(id, false, options),
-    [ActiveDirectoryKind.Computer]: (id: string, options?: RequestOptions) =>
+    [ActiveDirectoryNodeKind.Entity]: (id: string, options?: RequestOptions) => apiClient.getBaseV2(id, false, options),
+    [ActiveDirectoryNodeKind.Computer]: (id: string, options?: RequestOptions) =>
         apiClient.getComputerV2(id, false, options),
-    [ActiveDirectoryKind.Container]: () => Promise.resolve(),
-    [ActiveDirectoryKind.Domain]: (id: string, options?: RequestOptions) => apiClient.getDomainV2(id, false, options),
-    [ActiveDirectoryKind.GPO]: (id: string, options?: RequestOptions) => apiClient.getGPOV2(id, false, options),
-    [ActiveDirectoryKind.Group]: (id: string, options?: RequestOptions) => apiClient.getGroupV2(id, false, options),
-    [ActiveDirectoryKind.OU]: (id: string, options?: RequestOptions) => apiClient.getOUV2(id, false, options),
-    [ActiveDirectoryKind.User]: (id: string, options?: RequestOptions) => apiClient.getUserV2(id, false, options),
+    [ActiveDirectoryNodeKind.Container]: () => Promise.resolve(),
+    [ActiveDirectoryNodeKind.Domain]: (id: string, options?: RequestOptions) =>
+        apiClient.getDomainV2(id, false, options),
+    [ActiveDirectoryNodeKind.GPO]: (id: string, options?: RequestOptions) => apiClient.getGPOV2(id, false, options),
+    [ActiveDirectoryNodeKind.Group]: (id: string, options?: RequestOptions) => apiClient.getGroupV2(id, false, options),
+    [ActiveDirectoryNodeKind.OU]: (id: string, options?: RequestOptions) => apiClient.getOUV2(id, false, options),
+    [ActiveDirectoryNodeKind.User]: (id: string, options?: RequestOptions) => apiClient.getUserV2(id, false, options),
 };
 
 export const allSections: Record<GraphNodeTypes, (id: string) => EntityInfoDataTableProps[]> = {
-    [AzureKind.Entity]: (id) => [
+    [AzureNodeKind.Entity]: (id) => [
         {
             id,
             label: 'Outbound Object Control',
@@ -135,7 +136,7 @@ export const allSections: Record<GraphNodeTypes, (id: string) => EntityInfoDataT
                     .then((res) => res.data),
         },
     ],
-    [AzureKind.App]: (id) => [
+    [AzureNodeKind.App]: (id) => [
         {
             id,
             label: 'Inbound Object Control',
@@ -147,7 +148,7 @@ export const allSections: Record<GraphNodeTypes, (id: string) => EntityInfoDataT
                     .then((res) => res.data),
         },
     ],
-    [AzureKind.VMScaleSet]: (id) => [
+    [AzureNodeKind.VMScaleSet]: (id) => [
         {
             id,
             label: 'Inbound Object Control',
@@ -159,7 +160,7 @@ export const allSections: Record<GraphNodeTypes, (id: string) => EntityInfoDataT
                     .then((res) => res.data),
         },
     ],
-    [AzureKind.Device]: (id) => [
+    [AzureNodeKind.Device]: (id) => [
         {
             id,
             label: 'Local Admins',
@@ -181,7 +182,7 @@ export const allSections: Record<GraphNodeTypes, (id: string) => EntityInfoDataT
                     .then((res) => res.data),
         },
     ],
-    [AzureKind.FunctionApp]: (id) => [
+    [AzureNodeKind.FunctionApp]: (id) => [
         {
             id,
             label: 'Inbound Object Control',
@@ -193,7 +194,7 @@ export const allSections: Record<GraphNodeTypes, (id: string) => EntityInfoDataT
                     .then((res) => res.data),
         },
     ],
-    [AzureKind.Group]: (id) => [
+    [AzureNodeKind.Group]: (id) => [
         {
             id,
             label: 'Members',
@@ -243,7 +244,7 @@ export const allSections: Record<GraphNodeTypes, (id: string) => EntityInfoDataT
                     .then((res) => res.data),
         },
     ],
-    [AzureKind.KeyVault]: (id) => [
+    [AzureNodeKind.KeyVault]: (id) => [
         {
             id,
             label: 'Vault Readers',
@@ -301,7 +302,7 @@ export const allSections: Record<GraphNodeTypes, (id: string) => EntityInfoDataT
                     .then((res) => res.data),
         },
     ],
-    [AzureKind.ManagementGroup]: (id) => [
+    [AzureNodeKind.ManagementGroup]: (id) => [
         {
             id,
             label: 'Descendant Objects',
@@ -548,7 +549,7 @@ export const allSections: Record<GraphNodeTypes, (id: string) => EntityInfoDataT
                     .then((res) => res.data),
         },
     ],
-    [AzureKind.ResourceGroup]: (id) => [
+    [AzureNodeKind.ResourceGroup]: (id) => [
         {
             id,
             label: 'Descendant Objects',
@@ -737,7 +738,7 @@ export const allSections: Record<GraphNodeTypes, (id: string) => EntityInfoDataT
                     .then((res) => res.data),
         },
     ],
-    [AzureKind.Role]: (id) => [
+    [AzureNodeKind.Role]: (id) => [
         {
             id,
             label: 'Active Assignments',
@@ -749,7 +750,7 @@ export const allSections: Record<GraphNodeTypes, (id: string) => EntityInfoDataT
                     .then((res) => res.data),
         },
     ],
-    [AzureKind.ServicePrincipal]: (id) => {
+    [AzureNodeKind.ServicePrincipal]: (id) => {
         const BaseProps: EntityInfoDataTableProps[] = [
             {
                 id,
@@ -826,7 +827,7 @@ export const allSections: Record<GraphNodeTypes, (id: string) => EntityInfoDataT
             ? BaseProps
             : [...BaseProps, OutboundAbusableAppRoleAssignmentsProp];
     },
-    [AzureKind.Subscription]: (id) => [
+    [AzureNodeKind.Subscription]: (id) => [
         {
             id,
             label: 'Descendant Objects',
@@ -1025,7 +1026,7 @@ export const allSections: Record<GraphNodeTypes, (id: string) => EntityInfoDataT
                     .then((res) => res.data),
         },
     ],
-    [AzureKind.Tenant]: (id) => [
+    [AzureNodeKind.Tenant]: (id) => [
         {
             id,
             label: 'Descendant Objects',
@@ -1267,7 +1268,7 @@ export const allSections: Record<GraphNodeTypes, (id: string) => EntityInfoDataT
                     .then((res) => res.data),
         },
     ],
-    [AzureKind.User]: (id) => [
+    [AzureNodeKind.User]: (id) => [
         {
             id,
             label: 'Member Of',
@@ -1317,7 +1318,7 @@ export const allSections: Record<GraphNodeTypes, (id: string) => EntityInfoDataT
                     .then((res) => res.data),
         },
     ],
-    [AzureKind.VM]: (id) => [
+    [AzureNodeKind.VM]: (id) => [
         {
             id,
             label: 'Local Admins',
@@ -1339,7 +1340,7 @@ export const allSections: Record<GraphNodeTypes, (id: string) => EntityInfoDataT
                     .then((res) => res.data),
         },
     ],
-    [AzureKind.ManagedCluster]: (id) => [
+    [AzureNodeKind.ManagedCluster]: (id) => [
         {
             id,
             label: 'Inbound Object Control',
@@ -1351,7 +1352,7 @@ export const allSections: Record<GraphNodeTypes, (id: string) => EntityInfoDataT
                     .then((res) => res.data),
         },
     ],
-    [AzureKind.ContainerRegistry]: (id) => [
+    [AzureNodeKind.ContainerRegistry]: (id) => [
         {
             id,
             label: 'Inbound Object Control',
@@ -1363,7 +1364,7 @@ export const allSections: Record<GraphNodeTypes, (id: string) => EntityInfoDataT
                     .then((res) => res.data),
         },
     ],
-    [AzureKind.WebApp]: (id) => [
+    [AzureNodeKind.WebApp]: (id) => [
         {
             id,
             label: 'Inbound Object Control',
@@ -1375,7 +1376,7 @@ export const allSections: Record<GraphNodeTypes, (id: string) => EntityInfoDataT
                     .then((res) => res.data),
         },
     ],
-    [AzureKind.LogicApp]: (id) => [
+    [AzureNodeKind.LogicApp]: (id) => [
         {
             id,
             label: 'Inbound Object Control',
@@ -1387,7 +1388,7 @@ export const allSections: Record<GraphNodeTypes, (id: string) => EntityInfoDataT
                     .then((res) => res.data),
         },
     ],
-    [AzureKind.AutomationAccount]: (id) => [
+    [AzureNodeKind.AutomationAccount]: (id) => [
         {
             id,
             label: 'Inbound Object Control',
@@ -1399,7 +1400,7 @@ export const allSections: Record<GraphNodeTypes, (id: string) => EntityInfoDataT
                     .then((res) => res.data),
         },
     ],
-    [ActiveDirectoryKind.Entity]: (id) => [
+    [ActiveDirectoryNodeKind.Entity]: (id) => [
         {
             id,
             label: 'Outbound Object Control',
@@ -1417,7 +1418,7 @@ export const allSections: Record<GraphNodeTypes, (id: string) => EntityInfoDataT
                     .then((res) => res.data),
         },
     ],
-    [ActiveDirectoryKind.Computer]: (id) => [
+    [ActiveDirectoryNodeKind.Computer]: (id) => [
         {
             id,
             label: 'Sessions',
@@ -1545,8 +1546,8 @@ export const allSections: Record<GraphNodeTypes, (id: string) => EntityInfoDataT
                     .then((res) => res.data),
         },
     ],
-    [ActiveDirectoryKind.Container]: () => [],
-    [ActiveDirectoryKind.Domain]: (id) => [
+    [ActiveDirectoryNodeKind.Container]: () => [],
+    [ActiveDirectoryNodeKind.Domain]: (id) => [
         {
             id,
             label: 'Foreign Members',
@@ -1610,7 +1611,7 @@ export const allSections: Record<GraphNodeTypes, (id: string) => EntityInfoDataT
                     .then((res) => res.data),
         },
     ],
-    [ActiveDirectoryKind.GPO]: (id) => [
+    [ActiveDirectoryNodeKind.GPO]: (id) => [
         {
             id,
             label: 'Affected Objects',
@@ -1658,7 +1659,7 @@ export const allSections: Record<GraphNodeTypes, (id: string) => EntityInfoDataT
                     .then((res) => res.data),
         },
     ],
-    [ActiveDirectoryKind.Group]: (id) => [
+    [ActiveDirectoryNodeKind.Group]: (id) => [
         {
             id,
             label: 'Sessions',
@@ -1738,7 +1739,7 @@ export const allSections: Record<GraphNodeTypes, (id: string) => EntityInfoDataT
                     .then((res) => res.data),
         },
     ],
-    [ActiveDirectoryKind.OU]: (id) => [
+    [ActiveDirectoryNodeKind.OU]: (id) => [
         {
             id,
             label: 'Affecting GPOs',
@@ -1766,7 +1767,7 @@ export const allSections: Record<GraphNodeTypes, (id: string) => EntityInfoDataT
                 apiClient.getOUUsersV2(id, skip, limit, type, { signal: controller.signal }).then((res) => res.data),
         },
     ],
-    [ActiveDirectoryKind.User]: (id) => [
+    [ActiveDirectoryNodeKind.User]: (id) => [
         {
             id,
             label: 'Sessions',

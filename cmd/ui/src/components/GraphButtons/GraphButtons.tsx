@@ -83,7 +83,12 @@ const GraphButtons: FC<GraphButtonsProps> = ({ rankDirection, options, nonLayout
             {nonLayoutButtons?.length && (
                 <>
                     {nonLayoutButtons.map((props, index) => (
-                        <GraphButton key={index} onClick={props.onClick} displayText={props.displayText} disabled={props.disabled} />
+                        <GraphButton
+                            key={index}
+                            onClick={props.onClick}
+                            displayText={props.displayText}
+                            disabled={props.disabled}
+                        />
                     ))}
                 </>
             )}
