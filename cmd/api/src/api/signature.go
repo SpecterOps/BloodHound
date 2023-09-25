@@ -22,6 +22,7 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"fmt"
+	"hash"
 	"io"
 	"net/http"
 	"time"
@@ -67,6 +68,7 @@ func tee(reader io.Reader, outA, outB io.Writer) error {
 }
 
 func GenerateRequestSignature(token model.TokenString, datetime, hmacMethod, requestMethod, requestURI string, body io.Reader) (io.Reader, []byte, error) {
+	var digester hash.Hash
 	if hmacMethod != auth.HMAC_SHA2_256 {
 		return nil, nil, fmt.Errorf("unsupported HMAC method: %s", hmacMethod)
 	}
@@ -77,12 +79,12 @@ func GenerateRequestSignature(token model.TokenString, datetime, hmacMethod, req
 	//
 	// Example: GET /api/v2/test/resource HTTP/1.1
 	// Signature Component: GET/api/v2/test/resource
-	dv, err := token.DigestableValue()
-	if err != nil {
-		return nil, nil, fmt.Errorf("token is unusable: %w", err)
-	}
-	digester := hmac.New(sha256.New, dv)
 
+	if dv, err := token.DigestableValue(); err != nil {
+		return nil, nil, fmt.Errorf("token is unusable: %w", err)
+	} else {
+		digester = hmac.New(sha256.New, dv)
+	}
 	if _, err := digester.Write([]byte(requestMethod + requestURI)); err != nil {
 		return nil, nil, err
 	}
