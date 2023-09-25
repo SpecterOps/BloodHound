@@ -39,8 +39,8 @@ const (
 	BHProductTokenPrefix  = "BH"
 	BHEProductTokenPrefix = "BHE"
 
-	BHClientTokenPrefix = "C"
-	BHUserTokenPrefix   = "U"
+	ClientTokenPrefix = "C"
+	UserTokenPrefix   = "U"
 )
 
 type SessionData struct {
@@ -167,7 +167,7 @@ func NewUserAuthToken(ownerId, tokenProductPrefix, tokenName string, hmacMethod 
 		authToken.ID = id
 	}
 
-	if ts, err := model.GenerateTokenString(strings.Join([]string{tokenProductPrefix, BHUserTokenPrefix}, "_")); err != nil {
+	if ts, err := model.GenerateTokenString(strings.Join([]string{tokenProductPrefix, UserTokenPrefix}, "_")); err != nil {
 		return authToken, nil
 	} else {
 		authToken.Key = ts

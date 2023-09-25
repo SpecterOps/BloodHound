@@ -49,7 +49,7 @@ func NewClientAuthToken(ownerID uuid.UUID, tokenProductPrefix string, hmacMethod
 		authToken.ID = id
 	}
 
-	if ts, err := model.GenerateTokenString(strings.Join([]string{tokenProductPrefix, auth.BHClientTokenPrefix}, "_")); err != nil {
+	if ts, err := model.GenerateTokenString(strings.Join([]string{tokenProductPrefix, auth.ClientTokenPrefix}, "_")); err != nil {
 		return authToken, nil
 	} else {
 		authToken.Key = ts
