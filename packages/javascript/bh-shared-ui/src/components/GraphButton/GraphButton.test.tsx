@@ -14,32 +14,23 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { render, screen } from 'src/test-utils';
-import GraphButton from 'src/components/GraphButton';
+import { render, screen } from '../../test-utils';
+import GraphButton from './GraphButton';
 import userEvent from '@testing-library/user-event';
-import { SigmaContainer } from '@react-sigma/core';
 
 const onClick = vi.fn();
 const displayText = 'test';
 
 describe('GraphButton', () => {
     it('should render a button with the passed in display text', () => {
-        render(
-            <SigmaContainer>
-                <GraphButton onClick={onClick} displayText={displayText} />
-            </SigmaContainer>
-        );
+        render(<GraphButton onClick={onClick} displayText={displayText} />);
 
         expect(screen.getByText(displayText)).toBeInTheDocument();
     });
 
     it('should call the onClick function when clicked', async () => {
         const user = userEvent.setup();
-        render(
-            <SigmaContainer>
-                <GraphButton onClick={onClick} displayText={displayText} />
-            </SigmaContainer>
-        );
+        render(<GraphButton onClick={onClick} displayText={displayText} />);
 
         await user.click(screen.getByRole('button'));
 

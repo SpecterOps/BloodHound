@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Grid, useTheme } from '@mui/material';
-import { EdgeInfoState, GraphProgress, setEdgeInfoOpen, setSelectedEdge } from 'bh-shared-ui';
+import { EdgeInfoState, GraphButtonProps, GraphProgress, setEdgeInfoOpen, setSelectedEdge } from 'bh-shared-ui';
 import { MultiDirectedGraph } from 'graphology';
 import { random } from 'graphology-layout';
 import forceAtlas2 from 'graphology-layout-forceatlas2';
@@ -24,7 +24,6 @@ import { GraphEdges, GraphNodes } from 'js-client-library';
 import isEmpty from 'lodash/isEmpty';
 import { FC, useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { GraphButtonProps } from 'src/components/GraphButton/GraphButton';
 import { GraphButtonOptions } from 'src/components/GraphButtons/GraphButtons';
 import SigmaChart from 'src/components/SigmaChart';
 import { setEntityInfoOpen, setSelectedNode } from 'src/ducks/entityinfo/actions';

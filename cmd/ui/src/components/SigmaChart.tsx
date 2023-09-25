@@ -31,11 +31,10 @@ import drawHover from 'src/rendering/programs/node-hover';
 import drawLabel from 'src/rendering/programs/node-label';
 import getNodeCombinedProgram from 'src/rendering/programs/node.combined';
 import getNodeGlyphsProgram from 'src/rendering/programs/node.glyphs';
-import { GraphButtonProps } from './GraphButton/GraphButton';
 import GraphEdgeEvents from './GraphEdgeEvents';
 import { Box } from '@mui/material';
 import { GraphNodes } from 'js-client-library';
-import { SearchCurrentNodes } from 'bh-shared-ui';
+import { GraphButtonProps, SearchCurrentNodes } from 'bh-shared-ui';
 
 interface SigmaChartProps {
     rankDirection: RankDirection;
