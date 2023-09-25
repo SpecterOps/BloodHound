@@ -45,9 +45,7 @@ func TestSignRequestSuccess(t *testing.T) {
 	require.Nil(t, err)
 
 	ts, err := model.GenerateTokenString("TEST")
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	err = api.SignRequest("tokenID", ts, request)
 	require.Nil(t, err)
 

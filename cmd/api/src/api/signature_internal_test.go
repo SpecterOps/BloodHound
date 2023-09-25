@@ -75,9 +75,7 @@ func TestSignRequestTeeFailure(t *testing.T) {
 	datetime := time.Now().Format(time.RFC3339)
 
 	ts, err := model.GenerateTokenString("TEST")
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	_, _, err = GenerateRequestSignature(ts, datetime, auth.HMAC_SHA2_256, "GET", "www.foo.bar", reader)
 	require.Error(t, err)
 	require.Equal(t, testFailure, err.Error())
@@ -88,9 +86,7 @@ func TestSignRequestValuesSuccess(t *testing.T) {
 	reader := strings.NewReader("Hello world")
 
 	ts, err := model.GenerateTokenString("TEST")
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	readerBody, signature, err := GenerateRequestSignature(ts, datetime, auth.HMAC_SHA2_256, "GET", "www.foo.bar", reader)
 	require.Nil(t, err)
 	require.Equal(t, readerBody, readerBody)
