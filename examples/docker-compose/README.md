@@ -98,6 +98,12 @@ You can provide each option as an environment variable:
 `bhe_default_admin_last_name=Admin`
 `bhe_default_admin_principal_email=spam@example.com`
 
+Note that in addition to having these environment variables set, you'll also need to pass them to the Docker container.
+To do that, modify the `environment` list in `docker-compose.yml`, adding a line for each environment variable you want
+to load: `- bhe_default_admin_principal_name=${bhe_default_admin_principal_name}`. The `${}` syntax is important, as it
+will allow you to read your environment variables from the session Docker Compose is running in, using that value for the
+environment variable in the Docker container.
+
 BloodHound environment variables follow these rules:
 
 -   BloodHound environment variables are case insensitive
