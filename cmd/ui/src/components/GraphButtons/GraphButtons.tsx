@@ -16,16 +16,17 @@
 
 import { faCropAlt } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Box } from '@mui/material';
+import { Box, MenuItem } from '@mui/material';
 import { useSigma } from '@react-sigma/core';
+import { GraphMenu, GraphButton, GraphButtonProps, exportToJson } from 'bh-shared-ui';
 import { random } from 'graphology-layout';
 import forceAtlas2 from 'graphology-layout-forceatlas2';
 import isEmpty from 'lodash/isEmpty';
 import { FC } from 'react';
-import GraphButton from 'src/components/GraphButton';
-import { GraphButtonProps } from 'src/components/GraphButton/GraphButton';
+import { useSelector } from 'react-redux';
 import { resetCamera } from 'src/ducks/graph/utils';
 import { RankDirection, layoutDagre } from 'src/hooks/useLayoutDagre/useLayoutDagre';
+import { AppState } from 'src/store';
 
 interface GraphButtonsProps {
     rankDirection?: RankDirection;
@@ -41,6 +42,8 @@ export type GraphButtonOptions = {
 const GraphButtons: FC<GraphButtonsProps> = ({ rankDirection, options, nonLayoutButtons }) => {
     if (isEmpty(options)) options = { standard: false, sequential: false };
     const { standard, sequential } = options;
+
+    const exportableGraphState = useSelector((state: AppState) => state.explore.export);
 
     const sigma = useSigma();
     const graph = sigma.getGraph();
@@ -76,22 +79,30 @@ const GraphButtons: FC<GraphButtonsProps> = ({ rankDirection, options, nonLayout
     };
 
     return (
-        <Box bottom={16} display={'flex'}>
+        <Box display={'flex'} gap={1} mt={2} ml={2}>
             <GraphButton onClick={reset} displayText={<FontAwesomeIcon icon={faCropAlt} />} />
-            {sequential && <GraphButton onClick={runSequentialLayout} displayText='sequential' />}
-            {standard && <GraphButton onClick={runStandardLayout} displayText='standard' />}
-            {nonLayoutButtons?.length && (
-                <>
-                    {nonLayoutButtons.map((props, index) => (
-                        <GraphButton
-                            key={index}
-                            onClick={props.onClick}
-                            displayText={props.displayText}
-                            disabled={props.disabled}
-                        />
-                    ))}
-                </>
-            )}
+
+            <GraphMenu label='Layout'>
+                {sequential && <MenuItem onClick={runSequentialLayout}>Sequential</MenuItem>}
+                {standard && <MenuItem onClick={runStandardLayout}>Standard</MenuItem>}
+            </GraphMenu>
+
+            <GraphMenu label='Export'>
+                <MenuItem
+                    onClick={(e) => exportToJson(e, exportableGraphState)}
+                    disabled={isEmpty(exportableGraphState)}>
+                    JSON
+                </MenuItem>
+            </GraphMenu>
+
+            {nonLayoutButtons?.map((props, index) => (
+                <GraphButton
+                    key={index}
+                    onClick={props.onClick}
+                    displayText={props.displayText}
+                    disabled={props.disabled}
+                />
+            ))}
         </Box>
     );
 };

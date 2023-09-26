@@ -22,6 +22,7 @@ const initialGraphDataState: types.GraphState = {
     loading: false,
     error: null,
     init: false,
+    export: {},
 };
 
 const graphDataReducer = (state = initialGraphDataState, action: types.GraphActionTypes) => {
@@ -45,6 +46,8 @@ const graphDataReducer = (state = initialGraphDataState, action: types.GraphActi
             // handle delete nodes (action.ids)
         } else if (action.type === types.GRAPH_INIT) {
             draft.init = action.payload;
+        } else if (action.type === types.SAVE_RESPONSE_FOR_EXPORT) {
+            draft.export = action.payload;
         }
         return draft;
     });

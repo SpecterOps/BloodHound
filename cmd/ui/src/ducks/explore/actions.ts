@@ -118,3 +118,10 @@ export const initGraph = (payload: boolean): types.GraphActionTypes => {
         payload,
     };
 };
+
+export const saveResponseForExport = (payload: Items): types.GraphActionTypes => {
+    return {
+        type: types.SAVE_RESPONSE_FOR_EXPORT,
+        payload,
+    };
+};
