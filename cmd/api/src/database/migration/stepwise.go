@@ -159,10 +159,10 @@ func (s *Migrator) CreateMigrationTable() error {
 
 func (s *Migrator) executeStepwiseMigrations(models []any) error {
 	if hasTable, err := s.HasMigrationTable(); err != nil {
-		return fmt.Errorf("failed to check if migraiton table exists: %w", err)
+		return fmt.Errorf("failed to check if migration table exists: %w", err)
 	} else if !hasTable {
 		if err := s.CreateMigrationTable(); err != nil {
-			return fmt.Errorf("failed to create migraiton table: %w", err)
+			return fmt.Errorf("failed to create migration table: %w", err)
 		}
 	}
 
