@@ -82,7 +82,6 @@ func UniqueBy[T any, U comparable](slice []T, fn func(T) U) []T {
 	return out
 }
 
-// TODO delete this function, use utils.Contains instead
 // Contains returns true if a slice contains an element that is equal to the given value
 func Contains[T comparable](slice []T, value T) bool {
 	for _, sliceValue := range slice {
