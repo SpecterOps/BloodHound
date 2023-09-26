@@ -2,6 +2,7 @@ package v2
 
 import (
 	"fmt"
+	"github.com/specterops/bloodhound/slices"
 	"github.com/specterops/bloodhound/src/api"
 	ctx2 "github.com/specterops/bloodhound/src/ctx"
 	"github.com/specterops/bloodhound/src/model"
@@ -73,4 +74,38 @@ func (s Resources) ListSavedQueries(response http.ResponseWriter, request *http.
 		}
 	}
 
+}
+
+type CreateSavedQueryRequest struct {
+	Query string `json:"query"`
+	Name  string `json:"name"`
+}
+
+func (s Resources) CreateSavedQuery(response http.ResponseWriter, request *http.Request) {
+	var (
+		createRequest CreateSavedQueryRequest
+		userID        = ctx2.FromRequest(request).AuthCtx.Session.UserID
+	)
+
+	if err := api.ReadJSONRequestPayloadLimited(&createRequest, request); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
+	} else if createRequest.Name == "" || createRequest.Query == "" {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "the name and/or query field is empty", request), response)
+	} else if savedQueries, _, err := s.DB.ListSavedQueries(userID, "", model.SQLFilter{}, 0, 10000); err != nil {
+		api.HandleDatabaseError(request, response, err)
+	} else {
+		names := []string{}
+		for _, query := range savedQueries {
+			names = append(names, query.Name)
+		}
+
+		if slices.Contains(names, createRequest.Name) {
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "duplicate name for saved query: please choose a different name", request), response)
+			return
+		} else if savedQuery, err := s.DB.CreateSavedQuery(userID, createRequest.Name, createRequest.Query); err != nil {
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, err.Error(), request), response)
+		} else {
+			api.WriteBasicResponse(request.Context(), savedQuery, http.StatusCreated, response)
+		}
+	}
 }

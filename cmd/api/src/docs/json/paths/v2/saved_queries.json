@@ -68,6 +68,46 @@
                     "$ref": "#/components/responses/defaultError"
                 }
             }
+        },
+        "post": {
+            "description": "Create a new saved cypher query",
+            "tags": [
+                "Cypher",
+                "Community",
+                "Enterprise"
+            ],
+            "summary": "Create a User saved cypher query",
+            "parameters": [
+                {
+                    "$ref": "#/definitions/parameter.PreferHeader"
+                }
+            ],
+            "requestBody": {
+                "description": "The request body for creating a saved query",
+                "required": true,
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "$ref": "#/definitions/v2.CreateSavedQueryRequest"
+                        }
+                    }
+                }
+            },
+            "responses": {
+                "201": {
+                    "description": "Created",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/definitions/api.BasicResponse"
+                            }
+                        }
+                    }
+                },
+                "Error": {
+                    "$ref": "#/components/responses/defaultError"
+                }
+            }
         }
     }
 }
