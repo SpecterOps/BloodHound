@@ -1,17 +1,17 @@
 // Copyright 2023 Specter Ops, Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// 
+//
 // SPDX-License-Identifier: Apache-2.0
 
 package registration
@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/specterops/bloodhound/params"
 	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/src/api/middleware"
 	"github.com/specterops/bloodhound/src/api/router"
@@ -29,7 +30,6 @@ import (
 	"github.com/specterops/bloodhound/src/auth"
 	"github.com/specterops/bloodhound/src/config"
 	"github.com/specterops/bloodhound/src/database"
-	"github.com/specterops/bloodhound/params"
 )
 
 func samlWriteAPIErrorResponse(request *http.Request, response http.ResponseWriter, statusCode int, message string) {
@@ -148,7 +148,10 @@ func NewV2API(cfg config.Configuration, resources v2.Resources, routerInst *rout
 		routerInst.GET("/api/v2/graphs/shortest-path", resources.GetShortestPath).Queries(params.StartNode.String(), params.StartNode.RouteMatcher(), params.EndNode.String(), params.EndNode.RouteMatcher()).RequirePermissions(permissions.GraphDBRead),
 		// TODO discuss if this should be a post endpoint
 		routerInst.GET("/api/v2/graph-search", resources.GetSearchResult).RequirePermissions(permissions.GraphDBRead),
+
+		// Cypher Queries API
 		routerInst.POST("/api/v2/graphs/cypher", resources.CypherSearch).RequirePermissions(permissions.GraphDBRead),
+		routerInst.GET("/api/v2/saved-queries", resources.ListSavedQueries).RequirePermissions(permissions.SavedQueriesRead),
 
 		// Azure Entity API
 		routerInst.GET("/api/v2/azure/{entity_type}", resources.GetAZEntity).RequirePermissions(permissions.GraphDBRead),

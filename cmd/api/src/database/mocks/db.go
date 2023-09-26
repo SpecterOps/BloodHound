@@ -1158,6 +1158,22 @@ func (mr *MockDatabaseMockRecorder) InitializeSecretAuth(arg0, arg1 interface{})
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InitializeSecretAuth", reflect.TypeOf((*MockDatabase)(nil).InitializeSecretAuth), arg0, arg1)
 }
 
+// ListSavedQueries mocks base method.
+func (m *MockDatabase) ListSavedQueries(arg0 uuid.UUID, arg1 string, arg2 model.SQLFilter, arg3, arg4 int) (model.SavedQueries, int, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListSavedQueries", arg0, arg1, arg2, arg3, arg4)
+	ret0, _ := ret[0].(model.SavedQueries)
+	ret1, _ := ret[1].(int)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// ListSavedQueries indicates an expected call of ListSavedQueries.
+func (mr *MockDatabaseMockRecorder) ListSavedQueries(arg0, arg1, arg2, arg3, arg4 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListSavedQueries", reflect.TypeOf((*MockDatabase)(nil).ListSavedQueries), arg0, arg1, arg2, arg3, arg4)
+}
+
 // ListUserTokens mocks base method.
 func (m *MockDatabase) ListUserTokens(arg0 uuid.UUID, arg1 string, arg2 model.SQLFilter) (model.AuthTokens, error) {
 	m.ctrl.T.Helper()
