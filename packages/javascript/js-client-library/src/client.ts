@@ -16,7 +16,7 @@
 
 import axios, { AxiosInstance } from 'axios';
 import * as types from './types';
-import { CreateAuthTokenResponse, ListAuthTokensResponse, PostureResponse } from './responses';
+import { BasicResponse, CreateAuthTokenResponse, ListAuthTokensResponse, PostureResponse } from './responses';
 
 class BHEAPIClient {
     baseClient: AxiosInstance;
@@ -103,7 +103,7 @@ class BHEAPIClient {
         this.baseClient.get(`/api/v2/meta-nodes/${domainId}`, options);
 
     getAssetGroupComboNode = (assetGroupId: string, domainsid?: string, options?: types.RequestOptions) => {
-        return this.baseClient.get(
+        return this.baseClient.get<BasicResponse<types.FlatGraphResponse>>(
             `/api/v2/asset-groups/${assetGroupId}/combo-node`,
             Object.assign(
                 {
