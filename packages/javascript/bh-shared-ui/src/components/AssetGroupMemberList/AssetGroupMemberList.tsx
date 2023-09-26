@@ -10,9 +10,10 @@ import {
 } from "@mui/material";
 import { FC } from "react"
 import NodeIcon from "../NodeIcon";
+import { AssetGroupMember } from "js-client-library";
 
 const AssetGroupMemberList: FC<{
-    assetGroupMembers: any[],
+    assetGroupMembers: AssetGroupMember[],
     onSelectMember: (member: any) => void,
 }> = ({ assetGroupMembers, onSelectMember }) => {
 
@@ -26,7 +27,7 @@ const AssetGroupMemberList: FC<{
     }
 
     return (
-        <TableContainer sx={{ height: "100%" }} component={Paper} elevation={0}>
+        <TableContainer sx={{ maxHeight: "100%" }} component={Paper} elevation={0}>
             <Table stickyHeader sx={{ height: "100%" }}>
                 <TableHead>
                     <TableRow>

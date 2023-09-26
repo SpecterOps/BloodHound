@@ -24,7 +24,10 @@ import { useEntityInfoPanelContext } from './EntityInfoPanelContext';
 import usePaneStyles from 'src/views/Explore/InfoStyles/Pane';
 import { SelectedNode } from 'src/ducks/entityinfo/types';
 
-const EntityInfoPanel: React.FC<{ sx?: SxProps, selectedNode: SelectedNode }> = ({ sx, selectedNode }) => {
+const EntityInfoPanel: React.FC<{
+    sx?: SxProps,
+    selectedNode: SelectedNode
+}> = ({ sx, selectedNode }) => {
     const styles = usePaneStyles();
     const [expanded, setExpanded] = useState(true);
     const { setExpandedSections } = useEntityInfoPanelContext();

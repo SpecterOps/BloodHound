@@ -16,7 +16,12 @@
 
 import axios, { AxiosInstance } from 'axios';
 import * as types from './types';
-import { CreateAuthTokenResponse, ListAuthTokensResponse } from './responses';
+import {
+    AssetGroupMembersResponse,
+    AssetGroupResponse,
+    CreateAuthTokenResponse,
+    ListAuthTokensResponse,
+} from './responses';
 
 class BHEAPIClient {
     baseClient: AxiosInstance;
@@ -91,9 +96,10 @@ class BHEAPIClient {
         this.baseClient.get(`/api/v2/asset-groups/${assetGroupId}/collections`, options);
 
     listAssetGroupMembers = (assetGroupId: string, options?: types.RequestOptions) =>
-        this.baseClient.get(`/api/v2/asset-groups/${assetGroupId}/members`, options);
+        this.baseClient.get<AssetGroupMembersResponse>(`/api/v2/asset-groups/${assetGroupId}/members`, options);
 
-    listAssetGroups = (options?: types.RequestOptions) => this.baseClient.get('/api/v2/asset-groups', options);
+    listAssetGroups = (options?: types.RequestOptions) =>
+        this.baseClient.get<AssetGroupResponse>('/api/v2/asset-groups', options);
 
     /* analysis */
     getComboTreeGraph = (domainId: string, nodeId: string | null = null, options?: types.RequestOptions) =>

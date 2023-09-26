@@ -54,3 +54,27 @@ export type NewAuthToken = AuthToken & {
 };
 
 export type CreateAuthTokenResponse = BasicResponse<NewAuthToken>;
+
+export type AssetGroup = TimestampFields & {
+    id: number;
+    name: string;
+    tag: string;
+    member_count: number;
+    system_group: boolean;
+    Selectors: string[];
+};
+
+export type AssetGroupMember = {
+    asset_group_id: number;
+    custom_member: boolean;
+    environment_id: string;
+    environment_kind: string;
+    kinds: string[];
+    name: string;
+    object_id: string;
+    primary_kind: string;
+};
+
+export type AssetGroupResponse = BasicResponse<{ asset_groups: AssetGroup[] }>;
+
+export type AssetGroupMembersResponse = PaginatedResponse<{ members: AssetGroupMember[] }>;
