@@ -64,6 +64,10 @@ func (s *BloodhoundDB) GetAllFileUploadJobs(skip int, limit int, order string, f
 		result = s.db.Model(model.FileUploadJob{}).Count(&count)
 	}
 
+	if result.Error != nil {
+		return nil, 0, CheckError(result)
+	}
+
 	if filter.SQLString != "" {
 		result = s.Scope(Paginate(skip, limit)).Preload("User").Where(filter.SQLString, filter.Params).Order(order).Find(&jobs)
 	} else {
