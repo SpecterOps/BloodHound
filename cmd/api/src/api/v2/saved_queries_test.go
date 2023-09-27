@@ -340,52 +340,6 @@ func TestResources_CreateSavedQuery_EmptyBody(t *testing.T) {
 	require.Contains(t, response.Body.String(), "field is empty")
 }
 
-func TestResources_CreateSavedQuery_DBError(t *testing.T) {
-	var (
-		mockCtrl  = gomock.NewController(t)
-		mockDB    = mocks.NewMockDatabase(mockCtrl)
-		resources = v2.Resources{DB: mockDB}
-	)
-	defer mockCtrl.Finish()
-
-	endpoint := "/api/v2/saved-queries"
-	userId, err := uuid2.NewV4()
-	require.Nil(t, err)
-
-	bhCtx := ctx.Context{
-		RequestID: "",
-		AuthCtx: auth.Context{
-			Session: model.UserSession{
-				User:   model.User{},
-				UserID: userId,
-			},
-		},
-		Host: nil,
-	}
-	goContext := bhCtx.ConstructGoContext()
-
-	mockDB.EXPECT().ListSavedQueries(userId, gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(model.SavedQueries{}, 0, fmt.Errorf("foo"))
-
-	payload := v2.CreateSavedQueryRequest{
-		Query: "Match(n) return n",
-		Name:  "myCustomQuery1",
-	}
-
-	req, err := http.NewRequest("POST", endpoint, must.MarshalJSONReader(payload))
-	require.Nil(t, err)
-
-	req = req.WithContext(goContext)
-	req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
-
-	router := mux.NewRouter()
-	router.HandleFunc(endpoint, resources.CreateSavedQuery).Methods("POST")
-
-	response := httptest.NewRecorder()
-	router.ServeHTTP(response, req)
-	require.Equal(t, http.StatusInternalServerError, response.Code)
-	require.Contains(t, response.Body.String(), api.ErrorResponseDetailsInternalServerError)
-}
-
 func TestResources_CreateSavedQuery_DuplicateName(t *testing.T) {
 	var (
 		mockCtrl  = gomock.NewController(t)
@@ -410,13 +364,7 @@ func TestResources_CreateSavedQuery_DuplicateName(t *testing.T) {
 	}
 	goContext := bhCtx.ConstructGoContext()
 
-	mockDB.EXPECT().ListSavedQueries(userId, gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(model.SavedQueries{
-		{
-			UserID: userId.String(),
-			Name:   "myQuery",
-			Query:  "Match(n) return n;",
-		},
-	}, 1, nil)
+	mockDB.EXPECT().CreateSavedQuery(gomock.Any(), gomock.Any(), gomock.Any()).Return(model.SavedQuery{}, fmt.Errorf("duplicate key value violates unique constraint \"idx_saved_queries_composite_index\""))
 
 	payload := v2.CreateSavedQueryRequest{
 		Query: "Match(n) return n",
@@ -467,14 +415,6 @@ func TestResources_CreateSavedQuery_CreateFailure(t *testing.T) {
 		Name:  "myCustomQuery1",
 	}
 
-	mockDB.EXPECT().ListSavedQueries(userId, gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(model.SavedQueries{
-		{
-			UserID: userId.String(),
-			Name:   "myQuery",
-			Query:  "Match(n) return n;",
-		},
-	}, 1, nil)
-
 	mockDB.EXPECT().CreateSavedQuery(userId, payload.Name, payload.Query).Return(model.SavedQuery{}, fmt.Errorf("foo"))
 
 	req, err := http.NewRequest("POST", endpoint, must.MarshalJSONReader(payload))
@@ -519,14 +459,6 @@ func TestResources_CreateSavedQuery(t *testing.T) {
 		Query: "Match(n) return n",
 		Name:  "myCustomQuery1",
 	}
-
-	mockDB.EXPECT().ListSavedQueries(userId, gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(model.SavedQueries{
-		{
-			UserID: userId.String(),
-			Name:   "myQuery",
-			Query:  "Match(n) return n;",
-		},
-	}, 1, nil)
 
 	mockDB.EXPECT().CreateSavedQuery(userId, payload.Name, payload.Query).Return(model.SavedQuery{
 		UserID: userId.String(),
