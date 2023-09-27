@@ -23,7 +23,7 @@ import React, { useState } from 'react';
 import { useSelector } from 'react-redux';
 import { PRIMARY_SEARCH } from 'src/ducks/searchbar/types';
 import { AppState } from 'src/store';
-import CypherInput from './CypherInput';
+import CypherSearch from './CypherSearch';
 import NodeSearch from './NodeSearch';
 import PathfindingSearch from './PathfindingSearch';
 
@@ -107,7 +107,7 @@ const ExploreSearch = ({ handleColumns }: ExploreSearchProps) => {
                         tabs={[
                             <NodeSearch searchType={PRIMARY_SEARCH} labelText='Search Nodes' />,
                             <PathfindingSearch />,
-                            <CypherInput />,
+                            <CypherSearch />,
                         ]}
                         activeTab={activeTab}
                     />

@@ -81,7 +81,7 @@ const schema = {
     ],
 };
 
-const CypherInput = () => {
+const CypherSearch = () => {
     const classes = useStyles();
     const dispatch = useDispatch();
 
@@ -204,4 +204,4 @@ const EasterEgg = () => {
     );
 };
 
-export default CypherInput;
+export default CypherSearch;

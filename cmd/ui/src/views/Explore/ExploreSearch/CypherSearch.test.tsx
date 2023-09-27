@@ -15,13 +15,13 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { act, render, screen } from 'src/test-utils';
-import CypherInput from './CypherInput';
+import CypherSearch from './CypherSearch';
 import userEvent from '@testing-library/user-event';
 
-describe('CypherInput', () => {
+describe('CypherSearch', () => {
     beforeEach(async () => {
         await act(async () => {
-            render(<CypherInput />);
+            render(<CypherSearch />);
         });
     });
     const user = userEvent.setup();
