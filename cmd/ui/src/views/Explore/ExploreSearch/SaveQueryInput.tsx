@@ -1,7 +1,7 @@
 import { faSave } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Button, TextField } from '@mui/material';
-import { useEffect, useState } from 'react';
+import { FC, useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { addSnackbar } from 'src/ducks/global/actions';
 import makeStyles from '@mui/styles/makeStyles';
@@ -22,7 +22,7 @@ const useStyles = makeStyles((theme) => ({
     },
 }));
 
-const SaveQueryInput = () => {
+const SaveQueryInput: FC<{ cypherQuery: string }> = ({ cypherQuery }) => {
     const dispatch = useDispatch();
     const queryClient = useQueryClient();
 
@@ -30,11 +30,11 @@ const SaveQueryInput = () => {
 
     const [showCustomQueryInput, setShowCustomQueryInput] = useState(false);
 
-    const [customQueryName, setCustomQueryName] = useState('');
-    const [saveDisabled, setSaveDisabled] = useState(false);
+    const [queryName, setQueryName] = useState('');
+    const [saveButtonDisabled, setSaveButtonDisabled] = useState(false);
 
     const mutation = useMutation({
-        mutationFn: (newQuery: any) => {
+        mutationFn: (newQuery: { name: string; query: string }) => {
             return apiClient.createUserQuery(newQuery);
         },
         // Always refetch after error or success:
@@ -42,8 +42,8 @@ const SaveQueryInput = () => {
             queryClient.invalidateQueries({ queryKey: 'userSavedQueries' });
         },
         onSuccess: () => {
-            setCustomQueryName(''); // reset input
-            dispatch(addSnackbar(`${customQueryName} saved!`, 'userSavedQuery'));
+            setQueryName(''); // reset input
+            dispatch(addSnackbar(`${queryName} saved!`, 'userSavedQuery'));
         },
     });
 
@@ -51,22 +51,22 @@ const SaveQueryInput = () => {
         setShowCustomQueryInput((c) => !c);
 
         if (showCustomQueryInput) {
-            mutation.mutate({ name: customQueryName, query: 'match (n) return n limit 100' });
+            mutation.mutate({ name: queryName, query: cypherQuery });
         }
     };
 
     useEffect(() => {
         const disableSaveButtonOnEmptyInput = () => {
             if (showCustomQueryInput) {
-                if (!customQueryName) {
-                    setSaveDisabled(true);
+                if (!queryName) {
+                    setSaveButtonDisabled(true);
                 } else {
-                    setSaveDisabled(false);
+                    setSaveButtonDisabled(false);
                 }
             }
         };
         disableSaveButtonOnEmptyInput();
-    }, [showCustomQueryInput, customQueryName, setSaveDisabled]);
+    }, [showCustomQueryInput, queryName, setSaveButtonDisabled]);
 
     return (
         <>
@@ -80,7 +80,6 @@ const SaveQueryInput = () => {
                         style: {
                             height: '35px',
                             top: '-3px',
-                            // ...(!focused && { top: `${labelOffset}px` }),
                         },
                     }}
                     inputProps={{
@@ -89,9 +88,9 @@ const SaveQueryInput = () => {
                             padding: '0px 3px',
                         },
                     }}
-                    value={customQueryName}
+                    value={queryName}
                     onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
-                        setCustomQueryName(event.target.value);
+                        setQueryName(event.target.value);
                     }}
                 />
             )}
@@ -99,7 +98,7 @@ const SaveQueryInput = () => {
             <Button
                 className={`${classes.button} ${classes.iconButton}`}
                 onClick={handleCustomQueryOnSave}
-                disabled={saveDisabled}
+                disabled={saveButtonDisabled}
                 variant='outlined'>
                 <FontAwesomeIcon icon={faSave} />
             </Button>

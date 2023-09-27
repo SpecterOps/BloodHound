@@ -167,7 +167,7 @@ const CypherInput = () => {
             </Box>
 
             <Box display={'flex'} gap={1} mt={1} justifyContent={'end'}>
-                <SaveQueryInput />
+                <SaveQueryInput cypherQuery={cypherQuery} />
 
                 <a
                     href='https://support.bloodhoundenterprise.io/hc/en-us/articles/16721164740251'
