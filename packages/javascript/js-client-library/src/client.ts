@@ -16,7 +16,14 @@
 
 import axios, { AxiosInstance } from 'axios';
 import * as types from './types';
-import { CreateAuthTokenResponse, ListAuthTokensResponse, PostureResponse } from './responses';
+import {
+    BasicResponse,
+    CreateAuthTokenResponse,
+    ListAuthTokensResponse,
+    PaginatedResponse,
+    PostureResponse,
+    SavedQuery,
+} from './responses';
 
 class BHEAPIClient {
     baseClient: AxiosInstance;
@@ -58,8 +65,8 @@ class BHEAPIClient {
     };
 
     getUserSavedQueries = (options?: types.RequestOptions) => {
-        return this.baseClient.get(
-            '/api/v2/queries',
+        return this.baseClient.get<PaginatedResponse<SavedQuery[]>>(
+            '/api/v2/saved-queries',
             Object.assign(
                 {
                     params: {
@@ -72,7 +79,7 @@ class BHEAPIClient {
     };
 
     createUserQuery = (payload: types.CreateUserQueryRequest, options?: types.RequestOptions) => {
-        return this.baseClient.post('/api/v2/queries', payload, options);
+        return this.baseClient.post<BasicResponse<SavedQuery>>('/api/v2/saved-queries', payload, options);
     };
 
     getAvailableDomains = (options?: types.RequestOptions) => this.baseClient.get('/api/v2/available-domains', options);

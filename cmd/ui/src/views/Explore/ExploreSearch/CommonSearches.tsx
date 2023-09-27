@@ -112,7 +112,13 @@ interface SearchListProps {
 
 type ListSection = {
     subheader: string;
-    lineItems: { description: string; cypher: string; canEdit?: boolean }[];
+    lineItems: LineItem[];
+};
+
+type LineItem = {
+    description: string;
+    cypher: string;
+    canEdit?: boolean;
 };
 
 const SearchList: FC<SearchListProps> = ({ listSections, onClickListItem }) => {
@@ -153,24 +159,26 @@ const SearchList: FC<SearchListProps> = ({ listSections, onClickListItem }) => {
 // `PersonalSearchList` is a more specific implementation of `SearchList`.  It includes
 // additional fetching logic to fetch queries saved by the user
 const PersonalSearchList: FC<{ onClickListItem: (query: string) => void }> = ({ onClickListItem }) => {
-    const [userSavedQueries, setUserSavedQueries] = useState([]);
+    const [queries, setQueries] = useState<LineItem[]>([]);
 
     useQuery({
         queryKey: 'userSavedQueries',
         queryFn: () => {
             return apiClient
                 .getUserSavedQueries()
-                .then((result) => {
-                    const userQueries = result.data.data;
-                    const userQueriesToDisplay = userQueries.map((element: any) => ({
-                        description: element.name,
-                        cypher: element.query,
+                .then((response) => {
+                    const queries = response.data.data;
+
+                    const queriesToDisplay = queries.map((query) => ({
+                        description: query.name,
+                        cypher: query.query,
                         canEdit: true,
                     }));
-                    setUserSavedQueries(userQueriesToDisplay);
+
+                    setQueries(queriesToDisplay);
                 })
-                .catch((err) => {
-                    setUserSavedQueries([]);
+                .catch(() => {
+                    setQueries([]);
                 });
         },
     });
@@ -180,7 +188,7 @@ const PersonalSearchList: FC<{ onClickListItem: (query: string) => void }> = ({ 
             listSections={[
                 {
                     subheader: 'User Saved Searches: ',
-                    lineItems: userSavedQueries,
+                    lineItems: queries,
                 },
             ]}
             onClickListItem={onClickListItem}
