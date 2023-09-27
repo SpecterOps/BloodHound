@@ -5,7 +5,7 @@ import { setupServer } from 'msw/node';
 import { rest } from 'msw';
 
 const server = setupServer(
-    rest.get('/api/v2/queries', (req, res, ctx) => {
+    rest.get('/api/v2/saved-queries', (req, res, ctx) => {
         return res(
             ctx.json({
                 data: [
