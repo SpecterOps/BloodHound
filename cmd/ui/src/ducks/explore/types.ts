@@ -26,6 +26,8 @@ const GRAPH_INIT = 'app/explore/INIT';
 const ADD_NODES = 'app/explore/ADDNODE';
 const REMOVE_NODES = 'app/explore/REMOVENODE';
 
+const SAVE_RESPONSE_FOR_EXPORT = 'app/explore/SAVE_RESPONSE_FOR_EXPORT';
+
 export {
     SET_GRAPH_LOADING,
     GRAPH_START,
@@ -35,6 +37,7 @@ export {
     ADD_NODES,
     REMOVE_NODES,
     GRAPH_INIT,
+    SAVE_RESPONSE_FOR_EXPORT,
 };
 
 export enum GraphEndpoints {}
@@ -44,6 +47,9 @@ export interface GraphState {
     loading: boolean;
     error: string | null;
     init: boolean;
+    // we save the raw API response in the export field so that a user can export
+    // their canvas to a target format, e.g. JSON, CSV
+    export: any;
 }
 
 interface SetGraphLoadingAction {
@@ -86,6 +92,11 @@ interface RemoveNodeAction {
     ids: string[];
 }
 
+interface SaveResponseForExportAction {
+    type: typeof SAVE_RESPONSE_FOR_EXPORT;
+    payload: Items;
+}
+
 export type GraphActionTypes =
     | SetGraphLoadingAction
     | GraphStartAction
@@ -94,7 +105,8 @@ export type GraphActionTypes =
     | GraphSetVarsAction
     | AddNodeAction
     | RemoveNodeAction
-    | GraphInitAction;
+    | GraphInitAction
+    | SaveResponseForExportAction;
 
 export interface NodeInfoRequest {
     type: typeof GRAPH_START;
