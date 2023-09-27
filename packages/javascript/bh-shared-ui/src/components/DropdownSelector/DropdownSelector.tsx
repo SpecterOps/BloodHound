@@ -1,5 +1,5 @@
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { Button, MenuItem, Popover, Tooltip, Typography } from "@mui/material";
+import { Box, Button, MenuItem, Popover, Tooltip, Typography } from "@mui/material";
 import { FC, useState } from "react";
 import { DropdownOption } from "./types";
 
@@ -11,6 +11,7 @@ const DropdownSelector: FC<{
 }> = ({ options, selectedText, fullWidth, onChange }) => {
 
     const [anchorEl, setAnchorEl] = useState(null);
+    const open = Boolean(anchorEl);
     
     const handleClick = (e: any) => {
         setAnchorEl(e.currentTarget);
@@ -20,10 +21,8 @@ const DropdownSelector: FC<{
         setAnchorEl(null);
     }
 
-    const open = Boolean(anchorEl);
-
     return (
-        <>
+        <Box p={1}>
             <Button
                 sx={{
                     whiteSpace: 'nowrap',
@@ -88,7 +87,7 @@ const DropdownSelector: FC<{
                         </MenuItem>
                     )})}
                 </Popover>
-            </>
+            </Box>
     )
 }
 
