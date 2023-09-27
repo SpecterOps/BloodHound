@@ -166,7 +166,7 @@ const CypherSearch = () => {
                 </div>
             </Box>
 
-            <Box display={'flex'} gap={1} mt={1} justifyContent={'end'}>
+            <Box display={'flex'} gap={1} mt={1} ml={'43px'} justifyContent={'end'}>
                 <SaveQueryInput cypherQuery={cypherQuery} />
 
                 <a
