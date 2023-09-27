@@ -12,6 +12,7 @@ import (
 	"github.com/specterops/bloodhound/src/ctx"
 	"github.com/specterops/bloodhound/src/database/mocks"
 	"github.com/specterops/bloodhound/src/model"
+	"github.com/specterops/bloodhound/src/test/must"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 	"net/http"
@@ -256,4 +257,225 @@ func TestResources_ListSavedQueries(t *testing.T) {
 		router.ServeHTTP(response, req)
 		require.Equal(t, http.StatusOK, response.Code)
 	}
+}
+
+func TestResources_CreateSavedQuery_InvalidBody(t *testing.T) {
+	var (
+		mockCtrl  = gomock.NewController(t)
+		mockDB    = mocks.NewMockDatabase(mockCtrl)
+		resources = v2.Resources{DB: mockDB}
+	)
+	defer mockCtrl.Finish()
+
+	endpoint := "/api/v2/saved-queries"
+	userId, err := uuid2.NewV4()
+	require.Nil(t, err)
+
+	bhCtx := ctx.Context{
+		RequestID: "",
+		AuthCtx: auth.Context{
+			Session: model.UserSession{
+				User:   model.User{},
+				UserID: userId,
+			},
+		},
+		Host: nil,
+	}
+	goContext := bhCtx.ConstructGoContext()
+
+	payload := "foobar"
+
+	req, err := http.NewRequest("POST", endpoint, must.MarshalJSONReader(payload))
+	require.Nil(t, err)
+
+	req = req.WithContext(goContext)
+	req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
+
+	router := mux.NewRouter()
+	router.HandleFunc(endpoint, resources.CreateSavedQuery).Methods("POST")
+
+	response := httptest.NewRecorder()
+	router.ServeHTTP(response, req)
+	require.Equal(t, http.StatusBadRequest, response.Code)
+}
+
+func TestResources_CreateSavedQuery_EmptyBody(t *testing.T) {
+	var (
+		mockCtrl  = gomock.NewController(t)
+		mockDB    = mocks.NewMockDatabase(mockCtrl)
+		resources = v2.Resources{DB: mockDB}
+	)
+	defer mockCtrl.Finish()
+
+	endpoint := "/api/v2/saved-queries"
+	userId, err := uuid2.NewV4()
+	require.Nil(t, err)
+
+	bhCtx := ctx.Context{
+		RequestID: "",
+		AuthCtx: auth.Context{
+			Session: model.UserSession{
+				User:   model.User{},
+				UserID: userId,
+			},
+		},
+		Host: nil,
+	}
+	goContext := bhCtx.ConstructGoContext()
+
+	payload := v2.CreateSavedQueryRequest{}
+
+	req, err := http.NewRequest("POST", endpoint, must.MarshalJSONReader(payload))
+	require.Nil(t, err)
+
+	req = req.WithContext(goContext)
+	req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
+
+	router := mux.NewRouter()
+	router.HandleFunc(endpoint, resources.CreateSavedQuery).Methods("POST")
+
+	response := httptest.NewRecorder()
+	router.ServeHTTP(response, req)
+	require.Equal(t, http.StatusBadRequest, response.Code)
+	require.Contains(t, response.Body.String(), "field is empty")
+}
+
+func TestResources_CreateSavedQuery_DuplicateName(t *testing.T) {
+	var (
+		mockCtrl  = gomock.NewController(t)
+		mockDB    = mocks.NewMockDatabase(mockCtrl)
+		resources = v2.Resources{DB: mockDB}
+	)
+	defer mockCtrl.Finish()
+
+	endpoint := "/api/v2/saved-queries"
+	userId, err := uuid2.NewV4()
+	require.Nil(t, err)
+
+	bhCtx := ctx.Context{
+		RequestID: "",
+		AuthCtx: auth.Context{
+			Session: model.UserSession{
+				User:   model.User{},
+				UserID: userId,
+			},
+		},
+		Host: nil,
+	}
+	goContext := bhCtx.ConstructGoContext()
+
+	mockDB.EXPECT().CreateSavedQuery(gomock.Any(), gomock.Any(), gomock.Any()).Return(model.SavedQuery{}, fmt.Errorf("duplicate key value violates unique constraint \"idx_saved_queries_composite_index\""))
+
+	payload := v2.CreateSavedQueryRequest{
+		Query: "Match(n) return n",
+		Name:  "myQuery",
+	}
+
+	req, err := http.NewRequest("POST", endpoint, must.MarshalJSONReader(payload))
+	require.Nil(t, err)
+
+	req = req.WithContext(goContext)
+	req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
+
+	router := mux.NewRouter()
+	router.HandleFunc(endpoint, resources.CreateSavedQuery).Methods("POST")
+
+	response := httptest.NewRecorder()
+	router.ServeHTTP(response, req)
+	require.Equal(t, http.StatusBadRequest, response.Code)
+	require.Contains(t, response.Body.String(), "duplicate")
+}
+
+func TestResources_CreateSavedQuery_CreateFailure(t *testing.T) {
+	var (
+		mockCtrl  = gomock.NewController(t)
+		mockDB    = mocks.NewMockDatabase(mockCtrl)
+		resources = v2.Resources{DB: mockDB}
+	)
+	defer mockCtrl.Finish()
+
+	endpoint := "/api/v2/saved-queries"
+	userId, err := uuid2.NewV4()
+	require.Nil(t, err)
+
+	bhCtx := ctx.Context{
+		RequestID: "",
+		AuthCtx: auth.Context{
+			Session: model.UserSession{
+				User:   model.User{},
+				UserID: userId,
+			},
+		},
+		Host: nil,
+	}
+	goContext := bhCtx.ConstructGoContext()
+
+	payload := v2.CreateSavedQueryRequest{
+		Query: "Match(n) return n",
+		Name:  "myCustomQuery1",
+	}
+
+	mockDB.EXPECT().CreateSavedQuery(userId, payload.Name, payload.Query).Return(model.SavedQuery{}, fmt.Errorf("foo"))
+
+	req, err := http.NewRequest("POST", endpoint, must.MarshalJSONReader(payload))
+	require.Nil(t, err)
+
+	req = req.WithContext(goContext)
+	req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
+
+	router := mux.NewRouter()
+	router.HandleFunc(endpoint, resources.CreateSavedQuery).Methods("POST")
+
+	response := httptest.NewRecorder()
+	router.ServeHTTP(response, req)
+	require.Equal(t, http.StatusInternalServerError, response.Code)
+}
+
+func TestResources_CreateSavedQuery(t *testing.T) {
+	var (
+		mockCtrl  = gomock.NewController(t)
+		mockDB    = mocks.NewMockDatabase(mockCtrl)
+		resources = v2.Resources{DB: mockDB}
+	)
+	defer mockCtrl.Finish()
+
+	endpoint := "/api/v2/saved-queries"
+	userId, err := uuid2.NewV4()
+	require.Nil(t, err)
+
+	bhCtx := ctx.Context{
+		RequestID: "",
+		AuthCtx: auth.Context{
+			Session: model.UserSession{
+				User:   model.User{},
+				UserID: userId,
+			},
+		},
+		Host: nil,
+	}
+	goContext := bhCtx.ConstructGoContext()
+
+	payload := v2.CreateSavedQueryRequest{
+		Query: "Match(n) return n",
+		Name:  "myCustomQuery1",
+	}
+
+	mockDB.EXPECT().CreateSavedQuery(userId, payload.Name, payload.Query).Return(model.SavedQuery{
+		UserID: userId.String(),
+		Name:   payload.Name,
+		Query:  payload.Query,
+	}, nil)
+
+	req, err := http.NewRequest("POST", endpoint, must.MarshalJSONReader(payload))
+	require.Nil(t, err)
+
+	req = req.WithContext(goContext)
+	req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
+
+	router := mux.NewRouter()
+	router.HandleFunc(endpoint, resources.CreateSavedQuery).Methods("POST")
+
+	response := httptest.NewRecorder()
+	router.ServeHTTP(response, req)
+	require.Equal(t, http.StatusCreated, response.Code)
 }

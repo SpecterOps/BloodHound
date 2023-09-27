@@ -74,3 +74,29 @@ func (s Resources) ListSavedQueries(response http.ResponseWriter, request *http.
 	}
 
 }
+
+type CreateSavedQueryRequest struct {
+	Query string `json:"query"`
+	Name  string `json:"name"`
+}
+
+func (s Resources) CreateSavedQuery(response http.ResponseWriter, request *http.Request) {
+	var (
+		createRequest CreateSavedQueryRequest
+		userID        = ctx2.FromRequest(request).AuthCtx.Session.UserID
+	)
+
+	if err := api.ReadJSONRequestPayloadLimited(&createRequest, request); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
+	} else if createRequest.Name == "" || createRequest.Query == "" {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "the name and/or query field is empty", request), response)
+	} else if savedQuery, err := s.DB.CreateSavedQuery(userID, createRequest.Name, createRequest.Query); err != nil {
+		if strings.Contains(err.Error(), "duplicate key value violates unique constraint") {
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "duplicate name for saved query: please choose a different name", request), response)
+		} else {
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, err.Error(), request), response)
+		}
+	} else {
+		api.WriteBasicResponse(request.Context(), savedQuery, http.StatusCreated, response)
+	}
+}

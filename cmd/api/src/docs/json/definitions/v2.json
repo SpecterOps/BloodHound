@@ -213,7 +213,7 @@
     "type": "object",
     "properties": {
       "token_name": {
-        "type": "string" 
+        "type": "string"
       },
       "user_id": {
         "type": "string"
@@ -898,6 +898,21 @@
         "items": {
           "$ref": "#/definitions/model.AzureDataQualityStat"
         }
+      }
+    }
+  },
+  "v2.CreateSavedQueryRequest": {
+    "type": "object",
+    "required": [
+      "name",
+      "query"
+    ],
+    "properties": {
+      "query": {
+          "type": "string"
+      },
+      "name": {
+        "type": "string"
       }
     }
   }
