@@ -75,6 +75,7 @@ const SaveQueryInput: FC<{ cypherQuery: string }> = ({ cypherQuery }) => {
                     label='Search Name'
                     variant='outlined'
                     size='small'
+                    fullWidth
                     sx={{ fontSize: '.875em' }}
                     InputLabelProps={{
                         style: {
