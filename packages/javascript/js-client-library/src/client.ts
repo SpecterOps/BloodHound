@@ -128,7 +128,7 @@ class BHEAPIClient {
         this.baseClient.get(`/api/v2/meta-nodes/${domainId}`, options);
 
     getAssetGroupComboNode = (assetGroupId: string, domainsid?: string, options?: types.RequestOptions) => {
-        return this.baseClient.get(
+        return this.baseClient.get<BasicResponse<types.FlatGraphResponse>>(
             `/api/v2/asset-groups/${assetGroupId}/combo-node`,
             Object.assign(
                 {
