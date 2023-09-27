@@ -29,3 +29,13 @@ func (s *BloodhoundDB) ListSavedQueries(userID uuid.UUID, order string, filter m
 	result = cursor.Find(&queries)
 	return queries, int(count), CheckError(result)
 }
+
+func (s *BloodhoundDB) CreateSavedQuery(userID uuid.UUID, name string, query string) (model.SavedQuery, error) {
+	savedQuery := model.SavedQuery{
+		UserID: userID.String(),
+		Name:   name,
+		Query:  query,
+	}
+
+	return savedQuery, CheckError(s.db.Create(&savedQuery))
+}
