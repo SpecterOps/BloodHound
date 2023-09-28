@@ -479,3 +479,178 @@ func TestResources_CreateSavedQuery(t *testing.T) {
 	router.ServeHTTP(response, req)
 	require.Equal(t, http.StatusCreated, response.Code)
 }
+
+func TestResources_DeleteSavedQuery_IDMalformed(t *testing.T) {
+	var (
+		mockCtrl  = gomock.NewController(t)
+		mockDB    = mocks.NewMockDatabase(mockCtrl)
+		resources = v2.Resources{DB: mockDB}
+	)
+	defer mockCtrl.Finish()
+
+	userId, err := uuid2.NewV4()
+	require.Nil(t, err)
+
+	bhCtx := ctx.Context{
+		RequestID: "",
+		AuthCtx: auth.Context{
+			Session: model.UserSession{
+				User:   model.User{},
+				UserID: userId,
+			},
+		},
+		Host: nil,
+	}
+	goContext := bhCtx.ConstructGoContext()
+
+	req, err := http.NewRequest("DELETE", "/api/v2/saved-queries/-1", nil)
+	require.Nil(t, err)
+
+	req = req.WithContext(goContext)
+	req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
+
+	router := mux.NewRouter()
+	router.HandleFunc("/api/v2/saved-queries/-1", resources.DeleteSavedQuery).Methods("DELETE")
+
+	response := httptest.NewRecorder()
+	router.ServeHTTP(response, req)
+	require.Equal(t, http.StatusBadRequest, response.Code)
+	require.Contains(t, response.Body.String(), api.ErrorResponseDetailsIDMalformed)
+}
+
+func TestResources_DeleteSavedQuery_DBError(t *testing.T) {
+	var (
+		mockCtrl  = gomock.NewController(t)
+		mockDB    = mocks.NewMockDatabase(mockCtrl)
+		resources = v2.Resources{DB: mockDB}
+	)
+	defer mockCtrl.Finish()
+
+	userId, err := uuid2.NewV4()
+	require.Nil(t, err)
+
+	bhCtx := ctx.Context{
+		RequestID: "",
+		AuthCtx: auth.Context{
+			Session: model.UserSession{
+				User:   model.User{},
+				UserID: userId,
+			},
+		},
+		Host: nil,
+	}
+	goContext := bhCtx.ConstructGoContext()
+	endpoint := "/api/v2/saved-queries/%s"
+	savedQueryId := "1"
+
+	mockDB.EXPECT().ListSavedQueries(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(model.SavedQueries{}, 0, fmt.Errorf("foo"))
+
+	req, err := http.NewRequestWithContext(goContext, "DELETE", fmt.Sprintf(endpoint, savedQueryId), nil)
+	require.Nil(t, err)
+
+	req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
+	req = mux.SetURLVars(req, map[string]string{api.URIPathVariableSavedQueryID: savedQueryId})
+
+	response := httptest.NewRecorder()
+	handler := http.HandlerFunc(resources.DeleteSavedQuery)
+
+	handler.ServeHTTP(response, req)
+	require.Equal(t, http.StatusInternalServerError, response.Code)
+}
+
+func TestResources_DeleteSavedQuery_IDNotBelongToUser(t *testing.T) {
+	var (
+		mockCtrl  = gomock.NewController(t)
+		mockDB    = mocks.NewMockDatabase(mockCtrl)
+		resources = v2.Resources{DB: mockDB}
+	)
+	defer mockCtrl.Finish()
+
+	userId, err := uuid2.NewV4()
+	require.Nil(t, err)
+
+	bhCtx := ctx.Context{
+		RequestID: "",
+		AuthCtx: auth.Context{
+			Session: model.UserSession{
+				User:   model.User{},
+				UserID: userId,
+			},
+		},
+		Host: nil,
+	}
+	goContext := bhCtx.ConstructGoContext()
+	endpoint := "/api/v2/saved-queries/%s"
+	savedQueryId := "1"
+
+	mockDB.EXPECT().ListSavedQueries(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(model.SavedQueries{
+		model.SavedQuery{
+			UserID:    userId.String(),
+			Name:      "foo",
+			Query:     "bar",
+			BigSerial: model.BigSerial{ID: 2},
+		},
+	}, 1, nil)
+
+	req, err := http.NewRequestWithContext(goContext, "DELETE", fmt.Sprintf(endpoint, savedQueryId), nil)
+	require.Nil(t, err)
+
+	req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
+	req = mux.SetURLVars(req, map[string]string{api.URIPathVariableSavedQueryID: savedQueryId})
+
+	response := httptest.NewRecorder()
+	handler := http.HandlerFunc(resources.DeleteSavedQuery)
+
+	handler.ServeHTTP(response, req)
+	require.Equal(t, http.StatusBadRequest, response.Code)
+	require.Contains(t, response.Body.String(), api.URIPathVariableSavedQueryID)
+}
+
+func TestResources_DeleteSavedQuery(t *testing.T) {
+	var (
+		mockCtrl  = gomock.NewController(t)
+		mockDB    = mocks.NewMockDatabase(mockCtrl)
+		resources = v2.Resources{DB: mockDB}
+	)
+	defer mockCtrl.Finish()
+
+	userId, err := uuid2.NewV4()
+	require.Nil(t, err)
+
+	bhCtx := ctx.Context{
+		RequestID: "",
+		AuthCtx: auth.Context{
+			Session: model.UserSession{
+				User:   model.User{},
+				UserID: userId,
+			},
+		},
+		Host: nil,
+	}
+	goContext := bhCtx.ConstructGoContext()
+	endpoint := "/api/v2/saved-queries/%s"
+	savedQueryId := "1"
+
+	mockDB.EXPECT().ListSavedQueries(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(model.SavedQueries{
+		model.SavedQuery{
+			UserID:    userId.String(),
+			Name:      "foo",
+			Query:     "bar",
+			BigSerial: model.BigSerial{ID: 1},
+		},
+	}, 1, nil)
+
+	mockDB.EXPECT().DeleteSavedQuery(gomock.Any())
+
+	req, err := http.NewRequestWithContext(goContext, "DELETE", fmt.Sprintf(endpoint, savedQueryId), nil)
+	require.Nil(t, err)
+
+	req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
+	req = mux.SetURLVars(req, map[string]string{api.URIPathVariableSavedQueryID: savedQueryId})
+
+	response := httptest.NewRecorder()
+	handler := http.HandlerFunc(resources.DeleteSavedQuery)
+
+	handler.ServeHTTP(response, req)
+	require.Equal(t, http.StatusNoContent, response.Code)
+}
