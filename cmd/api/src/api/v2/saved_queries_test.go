@@ -558,7 +558,7 @@ func TestResources_DeleteSavedQuery_DBError(t *testing.T) {
 	require.Equal(t, http.StatusInternalServerError, response.Code)
 }
 
-func TestResources_DeleteSavedQuery_IDNotBelongToUser(t *testing.T) {
+func TestResources_DeleteSavedQuery_QueryDoesNotBelongToUser(t *testing.T) {
 	var (
 		mockCtrl  = gomock.NewController(t)
 		mockDB    = mocks.NewMockDatabase(mockCtrl)
