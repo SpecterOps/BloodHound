@@ -40,6 +40,17 @@ func (s *BloodhoundDB) CreateSavedQuery(userID uuid.UUID, name string, query str
 	return savedQuery, CheckError(s.db.Create(&savedQuery))
 }
 
-func (s *BloodhoundDB) DeleteSavedQuery(id int) {
-	s.db.Delete(&model.SavedQuery{}, id)
+func (s *BloodhoundDB) DeleteSavedQuery(id int) error {
+	return CheckError(s.db.Delete(&model.SavedQuery{}, id))
+}
+
+func (s *BloodhoundDB) SavedQueryBelongsToUser(userID uuid.UUID, savedQueryID int) (bool, error) {
+	var savedQuery model.SavedQuery
+	if result := s.db.First(&savedQuery, savedQueryID); result.Error != nil {
+		return false, result.Error
+	} else if savedQuery.UserID == userID.String() {
+		return true, nil
+	} else {
+		return false, nil
+	}
 }

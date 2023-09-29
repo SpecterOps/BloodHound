@@ -1,11 +1,13 @@
 package v2
 
 import (
+	"errors"
 	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/specterops/bloodhound/src/api"
 	ctx2 "github.com/specterops/bloodhound/src/ctx"
 	"github.com/specterops/bloodhound/src/model"
+	"gorm.io/gorm"
 	"gorm.io/gorm/utils"
 	"net/http"
 	"strconv"
@@ -111,23 +113,17 @@ func (s Resources) DeleteSavedQuery(response http.ResponseWriter, request *http.
 
 	if savedQueryID, err := strconv.Atoi(rawSavedQueryID); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsIDMalformed, request), response)
-	} else if savedQueries, _, err := s.DB.ListSavedQueries(userID, "", model.SQLFilter{}, 0, 10000); err != nil {
-		api.HandleDatabaseError(request, response, err)
-	} else {
-		// ensure that the query ID specified belongs to the current user
-		savedQueryIDMatched := false
-		for _, savedQuery := range savedQueries {
-			if savedQuery.ID == int64(savedQueryID) {
-				savedQueryIDMatched = true
-				break
-			}
-		}
-
-		if !savedQueryIDMatched {
-			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "invalid saved_query_id supplied", request), response)
+	} else if savedQueryBelongsToUser, err := s.DB.SavedQueryBelongsToUser(userID, savedQueryID); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
+	} else if !savedQueryBelongsToUser {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "invalid saved_query_id supplied", request), response)
+	} else if err := s.DB.DeleteSavedQuery(savedQueryID); err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, "query does not exist", request), response)
 		} else {
-			s.DB.DeleteSavedQuery(savedQueryID)
-			response.WriteHeader(http.StatusNoContent)
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
 		}
+	} else {
+		response.WriteHeader(http.StatusNoContent)
 	}
 }
