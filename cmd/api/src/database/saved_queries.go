@@ -47,7 +47,7 @@ func (s *BloodhoundDB) DeleteSavedQuery(id int) error {
 func (s *BloodhoundDB) SavedQueryBelongsToUser(userID uuid.UUID, savedQueryID int) (bool, error) {
 	var savedQuery model.SavedQuery
 	if result := s.db.First(&savedQuery, savedQueryID); result.Error != nil {
-		return false, result.Error
+		return false, CheckError(result)
 	} else if savedQuery.UserID == userID.String() {
 		return true, nil
 	} else {

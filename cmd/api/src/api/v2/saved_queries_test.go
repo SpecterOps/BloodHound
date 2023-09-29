@@ -10,12 +10,12 @@ import (
 	v2 "github.com/specterops/bloodhound/src/api/v2"
 	"github.com/specterops/bloodhound/src/auth"
 	"github.com/specterops/bloodhound/src/ctx"
+	"github.com/specterops/bloodhound/src/database"
 	"github.com/specterops/bloodhound/src/database/mocks"
 	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/test/must"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
-	"gorm.io/gorm"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -625,8 +625,49 @@ func TestResources_DeleteSavedQuery_RecordNotFound(t *testing.T) {
 	endpoint := "/api/v2/saved-queries/%s"
 	savedQueryId := "1"
 
+	mockDB.EXPECT().SavedQueryBelongsToUser(gomock.Any(), gomock.Any()).Return(false, database.ErrNotFound)
+
+	req, err := http.NewRequestWithContext(goContext, "DELETE", fmt.Sprintf(endpoint, savedQueryId), nil)
+	require.Nil(t, err)
+
+	req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
+	req = mux.SetURLVars(req, map[string]string{api.URIPathVariableSavedQueryID: savedQueryId})
+
+	response := httptest.NewRecorder()
+	handler := http.HandlerFunc(resources.DeleteSavedQuery)
+
+	handler.ServeHTTP(response, req)
+	require.Equal(t, http.StatusNotFound, response.Code)
+	require.Contains(t, response.Body.String(), "query does not exist")
+}
+
+func TestResources_DeleteSavedQuery_RecordNotFound_EdgeCase(t *testing.T) {
+	var (
+		mockCtrl  = gomock.NewController(t)
+		mockDB    = mocks.NewMockDatabase(mockCtrl)
+		resources = v2.Resources{DB: mockDB}
+	)
+	defer mockCtrl.Finish()
+
+	userId, err := uuid2.NewV4()
+	require.Nil(t, err)
+
+	bhCtx := ctx.Context{
+		RequestID: "",
+		AuthCtx: auth.Context{
+			Session: model.UserSession{
+				User:   model.User{},
+				UserID: userId,
+			},
+		},
+		Host: nil,
+	}
+	goContext := bhCtx.ConstructGoContext()
+	endpoint := "/api/v2/saved-queries/%s"
+	savedQueryId := "1"
+
 	mockDB.EXPECT().SavedQueryBelongsToUser(gomock.Any(), gomock.Any()).Return(true, nil)
-	mockDB.EXPECT().DeleteSavedQuery(gomock.Any()).Return(gorm.ErrRecordNotFound)
+	mockDB.EXPECT().DeleteSavedQuery(gomock.Any()).Return(database.ErrNotFound)
 
 	req, err := http.NewRequestWithContext(goContext, "DELETE", fmt.Sprintf(endpoint, savedQueryId), nil)
 	require.Nil(t, err)
