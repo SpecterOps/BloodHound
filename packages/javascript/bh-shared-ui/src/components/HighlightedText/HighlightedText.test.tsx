@@ -46,7 +46,7 @@ describe('HighlightedText', () => {
     });
 
     it('should render when search string matches text entirely', () => {
-        render(<HighlightedText text='test string' search='test string' />).debug();
+        render(<HighlightedText text='test string' search='test string' />);
         expect(screen.getByText(/test string/)).toBeInTheDocument();
         expect(screen.getByText(/test string/)).toHaveAttribute('style', 'font-weight: bold;');
     });
