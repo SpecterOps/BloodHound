@@ -131,12 +131,7 @@ const GraphView: FC = () => {
         </Link>
     );
 
-    if (isError)
-        return (
-            <Box position={'relative'} height={'100%'} width={'100%'} overflow={'hidden'}>
-                <NoDataAlert dataCollectionLink={dataCollectionLink} fileIngestLink={fileIngestLink} severity='error' />
-            </Box>
-        );
+    if (isError) throw new Error();
 
     if (!data.length)
         return (

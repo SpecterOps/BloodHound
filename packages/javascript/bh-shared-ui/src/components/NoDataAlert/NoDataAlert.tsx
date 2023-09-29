@@ -14,32 +14,31 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Alert, AlertColor, AlertTitle, Box, useTheme } from '@mui/material';
+import { Alert, AlertTitle, Box, useTheme } from '@mui/material';
 import { FC } from 'react';
 
 type NoDataAlertProps = {
     dataCollectionLink: JSX.Element;
-    fileIngestLink: JSX.Element;
-    severity?: AlertColor;
+    fileIngestLink?: JSX.Element;
 };
 
-export const NoDataAlert: FC<NoDataAlertProps> = ({ dataCollectionLink, fileIngestLink, severity = 'warning' }) => {
+export const NoDataAlert: FC<NoDataAlertProps> = ({ dataCollectionLink, fileIngestLink }) => {
     const theme = useTheme();
 
     return (
         <Box display={'flex'} justifyContent={'center'} mt={theme.spacing(8)} mx={theme.spacing(4)}>
-            <Alert severity={severity}>
+            <Alert severity={'warning'}>
                 <AlertTitle>No Data Available</AlertTitle>
-                {severity === 'error' ? (
-                    <>There was an issue fetching data.</>
-                ) : (
-                    <>It appears that no data has been uploaded yet.</>
-                )}
+                It appears that no data has been uploaded yet.
                 <br />
                 See our {dataCollectionLink} documentation to learn how to start collecting data.
                 <br />
-                If you have files available from a SharpHound or AzureHound collection, please visit the{' '}
-                {fileIngestLink} page to begin uploading your data.
+                {fileIngestLink && (
+                    <>
+                        If you have files available from a SharpHound or AzureHound collection, please visit the{' '}
+                        {fileIngestLink} page to begin uploading your data.
+                    </>
+                )}
             </Alert>
         </Box>
     );

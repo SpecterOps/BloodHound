@@ -32,27 +32,22 @@ describe('NoDataAlert', () => {
         expect(screen.getByText('No Data Available')).toBeInTheDocument();
         expect(screen.getByText(/It appears that no data has been uploaded yet./)).toBeInTheDocument();
         expect(screen.getByText(/data collection/)).toBeInTheDocument();
-        expect(screen.getByText(/file ingest/)).toBeInTheDocument();
 
-        //This text only displays if there was an error with the http request to check if there are any domains or tenants in the database
-        expect(screen.queryByText(/There was an issue fetching data./)).toBeNull();
+        //This text only displays if file ingest link prop is passed
+        expect(screen.queryByText(/file ingest/)).toBeNull();
     });
 
-    it('should show different text when there is an error fetching data', () => {
+    it('should show the file ingest text if the prop is passed', () => {
         render(
             <NoDataAlert
                 dataCollectionLink={<>{dataCollectionLinkText}</>}
                 fileIngestLink={<>{fileIngestLinkText}</>}
-                severity='error'
             />
         );
 
         expect(screen.getByText('No Data Available')).toBeInTheDocument();
-        expect(screen.getByText(/There was an issue fetching data./)).toBeInTheDocument();
+        expect(screen.getByText(/It appears that no data has been uploaded yet./)).toBeInTheDocument();
         expect(screen.getByText(/data collection/)).toBeInTheDocument();
         expect(screen.getByText(/file ingest/)).toBeInTheDocument();
-
-        //This text only displays if the http request to check if there are any domains or tenants in the database was successful but the data came back empty
-        expect(screen.queryByText(/It appears that no data has been uploaded yet./)).toBeNull();
     });
 });
