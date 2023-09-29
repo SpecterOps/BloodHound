@@ -1,13 +1,13 @@
 {
     "/api/v2/saved-queries": {
         "get": {
-            "description": "Get the user saved cypher queries",
+            "description": "List saved queries",
             "tags": [
                 "Cypher",
                 "Community",
                 "Enterprise"
             ],
-            "summary": "Get User saved cypher queries",
+            "summary": "Get all saved queries for the current user",
             "parameters": [
                 {
                     "$ref": "#/definitions/parameter.PreferHeader"
@@ -70,13 +70,13 @@
             }
         },
         "post": {
-            "description": "Create a new saved cypher query",
+            "description": "Create a new saved query",
             "tags": [
                 "Cypher",
                 "Community",
                 "Enterprise"
             ],
-            "summary": "Create a User saved cypher query",
+            "summary": "Create a User saved query",
             "parameters": [
                 {
                     "$ref": "#/definitions/parameter.PreferHeader"
@@ -103,6 +103,30 @@
                             }
                         }
                     }
+                },
+                "Error": {
+                    "$ref": "#/components/responses/defaultError"
+                }
+            }
+        }
+    },
+    "/api/v2/saved-queries/{saved_query_id}": {
+        "delete": {
+            "description": "Delete an existing saved query",
+            "tags": [
+                "Cypher",
+                "Community",
+                "Enterprise"
+            ],
+            "summary": "Delete a Saved query by its ID",
+            "parameters": [
+                {
+                    "$ref": "#/definitions/parameter.PreferHeader"
+                }
+            ],
+            "responses": {
+                "204": {
+                    "description": "No Content"
                 },
                 "Error": {
                     "$ref": "#/components/responses/defaultError"

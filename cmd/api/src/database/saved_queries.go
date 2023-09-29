@@ -39,3 +39,7 @@ func (s *BloodhoundDB) CreateSavedQuery(userID uuid.UUID, name string, query str
 
 	return savedQuery, CheckError(s.db.Create(&savedQuery))
 }
+
+func (s *BloodhoundDB) DeleteSavedQuery(id int) {
+	s.db.Delete(&model.SavedQuery{}, id)
+}
