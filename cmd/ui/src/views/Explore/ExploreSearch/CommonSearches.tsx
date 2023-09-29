@@ -134,10 +134,14 @@ const SearchList: FC<SearchListProps> = ({ listSections, onClickListItem, delete
         <List dense disablePadding className={classes.list}>
             {listSections.map((section) => {
                 const { subheader, lineItems } = section;
+
                 return (
                     <Box key={subheader}>
                         <ListSubheader sx={{ fontWeight: 'bold' }}>{subheader} </ListSubheader>
-                        {lineItems?.map(({ id, description, cypher, canEdit = false }) => {
+
+                        {lineItems?.map((lineItem) => {
+                            const { id, description, cypher, canEdit = false } = lineItem;
+
                             return (
                                 <ListItem
                                     disablePadding
@@ -163,7 +167,7 @@ const SearchList: FC<SearchListProps> = ({ listSections, onClickListItem, delete
 };
 
 // `PersonalSearchList` is a more specific implementation of `SearchList`.  It includes
-// additional fetching logic to fetch queries saved by the user
+// additional fetching logic to fetch and delete queries saved by the user
 const PersonalSearchList: FC<{ onClickListItem: (query: string) => void }> = ({ onClickListItem }) => {
     const dispatch = useDispatch();
     const queryClient = useQueryClient();
