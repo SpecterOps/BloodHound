@@ -82,6 +82,10 @@ class BHEAPIClient {
         return this.baseClient.post<BasicResponse<SavedQuery>>('/api/v2/saved-queries', payload, options);
     };
 
+    deleteUserQuery = (queryId: number, options?: types.RequestOptions) => {
+        return this.baseClient.delete(`/api/v2/saved-queries/${queryId}`, options);
+    };
+
     getAvailableDomains = (options?: types.RequestOptions) => this.baseClient.get('/api/v2/available-domains', options);
 
     /* audit */

@@ -31,7 +31,9 @@ import { apiClient, CommonSearches as prebuiltSearchList } from 'bh-shared-ui';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTrash } from '@fortawesome/free-solid-svg-icons';
 import makeStyles from '@mui/styles/makeStyles';
-import { useQuery } from 'react-query';
+import { useMutation, useQuery, useQueryClient } from 'react-query';
+import { useDispatch } from 'react-redux';
+import { addSnackbar } from 'src/ducks/global/actions';
 
 const AD_TAB = 'Active Directory';
 const AZ_TAB = 'Azure';
@@ -108,6 +110,8 @@ const CommonSearches = ({ onClickListItem }: CommonSearchesProps) => {
 interface SearchListProps {
     listSections: ListSection[];
     onClickListItem: (query: string) => void;
+
+    deleteHandler?: any;
 }
 
 type ListSection = {
@@ -116,12 +120,14 @@ type ListSection = {
 };
 
 type LineItem = {
+    id?: number;
+
     description: string;
     cypher: string;
     canEdit?: boolean;
 };
 
-const SearchList: FC<SearchListProps> = ({ listSections, onClickListItem }) => {
+const SearchList: FC<SearchListProps> = ({ listSections, onClickListItem, deleteHandler }) => {
     const classes = useStyles();
 
     return (
@@ -131,14 +137,14 @@ const SearchList: FC<SearchListProps> = ({ listSections, onClickListItem }) => {
                 return (
                     <Box key={subheader}>
                         <ListSubheader sx={{ fontWeight: 'bold' }}>{subheader} </ListSubheader>
-                        {lineItems?.map(({ description, cypher, canEdit = false }) => {
+                        {lineItems?.map(({ id, description, cypher, canEdit = false }) => {
                             return (
                                 <ListItem
                                     disablePadding
-                                    key={description}
+                                    key={id}
                                     secondaryAction={
                                         canEdit && (
-                                            <IconButton size='small'>
+                                            <IconButton size='small' onClick={() => deleteHandler(id)}>
                                                 <FontAwesomeIcon icon={faTrash} />
                                             </IconButton>
                                         )
@@ -159,6 +165,9 @@ const SearchList: FC<SearchListProps> = ({ listSections, onClickListItem }) => {
 // `PersonalSearchList` is a more specific implementation of `SearchList`.  It includes
 // additional fetching logic to fetch queries saved by the user
 const PersonalSearchList: FC<{ onClickListItem: (query: string) => void }> = ({ onClickListItem }) => {
+    const dispatch = useDispatch();
+    const queryClient = useQueryClient();
+
     const [queries, setQueries] = useState<LineItem[]>([]);
 
     useQuery({
@@ -173,6 +182,7 @@ const PersonalSearchList: FC<{ onClickListItem: (query: string) => void }> = ({ 
                         description: query.name,
                         cypher: query.query,
                         canEdit: true,
+                        id: query.id,
                     }));
 
                     setQueries(queriesToDisplay);
@@ -180,6 +190,18 @@ const PersonalSearchList: FC<{ onClickListItem: (query: string) => void }> = ({ 
                 .catch(() => {
                     setQueries([]);
                 });
+        },
+    });
+
+    const mutation = useMutation({
+        mutationFn: (queryId: number) => {
+            return apiClient.deleteUserQuery(queryId);
+        },
+        onSettled: () => {
+            queryClient.invalidateQueries({ queryKey: 'userSavedQueries' });
+        },
+        onSuccess: () => {
+            dispatch(addSnackbar(`Query deleted.`, 'userDeleteQuery'));
         },
     });
 
@@ -192,6 +214,7 @@ const PersonalSearchList: FC<{ onClickListItem: (query: string) => void }> = ({ 
                 },
             ]}
             onClickListItem={onClickListItem}
+            deleteHandler={mutation.mutate}
         />
     );
 };
