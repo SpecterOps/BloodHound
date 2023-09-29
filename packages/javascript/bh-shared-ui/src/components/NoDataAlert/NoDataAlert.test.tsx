@@ -22,12 +22,7 @@ const fileIngestLinkText = 'file ingest';
 
 describe('NoDataAlert', () => {
     it('should render', () => {
-        render(
-            <NoDataAlert
-                dataCollectionLink={<>{dataCollectionLinkText}</>}
-                fileIngestLink={<>{fileIngestLinkText}</>}
-            />
-        );
+        render(<NoDataAlert dataCollectionLink={<>{dataCollectionLinkText}</>} />);
 
         expect(screen.getByText('No Data Available')).toBeInTheDocument();
         expect(screen.getByText(/It appears that no data has been uploaded yet./)).toBeInTheDocument();
