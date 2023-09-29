@@ -144,6 +144,8 @@ type Database interface {
 	GetFileUploadJobsWithStatus(status model.JobStatus) ([]model.FileUploadJob, error)
 	ListSavedQueries(userID uuid.UUID, order string, filter model.SQLFilter, skip, limit int) (model.SavedQueries, int, error)
 	CreateSavedQuery(userID uuid.UUID, name string, query string) (model.SavedQuery, error)
+	DeleteSavedQuery(id int) error
+	SavedQueryBelongsToUser(userID uuid.UUID, savedQueryID int) (bool, error)
 }
 
 type BloodhoundDB struct {
