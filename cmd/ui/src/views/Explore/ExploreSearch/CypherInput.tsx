@@ -191,7 +191,7 @@ const CypherInput = () => {
                 /*What is graphed will never die*/ toggle && (
                     <div style={{ display: 'block', position: 'relative', bottom: 0, left: 0 }}>
                         <img
-                            src={'img/logo-animated.gif'}
+                            src={'/img/logo-animated.gif'}
                             alt='What is graphed will never die'
                             style={{ width: '200px' }}
                         />
