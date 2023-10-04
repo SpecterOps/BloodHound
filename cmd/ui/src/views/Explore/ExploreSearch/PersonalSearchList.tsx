@@ -1,14 +1,12 @@
-import { LineItem, PrebuiltSearchList, apiClient } from 'bh-shared-ui';
+import { LineItem, PrebuiltSearchList, apiClient, useNotifications } from 'bh-shared-ui';
 import { FC, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from 'react-query';
-import { useDispatch } from 'react-redux';
-import { addSnackbar } from 'src/ducks/global/actions';
 
 // `PersonalSearchList` is a more specific implementation of `PrebuiltSearchList`.  It includes
 // additional fetching logic to fetch and delete queries saved by the user
 const PersonalSearchList: FC<{ clickHandler: (query: string) => void }> = ({ clickHandler }) => {
-    const dispatch = useDispatch();
     const queryClient = useQueryClient();
+    const { addNotification } = useNotifications();
 
     const [queries, setQueries] = useState<LineItem[]>([]);
 
@@ -43,7 +41,7 @@ const PersonalSearchList: FC<{ clickHandler: (query: string) => void }> = ({ cli
             queryClient.invalidateQueries({ queryKey: 'userSavedQueries' });
         },
         onSuccess: () => {
-            dispatch(addSnackbar(`Query deleted.`, 'userDeleteQuery'));
+            addNotification(`Query deleted.`, 'userDeleteQuery');
         },
     });
 
