@@ -200,140 +200,140 @@ func ParseProperty(source string) (Property, error) {
 		return "", errors.New("Invalid enumeration value: " + source)
 	}
 }
-func (s Property) String() string {
+func (s Property) String() (string, error) {
 	switch s {
 	case AppOwnerOrganizationID:
-		return string(AppOwnerOrganizationID)
+		return string(AppOwnerOrganizationID), nil
 	case AppDescription:
-		return string(AppDescription)
+		return string(AppDescription), nil
 	case AppDisplayName:
-		return string(AppDisplayName)
+		return string(AppDisplayName), nil
 	case ServicePrincipalType:
-		return string(ServicePrincipalType)
+		return string(ServicePrincipalType), nil
 	case UserType:
-		return string(UserType)
+		return string(UserType), nil
 	case TenantID:
-		return string(TenantID)
+		return string(TenantID), nil
 	case ServicePrincipalID:
-		return string(ServicePrincipalID)
+		return string(ServicePrincipalID), nil
 	case ServicePrincipalNames:
-		return string(ServicePrincipalNames)
+		return string(ServicePrincipalNames), nil
 	case OperatingSystemVersion:
-		return string(OperatingSystemVersion)
+		return string(OperatingSystemVersion), nil
 	case TrustType:
-		return string(TrustType)
+		return string(TrustType), nil
 	case IsBuiltIn:
-		return string(IsBuiltIn)
+		return string(IsBuiltIn), nil
 	case AppID:
-		return string(AppID)
+		return string(AppID), nil
 	case AppRoleID:
-		return string(AppRoleID)
+		return string(AppRoleID), nil
 	case DeviceID:
-		return string(DeviceID)
+		return string(DeviceID), nil
 	case NodeResourceGroupID:
-		return string(NodeResourceGroupID)
+		return string(NodeResourceGroupID), nil
 	case OnPremID:
-		return string(OnPremID)
+		return string(OnPremID), nil
 	case OnPremSyncEnabled:
-		return string(OnPremSyncEnabled)
+		return string(OnPremSyncEnabled), nil
 	case SecurityEnabled:
-		return string(SecurityEnabled)
+		return string(SecurityEnabled), nil
 	case SecurityIdentifier:
-		return string(SecurityIdentifier)
+		return string(SecurityIdentifier), nil
 	case EnableRBACAuthorization:
-		return string(EnableRBACAuthorization)
+		return string(EnableRBACAuthorization), nil
 	case Scope:
-		return string(Scope)
+		return string(Scope), nil
 	case Offer:
-		return string(Offer)
+		return string(Offer), nil
 	case MFAEnabled:
-		return string(MFAEnabled)
+		return string(MFAEnabled), nil
 	case License:
-		return string(License)
+		return string(License), nil
 	case Licenses:
-		return string(Licenses)
+		return string(Licenses), nil
 	case MFAEnforced:
-		return string(MFAEnforced)
+		return string(MFAEnforced), nil
 	case UserPrincipalName:
-		return string(UserPrincipalName)
+		return string(UserPrincipalName), nil
 	case IsAssignableToRole:
-		return string(IsAssignableToRole)
+		return string(IsAssignableToRole), nil
 	case PublisherDomain:
-		return string(PublisherDomain)
+		return string(PublisherDomain), nil
 	case SignInAudience:
-		return string(SignInAudience)
+		return string(SignInAudience), nil
 	case RoleTemplateID:
-		return string(RoleTemplateID)
+		return string(RoleTemplateID), nil
 	default:
-		panic("Invalid enumeration case: " + string(s))
+		return "", errors.New("Invalid enumeration value: " + string(s))
 	}
 }
-func (s Property) Name() string {
+func (s Property) Name() (string, error) {
 	switch s {
 	case AppOwnerOrganizationID:
-		return "App Owner Organization ID"
+		return "App Owner Organization ID", nil
 	case AppDescription:
-		return "App Description"
+		return "App Description", nil
 	case AppDisplayName:
-		return "App Display Name"
+		return "App Display Name", nil
 	case ServicePrincipalType:
-		return "Service Principal Type"
+		return "Service Principal Type", nil
 	case UserType:
-		return "User Type"
+		return "User Type", nil
 	case TenantID:
-		return "Tenant ID"
+		return "Tenant ID", nil
 	case ServicePrincipalID:
-		return "Service Principal ID"
+		return "Service Principal ID", nil
 	case ServicePrincipalNames:
-		return "Service Principal Names"
+		return "Service Principal Names", nil
 	case OperatingSystemVersion:
-		return "Operating System Version"
+		return "Operating System Version", nil
 	case TrustType:
-		return "Trust Type"
+		return "Trust Type", nil
 	case IsBuiltIn:
-		return "Is Built In"
+		return "Is Built In", nil
 	case AppID:
-		return "App ID"
+		return "App ID", nil
 	case AppRoleID:
-		return "App Role ID"
+		return "App Role ID", nil
 	case DeviceID:
-		return "Device ID"
+		return "Device ID", nil
 	case NodeResourceGroupID:
-		return "Node Resource Group ID"
+		return "Node Resource Group ID", nil
 	case OnPremID:
-		return "On Prem ID"
+		return "On Prem ID", nil
 	case OnPremSyncEnabled:
-		return "On Prem Sync Enabled"
+		return "On Prem Sync Enabled", nil
 	case SecurityEnabled:
-		return "Security Enabled"
+		return "Security Enabled", nil
 	case SecurityIdentifier:
-		return "Security Identifier"
+		return "Security Identifier", nil
 	case EnableRBACAuthorization:
-		return "RBAC Authorization Enabled"
+		return "RBAC Authorization Enabled", nil
 	case Scope:
-		return "Scope"
+		return "Scope", nil
 	case Offer:
-		return "Offer"
+		return "Offer", nil
 	case MFAEnabled:
-		return "MFA Enabled"
+		return "MFA Enabled", nil
 	case License:
-		return "License"
+		return "License", nil
 	case Licenses:
-		return "Licenses"
+		return "Licenses", nil
 	case MFAEnforced:
-		return "MFA Enforced"
+		return "MFA Enforced", nil
 	case UserPrincipalName:
-		return "User Principal Name"
+		return "User Principal Name", nil
 	case IsAssignableToRole:
-		return "Is Role Assignable"
+		return "Is Role Assignable", nil
 	case PublisherDomain:
-		return "Publisher Domain"
+		return "Publisher Domain", nil
 	case SignInAudience:
-		return "Sign In Audience"
+		return "Sign In Audience", nil
 	case RoleTemplateID:
-		return "Role Template ID"
+		return "Role Template ID", nil
 	default:
-		panic("Invalid enumeration case: " + string(s))
+		return "", errors.New("Invalid enumeration value: " + string(s))
 	}
 }
 func (s Property) Is(others ...graph.Kind) bool {

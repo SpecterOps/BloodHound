@@ -90,80 +90,80 @@ func ParseProperty(source string) (Property, error) {
 		return "", errors.New("Invalid enumeration value: " + source)
 	}
 }
-func (s Property) String() string {
+func (s Property) String() (string, error) {
 	switch s {
 	case ObjectID:
-		return string(ObjectID)
+		return string(ObjectID), nil
 	case Name:
-		return string(Name)
+		return string(Name), nil
 	case DisplayName:
-		return string(DisplayName)
+		return string(DisplayName), nil
 	case Description:
-		return string(Description)
+		return string(Description), nil
 	case OwnerObjectID:
-		return string(OwnerObjectID)
+		return string(OwnerObjectID), nil
 	case Collected:
-		return string(Collected)
+		return string(Collected), nil
 	case OperatingSystem:
-		return string(OperatingSystem)
+		return string(OperatingSystem), nil
 	case SystemTags:
-		return string(SystemTags)
+		return string(SystemTags), nil
 	case UserTags:
-		return string(UserTags)
+		return string(UserTags), nil
 	case LastSeen:
-		return string(LastSeen)
+		return string(LastSeen), nil
 	case WhenCreated:
-		return string(WhenCreated)
+		return string(WhenCreated), nil
 	case Enabled:
-		return string(Enabled)
+		return string(Enabled), nil
 	case PasswordLastSet:
-		return string(PasswordLastSet)
+		return string(PasswordLastSet), nil
 	case Title:
-		return string(Title)
+		return string(Title), nil
 	case Email:
-		return string(Email)
+		return string(Email), nil
 	case IsInherited:
-		return string(IsInherited)
+		return string(IsInherited), nil
 	default:
-		panic("Invalid enumeration case: " + string(s))
+		return "", errors.New("Invalid enumeration value: " + string(s))
 	}
 }
-func (s Property) Name() string {
+func (s Property) Name() (string, error) {
 	switch s {
 	case ObjectID:
-		return "Object ID"
+		return "Object ID", nil
 	case Name:
-		return "Name"
+		return "Name", nil
 	case DisplayName:
-		return "Display Name"
+		return "Display Name", nil
 	case Description:
-		return "Description"
+		return "Description", nil
 	case OwnerObjectID:
-		return "Owner Object ID"
+		return "Owner Object ID", nil
 	case Collected:
-		return "Collected"
+		return "Collected", nil
 	case OperatingSystem:
-		return "Operating System"
+		return "Operating System", nil
 	case SystemTags:
-		return "Node System Tags"
+		return "Node System Tags", nil
 	case UserTags:
-		return "Node User Tags"
+		return "Node User Tags", nil
 	case LastSeen:
-		return "Last Collected by BloodHound"
+		return "Last Collected by BloodHound", nil
 	case WhenCreated:
-		return "Created"
+		return "Created", nil
 	case Enabled:
-		return "Enabled"
+		return "Enabled", nil
 	case PasswordLastSet:
-		return "Password Last Set"
+		return "Password Last Set", nil
 	case Title:
-		return "Title"
+		return "Title", nil
 	case Email:
-		return "Email"
+		return "Email", nil
 	case IsInherited:
-		return "Is Inherited"
+		return "Is Inherited", nil
 	default:
-		panic("Invalid enumeration case: " + string(s))
+		return "", errors.New("Invalid enumeration value: " + string(s))
 	}
 }
 func (s Property) Is(others ...graph.Kind) bool {
