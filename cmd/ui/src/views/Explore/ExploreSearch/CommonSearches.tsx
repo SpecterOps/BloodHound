@@ -26,14 +26,16 @@ import {
     Typography,
     IconButton,
 } from '@mui/material';
-import { FC, useState } from 'react';
-import { apiClient, CommonSearches as prebuiltSearchList } from 'bh-shared-ui';
+import { FC, createContext, useContext, useState } from 'react';
+import { CommonSearchType, apiClient, CommonSearches as prebuiltSearchList } from 'bh-shared-ui';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTrash } from '@fortawesome/free-solid-svg-icons';
 import makeStyles from '@mui/styles/makeStyles';
 import { useMutation, useQuery, useQueryClient } from 'react-query';
 import { useDispatch } from 'react-redux';
 import { addSnackbar } from 'src/ducks/global/actions';
+import { setCypherQueryTerm } from 'src/ducks/searchbar/actions';
+import { startCypherQuery } from 'src/ducks/explore/actions';
 
 const AD_TAB = 'Active Directory';
 const AZ_TAB = 'Azure';
@@ -58,19 +60,22 @@ const useStyles = makeStyles((theme) => ({
     },
 }));
 
-export const getADSearches = () => {
-    return prebuiltSearchList.filter(({ category }) => category === 'Active Directory');
+const PrebuiltSearchContext = createContext();
+
+const PrebuiltSearches = ({ children, activeTab }) => {
+    const dispatch = useDispatch();
+
+    const show = (currenTab: string) => currenTab === activeTab;
+
+    const onClick = (query: string) => {
+        dispatch(setCypherQueryTerm(query));
+        dispatch(startCypherQuery(query));
+    };
+
+    return <PrebuiltSearchContext.Provider value={{ show, onClick }}>{children}</PrebuiltSearchContext.Provider>;
 };
 
-export const getAZSearches = () => {
-    return prebuiltSearchList.filter(({ category }) => category === 'Azure');
-};
-
-interface CommonSearchesProps {
-    onClickListItem: (query: string) => void;
-}
-
-const CommonSearches = ({ onClickListItem }: CommonSearchesProps) => {
+const CommonSearches = () => {
     const classes = useStyles();
 
     const [activeTab, setActiveTab] = useState(AD_TAB);
@@ -79,15 +84,11 @@ const CommonSearches = ({ onClickListItem }: CommonSearchesProps) => {
         setActiveTab(newValue);
     };
 
-    const adSections = getADSearches().map(({ subheader, queries }) => ({ subheader, lineItems: queries }));
-    const azSections = getAZSearches().map(({ subheader, queries }) => ({ subheader, lineItems: queries }));
-
     return (
         <Box>
             <Typography variant='h5' sx={{ mb: 2, mt: 2 }}>
                 Pre-built Searches
             </Typography>
-
             <Tabs
                 value={activeTab}
                 onChange={handleTabChange}
@@ -100,16 +101,39 @@ const CommonSearches = ({ onClickListItem }: CommonSearchesProps) => {
                 <Tab label={CUSTOM_TAB} key={CUSTOM_TAB} value={CUSTOM_TAB} className={classes.tab} />
             </Tabs>
 
-            {activeTab === AD_TAB && <SearchList listSections={adSections} onClickListItem={onClickListItem} />}
-            {activeTab === AZ_TAB && <SearchList listSections={azSections} onClickListItem={onClickListItem} />}
-            {activeTab === CUSTOM_TAB && <PersonalSearchList onClickListItem={onClickListItem} />}
+            <PrebuiltSearches activeTab={activeTab}>
+                <ActiveDirectoryPrebuiltSearches />
+                <AzurePrebuiltSearches />
+                <PersonalSearchList />
+            </PrebuiltSearches>
         </Box>
     );
 };
 
+const ActiveDirectoryPrebuiltSearches = () => {
+    const { show } = useContext(PrebuiltSearchContext);
+
+    const byADCategory = ({ category }: { category: string }) => category === AD_TAB;
+    const toListSections = ({ subheader, queries }: CommonSearchType) => ({ subheader, lineItems: queries });
+
+    const listSections = prebuiltSearchList.filter(byADCategory).map(toListSections);
+
+    return show ? <SearchList listSections={listSections} /> : null;
+};
+
+const AzurePrebuiltSearches = () => {
+    const { show } = useContext(PrebuiltSearchContext);
+
+    const byAZCategory = ({ category }: { category: string }) => category === AZ_TAB;
+    const toListSections = ({ subheader, queries }: CommonSearchType) => ({ subheader, lineItems: queries });
+
+    const listSections = prebuiltSearchList.filter(byAZCategory).map(toListSections);
+
+    return show ? <SearchList listSections={listSections} /> : null;
+};
+
 interface SearchListProps {
     listSections: ListSection[];
-    onClickListItem: (query: string) => void;
 
     deleteHandler?: any;
 }
@@ -127,8 +151,10 @@ type LineItem = {
     canEdit?: boolean;
 };
 
-const SearchList: FC<SearchListProps> = ({ listSections, onClickListItem, deleteHandler }) => {
+const SearchList: FC<SearchListProps> = ({ listSections, deleteHandler }) => {
     const classes = useStyles();
+
+    const { onClick } = useContext(PrebuiltSearchContext);
 
     return (
         <List dense disablePadding className={classes.list}>
@@ -153,7 +179,7 @@ const SearchList: FC<SearchListProps> = ({ listSections, onClickListItem, delete
                                             </IconButton>
                                         )
                                     }>
-                                    <ListItemButton onClick={() => onClickListItem(cypher)}>
+                                    <ListItemButton onClick={() => onClick(cypher)}>
                                         <ListItemText primary={description} />
                                     </ListItemButton>
                                 </ListItem>
@@ -168,7 +194,7 @@ const SearchList: FC<SearchListProps> = ({ listSections, onClickListItem, delete
 
 // `PersonalSearchList` is a more specific implementation of `SearchList`.  It includes
 // additional fetching logic to fetch and delete queries saved by the user
-const PersonalSearchList: FC<{ onClickListItem: (query: string) => void }> = ({ onClickListItem }) => {
+const PersonalSearchList = () => {
     const dispatch = useDispatch();
     const queryClient = useQueryClient();
 
@@ -209,7 +235,9 @@ const PersonalSearchList: FC<{ onClickListItem: (query: string) => void }> = ({ 
         },
     });
 
-    return (
+    const { show } = useContext(PrebuiltSearchContext);
+
+    return show ? (
         <SearchList
             listSections={[
                 {
@@ -217,10 +245,9 @@ const PersonalSearchList: FC<{ onClickListItem: (query: string) => void }> = ({ 
                     lineItems: queries,
                 },
             ]}
-            onClickListItem={onClickListItem}
             deleteHandler={mutation.mutate}
         />
-    );
+    ) : null;
 };
 
 export default CommonSearches;

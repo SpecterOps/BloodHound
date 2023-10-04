@@ -107,11 +107,6 @@ const CypherSearch = () => {
     const [showCommonQueries, setShowCommonQueries] = useState(false);
     const [showEgg, setShowEgg] = useState(false);
 
-    const handleCommonSearchesListItemClick = (query: string) => {
-        dispatch(setCypherQueryTerm(query));
-        dispatch(startCypherQuery(query));
-    };
-
     const handleCypherSearch = (cypherQuery?: string) => {
         if (cypherQuery) {
             // Easter Egg Trigger
@@ -187,7 +182,7 @@ const CypherSearch = () => {
             </Box>
 
             <Collapse in={showCommonQueries}>
-                <CommonSearches onClickListItem={handleCommonSearchesListItemClick} />
+                <CommonSearches />
             </Collapse>
 
             {showEgg && <EasterEgg />}
