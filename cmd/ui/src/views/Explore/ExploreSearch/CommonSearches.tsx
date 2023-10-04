@@ -139,13 +139,13 @@ const SearchList: FC<SearchListProps> = ({ listSections, onClickListItem, delete
                     <Box key={subheader}>
                         <ListSubheader sx={{ fontWeight: 'bold' }}>{subheader} </ListSubheader>
 
-                        {lineItems?.map((lineItem) => {
+                        {lineItems?.map((lineItem, idx) => {
                             const { id, description, cypher, canEdit = false } = lineItem;
 
                             return (
                                 <ListItem
                                     disablePadding
-                                    key={id}
+                                    key={`${id}-${idx}`}
                                     secondaryAction={
                                         canEdit && (
                                             <IconButton size='small' onClick={() => deleteHandler(id)}>

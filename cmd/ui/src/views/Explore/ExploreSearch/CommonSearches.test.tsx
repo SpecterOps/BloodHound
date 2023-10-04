@@ -13,11 +13,13 @@ const server = setupServer(
                         user_id: 'abcdefgh',
                         query: 'match (n) return n limit 5',
                         name: 'me save a query 1',
+                        id: 1,
                     },
                     {
                         user_id: 'abcdefgh',
                         query: 'match (n) return n limit 5',
                         name: 'me save a query 2',
+                        id: 2,
                     },
                 ],
             })
@@ -99,6 +101,4 @@ describe('CommonSearches', () => {
         expect(onClick).toHaveBeenCalledTimes(1);
         expect(onClick).toHaveBeenCalledWith(cypher);
     });
-    // todo:
-    it('handles the secondary action (delete) on each list item', async () => {});
 });
