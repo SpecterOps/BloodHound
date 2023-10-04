@@ -29,7 +29,7 @@ import {
     AzureRelationshipKind,
     CommonKindProperties,
 } from 'bh-shared-ui';
-import { useCallback, useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { setCypherQueryTerm, startCypherSearch } from 'src/ducks/searchbar/actions';
 import { AppState } from 'src/store';
@@ -80,33 +80,31 @@ const schema = {
     ],
 };
 
-const CypherSearch = () => {
-    const classes = useStyles();
+const useCypherEditor = () => {
+    const cypherQuery = useSelector((state: AppState) => state.search.cypher.searchTerm);
+
     const dispatch = useDispatch();
 
-    const [cypherQuery, setCypherQuery] = useState('');
+    const setCypherQuery = (query: string) => dispatch(setCypherQueryTerm(query));
 
-    const syncCypherQueryWithAppState = useCallback(
-        () => dispatch(setCypherQueryTerm(cypherQuery)),
-        [cypherQuery, dispatch]
-    );
+    const performSearch = () => dispatch(startCypherSearch(cypherQuery));
 
-    const cypherAppState = useSelector((state: AppState) => state.search.cypher);
+    return {
+        cypherQuery,
+        setCypherQuery,
+        performSearch,
+    };
+};
 
-    useEffect(() => {
-        if (cypherAppState.searchTerm) {
-            setCypherQuery(cypherAppState.searchTerm);
-        }
-    }, [cypherAppState]);
+const CypherSearch = () => {
+    const classes = useStyles();
 
-    useEffect(() => {
-        syncCypherQueryWithAppState();
-    }, [syncCypherQueryWithAppState]);
+    const { cypherQuery, setCypherQuery, performSearch } = useCypherEditor();
 
     const [showCommonQueries, setShowCommonQueries] = useState(false);
     const [showEgg, setShowEgg] = useState(false);
 
-    const handleCypherSearch = (cypherQuery?: string) => {
+    const handleCypherSearch = () => {
         if (cypherQuery) {
             // Easter Egg Trigger
             if (cypherQuery.toLowerCase().includes('match (n) return n limit 5')) {
@@ -114,7 +112,7 @@ const CypherSearch = () => {
             } else {
                 setShowEgg(false);
             }
-            dispatch(startCypherSearch(cypherQuery));
+            performSearch();
         }
     };
 
@@ -149,7 +147,7 @@ const CypherSearch = () => {
                             // if enter and shift key is pressed, execute cypher search
                             if (e.key === 'Enter' && e.shiftKey) {
                                 e.preventDefault();
-                                handleCypherSearch(cypherQuery);
+                                handleCypherSearch();
                             }
                         }}
                         schema={schema}
@@ -172,7 +170,7 @@ const CypherSearch = () => {
                     </Button>
                 </a>
 
-                <Button className={classes.button} onClick={() => handleCypherSearch(cypherQuery)} variant='outlined'>
+                <Button className={classes.button} onClick={() => handleCypherSearch()} variant='outlined'>
                     <Box mr={1}>
                         <FontAwesomeIcon icon={faPlay} />
                     </Box>
