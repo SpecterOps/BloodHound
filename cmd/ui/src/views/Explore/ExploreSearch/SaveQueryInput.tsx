@@ -1,12 +1,10 @@
 import { faSave } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Button, TextField } from '@mui/material';
-import { FC, useEffect, useState } from 'react';
-import { useDispatch } from 'react-redux';
-import { addSnackbar } from 'src/ducks/global/actions';
+import { FC, useState } from 'react';
 import makeStyles from '@mui/styles/makeStyles';
 import { useMutation, useQueryClient } from 'react-query';
-import { apiClient } from 'bh-shared-ui';
+import { apiClient, useNotifications } from 'bh-shared-ui';
 
 const useStyles = makeStyles((theme) => ({
     button: {
@@ -23,15 +21,13 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 const SaveQueryInput: FC<{ cypherQuery: string }> = ({ cypherQuery }) => {
-    const dispatch = useDispatch();
     const queryClient = useQueryClient();
+    const { addNotification } = useNotifications();
 
     const classes = useStyles();
 
-    const [showCustomQueryInput, setShowCustomQueryInput] = useState(false);
-
+    const [showQueryNameInput, setShowQueryNameInput] = useState(false);
     const [queryName, setQueryName] = useState('');
-    const [saveButtonDisabled, setSaveButtonDisabled] = useState(false);
 
     const mutation = useMutation({
         mutationFn: (newQuery: { name: string; query: string }) => {
@@ -43,34 +39,21 @@ const SaveQueryInput: FC<{ cypherQuery: string }> = ({ cypherQuery }) => {
         },
         onSuccess: () => {
             setQueryName(''); // reset input
-            dispatch(addSnackbar(`${queryName} saved!`, 'userSavedQuery'));
+            addNotification(`${queryName} saved!`, 'userSavedQuery');
         },
     });
 
-    const handleCustomQueryOnSave = () => {
-        setShowCustomQueryInput((c) => !c);
+    const handleOnSave = () => {
+        setShowQueryNameInput((c) => !c);
 
-        if (showCustomQueryInput) {
+        if (showQueryNameInput) {
             mutation.mutate({ name: queryName, query: cypherQuery });
         }
     };
 
-    useEffect(() => {
-        const disableSaveButtonOnEmptyInput = () => {
-            if (showCustomQueryInput) {
-                if (!queryName) {
-                    setSaveButtonDisabled(true);
-                } else {
-                    setSaveButtonDisabled(false);
-                }
-            }
-        };
-        disableSaveButtonOnEmptyInput();
-    }, [showCustomQueryInput, queryName, setSaveButtonDisabled]);
-
     return (
         <>
-            {showCustomQueryInput && (
+            {showQueryNameInput && (
                 <TextField
                     label='Search Name'
                     variant='outlined'
@@ -98,8 +81,8 @@ const SaveQueryInput: FC<{ cypherQuery: string }> = ({ cypherQuery }) => {
 
             <Button
                 className={`${classes.button} ${classes.iconButton}`}
-                onClick={handleCustomQueryOnSave}
-                disabled={saveButtonDisabled}
+                onClick={handleOnSave}
+                disabled={showQueryNameInput && queryName.length === 0}
                 variant='outlined'>
                 <FontAwesomeIcon icon={faSave} />
             </Button>
