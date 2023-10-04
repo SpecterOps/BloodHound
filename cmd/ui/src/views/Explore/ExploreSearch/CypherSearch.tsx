@@ -31,7 +31,6 @@ import {
 } from 'bh-shared-ui';
 import { useCallback, useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { startCypherQuery } from 'src/ducks/explore/actions';
 import { setCypherQueryTerm, startCypherSearch } from 'src/ducks/searchbar/actions';
 import { AppState } from 'src/store';
 import CommonSearches from './CommonSearches';
@@ -106,11 +105,6 @@ const CypherSearch = () => {
 
     const [showCommonQueries, setShowCommonQueries] = useState(false);
     const [showEgg, setShowEgg] = useState(false);
-
-    const handleCommonSearchesListItemClick = (query: string) => {
-        dispatch(setCypherQueryTerm(query));
-        dispatch(startCypherQuery(query));
-    };
 
     const handleCypherSearch = (cypherQuery?: string) => {
         if (cypherQuery) {
@@ -187,7 +181,7 @@ const CypherSearch = () => {
             </Box>
 
             <Collapse in={showCommonQueries}>
-                <CommonSearches onClickListItem={handleCommonSearchesListItemClick} />
+                <CommonSearches />
             </Collapse>
 
             {showEgg && <EasterEgg />}

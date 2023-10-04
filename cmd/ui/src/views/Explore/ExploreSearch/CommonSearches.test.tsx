@@ -3,6 +3,7 @@ import CommonSearches, { getADSearches, getAZSearches } from './CommonSearches';
 import userEvent from '@testing-library/user-event';
 import { setupServer } from 'msw/node';
 import { rest } from 'msw';
+import * as actions from 'src/ducks/explore/actions';
 
 const server = setupServer(
     rest.get('/api/v2/saved-queries', (req, res, ctx) => {
@@ -28,14 +29,16 @@ const server = setupServer(
 );
 
 beforeAll(() => server.listen());
-afterEach(() => server.resetHandlers());
+afterEach(() => {
+    server.resetHandlers();
+    jest.restoreAllMocks();
+});
 afterAll(() => server.close());
 
 describe('CommonSearches', () => {
-    const onClick = jest.fn();
     beforeEach(() => {
-        onClick.mockReset();
-        render(<CommonSearches onClickListItem={onClick} />);
+        render(<CommonSearches />);
+        jest.mock('src/ducks/explore/actions');
     });
 
     it('renders headers', () => {
@@ -88,6 +91,7 @@ describe('CommonSearches', () => {
     });
 
     it('handles a click on each list item', async () => {
+        const spy = jest.spyOn(actions, 'startCypherQuery');
         const user = userEvent.setup();
 
         const adSearches = getADSearches();
@@ -98,7 +102,7 @@ describe('CommonSearches', () => {
 
         await user.click(listItem);
 
-        expect(onClick).toHaveBeenCalledTimes(1);
-        expect(onClick).toHaveBeenCalledWith(cypher);
+        expect(spy).toHaveBeenCalledTimes(1);
+        expect(spy).toHaveBeenCalledWith(cypher);
     });
 });

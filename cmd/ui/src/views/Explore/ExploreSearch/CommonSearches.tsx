@@ -34,6 +34,8 @@ import makeStyles from '@mui/styles/makeStyles';
 import { useMutation, useQuery, useQueryClient } from 'react-query';
 import { useDispatch } from 'react-redux';
 import { addSnackbar } from 'src/ducks/global/actions';
+import { setCypherQueryTerm } from 'src/ducks/searchbar/actions';
+import { startCypherQuery } from 'src/ducks/explore/actions';
 
 const AD_TAB = 'Active Directory';
 const AZ_TAB = 'Azure';
@@ -66,12 +68,9 @@ export const getAZSearches = () => {
     return prebuiltSearchList.filter(({ category }) => category === 'Azure');
 };
 
-interface CommonSearchesProps {
-    onClickListItem: (query: string) => void;
-}
-
-const CommonSearches = ({ onClickListItem }: CommonSearchesProps) => {
+const CommonSearches = () => {
     const classes = useStyles();
+    const dispatch = useDispatch();
 
     const [activeTab, setActiveTab] = useState(AD_TAB);
 
@@ -81,6 +80,11 @@ const CommonSearches = ({ onClickListItem }: CommonSearchesProps) => {
 
     const adSections = getADSearches().map(({ subheader, queries }) => ({ subheader, lineItems: queries }));
     const azSections = getAZSearches().map(({ subheader, queries }) => ({ subheader, lineItems: queries }));
+
+    const handleClick = (query: string) => {
+        dispatch(setCypherQueryTerm(query));
+        dispatch(startCypherQuery(query));
+    };
 
     return (
         <Box>
@@ -100,9 +104,9 @@ const CommonSearches = ({ onClickListItem }: CommonSearchesProps) => {
                 <Tab label={CUSTOM_TAB} key={CUSTOM_TAB} value={CUSTOM_TAB} className={classes.tab} />
             </Tabs>
 
-            {activeTab === AD_TAB && <SearchList listSections={adSections} onClickListItem={onClickListItem} />}
-            {activeTab === AZ_TAB && <SearchList listSections={azSections} onClickListItem={onClickListItem} />}
-            {activeTab === CUSTOM_TAB && <PersonalSearchList onClickListItem={onClickListItem} />}
+            {activeTab === AD_TAB && <SearchList listSections={adSections} onClickListItem={handleClick} />}
+            {activeTab === AZ_TAB && <SearchList listSections={azSections} onClickListItem={handleClick} />}
+            {activeTab === CUSTOM_TAB && <PersonalSearchList onClickListItem={handleClick} />}
         </Box>
     );
 };
