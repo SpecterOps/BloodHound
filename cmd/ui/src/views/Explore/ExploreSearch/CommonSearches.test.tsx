@@ -1,9 +1,10 @@
 import { render, screen } from 'src/test-utils';
-import CommonSearches, { getADSearches, getAZSearches } from './CommonSearches';
+import CommonSearches from './CommonSearches';
 import userEvent from '@testing-library/user-event';
 import { setupServer } from 'msw/node';
 import { rest } from 'msw';
 import * as actions from 'src/ducks/explore/actions';
+import { CommonSearches as prebuiltSearchList } from 'bh-shared-ui';
 
 const server = setupServer(
     rest.get('/api/v2/saved-queries', (req, res, ctx) => {
@@ -56,7 +57,7 @@ describe('CommonSearches', () => {
     });
 
     it('renders search list for the currently active tab', () => {
-        const adSearches = getADSearches();
+        const adSearches = prebuiltSearchList.filter(({ category }) => category === 'Active Directory');
         const subheadersForAD = adSearches.map((element) => element.subheader);
 
         subheadersForAD.forEach((subheader) => {
@@ -71,7 +72,7 @@ describe('CommonSearches', () => {
         const azureTab = screen.getByRole('tab', { name: /azure/i });
         await user.click(azureTab);
 
-        const azSearches = getAZSearches();
+        const azSearches = prebuiltSearchList.filter(({ category }) => category === 'Azure');
         const subheadersForAZ = azSearches.map((element) => element.subheader);
 
         subheadersForAZ.forEach((subheader) => {
@@ -94,7 +95,8 @@ describe('CommonSearches', () => {
         const spy = jest.spyOn(actions, 'startCypherQuery');
         const user = userEvent.setup();
 
-        const adSearches = getADSearches();
+        const adSearches = prebuiltSearchList.filter(({ category }) => category === 'Active Directory');
+
         const { cypher, description } = adSearches[0].queries[0];
 
         const listItem = screen.getByRole('button', { name: description });

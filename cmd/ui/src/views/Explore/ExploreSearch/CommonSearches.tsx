@@ -46,14 +46,6 @@ const useStyles = makeStyles((theme) => ({
     },
 }));
 
-export const getADSearches = () => {
-    return prebuiltSearchList.filter(({ category }) => category === 'Active Directory');
-};
-
-export const getAZSearches = () => {
-    return prebuiltSearchList.filter(({ category }) => category === 'Azure');
-};
-
 const CommonSearches = () => {
     const classes = useStyles();
     const dispatch = useDispatch();
@@ -64,8 +56,13 @@ const CommonSearches = () => {
         setActiveTab(newValue);
     };
 
-    const adSections = getADSearches().map(({ subheader, queries }) => ({ subheader, lineItems: queries }));
-    const azSections = getAZSearches().map(({ subheader, queries }) => ({ subheader, lineItems: queries }));
+    const adSections = prebuiltSearchList
+        .filter(({ category }) => category === 'Active Directory')
+        .map(({ subheader, queries }) => ({ subheader, lineItems: queries }));
+
+    const azSections = prebuiltSearchList
+        .filter(({ category }) => category === 'Azure')
+        .map(({ subheader, queries }) => ({ subheader, lineItems: queries }));
 
     const handleClick = (query: string) => {
         dispatch(setCypherQueryTerm(query));
