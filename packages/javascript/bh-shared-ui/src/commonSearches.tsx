@@ -61,11 +61,11 @@ export const CommonSearches = [
             },
             {
                 description: 'Users with foreign domain group membership',
-                cypher: `MATCH p=(n:User)-[:MemberOf]->(m:Group)\nWHERE m.domain<>n.domain\nRETURN p`,
+                cypher: `MATCH p=(n:User)-[:MemberOf]->(m:Group)\nWHERE m.domainsid<>n.domainsid\nRETURN p`,
             },
             {
                 description: 'Groups with foreign domain group membership',
-                cypher: `MATCH p=(n:Group)-[:MemberOf]->(m:Group)\nWHERE m.domain<>n.domain AND n.name<>m.name\nRETURN p`,
+                cypher: `MATCH p=(n:Group)-[:MemberOf]->(m:Group)\nWHERE m.domainsid<>n.domainsid AND n.name<>m.name\nRETURN p`,
             },
             {
                 description: 'Computers where Domain Users are local administrators',

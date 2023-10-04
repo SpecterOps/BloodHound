@@ -1,12 +1,16 @@
 package v2
 
 import (
+	"errors"
 	"fmt"
+	"github.com/gorilla/mux"
 	"github.com/specterops/bloodhound/src/api"
 	ctx2 "github.com/specterops/bloodhound/src/ctx"
+	"github.com/specterops/bloodhound/src/database"
 	"github.com/specterops/bloodhound/src/model"
 	"gorm.io/gorm/utils"
 	"net/http"
+	"strconv"
 	"strings"
 )
 
@@ -98,5 +102,31 @@ func (s Resources) CreateSavedQuery(response http.ResponseWriter, request *http.
 		}
 	} else {
 		api.WriteBasicResponse(request.Context(), savedQuery, http.StatusCreated, response)
+	}
+}
+
+func (s Resources) DeleteSavedQuery(response http.ResponseWriter, request *http.Request) {
+	var (
+		rawSavedQueryID = mux.Vars(request)[api.URIPathVariableSavedQueryID]
+		userID          = ctx2.FromRequest(request).AuthCtx.Session.UserID
+	)
+
+	if savedQueryID, err := strconv.Atoi(rawSavedQueryID); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsIDMalformed, request), response)
+	} else if savedQueryBelongsToUser, err := s.DB.SavedQueryBelongsToUser(userID, savedQueryID); errors.Is(err, database.ErrNotFound) {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, "query does not exist", request), response)
+	} else if err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
+	} else if !savedQueryBelongsToUser {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "invalid saved_query_id supplied", request), response)
+	} else if err := s.DB.DeleteSavedQuery(savedQueryID); errors.Is(err, database.ErrNotFound) {
+		// This is an edge case and can only occur if the database has a concurrent operation that deletes the saved query
+		// after the check at s.DB.SavedQueryBelongsToUser but before getting here.
+		// Still, adding in the same check for good measure.
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, "query does not exist", request), response)
+	} else if err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
+	} else {
+		response.WriteHeader(http.StatusNoContent)
 	}
 }

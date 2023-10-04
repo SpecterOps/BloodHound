@@ -436,6 +436,20 @@ func (mr *MockDatabaseMockRecorder) DeleteSAMLProvider(arg0 interface{}) *gomock
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteSAMLProvider", reflect.TypeOf((*MockDatabase)(nil).DeleteSAMLProvider), arg0)
 }
 
+// DeleteSavedQuery mocks base method.
+func (m *MockDatabase) DeleteSavedQuery(arg0 int) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteSavedQuery", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteSavedQuery indicates an expected call of DeleteSavedQuery.
+func (mr *MockDatabaseMockRecorder) DeleteSavedQuery(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteSavedQuery", reflect.TypeOf((*MockDatabase)(nil).DeleteSavedQuery), arg0)
+}
+
 // DeleteUser mocks base method.
 func (m *MockDatabase) DeleteUser(arg0 model.User) error {
 	m.ctrl.T.Helper()
@@ -1304,6 +1318,21 @@ func (m *MockDatabase) RemoveAssetGroupSelector(arg0 model.AssetGroupSelector) e
 func (mr *MockDatabaseMockRecorder) RemoveAssetGroupSelector(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveAssetGroupSelector", reflect.TypeOf((*MockDatabase)(nil).RemoveAssetGroupSelector), arg0)
+}
+
+// SavedQueryBelongsToUser mocks base method.
+func (m *MockDatabase) SavedQueryBelongsToUser(arg0 uuid.UUID, arg1 int) (bool, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SavedQueryBelongsToUser", arg0, arg1)
+	ret0, _ := ret[0].(bool)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// SavedQueryBelongsToUser indicates an expected call of SavedQueryBelongsToUser.
+func (mr *MockDatabaseMockRecorder) SavedQueryBelongsToUser(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SavedQueryBelongsToUser", reflect.TypeOf((*MockDatabase)(nil).SavedQueryBelongsToUser), arg0, arg1)
 }
 
 // SetConfigurationParameter mocks base method.
