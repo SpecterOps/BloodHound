@@ -1,6 +1,8 @@
 export enum ChangelogAction {
-    ADD,
-    REMOVE,
+    ADD = 'Add',
+    REMOVE = 'Remove',
+    DEFAULT = 'Default Group Member',
+    UNDO = 'Undo',
 }
 
 export type MemberData = {
@@ -9,9 +11,6 @@ export type MemberData = {
     type: string;
 };
 
-export type AssetGroupChangelogEntry = {
-    member: MemberData;
-    action: ChangelogAction;
-};
+export type AssetGroupChangelogEntry = MemberData & { action: ChangelogAction };
 
 export type AssetGroupChangelog = AssetGroupChangelogEntry[];

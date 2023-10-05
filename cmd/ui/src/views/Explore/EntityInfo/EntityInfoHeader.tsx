@@ -21,7 +21,7 @@ import { Icon, NodeIcon } from 'bh-shared-ui';
 import React from 'react';
 import { GraphNodeTypes } from 'src/ducks/graph/types';
 import { useEntityInfoPanelContext } from 'src/views/Explore/EntityInfo/EntityInfoPanelContext';
-import useHeaderStyles from 'src/views/Explore/InfoStyles/Header';
+import { useHeaderStyles } from 'bh-shared-ui';
 
 interface HeaderProps {
     name?: string;

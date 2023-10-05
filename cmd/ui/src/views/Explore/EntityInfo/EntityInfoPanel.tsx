@@ -21,7 +21,7 @@ import EntityInfoContent from './EntityInfoContent';
 import Header from './EntityInfoHeader';
 import { EntityInfoPanelContextProvider } from './EntityInfoPanelContextProvider';
 import { useEntityInfoPanelContext } from './EntityInfoPanelContext';
-import usePaneStyles from 'src/views/Explore/InfoStyles/Pane';
+import { usePaneStyles } from 'bh-shared-ui';
 import { SelectedNode } from 'src/ducks/entityinfo/types';
 
 const EntityInfoPanel: React.FC<{

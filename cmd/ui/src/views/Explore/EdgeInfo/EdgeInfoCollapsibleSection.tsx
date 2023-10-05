@@ -17,12 +17,10 @@
 import { faMinus, faPlus } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Accordion, AccordionDetails, AccordionSummary } from '@mui/material';
-import { EdgeInfoState, EdgeSections, edgeSectionToggle } from 'bh-shared-ui';
+import { EdgeInfoState, EdgeSections, edgeSectionToggle, SubHeader, useCollapsibleSectionStyles } from 'bh-shared-ui';
 import React, { PropsWithChildren } from 'react';
 import { useSelector } from 'react-redux';
 import { AppState, useAppDispatch } from 'src/store';
-import useCollapsibleSectionStyles from 'src/views/Explore/InfoStyles/CollapsibleSection';
-import { SubHeader } from 'src/views/Explore/fragments';
 
 export const EdgeInfoCollapsibleSection: React.FC<
     PropsWithChildren<{

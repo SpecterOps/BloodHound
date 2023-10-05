@@ -120,3 +120,6 @@ export { default as DropdownSelector } from './DropdownSelector';
 
 export * from './AssetGroupAutocomplete';
 export { default as AssetGroupAutocomplete } from './AssetGroupAutocomplete';
+
+export * from './AssetGroupEdit';
+export { default as AssetGroupEdit } from './AssetGroupEdit';

@@ -15,3 +15,4 @@
 // SPDX-License-Identifier: Apache-2.0
 
 export { default as UserProfile } from './UserProfile';
+export * from './Explore';

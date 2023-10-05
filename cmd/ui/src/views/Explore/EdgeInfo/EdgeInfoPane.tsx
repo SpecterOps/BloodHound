@@ -19,7 +19,7 @@ import { SelectedEdge } from 'bh-shared-ui';
 import React, { useState } from 'react';
 import EdgeInfoContent from 'src/views/Explore/EdgeInfo/EdgeInfoContent';
 import Header from 'src/views/Explore/EdgeInfo/EdgeInfoHeader';
-import usePaneStyles from 'src/views/Explore/InfoStyles/Pane';
+import { usePaneStyles } from 'bh-shared-ui';
 
 const EdgeInfoPane: React.FC<{ sx?: SxProps, selectedEdge: SelectedEdge }> = ({ sx, selectedEdge }) => {
     const styles = usePaneStyles();

@@ -1,6 +1,6 @@
 import { Box, Grid, Paper, Typography, useTheme } from '@mui/material';
 import EntityInfoPanel from '../Explore/EntityInfo/EntityInfoPanel';
-import { AssetGroupMemberList, apiClient, DropdownSelector, DropdownOption, AssetGroupAutocomplete } from 'bh-shared-ui';
+import { AssetGroupMemberList, apiClient, DropdownSelector, DropdownOption, AssetGroupEdit } from 'bh-shared-ui';
 import { useQuery } from 'react-query';
 import { SelectedNode } from 'src/ducks/entityinfo/types';
 import { useEffect, useState } from 'react';
@@ -8,9 +8,6 @@ import DataSelector from '../QA/DataSelector';
 import { AssetGroup, AssetGroupMember } from 'js-client-library';
 import { GraphNodeTypes } from 'src/ducks/graph/types';
 import { faGem } from '@fortawesome/free-solid-svg-icons';
-import { SubHeader } from '../Explore/fragments';
-import { getKeywordAndTypeValues, useSearch } from 'src/hooks/useSearch';
-import { useDebouncedValue } from 'src/hooks/useDebouncedValue';
 
 type Domain = {
     type: string | null;
@@ -23,16 +20,7 @@ const SetManagement = () => {
     const [domain, setDomain] = useState<Domain>({ type: null, id: null });
     const [selectedAssetGroup, setSelectedAssetGroup] = useState<AssetGroup | null>(null);
     const [assetGroupMembers, setAssetGroupMembers] = useState<AssetGroupMember[]>([]);
-
-    const [searchInput, setSearchInput] = useState('');
-    const debouncedInputValue = useDebouncedValue(searchInput, 250);
-    const { keyword, type } = getKeywordAndTypeValues(debouncedInputValue);
-    const search = useSearch(keyword, type);
-
-    const handleInputChange = (_event: any, value: string) => {
-        setSearchInput(value);
-    }
-
+    
     const listAssetGroups = useQuery(
         ["listAssetGroups"],
         () => apiClient.listAssetGroups().then(res => res.data.data.asset_groups),
@@ -102,15 +90,7 @@ const SetManagement = () => {
                             </Grid>
                         </Grid>
                     </Box>
-                    <Box component={Paper} elevation={0} padding={1}>
-                        <SubHeader label={'Total Members'} count={listAssetGroupMembersQuery.data?.length} />
-                        <AssetGroupAutocomplete
-                            search={search}
-                            changelog={[]}
-                            onInputChange={handleInputChange}
-                            inputValue={searchInput}
-                        />
-                    </Box>
+                    <AssetGroupEdit assetGroupId={''} domainId={''} members={[]} />
                 </Grid>
                 <Grid height={"100%"} item xs={5} md={6}>
                     <AssetGroupMemberList 

@@ -43,57 +43,6 @@ export const getDatesInRange = (startDate: Date, endDate: Date) => {
     return dates;
 };
 
-export const validateNodeType = (type: string): ActiveDirectoryNodeKind | AzureNodeKind | undefined => {
-    let result = undefined;
-    Object.values(ActiveDirectoryNodeKind).forEach((activeDirectoryType: string) => {
-        if (activeDirectoryType.localeCompare(type, undefined, { sensitivity: 'base' }) === 0)
-            result = activeDirectoryType as ActiveDirectoryNodeKind;
-    });
-
-    Object.values(AzureNodeKind).forEach((azureType: string) => {
-        if (azureType.localeCompare(type, undefined, { sensitivity: 'base' }) === 0)
-            result = azureType as AzureNodeKind;
-    });
-
-    return result;
-};
-
-const formatSimple = (value: any): string => {
-    const type = typeof value;
-    if (type === 'number') {
-        const currentDate = Math.round(new Date().getTime() / 1000);
-
-        //315536400 = January 1st, 1980. Seems like a safe bet
-        if (value > 315536400 && value < currentDate) {
-            return DateTime.fromSeconds(value).toFormat(LuxonFormat.DATETIME);
-        } else {
-            return `${value}`.toLocaleString();
-        }
-    }
-
-    if (type === 'boolean') {
-        return value.toString().toUpperCase();
-    }
-
-    const potentialDate: any = DateTime.fromISO(value);
-
-    if (potentialDate.invalid === null) return potentialDate.toFormat(LuxonFormat.DATETIME);
-
-    return value;
-};
-
-export const format = (value: any): string | string[] | null => {
-    if (Array.isArray(value)) {
-        const fields: string[] = [];
-        value.forEach((val) => {
-            fields.push(formatSimple(val));
-        });
-        return fields;
-    } else {
-        return formatSimple(value);
-    }
-};
-
 export const getUsername = (user: any): string | undefined => {
     if (user?.first_name && user?.last_name) {
         return `${user.first_name} ${user.last_name}`;

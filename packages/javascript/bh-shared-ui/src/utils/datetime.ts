@@ -44,3 +44,39 @@ export const calculateJobDuration = (start: ISO_DATE_STRING, end: ISO_DATE_STRIN
     }
     return `${minutes} minutes`;
 };
+
+const formatSimple = (value: any): string => {
+    const type = typeof value;
+    if (type === 'number') {
+        const currentDate = Math.round(new Date().getTime() / 1000);
+
+        //315536400 = January 1st, 1980. Seems like a safe bet
+        if (value > 315536400 && value < currentDate) {
+            return DateTime.fromSeconds(value).toFormat(LuxonFormat.DATETIME);
+        } else {
+            return `${value}`.toLocaleString();
+        }
+    }
+
+    if (type === 'boolean') {
+        return value.toString().toUpperCase();
+    }
+
+    const potentialDate: any = DateTime.fromISO(value);
+
+    if (potentialDate.invalid === null) return potentialDate.toFormat(LuxonFormat.DATETIME);
+
+    return value;
+};
+
+export const format = (value: any): string | string[] | null => {
+    if (Array.isArray(value)) {
+        const fields: string[] = [];
+        value.forEach((val) => {
+            fields.push(formatSimple(val));
+        });
+        return fields;
+    } else {
+        return formatSimple(value);
+    }
+};

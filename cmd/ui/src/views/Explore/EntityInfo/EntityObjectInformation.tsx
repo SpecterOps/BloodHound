@@ -16,8 +16,9 @@
 
 import React from 'react';
 import EntityInfoCollapsibleSection from './EntityInfoCollapsibleSection';
-import { BasicObjectInfoFields, EntityField, FieldsContainer, ObjectInfoFields } from 'src/views/Explore/fragments';
+import { EntityField, FieldsContainer, ObjectInfoFields } from 'bh-shared-ui';
 import { formatObjectInfoFields } from 'src/views/Explore/utils';
+import { BasicObjectInfoFields } from '../BasicObjectInfoFields';
 
 const EntityObjectInformation: React.FC<{ props: any }> = ({ props }) => {
     const formattedObjectFields: EntityField[] = formatObjectInfoFields(props);

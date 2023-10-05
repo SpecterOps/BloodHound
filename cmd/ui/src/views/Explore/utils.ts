@@ -22,7 +22,7 @@ import {
     AzureKindPropertiesToDisplay,
 } from 'bh-shared-ui';
 import { CommonKindProperties, CommonKindPropertiesToDisplay } from 'src/graphSchema';
-import { EntityField } from './fragments';
+import { EntityField } from 'bh-shared-ui';
 
 export let controller = new AbortController();
 

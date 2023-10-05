@@ -1,17 +1,38 @@
 import { Autocomplete, AutocompleteRenderInputParams, TextField } from "@mui/material";
-import { FC, HTMLAttributes, ReactNode, SyntheticEvent } from "react";
+import { FC, HTMLAttributes, ReactNode, SyntheticEvent, useState } from "react";
 import AutocompleteOption from "./AutocompleteOption";
-import { AssetGroupChangelog, MemberData } from ".";
-import { UseQueryResult } from "react-query";
+import { AssetGroupChangelog, AssetGroupChangelogEntry, ChangelogAction } from "./types";
+import { AssetGroupMember } from "js-client-library";
+import { getKeywordAndTypeValues, useDebouncedValue, useSearch } from "../../hooks";
 
 const AssetGroupAutocomplete: FC<{
-    search: UseQueryResult<MemberData[], any>,
+    assetGroupMembers: AssetGroupMember[],
     changelog: AssetGroupChangelog,
-    inputValue: string,
-    onInputChange: (event: any, value: string) => void,
-}> = ({ search, inputValue, changelog, onInputChange }) => {
+    onChange: (event: any, value: AssetGroupChangelogEntry) => void,
+}> = ({ assetGroupMembers, changelog, onChange }) => {
 
-    const { data, error, isError, isLoading, isFetching } = search;
+    const [searchInput, setSearchInput] = useState('');
+    const debouncedInputValue = useDebouncedValue(searchInput, 250);
+    const { keyword, type } = getKeywordAndTypeValues(debouncedInputValue);
+    const { data, isLoading, isFetching } = useSearch(keyword, type);
+
+    const searchResultsWithActions = data?.map(result => {
+        const resultInChangelog = changelog.find(member => member.objectid === result.objectid);
+        const resultInAssetGroup = assetGroupMembers.find(member => member.object_id === result.objectid);
+
+        let action = ChangelogAction.ADD;
+        if (resultInAssetGroup) {
+            action = ChangelogAction.DEFAULT;
+        }
+        if (resultInAssetGroup?.custom_member) {
+            action = ChangelogAction.REMOVE;
+        }
+        if (resultInChangelog) {
+            action = ChangelogAction.UNDO;
+        }
+
+        return { ...result, action }
+    });
 
     const handleRenderInput = (params: AutocompleteRenderInputParams): ReactNode => {
         return (
@@ -24,28 +45,21 @@ const AssetGroupAutocomplete: FC<{
         );    
     }
 
-    const handleRenderOption = (props: HTMLAttributes<HTMLLIElement>, option: MemberData): ReactNode => {
-
-        // const memberInChangelog = changelog.filter(change => change.member.object_id === option.object_id)[0];
-
-        // Default is to display "Add" if node is not in asset group
-        // If it is already in the asset group and is a custom member, display "Remove"
-        // If the member is not custom member, we need to display "Default Group Member"
-        // If the member is already in the changelog, we display "Undo" followed by the action value, which should be a string
-
+    const handleRenderOption = (props: HTMLAttributes<HTMLLIElement>, option: AssetGroupChangelogEntry): ReactNode => {
         return (
             <AutocompleteOption
                 props={props}
                 id={option.objectid}
                 type={option.type}
                 name={option.name}
-                actionLabel="add"
+                actionLabel={option.action}
             />
         );
     }
 
     const handleInputChange = (_event: SyntheticEvent, value: string, reason: string): void => {
-        if (reason !== 'reset') onInputChange(_event, value);
+        if (reason !== 'reset') return;
+        setSearchInput(value);
     }
 
     return (
@@ -53,12 +67,13 @@ const AssetGroupAutocomplete: FC<{
             renderInput={handleRenderInput}
             renderOption={handleRenderOption}
             onInputChange={handleInputChange}
-            inputValue={inputValue}
-            filterOptions={(options: MemberData[]) => options}
+            onChange={onChange}
+            inputValue={searchInput}
+            filterOptions={(options: AssetGroupChangelogEntry[]) => options}
             value={null}
-            options={data || []}
+            options={searchResultsWithActions || []}
             loading={isLoading || isFetching}
-            getOptionLabel={(option: MemberData) => option.name || option.objectid}
+            getOptionLabel={(option: AssetGroupChangelogEntry) => option.name || option.objectid}
             isOptionEqualToValue={() => false}
             clearOnBlur
             clearOnEscape
