@@ -158,9 +158,9 @@ const Layout: React.FC<{
                         />
 
                         <LoadContainer
-                            icon={<NodeIcon nodeType={'EnrollmentService'} />}
-                            display='EnrollmentServices'
-                            value={dbInfo?.enrollmentservices || 0}
+                            icon={<NodeIcon nodeType={'EnterpriseCA'} />}
+                            display='EnterpriseCAs'
+                            value={dbInfo?.enterprisecas || 0}
                             loading={loading}
                         />
 

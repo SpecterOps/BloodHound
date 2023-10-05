@@ -166,7 +166,7 @@ export enum GraphNodeTypes {
     Domain = 'Domain',
     AIACA = 'AIACA',
     RootCA = 'RootCA',
-    EnrollmentService = 'EnrollmentService',
+    EnterpriseCA = 'EnterpriseCA',
     NTAuthStore = 'NTAuthStore',
     CertTemplate = 'CertTemplate',
     Meta = 'Meta',

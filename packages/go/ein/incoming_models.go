@@ -83,7 +83,7 @@ type Oid struct {
 }
 
 type CertificateExtension struct {
-	Oid 	 Oid
+	Oid      Oid
 	Critical bool
 }
 
@@ -98,50 +98,46 @@ type Certificate struct {
 }
 
 type EnrollmentAgentRestriction struct {
+	APIResult
 	AccessType   string
 	Agent        TypedPrincipal
+	AllTemplates bool
 	Targets      []TypedPrincipal
 	Template     TypedPrincipal
-	AllTemplates bool
+}
+
+type CASecurity struct {
+	APIResult
+	Data []ACE
+}
+
+type IsUserSpecifiesSanEnabled struct {
+	APIResult
+	Value bool
 }
 
 type CARegistryData struct {
-	CASecurity                           []ACE
-	EnrollmentAgentRestrictions          []EnrollmentAgentRestriction
-	IsUserSpecifiesSanEnabled            bool
-	CASecurityCollected                  bool
-	EnrollmentAgentRestrictionsCollected bool
-	IsUserSpecifiesSanEnabledCollected   bool
+	CASecurity                  CASecurity
+	EnrollmentAgentRestrictions []EnrollmentAgentRestriction
+	IsUserSpecifiesSanEnabled   IsUserSpecifiesSanEnabled
 }
 
 type GPO IngestBase
 
-type AIACA struct {
-	IngestBase
-	CertTemplate string
-}
+type AIACA IngestBase
 
-type RootCA struct {
-	IngestBase
-	CertTemplate string
-}
+type RootCA IngestBase
 
-type EnrollmentService struct {
+type EnterpriseCA struct {
 	IngestBase
-	Certificate          Certificate
-	CertTemplate         string
+	CARegistryData
 	EnabledCertTemplates []TypedPrincipal
 	HostingComputer      string
 }
 
-type NTAuthStore struct {
-	IngestBase
-	CertTemplates []string
-}
+type NTAuthStore IngestBase
 
-type CertTemplate struct {
-	IngestBase
-}
+type CertTemplate IngestBase
 
 type Session struct {
 	ComputerSID string

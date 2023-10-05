@@ -45,7 +45,7 @@ export enum GraphNodeTypes {
     Container = 'Container',
     AIACA = 'AIACA',
     RootCA = 'RootCA',
-    EnrollmentService = 'EnrollmentService',
+    EnterpriseCA = 'EnterpriseCA',
     NTAuthStore = 'NTAuthStore',
     CertTemplate = 'CertTemplate',
 }

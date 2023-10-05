@@ -406,49 +406,49 @@ func ParseUserRightData(userRight UserRightsAssignmentAPIResult, computer Comput
 	return relationships
 }
 
-func ParseEnrollmentServiceMiscData(enrollmentService EnrollmentService) []IngestibleRelationship {
+func ParseEnterpriseCAMiscData(enterpriseCA EnterpriseCA) []IngestibleRelationship {
 	relationships := make([]IngestibleRelationship, 0)
 	enabledCertTemplates := make([]string, 0)
 
-	for _, actor := range enrollmentService.EnabledCertTemplates {
+	for _, actor := range enterpriseCA.EnabledCertTemplates {
 		enabledCertTemplates = append(enabledCertTemplates, actor.ObjectIdentifier)
 		relationships = append(relationships, IngestibleRelationship{
 			Source:     actor.ObjectIdentifier,
 			SourceType: ad.CertTemplate,
-			Target:     enrollmentService.ObjectIdentifier,
-			TargetType: ad.EnrollmentService,
+			Target:     enterpriseCA.ObjectIdentifier,
+			TargetType: ad.EnterpriseCA,
 			RelType:    ad.PublishedTo,
 			RelProps:   map[string]any{"isacl": false},
 		})
 	}
 
-	if enrollmentService.HostingComputer != "" {
+	if enterpriseCA.HostingComputer != "" {
 		relationships = append(relationships, IngestibleRelationship{
-			Source:     enrollmentService.HostingComputer,
+			Source:     enterpriseCA.HostingComputer,
 			SourceType: ad.Computer,
-			Target:     enrollmentService.ObjectIdentifier,
-			TargetType: ad.EnrollmentService,
+			Target:     enterpriseCA.ObjectIdentifier,
+			TargetType: ad.EnterpriseCA,
 			RelType:    ad.HostsCAService,
 			RelProps:   map[string]any{"isacl": false},
 		})
 	}
 
-	// if enrollmentService.CARegistryData != "" {
+	// if enterpriseCA.CARegistryData != "" {
 	// 	//TODO: Handle CASecurity
 
-	// 	if enrollmentService.CARegistryData.EnrollmentAgentRestrictionsCollected {
-	// 		for _, restiction := range enrollmentService.CARegistryData.EnrollmentAgentRestrictions {
+	// 	if enterpriseCA.CARegistryData.EnrollmentAgentRestrictionsCollected {
+	// 		for _, restiction := range enterpriseCA.CARegistryData.EnrollmentAgentRestrictions {
 	// 			if restiction.AccessType == "AccessAllowedCallback" {
 	// 				templates := make([]string, 0)
 	// 				if restiction.AllTemplates {
 	// 					templates = enabledCertTemplates
-	// 				} 
+	// 				}
 	// 				else {
 	// 					templates = append(templates, restiction.Template.ObjectIdentifier)
 	// 				}
 
 	// 				// TODO: Handle Targets
-					
+
 	// 				for _, template := range templates {
 	// 					relationships = append(relationships, IngestibleRelationship{
 	// 						Source:     restiction.Agent.ObjectIdentifier,
@@ -458,7 +458,7 @@ func ParseEnrollmentServiceMiscData(enrollmentService EnrollmentService) []Inges
 	// 						RelType:    ad.DelegatedEnrollmentAgent,
 	// 						RelProps:   map[string]any{"isacl": false},
 	// 					})
-		
+
 	// 				}
 	// 			}
 	// 		}

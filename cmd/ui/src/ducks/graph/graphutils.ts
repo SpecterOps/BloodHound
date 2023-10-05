@@ -232,7 +232,7 @@ const ICONS: { [id in GraphNodeTypes]: string } = {
     [GraphNodeTypes.Container]: 'fa-box',
     [GraphNodeTypes.AIACA]: 'fa-box',
     [GraphNodeTypes.RootCA]: 'fa-landmark',
-    [GraphNodeTypes.EnrollmentService]: 'fa-box',
+    [GraphNodeTypes.EnterpriseCA]: 'fa-box',
     [GraphNodeTypes.NTAuthStore]: 'fa-store',
     [GraphNodeTypes.CertTemplate]: 'fa-id-card',
 };

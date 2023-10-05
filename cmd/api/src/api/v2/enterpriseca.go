@@ -20,29 +20,29 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/specterops/bloodhound/src/api"
 	adAnalysis "github.com/specterops/bloodhound/analysis/ad"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/graphschema/ad"
+	"github.com/specterops/bloodhound/src/api"
 )
 
-var enrollmentserviceQueries = map[string]any{
+var enterprisecaQueries = map[string]any{
 	"controllers": adAnalysis.FetchInboundADEntityControllers,
 }
 
-func (s *Resources) GetEnrollmentServiceEntityInfo(response http.ResponseWriter, request *http.Request) {
+func (s *Resources) GetEnterpriseCAEntityInfo(response http.ResponseWriter, request *http.Request) {
 	if hydrateCounts, err := api.ParseOptionalBool(request.URL.Query().Get(api.QueryParameterHydrateCounts), true); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsBadQueryParameterFilters, request), response)
 	} else if objectId, err := GetEntityObjectIDFromRequestPath(request); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("error reading objectid: %v", err), request), response)
-	} else if node, err := s.GraphQuery.GetEntityByObjectId(request.Context(), objectId, ad.EnrollmentService); err != nil {
+	} else if node, err := s.GraphQuery.GetEntityByObjectId(request.Context(), objectId, ad.EnterpriseCA); err != nil {
 		if graph.IsErrNotFound(err) {
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, "node not found", request), response)
 		} else {
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("error getting node: %v", err), request), response)
 		}
 	} else if hydrateCounts {
-		results := s.GraphQuery.GetEntityCountResults(request.Context(), node, enrollmentserviceQueries)
+		results := s.GraphQuery.GetEntityCountResults(request.Context(), node, enterprisecaQueries)
 		api.WriteBasicResponse(request.Context(), results, http.StatusOK, response)
 	} else {
 		results := map[string]any{"props": node.Properties.Map}

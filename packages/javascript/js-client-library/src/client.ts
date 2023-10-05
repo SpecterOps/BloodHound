@@ -1998,9 +1998,9 @@ class BHEAPIClient {
             )
         );
 
-    getEnrollmentServiceV2 = (id: string, counts?: boolean, options?: types.RequestOptions) =>
+    getEnterpriseCAV2 = (id: string, counts?: boolean, options?: types.RequestOptions) =>
         this.baseClient.get(
-            `/api/v2/enrollmentservices/${id}`,
+            `/api/v2/enterprisecas/${id}`,
             Object.assign(
                 {
                     params: {
@@ -2011,7 +2011,7 @@ class BHEAPIClient {
             )
         );
 
-    getEnrollmentServiceControllersV2 = (
+    getEnterpriseCAControllersV2 = (
         id: string,
         skip?: number,
         limit?: number,
@@ -2019,7 +2019,7 @@ class BHEAPIClient {
         options?: types.RequestOptions
     ) =>
         this.baseClient.get(
-            `/api/v2/enrollmentservices/${id}/controllers`,
+            `/api/v2/enterprisecas/${id}/controllers`,
             Object.assign(
                 {
                     params: {

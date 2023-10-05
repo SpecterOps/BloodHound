@@ -309,8 +309,8 @@ RootCA: types.#Kind & {
 	schema: "active_directory"
 }
 
-EnrollmentService: types.#Kind & {
-	symbol: "EnrollmentService"
+EnterpriseCA: types.#Kind & {
+	symbol: "EnterpriseCA"
 	schema: "active_directory"
 }
 
@@ -337,7 +337,7 @@ NodeKinds: [
 	LocalUser,
 	AIACA,
 	RootCA,
-	EnrollmentService,
+	EnterpriseCA,
 	NTAuthStore,
 	CertTemplate
 ]
