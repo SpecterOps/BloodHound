@@ -234,7 +234,7 @@ export const GraphEvents: FC<GraphEventProps> = ({
             setSelectedEdge(null);
             setHighlightedNode(selectedNode.graphId);
         }
-    }, [selectedNode])
+    }, [selectedNode]);
 
     return null;
 };

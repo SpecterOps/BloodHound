@@ -14,19 +14,16 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { ActiveDirectoryNodeKind, AzureNodeKind, apiClient } from 'bh-shared-ui';
+import { FlatGraphResponse, GraphData, GraphResponse, StyledGraphEdge, StyledGraphNode } from 'js-client-library';
 import identity from 'lodash/identity';
 import throttle from 'lodash/throttle';
-import { DateTime } from 'luxon';
-import { apiClient } from 'bh-shared-ui';
-import { FlatGraphResponse, GraphData, StyledGraphNode, StyledGraphEdge, GraphResponse } from 'js-client-library';
+import { Coordinates } from 'sigma/types';
 import { logout } from 'src/ducks/auth/authSlice';
 import { addSnackbar } from 'src/ducks/global/actions';
-import { ActiveDirectoryNodeKind, AzureNodeKind } from 'bh-shared-ui';
+import { isLink, isNode } from 'src/ducks/graph/utils';
+import { Glyph } from 'src/rendering/programs/node.glyphs';
 import { store } from 'src/store';
-import { LuxonFormat } from 'bh-shared-ui';
-import { isLink, isNode } from './ducks/graph/utils';
-import { Glyph } from './rendering/programs/node.glyphs';
-import { Coordinates } from 'sigma/types';
 
 export const getDatesInRange = (startDate: Date, endDate: Date) => {
     const date = new Date(startDate.getTime());
@@ -169,7 +166,7 @@ export const transformFlatGraphResponse = (graph: FlatGraphResponse): GraphData 
                 kind: edge.label.text || '',
                 lastSeen: lastSeen,
                 exploreGraphId: key || `${edge.id1}_${edge.label.text}_${edge.id2}`,
-                data: { ...edge.data, lastseen: lastSeen },
+                data: { ...(edge.data || {}), lastseen: lastSeen },
             });
         }
     }
@@ -203,7 +200,7 @@ export const transformToFlatGraphResponse = (graph: GraphResponse) => {
                 text: edge.label,
             },
             lastSeen: lastSeen,
-            data: { ...edge.data, lastseen: lastSeen },
+            data: { ...(edge.data || {}), lastseen: lastSeen },
         };
     }
     return result;

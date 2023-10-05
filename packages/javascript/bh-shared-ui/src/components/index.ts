@@ -50,6 +50,12 @@ export { default as Enable2FADialog } from './Enable2FADialog';
 export * from './GenericErrorBoundaryFallback';
 export { default as GenericErrorBoundaryFallback } from './GenericErrorBoundaryFallback';
 
+export * from './GraphButton';
+export { default as GraphButton } from './GraphButton';
+
+export * from './GraphMenu';
+export { default as GraphMenu } from './GraphMenu';
+
 export * from './GraphProgress';
 export { default as GraphProgress } from './GraphProgress';
 

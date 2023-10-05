@@ -63,7 +63,7 @@ const CreateUserForm: React.FC<{
 
     useEffect(() => {
         if (authenticationMethod === 'password') {
-            setValue("SAMLProviderId", '');
+            setValue('SAMLProviderId', '');
         }
     }, [authenticationMethod, setValue]);
 

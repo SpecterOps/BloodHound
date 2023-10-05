@@ -17,9 +17,15 @@
 import { List, ListItem, ListItemText, Paper, TextField, useTheme } from '@mui/material';
 import { useCombobox } from 'downshift';
 import { useState } from 'react';
-import {  NodeIcon, SearchResultItem } from 'bh-shared-ui';
-import { useDebouncedValue } from 'bh-shared-ui';
-import { getEmptyResultsText, getKeywordAndTypeValues, SearchResult, useSearch } from 'bh-shared-ui';
+import {
+    NodeIcon,
+    SearchResultItem,
+    useDebouncedValue,
+    getEmptyResultsText,
+    getKeywordAndTypeValues,
+    SearchResult,
+    useSearch
+} from 'bh-shared-ui';
 
 const ExploreSearchCombobox: React.FC<{
     inputValue: string;
@@ -124,7 +130,7 @@ const ExploreSearchCombobox: React.FC<{
                                         item={{
                                             label: item.name,
                                             objectId: item.objectid,
-                                            kind: item.type
+                                            kind: item.type,
                                         }}
                                         index={index}
                                         key={index}

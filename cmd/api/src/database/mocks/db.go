@@ -307,6 +307,21 @@ func (mr *MockDatabaseMockRecorder) CreateSAMLIdentityProvider(arg0 interface{})
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateSAMLIdentityProvider", reflect.TypeOf((*MockDatabase)(nil).CreateSAMLIdentityProvider), arg0)
 }
 
+// CreateSavedQuery mocks base method.
+func (m *MockDatabase) CreateSavedQuery(arg0 uuid.UUID, arg1, arg2 string) (model.SavedQuery, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateSavedQuery", arg0, arg1, arg2)
+	ret0, _ := ret[0].(model.SavedQuery)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreateSavedQuery indicates an expected call of CreateSavedQuery.
+func (mr *MockDatabaseMockRecorder) CreateSavedQuery(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateSavedQuery", reflect.TypeOf((*MockDatabase)(nil).CreateSavedQuery), arg0, arg1, arg2)
+}
+
 // CreateUser mocks base method.
 func (m *MockDatabase) CreateUser(arg0 model.User) (model.User, error) {
 	m.ctrl.T.Helper()
@@ -419,6 +434,20 @@ func (m *MockDatabase) DeleteSAMLProvider(arg0 model.SAMLProvider) error {
 func (mr *MockDatabaseMockRecorder) DeleteSAMLProvider(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteSAMLProvider", reflect.TypeOf((*MockDatabase)(nil).DeleteSAMLProvider), arg0)
+}
+
+// DeleteSavedQuery mocks base method.
+func (m *MockDatabase) DeleteSavedQuery(arg0 int) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteSavedQuery", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteSavedQuery indicates an expected call of DeleteSavedQuery.
+func (mr *MockDatabaseMockRecorder) DeleteSavedQuery(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteSavedQuery", reflect.TypeOf((*MockDatabase)(nil).DeleteSavedQuery), arg0)
 }
 
 // DeleteUser mocks base method.
@@ -1158,6 +1187,22 @@ func (mr *MockDatabaseMockRecorder) InitializeSecretAuth(arg0, arg1 interface{})
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InitializeSecretAuth", reflect.TypeOf((*MockDatabase)(nil).InitializeSecretAuth), arg0, arg1)
 }
 
+// ListSavedQueries mocks base method.
+func (m *MockDatabase) ListSavedQueries(arg0 uuid.UUID, arg1 string, arg2 model.SQLFilter, arg3, arg4 int) (model.SavedQueries, int, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListSavedQueries", arg0, arg1, arg2, arg3, arg4)
+	ret0, _ := ret[0].(model.SavedQueries)
+	ret1, _ := ret[1].(int)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// ListSavedQueries indicates an expected call of ListSavedQueries.
+func (mr *MockDatabaseMockRecorder) ListSavedQueries(arg0, arg1, arg2, arg3, arg4 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListSavedQueries", reflect.TypeOf((*MockDatabase)(nil).ListSavedQueries), arg0, arg1, arg2, arg3, arg4)
+}
+
 // ListUserTokens mocks base method.
 func (m *MockDatabase) ListUserTokens(arg0 uuid.UUID, arg1 string, arg2 model.SQLFilter) (model.AuthTokens, error) {
 	m.ctrl.T.Helper()
@@ -1273,6 +1318,21 @@ func (m *MockDatabase) RemoveAssetGroupSelector(arg0 model.AssetGroupSelector) e
 func (mr *MockDatabaseMockRecorder) RemoveAssetGroupSelector(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveAssetGroupSelector", reflect.TypeOf((*MockDatabase)(nil).RemoveAssetGroupSelector), arg0)
+}
+
+// SavedQueryBelongsToUser mocks base method.
+func (m *MockDatabase) SavedQueryBelongsToUser(arg0 uuid.UUID, arg1 int) (bool, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SavedQueryBelongsToUser", arg0, arg1)
+	ret0, _ := ret[0].(bool)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// SavedQueryBelongsToUser indicates an expected call of SavedQueryBelongsToUser.
+func (mr *MockDatabaseMockRecorder) SavedQueryBelongsToUser(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SavedQueryBelongsToUser", reflect.TypeOf((*MockDatabase)(nil).SavedQueryBelongsToUser), arg0, arg1)
 }
 
 // SetConfigurationParameter mocks base method.

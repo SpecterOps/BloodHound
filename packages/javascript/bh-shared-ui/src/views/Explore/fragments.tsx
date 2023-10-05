@@ -15,9 +15,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Alert, Box, CircularProgress, Typography } from '@mui/material';
-import React, { PropsWithChildren } from 'react';
-import { format } from '../../utils';
 import useCollapsibleSectionStyles from './InfoStyles/CollapsibleSection';
+import React, { PropsWithChildren } from 'react';
+import { EntityField, format } from '../../utils';
 
 const exclusionList = [
     'gid',
@@ -94,9 +94,18 @@ export const FieldsContainer: React.FC<PropsWithChildren> = ({ children }) => {
     return <div className={styles.fieldsContainer}>{children}</div>;
 };
 
-export const Field: React.FC<EntityField> = ({ label, value, keyprop }) => {
-    if (value === undefined || value === '' || (typeof value === 'object' && Object.keys(value).length === 0)) return null;
-    const formattedValue = format(value);
+export const Field: React.FC<EntityField> = (entityField) => {
+    const { label, value, keyprop } = entityField;
+
+    if (
+        value === undefined ||
+        value === '' ||
+        (Array.isArray(value) && value.length === 0) ||
+        (typeof value === 'object' && Object.keys(value).length === 0)
+    )
+        return null;
+
+    const formattedValue = format(entityField);
 
     let content: React.ReactNode;
     if (typeof formattedValue === 'string') {
@@ -136,12 +145,6 @@ export const Field: React.FC<EntityField> = ({ label, value, keyprop }) => {
     return <>{content}</>;
 };
 
-export type EntityField = {
-    label: string;
-    value: string | number | boolean | undefined | string[];
-    keyprop?: string;
-};
-
 export const ObjectInfoFields: React.FC<{ fields: EntityField[] }> = ({ fields }): JSX.Element => {
     const filteredFields = filterNegatedFields(fields);
 
@@ -150,10 +153,11 @@ export const ObjectInfoFields: React.FC<{ fields: EntityField[] }> = ({ fields }
             {filteredFields.map((field: EntityField) => {
                 return (
                     <Field
+                        kind={field.kind}
                         label={field.label}
                         value={field.value}
+                        keyprop={`${field.keyprop}`}
                         key={`${field.keyprop}-${field.label}`}
-                        keyprop={`${field.keyprop}-${field.label}`}
                     />
                 );
             })}

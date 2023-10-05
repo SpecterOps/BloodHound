@@ -58,15 +58,12 @@ const EdgeObjectInformation: FC<{ selectedEdge: NonNullable<SelectedEdge> }> = (
 
     let formattedObjectFields: EntityField[] = [sourceNodeField, targetNodeField];
 
-    if (isError) {
+    if (!isError) {
         formattedObjectFields = [
             ...formattedObjectFields,
-            ...formatObjectInfoFields({ lastseen: selectedEdge.data.lastseen }),
-        ];
-    } else {
-        formattedObjectFields = [
-            ...formattedObjectFields,
-            ...formatObjectInfoFields(cypherResponse.edges[0]?.properties || {}),
+            ...formatObjectInfoFields({
+                ...(cypherResponse.edges[0]?.properties || {}),
+            }),
         ];
     }
 

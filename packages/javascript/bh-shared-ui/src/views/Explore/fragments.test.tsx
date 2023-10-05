@@ -39,13 +39,6 @@ describe('Field', () => {
         expect(container.innerHTML).toBe('');
     });
 
-    it('should not render a Field when the provided value is undefined', () => {
-        const { container } = render(
-            <Field label='Test Field (Undefined)' value={undefined} keyprop='test-field-undefined' />
-        );
-        expect(container.innerHTML).toBe('');
-    });
-
     it('should not render a Field when the provided value is []', () => {
         const { container } = render(<Field label='Test Field (Array)' value={[]} keyprop='test-field-array' />);
         expect(container.innerHTML).toBe('');

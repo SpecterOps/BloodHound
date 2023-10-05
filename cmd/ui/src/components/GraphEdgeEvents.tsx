@@ -53,7 +53,7 @@ const GraphEdgeEvents: FC = () => {
                 setSelectedEdge({
                     id: id,
                     name: selectedItem.label?.text || '',
-                    data: selectedItem.data,
+                    data: selectedItem.data || {},
                     sourceNode: {
                         name: graphState.chartProps.items?.[selectedItem.id1].data.name,
                         id: selectedItem.id1,
