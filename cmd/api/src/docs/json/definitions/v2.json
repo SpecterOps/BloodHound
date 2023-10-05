@@ -76,7 +76,8 @@
   "v2.ClientCreateRequest": {
     "type": "object",
     "required": [
-      "name"
+      "name",
+      "type"
     ],
     "properties": {
       "domain_controller": {
@@ -84,6 +85,12 @@
       },
       "name": {
         "type": "string"
+      },
+      "type": {
+        "type": "string"
+      },
+      "events": {
+        "type": "array"
       }
     }
   },
