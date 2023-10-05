@@ -98,6 +98,9 @@ export { default as SAMLProviderTable } from './SAMLProviderTable';
 export * from './SAMLProviderTableActionMenu';
 export { default as SAMLProviderTableActionMenu } from './SAMLProviderTableActionMenu';
 
+export * from './SaveQueryInput';
+export { default as SaveQueryInput } from './SaveQueryInput';
+
 export * from './SetupKeyDialog';
 export { default as SetupKeyDialog } from './SetupKeyDialog';
 

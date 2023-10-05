@@ -28,13 +28,14 @@ import {
     AzureNodeKind,
     AzureRelationshipKind,
     CommonKindProperties,
+    SaveQueryInput,
 } from 'bh-shared-ui';
 import { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { setCypherQueryTerm, startCypherSearch } from 'src/ducks/searchbar/actions';
 import { AppState } from 'src/store';
 import CommonSearches from './CommonSearches';
-import SaveQueryInput from './SaveQueryInput';
+// import SaveQueryInput from './SaveQueryInput';
 
 const useStyles = makeStyles((theme) => ({
     button: {
