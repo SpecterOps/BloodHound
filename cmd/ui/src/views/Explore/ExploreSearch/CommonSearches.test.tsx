@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { setupServer } from 'msw/node';
 import { rest } from 'msw';
 import * as actions from 'src/ducks/explore/actions';
-import { CommonSearches as prebuiltSearchList } from 'bh-shared-ui';
+import { CommonSearches as prebuiltSearchList, apiClient } from 'bh-shared-ui';
 
 const server = setupServer(
     rest.get('/api/v2/saved-queries', (req, res, ctx) => {
@@ -26,6 +26,9 @@ const server = setupServer(
                 ],
             })
         );
+    }),
+    rest.delete('/api/v2/saved-queries/:id', (req, res, ctx) => {
+        return res(ctx.status(201));
     })
 );
 
@@ -87,8 +90,8 @@ describe('CommonSearches', () => {
         const userTab = screen.getByRole('tab', { name: /custom searches/i });
         await user.click(userTab);
 
-        const firstSavedQuery = screen.getAllByRole('button', { name: /me save a query/i });
-        expect(firstSavedQuery).toHaveLength(2);
+        const queries = screen.getAllByRole('button', { name: /me save a query/i });
+        expect(queries).toHaveLength(2);
     });
 
     it('handles a click on each list item', async () => {
@@ -106,5 +109,27 @@ describe('CommonSearches', () => {
 
         expect(spy).toHaveBeenCalledTimes(1);
         expect(spy).toHaveBeenCalledWith(cypher);
+    });
+
+    it('deletes a query that a user has saved', async () => {
+        const spy = jest.spyOn(apiClient, 'deleteUserQuery');
+        const user = userEvent.setup();
+
+        // switch tabs to user searches
+        const userTab = screen.getByRole('tab', { name: /custom searches/i });
+        await user.click(userTab);
+
+        const deleteButtons = screen.getAllByRole('button', { name: /trash/i });
+        await user.click(deleteButtons[0]);
+
+        // verify confirmation dialog appears
+        const deleteConfirmationDialog = screen.getByRole('dialog', { name: /Delete this query/i });
+        expect(deleteConfirmationDialog).toBeInTheDocument();
+
+        const confirmDeleteButton = screen.getByRole('button', { name: /confirm/i });
+        await user.click(confirmDeleteButton);
+
+        expect(spy).toHaveBeenCalledTimes(1);
+        expect(spy).toHaveBeenCalledWith(1);
     });
 });

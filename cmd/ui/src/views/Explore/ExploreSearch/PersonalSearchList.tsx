@@ -1,3 +1,4 @@
+import { Typography } from '@mui/material';
 import { LineItem, PrebuiltSearchList, apiClient, useNotifications } from 'bh-shared-ui';
 import { FC, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from 'react-query';
@@ -45,7 +46,7 @@ const PersonalSearchList: FC<{ clickHandler: (query: string) => void }> = ({ cli
         },
     });
 
-    return (
+    return queries?.length > 0 ? (
         <PrebuiltSearchList
             listSections={[
                 {
@@ -56,6 +57,10 @@ const PersonalSearchList: FC<{ clickHandler: (query: string) => void }> = ({ cli
             clickHandler={clickHandler}
             deleteHandler={mutation.mutate}
         />
+    ) : (
+        <Typography variant='overline' pl={'5px'} pt={'7px'} display={'block'}>
+            No queries have been saved yet.
+        </Typography>
     );
 };
 
