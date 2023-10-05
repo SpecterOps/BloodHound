@@ -20,7 +20,7 @@ export interface ActiveDirectoryQualityStat {
     gpos: number;
     aiacas: number;
     rootcas: number;
-    enrollmentservices: number;
+    enterprisecas: number;
     ntauthstores: number;
     certtemplates: number;
     acls: number;

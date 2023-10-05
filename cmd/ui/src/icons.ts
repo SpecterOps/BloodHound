@@ -107,7 +107,7 @@ export const NODE_ICON: IconDictionary = {
         color: '#763AAD',
     },
 
-    [ActiveDirectoryNodeKind.EnrollmentService]: {
+    [ActiveDirectoryNodeKind.EnterpriseCA]: {
         icon: faBox,
         color: '#25724B',
     },

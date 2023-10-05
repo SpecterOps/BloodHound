@@ -116,8 +116,8 @@ export interface DomainInfo extends EntityInfo {
     containers: number;
 }
 
-// --- EnrollmentService
-export interface EnrollmentServiceInfo extends EntityInfo {
+// --- EnterpriseCA
+export interface EnterpriseCAInfo extends EntityInfo {
     props: BasicInfo & {
         basicconstraintpathlength: number;
         caname: string;

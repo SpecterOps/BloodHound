@@ -77,7 +77,7 @@ export const NODE_ICON: { [index: string]: { icon: IconDefinition; color: string
         color: '#763AAD',
     },
 
-    EnrollmentService: {
+    EnterpriseCA: {
         icon: faBox,
         color: '#25724B',
     },

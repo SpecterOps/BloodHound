@@ -110,8 +110,8 @@ export const entityInformationEndpoints: Record<
     [ActiveDirectoryNodeKind.Container]: () => Promise.resolve(),
     [ActiveDirectoryNodeKind.Domain]: (id: string, options?: RequestOptions) =>
         apiClient.getDomainV2(id, false, options),
-    [ActiveDirectoryNodeKind.EnrollmentService]: (id: string, options?: RequestOptions) =>
-        apiClient.getEnrollmentServiceV2(id, false, options),
+    [ActiveDirectoryNodeKind.EnterpriseCA]: (id: string, options?: RequestOptions) =>
+        apiClient.getEnterpriseCAV2(id, false, options),
     [ActiveDirectoryNodeKind.GPO]: (id: string, options?: RequestOptions) => apiClient.getGPOV2(id, false, options),
     [ActiveDirectoryNodeKind.Group]: (id: string, options?: RequestOptions) => apiClient.getGroupV2(id, false, options),
     [ActiveDirectoryNodeKind.NTAuthStore]: (id: string, options?: RequestOptions) =>
@@ -1640,13 +1640,13 @@ export const allSections: Record<GraphNodeTypes, (id: string) => EntityInfoDataT
                     .then((res) => res.data),
         },
     ],
-    [ActiveDirectoryNodeKind.EnrollmentService]: (id) => [
+    [ActiveDirectoryNodeKind.EnterpriseCA]: (id) => [
         {
             id,
             label: 'Inbound Object Control',
             endpoint: ({ skip, limit, type }) =>
                 apiClient
-                    .getEnrollmentServiceControllersV2(id, skip, limit, type, { signal: controller.signal })
+                    .getEnterpriseCAControllersV2(id, skip, limit, type, { signal: controller.signal })
                     .then((res) => res.data),
         },
     ],

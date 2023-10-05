@@ -151,12 +151,12 @@ func (s *Daemon) IngestWrapper(batch graph.Batch, wrapper DataWrapper) error {
 			s.IngestBasicData(batch, converted)
 		}
 
-	case DataTypeEnrollmentService:
-		var enrollmentserviceData []ein.EnrollmentService
-		if err := json.Unmarshal(wrapper.Payload, &enrollmentserviceData); err != nil {
+	case DataTypeEnterpriseCA:
+		var enterprisecaData []ein.EnterpriseCA
+		if err := json.Unmarshal(wrapper.Payload, &enterprisecaData); err != nil {
 			return err
 		} else {
-			converted := convertEnrollmentServiceData(enrollmentserviceData)
+			converted := convertEnterpriseCAData(enterprisecaData)
 			s.IngestBasicData(batch, converted)
 		}
 

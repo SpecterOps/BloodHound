@@ -27,7 +27,7 @@ export enum ActiveDirectoryNodeKind {
     LocalUser = 'ADLocalUser',
     AIACA = 'AIACA',
     RootCA = 'RootCA',
-    EnrollmentService = 'EnrollmentService',
+    EnterpriseCA = 'EnterpriseCA',
     NTAuthStore = 'NTAuthStore',
     CertTemplate = 'CertTemplate',
 }
@@ -57,8 +57,8 @@ export function ActiveDirectoryNodeKindToDisplay(value: ActiveDirectoryNodeKind)
             return 'AIACA';
         case ActiveDirectoryNodeKind.RootCA:
             return 'RootCA';
-        case ActiveDirectoryNodeKind.EnrollmentService:
-            return 'EnrollmentService';
+        case ActiveDirectoryNodeKind.EnterpriseCA:
+            return 'EnterpriseCA';
         case ActiveDirectoryNodeKind.NTAuthStore:
             return 'NTAuthStore';
         case ActiveDirectoryNodeKind.CertTemplate:
