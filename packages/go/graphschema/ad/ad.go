@@ -169,124 +169,124 @@ func ParseProperty(source string) (Property, error) {
 		return "", errors.New("Invalid enumeration value: " + source)
 	}
 }
-func (s Property) String() (string, error) {
+func (s Property) String() string {
 	switch s {
 	case AdminCount:
-		return string(AdminCount), nil
+		return string(AdminCount)
 	case DistinguishedName:
-		return string(DistinguishedName), nil
+		return string(DistinguishedName)
 	case DomainFQDN:
-		return string(DomainFQDN), nil
+		return string(DomainFQDN)
 	case DomainSID:
-		return string(DomainSID), nil
+		return string(DomainSID)
 	case Sensitive:
-		return string(Sensitive), nil
+		return string(Sensitive)
 	case HighValue:
-		return string(HighValue), nil
+		return string(HighValue)
 	case BlocksInheritance:
-		return string(BlocksInheritance), nil
+		return string(BlocksInheritance)
 	case IsACL:
-		return string(IsACL), nil
+		return string(IsACL)
 	case IsACLProtected:
-		return string(IsACLProtected), nil
+		return string(IsACLProtected)
 	case Enforced:
-		return string(Enforced), nil
+		return string(Enforced)
 	case Department:
-		return string(Department), nil
+		return string(Department)
 	case HasSPN:
-		return string(HasSPN), nil
+		return string(HasSPN)
 	case UnconstrainedDelegation:
-		return string(UnconstrainedDelegation), nil
+		return string(UnconstrainedDelegation)
 	case LastLogon:
-		return string(LastLogon), nil
+		return string(LastLogon)
 	case LastLogonTimestamp:
-		return string(LastLogonTimestamp), nil
+		return string(LastLogonTimestamp)
 	case IsPrimaryGroup:
-		return string(IsPrimaryGroup), nil
+		return string(IsPrimaryGroup)
 	case HasLAPS:
-		return string(HasLAPS), nil
+		return string(HasLAPS)
 	case DontRequirePreAuth:
-		return string(DontRequirePreAuth), nil
+		return string(DontRequirePreAuth)
 	case LogonType:
-		return string(LogonType), nil
+		return string(LogonType)
 	case HasURA:
-		return string(HasURA), nil
+		return string(HasURA)
 	case PasswordNeverExpires:
-		return string(PasswordNeverExpires), nil
+		return string(PasswordNeverExpires)
 	case PasswordNotRequired:
-		return string(PasswordNotRequired), nil
+		return string(PasswordNotRequired)
 	case FunctionalLevel:
-		return string(FunctionalLevel), nil
+		return string(FunctionalLevel)
 	case TrustType:
-		return string(TrustType), nil
+		return string(TrustType)
 	case SidFiltering:
-		return string(SidFiltering), nil
+		return string(SidFiltering)
 	case TrustedToAuth:
-		return string(TrustedToAuth), nil
+		return string(TrustedToAuth)
 	case SamAccountName:
-		return string(SamAccountName), nil
+		return string(SamAccountName)
 	default:
-		return "", errors.New("Invalid enumeration value: " + string(s))
+		return "Invalid enumeration case: " + string(s)
 	}
 }
-func (s Property) Name() (string, error) {
+func (s Property) Name() string {
 	switch s {
 	case AdminCount:
-		return "Admin Count", nil
+		return "Admin Count"
 	case DistinguishedName:
-		return "Distinguished Name", nil
+		return "Distinguished Name"
 	case DomainFQDN:
-		return "Domain FQDN", nil
+		return "Domain FQDN"
 	case DomainSID:
-		return "Domain SID", nil
+		return "Domain SID"
 	case Sensitive:
-		return "Marked sensitive", nil
+		return "Marked sensitive"
 	case HighValue:
-		return "High Value", nil
+		return "High Value"
 	case BlocksInheritance:
-		return "Blocks Inheritance", nil
+		return "Blocks Inheritance"
 	case IsACL:
-		return "Is ACL", nil
+		return "Is ACL"
 	case IsACLProtected:
-		return "ACL Inheritance Denied", nil
+		return "ACL Inheritance Denied"
 	case Enforced:
-		return "Enforced", nil
+		return "Enforced"
 	case Department:
-		return "Department", nil
+		return "Department"
 	case HasSPN:
-		return "Has SPN", nil
+		return "Has SPN"
 	case UnconstrainedDelegation:
-		return "Allows Unconstrained Delegation", nil
+		return "Allows Unconstrained Delegation"
 	case LastLogon:
-		return "Last Logon", nil
+		return "Last Logon"
 	case LastLogonTimestamp:
-		return "Last Logon (Replicated)", nil
+		return "Last Logon (Replicated)"
 	case IsPrimaryGroup:
-		return "Is Primary Group", nil
+		return "Is Primary Group"
 	case HasLAPS:
-		return "LAPS Enabled", nil
+		return "LAPS Enabled"
 	case DontRequirePreAuth:
-		return "Do Not Require Pre-Authentication", nil
+		return "Do Not Require Pre-Authentication"
 	case LogonType:
-		return "Logon Type", nil
+		return "Logon Type"
 	case HasURA:
-		return "Has User Rights Assignment Collection", nil
+		return "Has User Rights Assignment Collection"
 	case PasswordNeverExpires:
-		return "Password Never Expires", nil
+		return "Password Never Expires"
 	case PasswordNotRequired:
-		return "Password Not Required", nil
+		return "Password Not Required"
 	case FunctionalLevel:
-		return "Functional Level", nil
+		return "Functional Level"
 	case TrustType:
-		return "Trust Type", nil
+		return "Trust Type"
 	case SidFiltering:
-		return "SID Filtering Enabled", nil
+		return "SID Filtering Enabled"
 	case TrustedToAuth:
-		return "Trusted For Constrained Delegation", nil
+		return "Trusted For Constrained Delegation"
 	case SamAccountName:
-		return "SAM Account Name", nil
+		return "SAM Account Name"
 	default:
-		return "", errors.New("Invalid enumeration value: " + string(s))
+		return "Invalid enumeration case: " + string(s)
 	}
 }
 func (s Property) Is(others ...graph.Kind) bool {

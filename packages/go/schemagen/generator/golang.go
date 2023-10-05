@@ -96,22 +96,16 @@ func WriteGolangStringEnumeration(root *jen.File, enumTypeSymbol string, values 
 	// symbol
 	root.Func().Params(jen.Id("s").Id(enumTypeSymbol)).Id("String").
 		Params().
-		Params(jen.String(), jen.Error()).
+		String().
 		BlockFunc(func(group *jen.Group) {
 			group.Switch(jen.Id("s")).BlockFunc(func(group *jen.Group) {
 				for _, value := range values {
-					group.Case(jen.Id(value.Symbol)).Return(jen.String().Call(jen.Id(value.Symbol)), jen.Nil())
+					group.Case(jen.Id(value.Symbol)).Return(jen.String().Call(jen.Id(value.Symbol)))
 				}
 
-				// group.Default().Block(
-				// 	jen.Panic(
-				// 		jen.Lit("Invalid enumeration case: ").Op("+").String().Params(jen.Id("s")),
-				// 	),
-				// )
 				group.Default().Block(
 					jen.Return(
-						jen.Lit(""),
-						jen.Qual("errors", "New").Call(jen.Lit("Invalid enumeration case: ").Op("+").String().Call(jen.Id("s"))),
+						jen.Lit("Invalid enumeration case: ").Op("+").String().Call(jen.Id("s")),
 					),
 				)
 			})
@@ -121,23 +115,16 @@ func WriteGolangStringEnumeration(root *jen.File, enumTypeSymbol string, values 
 	// instance that is more suitable for user interpretation
 	root.Func().Params(jen.Id("s").Id(enumTypeSymbol)).Id("Name").
 		Params().
-		Params(jen.String(), jen.Error()).
-		// String().
+		String().
 		BlockFunc(func(group *jen.Group) {
 			group.Switch(jen.Id("s")).BlockFunc(func(group *jen.Group) {
 				for _, value := range values {
-					group.Case(jen.Id(value.Symbol)).Return(jen.Lit(value.GetName()), jen.Nil())
+					group.Case(jen.Id(value.Symbol)).Return(jen.Lit(value.GetName()))
 				}
 
-				// group.Default().Block(
-				// 	jen.Panic(
-				// 		jen.Lit("Invalid enumeration case: ").Op("+").String().Params(jen.Id("s")),
-				// 	),
-				// )
 				group.Default().Block(
 					jen.Return(
-						jen.Lit(""),
-						jen.Qual("errors", "New").Call(jen.Lit("Invalid enumeration case: ").Op("+").String().Call(jen.Id("s"))),
+						jen.Lit("Invalid enumeration case: ").Op("+").String().Call(jen.Id("s")),
 					),
 				)
 			})
