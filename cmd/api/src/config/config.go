@@ -233,7 +233,7 @@ func SetValuesFromEnv(varPrefix string, target any, env []string) error {
 	for _, kvPairStr := range env {
 		if kvParts := strings.SplitN(kvPairStr, environmentVariableKeyValueSeparator, 2); len(kvParts) == 2 {
 			var (
-				key      = strings.TrimSpace(kvParts[0])
+				key      = strings.ToLower(strings.TrimSpace(kvParts[0])) // ToLower allows for env case insensitivity for maximum compatiblity/ease of use
 				valueStr = strings.TrimSpace(kvParts[1])
 			)
 
