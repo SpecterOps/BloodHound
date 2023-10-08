@@ -18,7 +18,8 @@ import { Button, TextField } from '@mui/material';
 import { FC, useState } from 'react';
 import makeStyles from '@mui/styles/makeStyles';
 import { useMutation, useQueryClient } from 'react-query';
-import { apiClient, useNotifications } from '../..';
+import { apiClient } from '../../utils';
+import { useNotifications } from '../../providers';
 
 const useStyles = makeStyles((theme) => ({
     button: {
