@@ -42,7 +42,6 @@ afterAll(() => server.close());
 describe('CommonSearches', () => {
     beforeEach(() => {
         render(<CommonSearches />);
-        jest.mock('src/ducks/explore/actions');
     });
 
     it('renders headers', () => {
