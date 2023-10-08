@@ -16,12 +16,11 @@
 
 import { Box, Tabs, Tab, Typography } from '@mui/material';
 import { useState } from 'react';
-import { PrebuiltSearchList, CommonSearches as prebuiltSearchList } from 'bh-shared-ui';
+import { PrebuiltSearchList, CommonSearches as prebuiltSearchList, PersonalSearchList } from 'bh-shared-ui';
 import makeStyles from '@mui/styles/makeStyles';
 import { useDispatch } from 'react-redux';
 import { setCypherQueryTerm } from 'src/ducks/searchbar/actions';
 import { startCypherQuery } from 'src/ducks/explore/actions';
-import PersonalSearchList from './PersonalSearchList';
 
 const AD_TAB = 'Active Directory';
 const AZ_TAB = 'Azure';
