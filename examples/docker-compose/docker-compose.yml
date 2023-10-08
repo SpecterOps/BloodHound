@@ -64,6 +64,11 @@ services:
     image: docker.io/specterops/bloodhound:${BLOODHOUND_TAG:-latest}
     environment:
       - bhe_disable_cypher_qc=${bhe_disable_cypher_qc:-false}
+      ### Add additional environment variables you wish to use here.
+      ### For common configuration options that you might want to use environment variables for, see `.env.example`
+      ### example: bhe_database_connection=${bhe_database_connection}
+      ### The left side is the environment variable you're setting for bloodhound, the variable on the right in `${}`
+      ### is the variable available outside of Docker
     ports:
       - ${BLOODHOUND_PORT:-8080}:8080
     ### Uncomment to use your own bloodhound.config.json to configure the application

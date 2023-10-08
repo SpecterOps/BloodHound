@@ -32,31 +32,30 @@ func NewDefaultConfiguration() (Configuration, error) {
 		return Configuration{}, fmt.Errorf("failed to generate default password: %w", err)
 	} else {
 		return Configuration{
-			Version:     0,
-			BindAddress: "127.0.0.1",
-			MetricsPort: ":2112",
-			RootURL:     serde.MustParseURL("http://localhost"),
-			WorkDir:     "/opt/bhe/work",
-			LogLevel:    "INFO",
-			LogPath:     DefaultLogFilePath,
-
-			// This idle timeout was set to a default of 70 seconds to avoid potential race conditions with the default 60 second
-			// idle timeout implemented on the load balancer side.
-			NetTimeoutSeconds: 70,
-			// This is the threshold (in ms) for marking a query as slow for caching purposes
-			SlowQueryThreshold:     100,
-			MaxAPICacheSize:        200, // Number of cache items for API utilities
+			Version:                0,
+			BindAddress:            "127.0.0.1",
+			NetTimeoutSeconds:      70,  // Default timeout to avoid race conditions with 60 second gateway timeouts
+			SlowQueryThreshold:     100, // Threshold in ms for caching queries
 			MaxGraphQueryCacheSize: 100, // Number of cache items for graph queries
-			TLS: TLSConfiguration{
-				CertFile: "",
-				KeyFile:  "",
-			},
+			MaxAPICacheSize:        200, // Number of cache items for API utilities
+			MetricsPort:            ":2112",
+			RootURL:                serde.MustParseURL("http://localhost"),
+			WorkDir:                "/opt/bhe/work",
+			LogLevel:               "INFO",
+			LogPath:                DefaultLogFilePath,
+			CollectorsBasePath:     "/etc/bloodhound/collectors",
+			DatapipeInterval:       60,
+			EnableAPILogging:       true,
+			DisableAnalysis:        false,
+			DisableCypherQC:        false,
+			DisableMigrations:      false,
+			TraversalMemoryLimit:   1, // 1 GiB by default
+			TLS:                    TLSConfiguration{},
+			SAML:                   SAMLConfiguration{},
 			Database: DatabaseConfiguration{
-				Connection:            "",
 				MaxConcurrentSessions: 10,
 			},
 			Neo4J: DatabaseConfiguration{
-				Connection:            "",
 				MaxConcurrentSessions: 10,
 			},
 			Crypto: CryptoConfiguration{
@@ -64,9 +63,9 @@ func NewDefaultConfiguration() (Configuration, error) {
 					SigningKey: jwtSigningKey,
 				},
 				Argon2: Argon2Configuration{
-					MemoryKibibytes: 1024 * 1024 * 1, // Minimum recommended memory
+					MemoryKibibytes: 1024 * 1024 * 1, // Minimum recommended memory (1GiB)
 					NumIterations:   1,
-					NumThreads:      8, // Default recommendation for Backend Server is 8 threads
+					NumThreads:      8, // Default recommendation for a backend server is 8 threads
 				},
 			},
 			DefaultAdmin: DefaultAdminConfiguration{
@@ -77,13 +76,6 @@ func NewDefaultConfiguration() (Configuration, error) {
 				LastName:      "User",
 				ExpireNow:     true,
 			},
-			CollectorsBasePath:   "/etc/bloodhound/collectors/",
-			DatapipeInterval:     60,
-			EnableAPILogging:     true,
-			DisableAnalysis:      false,
-			DisableCypherQC:      false,
-			DisableMigrations:    false,
-			TraversalMemoryLimit: 1,
 		}, nil
 	}
 }
