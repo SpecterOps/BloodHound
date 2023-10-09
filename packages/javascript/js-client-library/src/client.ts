@@ -407,21 +407,25 @@ class BHEAPIClient {
         limit: number,
         filterAccepted?: boolean,
         options?: types.RequestOptions
-    ) =>
-        this.baseClient.get(
+    ) => {
+        const params: types.RiskDetailsRequest = {
+            finding: finding,
+            skip: skip,
+            limit: limit,
+        };
+
+        if (typeof filterAccepted === 'boolean') params.Accepted = `eq:${filterAccepted}`;
+
+        return this.baseClient.get(
             `/api/v2/domains/${domainId}/details`,
             Object.assign(
                 {
-                    params: {
-                        finding,
-                        skip,
-                        limit,
-                        Accepted: `eq:${filterAccepted ? filterAccepted : false}`,
-                    },
+                    params: params,
                 },
                 options
             )
         );
+    };
 
     getRiskSparklineValues = (
         domainId: string,

@@ -148,6 +148,13 @@ export type PostureRequest = {
     sort_by?: string;
 };
 
+export type RiskDetailsRequest = {
+    finding: string;
+    skip: number;
+    limit: number;
+    Accepted?: string;
+};
+
 export type GraphNode = {
     label: string;
     kind: string;
