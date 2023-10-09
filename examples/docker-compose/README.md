@@ -1,9 +1,10 @@
 # BloodHound Community Edition Docker Compose Example
 
 BloodHound Community Edition is composed of three distinct parts:
-- A PostgreSQL database used for application state storage
-- A Neo4J graph database used for storing all the graph data
-- A single binary containing the BloodHound API server and the UI assets
+
+-   A PostgreSQL database used for application state storage
+-   A Neo4J graph database used for storing all the graph data
+-   A single binary containing the BloodHound API server and the UI assets
 
 While these can all be built and run locally, we provide an official Docker image for running the BloodHound binary.
 The databases need to be provided separately to provide more modular options for users. As such, this example folder
@@ -13,10 +14,11 @@ a single command.
 ## Prerequisites
 
 Using this `docker-compose` configuration requires:
-- A Docker compatible container runtime. Either [Docker](https://www.docker.com/) or
-[Podman (with Docker compatibility enabled)](https://www.redhat.com/sysadmin/podman-docker-compose) will work great
-- [Docker Compose](https://docs.docker.com/compose/install/), which is automatically included with Docker Desktop if you\
-choose to go that route
+
+-   A Docker compatible container runtime. Either [Docker](https://www.docker.com/) or
+    [Podman (with Docker compatibility enabled)](https://www.redhat.com/sysadmin/podman-docker-compose) will work great
+-   [Docker Compose](https://docs.docker.com/compose/install/), which is automatically included with Docker Desktop if you\
+    choose to go that route
 
 ## Running BloodHound Community Edition
 
@@ -25,20 +27,21 @@ simply copy the `docker-compose.yml` file from this directory to a location on d
 run `docker compose up` from that directory to start the application. To stop the application, simply run `docker compose down`.
 
 The default ports are as follows:
-- 8080 - BloodHound Web Port. You'll access the UI by going to `http://localhost:8080/ui/login` when the server is running
-- 7474 - Neo4J Web Interface. Useful for when you need to run queries directly against the Neo4J database
-- 7687 - Neo4J Database Port. This is provided in case you want to access the Neo4J database from some other application on your machine
+
+-   8080 - BloodHound Web Port. You'll access the UI by going to `http://localhost:8080/ui/login` when the server is running
+-   7474 - Neo4J Web Interface. Useful for when you need to run queries directly against the Neo4J database
+-   7687 - Neo4J Database Port. This is provided in case you want to access the Neo4J database from some other application on your machine
 
 ## Configuring BloodHound Community Edition
 
 There are additional files included in this directory to help you configure the application to your needs (such as modifying
 what ports different services run on and what credentials should be used):
 
-- `bloodhound.config.json`: Configuration file used by the BloodHound API server. This example is a direct copy of the one included
-in the official `bloodhound` docker image to be used as a starting point for modifying the configuration. If you want to change
-database credentials, you'll need to update them here as well so `bloodhound` will know how to connect to them.
-- `.env.example`: Copying this file to `.env` in the same directory as your `docker-compose.yml` will allow you to change
-the environment variables easily. Changes to database credentials here will need to be reflected in the `bloodhound.config.json`.
+-   `bloodhound.config.json`: Configuration file used by the BloodHound API server. This example is a direct copy of the one included
+    in the official `bloodhound` docker image to be used as a starting point for modifying the configuration. If you want to change
+    database credentials, you'll need to update them here as well so `bloodhound` will know how to connect to them.
+-   `.env.example`: Copying this file to `.env` in the same directory as your `docker-compose.yml` will allow you to change
+    the environment variables easily. Changes to database credentials here will need to be reflected in the `bloodhound.config.json`.
 
 Changing database credentials isn't necessary when running locally, but it is encouraged. It is _highly recommended_ that
 if you're going to make any of these ports available outside of localhost that you change the credentials to something secure.
@@ -56,15 +59,20 @@ require it. Afterward, you'll be greeted with the BloodHound Community Edition i
 ## Choosing a BloodHound Version
 
 BloodHound docker images are tagged for each release:
-- `latest` will give you the most recent stable release
-- `X` (e.g. `5`) will give you the latest stable release for that major version
-- `X.X` (e.g. `5.0`) will give you the latest stable release for that minor version
-- `X.X.X` (e.g. `5.0.0`) will give you the release for that specific patch version
-- `X.X.X-rcX` (e.g. `5.0.0-rc1`) will give you a specific release candidate for an upcoming release
-- `edge` will give you the most recent main commit (not guaranteed to be stable)
+
+-   `latest` will give you the most recent stable release
+-   `X` (e.g. `5`) will give you the latest stable release for that major version
+-   `X.X` (e.g. `5.0`) will give you the latest stable release for that minor version
+-   `X.X.X` (e.g. `5.0.0`) will give you the release for that specific patch version
+-   `X.X.X-rcX` (e.g. `5.0.0-rc1`) will give you a specific release candidate for an upcoming release
+-   `edge` will give you the most recent main commit (not guaranteed to be stable)
 
 You can either modify your `docker-compose.yml` configuration to change tags, or if using the example, you can change tags
 in your `.env` file under `BLOODHOUND_TAG`.
+
+## Configuration with Environment Variables
+
+See the [wiki](https://github.com/SpecterOps/BloodHound/wiki/Using-Environment-Variables-For-Sensitive-Configuration) for more information on using environment variables for sensitive configuration options.
 
 ## FAQ
 
@@ -73,8 +81,8 @@ in your `.env` file under `BLOODHOUND_TAG`.
 A: You'll need to find the full name of your Neo4J volume and then run `docker rm <volume-name>`. The following command examples
 will help do it all in one step:
 
-* For Bash compatible shells: `docker volume rm $(docker volume ls -q | grep neo4j-data)`
-* For PowerShell: `docker volume rm @(docker volume ls -q | Select-String neo4j-data)`
+-   For Bash compatible shells: `docker volume rm $(docker volume ls -q | grep neo4j-data)`
+-   For PowerShell: `docker volume rm @(docker volume ls -q | Select-String neo4j-data)`
 
 ### Q: "One of the ports used by default conflicts with a port running on my computer. How can I change it?"
 
@@ -86,12 +94,13 @@ it there before restarting the docker compose services.
 A: The Neo4j Docker image reads configuration parameters as environment variables with the prefix `NEO4J_`. A handy conversion
 table for Neo4j parameters to environment variables can be found here: https://neo4j.com/docs/operations-manual/4.4/docker/ref-settings/.
 These environment variables can be added to the `docker-compose.yml` file in this example directory under the `graph-db`
-service as additional list items for the `environment` parameter (follow the way the NEO4J auth is passed in for an example)  
+service as additional list items for the `environment` parameter (follow the way the NEO4J auth is passed in for an example)
 
 ### Q: "How can I access the databases directly (especially Neo4j's browser)?"
 
 A: Port forwarding is commented out by default for the databases due to a default password being used. If you change your
 database passwords, you can easily uncomment the lines in `docker-compose.yml` to provide port forwarded access.
+
 ### Q: "Can I run these services in the background?"
 
 A: Absolutely, simply run `docker compose up -d` to start the services up in the background. To access the logs, you can
