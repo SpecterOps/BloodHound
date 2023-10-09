@@ -37,7 +37,7 @@ var (
 	LocalUser                       = graph.StringKind("ADLocalUser")
 	AIACA                           = graph.StringKind("AIACA")
 	RootCA                          = graph.StringKind("RootCA")
-	EnterpriseCA               = graph.StringKind("EnterpriseCA")
+	EnterpriseCA                    = graph.StringKind("EnterpriseCA")
 	NTAuthStore                     = graph.StringKind("NTAuthStore")
 	CertTemplate                    = graph.StringKind("CertTemplate")
 	Owns                            = graph.StringKind("Owns")
@@ -84,6 +84,7 @@ var (
 	DelegatedEnrollmentAgent        = graph.StringKind("DelegatedEnrollmentAgent")
 	Enroll                          = graph.StringKind("Enroll")
 	HostsCAService                  = graph.StringKind("HostsCAService")
+	GoldenCert                      = graph.StringKind("GoldenCert")
 	WritePKIEnrollmentFlag          = graph.StringKind("WritePKIEnrollmentFlag")
 	WritePKINameFlag                = graph.StringKind("WritePKINameFlag")
 )
@@ -91,42 +92,68 @@ var (
 type Property string
 
 const (
-	AdminCount              Property = "admincount"
-	DistinguishedName       Property = "distinguishedname"
-	DomainFQDN              Property = "domain"
-	DomainSID               Property = "domainsid"
-	Sensitive               Property = "sensitive"
-	HighValue               Property = "highvalue"
-	BlocksInheritance       Property = "blocksinheritance"
-	IsACL                   Property = "isacl"
-	IsACLProtected          Property = "isaclprotected"
-	Enforced                Property = "enforced"
-	Department              Property = "department"
-	HasSPN                  Property = "hasspn"
-	UnconstrainedDelegation Property = "unconstraineddelegation"
-	LastLogon               Property = "lastlogon"
-	LastLogonTimestamp      Property = "lastlogontimestamp"
-	IsPrimaryGroup          Property = "isprimarygroup"
-	HasLAPS                 Property = "haslaps"
-	DontRequirePreAuth      Property = "dontreqpreauth"
-	LogonType               Property = "logontype"
-	HasURA                  Property = "hasura"
-	PasswordNeverExpires    Property = "pwdneverexpires"
-	PasswordNotRequired     Property = "passwordnotreqd"
-	FunctionalLevel         Property = "functionallevel"
-	TrustType               Property = "trusttype"
-	SidFiltering            Property = "sidfiltering"
-	TrustedToAuth           Property = "trustedtoauth"
-	SamAccountName          Property = "samaccountname"
+	AdminCount                           Property = "admincount"
+	CASecurityCollected                  Property = "casecuritycollected"
+	CAName                               Property = "caname"
+	CertChain                            Property = "certchain"
+	CertName                             Property = "certname"
+	CertThumbprint                       Property = "certthumbprint"
+	EnrollmentAgentRestrictionsCollected Property = "enrollmentagentrestrictionscollected"
+	IsUserSpecifiesSanEnabledCollected   Property = "isuserspecifiessanenabledcollected"
+	CrossCertificatePair                 Property = "crosscertificatepair"
+	DistinguishedName                    Property = "distinguishedname"
+	DomainFQDN                           Property = "domain"
+	DomainSID                            Property = "domainsid"
+	Sensitive                            Property = "sensitive"
+	HighValue                            Property = "highvalue"
+	BlocksInheritance                    Property = "blocksinheritance"
+	IsACL                                Property = "isacl"
+	IsACLProtected                       Property = "isaclprotected"
+	IsDeleted                            Property = "isdeleted"
+	Enforced                             Property = "enforced"
+	Department                           Property = "department"
+	HasCrossCertificatePair              Property = "hascrosscertificatepair"
+	HasSPN                               Property = "hasspn"
+	UnconstrainedDelegation              Property = "unconstraineddelegation"
+	LastLogon                            Property = "lastlogon"
+	LastLogonTimestamp                   Property = "lastlogontimestamp"
+	IsPrimaryGroup                       Property = "isprimarygroup"
+	HasLAPS                              Property = "haslaps"
+	DontRequirePreAuth                   Property = "dontreqpreauth"
+	LogonType                            Property = "logontype"
+	HasURA                               Property = "hasura"
+	PasswordNeverExpires                 Property = "pwdneverexpires"
+	PasswordNotRequired                  Property = "passwordnotreqd"
+	FunctionalLevel                      Property = "functionallevel"
+	TrustType                            Property = "trusttype"
+	SidFiltering                         Property = "sidfiltering"
+	TrustedToAuth                        Property = "trustedtoauth"
+	SamAccountName                       Property = "samaccountname"
 )
 
 func AllProperties() []Property {
-	return []Property{AdminCount, DistinguishedName, DomainFQDN, DomainSID, Sensitive, HighValue, BlocksInheritance, IsACL, IsACLProtected, Enforced, Department, HasSPN, UnconstrainedDelegation, LastLogon, LastLogonTimestamp, IsPrimaryGroup, HasLAPS, DontRequirePreAuth, LogonType, HasURA, PasswordNeverExpires, PasswordNotRequired, FunctionalLevel, TrustType, SidFiltering, TrustedToAuth, SamAccountName}
+	return []Property{AdminCount, CASecurityCollected, CAName, CertChain, CertName, CertThumbprint, EnrollmentAgentRestrictionsCollected, IsUserSpecifiesSanEnabledCollected, CrossCertificatePair, DistinguishedName, DomainFQDN, DomainSID, Sensitive, HighValue, BlocksInheritance, IsACL, IsACLProtected, IsDeleted, Enforced, Department, HasCrossCertificatePair, HasSPN, UnconstrainedDelegation, LastLogon, LastLogonTimestamp, IsPrimaryGroup, HasLAPS, DontRequirePreAuth, LogonType, HasURA, PasswordNeverExpires, PasswordNotRequired, FunctionalLevel, TrustType, SidFiltering, TrustedToAuth, SamAccountName}
 }
 func ParseProperty(source string) (Property, error) {
 	switch source {
 	case "admincount":
 		return AdminCount, nil
+	case "casecuritycollected":
+		return CASecurityCollected, nil
+	case "caname":
+		return CAName, nil
+	case "certchain":
+		return CertChain, nil
+	case "certname":
+		return CertName, nil
+	case "certthumbprint":
+		return CertThumbprint, nil
+	case "enrollmentagentrestrictionscollected":
+		return EnrollmentAgentRestrictionsCollected, nil
+	case "isuserspecifiessanenabledcollected":
+		return IsUserSpecifiesSanEnabledCollected, nil
+	case "crosscertificatepair":
+		return CrossCertificatePair, nil
 	case "distinguishedname":
 		return DistinguishedName, nil
 	case "domain":
@@ -143,10 +170,14 @@ func ParseProperty(source string) (Property, error) {
 		return IsACL, nil
 	case "isaclprotected":
 		return IsACLProtected, nil
+	case "isdeleted":
+		return IsDeleted, nil
 	case "enforced":
 		return Enforced, nil
 	case "department":
 		return Department, nil
+	case "hascrosscertificatepair":
+		return HasCrossCertificatePair, nil
 	case "hasspn":
 		return HasSPN, nil
 	case "unconstraineddelegation":
@@ -187,6 +218,22 @@ func (s Property) String() string {
 	switch s {
 	case AdminCount:
 		return string(AdminCount)
+	case CASecurityCollected:
+		return string(CASecurityCollected)
+	case CAName:
+		return string(CAName)
+	case CertChain:
+		return string(CertChain)
+	case CertName:
+		return string(CertName)
+	case CertThumbprint:
+		return string(CertThumbprint)
+	case EnrollmentAgentRestrictionsCollected:
+		return string(EnrollmentAgentRestrictionsCollected)
+	case IsUserSpecifiesSanEnabledCollected:
+		return string(IsUserSpecifiesSanEnabledCollected)
+	case CrossCertificatePair:
+		return string(CrossCertificatePair)
 	case DistinguishedName:
 		return string(DistinguishedName)
 	case DomainFQDN:
@@ -203,10 +250,14 @@ func (s Property) String() string {
 		return string(IsACL)
 	case IsACLProtected:
 		return string(IsACLProtected)
+	case IsDeleted:
+		return string(IsDeleted)
 	case Enforced:
 		return string(Enforced)
 	case Department:
 		return string(Department)
+	case HasCrossCertificatePair:
+		return string(HasCrossCertificatePair)
 	case HasSPN:
 		return string(HasSPN)
 	case UnconstrainedDelegation:
@@ -247,6 +298,22 @@ func (s Property) Name() string {
 	switch s {
 	case AdminCount:
 		return "Admin Count"
+	case CASecurityCollected:
+		return "CA Security Collected"
+	case CAName:
+		return "CA Name"
+	case CertChain:
+		return "Certificate Chain"
+	case CertName:
+		return "Certificate Name"
+	case CertThumbprint:
+		return "Certificate Thumbprint"
+	case EnrollmentAgentRestrictionsCollected:
+		return "Enrollment Agent Restrictions Collected"
+	case IsUserSpecifiesSanEnabledCollected:
+		return "Is User Specifies San Enabled Collected"
+	case CrossCertificatePair:
+		return "Cross Certificate Pair"
 	case DistinguishedName:
 		return "Distinguished Name"
 	case DomainFQDN:
@@ -263,10 +330,14 @@ func (s Property) Name() string {
 		return "Is ACL"
 	case IsACLProtected:
 		return "ACL Inheritance Denied"
+	case IsDeleted:
+		return "Is Deleted"
 	case Enforced:
 		return "Enforced"
 	case Department:
 		return "Department"
+	case HasCrossCertificatePair:
+		return "Has Cross Certificate Pair"
 	case HasSPN:
 		return "Has SPN"
 	case UnconstrainedDelegation:
@@ -315,7 +386,7 @@ func Nodes() []graph.Kind {
 	return []graph.Kind{Entity, User, Computer, Group, GPO, OU, Container, Domain, LocalGroup, LocalUser, AIACA, RootCA, EnterpriseCA, NTAuthStore, CertTemplate}
 }
 func Relationships() []graph.Kind {
-	return []graph.Kind{Owns, GenericAll, GenericWrite, WriteOwner, WriteDACL, MemberOf, ForceChangePassword, AllExtendedRights, AddMember, HasSession, Contains, GPLink, AllowedToDelegate, GetChanges, GetChangesAll, GetChangesInFilteredSet, TrustedBy, AllowedToAct, AdminTo, CanPSRemote, CanRDP, ExecuteDCOM, HasSIDHistory, AddSelf, DCSync, ReadLAPSPassword, ReadGMSAPassword, DumpSMSAPassword, SQLAdmin, AddAllowedToAct, WriteSPN, AddKeyCredentialLink, LocalToComputer, MemberOfLocalGroup, RemoteInteractiveLogonPrivilege, SyncLAPSPassword, WriteAccountRestrictions, RootCAFor, PublishedTo, ManageCertificates, ManageCA, DelegatedEnrollmentAgent, Enroll, HostsCAService, WritePKIEnrollmentFlag, WritePKINameFlag}
+	return []graph.Kind{Owns, GenericAll, GenericWrite, WriteOwner, WriteDACL, MemberOf, ForceChangePassword, AllExtendedRights, AddMember, HasSession, Contains, GPLink, AllowedToDelegate, GetChanges, GetChangesAll, GetChangesInFilteredSet, TrustedBy, AllowedToAct, AdminTo, CanPSRemote, CanRDP, ExecuteDCOM, HasSIDHistory, AddSelf, DCSync, ReadLAPSPassword, ReadGMSAPassword, DumpSMSAPassword, SQLAdmin, AddAllowedToAct, WriteSPN, AddKeyCredentialLink, LocalToComputer, MemberOfLocalGroup, RemoteInteractiveLogonPrivilege, SyncLAPSPassword, WriteAccountRestrictions, RootCAFor, PublishedTo, ManageCertificates, ManageCA, DelegatedEnrollmentAgent, Enroll, HostsCAService, GoldenCert, WritePKIEnrollmentFlag, WritePKINameFlag}
 }
 func ACLRelationships() []graph.Kind {
 	return []graph.Kind{AllExtendedRights, ForceChangePassword, AddMember, AddAllowedToAct, GenericAll, WriteDACL, WriteOwner, GenericWrite, ReadLAPSPassword, ReadGMSAPassword, Owns, AddSelf, WriteSPN, AddKeyCredentialLink, GetChanges, GetChangesAll, GetChangesInFilteredSet, WriteAccountRestrictions, SyncLAPSPassword, DCSync, ManageCertificates, ManageCA, Enroll, WritePKIEnrollmentFlag, WritePKINameFlag}

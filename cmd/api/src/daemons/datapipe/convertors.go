@@ -185,6 +185,10 @@ func convertAIACAData(data []ein.AIACA) ConvertedData {
 	converted := ConvertedData{}
 
 	for _, aiaca := range data {
+		if crosscertificatepair, ok := aiaca.Properties[ad.CrossCertificatePair.String()].(map[string]string); ok {
+			aiaca.Properties[ad.HasCrossCertificatePair.String()] = len(crosscertificatepair) > 0
+		}
+
 		converted.NodeProps = append(converted.NodeProps, ein.ConvertObjectToNode(ein.IngestBase(aiaca), ad.AIACA))
 		converted.RelProps = append(converted.RelProps, ein.ParseACEData(aiaca.Aces, aiaca.ObjectIdentifier, ad.AIACA)...)
 	}
@@ -208,8 +212,12 @@ func convertEnterpriseCAData(data []ein.EnterpriseCA) ConvertedData {
 	converted := ConvertedData{}
 
 	for _, enterpriseca := range data {
+
+		enterpriseca.Properties[ad.CASecurityCollected.String()] = enterpriseca.CASecurity.Collected
+		enterpriseca.Properties[ad.EnrollmentAgentRestrictionsCollected.String()] = enterpriseca.EnrollmentAgentRestrictions.Collected
+		enterpriseca.Properties[ad.IsUserSpecifiesSanEnabledCollected.String()] = enterpriseca.IsUserSpecifiesSanEnabled.Collected
+
 		converted.NodeProps = append(converted.NodeProps, ein.ConvertObjectToNode(enterpriseca.IngestBase, ad.EnterpriseCA))
-		converted.RelProps = append(converted.RelProps, ein.ParseACEData(enterpriseca.Aces, enterpriseca.ObjectIdentifier, ad.EnterpriseCA)...)
 		converted.RelProps = append(converted.RelProps, ein.ParseEnterpriseCAMiscData(enterpriseca)...)
 	}
 

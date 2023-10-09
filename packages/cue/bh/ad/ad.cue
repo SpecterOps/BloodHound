@@ -26,6 +26,56 @@ ACLRelationships: [...types.#Kind]
 PathfindingRelationships: [...types.#Kind]
 
 // Property name enumerations
+
+CertChain: types.#Kind & {
+	symbol: 		"CertChain"
+	schema: 		"ad"
+	name:           "Certificate Chain"
+	representation: "certchain"
+}
+
+CertName: types.#Kind & {
+	symbol: 		"CertName"
+	schema: 		"ad"
+	name:           "Certificate Name"
+	representation: "certname"
+}
+
+CertThumbprint: types.#Kind & {
+	symbol: 		"CertThumbprint"
+	schema: 		"ad"
+	name:           "Certificate Thumbprint"
+	representation: "certthumbprint"
+}
+
+CAName: types.#Kind & {
+	symbol: 		"CAName"
+	schema: 		"ad"
+	name:           "CA Name"
+	representation: "caname"
+}
+
+CASecurityCollected: types.#Kind & {
+	symbol: 		"CASecurityCollected"
+	schema: 		"ad"
+	name:           "CA Security Collected"
+	representation: "casecuritycollected"
+}
+
+EnrollmentAgentRestrictionsCollected: types.#Kind & {
+	symbol: 		"EnrollmentAgentRestrictionsCollected"
+	schema: 		"ad"
+	name:           "Enrollment Agent Restrictions Collected"
+	representation: "enrollmentagentrestrictionscollected"
+}
+
+IsUserSpecifiesSanEnabledCollected: types.#Kind & {
+	symbol: 		"IsUserSpecifiesSanEnabledCollected"
+	schema: 		"ad"
+	name:           "Is User Specifies San Enabled Collected"
+	representation: "isuserspecifiessanenabledcollected"
+}
+
 DistinguishedName: types.#StringEnum & {
 	symbol:         "DistinguishedName"
 	schema:         "ad"
@@ -82,6 +132,13 @@ IsACLProtected: types.#StringEnum & {
 	representation: "isaclprotected"
 }
 
+IsDeleted: types.#StringEnum & {
+	symbol:         "IsDeleted"
+	schema:         "ad"
+	name:           "Is Deleted"
+	representation: "isdeleted"
+}
+
 Enforced: types.#StringEnum & {
 	symbol:         "Enforced"
 	schema:         "ad"
@@ -101,6 +158,13 @@ Department: types.#StringEnum & {
 	schema:         "ad"
 	name:           "Department"
 	representation: "department"
+}
+
+HasCrossCertificatePair: types.#StringEnum & {
+	symbol:         "HasCrossCertificatePair"
+	schema:         "ad"
+	name:           "Has Cross Certificate Pair"
+	representation: "hascrosscertificatepair"
 }
 
 HasSPN: types.#StringEnum & {
@@ -215,8 +279,23 @@ SamAccountName: types.#StringEnum & {
 	representation: "samaccountname"
 }
 
+CrossCertificatePair: types.#StringEnum & {
+	symbol: "CrossCertificatePair"
+	schema: "ad"
+	name: "Cross Certificate Pair"
+	representation: "crosscertificatepair"
+}
+
 Properties: [
 	AdminCount,
+	CASecurityCollected,
+	CAName,
+	CertChain,
+	CertName,
+	CertThumbprint,
+	EnrollmentAgentRestrictionsCollected,
+	IsUserSpecifiesSanEnabledCollected,
+	CrossCertificatePair,
 	DistinguishedName,
 	DomainFQDN,
 	DomainSID,
@@ -225,8 +304,10 @@ Properties: [
 	BlocksInheritance,
 	IsACL,
 	IsACLProtected,
+	IsDeleted,
 	Enforced,
 	Department,
+	HasCrossCertificatePair,
 	HasSPN,
 	UnconstrainedDelegation,
 	LastLogon,
@@ -563,6 +644,11 @@ HostsCAService: types.#Kind & {
 	schema: "active_directory"
 }
 
+GoldenCert: types.#Kind & {
+	symbol: "GoldenCert"
+	schema: "active_directory"
+}
+
 WritePKIEnrollmentFlag: types.#Kind & {
 	symbol: "WritePKIEnrollmentFlag"
 	schema: "active_directory"
@@ -619,6 +705,7 @@ RelationshipKinds: [
 	DelegatedEnrollmentAgent,
 	Enroll,
 	HostsCAService,
+	GoldenCert,
 	WritePKIEnrollmentFlag,
 	WritePKINameFlag
 ]

@@ -98,12 +98,16 @@ type Certificate struct {
 }
 
 type EnrollmentAgentRestriction struct {
-	APIResult
 	AccessType   string
 	Agent        TypedPrincipal
 	AllTemplates bool
 	Targets      []TypedPrincipal
 	Template     TypedPrincipal
+}
+
+type EnrollmentAgentRestrictions struct {
+	APIResult
+	Restrictions []EnrollmentAgentRestriction
 }
 
 type CASecurity struct {
@@ -117,9 +121,9 @@ type IsUserSpecifiesSanEnabled struct {
 }
 
 type CARegistryData struct {
-	CASecurity                  CASecurity
-	EnrollmentAgentRestrictions []EnrollmentAgentRestriction
-	IsUserSpecifiesSanEnabled   IsUserSpecifiesSanEnabled
+	CASecurity
+	EnrollmentAgentRestrictions
+	IsUserSpecifiesSanEnabled
 }
 
 type GPO IngestBase

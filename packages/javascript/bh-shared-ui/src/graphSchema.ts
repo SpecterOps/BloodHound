@@ -112,6 +112,7 @@ export enum ActiveDirectoryRelationshipKind {
     DelegatedEnrollmentAgent = 'DelegatedEnrollmentAgent',
     Enroll = 'Enroll',
     HostsCAService = 'HostsCAService',
+    GoldenCert = 'GoldenCert',
     WritePKIEnrollmentFlag = 'WritePKIEnrollmentFlag',
     WritePKINameFlag = 'WritePKINameFlag',
 }
@@ -205,6 +206,8 @@ export function ActiveDirectoryRelationshipKindToDisplay(value: ActiveDirectoryR
             return 'Enroll';
         case ActiveDirectoryRelationshipKind.HostsCAService:
             return 'HostsCAService';
+        case ActiveDirectoryRelationshipKind.GoldenCert:
+            return 'GoldenCert';
         case ActiveDirectoryRelationshipKind.WritePKIEnrollmentFlag:
             return 'WritePKIEnrollmentFlag';
         case ActiveDirectoryRelationshipKind.WritePKINameFlag:
@@ -216,6 +219,14 @@ export function ActiveDirectoryRelationshipKindToDisplay(value: ActiveDirectoryR
 export type ActiveDirectoryKind = ActiveDirectoryNodeKind | ActiveDirectoryRelationshipKind;
 export enum ActiveDirectoryKindProperties {
     AdminCount = 'admincount',
+    CASecurityCollected = 'casecuritycollected',
+    CAName = 'caname',
+    CertChain = 'certchain',
+    CertName = 'certname',
+    CertThumbprint = 'certthumbprint',
+    EnrollmentAgentRestrictionsCollected = 'enrollmentagentrestrictionscollected',
+    IsUserSpecifiesSanEnabledCollected = 'isuserspecifiessanenabledcollected',
+    CrossCertificatePair = 'crosscertificatepair',
     DistinguishedName = 'distinguishedname',
     DomainFQDN = 'domain',
     DomainSID = 'domainsid',
@@ -224,8 +235,10 @@ export enum ActiveDirectoryKindProperties {
     BlocksInheritance = 'blocksinheritance',
     IsACL = 'isacl',
     IsACLProtected = 'isaclprotected',
+    IsDeleted = 'isdeleted',
     Enforced = 'enforced',
     Department = 'department',
+    HasCrossCertificatePair = 'hascrosscertificatepair',
     HasSPN = 'hasspn',
     UnconstrainedDelegation = 'unconstraineddelegation',
     LastLogon = 'lastlogon',
@@ -247,6 +260,22 @@ export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKin
     switch (value) {
         case ActiveDirectoryKindProperties.AdminCount:
             return 'Admin Count';
+        case ActiveDirectoryKindProperties.CASecurityCollected:
+            return 'CA Security Collected';
+        case ActiveDirectoryKindProperties.CAName:
+            return 'CA Name';
+        case ActiveDirectoryKindProperties.CertChain:
+            return 'Certificate Chain';
+        case ActiveDirectoryKindProperties.CertName:
+            return 'Certificate Name';
+        case ActiveDirectoryKindProperties.CertThumbprint:
+            return 'Certificate Thumbprint';
+        case ActiveDirectoryKindProperties.EnrollmentAgentRestrictionsCollected:
+            return 'Enrollment Agent Restrictions Collected';
+        case ActiveDirectoryKindProperties.IsUserSpecifiesSanEnabledCollected:
+            return 'Is User Specifies San Enabled Collected';
+        case ActiveDirectoryKindProperties.CrossCertificatePair:
+            return 'Cross Certificate Pair';
         case ActiveDirectoryKindProperties.DistinguishedName:
             return 'Distinguished Name';
         case ActiveDirectoryKindProperties.DomainFQDN:
@@ -263,10 +292,14 @@ export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKin
             return 'Is ACL';
         case ActiveDirectoryKindProperties.IsACLProtected:
             return 'ACL Inheritance Denied';
+        case ActiveDirectoryKindProperties.IsDeleted:
+            return 'Is Deleted';
         case ActiveDirectoryKindProperties.Enforced:
             return 'Enforced';
         case ActiveDirectoryKindProperties.Department:
             return 'Department';
+        case ActiveDirectoryKindProperties.HasCrossCertificatePair:
+            return 'Has Cross Certificate Pair';
         case ActiveDirectoryKindProperties.HasSPN:
             return 'Has SPN';
         case ActiveDirectoryKindProperties.UnconstrainedDelegation:
