@@ -58,7 +58,7 @@ const AssetGroupAutocomplete: FC<{
     }
 
     const handleInputChange = (_event: SyntheticEvent, value: string, reason: string): void => {
-        if (reason !== 'reset') return;
+        if (reason === 'reset') return;
         setSearchInput(value);
     }
 

@@ -65,7 +65,7 @@ const SetManagement = () => {
                 <Grid item xs={3} md={3}>
                     <Box component={Paper} elevation={0} marginBottom={1}>
                         <Grid container>
-                            <Grid item xs={3} display={"flex"} alignItems={"center"} paddingLeft={3}>
+                            <Grid item xs={3} display={"flex"} alignItems={"center"} paddingLeft={1}>
                                 <Typography variant="button">Set:</Typography>
                             </Grid>
                             <Grid item xs={9}>
@@ -78,7 +78,7 @@ const SetManagement = () => {
                                     onChange={handleAssetGroupSelectorChange}
                                 />
                             </Grid>
-                            <Grid item xs={3} display={"flex"} alignItems={"center"} paddingLeft={3}>
+                            <Grid item xs={3} display={"flex"} alignItems={"center"} paddingLeft={1}>
                                 <Typography variant="button">Tenant:</Typography>
                             </Grid>
                             <Grid item xs={9}>
@@ -90,7 +90,7 @@ const SetManagement = () => {
                             </Grid>
                         </Grid>
                     </Box>
-                    <AssetGroupEdit assetGroupId={''} domainId={''} members={[]} />
+                    <AssetGroupEdit assetGroupId={1} members={assetGroupMembers} />
                 </Grid>
                 <Grid height={"100%"} item xs={5} md={6}>
                     <AssetGroupMemberList 
