@@ -134,6 +134,7 @@ func convertOUData(data []ein.OU) ConvertedData {
 	converted := ConvertedData{}
 	for _, ou := range data {
 		converted.NodeProps = append(converted.NodeProps, ein.ConvertObjectToNode(ou.IngestBase, ad.OU))
+		converted.NodeProps = append(converted.NodeProps, ein.ParseOUMiscData(ou)...)
 		converted.RelProps = append(converted.RelProps, ein.ParseACEData(ou.Aces, ou.ObjectIdentifier, ad.OU)...)
 		if container := ein.ParseObjectContainer(ou.IngestBase, ad.OU); container.IsValid() {
 			converted.RelProps = append(converted.RelProps, container)

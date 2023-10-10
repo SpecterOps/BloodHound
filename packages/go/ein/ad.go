@@ -18,6 +18,7 @@ package ein
 
 import (
 	"strings"
+	"fmt"
 
 	"github.com/specterops/bloodhound/analysis"
 	"github.com/specterops/bloodhound/dawgs/graph"
@@ -253,6 +254,73 @@ func ParseDomainTrusts(domain Domain) ParsedDomainTrustData {
 	}
 
 	return parsedData
+}
+
+// ParseOUMiscData parses GPOChanges data and manages prioritizationof the policies
+func ParseOUMiscData(ou OU) []IngestibleNode {
+	ingestibleNodes := make([]IngestibleNode, 0)
+	for _, computer := range ou.GPOChanges.AffectedComputers {
+		props := make(map[string]any, 0)
+
+		for _, target := range ou.GPOChanges.LocalAdmins {
+			props["localadmins"] = target.ObjectIdentifier
+		}
+		for _, target := range ou.GPOChanges.RemoteDesktopUsers {
+			props["remotedesktopusers"] = target.ObjectIdentifier
+		}
+		for _, target := range ou.GPOChanges.DcomUsers {
+			props["dcomusers"] = target.ObjectIdentifier
+		}
+		for _, target := range ou.GPOChanges.PSRemoteUsers {
+			props["psremoteusers"] = target.ObjectIdentifier
+		}
+
+		// Password policies
+		for unenforcedPasswordPolicyKey, unenforcedPasswordPolicyValue := range ou.GPOChanges.Unenforced.PasswordPolicies {
+			props[unenforcedPasswordPolicyKey] = unenforcedPasswordPolicyValue
+		}
+		for enforcedPasswordPolicyKey, enforcedPasswordPolicyValue := range ou.GPOChanges.Enforced.PasswordPolicies {
+			props[enforcedPasswordPolicyKey] = enforcedPasswordPolicyValue
+		}
+		// Lockout policies
+		for unenforcedLockoutPolicyKey, unenforcedLockoutPolicyValue := range ou.GPOChanges.Unenforced.LockoutPolicies {
+			props[unenforcedLockoutPolicyKey] = unenforcedLockoutPolicyValue
+		}
+		for enforcedLockoutPolicyKey, enforcedLockoutPolicyValue := range ou.GPOChanges.Enforced.LockoutPolicies {
+			props[enforcedLockoutPolicyKey] = enforcedLockoutPolicyValue
+		}
+		// SMB signings
+		for unenforcedSMBSigningKey, unenforcedSMBSigningValue := range ou.GPOChanges.Unenforced.SMBSigning {
+			props[unenforcedSMBSigningKey] = unenforcedSMBSigningValue
+		}
+		for enforcedSMBSigningKey, enforcedSMBSigningValue := range ou.GPOChanges.Enforced.SMBSigning {
+			props[enforcedSMBSigningKey] = enforcedSMBSigningValue
+		}
+		// LDAP signings
+		for unenforcedLDAPSigningKey, unenforcedLDAPSigningValue := range ou.GPOChanges.Unenforced.LDAPSigning {
+			props[unenforcedLDAPSigningKey] = unenforcedLDAPSigningValue
+		}
+		for enforcedLDAPSigningKey, enforcedLDAPSigningValue := range ou.GPOChanges.Enforced.LDAPSigning {
+			props[enforcedLDAPSigningKey] = enforcedLDAPSigningValue
+		}
+		// LM authentication level
+		for unenforcedLMAuthenticationLevelKey, unenforcedLMAuthenticationLevelValue := range ou.GPOChanges.Unenforced.LMAuthenticationLevel {
+			props[unenforcedLMAuthenticationLevelKey] = unenforcedLMAuthenticationLevelValue
+		}
+		for enforcedLMAuthenticationLevelKey, enforcedLMAuthenticationLevelValue := range ou.GPOChanges.Enforced.LMAuthenticationLevel {
+			props[enforcedLMAuthenticationLevelKey] = enforcedLMAuthenticationLevelValue
+		}
+
+		fmt.Print(props)
+
+		ingestibleNodes = append(ingestibleNodes, IngestibleNode{
+			PropertyMap: props,
+            ObjectID:    computer.ObjectIdentifier,
+            Label:       ad.Computer,
+		})
+	}
+
+	return ingestibleNodes
 }
 
 // ParseComputerMiscData parses AllowedToDelegate, AllowedToAct, HasSIDHistory,DumpSMSAPassword and Sessions
