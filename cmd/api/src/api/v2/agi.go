@@ -416,18 +416,18 @@ func parseAGMembersFromNodes(nodes graph.NodeSet, selectors model.AssetGroupSele
 			memberName     string
 		)
 
-		if objectId, ok := node.Properties.Map[common.ObjectID.String()].(string); ok {
-			memberObjectId = objectId
-		} else {
+		if objectId, ok := node.Properties.Map[common.ObjectID.String()].(string); !ok {
 			log.Warnf("objectid is missing for node %d", node.ID)
 			memberObjectId = ""
+		} else {
+			memberObjectId = objectId
 		}
 
 		if name, ok := node.Properties.Map[common.Name.String()].(string); !ok {
-			memberName = name
-		} else {
 			log.Warnf("name is missing for node %d", node.ID)
 			memberName = ""
+		} else {
+			memberName = name
 		}
 
 		agMember := api.AssetGroupMember{
