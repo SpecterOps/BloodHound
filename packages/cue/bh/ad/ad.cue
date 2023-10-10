@@ -76,6 +76,27 @@ IsUserSpecifiesSanEnabledCollected: types.#Kind & {
 	representation: "isuserspecifiessanenabledcollected"
 }
 
+HasBasicConstraints: types.#Kind & {
+	symbol: 		"HasBasicConstraints"
+	schema: 		"ad"
+	name:           "Has Basic Constraints"
+	representation: "hasbasicconstraints"
+}
+
+BasicConstraintPathLength: types.#Kind & {
+	symbol: 		"BasicConstraintPathLength"
+	schema: 		"ad"
+	name:           "Basic Constraint Path Length"
+	representation: "basicconstraintpathlength"
+}
+
+DNSHostname: types.#Kind & {
+	symbol: 		"DNSHostname"
+	schema: 		"ad"
+	name:           "DNS Hostname"
+	representation: "dnshostname"
+}
+
 DistinguishedName: types.#StringEnum & {
 	symbol:         "DistinguishedName"
 	schema:         "ad"
@@ -295,6 +316,9 @@ Properties: [
 	CertThumbprint,
 	EnrollmentAgentRestrictionsCollected,
 	IsUserSpecifiesSanEnabledCollected,
+	HasBasicConstraints,
+	BasicConstraintPathLength,
+	DNSHostname,
 	CrossCertificatePair,
 	DistinguishedName,
 	DomainFQDN,
@@ -644,11 +668,6 @@ HostsCAService: types.#Kind & {
 	schema: "active_directory"
 }
 
-GoldenCert: types.#Kind & {
-	symbol: "GoldenCert"
-	schema: "active_directory"
-}
-
 WritePKIEnrollmentFlag: types.#Kind & {
 	symbol: "WritePKIEnrollmentFlag"
 	schema: "active_directory"
@@ -658,6 +677,91 @@ WritePKINameFlag: types.#Kind & {
 	symbol: "WritePKINameFlag"
 	schema: "active_directory"
 }
+
+NTAuthStoreFor: types.#Kind & {
+	symbol: "NTAuthStoreFor"
+	schema: "active_directory"
+}
+
+TrustedForNTAuth: types.#Kind & {
+	symbol: "TrustedForNTAuth"
+	schema: "active_directory"
+}
+
+EnterpriseCAFor: types.#Kind & {
+	symbol: "EnterpriseCAFor"
+	schema: "active_directory"
+}
+
+IssuedSignedBy: types.#Kind & {
+	symbol: "IssuedSignedBy"
+	schema: "active_directory"
+}
+
+GoldenCert: types.#Kind & {
+	symbol: "GoldenCert"
+	schema: "active_directory"
+}
+
+EnrollOnBehalfOF: types.#Kind & {
+	symbol: "EnrollOnBehalfOF"
+	schema: "active_directory"
+}
+
+ADCSESC1: types.#Kind & {
+	symbol: "ADCSESC1"
+	schema: "active_directory"
+}
+
+ADCSESC2: types.#Kind & {
+	symbol: "ADCSESC2"
+	schema: "active_directory"
+}
+
+ADCSESC3: types.#Kind & {
+	symbol: "ADCSESC3"
+	schema: "active_directory"
+}
+
+ADCSESC4: types.#Kind & {
+	symbol: "ADCSESC4"
+	schema: "active_directory"
+}
+
+ADCSESC5: types.#Kind & {
+	symbol: "ADCSESC5"
+	schema: "active_directory"
+}
+
+ADCSESC6: types.#Kind & {
+	symbol: "ADCSESC6"
+	schema: "active_directory"
+}
+
+ADCSESC7: types.#Kind & {
+	symbol: "ADCSESC7"
+	schema: "active_directory"
+}
+
+// ADCSESC8: types.#Kind & {
+// 	symbol: "ADCSESC8"
+// 	schema: "active_directory"
+// }
+
+// ADCSESC9: types.#Kind & {
+// 	symbol: "ADCSESC9"
+// 	schema: "active_directory"
+// }
+
+// ADCSESC10: types.#Kind & {
+// 	symbol: "ADCSESC10"
+// 	schema: "active_directory"
+// }
+
+// ADCSESC11: types.#Kind & {
+// 	symbol: "ADCSESC11"
+// 	schema: "active_directory"
+// }
 
 // Relationship Kinds
 RelationshipKinds: [
@@ -705,9 +809,21 @@ RelationshipKinds: [
 	DelegatedEnrollmentAgent,
 	Enroll,
 	HostsCAService,
-	GoldenCert,
 	WritePKIEnrollmentFlag,
-	WritePKINameFlag
+	WritePKINameFlag,
+	NTAuthStoreFor,
+	TrustedForNTAuth,
+	EnterpriseCAFor,
+	IssuedSignedBy,
+	GoldenCert,
+	EnrollOnBehalfOF,
+	ADCSESC1,
+	ADCSESC2,
+	ADCSESC3,
+	ADCSESC4,
+	ADCSESC5,
+	ADCSESC6,
+	ADCSESC7
 ]
 
 // ACL Relationships
@@ -772,6 +888,12 @@ PathfindingRelationships: [
 	AddKeyCredentialLink,
 	SyncLAPSPassword,
 	WriteAccountRestrictions,
-	ManageCA,
-	HostsCAService
+	GoldenCert,
+	ADCSESC1,
+	ADCSESC2,
+	ADCSESC3,
+	ADCSESC4,
+	ADCSESC5,
+	ADCSESC6,
+	ADCSESC7
 ]

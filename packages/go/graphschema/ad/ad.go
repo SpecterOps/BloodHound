@@ -84,9 +84,21 @@ var (
 	DelegatedEnrollmentAgent        = graph.StringKind("DelegatedEnrollmentAgent")
 	Enroll                          = graph.StringKind("Enroll")
 	HostsCAService                  = graph.StringKind("HostsCAService")
-	GoldenCert                      = graph.StringKind("GoldenCert")
 	WritePKIEnrollmentFlag          = graph.StringKind("WritePKIEnrollmentFlag")
 	WritePKINameFlag                = graph.StringKind("WritePKINameFlag")
+	NTAuthStoreFor                  = graph.StringKind("NTAuthStoreFor")
+	TrustedForNTAuth                = graph.StringKind("TrustedForNTAuth")
+	EnterpriseCAFor                 = graph.StringKind("EnterpriseCAFor")
+	IssuedSignedBy                  = graph.StringKind("IssuedSignedBy")
+	GoldenCert                      = graph.StringKind("GoldenCert")
+	EnrollOnBehalfOF                = graph.StringKind("EnrollOnBehalfOF")
+	ADCSESC1                        = graph.StringKind("ADCSESC1")
+	ADCSESC2                        = graph.StringKind("ADCSESC2")
+	ADCSESC3                        = graph.StringKind("ADCSESC3")
+	ADCSESC4                        = graph.StringKind("ADCSESC4")
+	ADCSESC5                        = graph.StringKind("ADCSESC5")
+	ADCSESC6                        = graph.StringKind("ADCSESC6")
+	ADCSESC7                        = graph.StringKind("ADCSESC7")
 )
 
 type Property string
@@ -100,6 +112,9 @@ const (
 	CertThumbprint                       Property = "certthumbprint"
 	EnrollmentAgentRestrictionsCollected Property = "enrollmentagentrestrictionscollected"
 	IsUserSpecifiesSanEnabledCollected   Property = "isuserspecifiessanenabledcollected"
+	HasBasicConstraints                  Property = "hasbasicconstraints"
+	BasicConstraintPathLength            Property = "basicconstraintpathlength"
+	DNSHostname                          Property = "dnshostname"
 	CrossCertificatePair                 Property = "crosscertificatepair"
 	DistinguishedName                    Property = "distinguishedname"
 	DomainFQDN                           Property = "domain"
@@ -132,7 +147,7 @@ const (
 )
 
 func AllProperties() []Property {
-	return []Property{AdminCount, CASecurityCollected, CAName, CertChain, CertName, CertThumbprint, EnrollmentAgentRestrictionsCollected, IsUserSpecifiesSanEnabledCollected, CrossCertificatePair, DistinguishedName, DomainFQDN, DomainSID, Sensitive, HighValue, BlocksInheritance, IsACL, IsACLProtected, IsDeleted, Enforced, Department, HasCrossCertificatePair, HasSPN, UnconstrainedDelegation, LastLogon, LastLogonTimestamp, IsPrimaryGroup, HasLAPS, DontRequirePreAuth, LogonType, HasURA, PasswordNeverExpires, PasswordNotRequired, FunctionalLevel, TrustType, SidFiltering, TrustedToAuth, SamAccountName}
+	return []Property{AdminCount, CASecurityCollected, CAName, CertChain, CertName, CertThumbprint, EnrollmentAgentRestrictionsCollected, IsUserSpecifiesSanEnabledCollected, HasBasicConstraints, BasicConstraintPathLength, DNSHostname, CrossCertificatePair, DistinguishedName, DomainFQDN, DomainSID, Sensitive, HighValue, BlocksInheritance, IsACL, IsACLProtected, IsDeleted, Enforced, Department, HasCrossCertificatePair, HasSPN, UnconstrainedDelegation, LastLogon, LastLogonTimestamp, IsPrimaryGroup, HasLAPS, DontRequirePreAuth, LogonType, HasURA, PasswordNeverExpires, PasswordNotRequired, FunctionalLevel, TrustType, SidFiltering, TrustedToAuth, SamAccountName}
 }
 func ParseProperty(source string) (Property, error) {
 	switch source {
@@ -152,6 +167,12 @@ func ParseProperty(source string) (Property, error) {
 		return EnrollmentAgentRestrictionsCollected, nil
 	case "isuserspecifiessanenabledcollected":
 		return IsUserSpecifiesSanEnabledCollected, nil
+	case "hasbasicconstraints":
+		return HasBasicConstraints, nil
+	case "basicconstraintpathlength":
+		return BasicConstraintPathLength, nil
+	case "dnshostname":
+		return DNSHostname, nil
 	case "crosscertificatepair":
 		return CrossCertificatePair, nil
 	case "distinguishedname":
@@ -232,6 +253,12 @@ func (s Property) String() string {
 		return string(EnrollmentAgentRestrictionsCollected)
 	case IsUserSpecifiesSanEnabledCollected:
 		return string(IsUserSpecifiesSanEnabledCollected)
+	case HasBasicConstraints:
+		return string(HasBasicConstraints)
+	case BasicConstraintPathLength:
+		return string(BasicConstraintPathLength)
+	case DNSHostname:
+		return string(DNSHostname)
 	case CrossCertificatePair:
 		return string(CrossCertificatePair)
 	case DistinguishedName:
@@ -312,6 +339,12 @@ func (s Property) Name() string {
 		return "Enrollment Agent Restrictions Collected"
 	case IsUserSpecifiesSanEnabledCollected:
 		return "Is User Specifies San Enabled Collected"
+	case HasBasicConstraints:
+		return "Has Basic Constraints"
+	case BasicConstraintPathLength:
+		return "Basic Constraint Path Length"
+	case DNSHostname:
+		return "DNS Hostname"
 	case CrossCertificatePair:
 		return "Cross Certificate Pair"
 	case DistinguishedName:
@@ -386,13 +419,13 @@ func Nodes() []graph.Kind {
 	return []graph.Kind{Entity, User, Computer, Group, GPO, OU, Container, Domain, LocalGroup, LocalUser, AIACA, RootCA, EnterpriseCA, NTAuthStore, CertTemplate}
 }
 func Relationships() []graph.Kind {
-	return []graph.Kind{Owns, GenericAll, GenericWrite, WriteOwner, WriteDACL, MemberOf, ForceChangePassword, AllExtendedRights, AddMember, HasSession, Contains, GPLink, AllowedToDelegate, GetChanges, GetChangesAll, GetChangesInFilteredSet, TrustedBy, AllowedToAct, AdminTo, CanPSRemote, CanRDP, ExecuteDCOM, HasSIDHistory, AddSelf, DCSync, ReadLAPSPassword, ReadGMSAPassword, DumpSMSAPassword, SQLAdmin, AddAllowedToAct, WriteSPN, AddKeyCredentialLink, LocalToComputer, MemberOfLocalGroup, RemoteInteractiveLogonPrivilege, SyncLAPSPassword, WriteAccountRestrictions, RootCAFor, PublishedTo, ManageCertificates, ManageCA, DelegatedEnrollmentAgent, Enroll, HostsCAService, GoldenCert, WritePKIEnrollmentFlag, WritePKINameFlag}
+	return []graph.Kind{Owns, GenericAll, GenericWrite, WriteOwner, WriteDACL, MemberOf, ForceChangePassword, AllExtendedRights, AddMember, HasSession, Contains, GPLink, AllowedToDelegate, GetChanges, GetChangesAll, GetChangesInFilteredSet, TrustedBy, AllowedToAct, AdminTo, CanPSRemote, CanRDP, ExecuteDCOM, HasSIDHistory, AddSelf, DCSync, ReadLAPSPassword, ReadGMSAPassword, DumpSMSAPassword, SQLAdmin, AddAllowedToAct, WriteSPN, AddKeyCredentialLink, LocalToComputer, MemberOfLocalGroup, RemoteInteractiveLogonPrivilege, SyncLAPSPassword, WriteAccountRestrictions, RootCAFor, PublishedTo, ManageCertificates, ManageCA, DelegatedEnrollmentAgent, Enroll, HostsCAService, WritePKIEnrollmentFlag, WritePKINameFlag, NTAuthStoreFor, TrustedForNTAuth, EnterpriseCAFor, IssuedSignedBy, GoldenCert, EnrollOnBehalfOF, ADCSESC1, ADCSESC2, ADCSESC3, ADCSESC4, ADCSESC5, ADCSESC6, ADCSESC7}
 }
 func ACLRelationships() []graph.Kind {
 	return []graph.Kind{AllExtendedRights, ForceChangePassword, AddMember, AddAllowedToAct, GenericAll, WriteDACL, WriteOwner, GenericWrite, ReadLAPSPassword, ReadGMSAPassword, Owns, AddSelf, WriteSPN, AddKeyCredentialLink, GetChanges, GetChangesAll, GetChangesInFilteredSet, WriteAccountRestrictions, SyncLAPSPassword, DCSync, ManageCertificates, ManageCA, Enroll, WritePKIEnrollmentFlag, WritePKINameFlag}
 }
 func PathfindingRelationships() []graph.Kind {
-	return []graph.Kind{Owns, GenericAll, GenericWrite, WriteOwner, WriteDACL, MemberOf, ForceChangePassword, AllExtendedRights, AddMember, HasSession, Contains, GPLink, AllowedToDelegate, TrustedBy, AllowedToAct, AdminTo, CanPSRemote, CanRDP, ExecuteDCOM, HasSIDHistory, AddSelf, DCSync, ReadLAPSPassword, ReadGMSAPassword, DumpSMSAPassword, SQLAdmin, AddAllowedToAct, WriteSPN, AddKeyCredentialLink, SyncLAPSPassword, WriteAccountRestrictions, ManageCA, HostsCAService}
+	return []graph.Kind{Owns, GenericAll, GenericWrite, WriteOwner, WriteDACL, MemberOf, ForceChangePassword, AllExtendedRights, AddMember, HasSession, Contains, GPLink, AllowedToDelegate, TrustedBy, AllowedToAct, AdminTo, CanPSRemote, CanRDP, ExecuteDCOM, HasSIDHistory, AddSelf, DCSync, ReadLAPSPassword, ReadGMSAPassword, DumpSMSAPassword, SQLAdmin, AddAllowedToAct, WriteSPN, AddKeyCredentialLink, SyncLAPSPassword, WriteAccountRestrictions, GoldenCert, ADCSESC1, ADCSESC2, ADCSESC3, ADCSESC4, ADCSESC5, ADCSESC6, ADCSESC7}
 }
 func IsACLKind(s graph.Kind) bool {
 	for _, acl := range ACLRelationships() {

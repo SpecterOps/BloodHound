@@ -112,9 +112,21 @@ export enum ActiveDirectoryRelationshipKind {
     DelegatedEnrollmentAgent = 'DelegatedEnrollmentAgent',
     Enroll = 'Enroll',
     HostsCAService = 'HostsCAService',
-    GoldenCert = 'GoldenCert',
     WritePKIEnrollmentFlag = 'WritePKIEnrollmentFlag',
     WritePKINameFlag = 'WritePKINameFlag',
+    NTAuthStoreFor = 'NTAuthStoreFor',
+    TrustedForNTAuth = 'TrustedForNTAuth',
+    EnterpriseCAFor = 'EnterpriseCAFor',
+    IssuedSignedBy = 'IssuedSignedBy',
+    GoldenCert = 'GoldenCert',
+    EnrollOnBehalfOF = 'EnrollOnBehalfOF',
+    ADCSESC1 = 'ADCSESC1',
+    ADCSESC2 = 'ADCSESC2',
+    ADCSESC3 = 'ADCSESC3',
+    ADCSESC4 = 'ADCSESC4',
+    ADCSESC5 = 'ADCSESC5',
+    ADCSESC6 = 'ADCSESC6',
+    ADCSESC7 = 'ADCSESC7',
 }
 export function ActiveDirectoryRelationshipKindToDisplay(value: ActiveDirectoryRelationshipKind): string | undefined {
     switch (value) {
@@ -206,12 +218,36 @@ export function ActiveDirectoryRelationshipKindToDisplay(value: ActiveDirectoryR
             return 'Enroll';
         case ActiveDirectoryRelationshipKind.HostsCAService:
             return 'HostsCAService';
-        case ActiveDirectoryRelationshipKind.GoldenCert:
-            return 'GoldenCert';
         case ActiveDirectoryRelationshipKind.WritePKIEnrollmentFlag:
             return 'WritePKIEnrollmentFlag';
         case ActiveDirectoryRelationshipKind.WritePKINameFlag:
             return 'WritePKINameFlag';
+        case ActiveDirectoryRelationshipKind.NTAuthStoreFor:
+            return 'NTAuthStoreFor';
+        case ActiveDirectoryRelationshipKind.TrustedForNTAuth:
+            return 'TrustedForNTAuth';
+        case ActiveDirectoryRelationshipKind.EnterpriseCAFor:
+            return 'EnterpriseCAFor';
+        case ActiveDirectoryRelationshipKind.IssuedSignedBy:
+            return 'IssuedSignedBy';
+        case ActiveDirectoryRelationshipKind.GoldenCert:
+            return 'GoldenCert';
+        case ActiveDirectoryRelationshipKind.EnrollOnBehalfOF:
+            return 'EnrollOnBehalfOF';
+        case ActiveDirectoryRelationshipKind.ADCSESC1:
+            return 'ADCSESC1';
+        case ActiveDirectoryRelationshipKind.ADCSESC2:
+            return 'ADCSESC2';
+        case ActiveDirectoryRelationshipKind.ADCSESC3:
+            return 'ADCSESC3';
+        case ActiveDirectoryRelationshipKind.ADCSESC4:
+            return 'ADCSESC4';
+        case ActiveDirectoryRelationshipKind.ADCSESC5:
+            return 'ADCSESC5';
+        case ActiveDirectoryRelationshipKind.ADCSESC6:
+            return 'ADCSESC6';
+        case ActiveDirectoryRelationshipKind.ADCSESC7:
+            return 'ADCSESC7';
         default:
             return undefined;
     }
@@ -226,6 +262,9 @@ export enum ActiveDirectoryKindProperties {
     CertThumbprint = 'certthumbprint',
     EnrollmentAgentRestrictionsCollected = 'enrollmentagentrestrictionscollected',
     IsUserSpecifiesSanEnabledCollected = 'isuserspecifiessanenabledcollected',
+    HasBasicConstraints = 'hasbasicconstraints',
+    BasicConstraintPathLength = 'basicconstraintpathlength',
+    DNSHostname = 'dnshostname',
     CrossCertificatePair = 'crosscertificatepair',
     DistinguishedName = 'distinguishedname',
     DomainFQDN = 'domain',
@@ -274,6 +313,12 @@ export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKin
             return 'Enrollment Agent Restrictions Collected';
         case ActiveDirectoryKindProperties.IsUserSpecifiesSanEnabledCollected:
             return 'Is User Specifies San Enabled Collected';
+        case ActiveDirectoryKindProperties.HasBasicConstraints:
+            return 'Has Basic Constraints';
+        case ActiveDirectoryKindProperties.BasicConstraintPathLength:
+            return 'Basic Constraint Path Length';
+        case ActiveDirectoryKindProperties.DNSHostname:
+            return 'DNS Hostname';
         case ActiveDirectoryKindProperties.CrossCertificatePair:
             return 'Cross Certificate Pair';
         case ActiveDirectoryKindProperties.DistinguishedName:
@@ -369,8 +414,14 @@ export function ActiveDirectoryPathfindingEdges(): ActiveDirectoryRelationshipKi
         ActiveDirectoryRelationshipKind.AddKeyCredentialLink,
         ActiveDirectoryRelationshipKind.SyncLAPSPassword,
         ActiveDirectoryRelationshipKind.WriteAccountRestrictions,
-        ActiveDirectoryRelationshipKind.ManageCA,
-        ActiveDirectoryRelationshipKind.HostsCAService,
+        ActiveDirectoryRelationshipKind.GoldenCert,
+        ActiveDirectoryRelationshipKind.ADCSESC1,
+        ActiveDirectoryRelationshipKind.ADCSESC2,
+        ActiveDirectoryRelationshipKind.ADCSESC3,
+        ActiveDirectoryRelationshipKind.ADCSESC4,
+        ActiveDirectoryRelationshipKind.ADCSESC5,
+        ActiveDirectoryRelationshipKind.ADCSESC6,
+        ActiveDirectoryRelationshipKind.ADCSESC7,
     ];
 }
 export enum AzureNodeKind {
