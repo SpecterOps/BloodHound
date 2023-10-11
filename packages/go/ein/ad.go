@@ -35,13 +35,9 @@ func ConvertSessionObject(session Session) IngestibleSession {
 }
 
 func ConvertObjectToNode(item IngestBase, itemType graph.Kind) IngestibleNode {
-	properties := item.Properties
-	properties[ad.IsACLProtected.String()] = item.IsACLProtected
-	properties[ad.IsDeleted.String()] = item.IsDeleted
-
 	return IngestibleNode{
 		ObjectID:    item.ObjectIdentifier,
-		PropertyMap: properties,
+		PropertyMap: item.Properties,
 		Label:       itemType,
 	}
 }
@@ -458,19 +454,19 @@ func ParseEnterpriseCAMiscData(enterpriseCA EnterpriseCA) []IngestibleRelationsh
 func handleEnterpriseCAEnrollmentAgentRestrictions(enterpriseCA EnterpriseCA, relationships []IngestibleRelationship, enabledCertTemplates []string) []IngestibleRelationship {
 
 	if enterpriseCA.CARegistryData.EnrollmentAgentRestrictions.Collected {
-		for _, restiction := range enterpriseCA.CARegistryData.EnrollmentAgentRestrictions.Restrictions {
-			if restiction.AccessType == AccessAllowedCallback {
+		for _, restriction := range enterpriseCA.CARegistryData.EnrollmentAgentRestrictions.Restrictions {
+			if restriction.AccessType == AccessAllowedCallback {
 				templates := make([]string, 0)
-				if restiction.AllTemplates {
+				if restriction.AllTemplates {
 					templates = enabledCertTemplates
 				} else {
-					templates = append(templates, restiction.Template.ObjectIdentifier)
+					templates = append(templates, restriction.Template.ObjectIdentifier)
 				}
 				// TODO: Handle Targets
 				for _, template := range templates {
 					relationships = append(relationships, IngestibleRelationship{
-						Source:     restiction.Agent.ObjectIdentifier,
-						SourceType: restiction.Agent.Kind(),
+						Source:     restriction.Agent.ObjectIdentifier,
+						SourceType: restriction.Agent.Kind(),
 						Target:     template,
 						TargetType: ad.CertTemplate,
 						RelType:    ad.DelegatedEnrollmentAgent,

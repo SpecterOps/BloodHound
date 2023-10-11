@@ -703,8 +703,8 @@ GoldenCert: types.#Kind & {
 	schema: "active_directory"
 }
 
-EnrollOnBehalfOF: types.#Kind & {
-	symbol: "EnrollOnBehalfOF"
+EnrollOnBehalfOf: types.#Kind & {
+	symbol: "EnrollOnBehalfOf"
 	schema: "active_directory"
 }
 
@@ -796,7 +796,7 @@ RelationshipKinds: [
 	EnterpriseCAFor,
 	IssuedSignedBy,
 	GoldenCert,
-	EnrollOnBehalfOF,
+	EnrollOnBehalfOf,
 	ADCSESC1,
 	ADCSESC2,
 	ADCSESC3,

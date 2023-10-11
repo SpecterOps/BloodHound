@@ -119,7 +119,7 @@ export enum ActiveDirectoryRelationshipKind {
     EnterpriseCAFor = 'EnterpriseCAFor',
     IssuedSignedBy = 'IssuedSignedBy',
     GoldenCert = 'GoldenCert',
-    EnrollOnBehalfOF = 'EnrollOnBehalfOF',
+    EnrollOnBehalfOf = 'EnrollOnBehalfOf',
     ADCSESC1 = 'ADCSESC1',
     ADCSESC2 = 'ADCSESC2',
     ADCSESC3 = 'ADCSESC3',
@@ -232,8 +232,8 @@ export function ActiveDirectoryRelationshipKindToDisplay(value: ActiveDirectoryR
             return 'IssuedSignedBy';
         case ActiveDirectoryRelationshipKind.GoldenCert:
             return 'GoldenCert';
-        case ActiveDirectoryRelationshipKind.EnrollOnBehalfOF:
-            return 'EnrollOnBehalfOF';
+        case ActiveDirectoryRelationshipKind.EnrollOnBehalfOf:
+            return 'EnrollOnBehalfOf';
         case ActiveDirectoryRelationshipKind.ADCSESC1:
             return 'ADCSESC1';
         case ActiveDirectoryRelationshipKind.ADCSESC2:
