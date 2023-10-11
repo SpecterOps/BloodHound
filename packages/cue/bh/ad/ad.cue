@@ -743,26 +743,6 @@ ADCSESC7: types.#Kind & {
 	schema: "active_directory"
 }
 
-// ADCSESC8: types.#Kind & {
-// 	symbol: "ADCSESC8"
-// 	schema: "active_directory"
-// }
-
-// ADCSESC9: types.#Kind & {
-// 	symbol: "ADCSESC9"
-// 	schema: "active_directory"
-// }
-
-// ADCSESC10: types.#Kind & {
-// 	symbol: "ADCSESC10"
-// 	schema: "active_directory"
-// }
-
-// ADCSESC11: types.#Kind & {
-// 	symbol: "ADCSESC11"
-// 	schema: "active_directory"
-// }
-
 // Relationship Kinds
 RelationshipKinds: [
 	Owns,

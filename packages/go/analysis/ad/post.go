@@ -50,40 +50,6 @@ func PostProcessedRelationships() []graph.Kind {
 	}
 }
 
-// func PostADCSESC1(ctx context.Context, db graph.Database) (*analysis.AtomicPostProcessingStats, error) {
-// 	if domainNodes, err := fetchCollectedDomainNodes(ctx, db); err != nil {
-// 		return &analysis.AtomicPostProcessingStats{}, err
-// 	} else {
-// 		operation := analysis.NewPostRelationshipOperation(ctx, db, "DCSync Post Processing")
-
-// 		for _, domain := range domainNodes {
-// 			innerDomain := domain
-// 			operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
-// 				if dcSyncers, err := analysis.GetDCSyncers(tx, innerDomain, true); err != nil {
-// 					return err
-// 				} else if len(dcSyncers) == 0 {
-// 					return nil
-// 				} else {
-// 					for _, dcSyncer := range dcSyncers {
-// 						nextJob := analysis.CreatePostRelationshipJob{
-// 							FromID: dcSyncer.ID,
-// 							ToID:   innerDomain.ID,
-// 							Kind:   ad.DCSync,
-// 						}
-
-// 						if !channels.Submit(ctx, outC, nextJob) {
-// 							return nil
-// 						}
-// 					}
-
-// 					return nil
-// 				}
-// 			})
-// 		}
-// 		return &operation.Stats, operation.Done()
-// 	}
-// }
-
 func PostSyncLAPSPassword(ctx context.Context, db graph.Database) (*analysis.AtomicPostProcessingStats, error) {
 	if domainNodes, err := fetchCollectedDomainNodes(ctx, db); err != nil {
 		return &analysis.AtomicPostProcessingStats{}, err
