@@ -114,6 +114,19 @@ export enum ActiveDirectoryRelationshipKind {
     HostsCAService = 'HostsCAService',
     WritePKIEnrollmentFlag = 'WritePKIEnrollmentFlag',
     WritePKINameFlag = 'WritePKINameFlag',
+    NTAuthStoreFor = 'NTAuthStoreFor',
+    TrustedForNTAuth = 'TrustedForNTAuth',
+    EnterpriseCAFor = 'EnterpriseCAFor',
+    IssuedSignedBy = 'IssuedSignedBy',
+    GoldenCert = 'GoldenCert',
+    EnrollOnBehalfOf = 'EnrollOnBehalfOf',
+    ADCSESC1 = 'ADCSESC1',
+    ADCSESC2 = 'ADCSESC2',
+    ADCSESC3 = 'ADCSESC3',
+    ADCSESC4 = 'ADCSESC4',
+    ADCSESC5 = 'ADCSESC5',
+    ADCSESC6 = 'ADCSESC6',
+    ADCSESC7 = 'ADCSESC7',
 }
 export function ActiveDirectoryRelationshipKindToDisplay(value: ActiveDirectoryRelationshipKind): string | undefined {
     switch (value) {
@@ -209,6 +222,32 @@ export function ActiveDirectoryRelationshipKindToDisplay(value: ActiveDirectoryR
             return 'WritePKIEnrollmentFlag';
         case ActiveDirectoryRelationshipKind.WritePKINameFlag:
             return 'WritePKINameFlag';
+        case ActiveDirectoryRelationshipKind.NTAuthStoreFor:
+            return 'NTAuthStoreFor';
+        case ActiveDirectoryRelationshipKind.TrustedForNTAuth:
+            return 'TrustedForNTAuth';
+        case ActiveDirectoryRelationshipKind.EnterpriseCAFor:
+            return 'EnterpriseCAFor';
+        case ActiveDirectoryRelationshipKind.IssuedSignedBy:
+            return 'IssuedSignedBy';
+        case ActiveDirectoryRelationshipKind.GoldenCert:
+            return 'GoldenCert';
+        case ActiveDirectoryRelationshipKind.EnrollOnBehalfOf:
+            return 'EnrollOnBehalfOf';
+        case ActiveDirectoryRelationshipKind.ADCSESC1:
+            return 'ADCSESC1';
+        case ActiveDirectoryRelationshipKind.ADCSESC2:
+            return 'ADCSESC2';
+        case ActiveDirectoryRelationshipKind.ADCSESC3:
+            return 'ADCSESC3';
+        case ActiveDirectoryRelationshipKind.ADCSESC4:
+            return 'ADCSESC4';
+        case ActiveDirectoryRelationshipKind.ADCSESC5:
+            return 'ADCSESC5';
+        case ActiveDirectoryRelationshipKind.ADCSESC6:
+            return 'ADCSESC6';
+        case ActiveDirectoryRelationshipKind.ADCSESC7:
+            return 'ADCSESC7';
         default:
             return undefined;
     }
@@ -216,6 +255,17 @@ export function ActiveDirectoryRelationshipKindToDisplay(value: ActiveDirectoryR
 export type ActiveDirectoryKind = ActiveDirectoryNodeKind | ActiveDirectoryRelationshipKind;
 export enum ActiveDirectoryKindProperties {
     AdminCount = 'admincount',
+    CASecurityCollected = 'casecuritycollected',
+    CAName = 'caname',
+    CertChain = 'certchain',
+    CertName = 'certname',
+    CertThumbprint = 'certthumbprint',
+    EnrollmentAgentRestrictionsCollected = 'enrollmentagentrestrictionscollected',
+    IsUserSpecifiesSanEnabledCollected = 'isuserspecifiessanenabledcollected',
+    HasBasicConstraints = 'hasbasicconstraints',
+    BasicConstraintPathLength = 'basicconstraintpathlength',
+    DNSHostname = 'dnshostname',
+    CrossCertificatePair = 'crosscertificatepair',
     DistinguishedName = 'distinguishedname',
     DomainFQDN = 'domain',
     DomainSID = 'domainsid',
@@ -224,8 +274,10 @@ export enum ActiveDirectoryKindProperties {
     BlocksInheritance = 'blocksinheritance',
     IsACL = 'isacl',
     IsACLProtected = 'isaclprotected',
+    IsDeleted = 'isdeleted',
     Enforced = 'enforced',
     Department = 'department',
+    HasCrossCertificatePair = 'hascrosscertificatepair',
     HasSPN = 'hasspn',
     UnconstrainedDelegation = 'unconstraineddelegation',
     LastLogon = 'lastlogon',
@@ -253,6 +305,28 @@ export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKin
     switch (value) {
         case ActiveDirectoryKindProperties.AdminCount:
             return 'Admin Count';
+        case ActiveDirectoryKindProperties.CASecurityCollected:
+            return 'CA Security Collected';
+        case ActiveDirectoryKindProperties.CAName:
+            return 'CA Name';
+        case ActiveDirectoryKindProperties.CertChain:
+            return 'Certificate Chain';
+        case ActiveDirectoryKindProperties.CertName:
+            return 'Certificate Name';
+        case ActiveDirectoryKindProperties.CertThumbprint:
+            return 'Certificate Thumbprint';
+        case ActiveDirectoryKindProperties.EnrollmentAgentRestrictionsCollected:
+            return 'Enrollment Agent Restrictions Collected';
+        case ActiveDirectoryKindProperties.IsUserSpecifiesSanEnabledCollected:
+            return 'Is User Specifies San Enabled Collected';
+        case ActiveDirectoryKindProperties.HasBasicConstraints:
+            return 'Has Basic Constraints';
+        case ActiveDirectoryKindProperties.BasicConstraintPathLength:
+            return 'Basic Constraint Path Length';
+        case ActiveDirectoryKindProperties.DNSHostname:
+            return 'DNS Hostname';
+        case ActiveDirectoryKindProperties.CrossCertificatePair:
+            return 'Cross Certificate Pair';
         case ActiveDirectoryKindProperties.DistinguishedName:
             return 'Distinguished Name';
         case ActiveDirectoryKindProperties.DomainFQDN:
@@ -269,10 +343,14 @@ export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKin
             return 'Is ACL';
         case ActiveDirectoryKindProperties.IsACLProtected:
             return 'ACL Inheritance Denied';
+        case ActiveDirectoryKindProperties.IsDeleted:
+            return 'Is Deleted';
         case ActiveDirectoryKindProperties.Enforced:
             return 'Enforced';
         case ActiveDirectoryKindProperties.Department:
             return 'Department';
+        case ActiveDirectoryKindProperties.HasCrossCertificatePair:
+            return 'Has Cross Certificate Pair';
         case ActiveDirectoryKindProperties.HasSPN:
             return 'Has SPN';
         case ActiveDirectoryKindProperties.UnconstrainedDelegation:
@@ -354,8 +432,14 @@ export function ActiveDirectoryPathfindingEdges(): ActiveDirectoryRelationshipKi
         ActiveDirectoryRelationshipKind.AddKeyCredentialLink,
         ActiveDirectoryRelationshipKind.SyncLAPSPassword,
         ActiveDirectoryRelationshipKind.WriteAccountRestrictions,
-        ActiveDirectoryRelationshipKind.ManageCA,
-        ActiveDirectoryRelationshipKind.HostsCAService,
+        ActiveDirectoryRelationshipKind.GoldenCert,
+        ActiveDirectoryRelationshipKind.ADCSESC1,
+        ActiveDirectoryRelationshipKind.ADCSESC2,
+        ActiveDirectoryRelationshipKind.ADCSESC3,
+        ActiveDirectoryRelationshipKind.ADCSESC4,
+        ActiveDirectoryRelationshipKind.ADCSESC5,
+        ActiveDirectoryRelationshipKind.ADCSESC6,
+        ActiveDirectoryRelationshipKind.ADCSESC7,
     ];
 }
 export enum AzureNodeKind {
