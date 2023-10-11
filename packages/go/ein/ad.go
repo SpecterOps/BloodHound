@@ -558,28 +558,28 @@ func ParseNTAuthStoreData(ntAuthStore NTAuthStore) []IngestibleRelationship {
 type CertificateMappingMethod int
 
 const (
-	CertificateMappingManytoMany                  CertificateMappingMethod = 1
-	CertificateMappingOneToOne                    CertificateMappingMethod = 1 << 1
-	CertificateMappingUserPrincipalName           CertificateMappingMethod = 1 << 2
-	CertificateMappingKerberosCertificate         CertificateMappingMethod = 1 << 3
-	CertificateMappingKerberosExplicitCertificate CertificateMappingMethod = 1 << 4
+	CertificateMappingManytoMany                     CertificateMappingMethod = 1
+	CertificateMappingOneToOne                       CertificateMappingMethod = 1 << 1
+	CertificateMappingUserPrincipalName              CertificateMappingMethod = 1 << 2
+	CertificateMappingKerberosS4UCertificate         CertificateMappingMethod = 1 << 3
+	CertificateMappingKerberosS4UExplicitCertificate CertificateMappingMethod = 1 << 4
+)
+
+// Prettified definitions for DCRegistryData
+const (
+	PrettyCertMappingManyToOne                      = "0x01: Many-to-one (issuer certificate)"
+	PrettyCertMappingOneToOne                       = "0x02: One-to-one (subject/issuer)"
+	PrettyCertMappingUserPrincipalName              = "0x04: User principal name (UPN/SAN)"
+	PrettyCertMappingKerberosS4UCertificate         = "0x08: Kerberos service-for-user (S4U) certificate"
+	PrettyCertMappingKerberosS4UExplicitCertificate = "0x10: Kerberos service-for-user (S4U) explicit certificate"
+
+	PrettyStrongCertBindingEnforcementDisabled      = "0: Disabled"
+	PrettyStrongCertBindingEnforcementCompatibility = "1: Compatibility mode"
+	PrettyStrongCertBindingEnforcementFull          = "2: Full enforcement mode"
 )
 
 func ParseDCRegistryData(computer Computer) IngestibleNode {
-	var (
-		prettyCertificateMappingMethodMappings map[string]string = map[string]string{
-			"01": "0x01: Many-to-one (issuer certificate)",
-			"02": "0x02: One-to-one (subject/issuer)",
-			"04": "0x04: User principal name (UPN/SAN)",
-			"08": "0x08: Kerberos service-for-user (S4U) certificate",
-			"10": "0x10: Kerberos service-for-user (S4U) explicit certificate",
-		}
-		prettyStrongCertificateBindingEnforcementMappings []string = []string{
-			"0: Disabled",
-			"1: Compatibility mode",
-			"2: Full enforcement mode",
-		}
-	)
+	var ()
 	propMap := make(map[string]any)
 
 	if computer.DCRegistryData.CertificateMappingMethods.Collected && computer.DCRegistryData.CertificateMappingMethods.Value >= 0 {
@@ -589,19 +589,19 @@ func ParseDCRegistryData(computer Computer) IngestibleNode {
 		var prettyMappings []string
 
 		if computer.DCRegistryData.CertificateMappingMethods.Value&int(CertificateMappingManytoMany) != 0 {
-			prettyMappings = append(prettyMappings, prettyCertificateMappingMethodMappings["01"])
+			prettyMappings = append(prettyMappings, PrettyCertMappingManyToOne)
 		}
 		if computer.DCRegistryData.CertificateMappingMethods.Value&int(CertificateMappingOneToOne) != 0 {
-			prettyMappings = append(prettyMappings, prettyCertificateMappingMethodMappings["02"])
+			prettyMappings = append(prettyMappings, PrettyCertMappingOneToOne)
 		}
 		if computer.DCRegistryData.CertificateMappingMethods.Value&int(CertificateMappingUserPrincipalName) != 0 {
-			prettyMappings = append(prettyMappings, prettyCertificateMappingMethodMappings["04"])
+			prettyMappings = append(prettyMappings, PrettyCertMappingUserPrincipalName)
 		}
-		if computer.DCRegistryData.CertificateMappingMethods.Value&int(CertificateMappingKerberosCertificate) != 0 {
-			prettyMappings = append(prettyMappings, prettyCertificateMappingMethodMappings["08"])
+		if computer.DCRegistryData.CertificateMappingMethods.Value&int(CertificateMappingKerberosS4UCertificate) != 0 {
+			prettyMappings = append(prettyMappings, PrettyCertMappingKerberosS4UCertificate)
 		}
-		if computer.DCRegistryData.CertificateMappingMethods.Value&int(CertificateMappingKerberosExplicitCertificate) != 0 {
-			prettyMappings = append(prettyMappings, prettyCertificateMappingMethodMappings["10"])
+		if computer.DCRegistryData.CertificateMappingMethods.Value&int(CertificateMappingKerberosS4UExplicitCertificate) != 0 {
+			prettyMappings = append(prettyMappings, PrettyCertMappingKerberosS4UExplicitCertificate)
 		}
 
 		propMap[ad.CertificateMappingMethodsPretty.String()] = prettyMappings
@@ -610,7 +610,15 @@ func ParseDCRegistryData(computer Computer) IngestibleNode {
 	if computer.DCRegistryData.StrongCertificateBindingEnforcement.Collected {
 		propMap[ad.StrongCertificateBindingEnforcementCollected.String()] = true
 		propMap[ad.StrongCertificateBindingEnforcementInt.String()] = computer.DCRegistryData.StrongCertificateBindingEnforcement.Value
-		propMap[ad.StrongCertificateBindingEnforcementPretty.String()] = prettyStrongCertificateBindingEnforcementMappings[computer.DCRegistryData.StrongCertificateBindingEnforcement.Value]
+
+		switch computer.DCRegistryData.StrongCertificateBindingEnforcement.Value {
+		case 0:
+			propMap[ad.StrongCertificateBindingEnforcementPretty.String()] = PrettyStrongCertBindingEnforcementDisabled
+		case 1:
+			propMap[ad.StrongCertificateBindingEnforcementPretty.String()] = PrettyStrongCertBindingEnforcementCompatibility
+		case 2:
+			propMap[ad.StrongCertificateBindingEnforcementPretty.String()] = PrettyStrongCertBindingEnforcementFull
+		}
 	}
 
 	return IngestibleNode{
