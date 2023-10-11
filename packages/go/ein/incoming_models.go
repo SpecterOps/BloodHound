@@ -98,12 +98,16 @@ type Certificate struct {
 }
 
 type EnrollmentAgentRestriction struct {
-	APIResult
 	AccessType   string
 	Agent        TypedPrincipal
 	AllTemplates bool
 	Targets      []TypedPrincipal
 	Template     TypedPrincipal
+}
+
+type EnrollmentAgentRestrictions struct {
+	APIResult
+	Restrictions []EnrollmentAgentRestriction
 }
 
 type CASecurity struct {
@@ -117,25 +121,32 @@ type IsUserSpecifiesSanEnabled struct {
 }
 
 type CARegistryData struct {
-	CASecurity                  CASecurity
-	EnrollmentAgentRestrictions []EnrollmentAgentRestriction
-	IsUserSpecifiesSanEnabled   IsUserSpecifiesSanEnabled
+	CASecurity
+	EnrollmentAgentRestrictions
+	IsUserSpecifiesSanEnabled
 }
 
 type GPO IngestBase
 
 type AIACA IngestBase
 
-type RootCA IngestBase
+type RootCA struct {
+	IngestBase
+	DomainSID string
+}
 
 type EnterpriseCA struct {
 	IngestBase
 	CARegistryData
 	EnabledCertTemplates []TypedPrincipal
 	HostingComputer      string
+	DomainSID            string
 }
 
-type NTAuthStore IngestBase
+type NTAuthStore struct {
+	IngestBase
+	DomainSID string
+}
 
 type CertTemplate IngestBase
 

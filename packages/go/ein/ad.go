@@ -23,6 +23,7 @@ import (
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/log"
+	"github.com/specterops/bloodhound/slices"
 )
 
 func ConvertSessionObject(session Session) IngestibleSession {
@@ -407,8 +408,10 @@ func ParseUserRightData(userRight UserRightsAssignmentAPIResult, computer Comput
 }
 
 func ParseEnterpriseCAMiscData(enterpriseCA EnterpriseCA) []IngestibleRelationship {
-	relationships := make([]IngestibleRelationship, 0)
-	enabledCertTemplates := make([]string, 0)
+	var (
+		relationships        = make([]IngestibleRelationship, 0)
+		enabledCertTemplates = make([]string, 0)
+	)
 
 	for _, actor := range enterpriseCA.EnabledCertTemplates {
 		enabledCertTemplates = append(enabledCertTemplates, actor.ObjectIdentifier)
@@ -431,60 +434,122 @@ func ParseEnterpriseCAMiscData(enterpriseCA EnterpriseCA) []IngestibleRelationsh
 			RelType:    ad.HostsCAService,
 			RelProps:   map[string]any{"isacl": false},
 		})
+
+		relationships = append(relationships, IngestibleRelationship{
+			Source:     enterpriseCA.HostingComputer,
+			SourceType: ad.Computer,
+			Target:     enterpriseCA.DomainSID,
+			TargetType: ad.Domain,
+			RelType:    ad.GoldenCert,
+			RelProps:   map[string]any{"isacl": false},
+		})
 	}
 
-	// if enterpriseCA.CARegistryData != "" {
-	// 	//TODO: Handle CASecurity
+	relationships = handleEnterpriseCAEnrollmentAgentRestrictions(enterpriseCA, relationships, enabledCertTemplates)
+	relationships = handleEnterpriseCASecurity(enterpriseCA, relationships)
 
-	// 	if enterpriseCA.CARegistryData.EnrollmentAgentRestrictionsCollected {
-	// 		for _, restiction := range enterpriseCA.CARegistryData.EnrollmentAgentRestrictions {
-	// 			if restiction.AccessType == "AccessAllowedCallback" {
-	// 				templates := make([]string, 0)
-	// 				if restiction.AllTemplates {
-	// 					templates = enabledCertTemplates
-	// 				}
-	// 				else {
-	// 					templates = append(templates, restiction.Template.ObjectIdentifier)
-	// 				}
+	return relationships
+}
 
-	// 				// TODO: Handle Targets
+func handleEnterpriseCAEnrollmentAgentRestrictions(enterpriseCA EnterpriseCA, relationships []IngestibleRelationship, enabledCertTemplates []string) []IngestibleRelationship {
 
-	// 				for _, template := range templates {
-	// 					relationships = append(relationships, IngestibleRelationship{
-	// 						Source:     restiction.Agent.ObjectIdentifier,
-	// 						SourceType: restiction.Agent.Kind(),
-	// 						Target:     template,
-	// 						TargetType: ad.CertTemplate,
-	// 						RelType:    ad.DelegatedEnrollmentAgent,
-	// 						RelProps:   map[string]any{"isacl": false},
-	// 					})
+	if enterpriseCA.CARegistryData.EnrollmentAgentRestrictions.Collected {
+		for _, restriction := range enterpriseCA.CARegistryData.EnrollmentAgentRestrictions.Restrictions {
+			if restriction.AccessType == AccessAllowedCallback {
+				templates := make([]string, 0)
+				if restriction.AllTemplates {
+					templates = enabledCertTemplates
+				} else {
+					templates = append(templates, restriction.Template.ObjectIdentifier)
+				}
+				// TODO: Handle Targets
+				for _, template := range templates {
+					relationships = append(relationships, IngestibleRelationship{
+						Source:     restriction.Agent.ObjectIdentifier,
+						SourceType: restriction.Agent.Kind(),
+						Target:     template,
+						TargetType: ad.CertTemplate,
+						RelType:    ad.DelegatedEnrollmentAgent,
+						RelProps:   map[string]any{"isacl": false},
+					})
 
-	// 				}
-	// 			}
-	// 		}
-	// 	}
-	// }
+				}
+			}
+		}
+	}
+
+	return relationships
+}
+
+func handleEnterpriseCASecurity(enterpriseCA EnterpriseCA, relationships []IngestibleRelationship) []IngestibleRelationship {
+
+	if enterpriseCA.CASecurity.Collected {
+		caSecurityData := slices.Filter(enterpriseCA.CARegistryData.CASecurity.Data, func(s ACE) bool {
+			if s.RightName == ad.Owns.String() {
+				return false
+			} else {
+				return true
+			}
+		})
+
+		filteredACES := slices.Filter(enterpriseCA.Aces, func(s ACE) bool {
+			if s.RightName == ad.ManageCA.String() || s.RightName == ad.ManageCertificates.String() || s.RightName == ad.Enroll.String() {
+				if s.PrincipalSID == enterpriseCA.HostingComputer {
+					return true
+				} else {
+					return false
+				}
+			} else {
+				return false
+			}
+		})
+
+		combinedData := append(caSecurityData, filteredACES...)
+		relationships = append(relationships, ParseACEData(combinedData, enterpriseCA.ObjectIdentifier, ad.EnterpriseCA)...)
+
+	} else {
+		relationships = append(relationships, ParseACEData(enterpriseCA.Aces, enterpriseCA.ObjectIdentifier, ad.EnterpriseCA)...)
+	}
 
 	return relationships
 }
 
 func ParseRootCAMiscData(rootCA RootCA) []IngestibleRelationship {
-	relationships := make([]IngestibleRelationship, 0)
+	var (
+		relationships = make([]IngestibleRelationship, 0)
+		domainsid     = rootCA.DomainSID
+	)
 
-	// if domainID, err := domain.Properties.Get(common.domainID.String()).String(); err != nil {
-	// 	return nil, err
-	// } else if domainID == objectID {
+	if domainsid != "" {
+		relationships = append(relationships, IngestibleRelationship{
+			Source:     rootCA.ObjectIdentifier,
+			SourceType: ad.RootCA,
+			Target:     domainsid,
+			TargetType: ad.Domain,
+			RelType:    ad.RootCAFor,
+			RelProps:   map[string]any{"isacl": false},
+		})
+	}
 
-	// if rootCA.Properties.domainsid != "" {
-	// 	relationships = append(relationships, IngestibleRelationship{
-	// 		Source:     rootCA.ObjectIdentifier,
-	// 		SourceType: ad.RootCA,
-	// 		Target:     rootCA.Properties.domainsid,
-	// 		TargetType: ad.Domain,
-	// 		RelType:    ad.RootCAFor,
-	// 		RelProps:   map[string]any{"isacl": false},
-	// 	})
-	// }
+	return relationships
+}
+
+func ParseNTAuthStoreData(ntAuthStore NTAuthStore) []IngestibleRelationship {
+	var (
+		relationships = make([]IngestibleRelationship, 0)
+		domainsid     = ntAuthStore.DomainSID
+	)
+
+	if domainsid != "" {
+		relationships = append(relationships, IngestibleRelationship{
+			Source:     ntAuthStore.ObjectIdentifier,
+			SourceType: ad.NTAuthStore,
+			Target:     domainsid,
+			TargetType: ad.Domain,
+			RelType:    ad.NTAuthStoreFor,
+			RelProps:   map[string]any{"isacl": false},
+		})
+	}
 
 	return relationships
 }

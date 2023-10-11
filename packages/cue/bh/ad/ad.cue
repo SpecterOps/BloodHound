@@ -26,6 +26,77 @@ ACLRelationships: [...types.#Kind]
 PathfindingRelationships: [...types.#Kind]
 
 // Property name enumerations
+
+CertChain: types.#Kind & {
+	symbol: 		"CertChain"
+	schema: 		"ad"
+	name:           "Certificate Chain"
+	representation: "certchain"
+}
+
+CertName: types.#Kind & {
+	symbol: 		"CertName"
+	schema: 		"ad"
+	name:           "Certificate Name"
+	representation: "certname"
+}
+
+CertThumbprint: types.#Kind & {
+	symbol: 		"CertThumbprint"
+	schema: 		"ad"
+	name:           "Certificate Thumbprint"
+	representation: "certthumbprint"
+}
+
+CAName: types.#Kind & {
+	symbol: 		"CAName"
+	schema: 		"ad"
+	name:           "CA Name"
+	representation: "caname"
+}
+
+CASecurityCollected: types.#Kind & {
+	symbol: 		"CASecurityCollected"
+	schema: 		"ad"
+	name:           "CA Security Collected"
+	representation: "casecuritycollected"
+}
+
+EnrollmentAgentRestrictionsCollected: types.#Kind & {
+	symbol: 		"EnrollmentAgentRestrictionsCollected"
+	schema: 		"ad"
+	name:           "Enrollment Agent Restrictions Collected"
+	representation: "enrollmentagentrestrictionscollected"
+}
+
+IsUserSpecifiesSanEnabledCollected: types.#Kind & {
+	symbol: 		"IsUserSpecifiesSanEnabledCollected"
+	schema: 		"ad"
+	name:           "Is User Specifies San Enabled Collected"
+	representation: "isuserspecifiessanenabledcollected"
+}
+
+HasBasicConstraints: types.#Kind & {
+	symbol: 		"HasBasicConstraints"
+	schema: 		"ad"
+	name:           "Has Basic Constraints"
+	representation: "hasbasicconstraints"
+}
+
+BasicConstraintPathLength: types.#Kind & {
+	symbol: 		"BasicConstraintPathLength"
+	schema: 		"ad"
+	name:           "Basic Constraint Path Length"
+	representation: "basicconstraintpathlength"
+}
+
+DNSHostname: types.#Kind & {
+	symbol: 		"DNSHostname"
+	schema: 		"ad"
+	name:           "DNS Hostname"
+	representation: "dnshostname"
+}
+
 DistinguishedName: types.#StringEnum & {
 	symbol:         "DistinguishedName"
 	schema:         "ad"
@@ -82,6 +153,13 @@ IsACLProtected: types.#StringEnum & {
 	representation: "isaclprotected"
 }
 
+IsDeleted: types.#StringEnum & {
+	symbol:         "IsDeleted"
+	schema:         "ad"
+	name:           "Is Deleted"
+	representation: "isdeleted"
+}
+
 Enforced: types.#StringEnum & {
 	symbol:         "Enforced"
 	schema:         "ad"
@@ -101,6 +179,13 @@ Department: types.#StringEnum & {
 	schema:         "ad"
 	name:           "Department"
 	representation: "department"
+}
+
+HasCrossCertificatePair: types.#StringEnum & {
+	symbol:         "HasCrossCertificatePair"
+	schema:         "ad"
+	name:           "Has Cross Certificate Pair"
+	representation: "hascrosscertificatepair"
 }
 
 HasSPN: types.#StringEnum & {
@@ -215,8 +300,26 @@ SamAccountName: types.#StringEnum & {
 	representation: "samaccountname"
 }
 
+CrossCertificatePair: types.#StringEnum & {
+	symbol: "CrossCertificatePair"
+	schema: "ad"
+	name: "Cross Certificate Pair"
+	representation: "crosscertificatepair"
+}
+
 Properties: [
 	AdminCount,
+	CASecurityCollected,
+	CAName,
+	CertChain,
+	CertName,
+	CertThumbprint,
+	EnrollmentAgentRestrictionsCollected,
+	IsUserSpecifiesSanEnabledCollected,
+	HasBasicConstraints,
+	BasicConstraintPathLength,
+	DNSHostname,
+	CrossCertificatePair,
 	DistinguishedName,
 	DomainFQDN,
 	DomainSID,
@@ -225,8 +328,10 @@ Properties: [
 	BlocksInheritance,
 	IsACL,
 	IsACLProtected,
+	IsDeleted,
 	Enforced,
 	Department,
+	HasCrossCertificatePair,
 	HasSPN,
 	UnconstrainedDelegation,
 	LastLogon,
@@ -573,6 +678,71 @@ WritePKINameFlag: types.#Kind & {
 	schema: "active_directory"
 }
 
+NTAuthStoreFor: types.#Kind & {
+	symbol: "NTAuthStoreFor"
+	schema: "active_directory"
+}
+
+TrustedForNTAuth: types.#Kind & {
+	symbol: "TrustedForNTAuth"
+	schema: "active_directory"
+}
+
+EnterpriseCAFor: types.#Kind & {
+	symbol: "EnterpriseCAFor"
+	schema: "active_directory"
+}
+
+IssuedSignedBy: types.#Kind & {
+	symbol: "IssuedSignedBy"
+	schema: "active_directory"
+}
+
+GoldenCert: types.#Kind & {
+	symbol: "GoldenCert"
+	schema: "active_directory"
+}
+
+EnrollOnBehalfOf: types.#Kind & {
+	symbol: "EnrollOnBehalfOf"
+	schema: "active_directory"
+}
+
+ADCSESC1: types.#Kind & {
+	symbol: "ADCSESC1"
+	schema: "active_directory"
+}
+
+ADCSESC2: types.#Kind & {
+	symbol: "ADCSESC2"
+	schema: "active_directory"
+}
+
+ADCSESC3: types.#Kind & {
+	symbol: "ADCSESC3"
+	schema: "active_directory"
+}
+
+ADCSESC4: types.#Kind & {
+	symbol: "ADCSESC4"
+	schema: "active_directory"
+}
+
+ADCSESC5: types.#Kind & {
+	symbol: "ADCSESC5"
+	schema: "active_directory"
+}
+
+ADCSESC6: types.#Kind & {
+	symbol: "ADCSESC6"
+	schema: "active_directory"
+}
+
+ADCSESC7: types.#Kind & {
+	symbol: "ADCSESC7"
+	schema: "active_directory"
+}
+
 // Relationship Kinds
 RelationshipKinds: [
 	Owns,
@@ -620,7 +790,20 @@ RelationshipKinds: [
 	Enroll,
 	HostsCAService,
 	WritePKIEnrollmentFlag,
-	WritePKINameFlag
+	WritePKINameFlag,
+	NTAuthStoreFor,
+	TrustedForNTAuth,
+	EnterpriseCAFor,
+	IssuedSignedBy,
+	GoldenCert,
+	EnrollOnBehalfOf,
+	ADCSESC1,
+	ADCSESC2,
+	ADCSESC3,
+	ADCSESC4,
+	ADCSESC5,
+	ADCSESC6,
+	ADCSESC7
 ]
 
 // ACL Relationships
@@ -685,6 +868,12 @@ PathfindingRelationships: [
 	AddKeyCredentialLink,
 	SyncLAPSPassword,
 	WriteAccountRestrictions,
-	ManageCA,
-	HostsCAService
+	GoldenCert,
+	ADCSESC1,
+	ADCSESC2,
+	ADCSESC3,
+	ADCSESC4,
+	ADCSESC5,
+	ADCSESC6,
+	ADCSESC7
 ]
