@@ -442,12 +442,20 @@ func ParseEnterpriseCAMiscData(enterpriseCA EnterpriseCA) []IngestibleRelationsh
 		relationships = append(relationships, IngestibleRelationship{
 			Source:     enterpriseCA.HostingComputer,
 			SourceType: ad.Computer,
-			Target:     enterpriseCA.Properties["domain"].(string),
+			Target:     enterpriseCA.DomainSID,
 			TargetType: ad.Domain,
 			RelType:    ad.GoldenCert,
 			RelProps:   map[string]any{"isacl": false},
 		})
 	}
+
+	relationships = handleEnterpriseCAEnrollmentAgentRestrictions(enterpriseCA, relationships, enabledCertTemplates)
+	relationships = handleEnterpriseCASecurity(enterpriseCA, relationships)
+
+	return relationships
+}
+
+func handleEnterpriseCAEnrollmentAgentRestrictions(enterpriseCA EnterpriseCA, relationships []IngestibleRelationship, enabledCertTemplates []string) []IngestibleRelationship {
 
 	if enterpriseCA.CARegistryData.EnrollmentAgentRestrictions.Collected {
 		for _, restiction := range enterpriseCA.CARegistryData.EnrollmentAgentRestrictions.Restrictions {
@@ -473,6 +481,11 @@ func ParseEnterpriseCAMiscData(enterpriseCA EnterpriseCA) []IngestibleRelationsh
 			}
 		}
 	}
+
+	return relationships
+}
+
+func handleEnterpriseCASecurity(enterpriseCA EnterpriseCA, relationships []IngestibleRelationship) []IngestibleRelationship {
 
 	if enterpriseCA.CASecurity.Collected {
 		caSecurityData := slices.Filter(enterpriseCA.CARegistryData.CASecurity.Data, func(s ACE) bool {
@@ -508,16 +521,36 @@ func ParseEnterpriseCAMiscData(enterpriseCA EnterpriseCA) []IngestibleRelationsh
 func ParseRootCAMiscData(rootCA RootCA) []IngestibleRelationship {
 	var (
 		relationships = make([]IngestibleRelationship, 0)
-		domainsid     = rootCA.Properties[ad.DomainSID.String()]
+		domainsid     = rootCA.DomainSID
 	)
 
 	if domainsid != "" {
 		relationships = append(relationships, IngestibleRelationship{
 			Source:     rootCA.ObjectIdentifier,
 			SourceType: ad.RootCA,
-			Target:     domainsid.(string),
+			Target:     domainsid,
 			TargetType: ad.Domain,
 			RelType:    ad.RootCAFor,
+			RelProps:   map[string]any{"isacl": false},
+		})
+	}
+
+	return relationships
+}
+
+func ParseNTAuthStoreData(ntAuthStore NTAuthStore) []IngestibleRelationship {
+	var (
+		relationships = make([]IngestibleRelationship, 0)
+		domainsid     = ntAuthStore.DomainSID
+	)
+
+	if domainsid != "" {
+		relationships = append(relationships, IngestibleRelationship{
+			Source:     ntAuthStore.ObjectIdentifier,
+			SourceType: ad.NTAuthStore,
+			Target:     domainsid,
+			TargetType: ad.Domain,
+			RelType:    ad.NTAuthStoreFor,
 			RelProps:   map[string]any{"isacl": false},
 		})
 	}

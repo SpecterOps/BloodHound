@@ -200,7 +200,7 @@ func convertRootCAData(data []ein.RootCA) ConvertedData {
 	converted := ConvertedData{}
 
 	for _, rootca := range data {
-		converted.NodeProps = append(converted.NodeProps, ein.ConvertObjectToNode(ein.IngestBase(rootca), ad.RootCA))
+		converted.NodeProps = append(converted.NodeProps, ein.ConvertObjectToNode(rootca.IngestBase, ad.RootCA))
 		converted.RelProps = append(converted.RelProps, ein.ParseACEData(rootca.Aces, rootca.ObjectIdentifier, ad.RootCA)...)
 		converted.RelProps = append(converted.RelProps, ein.ParseRootCAMiscData(rootca)...)
 	}
@@ -228,8 +228,10 @@ func convertNTAuthStoreData(data []ein.NTAuthStore) ConvertedData {
 	converted := ConvertedData{}
 
 	for _, ntauthstore := range data {
-		converted.NodeProps = append(converted.NodeProps, ein.ConvertObjectToNode(ein.IngestBase(ntauthstore), ad.NTAuthStore))
+		converted.NodeProps = append(converted.NodeProps, ein.ConvertObjectToNode(ntauthstore.IngestBase, ad.NTAuthStore))
+		converted.RelProps = append(converted.RelProps, ein.ParseNTAuthStoreData(ntauthstore)...)
 		converted.RelProps = append(converted.RelProps, ein.ParseACEData(ntauthstore.Aces, ntauthstore.ObjectIdentifier, ad.NTAuthStore)...)
+
 	}
 
 	return converted

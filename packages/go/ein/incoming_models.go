@@ -130,16 +130,23 @@ type GPO IngestBase
 
 type AIACA IngestBase
 
-type RootCA IngestBase
+type RootCA struct {
+	IngestBase
+	DomainSID string
+}
 
 type EnterpriseCA struct {
 	IngestBase
 	CARegistryData
 	EnabledCertTemplates []TypedPrincipal
 	HostingComputer      string
+	DomainSID            string
 }
 
-type NTAuthStore IngestBase
+type NTAuthStore struct {
+	IngestBase
+	DomainSID string
+}
 
 type CertTemplate IngestBase
 
