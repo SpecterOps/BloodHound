@@ -459,7 +459,7 @@ func handleEnterpriseCAEnrollmentAgentRestrictions(enterpriseCA EnterpriseCA, re
 
 	if enterpriseCA.CARegistryData.EnrollmentAgentRestrictions.Collected {
 		for _, restiction := range enterpriseCA.CARegistryData.EnrollmentAgentRestrictions.Restrictions {
-			if restiction.AccessType == "AccessAllowedCallback" {
+			if restiction.AccessType == AccessAllowedCallback {
 				templates := make([]string, 0)
 				if restiction.AllTemplates {
 					templates = enabledCertTemplates
