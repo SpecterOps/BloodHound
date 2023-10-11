@@ -1,17 +1,17 @@
 // Copyright 2023 Specter Ops, Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// 
+//
 // SPDX-License-Identifier: Apache-2.0
 
 package database
@@ -189,47 +189,49 @@ func (s *BloodhoundDB) UpdateAssetGroupSelectors(ctx ctx.Context, assetGroup mod
 		removedSelectors = make([]model.AssetGroupSelector, 0)
 	)
 
-	return map[string]model.AssetGroupSelectors{
-			"added_selectors":   addedSelectors,
-			"removed_selectors": removedSelectors,
-		}, s.db.Transaction(func(tx *gorm.DB) error {
-			for _, selectorSpec := range selectorSpecs {
-				switch selectorSpec.Action {
-				case model.SelectorSpecActionAdd:
-					assetGroupSelector := model.AssetGroupSelector{
-						AssetGroupID:   assetGroup.ID,
-						Name:           selectorSpec.SelectorName,
-						Selector:       selectorSpec.EntityObjectID,
-						SystemSelector: systemSelector,
-					}
-
-					if result := tx.Create(&assetGroupSelector); result.Error != nil {
-						return CheckError(result)
-					} else {
-						addedSelectors = append(addedSelectors, assetGroupSelector)
-					}
-
-				case model.SelectorSpecActionRemove:
-					if result := tx.Where("asset_group_id=? AND name=?", assetGroup.ID, selectorSpec.SelectorName).Delete(&model.AssetGroupSelector{}); result.Error != nil {
-						return CheckError(result)
-					} else {
-						removedSelectors = append(removedSelectors, model.AssetGroupSelector{
-							AssetGroupID: assetGroup.ID,
-							Name:         selectorSpec.SelectorName,
-							Selector:     selectorSpec.EntityObjectID,
-						})
-					}
+	err := s.db.Transaction(func(tx *gorm.DB) error {
+		for _, selectorSpec := range selectorSpecs {
+			switch selectorSpec.Action {
+			case model.SelectorSpecActionAdd:
+				assetGroupSelector := model.AssetGroupSelector{
+					AssetGroupID:   assetGroup.ID,
+					Name:           selectorSpec.SelectorName,
+					Selector:       selectorSpec.EntityObjectID,
+					SystemSelector: systemSelector,
 				}
 
-				if auditLog, err := newAuditLog(ctx, "UpdateAssetGroupSelectors", assetGroup.AuditData().MergeLeft(selectorSpec), s.idResolver); err != nil {
-					return err
-				} else if result := tx.Create(&auditLog); result.Error != nil {
-					return result.Error
+				if result := tx.Create(&assetGroupSelector); result.Error != nil {
+					return CheckError(result)
+				} else {
+					addedSelectors = append(addedSelectors, assetGroupSelector)
+				}
+
+			case model.SelectorSpecActionRemove:
+				if result := tx.Where("asset_group_id=? AND name=?", assetGroup.ID, selectorSpec.SelectorName).Delete(&model.AssetGroupSelector{}); result.Error != nil {
+					return CheckError(result)
+				} else {
+					removedSelectors = append(removedSelectors, model.AssetGroupSelector{
+						AssetGroupID: assetGroup.ID,
+						Name:         selectorSpec.SelectorName,
+						Selector:     selectorSpec.EntityObjectID,
+					})
 				}
 			}
 
-			return nil
-		})
+			if auditLog, err := newAuditLog(ctx, "UpdateAssetGroupSelectors", assetGroup.AuditData().MergeLeft(selectorSpec), s.idResolver); err != nil {
+				return err
+			} else if result := tx.Create(&auditLog); result.Error != nil {
+				return result.Error
+			}
+		}
+
+		return nil
+	})
+
+	return map[string]model.AssetGroupSelectors{
+		"added_selectors":   addedSelectors,
+		"removed_selectors": removedSelectors,
+	}, err
 }
 
 func (s *BloodhoundDB) GetAllAssetGroupSelectors() (model.AssetGroupSelectors, error) {

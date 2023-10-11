@@ -350,7 +350,7 @@
                     "content": {
                         "application/json": {
                             "schema": {
-                                "$ref": "#/definitions/api.ResponseWrapper"
+                                "$ref": "#/definitions/v2.CreateAssetGroupSelectorResponse"
                             }
                         }
                     }
