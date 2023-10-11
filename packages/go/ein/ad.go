@@ -17,6 +17,7 @@
 package ein
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/specterops/bloodhound/analysis"
@@ -487,4 +488,69 @@ func ParseRootCAMiscData(rootCA RootCA) []IngestibleRelationship {
 	// }
 
 	return relationships
+}
+
+type CertificateMappingMethod int
+
+const (
+	CertificateMappingManytoMany                  CertificateMappingMethod = 1
+	CertificateMappingOneToOne                    CertificateMappingMethod = 1 << 1
+	CertificateMappingUserPrincipalName           CertificateMappingMethod = 1 << 2
+	CertificateMappingKerberosCertificate         CertificateMappingMethod = 1 << 3
+	CertificateMappingKerberosExplicitCertificate CertificateMappingMethod = 1 << 4
+)
+
+func ParseDCRegistryData(computer Computer) IngestibleNode {
+	var (
+		prettyCertificateMappingMethodMappings map[string]string = map[string]string{
+			"01": "0x01: Many-to-one (issuer certificate)",
+			"02": "0x02: One-to-one (subject/issuer)",
+			"04": "0x04: User principal name (UPN/SAN)",
+			"08": "0x08: Kerberos service-for-user (S4U) certificate",
+			"10": "0x10: Kerberos service-for-user (S4U) explicit certificate",
+		}
+		prettyStrongCertificateBindingEnforcementMappings []string = []string{
+			"0: Disabled",
+			"1: Compatibility mode",
+			"2: Full enforcement mode",
+		}
+	)
+	propMap := make(map[string]any)
+
+	if computer.DCRegistryData.CertificateMappingMethods.Collected && computer.DCRegistryData.CertificateMappingMethods.Value >= 0 {
+		propMap["CertificateMappingMethodsCollected"] = true
+		propMap["CertificateMappingMethodsHex"] = fmt.Sprintf("0x%02x", computer.DCRegistryData.CertificateMappingMethods.Value)
+
+		var prettyMappings []string
+
+		if computer.DCRegistryData.CertificateMappingMethods.Value&int(CertificateMappingManytoMany) != 0 {
+			prettyMappings = append(prettyMappings, prettyCertificateMappingMethodMappings["01"])
+		}
+		if computer.DCRegistryData.CertificateMappingMethods.Value&int(CertificateMappingOneToOne) != 0 {
+			prettyMappings = append(prettyMappings, prettyCertificateMappingMethodMappings["02"])
+		}
+		if computer.DCRegistryData.CertificateMappingMethods.Value&int(CertificateMappingUserPrincipalName) != 0 {
+			prettyMappings = append(prettyMappings, prettyCertificateMappingMethodMappings["04"])
+		}
+		if computer.DCRegistryData.CertificateMappingMethods.Value&int(CertificateMappingKerberosCertificate) != 0 {
+			prettyMappings = append(prettyMappings, prettyCertificateMappingMethodMappings["08"])
+		}
+		if computer.DCRegistryData.CertificateMappingMethods.Value&int(CertificateMappingKerberosExplicitCertificate) != 0 {
+			prettyMappings = append(prettyMappings, prettyCertificateMappingMethodMappings["10"])
+		}
+
+		propMap["CertificateMappingMethodsPretty"] = prettyMappings
+	}
+
+	if computer.DCRegistryData.StrongCertificateBindingEnforcement.Collected {
+		propMap["StrongCertificateBindingEnforcementCollected"] = true
+		propMap["StrongCertificateBindingEnforcementInt"] = computer.DCRegistryData.StrongCertificateBindingEnforcement.Value
+		propMap["StrongCertificateBindingEnforcementPretty"] = prettyStrongCertificateBindingEnforcementMappings[computer.DCRegistryData.StrongCertificateBindingEnforcement.Value]
+	}
+
+	return IngestibleNode{
+		ObjectID:    computer.ObjectIdentifier,
+		PropertyMap: propMap,
+		Label:       ad.Computer,
+	}
 }

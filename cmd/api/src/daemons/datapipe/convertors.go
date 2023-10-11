@@ -57,6 +57,8 @@ func convertComputerData(data []ein.Computer) ConvertedData {
 			}
 		}
 
+		converted.NodeProps = append(converted.NodeProps, ein.ParseDCRegistryData(computer))
+
 		converted.NodeProps = append(converted.NodeProps, baseNodeProp)
 	}
 

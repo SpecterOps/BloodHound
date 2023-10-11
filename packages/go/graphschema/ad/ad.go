@@ -37,7 +37,7 @@ var (
 	LocalUser                       = graph.StringKind("ADLocalUser")
 	AIACA                           = graph.StringKind("AIACA")
 	RootCA                          = graph.StringKind("RootCA")
-	EnterpriseCA               = graph.StringKind("EnterpriseCA")
+	EnterpriseCA                    = graph.StringKind("EnterpriseCA")
 	NTAuthStore                     = graph.StringKind("NTAuthStore")
 	CertTemplate                    = graph.StringKind("CertTemplate")
 	Owns                            = graph.StringKind("Owns")
