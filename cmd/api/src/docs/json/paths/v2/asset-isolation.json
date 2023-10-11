@@ -339,7 +339,10 @@
                 "content": {
                     "application/json": {
                         "schema": {
-                            "$ref": "#/definitions/model.AssetGroupSelectorSpec"
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/model.AssetGroupSelectorSpec"
+                            }
                         }
                     }
                 }
