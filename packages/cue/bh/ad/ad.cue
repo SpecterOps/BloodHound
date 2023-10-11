@@ -215,6 +215,48 @@ SamAccountName: types.#StringEnum & {
 	representation: "samaccountname"
 }
 
+CertificateMappingMethodsCollected: types.#StringEnum & {
+	symbol:         "CertificateMappingMethodsCollected"
+	schema:         "ad"
+	name:           "Certificate Mapping Methods Collected"
+	representation: "certificatemappingmethodscollected"
+}
+
+CertificateMappingMethodsHex: types.#StringEnum & {
+	symbol:         "CertificateMappingMethodsHex"
+	schema:         "ad"
+	name:           "Certificate Mapping Methods Hex"
+	representation: "certificatemappingmethodshex"
+}
+
+CertificateMappingMethodsPretty: types.#StringEnum & {
+	symbol:         "CertificateMappingMethodsPretty"
+	schema:         "ad"
+	name:           "Certificate Mapping Methods Pretty"
+	representation: "certificatemappingmethodspretty"
+}
+
+StrongCertificateBindingEnforcementCollected: types.#StringEnum & {
+	symbol:         "StrongCertificateBindingEnforcementCollected"
+	schema:         "ad"
+	name:           "Strong Certificate Binding Enforcement Collected"
+	representation: "strongcertificatebindingenforcementcollected"
+}
+
+StrongCertificateBindingEnforcementInt: types.#StringEnum & {
+	symbol:         "StrongCertificateBindingEnforcementInt"
+	schema:         "ad"
+	name:           "Strong Certificate Binding Enforcement Int"
+	representation: "strongcertificatebindingenforcementint"
+}
+
+StrongCertificateBindingEnforcementPretty: types.#StringEnum & {
+	symbol:         "StrongCertificateBindingEnforcementPretty"
+	schema:         "ad"
+	name:           "Strong Certificate Binding Enforcement Pretty"
+	representation: "strongcertificatebindingenforcementpretty"
+}
+
 Properties: [
 	AdminCount,
 	DistinguishedName,
@@ -242,7 +284,13 @@ Properties: [
 	TrustType,
 	SidFiltering,
 	TrustedToAuth,
-	SamAccountName
+	SamAccountName,
+	CertificateMappingMethodsCollected,
+	CertificateMappingMethodsHex,
+	CertificateMappingMethodsPretty,
+	StrongCertificateBindingEnforcementCollected,
+	StrongCertificateBindingEnforcementInt,
+	StrongCertificateBindingEnforcementPretty
 ]
 
 // Kinds

@@ -518,8 +518,8 @@ func ParseDCRegistryData(computer Computer) IngestibleNode {
 	propMap := make(map[string]any)
 
 	if computer.DCRegistryData.CertificateMappingMethods.Collected && computer.DCRegistryData.CertificateMappingMethods.Value >= 0 {
-		propMap["CertificateMappingMethodsCollected"] = true
-		propMap["CertificateMappingMethodsHex"] = fmt.Sprintf("0x%02x", computer.DCRegistryData.CertificateMappingMethods.Value)
+		propMap[ad.CertificateMappingMethodsCollected.String()] = true
+		propMap[ad.CertificateMappingMethodsHex.String()] = fmt.Sprintf("0x%02x", computer.DCRegistryData.CertificateMappingMethods.Value)
 
 		var prettyMappings []string
 
@@ -539,13 +539,13 @@ func ParseDCRegistryData(computer Computer) IngestibleNode {
 			prettyMappings = append(prettyMappings, prettyCertificateMappingMethodMappings["10"])
 		}
 
-		propMap["CertificateMappingMethodsPretty"] = prettyMappings
+		propMap[ad.CertificateMappingMethodsPretty.String()] = prettyMappings
 	}
 
 	if computer.DCRegistryData.StrongCertificateBindingEnforcement.Collected {
-		propMap["StrongCertificateBindingEnforcementCollected"] = true
-		propMap["StrongCertificateBindingEnforcementInt"] = computer.DCRegistryData.StrongCertificateBindingEnforcement.Value
-		propMap["StrongCertificateBindingEnforcementPretty"] = prettyStrongCertificateBindingEnforcementMappings[computer.DCRegistryData.StrongCertificateBindingEnforcement.Value]
+		propMap[ad.StrongCertificateBindingEnforcementCollected.String()] = true
+		propMap[ad.StrongCertificateBindingEnforcementInt.String()] = computer.DCRegistryData.StrongCertificateBindingEnforcement.Value
+		propMap[ad.StrongCertificateBindingEnforcementPretty.String()] = prettyStrongCertificateBindingEnforcementMappings[computer.DCRegistryData.StrongCertificateBindingEnforcement.Value]
 	}
 
 	return IngestibleNode{
