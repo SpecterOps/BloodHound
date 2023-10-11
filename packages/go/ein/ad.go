@@ -489,7 +489,7 @@ func handleEnterpriseCASecurity(enterpriseCA EnterpriseCA, relationships []Inges
 
 	if enterpriseCA.CASecurity.Collected {
 		caSecurityData := slices.Filter(enterpriseCA.CARegistryData.CASecurity.Data, func(s ACE) bool {
-			if s.RightName == "Owns" {
+			if s.RightName == ad.Owns.String() {
 				return false
 			} else {
 				return true
@@ -497,7 +497,7 @@ func handleEnterpriseCASecurity(enterpriseCA EnterpriseCA, relationships []Inges
 		})
 
 		filteredACES := slices.Filter(enterpriseCA.Aces, func(s ACE) bool {
-			if s.RightName == "ManageCA" || s.RightName == "MangeCertificates" || s.RightName == "Enroll" {
+			if s.RightName == ad.ManageCA.String() || s.RightName == ad.ManageCertificates.String() || s.RightName == ad.Enroll.String() {
 				if s.PrincipalSID == enterpriseCA.HostingComputer {
 					return true
 				} else {
