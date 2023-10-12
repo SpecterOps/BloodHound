@@ -19,6 +19,7 @@ package ad
 import (
 	"context"
 	"errors"
+
 	"github.com/specterops/bloodhound/analysis"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/dawgs/ops"
@@ -31,6 +32,39 @@ import (
 var (
 	ErrNoCertParent = errors.New("cert has no parent")
 )
+
+func PostTrustedForNTAuth(ctx context.Context, db graph.Database, ntAuthStoreNodes []graph.Node) (*analysis.AtomicPostProcessingStats, error) {
+	operation := analysis.NewPostRelationshipOperation(ctx, db, "TrustedForNTAuth Post Processing")
+
+	for _, node := range ntAuthStoreNodes {
+		innerNode := node
+
+		operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
+			if thumbprints, err := node.Properties.Get(ad.CertThumbprint.String()).StringSlice(); err != nil {
+				return err
+			} else {
+				for _, thumbprint := range thumbprints {
+					if sourceNodeIDs, err := findMatchingCertChainIDs(thumbprint, tx, ad.EnterpriseCA); err != nil {
+						return err
+					} else {
+						for _, sourceNodeID := range sourceNodeIDs {
+							if !channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
+								FromID: sourceNodeID,
+								ToID:   innerNode.ID,
+								Kind:   ad.TrustedForNTAuth,
+							}) {
+								return nil
+							}
+						}
+					}
+				}
+			}
+			return nil
+		})
+	}
+
+	return &operation.Stats, operation.Done()
+}
 
 func PostIssuedSignedBy(ctx context.Context, db graph.Database, enterpriseCertAuthorities []graph.Node, rootCertAuthorities []graph.Node) (*analysis.AtomicPostProcessingStats, error) {
 	operation := analysis.NewPostRelationshipOperation(ctx, db, "IssuedSignBy Post Processing")
