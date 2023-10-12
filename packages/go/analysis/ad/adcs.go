@@ -21,6 +21,7 @@ import (
 	"errors"
 	"github.com/specterops/bloodhound/analysis"
 	"github.com/specterops/bloodhound/dawgs/graph"
+	"github.com/specterops/bloodhound/dawgs/ops"
 	"github.com/specterops/bloodhound/dawgs/query"
 	"github.com/specterops/bloodhound/dawgs/util/channels"
 	"github.com/specterops/bloodhound/graphschema/ad"
@@ -95,8 +96,7 @@ func processCertChainParent(node graph.Node, tx graph.Transaction) ([]analysis.C
 }
 
 func findMatchingCertChainIDs(certThumbprint string, tx graph.Transaction, kinds ...graph.Kind) ([]graph.ID, error) {
-	nodeIds := make([]graph.ID, 0)
-	return nodeIds, tx.Nodes().Filterf(func() graph.Criteria {
+	return ops.FetchNodeIDs(tx.Nodes().Filterf(func() graph.Criteria {
 		return query.And(
 			query.KindIn(query.Node(), kinds...),
 			query.Equals(
@@ -104,11 +104,5 @@ func findMatchingCertChainIDs(certThumbprint string, tx graph.Transaction, kinds
 				certThumbprint,
 			),
 		)
-	}).FetchIDs(func(cursor graph.Cursor[graph.ID]) error {
-		for id := range cursor.Chan() {
-			nodeIds = append(nodeIds, id)
-		}
-
-		return nil
-	})
+	}))
 }
