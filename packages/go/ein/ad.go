@@ -17,6 +17,7 @@
 package ein
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/specterops/bloodhound/analysis"
@@ -552,4 +553,77 @@ func ParseNTAuthStoreData(ntAuthStore NTAuthStore) []IngestibleRelationship {
 	}
 
 	return relationships
+}
+
+type CertificateMappingMethod int
+
+const (
+	CertificateMappingManytoMany                     CertificateMappingMethod = 1
+	CertificateMappingOneToOne                       CertificateMappingMethod = 1 << 1
+	CertificateMappingUserPrincipalName              CertificateMappingMethod = 1 << 2
+	CertificateMappingKerberosS4UCertificate         CertificateMappingMethod = 1 << 3
+	CertificateMappingKerberosS4UExplicitCertificate CertificateMappingMethod = 1 << 4
+)
+
+// Prettified definitions for DCRegistryData
+const (
+	PrettyCertMappingManyToOne                      = "0x01: Many-to-one (issuer certificate)"
+	PrettyCertMappingOneToOne                       = "0x02: One-to-one (subject/issuer)"
+	PrettyCertMappingUserPrincipalName              = "0x04: User principal name (UPN/SAN)"
+	PrettyCertMappingKerberosS4UCertificate         = "0x08: Kerberos service-for-user (S4U) certificate"
+	PrettyCertMappingKerberosS4UExplicitCertificate = "0x10: Kerberos service-for-user (S4U) explicit certificate"
+
+	PrettyStrongCertBindingEnforcementDisabled      = "0: Disabled"
+	PrettyStrongCertBindingEnforcementCompatibility = "1: Compatibility mode"
+	PrettyStrongCertBindingEnforcementFull          = "2: Full enforcement mode"
+)
+
+func ParseDCRegistryData(computer Computer) IngestibleNode {
+	var ()
+	propMap := make(map[string]any)
+
+	if computer.DCRegistryData.CertificateMappingMethods.Collected && computer.DCRegistryData.CertificateMappingMethods.Value >= 0 {
+		propMap[ad.CertificateMappingMethodsCollected.String()] = true
+		propMap[ad.CertificateMappingMethodsHex.String()] = fmt.Sprintf("0x%02x", computer.DCRegistryData.CertificateMappingMethods.Value)
+
+		var prettyMappings []string
+
+		if computer.DCRegistryData.CertificateMappingMethods.Value&int(CertificateMappingManytoMany) != 0 {
+			prettyMappings = append(prettyMappings, PrettyCertMappingManyToOne)
+		}
+		if computer.DCRegistryData.CertificateMappingMethods.Value&int(CertificateMappingOneToOne) != 0 {
+			prettyMappings = append(prettyMappings, PrettyCertMappingOneToOne)
+		}
+		if computer.DCRegistryData.CertificateMappingMethods.Value&int(CertificateMappingUserPrincipalName) != 0 {
+			prettyMappings = append(prettyMappings, PrettyCertMappingUserPrincipalName)
+		}
+		if computer.DCRegistryData.CertificateMappingMethods.Value&int(CertificateMappingKerberosS4UCertificate) != 0 {
+			prettyMappings = append(prettyMappings, PrettyCertMappingKerberosS4UCertificate)
+		}
+		if computer.DCRegistryData.CertificateMappingMethods.Value&int(CertificateMappingKerberosS4UExplicitCertificate) != 0 {
+			prettyMappings = append(prettyMappings, PrettyCertMappingKerberosS4UExplicitCertificate)
+		}
+
+		propMap[ad.CertificateMappingMethodsPretty.String()] = prettyMappings
+	}
+
+	if computer.DCRegistryData.StrongCertificateBindingEnforcement.Collected {
+		propMap[ad.StrongCertificateBindingEnforcementCollected.String()] = true
+		propMap[ad.StrongCertificateBindingEnforcementInt.String()] = computer.DCRegistryData.StrongCertificateBindingEnforcement.Value
+
+		switch computer.DCRegistryData.StrongCertificateBindingEnforcement.Value {
+		case 0:
+			propMap[ad.StrongCertificateBindingEnforcementPretty.String()] = PrettyStrongCertBindingEnforcementDisabled
+		case 1:
+			propMap[ad.StrongCertificateBindingEnforcementPretty.String()] = PrettyStrongCertBindingEnforcementCompatibility
+		case 2:
+			propMap[ad.StrongCertificateBindingEnforcementPretty.String()] = PrettyStrongCertBindingEnforcementFull
+		}
+	}
+
+	return IngestibleNode{
+		ObjectID:    computer.ObjectIdentifier,
+		PropertyMap: propMap,
+		Label:       ad.Computer,
+	}
 }

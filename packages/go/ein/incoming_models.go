@@ -126,6 +126,21 @@ type CARegistryData struct {
 	IsUserSpecifiesSanEnabled
 }
 
+type DCRegistryData struct {
+	CertificateMappingMethods           CertificateMappingMethods
+	StrongCertificateBindingEnforcement StrongCertificateBindingEnforcement
+}
+
+type CertificateMappingMethods struct {
+	APIResult
+	Value int
+}
+
+type StrongCertificateBindingEnforcement struct {
+	APIResult
+	Value int
+}
+
 type GPO IngestBase
 
 type AIACA IngestBase
@@ -241,6 +256,7 @@ type Computer struct {
 	RegistrySessions   SessionAPIResult
 	LocalGroups        []LocalGroupAPIResult
 	UserRights         []UserRightsAssignmentAPIResult
+	DCRegistryData     DCRegistryData
 	Status             ComputerStatus
 	HasSIDHistory      []TypedPrincipal
 }

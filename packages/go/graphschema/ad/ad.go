@@ -104,50 +104,56 @@ var (
 type Property string
 
 const (
-	AdminCount                           Property = "admincount"
-	CASecurityCollected                  Property = "casecuritycollected"
-	CAName                               Property = "caname"
-	CertChain                            Property = "certchain"
-	CertName                             Property = "certname"
-	CertThumbprint                       Property = "certthumbprint"
-	EnrollmentAgentRestrictionsCollected Property = "enrollmentagentrestrictionscollected"
-	IsUserSpecifiesSanEnabledCollected   Property = "isuserspecifiessanenabledcollected"
-	HasBasicConstraints                  Property = "hasbasicconstraints"
-	BasicConstraintPathLength            Property = "basicconstraintpathlength"
-	DNSHostname                          Property = "dnshostname"
-	CrossCertificatePair                 Property = "crosscertificatepair"
-	DistinguishedName                    Property = "distinguishedname"
-	DomainFQDN                           Property = "domain"
-	DomainSID                            Property = "domainsid"
-	Sensitive                            Property = "sensitive"
-	HighValue                            Property = "highvalue"
-	BlocksInheritance                    Property = "blocksinheritance"
-	IsACL                                Property = "isacl"
-	IsACLProtected                       Property = "isaclprotected"
-	IsDeleted                            Property = "isdeleted"
-	Enforced                             Property = "enforced"
-	Department                           Property = "department"
-	HasCrossCertificatePair              Property = "hascrosscertificatepair"
-	HasSPN                               Property = "hasspn"
-	UnconstrainedDelegation              Property = "unconstraineddelegation"
-	LastLogon                            Property = "lastlogon"
-	LastLogonTimestamp                   Property = "lastlogontimestamp"
-	IsPrimaryGroup                       Property = "isprimarygroup"
-	HasLAPS                              Property = "haslaps"
-	DontRequirePreAuth                   Property = "dontreqpreauth"
-	LogonType                            Property = "logontype"
-	HasURA                               Property = "hasura"
-	PasswordNeverExpires                 Property = "pwdneverexpires"
-	PasswordNotRequired                  Property = "passwordnotreqd"
-	FunctionalLevel                      Property = "functionallevel"
-	TrustType                            Property = "trusttype"
-	SidFiltering                         Property = "sidfiltering"
-	TrustedToAuth                        Property = "trustedtoauth"
-	SamAccountName                       Property = "samaccountname"
+	AdminCount                                   Property = "admincount"
+	CASecurityCollected                          Property = "casecuritycollected"
+	CAName                                       Property = "caname"
+	CertChain                                    Property = "certchain"
+	CertName                                     Property = "certname"
+	CertThumbprint                               Property = "certthumbprint"
+	EnrollmentAgentRestrictionsCollected         Property = "enrollmentagentrestrictionscollected"
+	IsUserSpecifiesSanEnabledCollected           Property = "isuserspecifiessanenabledcollected"
+	HasBasicConstraints                          Property = "hasbasicconstraints"
+	BasicConstraintPathLength                    Property = "basicconstraintpathlength"
+	DNSHostname                                  Property = "dnshostname"
+	CrossCertificatePair                         Property = "crosscertificatepair"
+	DistinguishedName                            Property = "distinguishedname"
+	DomainFQDN                                   Property = "domain"
+	DomainSID                                    Property = "domainsid"
+	Sensitive                                    Property = "sensitive"
+	HighValue                                    Property = "highvalue"
+	BlocksInheritance                            Property = "blocksinheritance"
+	IsACL                                        Property = "isacl"
+	IsACLProtected                               Property = "isaclprotected"
+	IsDeleted                                    Property = "isdeleted"
+	Enforced                                     Property = "enforced"
+	Department                                   Property = "department"
+	HasCrossCertificatePair                      Property = "hascrosscertificatepair"
+	HasSPN                                       Property = "hasspn"
+	UnconstrainedDelegation                      Property = "unconstraineddelegation"
+	LastLogon                                    Property = "lastlogon"
+	LastLogonTimestamp                           Property = "lastlogontimestamp"
+	IsPrimaryGroup                               Property = "isprimarygroup"
+	HasLAPS                                      Property = "haslaps"
+	DontRequirePreAuth                           Property = "dontreqpreauth"
+	LogonType                                    Property = "logontype"
+	HasURA                                       Property = "hasura"
+	PasswordNeverExpires                         Property = "pwdneverexpires"
+	PasswordNotRequired                          Property = "passwordnotreqd"
+	FunctionalLevel                              Property = "functionallevel"
+	TrustType                                    Property = "trusttype"
+	SidFiltering                                 Property = "sidfiltering"
+	TrustedToAuth                                Property = "trustedtoauth"
+	SamAccountName                               Property = "samaccountname"
+	CertificateMappingMethodsCollected           Property = "certificatemappingmethodscollected"
+	CertificateMappingMethodsHex                 Property = "certificatemappingmethodshex"
+	CertificateMappingMethodsPretty              Property = "certificatemappingmethodspretty"
+	StrongCertificateBindingEnforcementCollected Property = "strongcertificatebindingenforcementcollected"
+	StrongCertificateBindingEnforcementInt       Property = "strongcertificatebindingenforcementint"
+	StrongCertificateBindingEnforcementPretty    Property = "strongcertificatebindingenforcementpretty"
 )
 
 func AllProperties() []Property {
-	return []Property{AdminCount, CASecurityCollected, CAName, CertChain, CertName, CertThumbprint, EnrollmentAgentRestrictionsCollected, IsUserSpecifiesSanEnabledCollected, HasBasicConstraints, BasicConstraintPathLength, DNSHostname, CrossCertificatePair, DistinguishedName, DomainFQDN, DomainSID, Sensitive, HighValue, BlocksInheritance, IsACL, IsACLProtected, IsDeleted, Enforced, Department, HasCrossCertificatePair, HasSPN, UnconstrainedDelegation, LastLogon, LastLogonTimestamp, IsPrimaryGroup, HasLAPS, DontRequirePreAuth, LogonType, HasURA, PasswordNeverExpires, PasswordNotRequired, FunctionalLevel, TrustType, SidFiltering, TrustedToAuth, SamAccountName}
+	return []Property{AdminCount, CASecurityCollected, CAName, CertChain, CertName, CertThumbprint, EnrollmentAgentRestrictionsCollected, IsUserSpecifiesSanEnabledCollected, HasBasicConstraints, BasicConstraintPathLength, DNSHostname, CrossCertificatePair, DistinguishedName, DomainFQDN, DomainSID, Sensitive, HighValue, BlocksInheritance, IsACL, IsACLProtected, IsDeleted, Enforced, Department, HasCrossCertificatePair, HasSPN, UnconstrainedDelegation, LastLogon, LastLogonTimestamp, IsPrimaryGroup, HasLAPS, DontRequirePreAuth, LogonType, HasURA, PasswordNeverExpires, PasswordNotRequired, FunctionalLevel, TrustType, SidFiltering, TrustedToAuth, SamAccountName, CertificateMappingMethodsCollected, CertificateMappingMethodsHex, CertificateMappingMethodsPretty, StrongCertificateBindingEnforcementCollected, StrongCertificateBindingEnforcementInt, StrongCertificateBindingEnforcementPretty}
 }
 func ParseProperty(source string) (Property, error) {
 	switch source {
@@ -231,6 +237,18 @@ func ParseProperty(source string) (Property, error) {
 		return TrustedToAuth, nil
 	case "samaccountname":
 		return SamAccountName, nil
+	case "certificatemappingmethodscollected":
+		return CertificateMappingMethodsCollected, nil
+	case "certificatemappingmethodshex":
+		return CertificateMappingMethodsHex, nil
+	case "certificatemappingmethodspretty":
+		return CertificateMappingMethodsPretty, nil
+	case "strongcertificatebindingenforcementcollected":
+		return StrongCertificateBindingEnforcementCollected, nil
+	case "strongcertificatebindingenforcementint":
+		return StrongCertificateBindingEnforcementInt, nil
+	case "strongcertificatebindingenforcementpretty":
+		return StrongCertificateBindingEnforcementPretty, nil
 	default:
 		return "", errors.New("Invalid enumeration value: " + source)
 	}
@@ -317,6 +335,18 @@ func (s Property) String() string {
 		return string(TrustedToAuth)
 	case SamAccountName:
 		return string(SamAccountName)
+	case CertificateMappingMethodsCollected:
+		return string(CertificateMappingMethodsCollected)
+	case CertificateMappingMethodsHex:
+		return string(CertificateMappingMethodsHex)
+	case CertificateMappingMethodsPretty:
+		return string(CertificateMappingMethodsPretty)
+	case StrongCertificateBindingEnforcementCollected:
+		return string(StrongCertificateBindingEnforcementCollected)
+	case StrongCertificateBindingEnforcementInt:
+		return string(StrongCertificateBindingEnforcementInt)
+	case StrongCertificateBindingEnforcementPretty:
+		return string(StrongCertificateBindingEnforcementPretty)
 	default:
 		panic("Invalid enumeration case: " + string(s))
 	}
@@ -403,6 +433,18 @@ func (s Property) Name() string {
 		return "Trusted For Constrained Delegation"
 	case SamAccountName:
 		return "SAM Account Name"
+	case CertificateMappingMethodsCollected:
+		return "Certificate Mapping Methods Collected"
+	case CertificateMappingMethodsHex:
+		return "Certificate Mapping Methods Hex"
+	case CertificateMappingMethodsPretty:
+		return "Certificate Mapping Methods Pretty"
+	case StrongCertificateBindingEnforcementCollected:
+		return "Strong Certificate Binding Enforcement Collected"
+	case StrongCertificateBindingEnforcementInt:
+		return "Strong Certificate Binding Enforcement Int"
+	case StrongCertificateBindingEnforcementPretty:
+		return "Strong Certificate Binding Enforcement Pretty"
 	default:
 		panic("Invalid enumeration case: " + string(s))
 	}
