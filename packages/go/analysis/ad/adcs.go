@@ -78,7 +78,7 @@ func processCertChainParent(node graph.Node, tx graph.Transaction) ([]analysis.C
 		return []analysis.CreatePostRelationshipJob{}, err
 	} else if len(certChain) > 1 {
 		parentCert := certChain[1]
-		if targetNodes, err := findMatchingCertChainIDs(parentCert, tx); err != nil {
+		if targetNodes, err := findMatchingCertChainIDs(parentCert, tx, ad.EnterpriseCA, ad.RootCA); err != nil {
 			return []analysis.CreatePostRelationshipJob{}, err
 		} else {
 			return slices.Map(targetNodes, func(nodeId graph.ID) analysis.CreatePostRelationshipJob {
@@ -94,11 +94,11 @@ func processCertChainParent(node graph.Node, tx graph.Transaction) ([]analysis.C
 	}
 }
 
-func findMatchingCertChainIDs(certThumbprint string, tx graph.Transaction) ([]graph.ID, error) {
+func findMatchingCertChainIDs(certThumbprint string, tx graph.Transaction, kinds ...graph.Kind) ([]graph.ID, error) {
 	nodeIds := make([]graph.ID, 0)
 	return nodeIds, tx.Nodes().Filterf(func() graph.Criteria {
 		return query.And(
-			query.KindIn(query.Node(), ad.RootCA, ad.EnterpriseCA),
+			query.KindIn(query.Node(), kinds...),
 			query.Equals(
 				query.NodeProperty(ad.CertThumbprint.String()),
 				certThumbprint,
