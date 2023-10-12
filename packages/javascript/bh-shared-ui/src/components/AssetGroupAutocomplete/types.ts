@@ -1,8 +1,6 @@
 export enum ChangelogAction {
-    ADD = 'Add',
-    REMOVE = 'Remove',
-    DEFAULT = 'Default Group Member',
-    UNDO = 'Undo',
+    ADD = 'add',
+    REMOVE = 'remove',
 }
 
 export type MemberData = {
