@@ -35,7 +35,7 @@ func PostIssuedSignedBy(ctx context.Context, db graph.Database, enterpriseCertAu
 				return err
 			} else if len(certChain) > 1 {
 				parentCert := certChain[1]
-				if targetNode, err := findMatchingCertChain(parentCert, tx); err != nil {
+				if targetNode, err := findMatchingCertChainID(parentCert, tx); err != nil {
 					return err
 				} else {
 					if !channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
@@ -58,7 +58,7 @@ func PostIssuedSignedBy(ctx context.Context, db graph.Database, enterpriseCertAu
 				return err
 			} else if len(certChain) > 1 {
 				parentCert := certChain[1]
-				if targetNode, err := findMatchingCertChain(parentCert, tx); err != nil {
+				if targetNode, err := findMatchingCertChainID(parentCert, tx); err != nil {
 					return err
 				} else {
 					if !channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
@@ -77,7 +77,7 @@ func PostIssuedSignedBy(ctx context.Context, db graph.Database, enterpriseCertAu
 	return &operation.Stats, operation.Done()
 }
 
-func findMatchingCertChain(certThumbprint string, tx graph.Transaction) (graph.ID, error) {
+func findMatchingCertChainID(certThumbprint string, tx graph.Transaction) (graph.ID, error) {
 	if targetNode, err := tx.Nodes().Filterf(func() graph.Criteria {
 		return query.And(
 			query.Kind(query.Node(), ad.Entity),
