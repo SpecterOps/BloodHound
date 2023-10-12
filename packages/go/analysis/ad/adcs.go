@@ -26,55 +26,51 @@ import (
 )
 
 func PostIssuedSignedBy(ctx context.Context, db graph.Database, enterpriseCertAuthorities []graph.Node, rootCertAuthorities []graph.Node) (*analysis.AtomicPostProcessingStats, error) {
-	operation := analysis.NewPostRelationshipOperation(ctx, db, "PostIssuedSignedBy Post Processing")
+	operation := analysis.NewPostRelationshipOperation(ctx, db, "IssuedSignBy Post Processing")
 
 	for _, node := range enterpriseCertAuthorities {
 		innerNode := node
 		operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
 			if certChain, err := node.Properties.Get(ad.CertChain.String()).StringSlice(); err != nil {
 				return err
-			} else {
-				for _, cert := range certChain {
-					if targetNode, err := findMatchingCertChain(cert, tx); err != nil {
-						return err
-					} else {
-						if !channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
-							FromID: innerNode.ID,
-							ToID:   targetNode,
-							Kind:   ad.IssuedSignedBy,
-						}) {
-							return nil
-						}
+			} else if len(certChain) > 1 {
+				parentCert := certChain[1]
+				if targetNode, err := findMatchingCertChain(parentCert, tx); err != nil {
+					return err
+				} else {
+					if !channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
+						FromID: innerNode.ID,
+						ToID:   targetNode,
+						Kind:   ad.IssuedSignedBy,
+					}) {
+						return nil
 					}
 				}
-
-				return nil
 			}
+			return nil
 		})
 	}
 
-	for _, node := range enterpriseCertAuthorities {
+	for _, node := range rootCertAuthorities {
 		innerNode := node
 		operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
 			if certChain, err := node.Properties.Get(ad.CertChain.String()).StringSlice(); err != nil {
 				return err
-			} else {
-				for _, cert := range certChain {
-					if targetNode, err := findMatchingCertChain(cert, tx); err != nil {
-						return err
-					} else {
-						if !channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
-							FromID: innerNode.ID,
-							ToID:   targetNode,
-							Kind:   ad.IssuedSignedBy,
-						}) {
-							return nil
-						}
+			} else if len(certChain) > 1 {
+				parentCert := certChain[1]
+				if targetNode, err := findMatchingCertChain(parentCert, tx); err != nil {
+					return err
+				} else {
+					if !channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
+						FromID: innerNode.ID,
+						ToID:   targetNode,
+						Kind:   ad.IssuedSignedBy,
+					}) {
+						return nil
 					}
 				}
-
-				return nil
 			}
+			return nil
 		})
 	}
 
