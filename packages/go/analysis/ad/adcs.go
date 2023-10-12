@@ -37,6 +37,8 @@ func PostIssuedSignedBy(ctx context.Context, db graph.Database, enterpriseCertAu
 		for _, node := range enterpriseCertAuthorities {
 			if postRel, err := processCertChainParent(node, tx); err != nil && !errors.Is(err, ErrNoCertParent) {
 				return err
+			} else if errors.Is(err, ErrNoCertParent) {
+				continue
 			} else if !channels.Submit(ctx, outC, postRel) {
 				return nil
 			}
@@ -49,6 +51,8 @@ func PostIssuedSignedBy(ctx context.Context, db graph.Database, enterpriseCertAu
 		for _, node := range rootCertAuthorities {
 			if postRel, err := processCertChainParent(node, tx); err != nil && !errors.Is(err, ErrNoCertParent) {
 				return err
+			} else if errors.Is(err, ErrNoCertParent) {
+				continue
 			} else if !channels.Submit(ctx, outC, postRel) {
 				return nil
 			}
