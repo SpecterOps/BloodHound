@@ -24,6 +24,7 @@ import (
 	"github.com/specterops/bloodhound/dawgs/query"
 	"github.com/specterops/bloodhound/dawgs/util/channels"
 	"github.com/specterops/bloodhound/graphschema/ad"
+	"github.com/specterops/bloodhound/slices"
 )
 
 var (
@@ -35,12 +36,16 @@ func PostIssuedSignedBy(ctx context.Context, db graph.Database, enterpriseCertAu
 
 	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
 		for _, node := range enterpriseCertAuthorities {
-			if postRel, err := processCertChainParent(node, tx); err != nil && !errors.Is(err, ErrNoCertParent) {
+			if postRels, err := processCertChainParent(node, tx); err != nil && !errors.Is(err, ErrNoCertParent) {
 				return err
 			} else if errors.Is(err, ErrNoCertParent) {
 				continue
-			} else if !channels.Submit(ctx, outC, postRel) {
-				return nil
+			} else {
+				for _, rel := range postRels {
+					if !channels.Submit(ctx, outC, rel) {
+						return nil
+					}
+				}
 			}
 		}
 
@@ -49,12 +54,16 @@ func PostIssuedSignedBy(ctx context.Context, db graph.Database, enterpriseCertAu
 
 	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
 		for _, node := range rootCertAuthorities {
-			if postRel, err := processCertChainParent(node, tx); err != nil && !errors.Is(err, ErrNoCertParent) {
+			if postRels, err := processCertChainParent(node, tx); err != nil && !errors.Is(err, ErrNoCertParent) {
 				return err
 			} else if errors.Is(err, ErrNoCertParent) {
 				continue
-			} else if !channels.Submit(ctx, outC, postRel) {
-				return nil
+			} else {
+				for _, rel := range postRels {
+					if !channels.Submit(ctx, outC, rel) {
+						return nil
+					}
+				}
 			}
 		}
 
@@ -64,37 +73,42 @@ func PostIssuedSignedBy(ctx context.Context, db graph.Database, enterpriseCertAu
 	return &operation.Stats, operation.Done()
 }
 
-func processCertChainParent(node graph.Node, tx graph.Transaction) (analysis.CreatePostRelationshipJob, error) {
+func processCertChainParent(node graph.Node, tx graph.Transaction) ([]analysis.CreatePostRelationshipJob, error) {
 	if certChain, err := node.Properties.Get(ad.CertChain.String()).StringSlice(); err != nil {
-		return analysis.CreatePostRelationshipJob{}, err
+		return []analysis.CreatePostRelationshipJob{}, err
 	} else if len(certChain) > 1 {
 		parentCert := certChain[1]
-		if targetNode, err := findMatchingCertChainID(parentCert, tx); err != nil {
-			return analysis.CreatePostRelationshipJob{}, err
+		if targetNodes, err := findMatchingCertChainIDs(parentCert, tx); err != nil {
+			return []analysis.CreatePostRelationshipJob{}, err
 		} else {
-			return analysis.CreatePostRelationshipJob{
-				FromID: node.ID,
-				ToID:   targetNode,
-				Kind:   ad.IssuedSignedBy,
-			}, nil
+			return slices.Map(targetNodes, func(nodeId graph.ID) analysis.CreatePostRelationshipJob {
+				return analysis.CreatePostRelationshipJob{
+					FromID: node.ID,
+					ToID:   nodeId,
+					Kind:   ad.IssuedSignedBy,
+				}
+			}), nil
 		}
 	} else {
-		return analysis.CreatePostRelationshipJob{}, ErrNoCertParent
+		return []analysis.CreatePostRelationshipJob{}, ErrNoCertParent
 	}
 }
 
-func findMatchingCertChainID(certThumbprint string, tx graph.Transaction) (graph.ID, error) {
-	if targetNode, err := tx.Nodes().Filterf(func() graph.Criteria {
+func findMatchingCertChainIDs(certThumbprint string, tx graph.Transaction) ([]graph.ID, error) {
+	nodeIds := make([]graph.ID, 0)
+	return nodeIds, tx.Nodes().Filterf(func() graph.Criteria {
 		return query.And(
-			query.Kind(query.Node(), ad.Entity),
+			query.KindIn(query.Node(), ad.RootCA, ad.EnterpriseCA),
 			query.Equals(
 				query.NodeProperty(ad.CertThumbprint.String()),
 				certThumbprint,
 			),
 		)
-	}).First(); err != nil {
-		return graph.ID(0), err
-	} else {
-		return targetNode.ID, nil
-	}
+	}).FetchIDs(func(cursor graph.Cursor[graph.ID]) error {
+		for id := range cursor.Chan() {
+			nodeIds = append(nodeIds, id)
+		}
+
+		return nil
+	})
 }
