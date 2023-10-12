@@ -132,15 +132,13 @@ type DCRegistryData struct {
 }
 
 type CertificateMappingMethods struct {
-	Value         int
-	Collected     bool
-	FailureReason string
+	APIResult
+	Value int
 }
 
 type StrongCertificateBindingEnforcement struct {
-	Value         int
-	Collected     bool
-	FailureReason string
+	APIResult
+	Value int
 }
 
 type GPO IngestBase
