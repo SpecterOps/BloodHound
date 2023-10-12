@@ -18,6 +18,7 @@ package ad
 
 import (
 	"context"
+	"errors"
 	"github.com/specterops/bloodhound/analysis"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/dawgs/query"
@@ -25,56 +26,57 @@ import (
 	"github.com/specterops/bloodhound/graphschema/ad"
 )
 
+var (
+	ErrNoCertParent = errors.New("cert has no parent")
+)
+
 func PostIssuedSignedBy(ctx context.Context, db graph.Database, enterpriseCertAuthorities []graph.Node, rootCertAuthorities []graph.Node) (*analysis.AtomicPostProcessingStats, error) {
 	operation := analysis.NewPostRelationshipOperation(ctx, db, "IssuedSignBy Post Processing")
 
-	for _, node := range enterpriseCertAuthorities {
-		innerNode := node
-		operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
-			if certChain, err := node.Properties.Get(ad.CertChain.String()).StringSlice(); err != nil {
+	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
+		for _, node := range enterpriseCertAuthorities {
+			if postRel, err := processCertChainParent(node, tx); err != nil && !errors.Is(err, ErrNoCertParent) {
 				return err
-			} else if len(certChain) > 1 {
-				parentCert := certChain[1]
-				if targetNode, err := findMatchingCertChainID(parentCert, tx); err != nil {
-					return err
-				} else {
-					if !channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
-						FromID: innerNode.ID,
-						ToID:   targetNode,
-						Kind:   ad.IssuedSignedBy,
-					}) {
-						return nil
-					}
-				}
+			} else if !channels.Submit(ctx, outC, postRel) {
+				return nil
 			}
-			return nil
-		})
-	}
+		}
 
-	for _, node := range rootCertAuthorities {
-		innerNode := node
-		operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
-			if certChain, err := node.Properties.Get(ad.CertChain.String()).StringSlice(); err != nil {
+		return nil
+	})
+
+	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
+		for _, node := range rootCertAuthorities {
+			if postRel, err := processCertChainParent(node, tx); err != nil && !errors.Is(err, ErrNoCertParent) {
 				return err
-			} else if len(certChain) > 1 {
-				parentCert := certChain[1]
-				if targetNode, err := findMatchingCertChainID(parentCert, tx); err != nil {
-					return err
-				} else {
-					if !channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
-						FromID: innerNode.ID,
-						ToID:   targetNode,
-						Kind:   ad.IssuedSignedBy,
-					}) {
-						return nil
-					}
-				}
+			} else if !channels.Submit(ctx, outC, postRel) {
+				return nil
 			}
-			return nil
-		})
-	}
+		}
+
+		return nil
+	})
 
 	return &operation.Stats, operation.Done()
+}
+
+func processCertChainParent(node graph.Node, tx graph.Transaction) (analysis.CreatePostRelationshipJob, error) {
+	if certChain, err := node.Properties.Get(ad.CertChain.String()).StringSlice(); err != nil {
+		return analysis.CreatePostRelationshipJob{}, err
+	} else if len(certChain) > 1 {
+		parentCert := certChain[1]
+		if targetNode, err := findMatchingCertChainID(parentCert, tx); err != nil {
+			return analysis.CreatePostRelationshipJob{}, err
+		} else {
+			return analysis.CreatePostRelationshipJob{
+				FromID: node.ID,
+				ToID:   targetNode,
+				Kind:   ad.IssuedSignedBy,
+			}, nil
+		}
+	} else {
+		return analysis.CreatePostRelationshipJob{}, ErrNoCertParent
+	}
 }
 
 func findMatchingCertChainID(certThumbprint string, tx graph.Transaction) (graph.ID, error) {
