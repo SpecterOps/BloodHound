@@ -106,7 +106,7 @@ func (s Resources) GetAuditLogs(response http.ResponseWriter, request *http.Requ
 			api.WriteErrorResponse(request.Context(), ErrBadQueryParameter(request, logsBeforeQueryParam, err), response)
 		} else if getLogsAfter, err := ParseTimeQueryParameter(queryParams, logsAfterQueryParam, getLogsBefore.Add(-time.Hour*24*365)); err != nil {
 			api.WriteErrorResponse(request.Context(), ErrBadQueryParameter(request, logsAfterQueryParam, err), response)
-		} else if logs, count, err := s.DB.GetAuditLogsBetween(getLogsBefore, getLogsAfter, offset, limit, strings.Join(order, ", "), sqlFilter); err != nil {
+		} else if logs, count, err := s.DB.ListAuditLogs(getLogsBefore, getLogsAfter, offset, limit, strings.Join(order, ", "), sqlFilter); err != nil {
 			api.HandleDatabaseError(request, response, err)
 		} else {
 			api.WriteResponseWrapperWithPagination(request.Context(), AuditLogsResponse{Logs: logs}, limit, offset, count, http.StatusOK, response)

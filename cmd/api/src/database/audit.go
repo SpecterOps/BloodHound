@@ -60,7 +60,7 @@ func (s *BloodhoundDB) AppendAuditLog(ctx ctx.Context, action string, data model
 	}
 }
 
-func (s *BloodhoundDB) GetAuditLogsBetween(before, after time.Time, offset, limit int, order string, filter model.SQLFilter) (model.AuditLogs, int, error) {
+func (s *BloodhoundDB) ListAuditLogs(before, after time.Time, offset, limit int, order string, filter model.SQLFilter) (model.AuditLogs, int, error) {
 	var (
 		auditLogs model.AuditLogs
 		result    *gorm.DB

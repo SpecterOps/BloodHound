@@ -82,7 +82,7 @@ type Database interface {
 	Wipe() error
 	MigrateModels([]any) error
 	AppendAuditLog(ctx ctx.Context, action string, data model.Auditable) error
-	GetAuditLogsBetween(before, after time.Time, offset, limit int, order string, filter model.SQLFilter) (model.AuditLogs, int, error)
+	ListAuditLogs(before, after time.Time, offset, limit int, order string, filter model.SQLFilter) (model.AuditLogs, int, error)
 	CreateRole(role model.Role) (model.Role, error)
 	UpdateRole(role model.Role) error
 	GetAllRoles(order string, filter model.SQLFilter) (model.Roles, error)
