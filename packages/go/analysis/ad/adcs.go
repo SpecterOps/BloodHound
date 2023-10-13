@@ -113,21 +113,19 @@ func PostEnterpriseCAFor(ctx context.Context, db graph.Database, enterpriseCertA
 
 	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
 		for _, ecaNode := range enterpriseCertAuthorities {
-			if thumbprints, err := ecaNode.Properties.Get(ad.CertThumbprint.String()).StringSlice(); err != nil {
+			if thumbprint, err := ecaNode.Properties.Get(ad.CertThumbprint.String()).String(); err != nil {
 				return err
-			} else {
-				for _, thumbprint := range thumbprints {
-					if rootCAIDs, err := findNodesByCertThumbprint(thumbprint, tx, ad.RootCA); err != nil {
-						return err
-					} else {
-						for _, rootCANodeID := range rootCAIDs {
-							if !channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
-								FromID: ecaNode.ID,
-								ToID:   rootCANodeID,
-								Kind:   ad.EnterpriseCAFor,
-							}) {
-								return nil
-							}
+			} else if thumbprint != "" {
+				if rootCAIDs, err := findNodesByCertThumbprint(thumbprint, tx, ad.RootCA); err != nil {
+					return err
+				} else {
+					for _, rootCANodeID := range rootCAIDs {
+						if !channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
+							FromID: ecaNode.ID,
+							ToID:   rootCANodeID,
+							Kind:   ad.EnterpriseCAFor,
+						}) {
+							return nil
 						}
 					}
 				}
