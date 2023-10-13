@@ -69,11 +69,11 @@ func (s *BloodhoundDB) ListAuditLogs(before, after time.Time, offset, limit int,
 	)
 
 	if order != "" && filter.SQLString == "" {
-		result = cursor.Order(order).Find(&auditLogs)
+		result = cursor.Order(order).Find(&auditLogs).Count(&count)
 	} else if order != "" && filter.SQLString != "" {
-		result = cursor.Where(filter.SQLString, filter.Params).Order(order).Find(&auditLogs)
+		result = cursor.Where(filter.SQLString, filter.Params).Order(order).Find(&auditLogs).Count(&count)
 	} else if order == "" && filter.SQLString != "" {
-		result = cursor.Where(filter.SQLString, filter.Params).Find(&auditLogs)
+		result = cursor.Where(filter.SQLString, filter.Params).Find(&auditLogs).Count(&count)
 	} else {
 		result = cursor.Find(&auditLogs).Count(&count)
 	}
