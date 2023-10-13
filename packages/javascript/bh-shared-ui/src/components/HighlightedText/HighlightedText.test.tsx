@@ -50,4 +50,12 @@ describe('HighlightedText', () => {
         expect(screen.getByText(/test string/)).toBeInTheDocument();
         expect(screen.getByText(/test string/)).toHaveAttribute('style', 'font-weight: bold;');
     });
+
+    it('should handle special characters', () => {
+        render(<HighlightedText text='(TESTLAB.LOCAL)+SOME@TEXT$![-[\]{}()*+?' search='CAL)+SOME@TEXT$!' />);
+        expect(screen.getByText(/\(TESTLAB\.LO/)).toBeInTheDocument();
+        expect(screen.getByText(/CAL\)\+SOME@TEXT\$!/)).toBeInTheDocument();
+        expect(screen.getByText(/\[\-\[\\\]\{\}\(\)\*\+\?/)).toBeInTheDocument();
+        expect(screen.getByText(/CAL\)\+SOME@TEXT\$!/)).toHaveAttribute('style', 'font-weight: bold;');
+    });
 });
