@@ -44,7 +44,7 @@ func PostTrustedForNTAuth(ctx context.Context, db graph.Database, ntAuthStoreNod
 				return err
 			} else {
 				for _, thumbprint := range thumbprints {
-					if sourceNodeIDs, err := findMatchingCertChainIDs(thumbprint, tx, ad.EnterpriseCA); err != nil {
+					if sourceNodeIDs, err := findNodesByCertThumbprint(thumbprint, tx, ad.EnterpriseCA); err != nil {
 						return err
 					} else {
 						for _, sourceNodeID := range sourceNodeIDs {
@@ -108,12 +108,44 @@ func PostIssuedSignedBy(ctx context.Context, db graph.Database, enterpriseCertAu
 	return &operation.Stats, operation.Done()
 }
 
+func PostEnterpriseCAFor(ctx context.Context, db graph.Database, enterpriseCertAuthorities []graph.Node, rootCertAuthorities []graph.Node) (*analysis.AtomicPostProcessingStats, error) {
+	operation := analysis.NewPostRelationshipOperation(ctx, db, "EnterpriseCAFor Post Processing")
+
+	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
+		for _, ecaNode := range enterpriseCertAuthorities {
+			if thumbprints, err := ecaNode.Properties.Get(ad.CertThumbprint.String()).StringSlice(); err != nil {
+				return err
+			} else {
+				for _, thumbprint := range thumbprints {
+					if rootCAIDs, err := findNodesByCertThumbprint(thumbprint, tx, ad.RootCA); err != nil {
+						return err
+					} else {
+						for _, rootCANodeID := range rootCAIDs {
+							if !channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
+								FromID: ecaNode.ID,
+								ToID:   rootCANodeID,
+								Kind:   ad.EnterpriseCAFor,
+							}) {
+								return nil
+							}
+						}
+					}
+				}
+			}
+		}
+
+		return nil
+	})
+
+	return &operation.Stats, operation.Done()
+}
+
 func processCertChainParent(node graph.Node, tx graph.Transaction) ([]analysis.CreatePostRelationshipJob, error) {
 	if certChain, err := node.Properties.Get(ad.CertChain.String()).StringSlice(); err != nil {
 		return []analysis.CreatePostRelationshipJob{}, err
 	} else if len(certChain) > 1 {
 		parentCert := certChain[1]
-		if targetNodes, err := findMatchingCertChainIDs(parentCert, tx, ad.EnterpriseCA, ad.RootCA); err != nil {
+		if targetNodes, err := findNodesByCertThumbprint(parentCert, tx, ad.EnterpriseCA, ad.RootCA); err != nil {
 			return []analysis.CreatePostRelationshipJob{}, err
 		} else {
 			return slices.Map(targetNodes, func(nodeId graph.ID) analysis.CreatePostRelationshipJob {
@@ -129,7 +161,7 @@ func processCertChainParent(node graph.Node, tx graph.Transaction) ([]analysis.C
 	}
 }
 
-func findMatchingCertChainIDs(certThumbprint string, tx graph.Transaction, kinds ...graph.Kind) ([]graph.ID, error) {
+func findNodesByCertThumbprint(certThumbprint string, tx graph.Transaction, kinds ...graph.Kind) ([]graph.ID, error) {
 	return ops.FetchNodeIDs(tx.Nodes().Filterf(func() graph.Criteria {
 		return query.And(
 			query.KindIn(query.Node(), kinds...),
