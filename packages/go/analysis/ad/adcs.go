@@ -108,7 +108,7 @@ func PostIssuedSignedBy(ctx context.Context, db graph.Database, enterpriseCertAu
 	return &operation.Stats, operation.Done()
 }
 
-func PostEnterpriseCAFor(ctx context.Context, db graph.Database, enterpriseCertAuthorities []graph.Node, rootCertAuthorities []graph.Node) (*analysis.AtomicPostProcessingStats, error) {
+func PostEnterpriseCAFor(ctx context.Context, db graph.Database, enterpriseCertAuthorities []graph.Node) (*analysis.AtomicPostProcessingStats, error) {
 	operation := analysis.NewPostRelationshipOperation(ctx, db, "EnterpriseCAFor Post Processing")
 
 	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
