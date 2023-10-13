@@ -124,7 +124,7 @@ const Header: React.FC = () => {
                 <Box height='100%' paddingY='6px' boxSizing='border-box'>
                     <Link component={RouterLink} to={routes.ROUTE_HOME} data-testid='global_header_nav-home'>
                         <img
-                            src={'img/logo-transparent-banner.svg'}
+                            src={'/img/logo-transparent-banner.svg'}
                             alt='BloodHound CE Home'
                             style={{
                                 height: '100%',
