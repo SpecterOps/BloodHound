@@ -44,27 +44,6 @@ func (s Client) GetLatestAuditLogs() (v2.AuditLogsResponse, error) {
 	}
 }
 
-func (s Client) GetAuditLogs(offset, limit int) (v2.AuditLogsResponse, error) {
-	var logs v2.AuditLogsResponse
-
-	params := url.Values{
-		"offset": []string{strconv.Itoa(offset)},
-		"limit":  []string{strconv.Itoa(limit)},
-	}
-
-	if response, err := s.Request(http.MethodGet, "api/v2/audit", params, nil); err != nil {
-		return logs, err
-	} else {
-		defer response.Body.Close()
-
-		if api.IsErrorResponse(response) {
-			return logs, ReadAPIError(response)
-		}
-
-		return logs, api.ReadAPIV2ResponsePayload(&logs, response)
-	}
-}
-
 func (s Client) ListAuditLogs(after, before time.Time, offset, limit int) (v2.AuditLogsResponse, error) {
 	var logs v2.AuditLogsResponse
 

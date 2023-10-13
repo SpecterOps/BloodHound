@@ -121,7 +121,7 @@ func NewV2API(cfg config.Configuration, resources v2.Resources, routerInst *rout
 
 		// Audit API
 		// TODO: This might actually need its own permission that's assigned to the Administrator user by default
-		routerInst.GET("/api/v2/audit", resources.GetAuditLogs).RequirePermissions(permissions.AuthManageUsers),
+		routerInst.GET("/api/v2/audit", resources.ListAuditLogs).RequirePermissions(permissions.AuthManageUsers),
 
 		// App Config API
 		routerInst.GET("/api/v2/config", resources.GetApplicationConfigurations).RequirePermissions(permissions.AppReadApplicationConfiguration),

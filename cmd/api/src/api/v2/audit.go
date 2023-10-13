@@ -32,8 +32,8 @@ type AuditLogsResponse struct {
 	Logs model.AuditLogs `json:"logs"`
 }
 
-// GetAuditLogs retrieves audit logs
-func (s Resources) GetAuditLogs(response http.ResponseWriter, request *http.Request) {
+// ListAuditLogs retrieves audit logs
+func (s Resources) ListAuditLogs(response http.ResponseWriter, request *http.Request) {
 	var (
 		order         []string
 		auditLogs     model.AuditLogs

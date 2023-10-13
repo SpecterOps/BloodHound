@@ -37,7 +37,7 @@ import (
 	"github.com/specterops/bloodhound/src/model"
 )
 
-func TestResources_GetAuditLogs_SortingError(t *testing.T) {
+func TestResources_ListAuditLogs_SortingError(t *testing.T) {
 	var (
 		mockCtrl  = gomock.NewController(t)
 		resources = v2.Resources{}
@@ -56,7 +56,7 @@ func TestResources_GetAuditLogs_SortingError(t *testing.T) {
 		req.URL.RawQuery = q.Encode()
 
 		router := mux.NewRouter()
-		router.HandleFunc(endpoint, resources.GetAuditLogs).Methods("GET")
+		router.HandleFunc(endpoint, resources.ListAuditLogs).Methods("GET")
 
 		response := httptest.NewRecorder()
 		router.ServeHTTP(response, req)
@@ -66,7 +66,7 @@ func TestResources_GetAuditLogs_SortingError(t *testing.T) {
 	}
 }
 
-func TestResources_GetAuditLogs_InvalidColumn(t *testing.T) {
+func TestResources_ListAuditLogs_InvalidColumn(t *testing.T) {
 	var (
 		mockCtrl  = gomock.NewController(t)
 		resources = v2.Resources{}
@@ -85,7 +85,7 @@ func TestResources_GetAuditLogs_InvalidColumn(t *testing.T) {
 		req.URL.RawQuery = q.Encode()
 
 		router := mux.NewRouter()
-		router.HandleFunc(endpoint, resources.GetAuditLogs).Methods("GET")
+		router.HandleFunc(endpoint, resources.ListAuditLogs).Methods("GET")
 
 		response := httptest.NewRecorder()
 		router.ServeHTTP(response, req)
@@ -94,7 +94,7 @@ func TestResources_GetAuditLogs_InvalidColumn(t *testing.T) {
 	}
 }
 
-func TestResources_GetAuditLogs_InvalidPredicate(t *testing.T) {
+func TestResources_ListAuditLogs_InvalidPredicate(t *testing.T) {
 	var (
 		mockCtrl  = gomock.NewController(t)
 		resources = v2.Resources{}
@@ -113,7 +113,7 @@ func TestResources_GetAuditLogs_InvalidPredicate(t *testing.T) {
 		req.URL.RawQuery = q.Encode()
 
 		router := mux.NewRouter()
-		router.HandleFunc(endpoint, resources.GetAuditLogs).Methods("GET")
+		router.HandleFunc(endpoint, resources.ListAuditLogs).Methods("GET")
 
 		response := httptest.NewRecorder()
 		router.ServeHTTP(response, req)
@@ -122,7 +122,7 @@ func TestResources_GetAuditLogs_InvalidPredicate(t *testing.T) {
 	}
 }
 
-func TestResources_GetAuditLogs_PredicateMismatchWithColumn(t *testing.T) {
+func TestResources_ListAuditLogs_PredicateMismatchWithColumn(t *testing.T) {
 	var (
 		mockCtrl  = gomock.NewController(t)
 		resources = v2.Resources{}
@@ -141,7 +141,7 @@ func TestResources_GetAuditLogs_PredicateMismatchWithColumn(t *testing.T) {
 		req.URL.RawQuery = q.Encode()
 
 		router := mux.NewRouter()
-		router.HandleFunc(endpoint, resources.GetAuditLogs).Methods("GET")
+		router.HandleFunc(endpoint, resources.ListAuditLogs).Methods("GET")
 
 		response := httptest.NewRecorder()
 		router.ServeHTTP(response, req)
@@ -150,7 +150,7 @@ func TestResources_GetAuditLogs_PredicateMismatchWithColumn(t *testing.T) {
 	}
 }
 
-func TestResources_GetAuditLogs_DBError(t *testing.T) {
+func TestResources_ListAuditLogs_DBError(t *testing.T) {
 	var (
 		mockCtrl  = gomock.NewController(t)
 		mockDB    = mocks.NewMockDatabase(mockCtrl)
@@ -173,7 +173,7 @@ func TestResources_GetAuditLogs_DBError(t *testing.T) {
 		req.URL.RawQuery = q.Encode()
 
 		router := mux.NewRouter()
-		router.HandleFunc(endpoint, resources.GetAuditLogs).Methods("GET")
+		router.HandleFunc(endpoint, resources.ListAuditLogs).Methods("GET")
 
 		response := httptest.NewRecorder()
 		router.ServeHTTP(response, req)
@@ -182,7 +182,7 @@ func TestResources_GetAuditLogs_DBError(t *testing.T) {
 	}
 }
 
-func TestResources_GetAuditLogs(t *testing.T) {
+func TestResources_ListAuditLogs(t *testing.T) {
 	var (
 		mockCtrl  = gomock.NewController(t)
 		mockDB    = mocks.NewMockDatabase(mockCtrl)
@@ -205,7 +205,7 @@ func TestResources_GetAuditLogs(t *testing.T) {
 		req.URL.RawQuery = q.Encode()
 
 		router := mux.NewRouter()
-		router.HandleFunc(endpoint, resources.GetAuditLogs).Methods("GET")
+		router.HandleFunc(endpoint, resources.ListAuditLogs).Methods("GET")
 
 		response := httptest.NewRecorder()
 		router.ServeHTTP(response, req)
@@ -213,7 +213,7 @@ func TestResources_GetAuditLogs(t *testing.T) {
 	}
 }
 
-func TestResources_GetAuditLogs_Filtered(t *testing.T) {
+func TestResources_ListAuditLogs_Filtered(t *testing.T) {
 	var (
 		mockCtrl  = gomock.NewController(t)
 		mockDB    = mocks.NewMockDatabase(mockCtrl)
@@ -234,7 +234,7 @@ func TestResources_GetAuditLogs_Filtered(t *testing.T) {
 		req.URL.RawQuery = q.Encode()
 
 		router := mux.NewRouter()
-		router.HandleFunc(endpoint, resources.GetAuditLogs).Methods("GET")
+		router.HandleFunc(endpoint, resources.ListAuditLogs).Methods("GET")
 
 		response := httptest.NewRecorder()
 		router.ServeHTTP(response, req)
