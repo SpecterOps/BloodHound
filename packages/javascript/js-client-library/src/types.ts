@@ -33,6 +33,12 @@ export interface CreateAssetGroupSelectorRequest {
     sid: string;
 }
 
+export interface UpdateAssetGroupSelectorRequest {
+    selector_name: string;
+    sid: string;
+    action: 'add' | 'remove';
+}
+
 export interface CreateSharpHoundClientRequest {
     domain_controller: string;
     name: string;

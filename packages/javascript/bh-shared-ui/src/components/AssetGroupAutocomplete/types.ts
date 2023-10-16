@@ -1,6 +1,8 @@
 export enum ChangelogAction {
-    ADD = 'add',
-    REMOVE = 'remove',
+    ADD,
+    REMOVE,
+    DEFAULT,
+    UNDO,
 }
 
 export type MemberData = {

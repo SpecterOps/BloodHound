@@ -1,5 +1,5 @@
 import { Box, Paper } from "@mui/material"
-import { AssetGroupMember } from "js-client-library";
+import { AssetGroupMember, UpdateAssetGroupSelectorRequest } from "js-client-library";
 import { FC, useState } from "react"
 import AssetGroupAutocomplete, { AssetGroupChangelog, AssetGroupChangelogEntry, ChangelogAction } from "../AssetGroupAutocomplete";
 import { SubHeader } from "../../views/Explore";
@@ -24,7 +24,7 @@ const AssetGroupEdit: FC<{
         }
     }
 
-    const mapChangelogToSelectors = (): { selector_name: string, sid: string, action: 'add' | 'remove' }[] => {
+    const mapChangelogToSelectors = (): UpdateAssetGroupSelectorRequest[] => {
         return changelog.map(item => {
             return {
                 selector_name: item.objectid,
@@ -45,6 +45,7 @@ const AssetGroupEdit: FC<{
     })
 
     const handleRemoveEntryFromChangelog = (entry: AssetGroupChangelogEntry) => {
+        console.log(entry);
         setChangelog(changelog.filter(item => item.objectid !== entry.objectid))
     }
 

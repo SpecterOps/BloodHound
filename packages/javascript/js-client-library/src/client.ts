@@ -87,7 +87,7 @@ class BHEAPIClient {
 
     updateAssetGroupSelector = (
         assetGroupId: string,
-        selectorChangeset: { selector_name: string; sid: string; action: 'add' | 'remove' }[],
+        selectorChangeset: types.UpdateAssetGroupSelectorRequest[],
         options?: types.RequestOptions
     ) => this.baseClient.post(`/api/v2/asset-groups/${assetGroupId}/selectors`, selectorChangeset, options);
 

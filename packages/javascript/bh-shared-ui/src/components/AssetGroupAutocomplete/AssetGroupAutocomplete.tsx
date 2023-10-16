@@ -21,6 +21,7 @@ const AssetGroupAutocomplete: FC<{
         const resultInAssetGroup = assetGroupMembers.find(member => member.object_id === result.objectid);
 
         let action = ChangelogAction.ADD;
+        
         if (resultInAssetGroup) {
             action = ChangelogAction.DEFAULT;
         }
@@ -46,13 +47,19 @@ const AssetGroupAutocomplete: FC<{
     }
 
     const handleRenderOption = (props: HTMLAttributes<HTMLLIElement>, option: AssetGroupChangelogEntry): ReactNode => {
+        const actionLabels = {
+            [ChangelogAction.ADD]: "Add",
+            [ChangelogAction.REMOVE]: "Remove",
+            [ChangelogAction.DEFAULT]: "Default Group Member",
+            [ChangelogAction.UNDO]: "Undo",
+        }
         return (
             <AutocompleteOption
                 props={props}
                 id={option.objectid}
                 type={option.type}
                 name={option.name}
-                actionLabel={option.action}
+                actionLabel={actionLabels[option.action]}
             />
         );
     }
