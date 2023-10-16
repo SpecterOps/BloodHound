@@ -55,21 +55,21 @@ func TestParseAGMembersFromNodes_(t *testing.T) {
 	nodes := graph.NodeSet{
 		1: &graph.Node{
 			ID:    1,
-			Kinds: graph.Kinds{ad.Domain},
+			Kinds: graph.Kinds{ad.Entity, ad.Domain},
 			Properties: &graph.Properties{
 				Map: map[string]any{common.ObjectID.String(): "a", common.Name.String(): "a", ad.DomainSID.String(): "a"},
 			},
 		},
 		2: &graph.Node{
 			ID:    2,
-			Kinds: graph.Kinds{azure.Tenant},
+			Kinds: graph.Kinds{azure.Entity, azure.Tenant},
 			Properties: &graph.Properties{
 				Map: map[string]any{common.ObjectID.String(): "b", common.Name.String(): "b", azure.TenantID.String(): "b"},
 			},
 		},
 		3: &graph.Node{
 			ID:    3,
-			Kinds: graph.Kinds{ad.Domain},
+			Kinds: graph.Kinds{ad.Entity, ad.Domain},
 			Properties: &graph.Properties{
 				Map: map[string]any{common.ObjectID.String(): "c", common.Name.String(): "c", ad.DomainSID.String(): "c"},
 			},
@@ -103,7 +103,7 @@ func TestParseAGMembersFromNodes_MissingNodeProperties(t *testing.T) {
 		// the parse fn should handle a node with nil values for name, objectid, and domainsid
 		1: &graph.Node{
 			ID:    1,
-			Kinds: graph.Kinds{ad.Domain},
+			Kinds: graph.Kinds{ad.Entity, ad.Domain},
 			Properties: &graph.Properties{
 				Map: map[string]any{},
 			},

@@ -456,7 +456,7 @@ func parseAGMembersFromNodes(nodes graph.NodeSet, selectors model.AssetGroupSele
 				agMember.EnvironmentID = domainSID
 			}
 		} else {
-			log.Warnf("Node %d is missing valid base entity, skipping AG Membership...")
+			log.Warnf("Node %d is missing valid base entity, skipping AG Membership...", node.ID)
 			continue
 		}
 
