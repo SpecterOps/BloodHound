@@ -404,7 +404,7 @@ func parseAGMembersFromNodes(nodes graph.NodeSet, selectors model.AssetGroupSele
 		isCustomMember := false
 		// a member is custom if at least one selector exists for that object ID
 		for _, agSelector := range selectors {
-			if objectId, ok := node.Properties.Map[common.ObjectID.String()].(string); !ok {
+			if objectId, err := node.Properties.Get(common.ObjectID.String()).String(); err != nil {
 				log.Warnf("objectid is missing for node %d", node.ID)
 			} else if agSelector.Selector == objectId {
 				isCustomMember = true
@@ -416,14 +416,14 @@ func parseAGMembersFromNodes(nodes graph.NodeSet, selectors model.AssetGroupSele
 			memberName     string
 		)
 
-		if objectId, ok := node.Properties.Map[common.ObjectID.String()].(string); !ok {
+		if objectId, err := node.Properties.Get(common.ObjectID.String()).String(); err != nil {
 			log.Warnf("objectid is missing for node %d", node.ID)
 			memberObjectId = ""
 		} else {
 			memberObjectId = objectId
 		}
 
-		if name, ok := node.Properties.Map[common.Name.String()].(string); !ok {
+		if name, err := node.Properties.Get(common.Name.String()).String(); err != nil {
 			log.Warnf("name is missing for node %d", node.ID)
 			memberName = ""
 		} else {
@@ -439,10 +439,10 @@ func parseAGMembersFromNodes(nodes graph.NodeSet, selectors model.AssetGroupSele
 			CustomMember: isCustomMember,
 		}
 
-		if tenantID := node.Properties.Map[azure.TenantID.String()]; tenantID != nil {
-			agMember.EnvironmentID = tenantID.(string)
+		if tenantID, err := node.Properties.Get(azure.TenantID.String()).String(); err == nil {
+			agMember.EnvironmentID = tenantID
 			agMember.EnvironmentKind = azure.Tenant.String()
-		} else if domainSID, ok := node.Properties.Map[ad.DomainSID.String()].(string); !ok {
+		} else if domainSID, err := node.Properties.Get(ad.DomainSID.String()).String(); err != nil {
 			log.Warnf("domainsid is missing for node %d", node.ID)
 			domainSID = ""
 		} else {
