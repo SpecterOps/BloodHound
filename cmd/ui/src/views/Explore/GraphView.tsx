@@ -14,122 +14,42 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Grid, useTheme } from '@mui/material';
-import { EdgeInfoState, GraphButtonProps, GraphProgress, setEdgeInfoOpen, setSelectedEdge } from 'bh-shared-ui';
+import { Box, Grid, Link, useTheme } from '@mui/material';
+import {
+    EdgeInfoState,
+    GraphButtonProps,
+    GraphProgress,
+    NoDataAlert,
+    setEdgeInfoOpen,
+    setSelectedEdge,
+    useAvailableDomains,
+} from 'bh-shared-ui';
 import { MultiDirectedGraph } from 'graphology';
 import { random } from 'graphology-layout';
 import forceAtlas2 from 'graphology-layout-forceatlas2';
 import { Attributes } from 'graphology-types';
-import { GraphEdges, GraphNodes } from 'js-client-library';
+import { GraphNodes } from 'js-client-library';
 import isEmpty from 'lodash/isEmpty';
 import { FC, useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
+import { Link as RouterLink } from 'react-router-dom';
 import { GraphButtonOptions } from 'src/components/GraphButtons/GraphButtons';
 import SigmaChart from 'src/components/SigmaChart';
 import { setEntityInfoOpen, setSelectedNode } from 'src/ducks/entityinfo/actions';
 import { GraphState } from 'src/ducks/explore/types';
 import { setAssetGroupEdit } from 'src/ducks/global/actions';
+import { ROUTE_ADMINISTRATION_FILE_INGEST } from 'src/ducks/global/routes';
 import { GlobalOptionsState } from 'src/ducks/global/types';
 import { discardChanges } from 'src/ducks/tierzero/actions';
 import { RankDirection } from 'src/hooks/useLayoutDagre/useLayoutDagre';
 import useToggle from 'src/hooks/useToggle';
-import { GLYPHS, GlyphKind, NODE_ICON, UNKNOWN_ICON } from 'src/icons';
-import { GlyphLocation } from 'src/rendering/programs/node.glyphs';
 import { AppState, useAppDispatch } from 'src/store';
-import { EdgeDirection, EdgeParams, NodeParams, transformFlatGraphResponse } from 'src/utils';
+import { transformFlatGraphResponse } from 'src/utils';
 import EdgeInfoPane from 'src/views/Explore/EdgeInfo/EdgeInfoPane';
 import EntityInfoPanel from 'src/views/Explore/EntityInfo/EntityInfoPanel';
 import ExploreSearch from 'src/views/Explore/ExploreSearch';
 import usePrompt from 'src/views/Explore/NavigationAlert';
-
-const initGraphNodes = (graph: MultiDirectedGraph, nodes: GraphNodes, nodeSize: number) => {
-    Object.keys(nodes).forEach((key: string) => {
-        const node = nodes[key];
-        // Set default node parameters
-        const nodeParams: Partial<NodeParams> = {
-            color: '#FFFFFF',
-            type: 'combined',
-            label: node.label,
-            forceLabel: true,
-        };
-
-        const icon = NODE_ICON[node.kind] || UNKNOWN_ICON;
-        nodeParams.color = icon.color;
-        nodeParams.image = icon.url || '';
-
-        // Tier zero nodes should be marked with a gem glyph
-        if (node.isTierZero) {
-            const glyph = GLYPHS[GlyphKind.TIER_ZERO];
-            nodeParams.type = 'glyphs';
-            nodeParams.glyphs = [
-                {
-                    location: GlyphLocation.TOP_RIGHT,
-                    image: glyph.url || '',
-                    backgroundColor: glyph.color,
-                },
-            ];
-        }
-
-        graph.addNode(key, {
-            size: nodeSize,
-            borderColor: '#000000',
-            ...nodeParams,
-        });
-    });
-};
-
-const initGraphEdges = (graph: MultiDirectedGraph, edges: GraphEdges) => {
-    // Group edges with the same start and end nodes into arrays. Should be grouped regardless of direction
-    const groupedEdges = edges.reduce<Record<string, GraphEdges>>((groups, edge) => {
-        const identifiers = [edge.source, edge.target].sort();
-        const id = `${identifiers[0]}_${identifiers[1]}`;
-
-        if (!groups[id]) {
-            groups[id] = [];
-        }
-        groups[id].push(edge);
-
-        return groups;
-    }, {});
-
-    // Loop through our group arrays
-    for (const group in groupedEdges) {
-        const groupSize = groupedEdges[group].length;
-
-        for (const [i, edge] of groupedEdges[group].entries()) {
-            const key = `${edge.source}_${edge.kind}_${edge.target}`;
-
-            // Set default values for single edges
-            const edgeParams: Partial<EdgeParams> = {
-                size: 3,
-                type: 'arrow',
-                label: edge.label,
-                color: '#000000C0',
-                groupPosition: 0,
-                groupSize: 1,
-                exploreGraphId: edge.exploreGraphId || key,
-                forceLabel: true,
-            };
-
-            // Groups with odd-numbered totals should have a straight edge first, then curve the rest
-            const edgeShouldBeCurved = groupSize > 1;
-
-            // Handle edge groups that have a mix of directions that edges travel between source and target.
-            // We can use the value of the enum to indicate which direction the curve should bend
-            const groupStart = group.split('_')[0];
-            const edgeDirection = groupStart === edge.source ? EdgeDirection.FORWARDS : EdgeDirection.BACKWARDS;
-
-            if (edgeShouldBeCurved) {
-                edgeParams.type = 'curved';
-                edgeParams.groupPosition = i;
-                edgeParams.groupSize = groupSize;
-                edgeParams.direction = edgeDirection;
-            }
-
-            graph.addEdgeWithKey(key, edge.source, edge.target, edgeParams);
-        }
-    }
-};
+import { initGraphEdges, initGraphNodes } from 'src/views/Explore/utils';
 
 const GraphView: FC = () => {
     /* Hooks */
@@ -139,9 +59,12 @@ const GraphView: FC = () => {
     const graphState: GraphState = useSelector((state: AppState) => state.explore);
     const opts: GlobalOptionsState = useSelector((state: AppState) => state.global.options);
     const formIsDirty = Object.keys(useSelector((state: AppState) => state.tierzero).changelog).length > 0;
+
     const [graphologyGraph, setGraphologyGraph] = useState<MultiDirectedGraph<Attributes, Attributes, Attributes>>();
     const [currentNodes, setCurrentNodes] = useState<GraphNodes>({});
+
     const [currentSearchOpen, toggleCurrentSearch] = useToggle(false);
+    const { data, isLoading, isError } = useAvailableDomains();
 
     useEffect(() => {
         let items: any = graphState.chartProps.items;
@@ -186,6 +109,47 @@ const GraphView: FC = () => {
         formIsDirty
     );
 
+    if (isLoading) {
+        return (
+            <Box sx={{ position: 'relative', height: '100%', width: '100%', overflow: 'hidden' }} data-testid='explore'>
+                <GraphProgress loading={isLoading} />
+            </Box>
+        );
+    }
+
+    const dataCollectionLink = (
+        <Link
+            target='_blank'
+            href={'https://support.bloodhoundenterprise.io/hc/en-us/sections/17274904083483-BloodHound-CE-Collection'}>
+            Data Collection
+        </Link>
+    );
+
+    const fileIngestLink = (
+        <Link component={RouterLink} to={ROUTE_ADMINISTRATION_FILE_INGEST}>
+            File Ingest
+        </Link>
+    );
+
+    if (isError) throw new Error();
+
+    if (!data.length)
+        return (
+            <Box position={'relative'} height={'100%'} width={'100%'} overflow={'hidden'}>
+                <NoDataAlert dataCollectionLink={dataCollectionLink} fileIngestLink={fileIngestLink} />
+            </Box>
+        );
+
+    const options: GraphButtonOptions = { standard: true, sequential: true };
+
+    const nonLayoutButtons: GraphButtonProps[] = [
+        {
+            displayText: 'Search Current Results',
+            onClick: toggleCurrentSearch,
+            disabled: currentSearchOpen,
+        },
+    ];
+
     /* Event Handlers */
     const onClickNode = (id: string) => {
         dispatch(setEdgeInfoOpen(false));
@@ -205,18 +169,8 @@ const GraphView: FC = () => {
         }
     };
 
-    const options: GraphButtonOptions = { standard: true, sequential: true };
-
-    const nonLayoutButtons: GraphButtonProps[] = [
-        {
-            displayText: 'Search Current Results',
-            onClick: toggleCurrentSearch,
-            disabled: currentSearchOpen,
-        },
-    ];
-
     return (
-        <div style={{ position: 'relative', height: '100%', width: '100%', overflow: 'hidden' }} data-testid='explore'>
+        <Box sx={{ position: 'relative', height: '100%', width: '100%', overflow: 'hidden' }} data-testid='explore'>
             <SigmaChart
                 rankDirection={RankDirection.LEFT_RIGHT}
                 options={options}
@@ -241,7 +195,7 @@ const GraphView: FC = () => {
                 <GridItems />
             </Grid>
             <GraphProgress loading={graphState.loading} />
-        </div>
+        </Box>
     );
 };
 
@@ -249,13 +203,12 @@ const GridItems = () => {
     const columnsDefault = { xs: 6, md: 5, lg: 4, xl: 3 };
     const cypherSearchColumns = { xs: 6, md: 6, lg: 6, xl: 4 };
 
+    const edgeInfoState: EdgeInfoState = useSelector((state: AppState) => state.edgeinfo);
     const [columns, setColumns] = useState(columnsDefault);
 
     const handleCypherTab = (isCypherEditorActive: boolean) => {
         isCypherEditorActive ? setColumns(cypherSearchColumns) : setColumns(columnsDefault);
     };
-
-    const edgeInfoState: EdgeInfoState = useSelector((state: AppState) => state.edgeinfo);
 
     return [
         <Grid item {...columns} sx={{ height: '100%' }} key={'exploreSearch'}>
