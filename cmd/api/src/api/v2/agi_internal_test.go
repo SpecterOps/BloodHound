@@ -100,10 +100,17 @@ func TestParseAGMembersFromNodes_(t *testing.T) {
 
 func TestParseAGMembersFromNodes_MissingNodeProperties(t *testing.T) {
 	nodes := graph.NodeSet{
-		// the parse fn should handle a node with nil values for name, objectid, and domainsid
+		// the parse fn should handle nodes with missing name and missing properties with warnings and no output
 		1: &graph.Node{
 			ID:    1,
 			Kinds: graph.Kinds{ad.Entity, ad.Domain},
+			Properties: &graph.Properties{
+				Map: map[string]any{},
+			},
+		},
+		2: &graph.Node{
+			ID:    2,
+			Kinds: graph.Kinds{azure.Entity, azure.Tenant},
 			Properties: &graph.Properties{
 				Map: map[string]any{},
 			},
@@ -118,10 +125,5 @@ func TestParseAGMembersFromNodes_MissingNodeProperties(t *testing.T) {
 			SystemSelector: false,
 		}}, 1)
 
-	require.Equal(t, 1, len(members))
-
-	require.Equal(t, members[0].EnvironmentID, "")
-	require.Equal(t, members[0].ObjectID, "")
-	require.Equal(t, members[0].Name, "")
-
+	require.Equal(t, 0, len(members))
 }

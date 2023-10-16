@@ -28,6 +28,7 @@ import (
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/errors"
 	"github.com/specterops/bloodhound/graphschema/ad"
+	"github.com/specterops/bloodhound/graphschema/azure"
 	"github.com/specterops/bloodhound/graphschema/common"
 	"github.com/specterops/bloodhound/src/api"
 	v2 "github.com/specterops/bloodhound/src/api/v2"
@@ -881,6 +882,56 @@ func TestResources_ListAssetGroupMembers(t *testing.T) {
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusInternalServerError)
+				},
+			},
+			{
+				Name: "Node missing base entity kind",
+				Input: func(input *apitest.Input) {
+					apitest.SetURLVar(input, api.URIPathVariableAssetGroupID, "1")
+				},
+				Setup: func() {
+					mockDB.EXPECT().
+						GetAssetGroup(gomock.Any()).
+						Return(assetGroup, nil)
+					mockGraph.EXPECT().
+						GetAssetGroupNodes(gomock.Any(), gomock.Any()).
+						Return(graph.NodeSet{
+							1: &graph.Node{
+								ID:    1,
+								Kinds: graph.Kinds{ad.Entity, ad.Domain},
+								Properties: &graph.Properties{
+									Map: map[string]any{common.ObjectID.String(): "a", common.Name.String(): "a", ad.DomainSID.String(): "a"},
+								},
+							},
+							2: &graph.Node{
+								ID:    2,
+								Kinds: graph.Kinds{azure.Entity, azure.Tenant},
+								Properties: &graph.Properties{
+									Map: map[string]any{common.ObjectID.String(): "b", common.Name.String(): "b", azure.TenantID.String(): "b"},
+								},
+							},
+							3: &graph.Node{
+								ID:    3,
+								Kinds: graph.Kinds{ad.Domain},
+								Properties: &graph.Properties{
+									Map: map[string]any{common.ObjectID.String(): "c", common.Name.String(): "c", ad.DomainSID.String(): "c"},
+								},
+							},
+							4: &graph.Node{
+								ID:    4,
+								Kinds: graph.Kinds{azure.Tenant},
+								Properties: &graph.Properties{
+									Map: map[string]any{common.ObjectID.String(): "d", common.Name.String(): "d", azure.TenantID.String(): "d"},
+								},
+							},
+						}, nil)
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusOK)
+					result := api.ListAssetGroupMembersResponse{}
+					apitest.UnmarshalData(output, &result)
+					apitest.BodyContains(output, `"custom_member":true`)
+					apitest.Equal(output, 2, len(result.Members))
 				},
 			},
 			{

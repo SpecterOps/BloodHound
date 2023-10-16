@@ -441,7 +441,7 @@ func parseAGMembersFromNodes(nodes graph.NodeSet, selectors model.AssetGroupSele
 
 		if node.Kinds.ContainsOneOf(azure.Entity) {
 			if tenantID, err := node.Properties.Get(azure.TenantID.String()).String(); err != nil {
-				log.Warnf("%s is missing for node %d, skipping AG Membership...", azure.Tenant.String(), node.ID)
+				log.Warnf("%s is missing for node %d, skipping AG Membership...", azure.TenantID.String(), node.ID)
 				continue
 			} else {
 				agMember.EnvironmentKind = azure.Tenant.String()
