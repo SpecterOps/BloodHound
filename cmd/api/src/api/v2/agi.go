@@ -439,15 +439,25 @@ func parseAGMembersFromNodes(nodes graph.NodeSet, selectors model.AssetGroupSele
 			CustomMember: isCustomMember,
 		}
 
-		if tenantID, err := node.Properties.Get(azure.TenantID.String()).String(); err == nil {
-			agMember.EnvironmentID = tenantID
-			agMember.EnvironmentKind = azure.Tenant.String()
-		} else if domainSID, err := node.Properties.Get(ad.DomainSID.String()).String(); err != nil {
-			log.Warnf("domainsid is missing for node %d", node.ID)
-			domainSID = ""
+		if node.Kinds.ContainsOneOf(azure.Entity) {
+			if tenantID, err := node.Properties.Get(azure.TenantID.String()).String(); err != nil {
+				log.Warnf("%s is missing for node %d, skipping AG Membership...", azure.Tenant.String(), node.ID)
+				continue
+			} else {
+				agMember.EnvironmentKind = azure.Tenant.String()
+				agMember.EnvironmentID = tenantID
+			}
+		} else if node.Kinds.ContainsOneOf(ad.Entity) {
+			if domainSID, err := node.Properties.Get(ad.DomainSID.String()).String(); err != nil {
+				log.Warnf("%s is missing for node %d, skipping AG Membership...", ad.DomainSID.String(), node.ID)
+				continue
+			} else {
+				agMember.EnvironmentKind = ad.Domain.String()
+				agMember.EnvironmentID = domainSID
+			}
 		} else {
-			agMember.EnvironmentID = domainSID
-			agMember.EnvironmentKind = ad.Domain.String()
+			log.Warnf("Node %d is missing valid base entity, skipping AG Membership...")
+			continue
 		}
 
 		agMembers = append(agMembers, agMember)
