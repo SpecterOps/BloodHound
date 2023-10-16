@@ -27,7 +27,7 @@ export const NoDataAlert: FC<NoDataAlertProps> = ({ dataCollectionLink, fileInge
 
     return (
         <Box display={'flex'} justifyContent={'center'} mt={theme.spacing(8)} mx={theme.spacing(4)}>
-            <Alert severity={'warning'}>
+            <Alert severity={'info'}>
                 <AlertTitle>No Data Available</AlertTitle>
                 It appears that no data has been uploaded yet.
                 <br />
