@@ -260,6 +260,7 @@ export enum ActiveDirectoryKindProperties {
     CertChain = 'certchain',
     CertName = 'certname',
     CertThumbprint = 'certthumbprint',
+    CertThumbprints = 'certthumbprints',
     EnrollmentAgentRestrictionsCollected = 'enrollmentagentrestrictionscollected',
     IsUserSpecifiesSanEnabledCollected = 'isuserspecifiessanenabledcollected',
     HasBasicConstraints = 'hasbasicconstraints',
@@ -320,6 +321,8 @@ export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKin
             return 'Certificate Name';
         case ActiveDirectoryKindProperties.CertThumbprint:
             return 'Certificate Thumbprint';
+        case ActiveDirectoryKindProperties.CertThumbprints:
+            return 'Certificate Thumbprints';
         case ActiveDirectoryKindProperties.EnrollmentAgentRestrictionsCollected:
             return 'Enrollment Agent Restrictions Collected';
         case ActiveDirectoryKindProperties.IsUserSpecifiesSanEnabledCollected:

@@ -27,70 +27,77 @@ PathfindingRelationships: [...types.#Kind]
 
 // Property name enumerations
 
-CertChain: types.#Kind & {
+CertChain: types.#StringEnum & {
 	symbol: 		"CertChain"
 	schema: 		"ad"
 	name:           "Certificate Chain"
 	representation: "certchain"
 }
 
-CertName: types.#Kind & {
+CertName: types.#StringEnum & {
 	symbol: 		"CertName"
 	schema: 		"ad"
 	name:           "Certificate Name"
 	representation: "certname"
 }
 
-CertThumbprint: types.#Kind & {
+CertThumbprint: types.#StringEnum & {
 	symbol: 		"CertThumbprint"
 	schema: 		"ad"
 	name:           "Certificate Thumbprint"
 	representation: "certthumbprint"
 }
 
-CAName: types.#Kind & {
+CertThumbprints: types.#StringEnum & {
+	symbol: 		"CertThumbprints"
+	schema: 		"ad"
+	name:           "Certificate Thumbprints"
+	representation: "certthumbprints"
+}
+
+CAName: types.#StringEnum & {
 	symbol: 		"CAName"
 	schema: 		"ad"
 	name:           "CA Name"
 	representation: "caname"
 }
 
-CASecurityCollected: types.#Kind & {
+CASecurityCollected: types.#StringEnum & {
 	symbol: 		"CASecurityCollected"
 	schema: 		"ad"
 	name:           "CA Security Collected"
 	representation: "casecuritycollected"
 }
 
-EnrollmentAgentRestrictionsCollected: types.#Kind & {
+EnrollmentAgentRestrictionsCollected: types.#StringEnum & {
 	symbol: 		"EnrollmentAgentRestrictionsCollected"
 	schema: 		"ad"
 	name:           "Enrollment Agent Restrictions Collected"
 	representation: "enrollmentagentrestrictionscollected"
 }
 
-IsUserSpecifiesSanEnabledCollected: types.#Kind & {
+IsUserSpecifiesSanEnabledCollected: types.#StringEnum & {
 	symbol: 		"IsUserSpecifiesSanEnabledCollected"
 	schema: 		"ad"
 	name:           "Is User Specifies San Enabled Collected"
 	representation: "isuserspecifiessanenabledcollected"
 }
 
-HasBasicConstraints: types.#Kind & {
+HasBasicConstraints: types.#StringEnum & {
 	symbol: 		"HasBasicConstraints"
 	schema: 		"ad"
 	name:           "Has Basic Constraints"
 	representation: "hasbasicconstraints"
 }
 
-BasicConstraintPathLength: types.#Kind & {
+BasicConstraintPathLength: types.#StringEnum & {
 	symbol: 		"BasicConstraintPathLength"
 	schema: 		"ad"
 	name:           "Basic Constraint Path Length"
 	representation: "basicconstraintpathlength"
 }
 
-DNSHostname: types.#Kind & {
+DNSHostname: types.#StringEnum & {
 	symbol: 		"DNSHostname"
 	schema: 		"ad"
 	name:           "DNS Hostname"
@@ -391,6 +398,7 @@ Properties: [
 	CertChain,
 	CertName,
 	CertThumbprint,
+	CertThumbprints,
 	EnrollmentAgentRestrictionsCollected,
 	IsUserSpecifiesSanEnabledCollected,
 	HasBasicConstraints,

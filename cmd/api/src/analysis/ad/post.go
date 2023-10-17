@@ -27,33 +27,7 @@ import (
 	"github.com/specterops/bloodhound/dawgs/util/channels"
 	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/log"
-	"github.com/specterops/bloodhound/src/model/appcfg"
 )
-
-func PostProcessedRelationships(localGroupPostProcessingFlag appcfg.FeatureFlag) []graph.Kind {
-	if localGroupPostProcessingFlag.Enabled {
-		return []graph.Kind{
-			ad.DCSync,
-			ad.SyncLAPSPassword,
-			ad.CanRDP,
-			ad.AdminTo,
-			ad.CanPSRemote,
-			ad.ExecuteDCOM,
-			ad.ADCSESC1,
-			ad.ADCSESC2,
-			ad.ADCSESC3,
-			ad.ADCSESC4,
-			ad.ADCSESC5,
-			ad.ADCSESC6,
-			ad.ADCSESC7,
-		}
-	}
-
-	return []graph.Kind{
-		ad.SyncLAPSPassword,
-		ad.DCSync,
-	}
-}
 
 func PostLocalGroups(ctx context.Context, db graph.Database) (*analysis.AtomicPostProcessingStats, error) {
 	var (
@@ -183,11 +157,14 @@ func Post(ctx context.Context, db graph.Database) (*analysis.AtomicPostProcessin
 		return &aggregateStats, err
 	} else if localGroupStats, err := PostLocalGroups(ctx, db); err != nil {
 		return &aggregateStats, err
+	} else if adcsStats, err := adAnalysis.PostADCS(ctx, db); err != nil {
+		return &aggregateStats, err
 	} else {
 		aggregateStats.Merge(stats)
 		aggregateStats.Merge(syncLAPSStats)
 		aggregateStats.Merge(dcSyncStats)
 		aggregateStats.Merge(localGroupStats)
+		aggregateStats.Merge(adcsStats)
 		return &aggregateStats, nil
 	}
 }

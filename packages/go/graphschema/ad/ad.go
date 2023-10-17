@@ -110,6 +110,7 @@ const (
 	CertChain                                    Property = "certchain"
 	CertName                                     Property = "certname"
 	CertThumbprint                               Property = "certthumbprint"
+	CertThumbprints                              Property = "certthumbprints"
 	EnrollmentAgentRestrictionsCollected         Property = "enrollmentagentrestrictionscollected"
 	IsUserSpecifiesSanEnabledCollected           Property = "isuserspecifiessanenabledcollected"
 	HasBasicConstraints                          Property = "hasbasicconstraints"
@@ -174,6 +175,8 @@ func ParseProperty(source string) (Property, error) {
 		return CertName, nil
 	case "certthumbprint":
 		return CertThumbprint, nil
+	case "certthumbprints":
+		return CertThumbprints, nil
 	case "enrollmentagentrestrictionscollected":
 		return EnrollmentAgentRestrictionsCollected, nil
 	case "isuserspecifiessanenabledcollected":
@@ -282,6 +285,8 @@ func (s Property) String() string {
 		return string(CertName)
 	case CertThumbprint:
 		return string(CertThumbprint)
+	case CertThumbprints:
+		return string(CertThumbprints)
 	case EnrollmentAgentRestrictionsCollected:
 		return string(EnrollmentAgentRestrictionsCollected)
 	case IsUserSpecifiesSanEnabledCollected:
@@ -390,6 +395,8 @@ func (s Property) Name() string {
 		return "Certificate Name"
 	case CertThumbprint:
 		return "Certificate Thumbprint"
+	case CertThumbprints:
+		return "Certificate Thumbprints"
 	case EnrollmentAgentRestrictionsCollected:
 		return "Enrollment Agent Restrictions Collected"
 	case IsUserSpecifiesSanEnabledCollected:
