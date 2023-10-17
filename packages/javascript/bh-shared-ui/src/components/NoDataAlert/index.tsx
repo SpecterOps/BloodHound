@@ -14,6 +14,6 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-export { default as useAvailableDomains } from './useAvailableDomains';
+import { NoDataAlert } from './NoDataAlert';
 
-export { default as useOnClickOutside } from './useOnClickOutside';
+export default NoDataAlert;
