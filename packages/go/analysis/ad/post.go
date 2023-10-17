@@ -409,3 +409,14 @@ func ProcessRDPWithUra(tx graph.Transaction, rdpLocalGroup *graph.Node, computer
 		return rdpEntities, nil
 	}
 }
+
+func ExpandAllEnrollers(ctx context.Context, db graph.Database) (impact.PathAggregator, error) {
+	log.Infof("Expanding all cert template and enterprise ca enrollers")
+
+	return ResolveAllGroupMemberships(ctx, db, query.Not(
+		query.Or(
+			query.StringEndsWith(query.StartProperty(common.ObjectID.String()), AdminGroupSuffix),
+			query.StringEndsWith(query.EndProperty(common.ObjectID.String()), AdminGroupSuffix),
+		),
+	))
+}

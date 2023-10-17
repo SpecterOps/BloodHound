@@ -156,10 +156,13 @@ const (
 	AuthorizedSignatures                         Property = "authorizedsignatures"
 	ApplicationPolicies                          Property = "applicationpolicies"
 	SchemaVersion                                Property = "schemaversion"
+	RequiresManagerApproval                      Property = "requiresmanagerapproval"
+	AuthenticationEnabled                        Property = "authenticationenabled"
+	EnrolleeSuppliesSubject                      Property = "enrolleesuppliessubject"
 )
 
 func AllProperties() []Property {
-	return []Property{AdminCount, CASecurityCollected, CAName, CertChain, CertName, CertThumbprint, CertThumbprints, EnrollmentAgentRestrictionsCollected, IsUserSpecifiesSanEnabledCollected, HasBasicConstraints, BasicConstraintPathLength, DNSHostname, CrossCertificatePair, DistinguishedName, DomainFQDN, DomainSID, Sensitive, HighValue, BlocksInheritance, IsACL, IsACLProtected, IsDeleted, Enforced, Department, HasCrossCertificatePair, HasSPN, UnconstrainedDelegation, LastLogon, LastLogonTimestamp, IsPrimaryGroup, HasLAPS, DontRequirePreAuth, LogonType, HasURA, PasswordNeverExpires, PasswordNotRequired, FunctionalLevel, TrustType, SidFiltering, TrustedToAuth, SamAccountName, CertificateMappingMethodsCollected, CertificateMappingMethodsHex, CertificateMappingMethodsPretty, StrongCertificateBindingEnforcementCollected, StrongCertificateBindingEnforcementInt, StrongCertificateBindingEnforcementPretty, EKUs, SubjectAltRequireUPN, AuthorizedSignatures, ApplicationPolicies, SchemaVersion}
+	return []Property{AdminCount, CASecurityCollected, CAName, CertChain, CertName, CertThumbprint, CertThumbprints, EnrollmentAgentRestrictionsCollected, IsUserSpecifiesSanEnabledCollected, HasBasicConstraints, BasicConstraintPathLength, DNSHostname, CrossCertificatePair, DistinguishedName, DomainFQDN, DomainSID, Sensitive, HighValue, BlocksInheritance, IsACL, IsACLProtected, IsDeleted, Enforced, Department, HasCrossCertificatePair, HasSPN, UnconstrainedDelegation, LastLogon, LastLogonTimestamp, IsPrimaryGroup, HasLAPS, DontRequirePreAuth, LogonType, HasURA, PasswordNeverExpires, PasswordNotRequired, FunctionalLevel, TrustType, SidFiltering, TrustedToAuth, SamAccountName, CertificateMappingMethodsCollected, CertificateMappingMethodsHex, CertificateMappingMethodsPretty, StrongCertificateBindingEnforcementCollected, StrongCertificateBindingEnforcementInt, StrongCertificateBindingEnforcementPretty, EKUs, SubjectAltRequireUPN, AuthorizedSignatures, ApplicationPolicies, SchemaVersion, RequiresManagerApproval, AuthenticationEnabled, EnrolleeSuppliesSubject}
 }
 func ParseProperty(source string) (Property, error) {
 	switch source {
@@ -267,6 +270,12 @@ func ParseProperty(source string) (Property, error) {
 		return ApplicationPolicies, nil
 	case "schemaversion":
 		return SchemaVersion, nil
+	case "requiresmanagerapproval":
+		return RequiresManagerApproval, nil
+	case "authenticationenabled":
+		return AuthenticationEnabled, nil
+	case "enrolleesuppliessubject":
+		return EnrolleeSuppliesSubject, nil
 	default:
 		return "", errors.New("Invalid enumeration value: " + source)
 	}
@@ -377,6 +386,12 @@ func (s Property) String() string {
 		return string(ApplicationPolicies)
 	case SchemaVersion:
 		return string(SchemaVersion)
+	case RequiresManagerApproval:
+		return string(RequiresManagerApproval)
+	case AuthenticationEnabled:
+		return string(AuthenticationEnabled)
+	case EnrolleeSuppliesSubject:
+		return string(EnrolleeSuppliesSubject)
 	default:
 		panic("Invalid enumeration case: " + string(s))
 	}
@@ -487,6 +502,12 @@ func (s Property) Name() string {
 		return "Application Policies"
 	case SchemaVersion:
 		return "Schema Version"
+	case RequiresManagerApproval:
+		return "Requires Manager Approval"
+	case AuthenticationEnabled:
+		return "Authentication Enabled"
+	case EnrolleeSuppliesSubject:
+		return "Enrollee Suppliess Subject"
 	default:
 		panic("Invalid enumeration case: " + string(s))
 	}

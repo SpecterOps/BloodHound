@@ -306,6 +306,9 @@ export enum ActiveDirectoryKindProperties {
     AuthorizedSignatures = 'authorizedsignatures',
     ApplicationPolicies = 'applicationpolicies',
     SchemaVersion = 'schemaversion',
+    RequiresManagerApproval = 'requiresmanagerapproval',
+    AuthenticationEnabled = 'authenticationenabled',
+    EnrolleeSuppliesSubject = 'enrolleesuppliessubject',
 }
 export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKindProperties): string | undefined {
     switch (value) {
@@ -413,6 +416,12 @@ export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKin
             return 'Application Policies';
         case ActiveDirectoryKindProperties.SchemaVersion:
             return 'Schema Version';
+        case ActiveDirectoryKindProperties.RequiresManagerApproval:
+            return 'Requires Manager Approval';
+        case ActiveDirectoryKindProperties.AuthenticationEnabled:
+            return 'Authentication Enabled';
+        case ActiveDirectoryKindProperties.EnrolleeSuppliesSubject:
+            return 'Enrollee Suppliess Subject';
         default:
             return undefined;
     }
