@@ -1381,11 +1381,7 @@ func FetchDomainTierZeroAssets(tx graph.Transaction, domain *graph.Node) (graph.
 }
 
 func DoesCertTemplateLinkToDomain(tx graph.Transaction, certTemplate graph.Node, domainNode graph.Node) (bool, error) {
-	if domainSid, err := certTemplate.Properties.Get(ad.DomainSID.String()).String(); err != nil {
-		return false, err
-	} else if domainNode, err := analysis.FetchNodeByObjectID(tx, domainSid); err != nil {
-		return false, err
-	} else if pathSet, err := FetchCertTemplatePathToDomain(tx, certTemplate, *domainNode); err != nil {
+	if pathSet, err := FetchCertTemplatePathToDomain(tx, certTemplate, domainNode); err != nil {
 		return false, err
 	} else {
 		return pathSet.Len() > 0, nil
