@@ -191,7 +191,11 @@ const CypherSearch = () => {
 const EasterEgg = () => {
     return (
         <div style={{ display: 'block', position: 'relative', bottom: 0, left: 0 }}>
-            <img src={'img/logo-animated.gif'} alt='What is graphed will never die' style={{ width: '200px' }} />
+            <img
+                src={`${import.meta.env.BASE_URL}/img/logo-animated.gif`}
+                alt='What is graphed will never die'
+                style={{ width: '200px' }}
+            />
         </div>
     );
 };

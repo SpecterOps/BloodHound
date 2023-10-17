@@ -1,17 +1,17 @@
 // Copyright 2023 Specter Ops, Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// 
+//
 // SPDX-License-Identifier: Apache-2.0
 
 package v2
@@ -23,10 +23,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/specterops/bloodhound/src/api"
-	"github.com/specterops/bloodhound/src/ctx"
-	"github.com/specterops/bloodhound/src/model"
-	"github.com/specterops/bloodhound/src/utils"
 	"github.com/gorilla/mux"
 	"github.com/specterops/bloodhound/analysis"
 	"github.com/specterops/bloodhound/dawgs/graph"
@@ -35,6 +31,10 @@ import (
 	"github.com/specterops/bloodhound/graphschema/common"
 	"github.com/specterops/bloodhound/headers"
 	"github.com/specterops/bloodhound/slices"
+	"github.com/specterops/bloodhound/src/api"
+	"github.com/specterops/bloodhound/src/ctx"
+	"github.com/specterops/bloodhound/src/model"
+	"github.com/specterops/bloodhound/src/utils"
 )
 
 // CreateAssetGroupRequest holds data required to create an asset group
@@ -231,6 +231,37 @@ func (s Resources) DeleteAssetGroup(response http.ResponseWriter, request *http.
 		api.HandleDatabaseError(request, response, err)
 	} else {
 		response.WriteHeader(http.StatusOK)
+	}
+}
+
+func (s Resources) UpdateAssetGroupSelectors(response http.ResponseWriter, request *http.Request) {
+	var (
+		pathVars        = mux.Vars(request)
+		rawAssetGroupID = pathVars[api.URIPathVariableAssetGroupID]
+		selectorSpecs   []model.AssetGroupSelectorSpec
+	)
+
+	if assetGroupID, err := strconv.Atoi(rawAssetGroupID); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsIDMalformed, request), response)
+	} else if assetGroup, err := s.DB.GetAssetGroup(int32(assetGroupID)); err != nil {
+		api.HandleDatabaseError(request, response, err)
+	} else if err := api.ReadJSONRequestPayloadLimited(&selectorSpecs, request); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponsePayloadUnmarshalError, request), response)
+	} else {
+		for _, selectorSpec := range selectorSpecs {
+			if err := selectorSpec.Validate(); err != nil {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
+			}
+		}
+
+		if result, err := s.DB.UpdateAssetGroupSelectors(*ctx.FromRequest(request), assetGroup, selectorSpecs, false); err != nil {
+			api.HandleDatabaseError(request, response, err)
+		} else {
+			// When asset group selectors are modified we must trigger analysis
+			s.TaskNotifier.RequestAnalysis()
+
+			api.WriteBasicResponse(request.Context(), result, http.StatusOK, response)
+		}
 	}
 }
 

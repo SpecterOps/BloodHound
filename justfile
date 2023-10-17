@@ -102,6 +102,12 @@ yarn-local *ARGS="":
 yarn *ARGS="": && (bh-dev "build bh-ui")
   @yarn {{ARGS}}
 
+build-js-client *ARGS="":
+  @cd packages/javascript/js-client-library && yarn build
+
+build-shared-ui *ARGS="":
+  @cd packages/javascript/bh-shared-ui && yarn build
+
 # run the code generation from the cue schema
 schemagen: yarn-local && check-license (yarn "format")
   go run github.com/specterops/bloodhound/schemagen

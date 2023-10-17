@@ -21,17 +21,16 @@ import {
     Box,
     Button,
     Divider,
+    Link,
     MenuItem,
     Popover,
     Skeleton,
     TextField,
     Tooltip,
     Typography,
-    Link,
 } from '@mui/material';
+import { useAvailableDomains } from 'bh-shared-ui';
 import React, { useState } from 'react';
-import { useQuery } from 'react-query';
-import { apiClient } from 'bh-shared-ui';
 import { Domain } from 'src/ducks/global/types';
 
 const DataSelector: React.FC<{
@@ -39,11 +38,9 @@ const DataSelector: React.FC<{
     onChange?: (newValue: { type: string; id: string | null }) => void;
     fullWidth?: boolean;
 }> = ({ value, onChange = () => {}, fullWidth = false }) => {
-    const { data, isLoading, isError } = useQuery('available-domains', ({ signal }) =>
-        apiClient.getAvailableDomains({ signal }).then((response) => response.data.data)
-    );
     const [anchorEl, setAnchorEl] = useState(null);
     const [searchInput, setSearchInput] = useState<string>('');
+    const { data, isLoading, isError } = useAvailableDomains();
 
     if (isLoading) return <Skeleton variant='rounded' height={36} width={256} />;
 
