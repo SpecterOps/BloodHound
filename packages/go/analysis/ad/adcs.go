@@ -37,9 +37,7 @@ var (
 	EkuCertRequestAgent = "1.3.6.1.4.1.311.20.2.1"
 )
 
-func PostEnrollOnBehalfOf(ctx context.Context, db graph.Database, certTemplates []graph.Node) (*analysis.AtomicPostProcessingStats, error) {
-	operation := analysis.NewPostRelationshipOperation(ctx, db, "EnrollOnBehalfOf Post Processing")
-
+func PostEnrollOnBehalfOf(certTemplates []graph.Node, operation analysis.StatTrackedOperation[analysis.CreatePostRelationshipJob]) error {
 	versionOneTemplates := make([]graph.Node, 0)
 	versionTwoTemplates := make([]graph.Node, 0)
 
@@ -67,7 +65,7 @@ func PostEnrollOnBehalfOf(ctx context.Context, db graph.Database, certTemplates 
 		return enrollOnBehalfOfSelfControl(tx, versionOneTemplates, outC)
 	})
 
-	return &operation.Stats, operation.Done()
+	return nil
 }
 
 func enrollOnBehalfOfVersionTwo(tx graph.Transaction, versionTwoCertTemplates, allCertTemplates []graph.Node, outC chan<- analysis.CreatePostRelationshipJob) error {
