@@ -40,6 +40,9 @@ func PostProcessedRelationships() []graph.Kind {
 		ad.AdminTo,
 		ad.CanPSRemote,
 		ad.ExecuteDCOM,
+		ad.TrustedForNTAuth,
+		ad.IssuedSignedBy,
+		ad.EnterpriseCAFor,
 		ad.ADCSESC1,
 		ad.ADCSESC2,
 		ad.ADCSESC3,
@@ -136,6 +139,22 @@ func FetchComputers(ctx context.Context, db graph.Database) (*roaring64.Bitmap, 
 
 			return nil
 		})
+	})
+}
+
+func FetchNodesByKind(ctx context.Context, db graph.Database, kinds ...graph.Kind) ([]*graph.Node, error) {
+	var nodes []*graph.Node
+	return nodes, db.ReadTransaction(ctx, func(tx graph.Transaction) error {
+		var err error
+		if nodes, err = ops.FetchNodes(tx.Nodes().Filterf(func() graph.Criteria {
+			return query.And(
+				query.KindIn(query.Node(), kinds...),
+			)
+		})); err != nil {
+			return err
+		} else {
+			return nil
+		}
 	})
 }
 

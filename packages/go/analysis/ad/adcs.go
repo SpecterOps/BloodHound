@@ -19,6 +19,7 @@ package ad
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"github.com/specterops/bloodhound/analysis"
 	"github.com/specterops/bloodhound/dawgs/graph"
@@ -33,41 +34,66 @@ var (
 	ErrNoCertParent = errors.New("cert has no parent")
 )
 
-func PostTrustedForNTAuth(ctx context.Context, db graph.Database, ntAuthStoreNodes []graph.Node) (*analysis.AtomicPostProcessingStats, error) {
-	operation := analysis.NewPostRelationshipOperation(ctx, db, "TrustedForNTAuth Post Processing")
+func PostADCS(ctx context.Context, db graph.Database) (*analysis.AtomicPostProcessingStats, error) {
+	operation := analysis.NewPostRelationshipOperation(ctx, db, "ADCS Post Processing")
 
-	for _, node := range ntAuthStoreNodes {
-		innerNode := node
+	if err := PostTrustedForNTAuth(ctx, db, operation); err != nil {
+		return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("failed post processing for %s: %w", ad.TrustedForNTAuth.String(), err)
+	} else {
+		if enterpriseCertAuthorities, err := FetchNodesByKind(ctx, db, ad.EnterpriseCA); err != nil {
+			return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("failed fetching enterpriseCA nodes: %w", err)
+		} else if rootCertAuthorities, err := FetchNodesByKind(ctx, db, ad.RootCA); err != nil {
+			return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("failed fetching rootCA nodes: %w", err)
+		} else if err := PostIssuedSignedBy(ctx, db, operation, enterpriseCertAuthorities, rootCertAuthorities); err != nil {
+			return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("failed post processing for %s: %w", ad.IssuedSignedBy.String(), err)
+		} else if err := PostEnterpriseCAFor(ctx, db, operation, enterpriseCertAuthorities); err != nil {
+			return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("failed post processing for %s: %w", ad.EnterpriseCAFor.String(), err)
+		} else {
+			return &operation.Stats, operation.Done()
+		}
+	}
 
-		operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
-			if thumbprints, err := node.Properties.Get(ad.CertThumbprint.String()).StringSlice(); err != nil {
-				return err
-			} else {
-				for _, thumbprint := range thumbprints {
-					if sourceNodeIDs, err := findNodesByCertThumbprint(thumbprint, tx, ad.EnterpriseCA); err != nil {
-						return err
-					} else {
-						for _, sourceNodeID := range sourceNodeIDs {
-							if !channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
-								FromID: sourceNodeID,
-								ToID:   innerNode.ID,
-								Kind:   ad.TrustedForNTAuth,
-							}) {
-								return nil
+}
+
+func PostTrustedForNTAuth(ctx context.Context, db graph.Database, operation analysis.StatTrackedOperation[analysis.CreatePostRelationshipJob]) error {
+
+	if ntAuthStoreNodes, err := FetchNodesByKind(ctx, db, ad.NTAuthStore); err != nil {
+		return err
+	} else {
+		for _, node := range ntAuthStoreNodes {
+			innerNode := node
+
+			operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
+				if thumbprints, err := node.Properties.Get(ad.CertThumbprints.String()).StringSlice(); err != nil {
+					return err
+				} else {
+					for _, thumbprint := range thumbprints {
+						if thumbprint != "" {
+							if sourceNodeIDs, err := findNodesByCertThumbprint(thumbprint, tx, ad.EnterpriseCA); err != nil {
+								return err
+							} else {
+								for _, sourceNodeID := range sourceNodeIDs {
+									if !channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
+										FromID: sourceNodeID,
+										ToID:   innerNode.ID,
+										Kind:   ad.TrustedForNTAuth,
+									}) {
+										return nil
+									}
+								}
 							}
 						}
 					}
 				}
-			}
-			return nil
-		})
+				return nil
+			})
+		}
 	}
 
-	return &operation.Stats, operation.Done()
+	return nil
 }
 
-func PostIssuedSignedBy(ctx context.Context, db graph.Database, enterpriseCertAuthorities []graph.Node, rootCertAuthorities []graph.Node) (*analysis.AtomicPostProcessingStats, error) {
-	operation := analysis.NewPostRelationshipOperation(ctx, db, "IssuedSignBy Post Processing")
+func PostIssuedSignedBy(ctx context.Context, db graph.Database, operation analysis.StatTrackedOperation[analysis.CreatePostRelationshipJob], enterpriseCertAuthorities []*graph.Node, rootCertAuthorities []*graph.Node) error {
 
 	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
 		for _, node := range enterpriseCertAuthorities {
@@ -105,11 +131,10 @@ func PostIssuedSignedBy(ctx context.Context, db graph.Database, enterpriseCertAu
 		return nil
 	})
 
-	return &operation.Stats, operation.Done()
+	return nil
 }
 
-func PostEnterpriseCAFor(ctx context.Context, db graph.Database, enterpriseCertAuthorities []graph.Node) (*analysis.AtomicPostProcessingStats, error) {
-	operation := analysis.NewPostRelationshipOperation(ctx, db, "EnterpriseCAFor Post Processing")
+func PostEnterpriseCAFor(ctx context.Context, db graph.Database, operation analysis.StatTrackedOperation[analysis.CreatePostRelationshipJob], enterpriseCertAuthorities []*graph.Node) error {
 
 	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
 		for _, ecaNode := range enterpriseCertAuthorities {
@@ -135,10 +160,10 @@ func PostEnterpriseCAFor(ctx context.Context, db graph.Database, enterpriseCertA
 		return nil
 	})
 
-	return &operation.Stats, operation.Done()
+	return nil
 }
 
-func processCertChainParent(node graph.Node, tx graph.Transaction) ([]analysis.CreatePostRelationshipJob, error) {
+func processCertChainParent(node *graph.Node, tx graph.Transaction) ([]analysis.CreatePostRelationshipJob, error) {
 	if certChain, err := node.Properties.Get(ad.CertChain.String()).StringSlice(); err != nil {
 		return []analysis.CreatePostRelationshipJob{}, err
 	} else if len(certChain) > 1 {
