@@ -151,10 +151,15 @@ const (
 	StrongCertificateBindingEnforcementCollected Property = "strongcertificatebindingenforcementcollected"
 	StrongCertificateBindingEnforcementInt       Property = "strongcertificatebindingenforcementint"
 	StrongCertificateBindingEnforcementPretty    Property = "strongcertificatebindingenforcementpretty"
+	EKUs                                         Property = "ekus"
+	SubjectAltRequireUPN                         Property = "subjectaltrequireupn"
+	AuthorizedSignatures                         Property = "authorizedsignatures"
+	ApplicationPolicies                          Property = "applicationpolicies"
+	SchemaVersion                                Property = "schemaversion"
 )
 
 func AllProperties() []Property {
-	return []Property{AdminCount, CASecurityCollected, CAName, CertChain, CertName, CertThumbprint, CertThumbprints, EnrollmentAgentRestrictionsCollected, IsUserSpecifiesSanEnabledCollected, HasBasicConstraints, BasicConstraintPathLength, DNSHostname, CrossCertificatePair, DistinguishedName, DomainFQDN, DomainSID, Sensitive, HighValue, BlocksInheritance, IsACL, IsACLProtected, IsDeleted, Enforced, Department, HasCrossCertificatePair, HasSPN, UnconstrainedDelegation, LastLogon, LastLogonTimestamp, IsPrimaryGroup, HasLAPS, DontRequirePreAuth, LogonType, HasURA, PasswordNeverExpires, PasswordNotRequired, FunctionalLevel, TrustType, SidFiltering, TrustedToAuth, SamAccountName, CertificateMappingMethodsCollected, CertificateMappingMethodsHex, CertificateMappingMethodsPretty, StrongCertificateBindingEnforcementCollected, StrongCertificateBindingEnforcementInt, StrongCertificateBindingEnforcementPretty}
+	return []Property{AdminCount, CASecurityCollected, CAName, CertChain, CertName, CertThumbprint, CertThumbprints, EnrollmentAgentRestrictionsCollected, IsUserSpecifiesSanEnabledCollected, HasBasicConstraints, BasicConstraintPathLength, DNSHostname, CrossCertificatePair, DistinguishedName, DomainFQDN, DomainSID, Sensitive, HighValue, BlocksInheritance, IsACL, IsACLProtected, IsDeleted, Enforced, Department, HasCrossCertificatePair, HasSPN, UnconstrainedDelegation, LastLogon, LastLogonTimestamp, IsPrimaryGroup, HasLAPS, DontRequirePreAuth, LogonType, HasURA, PasswordNeverExpires, PasswordNotRequired, FunctionalLevel, TrustType, SidFiltering, TrustedToAuth, SamAccountName, CertificateMappingMethodsCollected, CertificateMappingMethodsHex, CertificateMappingMethodsPretty, StrongCertificateBindingEnforcementCollected, StrongCertificateBindingEnforcementInt, StrongCertificateBindingEnforcementPretty, EKUs, SubjectAltRequireUPN, AuthorizedSignatures, ApplicationPolicies, SchemaVersion}
 }
 func ParseProperty(source string) (Property, error) {
 	switch source {
@@ -252,6 +257,16 @@ func ParseProperty(source string) (Property, error) {
 		return StrongCertificateBindingEnforcementInt, nil
 	case "strongcertificatebindingenforcementpretty":
 		return StrongCertificateBindingEnforcementPretty, nil
+	case "ekus":
+		return EKUs, nil
+	case "subjectaltrequireupn":
+		return SubjectAltRequireUPN, nil
+	case "authorizedsignatures":
+		return AuthorizedSignatures, nil
+	case "applicationpolicies":
+		return ApplicationPolicies, nil
+	case "schemaversion":
+		return SchemaVersion, nil
 	default:
 		return "", errors.New("Invalid enumeration value: " + source)
 	}
@@ -352,6 +367,16 @@ func (s Property) String() string {
 		return string(StrongCertificateBindingEnforcementInt)
 	case StrongCertificateBindingEnforcementPretty:
 		return string(StrongCertificateBindingEnforcementPretty)
+	case EKUs:
+		return string(EKUs)
+	case SubjectAltRequireUPN:
+		return string(SubjectAltRequireUPN)
+	case AuthorizedSignatures:
+		return string(AuthorizedSignatures)
+	case ApplicationPolicies:
+		return string(ApplicationPolicies)
+	case SchemaVersion:
+		return string(SchemaVersion)
 	default:
 		panic("Invalid enumeration case: " + string(s))
 	}
@@ -452,6 +477,16 @@ func (s Property) Name() string {
 		return "Strong Certificate Binding Enforcement Int"
 	case StrongCertificateBindingEnforcementPretty:
 		return "Strong Certificate Binding Enforcement Pretty"
+	case EKUs:
+		return "EKUs"
+	case SubjectAltRequireUPN:
+		return "Subject Alt Require UPN"
+	case AuthorizedSignatures:
+		return "Authorized Signatures"
+	case ApplicationPolicies:
+		return "Application Policies"
+	case SchemaVersion:
+		return "Schema Version"
 	default:
 		panic("Invalid enumeration case: " + string(s))
 	}

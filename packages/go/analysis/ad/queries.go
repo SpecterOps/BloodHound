@@ -1379,3 +1379,31 @@ func FetchDomainTierZeroAssets(tx graph.Transaction, domain *graph.Node) (graph.
 		)
 	}))
 }
+
+func DoesCertTemplateLinkToDomain(tx graph.Transaction, certTemplate graph.Node, domainNode graph.Node) (bool, error) {
+	if pathSet, err := FetchCertTemplatePathToDomain(tx, certTemplate, domainNode); err != nil {
+		return false, err
+	} else {
+		return pathSet.Len() > 0, nil
+	}
+}
+
+func FetchCertTemplatePathToDomain(tx graph.Transaction, certTemplate graph.Node, domain graph.Node) (graph.PathSet, error) {
+	var (
+		paths = graph.NewPathSet()
+	)
+
+	return paths, tx.Relationships().Filter(
+		query.And(
+			query.Equals(query.StartID(), certTemplate.ID),
+			query.KindIn(query.Relationship(), ad.PublishedTo, ad.IssuedSignedBy, ad.EnterpriseCAFor, ad.RootCAFor),
+			query.Equals(query.EndID(), domain.ID),
+		),
+	).FetchAllShortestPaths(func(cursor graph.Cursor[graph.Path]) error {
+		for path := range cursor.Chan() {
+			paths.AddPath(path)
+		}
+
+		return cursor.Error()
+	})
+}

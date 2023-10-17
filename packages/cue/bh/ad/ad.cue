@@ -356,6 +356,41 @@ CrossCertificatePair: types.#StringEnum & {
 	representation: "crosscertificatepair"
 }
 
+EKUs: types.#StringEnum & {
+	symbol: "EKUs"
+	schema: "ad"
+	name: "EKUs"
+	representation: "ekus"
+}
+
+SubjectAltRequireUPN: types.#StringEnum & {
+	symbol: "SubjectAltRequireUPN"
+	schema: "ad"
+	name: "Subject Alt Require UPN"
+	representation: "subjectaltrequireupn"
+}
+
+AuthorizedSignatures: types.#StringEnum & {
+	symbol: "AuthorizedSignatures"
+	schema: "ad"
+	name: "Authorized Signatures"
+	representation: "authorizedsignatures"
+}
+
+ApplicationPolicies: types.#StringEnum & {
+	symbol: "ApplicationPolicies"
+	schema: "ad"
+	name: "Application Policies"
+	representation: "applicationpolicies"
+}
+
+SchemaVersion: types.#StringEnum & {
+	symbol: "SchemaVersion"
+	schema: "ad"
+	name: "Schema Version"
+	representation: "schemaversion"
+}
+
 Properties: [
 	AdminCount,
 	CASecurityCollected,
@@ -403,7 +438,12 @@ Properties: [
 	CertificateMappingMethodsPretty,
 	StrongCertificateBindingEnforcementCollected,
 	StrongCertificateBindingEnforcementInt,
-	StrongCertificateBindingEnforcementPretty
+	StrongCertificateBindingEnforcementPretty,
+	EKUs,
+	SubjectAltRequireUPN,
+	AuthorizedSignatures,
+	ApplicationPolicies,
+	SchemaVersion
 ]
 
 // Kinds
