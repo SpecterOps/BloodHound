@@ -356,11 +356,11 @@ CrossCertificatePair: types.#StringEnum & {
 	representation: "crosscertificatepair"
 }
 
-EffectiveEKUs: types.#StringEnum & {
-	symbol: "EffectiveEKUs"
+EKUs: types.#StringEnum & {
+	symbol: "EKUs"
 	schema: "ad"
-	name: "Effective EKUs"
-	representation: "effectiveekus"
+	name: "EKUs"
+	representation: "ekus"
 }
 
 SubjectAltRequireUPN: types.#StringEnum & {
@@ -439,7 +439,7 @@ Properties: [
 	StrongCertificateBindingEnforcementCollected,
 	StrongCertificateBindingEnforcementInt,
 	StrongCertificateBindingEnforcementPretty,
-	EffectiveEKUs,
+	EKUs,
 	SubjectAltRequireUPN,
 	AuthorizedSignatures,
 	ApplicationPolicies,

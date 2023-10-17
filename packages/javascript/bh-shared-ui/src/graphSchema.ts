@@ -301,7 +301,7 @@ export enum ActiveDirectoryKindProperties {
     StrongCertificateBindingEnforcementCollected = 'strongcertificatebindingenforcementcollected',
     StrongCertificateBindingEnforcementInt = 'strongcertificatebindingenforcementint',
     StrongCertificateBindingEnforcementPretty = 'strongcertificatebindingenforcementpretty',
-    EffectiveEKUs = 'effectiveekus',
+    EKUs = 'ekus',
     SubjectAltRequireUPN = 'subjectaltrequireupn',
     AuthorizedSignatures = 'authorizedsignatures',
     ApplicationPolicies = 'applicationpolicies',
@@ -403,8 +403,8 @@ export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKin
             return 'Strong Certificate Binding Enforcement Int';
         case ActiveDirectoryKindProperties.StrongCertificateBindingEnforcementPretty:
             return 'Strong Certificate Binding Enforcement Pretty';
-        case ActiveDirectoryKindProperties.EffectiveEKUs:
-            return 'Effective EKUs';
+        case ActiveDirectoryKindProperties.EKUs:
+            return 'EKUs';
         case ActiveDirectoryKindProperties.SubjectAltRequireUPN:
             return 'Subject Alt Require UPN';
         case ActiveDirectoryKindProperties.AuthorizedSignatures:

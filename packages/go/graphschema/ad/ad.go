@@ -151,7 +151,7 @@ const (
 	StrongCertificateBindingEnforcementCollected Property = "strongcertificatebindingenforcementcollected"
 	StrongCertificateBindingEnforcementInt       Property = "strongcertificatebindingenforcementint"
 	StrongCertificateBindingEnforcementPretty    Property = "strongcertificatebindingenforcementpretty"
-	EffectiveEKUs                                Property = "effectiveekus"
+	EKUs                                         Property = "ekus"
 	SubjectAltRequireUPN                         Property = "subjectaltrequireupn"
 	AuthorizedSignatures                         Property = "authorizedsignatures"
 	ApplicationPolicies                          Property = "applicationpolicies"
@@ -159,7 +159,7 @@ const (
 )
 
 func AllProperties() []Property {
-	return []Property{AdminCount, CASecurityCollected, CAName, CertChain, CertName, CertThumbprint, CertThumbprints, EnrollmentAgentRestrictionsCollected, IsUserSpecifiesSanEnabledCollected, HasBasicConstraints, BasicConstraintPathLength, DNSHostname, CrossCertificatePair, DistinguishedName, DomainFQDN, DomainSID, Sensitive, HighValue, BlocksInheritance, IsACL, IsACLProtected, IsDeleted, Enforced, Department, HasCrossCertificatePair, HasSPN, UnconstrainedDelegation, LastLogon, LastLogonTimestamp, IsPrimaryGroup, HasLAPS, DontRequirePreAuth, LogonType, HasURA, PasswordNeverExpires, PasswordNotRequired, FunctionalLevel, TrustType, SidFiltering, TrustedToAuth, SamAccountName, CertificateMappingMethodsCollected, CertificateMappingMethodsHex, CertificateMappingMethodsPretty, StrongCertificateBindingEnforcementCollected, StrongCertificateBindingEnforcementInt, StrongCertificateBindingEnforcementPretty, EffectiveEKUs, SubjectAltRequireUPN, AuthorizedSignatures, ApplicationPolicies, SchemaVersion}
+	return []Property{AdminCount, CASecurityCollected, CAName, CertChain, CertName, CertThumbprint, CertThumbprints, EnrollmentAgentRestrictionsCollected, IsUserSpecifiesSanEnabledCollected, HasBasicConstraints, BasicConstraintPathLength, DNSHostname, CrossCertificatePair, DistinguishedName, DomainFQDN, DomainSID, Sensitive, HighValue, BlocksInheritance, IsACL, IsACLProtected, IsDeleted, Enforced, Department, HasCrossCertificatePair, HasSPN, UnconstrainedDelegation, LastLogon, LastLogonTimestamp, IsPrimaryGroup, HasLAPS, DontRequirePreAuth, LogonType, HasURA, PasswordNeverExpires, PasswordNotRequired, FunctionalLevel, TrustType, SidFiltering, TrustedToAuth, SamAccountName, CertificateMappingMethodsCollected, CertificateMappingMethodsHex, CertificateMappingMethodsPretty, StrongCertificateBindingEnforcementCollected, StrongCertificateBindingEnforcementInt, StrongCertificateBindingEnforcementPretty, EKUs, SubjectAltRequireUPN, AuthorizedSignatures, ApplicationPolicies, SchemaVersion}
 }
 func ParseProperty(source string) (Property, error) {
 	switch source {
@@ -257,8 +257,8 @@ func ParseProperty(source string) (Property, error) {
 		return StrongCertificateBindingEnforcementInt, nil
 	case "strongcertificatebindingenforcementpretty":
 		return StrongCertificateBindingEnforcementPretty, nil
-	case "effectiveekus":
-		return EffectiveEKUs, nil
+	case "ekus":
+		return EKUs, nil
 	case "subjectaltrequireupn":
 		return SubjectAltRequireUPN, nil
 	case "authorizedsignatures":
@@ -367,8 +367,8 @@ func (s Property) String() string {
 		return string(StrongCertificateBindingEnforcementInt)
 	case StrongCertificateBindingEnforcementPretty:
 		return string(StrongCertificateBindingEnforcementPretty)
-	case EffectiveEKUs:
-		return string(EffectiveEKUs)
+	case EKUs:
+		return string(EKUs)
 	case SubjectAltRequireUPN:
 		return string(SubjectAltRequireUPN)
 	case AuthorizedSignatures:
@@ -477,8 +477,8 @@ func (s Property) Name() string {
 		return "Strong Certificate Binding Enforcement Int"
 	case StrongCertificateBindingEnforcementPretty:
 		return "Strong Certificate Binding Enforcement Pretty"
-	case EffectiveEKUs:
-		return "Effective EKUs"
+	case EKUs:
+		return "EKUs"
 	case SubjectAltRequireUPN:
 		return "Subject Alt Require UPN"
 	case AuthorizedSignatures:
