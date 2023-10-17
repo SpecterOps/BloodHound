@@ -22,7 +22,7 @@ services:
     environment:
       - POSTGRES_USER=bloodhound
       - POSTGRES_PASSWORD=bloodhoundcommunityedition
-      - POSTGRES_DATABASE=bloodhound
+      - POSTGRES_DB=bloodhound
     ports:
       - 65432:5432
     volumes:

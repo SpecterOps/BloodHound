@@ -14,6 +14,10 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-export { default as useAvailableDomains } from './useAvailableDomains';
+import { apiClient } from '../utils/api';
+import { useQuery } from 'react-query';
 
-export { default as useOnClickOutside } from './useOnClickOutside';
+const useAvailableDomains = () =>
+    useQuery('available-domains', () => apiClient.getAvailableDomains().then((response) => response.data.data));
+
+export default useAvailableDomains;

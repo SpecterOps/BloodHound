@@ -15,26 +15,30 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import React from 'react';
+import { Typography } from '@mui/material';
+
+const escapeSpecialCharacters = (text: string) => text.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
 
 const HighlightedText: React.FC<{ text: string; search: string }> = ({ text, search }) => {
-    const regex = new RegExp(`(.*?)(${search})(.*)`, 'mi');
+    const escapedSearch = escapeSpecialCharacters(search);
+    const regex = new RegExp(`(.*?)(${escapedSearch})(.*)`, 'mi');
     const groups = text.match(regex);
     if (groups === null || groups.length === 1) return <>{text}</>;
 
     const parts = groups.slice(1);
 
     return (
-        <span>
+        <Typography variant='body2' component={'span'}>
             {parts.map((part, i) => {
                 if (part.toLowerCase() === search.toLowerCase())
                     return (
-                        <span key={i} style={{ fontWeight: 'bold' }}>
+                        <Typography variant='body2' component={'span'} style={{ fontWeight: 'bold' }} key={i}>
                             {part}
-                        </span>
+                        </Typography>
                     );
                 return <React.Fragment key={i}>{part}</React.Fragment>;
             })}
-        </span>
+        </Typography>
     );
 };
 

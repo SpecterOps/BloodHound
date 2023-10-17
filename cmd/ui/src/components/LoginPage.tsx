@@ -28,7 +28,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ children }) => {
                     <Paper sx={{ px: 8, pb: 8, pt: 4 }}>
                         <Box height='100%' width='auto' textAlign='center' boxSizing='content-box' padding='64px'>
                             <img
-                                src={'img/logo-transparent-full.svg'}
+                                src={`${import.meta.env.BASE_URL}/img/logo-transparent-full.svg`}
                                 alt='BloodHound'
                                 style={{
                                     width: '100%',
