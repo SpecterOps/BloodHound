@@ -45,7 +45,6 @@ const AssetGroupEdit: FC<{
     })
 
     const handleRemoveEntryFromChangelog = (entry: AssetGroupChangelogEntry) => {
-        console.log(entry);
         setChangelog(changelog.filter(item => item.objectid !== entry.objectid))
     }
 

@@ -8,18 +8,22 @@ import DataSelector from '../QA/DataSelector';
 import { AssetGroup, AssetGroupMember } from 'js-client-library';
 import { GraphNodeTypes } from 'src/ducks/graph/types';
 import { faGem } from '@fortawesome/free-solid-svg-icons';
+import { useSelector } from 'react-redux';
+import { Domain } from 'src/ducks/global/types';
 
-type Domain = {
-    type: string | null;
+type SelectedDomain = {
     id: string | null;
+    type: string | null;
 }
 
 const SetManagement = () => {
     const theme = useTheme();
     const [selectedNode, setSelectedNode] = useState<SelectedNode | null>(null);
-    const [domain, setDomain] = useState<Domain>({ type: null, id: null });
     const [selectedAssetGroup, setSelectedAssetGroup] = useState<AssetGroup | null>(null);
     const [assetGroupMembers, setAssetGroupMembers] = useState<AssetGroupMember[]>([]);
+    const domain: Domain = useSelector((state: any) => state.global.options.domain);
+    const [selectedDomain, setSelectedDomain] = useState<SelectedDomain | null>(null);
+    
     
     const listAssetGroups = useQuery(
         ["listAssetGroups"],
@@ -66,7 +70,7 @@ const SetManagement = () => {
                     <Box component={Paper} elevation={0} marginBottom={1}>
                         <Grid container>
                             <Grid item xs={3} display={"flex"} alignItems={"center"} paddingLeft={1}>
-                                <Typography variant="button">Set:</Typography>
+                                <Typography variant="button">Group:</Typography>
                             </Grid>
                             <Grid item xs={9}>
                                 <DropdownSelector
@@ -83,14 +87,14 @@ const SetManagement = () => {
                             </Grid>
                             <Grid item xs={9}>
                                 <DataSelector
-                                    value={domain}
-                                    onChange={setDomain}
+                                    value={selectedDomain || domain || { type: null, id: null }}
+                                    onChange={selection => setSelectedDomain({ ...selection })}
                                     fullWidth
                                 />
                             </Grid>
                         </Grid>
                     </Box>
-                    <AssetGroupEdit assetGroupId={1} members={assetGroupMembers} />
+                    <AssetGroupEdit assetGroupId={"1"} members={assetGroupMembers} />
                 </Grid>
                 <Grid height={"100%"} item xs={5} md={6}>
                     <AssetGroupMemberList 
