@@ -44,7 +44,7 @@ func buildEsc1Cache(ctx context.Context, db graph.Database, enterpriseCAs, certT
 
 	return cache, db.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		for _, ct := range certTemplates {
-			if firstDegreePrincipals, err := fetchFirstDegreeNodes(tx, ct, ad.Enroll, ad.GenericAll, ad.AllExtendedRights); err != nil {
+			if firstDegreePrincipals, err := fetchFirstDegreeNodes(tx, ct, ad.Enroll, ad.GenericAll, ad.AllExtendedRights, ad.Owns); err != nil {
 				log.Errorf("error fetching enrollers for cert template %d: %w", ct.ID, err)
 			} else {
 				cache[ct.ID] = firstDegreePrincipals
@@ -82,7 +82,7 @@ func PostADCSESC1(ctx context.Context, db graph.Database, enterpriseCas, certTem
 		for _, domain := range domains {
 			innerDomain := domain
 			operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
-				if ecas, err := ops.AcyclicTraverseTerminals(tx, ops.TraversalPlan{
+				if enterpriseCAs, err := ops.AcyclicTraverseTerminals(tx, ops.TraversalPlan{
 					Root:      innerDomain,
 					Direction: graph.DirectionInbound,
 					BranchQuery: func() graph.Criteria {
@@ -104,13 +104,13 @@ func PostADCSESC1(ctx context.Context, db graph.Database, enterpriseCas, certTem
 				}); err != nil {
 					return err
 				} else {
-					for _, eca := range ecas {
-						if validPaths, err := FetchEnterpriseCAPathToDomain(tx, eca, innerDomain); err != nil {
-							log.Errorf("error fetching paths from enterprise ca %d to domain %d: %w", eca.ID, innerDomain.ID, err)
+					for _, enterpriseCA := range enterpriseCAs {
+						if validPaths, err := FetchEnterpriseCAPathToDomain(tx, enterpriseCA, innerDomain); err != nil {
+							log.Errorf("error fetching paths from enterprise ca %d to domain %d: %w", enterpriseCA.ID, innerDomain.ID, err)
 						} else if validPaths.Len() == 0 {
 							continue
-						} else if publishedCertTemplates, err := FetchCertTemplatesPublishedToCA(tx, eca); err != nil {
-							log.Errorf("error fetching cert templates for ECA %d: %w", eca.ID, err)
+						} else if publishedCertTemplates, err := FetchCertTemplatesPublishedToCA(tx, enterpriseCA); err != nil {
+							log.Errorf("error fetching cert templates for ECA %d: %w", enterpriseCA.ID, err)
 						} else {
 							for _, certTemplate := range publishedCertTemplates.Slice() {
 								if validationProperties, err := getValidatePublishedCertTemplateForEsc1PropertyValues(certTemplate); err != nil {
@@ -119,7 +119,7 @@ func PostADCSESC1(ctx context.Context, db graph.Database, enterpriseCas, certTem
 								} else if !validatePublishedCertTemplateForEsc1(validationProperties) {
 									continue
 								} else {
-									for _, enroller := range getEnrollersForCertTemplate(eca, certTemplate, expandedGroups, enrollCache).Slice() {
+									for _, enroller := range getEnrollersForCertTemplate(enterpriseCA, certTemplate, expandedGroups, enrollCache).Slice() {
 										outC <- analysis.CreatePostRelationshipJob{
 											FromID: graph.ID(enroller),
 											ToID:   innerDomain.ID,
@@ -166,7 +166,7 @@ func getEnrollersForCertTemplate(eca, certTemplates *graph.Node, groupExpansions
 		}
 	}
 
-	//Look at each entity of expanded gorups and see if they have the correct permission necessary
+	//Look at each entity of expanded groups and see if they have the correct permission necessary
 	for _, entity := range secondaryTargets.Slice() {
 		if ecaUnrolled.Contains(entity) {
 			enrollEntities.Add(entity)
