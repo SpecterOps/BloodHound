@@ -18,11 +18,13 @@ type SelectedDomain = {
 
 const SetManagement = () => {
     const theme = useTheme();
-    const [selectedNode, setSelectedNode] = useState<SelectedNode | null>(null);
+
+    const domain: Domain = useSelector((state: any) => state.global.options.domain);
+
+    const [selectedDomain, setSelectedDomain] = useState<SelectedDomain | null>(null);
     const [selectedAssetGroup, setSelectedAssetGroup] = useState<AssetGroup | null>(null);
     const [assetGroupMembers, setAssetGroupMembers] = useState<AssetGroupMember[]>([]);
-    const domain: Domain = useSelector((state: any) => state.global.options.domain);
-    const [selectedDomain, setSelectedDomain] = useState<SelectedDomain | null>(null);
+    const [selectedNode, setSelectedNode] = useState<SelectedNode | null>(null);
     
     
     const listAssetGroups = useQuery(
@@ -32,23 +34,24 @@ const SetManagement = () => {
 
     const listAssetGroupMembersQuery = useQuery(
         ["listAssetGroupMembers"],
-        () => apiClient.listAssetGroupMembers(selectedAssetGroup?.id.toString() || "1").then(res => res.data.data.members),
-        { enabled: !!selectedAssetGroup?.id }
+        () => apiClient.listAssetGroupMembers(`${selectedAssetGroup?.id}`).then(res => res.data.data.members),
+        { enabled: !!selectedAssetGroup }
     );
 
     useEffect(() => {
+        const filterDomain = selectedDomain || domain;
         const filteredAssetGroupMembers = listAssetGroupMembersQuery.data?.filter(member => {
-            switch (domain.type) {
+            switch (filterDomain.type) {
                 case 'active-directory-platform':
                     return member.environment_kind === "Domain";
                 case 'azure-platform':
                     return member.environment_kind === "Tenant";
                 default:
-                    return member.environment_id === domain.id;
+                    return member.environment_id === filterDomain.id;
             }
         });
         setAssetGroupMembers(filteredAssetGroupMembers || []);
-    }, [listAssetGroupMembersQuery.data, domain])
+    }, [listAssetGroupMembersQuery.data, selectedDomain, domain])
 
     const handleSelectMember = (member: AssetGroupMember) => {
         setSelectedNode({
@@ -94,7 +97,7 @@ const SetManagement = () => {
                             </Grid>
                         </Grid>
                     </Box>
-                    <AssetGroupEdit assetGroupId={"1"} members={assetGroupMembers} />
+                    <AssetGroupEdit assetGroupId={selectedAssetGroup?.id.toString()} members={assetGroupMembers} />
                 </Grid>
                 <Grid height={"100%"} item xs={5} md={6}>
                     <AssetGroupMemberList 

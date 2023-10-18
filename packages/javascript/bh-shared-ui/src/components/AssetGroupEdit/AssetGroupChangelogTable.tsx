@@ -2,7 +2,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { Box, Button, Grid, IconButton, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from "@mui/material"
 import NodeIcon from "../NodeIcon"
 import { faTimes } from "@fortawesome/free-solid-svg-icons"
-import { AssetGroupChangelogEntry } from "../AssetGroupAutocomplete"
+import { AssetGroupChangelogEntry } from "./types"
 import { FC } from "react"
 
 const AssetGroupChangelogTable: FC<{

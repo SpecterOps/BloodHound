@@ -1,14 +1,15 @@
 import { Box, Paper } from "@mui/material"
 import { AssetGroupMember, UpdateAssetGroupSelectorRequest } from "js-client-library";
 import { FC, useState } from "react"
-import AssetGroupAutocomplete, { AssetGroupChangelog, AssetGroupChangelogEntry, ChangelogAction } from "../AssetGroupAutocomplete";
+import { AssetGroupChangelog, AssetGroupChangelogEntry, ChangelogAction } from "./types";
+import AssetGroupAutocomplete from "./AssetGroupAutocomplete";
 import { SubHeader } from "../../views/Explore";
 import { useMutation } from "react-query";
 import { apiClient } from "../../utils";
 import AssetGroupChangelogTable from "./AssetGroupChangelogTable";
 
 const AssetGroupEdit: FC<{
-    assetGroupId: string,
+    assetGroupId?: string,
     members: AssetGroupMember[],
 }> = ({ assetGroupId, members }) => {
     const [changelog, setChangelog] = useState<AssetGroupChangelog>([]);
@@ -37,7 +38,7 @@ const AssetGroupEdit: FC<{
     const mutation = useMutation({
         mutationFn: () => {
             const selectors = mapChangelogToSelectors();
-            return apiClient.updateAssetGroupSelector(assetGroupId, selectors);
+            return apiClient.updateAssetGroupSelector(assetGroupId || "1", selectors);
         },
         onSuccess: () => {
             setChangelog([]);

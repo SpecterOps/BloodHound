@@ -21,7 +21,7 @@ const AssetGroupAutocomplete: FC<{
         const resultInAssetGroup = assetGroupMembers.find(member => member.object_id === result.objectid);
 
         let action = ChangelogAction.ADD;
-        
+
         if (resultInAssetGroup) {
             action = ChangelogAction.DEFAULT;
         }
@@ -69,6 +69,10 @@ const AssetGroupAutocomplete: FC<{
         setSearchInput(value);
     }
 
+    const filterOptions = (options: AssetGroupChangelogEntry[]) => options;
+    const getOptionLabel = (option: AssetGroupChangelogEntry) => option.name || option.objectid;
+    const getOptionDisabled = (option: AssetGroupChangelogEntry) => option.action === ChangelogAction.DEFAULT;
+
     return (
         <Autocomplete<any>
             renderInput={handleRenderInput}
@@ -76,11 +80,12 @@ const AssetGroupAutocomplete: FC<{
             onInputChange={handleInputChange}
             onChange={onChange}
             inputValue={searchInput}
-            filterOptions={(options: AssetGroupChangelogEntry[]) => options}
+            filterOptions={filterOptions}
             value={null}
             options={searchResultsWithActions || []}
             loading={isLoading || isFetching}
-            getOptionLabel={(option: AssetGroupChangelogEntry) => option.name || option.objectid}
+            getOptionLabel={getOptionLabel}
+            getOptionDisabled={getOptionDisabled}
             isOptionEqualToValue={() => false}
             clearOnBlur
             clearOnEscape
