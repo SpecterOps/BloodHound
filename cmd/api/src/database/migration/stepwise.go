@@ -22,7 +22,6 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/specterops/bloodhound/errors"
 	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/version"
@@ -113,32 +112,31 @@ func (s *Migrator) ExecuteMigrations(migrations []Migration) error {
 	for _, migration := range migrations {
 		log.Infof("Executing migration: %s", migration.Version)
 
-		if migrationContent, err := s.migrations.ReadFile(migration.Filename); err != nil {
-			return err
-		} else {
-			// this used to scan the sql in line by line, changed to fix a multiline issue.
-			// @JHop - running line by line was to give us pinpoint details on which statement failed in the collection
-			// of statements running them all together muddies error negotiation and introspection
-			err := s.db.Transaction(func(tx *gorm.DB) error {
-				if result := tx.Exec(string(migrationContent)); result.Error != nil {
-					return result.Error
-				}
-
-				migrationEntry := model.NewMigration(migration.Version)
-				if result := tx.Create(&migrationEntry); result.Error != nil {
-					return result.Error
-				}
-
-				return nil
-			})
-
-			if err != nil {
-				return err
-			}
-		}
+		s.executeSQLFile(migration.Filename, migration.Version)
 	}
 
 	return nil
+}
+
+func (s *Migrator) executeSQLFile(filename string, ver version.Version) error {
+	if migrationContent, err := s.migrations.ReadFile(filename); err != nil {
+		return err
+	} else if err := s.db.Transaction(func(tx *gorm.DB) error {
+		if result := tx.Exec(string(migrationContent)); result.Error != nil {
+			return result.Error
+		}
+
+		migrationEntry := model.NewMigration(ver)
+		if result := tx.Create(&migrationEntry); result.Error != nil {
+			return result.Error
+		}
+
+		return nil
+	}); err != nil {
+		return err
+	} else {
+		return nil
+	}
 }
 
 func (s *Migrator) HasMigrationTable() (bool, error) {
@@ -148,16 +146,12 @@ func (s *Migrator) HasMigrationTable() (bool, error) {
 	return hasTable, s.db.Raw(tableCheckSQL).Scan(&hasTable).Error
 }
 
-func (s *Migrator) InitialSchema() error {
-	return errors.New("not implemented")
-}
-
 func (s *Migrator) executeStepwiseMigrations() error {
 	if hasTable, err := s.HasMigrationTable(); err != nil {
 		return fmt.Errorf("failed to check if migration table exists: %w", err)
 	} else if !hasTable {
-		// TODO: This is where we will instead run initial schema
-		if err := s.InitialSchema(); err != nil {
+		log.Infof("This is a new database. Initializing schema...")
+		if err := s.executeSQLFile("migrations/schema.sql", version.Version{}); err != nil {
 			return fmt.Errorf("failed to create initial schema: %w", err)
 		}
 	}
@@ -167,17 +161,7 @@ func (s *Migrator) executeStepwiseMigrations() error {
 	} else if manifest, err := NewManifest(migrationFilenames); err != nil {
 		return err
 	} else if lastMigration, err := s.LatestMigration(); err != nil {
-		if !errors.Is(err, gorm.ErrRecordNotFound) {
-			return err
-		}
-
-		currentVersion := version.GetVersion()
-		log.Infof("This is a new database. Creating a migration entry for version %s", currentVersion)
-
-		return s.db.Transaction(func(tx *gorm.DB) error {
-			migrationEntry := model.NewMigration(currentVersion)
-			return tx.Create(&migrationEntry).Error
-		})
+		return fmt.Errorf("could not get latest migration: %w", err)
 	} else {
 		return s.ExecuteMigrations(manifest.After(lastMigration.Version()))
 	}
