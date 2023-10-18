@@ -21,8 +21,6 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/specterops/bloodhound/src/database/migration"
-
 	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/src/config"
 	"github.com/specterops/bloodhound/src/migrations"
@@ -41,7 +39,7 @@ func printVersion() {
 func performMigrationsOnly(cfg config.Configuration) {
 	if db, graphDB, err := server.ConnectDatabases(cfg); err != nil {
 		log.Fatalf("Failed connecting to databases: %v", err)
-	} else if err := db.MigrateModels(migration.ListBHModels()); err != nil {
+	} else if err := db.Migrate(); err != nil {
 		log.Fatalf("Migrations failed: %v", err)
 	} else {
 		var migrator = migrations.NewGraphMigrator(graphDB)

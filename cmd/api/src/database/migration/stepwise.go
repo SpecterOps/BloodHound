@@ -148,26 +148,18 @@ func (s *Migrator) HasMigrationTable() (bool, error) {
 	return hasTable, s.db.Raw(tableCheckSQL).Scan(&hasTable).Error
 }
 
-func (s *Migrator) CreateMigrationTable() error {
-	return s.db.Transaction(func(tx *gorm.DB) error {
-		return tx.Migrator().AutoMigrate(
-			// Migration model
-			&model.Migration{},
-		)
-	})
+func (s *Migrator) InitialSchema() error {
+	return errors.New("not implemented")
 }
 
-func (s *Migrator) executeStepwiseMigrations(models []any) error {
+func (s *Migrator) executeStepwiseMigrations() error {
 	if hasTable, err := s.HasMigrationTable(); err != nil {
 		return fmt.Errorf("failed to check if migration table exists: %w", err)
 	} else if !hasTable {
-		if err := s.CreateMigrationTable(); err != nil {
-			return fmt.Errorf("failed to create migration table: %w", err)
+		// TODO: This is where we will instead run initial schema
+		if err := s.InitialSchema(); err != nil {
+			return fmt.Errorf("failed to create initial schema: %w", err)
 		}
-	}
-
-	if err := s.gormAutoMigrate(models); err != nil {
-		return fmt.Errorf("failed to run auto migrations: %w", err)
 	}
 
 	if migrationFilenames, err := s.MigrationFilenames(migrationDirname); err != nil {
