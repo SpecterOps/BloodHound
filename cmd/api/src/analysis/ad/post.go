@@ -29,16 +29,14 @@ import (
 	"github.com/specterops/bloodhound/log"
 )
 
-func PostLocalGroups(ctx context.Context, db graph.Database) (*analysis.AtomicPostProcessingStats, error) {
+func PostLocalGroups(ctx context.Context, db graph.Database, localGroupExpansions impact.PathAggregator) (*analysis.AtomicPostProcessingStats, error) {
 	var (
 		adminGroupSuffix    = "-544"
 		psRemoteGroupSuffix = "-580"
 		dcomGroupSuffix     = "-562"
 	)
 
-	if localGroupExpansions, err := adAnalysis.ExpandAllRDPLocalGroups(ctx, db); err != nil {
-		return &analysis.AtomicPostProcessingStats{}, err
-	} else if computers, err := adAnalysis.FetchComputers(ctx, db); err != nil {
+	if computers, err := adAnalysis.FetchComputers(ctx, db); err != nil {
 		return &analysis.AtomicPostProcessingStats{}, err
 	} else {
 		var (
@@ -155,9 +153,11 @@ func Post(ctx context.Context, db graph.Database) (*analysis.AtomicPostProcessin
 		return &aggregateStats, err
 	} else if syncLAPSStats, err := adAnalysis.PostSyncLAPSPassword(ctx, db); err != nil {
 		return &aggregateStats, err
-	} else if localGroupStats, err := PostLocalGroups(ctx, db); err != nil {
+	} else if groupExpansions, err := adAnalysis.ExpandAllRDPLocalGroups(ctx, db); err != nil {
 		return &aggregateStats, err
-	} else if adcsStats, err := adAnalysis.PostADCS(ctx, db); err != nil {
+	} else if localGroupStats, err := PostLocalGroups(ctx, db, groupExpansions); err != nil {
+		return &aggregateStats, err
+	} else if adcsStats, err := adAnalysis.PostADCS(ctx, db, groupExpansions); err != nil {
 		return &aggregateStats, err
 	} else {
 		aggregateStats.Merge(stats)
