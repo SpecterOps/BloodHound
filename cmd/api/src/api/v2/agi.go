@@ -30,6 +30,7 @@ import (
 	"github.com/specterops/bloodhound/graphschema/azure"
 	"github.com/specterops/bloodhound/graphschema/common"
 	"github.com/specterops/bloodhound/headers"
+	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/slices"
 	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/src/ctx"
@@ -434,27 +435,62 @@ func parseAGMembersFromNodes(nodes graph.NodeSet, selectors model.AssetGroupSele
 		isCustomMember := false
 		// a member is custom if at least one selector exists for that object ID
 		for _, agSelector := range selectors {
-			if agSelector.Selector == node.Properties.Map[common.ObjectID.String()].(string) {
+			if objectId, err := node.Properties.Get(common.ObjectID.String()).String(); err != nil {
+				log.Warnf("objectid is missing for node %d", node.ID)
+			} else if agSelector.Selector == objectId {
 				isCustomMember = true
 			}
 		}
 
+		var (
+			memberObjectId string
+			memberName     string
+		)
+
+		if objectId, err := node.Properties.Get(common.ObjectID.String()).String(); err != nil {
+			log.Warnf("objectid is missing for node %d", node.ID)
+			memberObjectId = ""
+		} else {
+			memberObjectId = objectId
+		}
+
+		if name, err := node.Properties.Get(common.Name.String()).String(); err != nil {
+			log.Warnf("name is missing for node %d", node.ID)
+			memberName = ""
+		} else {
+			memberName = name
+		}
+
 		agMember := api.AssetGroupMember{
 			AssetGroupID: assetGroupID,
-			ObjectID:     node.Properties.Map[common.ObjectID.String()].(string),
+			ObjectID:     memberObjectId,
 			PrimaryKind:  analysis.GetNodeKindDisplayLabel(node),
 			Kinds:        node.Kinds.Strings(),
-			Name:         node.Properties.Map[common.Name.String()].(string),
+			Name:         memberName,
 			CustomMember: isCustomMember,
 		}
 
-		if tenantID := node.Properties.Map[azure.TenantID.String()]; tenantID != nil {
-			agMember.EnvironmentID = tenantID.(string)
-			agMember.EnvironmentKind = azure.Tenant.String()
+		if node.Kinds.ContainsOneOf(azure.Entity) {
+			if tenantID, err := node.Properties.Get(azure.TenantID.String()).String(); err != nil {
+				log.Warnf("%s is missing for node %d, skipping AG Membership...", azure.TenantID.String(), node.ID)
+				continue
+			} else {
+				agMember.EnvironmentKind = azure.Tenant.String()
+				agMember.EnvironmentID = tenantID
+			}
+		} else if node.Kinds.ContainsOneOf(ad.Entity) {
+			if domainSID, err := node.Properties.Get(ad.DomainSID.String()).String(); err != nil {
+				log.Warnf("%s is missing for node %d, skipping AG Membership...", ad.DomainSID.String(), node.ID)
+				continue
+			} else {
+				agMember.EnvironmentKind = ad.Domain.String()
+				agMember.EnvironmentID = domainSID
+			}
 		} else {
-			agMember.EnvironmentID = node.Properties.Map[ad.DomainSID.String()].(string)
-			agMember.EnvironmentKind = ad.Domain.String()
+			log.Warnf("Node %d is missing valid base entity, skipping AG Membership...", node.ID)
+			continue
 		}
+
 		agMembers = append(agMembers, agMember)
 	}
 	return agMembers
