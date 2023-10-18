@@ -20,8 +20,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/specterops/bloodhound/graphschema/common"
-
 	"github.com/specterops/bloodhound/analysis/impact"
 	"github.com/specterops/bloodhound/dawgs/cardinality"
 
@@ -84,7 +82,6 @@ func PostADCSESC1(ctx context.Context, db graph.Database, enterpriseCas, certTem
 		for _, domain := range domains {
 			innerDomain := domain
 			operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
-				log.Infof("Checking domain node %v", innerDomain.Properties.Get(common.Name.String()))
 				if ecas, err := ops.AcyclicTraverseTerminals(tx, ops.TraversalPlan{
 					Root:      innerDomain,
 					Direction: graph.DirectionInbound,
@@ -183,8 +180,8 @@ type PublishedCertTemplateValidationProperties struct {
 	reqManagerApproval      bool
 	authenticationEnabled   bool
 	enrolleeSuppliesSubject bool
-	schemaVersion           int
-	authorizedSignatures    int
+	schemaVersion           float64
+	authorizedSignatures    float64
 }
 
 func getValidatePublishedCertTemplateForEsc1PropertyValues(certTemplate *graph.Node) (PublishedCertTemplateValidationProperties, error) {
@@ -194,9 +191,9 @@ func getValidatePublishedCertTemplateForEsc1PropertyValues(certTemplate *graph.N
 		return PublishedCertTemplateValidationProperties{}, fmt.Errorf("error getting authenticationenabled for certtemplate %d: %w", certTemplate.ID, err)
 	} else if enrolleeSuppliesSubject, err := certTemplate.Properties.Get(ad.EnrolleeSuppliesSubject.String()).Bool(); err != nil {
 		return PublishedCertTemplateValidationProperties{}, fmt.Errorf("error getting enrollesuppliessubject for certtemplate %d: %w", certTemplate.ID, err)
-	} else if schemaVersion, err := certTemplate.Properties.Get(ad.SchemaVersion.String()).Int(); err != nil {
+	} else if schemaVersion, err := certTemplate.Properties.Get(ad.SchemaVersion.String()).Float64(); err != nil {
 		return PublishedCertTemplateValidationProperties{}, fmt.Errorf("error getting schemaversion for certtemplate %d: %w", certTemplate.ID, err)
-	} else if authorizedSignatures, err := certTemplate.Properties.Get(ad.AuthorizedSignatures.String()).Int(); err != nil {
+	} else if authorizedSignatures, err := certTemplate.Properties.Get(ad.AuthorizedSignatures.String()).Float64(); err != nil {
 		return PublishedCertTemplateValidationProperties{}, fmt.Errorf("error getting authorizedsignatures for certtemplate %d: %w", certTemplate.ID, err)
 	} else {
 		return PublishedCertTemplateValidationProperties{
