@@ -1383,9 +1383,9 @@ func FetchDomainTierZeroAssets(tx graph.Transaction, domain *graph.Node) (graph.
 func FetchCertTemplatesPublishedToCA(tx graph.Transaction, ca *graph.Node) (graph.NodeSet, error) {
 	return ops.FetchStartNodes(tx.Relationships().Filterf(func() graph.Criteria {
 		return query.And(
-			query.Equals(query.StartID(), ca.ID),
+			query.Equals(query.EndID(), ca.ID),
 			query.Kind(query.Relationship(), ad.PublishedTo),
-			query.Kind(query.End(), ad.CertTemplate),
+			query.Kind(query.Start(), ad.CertTemplate),
 		)
 	}))
 }
@@ -1398,7 +1398,7 @@ func FetchEnterpriseCAPathToDomain(tx graph.Transaction, enterpriseCA, domain *g
 			return query.KindIn(query.Relationship(), ad.IssuedSignedBy, ad.EnterpriseCAFor, ad.RootCAFor)
 		},
 		DescentFilter: func(ctx *ops.TraversalContext, segment *graph.PathSegment) bool {
-			return !segment.Node.Kinds.ContainsOneOf(ad.Domain)
+			return !segment.Trunk.Node.Kinds.ContainsOneOf(ad.Domain)
 		},
 		PathFilter: func(ctx *ops.TraversalContext, segment *graph.PathSegment) bool {
 			return segment.Node.ID == domain.ID

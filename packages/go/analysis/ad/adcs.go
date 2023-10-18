@@ -20,6 +20,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/specterops/bloodhound/graphschema/common"
 
 	"github.com/specterops/bloodhound/analysis/impact"
 	"github.com/specterops/bloodhound/dawgs/cardinality"
@@ -83,6 +84,7 @@ func PostADCSESC1(ctx context.Context, db graph.Database, enterpriseCas, certTem
 		for _, domain := range domains {
 			innerDomain := domain
 			operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
+				log.Infof("Checking domain node %v", innerDomain.Properties.Get(common.Name.String()))
 				if ecas, err := ops.AcyclicTraverseTerminals(tx, ops.TraversalPlan{
 					Root:      innerDomain,
 					Direction: graph.DirectionInbound,
@@ -90,11 +92,10 @@ func PostADCSESC1(ctx context.Context, db graph.Database, enterpriseCas, certTem
 						return query.KindIn(query.Relationship(), ad.TrustedForNTAuth, ad.NTAuthStoreFor)
 					},
 					DescentFilter: func(ctx *ops.TraversalContext, segment *graph.PathSegment) bool {
-						if segment.Depth() == 1 && !segment.Trunk.Edge.Kind.Is(ad.NTAuthStoreFor) {
+						depth := segment.Depth()
+						if depth == 1 && !segment.Edge.Kind.Is(ad.NTAuthStoreFor) {
 							return false
-						} else if segment.Depth() == 2 && !segment.Trunk.Edge.Kind.Is(ad.TrustedForNTAuth) {
-							return false
-						} else if segment.Node.Kinds.ContainsOneOf(ad.EnterpriseCA) {
+						} else if depth == 2 && !segment.Edge.Kind.Is(ad.TrustedForNTAuth) {
 							return false
 						} else {
 							return true
@@ -411,26 +412,36 @@ func certTemplateHasEku(certTemplate graph.Node, targetEkus ...string) (bool, er
 func PostADCS(ctx context.Context, db graph.Database, groupExpansions impact.PathAggregator) (*analysis.AtomicPostProcessingStats, error) {
 	operation := analysis.NewPostRelationshipOperation(ctx, db, "ADCS Post Processing")
 
+	if enterpriseCertAuthorities, err := FetchNodesByKind(ctx, db, ad.EnterpriseCA); err != nil {
+		return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("failed fetching enterpriseCA nodes: %w", err)
+	} else if rootCertAuthorities, err := FetchNodesByKind(ctx, db, ad.RootCA); err != nil {
+		return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("failed fetching rootCA nodes: %w", err)
+	} else if certTemplates, err := FetchNodesByKind(ctx, db, ad.CertTemplate); err != nil {
+		return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("failed fetching cert template nodes: %w", err)
+	} else if preProcessStats, err := postADCSPreProcess(ctx, db, enterpriseCertAuthorities, rootCertAuthorities); err != nil {
+		return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("failed adcs pre-processing: %w", err)
+	} else {
+
+		operation.Stats.Merge(preProcessStats)
+		if err := PostADCSESC1(ctx, db, enterpriseCertAuthorities, certTemplates, groupExpansions, operation); err != nil {
+			return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("failed post processing for %s: %w", ad.ADCSESC1.String(), err)
+		}
+
+		return &operation.Stats, operation.Done()
+	}
+}
+
+func postADCSPreProcess(ctx context.Context, db graph.Database, enterpriseCertAuthorities, rootCertAuthorities []*graph.Node) (*analysis.AtomicPostProcessingStats, error) {
+	operation := analysis.NewPostRelationshipOperation(ctx, db, "ADCS Post Processing - No Dependencies")
 	if err := PostTrustedForNTAuth(ctx, db, operation); err != nil {
 		return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("failed post processing for %s: %w", ad.TrustedForNTAuth.String(), err)
+	} else if err := PostIssuedSignedBy(ctx, db, operation, enterpriseCertAuthorities, rootCertAuthorities); err != nil {
+		return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("failed post processing for %s: %w", ad.IssuedSignedBy.String(), err)
+	} else if err := PostEnterpriseCAFor(ctx, db, operation, enterpriseCertAuthorities); err != nil {
+		return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("failed post processing for %s: %w", ad.EnterpriseCAFor.String(), err)
 	} else {
-		if enterpriseCertAuthorities, err := FetchNodesByKind(ctx, db, ad.EnterpriseCA); err != nil {
-			return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("failed fetching enterpriseCA nodes: %w", err)
-		} else if rootCertAuthorities, err := FetchNodesByKind(ctx, db, ad.RootCA); err != nil {
-			return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("failed fetching rootCA nodes: %w", err)
-		} else if certTemplates, err := FetchNodesByKind(ctx, db, ad.CertTemplate); err != nil {
-			return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("failed fetching cert template nodes: %w", err)
-		} else if err := PostIssuedSignedBy(ctx, db, operation, enterpriseCertAuthorities, rootCertAuthorities); err != nil {
-			return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("failed post processing for %s: %w", ad.IssuedSignedBy.String(), err)
-		} else if err := PostEnterpriseCAFor(ctx, db, operation, enterpriseCertAuthorities); err != nil {
-			return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("failed post processing for %s: %w", ad.EnterpriseCAFor.String(), err)
-		} else if err := PostADCSESC1(ctx, db, enterpriseCertAuthorities, certTemplates, groupExpansions, operation); err != nil {
-			return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("failed post processing for %s: %w", ad.ADCSESC1.String(), err)
-		} else {
-			return &operation.Stats, operation.Done()
-		}
+		return &operation.Stats, operation.Done()
 	}
-
 }
 
 func PostTrustedForNTAuth(ctx context.Context, db graph.Database, operation analysis.StatTrackedOperation[analysis.CreatePostRelationshipJob]) error {
