@@ -146,11 +146,11 @@ const (
 	TrustedToAuth                                Property = "trustedtoauth"
 	SamAccountName                               Property = "samaccountname"
 	CertificateMappingMethodsCollected           Property = "certificatemappingmethodscollected"
-	CertificateMappingMethodsHex                 Property = "certificatemappingmethodshex"
-	CertificateMappingMethodsPretty              Property = "certificatemappingmethodspretty"
+	CertificateMappingMethodsRaw                 Property = "certificatemappingmethodsraw"
+	CertificateMappingMethods                    Property = "certificatemappingmethodspretty"
 	StrongCertificateBindingEnforcementCollected Property = "strongcertificatebindingenforcementcollected"
-	StrongCertificateBindingEnforcementInt       Property = "strongcertificatebindingenforcementint"
-	StrongCertificateBindingEnforcementPretty    Property = "strongcertificatebindingenforcementpretty"
+	StrongCertificateBindingEnforcementRaw       Property = "strongcertificatebindingenforcementraw"
+	StrongCertificateBindingEnforcement          Property = "strongcertificatebindingenforcement"
 	EKUs                                         Property = "ekus"
 	SubjectAltRequireUPN                         Property = "subjectaltrequireupn"
 	AuthorizedSignatures                         Property = "authorizedsignatures"
@@ -159,7 +159,7 @@ const (
 )
 
 func AllProperties() []Property {
-	return []Property{AdminCount, CASecurityCollected, CAName, CertChain, CertName, CertThumbprint, CertThumbprints, EnrollmentAgentRestrictionsCollected, IsUserSpecifiesSanEnabledCollected, HasBasicConstraints, BasicConstraintPathLength, DNSHostname, CrossCertificatePair, DistinguishedName, DomainFQDN, DomainSID, Sensitive, HighValue, BlocksInheritance, IsACL, IsACLProtected, IsDeleted, Enforced, Department, HasCrossCertificatePair, HasSPN, UnconstrainedDelegation, LastLogon, LastLogonTimestamp, IsPrimaryGroup, HasLAPS, DontRequirePreAuth, LogonType, HasURA, PasswordNeverExpires, PasswordNotRequired, FunctionalLevel, TrustType, SidFiltering, TrustedToAuth, SamAccountName, CertificateMappingMethodsCollected, CertificateMappingMethodsHex, CertificateMappingMethodsPretty, StrongCertificateBindingEnforcementCollected, StrongCertificateBindingEnforcementInt, StrongCertificateBindingEnforcementPretty, EKUs, SubjectAltRequireUPN, AuthorizedSignatures, ApplicationPolicies, SchemaVersion}
+	return []Property{AdminCount, CASecurityCollected, CAName, CertChain, CertName, CertThumbprint, CertThumbprints, EnrollmentAgentRestrictionsCollected, IsUserSpecifiesSanEnabledCollected, HasBasicConstraints, BasicConstraintPathLength, DNSHostname, CrossCertificatePair, DistinguishedName, DomainFQDN, DomainSID, Sensitive, HighValue, BlocksInheritance, IsACL, IsACLProtected, IsDeleted, Enforced, Department, HasCrossCertificatePair, HasSPN, UnconstrainedDelegation, LastLogon, LastLogonTimestamp, IsPrimaryGroup, HasLAPS, DontRequirePreAuth, LogonType, HasURA, PasswordNeverExpires, PasswordNotRequired, FunctionalLevel, TrustType, SidFiltering, TrustedToAuth, SamAccountName, CertificateMappingMethodsCollected, CertificateMappingMethodsRaw, CertificateMappingMethods, StrongCertificateBindingEnforcementCollected, StrongCertificateBindingEnforcementRaw, StrongCertificateBindingEnforcement, EKUs, SubjectAltRequireUPN, AuthorizedSignatures, ApplicationPolicies, SchemaVersion}
 }
 func ParseProperty(source string) (Property, error) {
 	switch source {
@@ -247,16 +247,16 @@ func ParseProperty(source string) (Property, error) {
 		return SamAccountName, nil
 	case "certificatemappingmethodscollected":
 		return CertificateMappingMethodsCollected, nil
-	case "certificatemappingmethodshex":
-		return CertificateMappingMethodsHex, nil
+	case "certificatemappingmethodsraw":
+		return CertificateMappingMethodsRaw, nil
 	case "certificatemappingmethodspretty":
-		return CertificateMappingMethodsPretty, nil
+		return CertificateMappingMethods, nil
 	case "strongcertificatebindingenforcementcollected":
 		return StrongCertificateBindingEnforcementCollected, nil
-	case "strongcertificatebindingenforcementint":
-		return StrongCertificateBindingEnforcementInt, nil
-	case "strongcertificatebindingenforcementpretty":
-		return StrongCertificateBindingEnforcementPretty, nil
+	case "strongcertificatebindingenforcementraw":
+		return StrongCertificateBindingEnforcementRaw, nil
+	case "strongcertificatebindingenforcement":
+		return StrongCertificateBindingEnforcement, nil
 	case "ekus":
 		return EKUs, nil
 	case "subjectaltrequireupn":
@@ -357,16 +357,16 @@ func (s Property) String() string {
 		return string(SamAccountName)
 	case CertificateMappingMethodsCollected:
 		return string(CertificateMappingMethodsCollected)
-	case CertificateMappingMethodsHex:
-		return string(CertificateMappingMethodsHex)
-	case CertificateMappingMethodsPretty:
-		return string(CertificateMappingMethodsPretty)
+	case CertificateMappingMethodsRaw:
+		return string(CertificateMappingMethodsRaw)
+	case CertificateMappingMethods:
+		return string(CertificateMappingMethods)
 	case StrongCertificateBindingEnforcementCollected:
 		return string(StrongCertificateBindingEnforcementCollected)
-	case StrongCertificateBindingEnforcementInt:
-		return string(StrongCertificateBindingEnforcementInt)
-	case StrongCertificateBindingEnforcementPretty:
-		return string(StrongCertificateBindingEnforcementPretty)
+	case StrongCertificateBindingEnforcementRaw:
+		return string(StrongCertificateBindingEnforcementRaw)
+	case StrongCertificateBindingEnforcement:
+		return string(StrongCertificateBindingEnforcement)
 	case EKUs:
 		return string(EKUs)
 	case SubjectAltRequireUPN:
@@ -467,16 +467,16 @@ func (s Property) Name() string {
 		return "SAM Account Name"
 	case CertificateMappingMethodsCollected:
 		return "Certificate Mapping Methods Collected"
-	case CertificateMappingMethodsHex:
-		return "Certificate Mapping Methods Hex"
-	case CertificateMappingMethodsPretty:
+	case CertificateMappingMethodsRaw:
+		return "Certificate Mapping Methods (Raw)"
+	case CertificateMappingMethods:
 		return "Certificate Mapping Methods Pretty"
 	case StrongCertificateBindingEnforcementCollected:
 		return "Strong Certificate Binding Enforcement Collected"
-	case StrongCertificateBindingEnforcementInt:
-		return "Strong Certificate Binding Enforcement Int"
-	case StrongCertificateBindingEnforcementPretty:
-		return "Strong Certificate Binding Enforcement Pretty"
+	case StrongCertificateBindingEnforcementRaw:
+		return "Strong Certificate Binding Enforcement (Raw)"
+	case StrongCertificateBindingEnforcement:
+		return "Strong Certificate Binding Enforcement"
 	case EKUs:
 		return "EKUs"
 	case SubjectAltRequireUPN:
