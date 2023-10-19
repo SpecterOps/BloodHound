@@ -18,6 +18,7 @@ package migration
 
 import (
 	"fmt"
+	"path"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -30,7 +31,6 @@ import (
 
 const (
 	migrationSQLFilenameSuffix = ".sql"
-	migrationDirname           = "migrations"
 )
 
 type Migration struct {
@@ -87,15 +87,15 @@ func (s Manifest) After(target version.Version) []Migration {
 }
 
 // Additional migrator functions to support stepwise migrations
-func (s *Migrator) MigrationFilenames(migrationDir string) ([]string, error) {
+func (s *Migrator) MigrationFilenames() ([]string, error) {
 	var migrationFilenames []string
 
-	if dirEntries, err := s.migrations.ReadDir(migrationDir); err != nil {
+	if dirEntries, err := s.migrations.ReadDir(s.migrationDir); err != nil {
 		return nil, err
 	} else {
 		for _, entry := range dirEntries {
 			if !entry.IsDir() {
-				migrationFilenames = append(migrationFilenames, filepath.Join(migrationDir, entry.Name()))
+				migrationFilenames = append(migrationFilenames, filepath.Join(s.migrationDir, entry.Name()))
 			}
 		}
 	}
@@ -146,17 +146,17 @@ func (s *Migrator) HasMigrationTable() (bool, error) {
 	return hasTable, s.db.Raw(tableCheckSQL).Scan(&hasTable).Error
 }
 
-func (s *Migrator) executeStepwiseMigrations() error {
+func (s *Migrator) ExecuteStepwiseMigrations() error {
 	if hasTable, err := s.HasMigrationTable(); err != nil {
 		return fmt.Errorf("failed to check if migration table exists: %w", err)
 	} else if !hasTable {
 		log.Infof("This is a new database. Initializing schema...")
-		if err := s.executeSQLFile("migrations/schema.sql", version.Version{}); err != nil {
+		if err := s.executeSQLFile(path.Join(s.migrationDir, "schema.sql"), version.Version{}); err != nil {
 			return fmt.Errorf("failed to create initial schema: %w", err)
 		}
 	}
 
-	if migrationFilenames, err := s.MigrationFilenames(migrationDirname); err != nil {
+	if migrationFilenames, err := s.MigrationFilenames(); err != nil {
 		return err
 	} else if manifest, err := NewManifest(migrationFilenames); err != nil {
 		return err

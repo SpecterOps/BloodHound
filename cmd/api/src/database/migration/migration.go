@@ -27,20 +27,24 @@ import (
 
 var migrations embed.FS
 
+const migrationDirname = "migrations"
+
 type Migrator struct {
-	migrations embed.FS
-	db         *gorm.DB
+	migrations   embed.FS
+	db           *gorm.DB
+	migrationDir string
 }
 
 func NewMigrator(db *gorm.DB) *Migrator {
 	return &Migrator{
-		migrations: migrations,
-		db:         db,
+		migrations:   migrations,
+		db:           db,
+		migrationDir: migrationDirname,
 	}
 }
 
 func (s *Migrator) Migrate() error {
-	if err := s.executeStepwiseMigrations(); err != nil {
+	if err := s.ExecuteStepwiseMigrations(); err != nil {
 		return fmt.Errorf("failed to execute stepwise migrations: %w", err)
 	}
 

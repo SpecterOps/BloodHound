@@ -14,7 +14,7 @@
 -- 
 -- SPDX-License-Identifier: Apache-2.0
 
-create table migration_test (
+create table if not exists migration_test (
   id serial primary key,
   foo varchar(50) not null
 );
