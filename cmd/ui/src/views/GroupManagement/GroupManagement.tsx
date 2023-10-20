@@ -5,7 +5,7 @@ import { useQuery } from 'react-query';
 import { SelectedNode } from 'src/ducks/entityinfo/types';
 import { useEffect, useState } from 'react';
 import DataSelector from '../QA/DataSelector';
-import { AssetGroup, AssetGroupMember } from 'js-client-library';
+import { AssetGroup, AssetGroupMember, AssetGroupMemberParams } from 'js-client-library';
 import { GraphNodeTypes } from 'src/ducks/graph/types';
 import { faGem } from '@fortawesome/free-solid-svg-icons';
 import { useSelector } from 'react-redux';
@@ -16,42 +16,41 @@ type SelectedDomain = {
     type: string | null;
 }
 
-const SetManagement = () => {
+const GroupManagement = () => {
     const theme = useTheme();
 
     const domain: Domain = useSelector((state: any) => state.global.options.domain);
 
     const [selectedDomain, setSelectedDomain] = useState<SelectedDomain | null>(null);
     const [selectedAssetGroup, setSelectedAssetGroup] = useState<AssetGroup | null>(null);
-    const [assetGroupMembers, setAssetGroupMembers] = useState<AssetGroupMember[]>([]);
     const [selectedNode, setSelectedNode] = useState<SelectedNode | null>(null);
-    
+    const [filterParams, setFilterParams] = useState<AssetGroupMemberParams>({});
+
+    const setInitialGroup = (data: AssetGroup[]) => {
+        if (!selectedAssetGroup && data.length) {
+            const initialGroup = data.find(group => group.tag === 'admin_tier_zero') || data[0];
+            setSelectedAssetGroup(initialGroup);
+        }
+    }
     
     const listAssetGroups = useQuery(
         ["listAssetGroups"],
         () => apiClient.listAssetGroups().then(res => res.data.data.asset_groups),
-    );
-
-    const listAssetGroupMembersQuery = useQuery(
-        ["listAssetGroupMembers"],
-        () => apiClient.listAssetGroupMembers(`${selectedAssetGroup?.id}`).then(res => res.data.data.members),
-        { enabled: !!selectedAssetGroup }
+        { onSuccess: setInitialGroup }
     );
 
     useEffect(() => {
         const filterDomain = selectedDomain || domain;
-        const filteredAssetGroupMembers = listAssetGroupMembersQuery.data?.filter(member => {
-            switch (filterDomain.type) {
-                case 'active-directory-platform':
-                    return member.environment_kind === "Domain";
-                case 'azure-platform':
-                    return member.environment_kind === "Tenant";
-                default:
-                    return member.environment_id === filterDomain.id;
-            }
-        });
-        setAssetGroupMembers(filteredAssetGroupMembers || []);
-    }, [listAssetGroupMembersQuery.data, selectedDomain, domain])
+        const filter: AssetGroupMemberParams = {};
+        if (filterDomain.type === 'active-directory-platform') {
+            filter.environment_kind = "eq:Domain";
+        } else if (filterDomain.type === 'azure-platform') {
+            filter.environment_kind = "eq:AZTenant";
+        } else {
+            filter.environment_id = `eq:${filterDomain.id}`
+        }
+        setFilterParams(filter);
+    }, [selectedDomain, domain, selectedAssetGroup])
 
     const handleSelectMember = (member: AssetGroupMember) => {
         setSelectedNode({
@@ -97,11 +96,12 @@ const SetManagement = () => {
                             </Grid>
                         </Grid>
                     </Box>
-                    <AssetGroupEdit assetGroupId={selectedAssetGroup?.id.toString()} members={assetGroupMembers} />
+                    {selectedAssetGroup && <AssetGroupEdit assetGroup={selectedAssetGroup} filter={filterParams} />}
                 </Grid>
                 <Grid height={"100%"} item xs={5} md={6}>
                     <AssetGroupMemberList 
-                        assetGroupMembers={assetGroupMembers}
+                        assetGroup={selectedAssetGroup}
+                        filter={filterParams}
                         onSelectMember={handleSelectMember}
                     />
                 </Grid>
@@ -113,4 +113,4 @@ const SetManagement = () => {
     );
 };
 
-export default SetManagement;
+export default GroupManagement;

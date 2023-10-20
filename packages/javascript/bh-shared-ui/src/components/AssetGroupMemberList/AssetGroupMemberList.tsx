@@ -11,16 +11,25 @@ import {
 } from "@mui/material";
 import { FC } from "react"
 import NodeIcon from "../NodeIcon";
-import { AssetGroupMember } from "js-client-library";
+import { AssetGroup, AssetGroupMemberParams } from "js-client-library";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCheck, faTimes } from "@fortawesome/free-solid-svg-icons";
+import { useQuery } from "react-query";
+import { apiClient } from "../../utils";
 
 const AssetGroupMemberList: FC<{
-    assetGroupMembers: AssetGroupMember[],
+    assetGroup: AssetGroup | null,
+    filter: AssetGroupMemberParams,
     onSelectMember: (member: any) => void,
-}> = ({ assetGroupMembers, onSelectMember }) => {
+}> = ({ assetGroup, filter, onSelectMember }) => {
 
     const theme = useTheme();
+
+    const listAssetGroupMembersQuery = useQuery(
+        ["listAssetGroupMembers", assetGroup, filter],
+        ({ signal }) => apiClient.listAssetGroupMembers(`${assetGroup?.id}`, filter, { signal }).then(res => res.data.data.members),
+        { enabled: !!assetGroup }
+    );
 
     const hoverStyles = {
         "&:hover": {
@@ -39,7 +48,7 @@ const AssetGroupMemberList: FC<{
                     </TableRow>
                 </TableHead>
                 <TableBody sx={{ height: "100%", overflow: "auto" }}>
-                    {assetGroupMembers?.map(member => {
+                    {listAssetGroupMembersQuery.data?.map(member => {
                         return (
                             <TableRow
                                 onClick={() => onSelectMember(member)}

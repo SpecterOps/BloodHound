@@ -38,7 +38,7 @@ const UserProfile = React.lazy(() => import('bh-shared-ui').then((module) => ({ 
 const DownloadCollectors = React.lazy(() => import('./DownloadCollectors'));
 const Administration = React.lazy(() => import('./Administration'));
 const ApiExplorer = React.lazy(() => import('./ApiExplorer'));
-const SetManagement = React.lazy(() => import('./SetManagement/SetManagement'));
+const GroupManagement = React.lazy(() => import('./GroupManagement/GroupManagement'));
 
 const useStyles = makeStyles({
     content: {
@@ -114,8 +114,8 @@ const Content: React.FC = () => {
             authenticationRequired: true,
         },
         {
-            path: routes.ROUTE_SET_MANAGEMENT,
-            component: SetManagement,
+            path: routes.ROUTE_GROUP_MANAGEMENT,
+            component: GroupManagement,
             authenticationRequired: true,
         },
         {

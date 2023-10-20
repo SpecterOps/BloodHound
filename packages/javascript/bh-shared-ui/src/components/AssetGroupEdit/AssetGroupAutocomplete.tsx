@@ -2,14 +2,14 @@ import { Autocomplete, AutocompleteRenderInputParams, TextField } from "@mui/mat
 import { FC, HTMLAttributes, ReactNode, SyntheticEvent, useState } from "react";
 import AutocompleteOption from "./AutocompleteOption";
 import { AssetGroupChangelog, AssetGroupChangelogEntry, ChangelogAction } from "./types";
-import { AssetGroupMember } from "js-client-library";
+import { AssetGroup } from "js-client-library";
 import { getKeywordAndTypeValues, useDebouncedValue, useSearch } from "../../hooks";
 
 const AssetGroupAutocomplete: FC<{
-    assetGroupMembers: AssetGroupMember[],
+    assetGroup: AssetGroup,
     changelog: AssetGroupChangelog,
     onChange: (event: any, value: AssetGroupChangelogEntry) => void,
-}> = ({ assetGroupMembers, changelog, onChange }) => {
+}> = ({ assetGroup, changelog, onChange }) => {
 
     const [searchInput, setSearchInput] = useState('');
     const debouncedInputValue = useDebouncedValue(searchInput, 250);
@@ -18,14 +18,14 @@ const AssetGroupAutocomplete: FC<{
 
     const searchResultsWithActions = data?.map(result => {
         const resultInChangelog = changelog.find(member => member.objectid === result.objectid);
-        const resultInAssetGroup = assetGroupMembers.find(member => member.object_id === result.objectid);
+        const matchedSelector = assetGroup.Selectors.find(selector => selector.selector === result.objectid);
 
         let action = ChangelogAction.ADD;
-
-        if (resultInAssetGroup) {
+        
+        if (result.system_tags.includes(assetGroup.tag)) {
             action = ChangelogAction.DEFAULT;
         }
-        if (resultInAssetGroup?.custom_member) {
+        if (matchedSelector) {
             action = ChangelogAction.REMOVE;
         }
         if (resultInChangelog) {

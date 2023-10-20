@@ -65,13 +65,21 @@ export type NewAuthToken = AuthToken & {
 
 export type CreateAuthTokenResponse = BasicResponse<NewAuthToken>;
 
+export type AssetGroupSelector = TimestampFields & {
+    id: number;
+    asset_group_id: number;
+    name: string;
+    selector: string;
+    system_selector: boolean;
+};
+
 export type AssetGroup = TimestampFields & {
     id: number;
     name: string;
     tag: string;
     member_count: number;
     system_group: boolean;
-    Selectors: string[];
+    Selectors: AssetGroupSelector[];
 };
 
 export type AssetGroupMember = {

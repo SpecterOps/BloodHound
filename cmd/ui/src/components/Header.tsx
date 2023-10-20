@@ -97,8 +97,8 @@ const Header: React.FC = () => {
                     <MenuItem
                         title={'Group Management'}
                         icon={<FontAwesomeIcon icon={faUsersRectangle} size='sm' />}
-                        active={location.pathname === routes.ROUTE_SET_MANAGEMENT}
-                        onClick={() => navigate(routes.ROUTE_SET_MANAGEMENT)}
+                        active={location.pathname === routes.ROUTE_GROUP_MANAGEMENT}
+                        onClick={() => navigate(routes.ROUTE_GROUP_MANAGEMENT)}
                         data-testid='global_header_nav-set-management'
                     />
                 </div>

@@ -1,17 +1,18 @@
 import { Box, Paper } from "@mui/material"
-import { AssetGroupMember, UpdateAssetGroupSelectorRequest } from "js-client-library";
+import { AssetGroup, AssetGroupMemberParams, UpdateAssetGroupSelectorRequest } from "js-client-library";
 import { FC, useState } from "react"
 import { AssetGroupChangelog, AssetGroupChangelogEntry, ChangelogAction } from "./types";
 import AssetGroupAutocomplete from "./AssetGroupAutocomplete";
 import { SubHeader } from "../../views/Explore";
-import { useMutation } from "react-query";
+import { useMutation, useQuery } from "react-query";
 import { apiClient } from "../../utils";
 import AssetGroupChangelogTable from "./AssetGroupChangelogTable";
+import { ActiveDirectoryNodeKind, ActiveDirectoryNodeKindToDisplay, AzureNodeKind, AzureNodeKindToDisplay } from "../../graphSchema";
 
 const AssetGroupEdit: FC<{
-    assetGroupId?: string,
-    members: AssetGroupMember[],
-}> = ({ assetGroupId, members }) => {
+    assetGroup: AssetGroup,
+    filter: AssetGroupMemberParams
+}> = ({ assetGroup, filter }) => {
     const [changelog, setChangelog] = useState<AssetGroupChangelog>([]);
     const addRows = changelog.filter(entry => entry.action === ChangelogAction.ADD);
     const removeRows = changelog.filter(entry => entry.action === ChangelogAction.REMOVE);
@@ -38,7 +39,7 @@ const AssetGroupEdit: FC<{
     const mutation = useMutation({
         mutationFn: () => {
             const selectors = mapChangelogToSelectors();
-            return apiClient.updateAssetGroupSelector(assetGroupId || "1", selectors);
+            return apiClient.updateAssetGroupSelector(assetGroup.id.toString(), selectors);
         },
         onSuccess: () => {
             setChangelog([]);
@@ -51,9 +52,9 @@ const AssetGroupEdit: FC<{
 
     return (
         <Box component={Paper} elevation={0} padding={1}>
-            <SubHeader label={'Total Members'} count={members.length} />
+            <FilteredMemberCountDisplay assetGroupId={assetGroup.id} label="Total Count" filter={filter} />
             <AssetGroupAutocomplete
-                assetGroupMembers={members}
+                assetGroup={assetGroup}
                 changelog={changelog}
                 onChange={handleUpdateAssetGroupChangelog}
             />
@@ -66,8 +67,48 @@ const AssetGroupEdit: FC<{
                     onSubmit={() => mutation.mutate()}
                 />
             )}
+            {Object.values(ActiveDirectoryNodeKind).map(kind => {
+                const filterByKind = { ...filter, primary_kind: `eq:${kind}` }
+                return (
+                    <FilteredMemberCountDisplay
+                        assetGroupId={assetGroup.id}
+                        label={ActiveDirectoryNodeKindToDisplay(kind) || ""}
+                        filter={filterByKind}
+                    />
+                )
+            })}
+            {Object.values(AzureNodeKind).map(kind => {
+                const filterByKind = { ...filter, primary_kind: `eq:${kind}` }
+                return (
+                    <FilteredMemberCountDisplay
+                        assetGroupId={assetGroup.id}
+                        label={AzureNodeKindToDisplay(kind) || ""}
+                        filter={filterByKind}
+                    />
+                )
+            })}
         </Box>
     )
+}
+
+const FilteredMemberCountDisplay: FC<{
+    assetGroupId: number,
+    label: string,
+    filter: AssetGroupMemberParams
+}> = ({ assetGroupId, label, filter }) => {
+
+    const { data: count, isError, isLoading } = useQuery(
+        ["countAssetGroupMembers", assetGroupId, filter],
+        ({ signal }) => apiClient.listAssetGroupMembers(assetGroupId.toString(), filter, { signal }).then(res => res.data.count),
+    );
+
+    const hasValidCount = !isLoading && !isError && count && count > 0;
+
+    if (hasValidCount) {
+        return <SubHeader label={label} count={count} />;
+    } else {
+        return null;
+    }
 }
 
 export default AssetGroupEdit;
