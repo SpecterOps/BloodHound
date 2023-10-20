@@ -39,6 +39,7 @@ import {
     faLandmark,
     faStore,
     faIdCard,
+    faArrowsLeftRightToLine,
 } from '@fortawesome/free-solid-svg-icons';
 
 export const NODE_ICON: { [index: string]: { icon: IconDefinition; color: string } } = {
@@ -68,7 +69,7 @@ export const NODE_ICON: { [index: string]: { icon: IconDefinition; color: string
     },
 
     AIACA: {
-        icon: faBox,
+        icon: faArrowsLeftRightToLine,
         color: '#763AAD',
     },
 

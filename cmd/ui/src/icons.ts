@@ -44,6 +44,8 @@ import {
     faLandmark,
     faStore,
     faIdCard,
+    faArrowsLeftRightToLine,
+    faBuilding,
 } from '@fortawesome/free-solid-svg-icons';
 import { ActiveDirectoryNodeKind, AzureNodeKind } from 'bh-shared-ui';
 
@@ -98,7 +100,7 @@ export const NODE_ICON: IconDictionary = {
     },
 
     [ActiveDirectoryNodeKind.AIACA]: {
-        icon: faBox,
+        icon: faArrowsLeftRightToLine,
         color: '#763AAD',
     },
 
@@ -108,7 +110,7 @@ export const NODE_ICON: IconDictionary = {
     },
 
     [ActiveDirectoryNodeKind.EnterpriseCA]: {
-        icon: faBox,
+        icon: faBuilding,
         color: '#25724B',
     },
 
