@@ -44,7 +44,7 @@ func NewMigrator(db *gorm.DB) *Migrator {
 }
 
 func (s *Migrator) Migrate() error {
-	if err := s.ExecuteStepwiseMigrations(); err != nil {
+	if err := s.executeStepwiseMigrations(); err != nil {
 		return fmt.Errorf("failed to execute stepwise migrations: %w", err)
 	}
 

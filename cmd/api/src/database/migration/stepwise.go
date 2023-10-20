@@ -146,7 +146,7 @@ func (s *Migrator) HasMigrationTable() (bool, error) {
 	return hasTable, s.db.Raw(tableCheckSQL).Scan(&hasTable).Error
 }
 
-func (s *Migrator) ExecuteStepwiseMigrations() error {
+func (s *Migrator) executeStepwiseMigrations() error {
 	if hasTable, err := s.HasMigrationTable(); err != nil {
 		return fmt.Errorf("failed to check if migration table exists: %w", err)
 	} else if !hasTable {
@@ -162,7 +162,10 @@ func (s *Migrator) ExecuteStepwiseMigrations() error {
 		return err
 	} else if lastMigration, err := s.LatestMigration(); err != nil {
 		return fmt.Errorf("could not get latest migration: %w", err)
+	} else if err := s.ExecuteMigrations(manifest.After(lastMigration.Version())); err != nil {
+		return fmt.Errorf("could not execute migrations: %w", err)
 	} else {
-		return s.ExecuteMigrations(manifest.After(lastMigration.Version()))
+		currentVersionMigration := model.NewMigration(version.GetVersion())
+		return s.db.Create(&currentVersionMigration).Error
 	}
 }

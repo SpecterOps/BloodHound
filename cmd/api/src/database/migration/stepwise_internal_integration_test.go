@@ -30,6 +30,7 @@ import (
 	"gorm.io/gorm"
 
 	"github.com/specterops/bloodhound/src/test/integration/utils"
+	"github.com/specterops/bloodhound/src/version"
 )
 
 //go:embed test_migrations
@@ -117,13 +118,54 @@ func TestMigrator_Migrate(t *testing.T) {
 	db, err := setupDB()
 	require.Nil(t, err)
 
-	err = wipeDB(db)
-	require.Nil(t, err)
-
-	migrator := setupMigrator(db)
+	testMigrator := setupMigrator(db)
+	prodMigrator := NewMigrator(db)
 
 	t.Run("Full Initial Migration", func(t *testing.T) {
-		err := migrator.ExecuteStepwiseMigrations()
+		var (
+			migrationsTableExists bool
+			testTableExists       bool
+		)
+
+		expectedVersion, err := version.Parse("v1.0.0")
+		require.Nil(t, err)
+
+		err = wipeDB(db)
+		require.Nil(t, err)
+
+		err = testMigrator.executeStepwiseMigrations()
 		assert.Nil(t, err)
+
+		err = db.Raw("SELECT EXISTS(SELECT * FROM information_schema.tables WHERE table_name='migrations')").Scan(&migrationsTableExists).Error
+		require.Nil(t, err)
+		assert.True(t, migrationsTableExists)
+
+		err = db.Raw("SELECT EXISTS(SELECT * FROM information_schema.tables WHERE table_name='migration_test')").Scan(&testTableExists).Error
+		require.Nil(t, err)
+		assert.False(t, testTableExists, "migration test table unexpectedly exists after stepwise migration completed successfully")
+
+		ver, err := testMigrator.LatestMigration()
+		assert.Nil(t, err)
+		assert.Equal(t, expectedVersion, ver.Version())
+	})
+
+	t.Run("Production Schema Migration", func(t *testing.T) {
+		var (
+			migrationsTableExists bool
+		)
+
+		err = wipeDB(db)
+		require.Nil(t, err)
+
+		err = prodMigrator.executeStepwiseMigrations()
+		require.Nil(t, err)
+
+		err = db.Raw("SELECT EXISTS(SELECT * FROM information_schema.tables WHERE table_name='migrations')").Scan(&migrationsTableExists).Error
+		require.Nil(t, err)
+		assert.True(t, migrationsTableExists)
+
+		ver, err := testMigrator.LatestMigration()
+		assert.Nil(t, err)
+		assert.Equal(t, version.GetVersion(), ver.Version())
 	})
 }
