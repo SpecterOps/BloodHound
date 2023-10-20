@@ -40,6 +40,7 @@ import {
     faStore,
     faIdCard,
     faArrowsLeftRightToLine,
+    faBuilding,
 } from '@fortawesome/free-solid-svg-icons';
 
 export const NODE_ICON: { [index: string]: { icon: IconDefinition; color: string } } = {
@@ -79,7 +80,7 @@ export const NODE_ICON: { [index: string]: { icon: IconDefinition; color: string
     },
 
     EnterpriseCA: {
-        icon: faBox,
+        icon: faBuilding,
         color: '#25724B',
     },
 
