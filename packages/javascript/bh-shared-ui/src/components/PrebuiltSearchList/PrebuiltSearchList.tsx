@@ -21,6 +21,8 @@ import {
     Button,
     Dialog,
     DialogActions,
+    DialogContent,
+    DialogContentText,
     DialogTitle,
     IconButton,
     List,
@@ -28,24 +30,14 @@ import {
     ListItemButton,
     ListItemText,
     ListSubheader,
+    SvgIcon,
 } from '@mui/material';
 import { FC, useState } from 'react';
-import makeStyles from '@mui/styles/makeStyles';
-
-const useStyles = makeStyles((theme) => ({
-    list: {
-        position: 'relative',
-        overflow: 'auto',
-        maxHeight: 300,
-        '& ul': { padding: 0 },
-    },
-}));
 
 interface PrebuiltSearchListProps {
     listSections: ListSection[];
     clickHandler: (query: string) => void;
-
-    deleteHandler?: any;
+    deleteHandler?: (id: number) => void;
 }
 
 type ListSection = {
@@ -55,17 +47,15 @@ type ListSection = {
 
 export type LineItem = {
     id?: number;
-
     description: string;
     cypher: string;
     canEdit?: boolean;
 };
 
 const PrebuiltSearchList: FC<PrebuiltSearchListProps> = ({ listSections, clickHandler, deleteHandler }) => {
-    const classes = useStyles();
-
     const [open, setOpen] = useState(false);
     const [queryId, setQueryId] = useState<number>();
+    const [hoveredListItem, setHoveredListItem] = useState<number | null>(null);
 
     const handleOpen = () => {
         setOpen(true);
@@ -78,58 +68,64 @@ const PrebuiltSearchList: FC<PrebuiltSearchListProps> = ({ listSections, clickHa
 
     return (
         <>
-            <List dense disablePadding className={classes.list}>
-                {listSections.map((section) => {
-                    const { subheader, lineItems } = section;
+            <Box maxHeight={'300px'} overflow={'auto'}>
+                <List dense disablePadding onMouseLeave={() => setHoveredListItem(null)}>
+                    {listSections.map((section) => {
+                        const { subheader, lineItems } = section;
 
-                    return (
-                        <Box key={subheader}>
-                            <ListSubheader sx={{ fontWeight: 'bold' }}>{subheader} </ListSubheader>
+                        return (
+                            <Box key={subheader}>
+                                <ListSubheader sx={{ fontWeight: 'bold' }}>{subheader} </ListSubheader>
 
-                            {lineItems?.map((lineItem, idx) => {
-                                const { id, description, cypher, canEdit = false } = lineItem;
+                                {lineItems?.map((lineItem, idx) => {
+                                    const { id, description, cypher, canEdit = false } = lineItem;
 
-                                return (
-                                    <ListItem
-                                        disablePadding
-                                        key={`${id}-${idx}`}
-                                        secondaryAction={
-                                            canEdit && (
-                                                <IconButton
-                                                    size='small'
-                                                    onClick={() => {
-                                                        setQueryId(id);
-                                                        handleOpen();
-                                                    }}>
-                                                    <FontAwesomeIcon icon={faTrash} />
-                                                </IconButton>
-                                            )
-                                        }>
-                                        <ListItemButton onClick={() => clickHandler(cypher)}>
-                                            <ListItemText primary={description} />
-                                        </ListItemButton>
-                                    </ListItem>
-                                );
-                            })}
-                        </Box>
-                    );
-                })}
-            </List>
+                                    return (
+                                        <ListItem
+                                            onMouseEnter={() => setHoveredListItem(idx)}
+                                            disablePadding
+                                            key={`${id}-${idx}`}
+                                            secondaryAction={
+                                                canEdit &&
+                                                hoveredListItem === idx && (
+                                                    <IconButton
+                                                        size='small'
+                                                        onClick={() => {
+                                                            setQueryId(id);
+                                                            handleOpen();
+                                                        }}>
+                                                        <SvgIcon fontSize='small'>
+                                                            <FontAwesomeIcon icon={faTrash} />
+                                                        </SvgIcon>
+                                                    </IconButton>
+                                                )
+                                            }>
+                                            <ListItemButton onClick={() => clickHandler(cypher)}>
+                                                <ListItemText primary={description} />
+                                            </ListItemButton>
+                                        </ListItem>
+                                    );
+                                })}
+                            </Box>
+                        );
+                    })}
+                </List>
+            </Box>
 
-            <Dialog
-                open={open}
-                onClose={handleClose}
-                maxWidth={'xs'}
-                fullWidth
-                aria-labelledby='alert-delete-query-confirmation'>
-                <DialogTitle>Delete this query?</DialogTitle>
+            <Dialog open={open} onClose={handleClose} maxWidth={'xs'} fullWidth>
+                <DialogContent>
+                    <DialogContentText>Delete this query?</DialogContentText>
+                </DialogContent>
                 <DialogActions>
-                    <Button onClick={handleClose}>Cancel</Button>
+                    <Button color='inherit' onClick={handleClose}>
+                        Cancel
+                    </Button>
                     <Button
                         onClick={() => {
-                            deleteHandler(queryId);
+                            if (deleteHandler) deleteHandler(queryId!);
                             handleClose();
                         }}
+                        color='primary'
                         autoFocus>
                         Confirm
                     </Button>

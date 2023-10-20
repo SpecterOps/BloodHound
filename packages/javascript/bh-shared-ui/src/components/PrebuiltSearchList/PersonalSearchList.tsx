@@ -14,70 +14,64 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Typography } from '@mui/material';
-import { FC, useState } from 'react';
-import { useMutation, useQuery, useQueryClient } from 'react-query';
-import { apiClient } from '../../utils';
+import { Box, Skeleton, Typography } from '@mui/material';
+import { FC } from 'react';
 import { useNotifications } from '../../providers';
 import PrebuiltSearchList, { LineItem } from './PrebuiltSearchList';
+import { useDeleteSavedQuery, useSavedQueries } from '../../hooks/useSavedQueries';
 
 // `PersonalSearchList` is a more specific implementation of `PrebuiltSearchList`.  It includes
 // additional fetching logic to fetch and delete queries saved by the user
 export const PersonalSearchList: FC<{ clickHandler: (query: string) => void }> = ({ clickHandler }) => {
-    const queryClient = useQueryClient();
+    const userQueries = useSavedQueries();
+    const deleteQueryMutation = useDeleteSavedQuery();
     const { addNotification } = useNotifications();
 
-    const [queries, setQueries] = useState<LineItem[]>([]);
+    const handleDeleteQuery = (id: number) =>
+        deleteQueryMutation.mutate(id, {
+            onSuccess: () => {
+                addNotification(`Query deleted.`, 'userDeleteQuery');
+            },
+        });
 
-    useQuery({
-        queryKey: 'userSavedQueries',
-        queryFn: () => {
-            return apiClient
-                .getUserSavedQueries()
-                .then((response) => {
-                    const queries = response.data.data;
+    if (userQueries.isLoading) {
+        return (
+            <Box mt={2}>
+                <Skeleton />
+            </Box>
+        );
+    }
 
-                    const queriesToDisplay = queries.map((query) => ({
-                        description: query.name,
-                        cypher: query.query,
-                        canEdit: true,
-                        id: query.id,
-                    }));
+    if (userQueries.isError) {
+        return (
+            <Box my={2} ml={2}>
+                <Typography>Unable to list saved queries.</Typography>
+            </Box>
+        );
+    }
 
-                    setQueries(queriesToDisplay);
-                })
-                .catch(() => {
-                    setQueries([]);
-                });
-        },
-    });
+    const lineItems: LineItem[] =
+        userQueries.data?.map((query) => ({
+            description: query.name,
+            cypher: query.query,
+            canEdit: true,
+            id: query.id,
+        })) || [];
 
-    const mutation = useMutation({
-        mutationFn: (queryId: number) => {
-            return apiClient.deleteUserQuery(queryId);
-        },
-        onSettled: () => {
-            queryClient.invalidateQueries({ queryKey: 'userSavedQueries' });
-        },
-        onSuccess: () => {
-            addNotification(`Query deleted.`, 'userDeleteQuery');
-        },
-    });
-
-    return queries?.length > 0 ? (
+    return lineItems.length > 0 ? (
         <PrebuiltSearchList
             listSections={[
                 {
                     subheader: 'User Saved Searches: ',
-                    lineItems: queries,
+                    lineItems,
                 },
             ]}
             clickHandler={clickHandler}
-            deleteHandler={mutation.mutate}
+            deleteHandler={handleDeleteQuery}
         />
     ) : (
-        <Typography variant='overline' pl={'5px'} pt={'7px'} display={'block'}>
-            No queries have been saved yet.
-        </Typography>
+        <Box my={2} ml={2}>
+            <Typography variant='body2'>No queries have been saved yet.</Typography>
+        </Box>
     );
 };

@@ -17,9 +17,8 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Button, TextField } from '@mui/material';
 import { FC, useState } from 'react';
 import makeStyles from '@mui/styles/makeStyles';
-import { useMutation, useQueryClient } from 'react-query';
-import { apiClient } from '../../utils';
 import { useNotifications } from '../../providers';
+import { useCreateSavedQuery } from '../../hooks/useSavedQueries';
 
 const useStyles = makeStyles((theme) => ({
     button: {
@@ -36,33 +35,27 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 const SaveQueryInput: FC<{ cypherQuery: string }> = ({ cypherQuery }) => {
-    const queryClient = useQueryClient();
     const { addNotification } = useNotifications();
 
     const classes = useStyles();
 
     const [showQueryNameInput, setShowQueryNameInput] = useState(false);
     const [queryName, setQueryName] = useState('');
-
-    const mutation = useMutation({
-        mutationFn: (newQuery: { name: string; query: string }) => {
-            return apiClient.createUserQuery(newQuery);
-        },
-        // Always refetch after error or success:
-        onSettled: () => {
-            queryClient.invalidateQueries({ queryKey: 'userSavedQueries' });
-        },
-        onSuccess: () => {
-            setQueryName(''); // reset input
-            addNotification(`${queryName} saved!`, 'userSavedQuery');
-        },
-    });
+    const createSavedQuery = useCreateSavedQuery();
 
     const handleOnSave = () => {
         setShowQueryNameInput((c) => !c);
 
         if (showQueryNameInput) {
-            mutation.mutate({ name: queryName, query: cypherQuery });
+            createSavedQuery.mutate(
+                { name: queryName, query: cypherQuery },
+                {
+                    onSuccess: () => {
+                        setQueryName(''); // reset input
+                        addNotification(`${queryName} saved!`, 'userSavedQuery');
+                    },
+                }
+            );
         }
     };
 
@@ -98,7 +91,8 @@ const SaveQueryInput: FC<{ cypherQuery: string }> = ({ cypherQuery }) => {
                 className={`${classes.button} ${classes.iconButton}`}
                 onClick={handleOnSave}
                 disabled={showQueryNameInput && queryName.length === 0}
-                variant='outlined'>
+                variant='outlined'
+                aria-label='Save Query'>
                 <FontAwesomeIcon icon={faSave} />
             </Button>
         </>
