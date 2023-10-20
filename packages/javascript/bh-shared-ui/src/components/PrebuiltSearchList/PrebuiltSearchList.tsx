@@ -113,8 +113,9 @@ const PrebuiltSearchList: FC<PrebuiltSearchListProps> = ({ listSections, clickHa
             </Box>
 
             <Dialog open={open} onClose={handleClose} maxWidth={'xs'} fullWidth>
+                <DialogTitle>Delete Query</DialogTitle>
                 <DialogContent>
-                    <DialogContentText>Delete this query?</DialogContentText>
+                    <DialogContentText>Are you sure you want to delete this query?</DialogContentText>
                 </DialogContent>
                 <DialogActions>
                     <Button color='inherit' onClick={handleClose}>

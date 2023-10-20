@@ -14,9 +14,9 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { faFolderOpen, faPlay, faQuestion } from '@fortawesome/free-solid-svg-icons';
+import { faFolderOpen, faPlay, faQuestion, faSave } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Box, Button, Collapse } from '@mui/material';
+import { Box, Button, Collapse, SvgIcon } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
 import '@neo4j-cypher/codemirror/css/cypher-codemirror.css';
 import { CypherEditor } from '@neo4j-cypher/react-codemirror';
@@ -28,13 +28,15 @@ import {
     AzureNodeKind,
     AzureRelationshipKind,
     CommonKindProperties,
-    SaveQueryInput,
+    useCreateSavedQuery,
 } from 'bh-shared-ui';
 import { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { setCypherQueryTerm, startCypherSearch } from 'src/ducks/searchbar/actions';
 import { AppState } from 'src/store';
 import CommonSearches from './CommonSearches';
+import SaveQueryDialog from './SaveQueryDialog';
+import { addSnackbar } from 'src/ducks/global/actions';
 
 const useStyles = makeStyles((theme) => ({
     button: {
@@ -100,9 +102,12 @@ const CypherSearch = () => {
     const classes = useStyles();
 
     const { cypherQuery, setCypherQuery, performSearch } = useCypherEditor();
+    const createSavedQueryMutation = useCreateSavedQuery();
 
     const [showCommonQueries, setShowCommonQueries] = useState(false);
     const [showEgg, setShowEgg] = useState(false);
+    const [showSaveQueryDialog, setShowSaveQueryDialog] = useState(false);
+    const dispatch = useDispatch();
 
     const handleCypherSearch = () => {
         if (cypherQuery) {
@@ -114,6 +119,23 @@ const CypherSearch = () => {
             }
             performSearch();
         }
+    };
+
+    const handleSaveQuery = async (data: { name: string }) => {
+        return createSavedQueryMutation.mutate(
+            { name: data.name, query: cypherQuery },
+            {
+                onSuccess: () => {
+                    setShowSaveQueryDialog(false);
+                    dispatch(addSnackbar(`${data.name} saved!`, 'userSavedQuery'));
+                },
+            }
+        );
+    };
+
+    const handleCloseSaveQueryDialog = () => {
+        setShowSaveQueryDialog(false);
+        createSavedQueryMutation.reset();
     };
 
     // work-around handler for user clicking within code-mirror <CypherEditor />
@@ -132,7 +154,8 @@ const CypherSearch = () => {
                     onClick={() => {
                         setShowCommonQueries((v) => !v);
                     }}
-                    variant='outlined'>
+                    variant='outlined'
+                    aria-label='Show/Hide Saved Queries'>
                     <FontAwesomeIcon icon={faFolderOpen} />
                 </Button>
 
@@ -158,22 +181,44 @@ const CypherSearch = () => {
                 </div>
             </Box>
 
-            <Box display={'flex'} gap={1} mt={1} ml={'43px'} justifyContent={'end'}>
-                <SaveQueryInput cypherQuery={cypherQuery} />
+            <Box display={'flex'} gap={1} mt={1} justifyContent={'end'}>
+                <Button
+                    className={classes.button}
+                    onClick={() => {
+                        setShowSaveQueryDialog(true);
+                    }}
+                    variant='outlined'
+                    startIcon={
+                        <SvgIcon>
+                            <FontAwesomeIcon icon={faSave} />
+                        </SvgIcon>
+                    }>
+                    Save Query
+                </Button>
 
-                <a
+                <Button
                     href='https://support.bloodhoundenterprise.io/hc/en-us/articles/16721164740251'
                     target='_blank'
-                    rel='noreferrer'>
-                    <Button variant='outlined' className={`${classes.button} ${classes.iconButton}`}>
-                        <FontAwesomeIcon icon={faQuestion} />
-                    </Button>
-                </a>
+                    rel='noreferrer'
+                    variant='outlined'
+                    className={classes.button}
+                    startIcon={
+                        <SvgIcon>
+                            <FontAwesomeIcon icon={faQuestion} />
+                        </SvgIcon>
+                    }>
+                    Help
+                </Button>
 
-                <Button className={classes.button} onClick={() => handleCypherSearch()} variant='outlined'>
-                    <Box mr={1}>
-                        <FontAwesomeIcon icon={faPlay} />
-                    </Box>
+                <Button
+                    className={classes.button}
+                    onClick={() => handleCypherSearch()}
+                    variant='outlined'
+                    startIcon={
+                        <SvgIcon>
+                            <FontAwesomeIcon icon={faPlay} />
+                        </SvgIcon>
+                    }>
                     Search
                 </Button>
             </Box>
@@ -183,6 +228,14 @@ const CypherSearch = () => {
             </Collapse>
 
             {showEgg && <EasterEgg />}
+
+            <SaveQueryDialog
+                open={showSaveQueryDialog}
+                onClose={handleCloseSaveQueryDialog}
+                onSave={handleSaveQuery}
+                isLoading={createSavedQueryMutation.isLoading}
+                error={createSavedQueryMutation.error}
+            />
         </>
     );
 };
