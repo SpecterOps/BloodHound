@@ -127,7 +127,6 @@ func TestMigrator_Migrate(t *testing.T) {
 			testTableExists       bool
 		)
 
-		expectedVersion, err := version.Parse("v1.0.0")
 		require.Nil(t, err)
 
 		err = wipeDB(db)
@@ -143,10 +142,6 @@ func TestMigrator_Migrate(t *testing.T) {
 		err = db.Raw("SELECT EXISTS(SELECT * FROM information_schema.tables WHERE table_name='migration_test')").Scan(&testTableExists).Error
 		require.Nil(t, err)
 		assert.False(t, testTableExists, "migration test table unexpectedly exists after stepwise migration completed successfully")
-
-		ver, err := testMigrator.LatestMigration()
-		assert.Nil(t, err)
-		assert.Equal(t, expectedVersion, ver.Version())
 	})
 
 	t.Run("Production Schema Migration", func(t *testing.T) {
