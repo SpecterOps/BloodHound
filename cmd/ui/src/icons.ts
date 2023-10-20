@@ -101,12 +101,12 @@ export const NODE_ICON: IconDictionary = {
 
     [ActiveDirectoryNodeKind.AIACA]: {
         icon: faArrowsLeftRightToLine,
-        color: '#763AAD',
+        color: '#A561AA',
     },
 
     [ActiveDirectoryNodeKind.RootCA]: {
         icon: faLandmark,
-        color: '#763AAD',
+        color: '#A561AA',
     },
 
     [ActiveDirectoryNodeKind.EnterpriseCA]: {
@@ -116,7 +116,7 @@ export const NODE_ICON: IconDictionary = {
 
     [ActiveDirectoryNodeKind.NTAuthStore]: {
         icon: faStore,
-        color: '#763AAD',
+        color: '#A561AA',
     },
 
     [ActiveDirectoryNodeKind.CertTemplate]: {

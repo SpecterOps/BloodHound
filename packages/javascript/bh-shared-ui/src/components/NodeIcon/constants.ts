@@ -71,12 +71,12 @@ export const NODE_ICON: { [index: string]: { icon: IconDefinition; color: string
 
     AIACA: {
         icon: faArrowsLeftRightToLine,
-        color: '#763AAD',
+        color: '#A561AA',
     },
 
     RootCA: {
         icon: faLandmark,
-        color: '#763AAD',
+        color: '#A561AA',
     },
 
     EnterpriseCA: {
@@ -86,7 +86,7 @@ export const NODE_ICON: { [index: string]: { icon: IconDefinition; color: string
 
     NTAuthStore: {
         icon: faStore,
-        color: '#763AAD',
+        color: '#A561AA',
     },
 
     CertTemplate: {
