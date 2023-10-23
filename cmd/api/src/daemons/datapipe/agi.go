@@ -69,6 +69,13 @@ func ParallelTagAzureTierZero(ctx context.Context, db graph.Database) error {
 			readerWG = &sync.WaitGroup{}
 		)
 
+		// log missing tenant IDs for easier debugging
+		for _, tenant := range tenants {
+			if _, err = tenant.Properties.Get(azure.TenantID.String()).String(); err != nil {
+				log.Errorf("Error getting tenant id for tenant %d: %v", tenant.ID, err)
+			}
+		}
+
 		readerWG.Add(1)
 
 		go func() {
