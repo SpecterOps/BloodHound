@@ -73,7 +73,7 @@ export const formatBitwiseInt = (value: number, padding: number): string => {
 export const formatNumber = (value: number, kind?: EntityPropertyKind, keyprop?: string): string => {
     const isAmbiguousTimeValue =
         kind === 'ad' && Object.values(ADSpecificTimeProperties).includes(keyprop as ADSpecificTimeProperties);
-    const isBitwiseInt = kind === 'ad' && BitwiseInts.has(keyprop as ActiveDirectoryKindProperties);
+    const isBitwiseInt = BitwiseInts.has(keyprop as ActiveDirectoryKindProperties);
 
     if (isAmbiguousTimeValue) return formatADSpecificTime(value, keyprop as ADSpecificTimeProperties);
     if (isBitwiseInt) return formatBitwiseInt(value, 2);
