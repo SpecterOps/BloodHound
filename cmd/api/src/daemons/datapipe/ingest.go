@@ -19,9 +19,9 @@ package datapipe
 import (
 	"encoding/json"
 	"io"
+	"sort"
 	"strings"
 	"time"
-	"sort"
 
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/ein"

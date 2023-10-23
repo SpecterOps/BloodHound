@@ -176,22 +176,22 @@ type Computer struct {
 }
 
 type LinkType struct {
-	PasswordPolicies		map[string]int
-	LockoutPolicies			map[string]int
-	SMBSigning				map[string]bool
-	LDAPSigning				map[string]bool
-	LMAuthenticationLevel	map[string]int
+	PasswordPolicies      map[string]int
+	LockoutPolicies       map[string]int
+	SMBSigning            map[string]bool
+	LDAPSigning           map[string]bool
+	LMAuthenticationLevel map[string]int
 }
 
 type GPOResult struct {
-	LocalAdmins			[]TypedPrincipal
-	RemoteDesktopUsers	[]TypedPrincipal
-	DcomUsers			[]TypedPrincipal
-	PSRemoteUsers		[]TypedPrincipal
-	AffectedComputers	[]TypedPrincipal
-	BlockInheritance	bool
-	Unenforced			LinkType
-	Enforced			LinkType
+	LocalAdmins        []TypedPrincipal
+	RemoteDesktopUsers []TypedPrincipal
+	DcomUsers          []TypedPrincipal
+	PSRemoteUsers      []TypedPrincipal
+	AffectedComputers  []TypedPrincipal
+	BlockInheritance   bool
+	Unenforced         LinkType
+	Enforced           LinkType
 }
 
 type OU struct {

@@ -17,8 +17,8 @@
 package ein
 
 import (
-	"strings"
 	"slices"
+	"strings"
 
 	"github.com/specterops/bloodhound/analysis"
 	"github.com/specterops/bloodhound/dawgs/graph"
@@ -27,7 +27,7 @@ import (
 )
 
 var unenforcedDomainProperties = make(map[string]map[string]any) // key: objectid, value: {propertyKey: propertyValue}
-var enforcedDomainProperties = make(map[string][]string)  // key: objectid, value: [propertyKey]
+var enforcedDomainProperties = make(map[string][]string)         // key: objectid, value: [propertyKey]
 
 func ConvertSessionObject(session Session) IngestibleSession {
 	return IngestibleSession{
@@ -264,14 +264,14 @@ func ParseDomainTrusts(domain Domain) ParsedDomainTrustData {
 func ParseDomainMiscData(domains []Domain) []IngestibleNode {
 	unenforcedDomainProperties = make(map[string]map[string]any)
 	enforcedDomainProperties = make(map[string][]string)
-	
+
 	ingestibleNodes := make([]IngestibleNode, 0)
 	for _, domain := range domains {
 
 		domainProperties := map[string]map[string]any{"unenforced": {}, "enforced": {}}
 		linkTypes := [2]LinkType{domain.GPOChanges.Unenforced, domain.GPOChanges.Enforced}
 
-		for index, linkType := range [2]string{"unenforced", "enforced"}{
+		for index, linkType := range [2]string{"unenforced", "enforced"} {
 			// Password policies
 			if val, err := linkTypes[index].PasswordPolicies["MinimumPasswordAge"]; err != false {
 				domainProperties[linkType]["minimumPasswordAge"] = val
@@ -347,7 +347,7 @@ func ParseDomainMiscData(domains []Domain) []IngestibleNode {
 
 			// store defined property keys
 			for key, value := range domainProperties["enforced"] {
-				if (value != nil) {
+				if value != nil {
 					enforcedDomainProperties[computerId] = append(enforcedDomainProperties[computerId], key)
 				}
 			}
@@ -373,7 +373,7 @@ func ParseOUMiscData(ous []OU) []IngestibleNode {
 		foundInEnforcedDomainProperties := false
 
 		props := make(map[string]any, 0)
-		
+
 		for _, target := range ou.GPOChanges.LocalAdmins {
 			props["localadmins"] = target.ObjectIdentifier
 		}
@@ -386,8 +386,8 @@ func ParseOUMiscData(ous []OU) []IngestibleNode {
 		for _, target := range ou.GPOChanges.PSRemoteUsers {
 			props["psremoteusers"] = target.ObjectIdentifier
 		}
-		
-		for index, linkType := range [2]string{"unenforced", "enforced"}{
+
+		for index, linkType := range [2]string{"unenforced", "enforced"} {
 			// Password policies
 			if val, err := linkTypes[index].PasswordPolicies["MinimumPasswordAge"]; err != false {
 				ouProperties[linkType]["minimumPasswordAge"] = val
@@ -454,7 +454,7 @@ func ParseOUMiscData(ous []OU) []IngestibleNode {
 
 			// remove unenforced OU properties overlapping with domain enforced properties
 			for computerId, enforcedDomainProps := range enforcedDomainProperties {
-				if(computerId == computerIdentifier) {
+				if computerId == computerIdentifier {
 					for _, enforcedDomainProp := range enforcedDomainProps {
 						delete(ouProperties["unenforced"], enforcedDomainProp)
 					}
@@ -462,21 +462,21 @@ func ParseOUMiscData(ous []OU) []IngestibleNode {
 			}
 
 			// unenforced properties
-			if (!slices.Contains(blockInheritanceComputers, computerIdentifier)) {
+			if !slices.Contains(blockInheritanceComputers, computerIdentifier) {
 				// add, if the computer is already affected by properties
 				for _, propertiesComputer := range propertiesComputers {
-					for objectid, _ := range propertiesComputer {
-						if(objectid == computerIdentifier) {
+					for objectid := range propertiesComputer {
+						if objectid == computerIdentifier {
 							// add properties which do not exist yet and are not enforced at the domain level
 							for unenforcedPropKey, unenforcedPropValue := range ouProperties["unenforced"] {
 								foundInEnforcedDomainProperties = false
 								for enforcedDomainPropertiesComputerIdentifier, enforcedDomainPropertyKeys := range enforcedDomainProperties {
-									if(enforcedDomainPropertiesComputerIdentifier == computerIdentifier && slices.Contains(enforcedDomainPropertyKeys, unenforcedPropKey)) {
+									if enforcedDomainPropertiesComputerIdentifier == computerIdentifier && slices.Contains(enforcedDomainPropertyKeys, unenforcedPropKey) {
 										foundInEnforcedDomainProperties = true
 										break
 									}
 								}
-								if (!foundInEnforcedDomainProperties && propertiesComputer[computerIdentifier][unenforcedPropKey] == nil) {
+								if !foundInEnforcedDomainProperties && propertiesComputer[computerIdentifier][unenforcedPropKey] == nil {
 									propertiesComputer[computerIdentifier][unenforcedPropKey] = unenforcedPropValue
 								}
 							}
@@ -486,11 +486,11 @@ func ParseOUMiscData(ous []OU) []IngestibleNode {
 				}
 
 				// create, if the computer has not already been affected by properties
-				if(!foundInPropertiesComputers) {
+				if !foundInPropertiesComputers {
 					propertiesComputers = append(propertiesComputers, map[string]map[string]any{computerIdentifier: (ouProperties["unenforced"])})
 				}
 
-				if(blockInheritance) {
+				if blockInheritance {
 					// add the computer to the block inheritance array
 					blockInheritanceComputers = append(blockInheritanceComputers, computerIdentifier)
 					// remove unenforced properties set by domains
@@ -502,18 +502,18 @@ func ParseOUMiscData(ous []OU) []IngestibleNode {
 			// add, if this computer is already affected by properties
 			foundInPropertiesComputers = false
 			for _, propertiesComputer := range propertiesComputers {
-				for objectid, _ := range propertiesComputer {
-					if(objectid == computerIdentifier) {
+				for objectid := range propertiesComputer {
+					if objectid == computerIdentifier {
 						for enforcedPropKey, enforcedPropValue := range ouProperties["enforced"] {
 							// override the property if it is empty or not enforced at domain level
 							foundInEnforcedDomainProperties = false
 							for enforcedDomainPropertiesComputerIdentifier, enforcedDomainPropertyKeys := range enforcedDomainProperties {
-								if(enforcedDomainPropertiesComputerIdentifier == objectid && slices.Contains(enforcedDomainPropertyKeys, enforcedPropKey)) {
+								if enforcedDomainPropertiesComputerIdentifier == objectid && slices.Contains(enforcedDomainPropertyKeys, enforcedPropKey) {
 									foundInEnforcedDomainProperties = true
 									break
 								}
 							}
-							if (!foundInEnforcedDomainProperties) {
+							if !foundInEnforcedDomainProperties {
 								propertiesComputer[computerIdentifier][enforcedPropKey] = enforcedPropValue
 							}
 						}
@@ -523,26 +523,26 @@ func ParseOUMiscData(ous []OU) []IngestibleNode {
 			}
 
 			// create if the computer has not already been affected by properties
-			if(!foundInPropertiesComputers) {
+			if !foundInPropertiesComputers {
 				propertiesComputers = append(propertiesComputers, map[string]map[string]any{computerIdentifier: (ouProperties["enforced"])})
 			}
 		}
 	}
-	
+
 	// finally add domain unenforced properties, without overriding existing properties
 	for domainComputerId, unenforcedDomainProps := range unenforcedDomainProperties {
 		for _, propertiesComputer := range propertiesComputers {
 			for computerId, properties := range propertiesComputer {
-				if(domainComputerId == computerId) {
+				if domainComputerId == computerId {
 					for unenforcedDomainKey, unenforcedDomainValue := range unenforcedDomainProps {
 						foundInUnenforcedDomainProperties = false
-						for propKey, _ := range properties {
-							if(propKey == unenforcedDomainKey) {
+						for propKey := range properties {
+							if propKey == unenforcedDomainKey {
 								foundInUnenforcedDomainProperties = true
 								break
 							}
 						}
-						if(!foundInUnenforcedDomainProperties) {
+						if !foundInUnenforcedDomainProperties {
 							properties[unenforcedDomainKey] = unenforcedDomainValue
 						}
 					}

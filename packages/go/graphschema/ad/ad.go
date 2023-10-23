@@ -104,10 +104,10 @@ const (
 	SidFiltering            Property = "sidfiltering"
 	TrustedToAuth           Property = "trustedtoauth"
 	SamAccountName          Property = "samaccountname"
-	LocalAdmins 			Property = "localadmins"
-	RemoteDesktopUsers		Property = "remotedesktopusers"
-	DcomUsers				Property = "dcomusers"
-	PSRemoteUsers			Property = "psremoteusers"
+	LocalAdmins             Property = "localadmins"
+	RemoteDesktopUsers      Property = "remotedesktopusers"
+	DcomUsers               Property = "dcomusers"
+	PSRemoteUsers           Property = "psremoteusers"
 )
 
 func AllProperties() []Property {
