@@ -63,10 +63,10 @@ const SaveQueryDialog: React.FC<{
                 ) : null}
             </DialogContent>
             <DialogActions>
-                <Button color='inherit' autoFocus onClick={onClose} disabled={isLoading}>
+                <Button type='button' color='inherit' autoFocus onClick={onClose} disabled={isLoading}>
                     Cancel
                 </Button>
-                <Button color='primary' onClick={handleSave} disabled={saveDisabled || isLoading}>
+                <Button type='button' color='primary' onClick={handleSave} disabled={saveDisabled || isLoading}>
                     Save
                 </Button>
             </DialogActions>
