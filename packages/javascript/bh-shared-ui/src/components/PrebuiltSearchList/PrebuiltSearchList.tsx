@@ -55,7 +55,6 @@ export type LineItem = {
 const PrebuiltSearchList: FC<PrebuiltSearchListProps> = ({ listSections, clickHandler, deleteHandler }) => {
     const [open, setOpen] = useState(false);
     const [queryId, setQueryId] = useState<number>();
-    const [hoveredListItem, setHoveredListItem] = useState<number | null>(null);
 
     const handleOpen = () => {
         setOpen(true);
@@ -69,7 +68,7 @@ const PrebuiltSearchList: FC<PrebuiltSearchListProps> = ({ listSections, clickHa
     return (
         <>
             <Box maxHeight={'300px'} overflow={'auto'}>
-                <List dense disablePadding onMouseLeave={() => setHoveredListItem(null)}>
+                <List dense disablePadding>
                     {listSections.map((section) => {
                         const { subheader, lineItems } = section;
 
@@ -82,13 +81,12 @@ const PrebuiltSearchList: FC<PrebuiltSearchListProps> = ({ listSections, clickHa
 
                                     return (
                                         <ListItem
-                                            onMouseEnter={() => setHoveredListItem(idx)}
                                             disablePadding
                                             key={`${id}-${idx}`}
                                             secondaryAction={
-                                                canEdit &&
-                                                hoveredListItem === idx && (
+                                                canEdit && (
                                                     <IconButton
+                                                        aria-label='Delete Query'
                                                         size='small'
                                                         onClick={() => {
                                                             setQueryId(id);
