@@ -307,13 +307,6 @@ SamAccountName: types.#StringEnum & {
 	representation: "samaccountname"
 }
 
-CertificateMappingMethodsCollected: types.#StringEnum & {
-	symbol:         "CertificateMappingMethodsCollected"
-	schema:         "ad"
-	name:           "Certificate Mapping Methods Collected"
-	representation: "certificatemappingmethodscollected"
-}
-
 CertificateMappingMethodsRaw: types.#StringEnum & {
 	symbol:         "CertificateMappingMethodsRaw"
 	schema:         "ad"
@@ -324,15 +317,8 @@ CertificateMappingMethodsRaw: types.#StringEnum & {
 CertificateMappingMethods: types.#StringEnum & {
 	symbol:         "CertificateMappingMethods"
 	schema:         "ad"
-	name:           "Certificate Mapping Methods Pretty"
-	representation: "certificatemappingmethodspretty"
-}
-
-StrongCertificateBindingEnforcementCollected: types.#StringEnum & {
-	symbol:         "StrongCertificateBindingEnforcementCollected"
-	schema:         "ad"
-	name:           "Strong Certificate Binding Enforcement Collected"
-	representation: "strongcertificatebindingenforcementcollected"
+	name:           "Certificate Mapping Methods"
+	representation: "certificatemappingmethods"
 }
 
 StrongCertificateBindingEnforcementRaw: types.#StringEnum & {
@@ -433,10 +419,8 @@ Properties: [
 	SidFiltering,
 	TrustedToAuth,
 	SamAccountName,
-	CertificateMappingMethodsCollected,
 	CertificateMappingMethodsRaw,
 	CertificateMappingMethods,
-	StrongCertificateBindingEnforcementCollected,
 	StrongCertificateBindingEnforcementRaw,
 	StrongCertificateBindingEnforcement,
 	EKUs,

@@ -36,9 +36,7 @@ export enum ADSpecificTimeProperties {
 
 // Map containing all properties that should display as bitwise integers in the entity panel.
 // The key is the property string, the value is the amount of significant digits the hex value should display with.
-export var BitwiseInts = new Map([
-    ['certificatemappingmethodsraw', 2]
-])
+export var BitwiseInts = new Map([['certificatemappingmethodsraw', 2]]);
 
 //These times are handled differently specifically for these properties as they are collected and ingested to match these values
 //Here is some related documentation:
@@ -70,16 +68,15 @@ export const formatADSpecificTime = (timeValue: number, keyprop: ADSpecificTimeP
 
 export const formatBitwiseInt = (value: number, padding: number): string => {
     return `${value} (0x${value.toString(16).padStart(padding, '0').toUpperCase()})`;
-}
+};
 
 export const formatNumber = (value: number, kind?: EntityPropertyKind, keyprop?: string): string => {
     const isAmbiguousTimeValue =
         kind === 'ad' && Object.values(ADSpecificTimeProperties).includes(keyprop as ADSpecificTimeProperties);
-    const isBitwiseInt =
-        kind === 'ad' && BitwiseInts.has(keyprop as ActiveDirectoryKindProperties)
+    const isBitwiseInt = kind === 'ad' && BitwiseInts.has(keyprop as ActiveDirectoryKindProperties);
 
     if (isAmbiguousTimeValue) return formatADSpecificTime(value, keyprop as ADSpecificTimeProperties);
-    if (isBitwiseInt) return formatBitwiseInt(value, 2)
+    if (isBitwiseInt) return formatBitwiseInt(value, 2);
 
     //315536400 = January 1st, 1980. Seems like a safe bet
     const secondsLowerBound = 315536400;

@@ -582,7 +582,6 @@ func ParseDCRegistryData(computer Computer) IngestibleNode {
 	propMap := make(map[string]any)
 
 	if computer.DCRegistryData.CertificateMappingMethods.Collected && computer.DCRegistryData.CertificateMappingMethods.Value >= 0 {
-		propMap[ad.CertificateMappingMethodsCollected.String()] = true
 		propMap[ad.CertificateMappingMethodsRaw.String()] = computer.DCRegistryData.CertificateMappingMethods.Value
 
 		var prettyMappings []string
@@ -607,7 +606,6 @@ func ParseDCRegistryData(computer Computer) IngestibleNode {
 	}
 
 	if computer.DCRegistryData.StrongCertificateBindingEnforcement.Collected && computer.DCRegistryData.StrongCertificateBindingEnforcement.Value >= 0 {
-		propMap[ad.StrongCertificateBindingEnforcementCollected.String()] = true
 		propMap[ad.StrongCertificateBindingEnforcementRaw.String()] = computer.DCRegistryData.StrongCertificateBindingEnforcement.Value
 
 		switch computer.DCRegistryData.StrongCertificateBindingEnforcement.Value {

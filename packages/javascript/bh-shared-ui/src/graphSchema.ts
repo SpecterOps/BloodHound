@@ -295,10 +295,8 @@ export enum ActiveDirectoryKindProperties {
     SidFiltering = 'sidfiltering',
     TrustedToAuth = 'trustedtoauth',
     SamAccountName = 'samaccountname',
-    CertificateMappingMethodsCollected = 'certificatemappingmethodscollected',
     CertificateMappingMethodsRaw = 'certificatemappingmethodsraw',
-    CertificateMappingMethods = 'certificatemappingmethodspretty',
-    StrongCertificateBindingEnforcementCollected = 'strongcertificatebindingenforcementcollected',
+    CertificateMappingMethods = 'certificatemappingmethods',
     StrongCertificateBindingEnforcementRaw = 'strongcertificatebindingenforcementraw',
     StrongCertificateBindingEnforcement = 'strongcertificatebindingenforcement',
     EKUs = 'ekus',
@@ -391,14 +389,10 @@ export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKin
             return 'Trusted For Constrained Delegation';
         case ActiveDirectoryKindProperties.SamAccountName:
             return 'SAM Account Name';
-        case ActiveDirectoryKindProperties.CertificateMappingMethodsCollected:
-            return 'Certificate Mapping Methods Collected';
         case ActiveDirectoryKindProperties.CertificateMappingMethodsRaw:
             return 'Certificate Mapping Methods (Raw)';
         case ActiveDirectoryKindProperties.CertificateMappingMethods:
-            return 'Certificate Mapping Methods Pretty';
-        case ActiveDirectoryKindProperties.StrongCertificateBindingEnforcementCollected:
-            return 'Strong Certificate Binding Enforcement Collected';
+            return 'Certificate Mapping Methods';
         case ActiveDirectoryKindProperties.StrongCertificateBindingEnforcementRaw:
             return 'Strong Certificate Binding Enforcement (Raw)';
         case ActiveDirectoryKindProperties.StrongCertificateBindingEnforcement:
