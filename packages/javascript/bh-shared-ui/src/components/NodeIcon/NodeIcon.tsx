@@ -19,7 +19,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Box, Tooltip } from '@mui/material';
 import { Theme } from '@mui/material/styles';
 import makeStyles from '@mui/styles/makeStyles';
-import { NODE_ICON } from './constants';
+import { NODE_ICON } from '../../utils/icons';
 
 interface NodeIconProps {
     nodeType: string;

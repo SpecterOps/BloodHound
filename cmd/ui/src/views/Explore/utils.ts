@@ -29,7 +29,7 @@ import { GraphEdges, GraphNodes } from 'js-client-library';
 import isEmpty from 'lodash/isEmpty';
 import startCase from 'lodash/startCase';
 import { ZERO_VALUE_API_DATE } from 'src/constants';
-import { GLYPHS, GlyphKind, NODE_ICON, UNKNOWN_ICON } from 'src/icons';
+import { GLYPHS, GlyphKind, NODE_ICON, UNKNOWN_ICON } from 'bh-shared-ui';
 import { GlyphLocation } from 'src/rendering/programs/node.glyphs';
 import { EdgeDirection, EdgeParams, NodeParams } from 'src/utils';
 

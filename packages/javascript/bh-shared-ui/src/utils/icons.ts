@@ -42,7 +42,7 @@ import {
     faQuestion,
     faMinus,
 } from '@fortawesome/free-solid-svg-icons';
-import { ActiveDirectoryNodeKind, AzureNodeKind } from 'bh-shared-ui';
+import { ActiveDirectoryNodeKind, AzureNodeKind } from '../graphSchema';
 
 export type IconInfo = {
     icon: IconDefinition;
