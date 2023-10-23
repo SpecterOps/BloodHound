@@ -29,7 +29,7 @@ describe('CypherSearch', () => {
     it('should render', () => {
         expect(screen.getByText(/cypher search/i)).toBeInTheDocument();
 
-        expect(screen.getByRole('button', { name: /question/i })).toBeInTheDocument();
+        expect(screen.getByRole('link', { name: /help/i })).toBeInTheDocument();
         expect(screen.getByRole('button', { name: /search/i })).toBeInTheDocument();
     });
 
@@ -37,7 +37,7 @@ describe('CypherSearch', () => {
         const prebuiltSearches = screen.getByText(/pre-built searches/i);
         expect(prebuiltSearches).not.toBeVisible();
 
-        const menu = screen.getByRole('button', { name: /folder-open/i });
+        const menu = screen.getByRole('button', { name: /show\/hide saved queries/i });
 
         await user.click(menu);
         expect(prebuiltSearches).toBeVisible();

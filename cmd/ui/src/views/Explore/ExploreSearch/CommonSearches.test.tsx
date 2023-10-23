@@ -134,11 +134,11 @@ describe('CommonSearches', () => {
         const userTab = screen.getByRole('tab', { name: /custom searches/i });
         await user.click(userTab);
 
-        const deleteButtons = screen.getAllByRole('button', { name: /trash/i });
+        const deleteButtons = screen.getAllByRole('button', { name: /delete query/i });
         await user.click(deleteButtons[0]);
 
         // verify confirmation dialog appears
-        const deleteConfirmationDialog = screen.getByRole('dialog', { name: /Delete this query/i });
+        const deleteConfirmationDialog = screen.getByRole('dialog', { name: /delete query/i });
         expect(deleteConfirmationDialog).toBeInTheDocument();
 
         const confirmDeleteButton = screen.getByRole('button', { name: /confirm/i });
