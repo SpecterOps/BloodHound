@@ -40,6 +40,9 @@
       "deleted_at": {
         "$ref": "#/definitions/sql.NullTime"
       },
+      "asset_group_id": {
+        "type": "integer"
+      },
       "id": {
         "type": "integer"
       },
@@ -60,8 +63,9 @@
   "model.AssetGroupSelectorSpec": {
     "type": "object",
     "properties": {
-      "node_label": {
-        "type": "string"
+      "action": {
+        "type": "string",
+        "enum": ["add", "remove"]
       },
       "selector_name": {
         "type": "string"

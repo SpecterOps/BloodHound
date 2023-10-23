@@ -1,17 +1,17 @@
 // Copyright 2023 Specter Ops, Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// 
+//
 // SPDX-License-Identifier: Apache-2.0
 
 package v2_test
@@ -24,6 +24,12 @@ import (
 	"net/url"
 	"testing"
 
+	"github.com/gorilla/mux"
+	"github.com/specterops/bloodhound/dawgs/graph"
+	"github.com/specterops/bloodhound/errors"
+	"github.com/specterops/bloodhound/graphschema/ad"
+	"github.com/specterops/bloodhound/graphschema/azure"
+	"github.com/specterops/bloodhound/graphschema/common"
 	"github.com/specterops/bloodhound/src/api"
 	v2 "github.com/specterops/bloodhound/src/api/v2"
 	"github.com/specterops/bloodhound/src/api/v2/apitest"
@@ -32,13 +38,8 @@ import (
 	"github.com/specterops/bloodhound/src/model"
 	queriesMocks "github.com/specterops/bloodhound/src/queries/mocks"
 	"github.com/specterops/bloodhound/src/utils/test"
-	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
-	"github.com/specterops/bloodhound/dawgs/graph"
-	"github.com/specterops/bloodhound/errors"
-	"github.com/specterops/bloodhound/graphschema/ad"
-	"github.com/specterops/bloodhound/graphschema/common"
 )
 
 func TestCreateAssetGroupRequest_AuditData(t *testing.T) {
@@ -884,6 +885,56 @@ func TestResources_ListAssetGroupMembers(t *testing.T) {
 				},
 			},
 			{
+				Name: "Node missing base entity kind",
+				Input: func(input *apitest.Input) {
+					apitest.SetURLVar(input, api.URIPathVariableAssetGroupID, "1")
+				},
+				Setup: func() {
+					mockDB.EXPECT().
+						GetAssetGroup(gomock.Any()).
+						Return(assetGroup, nil)
+					mockGraph.EXPECT().
+						GetAssetGroupNodes(gomock.Any(), gomock.Any()).
+						Return(graph.NodeSet{
+							1: &graph.Node{
+								ID:    1,
+								Kinds: graph.Kinds{ad.Entity, ad.Domain},
+								Properties: &graph.Properties{
+									Map: map[string]any{common.ObjectID.String(): "a", common.Name.String(): "a", ad.DomainSID.String(): "a"},
+								},
+							},
+							2: &graph.Node{
+								ID:    2,
+								Kinds: graph.Kinds{azure.Entity, azure.Tenant},
+								Properties: &graph.Properties{
+									Map: map[string]any{common.ObjectID.String(): "b", common.Name.String(): "b", azure.TenantID.String(): "b"},
+								},
+							},
+							3: &graph.Node{
+								ID:    3,
+								Kinds: graph.Kinds{ad.Domain},
+								Properties: &graph.Properties{
+									Map: map[string]any{common.ObjectID.String(): "c", common.Name.String(): "c", ad.DomainSID.String(): "c"},
+								},
+							},
+							4: &graph.Node{
+								ID:    4,
+								Kinds: graph.Kinds{azure.Tenant},
+								Properties: &graph.Properties{
+									Map: map[string]any{common.ObjectID.String(): "d", common.Name.String(): "d", azure.TenantID.String(): "d"},
+								},
+							},
+						}, nil)
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusOK)
+					result := api.ListAssetGroupMembersResponse{}
+					apitest.UnmarshalData(output, &result)
+					apitest.BodyContains(output, `"custom_member":true`)
+					apitest.Equal(output, 2, len(result.Members))
+				},
+			},
+			{
 				Name: "SuccessDataTest",
 				Input: func(input *apitest.Input) {
 					apitest.SetURLVar(input, api.URIPathVariableAssetGroupID, "1")
@@ -897,14 +948,14 @@ func TestResources_ListAssetGroupMembers(t *testing.T) {
 						Return(graph.NodeSet{
 							1: &graph.Node{
 								ID:    1,
-								Kinds: graph.Kinds{ad.Domain},
+								Kinds: graph.Kinds{ad.Entity, ad.Domain},
 								Properties: &graph.Properties{
 									Map: map[string]any{common.ObjectID.String(): "a", common.Name.String(): "a", ad.DomainSID.String(): "a"},
 								},
 							},
 							2: &graph.Node{
 								ID:    2,
-								Kinds: graph.Kinds{ad.Domain},
+								Kinds: graph.Kinds{ad.Entity, ad.Domain},
 								Properties: &graph.Properties{
 									Map: map[string]any{common.ObjectID.String(): "b", common.Name.String(): "b", ad.DomainSID.String(): "b"},
 								},
@@ -974,21 +1025,21 @@ func TestResources_ListAssetGroupMembers(t *testing.T) {
 						Return(graph.NodeSet{
 							1: &graph.Node{
 								ID:    1,
-								Kinds: graph.Kinds{ad.Domain},
+								Kinds: graph.Kinds{ad.Entity, ad.Domain},
 								Properties: &graph.Properties{
 									Map: map[string]any{common.ObjectID.String(): "a", common.Name.String(): "a", ad.DomainSID.String(): "a"},
 								},
 							},
 							2: &graph.Node{
 								ID:    2,
-								Kinds: graph.Kinds{ad.Domain},
+								Kinds: graph.Kinds{ad.Entity, ad.Domain},
 								Properties: &graph.Properties{
 									Map: map[string]any{common.ObjectID.String(): "b", common.Name.String(): "b", ad.DomainSID.String(): "b"},
 								},
 							},
 							3: &graph.Node{
 								ID:    3,
-								Kinds: graph.Kinds{ad.Domain},
+								Kinds: graph.Kinds{ad.Entity, ad.Domain},
 								Properties: &graph.Properties{
 									Map: map[string]any{common.ObjectID.String(): "c", common.Name.String(): "c", ad.DomainSID.String(): "c"},
 								},
@@ -1017,14 +1068,14 @@ func TestResources_ListAssetGroupMembers(t *testing.T) {
 						Return(graph.NodeSet{
 							1: &graph.Node{
 								ID:    1,
-								Kinds: graph.Kinds{ad.Domain},
+								Kinds: graph.Kinds{ad.Entity, ad.Domain},
 								Properties: &graph.Properties{
 									Map: map[string]any{common.ObjectID.String(): "a", common.Name.String(): "a", ad.DomainSID.String(): "a"},
 								},
 							},
 							2: &graph.Node{
 								ID:    2,
-								Kinds: graph.Kinds{ad.Domain},
+								Kinds: graph.Kinds{ad.Entity, ad.Domain},
 								Properties: &graph.Properties{
 									Map: map[string]any{common.ObjectID.String(): "b", common.Name.String(): "b", ad.DomainSID.String(): "b"},
 								},
@@ -1052,14 +1103,14 @@ func TestResources_ListAssetGroupMembers(t *testing.T) {
 						Return(graph.NodeSet{
 							1: &graph.Node{
 								ID:    1,
-								Kinds: graph.Kinds{ad.Domain},
+								Kinds: graph.Kinds{ad.Entity, ad.Domain},
 								Properties: &graph.Properties{
 									Map: map[string]any{common.ObjectID.String(): "a", common.Name.String(): "a", ad.DomainSID.String(): "a"},
 								},
 							},
 							2: &graph.Node{
 								ID:    2,
-								Kinds: graph.Kinds{ad.Domain},
+								Kinds: graph.Kinds{ad.Entity, ad.Domain},
 								Properties: &graph.Properties{
 									Map: map[string]any{common.ObjectID.String(): "b", common.Name.String(): "b", ad.DomainSID.String(): "b"},
 								},
