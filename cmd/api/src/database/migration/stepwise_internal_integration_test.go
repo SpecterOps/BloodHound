@@ -38,6 +38,16 @@ var testMigrations embed.FS
 
 const migrationDir = "test_migrations"
 
+type MigrationTest struct {
+	Id   int64
+	Name string
+	Foo  string
+}
+
+func (MigrationTest) TableName() string {
+	return "migration_test"
+}
+
 func setupDB() (*gorm.DB, error) {
 	if cfg, err := utils.LoadIntegrationTestConfig(); err != nil {
 		return nil, fmt.Errorf("failed to load integration test config: %w", err)
@@ -74,13 +84,20 @@ func TestMigrator_MigrationFilenames(t *testing.T) {
 
 	filenames, err := migrator.MigrationFilenames()
 	assert.Nil(t, err)
-	assert.Len(t, filenames, 4)
-	assert.Equal(t, filenames[1], "test_migrations/v0.0.1.sql")
-	assert.Equal(t, filenames[2], "test_migrations/v0.1.0.sql")
-	assert.Equal(t, filenames[3], "test_migrations/v1.0.0.sql")
+	assert.Len(t, filenames, 5)
+	assert.Equal(t, "test_migrations/schema.sql", filenames[0])
+	assert.Equal(t, "test_migrations/v0.0.1.sql", filenames[1])
+	assert.Equal(t, "test_migrations/v0.1.0.sql", filenames[2])
+	assert.Equal(t, "test_migrations/v0.1.1.sql", filenames[3])
+	assert.Equal(t, "test_migrations/v1.0.0.sql", filenames[4])
 }
 
 func TestMigrator_ExecuteMigrations(t *testing.T) {
+	var (
+		entries     []MigrationTest
+		tableExists bool
+	)
+
 	db, err := setupDB()
 	assert.Nil(t, err)
 	migrator := setupMigrator(db)
@@ -91,27 +108,70 @@ func TestMigrator_ExecuteMigrations(t *testing.T) {
 	manifest, err := NewManifest(filenames)
 	assert.Nil(t, err)
 
-	var tableExists bool
-	err = migrator.ExecuteMigrations([]Migration{manifest.migrations[0]})
-	assert.Nil(t, err)
-	db.Raw("SELECT EXISTS(SELECT * FROM information_schema.tables WHERE table_name='migration_test')").Scan(&tableExists)
-	assert.True(t, tableExists)
+	t.Run("Create Table Migration", func(t *testing.T) {
+		err = migrator.ExecuteMigrations([]Migration{manifest.migrations[0]})
+		assert.Nil(t, err)
+		db.Raw("SELECT EXISTS(SELECT * FROM information_schema.tables WHERE table_name='migration_test')").Scan(&tableExists)
+		assert.True(t, tableExists)
+	})
 
-	var row = struct {
-		Id  int
-		Foo string
-	}{}
-	err = migrator.ExecuteMigrations([]Migration{manifest.migrations[1]})
-	assert.Nil(t, err)
-	db.Raw("SELECT * FROM migration_test").Scan(&row)
-	assert.NotEmpty(t, row)
-	assert.Equal(t, 1, row.Id)
-	assert.Equal(t, "bar", row.Foo)
+	t.Run("Add Data To Table Migration", func(t *testing.T) {
+		err = migrator.ExecuteMigrations([]Migration{manifest.migrations[1]})
+		assert.Nil(t, err)
+		result := db.Order("id ASC").Find(&entries)
+		require.Nil(t, result.Error)
 
-	err = migrator.ExecuteMigrations([]Migration{manifest.migrations[2]})
-	assert.Nil(t, err)
-	db.Raw("SELECT EXISTS(SELECT * FROM information_schema.tables WHERE table_name='migration_test')").Scan(&tableExists)
-	assert.False(t, tableExists)
+		assert.NotEmpty(t, entries[0])
+		assert.Equal(t, int64(1), entries[0].Id)
+		assert.Equal(t, "foo", entries[0].Name)
+		assert.Equal(t, "foo", entries[0].Foo)
+
+		assert.NotEmpty(t, entries[1])
+		assert.Equal(t, int64(2), entries[1].Id)
+		assert.Equal(t, "foo", entries[1].Name)
+		assert.Equal(t, "bar", entries[1].Foo)
+
+		assert.NotEmpty(t, entries[2])
+		assert.Equal(t, int64(3), entries[2].Id)
+		assert.Equal(t, "foo", entries[2].Name)
+		assert.Equal(t, "bar", entries[2].Foo)
+
+		assert.NotEmpty(t, entries[3])
+		assert.Equal(t, int64(4), entries[3].Id)
+		assert.Equal(t, "bar", entries[3].Name)
+		assert.Equal(t, "baz", entries[3].Foo)
+	})
+
+	t.Run("Deduplicate Data Migration", func(t *testing.T) {
+		err = migrator.ExecuteMigrations([]Migration{manifest.migrations[2]})
+		assert.Nil(t, err)
+		result := db.Order("id ASC").Find(&entries)
+		require.Nil(t, result.Error)
+
+		assert.Equal(t, int64(3), result.RowsAffected)
+
+		assert.NotEmpty(t, entries[0])
+		assert.Equal(t, int64(1), entries[0].Id)
+		assert.Equal(t, "foo_2", entries[0].Name)
+		assert.Equal(t, "foo", entries[0].Foo)
+
+		assert.NotEmpty(t, entries[1])
+		assert.Equal(t, int64(3), entries[1].Id)
+		assert.Equal(t, "foo", entries[1].Name)
+		assert.Equal(t, "bar", entries[1].Foo)
+
+		assert.NotEmpty(t, entries[2])
+		assert.Equal(t, int64(4), entries[2].Id)
+		assert.Equal(t, "bar", entries[2].Name)
+		assert.Equal(t, "baz", entries[2].Foo)
+	})
+
+	t.Run("Drop Table Migration", func(t *testing.T) {
+		err = migrator.ExecuteMigrations([]Migration{manifest.migrations[3]})
+		assert.Nil(t, err)
+		db.Raw("SELECT EXISTS(SELECT * FROM information_schema.tables WHERE table_name='migration_test')").Scan(&tableExists)
+		assert.False(t, tableExists)
+	})
 }
 
 func TestMigrator_Migrate(t *testing.T) {

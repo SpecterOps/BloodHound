@@ -13,8 +13,8 @@
 -- limitations under the License.
 -- 
 -- SPDX-License-Identifier: Apache-2.0
-
-insert into migration_test
-  (foo)
-values
-  ('bar');
+INSERT INTO migration_test (name, foo)
+VALUES ('foo', 'foo'),
+  ('foo', 'bar'),
+  ('foo', 'bar'),
+  ('bar', 'baz');
