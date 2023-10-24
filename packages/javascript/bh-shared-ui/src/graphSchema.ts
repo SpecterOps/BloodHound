@@ -295,12 +295,10 @@ export enum ActiveDirectoryKindProperties {
     SidFiltering = 'sidfiltering',
     TrustedToAuth = 'trustedtoauth',
     SamAccountName = 'samaccountname',
-    CertificateMappingMethodsCollected = 'certificatemappingmethodscollected',
-    CertificateMappingMethodsHex = 'certificatemappingmethodshex',
-    CertificateMappingMethodsPretty = 'certificatemappingmethodspretty',
-    StrongCertificateBindingEnforcementCollected = 'strongcertificatebindingenforcementcollected',
-    StrongCertificateBindingEnforcementInt = 'strongcertificatebindingenforcementint',
-    StrongCertificateBindingEnforcementPretty = 'strongcertificatebindingenforcementpretty',
+    CertificateMappingMethodsRaw = 'certificatemappingmethodsraw',
+    CertificateMappingMethods = 'certificatemappingmethods',
+    StrongCertificateBindingEnforcementRaw = 'strongcertificatebindingenforcementraw',
+    StrongCertificateBindingEnforcement = 'strongcertificatebindingenforcement',
     EKUs = 'ekus',
     SubjectAltRequireUPN = 'subjectaltrequireupn',
     AuthorizedSignatures = 'authorizedsignatures',
@@ -391,18 +389,14 @@ export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKin
             return 'Trusted For Constrained Delegation';
         case ActiveDirectoryKindProperties.SamAccountName:
             return 'SAM Account Name';
-        case ActiveDirectoryKindProperties.CertificateMappingMethodsCollected:
-            return 'Certificate Mapping Methods Collected';
-        case ActiveDirectoryKindProperties.CertificateMappingMethodsHex:
-            return 'Certificate Mapping Methods Hex';
-        case ActiveDirectoryKindProperties.CertificateMappingMethodsPretty:
-            return 'Certificate Mapping Methods Pretty';
-        case ActiveDirectoryKindProperties.StrongCertificateBindingEnforcementCollected:
-            return 'Strong Certificate Binding Enforcement Collected';
-        case ActiveDirectoryKindProperties.StrongCertificateBindingEnforcementInt:
-            return 'Strong Certificate Binding Enforcement Int';
-        case ActiveDirectoryKindProperties.StrongCertificateBindingEnforcementPretty:
-            return 'Strong Certificate Binding Enforcement Pretty';
+        case ActiveDirectoryKindProperties.CertificateMappingMethodsRaw:
+            return 'Certificate Mapping Methods (Raw)';
+        case ActiveDirectoryKindProperties.CertificateMappingMethods:
+            return 'Certificate Mapping Methods';
+        case ActiveDirectoryKindProperties.StrongCertificateBindingEnforcementRaw:
+            return 'Strong Certificate Binding Enforcement (Raw)';
+        case ActiveDirectoryKindProperties.StrongCertificateBindingEnforcement:
+            return 'Strong Certificate Binding Enforcement';
         case ActiveDirectoryKindProperties.EKUs:
             return 'EKUs';
         case ActiveDirectoryKindProperties.SubjectAltRequireUPN:
