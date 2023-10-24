@@ -16,7 +16,7 @@
 
 package graph
 
-//go:generate go run go.uber.org/mock/mockgen -copyright_file=../../../../LICENSE.header -destination=./mocks/graph.go -package=graph_mocks . Batch,Transaction,Database
+//go:generate go run go.uber.org/mock/mockgen -source=graph.go -copyright_file=../../../../LICENSE.header -destination=./mocks/graph.go -package=graph_mocks .
 
 import (
 	"context"
@@ -35,9 +35,7 @@ const (
 	Start                       = DirectionOutbound
 )
 
-var (
-	ErrInvalidDirection = errors.New("must be called with either an inbound or outbound direction")
-)
+var ErrInvalidDirection = errors.New("must be called with either an inbound or outbound direction")
 
 // Direction describes the direction of a graph traversal. A Direction may be either Inbound or DirectionOutbound.
 type Direction int

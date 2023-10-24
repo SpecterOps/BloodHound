@@ -321,25 +321,28 @@
             }
         ],
         "post": {
-            "description": "Creates an asset group selector",
+            "description": "Updates asset group selectors",
             "tags": [
                 "Asset Isolation",
                 "Community",
                 "Enterprise"
             ],
-            "summary": "Create an asset group selector",
+            "summary": "Update asset group selectors",
             "parameters": [
                 {
                     "$ref": "#/definitions/parameters.PreferHeader"
                 }
             ],
             "requestBody": {
-                "description": "The request body for creating an asset group selector",
+                "description": "The request body for updating asset group selectors",
                 "required": true,
                 "content": {
                     "application/json": {
                         "schema": {
-                            "$ref": "#/definitions/model.AssetGroupSelectorSpec"
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/model.AssetGroupSelectorSpec"
+                            }
                         }
                     }
                 }
@@ -350,7 +353,7 @@
                     "content": {
                         "application/json": {
                             "schema": {
-                                "$ref": "#/definitions/api.ResponseWrapper"
+                                "$ref": "#/definitions/v2.CreateAssetGroupSelectorResponse"
                             }
                         }
                     }

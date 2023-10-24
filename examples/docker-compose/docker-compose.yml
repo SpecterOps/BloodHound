@@ -21,7 +21,7 @@ services:
     environment:
       - POSTGRES_USER=${POSTGRES_USER:-bloodhound}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-bloodhoundcommunityedition}
-      - POSTGRES_DATABASE=${POSTGRES_DATABASE:-bloodhound}
+      - POSTGRES_DB=${POSTGRES_DB:-bloodhound}
     # Database ports are disabled by default. Please change your database password to something secure before uncommenting
     # ports:
     #   - ${POSTGRES_PORT:-5432}:5432
@@ -31,7 +31,7 @@ services:
       test:
         [
           "CMD-SHELL",
-          "pg_isready -U ${POSTGRES_USER:-bloodhound} -d ${POSTGRES_DATABASE:-bloodhound} -h 127.0.0.1 -p 5432"
+          "pg_isready -U ${POSTGRES_USER:-bloodhound} -d ${POSTGRES_DB:-bloodhound} -h 127.0.0.1 -p 5432"
         ]
       interval: 10s
       timeout: 5s

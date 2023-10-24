@@ -21,6 +21,20 @@
         },
         {
           "type": "string",
+          "description": "Return logs created before the specified time. Value should be in the format 2020-01-01T00:00:00Z. If not supplied, this will default to the current time.",
+          "name": "before",
+          "in": "query",
+          "required": false
+        },
+        {
+          "type": "string",
+          "description": "Return logs created after the specified time. Value should be in the format 2020-01-01T00:00:00Z. If not supplied, this will default to 1 year before the current time.",
+          "name": "after",
+          "in": "query",
+          "required": false
+        },
+        {
+          "type": "string",
           "description": "Filter results by column value. Valid filter predicates are eq, neq",
           "name": "id",
           "in": "query",

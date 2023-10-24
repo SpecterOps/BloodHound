@@ -1,17 +1,17 @@
 // Copyright 2023 Specter Ops, Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// 
+//
 // SPDX-License-Identifier: Apache-2.0
 
 package v2
@@ -23,10 +23,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/specterops/bloodhound/src/api"
-	"github.com/specterops/bloodhound/src/ctx"
-	"github.com/specterops/bloodhound/src/model"
-	"github.com/specterops/bloodhound/src/utils"
 	"github.com/gorilla/mux"
 	"github.com/specterops/bloodhound/analysis"
 	"github.com/specterops/bloodhound/dawgs/graph"
@@ -34,7 +30,12 @@ import (
 	"github.com/specterops/bloodhound/graphschema/azure"
 	"github.com/specterops/bloodhound/graphschema/common"
 	"github.com/specterops/bloodhound/headers"
+	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/slices"
+	"github.com/specterops/bloodhound/src/api"
+	"github.com/specterops/bloodhound/src/ctx"
+	"github.com/specterops/bloodhound/src/model"
+	"github.com/specterops/bloodhound/src/utils"
 )
 
 // CreateAssetGroupRequest holds data required to create an asset group
@@ -234,6 +235,37 @@ func (s Resources) DeleteAssetGroup(response http.ResponseWriter, request *http.
 	}
 }
 
+func (s Resources) UpdateAssetGroupSelectors(response http.ResponseWriter, request *http.Request) {
+	var (
+		pathVars        = mux.Vars(request)
+		rawAssetGroupID = pathVars[api.URIPathVariableAssetGroupID]
+		selectorSpecs   []model.AssetGroupSelectorSpec
+	)
+
+	if assetGroupID, err := strconv.Atoi(rawAssetGroupID); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsIDMalformed, request), response)
+	} else if assetGroup, err := s.DB.GetAssetGroup(int32(assetGroupID)); err != nil {
+		api.HandleDatabaseError(request, response, err)
+	} else if err := api.ReadJSONRequestPayloadLimited(&selectorSpecs, request); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponsePayloadUnmarshalError, request), response)
+	} else {
+		for _, selectorSpec := range selectorSpecs {
+			if err := selectorSpec.Validate(); err != nil {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
+			}
+		}
+
+		if result, err := s.DB.UpdateAssetGroupSelectors(*ctx.FromRequest(request), assetGroup, selectorSpecs, false); err != nil {
+			api.HandleDatabaseError(request, response, err)
+		} else {
+			// When asset group selectors are modified we must trigger analysis
+			s.TaskNotifier.RequestAnalysis()
+
+			api.WriteBasicResponse(request.Context(), result, http.StatusOK, response)
+		}
+	}
+}
+
 func (s Resources) DeleteAssetGroupSelector(response http.ResponseWriter, request *http.Request) {
 	var (
 		pathVars                = mux.Vars(request)
@@ -403,27 +435,62 @@ func parseAGMembersFromNodes(nodes graph.NodeSet, selectors model.AssetGroupSele
 		isCustomMember := false
 		// a member is custom if at least one selector exists for that object ID
 		for _, agSelector := range selectors {
-			if agSelector.Selector == node.Properties.Map[common.ObjectID.String()].(string) {
+			if objectId, err := node.Properties.Get(common.ObjectID.String()).String(); err != nil {
+				log.Warnf("objectid is missing for node %d", node.ID)
+			} else if agSelector.Selector == objectId {
 				isCustomMember = true
 			}
 		}
 
+		var (
+			memberObjectId string
+			memberName     string
+		)
+
+		if objectId, err := node.Properties.Get(common.ObjectID.String()).String(); err != nil {
+			log.Warnf("objectid is missing for node %d", node.ID)
+			memberObjectId = ""
+		} else {
+			memberObjectId = objectId
+		}
+
+		if name, err := node.Properties.Get(common.Name.String()).String(); err != nil {
+			log.Warnf("name is missing for node %d", node.ID)
+			memberName = ""
+		} else {
+			memberName = name
+		}
+
 		agMember := api.AssetGroupMember{
 			AssetGroupID: assetGroupID,
-			ObjectID:     node.Properties.Map[common.ObjectID.String()].(string),
+			ObjectID:     memberObjectId,
 			PrimaryKind:  analysis.GetNodeKindDisplayLabel(node),
 			Kinds:        node.Kinds.Strings(),
-			Name:         node.Properties.Map[common.Name.String()].(string),
+			Name:         memberName,
 			CustomMember: isCustomMember,
 		}
 
-		if tenantID := node.Properties.Map[azure.TenantID.String()]; tenantID != nil {
-			agMember.EnvironmentID = tenantID.(string)
-			agMember.EnvironmentKind = azure.Tenant.String()
+		if node.Kinds.ContainsOneOf(azure.Entity) {
+			if tenantID, err := node.Properties.Get(azure.TenantID.String()).String(); err != nil {
+				log.Warnf("%s is missing for node %d, skipping AG Membership...", azure.TenantID.String(), node.ID)
+				continue
+			} else {
+				agMember.EnvironmentKind = azure.Tenant.String()
+				agMember.EnvironmentID = tenantID
+			}
+		} else if node.Kinds.ContainsOneOf(ad.Entity) {
+			if domainSID, err := node.Properties.Get(ad.DomainSID.String()).String(); err != nil {
+				log.Warnf("%s is missing for node %d, skipping AG Membership...", ad.DomainSID.String(), node.ID)
+				continue
+			} else {
+				agMember.EnvironmentKind = ad.Domain.String()
+				agMember.EnvironmentID = domainSID
+			}
 		} else {
-			agMember.EnvironmentID = node.Properties.Map[ad.DomainSID.String()].(string)
-			agMember.EnvironmentKind = ad.Domain.String()
+			log.Warnf("Node %d is missing valid base entity, skipping AG Membership...", node.ID)
+			continue
 		}
+
 		agMembers = append(agMembers, agMember)
 	}
 	return agMembers
