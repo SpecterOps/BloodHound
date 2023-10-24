@@ -43,7 +43,7 @@ export const CommonSearches = [
             },
             {
                 description: 'Computers with unsupported operating systems',
-                cypher: `MATCH (n:Computer)\nWHERE n.operatingsystem =~ "(?i).* (2000|2003|2008|2012|xp|vista|7|8|me|nt).*"\nRETURN n`,
+                cypher: `MATCH (n:Computer)\nWHERE n.operatingsystem =~ "(?i).*Windows.* (2000|2003|2008|2012|xp|vista|7|8|me|nt).*"\nRETURN n`,
             },
             {
                 description: 'Locations of high value/Tier Zero objects',
