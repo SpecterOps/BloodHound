@@ -30,7 +30,7 @@ import (
 //
 // SPDX-License-Identifier: Apache-2.0
 
-func TestADCSESC1_SimpleHarness(t *testing.T) {
+func TestADCSESC1(t *testing.T) {
 	testContext := integration.NewGraphTestContext(t)
 	testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) {
 		harness.ADCSESC1Harness.Setup(testContext)
@@ -45,17 +45,26 @@ func TestADCSESC1_SimpleHarness(t *testing.T) {
 
 		var results cardinality.Duplex[uint32]
 		err = db.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
-			innerResults, err := ad2.PostADCSESC1Domain(tx, harness.ADCSESC1Harness.Domain, groupExpansions, enrollCache)
+			innerResults, err := ad2.PostADCSESC1Domain(tx, harness.ADCSESC1Harness.Domain1, groupExpansions, enrollCache)
 			results = innerResults
 			return err
 		})
 		require.Nil(t, err)
 
 		require.True(t, results.Cardinality() == 3)
-		require.True(t, results.Contains(harness.ADCSESC1Harness.User3.ID.Uint32()))
-		require.True(t, results.Contains(harness.ADCSESC1Harness.User1.ID.Uint32()))
-		require.True(t, results.Contains(harness.ADCSESC1Harness.Group3.ID.Uint32()))
+		require.True(t, results.Contains(harness.ADCSESC1Harness.User13.ID.Uint32()))
+		require.True(t, results.Contains(harness.ADCSESC1Harness.User11.ID.Uint32()))
+		require.True(t, results.Contains(harness.ADCSESC1Harness.Group13.ID.Uint32()))
 
+		err = db.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
+			innerResults, err := ad2.PostADCSESC1Domain(tx, harness.ADCSESC1Harness.Domain2, groupExpansions, enrollCache)
+			results = innerResults
+			return err
+		})
+
+		require.Nil(t, err)
+		require.True(t, results.Cardinality() == 1)
+		require.True(t, results.Contains(harness.ADCSESC1Harness.Group22.ID.Uint32()))
 		return nil
 	})
 }

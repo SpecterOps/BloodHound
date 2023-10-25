@@ -1083,55 +1083,89 @@ func (s *SearchHarness) Setup(graphTestContext *GraphTestContext) {
 }
 
 type ADCSESC1Harness struct {
-	DomainSid    string
-	AuthStore    *graph.Node
-	RootCA       *graph.Node
-	EnterpriseCA *graph.Node
-	CertTemplate *graph.Node
-	Domain       *graph.Node
-	Group1       *graph.Node
-	Group2       *graph.Node
-	Group3       *graph.Node
-	User1        *graph.Node
-	User2        *graph.Node
-	User3        *graph.Node
-	User4        *graph.Node
-	User5        *graph.Node
+	DomainSid     string
+	AuthStore1    *graph.Node
+	RootCA1       *graph.Node
+	EnterpriseCA1 *graph.Node
+	CertTemplate1 *graph.Node
+	Domain1       *graph.Node
+	Group11       *graph.Node
+	Group12       *graph.Node
+	Group13       *graph.Node
+	User11        *graph.Node
+	User12        *graph.Node
+	User13        *graph.Node
+	User14        *graph.Node
+	User15        *graph.Node
+
+	DomainSid2     string
+	Domain2        *graph.Node
+	RootCA2        *graph.Node
+	AuthStore2     *graph.Node
+	CertTemplate2  *graph.Node
+	EnterpriseCA21 *graph.Node
+	EnterpriseCA22 *graph.Node
+	Group21        *graph.Node
+	Group22        *graph.Node
+
+	DomainSid3 string
 }
 
 func (s *ADCSESC1Harness) Setup(graphTestContext *GraphTestContext) {
 	s.DomainSid = RandomDomainSID()
-	s.Domain = graphTestContext.NewActiveDirectoryDomain("domain", s.DomainSid, false, true)
-	s.AuthStore = graphTestContext.NewActiveDirectoryNTAuthStore("ntauthstore", s.DomainSid)
-	s.EnterpriseCA = graphTestContext.NewActiveDirectoryEnterpriseCA("eca", s.DomainSid)
-	s.RootCA = graphTestContext.NewActiveDirectoryRootCA("rca", s.DomainSid)
-	s.CertTemplate = graphTestContext.NewActiveDirectoryCertTemplate("certtemplate", s.DomainSid, false, true, true, 1, 0)
-	s.Group1 = graphTestContext.NewActiveDirectoryGroup("group1", s.DomainSid)
-	s.Group2 = graphTestContext.NewActiveDirectoryGroup("group2", s.DomainSid)
-	s.Group3 = graphTestContext.NewActiveDirectoryGroup("group3", s.DomainSid)
-	s.User1 = graphTestContext.NewActiveDirectoryUser("user1", s.DomainSid)
-	s.User2 = graphTestContext.NewActiveDirectoryUser("user2", s.DomainSid)
-	s.User3 = graphTestContext.NewActiveDirectoryUser("user3", s.DomainSid)
-	s.User4 = graphTestContext.NewActiveDirectoryUser("user4", s.DomainSid)
-	s.User5 = graphTestContext.NewActiveDirectoryUser("user5", s.DomainSid)
+	s.Domain1 = graphTestContext.NewActiveDirectoryDomain("domain 1", s.DomainSid, false, true)
+	s.AuthStore1 = graphTestContext.NewActiveDirectoryNTAuthStore("ntauthstore 1", s.DomainSid)
+	s.EnterpriseCA1 = graphTestContext.NewActiveDirectoryEnterpriseCA("eca 1", s.DomainSid)
+	s.RootCA1 = graphTestContext.NewActiveDirectoryRootCA("rca 1", s.DomainSid)
+	s.CertTemplate1 = graphTestContext.NewActiveDirectoryCertTemplate("certtemplate 1", s.DomainSid, false, true, true, 1, 0)
+	s.Group11 = graphTestContext.NewActiveDirectoryGroup("group1-1", s.DomainSid)
+	s.Group12 = graphTestContext.NewActiveDirectoryGroup("group1-2", s.DomainSid)
+	s.Group13 = graphTestContext.NewActiveDirectoryGroup("group1-3", s.DomainSid)
+	s.User11 = graphTestContext.NewActiveDirectoryUser("user1-1", s.DomainSid)
+	s.User12 = graphTestContext.NewActiveDirectoryUser("user1-2", s.DomainSid)
+	s.User13 = graphTestContext.NewActiveDirectoryUser("user1-3", s.DomainSid)
+	s.User14 = graphTestContext.NewActiveDirectoryUser("user1-4", s.DomainSid)
+	s.User15 = graphTestContext.NewActiveDirectoryUser("user1-5", s.DomainSid)
 
-	graphTestContext.NewRelationship(s.AuthStore, s.Domain, ad.NTAuthStoreFor)
-	graphTestContext.NewRelationship(s.RootCA, s.Domain, ad.RootCAFor)
-	graphTestContext.NewRelationship(s.EnterpriseCA, s.AuthStore, ad.TrustedForNTAuth)
-	graphTestContext.NewRelationship(s.EnterpriseCA, s.RootCA, ad.EnterpriseCAFor)
-	graphTestContext.NewRelationship(s.CertTemplate, s.EnterpriseCA, ad.PublishedTo)
-	graphTestContext.NewRelationship(s.Group1, s.CertTemplate, ad.Enroll)
-	graphTestContext.NewRelationship(s.Group2, s.EnterpriseCA, ad.Enroll)
-	graphTestContext.NewRelationship(s.Group3, s.EnterpriseCA, ad.Enroll)
-	graphTestContext.NewRelationship(s.Group3, s.CertTemplate, ad.Enroll)
+	graphTestContext.NewRelationship(s.AuthStore1, s.Domain1, ad.NTAuthStoreFor)
+	graphTestContext.NewRelationship(s.RootCA1, s.Domain1, ad.RootCAFor)
+	graphTestContext.NewRelationship(s.EnterpriseCA1, s.AuthStore1, ad.TrustedForNTAuth)
+	graphTestContext.NewRelationship(s.EnterpriseCA1, s.RootCA1, ad.EnterpriseCAFor)
+	graphTestContext.NewRelationship(s.CertTemplate1, s.EnterpriseCA1, ad.PublishedTo)
+	graphTestContext.NewRelationship(s.Group11, s.CertTemplate1, ad.Enroll)
+	graphTestContext.NewRelationship(s.Group12, s.EnterpriseCA1, ad.Enroll)
+	graphTestContext.NewRelationship(s.Group13, s.EnterpriseCA1, ad.Enroll)
+	graphTestContext.NewRelationship(s.Group13, s.CertTemplate1, ad.Enroll)
 
-	graphTestContext.NewRelationship(s.User5, s.Group1, ad.MemberOf)
-	graphTestContext.NewRelationship(s.User3, s.Group1, ad.MemberOf)
-	graphTestContext.NewRelationship(s.User1, s.Group1, ad.MemberOf)
-	graphTestContext.NewRelationship(s.User3, s.Group2, ad.MemberOf)
-	graphTestContext.NewRelationship(s.User4, s.Group2, ad.MemberOf)
-	graphTestContext.NewRelationship(s.User2, s.Group3, ad.MemberOf)
-	graphTestContext.NewRelationship(s.User1, s.Group3, ad.MemberOf)
+	graphTestContext.NewRelationship(s.User15, s.Group11, ad.MemberOf)
+	graphTestContext.NewRelationship(s.User13, s.Group11, ad.MemberOf)
+	graphTestContext.NewRelationship(s.User11, s.Group11, ad.MemberOf)
+	graphTestContext.NewRelationship(s.User13, s.Group12, ad.MemberOf)
+	graphTestContext.NewRelationship(s.User14, s.Group12, ad.MemberOf)
+	graphTestContext.NewRelationship(s.User12, s.Group13, ad.MemberOf)
+	graphTestContext.NewRelationship(s.User11, s.Group13, ad.MemberOf)
+
+	s.DomainSid2 = RandomDomainSID()
+	s.Domain2 = graphTestContext.NewActiveDirectoryDomain("domain 2", s.DomainSid2, false, true)
+	s.RootCA2 = graphTestContext.NewActiveDirectoryRootCA("rca2", s.DomainSid2)
+	s.AuthStore2 = graphTestContext.NewActiveDirectoryNTAuthStore("authstore2", s.DomainSid2)
+	s.EnterpriseCA21 = graphTestContext.NewActiveDirectoryEnterpriseCA("eca2-1", s.DomainSid2)
+	s.EnterpriseCA22 = graphTestContext.NewActiveDirectoryEnterpriseCA("eca2-2", s.DomainSid2)
+	s.Group21 = graphTestContext.NewActiveDirectoryGroup("group2-1", s.DomainSid2)
+	s.Group22 = graphTestContext.NewActiveDirectoryGroup("group2-2", s.DomainSid2)
+	s.CertTemplate2 = graphTestContext.NewActiveDirectoryCertTemplate("certtemplate 2", s.DomainSid2, false, true, true, 1, 0)
+
+	graphTestContext.NewRelationship(s.RootCA2, s.Domain2, ad.RootCAFor)
+	graphTestContext.NewRelationship(s.AuthStore2, s.Domain2, ad.NTAuthStoreFor)
+	graphTestContext.NewRelationship(s.EnterpriseCA21, s.AuthStore2, ad.TrustedForNTAuth)
+	graphTestContext.NewRelationship(s.EnterpriseCA21, s.RootCA2, ad.EnterpriseCAFor)
+	graphTestContext.NewRelationship(s.EnterpriseCA22, s.RootCA2, ad.IssuedSignedBy)
+	graphTestContext.NewRelationship(s.Group21, s.EnterpriseCA22, ad.Enroll)
+	graphTestContext.NewRelationship(s.Group21, s.CertTemplate2, ad.Enroll)
+	graphTestContext.NewRelationship(s.CertTemplate2, s.EnterpriseCA22, ad.PublishedTo)
+	graphTestContext.NewRelationship(s.CertTemplate2, s.EnterpriseCA21, ad.PublishedTo)
+	graphTestContext.NewRelationship(s.Group22, s.CertTemplate2, ad.Enroll)
+	graphTestContext.NewRelationship(s.Group22, s.EnterpriseCA21, ad.Enroll)
 }
 
 type ShortcutHarness struct {
