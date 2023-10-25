@@ -32,7 +32,7 @@ import drawLabel from 'src/rendering/programs/node-label';
 import getNodeCombinedProgram from 'src/rendering/programs/node.combined';
 import getNodeGlyphsProgram from 'src/rendering/programs/node.glyphs';
 import GraphEdgeEvents from './GraphEdgeEvents';
-import { Box } from '@mui/material';
+import { Box, Menu, MenuItem } from '@mui/material';
 import { GraphNodes } from 'js-client-library';
 import { GraphButtonProps, SearchCurrentNodes } from 'bh-shared-ui';
 
@@ -115,6 +115,9 @@ const SigmaChart: FC<Partial<SigmaChartProps>> = ({
                 )}
                 <GraphButtons rankDirection={rankDirection} options={options} nonLayoutButtons={nonLayoutButtons} />
             </Box>
+            {/* <Menu open>
+                <MenuItem>One</MenuItem>
+            </Menu> */}
         </SigmaContainer>
     );
 };

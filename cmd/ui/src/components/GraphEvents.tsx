@@ -127,6 +127,11 @@ export const GraphEvents: FC<GraphEventProps> = ({
                     }, 200);
                 }
             },
+            rightClickNode: (event) => {
+                event.preventSigmaDefault();
+                console.log(event.event);
+                console.log(event.node);
+            },
             // We need our reducers to run again when the camera state gets updated to position edge labels correctly.
             // Despite its name, this event only triggers on camera update, not any Sigma update
             updated: () => sigma.refresh(),
