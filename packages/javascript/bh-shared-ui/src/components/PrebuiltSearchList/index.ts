@@ -14,8 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-export { default as useAvailableDomains } from './useAvailableDomains';
+export * from './PrebuiltSearchList';
+export * from './PersonalSearchList';
 
-export { default as useOnClickOutside } from './useOnClickOutside';
-
-export * from './useSavedQueries';
+export { default } from './PrebuiltSearchList';

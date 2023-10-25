@@ -64,3 +64,10 @@ export type NewAuthToken = AuthToken & {
 };
 
 export type CreateAuthTokenResponse = BasicResponse<NewAuthToken>;
+
+export type SavedQuery = {
+    id: number;
+    name: string;
+    query: string;
+    user_id: string;
+};
