@@ -51,6 +51,8 @@ export const GraphEvents: FC<GraphEventProps> = ({
     const [highlightedNode, setHighlightedNode] = useState<string | null>(null);
     const [isDragging, setIsDragging] = useState(false);
 
+    const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
+
     const isLongPress = useRef(false);
     const dragTimerRef = useRef<ReturnType<typeof setTimeout>>();
     const clickTimerRef = useRef<ReturnType<typeof setTimeout>>();
@@ -129,6 +131,9 @@ export const GraphEvents: FC<GraphEventProps> = ({
             },
             rightClickNode: (event) => {
                 event.preventSigmaDefault();
+                event.event.original.preventDefault();
+                event.event.original.stopPropagation();
+                setAnchorEl(event.event.original.target as HTMLElement);
                 console.log(event.event);
                 console.log(event.node);
             },
