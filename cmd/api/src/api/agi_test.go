@@ -580,7 +580,7 @@ func TestResources_UpdateAssetGroupSelectors_SuccessOwned(t *testing.T) {
 
 	assetGroup := model.AssetGroup{
 		Name:        model.OwnedAssetGroupName,
-		Tag:         model.OwnedAsserGroupTag,
+		Tag:         model.OwnedAssetGroupTag,
 		SystemGroup: true,
 	}
 

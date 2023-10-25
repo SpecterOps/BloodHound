@@ -224,7 +224,7 @@ const (
 	TierZeroAssetGroupName   = "Admin Tier Zero"
 	TierZeroAssetGroupTag    = "admin_tier_0"
 	OwnedAssetGroupName      = "Owned"
-	OwnedAsserGroupTag       = "owned"
+	OwnedAssetGroupTag       = "owned"
 )
 
 func (s AssetGroupSelectorSpec) Validate() error {
