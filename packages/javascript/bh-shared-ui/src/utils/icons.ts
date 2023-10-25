@@ -36,134 +36,182 @@ import {
     faUsers,
     faWindowRestore,
     IconDefinition,
+    faGem,
+    faPlus,
+    faQuestion,
+    faMinus,
 } from '@fortawesome/free-solid-svg-icons';
+import { ActiveDirectoryNodeKind, AzureNodeKind } from '../graphSchema';
 
-export const NODE_ICON: { [index: string]: { icon: IconDefinition; color: string } } = {
-    User: {
+export type IconInfo = {
+    icon: IconDefinition;
+    color: string;
+    url?: string;
+};
+
+export type IconDictionary = {
+    [index: string]: IconInfo;
+};
+
+export type GlyphDictionary = {
+    [index: string]: IconInfo & { iconColor: string };
+};
+
+export enum GlyphKind {
+    TIER_ZERO,
+    EXPAND,
+    COLLAPSE,
+}
+
+export const NODE_ICON: IconDictionary = {
+    [ActiveDirectoryNodeKind.User]: {
         icon: faUser,
         color: '#17E625',
     },
 
-    Group: {
+    [ActiveDirectoryNodeKind.Group]: {
         icon: faUsers,
         color: '#DBE617',
     },
 
-    Computer: {
+    [ActiveDirectoryNodeKind.Computer]: {
         icon: faDesktop,
         color: '#E67873',
     },
 
-    Domain: {
+    [ActiveDirectoryNodeKind.Domain]: {
         icon: faGlobe,
         color: '#17E6B9',
     },
 
-    GPO: {
+    [ActiveDirectoryNodeKind.GPO]: {
         icon: faList,
         color: '#998EFD',
     },
 
-    OU: {
+    [ActiveDirectoryNodeKind.OU]: {
         icon: faSitemap,
         color: '#FFAA00',
     },
 
-    Container: {
+    [ActiveDirectoryNodeKind.Container]: {
         icon: faBox,
         color: '#F79A78',
     },
 
-    AZUser: {
+    [AzureNodeKind.User]: {
         icon: faUser,
         color: '#34D2EB',
     },
 
-    AZGroup: {
+    [AzureNodeKind.Group]: {
         icon: faUsers,
         color: '#F57C9B',
     },
 
-    AZTenant: {
+    [AzureNodeKind.Tenant]: {
         icon: faCloud,
         color: '#54F2F2',
     },
 
-    AZSubscription: {
+    [AzureNodeKind.Subscription]: {
         icon: faKey,
         color: '#D2CCA1',
     },
 
-    AZResourceGroup: {
+    [AzureNodeKind.ResourceGroup]: {
         icon: faCube,
         color: '#89BD9E',
     },
 
-    AZVM: {
+    [AzureNodeKind.VM]: {
         icon: faDesktop,
         color: '#F9ADA0',
     },
-    AZWebApp: {
+    [AzureNodeKind.WebApp]: {
         icon: faObjectGroup,
         color: '#4696E9',
     },
-    AZLogicApp: {
+    [AzureNodeKind.LogicApp]: {
         icon: faSitemap,
         color: '#9EE047',
     },
 
-    AZAutomationAccount: {
+    [AzureNodeKind.AutomationAccount]: {
         icon: faCog,
         color: '#F4BA44',
     },
 
-    AZFunctionApp: {
+    [AzureNodeKind.FunctionApp]: {
         icon: faBolt,
         color: '#F4BA44',
     },
 
-    AZContainerRegistry: {
+    [AzureNodeKind.ContainerRegistry]: {
         icon: faBoxOpen,
         color: '#0885D7',
     },
 
-    AZManagedCluster: {
+    [AzureNodeKind.ManagedCluster]: {
         icon: faCubes,
         color: '#326CE5',
     },
 
-    AZDevice: {
+    [AzureNodeKind.Device]: {
         icon: faDesktop,
         color: '#B18FCF',
     },
 
-    AZKeyVault: {
+    [AzureNodeKind.KeyVault]: {
         icon: faLock,
         color: '#ED658C',
     },
 
-    AZApp: {
+    [AzureNodeKind.App]: {
         icon: faWindowRestore,
         color: '#03FC84',
     },
 
-    AZVMScaleSet: {
+    [AzureNodeKind.VMScaleSet]: {
         icon: faServer,
         color: '#007CD0',
     },
 
-    AZServicePrincipal: {
+    [AzureNodeKind.ServicePrincipal]: {
         icon: faRobot,
         color: '#C1D6D6',
     },
 
-    AZRole: {
+    [AzureNodeKind.Role]: {
         icon: faClipboardList,
         color: '#ED8537',
     },
 
-    AZManagementGroup: {
+    [AzureNodeKind.ManagementGroup]: {
         icon: faSitemap,
         color: '#BD93D8',
     },
+};
+
+export const GLYPHS: GlyphDictionary = {
+    [GlyphKind.TIER_ZERO]: {
+        icon: faGem,
+        color: '#000000',
+        iconColor: '#FFFFFF',
+    },
+    [GlyphKind.EXPAND]: {
+        icon: faPlus,
+        color: '#FFFFFF',
+        iconColor: '#000000',
+    },
+    [GlyphKind.COLLAPSE]: {
+        icon: faMinus,
+        color: '#FFFFFF',
+        iconColor: '#000000',
+    },
+};
+
+export const UNKNOWN_ICON: IconInfo = {
+    icon: faQuestion,
+    color: '#FFFFFF',
 };
