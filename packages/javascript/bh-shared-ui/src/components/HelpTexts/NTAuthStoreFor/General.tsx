@@ -15,7 +15,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { FC } from 'react';
-import { typeFormat } from '../utils';
 import { EdgeInfoProps } from '../index';
 import { Typography } from '@mui/material';
 
@@ -23,13 +22,10 @@ const General: FC<EdgeInfoProps> = ({ sourceName, sourceType, targetName }) => {
     return (
         <>
             <Typography variant='body2'>
-                The {typeFormat(sourceType)} {sourceName} has enrollment rights against the target node, {targetName}.
-            </Typography>
-            <Typography variant='body2'>
                 The NTAuthStore is the Enterprise NTAuth store (NTAuthCertificates object) for the the AD forest of the
-                domain node. The NTAuthStore holds the list of certificates trusted for authentication in the AD forest.
-                When a user attempts to authenticate against a domain with a certificate, a domain controller will
-                verify that the certificate is signed by a certificate in the NTAuthStore.
+                domain node. The NTAuthStore holds the list of certificates trusted for authentication in the AD forest
+                of the domain {targetName}. When a user attempts to authenticate against a domain with a certificate, a
+                domain controller will verify that the certificate is signed by a certificate in the NTAuthStore.
             </Typography>
         </>
     );

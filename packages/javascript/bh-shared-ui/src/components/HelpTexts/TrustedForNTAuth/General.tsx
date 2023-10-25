@@ -18,13 +18,13 @@ import { FC } from 'react';
 import { EdgeInfoProps } from '../index';
 import { Typography } from '@mui/material';
 
-const General: FC<EdgeInfoProps> = ({ sourceName, sourceType, targetName }) => {
+const General: FC<EdgeInfoProps> = ({ sourceName }) => {
     return (
         <>
             <Typography variant='body2'>
-                The NTAuthStore contains the certificate of the Enterprise CA. The consequence of the relationship is
-                that certificate issued by the Enterprise CA are trusted for authentication in the AD forest of the
-                NTAuthStore.
+                The NTAuthStore contains the certificate of the Enterprise CA, {sourceName}. The consequence of the
+                relationship is that certificate issued by the Enterprise CA are trusted for authentication in the AD
+                forest of the NTAuthStore.
             </Typography>
         </>
     );

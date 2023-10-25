@@ -20,7 +20,7 @@ import LinuxAbuse from './LinuxAbuse';
 import Opsec from './Opsec';
 import References from './References';
 
-const Enroll = {
+const IssuedSignedBy = {
     general: General,
     windowsAbuse: WindowsAbuse,
     linuxAbuse: LinuxAbuse,
@@ -28,4 +28,4 @@ const Enroll = {
     references: References,
 };
 
-export default Enroll;
+export default IssuedSignedBy;

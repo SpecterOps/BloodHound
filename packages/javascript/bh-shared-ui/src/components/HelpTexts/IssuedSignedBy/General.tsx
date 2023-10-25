@@ -15,6 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { FC } from 'react';
+import { typeFormat } from '../utils';
 import { EdgeInfoProps } from '../index';
 import { Typography } from '@mui/material';
 
@@ -22,9 +23,12 @@ const General: FC<EdgeInfoProps> = ({ sourceName, sourceType, targetName }) => {
     return (
         <>
             <Typography variant='body2'>
-                The starting node CA's certificate is issued and signed by the end node CA. When Windows assesses the
-                validity and trustworthiness of a certificate it verifies the certificate chain up to a trusted root
-                certificate. The IssuedSignedBy edge represent a link within the certificate chain.
+                The {typeFormat(sourceType)} {sourceName}'s certificate is issued and signed by {targetName}
+            </Typography>
+            <Typography variant='body2'>
+                When Windows assesses the validity and trustworthiness of a certificate it verifies the certificate
+                chain up to a trusted root certificate. The IssuedSignedBy edge represent a link within the certificate
+                chain.
             </Typography>
         </>
     );
