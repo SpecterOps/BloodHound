@@ -20,11 +20,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/specterops/bloodhound/analysis/impact"
-	"github.com/specterops/bloodhound/dawgs/cardinality"
-	"sort"
-
 	"github.com/specterops/bloodhound/analysis"
+	"github.com/specterops/bloodhound/analysis/impact"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/dawgs/ops"
 	"github.com/specterops/bloodhound/dawgs/query"
@@ -120,20 +117,13 @@ func PostADCSESC1(ctx context.Context, db graph.Database, enterpriseCas, certTem
 								} else if !validatePublishedCertTemplateForEsc1(validationProperties) {
 									continue
 								} else {
-									for _, enroller := range calculateCrossProduct(enrollCache[enterpriseCA.ID].Slice(), enrollCache[certTemplate.ID].Slice(), expandedGroups).Slice() {
+									for _, enroller := range CalculateCrossProductNodeSets(enrollCache[enterpriseCA.ID].Slice(), enrollCache[certTemplate.ID].Slice(), expandedGroups).Slice() {
 										outC <- analysis.CreatePostRelationshipJob{
 											FromID: graph.ID(enroller),
 											ToID:   innerDomain.ID,
 											Kind:   ad.ADCSESC1,
 										}
 									}
-									//for _, enroller := range getEnrollersForCertTemplate(enterpriseCA, certTemplate, expandedGroups, enrollCache).Slice() {
-									//	outC <- analysis.CreatePostRelationshipJob{
-									//		FromID: graph.ID(enroller),
-									//		ToID:   innerDomain.ID,
-									//		Kind:   ad.ADCSESC1,
-									//	}
-									//}
 								}
 							}
 						}
@@ -145,170 +135,6 @@ func PostADCSESC1(ctx context.Context, db graph.Database, enterpriseCas, certTem
 	}
 
 	return nil
-}
-
-func calculateCrossProduct(firstNodeSet, secondNodeSet []*graph.Node, groupExpansions impact.PathAggregator) cardinality.Duplex[uint32] {
-	//The intention is that the node sets being passed into this function contain all the first degree principals for control
-	var (
-		resultEntities  = cardinality.NewBitmap32()
-		firstSetUnroll  = cardinality.NewBitmap32()
-		secondSetUnroll = cardinality.NewBitmap32()
-	)
-
-	//Unroll all groups in our first nodeset into a bitmap
-	for _, entity := range firstNodeSet {
-		firstSetUnroll.Add(entity.ID.Uint32())
-		if entity.Kinds.ContainsOneOf(ad.Group) {
-			firstSetUnroll.Or(groupExpansions.Cardinality(entity.ID.Uint32()).(cardinality.Duplex[uint32]))
-		}
-	}
-
-	//Check all our first degree entities directly for matches
-	for _, entity := range secondNodeSet {
-		if firstSetUnroll.Contains(entity.ID.Uint32()) {
-			resultEntities.Add(entity.ID.Uint32())
-		} else if entity.Kinds.ContainsOneOf(ad.Group, ad.LocalGroup) {
-			//If our entity doesn't match directly, but is a group or local group we want to expand its membership into a map
-			secondSetUnroll.Or(groupExpansions.Cardinality(entity.ID.Uint32()).(cardinality.Duplex[uint32]))
-		}
-	}
-
-	//Find all the groups in our secondary targets and map them to their cardinality in our expansions
-	//Saving off to a map to prevent multiple lookups on the expansions
-	tempMap := map[uint32]uint64{}
-	for _, id := range secondSetUnroll.Slice() {
-		//If group expansions contains this ID, it's a group/localgroup
-		if groupExpansions.Contains(id) {
-			tempMap[id] = groupExpansions.Cardinality(id).Cardinality()
-		}
-	}
-
-	//Save the map keys to a new slice, this represents our list of groups in the expansion
-	keys := make([]uint32, len(tempMap))
-	for key := range tempMap {
-		keys = append(keys, key)
-	}
-
-	//Sort by cardinality we saved in the map, which will give us all the groups sorted by their number of members
-	sort.Slice(keys, func(i, j int) bool {
-		return tempMap[keys[i]] < tempMap[keys[j]]
-	})
-
-	for _, groupId := range keys {
-		if firstSetUnroll.Contains(groupId) {
-			//If this entity is a cross product, add it to result entities, remove the group id from the second set and xor the group's membership with the result set
-			resultEntities.Add(groupId)
-			secondSetUnroll.Remove(groupId)
-			secondSetUnroll.Xor(groupExpansions.Cardinality(groupId).(cardinality.Duplex[uint32]))
-		} else {
-			//If this isn't a match, remove it from the second set to ensure we don't check it again, but leave its membership
-			secondSetUnroll.Remove(groupId)
-		}
-	}
-
-	//Iterate the last remaining items for matches
-	for _, remainder := range secondSetUnroll.Slice() {
-		if firstSetUnroll.Contains(remainder) {
-			resultEntities.Add(remainder)
-		}
-	}
-
-	return resultEntities
-}
-
-func getEnrollersForCertTemplate(eca, certTemplates *graph.Node, groupExpansions impact.PathAggregator, enrollCache map[graph.ID]graph.NodeSet) cardinality.Duplex[uint32] {
-	var (
-		enrollEntities          = cardinality.NewBitmap32()
-		secondaryTargets        = cardinality.NewBitmap32()
-		secondaryGroups         = make([]uint32, 0)
-		ecaFirstDegree          = enrollCache[eca.ID]
-		ecaUnrolled             = cardinality.NewBitmap32()
-		certTemplateFirstDegree = enrollCache[certTemplates.ID].Slice()
-	)
-
-	//Add unrolled group membership for eca first degree to a bitmap
-	for _, entity := range ecaFirstDegree {
-		ecaUnrolled.Add(entity.ID.Uint32())
-		if entity.Kinds.ContainsOneOf(ad.Group) {
-			ecaUnrolled.Or(groupExpansions.Cardinality(entity.ID.Uint32()).(cardinality.Duplex[uint32]))
-		}
-	}
-
-	//Sort groups first
-	sort.SliceStable(certTemplateFirstDegree, func(i, j int) bool {
-		var (
-			a int
-			b int
-		)
-		if certTemplateFirstDegree[i].Kinds.ContainsOneOf(ad.Group) {
-			a = 0
-		} else {
-			a = 1
-		}
-
-		if certTemplateFirstDegree[j].Kinds.ContainsOneOf(ad.Group) {
-			b = 0
-		} else {
-			b = 1
-		}
-
-		return a < b
-	})
-
-	//First lets check the first degree controllers of the certTemplate against the enterprise ca unrolled info
-	//If we have a match, we can directly add those
-	for _, entity := range certTemplateFirstDegree {
-		if ecaUnrolled.Contains(entity.ID.Uint32()) {
-			enrollEntities.Add(entity.ID.Uint32())
-		} else if entity.Kinds.ContainsOneOf(ad.Group) {
-			secondaryTargets.Or(groupExpansions.Cardinality(entity.ID.Uint32()).(cardinality.Duplex[uint32]))
-		}
-	}
-
-	//Find all the group objects in secondary targets and add them to a slice we can sort
-	for _, entity := range secondaryTargets.Slice() {
-		if groupExpansions.Contains(entity) {
-			secondaryGroups = append(secondaryGroups, entity)
-		}
-	}
-
-	//Sort groups by cardinality to hopefully get rid of the biggest groups first
-	sort.SliceStable(secondaryGroups, func(i, j int) bool {
-		return groupExpansions.Cardinality(secondaryGroups[i]).Cardinality() < groupExpansions.Cardinality(secondaryGroups[j]).Cardinality()
-	})
-
-	// Find any group cross products in both sides and then remove the members of those groups
-	for len(secondaryGroups) > 0 {
-		//Grab our first secondary group and remove it from the slice
-		target := secondaryGroups[0]
-		secondaryGroups = secondaryGroups[1:]
-		//If this group is contained in the target
-		if ecaUnrolled.Contains(target) {
-			//Add it to enrollers
-			enrollEntities.Add(target)
-			//Grab the full expansion of this group
-			expansions := groupExpansions.Cardinality(target).(cardinality.Duplex[uint32])
-			//Remove all members of this group from secondaryTargets
-			secondaryTargets.Xor(expansions)
-			//Remove all subgroups of this group from secondaryGroups
-			tempSlice := make([]uint32, 0)
-			for _, temp := range secondaryGroups {
-				if !expansions.Contains(temp) {
-					tempSlice = append(tempSlice, temp)
-				}
-			}
-			secondaryGroups = tempSlice
-		}
-	}
-
-	//Iterate the remaining entities
-	for _, entity := range secondaryTargets.Slice() {
-		if ecaUnrolled.Contains(entity) {
-			enrollEntities.Add(entity)
-		}
-	}
-
-	return enrollEntities
 }
 
 type PublishedCertTemplateValidationProperties struct {

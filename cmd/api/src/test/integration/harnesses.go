@@ -1082,6 +1082,29 @@ func (s *SearchHarness) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.UpdateNode(s.GroupLocalGroup)
 }
 
+type ShortcutHarness struct {
+	Group1 *graph.Node
+	Group2 *graph.Node
+	Group3 *graph.Node
+	Group4 *graph.Node
+	User1  *graph.Node
+}
+
+func (s *ShortcutHarness) Setup(graphTestContext *GraphTestContext) {
+	sid := RandomDomainSID()
+	s.Group1 = graphTestContext.NewActiveDirectoryGroup("GROUP ONE", sid)
+	s.Group2 = graphTestContext.NewActiveDirectoryGroup("GROUP TWO", sid)
+	s.Group3 = graphTestContext.NewActiveDirectoryGroup("GROUP THREE", sid)
+	s.Group4 = graphTestContext.NewActiveDirectoryGroup("GROUP FOUR", sid)
+	s.User1 = graphTestContext.NewActiveDirectoryUser("USER ONE", sid)
+
+	graphTestContext.NewRelationship(s.Group4, s.Group1, ad.MemberOf)
+	graphTestContext.NewRelationship(s.Group3, s.Group2, ad.MemberOf)
+	graphTestContext.NewRelationship(s.Group3, s.Group1, ad.MemberOf)
+	//graphTestContext.NewRelationship(s.User1, s.Group4, ad.MemberOf)
+	graphTestContext.NewRelationship(s.User1, s.Group3, ad.MemberOf)
+}
+
 type RootADHarness struct {
 	TierZero                                graph.NodeSet
 	ActiveDirectoryDomainSID                string
@@ -1142,6 +1165,7 @@ type HarnessDetails struct {
 	AZMGServicePrincipalEndpointReadWriteAllHarness AZMGServicePrincipalEndpointReadWriteAllHarness
 	RootADHarness                                   RootADHarness
 	SearchHarness                                   SearchHarness
+	ShortcutHarness                                 ShortcutHarness
 	NumCollectedActiveDirectoryDomains              int
 	AZInboundControlHarness                         AZInboundControlHarness
 }
