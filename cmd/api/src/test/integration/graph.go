@@ -486,6 +486,43 @@ func (s *GraphTestContext) NewActiveDirectoryGPO(name, domainSID string) *graph.
 	}), ad.Entity, ad.GPO)
 }
 
+func (s *GraphTestContext) NewActiveDirectoryNTAuthStore(name, domainSID string) *graph.Node {
+	return s.NewNode(graph.AsProperties(graph.PropertyMap{
+		common.Name:     name,
+		common.ObjectID: must.NewUUIDv4().String(),
+		ad.DomainSID:    domainSID,
+	}), ad.Entity, ad.NTAuthStore)
+}
+
+func (s *GraphTestContext) NewActiveDirectoryEnterpriseCA(name, domainSID string) *graph.Node {
+	return s.NewNode(graph.AsProperties(graph.PropertyMap{
+		common.Name:     name,
+		common.ObjectID: must.NewUUIDv4().String(),
+		ad.DomainSID:    domainSID,
+	}), ad.Entity, ad.EnterpriseCA)
+}
+
+func (s *GraphTestContext) NewActiveDirectoryRootCA(name, domainSID string) *graph.Node {
+	return s.NewNode(graph.AsProperties(graph.PropertyMap{
+		common.Name:     name,
+		common.ObjectID: must.NewUUIDv4().String(),
+		ad.DomainSID:    domainSID,
+	}), ad.Entity, ad.RootCA)
+}
+
+func (s *GraphTestContext) NewActiveDirectoryCertTemplate(name, domainSID string, requiresManagerApproval, authenticationEnabled, enrolleeSupplieSubject bool, schemaVersion, authorizedSignatures int) *graph.Node {
+	return s.NewNode(graph.AsProperties(graph.PropertyMap{
+		common.Name:                name,
+		common.ObjectID:            must.NewUUIDv4().String(),
+		ad.DomainSID:               domainSID,
+		ad.RequiresManagerApproval: requiresManagerApproval,
+		ad.AuthenticationEnabled:   authenticationEnabled,
+		ad.EnrolleeSuppliesSubject: enrolleeSupplieSubject,
+		ad.SchemaVersion:           float64(schemaVersion),
+		ad.AuthorizedSignatures:    float64(authorizedSignatures),
+	}), ad.Entity, ad.CertTemplate)
+}
+
 func (s *GraphTestContext) setupAzure() {
 	s.Harness.AZBaseHarness.Setup(s)
 	s.Harness.AZGroupMembership.Setup(s)

@@ -1082,6 +1082,58 @@ func (s *SearchHarness) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.UpdateNode(s.GroupLocalGroup)
 }
 
+type ADCSESC1Harness struct {
+	DomainSid    string
+	AuthStore    *graph.Node
+	RootCA       *graph.Node
+	EnterpriseCA *graph.Node
+	CertTemplate *graph.Node
+	Domain       *graph.Node
+	Group1       *graph.Node
+	Group2       *graph.Node
+	Group3       *graph.Node
+	User1        *graph.Node
+	User2        *graph.Node
+	User3        *graph.Node
+	User4        *graph.Node
+	User5        *graph.Node
+}
+
+func (s *ADCSESC1Harness) Setup(graphTestContext *GraphTestContext) {
+	s.DomainSid = RandomDomainSID()
+	s.Domain = graphTestContext.NewActiveDirectoryDomain("domain", s.DomainSid, false, true)
+	s.AuthStore = graphTestContext.NewActiveDirectoryNTAuthStore("ntauthstore", s.DomainSid)
+	s.EnterpriseCA = graphTestContext.NewActiveDirectoryEnterpriseCA("eca", s.DomainSid)
+	s.RootCA = graphTestContext.NewActiveDirectoryRootCA("rca", s.DomainSid)
+	s.CertTemplate = graphTestContext.NewActiveDirectoryCertTemplate("certtemplate", s.DomainSid, false, true, true, 1, 0)
+	s.Group1 = graphTestContext.NewActiveDirectoryGroup("group1", s.DomainSid)
+	s.Group2 = graphTestContext.NewActiveDirectoryGroup("group2", s.DomainSid)
+	s.Group3 = graphTestContext.NewActiveDirectoryGroup("group3", s.DomainSid)
+	s.User1 = graphTestContext.NewActiveDirectoryUser("user1", s.DomainSid)
+	s.User2 = graphTestContext.NewActiveDirectoryUser("user2", s.DomainSid)
+	s.User3 = graphTestContext.NewActiveDirectoryUser("user3", s.DomainSid)
+	s.User4 = graphTestContext.NewActiveDirectoryUser("user4", s.DomainSid)
+	s.User5 = graphTestContext.NewActiveDirectoryUser("user5", s.DomainSid)
+
+	graphTestContext.NewRelationship(s.AuthStore, s.Domain, ad.NTAuthStoreFor)
+	graphTestContext.NewRelationship(s.RootCA, s.Domain, ad.RootCAFor)
+	graphTestContext.NewRelationship(s.EnterpriseCA, s.AuthStore, ad.TrustedForNTAuth)
+	graphTestContext.NewRelationship(s.EnterpriseCA, s.RootCA, ad.EnterpriseCAFor)
+	graphTestContext.NewRelationship(s.CertTemplate, s.EnterpriseCA, ad.PublishedTo)
+	graphTestContext.NewRelationship(s.Group1, s.CertTemplate, ad.Enroll)
+	graphTestContext.NewRelationship(s.Group2, s.EnterpriseCA, ad.Enroll)
+	graphTestContext.NewRelationship(s.Group3, s.EnterpriseCA, ad.Enroll)
+	graphTestContext.NewRelationship(s.Group3, s.CertTemplate, ad.Enroll)
+
+	graphTestContext.NewRelationship(s.User5, s.Group1, ad.MemberOf)
+	graphTestContext.NewRelationship(s.User3, s.Group1, ad.MemberOf)
+	graphTestContext.NewRelationship(s.User1, s.Group1, ad.MemberOf)
+	graphTestContext.NewRelationship(s.User3, s.Group2, ad.MemberOf)
+	graphTestContext.NewRelationship(s.User4, s.Group2, ad.MemberOf)
+	graphTestContext.NewRelationship(s.User2, s.Group3, ad.MemberOf)
+	graphTestContext.NewRelationship(s.User1, s.Group3, ad.MemberOf)
+}
+
 type ShortcutHarness struct {
 	Group1 *graph.Node
 	Group2 *graph.Node
@@ -1166,6 +1218,7 @@ type HarnessDetails struct {
 	RootADHarness                                   RootADHarness
 	SearchHarness                                   SearchHarness
 	ShortcutHarness                                 ShortcutHarness
+	ADCSESC1Harness                                 ADCSESC1Harness
 	NumCollectedActiveDirectoryDomains              int
 	AZInboundControlHarness                         AZInboundControlHarness
 }

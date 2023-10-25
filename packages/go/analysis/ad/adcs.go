@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"github.com/specterops/bloodhound/analysis"
 	"github.com/specterops/bloodhound/analysis/impact"
+	"github.com/specterops/bloodhound/dawgs/cardinality"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/dawgs/ops"
 	"github.com/specterops/bloodhound/dawgs/query"
@@ -37,7 +38,7 @@ var (
 	EkuCertRequestAgent = "1.3.6.1.4.1.311.20.2.1"
 )
 
-func buildEsc1Cache(ctx context.Context, db graph.Database, enterpriseCAs, certTemplates []*graph.Node) (map[graph.ID]graph.NodeSet, error) {
+func BuildEsc1Cache(ctx context.Context, db graph.Database, enterpriseCAs, certTemplates []*graph.Node) (map[graph.ID]graph.NodeSet, error) {
 	cache := map[graph.ID]graph.NodeSet{}
 
 	return cache, db.ReadTransaction(ctx, func(tx graph.Transaction) error {
@@ -71,8 +72,56 @@ func fetchFirstDegreeNodes(tx graph.Transaction, targetNode *graph.Node, relKind
 	))
 }
 
+func PostADCSESC1Domain(tx graph.Transaction, domain *graph.Node, groupExpansions impact.PathAggregator, enrollCache map[graph.ID]graph.NodeSet) (cardinality.Duplex[uint32], error) {
+	results := cardinality.NewBitmap32()
+	if enterpriseCAs, err := ops.AcyclicTraverseTerminals(tx, ops.TraversalPlan{
+		Root:      domain,
+		Direction: graph.DirectionInbound,
+		BranchQuery: func() graph.Criteria {
+			return query.KindIn(query.Relationship(), ad.TrustedForNTAuth, ad.NTAuthStoreFor)
+		},
+		DescentFilter: func(ctx *ops.TraversalContext, segment *graph.PathSegment) bool {
+			depth := segment.Depth()
+			if depth == 1 && !segment.Edge.Kind.Is(ad.NTAuthStoreFor) {
+				return false
+			} else if depth == 2 && !segment.Edge.Kind.Is(ad.TrustedForNTAuth) {
+				return false
+			} else {
+				return true
+			}
+		},
+		PathFilter: func(ctx *ops.TraversalContext, segment *graph.PathSegment) bool {
+			return segment.Node.Kinds.ContainsOneOf(ad.EnterpriseCA)
+		},
+	}); err != nil {
+		return results, err
+	} else {
+		for _, enterpriseCA := range enterpriseCAs {
+			if validPaths, err := FetchEnterpriseCAPathToDomain(tx, enterpriseCA, domain); err != nil {
+				log.Errorf("error fetching paths from enterprise ca %d to domain %d: %w", enterpriseCA.ID, domain.ID, err)
+			} else if validPaths.Len() == 0 {
+				continue
+			} else if publishedCertTemplates, err := FetchCertTemplatesPublishedToCA(tx, enterpriseCA); err != nil {
+				log.Errorf("error fetching cert templates for ECA %d: %w", enterpriseCA.ID, err)
+			} else {
+				for _, certTemplate := range publishedCertTemplates.Slice() {
+					if validationProperties, err := getValidatePublishedCertTemplateForEsc1PropertyValues(certTemplate); err != nil {
+						log.Errorf("error getting published certtemplate validation properties, %w", err)
+						continue
+					} else if !validatePublishedCertTemplateForEsc1(validationProperties) {
+						continue
+					} else {
+						results.Or(CalculateCrossProductNodeSets(enrollCache[enterpriseCA.ID].Slice(), enrollCache[certTemplate.ID].Slice(), groupExpansions))
+					}
+				}
+			}
+		}
+	}
+	return results, nil
+}
+
 func PostADCSESC1(ctx context.Context, db graph.Database, enterpriseCas, certTemplates []*graph.Node, expandedGroups impact.PathAggregator, operation analysis.StatTrackedOperation[analysis.CreatePostRelationshipJob]) error {
-	if enrollCache, err := buildEsc1Cache(ctx, db, enterpriseCas, certTemplates); err != nil {
+	if enrollCache, err := BuildEsc1Cache(ctx, db, enterpriseCas, certTemplates); err != nil {
 		return fmt.Errorf("error building cache for esc1: %w", err)
 	} else if domains, err := FetchNodesByKind(ctx, db, ad.Domain); err != nil {
 		return fmt.Errorf("error getting domains for esc1: %w", err)
@@ -80,55 +129,20 @@ func PostADCSESC1(ctx context.Context, db graph.Database, enterpriseCas, certTem
 		for _, domain := range domains {
 			innerDomain := domain
 			operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
-				if enterpriseCAs, err := ops.AcyclicTraverseTerminals(tx, ops.TraversalPlan{
-					Root:      innerDomain,
-					Direction: graph.DirectionInbound,
-					BranchQuery: func() graph.Criteria {
-						return query.KindIn(query.Relationship(), ad.TrustedForNTAuth, ad.NTAuthStoreFor)
-					},
-					DescentFilter: func(ctx *ops.TraversalContext, segment *graph.PathSegment) bool {
-						depth := segment.Depth()
-						if depth == 1 && !segment.Edge.Kind.Is(ad.NTAuthStoreFor) {
-							return false
-						} else if depth == 2 && !segment.Edge.Kind.Is(ad.TrustedForNTAuth) {
-							return false
-						} else {
-							return true
-						}
-					},
-					PathFilter: func(ctx *ops.TraversalContext, segment *graph.PathSegment) bool {
-						return segment.Node.Kinds.ContainsOneOf(ad.EnterpriseCA)
-					},
-				}); err != nil {
+				if results, err := PostADCSESC1Domain(tx, innerDomain, expandedGroups, enrollCache); err != nil {
 					return err
 				} else {
-					for _, enterpriseCA := range enterpriseCAs {
-						if validPaths, err := FetchEnterpriseCAPathToDomain(tx, enterpriseCA, innerDomain); err != nil {
-							log.Errorf("error fetching paths from enterprise ca %d to domain %d: %w", enterpriseCA.ID, innerDomain.ID, err)
-						} else if validPaths.Len() == 0 {
-							continue
-						} else if publishedCertTemplates, err := FetchCertTemplatesPublishedToCA(tx, enterpriseCA); err != nil {
-							log.Errorf("error fetching cert templates for ECA %d: %w", enterpriseCA.ID, err)
-						} else {
-							for _, certTemplate := range publishedCertTemplates.Slice() {
-								if validationProperties, err := getValidatePublishedCertTemplateForEsc1PropertyValues(certTemplate); err != nil {
-									log.Errorf("error getting published certtemplate validation properties, %w", err)
-									continue
-								} else if !validatePublishedCertTemplateForEsc1(validationProperties) {
-									continue
-								} else {
-									for _, enroller := range CalculateCrossProductNodeSets(enrollCache[enterpriseCA.ID].Slice(), enrollCache[certTemplate.ID].Slice(), expandedGroups).Slice() {
-										outC <- analysis.CreatePostRelationshipJob{
-											FromID: graph.ID(enroller),
-											ToID:   innerDomain.ID,
-											Kind:   ad.ADCSESC1,
-										}
-									}
-								}
-							}
+					results.Each(func(value uint32) (bool, error) {
+						outC <- analysis.CreatePostRelationshipJob{
+							FromID: graph.ID(value),
+							ToID:   innerDomain.ID,
+							Kind:   ad.ADCSESC1,
 						}
-					}
+
+						return true, nil
+					})
 				}
+
 				return nil
 			})
 		}
@@ -379,7 +393,6 @@ func PostADCS(ctx context.Context, db graph.Database, groupExpansions impact.Pat
 	} else if preProcessStats, err := postADCSPreProcess(ctx, db, enterpriseCertAuthorities, rootCertAuthorities); err != nil {
 		return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("failed adcs pre-processing: %w", err)
 	} else {
-
 		operation.Stats.Merge(preProcessStats)
 		if err := PostADCSESC1(ctx, db, enterpriseCertAuthorities, certTemplates, groupExpansions, operation); err != nil {
 			return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("failed post processing for %s: %w", ad.ADCSESC1.String(), err)
