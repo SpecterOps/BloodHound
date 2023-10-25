@@ -94,15 +94,6 @@ func TestCrossProduct(t *testing.T) {
 		groupExpansions, err := ad2.ExpandAllRDPLocalGroups(context.Background(), db)
 		require.Nil(t, err)
 		results := ad2.CalculateCrossProductNodeSets(firstSet, secondSet, groupExpansions)
-		//db.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
-		//	for _, entity := range results {
-		//		result, _ := ops.FetchNode(tx, graph.ID(entity))
-		//		name := result.Properties.Get(common.Name.String()).Any()
-		//		log.Infof("Node Name: %v", name)
-		//	}
-		//
-		//	return nil
-		//})
 		require.True(t, results.Contains(harness.ShortcutHarness.Group3.ID.Uint32()))
 
 		return nil

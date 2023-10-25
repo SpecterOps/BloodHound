@@ -42,7 +42,7 @@ func buildEsc1Cache(ctx context.Context, db graph.Database, enterpriseCAs, certT
 
 	return cache, db.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		for _, ct := range certTemplates {
-			if firstDegreePrincipals, err := fetchFirstDegreeNodes(tx, ct, ad.Enroll, ad.GenericAll, ad.AllExtendedRights, ad.Owns); err != nil {
+			if firstDegreePrincipals, err := fetchFirstDegreeNodes(tx, ct, ad.Enroll, ad.GenericAll, ad.AllExtendedRights); err != nil {
 				log.Errorf("error fetching enrollers for cert template %d: %w", ct.ID, err)
 			} else {
 				cache[ct.ID] = firstDegreePrincipals
