@@ -17,7 +17,6 @@
 package ein
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/specterops/bloodhound/analysis"
@@ -573,9 +572,9 @@ const (
 	PrettyCertMappingKerberosS4UCertificate         = "0x08: Kerberos service-for-user (S4U) certificate"
 	PrettyCertMappingKerberosS4UExplicitCertificate = "0x10: Kerberos service-for-user (S4U) explicit certificate"
 
-	PrettyStrongCertBindingEnforcementDisabled      = "0: Disabled"
-	PrettyStrongCertBindingEnforcementCompatibility = "1: Compatibility mode"
-	PrettyStrongCertBindingEnforcementFull          = "2: Full enforcement mode"
+	PrettyStrongCertBindingEnforcementDisabled      = "Disabled"
+	PrettyStrongCertBindingEnforcementCompatibility = "Compatibility mode"
+	PrettyStrongCertBindingEnforcementFull          = "Full enforcement mode"
 )
 
 func ParseDCRegistryData(computer Computer) IngestibleNode {
@@ -583,8 +582,7 @@ func ParseDCRegistryData(computer Computer) IngestibleNode {
 	propMap := make(map[string]any)
 
 	if computer.DCRegistryData.CertificateMappingMethods.Collected && computer.DCRegistryData.CertificateMappingMethods.Value >= 0 {
-		propMap[ad.CertificateMappingMethodsCollected.String()] = true
-		propMap[ad.CertificateMappingMethodsHex.String()] = fmt.Sprintf("0x%02x", computer.DCRegistryData.CertificateMappingMethods.Value)
+		propMap[ad.CertificateMappingMethodsRaw.String()] = computer.DCRegistryData.CertificateMappingMethods.Value
 
 		var prettyMappings []string
 
@@ -604,20 +602,19 @@ func ParseDCRegistryData(computer Computer) IngestibleNode {
 			prettyMappings = append(prettyMappings, PrettyCertMappingKerberosS4UExplicitCertificate)
 		}
 
-		propMap[ad.CertificateMappingMethodsPretty.String()] = prettyMappings
+		propMap[ad.CertificateMappingMethods.String()] = prettyMappings
 	}
 
-	if computer.DCRegistryData.StrongCertificateBindingEnforcement.Collected {
-		propMap[ad.StrongCertificateBindingEnforcementCollected.String()] = true
-		propMap[ad.StrongCertificateBindingEnforcementInt.String()] = computer.DCRegistryData.StrongCertificateBindingEnforcement.Value
+	if computer.DCRegistryData.StrongCertificateBindingEnforcement.Collected && computer.DCRegistryData.StrongCertificateBindingEnforcement.Value >= 0 {
+		propMap[ad.StrongCertificateBindingEnforcementRaw.String()] = computer.DCRegistryData.StrongCertificateBindingEnforcement.Value
 
 		switch computer.DCRegistryData.StrongCertificateBindingEnforcement.Value {
 		case 0:
-			propMap[ad.StrongCertificateBindingEnforcementPretty.String()] = PrettyStrongCertBindingEnforcementDisabled
+			propMap[ad.StrongCertificateBindingEnforcement.String()] = PrettyStrongCertBindingEnforcementDisabled
 		case 1:
-			propMap[ad.StrongCertificateBindingEnforcementPretty.String()] = PrettyStrongCertBindingEnforcementCompatibility
+			propMap[ad.StrongCertificateBindingEnforcement.String()] = PrettyStrongCertBindingEnforcementCompatibility
 		case 2:
-			propMap[ad.StrongCertificateBindingEnforcementPretty.String()] = PrettyStrongCertBindingEnforcementFull
+			propMap[ad.StrongCertificateBindingEnforcement.String()] = PrettyStrongCertBindingEnforcementFull
 		}
 	}
 

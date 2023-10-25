@@ -307,46 +307,32 @@ SamAccountName: types.#StringEnum & {
 	representation: "samaccountname"
 }
 
-CertificateMappingMethodsCollected: types.#StringEnum & {
-	symbol:         "CertificateMappingMethodsCollected"
+CertificateMappingMethodsRaw: types.#StringEnum & {
+	symbol:         "CertificateMappingMethodsRaw"
 	schema:         "ad"
-	name:           "Certificate Mapping Methods Collected"
-	representation: "certificatemappingmethodscollected"
+	name:           "Certificate Mapping Methods (Raw)"
+	representation: "certificatemappingmethodsraw"
 }
 
-CertificateMappingMethodsHex: types.#StringEnum & {
-	symbol:         "CertificateMappingMethodsHex"
+CertificateMappingMethods: types.#StringEnum & {
+	symbol:         "CertificateMappingMethods"
 	schema:         "ad"
-	name:           "Certificate Mapping Methods Hex"
-	representation: "certificatemappingmethodshex"
+	name:           "Certificate Mapping Methods"
+	representation: "certificatemappingmethods"
 }
 
-CertificateMappingMethodsPretty: types.#StringEnum & {
-	symbol:         "CertificateMappingMethodsPretty"
+StrongCertificateBindingEnforcementRaw: types.#StringEnum & {
+	symbol:         "StrongCertificateBindingEnforcementRaw"
 	schema:         "ad"
-	name:           "Certificate Mapping Methods Pretty"
-	representation: "certificatemappingmethodspretty"
+	name:           "Strong Certificate Binding Enforcement (Raw)"
+	representation: "strongcertificatebindingenforcementraw"
 }
 
-StrongCertificateBindingEnforcementCollected: types.#StringEnum & {
-	symbol:         "StrongCertificateBindingEnforcementCollected"
+StrongCertificateBindingEnforcement: types.#StringEnum & {
+	symbol:         "StrongCertificateBindingEnforcement"
 	schema:         "ad"
-	name:           "Strong Certificate Binding Enforcement Collected"
-	representation: "strongcertificatebindingenforcementcollected"
-}
-
-StrongCertificateBindingEnforcementInt: types.#StringEnum & {
-	symbol:         "StrongCertificateBindingEnforcementInt"
-	schema:         "ad"
-	name:           "Strong Certificate Binding Enforcement Int"
-	representation: "strongcertificatebindingenforcementint"
-}
-
-StrongCertificateBindingEnforcementPretty: types.#StringEnum & {
-	symbol:         "StrongCertificateBindingEnforcementPretty"
-	schema:         "ad"
-	name:           "Strong Certificate Binding Enforcement Pretty"
-	representation: "strongcertificatebindingenforcementpretty"
+	name:           "Strong Certificate Binding Enforcement"
+	representation: "strongcertificatebindingenforcement"
 }
 
 CrossCertificatePair: types.#StringEnum & {
@@ -454,12 +440,10 @@ Properties: [
 	SidFiltering,
 	TrustedToAuth,
 	SamAccountName,
-	CertificateMappingMethodsCollected,
-	CertificateMappingMethodsHex,
-	CertificateMappingMethodsPretty,
-	StrongCertificateBindingEnforcementCollected,
-	StrongCertificateBindingEnforcementInt,
-	StrongCertificateBindingEnforcementPretty,
+	CertificateMappingMethodsRaw,
+	CertificateMappingMethods,
+	StrongCertificateBindingEnforcementRaw,
+	StrongCertificateBindingEnforcement,
 	EKUs,
 	SubjectAltRequireUPN,
 	AuthorizedSignatures,
