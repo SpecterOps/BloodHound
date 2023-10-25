@@ -566,6 +566,8 @@ const (
 
 // Prettified definitions for DCRegistryData
 const (
+	RegValNotExisting                               = "Registry value does not exist"
+
 	PrettyCertMappingManyToOne                      = "0x01: Many-to-one (issuer certificate)"
 	PrettyCertMappingOneToOne                       = "0x02: One-to-one (subject/issuer)"
 	PrettyCertMappingUserPrincipalName              = "0x04: User principal name (UPN/SAN)"
@@ -581,40 +583,50 @@ func ParseDCRegistryData(computer Computer) IngestibleNode {
 	var ()
 	propMap := make(map[string]any)
 
-	if computer.DCRegistryData.CertificateMappingMethods.Collected && computer.DCRegistryData.CertificateMappingMethods.Value >= 0 {
+	if computer.DCRegistryData.CertificateMappingMethods.Collected {
 		propMap[ad.CertificateMappingMethodsRaw.String()] = computer.DCRegistryData.CertificateMappingMethods.Value
 
-		var prettyMappings []string
+		if computer.DCRegistryData.CertificateMappingMethods.Value == -1 {
+			propMap[ad.CertificateMappingMethods.String()] = RegValNotExisting
 
-		if computer.DCRegistryData.CertificateMappingMethods.Value&int(CertificateMappingManytoMany) != 0 {
-			prettyMappings = append(prettyMappings, PrettyCertMappingManyToOne)
-		}
-		if computer.DCRegistryData.CertificateMappingMethods.Value&int(CertificateMappingOneToOne) != 0 {
-			prettyMappings = append(prettyMappings, PrettyCertMappingOneToOne)
-		}
-		if computer.DCRegistryData.CertificateMappingMethods.Value&int(CertificateMappingUserPrincipalName) != 0 {
-			prettyMappings = append(prettyMappings, PrettyCertMappingUserPrincipalName)
-		}
-		if computer.DCRegistryData.CertificateMappingMethods.Value&int(CertificateMappingKerberosS4UCertificate) != 0 {
-			prettyMappings = append(prettyMappings, PrettyCertMappingKerberosS4UCertificate)
-		}
-		if computer.DCRegistryData.CertificateMappingMethods.Value&int(CertificateMappingKerberosS4UExplicitCertificate) != 0 {
-			prettyMappings = append(prettyMappings, PrettyCertMappingKerberosS4UExplicitCertificate)
-		}
+		} else if computer.DCRegistryData.CertificateMappingMethods.Value >= 0 {
+			var prettyMappings []string
 
-		propMap[ad.CertificateMappingMethods.String()] = prettyMappings
+			if computer.DCRegistryData.CertificateMappingMethods.Value&int(CertificateMappingManytoMany) != 0 {
+				prettyMappings = append(prettyMappings, PrettyCertMappingManyToOne)
+			}
+			if computer.DCRegistryData.CertificateMappingMethods.Value&int(CertificateMappingOneToOne) != 0 {
+				prettyMappings = append(prettyMappings, PrettyCertMappingOneToOne)
+			}
+			if computer.DCRegistryData.CertificateMappingMethods.Value&int(CertificateMappingUserPrincipalName) != 0 {
+				prettyMappings = append(prettyMappings, PrettyCertMappingUserPrincipalName)
+			}
+			if computer.DCRegistryData.CertificateMappingMethods.Value&int(CertificateMappingKerberosS4UCertificate) != 0 {
+				prettyMappings = append(prettyMappings, PrettyCertMappingKerberosS4UCertificate)
+			}
+			if computer.DCRegistryData.CertificateMappingMethods.Value&int(CertificateMappingKerberosS4UExplicitCertificate) != 0 {
+				prettyMappings = append(prettyMappings, PrettyCertMappingKerberosS4UExplicitCertificate)
+			}
+
+			propMap[ad.CertificateMappingMethods.String()] = prettyMappings
+		}
 	}
 
-	if computer.DCRegistryData.StrongCertificateBindingEnforcement.Collected && computer.DCRegistryData.StrongCertificateBindingEnforcement.Value >= 0 {
+	if computer.DCRegistryData.StrongCertificateBindingEnforcement.Collected {
 		propMap[ad.StrongCertificateBindingEnforcementRaw.String()] = computer.DCRegistryData.StrongCertificateBindingEnforcement.Value
 
-		switch computer.DCRegistryData.StrongCertificateBindingEnforcement.Value {
-		case 0:
-			propMap[ad.StrongCertificateBindingEnforcement.String()] = PrettyStrongCertBindingEnforcementDisabled
-		case 1:
-			propMap[ad.StrongCertificateBindingEnforcement.String()] = PrettyStrongCertBindingEnforcementCompatibility
-		case 2:
-			propMap[ad.StrongCertificateBindingEnforcement.String()] = PrettyStrongCertBindingEnforcementFull
+		if computer.DCRegistryData.StrongCertificateBindingEnforcement.Value == -1 {
+			propMap[ad.StrongCertificateBindingEnforcement.String()] = RegValNotExisting
+
+		} else if computer.DCRegistryData.StrongCertificateBindingEnforcement.Value >= 0 {
+			switch computer.DCRegistryData.StrongCertificateBindingEnforcement.Value {
+			case 0:
+				propMap[ad.StrongCertificateBindingEnforcement.String()] = PrettyStrongCertBindingEnforcementDisabled
+			case 1:
+				propMap[ad.StrongCertificateBindingEnforcement.String()] = PrettyStrongCertBindingEnforcementCompatibility
+			case 2:
+				propMap[ad.StrongCertificateBindingEnforcement.String()] = PrettyStrongCertBindingEnforcementFull
+			}
 		}
 	}
 
