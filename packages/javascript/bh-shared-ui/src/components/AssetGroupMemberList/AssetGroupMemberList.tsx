@@ -28,7 +28,6 @@ const AssetGroupMemberList: FC<{
     const listAssetGroupMembersQuery = useQuery(
         ["listAssetGroupMembers", assetGroup, filter],
         ({ signal }) => apiClient.listAssetGroupMembers(`${assetGroup?.id}`, filter, { signal }).then(res => res.data.data.members),
-        { enabled: !!assetGroup }
     );
 
     const hoverStyles = {

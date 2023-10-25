@@ -3,7 +3,7 @@ import { FC, HTMLAttributes, ReactNode, SyntheticEvent, useState } from "react";
 import AutocompleteOption from "./AutocompleteOption";
 import { AssetGroupChangelog, AssetGroupChangelogEntry, ChangelogAction } from "./types";
 import { AssetGroup } from "js-client-library";
-import { getKeywordAndTypeValues, useDebouncedValue, useSearch } from "../../hooks";
+import { getEmptyResultsText, getKeywordAndTypeValues, useDebouncedValue, useSearch } from "../../hooks";
 
 const AssetGroupAutocomplete: FC<{
     assetGroup: AssetGroup,
@@ -14,14 +14,27 @@ const AssetGroupAutocomplete: FC<{
     const [searchInput, setSearchInput] = useState('');
     const debouncedInputValue = useDebouncedValue(searchInput, 250);
     const { keyword, type } = getKeywordAndTypeValues(debouncedInputValue);
-    const { data, isLoading, isFetching } = useSearch(keyword, type);
+    const { data, isLoading, isFetching, isError, error } = useSearch(keyword, type);
+
+    const noOptionsText = getEmptyResultsText(
+        isLoading,
+        isFetching,
+        isError,
+        error,
+        debouncedInputValue,
+        type,
+        keyword,
+        data
+    );
 
     const searchResultsWithActions = data?.map(result => {
         const resultInChangelog = changelog.find(member => member.objectid === result.objectid);
         const matchedSelector = assetGroup.Selectors.find(selector => selector.selector === result.objectid);
 
+        console.log(assetGroup.Selectors, result.objectid);
+
         let action = ChangelogAction.ADD;
-        
+
         if (result.system_tags.includes(assetGroup.tag)) {
             action = ChangelogAction.DEFAULT;
         }
@@ -55,6 +68,7 @@ const AssetGroupAutocomplete: FC<{
         }
         return (
             <AutocompleteOption
+                key={option.objectid}
                 props={props}
                 id={option.objectid}
                 type={option.type}
@@ -90,6 +104,7 @@ const AssetGroupAutocomplete: FC<{
             clearOnBlur
             clearOnEscape
             disableCloseOnSelect
+            noOptionsText={noOptionsText}
             forcePopupIcon={false}
         />
     )

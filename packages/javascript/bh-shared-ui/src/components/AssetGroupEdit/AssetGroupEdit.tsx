@@ -8,6 +8,7 @@ import { useMutation, useQuery } from "react-query";
 import { apiClient } from "../../utils";
 import AssetGroupChangelogTable from "./AssetGroupChangelogTable";
 import { ActiveDirectoryNodeKind, ActiveDirectoryNodeKindToDisplay, AzureNodeKind, AzureNodeKindToDisplay } from "../../graphSchema";
+import { useNotifications } from "../..";
 
 const AssetGroupEdit: FC<{
     assetGroup: AssetGroup,
@@ -16,6 +17,7 @@ const AssetGroupEdit: FC<{
     const [changelog, setChangelog] = useState<AssetGroupChangelog>([]);
     const addRows = changelog.filter(entry => entry.action === ChangelogAction.ADD);
     const removeRows = changelog.filter(entry => entry.action === ChangelogAction.REMOVE);
+    const { addNotification } = useNotifications();
 
     const handleUpdateAssetGroupChangelog = (_event: any, changelogEntry: AssetGroupChangelogEntry) => {
         if (changelogEntry.action === ChangelogAction.ADD || changelogEntry.action === ChangelogAction.REMOVE) {
@@ -43,6 +45,12 @@ const AssetGroupEdit: FC<{
         },
         onSuccess: () => {
             setChangelog([]);
+            addNotification('Update successful. Please check back later to view updated Asset Group.', 'AssetGroupUpdateSuccess');
+        },
+        onError: (error) => {
+            console.error(error);
+            setChangelog([]);
+            addNotification('Unknown error, group was not updated', 'AssetGroupUpdateError');
         }
     })
 
@@ -68,21 +76,25 @@ const AssetGroupEdit: FC<{
                 />
             )}
             {Object.values(ActiveDirectoryNodeKind).map(kind => {
-                const filterByKind = { ...filter, primary_kind: `eq:${kind}` }
+                const filterByKind = { ...filter, primary_kind: `eq:${kind}` };
+                const label = ActiveDirectoryNodeKindToDisplay(kind) || "";
                 return (
                     <FilteredMemberCountDisplay
+                        key={label}
                         assetGroupId={assetGroup.id}
-                        label={ActiveDirectoryNodeKindToDisplay(kind) || ""}
+                        label={label}
                         filter={filterByKind}
                     />
                 )
             })}
             {Object.values(AzureNodeKind).map(kind => {
-                const filterByKind = { ...filter, primary_kind: `eq:${kind}` }
+                const filterByKind = { ...filter, primary_kind: `eq:${kind}` };
+                const label = AzureNodeKindToDisplay(kind) || "";
                 return (
                     <FilteredMemberCountDisplay
+                        key={label}
                         assetGroupId={assetGroup.id}
-                        label={AzureNodeKindToDisplay(kind) || ""}
+                        label={label}
                         filter={filterByKind}
                     />
                 )

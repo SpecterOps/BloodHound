@@ -1,4 +1,4 @@
-import { Box, Grid, Paper, Typography, useTheme } from '@mui/material';
+import { Box, Button, Grid, Paper, Typography, useTheme } from '@mui/material';
 import EntityInfoPanel from '../Explore/EntityInfo/EntityInfoPanel';
 import { AssetGroupMemberList, apiClient, DropdownSelector, DropdownOption, AssetGroupEdit } from 'bh-shared-ui';
 import { useQuery } from 'react-query';
@@ -7,9 +7,15 @@ import { useEffect, useState } from 'react';
 import DataSelector from '../QA/DataSelector';
 import { AssetGroup, AssetGroupMember, AssetGroupMemberParams } from 'js-client-library';
 import { GraphNodeTypes } from 'src/ducks/graph/types';
-import { faGem } from '@fortawesome/free-solid-svg-icons';
-import { useSelector } from 'react-redux';
+import { faExternalLink, faGem } from '@fortawesome/free-solid-svg-icons';
+import { useDispatch, useSelector } from 'react-redux';
 import { Domain } from 'src/ducks/global/types';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { setSelectedNode } from 'src/ducks/entityinfo/actions';
+import { useNavigate } from 'react-router-dom';
+import * as routes from 'src/ducks/global/routes';
+import { setSearchValue, startSearchSelected } from 'src/ducks/searchbar/actions';
+import { PRIMARY_SEARCH, SEARCH_TYPE_EXACT } from 'src/ducks/searchbar/types';
 
 type SelectedDomain = {
     id: string | null;
@@ -18,12 +24,14 @@ type SelectedDomain = {
 
 const GroupManagement = () => {
     const theme = useTheme();
+    const dispatch = useDispatch();
+    const navigate = useNavigate();
 
     const domain: Domain = useSelector((state: any) => state.global.options.domain);
 
     const [selectedDomain, setSelectedDomain] = useState<SelectedDomain | null>(null);
     const [selectedAssetGroup, setSelectedAssetGroup] = useState<AssetGroup | null>(null);
-    const [selectedNode, setSelectedNode] = useState<SelectedNode | null>(null);
+    const [highlightedNode, setHighlightedNode] = useState<SelectedNode | null>(null);
     const [filterParams, setFilterParams] = useState<AssetGroupMemberParams>({});
 
     const setInitialGroup = (data: AssetGroup[]) => {
@@ -52,8 +60,8 @@ const GroupManagement = () => {
         setFilterParams(filter);
     }, [selectedDomain, domain, selectedAssetGroup])
 
-    const handleSelectMember = (member: AssetGroupMember) => {
-        setSelectedNode({
+    const handleClickMember = (member: AssetGroupMember) => {
+        setHighlightedNode({
             id: member.object_id,
             type: member.primary_kind as GraphNodeTypes,
             name: member.name
@@ -63,6 +71,21 @@ const GroupManagement = () => {
     const handleAssetGroupSelectorChange = (selectedAssetGroup: DropdownOption) => {
         const selected = listAssetGroups.data?.find(assetGroup => assetGroup.id === selectedAssetGroup.key);
         if (selected) setSelectedAssetGroup(selected);
+    }
+
+    const handleShowNodeInExplore = () => {
+        if (highlightedNode) {
+            const searchNode = {
+                objectid: highlightedNode.id,
+                label: highlightedNode.name,
+                ...highlightedNode,
+            }
+            dispatch(setSearchValue(searchNode, PRIMARY_SEARCH, SEARCH_TYPE_EXACT));
+            dispatch(startSearchSelected(PRIMARY_SEARCH));
+            dispatch(setSelectedNode(highlightedNode));
+
+            navigate(routes.ROUTE_EXPLORE);
+        }
     }
     
     return (
@@ -102,11 +125,23 @@ const GroupManagement = () => {
                     <AssetGroupMemberList 
                         assetGroup={selectedAssetGroup}
                         filter={filterParams}
-                        onSelectMember={handleSelectMember}
+                        onSelectMember={handleClickMember}
                     />
                 </Grid>
-                <Grid item xs={4} md={3}>
-                    <EntityInfoPanel selectedNode={selectedNode} />
+                <Grid item xs={4} md={3} height={"100%"}>
+                    <EntityInfoPanel selectedNode={highlightedNode} />
+                    {highlightedNode && (
+                        <Button
+                            variant="contained"
+                            disableElevation
+                            fullWidth
+                            sx={{ borderRadius: '4px', marginTop: '8px' }}
+                            onClick={handleShowNodeInExplore}
+                            startIcon={<FontAwesomeIcon icon={faExternalLink} />}
+                        >
+                            Open in Explore
+                        </Button>
+                    )}
                 </Grid>
             </Grid>
         </Box>
