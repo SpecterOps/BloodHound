@@ -1101,7 +1101,7 @@ func (s *ShortcutHarness) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.NewRelationship(s.Group4, s.Group1, ad.MemberOf)
 	graphTestContext.NewRelationship(s.Group3, s.Group2, ad.MemberOf)
 	graphTestContext.NewRelationship(s.Group3, s.Group1, ad.MemberOf)
-	//graphTestContext.NewRelationship(s.User1, s.Group4, ad.MemberOf)
+	graphTestContext.NewRelationship(s.User1, s.Group4, ad.MemberOf)
 	graphTestContext.NewRelationship(s.User1, s.Group3, ad.MemberOf)
 }
 

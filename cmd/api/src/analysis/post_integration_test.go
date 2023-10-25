@@ -22,9 +22,6 @@ package analysis_test
 import (
 	"context"
 	ad2 "github.com/specterops/bloodhound/analysis/ad"
-	"github.com/specterops/bloodhound/dawgs/ops"
-	"github.com/specterops/bloodhound/graphschema/common"
-	"github.com/specterops/bloodhound/log"
 	"testing"
 
 	"github.com/specterops/bloodhound/analysis"
@@ -96,16 +93,17 @@ func TestCrossProduct(t *testing.T) {
 		secondSet := []*graph.Node{testContext.Harness.ShortcutHarness.Group2}
 		groupExpansions, err := ad2.ExpandAllRDPLocalGroups(context.Background(), db)
 		require.Nil(t, err)
-		results := ad2.CalculateCrossProductNodeSets(firstSet, secondSet, groupExpansions).Slice()
-		db.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
-			for _, entity := range results {
-				result, _ := ops.FetchNode(tx, graph.ID(entity))
-				name := result.Properties.Get(common.Name.String()).Any()
-				log.Infof("Node Name: %v", name)
-			}
-
-			return nil
-		})
+		results := ad2.CalculateCrossProductNodeSets(firstSet, secondSet, groupExpansions)
+		//db.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
+		//	for _, entity := range results {
+		//		result, _ := ops.FetchNode(tx, graph.ID(entity))
+		//		name := result.Properties.Get(common.Name.String()).Any()
+		//		log.Infof("Node Name: %v", name)
+		//	}
+		//
+		//	return nil
+		//})
+		require.True(t, results.Contains(harness.ShortcutHarness.Group3.ID.Uint32()))
 
 		return nil
 	})
