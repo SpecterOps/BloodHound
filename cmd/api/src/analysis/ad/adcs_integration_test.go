@@ -76,6 +76,17 @@ func TestADCSESC1(t *testing.T) {
 		require.True(t, results.Cardinality() == 1)
 		require.True(t, results.Contains(harness.ADCSESC1Harness.Group32.ID.Uint32()))
 
+		err = db.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
+			innerResults, err := ad2.PostADCSESC1Domain(tx, harness.ADCSESC1Harness.Domain4, groupExpansions, enrollCache)
+			results = innerResults
+			return err
+		})
+
+		require.Nil(t, err)
+		require.True(t, results.Cardinality() == 2)
+		require.True(t, results.Contains(harness.ADCSESC1Harness.Group42.ID.Uint32()))
+		require.True(t, results.Contains(harness.ADCSESC1Harness.Group43.ID.Uint32()))
+
 		return nil
 	})
 }

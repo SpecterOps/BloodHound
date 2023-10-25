@@ -1117,6 +1117,23 @@ type ADCSESC1Harness struct {
 	CertTemplate3  *graph.Node
 	Group31        *graph.Node
 	Group32        *graph.Node
+
+	Domain4        *graph.Node
+	AuthStore4     *graph.Node
+	RootCA4        *graph.Node
+	Group41        *graph.Node
+	Group42        *graph.Node
+	Group43        *graph.Node
+	Group44        *graph.Node
+	Group45        *graph.Node
+	Group46        *graph.Node
+	EnterpriseCA4  *graph.Node
+	CertTemplate41 *graph.Node
+	CertTemplate42 *graph.Node
+	CertTemplate43 *graph.Node
+	CertTemplate44 *graph.Node
+	CertTemplate45 *graph.Node
+	CertTemplate46 *graph.Node
 }
 
 func (s *ADCSESC1Harness) Setup(gt *GraphTestContext) {
@@ -1196,6 +1213,48 @@ func (s *ADCSESC1Harness) Setup(gt *GraphTestContext) {
 	gt.NewRelationship(s.Group31, s.CertTemplate3, ad.Enroll)
 	gt.NewRelationship(s.Group32, s.CertTemplate3, ad.Enroll)
 	gt.NewRelationship(s.Group32, s.EnterpriseCA31, ad.Enroll)
+
+	sid := RandomDomainSID()
+	s.Domain4 = gt.NewActiveDirectoryDomain("domain 4", sid, false, true)
+	s.AuthStore4 = gt.NewActiveDirectoryNTAuthStore("authstore 4", sid)
+	s.RootCA4 = gt.NewActiveDirectoryRootCA("rca4", sid)
+	s.EnterpriseCA4 = gt.NewActiveDirectoryEnterpriseCA("eca4", sid)
+	s.Group41 = gt.NewActiveDirectoryGroup("group4-1", sid)
+	s.Group42 = gt.NewActiveDirectoryGroup("group4-2", sid)
+	s.Group43 = gt.NewActiveDirectoryGroup("group4-3", sid)
+	s.Group44 = gt.NewActiveDirectoryGroup("group4-4", sid)
+	s.Group45 = gt.NewActiveDirectoryGroup("group4-5", sid)
+	s.Group46 = gt.NewActiveDirectoryGroup("group4-6", sid)
+	s.CertTemplate41 = gt.NewActiveDirectoryCertTemplate("certtemplate 4-1", sid, false, true, true, 2, 1)
+	s.CertTemplate42 = gt.NewActiveDirectoryCertTemplate("certtemplate 4-2", sid, false, true, true, 2, 0)
+	s.CertTemplate43 = gt.NewActiveDirectoryCertTemplate("certtemplate 4-3", sid, false, true, true, 1, 0)
+	s.CertTemplate44 = gt.NewActiveDirectoryCertTemplate("certtemplate 4-4", sid, true, true, true, 1, 0)
+	s.CertTemplate45 = gt.NewActiveDirectoryCertTemplate("certtemplate 4-5", sid, false, false, true, 1, 0)
+	s.CertTemplate46 = gt.NewActiveDirectoryCertTemplate("certtemplate 4-6", sid, false, true, false, 1, 0)
+
+	gt.NewRelationship(s.AuthStore4, s.Domain4, ad.NTAuthStoreFor)
+	gt.NewRelationship(s.RootCA4, s.Domain4, ad.RootCAFor)
+	gt.NewRelationship(s.EnterpriseCA4, s.AuthStore4, ad.TrustedForNTAuth)
+	gt.NewRelationship(s.EnterpriseCA4, s.RootCA4, ad.EnterpriseCAFor)
+	gt.NewRelationship(s.Group41, s.EnterpriseCA4, ad.Enroll)
+	gt.NewRelationship(s.Group41, s.CertTemplate41, ad.Enroll)
+	gt.NewRelationship(s.Group42, s.EnterpriseCA4, ad.Enroll)
+	gt.NewRelationship(s.Group42, s.CertTemplate42, ad.Enroll)
+	gt.NewRelationship(s.Group43, s.EnterpriseCA4, ad.Enroll)
+	gt.NewRelationship(s.Group43, s.CertTemplate43, ad.Enroll)
+	gt.NewRelationship(s.Group44, s.EnterpriseCA4, ad.Enroll)
+	gt.NewRelationship(s.Group44, s.CertTemplate44, ad.Enroll)
+	gt.NewRelationship(s.Group45, s.EnterpriseCA4, ad.Enroll)
+	gt.NewRelationship(s.Group45, s.CertTemplate45, ad.Enroll)
+	gt.NewRelationship(s.Group46, s.EnterpriseCA4, ad.Enroll)
+	gt.NewRelationship(s.Group46, s.CertTemplate46, ad.Enroll)
+	gt.NewRelationship(s.CertTemplate41, s.EnterpriseCA4, ad.PublishedTo)
+	gt.NewRelationship(s.CertTemplate42, s.EnterpriseCA4, ad.PublishedTo)
+	gt.NewRelationship(s.CertTemplate43, s.EnterpriseCA4, ad.PublishedTo)
+	gt.NewRelationship(s.CertTemplate44, s.EnterpriseCA4, ad.PublishedTo)
+	gt.NewRelationship(s.CertTemplate45, s.EnterpriseCA4, ad.PublishedTo)
+	gt.NewRelationship(s.CertTemplate46, s.EnterpriseCA4, ad.PublishedTo)
+
 }
 
 type ShortcutHarness struct {
