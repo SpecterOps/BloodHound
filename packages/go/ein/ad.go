@@ -585,13 +585,11 @@ func ParseDCRegistryData(computer Computer) IngestibleNode {
 
 	if computer.DCRegistryData.CertificateMappingMethods.Collected {
 		propMap[ad.CertificateMappingMethodsRaw.String()] = computer.DCRegistryData.CertificateMappingMethods.Value
+		var prettyMappings []string
 
 		if computer.DCRegistryData.CertificateMappingMethods.Value == -1 {
-			propMap[ad.CertificateMappingMethods.String()] = RegValNotExisting
-
-		} else if computer.DCRegistryData.CertificateMappingMethods.Value >= 0 {
-			var prettyMappings []string
-
+			prettyMappings = append(prettyMappings, RegValNotExisting)
+		} else {
 			if computer.DCRegistryData.CertificateMappingMethods.Value&int(CertificateMappingManytoMany) != 0 {
 				prettyMappings = append(prettyMappings, PrettyCertMappingManyToOne)
 			}
@@ -607,26 +605,23 @@ func ParseDCRegistryData(computer Computer) IngestibleNode {
 			if computer.DCRegistryData.CertificateMappingMethods.Value&int(CertificateMappingKerberosS4UExplicitCertificate) != 0 {
 				prettyMappings = append(prettyMappings, PrettyCertMappingKerberosS4UExplicitCertificate)
 			}
-
-			propMap[ad.CertificateMappingMethods.String()] = prettyMappings
 		}
+
+		propMap[ad.CertificateMappingMethods.String()] = prettyMappings		
 	}
 
 	if computer.DCRegistryData.StrongCertificateBindingEnforcement.Collected {
 		propMap[ad.StrongCertificateBindingEnforcementRaw.String()] = computer.DCRegistryData.StrongCertificateBindingEnforcement.Value
 
-		if computer.DCRegistryData.StrongCertificateBindingEnforcement.Value == -1 {
-			propMap[ad.StrongCertificateBindingEnforcement.String()] = RegValNotExisting
-
-		} else if computer.DCRegistryData.StrongCertificateBindingEnforcement.Value >= 0 {
-			switch computer.DCRegistryData.StrongCertificateBindingEnforcement.Value {
+		switch computer.DCRegistryData.StrongCertificateBindingEnforcement.Value {
+		    case -1:
+				propMap[ad.StrongCertificateBindingEnforcement.String()] = RegValNotExisting
 			case 0:
 				propMap[ad.StrongCertificateBindingEnforcement.String()] = PrettyStrongCertBindingEnforcementDisabled
 			case 1:
 				propMap[ad.StrongCertificateBindingEnforcement.String()] = PrettyStrongCertBindingEnforcementCompatibility
 			case 2:
 				propMap[ad.StrongCertificateBindingEnforcement.String()] = PrettyStrongCertBindingEnforcementFull
-			}
 		}
 	}
 
