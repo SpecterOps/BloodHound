@@ -15,13 +15,13 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { act, render, screen } from 'src/test-utils';
-import CypherInput from './CypherInput';
+import CypherSearch from './CypherSearch';
 import userEvent from '@testing-library/user-event';
 
-describe('CypherInput', () => {
+describe('CypherSearch', () => {
     beforeEach(async () => {
         await act(async () => {
-            render(<CypherInput />);
+            render(<CypherSearch />);
         });
     });
     const user = userEvent.setup();
@@ -29,7 +29,7 @@ describe('CypherInput', () => {
     it('should render', () => {
         expect(screen.getByText(/cypher search/i)).toBeInTheDocument();
 
-        expect(screen.getByRole('button', { name: /question/i })).toBeInTheDocument();
+        expect(screen.getByRole('link', { name: /help/i })).toBeInTheDocument();
         expect(screen.getByRole('button', { name: /search/i })).toBeInTheDocument();
     });
 
@@ -37,7 +37,7 @@ describe('CypherInput', () => {
         const prebuiltSearches = screen.getByText(/pre-built searches/i);
         expect(prebuiltSearches).not.toBeVisible();
 
-        const menu = screen.getByRole('button', { name: /folder-open/i });
+        const menu = screen.getByRole('button', { name: /show\/hide saved queries/i });
 
         await user.click(menu);
         expect(prebuiltSearches).toBeVisible();

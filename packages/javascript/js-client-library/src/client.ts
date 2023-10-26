@@ -16,7 +16,14 @@
 
 import axios, { AxiosInstance } from 'axios';
 import * as types from './types';
-import { BasicResponse, CreateAuthTokenResponse, ListAuthTokensResponse, PostureResponse } from './responses';
+import {
+    BasicResponse,
+    CreateAuthTokenResponse,
+    ListAuthTokensResponse,
+    PaginatedResponse,
+    PostureResponse,
+    SavedQuery,
+} from './responses';
 
 class BHEAPIClient {
     baseClient: AxiosInstance;
@@ -55,6 +62,28 @@ class BHEAPIClient {
 
     cypherSearch = (query: string, includeProperties?: boolean, options?: types.RequestOptions) => {
         return this.baseClient.post('/api/v2/graphs/cypher', { query, include_properties: includeProperties }, options);
+    };
+
+    getUserSavedQueries = (options?: types.RequestOptions) => {
+        return this.baseClient.get<PaginatedResponse<SavedQuery[]>>(
+            '/api/v2/saved-queries',
+            Object.assign(
+                {
+                    params: {
+                        sort_by: 'name',
+                    },
+                },
+                options
+            )
+        );
+    };
+
+    createUserQuery = (payload: types.CreateUserQueryRequest, options?: types.RequestOptions) => {
+        return this.baseClient.post<BasicResponse<SavedQuery>>('/api/v2/saved-queries', payload, options);
+    };
+
+    deleteUserQuery = (queryId: number, options?: types.RequestOptions) => {
+        return this.baseClient.delete(`/api/v2/saved-queries/${queryId}`, options);
     };
 
     getAvailableDomains = (options?: types.RequestOptions) => this.baseClient.get('/api/v2/available-domains', options);

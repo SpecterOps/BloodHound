@@ -221,6 +221,10 @@ type AssetGroupSelectorSpec struct {
 const (
 	SelectorSpecActionAdd    = "add"
 	SelectorSpecActionRemove = "remove"
+	TierZeroAssetGroupName   = "Admin Tier Zero"
+	TierZeroAssetGroupTag    = "admin_tier_0"
+	OwnedAssetGroupName      = "Owned"
+	OwnedAssetGroupTag       = "owned"
 )
 
 func (s AssetGroupSelectorSpec) Validate() error {

@@ -18,6 +18,11 @@ package v2_test
 
 import (
 	"fmt"
+	"net/http"
+	"net/http/httptest"
+	"net/url"
+	"testing"
+
 	uuid2 "github.com/gofrs/uuid"
 	"github.com/gorilla/mux"
 	"github.com/specterops/bloodhound/headers"
@@ -32,10 +37,6 @@ import (
 	"github.com/specterops/bloodhound/src/test/must"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
-	"net/http"
-	"net/http/httptest"
-	"net/url"
-	"testing"
 )
 
 func TestResources_ListSavedQueries_SortingError(t *testing.T) {
