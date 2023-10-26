@@ -14,12 +14,12 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import LoginForm from 'src/components/LoginForm';
 import LoginViaSAMLForm from 'src/components/LoginViaSAMLForm';
 import LoginPage from 'src/components/LoginPage';
-import { useQuery } from 'react-query';
+import { useQuery, useQueryClient } from 'react-query';
 import { apiClient } from 'bh-shared-ui';
 import { Box, CircularProgress } from '@mui/material';
 import { OneTimePasscodeForm } from 'bh-shared-ui';
@@ -32,6 +32,8 @@ const Login: React.FC = () => {
     /* Hooks */
     const dispatch = useAppDispatch();
 
+    const queryClient = useQueryClient();
+
     const authState = useSelector((state: AppState) => state.auth);
 
     const [useSAML, setUseSAML] = useState(false);
@@ -39,6 +41,11 @@ const Login: React.FC = () => {
     const [lastUsername, setLastUsername] = useState('');
 
     const [lastPassword, setLastPassword] = useState('');
+
+    // clear the react-query query cache between authenticated sessions
+    useEffect(() => {
+        queryClient.clear();
+    }, [queryClient]);
 
     const listSAMLSignOnEndpointsQuery = useQuery(['listSAMLSignOnEndpoints'], ({ signal }) =>
         apiClient.listSAMLSignOnEndpoints({ signal }).then((res) => res.data.data.endpoints)

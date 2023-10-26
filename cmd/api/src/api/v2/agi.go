@@ -258,8 +258,10 @@ func (s Resources) UpdateAssetGroupSelectors(response http.ResponseWriter, reque
 		if result, err := s.DB.UpdateAssetGroupSelectors(*ctx.FromRequest(request), assetGroup, selectorSpecs, false); err != nil {
 			api.HandleDatabaseError(request, response, err)
 		} else {
-			// When asset group selectors are modified we must trigger analysis
-			s.TaskNotifier.RequestAnalysis()
+			// When T0 asset group selectors are modified we must trigger analysis
+			if assetGroup.Tag == model.TierZeroAssetGroupTag {
+				s.TaskNotifier.RequestAnalysis()
+			}
 
 			api.WriteBasicResponse(request.Context(), result, http.StatusOK, response)
 		}
