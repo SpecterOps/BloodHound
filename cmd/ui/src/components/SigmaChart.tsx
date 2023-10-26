@@ -18,7 +18,7 @@ import { SigmaContainer } from '@react-sigma/core';
 import '@react-sigma/core/lib/react-sigma.min.css';
 import Graph, { MultiDirectedGraph } from 'graphology';
 import { AbstractGraph, Attributes } from 'graphology-types';
-import { FC } from 'react';
+import { FC, useEffect, useState } from 'react';
 import GraphButtons from 'src/components/GraphButtons';
 import { GraphButtonOptions } from 'src/components/GraphButtons/GraphButtons';
 import { GraphEvents } from 'src/components/GraphEvents';
@@ -35,6 +35,7 @@ import GraphEdgeEvents from './GraphEdgeEvents';
 import { Box, Menu, MenuItem } from '@mui/material';
 import { GraphNodes } from 'js-client-library';
 import { GraphButtonProps, SearchCurrentNodes } from 'bh-shared-ui';
+import { SigmaNodeEventPayload } from 'sigma/sigma';
 
 interface SigmaChartProps {
     rankDirection: RankDirection;
@@ -49,6 +50,8 @@ interface SigmaChartProps {
     onClickEdge: (id: string, relatedFindingType?: string | null) => void;
     onClickStage: () => void;
     edgeReducer: (edge: string, data: Attributes, graph: AbstractGraph) => Attributes;
+    anchorPosition: any;
+    onRightClickNode: (event: SigmaNodeEventPayload) => void;
 }
 
 const SigmaChart: FC<Partial<SigmaChartProps>> = ({
@@ -64,62 +67,98 @@ const SigmaChart: FC<Partial<SigmaChartProps>> = ({
     onClickEdge,
     onClickStage,
     edgeReducer,
+    // todo: move these from props --> local state
+    anchorPosition,
+    onRightClickNode,
 }) => {
     return (
-        <SigmaContainer
-            id='sigma-container'
-            style={{
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                height: '100%',
-                width: '100%',
-                background: 'linear-gradient(rgb(228, 233, 235) 0%, rgb(228, 233, 235) 100%)',
-            }}
-            graph={graph || MultiDirectedGraph}
-            settings={{
-                nodeProgramClasses: {
-                    combined: getNodeCombinedProgram(),
-                    glyphs: getNodeGlyphsProgram(),
-                },
-                edgeProgramClasses: { curved: CurvedEdgeArrowProgram, arrow: EdgeArrowProgram },
-                renderEdgeLabels: true,
-                hoverRenderer: drawHover,
-                edgeLabelRenderer: drawEdgeLabel,
-                edgeLabelSize: 12,
-                labelSize: 12,
-                labelFont: 'Roboto',
-                labelRenderer: drawLabel,
-                maxCameraRatio: MAX_CAMERA_RATIO,
-                minCameraRatio: MIN_CAMERA_RATIO,
-            }}>
-            <GraphEdgeEvents />
-            <GraphEvents
-                onDoubleClickNode={onDoubleClickNode}
-                onClickNode={onClickNode}
-                onClickEdge={onClickEdge}
-                onClickStage={onClickStage}
-                edgeReducer={edgeReducer}
-            />
-            <Box position={'absolute'} bottom={16}>
-                {isCurrentSearchOpen && (
-                    <SearchCurrentNodes
-                        sx={{ marginLeft: 2, padding: 1 }}
-                        currentNodes={currentNodes || {}}
-                        onSelect={(node) => {
-                            onClickNode?.(node.id);
-                            toggleCurrentSearch?.();
-                        }}
-                        onClose={toggleCurrentSearch}
-                    />
-                )}
-                <GraphButtons rankDirection={rankDirection} options={options} nonLayoutButtons={nonLayoutButtons} />
-            </Box>
-            {/* <Menu open>
-                <MenuItem>One</MenuItem>
-            </Menu> */}
-        </SigmaContainer>
+        <div
+            // prevent browser's default right-click behavior
+            onContextMenu={(e) => e.preventDefault()}>
+            <SigmaContainer
+                id='sigma-container'
+                style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    height: '100%',
+                    width: '100%',
+                    background: 'linear-gradient(rgb(228, 233, 235) 0%, rgb(228, 233, 235) 100%)',
+                }}
+                graph={graph || MultiDirectedGraph}
+                settings={{
+                    nodeProgramClasses: {
+                        combined: getNodeCombinedProgram(),
+                        glyphs: getNodeGlyphsProgram(),
+                    },
+                    edgeProgramClasses: { curved: CurvedEdgeArrowProgram, arrow: EdgeArrowProgram },
+                    renderEdgeLabels: true,
+                    hoverRenderer: drawHover,
+                    edgeLabelRenderer: drawEdgeLabel,
+                    edgeLabelSize: 12,
+                    labelSize: 12,
+                    labelFont: 'Roboto',
+                    labelRenderer: drawLabel,
+                    maxCameraRatio: MAX_CAMERA_RATIO,
+                    minCameraRatio: MIN_CAMERA_RATIO,
+                }}>
+                <GraphEdgeEvents />
+                <GraphEvents
+                    onDoubleClickNode={onDoubleClickNode}
+                    onClickNode={onClickNode}
+                    onClickEdge={onClickEdge}
+                    onClickStage={onClickStage}
+                    edgeReducer={edgeReducer}
+                    onRightClickNode={onRightClickNode}
+                />
+                <Box position={'absolute'} bottom={16}>
+                    {isCurrentSearchOpen && (
+                        <SearchCurrentNodes
+                            sx={{ marginLeft: 2, padding: 1 }}
+                            currentNodes={currentNodes || {}}
+                            onSelect={(node) => {
+                                onClickNode?.(node.id);
+                                toggleCurrentSearch?.();
+                            }}
+                            onClose={toggleCurrentSearch}
+                        />
+                    )}
+                    <GraphButtons rankDirection={rankDirection} options={options} nonLayoutButtons={nonLayoutButtons} />
+                </Box>
+                <ContextMenu anchorPosition={anchorPosition} />
+            </SigmaContainer>
+        </div>
     );
 };
 
+const ContextMenu: FC<{ anchorPosition: { x: number; y: number } }> = ({ anchorPosition }) => {
+    const [open, setOpen] = useState(false);
+
+    useEffect(() => {
+        if (anchorPosition) {
+            setOpen(true);
+        } else {
+            setOpen(false);
+        }
+    }, [anchorPosition]);
+
+    const handleClick = () => {
+        setOpen(false);
+    };
+
+    const handleSetStartingNode = () => {
+        // close the menu
+        // dispatch to redux
+    };
+
+    return (
+        <Menu
+            open={open}
+            anchorPosition={{ left: anchorPosition?.x || 0, top: anchorPosition?.y || 0 }}
+            anchorReference='anchorPosition'
+            onClick={handleClick}>
+            <MenuItem>One</MenuItem>
+        </Menu>
+    );
+};
 export default SigmaChart;
