@@ -17,13 +17,13 @@
 package ein
 
 import (
-	"slices"
 	"strings"
 
 	"github.com/specterops/bloodhound/analysis"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/log"
+	"github.com/specterops/bloodhound/slices"
 )
 
 var unenforcedDomainProperties = make(map[string]map[string]any) // key: objectid, value: {propertyKey: propertyValue}
@@ -324,10 +324,18 @@ func ParseDomainMiscData(domains []Domain) []IngestibleNode {
 			if val, err := linkTypes[index].LDAPSigning["RequiresLDAPClientSigning"]; err != false {
 				domainProperties[linkType]["requiresLDAPClientSigning"] = val
 			}
+			if val, err := linkTypes[index].LDAPSigning["LDAPEnforceChannelBinding"]; err != false {
+				domainProperties[linkType]["LDAPEnforceChannelBinding"] = val
+			}
 
 			// LM authentication level
 			if val, err := linkTypes[index].LMAuthenticationLevel["LmCompatibilityLevel"]; err != false {
 				domainProperties[linkType]["lmCompatibilityLevel"] = val
+			}
+
+			// MSCache
+			if val, err := linkTypes[index].MSCache["CachedLogonsCount"]; err != false {
+				domainProperties[linkType]["cachedLogonsCount"] = val
 			}
 		}
 
@@ -440,10 +448,18 @@ func ParseOUMiscData(ous []OU) []IngestibleNode {
 			if val, err := linkTypes[index].LDAPSigning["RequiresLDAPClientSigning"]; err != false {
 				ouProperties[linkType]["requiresLDAPClientSigning"] = val
 			}
+			if val, err := linkTypes[index].LDAPSigning["LDAPEnforceChannelBinding"]; err != false {
+				ouProperties[linkType]["LDAPEnforceChannelBinding"] = val
+			}
 
 			// LM authentication level
 			if val, err := linkTypes[index].LMAuthenticationLevel["LmCompatibilityLevel"]; err != false {
 				ouProperties[linkType]["lmCompatibilityLevel"] = val
+			}
+
+			// MSCache
+			if val, err := linkTypes[index].MSCache["CachedLogonsCount"]; err != false {
+				ouProperties[linkType]["cachedLogonsCount"] = val
 			}
 		}
 

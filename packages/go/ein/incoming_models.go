@@ -181,6 +181,7 @@ type LinkType struct {
 	SMBSigning            map[string]bool
 	LDAPSigning           map[string]bool
 	LMAuthenticationLevel map[string]int
+	MSCache               map[string]int
 }
 
 type GPOResult struct {
