@@ -157,7 +157,7 @@ const ContextMenu: FC<{ anchorPosition: { x: number; y: number } }> = ({ anchorP
             anchorPosition={{ left: anchorPosition?.x || 0, top: anchorPosition?.y || 0 }}
             anchorReference='anchorPosition'
             onClick={handleClick}>
-            <MenuItem>One</MenuItem>
+            <MenuItem>Set as starting node</MenuItem>
         </Menu>
     );
 };
