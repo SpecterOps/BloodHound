@@ -16,10 +16,9 @@
 
 import { useDispatch, useSelector } from 'react-redux';
 import ExploreSearchCombobox from '../ExploreSearchCombobox';
-import { useEffect, useState } from 'react';
 import { AppState } from 'src/store';
 import { PRIMARY_SEARCH, SEARCH_TYPE_EXACT, SECONDARY_SEARCH, SearchNodeType } from 'src/ducks/searchbar/types';
-import { setSearchValue, startSearchSelected } from 'src/ducks/searchbar/actions';
+import { setSearchValue, startSearchAction, startSearchSelected } from 'src/ducks/searchbar/actions';
 
 interface NodeSearchProps {
     labelText: string;
@@ -29,38 +28,22 @@ interface NodeSearchProps {
 const NodeSearch = ({ searchType, labelText }: NodeSearchProps) => {
     const dispatch = useDispatch();
 
-    const [inputValue, setInputValue] = useState('');
-    const [selectedItem, setSelectedItem] = useState<SearchNodeType | null>(null);
-
     const searchState = useSelector((state: AppState) => state.search[searchType]);
 
-    useEffect(() => {
-        if (searchState.value) {
-            setInputValue(searchState.value!.name);
-            setSelectedItem(searchState.value);
-        }
-    }, [searchState]);
-
-    useEffect(() => {
-        if (selectedItem) {
-            dispatch(setSearchValue(selectedItem, searchType, SEARCH_TYPE_EXACT));
-            dispatch(startSearchSelected(searchType));
-        }
-    }, [selectedItem, searchType, dispatch]);
-
     const handleInputValueChange = ({ inputValue }: any) => {
-        setInputValue(inputValue || '');
+        dispatch(startSearchAction(inputValue, searchType));
     };
 
-    const handleSelectedItemChange = ({ selectedItem }: any) => {
-        setSelectedItem(selectedItem);
+    const handleSelectedItemChange = ({ selectedItem }: { selectedItem: SearchNodeType }) => {
+        dispatch(setSearchValue(selectedItem, searchType, SEARCH_TYPE_EXACT));
+        dispatch(startSearchSelected(searchType));
     };
 
     return (
         <ExploreSearchCombobox
-            inputValue={inputValue}
+            inputValue={searchState.searchTerm}
             onInputValueChange={handleInputValueChange}
-            selectedItem={selectedItem}
+            selectedItem={searchState.value}
             onSelectedItemChange={handleSelectedItemChange}
             labelText={labelText}
         />
