@@ -377,6 +377,27 @@ SchemaVersion: types.#StringEnum & {
 	representation: "schemaversion"
 }
 
+RequiresManagerApproval: types.#StringEnum & {
+	symbol: "RequiresManagerApproval"
+	schema: "ad"
+	name: "Requires Manager Approval"
+	representation: "requiresmanagerapproval"
+}
+
+AuthenticationEnabled: types.#StringEnum & {
+	symbol: "AuthenticationEnabled"
+	schema: "ad"
+	name: "Authentication Enabled"
+	representation: "authenticationenabled"
+}
+
+EnrolleeSuppliesSubject: types.#StringEnum & {
+	symbol: "EnrolleeSuppliesSubject"
+	schema: "ad"
+	name: "Enrollee Suppliess Subject"
+	representation: "enrolleesuppliessubject"
+}
+
 Properties: [
 	AdminCount,
 	CASecurityCollected,
@@ -427,7 +448,10 @@ Properties: [
 	SubjectAltRequireUPN,
 	AuthorizedSignatures,
 	ApplicationPolicies,
-	SchemaVersion
+	SchemaVersion,
+	RequiresManagerApproval,
+	AuthenticationEnabled,
+	EnrolleeSuppliesSubject
 ]
 
 // Kinds

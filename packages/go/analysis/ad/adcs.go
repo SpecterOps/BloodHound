@@ -20,8 +20,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
-
 	"github.com/specterops/bloodhound/analysis"
+	"github.com/specterops/bloodhound/analysis/impact"
+	"github.com/specterops/bloodhound/dawgs/cardinality"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/dawgs/ops"
 	"github.com/specterops/bloodhound/dawgs/query"
@@ -36,6 +37,165 @@ var (
 	EkuAnyPurpose       = "2.5.29.37.0"
 	EkuCertRequestAgent = "1.3.6.1.4.1.311.20.2.1"
 )
+
+func BuildEsc1Cache(ctx context.Context, db graph.Database, enterpriseCAs, certTemplates []*graph.Node) (map[graph.ID]graph.NodeSet, error) {
+	cache := map[graph.ID]graph.NodeSet{}
+
+	return cache, db.ReadTransaction(ctx, func(tx graph.Transaction) error {
+		for _, ct := range certTemplates {
+			if firstDegreePrincipals, err := fetchFirstDegreeNodes(tx, ct, ad.Enroll, ad.GenericAll, ad.AllExtendedRights); err != nil {
+				log.Errorf("error fetching enrollers for cert template %d: %w", ct.ID, err)
+			} else {
+				cache[ct.ID] = firstDegreePrincipals
+			}
+		}
+
+		for _, eca := range enterpriseCAs {
+			if firstDegreeEnrollers, err := fetchFirstDegreeNodes(tx, eca, ad.Enroll); err != nil {
+				log.Errorf("error fetching enrollers for enterprise ca %d: %w", eca.ID, err)
+			} else {
+				cache[eca.ID] = firstDegreeEnrollers
+			}
+		}
+
+		return nil
+	})
+}
+
+func fetchFirstDegreeNodes(tx graph.Transaction, targetNode *graph.Node, relKinds ...graph.Kind) (graph.NodeSet, error) {
+	return ops.FetchStartNodes(tx.Relationships().Filter(
+		query.And(
+			query.Kind(query.Start(), ad.Entity),
+			query.KindIn(query.Relationship(), relKinds...),
+			query.Equals(query.EndID(), targetNode.ID),
+		),
+	))
+}
+
+func PostADCSESC1Domain(tx graph.Transaction, domain *graph.Node, groupExpansions impact.PathAggregator, enrollCache map[graph.ID]graph.NodeSet) (cardinality.Duplex[uint32], error) {
+	results := cardinality.NewBitmap32()
+	if enterpriseCAs, err := ops.AcyclicTraverseTerminals(tx, ops.TraversalPlan{
+		Root:      domain,
+		Direction: graph.DirectionInbound,
+		BranchQuery: func() graph.Criteria {
+			return query.KindIn(query.Relationship(), ad.TrustedForNTAuth, ad.NTAuthStoreFor)
+		},
+		DescentFilter: func(ctx *ops.TraversalContext, segment *graph.PathSegment) bool {
+			depth := segment.Depth()
+			if depth == 1 && !segment.Edge.Kind.Is(ad.NTAuthStoreFor) {
+				return false
+			} else if depth == 2 && !segment.Edge.Kind.Is(ad.TrustedForNTAuth) {
+				return false
+			} else {
+				return true
+			}
+		},
+		PathFilter: func(ctx *ops.TraversalContext, segment *graph.PathSegment) bool {
+			return segment.Node.Kinds.ContainsOneOf(ad.EnterpriseCA)
+		},
+	}); err != nil {
+		return results, err
+	} else {
+		for _, enterpriseCA := range enterpriseCAs {
+			if validPaths, err := FetchEnterpriseCAPathToDomain(tx, enterpriseCA, domain); err != nil {
+				log.Errorf("error fetching paths from enterprise ca %d to domain %d: %w", enterpriseCA.ID, domain.ID, err)
+			} else if validPaths.Len() == 0 {
+				continue
+			} else if publishedCertTemplates, err := FetchCertTemplatesPublishedToCA(tx, enterpriseCA); err != nil {
+				log.Errorf("error fetching cert templates for ECA %d: %w", enterpriseCA.ID, err)
+			} else {
+				for _, certTemplate := range publishedCertTemplates.Slice() {
+					if validationProperties, err := getValidatePublishedCertTemplateForEsc1PropertyValues(certTemplate); err != nil {
+						log.Errorf("error getting published certtemplate validation properties, %w", err)
+						continue
+					} else if !validatePublishedCertTemplateForEsc1(validationProperties) {
+						continue
+					} else {
+						results.Or(CalculateCrossProductNodeSets(enrollCache[enterpriseCA.ID].Slice(), enrollCache[certTemplate.ID].Slice(), groupExpansions))
+					}
+				}
+			}
+		}
+	}
+	return results, nil
+}
+
+func PostADCSESC1(ctx context.Context, db graph.Database, enterpriseCas, certTemplates []*graph.Node, expandedGroups impact.PathAggregator, operation analysis.StatTrackedOperation[analysis.CreatePostRelationshipJob]) error {
+	if enrollCache, err := BuildEsc1Cache(ctx, db, enterpriseCas, certTemplates); err != nil {
+		return fmt.Errorf("error building cache for esc1: %w", err)
+	} else if domains, err := FetchNodesByKind(ctx, db, ad.Domain); err != nil {
+		return fmt.Errorf("error getting domains for esc1: %w", err)
+	} else {
+		for _, domain := range domains {
+			innerDomain := domain
+			operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
+				if results, err := PostADCSESC1Domain(tx, innerDomain, expandedGroups, enrollCache); err != nil {
+					return err
+				} else {
+					results.Each(func(value uint32) (bool, error) {
+						outC <- analysis.CreatePostRelationshipJob{
+							FromID: graph.ID(value),
+							ToID:   innerDomain.ID,
+							Kind:   ad.ADCSESC1,
+						}
+
+						return true, nil
+					})
+				}
+
+				return nil
+			})
+		}
+	}
+
+	return nil
+}
+
+type PublishedCertTemplateValidationProperties struct {
+	reqManagerApproval      bool
+	authenticationEnabled   bool
+	enrolleeSuppliesSubject bool
+	schemaVersion           float64
+	authorizedSignatures    float64
+}
+
+func getValidatePublishedCertTemplateForEsc1PropertyValues(certTemplate *graph.Node) (PublishedCertTemplateValidationProperties, error) {
+	if reqManagerApproval, err := certTemplate.Properties.Get(ad.RequiresManagerApproval.String()).Bool(); err != nil {
+		return PublishedCertTemplateValidationProperties{}, fmt.Errorf("error getting reqmanagerapproval for certtemplate %d: %w", certTemplate.ID, err)
+	} else if authenticationEnabled, err := certTemplate.Properties.Get(ad.AuthenticationEnabled.String()).Bool(); err != nil {
+		return PublishedCertTemplateValidationProperties{}, fmt.Errorf("error getting authenticationenabled for certtemplate %d: %w", certTemplate.ID, err)
+	} else if enrolleeSuppliesSubject, err := certTemplate.Properties.Get(ad.EnrolleeSuppliesSubject.String()).Bool(); err != nil {
+		return PublishedCertTemplateValidationProperties{}, fmt.Errorf("error getting enrollesuppliessubject for certtemplate %d: %w", certTemplate.ID, err)
+	} else if schemaVersion, err := certTemplate.Properties.Get(ad.SchemaVersion.String()).Float64(); err != nil {
+		return PublishedCertTemplateValidationProperties{}, fmt.Errorf("error getting schemaversion for certtemplate %d: %w", certTemplate.ID, err)
+	} else if authorizedSignatures, err := certTemplate.Properties.Get(ad.AuthorizedSignatures.String()).Float64(); err != nil {
+		return PublishedCertTemplateValidationProperties{}, fmt.Errorf("error getting authorizedsignatures for certtemplate %d: %w", certTemplate.ID, err)
+	} else {
+		return PublishedCertTemplateValidationProperties{
+			reqManagerApproval:      reqManagerApproval,
+			authenticationEnabled:   authenticationEnabled,
+			enrolleeSuppliesSubject: enrolleeSuppliesSubject,
+			schemaVersion:           schemaVersion,
+			authorizedSignatures:    authorizedSignatures,
+		}, nil
+	}
+}
+
+func validatePublishedCertTemplateForEsc1(properties PublishedCertTemplateValidationProperties) bool {
+	if properties.reqManagerApproval {
+		return false
+	} else if !properties.authenticationEnabled {
+		return false
+	} else if !properties.enrolleeSuppliesSubject {
+		return false
+	} else if properties.schemaVersion == 1 {
+		return true
+	} else if properties.schemaVersion > 1 && properties.authorizedSignatures == 0 {
+		return true
+	} else {
+		return false
+	}
+}
 
 func PostEnrollOnBehalfOf(certTemplates []graph.Node, operation analysis.StatTrackedOperation[analysis.CreatePostRelationshipJob]) error {
 	versionOneTemplates := make([]graph.Node, 0)
@@ -221,25 +381,38 @@ func certTemplateHasEku(certTemplate graph.Node, targetEkus ...string) (bool, er
 	}
 }
 
-func PostADCS(ctx context.Context, db graph.Database) (*analysis.AtomicPostProcessingStats, error) {
+func PostADCS(ctx context.Context, db graph.Database, groupExpansions impact.PathAggregator) (*analysis.AtomicPostProcessingStats, error) {
 	operation := analysis.NewPostRelationshipOperation(ctx, db, "ADCS Post Processing")
 
+	if enterpriseCertAuthorities, err := FetchNodesByKind(ctx, db, ad.EnterpriseCA); err != nil {
+		return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("failed fetching enterpriseCA nodes: %w", err)
+	} else if rootCertAuthorities, err := FetchNodesByKind(ctx, db, ad.RootCA); err != nil {
+		return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("failed fetching rootCA nodes: %w", err)
+	} else if certTemplates, err := FetchNodesByKind(ctx, db, ad.CertTemplate); err != nil {
+		return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("failed fetching cert template nodes: %w", err)
+	} else if preProcessStats, err := postADCSPreProcess(ctx, db, enterpriseCertAuthorities, rootCertAuthorities); err != nil {
+		return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("failed adcs pre-processing: %w", err)
+	} else {
+		operation.Stats.Merge(preProcessStats)
+		if err := PostADCSESC1(ctx, db, enterpriseCertAuthorities, certTemplates, groupExpansions, operation); err != nil {
+			return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("failed post processing for %s: %w", ad.ADCSESC1.String(), err)
+		}
+
+		return &operation.Stats, operation.Done()
+	}
+}
+
+func postADCSPreProcess(ctx context.Context, db graph.Database, enterpriseCertAuthorities, rootCertAuthorities []*graph.Node) (*analysis.AtomicPostProcessingStats, error) {
+	operation := analysis.NewPostRelationshipOperation(ctx, db, "ADCS Post Processing - No Dependencies")
 	if err := PostTrustedForNTAuth(ctx, db, operation); err != nil {
 		return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("failed post processing for %s: %w", ad.TrustedForNTAuth.String(), err)
+	} else if err := PostIssuedSignedBy(ctx, db, operation, enterpriseCertAuthorities, rootCertAuthorities); err != nil {
+		return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("failed post processing for %s: %w", ad.IssuedSignedBy.String(), err)
+	} else if err := PostEnterpriseCAFor(ctx, db, operation, enterpriseCertAuthorities); err != nil {
+		return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("failed post processing for %s: %w", ad.EnterpriseCAFor.String(), err)
 	} else {
-		if enterpriseCertAuthorities, err := FetchNodesByKind(ctx, db, ad.EnterpriseCA); err != nil {
-			return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("failed fetching enterpriseCA nodes: %w", err)
-		} else if rootCertAuthorities, err := FetchNodesByKind(ctx, db, ad.RootCA); err != nil {
-			return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("failed fetching rootCA nodes: %w", err)
-		} else if err := PostIssuedSignedBy(ctx, db, operation, enterpriseCertAuthorities, rootCertAuthorities); err != nil {
-			return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("failed post processing for %s: %w", ad.IssuedSignedBy.String(), err)
-		} else if err := PostEnterpriseCAFor(ctx, db, operation, enterpriseCertAuthorities); err != nil {
-			return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("failed post processing for %s: %w", ad.EnterpriseCAFor.String(), err)
-		} else {
-			return &operation.Stats, operation.Done()
-		}
+		return &operation.Stats, operation.Done()
 	}
-
 }
 
 func PostTrustedForNTAuth(ctx context.Context, db graph.Database, operation analysis.StatTrackedOperation[analysis.CreatePostRelationshipJob]) error {

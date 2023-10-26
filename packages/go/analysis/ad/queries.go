@@ -1380,6 +1380,32 @@ func FetchDomainTierZeroAssets(tx graph.Transaction, domain *graph.Node) (graph.
 	}))
 }
 
+func FetchCertTemplatesPublishedToCA(tx graph.Transaction, ca *graph.Node) (graph.NodeSet, error) {
+	return ops.FetchStartNodes(tx.Relationships().Filterf(func() graph.Criteria {
+		return query.And(
+			query.Equals(query.EndID(), ca.ID),
+			query.Kind(query.Relationship(), ad.PublishedTo),
+			query.Kind(query.Start(), ad.CertTemplate),
+		)
+	}))
+}
+
+func FetchEnterpriseCAPathToDomain(tx graph.Transaction, enterpriseCA, domain *graph.Node) (graph.PathSet, error) {
+	return ops.TraversePaths(tx, ops.TraversalPlan{
+		Root:      enterpriseCA,
+		Direction: graph.DirectionOutbound,
+		BranchQuery: func() graph.Criteria {
+			return query.KindIn(query.Relationship(), ad.IssuedSignedBy, ad.EnterpriseCAFor, ad.RootCAFor)
+		},
+		DescentFilter: func(ctx *ops.TraversalContext, segment *graph.PathSegment) bool {
+			return !segment.Trunk.Node.Kinds.ContainsOneOf(ad.Domain)
+		},
+		PathFilter: func(ctx *ops.TraversalContext, segment *graph.PathSegment) bool {
+			return segment.Node.ID == domain.ID
+		},
+	})
+}
+
 func DoesCertTemplateLinkToDomain(tx graph.Transaction, certTemplate graph.Node, domainNode graph.Node) (bool, error) {
 	if pathSet, err := FetchCertTemplatePathToDomain(tx, certTemplate, domainNode); err != nil {
 		return false, err
