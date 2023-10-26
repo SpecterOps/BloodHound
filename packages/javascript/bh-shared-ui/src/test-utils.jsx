@@ -19,6 +19,7 @@ import { createTheme } from '@mui/material/styles';
 import { CssBaseline, StyledEngineProvider, ThemeProvider } from '@mui/material';
 import { render } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from 'react-query';
+import { NotificationsProvider } from '.';
 
 const customRender = (
     ui,
@@ -63,8 +64,10 @@ const customRender = (
             <QueryClientProvider client={queryClient}>
                 <StyledEngineProvider injectFirst>
                     <ThemeProvider theme={theme}>
-                        <CssBaseline />
-                        {children}
+                        <NotificationsProvider>
+                            <CssBaseline />
+                            {children}
+                        </NotificationsProvider>
                     </ThemeProvider>
                 </StyledEngineProvider>
             </QueryClientProvider>

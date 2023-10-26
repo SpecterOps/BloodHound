@@ -65,7 +65,7 @@ func (s *Migrator) updateAssetGroups() error {
 			}
 		}
 
-		if _, hasOwned := systemAssetGroups.FindByName(model.OwnedAssetGroupTag); !hasOwned {
+		if _, hasOwned := systemAssetGroups.FindByName(model.OwnedAssetGroupName); !hasOwned {
 			log.Infof("Missing the default Owned asset group. Creating it now.")
 
 			ownedAG := model.AssetGroup{

@@ -4,7 +4,6 @@
             "description": "Ingests data from the user interface or clients",
             "tags": [
                 "Ingestion",
-                "Community",
                 "Enterprise"
             ],
             "summary": "Endpoint for data ingestion",
