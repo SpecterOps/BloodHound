@@ -26,7 +26,7 @@ const adTransitEdgeTypes =
     ActiveDirectoryPathfindingEdges().slice(0, -1).join('|') + '|' + ActiveDirectoryPathfindingEdges().slice(-1);
 
 const highPrivilegedRoleDisplayNameRegex =
-    'Global Administrator.*|User Administrator.*|Cloud Application Administrator.*|Authentication Policy Administrator.*|Exchange Administrator.*|Helpdesk Administrator.*|PRIVILEGED AUTHENTICATION ADMINISTRATOR.*';
+    'Global Administrator.*|User Administrator.*|Cloud Application Administrator.*|Authentication Policy Administrator.*|Exchange Administrator.*|Helpdesk Administrator.*|Privileged Authentication Administrator.*';
 
 export type CommonSearchType = {
     subheader: string;
