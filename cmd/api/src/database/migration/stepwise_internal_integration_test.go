@@ -17,6 +17,9 @@
 //go:build serial_integration
 // +build serial_integration
 
+// TODO: This file is unconventionally named because it was written as both an internal test and an integration test. Proper
+// refactoring of these tests is needed, but is non-trivial.
+
 package migration
 
 import (
