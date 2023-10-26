@@ -1,19 +1,3 @@
-//go:build integration
-// +build integration
-
-package ad_test
-
-import (
-	"context"
-	ad2 "github.com/specterops/bloodhound/analysis/ad"
-	"github.com/specterops/bloodhound/dawgs/cardinality"
-	"github.com/specterops/bloodhound/dawgs/graph"
-	"github.com/specterops/bloodhound/graphschema/ad"
-	"github.com/specterops/bloodhound/src/test/integration"
-	"github.com/stretchr/testify/require"
-	"testing"
-)
-
 // Copyright 2023 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
@@ -29,6 +13,22 @@ import (
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+
+//go:build integration
+// +build integration
+
+package ad_test
+
+import (
+	"context"
+	ad2 "github.com/specterops/bloodhound/analysis/ad"
+	"github.com/specterops/bloodhound/dawgs/cardinality"
+	"github.com/specterops/bloodhound/dawgs/graph"
+	"github.com/specterops/bloodhound/graphschema/ad"
+	"github.com/specterops/bloodhound/src/test/integration"
+	"github.com/stretchr/testify/require"
+	"testing"
+)
 
 func TestADCSESC1(t *testing.T) {
 	testContext := integration.NewGraphTestContext(t)
