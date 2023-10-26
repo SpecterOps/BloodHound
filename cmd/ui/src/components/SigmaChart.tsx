@@ -36,6 +36,9 @@ import { Box, Menu, MenuItem } from '@mui/material';
 import { GraphNodes } from 'js-client-library';
 import { GraphButtonProps, SearchCurrentNodes } from 'bh-shared-ui';
 import { SigmaNodeEventPayload } from 'sigma/sigma';
+import { AppState, useAppDispatch } from 'src/store';
+import { startSearchAction } from 'src/ducks/searchbar/actions';
+import { useSelector } from 'react-redux';
 
 interface SigmaChartProps {
     rankDirection: RankDirection;
@@ -132,7 +135,10 @@ const SigmaChart: FC<Partial<SigmaChartProps>> = ({
 };
 
 const ContextMenu: FC<{ anchorPosition: { x: number; y: number } }> = ({ anchorPosition }) => {
+    const dispatch = useAppDispatch();
     const [open, setOpen] = useState(false);
+
+    const selectedNode = useSelector((state: AppState) => state.entityinfo.selectedNode);
 
     useEffect(() => {
         if (anchorPosition) {
@@ -147,8 +153,7 @@ const ContextMenu: FC<{ anchorPosition: { x: number; y: number } }> = ({ anchorP
     };
 
     const handleSetStartingNode = () => {
-        // close the menu
-        // dispatch to redux
+        dispatch(startSearchAction(selectedNode?.name || '', 'primary'));
     };
 
     return (
@@ -157,7 +162,7 @@ const ContextMenu: FC<{ anchorPosition: { x: number; y: number } }> = ({ anchorP
             anchorPosition={{ left: anchorPosition?.x || 0, top: anchorPosition?.y || 0 }}
             anchorReference='anchorPosition'
             onClick={handleClick}>
-            <MenuItem>Set as starting node</MenuItem>
+            <MenuItem onClick={handleSetStartingNode}>Set as starting node</MenuItem>
         </Menu>
     );
 };

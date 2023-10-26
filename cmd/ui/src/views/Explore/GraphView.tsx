@@ -153,11 +153,7 @@ const GraphView: FC = () => {
         },
     ];
 
-    /* Event Handlers */
-    const onClickNode = (id: string) => {
-        dispatch(setEdgeInfoOpen(false));
-        dispatch(setEntityInfoOpen(true));
-
+    const findNodeAndSelect = (id: string) => {
         const selectedItem = graphState.chartProps.items?.[id];
         if (selectedItem?.data?.nodetype) {
             dispatch(setSelectedEdge(null));
@@ -172,9 +168,20 @@ const GraphView: FC = () => {
         }
     };
 
+    /* Event Handlers */
+    const onClickNode = (id: string) => {
+        dispatch(setEdgeInfoOpen(false));
+        dispatch(setEntityInfoOpen(true));
+
+        findNodeAndSelect(id);
+    };
+
     const onRightClickNode = (event: SigmaNodeEventPayload) => {
         setAnchorPosition({ x: event.event.x, y: event.event.y });
-        console.log(event.node, event.event.x, event.event.y);
+
+        const nodeId = event.node;
+
+        findNodeAndSelect(nodeId);
     };
 
     return (
