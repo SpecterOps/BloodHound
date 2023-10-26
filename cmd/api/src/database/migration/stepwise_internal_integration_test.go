@@ -99,27 +99,24 @@ func TestMigrator_ExecuteMigrations(t *testing.T) {
 	)
 
 	db, err := setupDB()
-	assert.Nil(t, err)
+	require.Nil(t, err)
 	migrator := setupMigrator(db)
 
 	filenames, err := migrator.MigrationFilenames()
-	assert.Nil(t, err)
+	require.Nil(t, err)
 
 	manifest, err := NewManifest(filenames)
-	assert.Nil(t, err)
+	require.Nil(t, err)
 
 	t.Run("Create Table Migration", func(t *testing.T) {
-		err = migrator.ExecuteMigrations([]Migration{manifest.migrations[0]})
-		assert.Nil(t, err)
+		require.Nil(t, migrator.ExecuteMigrations([]Migration{manifest.migrations[0]}))
 		db.Raw("SELECT EXISTS(SELECT * FROM information_schema.tables WHERE table_name='migration_test')").Scan(&tableExists)
 		assert.True(t, tableExists)
 	})
 
 	t.Run("Add Data To Table Migration", func(t *testing.T) {
-		err = migrator.ExecuteMigrations([]Migration{manifest.migrations[1]})
-		assert.Nil(t, err)
-		result := db.Order("id ASC").Find(&entries)
-		require.Nil(t, result.Error)
+		require.Nil(t, migrator.ExecuteMigrations([]Migration{manifest.migrations[1]}))
+		require.Nil(t, db.Order("id ASC").Find(&entries).Error)
 
 		assert.NotEmpty(t, entries[0])
 		assert.Equal(t, int64(1), entries[0].Id)
@@ -143,8 +140,7 @@ func TestMigrator_ExecuteMigrations(t *testing.T) {
 	})
 
 	t.Run("Deduplicate Data Migration", func(t *testing.T) {
-		err = migrator.ExecuteMigrations([]Migration{manifest.migrations[2]})
-		assert.Nil(t, err)
+		require.Nil(t, migrator.ExecuteMigrations([]Migration{manifest.migrations[2]}))
 		result := db.Order("id ASC").Find(&entries)
 		require.Nil(t, result.Error)
 
@@ -167,8 +163,7 @@ func TestMigrator_ExecuteMigrations(t *testing.T) {
 	})
 
 	t.Run("Drop Table Migration", func(t *testing.T) {
-		err = migrator.ExecuteMigrations([]Migration{manifest.migrations[3]})
-		assert.Nil(t, err)
+		require.Nil(t, migrator.ExecuteMigrations([]Migration{manifest.migrations[3]}))
 		db.Raw("SELECT EXISTS(SELECT * FROM information_schema.tables WHERE table_name='migration_test')").Scan(&tableExists)
 		assert.False(t, tableExists)
 	})
@@ -187,20 +182,13 @@ func TestMigrator_Migrate(t *testing.T) {
 			testTableExists       bool
 		)
 
-		require.Nil(t, err)
+		require.Nil(t, wipeDB(db))
+		assert.Nil(t, testMigrator.executeStepwiseMigrations())
 
-		err = wipeDB(db)
-		require.Nil(t, err)
-
-		err = testMigrator.executeStepwiseMigrations()
-		assert.Nil(t, err)
-
-		err = db.Raw("SELECT EXISTS(SELECT * FROM information_schema.tables WHERE table_name='migrations')").Scan(&migrationsTableExists).Error
-		require.Nil(t, err)
+		require.Nil(t, db.Raw("SELECT EXISTS(SELECT * FROM information_schema.tables WHERE table_name='migrations')").Scan(&migrationsTableExists).Error)
 		assert.True(t, migrationsTableExists)
 
-		err = db.Raw("SELECT EXISTS(SELECT * FROM information_schema.tables WHERE table_name='migration_test')").Scan(&testTableExists).Error
-		require.Nil(t, err)
+		require.Nil(t, db.Raw("SELECT EXISTS(SELECT * FROM information_schema.tables WHERE table_name='migration_test')").Scan(&testTableExists).Error)
 		assert.False(t, testTableExists, "migration test table unexpectedly exists after stepwise migration completed successfully")
 	})
 
@@ -209,18 +197,15 @@ func TestMigrator_Migrate(t *testing.T) {
 			migrationsTableExists bool
 		)
 
-		err = wipeDB(db)
-		require.Nil(t, err)
+		require.Nil(t, wipeDB(db))
 
-		err = prodMigrator.executeStepwiseMigrations()
-		require.Nil(t, err)
+		require.Nil(t, prodMigrator.executeStepwiseMigrations())
 
-		err = db.Raw("SELECT EXISTS(SELECT * FROM information_schema.tables WHERE table_name='migrations')").Scan(&migrationsTableExists).Error
-		require.Nil(t, err)
+		require.Nil(t, db.Raw("SELECT EXISTS(SELECT * FROM information_schema.tables WHERE table_name='migrations')").Scan(&migrationsTableExists).Error)
 		assert.True(t, migrationsTableExists)
 
 		ver, err := testMigrator.LatestMigration()
-		assert.Nil(t, err)
+		require.Nil(t, err)
 		assert.Equal(t, version.GetVersion(), ver.Version())
 	})
 }
