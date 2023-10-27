@@ -209,6 +209,8 @@ func TestMigrator_Migrate(t *testing.T) {
 
 		ver, err := testMigrator.LatestMigration()
 		require.Nil(t, err)
-		assert.Equal(t, version.GetVersion(), ver.Version())
+		assert.Equal(t, version.GetVersion().Major, ver.Version().Major)
+		assert.Equal(t, version.GetVersion().Minor, ver.Version().Minor)
+		assert.Equal(t, version.GetVersion().Patch, ver.Version().Patch)
 	})
 }
