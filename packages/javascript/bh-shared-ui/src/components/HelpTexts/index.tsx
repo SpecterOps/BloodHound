@@ -80,6 +80,7 @@ import GetChanges from './GetChanges/GetChanges';
 import GetChangesAll from './GetChangesAll/GetChangesAll';
 import HasSIDHistory from './HasSIDHistory/HasSIDHistory';
 import HasSession from './HasSession/HasSession';
+import HostsCAService from './HostsCAService/HostsCAService';
 import IssuedSignedBy from './IssuedSignedBy/IssuedSignedBy';
 import MemberOf from './MemberOf/MemberOf';
 import NTAuthStoreFor from './NTAuthStoreFor/NTAuthStoreFor';
@@ -187,6 +188,7 @@ const EdgeInfoComponents = {
     NTAuthStoreFor: NTAuthStoreFor,
     IssuedSignedBy: IssuedSignedBy,
     TrustedForNTAuth: TrustedForNTAuth,
+    HostsCAService: HostsCAService,
 };
 
 export default EdgeInfoComponents;
