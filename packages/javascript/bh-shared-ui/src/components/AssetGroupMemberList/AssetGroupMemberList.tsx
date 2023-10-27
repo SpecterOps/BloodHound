@@ -1,4 +1,5 @@
 import {
+    Box,
     Paper,
     Table,
     TableBody,
@@ -54,8 +55,11 @@ const AssetGroupMemberList: FC<{
                                 sx={{...hoverStyles }}
                                 key={member.object_id}
                             >
-                                <TableCell><NodeIcon nodeType={member.primary_kind} />
-                                    <Typography marginLeft={1} display={"inline-block"}>{member.name}</Typography>
+                                <TableCell>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', width: '100%' }}>
+                                        <NodeIcon nodeType={member.primary_kind} />
+                                        <Typography noWrap marginLeft={1} display={"inline-block"}>{member.name}</Typography>
+                                    </Box>    
                                 </TableCell>
                                 <TableCell align="right" sx={{
                                     padding: "0",
