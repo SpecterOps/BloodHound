@@ -68,6 +68,7 @@ import CanPSRemote from './CanPSRemote/CanPSRemote';
 import CanRDP from './CanRDP/CanRDP';
 import Contains from './Contains/Contains';
 import DCSync from './DCSync/DCSync';
+import DelegatedEnrollmentAgent from './DelegatedEnrollmentAgent/DelegatedEnrollmentAgent';
 import DumpSMSAPassword from './DumpSMSAPassword/DumpSMSAPassword';
 import Enroll from './Enroll/Enroll';
 import EnterpriseCAFor from './EnterpriseCAFor/EnterpriseCAFor';
@@ -189,6 +190,7 @@ const EdgeInfoComponents = {
     IssuedSignedBy: IssuedSignedBy,
     TrustedForNTAuth: TrustedForNTAuth,
     HostsCAService: HostsCAService,
+    DelegatedEnrollmentAgent: DelegatedEnrollmentAgent,
 };
 
 export default EdgeInfoComponents;
