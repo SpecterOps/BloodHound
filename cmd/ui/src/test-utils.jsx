@@ -25,6 +25,7 @@ import { Provider } from 'react-redux';
 import { Router } from 'react-router-dom';
 import createSagaMiddleware from 'redux-saga';
 import { rootReducer } from 'src/store';
+import { NotificationsProvider } from 'bh-shared-ui';
 
 const customRender = (
     ui,
@@ -78,10 +79,12 @@ const customRender = (
                 <QueryClientProvider client={queryClient}>
                     <StyledEngineProvider injectFirst>
                         <ThemeProvider theme={theme}>
-                            <CssBaseline />
-                            <Router location={history.location} navigator={history}>
-                                <SnackbarProvider>{children}</SnackbarProvider>
-                            </Router>
+                            <NotificationsProvider>
+                                <CssBaseline />
+                                <Router location={history.location} navigator={history}>
+                                    <SnackbarProvider>{children}</SnackbarProvider>
+                                </Router>
+                            </NotificationsProvider>
                         </ThemeProvider>
                     </StyledEngineProvider>
                 </QueryClientProvider>

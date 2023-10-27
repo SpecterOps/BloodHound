@@ -19,16 +19,25 @@ import { ActiveDirectoryPathfindingEdges, AzurePathfindingEdges } from './graphS
 const categoryAD = 'Active Directory';
 const categoryAzure = 'Azure';
 
-// Join all elements with "|" but the last element, then add last element
+// Join all elements with "|" but the last element, then append last element
 // produces element1|element2|element3
 const azureTransitEdgeTypes = AzurePathfindingEdges().slice(0, -1).join('|') + AzurePathfindingEdges().slice(-1);
 const adTransitEdgeTypes =
     ActiveDirectoryPathfindingEdges().slice(0, -1).join('|') + '|' + ActiveDirectoryPathfindingEdges().slice(-1);
 
-const highPrivilegedRoleDisplayNames =
-    'Global Administrator|User Administrator|Cloud Application Administrator|Authentication Policy Administrator|Exchange Administrator|Helpdesk Administrator|PRIVILEGED AUTHENTICATION ADMINISTRATOR';
+const highPrivilegedRoleDisplayNameRegex =
+    'Global Administrator.*|User Administrator.*|Cloud Application Administrator.*|Authentication Policy Administrator.*|Exchange Administrator.*|Helpdesk Administrator.*|Privileged Authentication Administrator.*';
 
-export const CommonSearches = [
+export type CommonSearchType = {
+    subheader: string;
+    category: string;
+    queries: {
+        description: string;
+        cypher: string;
+    }[];
+};
+
+export const CommonSearches: CommonSearchType[] = [
     {
         subheader: 'Domain Information',
         category: categoryAD,
@@ -43,7 +52,7 @@ export const CommonSearches = [
             },
             {
                 description: 'Computers with unsupported operating systems',
-                cypher: `MATCH (n:Computer)\nWHERE n.operatingsystem =~ "(?i).*(2000|2003|2008|2012|xp|vista|7|me).*"\nRETURN n`,
+                cypher: `MATCH (n:Computer)\nWHERE n.operatingsystem =~ "(?i).*Windows.* (2000|2003|2008|2012|xp|vista|7|8|me|nt).*"\nRETURN n`,
             },
             {
                 description: 'Locations of high value/Tier Zero objects',
@@ -159,7 +168,7 @@ export const CommonSearches = [
             },
             {
                 description: 'All members of high privileged roles',
-                cypher: `MATCH p=(n)-[:AZHasRole|AZMemberOf*1..2]->(r:AZRole)\nWHERE r.name =~ '(?i)${highPrivilegedRoleDisplayNames}'\nRETURN p`,
+                cypher: `MATCH p=(n)-[:AZHasRole|AZMemberOf*1..2]->(r:AZRole)\nWHERE r.name =~ '(?i)${highPrivilegedRoleDisplayNameRegex}'\nRETURN p`,
             },
         ],
     },
@@ -169,11 +178,11 @@ export const CommonSearches = [
         queries: [
             {
                 description: 'Shortest paths to high value/Tier Zero targets',
-                cypher: `MATCH p=shortestPath((m:AZUser)-[r:${azureTransitEdgeTypes}*1..]->(n))\nWHERE n.system_tags = "admin_tier_0" AND n.name =~ '(?i)${highPrivilegedRoleDisplayNames}' AND NOT m=n\nRETURN p`,
+                cypher: `MATCH p=shortestPath((m:AZUser)-[r:${azureTransitEdgeTypes}*1..]->(n))\nWHERE n.system_tags = "admin_tier_0" AND n.name =~ '(?i)${highPrivilegedRoleDisplayNameRegex}' AND m<>n\nRETURN p`,
             },
             {
                 description: 'Shortest paths to privileged roles',
-                cypher: `MATCH p=shortestPath((m)-[r:${azureTransitEdgeTypes}*1..]->(n:AZRole))\nWHERE n.name =~ '(?i)${highPrivilegedRoleDisplayNames}' AND NOT m=n\nRETURN p`,
+                cypher: `MATCH p=shortestPath((m)-[r:${azureTransitEdgeTypes}*1..]->(n:AZRole))\nWHERE n.name =~ '(?i)${highPrivilegedRoleDisplayNameRegex}' AND m<>n\nRETURN p`,
             },
             {
                 description: 'Shortest paths from Azure Applications to high value/Tier Zero targets',
@@ -181,7 +190,7 @@ export const CommonSearches = [
             },
             {
                 description: 'Shortest paths to Azure Subscriptions',
-                cypher: `MATCH p=shortestPath((m)-[r:${azureTransitEdgeTypes}*1..]->(n:AZSubscription))\nWHERE NOT m<>>n\nRETURN p`,
+                cypher: `MATCH p=shortestPath((m)-[r:${azureTransitEdgeTypes}*1..]->(n:AZSubscription))\nWHERE m<>n\nRETURN p`,
             },
         ],
     },
