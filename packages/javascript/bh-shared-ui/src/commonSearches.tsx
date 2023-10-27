@@ -25,8 +25,8 @@ const azureTransitEdgeTypes = AzurePathfindingEdges().slice(0, -1).join('|') + A
 const adTransitEdgeTypes =
     ActiveDirectoryPathfindingEdges().slice(0, -1).join('|') + '|' + ActiveDirectoryPathfindingEdges().slice(-1);
 
-const highPrivilegedRoleDisplayNames =
-    'Global Administrator|User Administrator|Cloud Application Administrator|Authentication Policy Administrator|Exchange Administrator|Helpdesk Administrator|PRIVILEGED AUTHENTICATION ADMINISTRATOR';
+const highPrivilegedRoleDisplayNameRegex =
+    'Global Administrator.*|User Administrator.*|Cloud Application Administrator.*|Authentication Policy Administrator.*|Exchange Administrator.*|Helpdesk Administrator.*|Privileged Authentication Administrator.*';
 
 export type CommonSearchType = {
     subheader: string;
@@ -168,7 +168,7 @@ export const CommonSearches: CommonSearchType[] = [
             },
             {
                 description: 'All members of high privileged roles',
-                cypher: `MATCH p=(n)-[:AZHasRole|AZMemberOf*1..2]->(r:AZRole)\nWHERE r.name =~ '(?i)${highPrivilegedRoleDisplayNames}'\nRETURN p`,
+                cypher: `MATCH p=(n)-[:AZHasRole|AZMemberOf*1..2]->(r:AZRole)\nWHERE r.name =~ '(?i)${highPrivilegedRoleDisplayNameRegex}'\nRETURN p`,
             },
         ],
     },
@@ -178,11 +178,11 @@ export const CommonSearches: CommonSearchType[] = [
         queries: [
             {
                 description: 'Shortest paths to high value/Tier Zero targets',
-                cypher: `MATCH p=shortestPath((m:AZUser)-[r:${azureTransitEdgeTypes}*1..]->(n))\nWHERE n.system_tags = "admin_tier_0" AND n.name =~ '(?i)${highPrivilegedRoleDisplayNames}' AND NOT m=n\nRETURN p`,
+                cypher: `MATCH p=shortestPath((m:AZUser)-[r:${azureTransitEdgeTypes}*1..]->(n))\nWHERE n.system_tags = "admin_tier_0" AND n.name =~ '(?i)${highPrivilegedRoleDisplayNameRegex}' AND m<>n\nRETURN p`,
             },
             {
                 description: 'Shortest paths to privileged roles',
-                cypher: `MATCH p=shortestPath((m)-[r:${azureTransitEdgeTypes}*1..]->(n:AZRole))\nWHERE n.name =~ '(?i)${highPrivilegedRoleDisplayNames}' AND NOT m=n\nRETURN p`,
+                cypher: `MATCH p=shortestPath((m)-[r:${azureTransitEdgeTypes}*1..]->(n:AZRole))\nWHERE n.name =~ '(?i)${highPrivilegedRoleDisplayNameRegex}' AND m<>n\nRETURN p`,
             },
             {
                 description: 'Shortest paths from Azure Applications to high value/Tier Zero targets',
@@ -190,7 +190,7 @@ export const CommonSearches: CommonSearchType[] = [
             },
             {
                 description: 'Shortest paths to Azure Subscriptions',
-                cypher: `MATCH p=shortestPath((m)-[r:${azureTransitEdgeTypes}*1..]->(n:AZSubscription))\nWHERE NOT m<>>n\nRETURN p`,
+                cypher: `MATCH p=shortestPath((m)-[r:${azureTransitEdgeTypes}*1..]->(n:AZSubscription))\nWHERE m<>n\nRETURN p`,
             },
         ],
     },
