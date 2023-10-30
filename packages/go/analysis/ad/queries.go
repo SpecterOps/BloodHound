@@ -1407,12 +1407,12 @@ func FetchEnterpriseCAsCertChainPathToDomain(tx graph.Transaction, enterpriseCA,
 	})
 }
 
-func FetchHostsCAServiceComputers(tx graph.Transaction, enterpriseCAID graph.ID) (graph.NodeSet, error) {
+func FetchHostsCAServiceComputers(tx graph.Transaction, enterpriseCA *graph.Node) (graph.NodeSet, error) {
 	return ops.FetchStartNodes(tx.Relationships().Filter(
 		query.And(
 			query.Kind(query.Start(), ad.Computer),
 			query.Kind(query.Relationship(), ad.HostsCAService),
-			query.Kind(query.End(), ad.EnterpriseCA),
+			query.Equals(query.EndID(), enterpriseCA.ID),
 		)))
 }
 

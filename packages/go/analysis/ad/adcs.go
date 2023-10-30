@@ -363,8 +363,8 @@ func PostADCS(ctx context.Context, db graph.Database, groupExpansions impact.Pat
 					return err
 				} else {
 					for _, enterpriseCA := range enterpriseCAs {
-						if validPaths, err := FetchEnterpriseCAsCertChainPathToDomain(tx, enterpriseCA, domain); err != nil {
-							log.Errorf("error fetching paths from enterprise ca %d to domain %d: %w", enterpriseCA.ID, domain.ID, err)
+						if validPaths, err := FetchEnterpriseCAsCertChainPathToDomain(tx, enterpriseCA, innerDomain); err != nil {
+							log.Errorf("error fetching paths from enterprise ca %d to domain %d: %w", enterpriseCA.ID, innerDomain.ID, err)
 						} else if validPaths.Len() == 0 {
 							continue
 						} else {
@@ -401,10 +401,10 @@ func postADCSPreProcess(ctx context.Context, db graph.Database, enterpriseCertAu
 }
 
 func PostGoldenCert(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob, domain, enterpriseCA *graph.Node) error {
-	if hostCAServiceComputers, err := FetchHostsCAServiceComputers(tx, enterpriseCA.ID); err != nil {
+	if hostCAServiceComputers, err := FetchHostsCAServiceComputers(tx, enterpriseCA); err != nil {
 		log.Errorf("error fetching host ca computer for enterprise ca %d: %w", enterpriseCA.ID, err)
 	} else {
-		for _, computer := range hostCAServiceComputers.Slice() {
+		for _, computer := range hostCAServiceComputers {
 			if !channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
 				FromID: computer.ID,
 				ToID:   domain.ID,
