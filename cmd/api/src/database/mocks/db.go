@@ -1249,18 +1249,18 @@ func (mr *MockDatabaseMockRecorder) LookupUser(arg0 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LookupUser", reflect.TypeOf((*MockDatabase)(nil).LookupUser), arg0)
 }
 
-// MigrateModels mocks base method.
-func (m *MockDatabase) MigrateModels(arg0 []interface{}) error {
+// Migrate mocks base method.
+func (m *MockDatabase) Migrate() error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "MigrateModels", arg0)
+	ret := m.ctrl.Call(m, "Migrate")
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// MigrateModels indicates an expected call of MigrateModels.
-func (mr *MockDatabaseMockRecorder) MigrateModels(arg0 interface{}) *gomock.Call {
+// Migrate indicates an expected call of Migrate.
+func (mr *MockDatabaseMockRecorder) Migrate() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MigrateModels", reflect.TypeOf((*MockDatabase)(nil).MigrateModels), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Migrate", reflect.TypeOf((*MockDatabase)(nil).Migrate))
 }
 
 // RawFirst mocks base method.
