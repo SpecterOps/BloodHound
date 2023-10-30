@@ -53,7 +53,7 @@ func tryParsePrivateKey(key string) (*rsa.PrivateKey, error) {
 
 func X509ParseCert(cert string) (*x509.Certificate, error) {
 	formattedCert := cert
-
+	
 	if !strings.HasPrefix("-----BEGIN CERTIFICATE-----", formattedCert) {
 		formattedCert = "-----BEGIN CERTIFICATE-----\n" + formattedCert
 	}
@@ -73,7 +73,8 @@ func X509ParseCert(cert string) (*x509.Certificate, error) {
 
 func X509ParsePair(cert, key string) (*x509.Certificate, *rsa.PrivateKey, error) {
 	formattedCert := cert
-
+	formattedKey := key
+	
 	if !strings.HasPrefix("-----BEGIN CERTIFICATE-----", formattedCert) {
 		formattedCert = "-----BEGIN CERTIFICATE-----\n" + formattedCert
 	}
@@ -81,6 +82,14 @@ func X509ParsePair(cert, key string) (*x509.Certificate, *rsa.PrivateKey, error)
 	if !strings.HasSuffix("-----END CERTIFICATE----- ", formattedCert) {
 		formattedCert = formattedCert + "\n-----END CERTIFICATE----- "
 	}
+
+	if !strings.HasPrefix("-----BEGIN PRIVATE KEY-----", formattedKey) {
+		formattedKey = "-----BEGIN PRIVATE KEY-----\n" + formattedKey
+	}
+
+	if !strings.HasSuffix("-----END PRIVATE KEY----- ", formattedKey) {
+		formattedKey = formattedKey + "\n-----END PRIVATE KEY----- "
+	}	
 
 	if certBlock, _ := pem.Decode([]byte(formattedCert)); certBlock == nil {
 		return nil, nil, fmt.Errorf("unable to decode cert")
