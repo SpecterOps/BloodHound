@@ -96,3 +96,10 @@ export type AssetGroupMember = {
 export type AssetGroupResponse = BasicResponse<{ asset_groups: AssetGroup[] }>;
 
 export type AssetGroupMembersResponse = PaginatedResponse<{ members: AssetGroupMember[] }>;
+
+export type SavedQuery = {
+    id: number;
+    name: string;
+    query: string;
+    user_id: string;
+};

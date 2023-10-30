@@ -80,7 +80,7 @@ type Database interface {
 	CreateAssetGroupCollection(collection model.AssetGroupCollection, entries model.AssetGroupCollectionEntries) error
 	RawFirst(value any) error
 	Wipe() error
-	MigrateModels([]any) error
+	Migrate() error
 	AppendAuditLog(ctx ctx.Context, action string, data model.Auditable) error
 	ListAuditLogs(before, after time.Time, offset, limit int, order string, filter model.SQLFilter) (model.AuditLogs, int, error)
 	CreateRole(role model.Role) (model.Role, error)
@@ -216,9 +216,9 @@ func (s *BloodhoundDB) Wipe() error {
 	})
 }
 
-func (s *BloodhoundDB) MigrateModels(models []any) error {
+func (s *BloodhoundDB) Migrate() error {
 	// Run the migrator
-	if err := migration.NewMigrator(s.db).Migrate(models); err != nil {
+	if err := migration.NewMigrator(s.db).Migrate(); err != nil {
 		log.Errorf("Error during database migration phase: %v", err)
 		return err
 	}

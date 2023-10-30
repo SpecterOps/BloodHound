@@ -96,6 +96,9 @@ export { default as PageWithTitle } from './PageWithTitle';
 export * from './PasswordDialog';
 export { default as PasswordDialog } from './PasswordDialog';
 
+export * from './PrebuiltSearchList';
+export { default as PrebuiltSearchList } from './PrebuiltSearchList';
+
 export * from './RemoteContent';
 export { default as RemoteContent } from './RemoteContent';
 

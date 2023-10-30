@@ -456,7 +456,7 @@ func TestResources_UpdateAssetGroupSelectors_PayloadError(t *testing.T) {
 	require.Contains(t, response.Body.String(), api.ErrorResponsePayloadUnmarshalError)
 }
 
-func TestResources_UpdateAssetGroupSelectors_Success(t *testing.T) {
+func TestResources_UpdateAssetGroupSelectors_SuccessT0(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
@@ -489,9 +489,9 @@ func TestResources_UpdateAssetGroupSelectors_Success(t *testing.T) {
 	req = mux.SetURLVars(req, map[string]string{api.URIPathVariableAssetGroupID: "1"})
 
 	assetGroup := model.AssetGroup{
-		Name:        "test group",
-		Tag:         "test tag",
-		SystemGroup: false,
+		Name:        model.TierZeroAssetGroupName,
+		Tag:         model.TierZeroAssetGroupTag,
+		SystemGroup: true,
 	}
 
 	expectedResult := map[string]model.AssetGroupSelectors{
@@ -516,7 +516,98 @@ func TestResources_UpdateAssetGroupSelectors_Success(t *testing.T) {
 	mockDB.EXPECT().UpdateAssetGroupSelectors(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(expectedResult, nil)
 
 	mockTasker := datapipeMocks.NewMockTasker(mockCtrl)
+	// MockTasker should receive a call to RequestAnalysis() since this is a Tier Zero Asset group.
+	// Analysis must be run upon updating a T0 AG
 	mockTasker.EXPECT().RequestAnalysis()
+
+	handlers := v2.Resources{
+		DB:           mockDB,
+		TaskNotifier: mockTasker,
+	}
+
+	response := httptest.NewRecorder()
+	handler := http.HandlerFunc(handlers.UpdateAssetGroupSelectors)
+
+	handler.ServeHTTP(response, req)
+	require.Equal(t, http.StatusOK, response.Code)
+
+	resp := api.ResponseWrapper{}
+	err = json.Unmarshal(response.Body.Bytes(), &resp)
+	require.Nil(t, err)
+
+	dataJSON, err := json.Marshal(resp.Data)
+	require.Nil(t, err)
+
+	data := make(map[string][]model.AssetGroupSelector, 0)
+	err = json.Unmarshal(dataJSON, &data)
+	require.Nil(t, err)
+
+	require.Equal(t, expectedResult["added_selectors"][0].Name, data["added_selectors"][0].Name)
+	require.Equal(t, expectedResult["removed_selectors"][0].Name, data["removed_selectors"][0].Name)
+}
+
+func TestResources_UpdateAssetGroupSelectors_SuccessOwned(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+
+	payload := []model.AssetGroupSelectorSpec{
+		{
+			SelectorName:   "test",
+			EntityObjectID: "1",
+			Action:         model.SelectorSpecActionAdd,
+		},
+		{
+			SelectorName:   "test2",
+			EntityObjectID: "2",
+			Action:         model.SelectorSpecActionRemove,
+		},
+	}
+
+	req, err := http.NewRequest("POST", "/api/v2/asset-groups/1/selectors", must.MarshalJSONReader(payload))
+	require.Nil(t, err)
+
+	req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
+
+	bheCtx := ctx.Context{
+		RequestID: "requestID",
+		AuthCtx: auth.Context{
+			Owner:   model.User{},
+			Session: model.UserSession{},
+		},
+	}
+	req = req.WithContext(context.WithValue(context.Background(), ctx.ValueKey, bheCtx.WithRequestID("requestID")))
+	req = mux.SetURLVars(req, map[string]string{api.URIPathVariableAssetGroupID: "1"})
+
+	assetGroup := model.AssetGroup{
+		Name:        model.OwnedAssetGroupName,
+		Tag:         model.OwnedAssetGroupTag,
+		SystemGroup: true,
+	}
+
+	expectedResult := map[string]model.AssetGroupSelectors{
+		"added_selectors": {
+			model.AssetGroupSelector{
+				AssetGroupID: assetGroup.ID,
+				Name:         payload[0].SelectorName,
+				Selector:     payload[0].EntityObjectID,
+			},
+		},
+		"removed_selectors": {
+			model.AssetGroupSelector{
+				AssetGroupID: assetGroup.ID,
+				Name:         payload[1].SelectorName,
+				Selector:     payload[1].EntityObjectID,
+			},
+		},
+	}
+
+	mockDB := dbMocks.NewMockDatabase(mockCtrl)
+	mockDB.EXPECT().GetAssetGroup(gomock.Any()).Return(assetGroup, nil)
+	mockDB.EXPECT().UpdateAssetGroupSelectors(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(expectedResult, nil)
+
+	mockTasker := datapipeMocks.NewMockTasker(mockCtrl)
+	// NOTE MockTasker should NOT receive a call to RequestAnalysis() since this is not a Tier Zero Asset group.
+	// Analysis should not be re-run when a non T0 AG is updated
 
 	handlers := v2.Resources{
 		DB:           mockDB,
