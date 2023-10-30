@@ -26,6 +26,7 @@ const SEARCH_SET_PATHFINDING = 'app/search/SET_PATHFINDING';
 const SEARCH_RESET = 'app/search/RESET';
 const CYPHER_SEARCH_SET_VALUE = 'app/search/CYPHERSEARCH_SETVALUE';
 const SAVE_PATH_FILTERS = 'app/search/SAVE_PATH_FILTERS';
+const TAB_SELECTED = 'app/search/TAB_SELECTED';
 
 const PRIMARY_SEARCH = 'primary';
 const SECONDARY_SEARCH = 'secondary';
@@ -54,6 +55,7 @@ export {
     SEARCH_RESET,
     CYPHER_SEARCH_SET_VALUE,
     SAVE_PATH_FILTERS,
+    TAB_SELECTED,
 };
 
 export interface SearchBarState {
@@ -75,6 +77,7 @@ export interface SearchState {
     cypher: SearchBarState;
     searchType: string;
     pathFilters: EdgeCheckboxType[];
+    activeTab: SearchTargetType;
 }
 
 export interface SearchStartAction {
@@ -104,6 +107,11 @@ interface SearchSetValueAction {
 
 interface SearchResetAction {
     type: typeof SEARCH_RESET;
+}
+
+interface TabSelectedAction {
+    type: typeof TAB_SELECTED;
+    tabName: SearchTargetType;
 }
 
 export interface SavePathFiltersAction {
@@ -152,7 +160,8 @@ export type SearchbarActionTypes =
     | SearchbarTargetedActionTypes
     | StartSearchSelectedAction
     | SearchResetAction
-    | SavePathFiltersAction;
+    | SavePathFiltersAction
+    | TabSelectedAction;
 
 export type SearchTargetType =
     | typeof PRIMARY_SEARCH

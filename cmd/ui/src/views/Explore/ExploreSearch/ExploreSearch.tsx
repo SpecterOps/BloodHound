@@ -19,13 +19,14 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Box, Collapse, Paper, Tab, Tabs, Theme, useMediaQuery, useTheme } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
 import { Icon } from 'bh-shared-ui';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { PRIMARY_SEARCH } from 'src/ducks/searchbar/types';
-import { AppState } from 'src/store';
+import { AppState, useAppDispatch } from 'src/store';
 import CypherSearch from './CypherSearch';
 import NodeSearch from './NodeSearch';
 import PathfindingSearch from './PathfindingSearch';
+import { setActiveTab } from 'src/ducks/searchbar/actions';
 
 const useStyles = makeStyles((theme) => ({
     menuButton: {
@@ -43,6 +44,13 @@ const useStyles = makeStyles((theme) => ({
     },
 }));
 
+const tabNameMap = {
+    primary: 0,
+    secondary: 1,
+    cypher: 2,
+    tierZero: 3,
+};
+
 interface ExploreSearchProps {
     handleColumns?: (isCypherEditorActive: boolean) => void;
 }
@@ -51,24 +59,35 @@ const ExploreSearch = ({ handleColumns }: ExploreSearchProps) => {
     const classes = useStyles();
     const theme = useTheme();
     const matches = useMediaQuery(theme.breakpoints.down('md'));
+    const dispatch = useAppDispatch();
 
-    const searchState = useSelector((state: AppState) => state.search);
+    const { activeTab: tabKey } = useSelector((state: AppState) => state.search);
+    const activeTab = tabNameMap[tabKey];
 
     const [showSearchWidget, setShowSearchWidget] = useState(true);
 
-    const [activeTab, setActiveTab] = useState(() => {
-        if (searchState.primary.value && searchState.secondary.value) {
-            return 1;
-        }
-        return 0;
-    });
+    // todo: recreate the following logic to work with the new ducks logic
 
-    const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
-        setActiveTab(newValue);
+    // const [activeTab, setActiveTab] = useState(() => {
+    //     if (searchState.primary.value && searchState.secondary.value) {
+    //         return 1;
+    //     }
+    //     return 0;
+    // });
+
+    const handleTabChange = (newTabIndex: number) => {
+        switch (newTabIndex) {
+            case 0:
+                return dispatch(setActiveTab('primary'));
+            case 1:
+                return dispatch(setActiveTab('secondary'));
+            case 2:
+                return dispatch(setActiveTab('cypher'));
+        }
 
         const cypherTabIndex = 2;
         if (handleColumns) {
-            handleColumns(newValue === cypherTabIndex);
+            handleColumns(newTabIndex === cypherTabIndex);
         }
     };
 
@@ -85,7 +104,7 @@ const ExploreSearch = ({ handleColumns }: ExploreSearchProps) => {
                 <Tabs
                     variant='fullWidth'
                     value={activeTab}
-                    onChange={handleTabChange}
+                    onChange={(e, newTabIdx) => handleTabChange(newTabIdx)}
                     onClick={() => setShowSearchWidget(true)}
                     sx={{
                         height: '40px',

@@ -65,6 +65,7 @@ const initialSearchState: types.SearchState = {
         options: [],
     },
     pathFilters: initialPathFilters,
+    activeTab: 'primary',
 };
 
 function isTargetedActionType(action: types.SearchbarActionTypes): action is types.SearchbarTargetedActionTypes {
@@ -80,6 +81,13 @@ const searchReducer = (state = initialSearchState, action: types.SearchbarAction
         return {
             ...state,
             pathFilters: [...action.filters],
+        };
+    }
+
+    if (action.type === types.TAB_SELECTED) {
+        return {
+            ...state,
+            activeTab: action.tabName,
         };
     }
 

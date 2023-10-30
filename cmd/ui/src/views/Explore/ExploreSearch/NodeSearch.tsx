@@ -26,70 +26,71 @@ interface NodeSearchProps {
     searchType: typeof PRIMARY_SEARCH | typeof SECONDARY_SEARCH;
 }
 
-const NodeSearch = ({ searchType, labelText }: NodeSearchProps) => {
-    const dispatch = useDispatch();
-
-    const [inputValue, setInputValue] = useState('');
-    const [selectedItem, setSelectedItem] = useState<SearchNodeType | null>(null);
-
-    const searchState = useSelector((state: AppState) => state.search[searchType]);
-
-    useEffect(() => {
-        if (searchState.value) {
-            setInputValue(searchState.value!.name);
-            setSelectedItem(searchState.value);
-        }
-    }, [searchState]);
-
-    useEffect(() => {
-        if (selectedItem) {
-            dispatch(setSearchValue(selectedItem, searchType, SEARCH_TYPE_EXACT));
-            dispatch(startSearchSelected(searchType));
-        }
-    }, [selectedItem, searchType, dispatch]);
-
-    const handleInputValueChange = ({ inputValue }: any) => {
-        setInputValue(inputValue || '');
-    };
-
-    const handleSelectedItemChange = ({ selectedItem }: any) => {
-        setSelectedItem(selectedItem);
-    };
-
-    return (
-        <ExploreSearchCombobox
-            inputValue={inputValue}
-            onInputValueChange={handleInputValueChange}
-            selectedItem={selectedItem}
-            onSelectedItemChange={handleSelectedItemChange}
-            labelText={labelText}
-        />
-    );
-};
-
 // const NodeSearch = ({ searchType, labelText }: NodeSearchProps) => {
 //     const dispatch = useDispatch();
 
+//     const [inputValue, setInputValue] = useState('');
+//     const [selectedItem, setSelectedItem] = useState<SearchNodeType | null>(null);
+
 //     const searchState = useSelector((state: AppState) => state.search[searchType]);
 
+//     useEffect(() => {
+//         if (searchState.value) {
+//             setInputValue(searchState.value!.name);
+//             setSelectedItem(searchState.value);
+//         }
+//     }, [searchState]);
+
+//     useEffect(() => {
+//         if (selectedItem) {
+//             dispatch(setSearchValue(selectedItem, searchType, SEARCH_TYPE_EXACT));
+//             dispatch(startSearchSelected(searchType));
+//         }
+//     }, [selectedItem, searchType, dispatch]);
+
 //     const handleInputValueChange = ({ inputValue }: any) => {
-//         dispatch(startSearchAction(inputValue, searchType));
+//         setInputValue(inputValue || '');
 //     };
 
-//     const handleSelectedItemChange = ({ selectedItem }: { selectedItem: SearchNodeType }) => {
-//         dispatch(setSearchValue(selectedItem, searchType, SEARCH_TYPE_EXACT));
-//         dispatch(startSearchSelected(searchType));
+//     const handleSelectedItemChange = ({ selectedItem }: any) => {
+//         setSelectedItem(selectedItem);
 //     };
 
 //     return (
 //         <ExploreSearchCombobox
-//             inputValue={searchState.searchTerm}
+//             inputValue={inputValue}
 //             onInputValueChange={handleInputValueChange}
-//             selectedItem={searchState.value}
+//             selectedItem={selectedItem}
 //             onSelectedItemChange={handleSelectedItemChange}
 //             labelText={labelText}
 //         />
 //     );
 // };
+
+const NodeSearch = ({ searchType, labelText }: NodeSearchProps) => {
+    const dispatch = useDispatch();
+
+    const searchState = useSelector((state: AppState) => state.search[searchType]);
+
+    const handleInputValueChange = ({ inputValue }: any) => {
+        console.log('is handleInputValueChange called?');
+        dispatch(startSearchAction(inputValue, searchType));
+    };
+
+    const handleSelectedItemChange = ({ selectedItem }: { selectedItem: SearchNodeType }) => {
+        dispatch(setSearchValue(selectedItem, searchType, SEARCH_TYPE_EXACT));
+        dispatch(startSearchSelected(searchType));
+    };
+
+    return (
+        <ExploreSearchCombobox
+            inputValue={searchState.searchTerm}
+            onInputValueChange={handleInputValueChange}
+            selectedItem={searchState.value}
+            onSelectedItemChange={handleSelectedItemChange}
+            labelText={labelText}
+        />
+    );
+};
 
 export default NodeSearch;
