@@ -104,14 +104,10 @@ const (
 	SidFiltering            Property = "sidfiltering"
 	TrustedToAuth           Property = "trustedtoauth"
 	SamAccountName          Property = "samaccountname"
-	LocalAdmins             Property = "localadmins"
-	RemoteDesktopUsers      Property = "remotedesktopusers"
-	DcomUsers               Property = "dcomusers"
-	PSRemoteUsers           Property = "psremoteusers"
 )
 
 func AllProperties() []Property {
-	return []Property{AdminCount, DistinguishedName, DomainFQDN, DomainSID, Sensitive, HighValue, BlocksInheritance, IsACL, IsACLProtected, Enforced, Department, HasSPN, UnconstrainedDelegation, LastLogon, LastLogonTimestamp, IsPrimaryGroup, HasLAPS, DontRequirePreAuth, LogonType, HasURA, PasswordNeverExpires, PasswordNotRequired, FunctionalLevel, TrustType, SidFiltering, TrustedToAuth, SamAccountName, LocalAdmins, RemoteDesktopUsers, DcomUsers, PSRemoteUsers}
+	return []Property{AdminCount, DistinguishedName, DomainFQDN, DomainSID, Sensitive, HighValue, BlocksInheritance, IsACL, IsACLProtected, Enforced, Department, HasSPN, UnconstrainedDelegation, LastLogon, LastLogonTimestamp, IsPrimaryGroup, HasLAPS, DontRequirePreAuth, LogonType, HasURA, PasswordNeverExpires, PasswordNotRequired, FunctionalLevel, TrustType, SidFiltering, TrustedToAuth, SamAccountName}
 }
 func ParseProperty(source string) (Property, error) {
 	switch source {
@@ -169,14 +165,6 @@ func ParseProperty(source string) (Property, error) {
 		return TrustedToAuth, nil
 	case "samaccountname":
 		return SamAccountName, nil
-	case "localadmins":
-		return LocalAdmins, nil
-	case "remotedesktopusers":
-		return RemoteDesktopUsers, nil
-	case "dcomusers":
-		return DcomUsers, nil
-	case "psremoteusers":
-		return PSRemoteUsers, nil
 	default:
 		return "", errors.New("Invalid enumeration value: " + source)
 	}
@@ -237,14 +225,6 @@ func (s Property) String() string {
 		return string(TrustedToAuth)
 	case SamAccountName:
 		return string(SamAccountName)
-	case LocalAdmins:
-		return string(LocalAdmins)
-	case RemoteDesktopUsers:
-		return string(RemoteDesktopUsers)
-	case DcomUsers:
-		return string(DcomUsers)
-	case PSRemoteUsers:
-		return string(PSRemoteUsers)
 	default:
 		panic("Invalid enumeration case: " + string(s))
 	}
@@ -305,14 +285,6 @@ func (s Property) Name() string {
 		return "Trusted For Constrained Delegation"
 	case SamAccountName:
 		return "SAM Account Name"
-	case LocalAdmins:
-		return "Local Admins"
-	case RemoteDesktopUsers:
-		return "Remote Desktop Users"
-	case DcomUsers:
-		return "Dcom Users"
-	case PSRemoteUsers:
-		return "PS Remote Users"
 	default:
 		panic("Invalid enumeration case: " + string(s))
 	}
