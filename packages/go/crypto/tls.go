@@ -53,7 +53,7 @@ func tryParsePrivateKey(key string) (*rsa.PrivateKey, error) {
 
 func X509ParseCert(cert string) (*x509.Certificate, error) {
 	formattedCert := cert
-	
+
 	if !strings.HasPrefix("-----BEGIN CERTIFICATE-----", formattedCert) {
 		formattedCert = "-----BEGIN CERTIFICATE-----\n" + formattedCert
 	}
