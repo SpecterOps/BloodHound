@@ -39,7 +39,6 @@ import (
 	"github.com/specterops/bloodhound/src/daemons/datapipe"
 	"github.com/specterops/bloodhound/src/daemons/gc"
 	"github.com/specterops/bloodhound/src/database"
-	"github.com/specterops/bloodhound/src/database/migration"
 	"github.com/specterops/bloodhound/src/database/types/null"
 	"github.com/specterops/bloodhound/src/migrations"
 	"github.com/specterops/bloodhound/src/model"
@@ -79,13 +78,13 @@ func MigrateGraph(cfg config.Configuration, db graph.Database) error {
 }
 
 // MigrateDB runs database migrations on PG
-func MigrateDB(cfg config.Configuration, db database.Database, models []any) error {
+func MigrateDB(cfg config.Configuration, db database.Database) error {
 	if cfg.DisableMigrations {
 		log.Infof("Database migrations are disabled per configuration")
 		return nil
 	}
 
-	if err := db.MigrateModels(models); err != nil {
+	if err := db.Migrate(); err != nil {
 		return err
 	}
 
@@ -155,7 +154,7 @@ func StartServer(cfg config.Configuration, exitC chan struct{}) error {
 
 	if db, graphDB, err := ConnectDatabases(cfg); err != nil {
 		return fmt.Errorf("db connection error: %w", err)
-	} else if err := MigrateDB(cfg, db, migration.ListBHModels()); err != nil {
+	} else if err := MigrateDB(cfg, db); err != nil {
 		return fmt.Errorf("db migration error: %w", err)
 	} else if err := MigrateGraph(cfg, graphDB); err != nil {
 		return fmt.Errorf("graph db migration error: %w", err)

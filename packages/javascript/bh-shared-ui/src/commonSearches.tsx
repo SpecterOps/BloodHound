@@ -138,7 +138,7 @@ export const CommonSearches: CommonSearchType[] = [
             },
             {
                 description: 'Shortest paths from Kerberoastable users',
-                cypher: `MATCH p=shortestPath((n)-[:${adTransitEdgeTypes}*1..]->(m:Computer))\nWHERE m.unconstraineddelegation = true AND n<>m\nRETURN p`,
+                cypher: `MATCH p=shortestPath((n:User)-[:${adTransitEdgeTypes}*1..]->(m:Computer))\nWHERE n.hasspn = true AND n<>m\nRETURN p`,
             },
             {
                 description: 'Shortest paths to Domain Admins from Kerberoastable users',
