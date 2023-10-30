@@ -104,7 +104,6 @@ const searchReducer = (state = initialSearchState, action: types.SearchbarAction
                     searchTerm: action.primary.name,
                     loading: false,
                     value: {
-                        label: action.primary.name,
                         name: action.primary.name,
                         objectid: action.primary.objectid,
                         type: GraphNodeTypes.User,
@@ -117,7 +116,6 @@ const searchReducer = (state = initialSearchState, action: types.SearchbarAction
                         searchTerm: action.secondary.name,
                         loading: false,
                         value: {
-                            label: action.secondary.name,
                             name: action.secondary.name,
                             objectid: action.secondary.objectid,
                             type: GraphNodeTypes.User,

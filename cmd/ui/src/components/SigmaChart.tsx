@@ -37,8 +37,9 @@ import { GraphNodes } from 'js-client-library';
 import { GraphButtonProps, SearchCurrentNodes } from 'bh-shared-ui';
 import { SigmaNodeEventPayload } from 'sigma/sigma';
 import { AppState, useAppDispatch } from 'src/store';
-import { startSearchAction } from 'src/ducks/searchbar/actions';
+import { setSearchValue, startSearchAction } from 'src/ducks/searchbar/actions';
 import { useSelector } from 'react-redux';
+import { SEARCH_TYPE_EXACT } from 'src/ducks/searchbar/types';
 
 interface SigmaChartProps {
     rankDirection: RankDirection;
@@ -153,7 +154,16 @@ const ContextMenu: FC<{ anchorPosition: { x: number; y: number } }> = ({ anchorP
     };
 
     const handleSetStartingNode = () => {
-        dispatch(startSearchAction(selectedNode?.name || '', 'primary'));
+        if (selectedNode) {
+            const bleh = {
+                objectid: selectedNode.id,
+                type: selectedNode.type,
+                name: selectedNode.name,
+            };
+            // dispatch(startSearchAction(selectedNode.name, 'primary'));
+
+            dispatch(setSearchValue(bleh, 'primary', SEARCH_TYPE_EXACT));
+        }
     };
 
     return (

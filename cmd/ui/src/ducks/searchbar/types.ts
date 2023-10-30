@@ -62,10 +62,8 @@ export interface SearchBarState {
     loading: boolean;
     value: SearchNodeType | null;
 }
-
 export interface SearchNodeType {
     objectid: string;
-    label: string;
     type: GraphNodeTypes;
     name: string;
 }

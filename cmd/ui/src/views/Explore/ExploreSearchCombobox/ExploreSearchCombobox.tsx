@@ -40,11 +40,12 @@ const ExploreSearchCombobox: React.FC<{
     const { isOpen, getMenuProps, getInputProps, getComboboxProps, highlightedIndex, getItemProps, openMenu } =
         useCombobox({
             items: data || [],
+            inputValue,
             onInputValueChange,
             selectedItem,
             onSelectedItemChange,
             itemToString: (item) => (item ? item.name || item.objectid : ''),
-            onStateChange: ({ type, inputValue, selectedItem }) => {
+            onStateChange: ({ type, inputValue }) => {
                 // remove icon when input is empty
                 if (type === useCombobox.stateChangeTypes.InputChange) {
                     if (!inputValue) {
@@ -96,7 +97,7 @@ const ExploreSearchCombobox: React.FC<{
                     },
                     startAdornment: showInputIcon && selectedItem?.type && <NodeIcon nodeType={selectedItem?.type} />,
                 }}
-                {...getInputProps({ onFocus: openMenu })}
+                {...getInputProps({ onFocus: openMenu, refKey: 'inputRef' })}
                 data-testid='explore_search_input-search'
             />
             <div
