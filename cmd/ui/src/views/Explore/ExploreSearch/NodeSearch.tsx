@@ -73,13 +73,18 @@ const NodeSearch = ({ searchType, labelText }: NodeSearchProps) => {
     const searchState = useSelector((state: AppState) => state.search[searchType]);
 
     const handleInputValueChange = ({ inputValue }: any) => {
-        console.log('is handleInputValueChange called?');
-        dispatch(startSearchAction(inputValue, searchType));
+        console.log('is handleInputValueChange called?', inputValue);
+        if (inputValue !== undefined) {
+            dispatch(startSearchAction(inputValue, searchType));
+        }
     };
 
     const handleSelectedItemChange = ({ selectedItem }: { selectedItem: SearchNodeType }) => {
-        dispatch(setSearchValue(selectedItem, searchType, SEARCH_TYPE_EXACT));
-        dispatch(startSearchSelected(searchType));
+        console.log('is handleSelectedItemChange called?', selectedItem);
+        if (selectedItem !== undefined) {
+            dispatch(setSearchValue(selectedItem, searchType, SEARCH_TYPE_EXACT));
+            dispatch(startSearchSelected(searchType));
+        }
     };
 
     return (

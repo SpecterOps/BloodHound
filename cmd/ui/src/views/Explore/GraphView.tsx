@@ -71,8 +71,9 @@ const GraphView: FC = () => {
 
     useEffect(() => {
         let items: any = graphState.chartProps.items;
-        if (!items || isEmpty(items)) return;
-        if (!items.nodes || isEmpty(items.nodes)) items = transformFlatGraphResponse(items);
+        if (!items) return;
+        // `items` may be empty, or it may contain an empty `nodes` object
+        if (isEmpty(items) || isEmpty(items.nodes)) items = transformFlatGraphResponse(items);
 
         const graph = new MultiDirectedGraph();
         const nodeSize = 25;
@@ -92,6 +93,8 @@ const GraphView: FC = () => {
             },
         });
         setGraphologyGraph(graph);
+
+        console.log(graph);
     }, [graphState.chartProps.items]);
 
     useEffect(() => {

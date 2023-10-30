@@ -159,7 +159,7 @@ const ContextMenu: FC<{ anchorPosition: { x: number; y: number } }> = ({ anchorP
                 type: selectedNode.type,
                 name: selectedNode.name,
             };
-            // dispatch(setActiveTab('secondary'));
+            dispatch(setActiveTab('secondary'));
             dispatch(startSearchAction(selectedNode.name, 'primary'));
 
             // dispatch(setSearchValue(bleh, 'primary', SEARCH_TYPE_EXACT));
