@@ -462,3 +462,27 @@ func CalculateCrossProductNodeSets(firstNodeSet, secondNodeSet []*graph.Node, gr
 
 	return resultEntities
 }
+
+func GetEdgeDetailPath(tx graph.Transaction, edge graph.Relationship) {
+
+}
+
+func getADCSESC1EdgeDetail(tx graph.Transaction, edge *graph.Relationship) error {
+	if startNode, endNode, err := ops.FetchRelationshipNodes(tx, edge); err != nil {
+		return err
+	} else {
+		ops.TraversePaths(tx, ops.TraversalPlan{
+			Root:      startNode,
+			Direction: graph.DirectionOutbound,
+			BranchQuery: func() graph.Criteria {
+				return query.KindIn(query.Relationship(), ad.Enroll, ad.GenericAll, ad.AllExtendedRights, ad.MemberOf, ad.PublishedTo, ad.IssuedSignedBy, ad.RootCAFor)
+			},
+			DescentFilter: func(ctx *ops.TraversalContext, segment *graph.PathSegment) bool {
+
+			},
+			PathFilter: nil,
+			Skip:       0,
+			Limit:      0,
+		})
+	}
+}
