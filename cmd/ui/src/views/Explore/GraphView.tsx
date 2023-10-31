@@ -93,8 +93,6 @@ const GraphView: FC = () => {
             },
         });
         setGraphologyGraph(graph);
-
-        console.log(graph);
     }, [graphState.chartProps.items]);
 
     useEffect(() => {

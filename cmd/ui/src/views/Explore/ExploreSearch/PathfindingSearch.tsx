@@ -18,7 +18,7 @@ import { Box, Button } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faBullseye, faCircle, faExchangeAlt, faFilter } from '@fortawesome/free-solid-svg-icons';
-import { savePathFilters, setSearchValue, startSearchSelected } from 'src/ducks/searchbar/actions';
+import { savePathFilters, setSearchValue, startSearchAction, startSearchSelected } from 'src/ducks/searchbar/actions';
 import { useDispatch, useSelector } from 'react-redux';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { PRIMARY_SEARCH, SEARCH_TYPE_EXACT, SECONDARY_SEARCH, SearchNodeType } from 'src/ducks/searchbar/types';
@@ -46,15 +46,29 @@ const PathfindingSearch = () => {
     const [isOpenDialog, setIsOpenDialog] = useState(false);
     const [isActiveFilters, setIsActiveFilters] = useState(false);
 
-    const searchState = useSelector((state: AppState) => state.search);
+    const { primary, secondary, pathFilters } = useSelector((state: AppState) => state.search);
+
+    useEffect(() => {
+        if (primary.value && secondary.value) {
+            dispatch(startSearchSelected(SECONDARY_SEARCH));
+        } else {
+            dispatch(startSearchSelected(PRIMARY_SEARCH));
+        }
+    }, [primary, secondary, dispatch]);
 
     const setSourceNode = useCallback(
-        (newSource: SearchNodeType | null) => dispatch(setSearchValue(newSource, PRIMARY_SEARCH, SEARCH_TYPE_EXACT)),
+        (newSource: SearchNodeType | null) => {
+            dispatch(startSearchAction(newSource!.name, PRIMARY_SEARCH));
+            dispatch(setSearchValue(newSource, PRIMARY_SEARCH, SEARCH_TYPE_EXACT));
+        },
         [dispatch]
     );
 
     const setDestinationNode = useCallback(
-        (newDest: SearchNodeType | null) => dispatch(setSearchValue(newDest, SECONDARY_SEARCH, SEARCH_TYPE_EXACT)),
+        (newDest: SearchNodeType | null) => {
+            dispatch(startSearchAction(newDest!.name, SECONDARY_SEARCH));
+            dispatch(setSearchValue(newDest, SECONDARY_SEARCH, SEARCH_TYPE_EXACT));
+        },
         [dispatch]
     );
 
@@ -62,21 +76,21 @@ const PathfindingSearch = () => {
 
     useEffect(() => {
         // if user has applied filters, set active
-        if (searchState.pathFilters?.some((filter) => !filter.checked)) {
+        if (pathFilters?.some((filter) => !filter.checked)) {
             setIsActiveFilters(true);
         } else {
             setIsActiveFilters(false);
         }
-    }, [searchState.pathFilters]);
+    }, [pathFilters]);
 
     const swapPathfindingInputs = useCallback(() => {
-        const newSourceItem = searchState.secondary.value;
-        const newDestinationItem = searchState.primary.value;
+        const newSourceItem = secondary.value;
+        const newDestinationItem = primary.value;
 
         setSourceNode(newSourceItem);
         setDestinationNode(newDestinationItem);
         executeSearch();
-    }, [searchState, setSourceNode, setDestinationNode, executeSearch]);
+    }, [setSourceNode, setDestinationNode, executeSearch, primary.value, secondary.value]);
 
     const doPathfindingSearch = () => {
         dispatch(startSearchSelected(SECONDARY_SEARCH));
@@ -96,7 +110,7 @@ const PathfindingSearch = () => {
             <Button
                 className={classes.pathfindingButton}
                 variant='outlined'
-                disabled={!searchState.primary.value || !searchState.secondary.value}
+                disabled={!primary.value || !secondary.value}
                 onClick={() => swapPathfindingInputs()}>
                 <FontAwesomeIcon icon={faExchangeAlt} className='fa-rotate-90' />
             </Button>
@@ -107,7 +121,7 @@ const PathfindingSearch = () => {
                 onClick={() => {
                     setIsOpenDialog(true);
                     // what is the initial state of edge filters?  save it
-                    initialFilterState.current = searchState.pathFilters;
+                    initialFilterState.current = pathFilters;
                 }}>
                 <FontAwesomeIcon icon={faFilter} color={isActiveFilters ? '#406F8E' : 'black'} />
             </Button>

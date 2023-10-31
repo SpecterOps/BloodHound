@@ -39,6 +39,7 @@ import { SigmaNodeEventPayload } from 'sigma/sigma';
 import { AppState, useAppDispatch } from 'src/store';
 import { setActiveTab, setSearchValue, startSearchAction } from 'src/ducks/searchbar/actions';
 import { useSelector } from 'react-redux';
+import { PRIMARY_SEARCH, SEARCH_TYPE_EXACT } from 'src/ducks/searchbar/types';
 
 interface SigmaChartProps {
     rankDirection: RankDirection;
@@ -154,15 +155,9 @@ const ContextMenu: FC<{ anchorPosition: { x: number; y: number } }> = ({ anchorP
 
     const handleSetStartingNode = () => {
         if (selectedNode) {
-            const bleh = {
-                objectid: selectedNode.id,
-                type: selectedNode.type,
-                name: selectedNode.name,
-            };
             dispatch(setActiveTab('secondary'));
-            dispatch(startSearchAction(selectedNode.name, 'primary'));
-
-            // dispatch(setSearchValue(bleh, 'primary', SEARCH_TYPE_EXACT));
+            dispatch(setSearchValue(null, PRIMARY_SEARCH, SEARCH_TYPE_EXACT));
+            dispatch(startSearchAction(selectedNode.name, PRIMARY_SEARCH));
         }
     };
 

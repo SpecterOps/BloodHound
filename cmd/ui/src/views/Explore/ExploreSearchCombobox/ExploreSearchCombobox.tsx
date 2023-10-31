@@ -18,34 +18,49 @@ import { List, ListItem, ListItemText, Paper, TextField, useTheme } from '@mui/m
 import { useCombobox } from 'downshift';
 import { useState } from 'react';
 import { NodeIcon, SearchResultItem } from 'bh-shared-ui';
-import { useDebouncedValue } from 'src/hooks/useDebouncedValue';
 import { getEmptyResultsText, getKeywordAndTypeValues, SearchResult, useSearch } from 'src/hooks/useSearch';
+import { AppState, useAppDispatch } from 'src/store';
+import { setSearchValue, startSearchAction } from 'src/ducks/searchbar/actions';
+import { PRIMARY_SEARCH, SEARCH_TYPE_EXACT, SECONDARY_SEARCH, SearchNodeType } from 'src/ducks/searchbar/types';
+import { useSelector } from 'react-redux';
 
 const ExploreSearchCombobox: React.FC<{
-    inputValue: string;
-    onInputValueChange: any;
-    selectedItem: any;
-    onSelectedItemChange: any;
     labelText: string;
     disabled?: boolean;
-}> = ({ inputValue, onInputValueChange, selectedItem, onSelectedItemChange, labelText, disabled = false }) => {
+    searchType: typeof PRIMARY_SEARCH | typeof SECONDARY_SEARCH;
+}> = ({ labelText, disabled = false, searchType }) => {
     const theme = useTheme();
+    const dispatch = useAppDispatch();
 
-    const [showInputIcon, setShowInputIcon] = useState(false);
+    const [showInputIcon, setShowInputIcon] = useState(true);
 
-    const debouncedInputValue = useDebouncedValue(inputValue, 150) as string;
-    const { keyword, type } = getKeywordAndTypeValues(debouncedInputValue);
+    const { primary, secondary } = useSelector((state: AppState) => state.search);
+    const inputValue = searchType === PRIMARY_SEARCH ? primary.searchTerm : secondary.searchTerm;
+    const selectedItem = searchType === PRIMARY_SEARCH ? primary.value : secondary.value;
+
+    const { keyword, type } = getKeywordAndTypeValues(inputValue);
     const { data, error, isError, isLoading, isFetching } = useSearch(keyword, type);
 
     const { isOpen, getMenuProps, getInputProps, getComboboxProps, highlightedIndex, getItemProps, openMenu } =
         useCombobox({
             items: data || [],
+            onInputValueChange: ({ type, inputValue }) => {
+                if (
+                    inputValue !== undefined &&
+                    type !== useCombobox.stateChangeTypes.ControlledPropUpdatedSelectedItem
+                ) {
+                    dispatch(startSearchAction(inputValue, searchType));
+                }
+            },
             inputValue,
-            onInputValueChange,
             selectedItem,
-            onSelectedItemChange,
+            onSelectedItemChange: ({ type, selectedItem }) => {
+                if (selectedItem) {
+                    dispatch(setSearchValue(selectedItem as SearchNodeType, searchType, SEARCH_TYPE_EXACT));
+                }
+            },
             itemToString: (item) => (item ? item.name || item.objectid : ''),
-            onStateChange: ({ type, inputValue }) => {
+            onStateChange: ({ type, inputValue, selectedItem }) => {
                 // remove icon when input is empty
                 if (type === useCombobox.stateChangeTypes.InputChange) {
                     if (!inputValue) {
@@ -73,7 +88,7 @@ const ExploreSearchCombobox: React.FC<{
         isFetching,
         isError,
         error,
-        debouncedInputValue,
+        inputValue,
         type,
         keyword,
         data

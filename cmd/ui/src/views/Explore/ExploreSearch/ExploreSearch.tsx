@@ -19,14 +19,14 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Box, Collapse, Paper, Tab, Tabs, Theme, useMediaQuery, useTheme } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
 import { Icon } from 'bh-shared-ui';
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { useSelector } from 'react-redux';
-import { PRIMARY_SEARCH } from 'src/ducks/searchbar/types';
+import { PRIMARY_SEARCH, SEARCH_TYPE_EXACT, SECONDARY_SEARCH } from 'src/ducks/searchbar/types';
 import { AppState, useAppDispatch } from 'src/store';
 import CypherSearch from './CypherSearch';
 import NodeSearch from './NodeSearch';
 import PathfindingSearch from './PathfindingSearch';
-import { setActiveTab, startSearchSelected } from 'src/ducks/searchbar/actions';
+import { setActiveTab, setSearchValue, startSearchSelected } from 'src/ducks/searchbar/actions';
 
 const useStyles = makeStyles((theme) => ({
     menuButton: {
@@ -81,6 +81,7 @@ const ExploreSearch = ({ handleColumns }: ExploreSearchProps) => {
                 if (primary.value) {
                     dispatch(startSearchSelected('primary'));
                 }
+                dispatch(setSearchValue(null, SECONDARY_SEARCH, SEARCH_TYPE_EXACT));
                 return dispatch(setActiveTab('primary'));
             case 1:
                 if (primary.value && secondary.value) {

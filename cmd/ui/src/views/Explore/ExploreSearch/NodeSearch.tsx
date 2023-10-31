@@ -17,85 +17,26 @@
 import { useDispatch, useSelector } from 'react-redux';
 import ExploreSearchCombobox from '../ExploreSearchCombobox';
 import { AppState } from 'src/store';
-import { PRIMARY_SEARCH, SEARCH_TYPE_EXACT, SECONDARY_SEARCH, SearchNodeType } from 'src/ducks/searchbar/types';
-import { setSearchValue, startSearchAction, startSearchSelected } from 'src/ducks/searchbar/actions';
-import { useEffect, useState } from 'react';
+import { PRIMARY_SEARCH, SECONDARY_SEARCH } from 'src/ducks/searchbar/types';
+import { startSearchSelected } from 'src/ducks/searchbar/actions';
+import { useEffect } from 'react';
 
 interface NodeSearchProps {
     labelText: string;
     searchType: typeof PRIMARY_SEARCH | typeof SECONDARY_SEARCH;
 }
 
-// const NodeSearch = ({ searchType, labelText }: NodeSearchProps) => {
-//     const dispatch = useDispatch();
-
-//     const [inputValue, setInputValue] = useState('');
-//     const [selectedItem, setSelectedItem] = useState<SearchNodeType | null>(null);
-
-//     const searchState = useSelector((state: AppState) => state.search[searchType]);
-
-//     useEffect(() => {
-//         if (searchState.value) {
-//             setInputValue(searchState.value!.name);
-//             setSelectedItem(searchState.value);
-//         }
-//     }, [searchState]);
-
-//     useEffect(() => {
-//         if (selectedItem) {
-//             dispatch(setSearchValue(selectedItem, searchType, SEARCH_TYPE_EXACT));
-//             dispatch(startSearchSelected(searchType));
-//         }
-//     }, [selectedItem, searchType, dispatch]);
-
-//     const handleInputValueChange = ({ inputValue }: any) => {
-//         setInputValue(inputValue || '');
-//     };
-
-//     const handleSelectedItemChange = ({ selectedItem }: any) => {
-//         setSelectedItem(selectedItem);
-//     };
-
-//     return (
-//         <ExploreSearchCombobox
-//             inputValue={inputValue}
-//             onInputValueChange={handleInputValueChange}
-//             selectedItem={selectedItem}
-//             onSelectedItemChange={handleSelectedItemChange}
-//             labelText={labelText}
-//         />
-//     );
-// };
-
 const NodeSearch = ({ searchType, labelText }: NodeSearchProps) => {
     const dispatch = useDispatch();
+    const { primary } = useSelector((state: AppState) => state.search);
 
-    const searchState = useSelector((state: AppState) => state.search[searchType]);
-
-    const handleInputValueChange = ({ inputValue }: any) => {
-        console.log('is handleInputValueChange called?', inputValue);
-        if (inputValue !== undefined) {
-            dispatch(startSearchAction(inputValue, searchType));
+    useEffect(() => {
+        if (primary.value) {
+            dispatch(startSearchSelected(PRIMARY_SEARCH));
         }
-    };
+    }, [primary, dispatch]);
 
-    const handleSelectedItemChange = ({ selectedItem }: { selectedItem: SearchNodeType }) => {
-        console.log('is handleSelectedItemChange called?', selectedItem);
-        if (selectedItem !== undefined) {
-            dispatch(setSearchValue(selectedItem, searchType, SEARCH_TYPE_EXACT));
-            dispatch(startSearchSelected(searchType));
-        }
-    };
-
-    return (
-        <ExploreSearchCombobox
-            inputValue={searchState.searchTerm}
-            onInputValueChange={handleInputValueChange}
-            selectedItem={searchState.value}
-            onSelectedItemChange={handleSelectedItemChange}
-            labelText={labelText}
-        />
-    );
+    return <ExploreSearchCombobox labelText={labelText} searchType={searchType} />;
 };
 
 export default NodeSearch;

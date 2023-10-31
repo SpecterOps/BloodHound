@@ -19,6 +19,8 @@ import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { act, render, screen, within } from 'src/test-utils';
 import ExploreSearchCombobox from '.';
+import * as actions from 'src/ducks/searchbar/actions';
+import { PRIMARY_SEARCH, SEARCH_TYPE_EXACT } from 'src/ducks/searchbar/types';
 
 const testSearchResults = {
     data: [
@@ -52,67 +54,43 @@ afterAll(() => server.close());
 
 describe('ExploreSearchCombobox', () => {
     it('can render', async () => {
-        const testOnInputValueChange: any = vi.fn();
-        const testOnSelectedItemChange: any = vi.fn();
-        const testLabelText: string = 'test label';
+        const labelText: string = 'test label';
         await act(async () => {
-            render(
-                <ExploreSearchCombobox
-                    inputValue=''
-                    onInputValueChange={testOnInputValueChange}
-                    selectedItem={null}
-                    onSelectedItemChange={testOnSelectedItemChange}
-                    labelText={testLabelText}
-                />
-            );
+            render(<ExploreSearchCombobox labelText={labelText} searchType={PRIMARY_SEARCH} />);
         });
-        expect(screen.getByLabelText(testLabelText)).toBeInTheDocument();
+        expect(screen.getByLabelText(labelText)).toBeInTheDocument();
     });
 
     it('typing a new search query calls onInputValueChange', async () => {
         const user = userEvent.setup();
-        const testOnInputValueChange: any = vi.fn();
-        const testOnSelectedItemChange: any = vi.fn();
-        const testLabelText: string = 'test label';
-        render(
-            <ExploreSearchCombobox
-                inputValue=''
-                onInputValueChange={testOnInputValueChange}
-                selectedItem={null}
-                onSelectedItemChange={testOnSelectedItemChange}
-                labelText={testLabelText}
-            />
-        );
+        const spy = jest.spyOn(actions, 'startSearchAction');
+        const labelText: string = 'test label';
+
+        render(<ExploreSearchCombobox labelText={labelText} searchType={PRIMARY_SEARCH} />);
 
         const testQuery = 'admin';
-        await user.type(screen.getByLabelText(testLabelText), testQuery);
-        expect(testOnInputValueChange).toHaveBeenLastCalledWith({
-            highlightedIndex: -1,
-            inputValue: testQuery,
-            isOpen: true,
-            selectedItem: null,
-            type: '__input_change__',
-        });
+        await user.type(screen.getByLabelText(labelText), testQuery);
+
+        expect(spy).toHaveBeenLastCalledWith(testQuery, PRIMARY_SEARCH);
     });
 
     it('when a search query is provided it eventually displays a list of search results', async () => {
         const user = userEvent.setup();
-        const testOnInputValueChange: any = vi.fn();
-        const testOnSelectedItemChange: any = vi.fn();
-        const testLabelText: string = 'test label';
-        const testInputValue = 'admin';
-        render(
-            <ExploreSearchCombobox
-                inputValue={testInputValue}
-                onInputValueChange={testOnInputValueChange}
-                selectedItem={null}
-                onSelectedItemChange={testOnSelectedItemChange}
-                labelText={testLabelText}
-            />
-        );
+        const labelText: string = 'test label';
 
-        await user.click(screen.getByLabelText(testLabelText));
+        render(<ExploreSearchCombobox labelText={labelText} searchType={PRIMARY_SEARCH} />, {
+            initialState: {
+                search: {
+                    primary: {
+                        searchTerm: ' ',
+                    },
+                },
+            },
+        });
+
+        await user.click(screen.getByLabelText(labelText));
         const options = await screen.findAllByRole('option');
+
         expect(options).toHaveLength(testSearchResults.data.length);
         for (let i = 0; i < testSearchResults.data.length; i++) {
             expect(options[i]).toHaveTextContent(testSearchResults.data[i].name);
@@ -122,31 +100,17 @@ describe('ExploreSearchCombobox', () => {
 
     it('when a search result is clicked it calls onSelectedItemChange', async () => {
         const user = userEvent.setup();
-        const testOnInputValueChange: any = vi.fn();
-        const testOnSelectedItemChange: any = vi.fn();
-        const testLabelText: string = 'test label';
-        const testInputValue = 'admin';
-        render(
-            <ExploreSearchCombobox
-                inputValue={testInputValue}
-                onInputValueChange={testOnInputValueChange}
-                selectedItem={null}
-                onSelectedItemChange={testOnSelectedItemChange}
-                labelText={testLabelText}
-            />
-        );
+        const spy = vi.spyOn(actions, 'setSearchValue');
+        const labelText: string = 'test label';
 
-        await user.click(screen.getByLabelText(testLabelText));
+        render(<ExploreSearchCombobox labelText={labelText} searchType={PRIMARY_SEARCH} />);
+
+        await user.type(screen.getByLabelText(labelText), 'admin');
         const options = await screen.findAllByRole('option');
         await user.click(options[0]);
 
-        expect(testOnSelectedItemChange).toHaveBeenCalledWith({
-            highlightedIndex: -1,
-            inputValue: 'admin1@testlab.local',
-            isOpen: false,
-            selectedItem: testSearchResults.data[0],
-            type: '__item_click__',
-        });
+        expect(spy).toHaveBeenCalledTimes(1);
+        expect(spy).toHaveBeenCalledWith(testSearchResults.data[0], PRIMARY_SEARCH, SEARCH_TYPE_EXACT);
     });
 });
 
@@ -157,124 +121,40 @@ describe('icon rendering', () => {
     it('when a search result is clicked, the combobox displays the icon', async () => {
         const user = userEvent.setup();
 
-        let selectedItem: any = null;
-        const onSelectedItemChange: any = vi.fn((item) => {
-            selectedItem = item.selectedItem;
-        });
+        render(<ExploreSearchCombobox labelText={labelText} searchType={PRIMARY_SEARCH} />);
 
-        const onInputValueChange: any = vi.fn();
-
-        const { rerender } = render(
-            <ExploreSearchCombobox
-                inputValue={userProvidedInput}
-                onInputValueChange={onInputValueChange}
-                selectedItem={selectedItem}
-                onSelectedItemChange={onSelectedItemChange}
-                labelText={labelText}
-            />
-        );
-
-        await user.click(screen.getByLabelText(labelText));
+        await user.type(screen.getByLabelText(labelText), userProvidedInput);
         const options = await screen.findAllByRole('option');
         await user.click(options[0]);
 
         const input = screen.getByLabelText(labelText);
-        expect(input).not.toHaveClass('MuiInputBase-inputAdornedStart');
-
-        rerender(
-            <ExploreSearchCombobox
-                inputValue={userProvidedInput}
-                onInputValueChange={onInputValueChange}
-                selectedItem={selectedItem}
-                onSelectedItemChange={onSelectedItemChange}
-                labelText={labelText}
-            />
-        );
-
         expect(input).toHaveClass('MuiInputBase-inputAdornedStart');
     });
 
     it('when a search result is selected with enter key, the combobox displays the icon', async () => {
         const user = userEvent.setup();
+        render(<ExploreSearchCombobox labelText={labelText} searchType={PRIMARY_SEARCH} />);
 
-        let selectedItem: any = null;
-        const onSelectedItemChange: any = vi.fn((item) => {
-            selectedItem = item.selectedItem;
-        });
-
-        const onInputValueChange: any = vi.fn();
-
-        const { rerender } = render(
-            <ExploreSearchCombobox
-                inputValue={userProvidedInput}
-                onInputValueChange={onInputValueChange}
-                selectedItem={selectedItem}
-                onSelectedItemChange={onSelectedItemChange}
-                labelText={labelText}
-            />
-        );
-
-        await user.click(screen.getByLabelText(labelText));
+        await user.type(screen.getByLabelText(labelText), userProvidedInput);
         const options = await screen.findAllByRole('option');
         await user.type(options[0], '{enter}');
 
         const input = screen.getByLabelText(labelText);
-        expect(input).not.toHaveClass('MuiInputBase-inputAdornedStart');
-
-        rerender(
-            <ExploreSearchCombobox
-                inputValue={userProvidedInput}
-                onInputValueChange={onInputValueChange}
-                selectedItem={selectedItem}
-                onSelectedItemChange={onSelectedItemChange}
-                labelText={labelText}
-            />
-        );
-
         expect(input).toHaveClass('MuiInputBase-inputAdornedStart');
     });
 
     it('when a search result is cleared, the combobox removes the icon', async () => {
         const user = userEvent.setup();
+        render(<ExploreSearchCombobox labelText={labelText} searchType={PRIMARY_SEARCH} />);
 
-        let selectedItem: any = null;
-        const onSelectedItemChange: any = vi.fn((item) => {
-            selectedItem = item.selectedItem;
-        });
-
-        const onInputValueChange: any = vi.fn();
-
-        const { rerender } = render(
-            <ExploreSearchCombobox
-                inputValue={userProvidedInput}
-                onInputValueChange={onInputValueChange}
-                selectedItem={selectedItem}
-                onSelectedItemChange={onSelectedItemChange}
-                labelText={labelText}
-            />
-        );
-
-        await user.click(screen.getByLabelText(labelText));
+        await user.type(screen.getByLabelText(labelText), userProvidedInput);
         const options = await screen.findAllByRole('option');
         await user.click(options[0]);
 
         const input = screen.getByLabelText(labelText);
-        expect(input).not.toHaveClass('MuiInputBase-inputAdornedStart');
-
-        rerender(
-            <ExploreSearchCombobox
-                inputValue={userProvidedInput}
-                onInputValueChange={onInputValueChange}
-                selectedItem={selectedItem}
-                onSelectedItemChange={onSelectedItemChange}
-                labelText={labelText}
-            />
-        );
-
         expect(input).toHaveClass('MuiInputBase-inputAdornedStart');
 
         await user.clear(input);
-
         expect(input).not.toHaveClass('MuiInputBase-inputAdornedStart');
     });
 });
@@ -289,21 +169,15 @@ describe('ExploreSearchCombobox with null response', () => {
     });
 
     it('a null response from the server is handled', async () => {
-        const testOnInputValueChange: any = vi.fn();
-        const testOnSelectedItemChange: any = vi.fn();
-        const testLabelText: string = 'test label';
-        const nullResultSearchText: string = 'the search result is null';
-        render(
-            <ExploreSearchCombobox
-                inputValue={nullResultSearchText}
-                onInputValueChange={testOnInputValueChange}
-                selectedItem={null}
-                onSelectedItemChange={testOnSelectedItemChange}
-                labelText={testLabelText}
-            />
-        );
+        const user = userEvent.setup();
+        const labelText: string = 'test label';
+        const searchText: string = 'blah';
 
-        expect(await screen.findByText(`No results found for "the search result is null"`)).toBeInTheDocument();
+        render(<ExploreSearchCombobox labelText={labelText} searchType={PRIMARY_SEARCH} />);
+
+        await user.type(screen.getByLabelText(labelText), searchText);
+
+        expect(await screen.findByText(`No results found for "blah"`)).toBeInTheDocument();
     });
 });
 
@@ -318,19 +192,13 @@ describe('ExploreSearchCombobox with search timeout', () => {
     });
 
     it('a timeout response from the server is handled', async () => {
-        const testOnInputValueChange: any = vi.fn();
-        const testOnSelectedItemChange: any = vi.fn();
-        const testLabelText: string = 'test label';
-        const inputValue: string = 'takesLongToFind';
-        render(
-            <ExploreSearchCombobox
-                inputValue={inputValue}
-                onInputValueChange={testOnInputValueChange}
-                selectedItem={null}
-                onSelectedItemChange={testOnSelectedItemChange}
-                labelText={testLabelText}
-            />
-        );
+        const user = userEvent.setup();
+        const labelText: string = 'test label';
+        const searchText: string = 'blah';
+
+        render(<ExploreSearchCombobox labelText={labelText} searchType={PRIMARY_SEARCH} />);
+
+        await user.type(screen.getByLabelText(labelText), searchText);
 
         expect(await screen.findByText(`Search has timed out. Please try again.`)).toBeInTheDocument();
     });
