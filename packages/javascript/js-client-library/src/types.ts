@@ -59,6 +59,7 @@ export interface CreateScheduledJobRequest {
     session_collection: boolean;
     ad_structure_collection: boolean;
     local_group_collection: boolean;
+    adcs_collection: boolean;
     domain_controller?: string;
     ous: string[];
     domains: string[];
@@ -82,6 +83,7 @@ export interface CreateSharpHoundEventRequest {
     session_collection: boolean;
     ad_structure_collection: boolean;
     local_group_collection: boolean;
+    adcs_collection: boolean;
     ous: string[];
     domains: string[];
     all_trusted_domains: boolean;
@@ -98,6 +100,7 @@ export interface UpdateSharpHoundEventRequest {
     session_collection: boolean;
     ad_structure_collection: boolean;
     local_group_collection: boolean;
+    adcs_collection: boolean;
     ous: string[];
     domains: string[];
     all_trusted_domains: boolean;
