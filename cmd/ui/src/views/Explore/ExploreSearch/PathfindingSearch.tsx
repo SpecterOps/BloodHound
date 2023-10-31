@@ -17,17 +17,17 @@
 import { Box, Button } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faBullseye, faCircle, faExchangeAlt, faFilter } from '@fortawesome/free-solid-svg-icons';
-import { savePathFilters, setSearchValue, startSearchSelected } from 'src/ducks/searchbar/actions';
+import { faBullseye, faCircle, faExchangeAlt } from '@fortawesome/free-solid-svg-icons';
+import { setSearchValue, startSearchSelected } from 'src/ducks/searchbar/actions';
 import { useDispatch, useSelector } from 'react-redux';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect } from 'react';
 import { PRIMARY_SEARCH, SEARCH_TYPE_EXACT, SECONDARY_SEARCH } from 'src/ducks/searchbar/types';
 import NodeSearch from './NodeSearch';
 import { AppState } from 'src/store';
-import EdgeFilteringDialog, { EdgeCheckboxType } from './EdgeFilteringDialog';
+import EdgeFilter from './EdgeFilter';
 
 const useStyles = makeStyles((theme) => ({
-    pathfindingButton: {
+    swapButton: {
         height: '25px',
         width: '25px',
         minWidth: '25px',
@@ -40,13 +40,9 @@ const useStyles = makeStyles((theme) => ({
 
 const PathfindingSearch = () => {
     const classes = useStyles();
-
     const dispatch = useDispatch();
 
-    const [isOpenDialog, setIsOpenDialog] = useState(false);
-    const [isActiveFilters, setIsActiveFilters] = useState(false);
-
-    const { primary, secondary, pathFilters } = useSelector((state: AppState) => state.search);
+    const { primary, secondary } = useSelector((state: AppState) => state.search);
 
     useEffect(() => {
         if (primary.value && secondary.value) {
@@ -55,15 +51,6 @@ const PathfindingSearch = () => {
             dispatch(startSearchSelected(PRIMARY_SEARCH));
         }
     }, [primary, secondary, dispatch]);
-
-    useEffect(() => {
-        // if user has applied filters, set active
-        if (pathFilters?.some((filter) => !filter.checked)) {
-            setIsActiveFilters(true);
-        } else {
-            setIsActiveFilters(false);
-        }
-    }, [pathFilters]);
 
     const swapPathfindingInputs = useCallback(() => {
         const newSourceNode = secondary.value;
@@ -75,12 +62,6 @@ const PathfindingSearch = () => {
         dispatch(startSearchSelected(SECONDARY_SEARCH));
     }, [primary, secondary, dispatch]);
 
-    const handlePathfindingSearch = () => {
-        dispatch(startSearchSelected(SECONDARY_SEARCH));
-    };
-
-    const initialFilterState = useRef<EdgeCheckboxType[]>([]);
-
     return (
         <Box display={'flex'} alignItems={'center'} gap={1}>
             <SourceToBullseyeIcon />
@@ -91,37 +72,14 @@ const PathfindingSearch = () => {
             </Box>
 
             <Button
-                className={classes.pathfindingButton}
+                className={classes.swapButton}
                 variant='outlined'
                 disabled={!primary?.value || !secondary?.value}
                 onClick={() => swapPathfindingInputs()}>
                 <FontAwesomeIcon icon={faExchangeAlt} className='fa-rotate-90' />
             </Button>
 
-            <Button
-                className={classes.pathfindingButton}
-                variant='outlined'
-                onClick={() => {
-                    setIsOpenDialog(true);
-                    // what is the initial state of edge filters?  save it
-                    initialFilterState.current = pathFilters;
-                }}>
-                <FontAwesomeIcon icon={faFilter} color={isActiveFilters ? '#406F8E' : 'black'} />
-            </Button>
-
-            <EdgeFilteringDialog
-                isOpen={isOpenDialog}
-                handleCancel={() => {
-                    setIsOpenDialog(false);
-
-                    // rollback changes made in dialog.
-                    dispatch(savePathFilters(initialFilterState.current));
-                }}
-                handleApply={() => {
-                    setIsOpenDialog(false);
-                    handlePathfindingSearch();
-                }}
-            />
+            <EdgeFilter />
         </Box>
     );
 };
