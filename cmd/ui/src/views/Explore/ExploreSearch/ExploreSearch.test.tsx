@@ -167,48 +167,6 @@ describe('ExploreSearch interaction', () => {
         expect(startNodeInputField).toHaveValue(userSuppliedSearchTerm);
     });
 
-    it('when user performs a pathfinding search, the swap button is disabled until both the start and destination nodes are provided', async () => {
-        const pathfindingTab = screen.getByRole('tab', { name: /pathfinding/i });
-        await user.click(pathfindingTab);
-
-        const swapButton = screen.getByRole('button', { name: /right-left/i });
-        expect(swapButton).toBeDisabled();
-
-        const startInput = screen.getByPlaceholderText(/start node/i);
-        await user.type(startInput, 'admin');
-        await user.click(await screen.findByRole('option', { name: /admin/i }));
-
-        const destinationInput = screen.getByPlaceholderText(/destination node/i);
-        await user.type(destinationInput, 'admin');
-        await user.click(await screen.findByRole('option', { name: /admin/i }));
-
-        expect(swapButton).toBeEnabled();
-    });
-
-    it('when user performs a pathfinding search, and then clicks the swap button, the start and destination inputs are swapped', async () => {
-        const pathfindingTab = screen.getByRole('tab', { name: /pathfinding/i });
-        await user.click(pathfindingTab);
-
-        const swapButton = screen.getByRole('button', { name: /right-left/i });
-        expect(swapButton).toBeDisabled();
-
-        const startInput = screen.getByPlaceholderText(/start node/i);
-        await user.type(startInput, 'admin');
-        await user.click(await screen.findByRole('option', { name: /admin/i }));
-
-        const destinationInput = screen.getByPlaceholderText(/destination node/i);
-        await user.type(destinationInput, 'computer');
-        await user.click(await screen.findByRole('option', { name: /computer/i }));
-
-        expect(startInput).toHaveValue('admin');
-        expect(destinationInput).toHaveValue('computer');
-
-        await user.click(swapButton);
-
-        expect(startInput).toHaveValue('computer');
-        expect(destinationInput).toHaveValue('admin');
-    });
-
     it('when user performs a pathfinding search, the selection for the start node is carried over to the `search` tab', async () => {
         const pathfindingTab = screen.getByRole('tab', { name: /pathfinding/i });
         await user.click(pathfindingTab);

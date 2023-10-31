@@ -108,6 +108,8 @@ const searchReducer = (state = initialSearchState, action: types.SearchbarAction
                 // clear out `searchTerm` if value is undefined or null
                 if (!action.value) {
                     draft[target].searchTerm = '';
+                } else {
+                    draft[target].searchTerm = action.value.name;
                 }
             } else if (action.type === types.CYPHER_SEARCH_SET_VALUE) {
                 draft[target].searchTerm = action.searchTerm;

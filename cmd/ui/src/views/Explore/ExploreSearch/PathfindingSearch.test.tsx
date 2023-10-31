@@ -18,8 +18,12 @@ import { act } from 'react-dom/test-utils';
 import { render, screen } from 'src/test-utils';
 import PathfindingSearch from './PathfindingSearch';
 import userEvent from '@testing-library/user-event';
+import { setupServer } from 'msw/node';
+import { rest } from 'msw';
+import * as actions from 'src/ducks/searchbar/actions';
+import { PRIMARY_SEARCH, SECONDARY_SEARCH } from 'src/ducks/searchbar/types';
 
-describe('Pathfinding', () => {
+describe('Pathfinding: edge filter dialog', () => {
     beforeEach(async () => {
         await act(async () => {
             render(<PathfindingSearch />);
@@ -122,5 +126,109 @@ describe('Pathfinding', () => {
         await user.click(pathfindingButton);
         expect(categoryADCheckbox).not.toBeChecked();
         expect(categoryAzureCheckbox).not.toBeChecked();
+    });
+});
+
+describe('Pathfinding: interaction', () => {
+    const comboboxLookaheadOptions = {
+        data: [
+            {
+                name: 'admin',
+                objectid: '1',
+                type: 'User',
+            },
+            {
+                name: 'computer',
+                objectid: '2',
+                type: 'Computer',
+            },
+        ],
+    };
+
+    const server = setupServer(
+        rest.get('/api/v2/search', (req, res, ctx) => {
+            return res(ctx.json(comboboxLookaheadOptions));
+        })
+    );
+
+    beforeEach(async () => {
+        await act(async () => {
+            render(<PathfindingSearch />);
+        });
+    });
+
+    beforeAll(() => server.listen());
+    afterEach(() => server.resetHandlers());
+    afterAll(() => server.close());
+
+    it('when user performs a pathfinding search, the swap button is disabled until both the start and destination nodes are provided', async () => {
+        const user = userEvent.setup();
+
+        const swapButton = screen.getByRole('button', { name: /right-left/i });
+        expect(swapButton).toBeDisabled();
+
+        const startInput = screen.getByPlaceholderText(/start node/i);
+        await user.type(startInput, 'admin');
+        await user.click(await screen.findByRole('option', { name: /admin/i }));
+
+        expect(swapButton).toBeDisabled();
+
+        const destinationInput = screen.getByPlaceholderText(/destination node/i);
+        await user.type(destinationInput, 'admin');
+        await user.click(await screen.findByRole('option', { name: /admin/i }));
+
+        expect(swapButton).toBeEnabled();
+    });
+
+    it('when user performs a pathfinding search, and then clicks the swap button, the start and destination inputs are swapped', async () => {
+        const user = userEvent.setup();
+
+        const swapButton = screen.getByRole('button', { name: /right-left/i });
+        expect(swapButton).toBeDisabled();
+
+        const startInput = screen.getByPlaceholderText(/start node/i);
+        await user.type(startInput, 'admin');
+        await user.click(await screen.findByRole('option', { name: /admin/i }));
+
+        const destinationInput = screen.getByPlaceholderText(/destination node/i);
+        await user.type(destinationInput, 'computer');
+        await user.click(await screen.findByRole('option', { name: /computer/i }));
+
+        expect(startInput).toHaveValue('admin');
+        expect(destinationInput).toHaveValue('computer');
+
+        await user.click(swapButton);
+
+        expect(startInput).toHaveValue('computer');
+        expect(destinationInput).toHaveValue('admin');
+    });
+
+    it('executes a primary search when only a source node is provided', async () => {
+        const user = userEvent.setup();
+        const spy = vi.spyOn(actions, 'startSearchSelected');
+
+        const startInput = screen.getByPlaceholderText(/start node/i);
+        await user.type(startInput, 'admin');
+        await user.click(await screen.findByRole('option', { name: /admin/i }));
+
+        expect(spy).toHaveBeenLastCalledWith(PRIMARY_SEARCH);
+        expect(spy).not.toHaveBeenCalledWith(SECONDARY_SEARCH);
+    });
+
+    it('executes a pathfinding search when both a source and destination node are provided', async () => {
+        const user = userEvent.setup();
+        const spy = vi.spyOn(actions, 'startSearchSelected');
+
+        const startInput = screen.getByPlaceholderText(/start node/i);
+        await user.type(startInput, 'admin');
+        await user.click(await screen.findByRole('option', { name: /admin/i }));
+
+        expect(spy).toHaveBeenLastCalledWith(PRIMARY_SEARCH);
+
+        const destinationInput = screen.getByPlaceholderText(/destination node/i);
+        await user.type(destinationInput, 'admin');
+        await user.click(await screen.findByRole('option', { name: /admin/i }));
+
+        expect(spy).toHaveBeenLastCalledWith(SECONDARY_SEARCH);
     });
 });

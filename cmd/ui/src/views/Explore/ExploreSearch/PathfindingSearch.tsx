@@ -18,10 +18,10 @@ import { Box, Button } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faBullseye, faCircle, faExchangeAlt, faFilter } from '@fortawesome/free-solid-svg-icons';
-import { savePathFilters, setSearchValue, startSearchAction, startSearchSelected } from 'src/ducks/searchbar/actions';
+import { savePathFilters, setSearchValue, startSearchSelected } from 'src/ducks/searchbar/actions';
 import { useDispatch, useSelector } from 'react-redux';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { PRIMARY_SEARCH, SEARCH_TYPE_EXACT, SECONDARY_SEARCH, SearchNodeType } from 'src/ducks/searchbar/types';
+import { PRIMARY_SEARCH, SEARCH_TYPE_EXACT, SECONDARY_SEARCH } from 'src/ducks/searchbar/types';
 import NodeSearch from './NodeSearch';
 import { AppState } from 'src/store';
 import EdgeFilteringDialog, { EdgeCheckboxType } from './EdgeFilteringDialog';
@@ -56,24 +56,6 @@ const PathfindingSearch = () => {
         }
     }, [primary, secondary, dispatch]);
 
-    const setSourceNode = useCallback(
-        (newSource: SearchNodeType | null) => {
-            dispatch(startSearchAction(newSource!.name, PRIMARY_SEARCH));
-            dispatch(setSearchValue(newSource, PRIMARY_SEARCH, SEARCH_TYPE_EXACT));
-        },
-        [dispatch]
-    );
-
-    const setDestinationNode = useCallback(
-        (newDest: SearchNodeType | null) => {
-            dispatch(startSearchAction(newDest!.name, SECONDARY_SEARCH));
-            dispatch(setSearchValue(newDest, SECONDARY_SEARCH, SEARCH_TYPE_EXACT));
-        },
-        [dispatch]
-    );
-
-    const executeSearch = useCallback(() => dispatch(startSearchSelected(SECONDARY_SEARCH)), [dispatch]);
-
     useEffect(() => {
         // if user has applied filters, set active
         if (pathFilters?.some((filter) => !filter.checked)) {
@@ -84,15 +66,16 @@ const PathfindingSearch = () => {
     }, [pathFilters]);
 
     const swapPathfindingInputs = useCallback(() => {
-        const newSourceItem = secondary.value;
-        const newDestinationItem = primary.value;
+        const newSourceNode = secondary.value;
+        const newDestinationNode = primary.value;
 
-        setSourceNode(newSourceItem);
-        setDestinationNode(newDestinationItem);
-        executeSearch();
-    }, [setSourceNode, setDestinationNode, executeSearch, primary.value, secondary.value]);
+        dispatch(setSearchValue(newSourceNode, PRIMARY_SEARCH, SEARCH_TYPE_EXACT));
+        dispatch(setSearchValue(newDestinationNode, SECONDARY_SEARCH, SEARCH_TYPE_EXACT));
 
-    const doPathfindingSearch = () => {
+        dispatch(startSearchSelected(SECONDARY_SEARCH));
+    }, [primary, secondary, dispatch]);
+
+    const handlePathfindingSearch = () => {
         dispatch(startSearchSelected(SECONDARY_SEARCH));
     };
 
@@ -136,7 +119,7 @@ const PathfindingSearch = () => {
                 }}
                 handleApply={() => {
                     setIsOpenDialog(false);
-                    doPathfindingSearch();
+                    handlePathfindingSearch();
                 }}
             />
         </Box>
