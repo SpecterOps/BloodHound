@@ -55,8 +55,18 @@ const main = async () => {
         Header: <CustomHeader />,
     };
 
+    const customReducers = {
+        customReducer: (state: any, action: any) => {
+            return state;
+        },
+    };
+
     root.render(
-        <BloodHoundUI routes={(baseRoutes) => [...baseRoutes, ...customRoutes]} components={customComponents} />
+        <BloodHoundUI
+            routes={(baseRoutes) => [...baseRoutes, ...customRoutes]}
+            components={customComponents}
+            reducers={customReducers}
+        />
     );
 };
 
