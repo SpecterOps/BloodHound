@@ -8,7 +8,7 @@ import { useMutation, useQuery } from "react-query";
 import { apiClient } from "../../utils";
 import AssetGroupChangelogTable from "./AssetGroupChangelogTable";
 import { ActiveDirectoryNodeKind, ActiveDirectoryNodeKindToDisplay, AzureNodeKind, AzureNodeKindToDisplay } from "../../graphSchema";
-import { useNotifications } from "../..";
+import { useNotifications } from "../../providers";
 
 const AssetGroupEdit: FC<{
     assetGroup: AssetGroup,

@@ -5,7 +5,9 @@ import {
     TableBody,
     TableCell,
     TableContainer,
+    TableFooter,
     TableHead,
+    TablePagination,
     TableRow,
     Typography,
     useTheme
@@ -40,7 +42,7 @@ const AssetGroupMemberList: FC<{
 
     return (
         <TableContainer sx={{ maxHeight: "100%" }} component={Paper} elevation={0}>
-            <Table stickyHeader sx={{ height: "100%" }}>
+            <Table stickyHeader sx={{ height: "100%", position: "relative" }}>
                 <TableHead>
                     <TableRow>
                         <TableCell sx={{ bgcolor: "white" }}>Name</TableCell>
@@ -77,6 +79,20 @@ const AssetGroupMemberList: FC<{
                         )
                     })}
                 </TableBody>
+                <TableFooter>
+                    <TableRow>
+                        <TablePagination
+                            sx={{ position: "sticky", bottom: 0, bgcolor: "white", borderTop: "1px solid #E0E0E0" }}
+                            colSpan={2}
+                            rowsPerPageOptions={[5, 10, 25, 100]}
+                            page={0}
+                            rowsPerPage={5}
+                            count={0}
+                            onPageChange={(event, page) => console.log("changedPage", event, page)}
+                            onRowsPerPageChange={(event) => console.log("rowsChange", event)}
+                        />
+                    </TableRow>
+                </TableFooter>
             </Table>
         </TableContainer>
     );
