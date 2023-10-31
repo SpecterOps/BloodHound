@@ -7,9 +7,11 @@ import { QueryClient, QueryClientProvider } from 'react-query';
 import { ReactQueryDevtools } from 'react-query/devtools';
 import { Provider } from 'react-redux';
 import { unstable_HistoryRouter as BrowserRouter } from 'react-router-dom';
-import App from './App';
-import { store } from './store';
-import { BloodHoundUIContextProvider, BloodHoundUIRoute } from './BloodHoundUIContext';
+import App from '../App';
+import { store } from '../store';
+import {} from './BloodHoundUIContext';
+
+import { BloodHoundUIContextProvider, BloodHoundUIProps } from '.';
 
 declare module '@mui/styles/defaultTheme' {
     // eslint-disable-next-line @typescript-eslint/no-empty-interface
@@ -142,13 +144,9 @@ const theme = createTheme({
 
 const queryClient = new QueryClient();
 
-interface BloodHoundUIProps {
-    routes: (routes: BloodHoundUIRoute[]) => BloodHoundUIRoute[];
-}
-
-const BloodHoundUI = ({ routes }: BloodHoundUIProps) => {
+const BloodHoundUI = ({ routes, components }: BloodHoundUIProps) => {
     return (
-        <BloodHoundUIContextProvider value={{ routes }}>
+        <BloodHoundUIContextProvider value={{ routes, components }}>
             <Provider store={store}>
                 <QueryClientProvider client={queryClient}>
                     <ReactQueryDevtools />

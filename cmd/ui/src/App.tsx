@@ -29,6 +29,7 @@ import { AppState, useAppDispatch } from 'src/store';
 import { initializeBHEClient } from 'src/utils';
 import Content from 'src/views/Content';
 import Header from 'src/components/Header';
+import useBloodHoundUIContext from './BloodHoundUI/useBloodHoundUIContext';
 
 const useStyles = makeStyles((theme) => ({
     applicationContainer: {
@@ -55,6 +56,7 @@ const App: React.FC = () => {
     const queryClient = useQueryClient();
     const dispatch = useAppDispatch();
     const location = useLocation();
+    const bloodHoundUIContext = useBloodHoundUIContext();
 
     // initialize authentication state and BHE client request/response handlers
     useEffect(() => {
@@ -81,7 +83,7 @@ const App: React.FC = () => {
             <Box className={classes.applicationContainer}>
                 {showHeader && (
                     <Box className={classes.applicationHeader}>
-                        <Header />
+                        {bloodHoundUIContext.components?.Header || <Header />}
                     </Box>
                 )}
                 <Box className={classes.applicationContent}>

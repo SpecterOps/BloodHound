@@ -27,7 +27,7 @@ import { fetchAssetGroups, setDomain } from 'src/ducks/global/actions';
 import * as routes from 'src/ducks/global/routes';
 import { useAppDispatch } from 'src/store';
 import AuthenticatedRoute from 'src/components/AuthenticatedRoute';
-import useBloodHoundUIContext from 'src/useBloodHoundUIContext';
+import useBloodHoundUIContext from 'src/BloodHoundUI/useBloodHoundUIContext';
 
 const Login = React.lazy(() => import('src/views/Login'));
 const DisabledUser = React.lazy(() => import('src/views/DisabledUser'));
@@ -143,7 +143,7 @@ const Content: React.FC = () => {
         },
     ];
 
-    const newRoutes = BloodHoundUIContext.routes(ROUTES);
+    const newRoutes = BloodHoundUIContext.routes ? BloodHoundUIContext.routes(ROUTES) : ROUTES;
 
     return (
         <Box className={classes.content}>

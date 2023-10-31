@@ -21,7 +21,8 @@ import '@fontsource/roboto/500.css';
 import '@fontsource/roboto/700.css';
 import './styles/index.scss';
 import { createRoot } from 'react-dom/client';
-import BloodHoundUI from './BloodHoundUI';
+import BloodHoundUI from './BloodHoundUI/BloodHoundUI';
+import CustomHeader from './components/CustomHeader';
 
 const main = async () => {
     const rootContainer = document.getElementById('root');
@@ -50,7 +51,13 @@ const main = async () => {
         },
     ];
 
-    root.render(<BloodHoundUI routes={(baseRoutes) => [...baseRoutes, ...customRoutes]} />);
+    const customComponents = {
+        Header: <CustomHeader />,
+    };
+
+    root.render(
+        <BloodHoundUI routes={(baseRoutes) => [...baseRoutes, ...customRoutes]} components={customComponents} />
+    );
 };
 
 main();
