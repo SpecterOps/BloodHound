@@ -12,7 +12,7 @@ import {
     Typography,
     useTheme
 } from "@mui/material";
-import { FC } from "react"
+import { FC, useState } from "react"
 import NodeIcon from "../NodeIcon";
 import { AssetGroup, AssetGroupMemberParams } from "js-client-library";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -28,9 +28,26 @@ const AssetGroupMemberList: FC<{
 
     const theme = useTheme();
 
+    const [page, setPage] = useState(0);
+    const [rowsPerPage, setRowsPerPage] = useState(25);
+    const [count, setCount] = useState(0);
+
     const listAssetGroupMembersQuery = useQuery(
-        ["listAssetGroupMembers", assetGroup, filter],
-        ({ signal }) => apiClient.listAssetGroupMembers(`${assetGroup?.id}`, filter, { signal }).then(res => res.data.data.members),
+        ["listAssetGroupMembers", assetGroup, filter, page, rowsPerPage],
+        ({ signal }) => {
+            const paginatedFilter = {
+                skip: page * rowsPerPage,
+                limit: rowsPerPage,
+                sortBy: "-name",
+                ...filter,
+            }
+            return apiClient.listAssetGroupMembers(`${assetGroup?.id}`, paginatedFilter, { signal })
+                .then(res => {
+                    setCount(res.data.count);
+                    return res.data.data.members;
+                })
+        },
+        { keepPreviousData: true }
     );
 
     const hoverStyles = {
@@ -79,20 +96,22 @@ const AssetGroupMemberList: FC<{
                         )
                     })}
                 </TableBody>
-                <TableFooter>
-                    <TableRow>
-                        <TablePagination
-                            sx={{ position: "sticky", bottom: 0, bgcolor: "white", borderTop: "1px solid #E0E0E0" }}
-                            colSpan={2}
-                            rowsPerPageOptions={[5, 10, 25, 100]}
-                            page={0}
-                            rowsPerPage={5}
-                            count={0}
-                            onPageChange={(event, page) => console.log("changedPage", event, page)}
-                            onRowsPerPageChange={(event) => console.log("rowsChange", event)}
-                        />
-                    </TableRow>
-                </TableFooter>
+                {count > 0 && (
+                    <TableFooter>
+                        <TableRow>
+                            <TablePagination
+                                sx={{ position: "sticky", bottom: 0, bgcolor: "white", borderTop: "1px solid #E0E0E0" }}
+                                colSpan={2}
+                                rowsPerPageOptions={[10, 25, 100, 250]}
+                                page={page}
+                                rowsPerPage={rowsPerPage}
+                                count={count}
+                                onPageChange={(_event, page) => setPage(page)}
+                                onRowsPerPageChange={(event) => setRowsPerPage(parseInt(event.target.value))}
+                            />
+                        </TableRow>
+                    </TableFooter>
+                )}
             </Table>
         </TableContainer>
     );

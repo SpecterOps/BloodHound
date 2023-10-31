@@ -43,6 +43,8 @@ export interface AssetGroupMemberParams {
     environment_kind?: string;
     environment_id?: string;
     primary_kind?: string;
+    skip?: number;
+    limit?: number;
 }
 
 export interface CreateSharpHoundClientRequest {
