@@ -1267,11 +1267,10 @@ type EnrollOnBehalfOfHarnessTwo struct {
 }
 
 func (s *EnrollOnBehalfOfHarnessTwo) Setup(gt *GraphTestContext) {
-	sid := RandomDomainSID()
 	certRequestAgentEKU := make([]string, 0)
 	certRequestAgentEKU = append(certRequestAgentEKU, adAnalysis.EkuCertRequestAgent)
 	emptyAppPolicies := make([]string, 0)
-	sid = RandomDomainSID()
+	sid := RandomDomainSID()
 	s.Domain2 = gt.NewActiveDirectoryDomain("domain2", sid, false, true)
 	s.AuthStore2 = gt.NewActiveDirectoryNTAuthStore("authstore2", sid)
 	s.RootCA2 = gt.NewActiveDirectoryRootCA("rca2", sid)
