@@ -18,7 +18,7 @@ import { SigmaContainer } from '@react-sigma/core';
 import '@react-sigma/core/lib/react-sigma.min.css';
 import Graph, { MultiDirectedGraph } from 'graphology';
 import { AbstractGraph, Attributes } from 'graphology-types';
-import { FC, useEffect, useState } from 'react';
+import { FC } from 'react';
 import GraphButtons from 'src/components/GraphButtons';
 import { GraphButtonOptions } from 'src/components/GraphButtons/GraphButtons';
 import { GraphEvents } from 'src/components/GraphEvents';
@@ -32,14 +32,11 @@ import drawLabel from 'src/rendering/programs/node-label';
 import getNodeCombinedProgram from 'src/rendering/programs/node.combined';
 import getNodeGlyphsProgram from 'src/rendering/programs/node.glyphs';
 import GraphEdgeEvents from './GraphEdgeEvents';
-import { Box, Menu, MenuItem } from '@mui/material';
+import { Box } from '@mui/material';
 import { GraphNodes } from 'js-client-library';
 import { GraphButtonProps, SearchCurrentNodes } from 'bh-shared-ui';
 import { SigmaNodeEventPayload } from 'sigma/sigma';
-import { AppState, useAppDispatch } from 'src/store';
-import { setActiveTab, setSearchValue, startSearchAction } from 'src/ducks/searchbar/actions';
-import { useSelector } from 'react-redux';
-import { PRIMARY_SEARCH, SEARCH_TYPE_EXACT, SECONDARY_SEARCH } from 'src/ducks/searchbar/types';
+import ContextMenu from 'src/views/Explore/ContextMenu/ContextMenu';
 
 interface SigmaChartProps {
     rankDirection: RankDirection;
@@ -134,49 +131,4 @@ const SigmaChart: FC<Partial<SigmaChartProps>> = ({
     );
 };
 
-const ContextMenu: FC<{ anchorPosition: { x: number; y: number } }> = ({ anchorPosition }) => {
-    const dispatch = useAppDispatch();
-    const [open, setOpen] = useState(false);
-
-    const selectedNode = useSelector((state: AppState) => state.entityinfo.selectedNode);
-
-    useEffect(() => {
-        if (anchorPosition) {
-            setOpen(true);
-        } else {
-            setOpen(false);
-        }
-    }, [anchorPosition]);
-
-    const handleClick = () => {
-        setOpen(false);
-    };
-
-    const handleSetStartingNode = () => {
-        if (selectedNode) {
-            dispatch(setActiveTab('secondary'));
-            dispatch(setSearchValue(null, PRIMARY_SEARCH, SEARCH_TYPE_EXACT));
-            dispatch(startSearchAction(selectedNode.name, PRIMARY_SEARCH));
-        }
-    };
-
-    const handleSetEndingNode = () => {
-        if (selectedNode) {
-            dispatch(setActiveTab('secondary'));
-            dispatch(setSearchValue(null, SECONDARY_SEARCH, SEARCH_TYPE_EXACT));
-            dispatch(startSearchAction(selectedNode.name, SECONDARY_SEARCH));
-        }
-    };
-
-    return (
-        <Menu
-            open={open}
-            anchorPosition={{ left: anchorPosition?.x || 0, top: anchorPosition?.y || 0 }}
-            anchorReference='anchorPosition'
-            onClick={handleClick}>
-            <MenuItem onClick={handleSetStartingNode}>Set as starting node</MenuItem>
-            <MenuItem onClick={handleSetEndingNode}>Set as ending node</MenuItem>
-        </Menu>
-    );
-};
 export default SigmaChart;
