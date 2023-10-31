@@ -16,6 +16,8 @@
 
 name: Jira Issue Transfer
 
+runs-on: self-hosted
+
 on:
   issues:
     types: 

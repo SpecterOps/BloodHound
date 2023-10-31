@@ -156,6 +156,8 @@ func (s *Migrator) executeStepwiseMigrations() error {
 		}
 	}
 
+	currentVersionMigration := model.NewMigration(version.GetVersion())
+
 	if migrationFilenames, err := s.MigrationFilenames(); err != nil {
 		return err
 	} else if manifest, err := NewManifest(migrationFilenames); err != nil {
@@ -164,8 +166,9 @@ func (s *Migrator) executeStepwiseMigrations() error {
 		return fmt.Errorf("could not get latest migration: %w", err)
 	} else if err := s.ExecuteMigrations(manifest.After(lastMigration.Version())); err != nil {
 		return fmt.Errorf("could not execute migrations: %w", err)
-	} else {
-		currentVersionMigration := model.NewMigration(version.GetVersion())
+	} else if lastMigration != currentVersionMigration {
 		return s.db.Create(&currentVersionMigration).Error
+	} else {
+		return nil
 	}
 }
