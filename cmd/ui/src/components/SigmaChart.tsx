@@ -39,7 +39,7 @@ import { SigmaNodeEventPayload } from 'sigma/sigma';
 import { AppState, useAppDispatch } from 'src/store';
 import { setActiveTab, setSearchValue, startSearchAction } from 'src/ducks/searchbar/actions';
 import { useSelector } from 'react-redux';
-import { PRIMARY_SEARCH, SEARCH_TYPE_EXACT } from 'src/ducks/searchbar/types';
+import { PRIMARY_SEARCH, SEARCH_TYPE_EXACT, SECONDARY_SEARCH } from 'src/ducks/searchbar/types';
 
 interface SigmaChartProps {
     rankDirection: RankDirection;
@@ -71,7 +71,6 @@ const SigmaChart: FC<Partial<SigmaChartProps>> = ({
     onClickEdge,
     onClickStage,
     edgeReducer,
-    // todo: move these from props --> local state
     anchorPosition,
     onRightClickNode,
 }) => {
@@ -161,6 +160,14 @@ const ContextMenu: FC<{ anchorPosition: { x: number; y: number } }> = ({ anchorP
         }
     };
 
+    const handleSetEndingNode = () => {
+        if (selectedNode) {
+            dispatch(setActiveTab('secondary'));
+            dispatch(setSearchValue(null, SECONDARY_SEARCH, SEARCH_TYPE_EXACT));
+            dispatch(startSearchAction(selectedNode.name, SECONDARY_SEARCH));
+        }
+    };
+
     return (
         <Menu
             open={open}
@@ -168,6 +175,7 @@ const ContextMenu: FC<{ anchorPosition: { x: number; y: number } }> = ({ anchorP
             anchorReference='anchorPosition'
             onClick={handleClick}>
             <MenuItem onClick={handleSetStartingNode}>Set as starting node</MenuItem>
+            <MenuItem onClick={handleSetEndingNode}>Set as ending node</MenuItem>
         </Menu>
     );
 };
