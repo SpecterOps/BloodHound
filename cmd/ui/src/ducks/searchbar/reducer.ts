@@ -37,7 +37,7 @@ AllEdgeTypes.forEach((category) => {
     });
 });
 
-const initialSearchState: types.SearchState = {
+export const initialSearchState: types.SearchState = {
     searchType: types.SEARCH_TYPE_EXACT,
 
     primary: {

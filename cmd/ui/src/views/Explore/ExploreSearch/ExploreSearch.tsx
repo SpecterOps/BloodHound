@@ -66,20 +66,11 @@ const ExploreSearch = ({ handleColumns }: ExploreSearchProps) => {
 
     const [showSearchWidget, setShowSearchWidget] = useState(true);
 
-    // todo: recreate the following logic to work with the new ducks logic
-
-    // const [activeTab, setActiveTab] = useState(() => {
-    //     if (searchState.primary.value && searchState.secondary.value) {
-    //         return 1;
-    //     }
-    //     return 0;
-    // });
-
     const handleTabChange = (newTabIndex: number) => {
         switch (newTabIndex) {
             case 0:
                 if (primary.value) {
-                    dispatch(startSearchSelected('primary'));
+                    dispatch(startSearchSelected(PRIMARY_SEARCH));
                 }
                 dispatch(setSearchValue(null, SECONDARY_SEARCH, SEARCH_TYPE_EXACT));
                 return dispatch(setActiveTab('primary'));

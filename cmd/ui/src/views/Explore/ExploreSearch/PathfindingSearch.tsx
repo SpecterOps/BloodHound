@@ -93,7 +93,7 @@ const PathfindingSearch = () => {
             <Button
                 className={classes.pathfindingButton}
                 variant='outlined'
-                disabled={!primary.value || !secondary.value}
+                disabled={!primary?.value || !secondary?.value}
                 onClick={() => swapPathfindingInputs()}>
                 <FontAwesomeIcon icon={faExchangeAlt} className='fa-rotate-90' />
             </Button>

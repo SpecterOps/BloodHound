@@ -19,6 +19,9 @@ import { act, render, screen, waitFor } from 'src/test-utils';
 import ExploreSearch from '.';
 import { setupServer } from 'msw/node';
 import { rest } from 'msw';
+import * as actions from 'src/ducks/searchbar/actions';
+import { PRIMARY_SEARCH, SEARCH_TYPE_EXACT, SECONDARY_SEARCH } from 'src/ducks/searchbar/types';
+import { initialSearchState } from 'src/ducks/searchbar/reducer';
 
 describe('ExploreSearch rendering per tab', async () => {
     let container: HTMLElement;
@@ -31,6 +34,7 @@ describe('ExploreSearch rendering per tab', async () => {
     const user = userEvent.setup();
 
     it('should render', () => {
+        screen.debug();
         expect(screen.getByLabelText('Search Nodes')).toBeInTheDocument();
 
         expect(screen.getByRole('tab', { name: /search/i })).toBeInTheDocument();
@@ -78,42 +82,85 @@ describe('ExploreSearch rendering per tab', async () => {
     });
 });
 
-describe('ExploreSearch rendering stored redux state', async () => {
-    // skipping due to redux action being triggered when it shouldn't and we don't know why.
-    it.skip('should render the pathfinding tab by default if a pathfinding search has been saved in redux (e.g. when moving from attack paths -> explore page) ', async () => {
-        const sourceNode = {
-            objectid: '1',
-            label: 'beep',
-            type: 'Computer',
-            name: 'computer a',
-        };
-        const destinationNode = {
-            objectid: '2',
-            label: 'boop',
-            type: 'Computer',
-            name: 'computer b',
-        };
+describe('ExploreSearch handles search on tab changing', async () => {
+    const sourceNode = {
+        objectid: '1',
+        label: 'beep',
+        type: 'Computer',
+        name: 'computer a',
+    };
 
+    const server = setupServer(
+        rest.get(`/api/v2/search`, (req, res, ctx) => {
+            return res(ctx.json([]));
+        })
+    );
+
+    beforeAll(() => server.listen());
+    afterEach(() => server.resetHandlers());
+    afterAll(() => server.close());
+
+    it('should perform a primary search when the user clicks the `Search` tab', async () => {
         await act(async () => {
             render(<ExploreSearch />, {
                 initialState: {
                     search: {
+                        ...initialSearchState,
                         primary: {
                             value: sourceNode,
+                            searchTerm: sourceNode.name,
+                        },
+                        activeTab: SECONDARY_SEARCH,
+                    },
+                },
+            });
+        });
+
+        const user = userEvent.setup();
+        const startSearchSelectedSpy = vi.spyOn(actions, 'startSearchSelected');
+        const setSearchValueSpy = vi.spyOn(actions, 'setSearchValue');
+        const setActiveTabSpy = vi.spyOn(actions, 'setActiveTab');
+
+        const searchTab = screen.getByRole('tab', { name: /search/i });
+        await user.click(searchTab);
+
+        expect(startSearchSelectedSpy).toHaveBeenLastCalledWith(PRIMARY_SEARCH);
+        expect(setSearchValueSpy).toHaveBeenLastCalledWith(null, SECONDARY_SEARCH, SEARCH_TYPE_EXACT);
+
+        expect(setActiveTabSpy).toHaveBeenCalledTimes(1);
+        expect(setActiveTabSpy).toHaveBeenCalledWith(PRIMARY_SEARCH);
+    });
+
+    it('should perform a pathfinding search when the user clicks the `pathfinding` tab', async () => {
+        await act(async () => {
+            render(<ExploreSearch />, {
+                initialState: {
+                    search: {
+                        ...initialSearchState,
+                        primary: {
+                            value: sourceNode,
+                            searchTerm: sourceNode.name,
                         },
                         secondary: {
-                            value: destinationNode,
+                            value: sourceNode,
+                            searchTerm: sourceNode.name,
                         },
                     },
                 },
             });
         });
 
-        const sourceNodeInput = screen.getByLabelText(/start node/i);
-        const destinationNodeInput = screen.getByLabelText(/destination node/i);
+        const user = userEvent.setup();
+        const startSearchSelectedSpy = vi.spyOn(actions, 'startSearchSelected');
+        const setActiveTabSpy = vi.spyOn(actions, 'setActiveTab');
 
-        expect(sourceNodeInput).toHaveValue(sourceNode.name);
-        expect(destinationNodeInput).toHaveValue(destinationNode.name);
+        const pathfindingTab = screen.getByRole('tab', { name: /pathfinding/i });
+        await user.click(pathfindingTab);
+
+        expect(startSearchSelectedSpy).toHaveBeenLastCalledWith(SECONDARY_SEARCH);
+
+        expect(setActiveTabSpy).toHaveBeenCalledTimes(1);
+        expect(setActiveTabSpy).toHaveBeenCalledWith(SECONDARY_SEARCH);
     });
 });
 
