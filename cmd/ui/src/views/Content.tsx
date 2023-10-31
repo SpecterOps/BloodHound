@@ -27,6 +27,7 @@ import { fetchAssetGroups, setDomain } from 'src/ducks/global/actions';
 import * as routes from 'src/ducks/global/routes';
 import { useAppDispatch } from 'src/store';
 import AuthenticatedRoute from 'src/components/AuthenticatedRoute';
+import useBloodHoundUIContext from 'src/useBloodHoundUIContext';
 
 const Login = React.lazy(() => import('src/views/Login'));
 const DisabledUser = React.lazy(() => import('src/views/DisabledUser'));
@@ -53,6 +54,7 @@ const Content: React.FC = () => {
     const dispatch = useAppDispatch();
     const authState = useSelector((state: any) => state.auth);
     const isFullyAuthenticated = useSelector(fullyAuthenticatedSelector);
+    const BloodHoundUIContext = useBloodHoundUIContext();
 
     useEffect(() => {
         if (isFullyAuthenticated) {
@@ -141,6 +143,8 @@ const Content: React.FC = () => {
         },
     ];
 
+    const newRoutes = BloodHoundUIContext.routes(ROUTES);
+
     return (
         <Box className={classes.content}>
             <Suspense
@@ -159,7 +163,7 @@ const Content: React.FC = () => {
                     </Box>
                 }>
                 <Routes>
-                    {ROUTES.map((route) => {
+                    {newRoutes.map((route) => {
                         return route.authenticationRequired ? (
                             <Route
                                 path={route.path}
