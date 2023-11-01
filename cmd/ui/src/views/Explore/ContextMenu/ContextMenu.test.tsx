@@ -19,7 +19,6 @@ import { render, screen } from 'src/test-utils';
 import userEvent from '@testing-library/user-event';
 import ContextMenu from './ContextMenu';
 import * as actions from 'src/ducks/searchbar/actions';
-import { PRIMARY_SEARCH, SEARCH_TYPE_EXACT, PATHFINDING_SEARCH } from 'src/ducks/searchbar/types';
 
 describe('ContextMenu', async () => {
     beforeEach(async () => {
@@ -57,20 +56,12 @@ describe('ContextMenu', async () => {
 
     it('handles setting a end node', async () => {
         const user = userEvent.setup();
-        const setActiveTabSpy = vi.spyOn(actions, 'tabChanged');
-        const setSearchValueSpy = vi.spyOn(actions, 'setSearchValue');
-        const startSearchActionSpy = vi.spyOn(actions, 'startSearchAction');
+        const destinationNodeSuggestedSpy = vi.spyOn(actions, 'destinationNodeSuggested');
 
         const startNodeOption = screen.getByRole('menuitem', { name: /set as ending node/i });
         await user.click(startNodeOption);
 
-        expect(setActiveTabSpy).toBeCalledTimes(1);
-        expect(setActiveTabSpy).toHaveBeenCalledWith(PATHFINDING_SEARCH);
-
-        expect(setSearchValueSpy).toBeCalledTimes(1);
-        expect(setSearchValueSpy).toHaveBeenCalledWith(null, PATHFINDING_SEARCH, SEARCH_TYPE_EXACT);
-
-        expect(startSearchActionSpy).toBeCalledTimes(1);
-        expect(startSearchActionSpy).toHaveBeenCalledWith('foo', PATHFINDING_SEARCH);
+        expect(destinationNodeSuggestedSpy).toBeCalledTimes(1);
+        expect(destinationNodeSuggestedSpy).toHaveBeenCalledWith('foo');
     });
 });

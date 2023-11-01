@@ -112,9 +112,10 @@ export const sourceNodeSelected = () => {
     };
 };
 
-export const destinationNodeSuggested = () => {
+export const destinationNodeSuggested = (name: string): types.DestinationNodeSuggestedAction => {
     return {
         type: types.DESTINATION_NODE_SUGGESTED,
+        name,
     };
 };
 

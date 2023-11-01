@@ -17,14 +17,7 @@
 import { Menu, MenuItem } from '@mui/material';
 import { FC, useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
-import {
-    destinationNodeSuggested,
-    tabChanged,
-    setSearchValue,
-    sourceNodeSuggested,
-    startSearchAction,
-} from 'src/ducks/searchbar/actions';
-import { PRIMARY_SEARCH, SEARCH_TYPE_EXACT, PATHFINDING_SEARCH } from 'src/ducks/searchbar/types';
+import { destinationNodeSuggested, sourceNodeSuggested } from 'src/ducks/searchbar/actions';
 import { AppState, useAppDispatch } from 'src/store';
 
 const ContextMenu: FC<{ anchorPosition: { x: number; y: number } }> = ({ anchorPosition }) => {
@@ -53,10 +46,7 @@ const ContextMenu: FC<{ anchorPosition: { x: number; y: number } }> = ({ anchorP
 
     const handleSetEndingNode = () => {
         if (selectedNode) {
-            dispatch(tabChanged('secondary'));
-            dispatch(setSearchValue(null, PATHFINDING_SEARCH, SEARCH_TYPE_EXACT));
-            dispatch(startSearchAction(selectedNode.name, PATHFINDING_SEARCH));
-            dispatch(destinationNodeSuggested());
+            dispatch(destinationNodeSuggested(selectedNode.name));
         }
     };
 

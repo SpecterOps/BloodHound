@@ -162,8 +162,9 @@ interface SourceNodeSelectedAction {
     type: typeof SOURCE_NODE_SELECTED;
 }
 
-interface DestinationNodeSuggestedAction {
+export interface DestinationNodeSuggestedAction {
     type: typeof DESTINATION_NODE_SUGGESTED;
+    name: string;
 }
 
 interface DestinationNodeSelectedAction {
