@@ -15,16 +15,10 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { SagaIterator } from 'redux-saga';
-import { all, call, fork, put, select, takeLatest } from 'redux-saga/effects';
-import { apiClient } from 'bh-shared-ui';
+import { all, fork, put, select, takeLatest } from 'redux-saga/effects';
 import { startCypherQuery, startPathfindingQuery, startSearchQuery } from 'src/ducks/explore/actions';
-import * as actions from 'src/ducks/searchbar/actions';
 import * as types from 'src/ducks/searchbar/types';
 import type { AppState } from 'src/store';
-
-function* searchWatcher(): SagaIterator {
-    yield takeLatest(types.SEARCH_START, searchWorker);
-}
 
 function* startSearchActionWatcher(): SagaIterator {
     yield takeLatest(types.SEARCH_SELECTED, searchSelectedWorker);
@@ -32,15 +26,6 @@ function* startSearchActionWatcher(): SagaIterator {
 
 function* cypherSearchWatcher(): SagaIterator {
     yield takeLatest(types.CYPHER_SEARCH, cypherSearchWorker);
-}
-
-function* searchWorker(payload: types.SearchStartAction) {
-    try {
-        const { data } = yield call(apiClient.searchHandler, payload.searchTerm);
-        yield put(actions.searchSuccessAction(data as types.SearchNodeType[], payload.target));
-    } catch {
-        /* empty */
-    }
 }
 
 function* cypherSearchWorker(payload: types.CypherSearchAction) {
@@ -71,5 +56,5 @@ function* searchSelectedWorker(payload: types.StartSearchSelectedAction) {
 }
 
 export default function* startSearchSagas() {
-    yield all([fork(searchWatcher), fork(startSearchActionWatcher), fork(cypherSearchWatcher)]);
+    yield all([fork(startSearchActionWatcher), fork(cypherSearchWatcher)]);
 }

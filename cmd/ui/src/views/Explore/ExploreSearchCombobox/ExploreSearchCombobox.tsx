@@ -21,10 +21,11 @@ import { NodeIcon, SearchResultItem } from 'bh-shared-ui';
 import { getEmptyResultsText, getKeywordAndTypeValues, SearchResult, useSearch } from 'src/hooks/useSearch';
 import { AppState, useAppDispatch } from 'src/store';
 import {
+    destinationNodeEdited,
     destinationNodeSelected,
     setSearchValue,
+    sourceNodeEdited,
     sourceNodeSelected,
-    startSearchAction,
 } from 'src/ducks/searchbar/actions';
 import { PRIMARY_SEARCH, SEARCH_TYPE_EXACT, PATHFINDING_SEARCH, SearchNodeType } from 'src/ducks/searchbar/types';
 import { useSelector } from 'react-redux';
@@ -55,7 +56,11 @@ const ExploreSearchCombobox: React.FC<{
                     inputValue !== undefined &&
                     type !== useCombobox.stateChangeTypes.ControlledPropUpdatedSelectedItem
                 ) {
-                    dispatch(startSearchAction(inputValue, searchType));
+                    if (searchType === PRIMARY_SEARCH) {
+                        dispatch(sourceNodeEdited(inputValue));
+                    } else if (searchType === PATHFINDING_SEARCH) {
+                        dispatch(destinationNodeEdited(inputValue));
+                    }
                 }
             },
             inputValue,

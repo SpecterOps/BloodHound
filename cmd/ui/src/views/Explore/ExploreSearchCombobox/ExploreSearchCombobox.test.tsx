@@ -63,7 +63,7 @@ describe('ExploreSearchCombobox', () => {
 
     it('typing a new search query calls onInputValueChange', async () => {
         const user = userEvent.setup();
-        const spy = jest.spyOn(actions, 'startSearchAction');
+        const spy = jest.spyOn(actions, 'sourceNodeEdited');
         const labelText: string = 'test label';
 
         render(<ExploreSearchCombobox labelText={labelText} searchType={PRIMARY_SEARCH} />);
@@ -71,7 +71,7 @@ describe('ExploreSearchCombobox', () => {
         const testQuery = 'admin';
         await user.type(screen.getByLabelText(labelText), testQuery);
 
-        expect(spy).toHaveBeenLastCalledWith(testQuery, PRIMARY_SEARCH);
+        expect(spy).toHaveBeenLastCalledWith(testQuery);
     });
 
     it('when a search query is provided it eventually displays a list of search results', async () => {

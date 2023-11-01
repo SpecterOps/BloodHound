@@ -17,11 +17,17 @@
 import { EdgeCheckboxType } from 'src/views/Explore/ExploreSearch/EdgeFilteringDialog';
 import * as types from './types';
 
-export const startSearchAction = (searchTerm: string, target: types.SearchTargetType): types.SearchbarActionTypes => {
+export const sourceNodeEdited = (searchTerm: string): types.SourceNodeEditedAction => {
     return {
-        type: types.SEARCH_START,
+        type: types.SOURCE_NODE_EDITED,
         searchTerm,
-        target,
+    };
+};
+
+export const destinationNodeEdited = (searchTerm: string): types.DestinationNodeEditedAction => {
+    return {
+        type: types.DESTINATION_NODE_EDITED,
+        searchTerm,
     };
 };
 

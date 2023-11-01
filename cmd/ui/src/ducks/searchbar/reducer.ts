@@ -110,8 +110,20 @@ const searchReducer = (state = initialSearchState, action: types.SearchbarAction
 
                 break;
             }
+            case types.SOURCE_NODE_EDITED: {
+                draft.primary.searchTerm = action.searchTerm;
+                draft.primary.loading = true;
+                draft.primary.options = [];
+                break;
+            }
             case types.SOURCE_NODE_SELECTED: {
                 draft.primary.openMenu = false;
+                break;
+            }
+            case types.DESTINATION_NODE_EDITED: {
+                draft.secondary.searchTerm = action.searchTerm;
+                draft.secondary.loading = true;
+                draft.secondary.options = [];
                 break;
             }
             case types.DESTINATION_NODE_SUGGESTED: {
@@ -136,11 +148,7 @@ const searchReducer = (state = initialSearchState, action: types.SearchbarAction
         if (isTargetedActionType(action)) {
             const { target } = action;
 
-            if (action.type === types.SEARCH_START) {
-                draft[target].loading = true;
-                draft[target].options = [];
-                draft[target].searchTerm = action.searchTerm;
-            } else if (action.type === types.SEARCH_SUCCESS) {
+            if (action.type === types.SEARCH_SUCCESS) {
                 draft[target].loading = false;
                 draft[target].options = action.results;
             } else if (action.type === types.SEARCH_SET_VALUE) {

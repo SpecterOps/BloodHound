@@ -17,7 +17,6 @@
 import { GraphNodeTypes } from 'src/ducks/graph/types';
 import { EdgeCheckboxType } from 'src/views/Explore/ExploreSearch/EdgeFilteringDialog';
 
-const SEARCH_START = 'app/search/START';
 const SEARCH_SUCCESS = 'app/search/SUCCESS';
 const SEARCH_FAILURE = 'app/search/FAILURE';
 const SEARCH_SET_VALUE = 'app/search/SETVALUE';
@@ -29,9 +28,11 @@ const SAVE_PATH_FILTERS = 'app/search/SAVE_PATH_FILTERS';
 
 export const TAB_CHANGED = 'app/search/TAB_CHANGED';
 
+export const SOURCE_NODE_EDITED = 'app/search/SOURCE_NODE_EDITED';
 export const SOURCE_NODE_SUGGESTED = 'app/search/SOURCE_NODE_SUGGESTED';
 export const SOURCE_NODE_SELECTED = 'app/search/SOURCE_NODE_SELECTED';
 
+export const DESTINATION_NODE_EDITED = 'app/search/DESTINATION_NODE_EDITED';
 export const DESTINATION_NODE_SUGGESTED = 'app/search/DESTINATION_NODE_SUGGESTED';
 export const DESTINATION_NODE_SELECTED = 'app/search/DESTINATION_NODE_SELECTED';
 
@@ -46,7 +47,6 @@ const SEARCH_TYPE_FUZZY = 'fuzzy';
 const SEARCH_TYPE_EXACT = 'exact';
 
 export {
-    SEARCH_START,
     SEARCH_SUCCESS,
     SEARCH_FAILURE,
     SEARCH_SET_VALUE,
@@ -89,12 +89,6 @@ export interface SearchState {
     searchType: string;
     pathFilters: EdgeCheckboxType[];
     activeTab: SearchTargetType;
-}
-
-export interface SearchStartAction {
-    type: typeof SEARCH_START;
-    searchTerm: string;
-    target: SearchTargetType;
 }
 
 interface SearchSuccessAction {
@@ -161,6 +155,10 @@ interface SourceNodeSelectedAction {
     type: typeof SOURCE_NODE_SELECTED;
 }
 
+export interface SourceNodeEditedAction {
+    type: typeof SOURCE_NODE_EDITED;
+    searchTerm: string;
+}
 export interface DestinationNodeSuggestedAction {
     type: typeof DESTINATION_NODE_SUGGESTED;
     name: string;
@@ -170,12 +168,16 @@ interface DestinationNodeSelectedAction {
     type: typeof DESTINATION_NODE_SELECTED;
 }
 
+export interface DestinationNodeEditedAction {
+    type: typeof DESTINATION_NODE_EDITED;
+    searchTerm: string;
+}
+
 export enum EndPoints {
     search = '/api/search',
 }
 
 export type SearchbarTargetedActionTypes =
-    | SearchStartAction
     | SearchFailureAction
     | SearchSuccessAction
     | SearchSetValueAction
@@ -186,8 +188,10 @@ export type CypherActionTypes = CypherSearchAction | CypherQueryEditedAction;
 export type NodeActionTypes =
     | SourceNodeSuggestedAction
     | SourceNodeSelectedAction
+    | SourceNodeEditedAction
     | DestinationNodeSuggestedAction
-    | DestinationNodeSelectedAction;
+    | DestinationNodeSelectedAction
+    | DestinationNodeEditedAction;
 
 export type SearchbarActionTypes =
     | SearchbarTargetedActionTypes
