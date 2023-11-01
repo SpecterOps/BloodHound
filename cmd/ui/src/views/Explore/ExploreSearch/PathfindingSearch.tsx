@@ -14,32 +14,19 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Box, Button } from '@mui/material';
-import makeStyles from '@mui/styles/makeStyles';
+import { Box } from '@mui/material';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faBullseye, faCircle, faExchangeAlt } from '@fortawesome/free-solid-svg-icons';
-import { setSearchValue, startSearchSelected } from 'src/ducks/searchbar/actions';
+import { faBullseye, faCircle } from '@fortawesome/free-solid-svg-icons';
+import { startSearchSelected } from 'src/ducks/searchbar/actions';
 import { useDispatch, useSelector } from 'react-redux';
-import { useCallback, useEffect } from 'react';
-import { PRIMARY_SEARCH, SEARCH_TYPE_EXACT, PATHFINDING_SEARCH } from 'src/ducks/searchbar/types';
-import NodeSearch from './NodeSearch';
+import { useEffect } from 'react';
+import { PRIMARY_SEARCH, PATHFINDING_SEARCH } from 'src/ducks/searchbar/types';
 import { AppState } from 'src/store';
 import EdgeFilter from './EdgeFilter';
-
-const useStyles = makeStyles((theme) => ({
-    swapButton: {
-        height: '25px',
-        width: '25px',
-        minWidth: '25px',
-        borderRadius: theme.shape.borderRadius,
-        borderColor: 'rgba(0,0,0,0.23)',
-        color: 'black',
-        padding: 0,
-    },
-}));
+import ExploreSearchCombobox from '../ExploreSearchCombobox';
+import PathfindingSwapButton from './PathfindingSwapButton';
 
 const PathfindingSearch = () => {
-    const classes = useStyles();
     const dispatch = useDispatch();
 
     const { primary, secondary } = useSelector((state: AppState) => state.search);
@@ -52,33 +39,16 @@ const PathfindingSearch = () => {
         }
     }, [primary, secondary, dispatch]);
 
-    const swapPathfindingInputs = useCallback(() => {
-        const newSourceNode = secondary.value;
-        const newDestinationNode = primary.value;
-
-        dispatch(setSearchValue(newSourceNode, PRIMARY_SEARCH, SEARCH_TYPE_EXACT));
-        dispatch(setSearchValue(newDestinationNode, PATHFINDING_SEARCH, SEARCH_TYPE_EXACT));
-
-        dispatch(startSearchSelected(PATHFINDING_SEARCH));
-    }, [primary, secondary, dispatch]);
-
     return (
         <Box display={'flex'} alignItems={'center'} gap={1}>
             <SourceToBullseyeIcon />
 
             <Box flexGrow={1} gap={1} display={'flex'} flexDirection={'column'}>
-                <NodeSearch searchType={PRIMARY_SEARCH} labelText='Start Node' />
-                <NodeSearch searchType={PATHFINDING_SEARCH} labelText='Destination Node' />
+                <ExploreSearchCombobox searchType={PRIMARY_SEARCH} labelText='Start Node' />
+                <ExploreSearchCombobox searchType={PATHFINDING_SEARCH} labelText='Destination Node' />
             </Box>
 
-            <Button
-                className={classes.swapButton}
-                variant='outlined'
-                disabled={!primary?.value || !secondary?.value}
-                onClick={() => swapPathfindingInputs()}>
-                <FontAwesomeIcon icon={faExchangeAlt} className='fa-rotate-90' />
-            </Button>
-
+            <PathfindingSwapButton />
             <EdgeFilter />
         </Box>
     );
