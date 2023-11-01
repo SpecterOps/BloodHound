@@ -66,40 +66,55 @@ function isTargetedActionType(action: types.SearchbarActionTypes): action is typ
 }
 
 const searchReducer = (state = initialSearchState, action: types.SearchbarActionTypes) => {
-    if (action.type === types.SEARCH_RESET) {
-        return cloneDeep(initialSearchState);
-    }
+    switch (action.type) {
+        case types.SEARCH_RESET: {
+            return cloneDeep(initialSearchState);
+        }
 
-    if (action.type === types.SAVE_PATH_FILTERS) {
-        return {
-            ...state,
-            pathFilters: [...action.filters],
-        };
-    }
+        case types.SAVE_PATH_FILTERS: {
+            return {
+                ...state,
+                pathFilters: [...action.filters],
+            };
+        }
 
-    if (action.type === types.TAB_SELECTED) {
-        return {
-            ...state,
-            activeTab: action.tabName,
-        };
-    }
+        case types.TAB_SELECTED: {
+            return {
+                ...state,
+                activeTab: action.tabName,
+            };
+        }
 
-    // if (action.type === types.SOURCE_NODE_SUGGESTED) {
-    //     return {
-    //         ...state,
-    //     };
-    // }
-
-    if (action.type === types.CYPHER_SEARCH_SET_VALUE) {
-        return {
-            ...state,
-            cypher: {
-                searchTerm: action.searchTerm,
-            },
-        };
+        case types.CYPHER_SEARCH_SET_VALUE: {
+            return {
+                ...state,
+                cypher: {
+                    searchTerm: action.searchTerm,
+                },
+            };
+        }
     }
 
     return produce(state, (draft) => {
+        switch (action.type) {
+            case types.SOURCE_NODE_SUGGESTED: {
+                draft.primary.openMenu = true;
+                break;
+            }
+            case types.SOURCE_NODE_SELECTED: {
+                draft.primary.openMenu = false;
+                break;
+            }
+            case types.DESTINATION_NODE_SUGGESTED: {
+                draft.secondary.openMenu = true;
+                break;
+            }
+            case types.DESTINATION_NODE_SELECTED: {
+                draft.secondary.openMenu = false;
+                break;
+            }
+        }
+
         if (isTargetedActionType(action)) {
             const { target } = action;
 

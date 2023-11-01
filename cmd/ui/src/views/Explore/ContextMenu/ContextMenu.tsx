@@ -17,7 +17,13 @@
 import { Menu, MenuItem } from '@mui/material';
 import { FC, useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { setActiveTab, setSearchValue, startSearchAction } from 'src/ducks/searchbar/actions';
+import {
+    destinationNodeSuggested,
+    setActiveTab,
+    setSearchValue,
+    sourceNodeSuggested,
+    startSearchAction,
+} from 'src/ducks/searchbar/actions';
 import { PRIMARY_SEARCH, SEARCH_TYPE_EXACT, SECONDARY_SEARCH } from 'src/ducks/searchbar/types';
 import { AppState, useAppDispatch } from 'src/store';
 
@@ -44,6 +50,7 @@ const ContextMenu: FC<{ anchorPosition: { x: number; y: number } }> = ({ anchorP
             dispatch(setActiveTab('secondary'));
             dispatch(setSearchValue(null, PRIMARY_SEARCH, SEARCH_TYPE_EXACT));
             dispatch(startSearchAction(selectedNode.name, PRIMARY_SEARCH));
+            dispatch(sourceNodeSuggested());
         }
     };
 
@@ -52,6 +59,7 @@ const ContextMenu: FC<{ anchorPosition: { x: number; y: number } }> = ({ anchorP
             dispatch(setActiveTab('secondary'));
             dispatch(setSearchValue(null, SECONDARY_SEARCH, SEARCH_TYPE_EXACT));
             dispatch(startSearchAction(selectedNode.name, SECONDARY_SEARCH));
+            dispatch(destinationNodeSuggested());
         }
     };
 

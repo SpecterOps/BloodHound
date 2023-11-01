@@ -153,6 +153,22 @@ interface SearchSetPathfindingAction {
     target: SearchTargetType;
 }
 
+interface SourceNodeSuggestedAction {
+    type: typeof SOURCE_NODE_SUGGESTED;
+}
+
+interface SourceNodeSelectedAction {
+    type: typeof SOURCE_NODE_SELECTED;
+}
+
+interface DestinationNodeSuggestedAction {
+    type: typeof DESTINATION_NODE_SUGGESTED;
+}
+
+interface DestinationNodeSelectedAction {
+    type: typeof DESTINATION_NODE_SELECTED;
+}
+
 export enum EndPoints {
     search = '/api/search',
 }
@@ -164,13 +180,21 @@ export type SearchbarTargetedActionTypes =
     | SearchSetValueAction
     | SearchSetPathfindingAction;
 
+export type CypherActionTypes = CypherSearchAction | CypherSearchSetQueryTermAction;
+
+export type NodeActionTypes =
+    | SourceNodeSuggestedAction
+    | SourceNodeSelectedAction
+    | DestinationNodeSuggestedAction
+    | DestinationNodeSelectedAction;
+
 export type SearchbarActionTypes =
     | SearchbarTargetedActionTypes
     | StartSearchSelectedAction
     | SearchResetAction
     | SavePathFiltersAction
     | TabSelectedAction
-    | CypherSearchAction
-    | CypherSearchSetQueryTermAction;
+    | CypherActionTypes
+    | NodeActionTypes;
 
 export type SearchTargetType = typeof PRIMARY_SEARCH | typeof SECONDARY_SEARCH;
