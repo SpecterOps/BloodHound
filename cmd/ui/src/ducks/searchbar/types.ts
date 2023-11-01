@@ -28,6 +28,12 @@ const CYPHER_SEARCH_SET_VALUE = 'app/search/CYPHERSEARCH_SETVALUE';
 const SAVE_PATH_FILTERS = 'app/search/SAVE_PATH_FILTERS';
 const TAB_SELECTED = 'app/search/TAB_SELECTED';
 
+export const SOURCE_NODE_SUGGESTED = 'app/search/SOURCE_NODE_SUGGESTED';
+export const SOURCE_NODE_SELECTED = 'app/search/SOURCE_NODE_SELECTED';
+
+export const DESTINATION_NODE_SUGGESTED = 'app/search/DESTINATION_NODE_SUGGESTED';
+export const DESTINATION_NODE_SELECTED = 'app/search/DESTINATION_NODE_SELECTED';
+
 const PRIMARY_SEARCH = 'primary';
 const SECONDARY_SEARCH = 'secondary';
 const CYPHER_SEARCH = 'cypher';
@@ -63,6 +69,7 @@ export interface SearchBarState {
     searchTerm: string;
     loading: boolean;
     value: SearchNodeType | null;
+    openMenu: boolean;
 }
 export interface SearchNodeType {
     objectid: string;
@@ -70,11 +77,15 @@ export interface SearchNodeType {
     name: string;
 }
 
+export interface CypherSearchState {
+    searchTerm: string;
+}
+
 export interface SearchState {
     primary: SearchBarState;
     secondary: SearchBarState;
-    tierZero: SearchBarState;
-    cypher: SearchBarState;
+    cypher: CypherSearchState;
+
     searchType: string;
     pathFilters: EdgeCheckboxType[];
     activeTab: SearchTargetType;
@@ -125,8 +136,7 @@ export interface StartSearchSelectedAction {
 }
 
 export interface CypherSearchAction {
-    type: typeof SEARCH_START;
-    target: typeof CYPHER_SEARCH;
+    type: typeof CYPHER_SEARCH;
     searchTerm: string;
 }
 
@@ -152,19 +162,15 @@ export type SearchbarTargetedActionTypes =
     | SearchFailureAction
     | SearchSuccessAction
     | SearchSetValueAction
-    | SearchSetPathfindingAction
-    | CypherSearchAction
-    | CypherSearchSetQueryTermAction;
+    | SearchSetPathfindingAction;
 
 export type SearchbarActionTypes =
     | SearchbarTargetedActionTypes
     | StartSearchSelectedAction
     | SearchResetAction
     | SavePathFiltersAction
-    | TabSelectedAction;
+    | TabSelectedAction
+    | CypherSearchAction
+    | CypherSearchSetQueryTermAction;
 
-export type SearchTargetType =
-    | typeof PRIMARY_SEARCH
-    | typeof SECONDARY_SEARCH
-    | typeof TIER_ZERO_SEARCH
-    | typeof CYPHER_SEARCH;
+export type SearchTargetType = typeof PRIMARY_SEARCH | typeof SECONDARY_SEARCH;

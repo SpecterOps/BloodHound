@@ -30,16 +30,24 @@ function* startSearchActionWatcher(): SagaIterator {
     yield takeLatest(types.SEARCH_SELECTED, searchSelectedWorker);
 }
 
+function* cypherSearchWatcher(): SagaIterator {
+    yield takeLatest(types.CYPHER_SEARCH, cypherSearchWorker);
+}
+
 function* searchWorker(payload: types.SearchStartAction) {
-    if (payload.target === types.CYPHER_SEARCH) {
+    try {
+        const { data } = yield call(apiClient.searchHandler, payload.searchTerm);
+        yield put(actions.searchSuccessAction(data as types.SearchNodeType[], payload.target));
+    } catch {
+        /* empty */
+    }
+}
+
+function* cypherSearchWorker(payload: types.CypherSearchAction) {
+    try {
         yield put(startCypherQuery(payload.searchTerm));
-    } else {
-        try {
-            const { data } = yield call(apiClient.searchHandler, payload.searchTerm);
-            yield put(actions.searchSuccessAction(data as types.SearchNodeType[], payload.target));
-        } catch {
-            /* empty */
-        }
+    } catch {
+        /* empty */
     }
 }
 
@@ -63,5 +71,5 @@ function* searchSelectedWorker(payload: types.StartSearchSelectedAction) {
 }
 
 export default function* startSearchSagas() {
-    yield all([fork(searchWatcher), fork(startSearchActionWatcher)]);
+    yield all([fork(searchWatcher), fork(startSearchActionWatcher), fork(cypherSearchWatcher)]);
 }

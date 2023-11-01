@@ -64,10 +64,9 @@ export const startSearchSelected = (target: types.SearchTargetType): types.Searc
     };
 };
 
-export const startCypherSearch = (cypherQuery: string) => {
+export const startCypherSearch = (cypherQuery: string): types.CypherSearchAction => {
     return {
-        type: types.SEARCH_START,
-        target: types.CYPHER_SEARCH,
+        type: types.CYPHER_SEARCH,
         searchTerm: cypherQuery,
     };
 };
@@ -97,5 +96,29 @@ export const setActiveTab = (tabName: types.SearchTargetType) => {
     return {
         type: types.TAB_SELECTED,
         tabName,
+    };
+};
+
+export const sourceNodeSuggested = () => {
+    return {
+        type: types.SOURCE_NODE_SUGGESTED,
+    };
+};
+
+export const sourceNodeSelected = () => {
+    return {
+        type: types.SOURCE_NODE_SELECTED,
+    };
+};
+
+export const destinationNodeSuggested = () => {
+    return {
+        type: types.DESTINATION_NODE_SUGGESTED,
+    };
+};
+
+export const destinationNodeSelected = () => {
+    return {
+        type: types.DESTINATION_NODE_SELECTED,
     };
 };

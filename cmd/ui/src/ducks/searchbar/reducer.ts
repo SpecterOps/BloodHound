@@ -45,24 +45,17 @@ export const initialSearchState: types.SearchState = {
         loading: false,
         value: null,
         options: [],
+        openMenu: false,
     },
     secondary: {
         searchTerm: '',
         loading: false,
         value: null,
         options: [],
-    },
-    tierZero: {
-        searchTerm: '',
-        loading: false,
-        value: null,
-        options: [],
+        openMenu: false,
     },
     cypher: {
         searchTerm: '',
-        loading: false,
-        value: null,
-        options: [],
     },
     pathFilters: initialPathFilters,
     activeTab: 'primary',
@@ -91,6 +84,21 @@ const searchReducer = (state = initialSearchState, action: types.SearchbarAction
         };
     }
 
+    // if (action.type === types.SOURCE_NODE_SUGGESTED) {
+    //     return {
+    //         ...state,
+    //     };
+    // }
+
+    if (action.type === types.CYPHER_SEARCH_SET_VALUE) {
+        return {
+            ...state,
+            cypher: {
+                searchTerm: action.searchTerm,
+            },
+        };
+    }
+
     return produce(state, (draft) => {
         if (isTargetedActionType(action)) {
             const { target } = action;
@@ -111,8 +119,6 @@ const searchReducer = (state = initialSearchState, action: types.SearchbarAction
                 } else {
                     draft[target].searchTerm = action.value.name;
                 }
-            } else if (action.type === types.CYPHER_SEARCH_SET_VALUE) {
-                draft[target].searchTerm = action.searchTerm;
             } else if (action.type === types.SEARCH_SET_PATHFINDING) {
                 draft.primary = {
                     searchTerm: action.primary.name,
@@ -123,6 +129,7 @@ const searchReducer = (state = initialSearchState, action: types.SearchbarAction
                         type: GraphNodeTypes.User,
                     },
                     options: [],
+                    openMenu: false,
                 };
 
                 if (action.secondary) {
@@ -135,6 +142,7 @@ const searchReducer = (state = initialSearchState, action: types.SearchbarAction
                             type: GraphNodeTypes.User,
                         },
                         options: [],
+                        openMenu: false,
                     };
                 } else {
                     draft.secondary = {
@@ -142,6 +150,7 @@ const searchReducer = (state = initialSearchState, action: types.SearchbarAction
                         loading: false,
                         value: null,
                         options: [],
+                        openMenu: false,
                     };
                 }
             }
