@@ -19,7 +19,6 @@ import { EdgeCheckboxType } from 'src/views/Explore/ExploreSearch/EdgeFilteringD
 
 const SEARCH_SUCCESS = 'app/search/SUCCESS';
 const SEARCH_FAILURE = 'app/search/FAILURE';
-const SEARCH_SET_VALUE = 'app/search/SETVALUE';
 const SEARCH_SELECTED = 'app/search/SELECTED';
 const SEARCH_SET_PATHFINDING = 'app/search/SET_PATHFINDING';
 const SEARCH_RESET = 'app/search/RESET';
@@ -49,7 +48,6 @@ const SEARCH_TYPE_EXACT = 'exact';
 export {
     SEARCH_SUCCESS,
     SEARCH_FAILURE,
-    SEARCH_SET_VALUE,
     PRIMARY_SEARCH,
     PATHFINDING_SEARCH,
     CYPHER_SEARCH,
@@ -103,13 +101,6 @@ interface SearchFailureAction {
     error: string;
 }
 
-interface SearchSetValueAction {
-    type: typeof SEARCH_SET_VALUE;
-    target: SearchTargetType;
-    value: SearchNodeType | null;
-    searchType: string;
-}
-
 interface SearchResetAction {
     type: typeof SEARCH_RESET;
 }
@@ -139,20 +130,14 @@ export interface CypherQueryEditedAction {
     searchTerm: string;
 }
 
-interface SearchSetPathfindingAction {
-    type: typeof SEARCH_SET_PATHFINDING;
-    primary: any;
-    secondary: any;
-    target: SearchTargetType;
-}
-
 export interface SourceNodeSuggestedAction {
     type: typeof SOURCE_NODE_SUGGESTED;
     name: string;
 }
 
-interface SourceNodeSelectedAction {
+export interface SourceNodeSelectedAction {
     type: typeof SOURCE_NODE_SELECTED;
+    node: SearchNodeType | null;
 }
 
 export interface SourceNodeEditedAction {
@@ -164,8 +149,9 @@ export interface DestinationNodeSuggestedAction {
     name: string;
 }
 
-interface DestinationNodeSelectedAction {
+export interface DestinationNodeSelectedAction {
     type: typeof DESTINATION_NODE_SELECTED;
+    node: SearchNodeType | null;
 }
 
 export interface DestinationNodeEditedAction {
@@ -177,11 +163,7 @@ export enum EndPoints {
     search = '/api/search',
 }
 
-export type SearchbarTargetedActionTypes =
-    | SearchFailureAction
-    | SearchSuccessAction
-    | SearchSetValueAction
-    | SearchSetPathfindingAction;
+export type SearchbarTargetedActionTypes = SearchFailureAction | SearchSuccessAction;
 
 export type CypherActionTypes = CypherSearchAction | CypherQueryEditedAction;
 

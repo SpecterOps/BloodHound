@@ -23,11 +23,10 @@ import { AppState, useAppDispatch } from 'src/store';
 import {
     destinationNodeEdited,
     destinationNodeSelected,
-    setSearchValue,
     sourceNodeEdited,
     sourceNodeSelected,
 } from 'src/ducks/searchbar/actions';
-import { PRIMARY_SEARCH, SEARCH_TYPE_EXACT, PATHFINDING_SEARCH, SearchNodeType } from 'src/ducks/searchbar/types';
+import { PRIMARY_SEARCH, PATHFINDING_SEARCH, SearchNodeType } from 'src/ducks/searchbar/types';
 import { useSelector } from 'react-redux';
 
 const ExploreSearchCombobox: React.FC<{
@@ -67,12 +66,10 @@ const ExploreSearchCombobox: React.FC<{
             selectedItem,
             onSelectedItemChange: ({ type, selectedItem }) => {
                 if (selectedItem) {
-                    dispatch(setSearchValue(selectedItem as SearchNodeType, searchType, SEARCH_TYPE_EXACT));
-                    // todo: need to dispatch action that the source/end node was selected
                     if (searchType === PRIMARY_SEARCH) {
-                        dispatch(sourceNodeSelected());
+                        dispatch(sourceNodeSelected(selectedItem as SearchNodeType));
                     } else if (searchType === PATHFINDING_SEARCH) {
-                        dispatch(destinationNodeSelected());
+                        dispatch(destinationNodeSelected(selectedItem as SearchNodeType));
                     }
                 }
             },

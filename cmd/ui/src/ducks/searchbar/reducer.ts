@@ -96,6 +96,13 @@ const searchReducer = (state = initialSearchState, action: types.SearchbarAction
 
     return produce(state, (draft) => {
         switch (action.type) {
+            case types.SOURCE_NODE_EDITED: {
+                draft.primary.searchTerm = action.searchTerm;
+                draft.primary.loading = true;
+                draft.primary.options = [];
+                break;
+            }
+
             case types.SOURCE_NODE_SUGGESTED: {
                 draft.activeTab = types.PATHFINDING_SEARCH;
 
@@ -110,22 +117,28 @@ const searchReducer = (state = initialSearchState, action: types.SearchbarAction
 
                 break;
             }
-            case types.SOURCE_NODE_EDITED: {
-                draft.primary.searchTerm = action.searchTerm;
-                draft.primary.loading = true;
-                draft.primary.options = [];
-                break;
-            }
+
             case types.SOURCE_NODE_SELECTED: {
+                draft.searchType = types.SEARCH_TYPE_EXACT;
+
                 draft.primary.openMenu = false;
+                draft.primary.value = action.node;
+
+                if (action.node) {
+                    draft.primary.searchTerm = action.node.name;
+                } else {
+                    draft.primary.searchTerm = '';
+                }
                 break;
             }
+
             case types.DESTINATION_NODE_EDITED: {
                 draft.secondary.searchTerm = action.searchTerm;
                 draft.secondary.loading = true;
                 draft.secondary.options = [];
                 break;
             }
+
             case types.DESTINATION_NODE_SUGGESTED: {
                 draft.activeTab = types.PATHFINDING_SEARCH;
 
@@ -139,8 +152,18 @@ const searchReducer = (state = initialSearchState, action: types.SearchbarAction
                 };
                 break;
             }
+
             case types.DESTINATION_NODE_SELECTED: {
+                draft.searchType = types.SEARCH_TYPE_EXACT;
+
                 draft.secondary.openMenu = false;
+                draft.secondary.value = action.node;
+
+                if (action.node) {
+                    draft.secondary.searchTerm = action.node.name;
+                } else {
+                    draft.secondary.searchTerm = '';
+                }
                 break;
             }
         }
@@ -151,15 +174,6 @@ const searchReducer = (state = initialSearchState, action: types.SearchbarAction
             if (action.type === types.SEARCH_SUCCESS) {
                 draft[target].loading = false;
                 draft[target].options = action.results;
-            } else if (action.type === types.SEARCH_SET_VALUE) {
-                draft.searchType = action.searchType;
-                draft[target].value = action.value;
-                // clear out `searchTerm` if value is undefined or null
-                if (!action.value) {
-                    draft[target].searchTerm = '';
-                } else {
-                    draft[target].searchTerm = action.value.name;
-                }
             }
         }
     });

@@ -50,19 +50,6 @@ export const searchFailAction = (error: string, target: types.SearchTargetType):
     };
 };
 
-export const setSearchValue = (
-    value: types.SearchNodeType | null,
-    target: types.SearchTargetType,
-    searchType: string
-): types.SearchbarActionTypes => {
-    return {
-        type: types.SEARCH_SET_VALUE,
-        target,
-        value,
-        searchType,
-    };
-};
-
 export const startSearchSelected = (target: types.SearchTargetType): types.SearchbarActionTypes => {
     return {
         type: types.SEARCH_SELECTED,
@@ -111,9 +98,10 @@ export const sourceNodeSuggested = (name: string): types.SourceNodeSuggestedActi
     };
 };
 
-export const sourceNodeSelected = () => {
+export const sourceNodeSelected = (node: types.SearchNodeType | null): types.SourceNodeSelectedAction => {
     return {
         type: types.SOURCE_NODE_SELECTED,
+        node,
     };
 };
 
@@ -124,8 +112,9 @@ export const destinationNodeSuggested = (name: string): types.DestinationNodeSug
     };
 };
 
-export const destinationNodeSelected = () => {
+export const destinationNodeSelected = (node: types.SearchNodeType | null): types.DestinationNodeSelectedAction => {
     return {
         type: types.DESTINATION_NODE_SELECTED,
+        node,
     };
 };

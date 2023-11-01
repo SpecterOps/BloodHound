@@ -21,12 +21,12 @@ import makeStyles from '@mui/styles/makeStyles';
 import { Icon } from 'bh-shared-ui';
 import React, { useState } from 'react';
 import { useSelector } from 'react-redux';
-import { PRIMARY_SEARCH, SEARCH_TYPE_EXACT, PATHFINDING_SEARCH } from 'src/ducks/searchbar/types';
+import { PRIMARY_SEARCH } from 'src/ducks/searchbar/types';
 import { AppState, useAppDispatch } from 'src/store';
 import CypherSearch from './CypherSearch';
 import NodeSearch from './NodeSearch';
 import PathfindingSearch from './PathfindingSearch';
-import { tabChanged, setSearchValue, startSearchSelected } from 'src/ducks/searchbar/actions';
+import { tabChanged, startSearchSelected, destinationNodeSelected } from 'src/ducks/searchbar/actions';
 
 const useStyles = makeStyles((theme) => ({
     menuButton: {
@@ -72,7 +72,7 @@ const ExploreSearch = ({ handleColumns }: ExploreSearchProps) => {
                 if (primary.value) {
                     dispatch(startSearchSelected(PRIMARY_SEARCH));
                 }
-                dispatch(setSearchValue(null, PATHFINDING_SEARCH, SEARCH_TYPE_EXACT));
+                dispatch(destinationNodeSelected(null));
                 return dispatch(tabChanged('primary'));
             case 1:
                 if (primary.value && secondary.value) {

@@ -20,7 +20,7 @@ import { setupServer } from 'msw/node';
 import { act, render, screen, within } from 'src/test-utils';
 import ExploreSearchCombobox from '.';
 import * as actions from 'src/ducks/searchbar/actions';
-import { PRIMARY_SEARCH, SEARCH_TYPE_EXACT } from 'src/ducks/searchbar/types';
+import { PRIMARY_SEARCH } from 'src/ducks/searchbar/types';
 
 const testSearchResults = {
     data: [
@@ -100,7 +100,7 @@ describe('ExploreSearchCombobox', () => {
 
     it('when a search result is clicked it calls onSelectedItemChange', async () => {
         const user = userEvent.setup();
-        const spy = vi.spyOn(actions, 'setSearchValue');
+        const spy = vi.spyOn(actions, 'sourceNodeSelected');
         const labelText: string = 'test label';
 
         render(<ExploreSearchCombobox labelText={labelText} searchType={PRIMARY_SEARCH} />);
@@ -110,7 +110,7 @@ describe('ExploreSearchCombobox', () => {
         await user.click(options[0]);
 
         expect(spy).toHaveBeenCalledTimes(1);
-        expect(spy).toHaveBeenCalledWith(testSearchResults.data[0], PRIMARY_SEARCH, SEARCH_TYPE_EXACT);
+        expect(spy).toHaveBeenCalledWith(testSearchResults.data[0]);
     });
 });
 

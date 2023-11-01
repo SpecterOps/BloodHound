@@ -20,7 +20,7 @@ import ExploreSearch from '.';
 import { setupServer } from 'msw/node';
 import { rest } from 'msw';
 import * as actions from 'src/ducks/searchbar/actions';
-import { PRIMARY_SEARCH, SEARCH_TYPE_EXACT, PATHFINDING_SEARCH } from 'src/ducks/searchbar/types';
+import { PRIMARY_SEARCH, PATHFINDING_SEARCH } from 'src/ducks/searchbar/types';
 import { initialSearchState } from 'src/ducks/searchbar/reducer';
 
 describe('ExploreSearch rendering per tab', async () => {
@@ -34,7 +34,6 @@ describe('ExploreSearch rendering per tab', async () => {
     const user = userEvent.setup();
 
     it('should render', () => {
-        screen.debug();
         expect(screen.getByLabelText('Search Nodes')).toBeInTheDocument();
 
         expect(screen.getByRole('tab', { name: /search/i })).toBeInTheDocument();
@@ -118,14 +117,14 @@ describe('ExploreSearch handles search on tab changing', async () => {
 
         const user = userEvent.setup();
         const startSearchSelectedSpy = vi.spyOn(actions, 'startSearchSelected');
-        const setSearchValueSpy = vi.spyOn(actions, 'setSearchValue');
+        const destinationNodeSelectedSpy = vi.spyOn(actions, 'destinationNodeSelected');
         const tabChangedSpy = vi.spyOn(actions, 'tabChanged');
 
         const searchTab = screen.getByRole('tab', { name: /search/i });
         await user.click(searchTab);
 
         expect(startSearchSelectedSpy).toHaveBeenLastCalledWith(PRIMARY_SEARCH);
-        expect(setSearchValueSpy).toHaveBeenLastCalledWith(null, PATHFINDING_SEARCH, SEARCH_TYPE_EXACT);
+        expect(destinationNodeSelectedSpy).toHaveBeenLastCalledWith(null);
 
         expect(tabChangedSpy).toHaveBeenCalledTimes(1);
         expect(tabChangedSpy).toHaveBeenCalledWith(PRIMARY_SEARCH);

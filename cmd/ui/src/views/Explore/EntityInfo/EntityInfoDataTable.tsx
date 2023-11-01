@@ -19,8 +19,8 @@ import { useDispatch } from 'react-redux';
 import { InfiniteScrollingTable } from 'bh-shared-ui';
 import { putGraphData, putGraphError, saveResponseForExport, setGraphLoading } from 'src/ducks/explore/actions';
 import { addSnackbar } from 'src/ducks/global/actions';
-import { setSearchValue, startSearchSelected } from 'src/ducks/searchbar/actions';
-import { PRIMARY_SEARCH, SEARCH_TYPE_EXACT } from 'src/ducks/searchbar/types';
+import { sourceNodeSelected, startSearchSelected } from 'src/ducks/searchbar/actions';
+import { PRIMARY_SEARCH } from 'src/ducks/searchbar/types';
 import { abortRequest } from 'src/views/Explore/utils';
 import EntityInfoCollapsibleSection from './EntityInfoCollapsibleSection';
 import { NODE_GRAPH_RENDER_LIMIT } from 'src/constants';
@@ -88,15 +88,11 @@ const EntityInfoDataTable: React.FC<EntityInfoDataTableProps> = ({ id, label, en
 
     const handleOnClick = (item: any) => {
         dispatch(
-            setSearchValue(
-                {
-                    objectid: item.id,
-                    type: item.type,
-                    name: item.name,
-                },
-                PRIMARY_SEARCH,
-                SEARCH_TYPE_EXACT
-            )
+            sourceNodeSelected({
+                objectid: item.id,
+                type: item.type,
+                name: item.name,
+            })
         );
         dispatch(startSearchSelected(PRIMARY_SEARCH));
     };
