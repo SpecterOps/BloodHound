@@ -71,6 +71,7 @@ import DCSync from './DCSync/DCSync';
 import DelegatedEnrollmentAgent from './DelegatedEnrollmentAgent/DelegatedEnrollmentAgent';
 import DumpSMSAPassword from './DumpSMSAPassword/DumpSMSAPassword';
 import Enroll from './Enroll/Enroll';
+import EnrollOnBehalfOf from './EnrollOnBehalfOf/EnrollOnBehalfOf';
 import EnterpriseCAFor from './EnterpriseCAFor/EnterpriseCAFor';
 import ExecuteDCOM from './ExecuteDCOM/ExecuteDCOM';
 import ForceChangePassword from './ForceChangePassword/ForceChangePassword';
@@ -191,6 +192,7 @@ const EdgeInfoComponents = {
     TrustedForNTAuth: TrustedForNTAuth,
     HostsCAService: HostsCAService,
     DelegatedEnrollmentAgent: DelegatedEnrollmentAgent,
+    EnrollOnBehalfOf: EnrollOnBehalfOf,
 };
 
 export default EdgeInfoComponents;
