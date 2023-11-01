@@ -85,7 +85,7 @@ const searchReducer = (state = initialSearchState, action: types.SearchbarAction
             };
         }
 
-        case types.CYPHER_SEARCH_SET_VALUE: {
+        case types.CYPHER_QUERY_EDITED: {
             return {
                 ...state,
                 cypher: {

@@ -32,7 +32,7 @@ import {
 } from 'bh-shared-ui';
 import { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { setCypherQueryTerm, cypherSearch } from 'src/ducks/searchbar/actions';
+import { cypherQueryEdited, cypherSearch } from 'src/ducks/searchbar/actions';
 import { AppState } from 'src/store';
 import CommonSearches from './CommonSearches';
 import SaveQueryDialog from './SaveQueryDialog';
@@ -87,7 +87,7 @@ const useCypherEditor = () => {
 
     const dispatch = useDispatch();
 
-    const setCypherQuery = (query: string) => dispatch(setCypherQueryTerm(query));
+    const setCypherQuery = (query: string) => dispatch(cypherQueryEdited(query));
 
     const performSearch = () => dispatch(cypherSearch(cypherQuery));
 

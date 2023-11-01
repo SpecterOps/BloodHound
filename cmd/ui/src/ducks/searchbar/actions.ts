@@ -71,10 +71,9 @@ export const cypherSearch = (cypherQuery: string): types.CypherSearchAction => {
     };
 };
 
-export const setCypherQueryTerm = (cypherQuery: string) => {
+export const cypherQueryEdited = (cypherQuery: string): types.CypherQueryEditedAction => {
     return {
-        type: types.CYPHER_SEARCH_SET_VALUE,
-        target: types.CYPHER_SEARCH,
+        type: types.CYPHER_QUERY_EDITED,
         searchTerm: cypherQuery,
     };
 };

@@ -24,7 +24,7 @@ const SEARCH_SET_VALUE = 'app/search/SETVALUE';
 const SEARCH_SELECTED = 'app/search/SELECTED';
 const SEARCH_SET_PATHFINDING = 'app/search/SET_PATHFINDING';
 const SEARCH_RESET = 'app/search/RESET';
-const CYPHER_SEARCH_SET_VALUE = 'app/search/CYPHERSEARCH_SETVALUE';
+const CYPHER_QUERY_EDITED = 'app/search/CYPHER_QUERY_EDITED';
 const SAVE_PATH_FILTERS = 'app/search/SAVE_PATH_FILTERS';
 
 export const TAB_CHANGED = 'app/search/TAB_CHANGED';
@@ -60,7 +60,7 @@ export {
     SEARCH_TYPE_EXACT,
     SEARCH_TYPE_FUZZY,
     SEARCH_RESET,
-    CYPHER_SEARCH_SET_VALUE,
+    CYPHER_QUERY_EDITED,
     SAVE_PATH_FILTERS,
 };
 
@@ -140,9 +140,8 @@ export interface CypherSearchAction {
     searchTerm: string;
 }
 
-export interface CypherSearchSetQueryTermAction {
-    type: typeof CYPHER_SEARCH_SET_VALUE;
-    target: typeof CYPHER_SEARCH;
+export interface CypherQueryEditedAction {
+    type: typeof CYPHER_QUERY_EDITED;
     searchTerm: string;
 }
 
@@ -182,7 +181,7 @@ export type SearchbarTargetedActionTypes =
     | SearchSetValueAction
     | SearchSetPathfindingAction;
 
-export type CypherActionTypes = CypherSearchAction | CypherSearchSetQueryTermAction;
+export type CypherActionTypes = CypherSearchAction | CypherQueryEditedAction;
 
 export type NodeActionTypes =
     | SourceNodeSuggestedAction
