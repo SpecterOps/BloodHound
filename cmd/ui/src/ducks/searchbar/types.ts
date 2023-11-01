@@ -35,7 +35,7 @@ export const DESTINATION_NODE_SUGGESTED = 'app/search/DESTINATION_NODE_SUGGESTED
 export const DESTINATION_NODE_SELECTED = 'app/search/DESTINATION_NODE_SELECTED';
 
 const PRIMARY_SEARCH = 'primary';
-const SECONDARY_SEARCH = 'secondary';
+const PATHFINDING_SEARCH = 'secondary';
 const CYPHER_SEARCH = 'cypher';
 const TIER_ZERO_SEARCH = 'tierZero';
 
@@ -50,7 +50,7 @@ export {
     SEARCH_FAILURE,
     SEARCH_SET_VALUE,
     PRIMARY_SEARCH,
-    SECONDARY_SEARCH,
+    PATHFINDING_SEARCH,
     CYPHER_SEARCH,
     TIER_ZERO_SEARCH,
     SEARCH_ENDPOINT,
@@ -197,4 +197,4 @@ export type SearchbarActionTypes =
     | CypherActionTypes
     | NodeActionTypes;
 
-export type SearchTargetType = typeof PRIMARY_SEARCH | typeof SECONDARY_SEARCH;
+export type SearchTargetType = typeof PRIMARY_SEARCH | typeof PATHFINDING_SEARCH;

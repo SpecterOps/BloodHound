@@ -21,7 +21,7 @@ import { faBullseye, faCircle, faExchangeAlt } from '@fortawesome/free-solid-svg
 import { setSearchValue, startSearchSelected } from 'src/ducks/searchbar/actions';
 import { useDispatch, useSelector } from 'react-redux';
 import { useCallback, useEffect } from 'react';
-import { PRIMARY_SEARCH, SEARCH_TYPE_EXACT, SECONDARY_SEARCH } from 'src/ducks/searchbar/types';
+import { PRIMARY_SEARCH, SEARCH_TYPE_EXACT, PATHFINDING_SEARCH } from 'src/ducks/searchbar/types';
 import NodeSearch from './NodeSearch';
 import { AppState } from 'src/store';
 import EdgeFilter from './EdgeFilter';
@@ -46,7 +46,7 @@ const PathfindingSearch = () => {
 
     useEffect(() => {
         if (primary.value && secondary.value) {
-            dispatch(startSearchSelected(SECONDARY_SEARCH));
+            dispatch(startSearchSelected(PATHFINDING_SEARCH));
         } else {
             dispatch(startSearchSelected(PRIMARY_SEARCH));
         }
@@ -57,9 +57,9 @@ const PathfindingSearch = () => {
         const newDestinationNode = primary.value;
 
         dispatch(setSearchValue(newSourceNode, PRIMARY_SEARCH, SEARCH_TYPE_EXACT));
-        dispatch(setSearchValue(newDestinationNode, SECONDARY_SEARCH, SEARCH_TYPE_EXACT));
+        dispatch(setSearchValue(newDestinationNode, PATHFINDING_SEARCH, SEARCH_TYPE_EXACT));
 
-        dispatch(startSearchSelected(SECONDARY_SEARCH));
+        dispatch(startSearchSelected(PATHFINDING_SEARCH));
     }, [primary, secondary, dispatch]);
 
     return (
@@ -68,7 +68,7 @@ const PathfindingSearch = () => {
 
             <Box flexGrow={1} gap={1} display={'flex'} flexDirection={'column'}>
                 <NodeSearch searchType={PRIMARY_SEARCH} labelText='Start Node' />
-                <NodeSearch searchType={SECONDARY_SEARCH} labelText='Destination Node' />
+                <NodeSearch searchType={PATHFINDING_SEARCH} labelText='Destination Node' />
             </Box>
 
             <Button

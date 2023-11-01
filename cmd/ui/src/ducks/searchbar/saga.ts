@@ -58,7 +58,7 @@ function* searchSelectedWorker(payload: types.StartSearchSelectedAction) {
         .map((pathFilter) => pathFilter.edgeType);
 
     if (
-        payload.target === types.SECONDARY_SEARCH &&
+        payload.target === types.PATHFINDING_SEARCH &&
         searchState.primary.value !== null &&
         searchState.secondary.value !== null
     ) {

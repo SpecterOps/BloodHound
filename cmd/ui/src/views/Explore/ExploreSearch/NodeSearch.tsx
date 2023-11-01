@@ -17,13 +17,13 @@
 import { useDispatch, useSelector } from 'react-redux';
 import ExploreSearchCombobox from '../ExploreSearchCombobox';
 import { AppState } from 'src/store';
-import { PRIMARY_SEARCH, SECONDARY_SEARCH } from 'src/ducks/searchbar/types';
+import { PRIMARY_SEARCH, PATHFINDING_SEARCH } from 'src/ducks/searchbar/types';
 import { startSearchSelected } from 'src/ducks/searchbar/actions';
 import { useEffect } from 'react';
 
 interface NodeSearchProps {
     labelText: string;
-    searchType: typeof PRIMARY_SEARCH | typeof SECONDARY_SEARCH;
+    searchType: typeof PRIMARY_SEARCH | typeof PATHFINDING_SEARCH;
 }
 
 const NodeSearch = ({ searchType, labelText }: NodeSearchProps) => {

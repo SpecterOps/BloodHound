@@ -21,7 +21,7 @@ import makeStyles from '@mui/styles/makeStyles';
 import { Icon } from 'bh-shared-ui';
 import React, { useState } from 'react';
 import { useSelector } from 'react-redux';
-import { PRIMARY_SEARCH, SEARCH_TYPE_EXACT, SECONDARY_SEARCH } from 'src/ducks/searchbar/types';
+import { PRIMARY_SEARCH, SEARCH_TYPE_EXACT, PATHFINDING_SEARCH } from 'src/ducks/searchbar/types';
 import { AppState, useAppDispatch } from 'src/store';
 import CypherSearch from './CypherSearch';
 import NodeSearch from './NodeSearch';
@@ -72,7 +72,7 @@ const ExploreSearch = ({ handleColumns }: ExploreSearchProps) => {
                 if (primary.value) {
                     dispatch(startSearchSelected(PRIMARY_SEARCH));
                 }
-                dispatch(setSearchValue(null, SECONDARY_SEARCH, SEARCH_TYPE_EXACT));
+                dispatch(setSearchValue(null, PATHFINDING_SEARCH, SEARCH_TYPE_EXACT));
                 return dispatch(setActiveTab('primary'));
             case 1:
                 if (primary.value && secondary.value) {

@@ -21,7 +21,7 @@ import userEvent from '@testing-library/user-event';
 import { setupServer } from 'msw/node';
 import { rest } from 'msw';
 import * as actions from 'src/ducks/searchbar/actions';
-import { PRIMARY_SEARCH, SECONDARY_SEARCH } from 'src/ducks/searchbar/types';
+import { PRIMARY_SEARCH, PATHFINDING_SEARCH } from 'src/ducks/searchbar/types';
 
 describe('Pathfinding: interaction', () => {
     const comboboxLookaheadOptions = {
@@ -106,7 +106,7 @@ describe('Pathfinding: interaction', () => {
         await user.click(await screen.findByRole('option', { name: /admin/i }));
 
         expect(spy).toHaveBeenLastCalledWith(PRIMARY_SEARCH);
-        expect(spy).not.toHaveBeenCalledWith(SECONDARY_SEARCH);
+        expect(spy).not.toHaveBeenCalledWith(PATHFINDING_SEARCH);
     });
 
     it('executes a pathfinding search when both a source and destination node are provided', async () => {
@@ -123,6 +123,6 @@ describe('Pathfinding: interaction', () => {
         await user.type(destinationInput, 'admin');
         await user.click(await screen.findByRole('option', { name: /admin/i }));
 
-        expect(spy).toHaveBeenLastCalledWith(SECONDARY_SEARCH);
+        expect(spy).toHaveBeenLastCalledWith(PATHFINDING_SEARCH);
     });
 });

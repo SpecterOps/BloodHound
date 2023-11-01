@@ -20,7 +20,7 @@ import ExploreSearch from '.';
 import { setupServer } from 'msw/node';
 import { rest } from 'msw';
 import * as actions from 'src/ducks/searchbar/actions';
-import { PRIMARY_SEARCH, SEARCH_TYPE_EXACT, SECONDARY_SEARCH } from 'src/ducks/searchbar/types';
+import { PRIMARY_SEARCH, SEARCH_TYPE_EXACT, PATHFINDING_SEARCH } from 'src/ducks/searchbar/types';
 import { initialSearchState } from 'src/ducks/searchbar/reducer';
 
 describe('ExploreSearch rendering per tab', async () => {
@@ -110,7 +110,7 @@ describe('ExploreSearch handles search on tab changing', async () => {
                             value: sourceNode,
                             searchTerm: sourceNode.name,
                         },
-                        activeTab: SECONDARY_SEARCH,
+                        activeTab: PATHFINDING_SEARCH,
                     },
                 },
             });
@@ -125,7 +125,7 @@ describe('ExploreSearch handles search on tab changing', async () => {
         await user.click(searchTab);
 
         expect(startSearchSelectedSpy).toHaveBeenLastCalledWith(PRIMARY_SEARCH);
-        expect(setSearchValueSpy).toHaveBeenLastCalledWith(null, SECONDARY_SEARCH, SEARCH_TYPE_EXACT);
+        expect(setSearchValueSpy).toHaveBeenLastCalledWith(null, PATHFINDING_SEARCH, SEARCH_TYPE_EXACT);
 
         expect(setActiveTabSpy).toHaveBeenCalledTimes(1);
         expect(setActiveTabSpy).toHaveBeenCalledWith(PRIMARY_SEARCH);
@@ -157,10 +157,10 @@ describe('ExploreSearch handles search on tab changing', async () => {
         const pathfindingTab = screen.getByRole('tab', { name: /pathfinding/i });
         await user.click(pathfindingTab);
 
-        expect(startSearchSelectedSpy).toHaveBeenLastCalledWith(SECONDARY_SEARCH);
+        expect(startSearchSelectedSpy).toHaveBeenLastCalledWith(PATHFINDING_SEARCH);
 
         expect(setActiveTabSpy).toHaveBeenCalledTimes(1);
-        expect(setActiveTabSpy).toHaveBeenCalledWith(SECONDARY_SEARCH);
+        expect(setActiveTabSpy).toHaveBeenCalledWith(PATHFINDING_SEARCH);
     });
 });
 

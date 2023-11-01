@@ -19,7 +19,7 @@ import { render, screen } from 'src/test-utils';
 import userEvent from '@testing-library/user-event';
 import ContextMenu from './ContextMenu';
 import * as actions from 'src/ducks/searchbar/actions';
-import { PRIMARY_SEARCH, SEARCH_TYPE_EXACT, SECONDARY_SEARCH } from 'src/ducks/searchbar/types';
+import { PRIMARY_SEARCH, SEARCH_TYPE_EXACT, PATHFINDING_SEARCH } from 'src/ducks/searchbar/types';
 
 describe('ContextMenu', async () => {
     beforeEach(async () => {
@@ -54,7 +54,7 @@ describe('ContextMenu', async () => {
         await user.click(startNodeOption);
 
         expect(setActiveTabSpy).toBeCalledTimes(1);
-        expect(setActiveTabSpy).toHaveBeenCalledWith(SECONDARY_SEARCH);
+        expect(setActiveTabSpy).toHaveBeenCalledWith(PATHFINDING_SEARCH);
 
         expect(setSearchValueSpy).toBeCalledTimes(1);
         expect(setSearchValueSpy).toHaveBeenCalledWith(null, PRIMARY_SEARCH, SEARCH_TYPE_EXACT);
@@ -73,12 +73,12 @@ describe('ContextMenu', async () => {
         await user.click(startNodeOption);
 
         expect(setActiveTabSpy).toBeCalledTimes(1);
-        expect(setActiveTabSpy).toHaveBeenCalledWith(SECONDARY_SEARCH);
+        expect(setActiveTabSpy).toHaveBeenCalledWith(PATHFINDING_SEARCH);
 
         expect(setSearchValueSpy).toBeCalledTimes(1);
-        expect(setSearchValueSpy).toHaveBeenCalledWith(null, SECONDARY_SEARCH, SEARCH_TYPE_EXACT);
+        expect(setSearchValueSpy).toHaveBeenCalledWith(null, PATHFINDING_SEARCH, SEARCH_TYPE_EXACT);
 
         expect(startSearchActionSpy).toBeCalledTimes(1);
-        expect(startSearchActionSpy).toHaveBeenCalledWith('foo', SECONDARY_SEARCH);
+        expect(startSearchActionSpy).toHaveBeenCalledWith('foo', PATHFINDING_SEARCH);
     });
 });

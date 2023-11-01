@@ -26,13 +26,13 @@ import {
     sourceNodeSelected,
     startSearchAction,
 } from 'src/ducks/searchbar/actions';
-import { PRIMARY_SEARCH, SEARCH_TYPE_EXACT, SECONDARY_SEARCH, SearchNodeType } from 'src/ducks/searchbar/types';
+import { PRIMARY_SEARCH, SEARCH_TYPE_EXACT, PATHFINDING_SEARCH, SearchNodeType } from 'src/ducks/searchbar/types';
 import { useSelector } from 'react-redux';
 
 const ExploreSearchCombobox: React.FC<{
     labelText: string;
     disabled?: boolean;
-    searchType: typeof PRIMARY_SEARCH | typeof SECONDARY_SEARCH;
+    searchType: typeof PRIMARY_SEARCH | typeof PATHFINDING_SEARCH;
 }> = ({ labelText, disabled = false, searchType }) => {
     const theme = useTheme();
     const dispatch = useAppDispatch();
@@ -66,7 +66,7 @@ const ExploreSearchCombobox: React.FC<{
                     // todo: need to dispatch action that the source/end node was selected
                     if (searchType === PRIMARY_SEARCH) {
                         dispatch(sourceNodeSelected());
-                    } else if (searchType === SECONDARY_SEARCH) {
+                    } else if (searchType === PATHFINDING_SEARCH) {
                         dispatch(destinationNodeSelected());
                     }
                 }

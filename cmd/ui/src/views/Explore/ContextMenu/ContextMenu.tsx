@@ -24,7 +24,7 @@ import {
     sourceNodeSuggested,
     startSearchAction,
 } from 'src/ducks/searchbar/actions';
-import { PRIMARY_SEARCH, SEARCH_TYPE_EXACT, SECONDARY_SEARCH } from 'src/ducks/searchbar/types';
+import { PRIMARY_SEARCH, SEARCH_TYPE_EXACT, PATHFINDING_SEARCH } from 'src/ducks/searchbar/types';
 import { AppState, useAppDispatch } from 'src/store';
 
 const ContextMenu: FC<{ anchorPosition: { x: number; y: number } }> = ({ anchorPosition }) => {
@@ -57,8 +57,8 @@ const ContextMenu: FC<{ anchorPosition: { x: number; y: number } }> = ({ anchorP
     const handleSetEndingNode = () => {
         if (selectedNode) {
             dispatch(setActiveTab('secondary'));
-            dispatch(setSearchValue(null, SECONDARY_SEARCH, SEARCH_TYPE_EXACT));
-            dispatch(startSearchAction(selectedNode.name, SECONDARY_SEARCH));
+            dispatch(setSearchValue(null, PATHFINDING_SEARCH, SEARCH_TYPE_EXACT));
+            dispatch(startSearchAction(selectedNode.name, PATHFINDING_SEARCH));
             dispatch(destinationNodeSuggested());
         }
     };
