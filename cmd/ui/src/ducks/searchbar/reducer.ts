@@ -16,7 +16,6 @@
 
 import { produce } from 'immer';
 import cloneDeep from 'lodash/cloneDeep';
-import { GraphNodeTypes } from 'src/ducks/graph/types';
 import * as types from 'src/ducks/searchbar/types';
 import { EdgeCheckboxType } from 'src/views/Explore/ExploreSearch/EdgeFilteringDialog';
 import { AllEdgeTypes } from 'src/views/Explore/ExploreSearch/edgeTypes';
@@ -152,40 +151,6 @@ const searchReducer = (state = initialSearchState, action: types.SearchbarAction
                     draft[target].searchTerm = '';
                 } else {
                     draft[target].searchTerm = action.value.name;
-                }
-            } else if (action.type === types.SEARCH_SET_PATHFINDING) {
-                draft.primary = {
-                    searchTerm: action.primary.name,
-                    loading: false,
-                    value: {
-                        name: action.primary.name,
-                        objectid: action.primary.objectid,
-                        type: GraphNodeTypes.User,
-                    },
-                    options: [],
-                    openMenu: false,
-                };
-
-                if (action.secondary) {
-                    draft.secondary = {
-                        searchTerm: action.secondary.name,
-                        loading: false,
-                        value: {
-                            name: action.secondary.name,
-                            objectid: action.secondary.objectid,
-                            type: GraphNodeTypes.User,
-                        },
-                        options: [],
-                        openMenu: false,
-                    };
-                } else {
-                    draft.secondary = {
-                        searchTerm: '',
-                        loading: false,
-                        value: null,
-                        options: [],
-                        openMenu: false,
-                    };
                 }
             }
         }
