@@ -26,7 +26,8 @@ const SEARCH_SET_PATHFINDING = 'app/search/SET_PATHFINDING';
 const SEARCH_RESET = 'app/search/RESET';
 const CYPHER_SEARCH_SET_VALUE = 'app/search/CYPHERSEARCH_SETVALUE';
 const SAVE_PATH_FILTERS = 'app/search/SAVE_PATH_FILTERS';
-const TAB_SELECTED = 'app/search/TAB_SELECTED';
+
+export const TAB_CHANGED = 'app/search/TAB_CHANGED';
 
 export const SOURCE_NODE_SUGGESTED = 'app/search/SOURCE_NODE_SUGGESTED';
 export const SOURCE_NODE_SELECTED = 'app/search/SOURCE_NODE_SELECTED';
@@ -61,7 +62,6 @@ export {
     SEARCH_RESET,
     CYPHER_SEARCH_SET_VALUE,
     SAVE_PATH_FILTERS,
-    TAB_SELECTED,
 };
 
 export interface SearchBarState {
@@ -120,8 +120,8 @@ interface SearchResetAction {
     type: typeof SEARCH_RESET;
 }
 
-interface TabSelectedAction {
-    type: typeof TAB_SELECTED;
+interface TabChangedAction {
+    type: typeof TAB_CHANGED;
     tabName: SearchTargetType;
 }
 
@@ -193,8 +193,10 @@ export type SearchbarActionTypes =
     | StartSearchSelectedAction
     | SearchResetAction
     | SavePathFiltersAction
-    | TabSelectedAction
+    | TabChangedAction
     | CypherActionTypes
     | NodeActionTypes;
 
 export type SearchTargetType = typeof PRIMARY_SEARCH | typeof PATHFINDING_SEARCH;
+
+export type TabNames = typeof PRIMARY_SEARCH | typeof PATHFINDING_SEARCH | typeof CYPHER_SEARCH;

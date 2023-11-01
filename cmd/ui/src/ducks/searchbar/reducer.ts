@@ -78,7 +78,7 @@ const searchReducer = (state = initialSearchState, action: types.SearchbarAction
             };
         }
 
-        case types.TAB_SELECTED: {
+        case types.TAB_CHANGED: {
             return {
                 ...state,
                 activeTab: action.tabName,

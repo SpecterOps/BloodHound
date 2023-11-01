@@ -19,7 +19,7 @@ import { FC, useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import {
     destinationNodeSuggested,
-    setActiveTab,
+    tabChanged,
     setSearchValue,
     sourceNodeSuggested,
     startSearchAction,
@@ -47,7 +47,7 @@ const ContextMenu: FC<{ anchorPosition: { x: number; y: number } }> = ({ anchorP
 
     const handleSetStartingNode = () => {
         if (selectedNode) {
-            dispatch(setActiveTab('secondary'));
+            dispatch(tabChanged('secondary'));
             dispatch(setSearchValue(null, PRIMARY_SEARCH, SEARCH_TYPE_EXACT));
             dispatch(startSearchAction(selectedNode.name, PRIMARY_SEARCH));
             dispatch(sourceNodeSuggested());
@@ -56,7 +56,7 @@ const ContextMenu: FC<{ anchorPosition: { x: number; y: number } }> = ({ anchorP
 
     const handleSetEndingNode = () => {
         if (selectedNode) {
-            dispatch(setActiveTab('secondary'));
+            dispatch(tabChanged('secondary'));
             dispatch(setSearchValue(null, PATHFINDING_SEARCH, SEARCH_TYPE_EXACT));
             dispatch(startSearchAction(selectedNode.name, PATHFINDING_SEARCH));
             dispatch(destinationNodeSuggested());

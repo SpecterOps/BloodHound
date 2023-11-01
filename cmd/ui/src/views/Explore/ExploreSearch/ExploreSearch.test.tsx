@@ -119,7 +119,7 @@ describe('ExploreSearch handles search on tab changing', async () => {
         const user = userEvent.setup();
         const startSearchSelectedSpy = vi.spyOn(actions, 'startSearchSelected');
         const setSearchValueSpy = vi.spyOn(actions, 'setSearchValue');
-        const setActiveTabSpy = vi.spyOn(actions, 'setActiveTab');
+        const tabChangedSpy = vi.spyOn(actions, 'tabChanged');
 
         const searchTab = screen.getByRole('tab', { name: /search/i });
         await user.click(searchTab);
@@ -127,8 +127,8 @@ describe('ExploreSearch handles search on tab changing', async () => {
         expect(startSearchSelectedSpy).toHaveBeenLastCalledWith(PRIMARY_SEARCH);
         expect(setSearchValueSpy).toHaveBeenLastCalledWith(null, PATHFINDING_SEARCH, SEARCH_TYPE_EXACT);
 
-        expect(setActiveTabSpy).toHaveBeenCalledTimes(1);
-        expect(setActiveTabSpy).toHaveBeenCalledWith(PRIMARY_SEARCH);
+        expect(tabChangedSpy).toHaveBeenCalledTimes(1);
+        expect(tabChangedSpy).toHaveBeenCalledWith(PRIMARY_SEARCH);
     });
 
     it('should perform a pathfinding search when the user clicks the `pathfinding` tab', async () => {
@@ -152,15 +152,15 @@ describe('ExploreSearch handles search on tab changing', async () => {
 
         const user = userEvent.setup();
         const startSearchSelectedSpy = vi.spyOn(actions, 'startSearchSelected');
-        const setActiveTabSpy = vi.spyOn(actions, 'setActiveTab');
+        const tabChangedSpy = vi.spyOn(actions, 'tabChanged');
 
         const pathfindingTab = screen.getByRole('tab', { name: /pathfinding/i });
         await user.click(pathfindingTab);
 
         expect(startSearchSelectedSpy).toHaveBeenLastCalledWith(PATHFINDING_SEARCH);
 
-        expect(setActiveTabSpy).toHaveBeenCalledTimes(1);
-        expect(setActiveTabSpy).toHaveBeenCalledWith(PATHFINDING_SEARCH);
+        expect(tabChangedSpy).toHaveBeenCalledTimes(1);
+        expect(tabChangedSpy).toHaveBeenCalledWith(PATHFINDING_SEARCH);
     });
 });
 

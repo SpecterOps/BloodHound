@@ -92,9 +92,9 @@ export const savePathFilters = (filters: EdgeCheckboxType[]): types.SavePathFilt
     };
 };
 
-export const setActiveTab = (tabName: types.SearchTargetType) => {
+export const tabChanged = (tabName: types.TabNames) => {
     return {
-        type: types.TAB_SELECTED,
+        type: types.TAB_CHANGED,
         tabName,
     };
 };

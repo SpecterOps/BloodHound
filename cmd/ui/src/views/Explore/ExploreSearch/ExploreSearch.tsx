@@ -26,7 +26,7 @@ import { AppState, useAppDispatch } from 'src/store';
 import CypherSearch from './CypherSearch';
 import NodeSearch from './NodeSearch';
 import PathfindingSearch from './PathfindingSearch';
-import { setActiveTab, setSearchValue, startSearchSelected } from 'src/ducks/searchbar/actions';
+import { tabChanged, setSearchValue, startSearchSelected } from 'src/ducks/searchbar/actions';
 
 const useStyles = makeStyles((theme) => ({
     menuButton: {
@@ -73,14 +73,14 @@ const ExploreSearch = ({ handleColumns }: ExploreSearchProps) => {
                     dispatch(startSearchSelected(PRIMARY_SEARCH));
                 }
                 dispatch(setSearchValue(null, PATHFINDING_SEARCH, SEARCH_TYPE_EXACT));
-                return dispatch(setActiveTab('primary'));
+                return dispatch(tabChanged('primary'));
             case 1:
                 if (primary.value && secondary.value) {
                     dispatch(startSearchSelected('secondary'));
                 }
-                return dispatch(setActiveTab('secondary'));
+                return dispatch(tabChanged('secondary'));
             case 2:
-                return dispatch(setActiveTab('cypher'));
+                return dispatch(tabChanged('cypher'));
         }
 
         const cypherTabIndex = 2;
