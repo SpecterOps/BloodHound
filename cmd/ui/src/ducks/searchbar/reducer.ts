@@ -98,7 +98,19 @@ const searchReducer = (state = initialSearchState, action: types.SearchbarAction
     return produce(state, (draft) => {
         switch (action.type) {
             case types.SOURCE_NODE_SUGGESTED: {
-                draft.primary.openMenu = true;
+                // todo: what if we responded to this event entirely in this block, rather than dispatching 4 actions from the component.
+                // this way, the developer does not have to be aware of all these moving pieces
+                draft.activeTab = types.PATHFINDING_SEARCH;
+
+                draft.primary = {
+                    searchTerm: action.name,
+                    openMenu: true,
+
+                    value: null,
+                    loading: true,
+                    options: [],
+                };
+
                 break;
             }
             case types.SOURCE_NODE_SELECTED: {

@@ -46,26 +46,18 @@ describe('ContextMenu', async () => {
 
     it('handles setting a start node', async () => {
         const user = userEvent.setup();
-        const setActiveTabSpy = vi.spyOn(actions, 'setActiveTab');
-        const setSearchValueSpy = vi.spyOn(actions, 'setSearchValue');
-        const startSearchActionSpy = vi.spyOn(actions, 'startSearchAction');
+        const sourceNodeSuggestedSpy = vi.spyOn(actions, 'sourceNodeSuggested');
 
         const startNodeOption = screen.getByRole('menuitem', { name: /set as starting node/i });
         await user.click(startNodeOption);
 
-        expect(setActiveTabSpy).toBeCalledTimes(1);
-        expect(setActiveTabSpy).toHaveBeenCalledWith(PATHFINDING_SEARCH);
-
-        expect(setSearchValueSpy).toBeCalledTimes(1);
-        expect(setSearchValueSpy).toHaveBeenCalledWith(null, PRIMARY_SEARCH, SEARCH_TYPE_EXACT);
-
-        expect(startSearchActionSpy).toBeCalledTimes(1);
-        expect(startSearchActionSpy).toHaveBeenCalledWith('foo', PRIMARY_SEARCH);
+        expect(sourceNodeSuggestedSpy).toBeCalledTimes(1);
+        expect(sourceNodeSuggestedSpy).toHaveBeenCalledWith('foo');
     });
 
     it('handles setting a end node', async () => {
         const user = userEvent.setup();
-        const setActiveTabSpy = vi.spyOn(actions, 'setActiveTab');
+        const setActiveTabSpy = vi.spyOn(actions, 'tabChanged');
         const setSearchValueSpy = vi.spyOn(actions, 'setSearchValue');
         const startSearchActionSpy = vi.spyOn(actions, 'startSearchAction');
 

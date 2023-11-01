@@ -99,9 +99,10 @@ export const tabChanged = (tabName: types.TabNames) => {
     };
 };
 
-export const sourceNodeSuggested = () => {
+export const sourceNodeSuggested = (name: string): types.SourceNodeSuggestedAction => {
     return {
         type: types.SOURCE_NODE_SUGGESTED,
+        name,
     };
 };
 

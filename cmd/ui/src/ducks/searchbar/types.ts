@@ -153,8 +153,9 @@ interface SearchSetPathfindingAction {
     target: SearchTargetType;
 }
 
-interface SourceNodeSuggestedAction {
+export interface SourceNodeSuggestedAction {
     type: typeof SOURCE_NODE_SUGGESTED;
+    name: string;
 }
 
 interface SourceNodeSelectedAction {

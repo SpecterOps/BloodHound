@@ -47,10 +47,7 @@ const ContextMenu: FC<{ anchorPosition: { x: number; y: number } }> = ({ anchorP
 
     const handleSetStartingNode = () => {
         if (selectedNode) {
-            dispatch(tabChanged('secondary'));
-            dispatch(setSearchValue(null, PRIMARY_SEARCH, SEARCH_TYPE_EXACT));
-            dispatch(startSearchAction(selectedNode.name, PRIMARY_SEARCH));
-            dispatch(sourceNodeSuggested());
+            dispatch(sourceNodeSuggested(selectedNode.name));
         }
     };
 
