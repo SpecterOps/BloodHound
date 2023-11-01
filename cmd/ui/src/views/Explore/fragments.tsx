@@ -176,7 +176,6 @@ const RelatedKindField = (fieldLabel: string, relatedKind: GraphNodeTypes, id: s
                             setSearchValue(
                                 {
                                     objectid: id,
-                                    label: '',
                                     type: relatedKind,
                                     name: name || '',
                                 },

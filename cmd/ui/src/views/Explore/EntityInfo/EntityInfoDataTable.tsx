@@ -91,7 +91,6 @@ const EntityInfoDataTable: React.FC<EntityInfoDataTableProps> = ({ id, label, en
             setSearchValue(
                 {
                     objectid: item.id,
-                    label: item.name,
                     type: item.type,
                     name: item.name,
                 },
