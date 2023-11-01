@@ -13,5 +13,4 @@
 -- limitations under the License.
 -- 
 -- SPDX-License-Identifier: Apache-2.0
-
-drop table migration_test;
+DROP TABLE migration_test;
