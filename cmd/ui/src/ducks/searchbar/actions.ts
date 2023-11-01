@@ -64,7 +64,7 @@ export const startSearchSelected = (target: types.SearchTargetType): types.Searc
     };
 };
 
-export const startCypherSearch = (cypherQuery: string): types.CypherSearchAction => {
+export const cypherSearch = (cypherQuery: string): types.CypherSearchAction => {
     return {
         type: types.CYPHER_SEARCH,
         searchTerm: cypherQuery,
