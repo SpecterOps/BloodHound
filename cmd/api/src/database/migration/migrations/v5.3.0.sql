@@ -14,6 +14,22 @@
 --
 -- SPDX-License-Identifier: Apache-2.0
 
+-- Data Quality Stats for new node types
+ALTER TABLE ad_data_quality_stats
+ADD COLUMN IF NOT EXISTS aiacas BIGINT DEFAULT 0,
+ADD COLUMN IF NOT EXISTS rootcas BIGINT DEFAULT 0,
+ADD COLUMN IF NOT EXISTS enterprisecas BIGINT DEFAULT 0,
+ADD COLUMN IF NOT EXISTS ntauthstores BIGINT DEFAULT 0,
+ADD COLUMN IF NOT EXISTS certtemplates BIGINT DEFAULT 0;
+
+ALTER TABLE ad_data_quality_aggregations
+ADD COLUMN IF NOT EXISTS aiacas BIGINT DEFAULT 0,
+ADD COLUMN IF NOT EXISTS rootcas BIGINT DEFAULT 0,
+ADD COLUMN IF NOT EXISTS enterprisecas BIGINT DEFAULT 0,
+ADD COLUMN IF NOT EXISTS ntauthstores BIGINT DEFAULT 0,
+ADD COLUMN IF NOT EXISTS certtemplates BIGINT DEFAULT 0;
+
+-- New columns for ADCS collection flags via SharpHound Service
 ALTER TABLE client_schedules
 ADD COLUMN IF NOT EXISTS adcs_collection BOOLEAN DEFAULT false;
 
