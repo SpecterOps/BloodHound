@@ -20,8 +20,7 @@ import { Button } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
 import { useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { destinationNodeSelected, sourceNodeSelected, startSearchSelected } from 'src/ducks/searchbar/actions';
-import { PATHFINDING_SEARCH } from 'src/ducks/searchbar/types';
+import { destinationNodeSelected, sourceNodeSelected } from 'src/ducks/searchbar/actions';
 import { AppState } from 'src/store';
 
 const useStyles = makeStyles((theme) => ({
@@ -48,8 +47,6 @@ const PathfindingSwapButton = () => {
 
         dispatch(sourceNodeSelected(newSourceNode));
         dispatch(destinationNodeSelected(newDestinationNode));
-
-        dispatch(startSearchSelected(PATHFINDING_SEARCH));
     }, [primary, secondary, dispatch]);
 
     return (

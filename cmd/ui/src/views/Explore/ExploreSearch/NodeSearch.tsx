@@ -14,29 +14,11 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { useDispatch, useSelector } from 'react-redux';
 import ExploreSearchCombobox from '../ExploreSearchCombobox';
-import { AppState } from 'src/store';
-import { PRIMARY_SEARCH, PATHFINDING_SEARCH } from 'src/ducks/searchbar/types';
-import { startSearchSelected } from 'src/ducks/searchbar/actions';
-import { useEffect } from 'react';
+import { PRIMARY_SEARCH } from 'src/ducks/searchbar/types';
 
-interface NodeSearchProps {
-    labelText: string;
-    searchType: typeof PRIMARY_SEARCH | typeof PATHFINDING_SEARCH;
-}
-
-const NodeSearch = ({ searchType, labelText }: NodeSearchProps) => {
-    const dispatch = useDispatch();
-    const { primary } = useSelector((state: AppState) => state.search);
-
-    useEffect(() => {
-        if (primary.value) {
-            dispatch(startSearchSelected(PRIMARY_SEARCH));
-        }
-    }, [primary, dispatch]);
-
-    return <ExploreSearchCombobox labelText={labelText} searchType={searchType} />;
+const NodeSearch = () => {
+    return <ExploreSearchCombobox labelText={'Search Nodes'} searchType={PRIMARY_SEARCH} />;
 };
 
 export default NodeSearch;

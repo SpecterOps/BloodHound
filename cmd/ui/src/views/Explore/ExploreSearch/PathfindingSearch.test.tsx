@@ -21,7 +21,6 @@ import userEvent from '@testing-library/user-event';
 import { setupServer } from 'msw/node';
 import { rest } from 'msw';
 import * as actions from 'src/ducks/searchbar/actions';
-import { PRIMARY_SEARCH, PATHFINDING_SEARCH } from 'src/ducks/searchbar/types';
 
 describe('Pathfinding: interaction', () => {
     const comboboxLookaheadOptions = {
@@ -99,30 +98,33 @@ describe('Pathfinding: interaction', () => {
 
     it('executes a primary search when only a source node is provided', async () => {
         const user = userEvent.setup();
-        const spy = vi.spyOn(actions, 'startSearchSelected');
+        const spy = vi.spyOn(actions, 'sourceNodeSelected');
 
         const startInput = screen.getByPlaceholderText(/start node/i);
         await user.type(startInput, 'admin');
         await user.click(await screen.findByRole('option', { name: /admin/i }));
 
-        expect(spy).toHaveBeenLastCalledWith(PRIMARY_SEARCH);
-        expect(spy).not.toHaveBeenCalledWith(PATHFINDING_SEARCH);
+        expect(spy).toHaveBeenCalledTimes(1);
+        expect(spy).toHaveBeenCalledWith(comboboxLookaheadOptions.data[0]);
     });
 
     it('executes a pathfinding search when both a source and destination node are provided', async () => {
         const user = userEvent.setup();
-        const spy = vi.spyOn(actions, 'startSearchSelected');
+        const sourceNodeSelectedSpy = vi.spyOn(actions, 'sourceNodeSelected');
+        const destinationNodeSelectedSpy = vi.spyOn(actions, 'destinationNodeSelected');
 
         const startInput = screen.getByPlaceholderText(/start node/i);
         await user.type(startInput, 'admin');
         await user.click(await screen.findByRole('option', { name: /admin/i }));
 
-        expect(spy).toHaveBeenLastCalledWith(PRIMARY_SEARCH);
+        expect(sourceNodeSelectedSpy).toHaveBeenCalledTimes(1);
+        expect(sourceNodeSelectedSpy).toHaveBeenCalledWith(comboboxLookaheadOptions.data[0]);
 
         const destinationInput = screen.getByPlaceholderText(/destination node/i);
-        await user.type(destinationInput, 'admin');
-        await user.click(await screen.findByRole('option', { name: /admin/i }));
+        await user.type(destinationInput, 'computer');
+        await user.click(await screen.findByRole('option', { name: /computer/i }));
 
-        expect(spy).toHaveBeenLastCalledWith(PATHFINDING_SEARCH);
+        expect(destinationNodeSelectedSpy).toHaveBeenCalledTimes(1);
+        expect(destinationNodeSelectedSpy).toHaveBeenCalledWith(comboboxLookaheadOptions.data[1]);
     });
 });

@@ -22,8 +22,7 @@ import { useEffect, useRef, useState } from 'react';
 import EdgeFilteringDialog, { EdgeCheckboxType } from './EdgeFilteringDialog';
 import { useSelector } from 'react-redux';
 import { AppState, useAppDispatch } from 'src/store';
-import { savePathFilters, startSearchSelected } from 'src/ducks/searchbar/actions';
-import { PATHFINDING_SEARCH } from 'src/ducks/searchbar/types';
+import { pathfindingSearch, savePathFilters } from 'src/ducks/searchbar/actions';
 
 const useStyles = makeStyles((theme) => ({
     pathfindingButton: {
@@ -57,7 +56,7 @@ const EdgeFilter = () => {
     }, [pathFilters]);
 
     const handlePathfindingSearch = () => {
-        dispatch(startSearchSelected(PATHFINDING_SEARCH));
+        dispatch(pathfindingSearch());
     };
 
     return (

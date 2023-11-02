@@ -20,41 +20,56 @@ import { startCypherQuery, startPathfindingQuery, startSearchQuery } from 'src/d
 import * as types from 'src/ducks/searchbar/types';
 import type { AppState } from 'src/store';
 
-function* startSearchActionWatcher(): SagaIterator {
-    yield takeLatest(types.SEARCH_SELECTED, searchSelectedWorker);
-}
-
 function* cypherSearchWatcher(): SagaIterator {
     yield takeLatest(types.CYPHER_SEARCH, cypherSearchWorker);
 }
 
 function* cypherSearchWorker(payload: types.CypherSearchAction) {
-    try {
+    if (payload.searchTerm) {
         yield put(startCypherQuery(payload.searchTerm));
-    } catch {
-        /* empty */
+    } else {
+        const { cypher }: types.SearchState = yield select((state: AppState) => state.search);
+        const { searchTerm } = cypher;
+        if (searchTerm) {
+            yield put(startCypherQuery(searchTerm));
+        }
     }
 }
 
-function* searchSelectedWorker(payload: types.StartSearchSelectedAction) {
-    const searchState: types.SearchState = yield select((state: AppState) => state.search);
-    const edges = searchState.pathFilters
-        .filter((pathFilter) => pathFilter.checked)
-        .map((pathFilter) => pathFilter.edgeType);
+function* primarySearchWatcher(): SagaIterator {
+    yield takeLatest(types.SOURCE_NODE_SELECTED, primarySearchWorker);
+    yield takeLatest(types.PRIMARY_SEARCH, primarySearchWorker);
+}
 
-    if (
-        payload.target === types.PATHFINDING_SEARCH &&
-        searchState.primary.value !== null &&
-        searchState.secondary.value !== null
-    ) {
-        yield put(
-            startPathfindingQuery(searchState.primary.value.objectid, searchState.secondary.value.objectid, edges)
-        );
-    } else if (payload.target === types.PRIMARY_SEARCH && searchState.primary.value !== null) {
-        yield put(startSearchQuery(searchState.primary.value.objectid, searchState.searchType));
+function* primarySearchWorker() {
+    const { primary }: types.SearchState = yield select((state: AppState) => state.search);
+    if (primary.value !== null) {
+        yield put(startSearchQuery(primary.value.objectid, types.SEARCH_TYPE_EXACT));
+    }
+}
+
+function* pathfindingSearchWatcher(): SagaIterator {
+    yield takeLatest(types.DESTINATION_NODE_SELECTED, pathfindingSearchWorker);
+    yield takeLatest(types.PATHFINDING_SEARCH, pathfindingSearchWorker);
+}
+
+function* pathfindingSearchWorker() {
+    const { primary, secondary, pathFilters }: types.SearchState = yield select((state: AppState) => state.search);
+
+    const edges = pathFilters.filter((pathFilter) => pathFilter.checked).map((pathFilter) => pathFilter.edgeType);
+
+    // first try a pathfinding search
+    if (primary.value !== null && secondary.value !== null) {
+        yield put(startPathfindingQuery(primary.value.objectid, secondary.value.objectid, edges));
+    } else if (secondary.value !== null) {
+        // then try a primary search on the `destination` node
+        yield put(startSearchQuery(secondary.value.objectid, types.SEARCH_TYPE_EXACT));
+    } else if (primary.value !== null) {
+        // then try a primary search on the `source` node
+        yield put(startSearchQuery(primary.value.objectid, types.SEARCH_TYPE_EXACT));
     }
 }
 
 export default function* startSearchSagas() {
-    yield all([fork(startSearchActionWatcher), fork(cypherSearchWatcher)]);
+    yield all([fork(primarySearchWatcher), fork(pathfindingSearchWatcher), fork(cypherSearchWatcher)]);
 }

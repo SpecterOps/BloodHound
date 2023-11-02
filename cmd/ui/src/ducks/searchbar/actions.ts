@@ -17,20 +17,6 @@
 import { EdgeCheckboxType } from 'src/views/Explore/ExploreSearch/EdgeFilteringDialog';
 import * as types from './types';
 
-export const sourceNodeEdited = (searchTerm: string): types.SourceNodeEditedAction => {
-    return {
-        type: types.SOURCE_NODE_EDITED,
-        searchTerm,
-    };
-};
-
-export const destinationNodeEdited = (searchTerm: string): types.DestinationNodeEditedAction => {
-    return {
-        type: types.DESTINATION_NODE_EDITED,
-        searchTerm,
-    };
-};
-
 export const searchSuccessAction = (
     results: types.SearchNodeType[],
     target: types.SearchTargetType
@@ -50,14 +36,19 @@ export const searchFailAction = (error: string, target: types.SearchTargetType):
     };
 };
 
-export const startSearchSelected = (target: types.SearchTargetType): types.SearchbarActionTypes => {
+export const primarySearch = () => {
     return {
-        type: types.SEARCH_SELECTED,
-        target,
+        type: types.PRIMARY_SEARCH,
     };
 };
 
-export const cypherSearch = (cypherQuery: string): types.CypherSearchAction => {
+export const pathfindingSearch = () => {
+    return {
+        type: types.PATHFINDING_SEARCH,
+    };
+};
+
+export const cypherSearch = (cypherQuery?: string): types.CypherSearchAction => {
     return {
         type: types.CYPHER_SEARCH,
         searchTerm: cypherQuery,
@@ -91,6 +82,13 @@ export const tabChanged = (tabName: types.TabNames) => {
     };
 };
 
+export const sourceNodeEdited = (searchTerm: string): types.SourceNodeEditedAction => {
+    return {
+        type: types.SOURCE_NODE_EDITED,
+        searchTerm,
+    };
+};
+
 export const sourceNodeSuggested = (name: string): types.SourceNodeSuggestedAction => {
     return {
         type: types.SOURCE_NODE_SUGGESTED,
@@ -102,6 +100,13 @@ export const sourceNodeSelected = (node: types.SearchNodeType | null): types.Sou
     return {
         type: types.SOURCE_NODE_SELECTED,
         node,
+    };
+};
+
+export const destinationNodeEdited = (searchTerm: string): types.DestinationNodeEditedAction => {
+    return {
+        type: types.DESTINATION_NODE_EDITED,
+        searchTerm,
     };
 };
 

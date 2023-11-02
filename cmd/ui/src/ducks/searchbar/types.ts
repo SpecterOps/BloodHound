@@ -19,7 +19,6 @@ import { EdgeCheckboxType } from 'src/views/Explore/ExploreSearch/EdgeFilteringD
 
 const SEARCH_SUCCESS = 'app/search/SUCCESS';
 const SEARCH_FAILURE = 'app/search/FAILURE';
-const SEARCH_SELECTED = 'app/search/SELECTED';
 const SEARCH_SET_PATHFINDING = 'app/search/SET_PATHFINDING';
 const SEARCH_RESET = 'app/search/RESET';
 const CYPHER_QUERY_EDITED = 'app/search/CYPHER_QUERY_EDITED';
@@ -53,7 +52,6 @@ export {
     CYPHER_SEARCH,
     TIER_ZERO_SEARCH,
     SEARCH_ENDPOINT,
-    SEARCH_SELECTED,
     SEARCH_SET_PATHFINDING,
     SEARCH_TYPE_EXACT,
     SEARCH_TYPE_FUZZY,
@@ -115,14 +113,9 @@ export interface SavePathFiltersAction {
     filters: EdgeCheckboxType[];
 }
 
-export interface StartSearchSelectedAction {
-    type: typeof SEARCH_SELECTED;
-    target: SearchTargetType;
-}
-
 export interface CypherSearchAction {
     type: typeof CYPHER_SEARCH;
-    searchTerm: string;
+    searchTerm?: string;
 }
 
 export interface CypherQueryEditedAction {
@@ -177,7 +170,6 @@ export type NodeActionTypes =
 
 export type SearchbarActionTypes =
     | SearchbarTargetedActionTypes
-    | StartSearchSelectedAction
     | SearchResetAction
     | SavePathFiltersAction
     | TabChangedAction

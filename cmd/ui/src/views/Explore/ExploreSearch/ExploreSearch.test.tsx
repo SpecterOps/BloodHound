@@ -20,7 +20,7 @@ import ExploreSearch from '.';
 import { setupServer } from 'msw/node';
 import { rest } from 'msw';
 import * as actions from 'src/ducks/searchbar/actions';
-import { PRIMARY_SEARCH, PATHFINDING_SEARCH } from 'src/ducks/searchbar/types';
+import { PRIMARY_SEARCH, PATHFINDING_SEARCH, CYPHER_SEARCH } from 'src/ducks/searchbar/types';
 import { initialSearchState } from 'src/ducks/searchbar/reducer';
 
 describe('ExploreSearch rendering per tab', async () => {
@@ -82,33 +82,12 @@ describe('ExploreSearch rendering per tab', async () => {
 });
 
 describe('ExploreSearch handles search on tab changing', async () => {
-    const sourceNode = {
-        objectid: '1',
-        label: 'beep',
-        type: 'Computer',
-        name: 'computer a',
-    };
-
-    const server = setupServer(
-        rest.get(`/api/v2/search`, (req, res, ctx) => {
-            return res(ctx.json([]));
-        })
-    );
-
-    beforeAll(() => server.listen());
-    afterEach(() => server.resetHandlers());
-    afterAll(() => server.close());
-
     it('should perform a primary search when the user clicks the `Search` tab', async () => {
         await act(async () => {
             render(<ExploreSearch />, {
                 initialState: {
                     search: {
                         ...initialSearchState,
-                        primary: {
-                            value: sourceNode,
-                            searchTerm: sourceNode.name,
-                        },
                         activeTab: PATHFINDING_SEARCH,
                     },
                 },
@@ -116,15 +95,13 @@ describe('ExploreSearch handles search on tab changing', async () => {
         });
 
         const user = userEvent.setup();
-        const startSearchSelectedSpy = vi.spyOn(actions, 'startSearchSelected');
-        const destinationNodeSelectedSpy = vi.spyOn(actions, 'destinationNodeSelected');
+        const primarySearchSpy = vi.spyOn(actions, 'primarySearch');
         const tabChangedSpy = vi.spyOn(actions, 'tabChanged');
 
         const searchTab = screen.getByRole('tab', { name: /search/i });
         await user.click(searchTab);
 
-        expect(startSearchSelectedSpy).toHaveBeenLastCalledWith(PRIMARY_SEARCH);
-        expect(destinationNodeSelectedSpy).toHaveBeenLastCalledWith(null);
+        expect(primarySearchSpy).toHaveBeenCalledTimes(1);
 
         expect(tabChangedSpy).toHaveBeenCalledTimes(1);
         expect(tabChangedSpy).toHaveBeenCalledWith(PRIMARY_SEARCH);
@@ -132,34 +109,38 @@ describe('ExploreSearch handles search on tab changing', async () => {
 
     it('should perform a pathfinding search when the user clicks the `pathfinding` tab', async () => {
         await act(async () => {
-            render(<ExploreSearch />, {
-                initialState: {
-                    search: {
-                        ...initialSearchState,
-                        primary: {
-                            value: sourceNode,
-                            searchTerm: sourceNode.name,
-                        },
-                        secondary: {
-                            value: sourceNode,
-                            searchTerm: sourceNode.name,
-                        },
-                    },
-                },
-            });
+            render(<ExploreSearch />);
         });
 
         const user = userEvent.setup();
-        const startSearchSelectedSpy = vi.spyOn(actions, 'startSearchSelected');
+        const pathfindingSearchSpy = vi.spyOn(actions, 'pathfindingSearch');
         const tabChangedSpy = vi.spyOn(actions, 'tabChanged');
 
         const pathfindingTab = screen.getByRole('tab', { name: /pathfinding/i });
         await user.click(pathfindingTab);
 
-        expect(startSearchSelectedSpy).toHaveBeenLastCalledWith(PATHFINDING_SEARCH);
+        expect(pathfindingSearchSpy).toHaveBeenCalledTimes(1);
 
         expect(tabChangedSpy).toHaveBeenCalledTimes(1);
         expect(tabChangedSpy).toHaveBeenCalledWith(PATHFINDING_SEARCH);
+    });
+
+    it('should perform a cypher search when the user clicks the `cypher` tab', async () => {
+        await act(async () => {
+            render(<ExploreSearch />);
+        });
+
+        const user = userEvent.setup();
+        const cypherSearchSpy = vi.spyOn(actions, 'cypherSearch');
+        const tabChangedSpy = vi.spyOn(actions, 'tabChanged');
+
+        const cypherTab = screen.getByRole('tab', { name: /cypher/i });
+        await user.click(cypherTab);
+
+        expect(cypherSearchSpy).toHaveBeenCalledTimes(1);
+
+        expect(tabChangedSpy).toHaveBeenCalledTimes(1);
+        expect(tabChangedSpy).toHaveBeenCalledWith(CYPHER_SEARCH);
     });
 });
 

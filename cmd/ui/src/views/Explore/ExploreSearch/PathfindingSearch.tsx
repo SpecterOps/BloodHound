@@ -17,28 +17,12 @@
 import { Box } from '@mui/material';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faBullseye, faCircle } from '@fortawesome/free-solid-svg-icons';
-import { startSearchSelected } from 'src/ducks/searchbar/actions';
-import { useDispatch, useSelector } from 'react-redux';
-import { useEffect } from 'react';
 import { PRIMARY_SEARCH, PATHFINDING_SEARCH } from 'src/ducks/searchbar/types';
-import { AppState } from 'src/store';
 import EdgeFilter from './EdgeFilter';
 import ExploreSearchCombobox from '../ExploreSearchCombobox';
 import PathfindingSwapButton from './PathfindingSwapButton';
 
 const PathfindingSearch = () => {
-    const dispatch = useDispatch();
-
-    const { primary, secondary } = useSelector((state: AppState) => state.search);
-
-    useEffect(() => {
-        if (primary.value && secondary.value) {
-            dispatch(startSearchSelected(PATHFINDING_SEARCH));
-        } else {
-            dispatch(startSearchSelected(PRIMARY_SEARCH));
-        }
-    }, [primary, secondary, dispatch]);
-
     return (
         <Box display={'flex'} alignItems={'center'} gap={1}>
             <SourceToBullseyeIcon />

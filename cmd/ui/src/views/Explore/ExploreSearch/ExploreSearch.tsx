@@ -21,12 +21,12 @@ import makeStyles from '@mui/styles/makeStyles';
 import { Icon } from 'bh-shared-ui';
 import React, { useState } from 'react';
 import { useSelector } from 'react-redux';
-import { PRIMARY_SEARCH } from 'src/ducks/searchbar/types';
+import { CYPHER_SEARCH, PATHFINDING_SEARCH, PRIMARY_SEARCH } from 'src/ducks/searchbar/types';
 import { AppState, useAppDispatch } from 'src/store';
 import CypherSearch from './CypherSearch';
 import NodeSearch from './NodeSearch';
 import PathfindingSearch from './PathfindingSearch';
-import { tabChanged, startSearchSelected, destinationNodeSelected } from 'src/ducks/searchbar/actions';
+import { tabChanged, primarySearch, pathfindingSearch, cypherSearch } from 'src/ducks/searchbar/actions';
 
 const useStyles = makeStyles((theme) => ({
     menuButton: {
@@ -61,7 +61,7 @@ const ExploreSearch = ({ handleColumns }: ExploreSearchProps) => {
     const matches = useMediaQuery(theme.breakpoints.down('md'));
     const dispatch = useAppDispatch();
 
-    const { activeTab: tabKey, primary, secondary } = useSelector((state: AppState) => state.search);
+    const { activeTab: tabKey } = useSelector((state: AppState) => state.search);
     const activeTab = tabNameMap[tabKey];
 
     const [showSearchWidget, setShowSearchWidget] = useState(true);
@@ -69,18 +69,14 @@ const ExploreSearch = ({ handleColumns }: ExploreSearchProps) => {
     const handleTabChange = (newTabIndex: number) => {
         switch (newTabIndex) {
             case 0:
-                if (primary.value) {
-                    dispatch(startSearchSelected(PRIMARY_SEARCH));
-                }
-                dispatch(destinationNodeSelected(null));
-                return dispatch(tabChanged('primary'));
+                dispatch(primarySearch());
+                return dispatch(tabChanged(PRIMARY_SEARCH));
             case 1:
-                if (primary.value && secondary.value) {
-                    dispatch(startSearchSelected('secondary'));
-                }
-                return dispatch(tabChanged('secondary'));
+                dispatch(pathfindingSearch());
+                return dispatch(tabChanged(PATHFINDING_SEARCH));
             case 2:
-                return dispatch(tabChanged('cypher'));
+                dispatch(cypherSearch());
+                return dispatch(tabChanged(CYPHER_SEARCH));
         }
 
         const cypherTabIndex = 2;
@@ -120,14 +116,7 @@ const ExploreSearch = ({ handleColumns }: ExploreSearchProps) => {
 
             <Collapse in={showSearchWidget}>
                 <Paper sx={{ mt: 1, p: 1 }} elevation={0}>
-                    <TabPanels
-                        tabs={[
-                            <NodeSearch searchType={PRIMARY_SEARCH} labelText='Search Nodes' />,
-                            <PathfindingSearch />,
-                            <CypherSearch />,
-                        ]}
-                        activeTab={activeTab}
-                    />
+                    <TabPanels tabs={[<NodeSearch />, <PathfindingSearch />, <CypherSearch />]} activeTab={activeTab} />
                 </Paper>
             </Collapse>
         </Box>
