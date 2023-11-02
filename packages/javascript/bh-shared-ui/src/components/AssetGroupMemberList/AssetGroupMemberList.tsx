@@ -1,6 +1,8 @@
 import {
+    Avatar,
     Box,
     Paper,
+    Skeleton,
     Table,
     TableBody,
     TableCell,
@@ -32,13 +34,14 @@ const AssetGroupMemberList: FC<{
     const [rowsPerPage, setRowsPerPage] = useState(25);
     const [count, setCount] = useState(0);
 
-    const listAssetGroupMembersQuery = useQuery(
+    const { data, isLoading, isSuccess } = useQuery(
         ["listAssetGroupMembers", assetGroup, filter, page, rowsPerPage],
         ({ signal }) => {
             const paginatedFilter = {
                 skip: page * rowsPerPage,
                 limit: rowsPerPage,
-                sortBy: "-name",
+                // we could make this user selected in the future
+                sort_by: "name",
                 ...filter,
             }
             return apiClient.listAssetGroupMembers(`${assetGroup?.id}`, paginatedFilter, { signal })
@@ -47,7 +50,10 @@ const AssetGroupMemberList: FC<{
                     return res.data.data.members;
                 })
         },
-        { keepPreviousData: true }
+        {
+            enabled: !!assetGroup,
+            keepPreviousData: true
+        }
     );
 
     const hoverStyles = {
@@ -57,9 +63,26 @@ const AssetGroupMemberList: FC<{
         }
     }
 
+    const getLoadingRows = (count: number) => {
+        const rows = [];
+        for (let i = 0; i < count; i++) {
+            rows.push(
+                <TableRow key={i}>
+                    <TableCell><Skeleton variant="text" /></TableCell>
+                    <TableCell><Skeleton variant="text" /></TableCell>
+                </TableRow> 
+            )
+        }
+        return rows;
+    }
+
     return (
         <TableContainer sx={{ maxHeight: "100%" }} component={Paper} elevation={0}>
             <Table stickyHeader sx={{ height: "100%", position: "relative" }}>
+                <colgroup>
+                    <col width="80%" />
+                    <col width="20%" />
+                </colgroup>
                 <TableHead>
                     <TableRow>
                         <TableCell sx={{ bgcolor: "white" }}>Name</TableCell>
@@ -67,7 +90,8 @@ const AssetGroupMemberList: FC<{
                     </TableRow>
                 </TableHead>
                 <TableBody sx={{ height: "100%", overflow: "auto" }}>
-                    {listAssetGroupMembersQuery.data?.map(member => {
+                    {isLoading && getLoadingRows(5)}
+                    {isSuccess && data?.map(member => {
                         return (
                             <TableRow
                                 onClick={() => onSelectMember(member)}
