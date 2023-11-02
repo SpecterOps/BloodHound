@@ -16,7 +16,7 @@
 
 import { List, ListItem, ListItemText, Paper, TextField, useTheme } from '@mui/material';
 import { useCombobox } from 'downshift';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { NodeIcon, SearchResultItem } from 'bh-shared-ui';
 import { getEmptyResultsText, getKeywordAndTypeValues, SearchResult, useSearch } from 'src/hooks/useSearch';
 import { AppState, useAppDispatch } from 'src/store';
@@ -37,8 +37,6 @@ const ExploreSearchCombobox: React.FC<{
     const theme = useTheme();
     const dispatch = useAppDispatch();
 
-    const [showInputIcon, setShowInputIcon] = useState(true);
-
     const { primary, secondary } = useSelector((state: AppState) => state.search);
     const inputValue = searchType === PRIMARY_SEARCH ? primary.searchTerm : secondary.searchTerm;
     const selectedItem = searchType === PRIMARY_SEARCH ? primary.value : secondary.value;
@@ -53,7 +51,10 @@ const ExploreSearchCombobox: React.FC<{
             onInputValueChange: ({ type, inputValue }) => {
                 if (
                     inputValue !== undefined &&
-                    type !== useCombobox.stateChangeTypes.ControlledPropUpdatedSelectedItem
+                    // filter out the following events, as they will be handled by `onSelectedItemChange` and should not be double-counted here
+                    type !== useCombobox.stateChangeTypes.ControlledPropUpdatedSelectedItem &&
+                    type !== useCombobox.stateChangeTypes.ItemClick &&
+                    type !== useCombobox.stateChangeTypes.InputKeyDownEnter
                 ) {
                     if (searchType === PRIMARY_SEARCH) {
                         dispatch(sourceNodeEdited(inputValue));
@@ -74,27 +75,6 @@ const ExploreSearchCombobox: React.FC<{
                 }
             },
             itemToString: (item) => (item ? item.name || item.objectid : ''),
-            onStateChange: ({ type, inputValue, selectedItem }) => {
-                // remove icon when input is empty
-                if (type === useCombobox.stateChangeTypes.InputChange) {
-                    if (!inputValue) {
-                        setShowInputIcon(false);
-                    }
-                }
-
-                // show icon when item is selected via click or enter key
-                if (type === useCombobox.stateChangeTypes.ItemClick) {
-                    setShowInputIcon(true);
-                }
-                if (type === useCombobox.stateChangeTypes.InputKeyDownEnter) {
-                    setShowInputIcon(true);
-                }
-
-                // show icon when input is controlled via props
-                if (type === useCombobox.stateChangeTypes.ControlledPropUpdatedSelectedItem) {
-                    setShowInputIcon(true);
-                }
-            },
         });
 
     // handy when combobox need's to be opened from outside the component, e.g. the <ContextMenu /> can set the input value
@@ -131,7 +111,7 @@ const ExploreSearchCombobox: React.FC<{
                         backgroundColor: disabled ? theme.palette.action.disabled : 'inherit',
                         fontSize: theme.typography.pxToRem(14),
                     },
-                    startAdornment: showInputIcon && selectedItem?.type && <NodeIcon nodeType={selectedItem?.type} />,
+                    startAdornment: selectedItem?.type && <NodeIcon nodeType={selectedItem?.type} />,
                 }}
                 {...getInputProps({ onFocus: openMenu, refKey: 'inputRef' })}
                 data-testid='explore_search_input-search'

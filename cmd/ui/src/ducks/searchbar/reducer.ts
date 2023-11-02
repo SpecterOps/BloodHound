@@ -100,6 +100,9 @@ const searchReducer = (state = initialSearchState, action: types.SearchbarAction
                 draft.primary.searchTerm = action.searchTerm;
                 draft.primary.loading = true;
                 draft.primary.options = [];
+
+                // any edits to the source node should clear out the previously saved primary.value
+                draft.primary.value = null;
                 break;
             }
 
@@ -135,6 +138,10 @@ const searchReducer = (state = initialSearchState, action: types.SearchbarAction
                 draft.secondary.searchTerm = action.searchTerm;
                 draft.secondary.loading = true;
                 draft.secondary.options = [];
+
+                // any edits to the destination node should clear out the previously saved destination.value
+                draft.secondary.value = null;
+
                 break;
             }
 
