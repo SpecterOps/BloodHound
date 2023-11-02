@@ -177,7 +177,9 @@ func PostEnrollOnBehalfOf(certTemplates []*graph.Node, operation analysis.StatTr
 			return err
 		} else {
 			for _, result := range results {
-				outC <- result
+				if !channels.Submit(ctx, outC, result) {
+					return nil
+				}
 			}
 
 			return nil
@@ -189,7 +191,9 @@ func PostEnrollOnBehalfOf(certTemplates []*graph.Node, operation analysis.StatTr
 			return err
 		} else {
 			for _, result := range results {
-				outC <- result
+				if !channels.Submit(ctx, outC, result) {
+					return nil
+				}
 			}
 
 			return nil
@@ -201,7 +205,9 @@ func PostEnrollOnBehalfOf(certTemplates []*graph.Node, operation analysis.StatTr
 			return err
 		} else {
 			for _, result := range results {
-				outC <- result
+				if !channels.Submit(ctx, outC, result) {
+					return nil
+				}
 			}
 
 			return nil
