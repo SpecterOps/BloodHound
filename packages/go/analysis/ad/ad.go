@@ -472,7 +472,7 @@ func getADCSESC1EdgeDetail(tx graph.Transaction, edge *graph.Relationship) (grap
 	if startNode, targetDomainNode, err := ops.FetchRelationshipNodes(tx, edge); err != nil {
 		return finalPaths, err
 	} else {
-		if pathsTotemplates, err := ops.TraversePaths(tx, ops.TraversalPlan{
+		if pathsToTemplates, err := ops.TraversePaths(tx, ops.TraversalPlan{
 			Root:      startNode,
 			Direction: graph.DirectionOutbound,
 			BranchQuery: func() graph.Criteria {
@@ -481,37 +481,19 @@ func getADCSESC1EdgeDetail(tx graph.Transaction, edge *graph.Relationship) (grap
 			DescentFilter: OutboundControlDescentFilter,
 			PathFilter: func(ctx *ops.TraversalContext, segment *graph.PathSegment) bool {
 				node := segment.Node
-				if reqManagerApproval, err := node.Properties.Get(ad.RequiresManagerApproval.String()).Bool(); err != nil {
+				if props, err := getValidatePublishedCertTemplateForEsc1PropertyValues(node); err != nil {
+					log.Errorf("Error getting props for certtemplate %d: %w", node.ID, err)
+				} else if !validatePublishedCertTemplateForEsc1(props) {
 					return false
-				} else if reqManagerApproval {
-					if authEnabled, err := node.Properties.Get(ad.AuthenticationEnabled.String()).Bool(); err != nil || !authEnabled {
-						return false
-					} else if enrolleeSuppliesSubject, err := node.Properties.Get(ad.EnrolleeSuppliesSubject.String()).Bool(); err != nil || !enrolleeSuppliesSubject {
-						return false
-					} else if schemaVersion, err := node.Properties.Get(ad.SchemaVersion.String()).Float64(); err != nil || schemaVersion < 2 {
-						return false
-					} else if authorizedSignatures, err := node.Properties.Get(ad.AuthorizedSignatures.String()).Float64(); err != nil || authorizedSignatures != 0 {
-						return false
-					} else {
-						return true
-					}
-				} else {
-					if authEnabled, err := node.Properties.Get(ad.AuthenticationEnabled.String()).Bool(); err != nil || !authEnabled {
-						return false
-					} else if enrolleeSuppliesSubject, err := node.Properties.Get(ad.EnrolleeSuppliesSubject.String()).Bool(); err != nil || !enrolleeSuppliesSubject {
-						return false
-					} else if schemaVersion, err := node.Properties.Get(ad.SchemaVersion.String()).Float64(); err != nil || schemaVersion != 1 {
-						return false
-					} else {
-						return true
-					}
 				}
+
+				return true
 			},
 		}); err != nil {
 			log.Errorf("Error getting paths from start node %d to templates: %w", startNode.ID, err)
 			return finalPaths, err
 		} else {
-			for _, path := range pathsTotemplates {
+			for _, path := range pathsToTemplates {
 				certTemplate := path.Terminal()
 				if paths, err := FetchCertTemplatePathToDomain(tx, *certTemplate, *targetDomainNode); err != nil {
 					log.Errorf("Error getting paths from cert template %d to domain %d: %w", certTemplate.ID, targetDomainNode.ID, err)
