@@ -18,10 +18,11 @@ package ad
 
 import (
 	"context"
-	"github.com/specterops/bloodhound/dawgs/graphcache"
-	"github.com/specterops/bloodhound/log"
 	"strings"
 	"time"
+
+	"github.com/specterops/bloodhound/dawgs/graphcache"
+	"github.com/specterops/bloodhound/log"
 
 	"github.com/RoaringBitmap/roaring/roaring64"
 	"github.com/specterops/bloodhound/analysis"
@@ -1390,7 +1391,7 @@ func FetchCertTemplatesPublishedToCA(tx graph.Transaction, ca *graph.Node) (grap
 	}))
 }
 
-func FetchEnterpriseCAPathToDomain(tx graph.Transaction, enterpriseCA, domain *graph.Node) (graph.PathSet, error) {
+func FetchEnterpriseCAsCertChainPathToDomain(tx graph.Transaction, enterpriseCA, domain *graph.Node) (graph.PathSet, error) {
 	return ops.TraversePaths(tx, ops.TraversalPlan{
 		Root:      enterpriseCA,
 		Direction: graph.DirectionOutbound,
@@ -1402,6 +1403,38 @@ func FetchEnterpriseCAPathToDomain(tx graph.Transaction, enterpriseCA, domain *g
 		},
 		PathFilter: func(ctx *ops.TraversalContext, segment *graph.PathSegment) bool {
 			return segment.Node.ID == domain.ID
+		},
+	})
+}
+
+func FetchHostsCAServiceComputers(tx graph.Transaction, enterpriseCA *graph.Node) (graph.NodeSet, error) {
+	return ops.FetchStartNodes(tx.Relationships().Filter(
+		query.And(
+			query.Kind(query.Start(), ad.Computer),
+			query.Kind(query.Relationship(), ad.HostsCAService),
+			query.Equals(query.EndID(), enterpriseCA.ID),
+		)))
+}
+
+func FetchEnterpriseCAsTrustedForNTAuthPathToDomain(tx graph.Transaction, domain *graph.Node) (graph.NodeSet, error) {
+	return ops.AcyclicTraverseTerminals(tx, ops.TraversalPlan{
+		Root:      domain,
+		Direction: graph.DirectionInbound,
+		BranchQuery: func() graph.Criteria {
+			return query.KindIn(query.Relationship(), ad.TrustedForNTAuth, ad.NTAuthStoreFor)
+		},
+		DescentFilter: func(ctx *ops.TraversalContext, segment *graph.PathSegment) bool {
+			depth := segment.Depth()
+			if depth == 1 && !segment.Edge.Kind.Is(ad.NTAuthStoreFor) {
+				return false
+			} else if depth == 2 && !segment.Edge.Kind.Is(ad.TrustedForNTAuth) {
+				return false
+			} else {
+				return true
+			}
+		},
+		PathFilter: func(ctx *ops.TraversalContext, segment *graph.PathSegment) bool {
+			return segment.Node.Kinds.ContainsOneOf(ad.EnterpriseCA)
 		},
 	})
 }

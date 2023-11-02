@@ -1324,6 +1324,81 @@ func (s *EnrollOnBehalfOfHarnessOne) Setup(gt *GraphTestContext) {
 	gt.NewRelationship(s.CertTemplate13, s.EnterpriseCA1, ad.PublishedTo)
 }
 
+type ADCSGoldenCertHarness struct {
+	NTAuthStore1  *graph.Node
+	RootCA1       *graph.Node
+	EnterpriseCA1 *graph.Node
+	Computer1     *graph.Node
+	Domain1       *graph.Node
+
+	Domain2        *graph.Node
+	RootCA2        *graph.Node
+	NTAuthStore2   *graph.Node
+	EnterpriseCA21 *graph.Node
+	EnterpriseCA22 *graph.Node
+	EnterpriseCA23 *graph.Node
+	Computer21     *graph.Node
+	Computer22     *graph.Node
+	Computer23     *graph.Node
+
+	NTAuthStore3  *graph.Node
+	RootCA3       *graph.Node
+	EnterpriseCA3 *graph.Node
+	Computer3     *graph.Node
+	Domain3       *graph.Node
+}
+
+func (s *ADCSGoldenCertHarness) Setup(graphTestContext *GraphTestContext) {
+	//Positive test cases for GoldenCert edge
+	sid := RandomDomainSID()
+	s.Domain1 = graphTestContext.NewActiveDirectoryDomain("domain 1", sid, false, true)
+	s.RootCA1 = graphTestContext.NewActiveDirectoryRootCA("rca 1", sid)
+	s.NTAuthStore1 = graphTestContext.NewActiveDirectoryNTAuthStore("ntauthstore 1", sid)
+	s.EnterpriseCA1 = graphTestContext.NewActiveDirectoryEnterpriseCA("eca 1", sid)
+	s.Computer1 = graphTestContext.NewActiveDirectoryComputer("computer 1", sid)
+
+	graphTestContext.NewRelationship(s.NTAuthStore1, s.Domain1, ad.NTAuthStoreFor)
+	graphTestContext.NewRelationship(s.RootCA1, s.Domain1, ad.RootCAFor)
+	graphTestContext.NewRelationship(s.EnterpriseCA1, s.NTAuthStore1, ad.TrustedForNTAuth)
+	graphTestContext.NewRelationship(s.EnterpriseCA1, s.RootCA1, ad.EnterpriseCAFor)
+	graphTestContext.NewRelationship(s.Computer1, s.EnterpriseCA1, ad.HostsCAService)
+
+	sid = RandomDomainSID()
+	s.Domain3 = graphTestContext.NewActiveDirectoryDomain("domain 3", sid, false, true)
+	s.RootCA3 = graphTestContext.NewActiveDirectoryRootCA("rca 3", sid)
+	s.NTAuthStore3 = graphTestContext.NewActiveDirectoryNTAuthStore("ntauthstore 3", sid)
+	s.EnterpriseCA3 = graphTestContext.NewActiveDirectoryEnterpriseCA("eca 3", sid)
+	s.Computer3 = graphTestContext.NewActiveDirectoryComputer("computer 3", sid)
+
+	graphTestContext.NewRelationship(s.NTAuthStore3, s.Domain3, ad.NTAuthStoreFor)
+	graphTestContext.NewRelationship(s.RootCA3, s.Domain3, ad.RootCAFor)
+	graphTestContext.NewRelationship(s.EnterpriseCA3, s.NTAuthStore3, ad.TrustedForNTAuth)
+	graphTestContext.NewRelationship(s.EnterpriseCA3, s.RootCA3, ad.IssuedSignedBy)
+	graphTestContext.NewRelationship(s.Computer3, s.EnterpriseCA3, ad.HostsCAService)
+
+	//Negative test cases for GoldenCert edge
+	sid = RandomDomainSID()
+	s.Domain2 = graphTestContext.NewActiveDirectoryDomain("domain 2", sid, false, true)
+	s.RootCA2 = graphTestContext.NewActiveDirectoryRootCA("rca2", sid)
+	s.NTAuthStore2 = graphTestContext.NewActiveDirectoryNTAuthStore("authstore2", sid)
+	s.EnterpriseCA21 = graphTestContext.NewActiveDirectoryEnterpriseCA("eca 3", sid)
+	s.EnterpriseCA22 = graphTestContext.NewActiveDirectoryEnterpriseCA("eca 4", sid)
+	s.EnterpriseCA23 = graphTestContext.NewActiveDirectoryEnterpriseCA("eca 5", sid)
+	s.Computer21 = graphTestContext.NewActiveDirectoryComputer("computer 3", sid)
+	s.Computer22 = graphTestContext.NewActiveDirectoryComputer("computer 4", sid)
+	s.Computer23 = graphTestContext.NewActiveDirectoryComputer("computer 5", sid)
+
+	graphTestContext.NewRelationship(s.RootCA2, s.Domain2, ad.RootCAFor)
+	graphTestContext.NewRelationship(s.NTAuthStore2, s.Domain2, ad.NTAuthStoreFor)
+	graphTestContext.NewRelationship(s.EnterpriseCA23, s.NTAuthStore2, ad.TrustedForNTAuth)
+	graphTestContext.NewRelationship(s.EnterpriseCA21, s.RootCA2, ad.EnterpriseCAFor)
+	graphTestContext.NewRelationship(s.EnterpriseCA22, s.RootCA2, ad.IssuedSignedBy)
+	graphTestContext.NewRelationship(s.Computer21, s.EnterpriseCA21, ad.HostsCAService)
+	graphTestContext.NewRelationship(s.Computer22, s.EnterpriseCA22, ad.HostsCAService)
+	graphTestContext.NewRelationship(s.Computer23, s.EnterpriseCA23, ad.HostsCAService)
+
+}
+
 type ShortcutHarness struct {
 	Group1 *graph.Node
 	Group2 *graph.Node
@@ -1411,6 +1486,7 @@ type HarnessDetails struct {
 	ADCSESC1Harness                                 ADCSESC1Harness
 	EnrollOnBehalfOfHarnessOne                      EnrollOnBehalfOfHarnessOne
 	EnrollOnBehalfOfHarnessTwo                      EnrollOnBehalfOfHarnessTwo
+	ADCSGoldenCertHarness                           ADCSGoldenCertHarness
 	NumCollectedActiveDirectoryDomains              int
 	AZInboundControlHarness                         AZInboundControlHarness
 }

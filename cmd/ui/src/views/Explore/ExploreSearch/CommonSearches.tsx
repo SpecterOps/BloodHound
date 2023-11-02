@@ -14,22 +14,58 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { List, ListSubheader, ListItem, ListItemText, ListItemButton, Box, Tabs, Tab, Typography } from '@mui/material';
+import { Box, Tabs, Tab, Typography } from '@mui/material';
 import { useState } from 'react';
-import { CommonSearches as prebuiltSearchList } from 'bh-shared-ui';
+import { PrebuiltSearchList, CommonSearches as prebuiltSearchList, PersonalSearchList } from 'bh-shared-ui';
+import makeStyles from '@mui/styles/makeStyles';
+import { useDispatch } from 'react-redux';
+import { setCypherQueryTerm } from 'src/ducks/searchbar/actions';
+import { startCypherQuery } from 'src/ducks/explore/actions';
 
-interface CommonSearchesProps {
-    onClickListItem: (query: string) => void;
-}
+const AD_TAB = 'Active Directory';
+const AZ_TAB = 'Azure';
+const CUSTOM_TAB = 'Custom Searches';
 
-const ACTIVE_DIRECTORY_TAB = 'Active Directory';
-const AZURE_TAB = 'Azure';
+const useStyles = makeStyles((theme) => ({
+    tabs: {
+        height: '35px',
+        minHeight: '35px',
+        mt: 1,
+    },
+    tab: {
+        height: '35px',
+        minHeight: '35px',
+        color: 'black',
+    },
+    list: {
+        position: 'relative',
+        overflow: 'auto',
+        maxHeight: 300,
+        '& ul': { padding: 0 },
+    },
+}));
 
-const CommonSearches = ({ onClickListItem }: CommonSearchesProps) => {
-    const [activeTab, setActiveTab] = useState(ACTIVE_DIRECTORY_TAB);
+const CommonSearches = () => {
+    const classes = useStyles();
+    const dispatch = useDispatch();
+
+    const [activeTab, setActiveTab] = useState(AD_TAB);
 
     const handleTabChange = (event: React.SyntheticEvent, newValue: string) => {
         setActiveTab(newValue);
+    };
+
+    const adSections = prebuiltSearchList
+        .filter(({ category }) => category === 'Active Directory')
+        .map(({ subheader, queries }) => ({ subheader, lineItems: queries }));
+
+    const azSections = prebuiltSearchList
+        .filter(({ category }) => category === 'Azure')
+        .map(({ subheader, queries }) => ({ subheader, lineItems: queries }));
+
+    const handleClick = (query: string) => {
+        dispatch(setCypherQueryTerm(query));
+        dispatch(startCypherQuery(query));
     };
 
     return (
@@ -41,60 +77,18 @@ const CommonSearches = ({ onClickListItem }: CommonSearchesProps) => {
             <Tabs
                 value={activeTab}
                 onChange={handleTabChange}
-                sx={{ height: '35px', minHeight: '35px', mt: 1 }}
+                className={classes.tabs}
                 TabIndicatorProps={{
                     sx: { height: 3, backgroundColor: '#6798B9' },
                 }}>
-                <Tab
-                    label={ACTIVE_DIRECTORY_TAB}
-                    key={ACTIVE_DIRECTORY_TAB}
-                    value={ACTIVE_DIRECTORY_TAB}
-                    sx={{
-                        height: '35px',
-                        minHeight: '35px',
-                        color: 'black',
-                    }}
-                />
-                <Tab
-                    label={AZURE_TAB}
-                    key={AZURE_TAB}
-                    value={AZURE_TAB}
-                    sx={{
-                        height: '35px',
-                        minHeight: '35px',
-                        color: 'black',
-                    }}
-                />
+                <Tab label={AD_TAB} key={AD_TAB} value={AD_TAB} className={classes.tab} />
+                <Tab label={AZ_TAB} key={AZ_TAB} value={AZ_TAB} className={classes.tab} />
+                <Tab label={CUSTOM_TAB} key={CUSTOM_TAB} value={CUSTOM_TAB} className={classes.tab} />
             </Tabs>
 
-            <List
-                dense
-                disablePadding
-                sx={{
-                    position: 'relative',
-                    overflow: 'auto',
-                    maxHeight: 300,
-                    '& ul': { padding: 0 },
-                }}>
-                {prebuiltSearchList
-                    .filter(({ category }) => category === activeTab)
-                    .map(({ category, subheader, queries }) => {
-                        return (
-                            <Box key={`${category}-${subheader}`}>
-                                <ListSubheader sx={{ fontWeight: 'bold' }}>{subheader}: </ListSubheader>
-                                {queries.map((query) => {
-                                    return (
-                                        <ListItem disablePadding key={query.description}>
-                                            <ListItemButton onClick={() => onClickListItem(query.cypher)}>
-                                                <ListItemText primary={query.description} />
-                                            </ListItemButton>
-                                        </ListItem>
-                                    );
-                                })}
-                            </Box>
-                        );
-                    })}
-            </List>
+            {activeTab === AD_TAB && <PrebuiltSearchList listSections={adSections} clickHandler={handleClick} />}
+            {activeTab === AZ_TAB && <PrebuiltSearchList listSections={azSections} clickHandler={handleClick} />}
+            {activeTab === CUSTOM_TAB && <PersonalSearchList clickHandler={handleClick} />}
         </Box>
     );
 };

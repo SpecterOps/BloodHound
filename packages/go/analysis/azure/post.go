@@ -21,7 +21,6 @@ import (
 	"strings"
 
 	"github.com/RoaringBitmap/roaring/roaring64"
-	"github.com/specterops/bloodhound/analysis"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/dawgs/ops"
 	"github.com/specterops/bloodhound/dawgs/query"
@@ -29,6 +28,8 @@ import (
 	"github.com/specterops/bloodhound/graphschema/azure"
 	"github.com/specterops/bloodhound/graphschema/common"
 	"github.com/specterops/bloodhound/log"
+
+	"github.com/specterops/bloodhound/analysis"
 )
 
 func AddMemberAllGroupsTargetRoles() []string {
@@ -243,11 +244,17 @@ func initTenantRoleAssignments(tx graph.Transaction, tenant *graph.Node) (RoleAs
 	}
 }
 
+// RoleMembers returns the NodeSet of members for a given set of roles
 func RoleMembers(tx graph.Transaction, tenant *graph.Node, roleTemplateIDs ...string) (graph.NodeSet, error) {
 	if tenantRoles, err := TenantRoles(tx, tenant, roleTemplateIDs...); err != nil {
 		return nil, err
+	} else if members, err := roleMembers(tx, tenantRoles); err != nil {
+		return nil, err
 	} else {
-		return roleMembers(tx, tenantRoles)
+		for _, role := range tenantRoles {
+			members.Remove(role.ID)
+		}
+		return members, nil
 	}
 }
 
@@ -278,6 +285,8 @@ func roleMembers(tx graph.Transaction, tenantRoles graph.NodeSet, additionalRela
 	return members, nil
 }
 
+// RoleMembersWithGrants returns the NodeSet of members for a given set of roles, including those members who may be able to grant themselves one of the given roles
+// NOTE: The current implementation also includes the role nodes in the returned set. It may be worth considering removing those nodes from the set if doing so doesn't break tier zero/high value assignment
 func RoleMembersWithGrants(tx graph.Transaction, tenant *graph.Node, roleTemplateIDs ...string) (graph.NodeSet, error) {
 	if tenantRoles, err := TenantRoles(tx, tenant, roleTemplateIDs...); err != nil {
 		return nil, err
@@ -341,9 +350,7 @@ func EndNodes(tx graph.Transaction, root *graph.Node, relationship graph.Kind, n
 }
 
 func FetchTenants(ctx context.Context, db graph.Database) (graph.NodeSet, error) {
-	var (
-		nodeSet graph.NodeSet
-	)
+	var nodeSet graph.NodeSet
 	if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		var err error
 		if nodeSet, err = ops.FetchNodeSet(tx.Nodes().Filterf(func() graph.Criteria {
@@ -361,9 +368,7 @@ func FetchTenants(ctx context.Context, db graph.Database) (graph.NodeSet, error)
 }
 
 func fetchAppOwnerRelationships(ctx context.Context, db graph.Database) ([]*graph.Relationship, error) {
-	var (
-		appOwnerRels []*graph.Relationship
-	)
+	var appOwnerRels []*graph.Relationship
 	return appOwnerRels, db.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		var err error
 		if appOwnerRels, err = ops.FetchRelationships(tx.Relationships().Filterf(func() graph.Criteria {
@@ -431,7 +436,6 @@ func AppRoleAssignments(ctx context.Context, db graph.Database) (*analysis.Atomi
 		operation := analysis.NewPostRelationshipOperation(ctx, db, "Azure App Role Assignments Post Processing")
 		for _, tenant := range tenants {
 			if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
-
 				if tenantContainsServicePrincipalRelationships, err := fetchTenantContainsRelationships(tx, tenant, azure.ServicePrincipal); err != nil {
 					return err
 				} else if err := createAZMGApplicationReadWriteAllEdges(ctx, db, operation, tenant, tenantContainsServicePrincipalRelationships); err != nil {
@@ -522,7 +526,7 @@ func createAZMGAppRoleAssignmentReadWriteAllEdges(ctx context.Context, db graph.
 					for _, sourceNode := range sourceNodes {
 						AZMGGrantAppRolesRelationship := analysis.CreatePostRelationshipJob{
 							FromID: sourceNode.ID,
-							ToID:   tenantContainsServicePrincipalRelationship.StartID, //the tenant
+							ToID:   tenantContainsServicePrincipalRelationship.StartID, // the tenant
 							Kind:   azure.AZMGGrantAppRoles,
 						}
 
@@ -931,7 +935,7 @@ func AddSecret(ctx context.Context, db graph.Database) (*analysis.AtomicPostProc
 			}
 			return nil
 		}); err != nil {
-			//Hit done to close out the operation so it doesn't hang in the background
+			// Hit done to close out the operation so it doesn't hang in the background
 			operation.Done()
 			return &operation.Stats, err
 		} else {
@@ -940,52 +944,11 @@ func AddSecret(ctx context.Context, db graph.Database) (*analysis.AtomicPostProc
 	}
 }
 
-func fetchDeviceOwnerRelationships(ctx context.Context, db graph.Database) ([]*graph.Relationship, error) {
-	var deviceOwnerRels []*graph.Relationship
-	return deviceOwnerRels, db.ReadTransaction(ctx, func(tx graph.Transaction) error {
-		var err error
-		deviceOwnerRels, err = ops.FetchRelationships(tx.Relationships().Filterf(func() graph.Criteria {
-			return query.And(
-				query.Kind(query.Relationship(), azure.Owns),
-				query.Kind(query.End(), azure.Device),
-			)
-		}))
-
-		return err
-	})
-}
-
 func ExecuteCommand(ctx context.Context, db graph.Database) (*analysis.AtomicPostProcessingStats, error) {
-	if deviceOwnerRels, err := fetchDeviceOwnerRelationships(ctx, db); err != nil {
-		return &analysis.AtomicPostProcessingStats{}, err
-	} else if tenants, err := FetchTenants(ctx, db); err != nil {
+	if tenants, err := FetchTenants(ctx, db); err != nil {
 		return &analysis.AtomicPostProcessingStats{}, err
 	} else {
 		operation := analysis.NewPostRelationshipOperation(ctx, db, "AZExecuteCommand Post Processing")
-		for _, deviceOwner := range deviceOwnerRels {
-			innerDeviceOwner := deviceOwner
-
-			operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
-				if end, err := ops.FetchNode(tx, innerDeviceOwner.EndID); err != nil {
-					return err
-				} else if isWindowsDevice, err := IsWindowsDevice(end); err != nil {
-					return err
-				} else if isWindowsDevice {
-					nextJob := analysis.CreatePostRelationshipJob{
-						FromID: innerDeviceOwner.StartID,
-						ToID:   end.ID,
-						Kind:   azure.ExecuteCommand,
-					}
-
-					if !channels.Submit(ctx, outC, nextJob) {
-						return nil
-					}
-				}
-
-				return nil
-			})
-		}
-
 		if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
 			for _, tenant := range tenants {
 				if tenantDevices, err := EndNodes(tx, tenant, azure.Contains, azure.Device); err != nil {
@@ -997,7 +960,7 @@ func ExecuteCommand(ctx context.Context, db graph.Database) (*analysis.AtomicPos
 				} else {
 					for _, tenantDevice := range tenantDevices {
 						innerTenantDevice := tenantDevice
-						operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
+						operation.Operation.SubmitReader(func(ctx context.Context, _ graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
 							if isWindowsDevice, err := IsWindowsDevice(innerTenantDevice); err != nil {
 								return err
 							} else if isWindowsDevice {
@@ -1031,9 +994,7 @@ func ExecuteCommand(ctx context.Context, db graph.Database) (*analysis.AtomicPos
 }
 
 func resetPassword(ctx context.Context, db graph.Database, operation analysis.StatTrackedOperation[analysis.CreatePostRelationshipJob], roleAssignments RoleAssignments) error {
-	var (
-		usersWithoutRoles = roleAssignments.UsersWithoutRoles()
-	)
+	usersWithoutRoles := roleAssignments.UsersWithoutRoles()
 
 	if securityGroupOwners, err := getRoleEligibleSecurityGroupUsers(ctx, db, roleAssignments); err != nil {
 		return err
@@ -1286,7 +1247,6 @@ func resetPasswordCases(roleAssignments RoleAssignments, operation analysis.Stat
 
 			return nil
 		})
-
 	}
 
 	return nil
@@ -1347,9 +1307,7 @@ func privilegedAuthAdmins(roleAssignments RoleAssignments, tenant *graph.Node, o
 }
 
 func addMembers(roleAssignments RoleAssignments, operation analysis.StatTrackedOperation[analysis.CreatePostRelationshipJob]) {
-	var (
-		tenantGroups = roleAssignments.Nodes.Get(azure.Group)
-	)
+	tenantGroups := roleAssignments.Nodes.Get(azure.Group)
 
 	for tenantGroupID, tenantGroup := range tenantGroups {
 		innerGroupID := tenantGroupID

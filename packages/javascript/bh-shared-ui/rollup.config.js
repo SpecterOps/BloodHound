@@ -36,6 +36,7 @@ export default {
         '@emotion/react',
         '@emotion/styled',
         '@fortawesome/free-solid-svg-icons',
+        '@fortawesome/fontawesome-svg-core',
         '@fortawesome/react-fontawesome',
         '@reduxjs/toolkit',
         '@mui/material',

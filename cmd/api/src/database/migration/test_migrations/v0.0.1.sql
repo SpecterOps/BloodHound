@@ -13,8 +13,8 @@
 -- limitations under the License.
 -- 
 -- SPDX-License-Identifier: Apache-2.0
-
-create table migration_test (
-  id serial primary key,
-  foo varchar(50) not null
+CREATE TABLE IF NOT EXISTS migration_test (
+  id SERIAL PRIMARY KEY,
+  name VARCHAR(50) NOT NULL,
+  foo VARCHAR(50) NOT NULL
 );

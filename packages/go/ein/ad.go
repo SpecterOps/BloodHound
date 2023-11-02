@@ -434,15 +434,6 @@ func ParseEnterpriseCAMiscData(enterpriseCA EnterpriseCA) []IngestibleRelationsh
 			RelType:    ad.HostsCAService,
 			RelProps:   map[string]any{"isacl": false},
 		})
-
-		relationships = append(relationships, IngestibleRelationship{
-			Source:     enterpriseCA.HostingComputer,
-			SourceType: ad.Computer,
-			Target:     enterpriseCA.DomainSID,
-			TargetType: ad.Domain,
-			RelType:    ad.GoldenCert,
-			RelProps:   map[string]any{"isacl": false},
-		})
 	}
 
 	relationships = handleEnterpriseCAEnrollmentAgentRestrictions(enterpriseCA, relationships, enabledCertTemplates)
@@ -462,7 +453,7 @@ func handleEnterpriseCAEnrollmentAgentRestrictions(enterpriseCA EnterpriseCA, re
 				} else {
 					templates = append(templates, restriction.Template.ObjectIdentifier)
 				}
-				// TODO: Handle Targets
+
 				for _, template := range templates {
 					relationships = append(relationships, IngestibleRelationship{
 						Source:     restriction.Agent.ObjectIdentifier,
@@ -566,7 +557,7 @@ const (
 
 // Prettified definitions for DCRegistryData
 const (
-	RegValNotExisting                               = "Registry value does not exist"
+	RegValNotExisting = "Registry value does not exist"
 
 	PrettyCertMappingManyToOne                      = "0x01: Many-to-one (issuer certificate)"
 	PrettyCertMappingOneToOne                       = "0x02: One-to-one (subject/issuer)"
@@ -607,21 +598,21 @@ func ParseDCRegistryData(computer Computer) IngestibleNode {
 			}
 		}
 
-		propMap[ad.CertificateMappingMethods.String()] = prettyMappings		
+		propMap[ad.CertificateMappingMethods.String()] = prettyMappings
 	}
 
 	if computer.DCRegistryData.StrongCertificateBindingEnforcement.Collected {
 		propMap[ad.StrongCertificateBindingEnforcementRaw.String()] = computer.DCRegistryData.StrongCertificateBindingEnforcement.Value
 
 		switch computer.DCRegistryData.StrongCertificateBindingEnforcement.Value {
-		    case -1:
-				propMap[ad.StrongCertificateBindingEnforcement.String()] = RegValNotExisting
-			case 0:
-				propMap[ad.StrongCertificateBindingEnforcement.String()] = PrettyStrongCertBindingEnforcementDisabled
-			case 1:
-				propMap[ad.StrongCertificateBindingEnforcement.String()] = PrettyStrongCertBindingEnforcementCompatibility
-			case 2:
-				propMap[ad.StrongCertificateBindingEnforcement.String()] = PrettyStrongCertBindingEnforcementFull
+		case -1:
+			propMap[ad.StrongCertificateBindingEnforcement.String()] = RegValNotExisting
+		case 0:
+			propMap[ad.StrongCertificateBindingEnforcement.String()] = PrettyStrongCertBindingEnforcementDisabled
+		case 1:
+			propMap[ad.StrongCertificateBindingEnforcement.String()] = PrettyStrongCertBindingEnforcementCompatibility
+		case 2:
+			propMap[ad.StrongCertificateBindingEnforcement.String()] = PrettyStrongCertBindingEnforcementFull
 		}
 	}
 

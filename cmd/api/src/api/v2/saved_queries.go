@@ -19,15 +19,16 @@ package v2
 import (
 	"errors"
 	"fmt"
+	"net/http"
+	"strconv"
+	"strings"
+
 	"github.com/gorilla/mux"
 	"github.com/specterops/bloodhound/src/api"
 	ctx2 "github.com/specterops/bloodhound/src/ctx"
 	"github.com/specterops/bloodhound/src/database"
 	"github.com/specterops/bloodhound/src/model"
 	"gorm.io/gorm/utils"
-	"net/http"
-	"strconv"
-	"strings"
 )
 
 func (s Resources) ListSavedQueries(response http.ResponseWriter, request *http.Request) {

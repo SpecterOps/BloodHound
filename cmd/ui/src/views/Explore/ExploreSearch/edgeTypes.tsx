@@ -141,7 +141,7 @@ export const AllEdgeTypes: Category[] = [
                     AzureRelationshipKind.AZMGAddOwner,
                     AzureRelationshipKind.AZMGAddSecret,
                     AzureRelationshipKind.AZMGGrantAppRoles,
-                    AzureRelationshipKind.AZMGGrantAppRoles,
+                    AzureRelationshipKind.AZMGGrantRole,
                 ],
             },
             {
