@@ -59,7 +59,7 @@ func TestADCSESC1(t *testing.T) {
 
 			operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
 
-				if enterpriseCAs, err := ad2.FetchEnterpriseCAsTrustedForNTAuthPathToDomain(tx, innerDomain); err != nil {
+				if enterpriseCAs, err := ad2.FetchEnterpriseCAsTrustedForNTAuthToDomain(tx, innerDomain); err != nil {
 					return err
 				} else {
 					for _, enterpriseCA := range enterpriseCAs {
@@ -130,7 +130,7 @@ func TestGoldenCert(t *testing.T) {
 
 			operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
 
-				if enterpriseCAs, err := ad2.FetchEnterpriseCAsTrustedForNTAuthPathToDomain(tx, innerDomain); err != nil {
+				if enterpriseCAs, err := ad2.FetchEnterpriseCAsTrustedForNTAuthToDomain(tx, innerDomain); err != nil {
 					return err
 				} else {
 					for _, enterpriseCA := range enterpriseCAs {

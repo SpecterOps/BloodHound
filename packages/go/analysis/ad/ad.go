@@ -520,7 +520,7 @@ func getADCSESC1EdgeDetail(tx graph.Transaction, edge *graph.Relationship) (grap
 		} else {
 			for _, path := range pathsToCA {
 				enterpriseCA := path.Terminal()
-				if paths, err := FetchEnterpriseCAPathToDomain(tx, enterpriseCA, targetDomainNode); err != nil {
+				if paths, err := FetchEnterpriseCAsTrustedForAuthPathToDomain(tx, enterpriseCA, targetDomainNode); err != nil {
 					log.Errorf("Error getting paths from cert template %d to domain %d: %w", enterpriseCA.ID, targetDomainNode.ID, err)
 				} else {
 					finalPaths.AddPathSet(paths)

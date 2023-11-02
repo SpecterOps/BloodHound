@@ -1407,6 +1407,22 @@ func FetchEnterpriseCAsCertChainPathToDomain(tx graph.Transaction, enterpriseCA,
 	})
 }
 
+func FetchEnterpriseCAsTrustedForAuthPathToDomain(tx graph.Transaction, enterpriseCA, domain *graph.Node) (graph.PathSet, error) {
+	return ops.TraversePaths(tx, ops.TraversalPlan{
+		Root:      enterpriseCA,
+		Direction: graph.DirectionOutbound,
+		BranchQuery: func() graph.Criteria {
+			return query.KindIn(query.Relationship(), ad.TrustedForNTAuth, ad.RootCAFor)
+		},
+		DescentFilter: func(ctx *ops.TraversalContext, segment *graph.PathSegment) bool {
+			return !segment.Trunk.Node.Kinds.ContainsOneOf(ad.Domain)
+		},
+		PathFilter: func(ctx *ops.TraversalContext, segment *graph.PathSegment) bool {
+			return segment.Node.ID == domain.ID
+		},
+	})
+}
+
 func FetchHostsCAServiceComputers(tx graph.Transaction, enterpriseCA *graph.Node) (graph.NodeSet, error) {
 	return ops.FetchStartNodes(tx.Relationships().Filter(
 		query.And(
@@ -1416,7 +1432,7 @@ func FetchHostsCAServiceComputers(tx graph.Transaction, enterpriseCA *graph.Node
 		)))
 }
 
-func FetchEnterpriseCAsTrustedForNTAuthPathToDomain(tx graph.Transaction, domain *graph.Node) (graph.NodeSet, error) {
+func FetchEnterpriseCAsTrustedForNTAuthToDomain(tx graph.Transaction, domain *graph.Node) (graph.NodeSet, error) {
 	return ops.AcyclicTraverseTerminals(tx, ops.TraversalPlan{
 		Root:      domain,
 		Direction: graph.DirectionInbound,
