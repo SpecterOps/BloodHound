@@ -24,7 +24,7 @@ const General: FC<EdgeInfoProps> = ({ sourceName, sourceType, targetName }) => {
         <>
             <Typography variant='body2'>
                 The {typeFormat(sourceType)} {sourceName} can be used to enroll certificates on behalf of other
-                principals for the CertTemplate {targetName}.
+                principals for the certificate template {targetName}.
             </Typography>
             <Typography variant='body2'>
                 The certificate template {sourceName} is configured to be used as an enrollment agent. The certificate
