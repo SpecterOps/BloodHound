@@ -467,22 +467,86 @@ func GetEdgeDetailPath(tx graph.Transaction, edge graph.Relationship) {
 
 }
 
-func getADCSESC1EdgeDetail(tx graph.Transaction, edge *graph.Relationship) error {
-	if startNode, endNode, err := ops.FetchRelationshipNodes(tx, edge); err != nil {
-		return err
+func getADCSESC1EdgeDetail(tx graph.Transaction, edge *graph.Relationship) (graph.PathSet, error) {
+	finalPaths := graph.NewPathSet()
+	if startNode, targetDomainNode, err := ops.FetchRelationshipNodes(tx, edge); err != nil {
+		return finalPaths, err
 	} else {
-		ops.TraversePaths(tx, ops.TraversalPlan{
+		if pathsTotemplates, err := ops.TraversePaths(tx, ops.TraversalPlan{
 			Root:      startNode,
 			Direction: graph.DirectionOutbound,
 			BranchQuery: func() graph.Criteria {
-				return query.KindIn(query.Relationship(), ad.Enroll, ad.GenericAll, ad.AllExtendedRights, ad.MemberOf, ad.PublishedTo, ad.IssuedSignedBy, ad.RootCAFor)
+				return query.KindIn(query.Relationship(), ad.Enroll, ad.GenericAll, ad.AllExtendedRights, ad.MemberOf)
 			},
-			DescentFilter: func(ctx *ops.TraversalContext, segment *graph.PathSegment) bool {
+			DescentFilter: OutboundControlDescentFilter,
+			PathFilter: func(ctx *ops.TraversalContext, segment *graph.PathSegment) bool {
+				node := segment.Node
+				if reqManagerApproval, err := node.Properties.Get(ad.RequiresManagerApproval.String()).Bool(); err != nil {
+					return false
+				} else if reqManagerApproval {
+					if authEnabled, err := node.Properties.Get(ad.AuthenticationEnabled.String()).Bool(); err != nil || !authEnabled {
+						return false
+					} else if enrolleeSuppliesSubject, err := node.Properties.Get(ad.EnrolleeSuppliesSubject.String()).Bool(); err != nil || !enrolleeSuppliesSubject {
+						return false
+					} else if schemaVersion, err := node.Properties.Get(ad.SchemaVersion.String()).Float64(); err != nil || schemaVersion < 2 {
+						return false
+					} else if authorizedSignatures, err := node.Properties.Get(ad.AuthorizedSignatures.String()).Float64(); err != nil || authorizedSignatures != 0 {
+						return false
+					} else {
+						return true
+					}
+				} else {
+					if authEnabled, err := node.Properties.Get(ad.AuthenticationEnabled.String()).Bool(); err != nil || !authEnabled {
+						return false
+					} else if enrolleeSuppliesSubject, err := node.Properties.Get(ad.EnrolleeSuppliesSubject.String()).Bool(); err != nil || !enrolleeSuppliesSubject {
+						return false
+					} else if schemaVersion, err := node.Properties.Get(ad.SchemaVersion.String()).Float64(); err != nil || schemaVersion != 1 {
+						return false
+					} else {
+						return true
+					}
+				}
+			},
+		}); err != nil {
+			log.Errorf("Error getting paths from start node %d to templates: %w", startNode.ID, err)
+			return finalPaths, err
+		} else {
+			for _, path := range pathsTotemplates {
+				certTemplate := path.Terminal()
+				if paths, err := FetchCertTemplatePathToDomain(tx, *certTemplate, *targetDomainNode); err != nil {
+					log.Errorf("Error getting paths from cert template %d to domain %d: %w", certTemplate.ID, targetDomainNode.ID, err)
+				} else {
+					finalPaths.AddPathSet(paths)
+					finalPaths.AddPath(path)
+				}
+			}
+		}
 
+		if pathsToCA, err := ops.TraversePaths(tx, ops.TraversalPlan{
+			Root:      startNode,
+			Direction: graph.DirectionOutbound,
+			BranchQuery: func() graph.Criteria {
+				return query.KindIn(query.Relationship(), ad.Enroll, ad.MemberOf)
 			},
-			PathFilter: nil,
-			Skip:       0,
-			Limit:      0,
-		})
+			DescentFilter: OutboundControlDescentFilter,
+			PathFilter: func(ctx *ops.TraversalContext, segment *graph.PathSegment) bool {
+				return segment.Node.Kinds.ContainsOneOf(ad.EnterpriseCA)
+			},
+		}); err != nil {
+			log.Errorf("Error getting paths from start node %d to enterprise ca: %w", startNode.ID, err)
+			return graph.NewPathSet(), err
+		} else {
+			for _, path := range pathsToCA {
+				enterpriseCA := path.Terminal()
+				if paths, err := FetchEnterpriseCAPathToDomain(tx, enterpriseCA, targetDomainNode); err != nil {
+					log.Errorf("Error getting paths from cert template %d to domain %d: %w", enterpriseCA.ID, targetDomainNode.ID, err)
+				} else {
+					finalPaths.AddPathSet(paths)
+					finalPaths.AddPath(path)
+				}
+			}
+		}
+
+		return finalPaths, nil
 	}
 }
