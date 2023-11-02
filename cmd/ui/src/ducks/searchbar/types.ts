@@ -125,7 +125,7 @@ export interface CypherQueryEditedAction {
 
 export interface SourceNodeSuggestedAction {
     type: typeof SOURCE_NODE_SUGGESTED;
-    name: string;
+    node: SearchNodeType | null;
 }
 
 export interface SourceNodeSelectedAction {
@@ -139,7 +139,7 @@ export interface SourceNodeEditedAction {
 }
 export interface DestinationNodeSuggestedAction {
     type: typeof DESTINATION_NODE_SUGGESTED;
-    name: string;
+    node: SearchNodeType | null;
 }
 
 export interface DestinationNodeSelectedAction {

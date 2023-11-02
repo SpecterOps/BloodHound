@@ -51,6 +51,9 @@ function* primarySearchWorker() {
 function* pathfindingSearchWatcher(): SagaIterator {
     yield takeLatest(types.DESTINATION_NODE_SELECTED, pathfindingSearchWorker);
     yield takeLatest(types.PATHFINDING_SEARCH, pathfindingSearchWorker);
+
+    yield takeLatest(types.SOURCE_NODE_SUGGESTED, pathfindingSearchWorker);
+    yield takeLatest(types.DESTINATION_NODE_SUGGESTED, pathfindingSearchWorker);
 }
 
 function* pathfindingSearchWorker() {

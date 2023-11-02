@@ -89,10 +89,10 @@ export const sourceNodeEdited = (searchTerm: string): types.SourceNodeEditedActi
     };
 };
 
-export const sourceNodeSuggested = (name: string): types.SourceNodeSuggestedAction => {
+export const sourceNodeSuggested = (node: types.SearchNodeType | null): types.SourceNodeSuggestedAction => {
     return {
         type: types.SOURCE_NODE_SUGGESTED,
-        name,
+        node,
     };
 };
 
@@ -110,10 +110,10 @@ export const destinationNodeEdited = (searchTerm: string): types.DestinationNode
     };
 };
 
-export const destinationNodeSuggested = (name: string): types.DestinationNodeSuggestedAction => {
+export const destinationNodeSuggested = (node: types.SearchNodeType | null): types.DestinationNodeSuggestedAction => {
     return {
         type: types.DESTINATION_NODE_SUGGESTED,
-        name,
+        node,
     };
 };
 

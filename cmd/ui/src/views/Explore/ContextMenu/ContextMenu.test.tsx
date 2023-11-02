@@ -28,6 +28,8 @@ describe('ContextMenu', async () => {
                     entityinfo: {
                         selectedNode: {
                             name: 'foo',
+                            id: '1234',
+                            type: 'User',
                         },
                     },
                 },
@@ -51,7 +53,11 @@ describe('ContextMenu', async () => {
         await user.click(startNodeOption);
 
         expect(sourceNodeSuggestedSpy).toBeCalledTimes(1);
-        expect(sourceNodeSuggestedSpy).toHaveBeenCalledWith('foo');
+        expect(sourceNodeSuggestedSpy).toHaveBeenCalledWith({
+            name: 'foo',
+            objectid: '1234',
+            type: 'User',
+        });
     });
 
     it('handles setting a end node', async () => {
@@ -62,6 +68,45 @@ describe('ContextMenu', async () => {
         await user.click(startNodeOption);
 
         expect(destinationNodeSuggestedSpy).toBeCalledTimes(1);
-        expect(destinationNodeSuggestedSpy).toHaveBeenCalledWith('foo');
+        expect(destinationNodeSuggestedSpy).toHaveBeenCalledWith({
+            name: 'foo',
+            objectid: '1234',
+            type: 'User',
+        });
+    });
+
+    it('opens a submenu when user clicks `Copy`', async () => {
+        const user = userEvent.setup();
+
+        const copyOption = screen.getByRole('menuitem', { name: /copy/i });
+        await user.click(copyOption);
+
+        const displayNameOption = screen.getByRole('menuitem', { name: /display name/i });
+        expect(displayNameOption).toBeInTheDocument();
+
+        const objectIdOption = screen.getByRole('menuitem', { name: /object id/i });
+        expect(objectIdOption).toBeInTheDocument();
+
+        const cypherOption = screen.getByRole('menuitem', { name: /cypher/i });
+        expect(cypherOption).toBeInTheDocument();
+
+        // click on any submenu option to close the submenu
+        await user.click(cypherOption);
+        expect(displayNameOption).not.toBeInTheDocument();
+        expect(objectIdOption).not.toBeInTheDocument();
+        expect(cypherOption).not.toBeInTheDocument();
+    });
+
+    it('handles copying a display name', async () => {
+        const user = userEvent.setup();
+
+        const copyOption = screen.getByRole('menuitem', { name: /copy/i });
+        await user.click(copyOption);
+
+        const displayNameOption = screen.getByRole('menuitem', { name: /display name/i });
+        await user.click(displayNameOption);
+
+        const clipboardText = await navigator.clipboard.readText();
+        expect(clipboardText).toBe('foo');
     });
 });

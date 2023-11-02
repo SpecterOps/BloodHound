@@ -15,6 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Menu, MenuItem } from '@mui/material';
+import { useNotifications } from 'bh-shared-ui';
 import { FC, useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { destinationNodeSuggested, sourceNodeSuggested } from 'src/ducks/searchbar/actions';
@@ -40,13 +41,25 @@ const ContextMenu: FC<{ anchorPosition: { x: number; y: number } }> = ({ anchorP
 
     const handleSetStartingNode = () => {
         if (selectedNode) {
-            dispatch(sourceNodeSuggested(selectedNode.name));
+            dispatch(
+                sourceNodeSuggested({
+                    name: selectedNode.name,
+                    objectid: selectedNode.id,
+                    type: selectedNode.type,
+                })
+            );
         }
     };
 
     const handleSetEndingNode = () => {
         if (selectedNode) {
-            dispatch(destinationNodeSuggested(selectedNode.name));
+            dispatch(
+                destinationNodeSuggested({
+                    name: selectedNode.name,
+                    objectid: selectedNode.id,
+                    type: selectedNode.type,
+                })
+            );
         }
     };
 
@@ -58,7 +71,71 @@ const ContextMenu: FC<{ anchorPosition: { x: number; y: number } }> = ({ anchorP
             onClick={handleClick}>
             <MenuItem onClick={handleSetStartingNode}>Set as starting node</MenuItem>
             <MenuItem onClick={handleSetEndingNode}>Set as ending node</MenuItem>
+            <CopyMenuItem />
         </Menu>
+    );
+};
+
+const CopyMenuItem = () => {
+    const { addNotification } = useNotifications();
+
+    const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+    const open = Boolean(anchorEl);
+
+    const handleMenuOpen = (event: React.MouseEvent<HTMLLIElement>) => {
+        // stop propagation so that parent menu click event one level up doesn't fire
+        event.stopPropagation();
+        setAnchorEl(event.currentTarget);
+    };
+
+    const handleCopyMenuClick = () => {
+        setAnchorEl(null);
+    };
+
+    const selectedNode = useSelector((state: AppState) => state.entityinfo.selectedNode);
+
+    const handleDisplayName = () => {
+        if (selectedNode) {
+            navigator.clipboard.writeText(selectedNode.name);
+            addNotification(`Display name copied to clipboard`, 'copyToClipboard');
+        }
+    };
+
+    const handleObjectId = () => {
+        if (selectedNode) {
+            navigator.clipboard.writeText(selectedNode.id);
+            addNotification(`Object ID name copied to clipboard`, 'copyToClipboard');
+        }
+    };
+
+    const handleCypher = () => {
+        if (selectedNode) {
+            const cypher = `MATCH (n:${selectedNode.type}) WHERE n.objectid = '${selectedNode.id}' RETURN n`;
+            navigator.clipboard.writeText(cypher);
+            addNotification(`Cypher copied to clipboard`, 'copyToClipboard');
+        }
+    };
+
+    return (
+        <>
+            <MenuItem onClick={handleMenuOpen}>Copy</MenuItem>
+            <Menu
+                open={open}
+                anchorEl={anchorEl}
+                anchorOrigin={{
+                    vertical: 'top',
+                    horizontal: 'right',
+                }}
+                transformOrigin={{
+                    vertical: 'top',
+                    horizontal: 'left',
+                }}
+                onClick={handleCopyMenuClick}>
+                <MenuItem onClick={handleDisplayName}>Display Name</MenuItem>
+                <MenuItem onClick={handleObjectId}>Object ID</MenuItem>
+                <MenuItem onClick={handleCypher}>Cypher</MenuItem>
+            </Menu>
+        </>
     );
 };
 
