@@ -269,5 +269,8 @@ func NewV2API(cfg config.Configuration, resources v2.Resources, routerInst *rout
 		routerInst.GET("/api/v2/datapipe/status", resources.GetDatapipeStatus).RequireAuth(),
 		//TODO: Update the permission on this once we get something more concrete
 		routerInst.PUT("/api/v2/analysis", resources.RequestAnalysis).RequirePermissions(permissions.GraphDBWrite),
+
+		// Edge Details
+		routerInst.GET("/api/v2/edge/details", resources.RequestAnalysis).RequirePermissions(permissions.GraphDBWrite),
 	)
 }

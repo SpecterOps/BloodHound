@@ -19,11 +19,12 @@ package ad
 import (
 	"context"
 	"fmt"
-	"github.com/specterops/bloodhound/analysis/impact"
-	"github.com/specterops/bloodhound/dawgs/cardinality"
 	"sort"
 	"strings"
 	"time"
+
+	"github.com/specterops/bloodhound/analysis/impact"
+	"github.com/specterops/bloodhound/dawgs/cardinality"
 
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/dawgs/ops"
@@ -463,8 +464,8 @@ func CalculateCrossProductNodeSets(firstNodeSet, secondNodeSet []*graph.Node, gr
 	return resultEntities
 }
 
-func GetEdgeDetailPath(tx graph.Transaction, edge graph.Relationship) {
-
+func GetEdgeDetailPath(tx graph.Transaction, edge graph.Relationship) (graph.PathSet, error) {
+	return getADCSESC1EdgeDetail(tx, &edge)
 }
 
 func getADCSESC1EdgeDetail(tx graph.Transaction, edge *graph.Relationship) (graph.PathSet, error) {
