@@ -44,14 +44,12 @@ export const initialSearchState: types.SearchState = {
         loading: false,
         value: null,
         options: [],
-        openMenu: false,
     },
     secondary: {
         searchTerm: '',
         loading: false,
         value: null,
         options: [],
-        openMenu: false,
     },
     cypher: {
         searchTerm: '',
@@ -110,7 +108,6 @@ const searchReducer = (state = initialSearchState, action: types.SearchbarAction
                 draft.activeTab = types.PATHFINDING_SEARCH;
                 draft.searchType = types.SEARCH_TYPE_EXACT;
 
-                draft.primary.openMenu = false;
                 draft.primary.value = action.node;
 
                 if (action.node) {
@@ -123,7 +120,6 @@ const searchReducer = (state = initialSearchState, action: types.SearchbarAction
             case types.SOURCE_NODE_SELECTED: {
                 draft.searchType = types.SEARCH_TYPE_EXACT;
 
-                draft.primary.openMenu = false;
                 draft.primary.value = action.node;
 
                 if (action.node) {
@@ -149,7 +145,6 @@ const searchReducer = (state = initialSearchState, action: types.SearchbarAction
                 draft.activeTab = types.PATHFINDING_SEARCH;
                 draft.searchType = types.SEARCH_TYPE_EXACT;
 
-                draft.secondary.openMenu = false;
                 draft.secondary.value = action.node;
 
                 if (action.node) {
@@ -161,7 +156,6 @@ const searchReducer = (state = initialSearchState, action: types.SearchbarAction
             case types.DESTINATION_NODE_SELECTED: {
                 draft.searchType = types.SEARCH_TYPE_EXACT;
 
-                draft.secondary.openMenu = false;
                 draft.secondary.value = action.node;
 
                 if (action.node) {

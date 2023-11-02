@@ -16,7 +16,6 @@
 
 import { List, ListItem, ListItemText, Paper, TextField, useTheme } from '@mui/material';
 import { useCombobox } from 'downshift';
-import { useEffect } from 'react';
 import { NodeIcon, SearchResultItem } from 'bh-shared-ui';
 import { getEmptyResultsText, getKeywordAndTypeValues, SearchResult, useSearch } from 'src/hooks/useSearch';
 import { AppState, useAppDispatch } from 'src/store';
@@ -40,7 +39,6 @@ const ExploreSearchCombobox: React.FC<{
     const { primary, secondary } = useSelector((state: AppState) => state.search);
     const inputValue = searchType === PRIMARY_SEARCH ? primary.searchTerm : secondary.searchTerm;
     const selectedItem = searchType === PRIMARY_SEARCH ? primary.value : secondary.value;
-    const controlledOpenMenu = searchType === PRIMARY_SEARCH ? primary.openMenu : secondary.openMenu;
 
     const { keyword, type } = getKeywordAndTypeValues(inputValue);
     const { data, error, isError, isLoading, isFetching } = useSearch(keyword, type);
@@ -76,13 +74,6 @@ const ExploreSearchCombobox: React.FC<{
             },
             itemToString: (item) => (item ? item.name || item.objectid : ''),
         });
-
-    // handy when combobox need's to be opened from outside the component, e.g. the <ContextMenu /> can set the input value
-    useEffect(() => {
-        if (controlledOpenMenu) {
-            openMenu();
-        }
-    }, [controlledOpenMenu, openMenu]);
 
     const disabledText: string = getEmptyResultsText(
         isLoading,

@@ -65,7 +65,6 @@ export interface SearchBarState {
     searchTerm: string;
     loading: boolean;
     value: SearchNodeType | null;
-    openMenu: boolean;
 }
 export interface SearchNodeType {
     objectid: string;
