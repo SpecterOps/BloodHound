@@ -469,6 +469,7 @@ func GetEdgeDetailPath(tx graph.Transaction, edge graph.Relationship) {
 
 func getADCSESC1EdgeDetail(tx graph.Transaction, edge *graph.Relationship) (graph.PathSet, error) {
 	finalPaths := graph.NewPathSet()
+	caSet := cardinality.NewBitmap32()
 	if startNode, targetDomainNode, err := ops.FetchRelationshipNodes(tx, edge); err != nil {
 		return finalPaths, err
 	} else {
@@ -498,6 +499,13 @@ func getADCSESC1EdgeDetail(tx graph.Transaction, edge *graph.Relationship) (grap
 				if paths, err := FetchCertTemplatePathToDomain(tx, *certTemplate, *targetDomainNode); err != nil {
 					log.Errorf("Error getting paths from cert template %d to domain %d: %w", certTemplate.ID, targetDomainNode.ID, err)
 				} else {
+					for _, subPath := range paths {
+						for _, node := range subPath.Nodes {
+							if node.Kinds.ContainsOneOf(ad.EnterpriseCA) {
+								caSet.Add(node.ID.Uint32())
+							}
+						}
+					}
 					finalPaths.AddPathSet(paths)
 					finalPaths.AddPath(path)
 				}
@@ -512,7 +520,7 @@ func getADCSESC1EdgeDetail(tx graph.Transaction, edge *graph.Relationship) (grap
 			},
 			DescentFilter: OutboundControlDescentFilter,
 			PathFilter: func(ctx *ops.TraversalContext, segment *graph.PathSegment) bool {
-				return segment.Node.Kinds.ContainsOneOf(ad.EnterpriseCA)
+				return caSet.Contains(segment.Node.ID.Uint32())
 			},
 		}); err != nil {
 			log.Errorf("Error getting paths from start node %d to enterprise ca: %w", startNode.ID, err)
