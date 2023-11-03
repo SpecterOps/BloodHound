@@ -18,12 +18,13 @@ package v2
 
 import (
 	"fmt"
+	"github.com/specterops/bloodhound/analysis"
+	"github.com/specterops/bloodhound/src/model"
 	"net/http"
 	"strconv"
 
 	"github.com/specterops/bloodhound/analysis/ad"
 	"github.com/specterops/bloodhound/dawgs/graph"
-	adSchema "github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/src/api"
 )
 
@@ -37,41 +38,26 @@ var validEdgeTypes = []string{"adcsesc1"}
 
 func (s *Resources) GetEdgeDetails(response http.ResponseWriter, request *http.Request) {
 	var (
-		params  = request.URL.Query()
-		pathSet graph.PathSet
+		params = request.URL.Query()
 	)
 
 	if edgeType, hasParameter := params[edgeParameterEdgeType]; !hasParameter {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("Expected %s parameter to be set.", edgeParameterEdgeType), request), response)
 	} else if len(edgeType) > 1 {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("Expected only one %s.", edgeParameterEdgeType), request), response)
+	} else if kind, err := analysis.ParseKind(edgeType[0]); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("Invalid edge %s requested.", kind), request), response)
+	} else if startID, err := strconv.ParseInt(params[edgeParameterSourceNode][0], 10, 32); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("Invalid value for startID: %s", edgeParameterSourceNode), request), response)
+	} else if endID, err := strconv.ParseInt(params[edgeParameterTargetNode][0], 10, 32); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("Invalid value for endID: %s", edgeParameterSourceNode), request), response)
+	} else if edge, err := analysis.FetchEdgeByStartAndEnd(request.Context(), s.Graph, graph.ID(startID), graph.ID(endID), kind); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("Could not find edge matching criteria: %v", err), request), response)
+	} else if pathSet, err := ad.GetEdgeDetailPath(request.Context(), s.Graph, edge); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("Error getting details for edge: %v", err), request), response)
 	} else {
-		if startID, err := strconv.ParseInt(params[edgeParameterSourceNode][0], 10, 32); err != nil {
-			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("Invalided %s", edgeParameterSourceNode), request), response)
-		} else if endID, err := strconv.ParseInt(params[edgeParameterTargetNode][0], 10, 32); err != nil {
-			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("Invalided %s", edgeParameterSourceNode), request), response)
-		} else if err := s.Graph.ReadTransaction(request.Context(), func(tx graph.Transaction) error {
-			if fetchedPathSet, err := ad.GetEdgeDetailPath(tx,
-				graph.Relationship{
-					StartID: graph.ID(startID),
-					EndID:   graph.ID(endID),
-					Kind:    adSchema.ADCSESC1,
-				},
-			); err != nil {
-				return err
-			} else {
-				pathSet = fetchedPathSet
-			}
-
-			return nil
-		}); err != nil {
-			if graph.IsErrNotFound(err) {
-				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, "not found", request), response)
-			} else {
-				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("error: %v", err), request), response)
-			}
-		} else {
-			api.WriteBasicResponse(request.Context(), pathSet, http.StatusOK, response)
-		}
+		unifiedGraph := model.UnifiedGraph{}
+		unifiedGraph.AddPathSet(pathSet, true)
+		api.WriteBasicResponse(request.Context(), unifiedGraph, http.StatusOK, response)
 	}
 }

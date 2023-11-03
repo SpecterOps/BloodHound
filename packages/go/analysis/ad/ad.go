@@ -464,8 +464,16 @@ func CalculateCrossProductNodeSets(firstNodeSet, secondNodeSet []*graph.Node, gr
 	return resultEntities
 }
 
-func GetEdgeDetailPath(tx graph.Transaction, edge graph.Relationship) (graph.PathSet, error) {
-	return getADCSESC1EdgeDetail(tx, &edge)
+func GetEdgeDetailPath(ctx context.Context, db graph.Database, edge *graph.Relationship) (graph.PathSet, error) {
+	pathSet := graph.NewPathSet()
+	return pathSet, db.ReadTransaction(ctx, func(tx graph.Transaction) error {
+		if results, err := getADCSESC1EdgeDetail(tx, edge); err != nil {
+			return err
+		} else {
+			pathSet = results
+			return nil
+		}
+	})
 }
 
 func getADCSESC1EdgeDetail(tx graph.Transaction, edge *graph.Relationship) (graph.PathSet, error) {
