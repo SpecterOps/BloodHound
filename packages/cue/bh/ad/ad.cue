@@ -345,21 +345,21 @@ CrossCertificatePair: types.#StringEnum & {
 EKUs: types.#StringEnum & {
 	symbol: "EKUs"
 	schema: "ad"
-	name: "EKUs"
+	name: "Enhanced Key Usage"
 	representation: "ekus"
 }
 
 SubjectAltRequireUPN: types.#StringEnum & {
 	symbol: "SubjectAltRequireUPN"
 	schema: "ad"
-	name: "Subject Alt Require UPN"
+	name: "Subject Alternative Name Require UPN"
 	representation: "subjectaltrequireupn"
 }
 
 AuthorizedSignatures: types.#StringEnum & {
 	symbol: "AuthorizedSignatures"
 	schema: "ad"
-	name: "Authorized Signatures"
+	name: "Authorized Signatures Required"
 	representation: "authorizedsignatures"
 }
 
@@ -394,8 +394,64 @@ AuthenticationEnabled: types.#StringEnum & {
 EnrolleeSuppliesSubject: types.#StringEnum & {
 	symbol: "EnrolleeSuppliesSubject"
 	schema: "ad"
-	name: "Enrollee Suppliess Subject"
+	name: "Enrollee Supplies Subject"
 	representation: "enrolleesuppliessubject"
+}
+
+CertificateApplicationPolicy: types.#StringEnum & {
+	symbol: "CertificateApplicationPolicy"
+	schema: "ad"
+	name: "Certificate Application Policies"
+	representation: "certificateapplicationpolicy"
+}
+
+CertificateNameFlag: types.#StringEnum & {
+	symbol: "CertificateNameFlag"
+	schema: "ad"
+	name: "Certificate Name Flags"
+	representation: "certificatenameflag"
+}
+
+EffectiveEKUs: types.#StringEnum & {
+	symbol: "EffectiveEKUs"
+	schema: "ad"
+	name: "Effective EKUs"
+	representation: "effectiveekus"
+}
+
+EnrollmentFlag: types.#StringEnum & {
+	symbol: "EnrollmentFlag"
+	schema: "ad"
+	name: "Enrollment Flags"
+	representation: "enrollmentflag"
+}
+
+NoSecurityExtension: types.#StringEnum & {
+	symbol: "NoSecurityExtension"
+	schema: "ad"
+	name: "No Security Extension"
+	representation: "nosecurityextension"
+}
+
+RenewalPeriod: types.#StringEnum & {
+	symbol: "RenewalPeriod"
+	schema: "ad"
+	name: "Renewal Period"
+	representation: "renewalperiod"
+}
+
+ValidityPeriod: types.#StringEnum & {
+	symbol: "ValidityPeriod"
+	schema: "ad"
+	name: "Validity Period"
+	representation: "validityperiod"
+}
+
+OID: types.#StringEnum & {
+	symbol: "OID"
+	schema: "ad"
+	name: "OID"
+	representation: "oid"
 }
 
 Properties: [
@@ -451,7 +507,15 @@ Properties: [
 	SchemaVersion,
 	RequiresManagerApproval,
 	AuthenticationEnabled,
-	EnrolleeSuppliesSubject
+	EnrolleeSuppliesSubject,
+	CertificateApplicationPolicy,
+	CertificateNameFlag,
+	EffectiveEKUs,
+	EnrollmentFlag,
+	NoSecurityExtension,
+	RenewalPeriod,
+	ValidityPeriod,
+	OID
 ]
 
 // Kinds
