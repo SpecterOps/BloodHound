@@ -491,7 +491,9 @@ func getADCSESC1EdgeDetail(tx graph.Transaction, edge *graph.Relationship) (grap
 			DescentFilter: OutboundControlDescentFilter,
 			PathFilter: func(ctx *ops.TraversalContext, segment *graph.PathSegment) bool {
 				node := segment.Node
-				if props, err := getValidatePublishedCertTemplateForEsc1PropertyValues(node); err != nil {
+				if !node.Kinds.ContainsOneOf(ad.CertTemplate) {
+					return false
+				} else if props, err := getValidatePublishedCertTemplateForEsc1PropertyValues(node); err != nil {
 					log.Errorf("Error getting props for certtemplate %d: %w", node.ID, err)
 				} else if !validatePublishedCertTemplateForEsc1(props) {
 					return false
