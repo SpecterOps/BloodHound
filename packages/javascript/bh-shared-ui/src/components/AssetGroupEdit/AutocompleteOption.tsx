@@ -1,13 +1,13 @@
-import { Box, Fade, ListItem, Tooltip, Typography } from "@mui/material";
-import { FC, HTMLAttributes } from "react";
-import NodeIcon from "../NodeIcon";
+import { Box, Fade, ListItem, Tooltip, Typography } from '@mui/material';
+import { FC, HTMLAttributes } from 'react';
+import NodeIcon from '../NodeIcon';
 
 const AutocompleteOption: FC<{
-    props: HTMLAttributes<HTMLLIElement>,
-    id: string,
-    name?: string,
-    type: string,
-    actionLabel?: string,
+    props: HTMLAttributes<HTMLLIElement>;
+    id: string;
+    name?: string;
+    type: string;
+    actionLabel?: string;
 }> = ({ props, id, name, type, actionLabel }) => {
     return (
         <ListItem
@@ -21,10 +21,7 @@ const AutocompleteOption: FC<{
             <Typography variant='body2'> {actionLabel}</Typography>
             <Box style={{ display: 'flex', justifyContent: 'flex-start' }}>
                 <NodeIcon nodeType={type}></NodeIcon>
-                <Tooltip
-                    title={name || id}
-                    placement='top-start'
-                    TransitionComponent={Fade}>
+                <Tooltip title={name || id} placement='top-start' TransitionComponent={Fade}>
                     <Typography
                         variant='body1'
                         style={{
@@ -39,7 +36,7 @@ const AutocompleteOption: FC<{
                 </Tooltip>
             </Box>
         </ListItem>
-    )
-}
+    );
+};
 
 export default AutocompleteOption;

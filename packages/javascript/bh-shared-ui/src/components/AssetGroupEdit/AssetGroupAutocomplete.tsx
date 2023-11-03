@@ -1,16 +1,15 @@
-import { Autocomplete, AutocompleteRenderInputParams, TextField } from "@mui/material";
-import { FC, HTMLAttributes, ReactNode, SyntheticEvent, useState } from "react";
-import AutocompleteOption from "./AutocompleteOption";
-import { AssetGroupChangelog, AssetGroupChangelogEntry, ChangelogAction } from "./types";
-import { AssetGroup } from "js-client-library";
-import { getEmptyResultsText, getKeywordAndTypeValues, useDebouncedValue, useSearch } from "../../hooks";
+import { Autocomplete, AutocompleteRenderInputParams, TextField } from '@mui/material';
+import { FC, HTMLAttributes, ReactNode, SyntheticEvent, useState } from 'react';
+import AutocompleteOption from './AutocompleteOption';
+import { AssetGroupChangelog, AssetGroupChangelogEntry, ChangelogAction } from './types';
+import { AssetGroup } from 'js-client-library';
+import { getEmptyResultsText, getKeywordAndTypeValues, useDebouncedValue, useSearch } from '../../hooks';
 
 const AssetGroupAutocomplete: FC<{
-    assetGroup: AssetGroup,
-    changelog: AssetGroupChangelog,
-    onChange: (event: any, value: AssetGroupChangelogEntry) => void,
+    assetGroup: AssetGroup;
+    changelog: AssetGroupChangelog;
+    onChange: (event: any, value: AssetGroupChangelogEntry) => void;
 }> = ({ assetGroup, changelog, onChange }) => {
-
     const [searchInput, setSearchInput] = useState('');
     const debouncedInputValue = useDebouncedValue(searchInput, 250);
     const { keyword, type } = getKeywordAndTypeValues(debouncedInputValue);
@@ -27,9 +26,9 @@ const AssetGroupAutocomplete: FC<{
         data
     );
 
-    const searchResultsWithActions = data?.map(result => {
-        const resultInChangelog = changelog.find(member => member.objectid === result.objectid);
-        const matchedSelector = assetGroup.Selectors.find(selector => selector.selector === result.objectid);
+    const searchResultsWithActions = data?.map((result) => {
+        const resultInChangelog = changelog.find((member) => member.objectid === result.objectid);
+        const matchedSelector = assetGroup.Selectors.find((selector) => selector.selector === result.objectid);
 
         console.log(assetGroup.Selectors, result.objectid);
 
@@ -45,7 +44,7 @@ const AssetGroupAutocomplete: FC<{
             action = ChangelogAction.UNDO;
         }
 
-        return { ...result, action }
+        return { ...result, action };
     });
 
     const handleRenderInput = (params: AutocompleteRenderInputParams): ReactNode => {
@@ -56,16 +55,16 @@ const AssetGroupAutocomplete: FC<{
                 placeholder='Add or Remove Members'
                 aria-label='Add or Remove Members'
             />
-        );    
-    }
+        );
+    };
 
     const handleRenderOption = (props: HTMLAttributes<HTMLLIElement>, option: AssetGroupChangelogEntry): ReactNode => {
         const actionLabels = {
-            [ChangelogAction.ADD]: "Add",
-            [ChangelogAction.REMOVE]: "Remove",
-            [ChangelogAction.DEFAULT]: "Default Group Member",
-            [ChangelogAction.UNDO]: "Undo",
-        }
+            [ChangelogAction.ADD]: 'Add',
+            [ChangelogAction.REMOVE]: 'Remove',
+            [ChangelogAction.DEFAULT]: 'Default Group Member',
+            [ChangelogAction.UNDO]: 'Undo',
+        };
         return (
             <AutocompleteOption
                 key={option.objectid}
@@ -76,12 +75,12 @@ const AssetGroupAutocomplete: FC<{
                 actionLabel={actionLabels[option.action]}
             />
         );
-    }
+    };
 
     const handleInputChange = (_event: SyntheticEvent, value: string, reason: string): void => {
         if (reason === 'reset') return;
         setSearchInput(value);
-    }
+    };
 
     const filterOptions = (options: AssetGroupChangelogEntry[]) => options;
     const getOptionLabel = (option: AssetGroupChangelogEntry) => option.name || option.objectid;
@@ -107,7 +106,7 @@ const AssetGroupAutocomplete: FC<{
             noOptionsText={noOptionsText}
             forcePopupIcon={false}
         />
-    )
-}
+    );
+};
 
 export default AssetGroupAutocomplete;
