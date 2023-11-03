@@ -131,7 +131,7 @@ const GroupManagement = () => {
                     />
                 </Grid>
                 <Grid item xs={4} md={3} height={'100%'}>
-                    <EntityInfoPanel selectedNode={highlightedNode} />
+                    <EntityInfoPanel sx={{ maxHeight: 'calc(100% - 45px)' }} selectedNode={highlightedNode} />
                     {highlightedNode && (
                         <Button
                             variant='contained'
