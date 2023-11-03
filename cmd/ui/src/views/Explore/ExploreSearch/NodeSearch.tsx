@@ -14,11 +14,31 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { useSelector } from 'react-redux';
 import ExploreSearchCombobox from '../ExploreSearchCombobox';
-import { PRIMARY_SEARCH } from 'src/ducks/searchbar/types';
+import { SearchNodeType, SourceNodeEditedAction, SourceNodeSelectedAction } from 'src/ducks/searchbar/types';
+import { AppState, useAppDispatch } from 'src/store';
+import { sourceNodeEdited, sourceNodeSelected } from 'src/ducks/searchbar/actions';
 
 const NodeSearch = () => {
-    return <ExploreSearchCombobox labelText={'Search Nodes'} searchType={PRIMARY_SEARCH} />;
+    const dispatch = useAppDispatch();
+
+    const { primary } = useSelector((state: AppState) => state.search);
+    const { searchTerm, value: selectedItem } = primary;
+
+    const handleNodeEdited = (edit: string): SourceNodeEditedAction => dispatch(sourceNodeEdited(edit));
+    const handleNodeSelected = (selected: SearchNodeType): SourceNodeSelectedAction =>
+        dispatch(sourceNodeSelected(selected));
+
+    return (
+        <ExploreSearchCombobox
+            labelText={'Search Nodes'}
+            inputValue={searchTerm}
+            selectedItem={selectedItem}
+            handleNodeEdited={handleNodeEdited}
+            handleNodeSelected={handleNodeSelected}
+        />
+    );
 };
 
 export default NodeSearch;

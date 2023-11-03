@@ -17,19 +17,62 @@
 import { Box } from '@mui/material';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faBullseye, faCircle } from '@fortawesome/free-solid-svg-icons';
-import { PRIMARY_SEARCH, PATHFINDING_SEARCH } from 'src/ducks/searchbar/types';
+import {
+    SourceNodeEditedAction,
+    SearchNodeType,
+    SourceNodeSelectedAction,
+    DestinationNodeEditedAction,
+    DestinationNodeSelectedAction,
+} from 'src/ducks/searchbar/types';
 import EdgeFilter from './EdgeFilter';
 import ExploreSearchCombobox from '../ExploreSearchCombobox';
 import PathfindingSwapButton from './PathfindingSwapButton';
+import { AppState, useAppDispatch } from 'src/store';
+import {
+    destinationNodeEdited,
+    destinationNodeSelected,
+    sourceNodeEdited,
+    sourceNodeSelected,
+} from 'src/ducks/searchbar/actions';
+import { useSelector } from 'react-redux';
 
 const PathfindingSearch = () => {
+    const dispatch = useAppDispatch();
+
+    const { primary, secondary } = useSelector((state: AppState) => state.search);
+    const { searchTerm: sourceInputValue, value: sourceSelectedItem } = primary;
+    const { searchTerm: destinationInputValue, value: destinationSelectedItem } = secondary;
+
+    const handleSourceNodeEdited = (edit: string): SourceNodeEditedAction => dispatch(sourceNodeEdited(edit));
+
+    const handleDestinationNodeEdited = (edit: string): DestinationNodeEditedAction =>
+        dispatch(destinationNodeEdited(edit));
+
+    const handleSourceNodeSelected = (selected: SearchNodeType): SourceNodeSelectedAction =>
+        dispatch(sourceNodeSelected(selected));
+
+    const handleDestinationNodeSelected = (selected: SearchNodeType): DestinationNodeSelectedAction =>
+        dispatch(destinationNodeSelected(selected));
+
     return (
         <Box display={'flex'} alignItems={'center'} gap={1}>
             <SourceToBullseyeIcon />
 
             <Box flexGrow={1} gap={1} display={'flex'} flexDirection={'column'}>
-                <ExploreSearchCombobox searchType={PRIMARY_SEARCH} labelText='Start Node' />
-                <ExploreSearchCombobox searchType={PATHFINDING_SEARCH} labelText='Destination Node' />
+                <ExploreSearchCombobox
+                    handleNodeEdited={handleSourceNodeEdited}
+                    handleNodeSelected={handleSourceNodeSelected}
+                    inputValue={sourceInputValue}
+                    selectedItem={sourceSelectedItem}
+                    labelText='Start Node'
+                />
+                <ExploreSearchCombobox
+                    handleNodeEdited={handleDestinationNodeEdited}
+                    handleNodeSelected={handleDestinationNodeSelected}
+                    inputValue={destinationInputValue}
+                    selectedItem={destinationSelectedItem}
+                    labelText='Destination Node'
+                />
             </Box>
 
             <PathfindingSwapButton />

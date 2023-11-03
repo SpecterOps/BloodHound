@@ -18,27 +18,17 @@ import { List, ListItem, ListItemText, Paper, TextField, useTheme } from '@mui/m
 import { useCombobox } from 'downshift';
 import { NodeIcon, SearchResultItem } from 'bh-shared-ui';
 import { getEmptyResultsText, getKeywordAndTypeValues, SearchResult, useSearch } from 'src/hooks/useSearch';
-import { AppState, useAppDispatch } from 'src/store';
-import {
-    destinationNodeEdited,
-    destinationNodeSelected,
-    sourceNodeEdited,
-    sourceNodeSelected,
-} from 'src/ducks/searchbar/actions';
-import { PRIMARY_SEARCH, PATHFINDING_SEARCH, SearchNodeType } from 'src/ducks/searchbar/types';
-import { useSelector } from 'react-redux';
+import { SearchNodeType } from 'src/ducks/searchbar/types';
 
 const ExploreSearchCombobox: React.FC<{
     labelText: string;
     disabled?: boolean;
-    searchType: typeof PRIMARY_SEARCH | typeof PATHFINDING_SEARCH;
-}> = ({ labelText, disabled = false, searchType }) => {
+    inputValue: string;
+    selectedItem: SearchNodeType | null;
+    handleNodeEdited: (edit: string) => any;
+    handleNodeSelected: (selection: SearchNodeType) => any;
+}> = ({ labelText, disabled = false, inputValue, selectedItem, handleNodeEdited, handleNodeSelected }) => {
     const theme = useTheme();
-    const dispatch = useAppDispatch();
-
-    const { primary, secondary } = useSelector((state: AppState) => state.search);
-    const inputValue = searchType === PRIMARY_SEARCH ? primary.searchTerm : secondary.searchTerm;
-    const selectedItem = searchType === PRIMARY_SEARCH ? primary.value : secondary.value;
 
     const { keyword, type } = getKeywordAndTypeValues(inputValue);
     const { data, error, isError, isLoading, isFetching } = useSearch(keyword, type);
@@ -54,22 +44,14 @@ const ExploreSearchCombobox: React.FC<{
                     type !== useCombobox.stateChangeTypes.ItemClick &&
                     type !== useCombobox.stateChangeTypes.InputKeyDownEnter
                 ) {
-                    if (searchType === PRIMARY_SEARCH) {
-                        dispatch(sourceNodeEdited(inputValue));
-                    } else if (searchType === PATHFINDING_SEARCH) {
-                        dispatch(destinationNodeEdited(inputValue));
-                    }
+                    handleNodeEdited(inputValue);
                 }
             },
             inputValue,
             selectedItem,
             onSelectedItemChange: ({ type, selectedItem }) => {
                 if (selectedItem) {
-                    if (searchType === PRIMARY_SEARCH) {
-                        dispatch(sourceNodeSelected(selectedItem as SearchNodeType));
-                    } else if (searchType === PATHFINDING_SEARCH) {
-                        dispatch(destinationNodeSelected(selectedItem as SearchNodeType));
-                    }
+                    handleNodeSelected(selectedItem as SearchNodeType);
                 }
             },
             itemToString: (item) => (item ? item.name || item.objectid : ''),
