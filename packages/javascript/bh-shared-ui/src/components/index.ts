@@ -131,3 +131,6 @@ export { default as DropdownSelector } from './DropdownSelector';
 
 export * from './AssetGroupEdit';
 export { default as AssetGroupEdit } from './AssetGroupEdit';
+
+export * from './GroupManagementContent';
+export { default as GroupManagementContent } from './GroupManagementContent';
