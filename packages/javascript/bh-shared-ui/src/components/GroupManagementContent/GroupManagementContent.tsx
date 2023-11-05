@@ -8,15 +8,14 @@ import { faExternalLink } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import AssetGroupEdit from '../AssetGroupEdit';
 import AssetGroupMemberList from '../AssetGroupMemberList';
+import { SelectedDomain } from './types';
 
-type SelectedDomain = {
-    id: string | null;
-    type: string | null;
-};
-
+// Top level layout and shared logic for the Group Management page
 const GroupManagementContent: FC<{
     globalDomain: SelectedDomain;
     showExplorePageLink: boolean;
+    tierZeroLabel: string;
+    tierZeroTag: string;
     entityPanelComponent: ReactNode;
     generateDomainSelectorComponent: (props: any) => ReactNode;
     onShowNodeInExplore: () => void;
@@ -25,6 +24,8 @@ const GroupManagementContent: FC<{
 }> = ({
     globalDomain,
     showExplorePageLink,
+    tierZeroLabel,
+    tierZeroTag,
     entityPanelComponent,
     generateDomainSelectorComponent,
     onShowNodeInExplore,
@@ -39,7 +40,7 @@ const GroupManagementContent: FC<{
 
     const setInitialGroup = (data: AssetGroup[]) => {
         if (!selectedAssetGroup && data.length) {
-            const initialGroup = data.find((group) => group.tag === 'admin_tier_zero') || data[0];
+            const initialGroup = data.find((group) => group.tag === tierZeroTag) || data[0];
             setSelectedAssetGroup(initialGroup);
         }
     };
@@ -63,6 +64,12 @@ const GroupManagementContent: FC<{
         };
     };
 
+    const getAssetGroupSelectorLabel = (): string => {
+        if (selectedAssetGroup?.tag === tierZeroTag) return tierZeroLabel;
+        return selectedAssetGroup?.name || 'Select a Group';
+    };
+
+    // Start building a filter query for members that gets passed down to AssetGroupMemberList to make the request
     useEffect(() => {
         const filterDomain = selectedDomain || globalDomain;
         const filter: AssetGroupMemberParams = {};
@@ -88,7 +95,7 @@ const GroupManagementContent: FC<{
                             <Grid item xs={9}>
                                 <DropdownSelector
                                     options={listAssetGroups.data ? mapAssetGroups(listAssetGroups.data) : []}
-                                    selectedText={selectedAssetGroup?.name || 'Loading...'}
+                                    selectedText={getAssetGroupSelectorLabel()}
                                     onChange={handleAssetGroupSelectorChange}
                                     fullWidth
                                 />
@@ -111,6 +118,7 @@ const GroupManagementContent: FC<{
                     />
                 </Grid>
                 <Grid item xs={4} md={3} height={'100%'}>
+                    {/* CSS calc accounts for the height of the link button */}
                     <Box sx={{ maxHeight: 'calc(100% - 45px)', overflow: 'auto' }}>{entityPanelComponent}</Box>
                     {showExplorePageLink && (
                         <Button
