@@ -89,13 +89,6 @@ export const sourceNodeEdited = (searchTerm: string): types.SourceNodeEditedActi
     };
 };
 
-export const sourceNodeSuggested = (node: types.SearchNodeType | null): types.SourceNodeSuggestedAction => {
-    return {
-        type: types.SOURCE_NODE_SUGGESTED,
-        node,
-    };
-};
-
 export const sourceNodeSelected = (node: types.SearchNodeType | null): types.SourceNodeSelectedAction => {
     return {
         type: types.SOURCE_NODE_SELECTED,
@@ -107,13 +100,6 @@ export const destinationNodeEdited = (searchTerm: string): types.DestinationNode
     return {
         type: types.DESTINATION_NODE_EDITED,
         searchTerm,
-    };
-};
-
-export const destinationNodeSuggested = (node: types.SearchNodeType | null): types.DestinationNodeSuggestedAction => {
-    return {
-        type: types.DESTINATION_NODE_SUGGESTED,
-        node,
     };
 };
 

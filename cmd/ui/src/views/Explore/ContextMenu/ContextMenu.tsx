@@ -18,7 +18,7 @@ import { Menu, MenuItem } from '@mui/material';
 import { useNotifications } from 'bh-shared-ui';
 import { FC, useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { destinationNodeSuggested, sourceNodeSuggested } from 'src/ducks/searchbar/actions';
+import { destinationNodeSelected, sourceNodeSelected, tabChanged } from 'src/ducks/searchbar/actions';
 import { AppState, useAppDispatch } from 'src/store';
 
 const ContextMenu: FC<{ anchorPosition: { x: number; y: number } }> = ({ anchorPosition }) => {
@@ -41,8 +41,9 @@ const ContextMenu: FC<{ anchorPosition: { x: number; y: number } }> = ({ anchorP
 
     const handleSetStartingNode = () => {
         if (selectedNode) {
+            dispatch(tabChanged('secondary'));
             dispatch(
-                sourceNodeSuggested({
+                sourceNodeSelected({
                     name: selectedNode.name,
                     objectid: selectedNode.id,
                     type: selectedNode.type,
@@ -53,8 +54,9 @@ const ContextMenu: FC<{ anchorPosition: { x: number; y: number } }> = ({ anchorP
 
     const handleSetEndingNode = () => {
         if (selectedNode) {
+            dispatch(tabChanged('secondary'));
             dispatch(
-                destinationNodeSuggested({
+                destinationNodeSelected({
                     name: selectedNode.name,
                     objectid: selectedNode.id,
                     type: selectedNode.type,

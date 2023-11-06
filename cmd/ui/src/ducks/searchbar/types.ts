@@ -27,11 +27,9 @@ const SAVE_PATH_FILTERS = 'app/search/SAVE_PATH_FILTERS';
 export const TAB_CHANGED = 'app/search/TAB_CHANGED';
 
 export const SOURCE_NODE_EDITED = 'app/search/SOURCE_NODE_EDITED';
-export const SOURCE_NODE_SUGGESTED = 'app/search/SOURCE_NODE_SUGGESTED';
 export const SOURCE_NODE_SELECTED = 'app/search/SOURCE_NODE_SELECTED';
 
 export const DESTINATION_NODE_EDITED = 'app/search/DESTINATION_NODE_EDITED';
-export const DESTINATION_NODE_SUGGESTED = 'app/search/DESTINATION_NODE_SUGGESTED';
 export const DESTINATION_NODE_SELECTED = 'app/search/DESTINATION_NODE_SELECTED';
 
 const PRIMARY_SEARCH = 'primary';
@@ -122,11 +120,6 @@ export interface CypherQueryEditedAction {
     searchTerm: string;
 }
 
-export interface SourceNodeSuggestedAction {
-    type: typeof SOURCE_NODE_SUGGESTED;
-    node: SearchNodeType | null;
-}
-
 export interface SourceNodeSelectedAction {
     type: typeof SOURCE_NODE_SELECTED;
     node: SearchNodeType | null;
@@ -135,10 +128,6 @@ export interface SourceNodeSelectedAction {
 export interface SourceNodeEditedAction {
     type: typeof SOURCE_NODE_EDITED;
     searchTerm: string;
-}
-export interface DestinationNodeSuggestedAction {
-    type: typeof DESTINATION_NODE_SUGGESTED;
-    node: SearchNodeType | null;
 }
 
 export interface DestinationNodeSelectedAction {
@@ -160,10 +149,8 @@ export type SearchbarTargetedActionTypes = SearchFailureAction | SearchSuccessAc
 export type CypherActionTypes = CypherSearchAction | CypherQueryEditedAction;
 
 export type NodeActionTypes =
-    | SourceNodeSuggestedAction
     | SourceNodeSelectedAction
     | SourceNodeEditedAction
-    | DestinationNodeSuggestedAction
     | DestinationNodeSelectedAction
     | DestinationNodeEditedAction;
 

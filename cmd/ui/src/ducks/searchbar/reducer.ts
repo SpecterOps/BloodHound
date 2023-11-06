@@ -104,19 +104,6 @@ const searchReducer = (state = initialSearchState, action: types.SearchbarAction
                 break;
             }
 
-            case types.SOURCE_NODE_SUGGESTED: {
-                draft.activeTab = types.PATHFINDING_SEARCH;
-                draft.searchType = types.SEARCH_TYPE_EXACT;
-
-                draft.primary.value = action.node;
-
-                if (action.node) {
-                    draft.primary.searchTerm = action.node.name;
-                }
-
-                break;
-            }
-
             case types.SOURCE_NODE_SELECTED: {
                 draft.searchType = types.SEARCH_TYPE_EXACT;
 
@@ -138,18 +125,6 @@ const searchReducer = (state = initialSearchState, action: types.SearchbarAction
                 // any edits to the destination node should clear out the previously saved destination.value
                 draft.secondary.value = null;
 
-                break;
-            }
-
-            case types.DESTINATION_NODE_SUGGESTED: {
-                draft.activeTab = types.PATHFINDING_SEARCH;
-                draft.searchType = types.SEARCH_TYPE_EXACT;
-
-                draft.secondary.value = action.node;
-
-                if (action.node) {
-                    draft.secondary.searchTerm = action.node.name;
-                }
                 break;
             }
 

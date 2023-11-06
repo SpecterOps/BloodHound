@@ -47,13 +47,13 @@ describe('ContextMenu', async () => {
 
     it('handles setting a start node', async () => {
         const user = userEvent.setup();
-        const sourceNodeSuggestedSpy = vi.spyOn(actions, 'sourceNodeSuggested');
+        const sourceNodeSelectedSpy = vi.spyOn(actions, 'sourceNodeSelected');
 
         const startNodeOption = screen.getByRole('menuitem', { name: /set as starting node/i });
         await user.click(startNodeOption);
 
-        expect(sourceNodeSuggestedSpy).toBeCalledTimes(1);
-        expect(sourceNodeSuggestedSpy).toHaveBeenCalledWith({
+        expect(sourceNodeSelectedSpy).toBeCalledTimes(1);
+        expect(sourceNodeSelectedSpy).toHaveBeenCalledWith({
             name: 'foo',
             objectid: '1234',
             type: 'User',
@@ -62,13 +62,13 @@ describe('ContextMenu', async () => {
 
     it('handles setting a end node', async () => {
         const user = userEvent.setup();
-        const destinationNodeSuggestedSpy = vi.spyOn(actions, 'destinationNodeSuggested');
+        const destinationNodeSelectedSpy = vi.spyOn(actions, 'destinationNodeSelected');
 
         const startNodeOption = screen.getByRole('menuitem', { name: /set as ending node/i });
         await user.click(startNodeOption);
 
-        expect(destinationNodeSuggestedSpy).toBeCalledTimes(1);
-        expect(destinationNodeSuggestedSpy).toHaveBeenCalledWith({
+        expect(destinationNodeSelectedSpy).toBeCalledTimes(1);
+        expect(destinationNodeSelectedSpy).toHaveBeenCalledWith({
             name: 'foo',
             objectid: '1234',
             type: 'User',
