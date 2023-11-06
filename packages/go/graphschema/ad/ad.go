@@ -157,10 +157,18 @@ const (
 	RequiresManagerApproval                Property = "requiresmanagerapproval"
 	AuthenticationEnabled                  Property = "authenticationenabled"
 	EnrolleeSuppliesSubject                Property = "enrolleesuppliessubject"
+	CertificateApplicationPolicy           Property = "certificateapplicationpolicy"
+	CertificateNameFlag                    Property = "certificatenameflag"
+	EffectiveEKUs                          Property = "effectiveekus"
+	EnrollmentFlag                         Property = "enrollmentflag"
+	NoSecurityExtension                    Property = "nosecurityextension"
+	RenewalPeriod                          Property = "renewalperiod"
+	ValidityPeriod                         Property = "validityperiod"
+	OID                                    Property = "oid"
 )
 
 func AllProperties() []Property {
-	return []Property{AdminCount, CASecurityCollected, CAName, CertChain, CertName, CertThumbprint, CertThumbprints, EnrollmentAgentRestrictionsCollected, IsUserSpecifiesSanEnabledCollected, HasBasicConstraints, BasicConstraintPathLength, DNSHostname, CrossCertificatePair, DistinguishedName, DomainFQDN, DomainSID, Sensitive, HighValue, BlocksInheritance, IsACL, IsACLProtected, IsDeleted, Enforced, Department, HasCrossCertificatePair, HasSPN, UnconstrainedDelegation, LastLogon, LastLogonTimestamp, IsPrimaryGroup, HasLAPS, DontRequirePreAuth, LogonType, HasURA, PasswordNeverExpires, PasswordNotRequired, FunctionalLevel, TrustType, SidFiltering, TrustedToAuth, SamAccountName, CertificateMappingMethodsRaw, CertificateMappingMethods, StrongCertificateBindingEnforcementRaw, StrongCertificateBindingEnforcement, EKUs, SubjectAltRequireUPN, AuthorizedSignatures, ApplicationPolicies, SchemaVersion, RequiresManagerApproval, AuthenticationEnabled, EnrolleeSuppliesSubject}
+	return []Property{AdminCount, CASecurityCollected, CAName, CertChain, CertName, CertThumbprint, CertThumbprints, EnrollmentAgentRestrictionsCollected, IsUserSpecifiesSanEnabledCollected, HasBasicConstraints, BasicConstraintPathLength, DNSHostname, CrossCertificatePair, DistinguishedName, DomainFQDN, DomainSID, Sensitive, HighValue, BlocksInheritance, IsACL, IsACLProtected, IsDeleted, Enforced, Department, HasCrossCertificatePair, HasSPN, UnconstrainedDelegation, LastLogon, LastLogonTimestamp, IsPrimaryGroup, HasLAPS, DontRequirePreAuth, LogonType, HasURA, PasswordNeverExpires, PasswordNotRequired, FunctionalLevel, TrustType, SidFiltering, TrustedToAuth, SamAccountName, CertificateMappingMethodsRaw, CertificateMappingMethods, StrongCertificateBindingEnforcementRaw, StrongCertificateBindingEnforcement, EKUs, SubjectAltRequireUPN, AuthorizedSignatures, ApplicationPolicies, SchemaVersion, RequiresManagerApproval, AuthenticationEnabled, EnrolleeSuppliesSubject, CertificateApplicationPolicy, CertificateNameFlag, EffectiveEKUs, EnrollmentFlag, NoSecurityExtension, RenewalPeriod, ValidityPeriod, OID}
 }
 func ParseProperty(source string) (Property, error) {
 	switch source {
@@ -270,6 +278,22 @@ func ParseProperty(source string) (Property, error) {
 		return AuthenticationEnabled, nil
 	case "enrolleesuppliessubject":
 		return EnrolleeSuppliesSubject, nil
+	case "certificateapplicationpolicy":
+		return CertificateApplicationPolicy, nil
+	case "certificatenameflag":
+		return CertificateNameFlag, nil
+	case "effectiveekus":
+		return EffectiveEKUs, nil
+	case "enrollmentflag":
+		return EnrollmentFlag, nil
+	case "nosecurityextension":
+		return NoSecurityExtension, nil
+	case "renewalperiod":
+		return RenewalPeriod, nil
+	case "validityperiod":
+		return ValidityPeriod, nil
+	case "oid":
+		return OID, nil
 	default:
 		return "", errors.New("Invalid enumeration value: " + source)
 	}
@@ -382,6 +406,22 @@ func (s Property) String() string {
 		return string(AuthenticationEnabled)
 	case EnrolleeSuppliesSubject:
 		return string(EnrolleeSuppliesSubject)
+	case CertificateApplicationPolicy:
+		return string(CertificateApplicationPolicy)
+	case CertificateNameFlag:
+		return string(CertificateNameFlag)
+	case EffectiveEKUs:
+		return string(EffectiveEKUs)
+	case EnrollmentFlag:
+		return string(EnrollmentFlag)
+	case NoSecurityExtension:
+		return string(NoSecurityExtension)
+	case RenewalPeriod:
+		return string(RenewalPeriod)
+	case ValidityPeriod:
+		return string(ValidityPeriod)
+	case OID:
+		return string(OID)
 	default:
 		panic("Invalid enumeration case: " + string(s))
 	}
@@ -479,11 +519,11 @@ func (s Property) Name() string {
 	case StrongCertificateBindingEnforcement:
 		return "Strong Certificate Binding Enforcement"
 	case EKUs:
-		return "EKUs"
+		return "Enhanced Key Usage"
 	case SubjectAltRequireUPN:
-		return "Subject Alt Require UPN"
+		return "Subject Alternative Name Require UPN"
 	case AuthorizedSignatures:
-		return "Authorized Signatures"
+		return "Authorized Signatures Required"
 	case ApplicationPolicies:
 		return "Application Policies"
 	case SchemaVersion:
@@ -493,7 +533,23 @@ func (s Property) Name() string {
 	case AuthenticationEnabled:
 		return "Authentication Enabled"
 	case EnrolleeSuppliesSubject:
-		return "Enrollee Suppliess Subject"
+		return "Enrollee Supplies Subject"
+	case CertificateApplicationPolicy:
+		return "Certificate Application Policies"
+	case CertificateNameFlag:
+		return "Certificate Name Flags"
+	case EffectiveEKUs:
+		return "Effective EKUs"
+	case EnrollmentFlag:
+		return "Enrollment Flags"
+	case NoSecurityExtension:
+		return "No Security Extension"
+	case RenewalPeriod:
+		return "Renewal Period"
+	case ValidityPeriod:
+		return "Validity Period"
+	case OID:
+		return "OID"
 	default:
 		panic("Invalid enumeration case: " + string(s))
 	}
