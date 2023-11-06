@@ -271,12 +271,11 @@ func SetValue(target any, path, value string) error {
 				break
 			}
 
-			base := idx
-			lookahead := base
+			lookahead := idx
 
 			for lookahead < len(pathParts) {
 				// Make sure to add one to lookahead, as we want to get the range starting at base and going 1 or more indexes beyond it
-				remainingFullPath := strings.Join(pathParts[base:lookahead+1], "_")
+				remainingFullPath := strings.Join(pathParts[idx:lookahead+1], "_")
 
 				if taggedFieldName == remainingFullPath {
 					cursor = cursor.Field(taggedField.Field)
