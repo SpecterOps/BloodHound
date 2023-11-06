@@ -23,7 +23,7 @@ const General: FC<EdgeInfoProps> = ({ sourceName, sourceType, targetName }) => {
     return (
         <>
             <Typography variant='body2'>
-                The {typeFormat(sourceType)} {sourceName} is hosts the enrollment service for the enterprise CA {targetName}.
+                The {typeFormat(sourceType)} {sourceName} hosts the enrollment service for the enterprise CA {targetName}.
             </Typography>
             <Typography variant='body2'>
                 The Enterprise Certification Authority node is the enrollment service LDAP object for CA hosted on the computer node.
