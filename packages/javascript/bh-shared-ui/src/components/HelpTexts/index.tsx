@@ -80,6 +80,7 @@ import GenericAll from './GenericAll/GenericAll';
 import GenericWrite from './GenericWrite/GenericWrite';
 import GetChanges from './GetChanges/GetChanges';
 import GetChangesAll from './GetChangesAll/GetChangesAll';
+import GoldenCert from './GoldenCert/GoldenCert';
 import HasSIDHistory from './HasSIDHistory/HasSIDHistory';
 import HasSession from './HasSession/HasSession';
 import HostsCAService from './HostsCAService/HostsCAService';
@@ -193,6 +194,7 @@ const EdgeInfoComponents = {
     HostsCAService: HostsCAService,
     DelegatedEnrollmentAgent: DelegatedEnrollmentAgent,
     EnrollOnBehalfOf: EnrollOnBehalfOf,
+    GoldenCert: GoldenCert,
 };
 
 export default EdgeInfoComponents;
