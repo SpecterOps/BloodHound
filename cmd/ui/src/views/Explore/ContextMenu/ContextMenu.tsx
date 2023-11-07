@@ -14,13 +14,15 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Menu, MenuItem } from '@mui/material';
+import { Menu, MenuItem, Tooltip } from '@mui/material';
 import { useNotifications } from 'bh-shared-ui';
 import { FC, useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { destinationNodeSelected, sourceNodeSelected, tabChanged } from 'src/ducks/searchbar/actions';
 import { AppState, useAppDispatch } from 'src/store';
-import makeStyles from '@mui/styles/makeStyles';
+import withStyles from '@mui/styles/withStyles';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faCaretRight } from '@fortawesome/free-solid-svg-icons';
 
 const ContextMenu: FC<{ anchorPosition: { x: number; y: number } }> = ({ anchorPosition }) => {
     const dispatch = useAppDispatch();
@@ -79,46 +81,20 @@ const ContextMenu: FC<{ anchorPosition: { x: number; y: number } }> = ({ anchorP
     );
 };
 
-const useStyles = makeStyles({
-    popOverRoot: {
-        pointerEvents: 'none',
+const StyledTooltip = withStyles((theme) => ({
+    tooltip: {
+        color: 'black',
+        backgroundColor: theme.palette.common.white,
+        padding: 0,
+        paddingTop: '0.5rem',
+        paddingBottom: '0.5rem',
     },
-});
+}))(Tooltip);
 
 const CopyMenuItem = () => {
     const { addNotification } = useNotifications();
-    const styles = useStyles();
 
     const selectedNode = useSelector((state: AppState) => state.entityinfo.selectedNode);
-
-    const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
-
-    let currentlyHovering = false;
-
-    const handleOpen = (event: React.MouseEvent<HTMLElement>) => {
-        // stop propagation to parent menu
-        event.stopPropagation();
-        if (anchorEl !== event.currentTarget) {
-            setAnchorEl(event.currentTarget);
-        }
-    };
-
-    const handleClose = () => {
-        setAnchorEl(null);
-    };
-
-    const handleHover = () => {
-        currentlyHovering = true;
-    };
-
-    const hoverAway = () => {
-        currentlyHovering = false;
-        setTimeout(() => {
-            if (!currentlyHovering) {
-                handleClose();
-            }
-        }, 50);
-    };
 
     const handleDisplayName = () => {
         if (selectedNode) {
@@ -144,33 +120,19 @@ const CopyMenuItem = () => {
 
     return (
         <div>
-            <MenuItem onMouseOver={handleOpen} onClick={handleOpen} onMouseLeave={hoverAway}>
-                Copy
-            </MenuItem>
-            <Menu
-                open={Boolean(anchorEl)}
-                anchorEl={anchorEl}
-                anchorOrigin={{
-                    vertical: 'top',
-                    horizontal: 'right',
-                }}
-                transformOrigin={{
-                    vertical: 'top',
-                    horizontal: 'left',
-                }}
-                MenuListProps={{
-                    onMouseLeave: hoverAway,
-                    onMouseEnter: handleHover,
-                    style: { pointerEvents: 'auto' },
-                }}
-                onClose={handleClose}
-                PopoverClasses={{
-                    root: styles.popOverRoot,
-                }}>
-                <MenuItem onClick={handleDisplayName}>Display Name</MenuItem>
-                <MenuItem onClick={handleObjectId}>Object ID</MenuItem>
-                <MenuItem onClick={handleCypher}>Cypher</MenuItem>
-            </Menu>
+            <StyledTooltip
+                placement='right'
+                title={
+                    <>
+                        <MenuItem onClick={handleDisplayName}>Display Name</MenuItem>
+                        <MenuItem onClick={handleObjectId}>Object ID</MenuItem>
+                        <MenuItem onClick={handleCypher}>Cypher</MenuItem>
+                    </>
+                }>
+                <MenuItem sx={{ justifyContent: 'space-between' }}>
+                    Copy <FontAwesomeIcon icon={faCaretRight} />
+                </MenuItem>
+            </StyledTooltip>
         </div>
     );
 };
