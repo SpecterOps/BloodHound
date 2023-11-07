@@ -5,5 +5,3 @@ export * from './BloodHoundUIContext';
 export { default as useBloodHoundUIContext } from './useBloodHoundUIContext';
 
 export * from './types';
-
-export * from './constants';

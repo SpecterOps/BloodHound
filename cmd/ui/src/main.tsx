@@ -52,12 +52,17 @@ const main = async () => {
     ];
 
     const customComponents = {
-        Header: <CustomHeader />,
+        Header: CustomHeader,
     };
 
     const customReducers = {
-        customReducer: (state: any, action: any) => {
-            return state;
+        exampleReducer: (state: any = { key: 'value' }, action: any) => {
+            switch (action.type) {
+                case 'UPDATE_VALUE':
+                    return { ...state, key: action.value };
+                default:
+                    return state;
+            }
         },
     };
 

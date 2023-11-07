@@ -83,7 +83,11 @@ const App: React.FC = () => {
             <Box className={classes.applicationContainer}>
                 {showHeader && (
                     <Box className={classes.applicationHeader}>
-                        {bloodHoundUIContext.components?.Header || <Header />}
+                        {bloodHoundUIContext.components?.Header ? (
+                            <bloodHoundUIContext.components.Header />
+                        ) : (
+                            <Header />
+                        )}
                     </Box>
                 )}
                 <Box className={classes.applicationContent}>

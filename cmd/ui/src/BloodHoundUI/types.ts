@@ -1,5 +1,4 @@
 import { Reducer } from '@reduxjs/toolkit';
-import { OVERRIDABLE_COMPONENTS } from '.';
 
 export interface BloodHoundUIRoute {
     exact?: boolean;
@@ -10,6 +9,6 @@ export interface BloodHoundUIRoute {
 
 export interface BloodHoundUIProps {
     routes?: (baseRoutes: BloodHoundUIRoute[]) => BloodHoundUIRoute[];
-    components?: Record<keyof typeof OVERRIDABLE_COMPONENTS, React.ReactNode>;
+    components?: Record<string, React.FC>;
     reducers?: Record<string, Reducer>;
 }

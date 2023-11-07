@@ -9,9 +9,9 @@ import { Provider } from 'react-redux';
 import { unstable_HistoryRouter as BrowserRouter } from 'react-router-dom';
 import App from '../App';
 import { store } from '../store';
-import {} from './BloodHoundUIContext';
 
 import { BloodHoundUIContextProvider, BloodHoundUIProps } from '.';
+import { useEffect } from 'react';
 
 declare module '@mui/styles/defaultTheme' {
     // eslint-disable-next-line @typescript-eslint/no-empty-interface
@@ -144,9 +144,19 @@ const theme = createTheme({
 
 const queryClient = new QueryClient();
 
-const BloodHoundUI = ({ routes, components }: BloodHoundUIProps) => {
+const BloodHoundUI = ({ routes, components, reducers }: BloodHoundUIProps) => {
+    useEffect(() => {
+        if (reducers !== undefined) {
+            for (const [key, reducer] of Object.entries(reducers)) {
+                store.reducerManager.add(key, reducer);
+            }
+        }
+        return () => {
+            store.reducerManager.removeAll();
+        };
+    }, [reducers]);
     return (
-        <BloodHoundUIContextProvider value={{ routes, components }}>
+        <BloodHoundUIContextProvider value={{ routes, components, reducers }}>
             <Provider store={store}>
                 <QueryClientProvider client={queryClient}>
                     <ReactQueryDevtools />
