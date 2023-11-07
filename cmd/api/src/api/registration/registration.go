@@ -26,7 +26,6 @@ import (
 	"github.com/specterops/bloodhound/src/api/router"
 	"github.com/specterops/bloodhound/src/api/static"
 	v2 "github.com/specterops/bloodhound/src/api/v2"
-	"github.com/specterops/bloodhound/src/auth"
 	"github.com/specterops/bloodhound/src/config"
 	"github.com/specterops/bloodhound/src/daemons/datapipe"
 	"github.com/specterops/bloodhound/src/database"
@@ -35,11 +34,6 @@ import (
 func RegisterFossGlobalMiddleware(routerInst *router.Router, cfg config.Configuration, authenticator api.Authenticator) {
 	// Set up the middleware stack
 	routerInst.UsePrerouting(middleware.ContextMiddleware)
-
-	if cfg.EnableAPILogging {
-		routerInst.UsePrerouting(middleware.LoggingMiddleware(cfg, auth.NewIdentityResolver()))
-	}
-
 	routerInst.UsePrerouting(middleware.CORSMiddleware())
 
 	routerInst.UsePostrouting(

@@ -19,6 +19,7 @@ package integration
 import (
 	"context"
 	"fmt"
+	"github.com/specterops/bloodhound/src/api/middleware"
 	"net/http"
 	"time"
 
@@ -64,6 +65,10 @@ func StartBHServer(apiServerContext APIServerContext) error {
 		datapipeDaemon         = datapipe.NewDaemon(apiServerContext.Configuration, apiServerContext.DB, apiServerContext.GraphDB, apiServerContext.GraphQueryCache, time.Second)
 		authenticator          = api.NewAuthenticator(apiServerContext.Configuration, apiServerContext.DB, database.NewContextInitializer(apiServerContext.DB))
 	)
+
+	if apiServerContext.Configuration.EnableAPILogging {
+		routerInst.UsePrerouting(middleware.LoggingMiddleware(apiServerContext.Configuration, auth.NewIdentityResolver()))
+	}
 
 	registration.RegisterFossGlobalMiddleware(&routerInst, apiServerContext.Configuration, authenticator)
 	registration.RegisterFossRoutes(

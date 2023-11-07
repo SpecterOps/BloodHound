@@ -18,6 +18,7 @@ package server
 
 import (
 	"fmt"
+	"github.com/specterops/bloodhound/src/api/middleware"
 	"os"
 	"os/signal"
 	"strings"
@@ -173,6 +174,10 @@ func StartServer(cfg config.Configuration, exitC chan struct{}) error {
 			datapipeDaemon         = datapipe.NewDaemon(cfg, db, graphDB, graphQueryCache, time.Duration(cfg.DatapipeInterval)*time.Second)
 			authenticator          = api.NewAuthenticator(cfg, db, database.NewContextInitializer(db))
 		)
+
+		if cfg.EnableAPILogging {
+			routerInst.UsePrerouting(middleware.LoggingMiddleware(cfg, auth.NewIdentityResolver()))
+		}
 
 		registration.RegisterFossGlobalMiddleware(&routerInst, cfg, authenticator)
 		registration.RegisterFossRoutes(&routerInst, cfg, db, graphDB, apiCache, graphQueryCache, collectorManifests, authenticator, datapipeDaemon)
