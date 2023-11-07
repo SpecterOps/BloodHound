@@ -21,6 +21,8 @@ import { AssetGroupChangelog, AssetGroupChangelogEntry, ChangelogAction } from '
 import { AssetGroup } from 'js-client-library';
 import { getEmptyResultsText, getKeywordAndTypeValues, useDebouncedValue, useSearch } from '../../hooks';
 
+export const AUTOCOMPLETE_PLACEHOLDER = 'Add or Remove Members';
+
 const AssetGroupAutocomplete: FC<{
     assetGroup: AssetGroup;
     changelog: AssetGroupChangelog;
@@ -66,8 +68,8 @@ const AssetGroupAutocomplete: FC<{
             <TextField
                 {...params}
                 variant='outlined'
-                placeholder='Add or Remove Members'
-                aria-label='Add or Remove Members'
+                placeholder={AUTOCOMPLETE_PLACEHOLDER}
+                aria-label={AUTOCOMPLETE_PLACEHOLDER}
             />
         );
     };
