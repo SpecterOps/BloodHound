@@ -129,7 +129,7 @@ const CopyMenuItem = () => {
                         <MenuItem onClick={handleCypher}>Cypher</MenuItem>
                     </>
                 }>
-                <MenuItem sx={{ justifyContent: 'space-between' }}>
+                <MenuItem sx={{ justifyContent: 'space-between' }} onClick={(e) => e.stopPropagation()}>
                     Copy <FontAwesomeIcon icon={faCaretRight} />
                 </MenuItem>
             </StyledTooltip>

@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { act } from 'react-dom/test-utils';
-import { render, screen } from 'src/test-utils';
+import { render, screen, waitFor } from 'src/test-utils';
 import userEvent from '@testing-library/user-event';
 import ContextMenu from './ContextMenu';
 import * as actions from 'src/ducks/searchbar/actions';
@@ -60,7 +60,7 @@ describe('ContextMenu', async () => {
         });
     });
 
-    it('handles setting a end node', async () => {
+    it('handles setting an end node', async () => {
         const user = userEvent.setup();
         const destinationNodeSelectedSpy = vi.spyOn(actions, 'destinationNodeSelected');
 
@@ -79,22 +79,28 @@ describe('ContextMenu', async () => {
         const user = userEvent.setup();
 
         const copyOption = screen.getByRole('menuitem', { name: /copy/i });
-        await user.click(copyOption);
+        await user.hover(copyOption);
 
-        const displayNameOption = screen.getByRole('menuitem', { name: /display name/i });
+        const tip = await screen.findByRole('tooltip');
+        expect(tip).toBeInTheDocument();
+
+        const displayNameOption = screen.getByLabelText(/display name/i);
         expect(displayNameOption).toBeInTheDocument();
 
-        const objectIdOption = screen.getByRole('menuitem', { name: /object id/i });
+        const objectIdOption = screen.getByLabelText(/object id/i);
         expect(objectIdOption).toBeInTheDocument();
 
-        const cypherOption = screen.getByRole('menuitem', { name: /cypher/i });
+        const cypherOption = screen.getByLabelText(/cypher/i);
         expect(cypherOption).toBeInTheDocument();
 
-        // click on any submenu option to close the submenu
-        await user.click(cypherOption);
-        expect(displayNameOption).not.toBeInTheDocument();
-        expect(objectIdOption).not.toBeInTheDocument();
-        expect(cypherOption).not.toBeInTheDocument();
+        // hover off the `Copy` option in order to close the tooltip
+        await userEvent.unhover(copyOption);
+
+        await waitFor(() => {
+            expect(screen.queryByText(/display name/i)).not.toBeInTheDocument();
+            expect(screen.queryByText(/object id/i)).not.toBeInTheDocument();
+            expect(screen.queryByText(/cypher/i)).not.toBeInTheDocument();
+        });
     });
 
     it('handles copying a display name', async () => {
@@ -103,7 +109,8 @@ describe('ContextMenu', async () => {
         const copyOption = screen.getByRole('menuitem', { name: /copy/i });
         await user.click(copyOption);
 
-        const displayNameOption = screen.getByRole('menuitem', { name: /display name/i });
+        // the tooltip container and the menu item for `display name` have the same accesible name, so return the second element here (which is the menu item)
+        const displayNameOption = screen.getAllByRole('menuitem', { name: /display name/i })[1];
         await user.click(displayNameOption);
 
         const clipboardText = await navigator.clipboard.readText();
