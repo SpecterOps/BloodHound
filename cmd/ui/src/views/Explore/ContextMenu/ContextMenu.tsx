@@ -20,6 +20,7 @@ import { FC, useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { destinationNodeSelected, sourceNodeSelected, tabChanged } from 'src/ducks/searchbar/actions';
 import { AppState, useAppDispatch } from 'src/store';
+import makeStyles from '@mui/styles/makeStyles';
 
 const ContextMenu: FC<{ anchorPosition: { x: number; y: number } }> = ({ anchorPosition }) => {
     const dispatch = useAppDispatch();
@@ -68,7 +69,7 @@ const ContextMenu: FC<{ anchorPosition: { x: number; y: number } }> = ({ anchorP
     return (
         <Menu
             open={open}
-            anchorPosition={{ left: anchorPosition?.x || 0, top: anchorPosition?.y || 0 }}
+            anchorPosition={{ left: anchorPosition?.x + 10 || 0, top: anchorPosition?.y || 0 }}
             anchorReference='anchorPosition'
             onClick={handleClick}>
             <MenuItem onClick={handleSetStartingNode}>Set as starting node</MenuItem>
@@ -78,23 +79,46 @@ const ContextMenu: FC<{ anchorPosition: { x: number; y: number } }> = ({ anchorP
     );
 };
 
+const useStyles = makeStyles({
+    popOverRoot: {
+        pointerEvents: 'none',
+    },
+});
+
 const CopyMenuItem = () => {
     const { addNotification } = useNotifications();
+    const styles = useStyles();
 
-    const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-    const open = Boolean(anchorEl);
+    const selectedNode = useSelector((state: AppState) => state.entityinfo.selectedNode);
 
-    const handleMenuOpen = (event: React.MouseEvent<HTMLLIElement>) => {
-        // stop propagation so that parent menu click event one level up doesn't fire
+    const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
+
+    let currentlyHovering = false;
+
+    const handleOpen = (event: React.MouseEvent<HTMLElement>) => {
+        // stop propagation to parent menu
         event.stopPropagation();
-        setAnchorEl(event.currentTarget);
+        if (anchorEl !== event.currentTarget) {
+            setAnchorEl(event.currentTarget);
+        }
     };
 
-    const handleCopyMenuClick = () => {
+    const handleClose = () => {
         setAnchorEl(null);
     };
 
-    const selectedNode = useSelector((state: AppState) => state.entityinfo.selectedNode);
+    const handleHover = () => {
+        currentlyHovering = true;
+    };
+
+    const hoverAway = () => {
+        currentlyHovering = false;
+        setTimeout(() => {
+            if (!currentlyHovering) {
+                handleClose();
+            }
+        }, 50);
+    };
 
     const handleDisplayName = () => {
         if (selectedNode) {
@@ -119,10 +143,12 @@ const CopyMenuItem = () => {
     };
 
     return (
-        <>
-            <MenuItem onClick={handleMenuOpen}>Copy</MenuItem>
+        <div>
+            <MenuItem onMouseOver={handleOpen} onClick={handleOpen} onMouseLeave={hoverAway}>
+                Copy
+            </MenuItem>
             <Menu
-                open={open}
+                open={Boolean(anchorEl)}
                 anchorEl={anchorEl}
                 anchorOrigin={{
                     vertical: 'top',
@@ -132,12 +158,20 @@ const CopyMenuItem = () => {
                     vertical: 'top',
                     horizontal: 'left',
                 }}
-                onClick={handleCopyMenuClick}>
+                MenuListProps={{
+                    onMouseLeave: hoverAway,
+                    onMouseEnter: handleHover,
+                    style: { pointerEvents: 'auto' },
+                }}
+                onClose={handleClose}
+                PopoverClasses={{
+                    root: styles.popOverRoot,
+                }}>
                 <MenuItem onClick={handleDisplayName}>Display Name</MenuItem>
                 <MenuItem onClick={handleObjectId}>Object ID</MenuItem>
                 <MenuItem onClick={handleCypher}>Cypher</MenuItem>
             </Menu>
-        </>
+        </div>
     );
 };
 
