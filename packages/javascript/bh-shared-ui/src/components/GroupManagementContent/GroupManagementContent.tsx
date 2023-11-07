@@ -55,7 +55,7 @@ const GroupManagementContent: FC<{
     const [filterParams, setFilterParams] = useState<AssetGroupMemberParams>({});
 
     const setInitialGroup = (data: AssetGroup[]) => {
-        if (!selectedAssetGroup && data.length) {
+        if (!selectedAssetGroup && data?.length) {
             const initialGroup = data.find((group) => group.tag === tierZeroTag) || data[0];
             setSelectedAssetGroup(initialGroup);
         }
@@ -89,12 +89,12 @@ const GroupManagementContent: FC<{
     useEffect(() => {
         const filterDomain = selectedDomain || globalDomain;
         const filter: AssetGroupMemberParams = {};
-        if (filterDomain.type === 'active-directory-platform') {
+        if (filterDomain?.type === 'active-directory-platform') {
             filter.environment_kind = 'eq:Domain';
-        } else if (filterDomain.type === 'azure-platform') {
+        } else if (filterDomain?.type === 'azure-platform') {
             filter.environment_kind = 'eq:AZTenant';
         } else {
-            filter.environment_id = `eq:${filterDomain.id}`;
+            filter.environment_id = `eq:${filterDomain?.id}`;
         }
         setFilterParams(filter);
     }, [selectedDomain, globalDomain, selectedAssetGroup]);
@@ -105,7 +105,7 @@ const GroupManagementContent: FC<{
                 <Grid item xs={3} md={3}>
                     <Box component={Paper} elevation={0} marginBottom={1}>
                         <Grid container>
-                            <Grid item xs={3} display={'flex'} alignItems={'center'} paddingLeft={1}>
+                            <Grid item xs={3} display={'flex'} alignItems={'center'} paddingLeft={3}>
                                 <Typography variant='button'>Group:</Typography>
                             </Grid>
                             <Grid item xs={9}>
@@ -116,7 +116,7 @@ const GroupManagementContent: FC<{
                                     fullWidth
                                 />
                             </Grid>
-                            <Grid item xs={3} display={'flex'} alignItems={'center'} paddingLeft={1}>
+                            <Grid item xs={3} display={'flex'} alignItems={'center'} paddingLeft={3}>
                                 <Typography variant='button'>Tenant:</Typography>
                             </Grid>
                             <Grid item xs={9}>
@@ -138,6 +138,7 @@ const GroupManagementContent: FC<{
                     <Box sx={{ maxHeight: 'calc(100% - 45px)', overflow: 'auto' }}>{entityPanelComponent}</Box>
                     {showExplorePageLink && (
                         <Button
+                            data-testid='group-management_explore-link'
                             variant='contained'
                             disableElevation
                             fullWidth

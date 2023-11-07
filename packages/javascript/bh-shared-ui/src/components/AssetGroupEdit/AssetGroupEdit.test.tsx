@@ -1,13 +1,13 @@
 import { setupServer } from 'msw/node';
-import { createAssetGroup, createAssetGroupMembers, createSearchResults } from '../../mocks/factories';
+import { createMockAssetGroup, createMockAssetGroupMembers, createMockSearchResults } from '../../mocks/factories';
 import { act, fireEvent, render, waitFor } from '../../test-utils';
 import { AUTOCOMPLETE_PLACEHOLDER } from './AssetGroupAutocomplete';
 import AssetGroupEdit from './AssetGroupEdit';
 import { rest } from 'msw';
 
-const assetGroup = createAssetGroup();
-const assetGroupMembers = createAssetGroupMembers();
-const searchResults = createSearchResults();
+const assetGroup = createMockAssetGroup();
+const assetGroupMembers = createMockAssetGroupMembers();
+const searchResults = createMockSearchResults();
 
 const server = setupServer(
     rest.get('/api/v2/asset-groups/1/members', (req, res, ctx) => {

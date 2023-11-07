@@ -43,7 +43,7 @@ export const abortRequest = () => {
 
 export const formatObjectInfoFields = (props: any): EntityField[] => {
     let mappedFields: EntityField[] = [];
-    const propKeys = Object.keys(props);
+    const propKeys = Object.keys(props || {});
 
     for (let i = 0; i < propKeys.length; i++) {
         const value = props[propKeys[i]];

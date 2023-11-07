@@ -1,7 +1,7 @@
 import { AssetGroup, AssetGroupMember } from 'js-client-library';
 import { SearchResults } from '../hooks';
 
-export const createAssetGroupMembers = (): { members: AssetGroupMember[] } => {
+export const createMockAssetGroupMembers = (): { members: AssetGroupMember[] } => {
     return {
         members: [
             {
@@ -38,7 +38,7 @@ export const createAssetGroupMembers = (): { members: AssetGroupMember[] } => {
     };
 };
 
-export const createAssetGroup = (): AssetGroup => {
+export const createMockAssetGroup = (): AssetGroup => {
     return {
         id: 1,
         name: 'Admin Tier Zero',
@@ -55,7 +55,7 @@ export const createAssetGroup = (): AssetGroup => {
     };
 };
 
-export const createSearchResults = (): SearchResults => {
+export const createMockSearchResults = (): SearchResults => {
     return [
         {
             objectid: '00000-00000-00000-00001',

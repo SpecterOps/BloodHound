@@ -2,10 +2,10 @@ import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import AssetGroupMemberList from './AssetGroupMemberList';
 import { fireEvent, render, waitFor } from '../../test-utils';
-import { createAssetGroup, createAssetGroupMembers } from '../../mocks/factories';
+import { createMockAssetGroup, createMockAssetGroupMembers } from '../../mocks/factories';
 
-const assetGroup = createAssetGroup();
-const assetGroupMembers = createAssetGroupMembers();
+const assetGroup = createMockAssetGroup();
+const assetGroupMembers = createMockAssetGroupMembers();
 
 const server = setupServer(
     rest.get('/api/v2/asset-groups/1/members', (req, res, ctx) => {

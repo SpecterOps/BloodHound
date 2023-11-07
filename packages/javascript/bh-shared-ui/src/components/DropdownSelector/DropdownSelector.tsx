@@ -14,28 +14,27 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { Box, Button, MenuItem, Popover, Tooltip, Typography } from "@mui/material";
-import { FC, useState } from "react";
-import { DropdownOption } from "./types";
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { Box, Button, MenuItem, Popover, Tooltip, Typography } from '@mui/material';
+import { FC, useState } from 'react';
+import { DropdownOption } from './types';
 
 const DropdownSelector: FC<{
-    options: DropdownOption[],
-    selectedText: string,
-    fullWidth?: boolean,
-    onChange: (selection: DropdownOption) => void,
+    options: DropdownOption[];
+    selectedText: string;
+    fullWidth?: boolean;
+    onChange: (selection: DropdownOption) => void;
 }> = ({ options, selectedText, fullWidth, onChange }) => {
-
     const [anchorEl, setAnchorEl] = useState(null);
     const open = Boolean(anchorEl);
-    
+
     const handleClick = (e: any) => {
         setAnchorEl(e.currentTarget);
-    }
+    };
 
     const handleClose = () => {
         setAnchorEl(null);
-    }
+    };
 
     return (
         <Box p={1}>
@@ -51,7 +50,7 @@ const DropdownSelector: FC<{
                 disableElevation
                 color='primary'
                 onClick={handleClick}
-                data-testid='data-quality_context-selector'>
+                data-testid='dropdown_context-selector'>
                 {selectedText}
             </Button>
             <Popover
@@ -66,8 +65,8 @@ const DropdownSelector: FC<{
                     vertical: 'top',
                     horizontal: 'center',
                 }}
-                data-testid='data-quality_context-selector-popover'>
-                {options.map(option => {
+                data-testid='dropdown_context-selector-popover'>
+                {options.map((option) => {
                     return (
                         <MenuItem
                             style={{
@@ -93,18 +92,19 @@ const DropdownSelector: FC<{
                                     {option.value}
                                 </Typography>
                             </Tooltip>
-                            {option.icon &&
+                            {option.icon && (
                                 <FontAwesomeIcon
                                     style={{ width: '10%', alignSelf: 'center' }}
                                     icon={option.icon}
                                     size='sm'
                                 />
-                            }
+                            )}
                         </MenuItem>
-                    )})}
-                </Popover>
-            </Box>
-    )
-}
+                    );
+                })}
+            </Popover>
+        </Box>
+    );
+};
 
 export default DropdownSelector;
