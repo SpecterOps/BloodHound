@@ -51,7 +51,7 @@ interface SigmaChartProps {
     onClickEdge: (id: string, relatedFindingType?: string | null) => void;
     onClickStage: () => void;
     edgeReducer: (edge: string, data: Attributes, graph: AbstractGraph) => Attributes;
-    anchorPosition: any;
+    anchorPosition: { x: number; y: number };
     onRightClickNode: (event: SigmaNodeEventPayload) => void;
 }
 

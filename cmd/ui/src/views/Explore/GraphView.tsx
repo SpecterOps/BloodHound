@@ -67,7 +67,7 @@ const GraphView: FC = () => {
     const [currentSearchOpen, toggleCurrentSearch] = useToggle(false);
     const { data, isLoading, isError } = useAvailableDomains();
 
-    const [anchorPosition, setAnchorPosition] = useState<{ x: number; y: number } | null>(null);
+    const [anchorPosition, setAnchorPosition] = useState<{ x: number; y: number } | undefined>(undefined);
 
     useEffect(() => {
         let items: any = graphState.chartProps.items;

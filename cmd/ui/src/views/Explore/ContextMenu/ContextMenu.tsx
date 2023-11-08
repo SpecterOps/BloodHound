@@ -24,7 +24,7 @@ import withStyles from '@mui/styles/withStyles';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCaretRight } from '@fortawesome/free-solid-svg-icons';
 
-const ContextMenu: FC<{ anchorPosition: { x: number; y: number } }> = ({ anchorPosition }) => {
+const ContextMenu: FC<{ anchorPosition?: { x: number; y: number } }> = ({ anchorPosition }) => {
     const dispatch = useAppDispatch();
     const [open, setOpen] = useState(false);
 
@@ -71,7 +71,7 @@ const ContextMenu: FC<{ anchorPosition: { x: number; y: number } }> = ({ anchorP
     return (
         <Menu
             open={open}
-            anchorPosition={{ left: anchorPosition?.x + 10 || 0, top: anchorPosition?.y || 0 }}
+            anchorPosition={{ left: anchorPosition?.x || 0 + 10, top: anchorPosition?.y || 0 }}
             anchorReference='anchorPosition'
             onClick={handleClick}>
             <MenuItem onClick={handleSetStartingNode}>Set as starting node</MenuItem>
