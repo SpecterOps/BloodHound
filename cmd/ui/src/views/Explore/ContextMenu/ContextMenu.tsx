@@ -81,15 +81,20 @@ const ContextMenu: FC<{ anchorPosition?: { x: number; y: number } }> = ({ anchor
     );
 };
 
-const StyledTooltip = withStyles((theme) => ({
-    tooltip: {
-        color: 'black',
-        backgroundColor: theme.palette.common.white,
-        padding: 0,
-        paddingTop: '0.5rem',
-        paddingBottom: '0.5rem',
-    },
-}))(Tooltip);
+const StyledTooltip = withStyles((theme) => {
+    console.log(theme);
+    return {
+        tooltip: {
+            color: 'black',
+            backgroundColor: theme.palette.common.white,
+            padding: 0,
+            paddingTop: '0.5rem',
+            paddingBottom: '0.5rem',
+            marginLeft: '2px',
+            boxShadow: theme.shadows[8],
+        },
+    };
+})(Tooltip);
 
 const CopyMenuItem = () => {
     const { addNotification } = useNotifications();
@@ -121,6 +126,7 @@ const CopyMenuItem = () => {
     return (
         <div>
             <StyledTooltip
+                sx={{ boxShadow: 3 }}
                 placement='right'
                 title={
                     <>
