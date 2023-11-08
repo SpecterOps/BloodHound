@@ -14,8 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import {FC} from "react";
-import {Typography} from "@mui/material";
+import { FC } from 'react';
+import { Typography } from '@mui/material';
 
 const Details: FC = () => {
     return (
@@ -25,7 +25,7 @@ const Details: FC = () => {
                 different objects. All objects involved in the creation of this relationship are listed here:
             </Typography>
         </>
-    )
-}
+    );
+};
 
 export default Details;

@@ -14,33 +14,37 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import {FC} from 'react';
-import {Link, Box} from '@mui/material';
+import { FC } from 'react';
+import { Link, Box } from '@mui/material';
 
 const References: FC = () => {
     return (
-        <Box sx={{overflowX: 'auto'}}>
-            <Link target='_blank' rel='noopener'
-                  href='https://specterops.io/wp-content/uploads/sites/3/2022/06/Certified_Pre-Owned.pdf'>
+        <Box sx={{ overflowX: 'auto' }}>
+            <Link
+                target='_blank'
+                rel='noopener'
+                href='https://specterops.io/wp-content/uploads/sites/3/2022/06/Certified_Pre-Owned.pdf'>
                 https://specterops.io/wp-content/uploads/sites/3/2022/06/Certified_Pre-Owned.pdf
             </Link>
-            <br/>
-            <Link target='_blank' rel='noopener'
-                  href='https://book.hacktricks.xyz/windows-hardening/active-directory-methodology/ad-certificates/domain-escalation#misconfigured-certificate-templates-esc1'>
+            <br />
+            <Link
+                target='_blank'
+                rel='noopener'
+                href='https://book.hacktricks.xyz/windows-hardening/active-directory-methodology/ad-certificates/domain-escalation#misconfigured-certificate-templates-esc1'>
                 https://book.hacktricks.xyz/windows-hardening/active-directory-methodology/ad-certificates/domain-escalation#misconfigured-certificate-templates-esc1
             </Link>
-            <br/>
+            <br />
             <Link
                 target='_blank'
                 rel='noopener'
                 href='https://hideandsec.sh/books/cheatsheets-82c/page/active-directory-certificate-services'>
                 https://hideandsec.sh/books/cheatsheets-82c/page/active-directory-certificate-services
             </Link>
-            <br/>
+            <br />
             <Link target='_blank' rel='noopener' href='https://github.com/ly4k/Certipy'>
                 https://github.com/ly4k/Certipy
             </Link>
-            <br/>
+            <br />
             <Link target='_blank' rel='noopener' href='https://github.com/GhostPack/Rubeus'>
                 https://github.com/GhostPack/Rubeus
             </Link>

