@@ -17,25 +17,6 @@
 import { EdgeCheckboxType } from 'src/views/Explore/ExploreSearch/EdgeFilteringDialog';
 import * as types from './types';
 
-export const searchSuccessAction = (
-    results: types.SearchNodeType[],
-    target: types.SearchTargetType
-): types.SearchbarActionTypes => {
-    return {
-        type: types.SEARCH_SUCCESS,
-        results,
-        target,
-    };
-};
-
-export const searchFailAction = (error: string, target: types.SearchTargetType): types.SearchbarActionTypes => {
-    return {
-        type: types.SEARCH_FAILURE,
-        target,
-        error,
-    };
-};
-
 export const primarySearch = () => {
     return {
         type: types.PRIMARY_SEARCH,
@@ -68,9 +49,9 @@ export const resetSearch = (): types.SearchbarActionTypes => {
     };
 };
 
-export const savePathFilters = (filters: EdgeCheckboxType[]): types.SavePathFiltersAction => {
+export const pathFiltersSaved = (filters: EdgeCheckboxType[]): types.PathFiltersSavedAction => {
     return {
-        type: types.SAVE_PATH_FILTERS,
+        type: types.PATH_FILTERS_SAVED,
         filters,
     };
 };

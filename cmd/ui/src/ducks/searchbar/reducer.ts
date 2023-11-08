@@ -58,17 +58,13 @@ export const initialSearchState: types.SearchState = {
     activeTab: 'primary',
 };
 
-function isTargetedActionType(action: types.SearchbarActionTypes): action is types.SearchbarTargetedActionTypes {
-    return (action as types.SearchbarTargetedActionTypes).target !== undefined;
-}
-
 const searchReducer = (state = initialSearchState, action: types.SearchbarActionTypes) => {
     switch (action.type) {
         case types.SEARCH_RESET: {
             return cloneDeep(initialSearchState);
         }
 
-        case types.SAVE_PATH_FILTERS: {
+        case types.PATH_FILTERS_SAVED: {
             return {
                 ...state,
                 pathFilters: [...action.filters],
@@ -139,15 +135,6 @@ const searchReducer = (state = initialSearchState, action: types.SearchbarAction
                     draft.secondary.searchTerm = '';
                 }
                 break;
-            }
-        }
-
-        if (isTargetedActionType(action)) {
-            const { target } = action;
-
-            if (action.type === types.SEARCH_SUCCESS) {
-                draft[target].loading = false;
-                draft[target].options = action.results;
             }
         }
     });

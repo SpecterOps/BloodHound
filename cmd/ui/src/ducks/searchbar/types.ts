@@ -17,12 +17,9 @@
 import { GraphNodeTypes } from 'src/ducks/graph/types';
 import { EdgeCheckboxType } from 'src/views/Explore/ExploreSearch/EdgeFilteringDialog';
 
-const SEARCH_SUCCESS = 'app/search/SUCCESS';
-const SEARCH_FAILURE = 'app/search/FAILURE';
-const SEARCH_SET_PATHFINDING = 'app/search/SET_PATHFINDING';
 const SEARCH_RESET = 'app/search/RESET';
 const CYPHER_QUERY_EDITED = 'app/search/CYPHER_QUERY_EDITED';
-const SAVE_PATH_FILTERS = 'app/search/SAVE_PATH_FILTERS';
+const PATH_FILTERS_SAVED = 'app/search/PATH_FILTERS_SAVED';
 
 export const TAB_CHANGED = 'app/search/TAB_CHANGED';
 
@@ -43,19 +40,16 @@ const SEARCH_TYPE_FUZZY = 'fuzzy';
 const SEARCH_TYPE_EXACT = 'exact';
 
 export {
-    SEARCH_SUCCESS,
-    SEARCH_FAILURE,
     PRIMARY_SEARCH,
     PATHFINDING_SEARCH,
     CYPHER_SEARCH,
     TIER_ZERO_SEARCH,
     SEARCH_ENDPOINT,
-    SEARCH_SET_PATHFINDING,
     SEARCH_TYPE_EXACT,
     SEARCH_TYPE_FUZZY,
     SEARCH_RESET,
     CYPHER_QUERY_EDITED,
-    SAVE_PATH_FILTERS,
+    PATH_FILTERS_SAVED,
 };
 
 export interface SearchBarState {
@@ -84,18 +78,6 @@ export interface SearchState {
     activeTab: SearchTargetType;
 }
 
-interface SearchSuccessAction {
-    type: typeof SEARCH_SUCCESS;
-    results: SearchNodeType[];
-    target: SearchTargetType;
-}
-
-interface SearchFailureAction {
-    type: typeof SEARCH_FAILURE;
-    target: SearchTargetType;
-    error: string;
-}
-
 interface SearchResetAction {
     type: typeof SEARCH_RESET;
 }
@@ -105,8 +87,8 @@ interface TabChangedAction {
     tabName: SearchTargetType;
 }
 
-export interface SavePathFiltersAction {
-    type: typeof SAVE_PATH_FILTERS;
+export interface PathFiltersSavedAction {
+    type: typeof PATH_FILTERS_SAVED;
     filters: EdgeCheckboxType[];
 }
 
@@ -144,8 +126,6 @@ export enum EndPoints {
     search = '/api/search',
 }
 
-export type SearchbarTargetedActionTypes = SearchFailureAction | SearchSuccessAction;
-
 export type CypherActionTypes = CypherSearchAction | CypherQueryEditedAction;
 
 export type NodeActionTypes =
@@ -155,9 +135,8 @@ export type NodeActionTypes =
     | DestinationNodeEditedAction;
 
 export type SearchbarActionTypes =
-    | SearchbarTargetedActionTypes
     | SearchResetAction
-    | SavePathFiltersAction
+    | PathFiltersSavedAction
     | TabChangedAction
     | CypherActionTypes
     | NodeActionTypes;

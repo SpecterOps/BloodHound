@@ -22,7 +22,7 @@ import { useEffect, useRef, useState } from 'react';
 import EdgeFilteringDialog, { EdgeCheckboxType } from './EdgeFilteringDialog';
 import { useSelector } from 'react-redux';
 import { AppState, useAppDispatch } from 'src/store';
-import { pathfindingSearch, savePathFilters } from 'src/ducks/searchbar/actions';
+import { pathfindingSearch, pathFiltersSaved } from 'src/ducks/searchbar/actions';
 
 const useStyles = makeStyles((theme) => ({
     pathfindingButton: {
@@ -77,7 +77,7 @@ const EdgeFilter = () => {
                     setIsOpenDialog(false);
 
                     // rollback changes made in dialog.
-                    dispatch(savePathFilters(initialFilterState.current));
+                    dispatch(pathFiltersSaved(initialFilterState.current));
                 }}
                 handleApply={() => {
                     setIsOpenDialog(false);
