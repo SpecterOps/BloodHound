@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { RequestOptions } from 'js-client-library';
-import { apiClient } from 'bh-shared-ui';
+import {ActiveDirectoryRelationshipKind, apiClient} from 'bh-shared-ui';
 import { GraphNodeTypes } from 'src/ducks/graph/types';
 import { ActiveDirectoryNodeKind, AzureNodeKind } from 'bh-shared-ui';
 import { EntityInfoDataTableProps } from './EntityInfoDataTable';
@@ -1915,3 +1915,7 @@ export const allSections: Record<GraphNodeTypes, (id: string) => EntityInfoDataT
         },
     ],
 };
+
+export const edgeInformationEndpoints : Record<ActiveDirectoryRelationshipKind, (startNode: number, endNode: number, options?: RequestOptions) => Promise<any>> = {
+    [ActiveDirectoryRelationshipKind.ADCSESC1]: (startNode: number, endNode: number, options?: RequestOptions) => apiClient.getEdgeDetails(startNode, endNode, ActiveDirectoryRelationshipKind.ADCSESC1)
+}
