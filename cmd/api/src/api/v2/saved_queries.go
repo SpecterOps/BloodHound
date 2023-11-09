@@ -38,13 +38,13 @@ func (s Resources) ListSavedQueries(response http.ResponseWriter, request *http.
 		queryParams   = request.URL.Query()
 		sortByColumns = queryParams[api.QueryParameterSortBy]
 		savedQueries  model.SavedQueries
-		user, _       = auth.GetUserFromAuthCtx(ctx2.FromRequest(request).AuthCtx)
+		user, isUser  = auth.GetUserFromAuthCtx(ctx2.FromRequest(request).AuthCtx)
 	)
 
-	// if !isUser {
-	// 	api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "No associated user found", request), response)
-	// 	return
-	// }
+	if !isUser {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "No associated user found", request), response)
+		return
+	}
 
 	for _, column := range sortByColumns {
 		var descending bool
