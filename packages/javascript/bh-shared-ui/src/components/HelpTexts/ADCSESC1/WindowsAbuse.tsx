@@ -21,9 +21,7 @@ const WindowsAbuse: FC = () => {
     return (
         <>
             <Typography variant='body2'>
-                ADCS ESC1 allows the principal to impersonate any other principal in the forest by enrolling in a
-                template, then using the subsequent certificate to perform NT authentication against a service in the
-                domain. An attacker may perform this attack in the following steps:
+                An attacker may perform this attack in the following steps:
             </Typography>
             <Typography variant='body2'>
                 <b>Step 1</b>: Use Certify to request enrollment in the affected template, specifying the affected
@@ -60,13 +58,6 @@ const WindowsAbuse: FC = () => {
                 <b>Step 5</b>: Optionally verify the TGT by listing it with the klist command:
             </Typography>
             <Typography component={'pre'}>{'klist'}</Typography>
-            <Typography variant='body2'>
-                <b>Step 6</b>: Verify successful impersonation of the target identity by running the following WMIC
-                command:
-            </Typography>
-            <Typography component={'pre'}>
-                {'wmic /authority:"kerberos:forestroot\\rootdomaindc" /node:10.10.0.4 process call create "whoami"'}
-            </Typography>
         </>
     );
 };

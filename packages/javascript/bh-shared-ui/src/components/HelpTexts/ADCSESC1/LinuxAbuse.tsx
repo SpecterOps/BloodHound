@@ -21,9 +21,7 @@ const LinuxAbuse: FC = () => {
     return (
         <>
             <Typography variant='body2'>
-                ADCS ESC1 allows the principal to impersonate any other principal in the forest by enrolling in a
-                template, then using the subsequent certificate to perform NT authentication against a service in the
-                domain. An attacker may perform this attack in the following steps:
+                An attacker may perform this attack in the following steps:
             </Typography>
             <Typography variant='body2'>
                 <b>Step 1</b>:  Use Certipy to request enrollment in the affected template, specifying the target
