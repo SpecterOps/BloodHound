@@ -82,7 +82,6 @@ const ContextMenu: FC<{ anchorPosition?: { x: number; y: number } }> = ({ anchor
 };
 
 const StyledTooltip = withStyles((theme) => {
-    console.log(theme);
     return {
         tooltip: {
             color: 'black',
