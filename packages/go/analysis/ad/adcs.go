@@ -466,7 +466,7 @@ func PostTrustedForNTAuth(ctx context.Context, db graph.Database, operation anal
 			innerNode := node
 
 			operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
-				if thumbprints, err := node.Properties.Get(ad.CertThumbprints.String()).StringSlice(); err != nil {
+				if thumbprints, err := innerNode.Properties.Get(ad.CertThumbprints.String()).StringSlice(); err != nil {
 					return err
 				} else {
 					for _, thumbprint := range thumbprints {
