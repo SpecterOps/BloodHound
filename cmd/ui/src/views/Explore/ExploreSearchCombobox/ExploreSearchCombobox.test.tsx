@@ -72,15 +72,17 @@ describe('ExploreSearchCombobox', () => {
         const user = userEvent.setup();
         const labelText: string = 'test label';
 
-        render(
-            <ExploreSearchCombobox
-                labelText={labelText}
-                inputValue='a'
-                handleNodeEdited={vi.fn()}
-                handleNodeSelected={vi.fn()}
-                selectedItem={null}
-            />
-        );
+        await act(async () => {
+            render(
+                <ExploreSearchCombobox
+                    labelText={labelText}
+                    inputValue='a'
+                    handleNodeEdited={vi.fn()}
+                    handleNodeSelected={vi.fn()}
+                    selectedItem={null}
+                />
+            );
+        });
 
         await user.click(screen.getByLabelText(labelText));
         const options = await screen.findAllByRole('option');
@@ -97,15 +99,17 @@ describe('ExploreSearchCombobox', () => {
         const labelText: string = 'test label';
         const handleNodeSelected = vi.fn();
 
-        render(
-            <ExploreSearchCombobox
-                labelText={labelText}
-                inputValue='a'
-                handleNodeEdited={vi.fn()}
-                handleNodeSelected={handleNodeSelected}
-                selectedItem={null}
-            />
-        );
+        await act(async () => {
+            render(
+                <ExploreSearchCombobox
+                    labelText={labelText}
+                    inputValue='a'
+                    handleNodeEdited={vi.fn()}
+                    handleNodeSelected={handleNodeSelected}
+                    selectedItem={null}
+                />
+            );
+        });
 
         await user.type(screen.getByLabelText(labelText), 'admin');
         const options = await screen.findAllByRole('option');
@@ -120,30 +124,34 @@ describe('icon rendering', () => {
     const labelText: string = 'test label';
 
     it('when `selectedItem` is provided, the combobox displays the icon', async () => {
-        render(
-            <ExploreSearchCombobox
-                labelText={labelText}
-                inputValue=''
-                handleNodeEdited={vi.fn()}
-                handleNodeSelected={vi.fn()}
-                selectedItem={{ type: GraphNodeTypes.Computer, objectid: '1', name: 'Computer a' }}
-            />
-        );
+        await act(async () => {
+            render(
+                <ExploreSearchCombobox
+                    labelText={labelText}
+                    inputValue=''
+                    handleNodeEdited={vi.fn()}
+                    handleNodeSelected={vi.fn()}
+                    selectedItem={{ type: GraphNodeTypes.Computer, objectid: '1', name: 'Computer a' }}
+                />
+            );
+        });
 
         const input = screen.getByLabelText(labelText);
         expect(input).toHaveClass('MuiInputBase-inputAdornedStart');
     });
 
     it('when `selectedItem` is null, the combobox does not display an icon', async () => {
-        render(
-            <ExploreSearchCombobox
-                labelText={labelText}
-                inputValue=''
-                handleNodeEdited={vi.fn()}
-                handleNodeSelected={vi.fn()}
-                selectedItem={null}
-            />
-        );
+        await act(async () => {
+            render(
+                <ExploreSearchCombobox
+                    labelText={labelText}
+                    inputValue=''
+                    handleNodeEdited={vi.fn()}
+                    handleNodeSelected={vi.fn()}
+                    selectedItem={null}
+                />
+            );
+        });
 
         const input = screen.getByLabelText(labelText);
         expect(input).not.toHaveClass('MuiInputBase-inputAdornedStart');
@@ -164,15 +172,17 @@ describe('ExploreSearchCombobox with null response', () => {
         const labelText: string = 'test label';
         const searchText: string = 'blah';
 
-        render(
-            <ExploreSearchCombobox
-                labelText={labelText}
-                inputValue={searchText}
-                handleNodeEdited={vi.fn()}
-                handleNodeSelected={vi.fn()}
-                selectedItem={null}
-            />
-        );
+        await act(async () => {
+            render(
+                <ExploreSearchCombobox
+                    labelText={labelText}
+                    inputValue={searchText}
+                    handleNodeEdited={vi.fn()}
+                    handleNodeSelected={vi.fn()}
+                    selectedItem={null}
+                />
+            );
+        });
 
         await user.type(screen.getByLabelText(labelText), searchText);
 
@@ -195,15 +205,17 @@ describe('ExploreSearchCombobox with search timeout', () => {
         const labelText: string = 'test label';
         const searchText: string = 'blah';
 
-        render(
-            <ExploreSearchCombobox
-                labelText={labelText}
-                inputValue={searchText}
-                handleNodeEdited={vi.fn()}
-                handleNodeSelected={vi.fn()}
-                selectedItem={null}
-            />
-        );
+        await act(async () => {
+            render(
+                <ExploreSearchCombobox
+                    labelText={labelText}
+                    inputValue={searchText}
+                    handleNodeEdited={vi.fn()}
+                    handleNodeSelected={vi.fn()}
+                    selectedItem={null}
+                />
+            );
+        });
 
         await user.type(screen.getByLabelText(labelText), searchText);
 
