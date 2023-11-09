@@ -47,6 +47,21 @@ func TestResources_ListSavedQueries_SortingError(t *testing.T) {
 	defer mockCtrl.Finish()
 
 	endpoint := "/api/v2/saved-queries"
+	userId, err := uuid2.NewV4()
+	require.Nil(t, err)
+
+	bhCtx := ctx.Context{
+		RequestID: "",
+		AuthCtx: auth.Context{
+			Owner: model.User{
+				Unique: model.Unique{
+					ID: userId,
+				},
+			},
+		},
+		Host: nil,
+	}
+	goContext := bhCtx.ConstructGoContext()
 
 	if req, err := http.NewRequest("GET", endpoint, nil); err != nil {
 		t.Fatal(err)
@@ -54,6 +69,7 @@ func TestResources_ListSavedQueries_SortingError(t *testing.T) {
 		q := url.Values{}
 		q.Add("sort_by", "invalidColumn")
 
+		req = req.WithContext(goContext)
 		req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
 		req.URL.RawQuery = q.Encode()
 
@@ -76,6 +92,21 @@ func TestResources_ListSavedQueries_InvalidFilterColumn(t *testing.T) {
 	defer mockCtrl.Finish()
 
 	endpoint := "/api/v2/saved-queries"
+	userId, err := uuid2.NewV4()
+	require.Nil(t, err)
+
+	bhCtx := ctx.Context{
+		RequestID: "",
+		AuthCtx: auth.Context{
+			Owner: model.User{
+				Unique: model.Unique{
+					ID: userId,
+				},
+			},
+		},
+		Host: nil,
+	}
+	goContext := bhCtx.ConstructGoContext()
 
 	if req, err := http.NewRequest("GET", endpoint, nil); err != nil {
 		t.Fatal(err)
@@ -83,6 +114,7 @@ func TestResources_ListSavedQueries_InvalidFilterColumn(t *testing.T) {
 		q := url.Values{}
 		q.Add("foo", "gt:0")
 
+		req = req.WithContext(goContext)
 		req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
 		req.URL.RawQuery = q.Encode()
 
@@ -105,6 +137,21 @@ func TestResources_ListSavedQueries_InvalidFilterPredicate(t *testing.T) {
 	defer mockCtrl.Finish()
 
 	endpoint := "/api/v2/saved-queries"
+	userId, err := uuid2.NewV4()
+	require.Nil(t, err)
+
+	bhCtx := ctx.Context{
+		RequestID: "",
+		AuthCtx: auth.Context{
+			Owner: model.User{
+				Unique: model.Unique{
+					ID: userId,
+				},
+			},
+		},
+		Host: nil,
+	}
+	goContext := bhCtx.ConstructGoContext()
 
 	if req, err := http.NewRequest("GET", endpoint, nil); err != nil {
 		t.Fatal(err)
@@ -112,6 +159,7 @@ func TestResources_ListSavedQueries_InvalidFilterPredicate(t *testing.T) {
 		q := url.Values{}
 		q.Add("name", "gt:0")
 
+		req = req.WithContext(goContext)
 		req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
 		req.URL.RawQuery = q.Encode()
 
@@ -133,6 +181,21 @@ func TestResources_ListSavedQueries_InvalidSkip(t *testing.T) {
 	defer mockCtrl.Finish()
 
 	endpoint := "/api/v2/saved-queries"
+	userId, err := uuid2.NewV4()
+	require.Nil(t, err)
+
+	bhCtx := ctx.Context{
+		RequestID: "",
+		AuthCtx: auth.Context{
+			Owner: model.User{
+				Unique: model.Unique{
+					ID: userId,
+				},
+			},
+		},
+		Host: nil,
+	}
+	goContext := bhCtx.ConstructGoContext()
 
 	if req, err := http.NewRequest("GET", endpoint, nil); err != nil {
 		t.Fatal(err)
@@ -140,6 +203,7 @@ func TestResources_ListSavedQueries_InvalidSkip(t *testing.T) {
 		q := url.Values{}
 		q.Add("skip", "-1")
 
+		req = req.WithContext(goContext)
 		req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
 		req.URL.RawQuery = q.Encode()
 
@@ -161,6 +225,21 @@ func TestResources_ListSavedQueries_InvalidLimit(t *testing.T) {
 	defer mockCtrl.Finish()
 
 	endpoint := "/api/v2/saved-queries"
+	userId, err := uuid2.NewV4()
+	require.Nil(t, err)
+
+	bhCtx := ctx.Context{
+		RequestID: "",
+		AuthCtx: auth.Context{
+			Owner: model.User{
+				Unique: model.Unique{
+					ID: userId,
+				},
+			},
+		},
+		Host: nil,
+	}
+	goContext := bhCtx.ConstructGoContext()
 
 	if req, err := http.NewRequest("GET", endpoint, nil); err != nil {
 		t.Fatal(err)
@@ -168,6 +247,7 @@ func TestResources_ListSavedQueries_InvalidLimit(t *testing.T) {
 		q := url.Values{}
 		q.Add("limit", "-1")
 
+		req = req.WithContext(goContext)
 		req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
 		req.URL.RawQuery = q.Encode()
 
@@ -196,9 +276,10 @@ func TestResources_ListSavedQueries_DBError(t *testing.T) {
 	bhCtx := ctx.Context{
 		RequestID: "",
 		AuthCtx: auth.Context{
-			Session: model.UserSession{
-				User:   model.User{},
-				UserID: userId,
+			Owner: model.User{
+				Unique: model.Unique{
+					ID: userId,
+				},
 			},
 		},
 		Host: nil,
@@ -238,9 +319,10 @@ func TestResources_ListSavedQueries(t *testing.T) {
 	bhCtx := ctx.Context{
 		RequestID: "",
 		AuthCtx: auth.Context{
-			Session: model.UserSession{
-				User:   model.User{},
-				UserID: userId,
+			Owner: model.User{
+				Unique: model.Unique{
+					ID: userId,
+				},
 			},
 		},
 		Host: nil,
@@ -292,9 +374,10 @@ func TestResources_CreateSavedQuery_InvalidBody(t *testing.T) {
 	bhCtx := ctx.Context{
 		RequestID: "",
 		AuthCtx: auth.Context{
-			Session: model.UserSession{
-				User:   model.User{},
-				UserID: userId,
+			Owner: model.User{
+				Unique: model.Unique{
+					ID: userId,
+				},
 			},
 		},
 		Host: nil,
@@ -332,9 +415,10 @@ func TestResources_CreateSavedQuery_EmptyBody(t *testing.T) {
 	bhCtx := ctx.Context{
 		RequestID: "",
 		AuthCtx: auth.Context{
-			Session: model.UserSession{
-				User:   model.User{},
-				UserID: userId,
+			Owner: model.User{
+				Unique: model.Unique{
+					ID: userId,
+				},
 			},
 		},
 		Host: nil,
@@ -373,9 +457,10 @@ func TestResources_CreateSavedQuery_DuplicateName(t *testing.T) {
 	bhCtx := ctx.Context{
 		RequestID: "",
 		AuthCtx: auth.Context{
-			Session: model.UserSession{
-				User:   model.User{},
-				UserID: userId,
+			Owner: model.User{
+				Unique: model.Unique{
+					ID: userId,
+				},
 			},
 		},
 		Host: nil,
@@ -419,9 +504,10 @@ func TestResources_CreateSavedQuery_CreateFailure(t *testing.T) {
 	bhCtx := ctx.Context{
 		RequestID: "",
 		AuthCtx: auth.Context{
-			Session: model.UserSession{
-				User:   model.User{},
-				UserID: userId,
+			Owner: model.User{
+				Unique: model.Unique{
+					ID: userId,
+				},
 			},
 		},
 		Host: nil,
@@ -464,9 +550,10 @@ func TestResources_CreateSavedQuery(t *testing.T) {
 	bhCtx := ctx.Context{
 		RequestID: "",
 		AuthCtx: auth.Context{
-			Session: model.UserSession{
-				User:   model.User{},
-				UserID: userId,
+			Owner: model.User{
+				Unique: model.Unique{
+					ID: userId,
+				},
 			},
 		},
 		Host: nil,
@@ -512,9 +599,10 @@ func TestResources_DeleteSavedQuery_IDMalformed(t *testing.T) {
 	bhCtx := ctx.Context{
 		RequestID: "",
 		AuthCtx: auth.Context{
-			Session: model.UserSession{
-				User:   model.User{},
-				UserID: userId,
+			Owner: model.User{
+				Unique: model.Unique{
+					ID: userId,
+				},
 			},
 		},
 		Host: nil,
@@ -550,9 +638,10 @@ func TestResources_DeleteSavedQuery_DBError(t *testing.T) {
 	bhCtx := ctx.Context{
 		RequestID: "",
 		AuthCtx: auth.Context{
-			Session: model.UserSession{
-				User:   model.User{},
-				UserID: userId,
+			Owner: model.User{
+				Unique: model.Unique{
+					ID: userId,
+				},
 			},
 		},
 		Host: nil,
@@ -590,9 +679,10 @@ func TestResources_DeleteSavedQuery_QueryDoesNotBelongToUser(t *testing.T) {
 	bhCtx := ctx.Context{
 		RequestID: "",
 		AuthCtx: auth.Context{
-			Session: model.UserSession{
-				User:   model.User{},
-				UserID: userId,
+			Owner: model.User{
+				Unique: model.Unique{
+					ID: userId,
+				},
 			},
 		},
 		Host: nil,
@@ -631,9 +721,10 @@ func TestResources_DeleteSavedQuery_RecordNotFound(t *testing.T) {
 	bhCtx := ctx.Context{
 		RequestID: "",
 		AuthCtx: auth.Context{
-			Session: model.UserSession{
-				User:   model.User{},
-				UserID: userId,
+			Owner: model.User{
+				Unique: model.Unique{
+					ID: userId,
+				},
 			},
 		},
 		Host: nil,
@@ -672,9 +763,10 @@ func TestResources_DeleteSavedQuery_RecordNotFound_EdgeCase(t *testing.T) {
 	bhCtx := ctx.Context{
 		RequestID: "",
 		AuthCtx: auth.Context{
-			Session: model.UserSession{
-				User:   model.User{},
-				UserID: userId,
+			Owner: model.User{
+				Unique: model.Unique{
+					ID: userId,
+				},
 			},
 		},
 		Host: nil,
@@ -714,9 +806,10 @@ func TestResources_DeleteSavedQuery_DeleteError(t *testing.T) {
 	bhCtx := ctx.Context{
 		RequestID: "",
 		AuthCtx: auth.Context{
-			Session: model.UserSession{
-				User:   model.User{},
-				UserID: userId,
+			Owner: model.User{
+				Unique: model.Unique{
+					ID: userId,
+				},
 			},
 		},
 		Host: nil,
@@ -756,9 +849,10 @@ func TestResources_DeleteSavedQuery(t *testing.T) {
 	bhCtx := ctx.Context{
 		RequestID: "",
 		AuthCtx: auth.Context{
-			Session: model.UserSession{
-				User:   model.User{},
-				UserID: userId,
+			Owner: model.User{
+				Unique: model.Unique{
+					ID: userId,
+				},
 			},
 		},
 		Host: nil,
