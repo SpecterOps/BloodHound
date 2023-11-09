@@ -49,7 +49,7 @@ func NewDefaultConfiguration() (Configuration, error) {
 			DisableAnalysis:        false,
 			DisableCypherQC:        false,
 			DisableMigrations:      false,
-			TraversalMemoryLimit:   1, // 1 GiB by default
+			TraversalMemoryLimit:   2, // 2 GiB by default
 			TLS:                    TLSConfiguration{},
 			SAML:                   SAMLConfiguration{},
 			Database: DatabaseConfiguration{
