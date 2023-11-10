@@ -121,7 +121,6 @@ export enum ActiveDirectoryRelationshipKind {
     GoldenCert = 'GoldenCert',
     EnrollOnBehalfOf = 'EnrollOnBehalfOf',
     ADCSESC1 = 'ADCSESC1',
-    ADCSESC2 = 'ADCSESC2',
     ADCSESC3 = 'ADCSESC3',
     ADCSESC4 = 'ADCSESC4',
     ADCSESC5 = 'ADCSESC5',
@@ -236,8 +235,6 @@ export function ActiveDirectoryRelationshipKindToDisplay(value: ActiveDirectoryR
             return 'EnrollOnBehalfOf';
         case ActiveDirectoryRelationshipKind.ADCSESC1:
             return 'ADCSESC1';
-        case ActiveDirectoryRelationshipKind.ADCSESC2:
-            return 'ADCSESC2';
         case ActiveDirectoryRelationshipKind.ADCSESC3:
             return 'ADCSESC3';
         case ActiveDirectoryRelationshipKind.ADCSESC4:
@@ -479,7 +476,6 @@ export function ActiveDirectoryPathfindingEdges(): ActiveDirectoryRelationshipKi
         ActiveDirectoryRelationshipKind.WriteAccountRestrictions,
         ActiveDirectoryRelationshipKind.GoldenCert,
         ActiveDirectoryRelationshipKind.ADCSESC1,
-        ActiveDirectoryRelationshipKind.ADCSESC2,
         ActiveDirectoryRelationshipKind.ADCSESC3,
         ActiveDirectoryRelationshipKind.ADCSESC4,
         ActiveDirectoryRelationshipKind.ADCSESC5,

@@ -881,11 +881,6 @@ ADCSESC1: types.#Kind & {
 	schema: "active_directory"
 }
 
-ADCSESC2: types.#Kind & {
-	symbol: "ADCSESC2"
-	schema: "active_directory"
-}
-
 ADCSESC3: types.#Kind & {
 	symbol: "ADCSESC3"
 	schema: "active_directory"
@@ -966,7 +961,6 @@ RelationshipKinds: [
 	GoldenCert,
 	EnrollOnBehalfOf,
 	ADCSESC1,
-	ADCSESC2,
 	ADCSESC3,
 	ADCSESC4,
 	ADCSESC5,
@@ -1038,7 +1032,6 @@ PathfindingRelationships: [
 	WriteAccountRestrictions,
 	GoldenCert,
 	ADCSESC1,
-	ADCSESC2,
 	ADCSESC3,
 	ADCSESC4,
 	ADCSESC5,
