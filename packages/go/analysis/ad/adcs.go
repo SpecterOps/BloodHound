@@ -387,10 +387,13 @@ func PostADCS(ctx context.Context, db graph.Database, groupExpansions impact.Pat
 		return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("failed fetching cert template nodes: %w", err)
 	} else if domains, err := FetchNodesByKind(ctx, db, ad.Domain); err != nil {
 		return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("failed fetching domain nodes: %w", err)
-	} else if preProcessStats, err := postADCSPreProcess(ctx, db, enterpriseCertAuthorities, rootCertAuthorities, certTemplates); err != nil {
-		return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("failed adcs pre-processing: %w", err)
+	} else if step1Stats, err := postADCSPreProcessStep1(ctx, db, enterpriseCertAuthorities, rootCertAuthorities); err != nil {
+		return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("failed adcs pre-processing step 1: %w", err)
+	} else if step2Stats, err := postADCSPreProcessStep2(ctx, db, certTemplates); err != nil {
+		return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("failed adcs pre-processing step 2: %w", err)
 	} else {
-		operation.Stats.Merge(preProcessStats)
+		operation.Stats.Merge(step1Stats)
+		operation.Stats.Merge(step2Stats)
 
 		for _, domain := range domains {
 			innerDomain := domain
@@ -424,8 +427,8 @@ func PostADCS(ctx context.Context, db graph.Database, groupExpansions impact.Pat
 	}
 }
 
-func postADCSPreProcess(ctx context.Context, db graph.Database, enterpriseCertAuthorities, rootCertAuthorities, certTemplates []*graph.Node) (*analysis.AtomicPostProcessingStats, error) {
-	operation := analysis.NewPostRelationshipOperation(ctx, db, "ADCS Post Processing - No Dependencies")
+func postADCSPreProcessStep1(ctx context.Context, db graph.Database, enterpriseCertAuthorities, rootCertAuthorities []*graph.Node) (*analysis.AtomicPostProcessingStats, error) {
+	operation := analysis.NewPostRelationshipOperation(ctx, db, "ADCS Post Processing Step 1")
 
 	if err := PostTrustedForNTAuth(ctx, db, operation); err != nil {
 		return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("failed post processing for %s: %w", ad.TrustedForNTAuth.String(), err)
@@ -433,7 +436,15 @@ func postADCSPreProcess(ctx context.Context, db graph.Database, enterpriseCertAu
 		return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("failed post processing for %s: %w", ad.IssuedSignedBy.String(), err)
 	} else if err := PostEnterpriseCAFor(ctx, db, operation, enterpriseCertAuthorities); err != nil {
 		return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("failed post processing for %s: %w", ad.EnterpriseCAFor.String(), err)
-	} else if err := PostEnrollOnBehalfOf(certTemplates, operation); err != nil {
+	} else {
+		return &operation.Stats, operation.Done()
+	}
+}
+
+func postADCSPreProcessStep2(ctx context.Context, db graph.Database, certTemplates []*graph.Node) (*analysis.AtomicPostProcessingStats, error) {
+	operation := analysis.NewPostRelationshipOperation(ctx, db, "ADCS Post Processing Step 2")
+
+	if err := PostEnrollOnBehalfOf(certTemplates, operation); err != nil {
 		return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("failed post processing for %s: %w", ad.EnrollOnBehalfOf.String(), err)
 	} else {
 		return &operation.Stats, operation.Done()
