@@ -27,10 +27,7 @@ const References: FC = () => {
                 https://specterops.io/wp-content/uploads/sites/3/2022/06/Certified_Pre-Owned.pdf
             </Link>
             <br />
-            <Link
-                target='_blank'
-                rel='noopener'
-                href='https://github.com/GhostPack/SharpDPAPI'>
+            <Link target='_blank' rel='noopener' href='https://github.com/GhostPack/SharpDPAPI'>
                 https://github.com/GhostPack/SharpDPAPI
             </Link>
             <br />
@@ -41,27 +38,17 @@ const References: FC = () => {
                 https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/certutil
             </Link>
             <br />
-            <Link
-                target='_blank'
-                rel='noopener'
-                href='https://github.com/GhostPack/ForgeCert'>
+            <Link target='_blank' rel='noopener' href='https://github.com/GhostPack/ForgeCert'>
                 https://github.com/GhostPack/ForgeCert
             </Link>
             <br />
-            <Link
-                target='_blank'
-                rel='noopener'
-                href='https://github.com/GhostPack/Rubeus'>
+            <Link target='_blank' rel='noopener' href='https://github.com/GhostPack/Rubeus'>
                 https://github.com/GhostPack/Rubeus
             </Link>
             <br />
-            <Link
-                target='_blank'
-                rel='noopener'
-                href='https://github.com/ly4k/Certipy#golden-certificates'>
-                https://github.com/ly4k/Certipy#golden-certificates                
+            <Link target='_blank' rel='noopener' href='https://github.com/ly4k/Certipy#golden-certificates'>
+                https://github.com/ly4k/Certipy#golden-certificates
             </Link>
-
         </Box>
     );
 };

@@ -21,10 +21,10 @@ const Abuse: FC = () => {
     return (
         <Typography variant='body2'>
             An attacker may perform several attacks that rely on this relationship. This relationship alone is not
-            enough to escalate rights or impersonate other principals. The enterprise CA must chain up to a root CA
-            of the AD forest and it must be trusted for NT authentication in the AD forest for an escalation to be
-            possible. If both conditions are met, BloodHound will generate a GoldenCert edge from the computer node
-            to the domain node. Check if there is an outbound GoldenCert edge from the computer node.
+            enough to escalate rights or impersonate other principals. The enterprise CA must chain up to a root CA of
+            the AD forest and it must be trusted for NT authentication in the AD forest for an escalation to be
+            possible. If both conditions are met, BloodHound will generate a GoldenCert edge from the computer node to
+            the domain node. Check if there is an outbound GoldenCert edge from the computer node.
         </Typography>
     );
 };

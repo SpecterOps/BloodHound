@@ -29,10 +29,10 @@ const General: FC<EdgeInfoProps> = ({ sourceName, sourceType, targetName }) => {
             <Typography variant='body2'>
                 The certificate template {sourceName} is configured to be used as an enrollment agent. The certificate
                 template {targetName} is configured to allow enrollment by enrollment agents. Both certificate templates
-                are published by an enterprise CA which is trusted for NT authentication and chain up to a root CA for the
-                domain. This enables a principal with a certificate of certificate template {sourceName} to enroll on
-                behalf of other principals for certificate template {targetName} as long as enrollment agent restrictions
-                configured on the enterprise CA permit it.
+                are published by an enterprise CA which is trusted for NT authentication and chain up to a root CA for
+                the domain. This enables a principal with a certificate of certificate template {sourceName} to enroll
+                on behalf of other principals for certificate template {targetName} as long as enrollment agent
+                restrictions configured on the enterprise CA permit it.
             </Typography>
         </>
     );
