@@ -35,6 +35,12 @@
                         "$ref": "#/definitions/api.ErrorWrapper"
                     }
                 },
+                "404": {
+                    "description": "Not Found",
+                    "schema": {
+                        "$ref": "#/definitions/api.ErrorWrapper"
+                    }
+                },
                 "504": {
                     "description": "Gateway Timeout",
                     "schema": {
