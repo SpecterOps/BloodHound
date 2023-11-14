@@ -20,18 +20,10 @@ import React, { useState } from 'react';
 import EdgeInfoContent from 'src/views/Explore/EdgeInfo/EdgeInfoContent';
 import Header from 'src/views/Explore/EdgeInfo/EdgeInfoHeader';
 import usePaneStyles from 'src/views/Explore/InfoStyles/Pane';
-import { useQuery } from 'react-query';
-import {edgeInformationEndpoints} from 'src/views/Explore/EntityInfo/content.ts';
 
 const EdgeInfoPane: React.FC<{ selectedEdge: SelectedEdge }> = ({ selectedEdge }) => {
     const styles = usePaneStyles();
     const [expanded, setExpanded] = useState(true);
-
-    const { data, isLoading, isError } = useQuery(
-        ['edge', selectedEdge?.name, selectedEdge?.sourceNode, selectedEdge?.targetNode],
-        ({ signal }) => edgeInformationEndpoints[selectedEdge.name]?.(id, { signal }).then((res) => res.data.data),
-        { refetchOnWindowFocus: false, retry: false }
-    );
 
     return (
         <div className={styles.container} data-testid='explore_edge-information-pane'>
@@ -50,13 +42,6 @@ const EdgeInfoPane: React.FC<{ selectedEdge: SelectedEdge }> = ({ selectedEdge }
                 sx={{
                     display: expanded ? 'initial' : 'none',
                 }}>
-                {isLoading ? (
-                    <div>Loading...</div>
-                ) : isError || data === undefined ? (
-                    <div>Unable to load node information.</div>
-                ) : (
-                    <EdgeInfoContent selectedEdge={selectedEdge} {...data} />
-                )}
                 {selectedEdge === null ? 'No information to display.' : <EdgeInfoContent selectedEdge={selectedEdge} />}
             </Paper>
         </div>

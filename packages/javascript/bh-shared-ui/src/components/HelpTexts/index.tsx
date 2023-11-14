@@ -103,8 +103,11 @@ import WriteSPN from './WriteSPN/WriteSPN';
 import ADCSESC1 from './ADCSESC1/ADCSESC1';
 
 export type EdgeInfoProps = {
+    edgeName?: string;
+    sourceDBId?: number;
     sourceName?: string;
     sourceType?: string;
+    targetDBId?: number;
     targetName?: string;
     targetType?: string;
 };

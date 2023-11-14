@@ -507,7 +507,7 @@ func getADCSESC1EdgeDetail(tx graph.Transaction, edge *graph.Relationship) (grap
 		} else {
 			for _, path := range pathsToTemplates {
 				certTemplate := path.Terminal()
-				if paths, err := FetchCertTemplatePathToDomain(tx, *certTemplate, *targetDomainNode); err != nil {
+				if paths, err := FetchCertTemplatePathToDomain(tx, certTemplate, targetDomainNode); err != nil {
 					log.Errorf("Error getting paths from cert template %d to domain %d: %w", certTemplate.ID, targetDomainNode.ID, err)
 				} else {
 					for _, subPath := range paths {

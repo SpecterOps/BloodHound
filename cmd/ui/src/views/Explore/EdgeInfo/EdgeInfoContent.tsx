@@ -26,6 +26,8 @@ const EdgeInfoContent: FC<{ selectedEdge: NonNullable<SelectedEdge> }> = ({ sele
     const sections = EdgeInfoComponents[selectedEdge.name as keyof typeof EdgeInfoComponents];
     const { sourceNode, targetNode } = selectedEdge;
 
+    console.log(sections);
+
     return (
         <Box>
             <EdgeObjectInformation selectedEdge={selectedEdge} />
@@ -33,15 +35,21 @@ const EdgeInfoContent: FC<{ selectedEdge: NonNullable<SelectedEdge> }> = ({ sele
                 <>
                     {Object.entries(sections).map((section, index) => {
                         const Section = section[1];
+
                         return (
                             <Fragment key={index}>
                                 <Box padding={1}>
                                     <Divider />
                                 </Box>
-                                <EdgeInfoCollapsibleSection section={section[0] as keyof typeof EdgeSections}>
+                                <EdgeInfoCollapsibleSection
+                                    section={section[0] as keyof typeof EdgeSections}
+                                    onChange={() => {}}>
                                     <Section
+                                        edgeName={selectedEdge.name}
+                                        sourceDBId={sourceNode.id}
                                         sourceName={sourceNode.name}
                                         sourceType={sourceNode.type}
+                                        targetDBId={targetNode.id}
                                         targetName={targetNode.name}
                                         targetType={targetNode.type}
                                         targetId={targetNode.objectId}

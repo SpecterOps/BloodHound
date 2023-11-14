@@ -16,14 +16,30 @@
 
 import { FC } from 'react';
 import { Typography } from '@mui/material';
+import { useQuery } from 'react-query';
+import { apiClient } from '../../..';
+import { EdgeInfoProps } from '..';
 
-const Details: FC = () => {
+const Details: FC<EdgeInfoProps> = ({ sourceDBId, targetDBId, edgeName }) => {
+    console.log({ sourceDBId, targetDBId, edgeName });
+
+    const { data, isLoading, isError } = useQuery(['edge', edgeName, sourceDBId, targetDBId], () =>
+        apiClient.getEdgeDetails(sourceDBId!, targetDBId!, edgeName!)
+    );
+
+    console.log(data, isLoading, isError);
+
     return (
         <>
             <Typography variant='body2'>
                 The relationship represents the effective outcome of the configuration and relationships between several
                 different objects. All objects involved in the creation of this relationship are listed here:
             </Typography>
+            <ul>
+                {Object.entries(data?.data.data.nodes || {}).map(([key, value], index) => (
+                    <li key={key}>{value.label}</li>
+                ))}
+            </ul>
         </>
     );
 };

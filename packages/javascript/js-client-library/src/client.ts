@@ -2155,14 +2155,14 @@ class BHEAPIClient {
             )
         );
 
-    getEdgeDetails = (startNode: number, endNode: number, relationshipKind: string) =>
+    getEdgeDetails = (startNode: number, endNode: number, edgeType: string) =>
         this.baseClient.get<types.GraphResponse>(
             '/api/v2/edge/details',
             Object.assign({
                 params: {
-                    start_node: startNode,
-                    end_node: endNode,
-                    relationship_kinds: relationshipKind,
+                    source_node: startNode,
+                    target_node: endNode,
+                    edge_type: edgeType,
                 },
             })
         );
