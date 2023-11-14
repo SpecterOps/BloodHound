@@ -164,6 +164,7 @@ export enum GraphNodeTypes {
     GPO = 'GPO',
     OU = 'OU',
     Domain = 'Domain',
+    Container = 'Container',
     Meta = 'Meta',
 }
 

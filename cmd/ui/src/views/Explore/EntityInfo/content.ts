@@ -104,7 +104,8 @@ export const entityInformationEndpoints: Record<
     [ActiveDirectoryNodeKind.Entity]: (id: string, options?: RequestOptions) => apiClient.getBaseV2(id, false, options),
     [ActiveDirectoryNodeKind.Computer]: (id: string, options?: RequestOptions) =>
         apiClient.getComputerV2(id, false, options),
-    [ActiveDirectoryNodeKind.Container]: () => Promise.resolve(),
+    [ActiveDirectoryNodeKind.Container]: (id: string, options?: RequestOptions) =>
+        apiClient.getContainerV2(id, false, options),
     [ActiveDirectoryNodeKind.Domain]: (id: string, options?: RequestOptions) =>
         apiClient.getDomainV2(id, false, options),
     [ActiveDirectoryNodeKind.GPO]: (id: string, options?: RequestOptions) => apiClient.getGPOV2(id, false, options),
@@ -1418,6 +1419,16 @@ export const allSections: Record<GraphNodeTypes, (id: string) => EntityInfoDataT
                     .then((res) => res.data),
         },
     ],
+    [ActiveDirectoryNodeKind.Container]: (id) => [
+        {
+            id,
+            label: 'Inbound Object Control',
+            endpoint: ({ skip, limit, type }) =>
+                apiClient
+                    .getContainerControllersV2(id, skip, limit, type, { signal: controller.signal })
+                    .then((res) => res.data),
+        },
+    ],
     [ActiveDirectoryNodeKind.Computer]: (id) => [
         {
             id,
@@ -1546,7 +1557,6 @@ export const allSections: Record<GraphNodeTypes, (id: string) => EntityInfoDataT
                     .then((res) => res.data),
         },
     ],
-    [ActiveDirectoryNodeKind.Container]: () => [],
     [ActiveDirectoryNodeKind.Domain]: (id) => [
         {
             id,
