@@ -42,6 +42,8 @@ const (
 	KeyVaultPermissionGet string = "Get"
 )
 
+var resourceGroupLevel, _ = regexp.Compile("^[\\w\\d\\-\\/]*/resourceGroups/[0-9a-zA-Z]+$")
+
 func ConvertAZAppToNode(app models.App) IngestibleNode {
 	return IngestibleNode{
 		PropertyMap: map[string]any{
@@ -1488,8 +1490,8 @@ func ResourceWithinScope(resource, scope string) bool {
 	if strings.EqualFold(resource, scope) {
 		return true
 	}
-	resourceGroupLevel, _ := regexp.MatchString("^[\\w\\d\\-\\/]*/resourceGroups/[0-9a-zA-Z]+$", resource)
-	if resourceGroupLevel && strings.HasPrefix(strings.ToLower(resource), strings.ToLower(scope)) {
+
+	if resourceGroupLevel.MatchString(scope) && strings.HasPrefix(strings.ToLower(resource), strings.ToLower(scope)) {
 		return true
 	}
 	return false
