@@ -121,7 +121,6 @@ export enum ActiveDirectoryRelationshipKind {
     GoldenCert = 'GoldenCert',
     EnrollOnBehalfOf = 'EnrollOnBehalfOf',
     ADCSESC1 = 'ADCSESC1',
-    ADCSESC2 = 'ADCSESC2',
     ADCSESC3 = 'ADCSESC3',
     ADCSESC4 = 'ADCSESC4',
     ADCSESC5 = 'ADCSESC5',
@@ -236,8 +235,6 @@ export function ActiveDirectoryRelationshipKindToDisplay(value: ActiveDirectoryR
             return 'EnrollOnBehalfOf';
         case ActiveDirectoryRelationshipKind.ADCSESC1:
             return 'ADCSESC1';
-        case ActiveDirectoryRelationshipKind.ADCSESC2:
-            return 'ADCSESC2';
         case ActiveDirectoryRelationshipKind.ADCSESC3:
             return 'ADCSESC3';
         case ActiveDirectoryRelationshipKind.ADCSESC4:
@@ -307,6 +304,14 @@ export enum ActiveDirectoryKindProperties {
     RequiresManagerApproval = 'requiresmanagerapproval',
     AuthenticationEnabled = 'authenticationenabled',
     EnrolleeSuppliesSubject = 'enrolleesuppliessubject',
+    CertificateApplicationPolicy = 'certificateapplicationpolicy',
+    CertificateNameFlag = 'certificatenameflag',
+    EffectiveEKUs = 'effectiveekus',
+    EnrollmentFlag = 'enrollmentflag',
+    NoSecurityExtension = 'nosecurityextension',
+    RenewalPeriod = 'renewalperiod',
+    ValidityPeriod = 'validityperiod',
+    OID = 'oid',
 }
 export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKindProperties): string | undefined {
     switch (value) {
@@ -401,11 +406,11 @@ export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKin
         case ActiveDirectoryKindProperties.StrongCertificateBindingEnforcement:
             return 'Strong Certificate Binding Enforcement';
         case ActiveDirectoryKindProperties.EKUs:
-            return 'EKUs';
+            return 'Enhanced Key Usage';
         case ActiveDirectoryKindProperties.SubjectAltRequireUPN:
-            return 'Subject Alt Require UPN';
+            return 'Subject Alternative Name Require UPN';
         case ActiveDirectoryKindProperties.AuthorizedSignatures:
-            return 'Authorized Signatures';
+            return 'Authorized Signatures Required';
         case ActiveDirectoryKindProperties.ApplicationPolicies:
             return 'Application Policies';
         case ActiveDirectoryKindProperties.SchemaVersion:
@@ -415,7 +420,23 @@ export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKin
         case ActiveDirectoryKindProperties.AuthenticationEnabled:
             return 'Authentication Enabled';
         case ActiveDirectoryKindProperties.EnrolleeSuppliesSubject:
-            return 'Enrollee Suppliess Subject';
+            return 'Enrollee Supplies Subject';
+        case ActiveDirectoryKindProperties.CertificateApplicationPolicy:
+            return 'Certificate Application Policies';
+        case ActiveDirectoryKindProperties.CertificateNameFlag:
+            return 'Certificate Name Flags';
+        case ActiveDirectoryKindProperties.EffectiveEKUs:
+            return 'Effective EKUs';
+        case ActiveDirectoryKindProperties.EnrollmentFlag:
+            return 'Enrollment Flags';
+        case ActiveDirectoryKindProperties.NoSecurityExtension:
+            return 'No Security Extension';
+        case ActiveDirectoryKindProperties.RenewalPeriod:
+            return 'Renewal Period';
+        case ActiveDirectoryKindProperties.ValidityPeriod:
+            return 'Validity Period';
+        case ActiveDirectoryKindProperties.OID:
+            return 'OID';
         default:
             return undefined;
     }
@@ -455,7 +476,6 @@ export function ActiveDirectoryPathfindingEdges(): ActiveDirectoryRelationshipKi
         ActiveDirectoryRelationshipKind.WriteAccountRestrictions,
         ActiveDirectoryRelationshipKind.GoldenCert,
         ActiveDirectoryRelationshipKind.ADCSESC1,
-        ActiveDirectoryRelationshipKind.ADCSESC2,
         ActiveDirectoryRelationshipKind.ADCSESC3,
         ActiveDirectoryRelationshipKind.ADCSESC4,
         ActiveDirectoryRelationshipKind.ADCSESC5,

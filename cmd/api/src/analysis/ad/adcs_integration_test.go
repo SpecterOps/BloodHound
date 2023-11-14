@@ -21,8 +21,8 @@ package ad_test
 
 import (
 	"context"
-
 	"github.com/specterops/bloodhound/analysis"
+
 	ad2 "github.com/specterops/bloodhound/analysis/ad"
 
 	"github.com/specterops/bloodhound/dawgs/ops"
@@ -176,4 +176,90 @@ func TestGoldenCert(t *testing.T) {
 		return nil
 	})
 
+}
+
+func TestEnrollOnBehalfOf(t *testing.T) {
+	testContext := integration.NewGraphTestContext(t)
+	testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) {
+		harness.EnrollOnBehalfOfHarnessOne.Setup(testContext)
+	}, func(harness integration.HarnessDetails, db graph.Database) error {
+		certTemplates, err := ad2.FetchNodesByKind(context.Background(), db, ad.CertTemplate)
+		v1Templates := make([]*graph.Node, 0)
+		v2Templates := make([]*graph.Node, 0)
+		for _, template := range certTemplates {
+			if version, err := template.Properties.Get(ad.SchemaVersion.String()).Float64(); err != nil {
+				continue
+			} else if version == 1 {
+				v1Templates = append(v1Templates, template)
+			} else if version >= 2 {
+				v2Templates = append(v2Templates, template)
+			}
+		}
+		require.Nil(t, err)
+		db.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
+			results, err := ad2.EnrollOnBehalfOfVersionOne(tx, v1Templates, certTemplates)
+			require.Nil(t, err)
+
+			require.Len(t, results, 2)
+
+			require.Contains(t, results, analysis.CreatePostRelationshipJob{
+				FromID: harness.EnrollOnBehalfOfHarnessOne.CertTemplate11.ID,
+				ToID:   harness.EnrollOnBehalfOfHarnessOne.CertTemplate12.ID,
+				Kind:   ad.EnrollOnBehalfOf,
+			})
+
+			require.Contains(t, results, analysis.CreatePostRelationshipJob{
+				FromID: harness.EnrollOnBehalfOfHarnessOne.CertTemplate13.ID,
+				ToID:   harness.EnrollOnBehalfOfHarnessOne.CertTemplate12.ID,
+				Kind:   ad.EnrollOnBehalfOf,
+			})
+
+			return nil
+		})
+
+		return nil
+	})
+
+	testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) {
+		harness.EnrollOnBehalfOfHarnessTwo.Setup(testContext)
+	}, func(harness integration.HarnessDetails, db graph.Database) error {
+		certTemplates, err := ad2.FetchNodesByKind(context.Background(), db, ad.CertTemplate)
+		v1Templates := make([]*graph.Node, 0)
+		v2Templates := make([]*graph.Node, 0)
+		for _, template := range certTemplates {
+			if version, err := template.Properties.Get(ad.SchemaVersion.String()).Float64(); err != nil {
+				continue
+			} else if version == 1 {
+				v1Templates = append(v1Templates, template)
+			} else if version >= 2 {
+				v2Templates = append(v2Templates, template)
+			}
+		}
+		require.Nil(t, err)
+		db.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
+			results, err := ad2.EnrollOnBehalfOfVersionTwo(tx, v2Templates, certTemplates)
+			require.Nil(t, err)
+
+			require.Len(t, results, 1)
+			require.Contains(t, results, analysis.CreatePostRelationshipJob{
+				FromID: harness.EnrollOnBehalfOfHarnessTwo.CertTemplate21.ID,
+				ToID:   harness.EnrollOnBehalfOfHarnessTwo.CertTemplate23.ID,
+				Kind:   ad.EnrollOnBehalfOf,
+			})
+
+			results, err = ad2.EnrollOnBehalfOfSelfControl(tx, v1Templates)
+			require.Nil(t, err)
+
+			require.Len(t, results, 1)
+			require.Contains(t, results, analysis.CreatePostRelationshipJob{
+				FromID: harness.EnrollOnBehalfOfHarnessTwo.CertTemplate25.ID,
+				ToID:   harness.EnrollOnBehalfOfHarnessTwo.CertTemplate25.ID,
+				Kind:   ad.EnrollOnBehalfOf,
+			})
+
+			return nil
+		})
+
+		return nil
+	})
 }

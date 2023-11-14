@@ -1455,7 +1455,7 @@ func FetchEnterpriseCAsTrustedForNTAuthToDomain(tx graph.Transaction, domain *gr
 	})
 }
 
-func DoesCertTemplateLinkToDomain(tx graph.Transaction, certTemplate graph.Node, domainNode graph.Node) (bool, error) {
+func DoesCertTemplateLinkToDomain(tx graph.Transaction, certTemplate, domainNode *graph.Node) (bool, error) {
 	if pathSet, err := FetchCertTemplatePathToDomain(tx, certTemplate, domainNode); err != nil {
 		return false, err
 	} else {
@@ -1463,7 +1463,7 @@ func DoesCertTemplateLinkToDomain(tx graph.Transaction, certTemplate graph.Node,
 	}
 }
 
-func FetchCertTemplatePathToDomain(tx graph.Transaction, certTemplate graph.Node, domain graph.Node) (graph.PathSet, error) {
+func FetchCertTemplatePathToDomain(tx graph.Transaction, certTemplate, domain *graph.Node) (graph.PathSet, error) {
 	var (
 		paths = graph.NewPathSet()
 	)

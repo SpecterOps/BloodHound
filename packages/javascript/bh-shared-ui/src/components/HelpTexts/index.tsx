@@ -68,8 +68,10 @@ import CanPSRemote from './CanPSRemote/CanPSRemote';
 import CanRDP from './CanRDP/CanRDP';
 import Contains from './Contains/Contains';
 import DCSync from './DCSync/DCSync';
+import DelegatedEnrollmentAgent from './DelegatedEnrollmentAgent/DelegatedEnrollmentAgent';
 import DumpSMSAPassword from './DumpSMSAPassword/DumpSMSAPassword';
 import Enroll from './Enroll/Enroll';
+import EnrollOnBehalfOf from './EnrollOnBehalfOf/EnrollOnBehalfOf';
 import EnterpriseCAFor from './EnterpriseCAFor/EnterpriseCAFor';
 import ExecuteDCOM from './ExecuteDCOM/ExecuteDCOM';
 import ForceChangePassword from './ForceChangePassword/ForceChangePassword';
@@ -78,8 +80,10 @@ import GenericAll from './GenericAll/GenericAll';
 import GenericWrite from './GenericWrite/GenericWrite';
 import GetChanges from './GetChanges/GetChanges';
 import GetChangesAll from './GetChangesAll/GetChangesAll';
+import GoldenCert from './GoldenCert/GoldenCert';
 import HasSIDHistory from './HasSIDHistory/HasSIDHistory';
 import HasSession from './HasSession/HasSession';
+import HostsCAService from './HostsCAService/HostsCAService';
 import IssuedSignedBy from './IssuedSignedBy/IssuedSignedBy';
 import MemberOf from './MemberOf/MemberOf';
 import NTAuthStoreFor from './NTAuthStoreFor/NTAuthStoreFor';
@@ -188,6 +192,10 @@ const EdgeInfoComponents = {
     NTAuthStoreFor: NTAuthStoreFor,
     IssuedSignedBy: IssuedSignedBy,
     TrustedForNTAuth: TrustedForNTAuth,
+    HostsCAService: HostsCAService,
+    DelegatedEnrollmentAgent: DelegatedEnrollmentAgent,
+    EnrollOnBehalfOf: EnrollOnBehalfOf,
+    GoldenCert: GoldenCert,
     ADCSESC1: ADCSESC1,
 };
 
