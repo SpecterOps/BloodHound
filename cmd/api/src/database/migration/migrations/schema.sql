@@ -715,7 +715,7 @@ ALTER TABLE ONLY asset_group_collection_entries
 ALTER TABLE ONLY asset_group_collections
     ADD CONSTRAINT asset_group_collections_pkey PRIMARY KEY (id);
 ALTER TABLE ONLY asset_group_selectors
-    ADD CONSTRAINT asset_group_selectors_name_key UNIQUE (name);
+    ADD CONSTRAINT asset_group_selectors_name_assetgroupid_key UNIQUE (name, asset_group_id);
 ALTER TABLE ONLY asset_group_selectors
     ADD CONSTRAINT asset_group_selectors_pkey PRIMARY KEY (id);
 ALTER TABLE ONLY asset_groups
