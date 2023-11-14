@@ -169,6 +169,7 @@ export enum GraphNodeTypes {
     EnterpriseCA = 'EnterpriseCA',
     NTAuthStore = 'NTAuthStore',
     CertTemplate = 'CertTemplate',
+    Container = 'Container',
     Meta = 'Meta',
 }
 

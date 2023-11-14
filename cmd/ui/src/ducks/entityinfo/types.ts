@@ -87,6 +87,14 @@ export interface ComputerInfo extends EntityInfo {
     sqlAdminUsers: number;
 }
 
+// --- Containers
+export interface ContainersInfo extends EntityInfo {
+    props: BasicInfo & {
+        description?: string;
+    };
+    controllers: number;
+}
+
 // --- Domain
 export interface DomainInfoGraph extends GraphInfo {
     functionallevel: string;
