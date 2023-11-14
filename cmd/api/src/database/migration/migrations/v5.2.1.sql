@@ -14,8 +14,8 @@
 --
 -- SPDX-License-Identifier: Apache-2.0
 
-ALTER TABLE ONLY asset_group_selectors
-  DROP CONSTRAINT asset_group_selectors_name_key;
+ALTER TABLE IF EXISTS ONLY asset_group_selectors
+  DROP CONSTRAINT IF EXISTS asset_group_selectors_name_key;
 
-ALTER TABLE ONLY asset_group_selectors
+ALTER TABLE IF EXISTS ONLY asset_group_selectors
   ADD CONSTRAINT asset_group_selectors_name_assetgroupid_key UNIQUE (name, asset_group_id);
