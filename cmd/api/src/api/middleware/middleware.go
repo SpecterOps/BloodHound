@@ -240,6 +240,11 @@ func SecureHandlerMiddleware(cfg config.Configuration, contentSecurityPolicy str
 	}).Handler
 }
 
+// FeatureFlagMiddleware is a middleware that enables or disables a given endpoint based on the status of the passed feature flag.
+// It is intended to be attached directly to endpoints that should be affected by the feature flag. The feature flag determining the
+// endpoint's availability should be specified in flagKey.
+//
+// If the flag is enabled, the endpoint will work as intended. If the flag is disabled, a 404 will be returned to the user.
 func FeatureFlagMiddleware(db database.Database, flagKey string) mux.MiddlewareFunc {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
