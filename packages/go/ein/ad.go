@@ -474,7 +474,7 @@ func handleEnterpriseCAEnrollmentAgentRestrictions(enterpriseCA EnterpriseCA, re
 
 func handleEnterpriseCASecurity(enterpriseCA EnterpriseCA, relationships []IngestibleRelationship) []IngestibleRelationship {
 
-	if enterpriseCA.CASecurity.Collected {
+	if enterpriseCA.CARegistryData.CASecurity.Collected {
 		caSecurityData := slices.Filter(enterpriseCA.CARegistryData.CASecurity.Data, func(s ACE) bool {
 			if s.RightName == ad.Owns.String() {
 				return false

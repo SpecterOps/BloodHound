@@ -121,9 +121,9 @@ type IsUserSpecifiesSanEnabled struct {
 }
 
 type CARegistryData struct {
-	CASecurity
-	EnrollmentAgentRestrictions
-	IsUserSpecifiesSanEnabled
+	CASecurity                  CASecurity
+	EnrollmentAgentRestrictions EnrollmentAgentRestrictions
+	IsUserSpecifiesSanEnabled   IsUserSpecifiesSanEnabled
 }
 
 type DCRegistryData struct {
@@ -152,7 +152,7 @@ type RootCA struct {
 
 type EnterpriseCA struct {
 	IngestBase
-	CARegistryData
+	CARegistryData       CARegistryData
 	EnabledCertTemplates []TypedPrincipal
 	HostingComputer      string
 	DomainSID            string
