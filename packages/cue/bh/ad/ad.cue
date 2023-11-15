@@ -1030,6 +1030,7 @@ PathfindingRelationships: [
 	AddKeyCredentialLink,
 	SyncLAPSPassword,
 	WriteAccountRestrictions,
+	HostsCAService,
 	GoldenCert,
 	ADCSESC1,
 	ADCSESC3,
