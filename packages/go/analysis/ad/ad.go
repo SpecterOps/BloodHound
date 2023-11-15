@@ -293,6 +293,34 @@ func createOrUpdateWellKnownLink(tx graph.Transaction, startNode *graph.Node, en
 	}
 }
 
+func CalculateCrossProductBitmapsNew(groupExpansions impact.PathAggregator, nodeSets ...cardinality.Duplex[uint32]) cardinality.Duplex[uint32] {
+	if len(nodeSets) < 2 {
+		log.Errorf("cross products require at least 2 nodesets")
+		return cardinality.NewBitmap32()
+	}
+
+	//The intention is that the node sets being passed into this function contain all the first degree principals for control
+	var (
+		resultEntities   = cardinality.NewBitmap32()
+		firstSetUnroll   = cardinality.NewBitmap32()
+		secondSetUnroll  = cardinality.NewBitmap32()
+		cardinalityCache = map[uint32]uint64{}
+	)
+
+	nodeSets[0].Each(func(id uint32) (bool, error) {
+		firstSetUnroll.Add(id)
+		idCardinality := groupExpansions.Cardinality(id)
+		idCardinalityCount := idCardinality.Cardinality()
+		if idCardinalityCount > 0 {
+			cardinalityCache[id] = idCardinalityCount
+			firstSetUnroll.Or(idCardinality.(cardinality.Duplex[uint32]))
+		}
+
+		return true, nil
+	})
+
+}
+
 func CalculateCrossProductBitmaps(firstNodeSet, secondNodeSet cardinality.Duplex[uint32], groupExpansions impact.PathAggregator) cardinality.Duplex[uint32] {
 	//The intention is that the node sets being passed into this function contain all the first degree principals for control
 	var (

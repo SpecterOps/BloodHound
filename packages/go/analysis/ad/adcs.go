@@ -137,8 +137,12 @@ func PostADCSESC3(ctx context.Context, tx graph.Transaction, outC chan<- analysi
 					for _, ca := range cas {
 						if collected, err := ca.Properties.Get(ad.EnrollmentAgentRestrictionsCollected.String()).Bool(); err != nil {
 							log.Errorf("error getting enrollmentagentcollected for ca %d: %w", ca.ID, err)
-						} else if !collected {
-							continue
+						} else if hasRestrictions, err := ca.Properties.Get(ad.HasEnrollmentAgentRestrictions.String()).Bool(); err != nil {
+							log.Errorf("error getting hasenrollmentagentrestrictions for ca %d: %w", ca.ID, err)
+						} else {
+							if collected && hasRestrictions {
+
+							}
 						}
 					}
 				}
