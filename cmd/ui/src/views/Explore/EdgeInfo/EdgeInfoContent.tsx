@@ -15,18 +15,20 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Box, Divider, Typography, useTheme } from '@mui/material';
-import { EdgeInfoComponents, EdgeSections, SelectedEdge } from 'bh-shared-ui';
+import { EdgeInfoComponents, EdgeSections, SelectedEdge, apiClient } from 'bh-shared-ui';
 import { FC, Fragment } from 'react';
+import { useDispatch } from 'react-redux';
+import { putGraphData, putGraphError, saveResponseForExport, setGraphLoading } from 'src/ducks/explore/actions';
+import { addSnackbar } from 'src/ducks/global/actions';
 import EdgeInfoCollapsibleSection from 'src/views/Explore/EdgeInfo/EdgeInfoCollapsibleSection';
 import EdgeObjectInformation from 'src/views/Explore/EdgeInfo/EdgeObjectInformation';
 
 const EdgeInfoContent: FC<{ selectedEdge: NonNullable<SelectedEdge> }> = ({ selectedEdge }) => {
     const theme = useTheme();
+    const dispatch = useDispatch();
 
     const sections = EdgeInfoComponents[selectedEdge.name as keyof typeof EdgeInfoComponents];
     const { sourceNode, targetNode } = selectedEdge;
-
-    console.log(sections);
 
     return (
         <Box>
@@ -36,6 +38,43 @@ const EdgeInfoContent: FC<{ selectedEdge: NonNullable<SelectedEdge> }> = ({ sele
                     {Object.entries(sections).map((section, index) => {
                         const Section = section[1];
 
+                        let handleOnChange = (label: string, isOpen: boolean) => {};
+
+                        if (selectedEdge.name === 'ADCSESC1' && section[0] === 'details') {
+                            handleOnChange = async (label: string, isOpen: boolean) => {
+                                if (isOpen) {
+                                    dispatch(setGraphLoading(true));
+
+                                    await apiClient
+                                        .getEdgeDetails(
+                                            sourceNode.id as number,
+                                            targetNode.id as number,
+                                            selectedEdge.name
+                                        )
+                                        .then((result) => {
+                                            dispatch(saveResponseForExport(result.data));
+                                            dispatch(putGraphData(result));
+                                        })
+                                        .catch((err) => {
+                                            if (err?.code === 'ERR_CANCELED') {
+                                                return;
+                                            }
+                                            dispatch(putGraphError(err));
+                                            dispatch(
+                                                addSnackbar(
+                                                    'Query failed. Please try again.',
+                                                    'edgeDetailsGraphQuery',
+                                                    {}
+                                                )
+                                            );
+                                        })
+                                        .finally(() => {
+                                            dispatch(setGraphLoading(false));
+                                        });
+                                }
+                            };
+                        }
+
                         return (
                             <Fragment key={index}>
                                 <Box padding={1}>
@@ -43,7 +82,7 @@ const EdgeInfoContent: FC<{ selectedEdge: NonNullable<SelectedEdge> }> = ({ sele
                                 </Box>
                                 <EdgeInfoCollapsibleSection
                                     section={section[0] as keyof typeof EdgeSections}
-                                    onChange={() => {}}>
+                                    onChange={handleOnChange}>
                                     <Section
                                         edgeName={selectedEdge.name}
                                         sourceDBId={sourceNode.id}

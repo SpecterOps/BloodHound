@@ -21,13 +21,9 @@ import { apiClient } from '../../..';
 import { EdgeInfoProps } from '..';
 
 const Details: FC<EdgeInfoProps> = ({ sourceDBId, targetDBId, edgeName }) => {
-    console.log({ sourceDBId, targetDBId, edgeName });
-
-    const { data, isLoading, isError } = useQuery(['edge', edgeName, sourceDBId, targetDBId], () =>
+    const { data } = useQuery(['edge', edgeName, sourceDBId, targetDBId], () =>
         apiClient.getEdgeDetails(sourceDBId!, targetDBId!, edgeName!)
     );
-
-    console.log(data, isLoading, isError);
 
     return (
         <>
