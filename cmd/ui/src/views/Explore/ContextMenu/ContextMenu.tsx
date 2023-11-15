@@ -15,19 +15,23 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Menu, MenuItem, Tooltip, TooltipProps, styled, tooltipClasses } from '@mui/material';
-import { useNotifications } from 'bh-shared-ui';
+import { apiClient, useNotifications } from 'bh-shared-ui';
 import { FC, useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { destinationNodeSelected, sourceNodeSelected, tabChanged } from 'src/ducks/searchbar/actions';
 import { AppState, useAppDispatch } from 'src/store';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCaretRight } from '@fortawesome/free-solid-svg-icons';
+import { useMutation } from 'react-query';
+import { selectOwnedAssetGroupId, selectTierZeroAssetGroupId } from 'src/ducks/assetgroups/reducer';
 
 const ContextMenu: FC<{ anchorPosition?: { x: number; y: number } }> = ({ anchorPosition }) => {
     const dispatch = useAppDispatch();
     const [open, setOpen] = useState(false);
 
     const selectedNode = useSelector((state: AppState) => state.entityinfo.selectedNode);
+    const ownedId = useSelector(selectOwnedAssetGroupId);
+    const tierZeroId = useSelector(selectTierZeroAssetGroupId);
 
     useEffect(() => {
         if (anchorPosition) {
@@ -75,6 +79,8 @@ const ContextMenu: FC<{ anchorPosition?: { x: number; y: number } }> = ({ anchor
             onClick={handleClick}>
             <MenuItem onClick={handleSetStartingNode}>Set as starting node</MenuItem>
             <MenuItem onClick={handleSetEndingNode}>Set as ending node</MenuItem>
+            <AssetGroupMenuItem assetGroupId={tierZeroId}>Add to high value</AssetGroupMenuItem>
+            <AssetGroupMenuItem assetGroupId={ownedId}>Add to owned</AssetGroupMenuItem>
             <CopyMenuItem />
         </Menu>
     );
@@ -137,6 +143,42 @@ const CopyMenuItem = () => {
             </StyledTooltip>
         </div>
     );
+};
+
+const AssetGroupMenuItem: FC<{ assetGroupId: string; children: any }> = ({ assetGroupId, children }) => {
+    const { addNotification } = useNotifications();
+
+    const selectedNode = useSelector((state: AppState) => state.entityinfo.selectedNode);
+
+    const mutation = useMutation({
+        mutationFn: (nodeId: string) => {
+            return apiClient.updateAssetGroupSelector(assetGroupId, [
+                {
+                    selector_name: nodeId,
+                    sid: nodeId,
+                    action: 'add',
+                },
+            ]);
+        },
+        onSuccess: () => {
+            addNotification(
+                'Update successful. Please check back later to view updated Asset Group.',
+                'AssetGroupUpdateSuccess'
+            );
+        },
+        onError: (error) => {
+            console.error(error);
+            addNotification('Unknown error, group was not updated', 'AssetGroupUpdateError');
+        },
+    });
+
+    const handleAddToAssetGroup = () => {
+        if (selectedNode) {
+            mutation.mutate(selectedNode.id);
+        }
+    };
+
+    return <MenuItem onClick={handleAddToAssetGroup}>{children}</MenuItem>;
 };
 
 export default ContextMenu;
