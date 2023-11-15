@@ -14,13 +14,12 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Menu, MenuItem, Tooltip } from '@mui/material';
+import { Menu, MenuItem, Tooltip, TooltipProps, styled, tooltipClasses } from '@mui/material';
 import { useNotifications } from 'bh-shared-ui';
 import { FC, useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { destinationNodeSelected, sourceNodeSelected, tabChanged } from 'src/ducks/searchbar/actions';
 import { AppState, useAppDispatch } from 'src/store';
-import withStyles from '@mui/styles/withStyles';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCaretRight } from '@fortawesome/free-solid-svg-icons';
 
@@ -81,19 +80,18 @@ const ContextMenu: FC<{ anchorPosition?: { x: number; y: number } }> = ({ anchor
     );
 };
 
-const StyledTooltip = withStyles((theme) => {
-    return {
-        tooltip: {
-            color: 'black',
-            backgroundColor: theme.palette.common.white,
-            padding: 0,
-            paddingTop: '0.5rem',
-            paddingBottom: '0.5rem',
-            marginLeft: '2px',
-            boxShadow: theme.shadows[8],
-        },
-    };
-})(Tooltip);
+const StyledTooltip = styled(({ className, ...props }: TooltipProps) => (
+    <Tooltip {...props} classes={{ popper: className }} />
+))(({ theme }) => ({
+    [`& .${tooltipClasses.tooltip}`]: {
+        color: 'black',
+        backgroundColor: theme.palette.common.white,
+        padding: 0,
+        paddingTop: '0.5rem',
+        paddingBottom: '0.5rem',
+        boxShadow: theme.shadows[8],
+    },
+}));
 
 const CopyMenuItem = () => {
     const { addNotification } = useNotifications();
@@ -125,7 +123,6 @@ const CopyMenuItem = () => {
     return (
         <div>
             <StyledTooltip
-                sx={{ boxShadow: 3 }}
                 placement='right'
                 title={
                     <>
