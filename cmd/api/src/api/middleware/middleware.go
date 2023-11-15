@@ -33,6 +33,7 @@ import (
 	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/src/config"
 	"github.com/specterops/bloodhound/src/ctx"
+	"github.com/specterops/bloodhound/src/database"
 	"github.com/specterops/bloodhound/src/utils"
 	"github.com/unrolled/secure"
 )
@@ -237,4 +238,18 @@ func SecureHandlerMiddleware(cfg config.Configuration, contentSecurityPolicy str
 		// This will cause the AllowedHosts, SSLRedirect, and STSSeconds/STSIncludeSubdomains options to be ignored during development
 		IsDevelopment: !cfg.TLS.Enabled(),
 	}).Handler
+}
+
+func FeatureFlagMiddleware(db database.Database, flagKey string) mux.MiddlewareFunc {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
+			if flag, err := db.GetFlagByKey(flagKey); err != nil {
+
+			} else if flag.Enabled {
+				next.ServeHTTP(response, request)
+			} else {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, api.ErrorResponseDetailsResourceNotFound, request), response)
+			}
+		})
+	}
 }
