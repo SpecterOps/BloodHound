@@ -22,8 +22,8 @@ on:
       - opened
 
 jobs:
-  Deploy-on-local-runner:
-    runs-on: self-hosted
+  build:
+  runs-on: self-hosted
     steps:
     - name: Login
       uses: atlassian/gajira-login@v3
