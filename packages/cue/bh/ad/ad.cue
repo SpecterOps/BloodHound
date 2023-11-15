@@ -69,11 +69,25 @@ CASecurityCollected: types.#StringEnum & {
 	representation: "casecuritycollected"
 }
 
+HasEnrollmentAgentRestrictions: types.#StringEnum & {
+	symbol: 		"HasEnrollmentAgentRestrictions"
+	schema: 		"ad"
+	name:           "Has Enrollment Agent Restrictions"
+	representation: "hasenrollmentagentrestrictions"
+}
+
 EnrollmentAgentRestrictionsCollected: types.#StringEnum & {
 	symbol: 		"EnrollmentAgentRestrictionsCollected"
 	schema: 		"ad"
 	name:           "Enrollment Agent Restrictions Collected"
 	representation: "enrollmentagentrestrictionscollected"
+}
+
+IsUserSpecifiesSanEnabled: types.#StringEnum & {
+	symbol: 		"IsUserSpecifiesSanEnabled"
+	schema: 		"ad"
+	name:           "Is User Specifies San Enabled"
+	representation: "isuserspecifiessanenabled"
 }
 
 IsUserSpecifiesSanEnabledCollected: types.#StringEnum & {
@@ -462,7 +476,9 @@ Properties: [
 	CertName,
 	CertThumbprint,
 	CertThumbprints,
+	HasEnrollmentAgentRestrictions,
 	EnrollmentAgentRestrictionsCollected,
+	IsUserSpecifiesSanEnabled,
 	IsUserSpecifiesSanEnabledCollected,
 	HasBasicConstraints,
 	BasicConstraintPathLength,
