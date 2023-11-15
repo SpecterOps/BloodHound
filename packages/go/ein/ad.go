@@ -407,6 +407,31 @@ func ParseUserRightData(userRight UserRightsAssignmentAPIResult, computer Comput
 	return relationships
 }
 
+func ParseCARegistryProperties(enterpriseCA EnterpriseCA) IngestibleNode {
+	propMap := make(map[string]any)
+
+	// HasEnrollmentAgentRestrictions
+	if enterpriseCA.CARegistryData.EnrollmentAgentRestrictions.Collected {
+
+		if len(enterpriseCA.CARegistryData.EnrollmentAgentRestrictions.Restrictions) > 0 {
+			propMap[ad.HasEnrollmentAgentRestrictions.String()] = true
+		} else {
+			propMap[ad.HasEnrollmentAgentRestrictions.String()] = false
+		}
+	}
+
+	// IsUserSpecifiesSanEnabled
+	if enterpriseCA.CARegistryData.IsUserSpecifiesSanEnabled.Collected {
+		propMap[ad.IsUserSpecifiesSanEnabled.String()] = enterpriseCA.CARegistryData.IsUserSpecifiesSanEnabled.Value
+	}
+
+	return IngestibleNode{
+		ObjectID:    enterpriseCA.ObjectIdentifier,
+		PropertyMap: propMap,
+		Label:       ad.EnterpriseCA,
+	}
+}
+
 func ParseEnterpriseCAMiscData(enterpriseCA EnterpriseCA) []IngestibleRelationship {
 	var (
 		relationships        = make([]IngestibleRelationship, 0)

@@ -137,7 +137,8 @@ export interface EnterpriseCAInfo extends EntityInfo {
         enrollmentagentrestrictionscollected: boolean;
         flags: 10;
         hasbasicconstraints: boolean;
-        isuserspecifiessanenabled: boolean;
+        hasenrollmentagentrestrictions?: boolean;
+        isuserspecifiessanenabled?: boolean;
         isuserspecifiessanenabledcollected: boolean;
         description?: string;
     };

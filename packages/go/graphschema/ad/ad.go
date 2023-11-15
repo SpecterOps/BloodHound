@@ -110,7 +110,9 @@ const (
 	CertName                               Property = "certname"
 	CertThumbprint                         Property = "certthumbprint"
 	CertThumbprints                        Property = "certthumbprints"
+	HasEnrollmentAgentRestrictions         Property = "hasenrollmentagentrestrictions"
 	EnrollmentAgentRestrictionsCollected   Property = "enrollmentagentrestrictionscollected"
+	IsUserSpecifiesSanEnabled              Property = "isuserspecifiessanenabled"
 	IsUserSpecifiesSanEnabledCollected     Property = "isuserspecifiessanenabledcollected"
 	HasBasicConstraints                    Property = "hasbasicconstraints"
 	BasicConstraintPathLength              Property = "basicconstraintpathlength"
@@ -167,7 +169,7 @@ const (
 )
 
 func AllProperties() []Property {
-	return []Property{AdminCount, CASecurityCollected, CAName, CertChain, CertName, CertThumbprint, CertThumbprints, EnrollmentAgentRestrictionsCollected, IsUserSpecifiesSanEnabledCollected, HasBasicConstraints, BasicConstraintPathLength, DNSHostname, CrossCertificatePair, DistinguishedName, DomainFQDN, DomainSID, Sensitive, HighValue, BlocksInheritance, IsACL, IsACLProtected, IsDeleted, Enforced, Department, HasCrossCertificatePair, HasSPN, UnconstrainedDelegation, LastLogon, LastLogonTimestamp, IsPrimaryGroup, HasLAPS, DontRequirePreAuth, LogonType, HasURA, PasswordNeverExpires, PasswordNotRequired, FunctionalLevel, TrustType, SidFiltering, TrustedToAuth, SamAccountName, CertificateMappingMethodsRaw, CertificateMappingMethods, StrongCertificateBindingEnforcementRaw, StrongCertificateBindingEnforcement, EKUs, SubjectAltRequireUPN, AuthorizedSignatures, ApplicationPolicies, SchemaVersion, RequiresManagerApproval, AuthenticationEnabled, EnrolleeSuppliesSubject, CertificateApplicationPolicy, CertificateNameFlag, EffectiveEKUs, EnrollmentFlag, NoSecurityExtension, RenewalPeriod, ValidityPeriod, OID}
+	return []Property{AdminCount, CASecurityCollected, CAName, CertChain, CertName, CertThumbprint, CertThumbprints, HasEnrollmentAgentRestrictions, EnrollmentAgentRestrictionsCollected, IsUserSpecifiesSanEnabled, IsUserSpecifiesSanEnabledCollected, HasBasicConstraints, BasicConstraintPathLength, DNSHostname, CrossCertificatePair, DistinguishedName, DomainFQDN, DomainSID, Sensitive, HighValue, BlocksInheritance, IsACL, IsACLProtected, IsDeleted, Enforced, Department, HasCrossCertificatePair, HasSPN, UnconstrainedDelegation, LastLogon, LastLogonTimestamp, IsPrimaryGroup, HasLAPS, DontRequirePreAuth, LogonType, HasURA, PasswordNeverExpires, PasswordNotRequired, FunctionalLevel, TrustType, SidFiltering, TrustedToAuth, SamAccountName, CertificateMappingMethodsRaw, CertificateMappingMethods, StrongCertificateBindingEnforcementRaw, StrongCertificateBindingEnforcement, EKUs, SubjectAltRequireUPN, AuthorizedSignatures, ApplicationPolicies, SchemaVersion, RequiresManagerApproval, AuthenticationEnabled, EnrolleeSuppliesSubject, CertificateApplicationPolicy, CertificateNameFlag, EffectiveEKUs, EnrollmentFlag, NoSecurityExtension, RenewalPeriod, ValidityPeriod, OID}
 }
 func ParseProperty(source string) (Property, error) {
 	switch source {
@@ -185,8 +187,12 @@ func ParseProperty(source string) (Property, error) {
 		return CertThumbprint, nil
 	case "certthumbprints":
 		return CertThumbprints, nil
+	case "hasenrollmentagentrestrictions":
+		return HasEnrollmentAgentRestrictions, nil
 	case "enrollmentagentrestrictionscollected":
 		return EnrollmentAgentRestrictionsCollected, nil
+	case "isuserspecifiessanenabled":
+		return IsUserSpecifiesSanEnabled, nil
 	case "isuserspecifiessanenabledcollected":
 		return IsUserSpecifiesSanEnabledCollected, nil
 	case "hasbasicconstraints":
@@ -313,8 +319,12 @@ func (s Property) String() string {
 		return string(CertThumbprint)
 	case CertThumbprints:
 		return string(CertThumbprints)
+	case HasEnrollmentAgentRestrictions:
+		return string(HasEnrollmentAgentRestrictions)
 	case EnrollmentAgentRestrictionsCollected:
 		return string(EnrollmentAgentRestrictionsCollected)
+	case IsUserSpecifiesSanEnabled:
+		return string(IsUserSpecifiesSanEnabled)
 	case IsUserSpecifiesSanEnabledCollected:
 		return string(IsUserSpecifiesSanEnabledCollected)
 	case HasBasicConstraints:
@@ -441,8 +451,12 @@ func (s Property) Name() string {
 		return "Certificate Thumbprint"
 	case CertThumbprints:
 		return "Certificate Thumbprints"
+	case HasEnrollmentAgentRestrictions:
+		return "Has Enrollment Agent Restrictions"
 	case EnrollmentAgentRestrictionsCollected:
 		return "Enrollment Agent Restrictions Collected"
+	case IsUserSpecifiesSanEnabled:
+		return "Is User Specifies San Enabled"
 	case IsUserSpecifiesSanEnabledCollected:
 		return "Is User Specifies San Enabled Collected"
 	case HasBasicConstraints:
