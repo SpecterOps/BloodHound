@@ -189,6 +189,10 @@ func convertAIACAData(data []ein.AIACA) ConvertedData {
 	for _, aiaca := range data {
 		converted.NodeProps = append(converted.NodeProps, ein.ConvertObjectToNode(ein.IngestBase(aiaca), ad.AIACA))
 		converted.RelProps = append(converted.RelProps, ein.ParseACEData(aiaca.Aces, aiaca.ObjectIdentifier, ad.AIACA)...)
+
+		if rel := ein.ParseObjectContainer(ein.IngestBase(aiaca), ad.AIACA); rel.IsValid() {
+			converted.RelProps = append(converted.RelProps, rel)
+		}
 	}
 
 	return converted
@@ -201,6 +205,10 @@ func convertRootCAData(data []ein.RootCA) ConvertedData {
 		converted.NodeProps = append(converted.NodeProps, ein.ConvertObjectToNode(rootca.IngestBase, ad.RootCA))
 		converted.RelProps = append(converted.RelProps, ein.ParseACEData(rootca.Aces, rootca.ObjectIdentifier, ad.RootCA)...)
 		converted.RelProps = append(converted.RelProps, ein.ParseRootCAMiscData(rootca)...)
+
+		if rel := ein.ParseObjectContainer(rootca.IngestBase, ad.RootCA); rel.IsValid() {
+			converted.RelProps = append(converted.RelProps, rel)
+		}
 	}
 
 	return converted
@@ -212,6 +220,10 @@ func convertEnterpriseCAData(data []ein.EnterpriseCA) ConvertedData {
 	for _, enterpriseca := range data {
 		converted.NodeProps = append(converted.NodeProps, ein.ConvertObjectToNode(enterpriseca.IngestBase, ad.EnterpriseCA))
 		converted.RelProps = append(converted.RelProps, ein.ParseEnterpriseCAMiscData(enterpriseca)...)
+
+		if rel := ein.ParseObjectContainer(enterpriseca.IngestBase, ad.EnterpriseCA); rel.IsValid() {
+			converted.RelProps = append(converted.RelProps, rel)
+		}
 	}
 
 	return converted
@@ -224,6 +236,10 @@ func convertNTAuthStoreData(data []ein.NTAuthStore) ConvertedData {
 		converted.NodeProps = append(converted.NodeProps, ein.ConvertObjectToNode(ntauthstore.IngestBase, ad.NTAuthStore))
 		converted.RelProps = append(converted.RelProps, ein.ParseNTAuthStoreData(ntauthstore)...)
 		converted.RelProps = append(converted.RelProps, ein.ParseACEData(ntauthstore.Aces, ntauthstore.ObjectIdentifier, ad.NTAuthStore)...)
+
+		if rel := ein.ParseObjectContainer(ntauthstore.IngestBase, ad.NTAuthStore); rel.IsValid() {
+			converted.RelProps = append(converted.RelProps, rel)
+		}
 	}
 
 	return converted
@@ -235,6 +251,10 @@ func convertCertTemplateData(data []ein.CertTemplate) ConvertedData {
 	for _, certtemplate := range data {
 		converted.NodeProps = append(converted.NodeProps, ein.ConvertObjectToNode(ein.IngestBase(certtemplate), ad.CertTemplate))
 		converted.RelProps = append(converted.RelProps, ein.ParseACEData(certtemplate.Aces, certtemplate.ObjectIdentifier, ad.CertTemplate)...)
+
+		if rel := ein.ParseObjectContainer(ein.IngestBase(certtemplate), ad.CertTemplate); rel.IsValid() {
+			converted.RelProps = append(converted.RelProps, rel)
+		}
 	}
 
 	return converted

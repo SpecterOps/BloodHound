@@ -19,6 +19,7 @@ package config
 import (
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -240,7 +241,9 @@ func SetValuesFromEnv(varPrefix string, target any, env []string) error {
 			if formattedPrefix := formatEnvironmentVariablePrefix(varPrefix); strings.HasPrefix(key, formattedPrefix) {
 				cfgKeyPath := strings.TrimPrefix(key, formattedPrefix)
 
-				if err := SetValue(target, cfgKeyPath, valueStr); err != nil {
+				if err := SetValue(target, cfgKeyPath, valueStr); errors.Is(err, InvalidConfigurationPathError) {
+					log.Warnf("%s", err)
+				} else if err != nil {
 					return err
 				}
 			}

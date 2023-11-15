@@ -44,7 +44,6 @@ func PostProcessedRelationships() []graph.Kind {
 		ad.IssuedSignedBy,
 		ad.EnterpriseCAFor,
 		ad.ADCSESC1,
-		ad.ADCSESC2,
 		ad.ADCSESC3,
 		ad.ADCSESC4,
 		ad.ADCSESC5,
