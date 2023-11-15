@@ -34,7 +34,7 @@ jobs:
           with:
                 project: BP
                 issuetype: 'Bug Report'
-                summary: ${{ github.event.issue.body }}
+                summary: ${{ github.event.issue.title }}
                 description: ${{ github.event.issue.body }}
                 fields: '{"labels":["GitHubReport"]}'
           env:
