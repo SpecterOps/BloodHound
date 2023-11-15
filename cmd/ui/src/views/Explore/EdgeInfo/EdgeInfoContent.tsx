@@ -20,6 +20,7 @@ import { FC, Fragment } from 'react';
 import { useDispatch } from 'react-redux';
 import { putGraphData, putGraphError, saveResponseForExport, setGraphLoading } from 'src/ducks/explore/actions';
 import { addSnackbar } from 'src/ducks/global/actions';
+import { transformToFlatGraphResponse } from 'src/utils';
 import EdgeInfoCollapsibleSection from 'src/views/Explore/EdgeInfo/EdgeInfoCollapsibleSection';
 import EdgeObjectInformation from 'src/views/Explore/EdgeInfo/EdgeObjectInformation';
 
@@ -52,8 +53,10 @@ const EdgeInfoContent: FC<{ selectedEdge: NonNullable<SelectedEdge> }> = ({ sele
                                             selectedEdge.name
                                         )
                                         .then((result) => {
-                                            dispatch(saveResponseForExport(result.data));
-                                            dispatch(putGraphData(result));
+                                            const formattedData = transformToFlatGraphResponse(result.data);
+
+                                            dispatch(saveResponseForExport(formattedData));
+                                            dispatch(putGraphData(formattedData));
                                         })
                                         .catch((err) => {
                                             if (err?.code === 'ERR_CANCELED') {
