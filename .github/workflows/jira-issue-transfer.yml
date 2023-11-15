@@ -16,16 +16,14 @@
 
 name: Jira Issue Transfer
 
-runs-on: self-hosted
-
 on:
   issues:
     types: 
       - opened
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
+  Deploy-on-local-runner:
+    runs-on: self-hosted
     steps:
     - name: Login
       uses: atlassian/gajira-login@v3
