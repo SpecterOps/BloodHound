@@ -221,6 +221,7 @@ func convertEnterpriseCAData(data []ein.EnterpriseCA) ConvertedData {
 
 	for _, enterpriseca := range data {
 		converted.NodeProps = append(converted.NodeProps, ein.ConvertObjectToNode(enterpriseca.IngestBase, ad.EnterpriseCA))
+		converted.NodeProps = append(converted.NodeProps, ein.ParseCARegistryProperties(enterpriseca))
 		converted.RelProps = append(converted.RelProps, ein.ParseEnterpriseCAMiscData(enterpriseca)...)
 
 		if rel := ein.ParseObjectContainer(enterpriseca.IngestBase, ad.EnterpriseCA); rel.IsValid() {
