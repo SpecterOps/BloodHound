@@ -478,7 +478,6 @@ func GetEdgeDetailPath(ctx context.Context, db graph.Database, edge *graph.Relat
 
 func getADCSESC1EdgeDetail(tx graph.Transaction, edge *graph.Relationship) (graph.PathSet, error) {
 	finalPaths := graph.NewPathSet()
-	caSet := cardinality.NewBitmap32()
 	//Grab the start node as well as the target domain node
 	if startNode, targetDomainNode, err := ops.FetchRelationshipNodes(tx, edge); err != nil {
 		return finalPaths, err
@@ -534,7 +533,7 @@ func getADCSESC1EdgeDetail(tx graph.Transaction, edge *graph.Relationship) (grap
 							},
 							DescentFilter: OutboundControlDescentFilter,
 							PathFilter: func(ctx *ops.TraversalContext, segment *graph.PathSegment) bool {
-								return caSet.Contains(segment.Node.ID.Uint32())
+								return segment.Node.ID == eca.ID
 							},
 						}); err != nil {
 							log.Errorf("Error getting paths from start node %d to enterprise ca: %w", startNode.ID, err)
