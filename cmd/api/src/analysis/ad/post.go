@@ -145,7 +145,7 @@ func PostLocalGroups(ctx context.Context, db graph.Database, localGroupExpansion
 	}
 }
 
-func Post(ctx context.Context, db graph.Database) (*analysis.AtomicPostProcessingStats, error) {
+func Post(ctx context.Context, db graph.Database, adcsEnabled bool) (*analysis.AtomicPostProcessingStats, error) {
 	aggregateStats := analysis.NewAtomicPostProcessingStats()
 	if stats, err := analysis.DeleteTransitEdges(ctx, db, ad.Entity, ad.Entity, adAnalysis.PostProcessedRelationships()...); err != nil {
 		return &aggregateStats, err
@@ -157,7 +157,7 @@ func Post(ctx context.Context, db graph.Database) (*analysis.AtomicPostProcessin
 		return &aggregateStats, err
 	} else if localGroupStats, err := PostLocalGroups(ctx, db, groupExpansions); err != nil {
 		return &aggregateStats, err
-	} else if adcsStats, err := adAnalysis.PostADCS(ctx, db, groupExpansions); err != nil {
+	} else if adcsStats, err := adAnalysis.PostADCS(ctx, db, groupExpansions, adcsEnabled); err != nil {
 		return &aggregateStats, err
 	} else {
 		aggregateStats.Merge(stats)
