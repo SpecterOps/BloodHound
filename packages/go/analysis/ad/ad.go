@@ -479,9 +479,11 @@ func GetEdgeDetailPath(ctx context.Context, db graph.Database, edge *graph.Relat
 func getADCSESC1EdgeDetail(tx graph.Transaction, edge *graph.Relationship) (graph.PathSet, error) {
 	finalPaths := graph.NewPathSet()
 	caSet := cardinality.NewBitmap32()
+	//Grab the start node as well as the target domain node
 	if startNode, targetDomainNode, err := ops.FetchRelationshipNodes(tx, edge); err != nil {
 		return finalPaths, err
 	} else {
+		//Find cert templates that we have control over using enroll/acls
 		if pathsToTemplates, err := ops.TraversePaths(tx, ops.TraversalPlan{
 			Root:      startNode,
 			Direction: graph.DirectionOutbound,
@@ -507,43 +509,45 @@ func getADCSESC1EdgeDetail(tx graph.Transaction, edge *graph.Relationship) (grap
 		} else {
 			for _, path := range pathsToTemplates {
 				certTemplate := path.Terminal()
-				if paths, err := FetchCertTemplatePathToDomain(tx, certTemplate, targetDomainNode); err != nil {
-					log.Errorf("Error getting paths from cert template %d to domain %d: %w", certTemplate.ID, targetDomainNode.ID, err)
+				if ecaPaths, err := ops.FetchPathSet(tx, tx.Relationships().Filter(query.And(
+					query.Equals(query.StartID(), certTemplate.ID),
+					query.KindIn(query.End(), ad.EnterpriseCA),
+					query.KindIn(query.Relationship(), ad.PublishedTo),
+				))); err != nil {
+					log.Errorf("error getting eca publishedto for cert template %d : %w", certTemplate.ID, err)
 				} else {
-					for _, subPath := range paths {
-						for _, node := range subPath.Nodes {
-							if node.Kinds.ContainsOneOf(ad.EnterpriseCA) {
-								caSet.Add(node.ID.Uint32())
-							}
+					for _, ecaPath := range ecaPaths {
+						eca := ecaPath.Terminal()
+						if domainPaths, err := FetchEnterpriseCAsCertChainPathToDomain(tx, eca, targetDomainNode); err != nil {
+							log.Errorf("error getting eca %d path to domain %d: %w", eca.ID, targetDomainNode.ID, err)
+						} else if domainPaths.Len() == 0 {
+							continue
+						} else if trustedForAuthPaths, err := FetchEnterpriseCAsTrustedForAuthPathToDomain(tx, eca, targetDomainNode); err != nil {
+							log.Errorf("error getting eca %d path to domain %d via trusted for auth: %w", eca.ID, targetDomainNode.ID, err)
+						} else if trustedForAuthPaths.Len() == 0 {
+							continue
+						} else if userPathsToCa, err := ops.TraversePaths(tx, ops.TraversalPlan{
+							Root:      startNode,
+							Direction: graph.DirectionOutbound,
+							BranchQuery: func() graph.Criteria {
+								return query.KindIn(query.Relationship(), ad.Enroll, ad.MemberOf)
+							},
+							DescentFilter: OutboundControlDescentFilter,
+							PathFilter: func(ctx *ops.TraversalContext, segment *graph.PathSegment) bool {
+								return caSet.Contains(segment.Node.ID.Uint32())
+							},
+						}); err != nil {
+							log.Errorf("Error getting paths from start node %d to enterprise ca: %w", startNode.ID, err)
+						} else if userPathsToCa.Len() == 0 {
+							continue
+						} else {
+							finalPaths.AddPath(path)
+							finalPaths.AddPath(ecaPath)
+							finalPaths.AddPathSet(domainPaths)
+							finalPaths.AddPathSet(trustedForAuthPaths)
+							finalPaths.AddPathSet(userPathsToCa)
 						}
 					}
-					finalPaths.AddPathSet(paths)
-					finalPaths.AddPath(path)
-				}
-			}
-		}
-
-		if pathsToCA, err := ops.TraversePaths(tx, ops.TraversalPlan{
-			Root:      startNode,
-			Direction: graph.DirectionOutbound,
-			BranchQuery: func() graph.Criteria {
-				return query.KindIn(query.Relationship(), ad.Enroll, ad.MemberOf)
-			},
-			DescentFilter: OutboundControlDescentFilter,
-			PathFilter: func(ctx *ops.TraversalContext, segment *graph.PathSegment) bool {
-				return caSet.Contains(segment.Node.ID.Uint32())
-			},
-		}); err != nil {
-			log.Errorf("Error getting paths from start node %d to enterprise ca: %w", startNode.ID, err)
-			return graph.NewPathSet(), err
-		} else {
-			for _, path := range pathsToCA {
-				enterpriseCA := path.Terminal()
-				if paths, err := FetchEnterpriseCAsTrustedForAuthPathToDomain(tx, enterpriseCA, targetDomainNode); err != nil {
-					log.Errorf("Error getting paths from cert template %d to domain %d: %w", enterpriseCA.ID, targetDomainNode.ID, err)
-				} else {
-					finalPaths.AddPathSet(paths)
-					finalPaths.AddPath(path)
 				}
 			}
 		}
