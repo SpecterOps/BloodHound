@@ -23,7 +23,7 @@ import { sourceNodeEdited, sourceNodeSelected } from 'src/ducks/searchbar/action
 const NodeSearch = () => {
     const dispatch = useAppDispatch();
 
-    const { primary } = useSelector((state: AppState) => state.search);
+    const primary = useSelector((state: AppState) => state.search.primary);
     const { searchTerm, value: selectedItem } = primary;
 
     const handleNodeEdited = (edit: string): SourceNodeEditedAction => dispatch(sourceNodeEdited(edit));

@@ -44,7 +44,7 @@ const EdgeFilter = () => {
     const [isActiveFilters, setIsActiveFilters] = useState(false);
 
     const initialFilterState = useRef<EdgeCheckboxType[]>([]);
-    const { pathFilters } = useSelector((state: AppState) => state.search);
+    const pathFilters = useSelector((state: AppState) => state.search.pathFilters);
 
     useEffect(() => {
         // if user has applied filters, set active

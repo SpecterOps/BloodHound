@@ -39,7 +39,9 @@ import { useSelector } from 'react-redux';
 const PathfindingSearch = () => {
     const dispatch = useAppDispatch();
 
-    const { primary, secondary } = useSelector((state: AppState) => state.search);
+    const primary = useSelector((state: AppState) => state.search.primary);
+    const secondary = useSelector((state: AppState) => state.search.secondary);
+
     const { searchTerm: sourceInputValue, value: sourceSelectedItem } = primary;
     const { searchTerm: destinationInputValue, value: destinationSelectedItem } = secondary;
 

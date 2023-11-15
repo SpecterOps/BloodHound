@@ -61,7 +61,7 @@ const ExploreSearch = ({ handleColumns }: ExploreSearchProps) => {
     const matches = useMediaQuery(theme.breakpoints.down('md'));
     const dispatch = useAppDispatch();
 
-    const { activeTab: tabKey } = useSelector((state: AppState) => state.search);
+    const tabKey = useSelector((state: AppState) => state.search.activeTab);
     const activeTab = tabNameMap[tabKey];
 
     const [showSearchWidget, setShowSearchWidget] = useState(true);
