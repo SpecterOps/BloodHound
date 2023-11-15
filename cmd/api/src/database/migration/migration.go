@@ -19,27 +19,37 @@ package migration
 import (
 	"embed"
 	"fmt"
+	"io/fs"
 
+	"github.com/specterops/bloodhound/src/version"
 	"gorm.io/gorm"
 )
 
 //go:embed migrations
+var FossMigrations embed.FS
 
-var migrations embed.FS
+type Source struct {
+	FileSystem fs.FS
+	Directory  string
+}
 
-const migrationDirname = "migrations"
+type Migration struct {
+	Filename string
+	Source   fs.FS
+	Version  version.Version
+}
 
 type Migrator struct {
-	migrations   embed.FS
-	db           *gorm.DB
-	migrationDir string
+	Sources []Source
+	Db      *gorm.DB
 }
 
 func NewMigrator(db *gorm.DB) *Migrator {
 	return &Migrator{
-		migrations:   migrations,
-		db:           db,
-		migrationDir: migrationDirname,
+		Sources: []Source{
+			{FileSystem: FossMigrations, Directory: "migrations"},
+		},
+		Db: db,
 	}
 }
 
