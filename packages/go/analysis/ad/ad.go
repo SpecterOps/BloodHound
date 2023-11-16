@@ -467,12 +467,20 @@ func CalculateCrossProductNodeSets(firstNodeSet, secondNodeSet []*graph.Node, gr
 func GetEdgeDetailPath(ctx context.Context, db graph.Database, edge *graph.Relationship) (graph.PathSet, error) {
 	pathSet := graph.NewPathSet()
 	return pathSet, db.ReadTransaction(ctx, func(tx graph.Transaction) error {
-		if results, err := getADCSESC1EdgeDetail(tx, edge); err != nil {
-			return err
-		} else {
-			pathSet = results
-			return nil
+		if edge.Kind == ad.GoldenCert {
+			if results, err := getGoldenCertEdgeDetail(tx, edge); err != nil {
+				return err
+			} else {
+				pathSet = results
+			}
+		} else if edge.Kind == ad.ADCSESC1 {
+			if results, err := getADCSESC1EdgeDetail(tx, edge); err != nil {
+				return err
+			} else {
+				pathSet = results
+			}
 		}
+		return nil
 	})
 }
 
@@ -547,6 +555,42 @@ func getADCSESC1EdgeDetail(tx graph.Transaction, edge *graph.Relationship) (grap
 							finalPaths.AddPathSet(userPathsToCa)
 						}
 					}
+				}
+			}
+		}
+
+		return finalPaths, nil
+	}
+}
+
+func getGoldenCertEdgeDetail(tx graph.Transaction, edge *graph.Relationship) (graph.PathSet, error) {
+	finalPaths := graph.NewPathSet()
+	//Grab the start node (computer) as well as the target domain node
+	if startNode, targetDomainNode, err := ops.FetchRelationshipNodes(tx, edge); err != nil {
+		return finalPaths, err
+	} else {
+		//Find hosted enterprise CA
+		if ecaPaths, err := ops.FetchPathSet(tx, tx.Relationships().Filter(query.And(
+			query.Equals(query.StartID(), startNode.ID),
+			query.KindIn(query.End(), ad.EnterpriseCA),
+			query.KindIn(query.Relationship(), ad.HostsCAService),
+		))); err != nil {
+			log.Errorf("error getting hostscaservice edge to enterprise ca for computer %d : %w", startNode.ID, err)
+		} else {
+			for _, ecaPath := range ecaPaths {
+				eca := ecaPath.Terminal()
+				if chainToRootCAPaths, err := FetchEnterpriseCAsCertChainPathToDomain(tx, eca, targetDomainNode); err != nil {
+					log.Errorf("error getting eca %d path to domain %d: %w", eca.ID, targetDomainNode.ID, err)
+				} else if chainToRootCAPaths.Len() == 0 {
+					continue
+				} else if trustedForAuthPaths, err := FetchEnterpriseCAsTrustedForAuthPathToDomain(tx, eca, targetDomainNode); err != nil {
+					log.Errorf("error getting eca %d path to domain %d via trusted for auth: %w", eca.ID, targetDomainNode.ID, err)
+				} else if trustedForAuthPaths.Len() == 0 {
+					continue
+				} else {
+					finalPaths.AddPath(ecaPath)
+					finalPaths.AddPathSet(chainToRootCAPaths)
+					finalPaths.AddPathSet(trustedForAuthPaths)
 				}
 			}
 		}

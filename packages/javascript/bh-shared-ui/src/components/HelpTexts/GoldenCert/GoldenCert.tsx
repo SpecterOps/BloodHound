@@ -19,6 +19,7 @@ import WindowsAbuse from './WindowsAbuse';
 import LinuxAbuse from './LinuxAbuse';
 import Opsec from './Opsec';
 import References from './References';
+import Details from './Details';
 
 const GoldenCert = {
     general: General,
@@ -26,6 +27,7 @@ const GoldenCert = {
     linuxAbuse: LinuxAbuse,
     opsec: Opsec,
     references: References,
+    details: Details,
 };
 
 export default GoldenCert;
