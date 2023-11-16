@@ -269,14 +269,11 @@ func NewV2API(cfg config.Configuration, resources v2.Resources, routerInst *rout
 		routerInst.GET(fmt.Sprintf("/api/v2/azure-tenants/{%s}/data-quality-stats", api.URIPathVariableTenantID), resources.GetAzureDataQualityStats).RequirePermissions(permissions.GraphDBRead),
 		routerInst.GET(fmt.Sprintf("/api/v2/platform/{%s}/data-quality-stats", api.URIPathVariablePlatformID), resources.GetPlatformAggregateStats).RequirePermissions(permissions.GraphDBRead),
 
-		routerInst.GET("/api/v2/edge/details", resources.GetEdgeDetails).RequirePermissions(permissions.GraphDBRead),
+		routerInst.GET("/api/v2/edge/composition", resources.GetEdgeComposition).RequirePermissions(permissions.GraphDBRead),
 
 		// Datapipe API
 		routerInst.GET("/api/v2/datapipe/status", resources.GetDatapipeStatus).RequireAuth(),
 		//TODO: Update the permission on this once we get something more concrete
 		routerInst.PUT("/api/v2/analysis", resources.RequestAnalysis).RequirePermissions(permissions.GraphDBWrite),
-
-		// Edge Details
-		routerInst.GET("/api/v2/edge/details", resources.RequestAnalysis).RequirePermissions(permissions.GraphDBWrite),
 	)
 }

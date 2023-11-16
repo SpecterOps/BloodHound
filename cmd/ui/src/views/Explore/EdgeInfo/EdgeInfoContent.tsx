@@ -44,14 +44,14 @@ const EdgeInfoContent: FC<{ selectedEdge: NonNullable<SelectedEdge> }> = ({ sele
 
                         if (
                             (selectedEdge.name === 'GoldenCert' || selectedEdge.name === 'ADCSESC1') &&
-                            section[0] === 'details'
+                            section[0] === 'composition'
                         ) {
                             handleOnChange = async (label: string, isOpen: boolean) => {
                                 if (isOpen) {
                                     dispatch(setGraphLoading(true));
 
                                     await apiClient
-                                        .getEdgeDetails(
+                                        .getEdgeComposition(
                                             sourceNode.id as number,
                                             targetNode.id as number,
                                             selectedEdge.name
@@ -73,7 +73,7 @@ const EdgeInfoContent: FC<{ selectedEdge: NonNullable<SelectedEdge> }> = ({ sele
                                             dispatch(
                                                 addSnackbar(
                                                     'Query failed. Please try again.',
-                                                    'edgeDetailsGraphQuery',
+                                                    'edgeCompositionGraphQuery',
                                                     {}
                                                 )
                                             );

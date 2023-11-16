@@ -464,17 +464,17 @@ func CalculateCrossProductNodeSets(firstNodeSet, secondNodeSet []*graph.Node, gr
 	return resultEntities
 }
 
-func GetEdgeDetailPath(ctx context.Context, db graph.Database, edge *graph.Relationship) (graph.PathSet, error) {
+func GetEdgeCompositionPath(ctx context.Context, db graph.Database, edge *graph.Relationship) (graph.PathSet, error) {
 	pathSet := graph.NewPathSet()
 	return pathSet, db.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		if edge.Kind == ad.GoldenCert {
-			if results, err := getGoldenCertEdgeDetail(tx, edge); err != nil {
+			if results, err := getGoldenCertEdgeComposition(tx, edge); err != nil {
 				return err
 			} else {
 				pathSet = results
 			}
 		} else if edge.Kind == ad.ADCSESC1 {
-			if results, err := getADCSESC1EdgeDetail(tx, edge); err != nil {
+			if results, err := getADCSESC1EdgeComposition(tx, edge); err != nil {
 				return err
 			} else {
 				pathSet = results
@@ -484,7 +484,7 @@ func GetEdgeDetailPath(ctx context.Context, db graph.Database, edge *graph.Relat
 	})
 }
 
-func getADCSESC1EdgeDetail(tx graph.Transaction, edge *graph.Relationship) (graph.PathSet, error) {
+func getADCSESC1EdgeComposition(tx graph.Transaction, edge *graph.Relationship) (graph.PathSet, error) {
 	finalPaths := graph.NewPathSet()
 	//Grab the start node as well as the target domain node
 	if startNode, targetDomainNode, err := ops.FetchRelationshipNodes(tx, edge); err != nil {
@@ -563,7 +563,7 @@ func getADCSESC1EdgeDetail(tx graph.Transaction, edge *graph.Relationship) (grap
 	}
 }
 
-func getGoldenCertEdgeDetail(tx graph.Transaction, edge *graph.Relationship) (graph.PathSet, error) {
+func getGoldenCertEdgeComposition(tx graph.Transaction, edge *graph.Relationship) (graph.PathSet, error) {
 	finalPaths := graph.NewPathSet()
 	//Grab the start node (computer) as well as the target domain node
 	if startNode, targetDomainNode, err := ops.FetchRelationshipNodes(tx, edge); err != nil {

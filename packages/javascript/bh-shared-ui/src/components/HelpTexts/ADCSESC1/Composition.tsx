@@ -21,9 +21,9 @@ import { EdgeInfoProps } from '..';
 import { useQuery } from 'react-query';
 import VirtualizedNodeList, { VirtualizedNodeListItem } from '../../VirtualizedNodeList';
 
-const Details: FC<EdgeInfoProps> = ({ sourceDBId, targetDBId, edgeName }) => {
-    const { data, isLoading, isError } = useQuery(['edgeDetails', sourceDBId, targetDBId, edgeName], ({ signal }) =>
-        apiClient.getEdgeDetails(sourceDBId!, targetDBId!, edgeName!).then((result) => result.data)
+const Composition: FC<EdgeInfoProps> = ({ sourceDBId, targetDBId, edgeName }) => {
+    const { data, isLoading, isError } = useQuery(['edgeComposition', sourceDBId, targetDBId, edgeName], ({ signal }) =>
+        apiClient.getEdgeComposition(sourceDBId!, targetDBId!, edgeName!).then((result) => result.data)
     );
 
     const nodesArray: VirtualizedNodeListItem[] = Object.values(data?.data.nodes || {}).map((node) => ({
@@ -42,7 +42,7 @@ const Details: FC<EdgeInfoProps> = ({ sourceDBId, targetDBId, edgeName }) => {
                 {isLoading ? (
                     <Skeleton variant='rounded' />
                 ) : isError ? (
-                    <Alert severity='error'>Couldn't load edge details</Alert>
+                    <Alert severity='error'>Couldn't load edge composition</Alert>
                 ) : (
                     <VirtualizedNodeList nodes={nodesArray} />
                 )}
@@ -51,4 +51,4 @@ const Details: FC<EdgeInfoProps> = ({ sourceDBId, targetDBId, edgeName }) => {
     );
 };
 
-export default Details;
+export default Composition;

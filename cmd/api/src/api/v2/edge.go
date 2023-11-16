@@ -18,10 +18,11 @@ package v2
 
 import (
 	"fmt"
-	"github.com/specterops/bloodhound/analysis"
-	"github.com/specterops/bloodhound/src/model"
 	"net/http"
 	"strconv"
+
+	"github.com/specterops/bloodhound/analysis"
+	"github.com/specterops/bloodhound/src/model"
 
 	"github.com/specterops/bloodhound/analysis/ad"
 	"github.com/specterops/bloodhound/dawgs/graph"
@@ -34,9 +35,7 @@ const (
 	edgeParameterTargetNode = "target_node"
 )
 
-var validEdgeTypes = []string{"goldencert", "adcsesc1"}
-
-func (s *Resources) GetEdgeDetails(response http.ResponseWriter, request *http.Request) {
+func (s *Resources) GetEdgeComposition(response http.ResponseWriter, request *http.Request) {
 	var (
 		params = request.URL.Query()
 	)
@@ -61,8 +60,8 @@ func (s *Resources) GetEdgeDetails(response http.ResponseWriter, request *http.R
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("Invalid value for endID: %s", targetNode[0]), request), response)
 	} else if edge, err := analysis.FetchEdgeByStartAndEnd(request.Context(), s.Graph, graph.ID(startID), graph.ID(endID), kind); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("Could not find edge matching criteria: %v", err), request), response)
-	} else if pathSet, err := ad.GetEdgeDetailPath(request.Context(), s.Graph, edge); err != nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("Error getting details for edge: %v", err), request), response)
+	} else if pathSet, err := ad.GetEdgeCompositionPath(request.Context(), s.Graph, edge); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("Error getting composition for edge: %v", err), request), response)
 	} else {
 		unifiedGraph := model.NewUnifiedGraph()
 		unifiedGraph.AddPathSet(pathSet, true)
