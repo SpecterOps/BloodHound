@@ -105,10 +105,11 @@ const EntityInfoDataTable: React.FC<EntityInfoDataTableProps> = ({ id, label, en
     let count: number | undefined;
     if (Array.isArray(countQuery.data)) {
         count = countQuery.data.reduce((acc, val) => {
-            return acc + val.count;
+            const count = val.count ?? 0;
+            return acc + count;
         }, 0);
     } else if (countQuery.data) {
-        count = countQuery.data.count;
+        count = countQuery.data.count ?? 0;
     }
 
     return (
