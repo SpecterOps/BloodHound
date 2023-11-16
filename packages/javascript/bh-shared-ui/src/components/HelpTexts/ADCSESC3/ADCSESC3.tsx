@@ -20,13 +20,12 @@ import LinuxAbuse from './LinuxAbuse';
 import Opsec from './Opsec';
 import References from './References';
 
-const ESC3 = {
-  general: General,
-  windowsAbuse: WindowsAbuse,
-  linuxAbuse: LinuxAbuse,
-  opsec: Opsec,
-  references: References,
+const ADCSESC3 = {
+    general: General,
+    windowsAbuse: WindowsAbuse,
+    linuxAbuse: LinuxAbuse,
+    opsec: Opsec,
+    references: References,
 };
 
-export default ESC3;
-
+export default ADCSESC3;
