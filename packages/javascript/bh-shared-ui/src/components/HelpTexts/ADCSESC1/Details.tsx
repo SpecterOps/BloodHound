@@ -15,61 +15,22 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { FC } from 'react';
-import { Alert, Box, List, ListItem, Skeleton, Tooltip, Typography } from '@mui/material';
-import { NodeIcon, apiClient } from '../../..';
+import { Alert, Box, Skeleton, Typography } from '@mui/material';
+import { apiClient } from '../../..';
 import { EdgeInfoProps } from '..';
-import { FixedSizeList } from 'react-window';
 import { useQuery } from 'react-query';
+import VirtualizedNodeList, { VirtualizedNodeListItem } from '../../VirtualizedNodeList';
 
 const Details: FC<EdgeInfoProps> = ({ sourceDBId, targetDBId, edgeName }) => {
     const { data, isLoading, isError } = useQuery(['edgeDetails', sourceDBId, targetDBId, edgeName], ({ signal }) =>
         apiClient.getEdgeDetails(sourceDBId!, targetDBId!, edgeName!).then((result) => result.data)
     );
 
-    const InnerElement = ({ style, ...rest }: any) => (
-        <List component='ul' disablePadding style={{ ...style, overflowX: 'hidden' }} {...rest} />
-    );
-
-    const Row = ({ data, index, style }: any) => {
-        const items = data;
-        const item = items[index];
-        const itemClass = index % 2 ? 'odd-item' : 'even-item';
-
-        if (item === undefined) {
-            return (
-                <ListItem
-                    className={itemClass}
-                    style={{ ...style, whiteSpace: 'nowrap', padding: '0 8px' }}
-                    data-testid='entity-row'>
-                    <Skeleton variant='text' width='100%' />
-                </ListItem>
-            );
-        }
-
-        const normalizedItem = {
-            id: item.objectID || item.props?.objectid || '',
-            name: item.name || item.objectID || item.props?.name || item.props?.objectid || 'Unknown',
-            type: item.label || item.kind || '',
-        };
-
-        return (
-            <ListItem
-                button
-                className={itemClass}
-                style={{
-                    ...style,
-                    padding: '0 8px',
-                }}
-                data-testid='entity-row'>
-                <NodeIcon nodeType={normalizedItem.type} />
-                <Tooltip title={normalizedItem.name}>
-                    <div style={{ minWidth: '0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                        {normalizedItem.name}
-                    </div>
-                </Tooltip>
-            </ListItem>
-        );
-    };
+    const nodesArray: VirtualizedNodeListItem[] = Object.values(data?.data.nodes || {}).map((node) => ({
+        name: node.label,
+        objectId: node.objectId,
+        kind: node.kind,
+    }));
 
     return (
         <>
@@ -83,21 +44,7 @@ const Details: FC<EdgeInfoProps> = ({ sourceDBId, targetDBId, edgeName }) => {
                 ) : isError ? (
                     <Alert severity='error'>Couldn't load edge details</Alert>
                 ) : (
-                    <FixedSizeList
-                        height={Math.min(Object.keys(data?.data.nodes || {}).length, 16) * 32}
-                        itemCount={Object.keys(data?.data.nodes || {}).length}
-                        itemData={Object.entries(data?.data.nodes || {}).map(([key, value]) => ({
-                            objectID: value.objectId,
-                            name: value.label,
-                            kind: value.kind,
-                        }))}
-                        itemSize={32}
-                        innerElementType={InnerElement}
-                        width={'100%'}
-                        initialScrollOffset={0}
-                        style={{ borderRadius: 4 }}>
-                        {Row}
-                    </FixedSizeList>
+                    <VirtualizedNodeList nodes={nodesArray} />
                 )}
             </Box>
         </>
