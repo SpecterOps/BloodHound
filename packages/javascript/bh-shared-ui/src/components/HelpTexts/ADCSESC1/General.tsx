@@ -23,12 +23,12 @@ const General: FC<EdgeInfoProps> = ({ sourceName, sourceType, targetName }) => {
     return (
         <>
             <Typography variant='body2'>
-                {groupSpecialFormat(sourceType, sourceName)} the privileges to perform the ADCS ESC1 attack against
-                the target domain.
+                {groupSpecialFormat(sourceType, sourceName)} the privileges to perform the ADCS ESC1 attack against the
+                target domain.
             </Typography>
             <Typography variant='body2'>
                 The principal has permission to enroll on one or more certificate templates, allowing them to specify an
-                alternate subject name and use the certificate for authentication. They also have enrollment permission 
+                alternate subject name and use the certificate for authentication. They also have enrollment permission
                 for an enterprise CA with the necessary templates published. This enterprise CA is trusted for NT
                 authentication in the forest, along with the certificate chain up to the root CA certificate. This setup
                 lets the principal enroll certificates for any AD forest user or computer, enabling authentication and
