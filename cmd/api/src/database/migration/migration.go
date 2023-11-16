@@ -28,28 +28,32 @@ import (
 //go:embed migrations
 var FossMigrations embed.FS
 
+// Source is meant to be a file system source that contains SQL migration files.
 type Source struct {
 	FileSystem fs.FS
 	Directory  string
 }
 
+// Migration contains information about a specific migration such as the file location, it's Source, and Version.
 type Migration struct {
 	Filename string
 	Source   fs.FS
 	Version  version.Version
 }
 
+// Migrator is the main SQL migration tool for BloodHound.
 type Migrator struct {
 	Sources []Source
-	Db      *gorm.DB
+	DB      *gorm.DB
 }
 
+// NewMigrator returns a new Migrator with the FossMigrations Source predefined.
 func NewMigrator(db *gorm.DB) *Migrator {
 	return &Migrator{
 		Sources: []Source{
 			{FileSystem: FossMigrations, Directory: "migrations"},
 		},
-		Db: db,
+		DB: db,
 	}
 }
 

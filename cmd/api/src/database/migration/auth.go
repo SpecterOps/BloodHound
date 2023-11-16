@@ -45,7 +45,7 @@ func getAllRoles(tx *gorm.DB) (model.Roles, error) {
 }
 
 func (s *Migrator) updatePermissions() error {
-	return s.Db.Transaction(func(tx *gorm.DB) error {
+	return s.DB.Transaction(func(tx *gorm.DB) error {
 		if existingPermissions, err := getAllPermissions(tx); err != nil {
 			return err
 		} else {
@@ -65,7 +65,7 @@ func (s *Migrator) updatePermissions() error {
 }
 
 func (s *Migrator) checkUserEmailAddresses() error {
-	return s.Db.Transaction(func(tx *gorm.DB) error {
+	return s.DB.Transaction(func(tx *gorm.DB) error {
 		var users model.Users
 
 		for _, userAssociation := range model.UserAssociations() {
@@ -97,7 +97,7 @@ func (s *Migrator) checkUserEmailAddresses() error {
 }
 
 func (s *Migrator) updateRoles() error {
-	return s.Db.Transaction(func(tx *gorm.DB) error {
+	return s.DB.Transaction(func(tx *gorm.DB) error {
 		if permissions, err := getAllPermissions(tx); err != nil {
 			return err
 		} else if existingRoles, err := getAllRoles(tx); err != nil {
@@ -122,7 +122,7 @@ func (s *Migrator) updateRoles() error {
 						existingRole.Name = expectedRole.Name
 						existingRole.Description = expectedRole.Description
 
-						if result := s.Db.Save(existingRole); result.Error != nil {
+						if result := s.DB.Save(existingRole); result.Error != nil {
 							return result.Error
 						}
 
@@ -134,7 +134,7 @@ func (s *Migrator) updateRoles() error {
 					existingRole.Permissions = expectedRole.Permissions
 					existingRole.Description = expectedRole.Description
 
-					if result := s.Db.Session(&gorm.Session{FullSaveAssociations: true}).Updates(existingRole); result.Error != nil {
+					if result := s.DB.Session(&gorm.Session{FullSaveAssociations: true}).Updates(existingRole); result.Error != nil {
 						return result.Error
 					}
 

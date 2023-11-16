@@ -19,7 +19,7 @@ package migration
 import "gorm.io/gorm"
 
 func (s *Migrator) cleanupIngest() error {
-	return s.Db.Transaction(func(tx *gorm.DB) error {
+	return s.DB.Transaction(func(tx *gorm.DB) error {
 		if result := tx.Exec(`truncate table ingest_tasks;`); result.Error != nil {
 			return result.Error
 		}

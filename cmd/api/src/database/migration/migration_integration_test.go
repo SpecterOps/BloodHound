@@ -53,6 +53,8 @@ func (BarTest) TableName() string {
 	return "bar_test"
 }
 
+// TestMigrator_LatestMigration tests that the Migrator can retrieve
+// the last migration entry in the `migration` table.
 func TestMigrator_LatestMigration(t *testing.T) {
 	_, migrator, err := integration.SetupTestMigrator(migration.Source{FileSystem: testMigrationSystem1, Directory: "test_migrations/system1"})
 	require.Nil(t, err)
@@ -71,6 +73,15 @@ func TestMigrator_LatestMigration(t *testing.T) {
 	assert.Equal(t, 0, ver.Version().Patch)
 }
 
+// TestMigrator_ExecuteMigrations tests the integrity of the stepwise
+// migration process. It generates a full manifest and then splits it
+// into chunks to test various scenarios the Migrator should handle
+// when dealing with multiple migration Source's.
+// Each chunk is similar to cases a user may encounter:
+// Case 1 simulates a new installation, running schema and some initial migrations.
+// Case 2 simulates independent migrations with independent versioning.
+// Case 3 simulates Source order-dependent migration operations within the same version.
+// Case 4 cleans up using independent migrations from the same version.
 func TestMigrator_ExecuteMigrations(t *testing.T) {
 	var (
 		tableExists bool
@@ -207,6 +218,8 @@ func TestMigrator_ExecuteMigrations(t *testing.T) {
 	})
 }
 
+// TestMigrator_HasMigrationTable makes sure the Migrator can properly
+// detect the `migrations` table.
 func TestMigrator_HasMigrationTable(t *testing.T) {
 	_, migrator, err := integration.SetupTestMigrator()
 	require.Nil(t, err)
@@ -218,6 +231,8 @@ func TestMigrator_HasMigrationTable(t *testing.T) {
 	assert.True(t, hasTable)
 }
 
+// TestMigrator_CreateMigrationSchema ensures that the Migrator can
+// successfully generate all schema needed to track migrations.
 func TestMigrator_CreateMigrationSchema(t *testing.T) {
 	const (
 		checkTableExistsSql    = "SELECT EXISTS(SELECT * FROM information_schema.tables WHERE table_name='migrations')"
@@ -263,6 +278,7 @@ func TestMigrator_CreateMigrationSchema(t *testing.T) {
 	})
 }
 
+// TestMigrator_Migrate tests the integrity of FossMigrations.
 func TestMigrator_Migrate(t *testing.T) {
 	_, migrator, err := integration.SetupTestMigrator(migration.Source{FileSystem: migration.FossMigrations, Directory: "migrations"})
 	require.Nil(t, err)

@@ -25,17 +25,24 @@ import (
 	"github.com/specterops/bloodhound/src/version"
 )
 
+// Manifest is a collection of available migrations. VersionTable is used to order and store
+// all version of migrations contained in the manifest. Migrations is the actual
+// underlying map of [version:[]migration]
 type Manifest struct {
 	VersionTable []string
 	Migrations   map[string][]Migration
 }
 
+// NewManifest creates a new Manifest and initializes the migrations map
 func NewManifest() Manifest {
 	return Manifest{
 		Migrations: make(map[string][]Migration),
 	}
 }
 
+// AddMigration will add migrations to the correct location in the migrations
+// map, with care to make sure the map is initialized, as well as the
+// version location within the map.
 func (s *Manifest) AddMigration(migration Migration) {
 	if s.Migrations == nil {
 		s.Migrations = make(map[string][]Migration)
@@ -47,6 +54,9 @@ func (s *Manifest) AddMigration(migration Migration) {
 	}
 }
 
+// GenerateManifest is a wrapper around GenerateManifestAfterVersion, using
+// -1.-1.-1 as the version. This ensures that a full manifest of all
+// available migrations is generated. This is most useful for new installations.
 func (s *Migrator) GenerateManifest() (Manifest, error) {
 	return s.GenerateManifestAfterVersion(version.Version{
 		Major: -1,
@@ -55,6 +65,14 @@ func (s *Migrator) GenerateManifest() (Manifest, error) {
 	})
 }
 
+// GenerateManifestAfterVersion takes a version.Version argument and uses
+// that to generate a manifest from the available migration Source's.
+// It will loop through sources and build Migration's from the available
+// migration files. Files labeled `schema` are considered the initial
+// migration and get versioned as v0.0.0. All valid migrations that
+// are versioned after the version given will be added to the manifest
+// for migration. The final step is the build and sort the VersionTable
+// that will be used for applying the migration in order by ExecuteMigrations.
 func (s *Migrator) GenerateManifestAfterVersion(lastVersion version.Version) (Manifest, error) {
 	const migrationSQLFilenameSuffix = ".sql"
 	var manifest = NewManifest()

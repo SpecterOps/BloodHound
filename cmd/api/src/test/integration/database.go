@@ -70,7 +70,7 @@ func SetupTestMigrator(sources ...migration.Source) (*gorm.DB, *migration.Migrat
 	} else {
 		return db, &migration.Migrator{
 			Sources: sources,
-			Db:      db,
+			DB:      db,
 		}, nil
 	}
 }

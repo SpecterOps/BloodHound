@@ -33,7 +33,7 @@ func (s *Migrator) setAppConfigDefaults() error {
 }
 
 func (s *Migrator) setFeatureFlagDefaults() error {
-	return s.Db.Transaction(func(tx *gorm.DB) error {
+	return s.DB.Transaction(func(tx *gorm.DB) error {
 		for flagKey, availableFlag := range appcfg.AvailableFlags() {
 			count := int64(0)
 
@@ -53,7 +53,7 @@ func (s *Migrator) setFeatureFlagDefaults() error {
 }
 
 func (s *Migrator) setParameterDefaults() error {
-	return s.Db.Transaction(func(tx *gorm.DB) error {
+	return s.DB.Transaction(func(tx *gorm.DB) error {
 		if availParams, err := appcfg.AvailableParameters(); err != nil {
 			return fmt.Errorf("error checking AvailableParameters: %w", err)
 		} else {
