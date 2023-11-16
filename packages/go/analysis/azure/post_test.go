@@ -20,9 +20,10 @@ import (
 	"context"
 	"testing"
 
+	"github.com/RoaringBitmap/roaring"
 	"github.com/bloodhoundad/azurehound/v2/constants"
 	"github.com/specterops/bloodhound/dawgs/graph"
-	"github.com/specterops/bloodhound/dawgs/graph/mocks"
+	graph_mocks "github.com/specterops/bloodhound/dawgs/graph/mocks"
 	"github.com/specterops/bloodhound/dawgs/util/size"
 	azschema "github.com/specterops/bloodhound/graphschema/azure"
 	"github.com/stretchr/testify/assert"
@@ -42,14 +43,21 @@ var (
 // setupRoleAssignments is used to create a testable RoleAssignments struct. It is used in all RoleAssignments tests
 // and may require adjusting tests if modified
 func setupRoleAssignments() azure.RoleAssignments {
+	roleMap := map[string]*roaring.Bitmap{
+		constants.GlobalAdministratorRoleID:   roaring.New(),
+		constants.ReportsReaderRoleID:         roaring.New(),
+		constants.HelpdeskAdministratorRoleID: roaring.New(),
+		constants.PartnerTier1SupportRoleID:   roaring.New(),
+	}
+	roleMap[constants.GlobalAdministratorRoleID].Add(uint32(user.ID))
+	roleMap[constants.ReportsReaderRoleID].Add(uint32(group.ID))
+	roleMap[constants.HelpdeskAdministratorRoleID].Add(uint32(group.ID))
+	roleMap[constants.PartnerTier1SupportRoleID].Add(uint32(app.ID))
+
 	return azure.RoleAssignments{
 		// user2 has no roles! this is intentional
-		Nodes: graph.NewNodeSet(user, user2, group, app).KindSet(),
-		AssignmentMap: map[graph.ID]map[string]struct{}{
-			user.ID:  {azschema.CompanyAdministratorRole: struct{}{}},
-			group.ID: {azschema.ReportsReaderRole: struct{}{}, azschema.HelpdeskAdministratorRole: struct{}{}},
-			app.ID:   {azschema.PartnerTier1SupportRole: struct{}{}},
-		},
+		Principals: graph.NewNodeSet(user, user2, group, app).KindSet(),
+		RoleMap:    roleMap,
 	}
 }
 
@@ -64,16 +72,16 @@ func TestRoleAssignments_NodeHasRole(t *testing.T) {
 
 func TestRoleAssignments_UsersWithoutRoles(t *testing.T) {
 	assignments := setupRoleAssignments()
-	assert.NotEqual(t, user, assignments.UsersWithoutRoles().Get(user.ID))
-	assert.Equal(t, user2, assignments.UsersWithoutRoles().Get(user2.ID))
+	assert.False(t, assignments.UsersWithoutRoles().Contains(uint32(user.ID)))
+	assert.True(t, assignments.UsersWithoutRoles().Contains(uint32(user2.ID)))
 }
 
 func TestRoleAssignments_NodesWithRole(t *testing.T) {
 	assignments := setupRoleAssignments()
-	assert.Equal(t, user, assignments.NodesWithRole(azschema.ReportsReaderRole, azschema.CompanyAdministratorRole).Get(azschema.User).Get(user.ID))
-	assert.Equal(t, group, assignments.NodesWithRole(azschema.ReportsReaderRole, azschema.CompanyAdministratorRole).Get(azschema.Group).Get(group.ID))
-	assert.Equal(t, group, assignments.NodesWithRole(azschema.ReportsReaderRole, azschema.HelpdeskAdministratorRole).Get(azschema.Group).Get(group.ID))
-	assert.Equal(t, graph.EmptyNodeSet().Get(0), assignments.NodesWithRole(azschema.ReportsReaderRole).Get(azschema.User).Get(user.ID))
+	assert.True(t, assignments.PrincipalsWithRole(constants.ReportsReaderRoleID, constants.GlobalAdministratorRoleID).Contains(uint32(user.ID)))
+	assert.True(t, assignments.PrincipalsWithRole(constants.ReportsReaderRoleID, constants.GlobalAdministratorRoleID).Contains(uint32(group.ID)))
+	assert.True(t, assignments.PrincipalsWithRole(constants.ReportsReaderRoleID, constants.HelpdeskAdministratorRoleID).Contains(uint32(group.ID)))
+	assert.False(t, assignments.PrincipalsWithRole(constants.ReportsReaderRoleID).Contains(uint32(user.ID)))
 }
 
 func TestRoleAssignments_NodesWithRolesExclusive(t *testing.T) {

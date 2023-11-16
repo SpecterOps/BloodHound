@@ -19,6 +19,7 @@ package ein
 import (
 	"encoding/json"
 	"fmt"
+	"regexp"
 	"strings"
 	"time"
 
@@ -40,6 +41,8 @@ const (
 	ISO8601               string = "2006-01-02T15:04:05Z"
 	KeyVaultPermissionGet string = "Get"
 )
+
+var resourceGroupLevel = regexp.MustCompile("^[\\w\\d\\-\\/]*/resourceGroups/[0-9a-zA-Z]+$")
 
 func ConvertAZAppToNode(app models.App) IngestibleNode {
 	return IngestibleNode{
@@ -1018,7 +1021,7 @@ func ConvertAzureVirtualMachine(data models.VirtualMachine) (IngestibleNode, []I
 func ConvertAzureVirtualMachineAdminLoginToRels(data models.VirtualMachineAdminLogins) []IngestibleRelationship {
 	relationships := make([]IngestibleRelationship, 0)
 	for _, raw := range data.AdminLogins {
-		if data.VirtualMachineId == raw.AdminLogin.Properties.Scope {
+		if ResourceWithinScope(data.VirtualMachineId, raw.AdminLogin.Properties.Scope) {
 			relationships = append(relationships, IngestibleRelationship{
 				Source:     strings.ToUpper(raw.AdminLogin.GetPrincipalId()),
 				SourceType: azure.Entity,
@@ -1052,7 +1055,7 @@ func ConvertAzureVirtualMachineAvereContributorToRels(data models.VirtualMachine
 func ConvertAzureVirtualMachineContributorToRels(data models.VirtualMachineContributors) []IngestibleRelationship {
 	relationships := make([]IngestibleRelationship, 0)
 	for _, raw := range data.Contributors {
-		if data.VirtualMachineId == raw.Contributor.Properties.Scope {
+		if ResourceWithinScope(data.VirtualMachineId, raw.Contributor.Properties.Scope) {
 			relationships = append(relationships, IngestibleRelationship{
 				Source:     strings.ToUpper(raw.Contributor.GetPrincipalId()),
 				SourceType: azure.Entity,
@@ -1069,7 +1072,7 @@ func ConvertAzureVirtualMachineContributorToRels(data models.VirtualMachineContr
 func ConvertAzureVirtualMachineVMContributorToRels(data models.VirtualMachineVMContributors) []IngestibleRelationship {
 	relationships := make([]IngestibleRelationship, 0)
 	for _, raw := range data.VMContributors {
-		if data.VirtualMachineId == raw.VMContributor.Properties.Scope {
+		if ResourceWithinScope(data.VirtualMachineId, raw.VMContributor.Properties.Scope) {
 			relationships = append(relationships, IngestibleRelationship{
 				Source:     strings.ToUpper(raw.VMContributor.GetPrincipalId()),
 				SourceType: azure.Entity,
@@ -1086,7 +1089,7 @@ func ConvertAzureVirtualMachineVMContributorToRels(data models.VirtualMachineVMC
 func ConvertAzureVirtualMachineOwnerToRels(data models.VirtualMachineOwners) []IngestibleRelationship {
 	relationships := make([]IngestibleRelationship, 0)
 	for _, raw := range data.Owners {
-		if data.VirtualMachineId == raw.Owner.Properties.Scope {
+		if ResourceWithinScope(data.VirtualMachineId, raw.Owner.Properties.Scope) {
 			relationships = append(relationships, IngestibleRelationship{
 				Source:     strings.ToUpper(raw.Owner.GetPrincipalId()),
 				SourceType: azure.Entity,
@@ -1103,7 +1106,7 @@ func ConvertAzureVirtualMachineOwnerToRels(data models.VirtualMachineOwners) []I
 func ConvertAzureVirtualMachineUserAccessAdminToRels(data models.VirtualMachineUserAccessAdmins) []IngestibleRelationship {
 	relationships := make([]IngestibleRelationship, 0)
 	for _, raw := range data.UserAccessAdmins {
-		if data.VirtualMachineId == raw.UserAccessAdmin.Properties.Scope {
+		if ResourceWithinScope(data.VirtualMachineId, raw.UserAccessAdmin.Properties.Scope) {
 			relationships = append(relationships, IngestibleRelationship{
 				Source:     strings.ToUpper(raw.UserAccessAdmin.Properties.PrincipalId),
 				SourceType: azure.Entity,
@@ -1481,4 +1484,15 @@ func getKeyVaultPermissions(data models.KeyVaultAccessPolicy) []graph.Kind {
 		}
 	}
 	return relationships
+}
+
+func ResourceWithinScope(resource, scope string) bool {
+	if strings.EqualFold(resource, scope) {
+		return true
+	}
+
+	if resourceGroupLevel.MatchString(scope) && strings.HasPrefix(strings.ToLower(resource), strings.ToLower(scope)) {
+		return true
+	}
+	return false
 }
