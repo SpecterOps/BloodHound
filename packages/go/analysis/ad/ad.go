@@ -513,7 +513,7 @@ func getADCSESC1EdgeDetail(tx graph.Transaction, edge *graph.Relationship) (grap
 					query.KindIn(query.End(), ad.EnterpriseCA),
 					query.KindIn(query.Relationship(), ad.PublishedTo),
 				))); err != nil {
-					log.Errorf("error getting eca publishedto for cert template %d : %w", certTemplate.ID, err)
+					log.Errorf("error getting eca published to for cert template %d : %w", certTemplate.ID, err)
 				} else {
 					for _, ecaPath := range ecaPaths {
 						eca := ecaPath.Terminal()
