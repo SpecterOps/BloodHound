@@ -20,7 +20,7 @@ import { ActiveDirectoryNodeKind, AzureNodeKind } from 'bh-shared-ui';
 import { validateNodeType } from 'src/utils';
 
 export type SearchResult = {
-    distinguishedname: string;
+    distinguishedname?: string;
     name: string;
     objectid: string;
     type: string;

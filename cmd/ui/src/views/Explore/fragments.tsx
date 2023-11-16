@@ -20,8 +20,8 @@ import isEmpty from 'lodash/isEmpty';
 import React, { PropsWithChildren } from 'react';
 import { TIER_ZERO_TAG } from 'src/constants';
 import { GraphNodeTypes } from 'src/ducks/graph/types';
-import { setSearchValue, startSearchSelected } from 'src/ducks/searchbar/actions';
-import { PRIMARY_SEARCH, SEARCH_TYPE_EXACT } from 'src/ducks/searchbar/types';
+import { sourceNodeSelected } from 'src/ducks/searchbar/actions';
+
 import { useAppDispatch } from 'src/store';
 import useCollapsibleSectionStyles from 'src/views/Explore/InfoStyles/CollapsibleSection';
 
@@ -173,18 +173,12 @@ const RelatedKindField = (fieldLabel: string, relatedKind: GraphNodeTypes, id: s
                 <Box
                     onClick={() => {
                         dispatch(
-                            setSearchValue(
-                                {
-                                    objectid: id,
-                                    label: '',
-                                    type: relatedKind,
-                                    name: name || '',
-                                },
-                                PRIMARY_SEARCH,
-                                SEARCH_TYPE_EXACT
-                            )
+                            sourceNodeSelected({
+                                objectid: id,
+                                type: relatedKind,
+                                name: name || '',
+                            })
                         );
-                        dispatch(startSearchSelected(PRIMARY_SEARCH));
                     }}
                     style={{ cursor: 'pointer' }}
                     overflow='hidden'
