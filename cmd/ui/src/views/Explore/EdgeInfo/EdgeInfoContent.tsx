@@ -16,6 +16,7 @@
 
 import { Box, Divider, Typography, useTheme } from '@mui/material';
 import { EdgeInfoComponents, EdgeSections, SelectedEdge, apiClient } from 'bh-shared-ui';
+import isEmpty from 'lodash/isEmpty';
 import { FC, Fragment } from 'react';
 import { useDispatch } from 'react-redux';
 import { putGraphData, putGraphError, saveResponseForExport, setGraphLoading } from 'src/ducks/explore/actions';
@@ -53,6 +54,9 @@ const EdgeInfoContent: FC<{ selectedEdge: NonNullable<SelectedEdge> }> = ({ sele
                                             selectedEdge.name
                                         )
                                         .then((result) => {
+                                            if (isEmpty(result.data.data.nodes)) {
+                                                throw new Error('empty result set');
+                                            }
                                             const formattedData = transformToFlatGraphResponse(result.data);
 
                                             dispatch(saveResponseForExport(formattedData));
