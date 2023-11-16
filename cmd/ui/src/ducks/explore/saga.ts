@@ -129,6 +129,7 @@ function* runPathfindingQuery(payload: PathfindingRequest): SagaIterator {
         ActiveDirectoryRelationshipKind.EnterpriseCAFor,
         ActiveDirectoryRelationshipKind.IssuedSignedBy,
         ActiveDirectoryRelationshipKind.EnrollOnBehalfOf,
+        ActiveDirectoryRelationshipKind.HostsCAService,
         AzureRelationshipKind.ApplicationReadWriteAll,
         AzureRelationshipKind.AppRoleAssignmentReadWriteAll,
         AzureRelationshipKind.DirectoryReadWriteAll,
