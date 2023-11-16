@@ -213,8 +213,8 @@ const GridItems = () => {
 
     const infoPanelStyles = {
         margin: theme.spacing(0, 4, 2, 2),
-        maxHeight: "95%"
-    }
+        maxHeight: '95%',
+    };
 
     const handleCypherTab = (isCypherEditorActive: boolean) => {
         isCypherEditorActive ? setColumns(cypherSearchColumns) : setColumns(columnsDefault);
@@ -225,9 +225,11 @@ const GridItems = () => {
             <ExploreSearch handleColumns={handleCypherTab} />
         </Grid>,
         <Grid item {...columnsDefault} sx={columnStyles} key={'info'}>
-            {edgeInfoState.open ?
-                <EdgeInfoPane sx={infoPanelStyles} selectedEdge={edgeInfoState.selectedEdge} /> :
-                <EntityInfoPanel sx={infoPanelStyles} selectedNode={selectedNode} />}
+            {edgeInfoState.open ? (
+                <EdgeInfoPane sx={infoPanelStyles} selectedEdge={edgeInfoState.selectedEdge} />
+            ) : (
+                <EntityInfoPanel sx={infoPanelStyles} selectedNode={selectedNode} />
+            )}
         </Grid>,
     ];
 };

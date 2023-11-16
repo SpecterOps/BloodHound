@@ -99,7 +99,7 @@ const Header: React.FC = () => {
                         icon={<FontAwesomeIcon icon={faUsersRectangle} size='sm' />}
                         active={location.pathname === routes.ROUTE_GROUP_MANAGEMENT}
                         onClick={() => navigate(routes.ROUTE_GROUP_MANAGEMENT)}
-                        data-testid='global_header_nav-set-management'
+                        data-testid='global_header_nav-group-management'
                     />
                 </div>
 

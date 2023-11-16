@@ -29,9 +29,9 @@ import {
     Typography,
     useTheme,
 } from '@mui/material';
-import { FC, useState } from 'react';
+import { FC, useEffect, useState } from 'react';
 import NodeIcon from '../NodeIcon';
-import { AssetGroup, AssetGroupMemberParams } from 'js-client-library';
+import { AssetGroup, AssetGroupMember, AssetGroupMemberParams } from 'js-client-library';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCheck, faTimes } from '@fortawesome/free-solid-svg-icons';
 import { useQuery } from 'react-query';
@@ -48,7 +48,7 @@ const AssetGroupMemberList: FC<{
     const [rowsPerPage, setRowsPerPage] = useState(25);
     const [count, setCount] = useState(0);
 
-    const { data, isLoading, isSuccess } = useQuery(
+    const { data, isLoading, isPreviousData, isSuccess } = useQuery(
         ['listAssetGroupMembers', assetGroup, filter, page, rowsPerPage],
         ({ signal }) => {
             const paginatedFilter = {
@@ -69,12 +69,8 @@ const AssetGroupMemberList: FC<{
         }
     );
 
-    const hoverStyles = {
-        '&:hover': {
-            backgroundColor: theme.palette.action.hover,
-            cursor: 'pointer',
-        },
-    };
+    // Prevents an error that occurs if you try to query with a "skip" value greater than the member count of the current group
+    useEffect(() => setPage(0), [assetGroup, filter]);
 
     const getLoadingRows = (count: number) => {
         const rows = [];
@@ -102,53 +98,42 @@ const AssetGroupMemberList: FC<{
                 </colgroup>
                 <TableHead>
                     <TableRow>
-                        <TableCell sx={{ bgcolor: 'white' }}>Name</TableCell>
-                        <TableCell sx={{ bgcolor: 'white', textAlign: 'center' }} align='right'>
+                        <TableCell sx={{ bgcolor: theme.palette.background.paper }}>Name</TableCell>
+                        <TableCell sx={{ bgcolor: theme.palette.background.paper, textAlign: 'center' }} align='right'>
                             Custom Member
                         </TableCell>
                     </TableRow>
                 </TableHead>
                 <TableBody sx={{ height: '100%', overflow: 'auto' }}>
-                    {isLoading && getLoadingRows(5)}
+                    {isLoading && getLoadingRows(10)}
                     {isSuccess &&
-                        data?.map((member) => {
-                            return (
-                                <TableRow
-                                    onClick={() => onSelectMember(member)}
-                                    sx={{ ...hoverStyles }}
-                                    key={member.object_id}>
-                                    <TableCell>
-                                        <Box sx={{ display: 'flex', alignItems: 'center', width: '100%' }}>
-                                            <NodeIcon nodeType={member.primary_kind} />
-                                            <Typography noWrap marginLeft={1} display={'inline-block'}>
-                                                {member.name}
-                                            </Typography>
-                                        </Box>
-                                    </TableCell>
-                                    <TableCell
-                                        align='right'
-                                        sx={{
-                                            padding: '0',
-                                            display: 'flex',
-                                            justifyContent: 'center',
-                                            alignItems: 'center',
-                                            height: '100%',
-                                        }}>
-                                        {member.custom_member ? (
-                                            <FontAwesomeIcon icon={faCheck} color='green' size='lg' />
-                                        ) : (
-                                            <FontAwesomeIcon icon={faTimes} color='red' size='lg' />
-                                        )}
-                                    </TableCell>
-                                </TableRow>
-                            );
-                        })}
+                        !!data.length &&
+                        data.map((member) => (
+                            <AssetGroupMemberRow
+                                member={member}
+                                onClick={onSelectMember}
+                                key={member.object_id}
+                                disabled={isPreviousData}
+                            />
+                        ))}
+                    {isSuccess && data.length === 0 && (
+                        <TableRow>
+                            <TableCell sx={{ textAlign: 'center', height: '100px' }} colSpan={2}>
+                                No members in selected Asset Group
+                            </TableCell>
+                        </TableRow>
+                    )}
                 </TableBody>
-                {count > 0 && (
+                {isSuccess && !!data.length && (
                     <TableFooter>
                         <TableRow>
                             <TablePagination
-                                sx={{ position: 'sticky', bottom: 0, bgcolor: 'white', borderTop: '1px solid #E0E0E0' }}
+                                sx={{
+                                    position: 'sticky',
+                                    bottom: 0,
+                                    bgcolor: theme.palette.background.paper,
+                                    borderTop: '1px solid #E0E0E0',
+                                }}
                                 colSpan={2}
                                 rowsPerPageOptions={[10, 25, 100, 250]}
                                 page={page}
@@ -162,6 +147,55 @@ const AssetGroupMemberList: FC<{
                 )}
             </Table>
         </TableContainer>
+    );
+};
+
+const AssetGroupMemberRow: FC<{
+    member: AssetGroupMember;
+    disabled: boolean;
+    onClick: (member: AssetGroupMember) => void;
+}> = ({ member, disabled, onClick }) => {
+    const theme = useTheme();
+
+    const disabledRowStyles = { opacity: '0.5' };
+
+    const rowStyles = {
+        '&:hover': {
+            backgroundColor: theme.palette.action.hover,
+            cursor: 'pointer',
+        },
+    };
+
+    const handleClick = () => {
+        if (!disabled) onClick(member);
+    };
+
+    return (
+        <TableRow onClick={handleClick} sx={disabled ? disabledRowStyles : rowStyles}>
+            <TableCell>
+                <Box sx={{ display: 'flex', alignItems: 'center', width: '100%' }}>
+                    <NodeIcon nodeType={member.primary_kind} />
+                    <Typography noWrap marginLeft={1} display={'inline-block'}>
+                        {member.name}
+                    </Typography>
+                </Box>
+            </TableCell>
+            <TableCell
+                align='right'
+                sx={{
+                    padding: '0',
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    height: '100%',
+                }}>
+                {member.custom_member ? (
+                    <FontAwesomeIcon icon={faCheck} color='green' size='lg' />
+                ) : (
+                    <FontAwesomeIcon icon={faTimes} color='red' size='lg' />
+                )}
+            </TableCell>
+        </TableRow>
     );
 };
 

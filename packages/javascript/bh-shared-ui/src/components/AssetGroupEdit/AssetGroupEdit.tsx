@@ -79,7 +79,7 @@ const AssetGroupEdit: FC<{
     });
 
     const handleRemoveEntryFromChangelog = (entry: AssetGroupChangelogEntry) => {
-        setChangelog(changelog.filter((item) => item.objectid !== entry.objectid));
+        setChangelog((prev) => prev.filter((item) => item.objectid !== entry.objectid));
     };
 
     return (

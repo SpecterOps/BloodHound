@@ -24,10 +24,12 @@ import { useEntityInfoPanelContext } from './EntityInfoPanelContext';
 import { usePaneStyles } from 'bh-shared-ui';
 import { SelectedNode } from 'src/ducks/entityinfo/types';
 
-const EntityInfoPanel: React.FC<{
-    sx?: SxProps,
-    selectedNode: SelectedNode
-}> = ({ sx, selectedNode }) => {
+interface EntityInfoPanelProps {
+    selectedNode: SelectedNode | null;
+    sx?: SxProps;
+}
+
+const EntityInfoPanel: React.FC<EntityInfoPanelProps> = ({ selectedNode, sx }) => {
     const styles = usePaneStyles();
     const [expanded, setExpanded] = useState(true);
     const { setExpandedSections } = useEntityInfoPanelContext();
@@ -86,7 +88,7 @@ const EntityInfoPanel: React.FC<{
     );
 };
 
-const WrappedEntityInfoPanel: React.FC<any> = (props) => (
+const WrappedEntityInfoPanel: React.FC<EntityInfoPanelProps> = (props) => (
     <EntityInfoPanelContextProvider>
         <EntityInfoPanel {...props} />
     </EntityInfoPanelContextProvider>

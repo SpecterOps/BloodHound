@@ -99,16 +99,18 @@ const GroupManagementContent: FC<{
         setFilterParams(filter);
     }, [selectedDomain, globalDomain, selectedAssetGroup]);
 
+    const selectorLabelStyles = { display: { xs: 'none', xl: 'flex' } };
+
     return (
         <Box height={'100%'} padding={theme.spacing(2, 4)}>
             <Grid container height={'100%'} spacing={2}>
                 <Grid item xs={3} md={3}>
                     <Box component={Paper} elevation={0} marginBottom={1}>
                         <Grid container>
-                            <Grid item xs={3} display={'flex'} alignItems={'center'} paddingLeft={3}>
+                            <Grid item sm={4} sx={selectorLabelStyles} alignItems={'center'} paddingLeft={3}>
                                 <Typography variant='button'>Group:</Typography>
                             </Grid>
-                            <Grid item xs={9}>
+                            <Grid item xs={12} xl={8}>
                                 <DropdownSelector
                                     options={listAssetGroups.data ? mapAssetGroups(listAssetGroups.data) : []}
                                     selectedText={getAssetGroupSelectorLabel()}
@@ -116,10 +118,10 @@ const GroupManagementContent: FC<{
                                     fullWidth
                                 />
                             </Grid>
-                            <Grid item xs={3} display={'flex'} alignItems={'center'} paddingLeft={3}>
-                                <Typography variant='button'>Tenant:</Typography>
+                            <Grid item xs={4} sx={selectorLabelStyles} alignItems={'center'} paddingLeft={3}>
+                                <Typography variant='button'>Environment:</Typography>
                             </Grid>
-                            <Grid item xs={9}>
+                            <Grid item xs={12} xl={8}>
                                 {generateDomainSelectorComponent(getDomainSelectorProps())}
                             </Grid>
                         </Grid>
