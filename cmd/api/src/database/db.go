@@ -219,7 +219,7 @@ func (s *BloodhoundDB) Wipe() error {
 func (s *BloodhoundDB) Migrate() error {
 	// Run the migrator
 	if err := migration.NewMigrator(s.db).Migrate(); err != nil {
-		log.Errorf("Error during database migration phase: %v", err)
+		log.Errorf("Error during SQL database migration phase: %v", err)
 		return err
 	}
 

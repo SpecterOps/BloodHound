@@ -456,23 +456,6 @@ CREATE SEQUENCE IF NOT EXISTS list_findings_id_seq
     CACHE 1;
 ALTER SEQUENCE list_findings_id_seq OWNED BY list_findings.id;
 
-CREATE TABLE IF NOT EXISTS migrations (
-    id integer NOT NULL,
-    updated_at timestamp with time zone,
-    major integer,
-    minor integer,
-    patch integer
-);
-
-CREATE SEQUENCE IF NOT EXISTS migrations_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-ALTER SEQUENCE migrations_id_seq OWNED BY migrations.id;
-
 CREATE TABLE IF NOT EXISTS ou_details (
     name text,
     object_id text NOT NULL,
@@ -696,7 +679,6 @@ ALTER TABLE ONLY feature_flags ALTER COLUMN id SET DEFAULT nextval('feature_flag
 ALTER TABLE ONLY file_upload_jobs ALTER COLUMN id SET DEFAULT nextval('file_upload_jobs_id_seq'::regclass);
 ALTER TABLE ONLY ingest_tasks ALTER COLUMN id SET DEFAULT nextval('ingest_tasks_id_seq'::regclass);
 ALTER TABLE ONLY list_findings ALTER COLUMN id SET DEFAULT nextval('list_findings_id_seq'::regclass);
-ALTER TABLE ONLY migrations ALTER COLUMN id SET DEFAULT nextval('migrations_id_seq'::regclass);
 ALTER TABLE ONLY parameters ALTER COLUMN id SET DEFAULT nextval('parameters_id_seq'::regclass);
 ALTER TABLE ONLY permissions ALTER COLUMN id SET DEFAULT nextval('permissions_id_seq'::regclass);
 ALTER TABLE ONLY relationship_findings ALTER COLUMN id SET DEFAULT nextval('relationship_findings_id_seq'::regclass);
@@ -756,8 +738,6 @@ ALTER TABLE ONLY installations
     ADD CONSTRAINT installations_pkey PRIMARY KEY (id);
 ALTER TABLE ONLY list_findings
     ADD CONSTRAINT list_findings_pkey PRIMARY KEY (id);
-ALTER TABLE ONLY migrations
-    ADD CONSTRAINT migrations_pkey PRIMARY KEY (id);
 ALTER TABLE ONLY ou_details
     ADD CONSTRAINT ou_details_pkey PRIMARY KEY (object_id);
 ALTER TABLE ONLY parameters
