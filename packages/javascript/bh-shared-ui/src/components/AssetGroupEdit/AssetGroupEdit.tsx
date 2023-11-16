@@ -20,7 +20,7 @@ import { FC, useState } from 'react';
 import { AssetGroupChangelog, AssetGroupChangelogEntry, ChangelogAction } from './types';
 import AssetGroupAutocomplete from './AssetGroupAutocomplete';
 import { SubHeader } from '../../views/Explore';
-import { useMutation, useQuery } from 'react-query';
+import { useMutation, useQuery, useQueryClient } from 'react-query';
 import { apiClient } from '../../utils';
 import AssetGroupChangelogTable from './AssetGroupChangelogTable';
 import {
@@ -39,6 +39,7 @@ const AssetGroupEdit: FC<{
     const addRows = changelog.filter((entry) => entry.action === ChangelogAction.ADD);
     const removeRows = changelog.filter((entry) => entry.action === ChangelogAction.REMOVE);
     const { addNotification } = useNotifications();
+    const queryClient = useQueryClient();
 
     const handleUpdateAssetGroupChangelog = (_event: any, changelogEntry: AssetGroupChangelogEntry) => {
         if (changelogEntry.action === ChangelogAction.ADD || changelogEntry.action === ChangelogAction.REMOVE) {
@@ -66,6 +67,7 @@ const AssetGroupEdit: FC<{
         },
         onSuccess: () => {
             setChangelog([]);
+            queryClient.invalidateQueries({ queryKey: ['listAssetGroupMembers'] });
             addNotification(
                 'Update successful. Please check back later to view updated Asset Group.',
                 'AssetGroupUpdateSuccess'
