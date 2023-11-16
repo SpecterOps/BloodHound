@@ -14,13 +14,12 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Box } from "@mui/material";
-import { NodeIcon, Field } from "bh-shared-ui";
-import { TIER_ZERO_TAG } from "src/constants";
-import { GraphNodeTypes } from "src/ducks/graph/types";
-import { setSearchValue, startSearchSelected } from "src/ducks/searchbar/actions";
-import { PRIMARY_SEARCH, SEARCH_TYPE_EXACT } from "src/ducks/searchbar/types";
-import { useAppDispatch } from "src/store";
+import { Box } from '@mui/material';
+import { NodeIcon, Field } from 'bh-shared-ui';
+import { TIER_ZERO_TAG } from 'src/constants';
+import { GraphNodeTypes } from 'src/ducks/graph/types';
+import { sourceNodeSelected } from 'src/ducks/searchbar/actions';
+import { useAppDispatch } from 'src/store';
 
 interface BasicObjectInfoFieldsProps {
     objectid: string;
@@ -44,18 +43,12 @@ const RelatedKindField = (fieldLabel: string, relatedKind: GraphNodeTypes, id: s
                 <Box
                     onClick={() => {
                         dispatch(
-                            setSearchValue(
-                                {
-                                    objectid: id,
-                                    label: '',
-                                    type: relatedKind,
-                                    name: name || '',
-                                },
-                                PRIMARY_SEARCH,
-                                SEARCH_TYPE_EXACT
-                            )
+                            sourceNodeSelected({
+                                objectid: id,
+                                type: relatedKind,
+                                name: name || '',
+                            })
                         );
-                        dispatch(startSearchSelected(PRIMARY_SEARCH));
                     }}
                     style={{ cursor: 'pointer' }}
                     overflow='hidden'
@@ -90,4 +83,4 @@ export const BasicObjectInfoFields: React.FC<BasicObjectInfoFieldsProps> = (prop
                 )}
         </>
     );
-}
+};

@@ -21,6 +21,7 @@ import (
 
 	"github.com/specterops/bloodhound/src/config"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestSetValue(t *testing.T) {
@@ -41,8 +42,14 @@ func TestSetValue(t *testing.T) {
 		assert.Equal(t, uint32(10), cfg.Crypto.Argon2.MemoryKibibytes)
 	})
 
-	t.Run("attempting to set a value to an unknown field should not fail", func(t *testing.T) {
-		assert.Nil(t, config.SetValue(&cfg, "crypto_fake", "string"))
+	t.Run("key with two underscores", func(t *testing.T) {
+		require.Nil(t, config.SetValue(&cfg, "disable_cypher_qc", "true"))
+		assert.Equal(t, true, cfg.DisableCypherQC)
+	})
+
+	t.Run("key with three underscores", func(t *testing.T) {
+		require.Nil(t, config.SetValue(&cfg, "max_graphdb_cache_size", "0"))
+		assert.Equal(t, 0, cfg.MaxGraphQueryCacheSize)
 	})
 
 	t.Run("edge cases", func(t *testing.T) {

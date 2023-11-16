@@ -19,7 +19,7 @@ import { useState } from 'react';
 import { PrebuiltSearchList, CommonSearches as prebuiltSearchList, PersonalSearchList } from 'bh-shared-ui';
 import makeStyles from '@mui/styles/makeStyles';
 import { useDispatch } from 'react-redux';
-import { setCypherQueryTerm } from 'src/ducks/searchbar/actions';
+import { cypherQueryEdited } from 'src/ducks/searchbar/actions';
 import { startCypherQuery } from 'src/ducks/explore/actions';
 
 const AD_TAB = 'Active Directory';
@@ -64,7 +64,7 @@ const CommonSearches = () => {
         .map(({ subheader, queries }) => ({ subheader, lineItems: queries }));
 
     const handleClick = (query: string) => {
-        dispatch(setCypherQueryTerm(query));
+        dispatch(cypherQueryEdited(query));
         dispatch(startCypherQuery(query));
     };
 

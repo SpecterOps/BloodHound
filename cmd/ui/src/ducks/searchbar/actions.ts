@@ -17,65 +17,28 @@
 import { EdgeCheckboxType } from 'src/views/Explore/ExploreSearch/EdgeFilteringDialog';
 import * as types from './types';
 
-export const startSearchAction = (searchTerm: string, target: types.SearchTargetType): types.SearchbarActionTypes => {
+export const primarySearch = () => {
     return {
-        type: types.SEARCH_START,
-        searchTerm,
-        target,
+        type: types.PRIMARY_SEARCH,
     };
 };
 
-export const searchSuccessAction = (
-    results: types.SearchNodeType[],
-    target: types.SearchTargetType
-): types.SearchbarActionTypes => {
+export const pathfindingSearch = () => {
     return {
-        type: types.SEARCH_SUCCESS,
-        results,
-        target,
+        type: types.PATHFINDING_SEARCH,
     };
 };
 
-export const searchFailAction = (error: string, target: types.SearchTargetType): types.SearchbarActionTypes => {
+export const cypherSearch = (cypherQuery?: string): types.CypherSearchAction => {
     return {
-        type: types.SEARCH_FAILURE,
-        target,
-        error,
-    };
-};
-
-export const setSearchValue = (
-    value: types.SearchNodeType | null,
-    target: types.SearchTargetType,
-    searchType: string
-): types.SearchbarActionTypes => {
-    return {
-        type: types.SEARCH_SET_VALUE,
-        target,
-        value,
-        searchType,
-    };
-};
-
-export const startSearchSelected = (target: types.SearchTargetType): types.SearchbarActionTypes => {
-    return {
-        type: types.SEARCH_SELECTED,
-        target,
-    };
-};
-
-export const startCypherSearch = (cypherQuery: string) => {
-    return {
-        type: types.SEARCH_START,
-        target: types.CYPHER_SEARCH,
+        type: types.CYPHER_SEARCH,
         searchTerm: cypherQuery,
     };
 };
 
-export const setCypherQueryTerm = (cypherQuery: string) => {
+export const cypherQueryEdited = (cypherQuery: string): types.CypherQueryEditedAction => {
     return {
-        type: types.CYPHER_SEARCH_SET_VALUE,
-        target: types.CYPHER_SEARCH,
+        type: types.CYPHER_QUERY_EDITED,
         searchTerm: cypherQuery,
     };
 };
@@ -86,9 +49,44 @@ export const resetSearch = (): types.SearchbarActionTypes => {
     };
 };
 
-export const savePathFilters = (filters: EdgeCheckboxType[]): types.SavePathFiltersAction => {
+export const pathFiltersSaved = (filters: EdgeCheckboxType[]): types.PathFiltersSavedAction => {
     return {
-        type: types.SAVE_PATH_FILTERS,
+        type: types.PATH_FILTERS_SAVED,
         filters,
+    };
+};
+
+export const tabChanged = (tabName: types.TabNames) => {
+    return {
+        type: types.TAB_CHANGED,
+        tabName,
+    };
+};
+
+export const sourceNodeEdited = (searchTerm: string): types.SourceNodeEditedAction => {
+    return {
+        type: types.SOURCE_NODE_EDITED,
+        searchTerm,
+    };
+};
+
+export const sourceNodeSelected = (node: types.SearchNodeType | null): types.SourceNodeSelectedAction => {
+    return {
+        type: types.SOURCE_NODE_SELECTED,
+        node,
+    };
+};
+
+export const destinationNodeEdited = (searchTerm: string): types.DestinationNodeEditedAction => {
+    return {
+        type: types.DESTINATION_NODE_EDITED,
+        searchTerm,
+    };
+};
+
+export const destinationNodeSelected = (node: types.SearchNodeType | null): types.DestinationNodeSelectedAction => {
+    return {
+        type: types.DESTINATION_NODE_SELECTED,
+        node,
     };
 };

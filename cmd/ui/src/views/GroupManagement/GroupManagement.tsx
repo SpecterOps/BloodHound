@@ -27,8 +27,7 @@ import { Domain } from 'src/ducks/global/types';
 import { setSelectedNode } from 'src/ducks/entityinfo/actions';
 import { useNavigate } from 'react-router-dom';
 import { ROUTE_EXPLORE } from 'src/ducks/global/routes';
-import { setSearchValue, startSearchSelected } from 'src/ducks/searchbar/actions';
-import { PRIMARY_SEARCH, SEARCH_TYPE_EXACT } from 'src/ducks/searchbar/types';
+import { sourceNodeSelected } from 'src/ducks/searchbar/actions';
 import { TIER_ZERO_LABEL, TIER_ZERO_TAG } from 'src/constants';
 import { useAppDispatch } from 'src/store';
 
@@ -56,8 +55,7 @@ const GroupManagement = () => {
                 label: openNode.name,
                 ...openNode,
             };
-            dispatch(setSearchValue(searchNode, PRIMARY_SEARCH, SEARCH_TYPE_EXACT));
-            dispatch(startSearchSelected(PRIMARY_SEARCH));
+            dispatch(sourceNodeSelected(searchNode));
             dispatch(setSelectedNode(openNode));
 
             navigate(ROUTE_EXPLORE);

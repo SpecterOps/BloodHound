@@ -33,6 +33,7 @@ import isEmpty from 'lodash/isEmpty';
 import { FC, useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { Link as RouterLink } from 'react-router-dom';
+import { SigmaNodeEventPayload } from 'sigma/sigma';
 import { GraphButtonOptions } from 'src/components/GraphButtons/GraphButtons';
 import SigmaChart from 'src/components/SigmaChart';
 import { setEntityInfoOpen, setSelectedNode } from 'src/ducks/entityinfo/actions';
@@ -66,10 +67,13 @@ const GraphView: FC = () => {
     const [currentSearchOpen, toggleCurrentSearch] = useToggle(false);
     const { data, isLoading, isError } = useAvailableDomains();
 
+    const [anchorPosition, setAnchorPosition] = useState<{ x: number; y: number } | undefined>(undefined);
+
     useEffect(() => {
         let items: any = graphState.chartProps.items;
-        if (!items || isEmpty(items)) return;
-        if (!items.nodes || isEmpty(items.nodes)) items = transformFlatGraphResponse(items);
+        if (!items) return;
+        // `items` may be empty, or it may contain an empty `nodes` object
+        if (isEmpty(items) || isEmpty(items.nodes)) items = transformFlatGraphResponse(items);
 
         const graph = new MultiDirectedGraph();
         const nodeSize = 25;
@@ -150,11 +154,7 @@ const GraphView: FC = () => {
         },
     ];
 
-    /* Event Handlers */
-    const onClickNode = (id: string) => {
-        dispatch(setEdgeInfoOpen(false));
-        dispatch(setEntityInfoOpen(true));
-
+    const findNodeAndSelect = (id: string) => {
         const selectedItem = graphState.chartProps.items?.[id];
         if (selectedItem?.data?.nodetype) {
             dispatch(setSelectedEdge(null));
@@ -169,6 +169,22 @@ const GraphView: FC = () => {
         }
     };
 
+    /* Event Handlers */
+    const onClickNode = (id: string) => {
+        dispatch(setEdgeInfoOpen(false));
+        dispatch(setEntityInfoOpen(true));
+
+        findNodeAndSelect(id);
+    };
+
+    const onRightClickNode = (event: SigmaNodeEventPayload) => {
+        setAnchorPosition({ x: event.event.x, y: event.event.y });
+
+        const nodeId = event.node;
+
+        findNodeAndSelect(nodeId);
+    };
+
     return (
         <Box sx={{ position: 'relative', height: '100%', width: '100%', overflow: 'hidden' }} data-testid='explore'>
             <SigmaChart
@@ -180,6 +196,8 @@ const GraphView: FC = () => {
                 nonLayoutButtons={nonLayoutButtons}
                 isCurrentSearchOpen={currentSearchOpen}
                 toggleCurrentSearch={toggleCurrentSearch}
+                anchorPosition={anchorPosition}
+                onRightClickNode={onRightClickNode}
             />
             <Grid
                 container

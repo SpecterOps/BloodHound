@@ -19,7 +19,7 @@ import { apiClient } from '../../utils';
 import { ActiveDirectoryNodeKind, AzureNodeKind } from '../../graphSchema';
 
 export type SearchResult = {
-    distinguishedname: string;
+    distinguishedname?: string;
     name: string;
     objectid: string;
     system_tags: string;

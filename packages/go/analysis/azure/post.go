@@ -18,9 +18,12 @@ package azure
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
+	"github.com/RoaringBitmap/roaring"
 	"github.com/RoaringBitmap/roaring/roaring64"
+	"github.com/bloodhoundad/azurehound/v2/constants"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/dawgs/ops"
 	"github.com/specterops/bloodhound/dawgs/query"
@@ -28,6 +31,7 @@ import (
 	"github.com/specterops/bloodhound/graphschema/azure"
 	"github.com/specterops/bloodhound/graphschema/common"
 	"github.com/specterops/bloodhound/log"
+	"github.com/specterops/bloodhound/slices"
 
 	"github.com/specterops/bloodhound/analysis"
 )
@@ -48,6 +52,19 @@ func AddMemberGroupNotRoleAssignableTargetRoles() []string {
 		azure.IntuneServiceAdministratorRole,
 		azure.KnowledgeAdministratorRole,
 		azure.KnowledgeManagerRole,
+	}
+}
+
+func ResetPasswordRoleIDs() []string {
+	return []string{
+		constants.GlobalAdministratorRoleID,
+		constants.PrivilegedAuthenticationAdministratorRoleID,
+		constants.PartnerTier2SupportRoleID,
+		constants.HelpdeskAdministratorRoleID,
+		constants.AuthenticationAdministratorRoleID,
+		constants.UserAdministratorRoleID,
+		constants.PasswordAdministratorRoleID,
+		constants.PartnerTier1SupportRoleID,
 	}
 }
 
@@ -146,100 +163,134 @@ func (s RoleAssignmentMap) HasRole(id graph.ID, roleTemplateIDs ...string) bool 
 }
 
 type RoleAssignments struct {
-	Nodes         graph.NodeKindSet
-	AssignmentMap RoleAssignmentMap
+	Principals graph.NodeKindSet
+	RoleMap    map[string]*roaring.Bitmap
 }
 
-func (s RoleAssignments) UsersWithoutRoles() graph.NodeSet {
-	users := graph.NewNodeSet()
-
-	for _, user := range s.Nodes.Get(azure.User) {
-		if !s.AssignmentMap.UserHasRoles(user) {
-			users.Add(user)
-		}
+func (s RoleAssignments) GetNodeKindSet(bm *roaring.Bitmap) graph.NodeKindSet {
+	var (
+		result = graph.NewNodeKindSet()
+		iter   = bm.Iterator()
+	)
+	for iter.HasNext() {
+		node := s.Principals.GetNode(graph.ID(iter.Next()))
+		result.Add(node)
 	}
-
-	return users
+	return result
 }
 
-func (s RoleAssignments) NodesWithRole(roleTemplateIDs ...string) graph.NodeKindSet {
-	members := graph.NewNodeKindSet()
+func (s RoleAssignments) GetNodeSet(bm *roaring.Bitmap) graph.NodeSet {
+	return s.GetNodeKindSet(bm).AllNodes()
+}
 
-	for userID, roleAssignments := range s.AssignmentMap {
-		for _, roleTemplateID := range roleTemplateIDs {
-			if _, hasRole := roleAssignments[roleTemplateID]; hasRole {
-				members.Add(s.Nodes.GetNode(userID))
-				break
-			}
+func (s RoleAssignments) Users() *roaring.Bitmap {
+	return s.Principals.Get(azure.User).IDBitmap()
+}
+
+func (s RoleAssignments) UsersWithAnyRole() *roaring.Bitmap {
+	users := s.Users()
+
+	principalsWithRoles := roaring.New()
+	for _, bitmap := range s.RoleMap {
+		principalsWithRoles.Or(bitmap)
+	}
+	principalsWithRoles.And(users)
+	return principalsWithRoles
+}
+
+func (s RoleAssignments) UsersWithoutRoles() *roaring.Bitmap {
+	result := s.Users()
+	result.AndNot(s.UsersWithAnyRole())
+	return result
+}
+
+func (s RoleAssignments) UsersWithRole(roleTemplateIDs ...string) *roaring.Bitmap {
+	result := s.PrincipalsWithRole(roleTemplateIDs...)
+	result.And(s.Users())
+	return result
+}
+
+func (s RoleAssignments) UsersWithRolesExclusive(roleTemplateIDs ...string) *roaring.Bitmap {
+	result := s.PrincipalsWithRolesExclusive(roleTemplateIDs...)
+	result.And(s.Users())
+	return result
+}
+
+// PrincipalsWithRole returns a roaring bitmap of principals that have been assigned one or more of the matching roles from list of role template IDs
+func (s RoleAssignments) PrincipalsWithRole(roleTemplateIDs ...string) *roaring.Bitmap {
+	result := roaring.New()
+	for _, roleTemplateID := range roleTemplateIDs {
+		if bitmap, ok := s.RoleMap[roleTemplateID]; ok {
+			result.Or(bitmap)
 		}
 	}
+	return result
+}
 
-	return members
+// PrincipalsWithRole returns a roaring bitmap of principals that have been assigned one or more of the matching roles from list of role template IDs but excluding principals with non-matching roles
+func (s RoleAssignments) PrincipalsWithRolesExclusive(roleTemplateIDs ...string) *roaring.Bitmap {
+	var (
+		result             = roaring.New()
+		excludedPrincipals = roaring.New()
+	)
+	for roleID, bitmap := range s.RoleMap {
+		if slices.Contains(roleTemplateIDs, roleID) {
+			result.Or(bitmap)
+		} else {
+			excludedPrincipals.Or(bitmap)
+		}
+	}
+	result.AndNot(excludedPrincipals)
+	return result
 }
 
 // NodesWithRolesExclusive will return nodes that *only* have a role/roles listed and exclude nodes that have other roles
 func (s RoleAssignments) NodesWithRolesExclusive(roleTemplateIDs ...string) graph.NodeKindSet {
-	var (
-		members = graph.NewNodeKindSet()
-		roleMap = make(map[string]struct{})
-	)
-	for _, roleTemplateID := range roleTemplateIDs {
-		roleMap[roleTemplateID] = struct{}{}
-	}
-
-	for nodeID, roleAssignments := range s.AssignmentMap {
-		var (
-			hasIncludedRole = false
-			hasExcludedRole = false
-		)
-		for assignment := range roleAssignments {
-			if _, hasRole := roleMap[assignment]; hasRole {
-				hasIncludedRole = true
-			} else {
-				hasExcludedRole = true
-			}
-		}
-		if hasIncludedRole && !hasExcludedRole {
-			members.Add(s.Nodes.GetNode(nodeID))
-		}
-	}
-
-	return members
+	bm := s.PrincipalsWithRolesExclusive(roleTemplateIDs...)
+	return s.GetNodeKindSet(bm)
 }
 
 func (s RoleAssignments) NodeHasRole(id graph.ID, roleTemplateIDs ...string) bool {
-	return s.AssignmentMap.HasRole(id, roleTemplateIDs...)
+	for _, roleID := range roleTemplateIDs {
+		if bm, ok := s.RoleMap[roleID]; ok {
+			if bm.Contains(uint32(id)) {
+				return true
+			}
+		}
+	}
+	return false
 }
 
+// TenantRoles returns the NodeSet of roles for a given tenant that match one of the given role template IDs. If no role template ID is provided, then all of the tenant role nodes are returned in the NodeSet.
 func TenantRoles(tx graph.Transaction, tenant *graph.Node, roleTemplateIDs ...string) (graph.NodeSet, error) {
+	if !IsTenantNode(tenant) {
+		return nil, fmt.Errorf("cannot fetch tenant roles - node %d must be of kind %s", tenant.ID, azure.Tenant)
+	}
+
+	conditions := []graph.Criteria{
+		query.Equals(query.StartID(), tenant.ID),
+		query.Kind(query.Relationship(), azure.Contains),
+		query.Kind(query.End(), azure.Role),
+	}
+
+	if len(roleTemplateIDs) > 0 {
+		conditions = append(conditions, query.In(query.EndProperty(azure.RoleTemplateID.String()), roleTemplateIDs))
+	}
+
 	return ops.FetchEndNodes(tx.Relationships().Filterf(func() graph.Criteria {
-		return query.And(
-			query.Equals(query.StartID(), tenant.ID),
-			query.Kind(query.Relationship(), azure.Contains),
-			query.Kind(query.End(), azure.Role),
-			query.In(query.EndProperty(azure.RoleTemplateID.String()), roleTemplateIDs),
-		)
+		return query.And(conditions...)
 	}))
 }
 
 func initTenantRoleAssignments(tx graph.Transaction, tenant *graph.Node) (RoleAssignments, error) {
-	if tenantID, err := tenant.Properties.Get(azure.TenantID.String()).String(); err != nil {
-		if graph.IsErrPropertyNotFound(err) {
-			log.Errorf("Node %d is missing property %s", tenant.ID, azure.TenantID)
-		}
-
-		return RoleAssignments{}, err
-	} else if roleMembers, err := ops.FetchNodeSet(tx.Nodes().Filterf(func() graph.Criteria {
-		return query.And(
-			query.Equals(query.NodeProperty(azure.TenantID.String()), tenantID),
-			query.KindIn(query.Node(), azure.User, azure.Group, azure.ServicePrincipal),
-		)
-	})); err != nil && !graph.IsErrNotFound(err) {
+	if !IsTenantNode(tenant) {
+		return RoleAssignments{}, fmt.Errorf("cannot initialize tenant role assignments - node %d must be of kind %s", tenant.ID, azure.Tenant)
+	} else if roleMembers, err := TenantPrincipals(tx, tenant); err != nil && !graph.IsErrNotFound(err) {
 		return RoleAssignments{}, err
 	} else {
 		return RoleAssignments{
-			Nodes:         roleMembers.KindSet(),
-			AssignmentMap: make(RoleAssignmentMap),
+			Principals: roleMembers.KindSet(),
+			RoleMap:    make(map[string]*roaring.Bitmap),
 		}, nil
 	}
 }
@@ -300,38 +351,21 @@ func TenantRoleAssignments(ctx context.Context, db graph.Database, tenant *graph
 	return roleAssignments, db.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		if fetchedRoleAssignments, err := initTenantRoleAssignments(tx, tenant); err != nil {
 			return err
+		} else if roles, err := TenantRoles(tx, tenant); err != nil {
+			return err
 		} else {
-			return fetchedRoleAssignments.Nodes.EachNode(func(node *graph.Node) error {
-				traversalPlan := ops.TraversalPlan{
-					Root:      node,
-					Direction: graph.DirectionOutbound,
-					BranchQuery: func() graph.Criteria {
-						return query.KindIn(query.Relationship(), azure.MemberOf, azure.HasRole)
-					},
-					DescentFilter: roleDescentFilter,
-					PathFilter: func(ctx *ops.TraversalContext, segment *graph.PathSegment) bool {
-						return segment.Node.Kinds.ContainsOneOf(azure.Role)
-					},
-				}
-
-				if roles, err := ops.AcyclicTraverseTerminals(tx, traversalPlan); err != nil {
-					return err
-				} else {
-					roleTemplateIDs := make(map[string]struct{}, roles.Len())
-
-					for _, roleNode := range roles {
-						if rollTemplateID, err := roleNode.Properties.Get(azure.RoleTemplateID.String()).String(); err != nil {
-							if !graph.IsErrPropertyNotFound(err) {
-								return err
-							}
-						} else {
-							roleTemplateIDs[rollTemplateID] = struct{}{}
-						}
+			return roles.KindSet().EachNode(func(node *graph.Node) error {
+				if roleTemplateID, err := node.Properties.Get(azure.RoleTemplateID.String()).String(); err != nil {
+					if !graph.IsErrPropertyNotFound(err) {
+						return err
 					}
-
-					fetchedRoleAssignments.AssignmentMap[node.ID] = roleTemplateIDs
+				} else if members, err := RoleMembers(tx, tenant, roleTemplateID); err != nil {
+					if !graph.IsErrNotFound(err) {
+						return err
+					}
+				} else {
+					fetchedRoleAssignments.RoleMap[roleTemplateID] = members.IDBitmap()
 				}
-
 				roleAssignments = fetchedRoleAssignments
 				return nil
 			})
@@ -993,26 +1027,70 @@ func ExecuteCommand(ctx context.Context, db graph.Database) (*analysis.AtomicPos
 	}
 }
 
-func resetPassword(ctx context.Context, db graph.Database, operation analysis.StatTrackedOperation[analysis.CreatePostRelationshipJob], roleAssignments RoleAssignments) error {
-	usersWithoutRoles := roleAssignments.UsersWithoutRoles()
+func resetPassword(ctx context.Context, db graph.Database, operation analysis.StatTrackedOperation[analysis.CreatePostRelationshipJob], tenant *graph.Node, roleAssignments RoleAssignments) error {
+	return operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
+		if pwResetRoles, err := TenantRoles(tx, tenant, ResetPasswordRoleIDs()...); err != nil {
+			return err
+		} else {
+			for _, role := range pwResetRoles {
+				if targets, err := resetPasswordEndNodeBitmapForRole(role, roleAssignments); err != nil {
+					return fmt.Errorf("unable to continue processing azresetpassword for tenant node %d: %w", tenant.ID, err)
+				} else {
+					iter := targets.Iterator()
+					for iter.HasNext() {
+						nextJob := analysis.CreatePostRelationshipJob{
+							FromID: role.ID,
+							ToID:   graph.ID(iter.Next()),
+							Kind:   azure.ResetPassword,
+						}
 
-	if securityGroupOwners, err := getRoleEligibleSecurityGroupUsers(ctx, db, roleAssignments); err != nil {
-		return err
-	} else {
-		for _, userID := range roleAssignments.Nodes.AllNodeIDs() {
-			if err := resetPasswordCases(roleAssignments, operation, userID, usersWithoutRoles, securityGroupOwners); err != nil {
-				log.Errorf("Unable to process AZResetPassword for node %d: %v", userID, err)
+						if !channels.Submit(ctx, outC, nextJob) {
+							return nil
+						}
+
+					}
+				}
 			}
 		}
-
 		return nil
+	})
+}
+
+func resetPasswordEndNodeBitmapForRole(role *graph.Node, roleAssignments RoleAssignments) (*roaring.Bitmap, error) {
+	if roleTemplateIDProp := role.Properties.Get(azure.RoleTemplateID.String()); roleTemplateIDProp.IsNil() {
+		return nil, fmt.Errorf("role node %d is missing property %s", role.ID, azure.RoleTemplateID)
+	} else if roleTemplateID, err := roleTemplateIDProp.String(); err != nil {
+		return nil, fmt.Errorf("role node %d property %s is not a string", role.ID, azure.RoleTemplateID)
+	} else {
+		result := roaring.New()
+		switch roleTemplateID {
+		case constants.GlobalAdministratorRoleID, constants.PrivilegedAuthenticationAdministratorRoleID, constants.PartnerTier2SupportRoleID:
+			result.Or(roleAssignments.Users())
+		case constants.UserAdministratorRoleID:
+			result.Or(roleAssignments.UsersWithoutRoles())
+			result.Or(roleAssignments.UsersWithRolesExclusive(UserAdministratorPasswordResetTargetRoles()...))
+		case constants.HelpdeskAdministratorRoleID:
+			result.Or(roleAssignments.UsersWithoutRoles())
+			result.Or(roleAssignments.UsersWithRolesExclusive(HelpdeskAdministratorPasswordResetTargetRoles()...))
+		case constants.AuthenticationAdministratorRoleID:
+			result.Or(roleAssignments.UsersWithoutRoles())
+			result.Or(roleAssignments.UsersWithRolesExclusive(AuthenticationAdministratorPasswordResetTargetRoles()...))
+		case constants.PasswordAdministratorRoleID:
+			result.Or(roleAssignments.UsersWithoutRoles())
+			result.Or(roleAssignments.UsersWithRolesExclusive(PasswordAdministratorPasswordResetTargetRoles()...))
+		case constants.PartnerTier1SupportRoleID:
+			result.Or(roleAssignments.UsersWithoutRoles())
+		default:
+			return nil, fmt.Errorf("role node %d has unsupported role template id '%s'", role.ID, roleTemplateID)
+		}
+		return result, nil
 	}
 }
 
 // getRoleEligibleSecurityGroupUsers finds Users who own or are members of a role eligible security group
 func getRoleEligibleSecurityGroupUsers(ctx context.Context, db graph.Database, roleAssignments RoleAssignments) (*roaring64.Bitmap, error) {
 	var (
-		tenantGroups   = roleAssignments.Nodes.Get(azure.Group)
+		tenantGroups   = roleAssignments.Principals.Get(azure.Group)
 		securityGroups = make([]graph.ID, 0)
 		groupUsers     = roaring64.New()
 	)
@@ -1034,7 +1112,7 @@ func getRoleEligibleSecurityGroupUsers(ctx context.Context, db graph.Database, r
 		// find users that own or are a member of role eligible groups
 		return tx.Relationships().Filterf(func() graph.Criteria {
 			return query.And(
-				query.InIDs(query.StartID(), roleAssignments.Nodes.Get(azure.User).IDs()...),
+				query.InIDs(query.StartID(), roleAssignments.Principals.Get(azure.User).IDs()...),
 				query.KindIn(query.Relationship(), azure.Owns, azure.MemberOf),
 				query.Kind(query.End(), azure.Group),
 				query.InIDs(query.EndID(), securityGroups...))
@@ -1051,7 +1129,7 @@ func resetPasswordCases(roleAssignments RoleAssignments, operation analysis.Stat
 	if roleAssignments.NodeHasRole(userID, azure.CompanyAdministratorRole, azure.PrivilegedAuthenticationAdministratorRole, azure.PartnerTier2SupportRole) {
 		// GA, PAA, and PT2S roles can reset all user passwords in the tenant
 		operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
-			for targetID := range roleAssignments.Nodes.Get(azure.User) {
+			for targetID := range roleAssignments.Principals.Get(azure.User) {
 				if userID == targetID {
 					continue
 				}
@@ -1254,9 +1332,10 @@ func resetPasswordCases(roleAssignments RoleAssignments, operation analysis.Stat
 
 func globalAdmins(roleAssignments RoleAssignments, tenant *graph.Node, operation analysis.StatTrackedOperation[analysis.CreatePostRelationshipJob]) {
 	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
-		for _, roleMember := range roleAssignments.NodesWithRole(azure.CompanyAdministratorRole).GetCombined(azure.User, azure.ServicePrincipal, azure.Group) {
+		iter := roleAssignments.PrincipalsWithRole(constants.GlobalAdministratorRoleID).Iterator()
+		for iter.HasNext() {
 			nextJob := analysis.CreatePostRelationshipJob{
-				FromID: roleMember.ID,
+				FromID: graph.ID(iter.Next()),
 				ToID:   tenant.ID,
 				Kind:   azure.GlobalAdmin,
 			}
@@ -1264,17 +1343,18 @@ func globalAdmins(roleAssignments RoleAssignments, tenant *graph.Node, operation
 			if !channels.Submit(ctx, outC, nextJob) {
 				return nil
 			}
-		}
 
+		}
 		return nil
 	})
 }
 
 func privilegedRoleAdmins(roleAssignments RoleAssignments, tenant *graph.Node, operation analysis.StatTrackedOperation[analysis.CreatePostRelationshipJob]) {
 	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
-		for _, roleMember := range roleAssignments.NodesWithRole(azure.PrivilegedRoleAdministratorRole).GetCombined(azure.User, azure.ServicePrincipal, azure.Group) {
+		iter := roleAssignments.PrincipalsWithRole(constants.PrivilegedRoleAdministratorRoleID).Iterator()
+		for iter.HasNext() {
 			nextJob := analysis.CreatePostRelationshipJob{
-				FromID: roleMember.ID,
+				FromID: graph.ID(iter.Next()),
 				ToID:   tenant.ID,
 				Kind:   azure.PrivilegedRoleAdmin,
 			}
@@ -1282,17 +1362,18 @@ func privilegedRoleAdmins(roleAssignments RoleAssignments, tenant *graph.Node, o
 			if !channels.Submit(ctx, outC, nextJob) {
 				return nil
 			}
-		}
 
+		}
 		return nil
 	})
 }
 
 func privilegedAuthAdmins(roleAssignments RoleAssignments, tenant *graph.Node, operation analysis.StatTrackedOperation[analysis.CreatePostRelationshipJob]) {
 	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
-		for _, roleMember := range roleAssignments.NodesWithRole(azure.PrivilegedAuthenticationAdministratorRole).GetCombined(azure.User, azure.ServicePrincipal, azure.Group) {
+		iter := roleAssignments.PrincipalsWithRole(constants.PrivilegedAuthenticationAdministratorRoleID).Iterator()
+		for iter.HasNext() {
 			nextJob := analysis.CreatePostRelationshipJob{
-				FromID: roleMember.ID,
+				FromID: graph.ID(iter.Next()),
 				ToID:   tenant.ID,
 				Kind:   azure.PrivilegedAuthAdmin,
 			}
@@ -1300,6 +1381,7 @@ func privilegedAuthAdmins(roleAssignments RoleAssignments, tenant *graph.Node, o
 			if !channels.Submit(ctx, outC, nextJob) {
 				return nil
 			}
+
 		}
 
 		return nil
@@ -1307,15 +1389,16 @@ func privilegedAuthAdmins(roleAssignments RoleAssignments, tenant *graph.Node, o
 }
 
 func addMembers(roleAssignments RoleAssignments, operation analysis.StatTrackedOperation[analysis.CreatePostRelationshipJob]) {
-	tenantGroups := roleAssignments.Nodes.Get(azure.Group)
+	tenantGroups := roleAssignments.Principals.Get(azure.Group)
 
 	for tenantGroupID, tenantGroup := range tenantGroups {
 		innerGroupID := tenantGroupID
 		innerGroup := tenantGroup
 		operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
-			for _, tenantUser := range roleAssignments.NodesWithRole(AddMemberAllGroupsTargetRoles()...).Get(azure.User) {
+			iter := roleAssignments.UsersWithRole(AddMemberAllGroupsTargetRoles()...).Iterator()
+			for iter.HasNext() {
 				nextJob := analysis.CreatePostRelationshipJob{
-					FromID: tenantUser.ID,
+					FromID: graph.ID(iter.Next()),
 					ToID:   innerGroupID,
 					Kind:   azure.AddMembers,
 				}
@@ -1323,8 +1406,8 @@ func addMembers(roleAssignments RoleAssignments, operation analysis.StatTrackedO
 				if !channels.Submit(ctx, outC, nextJob) {
 					return nil
 				}
-			}
 
+			}
 			return nil
 		})
 
@@ -1336,9 +1419,10 @@ func addMembers(roleAssignments RoleAssignments, operation analysis.StatTrackedO
 					return err
 				}
 			} else if !isRoleAssignable {
-				for _, tenantUser := range roleAssignments.NodesWithRole(AddMemberGroupNotRoleAssignableTargetRoles()...).Get(azure.User) {
+				iter := roleAssignments.UsersWithRole(AddMemberGroupNotRoleAssignableTargetRoles()...).Iterator()
+				for iter.HasNext() {
 					nextJob := analysis.CreatePostRelationshipJob{
-						FromID: tenantUser.ID,
+						FromID: graph.ID(iter.Next()),
 						ToID:   innerGroupID,
 						Kind:   azure.AddMembers,
 					}
@@ -1346,6 +1430,7 @@ func addMembers(roleAssignments RoleAssignments, operation analysis.StatTrackedO
 					if !channels.Submit(ctx, outC, nextJob) {
 						return nil
 					}
+
 				}
 			}
 
@@ -1364,7 +1449,7 @@ func UserRoleAssignments(ctx context.Context, db graph.Database) (*analysis.Atom
 				operation.Done()
 				return &analysis.AtomicPostProcessingStats{}, err
 			} else {
-				if err := resetPassword(ctx, db, operation, roleAssignments); err != nil {
+				if err := resetPassword(ctx, db, operation, tenant, roleAssignments); err != nil {
 					operation.Done()
 					return &analysis.AtomicPostProcessingStats{}, err
 				} else {
