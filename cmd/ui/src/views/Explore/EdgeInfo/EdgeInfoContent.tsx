@@ -18,16 +18,16 @@ import { Box, Divider, Typography, useTheme } from '@mui/material';
 import { EdgeInfoComponents, EdgeSections, SelectedEdge, apiClient } from 'bh-shared-ui';
 import isEmpty from 'lodash/isEmpty';
 import { FC, Fragment } from 'react';
-import { useDispatch } from 'react-redux';
 import { putGraphData, putGraphError, saveResponseForExport, setGraphLoading } from 'src/ducks/explore/actions';
 import { addSnackbar } from 'src/ducks/global/actions';
+import { useAppDispatch } from 'src/store';
 import { transformToFlatGraphResponse } from 'src/utils';
 import EdgeInfoCollapsibleSection from 'src/views/Explore/EdgeInfo/EdgeInfoCollapsibleSection';
 import EdgeObjectInformation from 'src/views/Explore/EdgeInfo/EdgeObjectInformation';
 
 const EdgeInfoContent: FC<{ selectedEdge: NonNullable<SelectedEdge> }> = ({ selectedEdge }) => {
     const theme = useTheme();
-    const dispatch = useDispatch();
+    const dispatch = useAppDispatch();
 
     const sections = EdgeInfoComponents[selectedEdge.name as keyof typeof EdgeInfoComponents];
     const { sourceNode, targetNode } = selectedEdge;

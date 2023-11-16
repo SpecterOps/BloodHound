@@ -1414,9 +1414,6 @@ func FetchEnterpriseCAsTrustedForAuthPathToDomain(tx graph.Transaction, enterpri
 		BranchQuery: func() graph.Criteria {
 			return query.KindIn(query.Relationship(), ad.TrustedForNTAuth, ad.NTAuthStoreFor)
 		},
-		//DescentFilter: func(ctx *ops.TraversalContext, segment *graph.PathSegment) bool {
-		//	return !segment.Trunk.Node.Kinds.ContainsOneOf(ad.Domain)
-		//},
 		PathFilter: func(ctx *ops.TraversalContext, segment *graph.PathSegment) bool {
 			return segment.Node.ID == domain.ID
 		},
