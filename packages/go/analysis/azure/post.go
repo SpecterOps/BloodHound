@@ -1034,7 +1034,7 @@ func resetPassword(ctx context.Context, db graph.Database, operation analysis.St
 		} else {
 			for _, role := range pwResetRoles {
 				if targets, err := resetPasswordEndNodeBitmapForRole(role, roleAssignments); err != nil {
-					return fmt.Errorf("unable to continue processing azresetpassword for tenant node %d", tenant.ID, err)
+					return fmt.Errorf("unable to continue processing azresetpassword for tenant node %d: %w", tenant.ID, err)
 				} else {
 					iter := targets.Iterator()
 					for iter.HasNext() {
