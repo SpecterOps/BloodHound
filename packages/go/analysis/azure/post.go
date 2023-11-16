@@ -1033,33 +1033,9 @@ func resetPassword(ctx context.Context, db graph.Database, operation analysis.St
 			return err
 		} else {
 			for _, role := range pwResetRoles {
-				if roleTemplateIDProp := role.Properties.Get(azure.RoleTemplateID.String()); roleTemplateIDProp.IsNil() {
-					log.Errorf("unable to process azresetpassword for role node %d - missing property %s", role.ID, azure.RoleTemplateID)
-				} else if roleTemplateID, err := roleTemplateIDProp.String(); err != nil {
-					log.Errorf("unable to process azresetpassword for role node %d - property %s is not a string", role.ID, azure.RoleTemplateID)
+				if targets, err := resetPasswordEndNodeBitmapForRole(role, roleAssignments); err != nil {
+					return fmt.Errorf("unable to continue processing azresetpassword for tenant node %d", tenant.ID, err)
 				} else {
-					targets := roaring.New()
-					switch roleTemplateID {
-					case constants.GlobalAdministratorRoleID, constants.PrivilegedAuthenticationAdministratorRoleID, constants.PartnerTier2SupportRoleID:
-						targets.Or(roleAssignments.Users())
-					case constants.UserAdministratorRoleID:
-						targets.Or(roleAssignments.UsersWithoutRoles())
-						targets.Or(roleAssignments.UsersWithRolesExclusive(UserAdministratorPasswordResetTargetRoles()...))
-					case constants.HelpdeskAdministratorRoleID:
-						targets.Or(roleAssignments.UsersWithoutRoles())
-						targets.Or(roleAssignments.UsersWithRolesExclusive(HelpdeskAdministratorPasswordResetTargetRoles()...))
-					case constants.AuthenticationAdministratorRoleID:
-						targets.Or(roleAssignments.UsersWithoutRoles())
-						targets.Or(roleAssignments.UsersWithRolesExclusive(AuthenticationAdministratorPasswordResetTargetRoles()...))
-					case constants.PasswordAdministratorRoleID:
-						targets.Or(roleAssignments.UsersWithoutRoles())
-						targets.Or(roleAssignments.UsersWithRolesExclusive(PasswordAdministratorPasswordResetTargetRoles()...))
-					case constants.PartnerTier1SupportRoleID:
-						targets.Or(roleAssignments.UsersWithoutRoles())
-					default:
-						log.Errorf("unable to process azresetpassword for role node %d - encountered unhandled role template id '%s'", role.ID, roleTemplateID)
-					}
-
 					iter := targets.Iterator()
 					for iter.HasNext() {
 						nextJob := analysis.CreatePostRelationshipJob{
@@ -1078,6 +1054,37 @@ func resetPassword(ctx context.Context, db graph.Database, operation analysis.St
 		}
 		return nil
 	})
+}
+
+func resetPasswordEndNodeBitmapForRole(role *graph.Node, roleAssignments RoleAssignments) (*roaring.Bitmap, error) {
+	if roleTemplateIDProp := role.Properties.Get(azure.RoleTemplateID.String()); roleTemplateIDProp.IsNil() {
+		return nil, fmt.Errorf("role node %d is missing property %s", role.ID, azure.RoleTemplateID)
+	} else if roleTemplateID, err := roleTemplateIDProp.String(); err != nil {
+		return nil, fmt.Errorf("role node %d property %s is not a string", role.ID, azure.RoleTemplateID)
+	} else {
+		result := roaring.New()
+		switch roleTemplateID {
+		case constants.GlobalAdministratorRoleID, constants.PrivilegedAuthenticationAdministratorRoleID, constants.PartnerTier2SupportRoleID:
+			result.Or(roleAssignments.Users())
+		case constants.UserAdministratorRoleID:
+			result.Or(roleAssignments.UsersWithoutRoles())
+			result.Or(roleAssignments.UsersWithRolesExclusive(UserAdministratorPasswordResetTargetRoles()...))
+		case constants.HelpdeskAdministratorRoleID:
+			result.Or(roleAssignments.UsersWithoutRoles())
+			result.Or(roleAssignments.UsersWithRolesExclusive(HelpdeskAdministratorPasswordResetTargetRoles()...))
+		case constants.AuthenticationAdministratorRoleID:
+			result.Or(roleAssignments.UsersWithoutRoles())
+			result.Or(roleAssignments.UsersWithRolesExclusive(AuthenticationAdministratorPasswordResetTargetRoles()...))
+		case constants.PasswordAdministratorRoleID:
+			result.Or(roleAssignments.UsersWithoutRoles())
+			result.Or(roleAssignments.UsersWithRolesExclusive(PasswordAdministratorPasswordResetTargetRoles()...))
+		case constants.PartnerTier1SupportRoleID:
+			result.Or(roleAssignments.UsersWithoutRoles())
+		default:
+			return nil, fmt.Errorf("role node %d has unsupported role template id '%s'", role.ID, roleTemplateID)
+		}
+		return result, nil
+	}
 }
 
 // getRoleEligibleSecurityGroupUsers finds Users who own or are members of a role eligible security group

@@ -49,10 +49,10 @@ func setupRoleAssignments() azure.RoleAssignments {
 		constants.HelpdeskAdministratorRoleID: roaring.New(),
 		constants.PartnerTier1SupportRoleID:   roaring.New(),
 	}
-	roleMap[constants.GlobalAdministratorRoleID].Add(user.ID.Uint32())
-	roleMap[constants.ReportsReaderRoleID].Add(group.ID.Uint32())
-	roleMap[constants.HelpdeskAdministratorRoleID].Add(group.ID.Uint32())
-	roleMap[constants.PartnerTier1SupportRoleID].Add(app.ID.Uint32())
+	roleMap[constants.GlobalAdministratorRoleID].Add(uint32(user.ID))
+	roleMap[constants.ReportsReaderRoleID].Add(uint32(group.ID))
+	roleMap[constants.HelpdeskAdministratorRoleID].Add(uint32(group.ID))
+	roleMap[constants.PartnerTier1SupportRoleID].Add(uint32(app.ID))
 
 	return azure.RoleAssignments{
 		// user2 has no roles! this is intentional

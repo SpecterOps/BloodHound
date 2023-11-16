@@ -68,7 +68,7 @@ func PopulateTenantEntityDetailsCounts(tx graph.Transaction, node *graph.Node, d
 
 // TenantPrincipals returns the complete set of User, Group, and Service Principal nodes contained by the given Tenant node
 func TenantPrincipals(tx graph.Transaction, tenant *graph.Node) (graph.NodeSet, error) {
-	if !tenant.Kinds.ContainsOneOf(azure.Tenant) {
+	if !IsTenantNode(tenant) {
 		return nil, fmt.Errorf("node %d must contain kind %s", tenant.ID, azure.Tenant)
 	} else {
 		return ops.FetchEndNodes(tx.Relationships().Filterf(func() graph.Criteria {
