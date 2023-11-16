@@ -249,7 +249,7 @@ func FeatureFlagMiddleware(db database.Database, flagKey string) mux.MiddlewareF
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
 			if flag, err := db.GetFlagByKey(flagKey); err != nil {
-
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("error retrieving %s feature flag: %s", flagKey, err), request), response)
 			} else if flag.Enabled {
 				next.ServeHTTP(response, request)
 			} else {
