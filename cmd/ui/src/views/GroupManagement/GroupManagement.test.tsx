@@ -58,7 +58,7 @@ describe('GroupManagement', () => {
         const tenantSelector = await waitFor(() => screen.getByTestId('data-quality_context-selector'));
 
         expect(screen.getByText('Group:')).toBeInTheDocument();
-        expect(screen.getByText('Tenant:')).toBeInTheDocument();
+        expect(screen.getByText('Environment:')).toBeInTheDocument();
         expect(groupSelector).toBeInTheDocument();
         expect(tenantSelector).toBeInTheDocument();
     });
