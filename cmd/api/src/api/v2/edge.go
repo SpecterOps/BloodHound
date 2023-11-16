@@ -34,7 +34,7 @@ const (
 	edgeParameterTargetNode = "target_node"
 )
 
-var validEdgeTypes = []string{"adcsesc1"}
+var validEdgeTypes = []string{"goldencert", "adcsesc1"}
 
 func (s *Resources) GetEdgeDetails(response http.ResponseWriter, request *http.Request) {
 	var (

@@ -42,7 +42,10 @@ const EdgeInfoContent: FC<{ selectedEdge: NonNullable<SelectedEdge> }> = ({ sele
 
                         let handleOnChange = (label: string, isOpen: boolean) => {};
 
-                        if (selectedEdge.name === 'ADCSESC1' && section[0] === 'details') {
+                        if (
+                            (selectedEdge.name === 'GoldenCert' || selectedEdge.name === 'ADCSESC1') &&
+                            section[0] === 'details'
+                        ) {
                             handleOnChange = async (label: string, isOpen: boolean) => {
                                 if (isOpen) {
                                     dispatch(setGraphLoading(true));
