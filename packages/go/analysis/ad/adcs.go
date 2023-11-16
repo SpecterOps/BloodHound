@@ -376,54 +376,58 @@ func certTemplateHasEku(certTemplate *graph.Node, targetEkus ...string) (bool, e
 	}
 }
 
-func PostADCS(ctx context.Context, db graph.Database, groupExpansions impact.PathAggregator) (*analysis.AtomicPostProcessingStats, error) {
-	operation := analysis.NewPostRelationshipOperation(ctx, db, "ADCS Post Processing")
+func PostADCS(ctx context.Context, db graph.Database, groupExpansions impact.PathAggregator, adcsEnabled bool) (*analysis.AtomicPostProcessingStats, error) {
+	if adcsEnabled {
+		operation := analysis.NewPostRelationshipOperation(ctx, db, "ADCS Post Processing")
 
-	if enterpriseCertAuthorities, err := FetchNodesByKind(ctx, db, ad.EnterpriseCA); err != nil {
-		return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("failed fetching enterpriseCA nodes: %w", err)
-	} else if rootCertAuthorities, err := FetchNodesByKind(ctx, db, ad.RootCA); err != nil {
-		return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("failed fetching rootCA nodes: %w", err)
-	} else if certTemplates, err := FetchNodesByKind(ctx, db, ad.CertTemplate); err != nil {
-		return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("failed fetching cert template nodes: %w", err)
-	} else if domains, err := FetchNodesByKind(ctx, db, ad.Domain); err != nil {
-		return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("failed fetching domain nodes: %w", err)
-	} else if step1Stats, err := postADCSPreProcessStep1(ctx, db, enterpriseCertAuthorities, rootCertAuthorities); err != nil {
-		return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("failed adcs pre-processing step 1: %w", err)
-	} else if step2Stats, err := postADCSPreProcessStep2(ctx, db, certTemplates); err != nil {
-		return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("failed adcs pre-processing step 2: %w", err)
-	} else {
-		operation.Stats.Merge(step1Stats)
-		operation.Stats.Merge(step2Stats)
+		if enterpriseCertAuthorities, err := FetchNodesByKind(ctx, db, ad.EnterpriseCA); err != nil {
+			return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("failed fetching enterpriseCA nodes: %w", err)
+		} else if rootCertAuthorities, err := FetchNodesByKind(ctx, db, ad.RootCA); err != nil {
+			return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("failed fetching rootCA nodes: %w", err)
+		} else if certTemplates, err := FetchNodesByKind(ctx, db, ad.CertTemplate); err != nil {
+			return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("failed fetching cert template nodes: %w", err)
+		} else if domains, err := FetchNodesByKind(ctx, db, ad.Domain); err != nil {
+			return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("failed fetching domain nodes: %w", err)
+		} else if step1Stats, err := postADCSPreProcessStep1(ctx, db, enterpriseCertAuthorities, rootCertAuthorities); err != nil {
+			return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("failed adcs pre-processing step 1: %w", err)
+		} else if step2Stats, err := postADCSPreProcessStep2(ctx, db, certTemplates); err != nil {
+			return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("failed adcs pre-processing step 2: %w", err)
+		} else {
+			operation.Stats.Merge(step1Stats)
+			operation.Stats.Merge(step2Stats)
 
-		for _, domain := range domains {
-			innerDomain := domain
+			for _, domain := range domains {
+				innerDomain := domain
 
-			operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
+				operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
 
-				if enterpriseCAs, err := FetchEnterpriseCAsTrustedForNTAuthPathToDomain(tx, innerDomain); err != nil {
-					return err
-				} else {
-					for _, enterpriseCA := range enterpriseCAs {
-						if validPaths, err := FetchEnterpriseCAsCertChainPathToDomain(tx, enterpriseCA, innerDomain); err != nil {
-							log.Errorf("error fetching paths from enterprise ca %d to domain %d: %w", enterpriseCA.ID, innerDomain.ID, err)
-						} else if validPaths.Len() == 0 {
-							continue
-						} else {
-							if err := PostGoldenCert(ctx, tx, outC, innerDomain, enterpriseCA); err != nil {
-								log.Errorf("failed post processing for %s: %w", ad.GoldenCert.String(), err)
-							} else if err := PostADCSESC1(ctx, tx, outC, db, groupExpansions, enterpriseCertAuthorities, certTemplates, enterpriseCA, innerDomain); err != nil {
-								log.Errorf("failed post processing for %s: %w", ad.ADCSESC1.String(), err)
+					if enterpriseCAs, err := FetchEnterpriseCAsTrustedForNTAuthPathToDomain(tx, innerDomain); err != nil {
+						return err
+					} else {
+						for _, enterpriseCA := range enterpriseCAs {
+							if validPaths, err := FetchEnterpriseCAsCertChainPathToDomain(tx, enterpriseCA, innerDomain); err != nil {
+								log.Errorf("error fetching paths from enterprise ca %d to domain %d: %w", enterpriseCA.ID, innerDomain.ID, err)
+							} else if validPaths.Len() == 0 {
+								continue
 							} else {
-								return nil
+								if err := PostGoldenCert(ctx, tx, outC, innerDomain, enterpriseCA); err != nil {
+									log.Errorf("failed post processing for %s: %w", ad.GoldenCert.String(), err)
+								} else if err := PostADCSESC1(ctx, tx, outC, db, groupExpansions, enterpriseCertAuthorities, certTemplates, enterpriseCA, innerDomain); err != nil {
+									log.Errorf("failed post processing for %s: %w", ad.ADCSESC1.String(), err)
+								} else {
+									return nil
+								}
 							}
 						}
 					}
-				}
-				return nil
-			})
-		}
+					return nil
+				})
+			}
 
-		return &operation.Stats, operation.Done()
+			return &operation.Stats, operation.Done()
+		}
+	} else {
+		return &analysis.AtomicPostProcessingStats{}, nil
 	}
 }
 
