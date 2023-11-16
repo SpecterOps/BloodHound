@@ -70,6 +70,7 @@ import Contains from './Contains/Contains';
 import DCSync from './DCSync/DCSync';
 import DelegatedEnrollmentAgent from './DelegatedEnrollmentAgent/DelegatedEnrollmentAgent';
 import DumpSMSAPassword from './DumpSMSAPassword/DumpSMSAPassword';
+import ADCSESC3 from './ADCSESC3/ADCSESC3';
 import Enroll from './Enroll/Enroll';
 import EnrollOnBehalfOf from './EnrollOnBehalfOf/EnrollOnBehalfOf';
 import EnterpriseCAFor from './EnterpriseCAFor/EnterpriseCAFor';
@@ -195,6 +196,7 @@ const EdgeInfoComponents = {
     DelegatedEnrollmentAgent: DelegatedEnrollmentAgent,
     EnrollOnBehalfOf: EnrollOnBehalfOf,
     GoldenCert: GoldenCert,
+    ADCSESC3: ADCSESC3,
 };
 
 export default EdgeInfoComponents;
