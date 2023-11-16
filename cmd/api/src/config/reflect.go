@@ -17,6 +17,7 @@
 package config
 
 import (
+	"errors"
 	"fmt"
 	"reflect"
 	"regexp"
@@ -24,11 +25,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/src/serde"
 )
 
 var structTagRegex = regexp.MustCompile(`(\w+):"([^"]+)"`)
+var InvalidConfigurationPathError = errors.New("Unable to find a configuration element by path")
 
 // taggedField represents a struct field by its index and a parsed representation of any tags associated with the
 // struct field.
@@ -270,10 +271,11 @@ func SetValue(target any, path, value string) error {
 				break
 			}
 
-			lookahead := idx + 1
+			lookahead := idx
 
 			for lookahead < len(pathParts) {
-				remainingFullPath := strings.Join(append([]string{nextPathPart}, pathParts[lookahead]), "_")
+				// Make sure to add one to lookahead, as we want to get the range starting at base and going 1 or more indexes beyond it
+				remainingFullPath := strings.Join(pathParts[idx:lookahead+1], "_")
 
 				if taggedFieldName == remainingFullPath {
 					cursor = cursor.Field(taggedField.Field)
@@ -291,8 +293,7 @@ func SetValue(target any, path, value string) error {
 		}
 
 		if !found {
-			log.Warnf("Unable to find a configuration element by path: %s", path)
-			return nil
+			return fmt.Errorf("%w: %s", InvalidConfigurationPathError, path)
 		}
 	}
 

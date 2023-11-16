@@ -87,6 +87,14 @@ export interface ComputerInfo extends EntityInfo {
     sqlAdminUsers: number;
 }
 
+// --- Containers
+export interface ContainersInfo extends EntityInfo {
+    props: BasicInfo & {
+        description?: string;
+    };
+    controllers: number;
+}
+
 // --- Domain
 export interface DomainInfoGraph extends GraphInfo {
     functionallevel: string;
@@ -129,7 +137,8 @@ export interface EnterpriseCAInfo extends EntityInfo {
         enrollmentagentrestrictionscollected: boolean;
         flags: 10;
         hasbasicconstraints: boolean;
-        isuserspecifiessanenabled: boolean;
+        hasenrollmentagentrestrictions?: boolean;
+        isuserspecifiessanenabled?: boolean;
         isuserspecifiessanenabledcollected: boolean;
         description?: string;
     };

@@ -1963,6 +1963,40 @@ class BHEAPIClient {
             )
         );
 
+    getContainerV2 = (id: string, counts?: boolean, options?: types.RequestOptions) =>
+        this.baseClient.get(
+            `/api/v2/containers/${id}`,
+            Object.assign(
+                {
+                    params: {
+                        counts,
+                    },
+                },
+                options
+            )
+        );
+
+    getContainerControllersV2 = (
+        id: string,
+        skip?: number,
+        limit?: number,
+        type?: string,
+        options?: types.RequestOptions
+    ) =>
+        this.baseClient.get(
+            `/api/v2/containers/${id}/controllers`,
+            Object.assign(
+                {
+                    params: {
+                        skip,
+                        limit,
+                        type,
+                    },
+                },
+                options
+            )
+        );
+
     getAIACAV2 = (id: string, counts?: boolean, options?: types.RequestOptions) =>
         this.baseClient.get(
             `/api/v2/aiacas/${id}`,

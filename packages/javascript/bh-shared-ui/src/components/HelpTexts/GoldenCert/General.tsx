@@ -23,8 +23,9 @@ const General: FC<EdgeInfoProps> = ({ sourceName, sourceType, targetName }) => {
     return (
         <>
             <Typography variant='body2'>
-                The {typeFormat(sourceType)} {sourceName} has a certificate private key that can be abused to sign 
-                "golden" certificates for authentication of any enabled principal in the AD forest of domain {targetName}.
+                The {typeFormat(sourceType)} {sourceName} has a certificate private key that can be abused to sign
+                "golden" certificates for authentication of any enabled principal in the AD forest of domain{' '}
+                {targetName}.
             </Typography>
             <Typography variant='body2'>
                 The {typeFormat(sourceType)} {sourceName} hosts the enrollment service of an enterprise CA which implies
@@ -39,7 +40,6 @@ const General: FC<EdgeInfoProps> = ({ sourceName, sourceType, targetName }) => {
                 templates, approve denied enrollment requests, and more. The {typeFormat(sourceType)} {sourceName} will
                 have an ESC7 edge to the domain {targetName} if any such attack has been found possible by BloodHound.
             </Typography>
-
         </>
     );
 };

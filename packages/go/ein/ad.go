@@ -407,6 +407,31 @@ func ParseUserRightData(userRight UserRightsAssignmentAPIResult, computer Comput
 	return relationships
 }
 
+func ParseCARegistryProperties(enterpriseCA EnterpriseCA) IngestibleNode {
+	propMap := make(map[string]any)
+
+	// HasEnrollmentAgentRestrictions
+	if enterpriseCA.CARegistryData.EnrollmentAgentRestrictions.Collected {
+
+		if len(enterpriseCA.CARegistryData.EnrollmentAgentRestrictions.Restrictions) > 0 {
+			propMap[ad.HasEnrollmentAgentRestrictions.String()] = true
+		} else {
+			propMap[ad.HasEnrollmentAgentRestrictions.String()] = false
+		}
+	}
+
+	// IsUserSpecifiesSanEnabled
+	if enterpriseCA.CARegistryData.IsUserSpecifiesSanEnabled.Collected {
+		propMap[ad.IsUserSpecifiesSanEnabled.String()] = enterpriseCA.CARegistryData.IsUserSpecifiesSanEnabled.Value
+	}
+
+	return IngestibleNode{
+		ObjectID:    enterpriseCA.ObjectIdentifier,
+		PropertyMap: propMap,
+		Label:       ad.EnterpriseCA,
+	}
+}
+
 func ParseEnterpriseCAMiscData(enterpriseCA EnterpriseCA) []IngestibleRelationship {
 	var (
 		relationships        = make([]IngestibleRelationship, 0)
@@ -474,7 +499,7 @@ func handleEnterpriseCAEnrollmentAgentRestrictions(enterpriseCA EnterpriseCA, re
 
 func handleEnterpriseCASecurity(enterpriseCA EnterpriseCA, relationships []IngestibleRelationship) []IngestibleRelationship {
 
-	if enterpriseCA.CASecurity.Collected {
+	if enterpriseCA.CARegistryData.CASecurity.Collected {
 		caSecurityData := slices.Filter(enterpriseCA.CARegistryData.CASecurity.Data, func(s ACE) bool {
 			if s.RightName == ad.Owns.String() {
 				return false

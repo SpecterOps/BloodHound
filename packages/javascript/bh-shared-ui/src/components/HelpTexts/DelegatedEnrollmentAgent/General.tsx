@@ -27,9 +27,9 @@ const General: FC<EdgeInfoProps> = ({ sourceName, sourceType, targetName }) => {
                 certificate template {targetName} as an enrollment agent.
             </Typography>
             <Typography variant='body2'>
-                The certificate template is published to an enterprise CA where the enrollment agent restrictions
-                are configured to allow this principal to enroll certificates against this template as an enrollment
-                agent. BloodHound does not assess what principals the enrollment agent is allowed to enroll on behalf of.
+                The certificate template is published to an enterprise CA where the enrollment agent restrictions are
+                configured to allow this principal to enroll certificates against this template as an enrollment agent.
+                BloodHound does not assess what principals the enrollment agent is allowed to enroll on behalf of.
             </Typography>
         </>
     );

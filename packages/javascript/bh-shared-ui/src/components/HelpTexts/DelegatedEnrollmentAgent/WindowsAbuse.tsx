@@ -20,8 +20,8 @@ import { Typography } from '@mui/material';
 const Abuse: FC = () => {
     return (
         <Typography variant='body2'>
-            An attacker may perform an ADCS ESC3 attack that relies on this DelegatedEnrollmentAgent relationship. This relationship alone is not
-            enough to escalate rights or impersonate other principals.
+            An attacker may perform an ADCS ESC3 attack that relies on this DelegatedEnrollmentAgent relationship. This
+            relationship alone is not enough to escalate rights or impersonate other principals.
         </Typography>
     );
 };
