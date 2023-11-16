@@ -17,8 +17,9 @@
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import AssetGroupMemberList from './AssetGroupMemberList';
-import { fireEvent, render, waitFor } from '../../test-utils';
+import { render, waitFor } from '../../test-utils';
 import { createMockAssetGroup, createMockAssetGroupMembers } from '../../mocks/factories';
+import userEvent from '@testing-library/user-event';
 
 const assetGroup = createMockAssetGroup();
 const assetGroupMembers = createMockAssetGroupMembers();
@@ -43,10 +44,11 @@ afterAll(() => server.close());
 describe('AssetGroupMemberList', () => {
     const setup = () => {
         const handleSelectMember = vi.fn();
+        const user = userEvent.setup();
         const screen = render(
             <AssetGroupMemberList assetGroup={assetGroup} filter={{}} onSelectMember={handleSelectMember} />
         );
-        return { screen, handleSelectMember };
+        return { screen, user, handleSelectMember };
     };
 
     it('Should display headers for member name and count', () => {
@@ -65,10 +67,10 @@ describe('AssetGroupMemberList', () => {
     });
 
     it('Should call handler when a member is clicked', async () => {
-        const { screen, handleSelectMember } = setup();
+        const { screen, user, handleSelectMember } = setup();
         const testMember = assetGroupMembers.members[0];
         const entry = await waitFor(() => screen.getByText(testMember.name));
-        fireEvent.click(entry);
+        await user.click(entry);
         expect(handleSelectMember).toHaveBeenCalledWith(testMember);
     });
 });

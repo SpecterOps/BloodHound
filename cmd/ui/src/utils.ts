@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { ActiveDirectoryNodeKind, AzureNodeKind, apiClient } from 'bh-shared-ui';
+import { apiClient } from 'bh-shared-ui';
 import { FlatGraphResponse, GraphData, GraphResponse, StyledGraphEdge, StyledGraphNode } from 'js-client-library';
 import identity from 'lodash/identity';
 import throttle from 'lodash/throttle';

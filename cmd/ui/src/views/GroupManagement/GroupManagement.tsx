@@ -22,7 +22,7 @@ import DataSelector from '../QA/DataSelector';
 import { AssetGroup, AssetGroupMember } from 'js-client-library';
 import { GraphNodeTypes } from 'src/ducks/graph/types';
 import { faGem } from '@fortawesome/free-solid-svg-icons';
-import { useDispatch, useSelector } from 'react-redux';
+import { useSelector } from 'react-redux';
 import { Domain } from 'src/ducks/global/types';
 import { setSelectedNode } from 'src/ducks/entityinfo/actions';
 import { useNavigate } from 'react-router-dom';
@@ -30,9 +30,10 @@ import { ROUTE_EXPLORE } from 'src/ducks/global/routes';
 import { setSearchValue, startSearchSelected } from 'src/ducks/searchbar/actions';
 import { PRIMARY_SEARCH, SEARCH_TYPE_EXACT } from 'src/ducks/searchbar/types';
 import { TIER_ZERO_LABEL, TIER_ZERO_TAG } from 'src/constants';
+import { useAppDispatch } from 'src/store';
 
 const GroupManagement = () => {
-    const dispatch = useDispatch();
+    const dispatch = useAppDispatch();
     const navigate = useNavigate();
 
     const globalDomain: Domain = useSelector((state: any) => state.global.options.domain);
