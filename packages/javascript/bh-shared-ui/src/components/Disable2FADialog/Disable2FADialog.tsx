@@ -14,7 +14,16 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, TextField } from '@mui/material';
+import {
+    Alert,
+    Button,
+    Dialog,
+    DialogActions,
+    DialogContent,
+    DialogContentText,
+    DialogTitle,
+    TextField,
+} from '@mui/material';
 import React from 'react';
 
 const Disable2FADialog: React.FC<{
@@ -26,7 +35,8 @@ const Disable2FADialog: React.FC<{
     secret: string;
     onSecretChange: (e: any) => void;
     contentText: string;
-}> = ({ open, onClose, onCancel, onSave, error, secret, onSecretChange, contentText }) => {
+    displayWarning: boolean;
+}> = ({ open, onClose, onCancel, onSave, error, secret, onSecretChange, contentText, displayWarning = false }) => {
     const handleOnSave: React.FormEventHandler = (e) => {
         e.preventDefault();
         onSave(secret);
@@ -37,6 +47,12 @@ const Disable2FADialog: React.FC<{
             <DialogTitle>Disable Multi-Factor Authentication?</DialogTitle>
             <form onSubmit={handleOnSave}>
                 <DialogContent>
+                    {displayWarning && (
+                        <Alert severity='warning' style={{ marginBottom: '10px', alignItems: 'center' }}>
+                            Disabling MFA increases the risk of unauthorized access. For optimal account security, we
+                            highly recommend keeping MFA enabled.
+                        </Alert>
+                    )}
                     <DialogContentText>{contentText}</DialogContentText>
 
                     <TextField
