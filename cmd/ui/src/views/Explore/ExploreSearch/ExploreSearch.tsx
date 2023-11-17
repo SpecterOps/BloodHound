@@ -21,11 +21,12 @@ import makeStyles from '@mui/styles/makeStyles';
 import { Icon } from 'bh-shared-ui';
 import React, { useState } from 'react';
 import { useSelector } from 'react-redux';
-import { PRIMARY_SEARCH } from 'src/ducks/searchbar/types';
-import { AppState } from 'src/store';
+import { CYPHER_SEARCH, PATHFINDING_SEARCH, PRIMARY_SEARCH } from 'src/ducks/searchbar/types';
+import { AppState, useAppDispatch } from 'src/store';
 import CypherSearch from './CypherSearch';
 import NodeSearch from './NodeSearch';
 import PathfindingSearch from './PathfindingSearch';
+import { tabChanged, primarySearch, pathfindingSearch, cypherSearch } from 'src/ducks/searchbar/actions';
 
 const useStyles = makeStyles((theme) => ({
     menuButton: {
@@ -43,6 +44,13 @@ const useStyles = makeStyles((theme) => ({
     },
 }));
 
+const tabNameMap = {
+    primary: 0,
+    secondary: 1,
+    cypher: 2,
+    tierZero: 3,
+};
+
 interface ExploreSearchProps {
     handleColumns?: (isCypherEditorActive: boolean) => void;
 }
@@ -51,24 +59,29 @@ const ExploreSearch = ({ handleColumns }: ExploreSearchProps) => {
     const classes = useStyles();
     const theme = useTheme();
     const matches = useMediaQuery(theme.breakpoints.down('md'));
+    const dispatch = useAppDispatch();
 
-    const searchState = useSelector((state: AppState) => state.search);
+    const tabKey = useSelector((state: AppState) => state.search.activeTab);
+    const activeTab = tabNameMap[tabKey];
 
     const [showSearchWidget, setShowSearchWidget] = useState(true);
 
-    const [activeTab, setActiveTab] = useState(() => {
-        if (searchState.primary.value && searchState.secondary.value) {
-            return 1;
+    const handleTabChange = (newTabIndex: number) => {
+        switch (newTabIndex) {
+            case 0:
+                dispatch(primarySearch());
+                return dispatch(tabChanged(PRIMARY_SEARCH));
+            case 1:
+                dispatch(pathfindingSearch());
+                return dispatch(tabChanged(PATHFINDING_SEARCH));
+            case 2:
+                dispatch(cypherSearch());
+                return dispatch(tabChanged(CYPHER_SEARCH));
         }
-        return 0;
-    });
-
-    const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
-        setActiveTab(newValue);
 
         const cypherTabIndex = 2;
         if (handleColumns) {
-            handleColumns(newValue === cypherTabIndex);
+            handleColumns(newTabIndex === cypherTabIndex);
         }
     };
 
@@ -85,7 +98,7 @@ const ExploreSearch = ({ handleColumns }: ExploreSearchProps) => {
                 <Tabs
                     variant='fullWidth'
                     value={activeTab}
-                    onChange={handleTabChange}
+                    onChange={(e, newTabIdx) => handleTabChange(newTabIdx)}
                     onClick={() => setShowSearchWidget(true)}
                     sx={{
                         height: '40px',
@@ -103,14 +116,7 @@ const ExploreSearch = ({ handleColumns }: ExploreSearchProps) => {
 
             <Collapse in={showSearchWidget}>
                 <Paper sx={{ mt: 1, p: 1 }} elevation={0}>
-                    <TabPanels
-                        tabs={[
-                            <NodeSearch searchType={PRIMARY_SEARCH} labelText='Search Nodes' />,
-                            <PathfindingSearch />,
-                            <CypherSearch />,
-                        ]}
-                        activeTab={activeTab}
-                    />
+                    <TabPanels tabs={[<NodeSearch />, <PathfindingSearch />, <CypherSearch />]} activeTab={activeTab} />
                 </Paper>
             </Collapse>
         </Box>

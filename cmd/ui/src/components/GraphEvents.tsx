@@ -19,6 +19,7 @@ import { setSelectedEdge } from 'bh-shared-ui';
 import { AbstractGraph, Attributes } from 'graphology-types';
 import { FC, useEffect, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
+import { SigmaNodeEventPayload } from 'sigma/sigma';
 import { getEdgeDataFromKey, getEdgeSourceAndTargetDisplayData, resetCamera } from 'src/ducks/graph/utils';
 import { bezier } from 'src/rendering/utils/bezier';
 import { AppState, useAppDispatch } from 'src/store';
@@ -29,6 +30,7 @@ export interface GraphEventProps {
     onClickEdge?: (id: string, relatedFindingType?: string | null) => void;
     onClickStage?: () => void;
     edgeReducer?: (edge: string, data: Attributes, graph: AbstractGraph) => Attributes;
+    onRightClickNode?: (event: SigmaNodeEventPayload) => void;
 }
 
 export const GraphEvents: FC<GraphEventProps> = ({
@@ -36,6 +38,7 @@ export const GraphEvents: FC<GraphEventProps> = ({
     onClickNode,
     onClickEdge,
     onClickStage,
+    onRightClickNode,
     edgeReducer,
 }) => {
     const dispatch = useAppDispatch();
@@ -76,11 +79,15 @@ export const GraphEvents: FC<GraphEventProps> = ({
                 setHoveredNode(null);
             },
             downNode: (event) => {
-                setDraggedNode(event.node);
+                // a button value of `0` indicates that the main button of the mouse device was pressed
+                // https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/button#value
+                if (event.event.original.button === 0) {
+                    setDraggedNode(event.node);
 
-                dragTimerRef.current = setTimeout(() => {
-                    isLongPress.current = true;
-                }, 150);
+                    dragTimerRef.current = setTimeout(() => {
+                        isLongPress.current = true;
+                    }, 150);
+                }
             },
             mouseup: () => clearDraggedNode(),
             mousemovebody: (event) => {
@@ -127,6 +134,10 @@ export const GraphEvents: FC<GraphEventProps> = ({
                     }, 200);
                 }
             },
+            rightClickNode: (event) => {
+                event.preventSigmaDefault();
+                onRightClickNode?.(event);
+            },
             // We need our reducers to run again when the camera state gets updated to position edge labels correctly.
             // Despite its name, this event only triggers on camera update, not any Sigma update
             updated: () => sigma.refresh(),
@@ -137,6 +148,7 @@ export const GraphEvents: FC<GraphEventProps> = ({
         registerEvents,
         onDoubleClickNode,
         onClickNode,
+        onRightClickNode,
         onClickEdge,
         onClickStage,
         sigma,
