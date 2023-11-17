@@ -20,6 +20,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	graphMocks "github.com/specterops/bloodhound/src/queries/mocks"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -512,8 +513,12 @@ func TestResources_UpdateAssetGroupSelectors_SuccessT0(t *testing.T) {
 	}
 
 	mockDB := dbMocks.NewMockDatabase(mockCtrl)
+	mockGraph := graphMocks.NewMockGraph(mockCtrl)
+
 	mockDB.EXPECT().GetAssetGroup(gomock.Any()).Return(assetGroup, nil)
 	mockDB.EXPECT().UpdateAssetGroupSelectors(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(expectedResult, nil)
+	mockGraph.EXPECT().ClearSystemTags(gomock.Any()).Return(nil)
+	mockGraph.EXPECT().UpdateAssetGroupIsolationTags(gomock.Any(), gomock.Any()).Return(nil)
 
 	mockTasker := datapipeMocks.NewMockTasker(mockCtrl)
 	// MockTasker should receive a call to RequestAnalysis() since this is a Tier Zero Asset group.
@@ -523,6 +528,7 @@ func TestResources_UpdateAssetGroupSelectors_SuccessT0(t *testing.T) {
 	handlers := v2.Resources{
 		DB:           mockDB,
 		TaskNotifier: mockTasker,
+		GraphQuery:   mockGraph,
 	}
 
 	response := httptest.NewRecorder()
@@ -602,8 +608,13 @@ func TestResources_UpdateAssetGroupSelectors_SuccessOwned(t *testing.T) {
 	}
 
 	mockDB := dbMocks.NewMockDatabase(mockCtrl)
+	mockGraph := graphMocks.NewMockGraph(mockCtrl)
+
 	mockDB.EXPECT().GetAssetGroup(gomock.Any()).Return(assetGroup, nil)
 	mockDB.EXPECT().UpdateAssetGroupSelectors(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(expectedResult, nil)
+
+	mockGraph.EXPECT().ClearSystemTags(gomock.Any()).Return(nil)
+	mockGraph.EXPECT().UpdateAssetGroupIsolationTags(gomock.Any(), gomock.Any()).Return(nil)
 
 	mockTasker := datapipeMocks.NewMockTasker(mockCtrl)
 	// NOTE MockTasker should NOT receive a call to RequestAnalysis() since this is not a Tier Zero Asset group.
@@ -612,6 +623,7 @@ func TestResources_UpdateAssetGroupSelectors_SuccessOwned(t *testing.T) {
 	handlers := v2.Resources{
 		DB:           mockDB,
 		TaskNotifier: mockTasker,
+		GraphQuery:   mockGraph,
 	}
 
 	response := httptest.NewRecorder()

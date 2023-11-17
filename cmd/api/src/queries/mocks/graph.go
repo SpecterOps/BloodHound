@@ -27,6 +27,7 @@ import (
 	graph "github.com/specterops/bloodhound/dawgs/graph"
 	model "github.com/specterops/bloodhound/src/model"
 	queries "github.com/specterops/bloodhound/src/queries"
+	agi "github.com/specterops/bloodhound/src/services/agi"
 	gomock "go.uber.org/mock/gomock"
 )
 
@@ -65,6 +66,20 @@ func (m *MockGraph) BatchNodeUpdate(arg0 context.Context, arg1 graph.NodeUpdate)
 func (mr *MockGraphMockRecorder) BatchNodeUpdate(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "BatchNodeUpdate", reflect.TypeOf((*MockGraph)(nil).BatchNodeUpdate), arg0, arg1)
+}
+
+// ClearSystemTags mocks base method.
+func (m *MockGraph) ClearSystemTags(arg0 context.Context) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ClearSystemTags", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// ClearSystemTags indicates an expected call of ClearSystemTags.
+func (mr *MockGraphMockRecorder) ClearSystemTags(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ClearSystemTags", reflect.TypeOf((*MockGraph)(nil).ClearSystemTags), arg0)
 }
 
 // FetchNodesByObjectIDs mocks base method.
@@ -259,6 +274,20 @@ func (m *MockGraph) SearchNodesByName(arg0 context.Context, arg1 graph.Kinds, ar
 func (mr *MockGraphMockRecorder) SearchNodesByName(arg0, arg1, arg2, arg3, arg4 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SearchNodesByName", reflect.TypeOf((*MockGraph)(nil).SearchNodesByName), arg0, arg1, arg2, arg3, arg4)
+}
+
+// UpdateAssetGroupIsolationTags mocks base method.
+func (m *MockGraph) UpdateAssetGroupIsolationTags(arg0 context.Context, arg1 agi.AgiData) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateAssetGroupIsolationTags", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdateAssetGroupIsolationTags indicates an expected call of UpdateAssetGroupIsolationTags.
+func (mr *MockGraphMockRecorder) UpdateAssetGroupIsolationTags(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateAssetGroupIsolationTags", reflect.TypeOf((*MockGraph)(nil).UpdateAssetGroupIsolationTags), arg0, arg1)
 }
 
 // ValidateOUs mocks base method.
