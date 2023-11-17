@@ -101,10 +101,14 @@ import WriteAccountRestrictions from './WriteAccountRestrictions/WriteAccountRes
 import WriteDacl from './WriteDacl/WriteDacl';
 import WriteOwner from './WriteOwner/WriteOwner';
 import WriteSPN from './WriteSPN/WriteSPN';
+import ADCSESC1 from './ADCSESC1/ADCSESC1';
 
 export type EdgeInfoProps = {
+    edgeName?: string;
+    sourceDBId?: number;
     sourceName?: string;
     sourceType?: string;
+    targetDBId?: number;
     targetName?: string;
     targetType?: string;
 };
@@ -196,6 +200,7 @@ const EdgeInfoComponents = {
     DelegatedEnrollmentAgent: DelegatedEnrollmentAgent,
     EnrollOnBehalfOf: EnrollOnBehalfOf,
     GoldenCert: GoldenCert,
+    ADCSESC1: ADCSESC1,
     ADCSESC3: ADCSESC3,
 };
 

@@ -19,11 +19,12 @@ package ad
 import (
 	"context"
 	"fmt"
-	"github.com/specterops/bloodhound/analysis/impact"
-	"github.com/specterops/bloodhound/dawgs/cardinality"
 	"sort"
 	"strings"
 	"time"
+
+	"github.com/specterops/bloodhound/analysis/impact"
+	"github.com/specterops/bloodhound/dawgs/cardinality"
 
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/dawgs/ops"
@@ -461,4 +462,139 @@ func CalculateCrossProductNodeSets(firstNodeSet, secondNodeSet []*graph.Node, gr
 	})
 
 	return resultEntities
+}
+
+func GetEdgeCompositionPath(ctx context.Context, db graph.Database, edge *graph.Relationship) (graph.PathSet, error) {
+	pathSet := graph.NewPathSet()
+	return pathSet, db.ReadTransaction(ctx, func(tx graph.Transaction) error {
+		if edge.Kind == ad.GoldenCert {
+			if results, err := getGoldenCertEdgeComposition(tx, edge); err != nil {
+				return err
+			} else {
+				pathSet = results
+			}
+		} else if edge.Kind == ad.ADCSESC1 {
+			if results, err := getADCSESC1EdgeComposition(tx, edge); err != nil {
+				return err
+			} else {
+				pathSet = results
+			}
+		}
+		return nil
+	})
+}
+
+func getADCSESC1EdgeComposition(tx graph.Transaction, edge *graph.Relationship) (graph.PathSet, error) {
+	finalPaths := graph.NewPathSet()
+	//Grab the start node as well as the target domain node
+	if startNode, targetDomainNode, err := ops.FetchRelationshipNodes(tx, edge); err != nil {
+		return finalPaths, err
+	} else {
+		//Find cert templates that we have control over using enroll/acls
+		if pathsToTemplates, err := ops.TraversePaths(tx, ops.TraversalPlan{
+			Root:      startNode,
+			Direction: graph.DirectionOutbound,
+			BranchQuery: func() graph.Criteria {
+				return query.KindIn(query.Relationship(), ad.Enroll, ad.GenericAll, ad.AllExtendedRights, ad.MemberOf)
+			},
+			DescentFilter: OutboundControlDescentFilter,
+			PathFilter: func(ctx *ops.TraversalContext, segment *graph.PathSegment) bool {
+				node := segment.Node
+				if !node.Kinds.ContainsOneOf(ad.CertTemplate) {
+					return false
+				} else if props, err := getValidatePublishedCertTemplateForEsc1PropertyValues(node); err != nil {
+					log.Errorf("Error getting props for certtemplate %d: %w", node.ID, err)
+				} else if !validatePublishedCertTemplateForEsc1(props) {
+					return false
+				}
+
+				return true
+			},
+		}); err != nil {
+			log.Errorf("Error getting paths from start node %d to templates: %w", startNode.ID, err)
+			return finalPaths, err
+		} else {
+			for _, path := range pathsToTemplates {
+				certTemplate := path.Terminal()
+				if ecaPaths, err := ops.FetchPathSet(tx, tx.Relationships().Filter(query.And(
+					query.Equals(query.StartID(), certTemplate.ID),
+					query.KindIn(query.End(), ad.EnterpriseCA),
+					query.KindIn(query.Relationship(), ad.PublishedTo),
+				))); err != nil {
+					log.Errorf("error getting eca published to for cert template %d : %w", certTemplate.ID, err)
+				} else {
+					for _, ecaPath := range ecaPaths {
+						eca := ecaPath.Terminal()
+						if domainPaths, err := FetchEnterpriseCAsCertChainPathToDomain(tx, eca, targetDomainNode); err != nil {
+							log.Errorf("error getting eca %d path to domain %d: %w", eca.ID, targetDomainNode.ID, err)
+						} else if domainPaths.Len() == 0 {
+							continue
+						} else if trustedForAuthPaths, err := FetchEnterpriseCAsTrustedForAuthPathToDomain(tx, eca, targetDomainNode); err != nil {
+							log.Errorf("error getting eca %d path to domain %d via trusted for auth: %w", eca.ID, targetDomainNode.ID, err)
+						} else if trustedForAuthPaths.Len() == 0 {
+							continue
+						} else if userPathsToCa, err := ops.TraversePaths(tx, ops.TraversalPlan{
+							Root:      startNode,
+							Direction: graph.DirectionOutbound,
+							BranchQuery: func() graph.Criteria {
+								return query.KindIn(query.Relationship(), ad.Enroll, ad.MemberOf)
+							},
+							DescentFilter: OutboundControlDescentFilter,
+							PathFilter: func(ctx *ops.TraversalContext, segment *graph.PathSegment) bool {
+								return segment.Node.ID == eca.ID
+							},
+						}); err != nil {
+							log.Errorf("Error getting paths from start node %d to enterprise ca: %w", startNode.ID, err)
+						} else if userPathsToCa.Len() == 0 {
+							continue
+						} else {
+							finalPaths.AddPath(path)
+							finalPaths.AddPath(ecaPath)
+							finalPaths.AddPathSet(domainPaths)
+							finalPaths.AddPathSet(trustedForAuthPaths)
+							finalPaths.AddPathSet(userPathsToCa)
+						}
+					}
+				}
+			}
+		}
+
+		return finalPaths, nil
+	}
+}
+
+func getGoldenCertEdgeComposition(tx graph.Transaction, edge *graph.Relationship) (graph.PathSet, error) {
+	finalPaths := graph.NewPathSet()
+	//Grab the start node (computer) as well as the target domain node
+	if startNode, targetDomainNode, err := ops.FetchRelationshipNodes(tx, edge); err != nil {
+		return finalPaths, err
+	} else {
+		//Find hosted enterprise CA
+		if ecaPaths, err := ops.FetchPathSet(tx, tx.Relationships().Filter(query.And(
+			query.Equals(query.StartID(), startNode.ID),
+			query.KindIn(query.End(), ad.EnterpriseCA),
+			query.KindIn(query.Relationship(), ad.HostsCAService),
+		))); err != nil {
+			log.Errorf("error getting hostscaservice edge to enterprise ca for computer %d : %w", startNode.ID, err)
+		} else {
+			for _, ecaPath := range ecaPaths {
+				eca := ecaPath.Terminal()
+				if chainToRootCAPaths, err := FetchEnterpriseCAsCertChainPathToDomain(tx, eca, targetDomainNode); err != nil {
+					log.Errorf("error getting eca %d path to domain %d: %w", eca.ID, targetDomainNode.ID, err)
+				} else if chainToRootCAPaths.Len() == 0 {
+					continue
+				} else if trustedForAuthPaths, err := FetchEnterpriseCAsTrustedForAuthPathToDomain(tx, eca, targetDomainNode); err != nil {
+					log.Errorf("error getting eca %d path to domain %d via trusted for auth: %w", eca.ID, targetDomainNode.ID, err)
+				} else if trustedForAuthPaths.Len() == 0 {
+					continue
+				} else {
+					finalPaths.AddPath(ecaPath)
+					finalPaths.AddPathSet(chainToRootCAPaths)
+					finalPaths.AddPathSet(trustedForAuthPaths)
+				}
+			}
+		}
+
+		return finalPaths, nil
+	}
 }

@@ -21,7 +21,7 @@ import Opsec from './Opsec';
 import References from './References';
 import Composition from './Composition';
 
-const GoldenCert = {
+const ADCSESC1 = {
     general: General,
     windowsAbuse: WindowsAbuse,
     linuxAbuse: LinuxAbuse,
@@ -30,4 +30,4 @@ const GoldenCert = {
     composition: Composition,
 };
 
-export default GoldenCert;
+export default ADCSESC1;
