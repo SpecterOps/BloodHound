@@ -28,7 +28,7 @@ import useCollapsibleSectionStyles from 'src/views/Explore/InfoStyles/Collapsibl
 const exclusionList = [
     'gid',
     'admin_rights_count',
-    'admincount',
+    'admin_rights_risk_percent',
     'hasspn',
     'system_tags',
     'user_tags',
