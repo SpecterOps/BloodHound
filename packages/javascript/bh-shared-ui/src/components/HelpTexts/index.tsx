@@ -86,6 +86,8 @@ import HasSIDHistory from './HasSIDHistory/HasSIDHistory';
 import HasSession from './HasSession/HasSession';
 import HostsCAService from './HostsCAService/HostsCAService';
 import IssuedSignedBy from './IssuedSignedBy/IssuedSignedBy';
+import ManageCA from './ManageCA/ManageCA';
+import ManageCertificates from './ManageCertificates/ManageCertificates';
 import MemberOf from './MemberOf/MemberOf';
 import NTAuthStoreFor from './NTAuthStoreFor/NTAuthStoreFor';
 import Owns from './Owns/Owns';
@@ -100,6 +102,8 @@ import TrustedForNTAuth from './TrustedForNTAuth/TrustedForNTAuth';
 import WriteAccountRestrictions from './WriteAccountRestrictions/WriteAccountRestrictions';
 import WriteDacl from './WriteDacl/WriteDacl';
 import WriteOwner from './WriteOwner/WriteOwner';
+import WritePKIEnrollmentFlag from './WritePKIEnrollmentFlag/WritePKIEnrollmentFlag';
+import WritePKINameFlag from './WritePKINameFlag/WritePKINameFlag';
 import WriteSPN from './WriteSPN/WriteSPN';
 import ADCSESC1 from './ADCSESC1/ADCSESC1';
 
@@ -202,6 +206,10 @@ const EdgeInfoComponents = {
     GoldenCert: GoldenCert,
     ADCSESC1: ADCSESC1,
     ADCSESC3: ADCSESC3,
+    ManageCA: ManageCA,
+    ManageCertificates: ManageCertificates,
+    WritePKIEnrollmentFlag: WritePKIEnrollmentFlag,
+    WritePKINameFlag: WritePKINameFlag,
 };
 
 export default EdgeInfoComponents;
