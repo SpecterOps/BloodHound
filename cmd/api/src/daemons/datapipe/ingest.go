@@ -18,6 +18,7 @@ package datapipe
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"strings"
 	"time"
@@ -28,6 +29,7 @@ import (
 	"github.com/specterops/bloodhound/graphschema/azure"
 	"github.com/specterops/bloodhound/graphschema/common"
 	"github.com/specterops/bloodhound/log"
+	"github.com/specterops/bloodhound/src/model/appcfg"
 )
 
 func (s *Daemon) ReadWrapper(batch graph.Batch, reader io.Reader) error {
@@ -58,6 +60,11 @@ func (s *Daemon) IngestAzureData(batch graph.Batch, converted ConvertedAzureData
 }
 
 func (s *Daemon) IngestWrapper(batch graph.Batch, wrapper DataWrapper) error {
+	adcsFlag, err := s.db.GetFlagByKey(appcfg.FeatureAdcs)
+	if err != nil {
+		return fmt.Errorf("error getting ADCS feature flag: %w", err)
+	}
+
 	switch wrapper.Metadata.Type {
 	case DataTypeComputer:
 		// We should not be getting anything with Version < 5 at this point, and we don't want to ingest it if we do as post-processing will blow it away anyways
@@ -67,10 +74,11 @@ func (s *Daemon) IngestWrapper(batch graph.Batch, wrapper DataWrapper) error {
 			if err := json.Unmarshal(wrapper.Payload, &computerData); err != nil {
 				return err
 			} else {
-				converted := convertComputerData(computerData)
+				converted := convertComputerData(computerData, adcsFlag.Enabled)
 				s.IngestBasicData(batch, converted)
 			}
 		}
+
 	case DataTypeUser:
 		var userData []ein.User
 		if err := json.Unmarshal(wrapper.Payload, &userData); err != nil {
@@ -134,48 +142,58 @@ func (s *Daemon) IngestWrapper(batch graph.Batch, wrapper DataWrapper) error {
 		}
 
 	case DataTypeAIACA:
-		var aiacaData []ein.AIACA
-		if err := json.Unmarshal(wrapper.Payload, &aiacaData); err != nil {
-			return err
-		} else {
-			converted := convertAIACAData(aiacaData)
-			s.IngestBasicData(batch, converted)
+		if adcsFlag.Enabled {
+			var aiacaData []ein.AIACA
+			if err := json.Unmarshal(wrapper.Payload, &aiacaData); err != nil {
+				return err
+			} else {
+				converted := convertAIACAData(aiacaData)
+				s.IngestBasicData(batch, converted)
+			}
 		}
 
 	case DataTypeRootCA:
-		var rootcaData []ein.RootCA
-		if err := json.Unmarshal(wrapper.Payload, &rootcaData); err != nil {
-			return err
-		} else {
-			converted := convertRootCAData(rootcaData)
-			s.IngestBasicData(batch, converted)
+		if adcsFlag.Enabled {
+			var rootcaData []ein.RootCA
+			if err := json.Unmarshal(wrapper.Payload, &rootcaData); err != nil {
+				return err
+			} else {
+				converted := convertRootCAData(rootcaData)
+				s.IngestBasicData(batch, converted)
+			}
 		}
 
 	case DataTypeEnterpriseCA:
-		var enterprisecaData []ein.EnterpriseCA
-		if err := json.Unmarshal(wrapper.Payload, &enterprisecaData); err != nil {
-			return err
-		} else {
-			converted := convertEnterpriseCAData(enterprisecaData)
-			s.IngestBasicData(batch, converted)
+		if adcsFlag.Enabled {
+			var enterprisecaData []ein.EnterpriseCA
+			if err := json.Unmarshal(wrapper.Payload, &enterprisecaData); err != nil {
+				return err
+			} else {
+				converted := convertEnterpriseCAData(enterprisecaData)
+				s.IngestBasicData(batch, converted)
+			}
 		}
 
 	case DataTypeNTAuthStore:
-		var ntauthstoreData []ein.NTAuthStore
-		if err := json.Unmarshal(wrapper.Payload, &ntauthstoreData); err != nil {
-			return err
-		} else {
-			converted := convertNTAuthStoreData(ntauthstoreData)
-			s.IngestBasicData(batch, converted)
+		if adcsFlag.Enabled {
+			var ntauthstoreData []ein.NTAuthStore
+			if err := json.Unmarshal(wrapper.Payload, &ntauthstoreData); err != nil {
+				return err
+			} else {
+				converted := convertNTAuthStoreData(ntauthstoreData)
+				s.IngestBasicData(batch, converted)
+			}
 		}
 
 	case DataTypeCertTemplate:
-		var certtemplateData []ein.CertTemplate
-		if err := json.Unmarshal(wrapper.Payload, &certtemplateData); err != nil {
-			return err
-		} else {
-			converted := convertCertTemplateData(certtemplateData)
-			s.IngestBasicData(batch, converted)
+		if adcsFlag.Enabled {
+			var certtemplateData []ein.CertTemplate
+			if err := json.Unmarshal(wrapper.Payload, &certtemplateData); err != nil {
+				return err
+			} else {
+				converted := convertCertTemplateData(certtemplateData)
+				s.IngestBasicData(batch, converted)
+			}
 		}
 
 	case DataTypeAzure:

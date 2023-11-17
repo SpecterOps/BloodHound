@@ -70,6 +70,7 @@ import Contains from './Contains/Contains';
 import DCSync from './DCSync/DCSync';
 import DelegatedEnrollmentAgent from './DelegatedEnrollmentAgent/DelegatedEnrollmentAgent';
 import DumpSMSAPassword from './DumpSMSAPassword/DumpSMSAPassword';
+import ADCSESC3 from './ADCSESC3/ADCSESC3';
 import Enroll from './Enroll/Enroll';
 import EnrollOnBehalfOf from './EnrollOnBehalfOf/EnrollOnBehalfOf';
 import EnterpriseCAFor from './EnterpriseCAFor/EnterpriseCAFor';
@@ -85,6 +86,8 @@ import HasSIDHistory from './HasSIDHistory/HasSIDHistory';
 import HasSession from './HasSession/HasSession';
 import HostsCAService from './HostsCAService/HostsCAService';
 import IssuedSignedBy from './IssuedSignedBy/IssuedSignedBy';
+import ManageCA from './ManageCA/ManageCA';
+import ManageCertificates from './ManageCertificates/ManageCertificates';
 import MemberOf from './MemberOf/MemberOf';
 import NTAuthStoreFor from './NTAuthStoreFor/NTAuthStoreFor';
 import Owns from './Owns/Owns';
@@ -99,11 +102,17 @@ import TrustedForNTAuth from './TrustedForNTAuth/TrustedForNTAuth';
 import WriteAccountRestrictions from './WriteAccountRestrictions/WriteAccountRestrictions';
 import WriteDacl from './WriteDacl/WriteDacl';
 import WriteOwner from './WriteOwner/WriteOwner';
+import WritePKIEnrollmentFlag from './WritePKIEnrollmentFlag/WritePKIEnrollmentFlag';
+import WritePKINameFlag from './WritePKINameFlag/WritePKINameFlag';
 import WriteSPN from './WriteSPN/WriteSPN';
+import ADCSESC1 from './ADCSESC1/ADCSESC1';
 
 export type EdgeInfoProps = {
+    edgeName?: string;
+    sourceDBId?: number;
     sourceName?: string;
     sourceType?: string;
+    targetDBId?: number;
     targetName?: string;
     targetType?: string;
 };
@@ -195,6 +204,12 @@ const EdgeInfoComponents = {
     DelegatedEnrollmentAgent: DelegatedEnrollmentAgent,
     EnrollOnBehalfOf: EnrollOnBehalfOf,
     GoldenCert: GoldenCert,
+    ADCSESC1: ADCSESC1,
+    ADCSESC3: ADCSESC3,
+    ManageCA: ManageCA,
+    ManageCertificates: ManageCertificates,
+    WritePKIEnrollmentFlag: WritePKIEnrollmentFlag,
+    WritePKINameFlag: WritePKINameFlag,
 };
 
 export default EdgeInfoComponents;

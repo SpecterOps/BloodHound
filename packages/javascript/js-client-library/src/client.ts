@@ -2188,6 +2188,21 @@ class BHEAPIClient {
                 options
             )
         );
+
+    getEdgeComposition = (sourceNode: number, targetNode: number, edgeType: string, options?: types.RequestOptions) =>
+        this.baseClient.get<types.GraphResponse>(
+            '/api/v2/graphs/edge-composition',
+            Object.assign(
+                {
+                    params: {
+                        source_node: sourceNode,
+                        target_node: targetNode,
+                        edge_type: edgeType,
+                    },
+                },
+                options
+            )
+        );
 }
 
 export default BHEAPIClient;

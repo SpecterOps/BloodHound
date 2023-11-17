@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { faBuilding, faCloud } from '@fortawesome/free-solid-svg-icons';
+import { faGlobe, faCloud } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
     Alert,
@@ -159,7 +159,7 @@ const DataSelector: React.FC<{
                                     </Tooltip>
                                     <FontAwesomeIcon
                                         style={{ width: '10%', alignSelf: 'center' }}
-                                        icon={item.type === 'azure' ? faCloud : faBuilding}
+                                        icon={item.type === 'azure' ? faCloud : faGlobe}
                                         size='sm'
                                     />
                                 </MenuItem>
@@ -178,7 +178,7 @@ const DataSelector: React.FC<{
                     All Active Directory Domains
                     <FontAwesomeIcon
                         style={{ width: '10%', alignSelf: 'center', marginLeft: '8px' }}
-                        icon={faBuilding}
+                        icon={faGlobe}
                         size='sm'
                     />
                 </MenuItem>

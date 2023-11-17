@@ -99,6 +99,38 @@ func OutboundControlledNodes(nodes *traversal.NodeCollector, skip, limit int) tr
 	)
 }
 
+func OutboundControlDescentFilter(ctx *ops.TraversalContext, segment *graph.PathSegment) bool {
+	var (
+		shouldDescend = true
+		sawControlRel = false
+	)
+
+	// We want to ensure that MemberOf is expanded as well as controls relationships but with one exception: we do not
+	// want to traverse more than one degree of control relationships. The question being answered for this entity query
+	// is, "what does this entity have direct control of, including the entity's group memberships." We also do not want to
+	// traverse a MemberOf after we traverse a control relationship
+	segment.Path().Walk(func(_, _ *graph.Node, relationship *graph.Relationship) bool {
+		if relationship.Kind.Is(ad.ACLRelationships()...) {
+			if !sawControlRel {
+				sawControlRel = true
+			} else {
+				// Reaching this condition means that this descent would result in a second control
+				// relationship in this path, making this descendent ineligible for further traversal
+				shouldDescend = false
+				return false
+			}
+		} else if relationship.Kind.Is(ad.MemberOf) && sawControlRel {
+			//If we've already seen a control rel, and we get to a MemberOf, we need to prevent a descent as well
+			shouldDescend = false
+			return false
+		}
+
+		return true
+	})
+
+	return shouldDescend
+}
+
 func FilterContainsRelationship() graph.Criteria {
 	return query.Kind(query.Relationship(), ad.Contains)
 }
