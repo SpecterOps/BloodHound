@@ -92,6 +92,26 @@ describe('Enable2FADialog', () => {
         ).toBeInTheDocument();
     });
 
+    it('does not display security wanrning when displayWarning is NOT passed', () => {
+        expect(screen.queryByTestId('ReportProblemOutlinedIcon')).not.toBeInTheDocument();
+    });
+
+    it('displays security warning when displayWarning is passed as a prop', () => {
+        render(
+            <Disable2FADialog
+                open={true}
+                onCancel={testOnCancel}
+                onClose={testOnClose}
+                onSave={testOnSave}
+                secret=''
+                onSecretChange={testSetSecret}
+                contentText=''
+                displayWarning // testing this field
+            />
+        );
+        expect(screen.queryByTestId('ReportProblemOutlinedIcon')).toBeInTheDocument();
+    });
+
     describe('user clicks "Cancel" button', () => {
         beforeEach(async () => {
             await user.click(screen.getByRole('button', { name: 'Cancel' }));

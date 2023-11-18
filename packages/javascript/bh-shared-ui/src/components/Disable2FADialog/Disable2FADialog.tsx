@@ -35,7 +35,7 @@ const Disable2FADialog: React.FC<{
     secret: string;
     onSecretChange: (e: any) => void;
     contentText: string;
-    displayWarning: boolean;
+    displayWarning?: boolean;
 }> = ({ open, onClose, onCancel, onSave, error, secret, onSecretChange, contentText, displayWarning = false }) => {
     const handleOnSave: React.FormEventHandler = (e) => {
         e.preventDefault();
