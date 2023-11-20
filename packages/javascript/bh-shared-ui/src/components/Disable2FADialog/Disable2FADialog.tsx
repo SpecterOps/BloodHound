@@ -35,8 +35,7 @@ const Disable2FADialog: React.FC<{
     secret: string;
     onSecretChange: (e: any) => void;
     contentText: string;
-    displayWarning?: boolean;
-}> = ({ open, onClose, onCancel, onSave, error, secret, onSecretChange, contentText, displayWarning = false }) => {
+}> = ({ open, onClose, onCancel, onSave, error, secret, onSecretChange, contentText }) => {
     const handleOnSave: React.FormEventHandler = (e) => {
         e.preventDefault();
         onSave(secret);
@@ -47,12 +46,10 @@ const Disable2FADialog: React.FC<{
             <DialogTitle>Disable Multi-Factor Authentication?</DialogTitle>
             <form onSubmit={handleOnSave}>
                 <DialogContent>
-                    {displayWarning && (
-                        <Alert severity='warning' style={{ marginBottom: '10px', alignItems: 'center' }}>
-                            Disabling MFA increases the risk of unauthorized access. For optimal account security, we
-                            highly recommend keeping MFA enabled.
-                        </Alert>
-                    )}
+                    <Alert severity='warning' style={{ marginBottom: '10px', alignItems: 'center' }}>
+                        Disabling MFA increases the risk of unauthorized access. For optimal account security, we highly
+                        recommend keeping MFA enabled.
+                    </Alert>
                     <DialogContentText>{contentText}</DialogContentText>
 
                     <TextField
