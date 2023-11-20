@@ -414,8 +414,6 @@ func PostADCS(ctx context.Context, db graph.Database, groupExpansions impact.Pat
 									log.Errorf("failed post processing for %s: %w", ad.GoldenCert.String(), err)
 								} else if err := PostADCSESC1(ctx, tx, outC, db, groupExpansions, enterpriseCertAuthorities, certTemplates, enterpriseCA, innerDomain); err != nil {
 									log.Errorf("failed post processing for %s: %w", ad.ADCSESC1.String(), err)
-								} else {
-									return nil
 								}
 							}
 						}
