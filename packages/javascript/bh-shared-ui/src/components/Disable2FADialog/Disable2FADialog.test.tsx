@@ -106,7 +106,7 @@ describe('Enable2FADialog', () => {
                 secret=''
                 onSecretChange={testSetSecret}
                 contentText=''
-                displayWarning // testing this field
+                displayWarning // <-- testing this prop
             />
         );
         expect(screen.queryByTestId('ReportProblemOutlinedIcon')).toBeInTheDocument();
