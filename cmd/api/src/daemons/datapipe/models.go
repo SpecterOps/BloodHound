@@ -140,6 +140,8 @@ const (
 	CollectionMethodPSRemote      CollectionMethod = 1 << 14
 	CollectionMethodUserRights    CollectionMethod = 1 << 15
 	CollectionMethodCARegistry    CollectionMethod = 1 << 16
+	CollectionMethodDCRegistry    CollectionMethod = 1 << 17
+	CollectionMethodCertServices  CollectionMethod = 1 << 18
 )
 
 func AllCollectionMethods() []CollectionMethod {
@@ -161,6 +163,8 @@ func AllCollectionMethods() []CollectionMethod {
 		CollectionMethodPSRemote,
 		CollectionMethodUserRights,
 		CollectionMethodCARegistry,
+		CollectionMethodDCRegistry,
+		CollectionMethodCertServices,
 	}
 }
 
