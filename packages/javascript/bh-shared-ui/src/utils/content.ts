@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { ActiveDirectoryNodeKind, AzureNodeKind } from '../graphSchema';
-import { apiClient } from '.';
+import { apiClient } from './api';
 import { RequestOptions } from 'js-client-library';
 
 type EntitySectionEndpointParams = {
@@ -140,7 +140,7 @@ export const entityInformationEndpoints: Partial<
     [ActiveDirectoryNodeKind.RootCA]: (id: string, options?: RequestOptions) =>
         apiClient.getRootCAV2(id, false, options),
     [ActiveDirectoryNodeKind.User]: (id: string, options?: RequestOptions) => apiClient.getUserV2(id, false, options),
-    ['Meta']: apiClient.getMetaV2,
+    Meta: apiClient.getMetaV2,
 };
 
 export const allSections: Partial<Record<EntityKinds, (id: string) => EntityInfoDataTableProps[]>> = {
@@ -1948,5 +1948,5 @@ export const allSections: Partial<Record<EntityKinds, (id: string) => EntityInfo
                     .then((res) => res.data),
         },
     ],
-    ['Meta']: () => [],
+    Meta: () => [],
 };

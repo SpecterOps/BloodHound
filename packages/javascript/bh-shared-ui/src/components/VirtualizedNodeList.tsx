@@ -16,7 +16,7 @@
 
 import { List, ListItemButton, Tooltip } from '@mui/material';
 import { FixedSizeList, ListChildComponentProps } from 'react-window';
-import { NodeIcon } from '.';
+import NodeIcon from './NodeIcon';
 
 export type VirtualizedNodeListItem = {
     name: string;

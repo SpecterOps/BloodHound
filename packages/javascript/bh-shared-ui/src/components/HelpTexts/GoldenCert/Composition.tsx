@@ -16,7 +16,7 @@
 
 import { FC } from 'react';
 import { Alert, Box, Skeleton, Typography } from '@mui/material';
-import { apiClient } from '../../..';
+import { apiClient } from '../../../utils/api';
 import { EdgeInfoProps } from '..';
 import { useQuery } from 'react-query';
 import VirtualizedNodeList, { VirtualizedNodeListItem } from '../../VirtualizedNodeList';
