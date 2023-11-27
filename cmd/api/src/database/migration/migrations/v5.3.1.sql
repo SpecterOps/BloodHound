@@ -1,0 +1,4 @@
+DELETE FROM
+    saved_queries
+WHERE
+    user_id = '00000000-0000-0000-0000-000000000000'
