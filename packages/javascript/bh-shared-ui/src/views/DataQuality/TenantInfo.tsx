@@ -17,13 +17,15 @@
 import React, { useEffect, useState } from 'react';
 import { Box, Table, TableBody, TableContainer, Paper, TableHead, TableCell, TableRow } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
-import { AzureDataQualityStat } from './types';
-import LoadContainer from 'src/views/QA/LoadContainer';
+import {
+    useAzureDataQualityStatsQuery,
+    useAzurePlatformsDataQualityStatsQuery,
+    AzureDataQualityStat,
+} from '../../hooks';
+import LoadContainer from './LoadContainer';
 import { faUsers } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { NodeIcon } from 'bh-shared-ui';
-import { GraphNodeTypes } from 'src/ducks/graph/types';
-import { useAzureDataQualityStatsQuery, useAzurePlatformsDataQualityStatsQuery } from 'src/views/QA/queries';
+import { NodeIcon } from '../../components';
 
 const useStyles = makeStyles({
     print: {
@@ -108,68 +110,68 @@ const Layout: React.FC<{
                     )}
                     <TableBody>
                         <LoadContainer
-                            icon={<NodeIcon nodeType={GraphNodeTypes.AZUser} />}
+                            icon={<NodeIcon nodeType={'AZUser'} />}
                             display='Users'
                             value={dbInfo?.users || 0}
                             loading={loading}
                         />
                         <LoadContainer
-                            icon={<NodeIcon nodeType={GraphNodeTypes.AZGroup} />}
+                            icon={<NodeIcon nodeType={'AZGroup'} />}
                             display='Groups'
                             value={dbInfo?.groups || 0}
                             loading={loading}
                         />
                         <LoadContainer
-                            icon={<NodeIcon nodeType={GraphNodeTypes.AZApp} />}
+                            icon={<NodeIcon nodeType={'AZApp'} />}
                             display='Apps'
                             value={dbInfo?.apps || 0}
                             loading={loading}
                         />
                         <LoadContainer
-                            icon={<NodeIcon nodeType={GraphNodeTypes.AZServicePrincipal} />}
+                            icon={<NodeIcon nodeType={'AZServicePrincipal'} />}
                             display='Service Principals'
                             value={dbInfo?.service_principals || 0}
                             loading={loading}
                         />
                         <LoadContainer
-                            icon={<NodeIcon nodeType={GraphNodeTypes.AZDevice} />}
+                            icon={<NodeIcon nodeType={'AZDevice'} />}
                             display='Devices'
                             value={dbInfo?.devices || 0}
                             loading={loading}
                         />
                         <LoadContainer
-                            icon={<NodeIcon nodeType={GraphNodeTypes.AZManagementGroup} />}
+                            icon={<NodeIcon nodeType={'AZManagementGroup'} />}
                             display='Management Groups'
                             value={dbInfo?.management_groups || 0}
                             loading={loading}
                         />
                         <LoadContainer
-                            icon={<NodeIcon nodeType={GraphNodeTypes.AZSubscription} />}
+                            icon={<NodeIcon nodeType={'AZSubscription'} />}
                             display='Subscriptions'
                             value={dbInfo?.subscriptions || 0}
                             loading={loading}
                         />
                         <LoadContainer
-                            icon={<NodeIcon nodeType={GraphNodeTypes.AZResourceGroup} />}
+                            icon={<NodeIcon nodeType={'AZResourceGroup'} />}
                             display='Resource Groups'
                             value={dbInfo?.resource_groups || 0}
                             loading={loading}
                         />
                         <LoadContainer
-                            icon={<NodeIcon nodeType={GraphNodeTypes.AZVM} />}
+                            icon={<NodeIcon nodeType={'AZVM'} />}
                             display='VMs'
                             value={dbInfo?.vms || 0}
                             loading={loading}
                         />
                         <LoadContainer
-                            icon={<NodeIcon nodeType={GraphNodeTypes.AZKeyVault} />}
+                            icon={<NodeIcon nodeType={'AZKeyVault'} />}
                             display='Key Vaults'
                             value={dbInfo?.key_vaults || 0}
                             loading={loading}
                         />
                         {isPlatform && (
                             <LoadContainer
-                                icon={<NodeIcon nodeType={GraphNodeTypes.AZTenant} />}
+                                icon={<NodeIcon nodeType={'AZTenant'} />}
                                 display='Tenants'
                                 value={dbInfo?.tenants || 0}
                                 loading={loading}

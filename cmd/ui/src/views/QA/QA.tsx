@@ -15,13 +15,17 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Alert, AlertTitle, Box, Grid, Link } from '@mui/material';
+import {
+    ActiveDirectoryPlatformInfo,
+    AzurePlatformInfo,
+    ContentPage,
+    DataSelector,
+    DomainInfo,
+    TenantInfo,
+} from 'bh-shared-ui';
 import { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { AppState } from 'src/store';
-import { ContentPage } from 'bh-shared-ui';
-import { ActiveDirectoryPlatformInfo, DomainInfo } from 'src/views/QA/DomainInfo';
-import DataSelector from './DataSelector';
-import { AzurePlatformInfo, TenantInfo } from './TenantInfo';
 
 const QualityAssurance: React.FC = () => {
     const domain = useSelector((state: AppState) => state.global.options.domain);
