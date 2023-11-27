@@ -36,7 +36,7 @@ const SearchResultItem: FC<{
         <ListItem
             button
             dense
-            selected={highlightedIndex ? highlightedIndex === index : false}
+            selected={highlightedIndex === index}
             key={item.objectId}
             data-testid='explore_search_result-list-item'
             {...getItemProps({ item, index })}>

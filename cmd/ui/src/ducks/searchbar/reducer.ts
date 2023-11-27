@@ -16,7 +16,6 @@
 
 import { produce } from 'immer';
 import cloneDeep from 'lodash/cloneDeep';
-import { GraphNodeTypes } from 'src/ducks/graph/types';
 import * as types from 'src/ducks/searchbar/types';
 import { EdgeCheckboxType } from 'src/views/Explore/ExploreSearch/EdgeFilteringDialog';
 import { AllEdgeTypes } from 'src/views/Explore/ExploreSearch/edgeTypes';
@@ -37,7 +36,7 @@ AllEdgeTypes.forEach((category) => {
     });
 });
 
-const initialSearchState: types.SearchState = {
+export const initialSearchState: types.SearchState = {
     searchType: types.SEARCH_TYPE_EXACT,
 
     primary: {
@@ -52,86 +51,90 @@ const initialSearchState: types.SearchState = {
         value: null,
         options: [],
     },
-    tierZero: {
-        searchTerm: '',
-        loading: false,
-        value: null,
-        options: [],
-    },
     cypher: {
         searchTerm: '',
-        loading: false,
-        value: null,
-        options: [],
     },
     pathFilters: initialPathFilters,
+    activeTab: 'primary',
 };
 
-function isTargetedActionType(action: types.SearchbarActionTypes): action is types.SearchbarTargetedActionTypes {
-    return (action as types.SearchbarTargetedActionTypes).target !== undefined;
-}
-
 const searchReducer = (state = initialSearchState, action: types.SearchbarActionTypes) => {
-    if (action.type === types.SEARCH_RESET) {
-        return cloneDeep(initialSearchState);
-    }
+    switch (action.type) {
+        case types.SEARCH_RESET: {
+            return cloneDeep(initialSearchState);
+        }
 
-    if (action.type === types.SAVE_PATH_FILTERS) {
-        return {
-            ...state,
-            pathFilters: [...action.filters],
-        };
+        case types.PATH_FILTERS_SAVED: {
+            return {
+                ...state,
+                pathFilters: [...action.filters],
+            };
+        }
+
+        case types.TAB_CHANGED: {
+            return {
+                ...state,
+                activeTab: action.tabName,
+            };
+        }
+
+        case types.CYPHER_QUERY_EDITED: {
+            return {
+                ...state,
+                cypher: {
+                    searchTerm: action.searchTerm,
+                },
+            };
+        }
     }
 
     return produce(state, (draft) => {
-        if (isTargetedActionType(action)) {
-            const { target } = action;
+        switch (action.type) {
+            case types.SOURCE_NODE_EDITED: {
+                draft.primary.searchTerm = action.searchTerm;
+                draft.primary.loading = true;
+                draft.primary.options = [];
 
-            if (action.type === types.SEARCH_START) {
-                draft[target].loading = true;
-                draft[target].options = [];
-                draft[target].searchTerm = action.searchTerm;
-            } else if (action.type === types.SEARCH_SUCCESS) {
-                draft[target].loading = false;
-                draft[target].options = action.results;
-            } else if (action.type === types.SEARCH_SET_VALUE) {
-                draft.searchType = action.searchType;
-                draft[target].value = action.value;
-            } else if (action.type === types.CYPHER_SEARCH_SET_VALUE) {
-                draft[target].searchTerm = action.searchTerm;
-            } else if (action.type === types.SEARCH_SET_PATHFINDING) {
-                draft.primary = {
-                    searchTerm: action.primary.name,
-                    loading: false,
-                    value: {
-                        label: action.primary.name,
-                        name: action.primary.name,
-                        objectid: action.primary.objectid,
-                        type: GraphNodeTypes.User,
-                    },
-                    options: [],
-                };
+                // any edits to the source node should clear out the previously saved primary.value
+                draft.primary.value = null;
+                break;
+            }
 
-                if (action.secondary) {
-                    draft.secondary = {
-                        searchTerm: action.secondary.name,
-                        loading: false,
-                        value: {
-                            label: action.secondary.name,
-                            name: action.secondary.name,
-                            objectid: action.secondary.objectid,
-                            type: GraphNodeTypes.User,
-                        },
-                        options: [],
-                    };
+            case types.SOURCE_NODE_SELECTED: {
+                draft.searchType = types.SEARCH_TYPE_EXACT;
+
+                draft.primary.value = action.node;
+
+                if (action.node) {
+                    draft.primary.searchTerm = action.node.name;
                 } else {
-                    draft.secondary = {
-                        searchTerm: '',
-                        loading: false,
-                        value: null,
-                        options: [],
-                    };
+                    draft.primary.searchTerm = '';
                 }
+                break;
+            }
+
+            case types.DESTINATION_NODE_EDITED: {
+                draft.secondary.searchTerm = action.searchTerm;
+                draft.secondary.loading = true;
+                draft.secondary.options = [];
+
+                // any edits to the destination node should clear out the previously saved destination.value
+                draft.secondary.value = null;
+
+                break;
+            }
+
+            case types.DESTINATION_NODE_SELECTED: {
+                draft.searchType = types.SEARCH_TYPE_EXACT;
+
+                draft.secondary.value = action.node;
+
+                if (action.node) {
+                    draft.secondary.searchTerm = action.node.name;
+                } else {
+                    draft.secondary.searchTerm = '';
+                }
+                break;
             }
         }
     });

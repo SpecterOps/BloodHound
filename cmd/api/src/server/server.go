@@ -174,7 +174,7 @@ func StartServer(cfg config.Configuration, exitC chan struct{}) error {
 			authenticator          = api.NewAuthenticator(cfg, db, database.NewContextInitializer(db))
 		)
 
-		registration.RegisterFossGlobalMiddleware(&routerInst, cfg, authenticator)
+		registration.RegisterFossGlobalMiddleware(&routerInst, cfg, auth.NewIdentityResolver(), authenticator)
 		registration.RegisterFossRoutes(&routerInst, cfg, db, graphDB, apiCache, graphQueryCache, collectorManifests, authenticator, datapipeDaemon)
 		apiDaemon := bhapi.NewDaemon(cfg, routerInst.Handler())
 

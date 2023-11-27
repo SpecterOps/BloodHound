@@ -65,7 +65,7 @@ func StartBHServer(apiServerContext APIServerContext) error {
 		authenticator          = api.NewAuthenticator(apiServerContext.Configuration, apiServerContext.DB, database.NewContextInitializer(apiServerContext.DB))
 	)
 
-	registration.RegisterFossGlobalMiddleware(&routerInst, apiServerContext.Configuration, authenticator)
+	registration.RegisterFossGlobalMiddleware(&routerInst, apiServerContext.Configuration, auth.NewIdentityResolver(), authenticator)
 	registration.RegisterFossRoutes(
 		&routerInst,
 		apiServerContext.Configuration,

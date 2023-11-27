@@ -92,6 +92,10 @@ describe('Enable2FADialog', () => {
         ).toBeInTheDocument();
     });
 
+    it('displays security warning ', () => {
+        expect(screen.queryByTestId('ReportProblemOutlinedIcon')).toBeInTheDocument();
+    });
+
     describe('user clicks "Cancel" button', () => {
         beforeEach(async () => {
             await user.click(screen.getByRole('button', { name: 'Cancel' }));
