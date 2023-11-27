@@ -15,16 +15,15 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Box } from '@mui/material';
+import { allSections, entityInformationEndpoints, EntityKinds } from 'bh-shared-ui';
 import React from 'react';
 import { useQuery } from 'react-query';
-import { GraphNodeTypes } from 'src/ducks/graph/types';
-import { allSections, entityInformationEndpoints } from './content';
 import EntityInfoDataTableList from './EntityInfoDataTableList';
 import EntityObjectInformation from './EntityObjectInformation';
 
 export interface EntityInfoContentProps {
     id: string;
-    nodeType: GraphNodeTypes;
+    nodeType: EntityKinds;
 }
 
 const EntityInfoContent: React.FC<EntityInfoContentProps> = ({ id, nodeType }) => {

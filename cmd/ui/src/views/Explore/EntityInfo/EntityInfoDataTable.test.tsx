@@ -18,13 +18,12 @@ import { render, screen } from 'src/test-utils';
 import userEvent from '@testing-library/user-event';
 import { rest, RequestHandler } from 'msw';
 import { setupServer } from 'msw/node';
-import { ActiveDirectoryNodeKind } from 'bh-shared-ui';
+import { ActiveDirectoryNodeKind, allSections } from 'bh-shared-ui';
 import EntityInfoDataTable from './EntityInfoDataTable';
 import { EntityInfoPanelContextProvider } from './EntityInfoPanelContextProvider';
-import { allSections } from './content';
 
 const objectId = 'fake-object-id';
-const sections = allSections[ActiveDirectoryNodeKind.GPO](objectId);
+const sections = allSections[ActiveDirectoryNodeKind.GPO]!(objectId);
 
 const queryCount = {
     controllers: {

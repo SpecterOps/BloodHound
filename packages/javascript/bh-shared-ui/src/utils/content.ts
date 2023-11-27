@@ -14,16 +14,35 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { ActiveDirectoryNodeKind, AzureNodeKind } from '../graphSchema';
+import { apiClient } from '.';
 import { RequestOptions } from 'js-client-library';
-import { apiClient } from 'bh-shared-ui';
-import { GraphNodeTypes } from 'src/ducks/graph/types';
-import { ActiveDirectoryNodeKind, AzureNodeKind } from 'bh-shared-ui';
-import { EntityInfoDataTableProps } from './EntityInfoDataTable';
-import { controller } from 'src/views/Explore/utils';
 
-export const entityInformationEndpoints: Record<
-    GraphNodeTypes,
-    (id: string, options?: RequestOptions) => Promise<any>
+type EntitySectionEndpointParams = {
+    counts?: boolean;
+    skip?: number;
+    limit?: number;
+    type?: string;
+};
+
+export interface EntityInfoDataTableProps {
+    id: string;
+    label: string;
+    endpoint?: ({ counts, skip, limit, type }: EntitySectionEndpointParams) => Promise<any>;
+    sections?: EntityInfoDataTableProps[];
+}
+
+let controller = new AbortController();
+
+export const abortEntitySectionRequest = () => {
+    controller.abort();
+    controller = new AbortController();
+};
+
+export type EntityKinds = ActiveDirectoryNodeKind | AzureNodeKind | 'Meta';
+
+export const entityInformationEndpoints: Partial<
+    Record<EntityKinds, (id: string, options?: RequestOptions) => Promise<any>>
 > = {
     [AzureNodeKind.Entity]: (id: string, options?: RequestOptions) =>
         apiClient.getAZEntityInfoV2('az-base', id, undefined, false, undefined, undefined, undefined, options),
@@ -121,14 +140,15 @@ export const entityInformationEndpoints: Record<
     [ActiveDirectoryNodeKind.RootCA]: (id: string, options?: RequestOptions) =>
         apiClient.getRootCAV2(id, false, options),
     [ActiveDirectoryNodeKind.User]: (id: string, options?: RequestOptions) => apiClient.getUserV2(id, false, options),
+    ['Meta']: apiClient.getMetaV2,
 };
 
-export const allSections: Record<GraphNodeTypes, (id: string) => EntityInfoDataTableProps[]> = {
-    [AzureNodeKind.Entity]: (id) => [
+export const allSections: Partial<Record<EntityKinds, (id: string) => EntityInfoDataTableProps[]>> = {
+    [AzureNodeKind.Entity]: (id: string) => [
         {
             id,
             label: 'Outbound Object Control',
-            endpoint: ({ counts, skip, limit, type }) =>
+            endpoint: ({ counts, skip, limit, type }: EntitySectionEndpointParams) =>
                 apiClient
                     .getAZEntityInfoV2('az-base', id, 'outbound-control', counts, skip, limit, type, {
                         signal: controller.signal,
@@ -138,7 +158,7 @@ export const allSections: Record<GraphNodeTypes, (id: string) => EntityInfoDataT
         {
             id,
             label: 'Inbound Object Control',
-            endpoint: ({ counts, skip, limit, type }) =>
+            endpoint: ({ counts, skip, limit, type }: EntitySectionEndpointParams) =>
                 apiClient
                     .getAZEntityInfoV2('az-base', id, 'inbound-control', counts, skip, limit, type, {
                         signal: controller.signal,
@@ -146,11 +166,11 @@ export const allSections: Record<GraphNodeTypes, (id: string) => EntityInfoDataT
                     .then((res) => res.data),
         },
     ],
-    [AzureNodeKind.App]: (id) => [
+    [AzureNodeKind.App]: (id: string) => [
         {
             id,
             label: 'Inbound Object Control',
-            endpoint: ({ counts, skip, limit, type }) =>
+            endpoint: ({ counts, skip, limit, type }: EntitySectionEndpointParams) =>
                 apiClient
                     .getAZEntityInfoV2('applications', id, 'inbound-control', counts, skip, limit, type, {
                         signal: controller.signal,
@@ -158,11 +178,11 @@ export const allSections: Record<GraphNodeTypes, (id: string) => EntityInfoDataT
                     .then((res) => res.data),
         },
     ],
-    [AzureNodeKind.VMScaleSet]: (id) => [
+    [AzureNodeKind.VMScaleSet]: (id: string) => [
         {
             id,
             label: 'Inbound Object Control',
-            endpoint: ({ counts, skip, limit, type }) =>
+            endpoint: ({ counts, skip, limit, type }: EntitySectionEndpointParams) =>
                 apiClient
                     .getAZEntityInfoV2('vm-scale-sets', id, 'inbound-control', counts, skip, limit, type, {
                         signal: controller.signal,
@@ -170,11 +190,11 @@ export const allSections: Record<GraphNodeTypes, (id: string) => EntityInfoDataT
                     .then((res) => res.data),
         },
     ],
-    [AzureNodeKind.Device]: (id) => [
+    [AzureNodeKind.Device]: (id: string) => [
         {
             id,
             label: 'Local Admins',
-            endpoint: ({ counts, skip, limit, type }) =>
+            endpoint: ({ counts, skip, limit, type }: EntitySectionEndpointParams) =>
                 apiClient
                     .getAZEntityInfoV2('devices', id, 'inbound-execution-privileges', counts, skip, limit, type, {
                         signal: controller.signal,
@@ -184,7 +204,7 @@ export const allSections: Record<GraphNodeTypes, (id: string) => EntityInfoDataT
         {
             id,
             label: 'Inbound Object Control',
-            endpoint: ({ counts, skip, limit, type }) =>
+            endpoint: ({ counts, skip, limit, type }: EntitySectionEndpointParams) =>
                 apiClient
                     .getAZEntityInfoV2('devices', id, 'inbound-control', counts, skip, limit, type, {
                         signal: controller.signal,
@@ -192,11 +212,11 @@ export const allSections: Record<GraphNodeTypes, (id: string) => EntityInfoDataT
                     .then((res) => res.data),
         },
     ],
-    [AzureNodeKind.FunctionApp]: (id) => [
+    [AzureNodeKind.FunctionApp]: (id: string) => [
         {
             id,
             label: 'Inbound Object Control',
-            endpoint: ({ counts, skip, limit, type }) =>
+            endpoint: ({ counts, skip, limit, type }: EntitySectionEndpointParams) =>
                 apiClient
                     .getAZEntityInfoV2('function-apps', id, 'inbound-control', counts, skip, limit, type, {
                         signal: controller.signal,
@@ -204,11 +224,11 @@ export const allSections: Record<GraphNodeTypes, (id: string) => EntityInfoDataT
                     .then((res) => res.data),
         },
     ],
-    [AzureNodeKind.Group]: (id) => [
+    [AzureNodeKind.Group]: (id: string) => [
         {
             id,
             label: 'Members',
-            endpoint: ({ counts, skip, limit, type }) =>
+            endpoint: ({ counts, skip, limit, type }: EntitySectionEndpointParams) =>
                 apiClient
                     .getAZEntityInfoV2('groups', id, 'group-members', counts, skip, limit, type, {
                         signal: controller.signal,
@@ -218,7 +238,7 @@ export const allSections: Record<GraphNodeTypes, (id: string) => EntityInfoDataT
         {
             id,
             label: 'Member Of',
-            endpoint: ({ counts, skip, limit, type }) =>
+            endpoint: ({ counts, skip, limit, type }: EntitySectionEndpointParams) =>
                 apiClient
                     .getAZEntityInfoV2('groups', id, 'group-membership', counts, skip, limit, type, {
                         signal: controller.signal,
@@ -228,15 +248,17 @@ export const allSections: Record<GraphNodeTypes, (id: string) => EntityInfoDataT
         {
             id,
             label: 'Roles',
-            endpoint: ({ counts, skip, limit, type }) =>
+            endpoint: ({ counts, skip, limit, type }: EntitySectionEndpointParams) =>
                 apiClient
-                    .getAZEntityInfoV2('groups', id, 'roles', counts, skip, limit, type, { signal: controller.signal })
+                    .getAZEntityInfoV2('groups', id, 'roles', counts, skip, limit, type, {
+                        signal: controller.signal,
+                    })
                     .then((res) => res.data),
         },
         {
             id,
             label: 'Inbound Object Control',
-            endpoint: ({ counts, skip, limit, type }) =>
+            endpoint: ({ counts, skip, limit, type }: EntitySectionEndpointParams) =>
                 apiClient
                     .getAZEntityInfoV2('groups', id, 'inbound-control', counts, skip, limit, type, {
                         signal: controller.signal,
@@ -246,7 +268,7 @@ export const allSections: Record<GraphNodeTypes, (id: string) => EntityInfoDataT
         {
             id,
             label: 'Outbound Object Control',
-            endpoint: ({ counts, skip, limit, type }) =>
+            endpoint: ({ counts, skip, limit, type }: EntitySectionEndpointParams) =>
                 apiClient
                     .getAZEntityInfoV2('groups', id, 'outbound-control', counts, skip, limit, type, {
                         signal: controller.signal,
@@ -254,7 +276,7 @@ export const allSections: Record<GraphNodeTypes, (id: string) => EntityInfoDataT
                     .then((res) => res.data),
         },
     ],
-    [AzureNodeKind.KeyVault]: (id) => [
+    [AzureNodeKind.KeyVault]: (id: string) => [
         {
             id,
             label: 'Vault Readers',
@@ -262,7 +284,7 @@ export const allSections: Record<GraphNodeTypes, (id: string) => EntityInfoDataT
                 {
                     id,
                     label: 'Key Readers',
-                    endpoint: ({ counts, skip, limit, type }) =>
+                    endpoint: ({ counts, skip, limit, type }: EntitySectionEndpointParams) =>
                         apiClient
                             .getAZEntityInfoV2('key-vaults', id, 'key-readers', counts, skip, limit, type, {
                                 signal: controller.signal,
@@ -272,7 +294,7 @@ export const allSections: Record<GraphNodeTypes, (id: string) => EntityInfoDataT
                 {
                     id,
                     label: 'Certificate Readers',
-                    endpoint: ({ counts, skip, limit, type }) =>
+                    endpoint: ({ counts, skip, limit, type }: EntitySectionEndpointParams) =>
                         apiClient
                             .getAZEntityInfoV2('key-vaults', id, 'certificate-readers', counts, skip, limit, type, {
                                 signal: controller.signal,
@@ -282,7 +304,7 @@ export const allSections: Record<GraphNodeTypes, (id: string) => EntityInfoDataT
                 {
                     id,
                     label: 'Secret Readers',
-                    endpoint: ({ counts, skip, limit, type }) =>
+                    endpoint: ({ counts, skip, limit, type }: EntitySectionEndpointParams) =>
                         apiClient
                             .getAZEntityInfoV2('key-vaults', id, 'secret-readers', counts, skip, limit, type, {
                                 signal: controller.signal,
@@ -292,7 +314,7 @@ export const allSections: Record<GraphNodeTypes, (id: string) => EntityInfoDataT
                 {
                     id,
                     label: 'All Readers',
-                    endpoint: ({ counts, skip, limit, type }) =>
+                    endpoint: ({ counts, skip, limit, type }: EntitySectionEndpointParams) =>
                         apiClient
                             .getAZEntityInfoV2('key-vaults', id, 'all-readers', counts, skip, limit, type, {
                                 signal: controller.signal,
@@ -304,7 +326,7 @@ export const allSections: Record<GraphNodeTypes, (id: string) => EntityInfoDataT
         {
             id,
             label: 'Inbound Object Control',
-            endpoint: ({ counts, skip, limit, type }) =>
+            endpoint: ({ counts, skip, limit, type }: EntitySectionEndpointParams) =>
                 apiClient
                     .getAZEntityInfoV2('key-vaults', id, 'inbound-control', counts, skip, limit, type, {
                         signal: controller.signal,
@@ -312,7 +334,7 @@ export const allSections: Record<GraphNodeTypes, (id: string) => EntityInfoDataT
                     .then((res) => res.data),
         },
     ],
-    [AzureNodeKind.ManagementGroup]: (id) => [
+    [AzureNodeKind.ManagementGroup]: (id: string) => [
         {
             id,
             label: 'Descendant Objects',
@@ -321,7 +343,7 @@ export const allSections: Record<GraphNodeTypes, (id: string) => EntityInfoDataT
                 {
                     id,
                     label: 'Descendant Management Groups',
-                    endpoint: ({ counts, skip, limit, type }) =>
+                    endpoint: ({ counts, skip, limit, type }: EntitySectionEndpointParams) =>
                         apiClient
                             .getAZEntityInfoV2(
                                 'management-groups',
@@ -340,7 +362,7 @@ export const allSections: Record<GraphNodeTypes, (id: string) => EntityInfoDataT
                 {
                     id,
                     label: 'Descendant Subscriptions',
-                    endpoint: ({ counts, skip, limit, type }) =>
+                    endpoint: ({ counts, skip, limit, type }: EntitySectionEndpointParams) =>
                         apiClient
                             .getAZEntityInfoV2(
                                 'management-groups',
@@ -359,7 +381,7 @@ export const allSections: Record<GraphNodeTypes, (id: string) => EntityInfoDataT
                 {
                     id,
                     label: 'Descendant Resource Groups',
-                    endpoint: ({ counts, skip, limit, type }) =>
+                    endpoint: ({ counts, skip, limit, type }: EntitySectionEndpointParams) =>
                         apiClient
                             .getAZEntityInfoV2(
                                 'management-groups',
@@ -378,7 +400,7 @@ export const allSections: Record<GraphNodeTypes, (id: string) => EntityInfoDataT
                 {
                     id,
                     label: 'Descendant VMs',
-                    endpoint: ({ counts, skip, limit, type }) =>
+                    endpoint: ({ counts, skip, limit, type }: EntitySectionEndpointParams) =>
                         apiClient
                             .getAZEntityInfoV2(
                                 'management-groups',
@@ -397,7 +419,7 @@ export const allSections: Record<GraphNodeTypes, (id: string) => EntityInfoDataT
                 {
                     id,
                     label: 'Descendant Managed Clusters',
-                    endpoint: ({ counts, skip, limit, type }) =>
+                    endpoint: ({ counts, skip, limit, type }: EntitySectionEndpointParams) =>
                         apiClient
                             .getAZEntityInfoV2(
                                 'management-groups',
@@ -416,7 +438,7 @@ export const allSections: Record<GraphNodeTypes, (id: string) => EntityInfoDataT
                 {
                     id,
                     label: 'Descendant VM Scale Sets',
-                    endpoint: ({ counts, skip, limit, type }) =>
+                    endpoint: ({ counts, skip, limit, type }: EntitySectionEndpointParams) =>
                         apiClient
                             .getAZEntityInfoV2(
                                 'management-groups',
@@ -435,7 +457,7 @@ export const allSections: Record<GraphNodeTypes, (id: string) => EntityInfoDataT
                 {
                     id,
                     label: 'Descendant Container Registries',
-                    endpoint: ({ counts, skip, limit, type }) =>
+                    endpoint: ({ counts, skip, limit, type }: EntitySectionEndpointParams) =>
                         apiClient
                             .getAZEntityInfoV2(
                                 'management-groups',
@@ -454,7 +476,7 @@ export const allSections: Record<GraphNodeTypes, (id: string) => EntityInfoDataT
                 {
                     id,
                     label: 'Descendant Web Apps',
-                    endpoint: ({ counts, skip, limit, type }) =>
+                    endpoint: ({ counts, skip, limit, type }: EntitySectionEndpointParams) =>
                         apiClient
                             .getAZEntityInfoV2(
                                 'management-groups',
@@ -473,7 +495,7 @@ export const allSections: Record<GraphNodeTypes, (id: string) => EntityInfoDataT
                 {
                     id,
                     label: 'Descendant Automation Accounts',
-                    endpoint: ({ counts, skip, limit, type }) =>
+                    endpoint: ({ counts, skip, limit, type }: EntitySectionEndpointParams) =>
                         apiClient
                             .getAZEntityInfoV2(
                                 'management-groups',
@@ -492,7 +514,7 @@ export const allSections: Record<GraphNodeTypes, (id: string) => EntityInfoDataT
                 {
                     id,
                     label: 'Descendant Key Vaults',
-                    endpoint: ({ counts, skip, limit, type }) =>
+                    endpoint: ({ counts, skip, limit, type }: EntitySectionEndpointParams) =>
                         apiClient
                             .getAZEntityInfoV2(
                                 'management-groups',
@@ -511,7 +533,7 @@ export const allSections: Record<GraphNodeTypes, (id: string) => EntityInfoDataT
                 {
                     id,
                     label: 'Descendant Function Apps',
-                    endpoint: ({ counts, skip, limit, type }) =>
+                    endpoint: ({ counts, skip, limit, type }: EntitySectionEndpointParams) =>
                         apiClient
                             .getAZEntityInfoV2(
                                 'management-groups',
@@ -530,7 +552,7 @@ export const allSections: Record<GraphNodeTypes, (id: string) => EntityInfoDataT
                 {
                     id,
                     label: 'Descendant Logic Apps',
-                    endpoint: ({ counts, skip, limit, type }) =>
+                    endpoint: ({ counts, skip, limit, type }: EntitySectionEndpointParams) =>
                         apiClient
                             .getAZEntityInfoV2(
                                 'management-groups',
@@ -551,7 +573,7 @@ export const allSections: Record<GraphNodeTypes, (id: string) => EntityInfoDataT
         {
             id,
             label: 'Inbound Object Control',
-            endpoint: ({ counts, skip, limit, type }) =>
+            endpoint: ({ counts, skip, limit, type }: EntitySectionEndpointParams) =>
                 apiClient
                     .getAZEntityInfoV2('management-groups', id, 'inbound-control', counts, skip, limit, type, {
                         signal: controller.signal,
@@ -559,7 +581,7 @@ export const allSections: Record<GraphNodeTypes, (id: string) => EntityInfoDataT
                     .then((res) => res.data),
         },
     ],
-    [AzureNodeKind.ResourceGroup]: (id) => [
+    [AzureNodeKind.ResourceGroup]: (id: string) => [
         {
             id,
             label: 'Descendant Objects',
@@ -567,7 +589,7 @@ export const allSections: Record<GraphNodeTypes, (id: string) => EntityInfoDataT
                 {
                     id,
                     label: 'Descendant VMs',
-                    endpoint: ({ counts, skip, limit, type }) =>
+                    endpoint: ({ counts, skip, limit, type }: EntitySectionEndpointParams) =>
                         apiClient
                             .getAZEntityInfoV2(
                                 'resource-groups',
@@ -586,7 +608,7 @@ export const allSections: Record<GraphNodeTypes, (id: string) => EntityInfoDataT
                 {
                     id,
                     label: 'Descendant Managed Clusters',
-                    endpoint: ({ counts, skip, limit, type }) =>
+                    endpoint: ({ counts, skip, limit, type }: EntitySectionEndpointParams) =>
                         apiClient
                             .getAZEntityInfoV2(
                                 'resource-groups',
@@ -605,7 +627,7 @@ export const allSections: Record<GraphNodeTypes, (id: string) => EntityInfoDataT
                 {
                     id,
                     label: 'Descendant VM Scale Sets',
-                    endpoint: ({ counts, skip, limit, type }) =>
+                    endpoint: ({ counts, skip, limit, type }: EntitySectionEndpointParams) =>
                         apiClient
                             .getAZEntityInfoV2(
                                 'resource-groups',
@@ -624,7 +646,7 @@ export const allSections: Record<GraphNodeTypes, (id: string) => EntityInfoDataT
                 {
                     id,
                     label: 'Descendant Container Registries',
-                    endpoint: ({ counts, skip, limit, type }) =>
+                    endpoint: ({ counts, skip, limit, type }: EntitySectionEndpointParams) =>
                         apiClient
                             .getAZEntityInfoV2(
                                 'resource-groups',
@@ -643,7 +665,7 @@ export const allSections: Record<GraphNodeTypes, (id: string) => EntityInfoDataT
                 {
                     id,
                     label: 'Descendant Automation Accounts',
-                    endpoint: ({ counts, skip, limit, type }) =>
+                    endpoint: ({ counts, skip, limit, type }: EntitySectionEndpointParams) =>
                         apiClient
                             .getAZEntityInfoV2(
                                 'resource-groups',
@@ -662,7 +684,7 @@ export const allSections: Record<GraphNodeTypes, (id: string) => EntityInfoDataT
                 {
                     id,
                     label: 'Descendant Key Vaults',
-                    endpoint: ({ counts, skip, limit, type }) =>
+                    endpoint: ({ counts, skip, limit, type }: EntitySectionEndpointParams) =>
                         apiClient
                             .getAZEntityInfoV2(
                                 'resource-groups',
@@ -681,7 +703,7 @@ export const allSections: Record<GraphNodeTypes, (id: string) => EntityInfoDataT
                 {
                     id,
                     label: 'Descendant Web Apps',
-                    endpoint: ({ counts, skip, limit, type }) =>
+                    endpoint: ({ counts, skip, limit, type }: EntitySectionEndpointParams) =>
                         apiClient
                             .getAZEntityInfoV2(
                                 'resource-groups',
@@ -700,7 +722,7 @@ export const allSections: Record<GraphNodeTypes, (id: string) => EntityInfoDataT
                 {
                     id,
                     label: 'Descendant Function Apps',
-                    endpoint: ({ counts, skip, limit, type }) =>
+                    endpoint: ({ counts, skip, limit, type }: EntitySectionEndpointParams) =>
                         apiClient
                             .getAZEntityInfoV2(
                                 'resource-groups',
@@ -719,7 +741,7 @@ export const allSections: Record<GraphNodeTypes, (id: string) => EntityInfoDataT
                 {
                     id,
                     label: 'Descendant Logic Apps',
-                    endpoint: ({ counts, skip, limit, type }) =>
+                    endpoint: ({ counts, skip, limit, type }: EntitySectionEndpointParams) =>
                         apiClient
                             .getAZEntityInfoV2(
                                 'resource-groups',
@@ -740,7 +762,7 @@ export const allSections: Record<GraphNodeTypes, (id: string) => EntityInfoDataT
         {
             id,
             label: 'Inbound Object Control',
-            endpoint: ({ counts, skip, limit, type }) =>
+            endpoint: ({ counts, skip, limit, type }: EntitySectionEndpointParams) =>
                 apiClient
                     .getAZEntityInfoV2('resource-groups', id, 'inbound-control', counts, skip, limit, type, {
                         signal: controller.signal,
@@ -748,11 +770,11 @@ export const allSections: Record<GraphNodeTypes, (id: string) => EntityInfoDataT
                     .then((res) => res.data),
         },
     ],
-    [AzureNodeKind.Role]: (id) => [
+    [AzureNodeKind.Role]: (id: string) => [
         {
             id,
             label: 'Active Assignments',
-            endpoint: ({ counts, skip, limit, type }) =>
+            endpoint: ({ counts, skip, limit, type }: EntitySectionEndpointParams) =>
                 apiClient
                     .getAZEntityInfoV2('roles', id, 'active-assignments', counts, skip, limit, type, {
                         signal: controller.signal,
@@ -760,7 +782,7 @@ export const allSections: Record<GraphNodeTypes, (id: string) => EntityInfoDataT
                     .then((res) => res.data),
         },
     ],
-    [AzureNodeKind.ServicePrincipal]: (id) => {
+    [AzureNodeKind.ServicePrincipal]: (id: string) => {
         const BaseProps: EntityInfoDataTableProps[] = [
             {
                 id,
@@ -837,7 +859,7 @@ export const allSections: Record<GraphNodeTypes, (id: string) => EntityInfoDataT
             ? BaseProps
             : [...BaseProps, OutboundAbusableAppRoleAssignmentsProp];
     },
-    [AzureNodeKind.Subscription]: (id) => [
+    [AzureNodeKind.Subscription]: (id: string) => [
         {
             id,
             label: 'Descendant Objects',
@@ -845,7 +867,7 @@ export const allSections: Record<GraphNodeTypes, (id: string) => EntityInfoDataT
                 {
                     id,
                     label: 'Descendant Resource Groups',
-                    endpoint: ({ counts, skip, limit, type }) =>
+                    endpoint: ({ counts, skip, limit, type }: EntitySectionEndpointParams) =>
                         apiClient
                             .getAZEntityInfoV2(
                                 'subscriptions',
@@ -864,7 +886,7 @@ export const allSections: Record<GraphNodeTypes, (id: string) => EntityInfoDataT
                 {
                     id,
                     label: 'Descendant VMs',
-                    endpoint: ({ counts, skip, limit, type }) =>
+                    endpoint: ({ counts, skip, limit, type }: EntitySectionEndpointParams) =>
                         apiClient
                             .getAZEntityInfoV2(
                                 'subscriptions',
@@ -883,7 +905,7 @@ export const allSections: Record<GraphNodeTypes, (id: string) => EntityInfoDataT
                 {
                     id,
                     label: 'Descendant Managed Clusters',
-                    endpoint: ({ counts, skip, limit, type }) =>
+                    endpoint: ({ counts, skip, limit, type }: EntitySectionEndpointParams) =>
                         apiClient
                             .getAZEntityInfoV2(
                                 'subscriptions',
@@ -902,7 +924,7 @@ export const allSections: Record<GraphNodeTypes, (id: string) => EntityInfoDataT
                 {
                     id,
                     label: 'Descendant VM Scale Sets',
-                    endpoint: ({ counts, skip, limit, type }) =>
+                    endpoint: ({ counts, skip, limit, type }: EntitySectionEndpointParams) =>
                         apiClient
                             .getAZEntityInfoV2(
                                 'subscriptions',
@@ -921,7 +943,7 @@ export const allSections: Record<GraphNodeTypes, (id: string) => EntityInfoDataT
                 {
                     id,
                     label: 'Descendant Container Registries',
-                    endpoint: ({ counts, skip, limit, type }) =>
+                    endpoint: ({ counts, skip, limit, type }: EntitySectionEndpointParams) =>
                         apiClient
                             .getAZEntityInfoV2(
                                 'subscriptions',
@@ -940,7 +962,7 @@ export const allSections: Record<GraphNodeTypes, (id: string) => EntityInfoDataT
                 {
                     id,
                     label: 'Descendant Automation Accounts',
-                    endpoint: ({ counts, skip, limit, type }) =>
+                    endpoint: ({ counts, skip, limit, type }: EntitySectionEndpointParams) =>
                         apiClient
                             .getAZEntityInfoV2(
                                 'subscriptions',
@@ -959,7 +981,7 @@ export const allSections: Record<GraphNodeTypes, (id: string) => EntityInfoDataT
                 {
                     id,
                     label: 'Descendant Key Vaults',
-                    endpoint: ({ counts, skip, limit, type }) =>
+                    endpoint: ({ counts, skip, limit, type }: EntitySectionEndpointParams) =>
                         apiClient
                             .getAZEntityInfoV2(
                                 'subscriptions',
@@ -978,7 +1000,7 @@ export const allSections: Record<GraphNodeTypes, (id: string) => EntityInfoDataT
                 {
                     id,
                     label: 'Descendant Web Apps',
-                    endpoint: ({ counts, skip, limit, type }) =>
+                    endpoint: ({ counts, skip, limit, type }: EntitySectionEndpointParams) =>
                         apiClient
                             .getAZEntityInfoV2('subscriptions', id, 'descendent-web-apps', counts, skip, limit, type, {
                                 signal: controller.signal,
@@ -988,7 +1010,7 @@ export const allSections: Record<GraphNodeTypes, (id: string) => EntityInfoDataT
                 {
                     id,
                     label: 'Descendant Function Apps',
-                    endpoint: ({ counts, skip, limit, type }) =>
+                    endpoint: ({ counts, skip, limit, type }: EntitySectionEndpointParams) =>
                         apiClient
                             .getAZEntityInfoV2(
                                 'subscriptions',
@@ -1007,7 +1029,7 @@ export const allSections: Record<GraphNodeTypes, (id: string) => EntityInfoDataT
                 {
                     id,
                     label: 'Descendant Logic Apps',
-                    endpoint: ({ counts, skip, limit, type }) =>
+                    endpoint: ({ counts, skip, limit, type }: EntitySectionEndpointParams) =>
                         apiClient
                             .getAZEntityInfoV2(
                                 'subscriptions',
@@ -1028,7 +1050,7 @@ export const allSections: Record<GraphNodeTypes, (id: string) => EntityInfoDataT
         {
             id,
             label: 'Inbound Object Control',
-            endpoint: ({ counts, skip, limit, type }) =>
+            endpoint: ({ counts, skip, limit, type }: EntitySectionEndpointParams) =>
                 apiClient
                     .getAZEntityInfoV2('subscriptions', id, 'inbound-control', counts, skip, limit, type, {
                         signal: controller.signal,
@@ -1036,7 +1058,7 @@ export const allSections: Record<GraphNodeTypes, (id: string) => EntityInfoDataT
                     .then((res) => res.data),
         },
     ],
-    [AzureNodeKind.Tenant]: (id) => [
+    [AzureNodeKind.Tenant]: (id: string) => [
         {
             id,
             label: 'Descendant Objects',
@@ -1044,7 +1066,7 @@ export const allSections: Record<GraphNodeTypes, (id: string) => EntityInfoDataT
                 {
                     id,
                     label: 'Descendant Users',
-                    endpoint: ({ counts, skip, limit, type }) =>
+                    endpoint: ({ counts, skip, limit, type }: EntitySectionEndpointParams) =>
                         apiClient
                             .getAZEntityInfoV2('tenants', id, 'descendent-users', counts, skip, limit, type, {
                                 signal: controller.signal,
@@ -1054,7 +1076,7 @@ export const allSections: Record<GraphNodeTypes, (id: string) => EntityInfoDataT
                 {
                     id,
                     label: 'Descendant Groups',
-                    endpoint: ({ counts, skip, limit, type }) =>
+                    endpoint: ({ counts, skip, limit, type }: EntitySectionEndpointParams) =>
                         apiClient
                             .getAZEntityInfoV2('tenants', id, 'descendent-groups', counts, skip, limit, type, {
                                 signal: controller.signal,
@@ -1064,7 +1086,7 @@ export const allSections: Record<GraphNodeTypes, (id: string) => EntityInfoDataT
                 {
                     id,
                     label: 'Descendant Management Groups',
-                    endpoint: ({ counts, skip, limit, type }) =>
+                    endpoint: ({ counts, skip, limit, type }: EntitySectionEndpointParams) =>
                         apiClient
                             .getAZEntityInfoV2(
                                 'tenants',
@@ -1083,7 +1105,7 @@ export const allSections: Record<GraphNodeTypes, (id: string) => EntityInfoDataT
                 {
                     id,
                     label: 'Descendant Subscriptions',
-                    endpoint: ({ counts, skip, limit, type }) =>
+                    endpoint: ({ counts, skip, limit, type }: EntitySectionEndpointParams) =>
                         apiClient
                             .getAZEntityInfoV2('tenants', id, 'descendent-subscriptions', counts, skip, limit, type, {
                                 signal: controller.signal,
@@ -1093,7 +1115,7 @@ export const allSections: Record<GraphNodeTypes, (id: string) => EntityInfoDataT
                 {
                     id,
                     label: 'Descendant Resource Groups',
-                    endpoint: ({ counts, skip, limit, type }) =>
+                    endpoint: ({ counts, skip, limit, type }: EntitySectionEndpointParams) =>
                         apiClient
                             .getAZEntityInfoV2('tenants', id, 'descendent-resource-groups', counts, skip, limit, type, {
                                 signal: controller.signal,
@@ -1103,7 +1125,7 @@ export const allSections: Record<GraphNodeTypes, (id: string) => EntityInfoDataT
                 {
                     id,
                     label: 'Descendant VMs',
-                    endpoint: ({ counts, skip, limit, type }) =>
+                    endpoint: ({ counts, skip, limit, type }: EntitySectionEndpointParams) =>
                         apiClient
                             .getAZEntityInfoV2(
                                 'tenants',
@@ -1122,7 +1144,7 @@ export const allSections: Record<GraphNodeTypes, (id: string) => EntityInfoDataT
                 {
                     id,
                     label: 'Descendant Managed Clusters',
-                    endpoint: ({ counts, skip, limit, type }) =>
+                    endpoint: ({ counts, skip, limit, type }: EntitySectionEndpointParams) =>
                         apiClient
                             .getAZEntityInfoV2(
                                 'tenants',
@@ -1141,7 +1163,7 @@ export const allSections: Record<GraphNodeTypes, (id: string) => EntityInfoDataT
                 {
                     id,
                     label: 'Descendant VM Scale Sets',
-                    endpoint: ({ counts, skip, limit, type }) =>
+                    endpoint: ({ counts, skip, limit, type }: EntitySectionEndpointParams) =>
                         apiClient
                             .getAZEntityInfoV2('tenants', id, 'descendent-vm-scale-sets', counts, skip, limit, type, {
                                 signal: controller.signal,
@@ -1151,7 +1173,7 @@ export const allSections: Record<GraphNodeTypes, (id: string) => EntityInfoDataT
                 {
                     id,
                     label: 'Descendant Container Registries',
-                    endpoint: ({ counts, skip, limit, type }) =>
+                    endpoint: ({ counts, skip, limit, type }: EntitySectionEndpointParams) =>
                         apiClient
                             .getAZEntityInfoV2(
                                 'tenants',
@@ -1170,7 +1192,7 @@ export const allSections: Record<GraphNodeTypes, (id: string) => EntityInfoDataT
                 {
                     id,
                     label: 'Descendant Web Apps',
-                    endpoint: ({ counts, skip, limit, type }) =>
+                    endpoint: ({ counts, skip, limit, type }: EntitySectionEndpointParams) =>
                         apiClient
                             .getAZEntityInfoV2('tenants', id, 'descendent-web-apps', counts, skip, limit, type, {
                                 signal: controller.signal,
@@ -1180,7 +1202,7 @@ export const allSections: Record<GraphNodeTypes, (id: string) => EntityInfoDataT
                 {
                     id,
                     label: 'Descendant Automation Accounts',
-                    endpoint: ({ counts, skip, limit, type }) =>
+                    endpoint: ({ counts, skip, limit, type }: EntitySectionEndpointParams) =>
                         apiClient
                             .getAZEntityInfoV2(
                                 'tenants',
@@ -1199,7 +1221,7 @@ export const allSections: Record<GraphNodeTypes, (id: string) => EntityInfoDataT
                 {
                     id,
                     label: 'Descendant Key Vaults',
-                    endpoint: ({ counts, skip, limit, type }) =>
+                    endpoint: ({ counts, skip, limit, type }: EntitySectionEndpointParams) =>
                         apiClient
                             .getAZEntityInfoV2('tenants', id, 'descendent-key-vaults', counts, skip, limit, type, {
                                 signal: controller.signal,
@@ -1209,7 +1231,7 @@ export const allSections: Record<GraphNodeTypes, (id: string) => EntityInfoDataT
                 {
                     id,
                     label: 'Descendant Function Apps',
-                    endpoint: ({ counts, skip, limit, type }) =>
+                    endpoint: ({ counts, skip, limit, type }: EntitySectionEndpointParams) =>
                         apiClient
                             .getAZEntityInfoV2('tenants', id, 'descendent-function-apps', counts, skip, limit, type, {
                                 signal: controller.signal,
@@ -1219,7 +1241,7 @@ export const allSections: Record<GraphNodeTypes, (id: string) => EntityInfoDataT
                 {
                     id,
                     label: 'Descendant Logic Apps',
-                    endpoint: ({ counts, skip, limit, type }) =>
+                    endpoint: ({ counts, skip, limit, type }: EntitySectionEndpointParams) =>
                         apiClient
                             .getAZEntityInfoV2('tenants', id, 'descendent-logic-apps', counts, skip, limit, type, {
                                 signal: controller.signal,
@@ -1229,7 +1251,7 @@ export const allSections: Record<GraphNodeTypes, (id: string) => EntityInfoDataT
                 {
                     id,
                     label: 'Descendant App Registrations',
-                    endpoint: ({ counts, skip, limit, type }) =>
+                    endpoint: ({ counts, skip, limit, type }: EntitySectionEndpointParams) =>
                         apiClient
                             .getAZEntityInfoV2('tenants', id, 'descendent-applications', counts, skip, limit, type, {
                                 signal: controller.signal,
@@ -1239,7 +1261,7 @@ export const allSections: Record<GraphNodeTypes, (id: string) => EntityInfoDataT
                 {
                     id,
                     label: 'Descendant Service Principals',
-                    endpoint: ({ counts, skip, limit, type }) =>
+                    endpoint: ({ counts, skip, limit, type }: EntitySectionEndpointParams) =>
                         apiClient
                             .getAZEntityInfoV2(
                                 'tenants',
@@ -1258,7 +1280,7 @@ export const allSections: Record<GraphNodeTypes, (id: string) => EntityInfoDataT
                 {
                     id,
                     label: 'Descendant Devices',
-                    endpoint: ({ counts, skip, limit, type }) =>
+                    endpoint: ({ counts, skip, limit, type }: EntitySectionEndpointParams) =>
                         apiClient
                             .getAZEntityInfoV2('tenants', id, 'descendent-devices', counts, skip, limit, type, {
                                 signal: controller.signal,
@@ -1270,7 +1292,7 @@ export const allSections: Record<GraphNodeTypes, (id: string) => EntityInfoDataT
         {
             id,
             label: 'Inbound Object Control',
-            endpoint: ({ counts, skip, limit, type }) =>
+            endpoint: ({ counts, skip, limit, type }: EntitySectionEndpointParams) =>
                 apiClient
                     .getAZEntityInfoV2('tenants', id, 'inbound-control', counts, skip, limit, type, {
                         signal: controller.signal,
@@ -1278,11 +1300,11 @@ export const allSections: Record<GraphNodeTypes, (id: string) => EntityInfoDataT
                     .then((res) => res.data),
         },
     ],
-    [AzureNodeKind.User]: (id) => [
+    [AzureNodeKind.User]: (id: string) => [
         {
             id,
             label: 'Member Of',
-            endpoint: ({ counts, skip, limit, type }) =>
+            endpoint: ({ counts, skip, limit, type }: EntitySectionEndpointParams) =>
                 apiClient
                     .getAZEntityInfoV2('users', id, 'group-membership', counts, skip, limit, type, {
                         signal: controller.signal,
@@ -1292,15 +1314,17 @@ export const allSections: Record<GraphNodeTypes, (id: string) => EntityInfoDataT
         {
             id,
             label: 'Roles',
-            endpoint: ({ counts, skip, limit, type }) =>
+            endpoint: ({ counts, skip, limit, type }: EntitySectionEndpointParams) =>
                 apiClient
-                    .getAZEntityInfoV2('users', id, 'roles', counts, skip, limit, type, { signal: controller.signal })
+                    .getAZEntityInfoV2('users', id, 'roles', counts, skip, limit, type, {
+                        signal: controller.signal,
+                    })
                     .then((res) => res.data),
         },
         {
             id,
             label: 'Execution Privileges',
-            endpoint: ({ counts, skip, limit, type }) =>
+            endpoint: ({ counts, skip, limit, type }: EntitySectionEndpointParams) =>
                 apiClient
                     .getAZEntityInfoV2('users', id, 'outbound-execution-privileges', counts, skip, limit, type, {
                         signal: controller.signal,
@@ -1310,7 +1334,7 @@ export const allSections: Record<GraphNodeTypes, (id: string) => EntityInfoDataT
         {
             id,
             label: 'Outbound Object Control',
-            endpoint: ({ counts, skip, limit, type }) =>
+            endpoint: ({ counts, skip, limit, type }: EntitySectionEndpointParams) =>
                 apiClient
                     .getAZEntityInfoV2('users', id, 'outbound-control', counts, skip, limit, type, {
                         signal: controller.signal,
@@ -1320,7 +1344,7 @@ export const allSections: Record<GraphNodeTypes, (id: string) => EntityInfoDataT
         {
             id,
             label: 'Inbound Object Control',
-            endpoint: ({ counts, skip, limit, type }) =>
+            endpoint: ({ counts, skip, limit, type }: EntitySectionEndpointParams) =>
                 apiClient
                     .getAZEntityInfoV2('users', id, 'inbound-control', counts, skip, limit, type, {
                         signal: controller.signal,
@@ -1328,11 +1352,11 @@ export const allSections: Record<GraphNodeTypes, (id: string) => EntityInfoDataT
                     .then((res) => res.data),
         },
     ],
-    [AzureNodeKind.VM]: (id) => [
+    [AzureNodeKind.VM]: (id: string) => [
         {
             id,
             label: 'Local Admins',
-            endpoint: ({ counts, skip, limit, type }) =>
+            endpoint: ({ counts, skip, limit, type }: EntitySectionEndpointParams) =>
                 apiClient
                     .getAZEntityInfoV2('vms', id, 'inbound-execution-privileges', counts, skip, limit, type, {
                         signal: controller.signal,
@@ -1342,7 +1366,7 @@ export const allSections: Record<GraphNodeTypes, (id: string) => EntityInfoDataT
         {
             id,
             label: 'Inbound Object Control',
-            endpoint: ({ counts, skip, limit, type }) =>
+            endpoint: ({ counts, skip, limit, type }: EntitySectionEndpointParams) =>
                 apiClient
                     .getAZEntityInfoV2('vms', id, 'inbound-control', counts, skip, limit, type, {
                         signal: controller.signal,
@@ -1350,11 +1374,11 @@ export const allSections: Record<GraphNodeTypes, (id: string) => EntityInfoDataT
                     .then((res) => res.data),
         },
     ],
-    [AzureNodeKind.ManagedCluster]: (id) => [
+    [AzureNodeKind.ManagedCluster]: (id: string) => [
         {
             id,
             label: 'Inbound Object Control',
-            endpoint: ({ counts, skip, limit, type }) =>
+            endpoint: ({ counts, skip, limit, type }: EntitySectionEndpointParams) =>
                 apiClient
                     .getAZEntityInfoV2('managed-clusters', id, 'inbound-control', counts, skip, limit, type, {
                         signal: controller.signal,
@@ -1362,11 +1386,11 @@ export const allSections: Record<GraphNodeTypes, (id: string) => EntityInfoDataT
                     .then((res) => res.data),
         },
     ],
-    [AzureNodeKind.ContainerRegistry]: (id) => [
+    [AzureNodeKind.ContainerRegistry]: (id: string) => [
         {
             id,
             label: 'Inbound Object Control',
-            endpoint: ({ counts, skip, limit, type }) =>
+            endpoint: ({ counts, skip, limit, type }: EntitySectionEndpointParams) =>
                 apiClient
                     .getAZEntityInfoV2('container-registries', id, 'inbound-control', counts, skip, limit, type, {
                         signal: controller.signal,
@@ -1374,11 +1398,11 @@ export const allSections: Record<GraphNodeTypes, (id: string) => EntityInfoDataT
                     .then((res) => res.data),
         },
     ],
-    [AzureNodeKind.WebApp]: (id) => [
+    [AzureNodeKind.WebApp]: (id: string) => [
         {
             id,
             label: 'Inbound Object Control',
-            endpoint: ({ counts, skip, limit, type }) =>
+            endpoint: ({ counts, skip, limit, type }: EntitySectionEndpointParams) =>
                 apiClient
                     .getAZEntityInfoV2('web-apps', id, 'inbound-control', counts, skip, limit, type, {
                         signal: controller.signal,
@@ -1386,11 +1410,11 @@ export const allSections: Record<GraphNodeTypes, (id: string) => EntityInfoDataT
                     .then((res) => res.data),
         },
     ],
-    [AzureNodeKind.LogicApp]: (id) => [
+    [AzureNodeKind.LogicApp]: (id: string) => [
         {
             id,
             label: 'Inbound Object Control',
-            endpoint: ({ counts, skip, limit, type }) =>
+            endpoint: ({ counts, skip, limit, type }: EntitySectionEndpointParams) =>
                 apiClient
                     .getAZEntityInfoV2('logic-apps', id, 'inbound-control', counts, skip, limit, type, {
                         signal: controller.signal,
@@ -1398,11 +1422,11 @@ export const allSections: Record<GraphNodeTypes, (id: string) => EntityInfoDataT
                     .then((res) => res.data),
         },
     ],
-    [AzureNodeKind.AutomationAccount]: (id) => [
+    [AzureNodeKind.AutomationAccount]: (id: string) => [
         {
             id,
             label: 'Inbound Object Control',
-            endpoint: ({ counts, skip, limit, type }) =>
+            endpoint: ({ counts, skip, limit, type }: EntitySectionEndpointParams) =>
                 apiClient
                     .getAZEntityInfoV2('automation-accounts', id, 'inbound-control', counts, skip, limit, type, {
                         signal: controller.signal,
@@ -1410,7 +1434,7 @@ export const allSections: Record<GraphNodeTypes, (id: string) => EntityInfoDataT
                     .then((res) => res.data),
         },
     ],
-    [ActiveDirectoryNodeKind.Entity]: (id) => [
+    [ActiveDirectoryNodeKind.Entity]: (id: string) => [
         {
             id,
             label: 'Outbound Object Control',
@@ -1428,7 +1452,7 @@ export const allSections: Record<GraphNodeTypes, (id: string) => EntityInfoDataT
                     .then((res) => res.data),
         },
     ],
-    [ActiveDirectoryNodeKind.Container]: (id) => [
+    [ActiveDirectoryNodeKind.Container]: (id: string) => [
         {
             id,
             label: 'Inbound Object Control',
@@ -1438,7 +1462,7 @@ export const allSections: Record<GraphNodeTypes, (id: string) => EntityInfoDataT
                     .then((res) => res.data),
         },
     ],
-    [ActiveDirectoryNodeKind.AIACA]: (id) => [
+    [ActiveDirectoryNodeKind.AIACA]: (id: string) => [
         {
             id,
             label: 'Inbound Object Control',
@@ -1448,7 +1472,7 @@ export const allSections: Record<GraphNodeTypes, (id: string) => EntityInfoDataT
                     .then((res) => res.data),
         },
     ],
-    [ActiveDirectoryNodeKind.CertTemplate]: (id) => [
+    [ActiveDirectoryNodeKind.CertTemplate]: (id: string) => [
         {
             id,
             label: 'Inbound Object Control',
@@ -1458,7 +1482,7 @@ export const allSections: Record<GraphNodeTypes, (id: string) => EntityInfoDataT
                     .then((res) => res.data),
         },
     ],
-    [ActiveDirectoryNodeKind.Computer]: (id) => [
+    [ActiveDirectoryNodeKind.Computer]: (id: string) => [
         {
             id,
             label: 'Sessions',
@@ -1586,7 +1610,7 @@ export const allSections: Record<GraphNodeTypes, (id: string) => EntityInfoDataT
                     .then((res) => res.data),
         },
     ],
-    [ActiveDirectoryNodeKind.Domain]: (id) => [
+    [ActiveDirectoryNodeKind.Domain]: (id: string) => [
         {
             id,
             label: 'Foreign Members',
@@ -1650,7 +1674,7 @@ export const allSections: Record<GraphNodeTypes, (id: string) => EntityInfoDataT
                     .then((res) => res.data),
         },
     ],
-    [ActiveDirectoryNodeKind.EnterpriseCA]: (id) => [
+    [ActiveDirectoryNodeKind.EnterpriseCA]: (id: string) => [
         {
             id,
             label: 'Inbound Object Control',
@@ -1660,7 +1684,7 @@ export const allSections: Record<GraphNodeTypes, (id: string) => EntityInfoDataT
                     .then((res) => res.data),
         },
     ],
-    [ActiveDirectoryNodeKind.GPO]: (id) => [
+    [ActiveDirectoryNodeKind.GPO]: (id: string) => [
         {
             id,
             label: 'Affected Objects',
@@ -1708,7 +1732,7 @@ export const allSections: Record<GraphNodeTypes, (id: string) => EntityInfoDataT
                     .then((res) => res.data),
         },
     ],
-    [ActiveDirectoryNodeKind.Group]: (id) => [
+    [ActiveDirectoryNodeKind.Group]: (id: string) => [
         {
             id,
             label: 'Sessions',
@@ -1788,7 +1812,7 @@ export const allSections: Record<GraphNodeTypes, (id: string) => EntityInfoDataT
                     .then((res) => res.data),
         },
     ],
-    [ActiveDirectoryNodeKind.NTAuthStore]: (id) => [
+    [ActiveDirectoryNodeKind.NTAuthStore]: (id: string) => [
         {
             id,
             label: 'Inbound Object Control',
@@ -1798,7 +1822,7 @@ export const allSections: Record<GraphNodeTypes, (id: string) => EntityInfoDataT
                     .then((res) => res.data),
         },
     ],
-    [ActiveDirectoryNodeKind.OU]: (id) => [
+    [ActiveDirectoryNodeKind.OU]: (id: string) => [
         {
             id,
             label: 'Affecting GPOs',
@@ -1826,7 +1850,7 @@ export const allSections: Record<GraphNodeTypes, (id: string) => EntityInfoDataT
                 apiClient.getOUUsersV2(id, skip, limit, type, { signal: controller.signal }).then((res) => res.data),
         },
     ],
-    [ActiveDirectoryNodeKind.RootCA]: (id) => [
+    [ActiveDirectoryNodeKind.RootCA]: (id: string) => [
         {
             id,
             label: 'Inbound Object Control',
@@ -1836,7 +1860,7 @@ export const allSections: Record<GraphNodeTypes, (id: string) => EntityInfoDataT
                     .then((res) => res.data),
         },
     ],
-    [ActiveDirectoryNodeKind.User]: (id) => [
+    [ActiveDirectoryNodeKind.User]: (id: string) => [
         {
             id,
             label: 'Sessions',
@@ -1924,4 +1948,5 @@ export const allSections: Record<GraphNodeTypes, (id: string) => EntityInfoDataT
                     .then((res) => res.data),
         },
     ],
+    ['Meta']: () => [],
 };

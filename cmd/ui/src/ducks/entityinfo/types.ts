@@ -14,9 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { GraphNodeTypes } from 'src/ducks/graph/types';
-
-import { AzureNodeKind } from 'bh-shared-ui';
+import { AzureNodeKind, EntityKinds } from 'bh-shared-ui';
 
 // --- AIACA
 export interface AIACAInfo extends EntityInfo {
@@ -274,12 +272,6 @@ export interface UserInfo extends EntityInfo {
 // --- Meta
 export type MetaInfoGraph = GraphInfo;
 
-export const EntityInfoEndpoints = {
-    GetInfo: (type: GraphNodeTypes, id: string) => {
-        return `/api/v1/entities/${type.toLowerCase()}/${id}`;
-    },
-};
-
 // --- Azure Entities
 export interface AZAppInfo extends AZEntityInfo {
     props: BasicInfo & {
@@ -431,7 +423,7 @@ export interface EntityInfo {
 }
 
 export interface AZEntityInfo {
-    kind: GraphNodeTypes;
+    kind: EntityKinds;
     props: BasicInfo;
 }
 
@@ -465,7 +457,7 @@ interface SetEntityInfoOpenAction {
 
 export type SelectedNode = {
     id: string;
-    type: GraphNodeTypes;
+    type: EntityKinds;
     name: string;
     graphId?: string;
 };

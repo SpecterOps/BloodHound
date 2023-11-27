@@ -17,15 +17,14 @@
 import { faAngleDoubleUp, faMinus, faPlus } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Typography } from '@mui/material';
-import { Icon, NodeIcon } from 'bh-shared-ui';
+import { Icon, NodeIcon, EntityKinds } from 'bh-shared-ui';
 import React from 'react';
-import { GraphNodeTypes } from 'src/ducks/graph/types';
 import { useEntityInfoPanelContext } from 'src/views/Explore/EntityInfo/EntityInfoPanelContext';
 import useHeaderStyles from 'src/views/Explore/InfoStyles/Header';
 
 interface HeaderProps {
     name?: string;
-    nodeType?: GraphNodeTypes;
+    nodeType?: EntityKinds;
     onToggleExpanded: (expanded: boolean) => void;
     expanded: boolean;
 }
