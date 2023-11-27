@@ -29,9 +29,8 @@ import {
     Tooltip,
     Typography,
 } from '@mui/material';
-import { useAvailableDomains } from 'bh-shared-ui';
+import { useAvailableDomains, Domain } from '../../../hooks';
 import React, { useState } from 'react';
-import { Domain } from 'src/ducks/global/types';
 
 const DataSelector: React.FC<{
     value: { type: string | null; id: string | null };

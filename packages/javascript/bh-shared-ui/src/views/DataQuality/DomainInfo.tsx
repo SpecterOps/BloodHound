@@ -17,15 +17,15 @@
 import React, { useState, useEffect } from 'react';
 import { Box, Table, TableBody, TableContainer, Paper, TableHead, TableRow, TableCell } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
-import { ActiveDirectoryQualityStat } from './types';
-import LoadContainer from 'src/views/QA/LoadContainer';
+import LoadContainer from './LoadContainer';
 import { faUsers, faChartPie, faSignInAlt, faStream } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { NodeIcon } from 'bh-shared-ui';
+import { NodeIcon } from '../../components';
 import {
     useActiveDirectoryDataQualityStatsQuery,
     useActiveDirectoryPlatformsDataQualityStatsQuery,
-} from 'src/views/QA/queries';
+    ActiveDirectoryQualityStat,
+} from '../../hooks';
 
 const useStyles = makeStyles({
     print: {
