@@ -307,6 +307,7 @@ func CalculateCrossProductNodeSetsNew(groupExpansions impact.PathAggregator, nod
 		checkSet       = cardinality.NewBitmap32()
 	)
 
+	//We need to fully unroll node sets 1-X into a single bitmap which we will check against
 	for _, entity := range nodeSets[1] {
 		checkSet.Add(entity.ID.Uint32())
 		if entity.Kinds.ContainsOneOf(ad.Group) {
@@ -332,11 +333,8 @@ func CalculateCrossProductNodeSetsNew(groupExpansions impact.PathAggregator, nod
 	for _, entity := range nodeSets[0] {
 		if checkSet.Contains(entity.ID.Uint32()) {
 			resultEntities.Add(entity.ID.Uint32())
-		} else {
-			unrollSet.Add(entity.ID.Uint32())
-			if entity.Kinds.ContainsOneOf(ad.Group) {
-				unrollSet.Or(groupExpansions.Cardinality(entity.ID.Uint32()).(cardinality.Duplex[uint32]))
-			}
+		} else if entity.Kinds.ContainsOneOf(ad.Group, ad.LocalGroup) {
+			unrollSet.Or(groupExpansions.Cardinality(entity.ID.Uint32()).(cardinality.Duplex[uint32]))
 		}
 	}
 

@@ -16,13 +16,17 @@ type ADCSCache struct {
 	PublishedTemplateCache  map[graph.ID][]*graph.Node
 }
 
-func (s ADCSCache) BuildCache(ctx context.Context, db graph.Database, enterpriseCAs, certTemplates []*graph.Node) {
-	s.AuthStoreForChainValid = make(map[graph.ID]cardinality.Duplex[uint32])
-	s.RootCAForChainValid = make(map[graph.ID]cardinality.Duplex[uint32])
-	s.CertTemplateControllers = make(map[graph.ID][]*graph.Node)
-	s.EnterpriseCAEnrollers = make(map[graph.ID][]*graph.Node)
-	s.PublishedTemplateCache = make(map[graph.ID][]*graph.Node)
+func NewADCSCache() ADCSCache {
+	return ADCSCache{
+		AuthStoreForChainValid:  make(map[graph.ID]cardinality.Duplex[uint32]),
+		RootCAForChainValid:     make(map[graph.ID]cardinality.Duplex[uint32]),
+		CertTemplateControllers: make(map[graph.ID][]*graph.Node),
+		EnterpriseCAEnrollers:   make(map[graph.ID][]*graph.Node),
+		PublishedTemplateCache:  make(map[graph.ID][]*graph.Node),
+	}
+}
 
+func (s ADCSCache) BuildCache(ctx context.Context, db graph.Database, enterpriseCAs, certTemplates []*graph.Node) {
 	db.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		for _, ct := range certTemplates {
 			if firstDegreePrincipals, err := fetchFirstDegreeNodes(tx, ct, ad.Enroll, ad.GenericAll, ad.AllExtendedRights); err != nil {
@@ -63,6 +67,8 @@ func (s ADCSCache) BuildCache(ctx context.Context, db graph.Database, enterprise
 
 		return nil
 	})
+
+	log.Infof("Finished building adcs cache")
 }
 
 func nodeSetToBitmap(set graph.NodeSet) cardinality.Duplex[uint32] {

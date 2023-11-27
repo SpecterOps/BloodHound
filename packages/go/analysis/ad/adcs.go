@@ -62,7 +62,7 @@ func PostADCSESC1(ctx context.Context, tx graph.Transaction, outC chan<- analysi
 			} else if !validatePublishedCertTemplateForEsc1(validationProperties) {
 				continue
 			} else {
-				results.Or(CalculateCrossProductNodeSetsNew(expandedGroups, cache.EnterpriseCAEnrollers[enterpriseCA.ID], cache.CertTemplateControllers[certTemplate.ID]))
+				results.Or(CalculateCrossProductNodeSetsNew(expandedGroups, cache.CertTemplateControllers[certTemplate.ID], cache.EnterpriseCAEnrollers[enterpriseCA.ID]))
 			}
 		}
 

@@ -54,6 +54,9 @@ func TestADCSESC1(t *testing.T) {
 		require.Nil(t, err)
 		domains, err := ad2.FetchNodesByKind(context.Background(), db, ad.Domain)
 
+		cache := ad2.NewADCSCache()
+		cache.BuildCache(context.Background(), db, enterpriseCertAuthorities, certTemplates)
+
 		for _, domain := range domains {
 			innerDomain := domain
 
@@ -63,14 +66,8 @@ func TestADCSESC1(t *testing.T) {
 					return err
 				} else {
 					for _, enterpriseCA := range enterpriseCAs {
-						t.Logf("here is one of the looped over ecas: %v", enterpriseCA.ID)
-						if validPaths, err := ad2.FetchEnterpriseCAsCertChainPathToDomain(tx, enterpriseCA, innerDomain); err != nil {
-							t.Logf("error fetching paths from enterprise ca %d to domain %d: %v", enterpriseCA.ID, innerDomain.ID, err)
-						} else if validPaths.Len() == 0 {
-							t.Logf("0 valid paths for eca: %v", enterpriseCA.Properties.Get("name"))
-							continue
-						} else {
-							if err := ad2.PostADCSESC1(ctx, tx, outC, db, groupExpansions, enterpriseCertAuthorities, certTemplates, enterpriseCA, innerDomain); err != nil {
+						if cache.DoesCAChainProperlyToDomain(enterpriseCA, innerDomain) {
+							if err := ad2.PostADCSESC1(ctx, tx, outC, groupExpansions, enterpriseCA, innerDomain, cache); err != nil {
 								t.Logf("failed post processing for %s: %v", ad.ADCSESC1.String(), err)
 							} else {
 								return nil
