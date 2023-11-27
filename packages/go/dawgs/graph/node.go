@@ -18,7 +18,7 @@ package graph
 
 import (
 	"encoding/json"
-	"github.com/specterops/bloodhound/dawgs/cardinality"
+	"github.com/RoaringBitmap/roaring"
 	"math"
 	"sync"
 
@@ -216,9 +216,9 @@ func (s NodeSet) IDs() []ID {
 	return idList
 }
 
-// IDBitmap returns a new cardinality bitmap instance containing all Node ID values in this NodeSet.
-func (s NodeSet) IDBitmap() cardinality.Duplex[uint32] {
-	bitmap := cardinality.NewBitmap32()
+// IDBitmap returns a new roaring64.Bitmap instance containing all Node ID values in this NodeSet.
+func (s NodeSet) IDBitmap() *roaring.Bitmap {
+	bitmap := roaring.New()
 
 	for id := range s {
 		bitmap.Add(id.Uint32())
@@ -377,7 +377,7 @@ func (s ThreadSafeNodeSet) IDs() []ID {
 }
 
 // IDBitmap returns a new roaring64.Bitmap instance containing all Node ID values in this NodeSet.
-func (s ThreadSafeNodeSet) IDBitmap() cardinality.Duplex[uint32] {
+func (s ThreadSafeNodeSet) IDBitmap() *roaring.Bitmap {
 	s.rwLock.RLock()
 	defer s.rwLock.RUnlock()
 

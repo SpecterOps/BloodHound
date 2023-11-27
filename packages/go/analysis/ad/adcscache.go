@@ -52,17 +52,25 @@ func (s ADCSCache) BuildCache(ctx context.Context, db graph.Database, enterprise
 			for _, domain := range domains {
 				if rootCaForNodes, err := FetchEnterpriseCAsRootCAForPathToDomain(tx, domain); err != nil {
 					log.Errorf("error getting cas via rootcafor for domain %d: %w", domain.ID, err)
-				} else if authStoreForNodes, err := FetchEnterpriseCAsTrustedForNTAuthPathToDomain(tx, domain); err != nil {
+				} else if authStoreForNodes, err := FetchEnterpriseCAsTrustedForNTAuthToDomain(tx, domain); err != nil {
 					log.Errorf("error getting cas via authstorefor for domain %d: %w", domain.ID, err)
 				} else {
-					s.AuthStoreForChainValid[domain.ID] = authStoreForNodes.IDBitmap()
-					s.RootCAForChainValid[domain.ID] = rootCaForNodes.IDBitmap()
+					s.AuthStoreForChainValid[domain.ID] = nodeSetToBitmap(authStoreForNodes)
+					s.RootCAForChainValid[domain.ID] = nodeSetToBitmap(rootCaForNodes)
 				}
 			}
 		}
 
 		return nil
 	})
+}
+
+func nodeSetToBitmap(set graph.NodeSet) cardinality.Duplex[uint32] {
+	bitmap := cardinality.NewBitmap32()
+	for _, s := range set {
+		bitmap.Add(s.ID.Uint32())
+	}
+	return bitmap
 }
 
 func (s ADCSCache) DoesCAChainProperlyToDomain(enterpriseCA, domain *graph.Node) bool {
