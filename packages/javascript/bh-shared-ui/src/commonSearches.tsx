@@ -90,11 +90,11 @@ export const CommonSearches: CommonSearchType[] = [
             },
             {
                 description: 'Workstations where Domain Users can RDP',
-                cypher: `MATCH p=(m:Group)-[:CanRDP]->(c:Computer)\nWHERE m.objectid ENDS WITH "-513" AND NOT c.operatingsystem CONTAINS "Server"\nRETURN p`,
+                cypher: `MATCH p=(m:Group)-[:CanRDP]->(c:Computer)\nWHERE m.objectid ENDS WITH "-513" AND NOT toUpper(c.operatingsystem) CONTAINS "Server"\nRETURN p`,
             },
             {
                 description: 'Servers where Domain Users can RDP',
-                cypher: `MATCH p=(m:Group)-[:CanRDP]->(c:Computer)\nWHERE m.objectid ENDS WITH "-513" AND c.operatingsystem CONTAINS "Server"\nRETURN p`,
+                cypher: `MATCH p=(m:Group)-[:CanRDP]->(c:Computer)\nWHERE m.objectid ENDS WITH "-513" AND toUpper(c.operatingsystem) CONTAINS "Server"\nRETURN p`,
             },
             {
                 description: 'Dangerous privileges for Domain Users groups',

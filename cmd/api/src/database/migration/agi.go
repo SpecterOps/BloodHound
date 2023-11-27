@@ -42,7 +42,7 @@ func SelectorToObjectID(rawSelector string) string {
 }
 
 func (s *Migrator) updateAssetGroups() error {
-	return s.db.Transaction(func(tx *gorm.DB) error {
+	return s.DB.Transaction(func(tx *gorm.DB) error {
 		var systemAssetGroups model.AssetGroups
 
 		// Lookup system asset groups
