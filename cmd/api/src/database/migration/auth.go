@@ -1,17 +1,17 @@
 // Copyright 2023 Specter Ops, Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// 
+//
 // SPDX-License-Identifier: Apache-2.0
 
 package migration
@@ -19,10 +19,10 @@ package migration
 import (
 	"strings"
 
+	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/src/auth"
 	"github.com/specterops/bloodhound/src/model"
 	"gorm.io/gorm"
-	"github.com/specterops/bloodhound/log"
 )
 
 func preload(tx *gorm.DB, associationSpecs []string) *gorm.DB {
@@ -45,7 +45,7 @@ func getAllRoles(tx *gorm.DB) (model.Roles, error) {
 }
 
 func (s *Migrator) updatePermissions() error {
-	return s.db.Transaction(func(tx *gorm.DB) error {
+	return s.DB.Transaction(func(tx *gorm.DB) error {
 		if existingPermissions, err := getAllPermissions(tx); err != nil {
 			return err
 		} else {
@@ -65,7 +65,7 @@ func (s *Migrator) updatePermissions() error {
 }
 
 func (s *Migrator) checkUserEmailAddresses() error {
-	return s.db.Transaction(func(tx *gorm.DB) error {
+	return s.DB.Transaction(func(tx *gorm.DB) error {
 		var users model.Users
 
 		for _, userAssociation := range model.UserAssociations() {
@@ -97,7 +97,7 @@ func (s *Migrator) checkUserEmailAddresses() error {
 }
 
 func (s *Migrator) updateRoles() error {
-	return s.db.Transaction(func(tx *gorm.DB) error {
+	return s.DB.Transaction(func(tx *gorm.DB) error {
 		if permissions, err := getAllPermissions(tx); err != nil {
 			return err
 		} else if existingRoles, err := getAllRoles(tx); err != nil {
@@ -122,7 +122,7 @@ func (s *Migrator) updateRoles() error {
 						existingRole.Name = expectedRole.Name
 						existingRole.Description = expectedRole.Description
 
-						if result := s.db.Save(existingRole); result.Error != nil {
+						if result := s.DB.Save(existingRole); result.Error != nil {
 							return result.Error
 						}
 
@@ -134,7 +134,7 @@ func (s *Migrator) updateRoles() error {
 					existingRole.Permissions = expectedRole.Permissions
 					existingRole.Description = expectedRole.Description
 
-					if result := s.db.Session(&gorm.Session{FullSaveAssociations: true}).Updates(existingRole); result.Error != nil {
+					if result := s.DB.Session(&gorm.Session{FullSaveAssociations: true}).Updates(existingRole); result.Error != nil {
 						return result.Error
 					}
 
