@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { ActiveDirectoryRelationshipKind, AzureRelationshipKind } from 'bh-shared-ui';
+import { ActiveDirectoryRelationshipKind, AzureRelationshipKind } from "../../..";
 
 export type Category = {
     categoryName: string;

@@ -18,14 +18,14 @@ import { produce } from 'immer';
 import cloneDeep from 'lodash/cloneDeep';
 import * as types from 'src/ducks/searchbar/types';
 import { EdgeCheckboxType } from 'src/views/Explore/ExploreSearch/EdgeFilteringDialog';
-import { AllEdgeTypes } from 'src/views/Explore/ExploreSearch/edgeTypes';
+import { AllEdgeTypes, Category, Subcategory } from 'bh-shared-ui';
 
 // by default: all checkboxes are selected
 const initialPathFilters: EdgeCheckboxType[] = [];
 
-AllEdgeTypes.forEach((category) => {
-    category.subcategories.forEach((subcategory) => {
-        subcategory.edgeTypes.forEach((edgeType) => {
+AllEdgeTypes.forEach((category: Category) => {
+    category.subcategories.forEach((subcategory: Subcategory) => {
+        subcategory.edgeTypes.forEach((edgeType: string) => {
             initialPathFilters.push({
                 category: category.categoryName,
                 subcategory: subcategory.name,
