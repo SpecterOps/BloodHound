@@ -38,13 +38,7 @@ func (s Resources) ListSavedQueries(response http.ResponseWriter, request *http.
 		queryParams   = request.URL.Query()
 		sortByColumns = queryParams[api.QueryParameterSortBy]
 		savedQueries  model.SavedQueries
-		user, isUser  = auth.GetUserFromAuthCtx(ctx2.FromRequest(request).AuthCtx)
 	)
-
-	if !isUser {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "No associated user found", request), response)
-		return
-	}
 
 	for _, column := range sortByColumns {
 		var descending bool
@@ -87,7 +81,9 @@ func (s Resources) ListSavedQueries(response http.ResponseWriter, request *http.
 			}
 		}
 
-		if sqlFilter, err := queryFilters.BuildSQLFilter(); err != nil {
+		if user, isUser := auth.GetUserFromAuthCtx(ctx2.FromRequest(request).AuthCtx); !isUser {
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "No associated user found", request), response)
+		} else if sqlFilter, err := queryFilters.BuildSQLFilter(); err != nil {
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "error building SQL for filter", request), response)
 		} else if skip, err := ParseSkipQueryParameter(queryParams, 0); err != nil {
 			api.WriteErrorResponse(request.Context(), ErrBadQueryParameter(request, model.PaginationQueryParameterSkip, err), response)
@@ -110,10 +106,9 @@ type CreateSavedQueryRequest struct {
 func (s Resources) CreateSavedQuery(response http.ResponseWriter, request *http.Request) {
 	var (
 		createRequest CreateSavedQueryRequest
-		user, isUser  = auth.GetUserFromAuthCtx(ctx2.FromRequest(request).AuthCtx)
 	)
 
-	if !isUser {
+	if user, isUser := auth.GetUserFromAuthCtx(ctx2.FromRequest(request).AuthCtx); !isUser {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "No associated user found", request), response)
 	} else if err := api.ReadJSONRequestPayloadLimited(&createRequest, request); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
@@ -133,10 +128,9 @@ func (s Resources) CreateSavedQuery(response http.ResponseWriter, request *http.
 func (s Resources) DeleteSavedQuery(response http.ResponseWriter, request *http.Request) {
 	var (
 		rawSavedQueryID = mux.Vars(request)[api.URIPathVariableSavedQueryID]
-		user, isUser    = auth.GetUserFromAuthCtx(ctx2.FromRequest(request).AuthCtx)
 	)
 
-	if !isUser {
+	if user, isUser := auth.GetUserFromAuthCtx(ctx2.FromRequest(request).AuthCtx); !isUser {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "No associated user found", request), response)
 	} else if savedQueryID, err := strconv.Atoi(rawSavedQueryID); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsIDMalformed, request), response)
