@@ -219,8 +219,8 @@ type AssetGroupSelectorSpec struct {
 }
 
 type UpdatedAssetGroupSelectors struct {
-	AddedSelectors   AssetGroupSelectors `json:"added_selectors"`
-	RemovedSelectors AssetGroupSelectors `json:"removed_selectors"`
+	Added   AssetGroupSelectors `json:"added_selectors"`
+	Removed AssetGroupSelectors `json:"removed_selectors"`
 }
 
 const (

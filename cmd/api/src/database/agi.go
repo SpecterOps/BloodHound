@@ -184,7 +184,7 @@ func (s *BloodhoundDB) CreateAssetGroupSelector(assetGroup model.AssetGroup, spe
 }
 
 func (s *BloodhoundDB) UpdateAssetGroupSelectors(ctx ctx.Context, assetGroup model.AssetGroup, selectorSpecs []model.AssetGroupSelectorSpec, systemSelector bool) (model.UpdatedAssetGroupSelectors, error) {
-	var updated = model.UpdatedAssetGroupSelectors{}
+	var updatedSelectors = model.UpdatedAssetGroupSelectors{}
 
 	err := s.db.Transaction(func(tx *gorm.DB) error {
 		for _, selectorSpec := range selectorSpecs {
@@ -200,14 +200,14 @@ func (s *BloodhoundDB) UpdateAssetGroupSelectors(ctx ctx.Context, assetGroup mod
 				if result := tx.Create(&assetGroupSelector); result.Error != nil {
 					return CheckError(result)
 				} else {
-					updated.AddedSelectors = append(updated.AddedSelectors, assetGroupSelector)
+					updatedSelectors.Added = append(updatedSelectors.Added, assetGroupSelector)
 				}
 
 			case model.SelectorSpecActionRemove:
 				if result := tx.Where("asset_group_id=? AND name=?", assetGroup.ID, selectorSpec.SelectorName).Delete(&model.AssetGroupSelector{}); result.Error != nil {
 					return CheckError(result)
 				} else {
-					updated.RemovedSelectors = append(updated.RemovedSelectors, model.AssetGroupSelector{
+					updatedSelectors.Removed = append(updatedSelectors.Removed, model.AssetGroupSelector{
 						AssetGroupID: assetGroup.ID,
 						Name:         selectorSpec.SelectorName,
 						Selector:     selectorSpec.EntityObjectID,
@@ -225,7 +225,7 @@ func (s *BloodhoundDB) UpdateAssetGroupSelectors(ctx ctx.Context, assetGroup mod
 		return nil
 	})
 
-	return updated, err
+	return updatedSelectors, err
 }
 
 func (s *BloodhoundDB) GetAllAssetGroupSelectors() (model.AssetGroupSelectors, error) {

@@ -68,20 +68,6 @@ func (mr *MockGraphMockRecorder) BatchNodeUpdate(arg0, arg1 interface{}) *gomock
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "BatchNodeUpdate", reflect.TypeOf((*MockGraph)(nil).BatchNodeUpdate), arg0, arg1)
 }
 
-// ClearSystemTags mocks base method.
-func (m *MockGraph) ClearSystemTags(arg0 context.Context) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ClearSystemTags", arg0)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// ClearSystemTags indicates an expected call of ClearSystemTags.
-func (mr *MockGraphMockRecorder) ClearSystemTags(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ClearSystemTags", reflect.TypeOf((*MockGraph)(nil).ClearSystemTags), arg0)
-}
-
 // FetchNodesByObjectIDs mocks base method.
 func (m *MockGraph) FetchNodesByObjectIDs(arg0 context.Context, arg1 ...string) (graph.NodeSet, error) {
 	m.ctrl.T.Helper()
@@ -276,18 +262,18 @@ func (mr *MockGraphMockRecorder) SearchNodesByName(arg0, arg1, arg2, arg3, arg4 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SearchNodesByName", reflect.TypeOf((*MockGraph)(nil).SearchNodesByName), arg0, arg1, arg2, arg3, arg4)
 }
 
-// UpdateAssetGroupIsolationTags mocks base method.
-func (m *MockGraph) UpdateAssetGroupIsolationTags(arg0 context.Context, arg1 agi.AgiData) error {
+// UpdateSelectorTags mocks base method.
+func (m *MockGraph) UpdateSelectorTags(arg0 context.Context, arg1 agi.AgiData, arg2 model.UpdatedAssetGroupSelectors) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateAssetGroupIsolationTags", arg0, arg1)
+	ret := m.ctrl.Call(m, "UpdateSelectorTags", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// UpdateAssetGroupIsolationTags indicates an expected call of UpdateAssetGroupIsolationTags.
-func (mr *MockGraphMockRecorder) UpdateAssetGroupIsolationTags(arg0, arg1 interface{}) *gomock.Call {
+// UpdateSelectorTags indicates an expected call of UpdateSelectorTags.
+func (mr *MockGraphMockRecorder) UpdateSelectorTags(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateAssetGroupIsolationTags", reflect.TypeOf((*MockGraph)(nil).UpdateAssetGroupIsolationTags), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateSelectorTags", reflect.TypeOf((*MockGraph)(nil).UpdateSelectorTags), arg0, arg1, arg2)
 }
 
 // ValidateOUs mocks base method.

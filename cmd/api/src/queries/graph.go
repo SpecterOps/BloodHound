@@ -141,8 +141,7 @@ type Graph interface {
 	ValidateOUs(ctx context.Context, ous []string) ([]string, error)
 	BatchNodeUpdate(ctx context.Context, nodeUpdate graph.NodeUpdate) error
 	RawCypherSearch(ctx context.Context, rawCypher string, includeProperties bool) (model.UnifiedGraph, error)
-	UpdateAssetGroupIsolationTags(ctx context.Context, db agi.AgiData) error
-	ClearSystemTags(ctx context.Context) error
+	UpdateSelectorTags(ctx context.Context, db agi.AgiData, selectors model.UpdatedAssetGroupSelectors) error
 }
 
 type GraphQuery struct {
@@ -871,45 +870,52 @@ func fromGraphNodes(nodes graph.NodeSet) []model.PagedNodeListEntry {
 	return renderedNodes
 }
 
-func (s *GraphQuery) UpdateAssetGroupIsolationTags(ctx context.Context, db agi.AgiData) error {
-	if assetGroups, err := db.GetAllAssetGroups("", model.SQLFilter{}); err != nil {
+func (s *GraphQuery) UpdateSelectorTags(ctx context.Context, db agi.AgiData, selectors model.UpdatedAssetGroupSelectors) error {
+	for _, selector := range selectors.Added {
+		if err := addTagsToSelector(ctx, s, db, selector); err != nil {
+			return err
+		}
+	}
+
+	for _, selector := range selectors.Removed {
+		if err := removeTagsFromSelector(ctx, s, db, selector); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func addTagsToSelector(ctx context.Context, graphQuery *GraphQuery, db agi.AgiData, selector model.AssetGroupSelector) error {
+	if assetGroup, err := db.GetAssetGroup(selector.AssetGroupID); err != nil {
 		return err
 	} else {
-		return s.Graph.WriteTransaction(ctx, func(tx graph.Transaction) error {
-			for _, assetGroup := range assetGroups {
-				if assetGroupNodes, err := ops.FetchNodes(tx.Nodes().Filterf(func() graph.Criteria {
-					tagPropertyStr := common.SystemTags.String()
+		return graphQuery.Graph.WriteTransaction(ctx, func(tx graph.Transaction) error {
+			tagPropertyStr := common.SystemTags.String()
 
-					if !assetGroup.SystemGroup {
-						tagPropertyStr = common.UserTags.String()
-					}
+			if !assetGroup.SystemGroup {
+				tagPropertyStr = common.UserTags.String()
+			}
 
-					return query.And(
-						query.KindIn(query.Node(), ad.Entity, azure.Entity),
-						query.In(query.NodeProperty(common.ObjectID.String()), assetGroup.Selectors.Strings()),
-						query.Not(query.StringContains(query.NodeProperty(tagPropertyStr), assetGroup.Tag)),
-					)
-				})); err != nil {
-					return err
-				} else {
-					for _, node := range assetGroupNodes {
-						tagPropertyStr := common.SystemTags.String()
-
-						if !assetGroup.SystemGroup {
-							tagPropertyStr = common.UserTags.String()
-						}
-
-						if tags, err := node.Properties.Get(tagPropertyStr).String(); err != nil {
-							if graph.IsErrPropertyNotFound(err) {
-								node.Properties.Set(tagPropertyStr, assetGroup.Tag)
-							} else {
-								return err
-							}
+			if assetGroupNodes, err := ops.FetchNodes(tx.Nodes().Filterf(func() graph.Criteria {
+				return query.And(
+					query.KindIn(query.Node(), ad.Entity, azure.Entity),
+					query.In(query.NodeProperty(common.ObjectID.String()), assetGroup.Selectors.Strings()),
+					query.Not(query.StringContains(query.NodeProperty(tagPropertyStr), assetGroup.Tag)),
+				)
+			})); err != nil {
+				return err
+			} else {
+				for _, node := range assetGroupNodes {
+					if tags, err := node.Properties.Get(tagPropertyStr).String(); err != nil {
+						if graph.IsErrPropertyNotFound(err) {
+							node.Properties.Set(tagPropertyStr, assetGroup.Tag)
 						} else {
-							node.Properties.Set(tagPropertyStr, tags+" "+assetGroup.Tag)
+							return err
 						}
+					} else if !strings.Contains(tags, assetGroup.Tag) {
+						node.Properties.Set(tagPropertyStr, tags+" "+assetGroup.Tag)
 
-						if err := tx.UpdateNode(node); err != nil {
+						if err = tx.UpdateNode(node); err != nil {
 							return err
 						}
 					}
@@ -921,22 +927,46 @@ func (s *GraphQuery) UpdateAssetGroupIsolationTags(ctx context.Context, db agi.A
 	}
 }
 
-func (s *GraphQuery) ClearSystemTags(ctx context.Context) error {
-	defer log.Measure(log.LevelInfo, "ClearSystemTagsIncludeMeta")()
+func removeTagsFromSelector(ctx context.Context, graphQuery *GraphQuery, db agi.AgiData, selector model.AssetGroupSelector) error {
+	if assetGroup, err := db.GetAssetGroup(selector.AssetGroupID); err != nil {
+		return err
+	} else {
+		return graphQuery.Graph.WriteTransaction(ctx, func(tx graph.Transaction) error {
+			tagPropertyStr := common.SystemTags.String()
 
-	var (
-		props = graph.NewProperties()
-	)
+			if !assetGroup.SystemGroup {
+				tagPropertyStr = common.UserTags.String()
+			}
 
-	props.Delete(common.SystemTags.String())
+			if assetGroupNodes, err := ops.FetchNodes(tx.Nodes().Filterf(func() graph.Criteria {
+				return query.And(
+					query.KindIn(query.Node(), ad.Entity, azure.Entity),
+					query.In(query.NodeProperty(common.ObjectID.String()), assetGroup.Selectors.Strings()),
+					query.StringContains(query.NodeProperty(tagPropertyStr), assetGroup.Tag),
+				)
+			})); err != nil {
+				return err
+			} else {
+				for _, node := range assetGroupNodes {
+					if tags, err := node.Properties.Get(tagPropertyStr).String(); err != nil {
+						if graph.IsErrPropertyNotFound(err) {
+							node.Properties.Set(tagPropertyStr, assetGroup.Tag)
+						} else {
+							return err
+						}
+					} else if strings.Contains(tags, assetGroup.Tag) {
+						// remove asset group tag and then remove any leftover double whitespace
+						tags = strings.ReplaceAll(strings.ReplaceAll(tags, assetGroup.Tag, ""), "  ", " ")
+						node.Properties.Set(tagPropertyStr, tags)
 
-	return s.Graph.WriteTransaction(ctx, func(tx graph.Transaction) error {
-		if ids, err := ops.FetchNodeIDs(tx.Nodes().Filter(analysis.AllTaggedNodesFilter(nil))); err != nil {
-			return err
-		} else {
-			return tx.Nodes().Filterf(func() graph.Criteria {
-				return query.InIDs(query.NodeID(), ids...)
-			}).Update(props)
-		}
-	})
+						if err = tx.UpdateNode(node); err != nil {
+							return err
+						}
+					}
+				}
+			}
+
+			return nil
+		})
+	}
 }

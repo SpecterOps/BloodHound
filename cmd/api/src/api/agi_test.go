@@ -496,7 +496,7 @@ func TestResources_UpdateAssetGroupSelectors_SuccessT0(t *testing.T) {
 	}
 
 	expectedResult := model.UpdatedAssetGroupSelectors{
-		AddedSelectors: model.AssetGroupSelectors{
+		Added: model.AssetGroupSelectors{
 			{
 				AssetGroupID: assetGroup.ID,
 				Name:         payload[0].SelectorName,
@@ -504,7 +504,7 @@ func TestResources_UpdateAssetGroupSelectors_SuccessT0(t *testing.T) {
 			},
 		},
 
-		RemovedSelectors: model.AssetGroupSelectors{
+		Removed: model.AssetGroupSelectors{
 			{
 				AssetGroupID: assetGroup.ID,
 				Name:         payload[1].SelectorName,
@@ -518,8 +518,7 @@ func TestResources_UpdateAssetGroupSelectors_SuccessT0(t *testing.T) {
 
 	mockDB.EXPECT().GetAssetGroup(gomock.Any()).Return(assetGroup, nil)
 	mockDB.EXPECT().UpdateAssetGroupSelectors(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(expectedResult, nil)
-	mockGraph.EXPECT().ClearSystemTags(gomock.Any()).Return(nil)
-	mockGraph.EXPECT().UpdateAssetGroupIsolationTags(gomock.Any(), gomock.Any()).Return(nil)
+	mockGraph.EXPECT().UpdateSelectorTags(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 
 	mockTasker := datapipeMocks.NewMockTasker(mockCtrl)
 	// MockTasker should receive a call to RequestAnalysis() since this is a Tier Zero Asset group.
@@ -549,8 +548,8 @@ func TestResources_UpdateAssetGroupSelectors_SuccessT0(t *testing.T) {
 	err = json.Unmarshal(dataJSON, &data)
 	require.Nil(t, err)
 
-	require.Equal(t, expectedResult.AddedSelectors[0].Name, data["added_selectors"][0].Name)
-	require.Equal(t, expectedResult.RemovedSelectors[0].Name, data["removed_selectors"][0].Name)
+	require.Equal(t, expectedResult.Added[0].Name, data["added_selectors"][0].Name)
+	require.Equal(t, expectedResult.Removed[0].Name, data["removed_selectors"][0].Name)
 }
 
 func TestResources_UpdateAssetGroupSelectors_SuccessOwned(t *testing.T) {
@@ -592,14 +591,14 @@ func TestResources_UpdateAssetGroupSelectors_SuccessOwned(t *testing.T) {
 	}
 
 	expectedResult := model.UpdatedAssetGroupSelectors{
-		AddedSelectors: model.AssetGroupSelectors{
+		Added: model.AssetGroupSelectors{
 			model.AssetGroupSelector{
 				AssetGroupID: assetGroup.ID,
 				Name:         payload[0].SelectorName,
 				Selector:     payload[0].EntityObjectID,
 			},
 		},
-		RemovedSelectors: model.AssetGroupSelectors{
+		Removed: model.AssetGroupSelectors{
 			model.AssetGroupSelector{
 				AssetGroupID: assetGroup.ID,
 				Name:         payload[1].SelectorName,
@@ -614,8 +613,7 @@ func TestResources_UpdateAssetGroupSelectors_SuccessOwned(t *testing.T) {
 	mockDB.EXPECT().GetAssetGroup(gomock.Any()).Return(assetGroup, nil)
 	mockDB.EXPECT().UpdateAssetGroupSelectors(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(expectedResult, nil)
 
-	mockGraph.EXPECT().ClearSystemTags(gomock.Any()).Return(nil)
-	mockGraph.EXPECT().UpdateAssetGroupIsolationTags(gomock.Any(), gomock.Any()).Return(nil)
+	mockGraph.EXPECT().UpdateSelectorTags(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 
 	mockTasker := datapipeMocks.NewMockTasker(mockCtrl)
 	// NOTE MockTasker should NOT receive a call to RequestAnalysis() since this is not a Tier Zero Asset group.
@@ -644,6 +642,6 @@ func TestResources_UpdateAssetGroupSelectors_SuccessOwned(t *testing.T) {
 	err = json.Unmarshal(dataJSON, &data)
 	require.Nil(t, err)
 
-	require.Equal(t, expectedResult.AddedSelectors[0].Name, data["added_selectors"][0].Name)
-	require.Equal(t, expectedResult.RemovedSelectors[0].Name, data["removed_selectors"][0].Name)
+	require.Equal(t, expectedResult.Added[0].Name, data["added_selectors"][0].Name)
+	require.Equal(t, expectedResult.Removed[0].Name, data["removed_selectors"][0].Name)
 }
