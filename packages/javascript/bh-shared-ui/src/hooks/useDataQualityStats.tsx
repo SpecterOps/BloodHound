@@ -16,7 +16,7 @@
 
 import { useQuery } from 'react-query';
 import { DateTime } from 'luxon';
-import { apiClient } from '..';
+import { apiClient } from '../utils/api';
 
 export type Domain = {
     type: string;

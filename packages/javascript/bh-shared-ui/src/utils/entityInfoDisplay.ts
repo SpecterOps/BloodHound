@@ -36,7 +36,7 @@ export enum ADSpecificTimeProperties {
 
 // Map containing all properties that should display as bitwise integers in the entity panel.
 // The key is the property string, the value is the amount of significant digits the hex value should display with.
-export var BitwiseInts = new Map([['certificatemappingmethodsraw', 2]]);
+const BitwiseInts = new Map([['certificatemappingmethodsraw', 2]]);
 
 //These times are handled differently specifically for these properties as they are collected and ingested to match these values
 //Here is some related documentation:

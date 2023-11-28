@@ -258,7 +258,7 @@ func (s *BloodHoundGraphNode) SetIcon(nType string) {
 		}
 	case "EnterpriseCA":
 		s.FontIcon = &BloodHoundGraphFontIcon{
-			Text: "fa-box",
+			Text: "fa-building",
 		}
 	case "NTAuthStore":
 		s.FontIcon = &BloodHoundGraphFontIcon{
@@ -340,15 +340,15 @@ func (s *BloodHoundGraphNode) SetBackground(nType string) {
 	case "GPO":
 		s.BloodHoundGraphItem.Color = "#998EFD"
 	case "AIACA":
-		s.BloodHoundGraphItem.Color = "#763AAD"
+		s.BloodHoundGraphItem.Color = "#9769F0"
 	case "RootCA":
-		s.BloodHoundGraphItem.Color = "#763AAD"
+		s.BloodHoundGraphItem.Color = "#6968E8"
 	case "EnterpriseCA":
-		s.BloodHoundGraphItem.Color = "#25724B"
+		s.BloodHoundGraphItem.Color = "#4696E9"
 	case "NTAuthStore":
-		s.BloodHoundGraphItem.Color = "#763AAD"
+		s.BloodHoundGraphItem.Color = "#D575F5"
 	case "CertTemplate":
-		s.BloodHoundGraphItem.Color = "#FDA1FF"
+		s.BloodHoundGraphItem.Color = "#B153F3"
 	case "Meta":
 		s.BloodHoundGraphItem.Color = "#000"
 	default:
