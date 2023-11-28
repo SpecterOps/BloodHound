@@ -218,6 +218,11 @@ type AssetGroupSelectorSpec struct {
 	Action         string `json:"action"`
 }
 
+type UpdatedAssetGroupSelectors struct {
+	AddedSelectors   AssetGroupSelectors `json:"added_selectors"`
+	RemovedSelectors AssetGroupSelectors `json:"removed_selectors"`
+}
+
 const (
 	SelectorSpecActionAdd    = "add"
 	SelectorSpecActionRemove = "remove"

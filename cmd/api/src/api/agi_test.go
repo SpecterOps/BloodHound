@@ -495,16 +495,17 @@ func TestResources_UpdateAssetGroupSelectors_SuccessT0(t *testing.T) {
 		SystemGroup: true,
 	}
 
-	expectedResult := map[string]model.AssetGroupSelectors{
-		"added_selectors": {
-			model.AssetGroupSelector{
+	expectedResult := model.UpdatedAssetGroupSelectors{
+		AddedSelectors: model.AssetGroupSelectors{
+			{
 				AssetGroupID: assetGroup.ID,
 				Name:         payload[0].SelectorName,
 				Selector:     payload[0].EntityObjectID,
 			},
 		},
-		"removed_selectors": {
-			model.AssetGroupSelector{
+
+		RemovedSelectors: model.AssetGroupSelectors{
+			{
 				AssetGroupID: assetGroup.ID,
 				Name:         payload[1].SelectorName,
 				Selector:     payload[1].EntityObjectID,
@@ -548,8 +549,8 @@ func TestResources_UpdateAssetGroupSelectors_SuccessT0(t *testing.T) {
 	err = json.Unmarshal(dataJSON, &data)
 	require.Nil(t, err)
 
-	require.Equal(t, expectedResult["added_selectors"][0].Name, data["added_selectors"][0].Name)
-	require.Equal(t, expectedResult["removed_selectors"][0].Name, data["removed_selectors"][0].Name)
+	require.Equal(t, expectedResult.AddedSelectors[0].Name, data["added_selectors"][0].Name)
+	require.Equal(t, expectedResult.RemovedSelectors[0].Name, data["removed_selectors"][0].Name)
 }
 
 func TestResources_UpdateAssetGroupSelectors_SuccessOwned(t *testing.T) {
@@ -590,15 +591,15 @@ func TestResources_UpdateAssetGroupSelectors_SuccessOwned(t *testing.T) {
 		SystemGroup: true,
 	}
 
-	expectedResult := map[string]model.AssetGroupSelectors{
-		"added_selectors": {
+	expectedResult := model.UpdatedAssetGroupSelectors{
+		AddedSelectors: model.AssetGroupSelectors{
 			model.AssetGroupSelector{
 				AssetGroupID: assetGroup.ID,
 				Name:         payload[0].SelectorName,
 				Selector:     payload[0].EntityObjectID,
 			},
 		},
-		"removed_selectors": {
+		RemovedSelectors: model.AssetGroupSelectors{
 			model.AssetGroupSelector{
 				AssetGroupID: assetGroup.ID,
 				Name:         payload[1].SelectorName,
@@ -643,6 +644,6 @@ func TestResources_UpdateAssetGroupSelectors_SuccessOwned(t *testing.T) {
 	err = json.Unmarshal(dataJSON, &data)
 	require.Nil(t, err)
 
-	require.Equal(t, expectedResult["added_selectors"][0].Name, data["added_selectors"][0].Name)
-	require.Equal(t, expectedResult["removed_selectors"][0].Name, data["removed_selectors"][0].Name)
+	require.Equal(t, expectedResult.AddedSelectors[0].Name, data["added_selectors"][0].Name)
+	require.Equal(t, expectedResult.RemovedSelectors[0].Name, data["removed_selectors"][0].Name)
 }
