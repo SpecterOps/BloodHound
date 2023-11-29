@@ -51,7 +51,7 @@ func TestResources_ListSavedQueries_SortingError(t *testing.T) {
 	userId, err := uuid2.NewV4()
 	require.Nil(t, err)
 
-	if req, err := http.NewRequestWithContext(CreateContextWithOwnerId(userId), "GET", endpoint, nil); err != nil {
+	if req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), "GET", endpoint, nil); err != nil {
 		t.Fatal(err)
 	} else {
 		q := url.Values{}
@@ -82,7 +82,7 @@ func TestResources_ListSavedQueries_InvalidFilterColumn(t *testing.T) {
 	userId, err := uuid2.NewV4()
 	require.Nil(t, err)
 
-	if req, err := http.NewRequestWithContext(CreateContextWithOwnerId(userId), "GET", endpoint, nil); err != nil {
+	if req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), "GET", endpoint, nil); err != nil {
 		t.Fatal(err)
 	} else {
 		q := url.Values{}
@@ -113,7 +113,7 @@ func TestResources_ListSavedQueries_InvalidFilterPredicate(t *testing.T) {
 	userId, err := uuid2.NewV4()
 	require.Nil(t, err)
 
-	if req, err := http.NewRequestWithContext(CreateContextWithOwnerId(userId), "GET", endpoint, nil); err != nil {
+	if req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), "GET", endpoint, nil); err != nil {
 		t.Fatal(err)
 	} else {
 		q := url.Values{}
@@ -143,7 +143,7 @@ func TestResources_ListSavedQueries_InvalidSkip(t *testing.T) {
 	userId, err := uuid2.NewV4()
 	require.Nil(t, err)
 
-	if req, err := http.NewRequestWithContext(CreateContextWithOwnerId(userId), "GET", endpoint, nil); err != nil {
+	if req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), "GET", endpoint, nil); err != nil {
 		t.Fatal(err)
 	} else {
 		q := url.Values{}
@@ -173,7 +173,7 @@ func TestResources_ListSavedQueries_InvalidLimit(t *testing.T) {
 	userId, err := uuid2.NewV4()
 	require.Nil(t, err)
 
-	if req, err := http.NewRequestWithContext(CreateContextWithOwnerId(userId), "GET", endpoint, nil); err != nil {
+	if req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), "GET", endpoint, nil); err != nil {
 		t.Fatal(err)
 	} else {
 		q := url.Values{}
@@ -206,7 +206,7 @@ func TestResources_ListSavedQueries_DBError(t *testing.T) {
 
 	mockDB.EXPECT().ListSavedQueries(userId, "", model.SQLFilter{}, 0, 10000).Return(model.SavedQueries{}, 0, fmt.Errorf("foo"))
 
-	if req, err := http.NewRequestWithContext(CreateContextWithOwnerId(userId), "GET", endpoint, nil); err != nil {
+	if req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), "GET", endpoint, nil); err != nil {
 		t.Fatal(err)
 	} else {
 		req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
@@ -241,7 +241,7 @@ func TestResources_ListSavedQueries(t *testing.T) {
 		},
 	}, 1, nil)
 
-	if req, err := http.NewRequestWithContext(CreateContextWithOwnerId(userId), "GET", endpoint, nil); err != nil {
+	if req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), "GET", endpoint, nil); err != nil {
 		t.Fatal(err)
 	} else {
 		q := url.Values{}
@@ -276,7 +276,7 @@ func TestResources_CreateSavedQuery_InvalidBody(t *testing.T) {
 
 	payload := "foobar"
 
-	req, err := http.NewRequestWithContext(CreateContextWithOwnerId(userId), "POST", endpoint, must.MarshalJSONReader(payload))
+	req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), "POST", endpoint, must.MarshalJSONReader(payload))
 	require.Nil(t, err)
 
 	req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
@@ -303,7 +303,7 @@ func TestResources_CreateSavedQuery_EmptyBody(t *testing.T) {
 
 	payload := v2.CreateSavedQueryRequest{}
 
-	req, err := http.NewRequestWithContext(CreateContextWithOwnerId(userId), "POST", endpoint, must.MarshalJSONReader(payload))
+	req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), "POST", endpoint, must.MarshalJSONReader(payload))
 	require.Nil(t, err)
 
 	req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
@@ -336,7 +336,7 @@ func TestResources_CreateSavedQuery_DuplicateName(t *testing.T) {
 		Name:  "myQuery",
 	}
 
-	req, err := http.NewRequestWithContext(CreateContextWithOwnerId(userId), "POST", endpoint, must.MarshalJSONReader(payload))
+	req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), "POST", endpoint, must.MarshalJSONReader(payload))
 	require.Nil(t, err)
 
 	req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
@@ -369,7 +369,7 @@ func TestResources_CreateSavedQuery_CreateFailure(t *testing.T) {
 
 	mockDB.EXPECT().CreateSavedQuery(userId, payload.Name, payload.Query).Return(model.SavedQuery{}, fmt.Errorf("foo"))
 
-	req, err := http.NewRequestWithContext(CreateContextWithOwnerId(userId), "POST", endpoint, must.MarshalJSONReader(payload))
+	req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), "POST", endpoint, must.MarshalJSONReader(payload))
 	require.Nil(t, err)
 
 	req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
@@ -405,7 +405,7 @@ func TestResources_CreateSavedQuery(t *testing.T) {
 		Query:  payload.Query,
 	}, nil)
 
-	req, err := http.NewRequestWithContext(CreateContextWithOwnerId(userId), "POST", endpoint, must.MarshalJSONReader(payload))
+	req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), "POST", endpoint, must.MarshalJSONReader(payload))
 	require.Nil(t, err)
 
 	req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
@@ -429,7 +429,7 @@ func TestResources_DeleteSavedQuery_IDMalformed(t *testing.T) {
 	userId, err := uuid2.NewV4()
 	require.Nil(t, err)
 
-	req, err := http.NewRequestWithContext(CreateContextWithOwnerId(userId), "DELETE", "/api/v2/saved-queries/-1", nil)
+	req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), "DELETE", "/api/v2/saved-queries/-1", nil)
 	require.Nil(t, err)
 
 	req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
@@ -459,7 +459,7 @@ func TestResources_DeleteSavedQuery_DBError(t *testing.T) {
 
 	mockDB.EXPECT().SavedQueryBelongsToUser(gomock.Any(), gomock.Any()).Return(false, fmt.Errorf("foo"))
 
-	req, err := http.NewRequestWithContext(CreateContextWithOwnerId(userId), "DELETE", fmt.Sprintf(endpoint, savedQueryId), nil)
+	req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), "DELETE", fmt.Sprintf(endpoint, savedQueryId), nil)
 	require.Nil(t, err)
 
 	req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
@@ -488,7 +488,7 @@ func TestResources_DeleteSavedQuery_QueryDoesNotBelongToUser(t *testing.T) {
 
 	mockDB.EXPECT().SavedQueryBelongsToUser(gomock.Any(), gomock.Any()).Return(false, nil)
 
-	req, err := http.NewRequestWithContext(CreateContextWithOwnerId(userId), "DELETE", fmt.Sprintf(endpoint, savedQueryId), nil)
+	req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), "DELETE", fmt.Sprintf(endpoint, savedQueryId), nil)
 	require.Nil(t, err)
 
 	req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
@@ -518,7 +518,7 @@ func TestResources_DeleteSavedQuery_RecordNotFound(t *testing.T) {
 
 	mockDB.EXPECT().SavedQueryBelongsToUser(gomock.Any(), gomock.Any()).Return(false, database.ErrNotFound)
 
-	req, err := http.NewRequestWithContext(CreateContextWithOwnerId(userId), "DELETE", fmt.Sprintf(endpoint, savedQueryId), nil)
+	req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), "DELETE", fmt.Sprintf(endpoint, savedQueryId), nil)
 	require.Nil(t, err)
 
 	req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
@@ -549,7 +549,7 @@ func TestResources_DeleteSavedQuery_RecordNotFound_EdgeCase(t *testing.T) {
 	mockDB.EXPECT().SavedQueryBelongsToUser(gomock.Any(), gomock.Any()).Return(true, nil)
 	mockDB.EXPECT().DeleteSavedQuery(gomock.Any()).Return(database.ErrNotFound)
 
-	req, err := http.NewRequestWithContext(CreateContextWithOwnerId(userId), "DELETE", fmt.Sprintf(endpoint, savedQueryId), nil)
+	req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), "DELETE", fmt.Sprintf(endpoint, savedQueryId), nil)
 	require.Nil(t, err)
 
 	req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
@@ -580,7 +580,7 @@ func TestResources_DeleteSavedQuery_DeleteError(t *testing.T) {
 	mockDB.EXPECT().SavedQueryBelongsToUser(gomock.Any(), gomock.Any()).Return(true, nil)
 	mockDB.EXPECT().DeleteSavedQuery(gomock.Any()).Return(fmt.Errorf("foo"))
 
-	req, err := http.NewRequestWithContext(CreateContextWithOwnerId(userId), "DELETE", fmt.Sprintf(endpoint, savedQueryId), nil)
+	req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), "DELETE", fmt.Sprintf(endpoint, savedQueryId), nil)
 	require.Nil(t, err)
 
 	req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
@@ -611,7 +611,7 @@ func TestResources_DeleteSavedQuery(t *testing.T) {
 	mockDB.EXPECT().SavedQueryBelongsToUser(gomock.Any(), gomock.Any()).Return(true, nil)
 	mockDB.EXPECT().DeleteSavedQuery(gomock.Any()).Return(nil)
 
-	req, err := http.NewRequestWithContext(CreateContextWithOwnerId(userId), "DELETE", fmt.Sprintf(endpoint, savedQueryId), nil)
+	req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), "DELETE", fmt.Sprintf(endpoint, savedQueryId), nil)
 	require.Nil(t, err)
 
 	req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
