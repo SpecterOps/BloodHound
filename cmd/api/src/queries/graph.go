@@ -899,7 +899,7 @@ func addTagsToSelector(ctx context.Context, graphQuery *GraphQuery, db agi.AgiDa
 			if assetGroupNodes, err := ops.FetchNodes(tx.Nodes().Filterf(func() graph.Criteria {
 				return query.And(
 					query.KindIn(query.Node(), ad.Entity, azure.Entity),
-					query.In(query.NodeProperty(common.ObjectID.String()), assetGroup.Selectors.Strings()),
+					query.Equals(query.NodeProperty(common.ObjectID.String()), selector.Selector),
 					query.Not(query.StringContains(query.NodeProperty(tagPropertyStr), assetGroup.Tag)),
 				)
 			})); err != nil {
@@ -941,7 +941,7 @@ func removeTagsFromSelector(ctx context.Context, graphQuery *GraphQuery, db agi.
 			if assetGroupNodes, err := ops.FetchNodes(tx.Nodes().Filterf(func() graph.Criteria {
 				return query.And(
 					query.KindIn(query.Node(), ad.Entity, azure.Entity),
-					query.In(query.NodeProperty(common.ObjectID.String()), assetGroup.Selectors.Strings()),
+					query.Equals(query.NodeProperty(common.ObjectID.String()), selector.Selector),
 					query.StringContains(query.NodeProperty(tagPropertyStr), assetGroup.Tag),
 				)
 			})); err != nil {
