@@ -19,3 +19,21 @@ ALTER TABLE IF EXISTS ONLY asset_group_selectors
 
 ALTER TABLE IF EXISTS ONLY asset_group_selectors
   ADD CONSTRAINT asset_group_selectors_name_assetgroupid_key UNIQUE (name, asset_group_id);
+
+ALTER TABLE IF EXISTS ONLY asset_group_selectors
+  DROP CONSTRAINT IF EXISTS asset_group_selectors_unique_name;
+
+ALTER TABLE IF EXISTS ONLY asset_group_selectors
+  DROP CONSTRAINT IF EXISTS asset_group_selectors_name_key;
+
+ALTER TABLE IF EXISTS ONLY asset_group_selectors
+  DROP CONSTRAINT IF EXISTS idx_asset_group_selectors_name;
+
+ALTER TABLE IF EXISTS ONLY asset_group_selectors
+  DROP CONSTRAINT IF EXISTS idx_asset_group_selectors_deleted_at;
+
+ALTER TABLE IF EXISTS ONLY asset_group_selectors
+  DROP CONSTRAINT IF EXISTS asset_group_selectors_name_unique;
+
+ALTER TABLE IF EXISTS ONLY asset_group_selectors
+  DROP CONSTRAINT IF EXISTS asset_group_selectors_name_assetgroupid_key;
