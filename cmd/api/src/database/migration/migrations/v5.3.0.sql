@@ -14,7 +14,7 @@
 --
 -- SPDX-License-Identifier: Apache-2.0
 
--- drop any known existing keys
+-- drop any keys known to exist
 ALTER TABLE IF EXISTS ONLY asset_group_selectors
   DROP CONSTRAINT IF EXISTS asset_group_selectors_name_key;
 
@@ -36,6 +36,6 @@ ALTER TABLE IF EXISTS ONLY asset_group_selectors
 ALTER TABLE IF EXISTS ONLY asset_group_selectors
   DROP CONSTRAINT IF EXISTS asset_group_selectors_name_assetgroupid_key;
 
--- create the only key we care about
+-- create the key we care about
 ALTER TABLE IF EXISTS ONLY asset_group_selectors
   ADD CONSTRAINT asset_group_selectors_name_assetgroupid_key UNIQUE (name, asset_group_id);
