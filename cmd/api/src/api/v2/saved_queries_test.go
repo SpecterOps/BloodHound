@@ -624,7 +624,7 @@ func TestResources_DeleteSavedQuery(t *testing.T) {
 	require.Equal(t, http.StatusNoContent, response.Code)
 }
 
-func CreateContextWithOwnerId(id uuid2.UUID) context.Context {
+func createContextWithOwnerId(id uuid2.UUID) context.Context {
 	bhCtx := ctx.Context{
 		RequestID: "",
 		AuthCtx: auth.Context{
