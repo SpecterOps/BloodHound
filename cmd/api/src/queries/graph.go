@@ -913,7 +913,11 @@ func addTagsToSelector(ctx context.Context, graphQuery *GraphQuery, db agi.AgiDa
 							return err
 						}
 					} else if !strings.Contains(tags, assetGroup.Tag) {
-						node.Properties.Set(tagPropertyStr, tags+" "+assetGroup.Tag)
+						if len(tags) == 0 {
+							node.Properties.Set(tagPropertyStr, assetGroup.Tag)
+						} else { // add a space and append if there are existing tags
+							node.Properties.Set(tagPropertyStr, tags+" "+assetGroup.Tag)
+						}
 
 						if err = tx.UpdateNode(node); err != nil {
 							return err
