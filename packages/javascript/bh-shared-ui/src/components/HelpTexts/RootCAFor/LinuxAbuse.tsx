@@ -20,7 +20,7 @@ import { Typography } from '@mui/material';
 const Abuse: FC = () => {
     return (
         <Typography variant='body2'>
-            An attacker may perform several attacks that rely on the existence of a root CA, such as ESC-1. This edge
+            An attacker may perform several attacks that rely on the existence of a root CA, such as ESC1. This edge
             alone is not enough to escalate rights or impersonate other principals. This edge may contribute to other
             edges and attributes, from which an escalation opportunity may emerge.
         </Typography>
