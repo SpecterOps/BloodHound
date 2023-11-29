@@ -18,109 +18,113 @@ import { act } from 'react-dom/test-utils';
 import { render, screen } from 'src/test-utils';
 import PathfindingSearch from './PathfindingSearch';
 import userEvent from '@testing-library/user-event';
+import { setupServer } from 'msw/node';
+import { rest } from 'msw';
+import * as actions from 'src/ducks/searchbar/actions';
 
-describe('Pathfinding', () => {
+describe('Pathfinding: interaction', () => {
+    const comboboxLookaheadOptions = {
+        data: [
+            {
+                name: 'admin',
+                objectid: '1',
+                type: 'User',
+            },
+            {
+                name: 'computer',
+                objectid: '2',
+                type: 'Computer',
+            },
+        ],
+    };
+
+    const server = setupServer(
+        rest.get('/api/v2/search', (req, res, ctx) => {
+            return res(ctx.json(comboboxLookaheadOptions));
+        })
+    );
+
     beforeEach(async () => {
         await act(async () => {
             render(<PathfindingSearch />);
         });
     });
 
-    it('should open path filtering dialog', async () => {
+    beforeAll(() => server.listen());
+    afterEach(() => server.resetHandlers());
+    afterAll(() => server.close());
+
+    it('when user performs a pathfinding search, the swap button is disabled until both the start and destination nodes are provided', async () => {
         const user = userEvent.setup();
 
-        const dialog = screen.queryByRole('dialog', { name: /path edge filtering/i });
-        expect(dialog).toBeNull();
+        const swapButton = screen.getByRole('button', { name: /right-left/i });
+        expect(swapButton).toBeDisabled();
 
-        const pathfindingButton = screen.getByRole('button', { name: /filter/i });
-        await user.click(pathfindingButton);
+        const startInput = screen.getByPlaceholderText(/start node/i);
+        await user.type(startInput, 'admin');
+        await user.click(await screen.findByRole('option', { name: /admin/i }));
 
-        expect(screen.queryByRole('dialog', { name: /path edge filtering/i })).toBeInTheDocument();
+        expect(swapButton).toBeDisabled();
+
+        const destinationInput = screen.getByPlaceholderText(/destination node/i);
+        await user.type(destinationInput, 'admin');
+        await user.click(await screen.findByRole('option', { name: /admin/i }));
+
+        expect(swapButton).toBeEnabled();
     });
 
-    it('should close the path filtering dialog when user clicks cancel button', async () => {
+    it('when user performs a pathfinding search, and then clicks the swap button, the start and destination inputs are swapped', async () => {
         const user = userEvent.setup();
 
-        const pathfindingButton = screen.getByRole('button', { name: /filter/i });
-        await user.click(pathfindingButton);
+        const swapButton = screen.getByRole('button', { name: /right-left/i });
+        expect(swapButton).toBeDisabled();
 
-        const dialog = screen.queryByRole('dialog', { name: /path edge filtering/i });
-        expect(dialog).toBeInTheDocument();
+        const startInput = screen.getByPlaceholderText(/start node/i);
+        await user.type(startInput, 'admin');
+        await user.click(await screen.findByRole('option', { name: /admin/i }));
 
-        const cancelButton = screen.getByRole('button', { name: /cancel/i });
-        await user.click(cancelButton);
+        const destinationInput = screen.getByPlaceholderText(/destination node/i);
+        await user.type(destinationInput, 'computer');
+        await user.click(await screen.findByRole('option', { name: /computer/i }));
 
-        expect(dialog).not.toBeVisible();
+        expect(startInput).toHaveValue('admin');
+        expect(destinationInput).toHaveValue('computer');
+
+        await user.click(swapButton);
+
+        expect(startInput).toHaveValue('computer');
+        expect(destinationInput).toHaveValue('admin');
     });
 
-    it('should close the path filtering dialog when user clicks apply button', async () => {
+    it('executes a primary search when only a source node is provided', async () => {
         const user = userEvent.setup();
+        const spy = vi.spyOn(actions, 'sourceNodeSelected');
 
-        const pathfindingButton = screen.getByRole('button', { name: /filter/i });
-        await user.click(pathfindingButton);
+        const startInput = screen.getByPlaceholderText(/start node/i);
+        await user.type(startInput, 'admin');
+        await user.click(await screen.findByRole('option', { name: /admin/i }));
 
-        const cancelButton = screen.getByRole('button', { name: /apply/i });
-        await user.click(cancelButton);
-
-        const dialog = screen.getByRole('dialog', { name: /path edge filtering/i });
-        expect(dialog).not.toBeVisible();
+        expect(spy).toHaveBeenCalledTimes(1);
+        expect(spy).toHaveBeenCalledWith(comboboxLookaheadOptions.data[0]);
     });
 
-    it('filter selections are rolled back if user closes modal with the cancel button', async () => {
+    it('executes a pathfinding search when both a source and destination node are provided', async () => {
         const user = userEvent.setup();
+        const sourceNodeSelectedSpy = vi.spyOn(actions, 'sourceNodeSelected');
+        const destinationNodeSelectedSpy = vi.spyOn(actions, 'destinationNodeSelected');
 
-        // 1: open dialog
-        const toggleDialogButton = screen.getByRole('button', { name: /filter/i });
-        await user.click(toggleDialogButton);
+        const startInput = screen.getByPlaceholderText(/start node/i);
+        await user.type(startInput, 'admin');
+        await user.click(await screen.findByRole('option', { name: /admin/i }));
 
-        const activeDirectoryCategoryCheckbox = screen.getByRole('checkbox', { name: /active directory/i });
-        expect(activeDirectoryCategoryCheckbox).toBeChecked();
+        expect(sourceNodeSelectedSpy).toHaveBeenCalledTimes(1);
+        expect(sourceNodeSelectedSpy).toHaveBeenCalledWith(comboboxLookaheadOptions.data[0]);
 
-        // 2: click active directory category, deselecting those edges
-        await user.click(activeDirectoryCategoryCheckbox);
-        expect(activeDirectoryCategoryCheckbox).not.toBeChecked();
+        const destinationInput = screen.getByPlaceholderText(/destination node/i);
+        await user.type(destinationInput, 'computer');
+        await user.click(await screen.findByRole('option', { name: /computer/i }));
 
-        // 3: click apply to persist changes
-        const applyButton = screen.getByRole('button', { name: /apply/i });
-        await user.click(applyButton);
-
-        // 4. open dialog again
-        await user.click(toggleDialogButton);
-
-        // 5. click active directory category, re-selecting those edges
-        await user.click(activeDirectoryCategoryCheckbox);
-
-        // 6. close the dialog with the cancel button, undoing the changes made above
-        const cancelButton = screen.getByRole('button', { name: /cancel/i });
-        await user.click(cancelButton);
-
-        // 7. open dialog a third time, active directory category should be unselected
-        await user.click(toggleDialogButton);
-        expect(activeDirectoryCategoryCheckbox).not.toBeChecked();
-    });
-
-    it('filter selections are persisted if user closes modal with the apply button', async () => {
-        const user = userEvent.setup();
-
-        const pathfindingButton = screen.getByRole('button', { name: /filter/i });
-        await user.click(pathfindingButton);
-
-        const categoryADCheckbox = screen.getByRole('checkbox', { name: /active directory/i });
-        const categoryAzureCheckbox = screen.getByRole('checkbox', { name: /azure/i });
-        expect(categoryADCheckbox).toBeChecked();
-        expect(categoryAzureCheckbox).toBeChecked();
-
-        await user.click(categoryADCheckbox);
-        await user.click(categoryAzureCheckbox);
-
-        expect(categoryADCheckbox).not.toBeChecked();
-        expect(categoryAzureCheckbox).not.toBeChecked();
-
-        const applyButton = screen.getByRole('button', { name: /apply/i });
-        await user.click(applyButton);
-
-        await user.click(pathfindingButton);
-        expect(categoryADCheckbox).not.toBeChecked();
-        expect(categoryAzureCheckbox).not.toBeChecked();
+        expect(destinationNodeSelectedSpy).toHaveBeenCalledTimes(1);
+        expect(destinationNodeSelectedSpy).toHaveBeenCalledWith(comboboxLookaheadOptions.data[1]);
     });
 });

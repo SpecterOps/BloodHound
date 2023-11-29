@@ -19,6 +19,9 @@ import { act, render, screen, waitFor } from 'src/test-utils';
 import ExploreSearch from '.';
 import { setupServer } from 'msw/node';
 import { rest } from 'msw';
+import * as actions from 'src/ducks/searchbar/actions';
+import { PRIMARY_SEARCH, PATHFINDING_SEARCH, CYPHER_SEARCH } from 'src/ducks/searchbar/types';
+import { initialSearchState } from 'src/ducks/searchbar/reducer';
 
 describe('ExploreSearch rendering per tab', async () => {
     let container: HTMLElement;
@@ -78,42 +81,66 @@ describe('ExploreSearch rendering per tab', async () => {
     });
 });
 
-describe('ExploreSearch rendering stored redux state', async () => {
-    // skipping due to redux action being triggered when it shouldn't and we don't know why.
-    it.skip('should render the pathfinding tab by default if a pathfinding search has been saved in redux (e.g. when moving from attack paths -> explore page) ', async () => {
-        const sourceNode = {
-            objectid: '1',
-            label: 'beep',
-            type: 'Computer',
-            name: 'computer a',
-        };
-        const destinationNode = {
-            objectid: '2',
-            label: 'boop',
-            type: 'Computer',
-            name: 'computer b',
-        };
-
+describe('ExploreSearch handles search on tab changing', async () => {
+    it('should perform a primary search when the user clicks the `Search` tab', async () => {
         await act(async () => {
             render(<ExploreSearch />, {
                 initialState: {
                     search: {
-                        primary: {
-                            value: sourceNode,
-                        },
-                        secondary: {
-                            value: destinationNode,
-                        },
+                        ...initialSearchState,
+                        activeTab: PATHFINDING_SEARCH,
                     },
                 },
             });
         });
 
-        const sourceNodeInput = screen.getByLabelText(/start node/i);
-        const destinationNodeInput = screen.getByLabelText(/destination node/i);
+        const user = userEvent.setup();
+        const primarySearchSpy = vi.spyOn(actions, 'primarySearch');
+        const tabChangedSpy = vi.spyOn(actions, 'tabChanged');
 
-        expect(sourceNodeInput).toHaveValue(sourceNode.name);
-        expect(destinationNodeInput).toHaveValue(destinationNode.name);
+        const searchTab = screen.getByRole('tab', { name: /search/i });
+        await user.click(searchTab);
+
+        expect(primarySearchSpy).toHaveBeenCalledTimes(1);
+
+        expect(tabChangedSpy).toHaveBeenCalledTimes(1);
+        expect(tabChangedSpy).toHaveBeenCalledWith(PRIMARY_SEARCH);
+    });
+
+    it('should perform a pathfinding search when the user clicks the `pathfinding` tab', async () => {
+        await act(async () => {
+            render(<ExploreSearch />);
+        });
+
+        const user = userEvent.setup();
+        const pathfindingSearchSpy = vi.spyOn(actions, 'pathfindingSearch');
+        const tabChangedSpy = vi.spyOn(actions, 'tabChanged');
+
+        const pathfindingTab = screen.getByRole('tab', { name: /pathfinding/i });
+        await user.click(pathfindingTab);
+
+        expect(pathfindingSearchSpy).toHaveBeenCalledTimes(1);
+
+        expect(tabChangedSpy).toHaveBeenCalledTimes(1);
+        expect(tabChangedSpy).toHaveBeenCalledWith(PATHFINDING_SEARCH);
+    });
+
+    it('should perform a cypher search when the user clicks the `cypher` tab', async () => {
+        await act(async () => {
+            render(<ExploreSearch />);
+        });
+
+        const user = userEvent.setup();
+        const cypherSearchSpy = vi.spyOn(actions, 'cypherSearch');
+        const tabChangedSpy = vi.spyOn(actions, 'tabChanged');
+
+        const cypherTab = screen.getByRole('tab', { name: /cypher/i });
+        await user.click(cypherTab);
+
+        expect(cypherSearchSpy).toHaveBeenCalledTimes(1);
+
+        expect(tabChangedSpy).toHaveBeenCalledTimes(1);
+        expect(tabChangedSpy).toHaveBeenCalledWith(CYPHER_SEARCH);
     });
 });
 
@@ -165,48 +192,6 @@ describe('ExploreSearch interaction', () => {
         await user.click(pathfindingTab);
         const startNodeInputField = screen.getByPlaceholderText(/start node/i);
         expect(startNodeInputField).toHaveValue(userSuppliedSearchTerm);
-    });
-
-    it('when user performs a pathfinding search, the swap button is disabled until both the start and destination nodes are provided', async () => {
-        const pathfindingTab = screen.getByRole('tab', { name: /pathfinding/i });
-        await user.click(pathfindingTab);
-
-        const swapButton = screen.getByRole('button', { name: /right-left/i });
-        expect(swapButton).toBeDisabled();
-
-        const startInput = screen.getByPlaceholderText(/start node/i);
-        await user.type(startInput, 'admin');
-        await user.click(await screen.findByRole('option', { name: /admin/i }));
-
-        const destinationInput = screen.getByPlaceholderText(/destination node/i);
-        await user.type(destinationInput, 'admin');
-        await user.click(await screen.findByRole('option', { name: /admin/i }));
-
-        expect(swapButton).toBeEnabled();
-    });
-
-    it('when user performs a pathfinding search, and then clicks the swap button, the start and destination inputs are swapped', async () => {
-        const pathfindingTab = screen.getByRole('tab', { name: /pathfinding/i });
-        await user.click(pathfindingTab);
-
-        const swapButton = screen.getByRole('button', { name: /right-left/i });
-        expect(swapButton).toBeDisabled();
-
-        const startInput = screen.getByPlaceholderText(/start node/i);
-        await user.type(startInput, 'admin');
-        await user.click(await screen.findByRole('option', { name: /admin/i }));
-
-        const destinationInput = screen.getByPlaceholderText(/destination node/i);
-        await user.type(destinationInput, 'computer');
-        await user.click(await screen.findByRole('option', { name: /computer/i }));
-
-        expect(startInput).toHaveValue('admin');
-        expect(destinationInput).toHaveValue('computer');
-
-        await user.click(swapButton);
-
-        expect(startInput).toHaveValue('computer');
-        expect(destinationInput).toHaveValue('admin');
     });
 
     it('when user performs a pathfinding search, the selection for the start node is carried over to the `search` tab', async () => {

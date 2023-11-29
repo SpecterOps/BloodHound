@@ -14,55 +14,29 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { useDispatch, useSelector } from 'react-redux';
+import { useSelector } from 'react-redux';
 import ExploreSearchCombobox from '../ExploreSearchCombobox';
-import { useEffect, useState } from 'react';
-import { AppState } from 'src/store';
-import { PRIMARY_SEARCH, SEARCH_TYPE_EXACT, SECONDARY_SEARCH, SearchNodeType } from 'src/ducks/searchbar/types';
-import { setSearchValue, startSearchSelected } from 'src/ducks/searchbar/actions';
+import { SearchNodeType, SourceNodeEditedAction, SourceNodeSelectedAction } from 'src/ducks/searchbar/types';
+import { AppState, useAppDispatch } from 'src/store';
+import { sourceNodeEdited, sourceNodeSelected } from 'src/ducks/searchbar/actions';
 
-interface NodeSearchProps {
-    labelText: string;
-    searchType: typeof PRIMARY_SEARCH | typeof SECONDARY_SEARCH;
-}
+const NodeSearch = () => {
+    const dispatch = useAppDispatch();
 
-const NodeSearch = ({ searchType, labelText }: NodeSearchProps) => {
-    const dispatch = useDispatch();
+    const primary = useSelector((state: AppState) => state.search.primary);
+    const { searchTerm, value: selectedItem } = primary;
 
-    const [inputValue, setInputValue] = useState('');
-    const [selectedItem, setSelectedItem] = useState<SearchNodeType | null>(null);
-
-    const searchState = useSelector((state: AppState) => state.search[searchType]);
-
-    useEffect(() => {
-        if (searchState.value) {
-            setInputValue(searchState.value!.name);
-            setSelectedItem(searchState.value);
-        }
-    }, [searchState]);
-
-    useEffect(() => {
-        if (selectedItem) {
-            dispatch(setSearchValue(selectedItem, searchType, SEARCH_TYPE_EXACT));
-            dispatch(startSearchSelected(searchType));
-        }
-    }, [selectedItem, searchType, dispatch]);
-
-    const handleInputValueChange = ({ inputValue }: any) => {
-        setInputValue(inputValue || '');
-    };
-
-    const handleSelectedItemChange = ({ selectedItem }: any) => {
-        setSelectedItem(selectedItem);
-    };
+    const handleNodeEdited = (edit: string): SourceNodeEditedAction => dispatch(sourceNodeEdited(edit));
+    const handleNodeSelected = (selected: SearchNodeType): SourceNodeSelectedAction =>
+        dispatch(sourceNodeSelected(selected));
 
     return (
         <ExploreSearchCombobox
-            inputValue={inputValue}
-            onInputValueChange={handleInputValueChange}
+            labelText={'Search Nodes'}
+            inputValue={searchTerm}
             selectedItem={selectedItem}
-            onSelectedItemChange={handleSelectedItemChange}
-            labelText={labelText}
+            handleNodeEdited={handleNodeEdited}
+            handleNodeSelected={handleNodeSelected}
         />
     );
 };
