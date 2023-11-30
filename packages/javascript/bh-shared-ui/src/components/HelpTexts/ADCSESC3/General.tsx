@@ -28,7 +28,7 @@ const General: FC<EdgeInfoProps> = ({ sourceName, sourceType, targetName }) => {
             </Typography>
             <Typography variant='body2'>
                 The principal has permission to enroll on a certificate template with the Certificate Request Agent EKU
-                (OID 1.3.6.1.4.1.311.20.2.1), allowing them to obtain an enrollement agent certificate. They also have
+                (OID 1.3.6.1.4.1.311.20.2.1), allowing them to obtain an enrollment agent certificate. They also have
                 permission to enroll for a certificate template that permits enrollment by enrollment agents and can be
                 used for authentication. Additionally, they also have enrollment permissions for an enterprise CA with
                 the necessary templates published. This enterprise CA is trusted for NT authentication in the forest,

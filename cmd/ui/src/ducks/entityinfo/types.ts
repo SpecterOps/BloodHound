@@ -133,7 +133,7 @@ export interface EnterpriseCAInfo extends EntityInfo {
         certthumbprint: string;
         dnshostname: string;
         enrollmentagentrestrictionscollected: boolean;
-        flags: 10;
+        flags: string;
         hasbasicconstraints: boolean;
         hasenrollmentagentrestrictions?: boolean;
         isuserspecifiessanenabled?: boolean;
