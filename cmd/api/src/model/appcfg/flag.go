@@ -79,7 +79,7 @@ func AvailableFlags() FeatureFlagSet {
 			Name:          "Enable collection and processing of ADCS data",
 			Description:   "Enables the ability to analyze ADCS data for creating ADCS attack paths",
 			Enabled:       false,
-			UserUpdatable: false,
+			UserUpdatable: true,
 		},
 	}
 }
