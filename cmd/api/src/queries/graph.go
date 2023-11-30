@@ -896,33 +896,25 @@ func addTagsToSelector(ctx context.Context, graphQuery *GraphQuery, db agi.AgiDa
 				tagPropertyStr = common.UserTags.String()
 			}
 
-			if assetGroupNodes, err := ops.FetchNodes(tx.Nodes().Filterf(func() graph.Criteria {
-				return query.And(
-					query.KindIn(query.Node(), ad.Entity, azure.Entity),
-					query.Equals(query.NodeProperty(common.ObjectID.String()), selector.Selector),
-					query.Not(query.StringContains(query.NodeProperty(tagPropertyStr), assetGroup.Tag)),
-				)
-			})); err != nil {
+			if node, err := analysis.FetchNodeByObjectID(tx, selector.Selector); err != nil {
 				return err
 			} else {
-				for _, node := range assetGroupNodes {
-					if tags, err := node.Properties.Get(tagPropertyStr).String(); err != nil {
-						if graph.IsErrPropertyNotFound(err) {
-							node.Properties.Set(tagPropertyStr, assetGroup.Tag)
-						} else {
-							return err
-						}
-					} else if !strings.Contains(tags, assetGroup.Tag) {
-						if len(tags) == 0 {
-							node.Properties.Set(tagPropertyStr, assetGroup.Tag)
-						} else { // add a space and append if there are existing tags
-							node.Properties.Set(tagPropertyStr, tags+" "+assetGroup.Tag)
-						}
-
-						if err = tx.UpdateNode(node); err != nil {
-							return err
-						}
+				if tags, err := node.Properties.Get(tagPropertyStr).String(); err != nil {
+					if graph.IsErrPropertyNotFound(err) {
+						node.Properties.Set(tagPropertyStr, assetGroup.Tag)
+					} else {
+						return err
 					}
+				} else if !strings.Contains(tags, assetGroup.Tag) {
+					if len(tags) == 0 {
+						node.Properties.Set(tagPropertyStr, assetGroup.Tag)
+					} else { // add a space and append if there are existing tags
+						node.Properties.Set(tagPropertyStr, tags+" "+assetGroup.Tag)
+					}
+				}
+
+				if err = tx.UpdateNode(node); err != nil {
+					return err
 				}
 			}
 
@@ -942,31 +934,23 @@ func removeTagsFromSelector(ctx context.Context, graphQuery *GraphQuery, db agi.
 				tagPropertyStr = common.UserTags.String()
 			}
 
-			if assetGroupNodes, err := ops.FetchNodes(tx.Nodes().Filterf(func() graph.Criteria {
-				return query.And(
-					query.KindIn(query.Node(), ad.Entity, azure.Entity),
-					query.Equals(query.NodeProperty(common.ObjectID.String()), selector.Selector),
-					query.StringContains(query.NodeProperty(tagPropertyStr), assetGroup.Tag),
-				)
-			})); err != nil {
+			if node, err := analysis.FetchNodeByObjectID(tx, selector.Selector); err != nil {
 				return err
 			} else {
-				for _, node := range assetGroupNodes {
-					if tags, err := node.Properties.Get(tagPropertyStr).String(); err != nil {
-						if graph.IsErrPropertyNotFound(err) {
-							node.Properties.Set(tagPropertyStr, assetGroup.Tag)
-						} else {
-							return err
-						}
-					} else if strings.Contains(tags, assetGroup.Tag) {
-						// remove asset group tag and then remove any leftover double whitespace
-						tags = strings.ReplaceAll(strings.ReplaceAll(tags, assetGroup.Tag, ""), "  ", " ")
-						node.Properties.Set(tagPropertyStr, tags)
-
-						if err = tx.UpdateNode(node); err != nil {
-							return err
-						}
+				if tags, err := node.Properties.Get(tagPropertyStr).String(); err != nil {
+					if graph.IsErrPropertyNotFound(err) {
+						node.Properties.Set(tagPropertyStr, assetGroup.Tag)
+					} else {
+						return err
 					}
+				} else if strings.Contains(tags, assetGroup.Tag) {
+					// remove asset group tag and then remove any leftover double whitespace
+					tags = strings.ReplaceAll(strings.ReplaceAll(tags, assetGroup.Tag, ""), "  ", " ")
+					node.Properties.Set(tagPropertyStr, tags)
+				}
+
+				if err = tx.UpdateNode(node); err != nil {
+					return err
 				}
 			}
 
