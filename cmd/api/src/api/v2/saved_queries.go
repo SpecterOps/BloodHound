@@ -25,6 +25,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/specterops/bloodhound/src/api"
+	"github.com/specterops/bloodhound/src/auth"
 	ctx2 "github.com/specterops/bloodhound/src/ctx"
 	"github.com/specterops/bloodhound/src/database"
 	"github.com/specterops/bloodhound/src/model"
@@ -37,7 +38,6 @@ func (s Resources) ListSavedQueries(response http.ResponseWriter, request *http.
 		queryParams   = request.URL.Query()
 		sortByColumns = queryParams[api.QueryParameterSortBy]
 		savedQueries  model.SavedQueries
-		userID        = ctx2.FromRequest(request).AuthCtx.Session.UserID
 	)
 
 	for _, column := range sortByColumns {
@@ -81,13 +81,15 @@ func (s Resources) ListSavedQueries(response http.ResponseWriter, request *http.
 			}
 		}
 
-		if sqlFilter, err := queryFilters.BuildSQLFilter(); err != nil {
+		if user, isUser := auth.GetUserFromAuthCtx(ctx2.FromRequest(request).AuthCtx); !isUser {
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "No associated user found", request), response)
+		} else if sqlFilter, err := queryFilters.BuildSQLFilter(); err != nil {
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "error building SQL for filter", request), response)
 		} else if skip, err := ParseSkipQueryParameter(queryParams, 0); err != nil {
 			api.WriteErrorResponse(request.Context(), ErrBadQueryParameter(request, model.PaginationQueryParameterSkip, err), response)
 		} else if limit, err := ParseLimitQueryParameter(queryParams, 10000); err != nil {
 			api.WriteErrorResponse(request.Context(), ErrBadQueryParameter(request, model.PaginationQueryParameterLimit, err), response)
-		} else if queries, count, err := s.DB.ListSavedQueries(userID, strings.Join(order, ", "), sqlFilter, skip, limit); err != nil {
+		} else if queries, count, err := s.DB.ListSavedQueries(user.ID, strings.Join(order, ", "), sqlFilter, skip, limit); err != nil {
 			api.HandleDatabaseError(request, response, err)
 		} else {
 			api.WriteResponseWrapperWithPagination(request.Context(), queries, limit, skip, count, http.StatusOK, response)
@@ -104,14 +106,15 @@ type CreateSavedQueryRequest struct {
 func (s Resources) CreateSavedQuery(response http.ResponseWriter, request *http.Request) {
 	var (
 		createRequest CreateSavedQueryRequest
-		userID        = ctx2.FromRequest(request).AuthCtx.Session.UserID
 	)
 
-	if err := api.ReadJSONRequestPayloadLimited(&createRequest, request); err != nil {
+	if user, isUser := auth.GetUserFromAuthCtx(ctx2.FromRequest(request).AuthCtx); !isUser {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "No associated user found", request), response)
+	} else if err := api.ReadJSONRequestPayloadLimited(&createRequest, request); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
 	} else if createRequest.Name == "" || createRequest.Query == "" {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "the name and/or query field is empty", request), response)
-	} else if savedQuery, err := s.DB.CreateSavedQuery(userID, createRequest.Name, createRequest.Query); err != nil {
+	} else if savedQuery, err := s.DB.CreateSavedQuery(user.ID, createRequest.Name, createRequest.Query); err != nil {
 		if strings.Contains(err.Error(), "duplicate key value violates unique constraint") {
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "duplicate name for saved query: please choose a different name", request), response)
 		} else {
@@ -125,12 +128,13 @@ func (s Resources) CreateSavedQuery(response http.ResponseWriter, request *http.
 func (s Resources) DeleteSavedQuery(response http.ResponseWriter, request *http.Request) {
 	var (
 		rawSavedQueryID = mux.Vars(request)[api.URIPathVariableSavedQueryID]
-		userID          = ctx2.FromRequest(request).AuthCtx.Session.UserID
 	)
 
-	if savedQueryID, err := strconv.Atoi(rawSavedQueryID); err != nil {
+	if user, isUser := auth.GetUserFromAuthCtx(ctx2.FromRequest(request).AuthCtx); !isUser {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "No associated user found", request), response)
+	} else if savedQueryID, err := strconv.Atoi(rawSavedQueryID); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsIDMalformed, request), response)
-	} else if savedQueryBelongsToUser, err := s.DB.SavedQueryBelongsToUser(userID, savedQueryID); errors.Is(err, database.ErrNotFound) {
+	} else if savedQueryBelongsToUser, err := s.DB.SavedQueryBelongsToUser(user.ID, savedQueryID); errors.Is(err, database.ErrNotFound) {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, "query does not exist", request), response)
 	} else if err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
