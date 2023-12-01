@@ -51,13 +51,13 @@ const GroupManagementContent: FC<{
     const theme = useTheme();
 
     const [selectedDomain, setSelectedDomain] = useState<SelectedDomain | null>(null);
-    const [selectedAssetGroup, setSelectedAssetGroup] = useState<AssetGroup | null>(null);
+    const [selectedAssetGroupId, setSelectedAssetGroupId] = useState<number | null>(null);
     const [filterParams, setFilterParams] = useState<AssetGroupMemberParams>({});
 
     const setInitialGroup = (data: AssetGroup[]) => {
-        if (!selectedAssetGroup && data?.length) {
+        if (!selectedAssetGroupId && data?.length) {
             const initialGroup = data.find((group) => group.tag === tierZeroTag) || data[0];
-            setSelectedAssetGroup(initialGroup);
+            setSelectedAssetGroupId(initialGroup.id);
         }
     };
 
@@ -67,9 +67,11 @@ const GroupManagementContent: FC<{
         { onSuccess: setInitialGroup }
     );
 
+    const selectedAssetGroup = listAssetGroups.data?.find((group) => group.id === selectedAssetGroupId) || null;
+
     const handleAssetGroupSelectorChange = (selectedAssetGroup: DropdownOption) => {
         const selected = listAssetGroups.data?.find((assetGroup) => assetGroup.id === selectedAssetGroup.key);
-        if (selected) setSelectedAssetGroup(selected);
+        if (selected) setSelectedAssetGroupId(selected.id);
     };
 
     const getDomainSelectorProps = () => {
@@ -97,7 +99,7 @@ const GroupManagementContent: FC<{
             filter.environment_id = `eq:${filterDomain?.id}`;
         }
         setFilterParams(filter);
-    }, [selectedDomain, globalDomain, selectedAssetGroup]);
+    }, [selectedDomain, globalDomain, selectedAssetGroupId]);
 
     const selectorLabelStyles = { display: { xs: 'none', xl: 'flex' } };
 

@@ -16,7 +16,7 @@
 
 import { Box, Paper } from '@mui/material';
 import { AssetGroup, AssetGroupMemberParams, UpdateAssetGroupSelectorRequest } from 'js-client-library';
-import { FC, useState } from 'react';
+import { FC, useEffect, useState } from 'react';
 import { AssetGroupChangelog, AssetGroupChangelogEntry, ChangelogAction } from './types';
 import AssetGroupAutocomplete from './AssetGroupAutocomplete';
 import { SubHeader } from '../../views/Explore';
@@ -60,6 +60,9 @@ const AssetGroupEdit: FC<{
         });
     };
 
+    // Clear out changelog when group/domain changes
+    useEffect(() => setChangelog([]), [filter]);
+
     const mutation = useMutation({
         mutationFn: () => {
             const selectors = mapChangelogToSelectors();
@@ -67,7 +70,13 @@ const AssetGroupEdit: FC<{
         },
         onSuccess: () => {
             setChangelog([]);
+
+            // refetch all page data after updating group membership
+            queryClient.invalidateQueries({ queryKey: ['listAssetGroups'] });
             queryClient.invalidateQueries({ queryKey: ['listAssetGroupMembers'] });
+            queryClient.invalidateQueries({ queryKey: ['countAssetGroupMembers'] });
+            queryClient.resetQueries({ queryKey: ['search'] });
+
             addNotification(
                 'Update successful. Please check back later to view updated Asset Group.',
                 'AssetGroupUpdateSuccess'

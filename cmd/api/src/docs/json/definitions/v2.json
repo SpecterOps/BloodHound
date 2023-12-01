@@ -60,14 +60,20 @@
       "data": {
         "type": "object",
         "properties": {
-            "count": { "type": "integer" },
-            "limit": { "type": "integer" },
-            "skip":  { "type": "integer" },
-            "members": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/model.AssetGroupMember"
-              }
+          "count": {
+            "type": "integer"
+          },
+          "limit": {
+            "type": "integer"
+          },
+          "skip": {
+            "type": "integer"
+          },
+          "members": {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/model.AssetGroupMember"
+            }
           }
         }
       }
@@ -937,10 +943,21 @@
     ],
     "properties": {
       "query": {
-          "type": "string"
+        "type": "string"
       },
       "name": {
         "type": "string"
+      }
+    }
+  },
+  "v2.SearchResponse": {
+    "type": "object",
+    "properties": {
+      "data": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/model.SearchResult"
+        }
       }
     }
   }
