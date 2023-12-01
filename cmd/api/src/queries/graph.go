@@ -22,6 +22,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"github.com/specterops/bloodhound/src/services/agi"
 	"net/http"
 	"net/url"
 	"sort"
@@ -140,6 +141,7 @@ type Graph interface {
 	ValidateOUs(ctx context.Context, ous []string) ([]string, error)
 	BatchNodeUpdate(ctx context.Context, nodeUpdate graph.NodeUpdate) error
 	RawCypherSearch(ctx context.Context, rawCypher string, includeProperties bool) (model.UnifiedGraph, error)
+	UpdateSelectorTags(ctx context.Context, db agi.AgiData, selectors model.UpdatedAssetGroupSelectors) error
 }
 
 type GraphQuery struct {
@@ -866,4 +868,93 @@ func fromGraphNodes(nodes graph.NodeSet) []model.PagedNodeListEntry {
 	}
 
 	return renderedNodes
+}
+
+func (s *GraphQuery) UpdateSelectorTags(ctx context.Context, db agi.AgiData, selectors model.UpdatedAssetGroupSelectors) error {
+	for _, selector := range selectors.Added {
+		if err := addTagsToSelector(ctx, s, db, selector); err != nil {
+			return err
+		}
+	}
+
+	for _, selector := range selectors.Removed {
+		if err := removeTagsFromSelector(ctx, s, db, selector); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func addTagsToSelector(ctx context.Context, graphQuery *GraphQuery, db agi.AgiData, selector model.AssetGroupSelector) error {
+	if assetGroup, err := db.GetAssetGroup(selector.AssetGroupID); err != nil {
+		return err
+	} else {
+		return graphQuery.Graph.WriteTransaction(ctx, func(tx graph.Transaction) error {
+			tagPropertyStr := common.SystemTags.String()
+
+			if !assetGroup.SystemGroup {
+				tagPropertyStr = common.UserTags.String()
+			}
+
+			if node, err := analysis.FetchNodeByObjectID(tx, selector.Selector); err != nil {
+				return err
+			} else {
+				if tags, err := node.Properties.Get(tagPropertyStr).String(); err != nil {
+					if graph.IsErrPropertyNotFound(err) {
+						node.Properties.Set(tagPropertyStr, assetGroup.Tag)
+					} else {
+						return err
+					}
+				} else if !strings.Contains(tags, assetGroup.Tag) {
+					if len(tags) == 0 {
+						node.Properties.Set(tagPropertyStr, assetGroup.Tag)
+					} else { // add a space and append if there are existing tags
+						node.Properties.Set(tagPropertyStr, tags+" "+assetGroup.Tag)
+					}
+				}
+
+				if err = tx.UpdateNode(node); err != nil {
+					return err
+				}
+			}
+
+			return nil
+		})
+	}
+}
+
+func removeTagsFromSelector(ctx context.Context, graphQuery *GraphQuery, db agi.AgiData, selector model.AssetGroupSelector) error {
+	if assetGroup, err := db.GetAssetGroup(selector.AssetGroupID); err != nil {
+		return err
+	} else {
+		return graphQuery.Graph.WriteTransaction(ctx, func(tx graph.Transaction) error {
+			tagPropertyStr := common.SystemTags.String()
+
+			if !assetGroup.SystemGroup {
+				tagPropertyStr = common.UserTags.String()
+			}
+
+			if node, err := analysis.FetchNodeByObjectID(tx, selector.Selector); err != nil {
+				return err
+			} else {
+				if tags, err := node.Properties.Get(tagPropertyStr).String(); err != nil {
+					if graph.IsErrPropertyNotFound(err) {
+						node.Properties.Set(tagPropertyStr, assetGroup.Tag)
+					} else {
+						return err
+					}
+				} else if strings.Contains(tags, assetGroup.Tag) {
+					// remove asset group tag and then remove any leftover double whitespace
+					tags = strings.ReplaceAll(strings.ReplaceAll(tags, assetGroup.Tag, ""), "  ", " ")
+					node.Properties.Set(tagPropertyStr, tags)
+				}
+
+				if err = tx.UpdateNode(node); err != nil {
+					return err
+				}
+			}
+
+			return nil
+		})
+	}
 }
