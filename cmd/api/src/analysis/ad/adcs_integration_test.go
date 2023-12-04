@@ -190,17 +190,9 @@ func TestTrustedForNTAuth(t *testing.T) {
 			// post `TrustedForNTAuth` edges
 			operation := analysis.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - TrustedForNTAuth")
 
-			operation.Operation.SubmitReader(
-				func(
-					ctx context.Context,
-					tx graph.Transaction,
-					outC chan<- analysis.CreatePostRelationshipJob,
-				) error {
-					if err := ad2.PostTrustedForNTAuth(ctx, db, operation); err != nil {
-						t.Logf("failed post processing for %s: %v", ad.GoldenCert.String(), err)
-					}
-					return nil
-				})
+			if err := ad2.PostTrustedForNTAuth(context.Background(), db, operation); err != nil {
+				t.Logf("failed post processing for %s: %v", ad.TrustedForNTAuth.String(), err)
+			}
 
 			operation.Done()
 
@@ -219,9 +211,7 @@ func TestTrustedForNTAuth(t *testing.T) {
 					assert.True(t, results.Contains(harness.TrustedForNTAuthHarness.EnterpriseCA2))
 
 					//Negative Cases
-					// assert.False(t, results.Contains(harness.ADCSGoldenCertHarness.Computer21))
-					// assert.False(t, results.Contains(harness.ADCSGoldenCertHarness.Computer22))
-					// assert.False(t, results.Contains(harness.ADCSGoldenCertHarness.Computer23))
+					assert.False(t, results.Contains(harness.TrustedForNTAuthHarness.EnterpriseCA3))
 				}
 				return nil
 			})

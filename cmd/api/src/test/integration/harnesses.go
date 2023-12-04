@@ -1415,16 +1415,12 @@ func (s *TrustedForNTAuthHarness) Setup(graphTestContext *GraphTestContext) {
 	s.Domain = graphTestContext.NewActiveDirectoryDomain("domain", sid, false, true)
 
 	s.NTAuthStore = graphTestContext.NewActiveDirectoryNTAuthStore("ntauthstore", sid)
-	s.NTAuthStore.Properties.Set(string(ad.CertThumbprints), []string{"a", "b", "c"})
 
-	s.EnterpriseCA1 = graphTestContext.NewActiveDirectoryEnterpriseCA("eca 1", sid)
-	s.EnterpriseCA1.Properties.Set(string(ad.CertThumbprint), "a")
+	s.EnterpriseCA1 = graphTestContext.NewActiveDirectoryEnterpriseCAWithThumbprint("eca 1", sid, "a")
 
-	s.EnterpriseCA2 = graphTestContext.NewActiveDirectoryEnterpriseCA("eca 2", sid)
-	s.EnterpriseCA2.Properties.Set(string(ad.CertThumbprint), "b")
+	s.EnterpriseCA2 = graphTestContext.NewActiveDirectoryEnterpriseCAWithThumbprint("eca 2", sid, "b")
 
 	s.EnterpriseCA3 = graphTestContext.NewActiveDirectoryEnterpriseCA("eca 3", sid)
-
 }
 
 type ShortcutHarness struct {
