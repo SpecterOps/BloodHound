@@ -20,6 +20,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	graphMocks "github.com/specterops/bloodhound/src/queries/mocks"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -494,16 +495,17 @@ func TestResources_UpdateAssetGroupSelectors_SuccessT0(t *testing.T) {
 		SystemGroup: true,
 	}
 
-	expectedResult := map[string]model.AssetGroupSelectors{
-		"added_selectors": {
-			model.AssetGroupSelector{
+	expectedResult := model.UpdatedAssetGroupSelectors{
+		Added: model.AssetGroupSelectors{
+			{
 				AssetGroupID: assetGroup.ID,
 				Name:         payload[0].SelectorName,
 				Selector:     payload[0].EntityObjectID,
 			},
 		},
-		"removed_selectors": {
-			model.AssetGroupSelector{
+
+		Removed: model.AssetGroupSelectors{
+			{
 				AssetGroupID: assetGroup.ID,
 				Name:         payload[1].SelectorName,
 				Selector:     payload[1].EntityObjectID,
@@ -512,8 +514,11 @@ func TestResources_UpdateAssetGroupSelectors_SuccessT0(t *testing.T) {
 	}
 
 	mockDB := dbMocks.NewMockDatabase(mockCtrl)
+	mockGraph := graphMocks.NewMockGraph(mockCtrl)
+
 	mockDB.EXPECT().GetAssetGroup(gomock.Any()).Return(assetGroup, nil)
 	mockDB.EXPECT().UpdateAssetGroupSelectors(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(expectedResult, nil)
+	mockGraph.EXPECT().UpdateSelectorTags(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 
 	mockTasker := datapipeMocks.NewMockTasker(mockCtrl)
 	// MockTasker should receive a call to RequestAnalysis() since this is a Tier Zero Asset group.
@@ -523,6 +528,7 @@ func TestResources_UpdateAssetGroupSelectors_SuccessT0(t *testing.T) {
 	handlers := v2.Resources{
 		DB:           mockDB,
 		TaskNotifier: mockTasker,
+		GraphQuery:   mockGraph,
 	}
 
 	response := httptest.NewRecorder()
@@ -542,8 +548,8 @@ func TestResources_UpdateAssetGroupSelectors_SuccessT0(t *testing.T) {
 	err = json.Unmarshal(dataJSON, &data)
 	require.Nil(t, err)
 
-	require.Equal(t, expectedResult["added_selectors"][0].Name, data["added_selectors"][0].Name)
-	require.Equal(t, expectedResult["removed_selectors"][0].Name, data["removed_selectors"][0].Name)
+	require.Equal(t, expectedResult.Added[0].Name, data["added_selectors"][0].Name)
+	require.Equal(t, expectedResult.Removed[0].Name, data["removed_selectors"][0].Name)
 }
 
 func TestResources_UpdateAssetGroupSelectors_SuccessOwned(t *testing.T) {
@@ -584,15 +590,15 @@ func TestResources_UpdateAssetGroupSelectors_SuccessOwned(t *testing.T) {
 		SystemGroup: true,
 	}
 
-	expectedResult := map[string]model.AssetGroupSelectors{
-		"added_selectors": {
+	expectedResult := model.UpdatedAssetGroupSelectors{
+		Added: model.AssetGroupSelectors{
 			model.AssetGroupSelector{
 				AssetGroupID: assetGroup.ID,
 				Name:         payload[0].SelectorName,
 				Selector:     payload[0].EntityObjectID,
 			},
 		},
-		"removed_selectors": {
+		Removed: model.AssetGroupSelectors{
 			model.AssetGroupSelector{
 				AssetGroupID: assetGroup.ID,
 				Name:         payload[1].SelectorName,
@@ -602,8 +608,12 @@ func TestResources_UpdateAssetGroupSelectors_SuccessOwned(t *testing.T) {
 	}
 
 	mockDB := dbMocks.NewMockDatabase(mockCtrl)
+	mockGraph := graphMocks.NewMockGraph(mockCtrl)
+
 	mockDB.EXPECT().GetAssetGroup(gomock.Any()).Return(assetGroup, nil)
 	mockDB.EXPECT().UpdateAssetGroupSelectors(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(expectedResult, nil)
+
+	mockGraph.EXPECT().UpdateSelectorTags(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 
 	mockTasker := datapipeMocks.NewMockTasker(mockCtrl)
 	// NOTE MockTasker should NOT receive a call to RequestAnalysis() since this is not a Tier Zero Asset group.
@@ -612,6 +622,7 @@ func TestResources_UpdateAssetGroupSelectors_SuccessOwned(t *testing.T) {
 	handlers := v2.Resources{
 		DB:           mockDB,
 		TaskNotifier: mockTasker,
+		GraphQuery:   mockGraph,
 	}
 
 	response := httptest.NewRecorder()
@@ -631,6 +642,6 @@ func TestResources_UpdateAssetGroupSelectors_SuccessOwned(t *testing.T) {
 	err = json.Unmarshal(dataJSON, &data)
 	require.Nil(t, err)
 
-	require.Equal(t, expectedResult["added_selectors"][0].Name, data["added_selectors"][0].Name)
-	require.Equal(t, expectedResult["removed_selectors"][0].Name, data["removed_selectors"][0].Name)
+	require.Equal(t, expectedResult.Added[0].Name, data["added_selectors"][0].Name)
+	require.Equal(t, expectedResult.Removed[0].Name, data["removed_selectors"][0].Name)
 }
