@@ -258,8 +258,12 @@ func (s Resources) UpdateAssetGroupSelectors(response http.ResponseWriter, reque
 		if result, err := s.DB.UpdateAssetGroupSelectors(*ctx.FromRequest(request), assetGroup, selectorSpecs, false); err != nil {
 			api.HandleDatabaseError(request, response, err)
 		} else {
-			// When T0 asset group selectors are modified we must trigger analysis
+			if err := s.GraphQuery.UpdateSelectorTags(request.Context(), s.DB, result); err != nil {
+				log.Warnf("failed updating asset group tags; will be retried upon next analysis run: %v", err)
+			}
+
 			if assetGroup.Tag == model.TierZeroAssetGroupTag {
+				// When T0 asset group selectors are modified, entire analysis must be re-run
 				s.TaskNotifier.RequestAnalysis()
 			}
 
