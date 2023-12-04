@@ -1399,6 +1399,34 @@ func (s *ADCSGoldenCertHarness) Setup(graphTestContext *GraphTestContext) {
 
 }
 
+type TrustedForNTAuthHarness struct {
+	EnterpriseCA1 *graph.Node
+	EnterpriseCA2 *graph.Node
+	EnterpriseCA3 *graph.Node
+
+	NTAuthStore *graph.Node
+
+	Domain *graph.Node
+}
+
+func (s *TrustedForNTAuthHarness) Setup(graphTestContext *GraphTestContext) {
+	sid := RandomDomainSID()
+
+	s.Domain = graphTestContext.NewActiveDirectoryDomain("domain", sid, false, true)
+
+	s.NTAuthStore = graphTestContext.NewActiveDirectoryNTAuthStore("ntauthstore", sid)
+	s.NTAuthStore.Properties.Set(string(ad.CertThumbprints), []string{"a", "b", "c"})
+
+	s.EnterpriseCA1 = graphTestContext.NewActiveDirectoryEnterpriseCA("eca 1", sid)
+	s.EnterpriseCA1.Properties.Set(string(ad.CertThumbprint), "a")
+
+	s.EnterpriseCA2 = graphTestContext.NewActiveDirectoryEnterpriseCA("eca 2", sid)
+	s.EnterpriseCA2.Properties.Set(string(ad.CertThumbprint), "b")
+
+	s.EnterpriseCA3 = graphTestContext.NewActiveDirectoryEnterpriseCA("eca 3", sid)
+
+}
+
 type ShortcutHarness struct {
 	Group1 *graph.Node
 	Group2 *graph.Node
@@ -1487,6 +1515,7 @@ type HarnessDetails struct {
 	EnrollOnBehalfOfHarnessOne                      EnrollOnBehalfOfHarnessOne
 	EnrollOnBehalfOfHarnessTwo                      EnrollOnBehalfOfHarnessTwo
 	ADCSGoldenCertHarness                           ADCSGoldenCertHarness
+	TrustedForNTAuthHarness                         TrustedForNTAuthHarness
 	NumCollectedActiveDirectoryDomains              int
 	AZInboundControlHarness                         AZInboundControlHarness
 }

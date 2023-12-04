@@ -21,6 +21,7 @@ package ad_test
 
 import (
 	"context"
+
 	"github.com/specterops/bloodhound/analysis"
 
 	ad2 "github.com/specterops/bloodhound/analysis/ad"
@@ -176,6 +177,57 @@ func TestGoldenCert(t *testing.T) {
 		return nil
 	})
 
+}
+
+func TestTrustedForNTAuth(t *testing.T) {
+	testContext := integration.NewGraphTestContext(t)
+
+	testContext.DatabaseTestWithSetup(
+		func(harness *integration.HarnessDetails) {
+			harness.TrustedForNTAuthHarness.Setup(testContext)
+		},
+		func(harness integration.HarnessDetails, db graph.Database) error {
+			// post `TrustedForNTAuth` edges
+			operation := analysis.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - TrustedForNTAuth")
+
+			operation.Operation.SubmitReader(
+				func(
+					ctx context.Context,
+					tx graph.Transaction,
+					outC chan<- analysis.CreatePostRelationshipJob,
+				) error {
+					if err := ad2.PostTrustedForNTAuth(ctx, db, operation); err != nil {
+						t.Logf("failed post processing for %s: %v", ad.GoldenCert.String(), err)
+					}
+					return nil
+				})
+
+			operation.Done()
+
+			db.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
+				if results, err := ops.FetchStartNodes(
+					tx.Relationships().Filterf(func() graph.Criteria {
+						return query.Kind(query.Relationship(), ad.TrustedForNTAuth)
+					}),
+				); err != nil {
+					t.Fatalf("error fetching TrustedForNTAuth relationships; %v", err)
+				} else {
+					assert.True(t, len(results) == 2)
+
+					//Positive Cases
+					assert.True(t, results.Contains(harness.TrustedForNTAuthHarness.EnterpriseCA1))
+					assert.True(t, results.Contains(harness.TrustedForNTAuthHarness.EnterpriseCA2))
+
+					//Negative Cases
+					// assert.False(t, results.Contains(harness.ADCSGoldenCertHarness.Computer21))
+					// assert.False(t, results.Contains(harness.ADCSGoldenCertHarness.Computer22))
+					// assert.False(t, results.Contains(harness.ADCSGoldenCertHarness.Computer23))
+				}
+				return nil
+			})
+
+			return nil
+		})
 }
 
 func TestEnrollOnBehalfOf(t *testing.T) {
