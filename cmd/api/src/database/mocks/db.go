@@ -1387,10 +1387,10 @@ func (mr *MockDatabaseMockRecorder) UpdateAssetGroupSelector(arg0 interface{}) *
 }
 
 // UpdateAssetGroupSelectors mocks base method.
-func (m *MockDatabase) UpdateAssetGroupSelectors(arg0 ctx.Context, arg1 model.AssetGroup, arg2 []model.AssetGroupSelectorSpec, arg3 bool) (map[string]model.AssetGroupSelectors, error) {
+func (m *MockDatabase) UpdateAssetGroupSelectors(arg0 ctx.Context, arg1 model.AssetGroup, arg2 []model.AssetGroupSelectorSpec, arg3 bool) (model.UpdatedAssetGroupSelectors, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateAssetGroupSelectors", arg0, arg1, arg2, arg3)
-	ret0, _ := ret[0].(map[string]model.AssetGroupSelectors)
+	ret0, _ := ret[0].(model.UpdatedAssetGroupSelectors)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
