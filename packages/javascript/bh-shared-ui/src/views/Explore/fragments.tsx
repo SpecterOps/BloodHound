@@ -21,6 +21,8 @@ import { EntityField, format } from '../../utils';
 
 const exclusionList = [
     'gid',
+    'admin_rights_count',
+    'admin_rights_risk_percent',
     'hasspn',
     'system_tags',
     'user_tags',

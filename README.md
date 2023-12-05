@@ -25,11 +25,12 @@ original BloodHound was created by [@_wald0](https://www.twitter.com/_wald0), [@
 The easiest way to get up and running is to use our pre-configured Docker Compose setup. The following steps will get BloodHound CE up and running with the least amount of effort.
   
   1. Install Docker Compose. This should be included with the [Docker Desktop](https://www.docker.com/products/docker-desktop/) installation
-  2. Run `curl https://raw.githubusercontent.com/SpecterOps/bloodhound/main/examples/docker-compose/docker-compose.yml | docker compose -f - up `
+  2. Run `curl -L https://ghst.ly/getbhce | docker compose -f - up`
   3. Locate the randomly generated password in the terminal output of Docker Compose
   4. In a browser, navigate to `http://localhost:8080/ui/login`. Login with a username of `admin` and the randomly generated password from the logs
 ## Useful Links
 
+- [BloodHound Slack](https://ghst.ly/BHSlack)
 - [Wiki](https://github.com/SpecterOps/BloodHound/wiki)
 - [Contributors](./CONTRIBUTORS.md)
 - [Docker Compose Example](./examples/docker-compose/README.md)
@@ -40,6 +41,7 @@ The easiest way to get up and running is to use our pre-configured Docker Compos
 ## Contact
 
 Please check out the [Contact page](https://github.com/SpecterOps/BloodHound/wiki/Contact) in our wiki for details on how to reach out with questions and suggestions.
+
 ## Licensing
 
 ```

@@ -27,6 +27,7 @@ import (
 	graph "github.com/specterops/bloodhound/dawgs/graph"
 	model "github.com/specterops/bloodhound/src/model"
 	queries "github.com/specterops/bloodhound/src/queries"
+	agi "github.com/specterops/bloodhound/src/services/agi"
 	gomock "go.uber.org/mock/gomock"
 )
 
@@ -259,6 +260,20 @@ func (m *MockGraph) SearchNodesByName(arg0 context.Context, arg1 graph.Kinds, ar
 func (mr *MockGraphMockRecorder) SearchNodesByName(arg0, arg1, arg2, arg3, arg4 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SearchNodesByName", reflect.TypeOf((*MockGraph)(nil).SearchNodesByName), arg0, arg1, arg2, arg3, arg4)
+}
+
+// UpdateSelectorTags mocks base method.
+func (m *MockGraph) UpdateSelectorTags(arg0 context.Context, arg1 agi.AgiData, arg2 model.UpdatedAssetGroupSelectors) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateSelectorTags", arg0, arg1, arg2)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdateSelectorTags indicates an expected call of UpdateSelectorTags.
+func (mr *MockGraphMockRecorder) UpdateSelectorTags(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateSelectorTags", reflect.TypeOf((*MockGraph)(nil).UpdateSelectorTags), arg0, arg1, arg2)
 }
 
 // ValidateOUs mocks base method.

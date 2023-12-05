@@ -75,7 +75,7 @@ type Database interface {
 	RemoveAssetGroupSelector(selector model.AssetGroupSelector) error
 	CreateRawAssetGroupSelector(assetGroup model.AssetGroup, name, selector string) (model.AssetGroupSelector, error)
 	CreateAssetGroupSelector(assetGroup model.AssetGroup, spec model.AssetGroupSelectorSpec, systemSelector bool) (model.AssetGroupSelector, error)
-	UpdateAssetGroupSelectors(ctx ctx.Context, assetGroup model.AssetGroup, selectorSpecs []model.AssetGroupSelectorSpec, systemSelector bool) (map[string]model.AssetGroupSelectors, error)
+	UpdateAssetGroupSelectors(ctx ctx.Context, assetGroup model.AssetGroup, selectorSpecs []model.AssetGroupSelectorSpec, systemSelector bool) (model.UpdatedAssetGroupSelectors, error)
 	GetAllAssetGroupSelectors() (model.AssetGroupSelectors, error)
 	CreateAssetGroupCollection(collection model.AssetGroupCollection, entries model.AssetGroupCollectionEntries) error
 	RawFirst(value any) error
@@ -219,7 +219,7 @@ func (s *BloodhoundDB) Wipe() error {
 func (s *BloodhoundDB) Migrate() error {
 	// Run the migrator
 	if err := migration.NewMigrator(s.db).Migrate(); err != nil {
-		log.Errorf("Error during database migration phase: %v", err)
+		log.Errorf("Error during SQL database migration phase: %v", err)
 		return err
 	}
 
