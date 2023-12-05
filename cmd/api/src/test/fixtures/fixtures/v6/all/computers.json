@@ -1,4 +1,4 @@
-﻿{
+{
   "data": [
     {
       "Properties": {
@@ -14,9 +14,9 @@
         "enabled": true,
         "unconstraineddelegation": true,
         "trustedtoauth": false,
-        "lastlogon": 1701284109,
+        "lastlogon": 1701804392,
         "lastlogontimestamp": 1701111309,
-        "pwdlastset": 1698800910,
+        "pwdlastset": 1701438050,
         "serviceprincipalnames": [
           "Dfsr-12F9A27C-BF97-4787-9364-D31B6C55EB04/ESC1-DC.ESC1.LOCAL",
           "TERMSRV/ESC1-DC",
@@ -441,9 +441,9 @@
         "enabled": true,
         "unconstraineddelegation": false,
         "trustedtoauth": false,
-        "lastlogon": 1701286937,
-        "lastlogontimestamp": 1700725003,
-        "pwdlastset": 1698796126,
+        "lastlogon": 1701807130,
+        "lastlogontimestamp": 1701589065,
+        "pwdlastset": 1701456467,
         "serviceprincipalnames": [
           "WSMAN/ESC1-Server",
           "WSMAN/ESC1-Server.ESC1.LOCAL",
