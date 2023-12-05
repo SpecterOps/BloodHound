@@ -171,7 +171,7 @@ const SubcategoryListItem = ({ subcategory, checked, setChecked }: SubcategoryLi
             setChecked={setChecked}
             collapsibleContent={
                 <List sx={{ pl: 4 }}>
-                    <ListItem sx={{ display: 'block'}}>
+                    <ListItem sx={{ display: 'block' }}>
                         <EdgesView edgeTypes={edgeTypes} checked={checked} setChecked={setChecked} />
                     </ListItem>
                 </List>
