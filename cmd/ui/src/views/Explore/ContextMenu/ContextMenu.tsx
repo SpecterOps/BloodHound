@@ -22,7 +22,7 @@ import { destinationNodeSelected, sourceNodeSelected, tabChanged } from 'src/duc
 import { AppState, useAppDispatch } from 'src/store';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCaretRight } from '@fortawesome/free-solid-svg-icons';
-import { useMutation } from 'react-query';
+import { useMutation, useQuery } from 'react-query';
 import { selectOwnedAssetGroupId, selectTierZeroAssetGroupId } from 'src/ducks/assetgroups/reducer';
 
 const ContextMenu: FC<{ anchorPosition?: { x: number; y: number } }> = ({ anchorPosition }) => {
@@ -71,6 +71,12 @@ const ContextMenu: FC<{ anchorPosition?: { x: number; y: number } }> = ({ anchor
             );
         }
     };
+
+    // const { data, isError, isLoading } = useQuery(['listAssetGroupMembers', tierZeroAssetGroupId], () =>
+    //     apiClient.listAssetGroupMembers(tierZeroAssetGroupId).then((res) => res.data)
+    // );
+
+    // console.log(data);
 
     return (
         <Menu
