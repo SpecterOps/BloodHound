@@ -82,7 +82,7 @@ export const CommonSearches: CommonSearchType[] = [
             },
             {
                 description: 'Computers where Domain Users can read LAPS passwords',
-                cypher: `MATCH p=(m:Group)-[:AllExtendedRights|ReadLAPSPassword]->(n:Computer)\nWHERE m.objectid ENDS WITH "-513"\nRETURN p`,
+                cypher: `MATCH p=(m:Group)-[:AllExtendedRights|ReadLAPSPassword]->(n:Computer)\nRETURN p`,
             },
             {
                 description: 'Paths from Domain Users to high value/Tier Zero targets',
