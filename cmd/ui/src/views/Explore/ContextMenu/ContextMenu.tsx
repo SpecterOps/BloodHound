@@ -27,11 +27,12 @@ import { selectOwnedAssetGroupId, selectTierZeroAssetGroupId } from 'src/ducks/a
 
 const ContextMenu: FC<{ anchorPosition?: { x: number; y: number } }> = ({ anchorPosition }) => {
     const dispatch = useAppDispatch();
+
     const [open, setOpen] = useState(false);
 
     const selectedNode = useSelector((state: AppState) => state.entityinfo.selectedNode);
-    const ownedId = useSelector(selectOwnedAssetGroupId);
-    const tierZeroId = useSelector(selectTierZeroAssetGroupId);
+    const ownedAssetGroupId = useSelector(selectOwnedAssetGroupId);
+    const tierZeroAssetGroupId = useSelector(selectTierZeroAssetGroupId);
 
     useEffect(() => {
         if (anchorPosition) {
@@ -41,7 +42,7 @@ const ContextMenu: FC<{ anchorPosition?: { x: number; y: number } }> = ({ anchor
         }
     }, [anchorPosition]);
 
-    const handleClick = () => {
+    const handleClose = () => {
         setOpen(false);
     };
 
@@ -76,11 +77,13 @@ const ContextMenu: FC<{ anchorPosition?: { x: number; y: number } }> = ({ anchor
             open={open}
             anchorPosition={{ left: anchorPosition?.x || 0 + 10, top: anchorPosition?.y || 0 }}
             anchorReference='anchorPosition'
-            onClick={handleClick}>
+            onClick={handleClose}>
             <MenuItem onClick={handleSetStartingNode}>Set as starting node</MenuItem>
             <MenuItem onClick={handleSetEndingNode}>Set as ending node</MenuItem>
-            <AssetGroupMenuItem assetGroupId={tierZeroId}>Add to high value</AssetGroupMenuItem>
-            <AssetGroupMenuItem assetGroupId={ownedId}>Add to owned</AssetGroupMenuItem>
+
+            <AssetGroupMenuItem assetGroupId={tierZeroAssetGroupId}>Add to high value</AssetGroupMenuItem>
+            <AssetGroupMenuItem assetGroupId={ownedAssetGroupId}>Add to owned</AssetGroupMenuItem>
+
             <CopyMenuItem />
         </Menu>
     );
@@ -104,21 +107,21 @@ const CopyMenuItem = () => {
 
     const selectedNode = useSelector((state: AppState) => state.entityinfo.selectedNode);
 
-    const handleDisplayName = () => {
+    const handleCopyDisplayName = () => {
         if (selectedNode) {
             navigator.clipboard.writeText(selectedNode.name);
             addNotification(`Display name copied to clipboard`, 'copyToClipboard');
         }
     };
 
-    const handleObjectId = () => {
+    const handleCopyObjectId = () => {
         if (selectedNode) {
             navigator.clipboard.writeText(selectedNode.id);
             addNotification(`Object ID name copied to clipboard`, 'copyToClipboard');
         }
     };
 
-    const handleCypher = () => {
+    const handleCopyCypher = () => {
         if (selectedNode) {
             const cypher = `MATCH (n:${selectedNode.type}) WHERE n.objectid = '${selectedNode.id}' RETURN n`;
             navigator.clipboard.writeText(cypher);
@@ -132,9 +135,9 @@ const CopyMenuItem = () => {
                 placement='right'
                 title={
                     <>
-                        <MenuItem onClick={handleDisplayName}>Display Name</MenuItem>
-                        <MenuItem onClick={handleObjectId}>Object ID</MenuItem>
-                        <MenuItem onClick={handleCypher}>Cypher</MenuItem>
+                        <MenuItem onClick={handleCopyDisplayName}>Display Name</MenuItem>
+                        <MenuItem onClick={handleCopyObjectId}>Object ID</MenuItem>
+                        <MenuItem onClick={handleCopyCypher}>Cypher</MenuItem>
                     </>
                 }>
                 <MenuItem sx={{ justifyContent: 'space-between' }} onClick={(e) => e.stopPropagation()}>
