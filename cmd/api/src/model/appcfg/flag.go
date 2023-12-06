@@ -76,8 +76,8 @@ func AvailableFlags() FeatureFlagSet {
 		},
 		FeatureAdcs: {
 			Key:           FeatureAdcs,
-			Name:          "Enable collection and processing of ADCS data",
-			Description:   "Enables the ability to analyze ADCS data for creating ADCS attack paths",
+			Name:          "Enable collection and processing of Active Directory Certificate Services Data",
+			Description:   "Enables the ability to collect, analyze, and explore Active Directory Certificate Services data and previews new attack paths.",
 			Enabled:       false,
 			UserUpdatable: true,
 		},
