@@ -72,12 +72,6 @@ const ContextMenu: FC<{ anchorPosition?: { x: number; y: number } }> = ({ anchor
         }
     };
 
-    // const { data, isError, isLoading } = useQuery(['listAssetGroupMembers', tierZeroAssetGroupId], () =>
-    //     apiClient.listAssetGroupMembers(tierZeroAssetGroupId).then((res) => res.data)
-    // );
-
-    // console.log(data);
-
     return (
         <Menu
             open={open}
@@ -87,8 +81,8 @@ const ContextMenu: FC<{ anchorPosition?: { x: number; y: number } }> = ({ anchor
             <MenuItem onClick={handleSetStartingNode}>Set as starting node</MenuItem>
             <MenuItem onClick={handleSetEndingNode}>Set as ending node</MenuItem>
 
-            <AssetGroupMenuItem assetGroupId={tierZeroAssetGroupId}>Add to high value</AssetGroupMenuItem>
-            <AssetGroupMenuItem assetGroupId={ownedAssetGroupId}>Add to owned</AssetGroupMenuItem>
+            <AssetGroupMenuItem assetGroupId={tierZeroAssetGroupId} assetGroupName='tier zero' />
+            <AssetGroupMenuItem assetGroupId={ownedAssetGroupId} assetGroupName='owned' />
 
             <CopyMenuItem />
         </Menu>
@@ -105,6 +99,7 @@ const StyledTooltip = styled(({ className, ...props }: TooltipProps) => (
         paddingTop: '0.5rem',
         paddingBottom: '0.5rem',
         boxShadow: theme.shadows[8],
+        marginLeft: '2px !important',
     },
 }));
 
@@ -154,18 +149,18 @@ const CopyMenuItem = () => {
     );
 };
 
-const AssetGroupMenuItem: FC<{ assetGroupId: string; children: any }> = ({ assetGroupId, children }) => {
+const AssetGroupMenuItem: FC<{ assetGroupId: string; assetGroupName: string }> = ({ assetGroupId, assetGroupName }) => {
     const { addNotification } = useNotifications();
 
     const selectedNode = useSelector((state: AppState) => state.entityinfo.selectedNode);
 
     const mutation = useMutation({
-        mutationFn: (nodeId: string) => {
+        mutationFn: ({ nodeId, action }: { nodeId: string; action: 'add' | 'remove' }) => {
             return apiClient.updateAssetGroupSelector(assetGroupId, [
                 {
                     selector_name: nodeId,
                     sid: nodeId,
-                    action: 'add',
+                    action,
                 },
             ]);
         },
@@ -175,19 +170,48 @@ const AssetGroupMenuItem: FC<{ assetGroupId: string; children: any }> = ({ asset
                 'AssetGroupUpdateSuccess'
             );
         },
-        onError: (error) => {
+        onError: (error: any) => {
             console.error(error);
             addNotification('Unknown error, group was not updated', 'AssetGroupUpdateError');
         },
     });
 
+    const { data: assetGroupMembers } = useQuery(['listAssetGroupMembers', assetGroupId], () =>
+        apiClient
+            .listAssetGroupMembers(assetGroupId, undefined, {
+                params: {
+                    object_id: `object_id=eq:${selectedNode?.id}`,
+                },
+            })
+            .then((res) => res.data.data.members)
+    );
+
     const handleAddToAssetGroup = () => {
         if (selectedNode) {
-            mutation.mutate(selectedNode.id);
+            mutation.mutate({ nodeId: selectedNode.id, action: 'add' });
         }
     };
 
-    return <MenuItem onClick={handleAddToAssetGroup}>{children}</MenuItem>;
+    const handleRemoveFromAssetGroup = () => {
+        if (selectedNode) {
+            mutation.mutate({ nodeId: selectedNode.id, action: 'remove' });
+        }
+    };
+
+    // error state, data didn't load
+    if (!assetGroupMembers) {
+        return null;
+    }
+
+    // selected node is not a member of the group
+    if (assetGroupMembers.length === 0) {
+        return <MenuItem onClick={handleAddToAssetGroup}>Add to {assetGroupName}</MenuItem>;
+    }
+
+    // selected node is a custom member of the group
+    if (assetGroupMembers.length === 1 && assetGroupMembers[0].custom_member) {
+        return <MenuItem onClick={handleRemoveFromAssetGroup}>Remove from {assetGroupName}</MenuItem>;
+    }
 };
 
 export default ContextMenu;
