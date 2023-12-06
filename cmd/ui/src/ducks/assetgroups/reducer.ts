@@ -65,11 +65,11 @@ const asssetGroupReducer = (state: types.AssetGroupsState = INITIAL_STATE, actio
 };
 
 export const selectTierZeroAssetGroupId = (state: AppState) => {
-    return state.assetgroups.assetGroups.find((assetGroup) => assetGroup.tag === 'admin_tier_0').id;
+    return state.assetgroups.assetGroups.find((assetGroup) => assetGroup.tag === 'admin_tier_0')?.id;
 };
 
 export const selectOwnedAssetGroupId = (state: AppState) => {
-    return state.assetgroups.assetGroups.find((assetGroup) => assetGroup.tag === 'owned').id;
+    return state.assetgroups.assetGroups.find((assetGroup) => assetGroup.tag === 'owned')?.id;
 };
 
 export default asssetGroupReducer;

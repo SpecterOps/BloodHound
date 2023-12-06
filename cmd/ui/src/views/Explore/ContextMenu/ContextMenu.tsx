@@ -15,16 +15,15 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Menu, MenuItem, Tooltip, TooltipProps, styled, tooltipClasses } from '@mui/material';
-import { apiClient, useNotifications } from 'bh-shared-ui';
+import { useNotifications } from 'bh-shared-ui';
 import { FC, useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { destinationNodeSelected, sourceNodeSelected, tabChanged } from 'src/ducks/searchbar/actions';
 import { AppState, useAppDispatch } from 'src/store';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCaretRight } from '@fortawesome/free-solid-svg-icons';
-import { useMutation, useQuery } from 'react-query';
 import { selectOwnedAssetGroupId, selectTierZeroAssetGroupId } from 'src/ducks/assetgroups/reducer';
-import { toggleTierZeroNode } from 'src/ducks/explore/actions';
+import AssetGroupMenuItem from './AssetGroupMenuItem';
 
 const ContextMenu: FC<{ anchorPosition?: { x: number; y: number } }> = ({ anchorPosition }) => {
     const dispatch = useAppDispatch();
@@ -148,77 +147,6 @@ const CopyMenuItem = () => {
             </StyledTooltip>
         </div>
     );
-};
-
-const AssetGroupMenuItem: FC<{ assetGroupId: string; assetGroupName: string }> = ({ assetGroupId, assetGroupName }) => {
-    const { addNotification } = useNotifications();
-    const dispatch = useAppDispatch();
-
-    const selectedNode = useSelector((state: AppState) => state.entityinfo.selectedNode);
-    const tierZeroAssetGroupId = useSelector(selectTierZeroAssetGroupId);
-
-    const mutation = useMutation({
-        mutationFn: ({ nodeId, action }: { nodeId: string; action: 'add' | 'remove' }) => {
-            return apiClient.updateAssetGroupSelector(assetGroupId, [
-                {
-                    selector_name: nodeId,
-                    sid: nodeId,
-                    action,
-                },
-            ]);
-        },
-        onSuccess: () => {
-            if (selectedNode?.graphId && assetGroupId === tierZeroAssetGroupId) {
-                dispatch(toggleTierZeroNode(selectedNode.graphId));
-            }
-
-            addNotification(
-                'Update successful. Please check back later to view updated Asset Group.',
-                'AssetGroupUpdateSuccess'
-            );
-        },
-        onError: (error: any) => {
-            console.error(error);
-            addNotification('Unknown error, group was not updated', 'AssetGroupUpdateError');
-        },
-    });
-
-    const { data: assetGroupMembers } = useQuery(['listAssetGroupMembers', assetGroupId], () =>
-        apiClient
-            .listAssetGroupMembers(assetGroupId, undefined, {
-                params: {
-                    object_id: `object_id=eq:${selectedNode?.id}`,
-                },
-            })
-            .then((res) => res.data.data.members)
-    );
-
-    const handleAddToAssetGroup = () => {
-        if (selectedNode) {
-            mutation.mutate({ nodeId: selectedNode.id, action: 'add' });
-        }
-    };
-
-    const handleRemoveFromAssetGroup = () => {
-        if (selectedNode) {
-            mutation.mutate({ nodeId: selectedNode.id, action: 'remove' });
-        }
-    };
-
-    // error state, data didn't load
-    if (!assetGroupMembers) {
-        return null;
-    }
-
-    // selected node is not a member of the group
-    if (assetGroupMembers.length === 0) {
-        return <MenuItem onClick={handleAddToAssetGroup}>Add to {assetGroupName}</MenuItem>;
-    }
-
-    // selected node is a custom member of the group
-    if (assetGroupMembers.length === 1 && assetGroupMembers[0].custom_member) {
-        return <MenuItem onClick={handleRemoveFromAssetGroup}>Remove from {assetGroupName}</MenuItem>;
-    }
 };
 
 export default ContextMenu;
