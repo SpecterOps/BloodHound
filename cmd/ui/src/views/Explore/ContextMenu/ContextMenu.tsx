@@ -24,6 +24,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCaretRight } from '@fortawesome/free-solid-svg-icons';
 import { useMutation, useQuery } from 'react-query';
 import { selectOwnedAssetGroupId, selectTierZeroAssetGroupId } from 'src/ducks/assetgroups/reducer';
+import { toggleTierZeroNode } from 'src/ducks/explore/actions';
 
 const ContextMenu: FC<{ anchorPosition?: { x: number; y: number } }> = ({ anchorPosition }) => {
     const dispatch = useAppDispatch();
@@ -81,8 +82,8 @@ const ContextMenu: FC<{ anchorPosition?: { x: number; y: number } }> = ({ anchor
             <MenuItem onClick={handleSetStartingNode}>Set as starting node</MenuItem>
             <MenuItem onClick={handleSetEndingNode}>Set as ending node</MenuItem>
 
-            <AssetGroupMenuItem assetGroupId={tierZeroAssetGroupId} assetGroupName='tier zero' />
-            <AssetGroupMenuItem assetGroupId={ownedAssetGroupId} assetGroupName='owned' />
+            <AssetGroupMenuItem assetGroupId={tierZeroAssetGroupId} assetGroupName='High Value' />
+            <AssetGroupMenuItem assetGroupId={ownedAssetGroupId} assetGroupName='Owned' />
 
             <CopyMenuItem />
         </Menu>
@@ -151,8 +152,10 @@ const CopyMenuItem = () => {
 
 const AssetGroupMenuItem: FC<{ assetGroupId: string; assetGroupName: string }> = ({ assetGroupId, assetGroupName }) => {
     const { addNotification } = useNotifications();
+    const dispatch = useAppDispatch();
 
     const selectedNode = useSelector((state: AppState) => state.entityinfo.selectedNode);
+    const tierZeroAssetGroupId = useSelector(selectTierZeroAssetGroupId);
 
     const mutation = useMutation({
         mutationFn: ({ nodeId, action }: { nodeId: string; action: 'add' | 'remove' }) => {
@@ -165,6 +168,10 @@ const AssetGroupMenuItem: FC<{ assetGroupId: string; assetGroupName: string }> =
             ]);
         },
         onSuccess: () => {
+            if (selectedNode?.graphId && assetGroupId === tierZeroAssetGroupId) {
+                dispatch(toggleTierZeroNode(selectedNode.graphId));
+            }
+
             addNotification(
                 'Update successful. Please check back later to view updated Asset Group.',
                 'AssetGroupUpdateSuccess'
