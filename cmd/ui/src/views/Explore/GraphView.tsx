@@ -203,6 +203,7 @@ const GraphView: FC = () => {
                 toggleCurrentSearch={toggleCurrentSearch}
                 handleContextMenu={handleContextMenu}
             />
+
             <ContextMenu contextMenu={contextMenu} handleClose={handleCloseContextMenu} />
 
             <Grid
