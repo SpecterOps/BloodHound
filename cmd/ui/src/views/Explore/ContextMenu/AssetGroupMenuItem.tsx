@@ -14,9 +14,9 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { MenuItem } from '@mui/material';
+import { Button, Dialog, DialogActions, DialogContent, DialogTitle, MenuItem } from '@mui/material';
 import { apiClient, useNotifications } from 'bh-shared-ui';
-import { FC } from 'react';
+import { FC, useState } from 'react';
 import { useMutation, useQuery } from 'react-query';
 import { useSelector } from 'react-redux';
 import { selectTierZeroAssetGroupId } from 'src/ducks/assetgroups/reducer';
@@ -27,8 +27,12 @@ const AssetGroupMenuItem: FC<{ assetGroupId: string; assetGroupName: string }> =
     const { addNotification } = useNotifications();
     const dispatch = useAppDispatch();
 
+    const [open, setOpen] = useState(false);
+
     const selectedNode = useSelector((state: AppState) => state.entityinfo.selectedNode);
     const tierZeroAssetGroupId = useSelector(selectTierZeroAssetGroupId);
+
+    const isMenuItemForTierZero = assetGroupId === tierZeroAssetGroupId;
 
     const mutation = useMutation({
         mutationFn: ({ nodeId, action }: { nodeId: string; action: 'add' | 'remove' }) => {
@@ -41,7 +45,7 @@ const AssetGroupMenuItem: FC<{ assetGroupId: string; assetGroupName: string }> =
             ]);
         },
         onSuccess: () => {
-            if (selectedNode?.graphId && assetGroupId === tierZeroAssetGroupId) {
+            if (selectedNode?.graphId && isMenuItemForTierZero) {
                 dispatch(toggleTierZeroNode(selectedNode.graphId));
             }
 
@@ -78,6 +82,15 @@ const AssetGroupMenuItem: FC<{ assetGroupId: string; assetGroupName: string }> =
         }
     };
 
+    const handleOpenConfirmation = (e: React.MouseEvent<HTMLLIElement>) => {
+        e.stopPropagation();
+        setOpen(true);
+    };
+
+    const handleCloseConfirmation = () => {
+        setOpen(false);
+    };
+
     // error state, data didn't load
     if (!assetGroupMembers) {
         return null;
@@ -85,13 +98,61 @@ const AssetGroupMenuItem: FC<{ assetGroupId: string; assetGroupName: string }> =
 
     // selected node is not a member of the group
     if (assetGroupMembers.length === 0) {
-        return <MenuItem onClick={handleAddToAssetGroup}>Add to {assetGroupName}</MenuItem>;
+        return (
+            <>
+                <MenuItem onClick={isMenuItemForTierZero ? handleOpenConfirmation : handleAddToAssetGroup}>
+                    Add to {assetGroupName}
+                </MenuItem>
+                {isMenuItemForTierZero ? (
+                    <ConfirmationDialog
+                        handleCancel={handleCloseConfirmation}
+                        handleApply={handleAddToAssetGroup}
+                        open={open}
+                        dialogContent={`Are you sure you want to add this node to ${assetGroupName}? This action will initiate an analysis run to update group membership.`}
+                    />
+                ) : null}
+            </>
+        );
     }
 
     // selected node is a custom member of the group
     if (assetGroupMembers.length === 1 && assetGroupMembers[0].custom_member) {
-        return <MenuItem onClick={handleRemoveFromAssetGroup}>Remove from {assetGroupName}</MenuItem>;
+        return (
+            <>
+                <MenuItem onClick={isMenuItemForTierZero ? handleOpenConfirmation : handleRemoveFromAssetGroup}>
+                    Remove from {assetGroupName}
+                </MenuItem>
+                {isMenuItemForTierZero ? (
+                    <ConfirmationDialog
+                        handleCancel={() => setOpen(false)}
+                        handleApply={handleRemoveFromAssetGroup}
+                        open={open}
+                        dialogContent={`Are you sure you want to remove this node from ${assetGroupName}? This action will initiate an analysis run to update group membership.`}
+                    />
+                ) : null}
+            </>
+        );
     }
+};
+
+const ConfirmationDialog: FC<{
+    open: boolean;
+    handleCancel: () => void;
+    handleApply: () => void;
+    dialogContent: string;
+}> = ({ open, handleApply, handleCancel, dialogContent }) => {
+    return (
+        <Dialog open={open}>
+            <DialogTitle>Confirm Selection</DialogTitle>
+            <DialogContent>{dialogContent}</DialogContent>
+            <DialogActions>
+                <Button autoFocus onClick={handleCancel}>
+                    Cancel
+                </Button>
+                <Button onClick={handleApply}>Ok</Button>
+            </DialogActions>
+        </Dialog>
+    );
 };
 
 export default AssetGroupMenuItem;
