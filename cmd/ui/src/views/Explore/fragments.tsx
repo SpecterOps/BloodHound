@@ -15,11 +15,10 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Alert, Box, CircularProgress, Typography } from '@mui/material';
-import { EntityField, NodeIcon, format } from 'bh-shared-ui';
+import { AzureNodeKind, EntityField, EntityKinds, NodeIcon, format } from 'bh-shared-ui';
 import isEmpty from 'lodash/isEmpty';
 import React, { PropsWithChildren } from 'react';
 import { TIER_ZERO_TAG } from 'src/constants';
-import { GraphNodeTypes } from 'src/ducks/graph/types';
 import { sourceNodeSelected } from 'src/ducks/searchbar/actions';
 
 import { useAppDispatch } from 'src/store';
@@ -27,6 +26,8 @@ import useCollapsibleSectionStyles from 'src/views/Explore/InfoStyles/Collapsibl
 
 const exclusionList = [
     'gid',
+    'admin_rights_count',
+    'admin_rights_risk_percent',
     'hasspn',
     'system_tags',
     'user_tags',
@@ -160,7 +161,7 @@ interface BasicObjectInfoFieldsProps {
     name?: string;
 }
 
-const RelatedKindField = (fieldLabel: string, relatedKind: GraphNodeTypes, id: string, name?: string) => {
+const RelatedKindField = (fieldLabel: string, relatedKind: EntityKinds, id: string, name?: string) => {
     const dispatch = useAppDispatch();
     return (
         <Box padding={1}>
@@ -200,14 +201,14 @@ export const BasicObjectInfoFields: React.FC<BasicObjectInfoFieldsProps> = (prop
             {props.service_principal_id &&
                 RelatedKindField(
                     'Service Principal ID:',
-                    GraphNodeTypes.AZServicePrincipal,
+                    AzureNodeKind.ServicePrincipal,
                     props.service_principal_id,
                     props.name
                 )}
             {props.noderesourcegroupid &&
                 RelatedKindField(
                     'Node Resource Group ID:',
-                    GraphNodeTypes.AZResourceGroup,
+                    AzureNodeKind.ResourceGroup,
                     props.noderesourcegroupid,
                     props.name
                 )}

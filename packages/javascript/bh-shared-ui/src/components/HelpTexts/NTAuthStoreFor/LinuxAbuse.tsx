@@ -18,7 +18,14 @@ import { FC } from 'react';
 import { Typography } from '@mui/material';
 
 const Abuse: FC = () => {
-    return <Typography variant='body2'>There is no abuse info related to this edge.</Typography>;
+    return (
+        <Typography variant='body2'>
+            An attacker may perform several attacks that rely on certificates being stored in the NTAuthStore, such as
+            ESC1. This relationship alone is not enough to escalate rights or impersonate other principals. This
+            relationship may contribute to other relationships and attributes, from which an escalation opportunity may
+            emerge.
+        </Typography>
+    );
 };
 
 export default Abuse;

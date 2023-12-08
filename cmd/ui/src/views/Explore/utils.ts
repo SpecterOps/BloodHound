@@ -34,13 +34,6 @@ import { GlyphLocation } from 'src/rendering/programs/node.glyphs';
 import { EdgeDirection, EdgeParams, NodeParams } from 'src/utils';
 import { NODE_ICON, GLYPHS, UNKNOWN_ICON } from './svgIcons';
 
-export let controller = new AbortController();
-
-export const abortRequest = () => {
-    controller.abort();
-    controller = new AbortController();
-};
-
 export const formatObjectInfoFields = (props: any): EntityField[] => {
     let mappedFields: EntityField[] = [];
     const propKeys = Object.keys(props);

@@ -21,7 +21,7 @@ const Abuse: FC = () => {
     return (
         <Typography variant='body2'>
             An attacker may perform several attacks that rely on certificates being stored in the NTAuthStore, such as
-            ESC-1. This relationship alone is not enough to escalate rights or impersonate other principals. This
+            ESC1. This relationship alone is not enough to escalate rights or impersonate other principals. This
             relationship may contribute to other relationships and attributes, from which an escalation opportunity may
             emerge.
         </Typography>

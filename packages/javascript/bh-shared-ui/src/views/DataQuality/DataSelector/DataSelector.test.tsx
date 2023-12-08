@@ -17,8 +17,8 @@
 import userEvent from '@testing-library/user-event';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
-import { render, screen, within } from 'src/test-utils';
-import DataSelector from 'src/views/QA/DataSelector';
+import { render, screen, within } from '../../../test-utils';
+import DataSelector from './';
 
 const server = setupServer(
     rest.get(`/api/v2/available-domains`, (req, res, ctx) => {

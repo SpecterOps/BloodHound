@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { ActiveDirectoryRelationshipKind, AzureRelationshipKind } from 'bh-shared-ui';
+import { ActiveDirectoryRelationshipKind, AzureRelationshipKind } from '../../../graphSchema';
 
 export type Category = {
     categoryName: string;
@@ -88,11 +88,7 @@ export const AllEdgeTypes: Category[] = [
             },
             {
                 name: 'Active Directory Certificate Services',
-                edgeTypes: [
-                    ActiveDirectoryRelationshipKind.ADCSESC1,
-                    ActiveDirectoryRelationshipKind.HostsCAService,
-                    ActiveDirectoryRelationshipKind.GoldenCert,
-                ],
+                edgeTypes: [ActiveDirectoryRelationshipKind.ADCSESC1, ActiveDirectoryRelationshipKind.GoldenCert],
             },
         ],
     },

@@ -16,8 +16,67 @@
 
 import { useQuery } from 'react-query';
 import { DateTime } from 'luxon';
-import { apiClient } from 'bh-shared-ui';
-import { ActiveDirectoryDataQualityResponse, AzureDataQualityResponse } from './types';
+import { apiClient } from '../utils/api';
+
+export type Domain = {
+    type: string;
+    impactValue: number;
+    name: string;
+    id: string;
+    collected: boolean;
+};
+
+export type ActiveDirectoryQualityStat = {
+    groups: number;
+    ous: number;
+    gpos: number;
+    aiacas: number;
+    rootcas: number;
+    enterprisecas: number;
+    ntauthstores: number;
+    certtemplates: number;
+    acls: number;
+    relationships: number;
+    users: number;
+    containers?: number;
+    computers: number;
+    domains?: number;
+    sessions: number;
+    local_group_completeness: number;
+    session_completeness: number;
+    created_at: string;
+};
+
+export type ActiveDirectoryDataQualityResponse = {
+    start: string;
+    end: string;
+    limit: number;
+    data: ActiveDirectoryQualityStat[];
+};
+
+export type AzureDataQualityStat = {
+    tenantid: string;
+    users: number;
+    groups: number;
+    apps: number;
+    service_principals: number;
+    devices: number;
+    management_groups: number;
+    subscriptions: number;
+    tenants?: number;
+    resource_groups: number;
+    vms: number;
+    key_vaults: number;
+    relationships: number;
+    run_id: string;
+};
+
+export type AzureDataQualityResponse = {
+    start: string;
+    end: string;
+    limit: number;
+    data: AzureDataQualityStat[];
+};
 
 const now = DateTime.now();
 

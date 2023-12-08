@@ -14,6 +14,6 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import QA from './QA';
+import QualityAssurance from './QA';
 
-export default QA;
+export default QualityAssurance;

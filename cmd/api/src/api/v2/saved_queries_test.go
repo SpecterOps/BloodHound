@@ -17,6 +17,7 @@
 package v2_test
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -47,8 +48,10 @@ func TestResources_ListSavedQueries_SortingError(t *testing.T) {
 	defer mockCtrl.Finish()
 
 	endpoint := "/api/v2/saved-queries"
+	userId, err := uuid2.NewV4()
+	require.Nil(t, err)
 
-	if req, err := http.NewRequest("GET", endpoint, nil); err != nil {
+	if req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), "GET", endpoint, nil); err != nil {
 		t.Fatal(err)
 	} else {
 		q := url.Values{}
@@ -76,8 +79,10 @@ func TestResources_ListSavedQueries_InvalidFilterColumn(t *testing.T) {
 	defer mockCtrl.Finish()
 
 	endpoint := "/api/v2/saved-queries"
+	userId, err := uuid2.NewV4()
+	require.Nil(t, err)
 
-	if req, err := http.NewRequest("GET", endpoint, nil); err != nil {
+	if req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), "GET", endpoint, nil); err != nil {
 		t.Fatal(err)
 	} else {
 		q := url.Values{}
@@ -105,8 +110,10 @@ func TestResources_ListSavedQueries_InvalidFilterPredicate(t *testing.T) {
 	defer mockCtrl.Finish()
 
 	endpoint := "/api/v2/saved-queries"
+	userId, err := uuid2.NewV4()
+	require.Nil(t, err)
 
-	if req, err := http.NewRequest("GET", endpoint, nil); err != nil {
+	if req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), "GET", endpoint, nil); err != nil {
 		t.Fatal(err)
 	} else {
 		q := url.Values{}
@@ -133,8 +140,10 @@ func TestResources_ListSavedQueries_InvalidSkip(t *testing.T) {
 	defer mockCtrl.Finish()
 
 	endpoint := "/api/v2/saved-queries"
+	userId, err := uuid2.NewV4()
+	require.Nil(t, err)
 
-	if req, err := http.NewRequest("GET", endpoint, nil); err != nil {
+	if req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), "GET", endpoint, nil); err != nil {
 		t.Fatal(err)
 	} else {
 		q := url.Values{}
@@ -161,8 +170,10 @@ func TestResources_ListSavedQueries_InvalidLimit(t *testing.T) {
 	defer mockCtrl.Finish()
 
 	endpoint := "/api/v2/saved-queries"
+	userId, err := uuid2.NewV4()
+	require.Nil(t, err)
 
-	if req, err := http.NewRequest("GET", endpoint, nil); err != nil {
+	if req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), "GET", endpoint, nil); err != nil {
 		t.Fatal(err)
 	} else {
 		q := url.Values{}
@@ -193,24 +204,11 @@ func TestResources_ListSavedQueries_DBError(t *testing.T) {
 	userId, err := uuid2.NewV4()
 	require.Nil(t, err)
 
-	bhCtx := ctx.Context{
-		RequestID: "",
-		AuthCtx: auth.Context{
-			Session: model.UserSession{
-				User:   model.User{},
-				UserID: userId,
-			},
-		},
-		Host: nil,
-	}
-	goContext := bhCtx.ConstructGoContext()
-
 	mockDB.EXPECT().ListSavedQueries(userId, "", model.SQLFilter{}, 0, 10000).Return(model.SavedQueries{}, 0, fmt.Errorf("foo"))
 
-	if req, err := http.NewRequest("GET", endpoint, nil); err != nil {
+	if req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), "GET", endpoint, nil); err != nil {
 		t.Fatal(err)
 	} else {
-		req = req.WithContext(goContext)
 		req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
 
 		router := mux.NewRouter()
@@ -235,18 +233,6 @@ func TestResources_ListSavedQueries(t *testing.T) {
 	userId, err := uuid2.NewV4()
 	require.Nil(t, err)
 
-	bhCtx := ctx.Context{
-		RequestID: "",
-		AuthCtx: auth.Context{
-			Session: model.UserSession{
-				User:   model.User{},
-				UserID: userId,
-			},
-		},
-		Host: nil,
-	}
-	goContext := bhCtx.ConstructGoContext()
-
 	mockDB.EXPECT().ListSavedQueries(userId, gomock.Any(), gomock.Any(), 1, 10).Return(model.SavedQueries{
 		{
 			UserID: userId.String(),
@@ -255,10 +241,9 @@ func TestResources_ListSavedQueries(t *testing.T) {
 		},
 	}, 1, nil)
 
-	if req, err := http.NewRequest("GET", endpoint, nil); err != nil {
+	if req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), "GET", endpoint, nil); err != nil {
 		t.Fatal(err)
 	} else {
-		req = req.WithContext(goContext)
 		q := url.Values{}
 		q.Add("sort_by", "-name")
 		q.Add("name", "eq:myQuery")
@@ -289,24 +274,11 @@ func TestResources_CreateSavedQuery_InvalidBody(t *testing.T) {
 	userId, err := uuid2.NewV4()
 	require.Nil(t, err)
 
-	bhCtx := ctx.Context{
-		RequestID: "",
-		AuthCtx: auth.Context{
-			Session: model.UserSession{
-				User:   model.User{},
-				UserID: userId,
-			},
-		},
-		Host: nil,
-	}
-	goContext := bhCtx.ConstructGoContext()
-
 	payload := "foobar"
 
-	req, err := http.NewRequest("POST", endpoint, must.MarshalJSONReader(payload))
+	req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), "POST", endpoint, must.MarshalJSONReader(payload))
 	require.Nil(t, err)
 
-	req = req.WithContext(goContext)
 	req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
 
 	router := mux.NewRouter()
@@ -329,24 +301,11 @@ func TestResources_CreateSavedQuery_EmptyBody(t *testing.T) {
 	userId, err := uuid2.NewV4()
 	require.Nil(t, err)
 
-	bhCtx := ctx.Context{
-		RequestID: "",
-		AuthCtx: auth.Context{
-			Session: model.UserSession{
-				User:   model.User{},
-				UserID: userId,
-			},
-		},
-		Host: nil,
-	}
-	goContext := bhCtx.ConstructGoContext()
-
 	payload := v2.CreateSavedQueryRequest{}
 
-	req, err := http.NewRequest("POST", endpoint, must.MarshalJSONReader(payload))
+	req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), "POST", endpoint, must.MarshalJSONReader(payload))
 	require.Nil(t, err)
 
-	req = req.WithContext(goContext)
 	req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
 
 	router := mux.NewRouter()
@@ -370,18 +329,6 @@ func TestResources_CreateSavedQuery_DuplicateName(t *testing.T) {
 	userId, err := uuid2.NewV4()
 	require.Nil(t, err)
 
-	bhCtx := ctx.Context{
-		RequestID: "",
-		AuthCtx: auth.Context{
-			Session: model.UserSession{
-				User:   model.User{},
-				UserID: userId,
-			},
-		},
-		Host: nil,
-	}
-	goContext := bhCtx.ConstructGoContext()
-
 	mockDB.EXPECT().CreateSavedQuery(gomock.Any(), gomock.Any(), gomock.Any()).Return(model.SavedQuery{}, fmt.Errorf("duplicate key value violates unique constraint \"idx_saved_queries_composite_index\""))
 
 	payload := v2.CreateSavedQueryRequest{
@@ -389,10 +336,9 @@ func TestResources_CreateSavedQuery_DuplicateName(t *testing.T) {
 		Name:  "myQuery",
 	}
 
-	req, err := http.NewRequest("POST", endpoint, must.MarshalJSONReader(payload))
+	req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), "POST", endpoint, must.MarshalJSONReader(payload))
 	require.Nil(t, err)
 
-	req = req.WithContext(goContext)
 	req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
 
 	router := mux.NewRouter()
@@ -416,18 +362,6 @@ func TestResources_CreateSavedQuery_CreateFailure(t *testing.T) {
 	userId, err := uuid2.NewV4()
 	require.Nil(t, err)
 
-	bhCtx := ctx.Context{
-		RequestID: "",
-		AuthCtx: auth.Context{
-			Session: model.UserSession{
-				User:   model.User{},
-				UserID: userId,
-			},
-		},
-		Host: nil,
-	}
-	goContext := bhCtx.ConstructGoContext()
-
 	payload := v2.CreateSavedQueryRequest{
 		Query: "Match(n) return n",
 		Name:  "myCustomQuery1",
@@ -435,10 +369,9 @@ func TestResources_CreateSavedQuery_CreateFailure(t *testing.T) {
 
 	mockDB.EXPECT().CreateSavedQuery(userId, payload.Name, payload.Query).Return(model.SavedQuery{}, fmt.Errorf("foo"))
 
-	req, err := http.NewRequest("POST", endpoint, must.MarshalJSONReader(payload))
+	req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), "POST", endpoint, must.MarshalJSONReader(payload))
 	require.Nil(t, err)
 
-	req = req.WithContext(goContext)
 	req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
 
 	router := mux.NewRouter()
@@ -461,18 +394,6 @@ func TestResources_CreateSavedQuery(t *testing.T) {
 	userId, err := uuid2.NewV4()
 	require.Nil(t, err)
 
-	bhCtx := ctx.Context{
-		RequestID: "",
-		AuthCtx: auth.Context{
-			Session: model.UserSession{
-				User:   model.User{},
-				UserID: userId,
-			},
-		},
-		Host: nil,
-	}
-	goContext := bhCtx.ConstructGoContext()
-
 	payload := v2.CreateSavedQueryRequest{
 		Query: "Match(n) return n",
 		Name:  "myCustomQuery1",
@@ -484,10 +405,9 @@ func TestResources_CreateSavedQuery(t *testing.T) {
 		Query:  payload.Query,
 	}, nil)
 
-	req, err := http.NewRequest("POST", endpoint, must.MarshalJSONReader(payload))
+	req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), "POST", endpoint, must.MarshalJSONReader(payload))
 	require.Nil(t, err)
 
-	req = req.WithContext(goContext)
 	req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
 
 	router := mux.NewRouter()
@@ -509,22 +429,9 @@ func TestResources_DeleteSavedQuery_IDMalformed(t *testing.T) {
 	userId, err := uuid2.NewV4()
 	require.Nil(t, err)
 
-	bhCtx := ctx.Context{
-		RequestID: "",
-		AuthCtx: auth.Context{
-			Session: model.UserSession{
-				User:   model.User{},
-				UserID: userId,
-			},
-		},
-		Host: nil,
-	}
-	goContext := bhCtx.ConstructGoContext()
-
-	req, err := http.NewRequest("DELETE", "/api/v2/saved-queries/-1", nil)
+	req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), "DELETE", "/api/v2/saved-queries/-1", nil)
 	require.Nil(t, err)
 
-	req = req.WithContext(goContext)
 	req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
 
 	router := mux.NewRouter()
@@ -547,23 +454,12 @@ func TestResources_DeleteSavedQuery_DBError(t *testing.T) {
 	userId, err := uuid2.NewV4()
 	require.Nil(t, err)
 
-	bhCtx := ctx.Context{
-		RequestID: "",
-		AuthCtx: auth.Context{
-			Session: model.UserSession{
-				User:   model.User{},
-				UserID: userId,
-			},
-		},
-		Host: nil,
-	}
-	goContext := bhCtx.ConstructGoContext()
 	endpoint := "/api/v2/saved-queries/%s"
 	savedQueryId := "1"
 
 	mockDB.EXPECT().SavedQueryBelongsToUser(gomock.Any(), gomock.Any()).Return(false, fmt.Errorf("foo"))
 
-	req, err := http.NewRequestWithContext(goContext, "DELETE", fmt.Sprintf(endpoint, savedQueryId), nil)
+	req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), "DELETE", fmt.Sprintf(endpoint, savedQueryId), nil)
 	require.Nil(t, err)
 
 	req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
@@ -587,23 +483,12 @@ func TestResources_DeleteSavedQuery_QueryDoesNotBelongToUser(t *testing.T) {
 	userId, err := uuid2.NewV4()
 	require.Nil(t, err)
 
-	bhCtx := ctx.Context{
-		RequestID: "",
-		AuthCtx: auth.Context{
-			Session: model.UserSession{
-				User:   model.User{},
-				UserID: userId,
-			},
-		},
-		Host: nil,
-	}
-	goContext := bhCtx.ConstructGoContext()
 	endpoint := "/api/v2/saved-queries/%s"
 	savedQueryId := "1"
 
 	mockDB.EXPECT().SavedQueryBelongsToUser(gomock.Any(), gomock.Any()).Return(false, nil)
 
-	req, err := http.NewRequestWithContext(goContext, "DELETE", fmt.Sprintf(endpoint, savedQueryId), nil)
+	req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), "DELETE", fmt.Sprintf(endpoint, savedQueryId), nil)
 	require.Nil(t, err)
 
 	req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
@@ -628,23 +513,12 @@ func TestResources_DeleteSavedQuery_RecordNotFound(t *testing.T) {
 	userId, err := uuid2.NewV4()
 	require.Nil(t, err)
 
-	bhCtx := ctx.Context{
-		RequestID: "",
-		AuthCtx: auth.Context{
-			Session: model.UserSession{
-				User:   model.User{},
-				UserID: userId,
-			},
-		},
-		Host: nil,
-	}
-	goContext := bhCtx.ConstructGoContext()
 	endpoint := "/api/v2/saved-queries/%s"
 	savedQueryId := "1"
 
 	mockDB.EXPECT().SavedQueryBelongsToUser(gomock.Any(), gomock.Any()).Return(false, database.ErrNotFound)
 
-	req, err := http.NewRequestWithContext(goContext, "DELETE", fmt.Sprintf(endpoint, savedQueryId), nil)
+	req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), "DELETE", fmt.Sprintf(endpoint, savedQueryId), nil)
 	require.Nil(t, err)
 
 	req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
@@ -669,24 +543,13 @@ func TestResources_DeleteSavedQuery_RecordNotFound_EdgeCase(t *testing.T) {
 	userId, err := uuid2.NewV4()
 	require.Nil(t, err)
 
-	bhCtx := ctx.Context{
-		RequestID: "",
-		AuthCtx: auth.Context{
-			Session: model.UserSession{
-				User:   model.User{},
-				UserID: userId,
-			},
-		},
-		Host: nil,
-	}
-	goContext := bhCtx.ConstructGoContext()
 	endpoint := "/api/v2/saved-queries/%s"
 	savedQueryId := "1"
 
 	mockDB.EXPECT().SavedQueryBelongsToUser(gomock.Any(), gomock.Any()).Return(true, nil)
 	mockDB.EXPECT().DeleteSavedQuery(gomock.Any()).Return(database.ErrNotFound)
 
-	req, err := http.NewRequestWithContext(goContext, "DELETE", fmt.Sprintf(endpoint, savedQueryId), nil)
+	req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), "DELETE", fmt.Sprintf(endpoint, savedQueryId), nil)
 	require.Nil(t, err)
 
 	req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
@@ -711,24 +574,13 @@ func TestResources_DeleteSavedQuery_DeleteError(t *testing.T) {
 	userId, err := uuid2.NewV4()
 	require.Nil(t, err)
 
-	bhCtx := ctx.Context{
-		RequestID: "",
-		AuthCtx: auth.Context{
-			Session: model.UserSession{
-				User:   model.User{},
-				UserID: userId,
-			},
-		},
-		Host: nil,
-	}
-	goContext := bhCtx.ConstructGoContext()
 	endpoint := "/api/v2/saved-queries/%s"
 	savedQueryId := "1"
 
 	mockDB.EXPECT().SavedQueryBelongsToUser(gomock.Any(), gomock.Any()).Return(true, nil)
 	mockDB.EXPECT().DeleteSavedQuery(gomock.Any()).Return(fmt.Errorf("foo"))
 
-	req, err := http.NewRequestWithContext(goContext, "DELETE", fmt.Sprintf(endpoint, savedQueryId), nil)
+	req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), "DELETE", fmt.Sprintf(endpoint, savedQueryId), nil)
 	require.Nil(t, err)
 
 	req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
@@ -753,24 +605,13 @@ func TestResources_DeleteSavedQuery(t *testing.T) {
 	userId, err := uuid2.NewV4()
 	require.Nil(t, err)
 
-	bhCtx := ctx.Context{
-		RequestID: "",
-		AuthCtx: auth.Context{
-			Session: model.UserSession{
-				User:   model.User{},
-				UserID: userId,
-			},
-		},
-		Host: nil,
-	}
-	goContext := bhCtx.ConstructGoContext()
 	endpoint := "/api/v2/saved-queries/%s"
 	savedQueryId := "1"
 
 	mockDB.EXPECT().SavedQueryBelongsToUser(gomock.Any(), gomock.Any()).Return(true, nil)
 	mockDB.EXPECT().DeleteSavedQuery(gomock.Any()).Return(nil)
 
-	req, err := http.NewRequestWithContext(goContext, "DELETE", fmt.Sprintf(endpoint, savedQueryId), nil)
+	req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), "DELETE", fmt.Sprintf(endpoint, savedQueryId), nil)
 	require.Nil(t, err)
 
 	req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
@@ -781,4 +622,19 @@ func TestResources_DeleteSavedQuery(t *testing.T) {
 
 	handler.ServeHTTP(response, req)
 	require.Equal(t, http.StatusNoContent, response.Code)
+}
+
+func createContextWithOwnerId(id uuid2.UUID) context.Context {
+	bhCtx := ctx.Context{
+		RequestID: "",
+		AuthCtx: auth.Context{
+			Owner: model.User{
+				Unique: model.Unique{
+					ID: id,
+				},
+			},
+		},
+		Host: nil,
+	}
+	return bhCtx.ConstructGoContext()
 }

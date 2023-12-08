@@ -13,9 +13,7 @@
 -- limitations under the License.
 --
 -- SPDX-License-Identifier: Apache-2.0
-
-ALTER TABLE IF EXISTS ONLY asset_group_selectors
-  DROP CONSTRAINT IF EXISTS asset_group_selectors_name_key;
-
-ALTER TABLE IF EXISTS ONLY asset_group_selectors
-  ADD CONSTRAINT asset_group_selectors_name_assetgroupid_key UNIQUE (name, asset_group_id);
+DELETE FROM
+    saved_queries
+WHERE
+    user_id = '00000000-0000-0000-0000-000000000000'
