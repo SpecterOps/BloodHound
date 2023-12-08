@@ -40,13 +40,13 @@ const WindowsAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> =
                         the opsec considerations tab for why this may be a bad idea. The second, and highly recommended
                         method, is by using the Add-DomainGroupMember function in PowerView. This function is superior
                         to using the net.exe binary in several ways. For instance, you can supply alternate credentials,
-                        instead of needing to run a process as or logon as the user with the AddMember privilege.
+                        instead of needing to run a process as or logon as the user with the AddMember permission.
                         Additionally, you have much safer execution options than you do with spawning net.exe (see the
                         opsec tab).
                     </Typography>
 
                     <Typography variant='body2'>
-                        To abuse this privilege with PowerView's Add-DomainGroupMember, first import PowerView into your
+                        To abuse this permission with PowerView's Add-DomainGroupMember, first import PowerView into your
                         agent session or into a PowerShell instance at the console. You may need to authenticate to the
                         Domain Controller as{' '}
                         {sourceType === 'User'
@@ -142,13 +142,13 @@ const WindowsAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> =
                         considerations tab for why this may be a bad idea. The second, and highly recommended method, is
                         by using the Set-DomainUserPassword function in PowerView. This function is superior to using
                         the net.exe binary in several ways. For instance, you can supply alternate credentials, instead
-                        of needing to run a process as or logon as the user with the ForceChangePassword privilege.
+                        of needing to run a process as or logon as the user with the ForceChangePassword permission.
                         Additionally, you have much safer execution options than you do with spawning net.exe (see the
                         opsec tab).
                     </Typography>
 
                     <Typography variant='body2'>
-                        To abuse this privilege with PowerView's Set-DomainUserPassword, first import PowerView into
+                        To abuse this permission with PowerView's Set-DomainUserPassword, first import PowerView into
                         your agent session or into a PowerShell instance at the console. You may need to authenticate to
                         the Domain Controller as{' '}
                         {sourceType === 'User'
@@ -439,7 +439,7 @@ const WindowsAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> =
                     <Typography variant='body2'>
                         If you want to be more targeted with your approach, it is possible to specify precisely what
                         right you want to apply to precisely which kinds of descendent objects. You could, for example,
-                        grant a user "ForceChangePassword" privilege against all user objects, or grant a security group
+                        grant a user "ForceChangePassword" permission against all user objects, or grant a security group
                         the ability to read every GMSA password under a certain OU. Below is an example taken from
                         PowerView's help text on how to grant the "ITADMIN" user the ability to read the LAPS password
                         from all computer objects in the "Workstations" OU:
