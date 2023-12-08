@@ -24,9 +24,9 @@ const General: FC<EdgeInfoProps> = ({ sourceName, sourceType, targetName }) => {
         <>
             <Typography variant='body2'>
                 {groupSpecialFormat(sourceType, sourceName)} the DS-Replication-Get-Changes and the
-                DS-Replication-Get-Changes-All privilege on the domain {targetName}.
+                DS-Replication-Get-Changes-All permission on the domain {targetName}.
             </Typography>
-            <Typography variant='body2'>These two privileges allow a principal to perform a DCSync attack.</Typography>
+            <Typography variant='body2'>These two permissions allow a principal to perform a DCSync attack.</Typography>
         </>
     );
 };
