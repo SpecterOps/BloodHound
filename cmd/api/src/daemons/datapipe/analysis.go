@@ -62,6 +62,7 @@ func RunAnalysisOperations(ctx context.Context, db database.Database, graphDB gr
 		collector.Collect(fmt.Errorf("azure tier zero tagging failed: %w", err))
 	}
 
+	// TODO: Cleanup #ADCSFeatureFlag after full launch.
 	if adcsFlag, err := db.GetFlagByKey(appcfg.FeatureAdcs); err != nil {
 		collector.Collect(fmt.Errorf("error retrieving ADCS feature flag: %w", err))
 	} else if stats, err := ad.Post(ctx, graphDB, adcsFlag.Enabled); err != nil {
