@@ -22,7 +22,7 @@ export type SearchResult = {
     distinguishedname?: string;
     name: string;
     objectid: string;
-    system_tags: string;
+    system_tags?: string;
     type: string;
 };
 
