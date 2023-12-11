@@ -242,7 +242,7 @@ func TestEnrollOnBehalfOf(t *testing.T) {
 			results, err := ad2.EnrollOnBehalfOfVersionOne(tx, v1Templates, certTemplates)
 			require.Nil(t, err)
 
-			require.Len(t, results, 2)
+			require.Len(t, results, 3)
 
 			require.Contains(t, results, analysis.CreatePostRelationshipJob{
 				FromID: harness.EnrollOnBehalfOfHarnessOne.CertTemplate11.ID,
@@ -252,6 +252,12 @@ func TestEnrollOnBehalfOf(t *testing.T) {
 
 			require.Contains(t, results, analysis.CreatePostRelationshipJob{
 				FromID: harness.EnrollOnBehalfOfHarnessOne.CertTemplate13.ID,
+				ToID:   harness.EnrollOnBehalfOfHarnessOne.CertTemplate12.ID,
+				Kind:   ad.EnrollOnBehalfOf,
+			})
+
+			require.Contains(t, results, analysis.CreatePostRelationshipJob{
+				FromID: harness.EnrollOnBehalfOfHarnessOne.CertTemplate12.ID,
 				ToID:   harness.EnrollOnBehalfOfHarnessOne.CertTemplate12.ID,
 				Kind:   ad.EnrollOnBehalfOf,
 			})
@@ -286,16 +292,6 @@ func TestEnrollOnBehalfOf(t *testing.T) {
 			require.Contains(t, results, analysis.CreatePostRelationshipJob{
 				FromID: harness.EnrollOnBehalfOfHarnessTwo.CertTemplate21.ID,
 				ToID:   harness.EnrollOnBehalfOfHarnessTwo.CertTemplate23.ID,
-				Kind:   ad.EnrollOnBehalfOf,
-			})
-
-			results, err = ad2.EnrollOnBehalfOfSelfControl(tx, v1Templates)
-			require.Nil(t, err)
-
-			require.Len(t, results, 1)
-			require.Contains(t, results, analysis.CreatePostRelationshipJob{
-				FromID: harness.EnrollOnBehalfOfHarnessTwo.CertTemplate25.ID,
-				ToID:   harness.EnrollOnBehalfOfHarnessTwo.CertTemplate25.ID,
 				Kind:   ad.EnrollOnBehalfOf,
 			})
 
