@@ -88,7 +88,11 @@ export const AllEdgeTypes: Category[] = [
             },
             {
                 name: 'Active Directory Certificate Services',
-                edgeTypes: [ActiveDirectoryRelationshipKind.ADCSESC1, ActiveDirectoryRelationshipKind.GoldenCert],
+                edgeTypes: [
+                    ActiveDirectoryRelationshipKind.GoldenCert,
+                    ActiveDirectoryRelationshipKind.ADCSESC1,
+                    ActiveDirectoryRelationshipKind.ADCSESC3,
+                ],
             },
         ],
     },
