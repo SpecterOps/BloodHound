@@ -711,6 +711,136 @@ func GetEdgeCompositionPath(ctx context.Context, db graph.Database, edge *graph.
 	})
 }
 
+//func getADCSESC3EdgeComposition(tx graph.Transaction, edge *graph.Relationship) (graph.PathSet, error) {
+//	finalPaths := graph.NewPathSet()
+//	validECA1Paths := make(map[graph.ID]graph.PathSet)
+//	validECA2Paths := make(map[graph.ID]graph.PathSet)
+//	certTemplateCache := make(map[graph.ID]*graph.Node)
+//	secondCertTemplateStore := make([]*graph.Node, 0)
+//	ecaCache := make(map[graph.ID]*graph.Node)
+//
+//	if startNode, targetDomainNode, err := ops.FetchRelationshipNodes(tx, edge); err != nil {
+//		return finalPaths, err
+//	} else {
+//		if pathsToTemplates, err := ops.TraversePaths(tx, ops.TraversalPlan{
+//			Root:      startNode,
+//			Direction: graph.DirectionOutbound,
+//			BranchQuery: func() graph.Criteria {
+//				return query.KindIn(query.Relationship(), ad.Enroll, ad.GenericAll, ad.AllExtendedRights, ad.MemberOf)
+//			},
+//			DescentFilter: OutboundControlDescentFilter,
+//			PathFilter: func(ctx *ops.TraversalContext, segment *graph.PathSegment) bool {
+//				node := segment.Node
+//				if !node.Kinds.ContainsOneOf(ad.CertTemplate) {
+//					return false
+//				}
+//
+//				return true
+//			},
+//		}); err != nil {
+//			log.Errorf("Error getting paths from start node %d to templates: %v", startNode.ID, err)
+//			return finalPaths, err
+//		} else {
+//			//Start by building out our eca caches
+//			for _, path := range pathsToTemplates {
+//				certTemplate := path.Terminal()
+//				certTemplateCache[certTemplate.ID] = certTemplate
+//				if isStartCertTemplateValidESC3(certTemplate) {
+//					if pathsToECA, err := ops.FetchPathSet(tx, tx.Relationships().Filter(FilterPublishedCAs(certTemplate))); err != nil {
+//						log.Errorf("error getting eca published to for cert template %d: %v", certTemplate.ID, err)
+//					} else {
+//						for _, enterpriseCAs := range pathsToECA.Paths() {
+//							eca1 := enterpriseCAs.Terminal()
+//							if paths, err := FetchEnterpriseCAsCertChainPathToDomain(tx, eca1, targetDomainNode); err != nil {
+//								log.Errorf("error getting eca %d path to domain %d: %v", eca1.ID, targetDomainNode.ID, err)
+//							} else if paths.Len() == 0 {
+//								continue
+//							} else {
+//								var fullPath = graph.NewPathSet()
+//								fullPath.AddPath(path)
+//								fullPath.AddPathSet(pathsToECA)
+//								fullPath.AddPathSet(paths)
+//								validECA1Paths[eca1.ID] = fullPath
+//
+//							}
+//						}
+//					}
+//				}
+//
+//				if isEndCertTemplateValidESC3(certTemplate) {
+//					if pathsToECA, err := ops.FetchPathSet(tx, tx.Relationships().Filter(FilterPublishedCAs(certTemplate))); err != nil {
+//						log.Errorf("error getting eca published to for cert template %d: %v", certTemplate.ID, err)
+//					} else {
+//						for _, enterpriseCAs := range pathsToECA.Paths() {
+//							eca2 := enterpriseCAs.Terminal()
+//							if pathsToDomain, err := FetchEnterpriseCAsTrustedForAuthPathToDomain(tx, eca2, targetDomainNode); err != nil {
+//								log.Errorf("error getting eca %d path to domain %d: %v", eca2.ID, targetDomainNode.ID, err)
+//							} else if pathsToDomain.Len() == 0 {
+//								continue
+//							} else {
+//								var fullPath = graph.NewPathSet()
+//								fullPath.AddPath(path)
+//								fullPath.AddPathSet(pathsToECA)
+//								fullPath.AddPathSet(pathsToDomain)
+//								validECA2Paths[eca2.ID] = fullPath
+//							}
+//						}
+//					}
+//				}
+//			}
+//
+//			for eca1id, eca1paths := range validECA1Paths {
+//				for eca2id, eca2paths := range validECA2Paths {
+//					if enrollOnBehalfOfPath, err := ops.FetchPathSet(tx, tx.Relationships().Filter(query.And(
+//						query.Equals(query.StartID(), eca1id),
+//						query.Equals(query.EndID(), eca2id),
+//						query.Kind(query.Relationship(), ad.EnrollOnBehalfOf),
+//					))); err != nil {
+//						log.Errorf("Error getting enrollonbehalfofpaths from %d to %d: %v", eca1id, eca2id, err)
+//						continue
+//					} else if enrollEca1Paths, err := ops.FetchPathSet(tx, tx.Relationships().Filter(
+//						query.And(
+//							query.Equals(query.StartID(), startNode.ID),
+//							query.Equals(query.EndID(), eca1id),
+//							query.Kind(query.Relationship(), ad.Enroll)))); err != nil {
+//						log.Errorf("Error getting enroll from %d to %d: %v", startNode.ID, eca2id, err)
+//						continue
+//					} else if enrollEca2Paths, err := ops.FetchPathSet(tx, tx.Relationships().Filter(
+//						query.And(
+//							query.Equals(query.StartID(), startNode.ID),
+//							query.Equals(query.EndID(), eca2id),
+//							query.Kind(query.Relationship(), ad.Enroll)))); err != nil {
+//						log.Errorf("Error getting enroll from %d to %d: %v", startNode.ID, eca2id, err)
+//						continue
+//					} else if eca2, ok := ecaCache[eca2id]; !ok {
+//						continue
+//					} else if collected, err := eca2.Properties.Get(ad.EnrollmentAgentRestrictionsCollected.String()).Bool(); err != nil {
+//						log.Errorf("error getting enrollmentagentcollected for eca2 %d: %v", eca2.ID, err)
+//					} else if hasRestrictions, err := eca2.Properties.Get(ad.HasEnrollmentAgentRestrictions.String()).Bool(); err != nil {
+//						log.Errorf("error getting hasenrollmentagentrestrictions for ca %d: %v", eca2.ID, err)
+//					} else {
+//						if collected && hasRestrictions {
+//							if delegate, err := ops.FetchPathSet(tx, tx.Relationships().Filter(
+//								query.And(
+//									query.Equals(query.StartID(), startNode.ID),
+//									query.Equals(query.EndID(), eca2id),
+//									query.Kind(query.Relationship(), ad.Enroll)))); err != nil {
+//
+//							}
+//						}
+//						finalPaths.AddPathSet(eca1paths)
+//						finalPaths.AddPathSet(eca2paths)
+//						finalPaths.AddPathSet(enrollEca1Paths)
+//						finalPaths.AddPathSet(enrollEca2Paths)
+//						finalPaths.AddPathSet(enrollOnBehalfOfPath)
+//
+//					}
+//				}
+//			}
+//		}
+//	}
+//}
+
 func getADCSESC1EdgeComposition(tx graph.Transaction, edge *graph.Relationship) (graph.PathSet, error) {
 	finalPaths := graph.NewPathSet()
 	//Grab the start node as well as the target domain node
@@ -730,7 +860,8 @@ func getADCSESC1EdgeComposition(tx graph.Transaction, edge *graph.Relationship) 
 				if !node.Kinds.ContainsOneOf(ad.CertTemplate) {
 					return false
 				} else if props, err := getValidatePublishedCertTemplateForEsc1PropertyValues(node); err != nil {
-					log.Errorf("Error getting props for certtemplate %d: %w", node.ID, err)
+					log.Errorf("Error getting props for certtemplate %d: %v", node.ID, err)
+					return false
 				} else if !validatePublishedCertTemplateForEsc1(props) {
 					return false
 				}
@@ -738,26 +869,22 @@ func getADCSESC1EdgeComposition(tx graph.Transaction, edge *graph.Relationship) 
 				return true
 			},
 		}); err != nil {
-			log.Errorf("Error getting paths from start node %d to templates: %w", startNode.ID, err)
+			log.Errorf("Error getting paths from start node %d to templates: %v", startNode.ID, err)
 			return finalPaths, err
 		} else {
 			for _, path := range pathsToTemplates {
 				certTemplate := path.Terminal()
-				if ecaPaths, err := ops.FetchPathSet(tx, tx.Relationships().Filter(query.And(
-					query.Equals(query.StartID(), certTemplate.ID),
-					query.KindIn(query.End(), ad.EnterpriseCA),
-					query.KindIn(query.Relationship(), ad.PublishedTo),
-				))); err != nil {
-					log.Errorf("error getting eca published to for cert template %d : %w", certTemplate.ID, err)
+				if ecaPaths, err := ops.FetchPathSet(tx, tx.Relationships().Filter(FilterPublishedCAs(certTemplate))); err != nil {
+					log.Errorf("error getting eca published to for cert template %d : %v", certTemplate.ID, err)
 				} else {
 					for _, ecaPath := range ecaPaths {
 						eca := ecaPath.Terminal()
 						if domainPaths, err := FetchEnterpriseCAsCertChainPathToDomain(tx, eca, targetDomainNode); err != nil {
-							log.Errorf("error getting eca %d path to domain %d: %w", eca.ID, targetDomainNode.ID, err)
+							log.Errorf("error getting eca %d path to domain %d: %v", eca.ID, targetDomainNode.ID, err)
 						} else if domainPaths.Len() == 0 {
 							continue
 						} else if trustedForAuthPaths, err := FetchEnterpriseCAsTrustedForAuthPathToDomain(tx, eca, targetDomainNode); err != nil {
-							log.Errorf("error getting eca %d path to domain %d via trusted for auth: %w", eca.ID, targetDomainNode.ID, err)
+							log.Errorf("error getting eca %d path to domain %d via trusted for auth: %v", eca.ID, targetDomainNode.ID, err)
 						} else if trustedForAuthPaths.Len() == 0 {
 							continue
 						} else if userPathsToCa, err := ops.TraversePaths(tx, ops.TraversalPlan{
@@ -771,7 +898,7 @@ func getADCSESC1EdgeComposition(tx graph.Transaction, edge *graph.Relationship) 
 								return segment.Node.ID == eca.ID
 							},
 						}); err != nil {
-							log.Errorf("Error getting paths from start node %d to enterprise ca: %w", startNode.ID, err)
+							log.Errorf("Error getting paths from start node %d to enterprise ca: %v", startNode.ID, err)
 						} else if userPathsToCa.Len() == 0 {
 							continue
 						} else {

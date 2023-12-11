@@ -164,7 +164,7 @@ func PostADCSESC3(ctx context.Context, tx graph.Transaction, outC chan<- analysi
 func isStartCertTemplateValidESC3(template *graph.Node) bool {
 	if reqManagerApproval, err := template.Properties.Get(ad.RequiresManagerApproval.String()).Bool(); err != nil {
 		log.Errorf("error getting reqmanagerapproval for certtemplate %d: %w", template.ID, err)
-	} else if !reqManagerApproval {
+	} else if reqManagerApproval {
 		return false
 	} else if schemaVersion, err := template.Properties.Get(ad.SchemaVersion.String()).Float64(); err != nil {
 		log.Errorf("error getting schemaversion for certtemplate %d: %w", template.ID, err)
@@ -488,7 +488,7 @@ func PostADCS(ctx context.Context, db graph.Database, groupExpansions impact.Pat
 	} else {
 		operation.Stats.Merge(step1Stats)
 		operation.Stats.Merge(step2Stats)
-		var cache = ADCSCache{}
+		var cache = NewADCSCache()
 		cache.BuildCache(ctx, db, enterpriseCertAuthorities, certTemplates)
 
 		for _, domain := range domains {
