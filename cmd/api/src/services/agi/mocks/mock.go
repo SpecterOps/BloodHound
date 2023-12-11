@@ -78,3 +78,18 @@ func (mr *MockAgiDataMockRecorder) GetAllAssetGroups(arg0, arg1 interface{}) *go
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllAssetGroups", reflect.TypeOf((*MockAgiData)(nil).GetAllAssetGroups), arg0, arg1)
 }
+
+// GetAssetGroup mocks base method.
+func (m *MockAgiData) GetAssetGroup(arg0 int32) (model.AssetGroup, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAssetGroup", arg0)
+	ret0, _ := ret[0].(model.AssetGroup)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetAssetGroup indicates an expected call of GetAssetGroup.
+func (mr *MockAgiDataMockRecorder) GetAssetGroup(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAssetGroup", reflect.TypeOf((*MockAgiData)(nil).GetAssetGroup), arg0)
+}
