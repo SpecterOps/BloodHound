@@ -23,6 +23,11 @@ import (
 
 	"github.com/specterops/bloodhound/dawgs/graphcache"
 	"github.com/specterops/bloodhound/log"
+	"strings"
+	"time"
+
+	"github.com/specterops/bloodhound/dawgs/graphcache"
+	"github.com/specterops/bloodhound/log"
 
 	"github.com/RoaringBitmap/roaring/roaring64"
 	"github.com/specterops/bloodhound/analysis"

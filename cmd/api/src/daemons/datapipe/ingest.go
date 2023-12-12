@@ -60,6 +60,7 @@ func (s *Daemon) IngestAzureData(batch graph.Batch, converted ConvertedAzureData
 }
 
 func (s *Daemon) IngestWrapper(batch graph.Batch, wrapper DataWrapper) error {
+	// TODO: Cleanup #ADCSFeatureFlag after full launch.
 	adcsFlag, err := s.db.GetFlagByKey(appcfg.FeatureAdcs)
 	if err != nil {
 		return fmt.Errorf("error getting ADCS feature flag: %w", err)
