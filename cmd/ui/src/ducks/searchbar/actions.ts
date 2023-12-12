@@ -70,14 +70,10 @@ export const sourceNodeEdited = (searchTerm: string): types.SourceNodeEditedActi
     };
 };
 
-export const sourceNodeSelected = (
-    node: types.SearchNodeType | null,
-    preservePathfinding: boolean = false // edge case: we want to issue a pathfinding search (instead of a single node search) in the case that a destination node is already selected when this action is dispatched. this flag enables this behavior.
-): types.SourceNodeSelectedAction => {
+export const sourceNodeSelected = (node: types.SearchNodeType | null): types.SourceNodeSelectedAction => {
     return {
         type: types.SOURCE_NODE_SELECTED,
         node,
-        preservePathfinding,
     };
 };
 

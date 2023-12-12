@@ -105,7 +105,6 @@ export interface CypherQueryEditedAction {
 export interface SourceNodeSelectedAction {
     type: typeof SOURCE_NODE_SELECTED;
     node: SearchNodeType | null;
-    preservePathfinding: boolean;
 }
 
 export interface SourceNodeEditedAction {

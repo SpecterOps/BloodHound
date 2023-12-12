@@ -41,18 +41,14 @@ function* primarySearchWatcher(): SagaIterator {
     yield takeLatest(types.PRIMARY_SEARCH, primarySearchWorker);
 }
 
-function* primarySearchWorker(payload: types.SourceNodeSelectedAction) {
+function* primarySearchWorker() {
     const { primary, secondary, pathFilters }: types.SearchState = yield select((state: AppState) => state.search);
 
     const edges = pathFilters.filter((pathFilter) => pathFilter.checked).map((pathFilter) => pathFilter.edgeType);
 
-    // attempt a pathfinding search first if flag is true
-    if (payload.preservePathfinding) {
-        if (primary.value !== null && secondary.value !== null) {
-            yield put(startPathfindingQuery(primary.value.objectid, secondary.value.objectid, edges));
-        } else if (primary.value !== null) {
-            yield put(startSearchQuery(primary.value.objectid, types.SEARCH_TYPE_EXACT));
-        }
+    // attempt a pathfinding search first
+    if (primary.value !== null && secondary.value !== null) {
+        yield put(startPathfindingQuery(primary.value.objectid, secondary.value.objectid, edges));
     } else if (primary.value !== null) {
         yield put(startSearchQuery(primary.value.objectid, types.SEARCH_TYPE_EXACT));
     }
