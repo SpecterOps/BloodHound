@@ -1,0 +1,104 @@
+{
+    "/api/v2/rootcas/{object_id}": {
+        "parameters": [
+            {
+                "type": "string",
+                "description": "RootCA Object ID",
+                "name": "object_id",
+                "in": "path",
+                "required": true
+            }
+        ],
+        "get": {
+            "description": "Get basic info and counts for this RootCA",
+            "tags": [
+                "RootCA Entity API",
+                "Community",
+                "Enterprise"
+            ],
+            "summary": "Get rootca entity info",
+            "parameters": [
+                {
+                    "$ref": "#/definitions/parameters.PreferHeader"
+                }
+            ],
+            "responses": {
+                "200": {
+                    "description": "OK",
+                    "schema": {
+                        "$ref": "#/definitions/api.BasicResponse"
+                    }
+                },
+                "400": {
+                    "description": "Bad Request",
+                    "schema": {
+                        "$ref": "#/definitions/api.ErrorWrapper"
+                    }
+                },
+                "504": {
+                    "description": "Gateway Timeout",
+                    "schema": {
+                        "$ref": "#/definitions/api.ErrorWrapper"
+                    }
+                }
+            }
+        }
+    },
+    "/api/v2/rootcas/{object_id}/controllers": {
+        "parameters": [
+            {
+                "type": "string",
+                "description": "RootCA Object ID",
+                "name": "object_id",
+                "in": "path",
+                "required": true
+            }
+        ],
+        "get": {
+            "description": "List the principals that can control this RootCA through ACLs",
+            "tags": [
+                "RootCA Entity API",
+                "Community",
+                "Enterprise"
+            ],
+            "summary": "List rootca controllers",
+            "parameters": [
+                {
+                    "$ref": "#/definitions/parameters.PreferHeader"
+                },
+                {
+                    "type": "integer",
+                    "description": "Paging Skip",
+                    "name": "skip",
+                    "in": "query"
+                },
+                {
+                    "type": "integer",
+                    "description": "Paging Limit",
+                    "name": "limit",
+                    "in": "query"
+                }
+            ],
+            "responses": {
+                "200": {
+                    "description": "OK",
+                    "schema": {
+                        "$ref": "#/definitions/api.ResponseWrapper"
+                    }
+                },
+                "400": {
+                    "description": "Bad Request",
+                    "schema": {
+                        "$ref": "#/definitions/api.ErrorWrapper"
+                    }
+                },
+                "504": {
+                    "description": "Gateway Timeout",
+                    "schema": {
+                        "$ref": "#/definitions/api.ErrorWrapper"
+                    }
+                }
+            }
+        }
+    }
+}

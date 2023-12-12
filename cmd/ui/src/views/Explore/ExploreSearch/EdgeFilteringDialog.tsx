@@ -41,7 +41,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faChevronDown, faChevronUp } from '@fortawesome/free-solid-svg-icons';
 import { useSelector } from 'react-redux';
 import { pathFiltersSaved } from 'src/ducks/searchbar/actions';
-import { AllEdgeTypes, Category, Subcategory } from './edgeTypes';
+import { AllEdgeTypes, Category, Subcategory } from 'bh-shared-ui';
 import { AppState, useAppDispatch } from 'src/store';
 
 interface EdgeFilteringDialogProps {
@@ -171,7 +171,7 @@ const SubcategoryListItem = ({ subcategory, checked, setChecked }: SubcategoryLi
             setChecked={setChecked}
             collapsibleContent={
                 <List sx={{ pl: 4 }}>
-                    <ListItem>
+                    <ListItem sx={{ display: 'block'}}>
                         <EdgesView edgeTypes={edgeTypes} checked={checked} setChecked={setChecked} />
                     </ListItem>
                 </List>

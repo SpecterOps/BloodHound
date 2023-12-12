@@ -15,9 +15,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Box, Divider } from '@mui/material';
+import { EntityInfoDataTableProps } from 'bh-shared-ui';
 import React from 'react';
-import EntityInfoDataTable, { EntityInfoDataTableProps } from './EntityInfoDataTable';
-
+import EntityInfoDataTable from './EntityInfoDataTable';
 export interface EntityInfoDataTableListProps {
     tables: EntityInfoDataTableProps[];
 }
