@@ -115,7 +115,7 @@ func (s *neo4jTransaction) UpdateNodeBy(update graph.NodeUpdate) error {
 
 func newTransaction(ctx context.Context, session neo4j_core.Session, cfg graph.TransactionConfig, writeFlushSize int, batchWriteSize int, traversalMemoryLimit size.Size) *neo4jTransaction {
 	if traversalMemoryLimit == 0 {
-		traversalMemoryLimit = size.Gibibyte
+		traversalMemoryLimit = 2 * size.Gibibyte
 	}
 
 	return &neo4jTransaction{

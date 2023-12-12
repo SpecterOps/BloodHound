@@ -36,7 +36,7 @@ services:
     environment:
       - POSTGRES_USER=${BH_POSTGRES_USER:-bloodhound}
       - POSTGRES_PASSWORD=${BH_POSTGRES_PASSWORD:-bloodhoundcommunityedition}
-      - POSTGRES_DATABASE=${BH_POSTGRES_DATABASE:-bloodhound}
+      - POSTGRES_DB=${BH_POSTGRES_DB:-bloodhound}
     ports:
       - ${BH_POSTGRES_PORT:-5432}:5432
     volumes:
@@ -45,7 +45,7 @@ services:
       test:
         [
           "CMD-SHELL",
-          "pg_isready -U ${BH_POSTGRES_USER:-bloodhound} -d 'dbname=${BH_POSTGRES_DATABASE:-bloodhound}' -h 127.0.0.1 -p 5432"
+          "pg_isready -U ${BH_POSTGRES_USER:-bloodhound} -d 'dbname=${BH_POSTGRES_DB:-bloodhound}' -h 127.0.0.1 -p 5432"
         ]
       interval: 10s
       timeout: 5s

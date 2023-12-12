@@ -230,6 +230,11 @@ const ICONS: { [id in GraphNodeTypes]: string } = {
     [GraphNodeTypes.OU]: 'fa-sitemap',
     [GraphNodeTypes.User]: 'fa-user',
     [GraphNodeTypes.Container]: 'fa-box',
+    [GraphNodeTypes.AIACA]: 'fa-box',
+    [GraphNodeTypes.RootCA]: 'fa-landmark',
+    [GraphNodeTypes.EnterpriseCA]: 'fa-box',
+    [GraphNodeTypes.NTAuthStore]: 'fa-store',
+    [GraphNodeTypes.CertTemplate]: 'fa-id-card',
 };
 
 const setFontIcons = (data: Items): void => {

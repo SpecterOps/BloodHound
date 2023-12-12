@@ -35,7 +35,6 @@ import (
 	"github.com/specterops/bloodhound/src/daemons/datapipe"
 	"github.com/specterops/bloodhound/src/daemons/gc"
 	"github.com/specterops/bloodhound/src/database"
-	"github.com/specterops/bloodhound/src/database/migration"
 	"github.com/specterops/bloodhound/src/server"
 	"github.com/specterops/bloodhound/src/test/integration"
 	"github.com/specterops/bloodhound/src/test/integration/utils"
@@ -66,7 +65,7 @@ func StartBHServer(apiServerContext APIServerContext) error {
 		authenticator          = api.NewAuthenticator(apiServerContext.Configuration, apiServerContext.DB, database.NewContextInitializer(apiServerContext.DB))
 	)
 
-	registration.RegisterFossGlobalMiddleware(&routerInst, apiServerContext.Configuration, authenticator)
+	registration.RegisterFossGlobalMiddleware(&routerInst, apiServerContext.Configuration, auth.NewIdentityResolver(), authenticator)
 	registration.RegisterFossRoutes(
 		&routerInst,
 		apiServerContext.Configuration,
@@ -138,7 +137,7 @@ func (s *Context) EnableAPI(startFunc APIStartFunc) {
 		s.TestCtrl.Fatalf("Failed connecting to databases: %v", err)
 	} else if err := integration.Prepare(db); err != nil {
 		s.TestCtrl.Fatalf("Failed ensuring database: %v", err)
-	} else if err := server.MigrateDB(cfg, db, migration.ListBHModels()); err != nil {
+	} else if err := server.MigrateDB(cfg, db); err != nil {
 		s.TestCtrl.Fatalf("Failed migrating database: %v", err)
 	} else if err := server.MigrateGraph(cfg, graphDB); err != nil {
 		s.TestCtrl.Fatalf("Failed migrating Graph database: %v", err)

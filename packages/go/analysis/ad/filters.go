@@ -1,17 +1,17 @@
 // Copyright 2023 Specter Ops, Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// 
+//
 // SPDX-License-Identifier: Apache-2.0
 
 package ad
@@ -99,6 +99,38 @@ func OutboundControlledNodes(nodes *traversal.NodeCollector, skip, limit int) tr
 	)
 }
 
+func OutboundControlDescentFilter(ctx *ops.TraversalContext, segment *graph.PathSegment) bool {
+	var (
+		shouldDescend = true
+		sawControlRel = false
+	)
+
+	// We want to ensure that MemberOf is expanded as well as controls relationships but with one exception: we do not
+	// want to traverse more than one degree of control relationships. The question being answered for this entity query
+	// is, "what does this entity have direct control of, including the entity's group memberships." We also do not want to
+	// traverse a MemberOf after we traverse a control relationship
+	segment.Path().Walk(func(_, _ *graph.Node, relationship *graph.Relationship) bool {
+		if relationship.Kind.Is(ad.ACLRelationships()...) {
+			if !sawControlRel {
+				sawControlRel = true
+			} else {
+				// Reaching this condition means that this descent would result in a second control
+				// relationship in this path, making this descendent ineligible for further traversal
+				shouldDescend = false
+				return false
+			}
+		} else if relationship.Kind.Is(ad.MemberOf) && sawControlRel {
+			//If we've already seen a control rel, and we get to a MemberOf, we need to prevent a descent as well
+			shouldDescend = false
+			return false
+		}
+
+		return true
+	})
+
+	return shouldDescend
+}
+
 func FilterContainsRelationship() graph.Criteria {
 	return query.Kind(query.Relationship(), ad.Contains)
 }
@@ -138,4 +170,12 @@ func SelectGPOTierZeroCandidateFilter(node *graph.Node) bool {
 
 func SelectGPOContainerCandidateFilter(node *graph.Node) bool {
 	return node.Kinds.ContainsOneOf(ad.OU, ad.Domain)
+}
+
+func FilterEnrollers(node graph.Node) graph.Criteria {
+	return query.And(
+		query.Equals(query.EndID(), node.ID),
+		query.Kind(query.Relationship(), ad.Enroll),
+		query.Kind(query.Start(), ad.Entity),
+	)
 }

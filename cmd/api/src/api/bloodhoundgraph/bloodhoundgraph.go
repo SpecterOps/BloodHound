@@ -1,17 +1,17 @@
 // Copyright 2023 Specter Ops, Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// 
+//
 // SPDX-License-Identifier: Apache-2.0
 
 package bloodhoundgraph
@@ -248,6 +248,26 @@ func (s *BloodHoundGraphNode) SetIcon(nType string) {
 		s.FontIcon = &BloodHoundGraphFontIcon{
 			Text: "fa-list",
 		}
+	case "AIACA":
+		s.FontIcon = &BloodHoundGraphFontIcon{
+			Text: "fa-box",
+		}
+	case "RootCA":
+		s.FontIcon = &BloodHoundGraphFontIcon{
+			Text: "fa-landmark",
+		}
+	case "EnterpriseCA":
+		s.FontIcon = &BloodHoundGraphFontIcon{
+			Text: "fa-building",
+		}
+	case "NTAuthStore":
+		s.FontIcon = &BloodHoundGraphFontIcon{
+			Text: "fa-store",
+		}
+	case "CertTemplate":
+		s.FontIcon = &BloodHoundGraphFontIcon{
+			Text: "fa-id-card",
+		}
 	case "Meta":
 		if tier, ok := s.Data["admintier"]; ok {
 			if tier.(int64) == 0 {
@@ -319,6 +339,16 @@ func (s *BloodHoundGraphNode) SetBackground(nType string) {
 		s.BloodHoundGraphItem.Color = "#FFAA00"
 	case "GPO":
 		s.BloodHoundGraphItem.Color = "#998EFD"
+	case "AIACA":
+		s.BloodHoundGraphItem.Color = "#9769F0"
+	case "RootCA":
+		s.BloodHoundGraphItem.Color = "#6968E8"
+	case "EnterpriseCA":
+		s.BloodHoundGraphItem.Color = "#4696E9"
+	case "NTAuthStore":
+		s.BloodHoundGraphItem.Color = "#D575F5"
+	case "CertTemplate":
+		s.BloodHoundGraphItem.Color = "#B153F3"
 	case "Meta":
 		s.BloodHoundGraphItem.Color = "#000"
 	default:

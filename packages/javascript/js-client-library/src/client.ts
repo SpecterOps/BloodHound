@@ -16,7 +16,14 @@
 
 import axios, { AxiosInstance } from 'axios';
 import * as types from './types';
-import { BasicResponse, CreateAuthTokenResponse, ListAuthTokensResponse, PostureResponse } from './responses';
+import {
+    BasicResponse,
+    CreateAuthTokenResponse,
+    ListAuthTokensResponse,
+    PaginatedResponse,
+    PostureResponse,
+    SavedQuery,
+} from './responses';
 
 class BHEAPIClient {
     baseClient: AxiosInstance;
@@ -55,6 +62,28 @@ class BHEAPIClient {
 
     cypherSearch = (query: string, includeProperties?: boolean, options?: types.RequestOptions) => {
         return this.baseClient.post('/api/v2/graphs/cypher', { query, include_properties: includeProperties }, options);
+    };
+
+    getUserSavedQueries = (options?: types.RequestOptions) => {
+        return this.baseClient.get<PaginatedResponse<SavedQuery[]>>(
+            '/api/v2/saved-queries',
+            Object.assign(
+                {
+                    params: {
+                        sort_by: 'name',
+                    },
+                },
+                options
+            )
+        );
+    };
+
+    createUserQuery = (payload: types.CreateUserQueryRequest, options?: types.RequestOptions) => {
+        return this.baseClient.post<BasicResponse<SavedQuery>>('/api/v2/saved-queries', payload, options);
+    };
+
+    deleteUserQuery = (queryId: number, options?: types.RequestOptions) => {
+        return this.baseClient.delete(`/api/v2/saved-queries/${queryId}`, options);
     };
 
     getAvailableDomains = (options?: types.RequestOptions) => this.baseClient.get('/api/v2/available-domains', options);
@@ -1934,6 +1963,210 @@ class BHEAPIClient {
             )
         );
 
+    getContainerV2 = (id: string, counts?: boolean, options?: types.RequestOptions) =>
+        this.baseClient.get(
+            `/api/v2/containers/${id}`,
+            Object.assign(
+                {
+                    params: {
+                        counts,
+                    },
+                },
+                options
+            )
+        );
+
+    getContainerControllersV2 = (
+        id: string,
+        skip?: number,
+        limit?: number,
+        type?: string,
+        options?: types.RequestOptions
+    ) =>
+        this.baseClient.get(
+            `/api/v2/containers/${id}/controllers`,
+            Object.assign(
+                {
+                    params: {
+                        skip,
+                        limit,
+                        type,
+                    },
+                },
+                options
+            )
+        );
+
+    getAIACAV2 = (id: string, counts?: boolean, options?: types.RequestOptions) =>
+        this.baseClient.get(
+            `/api/v2/aiacas/${id}`,
+            Object.assign(
+                {
+                    params: {
+                        counts,
+                    },
+                },
+                options
+            )
+        );
+
+    getAIACAControllersV2 = (
+        id: string,
+        skip?: number,
+        limit?: number,
+        type?: string,
+        options?: types.RequestOptions
+    ) =>
+        this.baseClient.get(
+            `/api/v2/aiacas/${id}/controllers`,
+            Object.assign(
+                {
+                    params: {
+                        skip,
+                        limit,
+                        type,
+                    },
+                },
+                options
+            )
+        );
+
+    getRootCAV2 = (id: string, counts?: boolean, options?: types.RequestOptions) =>
+        this.baseClient.get(
+            `/api/v2/rootcas/${id}`,
+            Object.assign(
+                {
+                    params: {
+                        counts,
+                    },
+                },
+                options
+            )
+        );
+
+    getRootCAControllersV2 = (
+        id: string,
+        skip?: number,
+        limit?: number,
+        type?: string,
+        options?: types.RequestOptions
+    ) =>
+        this.baseClient.get(
+            `/api/v2/rootcas/${id}/controllers`,
+            Object.assign(
+                {
+                    params: {
+                        skip,
+                        limit,
+                        type,
+                    },
+                },
+                options
+            )
+        );
+
+    getEnterpriseCAV2 = (id: string, counts?: boolean, options?: types.RequestOptions) =>
+        this.baseClient.get(
+            `/api/v2/enterprisecas/${id}`,
+            Object.assign(
+                {
+                    params: {
+                        counts,
+                    },
+                },
+                options
+            )
+        );
+
+    getEnterpriseCAControllersV2 = (
+        id: string,
+        skip?: number,
+        limit?: number,
+        type?: string,
+        options?: types.RequestOptions
+    ) =>
+        this.baseClient.get(
+            `/api/v2/enterprisecas/${id}/controllers`,
+            Object.assign(
+                {
+                    params: {
+                        skip,
+                        limit,
+                        type,
+                    },
+                },
+                options
+            )
+        );
+
+    getNTAuthStoreV2 = (id: string, counts?: boolean, options?: types.RequestOptions) =>
+        this.baseClient.get(
+            `/api/v2/ntauthstores/${id}`,
+            Object.assign(
+                {
+                    params: {
+                        counts,
+                    },
+                },
+                options
+            )
+        );
+
+    getNTAuthStoreControllersV2 = (
+        id: string,
+        skip?: number,
+        limit?: number,
+        type?: string,
+        options?: types.RequestOptions
+    ) =>
+        this.baseClient.get(
+            `/api/v2/ntauthstores/${id}/controllers`,
+            Object.assign(
+                {
+                    params: {
+                        skip,
+                        limit,
+                        type,
+                    },
+                },
+                options
+            )
+        );
+
+    getCertTemplateV2 = (id: string, counts?: boolean, options?: types.RequestOptions) =>
+        this.baseClient.get(
+            `/api/v2/certtemplates/${id}`,
+            Object.assign(
+                {
+                    params: {
+                        counts,
+                    },
+                },
+                options
+            )
+        );
+
+    getCertTemplateControllersV2 = (
+        id: string,
+        skip?: number,
+        limit?: number,
+        type?: string,
+        options?: types.RequestOptions
+    ) =>
+        this.baseClient.get(
+            `/api/v2/certtemplates/${id}/controllers`,
+            Object.assign(
+                {
+                    params: {
+                        skip,
+                        limit,
+                        type,
+                    },
+                },
+                options
+            )
+        );
+
     getMetaV2 = (id: string, options?: types.RequestOptions) => this.baseClient.get(`/api/v2/meta/${id}`, options);
 
     getShortestPathV2 = (
@@ -1950,6 +2183,21 @@ class BHEAPIClient {
                         start_node: startNode,
                         end_node: endNode,
                         relationship_kinds: relationshipKinds,
+                    },
+                },
+                options
+            )
+        );
+
+    getEdgeComposition = (sourceNode: number, targetNode: number, edgeType: string, options?: types.RequestOptions) =>
+        this.baseClient.get<types.GraphResponse>(
+            '/api/v2/graphs/edge-composition',
+            Object.assign(
+                {
+                    params: {
+                        source_node: sourceNode,
+                        target_node: targetNode,
+                        edge_type: edgeType,
                     },
                 },
                 options

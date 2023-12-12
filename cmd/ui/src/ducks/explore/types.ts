@@ -164,6 +164,12 @@ export enum GraphNodeTypes {
     GPO = 'GPO',
     OU = 'OU',
     Domain = 'Domain',
+    AIACA = 'AIACA',
+    RootCA = 'RootCA',
+    EnterpriseCA = 'EnterpriseCA',
+    NTAuthStore = 'NTAuthStore',
+    CertTemplate = 'CertTemplate',
+    Container = 'Container',
     Meta = 'Meta',
 }
 

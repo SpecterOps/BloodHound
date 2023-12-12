@@ -14,6 +14,6 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-export * from './constants';
+export * from '../../utils/icons';
 export * from './NodeIcon';
 export { default } from './NodeIcon';

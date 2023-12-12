@@ -27,6 +27,16 @@ export const typeFormat = (type: string | undefined): string => {
     if (!type) return '';
     if (type === 'GPO' || type === 'OU') {
         return type;
+    } else if (type === 'CertTemplate') {
+        return 'certificate template';
+    } else if (type === 'EnterpriseCA') {
+        return 'enterprise CA';
+    } else if (type === 'RootCA') {
+        return 'root CA';
+    } else if (type === 'NTAuthStore') {
+        return 'NTAuth store';
+    } else if (type === 'AIACA') {
+        return 'AIA CA';
     } else {
         return type.toLowerCase();
     }

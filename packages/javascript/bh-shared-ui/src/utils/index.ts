@@ -15,8 +15,10 @@
 // SPDX-License-Identifier: Apache-2.0
 
 export * from './api';
+export * from './content';
 export * from './datetime';
 export * from './exportGraphData';
 export * from './entityInfoDisplay';
 export * from './passwd';
 export * from './user';
+export * from './icons';

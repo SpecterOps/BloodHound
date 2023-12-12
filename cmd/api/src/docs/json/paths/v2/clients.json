@@ -263,6 +263,15 @@
         }
     },
     "/api/v2/clients/{client_id}": {
+        "parameters": [
+            {
+                "type": "string",
+                "description": "Client ID",
+                "name": "client_id",
+                "in": "path",
+                "required": true
+            }
+        ],
         "get": {
             "description": "Gets given client for processing collection events",
             "tags": [
@@ -435,13 +444,6 @@
                 {
                     "type": "string",
                     "description": "Filter results by column value. Valid filter predicates are eq, neq, gt, gte, lt, lte",
-                    "name": "client_id",
-                    "in": "query",
-                    "required": false
-                },
-                {
-                    "type": "string",
-                    "description": "Filter results by column value. Valid filter predicates are eq, neq, gt, gte, lt, lte",
                     "name": "event_id",
                     "in": "query",
                     "required": false
@@ -606,13 +608,6 @@
                     "type": "string",
                     "description": "Sort by column. Can be used multiple times; prepend hyphen for descending order. Sortable columns are client_id, event_id, execution_time, status, start_time, end_time, log_path, domain_controller, event_title, last_ingest, id, created_at, updated_at, deleted_at.",
                     "name": "sort_by",
-                    "in": "query",
-                    "required": false
-                },
-                {
-                    "type": "string",
-                    "description": "Filter results by column value. Valid filter predicates are eq, neq, gt, gte, lt, lte",
-                    "name": "client_id",
                     "in": "query",
                     "required": false
                 },

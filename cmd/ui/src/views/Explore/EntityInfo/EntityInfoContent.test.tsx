@@ -17,9 +17,9 @@
 import EntityInfoContent from './EntityInfoContent';
 import { EntityInfoPanelContextProvider } from './EntityInfoPanelContextProvider';
 import { render, screen, waitForElementToBeRemoved } from 'src/test-utils';
-import { GraphNodeTypes } from 'src/ducks/graph/types';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
+import { AzureNodeKind } from 'bh-shared-ui';
 
 const server = setupServer(
     rest.get('/api/v2/azure/roles', (req, res, ctx) => {
@@ -46,7 +46,7 @@ describe('EntityInfoContent', () => {
 
         render(
             <EntityInfoPanelContextProvider>
-                <EntityInfoContent id={testId} nodeType={GraphNodeTypes.AZRole} />
+                <EntityInfoContent id={testId} nodeType={AzureNodeKind.Role} />
             </EntityInfoPanelContextProvider>
         );
         await waitForElementToBeRemoved(() => screen.getByText('Loading...'));

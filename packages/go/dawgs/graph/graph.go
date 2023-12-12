@@ -16,7 +16,7 @@
 
 package graph
 
-//go:generate go run go.uber.org/mock/mockgen -copyright_file=../../../../LICENSE.header -destination=./mocks/graph.go -package=graph_mocks . Batch,Transaction,Database
+//go:generate go run go.uber.org/mock/mockgen -source=graph.go -copyright_file=../../../../LICENSE.header -destination=./mocks/graph.go -package=graph_mocks .
 
 import (
 	"context"
@@ -35,9 +35,7 @@ const (
 	Start                       = DirectionOutbound
 )
 
-var (
-	ErrInvalidDirection = errors.New("must be called with either an inbound or outbound direction")
-)
+var ErrInvalidDirection = errors.New("must be called with either an inbound or outbound direction")
 
 // Direction describes the direction of a graph traversal. A Direction may be either Inbound or DirectionOutbound.
 type Direction int
@@ -138,6 +136,9 @@ type PropertyValue interface {
 
 	// IDSlice returns the property value as a ID slice along with any type negotiation error information.
 	IDSlice() ([]ID, error)
+
+	//StringSlice returns the property value as a string slice along with any type negotiation error information.
+	StringSlice() ([]string, error)
 
 	// Uint64 returns the property value as an uint64 along with any type negotiation error information.
 	Uint64() (uint64, error)

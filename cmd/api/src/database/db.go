@@ -75,16 +75,14 @@ type Database interface {
 	RemoveAssetGroupSelector(selector model.AssetGroupSelector) error
 	CreateRawAssetGroupSelector(assetGroup model.AssetGroup, name, selector string) (model.AssetGroupSelector, error)
 	CreateAssetGroupSelector(assetGroup model.AssetGroup, spec model.AssetGroupSelectorSpec, systemSelector bool) (model.AssetGroupSelector, error)
-	UpdateAssetGroupSelectors(ctx ctx.Context, assetGroup model.AssetGroup, selectorSpecs []model.AssetGroupSelectorSpec, systemSelector bool) (map[string]model.AssetGroupSelectors, error)
+	UpdateAssetGroupSelectors(ctx ctx.Context, assetGroup model.AssetGroup, selectorSpecs []model.AssetGroupSelectorSpec, systemSelector bool) (model.UpdatedAssetGroupSelectors, error)
 	GetAllAssetGroupSelectors() (model.AssetGroupSelectors, error)
 	CreateAssetGroupCollection(collection model.AssetGroupCollection, entries model.AssetGroupCollectionEntries) error
 	RawFirst(value any) error
 	Wipe() error
-	MigrateModels([]any) error
+	Migrate() error
 	AppendAuditLog(ctx ctx.Context, action string, data model.Auditable) error
-	GetAuditLogs(offset, limit int) (model.AuditLogs, error)
-	GetAuditLogsBetween(before, after time.Time, offset, limit int, order string, filter model.SQLFilter) (model.AuditLogs, error)
-	GetAuditLogsCount() (int, error)
+	ListAuditLogs(before, after time.Time, offset, limit int, order string, filter model.SQLFilter) (model.AuditLogs, int, error)
 	CreateRole(role model.Role) (model.Role, error)
 	UpdateRole(role model.Role) error
 	GetAllRoles(order string, filter model.SQLFilter) (model.Roles, error)
@@ -218,10 +216,10 @@ func (s *BloodhoundDB) Wipe() error {
 	})
 }
 
-func (s *BloodhoundDB) MigrateModels(models []any) error {
+func (s *BloodhoundDB) Migrate() error {
 	// Run the migrator
-	if err := migration.NewMigrator(s.db).Migrate(models); err != nil {
-		log.Errorf("Error during database migration phase: %v", err)
+	if err := migration.NewMigrator(s.db).Migrate(); err != nil {
+		log.Errorf("Error during SQL database migration phase: %v", err)
 		return err
 	}
 
