@@ -45,11 +45,14 @@ const ContextMenu: FC<{ anchorPosition?: { x: number; y: number } }> = ({ anchor
         if (selectedNode) {
             dispatch(tabChanged('secondary'));
             dispatch(
-                sourceNodeSelected({
-                    name: selectedNode.name,
-                    objectid: selectedNode.id,
-                    type: selectedNode.type,
-                })
+                sourceNodeSelected(
+                    {
+                        name: selectedNode.name,
+                        objectid: selectedNode.id,
+                        type: selectedNode.type,
+                    },
+                    true
+                )
             );
         }
     };
