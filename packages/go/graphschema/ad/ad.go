@@ -432,7 +432,7 @@ func (s Property) String() string {
 	case OID:
 		return string(OID)
 	default:
-		panic("Invalid enumeration case: " + string(s))
+		return "Invalid enumeration case: " + string(s)
 	}
 }
 func (s Property) Name() string {
@@ -564,7 +564,7 @@ func (s Property) Name() string {
 	case OID:
 		return "OID"
 	default:
-		panic("Invalid enumeration case: " + string(s))
+		return "Invalid enumeration case: " + string(s)
 	}
 }
 func (s Property) Is(others ...graph.Kind) bool {
