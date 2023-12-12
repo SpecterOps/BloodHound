@@ -77,7 +77,93 @@ type IngestBase struct {
 	ContainedBy      TypedPrincipal
 }
 
+type Oid struct {
+	Name  string
+	Value string
+}
+
+type CertificateExtension struct {
+	Oid      Oid
+	Critical bool
+}
+
+type Certificate struct {
+	Thumbprint                string
+	Name                      string
+	Chain                     []string
+	HasBasicConstraints       bool
+	BasicConstraintPathLength int
+	EnhancedKeyUsageOids      []Oid
+	CertificateExtensions     []CertificateExtension
+}
+
+type EnrollmentAgentRestriction struct {
+	AccessType   string
+	Agent        TypedPrincipal
+	AllTemplates bool
+	Targets      []TypedPrincipal
+	Template     TypedPrincipal
+}
+
+type EnrollmentAgentRestrictions struct {
+	APIResult
+	Restrictions []EnrollmentAgentRestriction
+}
+
+type CASecurity struct {
+	APIResult
+	Data []ACE
+}
+
+type IsUserSpecifiesSanEnabled struct {
+	APIResult
+	Value bool
+}
+
+type CARegistryData struct {
+	CASecurity                  CASecurity
+	EnrollmentAgentRestrictions EnrollmentAgentRestrictions
+	IsUserSpecifiesSanEnabled   IsUserSpecifiesSanEnabled
+}
+
+type DCRegistryData struct {
+	CertificateMappingMethods           CertificateMappingMethods
+	StrongCertificateBindingEnforcement StrongCertificateBindingEnforcement
+}
+
+type CertificateMappingMethods struct {
+	APIResult
+	Value int
+}
+
+type StrongCertificateBindingEnforcement struct {
+	APIResult
+	Value int
+}
+
 type GPO IngestBase
+
+type AIACA IngestBase
+
+type RootCA struct {
+	IngestBase
+	DomainSID string
+}
+
+type EnterpriseCA struct {
+	IngestBase
+	CARegistryData       CARegistryData
+	EnabledCertTemplates []TypedPrincipal
+	HostingComputer      string
+	DomainSID            string
+}
+
+type NTAuthStore struct {
+	IngestBase
+	DomainSID string
+}
+
+type CertTemplate IngestBase
 
 type Session struct {
 	ComputerSID string
@@ -170,6 +256,7 @@ type Computer struct {
 	RegistrySessions   SessionAPIResult
 	LocalGroups        []LocalGroupAPIResult
 	UserRights         []UserRightsAssignmentAPIResult
+	DCRegistryData     DCRegistryData
 	Status             ComputerStatus
 	HasSIDHistory      []TypedPrincipal
 }

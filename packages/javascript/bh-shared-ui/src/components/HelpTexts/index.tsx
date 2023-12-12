@@ -68,7 +68,12 @@ import CanPSRemote from './CanPSRemote/CanPSRemote';
 import CanRDP from './CanRDP/CanRDP';
 import Contains from './Contains/Contains';
 import DCSync from './DCSync/DCSync';
+import DelegatedEnrollmentAgent from './DelegatedEnrollmentAgent/DelegatedEnrollmentAgent';
 import DumpSMSAPassword from './DumpSMSAPassword/DumpSMSAPassword';
+import ADCSESC3 from './ADCSESC3/ADCSESC3';
+import Enroll from './Enroll/Enroll';
+import EnrollOnBehalfOf from './EnrollOnBehalfOf/EnrollOnBehalfOf';
+import EnterpriseCAFor from './EnterpriseCAFor/EnterpriseCAFor';
 import ExecuteDCOM from './ExecuteDCOM/ExecuteDCOM';
 import ForceChangePassword from './ForceChangePassword/ForceChangePassword';
 import GPLink from './GPLink/GPLink';
@@ -76,23 +81,38 @@ import GenericAll from './GenericAll/GenericAll';
 import GenericWrite from './GenericWrite/GenericWrite';
 import GetChanges from './GetChanges/GetChanges';
 import GetChangesAll from './GetChangesAll/GetChangesAll';
+import GoldenCert from './GoldenCert/GoldenCert';
 import HasSIDHistory from './HasSIDHistory/HasSIDHistory';
 import HasSession from './HasSession/HasSession';
+import HostsCAService from './HostsCAService/HostsCAService';
+import IssuedSignedBy from './IssuedSignedBy/IssuedSignedBy';
+import ManageCA from './ManageCA/ManageCA';
+import ManageCertificates from './ManageCertificates/ManageCertificates';
 import MemberOf from './MemberOf/MemberOf';
+import NTAuthStoreFor from './NTAuthStoreFor/NTAuthStoreFor';
 import Owns from './Owns/Owns';
+import PublishedTo from './PublishedTo/PublishedTo';
 import ReadGMSAPassword from './ReadGMSAPassword/ReadGMSAPassword';
 import ReadLAPSPassword from './ReadLAPSPassword/ReadLAPSPassword';
+import RootCAFor from './RootCAFor/RootCAFor';
 import SQLAdmin from './SQLAdmin/SQLAdmin';
 import SyncLAPSPassword from './SyncLAPSPassword/SyncLAPSPassword';
 import TrustedBy from './TrustedBy/TrustedBy';
+import TrustedForNTAuth from './TrustedForNTAuth/TrustedForNTAuth';
 import WriteAccountRestrictions from './WriteAccountRestrictions/WriteAccountRestrictions';
 import WriteDacl from './WriteDacl/WriteDacl';
 import WriteOwner from './WriteOwner/WriteOwner';
+import WritePKIEnrollmentFlag from './WritePKIEnrollmentFlag/WritePKIEnrollmentFlag';
+import WritePKINameFlag from './WritePKINameFlag/WritePKINameFlag';
 import WriteSPN from './WriteSPN/WriteSPN';
+import ADCSESC1 from './ADCSESC1/ADCSESC1';
 
 export type EdgeInfoProps = {
+    edgeName?: string;
+    sourceDBId?: number;
     sourceName?: string;
     sourceType?: string;
+    targetDBId?: number;
     targetName?: string;
     targetType?: string;
 };
@@ -173,6 +193,23 @@ const EdgeInfoComponents = {
     AZKeyVaultKVContributor: AZKeyVaultKVContributor,
     AZLogicAppContributor: AZLogicAppContributor,
     AZNodeResourceGroup: AZNodeResourceGroup,
+    Enroll: Enroll,
+    EnterpriseCAFor: EnterpriseCAFor,
+    RootCAFor: RootCAFor,
+    PublishedTo: PublishedTo,
+    NTAuthStoreFor: NTAuthStoreFor,
+    IssuedSignedBy: IssuedSignedBy,
+    TrustedForNTAuth: TrustedForNTAuth,
+    HostsCAService: HostsCAService,
+    DelegatedEnrollmentAgent: DelegatedEnrollmentAgent,
+    EnrollOnBehalfOf: EnrollOnBehalfOf,
+    GoldenCert: GoldenCert,
+    ADCSESC1: ADCSESC1,
+    ADCSESC3: ADCSESC3,
+    ManageCA: ManageCA,
+    ManageCertificates: ManageCertificates,
+    WritePKIEnrollmentFlag: WritePKIEnrollmentFlag,
+    WritePKINameFlag: WritePKINameFlag,
 };
 
 export default EdgeInfoComponents;

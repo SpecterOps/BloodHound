@@ -72,6 +72,13 @@ describe('Formatting number properties', () => {
         //A value of 0 will not be held by azure property whencreated but this demonstrated handling the values differently
         expect(formatNumber(0, 'az', 'whencreated')).toEqual('0');
     });
+
+    it('properly displays bitwise integers', () => {
+        // Base happy path
+        expect(formatNumber(31, 'ad', 'certificatemappingmethodsraw')).toEqual('31 (0x1F)');
+        // Honors specified padding
+        expect(formatNumber(4, 'ad', 'certificatemappingmethodsraw')).toEqual('4 (0x04)');
+    });
 });
 
 describe('Formatting boolean properties', () => {

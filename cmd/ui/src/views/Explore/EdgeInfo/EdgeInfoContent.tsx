@@ -15,13 +15,49 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Box, Divider, Typography, useTheme } from '@mui/material';
-import { EdgeInfoComponents, EdgeSections, SelectedEdge } from 'bh-shared-ui';
-import { FC, Fragment } from 'react';
+import { EdgeInfoComponents, EdgeSections, SelectedEdge, apiClient } from 'bh-shared-ui';
+import isEmpty from 'lodash/isEmpty';
+import { Dispatch, FC, Fragment } from 'react';
+import { putGraphData, putGraphError, saveResponseForExport, setGraphLoading } from 'src/ducks/explore/actions';
+import { addSnackbar } from 'src/ducks/global/actions';
+import { useAppDispatch } from 'src/store';
+import { transformToFlatGraphResponse } from 'src/utils';
 import EdgeInfoCollapsibleSection from 'src/views/Explore/EdgeInfo/EdgeInfoCollapsibleSection';
 import EdgeObjectInformation from 'src/views/Explore/EdgeInfo/EdgeObjectInformation';
 
+const getOnChange = (dispatch: Dispatch<any>, sourceNodeId: number, targetNodeId: number, selectedEdgeName: string) => {
+    return async (label: string, isOpen: boolean) => {
+        if (isOpen) {
+            dispatch(setGraphLoading(true));
+
+            await apiClient
+                .getEdgeComposition(sourceNodeId, targetNodeId, selectedEdgeName)
+                .then((result) => {
+                    if (isEmpty(result.data.data.nodes)) {
+                        throw new Error('empty result set');
+                    }
+                    const formattedData = transformToFlatGraphResponse(result.data);
+
+                    dispatch(saveResponseForExport(formattedData));
+                    dispatch(putGraphData(formattedData));
+                })
+                .catch((err) => {
+                    if (err?.code === 'ERR_CANCELED') {
+                        return;
+                    }
+                    dispatch(putGraphError(err));
+                    dispatch(addSnackbar('Query failed. Please try again.', 'edgeCompositionGraphQuery', {}));
+                })
+                .finally(() => {
+                    dispatch(setGraphLoading(false));
+                });
+        }
+    };
+};
+
 const EdgeInfoContent: FC<{ selectedEdge: NonNullable<SelectedEdge> }> = ({ selectedEdge }) => {
     const theme = useTheme();
+    const dispatch = useAppDispatch();
 
     const sections = EdgeInfoComponents[selectedEdge.name as keyof typeof EdgeInfoComponents];
     const { sourceNode, targetNode } = selectedEdge;
@@ -33,15 +69,34 @@ const EdgeInfoContent: FC<{ selectedEdge: NonNullable<SelectedEdge> }> = ({ sele
                 <>
                     {Object.entries(sections).map((section, index) => {
                         const Section = section[1];
+
+                        const sendOnChange =
+                            (selectedEdge.name === 'GoldenCert' || selectedEdge.name === 'ADCSESC1') &&
+                            section[0] === 'composition';
+
                         return (
                             <Fragment key={index}>
                                 <Box padding={1}>
                                     <Divider />
                                 </Box>
-                                <EdgeInfoCollapsibleSection section={section[0] as keyof typeof EdgeSections}>
+                                <EdgeInfoCollapsibleSection
+                                    section={section[0] as keyof typeof EdgeSections}
+                                    onChange={
+                                        sendOnChange
+                                            ? getOnChange(
+                                                  dispatch,
+                                                  parseInt(`${sourceNode.id}`),
+                                                  parseInt(`${targetNode.id}`),
+                                                  selectedEdge.name
+                                              )
+                                            : undefined
+                                    }>
                                     <Section
+                                        edgeName={selectedEdge.name}
+                                        sourceDBId={sourceNode.id}
                                         sourceName={sourceNode.name}
                                         sourceType={sourceNode.type}
+                                        targetDBId={targetNode.id}
                                         targetName={targetNode.name}
                                         targetType={targetNode.type}
                                         targetId={targetNode.objectId}
