@@ -535,7 +535,7 @@ func TestResources_UpdateAssetGroupSelectors_SuccessT0(t *testing.T) {
 	handler := http.HandlerFunc(handlers.UpdateAssetGroupSelectors)
 
 	handler.ServeHTTP(response, req)
-	require.Equal(t, http.StatusOK, response.Code)
+	require.Equal(t, http.StatusCreated, response.Code)
 
 	resp := api.ResponseWrapper{}
 	err = json.Unmarshal(response.Body.Bytes(), &resp)
@@ -629,7 +629,7 @@ func TestResources_UpdateAssetGroupSelectors_SuccessOwned(t *testing.T) {
 	handler := http.HandlerFunc(handlers.UpdateAssetGroupSelectors)
 
 	handler.ServeHTTP(response, req)
-	require.Equal(t, http.StatusOK, response.Code)
+	require.Equal(t, http.StatusCreated, response.Code)
 
 	resp := api.ResponseWrapper{}
 	err = json.Unmarshal(response.Body.Bytes(), &resp)
