@@ -123,7 +123,6 @@ type Domain struct {
 	Trusts       []Trust
 	Links        []GPLink
 	GPOChanges   GPOResult
-	DNSProperty  map[string]map[string]any
 }
 
 type SessionAPIResult struct {

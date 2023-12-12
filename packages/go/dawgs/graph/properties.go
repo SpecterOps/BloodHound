@@ -1,23 +1,24 @@
 // Copyright 2023 Specter Ops, Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// 
+//
 // SPDX-License-Identifier: Apache-2.0
 
 package graph
 
 import (
 	"fmt"
+	"reflect"
 	"time"
 
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
@@ -412,6 +413,23 @@ func NewProperties() *Properties {
 
 type PropertyMap map[String]any
 
+func unwind(props map[string]any) map[string]any {
+	store := make(map[string]any, len(props))
+
+	for k, v := range props {
+		if reflect.ValueOf(v).Kind() == reflect.Map {
+			var mapV = unwind(v.(map[string]any))
+			for nestedK, nestedV := range mapV {
+				store[k+"_"+nestedK] = nestedV
+			}
+		} else {
+			store[k] = v
+		}
+	}
+
+	return store
+}
+
 func symbolMapToStringMap(props map[String]any) map[string]any {
 	store := make(map[string]any, len(props))
 
@@ -435,6 +453,8 @@ func AsProperties[T PropertyMap | map[String]any | map[string]any](rawStore T) *
 	case map[string]any:
 		store = typedStore
 	}
+
+	store = unwind(store)
 
 	return &Properties{
 		Map:      store,

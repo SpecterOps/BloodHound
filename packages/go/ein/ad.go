@@ -361,34 +361,6 @@ func ParseDomainMiscData(domains []Domain) []IngestibleNode {
 				}
 			}
 		}
-
-		//DNS Property
-		zones := domain.DNSProperty
-		dNSProps := make(map[string]any)
-		for zone, dNSProperties := range zones {
-			for dNSProperty, value := range dNSProperties {
-
-				switch dNSProperty {
-
-				// allow_update
-				case "allowUpdate":
-					switch int(value.(float64)) {
-					case 2:
-						dNSProps[zone+" "+dNSProperty] = "secure"
-						break
-					default:
-						dNSProps[zone+" "+dNSProperty] = "unsecure"
-						break
-					}
-					break
-				}
-			}
-		}
-		ingestibleNodes = append(ingestibleNodes, IngestibleNode{
-			PropertyMap: dNSProps,
-			ObjectID:    domain.ObjectIdentifier,
-			Label:       ad.Domain,
-		})
 	}
 	return ingestibleNodes
 
