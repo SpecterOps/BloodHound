@@ -181,17 +181,22 @@ func (s JobStatus) IsValidEndState() error {
 }
 
 type DomainCollectionResult struct {
-	JobID          int64  `json:"job_id"` // TODO remove this field to enable moving this model to FOSS
-	DomainName     string `json:"domain_name"`
-	Success        bool   `json:"success"`
-	Message        string `json:"message"`
-	UserCount      int    `json:"user_count"`
-	GroupCount     int    `json:"group_count"`
-	ComputerCount  int    `json:"computer_count"`
-	GPOCount       int    `json:"gpo_count"`
-	OUCount        int    `json:"ou_count"`
-	ContainerCount int    `json:"container_count"`
-	DeletedCount   int    `json:"deleted_count"`
+	JobID             int64  `json:"job_id"` // TODO remove this field to enable moving this model to FOSS
+	DomainName        string `json:"domain_name"`
+	Success           bool   `json:"success"`
+	Message           string `json:"message"`
+	UserCount         int    `json:"user_count"`
+	GroupCount        int    `json:"group_count"`
+	ComputerCount     int    `json:"computer_count"`
+	GPOCount          int    `json:"gpo_count"`
+	OUCount           int    `json:"ou_count"`
+	ContainerCount    int    `json:"container_count"`
+	AIACACount        int    `json:"aiaca_count"`
+	RootCACount       int    `json:"rootca_count"`
+	EnterpriseCACount int    `json:"enterpriseca_count"`
+	NTAuthStoreCount  int    `json:"ntauthstore_count"`
+	CertTemplateCount int    `json:"certtemplate_count"`
+	DeletedCount      int    `json:"deleted_count"`
 
 	BigSerial
 }

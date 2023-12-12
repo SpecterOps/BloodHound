@@ -33,6 +33,7 @@ import (
 	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/src/config"
 	"github.com/specterops/bloodhound/src/ctx"
+	"github.com/specterops/bloodhound/src/database"
 	"github.com/specterops/bloodhound/src/utils"
 	"github.com/unrolled/secure"
 )
@@ -237,4 +238,23 @@ func SecureHandlerMiddleware(cfg config.Configuration, contentSecurityPolicy str
 		// This will cause the AllowedHosts, SSLRedirect, and STSSeconds/STSIncludeSubdomains options to be ignored during development
 		IsDevelopment: !cfg.TLS.Enabled(),
 	}).Handler
+}
+
+// FeatureFlagMiddleware is a middleware that enables or disables a given endpoint based on the status of the passed feature flag.
+// It is intended to be attached directly to endpoints that should be affected by the feature flag. The feature flag determining the
+// endpoint's availability should be specified in flagKey.
+//
+// If the flag is enabled, the endpoint will work as intended. If the flag is disabled, a 404 will be returned to the user.
+func FeatureFlagMiddleware(db database.Database, flagKey string) mux.MiddlewareFunc {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
+			if flag, err := db.GetFlagByKey(flagKey); err != nil {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("error retrieving %s feature flag: %s", flagKey, err), request), response)
+			} else if flag.Enabled {
+				next.ServeHTTP(response, request)
+			} else {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, api.ErrorResponseDetailsResourceNotFound, request), response)
+			}
+		})
+	}
 }

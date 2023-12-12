@@ -562,12 +562,7 @@
   },
   "model.PaginatedResponse": {
     "type": "object",
-    "required": [
-      "count",
-      "limit",
-      "skip",
-      "data"
-    ],
+    "required": ["count", "limit", "skip", "data"],
     "properties": {
       "count": {
         "type": "integer"
@@ -644,6 +639,21 @@
       "gpos": {
         "type": "integer"
       },
+      "aiacas": {
+        "type": "integer"
+      },
+      "rootcas": {
+        "type": "integer"
+      },
+      "enterprisecas": {
+        "type": "integer"
+      },
+      "ntauthstores": {
+        "type": "integer"
+      },
+      "certtemplates": {
+        "type": "integer"
+      },
       "acls": {
         "type": "integer"
       },
@@ -706,6 +716,21 @@
         "type": "integer"
       },
       "gpos": {
+        "type": "integer"
+      },
+      "aiacas": {
+        "type": "integer"
+      },
+      "rootcas": {
+        "type": "integer"
+      },
+      "enterprisecas": {
+        "type": "integer"
+      },
+      "ntauthstores": {
+        "type": "integer"
+      },
+      "certtemplates": {
         "type": "integer"
       },
       "acls": {
@@ -830,54 +855,74 @@
       }
     }
   },
-    "model.DomainCollectionResult": {
-        "type": "object",
-        "properties": {
-            "job_id": {
-                "type": "integer"
-            },
-            "domain_name": {
-                "description": "Name of the domain that was enumerated",
-                "type": "string"
-            },
-            "message": {
-                "description": "A status message for a domain enumeration result",
-                "type": "string"
-            },
-            "success": {
-                "description": "A boolean value indicating whether the domain enumeration succeeded",
-                "type": "boolean"
-            },
-            "user_count": {
-                "Description": "A count of users enumerated",
-                "type": "integer"
-            },
-            "group_count": {
-                "Description": "A count of groups enumerated",
-                "type": "integer"
-            },
-            "computers": {
-                "Description": "A count of computers enumerated",
-                "type": "integer"
-            },
-            "containers": {
-                "Description": "A count of containers enumerated",
-                "type": "integer"
-            },
-            "gpos": {
-                "Description": "A count of gpos enumerated",
-                "type": "integer"
-            },
-            "ous": {
-                "Description": "A count of ous enumerated",
-                "type": "integer"
-            },
-            "deleted": {
-                "Description": "A count of deleted objects enumerated",
-                "type": "integer"
-            }
-        }
-    },
+  "model.DomainCollectionResult": {
+    "type": "object",
+    "properties": {
+      "job_id": {
+        "type": "integer"
+      },
+      "domain_name": {
+        "description": "Name of the domain that was enumerated",
+        "type": "string"
+      },
+      "message": {
+        "description": "A status message for a domain enumeration result",
+        "type": "string"
+      },
+      "success": {
+        "description": "A boolean value indicating whether the domain enumeration succeeded",
+        "type": "boolean"
+      },
+      "user_count": {
+        "Description": "A count of users enumerated",
+        "type": "integer"
+      },
+      "group_count": {
+        "Description": "A count of groups enumerated",
+        "type": "integer"
+      },
+      "computers": {
+        "Description": "A count of computers enumerated",
+        "type": "integer"
+      },
+      "containers": {
+        "Description": "A count of containers enumerated",
+        "type": "integer"
+      },
+      "gpos": {
+        "Description": "A count of gpos enumerated",
+        "type": "integer"
+      },
+      "aiacas": {
+        "Description": "A count of aiacas enumerated",
+        "type": "integer"
+      },
+      "rootcas": {
+        "Description": "A count of rootcas enumerated",
+        "type": "integer"
+      },
+      "enterprisecas": {
+        "Description": "A count of enterprisecas enumerated",
+        "type": "integer"
+      },
+      "ntauthstores": {
+        "Description": "A count of ntauthstores enumerated",
+        "type": "integer"
+      },
+      "certtemplates": {
+        "Description": "A count of certtemplates enumerated",
+        "type": "integer"
+      },
+      "ous": {
+        "Description": "A count of ous enumerated",
+        "type": "integer"
+      },
+      "deleted": {
+        "Description": "A count of deleted objects enumerated",
+        "type": "integer"
+      }
+    }
+  },
   "model.DisplayClientScheduledJob": {
     "type": "object",
     "properties": {

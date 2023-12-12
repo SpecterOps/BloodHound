@@ -186,6 +186,21 @@ func (mr *MockPropertyValueMockRecorder) String() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "String", reflect.TypeOf((*MockPropertyValue)(nil).String))
 }
 
+// StringSlice mocks base method.
+func (m *MockPropertyValue) StringSlice() ([]string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "StringSlice")
+	ret0, _ := ret[0].([]string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// StringSlice indicates an expected call of StringSlice.
+func (mr *MockPropertyValueMockRecorder) StringSlice() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "StringSlice", reflect.TypeOf((*MockPropertyValue)(nil).StringSlice))
+}
+
 // Time mocks base method.
 func (m *MockPropertyValue) Time() (time.Time, error) {
 	m.ctrl.T.Helper()

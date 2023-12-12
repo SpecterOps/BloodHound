@@ -28,6 +28,7 @@ import (
 	"github.com/specterops/bloodhound/src/analysis/azure"
 	"github.com/specterops/bloodhound/src/config"
 	"github.com/specterops/bloodhound/src/database"
+	"github.com/specterops/bloodhound/src/model/appcfg"
 	"github.com/specterops/bloodhound/src/services/agi"
 	"github.com/specterops/bloodhound/src/services/dataquality"
 )
@@ -61,7 +62,10 @@ func RunAnalysisOperations(ctx context.Context, db database.Database, graphDB gr
 		collector.Collect(fmt.Errorf("azure tier zero tagging failed: %w", err))
 	}
 
-	if stats, err := ad.Post(ctx, graphDB); err != nil {
+	// TODO: Cleanup #ADCSFeatureFlag after full launch.
+	if adcsFlag, err := db.GetFlagByKey(appcfg.FeatureAdcs); err != nil {
+		collector.Collect(fmt.Errorf("error retrieving ADCS feature flag: %w", err))
+	} else if stats, err := ad.Post(ctx, graphDB, adcsFlag.Enabled); err != nil {
 		collector.Collect(fmt.Errorf("error during ad post: %w", err))
 	} else {
 		stats.LogStats()

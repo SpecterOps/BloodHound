@@ -55,15 +55,23 @@ export interface UpdateAzureHoundClientRequest {
     name: string;
 }
 
-export interface CreateScheduledJobRequest {
+export interface CreateScheduledSharpHoundJobRequest {
     session_collection: boolean;
     ad_structure_collection: boolean;
     local_group_collection: boolean;
+    cert_services_collection: boolean;
+    ca_registry_collection: boolean;
+    dc_registry_collection: boolean;
     domain_controller?: string;
     ous: string[];
     domains: string[];
     all_trusted_domains: boolean;
 }
+
+// eslint-disable-next-line @typescript-eslint/no-empty-interface
+export type CreateScheduledAzureHoundJobRequest = Record<string, never>;
+
+export type CreateScheduledJobRequest = CreateScheduledSharpHoundJobRequest | CreateScheduledAzureHoundJobRequest;
 
 export interface ClientStartJobRequest {
     id: number;
@@ -82,6 +90,9 @@ export interface CreateSharpHoundEventRequest {
     session_collection: boolean;
     ad_structure_collection: boolean;
     local_group_collection: boolean;
+    cert_services_collection: boolean;
+    ca_registry_collection: boolean;
+    dc_registry_collection: boolean;
     ous: string[];
     domains: string[];
     all_trusted_domains: boolean;
@@ -98,6 +109,9 @@ export interface UpdateSharpHoundEventRequest {
     session_collection: boolean;
     ad_structure_collection: boolean;
     local_group_collection: boolean;
+    cert_services_collection: boolean;
+    ca_registry_collection: boolean;
+    dc_registry_collection: boolean;
     ous: string[];
     domains: string[];
     all_trusted_domains: boolean;

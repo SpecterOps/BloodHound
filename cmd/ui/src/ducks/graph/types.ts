@@ -43,6 +43,11 @@ export enum GraphNodeTypes {
     OU = 'OU',
     Domain = 'Domain',
     Container = 'Container',
+    AIACA = 'AIACA',
+    RootCA = 'RootCA',
+    EnterpriseCA = 'EnterpriseCA',
+    NTAuthStore = 'NTAuthStore',
+    CertTemplate = 'CertTemplate',
 }
 
 export interface GraphNodeData {

@@ -14,9 +14,37 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { GraphNodeTypes } from 'src/ducks/graph/types';
+import { AzureNodeKind, EntityKinds } from 'bh-shared-ui';
 
-import { AzureNodeKind } from 'bh-shared-ui';
+// --- AIACA
+export interface AIACAInfo extends EntityInfo {
+    props: BasicInfo & {
+        certthumbprint: string;
+        hascrosscertificatepair: boolean;
+        description?: string;
+    };
+    controllables: number;
+    controllers: number;
+}
+
+// --- CertTemplate
+export interface CertTemplateInfo extends EntityInfo {
+    props: BasicInfo & {
+        applicationpolicies: string;
+        authorizedsignatures: number;
+        certificateapplicationpolicy: string[];
+        ekus: string[];
+        enrolleesuppliessubject: boolean;
+        issuancepolicies: string;
+        oid: string;
+        renewalperiod: string;
+        requiresmanagerapproval: boolean;
+        schemaversion: number;
+        validityperiod: string;
+    };
+    controllables: number;
+    controllers: number;
+}
 
 // --- Computer
 export interface ComputerInfoGraph extends GraphInfo {
@@ -94,6 +122,28 @@ export interface DomainInfo extends EntityInfo {
     containers: number;
 }
 
+// --- EnterpriseCA
+export interface EnterpriseCAInfo extends EntityInfo {
+    props: BasicInfo & {
+        basicconstraintpathlength: number;
+        caname: string;
+        casecuritycollected: boolean;
+        certchain: string[];
+        certname: string;
+        certthumbprint: string;
+        dnshostname: string;
+        enrollmentagentrestrictionscollected: boolean;
+        flags: string;
+        hasbasicconstraints: boolean;
+        hasenrollmentagentrestrictions?: boolean;
+        isuserspecifiessanenabled?: boolean;
+        isuserspecifiessanenabledcollected: boolean;
+        description?: string;
+    };
+    controllables: number;
+    controllers: number;
+}
+
 // --- GPO
 export interface GPOInfoGraph extends GraphInfo {
     gpcpath: string;
@@ -132,6 +182,16 @@ export interface GroupInfo extends EntityInfo {
     sessions: number;
 }
 
+// --- NTAuthStore
+export interface NTAuthStoreInfo extends EntityInfo {
+    props: BasicInfo & {
+        certthumbprints: string[];
+        description?: string;
+    };
+    controllables: number;
+    controllers: number;
+}
+
 // --- OU
 export interface OUInfoGraph extends GraphInfo {
     blocksinheritance: boolean;
@@ -146,6 +206,16 @@ export interface OUInfo extends EntityInfo {
     users: number;
     groups: number;
     computers: number;
+}
+
+// --- RootCA
+export interface RootCAInfo extends EntityInfo {
+    props: BasicInfo & {
+        certthumbprint: string;
+        description?: string;
+    };
+    controllables: number;
+    controllers: number;
 }
 
 // --- User
@@ -201,12 +271,6 @@ export interface UserInfo extends EntityInfo {
 
 // --- Meta
 export type MetaInfoGraph = GraphInfo;
-
-export const EntityInfoEndpoints = {
-    GetInfo: (type: GraphNodeTypes, id: string) => {
-        return `/api/v1/entities/${type.toLowerCase()}/${id}`;
-    },
-};
 
 // --- Azure Entities
 export interface AZAppInfo extends AZEntityInfo {
@@ -359,7 +423,7 @@ export interface EntityInfo {
 }
 
 export interface AZEntityInfo {
-    kind: GraphNodeTypes;
+    kind: EntityKinds;
     props: BasicInfo;
 }
 
@@ -393,7 +457,7 @@ interface SetEntityInfoOpenAction {
 
 export type SelectedNode = {
     id: string;
-    type: GraphNodeTypes;
+    type: EntityKinds;
     name: string;
     graphId?: string;
 };

@@ -14,33 +14,15 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { EntityInfoDataTableProps, InfiniteScrollingTable, abortEntitySectionRequest } from 'bh-shared-ui';
 import { useQuery } from 'react-query';
 import { useDispatch } from 'react-redux';
-import { InfiniteScrollingTable } from 'bh-shared-ui';
+import { NODE_GRAPH_RENDER_LIMIT } from 'src/constants';
 import { putGraphData, putGraphError, saveResponseForExport, setGraphLoading } from 'src/ducks/explore/actions';
 import { addSnackbar } from 'src/ducks/global/actions';
 import { sourceNodeSelected } from 'src/ducks/searchbar/actions';
-import { abortRequest } from 'src/views/Explore/utils';
-import EntityInfoCollapsibleSection from './EntityInfoCollapsibleSection';
-import { NODE_GRAPH_RENDER_LIMIT } from 'src/constants';
 import { transformFlatGraphResponse } from 'src/utils';
-
-export interface EntityInfoDataTableProps {
-    id: string;
-    label: string;
-    endpoint?: ({
-        counts,
-        skip,
-        limit,
-        type,
-    }: {
-        counts?: boolean;
-        skip?: number;
-        limit?: number;
-        type?: string;
-    }) => Promise<any>;
-    sections?: EntityInfoDataTableProps[];
-}
+import EntityInfoCollapsibleSection from './EntityInfoCollapsibleSection';
 
 const EntityInfoDataTable: React.FC<EntityInfoDataTableProps> = ({ id, label, endpoint, sections }) => {
     const dispatch = useDispatch();
@@ -61,7 +43,7 @@ const EntityInfoDataTable: React.FC<EntityInfoDataTableProps> = ({ id, label, en
         if (!endpoint) return;
 
         if (isOpen && countQuery.data?.count < NODE_GRAPH_RENDER_LIMIT) {
-            abortRequest();
+            abortEntitySectionRequest();
 
             dispatch(setGraphLoading(true));
 

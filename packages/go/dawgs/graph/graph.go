@@ -137,6 +137,9 @@ type PropertyValue interface {
 	// IDSlice returns the property value as a ID slice along with any type negotiation error information.
 	IDSlice() ([]ID, error)
 
+	//StringSlice returns the property value as a string slice along with any type negotiation error information.
+	StringSlice() ([]string, error)
+
 	// Uint64 returns the property value as an uint64 along with any type negotiation error information.
 	Uint64() (uint64, error)
 

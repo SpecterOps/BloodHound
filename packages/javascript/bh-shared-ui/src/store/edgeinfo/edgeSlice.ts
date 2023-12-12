@@ -40,6 +40,7 @@ export const EdgeSections = {
     linuxAbuse: 'Linux Abuse',
     opsec: 'OPSEC',
     references: 'References',
+    composition: 'Composition',
 } as const;
 
 export const initialState: EdgeInfoState = {
@@ -53,6 +54,7 @@ export const initialState: EdgeInfoState = {
         linuxAbuse: false,
         opsec: false,
         references: false,
+        composition: false,
     },
 };
 

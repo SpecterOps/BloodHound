@@ -1997,6 +1997,176 @@ class BHEAPIClient {
             )
         );
 
+    getAIACAV2 = (id: string, counts?: boolean, options?: types.RequestOptions) =>
+        this.baseClient.get(
+            `/api/v2/aiacas/${id}`,
+            Object.assign(
+                {
+                    params: {
+                        counts,
+                    },
+                },
+                options
+            )
+        );
+
+    getAIACAControllersV2 = (
+        id: string,
+        skip?: number,
+        limit?: number,
+        type?: string,
+        options?: types.RequestOptions
+    ) =>
+        this.baseClient.get(
+            `/api/v2/aiacas/${id}/controllers`,
+            Object.assign(
+                {
+                    params: {
+                        skip,
+                        limit,
+                        type,
+                    },
+                },
+                options
+            )
+        );
+
+    getRootCAV2 = (id: string, counts?: boolean, options?: types.RequestOptions) =>
+        this.baseClient.get(
+            `/api/v2/rootcas/${id}`,
+            Object.assign(
+                {
+                    params: {
+                        counts,
+                    },
+                },
+                options
+            )
+        );
+
+    getRootCAControllersV2 = (
+        id: string,
+        skip?: number,
+        limit?: number,
+        type?: string,
+        options?: types.RequestOptions
+    ) =>
+        this.baseClient.get(
+            `/api/v2/rootcas/${id}/controllers`,
+            Object.assign(
+                {
+                    params: {
+                        skip,
+                        limit,
+                        type,
+                    },
+                },
+                options
+            )
+        );
+
+    getEnterpriseCAV2 = (id: string, counts?: boolean, options?: types.RequestOptions) =>
+        this.baseClient.get(
+            `/api/v2/enterprisecas/${id}`,
+            Object.assign(
+                {
+                    params: {
+                        counts,
+                    },
+                },
+                options
+            )
+        );
+
+    getEnterpriseCAControllersV2 = (
+        id: string,
+        skip?: number,
+        limit?: number,
+        type?: string,
+        options?: types.RequestOptions
+    ) =>
+        this.baseClient.get(
+            `/api/v2/enterprisecas/${id}/controllers`,
+            Object.assign(
+                {
+                    params: {
+                        skip,
+                        limit,
+                        type,
+                    },
+                },
+                options
+            )
+        );
+
+    getNTAuthStoreV2 = (id: string, counts?: boolean, options?: types.RequestOptions) =>
+        this.baseClient.get(
+            `/api/v2/ntauthstores/${id}`,
+            Object.assign(
+                {
+                    params: {
+                        counts,
+                    },
+                },
+                options
+            )
+        );
+
+    getNTAuthStoreControllersV2 = (
+        id: string,
+        skip?: number,
+        limit?: number,
+        type?: string,
+        options?: types.RequestOptions
+    ) =>
+        this.baseClient.get(
+            `/api/v2/ntauthstores/${id}/controllers`,
+            Object.assign(
+                {
+                    params: {
+                        skip,
+                        limit,
+                        type,
+                    },
+                },
+                options
+            )
+        );
+
+    getCertTemplateV2 = (id: string, counts?: boolean, options?: types.RequestOptions) =>
+        this.baseClient.get(
+            `/api/v2/certtemplates/${id}`,
+            Object.assign(
+                {
+                    params: {
+                        counts,
+                    },
+                },
+                options
+            )
+        );
+
+    getCertTemplateControllersV2 = (
+        id: string,
+        skip?: number,
+        limit?: number,
+        type?: string,
+        options?: types.RequestOptions
+    ) =>
+        this.baseClient.get(
+            `/api/v2/certtemplates/${id}/controllers`,
+            Object.assign(
+                {
+                    params: {
+                        skip,
+                        limit,
+                        type,
+                    },
+                },
+                options
+            )
+        );
+
     getMetaV2 = (id: string, options?: types.RequestOptions) => this.baseClient.get(`/api/v2/meta/${id}`, options);
 
     getShortestPathV2 = (
@@ -2013,6 +2183,21 @@ class BHEAPIClient {
                         start_node: startNode,
                         end_node: endNode,
                         relationship_kinds: relationshipKinds,
+                    },
+                },
+                options
+            )
+        );
+
+    getEdgeComposition = (sourceNode: number, targetNode: number, edgeType: string, options?: types.RequestOptions) =>
+        this.baseClient.get<types.GraphResponse>(
+            '/api/v2/graphs/edge-composition',
+            Object.assign(
+                {
+                    params: {
+                        source_node: sourceNode,
+                        target_node: targetNode,
+                        edge_type: edgeType,
                     },
                 },
                 options
