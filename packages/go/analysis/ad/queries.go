@@ -21,23 +21,17 @@ import (
 	"strings"
 	"time"
 
-	"github.com/specterops/bloodhound/dawgs/graphcache"
-	"github.com/specterops/bloodhound/log"
-	"strings"
-	"time"
-
-	"github.com/specterops/bloodhound/dawgs/graphcache"
-	"github.com/specterops/bloodhound/log"
-
 	"github.com/RoaringBitmap/roaring/roaring64"
 	"github.com/specterops/bloodhound/analysis"
 	"github.com/specterops/bloodhound/dawgs/cardinality"
 	"github.com/specterops/bloodhound/dawgs/graph"
+	"github.com/specterops/bloodhound/dawgs/graphcache"
 	"github.com/specterops/bloodhound/dawgs/ops"
 	"github.com/specterops/bloodhound/dawgs/query"
 	"github.com/specterops/bloodhound/dawgs/traversal"
 	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/graphschema/common"
+	"github.com/specterops/bloodhound/log"
 )
 
 func FetchGraphDBTierZeroTaggedAssets(tx graph.Transaction, domainSID string) (graph.NodeSet, error) {

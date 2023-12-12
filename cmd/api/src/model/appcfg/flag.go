@@ -81,13 +81,6 @@ func AvailableFlags() FeatureFlagSet {
 			Enabled:       false,
 			UserUpdatable: false,
 		},
-		FeatureAdcs: {
-			Key:           FeatureAdcs,
-			Name:          "Enable collection and processing of Active Directory Certificate Services Data",
-			Description:   "Enables the ability to collect, analyze, and explore Active Directory Certificate Services data and previews new attack paths.",
-			Enabled:       false,
-			UserUpdatable: true,
-		},
 	}
 }
 
