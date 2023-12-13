@@ -10,7 +10,7 @@
       }
     ],
     "get": {
-      "description": "Get basic info and counts for this EnterpriseCA",
+      "description": "Get basic info and counts for this EnterpriseCA. \n\n<b>Early Access Notice:</b> This API endpoint is in early access and may undergo changes. Exercise caution when integrating, and avoid critical use until it reaches stable status.",
       "tags": ["EnterpriseCA Entity API", "Community", "Enterprise"],
       "summary": "Get enterpriseca entity info",
       "parameters": [
@@ -51,7 +51,7 @@
       }
     ],
     "get": {
-      "description": "List the principals that can control this EnterpriseCA through ACLs",
+      "description": "List the principals that can control this EnterpriseCA through ACLs. \n\n<b>Early Access Notice:</b> This API endpoint is in early access and may undergo changes. Exercise caution when integrating, and avoid critical use until it reaches stable status.",
       "tags": ["EnterpriseCA Entity API", "Community", "Enterprise"],
       "summary": "List enterpriseca controllers",
       "parameters": [
