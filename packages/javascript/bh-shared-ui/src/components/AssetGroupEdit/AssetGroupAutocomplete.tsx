@@ -50,7 +50,7 @@ const AssetGroupAutocomplete: FC<{
 
         let action = ChangelogAction.ADD;
 
-        if (result.system_tags.includes(assetGroup.tag)) {
+        if (result.system_tags?.includes(assetGroup.tag)) {
             action = ChangelogAction.DEFAULT;
         }
         if (matchedSelector) {
