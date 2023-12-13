@@ -25,8 +25,9 @@ import { AppState, useAppDispatch } from 'src/store';
 export const EdgeInfoCollapsibleSection: React.FC<
     PropsWithChildren<{
         section: keyof typeof EdgeSections;
+        onChange?: (label: string, isOpen: boolean) => void;
     }>
-> = ({ children, section }) => {
+> = ({ children, section, onChange = () => {} }) => {
     const styles = useCollapsibleSectionStyles();
 
     const dispatch = useAppDispatch();
@@ -37,7 +38,10 @@ export const EdgeInfoCollapsibleSection: React.FC<
     return (
         <Accordion
             expanded={expanded}
-            onChange={() => dispatch(edgeSectionToggle({ section: section, expanded: !expanded }))}
+            onChange={() => {
+                dispatch(edgeSectionToggle({ section: section, expanded: !expanded }));
+                onChange(section, !expanded);
+            }}
             TransitionProps={{ unmountOnExit: true }}
             className={styles.accordionRoot}>
             <AccordionSummary

@@ -15,10 +15,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import EntityInfoPanel from '../Explore/EntityInfo/EntityInfoPanel';
-import { DropdownOption, GroupManagementContent } from 'bh-shared-ui';
+import { DropdownOption, GroupManagementContent, DataSelector } from 'bh-shared-ui';
 import { SelectedNode } from 'src/ducks/entityinfo/types';
 import { useState } from 'react';
-import DataSelector from '../QA/DataSelector';
 import { AssetGroup, AssetGroupMember } from 'js-client-library';
 import { GraphNodeTypes } from 'src/ducks/graph/types';
 import { faGem } from '@fortawesome/free-solid-svg-icons';

@@ -647,6 +647,21 @@
       "gpos": {
         "type": "integer"
       },
+      "aiacas": {
+        "type": "integer"
+      },
+      "rootcas": {
+        "type": "integer"
+      },
+      "enterprisecas": {
+        "type": "integer"
+      },
+      "ntauthstores": {
+        "type": "integer"
+      },
+      "certtemplates": {
+        "type": "integer"
+      },
       "acls": {
         "type": "integer"
       },
@@ -709,6 +724,21 @@
         "type": "integer"
       },
       "gpos": {
+        "type": "integer"
+      },
+      "aiacas": {
+        "type": "integer"
+      },
+      "rootcas": {
+        "type": "integer"
+      },
+      "enterprisecas": {
+        "type": "integer"
+      },
+      "ntauthstores": {
+        "type": "integer"
+      },
+      "certtemplates": {
         "type": "integer"
       },
       "acls": {
@@ -869,6 +899,26 @@
       },
       "gpos": {
         "Description": "A count of gpos enumerated",
+        "type": "integer"
+      },
+      "aiacas": {
+        "Description": "A count of aiacas enumerated",
+        "type": "integer"
+      },
+      "rootcas": {
+        "Description": "A count of rootcas enumerated",
+        "type": "integer"
+      },
+      "enterprisecas": {
+        "Description": "A count of enterprisecas enumerated",
+        "type": "integer"
+      },
+      "ntauthstores": {
+        "Description": "A count of ntauthstores enumerated",
+        "type": "integer"
+      },
+      "certtemplates": {
+        "Description": "A count of certtemplates enumerated",
         "type": "integer"
       },
       "ous": {

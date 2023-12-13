@@ -1,23 +1,24 @@
 // Copyright 2023 Specter Ops, Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// 
+//
 // SPDX-License-Identifier: Apache-2.0
 
 package ad
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/RoaringBitmap/roaring/roaring64"
 	"github.com/specterops/bloodhound/analysis"
@@ -40,6 +41,16 @@ func PostProcessedRelationships() []graph.Kind {
 		ad.AdminTo,
 		ad.CanPSRemote,
 		ad.ExecuteDCOM,
+		ad.TrustedForNTAuth,
+		ad.IssuedSignedBy,
+		ad.EnterpriseCAFor,
+		ad.ADCSESC1,
+		ad.ADCSESC3,
+		ad.ADCSESC4,
+		ad.ADCSESC5,
+		ad.ADCSESC6,
+		ad.ADCSESC7,
+		ad.EnrollOnBehalfOf,
 	}
 }
 
@@ -132,6 +143,22 @@ func FetchComputers(ctx context.Context, db graph.Database) (*roaring64.Bitmap, 
 	})
 }
 
+func FetchNodesByKind(ctx context.Context, db graph.Database, kinds ...graph.Kind) ([]*graph.Node, error) {
+	var nodes []*graph.Node
+	return nodes, db.ReadTransaction(ctx, func(tx graph.Transaction) error {
+		var err error
+		if nodes, err = ops.FetchNodes(tx.Nodes().Filterf(func() graph.Criteria {
+			return query.And(
+				query.KindIn(query.Node(), kinds...),
+			)
+		})); err != nil {
+			return err
+		} else {
+			return nil
+		}
+	})
+}
+
 func fetchCollectedDomainNodes(ctx context.Context, db graph.Database) ([]*graph.Node, error) {
 	var nodes []*graph.Node
 	return nodes, db.ReadTransaction(ctx, func(tx graph.Transaction) error {
@@ -161,6 +188,122 @@ func getLAPSComputersForDomain(tx graph.Transaction, domain *graph.Node) ([]grap
 				query.Equals(query.Property(query.Node(), ad.DomainSID.String()), domainSid),
 			)
 		}))
+	}
+}
+
+func PostLocalGroups(ctx context.Context, db graph.Database, localGroupExpansions impact.PathAggregator) (*analysis.AtomicPostProcessingStats, error) {
+	var (
+		adminGroupSuffix    = "-544"
+		psRemoteGroupSuffix = "-580"
+		dcomGroupSuffix     = "-562"
+	)
+
+	if computers, err := FetchComputers(ctx, db); err != nil {
+		return &analysis.AtomicPostProcessingStats{}, err
+	} else {
+		var (
+			threadSafeLocalGroupExpansions = impact.NewThreadSafeAggregator(localGroupExpansions)
+			operation                      = analysis.NewPostRelationshipOperation(ctx, db, "LocalGroup Post Processing")
+		)
+
+		for idx, computer := range computers.ToArray() {
+			computerID := graph.ID(computer)
+
+			if idx > 0 && idx%10000 == 0 {
+				log.Infof("Post processed %d active directory computers", idx)
+			}
+
+			if err := operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
+				if entities, err := FetchLocalGroupBitmapForComputer(tx, computerID, dcomGroupSuffix); err != nil {
+					return err
+				} else {
+					for _, admin := range entities.Slice() {
+						nextJob := analysis.CreatePostRelationshipJob{
+							FromID: graph.ID(admin),
+							ToID:   computerID,
+							Kind:   ad.ExecuteDCOM,
+						}
+
+						if !channels.Submit(ctx, outC, nextJob) {
+							return nil
+						}
+					}
+
+					return nil
+				}
+			}); err != nil {
+				return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("failed submitting reader for operation involving computer %d: %w", computerID, err)
+			}
+
+			if err := operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
+				if entities, err := FetchLocalGroupBitmapForComputer(tx, computerID, psRemoteGroupSuffix); err != nil {
+					return err
+				} else {
+					for _, admin := range entities.Slice() {
+						nextJob := analysis.CreatePostRelationshipJob{
+							FromID: graph.ID(admin),
+							ToID:   computerID,
+							Kind:   ad.CanPSRemote,
+						}
+
+						if !channels.Submit(ctx, outC, nextJob) {
+							return nil
+						}
+					}
+
+					return nil
+				}
+			}); err != nil {
+				return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("failed submitting reader for operation involving computer %d: %w", computerID, err)
+			}
+
+			if err := operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
+				if entities, err := FetchLocalGroupBitmapForComputer(tx, computerID, adminGroupSuffix); err != nil {
+					return err
+				} else {
+					for _, admin := range entities.Slice() {
+						nextJob := analysis.CreatePostRelationshipJob{
+							FromID: graph.ID(admin),
+							ToID:   computerID,
+							Kind:   ad.AdminTo,
+						}
+
+						if !channels.Submit(ctx, outC, nextJob) {
+							return nil
+						}
+					}
+
+					return nil
+				}
+			}); err != nil {
+				return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("failed submitting reader for operation involving computer %d: %w", computerID, err)
+			}
+
+			if err := operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
+				if entities, err := FetchRDPEntityBitmapForComputerWithUnenforcedURA(tx, computerID, threadSafeLocalGroupExpansions); err != nil {
+					return err
+				} else {
+					for _, rdp := range entities.Slice() {
+						nextJob := analysis.CreatePostRelationshipJob{
+							FromID: graph.ID(rdp),
+							ToID:   computerID,
+							Kind:   ad.CanRDP,
+						}
+
+						if !channels.Submit(ctx, outC, nextJob) {
+							return nil
+						}
+					}
+				}
+
+				return nil
+			}); err != nil {
+				return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("failed submitting reader for operation involving computer %d: %w", computerID, err)
+			}
+		}
+
+		log.Infof("Finished post-processing %d active directory computers", computers.GetCardinality())
+		return &operation.Stats, operation.Done()
 	}
 }
 
@@ -381,4 +524,15 @@ func ProcessRDPWithUra(tx graph.Transaction, rdpLocalGroup *graph.Node, computer
 
 		return rdpEntities, nil
 	}
+}
+
+func ExpandAllEnrollers(ctx context.Context, db graph.Database) (impact.PathAggregator, error) {
+	log.Infof("Expanding all cert template and enterprise ca enrollers")
+
+	return ResolveAllGroupMemberships(ctx, db, query.Not(
+		query.Or(
+			query.StringEndsWith(query.StartProperty(common.ObjectID.String()), AdminGroupSuffix),
+			query.StringEndsWith(query.EndProperty(common.ObjectID.String()), AdminGroupSuffix),
+		),
+	))
 }

@@ -1,7 +1,7 @@
 {
     "/api/v2/jobs/available": {
         "get": {
-            "description": "Gets next scheduled job for client",
+            "description": "Gets next scheduled job for client. NOTE: This endpoint is intended to be used by clients and may not function properly in the API Explorer.",
             "tags": [
                 "Jobs",
                 "Enterprise"
@@ -10,13 +10,6 @@
             "parameters": [
                 {
                     "$ref": "#/definitions/parameters.PreferHeader"
-                },
-                {
-                    "type": "string",
-                    "description": "Client ID",
-                    "name": "id",
-                    "in": "query",
-                    "required": true
                 },
                 {
                     "type": "string",
@@ -106,13 +99,6 @@
                     "type": "string",
                     "description": "Filter results by column value. Valid filter predicates are eq, neq, gt, gte, lt, lte",
                     "name": "last_ingest",
-                    "in": "query",
-                    "required": false
-                },
-                {
-                    "type": "string",
-                    "description": "Filter results by column value. Valid filter predicates are eq, neq, gt, gte, lt, lte",
-                    "name": "id",
                     "in": "query",
                     "required": false
                 },
