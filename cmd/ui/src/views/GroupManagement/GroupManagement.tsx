@@ -15,11 +15,10 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import EntityInfoPanel from '../Explore/EntityInfo/EntityInfoPanel';
-import { DropdownOption, GroupManagementContent, DataSelector } from 'bh-shared-ui';
+import { DropdownOption, GroupManagementContent, DataSelector, EntityKinds } from 'bh-shared-ui';
 import { SelectedNode } from 'src/ducks/entityinfo/types';
 import { useState } from 'react';
 import { AssetGroup, AssetGroupMember } from 'js-client-library';
-import { GraphNodeTypes } from 'src/ducks/graph/types';
 import { faGem } from '@fortawesome/free-solid-svg-icons';
 import { useSelector } from 'react-redux';
 import { Domain } from 'src/ducks/global/types';
@@ -42,7 +41,7 @@ const GroupManagement = () => {
     const handleClickMember = (member: AssetGroupMember) => {
         setOpenNode({
             id: member.object_id,
-            type: member.primary_kind as GraphNodeTypes,
+            type: member.primary_kind as EntityKinds,
             name: member.name,
         });
     };
