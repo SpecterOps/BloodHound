@@ -77,10 +77,7 @@ const AssetGroupEdit: FC<{
             queryClient.invalidateQueries({ queryKey: ['countAssetGroupMembers'] });
             queryClient.resetQueries({ queryKey: ['search'] });
 
-            addNotification(
-                'Update successful. Please check back later to view updated Asset Group.',
-                'AssetGroupUpdateSuccess'
-            );
+            addNotification('Update successful.', 'AssetGroupUpdateSuccess');
         },
         onError: (error) => {
             console.error(error);

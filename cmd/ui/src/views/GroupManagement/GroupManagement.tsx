@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import EntityInfoPanel from '../Explore/EntityInfo/EntityInfoPanel';
-import { DropdownOption, GroupManagementContent, DataSelector, EntityKinds } from 'bh-shared-ui';
+import { DropdownOption, GroupManagementContent, EntityKinds } from 'bh-shared-ui';
 import { SelectedNode } from 'src/ducks/entityinfo/types';
 import { useState } from 'react';
 import { AssetGroup, AssetGroupMember } from 'js-client-library';
@@ -28,6 +28,7 @@ import { ROUTE_EXPLORE } from 'src/ducks/global/routes';
 import { sourceNodeSelected } from 'src/ducks/searchbar/actions';
 import { TIER_ZERO_LABEL, TIER_ZERO_TAG } from 'src/constants';
 import { useAppDispatch } from 'src/store';
+import { dataCollectionMessage } from '../QA/utils';
 
 const GroupManagement = () => {
     const dispatch = useAppDispatch();
@@ -80,7 +81,7 @@ const GroupManagement = () => {
             tierZeroTag={TIER_ZERO_TAG}
             // Both these components should eventually be moved into the shared UI library
             entityPanelComponent={<EntityInfoPanel selectedNode={openNode} />}
-            generateDomainSelectorComponent={(props) => <DataSelector {...props} />}
+            domainSelectorErrorMessage={<>Domains unavailable. {dataCollectionMessage}</>}
             onShowNodeInExplore={handleShowNodeInExplore}
             onClickMember={handleClickMember}
             mapAssetGroups={mapAssetGroups}

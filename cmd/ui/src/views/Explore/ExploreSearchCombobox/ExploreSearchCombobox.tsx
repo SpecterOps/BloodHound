@@ -24,14 +24,15 @@ import {
     SearchResult,
     useSearch,
 } from 'bh-shared-ui';
+import { SearchNodeType } from 'src/ducks/searchbar/types';
 
 const ExploreSearchCombobox: React.FC<{
     labelText: string;
     disabled?: boolean;
     inputValue: string;
-    selectedItem: SearchResult | null;
+    selectedItem: SearchNodeType | null;
     handleNodeEdited: (edit: string) => any;
-    handleNodeSelected: (selection: SearchResult) => any;
+    handleNodeSelected: (selection: SearchNodeType) => any;
 }> = ({ labelText, disabled = false, inputValue, selectedItem, handleNodeEdited, handleNodeSelected }) => {
     const theme = useTheme();
 
@@ -56,7 +57,7 @@ const ExploreSearchCombobox: React.FC<{
             selectedItem,
             onSelectedItemChange: ({ type, selectedItem }) => {
                 if (selectedItem) {
-                    handleNodeSelected(selectedItem as SearchResult);
+                    handleNodeSelected(selectedItem as SearchNodeType);
                 }
             },
             itemToString: (item) => (item ? item.name || item.objectid : ''),

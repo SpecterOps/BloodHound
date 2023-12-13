@@ -25,6 +25,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import AssetGroupEdit from '../AssetGroupEdit';
 import AssetGroupMemberList from '../AssetGroupMemberList';
 import { SelectedDomain } from './types';
+import DataSelector from '../../views/DataQuality/DataSelector';
 
 // Top level layout and shared logic for the Group Management page
 const GroupManagementContent: FC<{
@@ -33,7 +34,7 @@ const GroupManagementContent: FC<{
     tierZeroLabel: string;
     tierZeroTag: string;
     entityPanelComponent: ReactNode;
-    generateDomainSelectorComponent: (props: any) => ReactNode;
+    domainSelectorErrorMessage: ReactNode;
     onShowNodeInExplore: () => void;
     onClickMember: (member: AssetGroupMember) => void;
     mapAssetGroups: (assetGroups: AssetGroup[]) => DropdownOption[];
@@ -43,7 +44,7 @@ const GroupManagementContent: FC<{
     tierZeroLabel,
     tierZeroTag,
     entityPanelComponent,
-    generateDomainSelectorComponent,
+    domainSelectorErrorMessage,
     onShowNodeInExplore,
     onClickMember,
     mapAssetGroups,
@@ -72,14 +73,6 @@ const GroupManagementContent: FC<{
     const handleAssetGroupSelectorChange = (selectedAssetGroup: DropdownOption) => {
         const selected = listAssetGroups.data?.find((assetGroup) => assetGroup.id === selectedAssetGroup.key);
         if (selected) setSelectedAssetGroupId(selected.id);
-    };
-
-    const getDomainSelectorProps = () => {
-        return {
-            value: selectedDomain || globalDomain || { type: null, id: null },
-            onChange: (selection: SelectedDomain) => setSelectedDomain({ ...selection }),
-            fullWidth: true,
-        };
     };
 
     const getAssetGroupSelectorLabel = (): string => {
@@ -124,7 +117,12 @@ const GroupManagementContent: FC<{
                                 <Typography variant='button'>Environment:</Typography>
                             </Grid>
                             <Grid item xs={12} xl={8}>
-                                {generateDomainSelectorComponent(getDomainSelectorProps())}
+                                <DataSelector
+                                    value={selectedDomain || globalDomain || { type: null, id: null }}
+                                    errorMessage={domainSelectorErrorMessage}
+                                    onChange={(selection: SelectedDomain) => setSelectedDomain({ ...selection })}
+                                    fullWidth={true}
+                                />
                             </Grid>
                         </Grid>
                     </Box>

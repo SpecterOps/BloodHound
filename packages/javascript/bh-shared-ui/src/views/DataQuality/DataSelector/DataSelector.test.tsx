@@ -258,12 +258,14 @@ const testDomains = [
     },
 ];
 
+const errorMessage = <>Domains unavailable</>;
+
 describe('Context Selector', () => {
     it('should render with a full list of multiple tenants and domains', async () => {
         const user = userEvent.setup();
         const testOnChange = vi.fn();
         const testValue = { type: 'active-directory', id: '6b55e74d-f24e-418a-bfd1-4769e93517c7' };
-        render(<DataSelector value={testValue} onChange={testOnChange} />);
+        render(<DataSelector value={testValue} onChange={testOnChange} errorMessage={errorMessage} />);
 
         const contextSelector = await screen.findByTestId('data-quality_context-selector');
         expect(contextSelector).toBeInTheDocument();
@@ -288,7 +290,7 @@ describe('Context Selector', () => {
         const user = userEvent.setup();
         const testOnChange = vi.fn();
         const testValue = { type: 'active-directory', id: '6b55e74d-f24e-418a-bfd1-4769e93517c7' };
-        render(<DataSelector value={testValue} onChange={testOnChange} />);
+        render(<DataSelector value={testValue} onChange={testOnChange} errorMessage={errorMessage} />);
 
         const contextSelector = await screen.findByTestId('data-quality_context-selector');
         await user.click(contextSelector);
@@ -337,7 +339,7 @@ describe('Context Selector', () => {
         const user = userEvent.setup();
         const testOnChange = vi.fn();
         const testValue = { type: 'azure', id: 'd1993a1b-55c1-4668-9393-ddfffb6ab639' };
-        render(<DataSelector value={testValue} onChange={testOnChange} />);
+        render(<DataSelector value={testValue} onChange={testOnChange} errorMessage={errorMessage} />);
 
         const contextSelector = await screen.findByTestId('data-quality_context-selector');
 
@@ -366,9 +368,10 @@ describe('Context Selector Error', () => {
 
     it('should display an error message if data does not return from the API', async () => {
         const testOnChange = vi.fn();
+        const testErrorMessage = 'test error message';
         const testValue = { type: 'active-directory', id: '6b55e74d-f24e-418a-bfd1-4769e93517c7' };
-        render(<DataSelector value={testValue} onChange={testOnChange} />);
+        render(<DataSelector value={testValue} onChange={testOnChange} errorMessage={<>{testErrorMessage}</>} />);
 
-        expect(await screen.findByText('Data Collection')).toBeInTheDocument();
+        expect(await screen.findByText(testErrorMessage)).toBeInTheDocument();
     });
 });
