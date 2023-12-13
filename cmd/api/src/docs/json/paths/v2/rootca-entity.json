@@ -10,7 +10,7 @@
             }
         ],
         "get": {
-            "description": "Get basic info and counts for this RootCA",
+            "description": "Get basic info and counts for this RootCA. \n\n<b>Early Access Notice:</b> This API endpoint is in early access and may undergo changes. Exercise caution when integrating, and avoid critical use until it reaches stable status.",
             "tags": [
                 "RootCA Entity API",
                 "Community",
@@ -55,7 +55,7 @@
             }
         ],
         "get": {
-            "description": "List the principals that can control this RootCA through ACLs",
+            "description": "List the principals that can control this RootCA through ACLs. \n\n<b>Early Access Notice:</b> This API endpoint is in early access and may undergo changes. Exercise caution when integrating, and avoid critical use until it reaches stable status.",
             "tags": [
                 "RootCA Entity API",
                 "Community",
