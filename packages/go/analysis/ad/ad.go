@@ -19,6 +19,8 @@ package ad
 import (
 	"context"
 	"fmt"
+	"github.com/specterops/bloodhound/analysis"
+	"github.com/specterops/bloodhound/dawgs/traversal"
 	"sort"
 	"strings"
 	"time"
@@ -711,135 +713,287 @@ func GetEdgeCompositionPath(ctx context.Context, db graph.Database, edge *graph.
 	})
 }
 
-//func getADCSESC3EdgeComposition(tx graph.Transaction, edge *graph.Relationship) (graph.PathSet, error) {
-//	finalPaths := graph.NewPathSet()
-//	validECA1Paths := make(map[graph.ID]graph.PathSet)
-//	validECA2Paths := make(map[graph.ID]graph.PathSet)
-//	certTemplateCache := make(map[graph.ID]*graph.Node)
-//	secondCertTemplateStore := make([]*graph.Node, 0)
-//	ecaCache := make(map[graph.ID]*graph.Node)
-//
-//	if startNode, targetDomainNode, err := ops.FetchRelationshipNodes(tx, edge); err != nil {
-//		return finalPaths, err
-//	} else {
-//		if pathsToTemplates, err := ops.TraversePaths(tx, ops.TraversalPlan{
-//			Root:      startNode,
-//			Direction: graph.DirectionOutbound,
-//			BranchQuery: func() graph.Criteria {
-//				return query.KindIn(query.Relationship(), ad.Enroll, ad.GenericAll, ad.AllExtendedRights, ad.MemberOf)
-//			},
-//			DescentFilter: OutboundControlDescentFilter,
-//			PathFilter: func(ctx *ops.TraversalContext, segment *graph.PathSegment) bool {
-//				node := segment.Node
-//				if !node.Kinds.ContainsOneOf(ad.CertTemplate) {
-//					return false
-//				}
-//
-//				return true
-//			},
-//		}); err != nil {
-//			log.Errorf("Error getting paths from start node %d to templates: %v", startNode.ID, err)
-//			return finalPaths, err
-//		} else {
-//			//Start by building out our eca caches
-//			for _, path := range pathsToTemplates {
-//				certTemplate := path.Terminal()
-//				certTemplateCache[certTemplate.ID] = certTemplate
-//				if isStartCertTemplateValidESC3(certTemplate) {
-//					if pathsToECA, err := ops.FetchPathSet(tx, tx.Relationships().Filter(FilterPublishedCAs(certTemplate))); err != nil {
-//						log.Errorf("error getting eca published to for cert template %d: %v", certTemplate.ID, err)
-//					} else {
-//						for _, enterpriseCAs := range pathsToECA.Paths() {
-//							eca1 := enterpriseCAs.Terminal()
-//							if paths, err := FetchEnterpriseCAsCertChainPathToDomain(tx, eca1, targetDomainNode); err != nil {
-//								log.Errorf("error getting eca %d path to domain %d: %v", eca1.ID, targetDomainNode.ID, err)
-//							} else if paths.Len() == 0 {
-//								continue
-//							} else {
-//								var fullPath = graph.NewPathSet()
-//								fullPath.AddPath(path)
-//								fullPath.AddPathSet(pathsToECA)
-//								fullPath.AddPathSet(paths)
-//								validECA1Paths[eca1.ID] = fullPath
-//
-//							}
-//						}
-//					}
-//				}
-//
-//				if isEndCertTemplateValidESC3(certTemplate) {
-//					if pathsToECA, err := ops.FetchPathSet(tx, tx.Relationships().Filter(FilterPublishedCAs(certTemplate))); err != nil {
-//						log.Errorf("error getting eca published to for cert template %d: %v", certTemplate.ID, err)
-//					} else {
-//						for _, enterpriseCAs := range pathsToECA.Paths() {
-//							eca2 := enterpriseCAs.Terminal()
-//							if pathsToDomain, err := FetchEnterpriseCAsTrustedForAuthPathToDomain(tx, eca2, targetDomainNode); err != nil {
-//								log.Errorf("error getting eca %d path to domain %d: %v", eca2.ID, targetDomainNode.ID, err)
-//							} else if pathsToDomain.Len() == 0 {
-//								continue
-//							} else {
-//								var fullPath = graph.NewPathSet()
-//								fullPath.AddPath(path)
-//								fullPath.AddPathSet(pathsToECA)
-//								fullPath.AddPathSet(pathsToDomain)
-//								validECA2Paths[eca2.ID] = fullPath
-//							}
-//						}
-//					}
-//				}
-//			}
-//
-//			for eca1id, eca1paths := range validECA1Paths {
-//				for eca2id, eca2paths := range validECA2Paths {
-//					if enrollOnBehalfOfPath, err := ops.FetchPathSet(tx, tx.Relationships().Filter(query.And(
-//						query.Equals(query.StartID(), eca1id),
-//						query.Equals(query.EndID(), eca2id),
-//						query.Kind(query.Relationship(), ad.EnrollOnBehalfOf),
-//					))); err != nil {
-//						log.Errorf("Error getting enrollonbehalfofpaths from %d to %d: %v", eca1id, eca2id, err)
-//						continue
-//					} else if enrollEca1Paths, err := ops.FetchPathSet(tx, tx.Relationships().Filter(
-//						query.And(
-//							query.Equals(query.StartID(), startNode.ID),
-//							query.Equals(query.EndID(), eca1id),
-//							query.Kind(query.Relationship(), ad.Enroll)))); err != nil {
-//						log.Errorf("Error getting enroll from %d to %d: %v", startNode.ID, eca2id, err)
-//						continue
-//					} else if enrollEca2Paths, err := ops.FetchPathSet(tx, tx.Relationships().Filter(
-//						query.And(
-//							query.Equals(query.StartID(), startNode.ID),
-//							query.Equals(query.EndID(), eca2id),
-//							query.Kind(query.Relationship(), ad.Enroll)))); err != nil {
-//						log.Errorf("Error getting enroll from %d to %d: %v", startNode.ID, eca2id, err)
-//						continue
-//					} else if eca2, ok := ecaCache[eca2id]; !ok {
-//						continue
-//					} else if collected, err := eca2.Properties.Get(ad.EnrollmentAgentRestrictionsCollected.String()).Bool(); err != nil {
-//						log.Errorf("error getting enrollmentagentcollected for eca2 %d: %v", eca2.ID, err)
-//					} else if hasRestrictions, err := eca2.Properties.Get(ad.HasEnrollmentAgentRestrictions.String()).Bool(); err != nil {
-//						log.Errorf("error getting hasenrollmentagentrestrictions for ca %d: %v", eca2.ID, err)
-//					} else {
-//						if collected && hasRestrictions {
-//							if delegate, err := ops.FetchPathSet(tx, tx.Relationships().Filter(
-//								query.And(
-//									query.Equals(query.StartID(), startNode.ID),
-//									query.Equals(query.EndID(), eca2id),
-//									query.Kind(query.Relationship(), ad.Enroll)))); err != nil {
-//
-//							}
-//						}
-//						finalPaths.AddPathSet(eca1paths)
-//						finalPaths.AddPathSet(eca2paths)
-//						finalPaths.AddPathSet(enrollEca1Paths)
-//						finalPaths.AddPathSet(enrollEca2Paths)
-//						finalPaths.AddPathSet(enrollOnBehalfOfPath)
-//
-//					}
-//				}
-//			}
-//		}
-//	}
-//}
+var (
+	esc3EdgeCompSegment1Kinds      = graph.Kinds{ad.GenericAll, ad.Enroll, ad.AllExtendedRights, ad.MemberOf}
+	esc3EdgeCompPath1Segment2Kinds = graph.Kinds{ad.PublishedTo, ad.IssuedSignedBy, ad.EnterpriseCAFor, ad.RootCAFor}
+	esc3EdgeCompPath2Segment2Kinds = graph.Kinds{ad.PublishedTo, ad.TrustedForNTAuth, ad.NTAuthStoreFor}
+)
+
+func GetADCSESC3EdgeComposition(ctx context.Context, db graph.Database, edge *graph.Relationship) (graph.PathSet, error) {
+	/*
+		MATCH p1 = (x)-[:MemberOf|GenericAll|Enroll|AllExtendedRights]->(ct1:CertTemplate)-[PublishedTo]->(eca1:EnterpriseCA)-[:IssuedSignedBy|EnterpriseCAFor*1..]->(rca:RootCA)-[:RootCAFor]->(d:Domain)
+		WHERE x.objectid = "<principal objectid>"
+		WHERE d.objectid = "<domain objectid>">
+		AND ct1.requiresmanagerapproval = false
+		AND ct1.schemaversion = 1 OR (ct1.schemaversion > 1 AND ct1.authorizedsignatures = 0)
+		MATCH p2 = (x)-[:GenericAll|Enroll|AllExtendedRights]->(ct2:CertTemplate)-[PublishedTo]->(eca2:EnterpriseCA)-[:TrustedForNTAuth]->(:NTAuthStore)-[:NTAuthStoreFor]->(d)
+		WHERE ct2.authenticationenabled = true
+		AND ct2.requiresmanagerapproval = false
+		MATCH p3 = (ct1)-[:EnrollOnBehalfOf]->(ct2)
+		MATCH p4 = (x)-[:Enroll|MemberOf*..]->(eca1)
+		MATCH p5 = (x)-[:Enroll|MemberOf*..]->(eca2)
+		RETURN p1,p2,p3,p4,p5
+
+
+		Additionally, if eca2.enrollmentagentrestrictionscollected == true AND eca2.hasenrollmentagentrestrictions == true then we should include an additional path:
+		MATCH p6 = (x)-[:DelegatedEnrollmentAgent]->(ct2)
+	*/
+
+	var (
+		paths           graph.PathSet
+		traversalInst   = traversal.New(db, analysis.MaximumDatabaseParallelWorkers)
+		traversalBitmap = cardinality.NewBitmap32()
+		ct1Nodes        = cardinality.NewBitmap32()
+		ct2Nodes        = cardinality.NewBitmap32()
+		ecaNodes        = cardinality.NewBitmap32()
+		p6CTNodes       = cardinality.NewBitmap32()
+	)
+
+	if err := traversalInst.BreadthFirst(ctx, traversal.Plan{
+		Root: graph.NewNode(edge.StartID, graph.NewProperties(), ad.Entity),
+		Driver: func(ctx context.Context, tx graph.Transaction, segment *graph.PathSegment) ([]*graph.PathSegment, error) {
+			var (
+				criteria = []graph.Criteria{
+					query.Equals(query.StartID(), segment.Node.ID),
+				}
+				sawControlRel = false
+			)
+
+			// Don't revisit nodes
+			if !traversalBitmap.CheckedAdd(segment.Node.ID.Uint32()) {
+				return nil, nil
+			}
+
+			var (
+				path = segment.Path()
+			)
+
+			// Walk the path to check for a control relationship
+			path.Walk(func(start, end *graph.Node, relationship *graph.Relationship) bool {
+				sawControlRel = relationship.Kind.Is(ad.ACLRelationships()...)
+				return !sawControlRel
+			})
+
+			// Swap query criteria depending on the of the traversal
+			if sawControlRel {
+				// Don't expand this path any further
+				if segment.Edge.Kind.Is(ad.MemberOf) {
+					return nil, nil
+				}
+
+				// Switch to expanding ADCS kinds
+				criteria = append(criteria, query.KindIn(query.Relationship(), esc3EdgeCompPath1Segment2Kinds...))
+			} else {
+				// Expand membership and ACL kinds
+				criteria = append(criteria, query.KindIn(query.Relationship(), esc3EdgeCompSegment1Kinds...))
+			}
+
+			// Is this node the terminal node?
+			if segment.Node.ID == edge.EndID {
+				// Add the path
+				paths.AddPath(path)
+
+				path.Walk(func(start, end *graph.Node, relationship *graph.Relationship) bool {
+					// Capture the cert template nodes
+					if end.Kinds.ContainsOneOf(ad.CertTemplate) {
+						ct1Nodes.Add(end.ID.Uint32())
+					}
+
+					// Capture the enterprise CA nodes
+					if end.Kinds.ContainsOneOf(ad.EnterpriseCA) {
+						ecaNodes.Add(end.ID.Uint32())
+					}
+
+					return true
+				})
+
+				return nil, nil
+			}
+
+			// Is this node a cert template?
+			if segment.Node.Kinds.ContainsOneOf(ad.CertTemplate) && !isStartCertTemplateValidESC3(segment.Node) {
+				return nil, nil
+			}
+
+			var (
+				nextSegments []*graph.PathSegment
+				nextQuery    = tx.Relationships().Filter(query.And(criteria...))
+			)
+
+			// Order by relationship ID so that skip and limit behave somewhat predictably - cost of this is pretty
+			// small even for large result sets
+			nextQuery.OrderBy(query.Order(query.Identity(query.Relationship()), query.Ascending()))
+
+			return nextSegments, nextQuery.FetchDirection(graph.DirectionInbound, func(cursor graph.Cursor[graph.DirectionalResult]) error {
+				for next := range cursor.Chan() {
+					nextSegments = append(nextSegments, segment.Descend(next.Node, next.Relationship))
+				}
+
+				return cursor.Error()
+			})
+		},
+	}); err != nil {
+		return nil, err
+	}
+
+	traversalBitmap.Clear()
+
+	if err := traversalInst.BreadthFirst(ctx, traversal.Plan{
+		Root: graph.NewNode(edge.StartID, graph.NewProperties(), ad.Entity),
+		Driver: func(ctx context.Context, tx graph.Transaction, segment *graph.PathSegment) ([]*graph.PathSegment, error) {
+			var (
+				criteria = []graph.Criteria{
+					query.Equals(query.StartID(), segment.Node.ID),
+				}
+				sawControlRel = false
+			)
+
+			// Don't revisit nodes
+			if !traversalBitmap.CheckedAdd(segment.Node.ID.Uint32()) {
+				return nil, nil
+			}
+
+			var (
+				path = segment.Path()
+			)
+
+			// Walk the path to check for a control relationship
+			path.Walk(func(start, end *graph.Node, relationship *graph.Relationship) bool {
+				sawControlRel = relationship.Kind.Is(ad.ACLRelationships()...)
+				return !sawControlRel
+			})
+
+			// Swap query criteria depending on the of the traversal
+			if sawControlRel {
+				// Don't expand this path any further
+				if segment.Edge.Kind.Is(ad.MemberOf) {
+					return nil, nil
+				}
+
+				// Switch to expanding ADCS kinds
+				criteria = append(criteria, query.KindIn(query.Relationship(), esc3EdgeCompPath2Segment2Kinds...))
+			} else {
+				// Expand membership and ACL kinds
+				criteria = append(criteria, query.KindIn(query.Relationship(), esc3EdgeCompSegment1Kinds...))
+			}
+
+			// Is this node the terminal node?
+			if segment.Node.ID == edge.EndID {
+				// Add the path
+				paths.AddPath(path)
+
+				path.Walk(func(start, end *graph.Node, relationship *graph.Relationship) bool {
+					// Capture the cert template nodes
+					if end.Kinds.ContainsOneOf(ad.CertTemplate) {
+						ct2Nodes.Add(end.ID.Uint32())
+					}
+
+					// Capture the enterprise CA nodes
+					if end.Kinds.ContainsOneOf(ad.EnterpriseCA) {
+						ecaNodes.Add(end.ID.Uint32())
+
+						// In addition, to account for P6 we must track CertTemplates that are published to ECA nodes with certain conditions
+						if collected, err := end.Properties.Get(ad.EnrollmentAgentRestrictionsCollected.String()).Bool(); err != nil {
+							log.Errorf("error getting enrollmentagentcollected for eca2 %d: %w", end.ID, err)
+						} else if hasRestrictions, err := end.Properties.Get(ad.HasEnrollmentAgentRestrictions.String()).Bool(); err != nil {
+							log.Errorf("error getting hasenrollmentagentrestrictions for ca %d: %w", end.ID, err)
+						} else if collected && hasRestrictions {
+							// The start node here MUST be a CertTemplate as it is the only node kind that can traverse PublishedTo to an EnterpriseCA
+							p6CTNodes.Add(start.ID.Uint32())
+						}
+					}
+
+					return true
+				})
+
+				return nil, nil
+			}
+
+			// Is this node a cert template?
+			if segment.Node.Kinds.ContainsOneOf(ad.CertTemplate) && !isEndCertTemplateValidESC3(segment.Node) {
+				return nil, nil
+			}
+
+			var (
+				nextSegments []*graph.PathSegment
+				nextQuery    = tx.Relationships().Filter(query.And(criteria...))
+			)
+
+			// Order by relationship ID so that skip and limit behave somewhat predictably - cost of this is pretty
+			// small even for large result sets
+			nextQuery.OrderBy(query.Order(query.Identity(query.Relationship()), query.Ascending()))
+
+			return nextSegments, nextQuery.FetchDirection(graph.DirectionInbound, func(cursor graph.Cursor[graph.DirectionalResult]) error {
+				for next := range cursor.Chan() {
+					nextSegments = append(nextSegments, segment.Descend(next.Node, next.Relationship))
+				}
+
+				return cursor.Error()
+			})
+		},
+	}); err != nil {
+		return nil, err
+	}
+
+	if err := traversalInst.BreadthFirst(ctx, traversal.Plan{
+		Root: graph.NewNode(edge.StartID, graph.NewProperties(), ad.Entity),
+		Driver: func(ctx context.Context, tx graph.Transaction, segment *graph.PathSegment) ([]*graph.PathSegment, error) {
+			if ecaNodes.Contains(segment.Node.ID.Uint32()) {
+				// We reached one of the ECA nodes
+				paths.AddPath(segment.Path())
+				return nil, nil
+			}
+
+			var (
+				nextSegments []*graph.PathSegment
+				nextQuery    = tx.Relationships().Filter(query.And(
+					query.Equals(query.StartID(), segment.Node.ID),
+					query.KindIn(query.Relationship(), ad.Enroll, ad.MemberOf),
+				))
+			)
+
+			// Order by relationship ID so that skip and limit behave somewhat predictably - cost of this is pretty
+			// small even for large result sets
+			nextQuery.OrderBy(query.Order(query.Identity(query.Relationship()), query.Ascending()))
+
+			return nextSegments, nextQuery.FetchDirection(graph.DirectionInbound, func(cursor graph.Cursor[graph.DirectionalResult]) error {
+				for next := range cursor.Chan() {
+					nextSegments = append(nextSegments, segment.Descend(next.Node, next.Relationship))
+				}
+
+				return cursor.Error()
+			})
+		},
+	}); err != nil {
+		return nil, err
+	}
+
+	return paths, db.ReadTransaction(ctx, func(tx graph.Transaction) error {
+		if templateEscalationPaths, err := ops.FetchPathSet(tx, tx.Relationships().Filter(query.And(
+			query.InIDs(query.StartID(), cardinality.DuplexToGraphIDs(ct1Nodes)...),
+			query.Kind(query.Relationship(), ad.EnrollOnBehalfOf),
+			query.InIDs(query.EndID(), cardinality.DuplexToGraphIDs(ct2Nodes)...),
+		))); err != nil {
+			return err
+		} else {
+			paths.AddPathSet(templateEscalationPaths)
+		}
+
+		if p6CTNodes.Cardinality() > 0 {
+			if delegatedEnrollmentEscalationPaths, err := ops.FetchPathSet(tx, tx.Relationships().Filter(query.And(
+				query.Equals(query.StartID(), edge.StartID),
+				query.Kind(query.Relationship(), ad.DelegatedEnrollmentAgent),
+				query.InIDs(query.EndID(), cardinality.DuplexToGraphIDs(p6CTNodes)...),
+			))); err != nil {
+				return err
+			} else {
+				paths.AddPathSet(delegatedEnrollmentEscalationPaths)
+			}
+		}
+
+		return nil
+	})
+}
 
 func getADCSESC1EdgeComposition(tx graph.Transaction, edge *graph.Relationship) (graph.PathSet, error) {
 	finalPaths := graph.NewPathSet()
