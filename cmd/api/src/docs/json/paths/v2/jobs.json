@@ -1,7 +1,7 @@
 {
     "/api/v2/jobs/available": {
         "get": {
-            "description": "Gets next scheduled job for client. NOTE: This endpoint is intended to be used by clients and may not function properly in the API Explorer.",
+            "description": "Gets next scheduled job for client. \n\n<b>NOTE:</b> This endpoint is intended to be used by clients and may not function properly in the API Explorer.",
             "tags": [
                 "Jobs",
                 "Enterprise"
