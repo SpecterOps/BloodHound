@@ -488,9 +488,10 @@ func (s *GraphTestContext) NewActiveDirectoryGPO(name, domainSID string) *graph.
 
 func (s *GraphTestContext) NewActiveDirectoryNTAuthStore(name, domainSID string) *graph.Node {
 	return s.NewNode(graph.AsProperties(graph.PropertyMap{
-		common.Name:     name,
-		common.ObjectID: must.NewUUIDv4().String(),
-		ad.DomainSID:    domainSID,
+		common.Name:        name,
+		common.ObjectID:    must.NewUUIDv4().String(),
+		ad.DomainSID:       domainSID,
+		ad.CertThumbprints: []string{"a", "b", "c"},
 	}), ad.Entity, ad.NTAuthStore)
 }
 
@@ -499,6 +500,15 @@ func (s *GraphTestContext) NewActiveDirectoryEnterpriseCA(name, domainSID string
 		common.Name:     name,
 		common.ObjectID: must.NewUUIDv4().String(),
 		ad.DomainSID:    domainSID,
+	}), ad.Entity, ad.EnterpriseCA)
+}
+
+func (s *GraphTestContext) NewActiveDirectoryEnterpriseCAWithThumbprint(name, domainSID, certThumbprint string) *graph.Node {
+	return s.NewNode(graph.AsProperties(graph.PropertyMap{
+		common.Name:       name,
+		common.ObjectID:   must.NewUUIDv4().String(),
+		ad.DomainSID:      domainSID,
+		ad.CertThumbprint: certThumbprint,
 	}), ad.Entity, ad.EnterpriseCA)
 }
 
