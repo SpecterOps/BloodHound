@@ -580,7 +580,7 @@ func GetADCSESC1EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 
 	for _, searchSegment := range searchPaths {
 		if err := traversalInst.BreadthFirst(ctx, traversal.Plan{
-			Root: searchSegment.Node,
+			RootSegment: searchSegment,
 			Driver: func(ctx context.Context, tx graph.Transaction, segment *graph.PathSegment) ([]*graph.PathSegment, error) {
 				criteria := []graph.Criteria{
 					query.Equals(query.StartID(), segment.Node.ID),
@@ -603,11 +603,6 @@ func GetADCSESC1EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 				// Stop at EnterpriseCA nodes and preserve the segments
 				if segment.Node.Kinds.ContainsOneOf(ad.EnterpriseCA) {
 					lock.Lock()
-
-					if searchSegment.Trunk != nil {
-						searchSegment.Trunk.Attach(segment)
-					}
-
 					enterpriseCASegments = append(enterpriseCASegments, segment)
 					lock.Unlock()
 
@@ -635,7 +630,7 @@ func GetADCSESC1EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 	// P1
 	for _, enterpriseCASegment := range enterpriseCASegments {
 		if err := traversalInst.BreadthFirst(ctx, traversal.Plan{
-			Root: enterpriseCASegment.Node,
+			RootSegment: enterpriseCASegment,
 			Driver: func(ctx context.Context, tx graph.Transaction, segment *graph.PathSegment) ([]*graph.PathSegment, error) {
 				if segment.Node.ID == edge.EndID {
 					lock.Lock()
@@ -671,7 +666,7 @@ func GetADCSESC1EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 		enterpriseCAHasValidNTAuthStore := false
 
 		if err := traversalInst.BreadthFirst(ctx, traversal.Plan{
-			Root: enterpriseCASegment.Node,
+			RootSegment: enterpriseCASegment,
 			Driver: func(ctx context.Context, tx graph.Transaction, segment *graph.PathSegment) ([]*graph.PathSegment, error) {
 				if segment.Node.ID == edge.EndID {
 					lock.Lock()

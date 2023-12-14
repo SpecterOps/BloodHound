@@ -369,17 +369,22 @@ func (s *PathSegment) Detach() {
 	}
 }
 
-func (s *PathSegment) Attach(segment *PathSegment) *PathSegment {
+func (s *PathSegment) Descend(node *Node, relationship *Relationship) *PathSegment {
 	var (
-		sizeAdded         = segment.size
+		nextSegment = &PathSegment{
+			Node:  node,
+			Trunk: s,
+			Edge:  relationship,
+		}
+		sizeAdded         = sizeOfPathSegment(nextSegment)
 		oldBranchCapacity = cap(s.Branches)
 	)
 
-	// Attach the trunk to this segment
-	segment.Trunk = s
+	// Track the size of the segment
+	nextSegment.size = sizeAdded
 
 	// Track this edge on the list of branches
-	s.Branches = append(s.Branches, segment)
+	s.Branches = append(s.Branches, nextSegment)
 
 	// Update the size if we increased the capacity of the branches slice for this segment
 	if newCapacity := cap(s.Branches); newCapacity != oldBranchCapacity {
@@ -392,18 +397,7 @@ func (s *PathSegment) Attach(segment *PathSegment) *PathSegment {
 		sizeCursor.size += sizeAdded
 	}
 
-	return segment
-}
-
-func (s *PathSegment) Descend(node *Node, relationship *Relationship) *PathSegment {
-	newSegment := &PathSegment{
-		Node: node,
-		Edge: relationship,
-	}
-
-	newSegment.size = sizeOfPathSegment(newSegment)
-
-	return s.Attach(newSegment)
+	return nextSegment
 }
 
 // FormatPathSegment outputs a cypher-formatted path from the given PathSegment pointer

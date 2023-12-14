@@ -41,8 +41,9 @@ import (
 type Driver = func(ctx context.Context, tx graph.Transaction, segment *graph.PathSegment) ([]*graph.PathSegment, error)
 
 type Plan struct {
-	Root   *graph.Node
-	Driver Driver
+	Root        *graph.Node
+	RootSegment *graph.PathSegment
+	Driver      Driver
 }
 
 type Traversal struct {
@@ -64,13 +65,12 @@ func (s Traversal) BreadthFirst(ctx context.Context, plan Plan) error {
 
 		// descentWG keeps count of in-flight traversal work. When this wait group reaches a count of 0 the traversal
 		// is considered complete.
-		completionC  = make(chan struct{}, s.numWorkers*2)
-		descentCount = &atomic.Int64{}
-
+		completionC                    = make(chan struct{}, s.numWorkers*2)
+		descentCount                   = &atomic.Int64{}
 		errors                         = util.NewErrorCollector()
-		pathTree                       = graph.NewTree(plan.Root)
 		traversalCtx, doneFunc         = context.WithCancel(ctx)
 		segmentWriterC, segmentReaderC = channels.BufferedPipe[*graph.PathSegment](traversalCtx)
+		pathTree                       graph.Tree
 	)
 
 	// Defer calling the cancellation function of the context to ensure that all workers join, no matter what
@@ -78,6 +78,16 @@ func (s Traversal) BreadthFirst(ctx context.Context, plan Plan) error {
 
 	// Close the writer channel to the buffered pipe
 	defer close(segmentWriterC)
+
+	if plan.Root != nil {
+		pathTree = graph.NewTree(plan.Root)
+	} else if plan.RootSegment != nil {
+		pathTree = graph.Tree{
+			Root: plan.RootSegment,
+		}
+	} else {
+		return fmt.Errorf("no root specified")
+	}
 
 	// Launch the background traversal workers
 	for workerID := 0; workerID < s.numWorkers; workerID++ {
