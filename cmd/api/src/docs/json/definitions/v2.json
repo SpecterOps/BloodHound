@@ -929,5 +929,36 @@
         "type": "string"
       }
     }
+  },
+  "v2.EntityWithControllersResponse": {
+    "type": "object",
+    "properties": {
+      "data": {
+        "type": "object",
+        "properties": {
+          "controllers": {
+            "type": "integer",
+            "description": "A count of the number of controllers associated with this entity."
+          },
+          "properties": {
+            "type": "object"
+          }
+        }
+      }
+    }
+  },
+  "v2.EntityControllersResponse": {
+    "type": "object",
+    "properties": {
+      "count": { "$ref": "#/definitions/attributes.PagingCount" },
+      "limit": { "$ref": "#/definitions/attributes.PagingLimit" },
+      "skip": { "$ref": "#/definitions/attributes.PagingSkip" },
+      "data": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/model.EntityController"
+        }
+      }
+    }
   }
 }

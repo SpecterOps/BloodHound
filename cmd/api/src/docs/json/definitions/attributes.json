@@ -1,0 +1,11 @@
+{
+    "attribute.PagingCount": {
+        "type": "integer"
+    },
+    "attribute.PagingLimit": {
+        "type": "integer"
+    },
+    "attribute.PagingSkip": {
+        "type": "integer"
+    }
+}
