@@ -396,10 +396,14 @@ func (s *PathSegment) Attach(segment *PathSegment) *PathSegment {
 }
 
 func (s *PathSegment) Descend(node *Node, relationship *Relationship) *PathSegment {
-	return s.Attach(&PathSegment{
+	newSegment := &PathSegment{
 		Node: node,
 		Edge: relationship,
-	})
+	}
+
+	newSegment.size = sizeOfPathSegment(newSegment)
+
+	return s.Attach(newSegment)
 }
 
 // FormatPathSegment outputs a cypher-formatted path from the given PathSegment pointer

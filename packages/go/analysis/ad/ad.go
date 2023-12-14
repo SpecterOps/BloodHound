@@ -603,7 +603,11 @@ func GetADCSESC1EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 				// Stop at EnterpriseCA nodes and preserve the segments
 				if segment.Node.Kinds.ContainsOneOf(ad.EnterpriseCA) {
 					lock.Lock()
-					searchSegment.Trunk.Attach(segment)
+
+					if searchSegment.Trunk != nil {
+						searchSegment.Trunk.Attach(segment)
+					}
+
 					enterpriseCASegments = append(enterpriseCASegments, segment)
 					lock.Unlock()
 
