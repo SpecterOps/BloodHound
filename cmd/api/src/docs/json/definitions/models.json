@@ -1105,5 +1105,19 @@
         "format": "date-time"
       }
     }
+  },
+  "model.EntityController": {
+    "type": "object",
+    "properties": {
+      "objectID": {
+        "type": "string"
+      },
+      "name": {
+        "type": "string"
+      },
+      "label": {
+        "type": "string"
+      }
+    }
   }
 }
