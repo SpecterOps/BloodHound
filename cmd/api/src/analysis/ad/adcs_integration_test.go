@@ -21,10 +21,7 @@ package ad_test
 
 import (
 	"context"
-<<<<<<< HEAD
-=======
 
->>>>>>> 823c32a2d72c8bae479cf67e167ab0ec5e4839b7
 	"github.com/specterops/bloodhound/analysis"
 
 	ad2 "github.com/specterops/bloodhound/analysis/ad"
