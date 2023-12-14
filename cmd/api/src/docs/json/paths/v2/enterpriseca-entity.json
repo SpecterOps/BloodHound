@@ -32,25 +32,8 @@
                 }
             }
         },
-        "400": {
-            "description": "Bad Request",
-            "content": {
-                "application/json": {
-                    "schema": {
-                        "$ref": "#/definitions/api.ErrorWrapper"
-                      }
-                }
-            }
-        },
-        "504": {
-            "description": "Gateway Timeout",
-            "content": {
-                "application/json": {
-                    "schema": {
-                        "$ref": "#/definitions/api.ErrorWrapper"
-                      }
-                }
-            }
+        "Error": {
+          "$ref": "#/components/responses/defaultError"
         }
     }
     }
@@ -97,25 +80,8 @@
                 }
             }
         },
-        "400": {
-            "description": "Bad Request",
-            "content": {
-                "application/json": {
-                    "schema": {
-                        "$ref": "#/definitions/api.ErrorWrapper"
-                      }
-                }
-            }
-        },
-        "504": {
-            "description": "Gateway Timeout",
-            "content": {
-                "application/json": {
-                    "schema": {
-                        "$ref": "#/definitions/api.ErrorWrapper"
-                      }
-                }
-            }
+        "Error": {
+          "$ref": "#/components/responses/defaultError"
         }
     }
     }
