@@ -23,6 +23,7 @@ import (
 	"github.com/specterops/bloodhound/dawgs/traversal"
 	"sort"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/specterops/bloodhound/analysis/impact"
@@ -476,7 +477,7 @@ func GetEdgeCompositionPath(ctx context.Context, db graph.Database, edge *graph.
 				pathSet = results
 			}
 		} else if edge.Kind == ad.ADCSESC1 {
-			if results, err := getADCSESC1EdgeComposition(ctx, db, edge); err != nil {
+			if results, err := GetADCSESC1EdgeComposition(ctx, db, edge); err != nil {
 				return err
 			} else {
 				pathSet = results
@@ -486,41 +487,74 @@ func GetEdgeCompositionPath(ctx context.Context, db graph.Database, edge *graph.
 	})
 }
 
+func ExpandOutboundGroupMembershipPaths(ctx context.Context, traversalInst traversal.Traversal, root *graph.Node) ([]*graph.PathSegment, error) {
+	var (
+		groupMembershipPaths []*graph.PathSegment
+		groupMembershipLock  = &sync.Mutex{}
+	)
+
+	return groupMembershipPaths, traversalInst.BreadthFirst(ctx, traversal.Plan{
+		Root: root,
+		Driver: func(ctx context.Context, tx graph.Transaction, segment *graph.PathSegment) ([]*graph.PathSegment, error) {
+			var (
+				nextSegments []*graph.PathSegment
+				nextQuery    = tx.Relationships().Filter(query.And(
+					query.Equals(query.StartID(), segment.Node.ID),
+					query.Kind(query.Relationship(), ad.MemberOf),
+				))
+			)
+
+			if err := nextQuery.FetchDirection(graph.DirectionInbound, func(cursor graph.Cursor[graph.DirectionalResult]) error {
+				for next := range cursor.Chan() {
+					nextSegments = append(nextSegments, segment.Descend(next.Node, next.Relationship))
+				}
+
+				return cursor.Error()
+			}); err != nil {
+				return nil, err
+			}
+
+			if len(nextSegments) == 0 {
+				// This is the end of group membership for this path
+				groupMembershipLock.Lock()
+				groupMembershipPaths = append(groupMembershipPaths, segment)
+				groupMembershipLock.Unlock()
+			}
+
+			return nextSegments, nil
+		},
+	})
+}
+
 var (
-	esc3EdgeCompSegment1Kinds      = graph.Kinds{ad.GenericAll, ad.Enroll, ad.AllExtendedRights, ad.MemberOf}
-	esc3EdgeCompPath1Segment2Kinds = graph.Kinds{ad.PublishedTo, ad.IssuedSignedBy, ad.EnterpriseCAFor, ad.RootCAFor}
-	esc3EdgeCompPath2Segment2Kinds = graph.Kinds{ad.PublishedTo, ad.TrustedForNTAuth, ad.NTAuthStoreFor}
+	esc3EdgeCompPathSegment1Kinds = graph.Kinds{ad.GenericAll, ad.Enroll, ad.AllExtendedRights, ad.PublishedTo}
+	esc3EdgeCompPathSegment2Kinds = graph.Kinds{ad.IssuedSignedBy, ad.EnterpriseCAFor, ad.RootCAFor}
+	esc3EdgeCompPathSegment3Kinds = graph.Kinds{ad.TrustedForNTAuth, ad.NTAuthStoreFor}
 )
 
-func getADCSESC1EdgeComposition(ctx context.Context, db graph.Database, edge *graph.Relationship) (graph.PathSet, error) {
-	/*MATCH (u:User {objectid:'S-1-5-21-3899650703-823839164-3449954884-500'})-[:ADCSESC1]->(d:Domain {objectid:'S-1-5-21-3899650703-823839164-3449954884'})
-	MATCH (c:Container)-[:Contains]->(rca:RootCA)
-	WHERE c.name CONTAINS "CERTIFICATION AUTHORITIES" AND c.domain = d.domain
-	MATCH (ca:EnterpriseCA)-[:IssuedSignedBy|EnterpriseCAFor*1..]->(rca)
-	WHERE (ca)-[:TrustedForNTAuth]->(:NTAuthStore)
-	MATCH (ct:CertTemplate)
-	WHERE (ct.requiresmanagerapproval = false
-	AND ct.schemaversion > 1
-	AND ct.authorizedsignatures = 0
-	AND ct.authenticationenabled = true
-	AND ct.enrolleesuppliessubject = true)
-	OR (ct.requiresmanagerapproval = false
-	AND ct.schemaversion = 1
-	AND ct.authenticationenabled = true
-	AND ct.enrolleesuppliessubject = true)
-	OPTIONAL MATCH p1 = (u)-[:GenericAll|Enroll|AllExtendedRights]->(ct)
-	OPTIONAL MATCH p2 = (u)-[:MemberOf*1..]->(:Group)-[:GenericAll|Enroll|AllExtendedRights]->(ct)
-	OPTIONAL MATCH p3 = (u)-[:Enroll]->(ca)-[:IssuedSignedBy|EnterpriseCAFor|RootCAFor*1..]->(d)
-	OPTIONAL MATCH p4 = (u)-[:MemberOf*1..]->(:Group)-[:Enroll]->(ca)-[:IssuedSignedBy|EnterpriseCAFor|RootCAFor*1..]->(d)
-	OPTIONAL MATCH p5 = (ca)-[:TrustedForNTAuth]->(:NTAuthStore)-[:NTAuthStoreFor]->(d)
-	RETURN p1,p2,p3,p4,p5*/
+func GetADCSESC1EdgeComposition(ctx context.Context, db graph.Database, edge *graph.Relationship) (graph.PathSet, error) {
+	/*
+		MATCH p1 = (n:Base {name:"JONES@ESC1-OFFLINEROOTCA.LOCAL"})-[:Enroll|GenericAll|AllExtendedRights*1..]->(ct:CertTemplate)-[:PublishedTo]-(ca:EnterpriseCA)-[:IssuedSignedBy*1..]-(rootca:RootCA)-[:RootCAFor]->(d:Domain {name:'ESC1-OFFLINEROOTCA.LOCAL'})
+		WHERE (ct.requiresmanagerapproval = false
+		AND ct.schemaversion > 1
+		AND ct.authorizedsignatures = 0
+		AND ct.authenticationenabled = true
+		AND ct.enrolleesuppliessubject = true)
+		OR (ct.requiresmanagerapproval = false
+		AND ct.schemaversion = 1
+		AND ct.authenticationenabled = true
+		AND ct.enrolleesuppliessubject = true)
+		MATCH p2 = (n)-[:Enroll|GenericAll|AllExtendedRights|MemberOf*1..]->(ca)-[:TrustedForNTAuth]->(nt:NTAuthStore)-[:NTAuthStoreFor]-(d)
+		RETURN p1,p2
+	*/
 
 	var (
-		traversalInst   = traversal.New(db, analysis.MaximumDatabaseParallelWorkers)
-		traversalBitmap = cardinality.NewBitmap32()
-		paths           graph.PathSet
-		startNode       *graph.Node
-		candidatePaths  = map[graph.ID]graph.PathSet{}
+		traversalInst        = traversal.New(db, analysis.MaximumDatabaseParallelWorkers)
+		paths                graph.PathSet
+		startNode            *graph.Node
+		enterpriseCASegments []*graph.PathSegment
+		lock                 = &sync.Mutex{}
+		candidatePaths       = map[graph.ID]graph.PathSet{}
 	)
 
 	if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
@@ -534,114 +568,43 @@ func getADCSESC1EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 		return paths, err
 	}
 
-	if err := traversalInst.BreadthFirst(ctx, traversal.Plan{
-		Root: startNode,
-		Driver: func(ctx context.Context, tx graph.Transaction, segment *graph.PathSegment) ([]*graph.PathSegment, error) {
-			var (
-				criteria = []graph.Criteria{
-					query.Equals(query.StartID(), segment.Node.ID),
-				}
-				sawControlRel = false
-			)
+	// Expand start node's group membership
+	searchPaths, err := ExpandOutboundGroupMembershipPaths(ctx, traversalInst, startNode)
 
-			//Don't revisit nodes
-			if !traversalBitmap.CheckedAdd(segment.Node.ID.Uint32()) {
-				return nil, nil
-			}
-
-			var (
-				path = segment.Path()
-			)
-
-			//Walk the path to check for a control relationship
-			path.Walk(func(start, end *graph.Node, relationship *graph.Relationship) bool {
-				sawControlRel = relationship.Kind.Is(ad.ACLRelationships()...)
-				return !sawControlRel
-			})
-
-			// Swap query criteria depending on the of the traversal
-			if sawControlRel {
-				// Don't expand this path any further
-				if segment.Edge.Kind.Is(ad.MemberOf) {
-					return nil, nil
-				}
-
-				// Switch to expanding ADCS kinds
-				criteria = append(criteria, query.KindIn(query.Relationship(), esc3EdgeCompPath1Segment2Kinds...))
-			} else {
-				// Expand membership and ACL kinds
-				criteria = append(criteria, query.KindIn(query.Relationship(), esc3EdgeCompSegment1Kinds...))
-			}
-
-			// Is this node the terminal node?
-			if segment.Node.ID == edge.EndID {
-				path.Walk(func(start, end *graph.Node, relationship *graph.Relationship) bool {
-					// Capture the enterprise CA node along with the path as a candidate
-					if end.Kinds.ContainsOneOf(ad.EnterpriseCA) {
-						candidatePaths[end.ID] = graph.NewPathSet(path)
-					}
-
-					return true
-				})
-
-				return nil, nil
-			}
-
-			if segment.Node.Kinds.ContainsOneOf(ad.CertTemplate) {
-				if validationProperties, err := getValidatePublishedCertTemplateForEsc1PropertyValues(segment.Node); err != nil {
-					log.Errorf("error getting published certtemplate validation properties, %v", err)
-				} else if !validatePublishedCertTemplateForEsc1(validationProperties) {
-					return nil, nil
-				}
-			}
-
-			var (
-				nextSegments []*graph.PathSegment
-				nextQuery    = tx.Relationships().Filter(query.And(criteria...))
-			)
-
-			nextQuery.OrderBy(query.Order(query.Identity(query.Relationship()), query.Ascending()))
-
-			return nextSegments, nextQuery.FetchDirection(graph.DirectionInbound, func(cursor graph.Cursor[graph.DirectionalResult]) error {
-				for next := range cursor.Chan() {
-					nextSegments = append(nextSegments, segment.Descend(next.Node, next.Relationship))
-				}
-
-				return cursor.Error()
-			})
-		},
-	}); err != nil {
+	if err != nil {
 		return nil, err
 	}
 
-	traversalBitmap.Clear()
+	// Add a path segment to cover just the user as well
+	searchPaths = append(searchPaths, graph.NewRootPathSegment(startNode))
 
-	for ecaId, _ := range candidatePaths {
-		foundPath := false
+	for _, searchSegment := range searchPaths {
 		if err := traversalInst.BreadthFirst(ctx, traversal.Plan{
-			Root: graph.NewNode(ecaId, graph.NewProperties(), ad.EnterpriseCA),
+			Root: searchSegment.Node,
 			Driver: func(ctx context.Context, tx graph.Transaction, segment *graph.PathSegment) ([]*graph.PathSegment, error) {
-				var (
-					criteria = []graph.Criteria{
-						query.Equals(query.StartID(), segment.Node.ID),
-						query.KindIn(query.Relationship(), esc3EdgeCompPath2Segment2Kinds...),
-					}
-				)
-				//Don't revisit nodes
-				if !traversalBitmap.CheckedAdd(segment.Node.ID.Uint32()) {
-					return nil, nil
+				criteria := []graph.Criteria{
+					query.Equals(query.StartID(), segment.Node.ID),
+					query.KindIn(query.Relationship(), esc3EdgeCompPathSegment1Kinds...),
 				}
 
-				var (
-					path = segment.Path()
-				)
-
 				// Is this node the terminal node?
-				if segment.Node.ID == edge.EndID {
-					pathSet := candidatePaths[ecaId]
-					pathSet.AddPath(path)
-					candidatePaths[ecaId] = pathSet
-					foundPath = true
+				if segment.Node.Kinds.ContainsOneOf(ad.CertTemplate) {
+					if validationProps, err := getValidatePublishedCertTemplateForEsc1PropertyValues(segment.Node); err != nil {
+						return nil, err
+					} else if !validatePublishedCertTemplateForEsc1(validationProps) {
+						// Stop traversal at CertTemplates that do not match our expected escalation criteria
+						return nil, nil
+					}
+				} else {
+					// Make sure to only find CertTemplate nodes if we have not yet encountered one
+					criteria = append(criteria, query.Kind(query.End(), ad.CertTemplate))
+				}
+
+				// Stop at EnterpriseCA nodes and preserve the segments
+				if segment.Node.Kinds.ContainsOneOf(ad.EnterpriseCA) {
+					lock.Lock()
+					enterpriseCASegments = append(enterpriseCASegments, segment)
+					lock.Unlock()
 
 					return nil, nil
 				}
@@ -650,8 +613,6 @@ func getADCSESC1EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 					nextSegments []*graph.PathSegment
 					nextQuery    = tx.Relationships().Filter(query.And(criteria...))
 				)
-
-				nextQuery.OrderBy(query.Order(query.Identity(query.Relationship()), query.Ascending()))
 
 				return nextSegments, nextQuery.FetchDirection(graph.DirectionInbound, func(cursor graph.Cursor[graph.DirectionalResult]) error {
 					for next := range cursor.Chan() {
@@ -662,45 +623,88 @@ func getADCSESC1EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 				})
 			},
 		}); err != nil {
-			delete(candidatePaths, ecaId)
-		}
-
-		if !foundPath {
-			delete(candidatePaths, ecaId)
+			return nil, err
 		}
 	}
 
-	if err := traversalInst.BreadthFirst(ctx, traversal.Plan{
-		Root: startNode,
-		Driver: func(ctx context.Context, tx graph.Transaction, segment *graph.PathSegment) ([]*graph.PathSegment, error) {
-			if pathSet, ok := candidatePaths[segment.Node.ID]; ok {
-				paths.AddPath(segment.Path())
-				paths.AddPathSet(pathSet)
-				return nil, nil
-			}
+	// P1
+	for _, enterpriseCASegment := range enterpriseCASegments {
+		if err := traversalInst.BreadthFirst(ctx, traversal.Plan{
+			Root: enterpriseCASegment.Node,
+			Driver: func(ctx context.Context, tx graph.Transaction, segment *graph.PathSegment) ([]*graph.PathSegment, error) {
+				if segment.Node.ID == edge.EndID {
+					lock.Lock()
+					candidatePaths[enterpriseCASegment.Node.ID] = append(candidatePaths[enterpriseCASegment.Node.ID], segment.Path())
+					lock.Unlock()
 
-			var (
-				nextSegments []*graph.PathSegment
-				nextQuery    = tx.Relationships().Filter(query.And(
-					query.Equals(query.StartID(), segment.Node.ID),
-					query.KindIn(query.Relationship(), ad.Enroll, ad.MemberOf),
-				))
-			)
-
-			// Order by relationship ID so that skip and limit behave somewhat predictably - cost of this is pretty
-			// small even for large result sets
-			nextQuery.OrderBy(query.Order(query.Identity(query.Relationship()), query.Ascending()))
-
-			return nextSegments, nextQuery.FetchDirection(graph.DirectionInbound, func(cursor graph.Cursor[graph.DirectionalResult]) error {
-				for next := range cursor.Chan() {
-					nextSegments = append(nextSegments, segment.Descend(next.Node, next.Relationship))
+					return nil, nil
 				}
 
-				return cursor.Error()
-			})
-		},
-	}); err != nil {
-		return nil, err
+				var (
+					nextSegments []*graph.PathSegment
+					nextQuery    = tx.Relationships().Filter(query.And(
+						query.Equals(query.StartID(), segment.Node.ID),
+						query.KindIn(query.Relationship(), esc3EdgeCompPathSegment2Kinds...),
+					))
+				)
+
+				return nextSegments, nextQuery.FetchDirection(graph.DirectionInbound, func(cursor graph.Cursor[graph.DirectionalResult]) error {
+					for next := range cursor.Chan() {
+						nextSegments = append(nextSegments, segment.Descend(next.Node, next.Relationship))
+					}
+
+					return cursor.Error()
+				})
+			},
+		}); err != nil {
+			return nil, err
+		}
+	}
+
+	// P2
+	for _, enterpriseCASegment := range enterpriseCASegments {
+		enterpriseCAHasValidNTAuthStore := false
+
+		if err := traversalInst.BreadthFirst(ctx, traversal.Plan{
+			Root: enterpriseCASegment.Node,
+			Driver: func(ctx context.Context, tx graph.Transaction, segment *graph.PathSegment) ([]*graph.PathSegment, error) {
+				if segment.Node.ID == edge.EndID {
+					lock.Lock()
+					candidatePaths[enterpriseCASegment.Node.ID] = append(candidatePaths[enterpriseCASegment.Node.ID], segment.Path())
+					lock.Unlock()
+
+					enterpriseCAHasValidNTAuthStore = true
+					return nil, nil
+				}
+
+				var (
+					nextSegments []*graph.PathSegment
+					nextQuery    = tx.Relationships().Filter(query.And(
+						query.Equals(query.StartID(), segment.Node.ID),
+						query.KindIn(query.Relationship(), esc3EdgeCompPathSegment3Kinds...),
+					))
+				)
+
+				return nextSegments, nextQuery.FetchDirection(graph.DirectionInbound, func(cursor graph.Cursor[graph.DirectionalResult]) error {
+					for next := range cursor.Chan() {
+						nextSegments = append(nextSegments, segment.Descend(next.Node, next.Relationship))
+					}
+
+					return cursor.Error()
+				})
+			},
+		}); err != nil {
+			return nil, err
+		}
+
+		// If there is no valid NTAuthStoreFor path to the domain node then this is not a valid escalation path
+		if !enterpriseCAHasValidNTAuthStore {
+			delete(candidatePaths, enterpriseCASegment.Node.ID)
+		}
+	}
+
+	for _, pathSet := range candidatePaths {
+		paths.AddPathSet(pathSet)
 	}
 
 	return paths, nil
