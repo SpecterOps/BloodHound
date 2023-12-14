@@ -166,10 +166,11 @@ const (
 	RenewalPeriod                          Property = "renewalperiod"
 	ValidityPeriod                         Property = "validityperiod"
 	OID                                    Property = "oid"
+	HomeDirectory                          Property = "homedirectory"
 )
 
 func AllProperties() []Property {
-	return []Property{AdminCount, CASecurityCollected, CAName, CertChain, CertName, CertThumbprint, CertThumbprints, HasEnrollmentAgentRestrictions, EnrollmentAgentRestrictionsCollected, IsUserSpecifiesSanEnabled, IsUserSpecifiesSanEnabledCollected, HasBasicConstraints, BasicConstraintPathLength, DNSHostname, CrossCertificatePair, DistinguishedName, DomainFQDN, DomainSID, Sensitive, HighValue, BlocksInheritance, IsACL, IsACLProtected, IsDeleted, Enforced, Department, HasCrossCertificatePair, HasSPN, UnconstrainedDelegation, LastLogon, LastLogonTimestamp, IsPrimaryGroup, HasLAPS, DontRequirePreAuth, LogonType, HasURA, PasswordNeverExpires, PasswordNotRequired, FunctionalLevel, TrustType, SidFiltering, TrustedToAuth, SamAccountName, CertificateMappingMethodsRaw, CertificateMappingMethods, StrongCertificateBindingEnforcementRaw, StrongCertificateBindingEnforcement, EKUs, SubjectAltRequireUPN, AuthorizedSignatures, ApplicationPolicies, SchemaVersion, RequiresManagerApproval, AuthenticationEnabled, EnrolleeSuppliesSubject, CertificateApplicationPolicy, CertificateNameFlag, EffectiveEKUs, EnrollmentFlag, NoSecurityExtension, RenewalPeriod, ValidityPeriod, OID}
+	return []Property{AdminCount, CASecurityCollected, CAName, CertChain, CertName, CertThumbprint, CertThumbprints, HasEnrollmentAgentRestrictions, EnrollmentAgentRestrictionsCollected, IsUserSpecifiesSanEnabled, IsUserSpecifiesSanEnabledCollected, HasBasicConstraints, BasicConstraintPathLength, DNSHostname, CrossCertificatePair, DistinguishedName, DomainFQDN, DomainSID, Sensitive, HighValue, BlocksInheritance, IsACL, IsACLProtected, IsDeleted, Enforced, Department, HasCrossCertificatePair, HasSPN, UnconstrainedDelegation, LastLogon, LastLogonTimestamp, IsPrimaryGroup, HasLAPS, DontRequirePreAuth, LogonType, HasURA, PasswordNeverExpires, PasswordNotRequired, FunctionalLevel, TrustType, SidFiltering, TrustedToAuth, SamAccountName, CertificateMappingMethodsRaw, CertificateMappingMethods, StrongCertificateBindingEnforcementRaw, StrongCertificateBindingEnforcement, EKUs, SubjectAltRequireUPN, AuthorizedSignatures, ApplicationPolicies, SchemaVersion, RequiresManagerApproval, AuthenticationEnabled, EnrolleeSuppliesSubject, CertificateApplicationPolicy, CertificateNameFlag, EffectiveEKUs, EnrollmentFlag, NoSecurityExtension, RenewalPeriod, ValidityPeriod, OID, HomeDirectory}
 }
 func ParseProperty(source string) (Property, error) {
 	switch source {
@@ -299,6 +300,8 @@ func ParseProperty(source string) (Property, error) {
 		return ValidityPeriod, nil
 	case "oid":
 		return OID, nil
+	case "homedirectory":
+		return HomeDirectory, nil
 	default:
 		return "", errors.New("Invalid enumeration value: " + source)
 	}
@@ -431,6 +434,8 @@ func (s Property) String() string {
 		return string(ValidityPeriod)
 	case OID:
 		return string(OID)
+	case HomeDirectory:
+		return string(HomeDirectory)
 	default:
 		return "Invalid enumeration case: " + string(s)
 	}
@@ -474,7 +479,7 @@ func (s Property) Name() string {
 	case DomainSID:
 		return "Domain SID"
 	case Sensitive:
-		return "Marked sensitive"
+		return "Marked Sensitive"
 	case HighValue:
 		return "High Value"
 	case BlocksInheritance:
@@ -563,6 +568,8 @@ func (s Property) Name() string {
 		return "Validity Period"
 	case OID:
 		return "OID"
+	case HomeDirectory:
+		return "Home Directory"
 	default:
 		return "Invalid enumeration case: " + string(s)
 	}

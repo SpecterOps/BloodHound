@@ -142,7 +142,7 @@ DomainSID: types.#StringEnum & {
 Sensitive: types.#StringEnum & {
 	symbol:         "Sensitive"
 	schema:         "ad"
-	name:           "Marked sensitive"
+	name:           "Marked Sensitive"
 	representation: "sensitive"
 }
 
@@ -319,6 +319,13 @@ SamAccountName: types.#StringEnum & {
 	schema: "ad"
 	name: "SAM Account Name"
 	representation: "samaccountname"
+}
+
+HomeDirectory: types.#StringEnum & {
+	symbol: "HomeDirectory"
+	schema: "ad"
+	name: "Home Directory"
+	representation: "homedirectory"
 }
 
 CertificateMappingMethodsRaw: types.#StringEnum & {
@@ -531,7 +538,8 @@ Properties: [
 	NoSecurityExtension,
 	RenewalPeriod,
 	ValidityPeriod,
-	OID
+	OID,
+	HomeDirectory
 ]
 
 // Kinds
