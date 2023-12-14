@@ -49,10 +49,7 @@ const AssetGroupMenuItem: FC<{ assetGroupId: string; assetGroupName: string }> =
                 dispatch(toggleTierZeroNode(selectedNode.graphId));
             }
 
-            addNotification(
-                'Update successful. Please check back later to view updated Asset Group.',
-                'AssetGroupUpdateSuccess'
-            );
+            addNotification('Update successful.', 'AssetGroupUpdateSuccess');
         },
         onError: (error: any) => {
             console.error(error);
