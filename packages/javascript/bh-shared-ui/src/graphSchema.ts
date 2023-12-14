@@ -314,6 +314,7 @@ export enum ActiveDirectoryKindProperties {
     RenewalPeriod = 'renewalperiod',
     ValidityPeriod = 'validityperiod',
     OID = 'oid',
+    HomeDirectory = 'homedirectory',
 }
 export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKindProperties): string | undefined {
     switch (value) {
@@ -354,7 +355,7 @@ export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKin
         case ActiveDirectoryKindProperties.DomainSID:
             return 'Domain SID';
         case ActiveDirectoryKindProperties.Sensitive:
-            return 'Marked sensitive';
+            return 'Marked Sensitive';
         case ActiveDirectoryKindProperties.HighValue:
             return 'High Value';
         case ActiveDirectoryKindProperties.BlocksInheritance:
@@ -443,6 +444,8 @@ export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKin
             return 'Validity Period';
         case ActiveDirectoryKindProperties.OID:
             return 'OID';
+        case ActiveDirectoryKindProperties.HomeDirectory:
+            return 'Home Directory';
         default:
             return undefined;
     }
