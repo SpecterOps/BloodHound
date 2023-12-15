@@ -36,3 +36,5 @@ export * from './graphSchema';
 export * from './views';
 
 export * from './store';
+
+export * from './mocks';

@@ -15,14 +15,14 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { useQuery } from 'react-query';
-import { apiClient } from 'bh-shared-ui';
-import { ActiveDirectoryNodeKind, AzureNodeKind } from 'bh-shared-ui';
-import { validateNodeType } from 'src/utils';
+import { apiClient } from '../../utils';
+import { ActiveDirectoryNodeKind, AzureNodeKind } from '../../graphSchema';
 
 export type SearchResult = {
     distinguishedname?: string;
     name: string;
     objectid: string;
+    system_tags?: string;
     type: string;
 };
 
@@ -65,6 +65,21 @@ export const getKeywordAndTypeValues = (
     } else keyword = splitValue[0];
 
     return { keyword: keyword, type: type };
+};
+
+const validateNodeType = (type: string): ActiveDirectoryNodeKind | AzureNodeKind | undefined => {
+    let result = undefined;
+    Object.values(ActiveDirectoryNodeKind).forEach((activeDirectoryType: string) => {
+        if (activeDirectoryType.localeCompare(type, undefined, { sensitivity: 'base' }) === 0)
+            result = activeDirectoryType as ActiveDirectoryNodeKind;
+    });
+
+    Object.values(AzureNodeKind).forEach((azureType: string) => {
+        if (azureType.localeCompare(type, undefined, { sensitivity: 'base' }) === 0)
+            result = azureType as AzureNodeKind;
+    });
+
+    return result;
 };
 
 const getErrorText = (error: any): string => {

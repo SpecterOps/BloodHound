@@ -16,6 +16,8 @@
 
 export { default as UserProfile } from './UserProfile';
 
+export * from './Explore';
+
 export * from './DataQuality';
 
 export * from './Explore/ExploreSearch';

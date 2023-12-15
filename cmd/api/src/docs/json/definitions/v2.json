@@ -28,7 +28,10 @@
   },
   "v2.RiskAcceptRequest": {
     "type": "object",
-    "required": ["risk_type", "accepted"],
+    "required": [
+      "risk_type",
+      "accepted"
+    ],
     "properties": {
       "risk_type": {
         "type": "string"
@@ -57,9 +60,15 @@
       "data": {
         "type": "object",
         "properties": {
-          "count": { "type": "integer" },
-          "limit": { "type": "integer" },
-          "skip": { "type": "integer" },
+          "count": {
+            "type": "integer"
+          },
+          "limit": {
+            "type": "integer"
+          },
+          "skip": {
+            "type": "integer"
+          },
           "members": {
             "type": "array",
             "items": {
@@ -93,7 +102,10 @@
   },
   "v2.ClientCreateRequest": {
     "type": "object",
-    "required": ["name", "type"],
+    "required": [
+      "name",
+      "type"
+    ],
     "properties": {
       "domain_controller": {
         "type": "string"
@@ -111,7 +123,9 @@
   },
   "v2.ClientUpdateRequest": {
     "type": "object",
-    "required": ["name"],
+    "required": [
+      "name"
+    ],
     "properties": {
       "name": {
         "type": "string"
@@ -222,7 +236,10 @@
       "status": {
         "description": "Status code for complete (2) or failed (5)",
         "type": "integer",
-        "enum": [2, 5],
+        "enum": [
+          2,
+          5
+        ],
         "required": true
       },
       "message": {
@@ -477,7 +494,10 @@
   },
   "v2.CreateUserRequest": {
     "type": "object",
-    "required": ["email_address", "roles"],
+    "required": [
+      "email_address",
+      "roles"
+    ],
     "properties": {
       "email_address": {
         "type": "string",
@@ -618,7 +638,9 @@
   },
   "v2.ListAppConfigParametersResponse": {
     "type": "object",
-    "required": ["data"],
+    "required": [
+      "data"
+    ],
     "properties": {
       "data": {
         "type": "object"
@@ -627,7 +649,9 @@
   },
   "v2.ListFlagsResponse": {
     "type": "object",
-    "required": ["data"],
+    "required": [
+      "data"
+    ],
     "properties": {
       "data": {
         "type": "object"
@@ -636,7 +660,9 @@
   },
   "v2.ToggleFlagResponse": {
     "type": "object",
-    "required": ["enabled"],
+    "required": [
+      "enabled"
+    ],
     "properties": {
       "enabled": {
         "type": "boolean"
@@ -645,7 +671,9 @@
   },
   "v2.ListSAMLSignOnEndpointsResponse": {
     "type": "object",
-    "required": ["endpoints"],
+    "required": [
+      "endpoints"
+    ],
     "properties": {
       "endpoints": {
         "type": "boolean"
@@ -654,7 +682,9 @@
   },
   "v2.IDPValidationResponse": {
     "type": "object",
-    "required": ["successful"],
+    "required": [
+      "successful"
+    ],
     "properties": {
       "error_message": {
         "type": "string"
@@ -697,7 +727,9 @@
   },
   "v2.MFAEnrollmentRequest": {
     "type": "object",
-    "required": ["secret"],
+    "required": [
+      "secret"
+    ],
     "properties": {
       "secret": {
         "type": "string"
@@ -717,7 +749,9 @@
   },
   "v2.MFAStatusResponse": {
     "type": "object",
-    "required": ["status"],
+    "required": [
+      "status"
+    ],
     "properties": {
       "data": {
         "type": "object",
@@ -731,7 +765,9 @@
   },
   "v2.MFAActivationRequest": {
     "type": "object",
-    "required": ["otp"],
+    "required": [
+      "otp"
+    ],
     "properties": {
       "otp": {
         "type": "string"
@@ -740,7 +776,9 @@
   },
   "v2.LoginResponse": {
     "type": "object",
-    "required": ["status"],
+    "required": [
+      "status"
+    ],
     "properties": {
       "data": {
         "type": "object",
@@ -760,7 +798,9 @@
   },
   "v2.ClientErrorRequest": {
     "type": "object",
-    "required": ["task_error"],
+    "required": [
+      "task_error"
+    ],
     "properties": {
       "task_error": {
         "type": "string"
@@ -772,7 +812,9 @@
   },
   "v2.PagedNodeListEntry": {
     "type": "object",
-    "required": ["object_id"],
+    "required": [
+      "object_id"
+    ],
     "properties": {
       "object_id": {
         "type": "string"
@@ -920,13 +962,27 @@
   },
   "v2.CreateSavedQueryRequest": {
     "type": "object",
-    "required": ["name", "query"],
+    "required": [
+      "name",
+      "query"
+    ],
     "properties": {
       "query": {
         "type": "string"
       },
       "name": {
         "type": "string"
+      }
+    }
+  },
+  "v2.SearchResponse": {
+    "type": "object",
+    "properties": {
+      "data": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/model.SearchResult"
+        }
       }
     }
   }

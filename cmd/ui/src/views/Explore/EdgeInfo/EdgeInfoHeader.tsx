@@ -20,7 +20,7 @@ import { Typography } from '@mui/material';
 import { Icon, collapseAllSections } from 'bh-shared-ui';
 import React from 'react';
 import { useAppDispatch } from 'src/store';
-import useHeaderStyles from 'src/views/Explore/InfoStyles/Header';
+import { useHeaderStyles } from 'bh-shared-ui';
 
 interface HeaderProps {
     name: string;

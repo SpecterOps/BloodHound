@@ -14,13 +14,21 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-export const NODE_GRAPH_RENDER_LIMIT = 1000;
+import { useState, useEffect } from 'react';
 
-export const CRITICAL_THRESHOLD = 95;
-export const HIGH_THRESHOLD = 80;
-export const MODERATE_THRESHOLD = 40;
+const useDebouncedValue = (value: any, delay: number) => {
+    const [debouncedValue, setDebouncedValue] = useState(value);
 
-export const ZERO_VALUE_API_DATE = '0001-01-01T00:00:00Z';
+    useEffect(() => {
+        const timeout = setTimeout(() => {
+            setDebouncedValue(value);
+        }, delay);
+        return () => {
+            clearTimeout(timeout);
+        };
+    }, [value, delay]);
 
-export const TIER_ZERO_TAG = 'admin_tier_0';
-export const TIER_ZERO_LABEL = 'High Value';
+    return debouncedValue;
+};
+
+export default useDebouncedValue;

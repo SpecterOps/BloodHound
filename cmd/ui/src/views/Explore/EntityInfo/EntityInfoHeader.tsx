@@ -20,7 +20,7 @@ import { Typography } from '@mui/material';
 import { Icon, NodeIcon, EntityKinds } from 'bh-shared-ui';
 import React from 'react';
 import { useEntityInfoPanelContext } from 'src/views/Explore/EntityInfo/EntityInfoPanelContext';
-import useHeaderStyles from 'src/views/Explore/InfoStyles/Header';
+import { useHeaderStyles } from 'bh-shared-ui';
 
 interface HeaderProps {
     name?: string;
