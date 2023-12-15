@@ -225,22 +225,36 @@ const GraphView: FC = () => {
 };
 
 const GridItems = () => {
+    const selectedNode = useSelector((state: AppState) => state.entityinfo.selectedNode);
+
     const columnsDefault = { xs: 6, md: 5, lg: 4, xl: 3 };
     const cypherSearchColumns = { xs: 6, md: 6, lg: 6, xl: 4 };
 
     const edgeInfoState: EdgeInfoState = useSelector((state: AppState) => state.edgeinfo);
     const [columns, setColumns] = useState(columnsDefault);
+    const theme = useTheme();
+
+    const columnStyles = { height: '100%' };
+
+    const infoPanelStyles = {
+        margin: theme.spacing(0, 4, 2, 2),
+        maxHeight: '95%',
+    };
 
     const handleCypherTab = (isCypherEditorActive: boolean) => {
         isCypherEditorActive ? setColumns(cypherSearchColumns) : setColumns(columnsDefault);
     };
 
     return [
-        <Grid item {...columns} sx={{ height: '100%' }} key={'exploreSearch'}>
+        <Grid item {...columns} sx={columnStyles} key={'exploreSearch'}>
             <ExploreSearch handleColumns={handleCypherTab} />
         </Grid>,
-        <Grid item {...columnsDefault} sx={{ height: '100%' }} key={'info'}>
-            {edgeInfoState.open ? <EdgeInfoPane selectedEdge={edgeInfoState.selectedEdge} /> : <EntityInfoPanel />}
+        <Grid item {...columnsDefault} sx={columnStyles} key={'info'}>
+            {edgeInfoState.open ? (
+                <EdgeInfoPane sx={infoPanelStyles} selectedEdge={edgeInfoState.selectedEdge} />
+            ) : (
+                <EntityInfoPanel sx={infoPanelStyles} selectedNode={selectedNode} />
+            )}
         </Grid>,
     ];
 };

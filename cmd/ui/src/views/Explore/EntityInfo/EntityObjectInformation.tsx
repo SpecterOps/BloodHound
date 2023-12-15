@@ -14,11 +14,11 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { EntityField } from 'bh-shared-ui';
 import React from 'react';
-import EntityInfoCollapsibleSection from 'src/views/Explore/EntityInfo/EntityInfoCollapsibleSection';
-import { BasicObjectInfoFields, FieldsContainer, ObjectInfoFields } from 'src/views/Explore/fragments';
+import EntityInfoCollapsibleSection from './EntityInfoCollapsibleSection';
+import { EntityField, FieldsContainer, ObjectInfoFields } from 'bh-shared-ui';
 import { formatObjectInfoFields } from 'src/views/Explore/utils';
+import { BasicObjectInfoFields } from '../BasicObjectInfoFields';
 
 const EntityObjectInformation: React.FC<{ props: any }> = ({ props }) => {
     const formattedObjectFields: EntityField[] = formatObjectInfoFields(props);

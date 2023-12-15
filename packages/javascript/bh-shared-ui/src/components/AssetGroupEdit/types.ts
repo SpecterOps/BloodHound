@@ -14,13 +14,19 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-export const NODE_GRAPH_RENDER_LIMIT = 1000;
+export enum ChangelogAction {
+    ADD,
+    REMOVE,
+    DEFAULT,
+    UNDO,
+}
 
-export const CRITICAL_THRESHOLD = 95;
-export const HIGH_THRESHOLD = 80;
-export const MODERATE_THRESHOLD = 40;
+export type MemberData = {
+    objectid: string;
+    name: string;
+    type: string;
+};
 
-export const ZERO_VALUE_API_DATE = '0001-01-01T00:00:00Z';
+export type AssetGroupChangelogEntry = MemberData & { action: ChangelogAction };
 
-export const TIER_ZERO_TAG = 'admin_tier_0';
-export const TIER_ZERO_LABEL = 'High Value';
+export type AssetGroupChangelog = AssetGroupChangelogEntry[];

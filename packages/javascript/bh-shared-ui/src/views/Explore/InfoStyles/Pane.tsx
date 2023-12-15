@@ -22,8 +22,7 @@ const usePaneStyles = makeStyles((theme: Theme) => ({
         display: 'flex',
         flexDirection: 'column',
         pointerEvents: 'none',
-        margin: theme.spacing(0, 4, 2, 2),
-        maxHeight: '95%',
+        overflowY: 'hidden',
     },
     headerPaperRoot: {
         backgroundColor: theme.palette.background.paper,

@@ -65,7 +65,10 @@
     "properties": {
       "action": {
         "type": "string",
-        "enum": ["add", "remove"]
+        "enum": [
+          "add",
+          "remove"
+        ]
       },
       "selector_name": {
         "type": "string"
@@ -562,7 +565,12 @@
   },
   "model.PaginatedResponse": {
     "type": "object",
-    "required": ["count", "limit", "skip", "data"],
+    "required": [
+      "count",
+      "limit",
+      "skip",
+      "data"
+    ],
     "properties": {
       "count": {
         "type": "integer"
@@ -1103,6 +1111,26 @@
       "last_ingest": {
         "type": "string",
         "format": "date-time"
+      }
+    }
+  },
+  "model.SearchResult": {
+    "type": "object",
+    "properties": {
+      "objectid": {
+        "type": "string"
+      },
+      "type": {
+        "type": "string"
+      },
+      "name": {
+        "type": "string"
+      },
+      "distinguishedname": {
+        "type": "string"
+      },
+      "system_tags": {
+        "type": "string"
       }
     }
   }

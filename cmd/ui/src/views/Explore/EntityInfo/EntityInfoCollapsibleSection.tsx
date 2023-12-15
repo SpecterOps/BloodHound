@@ -19,8 +19,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Accordion, AccordionDetails, AccordionSummary, Alert, AlertTitle } from '@mui/material';
 import React, { PropsWithChildren } from 'react';
 import { useEntityInfoPanelContext } from './EntityInfoPanelContext';
-import { SubHeader } from 'src/views/Explore/fragments';
-import useCollapsibleSectionStyles from 'src/views/Explore/InfoStyles/CollapsibleSection';
+import { SubHeader, useCollapsibleSectionStyles } from 'bh-shared-ui';
 
 const EntityInfoCollapsibleSectionError: React.FC<{ error: any }> = ({ error }) => {
     //TODO: Once azure backend changes for counts param are in, utilize response error details

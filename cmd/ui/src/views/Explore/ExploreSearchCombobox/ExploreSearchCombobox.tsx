@@ -16,8 +16,14 @@
 
 import { List, ListItem, ListItemText, Paper, TextField, useTheme } from '@mui/material';
 import { useCombobox } from 'downshift';
-import { NodeIcon, SearchResultItem } from 'bh-shared-ui';
-import { getEmptyResultsText, getKeywordAndTypeValues, SearchResult, useSearch } from 'src/hooks/useSearch';
+import {
+    NodeIcon,
+    SearchResultItem,
+    getEmptyResultsText,
+    getKeywordAndTypeValues,
+    SearchResult,
+    useSearch,
+} from 'bh-shared-ui';
 import { SearchNodeType } from 'src/ducks/searchbar/types';
 
 const ExploreSearchCombobox: React.FC<{
