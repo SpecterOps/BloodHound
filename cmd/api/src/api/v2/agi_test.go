@@ -17,8 +17,13 @@
 package v2_test
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/specterops/bloodhound/headers"
+	"github.com/specterops/bloodhound/mediatypes"
+	"github.com/specterops/bloodhound/src/auth"
+	"github.com/specterops/bloodhound/src/test/must"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -34,6 +39,7 @@ import (
 	v2 "github.com/specterops/bloodhound/src/api/v2"
 	"github.com/specterops/bloodhound/src/api/v2/apitest"
 	"github.com/specterops/bloodhound/src/ctx"
+	datapipeMocks "github.com/specterops/bloodhound/src/daemons/datapipe/mocks"
 	dbmocks "github.com/specterops/bloodhound/src/database/mocks"
 	"github.com/specterops/bloodhound/src/model"
 	queriesMocks "github.com/specterops/bloodhound/src/queries/mocks"
@@ -447,171 +453,257 @@ func TestResources_CreateAssetGroup(t *testing.T) {
 		ResponseStatusCode(http.StatusCreated)
 }
 
-func TestResources_ListAssetGroupCollections(t *testing.T) {
-	var (
-		mockCtrl    = gomock.NewController(t)
-		mockDB      = dbmocks.NewMockDatabase(mockCtrl)
-		resources   = v2.Resources{DB: mockDB}
-		collections = model.AssetGroupCollections{
-			model.AssetGroupCollection{
-				Entries: model.AssetGroupCollectionEntries{
-					model.AssetGroupCollectionEntry{
-						ObjectID:  "a",
-						NodeLabel: "b",
-						BigSerial: model.BigSerial{ID: 1},
-					},
-					model.AssetGroupCollectionEntry{
-						ObjectID:  "c",
-						NodeLabel: "d",
-						BigSerial: model.BigSerial{ID: 2},
-					},
-				},
-				BigSerial: model.BigSerial{ID: 3},
-			},
-			model.AssetGroupCollection{
-				Entries:   nil,
-				BigSerial: model.BigSerial{ID: 4},
-			},
-		}
-		assetGroup = model.AssetGroup{
-			Name:        "test group",
-			Tag:         "test tag",
-			SystemGroup: false,
-			Selectors: model.AssetGroupSelectors{
-				model.AssetGroupSelector{
-					AssetGroupID:   1,
-					Name:           "test selector",
-					Selector:       "selector",
-					SystemSelector: false,
-					Serial:         model.Serial{},
-				},
-			},
-			Collections: collections,
-		}
-	)
+func TestResources_UpdateAssetGroupSelectors_GetAssetGroupError(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
-	apitest.NewHarness(t, resources.ListAssetGroupCollections).
-		WithCommonRequest(func(input *apitest.Input) {
-			apitest.SetURLVar(input, api.URIPathVariableAssetGroupID, "1")
-		}).
-		Run([]apitest.Case{
-			apitest.NewSortingErrorCase(),
-			apitest.NewColumnNotFilterableCase(),
-			apitest.NewInvalidFilterPredicateCase("id"),
-			{
-				Name: "InvalidAssetGroupID",
-				Input: func(input *apitest.Input) {
-					apitest.SetURLVar(input, api.URIPathVariableAssetGroupID, "invalid")
-				},
-				Test: func(output apitest.Output) {
-					apitest.StatusCode(output, http.StatusBadRequest)
-					apitest.BodyContains(output, api.ErrorResponseDetailsIDMalformed)
-				},
-			},
-			{
-				Name: "DatabaseGetAssetGroupError",
-				Setup: func() {
-					mockDB.EXPECT().
-						GetAssetGroup(gomock.Any()).
-						Return(model.AssetGroup{}, errors.New("GetAssetGroup fail"))
-				},
-				Test: func(output apitest.Output) {
-					apitest.StatusCode(output, http.StatusInternalServerError)
-					apitest.BodyContains(output, api.ErrorResponseDetailsInternalServerError)
-				},
-			},
-			{
-				Name: "DatabaseGetAssetGroupCollectionsError",
-				Setup: func() {
-					mockDB.EXPECT().
-						GetAssetGroup(gomock.Any()).
-						Return(assetGroup, nil)
-					mockDB.EXPECT().
-						GetAssetGroupCollections(gomock.Any(), "", gomock.Any()).
-						Return(nil, errors.New("GetAssetGroupCollectionsError"))
-				},
-				Test: func(output apitest.Output) {
-					apitest.StatusCode(output, http.StatusInternalServerError)
-				},
-			},
-			{
-				Name: "SuccessDataTest",
-				Setup: func() {
-					mockDB.EXPECT().
-						GetAssetGroup(gomock.Any()).
-						Return(assetGroup, nil)
-					mockDB.EXPECT().
-						GetAssetGroupCollections(gomock.Any(), "", gomock.Any()).
-						Return(collections, nil)
-				},
-				Test: func(output apitest.Output) {
-					result := model.AssetGroupCollections{}
-					apitest.UnmarshalData(output, &result)
+	payload := []model.AssetGroupSelectorSpec{
+		{
+			SelectorName:   "test",
+			EntityObjectID: "1",
+		},
+	}
 
-					require.Equal(t, len(collections), len(result))
+	req, err := http.NewRequest("POST", "/api/v2/asset-groups/1/selectors", must.MarshalJSONReader(payload))
+	require.Nil(t, err)
 
-					require.Equal(t, collections[0].Entries[0].ObjectID, result[0].Entries[0].ObjectID)
-					require.Equal(t, collections[0].Entries[0].NodeLabel, result[0].Entries[0].NodeLabel)
+	req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
+	req = mux.SetURLVars(req, map[string]string{api.URIPathVariableAssetGroupID: "1"})
 
-					require.Equal(t, collections[0].Entries[1].ObjectID, result[0].Entries[1].ObjectID)
-					require.Equal(t, collections[0].Entries[1].NodeLabel, result[0].Entries[1].NodeLabel)
+	mockDB := dbmocks.NewMockDatabase(mockCtrl)
+	mockDB.EXPECT().GetAssetGroup(gomock.Any()).Return(model.AssetGroup{}, fmt.Errorf("test error"))
+	handlers := v2.Resources{DB: mockDB}
 
-					require.Equal(t, 0, len(result[1].Entries))
-				},
-			},
+	response := httptest.NewRecorder()
+	handler := http.HandlerFunc(handlers.UpdateAssetGroupSelectors)
+
+	handler.ServeHTTP(response, req)
+	require.Equal(t, http.StatusInternalServerError, response.Code)
+	require.Contains(t, response.Body.String(), api.ErrorResponseDetailsInternalServerError)
+}
+
+func TestResources_UpdateAssetGroupSelectors_PayloadError(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+
+	payload := "INVALID PAYLOAD"
+
+	req, err := http.NewRequest("POST", "/api/v2/asset-groups/1/selectors", must.MarshalJSONReader(payload))
+	require.Nil(t, err)
+
+	req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
+	req = mux.SetURLVars(req, map[string]string{api.URIPathVariableAssetGroupID: "1"})
+
+	assetGroup := model.AssetGroup{
+		Name:        "test group",
+		Tag:         "test tag",
+		SystemGroup: false,
+	}
+
+	mockDB := dbmocks.NewMockDatabase(mockCtrl)
+	mockDB.EXPECT().GetAssetGroup(gomock.Any()).Return(assetGroup, nil)
+	handlers := v2.Resources{DB: mockDB}
+
+	response := httptest.NewRecorder()
+	handler := http.HandlerFunc(handlers.UpdateAssetGroupSelectors)
+
+	handler.ServeHTTP(response, req)
+	require.Equal(t, http.StatusBadRequest, response.Code)
+	require.Contains(t, response.Body.String(), api.ErrorResponsePayloadUnmarshalError)
+}
+
+func TestResources_UpdateAssetGroupSelectors_SuccessT0(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+
+	payload := []model.AssetGroupSelectorSpec{
+		{
+			SelectorName:   "test",
+			EntityObjectID: "1",
+			Action:         model.SelectorSpecActionAdd,
+		},
+		{
+			SelectorName:   "test3",
+			EntityObjectID: "3",
+			Action:         model.SelectorSpecActionAdd,
+		},
+		{
+			SelectorName:   "test2",
+			EntityObjectID: "2",
+			Action:         model.SelectorSpecActionRemove,
+		},
+	}
+
+	req, err := http.NewRequest("POST", "/api/v2/asset-groups/1/selectors", must.MarshalJSONReader(payload))
+	require.Nil(t, err)
+
+	req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
+
+	bheCtx := ctx.Context{
+		RequestID: "requestID",
+		AuthCtx: auth.Context{
+			Owner:   model.User{},
+			Session: model.UserSession{},
+		},
+	}
+	req = req.WithContext(context.WithValue(context.Background(), ctx.ValueKey, bheCtx.WithRequestID("requestID")))
+	req = mux.SetURLVars(req, map[string]string{api.URIPathVariableAssetGroupID: "1"})
+
+	assetGroup := model.AssetGroup{
+		Name:        model.TierZeroAssetGroupName,
+		Tag:         model.TierZeroAssetGroupTag,
+		SystemGroup: true,
+	}
+
+	expectedResult := model.UpdatedAssetGroupSelectors{
+		Added: model.AssetGroupSelectors{
 			{
-				Name: "SuccessSorted",
-				Input: func(input *apitest.Input) {
-					apitest.AddQueryParam(input, "sort_by", "created_at")
-				},
-				Setup: func() {
-					mockDB.EXPECT().
-						GetAssetGroup(gomock.Any()).
-						Return(assetGroup, nil)
-					mockDB.EXPECT().
-						GetAssetGroupCollections(gomock.Any(), "created_at", gomock.Any()).
-						Return(collections, nil)
-				},
-				Test: func(output apitest.Output) {
-					apitest.StatusCode(output, http.StatusOK)
-				},
+				AssetGroupID: assetGroup.ID,
+				Name:         payload[0].SelectorName,
+				Selector:     payload[0].EntityObjectID,
 			},
+		},
+
+		Removed: model.AssetGroupSelectors{
 			{
-				Name: "SuccessSortedDesc",
-				Input: func(input *apitest.Input) {
-					apitest.AddQueryParam(input, "sort_by", "-created_at")
-				},
-				Setup: func() {
-					mockDB.EXPECT().
-						GetAssetGroup(gomock.Any()).
-						Return(assetGroup, nil)
-					mockDB.EXPECT().
-						GetAssetGroupCollections(gomock.Any(), "created_at desc", gomock.Any()).
-						Return(collections, nil)
-				},
-				Test: func(output apitest.Output) {
-					apitest.StatusCode(output, http.StatusOK)
-				},
+				AssetGroupID: assetGroup.ID,
+				Name:         payload[1].SelectorName,
+				Selector:     payload[1].EntityObjectID,
 			},
-			{
-				Name: "SuccessFiltered",
-				Input: func(input *apitest.Input) {
-					apitest.AddQueryParam(input, "id", "eq:1")
-					apitest.SetURLVar(input, api.URIPathVariableAssetGroupID, "1")
-				},
-				Setup: func() {
-					mockDB.EXPECT().GetAssetGroup(gomock.Any()).Return(assetGroup, nil)
-					mockDB.EXPECT().
-						GetAssetGroupCollections(gomock.Any(), "",
-							model.SQLFilter{SQLString: "id = ?", Params: []any{"1"}}).
-						Return(collections, nil)
-				},
-				Test: func(output apitest.Output) {
-					apitest.StatusCode(output, http.StatusOK)
-				},
+		},
+	}
+
+	mockDB := dbmocks.NewMockDatabase(mockCtrl)
+	mockGraph := queriesMocks.NewMockGraph(mockCtrl)
+
+	mockDB.EXPECT().GetAssetGroup(gomock.Any()).Return(assetGroup, nil)
+	mockDB.EXPECT().UpdateAssetGroupSelectors(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(expectedResult, nil)
+	mockGraph.EXPECT().UpdateSelectorTags(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+
+	mockTasker := datapipeMocks.NewMockTasker(mockCtrl)
+	// MockTasker should receive a call to RequestAnalysis() since this is a Tier Zero Asset group.
+	// Analysis must be run upon updating a T0 AG
+	mockTasker.EXPECT().RequestAnalysis()
+
+	handlers := v2.Resources{
+		DB:           mockDB,
+		TaskNotifier: mockTasker,
+		GraphQuery:   mockGraph,
+	}
+
+	response := httptest.NewRecorder()
+	handler := http.HandlerFunc(handlers.UpdateAssetGroupSelectors)
+
+	handler.ServeHTTP(response, req)
+	require.Equal(t, http.StatusCreated, response.Code)
+
+	resp := api.ResponseWrapper{}
+	err = json.Unmarshal(response.Body.Bytes(), &resp)
+	require.Nil(t, err)
+
+	dataJSON, err := json.Marshal(resp.Data)
+	require.Nil(t, err)
+
+	data := make(map[string][]model.AssetGroupSelector, 0)
+	err = json.Unmarshal(dataJSON, &data)
+	require.Nil(t, err)
+
+	require.Equal(t, expectedResult.Added[0].Name, data["added_selectors"][0].Name)
+	require.Equal(t, expectedResult.Removed[0].Name, data["removed_selectors"][0].Name)
+}
+
+func TestResources_UpdateAssetGroupSelectors_SuccessOwned(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+
+	payload := []model.AssetGroupSelectorSpec{
+		{
+			SelectorName:   "test",
+			EntityObjectID: "1",
+			Action:         model.SelectorSpecActionAdd,
+		},
+		{
+			SelectorName:   "test2",
+			EntityObjectID: "2",
+			Action:         model.SelectorSpecActionRemove,
+		},
+	}
+
+	req, err := http.NewRequest("POST", "/api/v2/asset-groups/1/selectors", must.MarshalJSONReader(payload))
+	require.Nil(t, err)
+
+	req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
+
+	bheCtx := ctx.Context{
+		RequestID: "requestID",
+		AuthCtx: auth.Context{
+			Owner:   model.User{},
+			Session: model.UserSession{},
+		},
+	}
+	req = req.WithContext(context.WithValue(context.Background(), ctx.ValueKey, bheCtx.WithRequestID("requestID")))
+	req = mux.SetURLVars(req, map[string]string{api.URIPathVariableAssetGroupID: "1"})
+
+	assetGroup := model.AssetGroup{
+		Name:        model.OwnedAssetGroupName,
+		Tag:         model.OwnedAssetGroupTag,
+		SystemGroup: true,
+	}
+
+	expectedResult := model.UpdatedAssetGroupSelectors{
+		Added: model.AssetGroupSelectors{
+			model.AssetGroupSelector{
+				AssetGroupID: assetGroup.ID,
+				Name:         payload[0].SelectorName,
+				Selector:     payload[0].EntityObjectID,
 			},
-		})
+		},
+		Removed: model.AssetGroupSelectors{
+			model.AssetGroupSelector{
+				AssetGroupID: assetGroup.ID,
+				Name:         payload[1].SelectorName,
+				Selector:     payload[1].EntityObjectID,
+			},
+		},
+	}
+
+	mockDB := dbmocks.NewMockDatabase(mockCtrl)
+	mockGraph := queriesMocks.NewMockGraph(mockCtrl)
+
+	mockDB.EXPECT().GetAssetGroup(gomock.Any()).Return(assetGroup, nil)
+	mockDB.EXPECT().UpdateAssetGroupSelectors(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(expectedResult, nil)
+
+	mockGraph.EXPECT().UpdateSelectorTags(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+
+	mockTasker := datapipeMocks.NewMockTasker(mockCtrl)
+	// NOTE MockTasker should NOT receive a call to RequestAnalysis() since this is not a Tier Zero Asset group.
+	// Analysis should not be re-run when a non T0 AG is updated
+
+	handlers := v2.Resources{
+		DB:           mockDB,
+		TaskNotifier: mockTasker,
+		GraphQuery:   mockGraph,
+	}
+
+	response := httptest.NewRecorder()
+	handler := http.HandlerFunc(handlers.UpdateAssetGroupSelectors)
+
+	handler.ServeHTTP(response, req)
+	require.Equal(t, http.StatusCreated, response.Code)
+
+	resp := api.ResponseWrapper{}
+	err = json.Unmarshal(response.Body.Bytes(), &resp)
+	require.Nil(t, err)
+
+	dataJSON, err := json.Marshal(resp.Data)
+	require.Nil(t, err)
+
+	data := make(map[string][]model.AssetGroupSelector, 0)
+	err = json.Unmarshal(dataJSON, &data)
+	require.Nil(t, err)
+
+	require.Equal(t, expectedResult.Added[0].Name, data["added_selectors"][0].Name)
+	require.Equal(t, expectedResult.Removed[0].Name, data["removed_selectors"][0].Name)
 }
 
 func TestResources_DeleteAssetGroup(t *testing.T) {
@@ -798,6 +890,173 @@ func TestResources_DeleteAssetGroupSelector(t *testing.T) {
 		OnHandlerFunc(resources.DeleteAssetGroupSelector).
 		Require().
 		ResponseStatusCode(http.StatusOK)
+}
+
+func TestResources_ListAssetGroupCollections(t *testing.T) {
+	var (
+		mockCtrl    = gomock.NewController(t)
+		mockDB      = dbmocks.NewMockDatabase(mockCtrl)
+		resources   = v2.Resources{DB: mockDB}
+		collections = model.AssetGroupCollections{
+			model.AssetGroupCollection{
+				Entries: model.AssetGroupCollectionEntries{
+					model.AssetGroupCollectionEntry{
+						ObjectID:  "a",
+						NodeLabel: "b",
+						BigSerial: model.BigSerial{ID: 1},
+					},
+					model.AssetGroupCollectionEntry{
+						ObjectID:  "c",
+						NodeLabel: "d",
+						BigSerial: model.BigSerial{ID: 2},
+					},
+				},
+				BigSerial: model.BigSerial{ID: 3},
+			},
+			model.AssetGroupCollection{
+				Entries:   nil,
+				BigSerial: model.BigSerial{ID: 4},
+			},
+		}
+		assetGroup = model.AssetGroup{
+			Name:        "test group",
+			Tag:         "test tag",
+			SystemGroup: false,
+			Selectors: model.AssetGroupSelectors{
+				model.AssetGroupSelector{
+					AssetGroupID:   1,
+					Name:           "test selector",
+					Selector:       "selector",
+					SystemSelector: false,
+					Serial:         model.Serial{},
+				},
+			},
+			Collections: collections,
+		}
+	)
+	defer mockCtrl.Finish()
+
+	apitest.NewHarness(t, resources.ListAssetGroupCollections).
+		WithCommonRequest(func(input *apitest.Input) {
+			apitest.SetURLVar(input, api.URIPathVariableAssetGroupID, "1")
+		}).
+		Run([]apitest.Case{
+			apitest.NewSortingErrorCase(),
+			apitest.NewColumnNotFilterableCase(),
+			apitest.NewInvalidFilterPredicateCase("id"),
+			{
+				Name: "InvalidAssetGroupID",
+				Input: func(input *apitest.Input) {
+					apitest.SetURLVar(input, api.URIPathVariableAssetGroupID, "invalid")
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusBadRequest)
+					apitest.BodyContains(output, api.ErrorResponseDetailsIDMalformed)
+				},
+			},
+			{
+				Name: "DatabaseGetAssetGroupError",
+				Setup: func() {
+					mockDB.EXPECT().
+						GetAssetGroup(gomock.Any()).
+						Return(model.AssetGroup{}, errors.New("GetAssetGroup fail"))
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusInternalServerError)
+					apitest.BodyContains(output, api.ErrorResponseDetailsInternalServerError)
+				},
+			},
+			{
+				Name: "DatabaseGetAssetGroupCollectionsError",
+				Setup: func() {
+					mockDB.EXPECT().
+						GetAssetGroup(gomock.Any()).
+						Return(assetGroup, nil)
+					mockDB.EXPECT().
+						GetAssetGroupCollections(gomock.Any(), "", gomock.Any()).
+						Return(nil, errors.New("GetAssetGroupCollectionsError"))
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusInternalServerError)
+				},
+			},
+			{
+				Name: "SuccessDataTest",
+				Setup: func() {
+					mockDB.EXPECT().
+						GetAssetGroup(gomock.Any()).
+						Return(assetGroup, nil)
+					mockDB.EXPECT().
+						GetAssetGroupCollections(gomock.Any(), "", gomock.Any()).
+						Return(collections, nil)
+				},
+				Test: func(output apitest.Output) {
+					result := model.AssetGroupCollections{}
+					apitest.UnmarshalData(output, &result)
+
+					require.Equal(t, len(collections), len(result))
+
+					require.Equal(t, collections[0].Entries[0].ObjectID, result[0].Entries[0].ObjectID)
+					require.Equal(t, collections[0].Entries[0].NodeLabel, result[0].Entries[0].NodeLabel)
+
+					require.Equal(t, collections[0].Entries[1].ObjectID, result[0].Entries[1].ObjectID)
+					require.Equal(t, collections[0].Entries[1].NodeLabel, result[0].Entries[1].NodeLabel)
+
+					require.Equal(t, 0, len(result[1].Entries))
+				},
+			},
+			{
+				Name: "SuccessSorted",
+				Input: func(input *apitest.Input) {
+					apitest.AddQueryParam(input, "sort_by", "created_at")
+				},
+				Setup: func() {
+					mockDB.EXPECT().
+						GetAssetGroup(gomock.Any()).
+						Return(assetGroup, nil)
+					mockDB.EXPECT().
+						GetAssetGroupCollections(gomock.Any(), "created_at", gomock.Any()).
+						Return(collections, nil)
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusOK)
+				},
+			},
+			{
+				Name: "SuccessSortedDesc",
+				Input: func(input *apitest.Input) {
+					apitest.AddQueryParam(input, "sort_by", "-created_at")
+				},
+				Setup: func() {
+					mockDB.EXPECT().
+						GetAssetGroup(gomock.Any()).
+						Return(assetGroup, nil)
+					mockDB.EXPECT().
+						GetAssetGroupCollections(gomock.Any(), "created_at desc", gomock.Any()).
+						Return(collections, nil)
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusOK)
+				},
+			},
+			{
+				Name: "SuccessFiltered",
+				Input: func(input *apitest.Input) {
+					apitest.AddQueryParam(input, "id", "eq:1")
+					apitest.SetURLVar(input, api.URIPathVariableAssetGroupID, "1")
+				},
+				Setup: func() {
+					mockDB.EXPECT().GetAssetGroup(gomock.Any()).Return(assetGroup, nil)
+					mockDB.EXPECT().
+						GetAssetGroupCollections(gomock.Any(), "",
+							model.SQLFilter{SQLString: "id = ?", Params: []any{"1"}}).
+						Return(collections, nil)
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusOK)
+				},
+			},
+		})
 }
 
 func TestResources_ListAssetGroupMembers(t *testing.T) {

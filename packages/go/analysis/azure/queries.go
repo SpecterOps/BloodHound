@@ -18,6 +18,8 @@ package azure
 
 import (
 	"context"
+	"strings"
+
 	"github.com/RoaringBitmap/roaring/roaring64"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/dawgs/ops"
@@ -26,7 +28,6 @@ import (
 	"github.com/specterops/bloodhound/graphschema/azure"
 	"github.com/specterops/bloodhound/graphschema/common"
 	"github.com/specterops/bloodhound/log"
-	"strings"
 )
 
 func FetchCollectedTenants(tx graph.Transaction) (graph.NodeSet, error) {
@@ -87,15 +88,15 @@ func FetchAzureAttackPathRoots(tx graph.Transaction, tenant *graph.Node) (graph.
 		attackPathRoots.AddSets(customTierZeroNodes)
 	}
 
-	// The CompanyAdministratorRole, PrivilegedRoleAdministratorRole tenant roles are critical attack path roots
-	if adminRoles, err := TenantRoles(tx, tenant, azure.CompanyAdministratorRole, azure.PrivilegedRoleAdministratorRole, azure.PrivilegedAuthenticationAdministratorRole); err != nil {
+	// The CompanyAdministratorRole, PrivilegedRoleAdministratorRole, PrivilegedAuthenticationAdministratorRole, PartnerTier2SupportRole tenant roles are critical attack path roots
+	if adminRoles, err := TenantRoles(tx, tenant, azure.CompanyAdministratorRole, azure.PrivilegedRoleAdministratorRole, azure.PrivilegedAuthenticationAdministratorRole, azure.PartnerTier2SupportRole); err != nil {
 		return nil, err
 	} else {
 		attackPathRoots.AddSets(adminRoles)
 	}
 
-	// Find users that have CompanyAdministratorRole, PrivilegedRoleAdministratorRole
-	if adminRoleMembers, err := RoleMembersWithGrants(tx, tenant, azure.CompanyAdministratorRole, azure.PrivilegedRoleAdministratorRole, azure.PrivilegedAuthenticationAdministratorRole); err != nil {
+	// Find users that have CompanyAdministratorRole, PrivilegedRoleAdministratorRole, PrivilegedAuthenticationAdministratorRole, PartnerTier2SupportRole
+	if adminRoleMembers, err := RoleMembersWithGrants(tx, tenant, azure.CompanyAdministratorRole, azure.PrivilegedRoleAdministratorRole, azure.PrivilegedAuthenticationAdministratorRole, azure.PartnerTier2SupportRole); err != nil {
 		return nil, err
 	} else {
 		for _, adminRoleMember := range adminRoleMembers {

@@ -32,6 +32,7 @@ ENV CHECKOUT_HASH=${checkout_hash}
 WORKDIR /bloodhound
 
 RUN apk add --update --no-cache python3 git go
+RUN rm /usr/lib/python3.11/EXTERNALLY-MANAGED
 RUN python3 -m ensurepip
 RUN pip3 install --no-cache --upgrade pip setuptools
 

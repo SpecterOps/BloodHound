@@ -267,7 +267,7 @@ func (s Resources) UpdateAssetGroupSelectors(response http.ResponseWriter, reque
 				s.TaskNotifier.RequestAnalysis()
 			}
 
-			api.WriteBasicResponse(request.Context(), result, http.StatusOK, response)
+			api.WriteBasicResponse(request.Context(), result, http.StatusCreated, response)
 		}
 	}
 }

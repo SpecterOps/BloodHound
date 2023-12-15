@@ -113,7 +113,7 @@ class BHEAPIClient {
         assetGroupId: string,
         selectorChangeset: types.UpdateAssetGroupSelectorRequest[],
         options?: types.RequestOptions
-    ) => this.baseClient.post(`/api/v2/asset-groups/${assetGroupId}/selectors`, selectorChangeset, options);
+    ) => this.baseClient.put(`/api/v2/asset-groups/${assetGroupId}/selectors`, selectorChangeset, options);
 
     deleteAssetGroupSelector = (assetGroupId: string, selectorId: string, options?: types.RequestOptions) =>
         this.baseClient.delete(`/api/v2/asset-groups/${assetGroupId}/selectors/${selectorId}`, options);
