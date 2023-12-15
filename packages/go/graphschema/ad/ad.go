@@ -154,6 +154,7 @@ const (
 	SubjectAltRequireUPN                   Property = "subjectaltrequireupn"
 	AuthorizedSignatures                   Property = "authorizedsignatures"
 	ApplicationPolicies                    Property = "applicationpolicies"
+	IssuancePolicies                       Property = "issuancepolicies"
 	SchemaVersion                          Property = "schemaversion"
 	RequiresManagerApproval                Property = "requiresmanagerapproval"
 	AuthenticationEnabled                  Property = "authenticationenabled"
@@ -162,6 +163,7 @@ const (
 	CertificateNameFlag                    Property = "certificatenameflag"
 	EffectiveEKUs                          Property = "effectiveekus"
 	EnrollmentFlag                         Property = "enrollmentflag"
+	Flags                                  Property = "flags"
 	NoSecurityExtension                    Property = "nosecurityextension"
 	RenewalPeriod                          Property = "renewalperiod"
 	ValidityPeriod                         Property = "validityperiod"
@@ -169,7 +171,7 @@ const (
 )
 
 func AllProperties() []Property {
-	return []Property{AdminCount, CASecurityCollected, CAName, CertChain, CertName, CertThumbprint, CertThumbprints, HasEnrollmentAgentRestrictions, EnrollmentAgentRestrictionsCollected, IsUserSpecifiesSanEnabled, IsUserSpecifiesSanEnabledCollected, HasBasicConstraints, BasicConstraintPathLength, DNSHostname, CrossCertificatePair, DistinguishedName, DomainFQDN, DomainSID, Sensitive, HighValue, BlocksInheritance, IsACL, IsACLProtected, IsDeleted, Enforced, Department, HasCrossCertificatePair, HasSPN, UnconstrainedDelegation, LastLogon, LastLogonTimestamp, IsPrimaryGroup, HasLAPS, DontRequirePreAuth, LogonType, HasURA, PasswordNeverExpires, PasswordNotRequired, FunctionalLevel, TrustType, SidFiltering, TrustedToAuth, SamAccountName, CertificateMappingMethodsRaw, CertificateMappingMethods, StrongCertificateBindingEnforcementRaw, StrongCertificateBindingEnforcement, EKUs, SubjectAltRequireUPN, AuthorizedSignatures, ApplicationPolicies, SchemaVersion, RequiresManagerApproval, AuthenticationEnabled, EnrolleeSuppliesSubject, CertificateApplicationPolicy, CertificateNameFlag, EffectiveEKUs, EnrollmentFlag, NoSecurityExtension, RenewalPeriod, ValidityPeriod, OID}
+	return []Property{AdminCount, CASecurityCollected, CAName, CertChain, CertName, CertThumbprint, CertThumbprints, HasEnrollmentAgentRestrictions, EnrollmentAgentRestrictionsCollected, IsUserSpecifiesSanEnabled, IsUserSpecifiesSanEnabledCollected, HasBasicConstraints, BasicConstraintPathLength, DNSHostname, CrossCertificatePair, DistinguishedName, DomainFQDN, DomainSID, Sensitive, HighValue, BlocksInheritance, IsACL, IsACLProtected, IsDeleted, Enforced, Department, HasCrossCertificatePair, HasSPN, UnconstrainedDelegation, LastLogon, LastLogonTimestamp, IsPrimaryGroup, HasLAPS, DontRequirePreAuth, LogonType, HasURA, PasswordNeverExpires, PasswordNotRequired, FunctionalLevel, TrustType, SidFiltering, TrustedToAuth, SamAccountName, CertificateMappingMethodsRaw, CertificateMappingMethods, StrongCertificateBindingEnforcementRaw, StrongCertificateBindingEnforcement, EKUs, SubjectAltRequireUPN, AuthorizedSignatures, ApplicationPolicies, IssuancePolicies, SchemaVersion, RequiresManagerApproval, AuthenticationEnabled, EnrolleeSuppliesSubject, CertificateApplicationPolicy, CertificateNameFlag, EffectiveEKUs, EnrollmentFlag, Flags, NoSecurityExtension, RenewalPeriod, ValidityPeriod, OID}
 }
 func ParseProperty(source string) (Property, error) {
 	switch source {
@@ -275,6 +277,8 @@ func ParseProperty(source string) (Property, error) {
 		return AuthorizedSignatures, nil
 	case "applicationpolicies":
 		return ApplicationPolicies, nil
+	case "issuancepolicies":
+		return IssuancePolicies, nil
 	case "schemaversion":
 		return SchemaVersion, nil
 	case "requiresmanagerapproval":
@@ -291,6 +295,8 @@ func ParseProperty(source string) (Property, error) {
 		return EffectiveEKUs, nil
 	case "enrollmentflag":
 		return EnrollmentFlag, nil
+	case "flags":
+		return Flags, nil
 	case "nosecurityextension":
 		return NoSecurityExtension, nil
 	case "renewalperiod":
@@ -407,6 +413,8 @@ func (s Property) String() string {
 		return string(AuthorizedSignatures)
 	case ApplicationPolicies:
 		return string(ApplicationPolicies)
+	case IssuancePolicies:
+		return string(IssuancePolicies)
 	case SchemaVersion:
 		return string(SchemaVersion)
 	case RequiresManagerApproval:
@@ -423,6 +431,8 @@ func (s Property) String() string {
 		return string(EffectiveEKUs)
 	case EnrollmentFlag:
 		return string(EnrollmentFlag)
+	case Flags:
+		return string(Flags)
 	case NoSecurityExtension:
 		return string(NoSecurityExtension)
 	case RenewalPeriod:
@@ -539,6 +549,8 @@ func (s Property) Name() string {
 		return "Authorized Signatures Required"
 	case ApplicationPolicies:
 		return "Application Policies"
+	case IssuancePolicies:
+		return "Issuance Policies"
 	case SchemaVersion:
 		return "Schema Version"
 	case RequiresManagerApproval:
@@ -555,6 +567,8 @@ func (s Property) Name() string {
 		return "Effective EKUs"
 	case EnrollmentFlag:
 		return "Enrollment Flags"
+	case Flags:
+		return "Flags"
 	case NoSecurityExtension:
 		return "No Security Extension"
 	case RenewalPeriod:
