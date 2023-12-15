@@ -36,7 +36,6 @@ import { Box } from '@mui/material';
 import { GraphNodes } from 'js-client-library';
 import { GraphButtonProps, SearchCurrentNodes } from 'bh-shared-ui';
 import { SigmaNodeEventPayload } from 'sigma/sigma';
-import ContextMenu from 'src/views/Explore/ContextMenu/ContextMenu';
 
 interface SigmaChartProps {
     rankDirection: RankDirection;
@@ -51,8 +50,7 @@ interface SigmaChartProps {
     onClickEdge: (id: string, relatedFindingType?: string | null) => void;
     onClickStage: () => void;
     edgeReducer: (edge: string, data: Attributes, graph: AbstractGraph) => Attributes;
-    anchorPosition: { x: number; y: number };
-    onRightClickNode: (event: SigmaNodeEventPayload) => void;
+    handleContextMenu: (event: SigmaNodeEventPayload) => void;
 }
 
 const SigmaChart: FC<Partial<SigmaChartProps>> = ({
@@ -68,8 +66,7 @@ const SigmaChart: FC<Partial<SigmaChartProps>> = ({
     onClickEdge,
     onClickStage,
     edgeReducer,
-    anchorPosition,
-    onRightClickNode,
+    handleContextMenu,
 }) => {
     return (
         <div
@@ -109,7 +106,7 @@ const SigmaChart: FC<Partial<SigmaChartProps>> = ({
                     onClickEdge={onClickEdge}
                     onClickStage={onClickStage}
                     edgeReducer={edgeReducer}
-                    onRightClickNode={onRightClickNode}
+                    onRightClickNode={handleContextMenu}
                 />
                 <Box position={'absolute'} bottom={16}>
                     {isCurrentSearchOpen && (
@@ -125,7 +122,6 @@ const SigmaChart: FC<Partial<SigmaChartProps>> = ({
                     )}
                     <GraphButtons rankDirection={rankDirection} options={options} nonLayoutButtons={nonLayoutButtons} />
                 </Box>
-                <ContextMenu anchorPosition={anchorPosition} />
             </SigmaContainer>
         </div>
     );
