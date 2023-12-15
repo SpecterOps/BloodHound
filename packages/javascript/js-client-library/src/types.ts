@@ -82,7 +82,6 @@ export interface CreateScheduledSharpHoundJobRequest {
     all_trusted_domains: boolean;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-empty-interface
 export type CreateScheduledAzureHoundJobRequest = Record<string, never>;
 
 export type CreateScheduledJobRequest = CreateScheduledSharpHoundJobRequest | CreateScheduledAzureHoundJobRequest;
