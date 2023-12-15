@@ -55,6 +55,7 @@ const (
 	ErrorResponseDetailsToBeforeFrom                = "to time cannot be before from time"
 	ErrorResponseDetailsToMalformed                 = "to parameter should be formatted as RFC3339 i.e 2021-04-21T07:20:50.52Z"
 	ErrorResponseMultipleCollectionScopesProvided   = "may only scope collection by exactly one of OU, Domain, or All Trusted Domains"
+	ErrorResponseADUnavailableWithOUFiltering       = "AD structure collection unavailable while limiting results by OU(s)"
 	ErrorResponsePayloadUnmarshalError              = "error unmarshalling JSON payload"
 	ErrorResponseUserSelfDisable                    = "user attempted to disable themselves"
 
