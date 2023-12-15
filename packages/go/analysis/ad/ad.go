@@ -547,21 +547,6 @@ func ADCSESC1Path2Pattern(domainID graph.ID, enterpriseCAs cardinality.Duplex[ui
 }
 
 func GetADCSESC1EdgeComposition(ctx context.Context, db graph.Database, edge *graph.Relationship) (graph.PathSet, error) {
-	/*
-		MATCH p1 = (n:Base {name:"JONES@ESC1-OFFLINEROOTCA.LOCAL"})-[:Enroll|GenericAll|AllExtendedRights*1..]->(ct:CertTemplate)-[:PublishedTo]-(ca:EnterpriseCA)-[:IssuedSignedBy*1..]-(rootca:RootCA)-[:RootCAFor]->(d:Domain {name:'ESC1-OFFLINEROOTCA.LOCAL'})
-		WHERE (ct.requiresmanagerapproval = false
-		AND ct.schemaversion > 1
-		AND ct.authorizedsignatures = 0
-		AND ct.authenticationenabled = true
-		AND ct.enrolleesuppliessubject = true)
-		OR (ct.requiresmanagerapproval = false
-		AND ct.schemaversion = 1
-		AND ct.authenticationenabled = true
-		AND ct.enrolleesuppliessubject = true)
-		MATCH p2 = (n)-[:Enroll|GenericAll|AllExtendedRights|MemberOf*1..]->(ca)-[:TrustedForNTAuth]->(nt:NTAuthStore)-[:NTAuthStoreFor]-(d)
-		RETURN p1,p2
-	*/
-
 	var (
 		startNode *graph.Node
 
