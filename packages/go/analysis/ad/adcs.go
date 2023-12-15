@@ -511,7 +511,7 @@ func PostADCS(ctx context.Context, db graph.Database, groupExpansions impact.Pat
 				for _, enterpriseCA := range enterpriseCertAuthorities {
 					if cache.DoesCAChainProperlyToDomain(enterpriseCA, innerDomain) {
 						if err := PostADCSESC1(ctx, tx, outC, groupExpansions, enterpriseCA, innerDomain, cache); err != nil {
-							log.Errorf("failed post processing for %s: %w", ad.ADCSESC1.String(), err)
+							log.Errorf("failed post processing for %s: %v", ad.ADCSESC1.String(), err)
 						} else {
 							return nil
 						}
@@ -525,7 +525,7 @@ func PostADCS(ctx context.Context, db graph.Database, groupExpansions impact.Pat
 				for _, enterpriseCA := range enterpriseCertAuthorities {
 					if cache.DoesCAChainProperlyToDomain(enterpriseCA, innerDomain) {
 						if err := PostADCSESC3(ctx, tx, outC, groupExpansions, enterpriseCA, innerDomain, cache); err != nil {
-							log.Errorf("failed post processing for %s: %w", ad.ADCSESC1.String(), err)
+							log.Errorf("failed post processing for %s: %v", ad.ADCSESC1.String(), err)
 						} else {
 							return nil
 						}
