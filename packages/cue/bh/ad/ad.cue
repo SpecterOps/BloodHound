@@ -391,6 +391,13 @@ ApplicationPolicies: types.#StringEnum & {
 	representation: "applicationpolicies"
 }
 
+IssuancePolicies: types.#StringEnum & {
+	symbol: "IssuancePolicies"
+	schema: "ad"
+	name: "Issuance Policies"
+	representation: "issuancepolicies"
+}
+
 SchemaVersion: types.#StringEnum & {
 	symbol: "SchemaVersion"
 	schema: "ad"
@@ -445,6 +452,13 @@ EnrollmentFlag: types.#StringEnum & {
 	schema: "ad"
 	name: "Enrollment Flags"
 	representation: "enrollmentflag"
+}
+
+Flags: types.#StringEnum & {
+	symbol: "Flags"
+	schema: "ad"
+	name: "Flags"
+	representation: "flags"
 }
 
 NoSecurityExtension: types.#StringEnum & {
@@ -527,6 +541,7 @@ Properties: [
 	SubjectAltRequireUPN,
 	AuthorizedSignatures,
 	ApplicationPolicies,
+	IssuancePolicies,
 	SchemaVersion,
 	RequiresManagerApproval,
 	AuthenticationEnabled,
@@ -535,6 +550,7 @@ Properties: [
 	CertificateNameFlag,
 	EffectiveEKUs,
 	EnrollmentFlag,
+	Flags,
 	NoSecurityExtension,
 	RenewalPeriod,
 	ValidityPeriod,
