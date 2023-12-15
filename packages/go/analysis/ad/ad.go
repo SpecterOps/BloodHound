@@ -487,45 +487,6 @@ func GetEdgeCompositionPath(ctx context.Context, db graph.Database, edge *graph.
 	})
 }
 
-func ExpandOutboundGroupMembershipPaths(ctx context.Context, traversalInst traversal.Traversal, root *graph.Node) ([]*graph.PathSegment, error) {
-	var (
-		groupMembershipPaths []*graph.PathSegment
-		groupMembershipLock  = &sync.Mutex{}
-	)
-
-	return groupMembershipPaths, traversalInst.BreadthFirst(ctx, traversal.Plan{
-		Root: root,
-		Driver: func(ctx context.Context, tx graph.Transaction, segment *graph.PathSegment) ([]*graph.PathSegment, error) {
-			var (
-				nextSegments []*graph.PathSegment
-				nextQuery    = tx.Relationships().Filter(query.And(
-					query.Equals(query.StartID(), segment.Node.ID),
-					query.Kind(query.Relationship(), ad.MemberOf),
-				))
-			)
-
-			if err := nextQuery.FetchDirection(graph.DirectionInbound, func(cursor graph.Cursor[graph.DirectionalResult]) error {
-				for next := range cursor.Chan() {
-					nextSegments = append(nextSegments, segment.Descend(next.Node, next.Relationship))
-				}
-
-				return cursor.Error()
-			}); err != nil {
-				return nil, err
-			}
-
-			if len(nextSegments) == 0 {
-				// This is the end of group membership for this path
-				groupMembershipLock.Lock()
-				groupMembershipPaths = append(groupMembershipPaths, segment)
-				groupMembershipLock.Unlock()
-			}
-
-			return nextSegments, nil
-		},
-	})
-}
-
 func ADCSESC1Path1Pattern(domainID graph.ID) traversal.PatternContinuation {
 	return traversal.NewPattern().
 		Outbound(query.And(
