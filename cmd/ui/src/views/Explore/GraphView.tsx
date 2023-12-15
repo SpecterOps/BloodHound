@@ -51,6 +51,7 @@ import EntityInfoPanel from 'src/views/Explore/EntityInfo/EntityInfoPanel';
 import ExploreSearch from 'src/views/Explore/ExploreSearch';
 import usePrompt from 'src/views/Explore/NavigationAlert';
 import { initGraphEdges, initGraphNodes } from 'src/views/Explore/utils';
+import ContextMenu from './ContextMenu/ContextMenu';
 
 const GraphView: FC = () => {
     /* Hooks */
@@ -67,7 +68,7 @@ const GraphView: FC = () => {
     const [currentSearchOpen, toggleCurrentSearch] = useToggle(false);
     const { data, isLoading, isError } = useAvailableDomains();
 
-    const [anchorPosition, setAnchorPosition] = useState<{ x: number; y: number } | undefined>(undefined);
+    const [contextMenu, setContextMenu] = useState<{ mouseX: number; mouseY: number } | null>(null);
 
     useEffect(() => {
         let items: any = graphState.chartProps.items;
@@ -177,12 +178,16 @@ const GraphView: FC = () => {
         findNodeAndSelect(id);
     };
 
-    const onRightClickNode = (event: SigmaNodeEventPayload) => {
-        setAnchorPosition({ x: event.event.x, y: event.event.y });
+    const handleContextMenu = (event: SigmaNodeEventPayload) => {
+        setContextMenu(contextMenu === null ? { mouseX: event.event.x, mouseY: event.event.y } : null);
 
         const nodeId = event.node;
 
         findNodeAndSelect(nodeId);
+    };
+
+    const handleCloseContextMenu = () => {
+        setContextMenu(null);
     };
 
     return (
@@ -196,9 +201,11 @@ const GraphView: FC = () => {
                 nonLayoutButtons={nonLayoutButtons}
                 isCurrentSearchOpen={currentSearchOpen}
                 toggleCurrentSearch={toggleCurrentSearch}
-                anchorPosition={anchorPosition}
-                onRightClickNode={onRightClickNode}
+                handleContextMenu={handleContextMenu}
             />
+
+            <ContextMenu contextMenu={contextMenu} handleClose={handleCloseContextMenu} />
+
             <Grid
                 container
                 direction='row'

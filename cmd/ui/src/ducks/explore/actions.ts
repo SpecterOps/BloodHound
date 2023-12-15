@@ -125,3 +125,10 @@ export const saveResponseForExport = (payload: Items): types.GraphActionTypes =>
         payload,
     };
 };
+
+export const toggleTierZeroNode = (nodeId: string): types.GraphActionTypes => {
+    return {
+        type: types.TOGGLE_TIER_ZERO_NODE,
+        nodeId,
+    };
+};
