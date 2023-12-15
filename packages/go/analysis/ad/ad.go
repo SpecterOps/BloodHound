@@ -533,7 +533,7 @@ func ADCSESC1Path2Pattern(domainID graph.ID, enterpriseCAs cardinality.Duplex[ui
 			query.Kind(query.End(), ad.Group),
 		)).
 		Outbound(query.And(
-			query.KindIn(query.Relationship(), ad.GenericAll, ad.Enroll, ad.AllExtendedRights),
+			query.KindIn(query.Relationship(), ad.Enroll),
 			query.InIDs(query.EndID(), cardinality.DuplexToGraphIDs(enterpriseCAs)...),
 		)).
 		Outbound(query.And(
