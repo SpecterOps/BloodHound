@@ -535,6 +535,21 @@ func ADCSESC1Path1Pattern(domainID graph.ID) traversal.PatternContinuation {
 		Outbound(query.And(
 			query.KindIn(query.Relationship(), ad.GenericAll, ad.Enroll, ad.AllExtendedRights),
 			query.Kind(query.End(), ad.CertTemplate),
+			query.Or(
+				query.And(
+					query.Equals(query.EndProperty(ad.RequiresManagerApproval.String()), false),
+					query.GreaterThan(query.EndProperty(ad.SchemaVersion.String()), 1),
+					query.Equals(query.EndProperty(ad.AuthorizedSignatures.String()), 0),
+					query.Equals(query.EndProperty(ad.AuthenticationEnabled.String()), true),
+					query.Equals(query.EndProperty(ad.EnrolleeSuppliesSubject.String()), true),
+				),
+				query.And(
+					query.Equals(query.EndProperty(ad.RequiresManagerApproval.String()), false),
+					query.Equals(query.EndProperty(ad.SchemaVersion.String()), 1),
+					query.Equals(query.EndProperty(ad.AuthenticationEnabled.String()), true),
+					query.Equals(query.EndProperty(ad.EnrolleeSuppliesSubject.String()), true),
+				),
+			),
 		)).
 		Outbound(query.And(
 			query.KindIn(query.Relationship(), ad.PublishedTo),
