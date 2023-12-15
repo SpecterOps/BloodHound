@@ -260,6 +260,7 @@ type PathSegment struct {
 	Trunk    *PathSegment
 	Edge     *Relationship
 	Branches []*PathSegment
+	Tag      any
 	size     size.Size
 }
 
@@ -340,12 +341,36 @@ func (s *PathSegment) Path() Path {
 	return path
 }
 
+func (s *PathSegment) Slice() []*PathSegment {
+	var (
+		containerIdx = s.Depth()
+		container    = make([]*PathSegment, containerIdx)
+	)
+
+	for cursor := s; cursor != nil; cursor = cursor.Trunk {
+		containerIdx--
+		container[containerIdx] = cursor
+	}
+
+	return container
+}
+
 func (s *PathSegment) WalkReverse(delegate func(nextSegment *PathSegment) bool) {
 	for cursor := s; cursor != nil; cursor = cursor.Trunk {
 		if !delegate(cursor) {
 			break
 		}
 	}
+}
+
+func (s *PathSegment) Search(delegate func(nextSegment *PathSegment) bool) *Node {
+	for cursor := s; cursor != nil; cursor = cursor.Trunk {
+		if delegate(cursor) {
+			return cursor.Node
+		}
+	}
+
+	return nil
 }
 
 func (s *PathSegment) Detach() {
@@ -410,9 +435,9 @@ func FormatPathSegment(segment *PathSegment) string {
 		formatted.WriteString(")")
 
 		if nextSegment.Trunk != nil {
-			formatted.WriteString("-[")
+			formatted.WriteString("<-[")
 			formatted.WriteString(nextSegment.Edge.Kind.String())
-			formatted.WriteString("]->")
+			formatted.WriteString("]-")
 		}
 
 		return true
