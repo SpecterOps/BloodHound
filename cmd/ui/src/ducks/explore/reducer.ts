@@ -48,6 +48,14 @@ const graphDataReducer = (state = initialGraphDataState, action: types.GraphActi
             draft.init = action.payload;
         } else if (action.type === types.SAVE_RESPONSE_FOR_EXPORT) {
             draft.export = action.payload;
+        } else if (action.type === types.TOGGLE_TIER_ZERO_NODE) {
+            const systemTags = state.chartProps.items[action.nodeId].data.system_tags;
+            // remove the tier zero tag from the node
+            if (systemTags === 'admin_tier_0') {
+                draft.chartProps.items[action.nodeId].data.system_tags = '';
+            } else {
+                draft.chartProps.items[action.nodeId].data.system_tags = 'admin_tier_0';
+            }
         }
         return draft;
     });
