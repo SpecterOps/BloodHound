@@ -807,7 +807,7 @@ func (s ManagementResource) CreateAuthToken(response http.ResponseWriter, reques
 		api.HandleDatabaseError(request, response, err)
 	} else if err := verifyUserID(&createUserTokenRequest, user, bhCtx, s.authorizer); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusForbidden, err.Error(), request), response)
-	} else if authToken, err := auth.NewUserAuthToken(createUserTokenRequest.UserID, createUserTokenRequest.TokenName, auth.HMAC_SHA2_256); err != nil {
+	} else if authToken, err := auth.NewUserAuthToken(createUserTokenRequest.UserID, auth.BHProductTokenPrefix, createUserTokenRequest.TokenName, auth.HMAC_SHA2_256); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
 	} else if newAuthToken, err := s.db.CreateAuthToken(authToken); err != nil {
 		api.HandleDatabaseError(request, response, err)

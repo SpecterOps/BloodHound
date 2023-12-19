@@ -1,33 +1,32 @@
 // Copyright 2023 Specter Ops, Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// 
+//
 // SPDX-License-Identifier: Apache-2.0
 
 package auth
 
 import (
-	"crypto/rand"
-	"encoding/base64"
 	"fmt"
 	"strconv"
+	"strings"
 	"time"
 
-	"github.com/specterops/bloodhound/src/database/types/null"
-	"github.com/specterops/bloodhound/src/model"
 	"github.com/gofrs/uuid"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/specterops/bloodhound/errors"
+	"github.com/specterops/bloodhound/src/database/types/null"
+	"github.com/specterops/bloodhound/src/model"
 )
 
 const (
@@ -36,6 +35,12 @@ const (
 	HMAC_SHA2_256 = "hmac-sha2-256"
 
 	SessionTTL = time.Hour * 8
+
+	BHProductTokenPrefix  = "BH"
+	BHEProductTokenPrefix = "BHE"
+
+	ClientTokenPrefix = "C"
+	UserTokenPrefix   = "U"
 )
 
 type SessionData struct {
@@ -139,11 +144,7 @@ func GetUserFromAuthCtx(ctx Context) (model.User, bool) {
 //
 // This isn't an ideal location for this function but it was determined to be the best place "for now".
 // See https://specterops.atlassian.net/browse/BED-3367
-func NewUserAuthToken(ownerId string, tokenName string, hmacMethod string) (model.AuthToken, error) {
-	var (
-		tokenBytes = make([]byte, 40)
-	)
-
+func NewUserAuthToken(ownerId, tokenProductPrefix, tokenName string, hmacMethod string) (model.AuthToken, error) {
 	ownerUuid, err := uuid.FromString(ownerId)
 	if err != nil {
 		return model.AuthToken{}, err
@@ -166,10 +167,11 @@ func NewUserAuthToken(ownerId string, tokenName string, hmacMethod string) (mode
 		authToken.ID = id
 	}
 
-	if _, err := rand.Read(tokenBytes); err != nil {
+	if ts, err := model.GenerateTokenString(strings.Join([]string{tokenProductPrefix, UserTokenPrefix}, "_")); err != nil {
 		return authToken, nil
+	} else {
+		authToken.Key = ts
 	}
 
-	authToken.Key = base64.StdEncoding.EncodeToString(tokenBytes)
 	return authToken, nil
 }

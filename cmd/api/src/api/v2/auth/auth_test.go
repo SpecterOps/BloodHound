@@ -1902,7 +1902,7 @@ func TestManagementResource_ListAuthTokens_SortingError(t *testing.T) {
 			Valid: true,
 		},
 		Name:       null.String{NullString: sql.NullString{String: "auth_token_1", Valid: true}},
-		Key:        "abcd",
+		Key:        model.TokenString{},
 		HmacMethod: "method",
 		LastAccess: time.Now().Add(100 * time.Second),
 		Unique: model.Unique{
@@ -1918,7 +1918,7 @@ func TestManagementResource_ListAuthTokens_SortingError(t *testing.T) {
 			Valid: true,
 		},
 		Name:       null.String{NullString: sql.NullString{String: "auth_token_2", Valid: true}},
-		Key:        "abcde",
+		Key:        model.TokenString{},
 		HmacMethod: "method",
 		LastAccess: time.Now().Add(150 * time.Second),
 		Unique: model.Unique{
@@ -2143,7 +2143,7 @@ func TestManagementResource_ListAuthTokens_Admin(t *testing.T) {
 			Valid: true,
 		},
 		Name:       null.String{NullString: sql.NullString{String: "auth_token_1", Valid: true}},
-		Key:        "abcd",
+		Key:        model.TokenString{},
 		HmacMethod: "method",
 		LastAccess: time.Now().Add(100 * time.Second),
 		Unique: model.Unique{
@@ -2159,7 +2159,7 @@ func TestManagementResource_ListAuthTokens_Admin(t *testing.T) {
 			Valid: true,
 		},
 		Name:       null.String{NullString: sql.NullString{String: "auth_token_2", Valid: true}},
-		Key:        "abcde",
+		Key:        model.TokenString{},
 		HmacMethod: "method",
 		LastAccess: time.Now().Add(150 * time.Second),
 		Unique: model.Unique{
@@ -2179,7 +2179,7 @@ func TestManagementResource_ListAuthTokens_Admin(t *testing.T) {
 			Valid: true,
 		},
 		Name:       null.String{NullString: sql.NullString{String: "other_user_token_1", Valid: true}},
-		Key:        "abcdef",
+		Key:        model.TokenString{},
 		HmacMethod: "method",
 		LastAccess: time.Now().Add(150 * time.Second),
 		Unique: model.Unique{
@@ -2271,7 +2271,7 @@ func TestManagementResource_ListAuthTokens_NonAdmin(t *testing.T) {
 			Valid: true,
 		},
 		Name:       null.String{NullString: sql.NullString{String: "auth_token_1", Valid: true}},
-		Key:        "abcd",
+		Key:        model.TokenString{},
 		HmacMethod: "method",
 		LastAccess: time.Now().Add(100 * time.Second),
 		Unique: model.Unique{
@@ -2287,7 +2287,7 @@ func TestManagementResource_ListAuthTokens_NonAdmin(t *testing.T) {
 			Valid: true,
 		},
 		Name:       null.String{NullString: sql.NullString{String: "auth_token_2", Valid: true}},
-		Key:        "abcde",
+		Key:        model.TokenString{},
 		HmacMethod: "method",
 		LastAccess: time.Now().Add(150 * time.Second),
 		Unique: model.Unique{
@@ -2307,7 +2307,7 @@ func TestManagementResource_ListAuthTokens_NonAdmin(t *testing.T) {
 			Valid: true,
 		},
 		Name:       null.String{NullString: sql.NullString{String: "other_user_token_1", Valid: true}},
-		Key:        "abcdef",
+		Key:        model.TokenString{},
 		HmacMethod: "method",
 		LastAccess: time.Now().Add(150 * time.Second),
 		Unique: model.Unique{
@@ -2386,7 +2386,7 @@ func TestManagementResource_ListAuthTokens_Filtered(t *testing.T) {
 			Valid: true,
 		},
 		Name:       null.String{NullString: sql.NullString{String: "a", Valid: true}},
-		Key:        "abcd",
+		Key:        model.TokenString{},
 		HmacMethod: "method",
 		LastAccess: time.Now().Add(100 * time.Second),
 		Unique: model.Unique{
