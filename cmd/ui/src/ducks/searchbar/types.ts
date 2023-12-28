@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { GraphNodeTypes } from 'src/ducks/graph/types';
+import { EntityKinds } from 'bh-shared-ui';
 import { EdgeCheckboxType } from 'src/views/Explore/ExploreSearch/EdgeFilteringDialog';
 
 const SEARCH_RESET = 'app/search/RESET';
@@ -60,7 +60,7 @@ export interface SearchBarState {
 }
 export interface SearchNodeType {
     objectid: string;
-    type: GraphNodeTypes;
+    type: EntityKinds;
     name: string;
 }
 

@@ -60,14 +60,20 @@
       "data": {
         "type": "object",
         "properties": {
-            "count": { "type": "integer" },
-            "limit": { "type": "integer" },
-            "skip":  { "type": "integer" },
-            "members": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/model.AssetGroupMember"
-              }
+          "count": {
+            "type": "integer"
+          },
+          "limit": {
+            "type": "integer"
+          },
+          "skip": {
+            "type": "integer"
+          },
+          "members": {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/model.AssetGroupMember"
+            }
           }
         }
       }
@@ -184,6 +190,31 @@
       },
       "gpos": {
         "Description": "A count of gpos enumerated",
+        "type": "integer",
+        "required": true
+      },
+      "aiacas": {
+        "Description": "A count of aiacas enumerated",
+        "type": "integer",
+        "required": true
+      },
+      "rootcas": {
+        "Description": "A count of rootcas enumerated",
+        "type": "integer",
+        "required": true
+      },
+      "enterprisecas": {
+        "Description": "A count of enterprisecas enumerated",
+        "type": "integer",
+        "required": true
+      },
+      "ntauthstores": {
+        "Description": "A count of ntauthstores enumerated",
+        "type": "integer",
+        "required": true
+      },
+      "certtemplates": {
+        "Description": "A count of certtemplates enumerated",
         "type": "integer",
         "required": true
       },
@@ -937,10 +968,21 @@
     ],
     "properties": {
       "query": {
-          "type": "string"
+        "type": "string"
       },
       "name": {
         "type": "string"
+      }
+    }
+  },
+  "v2.SearchResponse": {
+    "type": "object",
+    "properties": {
+      "data": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/model.SearchResult"
+        }
       }
     }
   }

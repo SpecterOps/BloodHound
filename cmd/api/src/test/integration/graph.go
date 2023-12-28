@@ -1,17 +1,17 @@
 // Copyright 2023 Specter Ops, Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// 
+//
 // SPDX-License-Identifier: Apache-2.0
 
 package integration
@@ -22,9 +22,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/specterops/bloodhound/src/test"
-	"github.com/specterops/bloodhound/src/test/must"
-	"github.com/stretchr/testify/require"
 	"github.com/specterops/bloodhound/dawgs/cardinality"
 	_ "github.com/specterops/bloodhound/dawgs/drivers/neo4j"
 	"github.com/specterops/bloodhound/dawgs/graph"
@@ -33,6 +30,9 @@ import (
 	"github.com/specterops/bloodhound/graphschema/azure"
 	"github.com/specterops/bloodhound/graphschema/common"
 	"github.com/specterops/bloodhound/log"
+	"github.com/specterops/bloodhound/src/test"
+	"github.com/specterops/bloodhound/src/test/must"
+	"github.com/stretchr/testify/require"
 )
 
 var DefaultRelProperties = graph.AsProperties(graph.PropertyMap{
@@ -486,6 +486,56 @@ func (s *GraphTestContext) NewActiveDirectoryGPO(name, domainSID string) *graph.
 	}), ad.Entity, ad.GPO)
 }
 
+func (s *GraphTestContext) NewActiveDirectoryNTAuthStore(name, domainSID string) *graph.Node {
+	return s.NewNode(graph.AsProperties(graph.PropertyMap{
+		common.Name:        name,
+		common.ObjectID:    must.NewUUIDv4().String(),
+		ad.DomainSID:       domainSID,
+		ad.CertThumbprints: []string{"a", "b", "c"},
+	}), ad.Entity, ad.NTAuthStore)
+}
+
+func (s *GraphTestContext) NewActiveDirectoryEnterpriseCA(name, domainSID string) *graph.Node {
+	return s.NewNode(graph.AsProperties(graph.PropertyMap{
+		common.Name:     name,
+		common.ObjectID: must.NewUUIDv4().String(),
+		ad.DomainSID:    domainSID,
+	}), ad.Entity, ad.EnterpriseCA)
+}
+
+func (s *GraphTestContext) NewActiveDirectoryEnterpriseCAWithThumbprint(name, domainSID, certThumbprint string) *graph.Node {
+	return s.NewNode(graph.AsProperties(graph.PropertyMap{
+		common.Name:       name,
+		common.ObjectID:   must.NewUUIDv4().String(),
+		ad.DomainSID:      domainSID,
+		ad.CertThumbprint: certThumbprint,
+	}), ad.Entity, ad.EnterpriseCA)
+}
+
+func (s *GraphTestContext) NewActiveDirectoryRootCA(name, domainSID string) *graph.Node {
+	return s.NewNode(graph.AsProperties(graph.PropertyMap{
+		common.Name:     name,
+		common.ObjectID: must.NewUUIDv4().String(),
+		ad.DomainSID:    domainSID,
+	}), ad.Entity, ad.RootCA)
+}
+
+func (s *GraphTestContext) NewActiveDirectoryCertTemplate(name, domainSID string, requiresManagerApproval, authenticationEnabled, enrolleeSupplieSubject, subjectAltRequireUpn bool, schemaVersion, authorizedSignatures int, ekus, applicationPolicies []string) *graph.Node {
+	return s.NewNode(graph.AsProperties(graph.PropertyMap{
+		common.Name:                name,
+		common.ObjectID:            must.NewUUIDv4().String(),
+		ad.DomainSID:               domainSID,
+		ad.RequiresManagerApproval: requiresManagerApproval,
+		ad.AuthenticationEnabled:   authenticationEnabled,
+		ad.EnrolleeSuppliesSubject: enrolleeSupplieSubject,
+		ad.SchemaVersion:           float64(schemaVersion),
+		ad.AuthorizedSignatures:    float64(authorizedSignatures),
+		ad.EKUs:                    ekus,
+		ad.ApplicationPolicies:     applicationPolicies,
+		ad.SubjectAltRequireUPN:    subjectAltRequireUpn,
+	}), ad.Entity, ad.CertTemplate)
+}
+
 func (s *GraphTestContext) setupAzure() {
 	s.Harness.AZBaseHarness.Setup(s)
 	s.Harness.AZGroupMembership.Setup(s)
@@ -526,6 +576,7 @@ func (s *GraphTestContext) setupActiveDirectory() {
 	s.Harness.ForeignHarness.Setup(s)
 	s.Harness.TrustDCSync.Setup(s)
 	s.Harness.Completeness.Setup(s)
+	s.Harness.ShortcutHarness.Setup(s)
 
 	s.Harness.AssetGroupComboNodeHarness.Setup(s)
 }

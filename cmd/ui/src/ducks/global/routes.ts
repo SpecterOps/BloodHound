@@ -16,6 +16,7 @@
 
 export const ROUTE_HOME = '/';
 export const ROUTE_EXPLORE = '/explore';
+export const ROUTE_GROUP_MANAGEMENT = '/group-management';
 export const ROUTE_LOGIN = '/login';
 export const ROUTE_CHANGE_PASSWORD = '/changepassword';
 export const ROUTE_USER_DISABLED = '/user-disabled';

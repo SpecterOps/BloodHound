@@ -23,6 +23,7 @@ import (
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/log"
+	"github.com/specterops/bloodhound/slices"
 )
 
 func ConvertSessionObject(session Session) IngestibleSession {
@@ -404,4 +405,247 @@ func ParseUserRightData(userRight UserRightsAssignmentAPIResult, computer Comput
 	}
 
 	return relationships
+}
+
+func ParseCARegistryProperties(enterpriseCA EnterpriseCA) IngestibleNode {
+	propMap := make(map[string]any)
+
+	// HasEnrollmentAgentRestrictions
+	if enterpriseCA.CARegistryData.EnrollmentAgentRestrictions.Collected {
+
+		if len(enterpriseCA.CARegistryData.EnrollmentAgentRestrictions.Restrictions) > 0 {
+			propMap[ad.HasEnrollmentAgentRestrictions.String()] = true
+		} else {
+			propMap[ad.HasEnrollmentAgentRestrictions.String()] = false
+		}
+	}
+
+	// IsUserSpecifiesSanEnabled
+	if enterpriseCA.CARegistryData.IsUserSpecifiesSanEnabled.Collected {
+		propMap[ad.IsUserSpecifiesSanEnabled.String()] = enterpriseCA.CARegistryData.IsUserSpecifiesSanEnabled.Value
+	}
+
+	return IngestibleNode{
+		ObjectID:    enterpriseCA.ObjectIdentifier,
+		PropertyMap: propMap,
+		Label:       ad.EnterpriseCA,
+	}
+}
+
+func ParseEnterpriseCAMiscData(enterpriseCA EnterpriseCA) []IngestibleRelationship {
+	var (
+		relationships        = make([]IngestibleRelationship, 0)
+		enabledCertTemplates = make([]string, 0)
+	)
+
+	for _, actor := range enterpriseCA.EnabledCertTemplates {
+		enabledCertTemplates = append(enabledCertTemplates, actor.ObjectIdentifier)
+		relationships = append(relationships, IngestibleRelationship{
+			Source:     actor.ObjectIdentifier,
+			SourceType: ad.CertTemplate,
+			Target:     enterpriseCA.ObjectIdentifier,
+			TargetType: ad.EnterpriseCA,
+			RelType:    ad.PublishedTo,
+			RelProps:   map[string]any{"isacl": false},
+		})
+	}
+
+	if enterpriseCA.HostingComputer != "" {
+		relationships = append(relationships, IngestibleRelationship{
+			Source:     enterpriseCA.HostingComputer,
+			SourceType: ad.Computer,
+			Target:     enterpriseCA.ObjectIdentifier,
+			TargetType: ad.EnterpriseCA,
+			RelType:    ad.HostsCAService,
+			RelProps:   map[string]any{"isacl": false},
+		})
+	}
+
+	relationships = handleEnterpriseCAEnrollmentAgentRestrictions(enterpriseCA, relationships, enabledCertTemplates)
+	relationships = handleEnterpriseCASecurity(enterpriseCA, relationships)
+
+	return relationships
+}
+
+func handleEnterpriseCAEnrollmentAgentRestrictions(enterpriseCA EnterpriseCA, relationships []IngestibleRelationship, enabledCertTemplates []string) []IngestibleRelationship {
+
+	if enterpriseCA.CARegistryData.EnrollmentAgentRestrictions.Collected {
+		for _, restriction := range enterpriseCA.CARegistryData.EnrollmentAgentRestrictions.Restrictions {
+			if restriction.AccessType == AccessAllowedCallback {
+				templates := make([]string, 0)
+				if restriction.AllTemplates {
+					templates = enabledCertTemplates
+				} else {
+					templates = append(templates, restriction.Template.ObjectIdentifier)
+				}
+
+				for _, template := range templates {
+					relationships = append(relationships, IngestibleRelationship{
+						Source:     restriction.Agent.ObjectIdentifier,
+						SourceType: restriction.Agent.Kind(),
+						Target:     template,
+						TargetType: ad.CertTemplate,
+						RelType:    ad.DelegatedEnrollmentAgent,
+						RelProps:   map[string]any{"isacl": false},
+					})
+
+				}
+			}
+		}
+	}
+
+	return relationships
+}
+
+func handleEnterpriseCASecurity(enterpriseCA EnterpriseCA, relationships []IngestibleRelationship) []IngestibleRelationship {
+	if enterpriseCA.CARegistryData.CASecurity.Collected {
+		caSecurityData := slices.Filter(enterpriseCA.CARegistryData.CASecurity.Data, func(s ACE) bool {
+			if s.PrincipalType == ad.LocalGroup.String() {
+				return false
+			}
+			if s.RightName == ad.Owns.String() {
+				return false
+			} else {
+				return true
+			}
+		})
+
+		filteredACES := slices.Filter(enterpriseCA.Aces, func(s ACE) bool {
+			if s.PrincipalSID == enterpriseCA.HostingComputer {
+				return true
+			} else {
+				if s.RightName == ad.ManageCA.String() || s.RightName == ad.ManageCertificates.String() || s.RightName == ad.Enroll.String() {
+					return false
+				} else {
+					return true
+				}
+			}
+		})
+
+		combinedData := append(caSecurityData, filteredACES...)
+		relationships = append(relationships, ParseACEData(combinedData, enterpriseCA.ObjectIdentifier, ad.EnterpriseCA)...)
+
+	} else {
+		relationships = append(relationships, ParseACEData(enterpriseCA.Aces, enterpriseCA.ObjectIdentifier, ad.EnterpriseCA)...)
+	}
+
+	return relationships
+}
+
+func ParseRootCAMiscData(rootCA RootCA) []IngestibleRelationship {
+	var (
+		relationships = make([]IngestibleRelationship, 0)
+		domainsid     = rootCA.DomainSID
+	)
+
+	if domainsid != "" {
+		relationships = append(relationships, IngestibleRelationship{
+			Source:     rootCA.ObjectIdentifier,
+			SourceType: ad.RootCA,
+			Target:     domainsid,
+			TargetType: ad.Domain,
+			RelType:    ad.RootCAFor,
+			RelProps:   map[string]any{"isacl": false},
+		})
+	}
+
+	return relationships
+}
+
+func ParseNTAuthStoreData(ntAuthStore NTAuthStore) []IngestibleRelationship {
+	var (
+		relationships = make([]IngestibleRelationship, 0)
+		domainsid     = ntAuthStore.DomainSID
+	)
+
+	if domainsid != "" {
+		relationships = append(relationships, IngestibleRelationship{
+			Source:     ntAuthStore.ObjectIdentifier,
+			SourceType: ad.NTAuthStore,
+			Target:     domainsid,
+			TargetType: ad.Domain,
+			RelType:    ad.NTAuthStoreFor,
+			RelProps:   map[string]any{"isacl": false},
+		})
+	}
+
+	return relationships
+}
+
+type CertificateMappingMethod int
+
+const (
+	CertificateMappingManytoMany                     CertificateMappingMethod = 1
+	CertificateMappingOneToOne                       CertificateMappingMethod = 1 << 1
+	CertificateMappingUserPrincipalName              CertificateMappingMethod = 1 << 2
+	CertificateMappingKerberosS4UCertificate         CertificateMappingMethod = 1 << 3
+	CertificateMappingKerberosS4UExplicitCertificate CertificateMappingMethod = 1 << 4
+)
+
+// Prettified definitions for DCRegistryData
+const (
+	RegValNotExisting = "Registry value does not exist"
+
+	PrettyCertMappingManyToOne                      = "0x01: Many-to-one (issuer certificate)"
+	PrettyCertMappingOneToOne                       = "0x02: One-to-one (subject/issuer)"
+	PrettyCertMappingUserPrincipalName              = "0x04: User principal name (UPN/SAN)"
+	PrettyCertMappingKerberosS4UCertificate         = "0x08: Kerberos service-for-user (S4U) certificate"
+	PrettyCertMappingKerberosS4UExplicitCertificate = "0x10: Kerberos service-for-user (S4U) explicit certificate"
+
+	PrettyStrongCertBindingEnforcementDisabled      = "Disabled"
+	PrettyStrongCertBindingEnforcementCompatibility = "Compatibility mode"
+	PrettyStrongCertBindingEnforcementFull          = "Full enforcement mode"
+)
+
+func ParseDCRegistryData(computer Computer) IngestibleNode {
+	var ()
+	propMap := make(map[string]any)
+
+	if computer.DCRegistryData.CertificateMappingMethods.Collected {
+		propMap[ad.CertificateMappingMethodsRaw.String()] = computer.DCRegistryData.CertificateMappingMethods.Value
+		var prettyMappings []string
+
+		if computer.DCRegistryData.CertificateMappingMethods.Value == -1 {
+			prettyMappings = append(prettyMappings, RegValNotExisting)
+		} else {
+			if computer.DCRegistryData.CertificateMappingMethods.Value&int(CertificateMappingManytoMany) != 0 {
+				prettyMappings = append(prettyMappings, PrettyCertMappingManyToOne)
+			}
+			if computer.DCRegistryData.CertificateMappingMethods.Value&int(CertificateMappingOneToOne) != 0 {
+				prettyMappings = append(prettyMappings, PrettyCertMappingOneToOne)
+			}
+			if computer.DCRegistryData.CertificateMappingMethods.Value&int(CertificateMappingUserPrincipalName) != 0 {
+				prettyMappings = append(prettyMappings, PrettyCertMappingUserPrincipalName)
+			}
+			if computer.DCRegistryData.CertificateMappingMethods.Value&int(CertificateMappingKerberosS4UCertificate) != 0 {
+				prettyMappings = append(prettyMappings, PrettyCertMappingKerberosS4UCertificate)
+			}
+			if computer.DCRegistryData.CertificateMappingMethods.Value&int(CertificateMappingKerberosS4UExplicitCertificate) != 0 {
+				prettyMappings = append(prettyMappings, PrettyCertMappingKerberosS4UExplicitCertificate)
+			}
+		}
+
+		propMap[ad.CertificateMappingMethods.String()] = prettyMappings
+	}
+
+	if computer.DCRegistryData.StrongCertificateBindingEnforcement.Collected {
+		propMap[ad.StrongCertificateBindingEnforcementRaw.String()] = computer.DCRegistryData.StrongCertificateBindingEnforcement.Value
+
+		switch computer.DCRegistryData.StrongCertificateBindingEnforcement.Value {
+		case -1:
+			propMap[ad.StrongCertificateBindingEnforcement.String()] = RegValNotExisting
+		case 0:
+			propMap[ad.StrongCertificateBindingEnforcement.String()] = PrettyStrongCertBindingEnforcementDisabled
+		case 1:
+			propMap[ad.StrongCertificateBindingEnforcement.String()] = PrettyStrongCertBindingEnforcementCompatibility
+		case 2:
+			propMap[ad.StrongCertificateBindingEnforcement.String()] = PrettyStrongCertBindingEnforcementFull
+		}
+	}
+
+	return IngestibleNode{
+		ObjectID:    computer.ObjectIdentifier,
+		PropertyMap: propMap,
+		Label:       ad.Computer,
+	}
 }

@@ -265,7 +265,7 @@ func (s Property) String() string {
 	case RoleTemplateID:
 		return string(RoleTemplateID)
 	default:
-		panic("Invalid enumeration case: " + string(s))
+		return "Invalid enumeration case: " + string(s)
 	}
 }
 func (s Property) Name() string {
@@ -333,7 +333,7 @@ func (s Property) Name() string {
 	case RoleTemplateID:
 		return "Role Template ID"
 	default:
-		panic("Invalid enumeration case: " + string(s))
+		return "Invalid enumeration case: " + string(s)
 	}
 }
 func (s Property) Is(others ...graph.Kind) bool {

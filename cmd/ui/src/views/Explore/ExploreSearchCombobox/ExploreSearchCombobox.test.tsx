@@ -19,7 +19,7 @@ import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { act, render, screen, within } from 'src/test-utils';
 import ExploreSearchCombobox from '.';
-import { GraphNodeTypes } from 'src/ducks/graph/types';
+import { ActiveDirectoryNodeKind } from 'bh-shared-ui';
 
 const testSearchResults = {
     data: [
@@ -131,7 +131,7 @@ describe('icon rendering', () => {
                     inputValue=''
                     handleNodeEdited={vi.fn()}
                     handleNodeSelected={vi.fn()}
-                    selectedItem={{ type: GraphNodeTypes.Computer, objectid: '1', name: 'Computer a' }}
+                    selectedItem={{ type: ActiveDirectoryNodeKind.Computer, objectid: '1', name: 'Computer a' }}
                 />
             );
         });

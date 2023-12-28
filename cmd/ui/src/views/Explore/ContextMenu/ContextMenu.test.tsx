@@ -19,11 +19,26 @@ import { render, screen, waitFor } from 'src/test-utils';
 import userEvent from '@testing-library/user-event';
 import ContextMenu from './ContextMenu';
 import * as actions from 'src/ducks/searchbar/actions';
+import { setupServer } from 'msw/node';
+import { rest } from 'msw';
 
 describe('ContextMenu', async () => {
+    const server = setupServer(
+        rest.get('/api/v2/asset-groups/:assetGroupId/members', (req, res, ctx) => {
+            return res(
+                ctx.json({
+                    data: {
+                        members: [],
+                    },
+                })
+            );
+        })
+    );
+
+    beforeAll(() => server.listen());
     beforeEach(async () => {
         await act(async () => {
-            render(<ContextMenu anchorPosition={{ x: 0, y: 0 }} />, {
+            render(<ContextMenu contextMenu={{ mouseX: 0, mouseY: 0 }} handleClose={vi.fn()} />, {
                 initialState: {
                     entityinfo: {
                         selectedNode: {
@@ -32,17 +47,31 @@ describe('ContextMenu', async () => {
                             type: 'User',
                         },
                     },
+                    assetgroups: {
+                        assetGroups: [
+                            { tag: 'owned', id: 1 },
+                            { tag: 'admin_tier_0', id: 2 },
+                        ],
+                    },
                 },
             });
         });
     });
+    afterEach(() => {
+        server.resetHandlers();
+    });
+    afterAll(() => server.close());
 
     it('renders', () => {
         const startNodeOption = screen.getByRole('menuitem', { name: /set as starting node/i });
         const endNodeOption = screen.getByRole('menuitem', { name: /set as ending node/i });
+        const addToHighValueOption = screen.getByRole('menuitem', { name: /add to high value/i });
+        const addToOwnedOption = screen.getByRole('menuitem', { name: /add to owned/i });
 
         expect(startNodeOption).toBeInTheDocument();
         expect(endNodeOption).toBeInTheDocument();
+        expect(addToHighValueOption).toBeInTheDocument();
+        expect(addToOwnedOption).toBeInTheDocument();
     });
 
     it('handles setting a start node', async () => {
@@ -75,7 +104,7 @@ describe('ContextMenu', async () => {
         });
     });
 
-    it('opens a submenu when user clicks `Copy`', async () => {
+    it('opens a submenu when user hovers over `Copy`', async () => {
         const user = userEvent.setup();
 
         const copyOption = screen.getByRole('menuitem', { name: /copy/i });
@@ -101,19 +130,5 @@ describe('ContextMenu', async () => {
             expect(screen.queryByText(/object id/i)).not.toBeInTheDocument();
             expect(screen.queryByText(/cypher/i)).not.toBeInTheDocument();
         });
-    });
-
-    it('handles copying a display name', async () => {
-        const user = userEvent.setup();
-
-        const copyOption = screen.getByRole('menuitem', { name: /copy/i });
-        await user.click(copyOption);
-
-        // the tooltip container and the menu item for `display name` have the same accesible name, so return the second element here (which is the menu item)
-        const displayNameOption = screen.getAllByRole('menuitem', { name: /display name/i })[1];
-        await user.click(displayNameOption);
-
-        const clipboardText = await navigator.clipboard.readText();
-        expect(clipboardText).toBe('foo');
     });
 });
