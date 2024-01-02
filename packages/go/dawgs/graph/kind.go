@@ -137,6 +137,7 @@ func (s Kinds) ContainsOneOf(others ...Kind) bool {
 
 var (
 	kindCache = &sync.Map{}
+	EmptyKind = StringKind("")
 )
 
 func StringKind(str string) Kind {
