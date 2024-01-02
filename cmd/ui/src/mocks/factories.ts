@@ -80,3 +80,11 @@ export const createMockSearchResult = (nodeType?: string) => {
             ]),
     };
 };
+
+export const createMockDomain = () => ({
+    type: faker.helpers.arrayElement(['active-directory', 'azure']),
+    impactValue: faker.datatype.number({ min: 0, max: 100 }),
+    name: faker.internet.domainName(),
+    id: faker.datatype.uuid(),
+    collected: faker.datatype.boolean(),
+});

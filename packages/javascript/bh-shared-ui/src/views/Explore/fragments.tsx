@@ -15,14 +15,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Alert, Box, CircularProgress, Typography } from '@mui/material';
-import { AzureNodeKind, EntityField, EntityKinds, NodeIcon, format } from 'bh-shared-ui';
-import isEmpty from 'lodash/isEmpty';
+import useCollapsibleSectionStyles from './InfoStyles/CollapsibleSection';
 import React, { PropsWithChildren } from 'react';
-import { TIER_ZERO_TAG } from 'src/constants';
-import { sourceNodeSelected } from 'src/ducks/searchbar/actions';
-
-import { useAppDispatch } from 'src/store';
-import useCollapsibleSectionStyles from 'src/views/Explore/InfoStyles/CollapsibleSection';
+import { EntityField, format } from '../../utils';
 
 const exclusionList = [
     'gid',
@@ -108,7 +103,7 @@ export const Field: React.FC<EntityField> = (entityField) => {
         value === undefined ||
         value === '' ||
         (Array.isArray(value) && value.length === 0) ||
-        (typeof value === 'object' && isEmpty(value))
+        (typeof value === 'object' && Object.keys(value).length === 0)
     )
         return null;
 
@@ -150,70 +145,6 @@ export const Field: React.FC<EntityField> = (entityField) => {
     }
 
     return <>{content}</>;
-};
-
-interface BasicObjectInfoFieldsProps {
-    objectid: string;
-    displayname?: string;
-    system_tags?: string;
-    service_principal_id?: string;
-    noderesourcegroupid?: string;
-    name?: string;
-}
-
-const RelatedKindField = (fieldLabel: string, relatedKind: EntityKinds, id: string, name?: string) => {
-    const dispatch = useAppDispatch();
-    return (
-        <Box padding={1}>
-            <Box fontWeight='bold' mr={1}>
-                {fieldLabel}
-            </Box>
-            <br />
-            <Box display='flex' flexDirection='row' flexWrap='wrap' justifyContent='flex-start'>
-                <NodeIcon nodeType={relatedKind} />
-                <Box
-                    onClick={() => {
-                        dispatch(
-                            sourceNodeSelected({
-                                objectid: id,
-                                type: relatedKind,
-                                name: name || '',
-                            })
-                        );
-                    }}
-                    style={{ cursor: 'pointer' }}
-                    overflow='hidden'
-                    textOverflow='ellipsis'
-                    title={id}>
-                    {id}
-                </Box>
-            </Box>
-        </Box>
-    );
-};
-
-export const BasicObjectInfoFields: React.FC<BasicObjectInfoFieldsProps> = (props): JSX.Element => {
-    return (
-        <>
-            {props.system_tags?.includes(TIER_ZERO_TAG) && <Field label='Tier Zero:' value={true} />}
-            {props.displayname && <Field label='Display Name:' value={props.displayname} />}
-            <Field label='Object ID:' value={props.objectid} />
-            {props.service_principal_id &&
-                RelatedKindField(
-                    'Service Principal ID:',
-                    AzureNodeKind.ServicePrincipal,
-                    props.service_principal_id,
-                    props.name
-                )}
-            {props.noderesourcegroupid &&
-                RelatedKindField(
-                    'Node Resource Group ID:',
-                    AzureNodeKind.ResourceGroup,
-                    props.noderesourcegroupid,
-                    props.name
-                )}
-        </>
-    );
 };
 
 export const ObjectInfoFields: React.FC<{ fields: EntityField[] }> = ({ fields }): JSX.Element => {

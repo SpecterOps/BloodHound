@@ -51,6 +51,7 @@ import EntityInfoPanel from 'src/views/Explore/EntityInfo/EntityInfoPanel';
 import ExploreSearch from 'src/views/Explore/ExploreSearch';
 import usePrompt from 'src/views/Explore/NavigationAlert';
 import { initGraphEdges, initGraphNodes } from 'src/views/Explore/utils';
+import ContextMenu from './ContextMenu/ContextMenu';
 
 const GraphView: FC = () => {
     /* Hooks */
@@ -67,7 +68,7 @@ const GraphView: FC = () => {
     const [currentSearchOpen, toggleCurrentSearch] = useToggle(false);
     const { data, isLoading, isError } = useAvailableDomains();
 
-    const [anchorPosition, setAnchorPosition] = useState<{ x: number; y: number } | undefined>(undefined);
+    const [contextMenu, setContextMenu] = useState<{ mouseX: number; mouseY: number } | null>(null);
 
     useEffect(() => {
         let items: any = graphState.chartProps.items;
@@ -177,12 +178,16 @@ const GraphView: FC = () => {
         findNodeAndSelect(id);
     };
 
-    const onRightClickNode = (event: SigmaNodeEventPayload) => {
-        setAnchorPosition({ x: event.event.x, y: event.event.y });
+    const handleContextMenu = (event: SigmaNodeEventPayload) => {
+        setContextMenu(contextMenu === null ? { mouseX: event.event.x, mouseY: event.event.y } : null);
 
         const nodeId = event.node;
 
         findNodeAndSelect(nodeId);
+    };
+
+    const handleCloseContextMenu = () => {
+        setContextMenu(null);
     };
 
     return (
@@ -196,9 +201,11 @@ const GraphView: FC = () => {
                 nonLayoutButtons={nonLayoutButtons}
                 isCurrentSearchOpen={currentSearchOpen}
                 toggleCurrentSearch={toggleCurrentSearch}
-                anchorPosition={anchorPosition}
-                onRightClickNode={onRightClickNode}
+                handleContextMenu={handleContextMenu}
             />
+
+            <ContextMenu contextMenu={contextMenu} handleClose={handleCloseContextMenu} />
+
             <Grid
                 container
                 direction='row'
@@ -218,22 +225,36 @@ const GraphView: FC = () => {
 };
 
 const GridItems = () => {
+    const selectedNode = useSelector((state: AppState) => state.entityinfo.selectedNode);
+
     const columnsDefault = { xs: 6, md: 5, lg: 4, xl: 3 };
     const cypherSearchColumns = { xs: 6, md: 6, lg: 6, xl: 4 };
 
     const edgeInfoState: EdgeInfoState = useSelector((state: AppState) => state.edgeinfo);
     const [columns, setColumns] = useState(columnsDefault);
+    const theme = useTheme();
+
+    const columnStyles = { height: '100%' };
+
+    const infoPanelStyles = {
+        margin: theme.spacing(0, 4, 2, 2),
+        maxHeight: '95%',
+    };
 
     const handleCypherTab = (isCypherEditorActive: boolean) => {
         isCypherEditorActive ? setColumns(cypherSearchColumns) : setColumns(columnsDefault);
     };
 
     return [
-        <Grid item {...columns} sx={{ height: '100%' }} key={'exploreSearch'}>
+        <Grid item {...columns} sx={columnStyles} key={'exploreSearch'}>
             <ExploreSearch handleColumns={handleCypherTab} />
         </Grid>,
-        <Grid item {...columnsDefault} sx={{ height: '100%' }} key={'info'}>
-            {edgeInfoState.open ? <EdgeInfoPane selectedEdge={edgeInfoState.selectedEdge} /> : <EntityInfoPanel />}
+        <Grid item {...columnsDefault} sx={columnStyles} key={'info'}>
+            {edgeInfoState.open ? (
+                <EdgeInfoPane sx={infoPanelStyles} selectedEdge={edgeInfoState.selectedEdge} />
+            ) : (
+                <EntityInfoPanel sx={infoPanelStyles} selectedNode={selectedNode} />
+            )}
         </Grid>,
     ];
 };

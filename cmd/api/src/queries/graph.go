@@ -448,6 +448,7 @@ func nodeToSearchResult(node *graph.Node) model.SearchResult {
 		name, _              = node.Properties.GetOrDefault(common.Name.String(), "NO NAME").String()
 		objectID, _          = node.Properties.GetOrDefault(common.ObjectID.String(), "NO OBJECT ID").String()
 		distinguishedName, _ = node.Properties.GetOrDefault(ad.DistinguishedName.String(), "").String()
+		systemTags, _        = node.Properties.GetOrDefault(common.SystemTags.String(), "").String()
 	)
 
 	return model.SearchResult{
@@ -455,6 +456,7 @@ func nodeToSearchResult(node *graph.Node) model.SearchResult {
 		Type:              analysis.GetNodeKindDisplayLabel(node),
 		Name:              name,
 		DistinguishedName: distinguishedName,
+		SystemTags:        systemTags,
 	}
 }
 

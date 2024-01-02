@@ -14,8 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { getEmptyResultsText, getKeywordAndTypeValues } from 'src/hooks/useSearch';
-import { ActiveDirectoryNodeKind } from 'bh-shared-ui';
+import { ActiveDirectoryNodeKind } from '../../graphSchema';
+import { getEmptyResultsText, getKeywordAndTypeValues } from './useSearch';
 
 describe('Getting the text for the disabled item display for a search when there are no results', () => {
     describe('Loading states', () => {
