@@ -1,0 +1,15 @@
+{{- if .Values.appdb.service.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: app-db
+  namespace: {{ .Values.namespace }}
+spec:
+  type: {{ .Values.appdb.service.type }}
+  ports:
+    - port: {{ .Values.appdb.service.port }}
+      targetPort: {{ .Values.appdb.service.targetPort }}
+      protocol: TCP
+  selector:
+    app: {{ .Values.appdb.appName }}
+{{- end }}

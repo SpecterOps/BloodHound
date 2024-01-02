@@ -1,0 +1,18 @@
+{{- if .Values.graphdb.service.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: graph-db
+  namespace: {{ .Values.namespace }}
+spec:
+  selector:
+    app: {{ .Values.graphdb.appName }}
+  ports:
+    {{- range .Values.graphdb.service.ports }}
+    - name: {{ .name }}
+      protocol: {{ .protocol }}
+      port: {{ .port }}
+      targetPort: {{ .targetPort }}
+    {{- end }}
+  type: {{ .Values.graphdb.service.type }}
+{{- end }}
