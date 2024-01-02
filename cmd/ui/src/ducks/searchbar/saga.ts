@@ -46,8 +46,8 @@ function* primarySearchWorker(payload: types.SourceNodeSelectedAction) {
 
     const edges = pathFilters.filter((pathFilter) => pathFilter.checked).map((pathFilter) => pathFilter.edgeType);
 
-    // attempt a pathfinding search first if flag is true
-    if (payload.preservePathfinding) {
+    // try a pathfinding search first if flag is true
+    if (payload.tryPathfind) {
         if (primary.value !== null && secondary.value !== null) {
             yield put(startPathfindingQuery(primary.value.objectid, secondary.value.objectid, edges));
         } else if (primary.value !== null) {
