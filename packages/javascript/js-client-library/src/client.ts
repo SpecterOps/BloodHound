@@ -20,6 +20,8 @@ import {
     BasicResponse,
     CreateAuthTokenResponse,
     ListAuthTokensResponse,
+    AssetGroupMembersResponse,
+    AssetGroupResponse,
     PaginatedResponse,
     PostureResponse,
     SavedQuery,
@@ -109,9 +111,9 @@ class BHEAPIClient {
 
     updateAssetGroupSelector = (
         assetGroupId: string,
-        selectorChangeset: { selector_name: string; sid: string; action: 'add' | 'remove' }[],
+        selectorChangeset: types.UpdateAssetGroupSelectorRequest[],
         options?: types.RequestOptions
-    ) => this.baseClient.post(`/api/v2/asset-groups/${assetGroupId}/selectors`, selectorChangeset, options);
+    ) => this.baseClient.put(`/api/v2/asset-groups/${assetGroupId}/selectors`, selectorChangeset, options);
 
     deleteAssetGroupSelector = (assetGroupId: string, selectorId: string, options?: types.RequestOptions) =>
         this.baseClient.delete(`/api/v2/asset-groups/${assetGroupId}/selectors/${selectorId}`, options);
@@ -119,7 +121,18 @@ class BHEAPIClient {
     listAssetGroupCollections = (assetGroupId: string, options?: types.RequestOptions) =>
         this.baseClient.get(`/api/v2/asset-groups/${assetGroupId}/collections`, options);
 
-    listAssetGroups = (options?: types.RequestOptions) => this.baseClient.get('/api/v2/asset-groups', options);
+    listAssetGroupMembers = (
+        assetGroupId: string,
+        params?: types.AssetGroupMemberParams,
+        options?: types.RequestOptions
+    ) =>
+        this.baseClient.get<AssetGroupMembersResponse>(
+            `/api/v2/asset-groups/${assetGroupId}/members`,
+            Object.assign({ params }, options)
+        );
+
+    listAssetGroups = (options?: types.RequestOptions) =>
+        this.baseClient.get<AssetGroupResponse>('/api/v2/asset-groups', options);
 
     /* analysis */
     getComboTreeGraph = (domainId: string, nodeId: string | null = null, options?: types.RequestOptions) =>

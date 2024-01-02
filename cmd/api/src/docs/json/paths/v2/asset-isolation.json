@@ -321,6 +321,50 @@
             }
         ],
         "post": {
+            "deprecated": true,
+            "description": "DEPRECATED use PUT instead. Updates asset group selectors",
+            "tags": [
+                "Asset Isolation",
+                "Community",
+                "Enterprise"
+            ],
+            "summary": "Update asset group selectors",
+            "parameters": [
+                {
+                    "$ref": "#/definitions/parameters.PreferHeader"
+                }
+            ],
+            "requestBody": {
+                "description": "The request body for updating asset group selectors",
+                "required": true,
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/model.AssetGroupSelectorSpec"
+                            }
+                        }
+                    }
+                }
+            },
+            "responses": {
+                "201": {
+                    "description": "Created",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/definitions/v2.CreateAssetGroupSelectorResponse"
+                            }
+                        }
+                    }
+                },
+                "Error": {
+                    "$ref": "#/components/responses/defaultError"
+                }
+            }
+        },
+        "put": {
             "description": "Updates asset group selectors",
             "tags": [
                 "Asset Isolation",
@@ -348,8 +392,8 @@
                 }
             },
             "responses": {
-                "200": {
-                    "description": "OK",
+                "201": {
+                    "description": "Created",
                     "content": {
                         "application/json": {
                             "schema": {

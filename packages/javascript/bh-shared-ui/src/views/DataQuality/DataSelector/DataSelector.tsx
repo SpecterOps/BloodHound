@@ -21,7 +21,6 @@ import {
     Box,
     Button,
     Divider,
-    Link,
     MenuItem,
     Popover,
     Skeleton,
@@ -30,31 +29,21 @@ import {
     Typography,
 } from '@mui/material';
 import { useAvailableDomains, Domain } from '../../../hooks';
-import React, { useState } from 'react';
+import React, { ReactNode, useState } from 'react';
 
 const DataSelector: React.FC<{
     value: { type: string | null; id: string | null };
+    errorMessage: ReactNode;
     onChange?: (newValue: { type: string; id: string | null }) => void;
     fullWidth?: boolean;
-}> = ({ value, onChange = () => {}, fullWidth = false }) => {
+}> = ({ value, errorMessage, onChange = () => {}, fullWidth = false }) => {
     const [anchorEl, setAnchorEl] = useState(null);
     const [searchInput, setSearchInput] = useState<string>('');
     const { data, isLoading, isError } = useAvailableDomains();
 
     if (isLoading) return <Skeleton variant='rounded' height={36} width={256} />;
 
-    if (isError)
-        return (
-            <Alert severity='error'>
-                Domains unavailable. See the{' '}
-                <Link
-                    target='_blank'
-                    href={'https://support.bloodhoundenterprise.io/hc/en-us/categories/9270370014875-Data-Collection'}>
-                    Data Collection
-                </Link>{' '}
-                page to view instructions on how to begin data collection.
-            </Alert>
-        );
+    if (isError) return <Alert severity='error'>{errorMessage}</Alert>;
 
     const handleClick = (event: any) => {
         setAnchorEl(event.currentTarget);

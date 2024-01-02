@@ -197,11 +197,14 @@ func (s *BloodhoundDB) UpdateAssetGroupSelectors(ctx ctx.Context, assetGroup mod
 					SystemSelector: systemSelector,
 				}
 
-				if result := tx.Create(&assetGroupSelector); result.Error != nil {
-					return CheckError(result)
-				} else {
-					updatedSelectors.Added = append(updatedSelectors.Added, assetGroupSelector)
+				if selectorsMatched := tx.Where("asset_group_id=? AND name=?", assetGroup.ID, selectorSpec.SelectorName).Find(&model.AssetGroupSelector{}).RowsAffected; selectorsMatched == 0 {
+					// create a new db entry only if it doesn't exist, otherwise continue execution
+					if result := tx.Create(&assetGroupSelector); result.Error != nil {
+						return CheckError(result)
+					}
 				}
+
+				updatedSelectors.Added = append(updatedSelectors.Added, assetGroupSelector)
 
 			case model.SelectorSpecActionRemove:
 				if result := tx.Where("asset_group_id=? AND name=?", assetGroup.ID, selectorSpec.SelectorName).Delete(&model.AssetGroupSelector{}); result.Error != nil {
