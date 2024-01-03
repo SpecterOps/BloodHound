@@ -35,7 +35,7 @@ describe('AssetGroupMenuItem', async () => {
             },
         },
     });
-    console.log('just testing commit');
+
     const getAssetGroupTestProps = ({ isTierZero }: { isTierZero: boolean }) => ({
         assetgroups: {
             assetGroups: isTierZero
