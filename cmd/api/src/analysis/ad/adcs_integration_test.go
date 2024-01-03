@@ -186,10 +186,10 @@ func TestIssuedSignedBy(t *testing.T) {
 	}, func(harness integration.HarnessDetails, db graph.Database) error {
 		operation := analysis.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - IssuedSignedBy")
 
-		if enterpriseCertAuthorities, err := ad2.FetchNodesByKind(context.Background(), db, ad.EnterpriseCA); err != nil {
-			t.Logf("failed fetching enterpriseCA nodes: %v", err)
-		} else if rootCertAuthorities, err := ad2.FetchNodesByKind(context.Background(), db, ad.RootCA); err != nil {
+		if rootCertAuthorities, err := ad2.FetchNodesByKind(context.Background(), db, ad.RootCA); err != nil {
 			t.Logf("failed fetching rootCA nodes: %v", err)
+		} else if enterpriseCertAuthorities, err := ad2.FetchNodesByKind(context.Background(), db, ad.EnterpriseCA); err != nil {
+			t.Logf("failed fetching enterpriseCA nodes: %v", err)
 		} else if err := ad2.PostIssuedSignedBy(context.Background(), db, operation, enterpriseCertAuthorities, rootCertAuthorities); err != nil {
 			t.Logf("failed post processing for %s: %v", ad.IssuedSignedBy.String(), err)
 		}
