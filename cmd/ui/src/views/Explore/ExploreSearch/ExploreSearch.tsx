@@ -19,14 +19,13 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Box, Collapse, Paper, Tab, Tabs, Theme, useMediaQuery, useTheme } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
 import { Icon } from 'bh-shared-ui';
-import React, { useState } from 'react';
-import { useSelector } from 'react-redux';
-import { CYPHER_SEARCH, PATHFINDING_SEARCH, PRIMARY_SEARCH } from 'src/ducks/searchbar/types';
-import { AppState, useAppDispatch } from 'src/store';
+import { useState } from 'react';
+import { useAppDispatch } from 'src/store';
 import CypherSearch from './CypherSearch';
 import NodeSearch from './NodeSearch';
 import PathfindingSearch from './PathfindingSearch';
-import { tabChanged, primarySearch, pathfindingSearch, cypherSearch } from 'src/ducks/searchbar/actions';
+import { primarySearch, pathfindingSearch, cypherSearch } from 'src/ducks/searchbar/actions';
+import { useSearchParams } from 'react-router-dom';
 
 const useStyles = makeStyles((theme) => ({
     menuButton: {
@@ -61,8 +60,8 @@ const ExploreSearch = ({ handleColumns }: ExploreSearchProps) => {
     const matches = useMediaQuery(theme.breakpoints.down('md'));
     const dispatch = useAppDispatch();
 
-    const tabKey = useSelector((state: AppState) => state.search.activeTab);
-    const activeTab = tabNameMap[tabKey];
+    const [searchParams, setSearchParams] = useSearchParams();
+    const activeTab = searchParams.get('activeTab') || 'primary';
 
     const [showSearchWidget, setShowSearchWidget] = useState(true);
 
@@ -70,13 +69,19 @@ const ExploreSearch = ({ handleColumns }: ExploreSearchProps) => {
         switch (newTabIndex) {
             case 0:
                 dispatch(primarySearch());
-                return dispatch(tabChanged(PRIMARY_SEARCH));
+                searchParams.set('activeTab', 'primary');
+                setSearchParams(searchParams);
+                return;
             case 1:
                 dispatch(pathfindingSearch());
-                return dispatch(tabChanged(PATHFINDING_SEARCH));
+                searchParams.set('activeTab', 'secondary');
+                setSearchParams(searchParams);
+                return;
             case 2:
                 dispatch(cypherSearch());
-                return dispatch(tabChanged(CYPHER_SEARCH));
+                searchParams.set('activeTab', 'cypher');
+                setSearchParams(searchParams);
+                return;
         }
 
         const cypherTabIndex = 2;
@@ -97,7 +102,7 @@ const ExploreSearch = ({ handleColumns }: ExploreSearchProps) => {
                 </Icon>
                 <Tabs
                     variant='fullWidth'
-                    value={activeTab}
+                    value={tabNameMap[activeTab]}
                     onChange={(e, newTabIdx) => handleTabChange(newTabIdx)}
                     onClick={() => setShowSearchWidget(true)}
                     sx={{
@@ -116,7 +121,9 @@ const ExploreSearch = ({ handleColumns }: ExploreSearchProps) => {
 
             <Collapse in={showSearchWidget}>
                 <Paper sx={{ mt: 1, p: 1 }} elevation={0}>
-                    <TabPanels tabs={[<NodeSearch />, <PathfindingSearch />, <CypherSearch />]} activeTab={activeTab} />
+                    {activeTab === 'primary' ? <NodeSearch /> : null}
+                    {activeTab === 'secondary' ? <PathfindingSearch /> : null}
+                    {activeTab === 'cypher' ? <CypherSearch /> : null}
                 </Paper>
             </Collapse>
         </Box>
@@ -157,25 +164,6 @@ const getTabsContent = (theme: Theme, matches: boolean) => {
             }}
         />
     ));
-};
-
-interface TabPanelsProps {
-    tabs: React.ReactNode[];
-    activeTab: number;
-}
-
-const TabPanels = ({ tabs, activeTab }: TabPanelsProps) => {
-    return (
-        <>
-            {tabs.map((tab, index) => {
-                return (
-                    <Box role='tabpanel' key={index}>
-                        {activeTab === index && tab}
-                    </Box>
-                );
-            })}
-        </>
-    );
 };
 
 export default ExploreSearch;

@@ -18,11 +18,12 @@ import { Menu, MenuItem } from '@mui/material';
 
 import { FC } from 'react';
 import { useSelector } from 'react-redux';
-import { destinationNodeSelected, sourceNodeSelected, tabChanged } from 'src/ducks/searchbar/actions';
+import { destinationNodeSelected, sourceNodeSelected } from 'src/ducks/searchbar/actions';
 import { AppState, useAppDispatch } from 'src/store';
 import { selectOwnedAssetGroupId, selectTierZeroAssetGroupId } from 'src/ducks/assetgroups/reducer';
 import AssetGroupMenuItem from './AssetGroupMenuItem';
 import CopyMenuItem from './CopyMenuItem';
+import { useSearchParams } from 'react-router-dom';
 
 const ContextMenu: FC<{ contextMenu: { mouseX: number; mouseY: number } | null; handleClose: () => void }> = ({
     contextMenu,
@@ -35,11 +36,15 @@ const ContextMenu: FC<{ contextMenu: { mouseX: number; mouseY: number } | null; 
     const ownedAssetGroupId = useSelector(selectOwnedAssetGroupId);
     const tierZeroAssetGroupId = useSelector(selectTierZeroAssetGroupId);
 
-    const handleSetStartingNode = () => {
+    const [searchParams, setSearchParams] = useSearchParams();
+
+    const handleSettingNode = (nodeSetter: any) => {
         if (selectedNode) {
-            dispatch(tabChanged('secondary'));
+            searchParams.set('activeTab', 'secondary');
+            setSearchParams(searchParams);
+
             dispatch(
-                sourceNodeSelected({
+                nodeSetter({
                     name: selectedNode.name,
                     objectid: selectedNode.id,
                     type: selectedNode.type,
@@ -48,17 +53,12 @@ const ContextMenu: FC<{ contextMenu: { mouseX: number; mouseY: number } | null; 
         }
     };
 
+    const handleSetStartingNode = () => {
+        handleSettingNode(sourceNodeSelected);
+    };
+
     const handleSetEndingNode = () => {
-        if (selectedNode) {
-            dispatch(tabChanged('secondary'));
-            dispatch(
-                destinationNodeSelected({
-                    name: selectedNode.name,
-                    objectid: selectedNode.id,
-                    type: selectedNode.type,
-                })
-            );
-        }
+        handleSettingNode(destinationNodeSelected);
     };
 
     return (
