@@ -776,8 +776,8 @@ func ADCSESC3Path2Pattern(domainId graph.ID, enterpriseCAs, candidateTemplates c
 		)).
 		Outbound(query.And(
 			query.KindIn(query.Relationship(), ad.PublishedTo),
-			query.KindIn(query.End()), ad.EnterpriseCA),
-			query.InIDs(query.End(), cardinality.DuplexToGraphIDs(enterpriseCAs)...)).
+			query.KindIn(query.End(), ad.EnterpriseCA),
+			query.InIDs(query.End(), cardinality.DuplexToGraphIDs(enterpriseCAs)...))).
 		Outbound(query.And(
 			query.KindIn(query.Relationship(), ad.TrustedForNTAuth),
 			query.Kind(query.End(), ad.NTAuthStore),
@@ -812,7 +812,7 @@ func GetADCSESC3EdgeCompositionN(ctx context.Context, db graph.Database, edge *g
 		path1CertTemplates      = cardinality.NewBitmap32()
 		path2CertTemplates      = cardinality.NewBitmap32()
 		enterpriseCANodes       = cardinality.NewBitmap32()
-		enterpriseCASegments    = map[graph.ID]*graph.PathSegment{}
+		enterpriseCASegments    = map[graph.ID][]*graph.PathSegment{}
 		path2CandidateTemplates = cardinality.NewBitmap32()
 		enrollOnBehalfOfPaths   graph.PathSet
 	)
@@ -837,7 +837,7 @@ func GetADCSESC3EdgeCompositionN(ctx context.Context, db graph.Database, edge *g
 			})
 
 			lock.Lock()
-			enterpriseCASegments[enterpriseCANode.ID] = terminal
+			enterpriseCASegments[enterpriseCANode.ID] = append(enterpriseCASegments[enterpriseCANode.ID], terminal)
 			enterpriseCANodes.Add(enterpriseCANode.ID.Uint32())
 			lock.Unlock()
 
@@ -922,38 +922,36 @@ func GetADCSESC3EdgeCompositionN(ctx context.Context, db graph.Database, edge *g
 
 		for _, p1 := range p1paths {
 			eca1 := p1.Search(func(nextSegment *graph.PathSegment) bool {
-				return nextSegment.Node.Kinds.ContainsOneOf(ad.EnterpriseCA)
+				return nextSegment.Node.Kinds.ContainsOneOf(ad.EnterpriseCA) && enterpriseCANodes.Contains(nextSegment.Node.ID.Uint32())
 			})
 
 			for _, p2 := range p2paths {
 				eca2 := p2.Search(func(nextSegment *graph.PathSegment) bool {
-					return nextSegment.Node.Kinds.ContainsOneOf(ad.CertTemplate)
+					return nextSegment.Node.Kinds.ContainsOneOf(ad.EnterpriseCA) && enterpriseCANodes.Contains(nextSegment.Node.ID.Uint32())
 				})
 
-				p4 := enterpriseCASegments[eca1.ID]
-				p5 := enterpriseCASegments[eca2.ID]
+				for _, p4 := range enterpriseCASegments[eca1.ID] {
+					paths.AddPath(p4.Path())
+				}
+
+				for _, p5 := range enterpriseCASegments[eca2.ID] {
+					paths.AddPath(p5.Path())
+				}
+
+				paths.AddPath(p3)
+				paths.AddPath(p1.Path())
+				paths.AddPath(p2.Path())
 
 				if collected, err := eca2.Properties.Get(ad.EnrollmentAgentRestrictionsCollected.String()).Bool(); err != nil {
 					log.Errorf("error getting enrollmentagentcollected for eca2 %d: %w", eca2.ID, err)
 				} else if hasRestrictions, err := eca2.Properties.Get(ad.HasEnrollmentAgentRestrictions.String()).Bool(); err != nil {
 					log.Errorf("error getting hasenrollmentagentrestrictions for ca %d: %w", eca2.ID, err)
 				} else if collected && hasRestrictions {
-					paths.AddPath(p3)
-					paths.AddPath(p1.Path())
-					paths.AddPath(p2.Path())
-					paths.AddPath(p4.Path())
-					paths.AddPath(p5.Path())
 					if p6, err := getDelegatedEnrollmentAgentPath(ctx, startNode, ct2, db); err != nil {
 						log.Infof("Error getting p6 for composition: %v", err)
 					} else {
 						paths.AddPathSet(p6)
 					}
-				} else {
-					paths.AddPath(p3)
-					paths.AddPath(p1.Path())
-					paths.AddPath(p2.Path())
-					paths.AddPath(p4.Path())
-					paths.AddPath(p5.Path())
 				}
 			}
 		}

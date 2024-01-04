@@ -71,7 +71,7 @@ const EdgeInfoContent: FC<{ selectedEdge: NonNullable<SelectedEdge> }> = ({ sele
                         const Section = section[1];
 
                         const sendOnChange =
-                            (selectedEdge.name === 'GoldenCert' || selectedEdge.name === 'ADCSESC1') &&
+                            (selectedEdge.name === 'GoldenCert' || selectedEdge.name === 'ADCSESC1' || selectedEdge.name === 'ADCSESC3') &&
                             section[0] === 'composition';
 
                         return (
