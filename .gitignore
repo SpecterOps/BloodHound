@@ -2,6 +2,9 @@
 # Project Level Git Ignore
 ################################
 
+# Temporary backup files
+*.bak
+
 # beagle state
 .beagle
 
