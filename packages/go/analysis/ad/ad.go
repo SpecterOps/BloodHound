@@ -710,7 +710,7 @@ func GetEdgeCompositionPath(ctx context.Context, db graph.Database, edge *graph.
 				pathSet = results
 			}
 		} else if edge.Kind == ad.ADCSESC3 {
-			if results, err := GetADCSESC3EdgeCompositionN(ctx, db, edge); err != nil {
+			if results, err := GetADCSESC3EdgeComposition(ctx, db, edge); err != nil {
 				return err
 			} else {
 				pathSet = results
@@ -719,12 +719,6 @@ func GetEdgeCompositionPath(ctx context.Context, db graph.Database, edge *graph.
 		return nil
 	})
 }
-
-var (
-	esc3EdgeCompSegment1Kinds      = graph.Kinds{ad.GenericAll, ad.Enroll, ad.AllExtendedRights, ad.MemberOf}
-	esc3EdgeCompPath1Segment2Kinds = graph.Kinds{ad.PublishedTo, ad.IssuedSignedBy, ad.EnterpriseCAFor, ad.RootCAFor}
-	esc3EdgeCompPath2Segment2Kinds = graph.Kinds{ad.PublishedTo, ad.TrustedForNTAuth, ad.NTAuthStoreFor}
-)
 
 func ADCSESC3Path1Pattern(domainId graph.ID, enterpriseCAs cardinality.Duplex[uint32]) traversal.PatternContinuation {
 	return traversal.NewPattern().
@@ -800,7 +794,7 @@ func ADCSESC3Path3Pattern() traversal.PatternContinuation {
 		))
 }
 
-func GetADCSESC3EdgeCompositionN(ctx context.Context, db graph.Database, edge *graph.Relationship) (graph.PathSet, error) {
+func GetADCSESC3EdgeComposition(ctx context.Context, db graph.Database, edge *graph.Relationship) (graph.PathSet, error) {
 	var (
 		startNode *graph.Node
 
