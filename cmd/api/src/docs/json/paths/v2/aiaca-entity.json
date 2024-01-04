@@ -10,7 +10,7 @@
             }
         ],
         "get": {
-            "description": "Get basic info and counts for this AIACA",
+            "description": "Get basic info and counts for this AIACA. \n\n<b>Early Access Notice:</b> This API endpoint is in early access and may undergo changes. Exercise caution when integrating, and avoid critical use until it reaches stable status.",
             "tags": [
                 "AIACA Entity API",
                 "Community",
@@ -20,26 +20,24 @@
             "parameters": [
                 {
                     "$ref": "#/definitions/parameters.PreferHeader"
+                },
+                {
+                    "$ref": "#/definitions/parameters.HydrateCounts"
                 }
             ],
             "responses": {
                 "200": {
                     "description": "OK",
-                    "schema": {
-                        "$ref": "#/definitions/api.BasicResponse"
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/definitions/v2.EntityWithControllersResponse"
+                              }
+                        }
                     }
                 },
-                "400": {
-                    "description": "Bad Request",
-                    "schema": {
-                        "$ref": "#/definitions/api.ErrorWrapper"
-                    }
-                },
-                "504": {
-                    "description": "Gateway Timeout",
-                    "schema": {
-                        "$ref": "#/definitions/api.ErrorWrapper"
-                    }
+                "Error": {
+                    "$ref": "#/components/responses/defaultError"
                 }
             }
         }
@@ -55,7 +53,7 @@
             }
         ],
         "get": {
-            "description": "List the principals that can control this AIACA through ACLs",
+            "description": "List the principals that can control this AIACA through ACLs. \n\n<b>Early Access Notice:</b> This API endpoint is in early access and may undergo changes. Exercise caution when integrating, and avoid critical use until it reaches stable status.",
             "tags": [
                 "AIACA Entity API",
                 "Community",
@@ -82,21 +80,16 @@
             "responses": {
                 "200": {
                     "description": "OK",
-                    "schema": {
-                        "$ref": "#/definitions/api.ResponseWrapper"
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/definitions/v2.EntityControllersResponse"
+                              }
+                        }
                     }
                 },
-                "400": {
-                    "description": "Bad Request",
-                    "schema": {
-                        "$ref": "#/definitions/api.ErrorWrapper"
-                    }
-                },
-                "504": {
-                    "description": "Gateway Timeout",
-                    "schema": {
-                        "$ref": "#/definitions/api.ErrorWrapper"
-                    }
+                "Error": {
+                    "$ref": "#/components/responses/defaultError"
                 }
             }
         }
