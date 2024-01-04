@@ -520,6 +520,15 @@ func (s *GraphTestContext) NewActiveDirectoryRootCA(name, domainSID string) *gra
 	}), ad.Entity, ad.RootCA)
 }
 
+func (s *GraphTestContext) NewActiveDirectoryRootCAWithThumbprint(name, domainSID string, certThumbprint string) *graph.Node {
+	return s.NewNode(graph.AsProperties(graph.PropertyMap{
+		common.Name:       name,
+		common.ObjectID:   must.NewUUIDv4().String(),
+		ad.DomainSID:      domainSID,
+		ad.CertThumbprint: certThumbprint,
+	}), ad.Entity, ad.RootCA)
+}
+
 func (s *GraphTestContext) NewActiveDirectoryCertTemplate(name, domainSID string, requiresManagerApproval, authenticationEnabled, enrolleeSupplieSubject, subjectAltRequireUpn bool, schemaVersion, authorizedSignatures int, ekus, applicationPolicies []string) *graph.Node {
 	return s.NewNode(graph.AsProperties(graph.PropertyMap{
 		common.Name:                name,
