@@ -12,7 +12,7 @@ This Helm chart templates these three services and facilitates communication bet
 
 In order to run this chart you will need the following:
 - A Kubernetes Cluster in which to deploy (any supported version should work with this chart).
-- Admin access or the ability to create Helm charts and the accociated Objects in this chart (validate RBAC Policies and Policy Engine configuration)
+- Admin access or the ability to create Helm charts and the associated Objects in this chart (validate RBAC Policies and Policy Engine configuration)
 - Helm (v3+) installed on a local workstation or CI Pipeline.
 
 ## Quick start
@@ -24,15 +24,15 @@ $ helm install bhce $BH_ROOT/examples/helm/.
 ```
 
 ## Accessing
-By default, the ingress is enabled. This means the application will be availible on the ingress endpoint with the host set to `bloodhound.example.com` (Each of these values can be configured in the values.yaml). As long as you have a properly configured ingress controller and valid DNS configuration the application will be availible at `https://bloodhound.example.com`, else without DNS you can test with curl by passing the 'Host' Header: `curl -H 'Host: bloodhound.example.com' https://$endpointIP`.
+By default, the ingress is enabled. This means the application will be available on the ingress endpoint with the host set to `bloodhound.example.com` (Each of these values can be configured in the values.yaml). As long as you have a properly configured ingress controller and valid DNS configuration the application will be available at `https://bloodhound.example.com`, else without DNS you can test with curl by passing the 'Host' Header: `curl -H 'Host: bloodhound.example.com' https://$endpointIP`.
 
- If you have a TLS cert you can enable `bloodhound.tls.customCert` in the values.yaml and provide the ingress secret in `bloodhound.tls.certSecret`. Else, the privded cert will be self signed from the ingress controller.
+ If you have a TLS cert you can enable `bloodhound.tls.customCert` in the values.yaml and provide the ingress secret in `bloodhound.tls.certSecret`. Else, the provided cert will be self signed from the ingress controller.
 
  ## Configuring BloodHound Community Edition
 
 To configure the Helm Chart deployment of BloodHound Community Edition you can use the two files specified below:
 
--   `values.yaml` - A general Helm Chart configuration file - you can use this to configure aspects of the deployment of BloodHound and set Environment Variables. This file generally will be the single source of truth for application and depployment configuration.
+-   `values.yaml` - A general Helm Chart configuration file - you can use this to configure aspects of the deployment of BloodHound and set Environment Variables. This file generally will be the single source of truth for application and deployment configuration.
 -   `templates/cmbh.yaml` - This is the Kubernetes configmap used for the BloodHound Application - you can add your own custom configuration in the `bloodhound-config.json` section of this file. Some of it is populated with the `values.yaml` as well for portibility
 
 If using a custom Certificate for TLS please terminate it on the ingress and not the application directly for easier Kubernetes native management. 
@@ -62,7 +62,7 @@ By Default the `latest` tag is set. You can change this by setting the `bloodhou
 
 ## Troubleshooting
 
-Please assure any local host-based firewall frontends such as firewalld or ufw on the node is disabled. Please use Kubernetes NetworkPolicies and admission controllers instead.
+Please assure any local host-based firewall frontends such as `firewalld` or `ufw` on the node is disabled. Please use Kubernetes NetworkPolicies and admission controllers instead.
 
 Validate all 3 of the Deployments are healthy, Services are active and the ingress is properly configured  with `kubectl get -n bloodhoundad deployments,svc,ingress`
 
@@ -76,4 +76,3 @@ If you are having trouble with cluster DNS please refer to the upstream Kubernet
 https://kubernetes.io/docs/tasks/administer-cluster/dns-debugging-resolution/
 
 Else, please refer to the upstream Kubernetes Documentation for General cluster troubleshooting: https://kubernetes.io/docs/tasks/debug/debug-cluster/.
-
