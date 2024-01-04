@@ -179,6 +179,46 @@ func TestGoldenCert(t *testing.T) {
 
 }
 
+func TestIssuedSignedBy(t *testing.T) {
+	testContext := integration.NewGraphTestContext(t)
+	testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) {
+		harness.IssuedSignedByHarness.Setup(testContext)
+	}, func(harness integration.HarnessDetails, db graph.Database) error {
+		operation := analysis.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - IssuedSignedBy")
+
+		if rootCertAuthorities, err := ad2.FetchNodesByKind(context.Background(), db, ad.RootCA); err != nil {
+			t.Logf("failed fetching rootCA nodes: %v", err)
+		} else if enterpriseCertAuthorities, err := ad2.FetchNodesByKind(context.Background(), db, ad.EnterpriseCA); err != nil {
+			t.Logf("failed fetching enterpriseCA nodes: %v", err)
+		} else if err := ad2.PostIssuedSignedBy(context.Background(), db, operation, enterpriseCertAuthorities, rootCertAuthorities); err != nil {
+			t.Logf("failed post processing for %s: %v", ad.IssuedSignedBy.String(), err)
+		}
+
+		operation.Done()
+
+		db.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
+			if results, err := ops.FetchStartNodes(tx.Relationships().Filterf(func() graph.Criteria {
+				return query.Kind(query.Relationship(), ad.IssuedSignedBy)
+			})); err != nil {
+				t.Fatalf("error fetching IssuedSignedBy relationships; %v", err)
+			} else {
+				assert.True(t, len(results) == 3)
+
+				// Positive Cases
+				assert.True(t, results.Contains(harness.IssuedSignedByHarness.RootCA2))
+				assert.True(t, results.Contains(harness.IssuedSignedByHarness.EnterpriseCA1))
+				assert.True(t, results.Contains(harness.IssuedSignedByHarness.EnterpriseCA2))
+
+				// Negative Cases
+				assert.False(t, results.Contains(harness.IssuedSignedByHarness.RootCA1))
+				assert.False(t, results.Contains(harness.IssuedSignedByHarness.EnterpriseCA3))
+			}
+			return nil
+		})
+		return nil
+	})
+}
+
 func TestTrustedForNTAuth(t *testing.T) {
 	testContext := integration.NewGraphTestContext(t)
 

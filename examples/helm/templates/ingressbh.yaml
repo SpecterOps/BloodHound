@@ -1,0 +1,24 @@
+{{- if .Values.bloodhound.ingress.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ .Values.bloodhound.name }}-ingress
+  namespace: {{ .Values.namespace }}
+spec:
+  rules:
+  - host: {{ .Values.bloodhound.ingress.host }}
+    http:
+      paths:
+      - path: {{ .Values.bloodhound.ingress.path }}
+        pathType: Prefix
+        backend:
+          service:
+            name: {{ .Values.bloodhound.name }}-service
+            port:
+              number: {{ .Values.bloodhound.service.port }}
+  {{- if .Values.bloodhound.ingress.tls }}
+  tls:
+  - hosts:
+    - {{ .Values.bloodhound.ingress.host }}
+  {{- end }}
+{{- end }}

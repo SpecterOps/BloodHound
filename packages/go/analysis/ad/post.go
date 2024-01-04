@@ -44,6 +44,7 @@ func PostProcessedRelationships() []graph.Kind {
 		ad.TrustedForNTAuth,
 		ad.IssuedSignedBy,
 		ad.EnterpriseCAFor,
+		ad.GoldenCert,
 		ad.ADCSESC1,
 		ad.ADCSESC3,
 		ad.ADCSESC4,

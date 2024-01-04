@@ -17,22 +17,29 @@ init wipe="":
   #!/usr/bin/env bash
   echo "Init BloodHound CE"
   echo "Make local copies of configuration files"
-  if [[ -d "./local-harnesses/build.config.json" ]]; then
-    rm -rf "./local-harnesses/build.config.json"
-    cp ./local-harnesses/build.config.json.template ./local-harnesses/build.config.json
-  elif [[ -f "./local-harnesses/build.config.json" ]] && [[ "{{wipe}}" != "clean" ]]; then
+    if [[ -f "./local-harnesses/build.config.json" ]] && [[ "{{wipe}}" != "clean" ]]; then
     echo "Not copying build.config.json since it already exists"
+  elif [[ -f "./local-harnesses/build.config.json" ]]; then
+    echo "Backing up build.config.json and resetting"
+    mv ./local-harnesses/build.config.json ./local-harnesses/build.config.json.bak
+    cp ./local-harnesses/build.config.json.template ./local-harnesses/build.config.json
   else
     cp ./local-harnesses/build.config.json.template ./local-harnesses/build.config.json
   fi
 
-  if [[ -d "./local-harnesses/integration.config.json" ]]; then
-    rm -rf "./local-harnesses/integration.config.json"
-    cp ./local-harnesses/integration.config.json.template ./local-harnesses/integration.config.json
-  elif [[ -f "./local-harnesses/integration.config.json" ]] && [[ "{{wipe}}" != "clean" ]]; then
+  if [[ -f "./local-harnesses/integration.config.json" ]] && [[ "{{wipe}}" != "clean" ]]; then
     echo "Not copying integration.config.json since it already exists"
+  elif [[ -f "./local-harnesses/integration.config.json" ]]; then
+    echo "Backing up integration.config.json and resetting"
+    mv ./local-harnesses/integration.config.json ./local-harnesses/integration.config.json.bak
+    cp ./local-harnesses/integration.config.json.template ./local-harnesses/integration.config.json
   else
     cp ./local-harnesses/integration.config.json.template ./local-harnesses/integration.config.json
+  fi
+
+  if [[ -f "./.env" ]] && [[ "{{wipe}}" == "clean" ]]; then
+    echo "Backing up existing environment file"
+    mv ./.env ./.env.bak
   fi
 
   echo "Install additional Go tools"
