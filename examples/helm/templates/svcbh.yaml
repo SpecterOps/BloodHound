@@ -1,0 +1,15 @@
+{{- if .Values.bloodhound.service.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.bloodhound.name }}-service
+  namespace: {{ .Values.namespace }}
+spec:
+  type: {{ .Values.bloodhound.service.type }}
+  ports:
+    - port: {{ .Values.bloodhound.service.port }}
+      targetPort: {{ .Values.bloodhound.service.targetPort }}
+      protocol: TCP
+  selector:
+    app: {{ .Values.bloodhound.appName }}
+{{- end }}

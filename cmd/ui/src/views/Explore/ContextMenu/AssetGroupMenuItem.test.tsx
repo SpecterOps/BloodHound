@@ -70,7 +70,7 @@ describe('AssetGroupMenuItem', async () => {
                     return res(ctx.json({}));
                 }
             }),
-            rest.post('/api/v2/asset-groups/:assetGroupId/selectors', (req, res, ctx) => {
+            rest.put('/api/v2/asset-groups/:assetGroupId/selectors', (req, res, ctx) => {
                 return res(ctx.json({}));
             })
         );
@@ -183,7 +183,7 @@ describe('AssetGroupMenuItem', async () => {
                     return res(ctx.json({}));
                 }
             }),
-            rest.post('/api/v2/asset-groups/:assetGroupId/selectors', (req, res, ctx) => {
+            rest.put('/api/v2/asset-groups/:assetGroupId/selectors', (req, res, ctx) => {
                 return res(ctx.json({}));
             })
         );
