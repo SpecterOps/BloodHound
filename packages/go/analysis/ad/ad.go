@@ -997,7 +997,7 @@ func ADCSESC1Path1Pattern(domainID graph.ID) traversal.PatternContinuation {
 			),
 		)).
 		Outbound(query.And(
-			query.KindIn(query.Relationship(), ad.PublishedTo),
+			query.KindIn(query.Relationship(), ad.PublishedTo, ad.IssuedSignedBy),
 			query.Kind(query.End(), ad.EnterpriseCA),
 		)).
 		Outbound(query.And(
