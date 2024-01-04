@@ -33,7 +33,7 @@ const LinuxAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> = (
                     <Typography variant='body1'> Modifying the rights </Typography>
 
                     <Typography variant='body2'>
-                        To abuse WriteDacl to a group object, you may grant yourself the AddMember privilege.
+                        To abuse WriteDacl to a group object, you may grant yourself the AddMember permission.
                     </Typography>
 
                     <Typography variant='body2'>
@@ -104,7 +104,7 @@ const LinuxAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> = (
             return (
                 <>
                     <Typography variant='body2'>
-                        To abuse WriteDacl to a user object, you may grant yourself the GenericAll privilege.
+                        To abuse WriteDacl to a user object, you may grant yourself the GenericAll permission.
                     </Typography>
 
                     <Typography variant='body2'>
@@ -183,7 +183,7 @@ const LinuxAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> = (
                     <Typography variant='body1'> Shadow Credentials attack </Typography>
 
                     <Typography variant='body2'>
-                        To abuse this privilege, use{' '}
+                        To abuse this permission, use{' '}
                         <Link target='_blank' rel='noopener' href='https://github.com/ShutdownRepo/pywhisker'>
                             pyWhisker
                         </Link>
@@ -206,7 +206,7 @@ const LinuxAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> = (
                 return (
                     <>
                         <Typography variant='body2'>
-                            To abuse WriteDacl to a computer object, you may grant yourself the GenericAll privilege.
+                            To abuse WriteDacl to a computer object, you may grant yourself the GenericAll permission.
                         </Typography>
                         <Typography variant='body2'>
                             Impacket's dacledit can be used for that purpose (cf. "grant rights" reference for the
@@ -272,7 +272,7 @@ const LinuxAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> = (
                         </Typography>
                         <Typography variant='body1'> Shadow Credentials attack </Typography>
                         <Typography variant='body2'>
-                            To abuse this privilege, use{' '}
+                            To abuse this permission, use{' '}
                             <Link target='_blank' rel='noopener' href='https://github.com/ShutdownRepo/pywhisker'>
                                 pyWhisker
                             </Link>
@@ -292,7 +292,7 @@ const LinuxAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> = (
                 return (
                     <>
                         <Typography variant='body2'>
-                            To abuse WriteDacl to a computer object, you may grant yourself the GenericAll privilege.
+                            To abuse WriteDacl to a computer object, you may grant yourself the GenericAll permission.
                         </Typography>
                         <Typography variant='body2'>
                             Impacket's dacledit can be used for that purpose (cf. "grant rights" reference for the
@@ -340,7 +340,7 @@ const LinuxAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> = (
                         </Typography>
                         <Typography variant='body1'> Shadow Credentials attack </Typography>
                         <Typography variant='body2'>
-                            To abuse this privilege, use{' '}
+                            To abuse this permission, use{' '}
                             <Link target='_blank' rel='noopener' href='https://github.com/ShutdownRepo/pywhisker'>
                                 pyWhisker
                             </Link>
@@ -361,7 +361,7 @@ const LinuxAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> = (
             return (
                 <>
                     <Typography variant='body2'>
-                        To abuse WriteDacl to a domain object, you may grant yourself the DcSync privileges.
+                        To abuse WriteDacl to a domain object, you may grant yourself the DcSync permissions.
                     </Typography>
 
                     <Typography variant='body2'>
@@ -381,8 +381,8 @@ const LinuxAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> = (
                     <Typography variant='body1'> DCSync </Typography>
 
                     <Typography variant='body2'>
-                        The AllExtendedRights privilege grants {sourceName} both the DS-Replication-Get-Changes and
-                        DS-Replication-Get-Changes-All privileges, which combined allow a principal to replicate objects
+                        The AllExtendedRights permission grants {sourceName} both the DS-Replication-Get-Changes and
+                        DS-Replication-Get-Changes-All permissions, which combined allow a principal to replicate objects
                         from the domain {targetName}.
                     </Typography>
 
@@ -398,7 +398,7 @@ const LinuxAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> = (
 
                     <Typography variant='body2'>
                         If FullControl (GenericAll) is obtained on the domain, instead of granting DCSync rights, the
-                        AllExtendedRights privilege included grants {sourceName} enough privileges to retrieve LAPS
+                        AllExtendedRights permission included grants {sourceName} enough permissions to retrieve LAPS
                         passwords domain-wise.
                     </Typography>
 
@@ -418,7 +418,7 @@ const LinuxAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> = (
             return (
                 <>
                     <Typography variant='body2'>
-                        To abuse WriteDacl to a GPO, you may grant yourself the GenericAll privilege.
+                        To abuse WriteDacl to a GPO, you may grant yourself the GenericAll permission.
                     </Typography>
 
                     <Typography variant='body2'>
@@ -458,7 +458,7 @@ const LinuxAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> = (
                     <Typography variant='body1'>Control of the Organization Unit</Typography>
 
                     <Typography variant='body2'>
-                        With WriteDacl to an OU object, you may grant yourself the GenericAll privilege.
+                        With WriteDacl to an OU object, you may grant yourself the GenericAll permission.
                     </Typography>
 
                     <Typography variant='body1'>Generic Descendent Object Takeover</Typography>
@@ -493,7 +493,7 @@ const LinuxAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> = (
                     <Typography variant='body1'>Control of the Container</Typography>
 
                     <Typography variant='body2'>
-                        With WriteDacl to a container object, you may grant yourself the GenericAll privilege.
+                        With WriteDacl to a container object, you may grant yourself the GenericAll permission.
                     </Typography>
 
                     <Typography variant='body1'>Generic Descendent Object Takeover</Typography>
