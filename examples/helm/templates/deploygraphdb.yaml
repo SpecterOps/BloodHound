@@ -18,7 +18,7 @@ spec:
         image: {{ .Values.graphdb.container.image }}
         env:
         - name: NEO4J_AUTH
-          value: "{{ .Values.graphdb.container.env.NEO4J_AUTH }}"
+          value: "{{ .Values.graphdb.container.env.NEO4J_AUTH_USER }}/{{ .Values.graphdb.container.env.NEO4J_AUTH_PASS }}"
         - name: NEO4J_dbms_allow__upgrade
           value: "{{ .Values.graphdb.container.env.NEO4J_dbms_allow__upgrade }}"
         ports:

@@ -13,9 +13,19 @@ spec:
       labels:
         app: {{ .Values.bloodhound.appName }}
     spec:
+      initContainers:
+      - name: check-db-availability
+        image: busybox
+        command: ['/bin/sh', '-c']
+        args:
+        - >
+          until nc -z graph-db 7687 && nc -z app-db 5432; do
+            echo "Waiting for databases to be ready";
+            sleep 5;
+          done;
       containers:
       - name: {{ .Values.bloodhound.container.name }}
-        image: {{ .Values.bloodhound.container.image }}
+        image: {{ .Values.bloodhound.container.image }}:{{ .Values.bloodhound.container.version }}
         env:
         - name: bhe_disable_cypher_qc
           value: "{{ .Values.bloodhound.container.env.bhe_disable_cypher_qc }}"
@@ -24,7 +34,8 @@ spec:
         {{- if .Values.bloodhound.configMap.enabled }}
         volumeMounts:
         - name: bloodhound-config
-          mountPath: /path/to/config  # Update with actual mount path
+          mountPath: /bloodhound.config.json
+          subPath: bloodhound.config.json
         {{- end }}
       {{- if .Values.bloodhound.configMap.enabled }}
       volumes:
