@@ -1399,6 +1399,35 @@ func (s *ADCSGoldenCertHarness) Setup(graphTestContext *GraphTestContext) {
 
 }
 
+type IssuedSignedByHarness struct {
+	RootCA1       *graph.Node
+	RootCA2       *graph.Node
+	EnterpriseCA1 *graph.Node
+	EnterpriseCA2 *graph.Node
+	EnterpriseCA3 *graph.Node
+}
+
+func (s *IssuedSignedByHarness) Setup(graphTestContext *GraphTestContext) {
+	sid := RandomDomainSID()
+	s.RootCA1 = graphTestContext.NewActiveDirectoryRootCAWithThumbprint("rca1", sid, "a")
+	s.RootCA2 = graphTestContext.NewActiveDirectoryRootCAWithThumbprint("rca2", sid, "b")
+	s.EnterpriseCA1 = graphTestContext.NewActiveDirectoryEnterpriseCAWithThumbprint("eca1", sid, "c")
+	s.EnterpriseCA2 = graphTestContext.NewActiveDirectoryEnterpriseCAWithThumbprint("eca2", sid, "d")
+	s.EnterpriseCA3 = graphTestContext.NewActiveDirectoryEnterpriseCAWithThumbprint("eca2", sid, "e")
+
+	s.RootCA1.Properties.Set(ad.CertChain.String(), []string{"a"})
+	s.RootCA2.Properties.Set(ad.CertChain.String(), []string{"b", "a"})
+	s.EnterpriseCA1.Properties.Set(ad.CertChain.String(), []string{"c", "b", "a"})
+	s.EnterpriseCA2.Properties.Set(ad.CertChain.String(), []string{"d", "c", "b", "a"})
+	s.EnterpriseCA3.Properties.Set(ad.CertChain.String(), []string{"e"})
+
+	graphTestContext.UpdateNode(s.RootCA1)
+	graphTestContext.UpdateNode(s.RootCA2)
+	graphTestContext.UpdateNode(s.EnterpriseCA1)
+	graphTestContext.UpdateNode(s.EnterpriseCA2)
+	graphTestContext.UpdateNode(s.EnterpriseCA3)
+}
+
 type TrustedForNTAuthHarness struct {
 	EnterpriseCA1 *graph.Node
 	EnterpriseCA2 *graph.Node
@@ -1511,6 +1540,7 @@ type HarnessDetails struct {
 	EnrollOnBehalfOfHarnessOne                      EnrollOnBehalfOfHarnessOne
 	EnrollOnBehalfOfHarnessTwo                      EnrollOnBehalfOfHarnessTwo
 	ADCSGoldenCertHarness                           ADCSGoldenCertHarness
+	IssuedSignedByHarness                           IssuedSignedByHarness
 	TrustedForNTAuthHarness                         TrustedForNTAuthHarness
 	NumCollectedActiveDirectoryDomains              int
 	AZInboundControlHarness                         AZInboundControlHarness

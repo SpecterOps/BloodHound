@@ -53,7 +53,7 @@ func (s *Resources) GetEdgeComposition(response http.ResponseWriter, request *ht
 	} else if len(targetNode) > 1 {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("Expected only one %s.", edgeParameterTargetNode), request), response)
 	} else if kind, err := analysis.ParseKind(edgeType[0]); err != nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("Invalid edge %s requested.", kind), request), response)
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("Invalid edge requested: %s", edgeType[0]), request), response)
 	} else if startID, err := strconv.ParseInt(sourceNode[0], 10, 32); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("Invalid value for startID: %s", sourceNode[0]), request), response)
 	} else if endID, err := strconv.ParseInt(targetNode[0], 10, 32); err != nil {

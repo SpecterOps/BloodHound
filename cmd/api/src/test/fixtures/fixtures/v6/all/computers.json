@@ -1,0 +1,549 @@
+{
+  "data": [
+    {
+      "Properties": {
+        "domain": "ESC1.LOCAL",
+        "name": "ESC1-DC.ESC1.LOCAL",
+        "distinguishedname": "CN=ESC1-DC,OU=DOMAIN CONTROLLERS,DC=ESC1,DC=LOCAL",
+        "domainsid": "S-1-5-21-909015691-3030120388-2582151266",
+        "highvalue": false,
+        "samaccountname": "ESC1-DC$",
+        "haslaps": false,
+        "description": null,
+        "whencreated": 1664419087,
+        "enabled": true,
+        "unconstraineddelegation": true,
+        "trustedtoauth": false,
+        "lastlogon": 1701804392,
+        "lastlogontimestamp": 1701111309,
+        "pwdlastset": 1701438050,
+        "serviceprincipalnames": [
+          "Dfsr-12F9A27C-BF97-4787-9364-D31B6C55EB04/ESC1-DC.ESC1.LOCAL",
+          "TERMSRV/ESC1-DC",
+          "TERMSRV/ESC1-DC.ESC1.LOCAL",
+          "ldap/ESC1-DC.ESC1.LOCAL/ForestDnsZones.ESC1.LOCAL",
+          "ldap/ESC1-DC.ESC1.LOCAL/DomainDnsZones.ESC1.LOCAL",
+          "DNS/ESC1-DC.ESC1.LOCAL",
+          "GC/ESC1-DC.ESC1.LOCAL/ESC1.LOCAL",
+          "RestrictedKrbHost/ESC1-DC.ESC1.LOCAL",
+          "RestrictedKrbHost/ESC1-DC",
+          "RPC/35bb9077-84f8-4114-93d5-0898f3c1eb61._msdcs.ESC1.LOCAL",
+          "HOST/ESC1-DC/ESC1",
+          "HOST/ESC1-DC.ESC1.LOCAL/ESC1",
+          "HOST/ESC1-DC",
+          "HOST/ESC1-DC.ESC1.LOCAL",
+          "HOST/ESC1-DC.ESC1.LOCAL/ESC1.LOCAL",
+          "E3514235-4B06-11D1-AB04-00C04FC2DCD2/35bb9077-84f8-4114-93d5-0898f3c1eb61/ESC1.LOCAL",
+          "ldap/ESC1-DC/ESC1",
+          "ldap/35bb9077-84f8-4114-93d5-0898f3c1eb61._msdcs.ESC1.LOCAL",
+          "ldap/ESC1-DC.ESC1.LOCAL/ESC1",
+          "ldap/ESC1-DC",
+          "ldap/ESC1-DC.ESC1.LOCAL",
+          "ldap/ESC1-DC.ESC1.LOCAL/ESC1.LOCAL"
+        ],
+        "operatingsystem": "Windows Server 2022 Datacenter Azure Edition",
+        "sidhistory": []
+      },
+      "PrimaryGroupSID": "S-1-5-21-909015691-3030120388-2582151266-516",
+      "AllowedToDelegate": [],
+      "AllowedToAct": [],
+      "HasSIDHistory": [],
+      "DumpSMSAPassword": [],
+      "Sessions": { "Results": [], "Collected": true, "FailureReason": null },
+      "PrivilegedSessions": {
+        "Results": [
+          {
+            "UserSID": "S-1-5-21-909015691-3030120388-2582151266-500",
+            "ComputerSID": "S-1-5-21-909015691-3030120388-2582151266-1000"
+          }
+        ],
+        "Collected": true,
+        "FailureReason": null
+      },
+      "RegistrySessions": {
+        "Results": [
+          {
+            "UserSID": "S-1-5-21-909015691-3030120388-2582151266-500",
+            "ComputerSID": "S-1-5-21-909015691-3030120388-2582151266-1000"
+          }
+        ],
+        "Collected": true,
+        "FailureReason": null
+      },
+      "LocalGroups": [
+        {
+          "ObjectIdentifier": "ESC1.LOCAL-S-1-5-32-549",
+          "Name": "IGNOREME",
+          "Results": [],
+          "LocalNames": [],
+          "Collected": true,
+          "FailureReason": null
+        },
+        {
+          "ObjectIdentifier": "ESC1.LOCAL-S-1-5-32-548",
+          "Name": "IGNOREME",
+          "Results": [],
+          "LocalNames": [],
+          "Collected": true,
+          "FailureReason": null
+        },
+        {
+          "ObjectIdentifier": "ESC1.LOCAL-S-1-5-32-554",
+          "Name": "IGNOREME",
+          "Results": [
+            {
+              "ObjectIdentifier": "ESC1.LOCAL-S-1-5-11",
+              "ObjectType": "Group"
+            },
+            {
+              "ObjectIdentifier": "S-1-5-21-909015691-3030120388-2582151266-1000",
+              "ObjectType": "Computer"
+            }
+          ],
+          "LocalNames": [],
+          "Collected": true,
+          "FailureReason": null
+        },
+        {
+          "ObjectIdentifier": "ESC1.LOCAL-S-1-5-32-557",
+          "Name": "IGNOREME",
+          "Results": [],
+          "LocalNames": [],
+          "Collected": true,
+          "FailureReason": null
+        },
+        {
+          "ObjectIdentifier": "ESC1.LOCAL-S-1-5-32-560",
+          "Name": "IGNOREME",
+          "Results": [
+            { "ObjectIdentifier": "ESC1.LOCAL-S-1-5-9", "ObjectType": "Group" }
+          ],
+          "LocalNames": [],
+          "Collected": true,
+          "FailureReason": null
+        },
+        {
+          "ObjectIdentifier": "ESC1.LOCAL-S-1-5-32-561",
+          "Name": "IGNOREME",
+          "Results": [],
+          "LocalNames": [],
+          "Collected": true,
+          "FailureReason": null
+        },
+        {
+          "ObjectIdentifier": "ESC1.LOCAL-S-1-5-32-544",
+          "Name": "IGNOREME",
+          "Results": [
+            {
+              "ObjectIdentifier": "S-1-5-21-909015691-3030120388-2582151266-500",
+              "ObjectType": "User"
+            },
+            {
+              "ObjectIdentifier": "S-1-5-21-909015691-3030120388-2582151266-519",
+              "ObjectType": "Group"
+            },
+            {
+              "ObjectIdentifier": "S-1-5-21-909015691-3030120388-2582151266-512",
+              "ObjectType": "Group"
+            }
+          ],
+          "LocalNames": [],
+          "Collected": true,
+          "FailureReason": null
+        },
+        {
+          "ObjectIdentifier": "ESC1.LOCAL-S-1-5-32-545",
+          "Name": "IGNOREME",
+          "Results": [
+            {
+              "ObjectIdentifier": "ESC1.LOCAL-S-1-5-11",
+              "ObjectType": "Group"
+            },
+            {
+              "ObjectIdentifier": "S-1-5-21-909015691-3030120388-2582151266-513",
+              "ObjectType": "Group"
+            }
+          ],
+          "LocalNames": [],
+          "Collected": true,
+          "FailureReason": null
+        },
+        {
+          "ObjectIdentifier": "ESC1.LOCAL-S-1-5-32-546",
+          "Name": "IGNOREME",
+          "Results": [
+            {
+              "ObjectIdentifier": "S-1-5-21-909015691-3030120388-2582151266-501",
+              "ObjectType": "User"
+            },
+            {
+              "ObjectIdentifier": "S-1-5-21-909015691-3030120388-2582151266-514",
+              "ObjectType": "Group"
+            }
+          ],
+          "LocalNames": [],
+          "Collected": true,
+          "FailureReason": null
+        },
+        {
+          "ObjectIdentifier": "ESC1.LOCAL-S-1-5-32-550",
+          "Name": "IGNOREME",
+          "Results": [],
+          "LocalNames": [],
+          "Collected": true,
+          "FailureReason": null
+        },
+        {
+          "ObjectIdentifier": "ESC1.LOCAL-S-1-5-32-551",
+          "Name": "IGNOREME",
+          "Results": [],
+          "LocalNames": [],
+          "Collected": true,
+          "FailureReason": null
+        },
+        {
+          "ObjectIdentifier": "ESC1.LOCAL-S-1-5-32-552",
+          "Name": "IGNOREME",
+          "Results": [],
+          "LocalNames": [],
+          "Collected": true,
+          "FailureReason": null
+        },
+        {
+          "ObjectIdentifier": "ESC1.LOCAL-S-1-5-32-555",
+          "Name": "IGNOREME",
+          "Results": [],
+          "LocalNames": [],
+          "Collected": true,
+          "FailureReason": null
+        },
+        {
+          "ObjectIdentifier": "ESC1.LOCAL-S-1-5-32-556",
+          "Name": "IGNOREME",
+          "Results": [],
+          "LocalNames": [],
+          "Collected": true,
+          "FailureReason": null
+        },
+        {
+          "ObjectIdentifier": "ESC1.LOCAL-S-1-5-32-558",
+          "Name": "IGNOREME",
+          "Results": [],
+          "LocalNames": [],
+          "Collected": true,
+          "FailureReason": null
+        },
+        {
+          "ObjectIdentifier": "ESC1.LOCAL-S-1-5-32-559",
+          "Name": "IGNOREME",
+          "Results": [],
+          "LocalNames": [],
+          "Collected": true,
+          "FailureReason": null
+        },
+        {
+          "ObjectIdentifier": "ESC1.LOCAL-S-1-5-32-562",
+          "Name": "IGNOREME",
+          "Results": [],
+          "LocalNames": [],
+          "Collected": true,
+          "FailureReason": null
+        },
+        {
+          "ObjectIdentifier": "ESC1.LOCAL-S-1-5-32-568",
+          "Name": "IGNOREME",
+          "Results": [
+            { "ObjectIdentifier": "ESC1.LOCAL-S-1-5-17", "ObjectType": "Group" }
+          ],
+          "LocalNames": [],
+          "Collected": true,
+          "FailureReason": null
+        },
+        {
+          "ObjectIdentifier": "ESC1.LOCAL-S-1-5-32-569",
+          "Name": "IGNOREME",
+          "Results": [],
+          "LocalNames": [],
+          "Collected": true,
+          "FailureReason": null
+        },
+        {
+          "ObjectIdentifier": "ESC1.LOCAL-S-1-5-32-573",
+          "Name": "IGNOREME",
+          "Results": [],
+          "LocalNames": [],
+          "Collected": true,
+          "FailureReason": null
+        },
+        {
+          "ObjectIdentifier": "ESC1.LOCAL-S-1-5-32-574",
+          "Name": "IGNOREME",
+          "Results": [
+            { "ObjectIdentifier": "ESC1.LOCAL-S-1-5-11", "ObjectType": "Group" }
+          ],
+          "LocalNames": [],
+          "Collected": true,
+          "FailureReason": null
+        },
+        {
+          "ObjectIdentifier": "ESC1.LOCAL-S-1-5-32-575",
+          "Name": "IGNOREME",
+          "Results": [],
+          "LocalNames": [],
+          "Collected": true,
+          "FailureReason": null
+        },
+        {
+          "ObjectIdentifier": "ESC1.LOCAL-S-1-5-32-576",
+          "Name": "IGNOREME",
+          "Results": [],
+          "LocalNames": [],
+          "Collected": true,
+          "FailureReason": null
+        },
+        {
+          "ObjectIdentifier": "ESC1.LOCAL-S-1-5-32-577",
+          "Name": "IGNOREME",
+          "Results": [],
+          "LocalNames": [],
+          "Collected": true,
+          "FailureReason": null
+        },
+        {
+          "ObjectIdentifier": "ESC1.LOCAL-S-1-5-32-578",
+          "Name": "IGNOREME",
+          "Results": [],
+          "LocalNames": [],
+          "Collected": true,
+          "FailureReason": null
+        },
+        {
+          "ObjectIdentifier": "ESC1.LOCAL-S-1-5-32-579",
+          "Name": "IGNOREME",
+          "Results": [],
+          "LocalNames": [],
+          "Collected": true,
+          "FailureReason": null
+        },
+        {
+          "ObjectIdentifier": "ESC1.LOCAL-S-1-5-32-580",
+          "Name": "IGNOREME",
+          "Results": [],
+          "LocalNames": [],
+          "Collected": true,
+          "FailureReason": null
+        },
+        {
+          "ObjectIdentifier": "ESC1.LOCAL-S-1-5-32-582",
+          "Name": "IGNOREME",
+          "Results": [],
+          "LocalNames": [],
+          "Collected": true,
+          "FailureReason": null
+        }
+      ],
+      "UserRights": [
+        {
+          "Privilege": "SeRemoteInteractiveLogonRight",
+          "Results": [
+            {
+              "ObjectIdentifier": "ESC1.LOCAL-S-1-5-32-544",
+              "ObjectType": "Group"
+            }
+          ],
+          "LocalNames": [],
+          "Collected": true,
+          "FailureReason": null
+        }
+      ],
+      "DCRegistryData": {
+        "CertificateMappingMethods": {
+          "Value": -1,
+          "Collected": true,
+          "FailureReason": null
+        },
+        "StrongCertificateBindingEnforcement": {
+          "Value": 2,
+          "Collected": true,
+          "FailureReason": null
+        }
+      },
+      "Status": null,
+      "Aces": [
+        {
+          "PrincipalSID": "S-1-5-21-909015691-3030120388-2582151266-512",
+          "PrincipalType": "Group",
+          "RightName": "Owns",
+          "IsInherited": false
+        },
+        {
+          "PrincipalSID": "S-1-5-21-909015691-3030120388-2582151266-512",
+          "PrincipalType": "Group",
+          "RightName": "GenericAll",
+          "IsInherited": false
+        },
+        {
+          "PrincipalSID": "S-1-5-21-909015691-3030120388-2582151266-526",
+          "PrincipalType": "Group",
+          "RightName": "AddKeyCredentialLink",
+          "IsInherited": true
+        },
+        {
+          "PrincipalSID": "S-1-5-21-909015691-3030120388-2582151266-527",
+          "PrincipalType": "Group",
+          "RightName": "AddKeyCredentialLink",
+          "IsInherited": true
+        },
+        {
+          "PrincipalSID": "S-1-5-21-909015691-3030120388-2582151266-519",
+          "PrincipalType": "Group",
+          "RightName": "GenericAll",
+          "IsInherited": true
+        },
+        {
+          "PrincipalSID": "ESC1.LOCAL-S-1-5-32-544",
+          "PrincipalType": "Group",
+          "RightName": "WriteDacl",
+          "IsInherited": true
+        },
+        {
+          "PrincipalSID": "ESC1.LOCAL-S-1-5-32-544",
+          "PrincipalType": "Group",
+          "RightName": "WriteOwner",
+          "IsInherited": true
+        },
+        {
+          "PrincipalSID": "ESC1.LOCAL-S-1-5-32-544",
+          "PrincipalType": "Group",
+          "RightName": "GenericWrite",
+          "IsInherited": true
+        }
+      ],
+      "ObjectIdentifier": "S-1-5-21-909015691-3030120388-2582151266-1000",
+      "IsDeleted": false,
+      "IsACLProtected": false,
+      "ContainedBy": {
+        "ObjectIdentifier": "1AEEE963-F4C8-49DA-BBE6-A6107F42CAF0",
+        "ObjectType": "OU"
+      }
+    },
+    {
+      "Properties": {
+        "domain": "ESC1.LOCAL",
+        "name": "ESC1-SERVER.ESC1.LOCAL",
+        "distinguishedname": "CN=ESC1-SERVER,CN=COMPUTERS,DC=ESC1,DC=LOCAL",
+        "domainsid": "S-1-5-21-909015691-3030120388-2582151266",
+        "highvalue": false,
+        "samaccountname": "ESC1-SERVER$",
+        "haslaps": false,
+        "description": null,
+        "whencreated": 1664424043,
+        "enabled": true,
+        "unconstraineddelegation": false,
+        "trustedtoauth": false,
+        "lastlogon": 1701807130,
+        "lastlogontimestamp": 1701589065,
+        "pwdlastset": 1701456467,
+        "serviceprincipalnames": [
+          "WSMAN/ESC1-Server",
+          "WSMAN/ESC1-Server.ESC1.LOCAL",
+          "TERMSRV/ESC1-SERVER",
+          "TERMSRV/ESC1-Server.ESC1.LOCAL",
+          "RestrictedKrbHost/ESC1-Server",
+          "HOST/ESC1-Server",
+          "RestrictedKrbHost/ESC1-Server.ESC1.LOCAL",
+          "HOST/ESC1-Server.ESC1.LOCAL"
+        ],
+        "operatingsystem": "Windows Server 2022 Datacenter Azure Edition",
+        "sidhistory": []
+      },
+      "PrimaryGroupSID": "S-1-5-21-909015691-3030120388-2582151266-515",
+      "AllowedToDelegate": [],
+      "AllowedToAct": [],
+      "HasSIDHistory": [],
+      "DumpSMSAPassword": [],
+      "Sessions": { "Results": [], "Collected": false, "FailureReason": null },
+      "PrivilegedSessions": {
+        "Results": [],
+        "Collected": false,
+        "FailureReason": null
+      },
+      "RegistrySessions": {
+        "Results": [],
+        "Collected": false,
+        "FailureReason": null
+      },
+      "LocalGroups": [],
+      "UserRights": [],
+      "DCRegistryData": {
+        "CertificateMappingMethods": null,
+        "StrongCertificateBindingEnforcement": null
+      },
+      "Status": null,
+      "Aces": [
+        {
+          "PrincipalSID": "S-1-5-21-909015691-3030120388-2582151266-512",
+          "PrincipalType": "Group",
+          "RightName": "Owns",
+          "IsInherited": false
+        },
+        {
+          "PrincipalSID": "ESC1.LOCAL-S-1-5-32-548",
+          "PrincipalType": "Group",
+          "RightName": "GenericAll",
+          "IsInherited": false
+        },
+        {
+          "PrincipalSID": "S-1-5-21-909015691-3030120388-2582151266-512",
+          "PrincipalType": "Group",
+          "RightName": "GenericAll",
+          "IsInherited": false
+        },
+        {
+          "PrincipalSID": "S-1-5-21-909015691-3030120388-2582151266-526",
+          "PrincipalType": "Group",
+          "RightName": "AddKeyCredentialLink",
+          "IsInherited": true
+        },
+        {
+          "PrincipalSID": "S-1-5-21-909015691-3030120388-2582151266-527",
+          "PrincipalType": "Group",
+          "RightName": "AddKeyCredentialLink",
+          "IsInherited": true
+        },
+        {
+          "PrincipalSID": "S-1-5-21-909015691-3030120388-2582151266-519",
+          "PrincipalType": "Group",
+          "RightName": "GenericAll",
+          "IsInherited": true
+        },
+        {
+          "PrincipalSID": "ESC1.LOCAL-S-1-5-32-544",
+          "PrincipalType": "Group",
+          "RightName": "WriteDacl",
+          "IsInherited": true
+        },
+        {
+          "PrincipalSID": "ESC1.LOCAL-S-1-5-32-544",
+          "PrincipalType": "Group",
+          "RightName": "WriteOwner",
+          "IsInherited": true
+        },
+        {
+          "PrincipalSID": "ESC1.LOCAL-S-1-5-32-544",
+          "PrincipalType": "Group",
+          "RightName": "GenericWrite",
+          "IsInherited": true
+        }
+      ],
+      "ObjectIdentifier": "S-1-5-21-909015691-3030120388-2582151266-1103",
+      "IsDeleted": false,
+      "IsACLProtected": false,
+      "ContainedBy": {
+        "ObjectIdentifier": "CC7D845D-04FF-470C-8E6B-8C810AB1B4FB",
+        "ObjectType": "Container"
+      }
+    }
+  ],
+  "meta": { "methods": 521215, "type": "computers", "count": 2, "version": 6 }
+}
