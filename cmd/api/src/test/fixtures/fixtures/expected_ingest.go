@@ -18,6 +18,7 @@ package fixtures
 
 import (
 	"bytes"
+
 	"github.com/specterops/bloodhound/cypher/frontend"
 	"github.com/specterops/bloodhound/cypher/model"
 	"github.com/specterops/bloodhound/dawgs/graph"
@@ -246,7 +247,7 @@ var (
 	}
 )
 
-func formatQueryComponent(criteria graph.Criteria) string {
+func FormatQueryComponent(criteria graph.Criteria) string {
 	var (
 		emitter      = frontend.NewCypherEmitter(false)
 		stringBuffer = &bytes.Buffer{}
@@ -262,6 +263,6 @@ func formatQueryComponent(criteria graph.Criteria) string {
 func IngestAssertions(testCtrl test.Controller, tx graph.Transaction) {
 	for _, assertionCriteria := range ingestRelationshipAssertionCriteria {
 		_, err := tx.Relationships().Filter(assertionCriteria).First()
-		require.Nilf(testCtrl, err, "Unable to find an expected relationship: %s", formatQueryComponent(assertionCriteria))
+		require.Nilf(testCtrl, err, "Unable to find an expected relationship: %s", FormatQueryComponent(assertionCriteria))
 	}
 }

@@ -170,6 +170,34 @@ func Test_FileUploadWorkFlowVersion6(t *testing.T) {
 	testCtx.AssertIngest(fixtures.IngestAssertions)
 }
 
+func Test_FileUploadVersion6AllOptionADCS(t *testing.T) {
+	testCtx := integration.NewContext(t, integration.StartBHServer)
+
+	if adcsFlag, err := testCtx.DB.GetFlagByKey("adcs"); err != nil {
+		t.Fatalf("unable to get adcs flag: %v", err)
+	} else {
+		adcsFlag.Enabled = true
+		testCtx.DB.SetFlag(adcsFlag)
+	}
+
+	testCtx.SendFileIngest([]string{
+		"v6/all/aiacas.json",
+		"v6/all/certtemplates.json",
+		"v6/all/computers.json",
+		"v6/all/containers.json",
+		"v6/all/domains.json",
+		"v6/all/enterprisecas.json",
+		"v6/all/gpos.json",
+		"v6/all/groups.json",
+		"v6/all/ntauthstores.json",
+		"v6/all/ous.json",
+		"v6/all/rootcas.json",
+		"v6/all/users.json",
+	})
+
+	testCtx.AssertIngest(fixtures.IngestADCSAssertions)
+}
+
 func Test_CompressedFileUploadWorkFlowVersion5(t *testing.T) {
 	testCtx := integration.NewContext(t, integration.StartBHServer)
 
