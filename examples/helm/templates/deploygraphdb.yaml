@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.graphdb.name }}
+  namespace: {{ .Values.namespace }}
+spec:
+  replicas: {{ .Values.graphdb.replicas }}
+  selector:
+    matchLabels:
+      app: {{ .Values.graphdb.appName }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.graphdb.appName }}
+    spec:
+      containers:
+      - name: {{ .Values.graphdb.container.name }}
+        image: {{ .Values.graphdb.container.image }}
+        env:
+        - name: NEO4J_AUTH
+          value: "{{ .Values.graphdb.container.env.NEO4J_AUTH }}"
+        - name: NEO4J_dbms_allow__upgrade
+          value: "{{ .Values.graphdb.container.env.NEO4J_dbms_allow__upgrade }}"
+        ports:
+        - containerPort: {{ (index .Values.graphdb.container.ports 0).containerPort }}
+        - containerPort: {{ (index .Values.graphdb.container.ports 1).containerPort }}
+        livenessProbe:
+          exec:
+            command:
+            - wget
+            - -O
+            - /dev/null
+            - -q
+            - http://localhost:7474
+          initialDelaySeconds: {{ .Values.graphdb.livenessProbe.initialDelaySeconds }}
+          periodSeconds: {{ .Values.graphdb.livenessProbe.periodSeconds }}
+          timeoutSeconds: {{ .Values.graphdb.livenessProbe.timeoutSeconds }}
+          failureThreshold: {{ .Values.graphdb.livenessProbe.failureThreshold }}
+        {{- if .Values.graphdb.volumes.pvcEnabled }}
+        volumeMounts:
+        - name: neo4j-data
+          mountPath: /var/lib/neo4j/data
+        {{- end }}
+      {{- if .Values.graphdb.volumes.pvcEnabled }}
+      volumes:
+      - name: neo4j-data
+        persistentVolumeClaim:
+          claimName: {{ .Values.graphdb.volumes.persistentVolumeClaim.claimName }}
+      {{- end }}

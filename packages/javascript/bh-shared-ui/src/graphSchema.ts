@@ -302,6 +302,7 @@ export enum ActiveDirectoryKindProperties {
     SubjectAltRequireUPN = 'subjectaltrequireupn',
     AuthorizedSignatures = 'authorizedsignatures',
     ApplicationPolicies = 'applicationpolicies',
+    IssuancePolicies = 'issuancepolicies',
     SchemaVersion = 'schemaversion',
     RequiresManagerApproval = 'requiresmanagerapproval',
     AuthenticationEnabled = 'authenticationenabled',
@@ -310,6 +311,7 @@ export enum ActiveDirectoryKindProperties {
     CertificateNameFlag = 'certificatenameflag',
     EffectiveEKUs = 'effectiveekus',
     EnrollmentFlag = 'enrollmentflag',
+    Flags = 'flags',
     NoSecurityExtension = 'nosecurityextension',
     RenewalPeriod = 'renewalperiod',
     ValidityPeriod = 'validityperiod',
@@ -420,6 +422,8 @@ export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKin
             return 'Authorized Signatures Required';
         case ActiveDirectoryKindProperties.ApplicationPolicies:
             return 'Application Policies';
+        case ActiveDirectoryKindProperties.IssuancePolicies:
+            return 'Issuance Policies';
         case ActiveDirectoryKindProperties.SchemaVersion:
             return 'Schema Version';
         case ActiveDirectoryKindProperties.RequiresManagerApproval:
@@ -436,6 +440,8 @@ export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKin
             return 'Effective EKUs';
         case ActiveDirectoryKindProperties.EnrollmentFlag:
             return 'Enrollment Flags';
+        case ActiveDirectoryKindProperties.Flags:
+            return 'Flags';
         case ActiveDirectoryKindProperties.NoSecurityExtension:
             return 'No Security Extension';
         case ActiveDirectoryKindProperties.RenewalPeriod:
