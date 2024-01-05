@@ -2,7 +2,7 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: graph-db
+  name: {{ .Values.graphdb.service.name }}
   namespace: {{ .Values.namespace }}
 spec:
   selector:

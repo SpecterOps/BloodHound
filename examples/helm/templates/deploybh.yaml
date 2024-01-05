@@ -19,7 +19,7 @@ spec:
         command: ['/bin/sh', '-c']
         args:
         - >
-          until nc -z graph-db 7687 && nc -z app-db 5432; do
+          until nc -z {{ .Values.graphdb.service.name }} {{ (index .Values.graphdb.service.ports 0).port }} && nc -z {{ .Values.appdb.service.name }} {{ .Values.appdb.service.port }}; do
             echo "Waiting for databases to be ready";
             sleep 5;
           done;

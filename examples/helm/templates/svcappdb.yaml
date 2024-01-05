@@ -2,7 +2,7 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: app-db
+  name: {{ .Values.appdb.service.name }}
   namespace: {{ .Values.namespace }}
 spec:
   type: {{ .Values.appdb.service.type }}

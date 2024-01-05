@@ -31,7 +31,7 @@ spec:
             - -O
             - /dev/null
             - -q
-            - http://localhost:7474
+            - http://127.0.0.1:{{ (index .Values.graphdb.container.ports 1).containerPort }}
           initialDelaySeconds: {{ .Values.graphdb.livenessProbe.initialDelaySeconds }}
           periodSeconds: {{ .Values.graphdb.livenessProbe.periodSeconds }}
           timeoutSeconds: {{ .Values.graphdb.livenessProbe.timeoutSeconds }}
