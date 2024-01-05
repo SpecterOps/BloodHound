@@ -10,34 +10,32 @@
       }
     ],
     "get": {
-      "description": "Get basic info and counts for this EnterpriseCA",
+      "description": "Get basic info and counts for this EnterpriseCA. \n\n<b>Early Access Notice:</b> This API endpoint is in early access and may undergo changes. Exercise caution when integrating, and avoid critical use until it reaches stable status.",
       "tags": ["EnterpriseCA Entity API", "Community", "Enterprise"],
       "summary": "Get enterpriseca entity info",
       "parameters": [
         {
           "$ref": "#/definitions/parameters.PreferHeader"
+        },
+        {
+            "$ref": "#/definitions/parameters.HydrateCounts"
         }
       ],
       "responses": {
         "200": {
-          "description": "OK",
-          "schema": {
-            "$ref": "#/definitions/api.BasicResponse"
-          }
+            "description": "OK",
+            "content": {
+                "application/json": {
+                    "schema": {
+                        "$ref": "#/definitions/v2.EntityWithControllersResponse"
+                      }
+                }
+            }
         },
-        "400": {
-          "description": "Bad Request",
-          "schema": {
-            "$ref": "#/definitions/api.ErrorWrapper"
-          }
-        },
-        "504": {
-          "description": "Gateway Timeout",
-          "schema": {
-            "$ref": "#/definitions/api.ErrorWrapper"
-          }
+        "Error": {
+          "$ref": "#/components/responses/defaultError"
         }
-      }
+    }
     }
   },
   "/api/v2/enterprisecas/{object_id}/controllers": {
@@ -51,7 +49,7 @@
       }
     ],
     "get": {
-      "description": "List the principals that can control this EnterpriseCA through ACLs",
+      "description": "List the principals that can control this EnterpriseCA through ACLs. \n\n<b>Early Access Notice:</b> This API endpoint is in early access and may undergo changes. Exercise caution when integrating, and avoid critical use until it reaches stable status.",
       "tags": ["EnterpriseCA Entity API", "Community", "Enterprise"],
       "summary": "List enterpriseca controllers",
       "parameters": [
@@ -73,24 +71,19 @@
       ],
       "responses": {
         "200": {
-          "description": "OK",
-          "schema": {
-            "$ref": "#/definitions/api.ResponseWrapper"
-          }
+            "description": "OK",
+            "content": {
+                "application/json": {
+                    "schema": {
+                        "$ref": "#/definitions/v2.EntityControllersResponse"
+                      }
+                }
+            }
         },
-        "400": {
-          "description": "Bad Request",
-          "schema": {
-            "$ref": "#/definitions/api.ErrorWrapper"
-          }
-        },
-        "504": {
-          "description": "Gateway Timeout",
-          "schema": {
-            "$ref": "#/definitions/api.ErrorWrapper"
-          }
+        "Error": {
+          "$ref": "#/components/responses/defaultError"
         }
-      }
+    }
     }
   }
 }

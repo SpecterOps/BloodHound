@@ -67,11 +67,11 @@ func TestSetValuesFromEnv(t *testing.T) {
 			"bhe_database_addr=localhost:5432",
 			"bhe_database_database=bhe",
 			"bhe_database_username=bhe",
-			"bhe_database_secret=bhe4eva",
+			"bhe_database_secret=supersecretpassword",
 		}))
 
 		assert.Equal(t, "neo4j://neo4j:neo4jj@localhost:7070/neo4j", cfg.Neo4J.Neo4jConnectionString())
-		assert.Equal(t, "postgresql://bhe:bhe4eva@localhost:5432/bhe", cfg.Database.PostgreSQLConnectionString())
+		assert.Equal(t, "postgresql://bhe:supersecretpassword@localhost:5432/bhe", cfg.Database.PostgreSQLConnectionString())
 	})
 
 	// This test ensures that fields that could be considered sensitive are configurable through expected environment
