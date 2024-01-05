@@ -62,7 +62,7 @@ func PostADCSESC1(ctx context.Context, tx graph.Transaction, outC chan<- analysi
 			} else if !validatePublishedCertTemplateForEsc1(validationProperties) {
 				continue
 			} else {
-				results.Or(CalculateCrossProductNodeSetsNew(expandedGroups, cache.CertTemplateControllers[certTemplate.ID], cache.EnterpriseCAEnrollers[enterpriseCA.ID]))
+				results.Or(CalculateCrossProductNodeSets(expandedGroups, cache.CertTemplateControllers[certTemplate.ID], cache.EnterpriseCAEnrollers[enterpriseCA.ID]))
 			}
 		}
 
@@ -122,7 +122,7 @@ func PostADCSESC3(ctx context.Context, tx graph.Transaction, outC chan<- analysi
 							log.Errorf("error getting delegated agents for cert template %d: %w", certTemplateTwo.ID, err)
 						} else {
 							for _, eca1 := range publishedECAs {
-								tempResults := CalculateCrossProductNodeSetsNew(groupExpansions,
+								tempResults := CalculateCrossProductNodeSets(groupExpansions,
 									cache.CertTemplateControllers[certTemplateOne.ID],
 									cache.CertTemplateControllers[certTemplateTwo.ID],
 									cache.EnterpriseCAEnrollers[eca1.ID],
@@ -133,7 +133,7 @@ func PostADCSESC3(ctx context.Context, tx graph.Transaction, outC chan<- analysi
 						}
 					} else {
 						for _, eca1 := range publishedECAs {
-							tempResults := CalculateCrossProductNodeSetsNew(groupExpansions,
+							tempResults := CalculateCrossProductNodeSets(groupExpansions,
 								cache.CertTemplateControllers[certTemplateOne.ID],
 								cache.CertTemplateControllers[certTemplateTwo.ID],
 								cache.EnterpriseCAEnrollers[eca1.ID],
