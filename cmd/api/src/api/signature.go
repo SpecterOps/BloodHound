@@ -1,23 +1,24 @@
 // Copyright 2023 Specter Ops, Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// 
+//
 // SPDX-License-Identifier: Apache-2.0
 
 package api
 
 import (
 	"bytes"
+	"context"
 	"crypto/hmac"
 	"crypto/sha256"
 	"encoding/base64"
@@ -26,13 +27,13 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/specterops/bloodhound/src/auth"
 	"github.com/specterops/bloodhound/headers"
+	"github.com/specterops/bloodhound/src/auth"
 )
 
 // tee takes a source reader and two writers. The function reads from the source until exhaustion. Each read is written
 // serially to both writers.
-func tee(reader io.Reader, outA, outB io.Writer) error {
+func tee(ctx context.Context, reader io.Reader, outA, outB io.Writer) error {
 	// Ignore readers that are nil to begin with. This covers the case where a request is being signed but contains
 	// no body.
 	if reader == nil {
@@ -41,16 +42,18 @@ func tee(reader io.Reader, outA, outB io.Writer) error {
 
 	// Internal read buffer for splitting out to the other writers
 	buffer := make([]byte, 4096)
+	outputs := io.MultiWriter(outA, outB)
 
 	for {
 		read, err := reader.Read(buffer)
 
-		if read > 0 {
-			if _, err := outA.Write(buffer[:read]); err != nil {
-				return err
-			}
+		// check context after read
+		if err := ctx.Err(); err != nil {
+			return err
+		}
 
-			if _, err := outB.Write(buffer[:read]); err != nil {
+		if read > 0 {
+			if _, err := outputs.Write(buffer[:read]); err != nil {
 				return err
 			}
 		}
@@ -62,10 +65,15 @@ func tee(reader io.Reader, outA, outB io.Writer) error {
 
 			return nil
 		}
+
+		// check context after writes before next read
+		if err := ctx.Err(); err != nil {
+			return err
+		}
 	}
 }
 
-func GenerateRequestSignature(token, datetime, hmacMethod, requestMethod, requestURI string, body io.Reader) (io.Reader, []byte, error) {
+func GenerateRequestSignature(ctx context.Context, token, datetime, hmacMethod, requestMethod, requestURI string, body io.Reader) (io.Reader, []byte, error) {
 	if hmacMethod != auth.HMAC_SHA2_256 {
 		return nil, nil, fmt.Errorf("unsupported HMAC method: %s", hmacMethod)
 	}
@@ -101,8 +109,13 @@ func GenerateRequestSignature(token, datetime, hmacMethod, requestMethod, reques
 	// digester.
 	digester = hmac.New(sha256.New, digester.Sum(nil))
 
+	// check context before processing body
+	if err := ctx.Err(); err != nil {
+		return nil, nil, err
+	}
+
 	readBody := &bytes.Buffer{}
-	if err := tee(body, readBody, digester); err != nil {
+	if err := tee(ctx, body, readBody, digester); err != nil {
 		return nil, nil, err
 	}
 
@@ -114,7 +127,7 @@ func GenerateRequestSignature(token, datetime, hmacMethod, requestMethod, reques
 func SignRequestAtTime(id, token, hmacMethod string, datetime time.Time, request *http.Request) error {
 	datetimeFormatted := datetime.Format(time.RFC3339)
 
-	if readBody, signature, err := GenerateRequestSignature(token, datetimeFormatted, hmacMethod, request.Method, request.URL.Path, request.Body); err != nil {
+	if readBody, signature, err := GenerateRequestSignature(request.Context(), token, datetimeFormatted, hmacMethod, request.Method, request.URL.Path, request.Body); err != nil {
 		return err
 	} else {
 		// Overwrite the request body reader if the request body wasn't nil

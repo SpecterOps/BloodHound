@@ -241,7 +241,7 @@ func (s authenticator) ValidateRequestSignature(tokenID uuid.UUID, request *http
 	} else {
 		// Read the body of the request to compute the actual signature. This forces the body into memory so there may
 		// be a scaling pain-point here.
-		if readBody, digestNow, err := GenerateRequestSignature(authToken.Key, requestDate.Format(time.RFC3339), auth.HMAC_SHA2_256, request.Method, request.RequestURI, request.Body); err != nil {
+		if readBody, digestNow, err := GenerateRequestSignature(request.Context(), authToken.Key, requestDate.Format(time.RFC3339), auth.HMAC_SHA2_256, request.Method, request.RequestURI, request.Body); err != nil {
 			return authContext, http.StatusInternalServerError, err
 		} else {
 			request.Body = &readerDelegatedCloser{
