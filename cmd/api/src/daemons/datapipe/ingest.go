@@ -20,6 +20,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"sort"
 	"strings"
 	"time"
 
@@ -34,7 +35,6 @@ import (
 
 func (s *Daemon) ReadWrapper(batch graph.Batch, reader io.Reader) error {
 	var wrapper DataWrapper
-
 	if err := json.NewDecoder(reader).Decode(&wrapper); err != nil {
 		return err
 	}
@@ -121,6 +121,10 @@ func (s *Daemon) IngestWrapper(batch graph.Batch, wrapper DataWrapper) error {
 		if err := json.Unmarshal(wrapper.Payload, &ouData); err != nil {
 			return err
 		} else {
+			// sort OU by descending order of length of distinguishedname to manage GPO priority
+			sort.Slice(ouData[:], func(i, j int) bool {
+				return len((ouData[i].Properties["distinguishedname"]).(string)) > len((ouData[j].Properties["distinguishedname"]).(string))
+			})
 			converted := convertOUData(ouData)
 			s.IngestBasicData(batch, converted)
 		}

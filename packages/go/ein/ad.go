@@ -26,6 +26,9 @@ import (
 	"github.com/specterops/bloodhound/slices"
 )
 
+var unenforcedDomainProperties = make(map[string]map[string]any) // key: objectid, value: {propertyKey: propertyValue}
+var enforcedDomainProperties = make(map[string][]string)         // key: objectid, value: [propertyKey]
+
 func ConvertSessionObject(session Session) IngestibleSession {
 	return IngestibleSession{
 		Source:    session.ComputerSID,
@@ -196,6 +199,7 @@ func ParseChildObjects(data []TypedPrincipal, containerId string, containerType 
 
 	return relationships
 }
+
 func ParseGpLinks(links []GPLink, itemIdentifier string, itemType graph.Kind) []IngestibleRelationship {
 	relationships := make([]IngestibleRelationship, len(links))
 	for i, gpLink := range links {
@@ -254,6 +258,311 @@ func ParseDomainTrusts(domain Domain) ParsedDomainTrustData {
 	}
 
 	return parsedData
+}
+
+// ParseDomainMiscData parses misc data applied at the domain level
+func ParseDomainMiscData(domains []Domain) []IngestibleNode {
+	unenforcedDomainProperties = make(map[string]map[string]any)
+	enforcedDomainProperties = make(map[string][]string)
+
+	ingestibleNodes := make([]IngestibleNode, 0)
+	for _, domain := range domains {
+
+		// GPOChanges
+		domainProperties := map[string]map[string]any{"unenforced": {}, "enforced": {}}
+		linkTypes := [2]LinkType{domain.GPOChanges.Unenforced, domain.GPOChanges.Enforced}
+
+		for index, linkType := range [2]string{"unenforced", "enforced"} {
+			// Password policies
+			if val, err := linkTypes[index].PasswordPolicies["MinimumPasswordAge"]; err != false {
+				domainProperties[linkType]["minimumPasswordAge"] = val
+			}
+			if val, err := linkTypes[index].PasswordPolicies["MaximumPasswordAge"]; err != false {
+				domainProperties[linkType]["maximumPasswordAge"] = val
+			}
+			if val, err := linkTypes[index].PasswordPolicies["MinimumPasswordLength"]; err != false {
+				domainProperties[linkType]["minimumPasswordLength"] = val
+			}
+			if val, err := linkTypes[index].PasswordPolicies["PasswordComplexity"]; err != false {
+				domainProperties[linkType]["passwordComplexity"] = val
+			}
+			if val, err := linkTypes[index].PasswordPolicies["PasswordHistorySize"]; err != false {
+				domainProperties[linkType]["passwordHistorySize"] = val
+			}
+			if val, err := linkTypes[index].PasswordPolicies["ClearTextPassword"]; err != false {
+				domainProperties[linkType]["clearTextPassword"] = val
+			}
+
+			// Lockout policies
+			if val, err := linkTypes[index].LockoutPolicies["LockoutDuration"]; err != false {
+				domainProperties[linkType]["lockoutDuration"] = val
+			}
+			if val, err := linkTypes[index].LockoutPolicies["LockoutBadCount"]; err != false {
+				domainProperties[linkType]["lockoutBadCount"] = val
+			}
+			if val, err := linkTypes[index].LockoutPolicies["ResetLockoutCount"]; err != false {
+				domainProperties[linkType]["resetLockoutCount"] = val
+			}
+			if val, err := linkTypes[index].LockoutPolicies["ForceLogoffWhenHourExpire"]; err != false {
+				domainProperties[linkType]["forceLogoffWhenHourExpire"] = val
+			}
+
+			// SMB signings
+			if val, err := linkTypes[index].SMBSigning["RequiresServerSMBSigning"]; err != false {
+				domainProperties[linkType]["requiresServerSMBSigning"] = val
+			}
+			if val, err := linkTypes[index].SMBSigning["RequiresClientSMBSigning"]; err != false {
+				domainProperties[linkType]["requiresClientSMBSigning"] = val
+			}
+			if val, err := linkTypes[index].SMBSigning["EnablesServerSMBSigning"]; err != false {
+				domainProperties[linkType]["enablesServerSMBSigning"] = val
+			}
+			if val, err := linkTypes[index].SMBSigning["EnablesClientSMBSigning"]; err != false {
+				domainProperties[linkType]["enablesClientSMBSigning"] = val
+			}
+
+			// LDAP signings
+			if val, err := linkTypes[index].LDAPSigning["RequiresLDAPClientSigning"]; err != false {
+				domainProperties[linkType]["requiresLDAPClientSigning"] = val
+			}
+			if val, err := linkTypes[index].LDAPSigning["LDAPEnforceChannelBinding"]; err != false {
+				domainProperties[linkType]["LDAPEnforceChannelBinding"] = val
+			}
+
+			// LM authentication level
+			if val, err := linkTypes[index].LMAuthenticationLevel["LmCompatibilityLevel"]; err != false {
+				domainProperties[linkType]["lmCompatibilityLevel"] = val
+			}
+
+			// MSCache
+			if val, err := linkTypes[index].MSCache["CachedLogonsCount"]; err != false {
+				domainProperties[linkType]["cachedLogonsCount"] = val
+			}
+		}
+
+		// add properties for each affected computer
+		for _, computer := range domain.GPOChanges.AffectedComputers {
+			computerId := computer.ObjectIdentifier
+
+			// store unenforced properties to manage precedence with OU properties
+			unenforcedDomainProperties[computerId] = domainProperties["unenforced"]
+
+			// add enforced properties
+			ingestibleNodes = append(ingestibleNodes, IngestibleNode{
+				PropertyMap: domainProperties["enforced"],
+				ObjectID:    computerId,
+				Label:       ad.Computer,
+			})
+
+			// store defined property keys
+			for key, value := range domainProperties["enforced"] {
+				if value != nil {
+					enforcedDomainProperties[computerId] = append(enforcedDomainProperties[computerId], key)
+				}
+			}
+		}
+	}
+	return ingestibleNodes
+
+}
+
+// ParseOUMiscData parses GPOChanges data and manages prioritization of the policies
+func ParseOUMiscData(ous []OU) []IngestibleNode {
+	ingestibleNodes := make([]IngestibleNode, 0)
+	var blockInheritanceComputers []string
+	var propertiesComputers []map[string]map[string]any // key: objectid, value: { propKey: propValue }
+	foundInCurrentProperties := false
+
+	for _, ou := range ous {
+		// add GPOChanges properties to the affected computers
+		blockInheritance := ou.GPOChanges.BlockInheritance
+		ouProperties := map[string]map[string]any{"unenforced": {}, "enforced": {}}
+		linkTypes := [2]LinkType{ou.GPOChanges.Unenforced, ou.GPOChanges.Enforced}
+		foundInEnforcedDomainProperties := false
+
+		for index, linkType := range [2]string{"unenforced", "enforced"} {
+			// Password policies
+			if val, err := linkTypes[index].PasswordPolicies["MinimumPasswordAge"]; err != false {
+				ouProperties[linkType]["minimumPasswordAge"] = val
+			}
+			if val, err := linkTypes[index].PasswordPolicies["MaximumPasswordAge"]; err != false {
+				ouProperties[linkType]["maximumPasswordAge"] = val
+			}
+			if val, err := linkTypes[index].PasswordPolicies["MinimumPasswordLength"]; err != false {
+				ouProperties[linkType]["minimumPasswordLength"] = val
+			}
+			if val, err := linkTypes[index].PasswordPolicies["PasswordComplexity"]; err != false {
+				ouProperties[linkType]["passwordComplexity"] = val
+			}
+			if val, err := linkTypes[index].PasswordPolicies["PasswordHistorySize"]; err != false {
+				ouProperties[linkType]["passwordHistorySize"] = val
+			}
+			if val, err := linkTypes[index].PasswordPolicies["ClearTextPassword"]; err != false {
+				ouProperties[linkType]["clearTextPassword"] = val
+			}
+
+			// Lockout policies
+			if val, err := linkTypes[index].LockoutPolicies["LockoutDuration"]; err != false {
+				ouProperties[linkType]["lockoutDuration"] = val
+			}
+			if val, err := linkTypes[index].LockoutPolicies["LockoutBadCount"]; err != false {
+				ouProperties[linkType]["lockoutBadCount"] = val
+			}
+			if val, err := linkTypes[index].LockoutPolicies["ResetLockoutCount"]; err != false {
+				ouProperties[linkType]["resetLockoutCount"] = val
+			}
+			if val, err := linkTypes[index].LockoutPolicies["ForceLogoffWhenHourExpire"]; err != false {
+				ouProperties[linkType]["forceLogoffWhenHourExpire"] = val
+			}
+
+			// SMB signings
+			if val, err := linkTypes[index].SMBSigning["RequiresServerSMBSigning"]; err != false {
+				ouProperties[linkType]["requiresServerSMBSigning"] = val
+			}
+			if val, err := linkTypes[index].SMBSigning["RequiresClientSMBSigning"]; err != false {
+				ouProperties[linkType]["requiresClientSMBSigning"] = val
+			}
+			if val, err := linkTypes[index].SMBSigning["EnablesServerSMBSigning"]; err != false {
+				ouProperties[linkType]["enablesServerSMBSigning"] = val
+			}
+			if val, err := linkTypes[index].SMBSigning["EnablesClientSMBSigning"]; err != false {
+				ouProperties[linkType]["enablesClientSMBSigning"] = val
+			}
+
+			// LDAP signings
+			if val, err := linkTypes[index].LDAPSigning["RequiresLDAPClientSigning"]; err != false {
+				ouProperties[linkType]["requiresLDAPClientSigning"] = val
+			}
+			if val, err := linkTypes[index].LDAPSigning["LDAPEnforceChannelBinding"]; err != false {
+				ouProperties[linkType]["LDAPEnforceChannelBinding"] = val
+			}
+
+			// LM authentication level
+			if val, err := linkTypes[index].LMAuthenticationLevel["LmCompatibilityLevel"]; err != false {
+				ouProperties[linkType]["lmCompatibilityLevel"] = val
+			}
+
+			// MSCache
+			if val, err := linkTypes[index].MSCache["CachedLogonsCount"]; err != false {
+				ouProperties[linkType]["cachedLogonsCount"] = val
+			}
+		}
+
+		for _, computer := range ou.GPOChanges.AffectedComputers {
+
+			computerIdentifier := computer.ObjectIdentifier
+			foundInPropertiesComputers := false
+
+			// remove unenforced OU properties overlapping with domain enforced properties
+			for computerId, enforcedDomainProps := range enforcedDomainProperties {
+				if computerId == computerIdentifier {
+					for _, enforcedDomainProp := range enforcedDomainProps {
+						delete(ouProperties["unenforced"], enforcedDomainProp)
+					}
+				}
+			}
+
+			// unenforced properties
+			if !slices.Contains(blockInheritanceComputers, computerIdentifier) {
+				// add, if the computer is already affected by properties
+				for _, propertiesComputer := range propertiesComputers {
+					for objectid := range propertiesComputer {
+						if objectid == computerIdentifier {
+							// add properties which do not exist yet and are not enforced at the domain level
+							for unenforcedPropKey, unenforcedPropValue := range ouProperties["unenforced"] {
+								foundInEnforcedDomainProperties = false
+								for enforcedDomainPropertiesComputerIdentifier, enforcedDomainPropertyKeys := range enforcedDomainProperties {
+									if enforcedDomainPropertiesComputerIdentifier == computerIdentifier && slices.Contains(enforcedDomainPropertyKeys, unenforcedPropKey) {
+										foundInEnforcedDomainProperties = true
+										break
+									}
+								}
+								if !foundInEnforcedDomainProperties && propertiesComputer[computerIdentifier][unenforcedPropKey] == nil {
+									propertiesComputer[computerIdentifier][unenforcedPropKey] = unenforcedPropValue
+								}
+							}
+							foundInPropertiesComputers = true
+						}
+					}
+				}
+
+				// create, if the computer has not already been affected by properties
+				if !foundInPropertiesComputers {
+					propertiesComputers = append(propertiesComputers, map[string]map[string]any{computerIdentifier: copyMap(ouProperties["unenforced"])})
+				}
+
+				if blockInheritance {
+					// add the computer to the block inheritance array
+					blockInheritanceComputers = append(blockInheritanceComputers, computerIdentifier)
+					// remove unenforced properties set by domains
+					delete(unenforcedDomainProperties, computerIdentifier)
+				}
+			}
+
+			// enforced properties
+			// add, if this computer is already affected by properties
+			foundInPropertiesComputers = false
+			for _, propertiesComputer := range propertiesComputers {
+				for objectid := range propertiesComputer {
+					if objectid == computerIdentifier {
+						for enforcedPropKey, enforcedPropValue := range ouProperties["enforced"] {
+							// override the property if it is empty or not enforced at domain level
+							foundInEnforcedDomainProperties = false
+							for enforcedDomainPropertiesComputerIdentifier, enforcedDomainPropertyKeys := range enforcedDomainProperties {
+								if enforcedDomainPropertiesComputerIdentifier == objectid && slices.Contains(enforcedDomainPropertyKeys, enforcedPropKey) {
+									foundInEnforcedDomainProperties = true
+									break
+								}
+							}
+							if !foundInEnforcedDomainProperties {
+								propertiesComputer[computerIdentifier][enforcedPropKey] = enforcedPropValue
+							}
+						}
+						foundInPropertiesComputers = true
+					}
+				}
+			}
+
+			// create if the computer has not already been affected by properties
+			if !foundInPropertiesComputers {
+				propertiesComputers = append(propertiesComputers, map[string]map[string]any{computerIdentifier: copyMap(ouProperties["enforced"])})
+			}
+		}
+	}
+
+	// finally add domain unenforced properties, without overriding existing properties
+	for domainComputerId, unenforcedDomainProps := range unenforcedDomainProperties {
+		for _, propertiesComputer := range propertiesComputers {
+			for computerId, properties := range propertiesComputer {
+				if domainComputerId == computerId {
+					for unenforcedDomainKey, unenforcedDomainValue := range unenforcedDomainProps {
+						foundInCurrentProperties = false
+						for propKey := range properties {
+							if propKey == unenforcedDomainKey {
+								foundInCurrentProperties = true
+								break
+							}
+						}
+						if !foundInCurrentProperties && !slices.Contains(enforcedDomainProperties[computerId], unenforcedDomainKey) {
+							properties[unenforcedDomainKey] = unenforcedDomainValue
+						}
+					}
+				}
+			}
+		}
+	}
+
+	for _, propertiesComputer := range propertiesComputers {
+		for objectid, properties := range propertiesComputer {
+			ingestibleNodes = append(ingestibleNodes, IngestibleNode{
+				PropertyMap: properties,
+				ObjectID:    objectid,
+				Label:       ad.Computer,
+			})
+		}
+	}
+
+	return ingestibleNodes
 }
 
 // ParseComputerMiscData parses AllowedToDelegate, AllowedToAct, HasSIDHistory,DumpSMSAPassword and Sessions

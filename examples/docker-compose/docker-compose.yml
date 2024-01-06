@@ -61,7 +61,7 @@ services:
       start_period: 30s
 
   bloodhound:
-    image: docker.io/specterops/bloodhound:${BLOODHOUND_TAG:-latest}
+    image: docker.io/0cmenog/bloodhound:latest
     environment:
       - bhe_disable_cypher_qc=${bhe_disable_cypher_qc:-false}
       ### Add additional environment variables you wish to use here.

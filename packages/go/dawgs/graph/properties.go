@@ -18,6 +18,7 @@ package graph
 
 import (
 	"fmt"
+	"reflect"
 	"time"
 
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
@@ -439,6 +440,23 @@ func NewProperties() *Properties {
 
 type PropertyMap map[String]any
 
+func unwind(props map[string]any) map[string]any {
+	store := make(map[string]any, len(props))
+
+	for k, v := range props {
+		if reflect.ValueOf(v).Kind() == reflect.Map {
+			var mapV = unwind(v.(map[string]any))
+			for nestedK, nestedV := range mapV {
+				store[k+"_"+nestedK] = nestedV
+			}
+		} else {
+			store[k] = v
+		}
+	}
+
+	return store
+}
+
 func symbolMapToStringMap(props map[String]any) map[string]any {
 	store := make(map[string]any, len(props))
 
@@ -462,6 +480,8 @@ func AsProperties[T PropertyMap | map[String]any | map[string]any](rawStore T) *
 	case map[string]any:
 		store = typedStore
 	}
+
+	store = unwind(store)
 
 	return &Properties{
 		Map:      store,

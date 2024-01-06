@@ -120,6 +120,8 @@ func convertDomainData(data []ein.Domain) ConvertedData {
 		converted.NodeProps = append(converted.NodeProps, domainTrustData.ExtraNodeProps...)
 	}
 
+	converted.NodeProps = append(converted.NodeProps, ein.ParseDomainMiscData(data)...)
+
 	return converted
 }
 
@@ -148,6 +150,8 @@ func convertOUData(data []ein.OU) ConvertedData {
 			converted.RelProps = append(converted.RelProps, ein.ParseChildObjects(ou.ChildObjects, ou.ObjectIdentifier, ad.OU)...)
 		}
 	}
+
+	converted.NodeProps = append(converted.NodeProps, ein.ParseOUMiscData(data)...)
 
 	return converted
 }
