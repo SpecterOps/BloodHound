@@ -192,7 +192,7 @@ func getLAPSComputersForDomain(tx graph.Transaction, domain *graph.Node) ([]grap
 	}
 }
 
-func PostLocalGroups(ctx context.Context, db graph.Database, localGroupExpansions impact.PathAggregator) (*analysis.AtomicPostProcessingStats, error) {
+func PostLocalGroups(ctx context.Context, db graph.Database, localGroupExpansions impact.PathAggregator, enforceURA bool) (*analysis.AtomicPostProcessingStats, error) {
 	var (
 		adminGroupSuffix    = "-544"
 		psRemoteGroupSuffix = "-580"
@@ -281,7 +281,7 @@ func PostLocalGroups(ctx context.Context, db graph.Database, localGroupExpansion
 			}
 
 			if err := operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
-				if entities, err := FetchRDPEntityBitmapForComputerWithUnenforcedURA(tx, computerID, threadSafeLocalGroupExpansions); err != nil {
+				if entities, err := FetchRDPEntityBitmapForComputer(tx, computerID, threadSafeLocalGroupExpansions, enforceURA); err != nil {
 					return err
 				} else {
 					for _, rdp := range entities.Slice() {
@@ -437,26 +437,14 @@ func ExpandAllRDPLocalGroups(ctx context.Context, db graph.Database) (impact.Pat
 	))
 }
 
-func FetchRDPEntityBitmapForComputer(tx graph.Transaction, computer graph.ID, localGroupExpansions impact.PathAggregator) (cardinality.Duplex[uint32], error) {
+func FetchRDPEntityBitmapForComputer(tx graph.Transaction, computer graph.ID, localGroupExpansions impact.PathAggregator, enforceURA bool) (cardinality.Duplex[uint32], error) {
 	if rdpLocalGroup, err := FetchComputerLocalGroupBySIDSuffix(tx, computer, RDPGroupSuffix); err != nil {
 		if graph.IsErrNotFound(err) {
 			return cardinality.NewBitmap32(), nil
 		}
 
 		return nil, err
-	} else {
-		return ProcessRDPWithUra(tx, rdpLocalGroup, computer, localGroupExpansions)
-	}
-}
-
-func FetchRDPEntityBitmapForComputerWithUnenforcedURA(tx graph.Transaction, computer graph.ID, localGroupExpansions impact.PathAggregator) (cardinality.Duplex[uint32], error) {
-	if rdpLocalGroup, err := FetchComputerLocalGroupBySIDSuffix(tx, computer, RDPGroupSuffix); err != nil {
-		if graph.IsErrNotFound(err) {
-			return cardinality.NewBitmap32(), nil
-		}
-
-		return nil, err
-	} else if ComputerHasURACollection(tx, computer) {
+	} else if enforceURA || ComputerHasURACollection(tx, computer) {
 		return ProcessRDPWithUra(tx, rdpLocalGroup, computer, localGroupExpansions)
 	} else if bitmap, err := FetchLocalGroupBitmapForComputer(tx, computer, RDPGroupSuffix); err != nil {
 		return nil, err
@@ -481,7 +469,7 @@ func ComputerHasURACollection(tx graph.Transaction, computerID graph.ID) bool {
 
 func ProcessRDPWithUra(tx graph.Transaction, rdpLocalGroup *graph.Node, computer graph.ID, localGroupExpansions impact.PathAggregator) (cardinality.Duplex[uint32], error) {
 	rdpLocalGroupMembers := localGroupExpansions.Cardinality(rdpLocalGroup.ID.Uint32()).(cardinality.Duplex[uint32])
-	//Shortcut opportunity: see if the RDP group has RIL privilege. If it does, get the first degree members and return those ids, since everything in RDP group has CanRDP privs. No reason to look any further
+	// Shortcut opportunity: see if the RDP group has RIL privilege. If it does, get the first degree members and return those ids, since everything in RDP group has CanRDP privs. No reason to look any further
 	if HasRemoteInteractiveLogonPrivilege(tx, rdpLocalGroup.ID, computer) {
 		firstDegreeMembers := cardinality.NewBitmap32()
 
