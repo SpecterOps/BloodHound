@@ -24,7 +24,10 @@ import (
 	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/graphschema/azure"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
+
+const unsupportedKind = kindStr("Unsupported Kind")
 
 type kindStr string
 
@@ -42,8 +45,68 @@ func (s kindStr) Is(others ...graph.Kind) bool {
 	return false
 }
 
+func validKinds() graph.Kinds {
+	var (
+		lenCalc = len(ad.NodeKinds()) + len(ad.Relationships()) + len(azure.NodeKinds()) + len(azure.Relationships())
+		kinds   = make(graph.Kinds, 0, lenCalc)
+	)
+
+	kinds = append(kinds, ad.NodeKinds()...)
+	kinds = append(kinds, ad.Relationships()...)
+	kinds = append(kinds, azure.NodeKinds()...)
+	kinds = append(kinds, azure.Relationships()...)
+
+	return kinds
+}
+
+func validKindStrings() []string {
+	var (
+		kindStrings = make([]string, 0, len(validKinds()))
+	)
+
+	for _, kind := range validKinds() {
+		kindStrings = append(kindStrings, kind.String())
+	}
+
+	return kindStrings
+}
+
+func TestParseKind(t *testing.T) {
+	t.Run("all known strings map to their graph.Kind", func(t *testing.T) {
+		for _, k := range validKinds() {
+			res, err := analysis.ParseKind(k.String())
+			require.Nil(t, err)
+			assert.Equal(t, k, res, "expect string to map back to original kind")
+		}
+	})
+
+	t.Run("unknown kind strings cause an error", func(t *testing.T) {
+		_, err := analysis.ParseKind(unsupportedKind.String())
+		assert.Contains(t, err.Error(), unsupportedKind.String(), "error contains unsupported kind string")
+	})
+}
+
+func TestParseKinds(t *testing.T) {
+	t.Run("all known strings map to their graph.Kind", func(t *testing.T) {
+		res, err := analysis.ParseKinds(validKindStrings()...)
+		require.Nil(t, err)
+		assert.Equal(t, validKinds(), res)
+	})
+
+	t.Run("unknown kind strings cause an error", func(t *testing.T) {
+		_, err := analysis.ParseKinds(unsupportedKind.String())
+		require.NotNil(t, err)
+		assert.Contains(t, err.Error(), unsupportedKind, "expect string to map back to original kind")
+	})
+
+	t.Run("no arguments provided should return the base kinds", func(t *testing.T) {
+		res, err := analysis.ParseKinds()
+		require.Nil(t, err)
+		assert.Equal(t, graph.Kinds{ad.Entity, azure.Entity}, res)
+	})
+}
+
 func TestGetNodeKindDisplayLabel(t *testing.T) {
-	const unsupportedKind = kindStr("Unsupported Kind")
 	assert := assert.New(t)
 
 	assert.Equal(ad.Entity.String(), analysis.GetNodeKindDisplayLabel(graph.PrepareNode(graph.NewProperties(), ad.Entity)), "should return base kind if no other valid kinds are present")

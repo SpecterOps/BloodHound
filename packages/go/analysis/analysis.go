@@ -28,6 +28,7 @@ import (
 	"github.com/specterops/bloodhound/graphschema/azure"
 	"github.com/specterops/bloodhound/graphschema/common"
 	"github.com/specterops/bloodhound/log"
+	"github.com/specterops/bloodhound/slices"
 )
 
 const (
@@ -58,10 +59,7 @@ func GetNodeKindDisplayLabel(node *graph.Node) string {
 func GetNodeKind(node *graph.Node) graph.Kind {
 	var (
 		resultKind = graph.StringKind(NodeKindUnknown)
-
-		// Start with the baseKind being equal to the default resultKind of NodeKindUnknown so that fallthrough for
-		// nodes without kinds associated with them return the correct kind
-		baseKind = resultKind
+		baseKind   = resultKind
 	)
 
 	for _, kind := range node.Kinds {
@@ -72,7 +70,7 @@ func GetNodeKind(node *graph.Node) graph.Kind {
 			if resultKind.String() == NodeKindUnknown {
 				resultKind = kind
 			}
-		} else if _, err := ParseKind(kind.String()); err == nil {
+		} else if slices.Contains(ValidKinds(), kind) {
 			resultKind = kind
 		}
 	}
@@ -104,16 +102,24 @@ func ClearSystemTags(ctx context.Context, db graph.Database) error {
 	})
 }
 
-func ParseKind(rawKind string) (graph.Kind, error) {
-	for _, adKind := range append(ad.Nodes(), ad.Relationships()...) {
-		if adKind.String() == rawKind {
-			return adKind, nil
-		}
-	}
+func ValidKinds() []graph.Kind {
+	var (
+		lenCalc = len(ad.Nodes()) + len(ad.Relationships()) + len(azure.NodeKinds()) + len(azure.Relationships())
+		kinds   = make([]graph.Kind, 0, lenCalc)
+	)
 
-	for _, azureKind := range append(azure.NodeKinds(), azure.Relationships()...) {
-		if azureKind.String() == rawKind {
-			return azureKind, nil
+	kinds = append(kinds, ad.Nodes()...)
+	kinds = append(kinds, ad.Relationships()...)
+	kinds = append(kinds, azure.NodeKinds()...)
+	kinds = append(kinds, azure.Relationships()...)
+
+	return kinds
+}
+
+func ParseKind(rawKind string) (graph.Kind, error) {
+	for _, kind := range ValidKinds() {
+		if kind.String() == rawKind {
+			return kind, nil
 		}
 	}
 
@@ -125,17 +131,7 @@ func ParseKinds(rawKinds ...string) (graph.Kinds, error) {
 		return graph.Kinds{ad.Entity, azure.Entity}, nil
 	}
 
-	kinds := make(graph.Kinds, len(rawKinds))
-
-	for idx, rawKind := range rawKinds {
-		if parsedKind, err := ParseKind(rawKind); err != nil {
-			return nil, err
-		} else {
-			kinds[idx] = parsedKind
-		}
-	}
-
-	return kinds, nil
+	return slices.MapWithErr(rawKinds, ParseKind)
 }
 
 func nodeByIndexedKindProperty(property, value string, kind graph.Kind) graph.Criteria {
