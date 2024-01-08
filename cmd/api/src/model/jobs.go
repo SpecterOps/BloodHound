@@ -191,11 +191,11 @@ type DomainCollectionResult struct {
 	GPOCount          int    `json:"gpo_count"`
 	OUCount           int    `json:"ou_count"`
 	ContainerCount    int    `json:"container_count"`
-	AIACACount        int    `json:"aiaca_count"`
-	RootCACount       int    `json:"rootca_count"`
-	EnterpriseCACount int    `json:"enterpriseca_count"`
-	NTAuthStoreCount  int    `json:"ntauthstore_count"`
-	CertTemplateCount int    `json:"certtemplate_count"`
+	AIACACount        int    `json:"aiaca_count" gorm:"column:aiaca_count"`
+	RootCACount       int    `json:"rootca_count" gorm:"column:rootca_count"`
+	EnterpriseCACount int    `json:"enterpriseca_count" gorm:"column:enterpriseca_count"`
+	NTAuthStoreCount  int    `json:"ntauthstore_count" gorm:"column:ntauthstore_count"`
+	CertTemplateCount int    `json:"certtemplate_count" gorm:"column:certtemplate_count"`
 	DeletedCount      int    `json:"deleted_count"`
 
 	BigSerial
