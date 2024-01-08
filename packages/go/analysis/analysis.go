@@ -66,7 +66,7 @@ func GetNodeKind(node *graph.Node) graph.Kind {
 		if kind.Is(ad.Entity, azure.Entity) {
 			baseKind = kind
 		} else if kind.Is(ad.LocalGroup) {
-			// If we run into a local group kind, we want to only consider it valid if no other known kinds have been found yet
+			// Allow ad.LocalGroup to overwrite NodeKindUnknown, but nothing else
 			if resultKind.String() == NodeKindUnknown {
 				resultKind = kind
 			}
