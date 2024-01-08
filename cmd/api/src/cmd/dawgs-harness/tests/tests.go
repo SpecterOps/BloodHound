@@ -1,17 +1,17 @@
 // Copyright 2023 Specter Ops, Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// 
+//
 // SPDX-License-Identifier: Apache-2.0
 
 package tests
@@ -61,15 +61,12 @@ func FetchNodesByID(testCase *TestCase) any {
 	}
 }
 
-func FetchNodesByProperty(propertyName string) func(testCase *TestCase) any {
+func FetchNodesByProperty(propertyName string, maxFetches int) func(testCase *TestCase) any {
 	return func(testCase *TestCase) any {
 		return func(tx graph.Transaction) error {
-			var (
-				numExpectedFetches = len(StartNodeIDs)
-				resultsFetched     = 0
-			)
+			resultsFetched := 0
 
-			for iteration := 0; iteration < numExpectedFetches; iteration++ {
+			for iteration := 0; iteration < maxFetches; iteration++ {
 				propertyValue := "batch start node " + strconv.Itoa(iteration)
 
 				if iteration == 0 {
@@ -80,10 +77,6 @@ func FetchNodesByProperty(propertyName string) func(testCase *TestCase) any {
 
 				if err := testCase.Sample(func() error {
 					return tx.Nodes().Filterf(func() graph.Criteria {
-						if testCase.DBType == Postgres {
-							return query.Equals(query.NodeProperty(propertyName), propertyValue)
-						}
-
 						return query.And(
 							query.Kind(query.Node(), ad.Entity),
 							query.Equals(query.NodeProperty(propertyName), propertyValue),
@@ -106,7 +99,7 @@ func FetchNodesByProperty(propertyName string) func(testCase *TestCase) any {
 				}
 			}
 
-			return validateFetches(numExpectedFetches, resultsFetched)
+			return validateFetches(maxFetches, resultsFetched)
 		}
 	}
 }
@@ -126,10 +119,6 @@ func FetchNodesByPropertySlice(propertyName string) func(testCase *TestCase) any
 
 			if err := testCase.Sample(func() error {
 				return tx.Nodes().Filterf(func() graph.Criteria {
-					if testCase.DBType == Postgres {
-						return query.In(query.NodeProperty(propertyName), propertyValues)
-					}
-
 					return query.And(
 						query.Kind(query.Node(), ad.Entity),
 						query.In(query.NodeProperty(propertyName), propertyValues),
@@ -170,10 +159,6 @@ func FetchRelationshipByStartNodeProperty(testCase *TestCase) any {
 
 			if err := testCase.Sample(func() error {
 				return tx.Relationships().Filterf(func() graph.Criteria {
-					if testCase.DBType == Postgres {
-						return query.Equals(query.StartProperty(common.Name.String()), nodeName)
-					}
-
 					return query.And(
 						query.Kind(query.Start(), ad.Entity),
 						query.Equals(query.StartProperty(common.Name.String()), nodeName),
@@ -222,10 +207,6 @@ func FetchDirectionalResultByStartNodeProperty(testCase *TestCase) any {
 
 			if err := testCase.Sample(func() error {
 				return tx.Relationships().Filterf(func() graph.Criteria {
-					if testCase.DBType == Postgres {
-						return query.Equals(query.StartProperty(common.Name.String()), nodeName)
-					}
-
 					return query.And(
 						query.Kind(query.Start(), ad.Entity),
 						query.Equals(query.StartProperty(common.Name.String()), nodeName),
@@ -272,7 +253,7 @@ func FetchRelationshipsByPropertySlice(testCase *TestCase) any {
 
 		if err := testCase.Sample(func() error {
 			return tx.Relationships().Filterf(func() graph.Criteria {
-				return query.In(query.NodeProperty(common.Name.String()), relationshipNames)
+				return query.In(query.RelationshipProperty(common.Name.String()), relationshipNames)
 			}).Fetch(func(cursor graph.Cursor[*graph.Relationship]) error {
 				for relationship := range cursor.Chan() {
 					if _, err := relationship.Properties.Get(common.Name.String()).String(); err != nil {
@@ -305,7 +286,7 @@ func FetchRelationshipsByProperty(propertyName string) func(testCase *TestCase) 
 
 				if err := testCase.Sample(func() error {
 					return tx.Relationships().Filterf(func() graph.Criteria {
-						return query.Equals(query.NodeProperty(propertyName), relationshipName)
+						return query.Equals(query.RelationshipProperty(propertyName), relationshipName)
 					}).Fetch(func(cursor graph.Cursor[*graph.Relationship]) error {
 						for relationship := range cursor.Chan() {
 							if actualRelationshipName, err := relationship.Properties.Get(common.Name.String()).String(); err != nil {
@@ -413,10 +394,18 @@ func BatchNodeAndRelationshipCreationTest(testCase *TestCase) any {
 			)
 
 			if err := testCase.Sample(func() error {
-				return batch.CreateRelationship(startNode, endNode, ad.MemberOf, graph.AsProperties(graph.PropertyMap{
-					common.Name:     relationshipPropertyValue,
-					common.ObjectID: relationshipPropertyValue,
-				}))
+				return batch.UpdateRelationshipBy(graph.RelationshipUpdate{
+					Relationship: graph.PrepareRelationship(graph.AsProperties(graph.PropertyMap{
+						common.Name:     relationshipPropertyValue,
+						common.ObjectID: relationshipPropertyValue,
+					}), ad.MemberOf),
+					Start:                   startNode,
+					StartIdentityKind:       ad.Entity,
+					StartIdentityProperties: []string{common.ObjectID.String()},
+					End:                     endNode,
+					EndIdentityKind:         ad.Entity,
+					EndIdentityProperties:   []string{common.ObjectID.String()},
+				})
 			}); err != nil {
 				return err
 			}
@@ -447,7 +436,7 @@ func NodeAndRelationshipCreationTest(testCase *TestCase) any {
 					common.ObjectID: endNodePropertyValue,
 				}), ad.Entity, ad.Group); err != nil {
 					return err
-				} else if relationship, err := tx.CreateRelationship(startNode, endNode, ad.MemberOf, graph.AsProperties(graph.PropertyMap{
+				} else if relationship, err := tx.CreateRelationshipByIDs(startNode.ID, endNode.ID, ad.MemberOf, graph.AsProperties(graph.PropertyMap{
 					common.Name:     relationshipPropertyValue,
 					common.ObjectID: relationshipPropertyValue,
 				})); err != nil {

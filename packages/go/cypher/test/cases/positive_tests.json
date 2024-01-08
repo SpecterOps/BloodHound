@@ -421,7 +421,7 @@
             "name": "Eliminate duplication in lists",
             "type": "string_match",
             "details": {
-                "query": "match (p:Person)-[:ACTED_IN]->(m:Movie) where m.year = 1920 return collect(distinct(m.title))",
+                "query": "match (p:Person)-[:ACTED_IN]->(m:Movie) where m.year = 1920 return collect(distinct (m.title))",
                 "complexity": 4.0
             }
         },
@@ -462,7 +462,7 @@
             "type": "string_match",
             "details": {
                 "query": "match (b) where (b)<-[]->() return b",
-                "complexity": 11.0
+                "complexity": 9.0
             }
         },
         {
@@ -470,7 +470,7 @@
             "type": "string_match",
             "details": {
                 "query": "match (b) where not ((b)<-[]->()) return b",
-                "complexity": 11.0
+                "complexity": 9.0
             }
         },
         {
@@ -958,7 +958,7 @@
             "name": "Find Kerberoastable Users with most privileges",
             "type": "string_match",
             "details": {
-                "query": "match (u:User {hasspn: true}) optional match (u)-[:AdminTo]->(c1:Computer) optional match (u)-[:MemberOf*1..]->(:Group)-[:AdminTo]->(c2:Computer) with u, collect(c1) + collect(c2) as tempVar unwind tempVar as comps return u.name, count(distinct(comps)) order by count(distinct(comps)) desc",
+                "query": "match (u:User {hasspn: true}) optional match (u)-[:AdminTo]->(c1:Computer) optional match (u)-[:MemberOf*1..]->(:Group)-[:AdminTo]->(c2:Computer) with u, collect(c1) + collect(c2) as tempVar unwind tempVar as comps return u.name, count(distinct (comps)) order by count(distinct (comps)) desc",
                 "complexity": 18.0
             }
         },

@@ -1,17 +1,17 @@
 // Copyright 2023 Specter Ops, Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// 
+//
 // SPDX-License-Identifier: Apache-2.0
 
 package neo4j
@@ -67,8 +67,8 @@ func (s relUpdateByMap) add(update graph.RelationshipUpdate) {
 		updateKey        = relUpdateKey(update)
 		updateProperties = map[string]any{
 			"r": update.Relationship.Properties.Map,
-			"s": update.StartIdentityPropertiesMap(),
-			"e": update.EndIdentityPropertiesMap(),
+			"s": update.Start.Properties.Map,
+			"e": update.End.Properties.Map,
 		}
 	)
 
@@ -171,7 +171,7 @@ func cypherBuildRelationshipUpdateQueryBatch(updates []graph.RelationshipUpdate)
 			output.WriteString("}")
 		}
 
-		output.WriteString("]->(e) set r += p.r")
+		output.WriteString("]->(e) set s += p.s, e += p.e, r += p.r")
 
 		if len(batch.startNodeKindsToAdd) > 0 {
 			for _, kindToAdd := range batch.startNodeKindsToAdd {
@@ -187,8 +187,7 @@ func cypherBuildRelationshipUpdateQueryBatch(updates []graph.RelationshipUpdate)
 			}
 		}
 
-		output.WriteString(", s.lastseen = datetime({timezone: 'UTC'}), e.lastseen = datetime({timezone: 'UTC'})")
-		output.WriteString(";")
+		output.WriteString(", s.lastseen = datetime({timezone: 'UTC'}), e.lastseen = datetime({timezone: 'UTC'});")
 
 		// Write out the query to be run
 		queries = append(queries, output.String())

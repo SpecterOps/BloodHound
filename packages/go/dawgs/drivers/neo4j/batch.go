@@ -42,6 +42,19 @@ type batchTransaction struct {
 	batchWriteSize             int
 }
 
+func (s *batchTransaction) CreateNode(node *graph.Node) error {
+	_, err := s.innerTx.CreateNode(node.Properties, node.Kinds...)
+	return err
+}
+
+func (s *batchTransaction) CreateRelationship(relationship *graph.Relationship) error {
+	return s.CreateRelationshipByIDs(relationship.StartID, relationship.EndID, relationship.Kind, relationship.Properties)
+}
+
+func (s *batchTransaction) WithGraph(graphSchema graph.Graph) graph.Batch {
+	return s
+}
+
 func (s *batchTransaction) Nodes() graph.NodeQuery {
 	return NewNodeQuery(s.innerTx.ctx, s)
 }
@@ -112,33 +125,8 @@ func (s *batchTransaction) Close() error {
 	return s.innerTx.Close()
 }
 
-func (s *batchTransaction) CreateNode(properties *graph.Properties, kinds ...graph.Kind) error {
-	_, err := s.innerTx.CreateNode(properties, kinds...)
-	return err
-}
-
 func (s *batchTransaction) UpdateNode(target *graph.Node) error {
 	return s.innerTx.UpdateNode(target)
-}
-
-func (s *batchTransaction) CreateRelationship(startNode, endNode *graph.Node, kind graph.Kind, properties *graph.Properties) error {
-	if startNode.ID == graph.UnregisteredNodeID {
-		if newStartNode, err := s.innerTx.CreateNode(startNode.Properties, startNode.Kinds...); err != nil {
-			return err
-		} else {
-			startNode = newStartNode
-		}
-	}
-
-	if endNode.ID == graph.UnregisteredNodeID {
-		if newEndNode, err := s.innerTx.CreateNode(endNode.Properties, endNode.Kinds...); err != nil {
-			return err
-		} else {
-			endNode = newEndNode
-		}
-	}
-
-	return s.CreateRelationshipByIDs(startNode.ID, endNode.ID, kind, properties)
 }
 
 func (s *batchTransaction) CreateRelationshipByIDs(startNodeID, endNodeID graph.ID, kind graph.Kind, properties *graph.Properties) error {
@@ -176,8 +164,8 @@ func (s *batchTransaction) UpdateRelationship(relationship *graph.Relationship) 
 	return s.innerTx.UpdateRelationship(relationship)
 }
 
-func (s *batchTransaction) Run(cypher string, params map[string]any) graph.Result {
-	return s.innerTx.Run(cypher, params)
+func (s *batchTransaction) Raw(cypher string, params map[string]any) graph.Result {
+	return s.innerTx.Raw(cypher, params)
 }
 
 type relationshipCreateByIDBatch struct {

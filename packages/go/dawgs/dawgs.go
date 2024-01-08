@@ -17,6 +17,7 @@
 package dawgs
 
 import (
+	"context"
 	"errors"
 
 	"github.com/specterops/bloodhound/dawgs/graph"
@@ -27,7 +28,7 @@ var (
 	ErrDriverMissing = errors.New("driver missing")
 )
 
-type DriverConstructor func(cfg Config) (graph.Database, error)
+type DriverConstructor func(ctx context.Context, cfg Config) (graph.Database, error)
 
 var availableDrivers = map[string]DriverConstructor{}
 
@@ -40,10 +41,10 @@ type Config struct {
 	DriverCfg            any
 }
 
-func Open(driverName string, config Config) (graph.Database, error) {
+func Open(ctx context.Context, driverName string, config Config) (graph.Database, error) {
 	if driverConstructor, hasDriver := availableDrivers[driverName]; !hasDriver {
 		return nil, ErrDriverMissing
 	} else {
-		return driverConstructor(config)
+		return driverConstructor(ctx, config)
 	}
 }

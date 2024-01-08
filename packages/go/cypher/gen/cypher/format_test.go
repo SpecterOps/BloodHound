@@ -14,19 +14,23 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package frontend
+package cypher_test
 
 import (
 	"bytes"
+	"github.com/specterops/bloodhound/cypher/frontend"
+	"github.com/specterops/bloodhound/cypher/gen/cypher"
 	"github.com/stretchr/testify/require"
 	"testing"
+
+	"github.com/specterops/bloodhound/cypher/test"
 )
 
 func TestCypherEmitter_StripLiterals(t *testing.T) {
 	var (
 		buffer            = &bytes.Buffer{}
-		regularQuery, err = ParseCypher(DefaultCypherContext(), "match (n {value: 'PII'}) where n.other = 'more pii' and n.number = 411 return n.name, n")
-		emitter           = CypherEmitter{
+		regularQuery, err = frontend.ParseCypher(frontend.DefaultCypherContext(), "match (n {value: 'PII'}) where n.other = 'more pii' and n.number = 411 return n.name, n")
+		emitter           = cypher.Emitter{
 			StripLiterals: true,
 		}
 	)
@@ -34,4 +38,12 @@ func TestCypherEmitter_StripLiterals(t *testing.T) {
 	require.Nil(t, err)
 	require.Nil(t, emitter.Write(regularQuery, buffer))
 	require.Equal(t, "match (n {value: $STRIPPED}) where n.other = $STRIPPED and n.number = $STRIPPED return n.name, n", buffer.String())
+}
+
+func TestCypherEmitter_HappyPath(t *testing.T) {
+	test.LoadFixture(t, test.PositiveTestCases).Run(t)
+}
+
+func TestCypherEmitter_NegativeCases(t *testing.T) {
+	test.LoadFixture(t, test.NegativeTestCases).Run(t)
 }

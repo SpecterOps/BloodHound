@@ -263,6 +263,8 @@ func (s RoleAssignments) NodeHasRole(id graph.ID, roleTemplateIDs ...string) boo
 
 // TenantRoles returns the NodeSet of roles for a given tenant that match one of the given role template IDs. If no role template ID is provided, then all of the tenant role nodes are returned in the NodeSet.
 func TenantRoles(tx graph.Transaction, tenant *graph.Node, roleTemplateIDs ...string) (graph.NodeSet, error) {
+	defer log.LogAndMeasure(log.LevelInfo, "Tenant %d TenantRoles", tenant.ID)()
+
 	if !IsTenantNode(tenant) {
 		return nil, fmt.Errorf("cannot fetch tenant roles - node %d must be of kind %s", tenant.ID, azure.Tenant)
 	}
@@ -339,6 +341,8 @@ func roleMembers(tx graph.Transaction, tenantRoles graph.NodeSet, additionalRela
 // RoleMembersWithGrants returns the NodeSet of members for a given set of roles, including those members who may be able to grant themselves one of the given roles
 // NOTE: The current implementation also includes the role nodes in the returned set. It may be worth considering removing those nodes from the set if doing so doesn't break tier zero/high value assignment
 func RoleMembersWithGrants(tx graph.Transaction, tenant *graph.Node, roleTemplateIDs ...string) (graph.NodeSet, error) {
+	defer log.LogAndMeasure(log.LevelInfo, "Tenant %d RoleMembersWithGrants", tenant.ID)()
+
 	if tenantRoles, err := TenantRoles(tx, tenant, roleTemplateIDs...); err != nil {
 		return nil, err
 	} else {
@@ -463,6 +467,39 @@ func aggregateSourceReadWriteServicePrincipals(tx graph.Transaction, tenantConta
 	return sourceNodes, nil
 }
 
+func TestAppRoleAssignments(ctx context.Context, db graph.Database) error {
+	if _, err := analysis.DeleteTransitEdges(ctx, db, azure.Entity, azure.Entity, AzurePostProcessedRelationships()...); err != nil {
+		return err
+	}
+
+	//if tenants, err := FetchTenants(ctx, db); err != nil {
+	//	return err
+	//} else {
+	//	for _, tenant := range tenants {
+	//		if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
+	//			if tenantContainsServicePrincipalRelationships, err := fetchTenantContainsRelationships(tx, tenant, azure.ServicePrincipal); err != nil {
+	//				return err
+	//			} else {
+	//				log.Infof("Tenant %d contains %d service principals.", tenant.ID, len(tenantContainsServicePrincipalRelationships))
+	//
+	//				if sourceNodes, err := aggregateSourceReadWriteServicePrincipals(tx, tenantContainsServicePrincipalRelationships, azure.AppRoleAssignmentReadWriteAll); err != nil {
+	//					return err
+	//				} else {
+	//					log.Infof("Tenant %d has %d aggregated source read/write service principals.", tenant.ID, len(sourceNodes))
+	//				}
+	//			}
+	//
+	//			return nil
+	//		}); err != nil {
+	//			return err
+	//		}
+	//	}
+	//}
+
+	_, err := AppRoleAssignments(ctx, db)
+	return err
+}
+
 func AppRoleAssignments(ctx context.Context, db graph.Database) (*analysis.AtomicPostProcessingStats, error) {
 	if tenants, err := FetchTenants(ctx, db); err != nil {
 		return &analysis.AtomicPostProcessingStats{}, err
@@ -569,6 +606,7 @@ func createAZMGAppRoleAssignmentReadWriteAllEdges(ctx context.Context, db graph.
 						}
 					}
 				}
+
 				return nil
 			})
 		}

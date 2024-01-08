@@ -21,6 +21,7 @@ package ad_test
 
 import (
 	"context"
+	"github.com/specterops/bloodhound/graphschema"
 
 	"github.com/specterops/bloodhound/analysis"
 
@@ -40,11 +41,12 @@ import (
 )
 
 func TestADCSESC1(t *testing.T) {
-	testContext := integration.NewGraphTestContext(t)
+	testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
 
-	testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) {
+	testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) error {
 		harness.ADCSESC1Harness.Setup(testContext)
-	}, func(harness integration.HarnessDetails, db graph.Database) error {
+		return nil
+	}, func(harness integration.HarnessDetails, db graph.Database) {
 		operation := analysis.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - ESC1")
 
 		groupExpansions, err := ad2.ExpandAllRDPLocalGroups(context.Background(), db)
@@ -110,17 +112,17 @@ func TestADCSESC1(t *testing.T) {
 			}
 			return nil
 		})
-		return nil
 	})
 
 }
 
 func TestGoldenCert(t *testing.T) {
-	testContext := integration.NewGraphTestContext(t)
+	testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
 
-	testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) {
+	testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) error {
 		harness.ADCSGoldenCertHarness.Setup(testContext)
-	}, func(harness integration.HarnessDetails, db graph.Database) error {
+		return nil
+	}, func(harness integration.HarnessDetails, db graph.Database) {
 		operation := analysis.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - Golden Cert")
 
 		domains, err := ad2.FetchNodesByKind(context.Background(), db, ad.Domain)
@@ -174,16 +176,16 @@ func TestGoldenCert(t *testing.T) {
 			}
 			return nil
 		})
-		return nil
 	})
 
 }
 
 func TestIssuedSignedBy(t *testing.T) {
-	testContext := integration.NewGraphTestContext(t)
-	testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) {
+	testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
+	testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) error {
 		harness.IssuedSignedByHarness.Setup(testContext)
-	}, func(harness integration.HarnessDetails, db graph.Database) error {
+		return nil
+	}, func(harness integration.HarnessDetails, db graph.Database) {
 		operation := analysis.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - IssuedSignedBy")
 
 		if rootCertAuthorities, err := ad2.FetchNodesByKind(context.Background(), db, ad.RootCA); err != nil {
@@ -196,7 +198,7 @@ func TestIssuedSignedBy(t *testing.T) {
 
 		operation.Done()
 
-		db.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
+		require.Nil(t, db.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
 			if results, err := ops.FetchStartNodes(tx.Relationships().Filterf(func() graph.Criteria {
 				return query.Kind(query.Relationship(), ad.IssuedSignedBy)
 			})); err != nil {
@@ -213,20 +215,21 @@ func TestIssuedSignedBy(t *testing.T) {
 				assert.False(t, results.Contains(harness.IssuedSignedByHarness.RootCA1))
 				assert.False(t, results.Contains(harness.IssuedSignedByHarness.EnterpriseCA3))
 			}
+
 			return nil
-		})
-		return nil
+		}))
 	})
 }
 
 func TestTrustedForNTAuth(t *testing.T) {
-	testContext := integration.NewGraphTestContext(t)
+	testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
 
 	testContext.DatabaseTestWithSetup(
-		func(harness *integration.HarnessDetails) {
+		func(harness *integration.HarnessDetails) error {
 			harness.TrustedForNTAuthHarness.Setup(testContext)
+			return nil
 		},
-		func(harness integration.HarnessDetails, db graph.Database) error {
+		func(harness integration.HarnessDetails, db graph.Database) {
 			// post `TrustedForNTAuth` edges
 			operation := analysis.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - TrustedForNTAuth")
 
@@ -255,16 +258,15 @@ func TestTrustedForNTAuth(t *testing.T) {
 				}
 				return nil
 			})
-
-			return nil
 		})
 }
 
 func TestEnrollOnBehalfOf(t *testing.T) {
-	testContext := integration.NewGraphTestContext(t)
-	testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) {
+	testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
+	testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) error {
 		harness.EnrollOnBehalfOfHarnessOne.Setup(testContext)
-	}, func(harness integration.HarnessDetails, db graph.Database) error {
+		return nil
+	}, func(harness integration.HarnessDetails, db graph.Database) {
 		certTemplates, err := ad2.FetchNodesByKind(context.Background(), db, ad.CertTemplate)
 		v1Templates := make([]*graph.Node, 0)
 		v2Templates := make([]*graph.Node, 0)
@@ -298,13 +300,12 @@ func TestEnrollOnBehalfOf(t *testing.T) {
 
 			return nil
 		})
-
-		return nil
 	})
 
-	testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) {
+	testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) error {
 		harness.EnrollOnBehalfOfHarnessTwo.Setup(testContext)
-	}, func(harness integration.HarnessDetails, db graph.Database) error {
+		return nil
+	}, func(harness integration.HarnessDetails, db graph.Database) {
 		certTemplates, err := ad2.FetchNodesByKind(context.Background(), db, ad.CertTemplate)
 		v1Templates := make([]*graph.Node, 0)
 		v2Templates := make([]*graph.Node, 0)
@@ -341,7 +342,5 @@ func TestEnrollOnBehalfOf(t *testing.T) {
 
 			return nil
 		})
-
-		return nil
 	})
 }

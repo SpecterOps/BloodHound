@@ -1,17 +1,17 @@
 // Copyright 2023 Specter Ops, Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// 
+//
 // SPDX-License-Identifier: Apache-2.0
 
 package neo4j
@@ -20,10 +20,10 @@ import (
 	"testing"
 
 	neo4j_core "github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/stretchr/testify/require"
-	"go.uber.org/mock/gomock"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/dawgs/vendormocks/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/stretchr/testify/require"
+	"go.uber.org/mock/gomock"
 )
 
 var (
@@ -192,7 +192,7 @@ func TestNeo4jTransaction_UpdateRelationshipBy_Batch(t *testing.T) {
 	// Expect that a new transaction is opened and then closed with commit after the final submission and call to commit
 	sessionMock.EXPECT().BeginTransaction(gomock.Any()).Return(transactionMock, nil)
 	resultMock.EXPECT().Err().Return(nil)
-	transactionMock.EXPECT().Run(`unwind $p as p merge (s:Base {objectid:p.s.objectid}) merge (e:Base {objectid:p.e.objectid}) merge (s)-[r:HasSession {objectid:p.r.objectid}]->(e) set r += p.r, s:Base, s:User, e:Base, e:Computer, s.lastseen = datetime({timezone: 'UTC'}), e.lastseen = datetime({timezone: 'UTC'});`, gomock.Any()).Return(resultMock, nil)
+	transactionMock.EXPECT().Run(`unwind $p as p merge (s:Base {objectid:p.s.objectid}) merge (e:Base {objectid:p.e.objectid}) merge (s)-[r:HasSession {objectid:p.r.objectid}]->(e) set s += p.s, e += p.e, r += p.r, s:Base, s:User, e:Base, e:Computer, s.lastseen = datetime({timezone: 'UTC'}), e.lastseen = datetime({timezone: 'UTC'});`, gomock.Any()).Return(resultMock, nil)
 	transactionMock.EXPECT().Commit().Return(nil)
 
 	submitf()
@@ -225,15 +225,17 @@ func TestNeo4jTransaction_UpdateRelationshipBy(t *testing.T) {
 			"name":     "a_name",
 		}
 
-		expectedIdentityProperties = map[string]any{
+		expectedPayloa = map[string]any{
 			"p": []map[string]any{{
 				"r": map[string]any{
 					"objectid": "a-b-c",
 				},
 				"s": map[string]any{
+					"name":     "a_name",
 					"objectid": "1-2-3",
 				},
 				"e": map[string]any{
+					"name":     "a_name",
 					"objectid": "2-3-4",
 				},
 			}, {
@@ -241,9 +243,11 @@ func TestNeo4jTransaction_UpdateRelationshipBy(t *testing.T) {
 					"objectid": "a-b-c",
 				},
 				"s": map[string]any{
+					"name":     "a_name",
 					"objectid": "1-2-3",
 				},
 				"e": map[string]any{
+					"name":     "a_name",
 					"objectid": "2-3-4",
 				},
 			}},
@@ -251,7 +255,7 @@ func TestNeo4jTransaction_UpdateRelationshipBy(t *testing.T) {
 	)
 
 	resultMock.EXPECT().Err().Return(nil)
-	transactionMock.EXPECT().Run(`unwind $p as p merge (s:Base {objectid:p.s.objectid}) merge (e:Base {objectid:p.e.objectid}) merge (s)-[r:HasSession {objectid:p.r.objectid}]->(e) set r += p.r, s:Base, s:User, e:Base, e:Computer, s.lastseen = datetime({timezone: 'UTC'}), e.lastseen = datetime({timezone: 'UTC'});`, expectedIdentityProperties).Return(resultMock, nil)
+	transactionMock.EXPECT().Run(`unwind $p as p merge (s:Base {objectid:p.s.objectid}) merge (e:Base {objectid:p.e.objectid}) merge (s)-[r:HasSession {objectid:p.r.objectid}]->(e) set s += p.s, e += p.e, r += p.r, s:Base, s:User, e:Base, e:Computer, s.lastseen = datetime({timezone: 'UTC'}), e.lastseen = datetime({timezone: 'UTC'});`, expectedPayloa).Return(resultMock, nil)
 	transactionMock.EXPECT().Commit().Return(nil)
 
 	require.Nil(t, tx.UpdateRelationshipBy(graph.RelationshipUpdate{
@@ -293,13 +297,13 @@ func TestNeo4jTransaction_CreateNode(t *testing.T) {
 		}
 
 		expectedProperties = map[string]any{
-			"0": map[string]any{
+			"p0": map[string]any{
 				"prop": "value",
 			},
 		}
 	)
 
-	transactionMock.EXPECT().Run(`create (n:User $0) return n`, expectedProperties).Return(resultMock, nil)
+	transactionMock.EXPECT().Run(`create (n:User $p0) return n`, expectedProperties).Return(resultMock, nil)
 	transactionMock.EXPECT().Commit()
 
 	resultMock.EXPECT().Err().Return(nil)

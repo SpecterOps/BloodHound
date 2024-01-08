@@ -1,17 +1,17 @@
 // Copyright 2023 Specter Ops, Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// 
+//
 // SPDX-License-Identifier: Apache-2.0
 
 //go:build serial_integration
@@ -23,11 +23,11 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/specterops/bloodhound/errors"
 	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/src/api/v2/integration"
 	"github.com/specterops/bloodhound/src/auth"
 	"github.com/stretchr/testify/require"
-	"github.com/specterops/bloodhound/errors"
 )
 
 const (
@@ -38,7 +38,7 @@ const (
 
 func Test_PermissionHandling(t *testing.T) {
 	var (
-		testCtx       = integration.NewContext(t, integration.StartBHServer)
+		testCtx       = integration.NewFOSSContext(t)
 		newUser       = testCtx.CreateUser(otherUser, otherUser, auth.RoleReadOnly)
 		newUserToken  = testCtx.CreateAuthToken(newUser.ID, "TestToken")
 		newUserClient = testCtx.NewAPIClientWithToken(newUserToken)
@@ -53,7 +53,7 @@ func Test_PermissionHandling(t *testing.T) {
 
 func Test_AuthRolesMatchInternalDefinitions(t *testing.T) {
 	var (
-		testCtx     = integration.NewContext(t, integration.StartBHServer)
+		testCtx     = integration.NewFOSSContext(t)
 		actualRoles = testCtx.ListRoles()
 	)
 
@@ -68,7 +68,7 @@ func Test_AuthRolesMatchInternalDefinitions(t *testing.T) {
 
 func Test_UserManagement(t *testing.T) {
 	var (
-		testCtx = integration.NewContext(t, integration.StartBHServer)
+		testCtx = integration.NewFOSSContext(t)
 		newUser = testCtx.CreateUser(otherUser, otherUser, auth.RoleReadOnly)
 	)
 
@@ -133,7 +133,7 @@ func Test_UserManagement(t *testing.T) {
 
 func Test_NonAdminFunctionality(t *testing.T) {
 	var (
-		testCtx        = integration.NewContext(t, integration.StartBHServer)
+		testCtx        = integration.NewFOSSContext(t)
 		newUser        = testCtx.CreateUser(otherUser, otherUser, auth.RoleReadOnly)
 		nonAdminUser   = testCtx.CreateUser(nonAdmin, nonAdmin, auth.RoleUser)
 		nonAdminToken  = testCtx.CreateAuthToken(nonAdminUser.ID, "NonAdmin Token")

@@ -81,7 +81,7 @@ func (s IDTraversal) BreadthFirst(ctx context.Context, plan IDPlan) error {
 		go func(workerID int) {
 			defer workerWG.Done()
 
-			if err := s.db.ReadTransaction(traversalCtx, func(tx graph.Transaction) error {
+			if err := s.db.ReadTransaction(ctx, func(tx graph.Transaction) error {
 				for {
 					if nextDescent, ok := channels.Receive(traversalCtx, segmentReaderC); !ok {
 						return nil
@@ -101,12 +101,12 @@ func (s IDTraversal) BreadthFirst(ctx context.Context, plan IDPlan) error {
 						errors.Add(fmt.Errorf("%w - Limit: %.2f MB - Memory In-Use: %.2f MB", ops.ErrTraversalMemoryLimit, tx.TraversalMemoryLimit().Mebibytes(), pathTree.SizeOf().Mebibytes()))
 					}
 
-					// Mark descent for this segment as complete
-					descentCount.Add(-1)
-
 					if !channels.Submit(traversalCtx, completionC, struct{}{}) {
 						return nil
 					}
+
+					// Mark descent for this segment as complete
+					descentCount.Add(-1)
 				}
 			}); err != nil && err != graph.ErrContextTimedOut {
 				// A worker encountered a fatal error, kill the traversal context

@@ -76,33 +76,39 @@ func TierZeroWellKnownSIDSuffixes() []string {
 		AdministratorsGroupSIDSuffix,
 	}
 }
-func FetchWellKnownTierZeroEntities(tx graph.Transaction, domainSID string) (graph.NodeSet, error) {
+
+func FetchWellKnownTierZeroEntities(ctx context.Context, db graph.Database, domainSID string) (graph.NodeSet, error) {
+	defer log.Measure(log.LevelInfo, "FetchWellKnownTierZeroEntities")()
+
 	nodes := graph.NewNodeSet()
 
-	for _, wellKnownSIDSuffix := range TierZeroWellKnownSIDSuffixes() {
-		if err := tx.Nodes().Filterf(func() graph.Criteria {
-			return query.And(
-				// Make sure we have the Group or User label. This should cover the case for URA as well as filter out all the other localgroups
-				query.KindIn(query.Node(), ad.Group, ad.User),
-				query.StringEndsWith(query.NodeProperty(common.ObjectID.String()), wellKnownSIDSuffix),
-				query.Equals(query.NodeProperty(ad.DomainSID.String()), domainSID),
-			)
-		}).Fetch(func(cursor graph.Cursor[*graph.Node]) error {
-			for node := range cursor.Chan() {
-				nodes.Add(node)
+	return nodes, db.ReadTransaction(ctx, func(tx graph.Transaction) error {
+		for _, wellKnownSIDSuffix := range TierZeroWellKnownSIDSuffixes() {
+			if err := tx.Nodes().Filterf(func() graph.Criteria {
+				return query.And(
+					// Make sure we have the Group or User label. This should cover the case for URA as well as filter out all the other localgroups
+					query.KindIn(query.Node(), ad.Group, ad.User),
+					query.StringEndsWith(query.NodeProperty(common.ObjectID.String()), wellKnownSIDSuffix),
+					query.Equals(query.NodeProperty(ad.DomainSID.String()), domainSID),
+				)
+			}).Fetch(func(cursor graph.Cursor[*graph.Node]) error {
+				for node := range cursor.Chan() {
+					nodes.Add(node)
+				}
+
+				return cursor.Error()
+			}); err != nil {
+				return err
 			}
-
-			return cursor.Error()
-		}); err != nil {
-			return nil, err
 		}
-	}
 
-	return nodes, nil
+		return nil
+	})
 }
 
 func FixWellKnownNodeTypes(ctx context.Context, db graph.Database) error {
 	defer log.Measure(log.LevelInfo, "Fix well known node types")()
+
 	groupSuffixes := []string{EnterpriseKeyAdminsGroupSIDSuffix,
 		KeyAdminsGroupSIDSuffix,
 		EnterpriseDomainControllersGroupSIDSuffix,
@@ -629,7 +635,7 @@ func getGoldenCertEdgeComposition(tx graph.Transaction, edge *graph.Relationship
 		return finalPaths, err
 	} else {
 		//Find hosted enterprise CA
-		if ecaPaths, err := ops.FetchPathSet(tx, tx.Relationships().Filter(query.And(
+		if ecaPaths, err := ops.FetchPathSet(tx.Relationships().Filter(query.And(
 			query.Equals(query.StartID(), startNode.ID),
 			query.KindIn(query.End(), ad.EnterpriseCA),
 			query.KindIn(query.Relationship(), ad.HostsCAService),

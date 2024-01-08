@@ -21,7 +21,9 @@ package graph
 import (
 	"context"
 	"errors"
+	"slices"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/specterops/bloodhound/dawgs/util/size"
@@ -90,6 +92,19 @@ func (s Direction) Pick(relationship *Relationship) (ID, error) {
 // PickReverse picks either the start or end Node ID from a Relationship depending on the direction of the receiver.
 func (s Direction) PickReverse(relationship *Relationship) (ID, error) {
 	return s.PickReverseID(relationship.StartID, relationship.EndID)
+}
+
+func (s Direction) String() string {
+	switch s {
+	case DirectionInbound:
+		return "inbound"
+	case DirectionOutbound:
+		return "outbound"
+	case DirectionBoth:
+		return "both"
+	default:
+		return "invalid"
+	}
 }
 
 // ID is a 32-bit database Entity identifier type. Negative ID value associations in DAWGS drivers are not recommended
@@ -175,6 +190,22 @@ type NodeUpdate struct {
 	IdentityProperties []string
 }
 
+func (s NodeUpdate) Key() (string, error) {
+	key := strings.Builder{}
+
+	slices.Sort(s.IdentityProperties)
+
+	for _, identityProperty := range s.IdentityProperties {
+		if propertyValue, err := s.Node.Properties.Get(identityProperty).String(); err != nil {
+			return "", err
+		} else {
+			key.WriteString(propertyValue)
+		}
+	}
+
+	return key.String(), nil
+}
+
 type RelationshipUpdate struct {
 	Relationship            *Relationship
 	IdentityProperties      []string
@@ -184,6 +215,46 @@ type RelationshipUpdate struct {
 	End                     *Node
 	EndIdentityKind         Kind
 	EndIdentityProperties   []string
+}
+
+func (s RelationshipUpdate) Key() (string, error) {
+	var (
+		key             = strings.Builder{}
+		startNodeUpdate = NodeUpdate{
+			Node:               s.Start,
+			IdentityKind:       s.StartIdentityKind,
+			IdentityProperties: s.StartIdentityProperties,
+		}
+
+		endNodeUpdate = NodeUpdate{
+			Node:               s.End,
+			IdentityKind:       s.EndIdentityKind,
+			IdentityProperties: s.EndIdentityProperties,
+		}
+	)
+
+	key.WriteString(s.Relationship.Kind.String())
+
+	if startKey, err := startNodeUpdate.Key(); err != nil {
+		return "", err
+	} else if endKey, err := endNodeUpdate.Key(); err != nil {
+		return "", err
+	} else {
+		key.WriteString(startKey)
+
+		slices.Sort(s.IdentityProperties)
+
+		for _, identityProperty := range s.IdentityProperties {
+			if propertyValue, err := s.Relationship.Properties.Get(identityProperty).String(); err != nil {
+				return "", err
+			} else {
+				key.WriteString(propertyValue)
+			}
+		}
+
+		key.WriteString(endKey)
+		return key.String(), nil
+	}
 }
 
 func (s RelationshipUpdate) IdentityPropertiesMap() map[string]any {
@@ -217,8 +288,12 @@ func (s RelationshipUpdate) EndIdentityPropertiesMap() map[string]any {
 }
 
 type Batch interface {
+	// WithGraph scopes the transaction to a specific graph. If the driver for the transaction does not support
+	// multiple  graphs the resulting transaction will target the default graph instead and this call becomes a no-op.
+	WithGraph(graphSchema Graph) Batch
+
 	// CreateNode creates a new Node in the database and returns the creation as a NodeResult.
-	CreateNode(properties *Properties, kinds ...Kind) error
+	CreateNode(node *Node) error
 
 	// DeleteNode deletes a node by the given ID.
 	DeleteNode(id ID) error
@@ -234,12 +309,13 @@ type Batch interface {
 	// exist, created.
 	UpdateNodeBy(update NodeUpdate) error
 
-	// CreateRelationship creates a new Relationship from the start Node to the end Node with the given Kind and
-	// Properties and returns the creation as a RelationshipResult.
-	CreateRelationship(startNode, endNode *Node, kind Kind, properties *Properties) error
+	// TODO: Existing batch logic expects this to perform an upsert on conficts with (start_id, end_id, kind). This is incorrect and should be refactored
+	CreateRelationship(relationship *Relationship) error
 
 	// CreateRelationshipByIDs creates a new Relationship from the start Node to the end Node with the given Kind and
 	// Properties and returns the creation as a RelationshipResult.
+	//
+	// Deprecated: Use CreateRelationship
 	CreateRelationshipByIDs(startNodeID, endNodeID ID, kind Kind, properties *Properties) error
 
 	// DeleteRelationship deletes a relationship by the given ID.
@@ -257,6 +333,10 @@ type Batch interface {
 // Transaction is an interface that contains all operations that may be executed against a DAWGS driver. DAWGS drivers are
 // expected to support all Transaction operations in-transaction.
 type Transaction interface {
+	// WithGraph scopes the transaction to a specific graph. If the driver for the transaction does not support
+	// multiple  graphs the resulting transaction will target the default graph instead and this call becomes a no-op.
+	WithGraph(graphSchema Graph) Transaction
+
 	// CreateNode creates a new Node in the database and returns the creation as a NodeResult.
 	CreateNode(properties *Properties, kinds ...Kind) (*Node, error)
 
@@ -264,16 +344,8 @@ type Transaction interface {
 	// entries in the database. Use CreateNode first to create a new Node.
 	UpdateNode(node *Node) error
 
-	// UpdateNodeBy updates a Node by attempting to write a valid merge statement for the criteria in the given
-	// NodeUpdate struct.
-	UpdateNodeBy(update NodeUpdate) error
-
 	// Nodes creates a new NodeQuery and returns it.
 	Nodes() NodeQuery
-
-	// CreateRelationship creates a new Relationship from the start Node to the end Node with the given Kind and
-	// Properties and returns the creation as a RelationshipResult.
-	CreateRelationship(startNode, endNode *Node, kind Kind, properties *Properties) (*Relationship, error)
 
 	// CreateRelationshipByIDs creates a new Relationship from the start Node to the end Node with the given Kind and
 	// Properties and returns the creation as a RelationshipResult.
@@ -284,15 +356,14 @@ type Transaction interface {
 	// Relationship.
 	UpdateRelationship(relationship *Relationship) error
 
-	// UpdateRelationshipBy updates a Relationship by attempting to write a valid merge statement for the criteria in
-	// the given RelationshipUpdate struct.
-	UpdateRelationshipBy(update RelationshipUpdate) error
-
 	// Relationships creates a new RelationshipQuery and returns it.
 	Relationships() RelationshipQuery
 
-	// Run allows a user to pass statements directly to the database.
-	Run(query string, parameters map[string]any) Result
+	// Raw allows a user to pass raw queries directly to the database without translation.
+	Raw(query string, parameters map[string]any) Result
+
+	// Query allows a user to execute a given cypher query that will be translated to the target database.
+	Query(query string, parameters map[string]any) Result
 
 	// Commit calls to commit this transaction right away.
 	Commit() error
@@ -311,7 +382,8 @@ type BatchDelegate func(batch Batch) error
 
 // TransactionConfig is a generic configuration that may apply to all supported databases.
 type TransactionConfig struct {
-	Timeout time.Duration
+	Timeout      time.Duration
+	DriverConfig any
 }
 
 // TransactionOption is a function that represents a configuration setting for the underlying database transaction.
@@ -339,16 +411,13 @@ type Database interface {
 	// transaction.
 	BatchOperation(ctx context.Context, batchDelegate BatchDelegate) error
 
-	// AssertSchema will apply the given schema model to the underlying database.
-	AssertSchema(ctx context.Context, schema *Schema) error
-
-	// FetchSchema will pull the schema of the underlying database and marshal it into the DAWGS schema model.
-	FetchSchema(ctx context.Context) (*Schema, error)
+	// AssertSchema will apply the given schema to the underlying database.
+	AssertSchema(ctx context.Context, dbSchema Schema) error
 
 	// Run allows a user to pass statements directly to the database. Since results may rely on a transactional context
 	// only an error is returned from this function
 	Run(ctx context.Context, query string, parameters map[string]any) error
 
 	// Close closes the database context and releases any pooled resources held by the instance.
-	Close() error
+	Close(ctx context.Context) error
 }

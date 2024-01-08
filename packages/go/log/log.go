@@ -221,13 +221,20 @@ func Measure(level Level, format string, args ...any) func() {
 	then := time.Now()
 
 	return func() {
-		WithLevel(level).Duration(FieldElapsed, time.Since(then)).Msgf(format, args...)
+		if elapsed := time.Since(then); elapsed >= measureThreshold {
+			WithLevel(level).Duration(FieldElapsed, elapsed).Msgf(format, args...)
+		}
 	}
 }
 
 var (
 	logMeasurePairCounter = atomic.Uint64{}
+	measureThreshold      = time.Second
 )
+
+func SetMeasureThreshold(newMeasureThreshold time.Duration) {
+	measureThreshold = newMeasureThreshold
+}
 
 func LogAndMeasure(level Level, format string, args ...any) func() {
 	var (
@@ -236,9 +243,12 @@ func LogAndMeasure(level Level, format string, args ...any) func() {
 		then    = time.Now()
 	)
 
-	WithLevel(level).Uint64(FieldMeasurementID, pairID).Msg(message)
+	// Only output the message header on debug
+	WithLevel(LevelDebug).Uint64(FieldMeasurementID, pairID).Msg(message)
 
 	return func() {
-		WithLevel(level).Duration(FieldElapsed, time.Since(then)).Uint64(FieldMeasurementID, pairID).Msg(message)
+		if elapsed := time.Since(then); elapsed >= measureThreshold {
+			WithLevel(level).Duration(FieldElapsed, elapsed).Uint64(FieldMeasurementID, pairID).Msg(message)
+		}
 	}
 }

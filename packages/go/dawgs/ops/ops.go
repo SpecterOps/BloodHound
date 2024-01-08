@@ -27,6 +27,18 @@ import (
 	"github.com/specterops/bloodhound/dawgs/util/size"
 )
 
+func FetchAllNodeProperties(tx graph.Transaction, nodes graph.NodeSet) error {
+	return tx.Nodes().Filter(
+		query.InIDs(query.NodeID(), nodes.IDs()...),
+	).Fetch(func(cursor graph.Cursor[*graph.Node]) error {
+		for next := range cursor.Chan() {
+			nodes[next.ID] = next
+		}
+
+		return cursor.Error()
+	})
+}
+
 func FetchNodeProperties(tx graph.Transaction, nodes graph.NodeSet, propertyNames []string) error {
 	returningCriteria := make([]graph.Criteria, len(propertyNames)+1)
 	returningCriteria[0] = query.NodeID()
@@ -37,31 +49,32 @@ func FetchNodeProperties(tx graph.Transaction, nodes graph.NodeSet, propertyName
 
 	return tx.Nodes().Filter(
 		query.InIDs(query.NodeID(), nodes.IDs()...),
-	).Execute(func(results graph.Result) error {
+	).Query(func(results graph.Result) error {
 		var nodeID graph.ID
 
 		for results.Next() {
-			var (
-				mapper         = results.Values()
-				nodeProperties = map[string]any{}
-			)
-
-			// Map the node ID first
-			if err := mapper.Map(&nodeID); err != nil {
+			if values, err := results.Values(); err != nil {
 				return err
-			}
+			} else {
+				nodeProperties := map[string]any{}
 
-			// Map requested properties next by matching the name index
-			for idx := 0; idx < len(propertyNames); idx++ {
-				if next, err := mapper.Next(); err != nil {
+				// Map the node ID first
+				if err := values.Map(&nodeID); err != nil {
 					return err
-				} else {
-					nodeProperties[propertyNames[idx]] = next
 				}
-			}
 
-			// Update the node in the node set
-			nodes[nodeID].Properties = graph.AsProperties(nodeProperties)
+				// Map requested properties next by matching the name index
+				for idx := 0; idx < len(propertyNames); idx++ {
+					if next, err := values.Next(); err != nil {
+						return err
+					} else {
+						nodeProperties[propertyNames[idx]] = next
+					}
+				}
+
+				// Update the node in the node set
+				nodes[nodeID].Properties = graph.AsProperties(nodeProperties)
+			}
 		}
 
 		return nil
@@ -146,7 +159,7 @@ func FetchPathSetByQuery(tx graph.Transaction, query string) (graph.PathSet, err
 		pathSet     graph.PathSet
 	)
 
-	if result := tx.Run(query, map[string]any{}); result.Error() != nil {
+	if result := tx.Query(query, map[string]any{}); result.Error() != nil {
 		return pathSet, result.Error()
 	} else {
 		defer result.Close()
@@ -158,7 +171,9 @@ func FetchPathSetByQuery(tx graph.Transaction, query string) (graph.PathSet, err
 				path         graph.Path
 			)
 
-			if mapped, err := result.Values().MapOptions(&relationship, &node, &path); err != nil {
+			if values, err := result.Values(); err != nil {
+				return pathSet, err
+			} else if mapped, err := values.MapOptions(&relationship, &node, &path); err != nil {
 				return pathSet, err
 			} else {
 				switch typedMapped := mapped.(type) {
@@ -323,22 +338,32 @@ func FetchRelationshipIDs(query graph.RelationshipQuery) ([]graph.ID, error) {
 	})
 }
 
-func FetchPathSet(tx graph.Transaction, query graph.RelationshipQuery) (graph.PathSet, error) {
+func FetchPathSet(queryInst graph.RelationshipQuery) (graph.PathSet, error) {
 	pathSet := graph.NewPathSet()
-	return pathSet, query.Fetch(func(cursor graph.Cursor[*graph.Relationship]) error {
-		for rel := range cursor.Chan() {
-			if start, end, err := FetchRelationshipNodes(tx, rel); err != nil {
+
+	return pathSet, queryInst.Query(func(results graph.Result) error {
+		defer results.Close()
+
+		for results.Next() {
+			var (
+				start, end graph.Node
+				edge       graph.Relationship
+			)
+
+			if err := results.Scan(&start, &edge, &end); err != nil {
 				return err
 			} else {
 				pathSet.AddPath(graph.Path{
-					Nodes: []*graph.Node{start, end},
-					Edges: []*graph.Relationship{rel},
+					Nodes: []*graph.Node{&start, &end},
+					Edges: []*graph.Relationship{&edge},
 				})
 			}
 		}
 
-		return nil
-	})
+		return results.Error()
+	}, query.Returning(
+		query.Start(), query.Relationship(), query.End(),
+	))
 }
 
 func FetchRelationshipNodes(tx graph.Transaction, relationship *graph.Relationship) (*graph.Node, *graph.Node, error) {

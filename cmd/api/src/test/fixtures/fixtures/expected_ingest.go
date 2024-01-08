@@ -18,8 +18,7 @@ package fixtures
 
 import (
 	"bytes"
-
-	"github.com/specterops/bloodhound/cypher/frontend"
+	"github.com/specterops/bloodhound/cypher/gen/cypher"
 	"github.com/specterops/bloodhound/cypher/model"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/dawgs/query"
@@ -249,7 +248,7 @@ var (
 
 func FormatQueryComponent(criteria graph.Criteria) string {
 	var (
-		emitter      = frontend.NewCypherEmitter(false)
+		emitter      = cypher.NewCypherEmitter(false)
 		stringBuffer = &bytes.Buffer{}
 	)
 
