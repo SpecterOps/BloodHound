@@ -16,9 +16,12 @@ spec:
             name: {{ .Values.bloodhound.name }}-service
             port:
               number: {{ .Values.bloodhound.service.port }}
-  {{- if .Values.bloodhound.ingress.tls }}
+  {{- if .Values.bloodhound.tls.enabled }}
   tls:
   - hosts:
     - {{ .Values.bloodhound.ingress.host }}
+    {{- if .Values.bloodhound.tls.customCert }}
+    secretName: {{ .Values.bloodhound.tls.certSecret }}
+    {{- end }}
   {{- end }}
 {{- end }}
