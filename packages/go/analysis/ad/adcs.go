@@ -20,7 +20,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-
 	"github.com/specterops/bloodhound/analysis"
 	"github.com/specterops/bloodhound/analysis/impact"
 	"github.com/specterops/bloodhound/dawgs/cardinality"
@@ -429,20 +428,24 @@ func PostADCS(ctx context.Context, db graph.Database, groupExpansions impact.Pat
 	}
 }
 
+// postADCSPreProcessStep1 processes the edges that are not dependent on any other post-processed edges
 func postADCSPreProcessStep1(ctx context.Context, db graph.Database, enterpriseCertAuthorities, rootCertAuthorities []*graph.Node) (*analysis.AtomicPostProcessingStats, error) {
 	operation := analysis.NewPostRelationshipOperation(ctx, db, "ADCS Post Processing Step 1")
 
 	if err := PostTrustedForNTAuth(ctx, db, operation); err != nil {
 		return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("failed post processing for %s: %w", ad.TrustedForNTAuth.String(), err)
-	} else if err := PostIssuedSignedBy(ctx, db, operation, enterpriseCertAuthorities, rootCertAuthorities); err != nil {
+	} else if err = PostIssuedSignedBy(ctx, db, operation, enterpriseCertAuthorities, rootCertAuthorities); err != nil {
 		return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("failed post processing for %s: %w", ad.IssuedSignedBy.String(), err)
-	} else if err := PostEnterpriseCAFor(ctx, db, operation, enterpriseCertAuthorities); err != nil {
+	} else if err = PostEnterpriseCAFor(ctx, db, operation, enterpriseCertAuthorities); err != nil {
 		return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("failed post processing for %s: %w", ad.EnterpriseCAFor.String(), err)
+	} else if err = PostCanAbuseUPNCertMapping(ctx, db, operation, enterpriseCertAuthorities); err != nil {
+		return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("failed post processing for %s: %w", ad.CanAbuseUPNCertMapping.String(), err)
 	} else {
 		return &operation.Stats, operation.Done()
 	}
 }
 
+// postADCSPreProcessStep2 Processes the edges that are dependent on those processed in postADCSPreProcessStep1
 func postADCSPreProcessStep2(ctx context.Context, db graph.Database, certTemplates []*graph.Node) (*analysis.AtomicPostProcessingStats, error) {
 	operation := analysis.NewPostRelationshipOperation(ctx, db, "ADCS Post Processing Step 2")
 
@@ -508,7 +511,7 @@ func PostTrustedForNTAuth(ctx context.Context, db graph.Database, operation anal
 	return nil
 }
 
-func PostIssuedSignedBy(ctx context.Context, db graph.Database, operation analysis.StatTrackedOperation[analysis.CreatePostRelationshipJob], enterpriseCertAuthorities []*graph.Node, rootCertAuthorities []*graph.Node) error {
+func PostIssuedSignedBy(_ context.Context, _ graph.Database, operation analysis.StatTrackedOperation[analysis.CreatePostRelationshipJob], enterpriseCertAuthorities []*graph.Node, rootCertAuthorities []*graph.Node) error {
 
 	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
 		for _, node := range enterpriseCertAuthorities {
@@ -549,8 +552,7 @@ func PostIssuedSignedBy(ctx context.Context, db graph.Database, operation analys
 	return nil
 }
 
-func PostEnterpriseCAFor(ctx context.Context, db graph.Database, operation analysis.StatTrackedOperation[analysis.CreatePostRelationshipJob], enterpriseCertAuthorities []*graph.Node) error {
-
+func PostEnterpriseCAFor(_ context.Context, _ graph.Database, operation analysis.StatTrackedOperation[analysis.CreatePostRelationshipJob], enterpriseCertAuthorities []*graph.Node) error {
 	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
 		for _, ecaNode := range enterpriseCertAuthorities {
 			if thumbprint, err := ecaNode.Properties.Get(ad.CertThumbprint.String()).String(); err != nil {
@@ -565,17 +567,82 @@ func PostEnterpriseCAFor(ctx context.Context, db graph.Database, operation analy
 							ToID:   rootCANodeID,
 							Kind:   ad.EnterpriseCAFor,
 						}) {
-							return nil
+							return fmt.Errorf("context timed out while creating EnterpriseCAFor edge")
 						}
 					}
 				}
 			}
 		}
-
 		return nil
 	})
-
 	return nil
+}
+
+func PostCanAbuseUPNCertMapping(_ context.Context, _ graph.Database, operation analysis.StatTrackedOperation[analysis.CreatePostRelationshipJob], enterpriseCertAuthorities []*graph.Node) error {
+	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
+		for _, eca := range enterpriseCertAuthorities {
+			if ecaDomainSID, err := eca.Properties.Get(ad.DomainSID.String()).String(); err != nil {
+				return err
+			} else if ecaDomain, err := analysis.FetchNodeByObjectID(tx, ecaDomainSID); err != nil {
+				return err
+			} else if trustedByNodes, err := fetchNodesWithTrustedByParentChildRelationship(tx, ecaDomain); err != nil {
+				return err
+			} else {
+				for _, trustedByDomain := range trustedByNodes {
+					if dcForNodes, err := fetchNodesWithDCForEdge(tx, trustedByDomain); err != nil {
+						return err
+					} else {
+						for _, dcForNode := range dcForNodes {
+							if cmmrProperty, err := dcForNode.Properties.Get(ad.CertificateMappingMethodsRaw.String()).Int(); err != nil {
+								return err
+							} else if cmmrProperty&0x04 == 0x04 {
+								if !channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
+									FromID: eca.ID,
+									ToID:   dcForNode.ID,
+									Kind:   ad.CanAbuseUPNCertMapping,
+								}) {
+									return fmt.Errorf("context timed out while creating CanAbuseUPNCert edge")
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+		return nil
+	})
+	return nil
+}
+
+func fetchNodesWithTrustedByParentChildRelationship(tx graph.Transaction, root *graph.Node) (graph.NodeSet, error) {
+	if nodeSet, err := ops.AcyclicTraverseTerminals(tx, ops.TraversalPlan{
+		Root:      root,
+		Direction: graph.DirectionOutbound,
+		BranchQuery: func() graph.Criteria {
+			return query.And(
+				query.KindIn(query.Relationship(), ad.TrustedBy),
+				query.Equals(query.RelationshipProperty(ad.TrustType.String()), "ParentChild"),
+			)
+		},
+	}); err != nil {
+		return graph.NodeSet{}, err
+	} else {
+		nodeSet.Add(root)
+		return nodeSet, nil
+	}
+}
+
+func fetchNodesWithDCForEdge(tx graph.Transaction, rootNode *graph.Node) (graph.NodeSet, error) {
+	return ops.AcyclicTraverseTerminals(tx, ops.TraversalPlan{
+		Root:      rootNode,
+		Direction: graph.DirectionInbound,
+		BranchQuery: func() graph.Criteria {
+			return query.And(
+				query.KindIn(query.Start(), ad.Computer),
+				query.KindIn(query.Relationship(), ad.DCFor),
+			)
+		},
+	})
 }
 
 func processCertChainParent(node *graph.Node, tx graph.Transaction) ([]analysis.CreatePostRelationshipJob, error) {
