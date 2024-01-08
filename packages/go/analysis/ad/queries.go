@@ -1458,18 +1458,6 @@ func FetchEnterpriseCAsRootCAForPathToDomain(tx graph.Transaction, domain *graph
 		BranchQuery: func() graph.Criteria {
 			return query.KindIn(query.Relationship(), ad.IssuedSignedBy, ad.EnterpriseCAFor, ad.RootCAFor)
 		},
-		DescentFilter: func(ctx *ops.TraversalContext, segment *graph.PathSegment) bool {
-			depth := segment.Depth()
-			if depth == 1 && !segment.Edge.Kind.Is(ad.RootCAFor) {
-				return false
-			} else if depth == 2 && !segment.Edge.Kind.Is(ad.EnterpriseCAFor) {
-				return false
-			} else if depth == 3 && !segment.Edge.Kind.Is(ad.IssuedSignedBy) {
-				return false
-			} else {
-				return true
-			}
-		},
 		PathFilter: func(ctx *ops.TraversalContext, segment *graph.PathSegment) bool {
 			return segment.Node.Kinds.ContainsOneOf(ad.EnterpriseCA)
 		},

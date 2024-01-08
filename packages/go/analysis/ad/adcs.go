@@ -97,7 +97,7 @@ func PostADCSESC3(ctx context.Context, tx graph.Transaction, outC chan<- analysi
 				continue
 			}
 
-			if inboundTemplates, err := ops.FetchEndNodes(tx.Relationships().Filterf(func() graph.Criteria {
+			if inboundTemplates, err := ops.FetchStartNodes(tx.Relationships().Filterf(func() graph.Criteria {
 				return query.And(
 					query.Equals(query.EndID(), certTemplateTwo.ID),
 					query.Kind(query.Relationship(), ad.EnrollOnBehalfOf),
