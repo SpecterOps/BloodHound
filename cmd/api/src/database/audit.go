@@ -37,6 +37,7 @@ func newAuditLog(ctx ctx.Context, action string, data model.Auditable, idResolve
 		Action:    action,
 		Fields:    types.JSONUntypedObject(data.AuditData()),
 		RequestID: ctx.RequestID,
+		Status:    "success", // TODO: parameterize this so we can pass the actual status instead of hard-coding
 	}
 
 	authContext := ctx.AuthCtx
