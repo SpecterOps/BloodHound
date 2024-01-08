@@ -70,10 +70,14 @@ export const sourceNodeEdited = (searchTerm: string): types.SourceNodeEditedActi
     };
 };
 
-export const sourceNodeSelected = (node: types.SearchNodeType | null): types.SourceNodeSelectedAction => {
+export const sourceNodeSelected = (
+    node: types.SearchNodeType | null,
+    doPathfindSearch: boolean = false // sometimes, selecting a source node should trigger a pathfinding search, and other times it should only trigger a single node search
+): types.SourceNodeSelectedAction => {
     return {
         type: types.SOURCE_NODE_SELECTED,
         node,
+        doPathfindSearch,
     };
 };
 

@@ -82,11 +82,14 @@ describe('ContextMenu', async () => {
         await user.click(startNodeOption);
 
         expect(sourceNodeSelectedSpy).toBeCalledTimes(1);
-        expect(sourceNodeSelectedSpy).toHaveBeenCalledWith({
-            name: 'foo',
-            objectid: '1234',
-            type: 'User',
-        });
+        expect(sourceNodeSelectedSpy).toHaveBeenCalledWith(
+            {
+                name: 'foo',
+                objectid: '1234',
+                type: 'User',
+            },
+            true
+        );
     });
 
     it('handles setting an end node', async () => {

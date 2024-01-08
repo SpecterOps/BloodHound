@@ -24,12 +24,10 @@ services:
       - --providers.docker
       - --providers.docker.exposedbydefault=false
     ports:
-      - ${WEB_PORT:-80}:80
-      - ${TRAEFIK_PORT:-8000}:8080
+      - ${WEB_PORT:-127.0.0.1:80}:80
+      - ${TRAEFIK_PORT:-127.0.0.1:8000}:8080
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
-    extra_hosts:
-      - host.docker.internal:host-gateway
 
   app-db:
     image: docker.io/library/postgres:13.2
@@ -38,7 +36,7 @@ services:
       - POSTGRES_PASSWORD=${BH_POSTGRES_PASSWORD:-bloodhoundcommunityedition}
       - POSTGRES_DB=${BH_POSTGRES_DB:-bloodhound}
     ports:
-      - ${BH_POSTGRES_PORT:-5432}:5432
+      - ${BH_POSTGRES_PORT:-127.0.0.1:5432}:5432
     volumes:
       - ${BH_POSTGRES_VOLUME:-postgres-data}:/var/lib/postgresql/data
     healthcheck:
@@ -61,7 +59,7 @@ services:
       PGADMIN_DEFAULT_PASSWORD: ${BH_PG_ADMIN_PASSWORD:-bloodhoundcommunityedition}
       PGADMIN_LISTEN_PORT: 5050
     ports:
-      - ${BH_PG_ADMIN_PORT:-5050}:5050
+      - ${BH_PG_ADMIN_PORT:-127.0.0.1:5050}:5050
     labels:
       - traefik.enable=true
       - traefik.http.routers.pgadmin.rule=Host(`${BH_PG_ADMIN_HOSTNAME:-pgadmin.localhost}`)
@@ -79,8 +77,8 @@ services:
       - NEO4J_AUTH=${BH_NEO4J_AUTH:-neo4j/bloodhoundcommunityedition}
       - NEO4J_dbms_allow__upgrade=${BH_NEO4J_ALLOW_UPGRADE:-true}
     ports:
-      - ${BH_NEO4J_PORT:-7687}:7687
-      - ${BH_NEO4J_WEB_PORT:-7474}:7474
+      - ${BH_NEO4J_PORT:-127.0.0.1:7687}:7687
+      - ${BH_NEO4J_WEB_PORT:-127.0.0.1:7474}:7474
     volumes:
       - ${BH_NEO4J_VOLUME:-neo4j-data}:/data
     labels:
@@ -108,7 +106,7 @@ services:
       dockerfile: api.Dockerfile
     command: "-c .air.toml ${AIR_FLAGS:-''}"
     ports:
-      - ${BH_API_PORT:-8080}:8080
+      - ${BH_API_PORT:-127.0.0.1:8080}:8080
     labels:
       - traefik.enable=true
       - traefik.http.routers.bhapi.rule=Host(`${BH_HOSTNAME:-bloodhound.localhost}`) && PathPrefix(`/api`)
@@ -118,8 +116,6 @@ services:
       - .:/bloodhound:ro
       - ./local-harnesses/${BH_CONFIG_FILE:-build.config.json}:/build.config.json:ro
       - go-pkg-mod:/go/pkg/mod
-    extra_hosts:
-      - host.docker.internal:host-gateway
     depends_on:
       app-db:
         condition: service_healthy
@@ -155,8 +151,8 @@ services:
       dockerfile: api.Dockerfile
     command: "-c .air.debug.toml ${AIR_FLAGS:-''}"
     ports:
-      - ${BH_API_PORT:-8080}:8080
-      - ${DEBUG_PORT:-3456}:2345
+      - ${BH_API_PORT:-127.0.0.1:8080}:8080
+      - ${DEBUG_PORT:-127.0.0.1:3456}:2345
     labels:
       - traefik.enable=true
       - traefik.http.routers.debugapi.rule=Host(`${BH_HOSTNAME:-bloodhound.localhost}`) && PathPrefix(`/api`)
@@ -165,8 +161,6 @@ services:
     volumes:
       - .:/bloodhound:ro
       - ./local-harnesses/${BH_CONFIG_FILE:-build.config.json}:/build.config.json:ro
-    extra_hosts:
-      - host.docker.internal:host-gateway
     depends_on:
       app-db:
         condition: service_healthy
