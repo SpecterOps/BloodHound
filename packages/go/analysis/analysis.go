@@ -67,12 +67,8 @@ func GetNodeKind(node *graph.Node) graph.Kind {
 	for _, kind := range node.Kinds {
 		if kind.Is(ad.Entity, azure.Entity) {
 			baseKind = kind
-		} else if kind.Is(ad.LocalGroup) {
+		} else if IsKnownKind(kind, resultKind) {
 			// Allow ad.LocalGroup to overwrite NodeKindUnknown, but nothing else
-			if resultKind.String() == NodeKindUnknown {
-				resultKind = kind
-			}
-		} else {
 			resultKind = kind
 		}
 	}
@@ -102,6 +98,20 @@ func ClearSystemTags(ctx context.Context, db graph.Database) error {
 			}).Update(props)
 		}
 	})
+}
+
+// IsKnownKind takes a kind and current result kind and returns whether the kind can be determined as a known kind
+func IsKnownKind(kind, result graph.Kind) bool {
+	// If we run into a local group kind, we want to only consider it valid if no other known kinds have been found yet
+	if kind.Is(ad.LocalGroup) && result.String() != NodeKindUnknown {
+		return false
+	}
+
+	if _, err := ParseKind(kind.String()); err != nil {
+		return false
+	} else {
+		return true
+	}
 }
 
 func ParseKind(rawKind string) (graph.Kind, error) {
