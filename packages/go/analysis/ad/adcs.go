@@ -269,7 +269,7 @@ func EnrollOnBehalfOfVersionOne(tx graph.Transaction, versionOneCertTemplates []
 	results := make([]analysis.CreatePostRelationshipJob, 0)
 
 	for _, certTemplateOne := range allCertTemplates {
-		//prefilter as much as we can first
+		// prefilter as much as we can first
 		if slices.Contains(versionOneCertTemplates, certTemplateOne) {
 			continue
 		} else if hasEku, err := certTemplateHasEkuOrAll(certTemplateOne, EkuCertRequestAgent, EkuAnyPurpose); err != nil {
@@ -401,7 +401,6 @@ func PostADCS(ctx context.Context, db graph.Database, groupExpansions impact.Pat
 				innerDomain := domain
 
 				operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
-
 					if enterpriseCAs, err := FetchEnterpriseCAsTrustedForNTAuthToDomain(tx, innerDomain); err != nil {
 						return err
 					} else {
@@ -472,7 +471,6 @@ func PostGoldenCert(ctx context.Context, tx graph.Transaction, outC chan<- analy
 }
 
 func PostTrustedForNTAuth(ctx context.Context, db graph.Database, operation analysis.StatTrackedOperation[analysis.CreatePostRelationshipJob]) error {
-
 	if ntAuthStoreNodes, err := FetchNodesByKind(ctx, db, ad.NTAuthStore); err != nil {
 		return err
 	} else {
@@ -482,7 +480,7 @@ func PostTrustedForNTAuth(ctx context.Context, db graph.Database, operation anal
 			operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
 				if thumbprints, err := innerNode.Properties.Get(ad.CertThumbprints.String()).StringSlice(); err != nil {
 					if strings.Contains(err.Error(), graph.ErrPropertyNotFound.Error()) {
-						log.Warnf("PostTrustedForNTAuth; thumbprint property not available for post processing: %v", err)
+						log.Warnf("unable to post-process TrustedForNTAuth edge for NTAuthStore node %d due to missing adcs data: %v", innerNode.ID, err)
 						return nil
 					}
 					return err
@@ -514,7 +512,6 @@ func PostTrustedForNTAuth(ctx context.Context, db graph.Database, operation anal
 }
 
 func PostIssuedSignedBy(ctx context.Context, db graph.Database, operation analysis.StatTrackedOperation[analysis.CreatePostRelationshipJob], enterpriseCertAuthorities []*graph.Node, rootCertAuthorities []*graph.Node) error {
-
 	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
 		for _, node := range enterpriseCertAuthorities {
 			if postRels, err := processCertChainParent(node, tx); err != nil && !errors.Is(err, ErrNoCertParent) {
@@ -555,12 +552,11 @@ func PostIssuedSignedBy(ctx context.Context, db graph.Database, operation analys
 }
 
 func PostEnterpriseCAFor(ctx context.Context, db graph.Database, operation analysis.StatTrackedOperation[analysis.CreatePostRelationshipJob], enterpriseCertAuthorities []*graph.Node) error {
-
 	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
 		for _, ecaNode := range enterpriseCertAuthorities {
 			if thumbprint, err := ecaNode.Properties.Get(ad.CertThumbprint.String()).String(); err != nil {
 				if strings.Contains(err.Error(), graph.ErrPropertyNotFound.Error()) {
-					log.Warnf("PostEnterpriseCAFor; thumbprint property not available for post processing: %v", err)
+					log.Warnf("unable to post-process EnterpriseCAFor edge for EnterpriseCA node %d due to missing adcs data: %v", ecaNode.ID, err)
 					return nil
 				}
 				return err
@@ -590,7 +586,7 @@ func PostEnterpriseCAFor(ctx context.Context, db graph.Database, operation analy
 func processCertChainParent(node *graph.Node, tx graph.Transaction) ([]analysis.CreatePostRelationshipJob, error) {
 	if certChain, err := node.Properties.Get(ad.CertChain.String()).StringSlice(); err != nil {
 		if strings.Contains(err.Error(), graph.ErrPropertyNotFound.Error()) {
-			log.Warnf("IssuedSignedBy; certchain property not available for post processing: %v", err)
+			log.Warnf("unable to post-process IssuedSignedBy edge for node %d due to missing adcs data: %v", node.ID, err)
 			return []analysis.CreatePostRelationshipJob{}, nil
 		}
 		return []analysis.CreatePostRelationshipJob{}, err
