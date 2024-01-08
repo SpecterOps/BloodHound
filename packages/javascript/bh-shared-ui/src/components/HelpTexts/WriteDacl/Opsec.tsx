@@ -31,9 +31,9 @@ const Opsec: FC = () => {
                 handled the request.
             </Typography>
             <Typography variant='body2'>
-                Additional opsec considerations depend on the target object and how to take advantage of this permission.
-                Opsec considerations for each abuse primitive are documented on the specific abuse edges and on the
-                BloodHound wiki.
+                Additional opsec considerations depend on the target object and how to take advantage of this
+                permission. Opsec considerations for each abuse primitive are documented on the specific abuse edges and
+                on the BloodHound wiki.
             </Typography>
         </>
     );

@@ -115,7 +115,7 @@
         },
         {
           "name": "edge_type",
-          "description": "The type of edge to show the composition for. \n\n<b>NOTE:</b> Currently only the `GoldenCert` and `ADCSESC1` edges are supported. More edges will be supported with future updates.",
+          "description": "The type of edge to show the composition for. \n\n<b>NOTE:</b> Currently only the `GoldenCert`, `ADCSESC1`, and `ADCSESC3` edges are supported. More edges will be supported with future updates.",
           "in": "query",
           "required": true
         }

@@ -179,3 +179,11 @@ func FilterEnrollers(node graph.Node) graph.Criteria {
 		query.Kind(query.Start(), ad.Entity),
 	)
 }
+
+func FilterPublishedCAs(certTemplate *graph.Node) graph.Criteria {
+	return query.And(
+		query.Equals(query.StartID(), certTemplate.ID),
+		query.KindIn(query.End(), ad.EnterpriseCA),
+		query.KindIn(query.Relationship(), ad.PublishedTo),
+	)
+}
