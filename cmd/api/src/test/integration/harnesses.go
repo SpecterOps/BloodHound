@@ -1482,7 +1482,7 @@ func (s *ESC3Harness1) Setup(graphTestContext *GraphTestContext) {
 	s.Group1 = graphTestContext.NewActiveDirectoryGroup("Group1", sid)
 	s.Group2 = graphTestContext.NewActiveDirectoryGroup("Group2", sid)
 	s.CertTemplate0 = graphTestContext.NewActiveDirectoryCertTemplate("CertTemplate0", sid, false, true, false, true, 1, 0, emptyEkus, emptyEkus)
-	s.CertTemplate1 = graphTestContext.NewActiveDirectoryCertTemplate("CertTemplate1", sid, false, true, false, false, 2, 0, emptyEkus, emptyEkus)
+	s.CertTemplate1 = graphTestContext.NewActiveDirectoryCertTemplate("CertTemplate1", sid, false, false, false, false, 2, 0, emptyEkus, emptyEkus)
 	s.CertTemplate2 = graphTestContext.NewActiveDirectoryCertTemplate("CertTemplate2", sid, false, true, false, true, 1, 0, emptyEkus, emptyEkus)
 	s.CertTemplate3 = graphTestContext.NewActiveDirectoryCertTemplate("CertTemplate3", sid, false, false, false, false, 1, 0, emptyEkus, emptyEkus)
 	s.EnterpriseCA1 = graphTestContext.NewActiveDirectoryEnterpriseCA("EnterpriseCA1", sid)
