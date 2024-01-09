@@ -75,8 +75,8 @@ func (s ADCSCache) BuildCache(ctx context.Context, db graph.Database, enterprise
 				} else if authStoreForNodes, err := FetchEnterpriseCAsTrustedForNTAuthToDomain(tx, domain); err != nil {
 					log.Errorf("error getting cas via authstorefor for domain %d: %w", domain.ID, err)
 				} else {
-					s.AuthStoreForChainValid[domain.ID] = nodeSetToBitmap(authStoreForNodes)
-					s.RootCAForChainValid[domain.ID] = nodeSetToBitmap(rootCaForNodes)
+					s.AuthStoreForChainValid[domain.ID] = cardinality.NodeSetToDuplex(authStoreForNodes)
+					s.RootCAForChainValid[domain.ID] = cardinality.NodeSetToDuplex(rootCaForNodes)
 				}
 			}
 		}
@@ -85,14 +85,6 @@ func (s ADCSCache) BuildCache(ctx context.Context, db graph.Database, enterprise
 	})
 
 	log.Infof("Finished building adcs cache")
-}
-
-func nodeSetToBitmap(set graph.NodeSet) cardinality.Duplex[uint32] {
-	bitmap := cardinality.NewBitmap32()
-	for _, s := range set {
-		bitmap.Add(s.ID.Uint32())
-	}
-	return bitmap
 }
 
 func (s ADCSCache) DoesCAChainProperlyToDomain(enterpriseCA, domain *graph.Node) bool {

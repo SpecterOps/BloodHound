@@ -1494,10 +1494,6 @@ func FetchCertTemplatePathToDomain(tx graph.Transaction, certTemplate, domain *g
 
 func FetchCertTemplateCAs(tx graph.Transaction, certTemplate *graph.Node) (graph.NodeSet, error) {
 	return ops.FetchEndNodes(tx.Relationships().Filter(
-		query.And(
-			query.Equals(query.StartID(), certTemplate.ID),
-			query.KindIn(query.Relationship(), ad.PublishedTo),
-			query.KindIn(query.End(), ad.EnterpriseCA),
-		),
+		FilterPublishedCAs(certTemplate),
 	))
 }
