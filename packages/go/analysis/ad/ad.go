@@ -416,7 +416,6 @@ func CalculateCrossProductBitmaps(groupExpansions impact.PathAggregator, nodeSet
 		idCardinalityCount := getCardinalityCount(id, idCardinality, cardinalityCache)
 		cardinalityCache[id] = idCardinalityCount
 		if idCardinalityCount > 0 {
-			cardinalityCache[id] = idCardinalityCount
 			checkSet.Or(idCardinality.(cardinality.Duplex[uint32]))
 		}
 
@@ -433,7 +432,6 @@ func CalculateCrossProductBitmaps(groupExpansions impact.PathAggregator, nodeSet
 				idCardinalityCount := getCardinalityCount(id, idCardinality, cardinalityCache)
 				cardinalityCache[id] = idCardinalityCount
 				if idCardinalityCount > 0 {
-					cardinalityCache[id] = idCardinalityCount
 					tempSet.Or(idCardinality.(cardinality.Duplex[uint32]))
 				}
 
@@ -452,8 +450,8 @@ func CalculateCrossProductBitmaps(groupExpansions impact.PathAggregator, nodeSet
 		} else {
 			idCardinality := groupExpansions.Cardinality(id)
 			idCardinalityCount := getCardinalityCount(id, idCardinality, cardinalityCache)
+			cardinalityCache[id] = idCardinalityCount
 			if idCardinalityCount > 0 {
-				cardinalityCache[id] = idCardinalityCount
 				unrollSet.Or(idCardinality.(cardinality.Duplex[uint32]))
 			}
 		}
