@@ -28,12 +28,12 @@ type AuditLog struct {
 	CreatedAt  time.Time               `json:"created_at" gorm:"index"`
 	ActorID    string                  `json:"actor_id" gorm:"index"`
 	ActorName  string                  `json:"actor_name"`
+	ActorEmail string                  `json:"actor_email"`
 	Action     string                  `json:"action" gorm:"index"`
 	Fields     types.JSONUntypedObject `json:"fields"`
 	RequestID  string                  `json:"request_id"`
-	ActorEmail string                  `json:"actor_email"`
-	Status     string                  `json:"status"`
 	Source     string                  `json:"source"`
+	Status     string                  `json:"status"`
 }
 
 func (s AuditLog) String() string {
@@ -47,12 +47,12 @@ func (s AuditLogs) IsSortable(column string) bool {
 	case "id",
 		"actor_id",
 		"actor_name",
+		"actor_email",
 		"action",
 		"request_id",
 		"created_at",
-		"actor_email",
-		"status",
-		"source":
+		"source",
+		"status":
 		return true
 	default:
 		return false
@@ -64,12 +64,12 @@ func (s AuditLogs) ValidFilters() map[string][]FilterOperator {
 		"id":          {Equals, GreaterThan, GreaterThanOrEquals, LessThan, LessThanOrEquals, NotEquals},
 		"actor_id":    {Equals, NotEquals},
 		"actor_name":  {Equals, NotEquals},
+		"actor_email": {Equals, NotEquals},
 		"action":      {Equals, NotEquals},
 		"request_id":  {Equals, NotEquals},
 		"created_at":  {Equals, GreaterThan, GreaterThanOrEquals, LessThan, LessThanOrEquals, NotEquals},
-		"actor_email": {Equals, NotEquals},
-		"status":      {Equals, NotEquals},
 		"source":      {Equals, NotEquals},
+		"status":      {Equals, NotEquals},
 	}
 }
 
@@ -77,11 +77,11 @@ func (s AuditLogs) IsString(column string) bool {
 	switch column {
 	case "actor_id",
 		"actor_name",
+		"actor_email",
 		"action",
 		"request_id",
-		"actor_email",
-		"status",
-		"source":
+		"source",
+		"status":
 		return true
 	default:
 		return false
