@@ -91,6 +91,7 @@ var (
 	TrustedForNTAuth                = graph.StringKind("TrustedForNTAuth")
 	EnterpriseCAFor                 = graph.StringKind("EnterpriseCAFor")
 	CanAbuseUPNCertMapping          = graph.StringKind("CanAbuseUPNCertMapping")
+	CanAbuseWeakCertBinding         = graph.StringKind("CanAbuseWeakCertBinding")
 	IssuedSignedBy                  = graph.StringKind("IssuedSignedBy")
 	GoldenCert                      = graph.StringKind("GoldenCert")
 	EnrollOnBehalfOf                = graph.StringKind("EnrollOnBehalfOf")

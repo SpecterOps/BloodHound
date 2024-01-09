@@ -50,7 +50,43 @@ func PostCanAbuseUPNCertMapping(_ context.Context, _ graph.Database, operation a
 									ToID:   dcForNode.ID,
 									Kind:   ad.CanAbuseUPNCertMapping,
 								}) {
-									return fmt.Errorf("context timed out while creating CanAbuseUPNCert edge")
+									return fmt.Errorf("context timed out while creating CanAbuseUPNCertMapping edge")
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+		return nil
+	})
+	return nil
+}
+
+func PostCanAbuseWeakCertBinding(_ context.Context, _ graph.Database, operation analysis.StatTrackedOperation[analysis.CreatePostRelationshipJob], enterpriseCertAuthorities []*graph.Node) error {
+	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
+		for _, eca := range enterpriseCertAuthorities {
+			if ecaDomainSID, err := eca.Properties.Get(ad.DomainSID.String()).String(); err != nil {
+				return err
+			} else if ecaDomain, err := analysis.FetchNodeByObjectID(tx, ecaDomainSID); err != nil {
+				return err
+			} else if trustedByNodes, err := fetchNodesWithTrustedByParentChildRelationship(tx, ecaDomain); err != nil {
+				return err
+			} else {
+				for _, trustedByDomain := range trustedByNodes {
+					if dcForNodes, err := fetchNodesWithDCForEdge(tx, trustedByDomain); err != nil {
+						return err
+					} else {
+						for _, dcForNode := range dcForNodes {
+							if strongCertBindingEnforcement, err := dcForNode.Properties.Get(ad.StrongCertificateBindingEnforcementRaw.String()).Int(); err != nil {
+								return err
+							} else if strongCertBindingEnforcement == 0 || strongCertBindingEnforcement == 1 {
+								if !channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
+									FromID: eca.ID,
+									ToID:   dcForNode.ID,
+									Kind:   ad.CanAbuseWeakCertBinding,
+								}) {
+									return fmt.Errorf("context timed out while creating CanAbuseWeakCertBinding edge")
 								}
 							}
 						}
