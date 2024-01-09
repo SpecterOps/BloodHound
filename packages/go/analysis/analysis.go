@@ -72,7 +72,7 @@ func GetNodeKind(node *graph.Node) graph.Kind {
 			if resultKind.String() == NodeKindUnknown {
 				resultKind = kind
 			}
-		} else {
+		} else if _, err := ParseKind(kind.String()); err == nil {
 			resultKind = kind
 		}
 	}
