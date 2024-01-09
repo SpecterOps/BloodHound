@@ -21,7 +21,6 @@ package ad_test
 
 import (
 	"context"
-
 	"github.com/specterops/bloodhound/analysis"
 
 	ad2 "github.com/specterops/bloodhound/analysis/ad"
@@ -444,6 +443,17 @@ func TestADCSESC3(t *testing.T) {
 				assert.Equal(t, 1, len(results))
 
 				require.True(t, results.Contains(harness.ESC3Harness2.User1))
+			}
+
+			if edge, err := tx.Relationships().Filterf(func() graph.Criteria {
+				return query.Kind(query.Relationship(), ad.ADCSESC3)
+			}).First(); err != nil {
+				t.Fatalf("error fetching esc3 edges in integration test; %v", err)
+			} else {
+				comp, err := ad2.GetADCSESC3EdgeComposition(context.Background(), db, edge)
+				assert.Nil(t, err)
+				assert.Equal(t, 8, len(comp.AllNodes()))
+				assert.False(t, comp.AllNodes().Contains(harness.ESC3Harness2.User2))
 			}
 			return nil
 		})
