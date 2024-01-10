@@ -81,12 +81,16 @@ func (s *BloodhoundDB) ListAuditLogs(before, after time.Time, offset, limit int,
 		result = cursor.Find(&auditLogs).Count(&count)
 	}
 
+	// Verify there were no errors before iterating over the results
+	if CheckError(result) != nil {
+		return auditLogs, int(count), CheckError(result)
+	}
+
 	// Populate the actor name and email from the users table. Uses a map as a cache to avoid looking up the same user multiple times.
 	// NOTE: This is intended to be a temporary solution for including this data directly in the returned AuditLog. This is due to a lack
 	// of flexibility with gorm's associations/JOINs.
 	// TODO: When gorm is removed, select these values with a JOIN on the users table.
 	for i, log := range auditLogs {
-		var actor model.User
 		actor, ok := actors[log.ActorID]
 		if !ok {
 			if userId, err := uuid.FromString(log.ActorID); err != nil {
