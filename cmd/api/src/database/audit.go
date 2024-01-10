@@ -17,8 +17,10 @@
 package database
 
 import (
+	"fmt"
 	"time"
 
+	"github.com/gofrs/uuid"
 	"github.com/specterops/bloodhound/src/auth"
 	"github.com/specterops/bloodhound/src/ctx"
 	"gorm.io/gorm"
@@ -47,7 +49,6 @@ func newAuditLog(ctx ctx.Context, action string, data model.Auditable, idResolve
 		return auditLog, ErrAuthContextInvalid
 	} else {
 		auditLog.ActorID = identity.ID.String()
-		auditLog.ActorName = identity.Name
 	}
 
 	return auditLog, nil
@@ -66,6 +67,7 @@ func (s *BloodhoundDB) ListAuditLogs(before, after time.Time, offset, limit int,
 		auditLogs model.AuditLogs
 		result    *gorm.DB
 		cursor    = s.Scope(Paginate(offset, limit)).Where("created_at between ? and ?", after, before).Order("created_at desc")
+		actors    = make(map[string]model.User)
 		count     int64
 	)
 
@@ -77,6 +79,28 @@ func (s *BloodhoundDB) ListAuditLogs(before, after time.Time, offset, limit int,
 		result = cursor.Where(filter.SQLString, filter.Params).Find(&auditLogs).Count(&count)
 	} else {
 		result = cursor.Find(&auditLogs).Count(&count)
+	}
+
+	// Populate the actor name and email from the users table. Uses a map as a cache to avoid looking up the same user multiple times.
+	// NOTE: This is intended to be a temporary solution for including this data directly in the returned AuditLog. This is due to a lack
+	// of flexibility with gorm's associations/JOINs.
+	// TODO: When gorm is removed, select these values with a JOIN on the users table.
+	for i, log := range auditLogs {
+		var actor model.User
+		actor, ok := actors[log.ActorID]
+		if !ok {
+			if userId, err := uuid.FromString(log.ActorID); err != nil {
+				return auditLogs, int(count), fmt.Errorf("error parsing actor_id: %w", err)
+			} else if user, err := s.GetUser(userId); err != nil {
+				return auditLogs, int(count), fmt.Errorf("error retrieving actor: %w", err)
+			} else {
+				actors[user.ID.String()] = user
+				actor = user
+			}
+		}
+
+		auditLogs[i].ActorName = actor.PrincipalName
+		auditLogs[i].ActorEmail = actor.EmailAddress.ValueOrZero()
 	}
 
 	return auditLogs, int(count), CheckError(result)

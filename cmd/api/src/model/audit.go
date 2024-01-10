@@ -27,8 +27,8 @@ type AuditLog struct {
 	ID         int64                   `json:"id" gorm:"primaryKey"`
 	CreatedAt  time.Time               `json:"created_at" gorm:"index"`
 	ActorID    string                  `json:"actor_id" gorm:"index"`
-	ActorName  string                  `json:"actor_name"`
-	ActorEmail string                  `json:"actor_email"`
+	ActorName  string                  `json:"actor_name" gorm:"-"`
+	ActorEmail string                  `json:"actor_email" gorm:"-"`
 	Action     string                  `json:"action" gorm:"index"`
 	Fields     types.JSONUntypedObject `json:"fields"`
 	RequestID  string                  `json:"request_id"`
