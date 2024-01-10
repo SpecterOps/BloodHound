@@ -18,11 +18,11 @@ import { useSearchParams } from 'react-router-dom';
 import { ActiveDirectoryNodeKind, AzureNodeKind } from '../../graphSchema';
 
 type UrlParamState = {
-    graphQueryType: 'primary' | 'secondary' | 'cypher'; // TOOD: there are types for this and we should use them
+    graphQueryType: 'primary' | 'secondary' | 'cypher'; // TODO: there are types for this and we should use them
     primaryQuery: string; // search and pathfinding from
     secondaryQuery: string; // pathfinding to
     graphLayout: 'sequential' | 'standard';
-    selectedNode: string; // TODO: find the type of a node and set this to the objectId
+    selectedNode: string; // TODO: should be node objectId
     selectedNodeType: AzureNodeKind | ActiveDirectoryNodeKind;
     omittedEdges: string[];
 };
@@ -34,7 +34,7 @@ export function useAppSearchParams() {
 
     const getParam = <param extends UrlParamStateKeys>(key: param, fallback?: UrlParamState[param]) => {
         const encoded = search.get(key);
-        if (!encoded) return fallback ?? null;
+        if (!encoded) return fallback;
 
         return decodeURIComponent(encoded) as UrlParamState[param];
     };
