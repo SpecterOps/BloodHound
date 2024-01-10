@@ -2912,6 +2912,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@remix-run/router@npm:1.14.1":
+  version: 1.14.1
+  resolution: "@remix-run/router@npm:1.14.1"
+  checksum: a3a0e7bd1917a4fd10322269b78ce1c5917a74889dfa747305b5a56e5d441b9187e1d8aaa6d58c4bf77713e7baca825f87057a64b2d21718cdb361f1cda75687
+  languageName: node
+  linkType: hard
+
 "@rollup/plugin-terser@npm:^0.4.3":
   version: 0.4.3
   resolution: "@rollup/plugin-terser@npm:0.4.3"
@@ -4579,7 +4586,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"bh-shared-ui@workspace:*, bh-shared-ui@workspace:packages/javascript/bh-shared-ui":
+"bh-shared-ui@workspace:^, bh-shared-ui@workspace:packages/javascript/bh-shared-ui":
   version: 0.0.0-use.local
   resolution: "bh-shared-ui@workspace:packages/javascript/bh-shared-ui"
   dependencies:
@@ -4613,7 +4620,7 @@ __metadata:
     eslint: ^8.45.0
     eslint-config-prettier: ^8.8.0
     eslint-config-react-app: ^7.0.1
-    js-client-library: "workspace:*"
+    js-client-library: "workspace:^"
     jsdom: ^20.0.2
     luxon: ^3.3.0
     memoize-one: ^6.0.0
@@ -4625,6 +4632,7 @@ __metadata:
     react-hook-form: ^7.45.1
     react-markdown: ^6.0.3
     react-query: ^3.39.3
+    react-router-dom: ^6.21.1
     react-window: ^1.8.9
     react-window-infinite-loader: ^1.0.9
     rollup: ^3.26.2
@@ -4717,7 +4725,7 @@ __metadata:
     "@typescript-eslint/parser": ^5.62.0
     "@vitejs/plugin-react": ^4.0.3
     "@vitest/coverage-v8": ^0.32.0
-    bh-shared-ui: "workspace:*"
+    bh-shared-ui: "workspace:^"
     dagrejs: "git@github.com:BloodHoundAD/dagre.git"
     downshift: ^6.1.7
     eslint: ^8.45.0
@@ -4733,7 +4741,7 @@ __metadata:
     history: 5.3.0
     immer: ^10.0.2
     jest-webgl-canvas-mock: ^2.5.0
-    js-client-library: "workspace:*"
+    js-client-library: "workspace:^"
     js-cookie: ^3.0.1
     js-file-download: ^0.4.12
     jsdom: ^20.0.2
@@ -7904,7 +7912,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"js-client-library@workspace:*, js-client-library@workspace:packages/javascript/js-client-library":
+"js-client-library@workspace:^, js-client-library@workspace:packages/javascript/js-client-library":
   version: 0.0.0-use.local
   resolution: "js-client-library@workspace:packages/javascript/js-client-library"
   dependencies:
@@ -9956,6 +9964,30 @@ __metadata:
     react: ">=16.8"
     react-dom: ">=16.8"
   checksum: 006a38590d182483edb33d32cc4524a81cb6113c8c9896768d6cab05ab4dfafb2bbccefef9bea6d57dd71ece4438e5e1d9c53894d958f0cdd30ff5c862f08ebc
+  languageName: node
+  linkType: hard
+
+"react-router-dom@npm:^6.21.1":
+  version: 6.21.1
+  resolution: "react-router-dom@npm:6.21.1"
+  dependencies:
+    "@remix-run/router": 1.14.1
+    react-router: 6.21.1
+  peerDependencies:
+    react: ">=16.8"
+    react-dom: ">=16.8"
+  checksum: d8ea3370babab626827008ced8a776ac991023745dc69d44332b6a5229dd2a6899f3e46fc50365cef0c7487cf726bcdccb365ec106915f92c735da6e4c2e6b97
+  languageName: node
+  linkType: hard
+
+"react-router@npm:6.21.1":
+  version: 6.21.1
+  resolution: "react-router@npm:6.21.1"
+  dependencies:
+    "@remix-run/router": 1.14.1
+  peerDependencies:
+    react: ">=16.8"
+  checksum: c6774cf4440b524401cecb40f4fbf4dbc89d61405f9f6d3cb3d2338e262a5254b9e27bc6039dc32e2c5f8b3009e83e9d6b30a61159dd6c423297cb0e3bd46fb3
   languageName: node
   linkType: hard
 
