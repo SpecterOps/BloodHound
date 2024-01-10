@@ -31,7 +31,6 @@ type UrlParamStateKeys = keyof UrlParamState;
 
 export function useAppSearchParams() {
     const [search, setSearch] = useSearchParams();
-
     const getParam = <param extends UrlParamStateKeys>(key: param, fallback?: UrlParamState[param]) => {
         const encoded = search.get(key);
         if (!encoded) return fallback;
@@ -39,9 +38,15 @@ export function useAppSearchParams() {
         return decodeURIComponent(encoded) as UrlParamState[param];
     };
 
-    const setParam = (key: keyof UrlParamState, value: string) => {
-        search.set(key, encodeURIComponent(value));
-        setSearch(search);
+    const setParam = (key: keyof UrlParamState, value: string | string[]) => {
+        if (typeof value === 'string') {
+            search.set(key, encodeURIComponent(value));
+            setSearch(search);
+        } else {
+            search.delete(key);
+            value.forEach((value) => search.append(key, value));
+            setSearch(search);
+        }
     };
 
     const graphQueryType = getParam('graphQueryType', 'primary');
@@ -65,7 +70,7 @@ export function useAppSearchParams() {
         setParam('selectedNodeType', selectedNodeType);
 
     const omittedEdges = getParam('omittedEdges');
-    const setOmittedEdges = (omittedEdges: UrlParamState['omittedEdges'][0]) => setParam('omittedEdges', omittedEdges);
+    const setOmittedEdges = (omittedEdges: UrlParamState['omittedEdges']) => setParam('omittedEdges', omittedEdges);
 
     return {
         graphQueryType,
