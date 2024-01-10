@@ -32,9 +32,9 @@ type UrlParamStateKeys = keyof UrlParamState;
 export function useAppSearchParams() {
     const [search, setSearch] = useSearchParams();
 
-    const getParam = <param extends UrlParamStateKeys>(key: param, fallback?: UrlParamState[param]) => {
+    const getParam = <param extends UrlParamStateKeys>(key: param) => {
         const encoded = search.get(key);
-        if (!encoded) return fallback;
+        if (!encoded) return;
 
         return decodeURIComponent(encoded) as UrlParamState[param];
     };
@@ -50,7 +50,7 @@ export function useAppSearchParams() {
         }
     };
 
-    const graphQueryType = getParam('graphQueryType', 'primary');
+    const graphQueryType = getParam('graphQueryType');
 
     const graphQuery = getParam('primaryQuery');
 
