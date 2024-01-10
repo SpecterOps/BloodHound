@@ -24,6 +24,7 @@ type UrlParamState = {
     graphLayout: 'sequential' | 'standard';
     selectedNode: string; // TODO: should be node objectId
     selectedNodeType: AzureNodeKind | ActiveDirectoryNodeKind;
+    selectedEdge: string;
     omittedEdges: string[];
 };
 
