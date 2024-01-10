@@ -41,12 +41,12 @@ services:
   graph-db:
     image: docker.io/library/neo4j:4.4
     environment:
-      - NEO4J_AUTH=${NEO4J_AUTH:-neo4j/bloodhoundcommunityedition}
+      - NEO4J_AUTH=${NEO4J_USER:-neo4j}/${NEO4J_SECRET:-bloodhoundcommunityedition}
       - NEO4J_dbms_allow__upgrade=${NEO4J_ALLOW_UPGRADE:-true}
     # Database ports are disabled by default. Please change your database password to something secure before uncommenting
-    # ports:
-    #   - 127.0.0.1:${NEO4J_DB_PORT:-7687}:7687
-    #   - 127.0.0.1:${NEO4J_WEB_PORT:-7474}:7474
+    ports:
+      - 127.0.0.1:${NEO4J_DB_PORT:-7687}:7687
+      - 127.0.0.1:${NEO4J_WEB_PORT:-7474}:7474
     volumes:
       - ${NEO4J_DATA_MOUNT:-neo4j-data}:/data
     healthcheck:
@@ -64,6 +64,8 @@ services:
     image: docker.io/specterops/bloodhound:${BLOODHOUND_TAG:-latest}
     environment:
       - bhe_disable_cypher_qc=${bhe_disable_cypher_qc:-false}
+      - bhe_database_connection=user=${POSTGRES_USER:-bloodhound} password=${POSTGRES_PASSWORD:-bloodhoundcommunityedition} dbname=${POSTGRES_DB:-bloodhound} host=app-db
+      - bhe_neo4j_connection=neo4j://${NEO4J_USER:-neo4j}:${NEO4J_SECRET:-bloodhoundcommunityedition}@graph-db:7687/
       ### Add additional environment variables you wish to use here.
       ### For common configuration options that you might want to use environment variables for, see `.env.example`
       ### example: bhe_database_connection=${bhe_database_connection}
