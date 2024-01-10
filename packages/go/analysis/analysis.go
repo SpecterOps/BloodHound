@@ -36,6 +36,11 @@ const (
 	MaximumDatabaseParallelWorkers = 6
 )
 
+var (
+	metaKind       = graph.StringKind("Meta")
+	metaDetailKind = graph.StringKind("MetaDetail")
+)
+
 func AllTaggedNodesFilter(additionalFilter graph.Criteria) graph.Criteria {
 	var (
 		filters = []graph.Criteria{
@@ -63,7 +68,10 @@ func GetNodeKind(node *graph.Node) graph.Kind {
 	)
 
 	for _, kind := range node.Kinds {
-		if kind.Is(ad.Entity, azure.Entity) {
+		// If this is a BHE meta kind, return early
+		if kind.Is(metaKind, metaDetailKind) {
+			return metaKind
+		} else if kind.Is(ad.Entity, azure.Entity) {
 			baseKind = kind
 		} else if kind.Is(ad.LocalGroup) {
 			// Allow ad.LocalGroup to overwrite NodeKindUnknown, but nothing else
@@ -112,6 +120,7 @@ func ValidKinds() []graph.Kind {
 	kinds = append(kinds, ad.Relationships()...)
 	kinds = append(kinds, azure.NodeKinds()...)
 	kinds = append(kinds, azure.Relationships()...)
+	kinds = append(kinds, metaKind, metaDetailKind)
 
 	return kinds
 }
