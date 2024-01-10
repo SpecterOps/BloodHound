@@ -18,15 +18,14 @@ import { faCode, faDirections, faMinus, faPlus, faSearch } from '@fortawesome/fr
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Box, Collapse, Paper, Tab, Tabs, Theme, useMediaQuery, useTheme } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
-import { Icon } from 'bh-shared-ui';
+import { Icon, useAppSearchParams } from 'bh-shared-ui';
 import React, { useState } from 'react';
-import { useSelector } from 'react-redux';
 import { CYPHER_SEARCH, PATHFINDING_SEARCH, PRIMARY_SEARCH } from 'src/ducks/searchbar/types';
-import { AppState, useAppDispatch } from 'src/store';
+import { useAppDispatch } from 'src/store';
 import CypherSearch from './CypherSearch';
 import NodeSearch from './NodeSearch';
 import PathfindingSearch from './PathfindingSearch';
-import { tabChanged, primarySearch, pathfindingSearch, cypherSearch } from 'src/ducks/searchbar/actions';
+import { primarySearch, pathfindingSearch, cypherSearch } from 'src/ducks/searchbar/actions';
 
 const useStyles = makeStyles((theme) => ({
     menuButton: {
@@ -48,8 +47,13 @@ const tabNameMap = {
     primary: 0,
     secondary: 1,
     cypher: 2,
-    tierZero: 3,
-};
+} as const;
+
+const tabActionMap = {
+    0: [PRIMARY_SEARCH, primarySearch],
+    1: [PATHFINDING_SEARCH, pathfindingSearch],
+    2: [CYPHER_SEARCH, cypherSearch],
+} as const;
 
 interface ExploreSearchProps {
     handleColumns?: (isCypherEditorActive: boolean) => void;
@@ -61,23 +65,16 @@ const ExploreSearch = ({ handleColumns }: ExploreSearchProps) => {
     const matches = useMediaQuery(theme.breakpoints.down('md'));
     const dispatch = useAppDispatch();
 
-    const tabKey = useSelector((state: AppState) => state.search.activeTab);
-    const activeTab = tabNameMap[tabKey];
+    const { graphQueryType, setGraphQueryType } = useAppSearchParams();
+    const activeTab = graphQueryType ? tabNameMap[graphQueryType] : tabNameMap.primary;
 
     const [showSearchWidget, setShowSearchWidget] = useState(true);
 
-    const handleTabChange = (newTabIndex: number) => {
-        switch (newTabIndex) {
-            case 0:
-                dispatch(primarySearch());
-                return dispatch(tabChanged(PRIMARY_SEARCH));
-            case 1:
-                dispatch(pathfindingSearch());
-                return dispatch(tabChanged(PATHFINDING_SEARCH));
-            case 2:
-                dispatch(cypherSearch());
-                return dispatch(tabChanged(CYPHER_SEARCH));
-        }
+    const handleTabChange = (newTabIndex: keyof typeof tabActionMap) => {
+        const [tabTitle, tabAction] = tabActionMap[newTabIndex];
+
+        setGraphQueryType(tabTitle);
+        dispatch(tabAction());
 
         const cypherTabIndex = 2;
         if (handleColumns) {

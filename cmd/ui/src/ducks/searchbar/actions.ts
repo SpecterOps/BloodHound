@@ -56,13 +56,6 @@ export const pathFiltersSaved = (filters: EdgeCheckboxType[]): types.PathFilters
     };
 };
 
-export const tabChanged = (tabName: types.TabNames) => {
-    return {
-        type: types.TAB_CHANGED,
-        tabName,
-    };
-};
-
 export const sourceNodeEdited = (searchTerm: string): types.SourceNodeEditedAction => {
     return {
         type: types.SOURCE_NODE_EDITED,

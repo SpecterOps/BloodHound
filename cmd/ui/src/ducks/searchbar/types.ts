@@ -21,8 +21,6 @@ const SEARCH_RESET = 'app/search/RESET';
 const CYPHER_QUERY_EDITED = 'app/search/CYPHER_QUERY_EDITED';
 const PATH_FILTERS_SAVED = 'app/search/PATH_FILTERS_SAVED';
 
-export const TAB_CHANGED = 'app/search/TAB_CHANGED';
-
 export const SOURCE_NODE_EDITED = 'app/search/SOURCE_NODE_EDITED';
 export const SOURCE_NODE_SELECTED = 'app/search/SOURCE_NODE_SELECTED';
 
@@ -82,11 +80,6 @@ interface SearchResetAction {
     type: typeof SEARCH_RESET;
 }
 
-interface TabChangedAction {
-    type: typeof TAB_CHANGED;
-    tabName: SearchTargetType;
-}
-
 export interface PathFiltersSavedAction {
     type: typeof PATH_FILTERS_SAVED;
     filters: EdgeCheckboxType[];
@@ -138,7 +131,6 @@ export type NodeActionTypes =
 export type SearchbarActionTypes =
     | SearchResetAction
     | PathFiltersSavedAction
-    | TabChangedAction
     | CypherActionTypes
     | NodeActionTypes;
 

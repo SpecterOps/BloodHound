@@ -71,13 +71,6 @@ const searchReducer = (state = initialSearchState, action: types.SearchbarAction
             };
         }
 
-        case types.TAB_CHANGED: {
-            return {
-                ...state,
-                activeTab: action.tabName,
-            };
-        }
-
         case types.CYPHER_QUERY_EDITED: {
             return {
                 ...state,
