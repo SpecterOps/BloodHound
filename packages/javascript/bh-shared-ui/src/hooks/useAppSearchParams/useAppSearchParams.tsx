@@ -31,6 +31,7 @@ type UrlParamStateKeys = keyof UrlParamState;
 
 export function useAppSearchParams() {
     const [search, setSearch] = useSearchParams();
+
     const getParam = <param extends UrlParamStateKeys>(key: param, fallback?: UrlParamState[param]) => {
         const encoded = search.get(key);
         if (!encoded) return fallback;
