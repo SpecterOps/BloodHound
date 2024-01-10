@@ -55,8 +55,8 @@ const WindowsAbuse: FC<EdgeInfoProps & { targetId: string }> = ({
                         }
                     </Typography>
                     <Typography variant='body2'>
-                        To abuse ownership of a user object, you may grant yourself the AddMember permission. This can be
-                        accomplished using the Add-DomainObjectAcl function in PowerView.
+                        To abuse ownership of a user object, you may grant yourself the AddMember permission. This can
+                        be accomplished using the Add-DomainObjectAcl function in PowerView.
                     </Typography>
                     <Typography variant='body2'>
                         You may need to authenticate to the Domain Controller as{' '}
@@ -91,9 +91,9 @@ const WindowsAbuse: FC<EdgeInfoProps & { targetId: string }> = ({
                         opsec tab).
                     </Typography>
                     <Typography variant='body2'>
-                        To abuse this permission with PowerView's Add-DomainGroupMember, first import PowerView into your
-                        agent session or into a PowerShell instance at the console. You may need to authenticate to the
-                        Domain Controller as{' '}
+                        To abuse this permission with PowerView's Add-DomainGroupMember, first import PowerView into
+                        your agent session or into a PowerShell instance at the console. You may need to authenticate to
+                        the Domain Controller as{' '}
                         {sourceType === 'User'
                             ? `${sourceName} if you are not running a process as that user`
                             : `a member of ${sourceName} if you are not running a process as a member`}
@@ -615,8 +615,8 @@ const WindowsAbuse: FC<EdgeInfoProps & { targetId: string }> = ({
                     <Typography variant='body2'>
                         If you want to be more targeted with your approach, it is possible to specify precisely what
                         right you want to apply to precisely which kinds of descendent objects. You could, for example,
-                        grant a user "ForceChangePassword" permission against all user objects, or grant a security group
-                        the ability to read every GMSA password under a certain OU. Below is an example taken from
+                        grant a user "ForceChangePassword" permission against all user objects, or grant a security
+                        group the ability to read every GMSA password under a certain OU. Below is an example taken from
                         PowerView's help text on how to grant the "ITADMIN" user the ability to read the LAPS password
                         from all computer objects in the "Workstations" OU:
                     </Typography>
