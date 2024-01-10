@@ -65,7 +65,7 @@ const ExploreSearch = ({ handleColumns }: ExploreSearchProps) => {
     const matches = useMediaQuery(theme.breakpoints.down('md'));
     const dispatch = useAppDispatch();
 
-    const { graphQueryType, setGraphQueryType } = useAppSearchParams();
+    const { graphQueryType, setAppSearchParam } = useAppSearchParams();
     const activeTab = graphQueryType ? tabNameMap[graphQueryType] : tabNameMap.primary;
 
     const [showSearchWidget, setShowSearchWidget] = useState(true);
@@ -73,7 +73,7 @@ const ExploreSearch = ({ handleColumns }: ExploreSearchProps) => {
     const handleTabChange = (newTabIndex: keyof typeof tabActionMap) => {
         const [tabTitle, tabAction] = tabActionMap[newTabIndex];
 
-        setGraphQueryType(tabTitle);
+        setAppSearchParam('graphQueryType', tabTitle);
         dispatch(tabAction());
 
         const cypherTabIndex = 2;

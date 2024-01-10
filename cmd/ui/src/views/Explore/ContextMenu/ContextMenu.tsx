@@ -32,14 +32,14 @@ const ContextMenu: FC<{ contextMenu: { mouseX: number; mouseY: number } | null; 
     const dispatch = useAppDispatch();
 
     const selectedNode = useSelector((state: AppState) => state.entityinfo.selectedNode);
-    const { setGraphQueryType } = useAppSearchParams();
+    const { setAppSearchParam } = useAppSearchParams();
 
     const ownedAssetGroupId = useSelector(selectOwnedAssetGroupId);
     const tierZeroAssetGroupId = useSelector(selectTierZeroAssetGroupId);
 
     const handleSetStartingNode = () => {
         if (selectedNode) {
-            setGraphQueryType('secondary');
+            setAppSearchParam('graphQueryType', 'secondary');
             dispatch(
                 sourceNodeSelected(
                     {
@@ -55,7 +55,7 @@ const ContextMenu: FC<{ contextMenu: { mouseX: number; mouseY: number } | null; 
 
     const handleSetEndingNode = () => {
         if (selectedNode) {
-            setGraphQueryType('secondary');
+            setAppSearchParam('graphQueryType', 'secondary');
             dispatch(
                 destinationNodeSelected({
                     name: selectedNode.name,

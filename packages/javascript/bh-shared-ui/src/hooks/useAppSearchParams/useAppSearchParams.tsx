@@ -39,7 +39,7 @@ export function useAppSearchParams() {
         return decodeURIComponent(encoded) as UrlParamState[param];
     };
 
-    const setParam = (key: keyof UrlParamState, value: string | string[]) => {
+    const setAppSearchParam = (key: keyof UrlParamState, value: string | string[]) => {
         if (typeof value === 'string') {
             search.set(key, encodeURIComponent(value));
             setSearch(search);
@@ -51,42 +51,27 @@ export function useAppSearchParams() {
     };
 
     const graphQueryType = getParam('graphQueryType', 'primary');
-    const setGraphQueryType = (type: UrlParamState['graphQueryType']) => setParam('graphQueryType', type);
 
     const graphQuery = getParam('primaryQuery');
-    const setGraphQuery = (primaryQuery: UrlParamState['primaryQuery']) => setParam('primaryQuery', primaryQuery);
 
     const secondaryQuery = getParam('secondaryQuery');
-    const setSecondaryQuery = (secondaryQuery: UrlParamState['secondaryQuery']) =>
-        setParam('secondaryQuery', secondaryQuery);
 
     const graphLayout = getParam('graphLayout');
-    const setGraphLayout = (graphLayout: UrlParamState['graphLayout']) => setParam('graphLayout', graphLayout);
 
     const selectedNode = getParam('selectedNode');
-    const setSelectedNode = (selectedNode: UrlParamState['selectedNode']) => setParam('selectedNode', selectedNode);
 
     const selectedNodeType = getParam('selectedNodeType');
-    const setSelectedNodeType = (selectedNodeType: UrlParamState['selectedNodeType']) =>
-        setParam('selectedNodeType', selectedNodeType);
 
     const omittedEdges = getParam('omittedEdges');
-    const setOmittedEdges = (omittedEdges: UrlParamState['omittedEdges']) => setParam('omittedEdges', omittedEdges);
 
     return {
+        setAppSearchParam,
         graphQueryType,
-        setGraphQueryType,
         graphQuery,
-        setGraphQuery,
         secondaryQuery,
-        setSecondaryQuery,
         graphLayout,
-        setGraphLayout,
         selectedNode,
-        setSelectedNode,
         selectedNodeType,
-        setSelectedNodeType,
         omittedEdges,
-        setOmittedEdges,
     };
 }
