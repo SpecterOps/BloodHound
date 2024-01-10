@@ -65,7 +65,6 @@ var (
 	HasSIDHistory                   = graph.StringKind("HasSIDHistory")
 	AddSelf                         = graph.StringKind("AddSelf")
 	DCSync                          = graph.StringKind("DCSync")
-	DCFor                           = graph.StringKind("DCFor")
 	ReadLAPSPassword                = graph.StringKind("ReadLAPSPassword")
 	ReadGMSAPassword                = graph.StringKind("ReadGMSAPassword")
 	DumpSMSAPassword                = graph.StringKind("DumpSMSAPassword")
@@ -79,6 +78,7 @@ var (
 	SyncLAPSPassword                = graph.StringKind("SyncLAPSPassword")
 	WriteAccountRestrictions        = graph.StringKind("WriteAccountRestrictions")
 	RootCAFor                       = graph.StringKind("RootCAFor")
+	DCFor                           = graph.StringKind("DCFor")
 	PublishedTo                     = graph.StringKind("PublishedTo")
 	ManageCertificates              = graph.StringKind("ManageCertificates")
 	ManageCA                        = graph.StringKind("ManageCA")
@@ -154,7 +154,13 @@ const (
 	StrongCertificateBindingEnforcementRaw Property = "strongcertificatebindingenforcementraw"
 	StrongCertificateBindingEnforcement    Property = "strongcertificatebindingenforcement"
 	EKUs                                   Property = "ekus"
+	IsDC                                   Property = "isdc"
 	SubjectAltRequireUPN                   Property = "subjectaltrequireupn"
+	SubjectAltRequireDNS                   Property = "subjectaltrequiredns"
+	SubjectAltRequireDomainDNS             Property = "subjectaltrequiredomaindns"
+	SubjectAltRequireEmail                 Property = "subjectaltrequireemail"
+	SubjectAltRequireSPN                   Property = "subjectaltrequirespn"
+	SubjectRequireEmail                    Property = "subjectrequireemail"
 	AuthorizedSignatures                   Property = "authorizedsignatures"
 	ApplicationPolicies                    Property = "applicationpolicies"
 	IssuancePolicies                       Property = "issuancepolicies"
@@ -175,7 +181,7 @@ const (
 )
 
 func AllProperties() []Property {
-	return []Property{AdminCount, CASecurityCollected, CAName, CertChain, CertName, CertThumbprint, CertThumbprints, HasEnrollmentAgentRestrictions, EnrollmentAgentRestrictionsCollected, IsUserSpecifiesSanEnabled, IsUserSpecifiesSanEnabledCollected, HasBasicConstraints, BasicConstraintPathLength, DNSHostname, CrossCertificatePair, DistinguishedName, DomainFQDN, DomainSID, Sensitive, HighValue, BlocksInheritance, IsACL, IsACLProtected, IsDeleted, Enforced, Department, HasCrossCertificatePair, HasSPN, UnconstrainedDelegation, LastLogon, LastLogonTimestamp, IsPrimaryGroup, HasLAPS, DontRequirePreAuth, LogonType, HasURA, PasswordNeverExpires, PasswordNotRequired, FunctionalLevel, TrustType, SidFiltering, TrustedToAuth, SamAccountName, CertificateMappingMethodsRaw, CertificateMappingMethods, StrongCertificateBindingEnforcementRaw, StrongCertificateBindingEnforcement, EKUs, SubjectAltRequireUPN, AuthorizedSignatures, ApplicationPolicies, IssuancePolicies, SchemaVersion, RequiresManagerApproval, AuthenticationEnabled, EnrolleeSuppliesSubject, CertificateApplicationPolicy, CertificateNameFlag, EffectiveEKUs, EnrollmentFlag, Flags, NoSecurityExtension, RenewalPeriod, ValidityPeriod, OID, HomeDirectory}
+	return []Property{AdminCount, CASecurityCollected, CAName, CertChain, CertName, CertThumbprint, CertThumbprints, HasEnrollmentAgentRestrictions, EnrollmentAgentRestrictionsCollected, IsUserSpecifiesSanEnabled, IsUserSpecifiesSanEnabledCollected, HasBasicConstraints, BasicConstraintPathLength, DNSHostname, CrossCertificatePair, DistinguishedName, DomainFQDN, DomainSID, Sensitive, HighValue, BlocksInheritance, IsACL, IsACLProtected, IsDeleted, Enforced, Department, HasCrossCertificatePair, HasSPN, UnconstrainedDelegation, LastLogon, LastLogonTimestamp, IsPrimaryGroup, HasLAPS, DontRequirePreAuth, LogonType, HasURA, PasswordNeverExpires, PasswordNotRequired, FunctionalLevel, TrustType, SidFiltering, TrustedToAuth, SamAccountName, CertificateMappingMethodsRaw, CertificateMappingMethods, StrongCertificateBindingEnforcementRaw, StrongCertificateBindingEnforcement, EKUs, IsDC, SubjectAltRequireUPN, SubjectAltRequireDNS, SubjectAltRequireDomainDNS, SubjectAltRequireEmail, SubjectAltRequireSPN, SubjectRequireEmail, AuthorizedSignatures, ApplicationPolicies, IssuancePolicies, SchemaVersion, RequiresManagerApproval, AuthenticationEnabled, EnrolleeSuppliesSubject, CertificateApplicationPolicy, CertificateNameFlag, EffectiveEKUs, EnrollmentFlag, Flags, NoSecurityExtension, RenewalPeriod, ValidityPeriod, OID, HomeDirectory}
 }
 func ParseProperty(source string) (Property, error) {
 	switch source {
@@ -275,8 +281,20 @@ func ParseProperty(source string) (Property, error) {
 		return StrongCertificateBindingEnforcement, nil
 	case "ekus":
 		return EKUs, nil
+	case "isdc":
+		return IsDC, nil
 	case "subjectaltrequireupn":
 		return SubjectAltRequireUPN, nil
+	case "subjectaltrequiredns":
+		return SubjectAltRequireDNS, nil
+	case "subjectaltrequiredomaindns":
+		return SubjectAltRequireDomainDNS, nil
+	case "subjectaltrequireemail":
+		return SubjectAltRequireEmail, nil
+	case "subjectaltrequirespn":
+		return SubjectAltRequireSPN, nil
+	case "subjectrequireemail":
+		return SubjectRequireEmail, nil
 	case "authorizedsignatures":
 		return AuthorizedSignatures, nil
 	case "applicationpolicies":
@@ -413,8 +431,20 @@ func (s Property) String() string {
 		return string(StrongCertificateBindingEnforcement)
 	case EKUs:
 		return string(EKUs)
+	case IsDC:
+		return string(IsDC)
 	case SubjectAltRequireUPN:
 		return string(SubjectAltRequireUPN)
+	case SubjectAltRequireDNS:
+		return string(SubjectAltRequireDNS)
+	case SubjectAltRequireDomainDNS:
+		return string(SubjectAltRequireDomainDNS)
+	case SubjectAltRequireEmail:
+		return string(SubjectAltRequireEmail)
+	case SubjectAltRequireSPN:
+		return string(SubjectAltRequireSPN)
+	case SubjectRequireEmail:
+		return string(SubjectRequireEmail)
 	case AuthorizedSignatures:
 		return string(AuthorizedSignatures)
 	case ApplicationPolicies:
@@ -551,8 +581,20 @@ func (s Property) Name() string {
 		return "Strong Certificate Binding Enforcement"
 	case EKUs:
 		return "Enhanced Key Usage"
+	case IsDC:
+		return "Is DC"
 	case SubjectAltRequireUPN:
 		return "Subject Alternative Name Require UPN"
+	case SubjectAltRequireDNS:
+		return "Subject Alternative Name Require DNS"
+	case SubjectAltRequireDomainDNS:
+		return "Subject Alternative Name Require Domain DNS"
+	case SubjectAltRequireEmail:
+		return "Subject Alternative Name Require Email"
+	case SubjectAltRequireSPN:
+		return "Subject Alternative Name Require SPN"
+	case SubjectRequireEmail:
+		return "Subject Require Email"
 	case AuthorizedSignatures:
 		return "Authorized Signatures Required"
 	case ApplicationPolicies:
