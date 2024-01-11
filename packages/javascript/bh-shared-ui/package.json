@@ -34,7 +34,7 @@
         "react-hook-form": "^7.45.1",
         "react-markdown": "^6.0.3",
         "react-query": "^3.39.3",
-        "react-router-dom": "^6.21.1",
+        "react-router-dom": "^6.21.2",
         "react-window": "^1.8.9",
         "react-window-infinite-loader": "^1.0.9"
     },
