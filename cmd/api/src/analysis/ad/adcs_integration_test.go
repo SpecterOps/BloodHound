@@ -179,6 +179,53 @@ func TestGoldenCert(t *testing.T) {
 
 }
 
+func TestWeakCertBinding(t *testing.T) {
+	testContext := integration.NewGraphTestContext(t)
+	testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) {
+		harness.WeakCertBindingAndUPNCertMappingHarness.Setup(testContext)
+	}, func(harness integration.HarnessDetails, db graph.Database) error {
+		operation := analysis.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - CanAbuseWeakCertBinding")
+
+		if enterpriseCertAuthorities, err := ad2.FetchNodesByKind(context.Background(), db, ad.EnterpriseCA); err != nil {
+			t.Logf("failed fetching enterpriseCA nodes: %v", err)
+		} else if err := ad2.PostCanAbuseWeakCertBinding(context.Background(), db, operation, enterpriseCertAuthorities); err != nil {
+			t.Logf("failed post processing for %s: %v", ad.CanAbuseWeakCertBinding.String(), err)
+		}
+
+		operation.Done()
+
+		db.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
+			if results, err := ops.FetchStartNodes(tx.Relationships().Filterf(func() graph.Criteria {
+				return query.And(
+					query.Kind(query.Relationship(), ad.CanAbuseWeakCertBinding),
+					query.KindIn(query.Start(), ad.EnterpriseCA),
+					query.KindIn(query.End(), ad.Computer),
+				)
+			})); err != nil {
+				t.Fatalf("error fetching CanAbuseWeakCertBinding relationships; %v", err)
+			} else {
+				assert.True(t, len(results) == 1)
+
+				// Positive Cases
+				assert.True(t, results.Contains(harness.WeakCertBindingAndUPNCertMappingHarness.EnterpriseCA1))
+				assert.True(t, results.Contains(harness.WeakCertBindingAndUPNCertMappingHarness.Computer1))
+				assert.True(t, results.Contains(harness.WeakCertBindingAndUPNCertMappingHarness.Computer2))
+				assert.True(t, results.Contains(harness.WeakCertBindingAndUPNCertMappingHarness.Domain1))
+				assert.True(t, results.Contains(harness.WeakCertBindingAndUPNCertMappingHarness.Domain2))
+
+				// Negative Cases
+				assert.True(t, results.Contains(harness.WeakCertBindingAndUPNCertMappingHarness.EnterpriseCA2))
+				assert.True(t, results.Contains(harness.WeakCertBindingAndUPNCertMappingHarness.Computer3))
+				assert.True(t, results.Contains(harness.WeakCertBindingAndUPNCertMappingHarness.Computer4))
+				assert.True(t, results.Contains(harness.WeakCertBindingAndUPNCertMappingHarness.Computer5))
+				assert.True(t, results.Contains(harness.WeakCertBindingAndUPNCertMappingHarness.Domain3))
+			}
+			return nil
+		})
+		return nil
+	})
+}
+
 func TestIssuedSignedBy(t *testing.T) {
 	testContext := integration.NewGraphTestContext(t)
 	testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) {
