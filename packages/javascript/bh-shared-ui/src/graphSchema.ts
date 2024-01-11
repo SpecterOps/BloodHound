@@ -93,6 +93,7 @@ export enum ActiveDirectoryRelationshipKind {
     HasSIDHistory = 'HasSIDHistory',
     AddSelf = 'AddSelf',
     DCSync = 'DCSync',
+    DCFor = 'DCFor',
     ReadLAPSPassword = 'ReadLAPSPassword',
     ReadGMSAPassword = 'ReadGMSAPassword',
     DumpSMSAPassword = 'DumpSMSAPassword',
@@ -117,6 +118,7 @@ export enum ActiveDirectoryRelationshipKind {
     NTAuthStoreFor = 'NTAuthStoreFor',
     TrustedForNTAuth = 'TrustedForNTAuth',
     EnterpriseCAFor = 'EnterpriseCAFor',
+    CanAbuseUPNCertMapping = 'CanAbuseUPNCertMapping',
     IssuedSignedBy = 'IssuedSignedBy',
     GoldenCert = 'GoldenCert',
     EnrollOnBehalfOf = 'EnrollOnBehalfOf',
@@ -180,6 +182,8 @@ export function ActiveDirectoryRelationshipKindToDisplay(value: ActiveDirectoryR
             return 'AddSelf';
         case ActiveDirectoryRelationshipKind.DCSync:
             return 'DCSync';
+        case ActiveDirectoryRelationshipKind.DCFor:
+            return 'DCFor';
         case ActiveDirectoryRelationshipKind.ReadLAPSPassword:
             return 'ReadLAPSPassword';
         case ActiveDirectoryRelationshipKind.ReadGMSAPassword:
@@ -228,6 +232,8 @@ export function ActiveDirectoryRelationshipKindToDisplay(value: ActiveDirectoryR
             return 'TrustedForNTAuth';
         case ActiveDirectoryRelationshipKind.EnterpriseCAFor:
             return 'EnterpriseCAFor';
+        case ActiveDirectoryRelationshipKind.CanAbuseUPNCertMapping:
+            return 'CanAbuseUPNCertMapping';
         case ActiveDirectoryRelationshipKind.IssuedSignedBy:
             return 'IssuedSignedBy';
         case ActiveDirectoryRelationshipKind.GoldenCert:
