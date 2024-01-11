@@ -69,6 +69,9 @@ func (s *BloodhoundDB) ListAuditLogs(before, after time.Time, offset, limit int,
 		count     int64
 	)
 
+	// This code went through a partial refactor when adding support for new fields.
+	// See the comments here for more information: https://github.com/SpecterOps/BloodHound/pull/297#issuecomment-1887640827
+
 	if order != "" && filter.SQLString == "" {
 		result = cursor.Order(order).Find(&auditLogs).Count(&count)
 	} else if order != "" && filter.SQLString != "" {
