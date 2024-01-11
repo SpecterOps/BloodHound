@@ -35,7 +35,7 @@ func Post(ctx context.Context, db graph.Database, adcsEnabled bool) (*analysis.A
 		return &aggregateStats, err
 	} else if groupExpansions, err := adAnalysis.ExpandAllRDPLocalGroups(ctx, db); err != nil {
 		return &aggregateStats, err
-	} else if localGroupStats, err := adAnalysis.PostLocalGroups(ctx, db, groupExpansions); err != nil {
+	} else if localGroupStats, err := adAnalysis.PostLocalGroups(ctx, db, groupExpansions, false); err != nil {
 		return &aggregateStats, err
 	} else if adcsStats, err := adAnalysis.PostADCS(ctx, db, groupExpansions, adcsEnabled); err != nil {
 		return &aggregateStats, err
