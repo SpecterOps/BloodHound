@@ -40,14 +40,6 @@ const References: FC = () => {
                 href='https://book.hacktricks.xyz/windows-hardening/active-directory-methodology/ad-certificates/domain-escalation#editf_attributesubjectaltname2-esc6'>
                 https://book.hacktricks.xyz/windows-hardening/active-directory-methodology/ad-certificates/domain-escalation#editf_attributesubjectaltname2-esc6
             </Link>
-            <br />
-            <Link target='_blank' rel='noopener' href='https://github.com/ly4k/Certipy'>
-                https://github.com/ly4k/Certipy
-            </Link>
-            <br />
-            <Link target='_blank' rel='noopener' href='https://github.com/GhostPack/Rubeus'>
-                https://github.com/GhostPack/Rubeus
-            </Link>
         </Box>
     );
 };

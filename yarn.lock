@@ -4579,7 +4579,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"bh-shared-ui@workspace:*, bh-shared-ui@workspace:packages/javascript/bh-shared-ui":
+"bh-shared-ui@workspace:^, bh-shared-ui@workspace:packages/javascript/bh-shared-ui":
   version: 0.0.0-use.local
   resolution: "bh-shared-ui@workspace:packages/javascript/bh-shared-ui"
   dependencies:
@@ -4613,7 +4613,7 @@ __metadata:
     eslint: ^8.45.0
     eslint-config-prettier: ^8.8.0
     eslint-config-react-app: ^7.0.1
-    js-client-library: "workspace:*"
+    js-client-library: "workspace:^"
     jsdom: ^20.0.2
     luxon: ^3.3.0
     memoize-one: ^6.0.0
@@ -4717,7 +4717,7 @@ __metadata:
     "@typescript-eslint/parser": ^5.62.0
     "@vitejs/plugin-react": ^4.0.3
     "@vitest/coverage-v8": ^0.32.0
-    bh-shared-ui: "workspace:*"
+    bh-shared-ui: "workspace:^"
     dagrejs: "git@github.com:BloodHoundAD/dagre.git"
     downshift: ^6.1.7
     eslint: ^8.45.0
@@ -4733,7 +4733,7 @@ __metadata:
     history: 5.3.0
     immer: ^10.0.2
     jest-webgl-canvas-mock: ^2.5.0
-    js-client-library: "workspace:*"
+    js-client-library: "workspace:^"
     js-cookie: ^3.0.1
     js-file-download: ^0.4.12
     jsdom: ^20.0.2
@@ -7904,7 +7904,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"js-client-library@workspace:*, js-client-library@workspace:packages/javascript/js-client-library":
+"js-client-library@workspace:^, js-client-library@workspace:packages/javascript/js-client-library":
   version: 0.0.0-use.local
   resolution: "js-client-library@workspace:packages/javascript/js-client-library"
   dependencies:
