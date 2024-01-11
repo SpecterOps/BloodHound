@@ -65,6 +65,7 @@ var (
 	HasSIDHistory                   = graph.StringKind("HasSIDHistory")
 	AddSelf                         = graph.StringKind("AddSelf")
 	DCSync                          = graph.StringKind("DCSync")
+	DCFor                           = graph.StringKind("DCFor")
 	ReadLAPSPassword                = graph.StringKind("ReadLAPSPassword")
 	ReadGMSAPassword                = graph.StringKind("ReadGMSAPassword")
 	DumpSMSAPassword                = graph.StringKind("DumpSMSAPassword")
@@ -89,6 +90,7 @@ var (
 	NTAuthStoreFor                  = graph.StringKind("NTAuthStoreFor")
 	TrustedForNTAuth                = graph.StringKind("TrustedForNTAuth")
 	EnterpriseCAFor                 = graph.StringKind("EnterpriseCAFor")
+	CanAbuseUPNCertMapping          = graph.StringKind("CanAbuseUPNCertMapping")
 	IssuedSignedBy                  = graph.StringKind("IssuedSignedBy")
 	GoldenCert                      = graph.StringKind("GoldenCert")
 	EnrollOnBehalfOf                = graph.StringKind("EnrollOnBehalfOf")
@@ -98,7 +100,6 @@ var (
 	ADCSESC5                        = graph.StringKind("ADCSESC5")
 	ADCSESC6                        = graph.StringKind("ADCSESC6")
 	ADCSESC7                        = graph.StringKind("ADCSESC7")
-	DCFor                           = graph.StringKind("DCFor")
 )
 
 type Property string

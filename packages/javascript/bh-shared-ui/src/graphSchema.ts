@@ -128,7 +128,6 @@ export enum ActiveDirectoryRelationshipKind {
     ADCSESC5 = 'ADCSESC5',
     ADCSESC6 = 'ADCSESC6',
     ADCSESC7 = 'ADCSESC7',
-    DCFor = 'DCFor',
 }
 export function ActiveDirectoryRelationshipKindToDisplay(value: ActiveDirectoryRelationshipKind): string | undefined {
     switch (value) {
@@ -252,8 +251,6 @@ export function ActiveDirectoryRelationshipKindToDisplay(value: ActiveDirectoryR
             return 'ADCSESC6';
         case ActiveDirectoryRelationshipKind.ADCSESC7:
             return 'ADCSESC7';
-        case ActiveDirectoryRelationshipKind.DCFor:
-            return 'DCFor';
         default:
             return undefined;
     }
