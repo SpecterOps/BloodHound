@@ -20,7 +20,6 @@ import { EdgeInfoProps } from '../index';
 import { Typography } from '@mui/material';
 
 const General: FC<EdgeInfoProps> = ({ sourceName, sourceType, targetName }) => {
-    // TODO: should targeName be getting used?
     return (
         <>
             <Typography variant='body2'>
