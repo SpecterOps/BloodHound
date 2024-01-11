@@ -56,9 +56,10 @@ type PermissionOverrides struct {
 }
 
 type SimpleIdentity struct {
-	ID   uuid.UUID
-	Name string
-	Key  string
+	ID    uuid.UUID
+	Name  string
+	Email string
+	Key   string
 }
 
 type IdentityResolver interface {
@@ -76,9 +77,10 @@ func (s idResolver) GetIdentity(ctx Context) (SimpleIdentity, error) {
 		return SimpleIdentity{}, errors.New("error retrieving user from auth context")
 	} else {
 		return SimpleIdentity{
-			ID:   user.ID,
-			Name: user.PrincipalName,
-			Key:  "user_id",
+			ID:    user.ID,
+			Name:  user.PrincipalName,
+			Email: user.EmailAddress.String,
+			Key:   "user_id",
 		}, nil
 	}
 }

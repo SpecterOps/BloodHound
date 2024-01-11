@@ -44,6 +44,7 @@ type Context struct {
 	RequestID string
 	AuthCtx   auth.Context
 	Host      *url.URL
+	RequestIP string
 }
 
 func (s *Context) ConstructGoContext() context.Context {

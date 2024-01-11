@@ -139,12 +139,28 @@ func ContextMiddleware(next http.Handler) http.Handler {
 					Scheme: getScheme(request),
 					Host:   request.Host,
 				},
+				RequestIP: parseUserIP(request),
 			})
 
 			// Route the request with the embedded context
 			next.ServeHTTP(response, request.WithContext(requestCtx))
 		}
 	})
+}
+
+func parseUserIP(r *http.Request) string {
+	IPAddress := r.Header.Get("X-Real-Ip")
+	if IPAddress == "" {
+		IPAddress = r.Header.Get("X-Forwarded-For")
+	}
+	if IPAddress == "" {
+		if parsedUrl, err := url.Parse(r.RemoteAddr); err != nil {
+			log.Errorf("error parsing IP address from RemoteAddr: %s", err)
+		} else {
+			IPAddress = parsedUrl.Hostname()
+		}
+	}
+	return IPAddress
 }
 
 func ParseHeaderValues(values string) map[string]string {

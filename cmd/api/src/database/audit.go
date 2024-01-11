@@ -37,6 +37,7 @@ func newAuditLog(ctx ctx.Context, action string, data model.Auditable, idResolve
 		Action:    action,
 		Fields:    types.JSONUntypedObject(data.AuditData()),
 		RequestID: ctx.RequestID,
+		Source:    ctx.RequestIP,
 		Status:    "success", // TODO: parameterize this so we can pass the actual status instead of hard-coding
 	}
 
@@ -48,6 +49,7 @@ func newAuditLog(ctx ctx.Context, action string, data model.Auditable, idResolve
 	} else {
 		auditLog.ActorID = identity.ID.String()
 		auditLog.ActorName = identity.Name
+		auditLog.ActorEmail = identity.Email
 	}
 
 	return auditLog, nil
