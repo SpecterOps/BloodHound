@@ -1,8 +1,8 @@
 {
     "version": 1,
-    "bind_addr": "0.0.0.0:8080",
-    "metrics_port": ":2112",
-    "root_url": "http://0.0.0.0:8080/",
+    "bind_addr": "localhost:8080",
+    "metrics_port": "localhost:2112",
+    "root_url": "http://localhost:8080/",
     "work_dir": "/bhapi/work",
     "collectors_base_path": "/bhapi/collectors",
     "log_level": "INFO",
@@ -11,10 +11,10 @@
         "enable_auth": true
     },
     "database": {
-        "connection": "user=bloodhound password=bloodhoundcommunityedition dbname=bloodhound host=host.docker.internal port=5432"
+        "connection": "user=bloodhound password=bloodhoundcommunityedition dbname=bloodhound host=bh-app-db port=5432"
     },
     "neo4j": {
-        "connection": "neo4j://neo4j:bloodhoundcommunityedition@host.docker.internal:7687/"
+        "connection": "neo4j://neo4j:bloodhoundcommunityedition@bh-graph-db:7687/"
     },
     "default_admin": {
         "principal_name": "admin",

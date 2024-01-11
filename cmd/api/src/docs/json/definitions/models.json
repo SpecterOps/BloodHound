@@ -1106,6 +1106,26 @@
       }
     }
   },
+  "model.SearchResult": {
+    "type": "object",
+    "properties": {
+      "objectid": {
+        "type": "string"
+      },
+      "type": {
+        "type": "string"
+      },
+      "name": {
+        "type": "string"
+      },
+      "distinguishedname": {
+        "type": "string"
+      },
+      "system_tags": {
+        "type": "string"
+      }
+    }
+  },
   "model.EntityController": {
     "type": "object",
     "properties": {

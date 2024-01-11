@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { faCog, faProjectDiagram } from '@fortawesome/free-solid-svg-icons';
+import { faCog, faUsersRectangle, faProjectDiagram } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { AppBar, Box, IconButton, Link, Toolbar } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
@@ -93,6 +93,13 @@ const Header: React.FC = () => {
                         active={location.pathname === routes.ROUTE_EXPLORE}
                         onClick={() => navigate(routes.ROUTE_EXPLORE)}
                         data-testid='global_header_nav-explore'
+                    />
+                    <MenuItem
+                        title={'Group Management'}
+                        icon={<FontAwesomeIcon icon={faUsersRectangle} size='sm' />}
+                        active={location.pathname === routes.ROUTE_GROUP_MANAGEMENT}
+                        onClick={() => navigate(routes.ROUTE_GROUP_MANAGEMENT)}
+                        data-testid='global_header_nav-group-management'
                     />
                 </div>
 

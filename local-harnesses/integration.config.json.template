@@ -1,8 +1,8 @@
 {
     "version": 1,
-    "bind_addr": "0.0.0.0:8081",
-    "metrics_port": ":2113",
-    "root_url": "http://0.0.0.0:8081/",
+    "bind_addr": "localhost:8081",
+    "metrics_port": "localhost:2113",
+    "root_url": "http://localhost:8081/",
     "work_dir": "/tmp/work",
     "collectors_base_path": "/tmp/collectors",
     "log_level": "ERROR",

@@ -33,6 +33,20 @@ export interface CreateAssetGroupSelectorRequest {
     sid: string;
 }
 
+export interface UpdateAssetGroupSelectorRequest {
+    selector_name: string;
+    sid: string;
+    action: 'add' | 'remove';
+}
+
+export interface AssetGroupMemberParams {
+    environment_kind?: string;
+    environment_id?: string;
+    primary_kind?: string;
+    skip?: number;
+    limit?: number;
+}
+
 export interface CreateSharpHoundClientRequest {
     domain_controller: string;
     name: string;
@@ -68,7 +82,6 @@ export interface CreateScheduledSharpHoundJobRequest {
     all_trusted_domains: boolean;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-empty-interface
 export type CreateScheduledAzureHoundJobRequest = Record<string, never>;
 
 export type CreateScheduledJobRequest = CreateScheduledSharpHoundJobRequest | CreateScheduledAzureHoundJobRequest;

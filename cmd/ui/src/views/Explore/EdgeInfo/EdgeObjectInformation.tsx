@@ -15,11 +15,10 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Skeleton } from '@mui/material';
-import { EntityField, SelectedEdge, apiClient } from 'bh-shared-ui';
+import { SelectedEdge, apiClient, EntityField, FieldsContainer, ObjectInfoFields } from 'bh-shared-ui';
 import { FC } from 'react';
 import { useQuery } from 'react-query';
 import EdgeInfoCollapsibleSection from 'src/views/Explore/EdgeInfo/EdgeInfoCollapsibleSection';
-import { FieldsContainer, ObjectInfoFields } from 'src/views/Explore/fragments';
 import { formatObjectInfoFields } from 'src/views/Explore/utils';
 
 const selectedEdgeCypherQuery = (sourceId: string | number, targetId: string | number, edgeKind: string): string =>

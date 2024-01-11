@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Field } from './fragments';
-import { render, screen } from 'src/test-utils';
+import { render, screen } from '../../test-utils';
 
 describe('Field', () => {
     it('should render a Field when the provided value is false', () => {

@@ -57,9 +57,15 @@
       "data": {
         "type": "object",
         "properties": {
-          "count": { "type": "integer" },
-          "limit": { "type": "integer" },
-          "skip": { "type": "integer" },
+          "count": {
+            "type": "integer"
+          },
+          "limit": {
+            "type": "integer"
+          },
+          "skip": {
+            "type": "integer"
+          },
           "members": {
             "type": "array",
             "items": {
@@ -927,6 +933,17 @@
       },
       "name": {
         "type": "string"
+      }
+    }
+  },
+  "v2.SearchResponse": {
+    "type": "object",
+    "properties": {
+      "data": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/model.SearchResult"
+        }
       }
     }
   },

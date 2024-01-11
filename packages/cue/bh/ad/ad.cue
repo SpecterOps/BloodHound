@@ -142,7 +142,7 @@ DomainSID: types.#StringEnum & {
 Sensitive: types.#StringEnum & {
 	symbol:         "Sensitive"
 	schema:         "ad"
-	name:           "Marked sensitive"
+	name:           "Marked Sensitive"
 	representation: "sensitive"
 }
 
@@ -319,6 +319,13 @@ SamAccountName: types.#StringEnum & {
 	schema: "ad"
 	name: "SAM Account Name"
 	representation: "samaccountname"
+}
+
+HomeDirectory: types.#StringEnum & {
+	symbol: "HomeDirectory"
+	schema: "ad"
+	name: "Home Directory"
+	representation: "homedirectory"
 }
 
 CertificateMappingMethodsRaw: types.#StringEnum & {
@@ -547,7 +554,8 @@ Properties: [
 	NoSecurityExtension,
 	RenewalPeriod,
 	ValidityPeriod,
-	OID
+	OID,
+	HomeDirectory
 ]
 
 // Kinds
@@ -778,6 +786,11 @@ DCSync: types.#Kind & {
 	schema: "active_directory"
 }
 
+DCFor: types.#Kind & {
+	symbol: "DCFor"
+	schema: "active_directory"
+}
+
 ReadLAPSPassword: types.#Kind & {
 	symbol: "ReadLAPSPassword"
 	schema: "active_directory"
@@ -893,6 +906,11 @@ EnterpriseCAFor: types.#Kind & {
 	schema: "active_directory"
 }
 
+CanAbuseUPNCertMapping: types.#Kind & {
+	symbol: "CanAbuseUPNCertMapping"
+	schema: "active_directory"
+}
+
 IssuedSignedBy: types.#Kind & {
 	symbol: "IssuedSignedBy"
 	schema: "active_directory"
@@ -965,6 +983,7 @@ RelationshipKinds: [
 	HasSIDHistory,
 	AddSelf,
 	DCSync,
+	DCFor,
 	ReadLAPSPassword,
 	ReadGMSAPassword,
 	DumpSMSAPassword,
@@ -989,6 +1008,7 @@ RelationshipKinds: [
 	NTAuthStoreFor,
 	TrustedForNTAuth,
 	EnterpriseCAFor,
+	CanAbuseUPNCertMapping,
 	IssuedSignedBy,
 	GoldenCert,
 	EnrollOnBehalfOf,

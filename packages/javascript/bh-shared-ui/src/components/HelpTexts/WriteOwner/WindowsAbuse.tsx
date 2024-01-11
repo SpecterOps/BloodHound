@@ -55,7 +55,7 @@ const WindowsAbuse: FC<EdgeInfoProps & { targetId: string }> = ({
                         }
                     </Typography>
                     <Typography variant='body2'>
-                        To abuse ownership of a user object, you may grant yourself the AddMember privilege. This can be
+                        To abuse ownership of a user object, you may grant yourself the AddMember permission. This can be
                         accomplished using the Add-DomainObjectAcl function in PowerView.
                     </Typography>
                     <Typography variant='body2'>
@@ -86,12 +86,12 @@ const WindowsAbuse: FC<EdgeInfoProps & { targetId: string }> = ({
                         the opsec considerations tab for why this may be a bad idea. The second, and highly recommended
                         method, is by using the Add-DomainGroupMember function in PowerView. This function is superior
                         to using the net.exe binary in several ways. For instance, you can supply alternate credentials,
-                        instead of needing to run a process as or logon as the user with the AddMember privilege.
+                        instead of needing to run a process as or logon as the user with the AddMember permission.
                         Additionally, you have much safer execution options than you do with spawning net.exe (see the
                         opsec tab).
                     </Typography>
                     <Typography variant='body2'>
-                        To abuse this privilege with PowerView's Add-DomainGroupMember, first import PowerView into your
+                        To abuse this permission with PowerView's Add-DomainGroupMember, first import PowerView into your
                         agent session or into a PowerShell instance at the console. You may need to authenticate to the
                         Domain Controller as{' '}
                         {sourceType === 'User'
@@ -154,7 +154,7 @@ const WindowsAbuse: FC<EdgeInfoProps & { targetId: string }> = ({
                         {'Set-DomainObjectOwner -Credential $Cred -TargetIdentity dfm -OwnerIdentity harmj0y'}
                     </Typography>
                     <Typography variant='body2'>
-                        To abuse ownership of a user object, you may grant yourself the GenericAll privilege. This can
+                        To abuse ownership of a user object, you may grant yourself the GenericAll permission. This can
                         be accomplished using the Add-DomainObjectAcl function in PowerView.
                     </Typography>
                     <Typography variant='body2'>
@@ -224,12 +224,12 @@ const WindowsAbuse: FC<EdgeInfoProps & { targetId: string }> = ({
                         considerations tab for why this may be a bad idea. The second, and highly recommended method, is
                         by using the Set-DomainUserPassword function in PowerView. This function is superior to using
                         the net.exe binary in several ways. For instance, you can supply alternate credentials, instead
-                        of needing to run a process as or logon as the user with the ForceChangePassword privilege.
+                        of needing to run a process as or logon as the user with the ForceChangePassword permission.
                         Additionally, you have much safer execution options than you do with spawning net.exe (see the
                         opsec tab).
                     </Typography>
                     <Typography variant='body2'>
-                        To abuse this privilege with PowerView's Set-DomainUserPassword, first import PowerView into
+                        To abuse this permission with PowerView's Set-DomainUserPassword, first import PowerView into
                         your agent session or into a PowerShell instance at the console. You may need to authenticate to
                         the Domain Controller as{' '}
                         {sourceType === 'User'
@@ -299,7 +299,7 @@ const WindowsAbuse: FC<EdgeInfoProps & { targetId: string }> = ({
                         {'Set-DomainObjectOwner -Credential $Cred -TargetIdentity windows1 -OwnerIdentity harmj0y'}
                     </Typography>
                     <Typography variant='body2'>
-                        To abuse ownership of a computer object, you may grant yourself the GenericAll privilege.
+                        To abuse ownership of a computer object, you may grant yourself the GenericAll permission.
                     </Typography>
                     <Typography variant='body2'>
                         You may need to authenticate to the Domain Controller as{' '}
@@ -321,7 +321,7 @@ const WindowsAbuse: FC<EdgeInfoProps & { targetId: string }> = ({
                         {'Add-DomainObjectAcl -Credential $Cred -TargetIdentity windows1 -Rights All'}
                     </Typography>
                     <Typography variant='body2'>
-                        Once you have granted yourself this privilege, you may read the ms-Ads-AdmPwd attribute on the
+                        Once you have granted yourself this permission, you may read the ms-Ads-AdmPwd attribute on the
                         computer object in LDAP which contains the local administrator password.
                     </Typography>
                     <Typography variant='body2'>
@@ -423,7 +423,7 @@ const WindowsAbuse: FC<EdgeInfoProps & { targetId: string }> = ({
                         {'Set-DomainObjectOwner -Credential $Cred -TargetIdentity testlab.local -OwnerIdentity harmj0y'}
                     </Typography>
                     <Typography variant='body2'>
-                        To abuse ownership of a domain object, you may grant yourself the DcSync privileges.
+                        To abuse ownership of a domain object, you may grant yourself the DcSync permissions.
                     </Typography>
                     <Typography variant='body2'>
                         You may need to authenticate to the Domain Controller as{' '}
@@ -445,7 +445,7 @@ const WindowsAbuse: FC<EdgeInfoProps & { targetId: string }> = ({
                         {'Add-DomainObjectAcl -Credential $Cred -TargetIdentity testlab.local -Rights DCSync'}
                     </Typography>
                     <Typography variant='body2'>
-                        Once you have granted yourself this privilege, you may use the mimikatz dcsync function to
+                        Once you have granted yourself this permission, you may use the mimikatz dcsync function to
                         dcsync the password of arbitrary principals on the domain
                     </Typography>
                     <Typography component={'pre'}>
@@ -489,7 +489,7 @@ const WindowsAbuse: FC<EdgeInfoProps & { targetId: string }> = ({
                         {'Set-DomainObjectOwner -Credential $Cred -TargetIdentity TestGPO -OwnerIdentity harmj0y'}
                     </Typography>
                     <Typography variant='body2'>
-                        To abuse ownership of a domain object, you may grant yourself the DcSync privileges.
+                        To abuse ownership of a domain object, you may grant yourself the DcSync permissions.
                     </Typography>
                     <Typography variant='body2'>
                         You may need to authenticate to the Domain Controller as{' '}
@@ -558,7 +558,7 @@ const WindowsAbuse: FC<EdgeInfoProps & { targetId: string }> = ({
                         {'Set-DomainObjectOwner -Credential $Cred -TargetIdentity dfm -OwnerIdentity harmj0y'}
                     </Typography>
                     <Typography variant='body2'>
-                        Now with ownership of the OU object, you may grant yourself the GenericAll privilege. This can
+                        Now with ownership of the OU object, you may grant yourself the GenericAll permission. This can
                         be accomplished using the Add-DomainObjectAcl function in PowerView.
                     </Typography>
                     <Typography component={'pre'}>
@@ -615,7 +615,7 @@ const WindowsAbuse: FC<EdgeInfoProps & { targetId: string }> = ({
                     <Typography variant='body2'>
                         If you want to be more targeted with your approach, it is possible to specify precisely what
                         right you want to apply to precisely which kinds of descendent objects. You could, for example,
-                        grant a user "ForceChangePassword" privilege against all user objects, or grant a security group
+                        grant a user "ForceChangePassword" permission against all user objects, or grant a security group
                         the ability to read every GMSA password under a certain OU. Below is an example taken from
                         PowerView's help text on how to grant the "ITADMIN" user the ability to read the LAPS password
                         from all computer objects in the "Workstations" OU:

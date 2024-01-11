@@ -125,7 +125,7 @@ func (s Property) String() string {
 	case IsInherited:
 		return string(IsInherited)
 	default:
-		panic("Invalid enumeration case: " + string(s))
+		return "Invalid enumeration case: " + string(s)
 	}
 }
 func (s Property) Name() string {
@@ -163,7 +163,7 @@ func (s Property) Name() string {
 	case IsInherited:
 		return "Is Inherited"
 	default:
-		panic("Invalid enumeration case: " + string(s))
+		return "Invalid enumeration case: " + string(s)
 	}
 }
 func (s Property) Is(others ...graph.Kind) bool {

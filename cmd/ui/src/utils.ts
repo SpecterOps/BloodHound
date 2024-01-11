@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { ActiveDirectoryNodeKind, AzureNodeKind, apiClient } from 'bh-shared-ui';
+import { apiClient } from 'bh-shared-ui';
 import { FlatGraphResponse, GraphData, GraphResponse, StyledGraphEdge, StyledGraphNode } from 'js-client-library';
 import identity from 'lodash/identity';
 import throttle from 'lodash/throttle';
@@ -38,21 +38,6 @@ export const getDatesInRange = (startDate: Date, endDate: Date) => {
     }
 
     return dates;
-};
-
-export const validateNodeType = (type: string): ActiveDirectoryNodeKind | AzureNodeKind | undefined => {
-    let result = undefined;
-    Object.values(ActiveDirectoryNodeKind).forEach((activeDirectoryType: string) => {
-        if (activeDirectoryType.localeCompare(type, undefined, { sensitivity: 'base' }) === 0)
-            result = activeDirectoryType as ActiveDirectoryNodeKind;
-    });
-
-    Object.values(AzureNodeKind).forEach((azureType: string) => {
-        if (azureType.localeCompare(type, undefined, { sensitivity: 'base' }) === 0)
-            result = azureType as AzureNodeKind;
-    });
-
-    return result;
 };
 
 export const getUsername = (user: any): string | undefined => {
