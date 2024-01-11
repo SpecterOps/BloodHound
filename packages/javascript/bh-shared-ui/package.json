@@ -27,7 +27,7 @@
         "clsx": "^1.1.1",
         "dompurify": "^2.3.0",
         "downshift": "^6.1.7",
-        "js-client-library": "workspace:^",
+        "js-client-library": "workspace:*",
         "luxon": "^3.3.0",
         "memoize-one": "^6.0.0",
         "notistack": "^2.0.5",
