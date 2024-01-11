@@ -1014,10 +1014,7 @@ RelationshipKinds: [
 	TrustedForNTAuth,
 	EnterpriseCAFor,
 	CanAbuseUPNCertMapping,
-<<<<<<< HEAD
-=======
 	CanAbuseWeakCertBinding,
->>>>>>> 2f720ab6 (schemagen for CanAbuseUPNCertMapping and CanAbuseWeakCertBinding)
 	IssuedSignedBy,
 	GoldenCert,
 	EnrollOnBehalfOf,

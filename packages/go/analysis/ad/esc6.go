@@ -24,26 +24,33 @@ import (
 	"github.com/specterops/bloodhound/dawgs/ops"
 	"github.com/specterops/bloodhound/dawgs/query"
 	"github.com/specterops/bloodhound/dawgs/util/channels"
+	"github.com/specterops/bloodhound/errors"
 	"github.com/specterops/bloodhound/graphschema/ad"
 )
 
 func PostCanAbuseUPNCertMapping(_ context.Context, _ graph.Database, operation analysis.StatTrackedOperation[analysis.CreatePostRelationshipJob], enterpriseCertAuthorities []*graph.Node) error {
 	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
+		collector := errors.ErrorCollector{}
 		for _, eca := range enterpriseCertAuthorities {
 			if ecaDomainSID, err := eca.Properties.Get(ad.DomainSID.String()).String(); err != nil {
-				return err
+				collector.Collect(fmt.Errorf("error in PostCanAbuseWeakCertBinding: unable to find domainsid for node ID %v: %v", eca.ID, err))
+				continue
 			} else if ecaDomain, err := analysis.FetchNodeByObjectID(tx, ecaDomainSID); err != nil {
-				return err
+				collector.Collect(fmt.Errorf("error in PostCanAbuseWeakCertBinding: unable to find node corresponding to domainsid %v: ", ecaDomainSID, err))
+				continue
 			} else if trustedByNodes, err := fetchNodesWithTrustedByParentChildRelationship(tx, ecaDomain); err != nil {
-				return err
+				collector.Collect(fmt.Errorf("error in PostCanAbuseWeakCertBinding: unable to fetch TrustedBy nodes: %v", err))
+				continue
 			} else {
 				for _, trustedByDomain := range trustedByNodes {
 					if dcForNodes, err := fetchNodesWithDCForEdge(tx, trustedByDomain); err != nil {
-						return err
+						collector.Collect(fmt.Errorf("error in PostCanAbuseWeakCertBinding: unable to fetch DCFor nodes: %v", err))
+						continue
 					} else {
 						for _, dcForNode := range dcForNodes {
 							if cmmrProperty, err := dcForNode.Properties.Get(ad.CertificateMappingMethodsRaw.String()).Int(); err != nil {
-								return err
+								collector.Collect(fmt.Errorf("error in PostCanAbuseWeakCertBinding: unable to fetch %v property for node ID %v: %v", ad.StrongCertificateBindingEnforcementRaw.String(), dcForNode.ID, err))
+								continue
 							} else if cmmrProperty&0x04 == 0x04 {
 								if !channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
 									FromID: eca.ID,
@@ -58,28 +65,34 @@ func PostCanAbuseUPNCertMapping(_ context.Context, _ graph.Database, operation a
 				}
 			}
 		}
-		return nil
+		return collector.Return()
 	})
 	return nil
 }
 
 func PostCanAbuseWeakCertBinding(_ context.Context, _ graph.Database, operation analysis.StatTrackedOperation[analysis.CreatePostRelationshipJob], enterpriseCertAuthorities []*graph.Node) error {
 	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
+		collector := errors.ErrorCollector{}
 		for _, eca := range enterpriseCertAuthorities {
 			if ecaDomainSID, err := eca.Properties.Get(ad.DomainSID.String()).String(); err != nil {
-				return err
+				collector.Collect(fmt.Errorf("error in PostCanAbuseWeakCertBinding: unable to find domainsid for node ID %v: %v", eca.ID, err))
+				continue
 			} else if ecaDomain, err := analysis.FetchNodeByObjectID(tx, ecaDomainSID); err != nil {
-				return err
+				collector.Collect(fmt.Errorf("error in PostCanAbuseWeakCertBinding: unable to find node corresponding to domainsid %v: ", ecaDomainSID, err))
+				continue
 			} else if trustedByNodes, err := fetchNodesWithTrustedByParentChildRelationship(tx, ecaDomain); err != nil {
-				return err
+				collector.Collect(fmt.Errorf("error in PostCanAbuseWeakCertBinding: unable to fetch TrustedBy nodes: %v", err))
+				continue
 			} else {
 				for _, trustedByDomain := range trustedByNodes {
 					if dcForNodes, err := fetchNodesWithDCForEdge(tx, trustedByDomain); err != nil {
-						return err
+						collector.Collect(fmt.Errorf("error in PostCanAbuseWeakCertBinding: unable to fetch DCFor nodes: %v", err))
+						continue
 					} else {
 						for _, dcForNode := range dcForNodes {
 							if strongCertBindingEnforcement, err := dcForNode.Properties.Get(ad.StrongCertificateBindingEnforcementRaw.String()).Int(); err != nil {
-								return err
+								collector.Collect(fmt.Errorf("error in PostCanAbuseWeakCertBinding: unable to fetch %v property for node ID %v: %v", ad.StrongCertificateBindingEnforcementRaw.String(), dcForNode.ID, err))
+								continue
 							} else if strongCertBindingEnforcement == 0 || strongCertBindingEnforcement == 1 {
 								if !channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
 									FromID: eca.ID,
@@ -94,7 +107,7 @@ func PostCanAbuseWeakCertBinding(_ context.Context, _ graph.Database, operation 
 				}
 			}
 		}
-		return nil
+		return collector.Return()
 	})
 	return nil
 }
