@@ -36,7 +36,7 @@ func PostCanAbuseUPNCertMapping(_ context.Context, _ graph.Database, operation a
 				collector.Collect(fmt.Errorf("error in PostCanAbuseWeakCertBinding: unable to find domainsid for node ID %v: %v", eca.ID, err))
 				continue
 			} else if ecaDomain, err := analysis.FetchNodeByObjectID(tx, ecaDomainSID); err != nil {
-				collector.Collect(fmt.Errorf("error in PostCanAbuseWeakCertBinding: unable to find node corresponding to domainsid %v: ", ecaDomainSID, err))
+				collector.Collect(fmt.Errorf("error in PostCanAbuseWeakCertBinding: unable to find node corresponding to domainsid %v: %v", ecaDomainSID, err))
 				continue
 			} else if trustedByNodes, err := fetchNodesWithTrustedByParentChildRelationship(tx, ecaDomain); err != nil {
 				collector.Collect(fmt.Errorf("error in PostCanAbuseWeakCertBinding: unable to fetch TrustedBy nodes: %v", err))
@@ -78,7 +78,7 @@ func PostCanAbuseWeakCertBinding(_ context.Context, _ graph.Database, operation 
 				collector.Collect(fmt.Errorf("error in PostCanAbuseWeakCertBinding: unable to find domainsid for node ID %v: %v", eca.ID, err))
 				continue
 			} else if ecaDomain, err := analysis.FetchNodeByObjectID(tx, ecaDomainSID); err != nil {
-				collector.Collect(fmt.Errorf("error in PostCanAbuseWeakCertBinding: unable to find node corresponding to domainsid %v: ", ecaDomainSID, err))
+				collector.Collect(fmt.Errorf("error in PostCanAbuseWeakCertBinding: unable to find node corresponding to domainsid %v: %v", ecaDomainSID, err))
 				continue
 			} else if trustedByNodes, err := fetchNodesWithTrustedByParentChildRelationship(tx, ecaDomain); err != nil {
 				collector.Collect(fmt.Errorf("error in PostCanAbuseWeakCertBinding: unable to fetch TrustedBy nodes: %v", err))

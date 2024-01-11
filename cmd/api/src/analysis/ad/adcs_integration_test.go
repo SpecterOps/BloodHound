@@ -209,15 +209,13 @@ func TestCanAbuseUPNCertMapping(t *testing.T) {
 				// Positive Cases
 				assert.True(t, results.Contains(harness.WeakCertBindingAndUPNCertMappingHarness.EnterpriseCA1))
 				assert.True(t, results.Contains(harness.WeakCertBindingAndUPNCertMappingHarness.EnterpriseCA2))
-				assert.True(t, results.Contains(harness.WeakCertBindingAndUPNCertMappingHarness.Computer1))
-				assert.True(t, results.Contains(harness.WeakCertBindingAndUPNCertMappingHarness.Computer3))
-				assert.True(t, results.Contains(harness.WeakCertBindingAndUPNCertMappingHarness.Computer5))
-				assert.True(t, results.Contains(harness.WeakCertBindingAndUPNCertMappingHarness.Domain1))
-				assert.True(t, results.Contains(harness.WeakCertBindingAndUPNCertMappingHarness.Domain2))
 
 				// Negative Cases
+				assert.False(t, results.Contains(harness.WeakCertBindingAndUPNCertMappingHarness.Computer1))
 				assert.False(t, results.Contains(harness.WeakCertBindingAndUPNCertMappingHarness.Computer2))
+				assert.False(t, results.Contains(harness.WeakCertBindingAndUPNCertMappingHarness.Computer3))
 				assert.False(t, results.Contains(harness.WeakCertBindingAndUPNCertMappingHarness.Computer4))
+				assert.False(t, results.Contains(harness.WeakCertBindingAndUPNCertMappingHarness.Computer5))
 				assert.False(t, results.Contains(harness.WeakCertBindingAndUPNCertMappingHarness.Domain1))
 				assert.False(t, results.Contains(harness.WeakCertBindingAndUPNCertMappingHarness.Domain2))
 				assert.False(t, results.Contains(harness.WeakCertBindingAndUPNCertMappingHarness.Domain3))
@@ -257,16 +255,16 @@ func TestCanAbuseWeakCertBinding(t *testing.T) {
 
 				// Positive Cases
 				assert.True(t, results.Contains(harness.WeakCertBindingAndUPNCertMappingHarness.EnterpriseCA1))
-				assert.True(t, results.Contains(harness.WeakCertBindingAndUPNCertMappingHarness.Computer1))
-				assert.True(t, results.Contains(harness.WeakCertBindingAndUPNCertMappingHarness.Computer2))
-				assert.True(t, results.Contains(harness.WeakCertBindingAndUPNCertMappingHarness.Domain1))
-				assert.True(t, results.Contains(harness.WeakCertBindingAndUPNCertMappingHarness.Domain2))
 
 				// Negative Cases
 				assert.False(t, results.Contains(harness.WeakCertBindingAndUPNCertMappingHarness.EnterpriseCA2))
+				assert.False(t, results.Contains(harness.WeakCertBindingAndUPNCertMappingHarness.Computer1))
+				assert.False(t, results.Contains(harness.WeakCertBindingAndUPNCertMappingHarness.Computer2))
 				assert.False(t, results.Contains(harness.WeakCertBindingAndUPNCertMappingHarness.Computer3))
 				assert.False(t, results.Contains(harness.WeakCertBindingAndUPNCertMappingHarness.Computer4))
 				assert.False(t, results.Contains(harness.WeakCertBindingAndUPNCertMappingHarness.Computer5))
+				assert.False(t, results.Contains(harness.WeakCertBindingAndUPNCertMappingHarness.Domain1))
+				assert.False(t, results.Contains(harness.WeakCertBindingAndUPNCertMappingHarness.Domain2))
 				assert.False(t, results.Contains(harness.WeakCertBindingAndUPNCertMappingHarness.Domain3))
 			}
 			return nil
@@ -316,20 +314,25 @@ func TestIssuedSignedBy(t *testing.T) {
 					query.KindIn(query.End(), ad.RootCA),
 				)
 			})); err != nil {
-				t.Fatalf("error fetching ECA to ECA IssuedSignedBy relationships; %v", err)
+				t.Fatalf("error fetching RootCA to RootCA IssuedSignedBy relationships; %v", err)
 			} else {
 				assert.True(t, len(results1) == 1)
 				assert.True(t, len(results2) == 1)
 				assert.True(t, len(results3) == 1)
 
 				// Positive Cases
-				assert.True(t, results.Contains(harness.IssuedSignedByHarness.RootCA2))
-				assert.True(t, results.Contains(harness.IssuedSignedByHarness.EnterpriseCA1))
-				assert.True(t, results.Contains(harness.IssuedSignedByHarness.EnterpriseCA2))
+				assert.True(t, results3.Contains(harness.IssuedSignedByHarness.RootCA2))
+				assert.True(t, results2.Contains(harness.IssuedSignedByHarness.EnterpriseCA1))
+				assert.True(t, results1.Contains(harness.IssuedSignedByHarness.EnterpriseCA2))
 
 				// Negative Cases
-				assert.False(t, results.Contains(harness.IssuedSignedByHarness.RootCA1))
-				assert.False(t, results.Contains(harness.IssuedSignedByHarness.EnterpriseCA3))
+				assert.False(t, results1.Contains(harness.IssuedSignedByHarness.RootCA1))
+				assert.False(t, results2.Contains(harness.IssuedSignedByHarness.RootCA1))
+				assert.False(t, results3.Contains(harness.IssuedSignedByHarness.RootCA1))
+
+				assert.False(t, results1.Contains(harness.IssuedSignedByHarness.EnterpriseCA3))
+				assert.False(t, results2.Contains(harness.IssuedSignedByHarness.EnterpriseCA3))
+				assert.False(t, results3.Contains(harness.IssuedSignedByHarness.EnterpriseCA3))
 			}
 			return nil
 		})
