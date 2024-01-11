@@ -1,4 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2024 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -38,10 +38,7 @@ const WindowsAbuse: FC = () => {
                 <b>Step 3</b>: Use Rubeus to request a ticket granting ticket (TGT) from the domain, specifying the
                 target identity to impersonate and the PFX-formatted certificate created in Step 2:
             </Typography>
-            <Typography component={'pre'}>{
-                'certutil.exe -MergePFX .cert.pem .cert.pfx\n' + 
-                'klist'
-            }</Typography>
+            <Typography component={'pre'}>{'certutil.exe -MergePFX .cert.pem .cert.pfx\n' + 'klist'}</Typography>
         </>
     );
 };
