@@ -342,6 +342,17 @@ func ParseComputerMiscData(computer Computer) []IngestibleRelationship {
 		}
 	}
 
+	if computer.IsDC && computer.DomainSID != "" {
+		relationships = append(relationships, IngestibleRelationship{
+			Source:     computer.ObjectIdentifier,
+			SourceType: ad.Computer,
+			TargetType: ad.Domain,
+			Target:     computer.DomainSID,
+			RelProps:   map[string]any{"isacl": false},
+			RelType:    ad.DCFor,
+		})
+	}
+
 	return relationships
 }
 
