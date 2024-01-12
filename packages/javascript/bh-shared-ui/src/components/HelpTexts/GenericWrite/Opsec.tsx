@@ -20,8 +20,8 @@ import { Typography } from '@mui/material';
 const Opsec: FC = () => {
     return (
         <Typography variant='body2'>
-            This depends on the target object and how to take advantage of this permission. Opsec considerations for each
-            abuse primitive are documented on the specific abuse edges and on the BloodHound wiki.
+            This depends on the target object and how to take advantage of this permission. Opsec considerations for
+            each abuse primitive are documented on the specific abuse edges and on the BloodHound wiki.
         </Typography>
     );
 };

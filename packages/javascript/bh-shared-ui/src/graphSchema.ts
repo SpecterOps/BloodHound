@@ -119,6 +119,7 @@ export enum ActiveDirectoryRelationshipKind {
     TrustedForNTAuth = 'TrustedForNTAuth',
     EnterpriseCAFor = 'EnterpriseCAFor',
     CanAbuseUPNCertMapping = 'CanAbuseUPNCertMapping',
+    CanAbuseWeakCertBinding = 'CanAbuseWeakCertBinding',
     IssuedSignedBy = 'IssuedSignedBy',
     GoldenCert = 'GoldenCert',
     EnrollOnBehalfOf = 'EnrollOnBehalfOf',
@@ -233,6 +234,8 @@ export function ActiveDirectoryRelationshipKindToDisplay(value: ActiveDirectoryR
             return 'EnterpriseCAFor';
         case ActiveDirectoryRelationshipKind.CanAbuseUPNCertMapping:
             return 'CanAbuseUPNCertMapping';
+        case ActiveDirectoryRelationshipKind.CanAbuseWeakCertBinding:
+            return 'CanAbuseWeakCertBinding';
         case ActiveDirectoryRelationshipKind.IssuedSignedBy:
             return 'IssuedSignedBy';
         case ActiveDirectoryRelationshipKind.GoldenCert:
