@@ -27,5 +27,5 @@ const ADCSESC6a = {
     opsec: Opsec,
     references: References,
 };
-console.log('test commit with a new name');
+
 export default ADCSESC6a;
