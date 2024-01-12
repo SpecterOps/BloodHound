@@ -1419,7 +1419,7 @@ func (s *WeakCertBindingAndUPNCertMappingHarness) Setup(graphTestContext *GraphT
 
 	// Set up ECA nodes
 	s.EnterpriseCA1 = graphTestContext.NewActiveDirectoryEnterpriseCAWithThumbprint("EnterpriseCA1", domainSid1, "a")
-	s.EnterpriseCA2 = graphTestContext.NewActiveDirectoryEnterpriseCAWithThumbprint("EnterpriseCA2", domainSid2, "b")
+	s.EnterpriseCA2 = graphTestContext.NewActiveDirectoryEnterpriseCAWithThumbprint("EnterpriseCA2", domainSid3, "b")
 
 	// Set up Domain nodes
 	s.Domain1 = graphTestContext.NewActiveDirectoryDomain("Domain1", domainSid1, false, true)

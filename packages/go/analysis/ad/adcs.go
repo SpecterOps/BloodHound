@@ -226,8 +226,10 @@ func postADCSPreProcessStep1(ctx context.Context, db graph.Database, enterpriseC
 		operation.Done()
 		return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("failed post processing for %s: %w", ad.EnterpriseCAFor.String(), err)
 	} else if err = PostCanAbuseUPNCertMapping(ctx, db, operation, enterpriseCertAuthorities); err != nil {
+		operation.Done()
 		return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("failed post processing for %s: %w", ad.CanAbuseUPNCertMapping.String(), err)
 	} else if err = PostCanAbuseWeakCertBinding(ctx, db, operation, enterpriseCertAuthorities); err != nil {
+		operation.Done()
 		return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("failed post processing for %s: %w", ad.CanAbuseWeakCertBinding.String(), err)
 	} else {
 		return &operation.Stats, operation.Done()
