@@ -106,7 +106,7 @@ import WritePKIEnrollmentFlag from './WritePKIEnrollmentFlag/WritePKIEnrollmentF
 import WritePKINameFlag from './WritePKINameFlag/WritePKINameFlag';
 import WriteSPN from './WriteSPN/WriteSPN';
 import ADCSESC1 from './ADCSESC1/ADCSESC1';
-import ADCSESC6A from './ADCSESC6A/ADCSESC6A';
+import ADCSESC6a from './ADCSESC6a/ADCSESC6a';
 
 export type EdgeInfoProps = {
     edgeName?: string;
@@ -207,7 +207,7 @@ const EdgeInfoComponents = {
     GoldenCert: GoldenCert,
     ADCSESC1: ADCSESC1,
     ADCSESC3: ADCSESC3,
-    ADCSESC6A: ADCSESC6A,
+    ADCSESC6a: ADCSESC6a,
     ManageCA: ManageCA,
     ManageCertificates: ManageCertificates,
     WritePKIEnrollmentFlag: WritePKIEnrollmentFlag,
