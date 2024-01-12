@@ -19,6 +19,7 @@ package database
 import (
 	"time"
 
+	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/src/auth"
 	"github.com/specterops/bloodhound/src/ctx"
 	"gorm.io/gorm"
@@ -35,7 +36,7 @@ const (
 func newAuditLog(ctx ctx.Context, action string, data model.Auditable, idResolver auth.IdentityResolver) (model.AuditLog, error) {
 	auditLog := model.AuditLog{
 		Action:    action,
-		Fields:    types.JSONUntypedObject(data.AuditData()),
+		Fields:    types.JSONUntypedObject(ctx.AuditModel.AuditData()),
 		RequestID: ctx.RequestID,
 		Source:    ctx.RequestIP,
 		Status:    "success", // TODO: parameterize this so we can pass the actual status instead of hard-coding
