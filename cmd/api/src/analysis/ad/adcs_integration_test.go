@@ -188,7 +188,7 @@ func TestCanAbuseUPNCertMapping(t *testing.T) {
 
 		if enterpriseCertAuthorities, err := ad2.FetchNodesByKind(context.Background(), db, ad.EnterpriseCA); err != nil {
 			t.Logf("failed fetching enterpriseCA nodes: %v", err)
-		} else if err := ad2.PostCanAbuseUPNCertMapping(context.Background(), db, operation, enterpriseCertAuthorities); err != nil {
+		} else if err := ad2.PostCanAbuseUPNCertMapping(operation, enterpriseCertAuthorities); err != nil {
 			t.Logf("failed post processing for %s: %v", ad.CanAbuseUPNCertMapping.String(), err)
 		}
 
@@ -196,11 +196,7 @@ func TestCanAbuseUPNCertMapping(t *testing.T) {
 
 		db.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
 			if results, err := ops.FetchStartNodes(tx.Relationships().Filterf(func() graph.Criteria {
-				return query.And(
-					query.Kind(query.Relationship(), ad.CanAbuseUPNCertMapping),
-					query.KindIn(query.Start(), ad.EnterpriseCA),
-					query.KindIn(query.End(), ad.Computer),
-				)
+				return query.Kind(query.Relationship(), ad.CanAbuseUPNCertMapping)
 			})); err != nil {
 				t.Fatalf("error fetching CanAbuseUPNCertMapping relationships; %v", err)
 			} else {
@@ -235,7 +231,7 @@ func TestCanAbuseWeakCertBinding(t *testing.T) {
 
 		if enterpriseCertAuthorities, err := ad2.FetchNodesByKind(context.Background(), db, ad.EnterpriseCA); err != nil {
 			t.Logf("failed fetching enterpriseCA nodes: %v", err)
-		} else if err := ad2.PostCanAbuseWeakCertBinding(context.Background(), db, operation, enterpriseCertAuthorities); err != nil {
+		} else if err := ad2.PostCanAbuseWeakCertBinding(operation, enterpriseCertAuthorities); err != nil {
 			t.Logf("failed post processing for %s: %v", ad.CanAbuseWeakCertBinding.String(), err)
 		}
 
@@ -243,11 +239,7 @@ func TestCanAbuseWeakCertBinding(t *testing.T) {
 
 		db.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
 			if results, err := ops.FetchStartNodes(tx.Relationships().Filterf(func() graph.Criteria {
-				return query.And(
-					query.Kind(query.Relationship(), ad.CanAbuseWeakCertBinding),
-					query.KindIn(query.Start(), ad.EnterpriseCA),
-					query.KindIn(query.End(), ad.Computer),
-				)
+				return query.Kind(query.Relationship(), ad.CanAbuseWeakCertBinding)
 			})); err != nil {
 				t.Fatalf("error fetching CanAbuseWeakCertBinding relationships; %v", err)
 			} else {
@@ -284,7 +276,7 @@ func TestIssuedSignedBy(t *testing.T) {
 			t.Logf("failed fetching rootCA nodes: %v", err)
 		} else if enterpriseCertAuthorities, err := ad2.FetchNodesByKind(context.Background(), db, ad.EnterpriseCA); err != nil {
 			t.Logf("failed fetching enterpriseCA nodes: %v", err)
-		} else if err := ad2.PostIssuedSignedBy(context.Background(), db, operation, enterpriseCertAuthorities, rootCertAuthorities); err != nil {
+		} else if err := ad2.PostIssuedSignedBy(operation, enterpriseCertAuthorities, rootCertAuthorities); err != nil {
 			t.Logf("failed post processing for %s: %v", ad.IssuedSignedBy.String(), err)
 		}
 

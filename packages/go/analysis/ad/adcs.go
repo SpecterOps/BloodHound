@@ -215,20 +215,21 @@ func PostADCS(ctx context.Context, db graph.Database, groupExpansions impact.Pat
 // postADCSPreProcessStep1 processes the edges that are not dependent on any other post-processed edges
 func postADCSPreProcessStep1(ctx context.Context, db graph.Database, enterpriseCertAuthorities, rootCertAuthorities []*graph.Node) (*analysis.AtomicPostProcessingStats, error) {
 	operation := analysis.NewPostRelationshipOperation(ctx, db, "ADCS Post Processing Step 1")
+	// TODO clean up the operation.Done() calls below
 
 	if err := PostTrustedForNTAuth(ctx, db, operation); err != nil {
 		operation.Done()
 		return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("failed post processing for %s: %w", ad.TrustedForNTAuth.String(), err)
-	} else if err := PostIssuedSignedBy(ctx, db, operation, enterpriseCertAuthorities, rootCertAuthorities); err != nil {
+	} else if err := PostIssuedSignedBy(operation, enterpriseCertAuthorities, rootCertAuthorities); err != nil {
 		operation.Done()
 		return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("failed post processing for %s: %w", ad.IssuedSignedBy.String(), err)
-	} else if err := PostEnterpriseCAFor(ctx, db, operation, enterpriseCertAuthorities); err != nil {
+	} else if err := PostEnterpriseCAFor(operation, enterpriseCertAuthorities); err != nil {
 		operation.Done()
 		return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("failed post processing for %s: %w", ad.EnterpriseCAFor.String(), err)
-	} else if err = PostCanAbuseUPNCertMapping(ctx, db, operation, enterpriseCertAuthorities); err != nil {
+	} else if err = PostCanAbuseUPNCertMapping(operation, enterpriseCertAuthorities); err != nil {
 		operation.Done()
 		return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("failed post processing for %s: %w", ad.CanAbuseUPNCertMapping.String(), err)
-	} else if err = PostCanAbuseWeakCertBinding(ctx, db, operation, enterpriseCertAuthorities); err != nil {
+	} else if err = PostCanAbuseWeakCertBinding(operation, enterpriseCertAuthorities); err != nil {
 		operation.Done()
 		return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("failed post processing for %s: %w", ad.CanAbuseWeakCertBinding.String(), err)
 	} else {
