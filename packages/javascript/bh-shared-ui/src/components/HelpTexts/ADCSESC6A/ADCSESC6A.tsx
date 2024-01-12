@@ -27,5 +27,5 @@ const ADCSESC6a = {
     opsec: Opsec,
     references: References,
 };
-
+console.log('common');
 export default ADCSESC6a;
