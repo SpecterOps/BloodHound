@@ -37,9 +37,9 @@ const WindowsAbuse: FC<EdgeInfoProps> = ({ sourceName, sourceType, targetType })
                         opsec tab).
                     </Typography>
                     <Typography variant='body2'>
-                        To abuse this permission with PowerView's Add-DomainGroupMember, first import PowerView into your
-                        agent session or into a PowerShell instance at the console. You may need to authenticate to the
-                        Domain Controller as
+                        To abuse this permission with PowerView's Add-DomainGroupMember, first import PowerView into
+                        your agent session or into a PowerShell instance at the console. You may need to authenticate to
+                        the Domain Controller as
                         {sourceType === 'User'
                             ? `${sourceName} if you are not running a process as that user`
                             : `a member of ${sourceName} if you are not running a process as a member`}

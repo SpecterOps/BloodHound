@@ -82,7 +82,8 @@ func PostADCSESC1(ctx context.Context, tx graph.Transaction, outC chan<- analysi
 	} else {
 		for _, certTemplate := range publishedCertTemplates.Slice() {
 			if validationProperties, err := getValidatePublishedCertTemplateForEsc1PropertyValues(certTemplate); err != nil {
-				log.Errorf("error getting published certtemplate validation properties, %v", err)
+
+				log.Errorf("error getting published cert template validation properties, %w", err)
 				continue
 			} else if !validatePublishedCertTemplateForEsc1(validationProperties) {
 				continue
@@ -225,7 +226,11 @@ func postADCSPreProcessStep1(ctx context.Context, db graph.Database, enterpriseC
 		operation.Done()
 		return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("failed post processing for %s: %w", ad.EnterpriseCAFor.String(), err)
 	} else if err = PostCanAbuseUPNCertMapping(ctx, db, operation, enterpriseCertAuthorities); err != nil {
+		operation.Done()
 		return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("failed post processing for %s: %w", ad.CanAbuseUPNCertMapping.String(), err)
+	} else if err = PostCanAbuseWeakCertBinding(ctx, db, operation, enterpriseCertAuthorities); err != nil {
+		operation.Done()
+		return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("failed post processing for %s: %w", ad.CanAbuseWeakCertBinding.String(), err)
 	} else {
 		return &operation.Stats, operation.Done()
 	}

@@ -422,8 +422,8 @@ const LinuxAbuse: FC<EdgeInfoProps & { haslaps: boolean }> = ({
 
                     <Typography variant='body2'>
                         The AllExtendedRights permission grants {sourceName} both the DS-Replication-Get-Changes and
-                        DS-Replication-Get-Changes-All permissions, which combined allow a principal to replicate objects
-                        from the domain {targetName}.
+                        DS-Replication-Get-Changes-All permissions, which combined allow a principal to replicate
+                        objects from the domain {targetName}.
                     </Typography>
 
                     <Typography variant='body2'>
