@@ -30,10 +30,18 @@ const WindowsAbuse: FC<EdgeInfoProps & { haslaps: boolean }> = ({
             return (
                 <>
                     <Typography variant='body2'>
-                        The AllExtendedRights privilege grants {sourceName} the ability to change the password of the
+                        The AllExtendedRights permission grants {sourceName} the ability to change the password of the
                         user {targetName} without knowing their current password. This is equivalent to the
                         "ForceChangePassword" edge in BloodHound.
                     </Typography>
+                    <Typography variant='body2'>
+                        AllExtendedRights also grants {sourceName} the permission to write to the
+                        "msds-KeyCredentialLink" attribute of {targetName}. Writing to this property allows an attacker
+                        to create "Shadow Credentials" on the object and authenticate as the principal using kerberos
+                        PKINIT. This is equivalent to the "AddKeyCredentialLink" edge.
+                    </Typography>
+
+                    <Typography variant='body1'> Force Change Password attack </Typography>
 
                     <Typography variant='body2'>
                         There are at least two ways to execute this attack. The first and most obvious is by using the
@@ -41,13 +49,13 @@ const WindowsAbuse: FC<EdgeInfoProps & { haslaps: boolean }> = ({
                         considerations tab for why this may be a bad idea. The second, and highly recommended method, is
                         by using the Set-DomainUserPassword function in PowerView. This function is superior to using
                         the net.exe binary in several ways. For instance, you can supply alternate credentials, instead
-                        of needing to run a process as or logon as the user with the ForceChangePassword privilege.
+                        of needing to run a process as or logon as the user with the ForceChangePassword permission.
                         Additionally, you have much safer execution options than you do with spawning net.exe (see the
                         opsec tab).
                     </Typography>
 
                     <Typography variant='body2'>
-                        To abuse this privilege with PowerView's Set-DomainUserPassword, first import PowerView into
+                        To abuse this permission with PowerView's Set-DomainUserPassword, first import PowerView into
                         your agent session or into a PowerShell instance at the console. You may need to authenticate to
                         the Domain Controller as{' '}
                         {sourceType === 'User'
@@ -85,6 +93,23 @@ const WindowsAbuse: FC<EdgeInfoProps & { haslaps: boolean }> = ({
                         or perhaps even RDP to a system the target user has access to. For more ideas and information,
                         see the references tab.
                     </Typography>
+
+                    <Typography variant='body1'> Shadow Credentials attack </Typography>
+
+                    <Typography variant='body2'>To abuse the permission, use Whisker. </Typography>
+
+                    <Typography variant='body2'>
+                        You may need to authenticate to the Domain Controller as{' '}
+                        {sourceType === 'User' || sourceType === 'Computer'
+                            ? `${sourceName} if you are not running a process as that user/computer`
+                            : `a member of ${sourceName} if you are not running a process as a member`}
+                    </Typography>
+
+                    <Typography component={'pre'}>{'Whisker.exe add /target:<TargetPrincipal>'}</Typography>
+
+                    <Typography variant='body2'>
+                        For other optional parameters, view the Whisker documentation.
+                    </Typography>
                 </>
             );
         case 'Computer':
@@ -92,17 +117,43 @@ const WindowsAbuse: FC<EdgeInfoProps & { haslaps: boolean }> = ({
                 return (
                     <>
                         <Typography variant='body2'>
-                            The AllExtendedRights privilege grants {sourceName} the ability to obtain the RID 500
-                            administrator password of {targetName}. {sourceName} can do so by listing a computer
+                            The AllExtendedRights permission grants {sourceName} the ability to obtain the LAPS (RID 500
+                            administrator) password of {targetName}. {sourceName} can do so by listing a computer
                             object's AD properties with PowerView using Get-DomainComputer {targetName}. The value of
                             the ms-mcs-AdmPwd property will contain password of the administrative local account on{' '}
                             {targetName}.
                         </Typography>
 
                         <Typography variant='body2'>
-                            Alternatively, AllExtendedRights on a computer object can be used to perform a resource
-                            based constrained delegation attack.
+                            AllExtendedRights also grants {sourceName} the permission to write to the
+                            "msds-KeyCredentialLink" attribute of {targetName}. Writing to this property allows an
+                            attacker to create "Shadow Credentials" on the object and authenticate as the principal
+                            using kerberos PKINIT. This is equivalent to the "AddKeyCredentialLink" edge.
                         </Typography>
+
+                        <Typography variant='body2'>
+                            Alternatively, AllExtendedRights on a computer object can be used to perform a
+                            Resource-Based Constrained Delegation attack.
+                        </Typography>
+
+                        <Typography variant='body1'> Shadow Credentials attack </Typography>
+
+                        <Typography variant='body2'>To abuse the permission, use Whisker. </Typography>
+
+                        <Typography variant='body2'>
+                            You may need to authenticate to the Domain Controller as{' '}
+                            {sourceType === 'User' || sourceType === 'Computer'
+                                ? `${sourceName} if you are not running a process as that user/computer`
+                                : `a member of ${sourceName} if you are not running a process as a member`}
+                        </Typography>
+
+                        <Typography component={'pre'}>{'Whisker.exe add /target:<TargetPrincipal>'}</Typography>
+
+                        <Typography variant='body2'>
+                            For other optional parameters, view the Whisker documentation.
+                        </Typography>
+
+                        <Typography variant='body1'> Resource-Based Constrained Delegation attack </Typography>
 
                         <Typography variant='body2'>
                             Abusing this primitive is possible through the Rubeus project.
@@ -175,9 +226,35 @@ const WindowsAbuse: FC<EdgeInfoProps & { haslaps: boolean }> = ({
                 return (
                     <>
                         <Typography variant='body2'>
-                            AllExtendedRights on a computer object can be used to perform a resource based constrained
-                            delegation attack.
+                            The AllExtendedRights grants {sourceName} the permission to write to the
+                            "msds-KeyCredentialLink" attribute of {targetName}. Writing to this property allows an
+                            attacker to create "Shadow Credentials" on the object and authenticate as the principal
+                            using kerberos PKINIT. This is equivalent to the "AddKeyCredentialLink" edge.
                         </Typography>
+
+                        <Typography variant='body2'>
+                            Alternatively, AllExtendedRights on a computer object can be used to perform a
+                            Resource-Based Constrained Delegation attack.
+                        </Typography>
+
+                        <Typography variant='body1'> Shadow Credentials attack </Typography>
+
+                        <Typography variant='body2'>To abuse the permission, use Whisker. </Typography>
+
+                        <Typography variant='body2'>
+                            You may need to authenticate to the Domain Controller as{' '}
+                            {sourceType === 'User' || sourceType === 'Computer'
+                                ? `${sourceName} if you are not running a process as that user/computer`
+                                : `a member of ${sourceName} if you are not running a process as a member`}
+                        </Typography>
+
+                        <Typography component={'pre'}>{'Whisker.exe add /target:<TargetPrincipal>'}</Typography>
+
+                        <Typography variant='body2'>
+                            For other optional parameters, view the Whisker documentation.
+                        </Typography>
+
+                        <Typography variant='body1'> Resource-Based Constrained Delegation attack </Typography>
 
                         <Typography variant='body2'>
                             Abusing this primitive is possible through the Rubeus project.
@@ -200,9 +277,8 @@ const WindowsAbuse: FC<EdgeInfoProps & { haslaps: boolean }> = ({
                         </Typography>
 
                         <Typography component={'pre'}>
-                            {
-                                '$ComputerSid = Get-DomainComputer attackersystem -Properties objectsid | Select -Expand objectsid'
-                            }
+                            $ComputerSid = Get-DomainComputer attackersystem -Properties objectsid | Select -Expand
+                            objectsid
                         </Typography>
 
                         <Typography variant='body2'>
@@ -251,7 +327,7 @@ const WindowsAbuse: FC<EdgeInfoProps & { haslaps: boolean }> = ({
         case 'Domain':
             return (
                 <Typography variant='body2'>
-                    The AllExtendedRights privilege grants {sourceName} both the DS-Replication-Get-Changes and
+                    The AllExtendedRights permission grants {sourceName} both the DS-Replication-Get-Changes and
                     DS-Replication-Get-Changes-All privileges, which combined allow a principal to replicate objects
                     from the domain {targetName}. This can be abused using the lsadump::dcsync command in mimikatz.
                 </Typography>

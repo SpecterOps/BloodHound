@@ -18,7 +18,6 @@ import { FC } from 'react';
 import { Link, Typography } from '@mui/material';
 import { EdgeInfoProps } from '../index';
 
-
 const LinuxAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> = ({
     sourceName,
     sourceType,
@@ -207,7 +206,6 @@ const LinuxAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> = (
                         </Typography>
                         This ticket can then be used with Pass-the-Ticket, and could grant access to the file system of
                         the TARGETCOMPUTER.
-                        
                         <Typography variant='body1'> Shadow Credentials attack </Typography>
                         <Typography variant='body2'>
                             To abuse this permission, use{' '}
