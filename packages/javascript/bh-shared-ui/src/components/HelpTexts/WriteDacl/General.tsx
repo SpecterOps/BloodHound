@@ -27,7 +27,7 @@ const General: FC<EdgeInfoProps> = ({ sourceName, sourceType, targetName, target
                 Control List) on the {typeFormat(targetType)} {targetName}
             </Typography>
             <Typography variant='body2'>
-                With write access to the target object's DACL, you can grant yourself any privilege you want on the
+                With write access to the target object's DACL, you can grant yourself any permission you want on the
                 object.
             </Typography>
         </>

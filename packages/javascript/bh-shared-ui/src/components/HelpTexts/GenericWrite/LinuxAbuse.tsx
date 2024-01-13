@@ -94,7 +94,7 @@ const LinuxAbuse: FC<EdgeInfoProps> = ({ sourceName, sourceType, targetType }) =
                     <Typography variant='body1'> Shadow Credentials attack </Typography>
 
                     <Typography variant='body2'>
-                        To abuse this privilege, use{' '}
+                        To abuse this permission, use{' '}
                         <Link target='_blank' rel='noopener' href='https://github.com/ShutdownRepo/pywhisker'>
                             pyWhisker
                         </Link>
@@ -149,7 +149,7 @@ const LinuxAbuse: FC<EdgeInfoProps> = ({ sourceName, sourceType, targetType }) =
                     </Typography>
                     <Typography variant='body1'> Shadow Credentials attack </Typography>
                     <Typography variant='body2'>
-                        To abuse this privilege, use{' '}
+                        To abuse this permission, use{' '}
                         <Link target='_blank' rel='noopener' href='https://github.com/ShutdownRepo/pywhisker'>
                             pyWhisker
                         </Link>

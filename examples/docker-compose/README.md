@@ -72,11 +72,31 @@ in your `.env` file under `BLOODHOUND_TAG`.
 
 ## Configuration with Environment Variables
 
-See the [wiki](https://github.com/SpecterOps/BloodHound/wiki/Using-Environment-Variables-For-Sensitive-Configuration) for more information on using environment variables for sensitive configuration options.
+See the [wiki](https://github.com/SpecterOps/BloodHound/wiki/Using-Environment-Variables-For-Sensitive-Configuration) for
+more information on using environment variables for sensitive configuration options.
 
 ## FAQ
 
-### Q: "How do I reset my Neo4J database without affecting my application state?
+### Q: "I'm wanting to connect to BloodHound on a host other than localhost, how do I allow it?"
+
+A: With the default Docker Compose configuration, we bind to `localhost` rather than `0.0.0.0`. This is to ensure that by
+default users won't be publishing to their local/external network interfaces. This is great if you're just running on localhost
+(even if using a VM with port forwarding, like Docker Desktop), since it ensures outside entities can't connect to your local
+instance, but also means that by default you can't intentionally run this configuration on a separate machine or non-port forwarded
+virtual machine.
+
+To help with this, the host is set using an environment variable calle `BLOODHOUND_HOST`. This defaults to `127.0.0.1` when
+not set elsewhere, but can be altered in one of two ways:
+
+-   Set in your `.env` file. In this directory is a file called `.env.example`. You can copy it to `.env` to have your own
+local changes to the environment in file form, or you can create a new `.env` file and simply save it with the variables
+you wish to add. For setting the host, simply save the following line: `BLOODHOUND_HOST=0.0.0.0`. When running `docker compose up`
+afterwards, the new host should be set (keep in mind, it's better to use the adapter IP you wish to bind to in most scenarios,
+`0.0.0.0` is used here for demonstration purposes)
+-   Set an environment variable on your Docker host. Depends on your exact host configuration, so please see the documentation
+for the host OS you run Docker in.
+
+### Q: "How do I reset my Neo4J database without affecting my application state?"
 
 A: You'll need to find the full name of your Neo4J volume and then run `docker rm <volume-name>`. The following command examples
 will help do it all in one step:
