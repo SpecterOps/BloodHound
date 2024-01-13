@@ -24,7 +24,7 @@ const LinuxAbuse: FC<EdgeInfoProps & { haslaps: boolean }> = ({ sourceName, targ
             return (
                 <>
                     <Typography variant='body2'>
-                        The AllExtendedRights privilege grants {sourceName} the ability to change the password of the
+                        The AllExtendedRights permission grants {sourceName} the ability to change the password of the
                         user {targetName} without knowing their current password. This is equivalent to the
                         "ForceChangePassword" edge in BloodHound.
                     </Typography>
@@ -63,7 +63,7 @@ const LinuxAbuse: FC<EdgeInfoProps & { haslaps: boolean }> = ({ sourceName, targ
                     <>
                         <Typography variant='body1'> Retrieve LAPS Password </Typography>
                         <Typography variant='body2'>
-                            The AllExtendedRights privilege grants {sourceName} the ability to obtain the RID 500
+                            The AllExtendedRights permission grants {sourceName} the ability to obtain the RID 500
                             administrator password of {targetName}. {sourceName} can do so by listing a computer
                             object's AD properties with PowerView using Get-DomainComputer {targetName}. The value of
                             the ms-mcs-AdmPwd property will contain password of the administrative local account on{' '}
@@ -112,7 +112,7 @@ const LinuxAbuse: FC<EdgeInfoProps & { haslaps: boolean }> = ({ sourceName, targ
                         </Typography>
                         <Typography variant='body1'> Shadow Credentials attack </Typography>
                         <Typography variant='body2'>
-                            To abuse this privilege, use{' '}
+                            To abuse this permission, use{' '}
                             <Link target='_blank' rel='noopener' href='https://github.com/ShutdownRepo/pywhisker'>
                                 pyWhisker
                             </Link>
@@ -165,7 +165,7 @@ const LinuxAbuse: FC<EdgeInfoProps & { haslaps: boolean }> = ({ sourceName, targ
                         </Typography>
                         <Typography variant='body1'> Shadow Credentials attack </Typography>
                         <Typography variant='body2'>
-                            To abuse this privilege, use{' '}
+                            To abuse this permission, use{' '}
                             <Link target='_blank' rel='noopener' href='https://github.com/ShutdownRepo/pywhisker'>
                                 pyWhisker
                             </Link>
@@ -188,7 +188,7 @@ const LinuxAbuse: FC<EdgeInfoProps & { haslaps: boolean }> = ({ sourceName, targ
                     <Typography variant='body1'>DCSync</Typography>
 
                     <Typography variant='body2'>
-                        The AllExtendedRights privilege grants {sourceName} both the DS-Replication-Get-Changes and
+                        The AllExtendedRights permission grants {sourceName} both the DS-Replication-Get-Changes and
                         DS-Replication-Get-Changes-All privileges, which combined allow a principal to replicate objects
                         from the domain {targetName}.
                     </Typography>
@@ -204,7 +204,7 @@ const LinuxAbuse: FC<EdgeInfoProps & { haslaps: boolean }> = ({ sourceName, targ
                     <Typography variant='body1'> Retrieve LAPS Passwords </Typography>
 
                     <Typography variant='body2'>
-                        The AllExtendedRights privilege also grants {sourceName} enough privileges, to retrieve LAPS
+                        The AllExtendedRights permission also grants {sourceName} enough privileges, to retrieve LAPS
                         passwords domain-wise.
                     </Typography>
 
