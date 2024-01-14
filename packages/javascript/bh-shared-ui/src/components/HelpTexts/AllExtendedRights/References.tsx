@@ -56,17 +56,6 @@ const References: FC = () => {
                 href='https://www.thehacker.recipes/ad/movement/credentials/dumping/dcsync'>
                 https://www.thehacker.recipes/ad/movement/credentials/dumping/dcsync
             </Link>
-            <br />
-            <Link target='_blank' rel='noopener' href='https://github.com/eladshamir/Whisker'>
-                https://github.com/eladshamir/Whisker
-            </Link>
-            <br />
-            <Link
-                target='_blank'
-                rel='noopener'
-                href='https://posts.specterops.io/shadow-credentials-abusing-key-trust-account-mapping-for-takeover-8ee1a53566ab'>
-                https://posts.specterops.io/shadow-credentials-abusing-key-trust-account-mapping-for-takeover-8ee1a53566ab
-            </Link>
         </Box>
     );
 };

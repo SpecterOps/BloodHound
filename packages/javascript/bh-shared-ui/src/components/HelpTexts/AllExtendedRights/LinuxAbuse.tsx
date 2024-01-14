@@ -61,6 +61,19 @@ const LinuxAbuse: FC<EdgeInfoProps & { haslaps: boolean }> = ({ sourceName, targ
             if (haslaps) {
                 return (
                     <>
+                        <Typography variant='body2'>
+                            The AllExtendedRights permission grants {sourceName} the ability to obtain the LAPS (RID 500
+                            administrator) password of {targetName}. {sourceName} can do so by listing a computer
+                            object's AD properties with PowerView using Get-DomainComputer {targetName}. The value of
+                            the ms-mcs-AdmPwd property will contain password of the administrative local account on{' '}
+                            {targetName}.
+                        </Typography>
+
+                        <Typography variant='body2'>
+                            Alternatively, AllExtendedRights on a computer object can be used to perform a
+                            Resource-Based Constrained Delegation attack.
+                        </Typography>
+
                         <Typography variant='body1'> Retrieve LAPS Password </Typography>
                         <Typography variant='body2'>
                             The AllExtendedRights permission grants {sourceName} the ability to obtain the RID 500
@@ -110,27 +123,16 @@ const LinuxAbuse: FC<EdgeInfoProps & { haslaps: boolean }> = ({ sourceName, targ
                             This ticket can then be used with Pass-the-Ticket, and could grant access to the file system
                             of the TARGETCOMPUTER.
                         </Typography>
-                        <Typography variant='body1'> Shadow Credentials attack </Typography>
-                        <Typography variant='body2'>
-                            To abuse this permission, use{' '}
-                            <Link target='_blank' rel='noopener' href='https://github.com/ShutdownRepo/pywhisker'>
-                                pyWhisker
-                            </Link>
-                            .
-                        </Typography>
-                        <Typography component={'pre'}>
-                            {
-                                'pywhisker.py -d "domain.local" -u "controlledAccount" -p "somepassword" --target "targetAccount" --action "add"'
-                            }
-                        </Typography>
-                        <Typography variant='body2'>
-                            For other optional parameters, view the pyWhisker documentation.
-                        </Typography>
                     </>
                 );
             } else {
                 return (
                     <>
+                        <Typography variant='body2'>
+                            AllExtendedRights on a computer object can be used to perform a Resource-Based Constrained
+                            Delegation attack.
+                        </Typography>
+
                         <Typography variant='body1'> Resource-Based Constrained Delegation </Typography>
                         <Typography variant='body2'>
                             First, if an attacker does not control an account with an SPN set, a new attacker-controlled
@@ -162,22 +164,6 @@ const LinuxAbuse: FC<EdgeInfoProps & { haslaps: boolean }> = ({ sourceName, targ
                         <Typography variant='body2'>
                             This ticket can then be used with Pass-the-Ticket, and could grant access to the file system
                             of the TARGETCOMPUTER.
-                        </Typography>
-                        <Typography variant='body1'> Shadow Credentials attack </Typography>
-                        <Typography variant='body2'>
-                            To abuse this permission, use{' '}
-                            <Link target='_blank' rel='noopener' href='https://github.com/ShutdownRepo/pywhisker'>
-                                pyWhisker
-                            </Link>
-                            .
-                        </Typography>
-                        <Typography component={'pre'}>
-                            {
-                                'pywhisker.py -d "domain.local" -u "controlledAccount" -p "somepassword" --target "targetAccount" --action "add"'
-                            }
-                        </Typography>
-                        <Typography variant='body2'>
-                            For other optional parameters, view the pyWhisker documentation.
                         </Typography>
                     </>
                 );

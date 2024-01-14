@@ -34,14 +34,6 @@ const WindowsAbuse: FC<EdgeInfoProps & { haslaps: boolean }> = ({
                         user {targetName} without knowing their current password. This is equivalent to the
                         "ForceChangePassword" edge in BloodHound.
                     </Typography>
-                    <Typography variant='body2'>
-                        AllExtendedRights also grants {sourceName} the permission to write to the
-                        "msds-KeyCredentialLink" attribute of {targetName}. Writing to this property allows an attacker
-                        to create "Shadow Credentials" on the object and authenticate as the principal using kerberos
-                        PKINIT. This is equivalent to the "AddKeyCredentialLink" edge.
-                    </Typography>
-
-                    <Typography variant='body1'> Force Change Password attack </Typography>
 
                     <Typography variant='body2'>
                         There are at least two ways to execute this attack. The first and most obvious is by using the
@@ -93,23 +85,6 @@ const WindowsAbuse: FC<EdgeInfoProps & { haslaps: boolean }> = ({
                         or perhaps even RDP to a system the target user has access to. For more ideas and information,
                         see the references tab.
                     </Typography>
-
-                    <Typography variant='body1'> Shadow Credentials attack </Typography>
-
-                    <Typography variant='body2'>To abuse the permission, use Whisker. </Typography>
-
-                    <Typography variant='body2'>
-                        You may need to authenticate to the Domain Controller as{' '}
-                        {sourceType === 'User' || sourceType === 'Computer'
-                            ? `${sourceName} if you are not running a process as that user/computer`
-                            : `a member of ${sourceName} if you are not running a process as a member`}
-                    </Typography>
-
-                    <Typography component={'pre'}>{'Whisker.exe add /target:<TargetPrincipal>'}</Typography>
-
-                    <Typography variant='body2'>
-                        For other optional parameters, view the Whisker documentation.
-                    </Typography>
                 </>
             );
         case 'Computer':
@@ -125,32 +100,8 @@ const WindowsAbuse: FC<EdgeInfoProps & { haslaps: boolean }> = ({
                         </Typography>
 
                         <Typography variant='body2'>
-                            AllExtendedRights also grants {sourceName} the permission to write to the
-                            "msds-KeyCredentialLink" attribute of {targetName}. Writing to this property allows an
-                            attacker to create "Shadow Credentials" on the object and authenticate as the principal
-                            using kerberos PKINIT. This is equivalent to the "AddKeyCredentialLink" edge.
-                        </Typography>
-
-                        <Typography variant='body2'>
                             Alternatively, AllExtendedRights on a computer object can be used to perform a
                             Resource-Based Constrained Delegation attack.
-                        </Typography>
-
-                        <Typography variant='body1'> Shadow Credentials attack </Typography>
-
-                        <Typography variant='body2'>To abuse the permission, use Whisker. </Typography>
-
-                        <Typography variant='body2'>
-                            You may need to authenticate to the Domain Controller as{' '}
-                            {sourceType === 'User' || sourceType === 'Computer'
-                                ? `${sourceName} if you are not running a process as that user/computer`
-                                : `a member of ${sourceName} if you are not running a process as a member`}
-                        </Typography>
-
-                        <Typography component={'pre'}>{'Whisker.exe add /target:<TargetPrincipal>'}</Typography>
-
-                        <Typography variant='body2'>
-                            For other optional parameters, view the Whisker documentation.
                         </Typography>
 
                         <Typography variant='body1'> Resource-Based Constrained Delegation attack </Typography>
@@ -226,35 +177,9 @@ const WindowsAbuse: FC<EdgeInfoProps & { haslaps: boolean }> = ({
                 return (
                     <>
                         <Typography variant='body2'>
-                            The AllExtendedRights grants {sourceName} the permission to write to the
-                            "msds-KeyCredentialLink" attribute of {targetName}. Writing to this property allows an
-                            attacker to create "Shadow Credentials" on the object and authenticate as the principal
-                            using kerberos PKINIT. This is equivalent to the "AddKeyCredentialLink" edge.
+                            AllExtendedRights on a computer object can be used to perform a Resource-Based Constrained
+                            Delegation attack.
                         </Typography>
-
-                        <Typography variant='body2'>
-                            Alternatively, AllExtendedRights on a computer object can be used to perform a
-                            Resource-Based Constrained Delegation attack.
-                        </Typography>
-
-                        <Typography variant='body1'> Shadow Credentials attack </Typography>
-
-                        <Typography variant='body2'>To abuse the permission, use Whisker. </Typography>
-
-                        <Typography variant='body2'>
-                            You may need to authenticate to the Domain Controller as{' '}
-                            {sourceType === 'User' || sourceType === 'Computer'
-                                ? `${sourceName} if you are not running a process as that user/computer`
-                                : `a member of ${sourceName} if you are not running a process as a member`}
-                        </Typography>
-
-                        <Typography component={'pre'}>{'Whisker.exe add /target:<TargetPrincipal>'}</Typography>
-
-                        <Typography variant='body2'>
-                            For other optional parameters, view the Whisker documentation.
-                        </Typography>
-
-                        <Typography variant='body1'> Resource-Based Constrained Delegation attack </Typography>
 
                         <Typography variant='body2'>
                             Abusing this primitive is possible through the Rubeus project.
