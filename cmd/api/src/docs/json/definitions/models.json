@@ -98,6 +98,45 @@
       }
     }
   },
+  "model.AuditLog": {
+    "type": "object",
+    "properties": {
+      "id": {
+        "type": "string"
+      },
+      "created_at": {
+        "type": "string"
+      },
+      "actor_id": {
+        "type": "string"
+      },
+      "actor_name": {
+        "type": "string"
+      },
+      "actor_email": {
+        "type": "string"
+      },
+      "action": {
+        "type": "string"
+      },
+      "fields": {
+        "type": "object"
+      },
+      "request_id": {
+        "type": "string"
+      },
+      "source": {
+        "type": "string"
+      },
+      "status": {
+        "string": "enum",
+        "enum": [
+          "success",
+          "failure"
+        ]
+      }
+    }
+  },
   "model.AuthToken": {
     "type": "object",
     "properties": {

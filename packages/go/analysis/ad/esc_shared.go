@@ -73,7 +73,7 @@ func PostTrustedForNTAuth(ctx context.Context, db graph.Database, operation anal
 	return nil
 }
 
-func PostIssuedSignedBy(_ context.Context, _ graph.Database, operation analysis.StatTrackedOperation[analysis.CreatePostRelationshipJob], enterpriseCertAuthorities []*graph.Node, rootCertAuthorities []*graph.Node) error {
+func PostIssuedSignedBy(operation analysis.StatTrackedOperation[analysis.CreatePostRelationshipJob], enterpriseCertAuthorities []*graph.Node, rootCertAuthorities []*graph.Node) error {
 	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
 		for _, node := range enterpriseCertAuthorities {
 			if postRels, err := processCertChainParent(node, tx); err != nil && !errors.Is(err, ErrNoCertParent) {
@@ -113,7 +113,7 @@ func PostIssuedSignedBy(_ context.Context, _ graph.Database, operation analysis.
 	return nil
 }
 
-func PostEnterpriseCAFor(_ context.Context, _ graph.Database, operation analysis.StatTrackedOperation[analysis.CreatePostRelationshipJob], enterpriseCertAuthorities []*graph.Node) error {
+func PostEnterpriseCAFor(operation analysis.StatTrackedOperation[analysis.CreatePostRelationshipJob], enterpriseCertAuthorities []*graph.Node) error {
 	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
 		for _, ecaNode := range enterpriseCertAuthorities {
 			if thumbprint, err := ecaNode.Properties.Get(ad.CertThumbprint.String()).String(); err != nil {
