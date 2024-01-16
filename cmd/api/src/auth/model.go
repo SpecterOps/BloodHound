@@ -1,17 +1,17 @@
 // Copyright 2023 Specter Ops, Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// 
+//
 // SPDX-License-Identifier: Apache-2.0
 
 package auth
@@ -23,11 +23,11 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/specterops/bloodhound/src/database/types/null"
-	"github.com/specterops/bloodhound/src/model"
 	"github.com/gofrs/uuid"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/specterops/bloodhound/errors"
+	"github.com/specterops/bloodhound/src/database/types/null"
+	"github.com/specterops/bloodhound/src/model"
 )
 
 const (
@@ -85,7 +85,8 @@ func (s idResolver) GetIdentity(ctx Context) (SimpleIdentity, error) {
 
 type Authorizer interface {
 	AllowsPermission(ctx Context, requiredPermission model.Permission) bool
-	AllowsPermissions(ctx Context, requiredPermissions model.Permissions) bool
+	AllowsAllPermissions(ctx Context, requiredPermissions model.Permissions) bool
+	AllowsAtLeastOnePermission(ctx Context, requiredPermissions model.Permissions) bool
 }
 
 type authorizer struct{}
@@ -106,7 +107,7 @@ func (s authorizer) AllowsPermission(ctx Context, requiredPermission model.Permi
 	return false
 }
 
-func (s authorizer) AllowsPermissions(ctx Context, requiredPermissions model.Permissions) bool {
+func (s authorizer) AllowsAllPermissions(ctx Context, requiredPermissions model.Permissions) bool {
 	for _, permission := range requiredPermissions {
 		if !s.AllowsPermission(ctx, permission) {
 			return false
@@ -114,6 +115,16 @@ func (s authorizer) AllowsPermissions(ctx Context, requiredPermissions model.Per
 	}
 
 	return true
+}
+
+func (s authorizer) AllowsAtLeastOnePermission(ctx Context, requiredPermissions model.Permissions) bool {
+	for _, permission := range requiredPermissions {
+		if s.AllowsPermission(ctx, permission) {
+			return true
+		}
+	}
+
+	return false
 }
 
 type Context struct {
