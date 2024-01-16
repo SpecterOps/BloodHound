@@ -23,8 +23,8 @@ const General: FC<EdgeInfoProps> = ({ sourceName, sourceType, targetName }) => {
     return (
         <>
             <Typography variant='body2'>
-                {groupSpecialFormat(sourceType, sourceName)} the the privileges to perform the ADCS ESC6 Scenario B
-                attack against the target domain.
+                {groupSpecialFormat(sourceType, sourceName)} the privileges to perform the ADCS ESC6 Scenario B attack
+                against the target domain.
             </Typography>
             <Typography variant='body2'>
                 The principal has permission to enroll on one or more certificate templates allowing for authentication.
