@@ -89,13 +89,13 @@ func Roles() map[string]RoleTemplate {
 			Description: "Can read data, modify asset group memberships",
 			Permissions: model.Permissions{
 				permissions.GraphDBRead,
-				permissions.ClientsManage,
 				permissions.AuthCreateToken,
 				permissions.AuthManageSelf,
 				permissions.APsGenerateReport,
 				permissions.AppReadApplicationConfiguration,
 				permissions.SavedQueriesRead,
 				permissions.SavedQueriesWrite,
+				permissions.ClientsRead,
 			},
 		},
 		RoleAdministrator: {
