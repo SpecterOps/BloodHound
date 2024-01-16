@@ -54,6 +54,7 @@ func TestADCSESC1(t *testing.T) {
 		certTemplates, err := ad2.FetchNodesByKind(context.Background(), db, ad.CertTemplate)
 		require.Nil(t, err)
 		domains, err := ad2.FetchNodesByKind(context.Background(), db, ad.Domain)
+		require.Nil(t, err)
 
 		for _, domain := range domains {
 			innerDomain := domain
