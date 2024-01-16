@@ -1399,6 +1399,79 @@ func (s *ADCSGoldenCertHarness) Setup(graphTestContext *GraphTestContext) {
 
 }
 
+type WeakCertBindingAndUPNCertMappingHarness struct {
+	EnterpriseCA1 *graph.Node
+	EnterpriseCA2 *graph.Node
+	Computer1     *graph.Node
+	Computer2     *graph.Node
+	Computer3     *graph.Node
+	Computer4     *graph.Node
+	Computer5     *graph.Node
+	Domain1       *graph.Node
+	Domain2       *graph.Node
+	Domain3       *graph.Node
+}
+
+func (s *WeakCertBindingAndUPNCertMappingHarness) Setup(graphTestContext *GraphTestContext) {
+	domainSid1 := "S-1-5-21-2697957641-2271029196-387917394"
+	domainSid2 := "S-1-5-21-2697957641-2271029196-387917395"
+	domainSid3 := "S-1-5-21-2697957641-2271029196-387917396"
+
+	// Set up ECA nodes
+	s.EnterpriseCA1 = graphTestContext.NewActiveDirectoryEnterpriseCAWithThumbprint("EnterpriseCA1", domainSid1, "a")
+	s.EnterpriseCA2 = graphTestContext.NewActiveDirectoryEnterpriseCAWithThumbprint("EnterpriseCA2", domainSid3, "b")
+
+	// Set up Domain nodes
+	s.Domain1 = graphTestContext.NewActiveDirectoryDomain("Domain1", domainSid1, false, true)
+	s.Domain2 = graphTestContext.NewActiveDirectoryDomain("Domain2", domainSid2, false, true)
+	s.Domain3 = graphTestContext.NewActiveDirectoryDomain("Domain3", domainSid3, false, true)
+
+	// Set up Computer nodes
+	s.Computer1 = graphTestContext.NewActiveDirectoryComputer("Computer1", domainSid1)
+	s.Computer1.Properties.Set(ad.CertificateMappingMethodsRaw.String(), []string{"4"})
+	s.Computer1.Properties.Set(ad.StrongCertificateBindingEnforcementRaw.String(), []string{"1"})
+	graphTestContext.UpdateNode(s.Computer1)
+
+	s.Computer2 = graphTestContext.NewActiveDirectoryComputer("Computer2", domainSid2)
+	s.Computer2.Properties.Set(ad.CertificateMappingMethodsRaw.String(), []string{"11"})
+	s.Computer2.Properties.Set(ad.StrongCertificateBindingEnforcementRaw.String(), []string{"0"})
+	graphTestContext.UpdateNode(s.Computer2)
+
+	s.Computer3 = graphTestContext.NewActiveDirectoryComputer("Computer3", domainSid2)
+	s.Computer3.Properties.Set(ad.CertificateMappingMethodsRaw.String(), []string{"31"})
+	s.Computer3.Properties.Set(ad.StrongCertificateBindingEnforcementRaw.String(), []string{"2"})
+	graphTestContext.UpdateNode(s.Computer3)
+
+	s.Computer4 = graphTestContext.NewActiveDirectoryComputer("Computer4", domainSid2)
+	s.Computer4.Properties.Set(ad.CertificateMappingMethodsRaw.String(), nil)
+	s.Computer4.Properties.Set(ad.StrongCertificateBindingEnforcementRaw.String(), nil)
+	graphTestContext.UpdateNode(s.Computer4)
+
+	s.Computer5 = graphTestContext.NewActiveDirectoryComputer("Computer5", domainSid3)
+	s.Computer5.Properties.Set(ad.CertificateMappingMethodsRaw.String(), []string{"15"})
+	s.Computer5.Properties.Set(ad.StrongCertificateBindingEnforcementRaw.String(), []string{"2"})
+	graphTestContext.UpdateNode(s.Computer5)
+
+	// Set up edges from ECA nodes
+	graphTestContext.NewRelationship(s.EnterpriseCA1, s.Computer1, ad.CanAbuseUPNCertMapping)
+	graphTestContext.NewRelationship(s.EnterpriseCA1, s.Computer1, ad.CanAbuseWeakCertBinding)
+	graphTestContext.NewRelationship(s.EnterpriseCA1, s.Computer2, ad.CanAbuseWeakCertBinding)
+	graphTestContext.NewRelationship(s.EnterpriseCA1, s.Computer3, ad.CanAbuseUPNCertMapping)
+
+	graphTestContext.NewRelationship(s.EnterpriseCA2, s.Computer5, ad.CanAbuseUPNCertMapping)
+
+	// Set up edges from Computer nodes
+	graphTestContext.NewRelationship(s.Computer1, s.Domain1, ad.DCFor)
+	graphTestContext.NewRelationship(s.Computer2, s.Domain2, ad.DCFor)
+	graphTestContext.NewRelationship(s.Computer3, s.Domain2, ad.DCFor)
+	graphTestContext.NewRelationship(s.Computer4, s.Domain2, ad.DCFor)
+	graphTestContext.NewRelationship(s.Computer5, s.Domain3, ad.DCFor)
+
+	// Set up edges from Domain nodes
+	graphTestContext.NewRelationship(s.Domain1, s.Domain2, ad.TrustedBy, graph.AsProperties(graph.PropertyMap{ad.TrustType: "ParentChild"}))
+	graphTestContext.NewRelationship(s.Domain2, s.Domain3, ad.TrustedBy, graph.AsProperties(graph.PropertyMap{ad.TrustType: "External"}))
+}
+
 type IssuedSignedByHarness struct {
 	RootCA1       *graph.Node
 	RootCA2       *graph.Node
@@ -1541,6 +1614,7 @@ type HarnessDetails struct {
 	EnrollOnBehalfOfHarnessTwo                      EnrollOnBehalfOfHarnessTwo
 	ADCSGoldenCertHarness                           ADCSGoldenCertHarness
 	IssuedSignedByHarness                           IssuedSignedByHarness
+	WeakCertBindingAndUPNCertMappingHarness         WeakCertBindingAndUPNCertMappingHarness
 	TrustedForNTAuthHarness                         TrustedForNTAuthHarness
 	NumCollectedActiveDirectoryDomains              int
 	AZInboundControlHarness                         AZInboundControlHarness

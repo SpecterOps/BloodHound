@@ -911,6 +911,11 @@ CanAbuseUPNCertMapping: types.#Kind & {
 	schema: "active_directory"
 }
 
+CanAbuseWeakCertBinding: types.#Kind & {
+	symbol: "CanAbuseWeakCertBinding"
+	schema: "active_directory"
+}
+
 IssuedSignedBy: types.#Kind & {
 	symbol: "IssuedSignedBy"
 	schema: "active_directory"
@@ -1009,6 +1014,7 @@ RelationshipKinds: [
 	TrustedForNTAuth,
 	EnterpriseCAFor,
 	CanAbuseUPNCertMapping,
+	CanAbuseWeakCertBinding,
 	IssuedSignedBy,
 	GoldenCert,
 	EnrollOnBehalfOf,

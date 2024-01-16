@@ -1,0 +1,314 @@
+{
+  "style": {
+    "font-family": "sans-serif",
+    "background-color": "#ffffff",
+    "background-image": "",
+    "background-size": "100%",
+    "node-color": "#ffffff",
+    "border-width": 4,
+    "border-color": "#000000",
+    "radius": 50,
+    "node-padding": 5,
+    "node-margin": 2,
+    "outside-position": "auto",
+    "node-icon-image": "",
+    "node-background-image": "",
+    "icon-position": "inside",
+    "icon-size": 64,
+    "caption-position": "inside",
+    "caption-max-width": 200,
+    "caption-color": "#000000",
+    "caption-font-size": 50,
+    "caption-font-weight": "normal",
+    "label-position": "inside",
+    "label-display": "pill",
+    "label-color": "#000000",
+    "label-background-color": "#ffffff",
+    "label-border-color": "#000000",
+    "label-border-width": 4,
+    "label-font-size": 40,
+    "label-padding": 5,
+    "label-margin": 4,
+    "directionality": "directed",
+    "detail-position": "inline",
+    "detail-orientation": "parallel",
+    "arrow-width": 5,
+    "arrow-color": "#000000",
+    "margin-start": 5,
+    "margin-end": 5,
+    "margin-peer": 20,
+    "attachment-start": "normal",
+    "attachment-end": "normal",
+    "relationship-icon-image": "",
+    "type-color": "#000000",
+    "type-background-color": "#ffffff",
+    "type-border-color": "#000000",
+    "type-border-width": 0,
+    "type-font-size": 16,
+    "type-padding": 5,
+    "property-position": "outside",
+    "property-alignment": "colon",
+    "property-color": "#000000",
+    "property-font-size": 16,
+    "property-font-weight": "normal"
+  },
+  "nodes": [
+    {
+      "id": "n0",
+      "position": {
+        "x": 190.72994242649474,
+        "y": -254
+      },
+      "caption": "Computer1",
+      "style": {
+        "node-color": "#d33115"
+      },
+      "labels": [],
+      "properties": {
+        "certificatemappingmethodsraw": "4",
+        "strongcertificatebindingenforcementraw": "1"
+      }
+    },
+    {
+      "id": "n1",
+      "position": {
+        "x": 190.72994242649474,
+        "y": -4.000000000000028
+      },
+      "caption": "Computer2",
+      "labels": [],
+      "properties": {
+        "certificatemappingmethodsraw": "11",
+        "strongcertificatebindingenforcementraw": "0"
+      },
+      "style": {
+        "node-color": "#d33115"
+      }
+    },
+    {
+      "id": "n2",
+      "position": {
+        "x": 190.72994242649474,
+        "y": 200.31730677356032
+      },
+      "caption": "Computer3",
+      "labels": [],
+      "properties": {
+        "certificatemappingmethodsraw": "31",
+        "strongcertificatebindingenforcementraw": "2"
+      },
+      "style": {
+        "node-color": "#d33115"
+      }
+    },
+    {
+      "id": "n3",
+      "position": {
+        "x": 588.032349294211,
+        "y": -254
+      },
+      "caption": "Domain1",
+      "style": {
+        "node-color": "#73d8ff"
+      },
+      "labels": [],
+      "properties": {
+        "objectid": "S-1-5-21-2697957641-2271029196-387917394"
+      }
+    },
+    {
+      "id": "n4",
+      "position": {
+        "x": 838.032349294211,
+        "y": -4.000000000000028
+      },
+      "caption": "Domain2",
+      "labels": [],
+      "properties": {
+        "objectid": "S-1-5-21-2697957641-2271029196-387917395"
+      },
+      "style": {
+        "node-color": "#73d8ff"
+      }
+    },
+    {
+      "id": "n6",
+      "position": {
+        "x": -242.28275946572413,
+        "y": -89.00000000000003
+      },
+      "caption": "EnterpriseCA1",
+      "style": {
+        "node-color": "#aea1ff"
+      },
+      "labels": [],
+      "properties": {
+        "domainsid": "S-1-5-21-2697957641-2271029196-387917394"
+      }
+    },
+    {
+      "id": "n7",
+      "position": {
+        "x": 190.72994242649474,
+        "y": 593.076549478154
+      },
+      "caption": "Computer5",
+      "labels": [],
+      "properties": {
+        "certificatemappingmethodsraw": "15",
+        "strongcertificatebindingenforcementraw": "2"
+      },
+      "style": {
+        "node-color": "#d33115"
+      }
+    },
+    {
+      "id": "n8",
+      "position": {
+        "x": 588.032349294211,
+        "y": 593.076549478154
+      },
+      "caption": "Domain3",
+      "labels": [],
+      "properties": {
+        "objectid": "S-1-5-21-2697957641-2271029196-387917396"
+      },
+      "style": {
+        "node-color": "#73d8ff"
+      }
+    },
+    {
+      "id": "n9",
+      "position": {
+        "x": -242.28275946572413,
+        "y": 593.076549478154
+      },
+      "caption": "EnterpriseCA2",
+      "labels": [],
+      "properties": {
+        "domainsid": "S-1-5-21-2697957641-2271029196-387917396"
+      },
+      "style": {
+        "node-color": "#aea1ff"
+      }
+    },
+    {
+      "id": "n10",
+      "position": {
+        "x": 190.72994242649474,
+        "y": 396.6969281258572
+      },
+      "caption": "Computer4",
+      "labels": [],
+      "properties": {
+        "certificatemappingmethodsraw": "null (not collected)",
+        "strongcertificatebindingenforcementraw": "null (not collected)"
+      },
+      "style": {
+        "node-color": "#d33115"
+      }
+    }
+  ],
+  "relationships": [
+    {
+      "id": "n0",
+      "type": "DCFor",
+      "style": {},
+      "properties": {},
+      "fromId": "n1",
+      "toId": "n4"
+    },
+    {
+      "id": "n1",
+      "type": "DCFor",
+      "style": {},
+      "properties": {},
+      "fromId": "n2",
+      "toId": "n4"
+    },
+    {
+      "id": "n2",
+      "type": "DCFor",
+      "style": {},
+      "properties": {},
+      "fromId": "n0",
+      "toId": "n3"
+    },
+    {
+      "id": "n3",
+      "type": "TrustedBy",
+      "style": {},
+      "properties": {
+        "trusttype": "ParentChild"
+      },
+      "fromId": "n3",
+      "toId": "n4"
+    },
+    {
+      "id": "n4",
+      "type": "CanAbuseUPNCertMapping",
+      "style": {},
+      "properties": {},
+      "fromId": "n6",
+      "toId": "n0"
+    },
+    {
+      "id": "n5",
+      "type": "CanAbuseUPNCertMapping",
+      "style": {},
+      "properties": {},
+      "fromId": "n6",
+      "toId": "n2"
+    },
+    {
+      "id": "n6",
+      "type": "TrustedBy",
+      "style": {},
+      "properties": {
+        "trusttype": "External"
+      },
+      "fromId": "n4",
+      "toId": "n8"
+    },
+    {
+      "id": "n7",
+      "type": "DCFor",
+      "style": {},
+      "properties": {},
+      "fromId": "n7",
+      "toId": "n8"
+    },
+    {
+      "id": "n8",
+      "type": "CanAbuseWeakCertBinding",
+      "style": {},
+      "properties": {},
+      "fromId": "n6",
+      "toId": "n0"
+    },
+    {
+      "id": "n9",
+      "type": "CanAbuseWeakCertBinding",
+      "style": {},
+      "properties": {},
+      "fromId": "n6",
+      "toId": "n1"
+    },
+    {
+      "id": "n10",
+      "type": "CanAbuseUPNCertMapping",
+      "style": {},
+      "properties": {},
+      "fromId": "n9",
+      "toId": "n7"
+    },
+    {
+      "id": "n11",
+      "type": "DCFor",
+      "style": {},
+      "properties": {},
+      "fromId": "n10",
+      "toId": "n4"
+    }
+  ]
+}
