@@ -142,7 +142,7 @@ const LinuxAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> = (
                     <Typography variant='body1'> Shadow Credentials attack </Typography>
 
                     <Typography variant='body2'>
-                        To abuse this privilege, use{' '}
+                        To abuse this permission, use{' '}
                         <Link target='_blank' rel='noopener' href='https://github.com/ShutdownRepo/pywhisker'>
                             pyWhisker
                         </Link>
@@ -208,7 +208,7 @@ const LinuxAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> = (
                         the TARGETCOMPUTER.
                         <Typography variant='body1'> Shadow Credentials attack </Typography>
                         <Typography variant='body2'>
-                            To abuse this privilege, use{' '}
+                            To abuse this permission, use{' '}
                             <Link target='_blank' rel='noopener' href='https://github.com/ShutdownRepo/pywhisker'>
                                 pyWhisker
                             </Link>
@@ -253,7 +253,7 @@ const LinuxAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> = (
                         the TARGETCOMPUTER.
                         <Typography variant='body1'> Shadow Credentials attack </Typography>
                         <Typography variant='body2'>
-                            To abuse this privilege, use{' '}
+                            To abuse this permissions, use{' '}
                             <Link target='_blank' rel='noopener' href='https://github.com/ShutdownRepo/pywhisker'>
                                 pyWhisker
                             </Link>
@@ -276,8 +276,8 @@ const LinuxAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> = (
                     <Typography variant='body1'> DCSync </Typography>
 
                     <Typography variant='body2'>
-                        The AllExtendedRights privilege grants {sourceName} both the DS-Replication-Get-Changes and
-                        DS-Replication-Get-Changes-All privileges, which combined allow a principal to replicate objects
+                        The AllExtendedRights permission grants {sourceName} both the DS-Replication-Get-Changes and
+                        DS-Replication-Get-Changes-All permission, which combined allow a principal to replicate objects
                         from the domain {targetName}.
                     </Typography>
 
@@ -292,7 +292,7 @@ const LinuxAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> = (
                     <Typography variant='body1'> Retrieve LAPS Passwords </Typography>
 
                     <Typography variant='body2'>
-                        The AllExtendedRights privilege also grants {sourceName} enough privileges, to retrieve LAPS
+                        The AllExtendedRights permission also grants {sourceName} enough permissions, to retrieve LAPS
                         passwords domain-wise.
                     </Typography>
 

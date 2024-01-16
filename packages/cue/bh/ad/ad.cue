@@ -391,6 +391,13 @@ ApplicationPolicies: types.#StringEnum & {
 	representation: "applicationpolicies"
 }
 
+IssuancePolicies: types.#StringEnum & {
+	symbol: "IssuancePolicies"
+	schema: "ad"
+	name: "Issuance Policies"
+	representation: "issuancepolicies"
+}
+
 SchemaVersion: types.#StringEnum & {
 	symbol: "SchemaVersion"
 	schema: "ad"
@@ -445,6 +452,13 @@ EnrollmentFlag: types.#StringEnum & {
 	schema: "ad"
 	name: "Enrollment Flags"
 	representation: "enrollmentflag"
+}
+
+Flags: types.#StringEnum & {
+	symbol: "Flags"
+	schema: "ad"
+	name: "Flags"
+	representation: "flags"
 }
 
 NoSecurityExtension: types.#StringEnum & {
@@ -527,6 +541,7 @@ Properties: [
 	SubjectAltRequireUPN,
 	AuthorizedSignatures,
 	ApplicationPolicies,
+	IssuancePolicies,
 	SchemaVersion,
 	RequiresManagerApproval,
 	AuthenticationEnabled,
@@ -535,6 +550,7 @@ Properties: [
 	CertificateNameFlag,
 	EffectiveEKUs,
 	EnrollmentFlag,
+	Flags,
 	NoSecurityExtension,
 	RenewalPeriod,
 	ValidityPeriod,
@@ -770,6 +786,11 @@ DCSync: types.#Kind & {
 	schema: "active_directory"
 }
 
+DCFor: types.#Kind & {
+	symbol: "DCFor"
+	schema: "active_directory"
+}
+
 ReadLAPSPassword: types.#Kind & {
 	symbol: "ReadLAPSPassword"
 	schema: "active_directory"
@@ -885,6 +906,16 @@ EnterpriseCAFor: types.#Kind & {
 	schema: "active_directory"
 }
 
+CanAbuseUPNCertMapping: types.#Kind & {
+	symbol: "CanAbuseUPNCertMapping"
+	schema: "active_directory"
+}
+
+CanAbuseWeakCertBinding: types.#Kind & {
+	symbol: "CanAbuseWeakCertBinding"
+	schema: "active_directory"
+}
+
 IssuedSignedBy: types.#Kind & {
 	symbol: "IssuedSignedBy"
 	schema: "active_directory"
@@ -957,6 +988,7 @@ RelationshipKinds: [
 	HasSIDHistory,
 	AddSelf,
 	DCSync,
+	DCFor,
 	ReadLAPSPassword,
 	ReadGMSAPassword,
 	DumpSMSAPassword,
@@ -981,6 +1013,8 @@ RelationshipKinds: [
 	NTAuthStoreFor,
 	TrustedForNTAuth,
 	EnterpriseCAFor,
+	CanAbuseUPNCertMapping,
+	CanAbuseWeakCertBinding,
 	IssuedSignedBy,
 	GoldenCert,
 	EnrollOnBehalfOf,

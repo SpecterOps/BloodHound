@@ -65,10 +65,7 @@
     "properties": {
       "action": {
         "type": "string",
-        "enum": [
-          "add",
-          "remove"
-        ]
+        "enum": ["add", "remove"]
       },
       "selector_name": {
         "type": "string"
@@ -98,6 +95,45 @@
       },
       "updated_at": {
         "type": "string"
+      }
+    }
+  },
+  "model.AuditLog": {
+    "type": "object",
+    "properties": {
+      "id": {
+        "type": "string"
+      },
+      "created_at": {
+        "type": "string"
+      },
+      "actor_id": {
+        "type": "string"
+      },
+      "actor_name": {
+        "type": "string"
+      },
+      "actor_email": {
+        "type": "string"
+      },
+      "action": {
+        "type": "string"
+      },
+      "fields": {
+        "type": "object"
+      },
+      "request_id": {
+        "type": "string"
+      },
+      "source": {
+        "type": "string"
+      },
+      "status": {
+        "string": "enum",
+        "enum": [
+          "success",
+          "failure"
+        ]
       }
     }
   },
@@ -565,12 +601,7 @@
   },
   "model.PaginatedResponse": {
     "type": "object",
-    "required": [
-      "count",
-      "limit",
-      "skip",
-      "data"
-    ],
+    "required": ["count", "limit", "skip", "data"],
     "properties": {
       "count": {
         "type": "integer"
@@ -1130,6 +1161,20 @@
         "type": "string"
       },
       "system_tags": {
+        "type": "string"
+      }
+    }
+  },
+  "model.EntityController": {
+    "type": "object",
+    "properties": {
+      "objectID": {
+        "type": "string"
+      },
+      "name": {
+        "type": "string"
+      },
+      "label": {
         "type": "string"
       }
     }

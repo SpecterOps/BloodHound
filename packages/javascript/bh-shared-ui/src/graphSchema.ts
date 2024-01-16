@@ -93,6 +93,7 @@ export enum ActiveDirectoryRelationshipKind {
     HasSIDHistory = 'HasSIDHistory',
     AddSelf = 'AddSelf',
     DCSync = 'DCSync',
+    DCFor = 'DCFor',
     ReadLAPSPassword = 'ReadLAPSPassword',
     ReadGMSAPassword = 'ReadGMSAPassword',
     DumpSMSAPassword = 'DumpSMSAPassword',
@@ -117,6 +118,8 @@ export enum ActiveDirectoryRelationshipKind {
     NTAuthStoreFor = 'NTAuthStoreFor',
     TrustedForNTAuth = 'TrustedForNTAuth',
     EnterpriseCAFor = 'EnterpriseCAFor',
+    CanAbuseUPNCertMapping = 'CanAbuseUPNCertMapping',
+    CanAbuseWeakCertBinding = 'CanAbuseWeakCertBinding',
     IssuedSignedBy = 'IssuedSignedBy',
     GoldenCert = 'GoldenCert',
     EnrollOnBehalfOf = 'EnrollOnBehalfOf',
@@ -179,6 +182,8 @@ export function ActiveDirectoryRelationshipKindToDisplay(value: ActiveDirectoryR
             return 'AddSelf';
         case ActiveDirectoryRelationshipKind.DCSync:
             return 'DCSync';
+        case ActiveDirectoryRelationshipKind.DCFor:
+            return 'DCFor';
         case ActiveDirectoryRelationshipKind.ReadLAPSPassword:
             return 'ReadLAPSPassword';
         case ActiveDirectoryRelationshipKind.ReadGMSAPassword:
@@ -227,6 +232,10 @@ export function ActiveDirectoryRelationshipKindToDisplay(value: ActiveDirectoryR
             return 'TrustedForNTAuth';
         case ActiveDirectoryRelationshipKind.EnterpriseCAFor:
             return 'EnterpriseCAFor';
+        case ActiveDirectoryRelationshipKind.CanAbuseUPNCertMapping:
+            return 'CanAbuseUPNCertMapping';
+        case ActiveDirectoryRelationshipKind.CanAbuseWeakCertBinding:
+            return 'CanAbuseWeakCertBinding';
         case ActiveDirectoryRelationshipKind.IssuedSignedBy:
             return 'IssuedSignedBy';
         case ActiveDirectoryRelationshipKind.GoldenCert:
@@ -302,6 +311,7 @@ export enum ActiveDirectoryKindProperties {
     SubjectAltRequireUPN = 'subjectaltrequireupn',
     AuthorizedSignatures = 'authorizedsignatures',
     ApplicationPolicies = 'applicationpolicies',
+    IssuancePolicies = 'issuancepolicies',
     SchemaVersion = 'schemaversion',
     RequiresManagerApproval = 'requiresmanagerapproval',
     AuthenticationEnabled = 'authenticationenabled',
@@ -310,6 +320,7 @@ export enum ActiveDirectoryKindProperties {
     CertificateNameFlag = 'certificatenameflag',
     EffectiveEKUs = 'effectiveekus',
     EnrollmentFlag = 'enrollmentflag',
+    Flags = 'flags',
     NoSecurityExtension = 'nosecurityextension',
     RenewalPeriod = 'renewalperiod',
     ValidityPeriod = 'validityperiod',
@@ -420,6 +431,8 @@ export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKin
             return 'Authorized Signatures Required';
         case ActiveDirectoryKindProperties.ApplicationPolicies:
             return 'Application Policies';
+        case ActiveDirectoryKindProperties.IssuancePolicies:
+            return 'Issuance Policies';
         case ActiveDirectoryKindProperties.SchemaVersion:
             return 'Schema Version';
         case ActiveDirectoryKindProperties.RequiresManagerApproval:
@@ -436,6 +449,8 @@ export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKin
             return 'Effective EKUs';
         case ActiveDirectoryKindProperties.EnrollmentFlag:
             return 'Enrollment Flags';
+        case ActiveDirectoryKindProperties.Flags:
+            return 'Flags';
         case ActiveDirectoryKindProperties.NoSecurityExtension:
             return 'No Security Extension';
         case ActiveDirectoryKindProperties.RenewalPeriod:

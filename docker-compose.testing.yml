@@ -24,7 +24,7 @@ services:
       - POSTGRES_PASSWORD=bloodhoundcommunityedition
       - POSTGRES_DB=bloodhound
     ports:
-      - 65432:5432
+      - 127.0.0.1:65432:5432
     volumes:
       - test-postgres-data:/var/lib/postgresql/data
 
@@ -36,8 +36,8 @@ services:
     environment:
       - NEO4J_AUTH=neo4j/bloodhoundcommunityedition
     ports:
-      - 37687:7687
-      - 37474:7474
+      - 127.0.0.1:37687:7687
+      - 127.0.0.1:37474:7474
     volumes:
       - test-neo4j-data:/data
 

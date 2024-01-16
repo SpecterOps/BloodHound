@@ -65,6 +65,7 @@ var (
 	HasSIDHistory                   = graph.StringKind("HasSIDHistory")
 	AddSelf                         = graph.StringKind("AddSelf")
 	DCSync                          = graph.StringKind("DCSync")
+	DCFor                           = graph.StringKind("DCFor")
 	ReadLAPSPassword                = graph.StringKind("ReadLAPSPassword")
 	ReadGMSAPassword                = graph.StringKind("ReadGMSAPassword")
 	DumpSMSAPassword                = graph.StringKind("DumpSMSAPassword")
@@ -89,6 +90,8 @@ var (
 	NTAuthStoreFor                  = graph.StringKind("NTAuthStoreFor")
 	TrustedForNTAuth                = graph.StringKind("TrustedForNTAuth")
 	EnterpriseCAFor                 = graph.StringKind("EnterpriseCAFor")
+	CanAbuseUPNCertMapping          = graph.StringKind("CanAbuseUPNCertMapping")
+	CanAbuseWeakCertBinding         = graph.StringKind("CanAbuseWeakCertBinding")
 	IssuedSignedBy                  = graph.StringKind("IssuedSignedBy")
 	GoldenCert                      = graph.StringKind("GoldenCert")
 	EnrollOnBehalfOf                = graph.StringKind("EnrollOnBehalfOf")
@@ -154,6 +157,7 @@ const (
 	SubjectAltRequireUPN                   Property = "subjectaltrequireupn"
 	AuthorizedSignatures                   Property = "authorizedsignatures"
 	ApplicationPolicies                    Property = "applicationpolicies"
+	IssuancePolicies                       Property = "issuancepolicies"
 	SchemaVersion                          Property = "schemaversion"
 	RequiresManagerApproval                Property = "requiresmanagerapproval"
 	AuthenticationEnabled                  Property = "authenticationenabled"
@@ -162,6 +166,7 @@ const (
 	CertificateNameFlag                    Property = "certificatenameflag"
 	EffectiveEKUs                          Property = "effectiveekus"
 	EnrollmentFlag                         Property = "enrollmentflag"
+	Flags                                  Property = "flags"
 	NoSecurityExtension                    Property = "nosecurityextension"
 	RenewalPeriod                          Property = "renewalperiod"
 	ValidityPeriod                         Property = "validityperiod"
@@ -170,7 +175,7 @@ const (
 )
 
 func AllProperties() []Property {
-	return []Property{AdminCount, CASecurityCollected, CAName, CertChain, CertName, CertThumbprint, CertThumbprints, HasEnrollmentAgentRestrictions, EnrollmentAgentRestrictionsCollected, IsUserSpecifiesSanEnabled, IsUserSpecifiesSanEnabledCollected, HasBasicConstraints, BasicConstraintPathLength, DNSHostname, CrossCertificatePair, DistinguishedName, DomainFQDN, DomainSID, Sensitive, HighValue, BlocksInheritance, IsACL, IsACLProtected, IsDeleted, Enforced, Department, HasCrossCertificatePair, HasSPN, UnconstrainedDelegation, LastLogon, LastLogonTimestamp, IsPrimaryGroup, HasLAPS, DontRequirePreAuth, LogonType, HasURA, PasswordNeverExpires, PasswordNotRequired, FunctionalLevel, TrustType, SidFiltering, TrustedToAuth, SamAccountName, CertificateMappingMethodsRaw, CertificateMappingMethods, StrongCertificateBindingEnforcementRaw, StrongCertificateBindingEnforcement, EKUs, SubjectAltRequireUPN, AuthorizedSignatures, ApplicationPolicies, SchemaVersion, RequiresManagerApproval, AuthenticationEnabled, EnrolleeSuppliesSubject, CertificateApplicationPolicy, CertificateNameFlag, EffectiveEKUs, EnrollmentFlag, NoSecurityExtension, RenewalPeriod, ValidityPeriod, OID, HomeDirectory}
+	return []Property{AdminCount, CASecurityCollected, CAName, CertChain, CertName, CertThumbprint, CertThumbprints, HasEnrollmentAgentRestrictions, EnrollmentAgentRestrictionsCollected, IsUserSpecifiesSanEnabled, IsUserSpecifiesSanEnabledCollected, HasBasicConstraints, BasicConstraintPathLength, DNSHostname, CrossCertificatePair, DistinguishedName, DomainFQDN, DomainSID, Sensitive, HighValue, BlocksInheritance, IsACL, IsACLProtected, IsDeleted, Enforced, Department, HasCrossCertificatePair, HasSPN, UnconstrainedDelegation, LastLogon, LastLogonTimestamp, IsPrimaryGroup, HasLAPS, DontRequirePreAuth, LogonType, HasURA, PasswordNeverExpires, PasswordNotRequired, FunctionalLevel, TrustType, SidFiltering, TrustedToAuth, SamAccountName, CertificateMappingMethodsRaw, CertificateMappingMethods, StrongCertificateBindingEnforcementRaw, StrongCertificateBindingEnforcement, EKUs, SubjectAltRequireUPN, AuthorizedSignatures, ApplicationPolicies, IssuancePolicies, SchemaVersion, RequiresManagerApproval, AuthenticationEnabled, EnrolleeSuppliesSubject, CertificateApplicationPolicy, CertificateNameFlag, EffectiveEKUs, EnrollmentFlag, Flags, NoSecurityExtension, RenewalPeriod, ValidityPeriod, OID, HomeDirectory}
 }
 func ParseProperty(source string) (Property, error) {
 	switch source {
@@ -276,6 +281,8 @@ func ParseProperty(source string) (Property, error) {
 		return AuthorizedSignatures, nil
 	case "applicationpolicies":
 		return ApplicationPolicies, nil
+	case "issuancepolicies":
+		return IssuancePolicies, nil
 	case "schemaversion":
 		return SchemaVersion, nil
 	case "requiresmanagerapproval":
@@ -292,6 +299,8 @@ func ParseProperty(source string) (Property, error) {
 		return EffectiveEKUs, nil
 	case "enrollmentflag":
 		return EnrollmentFlag, nil
+	case "flags":
+		return Flags, nil
 	case "nosecurityextension":
 		return NoSecurityExtension, nil
 	case "renewalperiod":
@@ -410,6 +419,8 @@ func (s Property) String() string {
 		return string(AuthorizedSignatures)
 	case ApplicationPolicies:
 		return string(ApplicationPolicies)
+	case IssuancePolicies:
+		return string(IssuancePolicies)
 	case SchemaVersion:
 		return string(SchemaVersion)
 	case RequiresManagerApproval:
@@ -426,6 +437,8 @@ func (s Property) String() string {
 		return string(EffectiveEKUs)
 	case EnrollmentFlag:
 		return string(EnrollmentFlag)
+	case Flags:
+		return string(Flags)
 	case NoSecurityExtension:
 		return string(NoSecurityExtension)
 	case RenewalPeriod:
@@ -544,6 +557,8 @@ func (s Property) Name() string {
 		return "Authorized Signatures Required"
 	case ApplicationPolicies:
 		return "Application Policies"
+	case IssuancePolicies:
+		return "Issuance Policies"
 	case SchemaVersion:
 		return "Schema Version"
 	case RequiresManagerApproval:
@@ -560,6 +575,8 @@ func (s Property) Name() string {
 		return "Effective EKUs"
 	case EnrollmentFlag:
 		return "Enrollment Flags"
+	case Flags:
+		return "Flags"
 	case NoSecurityExtension:
 		return "No Security Extension"
 	case RenewalPeriod:
@@ -586,7 +603,7 @@ func Nodes() []graph.Kind {
 	return []graph.Kind{Entity, User, Computer, Group, GPO, OU, Container, Domain, LocalGroup, LocalUser, AIACA, RootCA, EnterpriseCA, NTAuthStore, CertTemplate}
 }
 func Relationships() []graph.Kind {
-	return []graph.Kind{Owns, GenericAll, GenericWrite, WriteOwner, WriteDACL, MemberOf, ForceChangePassword, AllExtendedRights, AddMember, HasSession, Contains, GPLink, AllowedToDelegate, GetChanges, GetChangesAll, GetChangesInFilteredSet, TrustedBy, AllowedToAct, AdminTo, CanPSRemote, CanRDP, ExecuteDCOM, HasSIDHistory, AddSelf, DCSync, ReadLAPSPassword, ReadGMSAPassword, DumpSMSAPassword, SQLAdmin, AddAllowedToAct, WriteSPN, AddKeyCredentialLink, LocalToComputer, MemberOfLocalGroup, RemoteInteractiveLogonPrivilege, SyncLAPSPassword, WriteAccountRestrictions, RootCAFor, PublishedTo, ManageCertificates, ManageCA, DelegatedEnrollmentAgent, Enroll, HostsCAService, WritePKIEnrollmentFlag, WritePKINameFlag, NTAuthStoreFor, TrustedForNTAuth, EnterpriseCAFor, IssuedSignedBy, GoldenCert, EnrollOnBehalfOf, ADCSESC1, ADCSESC3, ADCSESC4, ADCSESC5, ADCSESC6, ADCSESC7}
+	return []graph.Kind{Owns, GenericAll, GenericWrite, WriteOwner, WriteDACL, MemberOf, ForceChangePassword, AllExtendedRights, AddMember, HasSession, Contains, GPLink, AllowedToDelegate, GetChanges, GetChangesAll, GetChangesInFilteredSet, TrustedBy, AllowedToAct, AdminTo, CanPSRemote, CanRDP, ExecuteDCOM, HasSIDHistory, AddSelf, DCSync, DCFor, ReadLAPSPassword, ReadGMSAPassword, DumpSMSAPassword, SQLAdmin, AddAllowedToAct, WriteSPN, AddKeyCredentialLink, LocalToComputer, MemberOfLocalGroup, RemoteInteractiveLogonPrivilege, SyncLAPSPassword, WriteAccountRestrictions, RootCAFor, PublishedTo, ManageCertificates, ManageCA, DelegatedEnrollmentAgent, Enroll, HostsCAService, WritePKIEnrollmentFlag, WritePKINameFlag, NTAuthStoreFor, TrustedForNTAuth, EnterpriseCAFor, CanAbuseUPNCertMapping, CanAbuseWeakCertBinding, IssuedSignedBy, GoldenCert, EnrollOnBehalfOf, ADCSESC1, ADCSESC3, ADCSESC4, ADCSESC5, ADCSESC6, ADCSESC7}
 }
 func ACLRelationships() []graph.Kind {
 	return []graph.Kind{AllExtendedRights, ForceChangePassword, AddMember, AddAllowedToAct, GenericAll, WriteDACL, WriteOwner, GenericWrite, ReadLAPSPassword, ReadGMSAPassword, Owns, AddSelf, WriteSPN, AddKeyCredentialLink, GetChanges, GetChangesAll, GetChangesInFilteredSet, WriteAccountRestrictions, SyncLAPSPassword, DCSync, ManageCertificates, ManageCA, Enroll, WritePKIEnrollmentFlag, WritePKINameFlag}
