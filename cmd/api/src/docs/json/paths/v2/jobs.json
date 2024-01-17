@@ -659,7 +659,7 @@
                 "Error": {
                     "$ref": "#/components/responses/defaultError"
                 }
-            }  
+            }
         }
     },
     "/api/v2/jobs/{job_id}/log": {

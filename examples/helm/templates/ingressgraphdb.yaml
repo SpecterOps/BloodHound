@@ -14,18 +14,30 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-{{- if .Values.appdb.service.enabled }}
-apiVersion: v1
-kind: Service
+{{- if .Values.graphdb.ingress.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
 metadata:
-  name: {{ .Values.appdb.service.name }}
+  name: {{ .Values.graphdb.name }}-ingress
   namespace: {{ .Values.namespace }}
 spec:
-  type: {{ .Values.appdb.service.type }}
-  ports:
-    - port: {{ .Values.appdb.service.port }}
-      targetPort: {{ .Values.appdb.service.targetPort }}
-      protocol: TCP
-  selector:
-    app: {{ .Values.appdb.appName }}
+  rules:
+  - host: {{ .Values.graphdb.ingress.host }}
+    http:
+      paths:
+      - path: {{ .Values.graphdb.ingress.path }}
+        pathType: Prefix
+        backend:
+          service:
+            name: graph-db
+            port:
+              number: {{ (index .Values.graphdb.service.ports 0).http }}
+  {{- if .Values.graphdb.tls.enabled }}
+  tls:
+  - hosts:
+    - {{ .Values.graphdb.ingress.host }}
+    {{- if .Values.graphdb.tls.customCert }}
+    secretName: {{ .Values.graphdb.tls.certSecret }}
+    {{- end }}
+  {{- end }}
 {{- end }}

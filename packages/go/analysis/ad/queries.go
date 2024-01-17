@@ -21,18 +21,17 @@ import (
 	"strings"
 	"time"
 
-	"github.com/specterops/bloodhound/dawgs/graphcache"
-	"github.com/specterops/bloodhound/log"
-
 	"github.com/RoaringBitmap/roaring/roaring64"
 	"github.com/specterops/bloodhound/analysis"
 	"github.com/specterops/bloodhound/dawgs/cardinality"
 	"github.com/specterops/bloodhound/dawgs/graph"
+	"github.com/specterops/bloodhound/dawgs/graphcache"
 	"github.com/specterops/bloodhound/dawgs/ops"
 	"github.com/specterops/bloodhound/dawgs/query"
 	"github.com/specterops/bloodhound/dawgs/traversal"
 	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/graphschema/common"
+	"github.com/specterops/bloodhound/log"
 )
 
 func FetchGraphDBTierZeroTaggedAssets(tx graph.Transaction, domainSID string) (graph.NodeSet, error) {
@@ -1452,6 +1451,19 @@ func FetchEnterpriseCAsTrustedForNTAuthToDomain(tx graph.Transaction, domain *gr
 	})
 }
 
+func FetchEnterpriseCAsRootCAForPathToDomain(tx graph.Transaction, domain *graph.Node) (graph.NodeSet, error) {
+	return ops.AcyclicTraverseTerminals(tx, ops.TraversalPlan{
+		Root:      domain,
+		Direction: graph.DirectionInbound,
+		BranchQuery: func() graph.Criteria {
+			return query.KindIn(query.Relationship(), ad.IssuedSignedBy, ad.EnterpriseCAFor, ad.RootCAFor)
+		},
+		PathFilter: func(ctx *ops.TraversalContext, segment *graph.PathSegment) bool {
+			return segment.Node.Kinds.ContainsOneOf(ad.EnterpriseCA)
+		},
+	})
+}
+
 func DoesCertTemplateLinkToDomain(tx graph.Transaction, certTemplate, domainNode *graph.Node) (bool, error) {
 	if pathSet, err := FetchCertTemplatePathToDomain(tx, certTemplate, domainNode); err != nil {
 		return false, err
@@ -1478,4 +1490,10 @@ func FetchCertTemplatePathToDomain(tx graph.Transaction, certTemplate, domain *g
 
 		return cursor.Error()
 	})
+}
+
+func FetchCertTemplateCAs(tx graph.Transaction, certTemplate *graph.Node) (graph.NodeSet, error) {
+	return ops.FetchEndNodes(tx.Relationships().Filter(
+		FilterPublishedCAs(certTemplate),
+	))
 }
