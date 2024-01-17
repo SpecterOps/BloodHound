@@ -21,7 +21,6 @@ package ad_test
 
 import (
 	"context"
-
 	"github.com/specterops/bloodhound/analysis"
 
 	ad2 "github.com/specterops/bloodhound/analysis/ad"
@@ -55,6 +54,9 @@ func TestADCSESC1(t *testing.T) {
 		require.Nil(t, err)
 		domains, err := ad2.FetchNodesByKind(context.Background(), db, ad.Domain)
 
+		cache := ad2.NewADCSCache()
+		cache.BuildCache(context.Background(), db, enterpriseCertAuthorities, certTemplates)
+
 		for _, domain := range domains {
 			innerDomain := domain
 
@@ -64,14 +66,8 @@ func TestADCSESC1(t *testing.T) {
 					return err
 				} else {
 					for _, enterpriseCA := range enterpriseCAs {
-						t.Logf("here is one of the looped over ecas: %v", enterpriseCA.ID)
-						if validPaths, err := ad2.FetchEnterpriseCAsCertChainPathToDomain(tx, enterpriseCA, innerDomain); err != nil {
-							t.Logf("error fetching paths from enterprise ca %d to domain %d: %v", enterpriseCA.ID, innerDomain.ID, err)
-						} else if validPaths.Len() == 0 {
-							t.Logf("0 valid paths for eca: %v", enterpriseCA.Properties.Get("name"))
-							continue
-						} else {
-							if err := ad2.PostADCSESC1(ctx, tx, outC, db, groupExpansions, enterpriseCertAuthorities, certTemplates, enterpriseCA, innerDomain); err != nil {
+						if cache.DoesCAChainProperlyToDomain(enterpriseCA, innerDomain) {
+							if err := ad2.PostADCSESC1(ctx, tx, outC, groupExpansions, enterpriseCA, innerDomain, cache); err != nil {
 								t.Logf("failed post processing for %s: %v", ad.ADCSESC1.String(), err)
 							} else {
 								return nil
@@ -395,7 +391,7 @@ func TestEnrollOnBehalfOf(t *testing.T) {
 			results, err := ad2.EnrollOnBehalfOfVersionOne(tx, v1Templates, certTemplates)
 			require.Nil(t, err)
 
-			require.Len(t, results, 2)
+			require.Len(t, results, 3)
 
 			require.Contains(t, results, analysis.CreatePostRelationshipJob{
 				FromID: harness.EnrollOnBehalfOfHarnessOne.CertTemplate11.ID,
@@ -405,6 +401,12 @@ func TestEnrollOnBehalfOf(t *testing.T) {
 
 			require.Contains(t, results, analysis.CreatePostRelationshipJob{
 				FromID: harness.EnrollOnBehalfOfHarnessOne.CertTemplate13.ID,
+				ToID:   harness.EnrollOnBehalfOfHarnessOne.CertTemplate12.ID,
+				Kind:   ad.EnrollOnBehalfOf,
+			})
+
+			require.Contains(t, results, analysis.CreatePostRelationshipJob{
+				FromID: harness.EnrollOnBehalfOfHarnessOne.CertTemplate12.ID,
 				ToID:   harness.EnrollOnBehalfOfHarnessOne.CertTemplate12.ID,
 				Kind:   ad.EnrollOnBehalfOf,
 			})
@@ -442,19 +444,132 @@ func TestEnrollOnBehalfOf(t *testing.T) {
 				Kind:   ad.EnrollOnBehalfOf,
 			})
 
-			results, err = ad2.EnrollOnBehalfOfSelfControl(tx, v1Templates)
-			require.Nil(t, err)
-
-			require.Len(t, results, 1)
-			require.Contains(t, results, analysis.CreatePostRelationshipJob{
-				FromID: harness.EnrollOnBehalfOfHarnessTwo.CertTemplate25.ID,
-				ToID:   harness.EnrollOnBehalfOfHarnessTwo.CertTemplate25.ID,
-				Kind:   ad.EnrollOnBehalfOf,
-			})
-
 			return nil
 		})
 
+		return nil
+	})
+}
+
+func TestADCSESC3(t *testing.T) {
+	testContext := integration.NewGraphTestContext(t)
+	testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) {
+		harness.ESC3Harness1.Setup(testContext)
+	}, func(harness integration.HarnessDetails, db graph.Database) error {
+		operation := analysis.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - ESC3")
+
+		groupExpansions, err := ad2.ExpandAllRDPLocalGroups(context.Background(), db)
+		require.Nil(t, err)
+		enterpriseCertAuthorities, err := ad2.FetchNodesByKind(context.Background(), db, ad.EnterpriseCA)
+		require.Nil(t, err)
+		certTemplates, err := ad2.FetchNodesByKind(context.Background(), db, ad.CertTemplate)
+		require.Nil(t, err)
+		domains, err := ad2.FetchNodesByKind(context.Background(), db, ad.Domain)
+
+		cache := ad2.NewADCSCache()
+		cache.BuildCache(context.Background(), db, enterpriseCertAuthorities, certTemplates)
+
+		for _, domain := range domains {
+			innerDomain := domain
+
+			operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
+				if enterpriseCAs, err := ad2.FetchEnterpriseCAsTrustedForNTAuthToDomain(tx, innerDomain); err != nil {
+					return err
+				} else {
+					for _, enterpriseCA := range enterpriseCAs {
+						if cache.DoesCAChainProperlyToDomain(enterpriseCA, innerDomain) {
+							if err := ad2.PostADCSESC3(ctx, tx, outC, groupExpansions, enterpriseCA, innerDomain, cache); err != nil {
+								t.Logf("failed post processing for %s: %v", ad.ADCSESC1.String(), err)
+							} else {
+								return nil
+							}
+						}
+					}
+				}
+				return nil
+			})
+		}
+		operation.Done()
+
+		db.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
+			if results, err := ops.FetchStartNodes(tx.Relationships().Filterf(func() graph.Criteria {
+				return query.Kind(query.Relationship(), ad.ADCSESC3)
+			})); err != nil {
+				t.Fatalf("error fetching esc3 edges in integration test; %v", err)
+			} else {
+				assert.Equal(t, 3, len(results))
+
+				require.True(t, results.Contains(harness.ESC3Harness1.Computer1))
+				require.True(t, results.Contains(harness.ESC3Harness1.Group2))
+				require.True(t, results.Contains(harness.ESC3Harness1.User1))
+
+			}
+			return nil
+		})
+		return nil
+	})
+
+	testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) {
+		harness.ESC3Harness2.Setup(testContext)
+	}, func(harness integration.HarnessDetails, db graph.Database) error {
+		operation := analysis.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - ESC3")
+
+		groupExpansions, err := ad2.ExpandAllRDPLocalGroups(context.Background(), db)
+		require.Nil(t, err)
+		enterpriseCertAuthorities, err := ad2.FetchNodesByKind(context.Background(), db, ad.EnterpriseCA)
+		require.Nil(t, err)
+		certTemplates, err := ad2.FetchNodesByKind(context.Background(), db, ad.CertTemplate)
+		require.Nil(t, err)
+		domains, err := ad2.FetchNodesByKind(context.Background(), db, ad.Domain)
+
+		cache := ad2.NewADCSCache()
+		cache.BuildCache(context.Background(), db, enterpriseCertAuthorities, certTemplates)
+
+		for _, domain := range domains {
+			innerDomain := domain
+
+			operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
+				if enterpriseCAs, err := ad2.FetchEnterpriseCAsTrustedForNTAuthToDomain(tx, innerDomain); err != nil {
+					return err
+				} else {
+					for _, enterpriseCA := range enterpriseCAs {
+						if cache.DoesCAChainProperlyToDomain(enterpriseCA, innerDomain) {
+							if err := ad2.PostADCSESC3(ctx, tx, outC, groupExpansions, enterpriseCA, innerDomain, cache); err != nil {
+								t.Logf("failed post processing for %s: %v", ad.ADCSESC1.String(), err)
+							} else {
+								return nil
+							}
+						}
+					}
+				}
+				return nil
+			})
+		}
+		operation.Done()
+
+		db.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
+			if results, err := ops.FetchStartNodes(tx.Relationships().Filterf(func() graph.Criteria {
+				return query.Kind(query.Relationship(), ad.ADCSESC3)
+			})); err != nil {
+				t.Fatalf("error fetching esc3 edges in integration test; %v", err)
+			} else {
+				assert.Equal(t, 1, len(results))
+
+				require.True(t, results.Contains(harness.ESC3Harness2.User1))
+			}
+
+			if edge, err := tx.Relationships().Filterf(func() graph.Criteria {
+				return query.Kind(query.Relationship(), ad.ADCSESC3)
+			}).First(); err != nil {
+				t.Fatalf("error fetching esc3 edges in integration test; %v", err)
+			} else {
+				comp, err := ad2.GetADCSESC3EdgeComposition(context.Background(), db, edge)
+				assert.Nil(t, err)
+				assert.Equal(t, 8, len(comp.AllNodes()))
+				assert.False(t, comp.AllNodes().Contains(harness.ESC3Harness2.User2))
+			}
+			return nil
+		})
 		return nil
 	})
 }
