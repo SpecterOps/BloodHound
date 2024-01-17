@@ -93,7 +93,6 @@ export enum ActiveDirectoryRelationshipKind {
     HasSIDHistory = 'HasSIDHistory',
     AddSelf = 'AddSelf',
     DCSync = 'DCSync',
-    DCFor = 'DCFor',
     ReadLAPSPassword = 'ReadLAPSPassword',
     ReadGMSAPassword = 'ReadGMSAPassword',
     DumpSMSAPassword = 'DumpSMSAPassword',
@@ -183,8 +182,6 @@ export function ActiveDirectoryRelationshipKindToDisplay(value: ActiveDirectoryR
             return 'AddSelf';
         case ActiveDirectoryRelationshipKind.DCSync:
             return 'DCSync';
-        case ActiveDirectoryRelationshipKind.DCFor:
-            return 'DCFor';
         case ActiveDirectoryRelationshipKind.ReadLAPSPassword:
             return 'ReadLAPSPassword';
         case ActiveDirectoryRelationshipKind.ReadGMSAPassword:

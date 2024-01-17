@@ -834,11 +834,6 @@ DCSync: types.#Kind & {
 	schema: "active_directory"
 }
 
-DCFor: types.#Kind & {
-	symbol: "DCFor"
-	schema: "active_directory"
-}
-
 ReadLAPSPassword: types.#Kind & {
 	symbol: "ReadLAPSPassword"
 	schema: "active_directory"
@@ -1051,7 +1046,6 @@ RelationshipKinds: [
 	HasSIDHistory,
 	AddSelf,
 	DCSync,
-	DCFor,
 	ReadLAPSPassword,
 	ReadGMSAPassword,
 	DumpSMSAPassword,
