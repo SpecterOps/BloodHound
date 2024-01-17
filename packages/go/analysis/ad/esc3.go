@@ -18,6 +18,7 @@ package ad
 
 import (
 	"context"
+
 	"github.com/specterops/bloodhound/analysis"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/dawgs/util/channels"
@@ -60,20 +61,6 @@ func PostEnrollOnBehalfOf(certTemplates []*graph.Node, operation analysis.StatTr
 
 	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
 		if results, err := EnrollOnBehalfOfVersionOne(tx, versionOneTemplates, certTemplates); err != nil {
-			return err
-		} else {
-			for _, result := range results {
-				if !channels.Submit(ctx, outC, result) {
-					return nil
-				}
-			}
-
-			return nil
-		}
-	})
-
-	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
-		if results, err := EnrollOnBehalfOfSelfControl(tx, versionOneTemplates); err != nil {
 			return err
 		} else {
 			for _, result := range results {
@@ -157,9 +144,7 @@ func EnrollOnBehalfOfVersionOne(tx graph.Transaction, versionOneCertTemplates []
 
 	for _, certTemplateOne := range allCertTemplates {
 		//prefilter as much as we can first
-		if slices.Contains(versionOneCertTemplates, certTemplateOne) {
-			continue
-		} else if hasEku, err := certTemplateHasEkuOrAll(certTemplateOne, EkuCertRequestAgent, EkuAnyPurpose); err != nil {
+		if hasEku, err := certTemplateHasEkuOrAll(certTemplateOne, EkuCertRequestAgent, EkuAnyPurpose); err != nil {
 			log.Errorf("Error checking ekus for certtemplate %d: %w", certTemplateOne.ID, err)
 		} else if !hasEku {
 			continue
@@ -171,9 +156,7 @@ func EnrollOnBehalfOfVersionOne(tx graph.Transaction, versionOneCertTemplates []
 			continue
 		} else {
 			for _, certTemplateTwo := range versionOneCertTemplates {
-				if certTemplateTwo.ID == certTemplateOne.ID {
-					continue
-				} else if hasPath, err := DoesCertTemplateLinkToDomain(tx, certTemplateTwo, domainNode); err != nil {
+				if hasPath, err := DoesCertTemplateLinkToDomain(tx, certTemplateTwo, domainNode); err != nil {
 					log.Errorf("Error getting domain node for certtemplate %d: %w", certTemplateTwo.ID, err)
 				} else if !hasPath {
 					continue
@@ -217,33 +200,4 @@ func getDomainForCertTemplate(tx graph.Transaction, certTemplate *graph.Node) (*
 	} else {
 		return domainNode, nil
 	}
-}
-
-func EnrollOnBehalfOfSelfControl(tx graph.Transaction, versionOneCertTemplates []*graph.Node) ([]analysis.CreatePostRelationshipJob, error) {
-	results := make([]analysis.CreatePostRelationshipJob, 0)
-	for _, certTemplate := range versionOneCertTemplates {
-		if hasEku, err := certTemplateHasEkuOrAll(certTemplate, EkuAnyPurpose); err != nil {
-			log.Errorf("Error checking ekus for certtemplate %d: %w", certTemplate.ID, err)
-		} else if !hasEku {
-			continue
-		} else if subjectRequireUpn, err := certTemplate.Properties.Get(ad.SubjectAltRequireUPN.String()).Bool(); err != nil {
-			log.Errorf("Error getting subjectAltRequireUPN for certtemplate %d: %w", certTemplate.ID, err)
-		} else if !subjectRequireUpn {
-			continue
-		} else if domainNode, err := getDomainForCertTemplate(tx, certTemplate); err != nil {
-			log.Errorf("Error getting domain for certtemplate %d: %w", certTemplate.ID, err)
-		} else if doesLink, err := DoesCertTemplateLinkToDomain(tx, certTemplate, domainNode); err != nil {
-			log.Errorf("Error fetching paths from certtemplate %d to domain: %w", certTemplate.ID, err)
-		} else if !doesLink {
-			continue
-		} else {
-			results = append(results, analysis.CreatePostRelationshipJob{
-				FromID: certTemplate.ID,
-				ToID:   certTemplate.ID,
-				Kind:   ad.EnrollOnBehalfOf,
-			})
-		}
-	}
-
-	return results, nil
 }

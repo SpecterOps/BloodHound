@@ -17,6 +17,8 @@
 package registration
 
 import (
+	"net/http"
+
 	"github.com/specterops/bloodhound/cache"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/src/api"
@@ -28,18 +30,17 @@ import (
 	"github.com/specterops/bloodhound/src/config"
 	"github.com/specterops/bloodhound/src/daemons/datapipe"
 	"github.com/specterops/bloodhound/src/database"
-	"net/http"
 )
 
 func RegisterFossGlobalMiddleware(routerInst *router.Router, cfg config.Configuration, identityResolver auth.IdentityResolver, authenticator api.Authenticator) {
-	// Set up logging
-	if cfg.EnableAPILogging {
-		routerInst.UsePrerouting(middleware.LoggingMiddleware(cfg, identityResolver))
-	}
-
 	// Set up the middleware stack
 	routerInst.UsePrerouting(middleware.ContextMiddleware)
 	routerInst.UsePrerouting(middleware.CORSMiddleware())
+
+	// Set up logging. This must be done after ContextMiddleware is initialized so the context can be accessed in the log logic
+	if cfg.EnableAPILogging {
+		routerInst.UsePrerouting(middleware.LoggingMiddleware(cfg, identityResolver))
+	}
 
 	routerInst.UsePostrouting(
 		middleware.PanicHandler,
