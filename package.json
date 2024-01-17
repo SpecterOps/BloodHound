@@ -1,0 +1,28 @@
+{
+    "private": true,
+    "name": "bloodhound-ce",
+    "workspaces": {
+        "packages": [
+            "cmd/ui",
+            "packages/javascript/**"
+        ]
+    },
+    "scripts": {
+        "dev": "yarn workspace bloodhound-ui dev",
+        "debug": "yarn workspace bloodhound-ui debug",
+        "start": "yarn workspace bloodhound-ui start",
+        "preview": "yarn workspace bloodhound-ui preview",
+        "build": "yarn workspaces foreach -ptv run build",
+        "test": "yarn workspaces foreach -ptv run test run",
+        "check-types": "yarn workspaces foreach -ptv run check-types",
+        "lint": "yarn workspaces foreach -ptv run lint",
+        "format": "yarn workspaces foreach -ptv run format",
+        "check-format": "yarn workspaces foreach -ptv run check-format"
+    },
+    "packageManager": "yarn@3.5.1",
+    "devDependencies": {
+        "all-contributors-cli": "^6.26.1",
+        "prettier": "^2.8.8",
+        "typescript": "^5.1.6"
+    }
+}

@@ -1,0 +1,116 @@
+{
+    "/api/v2/available-domains": {
+        "get": {
+            "description": "Gets available domains along with their collection status",
+            "tags": [
+                "Search",
+                "Community",
+                "Enterprise"
+            ],
+            "summary": "Get available domains",
+            "parameters": [
+                {
+                    "$ref": "#/definitions/parameters.PreferHeader"
+                },
+                {
+                    "type": "string",
+                    "description": "Sort by column. Can be used multiple times; prepend hyphen for descending order. Sortable columns are objectid, name.",
+                    "name": "sort_by",
+                    "in": "query",
+                    "required": false
+                },
+                {
+                    "type": "string",
+                    "description": "Filter results by column value. Valid filter predicates are eq, neq",
+                    "name": "objectid",
+                    "in": "query",
+                    "required": false
+                },
+                {
+                    "type": "string",
+                    "description": "Filter results by column value. Valid filter predicates are eq, neq",
+                    "name": "name",
+                    "in": "query",
+                    "required": false
+                },
+                {
+                    "type": "string",
+                    "description": "Filter results by column value. Valid filter predicates are eq, neq",
+                    "name": "collected",
+                    "in": "query",
+                    "required": false
+                }
+            ],
+            "responses": {
+                "200": {
+                    "description": "OK",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/definitions/api.BasicResponse"
+                            }
+                        }
+                    }
+                },
+                "Error": {
+                    "$ref": "#/components/responses/defaultError"
+                }
+            }
+        }
+    },
+    "/api/v2/search": {
+        "get": {
+            "tags": [
+                "Search",
+                "Community",
+                "Enterprise"
+            ],
+            "summary": "Get api",
+            "parameters": [
+                {
+                    "$ref": "#/definitions/parameters.PreferHeader"
+                },
+                {
+                    "type": "string",
+                    "description": "Search parameter for the name or object ID of a node.",
+                    "name": "q",
+                    "in": "query",
+                    "required": true
+                },
+                {
+                    "type": "integer",
+                    "description": "Paging Skip",
+                    "name": "skip",
+                    "in": "query"
+                },
+                {
+                    "type": "integer",
+                    "description": "Paging Limit",
+                    "name": "limit",
+                    "in": "query"
+                },
+                {
+                    "type": "string",
+                    "description": "Node type. Some AD examples: Base, User, Computer, Group, Container. Some Azure examples: AZBase, AZApp, AZDevice.",
+                    "name": "type",
+                    "in": "query"
+                }
+            ],
+            "responses": {
+                "200": {
+                    "description": "OK",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/definitions/v2.SearchResponse"
+                            }
+                        }
+                    }
+                },
+                "Error": {
+                    "$ref": "#/components/responses/defaultError"
+                }
+            }
+        }
+    }
+}

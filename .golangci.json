@@ -1,0 +1,60 @@
+{
+  "linters": {
+    "disable": [
+      "errcheck",
+      "unused"
+    ],
+    "enable": [
+      "gosimple"
+    ]
+  },
+  "issues": {
+    "max-issues-per-linter": 0,
+    "max-same-issues": 0,
+    "exclude-rules": [
+      {
+        "path": "hyperloglog_bench_test\\.go",
+        "text": "SA6002:"
+      },
+      {
+        "path": "cache_test\\.go",
+        "text": "SA1026:"
+      },
+      {
+        "path": "empty\\.go",
+        "text": "SA5010:"
+      },
+      {
+        "path": "foldr_test\\.go",
+        "text": "SA4000:"
+      },
+      {
+        "path": ".go",
+        "text": "((neo4j(.+)(NewDriver|Result))|Id|jwt\\.StandardClaims|database.Database|(.+)Deprecated) is deprecated"
+      },
+      {
+        "path": "(.+)_test\\.go",
+        "linters": [
+          "errcheck"
+        ]
+      }
+    ]
+  },
+  "run": {
+    "skip-dirs": [
+      "mocks"
+    ],
+    "build-tags": [
+      "integration",
+      "serial_integration"
+    ]
+  },
+  "linters-settings": {
+    "stylecheck": {
+      "checks": [
+        "all",
+        "-ST1000"
+      ]
+    }
+  }
+}

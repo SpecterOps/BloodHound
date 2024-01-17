@@ -1,0 +1,25 @@
+{
+    "/api/v2/ingest": {
+        "post": {
+            "description": "Ingests data from the user interface or clients",
+            "tags": [
+                "Ingestion",
+                "Enterprise"
+            ],
+            "summary": "Endpoint for data ingestion",
+            "parameters": [
+                {
+                    "$ref": "#/definitions/parameter.PreferHeader"
+                }
+            ],
+            "responses": {
+                "202": {
+                    "description": ""
+                },
+                "Error": {
+                    "$ref": "#/components/responses/defaultError"
+                }
+            }
+        }
+    }
+}

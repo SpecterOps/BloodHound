@@ -1,0 +1,26 @@
+{
+    "version": 1,
+    "bind_addr": "0.0.0.0:8081",
+    "metrics_port": ":2113",
+    "root_url": "http://0.0.0.0:8081/",
+    "work_dir": "/tmp/work",
+    "collectors_base_path": "/tmp/collectors",
+    "log_level": "ERROR",
+    "log_path": "bhapi.log",
+    "features": {
+        "enable_auth": true
+    },
+    "database": {
+        "connection": "user=bloodhound password=bloodhoundcommunityedition dbname=bloodhound host=localhost port=65432"
+    },
+    "neo4j": {
+        "connection": "neo4j://neo4j:bloodhoundcommunityedition@localhost:37687/"
+    },
+    "default_admin": {
+        "principal_name": "admin",
+        "password": "admin",
+        "first_name": "Bloodhound",
+        "last_name": "Dev",
+        "expire_now": true
+    }
+}

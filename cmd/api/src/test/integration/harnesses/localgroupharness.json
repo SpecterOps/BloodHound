@@ -1,0 +1,222 @@
+{
+    "style": {
+        "font-family": "sans-serif",
+        "background-color": "#ffffff",
+        "background-image": "",
+        "background-size": "100%",
+        "node-color": "#ffffff",
+        "border-width": 4,
+        "border-color": "#000000",
+        "radius": 50,
+        "node-padding": 5,
+        "node-margin": 2,
+        "outside-position": "auto",
+        "node-icon-image": "",
+        "node-background-image": "",
+        "icon-position": "inside",
+        "icon-size": 64,
+        "caption-position": "inside",
+        "caption-max-width": 200,
+        "caption-color": "#000000",
+        "caption-font-size": 50,
+        "caption-font-weight": "normal",
+        "label-position": "inside",
+        "label-display": "pill",
+        "label-color": "#000000",
+        "label-background-color": "#ffffff",
+        "label-border-color": "#000000",
+        "label-border-width": 4,
+        "label-font-size": 40,
+        "label-padding": 5,
+        "label-margin": 4,
+        "directionality": "directed",
+        "detail-position": "inline",
+        "detail-orientation": "parallel",
+        "arrow-width": 5,
+        "arrow-color": "#000000",
+        "margin-start": 5,
+        "margin-end": 5,
+        "margin-peer": 20,
+        "attachment-start": "normal",
+        "attachment-end": "normal",
+        "relationship-icon-image": "",
+        "type-color": "#000000",
+        "type-background-color": "#ffffff",
+        "type-border-color": "#000000",
+        "type-border-width": 0,
+        "type-font-size": 16,
+        "type-padding": 5,
+        "property-position": "outside",
+        "property-alignment": "colon",
+        "property-color": "#000000",
+        "property-font-size": 16,
+        "property-font-weight": "normal"
+    },
+    "nodes": [
+        {
+            "id": "n0",
+            "position": {
+                "x": -4.5,
+                "y": 249.49999999999994
+            },
+            "caption": "Computer A",
+            "labels": [],
+            "properties": {},
+            "style": {}
+        },
+        {
+            "id": "n1",
+            "position": {
+                "x": -323,
+                "y": -69
+            },
+            "caption": "Group A",
+            "labels": [],
+            "properties": {},
+            "style": {}
+        },
+        {
+            "id": "n2",
+            "position": {
+                "x": -322.99999999999994,
+                "y": 170
+            },
+            "caption": "User A",
+            "labels": [],
+            "properties": {},
+            "style": {}
+        },
+        {
+            "id": "n3",
+            "position": {
+                "x": -614,
+                "y": -69
+            },
+            "caption": "User B",
+            "labels": [],
+            "properties": {},
+            "style": {}
+        },
+        {
+            "id": "n4",
+            "position": {
+                "x": 269.98007150448075,
+                "y": 369
+            },
+            "caption": "Computer B",
+            "labels": [],
+            "properties": {},
+            "style": {}
+        },
+        {
+            "id": "n5",
+            "position": {
+                "x": 246.98007150448075,
+                "y": 170
+            },
+            "caption": "Group B",
+            "labels": [],
+            "properties": {},
+            "style": {}
+        },
+        {
+            "id": "n6",
+            "position": {
+                "x": 586,
+                "y": 170
+            },
+            "caption": "Computer C",
+            "labels": [],
+            "properties": {},
+            "style": {}
+        },
+        {
+            "id": "n7",
+            "position": {
+                "x": -322.99999999999994,
+                "y": 369
+            },
+            "caption": "User C",
+            "labels": [],
+            "properties": {},
+            "style": {}
+        },
+        {
+            "id": "n8",
+            "position": {
+                "x": -322.99999999999994,
+                "y": 568
+            },
+            "caption": "User D",
+            "labels": [],
+            "properties": {},
+            "style": {}
+        }
+    ],
+    "relationships": [
+        {
+            "id": "n0",
+            "fromId": "n1",
+            "toId": "n0",
+            "type": "AdminTo",
+            "properties": {},
+            "style": {}
+        },
+        {
+            "id": "n1",
+            "fromId": "n2",
+            "toId": "n0",
+            "type": "AdminTo",
+            "properties": {},
+            "style": {}
+        },
+        {
+            "id": "n2",
+            "fromId": "n3",
+            "toId": "n1",
+            "type": "MemberOf",
+            "properties": {},
+            "style": {}
+        },
+        {
+            "id": "n3",
+            "fromId": "n0",
+            "toId": "n4",
+            "type": "AdminTo",
+            "properties": {},
+            "style": {}
+        },
+        {
+            "id": "n4",
+            "fromId": "n0",
+            "toId": "n5",
+            "type": "MemberOf",
+            "properties": {},
+            "style": {}
+        },
+        {
+            "id": "n5",
+            "fromId": "n5",
+            "toId": "n6",
+            "type": "AdminTo",
+            "properties": {},
+            "style": {}
+        },
+        {
+            "id": "n6",
+            "fromId": "n7",
+            "toId": "n0",
+            "type": "SQLAdmin",
+            "properties": {},
+            "style": {}
+        },
+        {
+            "id": "n7",
+            "type": "AllowedToDelegate",
+            "style": {},
+            "properties": {},
+            "fromId": "n8",
+            "toId": "n0"
+        }
+    ]
+}

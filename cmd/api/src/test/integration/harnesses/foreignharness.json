@@ -1,0 +1,246 @@
+{
+    "style": {
+        "font-family": "sans-serif",
+        "background-color": "#ffffff",
+        "background-image": "",
+        "background-size": "100%",
+        "node-color": "#ffffff",
+        "border-width": 4,
+        "border-color": "#000000",
+        "radius": 50,
+        "node-padding": 5,
+        "node-margin": 2,
+        "outside-position": "auto",
+        "node-icon-image": "",
+        "node-background-image": "",
+        "icon-position": "inside",
+        "icon-size": 64,
+        "caption-position": "inside",
+        "caption-max-width": 200,
+        "caption-color": "#000000",
+        "caption-font-size": 50,
+        "caption-font-weight": "normal",
+        "label-position": "inside",
+        "label-display": "pill",
+        "label-color": "#000000",
+        "label-background-color": "#ffffff",
+        "label-border-color": "#000000",
+        "label-border-width": 4,
+        "label-font-size": 40,
+        "label-padding": 5,
+        "label-margin": 4,
+        "directionality": "directed",
+        "detail-position": "inline",
+        "detail-orientation": "parallel",
+        "arrow-width": 5,
+        "arrow-color": "#000000",
+        "margin-start": 5,
+        "margin-end": 5,
+        "margin-peer": 20,
+        "attachment-start": "normal",
+        "attachment-end": "normal",
+        "relationship-icon-image": "",
+        "type-color": "#000000",
+        "type-background-color": "#ffffff",
+        "type-border-color": "#000000",
+        "type-border-width": 0,
+        "type-font-size": 16,
+        "type-padding": 5,
+        "property-position": "outside",
+        "property-alignment": "colon",
+        "property-color": "#000000",
+        "property-font-size": 16,
+        "property-font-weight": "normal"
+    },
+    "nodes": [
+        {
+            "id": "n0",
+            "position": {
+                "x": -3,
+                "y": -76
+            },
+            "caption": "LocalGPO",
+            "labels": [],
+            "properties": {},
+            "style": {}
+        },
+        {
+            "id": "n1",
+            "position": {
+                "x": 264.5,
+                "y": -76
+            },
+            "caption": "LocalDomain",
+            "labels": [],
+            "properties": {},
+            "style": {}
+        },
+        {
+            "id": "n2",
+            "position": {
+                "x": 532,
+                "y": -76
+            },
+            "caption": "LocalOU A",
+            "labels": [],
+            "properties": {},
+            "style": {}
+        },
+        {
+            "id": "n3",
+            "position": {
+                "x": 806.153051362372,
+                "y": -394.00000000000006
+            },
+            "caption": "LocalComputer",
+            "labels": [],
+            "properties": {},
+            "style": {}
+        },
+        {
+            "id": "n4",
+            "position": {
+                "x": 532,
+                "y": -394
+            },
+            "caption": "LocalGroup",
+            "labels": [],
+            "properties": {},
+            "style": {}
+        },
+        {
+            "id": "n5",
+            "position": {
+                "x": -3,
+                "y": -394
+            },
+            "caption": "ForeignUser A",
+            "labels": [],
+            "properties": {},
+            "style": {}
+        },
+        {
+            "id": "n6",
+            "position": {
+                "x": 257.846948637628,
+                "y": -394.00000000000006
+            },
+            "caption": "ForeignGroup",
+            "labels": [],
+            "properties": {},
+            "style": {}
+        },
+        {
+            "id": "n7",
+            "position": {
+                "x": 532,
+                "y": -615.2823380032228
+            },
+            "caption": "ForeignUser B",
+            "labels": [],
+            "properties": {},
+            "style": {}
+        },
+        {
+            "id": "n8",
+            "position": {
+                "x": 264.5,
+                "y": 78.44119700822489
+            },
+            "caption": "LocalOU B",
+            "labels": [],
+            "properties": {},
+            "style": {}
+        }
+    ],
+    "relationships": [
+        {
+            "id": "n0",
+            "fromId": "n0",
+            "toId": "n1",
+            "type": "GPLink",
+            "properties": {},
+            "style": {}
+        },
+        {
+            "id": "n1",
+            "fromId": "n1",
+            "toId": "n2",
+            "type": "Contains",
+            "properties": {},
+            "style": {}
+        },
+        {
+            "id": "n3",
+            "fromId": "n2",
+            "toId": "n4",
+            "type": "Contains",
+            "properties": {},
+            "style": {}
+        },
+        {
+            "id": "n4",
+            "fromId": "n5",
+            "toId": "n0",
+            "type": "GenericAll",
+            "properties": {},
+            "style": {}
+        },
+        {
+            "id": "n6",
+            "fromId": "n4",
+            "toId": "n3",
+            "type": "AdminTo",
+            "properties": {},
+            "style": {}
+        },
+        {
+            "id": "n7",
+            "fromId": "n5",
+            "toId": "n6",
+            "type": "MemberOf",
+            "properties": {},
+            "style": {}
+        },
+        {
+            "id": "n8",
+            "fromId": "n6",
+            "toId": "n4",
+            "type": "MemberOf",
+            "properties": {},
+            "style": {}
+        },
+        {
+            "id": "n9",
+            "fromId": "n7",
+            "toId": "n3",
+            "type": "AdminTo",
+            "properties": {},
+            "style": {}
+        },
+        {
+            "id": "n10",
+            "fromId": "n7",
+            "toId": "n4",
+            "type": "MemberOf",
+            "properties": {},
+            "style": {}
+        },
+        {
+            "id": "n11",
+            "fromId": "n6",
+            "toId": "n0",
+            "type": "GenericAll",
+            "properties": {},
+            "style": {}
+        },
+        {
+            "id": "n12",
+            "type": "GPLink",
+            "style": {},
+            "properties": {},
+            "fromId": "n0",
+            "toId": "n8"
+        }
+    ]
+}

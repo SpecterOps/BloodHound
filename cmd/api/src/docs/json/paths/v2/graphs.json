@@ -1,0 +1,140 @@
+{
+  "/api/v2/graphs/shortest-path": {
+    "get": {
+      "description": "A graph of the shortest path from `start_node` to `end_node`.",
+      "tags": ["Graphs", "Community", "Enterprise"],
+      "summary": "Get the shortest path graph",
+      "parameters": [
+        {
+          "$ref": "#/definitions/parameters.PreferHeader"
+        },
+        {
+          "name": "start_node",
+          "description": "The start node objectId",
+          "in": "query",
+          "required": true
+        },
+        {
+          "name": "end_node",
+          "description": "The end node objectId",
+          "in": "query",
+          "required": true
+        },
+        {
+          "name": "relationship_kinds",
+          "description": "Filter the kinds of relationships traversed between the start node and the end node.",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "$ref": "#/components/schemas/predicates.ContainsPredicate"
+          },
+          "examples": {
+            "in": {
+              "value": "in:Contains,GetChangesAll,MemberOf",
+              "summary": "Only traverse specific kinds of relationships"
+            },
+            "nin": {
+              "value": "nin:LocalToComputer,MemberOfLocalGroup",
+              "summary": "Exclude traversing specific kinds of relationships"
+            }
+          }
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "A graph of the shortest path from `start_node` to `end_node`.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/definitions/graphs.GraphResponse"
+              }
+            }
+          }
+        },
+        "Error": {
+          "$ref": "#/components/responses/defaultError"
+        }
+      }
+    }
+  },
+  "/api/v2/graphs/cypher": {
+    "post": {
+      "description": "Runs a manual cypher query directly against the database",
+      "tags": ["Graphs", "Community", "Enterprise"],
+      "summary": "Runs a manual cypher query directly against the database",
+      "requestBody": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "properties": {
+                "query": {
+                  "type": "string"
+                },
+                "include_properties": { "type": "boolean" }
+              }
+            }
+          }
+        }
+      },
+      "responses": {
+        "200": {
+          "description": "Returns graph data related to the cypher query sent in the response body that contains a collection of nodes and edges",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/definitions/graphs.GraphResponse"
+              }
+            }
+          }
+        },
+        "Error": {
+          "$ref": "#/components/responses/defaultError"
+        }
+      }
+    }
+  },
+  "/api/v2/graphs/edge-composition": {
+    "get": {
+      "description": "Returns a graph representing the various nodes and edges that make up the complex post-processed edge.\n\n<b>Early Access Notice:</b> This API endpoint is in early access and may undergo changes. Exercise caution when integrating, and avoid critical use until it reaches stable status.",
+      "tags": ["Graphs", "Community", "Enterprise"],
+      "parameters": [
+        {
+          "$ref": "#/definitions/parameters.PreferHeader"
+        },
+        {
+          "name": "source_node",
+          "description": "The ID of the starting node.",
+          "in": "query",
+          "required": true
+        },
+        {
+          "name": "target_node",
+          "description": "The ID of the ending node.",
+          "in": "query",
+          "required": true
+        },
+        {
+          "name": "edge_type",
+          "description": "The type of edge to show the composition for. \n\n<b>NOTE:</b> Currently only the `GoldenCert`, `ADCSESC1`, and `ADCSESC3` edges are supported. More edges will be supported with future updates.",
+          "in": "query",
+          "required": true
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Returns graph data that contains a collection of nodes and edges related to the composition of the edge queried.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/definitions/graphs.GraphResponse"
+              }
+            }
+          }
+        },
+        "Error": {
+          "$ref": "#/components/responses/defaultError"
+        }
+      }
+    }
+  }
+}

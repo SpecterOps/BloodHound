@@ -1,0 +1,978 @@
+{
+  "style": {
+    "font-family": "sans-serif",
+    "background-color": "#ffffff",
+    "background-image": "",
+    "background-size": "100%",
+    "node-color": "#ffffff",
+    "border-width": 4,
+    "border-color": "#000000",
+    "radius": 50,
+    "node-padding": 5,
+    "node-margin": 2,
+    "outside-position": "auto",
+    "node-icon-image": "",
+    "node-background-image": "",
+    "icon-position": "inside",
+    "icon-size": 64,
+    "caption-position": "inside",
+    "caption-max-width": 200,
+    "caption-color": "#000000",
+    "caption-font-size": 50,
+    "caption-font-weight": "normal",
+    "label-position": "inside",
+    "label-display": "pill",
+    "label-color": "#000000",
+    "label-background-color": "#ffffff",
+    "label-border-color": "#000000",
+    "label-border-width": 4,
+    "label-font-size": 40,
+    "label-padding": 5,
+    "label-margin": 4,
+    "directionality": "directed",
+    "detail-position": "inline",
+    "detail-orientation": "parallel",
+    "arrow-width": 5,
+    "arrow-color": "#000000",
+    "margin-start": 5,
+    "margin-end": 5,
+    "margin-peer": 20,
+    "attachment-start": "normal",
+    "attachment-end": "normal",
+    "relationship-icon-image": "",
+    "type-color": "#000000",
+    "type-background-color": "#ffffff",
+    "type-border-color": "#000000",
+    "type-border-width": 0,
+    "type-font-size": 16,
+    "type-padding": 5,
+    "property-position": "outside",
+    "property-alignment": "colon",
+    "property-color": "#000000",
+    "property-font-size": 16,
+    "property-font-weight": "normal"
+  },
+  "nodes": [
+    {
+      "id": "n0",
+      "position": {
+        "x": 17,
+        "y": -104.9709448647974
+      },
+      "caption": "Tenant",
+      "style": {},
+      "labels": [],
+      "properties": {}
+    },
+    {
+      "id": "n1",
+      "position": {
+        "x": 17,
+        "y": 380
+      },
+      "caption": "User",
+      "style": {},
+      "labels": [],
+      "properties": {}
+    },
+    {
+      "id": "n2",
+      "position": {
+        "x": -156.22677866231288,
+        "y": 680.0375818746144
+      },
+      "caption": "App",
+      "style": {},
+      "labels": [],
+      "properties": {}
+    },
+    {
+      "id": "n3",
+      "position": {
+        "x": 131.87957700031453,
+        "y": 680.0375818746144
+      },
+      "caption": "Service Principal",
+      "style": {},
+      "labels": [],
+      "properties": {}
+    },
+    {
+      "id": "n4",
+      "position": {
+        "x": 419.9859326629419,
+        "y": 46.27414101439843
+      },
+      "caption": "Group A1",
+      "style": {},
+      "labels": [],
+      "properties": {}
+    },
+    {
+      "id": "n5",
+      "position": {
+        "x": 694.4135525503334,
+        "y": -112.16671920065536
+      },
+      "caption": "Group A2",
+      "labels": [],
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n6",
+      "position": {
+        "x": 987.0626081398748,
+        "y": -281.1277302233668
+      },
+      "caption": "Group A3",
+      "labels": [],
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n7",
+      "position": {
+        "x": 1255.6666463861652,
+        "y": -436.2063440102832
+      },
+      "caption": "Group A4",
+      "labels": [],
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n8",
+      "position": {
+        "x": 1571.176143466358,
+        "y": -436.2063440102832
+      },
+      "caption": "Group A5",
+      "labels": [],
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n9",
+      "position": {
+        "x": 419.9859326629419,
+        "y": 204.71500122945227
+      },
+      "caption": "Group B1",
+      "labels": [],
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n10",
+      "position": {
+        "x": 694.4135525503334,
+        "y": 46.27414101439845
+      },
+      "caption": "Group B2",
+      "labels": [],
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n11",
+      "position": {
+        "x": 987.0626081398748,
+        "y": -122.68687000831301
+      },
+      "caption": "Group B3",
+      "labels": [],
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n12",
+      "position": {
+        "x": 1255.6666463861652,
+        "y": -277.7654837952294
+      },
+      "caption": "Group B4",
+      "labels": [],
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n14",
+      "position": {
+        "x": 419.9859326629419,
+        "y": 363.1558614445062
+      },
+      "caption": "Group C1",
+      "labels": [],
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n15",
+      "position": {
+        "x": 694.4135525503334,
+        "y": 204.71500122945267
+      },
+      "caption": "Group C2",
+      "labels": [],
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n16",
+      "position": {
+        "x": 987.0626081398748,
+        "y": 35.75399020674115
+      },
+      "caption": "Group C3",
+      "labels": [],
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n19",
+      "position": {
+        "x": 419.9859326629419,
+        "y": 521.5967216595606
+      },
+      "caption": "Group D1",
+      "labels": [],
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n20",
+      "position": {
+        "x": 694.4135525503334,
+        "y": 363.155861444507
+      },
+      "caption": "Group D2",
+      "labels": [],
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n21",
+      "position": {
+        "x": 419.9859326629419,
+        "y": 680.0375818746144
+      },
+      "caption": "Group E1",
+      "labels": [],
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n22",
+      "position": {
+        "x": -1554.4852201151355,
+        "y": 680.0375818746144
+      },
+      "caption": "VM 1",
+      "style": {},
+      "labels": [],
+      "properties": {}
+    },
+    {
+      "id": "n23",
+      "position": {
+        "x": -1265.7450492587277,
+        "y": 680.0375818746144
+      },
+      "caption": "VM 2",
+      "labels": [],
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n24",
+      "position": {
+        "x": -977.00487840232,
+        "y": 680.0375818746144
+      },
+      "caption": "VM 3",
+      "labels": [],
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n25",
+      "position": {
+        "x": -688.2647075459122,
+        "y": 680.0375818746144
+      },
+      "caption": "VM 4",
+      "labels": [],
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n26",
+      "position": {
+        "x": -399.5245366895044,
+        "y": 680.0375818746144
+      },
+      "caption": "VM 5",
+      "labels": [],
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n27",
+      "position": {
+        "x": -1554.4852201151355,
+        "y": -104.9709448647974
+      },
+      "caption": "Role 1",
+      "labels": [],
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n28",
+      "position": {
+        "x": -1265.7450492587277,
+        "y": -104.9709448647974
+      },
+      "caption": "Role 2",
+      "labels": [],
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n29",
+      "position": {
+        "x": -977.00487840232,
+        "y": -104.9709448647974
+      },
+      "caption": "Role 3",
+      "labels": [],
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n30",
+      "position": {
+        "x": -688.2647075459122,
+        "y": -104.9709448647974
+      },
+      "caption": "Role 4",
+      "labels": [],
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n31",
+      "position": {
+        "x": -399.5245366895044,
+        "y": -104.9709448647974
+      },
+      "caption": "Role 5",
+      "labels": [],
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n32",
+      "position": {
+        "x": -255.65105823901047,
+        "y": -262.3861067339264
+      },
+      "caption": "",
+      "style": {},
+      "labels": [
+        "5 Roles",
+        "5 VMs",
+        "15 Groups"
+      ],
+      "properties": {
+        "Not Represented": ""
+      }
+    },
+    {
+      "id": "n33",
+      "position": {
+        "x": 1413.4213949262617,
+        "y": 473.42876927773085
+      },
+      "caption": "",
+      "labels": [
+        "5 Roles"
+      ],
+      "properties": {
+        "Not Represented": ""
+      },
+      "style": {}
+    }
+  ],
+  "relationships": [
+    {
+      "id": "n0",
+      "type": "AZPrivilegedRoleAdmin",
+      "style": {},
+      "properties": {},
+      "fromId": "n1",
+      "toId": "n0"
+    },
+    {
+      "id": "n1",
+      "type": "AZContains",
+      "style": {},
+      "properties": {},
+      "fromId": "n0",
+      "toId": "n1"
+    },
+    {
+      "id": "n2",
+      "type": "AZMemberOf",
+      "style": {},
+      "properties": {},
+      "fromId": "n1",
+      "toId": "n4"
+    },
+    {
+      "id": "n3",
+      "type": "AZMemberOf",
+      "style": {},
+      "properties": {},
+      "fromId": "n1",
+      "toId": "n9"
+    },
+    {
+      "id": "n4",
+      "type": "AZMemberOf",
+      "style": {},
+      "properties": {},
+      "fromId": "n1",
+      "toId": "n14"
+    },
+    {
+      "id": "n5",
+      "type": "AZMemberOf",
+      "style": {},
+      "properties": {},
+      "fromId": "n1",
+      "toId": "n19"
+    },
+    {
+      "id": "n6",
+      "type": "AZMemberOf",
+      "style": {},
+      "properties": {},
+      "fromId": "n1",
+      "toId": "n21"
+    },
+    {
+      "id": "n7",
+      "type": "AZMemberOf",
+      "style": {},
+      "properties": {},
+      "fromId": "n4",
+      "toId": "n5"
+    },
+    {
+      "id": "n8",
+      "type": "AZMemberOf",
+      "style": {},
+      "properties": {},
+      "fromId": "n9",
+      "toId": "n10"
+    },
+    {
+      "id": "n9",
+      "type": "AZMemberOf",
+      "style": {},
+      "properties": {},
+      "fromId": "n14",
+      "toId": "n15"
+    },
+    {
+      "id": "n10",
+      "type": "AZMemberOf",
+      "style": {},
+      "properties": {},
+      "fromId": "n19",
+      "toId": "n20"
+    },
+    {
+      "id": "n11",
+      "type": "AZMemberOf",
+      "style": {},
+      "properties": {},
+      "fromId": "n5",
+      "toId": "n6"
+    },
+    {
+      "id": "n12",
+      "type": "AZMemberOf",
+      "style": {},
+      "properties": {},
+      "fromId": "n10",
+      "toId": "n11"
+    },
+    {
+      "id": "n13",
+      "type": "AZMemberOf",
+      "style": {},
+      "properties": {},
+      "fromId": "n15",
+      "toId": "n16"
+    },
+    {
+      "id": "n14",
+      "type": "AZMemberOf",
+      "style": {},
+      "properties": {},
+      "fromId": "n11",
+      "toId": "n12"
+    },
+    {
+      "id": "n15",
+      "type": "AZMemberOf",
+      "style": {},
+      "properties": {},
+      "fromId": "n6",
+      "toId": "n7"
+    },
+    {
+      "id": "n16",
+      "type": "AZMemberOf",
+      "style": {},
+      "properties": {},
+      "fromId": "n7",
+      "toId": "n8"
+    },
+    {
+      "id": "n17",
+      "type": "AZOwner",
+      "style": {},
+      "properties": {},
+      "fromId": "n1",
+      "toId": "n3"
+    },
+    {
+      "id": "n18",
+      "type": "AZOwner",
+      "style": {},
+      "properties": {},
+      "fromId": "n1",
+      "toId": "n2"
+    },
+    {
+      "id": "n19",
+      "type": "AZRunsAs",
+      "style": {},
+      "properties": {},
+      "fromId": "n2",
+      "toId": "n3"
+    },
+    {
+      "id": "n20",
+      "type": "AZContributor",
+      "style": {},
+      "properties": {},
+      "fromId": "n27",
+      "toId": "n22"
+    },
+    {
+      "id": "n25",
+      "type": "AZContributor",
+      "style": {},
+      "properties": {},
+      "fromId": "n28",
+      "toId": "n22"
+    },
+    {
+      "id": "n27",
+      "type": "AZContributor",
+      "style": {},
+      "properties": {},
+      "fromId": "n29",
+      "toId": "n22"
+    },
+    {
+      "id": "n28",
+      "type": "AZContributor",
+      "style": {},
+      "properties": {},
+      "fromId": "n30",
+      "toId": "n22"
+    },
+    {
+      "id": "n29",
+      "type": "AZContributor",
+      "style": {},
+      "properties": {},
+      "fromId": "n31",
+      "toId": "n22"
+    },
+    {
+      "id": "n30",
+      "type": "AZContributor",
+      "style": {},
+      "properties": {},
+      "fromId": "n28",
+      "toId": "n24"
+    },
+    {
+      "id": "n31",
+      "type": "AZContributor",
+      "style": {},
+      "properties": {},
+      "fromId": "n27",
+      "toId": "n24"
+    },
+    {
+      "id": "n32",
+      "type": "AZContributor",
+      "style": {},
+      "properties": {},
+      "fromId": "n29",
+      "toId": "n24"
+    },
+    {
+      "id": "n33",
+      "type": "AZContributor",
+      "style": {},
+      "properties": {},
+      "fromId": "n30",
+      "toId": "n24"
+    },
+    {
+      "id": "n34",
+      "type": "AZContributor",
+      "style": {},
+      "properties": {},
+      "fromId": "n31",
+      "toId": "n24"
+    },
+    {
+      "id": "n35",
+      "type": "AZContributor",
+      "style": {},
+      "properties": {},
+      "fromId": "n28",
+      "toId": "n25"
+    },
+    {
+      "id": "n36",
+      "type": "AZContributor",
+      "style": {},
+      "properties": {},
+      "fromId": "n27",
+      "toId": "n25"
+    },
+    {
+      "id": "n37",
+      "type": "AZContributor",
+      "style": {},
+      "properties": {},
+      "fromId": "n29",
+      "toId": "n25"
+    },
+    {
+      "id": "n38",
+      "type": "AZContributor",
+      "style": {},
+      "properties": {},
+      "fromId": "n30",
+      "toId": "n25"
+    },
+    {
+      "id": "n39",
+      "type": "AZContributor",
+      "style": {},
+      "properties": {},
+      "fromId": "n31",
+      "toId": "n25"
+    },
+    {
+      "id": "n40",
+      "type": "AZContributor",
+      "style": {},
+      "properties": {},
+      "fromId": "n29",
+      "toId": "n26"
+    },
+    {
+      "id": "n41",
+      "type": "AZContributor",
+      "style": {},
+      "properties": {},
+      "fromId": "n27",
+      "toId": "n26"
+    },
+    {
+      "id": "n42",
+      "type": "AZContributor",
+      "style": {},
+      "properties": {},
+      "fromId": "n28",
+      "toId": "n26"
+    },
+    {
+      "id": "n43",
+      "type": "AZContributor",
+      "style": {},
+      "properties": {},
+      "fromId": "n30",
+      "toId": "n26"
+    },
+    {
+      "id": "n44",
+      "type": "AZContributor",
+      "style": {},
+      "properties": {},
+      "fromId": "n31",
+      "toId": "n26"
+    },
+    {
+      "id": "n45",
+      "type": "AZContributor",
+      "style": {},
+      "properties": {},
+      "fromId": "n31",
+      "toId": "n23"
+    },
+    {
+      "id": "n46",
+      "type": "AZContributor",
+      "style": {},
+      "properties": {},
+      "fromId": "n27",
+      "toId": "n23"
+    },
+    {
+      "id": "n47",
+      "type": "AZContributor",
+      "style": {},
+      "properties": {},
+      "fromId": "n28",
+      "toId": "n23"
+    },
+    {
+      "id": "n48",
+      "type": "AZContributor",
+      "style": {},
+      "properties": {},
+      "fromId": "n29",
+      "toId": "n23"
+    },
+    {
+      "id": "n49",
+      "type": "AZContributor",
+      "style": {},
+      "properties": {},
+      "fromId": "n30",
+      "toId": "n23"
+    },
+    {
+      "id": "n50",
+      "type": "AZHasRole",
+      "style": {},
+      "properties": {},
+      "fromId": "n1",
+      "toId": "n31"
+    },
+    {
+      "id": "n51",
+      "type": "AZHasRole",
+      "style": {},
+      "properties": {},
+      "fromId": "n1",
+      "toId": "n30"
+    },
+    {
+      "id": "n52",
+      "type": "AZHasRole",
+      "style": {},
+      "properties": {},
+      "fromId": "n1",
+      "toId": "n29"
+    },
+    {
+      "id": "n53",
+      "type": "AZHasRole",
+      "style": {},
+      "properties": {},
+      "fromId": "n1",
+      "toId": "n28"
+    },
+    {
+      "id": "n54",
+      "type": "AZHasRole",
+      "style": {},
+      "properties": {},
+      "fromId": "n1",
+      "toId": "n27"
+    },
+    {
+      "id": "n55",
+      "type": "AZContributor",
+      "style": {},
+      "properties": {},
+      "fromId": "n1",
+      "toId": "n26"
+    },
+    {
+      "id": "n56",
+      "type": "AZContributor",
+      "style": {},
+      "properties": {},
+      "fromId": "n1",
+      "toId": "n25"
+    },
+    {
+      "id": "n57",
+      "type": "AZContributor",
+      "style": {},
+      "properties": {},
+      "fromId": "n1",
+      "toId": "n24"
+    },
+    {
+      "id": "n58",
+      "type": "AZContributor",
+      "style": {},
+      "properties": {},
+      "fromId": "n1",
+      "toId": "n23"
+    },
+    {
+      "id": "n59",
+      "type": "AZContributor",
+      "style": {},
+      "properties": {},
+      "fromId": "n1",
+      "toId": "n22"
+    },
+    {
+      "id": "n60",
+      "type": "AZContains",
+      "style": {},
+      "properties": {},
+      "fromId": "n0",
+      "toId": "n32"
+    },
+    {
+      "id": "n61",
+      "type": "AZHasRole",
+      "style": {},
+      "properties": {},
+      "fromId": "n21",
+      "toId": "n33"
+    },
+    {
+      "id": "n62",
+      "type": "AZHasRole",
+      "style": {},
+      "properties": {},
+      "fromId": "n4",
+      "toId": "n33"
+    },
+    {
+      "id": "n63",
+      "type": "AZHasRole",
+      "style": {},
+      "properties": {},
+      "fromId": "n5",
+      "toId": "n33"
+    },
+    {
+      "id": "n64",
+      "type": "AZHasRole",
+      "style": {},
+      "properties": {},
+      "fromId": "n6",
+      "toId": "n33"
+    },
+    {
+      "id": "n65",
+      "type": "AZHasRole",
+      "style": {},
+      "properties": {},
+      "fromId": "n7",
+      "toId": "n33"
+    },
+    {
+      "id": "n66",
+      "type": "AZHasRole",
+      "style": {},
+      "properties": {},
+      "fromId": "n8",
+      "toId": "n33"
+    },
+    {
+      "id": "n67",
+      "type": "AZHasRole",
+      "style": {},
+      "properties": {},
+      "fromId": "n9",
+      "toId": "n33"
+    },
+    {
+      "id": "n68",
+      "type": "AZHasRole",
+      "style": {},
+      "properties": {},
+      "fromId": "n10",
+      "toId": "n33"
+    },
+    {
+      "id": "n69",
+      "type": "AZHasRole",
+      "style": {},
+      "properties": {},
+      "fromId": "n11",
+      "toId": "n33"
+    },
+    {
+      "id": "n70",
+      "type": "AZHasRole",
+      "style": {},
+      "properties": {},
+      "fromId": "n12",
+      "toId": "n33"
+    },
+    {
+      "id": "n71",
+      "type": "AZHasRole",
+      "style": {},
+      "properties": {},
+      "fromId": "n14",
+      "toId": "n33"
+    },
+    {
+      "id": "n72",
+      "type": "AZHasRole",
+      "style": {},
+      "properties": {},
+      "fromId": "n15",
+      "toId": "n33"
+    },
+    {
+      "id": "n73",
+      "type": "AZHasRole",
+      "style": {},
+      "properties": {},
+      "fromId": "n16",
+      "toId": "n33"
+    },
+    {
+      "id": "n74",
+      "type": "AZHasRole",
+      "style": {},
+      "properties": {},
+      "fromId": "n19",
+      "toId": "n33"
+    },
+    {
+      "id": "n75",
+      "type": "AZHasRole",
+      "style": {},
+      "properties": {},
+      "fromId": "n20",
+      "toId": "n33"
+    }
+  ]
+}

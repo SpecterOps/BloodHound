@@ -1,0 +1,137 @@
+{
+    "/api/v2/saved-queries": {
+        "get": {
+            "description": "List saved queries",
+            "tags": [
+                "Cypher",
+                "Community",
+                "Enterprise"
+            ],
+            "summary": "Get all saved queries for the current user",
+            "parameters": [
+                {
+                    "$ref": "#/definitions/parameter.PreferHeader"
+                },
+                {
+                    "type": "integer",
+                    "description": "Paging Skip",
+                    "name": "skip",
+                    "in": "query"
+                },
+                {
+                    "type": "integer",
+                    "description": "Paging Limit",
+                    "name": "limit",
+                    "in": "query"
+                },
+                {
+                    "type": "string",
+                    "description": "Sort by column. Can be used multiple times; prepend hyphen for descending order. Sortable columns are user_id, name, query, id, created_at, updated_at, deleted_at.",
+                    "name": "sort_by",
+                    "in": "query",
+                    "required": false
+                },
+                {
+                    "type": "string",
+                    "description": "Filter results by column value. Valid filter predicates are eq, neq",
+                    "name": "name",
+                    "in": "query",
+                    "required": false
+                },
+                {
+                    "type": "string",
+                    "description": "Filter results by column value. Valid filter predicates are eq, neq",
+                    "name": "query",
+                    "in": "query",
+                    "required": false
+                },
+                {
+                    "type": "string",
+                    "description": "Filter results by column value. Valid filter predicates are eq, neq",
+                    "name": "user_id",
+                    "in": "query",
+                    "required": false
+                }
+            ],
+            "responses": {
+                "200": {
+                    "description": "OK",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/definitions/api.BasicResponse"
+                            }
+                        }
+                    }
+                },
+                "Error": {
+                    "$ref": "#/components/responses/defaultError"
+                }
+            }
+        },
+        "post": {
+            "description": "Create a new saved query",
+            "tags": [
+                "Cypher",
+                "Community",
+                "Enterprise"
+            ],
+            "summary": "Create a User saved query",
+            "parameters": [
+                {
+                    "$ref": "#/definitions/parameter.PreferHeader"
+                }
+            ],
+            "requestBody": {
+                "description": "The request body for creating a saved query",
+                "required": true,
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "$ref": "#/definitions/v2.CreateSavedQueryRequest"
+                        }
+                    }
+                }
+            },
+            "responses": {
+                "201": {
+                    "description": "Created",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/definitions/api.BasicResponse"
+                            }
+                        }
+                    }
+                },
+                "Error": {
+                    "$ref": "#/components/responses/defaultError"
+                }
+            }
+        }
+    },
+    "/api/v2/saved-queries/{saved_query_id}": {
+        "delete": {
+            "description": "Delete an existing saved query",
+            "tags": [
+                "Cypher",
+                "Community",
+                "Enterprise"
+            ],
+            "summary": "Delete a Saved query by its ID",
+            "parameters": [
+                {
+                    "$ref": "#/definitions/parameter.PreferHeader"
+                }
+            ],
+            "responses": {
+                "204": {
+                    "description": "No Content"
+                },
+                "Error": {
+                    "$ref": "#/components/responses/defaultError"
+                }
+            }
+        }
+    }
+}

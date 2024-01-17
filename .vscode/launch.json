@@ -1,0 +1,61 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Launch Go file",
+            "type": "go",
+            "request": "launch",
+            "mode": "debug",
+            "program": "${file}"
+        },
+        {
+            "name": "Docker Compose Debug",
+            "type": "go",
+            "host": "localhost",
+            "mode": "remote",
+            "port": 3456,
+            "request": "attach",
+            "substitutePath": [
+                {
+                    "from": "${workspaceFolder}",
+                    "to": "/bloodhound"
+                }
+            ]
+        },
+        {
+            "name": "Debug API Locally",
+            "type": "go",
+            "request": "launch",
+            "mode": "debug",
+            "program": "github.com/specterops/bloodhound/src",
+            "cwd": "${workspaceFolder}",
+            "args": [
+                "-configfile",
+                "${workspaceFolder}/local-harnesses/build.config.json"
+            ]
+        },
+        {
+            "name": "Run Package Integration Tests",
+            "type": "go",
+            "request": "launch",
+            "mode": "test",
+            "program": "${fileDirname}",
+            "buildFlags": "--tags=integration,serial_integration",
+            "showLog": true,
+            "env": {
+                "INTEGRATION_CONFIG_PATH": "${workspaceFolder}/local-harnesses/integration.config.json"
+            }
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Launch Program",
+            "skipFiles": ["<node_internals>/**"],
+            "program": "${workspaceFolder}/start",
+            "outFiles": ["${workspaceFolder}/**/*.js"]
+        }
+    ]
+}

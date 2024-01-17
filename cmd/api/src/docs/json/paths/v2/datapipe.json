@@ -1,0 +1,32 @@
+{
+    "/api/v2/datapipe/status": {
+        "get": {
+            "description": "Gets the current status of the datapipe",
+            "tags": [
+                "Datapipe",
+                "Enterprise"
+            ],
+            "summary": "Get datapipe status",
+            "parameters": [
+                {
+                    "$ref": "#/definitions/parameter.PreferHeader"
+                }
+            ],
+            "responses": {
+                "200": {
+                    "description": "OK",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/definitions/api.BasicResponse"
+                            }
+                        }
+                    }
+                },
+                "Error": {
+                    "$ref": "#/components/responses/defaultError"
+                }
+            }
+        }
+    }
+}

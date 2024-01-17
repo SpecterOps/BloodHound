@@ -1,0 +1,16 @@
+{
+    "go.testTimeout": "10m0s",
+    "go.buildFlags": [
+        "-tags=integration,serial_integration"
+    ],
+    "go.testEnvVars": {
+        "INTEGRATION_CONFIG_PATH": "${workspaceFolder}/local-harnesses/integration.config.json"
+    },
+    "[python]": {
+        "editor.defaultFormatter": "ms-python.black-formatter"
+    },
+    "python.formatting.provider": "none",
+    "python.analysis.extraPaths": [
+        "./packages/python/beagle"
+    ]
+}

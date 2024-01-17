@@ -1,0 +1,124 @@
+{
+    "graphs.GraphResponse": {
+        "type": "object",
+        "properties": {
+            "data": {
+                "$ref": "#/definitions/graphs.Graph"
+            }
+        }
+    },
+    "graphs.Graph": {
+        "type": "object",
+        "properties": {
+            "nodes": {
+                "description": "A map of nodes in the graph indexed by each node's identifier",
+                "type": "object",
+                "additionalProperties": {
+                    "$ref": "#/definitions/graphs.Node"
+                }
+            },
+            "edges": {
+                "description": "A list of edges in the graph",
+                "type": "array",
+                "items": {
+                    "$ref": "#/definitions/graphs.Edge"
+                }
+            }
+        },
+        "example": {
+            "nodes": {
+                "node1": {
+                    "label": "A@TESTLAB.LOCAL",
+                    "kind": "User",
+                    "objectId": "abc123",
+                    "isTierZero": true,
+                    "lastSeen": "2022-12-07T15:09:51.474Z",
+                    "properties": {
+                            "lastseen": "2023-02-03T22:54:21.728Z",
+                            "system_tags": "admin_tier_0"
+                    }
+                },
+                "node2": {
+                    "label": "DOMAIN USERS@TESTLAB.LOCAL",
+                    "kind": "Group",
+                    "objectId": "xyz789",
+                    "isTierZero": false,
+                    "lastSeen": "2022-12-07T15:09:51.474Z",
+                    "properties": {
+                        "lastseen": "2023-02-03T22:54:21.728Z"
+                    }
+                }
+            },
+            "edges": [
+                {
+                    "source": "node1",
+                    "target": "node2",
+                    "label": "MemberOf",
+                    "kind": "MemberOf",
+                    "lastSeen": "2022-12-07T15:09:51.474Z",
+                    "properties": {
+                        "lastseen": "2023-02-03T22:54:21.728Z",
+                        "isacl": false
+                    }
+                }
+            ]
+        }
+    },
+    "graphs.Node": {
+        "type": "object",
+        "properties": {
+            "label": {
+                "type": "string",
+                "description": "The human-readable text that identifies the node"
+            },
+            "kind": {
+                "type": "string",
+                "description": "The kind of asset the node represents"
+            },
+            "objectId": {
+                "type": "string",
+                "description": "The unique object identifier of the node"
+            },
+            "isTierZero": {
+                "type": "boolean",
+                "description": "Indicates if the node has been classified as a tier zero asset"
+            },
+            "lastSeen": {
+                "type": "string",
+                "format": "date-time",
+                "description": "The RFC-3339 datetime of the last time BloodHound was notified of the node's existance."
+            },
+            "properties": {
+                "type": "object",
+                "description": "The node's properties that are stored in the graph database"
+            }
+        }
+    },
+    "graphs.Edge": {
+        "type": "object",
+        "properties": {
+            "source": {
+                "type": "string",
+                "description": "The identifier of the first node in the path segment"
+            },
+            "target": {
+                "type": "string",
+                "description": "The identifier of the second node in the path segment"
+            },
+            "label": {
+                "type": "string",
+                "description": "The human-readable text that identifies the edge"
+            },
+            "kind": {
+                "type": "string"
+            },
+            "lastSeen": {
+                "$ref": "#/definitions/properties.LastSeen"
+            },
+            "properties": {
+                "type": "object",
+                "description": "The edge's properties that are stored in the graph database"
+            }
+        }
+    }
+}

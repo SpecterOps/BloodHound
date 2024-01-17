@@ -1,0 +1,239 @@
+{
+  "/api/v2/ad-domains/{domain_id}/data-quality-stats": {
+    "parameters": [
+      {
+        "type": "string",
+        "description": "Domain ID",
+        "name": "domain_id",
+        "in": "path",
+        "required": true
+      }
+    ],
+    "get": {
+      "description": "Time series list of data quality stats for a given AD domain",
+      "tags": [
+        "Data Quality Stats",
+        "Community",
+        "Enterprise"
+      ],
+      "summary": "Time series list of data quality stats for a given AD domain",
+      "parameters": [
+        {
+          "$ref": "#/definitions/parameters.PreferHeader"
+        },
+        {
+          "type": "string",
+          "description": "Sort by column. Can be used multiple times; prepend hyphen for descending order. Sortable columns are created_at, updated_at.",
+          "name": "sort_by",
+          "in": "query",
+          "required": false
+        },
+        {
+          "type": "string",
+          "description": "Beginning datetime of range (inclusive) in RFC-3339 format; Defaults to current datetime minus 30 days",
+          "name": "start",
+          "in": "query",
+          "format": "date-time"
+        },
+        {
+          "type": "string",
+          "description": "Ending datetime of range (exclusive) in RFC-3339 format; Defaults to current datetime",
+          "name": "end",
+          "in": "query",
+          "format": "date-time"
+        },
+        {
+          "type": "integer",
+          "description": "Paging Skip",
+          "name": "skip",
+          "in": "query"
+        },
+        {
+          "type": "integer",
+          "description": "Paging Limit",
+          "name": "limit",
+          "in": "query"
+        },
+        {
+          "type": "integer",
+          "description": "Number of records per page",
+          "name": "count",
+          "in": "query"
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "OK",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/definitions/v2.ListAdDataQualityStatsResponse"
+              }
+            }
+          }
+        },
+        "Error": {
+          "$ref": "#/components/responses/defaultError"
+        }
+      }
+    }
+  },
+  "/api/v2/azure-tenants/{tenant_id}/data-quality-stats": {
+    "parameters": [
+      {
+        "type": "string",
+        "description": "Tenant ID",
+        "name": "tenant_id",
+        "in": "path",
+        "required": true
+      }
+    ],
+    "get": {
+      "description": "Time series list of data quality stats for a given Azure tenant",
+      "tags": [
+        "Data Quality Stats",
+        "Community",
+        "Enterprise"
+      ],
+      "summary": "Time series list of data quality stats for a given Azure tenant",
+      "parameters": [
+        {
+          "$ref": "#/definitions/parameters.PreferHeader"
+        },
+        {
+          "type": "string",
+          "description": "Sort by column. Can be used multiple times; prepend hyphen for descending order. Sortable columns are created_at, updated_at.",
+          "name": "sort_by",
+          "in": "query",
+          "required": false
+        },
+        {
+          "type": "string",
+          "description": "Beginning datetime of range (inclusive) in RFC-3339 format; Defaults to current datetime minus 30 days",
+          "name": "start",
+          "in": "query",
+          "format": "date-time"
+        },
+        {
+          "type": "string",
+          "description": "Ending datetime of range (exclusive) in RFC-3339 format; Defaults to current datetime",
+          "name": "end",
+          "in": "query",
+          "format": "date-time"
+        },
+        {
+          "type": "integer",
+          "description": "Paging Skip",
+          "name": "skip",
+          "in": "query"
+        },
+        {
+          "type": "integer",
+          "description": "Paging Limit",
+          "name": "limit",
+          "in": "query"
+        },
+        {
+          "type": "integer",
+          "description": "Number of records per page",
+          "name": "count",
+          "in": "query"
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "OK",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/definitions/v2.ListAzureDataQualityStatsResponse"
+              }
+            }
+          }
+        },
+        "Error": {
+          "$ref": "#/components/responses/defaultError"
+        }
+      }
+    }
+  },
+  "/api/v2/platform/{platform_id}/data-quality-stats": {
+    "parameters": [
+      {
+        "type": "string",
+        "description": "Platform ID",
+        "name": "platform_id",
+        "in": "path",
+        "required": true
+      }
+    ],
+    "get": {
+      "description": "Time series list of aggregate data quality stats for a given platform",
+      "tags": [
+        "Data Quality Stats",
+        "Community",
+        "Enterprise"
+      ],
+      "summary": "Time series list of aggregate data quality stats for a given platform",
+      "parameters": [
+        {
+          "$ref": "#/definitions/parameters.PreferHeader"
+        },
+        {
+          "type": "string",
+          "description": "Sort by column. Can be used multiple times; prepend hyphen for descending order. Sortable columns are created_at, updated_at.",
+          "name": "sort_by",
+          "in": "query",
+          "required": false
+        },
+        {
+          "type": "string",
+          "description": "Beginning datetime of range (inclusive) in RFC-3339 format; Defaults to current datetime minus 30 days",
+          "name": "start",
+          "in": "query",
+          "format": "date-time"
+        },
+        {
+          "type": "string",
+          "description": "Ending datetime of range (exclusive) in RFC-3339 format; Defaults to current datetime",
+          "name": "end",
+          "in": "query",
+          "format": "date-time"
+        },
+        {
+          "type": "integer",
+          "description": "Paging Skip",
+          "name": "skip",
+          "in": "query"
+        },
+        {
+          "type": "integer",
+          "description": "Paging Limit",
+          "name": "limit",
+          "in": "query"
+        },
+        {
+          "type": "integer",
+          "description": "Number of records per page",
+          "name": "count",
+          "in": "query"
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "OK",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/definitions/api.ResponseWrapper"
+              }
+            }
+          }
+        },
+        "Error": {
+          "$ref": "#/components/responses/defaultError"
+        }
+      }
+    }
+  }
+}

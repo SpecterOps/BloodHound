@@ -1,0 +1,7 @@
+{
+    "predicates.Contains": {
+        "type": "string",
+        "pattern": "^(in|nin):(\\w+)(,\\s*\\w+)*$",
+        "description": "The Contains predicate checks a property against the values in a given comma separated list.\n<table>\n  <thead>\n    <tr>\n      <th>Operator</th>\n      <th>Description</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <td><code>in</code></td>\n      <td>Checks if the property matches an element in the given comma separated list.</td>\n    </tr>\n    <tr>\n      <td><code>nin</code></td>\n      <td>Checks if the property does not match an element in the given comma separated list.</td>\n    </tr>\n  </tbody>\n</table>"
+    }
+}

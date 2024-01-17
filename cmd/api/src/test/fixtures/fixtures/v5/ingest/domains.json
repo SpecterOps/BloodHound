@@ -1,0 +1,181 @@
+{
+    "meta": {
+        "methods": 46067,
+        "type": "domains",
+        "count": 5
+    },
+    "data": [
+        {
+            "Properties": {
+                "domain": "TESTLAB.LOCAL",
+                "name": "TESTLAB.LOCAL",
+                "distinguishedname": "DC\u003dTESTLAB,DC\u003dLOCAL",
+                "domainsid": "S-1-5-21-3130019616-2776909439-2417379446",
+                "collected": true,
+                "whencreated": 1568630533,
+                "functionallevel": "2012 R2"
+            },
+            "ChildObjects": [
+                {
+                    "ObjectIdentifier": "AB616901-D423-4B9A-B68F-D24CEE1E36EF",
+                    "ObjectType": "Container"
+                },
+                {
+                    "ObjectIdentifier": "0DE400CD-2FF3-46E0-8A26-2C917B403C65",
+                    "ObjectType": "OU"
+                },
+                {
+                    "ObjectIdentifier": "629289D5-75F1-4122-B30E-3D823AD0E83C",
+                    "ObjectType": "Container"
+                },
+                {
+                    "ObjectIdentifier": "9AC9B1D2-469D-4C28-A397-1FD3C7ED2B23",
+                    "ObjectType": "Container"
+                },
+                {
+                    "ObjectIdentifier": "2A374493-816A-4193-BEFD-D2F4132C6DCA",
+                    "ObjectType": "OU"
+                },
+                {
+                    "ObjectIdentifier": "ECAD920E-8EB1-4E31-A80E-DD36367F81F4",
+                    "ObjectType": "Container"
+                }
+            ],
+            "Trusts": [
+                {
+                    "TargetDomainSid": "S-1-5-21-3084884204-958224920-2707782874",
+                    "TargetDomainName": "EXTERNAL.LOCAL",
+                    "IsTransitive": true,
+                    "SidFilteringEnabled": true,
+                    "TrustDirection": "Bidirectional",
+                    "TrustType": "Unknown"
+                },
+                {
+                    "TargetDomainSid": "S-1-5-21-3084884204-958224920-2707782873",
+                    "TargetDomainName": "TEST.LOCAL",
+                    "IsTransitive": true,
+                    "SidFilteringEnabled": true,
+                    "TrustDirection": "Outbound",
+                    "TrustType": "Unknown"
+                }
+            ],
+            "Links": [
+                {
+                    "IsEnforced": false,
+                    "GUID": "DF4B5337-3DF7-4504-B1B2-B5674186EE67"
+                },
+                {
+                    "IsEnforced": false,
+                    "GUID": "BE91688F-1333-45DF-93E4-4D2E8A36DE2B"
+                }
+            ],
+            "Aces": [
+                {
+                    "PrincipalSID": "TESTLAB.LOCAL-S-1-5-32-544",
+                    "PrincipalType": "Group",
+                    "RightName": "Owns",
+                    "IsInherited": false
+                },
+                {
+                    "PrincipalSID": "TESTLAB.LOCAL-S-1-5-32-544",
+                    "PrincipalType": "Group",
+                    "RightName": "WriteDacl",
+                    "IsInherited": false
+                },
+                {
+                    "PrincipalSID": "TESTLAB.LOCAL-S-1-5-32-544",
+                    "PrincipalType": "Group",
+                    "RightName": "WriteOwner",
+                    "IsInherited": false
+                },
+                {
+                    "PrincipalSID": "TESTLAB.LOCAL-S-1-5-32-544",
+                    "PrincipalType": "Group",
+                    "RightName": "AllExtendedRights",
+                    "IsInherited": false
+                },
+                {
+                    "PrincipalSID": "S-1-5-21-3130019616-2776909439-2417379446-512",
+                    "PrincipalType": "Group",
+                    "RightName": "WriteDacl",
+                    "IsInherited": false
+                },
+                {
+                    "PrincipalSID": "S-1-5-21-3130019616-2776909439-2417379446-512",
+                    "PrincipalType": "Group",
+                    "RightName": "WriteOwner",
+                    "IsInherited": false
+                },
+                {
+                    "PrincipalSID": "S-1-5-21-3130019616-2776909439-2417379446-512",
+                    "PrincipalType": "Group",
+                    "RightName": "AllExtendedRights",
+                    "IsInherited": false
+                },
+                {
+                    "PrincipalSID": "S-1-5-21-3130019616-2776909439-2417379446-519",
+                    "PrincipalType": "Group",
+                    "RightName": "GenericAll",
+                    "IsInherited": false
+                },
+                {
+                    "PrincipalSID": "TESTLAB.LOCAL-S-1-5-9",
+                    "PrincipalType": "Group",
+                    "RightName": "GetChanges",
+                    "IsInherited": false
+                },
+                {
+                    "PrincipalSID": "TESTLAB.LOCAL-S-1-5-32-544",
+                    "PrincipalType": "Group",
+                    "RightName": "GetChangesAll",
+                    "IsInherited": false
+                },
+                {
+                    "PrincipalSID": "TESTLAB.LOCAL-S-1-5-32-544",
+                    "PrincipalType": "Group",
+                    "RightName": "GetChanges",
+                    "IsInherited": false
+                },
+                {
+                    "PrincipalSID": "S-1-5-21-3130019616-2776909439-2417379446-498",
+                    "PrincipalType": "Group",
+                    "RightName": "GetChanges",
+                    "IsInherited": false
+                },
+                {
+                    "PrincipalSID": "S-1-5-21-3130019616-2776909439-2417379446-516",
+                    "PrincipalType": "Group",
+                    "RightName": "GetChangesAll",
+                    "IsInherited": false
+                },
+                {
+                    "PrincipalSID": "S-1-5-21-3130019616-2776909439-2417379446-2110",
+                    "PrincipalType": "Group",
+                    "RightName": "GetChanges",
+                    "IsInherited": false
+                },
+                {
+                    "PrincipalSID": "S-1-5-21-3130019616-2776909439-2417379446-2111",
+                    "PrincipalType": "Group",
+                    "RightName": "GetChangesAll",
+                    "IsInherited": false
+                },
+                {
+                    "PrincipalSID": "S-1-5-21-3130019616-2776909439-2417379446-2122",
+                    "PrincipalType": "User",
+                    "RightName": "GetChanges",
+                    "IsInherited": false
+                },
+                {
+                    "PrincipalSID": "S-1-5-21-3130019616-2776909439-2417379446-2122",
+                    "PrincipalType": "User",
+                    "RightName": "GetChangesAll",
+                    "IsInherited": false
+                }
+            ],
+            "ObjectIdentifier": "S-1-5-21-3130019616-2776909439-2417379446",
+            "IsDeleted": false,
+            "IsACLProtected": false
+        }
+    ]
+}

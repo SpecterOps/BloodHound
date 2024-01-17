@@ -1,0 +1,463 @@
+{
+    "/api/v2/domains/{domain_id}/attack-path-findings":{
+        "parameters": [
+            {
+                "type":"string",
+                "description":"Domain ID",
+                "name":"domain_id",
+                "in":"path",
+                "required":true
+            }
+        ],
+        "get":{
+            "description":"Export the finding table for a given attack path",
+            "produces":[
+                "text/csv"
+            ],
+            "tags":[
+                "Attack Paths",
+                "Enterprise"
+            ],
+            "summary":"Export attack path findings",
+            "parameters": [
+                {
+                    "$ref": "#/definitions/parameters.PreferHeader"
+                },
+                {
+                    "type":"string",
+                    "description":"Finding Type",
+                    "name":"finding",
+                    "in":"query",
+                    "required":true
+                }
+            ],
+            "responses":{
+                "200":{
+                    "description":"OK",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/definitions/api.BasicResponse"
+                            }
+                        }
+                    }
+                },
+                "Error": {
+                    "$ref": "#/components/responses/defaultError"
+                }
+            }
+        }
+    },
+    "/api/v2/attack-path-types":{
+        "get":{
+            "description":"Lists all possible attack path types",
+            "tags":[
+                "Attack Paths",
+                "Enterprise"
+            ],
+            "summary":"List all attack path types",
+            "parameters": [
+                {
+                    "$ref": "#/definitions/parameters.PreferHeader"
+                },
+                {
+                    "type":"string",
+                    "description":"Sort by column; prepend hyphen for descending order. The only sortable column is finding.",
+                    "name":"sort_by",
+                    "in":"query",
+                    "required":false
+                },
+                {
+                    "type":"string",
+                    "description":"Filter results by column value. Valid filter predicates are eq, neq. The only filterable column is finding",
+                    "name":"finding",
+                    "in":"query",
+                    "required":false
+                }
+            ],
+            "responses":{
+                "200":{
+                    "description":"OK",
+                    "content": {
+                        "application/json": {
+                            "schema":{
+                                "$ref":"#/definitions/api.BasicResponse"
+                            }
+                        }
+                    }
+                },
+                "Error": {
+                    "$ref": "#/components/responses/defaultError"
+                }
+            }
+        }
+    },
+    "/api/v2/attack-paths":{
+        "put":{
+            "description":"Pokes the analysis service",
+            "tags":[
+                "Attack Paths",
+                "Enterprise"
+            ],
+            "summary":"Starts generating attack paths",
+            "parameters": [
+                {
+                    "$ref": "#/definitions/parameters.PreferHeader"
+                }
+            ],
+            "responses":{
+                "200":{
+                    "description":"OK",
+                    "content": {
+                        "application/json": {
+                            "schema":{
+                                "type":"object",
+                                "additionalProperties":true
+                            }
+                        }
+                    }
+                },
+                "Error": {
+                    "$ref": "#/components/responses/defaultError"
+                }
+            }
+        }
+    },
+    "/api/v2/domains/{domain_id}/available-types":{
+        "parameters": [
+            {
+                "type":"string",
+                "description":"Domain ID",
+                "name":"domain_id",
+                "in":"path",
+                "required":true
+            }
+        ],
+        "get":{
+            "description":"Lists available attack path types for a domain",
+            "tags":[
+                "Attack Paths",
+                "Enterprise"
+            ],
+            "summary":"List available attack paths",
+            "parameters": [
+                {
+                    "$ref": "#/definitions/parameters.PreferHeader"
+                },
+                {
+                    "type":"string",
+                    "description":"Sort by column. Can be used multiple times; prepend hyphen for descending order. Sortable columns are [finding]",
+                    "name":"sort_by",
+                    "in":"query",
+                    "required":false
+                },
+                {
+                    "type":"string",
+                    "description":"Filter results by column value. Valid filter predicates are eq, neq. Filterable columns are [finding]",
+                    "name":"finding",
+                    "in":"query",
+                    "required":false
+                }
+            ],
+            "responses":{
+                "200":{
+                    "description":"OK",
+                    "content": {
+                        "application/json": {
+                            "schema":{
+                                "$ref":"#/definitions/api.BasicResponse"
+                            }
+                        }
+                    }
+                },
+                "Error": {
+                    "$ref": "#/components/responses/defaultError"
+                }
+            }
+        }
+    },
+    "/api/v2/domains/{domain_id}/details":{
+        "parameters": [
+            {
+                "type":"string",
+                "description":"Domain ID",
+                "name":"domain_id",
+                "in":"path",
+                "required":true
+            }
+        ],
+        "get":{
+            "description":"List the paged values for an attack path",
+            "tags":[
+                "Attack Paths",
+                "Enterprise"
+            ],
+            "summary":"Get data for an attack path",
+            "parameters": [
+                {
+                    "$ref": "#/definitions/parameters.PreferHeader"
+                },
+                {
+                    "type":"integer",
+                    "description":"Paging Skip",
+                    "name":"skip",
+                    "in":"query"
+                },
+                {
+                    "type":"integer",
+                    "description":"Paging Limit",
+                    "name":"limit",
+                    "in":"query"
+                },
+                {
+                    "type":"string",
+                    "description":"Finding Type",
+                    "name":"finding",
+                    "in":"query",
+                    "required":true
+                },
+                {
+                    "type":"string",
+                    "description":"Sort by column. Can be used multiple times; prepend hyphen for descending order. Sortable columns for List Risks are domain_sid, index, AcceptedUntil, id, created_at, updated_at, deleted_at. Relationship risks can be sorted on FromPrincipal and ToPrincipal in addition to the sortable columns for List Risks.",
+                    "name":"sort_by",
+                    "in":"query",
+                    "required":false
+                },
+                {
+                    "type":"string",
+                    "description":"DEPRECATED; use the from_principal filter instead. Filter Relationship Findings by column value. Valid filter predicates are eq, neq",
+                    "name":"FromPrincipal",
+                    "in":"query",
+                    "required":false
+                },
+                {
+                    "type":"string",
+                    "description":"DEPRECATED; use the to_principal filter instead. Filter RelationshipFindings by column value. Valid filter predicates are eq, neq",
+                    "name":"ToPrincipal",
+                    "in":"query",
+                    "required":false
+                },
+                {
+                    "type":"string",
+                    "description":"Filter RelationshipFindings by column value. Valid filter predicates are eq, neq",
+                    "name":"from_principal",
+                    "in":"query",
+                    "required":false
+                },
+                {
+                    "type":"string",
+                    "description":"Filter RelationshipFindings by column value. Valid filter predicates are eq, neq",
+                    "name":"to_principal",
+                    "in":"query",
+                    "required":false
+                },
+                {
+                    "type":"string",
+                    "description":"Filter RelationshipFindings by column value. Valid filter predicates are eq, neq",
+                    "name":"principals_hash",
+                    "in":"query",
+                    "required":false
+                },
+                {
+                    "type":"string",
+                    "description":"Filter Relationship or List Findings by column value. Valid filter predicates are eq, neq",
+                    "name":"Accepted",
+                    "in":"query",
+                    "required":false
+                },
+                {
+                    "type":"string",
+                    "description":"DEPRECATED; use accepted_until instead. Filter Relationship or List Findings by column value. Valid filter predicates are eq, neq, gt, gte, lt, lte",
+                    "name":"AcceptedUntil",
+                    "in":"query",
+                    "required":false
+                },
+                {
+                    "type":"string",
+                    "description":"Filter Relationship or List Findings by column value. Valid filter predicates are eq, neq, gt, gte, lt, lte",
+                    "name":"accepted_until",
+                    "in":"query",
+                    "required":false
+                },
+                {
+                    "type":"string",
+                    "description":"Filter ListFindings by column value. Valid filter predicates are eq, neq",
+                    "name":"Principal",
+                    "in":"query",
+                    "required":false
+                },
+                {
+                    "type":"string",
+                    "description":"Filter List or Relationship Findings by column value. Valid filter predicates are eq, neq",
+                    "name":"Finding",
+                    "in":"query",
+                    "required":false
+                },
+                {
+                    "type":"string",
+                    "description":"Filter List or Relationship Findings by column value. Valid filter predicates are eq, neq",
+                    "name":"domain_sid",
+                    "in":"query",
+                    "required":false
+                },
+                {
+                    "type":"string",
+                    "description":"Filter results by column value. Valid filter predicates are eq, neq, gt, gte, lt, lte",
+                    "name":"id",
+                    "in":"query",
+                    "required":false
+                },
+                {
+                    "type":"string",
+                    "description":"Filter results by column value. Valid filter predicates are eq, neq, gt, gte, lt, lte",
+                    "name":"created_at",
+                    "in":"query",
+                    "required":false
+                },
+                {
+                    "type":"string",
+                    "description":"Filter results by column value. Valid filter predicates are eq, neq, gt, gte, lt, lte",
+                    "name":"updated_at",
+                    "in":"query",
+                    "required":false
+                },
+                {
+                    "type":"string",
+                    "description":"Filter results by column value. Valid filter predicates are eq, neq, gt, gte, lt, lte",
+                    "name":"deleted_at",
+                    "in":"query",
+                    "required":false
+                }
+            ],
+            "responses":{
+                "200":{
+                    "description":"OK",
+                    "content": {
+                        "application/json": {
+                            "schema":{
+                                "type":"object",
+                                "additionalProperties":true
+                            }
+                        }
+                    }
+                },
+                "Error": {
+                    "$ref": "#/components/responses/defaultError"
+                }
+            }
+        }
+    },
+    "/api/v2/domains/{domain_id}/sparkline":{
+        "parameters": [
+            {
+                "type":"string",
+                "description":"Domain ID",
+                "name":"domain_id",
+                "in":"path",
+                "required":true
+            }
+        ],
+        "get":{
+            "description":"List the values that represent the sparklines for individual attack paths",
+            "tags":[
+                "Attack Paths",
+                "Enterprise"
+            ],
+            "summary":"List attack path sparkline values",
+            "parameters": [
+                {
+                    "$ref": "#/definitions/parameters.PreferHeader"
+                },
+                {
+                    "type":"string",
+                    "description":"Sort by column. Can be used multiple times; prepend hyphen for descending order. Sortable columns are CompositeRisk, FindingCount, ImpactedAssetCount, domain_sid, id, created_at, updated_at, deleted_at.",
+                    "name":"sort_by",
+                    "in":"query",
+                    "required":false
+                },
+                {
+                    "type":"string",
+                    "description":"Finding Type",
+                    "name":"finding",
+                    "in":"query",
+                    "required":true
+                },
+                {
+                    "type":"string",
+                    "description":"Beginning datetime of range (inclusive) in RFC-3339 format; Defaults to current datetime minus 30 days",
+                    "name":"from",
+                    "in":"query",
+                    "format":"date-time"
+                },
+                {
+                    "type":"string",
+                    "description":"Ending datetime of range (exclusive) in RFC-3339 format; Defaults to current datetime",
+                    "name":"to",
+                    "in":"query",
+                    "format":"date-time"
+                }
+            ],
+            "responses":{
+                "200":{
+                    "description":"OK",
+                    "schema":{
+                        "$ref":"#/definitions/api.TimeWindowedResponse"
+                    }
+                },
+                "Error": {
+                    "$ref": "#/components/responses/defaultError"
+                }
+            }
+        }
+    },
+    "/api/v2/attack-paths/{attack_path_id}/acceptance":{
+        "parameters": [
+            {
+                "type":"string",
+                "description":"Attack Path ID",
+                "name":"attack_path_id",
+                "in":"path",
+                "required":true
+            }
+        ],
+        "put":{
+            "description":"Takes a time to mark an attack path as accepted until",
+            "tags":[
+                "Attack Paths",
+                "Enterprise"
+            ],
+            "summary":"Marks an attack path as accepted",
+            "parameters": [
+                {
+                    "$ref": "#/definitions/parameters.PreferHeader"
+                }
+            ],
+            "requestBody": {
+                "description": "The request body for updating risk acceptance",
+                "required": true,
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "$ref": "#/definitions/v2.RiskAcceptRequest"
+                        }
+                    }
+                }
+            },
+            "responses":{
+                "200":{
+                    "description":"OK",
+                    "content": {
+                        "application/json": {
+                            "schema":{
+                                "$ref":"#/definitions/api.ResponseWrapper"
+                            }
+                        }
+                    }
+                },
+                "Error": {
+                    "$ref": "#/components/responses/defaultError"
+                }
+            }
+        }
+    }
+}

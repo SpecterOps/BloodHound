@@ -1,0 +1,123 @@
+{
+  "/api/v2/audit": {
+    "get": {
+      "description": "Gets audit logs",
+      "tags": [
+        "Audit",
+        "Community",
+        "Enterprise"
+      ],
+      "summary": "Get audit logs",
+      "parameters": [
+        {
+          "$ref": "#/definitions/parameters.PreferHeader"
+        },
+        {
+          "$ref": "#/definitions/parameters.PagingSkip"
+        },
+        {
+          "$ref": "#/definitions/parameters.PagingLimit"
+        },
+        {
+          "type": "string",
+          "description": "Sort by column. Can be used multiple times; prepend hyphen for descending order. Sortable columns are `id`, `actor_id`, `actor_name`, `actor_email`, `action`, `request_id`, `created_at`, `source`, and `status`.",
+          "name": "sort_by",
+          "in": "query",
+          "required": false
+        },
+        {
+          "type": "string",
+          "description": "Return logs created before the specified time. Value should be in the format `2020-01-01T00:00:00Z`. If not supplied, this will default to the current time.",
+          "name": "before",
+          "in": "query",
+          "required": false
+        },
+        {
+          "type": "string",
+          "description": "Return logs created after the specified time. Value should be in the format `2020-01-01T00:00:00Z`. If not supplied, this will default to 1 year before the current time.",
+          "name": "after",
+          "in": "query",
+          "required": false
+        },
+        {
+          "type": "string",
+          "description": "Filter results by column value. Valid filter predicates are `eq`, `neq`",
+          "name": "id",
+          "in": "query",
+          "required": false
+        },
+        {
+          "type": "string",
+          "description": "Filter results by column value. Valid filter predicates are `eq`, `neq`",
+          "name": "actor_id",
+          "in": "query",
+          "required": false
+        },
+        {
+          "type": "string",
+          "description": "Filter results by column value. Valid filter predicates are `eq`, `neq`",
+          "name": "actor_name",
+          "in": "query",
+          "required": false
+        },
+        {
+          "type": "string",
+          "description": "Filter results by column value. Valid filter predicates are `eq`, `neq`",
+          "name": "actor_email",
+          "in": "query",
+          "required": false
+        },
+        {
+          "type": "string",
+          "description": "Filter results by column value. Valid filter predicates are `eq`, `neq`",
+          "name": "action",
+          "in": "query",
+          "required": false
+        },
+        {
+          "type": "string",
+          "description": "Filter results by column value. Valid filter predicates are `eq`, `neq`",
+          "name": "request_id",
+          "in": "query",
+          "required": false
+        },
+        {
+          "type": "string",
+          "description": "Filter results by column value. Valid filter predicates are `eq`, `neq`, `gt`, `gte`, `lt`, `lte`",
+          "name": "created_at",
+          "in": "query",
+          "required": false
+        },
+        {
+          "type": "string",
+          "description": "Filter results by column value. Valid filter predicates are `eq`, `neq`",
+          "name": "source",
+          "in": "query",
+          "required": false
+        },
+        {
+          "type": "string",
+          "description": "Filter results by column value. Valid filter predicates are `eq`, `neq`. Valid values are `success` and `failure`.",
+          "name": "status",
+          "in": "query",
+          "required": false
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "OK",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/definitions/v2.ListAuditLogsResponse"
+              }
+            }
+          }
+        },
+        "Error": {
+          "$ref": "#/components/responses/defaultError"
+        }
+      }
+    }
+  }
+}

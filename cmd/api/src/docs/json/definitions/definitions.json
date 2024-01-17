@@ -1,0 +1,87 @@
+{
+  "null.Int32": {
+    "type": "object",
+    "properties": {
+      "int32": {
+        "type": "integer"
+      },
+      "valid": {
+        "description": "Valid is true if Int32 is not NULL",
+        "type": "boolean"
+      }
+    }
+  },
+  "null.Int64": {
+    "type": "object",
+    "properties": {
+      "int64": {
+        "type": "integer"
+      },
+      "valid": {
+        "description": "Valid is true if Int64 is not NULL",
+        "type": "boolean"
+      }
+    }
+  },
+  "null.String": {
+    "type": "object",
+    "properties": {
+      "string": {
+        "type": "string"
+      },
+      "valid": {
+        "description": "Valid is true if String is not NULL",
+        "type": "boolean"
+      }
+    }
+  },
+  "sql.NullTime": {
+    "type": "object",
+    "properties": {
+      "time": {
+        "type": "string"
+      },
+      "valid": {
+        "description": "Valid is true if Time is not NULL",
+        "type": "boolean"
+      }
+    }
+  },
+  "appcfg.Parameter": {
+    "type": "object",
+    "required": [
+      "key",
+      "name",
+      "value"
+    ],
+    "properties": {
+      "key": {
+        "type": "string"
+      },
+      "name": {
+        "type": "string"
+      },
+      "description": {
+        "type": "string"
+      },
+      "value": {
+        "type": "object"
+      },
+      "id": {
+        "type": "integer"
+      },
+      "created_at": {
+        "type": "string"
+      },
+      "updated_at": {
+        "type": "string"
+      },
+      "deleted_at": {
+        "type": "string"
+      }
+    }
+  },
+  "neo4j.PagedQueryListEntry": {
+    "type": "object"
+  }
+}

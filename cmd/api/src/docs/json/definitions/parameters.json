@@ -1,0 +1,29 @@
+{
+    "parameters.PreferHeader": {
+        "name": "prefer",
+        "description": "Prefer header, used to specify a custom timeout in seconds using the wait parameter as per RFC7240. The default timeout is 30 seconds and maximum timeout is 60 seconds",
+        "in": "header",
+        "required": false
+    },
+    "parameters.HydrateCounts": {
+        "type": "boolean",
+        "description": "Include count of related controllers. Assumes true if unspecified.",
+        "name": "counts",
+        "in": "query",
+        "required": false
+    },
+    "parameters.PagingSkip": {
+        "type": "integer",
+        "description": "Paging Skip",
+        "name": "skip",
+        "in": "query",
+        "required": false
+    },
+    "parameters.PagingLimit": {
+        "type": "integer",
+        "description": "Paging Limit",
+        "name": "limit",
+        "in": "query",
+        "required": false
+    }
+}

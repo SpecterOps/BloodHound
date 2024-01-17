@@ -1,0 +1,20 @@
+# Logs
+logs
+*.log
+
+# Runtime data
+pids
+*.pid
+*.seed
+
+# Coverage directory
+coverage
+
+# Dependency directory
+node_modules
+
+# kubernetes manifests
+./k8s
+
+# misc. tools
+./tools

@@ -1,0 +1,38 @@
+{
+    "version": 1,
+    "bind_addr": "localhost:8080",
+    "metrics_port": ":2112",
+    "root_url": "http://localhost:8080/",
+    "work_dir": "work",
+    "log_level": "INFO",
+    "log_path": "bheapi.log",
+    "features": {
+        "enable_auth": true
+    },
+    "tls": {
+        "cert_file": "",
+        "key_file": ""
+    },
+    "database": {
+        "connection": "user=bhe dbname=bhe host=/run/postgresql"
+    },
+    "neo4j": {
+        "connection": "neo4j://neo4j:supersecretpassword@localhost:7687/"
+    },
+    "collectors_base_path": "work/collectors",
+    "crypto": {
+        "jwt": {
+            "signing_key": "lVOfRdM3WudIn8CHdRnDbNGZGrgmxtbpl3DO4eWBDgk="
+        },
+        "argon2": {
+            "memory_kibibytes": 1048576,
+            "num_iterations": 2,
+            "num_threads": 2
+        }
+    },
+    "datapipe_interval": 1,
+    "default_admin": {
+        "principal_name": "admin",
+        "password": "admin"
+    }
+}
