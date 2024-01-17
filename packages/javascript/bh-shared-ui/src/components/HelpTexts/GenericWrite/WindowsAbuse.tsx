@@ -228,7 +228,7 @@ const WindowsAbuse: FC<EdgeInfoProps> = ({ sourceName, sourceType, targetName, t
 
                     <Typography variant='body2'>
                         Next, we need to set this newly created security descriptor in the
-                        msDS-AllowedToActOnBehalfOfOtherIdentity field of the comptuer account we're taking over, again
+                        msDS-AllowedToActOnBehalfOfOtherIdentity field of the computer account we're taking over, again
                         using PowerView in this case:
                     </Typography>
 
