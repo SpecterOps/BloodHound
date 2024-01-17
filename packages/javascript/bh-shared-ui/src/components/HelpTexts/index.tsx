@@ -68,6 +68,7 @@ import CanPSRemote from './CanPSRemote/CanPSRemote';
 import CanRDP from './CanRDP/CanRDP';
 import Contains from './Contains/Contains';
 import DCSync from './DCSync/DCSync';
+import DCFor from './DCFor/DCFor';
 import DelegatedEnrollmentAgent from './DelegatedEnrollmentAgent/DelegatedEnrollmentAgent';
 import DumpSMSAPassword from './DumpSMSAPassword/DumpSMSAPassword';
 import ADCSESC3 from './ADCSESC3/ADCSESC3';
@@ -210,6 +211,7 @@ const EdgeInfoComponents = {
     ManageCertificates: ManageCertificates,
     WritePKIEnrollmentFlag: WritePKIEnrollmentFlag,
     WritePKINameFlag: WritePKINameFlag,
+    DCFor: DCFor,
 };
 
 export default EdgeInfoComponents;
