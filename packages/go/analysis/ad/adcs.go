@@ -29,6 +29,7 @@ import (
 	"github.com/specterops/bloodhound/dawgs/query"
 	"github.com/specterops/bloodhound/dawgs/util/channels"
 	"github.com/specterops/bloodhound/graphschema/ad"
+	"github.com/specterops/bloodhound/graphschema/common"
 	"github.com/specterops/bloodhound/log"
 )
 
@@ -55,11 +56,14 @@ func PostADCSESC1(ctx context.Context, tx graph.Transaction, outC chan<- analysi
 		return fmt.Errorf("error fetching cert templates for ECA %d: %w", enterpriseCA.ID, err)
 	} else {
 		for _, certTemplate := range publishedCertTemplates {
-			if validationProperties, err := getValidatePublishedCertTemplateForEsc1PropertyValues(certTemplate); err != nil {
-
-				log.Errorf("error getting published cert template validation properties, %w", err)
-				continue
-			} else if !validatePublishedCertTemplateForEsc1(validationProperties) {
+			var (
+				reqManagerApproval, _      = certTemplate.Properties.Get(ad.RequiresManagerApproval.String()).Bool()
+				authenticationEnabled, _   = certTemplate.Properties.Get(ad.AuthenticationEnabled.String()).Bool()
+				enrolleeSuppliesSubject, _ = certTemplate.Properties.Get(ad.EnrolleeSuppliesSubject.String()).Bool()
+				schemaVersion, _           = certTemplate.Properties.Get(ad.SchemaVersion.String()).Float64()
+				authorizedSignatures, _    = certTemplate.Properties.Get(ad.AuthorizedSignatures.String()).Float64()
+			)
+			if !isCertTemplateValidForEsc1(reqManagerApproval, authenticationEnabled, enrolleeSuppliesSubject, schemaVersion, authorizedSignatures) {
 				continue
 			} else {
 				results.Or(CalculateCrossProductNodeSets(expandedGroups, cache.CertTemplateControllers[certTemplate.ID], cache.EnterpriseCAEnrollers[enterpriseCA.ID]))
@@ -161,6 +165,107 @@ func PostADCSESC3(ctx context.Context, tx graph.Transaction, outC chan<- analysi
 	return nil
 }
 
+func PostADCSESC6a(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob, groupExpansions impact.PathAggregator, enterpriseCA, domain *graph.Node, cache ADCSCache) error {
+	var (
+		results                      = cardinality.NewBitmap32()
+		isUserSpecifiesSanEnabled, _ = enterpriseCA.Properties.Get(ad.IsUserSpecifiesSanEnabled.String()).Bool()
+	)
+
+	if publishedCertTemplates, ok := cache.PublishedTemplateCache[enterpriseCA.ID]; !ok {
+		return nil
+	} else if !isUserSpecifiesSanEnabled {
+		return nil
+	} else if canAbuseWeakCertBindingRels, err := FetchCanAbuseWeakCertBindingRels(tx, enterpriseCA); err != nil {
+		log.Errorf("error getting canAbuseWeakCertBindingRels for enterpriseCA %d: %v", enterpriseCA.ID, err)
+	} else if len(canAbuseWeakCertBindingRels) == 0 {
+		return nil
+	} else {
+		var (
+			tempResults     = cardinality.NewBitmap32()
+			tempUserResults = cardinality.NewBitmap32()
+			exception       = false
+		)
+		for _, publishedCertTemplate := range publishedCertTemplates {
+			var (
+				reqManagerApproval, _         = publishedCertTemplate.Properties.Get(ad.RequiresManagerApproval.String()).Bool()
+				authenticationEnabled, _      = publishedCertTemplate.Properties.Get(ad.AuthenticationEnabled.String()).Bool()
+				noSecurityExtension, _        = publishedCertTemplate.Properties.Get(ad.NoSecurityExtension.String()).Bool()
+				schemaVersion, _              = publishedCertTemplate.Properties.Get(ad.SchemaVersion.String()).Float64()
+				authorizedSignatures, _       = publishedCertTemplate.Properties.Get(ad.AuthorizedSignatures.String()).Float64()
+				subjectAltRequireEmail, _     = publishedCertTemplate.Properties.Get("subjectaltrequireemail").Bool()
+				subjectRequireEmail, _        = publishedCertTemplate.Properties.Get("subjectrequireemail").Bool()
+				subjectAltRequireDNS, _       = publishedCertTemplate.Properties.Get("subjectaltrequiredns").Bool()
+				subjectAltRequireDomainDNS, _ = publishedCertTemplate.Properties.Get("subjectaltrequiredomaindns").Bool()
+			)
+
+			if !isCertTemplateValidForEsc6a(reqManagerApproval, authenticationEnabled, noSecurityExtension, schemaVersion, authorizedSignatures) {
+				continue
+			} else {
+
+				if (!subjectAltRequireEmail && !subjectRequireEmail) || schemaVersion == 1 {
+					exception = true
+				}
+
+				if !subjectAltRequireDNS && !subjectAltRequireDomainDNS {
+					tempUserResults.Or(CalculateCrossProductNodeSets(groupExpansions, cache.CertTemplateControllers[publishedCertTemplate.ID], cache.EnterpriseCAEnrollers[enterpriseCA.ID]))
+				}
+
+				tempResults.Or(CalculateCrossProductNodeSets(groupExpansions, cache.CertTemplateControllers[publishedCertTemplate.ID], cache.EnterpriseCAEnrollers[enterpriseCA.ID]))
+			}
+		}
+
+		tempResults.Each(func(value uint32) (bool, error) {
+			sourceID := graph.ID(value)
+
+			if resultNode, err := tx.Nodes().Filter(query.Equals(query.NodeID(), sourceID)).First(); err != nil {
+				return true, nil
+			} else {
+				if resultNode.Kinds.ContainsOneOf(ad.Group) {
+					results.Add(value)
+				} else if resultNode.Kinds.ContainsOneOf(ad.Computer) {
+					email, _ := resultNode.Properties.Get(common.Email.String()).String()
+
+					if email != "" || exception {
+						results.Add(value)
+					}
+
+				}
+			}
+			return true, nil
+		})
+
+		tempUserResults.Each(func(value uint32) (bool, error) {
+			sourceID := graph.ID(value)
+
+			if resultNode, err := tx.Nodes().Filter(query.Equals(query.NodeID(), sourceID)).First(); err != nil {
+				return true, nil
+			} else {
+				if resultNode.Kinds.ContainsOneOf(ad.User) {
+					email, _ := resultNode.Properties.Get(common.Email.String()).String()
+					if email != "" || exception {
+						results.CheckedAdd(value)
+					}
+				}
+			}
+			return true, nil
+		})
+
+		results.Each(func(value uint32) (bool, error) {
+			if !channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
+				FromID: graph.ID(value),
+				ToID:   domain.ID,
+				Kind:   ad.ADCSESC6a,
+			}) {
+				return false, nil
+			} else {
+				return true, nil
+			}
+		})
+	}
+
+	return nil
+}
+
 func isStartCertTemplateValidESC3(template *graph.Node) bool {
 	if reqManagerApproval, err := template.Properties.Get(ad.RequiresManagerApproval.String()).Bool(); err != nil {
 		log.Errorf("error getting reqmanagerapproval for certtemplate %d: %v", template.ID, err)
@@ -199,46 +304,32 @@ func isEndCertTemplateValidESC3(template *graph.Node) bool {
 	}
 }
 
-type PublishedCertTemplateValidationProperties struct {
-	reqManagerApproval      bool
-	authenticationEnabled   bool
-	enrolleeSuppliesSubject bool
-	schemaVersion           float64
-	authorizedSignatures    float64
-}
-
-func getValidatePublishedCertTemplateForEsc1PropertyValues(certTemplate *graph.Node) (PublishedCertTemplateValidationProperties, error) {
-	if reqManagerApproval, err := certTemplate.Properties.Get(ad.RequiresManagerApproval.String()).Bool(); err != nil {
-		return PublishedCertTemplateValidationProperties{}, fmt.Errorf("error getting reqmanagerapproval for certtemplate %d: %w", certTemplate.ID, err)
-	} else if authenticationEnabled, err := certTemplate.Properties.Get(ad.AuthenticationEnabled.String()).Bool(); err != nil {
-		return PublishedCertTemplateValidationProperties{}, fmt.Errorf("error getting authenticationenabled for certtemplate %d: %w", certTemplate.ID, err)
-	} else if enrolleeSuppliesSubject, err := certTemplate.Properties.Get(ad.EnrolleeSuppliesSubject.String()).Bool(); err != nil {
-		return PublishedCertTemplateValidationProperties{}, fmt.Errorf("error getting enrollesuppliessubject for certtemplate %d: %w", certTemplate.ID, err)
-	} else if schemaVersion, err := certTemplate.Properties.Get(ad.SchemaVersion.String()).Float64(); err != nil {
-		return PublishedCertTemplateValidationProperties{}, fmt.Errorf("error getting schemaversion for certtemplate %d: %w", certTemplate.ID, err)
-	} else if authorizedSignatures, err := certTemplate.Properties.Get(ad.AuthorizedSignatures.String()).Float64(); err != nil {
-		return PublishedCertTemplateValidationProperties{}, fmt.Errorf("error getting authorizedsignatures for certtemplate %d: %w", certTemplate.ID, err)
+func isCertTemplateValidForEsc6a(reqManagerApproval, authenticationEnabled, noSecurityExtension bool, schemaVersion, authorizedSignatures float64) bool {
+	if reqManagerApproval {
+		return false
+	} else if !authenticationEnabled {
+		return false
+	} else if !noSecurityExtension {
+		return false
+	} else if schemaVersion == 1 {
+		return true
+	} else if schemaVersion > 1 && authorizedSignatures == 0 {
+		return true
 	} else {
-		return PublishedCertTemplateValidationProperties{
-			reqManagerApproval:      reqManagerApproval,
-			authenticationEnabled:   authenticationEnabled,
-			enrolleeSuppliesSubject: enrolleeSuppliesSubject,
-			schemaVersion:           schemaVersion,
-			authorizedSignatures:    authorizedSignatures,
-		}, nil
+		return false
 	}
 }
 
-func validatePublishedCertTemplateForEsc1(properties PublishedCertTemplateValidationProperties) bool {
-	if properties.reqManagerApproval {
+func isCertTemplateValidForEsc1(reqManagerApproval, authenticationEnabled, enrolleeSuppliesSubject bool, schemaVersion, authorizedSignatures float64) bool {
+	if reqManagerApproval {
 		return false
-	} else if !properties.authenticationEnabled {
+	} else if !authenticationEnabled {
 		return false
-	} else if !properties.enrolleeSuppliesSubject {
+	} else if !enrolleeSuppliesSubject {
 		return false
-	} else if properties.schemaVersion == 1 {
+	} else if schemaVersion == 1 {
 		return true
-	} else if properties.schemaVersion > 1 && properties.authorizedSignatures == 0 {
+	} else if schemaVersion > 1 && authorizedSignatures == 0 {
 		return true
 	} else {
 		return false
@@ -303,6 +394,16 @@ func PostADCS(ctx context.Context, db graph.Database, groupExpansions impact.Pat
 					operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
 						if err := PostADCSESC3(ctx, tx, outC, groupExpansions, innerEnterpriseCA, innerDomain, cache); err != nil {
 							log.Errorf("failed post processing for %s: %v", ad.ADCSESC3.String(), err)
+						} else {
+							return nil
+						}
+
+						return nil
+					})
+
+					operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
+						if err := PostADCSESC6a(ctx, tx, outC, groupExpansions, innerEnterpriseCA, innerDomain, cache); err != nil {
+							log.Errorf("failed post processing for %s: %v", ad.ADCSESC6a.String(), err)
 						} else {
 							return nil
 						}
