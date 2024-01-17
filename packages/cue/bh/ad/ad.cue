@@ -377,6 +377,41 @@ SubjectAltRequireUPN: types.#StringEnum & {
 	representation: "subjectaltrequireupn"
 }
 
+SubjectAltRequireDNS: types.#StringEnum & {
+	symbol: "SubjectAltRequireDNS"
+	schema: "ad"
+	name: "Subject Alternative Name Require DNS"
+	representation: "subjectaltrequiredns"
+}
+
+SubjectAltRequireDomainDNS: types.#StringEnum & {
+	symbol: "SubjectAltRequireDomainDNS"
+	schema: "ad"
+	name: "Subject Alternative Name Require Domain DNS"
+	representation: "subjectaltrequiredomaindns"
+}
+
+SubjectAltRequireEmail: types.#StringEnum & {
+	symbol: "SubjectAltRequireEmail"
+	schema: "ad"
+	name: "Subject Alternative Name Require Email"
+	representation: "subjectaltrequireemail"
+}
+
+SubjectAltRequireSPN: types.#StringEnum & {
+	symbol: "SubjectAltRequireSPN"
+	schema: "ad"
+	name: "Subject Alternative Name Require SPN"
+	representation: "subjectaltrequirespn"
+}
+
+SubjectRequireEmail: types.#StringEnum & {
+	symbol: "SubjectRequireEmail"
+	schema: "ad"
+	name: "Subject Require Email"
+	representation: "subjectrequireemail"
+}
+
 AuthorizedSignatures: types.#StringEnum & {
 	symbol: "AuthorizedSignatures"
 	schema: "ad"
@@ -539,6 +574,11 @@ Properties: [
 	StrongCertificateBindingEnforcement,
 	EKUs,
 	SubjectAltRequireUPN,
+	SubjectAltRequireDNS,
+	SubjectAltRequireDomainDNS,
+	SubjectAltRequireEmail,
+	SubjectAltRequireSPN,
+	SubjectRequireEmail,
 	AuthorizedSignatures,
 	ApplicationPolicies,
 	IssuancePolicies,
@@ -786,11 +826,6 @@ DCSync: types.#Kind & {
 	schema: "active_directory"
 }
 
-DCFor: types.#Kind & {
-	symbol: "DCFor"
-	schema: "active_directory"
-}
-
 ReadLAPSPassword: types.#Kind & {
 	symbol: "ReadLAPSPassword"
 	schema: "active_directory"
@@ -848,6 +883,11 @@ GetChangesInFilteredSet: types.#Kind & {
 
 RootCAFor: types.#Kind & {
 	symbol: "RootCAFor"
+	schema: "active_directory"
+}
+
+DCFor: types.#Kind & {
+	symbol: "DCFor"
 	schema: "active_directory"
 }
 
@@ -988,7 +1028,6 @@ RelationshipKinds: [
 	HasSIDHistory,
 	AddSelf,
 	DCSync,
-	DCFor,
 	ReadLAPSPassword,
 	ReadGMSAPassword,
 	DumpSMSAPassword,
@@ -1002,6 +1041,7 @@ RelationshipKinds: [
 	SyncLAPSPassword,
 	WriteAccountRestrictions,
 	RootCAFor,
+	DCFor,
 	PublishedTo,
 	ManageCertificates,
 	ManageCA,
