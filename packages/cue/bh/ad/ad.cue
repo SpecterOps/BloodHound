@@ -891,16 +891,6 @@ DCFor: types.#Kind & {
 	schema: "active_directory"
 }
 
-CanAbuseUPNCertMapping: types.#Kind & {
-	symbol: "CanAbuseUPNCertMapping"
-	schema: "active_directory"
-}
-
-CanAbuseWeakCertBinding: types.#Kind & {
-	symbol: "CanAbuseWeakCertBinding"
-	schema: "active_directory"
-}
-
 PublishedTo: types.#Kind & {
 	symbol: "PublishedTo"
 	schema: "active_directory"
