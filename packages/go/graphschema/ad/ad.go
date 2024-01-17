@@ -154,7 +154,6 @@ const (
 	StrongCertificateBindingEnforcementRaw Property = "strongcertificatebindingenforcementraw"
 	StrongCertificateBindingEnforcement    Property = "strongcertificatebindingenforcement"
 	EKUs                                   Property = "ekus"
-	IsDC                                   Property = "isdc"
 	SubjectAltRequireUPN                   Property = "subjectaltrequireupn"
 	SubjectAltRequireDNS                   Property = "subjectaltrequiredns"
 	SubjectAltRequireDomainDNS             Property = "subjectaltrequiredomaindns"
@@ -181,7 +180,7 @@ const (
 )
 
 func AllProperties() []Property {
-	return []Property{AdminCount, CASecurityCollected, CAName, CertChain, CertName, CertThumbprint, CertThumbprints, HasEnrollmentAgentRestrictions, EnrollmentAgentRestrictionsCollected, IsUserSpecifiesSanEnabled, IsUserSpecifiesSanEnabledCollected, HasBasicConstraints, BasicConstraintPathLength, DNSHostname, CrossCertificatePair, DistinguishedName, DomainFQDN, DomainSID, Sensitive, HighValue, BlocksInheritance, IsACL, IsACLProtected, IsDeleted, Enforced, Department, HasCrossCertificatePair, HasSPN, UnconstrainedDelegation, LastLogon, LastLogonTimestamp, IsPrimaryGroup, HasLAPS, DontRequirePreAuth, LogonType, HasURA, PasswordNeverExpires, PasswordNotRequired, FunctionalLevel, TrustType, SidFiltering, TrustedToAuth, SamAccountName, CertificateMappingMethodsRaw, CertificateMappingMethods, StrongCertificateBindingEnforcementRaw, StrongCertificateBindingEnforcement, EKUs, IsDC, SubjectAltRequireUPN, SubjectAltRequireDNS, SubjectAltRequireDomainDNS, SubjectAltRequireEmail, SubjectAltRequireSPN, SubjectRequireEmail, AuthorizedSignatures, ApplicationPolicies, IssuancePolicies, SchemaVersion, RequiresManagerApproval, AuthenticationEnabled, EnrolleeSuppliesSubject, CertificateApplicationPolicy, CertificateNameFlag, EffectiveEKUs, EnrollmentFlag, Flags, NoSecurityExtension, RenewalPeriod, ValidityPeriod, OID, HomeDirectory}
+	return []Property{AdminCount, CASecurityCollected, CAName, CertChain, CertName, CertThumbprint, CertThumbprints, HasEnrollmentAgentRestrictions, EnrollmentAgentRestrictionsCollected, IsUserSpecifiesSanEnabled, IsUserSpecifiesSanEnabledCollected, HasBasicConstraints, BasicConstraintPathLength, DNSHostname, CrossCertificatePair, DistinguishedName, DomainFQDN, DomainSID, Sensitive, HighValue, BlocksInheritance, IsACL, IsACLProtected, IsDeleted, Enforced, Department, HasCrossCertificatePair, HasSPN, UnconstrainedDelegation, LastLogon, LastLogonTimestamp, IsPrimaryGroup, HasLAPS, DontRequirePreAuth, LogonType, HasURA, PasswordNeverExpires, PasswordNotRequired, FunctionalLevel, TrustType, SidFiltering, TrustedToAuth, SamAccountName, CertificateMappingMethodsRaw, CertificateMappingMethods, StrongCertificateBindingEnforcementRaw, StrongCertificateBindingEnforcement, EKUs, SubjectAltRequireUPN, SubjectAltRequireDNS, SubjectAltRequireDomainDNS, SubjectAltRequireEmail, SubjectAltRequireSPN, SubjectRequireEmail, AuthorizedSignatures, ApplicationPolicies, IssuancePolicies, SchemaVersion, RequiresManagerApproval, AuthenticationEnabled, EnrolleeSuppliesSubject, CertificateApplicationPolicy, CertificateNameFlag, EffectiveEKUs, EnrollmentFlag, Flags, NoSecurityExtension, RenewalPeriod, ValidityPeriod, OID, HomeDirectory}
 }
 func ParseProperty(source string) (Property, error) {
 	switch source {
@@ -281,8 +280,6 @@ func ParseProperty(source string) (Property, error) {
 		return StrongCertificateBindingEnforcement, nil
 	case "ekus":
 		return EKUs, nil
-	case "isdc":
-		return IsDC, nil
 	case "subjectaltrequireupn":
 		return SubjectAltRequireUPN, nil
 	case "subjectaltrequiredns":
@@ -431,8 +428,6 @@ func (s Property) String() string {
 		return string(StrongCertificateBindingEnforcement)
 	case EKUs:
 		return string(EKUs)
-	case IsDC:
-		return string(IsDC)
 	case SubjectAltRequireUPN:
 		return string(SubjectAltRequireUPN)
 	case SubjectAltRequireDNS:
@@ -581,8 +576,6 @@ func (s Property) Name() string {
 		return "Strong Certificate Binding Enforcement"
 	case EKUs:
 		return "Enhanced Key Usage"
-	case IsDC:
-		return "Is DC"
 	case SubjectAltRequireUPN:
 		return "Subject Alternative Name Require UPN"
 	case SubjectAltRequireDNS:

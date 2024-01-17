@@ -370,13 +370,6 @@ EKUs: types.#StringEnum & {
 	representation: "ekus"
 }
 
-IsDC: types.#StringEnum & {
-	symbol: "IsDC"
-	schema: "ad"
-	name: "Is DC"
-	representation: "isdc"
-}
-
 SubjectAltRequireUPN: types.#StringEnum & {
 	symbol: "SubjectAltRequireUPN"
 	schema: "ad"
@@ -580,7 +573,6 @@ Properties: [
 	StrongCertificateBindingEnforcementRaw,
 	StrongCertificateBindingEnforcement,
 	EKUs,
-	IsDC,
 	SubjectAltRequireUPN,
 	SubjectAltRequireDNS,
 	SubjectAltRequireDomainDNS,
