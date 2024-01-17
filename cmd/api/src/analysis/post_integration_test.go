@@ -93,7 +93,7 @@ func TestCrossProduct(t *testing.T) {
 		secondSet := []*graph.Node{testContext.Harness.ShortcutHarness.Group2}
 		groupExpansions, err := ad2.ExpandAllRDPLocalGroups(context.Background(), db)
 		require.Nil(t, err)
-		results := ad2.CalculateCrossProductNodeSets(firstSet, secondSet, groupExpansions)
+		results := ad2.CalculateCrossProductNodeSets(groupExpansions, firstSet, secondSet)
 		require.True(t, results.Contains(harness.ShortcutHarness.Group3.ID.Uint32()))
 
 		return nil
