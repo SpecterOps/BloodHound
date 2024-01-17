@@ -37,6 +37,7 @@ func newAuditLog(ctx ctx.Context, action string, data model.Auditable, idResolve
 		Action:    action,
 		Fields:    types.JSONUntypedObject(data.AuditData()),
 		RequestID: ctx.RequestID,
+		Status:    "success", // TODO: parameterize this so we can pass the actual status instead of hard-coding
 	}
 
 	authContext := ctx.AuthCtx
@@ -67,6 +68,9 @@ func (s *BloodhoundDB) ListAuditLogs(before, after time.Time, offset, limit int,
 		cursor    = s.Scope(Paginate(offset, limit)).Where("created_at between ? and ?", after, before).Order("created_at desc")
 		count     int64
 	)
+
+	// This code went through a partial refactor when adding support for new fields.
+	// See the comments here for more information: https://github.com/SpecterOps/BloodHound/pull/297#issuecomment-1887640827
 
 	if order != "" && filter.SQLString == "" {
 		result = cursor.Order(order).Find(&auditLogs).Count(&count)

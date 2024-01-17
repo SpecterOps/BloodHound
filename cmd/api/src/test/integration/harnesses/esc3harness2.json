@@ -1,0 +1,302 @@
+{
+  "nodes": [
+    {
+      "id": "n0",
+      "position": {
+        "x": 972.2765363078156,
+        "y": 933.6361632998663
+      },
+      "caption": "Domain",
+      "labels": [],
+      "properties": {},
+      "style": {
+        "node-color": "#68ccca"
+      }
+    },
+    {
+      "id": "n8",
+      "position": {
+        "x": 525.5619645062626,
+        "y": 812.9478184942836
+      },
+      "caption": "NTAuthStore",
+      "labels": [],
+      "properties": {},
+      "style": {
+        "node-color": "#653294",
+        "caption-color": "#ffffff"
+      }
+    },
+    {
+      "id": "n9",
+      "position": {
+        "x": 525.5619645062626,
+        "y": 1098.834752553724
+      },
+      "caption": "RootCA",
+      "labels": [],
+      "properties": {},
+      "style": {
+        "node-color": "#653294",
+        "caption-color": "#ffffff"
+      }
+    },
+    {
+      "id": "n11",
+      "position": {
+        "x": 210.51171900343365,
+        "y": 933.6361632998663
+      },
+      "caption": "EnterpriseCA1",
+      "labels": [],
+      "properties": {
+        "HasEnrollmentAgentRestrictions": "True"
+      },
+      "style": {
+        "node-color": "#194d33",
+        "caption-color": "#ffffff"
+      }
+    },
+    {
+      "id": "n17",
+      "position": {
+        "x": -833.951562713471,
+        "y": 1098.834752553724
+      },
+      "caption": "User1",
+      "labels": [],
+      "properties": {},
+      "style": {
+        "border-color": "#d33115"
+      }
+    },
+    {
+      "id": "n23",
+      "position": {
+        "x": -220.73005653827033,
+        "y": 1098.834752553724
+      },
+      "caption": "CertTemplate2",
+      "labels": [],
+      "properties": {
+        "AuthenticationEnabled": "True",
+        "RequiresManagerApproval": "False",
+        "SubjectAltRequireUPN": "True"
+      },
+      "style": {
+        "node-color": "#fda1ff"
+      }
+    },
+    {
+      "id": "n24",
+      "position": {
+        "x": -220.7300565382701,
+        "y": 812.9478184942836
+      },
+      "caption": "CertTemplate1",
+      "labels": [],
+      "properties": {
+        "RequiresManagerApproval": "False",
+        "AuthorizedSignatures": "0",
+        "SchemaVersion": "2"
+      },
+      "style": {
+        "node-color": "#fda1ff"
+      }
+    },
+    {
+      "id": "n26",
+      "position": {
+        "x": -551.2530983009483,
+        "y": 933.6361632998663
+      },
+      "caption": "Group1",
+      "labels": [],
+      "properties": {},
+      "style": {
+        "node-color": "#ffffff",
+        "border-color": "#009ce0"
+      }
+    },
+    {
+      "id": "n27",
+      "position": {
+        "x": -833.951562713471,
+        "y": 812.9478184942836
+      },
+      "caption": "User2",
+      "labels": [],
+      "properties": {},
+      "style": {
+        "border-color": "#009ce0"
+      }
+    }
+  ],
+  "relationships": [
+    {
+      "id": "n13",
+      "fromId": "n9",
+      "toId": "n0",
+      "type": "RootCAFor",
+      "properties": {},
+      "style": {
+        "arrow-color": "#000000"
+      }
+    },
+    {
+      "id": "n57",
+      "fromId": "n11",
+      "toId": "n9",
+      "type": "IssuedSignedBy",
+      "properties": {},
+      "style": {
+        "arrow-color": "#000000"
+      }
+    },
+    {
+      "id": "n59",
+      "fromId": "n8",
+      "toId": "n0",
+      "type": "NTAuthStoreFor",
+      "properties": {},
+      "style": {
+        "arrow-color": "#000000"
+      }
+    },
+    {
+      "id": "n60",
+      "fromId": "n11",
+      "toId": "n8",
+      "type": "TrustedForNTAuth",
+      "properties": {},
+      "style": {
+        "arrow-color": "#000000"
+      }
+    },
+    {
+      "id": "n78",
+      "fromId": "n23",
+      "toId": "n11",
+      "type": "PublishedTo",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n79",
+      "fromId": "n24",
+      "toId": "n11",
+      "type": "PublishedTo",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n82",
+      "fromId": "n24",
+      "toId": "n23",
+      "type": "EnrollOnBehalfOf",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n86",
+      "fromId": "n26",
+      "toId": "n11",
+      "type": "Enroll",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n87",
+      "fromId": "n17",
+      "toId": "n26",
+      "type": "MemberOf",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n92",
+      "fromId": "n27",
+      "toId": "n26",
+      "type": "MemberOf",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n93",
+      "fromId": "n26",
+      "toId": "n23",
+      "type": "AllExtendedRights",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n94",
+      "fromId": "n26",
+      "toId": "n24",
+      "type": "Enroll",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n95",
+      "fromId": "n17",
+      "toId": "n23",
+      "type": "DelegatedEnrollmentAgent",
+      "properties": {},
+      "style": {}
+    }
+  ],
+  "style": {
+    "font-family": "sans-serif",
+    "background-color": "#ffffff",
+    "background-image": "",
+    "background-size": "100%",
+    "node-color": "#ffffff",
+    "border-width": 4,
+    "border-color": "#000000",
+    "radius": 50,
+    "node-padding": 5,
+    "node-margin": 2,
+    "outside-position": "auto",
+    "node-icon-image": "",
+    "node-background-image": "",
+    "icon-position": "inside",
+    "icon-size": 64,
+    "caption-position": "inside",
+    "caption-max-width": 200,
+    "caption-color": "#000000",
+    "caption-font-size": 50,
+    "caption-font-weight": "normal",
+    "label-position": "inside",
+    "label-display": "pill",
+    "label-color": "#000000",
+    "label-background-color": "#ffffff",
+    "label-border-color": "#000000",
+    "label-border-width": 4,
+    "label-font-size": 40,
+    "label-padding": 5,
+    "label-margin": 4,
+    "directionality": "directed",
+    "detail-position": "inline",
+    "detail-orientation": "parallel",
+    "arrow-width": 5,
+    "arrow-color": "#000000",
+    "margin-start": 5,
+    "margin-end": 5,
+    "margin-peer": 20,
+    "attachment-start": "normal",
+    "attachment-end": "normal",
+    "relationship-icon-image": "",
+    "type-color": "#000000",
+    "type-background-color": "#ffffff",
+    "type-border-color": "#000000",
+    "type-border-width": 0,
+    "type-font-size": 16,
+    "type-padding": 5,
+    "property-position": "outside",
+    "property-alignment": "colon",
+    "property-color": "#000000",
+    "property-font-size": 16,
+    "property-font-weight": "normal"
+  }
+}

@@ -18,10 +18,10 @@ package graph
 
 import (
 	"encoding/json"
+	"github.com/RoaringBitmap/roaring"
 	"math"
 	"sync"
 
-	"github.com/RoaringBitmap/roaring"
 	"github.com/RoaringBitmap/roaring/roaring64"
 	"github.com/specterops/bloodhound/dawgs/util/size"
 )

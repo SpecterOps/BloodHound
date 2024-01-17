@@ -977,5 +977,24 @@
         }
       }
     }
+  },
+  "v2.ListAuditLogsResponse": {
+    "type": "object",
+    "properties": {
+      "count": { "$ref": "#/definitions/attributes.PagingCount" },
+      "limit": { "$ref": "#/definitions/attributes.PagingLimit" },
+      "skip": { "$ref": "#/definitions/attributes.PagingSkip" },
+      "data": {
+        "type": "object",
+        "properties": {
+          "logs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/model.AuditLog"
+            }
+          }
+        }
+      }
+    }
   }
 }

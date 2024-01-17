@@ -1,0 +1,48 @@
+# Copyright 2023 Specter Ops, Inc.
+#
+# Licensed under the Apache License, Version 2.0
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# SPDX-License-Identifier: Apache-2.0
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.bloodhound.configMap.name }}
+  namespace: {{ .Values.namespace }}
+data:
+  bloodhound.config.json: |
+    {
+      "version": 1,
+      "bind_addr": "0.0.0.0:{{ .Values.bloodhound.service.port }}",
+      "metrics_port": ":{{ (index .Values.bloodhound.container.ports 1).containerPort }}",
+      "root_url": "http://{{ .Values.bloodhound.ingress.host }}",
+      "work_dir": "/opt/bloodhound/work",
+      "log_level": "INFO",
+      "log_path": "bloodhound.log",
+      "features": {
+        "enable_auth": true
+      },
+      "database": {
+        "connection": "user={{ .Values.appdb.container.env.POSTGRES_USER }} password={{ .Values.appdb.container.env.POSTGRES_PASSWORD }} dbname={{ .Values.appdb.container.env.POSTGRES_DB }} host={{ .Values.appdb.service.name }}"
+      },
+      "neo4j": {
+        "connection": "neo4j://{{ .Values.graphdb.container.env.NEO4J_AUTH_USER }}:{{ .Values.graphdb.container.env.NEO4J_AUTH_PASS }}@{{ .Values.graphdb.service.name }}:{{ (index .Values.graphdb.service.ports 0).port }}/"
+      },
+      "collectors_base_path": "/etc/bloodhound/collectors",
+      "default_admin": {
+        "principal_name": "admin",
+        "first_name": "Bloodhound",
+        "last_name": "Admin",
+        "email_address": "spam@example.com"
+      }
+    }
