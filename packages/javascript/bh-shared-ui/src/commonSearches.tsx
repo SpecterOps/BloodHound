@@ -19,11 +19,8 @@ import { ActiveDirectoryPathfindingEdges, AzurePathfindingEdges } from './graphS
 const categoryAD = 'Active Directory';
 const categoryAzure = 'Azure';
 
-// Join all elements with "|" but the last element, then append last element
-// produces element1|element2|element3
-const azureTransitEdgeTypes = AzurePathfindingEdges().slice(0, -1).join('|') + AzurePathfindingEdges().slice(-1);
-const adTransitEdgeTypes =
-    ActiveDirectoryPathfindingEdges().slice(0, -1).join('|') + '|' + ActiveDirectoryPathfindingEdges().slice(-1);
+const azureTransitEdgeTypes = AzurePathfindingEdges().join('|');
+const adTransitEdgeTypes = ActiveDirectoryPathfindingEdges().join('|');
 
 const highPrivilegedRoleDisplayNameRegex =
     'Global Administrator.*|User Administrator.*|Cloud Application Administrator.*|Authentication Policy Administrator.*|Exchange Administrator.*|Helpdesk Administrator.*|Privileged Authentication Administrator.*';
