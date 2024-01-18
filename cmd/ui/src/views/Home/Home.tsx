@@ -21,14 +21,9 @@ const Home: React.FC = () => {
     return <Navigate to='/explore' />;
 };
 
-class Foo {
-    constructor() {}
-}
+const Bar = 0
+Bar = 1
 
-class Bar extends Foo {
-    constructor() {}
-}
-
-export {Bar}
+export {Bar as Bar}
 
 export default Home;
