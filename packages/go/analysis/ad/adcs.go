@@ -165,6 +165,79 @@ func PostADCSESC3(ctx context.Context, tx graph.Transaction, outC chan<- analysi
 	return nil
 }
 
+func principalControlsCertTemplate(principalID uint32, certTemplate *graph.Node, groupExpansions impact.PathAggregator, cache ADCSCache) bool {
+	controllers := cache.CertTemplateControllers[certTemplate.ID]
+	for _, controller := range controllers {
+		if principalID == controller.ID.Uint32() {
+			return true
+		}
+
+		if controller.Kinds.ContainsOneOf(ad.Group) {
+			expanded := groupExpansions.Cardinality(controller.ID.Uint32()).(cardinality.Duplex[uint32])
+			if expanded.Contains(principalID) {
+				return true
+			}
+		}
+	}
+
+	return false
+}
+
+func checkEmailValidity(node *graph.Node, validCertTemplates []*graph.Node, groupExpansions impact.PathAggregator, cache ADCSCache) cardinality.Duplex[uint32] {
+	results := cardinality.NewBitmap32()
+	email, _ := node.Properties.Get(common.Email.String()).String()
+
+	if email == "" {
+		exception := false
+
+		for _, certTemplate := range validCertTemplates {
+			if principalControlsCertTemplate(node.ID.Uint32(), certTemplate, groupExpansions, cache) {
+				var (
+					schemaVersion, _          = certTemplate.Properties.Get(ad.SchemaVersion.String()).Float64()
+					subjectAltRequireEmail, _ = certTemplate.Properties.Get("subjectaltrequireemail").Bool()
+					subjectRequireEmail, _    = certTemplate.Properties.Get("subjectrequireemail").Bool()
+				)
+				if (!subjectAltRequireEmail && !subjectRequireEmail) || schemaVersion == 1 {
+					exception = true
+				}
+			}
+
+		}
+
+		if exception {
+			results.Add(node.ID.Uint32())
+		}
+
+	} else {
+		results.Add(node.ID.Uint32())
+	}
+
+	return results
+}
+
+func recursiveHandler(node *graph.Node, validCertTemplates []*graph.Node, groupExpansions impact.PathAggregator, cache ADCSCache, tx graph.Transaction) cardinality.Duplex[uint32] {
+	var (
+		results  = cardinality.NewBitmap32()
+		expanded = groupExpansions.Cardinality(node.ID.Uint32()).(cardinality.Duplex[uint32])
+	)
+
+	expanded.Each(func(value uint32) (bool, error) {
+		sourceID := graph.ID(value)
+
+		if resultNode, err := tx.Nodes().Filter(query.Equals(query.NodeID(), sourceID)).First(); err != nil {
+			return true, nil
+		} else if resultNode.Kinds.ContainsOneOf(ad.Group) {
+			results.Add(resultNode.ID.Uint32())
+			results.Or(recursiveHandler(resultNode, validCertTemplates, groupExpansions, cache, tx))
+		} else if resultNode.Kinds.ContainsOneOf(ad.Computer, ad.User) {
+			results.Or(checkEmailValidity(resultNode, validCertTemplates, groupExpansions, cache))
+		}
+		return true, nil
+	})
+
+	return results
+}
+
 func PostADCSESC6a(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob, groupExpansions impact.PathAggregator, enterpriseCA, domain *graph.Node, cache ADCSCache) error {
 	var (
 		results                      = cardinality.NewBitmap32()
@@ -181,9 +254,9 @@ func PostADCSESC6a(ctx context.Context, tx graph.Transaction, outC chan<- analys
 		return nil
 	} else {
 		var (
-			tempResults     = cardinality.NewBitmap32()
-			tempUserResults = cardinality.NewBitmap32()
-			exception       = false
+			tempResults        = cardinality.NewBitmap32()
+			tempUserResults    = cardinality.NewBitmap32()
+			validCertTemplates []*graph.Node
 		)
 		for _, publishedCertTemplate := range publishedCertTemplates {
 			var (
@@ -192,8 +265,6 @@ func PostADCSESC6a(ctx context.Context, tx graph.Transaction, outC chan<- analys
 				noSecurityExtension, _        = publishedCertTemplate.Properties.Get(ad.NoSecurityExtension.String()).Bool()
 				schemaVersion, _              = publishedCertTemplate.Properties.Get(ad.SchemaVersion.String()).Float64()
 				authorizedSignatures, _       = publishedCertTemplate.Properties.Get(ad.AuthorizedSignatures.String()).Float64()
-				subjectAltRequireEmail, _     = publishedCertTemplate.Properties.Get("subjectaltrequireemail").Bool()
-				subjectRequireEmail, _        = publishedCertTemplate.Properties.Get("subjectrequireemail").Bool()
 				subjectAltRequireDNS, _       = publishedCertTemplate.Properties.Get("subjectaltrequiredns").Bool()
 				subjectAltRequireDomainDNS, _ = publishedCertTemplate.Properties.Get("subjectaltrequiredomaindns").Bool()
 			)
@@ -202,15 +273,15 @@ func PostADCSESC6a(ctx context.Context, tx graph.Transaction, outC chan<- analys
 				continue
 			} else {
 
-				if (!subjectAltRequireEmail && !subjectRequireEmail) || schemaVersion == 1 {
-					exception = true
-				}
+				validCertTemplates = append(validCertTemplates, publishedCertTemplate)
 
 				if !subjectAltRequireDNS && !subjectAltRequireDomainDNS {
-					tempUserResults.Or(CalculateCrossProductNodeSets(groupExpansions, cache.CertTemplateControllers[publishedCertTemplate.ID], cache.EnterpriseCAEnrollers[enterpriseCA.ID]))
+					crossProductResult := CalculateCrossProductNodeSets(groupExpansions, cache.CertTemplateControllers[publishedCertTemplate.ID], cache.EnterpriseCAEnrollers[enterpriseCA.ID])
+					tempUserResults.Or(crossProductResult)
 				}
 
-				tempResults.Or(CalculateCrossProductNodeSets(groupExpansions, cache.CertTemplateControllers[publishedCertTemplate.ID], cache.EnterpriseCAEnrollers[enterpriseCA.ID]))
+				crossProductResult := CalculateCrossProductNodeSets(groupExpansions, cache.CertTemplateControllers[publishedCertTemplate.ID], cache.EnterpriseCAEnrollers[enterpriseCA.ID])
+				tempResults.Or(crossProductResult)
 			}
 		}
 
@@ -222,12 +293,9 @@ func PostADCSESC6a(ctx context.Context, tx graph.Transaction, outC chan<- analys
 			} else {
 				if resultNode.Kinds.ContainsOneOf(ad.Group) {
 					results.Add(value)
+					results.Or(recursiveHandler(resultNode, validCertTemplates, groupExpansions, cache, tx))
 				} else if resultNode.Kinds.ContainsOneOf(ad.Computer) {
-					email, _ := resultNode.Properties.Get(common.Email.String()).String()
-
-					if email != "" || exception {
-						results.Add(value)
-					}
+					results.Or(checkEmailValidity(resultNode, validCertTemplates, groupExpansions, cache))
 
 				}
 			}
@@ -240,11 +308,11 @@ func PostADCSESC6a(ctx context.Context, tx graph.Transaction, outC chan<- analys
 			if resultNode, err := tx.Nodes().Filter(query.Equals(query.NodeID(), sourceID)).First(); err != nil {
 				return true, nil
 			} else {
-				if resultNode.Kinds.ContainsOneOf(ad.User) {
-					email, _ := resultNode.Properties.Get(common.Email.String()).String()
-					if email != "" || exception {
-						results.CheckedAdd(value)
-					}
+				if resultNode.Kinds.ContainsOneOf(ad.Group) {
+					results.Add(value)
+					results.Or(recursiveHandler(resultNode, validCertTemplates, groupExpansions, cache, tx))
+				} else if resultNode.Kinds.ContainsOneOf(ad.User) {
+					results.Or(checkEmailValidity(resultNode, validCertTemplates, groupExpansions, cache))
 				}
 			}
 			return true, nil
