@@ -163,6 +163,9 @@ func SelectComputersCandidateFilter(node *graph.Node) bool {
 func SelectGPOTierZeroCandidateFilter(node *graph.Node) bool {
 	if tags, err := node.Properties.Get(common.SystemTags.String()).String(); err != nil {
 		return false
+	} else if node.Kinds.ContainsOneOf(ad.Group) {
+		// GPOs don’t apply to groups.
+		return false
 	} else {
 		return strings.Contains(tags, ad.AdminTierZero)
 	}
