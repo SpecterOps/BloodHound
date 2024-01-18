@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { FC } from 'react';
-import { Link, List, ListItem, Typography } from '@mui/material';
+import { Box, Link, List, ListItem, Typography } from '@mui/material';
 import { makeStyles } from '@mui/styles';
 
 const useStyles = makeStyles((theme) => ({
@@ -92,8 +92,12 @@ const LinuxAbuse: FC = () => {
     );
 
     const step3 = (
-        <>
-            <Typography variant='body2'>
+        <Box
+            sx={{
+                borderRadius: '4px',
+                backgroundColor: '#eee',
+            }}>
+            <Typography variant='body2' sx={{ marginBottom: '-8px' }}>
                 <b>Step 3: </b>Obtain a session as victim.
                 <br />
                 <br />
@@ -153,7 +157,7 @@ const LinuxAbuse: FC = () => {
                     )
                 </ListItem>
             </List>
-        </>
+        </Box>
     );
 
     const step4 = (

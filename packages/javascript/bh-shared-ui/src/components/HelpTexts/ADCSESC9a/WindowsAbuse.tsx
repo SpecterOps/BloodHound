@@ -16,7 +16,7 @@
 
 import { FC } from 'react';
 import makeStyles from '@mui/styles/makeStyles';
-import { Typography, Link, List, ListItem } from '@mui/material';
+import { Typography, Link, List, ListItem, Box } from '@mui/material';
 
 const useStyles = makeStyles((theme) => ({
     containsCodeEl: {
@@ -88,8 +88,12 @@ const WindowsAbuse: FC = () => {
     );
 
     const step3 = (
-        <>
-            <Typography variant='body2' className={classes.containsCodeEl}>
+        <Box
+            sx={{
+                borderRadius: '4px',
+                backgroundColor: '#eee',
+            }}>
+            <Typography variant='body2' className={classes.containsCodeEl} sx={{ marginBottom: '-8px' }}>
                 <b>Step 3: </b>Obtain a session as victim.
                 <br />
                 <br />
@@ -149,7 +153,7 @@ const WindowsAbuse: FC = () => {
                     )
                 </ListItem>
             </List>
-        </>
+        </Box>
     );
 
     const step4 = (
