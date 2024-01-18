@@ -14,32 +14,60 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { FC } from 'react';
+import React, { FC } from 'react';
 import { Link, Box } from '@mui/material';
 
 const References: FC = () => {
+    const references = [
+        {
+            label: 'Certipy 4.0',
+            link: 'https://research.ifcr.dk/certipy-4-0-esc9-esc10-bloodhound-gui-new-authentication-and-request-methods-and-more-7237d88061f7',
+        },
+        {
+            label: 'Certified Pre-Owned',
+            link: 'https://specterops.io/wp-content/uploads/sites/3/2022/06/Certified_Pre-Owned.pdf',
+        },
+        {
+            label: 'Certipy',
+            link: 'https://github.com/ly4k/Certipy',
+        },
+        {
+            label: 'GhostPack Certipy',
+            link: 'https://github.com/GhostPack/Certify',
+        },
+        {
+            label: 'GhostPack Rubeus',
+            link: 'https://github.com/GhostPack/Rubeus',
+        },
+        {
+            label: 'Set-DomainObject',
+            link: 'https://powersploit.readthedocs.io/en/latest/Recon/Set-DomainObject',
+        },
+        {
+            label: 'CertUtil.exe',
+            link: 'https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/certutil',
+        },
+        {
+            label: 'LDAPSearch',
+            link: 'https://linux.die.net/man/1/ldapsearch',
+        },
+        {
+            label: 'LDAPModify',
+            link: 'https://linux.die.net/man/1/ldapmodify',
+        },
+    ];
     return (
         <Box sx={{ overflowX: 'auto' }}>
-            <Link
-                target='_blank'
-                rel='noopener'
-                href='https://specterops.io/wp-content/uploads/sites/3/2022/06/Certified_Pre-Owned.pdf'>
-                Certified Pre-Owned
-            </Link>
-            <br />
-            <Link
-                target='_blank'
-                rel='noopener'
-                href=' https://research.ifcr.dk/certipy-4-0-esc9-esc10-bloodhound-gui-new-authentication-and-request-methods-and-more-7237d88061f7'>
-                Certipy 4.0
-            </Link>
-            <br />
-            <Link
-                target='_blank'
-                rel='noopener'
-                href='https://book.hacktricks.xyz/windows-hardening/active-directory-methodology/ad-certificates/domain-escalation#editf_attributesubjectaltname2-esc6'>
-                Domain Escalation Edit Attributes
-            </Link>
+            {references.map((reference) => {
+                return (
+                    <React.Fragment key={reference.link}>
+                        <Link target='_blank' rel='noopener' href={reference.link}>
+                            {reference.label}
+                        </Link>
+                        <br />
+                    </React.Fragment>
+                );
+            })}
         </Box>
     );
 };

@@ -20,7 +20,7 @@ import LinuxAbuse from './LinuxAbuse';
 import Opsec from './Opsec';
 import References from './References';
 
-const ADCSESC6b = {
+const ADCSESC9a = {
     general: General,
     windowsAbuse: WindowsAbuse,
     linuxAbuse: LinuxAbuse,
@@ -28,4 +28,4 @@ const ADCSESC6b = {
     references: References,
 };
 
-export default ADCSESC6b;
+export default ADCSESC9a;
