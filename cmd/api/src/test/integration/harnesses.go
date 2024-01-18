@@ -1525,6 +1525,119 @@ func (s *TrustedForNTAuthHarness) Setup(graphTestContext *GraphTestContext) {
 	s.EnterpriseCA3 = graphTestContext.NewActiveDirectoryEnterpriseCA("eca 3", sid)
 }
 
+type ESC3Harness1 struct {
+	Computer1     *graph.Node
+	User1         *graph.Node
+	User2         *graph.Node
+	User3         *graph.Node
+	Group1        *graph.Node
+	Group2        *graph.Node
+	CertTemplate0 *graph.Node
+	CertTemplate1 *graph.Node
+	CertTemplate2 *graph.Node
+	CertTemplate3 *graph.Node
+	EnterpriseCA1 *graph.Node
+	EnterpriseCA2 *graph.Node
+
+	NTAuthStore *graph.Node
+	RootCA      *graph.Node
+
+	Domain *graph.Node
+}
+
+func (s *ESC3Harness1) Setup(graphTestContext *GraphTestContext) {
+	sid := RandomDomainSID()
+	emptyEkus := make([]string, 0)
+	s.Computer1 = graphTestContext.NewActiveDirectoryComputer("Computer1", sid)
+	s.User1 = graphTestContext.NewActiveDirectoryUser("User1", sid)
+	s.User2 = graphTestContext.NewActiveDirectoryUser("User2", sid)
+	s.User3 = graphTestContext.NewActiveDirectoryUser("User3", sid)
+	s.Group1 = graphTestContext.NewActiveDirectoryGroup("Group1", sid)
+	s.Group2 = graphTestContext.NewActiveDirectoryGroup("Group2", sid)
+	s.CertTemplate0 = graphTestContext.NewActiveDirectoryCertTemplate("CertTemplate0", sid, false, true, false, true, 1, 0, emptyEkus, emptyEkus)
+	s.CertTemplate1 = graphTestContext.NewActiveDirectoryCertTemplate("CertTemplate1", sid, false, false, false, false, 2, 0, emptyEkus, emptyEkus)
+	s.CertTemplate2 = graphTestContext.NewActiveDirectoryCertTemplate("CertTemplate2", sid, false, true, false, true, 1, 0, emptyEkus, emptyEkus)
+	s.CertTemplate3 = graphTestContext.NewActiveDirectoryCertTemplate("CertTemplate3", sid, false, false, false, false, 1, 0, emptyEkus, emptyEkus)
+	s.EnterpriseCA1 = graphTestContext.NewActiveDirectoryEnterpriseCA("EnterpriseCA1", sid)
+	s.EnterpriseCA2 = graphTestContext.NewActiveDirectoryEnterpriseCA("EnterpriseCA2", sid)
+	s.NTAuthStore = graphTestContext.NewActiveDirectoryNTAuthStore("NTAuthStore", sid)
+	s.RootCA = graphTestContext.NewActiveDirectoryRootCA("NTAuthStore", sid)
+	s.Domain = graphTestContext.NewActiveDirectoryDomain("ESC3-1Domain", sid, false, true)
+
+	graphTestContext.NewRelationship(s.Computer1, s.CertTemplate0, ad.Enroll)
+	graphTestContext.NewRelationship(s.Computer1, s.EnterpriseCA1, ad.Enroll)
+	graphTestContext.NewRelationship(s.CertTemplate0, s.CertTemplate0, ad.EnrollOnBehalfOf)
+	graphTestContext.NewRelationship(s.CertTemplate0, s.EnterpriseCA1, ad.PublishedTo)
+	graphTestContext.NewRelationship(s.User3, s.CertTemplate1, ad.Enroll)
+	graphTestContext.NewRelationship(s.Group2, s.CertTemplate1, ad.Enroll)
+	graphTestContext.NewRelationship(s.Group2, s.Group1, ad.MemberOf)
+	graphTestContext.NewRelationship(s.User2, s.Group1, ad.MemberOf)
+	graphTestContext.NewRelationship(s.User1, s.CertTemplate3, ad.GenericAll)
+	graphTestContext.NewRelationship(s.User1, s.Group1, ad.MemberOf)
+	graphTestContext.NewRelationship(s.User1, s.EnterpriseCA2, ad.Enroll)
+	graphTestContext.NewRelationship(s.Group1, s.EnterpriseCA1, ad.Enroll)
+	graphTestContext.NewRelationship(s.Group1, s.CertTemplate2, ad.AllExtendedRights)
+	graphTestContext.NewRelationship(s.CertTemplate1, s.EnterpriseCA1, ad.PublishedTo)
+	graphTestContext.NewRelationship(s.CertTemplate1, s.CertTemplate2, ad.EnrollOnBehalfOf)
+	graphTestContext.NewRelationship(s.CertTemplate2, s.EnterpriseCA1, ad.PublishedTo)
+	graphTestContext.NewRelationship(s.CertTemplate3, s.CertTemplate2, ad.EnrollOnBehalfOf)
+	graphTestContext.NewRelationship(s.CertTemplate3, s.EnterpriseCA2, ad.PublishedTo)
+	graphTestContext.NewRelationship(s.EnterpriseCA1, s.NTAuthStore, ad.TrustedForNTAuth)
+	graphTestContext.NewRelationship(s.EnterpriseCA1, s.RootCA, ad.IssuedSignedBy)
+	graphTestContext.NewRelationship(s.NTAuthStore, s.Domain, ad.NTAuthStoreFor)
+	graphTestContext.NewRelationship(s.RootCA, s.Domain, ad.RootCAFor)
+
+	s.EnterpriseCA1.Properties.Set(ad.EnrollmentAgentRestrictionsCollected.String(), true)
+	s.EnterpriseCA1.Properties.Set(ad.HasEnrollmentAgentRestrictions.String(), false)
+	graphTestContext.UpdateNode(s.EnterpriseCA1)
+}
+
+type ESC3Harness2 struct {
+	User1         *graph.Node
+	User2         *graph.Node
+	Group1        *graph.Node
+	CertTemplate1 *graph.Node
+	CertTemplate2 *graph.Node
+	EnterpriseCA1 *graph.Node
+
+	NTAuthStore *graph.Node
+	RootCA      *graph.Node
+
+	Domain *graph.Node
+}
+
+func (s *ESC3Harness2) Setup(c *GraphTestContext) {
+	sid := RandomDomainSID()
+	emptyEkus := make([]string, 0)
+	s.User1 = c.NewActiveDirectoryUser("User1", sid)
+	s.User2 = c.NewActiveDirectoryUser("User2", sid)
+	s.Group1 = c.NewActiveDirectoryGroup("Group1", sid)
+	s.CertTemplate1 = c.NewActiveDirectoryCertTemplate("CertTemplate1", sid, false, true, false, false, 2, 0, emptyEkus, emptyEkus)
+	s.CertTemplate2 = c.NewActiveDirectoryCertTemplate("CertTemplate2", sid, false, true, false, true, 1, 0, emptyEkus, emptyEkus)
+	s.EnterpriseCA1 = c.NewActiveDirectoryEnterpriseCA("EnterpriseCA1", sid)
+	s.NTAuthStore = c.NewActiveDirectoryNTAuthStore("NTAuthStore", sid)
+	s.RootCA = c.NewActiveDirectoryRootCA("NTAuthStore", sid)
+	s.Domain = c.NewActiveDirectoryDomain("ESC3-1Domain", sid, false, true)
+
+	c.NewRelationship(s.User2, s.Group1, ad.MemberOf)
+	c.NewRelationship(s.User1, s.Group1, ad.MemberOf)
+	c.NewRelationship(s.User1, s.CertTemplate2, ad.DelegatedEnrollmentAgent)
+	c.NewRelationship(s.Group1, s.CertTemplate1, ad.Enroll)
+	c.NewRelationship(s.Group1, s.EnterpriseCA1, ad.Enroll)
+	c.NewRelationship(s.Group1, s.CertTemplate2, ad.AllExtendedRights)
+	c.NewRelationship(s.CertTemplate1, s.EnterpriseCA1, ad.PublishedTo)
+	c.NewRelationship(s.CertTemplate1, s.CertTemplate2, ad.EnrollOnBehalfOf)
+	c.NewRelationship(s.CertTemplate2, s.EnterpriseCA1, ad.PublishedTo)
+	c.NewRelationship(s.EnterpriseCA1, s.NTAuthStore, ad.TrustedForNTAuth)
+	c.NewRelationship(s.EnterpriseCA1, s.RootCA, ad.IssuedSignedBy)
+	c.NewRelationship(s.NTAuthStore, s.Domain, ad.NTAuthStoreFor)
+	c.NewRelationship(s.RootCA, s.Domain, ad.RootCAFor)
+
+	s.EnterpriseCA1.Properties.Set(ad.EnrollmentAgentRestrictionsCollected.String(), true)
+	s.EnterpriseCA1.Properties.Set(ad.HasEnrollmentAgentRestrictions.String(), true)
+	c.UpdateNode(s.EnterpriseCA1)
+}
+
 type ShortcutHarness struct {
 	Group1 *graph.Node
 	Group2 *graph.Node
@@ -1618,4 +1731,6 @@ type HarnessDetails struct {
 	TrustedForNTAuthHarness                         TrustedForNTAuthHarness
 	NumCollectedActiveDirectoryDomains              int
 	AZInboundControlHarness                         AZInboundControlHarness
+	ESC3Harness1                                    ESC3Harness1
+	ESC3Harness2                                    ESC3Harness2
 }
