@@ -38,7 +38,7 @@ const LinuxAbuse: FC = () => {
     const classes = useStyles();
     const step1 = (
         <>
-            <Typography className={classes.containsCodeEl}>
+            <Typography variant='body2' className={classes.containsCodeEl}>
                 <b>Step 1: </b>Set UPN of victim to targeted principal's <code>sAMAccountName</code>.
                 <br />
                 <br />
@@ -52,7 +52,7 @@ const LinuxAbuse: FC = () => {
 
     const step2 = (
         <>
-            <Typography className={classes.containsCodeEl}>
+            <Typography variant='body2' className={classes.containsCodeEl}>
                 <b>Step 2: </b>Check if <code>mail</code> attribute of victim must be set and set it if required.
                 <br />
                 <br />
