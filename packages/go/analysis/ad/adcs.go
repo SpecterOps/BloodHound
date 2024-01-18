@@ -215,29 +215,6 @@ func checkEmailValidity(node *graph.Node, validCertTemplates []*graph.Node, grou
 	return results
 }
 
-func recursiveHandler(node *graph.Node, validCertTemplates []*graph.Node, groupExpansions impact.PathAggregator, cache ADCSCache, tx graph.Transaction) cardinality.Duplex[uint32] {
-	var (
-		results  = cardinality.NewBitmap32()
-		expanded = groupExpansions.Cardinality(node.ID.Uint32()).(cardinality.Duplex[uint32])
-	)
-
-	expanded.Each(func(value uint32) (bool, error) {
-		sourceID := graph.ID(value)
-
-		if resultNode, err := tx.Nodes().Filter(query.Equals(query.NodeID(), sourceID)).First(); err != nil {
-			return true, nil
-		} else if resultNode.Kinds.ContainsOneOf(ad.Group) {
-			results.Add(resultNode.ID.Uint32())
-			results.Or(recursiveHandler(resultNode, validCertTemplates, groupExpansions, cache, tx))
-		} else if resultNode.Kinds.ContainsOneOf(ad.Computer, ad.User) {
-			results.Or(checkEmailValidity(resultNode, validCertTemplates, groupExpansions, cache))
-		}
-		return true, nil
-	})
-
-	return results
-}
-
 func PostADCSESC6a(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob, groupExpansions impact.PathAggregator, enterpriseCA, domain *graph.Node, cache ADCSCache) error {
 	var (
 		results                      = cardinality.NewBitmap32()
@@ -293,7 +270,22 @@ func PostADCSESC6a(ctx context.Context, tx graph.Transaction, outC chan<- analys
 			} else {
 				if resultNode.Kinds.ContainsOneOf(ad.Group) {
 					results.Add(value)
-					results.Or(recursiveHandler(resultNode, validCertTemplates, groupExpansions, cache, tx))
+
+					expanded := groupExpansions.Cardinality(value).(cardinality.Duplex[uint32])
+
+					expanded.Each(func(value uint32) (bool, error) {
+						sourceID := graph.ID(value)
+
+						if resultNode, err := tx.Nodes().Filter(query.Equals(query.NodeID(), sourceID)).First(); err != nil {
+							return true, nil
+						} else if resultNode.Kinds.ContainsOneOf(ad.Group) {
+							results.Add(resultNode.ID.Uint32())
+						} else if resultNode.Kinds.ContainsOneOf(ad.Computer, ad.User) {
+							results.Or(checkEmailValidity(resultNode, validCertTemplates, groupExpansions, cache))
+						}
+						return true, nil
+					})
+
 				} else if resultNode.Kinds.ContainsOneOf(ad.Computer) {
 					results.Or(checkEmailValidity(resultNode, validCertTemplates, groupExpansions, cache))
 
