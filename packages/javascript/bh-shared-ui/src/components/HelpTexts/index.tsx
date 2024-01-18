@@ -65,6 +65,7 @@ import AllExtendedRights from './AllExtendedRights/AllExtendedRights';
 import AllowedToAct from './AllowedToAct/AllowedToAct';
 import AllowedToDelegate from './AllowedToDelegate/AllowedToDelegate';
 import CanAbuseUPNCertMapping from './CanAbuseUPNCertMapping/CanAbuseUPNCertMapping';
+import CanAbuseWeakCertBinding from './CanAbuseWeakCertBinding/CanAbuseWeakCertBinding';
 import CanPSRemote from './CanPSRemote/CanPSRemote';
 import CanRDP from './CanRDP/CanRDP';
 import Contains from './Contains/Contains';
@@ -148,6 +149,7 @@ const EdgeInfoComponents = {
     HasSIDHistory: HasSIDHistory,
     TrustedBy: TrustedBy,
     CanAbuseUPNCertMapping: CanAbuseUPNCertMapping,
+    CanAbuseWeakCertBinding: CanAbuseWeakCertBinding,
     CanPSRemote: CanPSRemote,
     AZAddMembers: AZAddMembers,
     AZAddSecret: AZAddSecret,
