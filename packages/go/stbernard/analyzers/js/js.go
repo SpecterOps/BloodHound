@@ -71,7 +71,7 @@ func runEslint(cwd string, env []string) ([]codeclimate.Entry, error) {
 		outb      bytes.Buffer
 	)
 
-	cmd := exec.Command("yarn", "run", "lint", "--format", "json", "--quiet")
+	cmd := exec.Command("yarn", "run", "lint", "--format", "json")
 	cmd.Env = env
 	cmd.Dir = cwd
 	cmd.Stdout = &outb

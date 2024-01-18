@@ -5,7 +5,8 @@
       "unused"
     ],
     "enable": [
-      "gosimple"
+      "gosimple",
+      "stylecheck"
     ]
   },
   "issues": {
@@ -49,11 +50,21 @@
       "serial_integration"
     ]
   },
+  "severity": {
+    "default-severity": "error",
+    "rules": [
+      {
+        "text": "(ST\\d{4}|S\\d{4})",
+        "severity": "warning"
+      }
+    ]
+  },
   "linters-settings": {
     "stylecheck": {
       "checks": [
         "all",
-        "-ST1000"
+        "-ST1000",
+        "-ST1003"
       ]
     }
   }

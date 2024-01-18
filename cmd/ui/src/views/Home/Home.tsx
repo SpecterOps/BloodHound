@@ -21,9 +21,10 @@ const Home: React.FC = () => {
     return <Navigate to='/explore' />;
 };
 
-const Bar = 0
-Bar = 1
-
-export {Bar as Bar}
-
 export default Home;
+
+// TODO: Remove before merge to fix linter messages
+const Bar = 0
+if (true) {
+    console.log('nothing')
+}
