@@ -16,11 +16,29 @@
 
 import { FC } from 'react';
 import { Link, List, ListItem, Typography } from '@mui/material';
+import { makeStyles } from '@mui/styles';
+
+const useStyles = makeStyles((theme) => ({
+    containsCodeEl: {
+        '& code': {
+            backgroundColor: 'darkgrey',
+            padding: '2px .5ch',
+            fontWeight: 'normal',
+            fontSize: '.875em',
+            borderRadius: '3px',
+            display: 'inline',
+
+            overflowWrap: 'break-word',
+            whiteSpace: 'pre-wrap',
+        },
+    },
+}));
 
 const LinuxAbuse: FC = () => {
+    const classes = useStyles();
     const step1 = (
         <>
-            <Typography>
+            <Typography className={classes.containsCodeEl}>
                 <b>Step 1: </b>Set UPN of victim to targeted principal's <code>sAMAccountName</code>.
                 <br />
                 <br />
@@ -34,7 +52,7 @@ const LinuxAbuse: FC = () => {
 
     const step2 = (
         <>
-            <Typography>
+            <Typography className={classes.containsCodeEl}>
                 <b>Step 2: </b>Check if <code>mail</code> attribute of victim must be set and set it if required.
                 <br />
                 <br />

@@ -18,15 +18,33 @@ import { FC } from 'react';
 import { groupSpecialFormat } from '../utils';
 import { EdgeInfoProps } from '../index';
 import { Typography } from '@mui/material';
+import { makeStyles } from '@mui/styles';
+
+const useStyles = makeStyles((theme) => ({
+    containsCodeEl: {
+        '& code': {
+            backgroundColor: 'darkgrey',
+            padding: '2px .5ch',
+            fontWeight: 'normal',
+            fontSize: '.875em',
+            borderRadius: '3px',
+            display: 'inline',
+
+            overflowWrap: 'break-word',
+            whiteSpace: 'pre-wrap',
+        },
+    },
+}));
 
 const General: FC<EdgeInfoProps> = ({ sourceName, sourceType, targetName }) => {
+    const classes = useStyles();
     return (
         <>
             <Typography variant='body2'>
                 {groupSpecialFormat(sourceType, sourceName)} the privileges to perform the ADCS ESC9 Scenario A attack
                 against the target domain.
             </Typography>
-            <Typography variant='body2'>
+            <Typography variant='body2' className={classes.containsCodeEl}>
                 The principal has control over a victim principal with permission to enroll on one or more certificate
                 templates, configured to: 1) enable certificate authentication, 2) require the{' '}
                 <code>userPrincipalName</code> (UPN) of the enrollee included in the Subject Alternative Name (SAN), and
@@ -36,7 +54,7 @@ const General: FC<EdgeInfoProps> = ({ sourceName, sourceType, targetName }) => {
                 Controller (DC) configured to allow weak certificate binding enforcement. This setup lets the principal
                 impersonate any AD forest principal (user or computer) without their credentials.
             </Typography>
-            <Typography variant='body2'>
+            <Typography variant='body2' className={classes.containsCodeEl}>
                 The attacker principal can abuse their control over the victim principal to modify the victim’s UPN to
                 match the <code>sAMAccountName</code> of a targeted principal. Example: If the targeted principal is
                 Administrator@corp.local user, the victim's UPN will be populated with "Administrator" (without the
