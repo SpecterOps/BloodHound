@@ -1,4 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2024 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -68,6 +68,7 @@ import CanPSRemote from './CanPSRemote/CanPSRemote';
 import CanRDP from './CanRDP/CanRDP';
 import Contains from './Contains/Contains';
 import DCSync from './DCSync/DCSync';
+import DCFor from './DCFor/DCFor';
 import DelegatedEnrollmentAgent from './DelegatedEnrollmentAgent/DelegatedEnrollmentAgent';
 import DumpSMSAPassword from './DumpSMSAPassword/DumpSMSAPassword';
 import ADCSESC3 from './ADCSESC3/ADCSESC3';
@@ -107,6 +108,8 @@ import WritePKINameFlag from './WritePKINameFlag/WritePKINameFlag';
 import WriteSPN from './WriteSPN/WriteSPN';
 import ADCSESC1 from './ADCSESC1/ADCSESC1';
 import CanAbuseWeakCertBinding from './CanAbuseWeakCertBinding/CanAbuseWeakCertBinding';
+import ADCSESC6a from './ADCSESC6a/ADCSESC6a';
+import ADCSESC6b from './ADCSESC6b/ADCSESC6b';
 
 export type EdgeInfoProps = {
     edgeName?: string;
@@ -208,10 +211,13 @@ const EdgeInfoComponents = {
     ADCSESC1: ADCSESC1,
     ADCSESC3: ADCSESC3,
     CanAbuseWeakCertBinding: CanAbuseWeakCertBinding,
+    ADCSESC6a: ADCSESC6a,
+    ADCSESC6b: ADCSESC6b,
     ManageCA: ManageCA,
     ManageCertificates: ManageCertificates,
     WritePKIEnrollmentFlag: WritePKIEnrollmentFlag,
     WritePKINameFlag: WritePKINameFlag,
+    DCFor: DCFor,
 };
 
 export default EdgeInfoComponents;
