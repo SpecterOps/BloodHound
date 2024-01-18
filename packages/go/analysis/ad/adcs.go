@@ -308,10 +308,7 @@ func PostADCSESC6a(ctx context.Context, tx graph.Transaction, outC chan<- analys
 			if resultNode, err := tx.Nodes().Filter(query.Equals(query.NodeID(), sourceID)).First(); err != nil {
 				return true, nil
 			} else {
-				if resultNode.Kinds.ContainsOneOf(ad.Group) {
-					results.Add(value)
-					results.Or(recursiveHandler(resultNode, validCertTemplates, groupExpansions, cache, tx))
-				} else if resultNode.Kinds.ContainsOneOf(ad.User) {
+				if resultNode.Kinds.ContainsOneOf(ad.User) {
 					results.Or(checkEmailValidity(resultNode, validCertTemplates, groupExpansions, cache))
 				}
 			}
