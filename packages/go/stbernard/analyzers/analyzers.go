@@ -160,7 +160,7 @@ func runEslint(cwd string, env []string) ([]codeClimateEntry, error) {
 		outb      bytes.Buffer
 	)
 
-	cmd := exec.Command("yarn", "run", "lint", "--format", "json")
+	cmd := exec.Command("yarn", "run", "lint", "--format", "json", "--quiet")
 	cmd.Env = env
 	cmd.Dir = cwd
 	cmd.Stdout = &outb
@@ -176,32 +176,30 @@ func runEslint(cwd string, env []string) ([]codeClimateEntry, error) {
 	}
 
 	for _, entry := range rawResult {
-		if entry.WarningCount > 0 || entry.ErrorCount > 0 || entry.FatalErrorCount > 0 {
-			for _, msg := range entry.Messages {
-				var severity string
+		for _, msg := range entry.Messages {
+			var severity string
 
-				switch msg.Severity {
-				case 0:
-					severity = "info"
-				case 1:
-					severity = "warning"
-				case 2:
-					severity = "error"
-				}
-
-				ccEntry := codeClimateEntry{
-					Description: msg.RuleID + ": " + msg.Message,
-					Severity:    severity,
-					Location: codeClimateLocation{
-						Path: entry.FilePath,
-						Lines: codeClimateLines{
-							Begin: msg.Line,
-						},
-					},
-				}
-
-				result = append(result, ccEntry)
+			switch msg.Severity {
+			case 0:
+				severity = "info"
+			case 1:
+				severity = "warning"
+			case 2:
+				severity = "error"
 			}
+
+			ccEntry := codeClimateEntry{
+				Description: msg.RuleID + ": " + msg.Message,
+				Severity:    severity,
+				Location: codeClimateLocation{
+					Path: entry.FilePath,
+					Lines: codeClimateLines{
+						Begin: msg.Line,
+					},
+				},
+			}
+
+			result = append(result, ccEntry)
 		}
 	}
 
