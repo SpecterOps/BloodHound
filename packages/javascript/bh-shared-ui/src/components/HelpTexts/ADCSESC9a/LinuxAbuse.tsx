@@ -57,10 +57,9 @@ const LinuxAbuse: FC = () => {
                 <br />
                 <br />
                 If the certificate template is of schema version 2 or above and its attribute{' '}
-                <code>msPKI-CertificateNameFlag</code>
-                contains the flag <code>SUBJECT_REQUIRE_EMAIL</code> and/or <code>SUBJECT_ALT_REQUIRE_EMAIL</code> then
-                the victim principal must have their <code>mail</code> attribute set for the certificate enrollment. The
-                CertTemplate BloodHound node will have
+                <code>msPKI-CertificateNameFlag</code> contains the flag <code>SUBJECT_REQUIRE_EMAIL</code> and/or{' '}
+                <code>SUBJECT_ALT_REQUIRE_EMAIL</code> then the victim principal must have their <code>mail</code>{' '}
+                attribute set for the certificate enrollment. The CertTemplate BloodHound node will have
                 <em>"Subject Require Email"</em> or <em>"Subject Alternative Name Require Email"</em> set to true if any
                 of the flags are present.
                 <br />
@@ -74,7 +73,7 @@ const LinuxAbuse: FC = () => {
                 principal why it can be set to any arbitrary string.
                 <br />
                 <br />
-                Check if the victim has the mail attribute set using PowerView:
+                Check if the victim has the mail attribute set using ldapsearch:
             </Typography>
             <Typography
                 component={

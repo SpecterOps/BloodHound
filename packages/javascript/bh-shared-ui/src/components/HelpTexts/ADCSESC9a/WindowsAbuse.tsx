@@ -149,7 +149,6 @@ const WindowsAbuse: FC = () => {
                     )
                 </ListItem>
             </List>
-            <Typography variant='body2'>Check if the victim has the mail attribute set using PowerView:</Typography>
         </>
     );
 
