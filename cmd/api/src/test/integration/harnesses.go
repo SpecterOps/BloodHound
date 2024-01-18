@@ -1702,7 +1702,7 @@ func setupHarnessFromArrowsJson(c *GraphTestContext, fileName string) {
 	sid := RandomDomainSID()
 
 	if data, err := harnesses.ReadHarness(fileName); err != nil {
-		c.testCtrl.Errorf("failed esc6aharnesstemplate2 setup: %v", err)
+		c.testCtrl.Errorf("failed %s setup: %v", fileName, err)
 	} else {
 		nodeMap := map[string]*graph.Node{}
 		for _, node := range data.Nodes {
@@ -1732,13 +1732,13 @@ func setupHarnessFromArrowsJson(c *GraphTestContext, fileName string) {
 				}
 
 				for key, value := range node.Properties {
+					//Unfortunately, all properties set within arrows.app are output as strings so we have to do a type dance here
+					//It would be best to define value types for all node properties to avoid handling them this way
 					if strings.ToLower(value) == "null" {
 						continue
 					}
 
-					//Unfortunately, all properties set within arrows.app are output as strings so we have to do a type dance here
 					//This is an exception for schemaVersion which should not be a boolean
-					//It would be best to strongly type all node property values to avoid handling them this way
 					if value == "1" || value == "0" || value == "2" {
 						intValue, _ := strconv.ParseInt(value, 10, 32)
 						nodeMap[node.ID].Properties.Set(strings.ToLower(key), float64(intValue))
@@ -1753,16 +1753,10 @@ func setupHarnessFromArrowsJson(c *GraphTestContext, fileName string) {
 		}
 
 		for _, relationship := range data.Relationships {
-			var (
-				kind, err = analysis.ParseKind(relationship.Kind)
-			)
-
-			if err != nil {
+			if kind, err := analysis.ParseKind(relationship.Kind); err != nil {
 				c.testCtrl.Errorf("invalid relationship kind: %s", kind)
 				continue
-			}
-
-			if asserting, ok := relationship.Properties["asserted"]; !ok {
+			} else if asserting, ok := relationship.Properties["asserted"]; !ok {
 				c.NewRelationship(nodeMap[relationship.From], nodeMap[relationship.To], kind)
 			} else {
 				if skip, err := strconv.ParseBool(asserting); err != nil {
