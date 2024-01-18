@@ -79,7 +79,7 @@ func runEslint(cwd string, env []string) ([]codeclimate.Entry, error) {
 	err := cmd.Run()
 	if _, ok := err.(*exec.ExitError); ok {
 		err = ErrNonZeroExit
-	} else {
+	} else if err != nil {
 		return result, fmt.Errorf("unexpected failure: %w", err)
 	}
 
