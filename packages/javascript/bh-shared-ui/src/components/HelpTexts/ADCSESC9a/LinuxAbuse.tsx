@@ -21,7 +21,7 @@ const LinuxAbuse: FC = () => {
     const step1 = (
         <>
             <Typography>
-                <b>Step 1: </b>Set UPN of victim to targeted principal’s sAMAccountName.
+                <b>Step 1: </b>Set UPN of victim to targeted principal's <code>sAMAccountName</code>.
                 <br />
                 <br />
                 Set the UPN of the victim principal using Certipy:
@@ -35,14 +35,16 @@ const LinuxAbuse: FC = () => {
     const step2 = (
         <>
             <Typography>
-                <b>Step 2: </b>Check if mail attribute of victim must be set and set it if required.
+                <b>Step 2: </b>Check if <code>mail</code> attribute of victim must be set and set it if required.
                 <br />
                 <br />
-                If the certificate template is of schema version 2 or above and its attribute msPKI-CertificateNameFlag
-                contains the flag SUBJECT_REQUIRE_EMAIL and/or SUBJECT_ALT_REQUIRE_EMAIL then the victim principal must
-                have their mail attribute set for the certificate enrollment. The CertTemplate BloodHound node will have
-                “Subject Require Email" or “Subject Alternative Name Require Email" set to true if any of the flags are
-                present.
+                If the certificate template is of schema version 2 or above and its attribute{' '}
+                <code>msPKI-CertificateNameFlag</code>
+                contains the flag <code>SUBJECT_REQUIRE_EMAIL</code> and/or <code>SUBJECT_ALT_REQUIRE_EMAIL</code> then
+                the victim principal must have their <code>mail</code> attribute set for the certificate enrollment. The
+                CertTemplate BloodHound node will have
+                <em>"Subject Require Email"</em> or <em>"Subject Alternative Name Require Email"</em> set to true if any
+                of the flags are present.
                 <br />
                 <br />
                 If the certificate template is of schema version 1 or does not have any of the email flags, then

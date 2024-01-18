@@ -15,13 +15,31 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { FC } from 'react';
+import makeStyles from '@mui/styles/makeStyles';
 import { Typography, Link, List, ListItem } from '@mui/material';
 
+const useStyles = makeStyles((theme) => ({
+    containsCodeEl: {
+        '& code': {
+            backgroundColor: 'darkgrey',
+            padding: '2px .5ch',
+            fontWeight: 'normal',
+            fontSize: '.875em',
+            borderRadius: '3px',
+            display: 'inline',
+
+            overflowWrap: 'break-word',
+            whiteSpace: 'pre-wrap',
+        },
+    },
+}));
+
 const WindowsAbuse: FC = () => {
+    const classes = useStyles();
     const step1 = (
         <>
-            <Typography variant='body2'>
-                <b>Step 1: </b>Set UPN of victim to targeted principal’s sAMAccountName.
+            <Typography variant='body2' className={classes.containsCodeEl}>
+                <b>Step 1: </b>Set UPN of victim to targeted principal's <code>sAMAccountName</code>.
                 <br />
                 <br />
                 Set the UPN of the victim principal using PowerView:
@@ -34,14 +52,15 @@ const WindowsAbuse: FC = () => {
 
     const step2 = (
         <>
-            <Typography variant='body2'>
+            <Typography variant='body2' className={classes.containsCodeEl}>
                 <b>Step 2: </b>Check if mail attribute of victim must be set and set it if required. If the certificate
                 <br />
                 <br />
-                template is of schema version 2 or above and its attribute msPKI-CertificateNameFlag contains the flag
-                SUBJECT_REQUIRE_EMAIL and/or SUBJECT_ALT_REQUIRE_EMAIL then the victim principal must have their mail
-                attribute set for the certificate enrollment. The CertTemplate BloodHound node will have “Subject
-                Require Email" or “Subject Alternative Name Require Email" set to true if any of the flags are present.
+                template is of schema version 2 or above and its attribute <code>msPKI-CertificateNameFlag</code>{' '}
+                contains the flag <code>SUBJECT_REQUIRE_EMAIL</code> and/or <code>SUBJECT_ALT_REQUIRE_EMAIL</code> then
+                the victim principal must have their mail attribute set for the certificate enrollment. The CertTemplate
+                BloodHound node will have <em>"Subject Require Email"</em> or{' '}
+                <em>"Subject Alternative Name Require Email"</em> set to true if any of the flags are present.
                 <br />
                 <br />
                 If the certificate template is of schema version 1 or does not have any of the email flags, then
@@ -70,7 +89,7 @@ const WindowsAbuse: FC = () => {
 
     const step3 = (
         <>
-            <Typography variant='body2'>
+            <Typography variant='body2' className={classes.containsCodeEl}>
                 <b>Step 3: </b>Obtain a session as victim.
                 <br />
                 <br />
@@ -144,7 +163,9 @@ const WindowsAbuse: FC = () => {
                 affected EnterpriseCA:
             </Typography>
             <Typography component={'pre'}>{'Certify.exe request /ca:SERVER\\CA-NAME /template:TEMPLATE'}</Typography>
-            <Typography variant='body2'>Save the certificate as cert.pem and the private key as cert.key.</Typography>
+            <Typography variant='body2' className={classes.containsCodeEl}>
+                Save the certificate as <code>cert.pem</code> and the private key as <code>cert.key</code>.
+            </Typography>
         </>
     );
 
