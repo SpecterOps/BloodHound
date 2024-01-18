@@ -99,7 +99,7 @@ func AuthMiddleware(authenticator api.Authenticator) mux.MiddlewareFunc {
 	}
 }
 
-// PermissionsCheck is a middleware func generator that returns a http.Handler which closes around a list of
+// PermissionsCheckAll is a middleware func generator that returns a http.Handler which closes around a list of
 // permissions that an actor must have in the request auth context to access the wrapped http.Handler.
 func PermissionsCheckAll(authorizer auth.Authorizer, permissions ...model.Permission) mux.MiddlewareFunc {
 	return func(next http.Handler) http.Handler {
@@ -115,7 +115,7 @@ func PermissionsCheckAll(authorizer auth.Authorizer, permissions ...model.Permis
 	}
 }
 
-// PermissionsCheck is a middleware func generator that returns a http.Handler which closes around a list of
+// PermissionsCheckAtLeastOne is a middleware func generator that returns a http.Handler which closes around a list of
 // permissions that an actor must have at least one in the request auth context to access the wrapped http.Handler.
 func PermissionsCheckAtLeastOne(authorizer auth.Authorizer, permissions ...model.Permission) mux.MiddlewareFunc {
 	return func(next http.Handler) http.Handler {
