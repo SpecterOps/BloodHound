@@ -170,7 +170,12 @@ func runEslint(cwd string, env []string) ([]codeClimateEntry, error) {
 		cmdErr = ErrNonZeroExit
 	}
 
-	err := json.NewDecoder(&outb).Decode(&rawResult)
+	rawOut := outb.String()
+	log.Print("\n\nBegin eslint dump:\n\n")
+	log.Println(rawOut)
+	log.Print("\n\nEnd eslint dump:\n\n")
+
+	err := json.Unmarshal([]byte(rawOut), &rawResult)
 	if err != nil {
 		return result, fmt.Errorf("failed to decode output: %w", err)
 	}
