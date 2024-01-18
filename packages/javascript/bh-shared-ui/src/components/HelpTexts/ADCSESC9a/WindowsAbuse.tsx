@@ -21,8 +21,10 @@ const WindowsAbuse: FC = () => {
     const step1 = (
         <>
             <Typography variant='body2'>
-                <b>Step 1: </b>Set UPN of victim to targeted principal’s sAMAccountName. Set the UPN of the victim
-                principal using PowerView:
+                <b>Step 1: </b>Set UPN of victim to targeted principal’s sAMAccountName.
+                <br />
+                <br />
+                Set the UPN of the victim principal using PowerView:
             </Typography>
             <Typography component={'pre'}>
                 {"Set-DomainObject -Identity VICTIM -Set @{'userprincipalname'='Target'}"}
@@ -69,7 +71,10 @@ const WindowsAbuse: FC = () => {
     const step3 = (
         <>
             <Typography variant='body2'>
-                <b>Step 3: </b>Obtain a session as victim. There are several options for this step.
+                <b>Step 3: </b>Obtain a session as victim.
+                <br />
+                <br />
+                There are several options for this step.
                 <br />
                 <br />
                 If the victim is a computer, you can obtain the credentials of the computer account using the Shadow
