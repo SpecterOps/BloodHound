@@ -1,4 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2024 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -14,20 +14,19 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import General from './General';
-import WindowsAbuse from './WindowsAbuse';
-import LinuxAbuse from './LinuxAbuse';
-import Opsec from './Opsec';
-import References from './References';
-import Composition from './Composition';
+import { FC } from 'react';
+import { EdgeInfoProps } from '../index';
+import { Typography } from '@mui/material';
 
-const ADCSESC3 = {
-    general: General,
-    windowsAbuse: WindowsAbuse,
-    linuxAbuse: LinuxAbuse,
-    opsec: Opsec,
-    references: References,
-    composition: Composition,
+const General: FC<EdgeInfoProps> = () => {
+    return (
+        <>
+            <Typography variant='body2'>
+                This edge indicates that the computer is a domain controller for the domain. This edge is not created
+                for read-only domain controllers.
+            </Typography>
+        </>
+    );
 };
 
-export default ADCSESC3;
+export default General;

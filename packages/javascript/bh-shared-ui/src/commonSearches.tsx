@@ -19,11 +19,8 @@ import { ActiveDirectoryPathfindingEdges, AzurePathfindingEdges } from './graphS
 const categoryAD = 'Active Directory';
 const categoryAzure = 'Azure';
 
-// Join all elements with "|" but the last element, then append last element
-// produces element1|element2|element3
-const azureTransitEdgeTypes = AzurePathfindingEdges().slice(0, -1).join('|') + AzurePathfindingEdges().slice(-1);
-const adTransitEdgeTypes =
-    ActiveDirectoryPathfindingEdges().slice(0, -1).join('|') + '|' + ActiveDirectoryPathfindingEdges().slice(-1);
+const azureTransitEdgeTypes = AzurePathfindingEdges().join('|');
+const adTransitEdgeTypes = ActiveDirectoryPathfindingEdges().join('|');
 
 const highPrivilegedRoleDisplayNameRegex =
     'Global Administrator.*|User Administrator.*|Cloud Application Administrator.*|Authentication Policy Administrator.*|Exchange Administrator.*|Helpdesk Administrator.*|Privileged Authentication Administrator.*';
@@ -90,11 +87,11 @@ export const CommonSearches: CommonSearchType[] = [
             },
             {
                 description: 'Workstations where Domain Users can RDP',
-                cypher: `MATCH p=(m:Group)-[:CanRDP]->(c:Computer)\nWHERE m.objectid ENDS WITH "-513" AND NOT toUpper(c.operatingsystem) CONTAINS "Server"\nRETURN p`,
+                cypher: `MATCH p=(m:Group)-[:CanRDP]->(c:Computer)\nWHERE m.objectid ENDS WITH "-513" AND NOT toUpper(c.operatingsystem) CONTAINS "SERVER"\nRETURN p`,
             },
             {
                 description: 'Servers where Domain Users can RDP',
-                cypher: `MATCH p=(m:Group)-[:CanRDP]->(c:Computer)\nWHERE m.objectid ENDS WITH "-513" AND toUpper(c.operatingsystem) CONTAINS "Server"\nRETURN p`,
+                cypher: `MATCH p=(m:Group)-[:CanRDP]->(c:Computer)\nWHERE m.objectid ENDS WITH "-513" AND toUpper(c.operatingsystem) CONTAINS "SERVER"\nRETURN p`,
             },
             {
                 description: 'Dangerous privileges for Domain Users groups',

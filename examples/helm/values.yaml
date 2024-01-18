@@ -14,12 +14,12 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-namespace: bloodhoundad
+namespace: bloodhound
 
 appdb:
-  name: bloodhound-postgres
+  name: postgres
   replicas: 1
-  appName: bloodhound-postgres
+  appName: postgres
   container:
     name: postgres
     image: docker.io/library/postgres:13.2
@@ -39,6 +39,7 @@ appdb:
     failureThreshold: 5
   service:
     enabled: true
+    name: app-db
     type: ClusterIP
     port: 5432
     targetPort: 5432
@@ -56,13 +57,15 @@ graphdb:
     name: neo4j
     image: docker.io/library/neo4j:4.4
     env:
-      NEO4J_AUTH: "neo4j/bloodhoundcommunityedition"
+      NEO4J_AUTH_USER: "neo4j"
+      NEO4J_AUTH_PASS: "bloodhoundcommunityedition"
       NEO4J_dbms_allow__upgrade: "true"
     ports:
       - containerPort: 7687
       - containerPort: 7474
   service:
     enabled: true
+    name: graph-db
     type: ClusterIP
     ports:
       - name: graphdb
@@ -83,6 +86,14 @@ graphdb:
     persistentVolumeClaim:
       claimName: graphdb-neo4j-data-pvc
       size: "1Gi"  # Configurable storage size
+  ingress:
+    enabled: false
+    host: graphdb.example.com
+    path: /
+  tls: 
+    enabled: true
+    customCert: false
+    certSecret: graphdb-tls
 
 bloodhound:
   name: bloodhound
@@ -90,11 +101,13 @@ bloodhound:
   appName: bloodhound
   container:
     name: bloodhound
-    image: docker.io/specterops/bloodhound:latest
+    image: docker.io/specterops/bloodhound
+    version: latest
     env:
       bhe_disable_cypher_qc: "false"
     ports:
       - containerPort: 8080
+      - containerPort: 2112
   service:
     enabled: true
     type: ClusterIP
@@ -104,7 +117,10 @@ bloodhound:
     enabled: true
     host: bloodhound.example.com
     path: /
-    tls: false
+  tls: 
+    enabled: true
+    customCert: false
+    certSecret: bloodhound-tls
   configMap:
-    enabled: false
+    enabled: true
     name: bloodhound-config
