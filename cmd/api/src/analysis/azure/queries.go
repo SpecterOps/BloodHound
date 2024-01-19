@@ -1,17 +1,17 @@
 // Copyright 2023 Specter Ops, Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// 
+//
 // SPDX-License-Identifier: Apache-2.0
 
 package azure
@@ -21,7 +21,6 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/specterops/bloodhound/src/model"
 	"github.com/gofrs/uuid"
 	"github.com/specterops/bloodhound/analysis"
 	"github.com/specterops/bloodhound/dawgs/graph"
@@ -30,6 +29,7 @@ import (
 	"github.com/specterops/bloodhound/graphschema/azure"
 	"github.com/specterops/bloodhound/graphschema/common"
 	"github.com/specterops/bloodhound/log"
+	"github.com/specterops/bloodhound/src/model"
 )
 
 func GraphStats(ctx context.Context, db graph.Database) (model.AzureDataQualityStats, model.AzureDataQualityAggregation, error) {
@@ -48,7 +48,7 @@ func GraphStats(ctx context.Context, db graph.Database) (model.AzureDataQualityS
 		runID = newUUID.String()
 	}
 
-	return stats, aggregation, db.ReadTransaction(ctx, func(tx graph.Transaction) error {
+	err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		if tenants, err := ops.FetchNodes(tx.Nodes().Filterf(func() graph.Criteria {
 			return query.Kind(query.Node(), azure.Tenant)
 		})); err != nil {
@@ -58,6 +58,8 @@ func GraphStats(ctx context.Context, db graph.Database) (model.AzureDataQualityS
 				if tenantObjectID, err := tenant.Properties.Get(common.ObjectID.String()).String(); err != nil {
 					log.Errorf("Tenant node %d does not have a valid %s property: %v", tenant.ID, common.ObjectID, err)
 				} else {
+					aggregation.Tenants++
+
 					var (
 						stat = model.AzureDataQualityStat{
 							RunID:    runID,
@@ -163,4 +165,6 @@ func GraphStats(ctx context.Context, db graph.Database) (model.AzureDataQualityS
 
 		return nil
 	})
+
+	return stats, aggregation, err
 }
