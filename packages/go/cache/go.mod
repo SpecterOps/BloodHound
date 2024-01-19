@@ -16,7 +16,7 @@
 
 module github.com/specterops/bloodhound/cache
 
-go 1.20
+go 1.21
 
 require (
 	github.com/hashicorp/golang-lru v0.6.0

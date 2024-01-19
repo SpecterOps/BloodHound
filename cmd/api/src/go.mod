@@ -16,7 +16,7 @@
 
 module github.com/specterops/bloodhound/src
 
-go 1.20
+go 1.21
 
 require (
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751
@@ -32,7 +32,7 @@ require (
 	github.com/gorilla/handlers v1.5.1
 	github.com/gorilla/mux v1.8.0
 	github.com/gorilla/schema v1.2.0
-	github.com/jackc/pgx/v5 v5.4.3
+	github.com/jackc/pgx/v5 v5.5.1
 	github.com/jedib0t/go-pretty/v6 v6.4.6
 	github.com/mattermost/xml-roundtrip-validator v0.1.0
 	github.com/neo4j/neo4j-go-driver/v5 v5.9.0
