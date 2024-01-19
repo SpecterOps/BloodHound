@@ -193,10 +193,10 @@ func checkEmailValidity(node *graph.Node, validCertTemplates []*graph.Node, grou
 			if principalControlsCertTemplate(node.ID.Uint32(), certTemplate, groupExpansions, cache) {
 				var (
 					schemaVersion, _              = certTemplate.Properties.Get(ad.SchemaVersion.String()).Float64()
-					subjectAltRequireEmail, _     = certTemplate.Properties.Get("subjectaltrequireemail").Bool()
-					subjectRequireEmail, _        = certTemplate.Properties.Get("subjectrequireemail").Bool()
-					subjectAltRequireDNS, _       = certTemplate.Properties.Get("subjectaltrequiredns").Bool()
-					subjectAltRequireDomainDNS, _ = certTemplate.Properties.Get("subjectaltrequiredomaindns").Bool()
+					subjectAltRequireEmail, _     = certTemplate.Properties.Get(ad.SubjectAltRequireEmail.String()).Bool()
+					subjectRequireEmail, _        = certTemplate.Properties.Get(ad.SubjectRequireEmail.String()).Bool()
+					subjectAltRequireDNS, _       = certTemplate.Properties.Get(ad.SubjectAltRequireDNS.String()).Bool()
+					subjectAltRequireDomainDNS, _ = certTemplate.Properties.Get(ad.SubjectAltRequireDomainDNS.String()).Bool()
 				)
 				if node.Kinds.ContainsOneOf(ad.User) && (subjectAltRequireDNS || subjectAltRequireDomainDNS) {
 					continue
