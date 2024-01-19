@@ -9,7 +9,7 @@ More detailed information regarding [contributing](https://github.com/SpecterOps
 
 -   [Just](https://github.com/casey/just)
 -   [Python 3.10](https://www.python.org/downloads/)
--   [Go 1.20](https://go.dev/dl/)
+-   [Go 1.21](https://go.dev/dl/)
 -   [Node 18](https://nodejs.dev/en/download/)
 -   [Yarn 3.6](https://yarnpkg.com/getting-started/install)
 -   [Docker Desktop](https://www.docker.com/products/docker-desktop/) (or Docker/Docker Compose compatible runtime)

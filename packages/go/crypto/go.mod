@@ -16,7 +16,7 @@
 
 module github.com/specterops/bloodhound/crypto
 
-go 1.20
+go 1.21
 
 require (
 	go.uber.org/mock v0.2.0
