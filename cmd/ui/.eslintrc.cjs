@@ -28,5 +28,6 @@ module.exports = {
         '@typescript-eslint/no-explicit-any': 'off',
         '@typescript-eslint/no-inferrable-types': 'off',
         '@typescript-eslint/no-empty-function': 'off',
+        'prefer-const': 'warn',
     },
 };

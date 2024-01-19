@@ -54,7 +54,9 @@ func Run(cwd string, modPaths []string, jsPaths []string, env []string) (string,
 
 	for idx, entry := range codeClimateReport {
 		// We're using err == nil here because we want to do nothing if an error occurs
-		if path, err := filepath.Rel(cwd, entry.Location.Path); err == nil {
+		if path, err := filepath.Rel(cwd, entry.Location.Path); err != nil {
+			log.Println("Debug")
+		} else {
 			codeClimateReport[idx].Location.Path = path
 		}
 
