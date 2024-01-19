@@ -584,11 +584,12 @@ func TestADCSESC3(t *testing.T) {
 }
 
 func TestADCSESC6a(t *testing.T) {
-	testContext := integration.NewGraphTestContext(t)
+	testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
 
-	testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) {
+	testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) error {
 		harness.ESC6aHarnessPrincipalEdges.Setup(testContext)
-	}, func(harness integration.HarnessDetails, db graph.Database) error {
+		return nil
+	}, func(harness integration.HarnessDetails, db graph.Database) {
 		operation := analysis.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - ESC6a")
 
 		groupExpansions, err := ad2.ExpandAllRDPLocalGroups(context.Background(), db)
@@ -638,12 +639,12 @@ func TestADCSESC6a(t *testing.T) {
 			}
 			return nil
 		})
-		return nil
 	})
 
-	testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) {
+	testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) error {
 		harness.ESC6aHarnessECA.Setup(testContext)
-	}, func(harness integration.HarnessDetails, db graph.Database) error {
+		return nil
+	}, func(harness integration.HarnessDetails, db graph.Database) {
 		operation := analysis.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - ESC6a")
 
 		groupExpansions, err := ad2.ExpandAllRDPLocalGroups(context.Background(), db)
@@ -692,12 +693,12 @@ func TestADCSESC6a(t *testing.T) {
 
 			return nil
 		})
-		return nil
 	})
 
-	testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) {
+	testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) error {
 		harness.ESC6aHarnessTemplate1.Setup(testContext)
-	}, func(harness integration.HarnessDetails, db graph.Database) error {
+		return nil
+	}, func(harness integration.HarnessDetails, db graph.Database) {
 		operation := analysis.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - ESC6a")
 
 		groupExpansions, err := ad2.ExpandAllRDPLocalGroups(context.Background(), db)
@@ -750,12 +751,12 @@ func TestADCSESC6a(t *testing.T) {
 
 			return nil
 		})
-		return nil
 	})
 
-	testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) {
+	testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) error {
 		harness.ESC6aHarnessTemplate2.Setup(testContext)
-	}, func(harness integration.HarnessDetails, db graph.Database) error {
+		return nil
+	}, func(harness integration.HarnessDetails, db graph.Database) {
 		operation := analysis.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - ESC6a")
 
 		groupExpansions, err := ad2.ExpandAllRDPLocalGroups(context.Background(), db)
@@ -810,6 +811,5 @@ func TestADCSESC6a(t *testing.T) {
 			}
 			return nil
 		})
-		return nil
 	})
 }

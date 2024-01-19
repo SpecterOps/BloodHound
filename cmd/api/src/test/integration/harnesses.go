@@ -1702,7 +1702,7 @@ func setupHarnessFromArrowsJson(c *GraphTestContext, fileName string) {
 	sid := RandomDomainSID()
 
 	if data, err := harnesses.ReadHarness(fileName); err != nil {
-		c.testCtrl.Errorf("failed %s setup: %v", fileName, err)
+		c.testCtx.Errorf("failed %s setup: %v", fileName, err)
 	} else {
 		nodeMap := initHarnessNodes(c, data.Nodes, sid)
 		initHarnessRelationships(c, nodeMap, data.Relationships)
@@ -1733,9 +1733,12 @@ func initHarnessNodes(c *GraphTestContext, nodes []harnesses.Node, sid string) m
 			case ad.User.String():
 				nodeMap[node.ID] = c.NewActiveDirectoryUser(node.Caption, sid)
 			case ad.Domain.String():
+				//Unable to assign the same sid to a new domain
+				//It is probably best to segment isolated graphs into their own files or ensure a domainsid property is present if the test relies on pivoting off of it
+				sid := RandomDomainSID()
 				nodeMap[node.ID] = c.NewActiveDirectoryDomain(node.Caption, sid, false, true)
 			default:
-				c.testCtrl.Errorf("invalid node kind: %s", kind)
+				c.testCtx.Errorf("invalid node kind: %s", kind)
 			}
 
 			initHarnessNodeProperties(c, nodeMap, node)
@@ -1753,7 +1756,7 @@ func initHarnessNodeProperties(c *GraphTestContext, nodeMap map[string]*graph.No
 		}
 
 		//This is an exception for schemaVersion which should not be a boolean
-		if value == "1" || value == "0" || value == "2" {
+		if value == "1" || value == "0" {
 			intValue, _ := strconv.ParseInt(value, 10, 32)
 			nodeMap[node.ID].Properties.Set(strings.ToLower(key), float64(intValue))
 		} else if boolValue, err := strconv.ParseBool(value); err != nil {
@@ -1768,13 +1771,13 @@ func initHarnessNodeProperties(c *GraphTestContext, nodeMap map[string]*graph.No
 func initHarnessRelationships(c *GraphTestContext, nodeMap map[string]*graph.Node, relationships []harnesses.Relationship) {
 	for _, relationship := range relationships {
 		if kind, err := analysis.ParseKind(relationship.Kind); err != nil {
-			c.testCtrl.Errorf("invalid relationship kind: %s", kind)
+			c.testCtx.Errorf("invalid relationship kind: %s", kind)
 			continue
 		} else if asserting, ok := relationship.Properties["asserted"]; !ok {
 			c.NewRelationship(nodeMap[relationship.From], nodeMap[relationship.To], kind)
 		} else {
 			if skip, err := strconv.ParseBool(asserting); err != nil {
-				c.testCtrl.Errorf("invalid assertion property: %s; %v", asserting, err)
+				c.testCtx.Errorf("invalid assertion property: %s; %v", asserting, err)
 			} else if !skip {
 				c.NewRelationship(nodeMap[relationship.From], nodeMap[relationship.To], kind)
 			}
