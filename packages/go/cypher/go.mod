@@ -16,7 +16,7 @@
 
 module github.com/specterops/bloodhound/cypher
 
-go 1.20
+go 1.21
 
 require (
 	github.com/antlr4-go/antlr/v4 v4.13.0
