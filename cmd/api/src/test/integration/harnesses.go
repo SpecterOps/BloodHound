@@ -1704,66 +1704,79 @@ func setupHarnessFromArrowsJson(c *GraphTestContext, fileName string) {
 	if data, err := harnesses.ReadHarness(fileName); err != nil {
 		c.testCtrl.Errorf("failed %s setup: %v", fileName, err)
 	} else {
-		nodeMap := map[string]*graph.Node{}
-		for _, node := range data.Nodes {
-			if kind, ok := node.Properties["kind"]; !ok {
-				continue
-			} else {
-				//The rest of the node kinds need handlers for initialization
-				switch kind {
-				case ad.Group.String():
-					nodeMap[node.ID] = c.NewActiveDirectoryGroup(node.Caption, sid)
-				case ad.CertTemplate.String():
-					nodeMap[node.ID] = c.NewActiveDirectoryCertTemplate(node.Caption, sid, false, true, false, false, true, 1, 0, []string{}, []string{})
-				case ad.EnterpriseCA.String():
-					nodeMap[node.ID] = c.NewActiveDirectoryEnterpriseCA(node.Caption, sid)
-				case ad.NTAuthStore.String():
-					nodeMap[node.ID] = c.NewActiveDirectoryNTAuthStore(node.Caption, sid)
-				case ad.RootCA.String():
-					nodeMap[node.ID] = c.NewActiveDirectoryRootCA(node.Caption, sid)
-				case ad.Computer.String():
-					nodeMap[node.ID] = c.NewActiveDirectoryComputer(node.Caption, sid)
-				case ad.User.String():
-					nodeMap[node.ID] = c.NewActiveDirectoryUser(node.Caption, sid)
-				case ad.Domain.String():
-					nodeMap[node.ID] = c.NewActiveDirectoryDomain(node.Caption, sid, false, true)
-				default:
-					c.testCtrl.Errorf("invalid node kind: %s", kind)
-				}
+		nodeMap := initHarnessNodes(c, data.Nodes, sid)
+		initHarnessRelationships(c, nodeMap, data.Relationships)
+	}
+}
 
-				for key, value := range node.Properties {
-					//Unfortunately, all properties set within arrows.app are output as strings so we have to do a type dance here
-					//It would be best to define value types for all node properties to avoid handling them this way
-					if strings.ToLower(value) == "null" {
-						continue
-					}
+func initHarnessNodes(c *GraphTestContext, nodes []harnesses.Node, sid string) map[string]*graph.Node {
+	nodeMap := map[string]*graph.Node{}
 
-					//This is an exception for schemaVersion which should not be a boolean
-					if value == "1" || value == "0" || value == "2" {
-						intValue, _ := strconv.ParseInt(value, 10, 32)
-						nodeMap[node.ID].Properties.Set(strings.ToLower(key), float64(intValue))
-					} else if boolValue, err := strconv.ParseBool(value); err != nil {
-						nodeMap[node.ID].Properties.Set(strings.ToLower(key), value)
-					} else {
-						nodeMap[node.ID].Properties.Set(strings.ToLower(key), boolValue)
-					}
-				}
-				c.UpdateNode(nodeMap[node.ID])
+	for _, node := range nodes {
+		if kind, ok := node.Properties["kind"]; !ok {
+			continue
+		} else {
+			//The rest of the node kinds need handlers for initialization
+			switch kind {
+			case ad.Group.String():
+				nodeMap[node.ID] = c.NewActiveDirectoryGroup(node.Caption, sid)
+			case ad.CertTemplate.String():
+				nodeMap[node.ID] = c.NewActiveDirectoryCertTemplate(node.Caption, sid, false, true, false, false, true, 1, 0, []string{}, []string{})
+			case ad.EnterpriseCA.String():
+				nodeMap[node.ID] = c.NewActiveDirectoryEnterpriseCA(node.Caption, sid)
+			case ad.NTAuthStore.String():
+				nodeMap[node.ID] = c.NewActiveDirectoryNTAuthStore(node.Caption, sid)
+			case ad.RootCA.String():
+				nodeMap[node.ID] = c.NewActiveDirectoryRootCA(node.Caption, sid)
+			case ad.Computer.String():
+				nodeMap[node.ID] = c.NewActiveDirectoryComputer(node.Caption, sid)
+			case ad.User.String():
+				nodeMap[node.ID] = c.NewActiveDirectoryUser(node.Caption, sid)
+			case ad.Domain.String():
+				nodeMap[node.ID] = c.NewActiveDirectoryDomain(node.Caption, sid, false, true)
+			default:
+				c.testCtrl.Errorf("invalid node kind: %s", kind)
 			}
+
+			initHarnessNodeProperties(c, nodeMap, node)
+		}
+	}
+	return nodeMap
+}
+
+func initHarnessNodeProperties(c *GraphTestContext, nodeMap map[string]*graph.Node, node harnesses.Node) {
+	for key, value := range node.Properties {
+		//Unfortunately, all properties set within arrows.app are output as strings so we have to do a type dance here
+		//It would be best to define value types for all node properties to avoid handling them this way
+		if strings.ToLower(value) == "null" {
+			continue
 		}
 
-		for _, relationship := range data.Relationships {
-			if kind, err := analysis.ParseKind(relationship.Kind); err != nil {
-				c.testCtrl.Errorf("invalid relationship kind: %s", kind)
-				continue
-			} else if asserting, ok := relationship.Properties["asserted"]; !ok {
+		//This is an exception for schemaVersion which should not be a boolean
+		if value == "1" || value == "0" || value == "2" {
+			intValue, _ := strconv.ParseInt(value, 10, 32)
+			nodeMap[node.ID].Properties.Set(strings.ToLower(key), float64(intValue))
+		} else if boolValue, err := strconv.ParseBool(value); err != nil {
+			nodeMap[node.ID].Properties.Set(strings.ToLower(key), value)
+		} else {
+			nodeMap[node.ID].Properties.Set(strings.ToLower(key), boolValue)
+		}
+	}
+	c.UpdateNode(nodeMap[node.ID])
+}
+
+func initHarnessRelationships(c *GraphTestContext, nodeMap map[string]*graph.Node, relationships []harnesses.Relationship) {
+	for _, relationship := range relationships {
+		if kind, err := analysis.ParseKind(relationship.Kind); err != nil {
+			c.testCtrl.Errorf("invalid relationship kind: %s", kind)
+			continue
+		} else if asserting, ok := relationship.Properties["asserted"]; !ok {
+			c.NewRelationship(nodeMap[relationship.From], nodeMap[relationship.To], kind)
+		} else {
+			if skip, err := strconv.ParseBool(asserting); err != nil {
+				c.testCtrl.Errorf("invalid assertion property: %s; %v", asserting, err)
+			} else if !skip {
 				c.NewRelationship(nodeMap[relationship.From], nodeMap[relationship.To], kind)
-			} else {
-				if skip, err := strconv.ParseBool(asserting); err != nil {
-					c.testCtrl.Errorf("invalid assertion property: %s; %v", asserting, err)
-				} else if !skip {
-					c.NewRelationship(nodeMap[relationship.From], nodeMap[relationship.To], kind)
-				}
 			}
 		}
 	}

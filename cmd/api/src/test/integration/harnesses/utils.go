@@ -11,22 +11,6 @@ import (
 	"runtime"
 )
 
-func Filename() (string, error) {
-	_, filename, _, ok := runtime.Caller(1)
-	if !ok {
-		return "", errors.New("unable to get the current filename")
-	}
-	return filename, nil
-}
-
-func Dirname() (string, error) {
-	filename, err := Filename()
-	if err != nil {
-		return "", err
-	}
-	return filepath.Dir(filename), nil
-}
-
 type NodeStyle struct {
 	NodeColor string `json:"node-color"`
 }
@@ -57,8 +41,24 @@ type HarnessData struct {
 	Relationships []Relationship
 }
 
+func filename() (string, error) {
+	_, filename, _, ok := runtime.Caller(1)
+	if !ok {
+		return "", errors.New("unable to get the current filename")
+	}
+	return filename, nil
+}
+
+func dir() (string, error) {
+	filename, err := filename()
+	if err != nil {
+		return "", err
+	}
+	return filepath.Dir(filename), nil
+}
+
 func ReadHarness(harnessName string) (HarnessData, error) {
-	if dir, err := Dirname(); err != nil {
+	if dir, err := dir(); err != nil {
 		return HarnessData{}, err
 	} else if jsonFile, err := os.Open(path.Join(dir, harnessName+".json")); err != nil {
 		return HarnessData{}, err
