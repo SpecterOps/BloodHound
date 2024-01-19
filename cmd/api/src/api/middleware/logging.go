@@ -29,6 +29,8 @@ import (
 	"github.com/specterops/bloodhound/src/auth"
 	"github.com/specterops/bloodhound/src/config"
 	"github.com/specterops/bloodhound/src/ctx"
+	"github.com/specterops/bloodhound/src/database"
+	"github.com/specterops/bloodhound/src/model"
 )
 
 // PanicHandler is a middleware func that sets up a defer-recovery trap to capture any unhandled panics that bubble
@@ -112,9 +114,13 @@ func setSignedRequestFields(request *http.Request, logEvent log.Event) {
 	}
 }
 
+// func writeAuditLog() error {
+
+// }
+
 // LoggingMiddleware is a middleware func that outputs a log for each request-response lifecycle. It includes timestamped
 // information organized into fields suitable for searching or parsing.
-func LoggingMiddleware(cfg config.Configuration, idResolver auth.IdentityResolver) func(http.Handler) http.Handler {
+func LoggingMiddleware(cfg config.Configuration, idResolver auth.IdentityResolver, db *database.BloodhoundDB) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
 			var (
@@ -169,6 +175,12 @@ func LoggingMiddleware(cfg config.Configuration, idResolver auth.IdentityResolve
 			logEvent.Int64("response_bytes", loggedResponse.bytesWritten)
 			logEvent.Int("status", loggedResponse.statusCode)
 			logEvent.Duration("elapsed", time.Since(requestContext.StartTime.UTC()))
+
+			if requestContext.AuditCtx != (model.AuditContext{}) {
+				if err := db.AppendAuditLog(*requestContext, requestContext.AuditCtx.Event, requestContext.AuditCtx.Model); err != nil {
+					log.Errorf("error writing to audit log: %w", err)
+				}
+			}
 		})
 	}
 }

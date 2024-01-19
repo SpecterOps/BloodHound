@@ -34,7 +34,6 @@ import (
 	"github.com/specterops/bloodhound/src/config"
 	"github.com/specterops/bloodhound/src/ctx"
 	"github.com/specterops/bloodhound/src/database"
-	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/utils"
 	"github.com/unrolled/secure"
 )
@@ -130,7 +129,6 @@ func ContextMiddleware(next http.Handler) http.Handler {
 			// Create a new context with the timeout
 			requestCtx, cancel := context.WithTimeout(request.Context(), requestedWaitDuration.Value)
 			defer cancel()
-
 			// Insert the bh context
 			requestCtx = ctx.Set(requestCtx, &ctx.Context{
 				StartTime: startTime,
@@ -276,26 +274,28 @@ func FeatureFlagMiddleware(db database.Database, flagKey string) mux.MiddlewareF
 	}
 }
 
-func AuditLogMiddleware(db database.Database, action string) mux.MiddlewareFunc {
-	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
-			log.Infof("********** Beginning of AuditLogMiddleware")
-			var testString string
+// func AuditLogMiddleware(db database.Database, action string) mux.MiddlewareFunc {
+// 	return func(next http.Handler) http.Handler {
+// 		return http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
+// 			log.Infof("********** Beginning of AuditLogMiddleware")
+// 			var testString string
 
-			testString = "before"
-			log.Infof("********** before defer testString is %s", testString)
-			// Defer the log statement and then serve the request
-			defer func() {
-				log.Infof("********** In defer testString is %s", testString)
-			}()
-			next.ServeHTTP(response, request)
+// 			testString = "before"
+// 			log.Infof("********** before defer testString is %s", testString)
+// 			// Defer the log statement and then serve the request
+// 			defer func() {
+// 				log.Infof("********** In defer testString is %s", testString)
+// 			}()
 
-			reqCtx := *ctx.FromRequest(request)
-			if err := db.AppendAuditLog(reqCtx, action, model.User{}); err != nil {
-				api.HandleDatabaseError(request, response, err)
-			}
-			testString = "after"
-			log.Infof("********** after defer testString is %s", testString)
-		})
-	}
-}
+// 			next.ServeHTTP(response, request)
+// 			log.Infof("********** after next, response Header is %+v", response.Header())
+
+// 			reqCtx := *ctx.FromRequest(request)
+// 			if err := db.AppendAuditLog(reqCtx, action, model.User{}); err != nil {
+// 				api.HandleDatabaseError(request, response, err)
+// 			}
+// 			testString = "after"
+// 			log.Infof("********** after defer testString is %s", testString)
+// 		})
+// 	}
+// }

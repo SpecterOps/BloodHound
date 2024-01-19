@@ -136,3 +136,8 @@ func (s AuditData) MergeLeft(rightSide Auditable) AuditData {
 type Auditable interface {
 	AuditData() AuditData
 }
+
+type AuditContext struct {
+	Event string
+	Model Auditable
+}

@@ -482,12 +482,15 @@ func (s ManagementResource) CreateUser(response http.ResponseWriter, request *ht
 		if newUser, err := s.db.CreateUser(userTemplate); err != nil {
 			api.HandleDatabaseError(request, response, err)
 		} else {
+			bhCtx := ctx.Get(request.Context())
+			bhCtx.AuditCtx = model.AuditContext{
+				Event: "CreateUser",
+				Model: userTemplate,
+			}
+			ctx.Set(request.Context(), bhCtx)
 			api.WriteBasicResponse(request.Context(), newUser, http.StatusOK, response)
 		}
 
-		bhCtx := ctx.Get(request.Context())
-		bhCtx.AuditModel = userTemplate
-		ctx.Set(request.Context(), bhCtx)
 	}
 }
 
