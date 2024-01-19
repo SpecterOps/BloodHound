@@ -800,10 +800,13 @@ func TestADCSESC6a(t *testing.T) {
 				names := []string{}
 				for _, result := range results.Slice() {
 					name, _ := result.Properties.Get(common.Name.String()).String()
-					t.Logf("%s", name)
 					names = append(names, name)
 				}
 				require.Equal(t, 15, len(results))
+				require.NotContains(t, names, "User2")
+				require.NotContains(t, names, "User3")
+				require.NotContains(t, names, "User5")
+				require.NotContains(t, names, "Computer6")
 			}
 			return nil
 		})
