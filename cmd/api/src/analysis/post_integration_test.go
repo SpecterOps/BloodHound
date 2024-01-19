@@ -22,6 +22,8 @@ package analysis_test
 import (
 	"context"
 	ad2 "github.com/specterops/bloodhound/analysis/ad"
+	schema "github.com/specterops/bloodhound/graphschema"
+	"github.com/specterops/bloodhound/src/test"
 	"testing"
 
 	"github.com/specterops/bloodhound/analysis"
@@ -48,54 +50,44 @@ func FetchNumHarnessNodes(db graph.Database) (int64, error) {
 func TestClearOrphanedNodes(t *testing.T) {
 	const numNodesToCreate = 1000
 
-	testContext := integration.NewGraphTestContext(t)
-	testContext.DatabaseTest(func(harness integration.HarnessDetails, db graph.Database) error {
-		if numHarnessNodes, err := FetchNumHarnessNodes(db); err != nil {
-			return err
-		} else {
-			if err := db.WriteTransaction(context.Background(), func(tx graph.Transaction) error {
-				for numCreated := 0; numCreated < numNodesToCreate; numCreated++ {
-					if _, err := tx.CreateNode(graph.NewProperties(), ad.Entity); err != nil {
-						return err
-					}
-				}
+	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
+	testContext.DatabaseTest(func(harness integration.HarnessDetails, db graph.Database) {
+		numHarnessNodes, err := FetchNumHarnessNodes(db)
+		test.RequireNilErr(t, err)
 
-				return nil
-			}); err != nil {
-				return err
-			}
-
-			if numNodesAfterCreation, err := FetchNumHarnessNodes(db); err != nil {
-				return err
-			} else {
-				require.Equal(t, numHarnessNodes+numNodesToCreate, numNodesAfterCreation)
-
-				if err := analysis.ClearOrphanedNodes(context.Background(), db); err != nil {
+		test.RequireNilErr(t, db.WriteTransaction(context.Background(), func(tx graph.Transaction) error {
+			for numCreated := 0; numCreated < numNodesToCreate; numCreated++ {
+				if _, err := tx.CreateNode(graph.NewProperties(), ad.Entity); err != nil {
 					return err
-				} else if numNodesAfterDeletion, err := FetchNumHarnessNodes(db); err != nil {
-					return err
-				} else {
-					require.Equal(t, numHarnessNodes, numNodesAfterDeletion)
 				}
 			}
-		}
 
-		return nil
+			return nil
+		}))
+
+		numNodesAfterCreation, err := FetchNumHarnessNodes(db)
+		test.RequireNilErr(t, err)
+
+		require.Equal(t, numHarnessNodes+numNodesToCreate, numNodesAfterCreation)
+		test.RequireNilErr(t, analysis.ClearOrphanedNodes(context.Background(), db))
+
+		numNodesAfterDeletion, err := FetchNumHarnessNodes(db)
+		test.RequireNilErr(t, err)
+		require.Equal(t, numHarnessNodes, numNodesAfterDeletion)
 	})
 }
 
 func TestCrossProduct(t *testing.T) {
-	testContext := integration.NewGraphTestContext(t)
-	testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) {
+	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
+	testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) error {
 		harness.ShortcutHarness.Setup(testContext)
-	}, func(harness integration.HarnessDetails, db graph.Database) error {
+		return nil
+	}, func(harness integration.HarnessDetails, db graph.Database) {
 		firstSet := []*graph.Node{testContext.Harness.ShortcutHarness.Group1}
 		secondSet := []*graph.Node{testContext.Harness.ShortcutHarness.Group2}
 		groupExpansions, err := ad2.ExpandAllRDPLocalGroups(context.Background(), db)
 		require.Nil(t, err)
 		results := ad2.CalculateCrossProductNodeSets(groupExpansions, firstSet, secondSet)
 		require.True(t, results.Contains(harness.ShortcutHarness.Group3.ID.Uint32()))
-
-		return nil
 	})
 }

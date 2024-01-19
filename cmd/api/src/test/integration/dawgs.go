@@ -17,13 +17,15 @@
 package integration
 
 import (
+	"context"
 	"github.com/specterops/bloodhound/dawgs"
 	"github.com/specterops/bloodhound/dawgs/drivers/neo4j"
+	"github.com/specterops/bloodhound/dawgs/drivers/pg"
 	"github.com/specterops/bloodhound/dawgs/graph"
+	schema "github.com/specterops/bloodhound/graphschema"
 	"github.com/specterops/bloodhound/src/config"
 	"github.com/specterops/bloodhound/src/test"
 	"github.com/specterops/bloodhound/src/test/integration/utils"
-	"github.com/stretchr/testify/require"
 )
 
 func LoadConfiguration(testCtrl test.Controller) config.Configuration {
@@ -36,16 +38,30 @@ func LoadConfiguration(testCtrl test.Controller) config.Configuration {
 	return cfg
 }
 
-func OpenPostgresqlGDB(testCtrl test.Controller) graph.Database {
-	graphDatabase, err := dawgs.Open(neo4j.DriverName, dawgs.Config{DriverCfg: LoadConfiguration(testCtrl).Database.PostgreSQLConnectionString()})
-	require.Nilf(testCtrl, err, "Failed connecting to graph database: %v", err)
+func OpenGraphDB(testCtrl test.Controller) graph.Database {
+	var (
+		cfg           = LoadConfiguration(testCtrl)
+		graphDatabase graph.Database
+		err           error
+	)
 
-	return graphDatabase
-}
+	switch cfg.GraphDriver {
+	case pg.DriverName:
+		graphDatabase, err = dawgs.Open(context.TODO(), cfg.GraphDriver, dawgs.Config{
+			DriverCfg: cfg.Database.PostgreSQLConnectionString(),
+		})
 
-func OpenNeo4jGraphDB(testCtrl test.Controller) graph.Database {
-	graphDatabase, err := dawgs.Open(neo4j.DriverName, dawgs.Config{DriverCfg: LoadConfiguration(testCtrl).Neo4J.Neo4jConnectionString()})
-	require.Nilf(testCtrl, err, "Failed connecting to graph database: %v", err)
+	case neo4j.DriverName:
+		graphDatabase, err = dawgs.Open(context.TODO(), cfg.GraphDriver, dawgs.Config{
+			DriverCfg: cfg.Neo4J.Neo4jConnectionString(),
+		})
+
+	default:
+		testCtrl.Fatalf("unsupported graph driver name %s", cfg.GraphDriver)
+	}
+
+	test.RequireNilErrf(testCtrl, err, "Failed connecting to graph database: %v", err)
+	test.RequireNilErr(testCtrl, graphDatabase.AssertSchema(context.Background(), schema.DefaultGraphSchema()))
 
 	return graphDatabase
 }

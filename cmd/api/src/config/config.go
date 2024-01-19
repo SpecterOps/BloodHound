@@ -151,6 +151,7 @@ type Configuration struct {
 	LogLevel               string                    `json:"log_level"`
 	LogPath                string                    `json:"log_path"`
 	TLS                    TLSConfiguration          `json:"tls"`
+	GraphDriver            string                    `json:"graph_driver"`
 	Database               DatabaseConfiguration     `json:"database"`
 	Neo4J                  DatabaseConfiguration     `json:"neo4j"`
 	Crypto                 CryptoConfiguration       `json:"crypto"`
@@ -255,44 +256,51 @@ func SetValuesFromEnv(varPrefix string, target any, env []string) error {
 	return nil
 }
 
-func GetConfiguration(path string) (Configuration, error) {
-	cfg, err := NewDefaultConfiguration()
-	if err != nil {
-		return cfg, fmt.Errorf("failed to create default configuration: %w", err)
-	}
-
+func getConfiguration(path string, defaultConfigFunc func() (Configuration, error)) (Configuration, error) {
 	if hasCfgFile, err := HasConfigurationFile(path); err != nil {
 		return Configuration{}, err
 	} else if hasCfgFile {
 		log.Infof("Reading configuration found at %s", path)
 
-		if readCfg, err := ReadConfigurationFile(path); err != nil {
-			return Configuration{}, err
-		} else {
-			cfg = readCfg
-		}
+		return ReadConfigurationFile(path)
 	} else {
-		log.Infof("No configuration file found at %s", path)
-	}
+		log.Infof("No configuration file found at %s. Returning defaults.", path)
 
-	if err := SetValuesFromEnv(bhAPIEnvironmentVariablePrefix, &cfg, os.Environ()); err != nil {
-		return Configuration{}, err
+		return defaultConfigFunc()
 	}
-
-	return cfg, nil
 }
 
-func (s Configuration) SaveCollectorManifests() (CollectorManifests, error) {
-	if azureHoundManifest, err := generateCollectorManifest(filepath.Join(s.CollectorsDirectory(), "azurehound")); err != nil {
-		return CollectorManifests{}, fmt.Errorf("error generating AzureHound manifest file: %w", err)
-	} else if sharpHoundManifest, err := generateCollectorManifest(filepath.Join(s.CollectorsDirectory(), "sharphound")); err != nil {
-		return CollectorManifests{}, fmt.Errorf("error generating SharpHound manifest file: %w", err)
+func GetConfiguration(path string, defaultConfigFunc func() (Configuration, error)) (Configuration, error) {
+	if cfg, err := getConfiguration(path, defaultConfigFunc); err != nil {
+		return cfg, err
+	} else if err := SetValuesFromEnv(bhAPIEnvironmentVariablePrefix, &cfg, os.Environ()); err != nil {
+		return cfg, err
 	} else {
-		return CollectorManifests{
-			"azurehound": azureHoundManifest,
-			"sharphound": sharpHoundManifest,
-		}, nil
+		return cfg, nil
 	}
+}
+
+const (
+	azureHoundCollector = "azurehound"
+	sharpHoundCollector = "sharphound"
+)
+
+func (s Configuration) SaveCollectorManifests() (CollectorManifests, error) {
+	manifests := CollectorManifests{}
+
+	if azureHoundManifest, err := generateCollectorManifest(filepath.Join(s.CollectorsDirectory(), azureHoundCollector)); err != nil {
+		log.Errorf("error generating AzureHound manifest file: %s", err)
+	} else {
+		manifests[azureHoundCollector] = azureHoundManifest
+	}
+
+	if sharpHoundManifest, err := generateCollectorManifest(filepath.Join(s.CollectorsDirectory(), sharpHoundCollector)); err != nil {
+		log.Errorf("error generating SharpHound manifest file: %s", err)
+	} else {
+		manifests[sharpHoundCollector] = sharpHoundManifest
+	}
+
+	return manifests, nil
 }
 
 func generateCollectorManifest(collectorDir string) (CollectorManifest, error) {
@@ -317,7 +325,7 @@ func generateCollectorManifest(collectorDir string) (CollectorManifest, error) {
 					collectorVersions = append(collectorVersions, CollectorVersion{
 						Version:    string(version),
 						SHA256Sum:  strings.Fields(string(sha256))[0], // Get only the SHA-256 portion
-						Deprecated: strings.Contains(collectorDir, "sharphound") && string(version) < "v2.0.0",
+						Deprecated: strings.Contains(collectorDir, sharpHoundCollector) && string(version) < "v2.0.0",
 					})
 
 					if string(version) > latestVersion {

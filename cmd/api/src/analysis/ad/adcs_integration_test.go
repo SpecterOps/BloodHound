@@ -23,6 +23,7 @@ import (
 	"context"
 
 	"github.com/specterops/bloodhound/analysis"
+	"github.com/specterops/bloodhound/graphschema"
 
 	ad2 "github.com/specterops/bloodhound/analysis/ad"
 
@@ -40,11 +41,12 @@ import (
 )
 
 func TestADCSESC1(t *testing.T) {
-	testContext := integration.NewGraphTestContext(t)
+	testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
 
-	testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) {
+	testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) error {
 		harness.ADCSESC1Harness.Setup(testContext)
-	}, func(harness integration.HarnessDetails, db graph.Database) error {
+		return nil
+	}, func(harness integration.HarnessDetails, db graph.Database) {
 		operation := analysis.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - ESC1")
 
 		groupExpansions, err := ad2.ExpandAllRDPLocalGroups(context.Background(), db)
@@ -108,17 +110,16 @@ func TestADCSESC1(t *testing.T) {
 			}
 			return nil
 		})
-		return nil
 	})
-
 }
 
 func TestGoldenCert(t *testing.T) {
-	testContext := integration.NewGraphTestContext(t)
+	testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
 
-	testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) {
+	testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) error {
 		harness.ADCSGoldenCertHarness.Setup(testContext)
-	}, func(harness integration.HarnessDetails, db graph.Database) error {
+		return nil
+	}, func(harness integration.HarnessDetails, db graph.Database) {
 		operation := analysis.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - Golden Cert")
 
 		domains, err := ad2.FetchNodesByKind(context.Background(), db, ad.Domain)
@@ -172,16 +173,17 @@ func TestGoldenCert(t *testing.T) {
 			}
 			return nil
 		})
-		return nil
 	})
 
 }
 
 func TestCanAbuseUPNCertMapping(t *testing.T) {
-	testContext := integration.NewGraphTestContext(t)
-	testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) {
+	testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
+
+	testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) error {
 		harness.WeakCertBindingAndUPNCertMappingHarness.Setup(testContext)
-	}, func(harness integration.HarnessDetails, db graph.Database) error {
+		return nil
+	}, func(harness integration.HarnessDetails, db graph.Database) {
 		operation := analysis.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - CanAbuseUPNCertMapping")
 
 		if enterpriseCertAuthorities, err := ad2.FetchNodesByKind(context.Background(), db, ad.EnterpriseCA); err != nil {
@@ -190,6 +192,7 @@ func TestCanAbuseUPNCertMapping(t *testing.T) {
 			t.Logf("failed post processing for %s: %v", ad.CanAbuseUPNCertMapping.String(), err)
 		}
 
+		// TODO: We're throwing away the collected errors from the operation and should assert on them
 		operation.Done()
 
 		db.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
@@ -216,15 +219,15 @@ func TestCanAbuseUPNCertMapping(t *testing.T) {
 			}
 			return nil
 		})
-		return nil
 	})
 }
 
 func TestCanAbuseWeakCertBinding(t *testing.T) {
-	testContext := integration.NewGraphTestContext(t)
-	testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) {
+	testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
+	testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) error {
 		harness.WeakCertBindingAndUPNCertMappingHarness.Setup(testContext)
-	}, func(harness integration.HarnessDetails, db graph.Database) error {
+		return nil
+	}, func(harness integration.HarnessDetails, db graph.Database) {
 		operation := analysis.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - CanAbuseWeakCertBinding")
 
 		if enterpriseCertAuthorities, err := ad2.FetchNodesByKind(context.Background(), db, ad.EnterpriseCA); err != nil {
@@ -233,6 +236,7 @@ func TestCanAbuseWeakCertBinding(t *testing.T) {
 			t.Logf("failed post processing for %s: %v", ad.CanAbuseWeakCertBinding.String(), err)
 		}
 
+		// TODO: We're throwing away the collected errors from the operation and should assert on them
 		operation.Done()
 
 		db.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
@@ -257,17 +261,18 @@ func TestCanAbuseWeakCertBinding(t *testing.T) {
 				assert.False(t, results.Contains(harness.WeakCertBindingAndUPNCertMappingHarness.Domain2))
 				assert.False(t, results.Contains(harness.WeakCertBindingAndUPNCertMappingHarness.Domain3))
 			}
+
 			return nil
 		})
-		return nil
 	})
 }
 
 func TestIssuedSignedBy(t *testing.T) {
-	testContext := integration.NewGraphTestContext(t)
-	testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) {
+	testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
+	testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) error {
 		harness.IssuedSignedByHarness.Setup(testContext)
-	}, func(harness integration.HarnessDetails, db graph.Database) error {
+		return nil
+	}, func(harness integration.HarnessDetails, db graph.Database) {
 		operation := analysis.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - IssuedSignedBy")
 
 		if rootCertAuthorities, err := ad2.FetchNodesByKind(context.Background(), db, ad.RootCA); err != nil {
@@ -324,20 +329,21 @@ func TestIssuedSignedBy(t *testing.T) {
 				assert.False(t, results2.Contains(harness.IssuedSignedByHarness.EnterpriseCA3))
 				assert.False(t, results3.Contains(harness.IssuedSignedByHarness.EnterpriseCA3))
 			}
+
 			return nil
 		})
-		return nil
 	})
 }
 
 func TestTrustedForNTAuth(t *testing.T) {
-	testContext := integration.NewGraphTestContext(t)
+	testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
 
 	testContext.DatabaseTestWithSetup(
-		func(harness *integration.HarnessDetails) {
+		func(harness *integration.HarnessDetails) error {
 			harness.TrustedForNTAuthHarness.Setup(testContext)
+			return nil
 		},
-		func(harness integration.HarnessDetails, db graph.Database) error {
+		func(harness integration.HarnessDetails, db graph.Database) {
 			// post `TrustedForNTAuth` edges
 			operation := analysis.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - TrustedForNTAuth")
 
@@ -366,16 +372,15 @@ func TestTrustedForNTAuth(t *testing.T) {
 				}
 				return nil
 			})
-
-			return nil
 		})
 }
 
 func TestEnrollOnBehalfOf(t *testing.T) {
-	testContext := integration.NewGraphTestContext(t)
-	testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) {
+	testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
+	testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) error {
 		harness.EnrollOnBehalfOfHarnessOne.Setup(testContext)
-	}, func(harness integration.HarnessDetails, db graph.Database) error {
+		return nil
+	}, func(harness integration.HarnessDetails, db graph.Database) {
 		certTemplates, err := ad2.FetchNodesByKind(context.Background(), db, ad.CertTemplate)
 		v1Templates := make([]*graph.Node, 0)
 		v2Templates := make([]*graph.Node, 0)
@@ -388,7 +393,9 @@ func TestEnrollOnBehalfOf(t *testing.T) {
 				v2Templates = append(v2Templates, template)
 			}
 		}
+
 		require.Nil(t, err)
+
 		db.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
 			results, err := ad2.EnrollOnBehalfOfVersionOne(tx, v1Templates, certTemplates)
 			require.Nil(t, err)
@@ -415,17 +422,17 @@ func TestEnrollOnBehalfOf(t *testing.T) {
 
 			return nil
 		})
-
-		return nil
 	})
 
-	testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) {
+	testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) error {
 		harness.EnrollOnBehalfOfHarnessTwo.Setup(testContext)
-	}, func(harness integration.HarnessDetails, db graph.Database) error {
+		return nil
+	}, func(harness integration.HarnessDetails, db graph.Database) {
 		certTemplates, err := ad2.FetchNodesByKind(context.Background(), db, ad.CertTemplate)
 		// TODO: v1Templates are never used in any assertions and should either have assertions added or be removed from the test entirely
 		//v1Templates := make([]*graph.Node, 0)
 		v2Templates := make([]*graph.Node, 0)
+
 		for _, template := range certTemplates {
 			if version, err := template.Properties.Get(ad.SchemaVersion.String()).Float64(); err != nil {
 				continue
@@ -436,7 +443,9 @@ func TestEnrollOnBehalfOf(t *testing.T) {
 				v2Templates = append(v2Templates, template)
 			}
 		}
+
 		require.Nil(t, err)
+
 		db.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
 			results, err := ad2.EnrollOnBehalfOfVersionTwo(tx, v2Templates, certTemplates)
 			require.Nil(t, err)
@@ -450,16 +459,15 @@ func TestEnrollOnBehalfOf(t *testing.T) {
 
 			return nil
 		})
-
-		return nil
 	})
 }
 
 func TestADCSESC3(t *testing.T) {
-	testContext := integration.NewGraphTestContext(t)
-	testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) {
+	testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
+	testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) error {
 		harness.ESC3Harness1.Setup(testContext)
-	}, func(harness integration.HarnessDetails, db graph.Database) error {
+		return nil
+	}, func(harness integration.HarnessDetails, db graph.Database) {
 		operation := analysis.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - ESC3")
 
 		groupExpansions, err := ad2.ExpandAllRDPLocalGroups(context.Background(), db)
@@ -511,12 +519,12 @@ func TestADCSESC3(t *testing.T) {
 			}
 			return nil
 		})
-		return nil
 	})
 
-	testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) {
+	testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) error {
 		harness.ESC3Harness2.Setup(testContext)
-	}, func(harness integration.HarnessDetails, db graph.Database) error {
+		return nil
+	}, func(harness integration.HarnessDetails, db graph.Database) {
 		operation := analysis.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - ESC3")
 
 		groupExpansions, err := ad2.ExpandAllRDPLocalGroups(context.Background(), db)
@@ -576,6 +584,5 @@ func TestADCSESC3(t *testing.T) {
 			}
 			return nil
 		})
-		return nil
 	})
 }

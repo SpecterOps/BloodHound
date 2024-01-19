@@ -208,6 +208,12 @@ type Plan struct {
 	Driver      Driver
 }
 
+type Service struct {
+	db         graph.Database
+	workerWG   *sync.WaitGroup
+	numWorkers int
+}
+
 type Traversal struct {
 	db         graph.Database
 	numWorkers int
@@ -221,6 +227,8 @@ func New(db graph.Database, numParallelWorkers int) Traversal {
 }
 
 func (s Traversal) BreadthFirst(ctx context.Context, plan Plan) error {
+	defer log.Measure(log.LevelDebug, "BreadthFirst - %d workers", s.numWorkers)()
+
 	var (
 		// workerWG keeps count of background workers launched in goroutines
 		workerWG = &sync.WaitGroup{}
@@ -258,7 +266,7 @@ func (s Traversal) BreadthFirst(ctx context.Context, plan Plan) error {
 		go func(workerID int) {
 			defer workerWG.Done()
 
-			if err := s.db.ReadTransaction(traversalCtx, func(tx graph.Transaction) error {
+			if err := s.db.ReadTransaction(ctx, func(tx graph.Transaction) error {
 				for {
 					if nextDescent, ok := channels.Receive(traversalCtx, segmentReaderC); !ok {
 						return nil
@@ -360,7 +368,7 @@ func shallowFetchRelationships(direction graph.Direction, segment *graph.PathSeg
 		return nil, fmt.Errorf("bi-directional or non-directed edges are not supported")
 	}
 
-	if err := graphQuery.Execute(func(results graph.Result) error {
+	if err := graphQuery.Query(func(results graph.Result) error {
 		defer results.Close()
 
 		var (

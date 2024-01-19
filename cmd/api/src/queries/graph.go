@@ -22,6 +22,10 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"github.com/specterops/bloodhound/cypher/backend/cypher"
+	"github.com/specterops/bloodhound/cypher/backend/pgsql"
+	"github.com/specterops/bloodhound/dawgs/drivers/pg"
+	"github.com/specterops/bloodhound/src/config"
 	"github.com/specterops/bloodhound/src/services/agi"
 	"net/http"
 	"net/url"
@@ -149,18 +153,18 @@ type GraphQuery struct {
 	Cache                 cache.Cache
 	SlowQueryThreshold    int64 // Threshold in milliseconds
 	DisableCypherQC       bool
-	cypherEmitter         frontend.Emitter
-	strippedCypherEmitter frontend.Emitter
+	cypherEmitter         cypher.Emitter
+	strippedCypherEmitter cypher.Emitter
 }
 
-func NewGraphQuery(graphDB graph.Database, cache cache.Cache, slowQueryThreshold int64, disableCypherQC bool) *GraphQuery {
+func NewGraphQuery(graphDB graph.Database, cache cache.Cache, cfg config.Configuration) *GraphQuery {
 	return &GraphQuery{
 		Graph:                 graphDB,
 		Cache:                 cache,
-		SlowQueryThreshold:    slowQueryThreshold,
-		DisableCypherQC:       disableCypherQC,
-		cypherEmitter:         frontend.NewCypherEmitter(false),
-		strippedCypherEmitter: frontend.NewCypherEmitter(true),
+		SlowQueryThreshold:    cfg.SlowQueryThreshold,
+		DisableCypherQC:       cfg.DisableCypherQC,
+		cypherEmitter:         cypher.NewCypherEmitter(false),
+		strippedCypherEmitter: cypher.NewCypherEmitter(true),
 	}
 }
 
@@ -262,7 +266,9 @@ func (s *GraphQuery) GetAllShortestPaths(ctx context.Context, startNodeID string
 
 			return tx.Relationships().Filter(query.And(criteria...)).FetchAllShortestPaths(func(cursor graph.Cursor[graph.Path]) error {
 				for path := range cursor.Chan() {
-					paths.AddPath(path)
+					if len(path.Edges) > 0 {
+						paths.AddPath(path)
+					}
 				}
 
 				return cursor.Error()
@@ -280,7 +286,7 @@ var groupFilter = query.Not(
 	),
 )
 
-func searchNodeByKindAndEqualsName(kind graph.Kind, name string) graph.Criteria {
+func SearchNodeByKindAndEqualsNameCriteria(kind graph.Kind, name string) graph.Criteria {
 	return query.And(
 		query.Kind(query.Node(), kind),
 		query.Or(
@@ -338,7 +344,7 @@ func (s *GraphQuery) SearchNodesByName(ctx context.Context, nodeKinds graph.Kind
 
 	for _, kind := range nodeKinds {
 		if err := s.Graph.ReadTransaction(ctx, func(tx graph.Transaction) error {
-			if exactMatchNodes, err := ops.FetchNodes(tx.Nodes().Filter(searchNodeByKindAndEqualsName(kind, formattedName))); err != nil {
+			if exactMatchNodes, err := ops.FetchNodes(tx.Nodes().Filter(SearchNodeByKindAndEqualsNameCriteria(kind, formattedName))); err != nil {
 				return err
 
 			} else {
@@ -361,9 +367,9 @@ func (s *GraphQuery) SearchNodesByName(ctx context.Context, nodeKinds graph.Kind
 }
 
 type preparedQuery struct {
-	cypher         string
-	strippedCypher string
-	complexity     *analyzer.ComplexityMeasure
+	query         string
+	strippedQuery string
+	complexity    *analyzer.ComplexityMeasure
 }
 
 func (s *GraphQuery) prepareGraphQuery(rawCypher string, disableCypherQC bool) (preparedQuery, error) {
@@ -379,13 +385,25 @@ func (s *GraphQuery) prepareGraphQuery(rawCypher string, disableCypherQC bool) (
 		return graphQuery, newQueryError(err)
 	} else if !disableCypherQC && complexityMeasure.Weight > MaxQueryComplexityWeightAllowed {
 		return graphQuery, newQueryError(ErrCypherQueryToComplex)
+	} else if pgDB, isPG := s.Graph.(*pg.Driver); isPG {
+		if _, err := pgsql.Translate(queryModel, pgDB.KindMapper()); err != nil {
+			return graphQuery, newQueryError(err)
+		}
+
+		if err := pgsql.NewEmitter(false, pgDB.KindMapper()).Write(queryModel, buffer); err != nil {
+			return graphQuery, err
+		} else {
+			graphQuery.query = buffer.String()
+		}
+
+		return graphQuery, nil
 	} else {
 		graphQuery.complexity = complexityMeasure
 
 		if err := s.cypherEmitter.Write(queryModel, buffer); err != nil {
 			return graphQuery, newQueryError(err)
 		} else {
-			graphQuery.cypher = buffer.String()
+			graphQuery.query = buffer.String()
 		}
 
 		buffer.Reset()
@@ -393,7 +411,7 @@ func (s *GraphQuery) prepareGraphQuery(rawCypher string, disableCypherQC bool) (
 		if err := s.strippedCypherEmitter.Write(queryModel, buffer); err != nil {
 			return graphQuery, newQueryError(err)
 		} else {
-			graphQuery.strippedCypher = buffer.String()
+			graphQuery.strippedQuery = buffer.String()
 		}
 	}
 
@@ -410,11 +428,11 @@ func (s *GraphQuery) RawCypherSearch(ctx context.Context, rawCypher string, incl
 		return graphResponse, err
 	} else {
 		logEvent := log.WithLevel(log.LevelInfo)
-		logEvent.Str("query", preparedQuery.strippedCypher)
+		logEvent.Str("query", preparedQuery.strippedQuery)
 		logEvent.Msg("Executing user cypher query")
 
 		return graphResponse, s.Graph.ReadTransaction(ctx, func(tx graph.Transaction) error {
-			if pathSet, err := ops.FetchPathSetByQuery(tx, preparedQuery.cypher); err != nil {
+			if pathSet, err := ops.FetchPathSetByQuery(tx, preparedQuery.query); err != nil {
 				return err
 			} else {
 				graphResponse.AddPathSet(pathSet, includeProperties)
