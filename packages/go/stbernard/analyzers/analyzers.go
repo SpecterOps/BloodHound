@@ -20,9 +20,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"log"
 	"path/filepath"
 
+	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/packages/go/stbernard/analyzers/golang"
 	"github.com/specterops/bloodhound/packages/go/stbernard/analyzers/js"
 )
@@ -38,14 +38,14 @@ func Run(cwd string, modPaths []string, jsPaths []string, env []string) (string,
 
 	golint, err := golang.Run(cwd, modPaths, env)
 	if errors.Is(err, golang.ErrNonZeroExit) {
-		log.Println("Ignoring golangci-lint exit code")
+		log.Debug().Msg("Ignoring golangci-lint exit code")
 	} else if err != nil {
 		return "", fmt.Errorf("golangci-lint: %w", err)
 	}
 
 	eslint, err := js.Run(jsPaths, env)
 	if errors.Is(err, js.ErrNonZeroExit) {
-		log.Println("Ignoring eslint exit code")
+		log.Debug().Msg("Ignoring eslint exit code")
 	} else if err != nil {
 		return "", fmt.Errorf("eslint: %w", err)
 	}
@@ -55,7 +55,7 @@ func Run(cwd string, modPaths []string, jsPaths []string, env []string) (string,
 	for idx, entry := range codeClimateReport {
 		// We're using err == nil here because we want to do nothing if an error occurs
 		if path, err := filepath.Rel(cwd, entry.Location.Path); err != nil {
-			log.Println("Debug")
+			log.Debug().Fault(err).Msg("File path is either already relative or cannot be relative to workspace root")
 		} else {
 			codeClimateReport[idx].Location.Path = path
 		}

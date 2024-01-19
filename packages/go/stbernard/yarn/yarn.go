@@ -2,9 +2,10 @@ package yarn
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"os/exec"
+
+	"github.com/specterops/bloodhound/log"
 )
 
 func InstallWorkspaceDeps(jsPaths []string, env []string) error {
@@ -21,15 +22,17 @@ func yarnInstall(path string, env []string) error {
 	cmd := exec.Command("yarn", "install")
 	cmd.Env = env
 	cmd.Dir = path
-	cmd.Stdout = os.Stderr
-	cmd.Stderr = os.Stderr
+	if log.GlobalAccepts(log.LevelDebug) {
+		cmd.Stdout = os.Stderr
+		cmd.Stderr = os.Stderr
+	}
 
-	log.Printf("Running yarn install for %v\n", path)
+	log.Infof("Running yarn install for %v", path)
 
 	if err := cmd.Run(); err != nil {
 		return fmt.Errorf("yarn install: %w", err)
 	} else {
-		log.Printf("Finished yarn install for %v\n", path)
+		log.Infof("Finished yarn install for %v", path)
 		return nil
 	}
 }

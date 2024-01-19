@@ -21,11 +21,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"log"
 	"os"
 	"os/exec"
 	"path"
 
+	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/packages/go/stbernard/analyzers/codeclimate"
 	"github.com/specterops/bloodhound/slices"
 )
@@ -37,15 +37,17 @@ var (
 func InstallGolangCiLint(env []string) error {
 	cmd := exec.Command("go", "install", "github.com/golangci/golangci-lint/cmd/golangci-lint@v1.55.2")
 	cmd.Env = env
-	cmd.Stdout = os.Stderr
-	cmd.Stderr = os.Stderr
+	if log.GlobalAccepts(log.LevelDebug) {
+		cmd.Stdout = os.Stderr
+		cmd.Stderr = os.Stderr
+	}
 
-	log.Println("Running golangci-lint install")
+	log.Infof("Running golangci-lint install")
 
 	if err := cmd.Run(); err != nil {
 		return fmt.Errorf("install golanci-lint: %w", err)
 	} else {
-		log.Println("Successfully installed golangci-lint")
+		log.Infof("Successfully installed golangci-lint")
 		return nil
 	}
 
