@@ -24,7 +24,9 @@ import (
 	"path/filepath"
 
 	"github.com/specterops/bloodhound/packages/go/stbernard/analyzers"
+	"github.com/specterops/bloodhound/packages/go/stbernard/analyzers/golang"
 	"github.com/specterops/bloodhound/packages/go/stbernard/workspace"
+	"github.com/specterops/bloodhound/packages/go/stbernard/yarn"
 )
 
 const (
@@ -55,6 +57,8 @@ func (s command) Run() error {
 		return fmt.Errorf("could not parse module absolute paths: %w", err)
 	} else if jsPaths, err := workspace.ParseJsAbsPaths(cwd); err != nil {
 		return fmt.Errorf("could not parse JS absolute paths: %w", err)
+	} else if err := preAnalysisSetup(jsPaths, s.config.Environment); err != nil {
+		return fmt.Errorf("could not complete environmental setup: %w", err)
 	} else if result, err := analyzers.Run(cwd, modPaths, jsPaths, s.config.Environment); errors.Is(err, analyzers.ErrSeverityExit) {
 		fmt.Println(result)
 		return err
@@ -80,5 +84,15 @@ func Create(config Config) (command, error) {
 		return command{}, fmt.Errorf("failed to parse analysis command: %w", err)
 	} else {
 		return command{config: config}, nil
+	}
+}
+
+func preAnalysisSetup(jsPaths []string, env []string) error {
+	if err := golang.InstallGolangCiLint(env); err != nil {
+		return fmt.Errorf("golangci-lint failed to install: %w", err)
+	} else if err := yarn.InstallWorkspaceDeps(jsPaths, env); err != nil {
+		return fmt.Errorf("yarn install failed: %w", err)
+	} else {
+		return nil
 	}
 }

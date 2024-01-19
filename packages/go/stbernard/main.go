@@ -1,3 +1,5 @@
+/// 2>/dev/null ; gorun "$0" "$@" ; exit $?
+
 // Copyright 2023 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
