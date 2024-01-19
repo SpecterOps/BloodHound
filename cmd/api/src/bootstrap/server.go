@@ -14,9 +14,10 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package server
+package bootstrap
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"os/signal"
@@ -25,19 +26,10 @@ import (
 	"time"
 
 	iso8601 "github.com/channelmeter/iso8601duration"
-	"github.com/specterops/bloodhound/cache"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/log"
-	"github.com/specterops/bloodhound/src/api"
-	"github.com/specterops/bloodhound/src/api/registration"
-	"github.com/specterops/bloodhound/src/api/router"
 	"github.com/specterops/bloodhound/src/auth"
 	"github.com/specterops/bloodhound/src/config"
-	"github.com/specterops/bloodhound/src/daemons"
-	"github.com/specterops/bloodhound/src/daemons/api/bhapi"
-	"github.com/specterops/bloodhound/src/daemons/api/toolapi"
-	"github.com/specterops/bloodhound/src/daemons/datapipe"
-	"github.com/specterops/bloodhound/src/daemons/gc"
 	"github.com/specterops/bloodhound/src/database"
 	"github.com/specterops/bloodhound/src/database/types/null"
 	"github.com/specterops/bloodhound/src/migrations"
@@ -50,11 +42,12 @@ const (
 	ContentSecurityPolicy        = "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:;"
 )
 
-// SystemSignalExitChannel is used to shut down the server. It creates a channel that listens for an exit signal from the server.
-func SystemSignalExitChannel() chan struct{} {
-	exitC := make(chan struct{})
+func NewDaemonContext(parentCtx context.Context) context.Context {
+	daemonContext, doneFunc := context.WithCancel(parentCtx)
 
 	go func() {
+		defer doneFunc()
+
 		// Shutdown on SIGINT/SIGTERM
 		signalChannel := make(chan os.Signal, 1)
 		signal.Notify(signalChannel, syscall.SIGTERM)
@@ -62,28 +55,18 @@ func SystemSignalExitChannel() chan struct{} {
 
 		// Wait for a signal from the OS
 		<-signalChannel
-		close(exitC)
 	}()
 
-	return exitC
+	return daemonContext
 }
 
 // MigrateGraph runs migrations for the graph database
-func MigrateGraph(cfg config.Configuration, db graph.Database) error {
-	if cfg.DisableMigrations {
-		log.Infof("Graph migrations are disabled per configuration")
-		return nil
-	}
-	return migrations.NewGraphMigrator(db).Migrate()
+func MigrateGraph(ctx context.Context, db graph.Database, schema graph.Schema) error {
+	return migrations.NewGraphMigrator(db).Migrate(ctx, schema)
 }
 
 // MigrateDB runs database migrations on PG
 func MigrateDB(cfg config.Configuration, db database.Database) error {
-	if cfg.DisableMigrations {
-		log.Infof("Database migrations are disabled per configuration")
-		return nil
-	}
-
 	if err := db.Migrate(); err != nil {
 		return err
 	}
@@ -141,59 +124,6 @@ func MigrateDB(cfg config.Configuration, db database.Database) error {
 			log.Infof("#%s#", paddingString)
 			log.Infof("%s", borderString)
 		}
-	}
-
-	return nil
-}
-
-// StartServer sets up background daemons, runs the service and waits for an exit signal to shut it down
-func StartServer(cfg config.Configuration, exitC chan struct{}) error {
-	if err := InitializeLogging(cfg); err != nil {
-		return fmt.Errorf("log initialization error: %w", err)
-	}
-
-	if db, graphDB, err := ConnectDatabases(cfg); err != nil {
-		return fmt.Errorf("db connection error: %w", err)
-	} else if err := MigrateDB(cfg, db); err != nil {
-		return fmt.Errorf("db migration error: %w", err)
-	} else if err := MigrateGraph(cfg, graphDB); err != nil {
-		return fmt.Errorf("graph db migration error: %w", err)
-	} else if apiCache, err := cache.NewCache(cache.Config{MaxSize: cfg.MaxAPICacheSize}); err != nil {
-		return fmt.Errorf("failed to create in-memory cache for API: %w", err)
-	} else if graphQueryCache, err := cache.NewCache(cache.Config{MaxSize: cfg.MaxAPICacheSize}); err != nil {
-		return fmt.Errorf("failed to create in-memory cache for graph queries: %w", err)
-	} else if collectorManifests, err := cfg.SaveCollectorManifests(); err != nil {
-		return fmt.Errorf("failed to save collector manifests: %w", err)
-	} else {
-		var (
-			serviceManager         = daemons.NewManager(DefaultServerShutdownTimeout)
-			sessionSweepingService = gc.NewDataPruningDaemon(db)
-			routerInst             = router.NewRouter(cfg, auth.NewAuthorizer(), ContentSecurityPolicy)
-			toolingService         = toolapi.NewDaemon(cfg, db)
-			datapipeDaemon         = datapipe.NewDaemon(cfg, db, graphDB, graphQueryCache, time.Duration(cfg.DatapipeInterval)*time.Second)
-			authenticator          = api.NewAuthenticator(cfg, db, database.NewContextInitializer(db))
-		)
-
-		registration.RegisterFossGlobalMiddleware(&routerInst, cfg, auth.NewIdentityResolver(), authenticator)
-		registration.RegisterFossRoutes(&routerInst, cfg, db, graphDB, apiCache, graphQueryCache, collectorManifests, authenticator, datapipeDaemon)
-		apiDaemon := bhapi.NewDaemon(cfg, routerInst.Handler())
-
-		// Set neo4j batch and flush sizes
-		neo4jParameters := appcfg.GetNeo4jParameters(db)
-		graphDB.SetBatchWriteSize(neo4jParameters.BatchWriteSize)
-		graphDB.SetWriteFlushSize(neo4jParameters.WriteFlushSize)
-
-		// Start daemons
-		serviceManager.Start(apiDaemon, toolingService, sessionSweepingService, datapipeDaemon)
-
-		log.Infof("Server started successfully")
-		// Wait for a signal to exit
-		<-exitC
-
-		log.Infof("Shutting down")
-		serviceManager.Stop()
-
-		log.Infof("Server shut down successfully")
 	}
 
 	return nil

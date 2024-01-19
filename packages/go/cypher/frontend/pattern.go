@@ -1,17 +1,17 @@
 // Copyright 2023 Specter Ops, Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// 
+//
 // SPDX-License-Identifier: Apache-2.0
 
 package frontend
@@ -49,11 +49,11 @@ type NodePatternVisitor struct {
 }
 
 func (s *NodePatternVisitor) EnterOC_Variable(ctx *parser.OC_VariableContext) {
-	s.ctx.Enter(&SymbolicNameOrReservedWordVisitor{})
+	s.ctx.Enter(NewVariableVisitor())
 }
 
 func (s *NodePatternVisitor) ExitOC_Variable(ctx *parser.OC_VariableContext) {
-	s.NodePattern.Binding = s.ctx.Exit().(*SymbolicNameOrReservedWordVisitor).Name
+	s.NodePattern.Binding = s.ctx.Exit().(*VariableVisitor).Variable
 }
 
 func (s *NodePatternVisitor) EnterOC_NodeLabels(ctx *parser.OC_NodeLabelsContext) {
@@ -119,11 +119,11 @@ func (s *RelationshipPatternVisitor) ExitOC_RelTypeName(ctx *parser.OC_RelTypeNa
 }
 
 func (s *RelationshipPatternVisitor) EnterOC_Variable(ctx *parser.OC_VariableContext) {
-	s.ctx.Enter(&SymbolicNameOrReservedWordVisitor{})
+	s.ctx.Enter(NewVariableVisitor())
 }
 
 func (s *RelationshipPatternVisitor) ExitOC_Variable(ctx *parser.OC_VariableContext) {
-	s.RelationshipPattern.Binding = s.ctx.Exit().(*SymbolicNameOrReservedWordVisitor).Name
+	s.RelationshipPattern.Binding = s.ctx.Exit().(*VariableVisitor).Variable
 }
 
 func (s *RelationshipPatternVisitor) EnterOC_LeftArrowHead(ctx *parser.OC_LeftArrowHeadContext) {
@@ -160,6 +160,40 @@ func (s *RelationshipPatternVisitor) EnterOC_Properties(ctx *parser.OC_Propertie
 
 func (s *RelationshipPatternVisitor) ExitOC_Properties(ctx *parser.OC_PropertiesContext) {
 	s.RelationshipPattern.Properties = s.ctx.Exit().(*PropertiesVisitor).Properties
+}
+
+type PatternPredicateVisitor struct {
+	BaseVisitor
+
+	PatternPredicate *model.PatternPredicate
+}
+
+func NewPatternPredicateVisitor() *PatternPredicateVisitor {
+	return &PatternPredicateVisitor{
+		PatternPredicate: model.NewPatternPredicate(),
+	}
+}
+
+func (s *PatternPredicateVisitor) EnterOC_NodePattern(ctx *parser.OC_NodePatternContext) {
+	s.ctx.Enter(&NodePatternVisitor{
+		NodePattern: &model.NodePattern{},
+	})
+}
+
+func (s *PatternPredicateVisitor) ExitOC_NodePattern(ctx *parser.OC_NodePatternContext) {
+	s.PatternPredicate.AddElement(s.ctx.Exit().(*NodePatternVisitor).NodePattern)
+}
+
+func (s *PatternPredicateVisitor) EnterOC_RelationshipPattern(ctx *parser.OC_RelationshipPatternContext) {
+	s.ctx.Enter(&RelationshipPatternVisitor{
+		RelationshipPattern: &model.RelationshipPattern{
+			Direction: graph.DirectionBoth,
+		},
+	})
+}
+
+func (s *PatternPredicateVisitor) ExitOC_RelationshipPattern(ctx *parser.OC_RelationshipPatternContext) {
+	s.PatternPredicate.AddElement(s.ctx.Exit().(*RelationshipPatternVisitor).RelationshipPattern)
 }
 
 type PatternVisitor struct {
@@ -215,11 +249,11 @@ func (s *PatternVisitor) ExitOC_ShortestPathPattern(ctx *parser.OC_ShortestPathP
 }
 
 func (s *PatternVisitor) EnterOC_Variable(ctx *parser.OC_VariableContext) {
-	s.ctx.Enter(&SymbolicNameOrReservedWordVisitor{})
+	s.ctx.Enter(NewVariableVisitor())
 }
 
 func (s *PatternVisitor) ExitOC_Variable(ctx *parser.OC_VariableContext) {
-	s.currentPart.Binding = s.ctx.Exit().(*SymbolicNameOrReservedWordVisitor).Name
+	s.currentPart.Binding = s.ctx.Exit().(*VariableVisitor).Variable
 }
 
 func (s *PatternVisitor) EnterOC_NodePattern(ctx *parser.OC_NodePatternContext) {
