@@ -39,7 +39,7 @@ const WindowsAbuse: FC = () => {
     const step1 = (
         <>
             <Typography variant='body2' className={classes.containsCodeEl}>
-                <b>Step 1: </b>Create .exe version of Certipy.<code>sAMAccountName</code>.
+                <b>Step 1: </b>Create .exe version of Certipy.
                 <br />
                 <br />
                 Install PyInstaller on a host with python installed, clone down Certipy from GitHub, and run this cmdlet
@@ -47,7 +47,7 @@ const WindowsAbuse: FC = () => {
                 Windows computer where Python is not installed:
             </Typography>
             <Typography component={'pre'}>{'pyinstaller ./Certipy.spec'}</Typography>
-            <Typography variant='body2'>
+            <Typography variant='body2' className={classes.containsCodeEl}>
                 The Certipy.exe will be in the <code>dist</code> folder.
             </Typography>
         </>
@@ -71,7 +71,7 @@ const WindowsAbuse: FC = () => {
     const step3 = (
         <>
             <Typography variant='body2' className={classes.containsCodeEl} sx={{ marginBottom: '-8px' }}>
-                <b>Step 3: </b>Check if mail attribute of victim must be set and set it if required.
+                <b>Step 3: </b>Check if <code>mail</code> attribute of victim must be set and set it if required.
                 <br />
                 <br />
                 If the certificate template is of schema version 2 or above and its attribute{' '}
@@ -136,7 +136,6 @@ const WindowsAbuse: FC = () => {
                 </Link>
                 ).
             </Typography>
-            <Typography component={'pre'}>{'Certify.exe request /ca:SERVER\\CA-NAME /template:TEMPLATE'}</Typography>
             <Typography variant='body2' className={classes.containsCodeEl}>
                 If the victim is a user, you have the following options for obtaining the credentials:
             </Typography>
