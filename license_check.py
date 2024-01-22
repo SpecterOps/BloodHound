@@ -312,6 +312,7 @@ IGNORED_EXTENSIONS = [
     ".crt",
     ".key",
     ".example",
+    ".svg",
 ]
 
 # Any file listed below is included regardless of exclusions.
@@ -360,6 +361,15 @@ LICENSE_HEADERS_BY_EXTENSION = {
     ".toml": generate_license_header("#"),
 }
 
+# Below is a list of valid file headers that the license must be placed after
+FILE_HEADER_PREFIXES = [
+    # POSIX exec header
+    "#!",
+
+    # XML header
+    "<?xml"
+]
+
 
 def content_has_header(path: str, content_lines: List[str], header: str) -> bool:
     matching_header = False
@@ -386,6 +396,13 @@ def content_has_header(path: str, content_lines: List[str], header: str) -> bool
     return False
 
 
+def _is_file_header(line: str) -> bool:
+    for header in FILE_HEADER_PREFIXES:
+        if line.startswith(header):
+            return True
+    return False
+
+
 def insert_license_header(path: str, header: str) -> None:
     with open(path, "r") as fin:
         content = fin.read()
@@ -398,7 +415,7 @@ def insert_license_header(path: str, header: str) -> None:
         return
 
     # Try to find a script exec header to advance the line offset
-    line_offset = 1 if len(content_lines) > 0 and content_lines[0].startswith("#!") else 0
+    line_offset = 1 if len(content_lines) > 0 and _is_file_header(content_lines[0]) else 0
 
     for line in content_lines[line_offset:]:
         # Make sure to skip leading newlines since we'll add our own

@@ -20,17 +20,20 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"net/http"
+	"github.com/specterops/bloodhound/dawgs/drivers/neo4j"
+	"github.com/specterops/bloodhound/dawgs/drivers/pg"
+	"github.com/specterops/bloodhound/dawgs/util/size"
+	schema "github.com/specterops/bloodhound/graphschema"
 	_ "net/http/pprof"
 	"os"
+	"os/signal"
+	"runtime/pprof"
+	"syscall"
 	"time"
 
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/specterops/bloodhound/dawgs"
-	"github.com/specterops/bloodhound/dawgs/drivers/neo4j"
 	"github.com/specterops/bloodhound/dawgs/graph"
-	"github.com/specterops/bloodhound/graphschema/ad"
-	"github.com/specterops/bloodhound/graphschema/common"
 	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/src/cmd/dawgs-harness/tests"
 )
@@ -40,66 +43,117 @@ func fatalf(format string, args ...any) {
 	os.Exit(1)
 }
 
-func RunNeo4jTestSuite(dbHost string) tests.TestSuite {
-	if connection, err := dawgs.Open("neo4j", dawgs.Config{DriverCfg: fmt.Sprintf("neo4j://neo4j:neo4jj@%s:7687/neo4j", dbHost)}); err != nil {
-		fatalf("Failed opening neo4j: %v", err)
-	} else if err := connection.WriteTransaction(context.Background(), func(tx graph.Transaction) error {
-		return tx.Nodes().Delete()
+func RunTestSuite(ctx context.Context, connectionStr, driverName string) tests.TestSuite {
+	if connection, err := dawgs.Open(context.TODO(), driverName, dawgs.Config{
+		TraversalMemoryLimit: size.Gibibyte,
+		DriverCfg:            connectionStr,
 	}); err != nil {
-		fatalf("Failed to clear neo4j: %v", err)
-	} else if err := neo4j.AssertNodePropertyIndex(connection, ad.Entity, common.Name.String(), graph.BTreeIndex); err != nil {
-		fatalf("Error creating database schema: %v", err)
-	} else if testSuite, err := tests.RunSuite(tests.Neo4j, connection); err != nil {
-		fatalf("Test suite error: %v", err)
+		fatalf("Failed opening %s database: %v", driverName, err)
 	} else {
-		connection.Close()
-		return testSuite
+		defer connection.Close(ctx)
+
+		if err := connection.AssertSchema(ctx, schema.DefaultGraphSchema()); err != nil {
+			fatalf("Failed asserting graph schema on %s database: %v", driverName, err)
+		} else if err := connection.WriteTransaction(ctx, func(tx graph.Transaction) error {
+			return tx.Nodes().Delete()
+		}); err != nil {
+			fatalf("Failed to clear %s database: %v", driverName, err)
+		} else if testSuite, err := tests.RunSuite(connection, driverName); err != nil {
+			fatalf("Test suite error for %s database: %v", driverName, err)
+		} else {
+			return testSuite
+		}
 	}
 
-	panic("")
+	panic(nil)
+}
+
+func newContext() context.Context {
+	var (
+		ctx, done = context.WithCancel(context.Background())
+		sigchnl   = make(chan os.Signal)
+	)
+
+	signal.Notify(sigchnl)
+
+	go func() {
+		defer done()
+
+		for nextSignal := range sigchnl {
+			switch nextSignal {
+			case syscall.SIGINT, syscall.SIGTERM:
+				return
+			}
+		}
+	}()
+
+	return ctx
+}
+
+var enablePprof bool
+
+func execSuite(name string, logic func() tests.TestSuite) tests.TestSuite {
+	if enablePprof {
+		if cpuProfileFile, err := os.OpenFile(name+".pprof", syscall.O_WRONLY|syscall.O_TRUNC|syscall.O_CREAT, 0644); err != nil {
+			fatalf("Unable to open file for CPU profile: %v", err)
+		} else {
+			defer cpuProfileFile.Close()
+
+			if err := pprof.StartCPUProfile(cpuProfileFile); err != nil {
+				fatalf("Failed to start CPU profile: %v", err)
+			} else {
+				defer pprof.StopCPUProfile()
+			}
+		}
+	}
+
+	return logic()
 }
 
 func main() {
 	var (
-		dbHost      string
-		testType    string
-		enablePprof bool
+		ctx                = newContext()
+		neo4jConnectionStr string
+		pgConnectionStr    string
+		testType           string
 	)
 
 	flag.StringVar(&testType, "test", "both", "Test to run. Must be one of: 'postgres', 'neo4j', 'both'")
-	flag.BoolVar(&enablePprof, "enable-pprof", false, "Enable the pprof HTTP sampling server.")
-	flag.IntVar(&tests.SimpleRelationshipsToCreate, "num-rels", 5000, "Number of simple relationships to create.")
-	flag.StringVar(&dbHost, "db-host", "192.168.122.170", "Database host.")
+	flag.BoolVar(&enablePprof, "enable-pprof", true, "Enable the pprof HTTP sampling server.")
+	flag.IntVar(&tests.SimpleRelationshipsToCreate, "num-rels", 2000, "Number of simple relationships to create.")
+	flag.StringVar(&neo4jConnectionStr, "neo4j", "neo4j://neo4j:neo4jj@localhost:7687", "Neo4j connection string.")
+	flag.StringVar(&pgConnectionStr, "pg", "user=bhe dbname=bhe password=bhe4eva host=localhost", "PostgreSQL connection string.")
 	flag.Parse()
-
-	if enablePprof {
-		go func() {
-			if err := http.ListenAndServe("localhost:8080", nil); err != nil {
-				log.Error().Fault(err).Msg("HTTP server caught an error while running.")
-			}
-		}()
-	}
 
 	log.ConfigureDefaults()
 
 	switch testType {
-	//case "both":
-	//	pgTestSuite := RunPostgresqlTestSuite(dbHost)
-	//
-	//	// Sleep between tests
-	//	time.Sleep(time.Second * 3)
-	//	fmt.Println()
-	//
-	//	n4jTestSuite := RunNeo4jTestSuite(dbHost)
-	//	fmt.Println()
-	//
-	//	OutputTestSuiteDeltas(pgTestSuite, n4jTestSuite)
-	//
-	//case "postgres":
-	//	RunPostgresqlTestSuite(dbHost)
+	case "both":
+		n4jTestSuite := execSuite(neo4j.DriverName, func() tests.TestSuite {
+			return RunTestSuite(ctx, neo4jConnectionStr, neo4j.DriverName)
+		})
+
+		fmt.Println()
+
+		// Sleep between tests
+		time.Sleep(time.Second * 3)
+
+		pgTestSuite := execSuite(pg.DriverName, func() tests.TestSuite {
+			return RunTestSuite(ctx, pgConnectionStr, pg.DriverName)
+		})
+		fmt.Println()
+
+		OutputTestSuiteDeltas(pgTestSuite, n4jTestSuite)
+
+	case "postgres":
+		execSuite(pg.DriverName, func() tests.TestSuite {
+			return RunTestSuite(ctx, pgConnectionStr, pg.DriverName)
+		})
 
 	case "neo4j":
-		RunNeo4jTestSuite(dbHost)
+		execSuite(neo4j.DriverName, func() tests.TestSuite {
+			return RunTestSuite(ctx, neo4jConnectionStr, neo4j.DriverName)
+		})
 	}
 }
 

@@ -54,7 +54,7 @@ func RunAnalysisOperations(ctx context.Context, db database.Database, graphDB gr
 		collector.Collect(fmt.Errorf("asset group isolation tagging failed: %w", err))
 	}
 
-	if err := ParallelTagActiveDirectoryTierZero(ctx, graphDB); err != nil {
+	if err := TagActiveDirectoryTierZero(ctx, graphDB); err != nil {
 		collector.Collect(fmt.Errorf("active directory tier zero tagging failed: %w", err))
 	}
 

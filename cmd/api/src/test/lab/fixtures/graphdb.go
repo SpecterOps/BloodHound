@@ -17,32 +17,34 @@
 package fixtures
 
 import (
+	"context"
 	"fmt"
+	schema "github.com/specterops/bloodhound/graphschema"
 	"log"
 
-	"github.com/specterops/bloodhound/dawgs"
-	"github.com/specterops/bloodhound/dawgs/drivers/neo4j"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/lab"
-	"github.com/specterops/bloodhound/src/server"
+	"github.com/specterops/bloodhound/src/bootstrap"
 )
 
 var GraphDBFixture = NewGraphDBFixture()
 
-func NewGraphDBFixture() *lab.Fixture[graph.Database] {
-	fixture := lab.NewFixture(func(harness *lab.Harness) (graph.Database, error) {
+func NewGraphDBFixture() *lab.Fixture[*graph.DatabaseSwitch] {
+	fixture := lab.NewFixture(func(harness *lab.Harness) (*graph.DatabaseSwitch, error) {
 		if config, ok := lab.Unpack(harness, ConfigFixture); !ok {
 			return nil, fmt.Errorf("unable to unpack ConfigFixture")
-		} else if graphdb, err := dawgs.Open(neo4j.DriverName, dawgs.Config{DriverCfg: config.Neo4J.Neo4jConnectionString()}); err != nil {
-			return graphdb, err
-		} else if err := server.MigrateGraph(config, graphdb); err != nil {
-			return graphdb, fmt.Errorf("failed migrating Graph database: %v", err)
+		} else if graphdb, err := bootstrap.ConnectGraph(context.TODO(), config); err != nil {
+			return nil, err
+		} else if err := bootstrap.MigrateGraph(context.Background(), graphdb, schema.DefaultGraphSchema()); err != nil {
+			return nil, fmt.Errorf("failed migrating Graph database: %v", err)
 		} else {
-			return graphdb, nil
+			return graph.NewDatabaseSwitch(context.Background(), graphdb), nil
 		}
 	}, nil)
+
 	if err := lab.SetDependency(fixture, ConfigFixture); err != nil {
 		log.Fatalln(err)
 	}
+
 	return fixture
 }

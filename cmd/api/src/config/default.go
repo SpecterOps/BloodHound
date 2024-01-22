@@ -18,6 +18,7 @@ package config
 
 import (
 	"fmt"
+	"github.com/specterops/bloodhound/dawgs/drivers/neo4j"
 
 	"github.com/specterops/bloodhound/src/serde"
 )
@@ -52,6 +53,7 @@ func NewDefaultConfiguration() (Configuration, error) {
 			TraversalMemoryLimit:   2, // 2 GiB by default
 			TLS:                    TLSConfiguration{},
 			SAML:                   SAMLConfiguration{},
+			GraphDriver:            neo4j.DriverName, // Default to Neo4j as the graph driver
 			Database: DatabaseConfiguration{
 				MaxConcurrentSessions: 10,
 			},

@@ -42,6 +42,13 @@ func NewBitmap32() Duplex[uint32] {
 	}
 }
 
+func NewBitmap32With(values ...uint32) Duplex[uint32] {
+	duplex := NewBitmap32()
+	duplex.Add(values...)
+
+	return duplex
+}
+
 func (s bitmap32) Clear() {
 	s.bitmap.Clear()
 }

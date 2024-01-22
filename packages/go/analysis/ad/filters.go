@@ -163,6 +163,9 @@ func SelectComputersCandidateFilter(node *graph.Node) bool {
 func SelectGPOTierZeroCandidateFilter(node *graph.Node) bool {
 	if tags, err := node.Properties.Get(common.SystemTags.String()).String(); err != nil {
 		return false
+	} else if node.Kinds.ContainsOneOf(ad.Group) {
+		// GPOs don’t apply to groups.
+		return false
 	} else {
 		return strings.Contains(tags, ad.AdminTierZero)
 	}
@@ -177,5 +180,13 @@ func FilterEnrollers(node graph.Node) graph.Criteria {
 		query.Equals(query.EndID(), node.ID),
 		query.Kind(query.Relationship(), ad.Enroll),
 		query.Kind(query.Start(), ad.Entity),
+	)
+}
+
+func FilterPublishedCAs(certTemplate *graph.Node) graph.Criteria {
+	return query.And(
+		query.Equals(query.StartID(), certTemplate.ID),
+		query.KindIn(query.End(), ad.EnterpriseCA),
+		query.KindIn(query.Relationship(), ad.PublishedTo),
 	)
 }
