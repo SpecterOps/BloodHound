@@ -42,17 +42,6 @@ const ExploreSearchCombobox: React.FC<{
     const { isOpen, getMenuProps, getInputProps, getComboboxProps, highlightedIndex, getItemProps, openMenu } =
         useCombobox({
             items: data || [],
-            onInputValueChange: ({ type, inputValue }) => {
-                if (
-                    inputValue !== undefined &&
-                    // filter out the following events, as they will be handled by `onSelectedItemChange` and should not be double-counted here
-                    type !== useCombobox.stateChangeTypes.ControlledPropUpdatedSelectedItem &&
-                    type !== useCombobox.stateChangeTypes.ItemClick &&
-                    type !== useCombobox.stateChangeTypes.InputKeyDownEnter
-                ) {
-                    handleNodeEdited(inputValue);
-                }
-            },
             inputValue,
             selectedItem,
             onSelectedItemChange: ({ type, selectedItem }) => {
@@ -92,7 +81,7 @@ const ExploreSearchCombobox: React.FC<{
                     },
                     startAdornment: selectedItem?.type && <NodeIcon nodeType={selectedItem?.type} />,
                 }}
-                {...getInputProps({ onFocus: openMenu, refKey: 'inputRef' })}
+                {...getInputProps({ onFocus: openMenu, refKey: 'inputRef', onChange: (e) => {handleNodeEdited(e.currentTarget.value)} })}
                 data-testid='explore_search_input-search'
             />
             <div
