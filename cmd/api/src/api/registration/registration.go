@@ -17,6 +17,8 @@
 package registration
 
 import (
+	"net/http"
+
 	"github.com/specterops/bloodhound/cache"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/src/api"
@@ -28,18 +30,18 @@ import (
 	"github.com/specterops/bloodhound/src/config"
 	"github.com/specterops/bloodhound/src/daemons/datapipe"
 	"github.com/specterops/bloodhound/src/database"
-	"net/http"
+	"github.com/specterops/bloodhound/src/queries"
 )
 
 func RegisterFossGlobalMiddleware(routerInst *router.Router, cfg config.Configuration, identityResolver auth.IdentityResolver, authenticator api.Authenticator) {
-	// Set up logging
-	if cfg.EnableAPILogging {
-		routerInst.UsePrerouting(middleware.LoggingMiddleware(cfg, identityResolver))
-	}
-
 	// Set up the middleware stack
 	routerInst.UsePrerouting(middleware.ContextMiddleware)
 	routerInst.UsePrerouting(middleware.CORSMiddleware())
+
+	// Set up logging. This must be done after ContextMiddleware is initialized so the context can be accessed in the log logic
+	if cfg.EnableAPILogging {
+		routerInst.UsePrerouting(middleware.LoggingMiddleware(cfg, identityResolver))
+	}
 
 	routerInst.UsePostrouting(
 		middleware.PanicHandler,
@@ -49,12 +51,16 @@ func RegisterFossGlobalMiddleware(routerInst *router.Router, cfg config.Configur
 }
 
 func RegisterFossRoutes(
-	routerInst *router.Router, cfg config.Configuration, db database.Database, graphDB graph.Database,
-	apiCache cache.Cache, graphQueryCache cache.Cache, collectorManifests config.CollectorManifests,
-	authenticator api.Authenticator, taskNotifier datapipe.Tasker,
+	routerInst *router.Router,
+	cfg config.Configuration,
+	rdms *database.BloodhoundDB,
+	graphDB *graph.DatabaseSwitch,
+	graphQuery queries.Graph,
+	apiCache cache.Cache,
+	collectorManifests config.CollectorManifests,
+	authenticator api.Authenticator,
+	taskNotifier datapipe.Tasker,
 ) {
-	var resources = v2.NewResources(db, graphDB, cfg, apiCache, graphQueryCache, collectorManifests, taskNotifier)
-
 	router.With(middleware.DefaultRateLimitMiddleware,
 		// Health Endpoint
 		routerInst.GET("/health", func(response http.ResponseWriter, _ *http.Request) {
@@ -70,5 +76,6 @@ func RegisterFossRoutes(
 		routerInst.PathPrefix("/ui", static.Handler()),
 	)
 
+	var resources = v2.NewResources(rdms, graphDB, cfg, apiCache, graphQuery, collectorManifests, taskNotifier)
 	NewV2API(cfg, resources, routerInst, authenticator)
 }

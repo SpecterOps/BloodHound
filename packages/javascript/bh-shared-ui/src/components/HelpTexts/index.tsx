@@ -1,4 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2024 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -64,6 +64,8 @@ import AdminTo from './AdminTo/AdminTo';
 import AllExtendedRights from './AllExtendedRights/AllExtendedRights';
 import AllowedToAct from './AllowedToAct/AllowedToAct';
 import AllowedToDelegate from './AllowedToDelegate/AllowedToDelegate';
+import CanAbuseUPNCertMapping from './CanAbuseUPNCertMapping/CanAbuseUPNCertMapping';
+import CanAbuseWeakCertBinding from './CanAbuseWeakCertBinding/CanAbuseWeakCertBinding';
 import CanPSRemote from './CanPSRemote/CanPSRemote';
 import CanRDP from './CanRDP/CanRDP';
 import Contains from './Contains/Contains';
@@ -107,6 +109,7 @@ import WritePKIEnrollmentFlag from './WritePKIEnrollmentFlag/WritePKIEnrollmentF
 import WritePKINameFlag from './WritePKINameFlag/WritePKINameFlag';
 import WriteSPN from './WriteSPN/WriteSPN';
 import ADCSESC1 from './ADCSESC1/ADCSESC1';
+import ADCSESC6a from './ADCSESC6a/ADCSESC6a';
 import ADCSESC6b from './ADCSESC6b/ADCSESC6b';
 
 export type EdgeInfoProps = {
@@ -145,6 +148,8 @@ const EdgeInfoComponents = {
     ReadGMSAPassword: ReadGMSAPassword,
     HasSIDHistory: HasSIDHistory,
     TrustedBy: TrustedBy,
+    CanAbuseUPNCertMapping: CanAbuseUPNCertMapping,
+    CanAbuseWeakCertBinding: CanAbuseWeakCertBinding,
     CanPSRemote: CanPSRemote,
     AZAddMembers: AZAddMembers,
     AZAddSecret: AZAddSecret,
@@ -208,6 +213,7 @@ const EdgeInfoComponents = {
     GoldenCert: GoldenCert,
     ADCSESC1: ADCSESC1,
     ADCSESC3: ADCSESC3,
+    ADCSESC6a: ADCSESC6a,
     ADCSESC6b: ADCSESC6b,
     ManageCA: ManageCA,
     ManageCertificates: ManageCertificates,

@@ -520,6 +520,7 @@ export function ActiveDirectoryPathfindingEdges(): ActiveDirectoryRelationshipKi
         ActiveDirectoryRelationshipKind.ADCSESC5,
         ActiveDirectoryRelationshipKind.ADCSESC6,
         ActiveDirectoryRelationshipKind.ADCSESC7,
+        ActiveDirectoryRelationshipKind.DCFor,
     ];
 }
 export enum AzureNodeKind {

@@ -21,6 +21,8 @@ package ad_test
 
 import (
 	"context"
+	schema "github.com/specterops/bloodhound/graphschema"
+	"github.com/specterops/bloodhound/src/test"
 	"testing"
 
 	"github.com/specterops/bloodhound/analysis"
@@ -33,34 +35,36 @@ import (
 )
 
 func TestFetchEnforcedGPOs(t *testing.T) {
-	testContext := integration.NewGraphTestContext(t)
-	testContext.ReadTransactionTest(func(harness *integration.HarnessDetails) {
+	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
+	testContext.ReadTransactionTestWithSetup(func(harness *integration.HarnessDetails) error {
 		harness.GPOEnforcement.Setup(testContext)
+		return nil
 	}, func(harness integration.HarnessDetails, tx graph.Transaction) {
 		// Check the first user
 		var (
 			enforcedGPOs, err = adAnalysis.FetchEnforcedGPOs(tx, harness.GPOEnforcement.UserC, 0, 0)
 		)
 
-		require.Nil(t, err)
+		test.RequireNilErr(t, err)
 		require.Equal(t, 1, enforcedGPOs.Len())
 
 		// Check the second user
 		enforcedGPOs, err = adAnalysis.FetchEnforcedGPOs(tx, harness.GPOEnforcement.UserB, 0, 0)
 
-		require.Nil(t, err)
+		test.RequireNilErr(t, err)
 		require.Equal(t, 2, enforcedGPOs.Len())
 	})
 }
 
 func TestFetchGPOAffectedContainerPaths(t *testing.T) {
-	testContext := integration.NewGraphTestContext(t)
-	testContext.ReadTransactionTest(func(harness *integration.HarnessDetails) {
+	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
+	testContext.ReadTransactionTestWithSetup(func(harness *integration.HarnessDetails) error {
 		harness.GPOEnforcement.Setup(testContext)
+		return nil
 	}, func(harness integration.HarnessDetails, tx graph.Transaction) {
 		containers, err := adAnalysis.FetchGPOAffectedContainerPaths(tx, harness.GPOEnforcement.GPOEnforced)
 
-		require.Nil(t, err)
+		test.RequireNilErr(t, err)
 		nodes := containers.AllNodes().IDs()
 		require.Equal(t, 6, len(nodes))
 		require.Contains(t, nodes, harness.GPOEnforcement.GPOEnforced.ID)
@@ -71,7 +75,7 @@ func TestFetchGPOAffectedContainerPaths(t *testing.T) {
 		require.Contains(t, nodes, harness.GPOEnforcement.OrganizationalUnitD.ID)
 
 		containers, err = adAnalysis.FetchGPOAffectedContainerPaths(tx, harness.GPOEnforcement.GPOUnenforced)
-		require.Nil(t, err)
+		test.RequireNilErr(t, err)
 		nodes = containers.AllNodes().IDs()
 		require.Equal(t, 5, len(nodes))
 		require.Contains(t, nodes, harness.GPOEnforcement.GPOUnenforced.ID)
@@ -83,20 +87,21 @@ func TestFetchGPOAffectedContainerPaths(t *testing.T) {
 }
 
 func TestCreateGPOAffectedIntermediariesListDelegateAffectedContainers(t *testing.T) {
-	testContext := integration.NewGraphTestContext(t)
-	testContext.WriteTransactionTest(func(harness *integration.HarnessDetails) {
+	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
+	testContext.WriteTransactionTestWithSetup(func(harness *integration.HarnessDetails) error {
 		harness.GPOEnforcement.Setup(testContext)
+		return nil
 	}, func(harness integration.HarnessDetails, tx graph.Transaction) {
 		containers, err := adAnalysis.CreateGPOAffectedIntermediariesListDelegate(adAnalysis.SelectGPOContainerCandidateFilter)(tx, harness.GPOEnforcement.GPOEnforced, 0, 0)
 
-		require.Nil(t, err)
+		test.RequireNilErr(t, err)
 		require.Equal(t, 5, containers.Len())
 		require.Equal(t, 4, containers.ContainingNodeKinds(ad.OU).Len())
 		require.Equal(t, 1, containers.ContainingNodeKinds(ad.Domain).Len())
 
 		containers, err = adAnalysis.CreateGPOAffectedIntermediariesListDelegate(adAnalysis.SelectGPOContainerCandidateFilter)(tx, harness.GPOEnforcement.GPOUnenforced, 0, 0)
 
-		require.Nil(t, err)
+		test.RequireNilErr(t, err)
 		require.Equal(t, 4, containers.Len())
 		require.False(t, containers.Contains(harness.GPOEnforcement.OrganizationalUnitC))
 		require.Equal(t, 3, containers.ContainingNodeKinds(ad.OU).Len())
@@ -105,13 +110,14 @@ func TestCreateGPOAffectedIntermediariesListDelegateAffectedContainers(t *testin
 }
 
 func TestCreateGPOAffectedIntermediariesPathDelegateAffectedUsers(t *testing.T) {
-	testContext := integration.NewGraphTestContext(t)
-	testContext.WriteTransactionTest(func(harness *integration.HarnessDetails) {
+	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
+	testContext.WriteTransactionTestWithSetup(func(harness *integration.HarnessDetails) error {
 		harness.GPOEnforcement.Setup(testContext)
+		return nil
 	}, func(harness integration.HarnessDetails, tx graph.Transaction) {
 		users, err := adAnalysis.CreateGPOAffectedIntermediariesPathDelegate(ad.User)(tx, harness.GPOEnforcement.GPOEnforced)
 
-		require.Nil(t, err)
+		test.RequireNilErr(t, err)
 		nodes := users.AllNodes().IDs()
 		require.Equal(t, 10, len(nodes))
 		require.Contains(t, nodes, harness.GPOEnforcement.GPOEnforced.ID)
@@ -122,7 +128,7 @@ func TestCreateGPOAffectedIntermediariesPathDelegateAffectedUsers(t *testing.T) 
 		require.Contains(t, nodes, harness.GPOEnforcement.OrganizationalUnitC.ID)
 
 		users, err = adAnalysis.CreateGPOAffectedIntermediariesPathDelegate(ad.User)(tx, harness.GPOEnforcement.GPOUnenforced)
-		require.Nil(t, err)
+		test.RequireNilErr(t, err)
 		nodes = users.AllNodes().IDs()
 		require.Equal(t, 8, len(nodes))
 		require.Contains(t, nodes, harness.GPOEnforcement.GPOUnenforced.ID)
@@ -135,27 +141,29 @@ func TestCreateGPOAffectedIntermediariesPathDelegateAffectedUsers(t *testing.T) 
 }
 
 func TestCreateGPOAffectedResultsListDelegateAffectedUsers(t *testing.T) {
-	testContext := integration.NewGraphTestContext(t)
-	testContext.WriteTransactionTest(func(harness *integration.HarnessDetails) {
+	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
+	testContext.WriteTransactionTestWithSetup(func(harness *integration.HarnessDetails) error {
 		harness.GPOEnforcement.Setup(testContext)
+		return nil
 	}, func(harness integration.HarnessDetails, tx graph.Transaction) {
 		users, err := adAnalysis.CreateGPOAffectedIntermediariesListDelegate(adAnalysis.SelectUsersCandidateFilter)(tx, harness.GPOEnforcement.GPOEnforced, 0, 0)
 
-		require.Nil(t, err)
+		test.RequireNilErr(t, err)
 		require.Equal(t, 4, users.Len())
 
 		users, err = adAnalysis.CreateGPOAffectedIntermediariesListDelegate(adAnalysis.SelectUsersCandidateFilter)(tx, harness.GPOEnforcement.GPOUnenforced, 0, 0)
 
-		require.Nil(t, err)
+		test.RequireNilErr(t, err)
 		require.Equal(t, 3, users.Len())
 		require.Equal(t, 3, users.ContainingNodeKinds(ad.User).Len())
 	})
 }
 
 func TestCreateGPOAffectedIntermediariesListDelegateTierZero(t *testing.T) {
-	testContext := integration.NewGraphTestContext(t)
-	testContext.WriteTransactionTest(func(harness *integration.HarnessDetails) {
+	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
+	testContext.WriteTransactionTestWithSetup(func(harness *integration.HarnessDetails) error {
 		harness.GPOEnforcement.Setup(testContext)
+		return nil
 	}, func(harness integration.HarnessDetails, tx graph.Transaction) {
 		harness.GPOEnforcement.UserC.Properties.Set(common.SystemTags.String(), ad.AdminTierZero)
 		harness.GPOEnforcement.UserD.Properties.Set(common.SystemTags.String(), ad.AdminTierZero)
@@ -164,24 +172,25 @@ func TestCreateGPOAffectedIntermediariesListDelegateTierZero(t *testing.T) {
 
 		users, err := adAnalysis.CreateGPOAffectedIntermediariesListDelegate(adAnalysis.SelectGPOTierZeroCandidateFilter)(tx, harness.GPOEnforcement.GPOEnforced, 0, 0)
 
-		require.Nil(t, err)
+		test.RequireNilErr(t, err)
 		require.Equal(t, 2, users.Len())
 
 		users, err = adAnalysis.CreateGPOAffectedIntermediariesListDelegate(adAnalysis.SelectGPOTierZeroCandidateFilter)(tx, harness.GPOEnforcement.GPOUnenforced, 0, 0)
 
-		require.Nil(t, err)
+		test.RequireNilErr(t, err)
 		require.Equal(t, 1, users.Len())
 	})
 }
 
 func TestFetchComputerSessionPaths(t *testing.T) {
-	testContext := integration.NewGraphTestContext(t)
-	testContext.ReadTransactionTest(func(harness *integration.HarnessDetails) {
+	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
+	testContext.ReadTransactionTestWithSetup(func(harness *integration.HarnessDetails) error {
 		harness.Session.Setup(testContext)
+		return nil
 	}, func(harness integration.HarnessDetails, tx graph.Transaction) {
 		sessions, err := adAnalysis.FetchComputerSessionPaths(tx, harness.Session.ComputerA)
 
-		require.Nil(t, err)
+		test.RequireNilErr(t, err)
 		nodes := sessions.AllNodes().IDs()
 		require.Equal(t, 2, len(nodes))
 		require.Contains(t, nodes, harness.Session.ComputerA.ID)
@@ -190,63 +199,67 @@ func TestFetchComputerSessionPaths(t *testing.T) {
 }
 
 func TestFetchComputerSessions(t *testing.T) {
-	testContext := integration.NewGraphTestContext(t)
-	testContext.ReadTransactionTest(func(harness *integration.HarnessDetails) {
+	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
+	testContext.ReadTransactionTestWithSetup(func(harness *integration.HarnessDetails) error {
 		harness.Session.Setup(testContext)
+		return nil
 	}, func(harness integration.HarnessDetails, tx graph.Transaction) {
 		sessions, err := adAnalysis.FetchComputerSessions(tx, harness.Session.ComputerA, 0, 0)
 
-		require.Nil(t, err)
+		test.RequireNilErr(t, err)
 		require.Equal(t, 1, sessions.Len())
 	})
 }
 
 func TestFetchGroupSessionPaths(t *testing.T) {
-	testContext := integration.NewGraphTestContext(t)
-	testContext.ReadTransactionTest(func(harness *integration.HarnessDetails) {
+	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
+	testContext.ReadTransactionTestWithSetup(func(harness *integration.HarnessDetails) error {
 		harness.Session.Setup(testContext)
+		return nil
 	}, func(harness integration.HarnessDetails, tx graph.Transaction) {
 		computers, err := adAnalysis.FetchGroupSessionPaths(tx, harness.Session.GroupA)
 
-		require.Nil(t, err)
+		test.RequireNilErr(t, err)
 		nodes := computers.AllNodes().IDs()
 		require.Equal(t, 4, len(nodes))
 
 		nestedComputers, err := adAnalysis.FetchGroupSessionPaths(tx, harness.Session.GroupC)
 
-		require.Nil(t, err)
+		test.RequireNilErr(t, err)
 		nestedNodes := nestedComputers.AllNodes().IDs()
 		require.Equal(t, 5, len(nestedNodes))
 	})
 }
 
 func TestFetchGroupSessions(t *testing.T) {
-	testContext := integration.NewGraphTestContext(t)
-	testContext.ReadTransactionTest(func(harness *integration.HarnessDetails) {
+	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
+	testContext.ReadTransactionTestWithSetup(func(harness *integration.HarnessDetails) error {
 		harness.Session.Setup(testContext)
+		return nil
 	}, func(harness integration.HarnessDetails, tx graph.Transaction) {
 		computers, err := adAnalysis.FetchGroupSessions(tx, harness.Session.GroupA, 0, 0)
 
-		require.Nil(t, err)
+		test.RequireNilErr(t, err)
 		require.Equal(t, 2, computers.Len())
 		require.Equal(t, 2, computers.ContainingNodeKinds(ad.Computer).Len())
 
 		nestedComputers, err := adAnalysis.FetchGroupSessions(tx, harness.Session.GroupC, 0, 0)
 
-		require.Nil(t, err)
+		test.RequireNilErr(t, err)
 		require.Equal(t, 2, nestedComputers.Len())
 		require.Equal(t, 2, nestedComputers.ContainingNodeKinds(ad.Computer).Len())
 	})
 }
 
 func TestFetchUserSessionPaths(t *testing.T) {
-	testContext := integration.NewGraphTestContext(t)
-	testContext.ReadTransactionTest(func(harness *integration.HarnessDetails) {
+	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
+	testContext.ReadTransactionTestWithSetup(func(harness *integration.HarnessDetails) error {
 		harness.Session.Setup(testContext)
+		return nil
 	}, func(harness integration.HarnessDetails, tx graph.Transaction) {
 		sessions, err := adAnalysis.FetchUserSessionPaths(tx, harness.Session.User)
 
-		require.Nil(t, err)
+		test.RequireNilErr(t, err)
 		nodes := sessions.AllNodes().IDs()
 		require.Equal(t, 3, len(nodes))
 		require.Contains(t, nodes, harness.Session.User.ID)
@@ -256,26 +269,28 @@ func TestFetchUserSessionPaths(t *testing.T) {
 }
 
 func TestFetchUserSessions(t *testing.T) {
-	testContext := integration.NewGraphTestContext(t)
-	testContext.ReadTransactionTest(func(harness *integration.HarnessDetails) {
+	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
+	testContext.ReadTransactionTestWithSetup(func(harness *integration.HarnessDetails) error {
 		harness.Session.Setup(testContext)
+		return nil
 	}, func(harness integration.HarnessDetails, tx graph.Transaction) {
 		computers, err := adAnalysis.FetchUserSessions(tx, harness.Session.User, 0, 0)
 
-		require.Nil(t, err)
+		test.RequireNilErr(t, err)
 		require.Equal(t, 2, computers.Len())
 		require.Equal(t, 2, computers.ContainingNodeKinds(ad.Computer).Len())
 	})
 }
 
 func TestCreateOutboundLocalGroupPathDelegateUser(t *testing.T) {
-	testContext := integration.NewGraphTestContext(t)
-	testContext.WriteTransactionTest(func(harness *integration.HarnessDetails) {
+	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
+	testContext.WriteTransactionTestWithSetup(func(harness *integration.HarnessDetails) error {
 		harness.LocalGroupSQL.Setup(testContext)
+		return nil
 	}, func(harness integration.HarnessDetails, tx graph.Transaction) {
 		path, err := adAnalysis.CreateOutboundLocalGroupPathDelegate(ad.AdminTo)(tx, harness.LocalGroupSQL.UserB)
 
-		require.Nil(t, err)
+		test.RequireNilErr(t, err)
 		nodes := path.AllNodes().IDs()
 		require.Contains(t, nodes, harness.LocalGroupSQL.UserB.ID)
 		require.Contains(t, nodes, harness.LocalGroupSQL.GroupA.ID)
@@ -285,26 +300,28 @@ func TestCreateOutboundLocalGroupPathDelegateUser(t *testing.T) {
 }
 
 func TestCreateOutboundLocalGroupListDelegateUser(t *testing.T) {
-	testContext := integration.NewGraphTestContext(t)
-	testContext.WriteTransactionTest(func(harness *integration.HarnessDetails) {
+	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
+	testContext.WriteTransactionTestWithSetup(func(harness *integration.HarnessDetails) error {
 		harness.LocalGroupSQL.Setup(testContext)
+		return nil
 	}, func(harness integration.HarnessDetails, tx graph.Transaction) {
 		computers, err := adAnalysis.CreateOutboundLocalGroupListDelegate(ad.AdminTo)(tx, harness.LocalGroupSQL.UserB, 0, 0)
 
-		require.Nil(t, err)
+		test.RequireNilErr(t, err)
 		require.Equal(t, 1, computers.Len())
 		require.Equal(t, harness.LocalGroupSQL.ComputerA.ID, computers.Slice()[0].ID)
 	})
 }
 
 func TestCreateOutboundLocalGroupPathDelegateGroup(t *testing.T) {
-	testContext := integration.NewGraphTestContext(t)
-	testContext.WriteTransactionTest(func(harness *integration.HarnessDetails) {
+	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
+	testContext.WriteTransactionTestWithSetup(func(harness *integration.HarnessDetails) error {
 		harness.LocalGroupSQL.Setup(testContext)
+		return nil
 	}, func(harness integration.HarnessDetails, tx graph.Transaction) {
 		path, err := adAnalysis.CreateOutboundLocalGroupPathDelegate(ad.AdminTo)(tx, harness.LocalGroupSQL.GroupA)
 
-		require.Nil(t, err)
+		test.RequireNilErr(t, err)
 		nodes := path.AllNodes().IDs()
 		require.Contains(t, nodes, harness.LocalGroupSQL.GroupA.ID)
 		require.Contains(t, nodes, harness.LocalGroupSQL.ComputerA.ID)
@@ -313,26 +330,28 @@ func TestCreateOutboundLocalGroupPathDelegateGroup(t *testing.T) {
 }
 
 func TestCreateOutboundLocalGroupListDelegateGroup(t *testing.T) {
-	testContext := integration.NewGraphTestContext(t)
-	testContext.WriteTransactionTest(func(harness *integration.HarnessDetails) {
+	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
+	testContext.WriteTransactionTestWithSetup(func(harness *integration.HarnessDetails) error {
 		harness.LocalGroupSQL.Setup(testContext)
+		return nil
 	}, func(harness integration.HarnessDetails, tx graph.Transaction) {
 		computers, err := adAnalysis.CreateOutboundLocalGroupListDelegate(ad.AdminTo)(tx, harness.LocalGroupSQL.GroupA, 0, 0)
 
-		require.Nil(t, err)
+		test.RequireNilErr(t, err)
 		require.Equal(t, 1, computers.Len())
 		require.Equal(t, harness.LocalGroupSQL.ComputerA.ID, computers.Slice()[0].ID)
 	})
 }
 
 func TestCreateOutboundLocalGroupPathDelegateComputer(t *testing.T) {
-	testContext := integration.NewGraphTestContext(t)
-	testContext.WriteTransactionTest(func(harness *integration.HarnessDetails) {
+	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
+	testContext.WriteTransactionTestWithSetup(func(harness *integration.HarnessDetails) error {
 		harness.LocalGroupSQL.Setup(testContext)
+		return nil
 	}, func(harness integration.HarnessDetails, tx graph.Transaction) {
 		path, err := adAnalysis.CreateOutboundLocalGroupPathDelegate(ad.AdminTo)(tx, harness.LocalGroupSQL.ComputerA)
 
-		require.Nil(t, err)
+		test.RequireNilErr(t, err)
 		nodes := path.AllNodes().IDs()
 		require.Contains(t, nodes, harness.LocalGroupSQL.ComputerA.ID)
 		require.Contains(t, nodes, harness.LocalGroupSQL.ComputerB.ID)
@@ -343,25 +362,27 @@ func TestCreateOutboundLocalGroupPathDelegateComputer(t *testing.T) {
 }
 
 func TestCreateOutboundLocalGroupListDelegateComputer(t *testing.T) {
-	testContext := integration.NewGraphTestContext(t)
-	testContext.WriteTransactionTest(func(harness *integration.HarnessDetails) {
+	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
+	testContext.WriteTransactionTestWithSetup(func(harness *integration.HarnessDetails) error {
 		harness.LocalGroupSQL.Setup(testContext)
+		return nil
 	}, func(harness integration.HarnessDetails, tx graph.Transaction) {
 		computers, err := adAnalysis.CreateOutboundLocalGroupListDelegate(ad.AdminTo)(tx, harness.LocalGroupSQL.ComputerA, 0, 0)
 
-		require.Nil(t, err)
+		test.RequireNilErr(t, err)
 		require.Equal(t, 2, computers.Len())
 	})
 }
 
 func TestCreateInboundLocalGroupPathDelegate(t *testing.T) {
-	testContext := integration.NewGraphTestContext(t)
-	testContext.WriteTransactionTest(func(harness *integration.HarnessDetails) {
+	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
+	testContext.WriteTransactionTestWithSetup(func(harness *integration.HarnessDetails) error {
 		harness.LocalGroupSQL.Setup(testContext)
+		return nil
 	}, func(harness integration.HarnessDetails, tx graph.Transaction) {
 		path, err := adAnalysis.CreateInboundLocalGroupPathDelegate(ad.AdminTo)(tx, harness.LocalGroupSQL.ComputerA)
 
-		require.Nil(t, err)
+		test.RequireNilErr(t, err)
 		nodes := path.AllNodes().IDs()
 		require.Contains(t, nodes, harness.LocalGroupSQL.UserB.ID)
 		require.Contains(t, nodes, harness.LocalGroupSQL.UserA.ID)
@@ -370,7 +391,7 @@ func TestCreateInboundLocalGroupPathDelegate(t *testing.T) {
 		require.Equal(t, 4, len(nodes))
 
 		path, err = adAnalysis.CreateInboundLocalGroupPathDelegate(ad.AdminTo)(tx, harness.LocalGroupSQL.ComputerC)
-		require.Nil(t, err)
+		test.RequireNilErr(t, err)
 		nodes = path.AllNodes().IDs()
 		require.Contains(t, nodes, harness.LocalGroupSQL.ComputerA.ID)
 		require.Contains(t, nodes, harness.LocalGroupSQL.GroupB.ID)
@@ -380,45 +401,47 @@ func TestCreateInboundLocalGroupPathDelegate(t *testing.T) {
 }
 
 func TestCreateInboundLocalGroupListDelegate(t *testing.T) {
-	testContext := integration.NewGraphTestContext(t)
-	testContext.WriteTransactionTest(func(harness *integration.HarnessDetails) {
+	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
+	testContext.WriteTransactionTestWithSetup(func(harness *integration.HarnessDetails) error {
 		harness.LocalGroupSQL.Setup(testContext)
+		return nil
 	}, func(harness integration.HarnessDetails, tx graph.Transaction) {
 		admins, err := adAnalysis.CreateInboundLocalGroupListDelegate(ad.AdminTo)(tx, harness.LocalGroupSQL.ComputerA, 0, 0)
 
-		require.Nil(t, err)
+		test.RequireNilErr(t, err)
 		require.Equal(t, 2, admins.Len())
 		require.Equal(t, 2, admins.ContainingNodeKinds(ad.User).Len())
 
 		admins, err = adAnalysis.CreateInboundLocalGroupListDelegate(ad.AdminTo)(tx, harness.LocalGroupSQL.ComputerC, 0, 0)
 
-		require.Nil(t, err)
+		test.RequireNilErr(t, err)
 		require.Equal(t, 1, admins.Len())
 		require.Equal(t, harness.LocalGroupSQL.ComputerA.ID, admins.Slice()[0].ID)
 
 		admins, err = adAnalysis.CreateInboundLocalGroupListDelegate(ad.AdminTo)(tx, harness.LocalGroupSQL.ComputerB, 0, 0)
 
-		require.Nil(t, err)
+		test.RequireNilErr(t, err)
 		require.Equal(t, 1, admins.Len())
 		require.Equal(t, harness.LocalGroupSQL.ComputerA.ID, admins.Slice()[0].ID)
 	})
 }
 
 func TestCreateSQLAdminPathDelegate(t *testing.T) {
-	testContext := integration.NewGraphTestContext(t)
-	testContext.WriteTransactionTest(func(harness *integration.HarnessDetails) {
+	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
+	testContext.WriteTransactionTestWithSetup(func(harness *integration.HarnessDetails) error {
 		harness.LocalGroupSQL.Setup(testContext)
+		return nil
 	}, func(harness integration.HarnessDetails, tx graph.Transaction) {
 		path, err := adAnalysis.CreateSQLAdminPathDelegate(graph.DirectionInbound)(tx, harness.LocalGroupSQL.ComputerA)
 
-		require.Nil(t, err)
+		test.RequireNilErr(t, err)
 		nodes := path.AllNodes().IDs()
 		require.Contains(t, nodes, harness.LocalGroupSQL.UserC.ID)
 		require.Contains(t, nodes, harness.LocalGroupSQL.ComputerA.ID)
 		require.Equal(t, 2, len(nodes))
 
 		path, err = adAnalysis.CreateSQLAdminPathDelegate(graph.DirectionOutbound)(tx, harness.LocalGroupSQL.UserC)
-		require.Nil(t, err)
+		test.RequireNilErr(t, err)
 		nodes = path.AllNodes().IDs()
 		require.Contains(t, nodes, harness.LocalGroupSQL.UserC.ID)
 		require.Contains(t, nodes, harness.LocalGroupSQL.ComputerA.ID)
@@ -427,36 +450,38 @@ func TestCreateSQLAdminPathDelegate(t *testing.T) {
 }
 
 func TestCreateSQLAdminListDelegate(t *testing.T) {
-	testContext := integration.NewGraphTestContext(t)
-	testContext.WriteTransactionTest(func(harness *integration.HarnessDetails) {
+	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
+	testContext.WriteTransactionTestWithSetup(func(harness *integration.HarnessDetails) error {
 		harness.LocalGroupSQL.Setup(testContext)
+		return nil
 	}, func(harness integration.HarnessDetails, tx graph.Transaction) {
 		admins, err := adAnalysis.CreateSQLAdminListDelegate(graph.DirectionInbound)(tx, harness.LocalGroupSQL.ComputerA, 0, 0)
 
-		require.Nil(t, err)
+		test.RequireNilErr(t, err)
 		require.Equal(t, 1, admins.Len())
 
 		computers, err := adAnalysis.CreateSQLAdminListDelegate(graph.DirectionOutbound)(tx, harness.LocalGroupSQL.UserC, 0, 0)
-		require.Nil(t, err)
+		test.RequireNilErr(t, err)
 		require.Equal(t, 1, computers.Len())
 	})
 }
 
 func TestCreateConstrainedDelegationPathDelegate(t *testing.T) {
-	testContext := integration.NewGraphTestContext(t)
-	testContext.WriteTransactionTest(func(harness *integration.HarnessDetails) {
+	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
+	testContext.WriteTransactionTestWithSetup(func(harness *integration.HarnessDetails) error {
 		harness.LocalGroupSQL.Setup(testContext)
+		return nil
 	}, func(harness integration.HarnessDetails, tx graph.Transaction) {
 		path, err := adAnalysis.CreateConstrainedDelegationPathDelegate(graph.DirectionInbound)(tx, harness.LocalGroupSQL.ComputerA)
 
-		require.Nil(t, err)
+		test.RequireNilErr(t, err)
 		nodes := path.AllNodes().IDs()
 		require.Contains(t, nodes, harness.LocalGroupSQL.UserD.ID)
 		require.Contains(t, nodes, harness.LocalGroupSQL.ComputerA.ID)
 		require.Equal(t, 2, len(nodes))
 
 		path, err = adAnalysis.CreateConstrainedDelegationPathDelegate(graph.DirectionOutbound)(tx, harness.LocalGroupSQL.UserD)
-		require.Nil(t, err)
+		test.RequireNilErr(t, err)
 		nodes = path.AllNodes().IDs()
 		require.Contains(t, nodes, harness.LocalGroupSQL.UserD.ID)
 		require.Contains(t, nodes, harness.LocalGroupSQL.ComputerA.ID)
@@ -465,29 +490,31 @@ func TestCreateConstrainedDelegationPathDelegate(t *testing.T) {
 }
 
 func TestCreateConstrainedDelegationListDelegate(t *testing.T) {
-	testContext := integration.NewGraphTestContext(t)
-	testContext.WriteTransactionTest(func(harness *integration.HarnessDetails) {
+	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
+	testContext.WriteTransactionTestWithSetup(func(harness *integration.HarnessDetails) error {
 		harness.LocalGroupSQL.Setup(testContext)
+		return nil
 	}, func(harness integration.HarnessDetails, tx graph.Transaction) {
 		admins, err := adAnalysis.CreateConstrainedDelegationListDelegate(graph.DirectionInbound)(tx, harness.LocalGroupSQL.ComputerA, 0, 0)
 
-		require.Nil(t, err)
+		test.RequireNilErr(t, err)
 		require.Equal(t, 1, admins.Len())
 
 		computers, err := adAnalysis.CreateConstrainedDelegationListDelegate(graph.DirectionOutbound)(tx, harness.LocalGroupSQL.UserD, 0, 0)
-		require.Nil(t, err)
+		test.RequireNilErr(t, err)
 		require.Equal(t, 1, computers.Len())
 	})
 }
 
 func TestFetchOutboundADEntityControlPaths(t *testing.T) {
-	testContext := integration.NewGraphTestContext(t)
-	testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) {
+	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
+	testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) error {
 		harness.OutboundControl.Setup(testContext)
-	}, func(harness integration.HarnessDetails, db graph.Database) error {
+		return nil
+	}, func(harness integration.HarnessDetails, db graph.Database) {
 		path, err := adAnalysis.FetchOutboundADEntityControlPaths(context.Background(), db, harness.OutboundControl.Controller)
 
-		require.Nil(t, err)
+		test.RequireNilErr(t, err)
 		nodes := path.AllNodes().IDs()
 		require.Equal(t, 7, len(nodes))
 		require.Contains(t, nodes, harness.OutboundControl.Controller.ID)
@@ -497,19 +524,18 @@ func TestFetchOutboundADEntityControlPaths(t *testing.T) {
 		require.Contains(t, nodes, harness.OutboundControl.GroupC.ID)
 		require.Contains(t, nodes, harness.OutboundControl.ComputerA.ID)
 		require.Contains(t, nodes, harness.OutboundControl.ComputerC.ID)
-
-		return nil
 	})
 }
 
 func TestFetchOutboundADEntityControl(t *testing.T) {
-	testContext := integration.NewGraphTestContext(t)
-	testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) {
+	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
+	testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) error {
 		harness.OutboundControl.Setup(testContext)
-	}, func(harness integration.HarnessDetails, db graph.Database) error {
+		return nil
+	}, func(harness integration.HarnessDetails, db graph.Database) {
 		control, err := adAnalysis.FetchOutboundADEntityControl(context.Background(), db, harness.OutboundControl.Controller, 0, 0)
 
-		require.Nil(t, err)
+		test.RequireNilErr(t, err)
 		require.Equal(t, 4, control.Len())
 		ids := control.IDs()
 
@@ -519,21 +545,20 @@ func TestFetchOutboundADEntityControl(t *testing.T) {
 		require.Contains(t, ids, harness.OutboundControl.ComputerC.ID)
 
 		control, err = adAnalysis.FetchOutboundADEntityControl(context.Background(), db, harness.OutboundControl.ControllerB, 0, 0)
-		require.Nil(t, err)
+		test.RequireNilErr(t, err)
 		require.Equal(t, 1, control.Len())
-
-		return nil
 	})
 }
 
 func TestFetchInboundADEntityControllerPaths(t *testing.T) {
 	t.Run("User", func(t *testing.T) {
-		testContext := integration.NewGraphTestContext(t)
-		testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) {
+		testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
+		testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) error {
 			harness.InboundControl.Setup(testContext)
-		}, func(harness integration.HarnessDetails, db graph.Database) error {
+			return nil
+		}, func(harness integration.HarnessDetails, db graph.Database) {
 			path, err := adAnalysis.FetchInboundADEntityControllerPaths(context.Background(), db, harness.InboundControl.ControlledUser)
-			require.Nil(t, err)
+			test.RequireNilErr(t, err)
 
 			nodes := path.AllNodes().IDs()
 			require.Equal(t, 5, len(nodes))
@@ -542,18 +567,17 @@ func TestFetchInboundADEntityControllerPaths(t *testing.T) {
 			require.Contains(t, nodes, harness.InboundControl.UserA.ID)
 			require.Contains(t, nodes, harness.InboundControl.GroupB.ID)
 			require.Contains(t, nodes, harness.InboundControl.UserD.ID)
-
-			return nil
 		})
 	})
 
 	t.Run("Group", func(t *testing.T) {
-		testContext := integration.NewGraphTestContext(t)
-		testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) {
+		testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
+		testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) error {
 			harness.InboundControl.Setup(testContext)
-		}, func(harness integration.HarnessDetails, db graph.Database) error {
+			return nil
+		}, func(harness integration.HarnessDetails, db graph.Database) {
 			path, err := adAnalysis.FetchInboundADEntityControllerPaths(context.Background(), db, harness.InboundControl.ControlledGroup)
-			require.Nil(t, err)
+			test.RequireNilErr(t, err)
 
 			nodes := path.AllNodes().IDs()
 			require.Equal(t, 7, len(nodes))
@@ -564,20 +588,19 @@ func TestFetchInboundADEntityControllerPaths(t *testing.T) {
 			require.Contains(t, nodes, harness.InboundControl.UserG.ID)
 			require.Contains(t, nodes, harness.InboundControl.GroupD.ID)
 			require.Contains(t, nodes, harness.InboundControl.UserH.ID)
-
-			return nil
 		})
 	})
 }
 
 func TestFetchInboundADEntityControllers(t *testing.T) {
 	t.Run("User", func(t *testing.T) {
-		testContext := integration.NewGraphTestContext(t)
-		testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) {
+		testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
+		testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) error {
 			harness.InboundControl.Setup(testContext)
-		}, func(harness integration.HarnessDetails, db graph.Database) error {
+			return nil
+		}, func(harness integration.HarnessDetails, db graph.Database) {
 			control, err := adAnalysis.FetchInboundADEntityControllers(context.Background(), db, harness.InboundControl.ControlledUser, 0, 0)
-			require.Nil(t, err)
+			test.RequireNilErr(t, err)
 			require.Equal(t, 4, control.Len())
 
 			ids := control.IDs()
@@ -587,20 +610,19 @@ func TestFetchInboundADEntityControllers(t *testing.T) {
 			require.Contains(t, ids, harness.InboundControl.GroupA.ID)
 
 			control, err = adAnalysis.FetchInboundADEntityControllers(context.Background(), db, harness.InboundControl.ControlledUser, 0, 1)
-			require.Nil(t, err)
+			test.RequireNilErr(t, err)
 			require.Equal(t, 1, control.Len())
-
-			return nil
 		})
 	})
 
 	t.Run("Group", func(t *testing.T) {
-		testContext := integration.NewGraphTestContext(t)
-		testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) {
+		testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
+		testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) error {
 			harness.InboundControl.Setup(testContext)
-		}, func(harness integration.HarnessDetails, db graph.Database) error {
+			return nil
+		}, func(harness integration.HarnessDetails, db graph.Database) {
 			control, err := adAnalysis.FetchInboundADEntityControllers(context.Background(), db, harness.InboundControl.ControlledGroup, 0, 0)
-			require.Nil(t, err)
+			test.RequireNilErr(t, err)
 			require.Equal(t, 6, control.Len())
 
 			ids := control.IDs()
@@ -612,22 +634,21 @@ func TestFetchInboundADEntityControllers(t *testing.T) {
 			require.Contains(t, ids, harness.InboundControl.UserH.ID)
 
 			control, err = adAnalysis.FetchInboundADEntityControllers(context.Background(), db, harness.InboundControl.ControlledGroup, 0, 1)
-			require.Nil(t, err)
+			test.RequireNilErr(t, err)
 			require.Equal(t, 1, control.Len())
-
-			return nil
 		})
 	})
 }
 
 func TestCreateOUContainedPathDelegate(t *testing.T) {
-	testContext := integration.NewGraphTestContext(t)
-	testContext.WriteTransactionTest(func(harness *integration.HarnessDetails) {
+	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
+	testContext.WriteTransactionTestWithSetup(func(harness *integration.HarnessDetails) error {
 		harness.OUHarness.Setup(testContext)
+		return nil
 	}, func(harness integration.HarnessDetails, tx graph.Transaction) {
 		paths, err := adAnalysis.CreateOUContainedPathDelegate(ad.User)(tx, harness.OUHarness.OUA)
 
-		require.Nil(t, err)
+		test.RequireNilErr(t, err)
 		nodes := paths.AllNodes().IDs()
 		require.Equal(t, 4, len(nodes))
 		require.Contains(t, nodes, harness.OUHarness.OUA.ID)
@@ -636,7 +657,7 @@ func TestCreateOUContainedPathDelegate(t *testing.T) {
 		require.Contains(t, nodes, harness.OUHarness.UserB.ID)
 
 		paths, err = adAnalysis.CreateOUContainedPathDelegate(ad.User)(tx, harness.OUHarness.OUB)
-		require.Nil(t, err)
+		test.RequireNilErr(t, err)
 		nodes = paths.AllNodes().IDs()
 		require.Equal(t, 4, len(nodes))
 		require.Contains(t, nodes, harness.OUHarness.OUB.ID)
@@ -647,29 +668,31 @@ func TestCreateOUContainedPathDelegate(t *testing.T) {
 }
 
 func TestCreateOUContainedListDelegate(t *testing.T) {
-	testContext := integration.NewGraphTestContext(t)
-	testContext.WriteTransactionTest(func(harness *integration.HarnessDetails) {
+	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
+	testContext.WriteTransactionTestWithSetup(func(harness *integration.HarnessDetails) error {
 		harness.OUHarness.Setup(testContext)
+		return nil
 	}, func(harness integration.HarnessDetails, tx graph.Transaction) {
 		contained, err := adAnalysis.CreateOUContainedListDelegate(ad.User)(tx, harness.OUHarness.OUA, 0, 0)
 
-		require.Nil(t, err)
+		test.RequireNilErr(t, err)
 		require.Equal(t, 2, contained.Len())
 
 		contained, err = adAnalysis.CreateOUContainedListDelegate(ad.User)(tx, harness.OUHarness.OUB, 0, 0)
-		require.Nil(t, err)
+		test.RequireNilErr(t, err)
 		require.Equal(t, 1, contained.Len())
 	})
 }
 
 func TestFetchGroupMemberPaths(t *testing.T) {
-	testContext := integration.NewGraphTestContext(t)
-	testContext.ReadTransactionTest(func(harness *integration.HarnessDetails) {
+	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
+	testContext.ReadTransactionTestWithSetup(func(harness *integration.HarnessDetails) error {
 		harness.MembershipHarness.Setup(testContext)
+		return nil
 	}, func(harness integration.HarnessDetails, tx graph.Transaction) {
 		path, err := adAnalysis.FetchGroupMemberPaths(tx, harness.MembershipHarness.GroupB)
 
-		require.Nil(t, err)
+		test.RequireNilErr(t, err)
 		nodes := path.AllNodes().IDs()
 		require.Equal(t, 3, len(nodes))
 		require.Contains(t, nodes, harness.MembershipHarness.GroupB.ID)
@@ -679,13 +702,14 @@ func TestFetchGroupMemberPaths(t *testing.T) {
 }
 
 func TestFetchGroupMembers(t *testing.T) {
-	testContext := integration.NewGraphTestContext(t)
-	testContext.ReadTransactionTest(func(harness *integration.HarnessDetails) {
+	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
+	testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) error {
 		harness.MembershipHarness.Setup(testContext)
-	}, func(harness integration.HarnessDetails, tx graph.Transaction) {
-		members, err := adAnalysis.FetchGroupMembers(tx, harness.MembershipHarness.GroupC, 0, 0)
+		return nil
+	}, func(harness integration.HarnessDetails, db graph.Database) {
+		members, err := adAnalysis.FetchGroupMembers(context.Background(), db, harness.MembershipHarness.GroupC, 0, 0)
 
-		require.Nil(t, err)
+		test.RequireNilErr(t, err)
 		require.Equal(t, 5, members.Len())
 		require.Equal(t, 2, members.ContainingNodeKinds(ad.Computer).Len())
 		require.Equal(t, 2, members.ContainingNodeKinds(ad.Group).Len())
@@ -694,13 +718,14 @@ func TestFetchGroupMembers(t *testing.T) {
 }
 
 func TestFetchEntityGroupMembershipPaths(t *testing.T) {
-	testContext := integration.NewGraphTestContext(t)
-	testContext.ReadTransactionTest(func(harness *integration.HarnessDetails) {
+	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
+	testContext.ReadTransactionTestWithSetup(func(harness *integration.HarnessDetails) error {
 		harness.MembershipHarness.Setup(testContext)
+		return nil
 	}, func(harness integration.HarnessDetails, tx graph.Transaction) {
 		paths, err := adAnalysis.FetchEntityGroupMembershipPaths(tx, harness.MembershipHarness.UserA)
 
-		require.Nil(t, err)
+		test.RequireNilErr(t, err)
 		nodes := paths.AllNodes().IDs()
 		require.Equal(t, 4, len(nodes))
 		require.Contains(t, nodes, harness.MembershipHarness.UserA.ID)
@@ -710,46 +735,49 @@ func TestFetchEntityGroupMembershipPaths(t *testing.T) {
 }
 
 func TestFetchEntityGroupMembership(t *testing.T) {
-	testContext := integration.NewGraphTestContext(t)
-	testContext.ReadTransactionTest(func(harness *integration.HarnessDetails) {
+	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
+	testContext.ReadTransactionTestWithSetup(func(harness *integration.HarnessDetails) error {
 		harness.MembershipHarness.Setup(testContext)
+		return nil
 	}, func(harness integration.HarnessDetails, tx graph.Transaction) {
 		membership, err := adAnalysis.FetchEntityGroupMembership(tx, harness.MembershipHarness.UserA, 0, 0)
 
-		require.Nil(t, err)
+		test.RequireNilErr(t, err)
 		require.Equal(t, 3, membership.Len())
 	})
 }
 
 func TestCreateForeignEntityMembershipListDelegate(t *testing.T) {
-	testContext := integration.NewGraphTestContext(t)
-	testContext.WriteTransactionTest(func(harness *integration.HarnessDetails) {
+	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
+	testContext.WriteTransactionTestWithSetup(func(harness *integration.HarnessDetails) error {
 		harness.ForeignHarness.Setup(testContext)
+		return nil
 	}, func(harness integration.HarnessDetails, tx graph.Transaction) {
 		members, err := adAnalysis.CreateForeignEntityMembershipListDelegate(ad.Group)(tx, harness.ForeignHarness.LocalDomain, 0, 0)
 
-		require.Nil(t, err)
+		test.RequireNilErr(t, err)
 		require.Equal(t, 1, members.Len())
 		require.Equal(t, 1, members.ContainingNodeKinds(ad.Group).Len())
 
 		members, err = adAnalysis.CreateForeignEntityMembershipListDelegate(ad.User)(tx, harness.ForeignHarness.LocalDomain, 0, 0)
-		require.Nil(t, err)
+		test.RequireNilErr(t, err)
 		require.Equal(t, 2, members.Len())
 		require.Equal(t, 2, members.ContainingNodeKinds(ad.User).Len())
 	})
 }
 
 func TestFetchCollectedDomains(t *testing.T) {
-	testContext := integration.NewGraphTestContext(t)
+	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
 
-	testContext.ReadTransactionTest(func(harness *integration.HarnessDetails) {
+	testContext.ReadTransactionTestWithSetup(func(harness *integration.HarnessDetails) error {
 		harness.TrustDCSync.Setup(testContext)
+		return nil
 	}, func(harness integration.HarnessDetails, tx graph.Transaction) {
 		domains, err := adAnalysis.FetchCollectedDomains(tx)
-		require.Nil(t, err)
+		test.RequireNilErr(t, err)
 		for _, domain := range domains {
 			collected, err := domain.Properties.Get(common.Collected.String()).Bool()
-			require.Nil(t, err)
+			test.RequireNilErr(t, err)
 			require.True(t, collected)
 		}
 		require.Equal(t, harness.NumCollectedActiveDirectoryDomains, domains.Len())
@@ -758,14 +786,15 @@ func TestFetchCollectedDomains(t *testing.T) {
 }
 
 func TestCreateDomainTrustPathDelegate(t *testing.T) {
-	testContext := integration.NewGraphTestContext(t)
+	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
 
-	testContext.WriteTransactionTest(func(harness *integration.HarnessDetails) {
+	testContext.WriteTransactionTestWithSetup(func(harness *integration.HarnessDetails) error {
 		harness.TrustDCSync.Setup(testContext)
+		return nil
 	}, func(harness integration.HarnessDetails, tx graph.Transaction) {
 		paths, err := adAnalysis.CreateDomainTrustPathDelegate(graph.DirectionOutbound)(tx, harness.TrustDCSync.DomainA)
 
-		require.Nil(t, err)
+		test.RequireNilErr(t, err)
 		nodes := paths.AllNodes().IDs()
 		require.Equal(t, 4, len(nodes))
 		require.Contains(t, nodes, harness.TrustDCSync.DomainA.ID)
@@ -775,7 +804,7 @@ func TestCreateDomainTrustPathDelegate(t *testing.T) {
 
 		paths, err = adAnalysis.CreateDomainTrustPathDelegate(graph.DirectionInbound)(tx, harness.TrustDCSync.DomainA)
 
-		require.Nil(t, err)
+		test.RequireNilErr(t, err)
 		nodes = paths.AllNodes().IDs()
 		require.Equal(t, 3, len(nodes))
 		require.Contains(t, nodes, harness.TrustDCSync.DomainA.ID)
@@ -785,14 +814,15 @@ func TestCreateDomainTrustPathDelegate(t *testing.T) {
 }
 
 func TestCreateDomainTrustListDelegate(t *testing.T) {
-	testContext := integration.NewGraphTestContext(t)
+	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
 
-	testContext.WriteTransactionTest(func(harness *integration.HarnessDetails) {
+	testContext.WriteTransactionTestWithSetup(func(harness *integration.HarnessDetails) error {
 		harness.TrustDCSync.Setup(testContext)
+		return nil
 	}, func(harness integration.HarnessDetails, tx graph.Transaction) {
 		domains, err := adAnalysis.CreateDomainTrustListDelegate(graph.DirectionOutbound)(tx, harness.TrustDCSync.DomainA, 0, 0)
 
-		require.Nil(t, err)
+		test.RequireNilErr(t, err)
 		require.Equal(t, 3, domains.Len())
 		ids := domains.IDs()
 		require.Contains(t, ids, harness.TrustDCSync.DomainB.ID)
@@ -801,7 +831,7 @@ func TestCreateDomainTrustListDelegate(t *testing.T) {
 
 		domains, err = adAnalysis.CreateDomainTrustListDelegate(graph.DirectionInbound)(tx, harness.TrustDCSync.DomainA, 0, 0)
 
-		require.Nil(t, err)
+		test.RequireNilErr(t, err)
 		require.Equal(t, 2, domains.Len())
 		ids = domains.IDs()
 		require.Contains(t, ids, harness.TrustDCSync.DomainB.ID)
@@ -810,15 +840,16 @@ func TestCreateDomainTrustListDelegate(t *testing.T) {
 }
 
 func TestGetDCSyncers(t *testing.T) {
-	testContext := integration.NewGraphTestContext(t)
+	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
 
 	// XXX: Why does this need a WriteTransaction to run?
-	testContext.WriteTransactionTest(func(harness *integration.HarnessDetails) {
+	testContext.WriteTransactionTestWithSetup(func(harness *integration.HarnessDetails) error {
 		harness.TrustDCSync.Setup(testContext)
+		return nil
 	}, func(harness integration.HarnessDetails, tx graph.Transaction) {
 		dcSyncers, err := analysis.GetDCSyncers(tx, harness.TrustDCSync.DomainA, true)
 
-		require.Nil(t, err)
+		test.RequireNilErr(t, err)
 		require.Equal(t, 2, len(dcSyncers))
 		ids := make([]graph.ID, len(dcSyncers))
 		for _, node := range dcSyncers {
@@ -832,7 +863,7 @@ func TestGetDCSyncers(t *testing.T) {
 
 		dcSyncers, err = analysis.GetDCSyncers(tx, harness.TrustDCSync.DomainA, true)
 
-		require.Nil(t, err)
+		test.RequireNilErr(t, err)
 		require.Equal(t, 1, len(dcSyncers))
 		ids = make([]graph.ID, len(dcSyncers))
 		for _, node := range dcSyncers {
@@ -844,14 +875,15 @@ func TestGetDCSyncers(t *testing.T) {
 }
 
 func TestFetchDCSyncers(t *testing.T) {
-	testContext := integration.NewGraphTestContext(t)
+	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
 
-	testContext.ReadTransactionTest(func(harness *integration.HarnessDetails) {
+	testContext.ReadTransactionTestWithSetup(func(harness *integration.HarnessDetails) error {
 		harness.TrustDCSync.Setup(testContext)
+		return nil
 	}, func(harness integration.HarnessDetails, tx graph.Transaction) {
 		dcSyncers, err := adAnalysis.FetchDCSyncers(tx, harness.TrustDCSync.DomainA, 0, 0)
 
-		require.Nil(t, err)
+		test.RequireNilErr(t, err)
 		require.Equal(t, 2, dcSyncers.Len())
 
 		nodes := dcSyncers.IDs()
@@ -861,14 +893,15 @@ func TestFetchDCSyncers(t *testing.T) {
 }
 
 func TestFetchDCSyncerPaths(t *testing.T) {
-	testContext := integration.NewGraphTestContext(t)
+	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
 
-	testContext.ReadTransactionTest(func(harness *integration.HarnessDetails) {
+	testContext.ReadTransactionTestWithSetup(func(harness *integration.HarnessDetails) error {
 		harness.TrustDCSync.Setup(testContext)
+		return nil
 	}, func(harness integration.HarnessDetails, tx graph.Transaction) {
 		paths, err := adAnalysis.FetchDCSyncerPaths(tx, harness.TrustDCSync.DomainA)
 
-		require.Nil(t, err)
+		test.RequireNilErr(t, err)
 		nodes := paths.AllNodes().IDs()
 		require.Equal(t, 5, len(nodes))
 		require.Contains(t, nodes, harness.TrustDCSync.DomainA.ID)
@@ -880,14 +913,15 @@ func TestFetchDCSyncerPaths(t *testing.T) {
 }
 
 func TestCreateForeignEntityMembershipPathDelegate(t *testing.T) {
-	testContext := integration.NewGraphTestContext(t)
+	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
 
-	testContext.WriteTransactionTest(func(harness *integration.HarnessDetails) {
+	testContext.WriteTransactionTestWithSetup(func(harness *integration.HarnessDetails) error {
 		harness.ForeignHarness.Setup(testContext)
+		return nil
 	}, func(harness integration.HarnessDetails, tx graph.Transaction) {
 		paths, err := adAnalysis.CreateForeignEntityMembershipPathDelegate(ad.Group)(tx, harness.ForeignHarness.LocalDomain)
 
-		require.Nil(t, err)
+		test.RequireNilErr(t, err)
 		nodes := paths.AllNodes().IDs()
 		require.Equal(t, 2, len(nodes))
 		require.Contains(t, nodes, harness.ForeignHarness.ForeignGroup.ID)
@@ -895,7 +929,7 @@ func TestCreateForeignEntityMembershipPathDelegate(t *testing.T) {
 
 		paths, err = adAnalysis.CreateForeignEntityMembershipPathDelegate(ad.User)(tx, harness.ForeignHarness.LocalDomain)
 
-		require.Nil(t, err)
+		test.RequireNilErr(t, err)
 		nodes = paths.AllNodes().IDs()
 		require.Equal(t, 4, len(nodes))
 		require.Contains(t, nodes, harness.ForeignHarness.ForeignGroup.ID)
@@ -906,28 +940,30 @@ func TestCreateForeignEntityMembershipPathDelegate(t *testing.T) {
 }
 
 func TestFetchForeignAdmins(t *testing.T) {
-	testContext := integration.NewGraphTestContext(t)
+	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
 
-	testContext.ReadTransactionTest(func(harness *integration.HarnessDetails) {
+	testContext.ReadTransactionTestWithSetup(func(harness *integration.HarnessDetails) error {
 		harness.ForeignHarness.Setup(testContext)
+		return nil
 	}, func(harness integration.HarnessDetails, tx graph.Transaction) {
 		admins, err := adAnalysis.FetchForeignAdmins(tx, harness.ForeignHarness.LocalDomain, 0, 0)
 
-		require.Nil(t, err)
+		test.RequireNilErr(t, err)
 		require.Equal(t, 2, admins.Len())
 		require.Equal(t, 2, admins.ContainingNodeKinds(ad.User).Len())
 	})
 }
 
 func TestFetchForeignAdminPaths(t *testing.T) {
-	testContext := integration.NewGraphTestContext(t)
+	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
 
-	testContext.ReadTransactionTest(func(harness *integration.HarnessDetails) {
+	testContext.ReadTransactionTestWithSetup(func(harness *integration.HarnessDetails) error {
 		harness.ForeignHarness.Setup(testContext)
+		return nil
 	}, func(harness integration.HarnessDetails, tx graph.Transaction) {
 		paths, err := adAnalysis.FetchForeignAdminPaths(tx, harness.ForeignHarness.LocalDomain)
 
-		require.Nil(t, err)
+		test.RequireNilErr(t, err)
 		nodes := paths.AllNodes().IDs()
 		require.Equal(t, 5, len(nodes))
 		require.Contains(t, nodes, harness.ForeignHarness.LocalComputer.ID)
@@ -939,14 +975,15 @@ func TestFetchForeignAdminPaths(t *testing.T) {
 }
 
 func TestFetchForeignGPOControllers(t *testing.T) {
-	testContext := integration.NewGraphTestContext(t)
+	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
 
-	testContext.ReadTransactionTest(func(harness *integration.HarnessDetails) {
+	testContext.ReadTransactionTestWithSetup(func(harness *integration.HarnessDetails) error {
 		harness.ForeignHarness.Setup(testContext)
+		return nil
 	}, func(harness integration.HarnessDetails, tx graph.Transaction) {
 		admins, err := adAnalysis.FetchForeignGPOControllers(tx, harness.ForeignHarness.LocalDomain, 0, 0)
 
-		require.Nil(t, err)
+		test.RequireNilErr(t, err)
 		require.Equal(t, 2, admins.Len())
 		require.Equal(t, 1, admins.ContainingNodeKinds(ad.User).Len())
 		require.Equal(t, 1, admins.ContainingNodeKinds(ad.Group).Len())
@@ -954,14 +991,15 @@ func TestFetchForeignGPOControllers(t *testing.T) {
 }
 
 func TestFetchForeignGPOControllerPaths(t *testing.T) {
-	testContext := integration.NewGraphTestContext(t)
+	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
 
-	testContext.ReadTransactionTest(func(harness *integration.HarnessDetails) {
+	testContext.ReadTransactionTestWithSetup(func(harness *integration.HarnessDetails) error {
 		harness.ForeignHarness.Setup(testContext)
+		return nil
 	}, func(harness integration.HarnessDetails, tx graph.Transaction) {
 		paths, err := adAnalysis.FetchForeignGPOControllerPaths(tx, harness.ForeignHarness.LocalDomain)
 
-		require.Nil(t, err)
+		test.RequireNilErr(t, err)
 		nodes := paths.AllNodes().IDs()
 		require.Equal(t, 3, len(nodes))
 		require.Contains(t, nodes, harness.ForeignHarness.ForeignUserA.ID)
@@ -971,45 +1009,48 @@ func TestFetchForeignGPOControllerPaths(t *testing.T) {
 }
 
 func TestFetchAllEnforcedGPOs(t *testing.T) {
-	testContext := integration.NewGraphTestContext(t)
+	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
 
-	testContext.ReadTransactionTest(func(harness *integration.HarnessDetails) {
+	testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) error {
 		harness.GPOEnforcement.Setup(testContext)
-	}, func(harness integration.HarnessDetails, tx graph.Transaction) {
-		gpos, err := adAnalysis.FetchAllEnforcedGPOs(tx, graph.NewNodeSet(harness.GPOEnforcement.OrganizationalUnitD))
+		return nil
+	}, func(harness integration.HarnessDetails, db graph.Database) {
+		gpos, err := adAnalysis.FetchAllEnforcedGPOs(context.Background(), db, graph.NewNodeSet(harness.GPOEnforcement.OrganizationalUnitD))
 
-		require.Nil(t, err)
+		test.RequireNilErr(t, err)
 		require.Equal(t, 2, gpos.Len())
 
-		gpos, err = adAnalysis.FetchAllEnforcedGPOs(tx, graph.NewNodeSet(harness.GPOEnforcement.OrganizationalUnitC))
+		gpos, err = adAnalysis.FetchAllEnforcedGPOs(context.Background(), db, graph.NewNodeSet(harness.GPOEnforcement.OrganizationalUnitC))
 
-		require.Nil(t, err)
+		test.RequireNilErr(t, err)
 		require.Equal(t, 1, gpos.Len())
 	})
 }
 
 func TestFetchEntityLinkedGPOList(t *testing.T) {
-	testContext := integration.NewGraphTestContext(t)
+	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
 
-	testContext.ReadTransactionTest(func(harness *integration.HarnessDetails) {
+	testContext.ReadTransactionTestWithSetup(func(harness *integration.HarnessDetails) error {
 		harness.GPOEnforcement.Setup(testContext)
+		return nil
 	}, func(harness integration.HarnessDetails, tx graph.Transaction) {
 		gpos, err := adAnalysis.FetchEntityLinkedGPOList(tx, harness.GPOEnforcement.Domain, 0, 0)
 
-		require.Nil(t, err)
+		test.RequireNilErr(t, err)
 		require.Equal(t, 2, gpos.Len())
 	})
 }
 
 func TestFetchEntityLinkedGPOPaths(t *testing.T) {
-	testContext := integration.NewGraphTestContext(t)
+	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
 
-	testContext.ReadTransactionTest(func(harness *integration.HarnessDetails) {
+	testContext.ReadTransactionTestWithSetup(func(harness *integration.HarnessDetails) error {
 		harness.GPOEnforcement.Setup(testContext)
+		return nil
 	}, func(harness integration.HarnessDetails, tx graph.Transaction) {
 		paths, err := adAnalysis.FetchEntityLinkedGPOPaths(tx, harness.GPOEnforcement.Domain)
 
-		require.Nil(t, err)
+		test.RequireNilErr(t, err)
 		nodes := paths.AllNodes().IDs()
 		require.Equal(t, 3, len(nodes))
 		require.Contains(t, nodes, harness.GPOEnforcement.Domain.ID)
@@ -1019,27 +1060,29 @@ func TestFetchEntityLinkedGPOPaths(t *testing.T) {
 }
 
 func TestFetchLocalGroupCompleteness(t *testing.T) {
-	testContext := integration.NewGraphTestContext(t)
+	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
 
-	testContext.ReadTransactionTest(func(harness *integration.HarnessDetails) {
+	testContext.ReadTransactionTestWithSetup(func(harness *integration.HarnessDetails) error {
 		harness.Completeness.Setup(testContext)
+		return nil
 	}, func(harness integration.HarnessDetails, tx graph.Transaction) {
 		completeness, err := adAnalysis.FetchLocalGroupCompleteness(tx, harness.Completeness.DomainSid)
 
-		require.Nil(t, err)
+		test.RequireNilErr(t, err)
 		require.Equal(t, .5, completeness)
 	})
 }
 
 func TestFetchUserSessionCompleteness(t *testing.T) {
-	testContext := integration.NewGraphTestContext(t)
+	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
 
-	testContext.ReadTransactionTest(func(harness *integration.HarnessDetails) {
+	testContext.ReadTransactionTestWithSetup(func(harness *integration.HarnessDetails) error {
 		harness.Completeness.Setup(testContext)
+		return nil
 	}, func(harness integration.HarnessDetails, tx graph.Transaction) {
 		completeness, err := adAnalysis.FetchUserSessionCompleteness(tx, harness.Completeness.DomainSid)
 
-		require.Nil(t, err)
+		test.RequireNilErr(t, err)
 		require.Equal(t, .5, completeness)
 	})
 }

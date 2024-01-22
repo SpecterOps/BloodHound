@@ -256,7 +256,7 @@ func ParseDomainTrusts(domain Domain) ParsedDomainTrustData {
 	return parsedData
 }
 
-// ParseComputerMiscData parses AllowedToDelegate, AllowedToAct, HasSIDHistory,DumpSMSAPassword and Sessions
+// ParseComputerMiscData parses AllowedToDelegate, AllowedToAct, HasSIDHistory,DumpSMSAPassword,DCFor and Sessions
 func ParseComputerMiscData(computer Computer) []IngestibleRelationship {
 	relationships := make([]IngestibleRelationship, 0)
 	for _, target := range computer.AllowedToDelegate {
@@ -340,6 +340,17 @@ func ParseComputerMiscData(computer Computer) []IngestibleRelationship {
 				RelProps:   map[string]any{"isacl": false},
 			})
 		}
+	}
+
+	if computer.IsDC && computer.DomainSID != "" {
+		relationships = append(relationships, IngestibleRelationship{
+			Source:     computer.ObjectIdentifier,
+			SourceType: ad.Computer,
+			TargetType: ad.Domain,
+			Target:     computer.DomainSID,
+			RelProps:   map[string]any{"isacl": false},
+			RelType:    ad.DCFor,
+		})
 	}
 
 	return relationships

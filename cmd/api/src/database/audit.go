@@ -72,14 +72,24 @@ func (s *BloodhoundDB) ListAuditLogs(before, after time.Time, offset, limit int,
 	// This code went through a partial refactor when adding support for new fields.
 	// See the comments here for more information: https://github.com/SpecterOps/BloodHound/pull/297#issuecomment-1887640827
 
-	if order != "" && filter.SQLString == "" {
-		result = cursor.Order(order).Find(&auditLogs).Count(&count)
-	} else if order != "" && filter.SQLString != "" {
-		result = cursor.Where(filter.SQLString, filter.Params).Order(order).Find(&auditLogs).Count(&count)
-	} else if order == "" && filter.SQLString != "" {
-		result = cursor.Where(filter.SQLString, filter.Params).Find(&auditLogs).Count(&count)
+	if filter.SQLString != "" {
+		result = s.db.Model(&auditLogs).Where(filter.SQLString, filter.Params).Count(&count)
 	} else {
-		result = cursor.Find(&auditLogs).Count(&count)
+		result = s.db.Model(&auditLogs).Count(&count)
+	}
+
+	if result.Error != nil {
+		return nil, 0, CheckError(result)
+	}
+
+	if order != "" && filter.SQLString == "" {
+		result = cursor.Order(order).Find(&auditLogs)
+	} else if order != "" && filter.SQLString != "" {
+		result = cursor.Where(filter.SQLString, filter.Params).Order(order).Find(&auditLogs)
+	} else if order == "" && filter.SQLString != "" {
+		result = cursor.Where(filter.SQLString, filter.Params).Find(&auditLogs)
+	} else {
+		result = cursor.Find(&auditLogs)
 	}
 
 	return auditLogs, int(count), CheckError(result)
