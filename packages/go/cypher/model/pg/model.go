@@ -19,11 +19,12 @@ package pg
 import (
 	"errors"
 	"fmt"
+	"time"
+
 	"github.com/jackc/pgtype"
 	"github.com/specterops/bloodhound/cypher/model"
 	pgModel "github.com/specterops/bloodhound/dawgs/drivers/pg/model"
 	"github.com/specterops/bloodhound/dawgs/graph"
-	"time"
 )
 
 var (

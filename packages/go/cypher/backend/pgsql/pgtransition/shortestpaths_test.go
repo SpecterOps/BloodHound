@@ -17,13 +17,14 @@
 package pgtransition_test
 
 import (
+	"testing"
+
 	"github.com/specterops/bloodhound/cypher/backend/pgsql/pgtransition"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/dawgs/query"
 	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/src/test"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 type kindMapper struct{}

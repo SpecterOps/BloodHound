@@ -18,9 +18,10 @@ package apiclient
 
 import (
 	"fmt"
+	"net/http"
+
 	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/src/model/appcfg"
-	"net/http"
 )
 
 func (s Client) GetFeatureFlags() ([]appcfg.FeatureFlag, error) {
