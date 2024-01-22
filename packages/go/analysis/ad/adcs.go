@@ -174,26 +174,21 @@ func PostADCSESC3(ctx context.Context, tx graph.Transaction, outC chan<- analysi
 	return nil
 }
 
-func principalControlsCertTemplate(principalID uint32, certTemplate *graph.Node, groupExpansions impact.PathAggregator, cache ADCSCache) bool {
-	expandedTemplateControllers := cache.ExpandedCertTemplateControllers[certTemplate.ID]
+func principalControlsCertTemplate(principal, certTemplate *graph.Node, groupExpansions impact.PathAggregator, cache ADCSCache) bool {
+	var (
+		expandedTemplateControllers = cache.ExpandedCertTemplateControllers[certTemplate.ID]
+		principalID                 = principal.ID.Uint32()
+	)
+
 	if slices.Contains(expandedTemplateControllers, principalID) {
 		return true
 	}
 
-	for _, controller := range cache.CertTemplateControllers[certTemplate.ID] {
-		if principalID == controller.ID.Uint32() {
-			cache.ExpandedCertTemplateControllers[certTemplate.ID] = append(expandedTemplateControllers, principalID)
-			return true
-		}
-		//Since CertTemplateControllers only contains first degree controllers, if the principal is a group we do a group expansion to check for certTemplate control through nested members
-		if controller.Kinds.ContainsOneOf(ad.Group) {
-			expanded := groupExpansions.Cardinality(controller.ID.Uint32()).(cardinality.Duplex[uint32])
-			if expanded.Contains(principalID) {
-				cache.ExpandedCertTemplateControllers[certTemplate.ID] = append(expandedTemplateControllers, principalID)
-				return true
-			}
-		}
+	if CalculateCrossProductNodeSets(groupExpansions, graph.NewNodeSet(principal).Slice(), cache.CertTemplateControllers[certTemplate.ID]).Contains(principalID) {
+		cache.ExpandedCertTemplateControllers[certTemplate.ID] = append(expandedTemplateControllers, principalID)
+		return true
 	}
+
 	return false
 }
 
@@ -206,7 +201,7 @@ func checkEmailValidity(node *graph.Node, validCertTemplates []*graph.Node, grou
 
 	if email == "" {
 		for _, certTemplate := range validCertTemplates {
-			if principalControlsCertTemplate(node.ID.Uint32(), certTemplate, groupExpansions, cache) {
+			if principalControlsCertTemplate(node, certTemplate, groupExpansions, cache) {
 				if schemaVersion, err := certTemplate.Properties.Get(ad.SchemaVersion.String()).Float64(); err != nil {
 					log.Errorf("%s property access error %d: %v", ad.SchemaVersion.String(), certTemplate.ID, err)
 					continue
