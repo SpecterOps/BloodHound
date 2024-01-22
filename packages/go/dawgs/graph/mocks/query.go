@@ -334,24 +334,6 @@ func (mr *MockNodeQueryMockRecorder) Delete() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockNodeQuery)(nil).Delete))
 }
 
-// Exec mocks base method.
-func (m *MockNodeQuery) Exec(finalCriteria ...graph.Criteria) error {
-	m.ctrl.T.Helper()
-	varargs := []interface{}{}
-	for _, a := range finalCriteria {
-		varargs = append(varargs, a)
-	}
-	ret := m.ctrl.Call(m, "Exec", varargs...)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// Exec indicates an expected call of Exec.
-func (mr *MockNodeQueryMockRecorder) Exec(finalCriteria ...interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Exec", reflect.TypeOf((*MockNodeQuery)(nil).Exec), finalCriteria...)
-}
-
 // Fetch mocks base method.
 func (m *MockNodeQuery) Fetch(delegate func(graph.Cursor[*graph.Node]) error) error {
 	m.ctrl.T.Helper()
