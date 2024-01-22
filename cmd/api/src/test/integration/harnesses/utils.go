@@ -70,7 +70,6 @@ func ReadHarness(harnessName string) (HarnessData, error) {
 		} else {
 			var result HarnessData
 			json.Unmarshal(byteValue, &result)
-
 			return result, nil
 		}
 	}
