@@ -1156,16 +1156,6 @@
       "properties": {},
       "fromId": "n30",
       "toId": "n27"
-    },
-    {
-      "id": "n65",
-      "type": "ADCSESC6a",
-      "style": {},
-      "properties": {
-        "asserted": "true"
-      },
-      "fromId": "n30",
-      "toId": "n0"
     }
   ]
 }
