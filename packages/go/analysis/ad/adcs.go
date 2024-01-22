@@ -57,14 +57,22 @@ func PostADCSESC1(ctx context.Context, tx graph.Transaction, outC chan<- analysi
 		return fmt.Errorf("error fetching cert templates for ECA %d: %w", enterpriseCA.ID, err)
 	} else {
 		for _, certTemplate := range publishedCertTemplates {
-			var (
-				reqManagerApproval, _      = certTemplate.Properties.Get(ad.RequiresManagerApproval.String()).Bool()
-				authenticationEnabled, _   = certTemplate.Properties.Get(ad.AuthenticationEnabled.String()).Bool()
-				enrolleeSuppliesSubject, _ = certTemplate.Properties.Get(ad.EnrolleeSuppliesSubject.String()).Bool()
-				schemaVersion, _           = certTemplate.Properties.Get(ad.SchemaVersion.String()).Float64()
-				authorizedSignatures, _    = certTemplate.Properties.Get(ad.AuthorizedSignatures.String()).Float64()
-			)
-			if !isCertTemplateValidForEsc1(reqManagerApproval, authenticationEnabled, enrolleeSuppliesSubject, schemaVersion, authorizedSignatures) {
+			if reqManagerApproval, err := certTemplate.Properties.Get(ad.RequiresManagerApproval.String()).Bool(); err != nil {
+				log.Errorf("%s property access error %d: %v", ad.RequiresManagerApproval.String(), certTemplate.ID, err)
+				continue
+			} else if authenticationEnabled, err := certTemplate.Properties.Get(ad.AuthenticationEnabled.String()).Bool(); err != nil {
+				log.Errorf("%s property access error %d: %v", ad.AuthenticationEnabled.String(), certTemplate.ID, err)
+				continue
+			} else if enrolleeSuppliesSubject, err := certTemplate.Properties.Get(ad.EnrolleeSuppliesSubject.String()).Bool(); err != nil {
+				log.Errorf("%s property access error %d: %v", ad.NoSecurityExtension.String(), certTemplate.ID, err)
+				continue
+			} else if schemaVersion, err := certTemplate.Properties.Get(ad.SchemaVersion.String()).Float64(); err != nil {
+				log.Errorf("%s property access error %d: %v", ad.SchemaVersion.String(), certTemplate.ID, err)
+				continue
+			} else if authorizedSignatures, err := certTemplate.Properties.Get(ad.AuthorizedSignatures.String()).Float64(); err != nil {
+				log.Errorf("%s property access error %d: %v", ad.AuthorizedSignatures.String(), certTemplate.ID, err)
+				continue
+			} else if !isCertTemplateValidForEsc1(reqManagerApproval, authenticationEnabled, enrolleeSuppliesSubject, schemaVersion, authorizedSignatures) {
 				continue
 			} else {
 				results.Or(CalculateCrossProductNodeSets(expandedGroups, cache.CertTemplateControllers[certTemplate.ID], cache.EnterpriseCAEnrollers[enterpriseCA.ID]))
@@ -244,25 +252,6 @@ func filterTempResultsForESC6a(tx graph.Transaction, tempResults cardinality.Dup
 			if resultNode.Kinds.ContainsOneOf(ad.Group) {
 				//A Group will be added to the list since it requires no further conditions
 				principalsEnabledForESC6a.Add(value)
-
-				//Obtain the members of this group so that we can handle principals with control over valid certTemplates through nested membership
-				expanded := groupExpansions.Cardinality(value).(cardinality.Duplex[uint32])
-
-				//Loop over the nested principals that have control over valid certTemplates because of Group membership
-				expanded.Each(func(value uint32) (bool, error) {
-					if resultNode, err := tx.Nodes().Filter(query.Equals(query.NodeID(), value)).First(); err != nil {
-						return true, nil
-					} else if resultNode.Kinds.ContainsOneOf(ad.Group) {
-						//A Group will be added to the list since it requires no further conditions
-						principalsEnabledForESC6a.Add(value)
-					} else if resultNode.Kinds.ContainsOneOf(ad.Computer, ad.User) {
-						//Both Users and Computers require control over a certTemplate that doesn't require an email property to be set or for the User or Computer to have an email property that is set
-						if checkEmailValidity(resultNode, validCertTemplates, groupExpansions, cache) {
-							principalsEnabledForESC6a.Add(value)
-						}
-					}
-					return true, nil
-				})
 			} else if resultNode.Kinds.ContainsOneOf(ad.Computer, ad.User) {
 				if checkEmailValidity(resultNode, validCertTemplates, groupExpansions, cache) {
 					principalsEnabledForESC6a.Add(value)
@@ -319,7 +308,10 @@ func PostADCSESC6a(ctx context.Context, tx graph.Transaction, outC chan<- analys
 			} else {
 				validCertTemplates = append(validCertTemplates, publishedCertTemplate)
 
-				tempResults.Or(CalculateCrossProductNodeSets(groupExpansions, cache.CertTemplateControllers[publishedCertTemplate.ID], cache.EnterpriseCAEnrollers[enterpriseCA.ID]))
+				for _, controller := range cache.CertTemplateControllers[publishedCertTemplate.ID] {
+					tempResults.Or(CalculateCrossProductNodeSets(groupExpansions, graph.NewNodeSet(controller).Slice(), cache.EnterpriseCAEnrollers[enterpriseCA.ID]))
+				}
+
 			}
 		}
 

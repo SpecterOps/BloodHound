@@ -808,10 +808,11 @@ func TestADCSESC6a(t *testing.T) {
 					name, _ := result.Properties.Get(common.Name.String()).String()
 					names = append(names, name)
 				}
-				require.Equal(t, 15, len(results))
+				require.Equal(t, 14, len(results))
 				require.NotContains(t, names, "User2")
 				require.NotContains(t, names, "User3")
 				require.NotContains(t, names, "User5")
+				require.NotContains(t, names, "User7")
 				require.NotContains(t, names, "Computer6")
 			}
 			return nil
