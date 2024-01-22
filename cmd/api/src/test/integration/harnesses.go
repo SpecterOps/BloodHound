@@ -1788,19 +1788,19 @@ func initHarnessRelationships(c *GraphTestContext, nodeMap map[string]*graph.Nod
 type ESC6aHarnessECA struct{}
 
 func (s *ESC6aHarnessECA) Setup(c *GraphTestContext) {
-	setupHarnessFromArrowsJson(c, "ESC6a Harness ECA")
+	setupHarnessFromArrowsJson(c, "esc6a-eca")
 }
 
 type ESC6aHarnessTemplate1 struct{}
 
 func (s *ESC6aHarnessTemplate1) Setup(c *GraphTestContext) {
-	setupHarnessFromArrowsJson(c, "ESC6a Harness Template1")
+	setupHarnessFromArrowsJson(c, "esc6a-template1")
 }
 
 type ESC6aHarnessTemplate2 struct{}
 
 func (s *ESC6aHarnessTemplate2) Setup(c *GraphTestContext) {
-	setupHarnessFromArrowsJson(c, "ESC6a Harness Template2")
+	setupHarnessFromArrowsJson(c, "esc6a-template2")
 }
 
 type ShortcutHarness struct {
