@@ -102,88 +102,89 @@ var (
 	ADCSESC6                        = graph.StringKind("ADCSESC6")
 	ADCSESC7                        = graph.StringKind("ADCSESC7")
 	ADCSESC9a                       = graph.StringKind("ADCSESC9a")
+	ADCSESC9b                       = graph.StringKind("ADCSESC9b")
 )
 
-type Item string
+type Property string
 
 const (
-	AdminCount                             Item = "admincount"
-	CASecurityCollected                    Item = "casecuritycollected"
-	CAName                                 Item = "caname"
-	CertChain                              Item = "certchain"
-	CertName                               Item = "certname"
-	CertThumbprint                         Item = "certthumbprint"
-	CertThumbprints                        Item = "certthumbprints"
-	HasEnrollmentAgentRestrictions         Item = "hasenrollmentagentrestrictions"
-	EnrollmentAgentRestrictionsCollected   Item = "enrollmentagentrestrictionscollected"
-	IsUserSpecifiesSanEnabled              Item = "isuserspecifiessanenabled"
-	IsUserSpecifiesSanEnabledCollected     Item = "isuserspecifiessanenabledcollected"
-	HasBasicConstraints                    Item = "hasbasicconstraints"
-	BasicConstraintPathLength              Item = "basicconstraintpathlength"
-	DNSHostname                            Item = "dnshostname"
-	CrossCertificatePair                   Item = "crosscertificatepair"
-	DistinguishedName                      Item = "distinguishedname"
-	DomainFQDN                             Item = "domain"
-	DomainSID                              Item = "domainsid"
-	Sensitive                              Item = "sensitive"
-	HighValue                              Item = "highvalue"
-	BlocksInheritance                      Item = "blocksinheritance"
-	IsACL                                  Item = "isacl"
-	IsACLProtected                         Item = "isaclprotected"
-	IsDeleted                              Item = "isdeleted"
-	Enforced                               Item = "enforced"
-	Department                             Item = "department"
-	HasCrossCertificatePair                Item = "hascrosscertificatepair"
-	HasSPN                                 Item = "hasspn"
-	UnconstrainedDelegation                Item = "unconstraineddelegation"
-	LastLogon                              Item = "lastlogon"
-	LastLogonTimestamp                     Item = "lastlogontimestamp"
-	IsPrimaryGroup                         Item = "isprimarygroup"
-	HasLAPS                                Item = "haslaps"
-	DontRequirePreAuth                     Item = "dontreqpreauth"
-	LogonType                              Item = "logontype"
-	HasURA                                 Item = "hasura"
-	PasswordNeverExpires                   Item = "pwdneverexpires"
-	PasswordNotRequired                    Item = "passwordnotreqd"
-	FunctionalLevel                        Item = "functionallevel"
-	TrustType                              Item = "trusttype"
-	SidFiltering                           Item = "sidfiltering"
-	TrustedToAuth                          Item = "trustedtoauth"
-	SamAccountName                         Item = "samaccountname"
-	CertificateMappingMethodsRaw           Item = "certificatemappingmethodsraw"
-	CertificateMappingMethods              Item = "certificatemappingmethods"
-	StrongCertificateBindingEnforcementRaw Item = "strongcertificatebindingenforcementraw"
-	StrongCertificateBindingEnforcement    Item = "strongcertificatebindingenforcement"
-	EKUs                                   Item = "ekus"
-	SubjectAltRequireUPN                   Item = "subjectaltrequireupn"
-	SubjectAltRequireDNS                   Item = "subjectaltrequiredns"
-	SubjectAltRequireDomainDNS             Item = "subjectaltrequiredomaindns"
-	SubjectAltRequireEmail                 Item = "subjectaltrequireemail"
-	SubjectAltRequireSPN                   Item = "subjectaltrequirespn"
-	SubjectRequireEmail                    Item = "subjectrequireemail"
-	AuthorizedSignatures                   Item = "authorizedsignatures"
-	ApplicationPolicies                    Item = "applicationpolicies"
-	IssuancePolicies                       Item = "issuancepolicies"
-	SchemaVersion                          Item = "schemaversion"
-	RequiresManagerApproval                Item = "requiresmanagerapproval"
-	AuthenticationEnabled                  Item = "authenticationenabled"
-	EnrolleeSuppliesSubject                Item = "enrolleesuppliessubject"
-	CertificateApplicationPolicy           Item = "certificateapplicationpolicy"
-	CertificateNameFlag                    Item = "certificatenameflag"
-	EffectiveEKUs                          Item = "effectiveekus"
-	EnrollmentFlag                         Item = "enrollmentflag"
-	Flags                                  Item = "flags"
-	NoSecurityExtension                    Item = "nosecurityextension"
-	RenewalPeriod                          Item = "renewalperiod"
-	ValidityPeriod                         Item = "validityperiod"
-	OID                                    Item = "oid"
-	HomeDirectory                          Item = "homedirectory"
+	AdminCount                             Property = "admincount"
+	CASecurityCollected                    Property = "casecuritycollected"
+	CAName                                 Property = "caname"
+	CertChain                              Property = "certchain"
+	CertName                               Property = "certname"
+	CertThumbprint                         Property = "certthumbprint"
+	CertThumbprints                        Property = "certthumbprints"
+	HasEnrollmentAgentRestrictions         Property = "hasenrollmentagentrestrictions"
+	EnrollmentAgentRestrictionsCollected   Property = "enrollmentagentrestrictionscollected"
+	IsUserSpecifiesSanEnabled              Property = "isuserspecifiessanenabled"
+	IsUserSpecifiesSanEnabledCollected     Property = "isuserspecifiessanenabledcollected"
+	HasBasicConstraints                    Property = "hasbasicconstraints"
+	BasicConstraintPathLength              Property = "basicconstraintpathlength"
+	DNSHostname                            Property = "dnshostname"
+	CrossCertificatePair                   Property = "crosscertificatepair"
+	DistinguishedName                      Property = "distinguishedname"
+	DomainFQDN                             Property = "domain"
+	DomainSID                              Property = "domainsid"
+	Sensitive                              Property = "sensitive"
+	HighValue                              Property = "highvalue"
+	BlocksInheritance                      Property = "blocksinheritance"
+	IsACL                                  Property = "isacl"
+	IsACLProtected                         Property = "isaclprotected"
+	IsDeleted                              Property = "isdeleted"
+	Enforced                               Property = "enforced"
+	Department                             Property = "department"
+	HasCrossCertificatePair                Property = "hascrosscertificatepair"
+	HasSPN                                 Property = "hasspn"
+	UnconstrainedDelegation                Property = "unconstraineddelegation"
+	LastLogon                              Property = "lastlogon"
+	LastLogonTimestamp                     Property = "lastlogontimestamp"
+	IsPrimaryGroup                         Property = "isprimarygroup"
+	HasLAPS                                Property = "haslaps"
+	DontRequirePreAuth                     Property = "dontreqpreauth"
+	LogonType                              Property = "logontype"
+	HasURA                                 Property = "hasura"
+	PasswordNeverExpires                   Property = "pwdneverexpires"
+	PasswordNotRequired                    Property = "passwordnotreqd"
+	FunctionalLevel                        Property = "functionallevel"
+	TrustType                              Property = "trusttype"
+	SidFiltering                           Property = "sidfiltering"
+	TrustedToAuth                          Property = "trustedtoauth"
+	SamAccountName                         Property = "samaccountname"
+	CertificateMappingMethodsRaw           Property = "certificatemappingmethodsraw"
+	CertificateMappingMethods              Property = "certificatemappingmethods"
+	StrongCertificateBindingEnforcementRaw Property = "strongcertificatebindingenforcementraw"
+	StrongCertificateBindingEnforcement    Property = "strongcertificatebindingenforcement"
+	EKUs                                   Property = "ekus"
+	SubjectAltRequireUPN                   Property = "subjectaltrequireupn"
+	SubjectAltRequireDNS                   Property = "subjectaltrequiredns"
+	SubjectAltRequireDomainDNS             Property = "subjectaltrequiredomaindns"
+	SubjectAltRequireEmail                 Property = "subjectaltrequireemail"
+	SubjectAltRequireSPN                   Property = "subjectaltrequirespn"
+	SubjectRequireEmail                    Property = "subjectrequireemail"
+	AuthorizedSignatures                   Property = "authorizedsignatures"
+	ApplicationPolicies                    Property = "applicationpolicies"
+	IssuancePolicies                       Property = "issuancepolicies"
+	SchemaVersion                          Property = "schemaversion"
+	RequiresManagerApproval                Property = "requiresmanagerapproval"
+	AuthenticationEnabled                  Property = "authenticationenabled"
+	EnrolleeSuppliesSubject                Property = "enrolleesuppliessubject"
+	CertificateApplicationPolicy           Property = "certificateapplicationpolicy"
+	CertificateNameFlag                    Property = "certificatenameflag"
+	EffectiveEKUs                          Property = "effectiveekus"
+	EnrollmentFlag                         Property = "enrollmentflag"
+	Flags                                  Property = "flags"
+	NoSecurityExtension                    Property = "nosecurityextension"
+	RenewalPeriod                          Property = "renewalperiod"
+	ValidityPeriod                         Property = "validityperiod"
+	OID                                    Property = "oid"
+	HomeDirectory                          Property = "homedirectory"
 )
 
-func AllProperties() []Item {
-	return []Item{AdminCount, CASecurityCollected, CAName, CertChain, CertName, CertThumbprint, CertThumbprints, HasEnrollmentAgentRestrictions, EnrollmentAgentRestrictionsCollected, IsUserSpecifiesSanEnabled, IsUserSpecifiesSanEnabledCollected, HasBasicConstraints, BasicConstraintPathLength, DNSHostname, CrossCertificatePair, DistinguishedName, DomainFQDN, DomainSID, Sensitive, HighValue, BlocksInheritance, IsACL, IsACLProtected, IsDeleted, Enforced, Department, HasCrossCertificatePair, HasSPN, UnconstrainedDelegation, LastLogon, LastLogonTimestamp, IsPrimaryGroup, HasLAPS, DontRequirePreAuth, LogonType, HasURA, PasswordNeverExpires, PasswordNotRequired, FunctionalLevel, TrustType, SidFiltering, TrustedToAuth, SamAccountName, CertificateMappingMethodsRaw, CertificateMappingMethods, StrongCertificateBindingEnforcementRaw, StrongCertificateBindingEnforcement, EKUs, SubjectAltRequireUPN, SubjectAltRequireDNS, SubjectAltRequireDomainDNS, SubjectAltRequireEmail, SubjectAltRequireSPN, SubjectRequireEmail, AuthorizedSignatures, ApplicationPolicies, IssuancePolicies, SchemaVersion, RequiresManagerApproval, AuthenticationEnabled, EnrolleeSuppliesSubject, CertificateApplicationPolicy, CertificateNameFlag, EffectiveEKUs, EnrollmentFlag, Flags, NoSecurityExtension, RenewalPeriod, ValidityPeriod, OID, HomeDirectory}
+func AllProperties() []Property {
+	return []Property{AdminCount, CASecurityCollected, CAName, CertChain, CertName, CertThumbprint, CertThumbprints, HasEnrollmentAgentRestrictions, EnrollmentAgentRestrictionsCollected, IsUserSpecifiesSanEnabled, IsUserSpecifiesSanEnabledCollected, HasBasicConstraints, BasicConstraintPathLength, DNSHostname, CrossCertificatePair, DistinguishedName, DomainFQDN, DomainSID, Sensitive, HighValue, BlocksInheritance, IsACL, IsACLProtected, IsDeleted, Enforced, Department, HasCrossCertificatePair, HasSPN, UnconstrainedDelegation, LastLogon, LastLogonTimestamp, IsPrimaryGroup, HasLAPS, DontRequirePreAuth, LogonType, HasURA, PasswordNeverExpires, PasswordNotRequired, FunctionalLevel, TrustType, SidFiltering, TrustedToAuth, SamAccountName, CertificateMappingMethodsRaw, CertificateMappingMethods, StrongCertificateBindingEnforcementRaw, StrongCertificateBindingEnforcement, EKUs, SubjectAltRequireUPN, SubjectAltRequireDNS, SubjectAltRequireDomainDNS, SubjectAltRequireEmail, SubjectAltRequireSPN, SubjectRequireEmail, AuthorizedSignatures, ApplicationPolicies, IssuancePolicies, SchemaVersion, RequiresManagerApproval, AuthenticationEnabled, EnrolleeSuppliesSubject, CertificateApplicationPolicy, CertificateNameFlag, EffectiveEKUs, EnrollmentFlag, Flags, NoSecurityExtension, RenewalPeriod, ValidityPeriod, OID, HomeDirectory}
 }
-func ParseItem(source string) (Item, error) {
+func ParseProperty(source string) (Property, error) {
 	switch source {
 	case "admincount":
 		return AdminCount, nil
@@ -331,7 +332,7 @@ func ParseItem(source string) (Item, error) {
 		return "", errors.New("Invalid enumeration value: " + source)
 	}
 }
-func (s Item) String() string {
+func (s Property) String() string {
 	switch s {
 	case AdminCount:
 		return string(AdminCount)
@@ -479,7 +480,7 @@ func (s Item) String() string {
 		return "Invalid enumeration case: " + string(s)
 	}
 }
-func (s Item) Name() string {
+func (s Property) Name() string {
 	switch s {
 	case AdminCount:
 		return "Admin Count"
@@ -627,9 +628,9 @@ func (s Item) Name() string {
 		return "Invalid enumeration case: " + string(s)
 	}
 }
-func (s Item) Is(others ...graph.Kind) bool {
+func (s Property) Is(others ...graph.Kind) bool {
 	for _, other := range others {
-		if value, err := ParseItem(other.String()); err == nil && value == s {
+		if value, err := ParseProperty(other.String()); err == nil && value == s {
 			return true
 		}
 	}
@@ -639,13 +640,13 @@ func Nodes() []graph.Kind {
 	return []graph.Kind{Entity, User, Computer, Group, GPO, OU, Container, Domain, LocalGroup, LocalUser, AIACA, RootCA, EnterpriseCA, NTAuthStore, CertTemplate}
 }
 func Relationships() []graph.Kind {
-	return []graph.Kind{Owns, GenericAll, GenericWrite, WriteOwner, WriteDACL, MemberOf, ForceChangePassword, AllExtendedRights, AddMember, HasSession, Contains, GPLink, AllowedToDelegate, GetChanges, GetChangesAll, GetChangesInFilteredSet, TrustedBy, AllowedToAct, AdminTo, CanPSRemote, CanRDP, ExecuteDCOM, HasSIDHistory, AddSelf, DCSync, ReadLAPSPassword, ReadGMSAPassword, DumpSMSAPassword, SQLAdmin, AddAllowedToAct, WriteSPN, AddKeyCredentialLink, LocalToComputer, MemberOfLocalGroup, RemoteInteractiveLogonPrivilege, SyncLAPSPassword, WriteAccountRestrictions, RootCAFor, DCFor, PublishedTo, ManageCertificates, ManageCA, DelegatedEnrollmentAgent, Enroll, HostsCAService, WritePKIEnrollmentFlag, WritePKINameFlag, NTAuthStoreFor, TrustedForNTAuth, EnterpriseCAFor, CanAbuseUPNCertMapping, CanAbuseWeakCertBinding, IssuedSignedBy, GoldenCert, EnrollOnBehalfOf, ADCSESC1, ADCSESC3, ADCSESC4, ADCSESC5, ADCSESC6, ADCSESC7, ADCSESC9a}
+	return []graph.Kind{Owns, GenericAll, GenericWrite, WriteOwner, WriteDACL, MemberOf, ForceChangePassword, AllExtendedRights, AddMember, HasSession, Contains, GPLink, AllowedToDelegate, GetChanges, GetChangesAll, GetChangesInFilteredSet, TrustedBy, AllowedToAct, AdminTo, CanPSRemote, CanRDP, ExecuteDCOM, HasSIDHistory, AddSelf, DCSync, ReadLAPSPassword, ReadGMSAPassword, DumpSMSAPassword, SQLAdmin, AddAllowedToAct, WriteSPN, AddKeyCredentialLink, LocalToComputer, MemberOfLocalGroup, RemoteInteractiveLogonPrivilege, SyncLAPSPassword, WriteAccountRestrictions, RootCAFor, DCFor, PublishedTo, ManageCertificates, ManageCA, DelegatedEnrollmentAgent, Enroll, HostsCAService, WritePKIEnrollmentFlag, WritePKINameFlag, NTAuthStoreFor, TrustedForNTAuth, EnterpriseCAFor, CanAbuseUPNCertMapping, CanAbuseWeakCertBinding, IssuedSignedBy, GoldenCert, EnrollOnBehalfOf, ADCSESC1, ADCSESC3, ADCSESC4, ADCSESC5, ADCSESC6, ADCSESC7, ADCSESC9a, ADCSESC9b}
 }
 func ACLRelationships() []graph.Kind {
 	return []graph.Kind{AllExtendedRights, ForceChangePassword, AddMember, AddAllowedToAct, GenericAll, WriteDACL, WriteOwner, GenericWrite, ReadLAPSPassword, ReadGMSAPassword, Owns, AddSelf, WriteSPN, AddKeyCredentialLink, GetChanges, GetChangesAll, GetChangesInFilteredSet, WriteAccountRestrictions, SyncLAPSPassword, DCSync, ManageCertificates, ManageCA, Enroll, WritePKIEnrollmentFlag, WritePKINameFlag}
 }
 func PathfindingRelationships() []graph.Kind {
-	return []graph.Kind{Owns, GenericAll, GenericWrite, WriteOwner, WriteDACL, MemberOf, ForceChangePassword, AllExtendedRights, AddMember, HasSession, Contains, GPLink, AllowedToDelegate, TrustedBy, AllowedToAct, AdminTo, CanPSRemote, CanRDP, ExecuteDCOM, HasSIDHistory, AddSelf, DCSync, ReadLAPSPassword, ReadGMSAPassword, DumpSMSAPassword, SQLAdmin, AddAllowedToAct, WriteSPN, AddKeyCredentialLink, SyncLAPSPassword, WriteAccountRestrictions, GoldenCert, ADCSESC1, ADCSESC3, ADCSESC4, ADCSESC5, ADCSESC6, ADCSESC7, ADCSESC9a, DCFor}
+	return []graph.Kind{Owns, GenericAll, GenericWrite, WriteOwner, WriteDACL, MemberOf, ForceChangePassword, AllExtendedRights, AddMember, HasSession, Contains, GPLink, AllowedToDelegate, TrustedBy, AllowedToAct, AdminTo, CanPSRemote, CanRDP, ExecuteDCOM, HasSIDHistory, AddSelf, DCSync, ReadLAPSPassword, ReadGMSAPassword, DumpSMSAPassword, SQLAdmin, AddAllowedToAct, WriteSPN, AddKeyCredentialLink, SyncLAPSPassword, WriteAccountRestrictions, GoldenCert, ADCSESC1, ADCSESC3, ADCSESC4, ADCSESC5, ADCSESC6, ADCSESC7, ADCSESC9a, ADCSESC9b, DCFor}
 }
 func IsACLKind(s graph.Kind) bool {
 	for _, acl := range ACLRelationships() {
