@@ -23,7 +23,7 @@ const General: FC<EdgeInfoProps> = ({ sourceName, sourceType, targetName }) => {
     return (
         <>
             <Typography variant='body2'>
-                {groupSpecialFormat(sourceType, sourceName)} the DS-Replication-Get-Changes privilege on the domain{' '}
+                {groupSpecialFormat(sourceType, sourceName)} the DS-Replication-Get-Changes permission on the domain{' '}
                 {targetName}.
             </Typography>
             <Typography variant='body2'>
