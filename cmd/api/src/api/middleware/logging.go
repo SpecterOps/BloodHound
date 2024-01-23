@@ -114,10 +114,6 @@ func setSignedRequestFields(request *http.Request, logEvent log.Event) {
 	}
 }
 
-// func writeAuditLog() error {
-
-// }
-
 // LoggingMiddleware is a middleware func that outputs a log for each request-response lifecycle. It includes timestamped
 // information organized into fields suitable for searching or parsing.
 func LoggingMiddleware(cfg config.Configuration, idResolver auth.IdentityResolver, db *database.BloodhoundDB) func(http.Handler) http.Handler {
@@ -181,7 +177,6 @@ func LoggingMiddleware(cfg config.Configuration, idResolver auth.IdentityResolve
 					requestContext.AuditCtx.Status = model.AuditStatusSuccess
 				} else {
 					requestContext.AuditCtx.Status = model.AuditStatusFailure
-					requestContext.AuditCtx.ErrorMsg = logEvent.Msg
 				}
 
 				if err := db.AppendAuditLog(*requestContext, "", requestContext.AuditCtx.Model); err != nil {

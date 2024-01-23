@@ -113,6 +113,12 @@ func SetAuditContext(request *http.Request, auditCtx model.AuditContext) {
 	Set(request.Context(), bhCtx)
 }
 
+func SetErrorContext(request *http.Request, err error) {
+	bhCtx := Get(request.Context())
+	bhCtx.AuditCtx.ErrorMsg = err.Error()
+	Set(request.Context(), bhCtx)
+}
+
 const (
 	ErrAuthContextInvalid = errors.Error("auth context is invalid")
 )
@@ -136,7 +142,7 @@ func NewAuditLogFromContext(ctx Context, idResolver auth.IdentityResolver) (mode
 		}
 
 		if auditLog.Status == model.AuditStatusFailure {
-			auditLog.Fields["error"] = authContext.ErrorMsg
+			auditLog.Fields["error"] = ctx.AuditCtx.ErrorMsg
 		}
 
 		return auditLog, nil

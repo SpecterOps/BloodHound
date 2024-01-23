@@ -111,6 +111,8 @@ func BuildErrorResponse(httpStatus int, message string, request *http.Request) *
 // HandleDatabaseError writes an error (not found or other) depending on the database error encountered
 // Alternate: FormatDatabaseError()
 func HandleDatabaseError(request *http.Request, response http.ResponseWriter, err error) {
+	ctx.SetErrorContext(request, err)
+
 	if errors.Is(err, database.ErrNotFound) {
 		WriteErrorResponse(request.Context(), BuildErrorResponse(http.StatusNotFound, ErrorResponseDetailsResourceNotFound, request), response)
 	} else {
