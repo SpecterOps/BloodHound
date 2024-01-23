@@ -193,7 +193,6 @@ func principalControlsCertTemplate(principal, certTemplate *graph.Node, groupExp
 }
 
 func checkEmailValidity(node *graph.Node, validCertTemplates []*graph.Node, groupExpansions impact.PathAggregator, cache ADCSCache) bool {
-	exception := false
 	email, err := node.Properties.Get(common.Email.String()).String()
 	if err != nil {
 		log.Errorf("%s property access error %d: %v", common.Email.String(), node.ID, err)
@@ -211,26 +210,32 @@ func checkEmailValidity(node *graph.Node, validCertTemplates []*graph.Node, grou
 				} else if subjectRequireEmail, err := certTemplate.Properties.Get(ad.SubjectRequireEmail.String()).Bool(); err != nil {
 					log.Errorf("%s property access error %d: %v", ad.SubjectRequireEmail.String(), certTemplate.ID, err)
 					continue
-				} else if subjectAltRequireDNS, err := certTemplate.Properties.Get(ad.SubjectAltRequireDNS.String()).Bool(); err != nil {
-					log.Errorf("%s property access error %d: %v", ad.SubjectAltRequireDNS.String(), certTemplate.ID, err)
-					continue
-				} else if subjectAltRequireDomainDNS, err := certTemplate.Properties.Get(ad.SubjectAltRequireDomainDNS.String()).Bool(); err != nil {
-					log.Errorf("%s property access error %d: %v", ad.SubjectAltRequireDomainDNS.String(), certTemplate.ID, err)
-					continue
-				} else if node.Kinds.ContainsOneOf(ad.User) && (subjectAltRequireDNS || subjectAltRequireDomainDNS) {
-					continue
 				} else if (!subjectAltRequireEmail && !subjectRequireEmail) || schemaVersion == 1 {
-					exception = true
+					//Principal does not have an email set but at least one of the certTemplates it controls does not require it so add it to the list of principals enabled for ESC6a
+					return true
 				}
 			}
-		}
-		if exception {
-			//Principal does not have an email set but at least one of the certTemplates it controls does not require it so add it to the list of principals enabled for ESC6a
-			return true
 		}
 	} else {
 		//Principal has an email set so add it to the list of principals enabled for ESC6a
 		return true
+	}
+	return false
+}
+
+func checkDNSValidity(node *graph.Node, validCertTemplates []*graph.Node, groupExpansions impact.PathAggregator, cache ADCSCache) bool {
+	for _, certTemplate := range validCertTemplates {
+		if principalControlsCertTemplate(node, certTemplate, groupExpansions, cache) {
+			if subjectAltRequireDNS, err := certTemplate.Properties.Get(ad.SubjectAltRequireDNS.String()).Bool(); err != nil {
+				log.Errorf("%s property access error %d: %v", ad.SubjectAltRequireDNS.String(), certTemplate.ID, err)
+				continue
+			} else if subjectAltRequireDomainDNS, err := certTemplate.Properties.Get(ad.SubjectAltRequireDomainDNS.String()).Bool(); err != nil {
+				log.Errorf("%s property access error %d: %v", ad.SubjectAltRequireDomainDNS.String(), certTemplate.ID, err)
+				continue
+			} else if !subjectAltRequireDNS && !subjectAltRequireDomainDNS {
+				return true
+			}
+		}
 	}
 	return false
 }
@@ -247,7 +252,13 @@ func filterTempResultsForESC6a(tx graph.Transaction, tempResults cardinality.Dup
 			if resultNode.Kinds.ContainsOneOf(ad.Group) {
 				//A Group will be added to the list since it requires no further conditions
 				principalsEnabledForESC6a.Add(value)
-			} else if resultNode.Kinds.ContainsOneOf(ad.Computer, ad.User) {
+			} else if resultNode.Kinds.ContainsOneOf(ad.User) {
+				if checkDNSValidity(resultNode, validCertTemplates, groupExpansions, cache) {
+					if checkEmailValidity(resultNode, validCertTemplates, groupExpansions, cache) {
+						principalsEnabledForESC6a.Add(value)
+					}
+				}
+			} else if resultNode.Kinds.ContainsOneOf(ad.Computer) {
 				if checkEmailValidity(resultNode, validCertTemplates, groupExpansions, cache) {
 					principalsEnabledForESC6a.Add(value)
 				}
@@ -310,7 +321,7 @@ func PostADCSESC6a(ctx context.Context, tx graph.Transaction, outC chan<- analys
 			}
 		}
 
-		filterTempResultsForESC6a(tx, tempResults, groupExpansions, validCertTemplates, cache).Each(func(value uint32) (bool, error) {
+		if err := filterTempResultsForESC6a(tx, tempResults, groupExpansions, validCertTemplates, cache).Each(func(value uint32) (bool, error) {
 			if !channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
 				FromID: graph.ID(value),
 				ToID:   domain.ID,
@@ -320,7 +331,9 @@ func PostADCSESC6a(ctx context.Context, tx graph.Transaction, outC chan<- analys
 			} else {
 				return true, nil
 			}
-		})
+		}); err != nil {
+			return err
+		}
 	}
 	return nil
 }

@@ -1425,10 +1425,10 @@ func FetchCertTemplatesPublishedToCA(tx graph.Transaction, ca *graph.Node) (grap
 	}))
 }
 
-func FetchCanAbuseWeakCertBindingRels(tx graph.Transaction, ca *graph.Node) ([]*graph.Relationship, error) {
+func FetchCanAbuseWeakCertBindingRels(tx graph.Transaction, node *graph.Node) ([]*graph.Relationship, error) {
 	if rels, err := ops.FetchRelationships(tx.Relationships().Filterf(func() graph.Criteria {
 		return query.And(
-			query.Equals(query.StartID(), ca.ID),
+			query.Equals(query.StartID(), node.ID),
 			query.Kind(query.Relationship(), ad.CanAbuseWeakCertBinding),
 			query.Kind(query.End(), ad.Entity),
 		)
