@@ -23,7 +23,9 @@ import (
 	"net/url"
 	"time"
 
+	"github.com/specterops/bloodhound/errors"
 	"github.com/specterops/bloodhound/src/auth"
+	"github.com/specterops/bloodhound/src/database/types"
 	"github.com/specterops/bloodhound/src/model"
 )
 
@@ -103,4 +105,40 @@ func RequestID(request *http.Request) string {
 func SetRequestContext(request *http.Request, bhCtx *Context) *http.Request {
 	newRequestContext := context.WithValue(request.Context(), ValueKey, bhCtx)
 	return request.WithContext(newRequestContext)
+}
+
+func SetAuditContext(request *http.Request, auditCtx model.AuditContext) {
+	bhCtx := Get(request.Context())
+	bhCtx.AuditCtx = auditCtx
+	Set(request.Context(), bhCtx)
+}
+
+const (
+	ErrAuthContextInvalid = errors.Error("auth context is invalid")
+)
+
+func NewAuditLogFromContext(ctx Context, idResolver auth.IdentityResolver) (model.AuditLog, error) {
+	authContext := ctx.AuthCtx
+	if !authContext.Authenticated() {
+		return model.AuditLog{}, ErrAuthContextInvalid
+	} else if identity, err := idResolver.GetIdentity(ctx.AuthCtx); err != nil {
+		return model.AuditLog{}, ErrAuthContextInvalid
+	} else {
+		auditLog := model.AuditLog{
+			ActorID:    identity.ID.String(),
+			ActorName:  identity.Name,
+			ActorEmail: identity.Email,
+			Action:     ctx.AuditCtx.Action,
+			Fields:     types.JSONUntypedObject(ctx.AuditCtx.Model.AuditData()),
+			RequestID:  ctx.RequestID,
+			Source:     ctx.RequestIP,
+			Status:     ctx.AuditCtx.Status,
+		}
+
+		if auditLog.Status == model.AuditStatusFailure {
+			auditLog.Fields["error"] = authContext.ErrorMsg
+		}
+
+		return auditLog, nil
+	}
 }

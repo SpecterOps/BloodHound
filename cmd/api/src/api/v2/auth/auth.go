@@ -479,15 +479,11 @@ func (s ManagementResource) CreateUser(response http.ResponseWriter, request *ht
 			}
 		}
 
+		auditCtx.Model = userTemplate
+		ctx.SetAuditContext(request, auditCtx)
 		if newUser, err := s.db.CreateUser(userTemplate); err != nil {
 			api.HandleDatabaseError(request, response, err)
 		} else {
-			bhCtx := ctx.Get(request.Context())
-			bhCtx.AuditCtx = model.AuditContext{
-				Event: "CreateUser",
-				Model: userTemplate,
-			}
-			ctx.Set(request.Context(), bhCtx)
 			api.WriteBasicResponse(request.Context(), newUser, http.StatusOK, response)
 		}
 

@@ -273,29 +273,3 @@ func FeatureFlagMiddleware(db database.Database, flagKey string) mux.MiddlewareF
 		})
 	}
 }
-
-// func AuditLogMiddleware(db database.Database, action string) mux.MiddlewareFunc {
-// 	return func(next http.Handler) http.Handler {
-// 		return http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
-// 			log.Infof("********** Beginning of AuditLogMiddleware")
-// 			var testString string
-
-// 			testString = "before"
-// 			log.Infof("********** before defer testString is %s", testString)
-// 			// Defer the log statement and then serve the request
-// 			defer func() {
-// 				log.Infof("********** In defer testString is %s", testString)
-// 			}()
-
-// 			next.ServeHTTP(response, request)
-// 			log.Infof("********** after next, response Header is %+v", response.Header())
-
-// 			reqCtx := *ctx.FromRequest(request)
-// 			if err := db.AppendAuditLog(reqCtx, action, model.User{}); err != nil {
-// 				api.HandleDatabaseError(request, response, err)
-// 			}
-// 			testString = "after"
-// 			log.Infof("********** after defer testString is %s", testString)
-// 		})
-// 	}
-// }

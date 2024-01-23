@@ -23,6 +23,11 @@ import (
 	"github.com/specterops/bloodhound/src/database/types"
 )
 
+const (
+	AuditStatusSuccess = "success"
+	AuditStatusFailure = "failure"
+)
+
 type AuditLog struct {
 	ID         int64                   `json:"id" gorm:"primaryKey"`
 	CreatedAt  time.Time               `json:"created_at" gorm:"index"`
@@ -138,6 +143,8 @@ type Auditable interface {
 }
 
 type AuditContext struct {
-	Event string
-	Model Auditable
+	Action   string
+	Model    Auditable
+	Status   string
+	ErrorMsg string
 }
