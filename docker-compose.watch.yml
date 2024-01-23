@@ -5,19 +5,25 @@ services:
     develop:
       watch:
         - action: rebuild
-          path: ./bhce/.yarnrc.yml
+          path: ./.yarnrc.yml
         - action: rebuild
-          path: ./bhce/package.json
+          path: ./package.json
         - action: rebuild
-          path: ./bhce/cmd/ui
+          path: ./cmd/ui
           ignore:
             - node_modules
             - src
             - public
             - dist
         - action: rebuild
-          path: ./bhce/packages/javascript
+          path: ./packages/javascript/bh-shared-ui
           ignore:
             - node_modules
-            - src
             - dist
+            - src
+        - action: rebuild
+          path: ./packages/javascript/js-client-library
+          ignore:
+            - node_modules
+            - dist
+            - src
