@@ -173,11 +173,7 @@ func LoggingMiddleware(cfg config.Configuration, idResolver auth.IdentityResolve
 			logEvent.Duration("elapsed", time.Since(requestContext.StartTime.UTC()))
 
 			if requestContext.AuditCtx != (model.AuditContext{}) {
-				if loggedResponse.statusCode <= 200 && loggedResponse.statusCode < 300 {
-					requestContext.AuditCtx.Status = model.AuditStatusSuccess
-				} else {
-					requestContext.AuditCtx.Status = model.AuditStatusFailure
-				}
+				requestContext.AuditCtx.SetStatus(loggedResponse.statusCode)
 
 				if err := db.AppendAuditLog(*requestContext, "", requestContext.AuditCtx.Model); err != nil {
 					log.Errorf("error writing to audit log: %w", err)
