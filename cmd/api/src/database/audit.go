@@ -20,7 +20,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/src/ctx"
 	"gorm.io/gorm"
 
@@ -32,7 +31,6 @@ func (s *BloodhoundDB) CreateAuditLog(auditLog *model.AuditLog) error {
 }
 
 func (s *BloodhoundDB) AppendAuditLog(context ctx.Context, unused string, model model.Auditable) error {
-	log.Infof("************** In AppendAuditLog")
 	if auditLog, err := ctx.NewAuditLogFromContext(context, s.idResolver); err != nil {
 		return fmt.Errorf("error creating audit log from context: %w", err)
 	} else {
