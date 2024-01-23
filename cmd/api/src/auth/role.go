@@ -26,6 +26,7 @@ const (
 	RoleUploadOnly    = "Upload-Only"
 	RoleReadOnly      = "Read-Only"
 	RoleUser          = "User"
+	RolePowerUser     = "Power User"
 	RoleAdministrator = "Administrator"
 )
 
@@ -93,6 +94,27 @@ func Roles() map[string]RoleTemplate {
 				permissions.AuthManageSelf,
 				permissions.APsGenerateReport,
 				permissions.AppReadApplicationConfiguration,
+				permissions.SavedQueriesRead,
+				permissions.SavedQueriesWrite,
+				permissions.ClientsRead,
+			},
+		},
+		RolePowerUser: {
+			Name:        RolePowerUser,
+			Description: "",
+			Permissions: model.Permissions{
+				permissions.GraphDBWrite,
+				permissions.GraphDBRead,
+				permissions.AppReadApplicationConfiguration,
+				permissions.AppWriteApplicationConfiguration,
+				permissions.CollectionManageJobs,
+				permissions.ClientsManage,
+				permissions.ClientsTasking,
+				permissions.AuthCreateToken,
+				permissions.AuthManageSelf,
+				permissions.AuthManageApplicationConfigurations,
+				permissions.APsGenerateReport,
+				permissions.APsManageAPs,
 				permissions.SavedQueriesRead,
 				permissions.SavedQueriesWrite,
 				permissions.ClientsRead,
