@@ -101,7 +101,7 @@ func Roles() map[string]RoleTemplate {
 		},
 		RolePowerUser: {
 			Name:        RolePowerUser,
-			Description: "",
+			Description: "Can upload data, manage clients, and perform any action a User can",
 			Permissions: model.Permissions{
 				permissions.GraphDBWrite,
 				permissions.GraphDBRead,
@@ -112,7 +112,6 @@ func Roles() map[string]RoleTemplate {
 				permissions.ClientsTasking,
 				permissions.AuthCreateToken,
 				permissions.AuthManageSelf,
-				permissions.AuthManageApplicationConfigurations,
 				permissions.APsGenerateReport,
 				permissions.APsManageAPs,
 				permissions.SavedQueriesRead,
