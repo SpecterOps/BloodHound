@@ -19,19 +19,15 @@ package integration
 import (
 	"fmt"
 	"math/rand"
-	"strconv"
-	"strings"
 	"time"
 
 	"github.com/gofrs/uuid"
-	"github.com/specterops/bloodhound/analysis"
 	adAnalysis "github.com/specterops/bloodhound/analysis/ad"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/graphschema/azure"
 	"github.com/specterops/bloodhound/graphschema/common"
 	"github.com/specterops/bloodhound/src/test"
-	"github.com/specterops/bloodhound/src/test/integration/harnesses"
 )
 
 func RandomObjectID(t test.Controller) string {
