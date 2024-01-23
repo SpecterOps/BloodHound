@@ -27,6 +27,7 @@
 
 import os
 import pathlib
+import re
 
 from typing import List
 
@@ -239,7 +240,7 @@ LICENSE = """                                 Apache License
 """
 
 # Apache License 2.0 header copy
-LICENSE_HEADER = """Copyright 2023 Specter Ops, Inc.
+LICENSE_HEADER = """Copyright 2024 Specter Ops, Inc.
 
 Licensed under the Apache License, Version 2.0
 you may not use this file except in compliance with the License.
@@ -388,6 +389,10 @@ def content_has_header(path: str, content_lines: List[str], header: str) -> bool
             # Ignore this file, it has a valid license header
             if header_lineno >= len(header_lines):
                 return True
+
+        elif re.search('Copyright \d{4} Specter Ops, Inc.', line.strip()):
+            matching_header=True
+            header_lineno += 1
 
         elif matching_header:
             print(f"WARNING: Path {path} contains damaged license information.")

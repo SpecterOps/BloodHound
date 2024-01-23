@@ -1,4 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2024 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -14,15 +14,19 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import React from 'react';
-import { Navigate } from 'react-router-dom';
+package codeclimate
 
-const Home: React.FC = () => {
-    return <Navigate to='/explore' />;
-};
+type Entry struct {
+	Description string   `json:"description"`
+	Severity    string   `json:"severity"`
+	Location    Location `json:"location"`
+}
 
-export default Home;
+type Location struct {
+	Path  string `json:"path"`
+	Lines Lines  `json:"lines"`
+}
 
-// TODO: Remove before merge to fix linter messages
-let arr = [].reduce(function(prev: never, curr: never, idx: number, arr: never[]) {})
-
+type Lines struct {
+	Begin uint64 `json:"begin"`
+}

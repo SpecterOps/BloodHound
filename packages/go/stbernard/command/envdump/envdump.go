@@ -19,7 +19,6 @@ package envdump
 import (
 	"flag"
 	"fmt"
-	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -47,12 +46,12 @@ func (s command) Usage() string {
 }
 
 func (s command) Run() error {
-	log.Printf("Environment:\n\n")
+	fmt.Print("Environment:\n\n")
 	for _, env := range s.config.Environment {
 		envTuple := strings.SplitN(env, "=", 2)
-		log.Printf("%s: %s\n", envTuple[0], envTuple[1])
+		fmt.Printf("%s: %s\n", envTuple[0], envTuple[1])
 	}
-	log.Printf("\n")
+	fmt.Print("\n")
 
 	return nil
 }
