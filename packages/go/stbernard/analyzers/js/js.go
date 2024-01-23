@@ -23,6 +23,7 @@ import (
 	"fmt"
 	"os/exec"
 
+	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/packages/go/stbernard/analyzers/codeclimate"
 )
 
@@ -51,6 +52,8 @@ func Run(jsPaths []string, env []string) ([]codeclimate.Entry, error) {
 		result          = make([]codeclimate.Entry, 0, len(jsPaths))
 	)
 
+	log.Infof("Running eslint")
+
 	for _, path := range jsPaths {
 		entries, err := runEslint(path, env)
 		if errors.Is(err, ErrNonZeroExit) {
@@ -60,6 +63,8 @@ func Run(jsPaths []string, env []string) ([]codeclimate.Entry, error) {
 		}
 		result = append(result, entries...)
 	}
+
+	log.Infof("Completed eslint")
 
 	return result, exitError
 }
