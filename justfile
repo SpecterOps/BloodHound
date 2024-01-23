@@ -178,6 +178,11 @@ bh-clear-volumes target='dev' *ARGS='':
 
 # build BH target cleanly (default profile dev with --no-cache flag)
 bh-clean-docker-build target='dev' *ARGS='':
+  # Ensure the target is down first
+  @docker compose --profile {{target}} -f docker-compose.dev.yml down
+  # Pull any updated images
+  @docker compose --profile {{target}} -f docker-compose.dev.yml pull
+  # Build without cache
   @docker compose --profile {{target}} -f docker-compose.dev.yml build --no-cache {{ARGS}}
 
 # build local BHCE container image (ex: just build-bhce-container <linux/arm64|linux/amd64> edge v5.0.0)

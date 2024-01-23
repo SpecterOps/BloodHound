@@ -17,12 +17,14 @@
 package workspace
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
 
+	"github.com/specterops/bloodhound/slices"
 	"golang.org/x/mod/modfile"
 )
 
@@ -88,6 +90,23 @@ func ParseModulesAbsPaths(cwd string) ([]string, error) {
 		}
 
 		return modulePaths, nil
+	}
+}
+
+func ParseJsAbsPaths(cwd string) ([]string, error) {
+	var (
+		paths  []string
+		ywPath = filepath.Join(cwd, "yarn-workspaces.json")
+	)
+
+	if data, err := os.ReadFile(ywPath); err != nil {
+		return paths, fmt.Errorf("could not read yarn-workspaces.json file: %w", err)
+	} else if err := json.Unmarshal(data, &paths); err != nil {
+		return paths, fmt.Errorf("could not unmarshal yarn-workspaces.json file: %w", err)
+	} else {
+		var workDir = filepath.Dir(ywPath)
+
+		return slices.Map(paths, func(path string) string { return filepath.Join(workDir, path) }), nil
 	}
 }
 
