@@ -1,4 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2024 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -129,6 +129,7 @@ export enum ActiveDirectoryRelationshipKind {
     ADCSESC5 = 'ADCSESC5',
     ADCSESC6 = 'ADCSESC6',
     ADCSESC7 = 'ADCSESC7',
+    ADCSESC9a = 'ADCSESC9a',
 }
 export function ActiveDirectoryRelationshipKindToDisplay(value: ActiveDirectoryRelationshipKind): string | undefined {
     switch (value) {
@@ -254,6 +255,8 @@ export function ActiveDirectoryRelationshipKindToDisplay(value: ActiveDirectoryR
             return 'ADCSESC6';
         case ActiveDirectoryRelationshipKind.ADCSESC7:
             return 'ADCSESC7';
+        case ActiveDirectoryRelationshipKind.ADCSESC9a:
+            return 'ADCSESC9a';
         default:
             return undefined;
     }
@@ -521,6 +524,7 @@ export function ActiveDirectoryPathfindingEdges(): ActiveDirectoryRelationshipKi
         ActiveDirectoryRelationshipKind.ADCSESC6,
         ActiveDirectoryRelationshipKind.ADCSESC7,
         ActiveDirectoryRelationshipKind.DCFor,
+        ActiveDirectoryRelationshipKind.ADCSESC9a,
     ];
 }
 export enum AzureNodeKind {

@@ -1425,6 +1425,20 @@ func FetchCertTemplatesPublishedToCA(tx graph.Transaction, ca *graph.Node) (grap
 	}))
 }
 
+func FetchCanAbuseWeakCertBindingRels(tx graph.Transaction, node *graph.Node) ([]*graph.Relationship, error) {
+	if rels, err := ops.FetchRelationships(tx.Relationships().Filterf(func() graph.Criteria {
+		return query.And(
+			query.Equals(query.StartID(), node.ID),
+			query.Kind(query.Relationship(), ad.CanAbuseWeakCertBinding),
+			query.Kind(query.End(), ad.Entity),
+		)
+	})); err != nil {
+		return nil, err
+	} else {
+		return rels, nil
+	}
+}
+
 func FetchEnterpriseCAsCertChainPathToDomain(tx graph.Transaction, enterpriseCA, domain *graph.Node) (graph.PathSet, error) {
 	return ops.TraversePaths(tx, ops.TraversalPlan{
 		Root:      enterpriseCA,
