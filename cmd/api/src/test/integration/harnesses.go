@@ -1638,6 +1638,43 @@ func (s *ESC3Harness2) Setup(c *GraphTestContext) {
 	c.UpdateNode(s.EnterpriseCA1)
 }
 
+type ESC9AHarness struct {
+	Domain       *graph.Node
+	NTAuthStore  *graph.Node
+	RootCA       *graph.Node
+	DC           *graph.Node
+	EnterpriseCA *graph.Node
+	CertTemplate *graph.Node
+	Victim       *graph.Node
+	Attacker     *graph.Node
+}
+
+func (s *ESC9AHarness) Setup(c *GraphTestContext) {
+	sid := RandomDomainSID()
+	s.Domain = c.NewActiveDirectoryDomain("ESC9aDomain", sid, false, true)
+	s.NTAuthStore = c.NewActiveDirectoryNTAuthStore("NTAuthStore", sid)
+	s.RootCA = c.NewActiveDirectoryRootCA("RootCA", sid)
+	s.DC = c.NewActiveDirectoryComputer("DC", sid)
+	s.EnterpriseCA = c.NewActiveDirectoryEnterpriseCA("eca", sid)
+	s.CertTemplate = c.NewActiveDirectoryCertTemplate("certtemplate", sid, false, true, false, true, 1, 0, make([]string, 0), make([]string, 0))
+	s.CertTemplate.Properties.Set(ad.NoSecurityExtension.String(), true)
+	s.CertTemplate.Properties.Set(ad.SubjectAltRequireSPN.String(), true)
+	c.UpdateNode(s.CertTemplate)
+	s.Victim = c.NewActiveDirectoryUser("victim", sid, false)
+	s.Attacker = c.NewActiveDirectoryUser("attacker", sid, false)
+
+	c.NewRelationship(s.DC, s.Domain, ad.DCFor)
+	c.NewRelationship(s.NTAuthStore, s.Domain, ad.NTAuthStoreFor)
+	c.NewRelationship(s.RootCA, s.Domain, ad.RootCAFor)
+	c.NewRelationship(s.EnterpriseCA, s.DC, ad.CanAbuseWeakCertBinding)
+	c.NewRelationship(s.EnterpriseCA, s.NTAuthStore, ad.TrustedForNTAuth)
+	c.NewRelationship(s.EnterpriseCA, s.RootCA, ad.IssuedSignedBy)
+	c.NewRelationship(s.CertTemplate, s.EnterpriseCA, ad.PublishedTo)
+	c.NewRelationship(s.Victim, s.EnterpriseCA, ad.Enroll)
+	c.NewRelationship(s.Victim, s.CertTemplate, ad.Enroll)
+	c.NewRelationship(s.Attacker, s.Victim, ad.GenericWrite)
+}
+
 type ShortcutHarness struct {
 	Group1 *graph.Node
 	Group2 *graph.Node
@@ -1731,4 +1768,5 @@ type HarnessDetails struct {
 	AZInboundControlHarness                         AZInboundControlHarness
 	ESC3Harness1                                    ESC3Harness1
 	ESC3Harness2                                    ESC3Harness2
+	ESC9AHarness                                    ESC9AHarness
 }
