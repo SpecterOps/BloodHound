@@ -2,7 +2,7 @@
     "version": 1,
     "bind_addr": "0.0.0.0:8080",
     "metrics_port": "localhost:2112",
-    "root_url": "http://localhost:8080/",
+    "root_url": "http://0.0.0.0:8080/",
     "work_dir": "/bhapi/work",
     "collectors_base_path": "/bhapi/collectors",
     "log_level": "INFO",

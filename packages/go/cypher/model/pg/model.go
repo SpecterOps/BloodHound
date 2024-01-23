@@ -1,4 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2024 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -19,11 +19,12 @@ package pg
 import (
 	"errors"
 	"fmt"
+	"time"
+
 	"github.com/jackc/pgtype"
 	"github.com/specterops/bloodhound/cypher/model"
 	pgModel "github.com/specterops/bloodhound/dawgs/drivers/pg/model"
 	"github.com/specterops/bloodhound/dawgs/graph"
-	"time"
 )
 
 var (

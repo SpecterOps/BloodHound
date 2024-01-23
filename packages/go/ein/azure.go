@@ -42,7 +42,7 @@ const (
 	KeyVaultPermissionGet string = "Get"
 )
 
-var resourceGroupLevel = regexp.MustCompile("^[\\w\\d\\-\\/]*/resourceGroups/[0-9a-zA-Z]+$")
+var resourceGroupLevel = regexp.MustCompile(`^[\\w\\d\\-\\/]*/resourceGroups/[0-9a-zA-Z]+$`)
 
 func ConvertAZAppToNode(app models.App) IngestibleNode {
 	return IngestibleNode{

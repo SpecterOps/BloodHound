@@ -128,7 +128,7 @@ func (s Resources) ProcessFileUpload(response http.ResponseWriter, request *http
 	} else if fileUploadJob, err := fileupload.GetFileUploadJobByID(s.DB, int64(fileUploadJobID)); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else if fileName, err := fileupload.SaveIngestFile(s.Config.TempDirectory(), request.Body); err != nil {
-		if errors.Is(err, fileupload.InvalidIngestFileType) {
+		if errors.Is(err, fileupload.ErrInvalidIngestFileType) {
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("Error saving ingest file: %v", err), request), response)
 		} else {
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("Error saving ingest file: %v", err), request), response)

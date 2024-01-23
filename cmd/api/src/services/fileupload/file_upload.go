@@ -32,7 +32,7 @@ import (
 
 const jobActivityTimeout = time.Minute * 20
 
-var InvalidIngestFileType = errors.New("file is not a valid content type")
+var ErrInvalidIngestFileType = errors.New("file is not a valid content type")
 
 type FileUploadData interface {
 	CreateFileUploadJob(job model.FileUploadJob) (model.FileUploadJob, error)
@@ -99,7 +99,7 @@ func SaveIngestFile(location string, fileData io.ReadCloser) (string, error) {
 	} else if n, err := tempFile.Read(typeBuf); err != nil {
 		return "", fmt.Errorf("error reading head of ingest file: %w", err)
 	} else if fileType := http.DetectContentType(typeBuf[:n]); !strings.Contains(fileType, "text/plain") {
-		return "", InvalidIngestFileType
+		return "", ErrInvalidIngestFileType
 	} else {
 		return tempFile.Name(), nil
 	}
