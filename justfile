@@ -185,6 +185,10 @@ bh-clean-docker-build target='dev' *ARGS='':
   # Build without cache
   @docker compose --profile {{target}} -f docker-compose.dev.yml build --no-cache {{ARGS}}
 
+# use docker compose watch to dynamically restart/rebuild containers (requires docker compose v2.22.0+)
+bh-watch target='dev' *ARGS='--no-up':
+  @docker compose --profile {{target}} -f docker-compose.dev.yml -f docker-compose.watch.yml watch {{ARGS}}
+
 # build local BHCE container image (ex: just build-bhce-container <linux/arm64|linux/amd64> edge v5.0.0)
 build-bhce-container platform='linux/amd64' tag='edge' version='v5.0.0' *ARGS='':
   @docker buildx build -f dockerfiles/bloodhound.Dockerfile -t specterops/bloodhound:{{tag}} --platform={{platform}} --load --build-arg version={{version}}-{{tag}} {{ARGS}} .
