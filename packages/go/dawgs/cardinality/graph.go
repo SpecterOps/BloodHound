@@ -62,7 +62,7 @@ func (s KindBitmaps) Or(bitmaps KindBitmaps) {
 func (s KindBitmaps) AddSets(nodeSets ...graph.NodeSet) {
 	for _, nodeSet := range nodeSets {
 		for _, node := range nodeSet {
-			s.AddIDKindsPair(node.ID, node.Kinds)
+			s.AddIDToKinds(node.ID, node.Kinds)
 		}
 	}
 }
@@ -87,17 +87,46 @@ func (s KindBitmaps) Contains(node *graph.Node) bool {
 	return false
 }
 
-func (s KindBitmaps) AddIDKindsPair(id graph.ID, kinds graph.Kinds) {
+func (s KindBitmaps) AddDuplexToKind(ids Duplex[uint32], kind graph.Kind) {
+	kindStr := kind.String()
+
+	if bitmap, hasBitmap := s[kindStr]; !hasBitmap {
+		newBitmap := NewBitmap32()
+		newBitmap.Or(ids)
+
+		s[kindStr] = newBitmap
+	} else {
+		bitmap.Or(ids)
+	}
+}
+
+func (s KindBitmaps) AddIDToKind(id graph.ID, kind graph.Kind) {
+	var (
+		nodeID  = id.Uint32()
+		kindStr = kind.String()
+	)
+
+	if bitmap, hasBitmap := s[kindStr]; !hasBitmap {
+		newBitmap := NewBitmap32()
+		newBitmap.Add(nodeID)
+
+		s[kindStr] = newBitmap
+	} else {
+		bitmap.Add(nodeID)
+	}
+}
+
+func (s KindBitmaps) AddIDToKinds(id graph.ID, kinds graph.Kinds) {
 	nodeID := id.Uint32()
 
-	for _, nodeKind := range kinds {
-		nodeKindStr := nodeKind.String()
+	for _, kind := range kinds {
+		kindStr := kind.String()
 
-		if bitmap, hasBitmap := s[nodeKindStr]; !hasBitmap {
+		if bitmap, hasBitmap := s[kindStr]; !hasBitmap {
 			newBitmap := NewBitmap32()
 			newBitmap.Add(nodeID)
 
-			s[nodeKindStr] = newBitmap
+			s[kindStr] = newBitmap
 		} else {
 			bitmap.Add(nodeID)
 		}
@@ -106,7 +135,7 @@ func (s KindBitmaps) AddIDKindsPair(id graph.ID, kinds graph.Kinds) {
 
 func (s KindBitmaps) AddNodes(nodes ...*graph.Node) {
 	for _, node := range nodes {
-		s.AddIDKindsPair(node.ID, node.Kinds)
+		s.AddIDToKinds(node.ID, node.Kinds)
 	}
 }
 

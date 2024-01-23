@@ -1,17 +1,17 @@
 // Copyright 2023 Specter Ops, Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// 
+//
 // SPDX-License-Identifier: Apache-2.0
 
 package query
@@ -26,19 +26,19 @@ func Variable(name string) *model.Variable {
 	}
 }
 
-func Identity(entity *model.Variable) *model.FunctionInvocation {
+func Identity(entity model.Expression) *model.FunctionInvocation {
 	return &model.FunctionInvocation{
 		Name:      "id",
-		Arguments: convertCriteria[model.Expression](entity),
+		Arguments: []model.Expression{entity},
 	}
 }
 
 const (
-	PathSymbol              = "p"
-	NodeSymbol              = "n"
-	RelationshipSymbol      = "r"
-	RelationshipStartSymbol = "s"
-	RelationshipEndSymbol   = "e"
+	PathSymbol      = "p"
+	NodeSymbol      = "n"
+	EdgeSymbol      = "r"
+	EdgeStartSymbol = "s"
+	EdgeEndSymbol   = "e"
 )
 
 func Node() *model.Variable {
@@ -50,7 +50,7 @@ func NodeID() *model.FunctionInvocation {
 }
 
 func Relationship() *model.Variable {
-	return Variable(RelationshipSymbol)
+	return Variable(EdgeSymbol)
 }
 
 func RelationshipID() *model.FunctionInvocation {
@@ -58,7 +58,7 @@ func RelationshipID() *model.FunctionInvocation {
 }
 
 func Start() *model.Variable {
-	return Variable(RelationshipStartSymbol)
+	return Variable(EdgeStartSymbol)
 }
 
 func StartID() *model.FunctionInvocation {
@@ -66,7 +66,7 @@ func StartID() *model.FunctionInvocation {
 }
 
 func End() *model.Variable {
-	return Variable(RelationshipEndSymbol)
+	return Variable(EdgeEndSymbol)
 }
 
 func EndID() *model.FunctionInvocation {

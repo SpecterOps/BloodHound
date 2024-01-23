@@ -17,11 +17,10 @@
 package graph_test
 
 import (
-	"strconv"
-	"testing"
-
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/stretchr/testify/require"
+	"strconv"
+	"testing"
 )
 
 func TestNewProperties(t *testing.T) {

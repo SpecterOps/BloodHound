@@ -36,6 +36,23 @@ func Map[T, U any](slice []T, fn func(T) U) []U {
 	return out
 }
 
+// MapWithErr applies a mapping/transformation function over each element in a given slice and returns a new slice of the transformed values with type T
+// An error from the mapping function will be returned directly to the caller
+// Note: MapWithErr is primarily designed for applying type conversion functions, where you want a slice of type U from a slice of type T
+func MapWithErr[T, U any](s []T, f func(T) (U, error)) ([]U, error) {
+	conv := make([]U, 0, len(s))
+
+	for _, e := range s {
+		if t, err := f(e); err != nil {
+			return nil, err
+		} else {
+			conv = append(conv, t)
+		}
+	}
+
+	return conv, nil
+}
+
 // FlatMap applies a mapping/transformation function over each element in a given slice, concatenates the results and returns a new flattened slice of the transformed values or nil
 func FlatMap[T, U any](slice []T, fn func(T) []U) []U {
 	var out []U

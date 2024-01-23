@@ -17,7 +17,6 @@
 package graph
 
 import (
-	"context"
 	"sync"
 	"unsafe"
 
@@ -50,6 +49,16 @@ func (s Kinds) Copy() Kinds {
 	}
 
 	return kindsCopy
+}
+
+func (s Kinds) ConcatenateAll(kindBags ...Kinds) Kinds {
+	combined := s
+
+	for _, kindBag := range kindBags {
+		combined = combined.Concatenate(kindBag)
+	}
+
+	return combined
 }
 
 func (s Kinds) Concatenate(kinds Kinds) Kinds {
@@ -167,11 +176,4 @@ func (s stringKind) Is(other ...Kind) bool {
 	}
 
 	return false
-}
-
-type KindMapper interface {
-	GetKind(kindIntKey int32) (Kind, error)
-	GetKinds(kindIntKeys []int32) (Kinds, error)
-	GetKey(ctx context.Context, kindStr string) (int32, error)
-	GetKeys(ctx context.Context, kindStr []string) ([]int32, error)
 }

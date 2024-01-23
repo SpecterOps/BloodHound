@@ -18,10 +18,10 @@ package graph
 
 import (
 	"encoding/json"
+	"github.com/RoaringBitmap/roaring"
 	"math"
 	"sync"
 
-	"github.com/RoaringBitmap/roaring"
 	"github.com/RoaringBitmap/roaring/roaring64"
 	"github.com/specterops/bloodhound/dawgs/util/size"
 )
@@ -56,6 +56,24 @@ type Node struct {
 	AddedKinds   Kinds       `json:"added_kinds"`
 	DeletedKinds Kinds       `json:"deleted_kinds"`
 	Properties   *Properties `json:"properties"`
+}
+
+func (s *Node) Merge(other *Node) {
+	s.Kinds = s.Kinds.Add(other.Kinds...)
+
+	for _, otherKind := range other.AddedKinds {
+		s.DeletedKinds = s.DeletedKinds.Remove(otherKind)
+	}
+
+	for _, otherKind := range other.DeletedKinds {
+		s.Kinds = s.Kinds.Remove(otherKind)
+		s.AddedKinds = s.AddedKinds.Remove(otherKind)
+	}
+
+	s.AddedKinds = s.AddedKinds.Add(other.AddedKinds...)
+	s.DeletedKinds = s.DeletedKinds.Add(other.DeletedKinds...)
+
+	s.Properties.Merge(other.Properties)
 }
 
 func (s *Node) SizeOf() size.Size {

@@ -16,4 +16,4 @@
 
 module github.com/specterops/bloodhound/conftool
 
-go 1.20
+go 1.21

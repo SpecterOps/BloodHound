@@ -32,25 +32,6 @@ func DefaultCypherContext() *Context {
 	)
 }
 
-func CypherToCypher(ctx *Context, input string) (string, error) {
-	if query, err := ParseCypher(ctx, input); err != nil {
-		return "", err
-	} else {
-		var (
-			output  = &bytes.Buffer{}
-			emitter = CypherEmitter{
-				StripLiterals: false,
-			}
-		)
-
-		if err := emitter.Write(query, output); err != nil {
-			return "", err
-		}
-
-		return output.String(), nil
-	}
-}
-
 func parseCypher(ctx *Context, input string) (*model.RegularQuery, error) {
 	var (
 		queryBuffer     = bytes.NewBufferString(input)
@@ -60,7 +41,7 @@ func parseCypher(ctx *Context, input string) (*model.RegularQuery, error) {
 		parseTreeWalker = antlr.NewParseTreeWalker()
 		queryVisitor    = &QueryVisitor{}
 	)
-
+	
 	// Set up the lexer and parser to report errors to the context
 	lexer.RemoveErrorListeners()
 	lexer.AddErrorListener(ctx)

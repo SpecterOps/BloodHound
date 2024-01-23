@@ -44,6 +44,8 @@ type PermissionSet struct {
 
 	SavedQueriesRead  model.Permission
 	SavedQueriesWrite model.Permission
+
+	ClientsRead model.Permission
 }
 
 func (s PermissionSet) All() model.Permissions {
@@ -64,6 +66,7 @@ func (s PermissionSet) All() model.Permissions {
 		s.APsManageAPs,
 		s.SavedQueriesRead,
 		s.SavedQueriesWrite,
+		s.ClientsRead,
 	}
 }
 
@@ -92,5 +95,7 @@ func Permissions() PermissionSet {
 
 		SavedQueriesRead:  model.NewPermission("saved_queries", "Read"),
 		SavedQueriesWrite: model.NewPermission("saved_queries", "Write"),
+
+		ClientsRead: model.NewPermission("clients", "Read"),
 	}
 }

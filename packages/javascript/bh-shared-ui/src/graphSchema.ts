@@ -106,6 +106,7 @@ export enum ActiveDirectoryRelationshipKind {
     SyncLAPSPassword = 'SyncLAPSPassword',
     WriteAccountRestrictions = 'WriteAccountRestrictions',
     RootCAFor = 'RootCAFor',
+    DCFor = 'DCFor',
     PublishedTo = 'PublishedTo',
     ManageCertificates = 'ManageCertificates',
     ManageCA = 'ManageCA',
@@ -117,6 +118,8 @@ export enum ActiveDirectoryRelationshipKind {
     NTAuthStoreFor = 'NTAuthStoreFor',
     TrustedForNTAuth = 'TrustedForNTAuth',
     EnterpriseCAFor = 'EnterpriseCAFor',
+    CanAbuseUPNCertMapping = 'CanAbuseUPNCertMapping',
+    CanAbuseWeakCertBinding = 'CanAbuseWeakCertBinding',
     IssuedSignedBy = 'IssuedSignedBy',
     GoldenCert = 'GoldenCert',
     EnrollOnBehalfOf = 'EnrollOnBehalfOf',
@@ -205,6 +208,8 @@ export function ActiveDirectoryRelationshipKindToDisplay(value: ActiveDirectoryR
             return 'WriteAccountRestrictions';
         case ActiveDirectoryRelationshipKind.RootCAFor:
             return 'RootCAFor';
+        case ActiveDirectoryRelationshipKind.DCFor:
+            return 'DCFor';
         case ActiveDirectoryRelationshipKind.PublishedTo:
             return 'PublishedTo';
         case ActiveDirectoryRelationshipKind.ManageCertificates:
@@ -227,6 +232,10 @@ export function ActiveDirectoryRelationshipKindToDisplay(value: ActiveDirectoryR
             return 'TrustedForNTAuth';
         case ActiveDirectoryRelationshipKind.EnterpriseCAFor:
             return 'EnterpriseCAFor';
+        case ActiveDirectoryRelationshipKind.CanAbuseUPNCertMapping:
+            return 'CanAbuseUPNCertMapping';
+        case ActiveDirectoryRelationshipKind.CanAbuseWeakCertBinding:
+            return 'CanAbuseWeakCertBinding';
         case ActiveDirectoryRelationshipKind.IssuedSignedBy:
             return 'IssuedSignedBy';
         case ActiveDirectoryRelationshipKind.GoldenCert:
@@ -300,6 +309,11 @@ export enum ActiveDirectoryKindProperties {
     StrongCertificateBindingEnforcement = 'strongcertificatebindingenforcement',
     EKUs = 'ekus',
     SubjectAltRequireUPN = 'subjectaltrequireupn',
+    SubjectAltRequireDNS = 'subjectaltrequiredns',
+    SubjectAltRequireDomainDNS = 'subjectaltrequiredomaindns',
+    SubjectAltRequireEmail = 'subjectaltrequireemail',
+    SubjectAltRequireSPN = 'subjectaltrequirespn',
+    SubjectRequireEmail = 'subjectrequireemail',
     AuthorizedSignatures = 'authorizedsignatures',
     ApplicationPolicies = 'applicationpolicies',
     IssuancePolicies = 'issuancepolicies',
@@ -418,6 +432,16 @@ export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKin
             return 'Enhanced Key Usage';
         case ActiveDirectoryKindProperties.SubjectAltRequireUPN:
             return 'Subject Alternative Name Require UPN';
+        case ActiveDirectoryKindProperties.SubjectAltRequireDNS:
+            return 'Subject Alternative Name Require DNS';
+        case ActiveDirectoryKindProperties.SubjectAltRequireDomainDNS:
+            return 'Subject Alternative Name Require Domain DNS';
+        case ActiveDirectoryKindProperties.SubjectAltRequireEmail:
+            return 'Subject Alternative Name Require Email';
+        case ActiveDirectoryKindProperties.SubjectAltRequireSPN:
+            return 'Subject Alternative Name Require SPN';
+        case ActiveDirectoryKindProperties.SubjectRequireEmail:
+            return 'Subject Require Email';
         case ActiveDirectoryKindProperties.AuthorizedSignatures:
             return 'Authorized Signatures Required';
         case ActiveDirectoryKindProperties.ApplicationPolicies:
@@ -496,6 +520,7 @@ export function ActiveDirectoryPathfindingEdges(): ActiveDirectoryRelationshipKi
         ActiveDirectoryRelationshipKind.ADCSESC5,
         ActiveDirectoryRelationshipKind.ADCSESC6,
         ActiveDirectoryRelationshipKind.ADCSESC7,
+        ActiveDirectoryRelationshipKind.DCFor,
     ];
 }
 export enum AzureNodeKind {

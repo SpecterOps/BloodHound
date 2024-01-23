@@ -11,5 +11,19 @@
         "name": "counts",
         "in": "query",
         "required": false
+    },
+    "parameters.PagingSkip": {
+        "type": "integer",
+        "description": "Paging Skip",
+        "name": "skip",
+        "in": "query",
+        "required": false
+    },
+    "parameters.PagingLimit": {
+        "type": "integer",
+        "description": "Paging Limit",
+        "name": "limit",
+        "in": "query",
+        "required": false
     }
 }
