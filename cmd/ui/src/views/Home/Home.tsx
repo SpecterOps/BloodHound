@@ -22,7 +22,3 @@ const Home: React.FC = () => {
 };
 
 export default Home;
-
-// TODO: Remove before merge to fix linter messages
-const arr = [].reduce(function(prev: never, curr: never, idx: number, arr: never[]) {})
-
