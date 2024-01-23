@@ -23,9 +23,8 @@ const General: FC<EdgeInfoProps> = ({ sourceName, sourceType, targetName, target
     return (
         <>
             <Typography variant='body2'>
-                {groupSpecialFormat(sourceType, sourceName)} the AllExtendedRights privilege to the{' '}
-                {typeFormat(targetType)}
-                {targetName}.
+                {groupSpecialFormat(sourceType, sourceName)} the AllExtendedRights permission to the{' '}
+                {typeFormat(targetType)} {targetName}.
             </Typography>
 
             <Typography variant='body2'>

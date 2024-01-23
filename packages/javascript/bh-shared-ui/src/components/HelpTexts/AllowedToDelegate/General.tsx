@@ -23,14 +23,14 @@ const General: FC<EdgeInfoProps> = ({ sourceName, sourceType, targetName }) => {
     return (
         <>
             <Typography variant='body2'>
-                The {typeFormat(sourceType)} {sourceName} has the constrained delegation privilege to the computer{' '}
+                The {typeFormat(sourceType)} {sourceName} has the constrained delegation permission to the computer{' '}
                 {targetName}.
             </Typography>
 
             <Typography variant='body2'>
                 The constrained delegation primitive allows a principal to authenticate as any user to specific services
                 (found in the msds-AllowedToDelegateTo LDAP property in the source node tab) on the target computer.
-                That is, a node with this privilege can impersonate any domain principal (including Domain Admins) to
+                That is, a node with this permission can impersonate any domain principal (including Domain Admins) to
                 the specific service on the target host. One caveat- impersonated users can not be in the "Protected
                 Users" security group or otherwise have delegation privileges revoked.
             </Typography>

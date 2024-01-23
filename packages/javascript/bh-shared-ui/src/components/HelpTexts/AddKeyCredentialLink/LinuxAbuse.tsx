@@ -22,7 +22,7 @@ const LinuxAbuse: FC<EdgeInfoProps> = ({ sourceName, sourceType }) => {
     return (
         <>
             <Typography variant='body2'>
-                To abuse this privilege, use{' '}
+                To abuse this permission, use{' '}
                 <Link target='_blank' rel='noopener' href='https://github.com/ShutdownRepo/pywhisker'>
                     pyWhisker
                 </Link>
