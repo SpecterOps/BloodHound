@@ -21,7 +21,7 @@ import { EdgeInfoProps } from '../index';
 const WindowsAbuse: FC<EdgeInfoProps> = ({ sourceName, sourceType }) => {
     return (
         <>
-            <Typography variant='body2'>To abuse this privilege, use Whisker. </Typography>
+            <Typography variant='body2'>To abuse this permission, use Whisker. </Typography>
 
             <Typography variant='body2'>
                 You may need to authenticate to the Domain Controller as{' '}

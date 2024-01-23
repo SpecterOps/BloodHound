@@ -16,7 +16,7 @@
 
 module github.com/specterops/bloodhound/src
 
-go 1.20
+go 1.21
 
 require (
 	go.uber.org/mock v1.5.0 // indirect

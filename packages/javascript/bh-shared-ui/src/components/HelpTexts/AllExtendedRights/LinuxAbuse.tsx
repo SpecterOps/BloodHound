@@ -24,7 +24,7 @@ const LinuxAbuse: FC<EdgeInfoProps & { haslaps: boolean }> = ({ sourceName, targ
             return (
                 <>
                     <Typography variant='body2'>
-                        The AllExtendedRights privilege grants {sourceName} the ability to change the password of the
+                        The AllExtendedRights permission grants {sourceName} the ability to change the password of the
                         user {targetName} without knowing their current password. This is equivalent to the
                         "ForceChangePassword" edge in BloodHound.
                     </Typography>
@@ -42,12 +42,11 @@ const LinuxAbuse: FC<EdgeInfoProps & { haslaps: boolean }> = ({ sourceName, targ
                     </Typography>
 
                     <Typography variant='body2'>
-                        Pass-the-hash can also be done here with{' '}
+                        It can also be done with pass-the-hash using{' '}
                         <Link target='_blank' rel='noopener' href='https://github.com/byt3bl33d3r/pth-toolkit'>
                             pth-toolkit's net tool
                         </Link>
-                        . If the LM hash is not known it must be replace with{' '}
-                        <Typography component={'pre'}>ffffffffffffffffffffffffffffffff</Typography>.
+                        . If the LM hash is not known, use 'ffffffffffffffffffffffffffffffff'.
                     </Typography>
 
                     <Typography component={'pre'}>
@@ -61,9 +60,22 @@ const LinuxAbuse: FC<EdgeInfoProps & { haslaps: boolean }> = ({ sourceName, targ
             if (haslaps) {
                 return (
                     <>
+                        <Typography variant='body2'>
+                            The AllExtendedRights permission grants {sourceName} the ability to obtain the LAPS (RID 500
+                            administrator) password of {targetName}. {sourceName} can do so by listing a computer
+                            object's AD properties with PowerView using Get-DomainComputer {targetName}. The value of
+                            the ms-mcs-AdmPwd property will contain password of the administrative local account on{' '}
+                            {targetName}.
+                        </Typography>
+
+                        <Typography variant='body2'>
+                            Alternatively, AllExtendedRights on a computer object can be used to perform a
+                            Resource-Based Constrained Delegation attack.
+                        </Typography>
+
                         <Typography variant='body1'> Retrieve LAPS Password </Typography>
                         <Typography variant='body2'>
-                            The AllExtendedRights privilege grants {sourceName} the ability to obtain the RID 500
+                            The AllExtendedRights permission grants {sourceName} the ability to obtain the RID 500
                             administrator password of {targetName}. {sourceName} can do so by listing a computer
                             object's AD properties with PowerView using Get-DomainComputer {targetName}. The value of
                             the ms-mcs-AdmPwd property will contain password of the administrative local account on{' '}
@@ -110,27 +122,16 @@ const LinuxAbuse: FC<EdgeInfoProps & { haslaps: boolean }> = ({ sourceName, targ
                             This ticket can then be used with Pass-the-Ticket, and could grant access to the file system
                             of the TARGETCOMPUTER.
                         </Typography>
-                        <Typography variant='body1'> Shadow Credentials attack </Typography>
-                        <Typography variant='body2'>
-                            To abuse this privilege, use{' '}
-                            <Link target='_blank' rel='noopener' href='https://github.com/ShutdownRepo/pywhisker'>
-                                pyWhisker
-                            </Link>
-                            .
-                        </Typography>
-                        <Typography component={'pre'}>
-                            {
-                                'pywhisker.py -d "domain.local" -u "controlledAccount" -p "somepassword" --target "targetAccount" --action "add"'
-                            }
-                        </Typography>
-                        <Typography variant='body2'>
-                            For other optional parameters, view the pyWhisker documentation.
-                        </Typography>
                     </>
                 );
             } else {
                 return (
                     <>
+                        <Typography variant='body2'>
+                            AllExtendedRights on a computer object can be used to perform a Resource-Based Constrained
+                            Delegation attack.
+                        </Typography>
+
                         <Typography variant='body1'> Resource-Based Constrained Delegation </Typography>
                         <Typography variant='body2'>
                             First, if an attacker does not control an account with an SPN set, a new attacker-controlled
@@ -163,22 +164,6 @@ const LinuxAbuse: FC<EdgeInfoProps & { haslaps: boolean }> = ({ sourceName, targ
                             This ticket can then be used with Pass-the-Ticket, and could grant access to the file system
                             of the TARGETCOMPUTER.
                         </Typography>
-                        <Typography variant='body1'> Shadow Credentials attack </Typography>
-                        <Typography variant='body2'>
-                            To abuse this privilege, use{' '}
-                            <Link target='_blank' rel='noopener' href='https://github.com/ShutdownRepo/pywhisker'>
-                                pyWhisker
-                            </Link>
-                            .
-                        </Typography>
-                        <Typography component={'pre'}>
-                            {
-                                'pywhisker.py -d "domain.local" -u "controlledAccount" -p "somepassword" --target "targetAccount" --action "add"'
-                            }
-                        </Typography>
-                        <Typography variant='body2'>
-                            For other optional parameters, view the pyWhisker documentation.
-                        </Typography>
                     </>
                 );
             }
@@ -188,7 +173,7 @@ const LinuxAbuse: FC<EdgeInfoProps & { haslaps: boolean }> = ({ sourceName, targ
                     <Typography variant='body1'>DCSync</Typography>
 
                     <Typography variant='body2'>
-                        The AllExtendedRights privilege grants {sourceName} both the DS-Replication-Get-Changes and
+                        The AllExtendedRights permission grants {sourceName} both the DS-Replication-Get-Changes and
                         DS-Replication-Get-Changes-All privileges, which combined allow a principal to replicate objects
                         from the domain {targetName}.
                     </Typography>
@@ -204,7 +189,7 @@ const LinuxAbuse: FC<EdgeInfoProps & { haslaps: boolean }> = ({ sourceName, targ
                     <Typography variant='body1'> Retrieve LAPS Passwords </Typography>
 
                     <Typography variant='body2'>
-                        The AllExtendedRights privilege also grants {sourceName} enough privileges, to retrieve LAPS
+                        The AllExtendedRights permission also grants {sourceName} enough privileges, to retrieve LAPS
                         passwords domain-wise.
                     </Typography>
 

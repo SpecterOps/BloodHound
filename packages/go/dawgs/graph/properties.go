@@ -149,27 +149,15 @@ func (s safePropertyValue) Int() (int, error) {
 	if rawValue, err := s.getValue(); err != nil {
 		return 0, err
 	} else {
-		switch typedValue := rawValue.(type) {
-		case int:
-			return typedValue, err
-
-		case int64:
-			return int(typedValue), nil
-		}
-
-		return 0, formatPropertyTypeError("int", rawValue)
+		return AsNumeric[int](rawValue)
 	}
 }
 
 func (s safePropertyValue) Int64() (int64, error) {
 	if rawValue, err := s.getValue(); err != nil {
 		return 0, err
-	} else if typedValue, typeOK := rawValue.(int64); !typeOK {
-		err := formatPropertyTypeError("int64", rawValue)
-
-		return 0, err
 	} else {
-		return typedValue, nil
+		return AsNumeric[int64](rawValue)
 	}
 }
 
@@ -177,26 +165,15 @@ func (s safePropertyValue) Uint64() (uint64, error) {
 	if rawValue, err := s.getValue(); err != nil {
 		return 0, err
 	} else {
-		switch typedValue := rawValue.(type) {
-		case uint64:
-			return typedValue, nil
-		case int64:
-			return uint64(typedValue), nil
-		default:
-			return 0, formatPropertyTypeError("uint64", rawValue)
-		}
+		return AsNumeric[uint64](rawValue)
 	}
 }
 
 func (s safePropertyValue) Float64() (float64, error) {
 	if rawValue, err := s.getValue(); err != nil {
 		return 0, err
-	} else if typedValue, typeOK := rawValue.(float64); !typeOK {
-		err := formatPropertyTypeError("float64", rawValue)
-
-		return 0, err
 	} else {
-		return typedValue, nil
+		return AsNumeric[float64](rawValue)
 	}
 }
 
@@ -267,6 +244,33 @@ type Properties struct {
 	Map      map[string]any      `json:"map"`
 	Deleted  map[string]struct{} `json:"deleted"`
 	Modified map[string]struct{} `json:"modified"`
+}
+
+func (s *Properties) Merge(other *Properties) {
+	for otherKey, otherValue := range other.Map {
+		s.Map[otherKey] = otherValue
+	}
+
+	for otherModifiedKey := range other.Modified {
+		s.Modified[otherModifiedKey] = struct{}{}
+
+		delete(s.Deleted, otherModifiedKey)
+	}
+
+	for otherDeletedKey := range other.Deleted {
+		s.Deleted[otherDeletedKey] = struct{}{}
+
+		delete(s.Map, otherDeletedKey)
+		delete(s.Modified, otherDeletedKey)
+	}
+}
+
+func (s *Properties) MapOrEmpty() map[string]any {
+	if s == nil || s.Map == nil {
+		return map[string]any{}
+	}
+
+	return s.Map
 }
 
 func (s *Properties) SizeOf() size.Size {
@@ -433,8 +437,17 @@ func (s *Properties) Delete(key string) *Properties {
 	return s
 }
 
+// TODO: This function does not correctly communicate that it is lazily instantiated
 func NewProperties() *Properties {
 	return &Properties{}
+}
+
+func NewPropertiesRed() *Properties {
+	return &Properties{
+		Map:      map[string]any{},
+		Modified: make(map[string]struct{}),
+		Deleted:  make(map[string]struct{}),
+	}
 }
 
 type PropertyMap map[String]any

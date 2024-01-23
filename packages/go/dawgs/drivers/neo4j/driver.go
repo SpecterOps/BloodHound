@@ -18,7 +18,6 @@ package neo4j
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
@@ -87,7 +86,7 @@ func (s *driver) BatchOperation(ctx context.Context, batchDelegate graph.BatchDe
 	return batch.Commit()
 }
 
-func (s *driver) Close() error {
+func (s *driver) Close(ctx context.Context) error {
 	return s.driver.Close()
 }
 
@@ -132,62 +131,15 @@ func (s *driver) WriteTransaction(ctx context.Context, txDelegate graph.Transact
 	return s.transaction(ctx, txDelegate, session, options)
 }
 
-func (s *driver) FetchSchema(ctx context.Context) (*graph.Schema, error) {
-	schema := graph.NewSchema()
-
-	return schema, s.ReadTransaction(ctx, func(tx graph.Transaction) error {
-		if result := tx.Run("call db.indexes() yield name, uniqueness, provider, labelsOrTypes, properties;", nil); result.Error() != nil {
-			return result.Error()
-		} else {
-			defer result.Close()
-
-			var (
-				name       string
-				uniqueness string
-				provider   string
-				labels     []string
-				properties []string
-			)
-
-			for result.Next() {
-				if err := result.Scan(&name, &uniqueness, &provider, &labels, &properties); err != nil {
-					return err
-				}
-
-				// Need this for neo4j 4.4+ which creates a weird index by default
-				if len(labels) == 0 {
-					continue
-				}
-
-				if len(labels) > 1 || len(properties) > 1 {
-					return fmt.Errorf("composite index types are currently not supported")
-				}
-
-				label := labels[0]
-				property := properties[0]
-
-				if uniqueness == "UNIQUE" {
-					schema.EnsureKind(graph.StringKind(label)).Constraint(property, name, parseProviderType(provider))
-				} else {
-					schema.EnsureKind(graph.StringKind(label)).Index(property, name, parseProviderType(provider))
-				}
-			}
-
-			return result.Error()
-		}
-	})
-}
-
-func (s *driver) AssertSchema(ctx context.Context, schema *graph.Schema) error {
-	if existingSchema, err := s.FetchSchema(ctx); err != nil {
-		return fmt.Errorf("could not load schema: %w", err)
-	} else {
-		return assertAgainst(ctx, schema, existingSchema, s)
-	}
+func (s *driver) AssertSchema(ctx context.Context, schema graph.Schema) error {
+	return assertSchema(ctx, s, schema)
 }
 
 func (s *driver) Run(ctx context.Context, query string, parameters map[string]any) error {
 	return s.WriteTransaction(ctx, func(tx graph.Transaction) error {
-		return tx.Run(query, parameters).Error()
+		result := tx.Raw(query, parameters)
+		defer result.Close()
+
+		return result.Error()
 	})
 }

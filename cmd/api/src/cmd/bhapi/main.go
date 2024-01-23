@@ -17,15 +17,17 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
-	"os"
-
+	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/log"
+	"github.com/specterops/bloodhound/src/bootstrap"
 	"github.com/specterops/bloodhound/src/config"
-	"github.com/specterops/bloodhound/src/migrations"
-	"github.com/specterops/bloodhound/src/server"
+	"github.com/specterops/bloodhound/src/database"
+	"github.com/specterops/bloodhound/src/services"
 	"github.com/specterops/bloodhound/src/version"
+	"os"
 
 	// This import is required by swaggo
 	_ "github.com/specterops/bloodhound/src/docs"
@@ -36,26 +38,10 @@ func printVersion() {
 	os.Exit(0)
 }
 
-func performMigrationsOnly(cfg config.Configuration) {
-	if db, graphDB, err := server.ConnectDatabases(cfg); err != nil {
-		log.Fatalf("Failed connecting to databases: %v", err)
-	} else if err := db.Migrate(); err != nil {
-		log.Fatalf("Migrations failed: %v", err)
-	} else {
-		var migrator = migrations.NewGraphMigrator(graphDB)
-		if err := migrator.Migrate(); err != nil {
-			log.Fatalf("Error running migrations for graph db: %v", err)
-		}
-	}
-
-	fmt.Println("Migrations executed successfully")
-}
-
 func main() {
 	var (
 		configFilePath string
 		logFilePath    string
-		migrationFlag  bool
 		versionFlag    bool
 	)
 
@@ -64,9 +50,8 @@ func main() {
 		flag.PrintDefaults()
 	}
 
-	flag.BoolVar(&migrationFlag, "migrate", false, "Only perform database migrations. Do not start the server.")
 	flag.BoolVar(&versionFlag, "version", false, "Get binary version.")
-	flag.StringVar(&configFilePath, "configfile", server.DefaultConfigFilePath(), "Configuration file to load.")
+	flag.StringVar(&configFilePath, "configfile", bootstrap.DefaultConfigFilePath(), "Configuration file to load.")
 	flag.StringVar(&logFilePath, "logfile", config.DefaultLogFilePath, "Log file to write to.")
 	flag.Parse()
 
@@ -77,13 +62,17 @@ func main() {
 	// Initialize basic logging facilities while we start up
 	log.ConfigureDefaults()
 
-	if cfg, err := config.GetConfiguration(configFilePath); err != nil {
+	if cfg, err := config.GetConfiguration(configFilePath, config.NewDefaultConfiguration); err != nil {
 		log.Fatalf("Unable to read configuration %s: %v", configFilePath, err)
-	} else if err := server.EnsureServerDirectories(cfg); err != nil {
-		log.Fatalf("Fatal error while attempting to ensure working directories: %v", err)
-	} else if migrationFlag {
-		performMigrationsOnly(cfg)
-	} else if err := server.StartServer(cfg, server.SystemSignalExitChannel()); err != nil {
-		log.Fatalf("Server start error: %v", err)
+	} else {
+		initializer := bootstrap.Initializer[*database.BloodhoundDB, *graph.DatabaseSwitch]{
+			Configuration: cfg,
+			DBConnector:   services.ConnectDatabases,
+			Entrypoint:    services.Entrypoint,
+		}
+
+		if err := initializer.Launch(context.Background(), true); err != nil {
+			log.Fatalf("Failed starting the server: %v", err)
+		}
 	}
 }

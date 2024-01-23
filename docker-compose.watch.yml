@@ -1,0 +1,17 @@
+version: '3'
+
+services:
+  bh-ui:
+    develop:
+      watch:
+        - action: sync+restart
+          path: cmd/ui/public
+          target: /bloodhound/cmd/ui/public
+        - action: rebuild
+          path: package.json
+        - action: rebuild
+          path: cmd/ui/package.json
+        - action: rebuild
+          path: packages/javascript
+          ignore:
+            - node_modules

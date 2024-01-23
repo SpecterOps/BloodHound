@@ -1,17 +1,17 @@
 // Copyright 2023 Specter Ops, Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// 
+//
 // SPDX-License-Identifier: Apache-2.0
 
 package model_test
@@ -19,9 +19,9 @@ package model_test
 import (
 	"testing"
 
-	"github.com/stretchr/testify/require"
 	"github.com/specterops/bloodhound/cypher/model"
 	"github.com/specterops/bloodhound/dawgs/graph"
+	"github.com/stretchr/testify/require"
 )
 
 func validateCopy(t *testing.T, actual any) {
@@ -54,7 +54,7 @@ func TestCopy(t *testing.T) {
 				Match: &model.Match{
 					Optional: true,
 					Pattern: []*model.PatternPart{{
-						Binding:                 "p",
+						Binding:                 model.NewVariableWithSymbol("p"),
 						ShortestPathPattern:     true,
 						AllShortestPathsPattern: true,
 						PatternElements:         []*model.PatternElement{},
@@ -136,17 +136,17 @@ func TestCopy(t *testing.T) {
 	validateCopy(t, &model.Disjunction{})
 	validateCopy(t, &model.ExclusiveDisjunction{})
 	validateCopy(t, &model.PatternPart{
-		Binding:                 "p",
+		Binding:                 model.NewVariableWithSymbol("p"),
 		ShortestPathPattern:     true,
 		AllShortestPathsPattern: true,
 	})
 	validateCopy(t, &model.PatternElement{})
 	validateCopy(t, &model.Negation{})
 	validateCopy(t, &model.NodePattern{
-		Binding: "n",
+		Binding: model.NewVariableWithSymbol("n"),
 	})
 	validateCopy(t, &model.RelationshipPattern{
-		Binding:   "r",
+		Binding:   model.NewVariableWithSymbol("r"),
 		Direction: graph.DirectionOutbound,
 	})
 	validateCopy(t, &model.PatternRange{
@@ -157,8 +157,9 @@ func TestCopy(t *testing.T) {
 		Ascending: true,
 	})
 	validateCopy(t, []*model.PatternPart{})
-
-	validateCopy(t, model.JoiningExpression{})
+	validateCopy(t, &model.PatternPredicate{
+		PatternElements: []*model.PatternElement{{}},
+	})
 
 	// External types
 	validateCopy(t, []string{})

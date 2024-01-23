@@ -1,32 +1,32 @@
 // Copyright 2023 Specter Ops, Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// 
+//
 // SPDX-License-Identifier: Apache-2.0
 
 package v2
 
 import (
+	"github.com/gorilla/schema"
+	"github.com/specterops/bloodhound/cache"
+	_ "github.com/specterops/bloodhound/dawgs/drivers/neo4j"
+	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/src/config"
 	"github.com/specterops/bloodhound/src/daemons/datapipe"
 	"github.com/specterops/bloodhound/src/database"
 	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/queries"
 	"github.com/specterops/bloodhound/src/serde"
-	"github.com/specterops/bloodhound/cache"
-	"github.com/gorilla/schema"
-	_ "github.com/specterops/bloodhound/dawgs/drivers/neo4j"
-	"github.com/specterops/bloodhound/dawgs/graph"
 )
 
 type ListPermissionsResponse struct {
@@ -144,16 +144,19 @@ type Resources struct {
 }
 
 func NewResources(
-	db database.Database, graphDB graph.Database, cfg config.Configuration,
-	apiCache cache.Cache, graphQueryCache cache.Cache,
+	rdms database.Database,
+	graphDB *graph.DatabaseSwitch,
+	cfg config.Configuration,
+	apiCache cache.Cache,
+	graphQuery queries.Graph,
 	collectorManifests config.CollectorManifests,
 	taskNotifier datapipe.Tasker,
 ) Resources {
 	return Resources{
 		Decoder:                    schema.NewDecoder(),
-		DB:                         db,
+		DB:                         rdms,
 		Graph:                      graphDB, // TODO: to be phased out in favor of graph queries
-		GraphQuery:                 queries.NewGraphQuery(graphDB, graphQueryCache, cfg.SlowQueryThreshold, cfg.DisableCypherQC),
+		GraphQuery:                 graphQuery,
 		Config:                     cfg,
 		QueryParameterFilterParser: model.NewQueryParameterFilterParser(),
 		Cache:                      apiCache,

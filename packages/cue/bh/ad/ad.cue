@@ -1134,5 +1134,6 @@ PathfindingRelationships: [
 	ADCSESC4,
 	ADCSESC5,
 	ADCSESC6,
-	ADCSESC7
+	ADCSESC7,
+	DCFor
 ]

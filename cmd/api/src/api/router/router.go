@@ -68,8 +68,15 @@ func (s *Route) RequireAuth() *Route {
 	return s.RequirePermissions()
 }
 
+// Ensure that the requestor has all of the listed permissions
 func (s *Route) RequirePermissions(permissions ...model.Permission) *Route {
-	s.handler.Use(middleware.PermissionsCheck(s.authorizer, permissions...))
+	s.handler.Use(middleware.PermissionsCheckAll(s.authorizer, permissions...))
+	return s
+}
+
+// Ensure that the requestor has at least one of the listed permissions
+func (s *Route) RequireAtLeastOnePermission(permissions ...model.Permission) *Route {
+	s.handler.Use(middleware.PermissionsCheckAtLeastOne(s.authorizer, permissions...))
 	return s
 }
 

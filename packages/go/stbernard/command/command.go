@@ -23,6 +23,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/specterops/bloodhound/packages/go/stbernard/command/analysis"
 	"github.com/specterops/bloodhound/packages/go/stbernard/command/envdump"
 	"github.com/specterops/bloodhound/packages/go/stbernard/command/modsync"
 )
@@ -37,9 +38,9 @@ type Commander interface {
 	Run() error
 }
 
-var NoCmdErr = errors.New("no command specified")
-var InvalidCmdErr = errors.New("invalid command specified")
-var FailedCreateCmdErr = errors.New("failed to create command")
+var ErrNoCmd = errors.New("no command specified")
+var ErrInvalidCmd = errors.New("invalid command specified")
+var ErrFailedCreateCmd = errors.New("failed to create command")
 
 // ParseCLI parses for a subcommand as the first argument to the calling binary,
 // and initializes the command (if it exists). It also provides the default usage
@@ -54,14 +55,14 @@ func ParseCLI() (Commander, error) {
 	// Default usage if no arguments provided
 	if len(os.Args) < 2 {
 		flag.Usage()
-		return nil, NoCmdErr
+		return nil, ErrNoCmd
 	}
 
 	switch os.Args[1] {
 	case ModSync.String():
 		config := modsync.Config{Environment: environment()}
 		if cmd, err := modsync.Create(config); err != nil {
-			return nil, fmt.Errorf("%w: %w", FailedCreateCmdErr, err)
+			return nil, fmt.Errorf("%w: %w", ErrFailedCreateCmd, err)
 		} else {
 			return cmd, nil
 		}
@@ -69,7 +70,15 @@ func ParseCLI() (Commander, error) {
 	case EnvDump.String():
 		config := envdump.Config{Environment: environment()}
 		if cmd, err := envdump.Create(config); err != nil {
-			return nil, fmt.Errorf("%w: %w", FailedCreateCmdErr, err)
+			return nil, fmt.Errorf("%w: %w", ErrFailedCreateCmd, err)
+		} else {
+			return cmd, nil
+		}
+
+	case Analysis.String():
+		config := analysis.Config{Environment: environment()}
+		if cmd, err := analysis.Create(config); err != nil {
+			return nil, fmt.Errorf("%w: %w", ErrFailedCreateCmd, err)
 		} else {
 			return cmd, nil
 		}
@@ -77,7 +86,7 @@ func ParseCLI() (Commander, error) {
 	default:
 		flag.Parse()
 		flag.Usage()
-		return nil, InvalidCmdErr
+		return nil, ErrInvalidCmd
 	}
 }
 
