@@ -22,7 +22,7 @@ const WindowsAbuse: FC<EdgeInfoProps> = ({ sourceName, sourceType }) => {
     return (
         <>
             <Typography variant='body2'>
-                To abuse this privilege with PowerView's Get-DomainObject, first import PowerView into your agent
+                To abuse this permission with PowerView's Get-DomainObject, first import PowerView into your agent
                 session or into a PowerShell instance at the console. You may need to authenticate to the Domain
                 Controller as{' '}
                 {sourceType === 'User'
