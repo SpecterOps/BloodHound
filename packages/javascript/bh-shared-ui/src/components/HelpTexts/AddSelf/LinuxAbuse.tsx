@@ -33,12 +33,11 @@ const LinuxAbuse: FC<EdgeInfoProps> = ({ sourceName, sourceType }) => {
             </Typography>
 
             <Typography variant='body2'>
-                Pass-the-hash can also be done here with{' '}
+                It can also be done with pass-the-hash using{' '}
                 <Link target='_blank' rel='noopener' href='https://github.com/byt3bl33d3r/pth-toolkit'>
                     pth-toolkit's net tool
                 </Link>
-                . If the LM hash is not known it must be replace with{' '}
-                <Typography component={'pre'}>ffffffffffffffffffffffffffffffff</Typography>.
+                . If the LM hash is not known, use 'ffffffffffffffffffffffffffffffff'.
             </Typography>
 
             <Typography component={'pre'}>

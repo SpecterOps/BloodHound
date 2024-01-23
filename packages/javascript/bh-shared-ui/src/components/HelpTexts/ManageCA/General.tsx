@@ -22,8 +22,8 @@ const General: FC<EdgeInfoProps> = ({ sourceName }) => {
     return (
         <>
             <Typography variant='body2'>
-                The principal {sourceName} has the "Manage CA", also known as "CA Administrator", privilege on the
-                EnterpriseCA. This privilege allows the principal to configure the CA to allow subject alternate names,
+                The principal {sourceName} has the "Manage CA", also known as "CA Administrator", permission on the
+                EnterpriseCA. This permission allows the principal to configure the CA to allow subject alternate names,
                 publish certificate templates, grant "Manage Certificates" and more.
             </Typography>
         </>
