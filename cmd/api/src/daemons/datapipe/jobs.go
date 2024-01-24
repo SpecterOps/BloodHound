@@ -25,54 +25,26 @@ import (
 	"github.com/specterops/bloodhound/src/services/fileupload"
 )
 
-func (s *Daemon) numAvailableCompletedFileUploadJobs() int {
-	s.lock.Lock()
-	defer s.lock.Unlock()
-
-	return len(s.completedFileUploadJobIDs)
-}
-
 func (s *Daemon) failJobsUnderAnalysis() {
-	for _, jobID := range s.fileUploadJobIDsUnderAnalysis {
+	for _, jobID := range s.fileUploadJobsUnderAnalysisByID {
 		if err := fileupload.FailFileUploadJob(s.db, jobID, "Analysis failed"); err != nil {
 			log.Errorf("Failed updating job %d to failed status: %v", jobID, err)
 		}
 	}
-
-	s.clearJobsFromAnalysis()
-}
-
-func (s *Daemon) clearJobsFromAnalysis() {
-	s.lock.Lock()
-	s.fileUploadJobIDsUnderAnalysis = s.fileUploadJobIDsUnderAnalysis[:0]
-	s.lock.Unlock()
 }
 
 func (s *Daemon) processCompletedFileUploadJobs() {
-	completedJobIDs := s.getAndTransitionCompletedJobIDs()
+	if completedFileUploadJobs, err := s.db.GetFileUploadJobsWithStatus(model.JobStatusIngesting); err != nil {
+		log.Errorf("Failed to look up finished file upload jobs: %v", err)
+	} else {
+		for _, completedFileUploadJob := range completedFileUploadJobs {
+			if err := fileupload.UpdateFileUploadJobStatus(s.db, completedFileUploadJob.ID, model.JobStatusComplete, "Complete"); err != nil {
+				log.Errorf("Error updating fileupload job %d: %v", completedFileUploadJob.ID, err)
+			}
 
-	for _, id := range completedJobIDs {
-		if ingestTasks, err := s.db.GetIngestTasksForJob(id); err != nil {
-			log.Errorf("Failed fetching available ingest tasks: %v", err)
-		} else {
-			s.processIngestTasks(ingestTasks)
-		}
-
-		if err := fileupload.UpdateFileUploadJobStatus(s.db, id, model.JobStatusComplete, "Complete"); err != nil {
-			log.Errorf("Error updating fileupload job %d: %v", id, err)
+			s.fileUploadJobsUnderAnalysisByID = append(s.fileUploadJobsUnderAnalysisByID, completedFileUploadJob.ID)
 		}
 	}
-}
-
-func (s *Daemon) getAndTransitionCompletedJobIDs() []int64 {
-	s.lock.Lock()
-	defer s.lock.Unlock()
-
-	// transition completed jobs to analysis
-	s.fileUploadJobIDsUnderAnalysis = append(s.fileUploadJobIDsUnderAnalysis, s.completedFileUploadJobIDs...)
-	s.completedFileUploadJobIDs = s.completedFileUploadJobIDs[:0]
-
-	return s.fileUploadJobIDsUnderAnalysis
 }
 
 func (s *Daemon) processIngestTasks(ingestTasks model.IngestTasks) {
@@ -103,13 +75,5 @@ func (s *Daemon) processIngestTasks(ingestTasks model.IngestTasks) {
 func (s *Daemon) clearTask(ingestTask model.IngestTask) {
 	if err := s.db.DeleteIngestTask(ingestTask); err != nil {
 		log.Errorf("Error removing task from db: %v", err)
-	}
-}
-
-func (s *Daemon) NotifyOfFileUploadJobStatus(job model.FileUploadJob) {
-	if job.Status == model.JobStatusIngesting {
-		s.lock.Lock()
-		s.completedFileUploadJobIDs = append(s.completedFileUploadJobIDs, job.ID)
-		s.lock.Unlock()
 	}
 }

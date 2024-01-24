@@ -40,22 +40,20 @@ const (
 )
 
 type Tasker interface {
-	NotifyOfFileUploadJobStatus(task model.FileUploadJob)
 	RequestAnalysis()
 	GetStatus() model.DatapipeStatusWrapper
 }
 
 type Daemon struct {
-	db                            database.Database
-	graphdb                       graph.Database
-	cache                         cache.Cache
-	cfg                           config.Configuration
-	analysisRequested             bool
-	tickInterval                  time.Duration
-	status                        model.DatapipeStatusWrapper
-	ctx                           context.Context
-	fileUploadJobIDsUnderAnalysis []int64
-	completedFileUploadJobIDs     []int64
+	db                              database.Database
+	graphdb                         graph.Database
+	cache                           cache.Cache
+	cfg                             config.Configuration
+	analysisRequested               bool
+	tickInterval                    time.Duration
+	status                          model.DatapipeStatusWrapper
+	ctx                             context.Context
+	fileUploadJobsUnderAnalysisByID []int64
 
 	lock                   *sync.Mutex
 	clearOrphanedFilesLock *sync.Mutex
@@ -104,16 +102,28 @@ func (s *Daemon) setAnalysisRequested(requested bool) {
 	s.analysisRequested = requested
 }
 
+func (s *Daemon) finishAnalysis() {
+	// Clear in-memory tracking of any file upload jobs that made it to this analysis run
+	s.fileUploadJobsUnderAnalysisByID = s.fileUploadJobsUnderAnalysisByID[:0]
+}
+
 func (s *Daemon) analyze() {
+	// Ensure that the user-requested analysis switch is flipped back to false. This is done at the beginning of the
+	// function so that any re-analysis requests are caught while analysis is in-progress.
+	s.setAnalysisRequested(false)
+
+	// Make sure to clean up in-memory state on exit of this function.
+	defer s.finishAnalysis()
+
 	if s.cfg.DisableAnalysis {
 		return
 	}
 
 	s.status.Update(model.DatapipeStatusAnalyzing, false)
-	log.Measure(log.LevelInfo, "Starting analysis")()
+	log.LogAndMeasure(log.LevelInfo, "Graph Analysis")()
 
 	if err := RunAnalysisOperations(s.ctx, s.db, s.graphdb, s.cfg); err != nil {
-		log.Errorf("Analysis failed: %v", err)
+		log.Errorf("Graph analysis failed: %v", err)
 		s.failJobsUnderAnalysis()
 
 		s.status.Update(model.DatapipeStatusIdle, false)
@@ -123,12 +133,9 @@ func (s *Daemon) analyze() {
 		} else {
 			resetCache(s.cache, entityPanelCachingFlag.Enabled)
 		}
-		s.clearJobsFromAnalysis()
-		log.Measure(log.LevelInfo, "Analysis run finished")()
+
 		s.status.Update(model.DatapipeStatusIdle, true)
 	}
-
-	s.setAnalysisRequested(false)
 }
 
 func resetCache(cacher cache.Cache, cacheEnabled bool) {
@@ -164,15 +171,18 @@ func (s *Daemon) Start() {
 			s.clearOrphanedData()
 
 		case <-datapipeLoopTimer.C:
+			// Ingest all available ingest tasks
+			s.ingestAvailableTasks()
+
+			// Manage time-out state progression for file upload jobs
 			fileupload.ProcessStaleFileUploadJobs(s.db)
 
-			if s.numAvailableCompletedFileUploadJobs() > 0 {
-				s.processCompletedFileUploadJobs()
+			// Manage nominal state transitions for file upload jobs
+			s.processCompletedFileUploadJobs()
+
+			// If there are completed client or file upload jobs or if analysis was user-requested, perform analysis
+			if len(s.fileUploadJobsUnderAnalysisByID) > 0 || s.getAnalysisRequested() {
 				s.analyze()
-			} else if s.getAnalysisRequested() {
-				s.analyze()
-			} else {
-				s.ingestAvailableTasks()
 			}
 
 			datapipeLoopTimer.Reset(s.tickInterval)
