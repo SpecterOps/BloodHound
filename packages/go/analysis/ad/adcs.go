@@ -482,9 +482,7 @@ func PostADCS(ctx context.Context, db graph.Database, groupExpansions impact.Pat
 
 					operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
 						if err := PostADCSESC9a(ctx, tx, outC, groupExpansions, innerEnterpriseCA, innerDomain, cache); err != nil {
-							log.Errorf("failed post processing for %s: %v", ad.ADCSESC3.String(), err)
-						} else {
-							return nil
+							log.Errorf("failed post processing for %s: %v", ad.ADCSESC9a.String(), err)
 						}
 
 						return nil
