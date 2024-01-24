@@ -200,7 +200,7 @@ func (s Resources) UpdateAssetGroup(response http.ResponseWriter, request *http.
 func (s Resources) CreateAssetGroup(response http.ResponseWriter, request *http.Request) {
 	var (
 		createRequest CreateAssetGroupRequest
-		auditCtx      = model.AuditContext{Action: "CreateAssetGroup"}
+		auditCtx      = model.AuditContext{Action: "CreateAssetGroup", Model: &createRequest}
 	)
 
 	if err := api.ReadJSONRequestPayloadLimited(&createRequest, request); err != nil {
@@ -212,7 +212,6 @@ func (s Resources) CreateAssetGroup(response http.ResponseWriter, request *http.
 		assetGroupURL.Path = fmt.Sprintf("/api/v2/asset-groups/%d", newAssetGroup.ID)
 		response.Header().Set(headers.Location.String(), assetGroupURL.String())
 
-		auditCtx.Model = createRequest
 		ctx.SetAuditContext(request, auditCtx)
 		api.WriteBasicResponse(request.Context(), newAssetGroup, http.StatusCreated, response)
 	}

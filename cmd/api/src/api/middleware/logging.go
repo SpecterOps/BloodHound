@@ -30,7 +30,6 @@ import (
 	"github.com/specterops/bloodhound/src/config"
 	"github.com/specterops/bloodhound/src/ctx"
 	"github.com/specterops/bloodhound/src/database"
-	"github.com/specterops/bloodhound/src/model"
 )
 
 // PanicHandler is a middleware func that sets up a defer-recovery trap to capture any unhandled panics that bubble
@@ -172,11 +171,11 @@ func LoggingMiddleware(cfg config.Configuration, idResolver auth.IdentityResolve
 			logEvent.Int("status", loggedResponse.statusCode)
 			logEvent.Duration("elapsed", time.Since(requestContext.StartTime.UTC()))
 
-			if requestContext.AuditCtx != (model.AuditContext{}) {
+			if requestContext.AuditCtx.Action != "" {
 				requestContext.AuditCtx.SetStatus(loggedResponse.statusCode)
 
 				if err := db.AppendAuditLog(*requestContext, "", requestContext.AuditCtx.Model); err != nil {
-					log.Errorf("error writing to audit log: %w", err)
+					log.Errorf("error writing to audit log: %s", err)
 				}
 			}
 		})

@@ -124,7 +124,12 @@ const (
 )
 
 func NewAuditLogFromContext(ctx Context, idResolver auth.IdentityResolver) (model.AuditLog, error) {
+	if ctx.AuditCtx.Model == nil {
+		return model.AuditLog{}, fmt.Errorf("model cannot be nil when creating a new audit log")
+	}
+	//TODO: Add a check for empty status to prevent nil pointer references
 	authContext := ctx.AuthCtx
+
 	if !authContext.Authenticated() {
 		return model.AuditLog{}, ErrAuthContextInvalid
 	} else if identity, err := idResolver.GetIdentity(ctx.AuthCtx); err != nil {
