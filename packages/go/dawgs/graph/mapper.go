@@ -85,8 +85,6 @@ func castNumericSlice[R numeric, T any](src []T) ([]R, error) {
 }
 
 func AsNumericSlice[T numeric](rawValue any) ([]T, error) {
-	var numericSlice []T
-
 	switch typedValue := rawValue.(type) {
 	case []any:
 		return castNumericSlice[T](typedValue)
@@ -117,8 +115,6 @@ func AsNumericSlice[T numeric](rawValue any) ([]T, error) {
 	default:
 		return nil, fmt.Errorf("unable to convert raw value %T as a numeric slice", rawValue)
 	}
-
-	return numericSlice, nil
 }
 
 func AsKinds(rawValue any) (Kinds, error) {
