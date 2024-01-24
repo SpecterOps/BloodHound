@@ -30,7 +30,7 @@ import (
 	"github.com/specterops/bloodhound/src/api"
 )
 
-var unsupportedEncodingError = errors.New("content encoding is not supported")
+var errUnsupportedEncoding = errors.New("content encoding is not supported")
 
 type GzipResponseWriter struct {
 	http.ResponseWriter
@@ -66,7 +66,7 @@ func CompressionMiddleware(next http.Handler) http.Handler {
 				if err != nil {
 					errMsg := fmt.Sprintf("failed to create reader for %s encoding: %v", encoding, err)
 					log.Warnf(errMsg)
-					if errors.Is(err, unsupportedEncodingError) {
+					if errors.Is(err, errUnsupportedEncoding) {
 						api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusUnsupportedMediaType, fmt.Sprintf("Error trying to read request: %s", errMsg), request), responseWriter)
 					} else {
 						api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("Error trying to read request: %s", errMsg), request), responseWriter)
@@ -107,7 +107,7 @@ func wrapBody(encoding string, body io.ReadCloser) (io.ReadCloser, error) {
 		newBody, err = zlib.NewReader(body)
 	default:
 		log.Infof("unsupported encoding detected: %s", encoding)
-		err = unsupportedEncodingError
+		err = errUnsupportedEncoding
 	}
 	return newBody, err
 }
