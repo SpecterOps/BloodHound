@@ -56,16 +56,16 @@ jobs:
         python packages/python/beagle/main.py test -avi
 
     - name: Neo4j Debug Logs
-      if: always()
+      if: failure()
       run: |
         docker-compose -f docker-compose.testing.yml exec -T testgraph cat /logs/debug.log
 
     - name: Postgres Debug Logs
-      if: always()
+      if: failure()
       run: |
         docker-compose -f docker-compose.testing.yml logs testdb
 
     - name: Stop and Remove Containers
-      if: always()
+      if: ${{ ! cancelled() }}
       run: |
         docker-compose -f docker-compose.testing.yml down
