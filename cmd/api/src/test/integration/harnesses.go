@@ -1920,14 +1920,13 @@ func (s *ESC9AHarness) Setup(c *GraphTestContext) {
 		EnrolleeSuppliesSubject: false,
 		SubjectAltRequireUPN:    true,
 		SubjectAltRequireSPN:    true,
+		SubjectAltRequireDNS:    false,
 		NoSecurityExtension:     true,
 		SchemaVersion:           1,
 		AuthorizedSignatures:    0,
 		EKUS:                    emptyEkus,
 		ApplicationPolicies:     emptyEkus,
 	})
-	s.CertTemplate.Properties.Set(ad.SubjectAltRequireSPN.String(), true)
-	c.UpdateNode(s.CertTemplate)
 	s.Victim = c.NewActiveDirectoryUser("victim", sid, false)
 	s.Attacker = c.NewActiveDirectoryUser("attacker", sid, false)
 

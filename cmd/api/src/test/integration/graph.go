@@ -416,33 +416,37 @@ func (s *GraphTestContext) NewActiveDirectoryRootCAWithThumbprint(name, domainSI
 
 func (s *GraphTestContext) NewActiveDirectoryCertTemplate(name, domainSID string, data CertTemplateData) *graph.Node {
 	return s.NewNode(graph.AsProperties(graph.PropertyMap{
-		common.Name:                name,
-		common.ObjectID:            must.NewUUIDv4().String(),
-		ad.DomainSID:               domainSID,
-		ad.RequiresManagerApproval: data.RequiresManagerApproval,
-		ad.AuthenticationEnabled:   data.AuthenticationEnabled,
-		ad.EnrolleeSuppliesSubject: data.EnrolleeSuppliesSubject,
-		ad.NoSecurityExtension:     data.NoSecurityExtension,
-		ad.SchemaVersion:           data.SchemaVersion,
-		ad.AuthorizedSignatures:    data.AuthorizedSignatures,
-		ad.EKUs:                    data.EKUS,
-		ad.ApplicationPolicies:     data.ApplicationPolicies,
-		ad.SubjectAltRequireUPN:    data.SubjectAltRequireUPN,
-		ad.SubjectAltRequireSPN:    data.SubjectAltRequireSPN,
+		common.Name:                   name,
+		common.ObjectID:               must.NewUUIDv4().String(),
+		ad.DomainSID:                  domainSID,
+		ad.RequiresManagerApproval:    data.RequiresManagerApproval,
+		ad.AuthenticationEnabled:      data.AuthenticationEnabled,
+		ad.EnrolleeSuppliesSubject:    data.EnrolleeSuppliesSubject,
+		ad.NoSecurityExtension:        data.NoSecurityExtension,
+		ad.SchemaVersion:              data.SchemaVersion,
+		ad.AuthorizedSignatures:       data.AuthorizedSignatures,
+		ad.EKUs:                       data.EKUS,
+		ad.ApplicationPolicies:        data.ApplicationPolicies,
+		ad.SubjectAltRequireUPN:       data.SubjectAltRequireUPN,
+		ad.SubjectAltRequireSPN:       data.SubjectAltRequireSPN,
+		ad.SubjectAltRequireDNS:       data.SubjectAltRequireDNS,
+		ad.SubjectAltRequireDomainDNS: data.SubjectAltRequireDomainDNS,
 	}), ad.Entity, ad.CertTemplate)
 }
 
 type CertTemplateData struct {
-	RequiresManagerApproval bool
-	AuthenticationEnabled   bool
-	EnrolleeSuppliesSubject bool
-	SubjectAltRequireUPN    bool
-	SubjectAltRequireSPN    bool
-	NoSecurityExtension     bool
-	SchemaVersion           float64
-	AuthorizedSignatures    float64
-	EKUS                    []string
-	ApplicationPolicies     []string
+	RequiresManagerApproval    bool
+	AuthenticationEnabled      bool
+	EnrolleeSuppliesSubject    bool
+	SubjectAltRequireUPN       bool
+	SubjectAltRequireSPN       bool
+	SubjectAltRequireDNS       bool
+	SubjectAltRequireDomainDNS bool
+	NoSecurityExtension        bool
+	SchemaVersion              float64
+	AuthorizedSignatures       float64
+	EKUS                       []string
+	ApplicationPolicies        []string
 }
 
 func (s *GraphTestContext) setupAzure() {
