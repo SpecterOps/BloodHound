@@ -154,90 +154,26 @@ func ParallelTagAzureTierZero(ctx context.Context, db graph.Database) error {
 	return nil
 }
 
-func ParallelTagActiveDirectoryTierZero(ctx context.Context, db graph.Database) error {
+func TagActiveDirectoryTierZero(ctx context.Context, db graph.Database) error {
+	defer log.Measure(log.LevelInfo, "Finished tagging Active Directory Tier Zero")()
+
 	if domains, err := adAnalysis.FetchAllDomains(ctx, db); err != nil {
 		return err
 	} else {
-		var (
-			domainC  = make(chan *graph.Node)
-			rootsC   = make(chan graph.ID)
-			writerWG = &sync.WaitGroup{}
-			readerWG = &sync.WaitGroup{}
-		)
+		for _, domain := range domains {
+			if roots, err := adAnalysis.FetchActiveDirectoryTierZeroRoots(ctx, db, domain); err != nil {
+				return err
+			} else {
+				properties := graph.NewProperties()
+				properties.Set(common.SystemTags.String(), ad.AdminTierZero)
 
-		readerWG.Add(1)
-
-		go func() {
-			defer readerWG.Done()
-
-			var (
-				tierZeroProperties = graph.NewProperties()
-				rootIDs            []graph.ID
-			)
-
-			tierZeroProperties.Set(common.SystemTags.String(), ad.AdminTierZero)
-
-			for rootID := range rootsC {
-				seen := false
-
-				for _, seenRootID := range rootIDs {
-					if seenRootID == rootID {
-						seen = true
-						break
-					}
-				}
-
-				if !seen {
-					rootIDs = append(rootIDs, rootID)
-				}
-			}
-
-			if err := db.WriteTransaction(ctx, func(tx graph.Transaction) error {
-				if err := tx.Nodes().Filterf(func() graph.Criteria {
-					return query.InIDs(query.NodeID(), rootIDs...)
-				}).Update(tierZeroProperties); err != nil {
+				if err := db.WriteTransaction(ctx, func(tx graph.Transaction) error {
+					return tx.Nodes().Filter(query.InIDs(query.Node(), roots.IDs()...)).Update(properties)
+				}); err != nil {
 					return err
 				}
-
-				return nil
-			}); err != nil {
-				log.Errorf("Failed tagging update: %v", err)
 			}
-		}()
-
-		for workerID := 0; workerID < commonanalysis.MaximumDatabaseParallelWorkers; workerID++ {
-			writerWG.Add(1)
-
-			go func(workerID int) {
-				defer writerWG.Done()
-
-				if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
-					for domain := range domainC {
-						if roots, err := adAnalysis.FetchActiveDirectoryTierZeroRoots(tx, domain); err != nil {
-							log.Errorf("Failed fetching tier zero for domain %d: %v", domain.ID, err)
-						} else {
-							for _, root := range roots {
-								rootsC <- root.ID
-							}
-						}
-					}
-
-					return nil
-				}); err != nil {
-					log.Errorf("Error reading tier zero for domains: %v", err)
-				}
-			}(workerID)
 		}
-
-		for _, domain := range domains {
-			domainC <- domain
-		}
-
-		close(domainC)
-		writerWG.Wait()
-
-		close(rootsC)
-		readerWG.Wait()
 	}
 
 	return nil

@@ -31,7 +31,7 @@ const WindowsAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> =
             return (
                 <>
                     <Typography variant='body2'>
-                        To abuse ownership of a group object, you may grant yourself the AddMember privilege. This can
+                        To abuse ownership of a group object, you may grant yourself the AddMember permission. This can
                         be accomplished using the Add-DomainObjectAcl function in PowerView.
                     </Typography>
 
@@ -68,15 +68,15 @@ const WindowsAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> =
                         the opsec considerations tab for why this may be a bad idea. The second, and highly recommended
                         method, is by using the Add-DomainGroupMember function in PowerView. This function is superior
                         to using the net.exe binary in several ways. For instance, you can supply alternate credentials,
-                        instead of needing to run a process as or logon as the user with the AddMember privilege.
+                        instead of needing to run a process as or logon as the user with the AddMember permission.
                         Additionally, you have much safer execution options than you do with spawning net.exe (see the
                         opsec tab).
                     </Typography>
 
                     <Typography variant='body2'>
-                        To abuse this privilege with PowerView's Add-DomainGroupMember, first import PowerView into your
-                        agent session or into a PowerShell instance at the console. You may need to authenticate to the
-                        Domain Controller as{' '}
+                        To abuse this permission with PowerView's Add-DomainGroupMember, first import PowerView into
+                        your agent session or into a PowerShell instance at the console. You may need to authenticate to
+                        the Domain Controller as{' '}
                         {sourceType === 'User'
                             ? `${sourceName} if you are not running a process as that user`
                             : `a member of ${sourceName} if you are not running a process as a member`}
@@ -119,7 +119,7 @@ const WindowsAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> =
             return (
                 <>
                     <Typography variant='body2'>
-                        To abuse ownership of a user object, you may grant yourself the GenericAll privilege. This can
+                        To abuse ownership of a user object, you may grant yourself the GenericAll permission. This can
                         be accomplished using the Add-DomainObjectAcl function in PowerView.
                     </Typography>
 
@@ -146,54 +146,24 @@ const WindowsAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> =
                         {'Add-DomainObjectAcl -Credential $Cred -TargetIdentity harmj0y -Rights All'}
                     </Typography>
 
-                    <Typography variant='body1'> Targeted Kerberoast </Typography>
-
                     <Typography variant='body2'>
-                        A targeted kerberoast attack can be performed using PowerView's Set-DomainObject along with
-                        Get-DomainSPNTicket.
+                        The GenericAll permission grants {sourceName} the ability to change the password of the user{' '}
+                        {targetName} without knowing their current password. This is equivalent to the
+                        "ForceChangePassword" edge in BloodHound.
                     </Typography>
-
                     <Typography variant='body2'>
-                        You may need to authenticate to the Domain Controller as{' '}
-                        {sourceType === 'User'
-                            ? `${sourceName} if you are not running a process as that user`
-                            : `a member of ${sourceName} if you are not running a process as a member`}
-                        . To do this in conjunction with Set-DomainObject, first create a PSCredential object (these
-                        examples comes from the PowerView help documentation):
-                    </Typography>
-
-                    <Typography component={'pre'}>
-                        {"$SecPassword = ConvertTo-SecureString 'Password123!' -AsPlainText -Force\n" +
-                            "$Cred = New-Object System.Management.Automation.PSCredential('TESTLAB\\dfm.a', $SecPassword)"}
+                        GenericAll also grants {sourceName} the permission to write to the "msds-KeyCredentialLink"
+                        attribute of {targetName}. Writing to this property allows an attacker to create "Shadow
+                        Credentials" on the object and authenticate as the principal using kerberos PKINIT. This is
+                        equivalent to the "AddKeyCredentialLink" edge.
                     </Typography>
 
                     <Typography variant='body2'>
-                        Then, use Set-DomainObject, optionally specifying $Cred if you are not already running a process
-                        as {sourceName}:
+                        Alternatively, GenericAll enables {sourceName} to set a ServicePrincipalName (SPN) on the
+                        targeted user, which may be abused in a Targeted Kerberoast attack.
                     </Typography>
 
-                    <Typography component={'pre'}>
-                        {
-                            "Set-DomainObject -Credential $Cred -Identity harmj0y -SET @{serviceprincipalname='nonexistent/BLAHBLAH'}"
-                        }
-                    </Typography>
-
-                    <Typography variant='body2'>
-                        After running this, you can use Get-DomainSPNTicket as follows:
-                    </Typography>
-
-                    <Typography component={'pre'}>{'Get-DomainSPNTicket -Credential $Cred harmj0y | fl'}</Typography>
-
-                    <Typography variant='body2'>
-                        The recovered hash can be cracked offline using the tool of your choice. Cleanup of the
-                        ServicePrincipalName can be done with the Set-DomainObject command:
-                    </Typography>
-
-                    <Typography component={'pre'}>
-                        {'Set-DomainObject -Credential $Cred -Identity harmj0y -Clear serviceprincipalname'}
-                    </Typography>
-
-                    <Typography variant='body1'> Force Change Password </Typography>
+                    <Typography variant='body1'> Force Change Password attack </Typography>
 
                     <Typography variant='body2'>
                         There are at least two ways to execute this attack. The first and most obvious is by using the
@@ -201,13 +171,13 @@ const WindowsAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> =
                         considerations tab for why this may be a bad idea. The second, and highly recommended method, is
                         by using the Set-DomainUserPassword function in PowerView. This function is superior to using
                         the net.exe binary in several ways. For instance, you can supply alternate credentials, instead
-                        of needing to run a process as or logon as the user with the ForceChangePassword privilege.
+                        of needing to run a process as or logon as the user with the ForceChangePassword permission.
                         Additionally, you have much safer execution options than you do with spawning net.exe (see the
                         opsec tab).
                     </Typography>
 
                     <Typography variant='body2'>
-                        To abuse this privilege with PowerView's Set-DomainUserPassword, first import PowerView into
+                        To abuse this permission with PowerView's Set-DomainUserPassword, first import PowerView into
                         your agent session or into a PowerShell instance at the console. You may need to authenticate to
                         the Domain Controller as{' '}
                         {sourceType === 'User'
@@ -246,12 +216,60 @@ const WindowsAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> =
                         see the references tab.
                     </Typography>
 
+                    <Typography variant='body1'> Shadow Credentials attack </Typography>
+
+                    <Typography variant='body2'>To abuse the permission, use Whisker. </Typography>
+
                     <Typography variant='body2'>
-                        Cleanup of the added ACL can be performed with Remove-DomainObjectAcl:
+                        You may need to authenticate to the Domain Controller as{' '}
+                        {sourceType === 'User' || sourceType === 'Computer'
+                            ? `${sourceName} if you are not running a process as that user/computer`
+                            : `a member of ${sourceName} if you are not running a process as a member`}
                     </Typography>
 
+                    <Typography component={'pre'}>{'Whisker.exe add /target:<TargetPrincipal>'}</Typography>
+
+                    <Typography variant='body2'>
+                        For other optional parameters, view the Whisker documentation.
+                    </Typography>
+
+                    <Typography variant='body1'> Targeted Kerberoast attack </Typography>
+
+                    <Typography variant='body2'>
+                        A targeted kerberoast attack can be performed using PowerView's Set-DomainObject along with
+                        Get-DomainSPNTicket.
+                    </Typography>
+                    <Typography variant='body2'>
+                        You may need to authenticate to the Domain Controller as{' '}
+                        {sourceType === 'User'
+                            ? `${sourceName} if you are not running a process as that user`
+                            : `a member of ${sourceName} if you are not running a process as a member`}
+                        . To do this in conjunction with Set-DomainObject, first create a PSCredential object (these
+                        examples comes from the PowerView help documentation):
+                    </Typography>
                     <Typography component={'pre'}>
-                        {'Remove-DomainObjectAcl -Credential $Cred -TargetIdentity harmj0y -Rights All'}
+                        {"$SecPassword = ConvertTo-SecureString 'Password123!' -AsPlainText -Force\n" +
+                            "$Cred = New-Object System.Management.Automation.PSCredential('TESTLAB\\dfm.a', $SecPassword)"}
+                    </Typography>
+                    <Typography variant='body2'>
+                        Then, use Set-DomainObject, optionally specifying $Cred if you are not already running a process
+                        as {sourceName}:
+                    </Typography>
+                    <Typography component={'pre'}>
+                        {
+                            "Set-DomainObject -Credential $Cred -Identity harmj0y -SET @{serviceprincipalname='nonexistent/BLAHBLAH'}"
+                        }
+                    </Typography>
+                    <Typography variant='body2'>
+                        After running this, you can use Get-DomainSPNTicket as follows:
+                    </Typography>
+                    <Typography component={'pre'}>{'Get-DomainSPNTicket -Credential $Cred harmj0y | fl'}</Typography>
+                    <Typography variant='body2'>
+                        The recovered hash can be cracked offline using the tool of your choice. Cleanup of the
+                        ServicePrincipalName can be done with the Set-DomainObject command:
+                    </Typography>
+                    <Typography component={'pre'}>
+                        {'Set-DomainObject -Credential $Cred -Identity harmj0y -Clear serviceprincipalname'}
                     </Typography>
                 </>
             );
@@ -260,7 +278,7 @@ const WindowsAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> =
                 return (
                     <>
                         <Typography variant='body2'>
-                            To abuse ownership of a computer object, you may grant yourself the GenericAll privilege.
+                            To abuse ownership of a computer object, you may grant yourself the GenericAll permission.
                         </Typography>
 
                         <Typography variant='body2'>
@@ -287,16 +305,46 @@ const WindowsAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> =
                         </Typography>
 
                         <Typography variant='body2'>
-                            Once you have granted yourself this privilege, you may read the ms-Ads-AdmPwd attribute on
-                            the computer object in LDAP which contains the local administrator password.
+                            The GenericAll permission grants {sourceName} the ability to obtain the LAPS (RID 500
+                            administrator) password of {targetName}. {sourceName} can do so by listing a computer
+                            object's AD properties with PowerView using Get-DomainComputer {targetName}. The value of
+                            the ms-mcs-AdmPwd property will contain password of the administrative local account on{' '}
+                            {targetName}.
                         </Typography>
 
                         <Typography variant='body2'>
-                            Alternatively, you can execute a resource based constrained delegation attack.
+                            GenericAll also grants {sourceName} the permission to write to the "msds-KeyCredentialLink"
+                            attribute of {targetName}. Writing to this property allows an attacker to create "Shadow
+                            Credentials" on the object and authenticate as the principal using kerberos PKINIT. This is
+                            equivalent to the "AddKeyCredentialLink" edge.
                         </Typography>
 
                         <Typography variant='body2'>
-                            Abusing this primitive is currently only possible through the Rubeus project.
+                            Alternatively, GenericAll on a computer object can be used to perform a Resource-Based
+                            Constrained Delegation attack.
+                        </Typography>
+
+                        <Typography variant='body1'> Shadow Credentials attack </Typography>
+
+                        <Typography variant='body2'>To abuse the permission, use Whisker. </Typography>
+
+                        <Typography variant='body2'>
+                            You may need to authenticate to the Domain Controller as{' '}
+                            {sourceType === 'User' || sourceType === 'Computer'
+                                ? `${sourceName} if you are not running a process as that user/computer`
+                                : `a member of ${sourceName} if you are not running a process as a member`}
+                        </Typography>
+
+                        <Typography component={'pre'}>{'Whisker.exe add /target:<TargetPrincipal>'}</Typography>
+
+                        <Typography variant='body2'>
+                            For other optional parameters, view the Whisker documentation.
+                        </Typography>
+
+                        <Typography variant='body1'> Resource-Based Constrained Delegation attack </Typography>
+
+                        <Typography variant='body2'>
+                            Abusing this primitive is possible through the Rubeus project.
                         </Typography>
 
                         <Typography variant='body2'>
@@ -316,9 +364,8 @@ const WindowsAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> =
                         </Typography>
 
                         <Typography component={'pre'}>
-                            {
-                                '$ComputerSid = Get-DomainComputer attackersystem -Properties objectsid | Select -Expand objectsid'
-                            }
+                            $ComputerSid = Get-DomainComputer attackersystem -Properties objectsid | Select -Expand
+                            objectsid
                         </Typography>
 
                         <Typography variant='body2'>
@@ -334,7 +381,7 @@ const WindowsAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> =
 
                         <Typography variant='body2'>
                             Next, we need to set this newly created security descriptor in the
-                            msDS-AllowedToActOnBehalfOfOtherIdentity field of the comptuer account we're taking over,
+                            msDS-AllowedToActOnBehalfOfOtherIdentity field of the computer account we're taking over,
                             again using PowerView in this case:
                         </Typography>
 
@@ -360,14 +407,6 @@ const WindowsAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> =
                             {
                                 'Rubeus.exe s4u /user:attackersystem$ /rc4:EF266C6B963C0BB683941032008AD47F /impersonateuser:admin /msdsspn:cifs/TARGETCOMPUTER.testlab.local /ptt'
                             }
-                        </Typography>
-
-                        <Typography variant='body2'>
-                            Cleanup can be done using the Remove-DomainObjectAcl function:
-                        </Typography>
-
-                        <Typography component={'pre'}>
-                            {'Remove-DomainObjectAcl -Credential $Cred -TargetIdentity windows1 -Rights All'}
                         </Typography>
                     </>
                 );
@@ -375,7 +414,7 @@ const WindowsAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> =
                 return (
                     <>
                         <Typography variant='body2'>
-                            To abuse ownership of a computer object, you may grant yourself the GenericAll privilege.
+                            To abuse ownership of a computer object, you may grant yourself the GenericAll permission.
                         </Typography>
 
                         <Typography variant='body2'>
@@ -402,12 +441,38 @@ const WindowsAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> =
                         </Typography>
 
                         <Typography variant='body2'>
-                            Once you have granted yourself this privilege, you can execute a resource based constrained
-                            delegation attack.
+                            The GenericAll grants {sourceName} the permission to write to the "msds-KeyCredentialLink"
+                            attribute of {targetName}. Writing to this property allows an attacker to create "Shadow
+                            Credentials" on the object and authenticate as the principal using kerberos PKINIT. This is
+                            equivalent to the "AddKeyCredentialLink" edge.
                         </Typography>
 
                         <Typography variant='body2'>
-                            Abusing this primitive is currently only possible through the Rubeus project.
+                            Alternatively, GenericAll on a computer object can be used to perform a Resource-Based
+                            Constrained Delegation attack.
+                        </Typography>
+
+                        <Typography variant='body1'> Shadow Credentials attack </Typography>
+
+                        <Typography variant='body2'>To abuse the permission, use Whisker. </Typography>
+
+                        <Typography variant='body2'>
+                            You may need to authenticate to the Domain Controller as{' '}
+                            {sourceType === 'User' || sourceType === 'Computer'
+                                ? `${sourceName} if you are not running a process as that user/computer`
+                                : `a member of ${sourceName} if you are not running a process as a member`}
+                        </Typography>
+
+                        <Typography component={'pre'}>{'Whisker.exe add /target:<TargetPrincipal>'}</Typography>
+
+                        <Typography variant='body2'>
+                            For other optional parameters, view the Whisker documentation.
+                        </Typography>
+
+                        <Typography variant='body1'> Resource-Based Constrained Delegation attack </Typography>
+
+                        <Typography variant='body2'>
+                            Abusing this primitive is possible through the Rubeus project.
                         </Typography>
 
                         <Typography variant='body2'>
@@ -427,9 +492,8 @@ const WindowsAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> =
                         </Typography>
 
                         <Typography component={'pre'}>
-                            {
-                                '$ComputerSid = Get-DomainComputer attackersystem -Properties objectsid | Select -Expand objectsid'
-                            }
+                            $ComputerSid = Get-DomainComputer attackersystem -Properties objectsid | Select -Expand
+                            objectsid
                         </Typography>
 
                         <Typography variant='body2'>
@@ -445,7 +509,7 @@ const WindowsAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> =
 
                         <Typography variant='body2'>
                             Next, we need to set this newly created security descriptor in the
-                            msDS-AllowedToActOnBehalfOfOtherIdentity field of the comptuer account we're taking over,
+                            msDS-AllowedToActOnBehalfOfOtherIdentity field of the computer account we're taking over,
                             again using PowerView in this case:
                         </Typography>
 
@@ -471,14 +535,6 @@ const WindowsAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> =
                             {
                                 'Rubeus.exe s4u /user:attackersystem$ /rc4:EF266C6B963C0BB683941032008AD47F /impersonateuser:admin /msdsspn:cifs/TARGETCOMPUTER.testlab.local /ptt'
                             }
-                        </Typography>
-
-                        <Typography variant='body2'>
-                            Cleanup can be done using the Remove-DomainObjectAcl function:
-                        </Typography>
-
-                        <Typography component={'pre'}>
-                            {'Remove-DomainObjectAcl -Credential $Cred -TargetIdentity windows1 -Rights All'}
                         </Typography>
                     </>
                 );
@@ -514,7 +570,7 @@ const WindowsAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> =
                     </Typography>
 
                     <Typography variant='body2'>
-                        Once you have granted yourself this privilege, you may use the mimikatz dcsync function to
+                        Once you have granted yourself this permission, you may use the mimikatz dcsync function to
                         dcsync the password of arbitrary principals on the domain
                     </Typography>
 
@@ -585,7 +641,7 @@ const WindowsAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> =
                     <Typography variant='body1'>Control of the Organization Unit</Typography>
 
                     <Typography variant='body2'>
-                        With ownership of the OU object, you may grant yourself the GenericAll privilege. This can be
+                        With ownership of the OU object, you may grant yourself the GenericAll permission. This can be
                         accomplished using the Add-DomainObjectAcl function in PowerView.
                     </Typography>
 
@@ -672,8 +728,8 @@ const WindowsAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> =
                     <Typography variant='body2'>
                         If you want to be more targeted with your approach, it is possible to specify precisely what
                         right you want to apply to precisely which kinds of descendent objects. You could, for example,
-                        grant a user "ForceChangePassword" privilege against all user objects, or grant a security group
-                        the ability to read every GMSA password under a certain OU. Below is an example taken from
+                        grant a user "ForceChangePassword" permission against all user objects, or grant a security
+                        group the ability to read every GMSA password under a certain OU. Below is an example taken from
                         PowerView's help text on how to grant the "ITADMIN" user the ability to read the LAPS password
                         from all computer objects in the "Workstations" OU:
                     </Typography>

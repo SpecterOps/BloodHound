@@ -19,6 +19,7 @@ package ops
 import (
 	"errors"
 	"fmt"
+	"github.com/specterops/bloodhound/log"
 
 	"github.com/RoaringBitmap/roaring/roaring64"
 
@@ -155,6 +156,8 @@ func AcyclicTraversal(tx graph.Transaction, plan TraversalPlan, pathVisitors ...
 }
 
 func Traversal(tx graph.Transaction, plan TraversalPlan, pathVisitors ...PathVisitor) error {
+	defer log.Measure(log.LevelInfo, "Node %d Traversal", plan.Root.ID)()
+
 	var (
 		pathVisitor           PathVisitor
 		requireTraversalOrder = plan.Limit > 0 || plan.Skip > 0

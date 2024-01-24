@@ -19,6 +19,7 @@ package datapipe
 
 import (
 	"context"
+	"github.com/specterops/bloodhound/src/bootstrap"
 	"os"
 	"path/filepath"
 	"sync"
@@ -45,7 +46,6 @@ type Tasker interface {
 }
 
 type Daemon struct {
-	exitC                         chan struct{}
 	db                            database.Database
 	graphdb                       graph.Database
 	cache                         cache.Cache
@@ -65,14 +65,13 @@ func (s *Daemon) Name() string {
 	return "Data Pipe Daemon"
 }
 
-func NewDaemon(cfg config.Configuration, db database.Database, graphdb graph.Database, cache cache.Cache, tickInterval time.Duration) *Daemon {
+func NewDaemon(ctx context.Context, cfg config.Configuration, connections bootstrap.DatabaseConnections[*database.BloodhoundDB, *graph.DatabaseSwitch], cache cache.Cache, tickInterval time.Duration) *Daemon {
 	return &Daemon{
-		exitC:   make(chan struct{}),
-		db:      db,
-		graphdb: graphdb,
+		db:      connections.RDMS,
+		graphdb: connections.Graph,
 		cache:   cache,
 		cfg:     cfg,
-		ctx:     context.Background(),
+		ctx:     ctx,
 
 		analysisRequested:      false,
 		lock:                   &sync.Mutex{},
@@ -154,7 +153,6 @@ func (s *Daemon) Start() {
 		pruningTicker     = time.NewTicker(pruningInterval)
 	)
 
-	defer close(s.exitC)
 	defer datapipeLoopTimer.Stop()
 	defer pruningTicker.Stop()
 
@@ -164,6 +162,7 @@ func (s *Daemon) Start() {
 		select {
 		case <-pruningTicker.C:
 			s.clearOrphanedData()
+
 		case <-datapipeLoopTimer.C:
 			fileupload.ProcessStaleFileUploadJobs(s.db)
 
@@ -177,21 +176,14 @@ func (s *Daemon) Start() {
 			}
 
 			datapipeLoopTimer.Reset(s.tickInterval)
-		case <-s.exitC:
+
+		case <-s.ctx.Done():
 			return
 		}
 	}
 }
 
 func (s *Daemon) Stop(ctx context.Context) error {
-	s.exitC <- struct{}{}
-
-	select {
-	case <-s.exitC:
-	case <-ctx.Done():
-		return ctx.Err()
-	}
-
 	return nil
 }
 
@@ -228,7 +220,7 @@ func (s *Daemon) clearOrphanedData() {
 
 			// Check to see if we need to shutdown after every file deletion
 			select {
-			case <-s.exitC:
+			case <-s.ctx.Done():
 				return
 			default:
 			}

@@ -13,11 +13,5 @@
     "cert_file": "",
     "key_file": ""
   },
-  "database": {
-    "connection": "user=bloodhound password=bloodhoundcommunityedition dbname=bloodhound host=app-db"
-  },
-  "neo4j": {
-    "connection": "neo4j://neo4j:bloodhoundcommunityedition@graph-db:7687/"
-  },
   "collectors_base_path": "/etc/bloodhound/collectors"
 }

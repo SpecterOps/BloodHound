@@ -54,6 +54,8 @@ func GetCollectedTenants(ctx context.Context, db graph.Database) (graph.NodeSet,
 }
 
 func FetchGraphDBTierZeroTaggedAssets(tx graph.Transaction, tenant *graph.Node) (graph.NodeSet, error) {
+	defer log.LogAndMeasure(log.LevelInfo, "Tenant %d FetchGraphDBTierZeroTaggedAssets", tenant.ID)()
+
 	if tenantObjectID, err := tenant.Properties.Get(common.ObjectID.String()).String(); err != nil {
 		log.Errorf("Tenant node %d does not have a valid %s property: %v", tenant.ID, common.ObjectID, err)
 		return nil, err
@@ -73,8 +75,7 @@ func FetchGraphDBTierZeroTaggedAssets(tx graph.Transaction, tenant *graph.Node) 
 }
 
 func FetchAzureAttackPathRoots(tx graph.Transaction, tenant *graph.Node) (graph.NodeSet, error) {
-	log.Infof("Fetching tier zero nodes for tenant %d", tenant.ID)
-	defer log.Measure(log.LevelInfo, "Finished fetching tier zero nodes for tenant %d", tenant.ID)()
+	defer log.LogAndMeasure(log.LevelDebug, "Tenant %d FetchAzureAttackPathRoots", tenant.ID)()
 
 	attackPathRoots := graph.NewNodeKindSet()
 
@@ -231,8 +232,6 @@ func FetchAzureAttackPathRoots(tx graph.Transaction, tenant *graph.Node) (graph.
 			inboundNodes.AddSet(inboundCollapsablePaths.AllNodes())
 		}
 	}
-
-	log.Infof("Collapsed an additional %d nodes into tier zero for non-descent relationships", inboundNodes.Len())
 
 	tierZeroNodes.AddSet(inboundNodes)
 	return tierZeroNodes, nil

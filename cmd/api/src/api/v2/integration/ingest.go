@@ -38,6 +38,10 @@ func ingestPayload(t test.Controller, loader fixtures.Loader, fixturePath string
 	return payload
 }
 
+func (s *Context) ToggleFeatureFlag(name string) {
+	require.Nil(s.TestCtrl, s.AdminClient().ToggleFeatureFlag(name))
+}
+
 func (s *Context) SendFileIngest(fixtures []string) {
 	apiClient := s.AdminClient()
 
@@ -136,10 +140,10 @@ func (s *Context) WaitForDatapipeAnalysis(timeout time.Duration, originalWrapper
 type IngestAssertion func(testCtrl test.Controller, tx graph.Transaction)
 
 func (s *Context) AssertIngest(assertion IngestAssertion) {
-	graphDB := integration.OpenNeo4jGraphDB(s.TestCtrl)
-	defer graphDB.Close()
+	graphDB := integration.OpenGraphDB(s.TestCtrl)
+	defer graphDB.Close(s.ctx)
 
-	require.Nil(s.TestCtrl, graphDB.ReadTransaction(s.Ctx, func(tx graph.Transaction) error {
+	require.Nil(s.TestCtrl, graphDB.ReadTransaction(s.ctx, func(tx graph.Transaction) error {
 		assertion(s.TestCtrl, tx)
 		return nil
 	}), "Unexpected database error during reconciliation assertion")

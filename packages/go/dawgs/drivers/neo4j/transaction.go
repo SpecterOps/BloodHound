@@ -20,7 +20,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
+	"github.com/specterops/bloodhound/dawgs/drivers"
+	"github.com/specterops/bloodhound/log"
 	"sort"
 	"strings"
 
@@ -41,7 +42,7 @@ const (
 )
 
 type innerTransaction interface {
-	Run(cypher string, params map[string]any) graph.Result
+	Raw(cypher string, params map[string]any) graph.Result
 }
 
 type neo4jTransaction struct {
@@ -53,6 +54,19 @@ type neo4jTransaction struct {
 	writeFlushSize       int
 	batchWriteSize       int
 	traversalMemoryLimit size.Size
+}
+
+func (s *neo4jTransaction) WithGraph(graphSchema graph.Graph) graph.Transaction {
+	// Neo4j does not support multiple graph namespaces within the same database. While Neo4j enterprise supports
+	// multiple databases this is not the same. Graph namespaces could be hacked using labels but this then requires
+	// a material change in how labels are applied and therefore was not plumbed.
+	//
+	// This has no material effect on the usage of the database: the schema is the same for all graph namespaces.
+	return s
+}
+
+func (s *neo4jTransaction) Query(query string, parameters map[string]any) graph.Result {
+	return s.Raw(query, parameters)
 }
 
 func (s *neo4jTransaction) updateRelationshipsBy(updates ...graph.RelationshipUpdate) error {
@@ -69,17 +83,18 @@ func (s *neo4jTransaction) updateRelationshipsBy(updates ...graph.RelationshipUp
 			chunkMap = append(chunkMap, val)
 
 			if len(chunkMap) == s.batchWriteSize {
-				if result := s.Run(stmt, map[string]any{
+				if result := s.Raw(stmt, map[string]any{
 					"p": chunkMap,
 				}); result.Error() != nil {
 					return result.Error()
 				}
+
 				chunkMap = chunkMap[:0]
 			}
 		}
 
 		if len(chunkMap) > 0 {
-			if result := s.Run(stmt, map[string]any{
+			if result := s.Raw(stmt, map[string]any{
 				"p": chunkMap,
 			}); result.Error() != nil {
 				return result.Error()
@@ -101,7 +116,7 @@ func (s *neo4jTransaction) updateNodesBy(updates ...graph.NodeUpdate) error {
 	)
 
 	for parameterIdx, stmt := range statements {
-		if result := s.Run(stmt, queryParameterMaps[parameterIdx]); result.Error() != nil {
+		if result := s.Raw(stmt, queryParameterMaps[parameterIdx]); result.Error() != nil {
 			return fmt.Errorf("update nodes by error on statement (%s): %s", stmt, result.Error())
 		}
 	}
@@ -165,7 +180,7 @@ func (s *neo4jTransaction) logWrites(writes int) error {
 }
 
 func (s *neo4jTransaction) runAndLog(stmt string, params map[string]any, numWrites int) graph.Result {
-	result := s.Run(stmt, params)
+	result := s.Raw(stmt, params)
 
 	if result.Error() == nil {
 		if err := s.logWrites(numWrites); err != nil {
@@ -212,7 +227,7 @@ func (s *neo4jTransaction) updateNode(updatedNode *graph.Node) error {
 		return err
 	} else if cypherQuery, err := queryBuilder.Render(); err != nil {
 		return graph.NewError(cypherQuery, err)
-	} else if result := s.Run(cypherQuery, queryBuilder.Parameters); result.Error() != nil {
+	} else if result := s.Raw(cypherQuery, queryBuilder.Parameters); result.Error() != nil {
 		return result.Error()
 	}
 
@@ -237,7 +252,7 @@ func (s *neo4jTransaction) createNode(properties *graph.Properties, kinds ...gra
 		return nil, err
 	} else if statement, err := queryBuilder.Render(); err != nil {
 		return nil, err
-	} else if result := s.Run(statement, queryBuilder.Parameters); result.Error() != nil {
+	} else if result := s.Raw(statement, queryBuilder.Parameters); result.Error() != nil {
 		return nil, result.Error()
 	} else if !result.Next() {
 		return nil, graph.ErrNoResultsFound
@@ -270,7 +285,7 @@ func (s *neo4jTransaction) createRelationshipByIDs(startNodeID, endNodeID graph.
 		return nil, err
 	} else if statement, err := queryBuilder.Render(); err != nil {
 		return nil, err
-	} else if result := s.Run(statement, queryBuilder.Parameters); result.Error() != nil {
+	} else if result := s.Raw(statement, queryBuilder.Parameters); result.Error() != nil {
 		return nil, result.Error()
 	} else if !result.Next() {
 		return nil, graph.ErrNoResultsFound
@@ -280,10 +295,10 @@ func (s *neo4jTransaction) createRelationshipByIDs(startNodeID, endNodeID graph.
 	}
 }
 
-func (s *neo4jTransaction) Run(stmt string, params map[string]any) graph.Result {
+func (s *neo4jTransaction) Raw(stmt string, params map[string]any) graph.Result {
 	const maxParametersToRender = 12
 
-	if IsQueryAnalysisEnabled() {
+	if drivers.IsQueryAnalysisEnabled() {
 		var (
 			parametersWritten = 0
 			prettyParameters  strings.Builder
@@ -317,13 +332,13 @@ func (s *neo4jTransaction) Run(stmt string, params map[string]any) graph.Result 
 			prettyParameters.WriteString(":")
 
 			if marshalledValue, err := json.Marshal(value); err != nil {
-				log.Printf("Unable to marshal query parameter %s", key)
+				log.Errorf("Unable to marshal query parameter %s", key)
 			} else {
 				prettyParameters.Write(marshalledValue)
 			}
 		}
 
-		log.Printf("[neo4j] %s - %s", stmt, prettyParameters.String())
+		log.Info().Str("dawgs_db_driver", DriverName).Msgf("%s - %s", stmt, prettyParameters.String())
 	}
 
 	driverResult, err := s.currentTx().Run(stmt, params)

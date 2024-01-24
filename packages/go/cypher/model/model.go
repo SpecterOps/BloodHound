@@ -1,26 +1,25 @@
 // Copyright 2023 Specter Ops, Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// 
+//
 // SPDX-License-Identifier: Apache-2.0
 
 package model
 
 import (
+	"github.com/specterops/bloodhound/dawgs/graph"
 	"sort"
 	"strings"
-
-	"github.com/specterops/bloodhound/dawgs/graph"
 )
 
 type SortOrder string
@@ -45,6 +44,7 @@ type Expression any
 
 type ExpressionList interface {
 	Add(expression Expression)
+	AddSlice(expressions []Expression)
 	Get(index int) Expression
 	GetAll() []Expression
 	Len() int
@@ -53,17 +53,27 @@ type ExpressionList interface {
 	Replace(index int, expression Expression)
 }
 
-type JoiningExpression struct {
+type expressionList struct {
 	Expressions []Expression
 }
 
-func (s *JoiningExpression) copy() JoiningExpression {
-	return JoiningExpression{
+func NewExpressionListFromSlice(slice []Expression) ExpressionList {
+	return &expressionList{
+		Expressions: slice,
+	}
+}
+
+func NewExpressionList() ExpressionList {
+	return &expressionList{}
+}
+
+func (s *expressionList) copy() expressionList {
+	return expressionList{
 		Expressions: Copy(s.Expressions),
 	}
 }
 
-func (s *JoiningExpression) IndexOf(expressionToFind Expression) int {
+func (s *expressionList) IndexOf(expressionToFind Expression) int {
 	for idx, expression := range s.Expressions {
 		if expression == expressionToFind {
 			return idx
@@ -73,11 +83,11 @@ func (s *JoiningExpression) IndexOf(expressionToFind Expression) int {
 	return -1
 }
 
-func (s *JoiningExpression) Len() int {
+func (s *expressionList) Len() int {
 	return len(s.Expressions)
 }
 
-func (s *JoiningExpression) Remove(expressionToRemove Expression) bool {
+func (s *expressionList) Remove(expressionToRemove Expression) bool {
 	for idx, expression := range s.Expressions {
 		if expression == expressionToRemove {
 			s.Expressions = append(s.Expressions[:idx], s.Expressions[idx+1:]...)
@@ -88,19 +98,23 @@ func (s *JoiningExpression) Remove(expressionToRemove Expression) bool {
 	return false
 }
 
-func (s *JoiningExpression) Add(expression Expression) {
+func (s *expressionList) Add(expression Expression) {
 	s.Expressions = append(s.Expressions, expression)
 }
 
-func (s *JoiningExpression) Get(index int) Expression {
+func (s *expressionList) AddSlice(expressions []Expression) {
+	s.Expressions = append(s.Expressions, expressions...)
+}
+
+func (s *expressionList) Get(index int) Expression {
 	return s.Expressions[index]
 }
 
-func (s *JoiningExpression) GetAll() []Expression {
+func (s *expressionList) GetAll() []Expression {
 	return s.Expressions
 }
 
-func (s *JoiningExpression) Replace(index int, expression Expression) {
+func (s *expressionList) Replace(index int, expression Expression) {
 	s.Expressions[index] = expression
 }
 
@@ -283,7 +297,7 @@ type SinglePartQuery struct {
 	errorContext
 
 	ReadingClauses  []*ReadingClause
-	UpdatingClauses []*UpdatingClause
+	UpdatingClauses []Expression
 	Return          *Return
 }
 
@@ -456,7 +470,7 @@ func (s *Remove) copy() *Remove {
 }
 
 type RemoveItem struct {
-	KindMatcher *KindMatcher
+	KindMatcher Expression
 	Property    *PropertyLookup
 }
 
@@ -654,6 +668,10 @@ func NewLiteral(value any, null bool) *Literal {
 	}
 }
 
+func NewStringLiteral(value string) *Literal {
+	return NewLiteral("'"+value+"'", false)
+}
+
 func (s *Literal) copy() *Literal {
 	return &Literal{
 		Value: s.Value,
@@ -780,6 +798,12 @@ type Parenthetical struct {
 	Expression Expression
 }
 
+func NewParenthetical(expression Expression) *Parenthetical {
+	return &Parenthetical{
+		Expression: expression,
+	}
+}
+
 func (s *Parenthetical) copy() *Parenthetical {
 	return &Parenthetical{
 		Expression: Copy(s.Expression),
@@ -787,12 +811,12 @@ func (s *Parenthetical) copy() *Parenthetical {
 }
 
 type ExclusiveDisjunction struct {
-	JoiningExpression
+	expressionList
 }
 
 func NewExclusiveDisjunction(expressions ...Expression) *ExclusiveDisjunction {
 	return &ExclusiveDisjunction{
-		JoiningExpression{
+		expressionList{
 			Expressions: expressions,
 		},
 	}
@@ -804,17 +828,17 @@ func (s *ExclusiveDisjunction) copy() *ExclusiveDisjunction {
 	}
 
 	return &ExclusiveDisjunction{
-		JoiningExpression: Copy(s.JoiningExpression),
+		expressionList: Copy(s.expressionList),
 	}
 }
 
 type Disjunction struct {
-	JoiningExpression
+	expressionList
 }
 
 func NewDisjunction(expressions ...Expression) *Disjunction {
 	return &Disjunction{
-		JoiningExpression: JoiningExpression{
+		expressionList: expressionList{
 			Expressions: expressions,
 		},
 	}
@@ -826,17 +850,17 @@ func (s *Disjunction) copy() *Disjunction {
 	}
 
 	return &Disjunction{
-		JoiningExpression: Copy(s.JoiningExpression),
+		expressionList: Copy(s.expressionList),
 	}
 }
 
 type Conjunction struct {
-	JoiningExpression
+	expressionList
 }
 
 func NewConjunction(expressions ...Expression) *Conjunction {
 	return &Conjunction{
-		JoiningExpression{
+		expressionList{
 			Expressions: expressions,
 		},
 	}
@@ -848,7 +872,7 @@ func (s *Conjunction) copy() *Conjunction {
 	}
 
 	return &Conjunction{
-		JoiningExpression: Copy(s.JoiningExpression),
+		expressionList: Copy(s.expressionList),
 	}
 }
 
@@ -973,7 +997,7 @@ func (s *Variable) copy() *Variable {
 
 type ProjectionItem struct {
 	Expression Expression
-	Binding    *Variable
+	Binding    Expression
 }
 
 func NewProjectionItem() *ProjectionItem {
@@ -1083,7 +1107,7 @@ func (s *Properties) copy() *Properties {
 
 // NodePattern
 type NodePattern struct {
-	Binding    string
+	Binding    Expression
 	Kinds      graph.Kinds
 	Properties Expression
 }
@@ -1111,7 +1135,7 @@ func (s *NodePattern) AddKind(kind graph.Kind) {
 
 // RelationshipPattern
 type RelationshipPattern struct {
-	Binding    string
+	Binding    Expression
 	Kinds      graph.Kinds
 	Direction  graph.Direction
 	Range      *PatternRange
@@ -1137,7 +1161,7 @@ func (s *RelationshipPattern) AddKind(kind graph.Kind) {
 }
 
 type Where struct {
-	JoiningExpression
+	expressionList
 }
 
 func NewWhere() *Where {
@@ -1150,7 +1174,7 @@ func (s *Where) copy() *Where {
 	}
 
 	return &Where{
-		JoiningExpression: Copy(s.JoiningExpression),
+		expressionList: Copy(s.expressionList),
 	}
 }
 
@@ -1194,7 +1218,7 @@ type Projection struct {
 	Order    *Order
 	Skip     *Skip
 	Limit    *Limit
-	Items    []*ProjectionItem
+	Items    []Expression
 }
 
 func NewProjection(distinct bool) *Projection {
@@ -1226,6 +1250,10 @@ type Return struct {
 	Projection *Projection
 }
 
+func NewReturn() *Return {
+	return &Return{}
+}
+
 func (s *Return) copy() *Return {
 	if s == nil {
 		return nil
@@ -1237,7 +1265,7 @@ func (s *Return) copy() *Return {
 }
 
 type PatternPart struct {
-	Binding                 string
+	Binding                 Expression
 	ShortestPathPattern     bool
 	AllShortestPathsPattern bool
 	PatternElements         []*PatternElement
@@ -1309,5 +1337,29 @@ func (s *Skip) copy() *Skip {
 
 	return &Skip{
 		Value: Copy(s.Value),
+	}
+}
+
+type PatternPredicate struct {
+	PatternElements []*PatternElement
+}
+
+func NewPatternPredicate() *PatternPredicate {
+	return &PatternPredicate{}
+}
+
+func (s *PatternPredicate) AddElement(element Expression) {
+	s.PatternElements = append(s.PatternElements, &PatternElement{
+		Element: element,
+	})
+}
+
+func (s *PatternPredicate) copy() *PatternPredicate {
+	if s == nil {
+		return nil
+	}
+
+	return &PatternPredicate{
+		PatternElements: Copy(s.PatternElements),
 	}
 }
