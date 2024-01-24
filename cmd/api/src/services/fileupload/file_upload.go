@@ -110,13 +110,14 @@ func TouchFileUploadJobLastIngest(db FileUploadData, fileUploadJob model.FileUpl
 	return db.UpdateFileUploadJob(fileUploadJob)
 }
 
-func EndFileUploadJob(db FileUploadData, job model.FileUploadJob) (model.FileUploadJob, error) {
+func EndFileUploadJob(db FileUploadData, job model.FileUploadJob) error {
 	job.Status = model.JobStatusIngesting
+
 	if err := db.UpdateFileUploadJob(job); err != nil {
-		return job, fmt.Errorf("error ending file upload job: %w", err)
-	} else {
-		return job, nil
+		return fmt.Errorf("error ending file upload job: %w", err)
 	}
+
+	return nil
 }
 
 func UpdateFileUploadJobStatus(db FileUploadData, jobID int64, status model.JobStatus, message string) error {
