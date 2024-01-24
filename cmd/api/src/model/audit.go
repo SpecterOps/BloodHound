@@ -149,7 +149,7 @@ type AuditContext struct {
 	ErrorMsg string
 }
 
-func (s AuditContext) SetStatus(statusCode int) {
+func (s *AuditContext) SetStatus(statusCode int) {
 	if statusCode <= 200 && statusCode < 300 {
 		s.Status = AuditStatusSuccess
 	} else {

@@ -218,10 +218,10 @@ func (s *BloodhoundDB) UpdateAssetGroupSelectors(ctx ctx.Context, assetGroup mod
 				}
 			}
 
-			if auditLog, err := newAuditLog(ctx, "UpdateAssetGroupSelectors", assetGroup.AuditData().MergeLeft(selectorSpec), s.idResolver); err != nil {
+			// TODO: complex audit log transform
+			ctx.AuditCtx = model.AuditContext{Action: "UpdateAssetGroupSelectors", Model: selectorSpec}
+			if err := s.AppendAuditLog(ctx, "", selectorSpec); err != nil {
 				return err
-			} else if result := tx.Create(&auditLog); result.Error != nil {
-				return result.Error
 			}
 		}
 
