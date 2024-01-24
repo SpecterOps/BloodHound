@@ -991,8 +991,8 @@ ADCSESC5: types.#Kind & {
 	schema: "active_directory"
 }
 
-ADCSESC6: types.#Kind & {
-	symbol: "ADCSESC6"
+ADCSESC6a: types.#Kind & {
+	symbol: "ADCSESC6a"
 	schema: "active_directory"
 }
 
@@ -1072,7 +1072,7 @@ RelationshipKinds: [
 	ADCSESC3,
 	ADCSESC4,
 	ADCSESC5,
-	ADCSESC6,
+	ADCSESC6a,
 	ADCSESC7,
 	ADCSESC9a,
 	ADCSESC9b,
@@ -1145,7 +1145,7 @@ PathfindingRelationships: [
 	ADCSESC3,
 	ADCSESC4,
 	ADCSESC5,
-	ADCSESC6,
+	ADCSESC6a,
 	ADCSESC7,
 	ADCSESC9a,
 	ADCSESC9b,

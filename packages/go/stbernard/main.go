@@ -1,3 +1,5 @@
+/// 2>/dev/null ; gorun "$0" "$@" ; exit $?
+
 // Copyright 2023 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
@@ -18,21 +20,38 @@ package main
 
 import (
 	"errors"
-	"log"
+	"os"
+	"strings"
 
+	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/packages/go/stbernard/command"
 )
 
 func main() {
+	const LogLevelVarName = "SB_LOG_LEVEL"
+	var rawLvl = os.Getenv(LogLevelVarName)
+
+	log.ConfigureDefaults()
+
+	if rawLvl == "" {
+		rawLvl = "info"
+	}
+
+	if lvl, err := log.ParseLevel(rawLvl); err != nil {
+		log.Errorf("Could not parse log level from %s: %v", LogLevelVarName, err)
+	} else {
+		log.SetGlobalLevel(lvl)
+	}
+
 	if cmd, err := command.ParseCLI(); err != nil {
-		if errors.Is(err, command.NoCmdErr) {
-			log.Fatal("No command specified")
+		if errors.Is(err, command.ErrNoCmd) {
+			log.Fatalf("No command specified")
 		} else {
 			log.Fatalf("Error while parsing command: %v", err)
 		}
 	} else if err := cmd.Run(); err != nil {
 		log.Fatalf("Failed to run command %s: %v", cmd.Name(), err)
 	} else {
-		log.Printf("%s completed successfully", cmd.Name())
+		log.Infof("%s completed successfully", strings.ToUpper(cmd.Name()))
 	}
 }
