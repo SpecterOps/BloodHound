@@ -414,7 +414,7 @@ func (s *GraphTestContext) NewActiveDirectoryRootCAWithThumbprint(name, domainSI
 	}), ad.Entity, ad.RootCA)
 }
 
-func (s *GraphTestContext) NewActiveDirectoryCertTemplate(name, domainSID string, requiresManagerApproval, authenticationEnabled, enrolleeSupplieSubject, subjectAltRequireUpn bool, schemaVersion, authorizedSignatures int, ekus, applicationPolicies []string) *graph.Node {
+func (s *GraphTestContext) NewActiveDirectoryCertTemplate(name, domainSID string, requiresManagerApproval, authenticationEnabled, enrolleeSupplieSubject, subjectAltRequireUpn, noSecurityExtension bool, schemaVersion, authorizedSignatures int, ekus, applicationPolicies []string) *graph.Node {
 	return s.NewNode(graph.AsProperties(graph.PropertyMap{
 		common.Name:                name,
 		common.ObjectID:            must.NewUUIDv4().String(),
@@ -422,6 +422,7 @@ func (s *GraphTestContext) NewActiveDirectoryCertTemplate(name, domainSID string
 		ad.RequiresManagerApproval: requiresManagerApproval,
 		ad.AuthenticationEnabled:   authenticationEnabled,
 		ad.EnrolleeSuppliesSubject: enrolleeSupplieSubject,
+		ad.NoSecurityExtension:     noSecurityExtension,
 		ad.SchemaVersion:           float64(schemaVersion),
 		ad.AuthorizedSignatures:    float64(authorizedSignatures),
 		ad.EKUs:                    ekus,
