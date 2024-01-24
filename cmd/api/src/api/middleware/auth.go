@@ -80,7 +80,7 @@ func AuthMiddleware(authenticator api.Authenticator) mux.MiddlewareFunc {
 						api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "Token ID is malformed.", request), response)
 						return
 					} else if userAuth, responseCode, err := authenticator.ValidateRequestSignature(tokenID, request, time.Now()); err != nil {
-						msg := fmt.Errorf("Unable to validate request signature for client: %w.", err).Error()
+						msg := fmt.Errorf("unable to validate request signature for client: %w", err).Error()
 						api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(responseCode, msg, request), response)
 						return
 					} else {

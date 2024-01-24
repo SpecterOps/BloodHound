@@ -1,17 +1,17 @@
 // Copyright 2023 Specter Ops, Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// 
+//
 // SPDX-License-Identifier: Apache-2.0
 
 package neo4j
@@ -29,14 +29,14 @@ import (
 func directionToReturnCriteria(direction graph.Direction) (graph.Criteria, error) {
 	switch direction {
 	case graph.DirectionInbound:
-		// Return the relationship and the end node
+		// Select the relationship and the end node
 		return query.Returning(
 			query.Relationship(),
 			query.End(),
 		), nil
 
 	case graph.DirectionOutbound:
-		// Return the relationship and the start node
+		// Select the relationship and the start node
 		return query.Returning(
 			query.Relationship(),
 			query.Start(),
@@ -78,10 +78,10 @@ func NewRelationshipQuery(ctx context.Context, tx innerTransaction) graph.Relati
 }
 
 func (s *RelationshipQuery) run(statement string, parameters map[string]any) graph.Result {
-	return s.tx.Run(statement, parameters)
+	return s.tx.Raw(statement, parameters)
 }
 
-func (s *RelationshipQuery) Execute(delegate func(results graph.Result) error, finalCriteria ...graph.Criteria) error {
+func (s *RelationshipQuery) Query(delegate func(results graph.Result) error, finalCriteria ...graph.Criteria) error {
 	for _, criteria := range finalCriteria {
 		s.queryBuilder.Apply(criteria)
 	}
@@ -169,7 +169,7 @@ func (s *RelationshipQuery) Filterf(criteriaDelegate graph.CriteriaProvider) gra
 func (s *RelationshipQuery) Count() (int64, error) {
 	var count int64
 
-	return count, s.Execute(func(results graph.Result) error {
+	return count, s.Query(func(results graph.Result) error {
 		if !results.Next() {
 			return graph.ErrNoResultsFound
 		}
@@ -209,7 +209,7 @@ func (s *RelationshipQuery) FetchAllShortestPaths(delegate func(cursor graph.Cur
 }
 
 func (s *RelationshipQuery) FetchTriples(delegate func(cursor graph.Cursor[graph.RelationshipTripleResult]) error) error {
-	return s.Execute(func(result graph.Result) error {
+	return s.Query(func(result graph.Result) error {
 		cursor := graph.NewResultIterator(s.ctx, result, func(scanner graph.Scanner) (graph.RelationshipTripleResult, error) {
 			var (
 				startID        graph.ID
@@ -227,15 +227,15 @@ func (s *RelationshipQuery) FetchTriples(delegate func(cursor graph.Cursor[graph
 
 		defer cursor.Close()
 		return delegate(cursor)
-	}, query.Returning(
-		query.Distinct(query.StartID()),
+	}, query.ReturningDistinct(
+		query.StartID(),
 		query.RelationshipID(),
 		query.EndID(),
 	))
 }
 
 func (s *RelationshipQuery) FetchKinds(delegate func(cursor graph.Cursor[graph.RelationshipKindsResult]) error) error {
-	return s.Execute(func(result graph.Result) error {
+	return s.Query(func(result graph.Result) error {
 		cursor := graph.NewResultIterator(s.ctx, result, func(scanner graph.Scanner) (graph.RelationshipKindsResult, error) {
 			var (
 				startID          graph.ID
@@ -268,7 +268,7 @@ func (s *RelationshipQuery) FetchKinds(delegate func(cursor graph.Cursor[graph.R
 func (s *RelationshipQuery) First() (*graph.Relationship, error) {
 	var relationship graph.Relationship
 
-	return &relationship, s.Execute(func(results graph.Result) error {
+	return &relationship, s.Query(func(results graph.Result) error {
 		if !results.Next() {
 			return graph.ErrNoResultsFound
 		}
@@ -280,7 +280,7 @@ func (s *RelationshipQuery) First() (*graph.Relationship, error) {
 }
 
 func (s *RelationshipQuery) Fetch(delegate func(cursor graph.Cursor[*graph.Relationship]) error) error {
-	return s.Execute(func(result graph.Result) error {
+	return s.Query(func(result graph.Result) error {
 		cursor := graph.NewResultIterator(s.ctx, result, func(scanner graph.Scanner) (*graph.Relationship, error) {
 			var relationship graph.Relationship
 			return &relationship, scanner.Scan(&relationship)
@@ -297,7 +297,7 @@ func (s *RelationshipQuery) FetchDirection(direction graph.Direction, delegate f
 	if returnCriteria, err := directionToReturnCriteria(direction); err != nil {
 		return err
 	} else {
-		return s.Execute(func(result graph.Result) error {
+		return s.Query(func(result graph.Result) error {
 			cursor := graph.NewResultIterator(s.ctx, result, func(scanner graph.Scanner) (graph.DirectionalResult, error) {
 				var (
 					relationship graph.Relationship
@@ -322,7 +322,7 @@ func (s *RelationshipQuery) FetchDirection(direction graph.Direction, delegate f
 }
 
 func (s *RelationshipQuery) FetchIDs(delegate func(cursor graph.Cursor[graph.ID]) error) error {
-	return s.Execute(func(result graph.Result) error {
+	return s.Query(func(result graph.Result) error {
 		cursor := graph.NewResultIterator(s.ctx, result, func(scanner graph.Scanner) (graph.ID, error) {
 			var relationshipID graph.ID
 			return relationshipID, scanner.Scan(&relationshipID)

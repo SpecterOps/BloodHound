@@ -1,0 +1,5 @@
+[
+  "cmd/ui",
+  "packages/javascript/bh-shared-ui",
+  "packages/javascript/js-client-library"
+]

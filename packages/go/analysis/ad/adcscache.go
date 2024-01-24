@@ -18,6 +18,7 @@ package ad
 
 import (
 	"context"
+
 	"github.com/specterops/bloodhound/dawgs/cardinality"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/graphschema/ad"
@@ -25,20 +26,22 @@ import (
 )
 
 type ADCSCache struct {
-	AuthStoreForChainValid  map[graph.ID]cardinality.Duplex[uint32]
-	RootCAForChainValid     map[graph.ID]cardinality.Duplex[uint32]
-	CertTemplateControllers map[graph.ID][]*graph.Node
-	EnterpriseCAEnrollers   map[graph.ID][]*graph.Node
-	PublishedTemplateCache  map[graph.ID][]*graph.Node
+	AuthStoreForChainValid          map[graph.ID]cardinality.Duplex[uint32]
+	RootCAForChainValid             map[graph.ID]cardinality.Duplex[uint32]
+	ExpandedCertTemplateControllers map[graph.ID][]uint32
+	CertTemplateControllers         map[graph.ID][]*graph.Node
+	EnterpriseCAEnrollers           map[graph.ID][]*graph.Node
+	PublishedTemplateCache          map[graph.ID][]*graph.Node
 }
 
 func NewADCSCache() ADCSCache {
 	return ADCSCache{
-		AuthStoreForChainValid:  make(map[graph.ID]cardinality.Duplex[uint32]),
-		RootCAForChainValid:     make(map[graph.ID]cardinality.Duplex[uint32]),
-		CertTemplateControllers: make(map[graph.ID][]*graph.Node),
-		EnterpriseCAEnrollers:   make(map[graph.ID][]*graph.Node),
-		PublishedTemplateCache:  make(map[graph.ID][]*graph.Node),
+		AuthStoreForChainValid:          make(map[graph.ID]cardinality.Duplex[uint32]),
+		RootCAForChainValid:             make(map[graph.ID]cardinality.Duplex[uint32]),
+		ExpandedCertTemplateControllers: make(map[graph.ID][]uint32),
+		CertTemplateControllers:         make(map[graph.ID][]*graph.Node),
+		EnterpriseCAEnrollers:           make(map[graph.ID][]*graph.Node),
+		PublishedTemplateCache:          make(map[graph.ID][]*graph.Node),
 	}
 }
 

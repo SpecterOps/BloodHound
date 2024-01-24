@@ -27,6 +27,7 @@
 
 import os
 import pathlib
+import re
 
 from typing import List
 
@@ -239,7 +240,7 @@ LICENSE = """                                 Apache License
 """
 
 # Apache License 2.0 header copy
-LICENSE_HEADER = """Copyright 2023 Specter Ops, Inc.
+LICENSE_HEADER = """Copyright 2024 Specter Ops, Inc.
 
 Licensed under the Apache License, Version 2.0
 you may not use this file except in compliance with the License.
@@ -312,6 +313,7 @@ IGNORED_EXTENSIONS = [
     ".crt",
     ".key",
     ".example",
+    ".svg",
 ]
 
 # Any file listed below is included regardless of exclusions.
@@ -360,6 +362,15 @@ LICENSE_HEADERS_BY_EXTENSION = {
     ".toml": generate_license_header("#"),
 }
 
+# Below is a list of valid file headers that the license must be placed after
+FILE_HEADER_PREFIXES = [
+    # POSIX exec header
+    "#!",
+
+    # XML header
+    "<?xml"
+]
+
 
 def content_has_header(path: str, content_lines: List[str], header: str) -> bool:
     matching_header = False
@@ -379,10 +390,21 @@ def content_has_header(path: str, content_lines: List[str], header: str) -> bool
             if header_lineno >= len(header_lines):
                 return True
 
+        elif re.search('Copyright \d{4} Specter Ops, Inc.', line.strip()):
+            matching_header=True
+            header_lineno += 1
+
         elif matching_header:
             print(f"WARNING: Path {path} contains damaged license information.")
             return True
 
+    return False
+
+
+def _is_file_header(line: str) -> bool:
+    for header in FILE_HEADER_PREFIXES:
+        if line.startswith(header):
+            return True
     return False
 
 
@@ -398,7 +420,7 @@ def insert_license_header(path: str, header: str) -> None:
         return
 
     # Try to find a script exec header to advance the line offset
-    line_offset = 1 if len(content_lines) > 0 and content_lines[0].startswith("#!") else 0
+    line_offset = 1 if len(content_lines) > 0 and _is_file_header(content_lines[0]) else 0
 
     for line in content_lines[line_offset:]:
         # Make sure to skip leading newlines since we'll add our own
