@@ -20,16 +20,17 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"github.com/specterops/bloodhound/dawgs/drivers/neo4j"
-	"github.com/specterops/bloodhound/dawgs/drivers/pg"
-	"github.com/specterops/bloodhound/dawgs/util/size"
-	schema "github.com/specterops/bloodhound/graphschema"
 	_ "net/http/pprof"
 	"os"
 	"os/signal"
 	"runtime/pprof"
 	"syscall"
 	"time"
+
+	"github.com/specterops/bloodhound/dawgs/drivers/neo4j"
+	"github.com/specterops/bloodhound/dawgs/drivers/pg"
+	"github.com/specterops/bloodhound/dawgs/util/size"
+	schema "github.com/specterops/bloodhound/graphschema"
 
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/specterops/bloodhound/dawgs"
@@ -71,7 +72,7 @@ func RunTestSuite(ctx context.Context, connectionStr, driverName string) tests.T
 func newContext() context.Context {
 	var (
 		ctx, done = context.WithCancel(context.Background())
-		sigchnl   = make(chan os.Signal)
+		sigchnl   = make(chan os.Signal, 1)
 	)
 
 	signal.Notify(sigchnl)
