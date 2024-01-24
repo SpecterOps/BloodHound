@@ -111,6 +111,7 @@ import WriteSPN from './WriteSPN/WriteSPN';
 import ADCSESC1 from './ADCSESC1/ADCSESC1';
 import ADCSESC6a from './ADCSESC6a/ADCSESC6a';
 import ADCSESC6b from './ADCSESC6b/ADCSESC6b';
+import ADCSESC9a from './ADCSESC9a/ADCSESC9a';
 
 export type EdgeInfoProps = {
     edgeName?: string;
@@ -215,6 +216,7 @@ const EdgeInfoComponents = {
     ADCSESC3: ADCSESC3,
     ADCSESC6a: ADCSESC6a,
     ADCSESC6b: ADCSESC6b,
+    ADCSESC9a: ADCSESC9a,
     ManageCA: ManageCA,
     ManageCertificates: ManageCertificates,
     WritePKIEnrollmentFlag: WritePKIEnrollmentFlag,
