@@ -27,12 +27,12 @@ const WindowsAbuse: FC<EdgeInfoProps> = ({ sourceName, sourceType }) => {
                 considerations tab for why this may be a bad idea. The second, and highly recommended method, is by
                 using the Add-DomainGroupMember function in PowerView. This function is superior to using the net.exe
                 binary in several ways. For instance, you can supply alternate credentials, instead of needing to run a
-                process as or logon as the user with the AddMember privilege. Additionally, you have much safer
+                process as or logon as the user with the AddMember permission. Additionally, you have much safer
                 execution options than you do with spawning net.exe (see the opsec tab).
             </Typography>
 
             <Typography variant='body2'>
-                To abuse this privilege with PowerView's Add-DomainGroupMember, first import PowerView into your agent
+                To abuse this permission with PowerView's Add-DomainGroupMember, first import PowerView into your agent
                 session or into a PowerShell instance at the console.
             </Typography>
 

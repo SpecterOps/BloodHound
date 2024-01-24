@@ -1,17 +1,17 @@
 // Copyright 2023 Specter Ops, Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// 
+//
 // SPDX-License-Identifier: Apache-2.0
 
 package neo4j
@@ -64,10 +64,10 @@ func NewNodeQuery(ctx context.Context, tx innerTransaction) graph.NodeQuery {
 }
 
 func (s *NodeQuery) run(statement string, parameters map[string]any) graph.Result {
-	return s.tx.Run(statement, parameters)
+	return s.tx.Raw(statement, parameters)
 }
 
-func (s *NodeQuery) Execute(delegate func(results graph.Result) error, finalCriteria ...graph.Criteria) error {
+func (s *NodeQuery) Query(delegate func(results graph.Result) error, finalCriteria ...graph.Criteria) error {
 	for _, criteria := range finalCriteria {
 		s.queryBuilder.Apply(criteria)
 	}
@@ -131,7 +131,7 @@ func (s *NodeQuery) Filterf(criteriaDelegate graph.CriteriaProvider) graph.NodeQ
 func (s *NodeQuery) Count() (int64, error) {
 	var count int64
 
-	return count, s.Execute(func(results graph.Result) error {
+	return count, s.Query(func(results graph.Result) error {
 		if !results.Next() {
 			return graph.ErrNoResultsFound
 		}
@@ -171,7 +171,7 @@ func (s *NodeQuery) Update(properties *graph.Properties) error {
 func (s *NodeQuery) First() (*graph.Node, error) {
 	var node graph.Node
 
-	return &node, s.Execute(func(results graph.Result) error {
+	return &node, s.Query(func(results graph.Result) error {
 		if !results.Next() {
 			return graph.ErrNoResultsFound
 		}
@@ -183,7 +183,7 @@ func (s *NodeQuery) First() (*graph.Node, error) {
 }
 
 func (s *NodeQuery) Fetch(delegate func(cursor graph.Cursor[*graph.Node]) error) error {
-	return s.Execute(func(result graph.Result) error {
+	return s.Query(func(result graph.Result) error {
 		cursor := graph.NewResultIterator(s.ctx, result, func(scanner graph.Scanner) (*graph.Node, error) {
 			var node graph.Node
 			return &node, scanner.Scan(&node)
@@ -197,7 +197,7 @@ func (s *NodeQuery) Fetch(delegate func(cursor graph.Cursor[*graph.Node]) error)
 }
 
 func (s *NodeQuery) FetchIDs(delegate func(cursor graph.Cursor[graph.ID]) error) error {
-	return s.Execute(func(result graph.Result) error {
+	return s.Query(func(result graph.Result) error {
 		cursor := graph.NewResultIterator(s.ctx, result, func(scanner graph.Scanner) (graph.ID, error) {
 			var nodeID graph.ID
 			return nodeID, scanner.Scan(&nodeID)
@@ -211,7 +211,7 @@ func (s *NodeQuery) FetchIDs(delegate func(cursor graph.Cursor[graph.ID]) error)
 }
 
 func (s *NodeQuery) FetchKinds(delegate func(cursor graph.Cursor[graph.KindsResult]) error) error {
-	return s.Execute(func(result graph.Result) error {
+	return s.Query(func(result graph.Result) error {
 		cursor := graph.NewResultIterator(s.ctx, result, func(scanner graph.Scanner) (graph.KindsResult, error) {
 			var (
 				nodeID    graph.ID

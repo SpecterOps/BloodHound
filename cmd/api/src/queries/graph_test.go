@@ -19,6 +19,7 @@ package queries_test
 import (
 	"context"
 	"fmt"
+	"github.com/specterops/bloodhound/src/config"
 	"net/http"
 	"net/url"
 	"testing"
@@ -45,7 +46,7 @@ func TestGraphQuery_RawCypherSearch(t *testing.T) {
 	var (
 		mockCtrl       = gomock.NewController(t)
 		mockGraphDB    = graphMocks.NewMockDatabase(mockCtrl)
-		gq             = queries.NewGraphQuery(mockGraphDB, cache.Cache{}, 0, false)
+		gq             = queries.NewGraphQuery(mockGraphDB, cache.Cache{}, config.Configuration{})
 		outerBHCtxInst = &bhCtx.Context{
 			StartTime: time.Now(),
 			Timeout: bhCtx.RequestedWaitDuration{

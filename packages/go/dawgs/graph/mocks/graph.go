@@ -334,36 +334,31 @@ func (mr *MockBatchMockRecorder) Commit() *gomock.Call {
 }
 
 // CreateNode mocks base method.
-func (m *MockBatch) CreateNode(properties *graph.Properties, kinds ...graph.Kind) error {
+func (m *MockBatch) CreateNode(node *graph.Node) error {
 	m.ctrl.T.Helper()
-	varargs := []interface{}{properties}
-	for _, a := range kinds {
-		varargs = append(varargs, a)
-	}
-	ret := m.ctrl.Call(m, "CreateNode", varargs...)
+	ret := m.ctrl.Call(m, "CreateNode", node)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // CreateNode indicates an expected call of CreateNode.
-func (mr *MockBatchMockRecorder) CreateNode(properties interface{}, kinds ...interface{}) *gomock.Call {
+func (mr *MockBatchMockRecorder) CreateNode(node interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]interface{}{properties}, kinds...)
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateNode", reflect.TypeOf((*MockBatch)(nil).CreateNode), varargs...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateNode", reflect.TypeOf((*MockBatch)(nil).CreateNode), node)
 }
 
 // CreateRelationship mocks base method.
-func (m *MockBatch) CreateRelationship(startNode, endNode *graph.Node, kind graph.Kind, properties *graph.Properties) error {
+func (m *MockBatch) CreateRelationship(relationship *graph.Relationship) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateRelationship", startNode, endNode, kind, properties)
+	ret := m.ctrl.Call(m, "CreateRelationship", relationship)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // CreateRelationship indicates an expected call of CreateRelationship.
-func (mr *MockBatchMockRecorder) CreateRelationship(startNode, endNode, kind, properties interface{}) *gomock.Call {
+func (mr *MockBatchMockRecorder) CreateRelationship(relationship interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateRelationship", reflect.TypeOf((*MockBatch)(nil).CreateRelationship), startNode, endNode, kind, properties)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateRelationship", reflect.TypeOf((*MockBatch)(nil).CreateRelationship), relationship)
 }
 
 // CreateRelationshipByIDs mocks base method.
@@ -464,6 +459,20 @@ func (mr *MockBatchMockRecorder) UpdateRelationshipBy(update interface{}) *gomoc
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateRelationshipBy", reflect.TypeOf((*MockBatch)(nil).UpdateRelationshipBy), update)
 }
 
+// WithGraph mocks base method.
+func (m *MockBatch) WithGraph(graphSchema graph.Graph) graph.Batch {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "WithGraph", graphSchema)
+	ret0, _ := ret[0].(graph.Batch)
+	return ret0
+}
+
+// WithGraph indicates an expected call of WithGraph.
+func (mr *MockBatchMockRecorder) WithGraph(graphSchema interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WithGraph", reflect.TypeOf((*MockBatch)(nil).WithGraph), graphSchema)
+}
+
 // MockTransaction is a mock of Transaction interface.
 type MockTransaction struct {
 	ctrl     *gomock.Controller
@@ -521,21 +530,6 @@ func (mr *MockTransactionMockRecorder) CreateNode(properties interface{}, kinds 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateNode", reflect.TypeOf((*MockTransaction)(nil).CreateNode), varargs...)
 }
 
-// CreateRelationship mocks base method.
-func (m *MockTransaction) CreateRelationship(startNode, endNode *graph.Node, kind graph.Kind, properties *graph.Properties) (*graph.Relationship, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateRelationship", startNode, endNode, kind, properties)
-	ret0, _ := ret[0].(*graph.Relationship)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// CreateRelationship indicates an expected call of CreateRelationship.
-func (mr *MockTransactionMockRecorder) CreateRelationship(startNode, endNode, kind, properties interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateRelationship", reflect.TypeOf((*MockTransaction)(nil).CreateRelationship), startNode, endNode, kind, properties)
-}
-
 // CreateRelationshipByIDs mocks base method.
 func (m *MockTransaction) CreateRelationshipByIDs(startNodeID, endNodeID graph.ID, kind graph.Kind, properties *graph.Properties) (*graph.Relationship, error) {
 	m.ctrl.T.Helper()
@@ -565,6 +559,34 @@ func (mr *MockTransactionMockRecorder) Nodes() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Nodes", reflect.TypeOf((*MockTransaction)(nil).Nodes))
 }
 
+// Query mocks base method.
+func (m *MockTransaction) Query(query string, parameters map[string]any) graph.Result {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Query", query, parameters)
+	ret0, _ := ret[0].(graph.Result)
+	return ret0
+}
+
+// Query indicates an expected call of Query.
+func (mr *MockTransactionMockRecorder) Query(query, parameters interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Query", reflect.TypeOf((*MockTransaction)(nil).Query), query, parameters)
+}
+
+// Raw mocks base method.
+func (m *MockTransaction) Raw(query string, parameters map[string]any) graph.Result {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Raw", query, parameters)
+	ret0, _ := ret[0].(graph.Result)
+	return ret0
+}
+
+// Raw indicates an expected call of Raw.
+func (mr *MockTransactionMockRecorder) Raw(query, parameters interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Raw", reflect.TypeOf((*MockTransaction)(nil).Raw), query, parameters)
+}
+
 // Relationships mocks base method.
 func (m *MockTransaction) Relationships() graph.RelationshipQuery {
 	m.ctrl.T.Helper()
@@ -577,20 +599,6 @@ func (m *MockTransaction) Relationships() graph.RelationshipQuery {
 func (mr *MockTransactionMockRecorder) Relationships() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Relationships", reflect.TypeOf((*MockTransaction)(nil).Relationships))
-}
-
-// Run mocks base method.
-func (m *MockTransaction) Run(query string, parameters map[string]any) graph.Result {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Run", query, parameters)
-	ret0, _ := ret[0].(graph.Result)
-	return ret0
-}
-
-// Run indicates an expected call of Run.
-func (mr *MockTransactionMockRecorder) Run(query, parameters interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Run", reflect.TypeOf((*MockTransaction)(nil).Run), query, parameters)
 }
 
 // TraversalMemoryLimit mocks base method.
@@ -621,20 +629,6 @@ func (mr *MockTransactionMockRecorder) UpdateNode(node interface{}) *gomock.Call
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateNode", reflect.TypeOf((*MockTransaction)(nil).UpdateNode), node)
 }
 
-// UpdateNodeBy mocks base method.
-func (m *MockTransaction) UpdateNodeBy(update graph.NodeUpdate) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateNodeBy", update)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// UpdateNodeBy indicates an expected call of UpdateNodeBy.
-func (mr *MockTransactionMockRecorder) UpdateNodeBy(update interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateNodeBy", reflect.TypeOf((*MockTransaction)(nil).UpdateNodeBy), update)
-}
-
 // UpdateRelationship mocks base method.
 func (m *MockTransaction) UpdateRelationship(relationship *graph.Relationship) error {
 	m.ctrl.T.Helper()
@@ -649,18 +643,18 @@ func (mr *MockTransactionMockRecorder) UpdateRelationship(relationship interface
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateRelationship", reflect.TypeOf((*MockTransaction)(nil).UpdateRelationship), relationship)
 }
 
-// UpdateRelationshipBy mocks base method.
-func (m *MockTransaction) UpdateRelationshipBy(update graph.RelationshipUpdate) error {
+// WithGraph mocks base method.
+func (m *MockTransaction) WithGraph(graphSchema graph.Graph) graph.Transaction {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateRelationshipBy", update)
-	ret0, _ := ret[0].(error)
+	ret := m.ctrl.Call(m, "WithGraph", graphSchema)
+	ret0, _ := ret[0].(graph.Transaction)
 	return ret0
 }
 
-// UpdateRelationshipBy indicates an expected call of UpdateRelationshipBy.
-func (mr *MockTransactionMockRecorder) UpdateRelationshipBy(update interface{}) *gomock.Call {
+// WithGraph indicates an expected call of WithGraph.
+func (mr *MockTransactionMockRecorder) WithGraph(graphSchema interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateRelationshipBy", reflect.TypeOf((*MockTransaction)(nil).UpdateRelationshipBy), update)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WithGraph", reflect.TypeOf((*MockTransaction)(nil).WithGraph), graphSchema)
 }
 
 // MockDatabase is a mock of Database interface.
@@ -687,17 +681,17 @@ func (m *MockDatabase) EXPECT() *MockDatabaseMockRecorder {
 }
 
 // AssertSchema mocks base method.
-func (m *MockDatabase) AssertSchema(ctx context.Context, schema *graph.Schema) error {
+func (m *MockDatabase) AssertSchema(ctx context.Context, dbSchema graph.Schema) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "AssertSchema", ctx, schema)
+	ret := m.ctrl.Call(m, "AssertSchema", ctx, dbSchema)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // AssertSchema indicates an expected call of AssertSchema.
-func (mr *MockDatabaseMockRecorder) AssertSchema(ctx, schema interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) AssertSchema(ctx, dbSchema interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AssertSchema", reflect.TypeOf((*MockDatabase)(nil).AssertSchema), ctx, schema)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AssertSchema", reflect.TypeOf((*MockDatabase)(nil).AssertSchema), ctx, dbSchema)
 }
 
 // BatchOperation mocks base method.
@@ -715,32 +709,17 @@ func (mr *MockDatabaseMockRecorder) BatchOperation(ctx, batchDelegate interface{
 }
 
 // Close mocks base method.
-func (m *MockDatabase) Close() error {
+func (m *MockDatabase) Close(ctx context.Context) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Close")
+	ret := m.ctrl.Call(m, "Close", ctx)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // Close indicates an expected call of Close.
-func (mr *MockDatabaseMockRecorder) Close() *gomock.Call {
+func (mr *MockDatabaseMockRecorder) Close(ctx interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Close", reflect.TypeOf((*MockDatabase)(nil).Close))
-}
-
-// FetchSchema mocks base method.
-func (m *MockDatabase) FetchSchema(ctx context.Context) (*graph.Schema, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FetchSchema", ctx)
-	ret0, _ := ret[0].(*graph.Schema)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// FetchSchema indicates an expected call of FetchSchema.
-func (mr *MockDatabaseMockRecorder) FetchSchema(ctx interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FetchSchema", reflect.TypeOf((*MockDatabase)(nil).FetchSchema), ctx)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Close", reflect.TypeOf((*MockDatabase)(nil).Close), ctx)
 }
 
 // ReadTransaction mocks base method.

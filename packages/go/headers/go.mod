@@ -16,4 +16,4 @@
 
 module github.com/specterops/bloodhound/headers
 
-go 1.20
+go 1.21

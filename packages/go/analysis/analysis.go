@@ -44,9 +44,7 @@ var (
 func AllTaggedNodesFilter(additionalFilter graph.Criteria) graph.Criteria {
 	var (
 		filters = []graph.Criteria{
-			query.Not(
-				query.Equals(query.NodeProperty(common.SystemTags.String()), ""),
-			),
+			query.IsNotNull(query.NodeProperty(common.SystemTags.String())),
 		}
 	)
 

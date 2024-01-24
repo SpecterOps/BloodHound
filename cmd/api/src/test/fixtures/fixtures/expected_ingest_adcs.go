@@ -549,6 +549,9 @@ func IngestADCSAssertions(testCtrl test.Controller, tx graph.Transaction) {
 
 	for _, assertionCriteria := range nodeAssertionCriteria {
 		_, err := tx.Nodes().Filter(assertionCriteria).First()
+		if err != nil {
+			tx.Nodes().Filter(assertionCriteria).First()
+		}
 		require.Nilf(testCtrl, err, "Node assertion failed: %s", FormatQueryComponent(assertionCriteria))
 	}
 }

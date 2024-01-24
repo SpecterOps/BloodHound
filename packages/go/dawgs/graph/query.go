@@ -27,7 +27,7 @@ type ValueMapper interface {
 
 type Scanner interface {
 	Next() bool
-	Values() ValueMapper
+	Values() (ValueMapper, error)
 	Scan(targets ...any) error
 }
 
@@ -36,6 +36,35 @@ type Result interface {
 
 	Error() error
 	Close()
+}
+
+type ErrorResult struct {
+	err error
+}
+
+func (s ErrorResult) Next() bool {
+	return false
+}
+
+func (s ErrorResult) Values() (ValueMapper, error) {
+	return nil, s.err
+}
+
+func (s ErrorResult) Scan(targets ...any) error {
+	return s.err
+}
+
+func (s ErrorResult) Error() error {
+	return s.err
+}
+
+func (s ErrorResult) Close() {
+}
+
+func NewErrorResult(err error) Result {
+	return ErrorResult{
+		err: err,
+	}
 }
 
 // Criteria is a top-level alias for communicating structured query filter criteria to a query generator.
@@ -53,8 +82,8 @@ type NodeQuery interface {
 	// Filterf applies the given criteria provider function to this query.
 	Filterf(criteriaDelegate CriteriaProvider) NodeQuery
 
-	// Execute completes the query and hands the raw result to the given delegate for unmarshalling
-	Execute(delegate func(results Result) error, finalCriteria ...Criteria) error
+	// Query completes the query and hands the raw result to the given delegate for unmarshalling
+	Query(delegate func(results Result) error, finalCriteria ...Criteria) error
 
 	// Delete deletes any candidate nodes that match the query criteria
 	Delete() error
@@ -88,8 +117,6 @@ type NodeQuery interface {
 
 	// FetchKinds returns the ID and Kinds of matched nodes and omits property fetching
 	FetchKinds(func(cursor Cursor[KindsResult]) error) error
-
-	Debug() (string, map[string]any)
 }
 
 // RelationshipQuery is an interface that covers all supported relationship query combinations. The contract supports a
@@ -124,8 +151,8 @@ type RelationshipQuery interface {
 	// First completes the query and returns the result and any error encountered during execution.
 	First() (*Relationship, error)
 
-	// Execute completes the query and hands the raw result to the given delegate for unmarshalling
-	Execute(delegate func(results Result) error, finalCriteria ...Criteria) error
+	// Query completes the query and hands the raw result to the given delegate for unmarshalling
+	Query(delegate func(results Result) error, finalCriteria ...Criteria) error
 
 	// Fetch completes the query and captures a cursor for iterating the result set. This cursor is passed to the given
 	// delegate. Errors from the delegate are returned upwards as the error result of this call.
@@ -147,6 +174,4 @@ type RelationshipQuery interface {
 
 	// FetchKinds returns the ID, Kind, Start ID and End ID of matched relationships and omits property fetching
 	FetchKinds(delegate func(cursor Cursor[RelationshipKindsResult]) error) error
-
-	Debug() (string, map[string]any)
 }
