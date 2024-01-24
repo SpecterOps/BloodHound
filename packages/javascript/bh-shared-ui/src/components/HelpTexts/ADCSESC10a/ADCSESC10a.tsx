@@ -1,4 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2024 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -14,24 +14,18 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package utils
+import General from './General';
+import WindowsAbuse from './WindowsAbuse';
+import LinuxAbuse from './LinuxAbuse';
+import Opsec from './Opsec';
+import References from './References';
 
-import (
-	_ "embed"
-	"fmt"
-	"os"
+const ADCSESC10a = {
+    general: General,
+    windowsAbuse: WindowsAbuse,
+    linuxAbuse: LinuxAbuse,
+    opsec: Opsec,
+    references: References,
+};
 
-	"github.com/specterops/bloodhound/src/config"
-)
-
-const (
-	integrationTestConfigEnvironmentVarName = "INTEGRATION_CONFIG_PATH"
-)
-
-func LoadIntegrationTestConfig() (config.Configuration, error) {
-	if cfgPath := os.Getenv(integrationTestConfigEnvironmentVarName); cfgPath != "" {
-		return config.ReadConfigurationFile(cfgPath)
-	} else {
-		return config.Configuration{}, fmt.Errorf("required environment variable %s not found", integrationTestConfigEnvironmentVarName)
-	}
-}
+export default ADCSESC10a;

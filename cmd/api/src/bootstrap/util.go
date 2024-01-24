@@ -19,16 +19,16 @@ package bootstrap
 import (
 	"context"
 	"fmt"
+	"os"
+
 	"github.com/specterops/bloodhound/dawgs"
 	"github.com/specterops/bloodhound/dawgs/drivers/neo4j"
-	_ "github.com/specterops/bloodhound/dawgs/drivers/neo4j"
 	"github.com/specterops/bloodhound/dawgs/drivers/pg"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/dawgs/util/size"
 	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/src/api/tools"
 	"github.com/specterops/bloodhound/src/config"
-	"os"
 )
 
 func ensureDirectory(path string) error {
