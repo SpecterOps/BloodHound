@@ -4,14 +4,26 @@ services:
   bh-ui:
     develop:
       watch:
-        - action: sync+restart
-          path: cmd/ui/public
-          target: /bloodhound/cmd/ui/public
         - action: rebuild
-          path: package.json
+          path: ./.yarnrc.yml
         - action: rebuild
-          path: cmd/ui/package.json
+          path: ./package.json
         - action: rebuild
-          path: packages/javascript
+          path: ./cmd/ui
           ignore:
             - node_modules
+            - src
+            - public
+            - dist
+        - action: rebuild
+          path: ./packages/javascript/bh-shared-ui
+          ignore:
+            - node_modules
+            - dist
+            - src
+        - action: rebuild
+          path: ./packages/javascript/js-client-library
+          ignore:
+            - node_modules
+            - dist
+            - src

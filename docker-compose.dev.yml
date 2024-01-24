@@ -138,6 +138,7 @@ services:
       - traefik.http.routers.bhui.service=bhui
       - traefik.http.services.bhui.loadbalancer.server.port=3000
     volumes:
+      - ./cmd/ui/public:/bloodhound/cmd/ui/public:ro
       - ./cmd/ui/src:/bloodhound/cmd/ui/src:ro
       - ./packages/javascript/bh-shared-ui/src:/bloodhound/packages/javascript/bh-shared-ui/src:ro
       - ./packages/javascript/js-client-library/src:/bloodhound/packages/javascript/js-client-library/src:ro
