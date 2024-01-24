@@ -1,4 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2024 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -17,13 +17,14 @@
 package pgtransition_test
 
 import (
+	"testing"
+
 	"github.com/specterops/bloodhound/cypher/backend/pgsql/pgtransition"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/dawgs/query"
 	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/src/test"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 type kindMapper struct{}

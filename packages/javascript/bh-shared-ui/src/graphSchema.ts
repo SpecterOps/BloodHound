@@ -127,7 +127,7 @@ export enum ActiveDirectoryRelationshipKind {
     ADCSESC3 = 'ADCSESC3',
     ADCSESC4 = 'ADCSESC4',
     ADCSESC5 = 'ADCSESC5',
-    ADCSESC6 = 'ADCSESC6',
+    ADCSESC6a = 'ADCSESC6a',
     ADCSESC7 = 'ADCSESC7',
 }
 export function ActiveDirectoryRelationshipKindToDisplay(value: ActiveDirectoryRelationshipKind): string | undefined {
@@ -250,8 +250,8 @@ export function ActiveDirectoryRelationshipKindToDisplay(value: ActiveDirectoryR
             return 'ADCSESC4';
         case ActiveDirectoryRelationshipKind.ADCSESC5:
             return 'ADCSESC5';
-        case ActiveDirectoryRelationshipKind.ADCSESC6:
-            return 'ADCSESC6';
+        case ActiveDirectoryRelationshipKind.ADCSESC6a:
+            return 'ADCSESC6a';
         case ActiveDirectoryRelationshipKind.ADCSESC7:
             return 'ADCSESC7';
         default:
@@ -518,9 +518,8 @@ export function ActiveDirectoryPathfindingEdges(): ActiveDirectoryRelationshipKi
         ActiveDirectoryRelationshipKind.ADCSESC3,
         ActiveDirectoryRelationshipKind.ADCSESC4,
         ActiveDirectoryRelationshipKind.ADCSESC5,
-        ActiveDirectoryRelationshipKind.ADCSESC6,
+        ActiveDirectoryRelationshipKind.ADCSESC6a,
         ActiveDirectoryRelationshipKind.ADCSESC7,
-        ActiveDirectoryRelationshipKind.DCFor,
     ];
 }
 export enum AzureNodeKind {

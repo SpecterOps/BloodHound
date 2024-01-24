@@ -37,22 +37,22 @@ type hyperLogLog32 struct {
 }
 
 func NewHyperLogLog32() Simplex[uint32] {
-	return hyperLogLog32{
+	return &hyperLogLog32{
 		sketch: hyperloglog.New14(),
 	}
 }
 
-func (s hyperLogLog32) Clone() Simplex[uint32] {
-	return hyperLogLog32{
+func (s *hyperLogLog32) Clone() Simplex[uint32] {
+	return &hyperLogLog32{
 		sketch: s.sketch.Clone(),
 	}
 }
 
-func (s hyperLogLog32) Clear() {
+func (s *hyperLogLog32) Clear() {
 	s.sketch = hyperloglog.New14()
 }
 
-func (s hyperLogLog32) Add(values ...uint32) {
+func (s *hyperLogLog32) Add(values ...uint32) {
 	buffer := size4BufferPool.Get()
 	byteBuffer := buffer.([]byte)
 	defer size4BufferPool.Put(buffer)
@@ -63,9 +63,9 @@ func (s hyperLogLog32) Add(values ...uint32) {
 	}
 }
 
-func (s hyperLogLog32) Or(provider Provider[uint32]) {
+func (s *hyperLogLog32) Or(provider Provider[uint32]) {
 	switch typedProvider := provider.(type) {
-	case hyperLogLog32:
+	case *hyperLogLog32:
 		s.sketch.Merge(typedProvider.sketch)
 
 	case Duplex[uint32]:
@@ -76,6 +76,6 @@ func (s hyperLogLog32) Or(provider Provider[uint32]) {
 	}
 }
 
-func (s hyperLogLog32) Cardinality() uint64 {
+func (s *hyperLogLog32) Cardinality() uint64 {
 	return s.sketch.Estimate()
 }

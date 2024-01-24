@@ -29,7 +29,7 @@ import (
 )
 
 var structTagRegex = regexp.MustCompile(`(\w+):"([^"]+)"`)
-var InvalidConfigurationPathError = errors.New("Unable to find a configuration element by path")
+var ErrInvalidConfigurationPath = errors.New("unable to find a configuration element by path")
 
 // taggedField represents a struct field by its index and a parsed representation of any tags associated with the
 // struct field.
@@ -293,7 +293,7 @@ func SetValue(target any, path, value string) error {
 		}
 
 		if !found {
-			return fmt.Errorf("%w: %s", InvalidConfigurationPathError, path)
+			return fmt.Errorf("%w: %s", ErrInvalidConfigurationPath, path)
 		}
 	}
 
