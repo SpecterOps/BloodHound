@@ -99,7 +99,7 @@ var (
 	ADCSESC3                        = graph.StringKind("ADCSESC3")
 	ADCSESC4                        = graph.StringKind("ADCSESC4")
 	ADCSESC5                        = graph.StringKind("ADCSESC5")
-	ADCSESC6                        = graph.StringKind("ADCSESC6")
+	ADCSESC6a                       = graph.StringKind("ADCSESC6a")
 	ADCSESC7                        = graph.StringKind("ADCSESC7")
 	ADCSESC9a                       = graph.StringKind("ADCSESC9a")
 )
