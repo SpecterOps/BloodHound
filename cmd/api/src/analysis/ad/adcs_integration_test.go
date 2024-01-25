@@ -384,14 +384,13 @@ func TestEnrollOnBehalfOf(t *testing.T) {
 	}, func(harness integration.HarnessDetails, db graph.Database) {
 		certTemplates, err := ad2.FetchNodesByKind(context.Background(), db, ad.CertTemplate)
 		v1Templates := make([]*graph.Node, 0)
-		v2Templates := make([]*graph.Node, 0)
 		for _, template := range certTemplates {
 			if version, err := template.Properties.Get(ad.SchemaVersion.String()).Float64(); err != nil {
 				continue
 			} else if version == 1 {
 				v1Templates = append(v1Templates, template)
 			} else if version >= 2 {
-				v2Templates = append(v2Templates, template)
+				continue
 			}
 		}
 
@@ -430,8 +429,6 @@ func TestEnrollOnBehalfOf(t *testing.T) {
 		return nil
 	}, func(harness integration.HarnessDetails, db graph.Database) {
 		certTemplates, err := ad2.FetchNodesByKind(context.Background(), db, ad.CertTemplate)
-		// TODO: v1Templates are never used in any assertions and should either have assertions added or be removed from the test entirely
-		//v1Templates := make([]*graph.Node, 0)
 		v2Templates := make([]*graph.Node, 0)
 
 		for _, template := range certTemplates {
@@ -439,7 +436,6 @@ func TestEnrollOnBehalfOf(t *testing.T) {
 				continue
 			} else if version == 1 {
 				continue
-				//v1Templates = append(v1Templates, template)
 			} else if version >= 2 {
 				v2Templates = append(v2Templates, template)
 			}
