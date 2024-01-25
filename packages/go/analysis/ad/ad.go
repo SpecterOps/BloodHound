@@ -549,6 +549,12 @@ func GetEdgeCompositionPath(ctx context.Context, db graph.Database, edge *graph.
 			} else {
 				pathSet = results
 			}
+		} else if edge.Kind == ad.ADCSESC9a {
+			if results, err := GetADCSESC9aEdgeComposition(ctx, db, edge); err != nil {
+				return err
+			} else {
+				pathSet = results
+			}
 		}
 		return nil
 	})
@@ -1045,11 +1051,11 @@ func adcsESC9APath2Pattern(caNodes []graph.ID, domainId graph.ID) traversal.Patt
 		))
 }
 
-func adcsESC9APath3Pattern(domainId graph.ID) traversal.PatternContinuation {
+func adcsESC9APath3Pattern(caIDs []graph.ID) traversal.PatternContinuation {
 	return traversal.NewPattern().
-		Outbound(query.And(
+		Inbound(query.And(
+			query.InIDs(query.StartID(), caIDs...),
 			query.KindIn(query.Relationship(), ad.CanAbuseWeakCertBinding, ad.DCFor, ad.TrustedBy),
-			query.Equals(query.EndID(), domainId),
 		))
 }
 
@@ -1077,21 +1083,27 @@ func GetADCSESC9aEdgeComposition(ctx context.Context, db graph.Database, edge *g
 
 	var (
 		startNode *graph.Node
+		endNode   *graph.Node
 
-		traversalInst     = traversal.New(db, analysis.MaximumDatabaseParallelWorkers)
-		paths             = graph.PathSet{}
-		candidateSegments = map[graph.ID][]*graph.PathSegment{}
-		victimCANodes     = map[graph.ID][]graph.ID{}
-		p2CAPaths         = map[graph.ID][]*graph.PathSegment{}
-		nodeMap           = map[graph.ID]*graph.Node{}
-		lock              = &sync.Mutex{}
+		traversalInst          = traversal.New(db, analysis.MaximumDatabaseParallelWorkers)
+		paths                  = graph.PathSet{}
+		path1CandidateSegments = map[graph.ID][]*graph.PathSegment{}
+		victimCANodes          = map[graph.ID][]graph.ID{}
+		path2CandidateSegments = map[graph.ID][]*graph.PathSegment{}
+		path3CandidateSegments = map[graph.ID][]*graph.PathSegment{}
+		p2canodes              = make([]graph.ID, 0)
+		nodeMap                = map[graph.ID]*graph.Node{}
+		lock                   = &sync.Mutex{}
 	)
 
 	if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		if node, err := ops.FetchNode(tx, edge.StartID); err != nil {
 			return err
+		} else if eNode, err := ops.FetchNode(tx, edge.EndID); err != nil {
+			return err
 		} else {
 			startNode = node
+			endNode = eNode
 			return nil
 		}
 	}); err != nil {
@@ -1121,7 +1133,7 @@ func GetADCSESC9aEdgeComposition(ctx context.Context, db graph.Database, edge *g
 			})
 
 			lock.Lock()
-			candidateSegments[victimNode.ID] = append(candidateSegments[victimNode.ID], terminal)
+			path1CandidateSegments[victimNode.ID] = append(path1CandidateSegments[victimNode.ID], terminal)
 			nodeMap[victimNode.ID] = victimNode
 			victimCANodes[victimNode.ID] = append(victimCANodes[victimNode.ID], caNode.ID)
 			lock.Unlock()
@@ -1141,7 +1153,8 @@ func GetADCSESC9aEdgeComposition(ctx context.Context, db graph.Database, edge *g
 				})
 
 				lock.Lock()
-				p2CAPaths[caNode.ID] = append(p2CAPaths[caNode.ID], terminal)
+				path2CandidateSegments[caNode.ID] = append(path2CandidateSegments[caNode.ID], terminal)
+				p2canodes = append(p2canodes, caNode.ID)
 				lock.Unlock()
 
 				return nil
@@ -1151,6 +1164,46 @@ func GetADCSESC9aEdgeComposition(ctx context.Context, db graph.Database, edge *g
 		}
 	}
 
+	if err := traversalInst.BreadthFirst(ctx, traversal.Plan{
+		Root: endNode,
+		Driver: adcsESC9APath3Pattern(p2canodes).Do(func(terminal *graph.PathSegment) error {
+			caNode := terminal.Search(func(nextSegment *graph.PathSegment) bool {
+				return nextSegment.Node.Kinds.ContainsOneOf(ad.EnterpriseCA)
+			})
+
+			lock.Lock()
+			path3CandidateSegments[caNode.ID] = append(path3CandidateSegments[caNode.ID], terminal)
+			lock.Unlock()
+			return nil
+		}),
+	}); err != nil {
+		return nil, err
+	}
+
+	for _, p1paths := range path1CandidateSegments {
+		for _, p1path := range p1paths {
+			caNode := p1path.Search(func(nextSegment *graph.PathSegment) bool {
+				return nextSegment.Node.Kinds.ContainsOneOf(ad.EnterpriseCA)
+			})
+
+			if p2segments, ok := path2CandidateSegments[caNode.ID]; !ok {
+				continue
+			} else if p3segments, ok := path3CandidateSegments[caNode.ID]; !ok {
+				continue
+			} else {
+				paths.AddPath(p1path.Path())
+				for _, p2 := range p2segments {
+					paths.AddPath(p2.Path())
+				}
+
+				for _, p3 := range p3segments {
+					paths.AddPath(p3.Path())
+				}
+			}
+		}
+	}
+
+	return paths, nil
 }
 
 func certTemplateValidForUserVictim(certTemplate *graph.Node) bool {
