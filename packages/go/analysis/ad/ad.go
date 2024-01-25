@@ -937,8 +937,6 @@ func GetADCSESC1EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 	// Render paths from the segments
 	return paths, path1EnterpriseCAs.Each(func(value uint32) (bool, error) {
 		for _, segment := range candidateSegments[graph.ID(value)] {
-			log.Infof("Found ESC1 Path: %s", graph.FormatPathSegment(segment))
-
 			paths.AddPath(segment.Path())
 		}
 
@@ -1176,8 +1174,6 @@ func GetADCSESC9aEdgeComposition(ctx context.Context, db graph.Database, edge *g
 				caNode := terminal.Search(func(nextSegment *graph.PathSegment) bool {
 					return nextSegment.Node.Kinds.ContainsOneOf(ad.EnterpriseCA)
 				})
-
-				log.Infof("Segment: %v", graph.FormatPathSegment(terminal))
 
 				lock.Lock()
 				path3CandidateSegments[caNode.ID] = append(path3CandidateSegments[caNode.ID], terminal)
