@@ -984,13 +984,15 @@ func getGoldenCertEdgeComposition(tx graph.Transaction, edge *graph.Relationship
 
 func adcsESC9aPath1Pattern(domainID graph.ID) traversal.PatternContinuation {
 	return traversal.NewPattern().
-		Outbound(
+		OutboundWithDepth(
+			1, 1,
 			query.And(
 				query.KindIn(query.Relationship(), ad.GenericWrite, ad.GenericAll, ad.Owns, ad.WriteOwner, ad.WriteDACL),
 				query.KindIn(query.End(), ad.Computer, ad.User),
 			),
 		).
-		Outbound(
+		OutboundWithDepth(
+			0, 0,
 			query.And(
 				query.Kind(query.Relationship(), ad.MemberOf),
 				query.Kind(query.End(), ad.Group),
@@ -1117,11 +1119,10 @@ func GetADCSESC9aEdgeComposition(ctx context.Context, db graph.Database, edge *g
 	if err := traversalInst.BreadthFirst(ctx, traversal.Plan{
 		Root: startNode,
 		Driver: adcsESC9aPath1Pattern(edge.EndID).Do(func(terminal *graph.PathSegment) error {
+			log.Infof("Segment: %v", graph.FormatPathSegment(terminal))
 			victimNode := terminal.Search(func(nextSegment *graph.PathSegment) bool {
 				return nextSegment.Depth() == 1
 			})
-
-			graph.FormatPathSegment(terminal)
 
 			if victimNode.Kinds.ContainsOneOf(ad.User) {
 				certTemplate := terminal.Search(func(nextSegment *graph.PathSegment) bool {
@@ -1132,8 +1133,6 @@ func GetADCSESC9aEdgeComposition(ctx context.Context, db graph.Database, edge *g
 					return nil
 				}
 			}
-
-			graph.FormatPathSegment(terminal)
 
 			caNode := terminal.Search(func(nextSegment *graph.PathSegment) bool {
 				return nextSegment.Node.Kinds.ContainsOneOf(ad.EnterpriseCA)
@@ -1159,8 +1158,6 @@ func GetADCSESC9aEdgeComposition(ctx context.Context, db graph.Database, edge *g
 					return nextSegment.Node.Kinds.ContainsOneOf(ad.EnterpriseCA)
 				})
 
-				graph.FormatPathSegment(terminal)
-
 				lock.Lock()
 				path2CandidateSegments[caNode.ID] = append(path2CandidateSegments[caNode.ID], terminal)
 				log.Infof("added ca node %d", caNode.ID)
@@ -1174,26 +1171,26 @@ func GetADCSESC9aEdgeComposition(ctx context.Context, db graph.Database, edge *g
 		}
 	}
 
-	if err := traversalInst.BreadthFirst(ctx, traversal.Plan{
-		Root: endNode,
-		Driver: adcsESC9APath3Pattern(p2canodes).Do(func(terminal *graph.PathSegment) error {
-			caNode := terminal.Search(func(nextSegment *graph.PathSegment) bool {
-				return nextSegment.Node.Kinds.ContainsOneOf(ad.EnterpriseCA)
-			})
+	if len(p2canodes) > 0 {
+		if err := traversalInst.BreadthFirst(ctx, traversal.Plan{
+			Root: endNode,
+			Driver: adcsESC9APath3Pattern(p2canodes).Do(func(terminal *graph.PathSegment) error {
+				caNode := terminal.Search(func(nextSegment *graph.PathSegment) bool {
+					return nextSegment.Node.Kinds.ContainsOneOf(ad.EnterpriseCA)
+				})
 
-			log.Infof(graph.FormatPathSegment(terminal))
+				if caNode == nil {
+					return nil
+				}
 
-			if caNode == nil {
+				lock.Lock()
+				path3CandidateSegments[caNode.ID] = append(path3CandidateSegments[caNode.ID], terminal)
+				lock.Unlock()
 				return nil
-			}
-
-			lock.Lock()
-			path3CandidateSegments[caNode.ID] = append(path3CandidateSegments[caNode.ID], terminal)
-			lock.Unlock()
-			return nil
-		}),
-	}); err != nil {
-		return nil, err
+			}),
+		}); err != nil {
+			return nil, err
+		}
 	}
 
 	for _, p1paths := range path1CandidateSegments {
