@@ -203,8 +203,10 @@ func (s *pattern) Driver(ctx context.Context, tx graph.Transaction, segment *gra
 		// Check first if this current segment was fetched using the current expansion (i.e. non-optional)
 		if tag.depth > 0 && currentExpansion.minDepth == 0 || tag.depth >= currentExpansion.minDepth {
 			// No further expansions means this pattern segment is complete. Increment the pattern index to select the
-			// next pattern expansion.
+			// next pattern expansion. Additionally, set the depth back to zero for the tag since we are leaving the
+			// current expansion.
 			tag.patternIdx++
+			tag.depth = 0
 
 			// Perform the next expansion if there is one.
 			if tag.patternIdx < len(s.expansions) {
@@ -215,6 +217,13 @@ func (s *pattern) Driver(ctx context.Context, tx graph.Transaction, segment *gra
 					return nil, err
 				} else if err := tx.Relationships().Filter(criteria).FetchDirection(fetchDirection, fetchFunc); err != nil {
 					return nil, err
+				}
+
+				// If the next expansion is optional, make sure to preserve the current traversal branch
+				if nextExpansion.minDepth == 0 {
+					// Reattach the tag to the segment before adding it to the returned segments for the next expansion
+					segment.Tag = tag
+					nextSegments = append(nextSegments, segment)
 				}
 			} else if len(nextSegments) == 0 {
 				// If there are no expanded segments and there are no remaining expansions, this is a terminal segment.
@@ -301,6 +310,8 @@ func (s Traversal) BreadthFirst(ctx context.Context, plan Plan) error {
 					if nextDescent, ok := channels.Receive(traversalCtx, segmentReaderC); !ok {
 						return nil
 					} else if pathTreeSize := pathTree.SizeOf(); pathTreeSize < tx.TraversalMemoryLimit() {
+						log.Infof("%s", graph.FormatPathSegment(nextDescent))
+
 						// Traverse the descending relationships of the current segment
 						if descendingSegments, err := plan.Driver(traversalCtx, tx, nextDescent); err != nil {
 							return err
