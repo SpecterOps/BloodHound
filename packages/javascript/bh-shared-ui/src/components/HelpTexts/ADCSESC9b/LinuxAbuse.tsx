@@ -43,7 +43,7 @@ const LinuxAbuse: FC = () => {
                 <code>dNSHostName</code>.
                 <br />
                 <br />
-                Set the dNSHostName of the victim computer using Certipy:
+                Set the <code>dNSHostName</code> of the victim computer using Certipy:
             </Typography>
             <Typography component='pre'>
                 {
@@ -91,12 +91,12 @@ const LinuxAbuse: FC = () => {
     );
 
     const step3 = (
-        <Typography variant='body2' sx={{ marginBottom: '-8px' }}>
+        <Typography variant='body2'>
             <b>Step 3: </b>Obtain a session as victim.
             <br />
             <br />
             There are several options for this step. You can obtain a session as SYSTEM on the host, which allows you to
-            interact with AD as the computer account, by abusing control over the computer AD object (see
+            interact with AD as the computer account, by abusing control over the computer AD object (see{' '}
             <Link
                 target='blank'
                 rel='noopener'
@@ -127,7 +127,7 @@ const LinuxAbuse: FC = () => {
 
     const step5 = (
         <>
-            <Typography variant='body2'>
+            <Typography variant='body2' className={classes.containsCodeEl}>
                 <b>Step 5 (Optional): </b>Set <code>dNSHostName</code> of victim to the previous value.
                 <br />
                 <br />

@@ -47,15 +47,15 @@ const General: FC<EdgeInfoProps> = ({ sourceName, sourceType, targetName }) => {
                 <br />
                 The principal has control over a victim computer with permission to enroll on one or more certificate
                 templates, configured to: 1) enable certificate authentication, 2) require the <code>dNSHostName</code>
-                of the enrollee included in the Subject Alternative Name (SAN), and 3) not have the security extension
-                enabled. The victim computer also has enrollment permission for an enterprise CA with the necessary
-                templates published. This enterprise CA is trusted for NT authentication in the forest, and chains up to
-                a root CA for the forest. There is an affected Domain Controller (DC) configured to allow weak
-                certificate binding enforcement. This setup lets the principal impersonate any AD forest computer
+                &nbsp;of the enrollee included in the Subject Alternative Name (SAN), and 3) not have the security
+                extension enabled. The victim computer also has enrollment permission for an enterprise CA with the
+                necessary templates published. This enterprise CA is trusted for NT authentication in the forest, and
+                chains up to a root CA for the forest. There is an affected Domain Controller (DC) configured to allow
+                weak certificate binding enforcement. This setup lets the principal impersonate any AD forest computer
                 without their credentials.
                 <br />
                 <br />
-                The attacker principal can abuse their control over the victim computer to modify the victim computer's
+                The attacker principal can abuse their control over the victim computer to modify the victim computer's{' '}
                 <code>dNSHostName</code> attribute to match the <code>dNSHostName</code> of a targeted computer. The
                 attacker principal will then abuse their control over the victim computer to obtain the credentials of
                 the victim computer, or a session as the victim computer, and enroll a certificate as the victim in one
