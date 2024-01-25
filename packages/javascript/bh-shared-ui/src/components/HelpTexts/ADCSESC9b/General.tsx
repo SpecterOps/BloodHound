@@ -65,9 +65,9 @@ const General: FC<EdgeInfoProps> = ({ sourceName, sourceType, targetName }) => {
                 certificate binding configuration will require a SID to be present in a certificate used for Kerberos
                 authentication, but the affected DCs with weak certificate binding configuration will not. The affected
                 DCs will split the SAN DNS name into a computer name and a domain name, confirm that the domain name is
-                correct, and use the computer name appended a $ to identify principals with a matching sAMAccountName.
-                At last, the DC issues a Kerberos TGT as the targeted computer to the attacker, which means the attacker
-                now has a session as the targeted computer.
+                correct, and use the computer name appended a $ to identify principals with a matching{' '}
+                <code>sAMAccountName</code>. At last, the DC issues a Kerberos TGT as the targeted computer to the
+                attacker, which means the attacker now has a session as the targeted computer.
             </Typography>
         </>
     );
