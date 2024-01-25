@@ -267,12 +267,6 @@ type Plan struct {
 	Driver      Driver
 }
 
-type Service struct {
-	db         graph.Database
-	workerWG   *sync.WaitGroup
-	numWorkers int
-}
-
 type Traversal struct {
 	db         graph.Database
 	numWorkers int

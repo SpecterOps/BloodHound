@@ -18,11 +18,12 @@ package pg
 
 import (
 	"errors"
+	"sync"
+
 	"github.com/jackc/pgx/v5"
 	"github.com/specterops/bloodhound/dawgs/drivers/pg/model"
 	"github.com/specterops/bloodhound/dawgs/drivers/pg/query"
 	"github.com/specterops/bloodhound/dawgs/graph"
-	"sync"
 )
 
 type KindMapper interface {
@@ -73,25 +74,6 @@ func (s *SchemaManager) defineKinds(tx graph.Transaction, kinds graph.Kinds) err
 		} else {
 			s.kindsByID[kind] = kindID
 			s.kindIDsByKind[kindID] = kind
-		}
-	}
-
-	return nil
-}
-
-func (s *SchemaManager) defineGraphKinds(tx graph.Transaction, schemas []graph.Graph) error {
-	for _, schema := range schemas {
-		var (
-			_, missingNodeKinds = s.mapKinds(schema.Nodes)
-			_, missingEdgeKinds = s.mapKinds(schema.Edges)
-		)
-
-		if err := s.defineKinds(tx, missingNodeKinds); err != nil {
-			return err
-		}
-
-		if err := s.defineKinds(tx, missingEdgeKinds); err != nil {
-			return err
 		}
 	}
 
