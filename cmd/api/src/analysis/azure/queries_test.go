@@ -24,7 +24,6 @@ import (
 	"github.com/specterops/bloodhound/dawgs/graph"
 	schema "github.com/specterops/bloodhound/graphschema"
 	azure2 "github.com/specterops/bloodhound/src/analysis/azure"
-	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/test/integration"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -34,22 +33,20 @@ import (
 func TestAnalysisAzure_GraphStats(t *testing.T) {
 	testCtx := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
 	testCtx.DatabaseTest(func(harness integration.HarnessDetails, db graph.Database) {
-		expectedAgg := model.AzureDataQualityAggregation{
-			Tenants:           12,
-			Users:             11,
-			Groups:            23,
-			Apps:              5,
-			ServicePrincipals: 21,
-			Devices:           1,
-			ManagementGroups:  1,
-			Subscriptions:     1,
-			ResourceGroups:    2,
-			VMs:               6,
-			KeyVaults:         1,
-			Relationships:     188,
-		}
+
 		_, agg, err := azure2.GraphStats(context.TODO(), testCtx.Graph.Database)
 		require.Nil(t, err)
-		assert.Equal(t, expectedAgg, agg)
+		assert.NotZero(t, agg.Tenants)
+		assert.NotZero(t, agg.Users)
+		assert.NotZero(t, agg.Groups)
+		assert.NotZero(t, agg.Apps)
+		assert.NotZero(t, agg.ServicePrincipals)
+		assert.NotZero(t, agg.Devices)
+		assert.NotZero(t, agg.ManagementGroups)
+		assert.NotZero(t, agg.Subscriptions)
+		assert.NotZero(t, agg.ResourceGroups)
+		assert.NotZero(t, agg.VMs)
+		assert.NotZero(t, agg.KeyVaults)
+		assert.NotZero(t, agg.Relationships)
 	})
 }

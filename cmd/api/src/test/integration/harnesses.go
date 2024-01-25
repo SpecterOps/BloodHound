@@ -1055,7 +1055,7 @@ func (s *AZMGServicePrincipalEndpointReadWriteAllHarness) Setup(testCtx *GraphTe
 }
 
 type AZInboundControlHarness struct {
-	Tenant              *graph.Node
+	AZTenant            *graph.Node
 	ControlledAZUser    *graph.Node
 	AZAppA              *graph.Node
 	AZGroupA            *graph.Node
@@ -1068,7 +1068,7 @@ type AZInboundControlHarness struct {
 
 func (s *AZInboundControlHarness) Setup(testCtx *GraphTestContext) {
 	tenantID := RandomObjectID(testCtx.testCtx)
-	s.Tenant = testCtx.NewAzureTenant(tenantID)
+	s.AZTenant = testCtx.NewAzureTenant(tenantID)
 	s.ControlledAZUser = testCtx.NewAzureUser("Controlled AZUser", "Controlled AZUser", "", RandomObjectID(testCtx.testCtx), HarnessUserLicenses, tenantID, HarnessUserMFAEnabled)
 	s.AZAppA = testCtx.NewAzureApplication("AZAppA", RandomObjectID(testCtx.testCtx), tenantID)
 	s.AZGroupA = testCtx.NewAzureGroup("AZGroupA", RandomObjectID(testCtx.testCtx), tenantID)
@@ -1078,7 +1078,7 @@ func (s *AZInboundControlHarness) Setup(testCtx *GraphTestContext) {
 	s.AZServicePrincipalA = testCtx.NewAzureServicePrincipal("AZServicePrincipalA", RandomObjectID(testCtx.testCtx), tenantID)
 	s.AZServicePrincipalB = testCtx.NewAzureServicePrincipal("AZServicePrincipalB", RandomObjectID(testCtx.testCtx), tenantID)
 
-	testCtx.NewRelationship(s.Tenant, s.AZGroupA, azure.Contains)
+	testCtx.NewRelationship(s.AZTenant, s.AZGroupA, azure.Contains)
 
 	testCtx.NewRelationship(s.AZUserA, s.AZGroupA, azure.MemberOf)
 	testCtx.NewRelationship(s.AZServicePrincipalB, s.AZGroupB, azure.MemberOf)
