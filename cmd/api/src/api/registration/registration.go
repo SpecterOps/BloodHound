@@ -33,7 +33,7 @@ import (
 	"github.com/specterops/bloodhound/src/queries"
 )
 
-func RegisterFossGlobalMiddleware(routerInst *router.Router, db *database.BloodhoundDB, cfg config.Configuration, identityResolver auth.IdentityResolver, authenticator api.Authenticator) {
+func RegisterFossGlobalMiddleware(routerInst *router.Router, cfg config.Configuration, db *database.BloodhoundDB, identityResolver auth.IdentityResolver, authenticator api.Authenticator) {
 	// Set up the middleware stack
 	routerInst.UsePrerouting(middleware.ContextMiddleware)
 	routerInst.UsePrerouting(middleware.CORSMiddleware())
