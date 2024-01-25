@@ -141,7 +141,14 @@ func PostADCSESC3(ctx context.Context, tx graph.Transaction, outC chan<- analysi
 									cache.EnterpriseCAEnrollers[eca1.ID],
 									cache.EnterpriseCAEnrollers[eca2.ID],
 									delegatedAgents.Slice())
-								results.Or(tempResults)
+
+
+								// Add principals to result set unless it's a user and DNS is required
+								if filteredResult, err := filterTempResultsForESC3(tx, tempResults, certTemplateOne); err != nil {
+									return err
+								} else {
+									results.Or(filteredResult)
+								}
 							}
 						}
 					} else {
@@ -151,7 +158,13 @@ func PostADCSESC3(ctx context.Context, tx graph.Transaction, outC chan<- analysi
 								cache.CertTemplateControllers[certTemplateTwo.ID],
 								cache.EnterpriseCAEnrollers[eca1.ID],
 								cache.EnterpriseCAEnrollers[eca2.ID])
-							results.Or(tempResults)
+
+							// Add principals to result set unless it's a user and DNS is required
+							if filteredResult, err := filterTempResultsForESC3(tx, tempResults, certTemplateOne); err != nil {
+								return err
+							} else {
+								results.Or(filteredResult)
+							}
 						}
 					}
 				}
@@ -238,6 +251,32 @@ func checkDNSValidity(node *graph.Node, validCertTemplates []*graph.Node, groupE
 		}
 	}
 	return false
+}
+
+func filterTempResultsForESC3(tx graph.Transaction, tempResults cardinality.Duplex[uint32], certTemplate *graph.Node) (cardinality.Duplex[uint32], error) {
+	principalsEnabledForESC3 := cardinality.NewBitmap32()
+
+	tempResults.Each(func(value uint32) (bool, error) {
+		sourceID := graph.ID(value)
+
+		if resultNode, err := tx.Nodes().Filter(query.Equals(query.NodeID(), sourceID)).First(); err != nil {
+			return true, nil
+		} else {
+			if resultNode.Kinds.ContainsOneOf(ad.User) {
+				if subjectAltRequireDNS, err := certTemplate.Properties.Get(ad.SubjectAltRequireDNS.String()).Bool(); err != nil {
+					log.Errorf("%s property access error %d: %v", ad.SubjectAltRequireDNS.String(), certTemplate.ID, err)
+				} else if subjectAltRequireDomainDNS, err := certTemplate.Properties.Get(ad.SubjectAltRequireDomainDNS.String()).Bool(); err != nil {
+					log.Errorf("%s property access error %d: %v", ad.SubjectAltRequireDomainDNS.String(), certTemplate.ID, err)
+				} else if !subjectAltRequireDNS && !subjectAltRequireDomainDNS {
+					principalsEnabledForESC3.Add(value)
+				}
+			} else {
+				principalsEnabledForESC3.Add(value)
+			}
+		}
+		return true, nil
+	})
+	return principalsEnabledForESC3, nil
 }
 
 func filterTempResultsForESC6a(tx graph.Transaction, tempResults cardinality.Duplex[uint32], groupExpansions impact.PathAggregator, validCertTemplates []*graph.Node, cache ADCSCache) cardinality.Duplex[uint32] {
