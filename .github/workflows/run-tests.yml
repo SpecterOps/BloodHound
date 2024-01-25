@@ -55,7 +55,17 @@ jobs:
         export INTEGRATION_CONFIG_PATH=$(pwd)/.github/config/integration.config.json
         python packages/python/beagle/main.py test -avi
 
-    - name: Stop and Remove Containers
+    - name: Neo4j Debug Logs
+      if: failure()
       run: |
+        docker-compose -f docker-compose.testing.yml exec -T testgraph cat /logs/debug.log
 
+    - name: Postgres Debug Logs
+      if: failure()
+      run: |
+        docker-compose -f docker-compose.testing.yml logs testdb
+
+    - name: Stop and Remove Containers
+      if: ${{ ! cancelled() }}
+      run: |
         docker-compose -f docker-compose.testing.yml down
