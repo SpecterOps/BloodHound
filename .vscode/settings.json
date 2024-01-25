@@ -6,6 +6,8 @@
     "go.testEnvVars": {
         "INTEGRATION_CONFIG_PATH": "${workspaceFolder}/local-harnesses/integration.config.json"
     },
+    "go.formatTool": "goimports",
+    "go.lintTool": "golangci-lint",
     "[python]": {
         "editor.defaultFormatter": "ms-python.black-formatter"
     },
