@@ -14,7 +14,7 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-name: Run Tests
+name: Static Code Analysis
 
 on:
   push:
@@ -24,7 +24,7 @@ on:
 
     
 jobs:
-  run-tests:
+  run-analysis:
     runs-on: ubuntu-latest
 
     steps:
