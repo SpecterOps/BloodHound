@@ -14,24 +14,18 @@
     "max-same-issues": 0,
     "exclude-rules": [
       {
-        "path": "hyperloglog_bench_test\\.go",
-        "text": "SA6002:"
-      },
-      {
-        "path": "cache_test\\.go",
-        "text": "SA1026:"
-      },
-      {
-        "path": "foldr_test\\.go",
-        "text": "SA4000:"
-      },
-      {
         "path": ".go",
         "text": "((neo4j(.+)(NewDriver|Result))|Id|database.Database|(.+)Deprecated) is deprecated"
       },
       {
-        "path": "expected_ingest.go",
-        "text": "ST1022:"
+        "path": "cache_test\\.go",
+        "text": "SA1026:",
+        "severity": "warning"
+      },
+      {
+        "path": "foldr_test\\.go",
+        "text": "SA4000:",
+        "severity": "warning"
       }
     ]
   },
@@ -49,6 +43,16 @@
     "rules": [
       {
         "text": "(ST\\d{4}|S\\d{4}|SA1019)",
+        "severity": "warning"
+      },
+      {
+        "path": "hyperloglog_bench_test\\.go",
+        "text": "SA6002:",
+        "severity": "warning"
+      },
+      {
+        "path": "expected_ingest.go",
+        "text": "ST1022:",
         "severity": "warning"
       }
     ]
