@@ -22,22 +22,16 @@
         "text": "SA1026:"
       },
       {
-        "path": "empty\\.go",
-        "text": "SA5010:"
-      },
-      {
         "path": "foldr_test\\.go",
         "text": "SA4000:"
       },
       {
         "path": ".go",
-        "text": "((neo4j(.+)(NewDriver|Result))|Id|jwt\\.StandardClaims|database.Database|(.+)Deprecated) is deprecated"
+        "text": "((neo4j(.+)(NewDriver|Result))|Id|database.Database|(.+)Deprecated) is deprecated"
       },
       {
-        "path": "(.+)_test\\.go",
-        "linters": [
-          "errcheck"
-        ]
+        "path": "expected_ingest.go",
+        "text": "ST1022:"
       }
     ]
   },
@@ -54,7 +48,7 @@
     "default-severity": "error",
     "rules": [
       {
-        "text": "(ST\\d{4}|S\\d{4})",
+        "text": "(ST\\d{4}|S\\d{4}|SA1019)",
         "severity": "warning"
       }
     ]
