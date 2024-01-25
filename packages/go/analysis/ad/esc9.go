@@ -18,6 +18,7 @@ package ad
 
 import (
 	"context"
+	"errors"
 	"github.com/specterops/bloodhound/analysis"
 	"github.com/specterops/bloodhound/analysis/impact"
 	"github.com/specterops/bloodhound/dawgs/cardinality"
@@ -45,14 +46,18 @@ func PostADCSESC9a(ctx context.Context, tx graph.Transaction, outC chan<- analys
 	} else {
 		for _, template := range publishedCertTemplates {
 			if valid, err := isCertTemplateValidForESC9a(template); err != nil {
-				log.Errorf("Error checking cert template validity for template %d: %v", template.ID, err)
+				if !errors.Is(err, graph.ErrPropertyNotFound) {
+					log.Errorf("Error checking cert template validity for template %d: %v", template.ID, err)
+				} else {
+					log.Debugf("Error checking cert template validity for template %d: %v", template.ID, err)
+				}
 			} else if !valid {
 				continue
 			} else if certTemplateControllers, ok := cache.CertTemplateControllers[template.ID]; !ok {
-				log.Errorf("Failed to retrieve controllers for cert template %d from cache", template.ID)
+				log.Debugf("Failed to retrieve controllers for cert template %d from cache", template.ID)
 				continue
 			} else if ecaControllers, ok := cache.EnterpriseCAEnrollers[eca.ID]; !ok {
-				log.Errorf("Failed to retrieve controllers for enterprise ca %d from cache", eca.ID)
+				log.Debugf("Failed to retrieve controllers for enterprise ca %d from cache", eca.ID)
 				continue
 			} else {
 				//Expand controllers for the eca + template completely because we don't do group shortcutting here
@@ -74,9 +79,11 @@ func PostADCSESC9a(ctx context.Context, tx graph.Transaction, outC chan<- analys
 					}
 				} else if len(userNodes) > 0 {
 					if subjRequireDns, err := template.Properties.Get(ad.SubjectAltRequireDNS.String()).Bool(); err != nil {
-						log.Errorf("Failed to retrieve subjectAltRequireDNS for template %d: %v", template.ID, err)
+						log.Debugf("Failed to retrieve subjectAltRequireDNS for template %d: %v", template.ID, err)
+						victimBitmap.Xor(cardinality.NodeSetToDuplex(userNodes))
 					} else if subjRequireDomainDns, err := template.Properties.Get(ad.SubjectAltRequireDomainDNS.String()).Bool(); err != nil {
-						log.Errorf("Failed to retrieve subjectAltRequireDomainDNS for template %d: %v", template.ID, err)
+						log.Debugf("Failed to retrieve subjectAltRequireDomainDNS for template %d: %v", template.ID, err)
+						victimBitmap.Xor(cardinality.NodeSetToDuplex(userNodes))
 					} else if subjRequireDns || subjRequireDomainDns {
 						//If either of these properties is true, we need to remove all these users from our victims list
 						victimBitmap.Xor(cardinality.NodeSetToDuplex(userNodes))
