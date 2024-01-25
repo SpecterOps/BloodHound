@@ -141,8 +141,8 @@ func (s *pattern) InboundWithDepth(min, max int, criteria ...graph.Criteria) Pat
 	s.expansions = append(s.expansions, expansion{
 		criteria:  criteria,
 		direction: graph.DirectionInbound,
-		minDepth:  max,
-		maxDepth:  min,
+		minDepth:  min,
+		maxDepth:  max,
 	})
 
 	return s
