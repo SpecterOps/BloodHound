@@ -1053,9 +1053,12 @@ func adcsESC9APath2Pattern(caNodes []graph.ID, domainId graph.ID) traversal.Patt
 
 func adcsESC9APath3Pattern(caIDs []graph.ID) traversal.PatternContinuation {
 	return traversal.NewPattern().
+		Inbound(
+			query.KindIn(query.Relationship(), ad.DCFor, ad.TrustedBy),
+		).
 		Inbound(query.And(
+			query.Kind(query.Relationship(), ad.CanAbuseWeakCertBinding),
 			query.InIDs(query.StartID(), caIDs...),
-			query.KindIn(query.Relationship(), ad.CanAbuseWeakCertBinding, ad.DCFor, ad.TrustedBy),
 		))
 }
 
@@ -1118,6 +1121,8 @@ func GetADCSESC9aEdgeComposition(ctx context.Context, db graph.Database, edge *g
 				return nextSegment.Depth() == 1
 			})
 
+			graph.FormatPathSegment(terminal)
+
 			if victimNode.Kinds.ContainsOneOf(ad.User) {
 				certTemplate := terminal.Search(func(nextSegment *graph.PathSegment) bool {
 					return nextSegment.Node.Kinds.ContainsOneOf(ad.CertTemplate)
@@ -1127,6 +1132,8 @@ func GetADCSESC9aEdgeComposition(ctx context.Context, db graph.Database, edge *g
 					return nil
 				}
 			}
+
+			graph.FormatPathSegment(terminal)
 
 			caNode := terminal.Search(func(nextSegment *graph.PathSegment) bool {
 				return nextSegment.Node.Kinds.ContainsOneOf(ad.EnterpriseCA)
@@ -1152,8 +1159,11 @@ func GetADCSESC9aEdgeComposition(ctx context.Context, db graph.Database, edge *g
 					return nextSegment.Node.Kinds.ContainsOneOf(ad.EnterpriseCA)
 				})
 
+				graph.FormatPathSegment(terminal)
+
 				lock.Lock()
 				path2CandidateSegments[caNode.ID] = append(path2CandidateSegments[caNode.ID], terminal)
+				log.Infof("added ca node %d", caNode.ID)
 				p2canodes = append(p2canodes, caNode.ID)
 				lock.Unlock()
 
@@ -1170,6 +1180,12 @@ func GetADCSESC9aEdgeComposition(ctx context.Context, db graph.Database, edge *g
 			caNode := terminal.Search(func(nextSegment *graph.PathSegment) bool {
 				return nextSegment.Node.Kinds.ContainsOneOf(ad.EnterpriseCA)
 			})
+
+			log.Infof(graph.FormatPathSegment(terminal))
+
+			if caNode == nil {
+				return nil
+			}
 
 			lock.Lock()
 			path3CandidateSegments[caNode.ID] = append(path3CandidateSegments[caNode.ID], terminal)
