@@ -175,14 +175,16 @@ func (s Resources) UpdateAssetGroup(response http.ResponseWriter, request *http.
 		pathVars                = mux.Vars(request)
 		rawAssetGroupID         = pathVars[api.URIPathVariableAssetGroupID]
 		updateAssetGroupRequest UpdateAssetGroupRequest
-		auditCtx                = model.AuditContext{Action: "UpdateAssetGroup"}
+		assetGroup              model.AssetGroup
 	)
+
+	ctx.SetAuditContext(request, model.AuditContext{Action: "UpdateAssetGroup", Model: &assetGroup})
 
 	if assetGroupID, err := strconv.Atoi(rawAssetGroupID); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsIDMalformed, request), response)
 	} else if err := api.ReadJSONRequestPayloadLimited(&updateAssetGroupRequest, request); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
-	} else if assetGroup, err := s.DB.GetAssetGroup(int32(assetGroupID)); err != nil {
+	} else if assetGroup, err = s.DB.GetAssetGroup(int32(assetGroupID)); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
 		assetGroup.Name = updateAssetGroupRequest.Name
@@ -190,18 +192,15 @@ func (s Resources) UpdateAssetGroup(response http.ResponseWriter, request *http.
 		if err := s.DB.UpdateAssetGroup(assetGroup); err != nil {
 			api.HandleDatabaseError(request, response, err)
 		} else {
-			auditCtx.Model = assetGroup
-			ctx.SetAuditContext(request, auditCtx)
 			api.WriteBasicResponse(request.Context(), assetGroup, http.StatusOK, response)
 		}
 	}
 }
 
 func (s Resources) CreateAssetGroup(response http.ResponseWriter, request *http.Request) {
-	var (
-		createRequest CreateAssetGroupRequest
-		auditCtx      = model.AuditContext{Action: "CreateAssetGroup", Model: &createRequest}
-	)
+	var createRequest CreateAssetGroupRequest
+
+	ctx.SetAuditContext(request, model.AuditContext{Action: "CreateAssetGroup", Model: &createRequest})
 
 	if err := api.ReadJSONRequestPayloadLimited(&createRequest, request); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
@@ -212,7 +211,6 @@ func (s Resources) CreateAssetGroup(response http.ResponseWriter, request *http.
 		assetGroupURL.Path = fmt.Sprintf("/api/v2/asset-groups/%d", newAssetGroup.ID)
 		response.Header().Set(headers.Location.String(), assetGroupURL.String())
 
-		ctx.SetAuditContext(request, auditCtx)
 		api.WriteBasicResponse(request.Context(), newAssetGroup, http.StatusCreated, response)
 	}
 }
@@ -221,20 +219,20 @@ func (s Resources) DeleteAssetGroup(response http.ResponseWriter, request *http.
 	var (
 		pathVars        = mux.Vars(request)
 		rawAssetGroupID = pathVars[api.URIPathVariableAssetGroupID]
-		auditCtx        = model.AuditContext{Action: "DeleteAssetGroup"}
+		assetGroup      model.AssetGroup
 	)
+
+	ctx.SetAuditContext(request, model.AuditContext{Action: "DeleteAssetGroup", Model: &assetGroup})
 
 	if assetGroupID, err := strconv.Atoi(rawAssetGroupID); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsIDMalformed, request), response)
-	} else if assetGroup, err := s.DB.GetAssetGroup(int32(assetGroupID)); err != nil {
+	} else if assetGroup, err = s.DB.GetAssetGroup(int32(assetGroupID)); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else if assetGroup.SystemGroup {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusConflict, "Cannot delete a system defined asset group.", request), response)
 	} else if err := s.DB.DeleteAssetGroup(assetGroup); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
-		auditCtx.Model = assetGroup
-		ctx.SetAuditContext(request, auditCtx)
 		response.WriteHeader(http.StatusOK)
 	}
 }
@@ -278,11 +276,13 @@ func (s Resources) UpdateAssetGroupSelectors(response http.ResponseWriter, reque
 
 func (s Resources) DeleteAssetGroupSelector(response http.ResponseWriter, request *http.Request) {
 	var (
+		assetGroupSelector      model.AssetGroupSelector
 		pathVars                = mux.Vars(request)
 		rawAssetGroupID         = pathVars[api.URIPathVariableAssetGroupID]
 		rawAssetGroupSelectorID = pathVars[api.URIPathVariableAssetGroupSelectorID]
-		auditCtx                = model.AuditContext{Action: "DeleteAssetGroupSelector"}
 	)
+
+	ctx.SetAuditContext(request, model.AuditContext{Action: "DeleteAssetGroupSelector", Model: &assetGroupSelector})
 
 	if assetGroupID, err := strconv.Atoi(rawAssetGroupID); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsIDMalformed, request), response)
@@ -290,15 +290,13 @@ func (s Resources) DeleteAssetGroupSelector(response http.ResponseWriter, reques
 		api.HandleDatabaseError(request, response, err)
 	} else if assetGroupSelectorID, err := strconv.Atoi(rawAssetGroupSelectorID); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsIDMalformed, request), response)
-	} else if assetGroupSelector, err := s.DB.GetAssetGroupSelector(int32(assetGroupSelectorID)); err != nil {
+	} else if assetGroupSelector, err = s.DB.GetAssetGroupSelector(int32(assetGroupSelectorID)); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else if assetGroupSelector.SystemSelector {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusConflict, "Cannot delete a system defined asset group selector.", request), response)
 	} else if err := s.DB.DeleteAssetGroupSelector(assetGroupSelector); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
-		auditCtx.Model = assetGroupSelector
-		ctx.SetAuditContext(request, auditCtx)
 		response.WriteHeader(http.StatusOK)
 	}
 }

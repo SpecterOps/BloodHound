@@ -119,7 +119,9 @@ func (s ManagementResource) GetSAMLProvider(response http.ResponseWriter, reques
 }
 
 func (s ManagementResource) CreateSAMLProviderMultipart(response http.ResponseWriter, request *http.Request) {
-	var auditCtx = model.AuditContext{Action: "CreateSAMLIdentityProvider"}
+	var samlIdentityProvider model.SAMLProvider
+
+	ctx.SetAuditContext(request, model.AuditContext{Action: "CreateSAMLIdentityProvider", Model: &samlIdentityProvider})
 
 	if err := request.ParseMultipartForm(api.DefaultAPIPayloadReadLimitBytes); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
@@ -145,19 +147,15 @@ func (s ManagementResource) CreateSAMLProviderMultipart(response http.ResponseWr
 		} else if ssoURL, err := bhsaml.GetIDPSingleSignOnServiceURL(ssoDescriptor, saml.HTTPPostBinding); err != nil {
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "metadata does not have a SSO service that supports HTTP POST binding", request), response)
 		} else {
-			samlIdentityProvider := model.SAMLProvider{
-				Name:            providerNames[0],
-				DisplayName:     providerNames[0],
-				MetadataXML:     metadataXML,
-				IssuerURI:       metadata.EntityID,
-				SingleSignOnURI: ssoURL,
-			}
+			samlIdentityProvider.Name = providerNames[0]
+			samlIdentityProvider.DisplayName = providerNames[0]
+			samlIdentityProvider.MetadataXML = metadataXML
+			samlIdentityProvider.IssuerURI = metadata.EntityID
+			samlIdentityProvider.SingleSignOnURI = ssoURL
 
 			if newSAMLProvider, err := s.db.CreateSAMLIdentityProvider(samlIdentityProvider); err != nil {
 				api.HandleDatabaseError(request, response, err)
 			} else {
-				auditCtx.Model = samlIdentityProvider
-				ctx.SetAuditContext(request, auditCtx)
 				api.WriteBasicResponse(request.Context(), newSAMLProvider, http.StatusOK, response)
 			}
 		}
@@ -182,14 +180,16 @@ func (s ManagementResource) disassociateUsersFromSAMLProvider(request *http.Requ
 
 func (s ManagementResource) DeleteSAMLProvider(response http.ResponseWriter, request *http.Request) {
 	var (
-		rawProviderID  = mux.Vars(request)[api.URIPathVariableSAMLProviderID]
-		requestContext = ctx.FromRequest(request)
-		auditCtx       = model.AuditContext{Action: "DeleteSAMLProvider"}
+		identityProvider model.SAMLProvider
+		rawProviderID    = mux.Vars(request)[api.URIPathVariableSAMLProviderID]
+		requestContext   = ctx.FromRequest(request)
 	)
+
+	ctx.SetAuditContext(request, model.AuditContext{Action: "DeleteSAMLProvider", Model: &identityProvider})
 
 	if providerID, err := strconv.ParseInt(rawProviderID, 10, 32); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, api.ErrorResponseDetailsResourceNotFound, request), response)
-	} else if identityProvider, err := s.db.GetSAMLProvider(int32(providerID)); err != nil {
+	} else if identityProvider, err = s.db.GetSAMLProvider(int32(providerID)); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else if user, isUser := auth.GetUserFromAuthCtx(requestContext.AuthCtx); isUser && int64(user.SAMLProviderID.Int32) == providerID {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusConflict, "user may not delete their own SAML auth provider", request), response)
@@ -200,8 +200,6 @@ func (s ManagementResource) DeleteSAMLProvider(response http.ResponseWriter, req
 	} else if err := s.db.DeleteSAMLProvider(identityProvider); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
-		auditCtx.Model = identityProvider
-		ctx.SetAuditContext(request, auditCtx)
 		api.WriteBasicResponse(request.Context(), v2.DeleteSAMLProviderResponse{
 			AffectedUsers: providerUsers,
 		}, http.StatusOK, response)
@@ -430,8 +428,10 @@ func (s ManagementResource) ListUsers(response http.ResponseWriter, request *htt
 func (s ManagementResource) CreateUser(response http.ResponseWriter, request *http.Request) {
 	var (
 		createUserRequest v2.CreateUserRequest
-		auditCtx          = model.AuditContext{Action: "CreateUser"}
+		userTemplate      model.User
 	)
+
+	ctx.SetAuditContext(request, model.AuditContext{Action: "CreateUser", Model: &userTemplate})
 
 	if err := api.ReadJSONRequestPayloadLimited(&createUserRequest, request); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
@@ -440,16 +440,13 @@ func (s ManagementResource) CreateUser(response http.ResponseWriter, request *ht
 	} else if roles, err := s.db.GetRoles(createUserRequest.Roles); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
-		userTemplate := model.User{
-			Roles:         roles,
-			FirstName:     null.StringFrom(createUserRequest.FirstName),
-			LastName:      null.StringFrom(createUserRequest.LastName),
-			EmailAddress:  null.StringFrom(createUserRequest.EmailAddress),
-			PrincipalName: createUserRequest.Principal,
-			// EULA Acceptance does not pertain to Bloodhound Community Edition; this flag is used for Bloodhound Enterprise users.
-			EULAAccepted: true,
-		}
-		auditCtx.Model = &userTemplate
+		userTemplate.Roles = roles
+		userTemplate.FirstName = null.StringFrom(createUserRequest.FirstName)
+		userTemplate.LastName = null.StringFrom(createUserRequest.LastName)
+		userTemplate.EmailAddress = null.StringFrom(createUserRequest.EmailAddress)
+		userTemplate.PrincipalName = createUserRequest.Principal
+		// EULA Acceptance does not pertain to Bloodhound Community Edition; this flag is used for Bloodhound Enterprise users.
+		userTemplate.EULAAccepted = true
 
 		if createUserRequest.Secret != "" {
 			if errs := validation.Validate(createUserRequest.SetUserSecretRequest); errs != nil {
@@ -487,7 +484,6 @@ func (s ManagementResource) CreateUser(response http.ResponseWriter, request *ht
 			}
 		}
 
-		ctx.SetAuditContext(request, auditCtx)
 		if newUser, err := s.db.CreateUser(userTemplate); err != nil {
 			api.HandleDatabaseError(request, response, err)
 		} else {
@@ -618,20 +614,20 @@ func (s ManagementResource) GetSelf(response http.ResponseWriter, request *http.
 
 func (s ManagementResource) DeleteUser(response http.ResponseWriter, request *http.Request) {
 	var (
+		user      model.User
 		pathVars  = mux.Vars(request)
 		rawUserID = pathVars[api.URIPathVariableUserID]
-		auditCtx  = model.AuditContext{Action: "DeleteUser"}
 	)
+
+	ctx.SetAuditContext(request, model.AuditContext{Action: "DeleteUser", Model: &user})
 
 	if userID, err := uuid.FromString(rawUserID); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsIDMalformed, request), response)
-	} else if user, err := s.db.GetUser(userID); err != nil {
+	} else if user, err = s.db.GetUser(userID); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else if err := s.db.DeleteUser(user); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
-		auditCtx.Model = user
-		ctx.SetAuditContext(request, auditCtx)
 		response.WriteHeader(http.StatusOK)
 	}
 }
@@ -658,11 +654,13 @@ func (s ManagementResource) setUserSecret(user model.User, authSecret model.Auth
 
 func (s ManagementResource) PutUserAuthSecret(response http.ResponseWriter, request *http.Request) {
 	var (
+		authSecret           model.AuthSecret
 		setUserSecretRequest v2.SetUserSecretRequest
 		pathVars             = mux.Vars(request)
 		rawUserID            = pathVars[api.URIPathVariableUserID]
-		auditCtx             = model.AuditContext{Action: "PutUserAuthSecret"}
 	)
+
+	ctx.SetAuditContext(request, model.AuditContext{Action: "PutUserAuthSecret", Model: &authSecret})
 
 	if userID, err := uuid.FromString(rawUserID); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsIDMalformed, request), response)
@@ -682,12 +680,10 @@ func (s ManagementResource) PutUserAuthSecret(response http.ResponseWriter, requ
 		log.Errorf("Error while attempting to digest secret for user: %v", err)
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
 	} else {
-		authSecret := model.AuthSecret{
-			UserID:       targetUser.ID,
-			Digest:       secretDigest.String(),
-			DigestMethod: s.secretDigester.Method(),
-			ExpiresAt:    time.Now().Add(passwordExpiration).UTC(),
-		}
+		authSecret.UserID = targetUser.ID
+		authSecret.Digest = secretDigest.String()
+		authSecret.DigestMethod = s.secretDigester.Method()
+		authSecret.ExpiresAt = time.Now().Add(passwordExpiration).UTC()
 
 		if setUserSecretRequest.NeedsPasswordReset {
 			authSecret.ExpiresAt = time.Time{}
@@ -696,8 +692,6 @@ func (s ManagementResource) PutUserAuthSecret(response http.ResponseWriter, requ
 		if err := s.setUserSecret(targetUser, authSecret); err != nil {
 			api.HandleDatabaseError(request, response, err)
 		} else {
-			auditCtx.Model = authSecret
-			ctx.SetAuditContext(request, auditCtx)
 			response.WriteHeader(http.StatusOK)
 		}
 	}
