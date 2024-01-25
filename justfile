@@ -138,15 +138,9 @@ prune-my-branches nuclear='no':
   echo "Remaining Git Branches:"
   git --no-pager branch
 
-# run linting for all Go modules
-go-lint:
-  #!/usr/bin/env bash
-  echo 'ensuring golangci-lint@{{golangci-lint-version}} is installed'
-  go install -v github.com/golangci/golangci-lint/cmd/golangci-lint@{{golangci-lint-version}}
-  echo 'running golangci-lint on all detected modules in your go.work'
-  # grab all the module locations from go.work and run golangci-lint on each
-  golangci-lint run $(cat go.work | { cat | grep -E '\./' | awk 'NF{print $0 "/..."}'; } | tr '\n' ' ')
-  echo 'done'
+# Run all analyzers (requires jq to be installed locally)
+analyze:
+  go run github.com/specterops/bloodhound/packages/go/stbernard analysis | jq 'sort_by(.severity) | .[] | {"severity": .severity, "description": .description, "location": "\(.location.path):\(.location.lines.begin)"}' 
 
 # run docker compose commands for the BH dev profile (Default: up)
 bh-dev *ARGS='up':
