@@ -151,7 +151,7 @@ func (s *pattern) InboundWithDepth(min, max int, criteria ...graph.Criteria) Pat
 // Inbound specifies the next inbound expansion step for this pattern. By default, this expansion will use a minimum
 // depth of 1 to make the expansion required and a maximum depth of 0 to expand indefinitely.
 func (s *pattern) Inbound(criteria ...graph.Criteria) PatternContinuation {
-	return s.InboundWithDepth(1, 0)
+	return s.InboundWithDepth(1, 0, criteria...)
 }
 
 // NewPattern returns a new PatternContinuation for building a new pattern.
@@ -310,8 +310,6 @@ func (s Traversal) BreadthFirst(ctx context.Context, plan Plan) error {
 					if nextDescent, ok := channels.Receive(traversalCtx, segmentReaderC); !ok {
 						return nil
 					} else if pathTreeSize := pathTree.SizeOf(); pathTreeSize < tx.TraversalMemoryLimit() {
-						log.Infof("%s", graph.FormatPathSegment(nextDescent))
-
 						// Traverse the descending relationships of the current segment
 						if descendingSegments, err := plan.Driver(traversalCtx, tx, nextDescent); err != nil {
 							return err

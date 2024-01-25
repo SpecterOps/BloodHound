@@ -1119,7 +1119,6 @@ func GetADCSESC9aEdgeComposition(ctx context.Context, db graph.Database, edge *g
 	if err := traversalInst.BreadthFirst(ctx, traversal.Plan{
 		Root: startNode,
 		Driver: adcsESC9aPath1Pattern(edge.EndID).Do(func(terminal *graph.PathSegment) error {
-			log.Infof("Segment: %v", graph.FormatPathSegment(terminal))
 			victimNode := terminal.Search(func(nextSegment *graph.PathSegment) bool {
 				return nextSegment.Depth() == 1
 			})
@@ -1160,7 +1159,6 @@ func GetADCSESC9aEdgeComposition(ctx context.Context, db graph.Database, edge *g
 
 				lock.Lock()
 				path2CandidateSegments[caNode.ID] = append(path2CandidateSegments[caNode.ID], terminal)
-				log.Infof("added ca node %d", caNode.ID)
 				p2canodes = append(p2canodes, caNode.ID)
 				lock.Unlock()
 
@@ -1179,9 +1177,7 @@ func GetADCSESC9aEdgeComposition(ctx context.Context, db graph.Database, edge *g
 					return nextSegment.Node.Kinds.ContainsOneOf(ad.EnterpriseCA)
 				})
 
-				if caNode == nil {
-					return nil
-				}
+				log.Infof("Segment: %v", graph.FormatPathSegment(terminal))
 
 				lock.Lock()
 				path3CandidateSegments[caNode.ID] = append(path3CandidateSegments[caNode.ID], terminal)
