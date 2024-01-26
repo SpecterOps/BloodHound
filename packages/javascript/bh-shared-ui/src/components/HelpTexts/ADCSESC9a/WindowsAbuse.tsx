@@ -15,27 +15,11 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { FC } from 'react';
-import makeStyles from '@mui/styles/makeStyles';
 import { Typography, Link, List, ListItem, Box } from '@mui/material';
-
-const useStyles = makeStyles((theme) => ({
-    containsCodeEl: {
-        '& code': {
-            backgroundColor: 'darkgrey',
-            padding: '2px .5ch',
-            fontWeight: 'normal',
-            fontSize: '.875em',
-            borderRadius: '3px',
-            display: 'inline',
-
-            overflowWrap: 'break-word',
-            whiteSpace: 'pre-wrap',
-        },
-    },
-}));
+import { useHelpTextStyles } from '../utils';
 
 const WindowsAbuse: FC = () => {
-    const classes = useStyles();
+    const classes = useHelpTextStyles();
     const step1 = (
         <>
             <Typography variant='body2' className={classes.containsCodeEl}>
