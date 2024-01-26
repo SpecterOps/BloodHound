@@ -19,6 +19,7 @@ services:
   testdb:
     restart: unless-stopped
     image: docker.io/library/postgres:13.2
+    command: "-c log_statement=all"
     environment:
       - POSTGRES_USER=bloodhound
       - POSTGRES_PASSWORD=bloodhoundcommunityedition
@@ -33,7 +34,8 @@ services:
     image: neo4j:4.4.0
     environment:
       - NEO4J_AUTH=neo4j/bloodhoundcommunityedition
-      - NEO4J_dbms_security_auth__enabled:false
+      - NEO4J_dbms_security_auth__enabled=false
+      - NEO4J_server_logs_debug_enabled=true
     ports:
       - 127.0.0.1:37687:7687
       - 127.0.0.1:37474:7474

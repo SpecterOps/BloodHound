@@ -70,12 +70,16 @@ func Run(cwd string, modPaths []string, env []string) ([]codeclimate.Entry, erro
 	cmd.Stdout = &outb
 	cmd.Args = append(cmd.Args, args...)
 
+	log.Infof("Running golangci-lint")
+
 	err := cmd.Run()
 	if _, ok := err.(*exec.ExitError); ok {
 		err = ErrNonZeroExit
 	} else if err != nil {
 		return result, fmt.Errorf("unexpected failure: %w", err)
 	}
+
+	log.Infof("Completed golangci-lint")
 
 	if err := json.NewDecoder(&outb).Decode(&result); err != nil {
 		return result, fmt.Errorf("failed to decode output: %w", err)
