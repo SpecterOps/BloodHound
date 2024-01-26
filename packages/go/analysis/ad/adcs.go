@@ -240,35 +240,6 @@ func checkDNSValidity(node *graph.Node, validCertTemplates []*graph.Node, groupE
 	return false
 }
 
-func filterTempResultsForESC6a(tx graph.Transaction, tempResults cardinality.Duplex[uint32], groupExpansions impact.PathAggregator, validCertTemplates []*graph.Node, cache ADCSCache) cardinality.Duplex[uint32] {
-	principalsEnabledForESC6a := cardinality.NewBitmap32()
-
-	tempResults.Each(func(value uint32) (bool, error) {
-		sourceID := graph.ID(value)
-
-		if resultNode, err := tx.Nodes().Filter(query.Equals(query.NodeID(), sourceID)).First(); err != nil {
-			return true, nil
-		} else {
-			if resultNode.Kinds.ContainsOneOf(ad.Group) {
-				//A Group will be added to the list since it requires no further conditions
-				principalsEnabledForESC6a.Add(value)
-			} else if resultNode.Kinds.ContainsOneOf(ad.User) {
-				if checkDNSValidity(resultNode, validCertTemplates, groupExpansions, cache) {
-					if checkEmailValidity(resultNode, validCertTemplates, groupExpansions, cache) {
-						principalsEnabledForESC6a.Add(value)
-					}
-				}
-			} else if resultNode.Kinds.ContainsOneOf(ad.Computer) {
-				if checkEmailValidity(resultNode, validCertTemplates, groupExpansions, cache) {
-					principalsEnabledForESC6a.Add(value)
-				}
-			}
-		}
-		return true, nil
-	})
-	return principalsEnabledForESC6a
-}
-
 func PostADCSESC6a(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob, groupExpansions impact.PathAggregator, enterpriseCA, domain *graph.Node, cache ADCSCache) error {
 	//The enterpriseCA that is passed here has a valid certificate chain up to the domain through an NTAuthStore and a RootCA
 	if isUserSpecifiesSanEnabled, err := enterpriseCA.Properties.Get(ad.IsUserSpecifiesSanEnabled.String()).Bool(); err != nil {
@@ -321,7 +292,7 @@ func PostADCSESC6a(ctx context.Context, tx graph.Transaction, outC chan<- analys
 			}
 		}
 
-		if err := filterTempResultsForESC6a(tx, tempResults, groupExpansions, validCertTemplates, cache).Each(func(value uint32) (bool, error) {
+		if err := filterTempResultsForESC6(tx, tempResults, groupExpansions, validCertTemplates, cache).Each(func(value uint32) (bool, error) {
 			if !channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
 				FromID: graph.ID(value),
 				ToID:   domain.ID,
@@ -476,6 +447,13 @@ func PostADCS(ctx context.Context, db graph.Database, groupExpansions impact.Pat
 					operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
 						if err := PostADCSESC6a(ctx, tx, outC, groupExpansions, innerEnterpriseCA, innerDomain, cache); err != nil {
 							log.Errorf("failed post processing for %s: %v", ad.ADCSESC6a.String(), err)
+						}
+						return nil
+					})
+
+					operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
+						if err := PostADCSESC6b(ctx, tx, outC, groupExpansions, innerEnterpriseCA, innerDomain, cache); err != nil {
+							log.Errorf("failed post processing for %s: %v", ad.ADCSESC6b.String(), err)
 						}
 						return nil
 					})
