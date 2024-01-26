@@ -15,29 +15,12 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { FC } from 'react';
-import { groupSpecialFormat } from '../utils';
+import { useHelpTextStyles, groupSpecialFormat } from '../utils';
 import { EdgeInfoProps } from '../index';
 import { Typography } from '@mui/material';
-import { makeStyles } from '@mui/styles';
-
-const useStyles = makeStyles((theme) => ({
-    containsCodeEl: {
-        '& code': {
-            backgroundColor: 'darkgrey',
-            padding: '2px .5ch',
-            fontWeight: 'normal',
-            fontSize: '.875em',
-            borderRadius: '3px',
-            display: 'inline',
-
-            overflowWrap: 'break-word',
-            whiteSpace: 'pre-wrap',
-        },
-    },
-}));
 
 const General: FC<EdgeInfoProps> = ({ sourceName, sourceType, targetName }) => {
-    const classes = useStyles();
+    const classes = useHelpTextStyles();
     return (
         <Typography variant='body2' className={classes.containsCodeEl}>
             {groupSpecialFormat(sourceType, sourceName)} has the privileges to perform the ADCS ESC10 Scenario A attack
