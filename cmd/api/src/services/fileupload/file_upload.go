@@ -120,20 +120,12 @@ func EndFileUploadJob(db FileUploadData, job model.FileUploadJob) error {
 	return nil
 }
 
-func UpdateFileUploadJobStatus(db FileUploadData, jobID int64, status model.JobStatus, message string) error {
-	if job, err := db.GetFileUploadJob(jobID); err != nil {
-		return err
-	} else {
-		job.Status = status
-		job.StatusMessage = message
-		job.EndTime = time.Now().UTC()
+func UpdateFileUploadJobStatus(db FileUploadData, fileUploadJob model.FileUploadJob, status model.JobStatus, message string) error {
+	fileUploadJob.Status = status
+	fileUploadJob.StatusMessage = message
+	fileUploadJob.EndTime = time.Now().UTC()
 
-		return db.UpdateFileUploadJob(job)
-	}
-}
-
-func CompleteFileUploadJob(db FileUploadData, jobID int64) (model.FileUploadJob, error) {
-	return model.FileUploadJob{}, nil
+	return db.UpdateFileUploadJob(fileUploadJob)
 }
 
 func TimeOutUploadJob(db FileUploadData, jobID int64, message string) error {

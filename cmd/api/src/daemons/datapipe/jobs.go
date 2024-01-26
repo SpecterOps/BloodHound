@@ -17,6 +17,7 @@
 package datapipe
 
 import (
+	"context"
 	"os"
 
 	"github.com/specterops/bloodhound/dawgs/graph"
@@ -26,49 +27,87 @@ import (
 )
 
 func (s *Daemon) failJobsUnderAnalysis() {
-	for _, jobID := range s.fileUploadJobsUnderAnalysisByID {
-		if err := fileupload.FailFileUploadJob(s.db, jobID, "Analysis failed"); err != nil {
-			log.Errorf("Failed updating job %d to failed status: %v", jobID, err)
+	if fileUploadJobsUnderAnalysis, err := s.db.GetFileUploadJobsWithStatus(model.JobStatusAnalyzing); err != nil {
+		log.Errorf("Failed to load file upload jobs under analysis: %v", err)
+	} else {
+		for _, job := range fileUploadJobsUnderAnalysis {
+			if err := fileupload.FailFileUploadJob(s.db, job.ID, "Analysis failed"); err != nil {
+				log.Errorf("Failed updating file upload job %d to failed status: %v", job.ID, err)
+			}
 		}
 	}
 }
 
-func (s *Daemon) processCompletedFileUploadJobs() {
-	if completedFileUploadJobs, err := s.db.GetFileUploadJobsWithStatus(model.JobStatusIngesting); err != nil {
+func (s *Daemon) completeJobsUnderAnalysis() {
+	if fileUploadJobsUnderAnalysis, err := s.db.GetFileUploadJobsWithStatus(model.JobStatusAnalyzing); err != nil {
+		log.Errorf("Failed to load file upload jobs under analysis: %v", err)
+	} else {
+		for _, job := range fileUploadJobsUnderAnalysis {
+			if err := fileupload.UpdateFileUploadJobStatus(s.db, job, model.JobStatusComplete, "Complete"); err != nil {
+				log.Errorf("Error updating fileupload job %d: %v", job.ID, err)
+			}
+		}
+	}
+}
+
+func (s *Daemon) processIngestedFileUploadJobs() {
+	if ingestedFileUploadJobs, err := s.db.GetFileUploadJobsWithStatus(model.JobStatusIngesting); err != nil {
 		log.Errorf("Failed to look up finished file upload jobs: %v", err)
 	} else {
-		for _, completedFileUploadJob := range completedFileUploadJobs {
-			if err := fileupload.UpdateFileUploadJobStatus(s.db, completedFileUploadJob.ID, model.JobStatusComplete, "Complete"); err != nil {
-				log.Errorf("Error updating fileupload job %d: %v", completedFileUploadJob.ID, err)
+		for _, ingestedFileUploadJob := range ingestedFileUploadJobs {
+			if err := fileupload.UpdateFileUploadJobStatus(s.db, ingestedFileUploadJob, model.JobStatusAnalyzing, "Analyzing"); err != nil {
+				log.Errorf("Error updating fileupload job %d: %v", ingestedFileUploadJob.ID, err)
 			}
-
-			s.fileUploadJobsUnderAnalysisByID = append(s.fileUploadJobsUnderAnalysisByID, completedFileUploadJob.ID)
 		}
 	}
 }
 
-func (s *Daemon) processIngestTasks(ingestTasks model.IngestTasks) {
-	s.status.Update(model.DatapipeStatusIngesting, false)
-	defer s.status.Update(model.DatapipeStatusIdle, false)
+// clearFileTask removes a generic file upload task for ingested data.
+func (s *Daemon) clearFileTask(ingestTask model.IngestTask) {
+	if err := s.db.DeleteIngestTask(ingestTask); err != nil {
+		log.Errorf("Error removing file upload task from db: %v", err)
+	}
+}
 
-	for _, ingestTask := range ingestTasks {
-		jsonFile, err := os.Open(ingestTask.FileName)
-		if err != nil {
-			log.Errorf("Error reading file for ingest task %v: %v", ingestTask.ID, err)
-		}
+func (s *Daemon) processIngestFile(ctx context.Context, path string) error {
+	if jsonFile, err := os.Open(path); err != nil {
+		return err
+	} else {
+		defer func() {
+			if err := jsonFile.Close(); err != nil {
+				log.Errorf("Failed closing ingest file %s: %v", path, err)
+			}
+		}()
 
-		if err = s.graphdb.BatchOperation(s.ctx, func(batch graph.Batch) error {
+		return s.graphdb.BatchOperation(ctx, func(batch graph.Batch) error {
 			if err := s.ReadWrapper(batch, jsonFile); err != nil {
 				return err
 			} else {
 				return nil
 			}
-		}); err != nil {
-			log.Errorf("Error processing ingest task %v: %v", ingestTask.ID, err)
+		})
+	}
+}
+
+// processIngestTasks covers the generic file upload case for ingested data.
+func (s *Daemon) processIngestTasks(ctx context.Context, ingestTasks model.IngestTasks) {
+	s.status.Update(model.DatapipeStatusIngesting, false)
+	defer s.status.Update(model.DatapipeStatusIdle, false)
+
+	for _, ingestTask := range ingestTasks {
+		// Check the context to see if we should continue processing ingest tasks. This has to be explicit since error
+		// handling assumes that all failures should be logged and not returned.
+		select {
+		case <-ctx.Done():
+			return
+		default:
 		}
 
-		s.clearTask(ingestTask)
-		jsonFile.Close()
+		if err := s.processIngestFile(ctx, ingestTask.FileName); err != nil {
+			log.Errorf("Failed processing ingest task %d with file %s: %v", ingestTask.ID, ingestTask.FileName, err)
+		}
+
+		s.clearFileTask(ingestTask)
 	}
 }
 

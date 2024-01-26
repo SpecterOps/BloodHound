@@ -23,6 +23,7 @@ import (
 	"os"
 	"path/filepath"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/specterops/bloodhound/cache"
@@ -45,17 +46,14 @@ type Tasker interface {
 }
 
 type Daemon struct {
-	db                              database.Database
-	graphdb                         graph.Database
-	cache                           cache.Cache
-	cfg                             config.Configuration
-	analysisRequested               bool
-	tickInterval                    time.Duration
-	status                          model.DatapipeStatusWrapper
-	ctx                             context.Context
-	fileUploadJobsUnderAnalysisByID []int64
-
-	lock                   *sync.Mutex
+	db                     database.Database
+	graphdb                graph.Database
+	cache                  cache.Cache
+	cfg                    config.Configuration
+	analysisRequested      *atomic.Bool
+	tickInterval           time.Duration
+	status                 model.DatapipeStatusWrapper
+	ctx                    context.Context
 	clearOrphanedFilesLock *sync.Mutex
 }
 
@@ -65,14 +63,12 @@ func (s *Daemon) Name() string {
 
 func NewDaemon(ctx context.Context, cfg config.Configuration, connections bootstrap.DatabaseConnections[*database.BloodhoundDB, *graph.DatabaseSwitch], cache cache.Cache, tickInterval time.Duration) *Daemon {
 	return &Daemon{
-		db:      connections.RDMS,
-		graphdb: connections.Graph,
-		cache:   cache,
-		cfg:     cfg,
-		ctx:     ctx,
-
-		analysisRequested:      false,
-		lock:                   &sync.Mutex{},
+		db:                     connections.RDMS,
+		graphdb:                connections.Graph,
+		cache:                  cache,
+		cfg:                    cfg,
+		ctx:                    ctx,
+		analysisRequested:      &atomic.Bool{},
 		clearOrphanedFilesLock: &sync.Mutex{},
 		tickInterval:           tickInterval,
 		status: model.DatapipeStatusWrapper{
@@ -91,29 +87,17 @@ func (s *Daemon) GetStatus() model.DatapipeStatusWrapper {
 }
 
 func (s *Daemon) getAnalysisRequested() bool {
-	s.lock.Lock()
-	defer s.lock.Unlock()
-	return s.analysisRequested
+	return s.analysisRequested.Load()
 }
 
 func (s *Daemon) setAnalysisRequested(requested bool) {
-	s.lock.Lock()
-	defer s.lock.Unlock()
-	s.analysisRequested = requested
-}
-
-func (s *Daemon) finishAnalysis() {
-	// Clear in-memory tracking of any file upload jobs that made it to this analysis run
-	s.fileUploadJobsUnderAnalysisByID = s.fileUploadJobsUnderAnalysisByID[:0]
+	s.analysisRequested.Store(requested)
 }
 
 func (s *Daemon) analyze() {
 	// Ensure that the user-requested analysis switch is flipped back to false. This is done at the beginning of the
 	// function so that any re-analysis requests are caught while analysis is in-progress.
 	s.setAnalysisRequested(false)
-
-	// Make sure to clean up in-memory state on exit of this function.
-	defer s.finishAnalysis()
 
 	if s.cfg.DisableAnalysis {
 		return
@@ -128,6 +112,8 @@ func (s *Daemon) analyze() {
 
 		s.status.Update(model.DatapipeStatusIdle, false)
 	} else {
+		s.completeJobsUnderAnalysis()
+
 		if entityPanelCachingFlag, err := s.db.GetFlagByKey(appcfg.FeatureEntityPanelCaching); err != nil {
 			log.Errorf("Error retrieving entity panel caching flag: %v", err)
 		} else {
@@ -150,8 +136,20 @@ func (s *Daemon) ingestAvailableTasks() {
 	if ingestTasks, err := s.db.GetAllIngestTasks(); err != nil {
 		log.Errorf("Failed fetching available ingest tasks: %v", err)
 	} else {
-		s.processIngestTasks(ingestTasks)
+		s.processIngestTasks(s.ctx, ingestTasks)
 	}
+}
+
+func (s *Daemon) getNumJobsWaitingForAnalysis() (int, error) {
+	numJobsWaitingForAnalysis := 0
+
+	if fileUploadJobsUnderAnalysis, err := s.db.GetFileUploadJobsWithStatus(model.JobStatusAnalyzing); err != nil {
+		return 0, err
+	} else {
+		numJobsWaitingForAnalysis += len(fileUploadJobsUnderAnalysis)
+	}
+
+	return numJobsWaitingForAnalysis, nil
 }
 
 func (s *Daemon) Start() {
@@ -178,10 +176,12 @@ func (s *Daemon) Start() {
 			fileupload.ProcessStaleFileUploadJobs(s.db)
 
 			// Manage nominal state transitions for file upload jobs
-			s.processCompletedFileUploadJobs()
+			s.processIngestedFileUploadJobs()
 
-			// If there are completed client or file upload jobs or if analysis was user-requested, perform analysis
-			if len(s.fileUploadJobsUnderAnalysisByID) > 0 || s.getAnalysisRequested() {
+			// If there are completed file upload jobs or if analysis was user-requested, perform analysis.
+			if numJobsWaitingForAnalysis, err := s.getNumJobsWaitingForAnalysis(); err != nil {
+				log.Errorf("Failed looking up jobs waiting for analysis: %v", err)
+			} else if numJobsWaitingForAnalysis > 0 || s.getAnalysisRequested() {
 				s.analyze()
 			}
 
