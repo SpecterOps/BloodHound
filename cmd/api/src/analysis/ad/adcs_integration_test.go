@@ -600,6 +600,7 @@ func TestADCSESC6a(t *testing.T) {
 		certTemplates, err := ad2.FetchNodesByKind(context.Background(), db, ad.CertTemplate)
 		require.Nil(t, err)
 		domains, err := ad2.FetchNodesByKind(context.Background(), db, ad.Domain)
+		require.Nil(t, err)
 
 		cache := ad2.NewADCSCache()
 		cache.BuildCache(context.Background(), db, enterpriseCertAuthorities, certTemplates)
@@ -655,6 +656,7 @@ func TestADCSESC6a(t *testing.T) {
 		certTemplates, err := ad2.FetchNodesByKind(context.Background(), db, ad.CertTemplate)
 		require.Nil(t, err)
 		domains, err := ad2.FetchNodesByKind(context.Background(), db, ad.Domain)
+		require.Nil(t, err)
 
 		cache := ad2.NewADCSCache()
 		cache.BuildCache(context.Background(), db, enterpriseCertAuthorities, certTemplates)
@@ -709,6 +711,7 @@ func TestADCSESC6a(t *testing.T) {
 		certTemplates, err := ad2.FetchNodesByKind(context.Background(), db, ad.CertTemplate)
 		require.Nil(t, err)
 		domains, err := ad2.FetchNodesByKind(context.Background(), db, ad.Domain)
+		require.Nil(t, err)
 
 		cache := ad2.NewADCSCache()
 		cache.BuildCache(context.Background(), db, enterpriseCertAuthorities, certTemplates)
@@ -767,6 +770,7 @@ func TestADCSESC6a(t *testing.T) {
 		certTemplates, err := ad2.FetchNodesByKind(context.Background(), db, ad.CertTemplate)
 		require.Nil(t, err)
 		domains, err := ad2.FetchNodesByKind(context.Background(), db, ad.Domain)
+		require.Nil(t, err)
 
 		cache := ad2.NewADCSCache()
 		cache.BuildCache(context.Background(), db, enterpriseCertAuthorities, certTemplates)
