@@ -18,7 +18,11 @@ package integration
 
 import (
 	"fmt"
+	"github.com/specterops/bloodhound/analysis"
+	"github.com/specterops/bloodhound/src/test/integration/harnesses"
 	"math/rand"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gofrs/uuid"
