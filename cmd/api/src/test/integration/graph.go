@@ -414,21 +414,39 @@ func (s *GraphTestContext) NewActiveDirectoryRootCAWithThumbprint(name, domainSI
 	}), ad.Entity, ad.RootCA)
 }
 
-func (s *GraphTestContext) NewActiveDirectoryCertTemplate(name, domainSID string, requiresManagerApproval, authenticationEnabled, enrolleeSupplieSubject, subjectAltRequireUpn, noSecurityExtension bool, schemaVersion, authorizedSignatures int, ekus, applicationPolicies []string) *graph.Node {
+func (s *GraphTestContext) NewActiveDirectoryCertTemplate(name, domainSID string, data CertTemplateData) *graph.Node {
 	return s.NewNode(graph.AsProperties(graph.PropertyMap{
-		common.Name:                name,
-		common.ObjectID:            must.NewUUIDv4().String(),
-		ad.DomainSID:               domainSID,
-		ad.RequiresManagerApproval: requiresManagerApproval,
-		ad.AuthenticationEnabled:   authenticationEnabled,
-		ad.EnrolleeSuppliesSubject: enrolleeSupplieSubject,
-		ad.NoSecurityExtension:     noSecurityExtension,
-		ad.SchemaVersion:           float64(schemaVersion),
-		ad.AuthorizedSignatures:    float64(authorizedSignatures),
-		ad.EKUs:                    ekus,
-		ad.ApplicationPolicies:     applicationPolicies,
-		ad.SubjectAltRequireUPN:    subjectAltRequireUpn,
+		common.Name:                   name,
+		common.ObjectID:               must.NewUUIDv4().String(),
+		ad.DomainSID:                  domainSID,
+		ad.RequiresManagerApproval:    data.RequiresManagerApproval,
+		ad.AuthenticationEnabled:      data.AuthenticationEnabled,
+		ad.EnrolleeSuppliesSubject:    data.EnrolleeSuppliesSubject,
+		ad.NoSecurityExtension:        data.NoSecurityExtension,
+		ad.SchemaVersion:              data.SchemaVersion,
+		ad.AuthorizedSignatures:       data.AuthorizedSignatures,
+		ad.EKUs:                       data.EKUS,
+		ad.ApplicationPolicies:        data.ApplicationPolicies,
+		ad.SubjectAltRequireUPN:       data.SubjectAltRequireUPN,
+		ad.SubjectAltRequireSPN:       data.SubjectAltRequireSPN,
+		ad.SubjectAltRequireDNS:       data.SubjectAltRequireDNS,
+		ad.SubjectAltRequireDomainDNS: data.SubjectAltRequireDomainDNS,
 	}), ad.Entity, ad.CertTemplate)
+}
+
+type CertTemplateData struct {
+	RequiresManagerApproval    bool
+	AuthenticationEnabled      bool
+	EnrolleeSuppliesSubject    bool
+	SubjectAltRequireUPN       bool
+	SubjectAltRequireSPN       bool
+	SubjectAltRequireDNS       bool
+	SubjectAltRequireDomainDNS bool
+	NoSecurityExtension        bool
+	SchemaVersion              float64
+	AuthorizedSignatures       float64
+	EKUS                       []string
+	ApplicationPolicies        []string
 }
 
 func (s *GraphTestContext) setupAzure() {
