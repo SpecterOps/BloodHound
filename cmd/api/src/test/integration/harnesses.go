@@ -1144,7 +1144,18 @@ func (s *ADCSESC1Harness) Setup(graphTestContext *GraphTestContext) {
 	s.AuthStore1 = graphTestContext.NewActiveDirectoryNTAuthStore("ntauthstore 1", sid)
 	s.EnterpriseCA1 = graphTestContext.NewActiveDirectoryEnterpriseCA("eca 1", sid)
 	s.RootCA1 = graphTestContext.NewActiveDirectoryRootCA("rca 1", sid)
-	s.CertTemplate1 = graphTestContext.NewActiveDirectoryCertTemplate("certtemplate 1", sid, false, true, true, false, false, 1, 0, emptyEkus, emptyEkus)
+	s.CertTemplate1 = graphTestContext.NewActiveDirectoryCertTemplate("certtemplate 1", sid, CertTemplateData{
+		RequiresManagerApproval: false,
+		AuthenticationEnabled:   true,
+		EnrolleeSuppliesSubject: true,
+		SubjectAltRequireUPN:    false,
+		SubjectAltRequireSPN:    false,
+		NoSecurityExtension:     false,
+		SchemaVersion:           1,
+		AuthorizedSignatures:    0,
+		EKUS:                    emptyEkus,
+		ApplicationPolicies:     emptyEkus,
+	})
 	s.Group11 = graphTestContext.NewActiveDirectoryGroup("group1-1", sid)
 	s.Group12 = graphTestContext.NewActiveDirectoryGroup("group1-2", sid)
 	s.Group13 = graphTestContext.NewActiveDirectoryGroup("group1-3", sid)
@@ -1180,7 +1191,18 @@ func (s *ADCSESC1Harness) Setup(graphTestContext *GraphTestContext) {
 	s.EnterpriseCA22 = graphTestContext.NewActiveDirectoryEnterpriseCA("eca2-2", sid)
 	s.Group21 = graphTestContext.NewActiveDirectoryGroup("group2-1", sid)
 	s.Group22 = graphTestContext.NewActiveDirectoryGroup("group2-2", sid)
-	s.CertTemplate2 = graphTestContext.NewActiveDirectoryCertTemplate("certtemplate 2", sid, false, true, true, false, false, 1, 0, emptyEkus, emptyEkus)
+	s.CertTemplate2 = graphTestContext.NewActiveDirectoryCertTemplate("certtemplate 2", sid, CertTemplateData{
+		RequiresManagerApproval: false,
+		AuthenticationEnabled:   true,
+		EnrolleeSuppliesSubject: true,
+		SubjectAltRequireUPN:    false,
+		SubjectAltRequireSPN:    false,
+		NoSecurityExtension:     false,
+		SchemaVersion:           1,
+		AuthorizedSignatures:    0,
+		EKUS:                    emptyEkus,
+		ApplicationPolicies:     emptyEkus,
+	})
 
 	graphTestContext.NewRelationship(s.RootCA2, s.Domain2, ad.RootCAFor)
 	graphTestContext.NewRelationship(s.AuthStore2, s.Domain2, ad.NTAuthStoreFor)
@@ -1202,7 +1224,18 @@ func (s *ADCSESC1Harness) Setup(graphTestContext *GraphTestContext) {
 	s.EnterpriseCA32 = graphTestContext.NewActiveDirectoryEnterpriseCA("eca3-2", sid)
 	s.Group31 = graphTestContext.NewActiveDirectoryGroup("group3-1", sid)
 	s.Group32 = graphTestContext.NewActiveDirectoryGroup("group3-2", sid)
-	s.CertTemplate3 = graphTestContext.NewActiveDirectoryCertTemplate("certtemplate 3", sid, false, true, true, false, false, 1, 0, emptyEkus, emptyEkus)
+	s.CertTemplate3 = graphTestContext.NewActiveDirectoryCertTemplate("certtemplate 3", sid, CertTemplateData{
+		RequiresManagerApproval: false,
+		AuthenticationEnabled:   true,
+		EnrolleeSuppliesSubject: true,
+		SubjectAltRequireUPN:    false,
+		SubjectAltRequireSPN:    false,
+		NoSecurityExtension:     false,
+		SchemaVersion:           1,
+		AuthorizedSignatures:    0,
+		EKUS:                    emptyEkus,
+		ApplicationPolicies:     emptyEkus,
+	})
 
 	graphTestContext.NewRelationship(s.RootCA3, s.Domain3, ad.RootCAFor)
 	graphTestContext.NewRelationship(s.AuthStore3, s.Domain3, ad.NTAuthStoreFor)
@@ -1227,12 +1260,78 @@ func (s *ADCSESC1Harness) Setup(graphTestContext *GraphTestContext) {
 	s.Group44 = graphTestContext.NewActiveDirectoryGroup("group4-4", sid)
 	s.Group45 = graphTestContext.NewActiveDirectoryGroup("group4-5", sid)
 	s.Group46 = graphTestContext.NewActiveDirectoryGroup("group4-6", sid)
-	s.CertTemplate41 = graphTestContext.NewActiveDirectoryCertTemplate("certtemplate 4-1", sid, false, true, true, false, false, 2, 1, emptyEkus, emptyEkus)
-	s.CertTemplate42 = graphTestContext.NewActiveDirectoryCertTemplate("certtemplate 4-2", sid, false, true, true, false, false, 2, 0, emptyEkus, emptyEkus)
-	s.CertTemplate43 = graphTestContext.NewActiveDirectoryCertTemplate("certtemplate 4-3", sid, false, true, true, false, false, 1, 0, emptyEkus, emptyEkus)
-	s.CertTemplate44 = graphTestContext.NewActiveDirectoryCertTemplate("certtemplate 4-4", sid, true, true, true, false, false, 1, 0, emptyEkus, emptyEkus)
-	s.CertTemplate45 = graphTestContext.NewActiveDirectoryCertTemplate("certtemplate 4-5", sid, false, false, true, false, false, 1, 0, emptyEkus, emptyEkus)
-	s.CertTemplate46 = graphTestContext.NewActiveDirectoryCertTemplate("certtemplate 4-6", sid, false, true, false, true, false, 1, 0, emptyEkus, emptyEkus)
+	s.CertTemplate41 = graphTestContext.NewActiveDirectoryCertTemplate("certtemplate 4-1", sid, CertTemplateData{
+		RequiresManagerApproval: false,
+		AuthenticationEnabled:   true,
+		EnrolleeSuppliesSubject: true,
+		SubjectAltRequireUPN:    false,
+		SubjectAltRequireSPN:    false,
+		NoSecurityExtension:     false,
+		SchemaVersion:           2,
+		AuthorizedSignatures:    1,
+		EKUS:                    emptyEkus,
+		ApplicationPolicies:     emptyEkus,
+	})
+	s.CertTemplate42 = graphTestContext.NewActiveDirectoryCertTemplate("certtemplate 4-2", sid, CertTemplateData{
+		RequiresManagerApproval: false,
+		AuthenticationEnabled:   true,
+		EnrolleeSuppliesSubject: true,
+		SubjectAltRequireUPN:    false,
+		SubjectAltRequireSPN:    false,
+		NoSecurityExtension:     false,
+		SchemaVersion:           2,
+		AuthorizedSignatures:    0,
+		EKUS:                    emptyEkus,
+		ApplicationPolicies:     emptyEkus,
+	})
+	s.CertTemplate43 = graphTestContext.NewActiveDirectoryCertTemplate("certtemplate 4-3", sid, CertTemplateData{
+		RequiresManagerApproval: false,
+		AuthenticationEnabled:   true,
+		EnrolleeSuppliesSubject: true,
+		SubjectAltRequireUPN:    false,
+		SubjectAltRequireSPN:    false,
+		NoSecurityExtension:     false,
+		SchemaVersion:           1,
+		AuthorizedSignatures:    0,
+		EKUS:                    emptyEkus,
+		ApplicationPolicies:     emptyEkus,
+	})
+	s.CertTemplate44 = graphTestContext.NewActiveDirectoryCertTemplate("certtemplate 4-4", sid, CertTemplateData{
+		RequiresManagerApproval: true,
+		AuthenticationEnabled:   true,
+		EnrolleeSuppliesSubject: true,
+		SubjectAltRequireUPN:    false,
+		SubjectAltRequireSPN:    false,
+		NoSecurityExtension:     false,
+		SchemaVersion:           1,
+		AuthorizedSignatures:    0,
+		EKUS:                    emptyEkus,
+		ApplicationPolicies:     emptyEkus,
+	})
+	s.CertTemplate45 = graphTestContext.NewActiveDirectoryCertTemplate("certtemplate 4-5", sid, CertTemplateData{
+		RequiresManagerApproval: false,
+		AuthenticationEnabled:   false,
+		EnrolleeSuppliesSubject: true,
+		SubjectAltRequireUPN:    false,
+		SubjectAltRequireSPN:    false,
+		NoSecurityExtension:     false,
+		SchemaVersion:           1,
+		AuthorizedSignatures:    0,
+		EKUS:                    emptyEkus,
+		ApplicationPolicies:     emptyEkus,
+	})
+	s.CertTemplate46 = graphTestContext.NewActiveDirectoryCertTemplate("certtemplate 4-6", sid, CertTemplateData{
+		RequiresManagerApproval: false,
+		AuthenticationEnabled:   true,
+		EnrolleeSuppliesSubject: false,
+		SubjectAltRequireUPN:    true,
+		SubjectAltRequireSPN:    false,
+		NoSecurityExtension:     false,
+		SchemaVersion:           1,
+		AuthorizedSignatures:    0,
+		EKUS:                    emptyEkus,
+		ApplicationPolicies:     emptyEkus,
+	})
 
 	graphTestContext.NewRelationship(s.AuthStore4, s.Domain4, ad.NTAuthStoreFor)
 	graphTestContext.NewRelationship(s.RootCA4, s.Domain4, ad.RootCAFor)
@@ -1279,11 +1378,66 @@ func (s *EnrollOnBehalfOfHarnessTwo) Setup(gt *GraphTestContext) {
 	s.AuthStore2 = gt.NewActiveDirectoryNTAuthStore("authstore2", sid)
 	s.RootCA2 = gt.NewActiveDirectoryRootCA("rca2", sid)
 	s.EnterpriseCA2 = gt.NewActiveDirectoryEnterpriseCA("eca2", sid)
-	s.CertTemplate21 = gt.NewActiveDirectoryCertTemplate("certtemplate2-1", sid, false, false, false, false, false, 1, 0, certRequestAgentEKU, emptyAppPolicies)
-	s.CertTemplate22 = gt.NewActiveDirectoryCertTemplate("certtemplate2-2", sid, false, false, false, false, false, 1, 0, []string{adAnalysis.EkuCertRequestAgent, adAnalysis.EkuAnyPurpose}, emptyAppPolicies)
-	s.CertTemplate23 = gt.NewActiveDirectoryCertTemplate("certtemplate2-3", sid, false, false, false, false, false, 2, 1, certRequestAgentEKU, []string{adAnalysis.EkuCertRequestAgent})
-	s.CertTemplate24 = gt.NewActiveDirectoryCertTemplate("certtemplate2-4", sid, false, false, false, false, false, 2, 1, []string{}, emptyAppPolicies)
-	s.CertTemplate25 = gt.NewActiveDirectoryCertTemplate("certtemplate2-5", sid, false, false, false, true, false, 1, 1, []string{}, emptyAppPolicies)
+	s.CertTemplate21 = gt.NewActiveDirectoryCertTemplate("certtemplate2-1", sid, CertTemplateData{
+		RequiresManagerApproval: false,
+		AuthenticationEnabled:   false,
+		EnrolleeSuppliesSubject: false,
+		SubjectAltRequireUPN:    false,
+		SubjectAltRequireSPN:    false,
+		NoSecurityExtension:     false,
+		SchemaVersion:           1,
+		AuthorizedSignatures:    0,
+		EKUS:                    certRequestAgentEKU,
+		ApplicationPolicies:     emptyAppPolicies,
+	})
+	s.CertTemplate22 = gt.NewActiveDirectoryCertTemplate("certtemplate2-2", sid, CertTemplateData{
+		RequiresManagerApproval: false,
+		AuthenticationEnabled:   false,
+		EnrolleeSuppliesSubject: false,
+		SubjectAltRequireUPN:    false,
+		SubjectAltRequireSPN:    false,
+		NoSecurityExtension:     false,
+		SchemaVersion:           1,
+		AuthorizedSignatures:    0,
+		EKUS:                    []string{adAnalysis.EkuCertRequestAgent, adAnalysis.EkuAnyPurpose},
+		ApplicationPolicies:     emptyAppPolicies,
+	})
+	s.CertTemplate23 = gt.NewActiveDirectoryCertTemplate("certtemplate2-3", sid, CertTemplateData{
+		RequiresManagerApproval: false,
+		AuthenticationEnabled:   false,
+		EnrolleeSuppliesSubject: false,
+		SubjectAltRequireUPN:    false,
+		SubjectAltRequireSPN:    false,
+		NoSecurityExtension:     false,
+		SchemaVersion:           2,
+		AuthorizedSignatures:    1,
+		EKUS:                    certRequestAgentEKU,
+		ApplicationPolicies:     []string{adAnalysis.EkuCertRequestAgent},
+	})
+	s.CertTemplate24 = gt.NewActiveDirectoryCertTemplate("certtemplate2-4", sid, CertTemplateData{
+		RequiresManagerApproval: false,
+		AuthenticationEnabled:   false,
+		EnrolleeSuppliesSubject: false,
+		SubjectAltRequireUPN:    false,
+		SubjectAltRequireSPN:    false,
+		NoSecurityExtension:     false,
+		SchemaVersion:           2,
+		AuthorizedSignatures:    1,
+		EKUS:                    emptyAppPolicies,
+		ApplicationPolicies:     emptyAppPolicies,
+	})
+	s.CertTemplate25 = gt.NewActiveDirectoryCertTemplate("certtemplate2-5", sid, CertTemplateData{
+		RequiresManagerApproval: false,
+		AuthenticationEnabled:   false,
+		EnrolleeSuppliesSubject: false,
+		SubjectAltRequireUPN:    false,
+		SubjectAltRequireSPN:    false,
+		NoSecurityExtension:     false,
+		SchemaVersion:           1,
+		AuthorizedSignatures:    1,
+		EKUS:                    emptyAppPolicies,
+		ApplicationPolicies:     emptyAppPolicies,
+	})
 
 	gt.NewRelationship(s.AuthStore2, s.Domain2, ad.NTAuthStoreFor)
 	gt.NewRelationship(s.RootCA2, s.Domain2, ad.RootCAFor)
@@ -1315,9 +1469,42 @@ func (s *EnrollOnBehalfOfHarnessOne) Setup(gt *GraphTestContext) {
 	s.AuthStore1 = gt.NewActiveDirectoryNTAuthStore("authstore1", sid)
 	s.RootCA1 = gt.NewActiveDirectoryRootCA("rca1", sid)
 	s.EnterpriseCA1 = gt.NewActiveDirectoryEnterpriseCA("eca1", sid)
-	s.CertTemplate11 = gt.NewActiveDirectoryCertTemplate("certtemplate1-1", sid, false, false, false, false, false, 2, 0, anyPurposeEkus, emptyAppPolicies)
-	s.CertTemplate12 = gt.NewActiveDirectoryCertTemplate("certtemplate1-2", sid, false, false, false, false, false, 1, 0, anyPurposeEkus, emptyAppPolicies)
-	s.CertTemplate13 = gt.NewActiveDirectoryCertTemplate("certtemplate1-3", sid, false, false, false, false, false, 2, 0, anyPurposeEkus, emptyAppPolicies)
+	s.CertTemplate11 = gt.NewActiveDirectoryCertTemplate("certtemplate1-1", sid, CertTemplateData{
+		RequiresManagerApproval: false,
+		AuthenticationEnabled:   false,
+		EnrolleeSuppliesSubject: false,
+		SubjectAltRequireUPN:    false,
+		SubjectAltRequireSPN:    false,
+		NoSecurityExtension:     false,
+		SchemaVersion:           2,
+		AuthorizedSignatures:    0,
+		EKUS:                    anyPurposeEkus,
+		ApplicationPolicies:     emptyAppPolicies,
+	})
+	s.CertTemplate12 = gt.NewActiveDirectoryCertTemplate("certtemplate1-2", sid, CertTemplateData{
+		RequiresManagerApproval: false,
+		AuthenticationEnabled:   false,
+		EnrolleeSuppliesSubject: false,
+		SubjectAltRequireUPN:    false,
+		SubjectAltRequireSPN:    false,
+		NoSecurityExtension:     false,
+		SchemaVersion:           1,
+		AuthorizedSignatures:    0,
+		EKUS:                    anyPurposeEkus,
+		ApplicationPolicies:     emptyAppPolicies,
+	})
+	s.CertTemplate13 = gt.NewActiveDirectoryCertTemplate("certtemplate1-3", sid, CertTemplateData{
+		RequiresManagerApproval: false,
+		AuthenticationEnabled:   false,
+		EnrolleeSuppliesSubject: false,
+		SubjectAltRequireUPN:    false,
+		SubjectAltRequireSPN:    false,
+		NoSecurityExtension:     false,
+		SchemaVersion:           2,
+		AuthorizedSignatures:    0,
+		EKUS:                    anyPurposeEkus,
+		ApplicationPolicies:     emptyAppPolicies,
+	})
 
 	gt.NewRelationship(s.AuthStore1, s.Domain1, ad.NTAuthStoreFor)
 	gt.NewRelationship(s.RootCA1, s.Domain1, ad.RootCAFor)
@@ -1558,10 +1745,54 @@ func (s *ESC3Harness1) Setup(graphTestContext *GraphTestContext) {
 	s.User3 = graphTestContext.NewActiveDirectoryUser("User3", sid)
 	s.Group1 = graphTestContext.NewActiveDirectoryGroup("Group1", sid)
 	s.Group2 = graphTestContext.NewActiveDirectoryGroup("Group2", sid)
-	s.CertTemplate0 = graphTestContext.NewActiveDirectoryCertTemplate("CertTemplate0", sid, false, true, false, true, false, 1, 0, emptyEkus, emptyEkus)
-	s.CertTemplate1 = graphTestContext.NewActiveDirectoryCertTemplate("CertTemplate1", sid, false, false, false, false, false, 2, 0, emptyEkus, emptyEkus)
-	s.CertTemplate2 = graphTestContext.NewActiveDirectoryCertTemplate("CertTemplate2", sid, false, true, false, true, false, 1, 0, emptyEkus, emptyEkus)
-	s.CertTemplate3 = graphTestContext.NewActiveDirectoryCertTemplate("CertTemplate3", sid, false, false, false, false, false, 1, 0, emptyEkus, emptyEkus)
+	s.CertTemplate0 = graphTestContext.NewActiveDirectoryCertTemplate("CertTemplate0", sid, CertTemplateData{
+		RequiresManagerApproval: false,
+		AuthenticationEnabled:   true,
+		EnrolleeSuppliesSubject: false,
+		SubjectAltRequireUPN:    true,
+		SubjectAltRequireSPN:    false,
+		NoSecurityExtension:     false,
+		SchemaVersion:           1,
+		AuthorizedSignatures:    0,
+		EKUS:                    emptyEkus,
+		ApplicationPolicies:     emptyEkus,
+	})
+	s.CertTemplate1 = graphTestContext.NewActiveDirectoryCertTemplate("CertTemplate1", sid, CertTemplateData{
+		RequiresManagerApproval: false,
+		AuthenticationEnabled:   false,
+		EnrolleeSuppliesSubject: false,
+		SubjectAltRequireUPN:    false,
+		SubjectAltRequireSPN:    false,
+		NoSecurityExtension:     false,
+		SchemaVersion:           2,
+		AuthorizedSignatures:    0,
+		EKUS:                    emptyEkus,
+		ApplicationPolicies:     emptyEkus,
+	})
+	s.CertTemplate2 = graphTestContext.NewActiveDirectoryCertTemplate("CertTemplate2", sid, CertTemplateData{
+		RequiresManagerApproval: false,
+		AuthenticationEnabled:   true,
+		EnrolleeSuppliesSubject: false,
+		SubjectAltRequireUPN:    true,
+		SubjectAltRequireSPN:    false,
+		NoSecurityExtension:     false,
+		SchemaVersion:           1,
+		AuthorizedSignatures:    0,
+		EKUS:                    emptyEkus,
+		ApplicationPolicies:     emptyEkus,
+	})
+	s.CertTemplate3 = graphTestContext.NewActiveDirectoryCertTemplate("CertTemplate3", sid, CertTemplateData{
+		RequiresManagerApproval: false,
+		AuthenticationEnabled:   false,
+		EnrolleeSuppliesSubject: false,
+		SubjectAltRequireUPN:    false,
+		SubjectAltRequireSPN:    false,
+		NoSecurityExtension:     false,
+		SchemaVersion:           1,
+		AuthorizedSignatures:    0,
+		EKUS:                    emptyEkus,
+		ApplicationPolicies:     emptyEkus,
+	})
 	s.EnterpriseCA1 = graphTestContext.NewActiveDirectoryEnterpriseCA("EnterpriseCA1", sid)
 	s.EnterpriseCA2 = graphTestContext.NewActiveDirectoryEnterpriseCA("EnterpriseCA2", sid)
 	s.NTAuthStore = graphTestContext.NewActiveDirectoryNTAuthStore("NTAuthStore", sid)
@@ -1616,8 +1847,30 @@ func (s *ESC3Harness2) Setup(c *GraphTestContext) {
 	s.User1 = c.NewActiveDirectoryUser("User1", sid)
 	s.User2 = c.NewActiveDirectoryUser("User2", sid)
 	s.Group1 = c.NewActiveDirectoryGroup("Group1", sid)
-	s.CertTemplate1 = c.NewActiveDirectoryCertTemplate("CertTemplate1", sid, false, true, false, false, false, 2, 0, emptyEkus, emptyEkus)
-	s.CertTemplate2 = c.NewActiveDirectoryCertTemplate("CertTemplate2", sid, false, true, false, true, false, 1, 0, emptyEkus, emptyEkus)
+	s.CertTemplate1 = c.NewActiveDirectoryCertTemplate("CertTemplate1", sid, CertTemplateData{
+		RequiresManagerApproval: false,
+		AuthenticationEnabled:   true,
+		EnrolleeSuppliesSubject: false,
+		SubjectAltRequireUPN:    false,
+		SubjectAltRequireSPN:    false,
+		NoSecurityExtension:     false,
+		SchemaVersion:           2,
+		AuthorizedSignatures:    0,
+		EKUS:                    emptyEkus,
+		ApplicationPolicies:     emptyEkus,
+	})
+	s.CertTemplate2 = c.NewActiveDirectoryCertTemplate("CertTemplate2", sid, CertTemplateData{
+		RequiresManagerApproval: false,
+		AuthenticationEnabled:   true,
+		EnrolleeSuppliesSubject: false,
+		SubjectAltRequireUPN:    true,
+		SubjectAltRequireSPN:    false,
+		NoSecurityExtension:     false,
+		SchemaVersion:           1,
+		AuthorizedSignatures:    0,
+		EKUS:                    emptyEkus,
+		ApplicationPolicies:     emptyEkus,
+	})
 	s.EnterpriseCA1 = c.NewActiveDirectoryEnterpriseCA("EnterpriseCA1", sid)
 	s.NTAuthStore = c.NewActiveDirectoryNTAuthStore("NTAuthStore", sid)
 	s.RootCA = c.NewActiveDirectoryRootCA("RootCA", sid)
@@ -1640,6 +1893,53 @@ func (s *ESC3Harness2) Setup(c *GraphTestContext) {
 	s.EnterpriseCA1.Properties.Set(ad.EnrollmentAgentRestrictionsCollected.String(), true)
 	s.EnterpriseCA1.Properties.Set(ad.HasEnrollmentAgentRestrictions.String(), true)
 	c.UpdateNode(s.EnterpriseCA1)
+}
+
+type ESC9AHarness struct {
+	Domain       *graph.Node
+	NTAuthStore  *graph.Node
+	RootCA       *graph.Node
+	DC           *graph.Node
+	EnterpriseCA *graph.Node
+	CertTemplate *graph.Node
+	Victim       *graph.Node
+	Attacker     *graph.Node
+}
+
+func (s *ESC9AHarness) Setup(c *GraphTestContext) {
+	sid := RandomDomainSID()
+	emptyEkus := make([]string, 0)
+	s.Domain = c.NewActiveDirectoryDomain("ESC9aDomain", sid, false, true)
+	s.NTAuthStore = c.NewActiveDirectoryNTAuthStore("NTAuthStore", sid)
+	s.RootCA = c.NewActiveDirectoryRootCA("RootCA", sid)
+	s.DC = c.NewActiveDirectoryComputer("DC", sid)
+	s.EnterpriseCA = c.NewActiveDirectoryEnterpriseCA("eca", sid)
+	s.CertTemplate = c.NewActiveDirectoryCertTemplate("certtemplate", sid, CertTemplateData{
+		RequiresManagerApproval: false,
+		AuthenticationEnabled:   true,
+		EnrolleeSuppliesSubject: false,
+		SubjectAltRequireUPN:    true,
+		SubjectAltRequireSPN:    true,
+		SubjectAltRequireDNS:    false,
+		NoSecurityExtension:     true,
+		SchemaVersion:           1,
+		AuthorizedSignatures:    0,
+		EKUS:                    emptyEkus,
+		ApplicationPolicies:     emptyEkus,
+	})
+	s.Victim = c.NewActiveDirectoryUser("victim", sid, false)
+	s.Attacker = c.NewActiveDirectoryUser("attacker", sid, false)
+
+	c.NewRelationship(s.DC, s.Domain, ad.DCFor)
+	c.NewRelationship(s.NTAuthStore, s.Domain, ad.NTAuthStoreFor)
+	c.NewRelationship(s.RootCA, s.Domain, ad.RootCAFor)
+	c.NewRelationship(s.EnterpriseCA, s.DC, ad.CanAbuseWeakCertBinding)
+	c.NewRelationship(s.EnterpriseCA, s.NTAuthStore, ad.TrustedForNTAuth)
+	c.NewRelationship(s.EnterpriseCA, s.RootCA, ad.IssuedSignedBy)
+	c.NewRelationship(s.CertTemplate, s.EnterpriseCA, ad.PublishedTo)
+	c.NewRelationship(s.Victim, s.EnterpriseCA, ad.Enroll)
+	c.NewRelationship(s.Victim, s.CertTemplate, ad.Enroll)
+	c.NewRelationship(s.Attacker, s.Victim, ad.GenericWrite)
 }
 
 type ESC6aHarnessPrincipalEdges struct {
@@ -1665,7 +1965,18 @@ func (s *ESC6aHarnessPrincipalEdges) Setup(c *GraphTestContext) {
 	s.Group2 = c.NewActiveDirectoryGroup("Group2", sid)
 	s.Group3 = c.NewActiveDirectoryGroup("Group3", sid)
 	s.Group4 = c.NewActiveDirectoryGroup("Group4", sid)
-	s.CertTemplate1 = c.NewActiveDirectoryCertTemplate("CertTemplate1", sid, false, true, false, false, true, 1, 0, []string{}, []string{})
+	s.CertTemplate1 = c.NewActiveDirectoryCertTemplate("CertTemplate1", sid, CertTemplateData{
+		RequiresManagerApproval: false,
+		AuthenticationEnabled:   true,
+		EnrolleeSuppliesSubject: false,
+		SubjectAltRequireUPN:    false,
+		SubjectAltRequireSPN:    false,
+		NoSecurityExtension:     true,
+		SchemaVersion:           1,
+		AuthorizedSignatures:    0,
+		EKUS:                    []string{},
+		ApplicationPolicies:     []string{},
+	})
 	s.EnterpriseCA1 = c.NewActiveDirectoryEnterpriseCA("EnterpriseCA1", sid)
 	s.NTAuthStore = c.NewActiveDirectoryNTAuthStore("NTAuthStore", sid)
 	s.RootCA = c.NewActiveDirectoryRootCA("RootCA", sid)
@@ -1712,6 +2023,19 @@ func setupHarnessFromArrowsJson(c *GraphTestContext, fileName string) {
 func initHarnessNodes(c *GraphTestContext, nodes []harnesses.Node, sid string) map[string]*graph.Node {
 	nodeMap := map[string]*graph.Node{}
 
+	ctData := CertTemplateData{
+		RequiresManagerApproval: false,
+		AuthenticationEnabled:   true,
+		EnrolleeSuppliesSubject: false,
+		SubjectAltRequireUPN:    false,
+		SubjectAltRequireSPN:    false,
+		NoSecurityExtension:     true,
+		SchemaVersion:           1,
+		AuthorizedSignatures:    0,
+		EKUS:                    []string{},
+		ApplicationPolicies:     []string{},
+	}
+
 	for _, node := range nodes {
 		if kind, ok := node.Properties["kind"]; !ok {
 			continue
@@ -1721,7 +2045,7 @@ func initHarnessNodes(c *GraphTestContext, nodes []harnesses.Node, sid string) m
 			case ad.Group.String():
 				nodeMap[node.ID] = c.NewActiveDirectoryGroup(node.Caption, sid)
 			case ad.CertTemplate.String():
-				nodeMap[node.ID] = c.NewActiveDirectoryCertTemplate(node.Caption, sid, false, true, false, false, true, 1, 0, []string{}, []string{})
+				nodeMap[node.ID] = c.NewActiveDirectoryCertTemplate(node.Caption, sid, ctData)
 			case ad.EnterpriseCA.String():
 				nodeMap[node.ID] = c.NewActiveDirectoryEnterpriseCA(node.Caption, sid)
 			case ad.NTAuthStore.String():
@@ -1900,4 +2224,5 @@ type HarnessDetails struct {
 	ESC6aHarnessECA                                 ESC6aHarnessECA
 	ESC6aHarnessTemplate1                           ESC6aHarnessTemplate1
 	ESC6aHarnessTemplate2                           ESC6aHarnessTemplate2
+	ESC9AHarness                                    ESC9AHarness
 }
