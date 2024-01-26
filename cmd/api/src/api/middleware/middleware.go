@@ -148,10 +148,7 @@ func ContextMiddleware(next http.Handler) http.Handler {
 }
 
 func parseUserIP(r *http.Request) string {
-	IPAddress := r.Header.Get("X-Real-Ip")
-	if IPAddress == "" {
-		IPAddress = r.Header.Get("X-Forwarded-For")
-	}
+	IPAddress := r.Header.Get("X-Forwarded-For")
 	if IPAddress == "" {
 		if parsedUrl, err := url.Parse(r.RemoteAddr); err != nil {
 			log.Errorf("error parsing IP address from RemoteAddr: %s", err)
