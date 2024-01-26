@@ -380,7 +380,7 @@ func (s Client) GetPermission(id int32) (model.Permission, error) {
 func (s Client) ListPermissions() (v2.ListPermissionsResponse, error) {
 	var permissions v2.ListPermissionsResponse
 
-	if response, err := s.Request(http.MethodGet, "api/v2/auth/permissions", nil, nil); err != nil {
+	if response, err := s.Request(http.MethodGet, "api/v2/permissions", nil, nil); err != nil {
 		return permissions, err
 	} else {
 		defer response.Body.Close()
