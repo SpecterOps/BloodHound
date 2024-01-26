@@ -126,8 +126,9 @@ const (
 func NewAuditLogFromContext(ctx Context, idResolver auth.IdentityResolver) (model.AuditLog, error) {
 	if ctx.AuditCtx.Model == nil {
 		return model.AuditLog{}, fmt.Errorf("model cannot be nil when creating a new audit log")
+	} else if ctx.AuditCtx.Action != model.AuditStatusFailure && ctx.AuditCtx.Action != model.AuditStatusSuccess {
+		return model.AuditLog{}, fmt.Errorf("invalid action specified in audit log: %s", ctx.AuditCtx.Action)
 	}
-	//TODO: Add a check for empty status to prevent nil pointer references
 	authContext := ctx.AuthCtx
 
 	if !authContext.Authenticated() {

@@ -21,6 +21,7 @@ import (
 	"crypto/tls"
 	"net/http"
 	"net/url"
+	"strings"
 	"testing"
 	"time"
 
@@ -77,6 +78,37 @@ func TestRequestWaitDuration(t *testing.T) {
 	require.Nil(t, err)
 	require.Equal(t, 1*time.Second, requestedWaitDuration.Value)
 	require.True(t, requestedWaitDuration.UserSet)
+}
+
+func TestParseUserIP_XForwardedFor(t *testing.T) {
+	req, err := http.NewRequest("GET", "/teapot", nil)
+	require.Nil(t, err)
+
+	ip1 := "192.168.1.1:8080"
+	ip2 := "192.168.1.2"
+	ip3 := "192.168.1.3"
+	req.Header.Set("X-Forwarded-For", strings.Join([]string{ip1, ip2, ip3}, ","))
+
+	ip, err := parseUserIP(req)
+	require.Nil(t, err)
+	require.Equal(t, ip1, ip)
+}
+
+func TestParseUserIP_RemoteAddrError(t *testing.T) {
+	req, err := http.NewRequest("GET", "/teapot", nil)
+	require.Nil(t, err)
+	req.RemoteAddr = "0.0.0.0:3000"
+
+	_, err = parseUserIP(req)
+	require.Contains(t, err.Error(), "error parsing IP address")
+}
+
+func TestParseUserIP_HostnameError(t *testing.T) {
+	req, err := http.NewRequest("GET", "/teapot", nil)
+	require.Nil(t, err)
+
+	_, err = parseUserIP(req)
+	require.Contains(t, err.Error(), "hostname")
 }
 
 func TestParsePreferHeaderWait(t *testing.T) {
