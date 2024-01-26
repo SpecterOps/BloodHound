@@ -130,20 +130,21 @@ func ContextMiddleware(next http.Handler) http.Handler {
 			requestCtx, cancel := context.WithTimeout(request.Context(), requestedWaitDuration.Value)
 			defer cancel()
 			// Insert the bh context
-			if ipAddress, err := parseUserIP(request); err != nil {
-				log.Errorf(err.Error())
-			} else {
-				requestCtx = ctx.Set(requestCtx, &ctx.Context{
-					StartTime: startTime,
-					Timeout:   requestedWaitDuration,
-					RequestID: requestID,
-					Host: &url.URL{
-						Scheme: getScheme(request),
-						Host:   request.Host,
-					},
-					RequestIP: ipAddress,
-				})
+			var ipAddress string
+			if ipAddress, err = parseUserIP(request); err != nil {
+				log.Errorf("requestIP not set: %v", err)
 			}
+
+			requestCtx = ctx.Set(requestCtx, &ctx.Context{
+				StartTime: startTime,
+				Timeout:   requestedWaitDuration,
+				RequestID: requestID,
+				Host: &url.URL{
+					Scheme: getScheme(request),
+					Host:   request.Host,
+				},
+				RequestIP: ipAddress,
+			})
 
 			// Route the request with the embedded context
 			next.ServeHTTP(response, request.WithContext(requestCtx))
@@ -153,9 +154,11 @@ func ContextMiddleware(next http.Handler) http.Handler {
 
 func parseUserIP(r *http.Request) (string, error) {
 	if ipAddress := r.Header.Get("X-Forwarded-For"); ipAddress != "" {
-		return strings.Split(ipAddress, " ")[0], nil
+		return strings.Split(ipAddress, ",")[0], nil
 	} else if parsedUrl, err := url.Parse(r.RemoteAddr); err != nil {
 		return "", fmt.Errorf("error parsing IP address from RemoteAddr: %s", err)
+	} else if hostName := parsedUrl.Hostname(); hostName == "" {
+		return "", fmt.Errorf("hostname not found in URL: %s", parsedUrl.String())
 	} else {
 		return parsedUrl.Hostname(), nil
 	}
