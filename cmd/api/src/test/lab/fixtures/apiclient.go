@@ -65,8 +65,8 @@ func NewUserApiClientFixture(adminApiFixture *lab.Fixture[apiclient.Client], rol
 	fixture := lab.NewFixture(func(harness *lab.Harness) (apiclient.Client, error) {
 		if configFixture, ok := lab.Unpack(harness, ConfigFixture); !ok {
 			return apiclient.Client{}, fmt.Errorf("unable to unpack ConfigFixture")
-		} else if adminClient, ok := lab.Unpack(harness, BHAdminApiClientFixture); !ok {
-			return apiclient.Client{}, fmt.Errorf("unable to unpack BHAdminApiClientFixture")
+		} else if adminClient, ok := lab.Unpack(harness, adminApiFixture); !ok {
+			return apiclient.Client{}, fmt.Errorf("unable to unpack adminApiFixture")
 		} else if username, err := config.GenerateSecureRandomString(7); err != nil {
 			return apiclient.Client{}, fmt.Errorf("unable to generate random username")
 		} else if secret, err := config.GenerateRandomBase64String(32); err != nil {

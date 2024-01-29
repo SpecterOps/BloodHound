@@ -59,8 +59,9 @@ func testRoleAccess(t *testing.T, roleName string) {
 	require.Truef(t, ok, "invalid role name")
 
 	harness := lab.NewHarness()
-	lab.Pack(harness, fixtures.BHAdminApiClientFixture)
-	userClientFixture := fixtures.NewUserApiClientFixture(fixtures.BHAdminApiClientFixture, role.Name)
+	adminApiClientFixture := fixtures.NewAdminApiClientFixture(fixtures.NewApiFixture())
+	lab.Pack(harness, adminApiClientFixture)
+	userClientFixture := fixtures.NewUserApiClientFixture(adminApiClientFixture, role.Name)
 	lab.Pack(harness, userClientFixture)
 
 	lab.NewSpec(t, harness).Run(
