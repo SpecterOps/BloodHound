@@ -111,17 +111,10 @@ func ClearSystemTags(ctx context.Context, db graph.Database) error {
 
 func ValidKinds() []graph.Kind {
 	var (
-		lenCalc = len(ad.Nodes()) + len(ad.Relationships()) + len(azure.NodeKinds()) + len(azure.Relationships())
-		kinds   = make([]graph.Kind, 0, lenCalc)
+		metaKinds = []graph.Kind{metaKind, metaDetailKind}
 	)
 
-	kinds = append(kinds, ad.Nodes()...)
-	kinds = append(kinds, ad.Relationships()...)
-	kinds = append(kinds, azure.NodeKinds()...)
-	kinds = append(kinds, azure.Relationships()...)
-	kinds = append(kinds, metaKind, metaDetailKind)
-
-	return kinds
+	return slicesext.Concat(ad.Nodes(), ad.Relationships(), azure.NodeKinds(), azure.Relationships(), metaKinds)
 }
 
 func ParseKind(rawKind string) (graph.Kind, error) {

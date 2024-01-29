@@ -17,6 +17,8 @@
 // Package slicesext extends the standard library slices package with additional slice utilities
 package slicesext
 
+import "slices"
+
 // Filter applies a predicate function over each element in a given slice and returns a new slice containing only the elements in which the predicate returns true
 func Filter[T any](slice []T, fn func(T) bool) []T {
 	var out []T
@@ -114,4 +116,22 @@ func Last[T any](list []T) T {
 
 func Init[T any](list []T) []T {
 	return list[:len(list)-1]
+}
+
+// Concat returns a new slice concatenating the passed in slices.
+// This was ripped from go1.22 source and should be replaced with the stdlib
+// implementation when we move to 1.22
+func Concat[S ~[]E, E any](s ...S) S {
+	size := 0
+	for _, slice := range s {
+		size += len(slice)
+		if size < 0 {
+			panic("len out of range")
+		}
+	}
+	newslice := slices.Grow[S](nil, size)
+	for _, s := range s {
+		newslice = append(newslice, s...)
+	}
+	return newslice
 }
