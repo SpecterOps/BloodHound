@@ -20,12 +20,12 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"slices"
 
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/dawgs/query"
 	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/graphschema/azure"
-	slicesext "github.com/specterops/bloodhound/slicesext"
 )
 
 type DomainSelector struct {
@@ -136,7 +136,7 @@ func (s DomainSelectors) GetFilterCriteria(request *http.Request) (graph.Criteri
 		return nil, fmt.Errorf(ErrorResponseDetailsBadQueryParameterFilters)
 	} else {
 		for name, filters := range queryFilters {
-			if valid := slicesext.Contains(s.GetFilterableColumns(), name); !valid {
+			if valid := slices.Contains(s.GetFilterableColumns(), name); !valid {
 				return nil, fmt.Errorf(ErrorResponseDetailsColumnNotFilterable)
 			}
 
@@ -144,7 +144,7 @@ func (s DomainSelectors) GetFilterCriteria(request *http.Request) (graph.Criteri
 				return nil, fmt.Errorf(ErrorResponseDetailsColumnNotFilterable)
 			} else {
 				for i, filter := range filters {
-					if !slicesext.Contains(validPredicates, string(filter.Operator)) {
+					if !slices.Contains(validPredicates, string(filter.Operator)) {
 						return nil, fmt.Errorf(ErrorResponseDetailsFilterPredicateNotSupported)
 					}
 

@@ -18,6 +18,7 @@ package slicesext_test
 
 import (
 	"fmt"
+	"slices"
 	"strconv"
 	"strings"
 	"testing"
@@ -67,33 +68,8 @@ func TestUnique(t *testing.T) {
 }
 
 func TestContains(t *testing.T) {
-	require.True(t, slicesext.Contains([]string{"a", "b", "c"}, "c"))
-	require.False(t, slicesext.Contains([]string{"a", "b", "c"}, "d"))
-}
-
-func TestReverse(t *testing.T) {
-	require.Equal(t, []int{}, slicesext.Reverse(listEmpty))
-	require.Equal(t, []int{0}, slicesext.Reverse(listSingle))
-	require.Equal(t, reversedListDuo, slicesext.Reverse(listDuo))
-	require.Equal(t, reversedListEven, slicesext.Reverse(listEven))
-	require.Equal(t, reversedListOdd, slicesext.Reverse(listOdd))
-}
-
-func BenchmarkReverse(b *testing.B) {
-	for i := 10; i < 1000000; i = i * 10 {
-		list := make([]int, i)
-		for idx := range list {
-			list[idx] = idx
-		}
-
-		b.Run(fmt.Sprintf("reverse_%d", i), func(b *testing.B) {
-			b.RunParallel(func(pb *testing.PB) {
-				for pb.Next() {
-					slicesext.Reverse(list)
-				}
-			})
-		})
-	}
+	require.True(t, slices.Contains([]string{"a", "b", "c"}, "c"))
+	require.False(t, slices.Contains([]string{"a", "b", "c"}, "d"))
 }
 
 func BenchmarkHead(b *testing.B) {

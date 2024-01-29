@@ -100,16 +100,6 @@ func UniqueBy[T any, U comparable](slice []T, fn func(T) U) []T {
 	return out
 }
 
-// Contains returns true if a slice contains an element that is equal to the given value
-func Contains[T comparable](slice []T, value T) bool {
-	for _, sliceValue := range slice {
-		if sliceValue == value {
-			return true
-		}
-	}
-	return false
-}
-
 func Head[T any](list []T) T {
 	return list[0]
 }
@@ -124,14 +114,4 @@ func Last[T any](list []T) T {
 
 func Init[T any](list []T) []T {
 	return list[:len(list)-1]
-}
-
-// Reverse reverses the order of a slice by doing an in place reverse
-// This will reorder the provided slice in place, and uses zero allocations
-func Reverse[T any](list []T) []T {
-	for low, high := 0, len(list)-1; low < high; low, high = low+1, high-1 {
-		list[low], list[high] = list[high], list[low]
-	}
-
-	return list
 }

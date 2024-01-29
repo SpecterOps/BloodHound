@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"net/http"
 	"regexp"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -27,7 +28,6 @@ import (
 	"github.com/specterops/bloodhound/dawgs/query"
 
 	"github.com/specterops/bloodhound/errors"
-	slicesext "github.com/specterops/bloodhound/slicesext"
 )
 
 type FilterOperator string
@@ -298,7 +298,7 @@ func (s QueryParameterFilterParser) ParseQueryParameterFilters(request *http.Req
 
 	for name, values := range request.URL.Query() {
 		// ignore pagination query params
-		if slicesext.Contains(AllPaginationQueryParameters(), name) {
+		if slices.Contains(AllPaginationQueryParameters(), name) {
 			continue
 		}
 

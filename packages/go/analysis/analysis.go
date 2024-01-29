@@ -19,6 +19,7 @@ package analysis
 import (
 	"context"
 	"fmt"
+	"slices"
 	"strings"
 
 	"github.com/specterops/bloodhound/dawgs/graph"
@@ -76,7 +77,7 @@ func GetNodeKind(node *graph.Node) graph.Kind {
 			if resultKind.String() == NodeKindUnknown {
 				resultKind = kind
 			}
-		} else if slicesext.Contains(ValidKinds(), kind) {
+		} else if slices.Contains(ValidKinds(), kind) {
 			resultKind = kind
 		}
 	}

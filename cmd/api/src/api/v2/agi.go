@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -31,7 +32,6 @@ import (
 	"github.com/specterops/bloodhound/graphschema/common"
 	"github.com/specterops/bloodhound/headers"
 	"github.com/specterops/bloodhound/log"
-	slicesext "github.com/specterops/bloodhound/slicesext"
 	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/src/ctx"
 	"github.com/specterops/bloodhound/src/model"
@@ -111,7 +111,7 @@ func (s Resources) ListAssetGroups(response http.ResponseWriter, request *http.R
 				return
 			} else {
 				for i, filter := range filters {
-					if !slicesext.Contains(validPredicates, string(filter.Operator)) {
+					if !slices.Contains(validPredicates, string(filter.Operator)) {
 						api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("%s: %s %s", api.ErrorResponseDetailsFilterPredicateNotSupported, filter.Name, filter.Operator), request), response)
 						return
 					}
@@ -341,7 +341,7 @@ func (s Resources) ListAssetGroupCollections(response http.ResponseWriter, reque
 				return
 			} else {
 				for _, filter := range filters {
-					if !slicesext.Contains(validPredicates, string(filter.Operator)) {
+					if !slices.Contains(validPredicates, string(filter.Operator)) {
 						api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("%s: %s %s", api.ErrorResponseDetailsFilterPredicateNotSupported, filter.Name, filter.Operator), request), response)
 						return
 					}
@@ -401,7 +401,7 @@ func (s Resources) ListAssetGroupMembers(response http.ResponseWriter, request *
 				return
 			} else {
 				for _, filter := range filters {
-					if !slicesext.Contains(validPredicates, string(filter.Operator)) {
+					if !slices.Contains(validPredicates, string(filter.Operator)) {
 						api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("%s: %s %s", api.ErrorResponseDetailsFilterPredicateNotSupported, filter.Name, filter.Operator), request), response)
 						return
 					}

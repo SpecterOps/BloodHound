@@ -20,12 +20,12 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"slices"
 	"strconv"
 	"strings"
 
 	"github.com/gorilla/mux"
 	"github.com/specterops/bloodhound/log"
-	slicesext "github.com/specterops/bloodhound/slicesext"
 	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/src/auth"
 	"github.com/specterops/bloodhound/src/ctx"
@@ -69,7 +69,7 @@ func (s Resources) ListFileUploadJobs(response http.ResponseWriter, request *htt
 		return
 	} else {
 		for name, filters := range queryFilters {
-			if valid := slicesext.Contains(fileUploadJobs.GetFilterableColumns(), name); !valid {
+			if valid := slices.Contains(fileUploadJobs.GetFilterableColumns(), name); !valid {
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("%s: %s", api.ErrorResponseDetailsColumnNotFilterable, name), request), response)
 				return
 			}
@@ -78,7 +78,7 @@ func (s Resources) ListFileUploadJobs(response http.ResponseWriter, request *htt
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("%s: %s", api.ErrorResponseDetailsColumnNotFilterable, name), request), response)
 			} else {
 				for i, filter := range filters {
-					if !slicesext.Contains(validPredicates, string(filter.Operator)) {
+					if !slices.Contains(validPredicates, string(filter.Operator)) {
 						api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("%s: %s %s", api.ErrorResponseDetailsFilterPredicateNotSupported, filter.Name, filter.Operator), request), response)
 						return
 					}

@@ -18,13 +18,13 @@ package ad
 
 import (
 	"context"
+	"slices"
 
 	"github.com/specterops/bloodhound/analysis"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/dawgs/util/channels"
 	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/log"
-	slicesext "github.com/specterops/bloodhound/slicesext"
 )
 
 func PostEnrollOnBehalfOf(certTemplates []*graph.Node, operation analysis.StatTrackedOperation[analysis.CreatePostRelationshipJob]) error {
@@ -103,7 +103,7 @@ func EnrollOnBehalfOfVersionTwo(tx graph.Transaction, versionTwoCertTemplates, a
 					continue
 				} else if applicationPolicies, err := certTemplateTwo.Properties.Get(ad.ApplicationPolicies.String()).StringSlice(); err != nil {
 					log.Errorf("Error getting application policies for cert template %d: %w", certTemplateTwo.ID, err)
-				} else if !slicesext.Contains(applicationPolicies, EkuCertRequestAgent) {
+				} else if !slices.Contains(applicationPolicies, EkuCertRequestAgent) {
 					continue
 				} else if isLinked, err := DoesCertTemplateLinkToDomain(tx, certTemplateTwo, domainNode); err != nil {
 					log.Errorf("error fetch paths from cert template %d to domain: %w", certTemplateTwo.ID, err)
