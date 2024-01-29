@@ -364,7 +364,7 @@ func (s Client) UserRemoveRole(userID uuid.UUID, roleID int32) error {
 func (s Client) GetPermission(id int32) (model.Permission, error) {
 	var permission model.Permission
 
-	if response, err := s.Request(http.MethodGet, fmt.Sprintf("api/v2/auth/permissions/%d", id), nil, nil); err != nil {
+	if response, err := s.Request(http.MethodGet, fmt.Sprintf("api/v2/permissions/%d", id), nil, nil); err != nil {
 		return permission, err
 	} else {
 		defer response.Body.Close()
