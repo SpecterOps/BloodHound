@@ -21,81 +21,79 @@ import (
 )
 
 type PermissionSet struct {
-	GraphDBRead  model.Permission
-	GraphDBWrite model.Permission
-
 	AppReadApplicationConfiguration  model.Permission
 	AppWriteApplicationConfiguration model.Permission
-
-	CollectionManageJobs model.Permission
-
-	ClientsManage  model.Permission
-	ClientsTasking model.Permission
-
-	AuthCreateToken                     model.Permission
-	AuthManageSelf                      model.Permission
-	AuthAcceptEULA                      model.Permission
-	AuthManageUsers                     model.Permission
-	AuthManageProviders                 model.Permission
-	AuthManageApplicationConfigurations model.Permission
 
 	APsGenerateReport model.Permission
 	APsManageAPs      model.Permission
 
+	AuthAcceptEULA                      model.Permission
+	AuthCreateToken                     model.Permission
+	AuthManageApplicationConfigurations model.Permission
+	AuthManageProviders                 model.Permission
+	AuthManageSelf                      model.Permission
+	AuthManageUsers                     model.Permission
+
+	ClientsManage  model.Permission
+	ClientsRead    model.Permission
+	ClientsTasking model.Permission
+
+	CollectionManageJobs model.Permission
+
+	GraphDBRead  model.Permission
+	GraphDBWrite model.Permission
+
 	SavedQueriesRead  model.Permission
 	SavedQueriesWrite model.Permission
-
-	ClientsRead model.Permission
 }
 
 func (s PermissionSet) All() model.Permissions {
 	return model.Permissions{
-		s.GraphDBWrite,
-		s.GraphDBRead,
 		s.AppReadApplicationConfiguration,
 		s.AppWriteApplicationConfiguration,
-		s.CollectionManageJobs,
-		s.ClientsManage,
-		s.ClientsTasking,
-		s.AuthCreateToken,
-		s.AuthManageUsers,
-		s.AuthManageProviders,
-		s.AuthManageSelf,
-		s.AuthManageApplicationConfigurations,
 		s.APsGenerateReport,
 		s.APsManageAPs,
+		s.AuthCreateToken,
+		s.AuthManageApplicationConfigurations,
+		s.AuthManageProviders,
+		s.AuthManageSelf,
+		s.AuthManageUsers,
+		s.ClientsManage,
+		s.ClientsRead,
+		s.ClientsTasking,
+		s.CollectionManageJobs,
+		s.GraphDBRead,
+		s.GraphDBWrite,
 		s.SavedQueriesRead,
 		s.SavedQueriesWrite,
-		s.ClientsRead,
 	}
 }
 
 func Permissions() PermissionSet {
 	return PermissionSet{
-		GraphDBRead:  model.NewPermission("graphdb", "Read"),
-		GraphDBWrite: model.NewPermission("graphdb", "Write"),
-
 		AppReadApplicationConfiguration:  model.NewPermission("app", "ReadAppConfig"),
 		AppWriteApplicationConfiguration: model.NewPermission("app", "WriteAppConfig"),
-
-		CollectionManageJobs: model.NewPermission("collection", "ManageJobs"),
-
-		ClientsManage:  model.NewPermission("clients", "Manage"),
-		ClientsTasking: model.NewPermission("clients", "Tasking"),
-
-		AuthCreateToken:                     model.NewPermission("auth", "CreateToken"),
-		AuthManageSelf:                      model.NewPermission("auth", "ManageSelf"),
-		AuthAcceptEULA:                      model.NewPermission("auth", "AcceptEULA"),
-		AuthManageProviders:                 model.NewPermission("auth", "ManageProviders"),
-		AuthManageUsers:                     model.NewPermission("auth", "ManageUsers"),
-		AuthManageApplicationConfigurations: model.NewPermission("auth", "ManageAppConfig"),
 
 		APsGenerateReport: model.NewPermission("risks", "GenerateReport"),
 		APsManageAPs:      model.NewPermission("risks", "ManageRisks"),
 
+		AuthAcceptEULA:                      model.NewPermission("auth", "AcceptEULA"),
+		AuthCreateToken:                     model.NewPermission("auth", "CreateToken"),
+		AuthManageApplicationConfigurations: model.NewPermission("auth", "ManageAppConfig"),
+		AuthManageProviders:                 model.NewPermission("auth", "ManageProviders"),
+		AuthManageSelf:                      model.NewPermission("auth", "ManageSelf"),
+		AuthManageUsers:                     model.NewPermission("auth", "ManageUsers"),
+
+		ClientsManage:  model.NewPermission("clients", "Manage"),
+		ClientsRead:    model.NewPermission("clients", "Read"),
+		ClientsTasking: model.NewPermission("clients", "Tasking"),
+
+		CollectionManageJobs: model.NewPermission("collection", "ManageJobs"),
+
+		GraphDBRead:  model.NewPermission("graphdb", "Read"),
+		GraphDBWrite: model.NewPermission("graphdb", "Write"),
+
 		SavedQueriesRead:  model.NewPermission("saved_queries", "Read"),
 		SavedQueriesWrite: model.NewPermission("saved_queries", "Write"),
-
-		ClientsRead: model.NewPermission("clients", "Read"),
 	}
 }
