@@ -170,6 +170,7 @@ func PostADCSESC6b(ctx context.Context, tx graph.Transaction, outC chan<- analys
 			tempResults        = cardinality.NewBitmap32()
 			validCertTemplates []*graph.Node
 		)
+
 		for _, publishedCertTemplate := range publishedCertTemplates {
 			if reqManagerApproval, err := publishedCertTemplate.Properties.Get(ad.RequiresManagerApproval.String()).Bool(); err != nil {
 				log.Errorf("%s property access error %d: %v", ad.RequiresManagerApproval.String(), publishedCertTemplate.ID, err)

@@ -211,13 +211,13 @@ func checkEmailValidity(node *graph.Node, validCertTemplates []*graph.Node, grou
 					log.Errorf("%s property access error %d: %v", ad.SubjectRequireEmail.String(), certTemplate.ID, err)
 					continue
 				} else if (!subjectAltRequireEmail && !subjectRequireEmail) || schemaVersion == 1 {
-					//Principal does not have an email set but at least one of the certTemplates it controls does not require it so add it to the list of principals enabled for ESC6a
+					//Principal does not have an email set but at least one of the certTemplates it controls does not require it so add it to the list of principals enabled for ESC6
 					return true
 				}
 			}
 		}
 	} else {
-		//Principal has an email set so add it to the list of principals enabled for ESC6a
+		//Principal has an email set so add it to the list of principals enabled for ESC6
 		return true
 	}
 	return false

@@ -2127,6 +2127,12 @@ func (s *ESC6aHarnessTemplate2) Setup(c *GraphTestContext) {
 	setupHarnessFromArrowsJson(c, "esc6a-template2")
 }
 
+type ESC6bHarnessTemplate1 struct{}
+
+func (s *ESC6bHarnessTemplate1) Setup(c *GraphTestContext) {
+	setupHarnessFromArrowsJson(c, "esc6b-template1")
+}
+
 type ShortcutHarness struct {
 	Group1 *graph.Node
 	Group2 *graph.Node
