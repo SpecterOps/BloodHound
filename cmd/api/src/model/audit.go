@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/gofrs/uuid"
 	"github.com/specterops/bloodhound/src/database/types"
 )
 
@@ -146,6 +147,7 @@ type Auditable interface {
 }
 
 type AuditEntry struct {
+	CommitID uuid.UUID
 	Action   string
 	Model    Auditable
 	Status   AuditEntryStatus

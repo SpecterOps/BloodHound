@@ -361,14 +361,25 @@ func (s *BloodhoundDB) CreateUser(user model.User) (model.User, error) {
 
 // UpdateUser updates the roles associated with the user according to the input struct
 // UPDATE users SET roles = ....
-func (s *BloodhoundDB) UpdateUser(user model.User) error {
-	// Update roles first
-	if err := s.db.Model(&user).Association("Roles").Replace(&user.Roles); err != nil {
-		return err
-	}
+func (s *BloodhoundDB) UpdateUser(ctx context.Context, user model.User) error {
+	var (
+		auditEntry = model.AuditEntry{
+			Action: "Update User",
+			Model:  user, // TODO: needs to be reflected to a more limited struct to prevent sensitive data exposure
+		}
+	)
 
-	result := s.db.Save(&user)
-	return CheckError(result)
+	err := s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
+		// Update roles first
+		if err := tx.Model(&user).Association("Roles").Replace(&user.Roles); err != nil {
+			return err
+		}
+
+		result := tx.Save(&user)
+		return CheckError(result)
+	})
+
+	return err
 }
 
 func (s *BloodhoundDB) GetAllUsers(order string, filter model.SQLFilter) (model.Users, error) {

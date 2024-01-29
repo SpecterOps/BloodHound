@@ -56,7 +56,7 @@ func (m *MockDatabase) EXPECT() *MockDatabaseMockRecorder {
 }
 
 // AppendAuditLog mocks base method.
-func (m *MockDatabase) AppendAuditLog(arg0 ctx.Context, arg1 model.AuditEntry) error {
+func (m *MockDatabase) AppendAuditLog(arg0 context.Context, arg1 model.AuditEntry) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "AppendAuditLog", arg0, arg1)
 	ret0, _ := ret[0].(error)
@@ -1485,17 +1485,17 @@ func (mr *MockDatabaseMockRecorder) UpdateSAMLIdentityProvider(arg0 interface{})
 }
 
 // UpdateUser mocks base method.
-func (m *MockDatabase) UpdateUser(arg0 model.User) error {
+func (m *MockDatabase) UpdateUser(arg0 context.Context, arg1 model.User) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateUser", arg0)
+	ret := m.ctrl.Call(m, "UpdateUser", arg0, arg1)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // UpdateUser indicates an expected call of UpdateUser.
-func (mr *MockDatabaseMockRecorder) UpdateUser(arg0 interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) UpdateUser(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateUser", reflect.TypeOf((*MockDatabase)(nil).UpdateUser), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateUser", reflect.TypeOf((*MockDatabase)(nil).UpdateUser), arg0, arg1)
 }
 
 // Wipe mocks base method.

@@ -140,7 +140,7 @@ func TestManagementResource_EnableUserSAML(t *testing.T) {
 	mockDB.EXPECT().GetUser(badUserID).Return(model.User{AuthSecret: &model.AuthSecret{}}, nil)
 	mockDB.EXPECT().GetUser(goodUserID).Return(model.User{}, nil)
 	mockDB.EXPECT().GetSAMLProvider(samlProviderID).Return(model.SAMLProvider{}, nil).Times(2)
-	mockDB.EXPECT().UpdateUser(gomock.Any()).Return(nil).Times(2)
+	mockDB.EXPECT().UpdateUser(gomock.Any(), gomock.Any()).Return(nil).Times(2)
 	mockDB.EXPECT().DeleteAuthSecret(gomock.Any()).Return(nil)
 
 	// Happy path
@@ -208,7 +208,7 @@ func TestManagementResource_DeleteSAMLProvider(t *testing.T) {
 	mockDB.EXPECT().DeleteSAMLProvider(gomock.Any(), gomock.Eq(samlProviderWithUsers)).Return(nil)
 	mockDB.EXPECT().GetSAMLProviderUsers(goodSAMLProvider.ID).Return(nil, nil)
 	mockDB.EXPECT().GetSAMLProviderUsers(samlProviderWithUsers.ID).Return(model.Users{samlEnabledUser}, nil)
-	mockDB.EXPECT().UpdateUser(gomock.Eq(samlEnabledUser)).Return(nil)
+	mockDB.EXPECT().UpdateUser(gomock.Any(), gomock.Eq(samlEnabledUser)).Return(nil)
 
 	// Happy path
 	test.Request(t).
@@ -1656,7 +1656,7 @@ func TestManagementResource_UpdateUser_DBError(t *testing.T) {
 		}},
 		Serial: model.Serial{},
 	}}, nil)
-	mockDB.EXPECT().UpdateUser(gomock.Any()).Return(fmt.Errorf("foo"))
+	mockDB.EXPECT().UpdateUser(gomock.Any(), gomock.Any()).Return(fmt.Errorf("foo"))
 
 	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
 	input := v2.CreateUserRequest{
@@ -1739,7 +1739,7 @@ func TestManagementResource_UpdateUser_Success(t *testing.T) {
 		Serial: model.Serial{},
 	}}, nil)
 	mockDB.EXPECT().LookupActiveSessionsByUser(gomock.Any()).Return([]model.UserSession{}, nil)
-	mockDB.EXPECT().UpdateUser(gomock.Any()).Return(nil)
+	mockDB.EXPECT().UpdateUser(gomock.Any(), gomock.Any()).Return(nil)
 
 	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
 	input := v2.CreateUserRequest{

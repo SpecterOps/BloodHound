@@ -83,7 +83,7 @@ type Database interface {
 	RawFirst(value any) error
 	Wipe() error
 	Migrate() error
-	AppendAuditLog(ctx ctx.Context, entry model.AuditEntry) error
+	AppendAuditLog(ctx context.Context, entry model.AuditEntry) error
 	ListAuditLogs(before, after time.Time, offset, limit int, order string, filter model.SQLFilter) (model.AuditLogs, int, error)
 	CreateRole(role model.Role) (model.Role, error)
 	UpdateRole(role model.Role) error
@@ -101,7 +101,7 @@ type Database interface {
 	GetInstallation() (model.Installation, error)
 	HasInstallation() (bool, error)
 	CreateUser(user model.User) (model.User, error)
-	UpdateUser(user model.User) error
+	UpdateUser(ctx context.Context, user model.User) error
 	GetAllUsers(order string, filter model.SQLFilter) (model.Users, error)
 	GetUser(id uuid.UUID) (model.User, error)
 	DeleteUser(user model.User) error

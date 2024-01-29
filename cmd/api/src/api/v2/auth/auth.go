@@ -165,7 +165,7 @@ func (s ManagementResource) disassociateUsersFromSAMLProvider(request *http.Requ
 		user.SAMLProvider = nil
 		user.SAMLProviderID = null.NewInt32(0, false)
 
-		if err := s.db.UpdateUser(user); err != nil {
+		if err := s.db.UpdateUser(request.Context(), user); err != nil {
 			return api.FormatDatabaseError(err)
 		}
 	}
@@ -485,7 +485,7 @@ func (s ManagementResource) CreateUser(response http.ResponseWriter, request *ht
 }
 
 func (s ManagementResource) updateUser(response http.ResponseWriter, request *http.Request, user model.User) {
-	if err := s.db.UpdateUser(user); err != nil {
+	if err := s.db.UpdateUser(request.Context(), user); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
 		response.WriteHeader(http.StatusOK)
