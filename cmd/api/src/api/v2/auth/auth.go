@@ -165,10 +165,7 @@ func (s ManagementResource) disassociateUsersFromSAMLProvider(request *http.Requ
 		user.SAMLProvider = nil
 		user.SAMLProviderID = null.NewInt32(0, false)
 
-		// TODO: complex audit log transform
-		if err := s.db.AppendAuditLog(*ctx.FromRequest(request), "RemoveSAMLProvider", user); err != nil {
-			return api.FormatDatabaseError(err)
-		} else if err := s.db.UpdateUser(user); err != nil {
+		if err := s.db.UpdateUser(user); err != nil {
 			return api.FormatDatabaseError(err)
 		}
 	}
@@ -193,7 +190,7 @@ func (s ManagementResource) DeleteSAMLProvider(response http.ResponseWriter, req
 		api.HandleDatabaseError(request, response, err)
 	} else if err := s.disassociateUsersFromSAMLProvider(request, providerUsers); err != nil {
 		api.HandleDatabaseError(request, response, err)
-	} else if err := s.db.DeleteSAMLProvider(identityProvider); err != nil {
+	} else if err := s.db.DeleteSAMLProvider(request.Context(), identityProvider); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
 		api.WriteBasicResponse(request.Context(), v2.DeleteSAMLProviderResponse{
@@ -497,10 +494,6 @@ func (s ManagementResource) updateUser(response http.ResponseWriter, request *ht
 
 func (s ManagementResource) ensureUserHasNoAuthSecret(context ctx.Context, user model.User) error {
 	if user.AuthSecret != nil {
-		if err := s.db.AppendAuditLog(context, "DeleteUserAuthSecret", user); err != nil {
-			return api.FormatDatabaseError(err)
-		}
-
 		if err := s.db.DeleteAuthSecret(*user.AuthSecret); err != nil {
 			return api.FormatDatabaseError(err)
 		} else {
@@ -558,8 +551,6 @@ func (s ManagementResource) UpdateUser(response http.ResponseWriter, request *ht
 			} else if err := s.ensureUserHasNoAuthSecret(context, user); err != nil {
 				api.HandleDatabaseError(request, response, err)
 			} else if provider, err := s.db.GetSAMLProvider(samlProviderID); err != nil {
-				api.HandleDatabaseError(request, response, err)
-			} else if err := s.db.AppendAuditLog(*ctx.FromRequest(request), "SetUserSAMLProvider", user); err != nil { // TODO: complex audit log transform
 				api.HandleDatabaseError(request, response, err)
 			} else {
 				// Ensure that the AuthSecret reference is nil and that the SAML provider is set

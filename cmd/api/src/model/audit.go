@@ -23,10 +23,12 @@ import (
 	"github.com/specterops/bloodhound/src/database/types"
 )
 
+type AuditEntryStatus string
+
 const (
-	AuditStatusSuccess = "success"
-	AuditStatusFailure = "failure"
-	AuditStatusIntent  = "intent"
+	AuditStatusSuccess AuditEntryStatus = "success"
+	AuditStatusFailure AuditEntryStatus = "failure"
+	AuditStatusIntent  AuditEntryStatus = "intent"
 )
 
 type AuditLog struct {
@@ -146,6 +148,6 @@ type Auditable interface {
 type AuditEntry struct {
 	Action   string
 	Model    Auditable
-	Status   string
+	Status   AuditEntryStatus
 	ErrorMsg string
 }

@@ -17,6 +17,7 @@
 package database
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/specterops/bloodhound/errors"
@@ -31,13 +32,13 @@ const (
 	ErrAuthContextInvalid = errors.Error("auth context is invalid")
 )
 
-func newAuditLog(ctx ctx.Context, action string, data model.Auditable, idResolver auth.IdentityResolver) (model.AuditLog, error) {
+func newAuditLog(ctx ctx.Context, entry model.AuditEntry, idResolver auth.IdentityResolver) (model.AuditLog, error) {
 	auditLog := model.AuditLog{
-		Action:    action,
-		Fields:    types.JSONUntypedObject(data.AuditData()),
+		Action:    entry.Action,
+		Fields:    types.JSONUntypedObject(entry.Model.AuditData()),
 		RequestID: ctx.RequestID,
 		Source:    ctx.RequestIP,
-		Status:    "success", // TODO: parameterize this so we can pass the actual status instead of hard-coding
+		Status:    string(entry.Status),
 	}
 
 	authContext := ctx.AuthCtx
@@ -54,9 +55,9 @@ func newAuditLog(ctx ctx.Context, action string, data model.Auditable, idResolve
 	return auditLog, nil
 }
 
-func (s *BloodhoundDB) AppendAuditLog(ctx ctx.Context, action string, data model.Auditable) error {
-	if auditLog, err := newAuditLog(ctx, action, data, s.idResolver); err != nil {
-		return err
+func (s *BloodhoundDB) AppendAuditLog(ctx ctx.Context, entry model.AuditEntry) error {
+	if auditLog, err := newAuditLog(ctx, entry, s.idResolver); err != nil {
+		return fmt.Errorf("audit log append: %w", err)
 	} else {
 		return CheckError(s.db.Create(&auditLog))
 	}

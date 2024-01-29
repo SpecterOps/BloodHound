@@ -19,6 +19,7 @@ package database
 //go:generate go run go.uber.org/mock/mockgen -copyright_file=../../../../LICENSE.header -destination=./mocks/db.go -package=mocks . Database
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -82,7 +83,7 @@ type Database interface {
 	RawFirst(value any) error
 	Wipe() error
 	Migrate() error
-	AppendAuditLog(ctx ctx.Context, action string, data model.Auditable) error
+	AppendAuditLog(ctx ctx.Context, entry model.AuditEntry) error
 	ListAuditLogs(before, after time.Time, offset, limit int, order string, filter model.SQLFilter) (model.AuditLogs, int, error)
 	CreateRole(role model.Role) (model.Role, error)
 	UpdateRole(role model.Role) error
@@ -122,7 +123,7 @@ type Database interface {
 	GetAllSAMLProviders() (model.SAMLProviders, error)
 	GetSAMLProvider(id int32) (model.SAMLProvider, error)
 	GetSAMLProviderUsers(id int32) (model.Users, error)
-	DeleteSAMLProvider(samlProvider model.SAMLProvider) error
+	DeleteSAMLProvider(ctx context.Context, samlProvider model.SAMLProvider) error
 	CreateUserSession(userSession model.UserSession) (model.UserSession, error)
 	LookupActiveSessionsByUser(user model.User) ([]model.UserSession, error)
 	EndUserSession(userSession model.UserSession)
