@@ -365,11 +365,11 @@ func (s *BloodhoundDB) UpdateUser(ctx context.Context, user model.User) error {
 	var (
 		auditEntry = model.AuditEntry{
 			Action: "Update User",
-			Model:  user, // TODO: needs to be reflected to a more limited struct to prevent sensitive data exposure
+			Model:  user.AuditData(),
 		}
 	)
 
-	err := s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
+	return s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
 		// Update roles first
 		if err := tx.Model(&user).Association("Roles").Replace(&user.Roles); err != nil {
 			return err
@@ -378,8 +378,6 @@ func (s *BloodhoundDB) UpdateUser(ctx context.Context, user model.User) error {
 		result := tx.Save(&user)
 		return CheckError(result)
 	})
-
-	return err
 }
 
 func (s *BloodhoundDB) GetAllUsers(order string, filter model.SQLFilter) (model.Users, error) {
@@ -610,7 +608,16 @@ func (s *BloodhoundDB) GetSAMLProvider(id int32) (model.SAMLProvider, error) {
 }
 
 func (s *BloodhoundDB) DeleteSAMLProvider(ctx context.Context, provider model.SAMLProvider) error {
-	return CheckError(s.db.Delete(&provider))
+	var (
+		auditEntry = model.AuditEntry{
+			Action: "Delete SAML Provider",
+			Model:  provider.AuditData(),
+		}
+	)
+
+	return s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
+		return CheckError(s.db.Delete(&provider))
+	})
 }
 
 // GetSAMLProviderUsers returns all users that are bound to the SAML provider ID provided
