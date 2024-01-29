@@ -17,24 +17,48 @@
 package database
 
 import (
-	"fmt"
 	"time"
 
+	"github.com/specterops/bloodhound/errors"
+	"github.com/specterops/bloodhound/src/auth"
 	"github.com/specterops/bloodhound/src/ctx"
-	"gorm.io/gorm"
-
+	"github.com/specterops/bloodhound/src/database/types"
 	"github.com/specterops/bloodhound/src/model"
+	"gorm.io/gorm"
 )
 
-func (s *BloodhoundDB) CreateAuditLog(auditLog *model.AuditLog) error {
-	return CheckError(s.db.Create(&auditLog))
+const (
+	ErrAuthContextInvalid = errors.Error("auth context is invalid")
+)
+
+func newAuditLog(ctx ctx.Context, action string, data model.Auditable, idResolver auth.IdentityResolver) (model.AuditLog, error) {
+	auditLog := model.AuditLog{
+		Action:    action,
+		Fields:    types.JSONUntypedObject(data.AuditData()),
+		RequestID: ctx.RequestID,
+		Source:    ctx.RequestIP,
+		Status:    "success", // TODO: parameterize this so we can pass the actual status instead of hard-coding
+	}
+
+	authContext := ctx.AuthCtx
+	if !authContext.Authenticated() {
+		return auditLog, ErrAuthContextInvalid
+	} else if identity, err := idResolver.GetIdentity(ctx.AuthCtx); err != nil {
+		return auditLog, ErrAuthContextInvalid
+	} else {
+		auditLog.ActorID = identity.ID.String()
+		auditLog.ActorName = identity.Name
+		auditLog.ActorEmail = identity.Email
+	}
+
+	return auditLog, nil
 }
 
-func (s *BloodhoundDB) AppendAuditLog(context ctx.Context, unused string, model model.Auditable) error {
-	if auditLog, err := ctx.NewAuditLogFromContext(context, s.idResolver); err != nil {
-		return fmt.Errorf("error creating audit log from context: %w", err)
+func (s *BloodhoundDB) AppendAuditLog(ctx ctx.Context, action string, data model.Auditable) error {
+	if auditLog, err := newAuditLog(ctx, action, data, s.idResolver); err != nil {
+		return err
 	} else {
-		return s.CreateAuditLog(&auditLog)
+		return CheckError(s.db.Create(&auditLog))
 	}
 }
 

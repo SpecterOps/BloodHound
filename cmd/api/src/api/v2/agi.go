@@ -178,8 +178,6 @@ func (s Resources) UpdateAssetGroup(response http.ResponseWriter, request *http.
 		assetGroup              model.AssetGroup
 	)
 
-	ctx.SetAuditContext(request, model.AuditContext{Action: "UpdateAssetGroup", Model: &assetGroup})
-
 	if assetGroupID, err := strconv.Atoi(rawAssetGroupID); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsIDMalformed, request), response)
 	} else if err := api.ReadJSONRequestPayloadLimited(&updateAssetGroupRequest, request); err != nil {
@@ -200,8 +198,6 @@ func (s Resources) UpdateAssetGroup(response http.ResponseWriter, request *http.
 func (s Resources) CreateAssetGroup(response http.ResponseWriter, request *http.Request) {
 	var createRequest CreateAssetGroupRequest
 
-	ctx.SetAuditContext(request, model.AuditContext{Action: "CreateAssetGroup", Model: &createRequest})
-
 	if err := api.ReadJSONRequestPayloadLimited(&createRequest, request); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
 	} else if newAssetGroup, err := s.DB.CreateAssetGroup(createRequest.Name, createRequest.Tag, false); err != nil {
@@ -221,8 +217,6 @@ func (s Resources) DeleteAssetGroup(response http.ResponseWriter, request *http.
 		rawAssetGroupID = pathVars[api.URIPathVariableAssetGroupID]
 		assetGroup      model.AssetGroup
 	)
-
-	ctx.SetAuditContext(request, model.AuditContext{Action: "DeleteAssetGroup", Model: &assetGroup})
 
 	if assetGroupID, err := strconv.Atoi(rawAssetGroupID); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsIDMalformed, request), response)
@@ -281,8 +275,6 @@ func (s Resources) DeleteAssetGroupSelector(response http.ResponseWriter, reques
 		rawAssetGroupID         = pathVars[api.URIPathVariableAssetGroupID]
 		rawAssetGroupSelectorID = pathVars[api.URIPathVariableAssetGroupSelectorID]
 	)
-
-	ctx.SetAuditContext(request, model.AuditContext{Action: "DeleteAssetGroupSelector", Model: &assetGroupSelector})
 
 	if assetGroupID, err := strconv.Atoi(rawAssetGroupID); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsIDMalformed, request), response)

@@ -26,6 +26,7 @@ import (
 const (
 	AuditStatusSuccess = "success"
 	AuditStatusFailure = "failure"
+	AuditStatusIntent  = "intent"
 )
 
 type AuditLog struct {
@@ -142,17 +143,9 @@ type Auditable interface {
 	AuditData() AuditData
 }
 
-type AuditContext struct {
+type AuditEntry struct {
 	Action   string
 	Model    Auditable
 	Status   string
 	ErrorMsg string
-}
-
-func (s *AuditContext) SetStatus(statusCode int) {
-	if statusCode >= 200 && statusCode < 300 {
-		s.Status = AuditStatusSuccess
-	} else {
-		s.Status = AuditStatusFailure
-	}
 }
