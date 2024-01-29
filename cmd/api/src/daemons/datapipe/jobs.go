@@ -51,12 +51,16 @@ func (s *Daemon) completeJobsUnderAnalysis() {
 }
 
 func (s *Daemon) processIngestedFileUploadJobs() {
-	if ingestedFileUploadJobs, err := s.db.GetFileUploadJobsWithStatus(model.JobStatusIngesting); err != nil {
+	if ingestingFileUploadJobs, err := s.db.GetFileUploadJobsWithStatus(model.JobStatusIngesting); err != nil {
 		log.Errorf("Failed to look up finished file upload jobs: %v", err)
 	} else {
-		for _, ingestedFileUploadJob := range ingestedFileUploadJobs {
-			if err := fileupload.UpdateFileUploadJobStatus(s.db, ingestedFileUploadJob, model.JobStatusAnalyzing, "Analyzing"); err != nil {
-				log.Errorf("Error updating fileupload job %d: %v", ingestedFileUploadJob.ID, err)
+		for _, ingestingFileUploadJob := range ingestingFileUploadJobs {
+			if remainingIngestTasks, err := s.db.GetIngestTasksForJob(ingestingFileUploadJob.ID); err != nil {
+				log.Errorf("Failed looking up remaining ingest tasks for file upload job %d: %v", ingestingFileUploadJob.ID, err)
+			} else if len(remainingIngestTasks) == 0 {
+				if err := fileupload.UpdateFileUploadJobStatus(s.db, ingestingFileUploadJob, model.JobStatusAnalyzing, "Analyzing"); err != nil {
+					log.Errorf("Error updating fileupload job %d: %v", ingestingFileUploadJob.ID, err)
+				}
 			}
 		}
 	}
