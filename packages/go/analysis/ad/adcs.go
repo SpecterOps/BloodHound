@@ -143,10 +143,26 @@ func PostADCSESC3(ctx context.Context, tx graph.Transaction, outC chan<- analysi
 									delegatedAgents.Slice())
 
 								// Add principals to result set unless it's a user and DNS is required
-								if filteredResult, err := filterTempResultsForESC3(tx, tempResults, certTemplateOne); err != nil {
-									return err
-								} else {
-									results.Or(filteredResult)
+								if userNodes, err := ops.FetchNodeSet(tx.Nodes().Filterf(func() graph.Criteria {
+									return query.And(
+										query.KindIn(query.Node(), ad.User),
+										query.InIDs(query.NodeID(), cardinality.DuplexToGraphIDs(tempResults)...),
+									)
+								})); err != nil {
+									if !graph.IsErrNotFound(err) {
+										return err
+									}
+								} else if len(userNodes) > 0 {
+									if subjRequireDns, err := certTemplateOne.Properties.Get(ad.SubjectAltRequireDNS.String()).Bool(); err != nil {
+										log.Debugf("Failed to retrieve subjectAltRequireDNS for template %d: %v", certTemplateOne.ID, err)
+										tempResults.Xor(cardinality.NodeSetToDuplex(userNodes))
+									} else if subjRequireDomainDns, err := certTemplateOne.Properties.Get(ad.SubjectAltRequireDomainDNS.String()).Bool(); err != nil {
+										log.Debugf("Failed to retrieve subjectAltRequireDomainDNS for template %d: %v", certTemplateOne.ID, err)
+										tempResults.Xor(cardinality.NodeSetToDuplex(userNodes))
+									} else if subjRequireDns || subjRequireDomainDns {
+										//If either of these properties is true, we need to remove all these users from our victims list
+										tempResults.Xor(cardinality.NodeSetToDuplex(userNodes))
+									}
 								}
 							}
 						}
