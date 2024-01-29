@@ -120,6 +120,16 @@ func (s *pattern) Do(delegate PatternMatchDelegate) Driver {
 
 // OutboundWithDepth specifies the next outbound expansion step for this pattern with depth parameters.
 func (s *pattern) OutboundWithDepth(min, max int, criteria ...graph.Criteria) PatternContinuation {
+	if min < 0 {
+		min = 1
+		log.Warnf("Negative mindepth not allowed. Setting min depth for expansion to 1")
+	}
+
+	if max < 0 {
+		max = 0
+		log.Warnf("Negative maxdepth not allowed. Setting max depth for expansion to 0")
+	}
+
 	s.expansions = append(s.expansions, expansion{
 		criteria:  criteria,
 		direction: graph.DirectionOutbound,
@@ -138,6 +148,16 @@ func (s *pattern) Outbound(criteria ...graph.Criteria) PatternContinuation {
 
 // InboundWithDepth specifies the next inbound expansion step for this pattern with depth parameters.
 func (s *pattern) InboundWithDepth(min, max int, criteria ...graph.Criteria) PatternContinuation {
+	if min < 0 {
+		min = 1
+		log.Warnf("Negative mindepth not allowed. Setting min depth for expansion to 1")
+	}
+
+	if max < 0 {
+		max = 0
+		log.Warnf("Negative maxdepth not allowed. Setting max depth for expansion to 0")
+	}
+
 	s.expansions = append(s.expansions, expansion{
 		criteria:  criteria,
 		direction: graph.DirectionInbound,
