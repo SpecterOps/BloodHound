@@ -110,29 +110,22 @@ func TouchFileUploadJobLastIngest(db FileUploadData, fileUploadJob model.FileUpl
 	return db.UpdateFileUploadJob(fileUploadJob)
 }
 
-func EndFileUploadJob(db FileUploadData, job model.FileUploadJob) (model.FileUploadJob, error) {
+func EndFileUploadJob(db FileUploadData, job model.FileUploadJob) error {
 	job.Status = model.JobStatusIngesting
+
 	if err := db.UpdateFileUploadJob(job); err != nil {
-		return job, fmt.Errorf("error ending file upload job: %w", err)
-	} else {
-		return job, nil
+		return fmt.Errorf("error ending file upload job: %w", err)
 	}
+
+	return nil
 }
 
-func UpdateFileUploadJobStatus(db FileUploadData, jobID int64, status model.JobStatus, message string) error {
-	if job, err := db.GetFileUploadJob(jobID); err != nil {
-		return err
-	} else {
-		job.Status = status
-		job.StatusMessage = message
-		job.EndTime = time.Now().UTC()
+func UpdateFileUploadJobStatus(db FileUploadData, fileUploadJob model.FileUploadJob, status model.JobStatus, message string) error {
+	fileUploadJob.Status = status
+	fileUploadJob.StatusMessage = message
+	fileUploadJob.EndTime = time.Now().UTC()
 
-		return db.UpdateFileUploadJob(job)
-	}
-}
-
-func CompleteFileUploadJob(db FileUploadData, jobID int64) (model.FileUploadJob, error) {
-	return model.FileUploadJob{}, nil
+	return db.UpdateFileUploadJob(fileUploadJob)
 }
 
 func TimeOutUploadJob(db FileUploadData, jobID int64, message string) error {
