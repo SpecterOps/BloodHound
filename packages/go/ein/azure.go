@@ -25,16 +25,15 @@ import (
 
 	"github.com/bloodhoundad/azurehound/v2/constants"
 	"github.com/bloodhoundad/azurehound/v2/enums"
+	"github.com/bloodhoundad/azurehound/v2/models"
 	azure2 "github.com/bloodhoundad/azurehound/v2/models/azure"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/errors"
 	"github.com/specterops/bloodhound/graphschema/ad"
-	"github.com/specterops/bloodhound/log"
-	"github.com/specterops/bloodhound/slices"
-
-	"github.com/bloodhoundad/azurehound/v2/models"
 	"github.com/specterops/bloodhound/graphschema/azure"
 	"github.com/specterops/bloodhound/graphschema/common"
+	"github.com/specterops/bloodhound/log"
+	slicesext "github.com/specterops/bloodhound/slicesext"
 )
 
 const (
@@ -155,7 +154,7 @@ func ConvertAzureVMScaleSetRoleAssignment(data models.AzureRoleAssignments) []In
 	relationships := make([]IngestibleRelationship, 0)
 	for _, raw := range data.RoleAssignments {
 		if strings.EqualFold(raw.Assignee.Properties.Scope, raw.ObjectId) {
-			if slices.Contains([]string{
+			if slicesext.Contains([]string{
 				constants.OwnerRoleID,
 				constants.UserAccessAdminRoleID,
 				constants.ContributorRoleID,
@@ -288,7 +287,7 @@ func ConvertAzureFunctionAppRoleAssignmentToRels(data models.AzureRoleAssignment
 	relationships := make([]IngestibleRelationship, 0)
 	for _, raw := range data.RoleAssignments {
 		if strings.EqualFold(raw.Assignee.Properties.Scope, raw.ObjectId) {
-			if slices.Contains([]string{
+			if slicesext.Contains([]string{
 				constants.OwnerRoleID,
 				constants.UserAccessAdminRoleID,
 				constants.ContributorRoleID,
@@ -805,7 +804,7 @@ func ConvertAzureLogicAppRoleAssignment(roleAssignment models.AzureRoleAssignmen
 	relationships := make([]IngestibleRelationship, 0)
 	for _, raw := range roleAssignment.RoleAssignments {
 		if strings.EqualFold(raw.Assignee.Properties.Scope, raw.ObjectId) {
-			if slices.Contains([]string{
+			if slicesext.Contains([]string{
 				constants.OwnerRoleID,
 				constants.UserAccessAdminRoleID,
 				constants.ContributorRoleID,
@@ -1157,7 +1156,7 @@ func ConvertAzureManagedClusterRoleAssignmentToRels(data models.AzureRoleAssignm
 	relationships := make([]IngestibleRelationship, 0)
 	for _, raw := range data.RoleAssignments {
 		if strings.EqualFold(raw.Assignee.Properties.Scope, raw.ObjectId) {
-			if slices.Contains([]string{
+			if slicesext.Contains([]string{
 				azure.OwnerRole,
 				azure.UserAccessAdminRole,
 				azure.ContributorRole,
@@ -1279,7 +1278,7 @@ func ConvertAzureAutomationAccountRoleAssignment(roleAssignments models.AzureRol
 	relationships := make([]IngestibleRelationship, 0)
 	for _, raw := range roleAssignments.RoleAssignments {
 		if strings.EqualFold(raw.Assignee.Properties.Scope, raw.ObjectId) {
-			if slices.Contains([]string{
+			if slicesext.Contains([]string{
 				constants.OwnerRoleID,
 				constants.UserAccessAdminRoleID,
 				constants.ContributorRoleID,
@@ -1304,7 +1303,7 @@ func ConvertAzureContainerRegistryRoleAssignment(roleAssignment models.AzureRole
 	relationships := make([]IngestibleRelationship, 0)
 	for _, raw := range roleAssignment.RoleAssignments {
 		if strings.EqualFold(raw.Assignee.Properties.Scope, raw.ObjectId) {
-			if slices.Contains([]string{
+			if slicesext.Contains([]string{
 				constants.OwnerRoleID,
 				constants.UserAccessAdminRoleID,
 				constants.ContributorRoleID,
@@ -1328,7 +1327,7 @@ func ConvertAzureWebAppRoleAssignment(roleAssignment models.AzureRoleAssignments
 	relationships := make([]IngestibleRelationship, 0)
 	for _, raw := range roleAssignment.RoleAssignments {
 		if strings.EqualFold(raw.Assignee.Properties.Scope, raw.ObjectId) {
-			if slices.Contains([]string{
+			if slicesext.Contains([]string{
 				constants.OwnerRoleID,
 				constants.UserAccessAdminRoleID,
 				constants.ContributorRoleID,

@@ -14,7 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package slices
+// Package slicesext extends the standard library slices package with additional slice utilities
+package slicesext
 
 // Filter applies a predicate function over each element in a given slice and returns a new slice containing only the elements in which the predicate returns true
 func Filter[T any](slice []T, fn func(T) bool) []T {

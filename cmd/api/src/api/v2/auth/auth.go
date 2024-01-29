@@ -24,9 +24,15 @@ import (
 	"strings"
 	"time"
 
+	"github.com/crewjam/saml"
+	"github.com/crewjam/saml/samlsp"
+	"github.com/gofrs/uuid"
+	"github.com/gorilla/mux"
+	"github.com/pkg/errors"
+	"github.com/pquerna/otp/totp"
 	"github.com/specterops/bloodhound/crypto"
 	"github.com/specterops/bloodhound/log"
-	"github.com/specterops/bloodhound/slices"
+	slicesext "github.com/specterops/bloodhound/slicesext"
 	"github.com/specterops/bloodhound/src/api"
 	v2 "github.com/specterops/bloodhound/src/api/v2"
 	"github.com/specterops/bloodhound/src/auth"
@@ -40,13 +46,6 @@ import (
 	"github.com/specterops/bloodhound/src/serde"
 	"github.com/specterops/bloodhound/src/utils"
 	"github.com/specterops/bloodhound/src/utils/validation"
-
-	"github.com/crewjam/saml"
-	"github.com/crewjam/saml/samlsp"
-	"github.com/gofrs/uuid"
-	"github.com/gorilla/mux"
-	"github.com/pkg/errors"
-	"github.com/pquerna/otp/totp"
 )
 
 const (
@@ -235,7 +234,7 @@ func (s ManagementResource) ListPermissions(response http.ResponseWriter, reques
 		return
 	} else {
 		for name, filters := range queryFilters {
-			if valid := slices.Contains(permissions.GetFilterableColumns(), name); !valid {
+			if valid := slicesext.Contains(permissions.GetFilterableColumns(), name); !valid {
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("%s: %s", api.ErrorResponseDetailsColumnNotFilterable, name), request), response)
 				return
 			}
@@ -244,7 +243,7 @@ func (s ManagementResource) ListPermissions(response http.ResponseWriter, reques
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("%s: %s", api.ErrorResponseDetailsColumnNotFilterable, name), request), response)
 			} else {
 				for i, filter := range filters {
-					if !slices.Contains(validPredicates, string(filter.Operator)) {
+					if !slicesext.Contains(validPredicates, string(filter.Operator)) {
 						api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("%s: %s %s", api.ErrorResponseDetailsFilterPredicateNotSupported, filter.Name, filter.Operator), request), response)
 						return
 					}
@@ -314,7 +313,7 @@ func (s ManagementResource) ListRoles(response http.ResponseWriter, request *htt
 		return
 	} else {
 		for name, filters := range queryFilters {
-			if valid := slices.Contains(roles.GetFilterableColumns(), name); !valid {
+			if valid := slicesext.Contains(roles.GetFilterableColumns(), name); !valid {
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("%s: %s", api.ErrorResponseDetailsColumnNotFilterable, name), request), response)
 				return
 			}
@@ -323,7 +322,7 @@ func (s ManagementResource) ListRoles(response http.ResponseWriter, request *htt
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("%s: %s", api.ErrorResponseDetailsColumnNotFilterable, name), request), response)
 			} else {
 				for i, filter := range filters {
-					if !slices.Contains(validPredicates, string(filter.Operator)) {
+					if !slicesext.Contains(validPredicates, string(filter.Operator)) {
 						api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("%s: %s %s", api.ErrorResponseDetailsFilterPredicateNotSupported, filter.Name, filter.Operator), request), response)
 						return
 					}
@@ -392,7 +391,7 @@ func (s ManagementResource) ListUsers(response http.ResponseWriter, request *htt
 		return
 	} else {
 		for name, filters := range queryFilters {
-			if valid := slices.Contains(users.GetFilterableColumns(), name); !valid {
+			if valid := slicesext.Contains(users.GetFilterableColumns(), name); !valid {
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("%s: %s", api.ErrorResponseDetailsColumnNotFilterable, name), request), response)
 				return
 			}
@@ -401,7 +400,7 @@ func (s ManagementResource) ListUsers(response http.ResponseWriter, request *htt
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("%s: %s", api.ErrorResponseDetailsColumnNotFilterable, name), request), response)
 			} else {
 				for i, filter := range filters {
-					if !slices.Contains(validPredicates, string(filter.Operator)) {
+					if !slicesext.Contains(validPredicates, string(filter.Operator)) {
 						api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("%s: %s %s", api.ErrorResponseDetailsFilterPredicateNotSupported, filter.Name, filter.Operator), request), response)
 						return
 					}
@@ -746,7 +745,7 @@ func (s ManagementResource) ListAuthTokens(response http.ResponseWriter, request
 		return
 	} else {
 		for name, filters := range queryFilters {
-			if valid := slices.Contains(authTokens.GetFilterableColumns(), name); !valid {
+			if valid := slicesext.Contains(authTokens.GetFilterableColumns(), name); !valid {
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("%s: %s", api.ErrorResponseDetailsColumnNotFilterable, name), request), response)
 				return
 			}
@@ -755,7 +754,7 @@ func (s ManagementResource) ListAuthTokens(response http.ResponseWriter, request
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("%s: %s", api.ErrorResponseDetailsColumnNotFilterable, name), request), response)
 			} else {
 				for i, filter := range filters {
-					if !slices.Contains(validPredicates, string(filter.Operator)) {
+					if !slicesext.Contains(validPredicates, string(filter.Operator)) {
 						api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("%s: %s %s", api.ErrorResponseDetailsFilterPredicateNotSupported, filter.Name, filter.Operator), request), response)
 						return
 					}

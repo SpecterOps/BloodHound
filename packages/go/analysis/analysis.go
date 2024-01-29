@@ -28,7 +28,7 @@ import (
 	"github.com/specterops/bloodhound/graphschema/azure"
 	"github.com/specterops/bloodhound/graphschema/common"
 	"github.com/specterops/bloodhound/log"
-	"github.com/specterops/bloodhound/slices"
+	slicesext "github.com/specterops/bloodhound/slicesext"
 )
 
 const (
@@ -76,7 +76,7 @@ func GetNodeKind(node *graph.Node) graph.Kind {
 			if resultKind.String() == NodeKindUnknown {
 				resultKind = kind
 			}
-		} else if slices.Contains(ValidKinds(), kind) {
+		} else if slicesext.Contains(ValidKinds(), kind) {
 			resultKind = kind
 		}
 	}
@@ -138,7 +138,7 @@ func ParseKinds(rawKinds ...string) (graph.Kinds, error) {
 		return graph.Kinds{ad.Entity, azure.Entity}, nil
 	}
 
-	return slices.MapWithErr(rawKinds, ParseKind)
+	return slicesext.MapWithErr(rawKinds, ParseKind)
 }
 
 func nodeByIndexedKindProperty(property, value string, kind graph.Kind) graph.Criteria {

@@ -1,17 +1,17 @@
 // Copyright 2023 Specter Ops, Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// 
+//
 // SPDX-License-Identifier: Apache-2.0
 
 package api
@@ -21,8 +21,8 @@ import (
 	"sort"
 	"strconv"
 
+	slicesext "github.com/specterops/bloodhound/slicesext"
 	"github.com/specterops/bloodhound/src/model"
-	"github.com/specterops/bloodhound/slices"
 )
 
 type AssetGroupMember struct {
@@ -82,7 +82,7 @@ func (s AssetGroupMembers) SortBy(columns []string) (AssetGroupMembers, error) {
 		}
 
 		if descending {
-			s = slices.Reverse(s)
+			s = slicesext.Reverse(s)
 		}
 	}
 	return s, nil
@@ -97,7 +97,7 @@ func (s AssetGroupMembers) Filter(filterMap model.QueryParameterFilterMap) (Asse
 			return AssetGroupMembers{}, fmt.Errorf("%s: %s", model.ErrorResponseDetailsColumnNotFilterable, column)
 		} else {
 			for _, filter := range filters {
-				if !slices.Contains(validPredicates, string(filter.Operator)) {
+				if !slicesext.Contains(validPredicates, string(filter.Operator)) {
 					return AssetGroupMembers{}, fmt.Errorf("%s: %s, %s", model.ErrorResponseDetailsFilterPredicateNotSupported, column, string(filter.Operator))
 				} else if conditional, err := s.BuildFilteringConditional(column, filter.Operator, filter.Value); err != nil {
 					return AssetGroupMembers{}, err

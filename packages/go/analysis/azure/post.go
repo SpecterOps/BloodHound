@@ -24,6 +24,7 @@ import (
 	"github.com/RoaringBitmap/roaring"
 	"github.com/RoaringBitmap/roaring/roaring64"
 	"github.com/bloodhoundad/azurehound/v2/constants"
+	"github.com/specterops/bloodhound/analysis"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/dawgs/ops"
 	"github.com/specterops/bloodhound/dawgs/query"
@@ -31,9 +32,7 @@ import (
 	"github.com/specterops/bloodhound/graphschema/azure"
 	"github.com/specterops/bloodhound/graphschema/common"
 	"github.com/specterops/bloodhound/log"
-	"github.com/specterops/bloodhound/slices"
-
-	"github.com/specterops/bloodhound/analysis"
+	slicesext "github.com/specterops/bloodhound/slicesext"
 )
 
 func AddMemberAllGroupsTargetRoles() []string {
@@ -234,7 +233,7 @@ func (s RoleAssignments) PrincipalsWithRolesExclusive(roleTemplateIDs ...string)
 		excludedPrincipals = roaring.New()
 	)
 	for roleID, bitmap := range s.RoleMap {
-		if slices.Contains(roleTemplateIDs, roleID) {
+		if slicesext.Contains(roleTemplateIDs, roleID) {
 			result.Or(bitmap)
 		} else {
 			excludedPrincipals.Or(bitmap)

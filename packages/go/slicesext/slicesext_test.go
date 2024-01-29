@@ -1,20 +1,20 @@
 // Copyright 2023 Specter Ops, Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// 
+//
 // SPDX-License-Identifier: Apache-2.0
 
-package slices_test
+package slicesext_test
 
 import (
 	"fmt"
@@ -22,8 +22,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/specterops/bloodhound/slicesext"
 	"github.com/stretchr/testify/require"
-	"github.com/specterops/bloodhound/slices"
 )
 
 var (
@@ -38,45 +38,45 @@ var (
 )
 
 func TestFilter(t *testing.T) {
-	require.Equal(t, []int{1, 3}, slices.Filter([]int{1, 2, 3, 4}, isOdd))
-	require.Equal(t, []string{"bbbbbb", "cccccccc"}, slices.Filter([]string{"aaaa", "bbbbbb", "cccccccc", "dd"}, isLong))
+	require.Equal(t, []int{1, 3}, slicesext.Filter([]int{1, 2, 3, 4}, isOdd))
+	require.Equal(t, []string{"bbbbbb", "cccccccc"}, slicesext.Filter([]string{"aaaa", "bbbbbb", "cccccccc", "dd"}, isLong))
 }
 
 func TestMap(t *testing.T) {
-	require.Equal(t, []uint{1, 3, 4, 12}, slices.Map([]int{-1, -3, 4, -12}, abs))
-	require.Equal(t, []string{"abc", "def", "hij"}, slices.Map([]string{"ABC", "DEF", "HIJ"}, strings.ToLower))
-	require.Equal(t, []int{3, 6, 9, 12}, slices.Map([]int{1, 2, 3, 4}, triple))
+	require.Equal(t, []uint{1, 3, 4, 12}, slicesext.Map([]int{-1, -3, 4, -12}, abs))
+	require.Equal(t, []string{"abc", "def", "hij"}, slicesext.Map([]string{"ABC", "DEF", "HIJ"}, strings.ToLower))
+	require.Equal(t, []int{3, 6, 9, 12}, slicesext.Map([]int{1, 2, 3, 4}, triple))
 }
 
 func TestFlatMap(t *testing.T) {
-	require.Equal(t, []string{"a", "a", "b", "b"}, slices.FlatMap([]string{"a", "b"}, duplicate[string]))
-	require.Equal(t, []int{1, 1, 2, 2}, slices.FlatMap([]int{1, 2}, duplicate[int]))
+	require.Equal(t, []string{"a", "a", "b", "b"}, slicesext.FlatMap([]string{"a", "b"}, duplicate[string]))
+	require.Equal(t, []int{1, 1, 2, 2}, slicesext.FlatMap([]int{1, 2}, duplicate[int]))
 }
 
 func TestUnique(t *testing.T) {
 	var (
 		in  = []string{"a", "a", "b", "b"}
-		out = slices.Unique(in)
+		out = slicesext.Unique(in)
 	)
 
 	require.Equal(t, []string{"a", "b"}, out)
 	require.NotSame(t, in, out) // ensure we didn't mutate the original slice
-	require.Equal(t, []string{"a", "b"}, slices.Unique([]string{"a", "b", "b", "a"}))
-	require.Equal(t, []string{"a"}, slices.Unique([]string{"a"}))
-	require.Equal(t, []int{1, 2, 3}, slices.Unique([]int{1, 1, 2, 2, 3}))
+	require.Equal(t, []string{"a", "b"}, slicesext.Unique([]string{"a", "b", "b", "a"}))
+	require.Equal(t, []string{"a"}, slicesext.Unique([]string{"a"}))
+	require.Equal(t, []int{1, 2, 3}, slicesext.Unique([]int{1, 1, 2, 2, 3}))
 }
 
 func TestContains(t *testing.T) {
-	require.True(t, slices.Contains([]string{"a", "b", "c"}, "c"))
-	require.False(t, slices.Contains([]string{"a", "b", "c"}, "d"))
+	require.True(t, slicesext.Contains([]string{"a", "b", "c"}, "c"))
+	require.False(t, slicesext.Contains([]string{"a", "b", "c"}, "d"))
 }
 
 func TestReverse(t *testing.T) {
-	require.Equal(t, []int{}, slices.Reverse(listEmpty))
-	require.Equal(t, []int{0}, slices.Reverse(listSingle))
-	require.Equal(t, reversedListDuo, slices.Reverse(listDuo))
-	require.Equal(t, reversedListEven, slices.Reverse(listEven))
-	require.Equal(t, reversedListOdd, slices.Reverse(listOdd))
+	require.Equal(t, []int{}, slicesext.Reverse(listEmpty))
+	require.Equal(t, []int{0}, slicesext.Reverse(listSingle))
+	require.Equal(t, reversedListDuo, slicesext.Reverse(listDuo))
+	require.Equal(t, reversedListEven, slicesext.Reverse(listEven))
+	require.Equal(t, reversedListOdd, slicesext.Reverse(listOdd))
 }
 
 func BenchmarkReverse(b *testing.B) {
@@ -89,7 +89,7 @@ func BenchmarkReverse(b *testing.B) {
 		b.Run(fmt.Sprintf("reverse_%d", i), func(b *testing.B) {
 			b.RunParallel(func(pb *testing.PB) {
 				for pb.Next() {
-					slices.Reverse(list)
+					slicesext.Reverse(list)
 				}
 			})
 		})
@@ -106,7 +106,7 @@ func BenchmarkHead(b *testing.B) {
 		b.Run(fmt.Sprintf("head_%d", i), func(b *testing.B) {
 			b.RunParallel(func(pb *testing.PB) {
 				for pb.Next() {
-					a := slices.Head(list)
+					a := slicesext.Head(list)
 					require.IsType(b, int(0), a)
 				}
 			})
@@ -133,7 +133,7 @@ func BenchmarkTail(b *testing.B) {
 		b.Run(fmt.Sprintf("tail_%d", i), func(b *testing.B) {
 			b.RunParallel(func(pb *testing.PB) {
 				for pb.Next() {
-					a := slices.Tail(list)
+					a := slicesext.Tail(list)
 					require.IsType(b, []int{}, a)
 				}
 			})
