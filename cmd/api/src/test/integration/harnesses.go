@@ -2109,7 +2109,7 @@ func initHarnessNodeProperties(c *GraphTestContext, nodeMap map[string]*graph.No
 		}
 
 		//This is an exception for schemaVersion which should not be a boolean
-		if value == "1" || value == "0" {
+		if value == "1" || value == "0" || value == "2" {
 			intValue, _ := strconv.ParseInt(value, 10, 32)
 			nodeMap[node.ID].Properties.Set(strings.ToLower(key), float64(intValue))
 		} else if boolValue, err := strconv.ParseBool(value); err != nil {
