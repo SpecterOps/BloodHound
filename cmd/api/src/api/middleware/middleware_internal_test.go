@@ -80,7 +80,35 @@ func TestRequestWaitDuration(t *testing.T) {
 	require.True(t, requestedWaitDuration.UserSet)
 }
 
-func TestParseUserIP_XForwardedFor(t *testing.T) {
+func TestParseUserIP_XForwardedForMissing(t *testing.T) {
+	req, err := http.NewRequest("GET", "/teapot", nil)
+	require.Nil(t, err)
+
+	req.RemoteAddr = "http://www.google.com/0.0.0.0:3000"
+
+	res := parseUserIP(req)
+	require.NotContains(t, res, "X-Forwarded-For")
+	require.Contains(t, res, "Remote Address")
+}
+
+func TestParseUserIP_RemoteAddrError(t *testing.T) {
+	req, err := http.NewRequest("GET", "/teapot", nil)
+	require.Nil(t, err)
+
+	ip1 := "192.168.1.1:8080"
+	ip2 := "192.168.1.2"
+	ip3 := "192.168.1.3"
+	req.Header.Set("X-Forwarded-For", strings.Join([]string{ip1, ip2, ip3}, ","))
+	req.RemoteAddr = "0.0.0.0:3000"
+
+	res := parseUserIP(req)
+	require.Contains(t, res, "X-Forwarded-For")
+	require.Contains(t, res, ip1)
+	require.Contains(t, res, ip2)
+	require.NotContains(t, res, "Remote Address")
+}
+
+func TestParseUserIP_Success(t *testing.T) {
 	req, err := http.NewRequest("GET", "/teapot", nil)
 	require.Nil(t, err)
 
@@ -89,26 +117,14 @@ func TestParseUserIP_XForwardedFor(t *testing.T) {
 	ip3 := "192.168.1.3"
 	req.Header.Set("X-Forwarded-For", strings.Join([]string{ip1, ip2, ip3}, ","))
 
-	ip, err := parseUserIP(req)
-	require.Nil(t, err)
-	require.Equal(t, ip1, ip)
-}
+	req.RemoteAddr = "http://www.google.com/0.0.0.0:3000"
 
-func TestParseUserIP_RemoteAddrError(t *testing.T) {
-	req, err := http.NewRequest("GET", "/teapot", nil)
-	require.Nil(t, err)
-	req.RemoteAddr = "0.0.0.0:3000"
-
-	_, err = parseUserIP(req)
-	require.Contains(t, err.Error(), "error parsing IP address")
-}
-
-func TestParseUserIP_HostnameError(t *testing.T) {
-	req, err := http.NewRequest("GET", "/teapot", nil)
-	require.Nil(t, err)
-
-	_, err = parseUserIP(req)
-	require.Contains(t, err.Error(), "hostname")
+	res := parseUserIP(req)
+	require.Contains(t, res, "X-Forwarded-For")
+	require.Contains(t, res, ip1)
+	require.Contains(t, res, ip2)
+	require.Contains(t, res, ip3)
+	require.Contains(t, res, "Remote Address")
 }
 
 func TestParsePreferHeaderWait(t *testing.T) {
