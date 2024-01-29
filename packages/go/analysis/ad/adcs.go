@@ -143,7 +143,7 @@ func PostADCSESC3(ctx context.Context, tx graph.Transaction, outC chan<- analysi
 									delegatedAgents.Slice())
 
 								// Add principals to result set unless it's a user and DNS is required
-								if filteredResults, err := filterESC3UserResults(tx, tempResults, certTemplateOne); err != nil {
+								if filteredResults, err := filterUserDNSResults(tx, tempResults, certTemplateOne); err != nil {
 									if !graph.IsErrNotFound(err) {
 										return err
 									}
@@ -160,7 +160,7 @@ func PostADCSESC3(ctx context.Context, tx graph.Transaction, outC chan<- analysi
 								cache.EnterpriseCAEnrollers[eca1.ID],
 								cache.EnterpriseCAEnrollers[eca2.ID])
 
-							if filteredResults, err := filterESC3UserResults(tx, tempResults, certTemplateOne); err != nil {
+							if filteredResults, err := filterUserDNSResults(tx, tempResults, certTemplateOne); err != nil {
 								if !graph.IsErrNotFound(err) {
 									return err
 								}
@@ -189,7 +189,7 @@ func PostADCSESC3(ctx context.Context, tx graph.Transaction, outC chan<- analysi
 	return nil
 }
 
-func filterESC3UserResults(tx graph.Transaction, tempResults cardinality.Duplex[uint32], certTemplate *graph.Node) (cardinality.Duplex[uint32], error) {
+func filterUserDNSResults(tx graph.Transaction, tempResults cardinality.Duplex[uint32], certTemplate *graph.Node) (cardinality.Duplex[uint32], error) {
 	if userNodes, err := ops.FetchNodeSet(tx.Nodes().Filterf(func() graph.Criteria {
 		return query.And(
 			query.KindIn(query.Node(), ad.User),
