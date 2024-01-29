@@ -643,7 +643,7 @@ func ADCSESC3Path3Pattern() traversal.PatternContinuation {
 
 func ADCSESC6aPath1Pattern() traversal.PatternContinuation {
 	return traversal.NewPattern().
-		Outbound(query.And(
+		OutboundWithDepth(0, 0, query.And(
 			query.Kind(query.Relationship(), ad.MemberOf),
 			query.Kind(query.End(), ad.Group),
 		)).
@@ -656,7 +656,7 @@ func ADCSESC6aPath1Pattern() traversal.PatternContinuation {
 
 func ADCSESC6aPath2Pattern(domainId graph.ID, enterpriseCAs cardinality.Duplex[uint32]) traversal.PatternContinuation {
 	return traversal.NewPattern().
-		Outbound(query.And(
+		OutboundWithDepth(0, 0, query.And(
 			query.Kind(query.Relationship(), ad.MemberOf),
 			query.Kind(query.End(), ad.Group),
 		)).
@@ -693,7 +693,7 @@ func ADCSESC6aPath2Pattern(domainId graph.ID, enterpriseCAs cardinality.Duplex[u
 
 func ADCSESC6aPath3Pattern(domainId graph.ID, enterpriseCAs, candidateTemplates cardinality.Duplex[uint32]) traversal.PatternContinuation {
 	return traversal.NewPattern().
-		Outbound(query.And(
+		OutboundWithDepth(0, 0, query.And(
 			query.Kind(query.Relationship(), ad.MemberOf),
 			query.Kind(query.End(), ad.Group),
 		)).
@@ -733,7 +733,7 @@ func ADCSESC6aPath4Pattern(domainId graph.ID, enterpriseCAs cardinality.Duplex[u
 			query.KindIn(query.End(), ad.Computer),
 		)).
 		Outbound(query.And(
-			query.KindIn(query.Relationship(), ad.DCFor),
+			query.KindIn(query.Relationship(), ad.DCFor, ad.TrustedBy),
 			query.Equals(query.EndID(), domainId),
 		))
 }
