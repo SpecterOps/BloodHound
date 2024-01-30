@@ -37,15 +37,18 @@ import (
 )
 
 func auditLogUnauthorizedAccess(db database.Database, request *http.Request) {
-	if err := db.AppendAuditLog(
-		request.Context(),
-		model.AuditEntry{
-			Action: "UnauthorizedAccessAttempt",
-			Model:  model.AuditData{"endpoint": request.Method + " " + request.URL.Path},
-			Status: model.AuditStatusFailure,
-		},
-	); err != nil {
-		log.Errorf("error creating audit log for unauthorized access: %s", err.Error())
+	// Ignore read logs as they are less likely to occur from malicious access
+	if request.Method != "GET" {
+		if err := db.AppendAuditLog(
+			request.Context(),
+			model.AuditEntry{
+				Action: "UnauthorizedAccessAttempt",
+				Model:  model.AuditData{"endpoint": request.Method + " " + request.URL.Path},
+				Status: model.AuditStatusFailure,
+			},
+		); err != nil {
+			log.Errorf("error creating audit log for unauthorized access: %s", err.Error())
+		}
 	}
 }
 
