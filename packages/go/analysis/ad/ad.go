@@ -1391,13 +1391,12 @@ func GetADCSESC9aEdgeComposition(ctx context.Context, db graph.Database, edge *g
 	)
 
 	if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
-		if node, err := ops.FetchNode(tx, edge.StartID); err != nil {
+		var err error
+		if startNode, err = ops.FetchNode(tx, edge.StartID); err != nil {
 			return err
-		} else if eNode, err := ops.FetchNode(tx, edge.EndID); err != nil {
+		} else if endNode, err = ops.FetchNode(tx, edge.EndID); err != nil {
 			return err
 		} else {
-			startNode = node
-			endNode = eNode
 			return nil
 		}
 	}); err != nil {
@@ -1611,13 +1610,12 @@ func GetADCSESC10aEdgeComposition(ctx context.Context, db graph.Database, edge *
 	)
 
 	if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
-		if node, err := ops.FetchNode(tx, edge.StartID); err != nil {
+		var err error
+		if startNode, err = ops.FetchNode(tx, edge.StartID); err != nil {
 			return err
-		} else if eNode, err := ops.FetchNode(tx, edge.EndID); err != nil {
+		} else if endNode, err = ops.FetchNode(tx, edge.EndID); err != nil {
 			return err
 		} else {
-			startNode = node
-			endNode = eNode
 			return nil
 		}
 	}); err != nil {
