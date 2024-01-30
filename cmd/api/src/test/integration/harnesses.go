@@ -2401,6 +2401,8 @@ func (s *ESC6bECAHarness) Setup(graphTestContext *GraphTestContext) {
 
 	// leave ca1 isUserSpecifiesSanEnabled as nil
 	s.EnterpriseCA1 = graphTestContext.NewActiveDirectoryEnterpriseCA("EnterpriseCA1", domainSid1)
+	s.EnterpriseCA1.Properties.Set(ad.IsUserSpecifiesSanEnabled.String(), false)
+	graphTestContext.UpdateNode(s.EnterpriseCA1)
 
 	s.EnterpriseCA2 = graphTestContext.NewActiveDirectoryEnterpriseCA("EnterpriseCA2", domainSid2)
 	s.EnterpriseCA2.Properties.Set(ad.IsUserSpecifiesSanEnabled.String(), true)
@@ -2492,6 +2494,65 @@ func (s *ESC6bECAHarness) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.NewRelationship(s.Group5, s.EnterpriseCA5, ad.Enroll)
 	graphTestContext.NewRelationship(s.EnterpriseCA5, s.DC5, ad.CanAbuseUPNCertMapping)
 	graphTestContext.NewRelationship(s.Group5, s.CertTemplate5, ad.Enroll)
+}
+
+type ESC6bPrincipalEdgesHarness struct {
+	CertTemplate1 *graph.Node
+	DC            *graph.Node
+	Domain        *graph.Node
+	EnterpriseCA  *graph.Node
+	Group0        *graph.Node
+	Group1        *graph.Node
+	Group2        *graph.Node
+	Group3        *graph.Node
+	Group4        *graph.Node
+	NTAuthStore   *graph.Node
+	RootCA        *graph.Node
+}
+
+func (s *ESC6bPrincipalEdgesHarness) Setup(graphTestContext *GraphTestContext) {
+	domainSid := RandomDomainSID()
+	s.CertTemplate1 = graphTestContext.NewActiveDirectoryCertTemplate("CertTemplate1", domainSid, CertTemplateData{
+		ApplicationPolicies:     []string{},
+		AuthenticationEnabled:   true,
+		AuthorizedSignatures:    0,
+		EKUS:                    []string{},
+		EnrolleeSuppliesSubject: false,
+		NoSecurityExtension:     false,
+		RequiresManagerApproval: false,
+		SchemaVersion:           1,
+		SubjectAltRequireSPN:    false,
+		SubjectAltRequireUPN:    false,
+	})
+	s.DC = graphTestContext.NewActiveDirectoryComputer("DC", domainSid)
+	s.Domain = graphTestContext.NewActiveDirectoryDomain("Domain", domainSid, false, true)
+
+	s.EnterpriseCA = graphTestContext.NewActiveDirectoryEnterpriseCA("EnterpriseCA", domainSid)
+	s.EnterpriseCA.Properties.Set(ad.IsUserSpecifiesSanEnabled.String(), true)
+	graphTestContext.UpdateNode(s.EnterpriseCA)
+
+	s.Group0 = graphTestContext.NewActiveDirectoryGroup("Group0", domainSid)
+	s.Group1 = graphTestContext.NewActiveDirectoryGroup("Group1", domainSid)
+	s.Group2 = graphTestContext.NewActiveDirectoryGroup("Group2", domainSid)
+	s.Group3 = graphTestContext.NewActiveDirectoryGroup("Group3", domainSid)
+	s.Group4 = graphTestContext.NewActiveDirectoryGroup("Group4", domainSid)
+	s.NTAuthStore = graphTestContext.NewActiveDirectoryNTAuthStore("NTAuthStore", domainSid)
+	s.RootCA = graphTestContext.NewActiveDirectoryRootCA("RootCA", domainSid)
+	graphTestContext.NewRelationship(s.RootCA, s.Domain, ad.RootCAFor)
+	graphTestContext.NewRelationship(s.EnterpriseCA, s.RootCA, ad.IssuedSignedBy)
+	graphTestContext.NewRelationship(s.NTAuthStore, s.Domain, ad.NTAuthStoreFor)
+	graphTestContext.NewRelationship(s.EnterpriseCA, s.NTAuthStore, ad.TrustedForNTAuth)
+	graphTestContext.NewRelationship(s.EnterpriseCA, s.DC, ad.CanAbuseUPNCertMapping)
+	graphTestContext.NewRelationship(s.DC, s.Domain, ad.DCFor)
+	graphTestContext.NewRelationship(s.Group0, s.EnterpriseCA, ad.Enroll)
+	graphTestContext.NewRelationship(s.CertTemplate1, s.EnterpriseCA, ad.PublishedTo)
+	graphTestContext.NewRelationship(s.Group1, s.CertTemplate1, ad.GenericAll)
+	graphTestContext.NewRelationship(s.Group1, s.Group0, ad.MemberOf)
+	graphTestContext.NewRelationship(s.Group2, s.CertTemplate1, ad.AllExtendedRights)
+	graphTestContext.NewRelationship(s.Group2, s.Group0, ad.MemberOf)
+	graphTestContext.NewRelationship(s.Group3, s.CertTemplate1, ad.GenericWrite)
+	graphTestContext.NewRelationship(s.Group3, s.Group0, ad.MemberOf)
+	graphTestContext.NewRelationship(s.Group4, s.CertTemplate1, ad.Enroll)
 }
 
 type ShortcutHarness struct {
@@ -2594,4 +2655,5 @@ type HarnessDetails struct {
 	ESC9AHarness                                    ESC9AHarness
 	ESC6bTemplate1Harness                           ESC6bTemplate1Harness
 	ESC6bECAHarness                                 ESC6bECAHarness
+	ESC6bPrincipalEdgesHarness                      ESC6bPrincipalEdgesHarness
 }
