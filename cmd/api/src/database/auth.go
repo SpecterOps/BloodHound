@@ -1,32 +1,33 @@
 // Copyright 2023 Specter Ops, Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// 
+//
 // SPDX-License-Identifier: Apache-2.0
 
 package database
 
 import (
+	"context"
 	"crypto/rand"
 	"encoding/base64"
 	"fmt"
 	"strings"
 	"time"
 
+	"github.com/gofrs/uuid"
 	"github.com/specterops/bloodhound/src/auth"
 	"github.com/specterops/bloodhound/src/database/types/null"
 	"github.com/specterops/bloodhound/src/model"
-	"github.com/gofrs/uuid"
 	"gorm.io/gorm"
 )
 
@@ -360,14 +361,23 @@ func (s *BloodhoundDB) CreateUser(user model.User) (model.User, error) {
 
 // UpdateUser updates the roles associated with the user according to the input struct
 // UPDATE users SET roles = ....
-func (s *BloodhoundDB) UpdateUser(user model.User) error {
-	// Update roles first
-	if err := s.db.Model(&user).Association("Roles").Replace(&user.Roles); err != nil {
-		return err
-	}
+func (s *BloodhoundDB) UpdateUser(ctx context.Context, user model.User) error {
+	var (
+		auditEntry = model.AuditEntry{
+			Action: "UpdateUser",
+			Model:  user.AuditData(),
+		}
+	)
 
-	result := s.db.Save(&user)
-	return CheckError(result)
+	return s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
+		// Update roles first
+		if err := tx.Model(&user).Association("Roles").Replace(&user.Roles); err != nil {
+			return err
+		}
+
+		result := tx.Save(&user)
+		return CheckError(result)
+	})
 }
 
 func (s *BloodhoundDB) GetAllUsers(order string, filter model.SQLFilter) (model.Users, error) {
@@ -597,8 +607,17 @@ func (s *BloodhoundDB) GetSAMLProvider(id int32) (model.SAMLProvider, error) {
 	return samlProvider, CheckError(result)
 }
 
-func (s *BloodhoundDB) DeleteSAMLProvider(provider model.SAMLProvider) error {
-	return CheckError(s.db.Delete(&provider))
+func (s *BloodhoundDB) DeleteSAMLProvider(ctx context.Context, provider model.SAMLProvider) error {
+	var (
+		auditEntry = model.AuditEntry{
+			Action: "DeleteSAMLProvider",
+			Model:  provider.AuditData(),
+		}
+	)
+
+	return s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
+		return CheckError(tx.Delete(&provider))
+	})
 }
 
 // GetSAMLProviderUsers returns all users that are bound to the SAML provider ID provided

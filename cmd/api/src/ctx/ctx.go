@@ -25,8 +25,6 @@ import (
 
 	"github.com/specterops/bloodhound/errors"
 	"github.com/specterops/bloodhound/src/auth"
-	"github.com/specterops/bloodhound/src/database/types"
-	"github.com/specterops/bloodhound/src/model"
 )
 
 // Use our own type rather than a primitive to avoid collisions
@@ -48,7 +46,6 @@ type Context struct {
 	AuthCtx   auth.Context
 	Host      *url.URL
 	RequestIP string
-	AuditCtx  model.AuditContext
 }
 
 func (s *Context) ConstructGoContext() context.Context {
@@ -107,50 +104,40 @@ func SetRequestContext(request *http.Request, bhCtx *Context) *http.Request {
 	return request.WithContext(newRequestContext)
 }
 
-func SetAuditContext(request *http.Request, auditCtx model.AuditContext) {
-	bhCtx := Get(request.Context())
-	bhCtx.AuditCtx = auditCtx
-	Set(request.Context(), bhCtx)
-}
-
-func SetErrorContext(request *http.Request, err error) {
-	bhCtx := Get(request.Context())
-	bhCtx.AuditCtx.ErrorMsg = err.Error()
-	Set(request.Context(), bhCtx)
-}
-
 const (
 	ErrAuthContextInvalid = errors.Error("auth context is invalid")
 )
 
-func NewAuditLogFromContext(ctx Context, idResolver auth.IdentityResolver) (model.AuditLog, error) {
-	if ctx.AuditCtx.Model == nil {
-		return model.AuditLog{}, fmt.Errorf("model cannot be nil when creating a new audit log")
-	} else if ctx.AuditCtx.Action != model.AuditStatusFailure && ctx.AuditCtx.Action != model.AuditStatusSuccess {
-		return model.AuditLog{}, fmt.Errorf("invalid action specified in audit log: %s", ctx.AuditCtx.Action)
-	}
-	authContext := ctx.AuthCtx
+// Audit Log Reference
 
-	if !authContext.Authenticated() {
-		return model.AuditLog{}, ErrAuthContextInvalid
-	} else if identity, err := idResolver.GetIdentity(ctx.AuthCtx); err != nil {
-		return model.AuditLog{}, ErrAuthContextInvalid
-	} else {
-		auditLog := model.AuditLog{
-			ActorID:    identity.ID.String(),
-			ActorName:  identity.Name,
-			ActorEmail: identity.Email,
-			Action:     ctx.AuditCtx.Action,
-			Fields:     types.JSONUntypedObject(ctx.AuditCtx.Model.AuditData()),
-			RequestID:  ctx.RequestID,
-			Source:     ctx.RequestIP,
-			Status:     ctx.AuditCtx.Status,
-		}
+// func NewAuditLogFromContext(ctx Context, idResolver auth.IdentityResolver) (model.AuditLog, error) {
+// 	if ctx.AuditCtx.Model == nil {
+// 		return model.AuditLog{}, fmt.Errorf("model cannot be nil when creating a new audit log")
+// 	} else if ctx.AuditCtx.Action != model.AuditStatusFailure && ctx.AuditCtx.Action != model.AuditStatusSuccess {
+// 		return model.AuditLog{}, fmt.Errorf("invalid action specified in audit log: %s", ctx.AuditCtx.Action)
+// 	}
+// 	authContext := ctx.AuthCtx
 
-		if auditLog.Status == model.AuditStatusFailure {
-			auditLog.Fields["error"] = ctx.AuditCtx.ErrorMsg
-		}
+// 	if !authContext.Authenticated() {
+// 		return model.AuditLog{}, ErrAuthContextInvalid
+// 	} else if identity, err := idResolver.GetIdentity(ctx.AuthCtx); err != nil {
+// 		return model.AuditLog{}, ErrAuthContextInvalid
+// 	} else {
+// 		auditLog := model.AuditLog{
+// 			ActorID:    identity.ID.String(),
+// 			ActorName:  identity.Name,
+// 			ActorEmail: identity.Email,
+// 			Action:     ctx.AuditCtx.Action,
+// 			Fields:     types.JSONUntypedObject(ctx.AuditCtx.Model.AuditData()),
+// 			RequestID:  ctx.RequestID,
+// 			Source:     ctx.RequestIP,
+// 			Status:     ctx.AuditCtx.Status,
+// 		}
 
-		return auditLog, nil
-	}
-}
+// 		if auditLog.Status == model.AuditStatusFailure {
+// 			auditLog.Fields["error"] = ctx.AuditCtx.ErrorMsg
+// 		}
+
+// 		return auditLog, nil
+// 	}
+// }

@@ -121,8 +121,6 @@ func (s ManagementResource) GetSAMLProvider(response http.ResponseWriter, reques
 func (s ManagementResource) CreateSAMLProviderMultipart(response http.ResponseWriter, request *http.Request) {
 	var samlIdentityProvider model.SAMLProvider
 
-	ctx.SetAuditContext(request, model.AuditContext{Action: "CreateSAMLIdentityProvider", Model: &samlIdentityProvider})
-
 	if err := request.ParseMultipartForm(api.DefaultAPIPayloadReadLimitBytes); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
 	} else if providerNames, hasProviderName := request.MultipartForm.Value["name"]; !hasProviderName {
@@ -167,10 +165,7 @@ func (s ManagementResource) disassociateUsersFromSAMLProvider(request *http.Requ
 		user.SAMLProvider = nil
 		user.SAMLProviderID = null.NewInt32(0, false)
 
-		// TODO: complex audit log transform
-		if err := s.db.AppendAuditLog(*ctx.FromRequest(request), "RemoveSAMLProvider", user); err != nil {
-			return api.FormatDatabaseError(err)
-		} else if err := s.db.UpdateUser(user); err != nil {
+		if err := s.db.UpdateUser(request.Context(), user); err != nil {
 			return api.FormatDatabaseError(err)
 		}
 	}
@@ -185,8 +180,6 @@ func (s ManagementResource) DeleteSAMLProvider(response http.ResponseWriter, req
 		requestContext   = ctx.FromRequest(request)
 	)
 
-	ctx.SetAuditContext(request, model.AuditContext{Action: "DeleteSAMLProvider", Model: &identityProvider})
-
 	if providerID, err := strconv.ParseInt(rawProviderID, 10, 32); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, api.ErrorResponseDetailsResourceNotFound, request), response)
 	} else if identityProvider, err = s.db.GetSAMLProvider(int32(providerID)); err != nil {
@@ -197,7 +190,7 @@ func (s ManagementResource) DeleteSAMLProvider(response http.ResponseWriter, req
 		api.HandleDatabaseError(request, response, err)
 	} else if err := s.disassociateUsersFromSAMLProvider(request, providerUsers); err != nil {
 		api.HandleDatabaseError(request, response, err)
-	} else if err := s.db.DeleteSAMLProvider(identityProvider); err != nil {
+	} else if err := s.db.DeleteSAMLProvider(request.Context(), identityProvider); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
 		api.WriteBasicResponse(request.Context(), v2.DeleteSAMLProviderResponse{
@@ -431,8 +424,6 @@ func (s ManagementResource) CreateUser(response http.ResponseWriter, request *ht
 		userTemplate      model.User
 	)
 
-	ctx.SetAuditContext(request, model.AuditContext{Action: "CreateUser", Model: &userTemplate})
-
 	if err := api.ReadJSONRequestPayloadLimited(&createUserRequest, request); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
 	} else if len(createUserRequest.Roles) > 1 {
@@ -494,8 +485,7 @@ func (s ManagementResource) CreateUser(response http.ResponseWriter, request *ht
 }
 
 func (s ManagementResource) updateUser(response http.ResponseWriter, request *http.Request, user model.User) {
-	ctx.SetAuditContext(request, model.AuditContext{Action: "UpdateUser", Model: &user})
-	if err := s.db.UpdateUser(user); err != nil {
+	if err := s.db.UpdateUser(request.Context(), user); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
 		response.WriteHeader(http.StatusOK)
@@ -503,17 +493,7 @@ func (s ManagementResource) updateUser(response http.ResponseWriter, request *ht
 }
 
 func (s ManagementResource) ensureUserHasNoAuthSecret(context ctx.Context, user model.User) error {
-	// TODO: Determine if we need to actually create an audit log here
-	// var auditCtx = model.AuditContext{
-	// 	Action: "DeleteUserAuthSecret",
-	// 	Model:  user,
-	// }
-
 	if user.AuthSecret != nil {
-		if err := s.db.AppendAuditLog(context, "DeleteUserAuthSecret", user); err != nil {
-			return api.FormatDatabaseError(err)
-		}
-
 		if err := s.db.DeleteAuthSecret(*user.AuthSecret); err != nil {
 			return api.FormatDatabaseError(err)
 		} else {
@@ -572,8 +552,6 @@ func (s ManagementResource) UpdateUser(response http.ResponseWriter, request *ht
 				api.HandleDatabaseError(request, response, err)
 			} else if provider, err := s.db.GetSAMLProvider(samlProviderID); err != nil {
 				api.HandleDatabaseError(request, response, err)
-			} else if err := s.db.AppendAuditLog(*ctx.FromRequest(request), "SetUserSAMLProvider", user); err != nil { // TODO: complex audit log transform
-				api.HandleDatabaseError(request, response, err)
 			} else {
 				// Ensure that the AuthSecret reference is nil and that the SAML provider is set
 				user.AuthSecret = nil
@@ -619,8 +597,6 @@ func (s ManagementResource) DeleteUser(response http.ResponseWriter, request *ht
 		rawUserID = pathVars[api.URIPathVariableUserID]
 	)
 
-	ctx.SetAuditContext(request, model.AuditContext{Action: "DeleteUser", Model: &user})
-
 	if userID, err := uuid.FromString(rawUserID); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsIDMalformed, request), response)
 	} else if user, err = s.db.GetUser(userID); err != nil {
@@ -660,8 +636,6 @@ func (s ManagementResource) PutUserAuthSecret(response http.ResponseWriter, requ
 		rawUserID            = pathVars[api.URIPathVariableUserID]
 	)
 
-	ctx.SetAuditContext(request, model.AuditContext{Action: "PutUserAuthSecret", Model: &authSecret})
-
 	if userID, err := uuid.FromString(rawUserID); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsIDMalformed, request), response)
 	} else if err := api.ReadJSONRequestPayloadLimited(&setUserSecretRequest, request); err != nil {
@@ -700,7 +674,6 @@ func (s ManagementResource) PutUserAuthSecret(response http.ResponseWriter, requ
 func (s ManagementResource) ExpireUserAuthSecret(response http.ResponseWriter, request *http.Request) {
 	var (
 		rawUserID = mux.Vars(request)[api.URIPathVariableUserID]
-		auditCtx  = model.AuditContext{Action: "InvalidateUserAuthSecret"}
 	)
 
 	if userID, err := uuid.FromString(rawUserID); err != nil {
@@ -716,8 +689,6 @@ func (s ManagementResource) ExpireUserAuthSecret(response http.ResponseWriter, r
 		if err := s.db.UpdateAuthSecret(*authSecret); err != nil {
 			api.HandleDatabaseError(request, response, err)
 		} else {
-			auditCtx.Model = model.AuditData{"user_id": targetUser.ID}
-			ctx.SetAuditContext(request, auditCtx)
 			// NOTE: This "should" be a 204 since we're not returning a payload but am returning a 200 to retain
 			// uniformity.
 			response.WriteHeader(http.StatusOK)
@@ -806,7 +777,6 @@ func (s ManagementResource) CreateAuthToken(response http.ResponseWriter, reques
 	var (
 		createUserTokenRequest = v2.CreateUserToken{}
 		bhCtx                  = ctx.FromRequest(request)
-		auditCtx               = model.AuditContext{Action: "CreateAuthToken"}
 	)
 
 	if user, isUser := auth.GetUserFromAuthCtx(bhCtx.AuthCtx); !isUser {
@@ -822,8 +792,6 @@ func (s ManagementResource) CreateAuthToken(response http.ResponseWriter, reques
 	} else if newAuthToken, err := s.db.CreateAuthToken(authToken); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
-		auditCtx.Model = model.AuditData{"user_id": user.ID}
-		ctx.SetAuditContext(request, auditCtx)
 		api.WriteBasicResponse(request.Context(), newAuthToken, http.StatusOK, response)
 	}
 }
@@ -848,7 +816,6 @@ func (s ManagementResource) DeleteAuthToken(response http.ResponseWriter, reques
 		pathVars   = mux.Vars(request)
 		rawTokenID = pathVars[api.URIPathVariableTokenID]
 		bhCtx      = ctx.FromRequest(request)
-		auditCtx   = model.AuditContext{Action: "DeleteAuthToken"}
 	)
 
 	if user, isUser := auth.GetUserFromAuthCtx(bhCtx.AuthCtx); !isUser {
@@ -863,8 +830,6 @@ func (s ManagementResource) DeleteAuthToken(response http.ResponseWriter, reques
 	} else if err := s.db.DeleteAuthToken(token); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
-		auditCtx.Model = model.AuditData{"user_id": user.ID.String(), "token_id": token.ID}
-		ctx.SetAuditContext(request, auditCtx)
 		response.WriteHeader(http.StatusOK)
 	}
 }

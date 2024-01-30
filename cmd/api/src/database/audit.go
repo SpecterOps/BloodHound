@@ -17,24 +17,55 @@
 package database
 
 import (
+	"context"
+	"database/sql"
 	"fmt"
 	"time"
 
+	"github.com/gofrs/uuid"
+	"github.com/specterops/bloodhound/errors"
+	"github.com/specterops/bloodhound/src/auth"
 	"github.com/specterops/bloodhound/src/ctx"
-	"gorm.io/gorm"
-
+	"github.com/specterops/bloodhound/src/database/types"
 	"github.com/specterops/bloodhound/src/model"
+	"gorm.io/gorm"
 )
 
-func (s *BloodhoundDB) CreateAuditLog(auditLog *model.AuditLog) error {
-	return CheckError(s.db.Create(&auditLog))
+const (
+	ErrAuthContextInvalid = errors.Error("auth context is invalid")
+)
+
+func newAuditLog(context context.Context, entry model.AuditEntry, idResolver auth.IdentityResolver) (model.AuditLog, error) {
+	bheCtx := ctx.Get(context)
+
+	auditLog := model.AuditLog{
+		Action:    entry.Action,
+		Fields:    types.JSONUntypedObject(entry.Model.AuditData()),
+		RequestID: bheCtx.RequestID,
+		Source:    bheCtx.RequestIP,
+		Status:    string(entry.Status),
+		CommitID:  entry.CommitID,
+	}
+
+	authContext := bheCtx.AuthCtx
+	if !authContext.Authenticated() {
+		return auditLog, ErrAuthContextInvalid
+	} else if identity, err := idResolver.GetIdentity(bheCtx.AuthCtx); err != nil {
+		return auditLog, ErrAuthContextInvalid
+	} else {
+		auditLog.ActorID = identity.ID.String()
+		auditLog.ActorName = identity.Name
+		auditLog.ActorEmail = identity.Email
+	}
+
+	return auditLog, nil
 }
 
-func (s *BloodhoundDB) AppendAuditLog(context ctx.Context, unused string, model model.Auditable) error {
-	if auditLog, err := ctx.NewAuditLogFromContext(context, s.idResolver); err != nil {
-		return fmt.Errorf("error creating audit log from context: %w", err)
+func (s *BloodhoundDB) AppendAuditLog(ctx context.Context, entry model.AuditEntry) error {
+	if auditLog, err := newAuditLog(ctx, entry, s.idResolver); err != nil && err != ErrAuthContextInvalid {
+		return fmt.Errorf("audit log append: %w", err)
 	} else {
-		return s.CreateAuditLog(&auditLog)
+		return CheckError(s.db.Create(&auditLog))
 	}
 }
 
@@ -70,4 +101,35 @@ func (s *BloodhoundDB) ListAuditLogs(before, after time.Time, offset, limit int,
 	}
 
 	return auditLogs, int(count), CheckError(result)
+}
+
+func (s *BloodhoundDB) AuditableTransaction(ctx context.Context, auditEntry model.AuditEntry, f func(tx *gorm.DB) error, opts ...*sql.TxOptions) error {
+	var (
+		commitID, err = uuid.NewV4()
+	)
+
+	if err != nil {
+		return fmt.Errorf("commitID could not be created: %w", err)
+	}
+
+	auditEntry.CommitID = commitID
+	auditEntry.Status = model.AuditStatusIntent
+
+	if err := s.AppendAuditLog(ctx, auditEntry); err != nil {
+		return fmt.Errorf("could not append intent to audit log: %w", err)
+	}
+
+	err = s.db.Transaction(f, opts...)
+
+	if err != nil {
+		auditEntry.Status = model.AuditStatusFailure
+	} else {
+		auditEntry.Status = model.AuditStatusSuccess
+	}
+
+	if err := s.AppendAuditLog(ctx, auditEntry); err != nil {
+		return fmt.Errorf("could not append end status to audit log: %w", err)
+	}
+
+	return err
 }

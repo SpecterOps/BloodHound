@@ -20,6 +20,7 @@ import (
 	"time"
 
 	"github.com/specterops/bloodhound/src/model"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -37,13 +38,13 @@ func (s *Context) ListAuditLogs(after, before time.Time, offset, limit int) mode
 }
 
 func (s *Context) AssetAuditLog(auditLog model.AuditLog, expectedAction string, expectedFields map[string]any) {
-	require.Equal(s.TestCtrl, auditLog.Action, expectedAction)
+	assert.Equal(s.TestCtrl, auditLog.Action, expectedAction)
 
 	for expectedFieldName, expectedFieldValue := range expectedFields {
 		actualFieldValue, hasField := auditLog.Fields[expectedFieldName]
 
-		require.True(s.TestCtrl, hasField)
-		require.Equal(s.TestCtrl, expectedFieldValue, actualFieldValue)
+		assert.True(s.TestCtrl, hasField)
+		assert.Equal(s.TestCtrl, expectedFieldValue, actualFieldValue)
 	}
 }
 

@@ -19,6 +19,7 @@ package database
 //go:generate go run go.uber.org/mock/mockgen -copyright_file=../../../../LICENSE.header -destination=./mocks/db.go -package=mocks . Database
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -60,9 +61,9 @@ type Database interface {
 	DeleteIngestTask(ingestTask model.IngestTask) error
 	GetIngestTasksForJob(jobID int64) (model.IngestTasks, error)
 	GetUnfinishedIngestIDs() ([]int64, error)
-	CreateAssetGroup(name, tag string, systemGroup bool) (model.AssetGroup, error)
+	CreateAssetGroup(ctx context.Context, name, tag string, systemGroup bool) (model.AssetGroup, error)
 	UpdateAssetGroup(assetGroup model.AssetGroup) error
-	DeleteAssetGroup(assetGroup model.AssetGroup) error
+	DeleteAssetGroup(ctx context.Context, assetGroup model.AssetGroup) error
 	GetAssetGroup(id int32) (model.AssetGroup, error)
 	GetAllAssetGroups(order string, filter model.SQLFilter) (model.AssetGroups, error)
 	SweepAssetGroupCollections()
@@ -82,7 +83,7 @@ type Database interface {
 	RawFirst(value any) error
 	Wipe() error
 	Migrate() error
-	AppendAuditLog(ctx ctx.Context, action string, data model.Auditable) error
+	AppendAuditLog(ctx context.Context, entry model.AuditEntry) error
 	ListAuditLogs(before, after time.Time, offset, limit int, order string, filter model.SQLFilter) (model.AuditLogs, int, error)
 	CreateRole(role model.Role) (model.Role, error)
 	UpdateRole(role model.Role) error
@@ -100,7 +101,7 @@ type Database interface {
 	GetInstallation() (model.Installation, error)
 	HasInstallation() (bool, error)
 	CreateUser(user model.User) (model.User, error)
-	UpdateUser(user model.User) error
+	UpdateUser(ctx context.Context, user model.User) error
 	GetAllUsers(order string, filter model.SQLFilter) (model.Users, error)
 	GetUser(id uuid.UUID) (model.User, error)
 	DeleteUser(user model.User) error
@@ -122,7 +123,7 @@ type Database interface {
 	GetAllSAMLProviders() (model.SAMLProviders, error)
 	GetSAMLProvider(id int32) (model.SAMLProvider, error)
 	GetSAMLProviderUsers(id int32) (model.Users, error)
-	DeleteSAMLProvider(samlProvider model.SAMLProvider) error
+	DeleteSAMLProvider(ctx context.Context, samlProvider model.SAMLProvider) error
 	CreateUserSession(userSession model.UserSession) (model.UserSession, error)
 	LookupActiveSessionsByUser(user model.User) ([]model.UserSession, error)
 	EndUserSession(userSession model.UserSession)

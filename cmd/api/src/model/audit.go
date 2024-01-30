@@ -20,12 +20,16 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/gofrs/uuid"
 	"github.com/specterops/bloodhound/src/database/types"
 )
 
+type AuditEntryStatus string
+
 const (
-	AuditStatusSuccess = "success"
-	AuditStatusFailure = "failure"
+	AuditStatusSuccess AuditEntryStatus = "success"
+	AuditStatusFailure AuditEntryStatus = "failure"
+	AuditStatusIntent  AuditEntryStatus = "intent"
 )
 
 type AuditLog struct {
@@ -39,6 +43,7 @@ type AuditLog struct {
 	RequestID  string                  `json:"request_id"`
 	Source     string                  `json:"source"`
 	Status     string                  `json:"status"`
+	CommitID   uuid.UUID               `json:"commit_id" gorm:"type:text"`
 }
 
 func (s AuditLog) String() string {
@@ -142,17 +147,10 @@ type Auditable interface {
 	AuditData() AuditData
 }
 
-type AuditContext struct {
+type AuditEntry struct {
+	CommitID uuid.UUID
 	Action   string
 	Model    Auditable
-	Status   string
+	Status   AuditEntryStatus
 	ErrorMsg string
-}
-
-func (s *AuditContext) SetStatus(statusCode int) {
-	if statusCode >= 200 && statusCode < 300 {
-		s.Status = AuditStatusSuccess
-	} else {
-		s.Status = AuditStatusFailure
-	}
 }
