@@ -73,6 +73,7 @@ func PostADCSESC10a(ctx context.Context, tx graph.Transaction, outC chan<- analy
 						query.InIDs(query.NodeID(), cardinality.DuplexToGraphIDs(victimBitmap)...),
 					)
 				})); err != nil && !graph.IsErrNotFound(err) {
+					log.Warnf("Error getting user nodes for esc10a attacker nodes: %v", err)
 					continue
 				} else if len(userNodes) > 0 {
 					if subjRequireDns, err := template.Properties.Get(ad.SubjectAltRequireDNS.String()).Bool(); err != nil {
@@ -94,7 +95,8 @@ func PostADCSESC10a(ctx context.Context, tx graph.Transaction, outC chan<- analy
 						query.InIDs(query.EndID(), cardinality.DuplexToGraphIDs(victimBitmap)...),
 					)
 				})); err != nil {
-					return err
+					log.Warnf("Error getting start nodes for esc10a attacker nodes: %v", err)
+					continue
 				} else {
 					results.Or(cardinality.NodeSetToDuplex(attackers))
 				}
