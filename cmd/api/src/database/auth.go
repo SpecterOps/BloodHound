@@ -365,7 +365,7 @@ func (s *BloodhoundDB) UpdateUser(ctx context.Context, user model.User) error {
 	var (
 		auditEntry = model.AuditEntry{
 			Action: "UpdateUser",
-			Model:  user.AuditData(),
+			Model:  &user, // Pointer is required to ensure success log contains updated fields after transaction
 		}
 	)
 
@@ -611,7 +611,7 @@ func (s *BloodhoundDB) DeleteSAMLProvider(ctx context.Context, provider model.SA
 	var (
 		auditEntry = model.AuditEntry{
 			Action: "DeleteSAMLProvider",
-			Model:  provider.AuditData(),
+			Model:  &provider, // Pointer is required to ensure success log contains updated fields after transaction
 		}
 	)
 

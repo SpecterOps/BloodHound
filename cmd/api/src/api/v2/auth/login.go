@@ -91,12 +91,13 @@ func (s LoginResource) Login(response http.ResponseWriter, request *http.Request
 func (s LoginResource) patchEULAAcceptance(ctx context.Context, username string) error {
 	if user, err := s.db.LookupUser(username); err != nil {
 		return err
-	} else {
+	} else if !user.EULAAccepted {
 		user.EULAAccepted = true
 		if err = s.db.UpdateUser(ctx, user); err != nil {
 			return err
 		}
 	}
+
 	return nil
 }
 
