@@ -839,6 +839,58 @@ func TestADCSESC6a(t *testing.T) {
 				require.Contains(t, names, "Group1", "Group2")
 			}
 
+			if edge, err := tx.Relationships().Filterf(func() graph.Criteria {
+				return query.And(
+					query.Kind(query.Relationship(), ad.ADCSESC6a),
+					query.Equals(query.StartProperty(common.Name.String()), "Group1"),
+				)
+			}).First(); err != nil {
+				t.Fatalf("error fetching esc6a edges in integration test; %v", err)
+			} else {
+				composition, err := ad2.GetADCSESC6aEdgeComposition(context.Background(), db, edge)
+				require.Nil(t, err)
+				names := []string{}
+				for _, node := range composition.AllNodes() {
+					name, _ := node.Properties.Get(common.Name.String()).String()
+					names = append(names, name)
+				}
+				require.Equal(t, 8, len(composition.AllNodes()))
+				require.Contains(t, names, "Group1")
+				require.Contains(t, names, "Group0")
+				require.Contains(t, names, "CertTemplate1")
+				require.Contains(t, names, "EnterpriseCA")
+				require.Contains(t, names, "RootCA")
+				require.Contains(t, names, "NTAuthStore")
+				require.Contains(t, names, "DC")
+				require.Contains(t, names, "Domain")
+			}
+
+			if edge, err := tx.Relationships().Filterf(func() graph.Criteria {
+				return query.And(
+					query.Kind(query.Relationship(), ad.ADCSESC6a),
+					query.Equals(query.StartProperty(common.Name.String()), "Group2"),
+				)
+			}).First(); err != nil {
+				t.Fatalf("error fetching esc6a edges in integration test; %v", err)
+			} else {
+				composition, err := ad2.GetADCSESC6aEdgeComposition(context.Background(), db, edge)
+				require.Nil(t, err)
+				names := []string{}
+				for _, node := range composition.AllNodes() {
+					name, _ := node.Properties.Get(common.Name.String()).String()
+					names = append(names, name)
+				}
+				require.Equal(t, 8, len(composition.AllNodes()))
+				require.Contains(t, names, "Group2")
+				require.Contains(t, names, "Group0")
+				require.Contains(t, names, "CertTemplate2")
+				require.Contains(t, names, "EnterpriseCA")
+				require.Contains(t, names, "RootCA")
+				require.Contains(t, names, "NTAuthStore")
+				require.Contains(t, names, "DC")
+				require.Contains(t, names, "Domain")
+			}
+
 			return nil
 		})
 	})
