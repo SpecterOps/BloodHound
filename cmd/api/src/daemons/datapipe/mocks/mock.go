@@ -64,18 +64,6 @@ func (mr *MockTaskerMockRecorder) GetStatus() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetStatus", reflect.TypeOf((*MockTasker)(nil).GetStatus))
 }
 
-// NotifyOfFileUploadJobStatus mocks base method.
-func (m *MockTasker) NotifyOfFileUploadJobStatus(arg0 model.FileUploadJob) {
-	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "NotifyOfFileUploadJobStatus", arg0)
-}
-
-// NotifyOfFileUploadJobStatus indicates an expected call of NotifyOfFileUploadJobStatus.
-func (mr *MockTaskerMockRecorder) NotifyOfFileUploadJobStatus(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NotifyOfFileUploadJobStatus", reflect.TypeOf((*MockTasker)(nil).NotifyOfFileUploadJobStatus), arg0)
-}
-
 // RequestAnalysis mocks base method.
 func (m *MockTasker) RequestAnalysis() {
 	m.ctrl.T.Helper()

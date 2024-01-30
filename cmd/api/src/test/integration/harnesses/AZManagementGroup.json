@@ -1,0 +1,156 @@
+{
+    "nodes": [
+        {
+            "id": "n0",
+            "position": {
+                "x": -55,
+                "y": 85.2904443080064
+            },
+            "caption": "UserA",
+            "labels": [
+                "AZUser"
+            ],
+            "properties": {},
+            "style": {}
+        },
+        {
+            "id": "n1",
+            "position": {
+                "x": -55,
+                "y": 253.81479412258489
+            },
+            "caption": "UserB",
+            "labels": [
+                "AZUser"
+            ],
+            "properties": {},
+            "style": {}
+        },
+        {
+            "id": "n2",
+            "position": {
+                "x": -55,
+                "y": 422.3391439371636
+            },
+            "caption": "UserC",
+            "labels": [
+                "AZUser"
+            ],
+            "properties": {},
+            "style": {}
+        },
+        {
+            "id": "n3",
+            "position": {
+                "x": 449.99999999999994,
+                "y": 40.19237886466851
+            },
+            "caption": "Tenant",
+            "labels": [
+                "AZTenant"
+            ],
+            "properties": {},
+            "style": {}
+        },
+        {
+            "id": "n4",
+            "position": {
+                "x": 300,
+                "y": 253.81479412258489
+            },
+            "caption": "Group",
+            "labels": [
+                "AZGroup"
+            ],
+            "properties": {},
+            "style": {}
+        }
+    ],
+    "relationships": [
+        {
+            "id": "n0",
+            "fromId": "n2",
+            "toId": "n4",
+            "type": "AZManagementGroup",
+            "properties": {},
+            "style": {}
+        },
+        {
+            "id": "n1",
+            "fromId": "n1",
+            "toId": "n4",
+            "type": "AZManagementGroup",
+            "properties": {},
+            "style": {}
+        },
+        {
+            "id": "n2",
+            "fromId": "n0",
+            "toId": "n4",
+            "type": "AZManagementGroup",
+            "properties": {},
+            "style": {}
+        },
+        {
+            "id": "n3",
+            "fromId": "n3",
+            "toId": "n4",
+            "type": "AZContains",
+            "properties": {},
+            "style": {}
+        }
+    ],
+    "style": {
+        "font-family": "sans-serif",
+        "background-color": "#ffffff",
+        "background-image": "",
+        "background-size": "100%",
+        "node-color": "#ffffff",
+        "border-width": 4,
+        "border-color": "#68bc00",
+        "radius": 50,
+        "node-padding": 5,
+        "node-margin": 2,
+        "outside-position": "auto",
+        "node-icon-image": "",
+        "node-background-image": "",
+        "icon-position": "inside",
+        "icon-size": 64,
+        "caption-position": "inside",
+        "caption-max-width": 200,
+        "caption-color": "#000000",
+        "caption-font-size": 50,
+        "caption-font-weight": "normal",
+        "label-position": "inside",
+        "label-display": "pill",
+        "label-color": "#000000",
+        "label-background-color": "#ffffff",
+        "label-border-color": "#000000",
+        "label-border-width": 4,
+        "label-font-size": 40,
+        "label-padding": 5,
+        "label-margin": 4,
+        "directionality": "directed",
+        "detail-position": "inline",
+        "detail-orientation": "parallel",
+        "arrow-width": 5,
+        "arrow-color": "#aea1ff",
+        "margin-start": 5,
+        "margin-end": 5,
+        "margin-peer": 20,
+        "attachment-start": "normal",
+        "attachment-end": "normal",
+        "relationship-icon-image": "",
+        "type-color": "#000000",
+        "type-background-color": "#ffffff",
+        "type-border-color": "#000000",
+        "type-border-width": 0,
+        "type-font-size": 16,
+        "type-padding": 5,
+        "property-position": "outside",
+        "property-alignment": "colon",
+        "property-color": "#000000",
+        "property-font-size": 16,
+        "property-font-weight": "normal"
+    }
+}
