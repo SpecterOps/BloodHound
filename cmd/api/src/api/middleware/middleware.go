@@ -156,14 +156,7 @@ func parseUserIP(r *http.Request) string {
 		log.Errorf("No data found in X-Forwarded-For")
 	}
 
-	if parsedUrl, err := url.Parse(r.RemoteAddr); err != nil {
-		log.Errorf("Error parsing IP address from RemoteAddr: %s", err)
-	} else if hostName := parsedUrl.Hostname(); hostName == "" {
-		log.Errorf("Hostname not found in URL: %s", parsedUrl.String())
-	} else {
-		res += "Remote Address: " + parsedUrl.Hostname()
-	}
-
+	res += "Remote Address: " + r.RemoteAddr
 	return res
 }
 
