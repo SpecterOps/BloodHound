@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { makeStyles } from "@mui/styles";
+import { makeStyles } from '@mui/styles';
 
 export const groupSpecialFormat = (sourceType: string | undefined, sourceName: string | undefined) => {
     if (!sourceType || !sourceName) return 'This entity has';
@@ -43,7 +43,6 @@ export const typeFormat = (type: string | undefined): string => {
         return type.toLowerCase();
     }
 };
-
 
 export const useHelpTextStyles = makeStyles((theme) => ({
     containsCodeEl: {

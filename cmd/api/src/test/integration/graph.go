@@ -431,6 +431,7 @@ func (s *GraphTestContext) NewActiveDirectoryCertTemplate(name, domainSID string
 		ad.SubjectAltRequireSPN:       data.SubjectAltRequireSPN,
 		ad.SubjectAltRequireDNS:       data.SubjectAltRequireDNS,
 		ad.SubjectAltRequireDomainDNS: data.SubjectAltRequireDomainDNS,
+		ad.SubjectAltRequireEmail:     data.SubjectAltRequireEmail,
 	}), ad.Entity, ad.CertTemplate)
 }
 
@@ -442,6 +443,7 @@ type CertTemplateData struct {
 	SubjectAltRequireSPN       bool
 	SubjectAltRequireDNS       bool
 	SubjectAltRequireDomainDNS bool
+	SubjectAltRequireEmail     bool
 	NoSecurityExtension        bool
 	SchemaVersion              float64
 	AuthorizedSignatures       float64
@@ -461,6 +463,7 @@ func (s *GraphTestContext) setupAzure() {
 	s.Harness.AZMGRoleManagementReadWriteDirectoryHarness.Setup(s)
 	s.Harness.AZMGServicePrincipalEndpointReadWriteAllHarness.Setup(s)
 	s.Harness.AZInboundControlHarness.Setup(s)
+	s.Harness.AZManagementGroup.Setup(s)
 }
 
 func (s *GraphTestContext) setupActiveDirectory() {
