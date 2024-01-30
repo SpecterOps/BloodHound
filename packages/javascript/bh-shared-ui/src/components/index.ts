@@ -134,3 +134,6 @@ export { default as AssetGroupEdit } from './AssetGroupEdit';
 
 export * from './GroupManagementContent';
 export { default as GroupManagementContent } from './GroupManagementContent';
+
+export * from './MarkdownWrapper';
+export { default as MarkdownWrapper } from './MarkdownWrapper';
