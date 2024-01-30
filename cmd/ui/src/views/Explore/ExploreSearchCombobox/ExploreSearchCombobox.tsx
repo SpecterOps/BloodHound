@@ -81,7 +81,13 @@ const ExploreSearchCombobox: React.FC<{
                     },
                     startAdornment: selectedItem?.type && <NodeIcon nodeType={selectedItem?.type} />,
                 }}
-                {...getInputProps({ onFocus: openMenu, refKey: 'inputRef', onChange: (e) => {handleNodeEdited(e.currentTarget.value)} })}
+                {...getInputProps({
+                    onFocus: openMenu,
+                    refKey: 'inputRef',
+                    onChange: (e) => {
+                        handleNodeEdited(e.currentTarget.value);
+                    },
+                })}
                 data-testid='explore_search_input-search'
             />
             <div
