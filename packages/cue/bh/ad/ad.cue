@@ -24,6 +24,7 @@ NodeKinds: [...types.#Kind]
 RelationshipKinds: [...types.#Kind]
 ACLRelationships: [...types.#Kind]
 PathfindingRelationships: [...types.#Kind]
+EdgeCompositionRelationships: [...types.#Kind]
 
 // Property name enumerations
 
@@ -1164,4 +1165,13 @@ PathfindingRelationships: [
 	ADCSESC10a,
 	ADCSESC10b,
 	DCFor
+]
+
+EdgeCompositionRelationships: [
+	GoldenCert,
+	ADCSESC1,
+	ADCSESC3,
+	ADCSESC6a,
+	ADCSESC9a,
+	ADCSESC10a,
 ]

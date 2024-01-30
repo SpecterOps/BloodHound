@@ -31,8 +31,6 @@ export * from './providers';
 
 export * from './utils';
 
-export * from './constants';
-
 export * from './graphSchema';
 
 export * from './views';

@@ -271,6 +271,14 @@ export function ActiveDirectoryRelationshipKindToDisplay(value: ActiveDirectoryR
     }
 }
 export type ActiveDirectoryKind = ActiveDirectoryNodeKind | ActiveDirectoryRelationshipKind;
+export const EdgeCompositionRelationships = [
+    'GoldenCert',
+    'ADCSESC1',
+    'ADCSESC3',
+    'ADCSESC6a',
+    'ADCSESC9a',
+    'ADCSESC10a',
+];
 export enum ActiveDirectoryKindProperties {
     AdminCount = 'admincount',
     CASecurityCollected = 'casecuritycollected',
