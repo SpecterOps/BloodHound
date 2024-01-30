@@ -75,8 +75,8 @@ func (s *Route) RequirePermissions(db database.Database, permissions ...model.Pe
 }
 
 // Ensure that the requestor has at least one of the listed permissions
-func (s *Route) RequireAtLeastOnePermission(permissions ...model.Permission) *Route {
-	s.handler.Use(middleware.PermissionsCheckAtLeastOne(s.authorizer, permissions...))
+func (s *Route) RequireAtLeastOnePermission(db database.Database, permissions ...model.Permission) *Route {
+	s.handler.Use(middleware.PermissionsCheckAtLeastOne(db, s.authorizer, permissions...))
 	return s
 }
 
