@@ -15,7 +15,14 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Box, Divider, Typography, useTheme } from '@mui/material';
-import { EdgeInfoComponents, EdgeSections, SelectedEdge, apiClient } from 'bh-shared-ui';
+import {
+    EdgeInfoComponents,
+    EdgeSections,
+    SelectedEdge,
+    apiClient,
+    EdgesWithComposition,
+    ActiveDirectoryRelationshipKind,
+} from 'bh-shared-ui';
 import isEmpty from 'lodash/isEmpty';
 import { Dispatch, FC, Fragment } from 'react';
 import { putGraphData, putGraphError, saveResponseForExport, setGraphLoading } from 'src/ducks/explore/actions';
@@ -71,11 +78,7 @@ const EdgeInfoContent: FC<{ selectedEdge: NonNullable<SelectedEdge> }> = ({ sele
                         const Section = section[1];
 
                         const sendOnChange =
-                            (selectedEdge.name === 'GoldenCert' ||
-                                selectedEdge.name === 'ADCSESC1' ||
-                                selectedEdge.name === 'ADCSESC3' ||
-                                selectedEdge.name === 'ADCSESC6a' ||
-                                selectedEdge.name === 'ADCSESC9a') &&
+                            EdgesWithComposition.includes(selectedEdge.name as ActiveDirectoryRelationshipKind) &&
                             section[0] === 'composition';
 
                         return (

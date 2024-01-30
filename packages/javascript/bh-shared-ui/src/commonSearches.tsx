@@ -184,7 +184,8 @@ export const CommonSearches: CommonSearchType[] = [
                 cypher: `MATCH p = ()-[:Enroll|GenericAll|AllExtendedRights]->(ct:CertTemplate)-[:PublishedTo]->(:EnterpriseCA)\nnWHERE ct.nosecurityextension = true\nRETURN p`,
             },
             {
-                description: 'Enrollment rights on certificate templates published to Enterprise CA with User Specified SAN enabled',
+                description:
+                    'Enrollment rights on certificate templates published to Enterprise CA with User Specified SAN enabled',
                 cypher: `MATCH p = ()-[:Enroll|GenericAll|AllExtendedRights]->(ct:CertTemplate)-[:PublishedTo]->(eca:EnterpriseCA)\nWHERE eca.isuserspecifiessanenabled = True\nRETURN p`,
             },
             {
@@ -198,7 +199,7 @@ export const CommonSearches: CommonSearchType[] = [
             {
                 description: 'Domain controllers with UPN certificate mapping enabled',
                 cypher: `MATCH p = (dc:Computer)-[:DCFor]->(d)\nWHERE dc.certificatemappingmethodsraw IN [4, 5, 6, 7, 12, 13, 14, 15, 20, 21, 22, 23, 28, 29, 30, 31]\nRETURN p`,
-            }
+            },
         ],
     },
     {

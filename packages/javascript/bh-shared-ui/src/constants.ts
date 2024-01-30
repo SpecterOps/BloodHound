@@ -1,4 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2024 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -14,29 +14,13 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Theme } from '@mui/material/styles';
+import { ActiveDirectoryRelationshipKind } from '.';
 
-declare module '@mui/styles/defaultTheme' {
-    // eslint-disable-next-line @typescript-eslint/no-empty-interface
-    interface DefaultTheme extends Theme {}
-}
-
-export * from './components';
-
-export * from './hooks';
-
-export * from './commonSearches';
-
-export * from './providers';
-
-export * from './utils';
-
-export * from './constants';
-
-export * from './graphSchema';
-
-export * from './views';
-
-export * from './store';
-
-export * from './mocks';
+export const EdgesWithComposition = [
+    ActiveDirectoryRelationshipKind.GoldenCert,
+    ActiveDirectoryRelationshipKind.ADCSESC1,
+    ActiveDirectoryRelationshipKind.ADCSESC3,
+    ActiveDirectoryRelationshipKind.ADCSESC6a,
+    ActiveDirectoryRelationshipKind.ADCSESC9a,
+    ActiveDirectoryRelationshipKind.ADCSESC10a,
+];
