@@ -128,7 +128,7 @@ func (s *BloodhoundDB) AuditableTransaction(ctx context.Context, auditEntry mode
 	}
 
 	if err := s.AppendAuditLog(ctx, auditEntry); err != nil {
-		return fmt.Errorf("could not append intent to audit log: %w", err)
+		return fmt.Errorf("could not append end status to audit log: %w", err)
 	}
 
 	return err

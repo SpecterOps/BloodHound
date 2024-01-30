@@ -220,7 +220,7 @@ func TestDatabase_CreateGetUser(t *testing.T) {
 
 			newUser.Roles = newUser.Roles.RemoveByName(roleToDelete)
 
-			if err := dbInst.UpdateUser(context.TODO(), newUser); err != nil {
+			if err := dbInst.UpdateUser(context.Background(), newUser); err != nil {
 				t.Fatalf("Failed to update user: %v", err)
 			}
 
@@ -329,7 +329,7 @@ func TestDatabase_CreateSAMLProvider(t *testing.T) {
 	} else {
 		user.SAMLProviderID = null.Int32From(newSAMLProvider.ID)
 
-		if err := dbInst.UpdateUser(context.TODO(), user); err != nil {
+		if err := dbInst.UpdateUser(context.Background(), user); err != nil {
 			t.Fatalf("Failed to update user: %v", err)
 		} else if updatedUser, err := dbInst.GetUser(user.ID); err != nil {
 			t.Fatalf("Failed to fetch updated user: %v", err)
