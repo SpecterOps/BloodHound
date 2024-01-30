@@ -14,14 +14,14 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Box, Divider, Typography, useTheme } from '@mui/material';
-import { EdgeInfoComponents, EdgeSections, SelectedEdge, apiClient } from 'bh-shared-ui';
+import {Box, Divider, Typography, useTheme} from '@mui/material';
+import {EdgeInfoComponents, EdgeSections, SelectedEdge, apiClient} from 'bh-shared-ui';
 import isEmpty from 'lodash/isEmpty';
-import { Dispatch, FC, Fragment } from 'react';
-import { putGraphData, putGraphError, saveResponseForExport, setGraphLoading } from 'src/ducks/explore/actions';
-import { addSnackbar } from 'src/ducks/global/actions';
-import { useAppDispatch } from 'src/store';
-import { transformToFlatGraphResponse } from 'src/utils';
+import {Dispatch, FC, Fragment} from 'react';
+import {putGraphData, putGraphError, saveResponseForExport, setGraphLoading} from 'src/ducks/explore/actions';
+import {addSnackbar} from 'src/ducks/global/actions';
+import {useAppDispatch} from 'src/store';
+import {transformToFlatGraphResponse} from 'src/utils';
 import EdgeInfoCollapsibleSection from 'src/views/Explore/EdgeInfo/EdgeInfoCollapsibleSection';
 import EdgeObjectInformation from 'src/views/Explore/EdgeInfo/EdgeObjectInformation';
 
@@ -55,16 +55,16 @@ const getOnChange = (dispatch: Dispatch<any>, sourceNodeId: number, targetNodeId
     };
 };
 
-const EdgeInfoContent: FC<{ selectedEdge: NonNullable<SelectedEdge> }> = ({ selectedEdge }) => {
+const EdgeInfoContent: FC<{ selectedEdge: NonNullable<SelectedEdge> }> = ({selectedEdge}) => {
     const theme = useTheme();
     const dispatch = useAppDispatch();
 
     const sections = EdgeInfoComponents[selectedEdge.name as keyof typeof EdgeInfoComponents];
-    const { sourceNode, targetNode } = selectedEdge;
+    const {sourceNode, targetNode} = selectedEdge;
 
     return (
         <Box>
-            <EdgeObjectInformation selectedEdge={selectedEdge} />
+            <EdgeObjectInformation selectedEdge={selectedEdge}/>
             {sections ? (
                 <>
                     {Object.entries(sections).map((section, index) => {
@@ -75,24 +75,25 @@ const EdgeInfoContent: FC<{ selectedEdge: NonNullable<SelectedEdge> }> = ({ sele
                                 selectedEdge.name === 'ADCSESC1' ||
                                 selectedEdge.name === 'ADCSESC3' ||
                                 selectedEdge.name === 'ADCSESC6a' ||
-                                selectedEdge.name === 'ADCSESC9a') &&
+                                selectedEdge.name === 'ADCSESC9a' ||
+                                selectedEdge.name === 'ADCSESC10a') &&
                             section[0] === 'composition';
 
                         return (
                             <Fragment key={index}>
                                 <Box padding={1}>
-                                    <Divider />
+                                    <Divider/>
                                 </Box>
                                 <EdgeInfoCollapsibleSection
                                     section={section[0] as keyof typeof EdgeSections}
                                     onChange={
                                         sendOnChange
                                             ? getOnChange(
-                                                  dispatch,
-                                                  parseInt(`${sourceNode.id}`),
-                                                  parseInt(`${targetNode.id}`),
-                                                  selectedEdge.name
-                                              )
+                                                dispatch,
+                                                parseInt(`${sourceNode.id}`),
+                                                parseInt(`${targetNode.id}`),
+                                                selectedEdge.name
+                                            )
                                             : undefined
                                     }>
                                     <Section
@@ -114,7 +115,7 @@ const EdgeInfoContent: FC<{ selectedEdge: NonNullable<SelectedEdge> }> = ({ sele
             ) : (
                 <>
                     <Box padding={1}>
-                        <Divider />
+                        <Divider/>
                     </Box>
                     <Box paddingLeft={theme.spacing(1)}>
                         <Typography variant='body1' fontSize={'0.75rem'}>
