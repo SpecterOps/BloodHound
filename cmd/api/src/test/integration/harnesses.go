@@ -1942,6 +1942,53 @@ func (s *ESC9AHarness) Setup(c *GraphTestContext) {
 	c.NewRelationship(s.Attacker, s.Victim, ad.GenericWrite)
 }
 
+type ESC9BHarness struct {
+	Domain       *graph.Node
+	NTAuthStore  *graph.Node
+	RootCA       *graph.Node
+	DC           *graph.Node
+	EnterpriseCA *graph.Node
+	CertTemplate *graph.Node
+	Victim       *graph.Node
+	Attacker     *graph.Node
+}
+
+func (s *ESC9BHarness) Setup(c *GraphTestContext) {
+	sid := RandomDomainSID()
+	emptyEkus := make([]string, 0)
+	s.Domain = c.NewActiveDirectoryDomain("ESC9bDomain", sid, false, true)
+	s.NTAuthStore = c.NewActiveDirectoryNTAuthStore("NTAuthStore", sid)
+	s.RootCA = c.NewActiveDirectoryRootCA("RootCA", sid)
+	s.DC = c.NewActiveDirectoryComputer("DC", sid)
+	s.EnterpriseCA = c.NewActiveDirectoryEnterpriseCA("eca", sid)
+	s.CertTemplate = c.NewActiveDirectoryCertTemplate("certtemplate", sid, CertTemplateData{
+		RequiresManagerApproval: false,
+		AuthenticationEnabled:   true,
+		EnrolleeSuppliesSubject: false,
+		SubjectAltRequireUPN:    false,
+		SubjectAltRequireSPN:    false,
+		SubjectAltRequireDNS:    true,
+		NoSecurityExtension:     true,
+		SchemaVersion:           1,
+		AuthorizedSignatures:    0,
+		EKUS:                    emptyEkus,
+		ApplicationPolicies:     emptyEkus,
+	})
+	s.Victim = c.NewActiveDirectoryUser("victim", sid, false)
+	s.Attacker = c.NewActiveDirectoryComputer("attacker", sid)
+
+	c.NewRelationship(s.DC, s.Domain, ad.DCFor)
+	c.NewRelationship(s.NTAuthStore, s.Domain, ad.NTAuthStoreFor)
+	c.NewRelationship(s.RootCA, s.Domain, ad.RootCAFor)
+	c.NewRelationship(s.EnterpriseCA, s.DC, ad.CanAbuseWeakCertBinding)
+	c.NewRelationship(s.EnterpriseCA, s.NTAuthStore, ad.TrustedForNTAuth)
+	c.NewRelationship(s.EnterpriseCA, s.RootCA, ad.IssuedSignedBy)
+	c.NewRelationship(s.CertTemplate, s.EnterpriseCA, ad.PublishedTo)
+	c.NewRelationship(s.Victim, s.EnterpriseCA, ad.Enroll)
+	c.NewRelationship(s.Victim, s.CertTemplate, ad.Enroll)
+	c.NewRelationship(s.Attacker, s.Victim, ad.GenericWrite)
+}
+
 type ESC6aHarnessPrincipalEdges struct {
 	Group0        *graph.Node
 	Group1        *graph.Node
@@ -2225,4 +2272,5 @@ type HarnessDetails struct {
 	ESC6aHarnessTemplate1                           ESC6aHarnessTemplate1
 	ESC6aHarnessTemplate2                           ESC6aHarnessTemplate2
 	ESC9AHarness                                    ESC9AHarness
+	ESC9BHarness                                    ESC9BHarness
 }
