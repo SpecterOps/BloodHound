@@ -2364,9 +2364,6 @@ func (s *ESC10aHarness1) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.NewRelationship(s.Group3, s.User3, ad.GenericAll)
 	graphTestContext.NewRelationship(s.Group2, s.User2, ad.GenericAll)
 	graphTestContext.NewRelationship(s.Group1, s.User1, ad.GenericAll)
-	graphTestContext.NewRelationship(s.Group3, s.Domain, ad.ADCSESC10a)
-	graphTestContext.NewRelationship(s.Group2, s.Domain, ad.ADCSESC10a)
-	graphTestContext.NewRelationship(s.Group1, s.Domain, ad.ADCSESC10a)
 }
 
 type ESC10aHarness2 struct {
