@@ -141,7 +141,13 @@ func PostADCSESC3(ctx context.Context, tx graph.Transaction, outC chan<- analysi
 									cache.EnterpriseCAEnrollers[eca1.ID],
 									cache.EnterpriseCAEnrollers[eca2.ID],
 									delegatedAgents.Slice())
-								results.Or(tempResults)
+
+								// Add principals to result set unless it's a user and DNS is required
+								if filteredResults, err := filterUserDNSResults(tx, tempResults, certTemplateOne); err != nil {
+									log.Errorf("Error filtering user dns results: %v", err)
+								} else {
+									results.Or(filteredResults)
+								}
 							}
 						}
 					} else {
@@ -151,7 +157,12 @@ func PostADCSESC3(ctx context.Context, tx graph.Transaction, outC chan<- analysi
 								cache.CertTemplateControllers[certTemplateTwo.ID],
 								cache.EnterpriseCAEnrollers[eca1.ID],
 								cache.EnterpriseCAEnrollers[eca2.ID])
-							results.Or(tempResults)
+
+							if filteredResults, err := filterUserDNSResults(tx, tempResults, certTemplateOne); err != nil {
+								log.Errorf("Error filtering user dns results: %v", err)
+							} else {
+								results.Or(filteredResults)
+							}
 						}
 					}
 				}
@@ -172,6 +183,32 @@ func PostADCSESC3(ctx context.Context, tx graph.Transaction, outC chan<- analysi
 	})
 
 	return nil
+}
+
+func filterUserDNSResults(tx graph.Transaction, tempResults cardinality.Duplex[uint32], certTemplate *graph.Node) (cardinality.Duplex[uint32], error) {
+	if userNodes, err := ops.FetchNodeSet(tx.Nodes().Filterf(func() graph.Criteria {
+		return query.And(
+			query.KindIn(query.Node(), ad.User),
+			query.InIDs(query.NodeID(), cardinality.DuplexToGraphIDs(tempResults)...),
+		)
+	})); err != nil {
+		if !graph.IsErrNotFound(err) {
+			return nil, err
+		}
+	} else if len(userNodes) > 0 {
+		if subjRequireDns, err := certTemplate.Properties.Get(ad.SubjectAltRequireDNS.String()).Bool(); err != nil {
+			log.Debugf("Failed to retrieve subjectAltRequireDNS for template %d: %v", certTemplate.ID, err)
+			tempResults.Xor(cardinality.NodeSetToDuplex(userNodes))
+		} else if subjRequireDomainDns, err := certTemplate.Properties.Get(ad.SubjectAltRequireDomainDNS.String()).Bool(); err != nil {
+			log.Debugf("Failed to retrieve subjectAltRequireDomainDNS for template %d: %v", certTemplate.ID, err)
+			tempResults.Xor(cardinality.NodeSetToDuplex(userNodes))
+		} else if subjRequireDns || subjRequireDomainDns {
+			//If either of these properties is true, we need to remove all these users from our victims list
+			tempResults.Xor(cardinality.NodeSetToDuplex(userNodes))
+		}
+	}
+
+	return tempResults, nil
 }
 
 func principalControlsCertTemplate(principal, certTemplate *graph.Node, groupExpansions impact.PathAggregator, cache ADCSCache) bool {
