@@ -26,6 +26,7 @@ import (
 	"github.com/specterops/bloodhound/dawgs/util/channels"
 	"github.com/specterops/bloodhound/errors"
 	"github.com/specterops/bloodhound/graphschema/ad"
+	"github.com/specterops/bloodhound/log"
 )
 
 func PostCanAbuseUPNCertMapping(operation analysis.StatTrackedOperation[analysis.CreatePostRelationshipJob], enterpriseCertAuthorities []*graph.Node) error {
@@ -49,7 +50,7 @@ func PostCanAbuseUPNCertMapping(operation analysis.StatTrackedOperation[analysis
 					} else {
 						for _, dcForNode := range dcForNodes {
 							if cmmrProperty, err := dcForNode.Properties.Get(ad.CertificateMappingMethodsRaw.String()).Int(); err != nil {
-								collector.Collect(fmt.Errorf("error in PostCanAbuseUPNCertMapping: unable to fetch %v property for node ID %v: %v", ad.StrongCertificateBindingEnforcementRaw.String(), dcForNode.ID, err))
+								log.Warnf("error in PostCanAbuseUPNCertMapping: unable to fetch %v property for node ID %v: %v", ad.StrongCertificateBindingEnforcementRaw.String(), dcForNode.ID, err)
 								continue
 							} else if cmmrProperty&0x04 == 0x04 {
 								if !channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
@@ -91,7 +92,7 @@ func PostCanAbuseWeakCertBinding(operation analysis.StatTrackedOperation[analysi
 					} else {
 						for _, dcForNode := range dcForNodes {
 							if strongCertBindingEnforcement, err := dcForNode.Properties.Get(ad.StrongCertificateBindingEnforcementRaw.String()).Int(); err != nil {
-								collector.Collect(fmt.Errorf("error in PostCanAbuseWeakCertBinding: unable to fetch %v property for node ID %v: %v", ad.StrongCertificateBindingEnforcementRaw.String(), dcForNode.ID, err))
+								log.Warnf("error in PostCanAbuseWeakCertBinding: unable to fetch %v property for node ID %v: %v", ad.StrongCertificateBindingEnforcementRaw.String(), dcForNode.ID, err)
 								continue
 							} else if strongCertBindingEnforcement == 0 || strongCertBindingEnforcement == 1 {
 								if !channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
