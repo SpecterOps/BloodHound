@@ -753,14 +753,39 @@ type AZGroupMembershipHarness struct {
 
 func (s *AZGroupMembershipHarness) Setup(testCtx *GraphTestContext) {
 	tenantID := RandomObjectID(testCtx.testCtx)
+	s.Tenant = testCtx.NewAzureTenant(tenantID)
 	s.UserA = testCtx.NewAzureUser("UserA", "UserA", "", RandomObjectID(testCtx.testCtx), "", tenantID, false)
 	s.UserB = testCtx.NewAzureUser("UserB", "UserB", "", RandomObjectID(testCtx.testCtx), "", tenantID, false)
 	s.UserC = testCtx.NewAzureUser("UserC", "UserC", "", RandomObjectID(testCtx.testCtx), "", tenantID, false)
 	s.Group = testCtx.NewAzureGroup("Group", RandomObjectID(testCtx.testCtx), tenantID)
 
+	testCtx.NewRelationship(s.Tenant, s.Group, azure.Contains)
+
 	testCtx.NewRelationship(s.UserA, s.Group, azure.MemberOf)
 	testCtx.NewRelationship(s.UserB, s.Group, azure.MemberOf)
 	testCtx.NewRelationship(s.UserC, s.Group, azure.MemberOf)
+}
+
+type AZManagementGroupHarness struct {
+	Tenant *graph.Node
+	UserA  *graph.Node
+	UserB  *graph.Node
+	UserC  *graph.Node
+	Group  *graph.Node
+}
+
+func (s *AZManagementGroupHarness) Setup(testCtx *GraphTestContext) {
+	tenantID := RandomObjectID(testCtx.testCtx)
+	s.Tenant = testCtx.NewAzureTenant(tenantID)
+	s.UserA = testCtx.NewAzureUser("Batman", "Batman", "", RandomObjectID(testCtx.testCtx), "", tenantID, false)
+	s.UserB = testCtx.NewAzureUser("Wonder Woman", "Wonder Woman", "", RandomObjectID(testCtx.testCtx), "", tenantID, false)
+	s.UserC = testCtx.NewAzureUser("Flash", "Flash", "", RandomObjectID(testCtx.testCtx), "", tenantID, false)
+	s.Group = testCtx.NewAzureManagementGroup("Justice League", RandomObjectID(testCtx.testCtx), tenantID)
+	testCtx.NewRelationship(s.Tenant, s.Group, azure.Contains)
+
+	testCtx.NewRelationship(s.UserA, s.Group, azure.ManagementGroup)
+	testCtx.NewRelationship(s.UserB, s.Group, azure.ManagementGroup)
+	testCtx.NewRelationship(s.UserC, s.Group, azure.ManagementGroup)
 }
 
 type AZEntityPanelHarness struct {
@@ -1030,6 +1055,7 @@ func (s *AZMGServicePrincipalEndpointReadWriteAllHarness) Setup(testCtx *GraphTe
 }
 
 type AZInboundControlHarness struct {
+	AZTenant            *graph.Node
 	ControlledAZUser    *graph.Node
 	AZAppA              *graph.Node
 	AZGroupA            *graph.Node
@@ -1042,6 +1068,7 @@ type AZInboundControlHarness struct {
 
 func (s *AZInboundControlHarness) Setup(testCtx *GraphTestContext) {
 	tenantID := RandomObjectID(testCtx.testCtx)
+	s.AZTenant = testCtx.NewAzureTenant(tenantID)
 	s.ControlledAZUser = testCtx.NewAzureUser("Controlled AZUser", "Controlled AZUser", "", RandomObjectID(testCtx.testCtx), HarnessUserLicenses, tenantID, HarnessUserMFAEnabled)
 	s.AZAppA = testCtx.NewAzureApplication("AZAppA", RandomObjectID(testCtx.testCtx), tenantID)
 	s.AZGroupA = testCtx.NewAzureGroup("AZGroupA", RandomObjectID(testCtx.testCtx), tenantID)
@@ -1050,6 +1077,8 @@ func (s *AZInboundControlHarness) Setup(testCtx *GraphTestContext) {
 	s.AZUserB = testCtx.NewAzureUser("AZUserB", "AZUserB", "", RandomObjectID(testCtx.testCtx), HarnessUserLicenses, tenantID, HarnessUserMFAEnabled)
 	s.AZServicePrincipalA = testCtx.NewAzureServicePrincipal("AZServicePrincipalA", RandomObjectID(testCtx.testCtx), tenantID)
 	s.AZServicePrincipalB = testCtx.NewAzureServicePrincipal("AZServicePrincipalB", RandomObjectID(testCtx.testCtx), tenantID)
+
+	testCtx.NewRelationship(s.AZTenant, s.AZGroupA, azure.Contains)
 
 	testCtx.NewRelationship(s.AZUserA, s.AZGroupA, azure.MemberOf)
 	testCtx.NewRelationship(s.AZServicePrincipalB, s.AZGroupB, azure.MemberOf)
@@ -2198,6 +2227,7 @@ type HarnessDetails struct {
 	Completeness                                    CompletenessHarness
 	AZBaseHarness                                   AZBaseHarness
 	AZGroupMembership                               AZGroupMembershipHarness
+	AZManagementGroup                               AZManagementGroupHarness
 	AZEntityPanelHarness                            AZEntityPanelHarness
 	AZMGApplicationReadWriteAllHarness              AZMGApplicationReadWriteAllHarness
 	AZMGAppRoleManagementReadWriteAllHarness        AZMGAppRoleManagementReadWriteAllHarness

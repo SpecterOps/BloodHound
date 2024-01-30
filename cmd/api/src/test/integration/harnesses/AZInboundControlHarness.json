@@ -54,10 +54,10 @@
   },
   "nodes": [
     {
-      "id": "n7",
+      "id": "n0",
       "position": {
         "x": 1059.8976569191977,
-        "y": 1346.027889910619
+        "y": 501.6907518623764
       },
       "caption": "Controlled AZUser",
       "labels": [],
@@ -67,10 +67,10 @@
       }
     },
     {
-      "id": "n8",
+      "id": "n1",
       "position": {
         "x": 604.0284270522187,
-        "y": 894.3371380482427
+        "y": 50
       },
       "caption": "AZGroup A",
       "labels": [],
@@ -80,10 +80,10 @@
       }
     },
     {
-      "id": "n9",
+      "id": "n2",
       "position": {
         "x": 604.0284270522187,
-        "y": 1838.502464519107
+        "y": 994.1653264708643
       },
       "caption": "AZGroup B",
       "labels": [],
@@ -93,10 +93,10 @@
       }
     },
     {
-      "id": "n10",
+      "id": "n3",
       "position": {
         "x": 604.0284270522187,
-        "y": 1475.6758276195499
+        "y": 631.3386895713072
       },
       "caption": "AZServicePrincipal A",
       "labels": [],
@@ -106,10 +106,10 @@
       }
     },
     {
-      "id": "n11",
+      "id": "n4",
       "position": {
         "x": 604.0284270522187,
-        "y": 1229.2947464229803
+        "y": 384.9576083747377
       },
       "caption": "AZUser B",
       "labels": [],
@@ -119,10 +119,10 @@
       }
     },
     {
-      "id": "n12",
+      "id": "n5",
       "position": {
         "x": 75,
-        "y": 894.3371380482427
+        "y": 50
       },
       "caption": "AZUser A",
       "labels": [],
@@ -132,10 +132,10 @@
       }
     },
     {
-      "id": "n13",
+      "id": "n6",
       "position": {
         "x": 75,
-        "y": 1838.502464519107
+        "y": 994.1653264708643
       },
       "caption": "AZServicePrincipal B",
       "labels": [],
@@ -145,14 +145,27 @@
       }
     },
     {
-      "id": "n14",
+      "id": "n7",
       "position": {
         "x": 75,
-        "y": 1475.6758276195499
+        "y": 631.3386895713072
       },
       "caption": "AZApp A",
+      "labels": [],
+      "properties": {},
       "style": {
         "border-color": "#d33115"
+      }
+    },
+    {
+      "id": "n8",
+      "position": {
+        "x": 379.0709828688383,
+        "y": 274.95744418338046
+      },
+      "caption": "AZTenant",
+      "style": {
+        "border-color": "#aea1ff"
       },
       "labels": [],
       "properties": {}
@@ -160,74 +173,84 @@
   ],
   "relationships": [
     {
-      "id": "n8",
+      "id": "n0",
+      "fromId": "n3",
+      "toId": "n0",
       "type": "AZResetPassword",
+      "properties": {},
       "style": {
         "arrow-color": "#68bc00"
-      },
-      "properties": {},
-      "fromId": "n10",
-      "toId": "n7"
+      }
     },
     {
-      "id": "n9",
+      "id": "n1",
+      "fromId": "n4",
+      "toId": "n0",
       "type": "AZResetPassword",
+      "properties": {},
       "style": {
         "arrow-color": "#68bc00"
-      },
-      "properties": {},
-      "fromId": "n11",
-      "toId": "n7"
+      }
     },
     {
-      "id": "n10",
+      "id": "n2",
+      "fromId": "n5",
+      "toId": "n1",
       "type": "AZMemberOf",
+      "properties": {},
       "style": {
         "arrow-color": "#68bc00"
-      },
-      "properties": {},
-      "fromId": "n12",
-      "toId": "n8"
+      }
     },
     {
-      "id": "n11",
+      "id": "n3",
+      "fromId": "n6",
+      "toId": "n2",
       "type": "AZMemberOf",
+      "properties": {},
       "style": {
         "arrow-color": "#68bc00"
-      },
-      "properties": {},
-      "fromId": "n13",
-      "toId": "n9"
+      }
     },
     {
-      "id": "n13",
+      "id": "n4",
+      "fromId": "n1",
+      "toId": "n0",
       "type": "AZResetPassword",
+      "properties": {},
+      "style": {
+        "arrow-color": "#68bc00"
+      }
+    },
+    {
+      "id": "n5",
+      "fromId": "n2",
+      "toId": "n0",
+      "type": "AZResetPassword",
+      "properties": {},
+      "style": {
+        "arrow-color": "#68bc00"
+      }
+    },
+    {
+      "id": "n6",
+      "fromId": "n7",
+      "toId": "n3",
+      "type": "AZRunsAs",
+      "properties": {},
+      "style": {
+        "arrow-color": "#d33115"
+      }
+    },
+    {
+      "id": "n7",
+      "type": "AZContains",
       "style": {
         "arrow-color": "#68bc00"
       },
       "properties": {},
       "fromId": "n8",
-      "toId": "n7"
-    },
-    {
-      "id": "n16",
-      "type": "AZResetPassword",
-      "style": {
-        "arrow-color": "#68bc00"
-      },
-      "properties": {},
-      "fromId": "n9",
-      "toId": "n7"
-    },
-    {
-      "id": "n17",
-      "type": "AZRunsAs",
-      "style": {
-        "arrow-color": "#d33115"
-      },
-      "properties": {},
-      "fromId": "n14",
-      "toId": "n10"
+      "toId": "n1"
     }
   ]
 }
