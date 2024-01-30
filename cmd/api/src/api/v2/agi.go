@@ -200,7 +200,7 @@ func (s Resources) CreateAssetGroup(response http.ResponseWriter, request *http.
 
 	if err := api.ReadJSONRequestPayloadLimited(&createRequest, request); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
-	} else if newAssetGroup, err := s.DB.CreateAssetGroup(createRequest.Name, createRequest.Tag, false); err != nil {
+	} else if newAssetGroup, err := s.DB.CreateAssetGroup(request.Context(), createRequest.Name, createRequest.Tag, false); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
 		assetGroupURL := *ctx.Get(request.Context()).Host
@@ -224,7 +224,7 @@ func (s Resources) DeleteAssetGroup(response http.ResponseWriter, request *http.
 		api.HandleDatabaseError(request, response, err)
 	} else if assetGroup.SystemGroup {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusConflict, "Cannot delete a system defined asset group.", request), response)
-	} else if err := s.DB.DeleteAssetGroup(assetGroup); err != nil {
+	} else if err := s.DB.DeleteAssetGroup(request.Context(), assetGroup); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
 		response.WriteHeader(http.StatusOK)

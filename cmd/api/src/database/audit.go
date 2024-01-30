@@ -61,7 +61,7 @@ func newAuditLog(context context.Context, entry model.AuditEntry, idResolver aut
 }
 
 func (s *BloodhoundDB) AppendAuditLog(ctx context.Context, entry model.AuditEntry) error {
-	if auditLog, err := newAuditLog(ctx, entry, s.idResolver); err != nil {
+	if auditLog, err := newAuditLog(ctx, entry, s.idResolver); err != nil && err != ErrAuthContextInvalid {
 		return fmt.Errorf("audit log append: %w", err)
 	} else {
 		return CheckError(s.db.Create(&auditLog))

@@ -17,6 +17,7 @@
 package database
 
 import (
+	"context"
 	"time"
 
 	"gorm.io/gorm"
@@ -26,22 +27,40 @@ import (
 	"github.com/specterops/bloodhound/src/model"
 )
 
-func (s *BloodhoundDB) CreateAssetGroup(name, tag string, systemGroup bool) (model.AssetGroup, error) {
-	assetGroup := model.AssetGroup{
-		Name:        name,
-		Tag:         tag,
-		SystemGroup: systemGroup,
-	}
+func (s *BloodhoundDB) CreateAssetGroup(ctx context.Context, name, tag string, systemGroup bool) (model.AssetGroup, error) {
+	var (
+		assetGroup = model.AssetGroup{
+			Name:        name,
+			Tag:         tag,
+			SystemGroup: systemGroup,
+		}
 
-	return assetGroup, CheckError(s.db.Create(&assetGroup))
+		auditEntry = model.AuditEntry{
+			Action: "Create Asset Group",
+			Model:  assetGroup.AuditData(),
+		}
+	)
+
+	return assetGroup, s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
+		return CheckError(tx.Create(&assetGroup))
+	})
 }
 
 func (s *BloodhoundDB) UpdateAssetGroup(assetGroup model.AssetGroup) error {
 	return CheckError(s.db.Save(&assetGroup))
 }
 
-func (s *BloodhoundDB) DeleteAssetGroup(assetGroup model.AssetGroup) error {
-	return CheckError(s.db.Delete(&assetGroup))
+func (s *BloodhoundDB) DeleteAssetGroup(ctx context.Context, assetGroup model.AssetGroup) error {
+	var (
+		auditEntry = model.AuditEntry{
+			Action: "Delete Asset Group",
+			Model:  assetGroup.AuditData(),
+		}
+	)
+
+	return s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
+		return CheckError(tx.Delete(&assetGroup))
+	})
 }
 
 func (s *BloodhoundDB) GetAssetGroup(id int32) (model.AssetGroup, error) {

@@ -407,7 +407,7 @@ func TestResources_CreateAssetGroup(t *testing.T) {
 		ResponseStatusCode(http.StatusBadRequest)
 
 	// Create DB Query fails
-	mockDB.EXPECT().CreateAssetGroup(gomock.Any(), gomock.Any(), gomock.Any()).Return(model.AssetGroup{}, fmt.Errorf("exploded"))
+	mockDB.EXPECT().CreateAssetGroup(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(model.AssetGroup{}, fmt.Errorf("exploded"))
 
 	requestTemplate.
 		WithBody(v2.CreateAssetGroupRequest{}).
@@ -416,7 +416,7 @@ func TestResources_CreateAssetGroup(t *testing.T) {
 		ResponseStatusCode(http.StatusInternalServerError)
 
 	// Success
-	mockDB.EXPECT().CreateAssetGroup(gomock.Any(), gomock.Any(), gomock.Any()).Return(model.AssetGroup{}, nil)
+	mockDB.EXPECT().CreateAssetGroup(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(model.AssetGroup{}, nil)
 
 	requestTemplate.
 		WithContext(&ctx.Context{
@@ -715,7 +715,7 @@ func TestResources_DeleteAssetGroup(t *testing.T) {
 
 	// DeleteAssetGroup DB fails
 	mockDB.EXPECT().GetAssetGroup(int32(1234)).Return(model.AssetGroup{}, nil)
-	mockDB.EXPECT().DeleteAssetGroup(model.AssetGroup{}).Return(fmt.Errorf("exploded"))
+	mockDB.EXPECT().DeleteAssetGroup(gomock.Any(), model.AssetGroup{}).Return(fmt.Errorf("exploded"))
 
 	requestTemplate.
 		WithURLPathVars(map[string]string{
@@ -727,7 +727,7 @@ func TestResources_DeleteAssetGroup(t *testing.T) {
 
 	// Success
 	mockDB.EXPECT().GetAssetGroup(int32(1234)).Return(model.AssetGroup{}, nil)
-	mockDB.EXPECT().DeleteAssetGroup(model.AssetGroup{}).Return(nil)
+	mockDB.EXPECT().DeleteAssetGroup(gomock.Any(), model.AssetGroup{}).Return(nil)
 
 	requestTemplate.
 		WithURLPathVars(map[string]string{

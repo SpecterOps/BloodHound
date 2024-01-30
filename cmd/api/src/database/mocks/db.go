@@ -112,18 +112,18 @@ func (mr *MockDatabaseMockRecorder) CreateADDataQualityStats(arg0 interface{}) *
 }
 
 // CreateAssetGroup mocks base method.
-func (m *MockDatabase) CreateAssetGroup(arg0, arg1 string, arg2 bool) (model.AssetGroup, error) {
+func (m *MockDatabase) CreateAssetGroup(arg0 context.Context, arg1, arg2 string, arg3 bool) (model.AssetGroup, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateAssetGroup", arg0, arg1, arg2)
+	ret := m.ctrl.Call(m, "CreateAssetGroup", arg0, arg1, arg2, arg3)
 	ret0, _ := ret[0].(model.AssetGroup)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // CreateAssetGroup indicates an expected call of CreateAssetGroup.
-func (mr *MockDatabaseMockRecorder) CreateAssetGroup(arg0, arg1, arg2 interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) CreateAssetGroup(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateAssetGroup", reflect.TypeOf((*MockDatabase)(nil).CreateAssetGroup), arg0, arg1, arg2)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateAssetGroup", reflect.TypeOf((*MockDatabase)(nil).CreateAssetGroup), arg0, arg1, arg2, arg3)
 }
 
 // CreateAssetGroupCollection mocks base method.
@@ -366,17 +366,17 @@ func (mr *MockDatabaseMockRecorder) CreateUserSession(arg0 interface{}) *gomock.
 }
 
 // DeleteAssetGroup mocks base method.
-func (m *MockDatabase) DeleteAssetGroup(arg0 model.AssetGroup) error {
+func (m *MockDatabase) DeleteAssetGroup(arg0 context.Context, arg1 model.AssetGroup) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DeleteAssetGroup", arg0)
+	ret := m.ctrl.Call(m, "DeleteAssetGroup", arg0, arg1)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // DeleteAssetGroup indicates an expected call of DeleteAssetGroup.
-func (mr *MockDatabaseMockRecorder) DeleteAssetGroup(arg0 interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) DeleteAssetGroup(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteAssetGroup", reflect.TypeOf((*MockDatabase)(nil).DeleteAssetGroup), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteAssetGroup", reflect.TypeOf((*MockDatabase)(nil).DeleteAssetGroup), arg0, arg1)
 }
 
 // DeleteAssetGroupSelector mocks base method.

@@ -616,7 +616,7 @@ func (s *BloodhoundDB) DeleteSAMLProvider(ctx context.Context, provider model.SA
 	)
 
 	return s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
-		return CheckError(s.db.Delete(&provider))
+		return CheckError(tx.Delete(&provider))
 	})
 }
 

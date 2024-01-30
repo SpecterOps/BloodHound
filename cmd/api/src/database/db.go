@@ -61,9 +61,9 @@ type Database interface {
 	DeleteIngestTask(ingestTask model.IngestTask) error
 	GetIngestTasksForJob(jobID int64) (model.IngestTasks, error)
 	GetUnfinishedIngestIDs() ([]int64, error)
-	CreateAssetGroup(name, tag string, systemGroup bool) (model.AssetGroup, error)
+	CreateAssetGroup(ctx context.Context, name, tag string, systemGroup bool) (model.AssetGroup, error)
 	UpdateAssetGroup(assetGroup model.AssetGroup) error
-	DeleteAssetGroup(assetGroup model.AssetGroup) error
+	DeleteAssetGroup(ctx context.Context, assetGroup model.AssetGroup) error
 	GetAssetGroup(id int32) (model.AssetGroup, error)
 	GetAllAssetGroups(order string, filter model.SQLFilter) (model.AssetGroups, error)
 	SweepAssetGroupCollections()
