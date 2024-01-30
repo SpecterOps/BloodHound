@@ -16,26 +16,10 @@
 
 import { FC } from 'react';
 import { Box, Link, List, ListItem, Typography } from '@mui/material';
-import { makeStyles } from '@mui/styles';
-
-const useStyles = makeStyles((theme) => ({
-    containsCodeEl: {
-        '& code': {
-            backgroundColor: 'darkgrey',
-            padding: '2px .5ch',
-            fontWeight: 'normal',
-            fontSize: '.875em',
-            borderRadius: '3px',
-            display: 'inline',
-
-            overflowWrap: 'break-word',
-            whiteSpace: 'pre-wrap',
-        },
-    },
-}));
+import { useHelpTextStyles } from '../utils';
 
 const LinuxAbuse: FC = () => {
-    const classes = useStyles();
+    const classes = useHelpTextStyles();
     const step1 = (
         <>
             <Typography variant='body2' className={classes.containsCodeEl}>
