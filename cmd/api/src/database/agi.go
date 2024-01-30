@@ -42,7 +42,7 @@ func (s *BloodhoundDB) CreateAssetGroup(ctx context.Context, name, tag string, s
 	)
 
 	return assetGroup, s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
-		return CheckError(tx.Create(assetGroup))
+		return CheckError(tx.Create(&assetGroup))
 	})
 }
 
