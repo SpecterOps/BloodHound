@@ -156,6 +156,52 @@ export const CommonSearches: CommonSearchType[] = [
         ],
     },
     {
+        subheader: 'Active Directory Certificate Services',
+        category: categoryAD,
+        queries: [
+            {
+                description: 'PKI hierarchy',
+                cypher: `MATCH p=()-[:HostsCAService|IssuedSignedBy|EnterpriseCAFor|RootCAFor|TrustedForNTAuth|NTAuthStoreFor*..]->()\nRETURN p`,
+            },
+            {
+                description: 'Public Key Services container',
+                cypher: `MATCH p = (c:Container)-[:Contains*..]->()\nWHERE c.distinguishedname starts with "CN=PUBLIC KEY SERVICES,CN=SERVICES,CN=CONFIGURATION,DC="\nRETURN p`,
+            },
+            {
+                description: 'Enrollment rights on published certificate templates',
+                cypher: `MATCH p = ()-[:Enroll|GenericAll|AllExtendedRights]->(ct:CertTemplate)-[:PublishedTo]->(:EnterpriseCA)\nRETURN p`,
+            },
+            {
+                description: 'Enrollment rights on published ESC1 certificate templates',
+                cypher: `MATCH p = ()-[:Enroll|GenericAll|AllExtendedRights]->(ct:CertTemplate)-[:PublishedTo]->(:EnterpriseCA)\nWHERE ct.enrolleesuppliessubject = True\nAND ct.authenticationenabled = True\nAND ct.requiresmanagerapproval = False\nRETURN p`,
+            },
+            {
+                description: 'Enrollment rights on published enrollment agent certificate templates',
+                cypher: `MATCH p = ()-[:Enroll|GenericAll|AllExtendedRights]->(ct:CertTemplate)-[:PublishedTo]->(:EnterpriseCA)\nWHERE ct.effectiveekus CONTAINS "1.3.6.1.4.1.311.20.2.1"\nOR ct.effectiveekus CONTAINS "2.5.29.37.0"\nOR SIZE(ct.effectiveekus) = 0\nRETURN p`,
+            },
+            {
+                description: 'Enrollment rights on published certificate templates with no security extension',
+                cypher: `MATCH p = ()-[:Enroll|GenericAll|AllExtendedRights]->(ct:CertTemplate)-[:PublishedTo]->(:EnterpriseCA)\nnWHERE ct.nosecurityextension = true\nRETURN p`,
+            },
+            {
+                description: 'Enrollment rights on certificate templates published to Enterprise CA with User Specified SAN enabled',
+                cypher: `MATCH p = ()-[:Enroll|GenericAll|AllExtendedRights]->(ct:CertTemplate)-[:PublishedTo]->(eca:EnterpriseCA)\nWHERE eca.isuserspecifiessanenabled = True\nRETURN p`,
+            },
+            {
+                description: 'CA administrators and CA managers',
+                cypher: `MATCH p = ()-[:ManageCertificates|ManageCA]->(:EnterpriseCA)\nRETURN p`,
+            },
+            {
+                description: 'Domain controllers with weak certificate binding enabled',
+                cypher: `MATCH p = (dc:Computer)-[:DCFor]->(d)\nWHERE dc.strongcertificatebindingenforcementraw = 0 OR dc.strongcertificatebindingenforcementraw = 1\nRETURN p`,
+            },
+            {
+                description: 'Domain controllers with UPN certificate mapping enabled',
+                cypher: `MATCH p = (dc:Computer)-[:DCFor]->(d)\nWHERE dc.certificatemappingmethodsraw IN [4, 5, 6, 7, 12, 13, 14, 15, 20, 21, 22, 23, 28, 29, 30, 31]\nRETURN p`,
+            }
+        ],
+    },
+    {
         subheader: 'General',
         category: categoryAzure,
         queries: [
