@@ -466,6 +466,7 @@ func (s *User) AuditData() AuditData {
 		"principal_name":   s.PrincipalName,
 		"roles":            s.Roles.IDs(),
 		"saml_provider_id": s.SAMLProviderID.ValueOrZero(),
+		"eula_accepted":    s.EULAAccepted,
 	}
 }
 
