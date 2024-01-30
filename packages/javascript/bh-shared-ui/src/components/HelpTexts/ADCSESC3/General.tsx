@@ -27,15 +27,14 @@ const General: FC<EdgeInfoProps> = ({ sourceName, sourceType, targetName }) => {
                 domain {targetName}.
             </Typography>
             <Typography variant='body2'>
-                The principal has permission to enroll on a certificate template with the Certificate Request Agent EKU
-                (OID 1.3.6.1.4.1.311.20.2.1), allowing them to obtain an enrollment agent certificate. They also have
-                permission to enroll for a certificate template that permits enrollment by enrollment agents and can be
-                used for authentication. Additionally, they also have enrollment permissions for an enterprise CA with
-                the necessary templates published. This enterprise CA is trusted for NT authentication in the forest,
-                along with the CA certificate chain up to the root CA certificate. This setup lets the principal enroll
-                certificates for any AD forest user or computer, enabling authentication and impersonation of any AD
-                forest user or computer without their credentials, unless the target user or computer is protected by
-                enrollment agent restrictions on the enterprise CA.
+                The principal has permission to enroll on a certificate allowing them to obtain an enrollment agent
+                certificate. They also have permission to enroll for a certificate template that permits enrollment by
+                enrollment agents and can be used for authentication. Additionally, they also have enrollment
+                permissions for an enterprise CA with the necessary templates published. This enterprise CA is trusted
+                for NT authentication in the forest, along with the CA certificate chain up to the root CA certificate.
+                This setup lets the principal enroll certificates for any AD forest user or computer, enabling
+                authentication and impersonation of any AD forest user or computer without their credentials, unless the
+                target user or computer is protected by enrollment agent restrictions on the enterprise CA.
             </Typography>
         </>
     );

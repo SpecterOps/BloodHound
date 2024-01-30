@@ -461,6 +461,7 @@ func (s *GraphTestContext) setupAzure() {
 	s.Harness.AZMGRoleManagementReadWriteDirectoryHarness.Setup(s)
 	s.Harness.AZMGServicePrincipalEndpointReadWriteAllHarness.Setup(s)
 	s.Harness.AZInboundControlHarness.Setup(s)
+	s.Harness.AZManagementGroup.Setup(s)
 }
 
 func (s *GraphTestContext) setupActiveDirectory() {

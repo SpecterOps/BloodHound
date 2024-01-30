@@ -31,6 +31,15 @@ const LinuxAbuse: FC = () => {
                 }
             </Typography>
             <Typography variant='body2'>
+                If the enrollment fails with an error message stating that the Email or DNS name is unavailable and
+                cannot be added to the Subject or Subject Alternate name, then it is because the enrollee principal does
+                not have their 'mail' or 'dNSHostName' attribute set, which is required by the certificate template. The
+                'mail' attribute can be set on both user and computer objects but the 'dNSHostName' attribute can only
+                be set on computer objects. Computers have validated write permission to their own 'dNSHostName'
+                attribute by default, but neither users nor computers can write to their own 'mail' attribute by
+                default.
+            </Typography>
+            <Typography variant='body2'>
                 <b>Step 2</b>: Request a ticket granting ticket (TGT) from the domain, specifying the certificate
                 created in Step 1 and the IP of a domain controller:
             </Typography>
