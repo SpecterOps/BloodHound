@@ -43,15 +43,15 @@ func testCondition(role auth.RoleTemplate, permission model.Permission) string {
 	return "SHOULD NOT"
 }
 
-func requireForbidden(t *testing.T, err error) {
+func requireForbidden(assert *require.Assertions, err error) {
 	var errByte []byte
 	errByte, err = json.Marshal(err)
-	require.Nil(t, err)
+	assert.Nil(err)
 
 	errWrapper := api.ErrorWrapper{}
 	err = json.Unmarshal(errByte, &errWrapper)
-	require.Nilf(t, err, "Failed to unmarshal error %v", string(errByte))
-	require.Equal(t, errWrapper.HTTPStatus, http.StatusForbidden)
+	assert.Nilf(err, "Failed to unmarshal error %v", string(errByte))
+	assert.Equal(errWrapper.HTTPStatus, http.StatusForbidden)
 }
 
 func testRoleAccess(t *testing.T, roleName string) {
@@ -71,9 +71,9 @@ func testRoleAccess(t *testing.T, roleName string) {
 
 			_, err := userClient.GetAppConfigs()
 			if role.Permissions.Has(auth.Permissions().AppReadApplicationConfiguration) {
-				require.Nil(t, err)
+				assert.Nil(err)
 			} else {
-				requireForbidden(t, err)
+				requireForbidden(assert, err)
 			}
 		}),
 
@@ -89,9 +89,9 @@ func testRoleAccess(t *testing.T, roleName string) {
 			}
 			_, err := userClient.PutAppConfig(updatedPasswordExpirationWindowParameter)
 			if role.Permissions.Has(auth.Permissions().AppWriteApplicationConfiguration) {
-				require.Nil(t, err)
+				assert.Nil(err)
 			} else {
-				requireForbidden(t, err)
+				requireForbidden(assert, err)
 			}
 		}),
 
@@ -100,13 +100,13 @@ func testRoleAccess(t *testing.T, roleName string) {
 			assert.True(ok)
 
 			user, err := userClient.GetSelf()
-			require.Nilf(t, err, "failed looking up user details")
+			assert.Nilf(err, "failed looking up user details")
 
 			_, err = userClient.ListUserTokens(user.ID)
 			if role.Permissions.Has(auth.Permissions().AuthCreateToken) {
-				require.Nil(t, err)
+				assert.Nil(err)
 			} else {
-				requireForbidden(t, err)
+				requireForbidden(assert, err)
 			}
 		}),
 
@@ -116,9 +116,9 @@ func testRoleAccess(t *testing.T, roleName string) {
 
 			_, err := userClient.ListSAMLIdentityProviders()
 			if role.Permissions.Has(auth.Permissions().AuthManageProviders) {
-				require.Nil(t, err)
+				assert.Nil(err)
 			} else {
-				requireForbidden(t, err)
+				requireForbidden(assert, err)
 			}
 		}),
 
@@ -128,9 +128,9 @@ func testRoleAccess(t *testing.T, roleName string) {
 
 			_, err := userClient.ListPermissions()
 			if role.Permissions.Has(auth.Permissions().AuthManageSelf) {
-				require.Nil(t, err)
+				assert.Nil(err)
 			} else {
-				requireForbidden(t, err)
+				requireForbidden(assert, err)
 			}
 		}),
 
@@ -140,9 +140,9 @@ func testRoleAccess(t *testing.T, roleName string) {
 
 			_, err := userClient.ListAuditLogs(time.Now(), time.Now(), 0, 0)
 			if role.Permissions.Has(auth.Permissions().AuthManageUsers) {
-				require.Nil(t, err)
+				assert.Nil(err)
 			} else {
-				requireForbidden(t, err)
+				requireForbidden(assert, err)
 			}
 		}),
 
@@ -152,9 +152,9 @@ func testRoleAccess(t *testing.T, roleName string) {
 
 			_, err := userClient.CreateFileUploadTask()
 			if role.Permissions.Has(auth.Permissions().GraphDBWrite) {
-				require.Nil(t, err)
+				assert.Nil(err)
 			} else {
-				requireForbidden(t, err)
+				requireForbidden(assert, err)
 			}
 		}),
 
@@ -164,9 +164,9 @@ func testRoleAccess(t *testing.T, roleName string) {
 
 			_, err := userClient.ListAssetGroups()
 			if role.Permissions.Has(auth.Permissions().GraphDBRead) {
-				require.Nil(t, err)
+				assert.Nil(err)
 			} else {
-				requireForbidden(t, err)
+				requireForbidden(assert, err)
 			}
 		}),
 
@@ -176,9 +176,9 @@ func testRoleAccess(t *testing.T, roleName string) {
 
 			_, err := userClient.ListSavedQueries()
 			if role.Permissions.Has(auth.Permissions().SavedQueriesRead) {
-				require.Nil(t, err)
+				assert.Nil(err)
 			} else {
-				requireForbidden(t, err)
+				requireForbidden(assert, err)
 			}
 		}),
 
@@ -188,9 +188,9 @@ func testRoleAccess(t *testing.T, roleName string) {
 
 			_, err := userClient.CreateSavedQuery()
 			if role.Permissions.Has(auth.Permissions().SavedQueriesWrite) {
-				require.Nil(t, err)
+				assert.Nil(err)
 			} else {
-				requireForbidden(t, err)
+				requireForbidden(assert, err)
 			}
 		}),
 	)
@@ -225,10 +225,10 @@ func TestRole_Administrator_ListOtherUserTokens(t *testing.T) {
 			assert.True(ok)
 
 			randoUser, err := uuid.NewV4()
-			require.Nilf(t, err, "failed to create rando user")
+			assert.Nilf(err, "failed to create rando user")
 
 			_, err = adminClient.ListUserTokens(randoUser)
-			require.Nil(t, err)
+			assert.Nil(err)
 		}),
 	)
 }
