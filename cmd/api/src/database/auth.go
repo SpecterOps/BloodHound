@@ -364,7 +364,7 @@ func (s *BloodhoundDB) CreateUser(user model.User) (model.User, error) {
 func (s *BloodhoundDB) UpdateUser(ctx context.Context, user model.User) error {
 	var (
 		auditEntry = model.AuditEntry{
-			Action: "Update User",
+			Action: "UpdateUser",
 			Model:  user.AuditData(),
 		}
 	)
@@ -610,7 +610,7 @@ func (s *BloodhoundDB) GetSAMLProvider(id int32) (model.SAMLProvider, error) {
 func (s *BloodhoundDB) DeleteSAMLProvider(ctx context.Context, provider model.SAMLProvider) error {
 	var (
 		auditEntry = model.AuditEntry{
-			Action: "Delete SAML Provider",
+			Action: "DeleteSAMLProvider",
 			Model:  provider.AuditData(),
 		}
 	)

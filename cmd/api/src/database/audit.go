@@ -44,6 +44,7 @@ func newAuditLog(context context.Context, entry model.AuditEntry, idResolver aut
 		RequestID: bheCtx.RequestID,
 		Source:    bheCtx.RequestIP,
 		Status:    string(entry.Status),
+		CommitID:  entry.CommitID,
 	}
 
 	authContext := bheCtx.AuthCtx

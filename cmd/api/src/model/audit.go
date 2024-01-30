@@ -43,6 +43,7 @@ type AuditLog struct {
 	RequestID  string                  `json:"request_id"`
 	Source     string                  `json:"source"`
 	Status     string                  `json:"status"`
+	CommitID   uuid.UUID               `json:"commit_id" gorm:"type:text"`
 }
 
 func (s AuditLog) String() string {

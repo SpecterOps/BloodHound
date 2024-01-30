@@ -1,9 +1,6 @@
 ALTER TABLE IF EXISTS audit_logs
-DROP CONSTRAINT IF EXISTS audit_logs_status_check;
-
-ALTER TABLE IF EXISTS audit_logs
+DROP CONSTRAINT IF EXISTS audit_logs_status_check,
 ADD CONSTRAINT status_check
-CHECK (status IN ('intent', 'success', 'failure'));
-
-ALTER TABLE IF EXISTS audit_logs
-ALTER COLUMN status SET DEFAULT 'intent';
+CHECK (status IN ('intent', 'success', 'failure')),
+ALTER COLUMN status SET DEFAULT 'intent',
+ADD COLUMN IF NOT EXISTS commit_id TEXT;

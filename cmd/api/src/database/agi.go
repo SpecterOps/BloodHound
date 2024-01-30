@@ -36,7 +36,7 @@ func (s *BloodhoundDB) CreateAssetGroup(ctx context.Context, name, tag string, s
 		}
 
 		auditEntry = model.AuditEntry{
-			Action: "Create Asset Group",
+			Action: "CreateAssetGroup",
 			Model:  assetGroup.AuditData(),
 		}
 	)
@@ -53,7 +53,7 @@ func (s *BloodhoundDB) UpdateAssetGroup(assetGroup model.AssetGroup) error {
 func (s *BloodhoundDB) DeleteAssetGroup(ctx context.Context, assetGroup model.AssetGroup) error {
 	var (
 		auditEntry = model.AuditEntry{
-			Action: "Delete Asset Group",
+			Action: "DeleteAssetGroup",
 			Model:  assetGroup.AuditData(),
 		}
 	)
@@ -236,12 +236,6 @@ func (s *BloodhoundDB) UpdateAssetGroupSelectors(ctx ctx.Context, assetGroup mod
 					})
 				}
 			}
-
-			// TODO: complex audit log transform
-			// ctx.AuditCtx = model.AuditContext{Action: "UpdateAssetGroupSelectors", Model: selectorSpec}
-			// if err := s.AppendAuditLog(ctx, "", selectorSpec); err != nil {
-			// 	return err
-			// }
 		}
 
 		return nil
