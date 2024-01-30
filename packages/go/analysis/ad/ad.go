@@ -19,12 +19,13 @@ package ad
 import (
 	"context"
 	"fmt"
-	"github.com/specterops/bloodhound/analysis"
-	"github.com/specterops/bloodhound/dawgs/traversal"
 	"sort"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/specterops/bloodhound/analysis"
+	"github.com/specterops/bloodhound/dawgs/traversal"
 
 	"github.com/specterops/bloodhound/analysis/impact"
 	"github.com/specterops/bloodhound/dawgs/cardinality"
@@ -549,6 +550,12 @@ func GetEdgeCompositionPath(ctx context.Context, db graph.Database, edge *graph.
 			} else {
 				pathSet = results
 			}
+		} else if edge.Kind == ad.ADCSESC6a {
+			if results, err := GetADCSESC6aEdgeComposition(ctx, db, edge); err != nil {
+				return err
+			} else {
+				pathSet = results
+			}
 		} else if edge.Kind == ad.ADCSESC9a {
 			if results, err := GetADCSESC9aEdgeComposition(ctx, db, edge); err != nil {
 				return err
@@ -632,6 +639,284 @@ func ADCSESC3Path3Pattern() traversal.PatternContinuation {
 			query.KindIn(query.End(), ad.EnterpriseCA),
 			query.KindIn(query.Relationship(), ad.Enroll),
 		))
+}
+
+func ADCSESC6aPath1Pattern() traversal.PatternContinuation {
+	return traversal.NewPattern().
+		OutboundWithDepth(0, 0, query.And(
+			query.Kind(query.Relationship(), ad.MemberOf),
+			query.Kind(query.End(), ad.Group),
+		)).
+		Outbound(query.And(
+			query.KindIn(query.End(), ad.EnterpriseCA),
+			query.Equals(query.EndProperty(ad.IsUserSpecifiesSanEnabled.String()), true),
+			query.KindIn(query.Relationship(), ad.Enroll),
+		))
+}
+
+func ADCSESC6aPath2Pattern(domainId graph.ID, enterpriseCAs cardinality.Duplex[uint32]) traversal.PatternContinuation {
+	return traversal.NewPattern().
+		OutboundWithDepth(0, 0, query.And(
+			query.Kind(query.Relationship(), ad.MemberOf),
+			query.Kind(query.End(), ad.Group),
+		)).
+		Outbound(query.And(
+			query.KindIn(query.Relationship(), ad.GenericAll, ad.Enroll, ad.AllExtendedRights),
+			query.Kind(query.End(), ad.CertTemplate),
+			query.And(
+				query.Equals(query.EndProperty(ad.RequiresManagerApproval.String()), false),
+				query.Equals(query.EndProperty(ad.NoSecurityExtension.String()), true),
+				query.Equals(query.EndProperty(ad.AuthenticationEnabled.String()), true),
+				query.Or(
+					query.Equals(query.EndProperty(ad.SchemaVersion.String()), 1),
+					query.And(
+						query.GreaterThan(query.EndProperty(ad.SchemaVersion.String()), 1),
+						query.Equals(query.EndProperty(ad.AuthorizedSignatures.String()), 0),
+					),
+				),
+			),
+		)).
+		Outbound(query.And(
+			query.KindIn(query.Relationship(), ad.PublishedTo),
+			query.InIDs(query.End(), cardinality.DuplexToGraphIDs(enterpriseCAs)...),
+			query.Kind(query.End(), ad.EnterpriseCA),
+		)).
+		Outbound(query.And(
+			query.KindIn(query.Relationship(), ad.IssuedSignedBy, ad.EnterpriseCAFor),
+			query.Kind(query.End(), ad.RootCA),
+		)).
+		Outbound(query.And(
+			query.KindIn(query.Relationship(), ad.RootCAFor),
+			query.Equals(query.EndID(), domainId),
+		))
+}
+
+func ADCSESC6aPath3Pattern(domainId graph.ID, enterpriseCAs, candidateTemplates cardinality.Duplex[uint32]) traversal.PatternContinuation {
+	return traversal.NewPattern().
+		OutboundWithDepth(0, 0, query.And(
+			query.Kind(query.Relationship(), ad.MemberOf),
+			query.Kind(query.End(), ad.Group),
+		)).
+		Outbound(query.And(
+			query.KindIn(query.Relationship(), ad.GenericAll, ad.Enroll, ad.AllExtendedRights),
+			query.KindIn(query.End(), ad.CertTemplate),
+			query.InIDs(query.EndID(), cardinality.DuplexToGraphIDs(candidateTemplates)...),
+		)).
+		Outbound(query.And(
+			query.KindIn(query.Relationship(), ad.PublishedTo),
+			query.KindIn(query.End(), ad.EnterpriseCA),
+			query.InIDs(query.End(), cardinality.DuplexToGraphIDs(enterpriseCAs)...))).
+		Outbound(query.And(
+			query.KindIn(query.Relationship(), ad.TrustedForNTAuth),
+			query.Kind(query.End(), ad.NTAuthStore),
+		)).
+		Outbound(query.And(
+			query.KindIn(query.Relationship(), ad.NTAuthStoreFor),
+			query.Equals(query.EndID(), domainId),
+		))
+}
+
+func ADCSESC6aPath4Pattern(domainId graph.ID, enterpriseCAs cardinality.Duplex[uint32]) traversal.PatternContinuation {
+	return traversal.NewPattern().
+		Outbound(
+			query.And(
+				query.Kind(query.Relationship(), ad.MemberOf),
+				query.Kind(query.End(), ad.Group),
+			)).
+		Outbound(query.And(
+			query.KindIn(query.Relationship(), ad.Enroll),
+			query.KindIn(query.End(), ad.EnterpriseCA),
+			query.InIDs(query.End(), cardinality.DuplexToGraphIDs(enterpriseCAs)...),
+		)).
+		Outbound(query.And(
+			query.KindIn(query.Relationship(), ad.CanAbuseWeakCertBinding),
+			query.KindIn(query.End(), ad.Computer),
+		)).
+		Outbound(query.And(
+			query.KindIn(query.Relationship(), ad.DCFor, ad.TrustedBy),
+			query.Equals(query.EndID(), domainId),
+		))
+}
+
+func GetADCSESC6aEdgeComposition(ctx context.Context, db graph.Database, edge *graph.Relationship) (graph.PathSet, error) {
+	var (
+		startNode            *graph.Node
+		traversalInst        = traversal.New(db, analysis.MaximumDatabaseParallelWorkers)
+		lock                 = &sync.Mutex{}
+		paths                = graph.PathSet{}
+		certTemplateSegments = map[graph.ID][]*graph.PathSegment{}
+		enterpriseCASegments = map[graph.ID][]*graph.PathSegment{}
+		certTemplates        = cardinality.NewBitmap32()
+		enterpriseCAs        = cardinality.NewBitmap32()
+		path1EnterpriseCAs   = cardinality.NewBitmap32()
+	)
+
+	if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
+		if node, err := ops.FetchNode(tx, edge.StartID); err != nil {
+			return err
+		} else {
+			startNode = node
+			return nil
+		}
+	}); err != nil {
+		return nil, err
+	}
+
+	if err := traversalInst.BreadthFirst(ctx, traversal.Plan{
+		Root: startNode,
+		Driver: ADCSESC6aPath1Pattern().Do(func(terminal *graph.PathSegment) error {
+			enterpriseCA := terminal.Search(func(nextSegment *graph.PathSegment) bool {
+				return nextSegment.Node.Kinds.ContainsOneOf(ad.EnterpriseCA)
+			})
+
+			lock.Lock()
+			path1EnterpriseCAs.Add(enterpriseCA.ID.Uint32())
+			lock.Unlock()
+
+			return nil
+		}),
+	}); err != nil {
+		return nil, err
+	}
+
+	if err := traversalInst.BreadthFirst(ctx, traversal.Plan{
+		Root: startNode,
+		Driver: ADCSESC6aPath2Pattern(edge.EndID, path1EnterpriseCAs).Do(func(terminal *graph.PathSegment) error {
+			certTemplate := terminal.Search(func(nextSegment *graph.PathSegment) bool {
+				return nextSegment.Node.Kinds.ContainsOneOf(ad.CertTemplate)
+			})
+
+			lock.Lock()
+			certTemplateSegments[certTemplate.ID] = append(certTemplateSegments[certTemplate.ID], terminal)
+			certTemplates.Add(certTemplate.ID.Uint32())
+			lock.Unlock()
+
+			return nil
+		})}); err != nil {
+		return nil, err
+	}
+	log.Infof("certtemplates %v", certTemplates.Slice())
+
+	if err := traversalInst.BreadthFirst(ctx, traversal.Plan{
+		Root: startNode,
+		Driver: ADCSESC6aPath3Pattern(edge.EndID, path1EnterpriseCAs, certTemplates).Do(func(terminal *graph.PathSegment) error {
+			certTemplate := terminal.Search(func(nextSegment *graph.PathSegment) bool {
+				return nextSegment.Node.Kinds.ContainsOneOf(ad.CertTemplate)
+			})
+
+			lock.Lock()
+			certTemplateSegments[certTemplate.ID] = append(certTemplateSegments[certTemplate.ID], terminal)
+			certTemplates.Add(certTemplate.ID.Uint32())
+			lock.Unlock()
+
+			return nil
+		})}); err != nil {
+		return nil, err
+	}
+
+	if err := traversalInst.BreadthFirst(ctx, traversal.Plan{
+		Root: startNode,
+		Driver: ADCSESC6aPath4Pattern(edge.EndID, path1EnterpriseCAs).Do(func(terminal *graph.PathSegment) error {
+			enterpriseCA := terminal.Search(func(nextSegment *graph.PathSegment) bool {
+				return nextSegment.Node.Kinds.ContainsOneOf(ad.EnterpriseCA)
+			})
+
+			lock.Lock()
+			paths.AddPath(terminal.Path())
+			enterpriseCASegments[enterpriseCA.ID] = append(enterpriseCASegments[enterpriseCA.ID], terminal)
+			enterpriseCAs.Add(enterpriseCA.ID.Uint32())
+			lock.Unlock()
+
+			return nil
+		}),
+	}); err != nil {
+		return nil, err
+	}
+
+	email, err := startNode.Properties.Get(common.Email.String()).String()
+	if err != nil {
+		log.Warnf("unable to access property %s for node with id %d: %v", common.Email.String(), startNode.ID, err)
+	}
+
+	if err := certTemplates.Each(func(value uint32) (bool, error) {
+
+		var certTemplate *graph.Node
+
+		if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
+			if node, err := ops.FetchNode(tx, graph.ID(value)); err != nil {
+				return err
+			} else {
+				certTemplate = node
+				return nil
+			}
+		}); err != nil {
+			return false, err
+		}
+
+		schemaVersion, err := certTemplate.Properties.Get(ad.SchemaVersion.String()).Float64()
+		if err != nil {
+			log.Warnf("unable to access property %s for certTemplate with id %d: %v", ad.SchemaVersion.String(), certTemplate.ID, err)
+		}
+		subjectAltRequireEmail, err := certTemplate.Properties.Get(ad.SubjectAltRequireEmail.String()).Bool()
+		if err != nil {
+			log.Warnf("unable to access property %s for certTemplate with id %d: %v", ad.SubjectAltRequireEmail.String(), certTemplate.ID, err)
+		}
+		subjectRequireEmail, err := certTemplate.Properties.Get(ad.SubjectRequireEmail.String()).Bool()
+		if err != nil {
+			log.Warnf("unable to access property %s for certTemplate with id %d: %v", ad.SubjectRequireEmail.String(), certTemplate.ID, err)
+		}
+		subjectAltRequireDNS, err := certTemplate.Properties.Get(ad.SubjectAltRequireDNS.String()).Bool()
+		if err != nil {
+			log.Warnf("unable to access property %s for certTemplate with id %d: %v", ad.SubjectAltRequireDNS.String(), certTemplate.ID, err)
+		}
+		subjectAltRequireDomainDNS, err := certTemplate.Properties.Get(ad.SubjectAltRequireDomainDNS.String()).Bool()
+		if err != nil {
+			log.Warnf("unable to access property %s for certTemplate with id %d: %v", ad.SubjectAltRequireDomainDNS.String(), certTemplate.ID, err)
+		}
+
+		for _, segment := range certTemplateSegments[graph.ID(value)] {
+
+			if startNode.Kinds.ContainsOneOf(ad.User) {
+				if subjectAltRequireDNS || subjectAltRequireDomainDNS {
+					continue
+				} else if email == "" && !((!subjectAltRequireEmail && !subjectRequireEmail) || schemaVersion == 1) {
+					continue
+				} else {
+					log.Infof("Found ESC6a Path: %s", graph.FormatPathSegment(segment))
+					paths.AddPath(segment.Path())
+				}
+			} else if startNode.Kinds.ContainsOneOf(ad.Computer) {
+				if email == "" && !((!subjectAltRequireEmail && !subjectRequireEmail) || schemaVersion == 1) {
+					continue
+				} else {
+					log.Infof("Found ESC6a Path: %s", graph.FormatPathSegment(segment))
+					paths.AddPath(segment.Path())
+				}
+			} else {
+				log.Infof("Found ESC6a Path: %s", graph.FormatPathSegment(segment))
+				paths.AddPath(segment.Path())
+			}
+
+		}
+
+		return true, nil
+	}); err != nil {
+		return paths, err
+	}
+
+	if paths.Len() > 0 {
+		if err := enterpriseCAs.Each(func(value uint32) (bool, error) {
+			for _, segment := range enterpriseCASegments[graph.ID(value)] {
+				paths.AddPath(segment.Path())
+			}
+			return true, nil
+
+		}); err != nil {
+			return paths, err
+		}
+	}
+
+	return paths, nil
 }
 
 func GetADCSESC3EdgeComposition(ctx context.Context, db graph.Database, edge *graph.Relationship) (graph.PathSet, error) {
