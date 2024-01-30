@@ -141,6 +141,9 @@ func PostEnterpriseCAFor(operation analysis.StatTrackedOperation[analysis.Create
 
 func processCertChainParent(node *graph.Node, tx graph.Transaction) ([]analysis.CreatePostRelationshipJob, error) {
 	if certChain, err := node.Properties.Get(ad.CertChain.String()).StringSlice(); err != nil {
+		if errors.Is(err, graph.ErrPropertyNotFound) {
+			return []analysis.CreatePostRelationshipJob{}, nil
+		}
 		return []analysis.CreatePostRelationshipJob{}, err
 	} else if len(certChain) > 1 {
 		parentCert := certChain[1]

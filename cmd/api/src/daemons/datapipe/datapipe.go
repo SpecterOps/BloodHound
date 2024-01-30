@@ -108,11 +108,11 @@ func (s *Daemon) analyze() {
 
 	if err := RunAnalysisOperations(s.ctx, s.db, s.graphdb, s.cfg); err != nil {
 		log.Errorf("Graph analysis failed: %v", err)
-		s.failJobsUnderAnalysis()
+		FailAnalyzedFileUploadJobs(s.ctx, s.db)
 
 		s.status.Update(model.DatapipeStatusIdle, false)
 	} else {
-		s.completeJobsUnderAnalysis()
+		CompleteAnalyzedFileUploadJobs(s.ctx, s.db)
 
 		if entityPanelCachingFlag, err := s.db.GetFlagByKey(appcfg.FeatureEntityPanelCaching); err != nil {
 			log.Errorf("Error retrieving entity panel caching flag: %v", err)
@@ -140,18 +140,6 @@ func (s *Daemon) ingestAvailableTasks() {
 	}
 }
 
-func (s *Daemon) getNumJobsWaitingForAnalysis() (int, error) {
-	numJobsWaitingForAnalysis := 0
-
-	if fileUploadJobsUnderAnalysis, err := s.db.GetFileUploadJobsWithStatus(model.JobStatusAnalyzing); err != nil {
-		return 0, err
-	} else {
-		numJobsWaitingForAnalysis += len(fileUploadJobsUnderAnalysis)
-	}
-
-	return numJobsWaitingForAnalysis, nil
-}
-
 func (s *Daemon) Start() {
 	var (
 		datapipeLoopTimer = time.NewTimer(s.tickInterval)
@@ -173,15 +161,15 @@ func (s *Daemon) Start() {
 			s.ingestAvailableTasks()
 
 			// Manage time-out state progression for file upload jobs
-			fileupload.ProcessStaleFileUploadJobs(s.db)
+			fileupload.ProcessStaleFileUploadJobs(s.ctx, s.db)
 
 			// Manage nominal state transitions for file upload jobs
-			s.processIngestedFileUploadJobs()
+			ProcessIngestedFileUploadJobs(s.ctx, s.db)
 
 			// If there are completed file upload jobs or if analysis was user-requested, perform analysis.
-			if numJobsWaitingForAnalysis, err := s.getNumJobsWaitingForAnalysis(); err != nil {
+			if hasJobsWaitingForAnalysis, err := HasFileUploadJobsWaitingForAnalysis(s.db); err != nil {
 				log.Errorf("Failed looking up jobs waiting for analysis: %v", err)
-			} else if numJobsWaitingForAnalysis > 0 || s.getAnalysisRequested() {
+			} else if hasJobsWaitingForAnalysis || s.getAnalysisRequested() {
 				s.analyze()
 			}
 
@@ -228,11 +216,9 @@ func (s *Daemon) clearOrphanedData() {
 				log.Errorf("Failed removing file: %s", fullPath)
 			}
 
-			// Check to see if we need to shutdown after every file deletion
-			select {
-			case <-s.ctx.Done():
+			// Check to see if we need to exit after every file deletion
+			if s.ctx.Err() != nil {
 				return
-			default:
 			}
 		}
 
