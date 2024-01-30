@@ -64,13 +64,13 @@ func (s *Route) Use(middleware ...mux.MiddlewareFunc) {
 	s.handler.Use(middleware...)
 }
 
-func (s *Route) RequireAuth() *Route {
-	return s.RequirePermissions()
+func (s *Route) RequireAuth(db database.Database) *Route {
+	return s.RequirePermissions(db)
 }
 
 // Ensure that the requestor has all of the listed permissions
-func (s *Route) RequirePermissions(permissions ...model.Permission) *Route {
-	s.handler.Use(middleware.PermissionsCheckAll(s.authorizer, permissions...))
+func (s *Route) RequirePermissions(db database.Database, permissions ...model.Permission) *Route {
+	s.handler.Use(middleware.PermissionsCheckAll(db, s.authorizer, permissions...))
 	return s
 }
 
@@ -80,8 +80,8 @@ func (s *Route) RequireAtLeastOnePermission(permissions ...model.Permission) *Ro
 	return s
 }
 
-func (s *Route) AuthorizeUserManagementAccess() *Route {
-	s.handler.Use(middleware.AuthorizeAuthManagementAccess(auth.Permissions(), s.authorizer))
+func (s *Route) AuthorizeUserManagementAccess(db database.Database) *Route {
+	s.handler.Use(middleware.AuthorizeAuthManagementAccess(db, auth.Permissions(), s.authorizer))
 	return s
 }
 
