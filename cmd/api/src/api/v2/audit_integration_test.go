@@ -57,7 +57,7 @@ func Test_ListAuditLogs(t *testing.T) {
 
 		// Expect one audit log entry from the deletion
 		auditLogs := testCtx.ListAuditLogs(deletionTimestamp, time.Now(), 0, 1000)
-		require.Equal(t, 2, len(auditLogs), "Expected only 2 audit log entries but saw %d", len(auditLogs))
+		require.Equal(t, 2, len(auditLogs), "Expected exactly 2 audit log entries but saw %d", len(auditLogs))
 
 		// Make sure these two actions are from the same request
 		require.Equal(t, auditLogs[0].RequestID, auditLogs[1].RequestID)
