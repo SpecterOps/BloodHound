@@ -72,10 +72,8 @@ func PostADCSESC10a(ctx context.Context, tx graph.Transaction, outC chan<- analy
 						query.KindIn(query.Node(), ad.User),
 						query.InIDs(query.NodeID(), cardinality.DuplexToGraphIDs(victimBitmap)...),
 					)
-				})); err != nil {
-					if !graph.IsErrNotFound(err) {
-						return err
-					}
+				})); err != nil && !graph.IsErrNotFound(err) {
+					continue
 				} else if len(userNodes) > 0 {
 					if subjRequireDns, err := template.Properties.Get(ad.SubjectAltRequireDNS.String()).Bool(); err != nil {
 						log.Debugf("Failed to retrieve subjectAltRequireDNS for template %d: %v", template.ID, err)
