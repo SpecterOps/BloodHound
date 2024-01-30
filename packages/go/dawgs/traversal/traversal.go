@@ -49,7 +49,9 @@ type PatternMatchDelegate = func(terminal *graph.PathSegment) error
 // The return value of the Do(...) function may be passed directly to a Traversal via a Plan as the Plan.Driver field.
 type PatternContinuation interface {
 	Outbound(criteria ...graph.Criteria) PatternContinuation
+	OutboundWithDepth(min, max int, criteria ...graph.Criteria) PatternContinuation
 	Inbound(criteria ...graph.Criteria) PatternContinuation
+	InboundWithDepth(min, max int, criteria ...graph.Criteria) PatternContinuation
 	Do(delegate PatternMatchDelegate) Driver
 }
 
@@ -57,6 +59,8 @@ type PatternContinuation interface {
 type expansion struct {
 	criteria  []graph.Criteria
 	direction graph.Direction
+	minDepth  int
+	maxDepth  int
 }
 
 func (s expansion) PrepareCriteria(segment *graph.PathSegment) (graph.Criteria, error) {
@@ -84,6 +88,7 @@ func (s expansion) PrepareCriteria(segment *graph.PathSegment) (graph.Criteria, 
 
 type patternTag struct {
 	patternIdx int
+	depth      int
 }
 
 func popSegmentPatternTag(segment *graph.PathSegment) *patternTag {
@@ -95,6 +100,7 @@ func popSegmentPatternTag(segment *graph.PathSegment) *patternTag {
 	} else {
 		tag = &patternTag{
 			patternIdx: 0,
+			depth:      0,
 		}
 	}
 
@@ -112,24 +118,60 @@ func (s *pattern) Do(delegate PatternMatchDelegate) Driver {
 	return s.Driver
 }
 
-// Outbound specifies the next outbound expansion step for this pattern.
-func (s *pattern) Outbound(criteria ...graph.Criteria) PatternContinuation {
+// OutboundWithDepth specifies the next outbound expansion step for this pattern with depth parameters.
+func (s *pattern) OutboundWithDepth(min, max int, criteria ...graph.Criteria) PatternContinuation {
+	if min < 0 {
+		min = 1
+		log.Warnf("Negative mindepth not allowed. Setting min depth for expansion to 1")
+	}
+
+	if max < 0 {
+		max = 0
+		log.Warnf("Negative maxdepth not allowed. Setting max depth for expansion to 0")
+	}
+
 	s.expansions = append(s.expansions, expansion{
 		criteria:  criteria,
 		direction: graph.DirectionOutbound,
+		minDepth:  min,
+		maxDepth:  max,
 	})
 
 	return s
 }
 
-// Inbound specifies the next inbound expansion step for this pattern.
-func (s *pattern) Inbound(criteria ...graph.Criteria) PatternContinuation {
+// Outbound specifies the next outbound expansion step for this pattern. By default, this expansion will use a minimum
+// depth of 1 to make the expansion required and a maximum depth of 0 to expand indefinitely.
+func (s *pattern) Outbound(criteria ...graph.Criteria) PatternContinuation {
+	return s.OutboundWithDepth(1, 0, criteria...)
+}
+
+// InboundWithDepth specifies the next inbound expansion step for this pattern with depth parameters.
+func (s *pattern) InboundWithDepth(min, max int, criteria ...graph.Criteria) PatternContinuation {
+	if min < 0 {
+		min = 1
+		log.Warnf("Negative mindepth not allowed. Setting min depth for expansion to 1")
+	}
+
+	if max < 0 {
+		max = 0
+		log.Warnf("Negative maxdepth not allowed. Setting max depth for expansion to 0")
+	}
+
 	s.expansions = append(s.expansions, expansion{
 		criteria:  criteria,
 		direction: graph.DirectionInbound,
+		minDepth:  min,
+		maxDepth:  max,
 	})
 
 	return s
+}
+
+// Inbound specifies the next inbound expansion step for this pattern. By default, this expansion will use a minimum
+// depth of 1 to make the expansion required and a maximum depth of 0 to expand indefinitely.
+func (s *pattern) Inbound(criteria ...graph.Criteria) PatternContinuation {
+	return s.InboundWithDepth(1, 0, criteria...)
 }
 
 // NewPattern returns a new PatternContinuation for building a new pattern.
@@ -152,9 +194,9 @@ func (s *pattern) Driver(ctx context.Context, tx graph.Transaction, segment *gra
 			for next := range cursor.Chan() {
 				nextSegment := segment.Descend(next.Node, next.Relationship)
 				nextSegment.Tag = &patternTag{
-					// Use the tag's patternIdx here since this is the reference that will see the increment when
-					// the current expansion is exhausted
+					// Use the tag's patternIdx and depth since this is a continuation of the expansions
 					patternIdx: tag.patternIdx,
+					depth:      tag.depth + 1,
 				}
 
 				nextSegments = append(nextSegments, nextSegment)
@@ -168,34 +210,51 @@ func (s *pattern) Driver(ctx context.Context, tx graph.Transaction, segment *gra
 	if fetchDirection, err := currentExpansion.direction.Reverse(); err != nil {
 		return nil, err
 	} else {
-		// Perform the current expansion.
-		if criteria, err := currentExpansion.PrepareCriteria(segment); err != nil {
-			return nil, err
-		} else if err := tx.Relationships().Filter(criteria).FetchDirection(fetchDirection, fetchFunc); err != nil {
-			return nil, err
-		}
-
-		// No further expansions means this pattern segment is complete. Increment the pattern index to select the
-		// next pattern expansion.
-		tag.patternIdx++
-
-		// Perform the next expansion if there is one.
-		if tag.patternIdx < len(s.expansions) {
-			nextExpansion := s.expansions[tag.patternIdx]
-
-			// Expand the next segments
-			if criteria, err := nextExpansion.PrepareCriteria(segment); err != nil {
+		// If no max depth was set or if a max depth was set expand the current step further
+		if currentExpansion.maxDepth == 0 || tag.depth < currentExpansion.maxDepth {
+			// Perform the current expansion.
+			if criteria, err := currentExpansion.PrepareCriteria(segment); err != nil {
 				return nil, err
 			} else if err := tx.Relationships().Filter(criteria).FetchDirection(fetchDirection, fetchFunc); err != nil {
 				return nil, err
 			}
-		} else if len(nextSegments) == 0 {
-			// If there are no expanded segments and there are no remaining expansions, this is a terminal segment.
-			// Hand it off to the delegate and handle any returned error.
-			if err := s.delegate(segment); err != nil {
-				return nil, err
+		}
+
+		// Check first if this current segment was fetched using the current expansion (i.e. non-optional)
+		if tag.depth > 0 && currentExpansion.minDepth == 0 || tag.depth >= currentExpansion.minDepth {
+			// No further expansions means this pattern segment is complete. Increment the pattern index to select the
+			// next pattern expansion. Additionally, set the depth back to zero for the tag since we are leaving the
+			// current expansion.
+			tag.patternIdx++
+			tag.depth = 0
+
+			// Perform the next expansion if there is one.
+			if tag.patternIdx < len(s.expansions) {
+				nextExpansion := s.expansions[tag.patternIdx]
+
+				// Expand the next segments
+				if criteria, err := nextExpansion.PrepareCriteria(segment); err != nil {
+					return nil, err
+				} else if err := tx.Relationships().Filter(criteria).FetchDirection(fetchDirection, fetchFunc); err != nil {
+					return nil, err
+				}
+
+				// If the next expansion is optional, make sure to preserve the current traversal branch
+				if nextExpansion.minDepth == 0 {
+					// Reattach the tag to the segment before adding it to the returned segments for the next expansion
+					segment.Tag = tag
+					nextSegments = append(nextSegments, segment)
+				}
+			} else if len(nextSegments) == 0 {
+				// If there are no expanded segments and there are no remaining expansions, this is a terminal segment.
+				// Hand it off to the delegate and handle any returned error.
+				if err := s.delegate(segment); err != nil {
+					return nil, err
+				}
 			}
 		}
+
+		// If the above condition does not match then this current expansion is non-terminal and non-continuable
 	}
 
 	// Return any collected segments

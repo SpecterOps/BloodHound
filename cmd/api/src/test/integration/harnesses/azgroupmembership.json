@@ -54,38 +54,25 @@
   },
   "nodes": [
     {
-      "id": "n0",
+      "id": "n1",
       "position": {
-        "x": 0,
-        "y": 0
+        "x": 505.40943703856345,
+        "y": 89.79253144038367
       },
       "caption": "Group",
-      "style": {},
       "labels": [
         "AZGroup"
       ],
-      "properties": {}
-    },
-    {
-      "id": "n1",
-      "position": {
-        "x": -276.40943703856345,
-        "y": -159.58506288076748
-      },
-      "caption": "UserA",
-      "style": {},
-      "labels": [
-        "AZUser"
-      ],
-      "properties": {}
+      "properties": {},
+      "style": {}
     },
     {
       "id": "n2",
       "position": {
-        "x": -276.40943703856345,
-        "y": 0
+        "x": 129,
+        "y": -4
       },
-      "caption": "UserB",
+      "caption": "UserA",
       "labels": [
         "AZUser"
       ],
@@ -95,8 +82,21 @@
     {
       "id": "n3",
       "position": {
-        "x": -276.40943703856345,
-        "y": 159.58506288076748
+        "x": 129,
+        "y": 155.58506288076748
+      },
+      "caption": "UserB",
+      "labels": [
+        "AZUser"
+      ],
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n4",
+      "position": {
+        "x": 129,
+        "y": 365.17012576153496
       },
       "caption": "UserC",
       "labels": [
@@ -104,32 +104,51 @@
       ],
       "properties": {},
       "style": {}
+    },
+    {
+      "id": "n5",
+      "position": {
+        "x": 129,
+        "y": -185.5850628807675
+      },
+      "caption": "Tenant",
+      "style": {},
+      "labels": [],
+      "properties": {}
     }
   ],
   "relationships": [
     {
       "id": "n0",
+      "fromId": "n2",
+      "toId": "n1",
       "type": "AZMemberOf",
-      "style": {},
       "properties": {},
-      "fromId": "n1",
-      "toId": "n0"
+      "style": {}
     },
     {
       "id": "n1",
+      "fromId": "n3",
+      "toId": "n1",
       "type": "AZMemberOf",
-      "style": {},
       "properties": {},
-      "fromId": "n2",
-      "toId": "n0"
+      "style": {}
     },
     {
       "id": "n2",
+      "fromId": "n4",
+      "toId": "n1",
       "type": "AZMemberOf",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n3",
+      "type": "AZContains",
       "style": {},
       "properties": {},
-      "fromId": "n3",
-      "toId": "n0"
+      "fromId": "n5",
+      "toId": "n1"
     }
   ]
 }
