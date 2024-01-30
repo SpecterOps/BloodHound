@@ -144,9 +144,7 @@ func PostADCSESC3(ctx context.Context, tx graph.Transaction, outC chan<- analysi
 
 								// Add principals to result set unless it's a user and DNS is required
 								if filteredResults, err := filterUserDNSResults(tx, tempResults, certTemplateOne); err != nil {
-									if !graph.IsErrNotFound(err) {
-										return err
-									}
+									log.Errorf("Error filtering user dns results: %v", err)
 								} else {
 									results.Or(filteredResults)
 								}
@@ -161,9 +159,7 @@ func PostADCSESC3(ctx context.Context, tx graph.Transaction, outC chan<- analysi
 								cache.EnterpriseCAEnrollers[eca2.ID])
 
 							if filteredResults, err := filterUserDNSResults(tx, tempResults, certTemplateOne); err != nil {
-								if !graph.IsErrNotFound(err) {
-									return err
-								}
+								log.Errorf("Error filtering user dns results: %v", err)
 							} else {
 								results.Or(filteredResults)
 							}
