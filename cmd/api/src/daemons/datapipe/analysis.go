@@ -53,53 +53,52 @@ func RunAnalysisOperations(ctx context.Context, db database.Database, graphDB gr
 	}
 
 	if err := adAnalysis.LinkWellKnownGroups(ctx, graphDB); err != nil {
-		// TODO: Continue refactoring like above
-		collector.Collect(fmt.Errorf("well known group linking failed: %w", err))
+		collectedErrors = append(collectedErrors, fmt.Errorf("well known group linking failed: %w", err))
 	}
 
 	if err := updateAssetGroupIsolationTags(ctx, db, graphDB); err != nil {
-		collector.Collect(fmt.Errorf("asset group isolation tagging failed: %w", err))
+		collectedErrors = append(collectedErrors, fmt.Errorf("asset group isolation tagging failed: %w", err))
 	}
 
 	if err := TagActiveDirectoryTierZero(ctx, graphDB); err != nil {
-		collector.Collect(fmt.Errorf("active directory tier zero tagging failed: %w", err))
+		collectedErrors = append(collectedErrors, fmt.Errorf("active directory tier zero tagging failed: %w", err))
 	}
 
 	if err := ParallelTagAzureTierZero(ctx, graphDB); err != nil {
-		collector.Collect(fmt.Errorf("azure tier zero tagging failed: %w", err))
+		collectedErrors = append(collectedErrors, fmt.Errorf("azure tier zero tagging failed: %w", err))
 	}
 
-	// TODO: Cleanup #ADCSFeatureFlag after full launch.
 	var (
 		adFailed          = false
 		azureFailed       = false
 		agiFailed         = false
 		dataQualityFailed = false
 	)
-
+	
+	// TODO: Cleanup #ADCSFeatureFlag after full launch.
 	if adcsFlag, err := db.GetFlagByKey(appcfg.FeatureAdcs); err != nil {
-		collector.Collect(fmt.Errorf("error retrieving ADCS feature flag: %w", err))
+		collectedErrors = append(collectedErrors, fmt.Errorf("error retrieving ADCS feature flag: %w", err))
 	} else if stats, err := ad.Post(ctx, graphDB, adcsFlag.Enabled); err != nil {
-		collector.Collect(fmt.Errorf("error during ad post: %w", err))
+		collectedErrors = append(collectedErrors, fmt.Errorf("error during ad post: %w", err))
 		adFailed = true
 	} else {
 		stats.LogStats()
 	}
 
 	if stats, err := azure.Post(ctx, graphDB); err != nil {
-		collector.Collect(fmt.Errorf("error during azure post: %w", err))
+		collectedErrors = append(collectedErrors, fmt.Errorf("error during azure post: %w", err))
 		azureFailed = true
 	} else {
 		stats.LogStats()
 	}
 
 	if err := agi.RunAssetGroupIsolationCollections(ctx, db, graphDB, analysis.GetNodeKindDisplayLabel); err != nil {
-		collector.Collect(fmt.Errorf("asset group isolation collection failed: %w", err))
+		collectedErrors = append(collectedErrors, fmt.Errorf("asset group isolation collection failed: %w", err))
 		agiFailed = true
 	}
 
 	if err := dataquality.SaveDataQuality(ctx, db, graphDB); err != nil {
-		collector.Collect(fmt.Errorf("error saving data quality stat: %v", err))
+		collectedErrors = append(collectedErrors, fmt.Errorf("error saving data quality stat: %v", err))
 		dataQualityFailed = true
 	}
 
