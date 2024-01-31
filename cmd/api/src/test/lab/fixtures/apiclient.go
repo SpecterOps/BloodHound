@@ -18,6 +18,7 @@ package fixtures
 
 import (
 	"fmt"
+	"github.com/specterops/bloodhound/src/config"
 	"log"
 
 	"github.com/specterops/bloodhound/lab"
@@ -25,9 +26,9 @@ import (
 	"github.com/specterops/bloodhound/src/api/v2/integration"
 )
 
-var BHApiClientFixture = NewApiClientFixture(BHApiFixture)
+var BHAdminApiClientFixture = NewAdminApiClientFixture(BHApiFixture)
 
-func NewApiClientFixture(apiFixture *lab.Fixture[bool]) *lab.Fixture[apiclient.Client] {
+func NewAdminApiClientFixture(apiFixture *lab.Fixture[bool]) *lab.Fixture[apiclient.Client] {
 	fixture := lab.NewFixture(func(harness *lab.Harness) (apiclient.Client, error) {
 		if config, ok := lab.Unpack(harness, ConfigFixture); !ok {
 			return apiclient.Client{}, fmt.Errorf("unable to unpack ConfigFixture")
@@ -55,6 +56,62 @@ func NewApiClientFixture(apiFixture *lab.Fixture[bool]) *lab.Fixture[apiclient.C
 		}
 	}, nil)
 	if err := lab.SetDependency(fixture, apiFixture); err != nil {
+		log.Fatalln(err)
+	}
+	return fixture
+}
+
+func NewUserApiClientFixture(adminApiFixture *lab.Fixture[apiclient.Client], roleNames ...string) *lab.Fixture[apiclient.Client] {
+	fixture := lab.NewFixture(func(harness *lab.Harness) (apiclient.Client, error) {
+		if configFixture, ok := lab.Unpack(harness, ConfigFixture); !ok {
+			return apiclient.Client{}, fmt.Errorf("unable to unpack ConfigFixture")
+		} else if adminClient, ok := lab.Unpack(harness, adminApiFixture); !ok {
+			return apiclient.Client{}, fmt.Errorf("unable to unpack adminApiFixture")
+		} else if username, err := config.GenerateSecureRandomString(7); err != nil {
+			return apiclient.Client{}, fmt.Errorf("unable to generate random username")
+		} else if secret, err := config.GenerateRandomBase64String(32); err != nil {
+			return apiclient.Client{}, fmt.Errorf("unable to generate secret")
+		} else if roles, err := adminClient.ListRoles(); err != nil {
+			return apiclient.Client{}, fmt.Errorf("unable to get roles")
+		} else {
+			var roleIds []int32
+			for _, r := range roleNames {
+				if foundRole, found := roles.Roles.FindByName(r); !found {
+					return apiclient.Client{}, fmt.Errorf("unable to find role")
+				} else {
+					roleIds = append(roleIds, foundRole.ID)
+				}
+			}
+
+			// Create user in database
+			if user, err := adminClient.CreateUser(username, "", roleIds); err != nil {
+				return apiclient.Client{}, fmt.Errorf("failed to create user in db")
+			} else {
+				if err := adminClient.SetUserSecret(user.ID, secret, false); err != nil {
+					return apiclient.Client{}, fmt.Errorf("failed resetting expired user password: %w", err)
+				}
+			}
+			// Get api client for user
+			client, err := apiclient.NewClient(configFixture.RootURL.String())
+			if err != nil {
+				return apiclient.Client{}, fmt.Errorf("unable to initialize api client: %w", err)
+			}
+
+			credentials := &apiclient.SecretCredentialsHandler{
+				Username: username,
+				Secret:   secret,
+			}
+			credentials.Client = client
+			client.Credentials = credentials
+
+			if _, err := client.GetSelf(); err != nil {
+				return apiclient.Client{}, fmt.Errorf("failed looking up user details: %w", err)
+			}
+
+			return client, nil
+		}
+	}, nil)
+	if err := lab.SetDependency(fixture, adminApiFixture); err != nil {
 		log.Fatalln(err)
 	}
 	return fixture

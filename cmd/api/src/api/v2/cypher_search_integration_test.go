@@ -33,21 +33,21 @@ import (
 
 func Test_CypherSearch(t *testing.T) {
 	var (
-		harness = harnesses.NewIntegrationTestHarness(fixtures.BHApiClientFixture)
+		harness = harnesses.NewIntegrationTestHarness(fixtures.BHAdminApiClientFixture)
 	)
 
 	lab.Pack(harness, fixtures.BasicComputerFixture)
 
 	lab.NewSpec(t, harness).Run(
 		lab.TestCase("errors on empty input", func(assert *require.Assertions, harness *lab.Harness) {
-			apiClient, ok := lab.Unpack(harness, fixtures.BHApiClientFixture)
+			apiClient, ok := lab.Unpack(harness, fixtures.BHAdminApiClientFixture)
 			assert.True(ok)
 
 			_, err := apiClient.CypherSearch(v2.CypherSearch{})
 			assert.ErrorContains(err, frontend.ErrInvalidInput.Error())
 		}),
 		lab.TestCase("errors on syntax mistake", func(assert *require.Assertions, harness *lab.Harness) {
-			apiClient, ok := lab.Unpack(harness, fixtures.BHApiClientFixture)
+			apiClient, ok := lab.Unpack(harness, fixtures.BHAdminApiClientFixture)
 			assert.True(ok)
 
 			_, err := apiClient.CypherSearch(v2.CypherSearch{
@@ -56,7 +56,7 @@ func Test_CypherSearch(t *testing.T) {
 			assert.ErrorContains(err, "extraneous input")
 		}),
 		lab.TestCase("errors on queries that are not supported", func(assert *require.Assertions, harness *lab.Harness) {
-			apiClient, ok := lab.Unpack(harness, fixtures.BHApiClientFixture)
+			apiClient, ok := lab.Unpack(harness, fixtures.BHAdminApiClientFixture)
 			assert.True(ok)
 
 			queryWithUpdateClause := "match (b) where b.name = 'test' remove b.prop return b"
@@ -66,7 +66,7 @@ func Test_CypherSearch(t *testing.T) {
 			assert.ErrorContains(err, frontend.ErrUpdateClauseNotSupported.Error())
 		}),
 		lab.TestCase("succesfully runs cypher query", func(assert *require.Assertions, harness *lab.Harness) {
-			apiClient, ok := lab.Unpack(harness, fixtures.BHApiClientFixture)
+			apiClient, ok := lab.Unpack(harness, fixtures.BHAdminApiClientFixture)
 			assert.True(ok)
 
 			graphResponse, err := apiClient.CypherSearch(v2.CypherSearch{

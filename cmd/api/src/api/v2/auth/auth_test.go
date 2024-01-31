@@ -237,7 +237,7 @@ func TestManagementResource_ListPermissions_SortingError(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
-	endpoint := "/api/v2/auth/permissions"
+	endpoint := "/api/v2/permissions"
 	mockDB := dbmocks.NewMockDatabase(mockCtrl)
 
 	config, err := config.NewDefaultConfiguration()
@@ -270,7 +270,7 @@ func TestManagementResource_ListPermissions_InvalidFilterPredicate(t *testing.T)
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
-	endpoint := "/api/v2/auth/permissions"
+	endpoint := "/api/v2/permissions"
 	mockDB := dbmocks.NewMockDatabase(mockCtrl)
 
 	config, err := config.NewDefaultConfiguration()
@@ -303,7 +303,7 @@ func TestManagementResource_ListPermissions_PredicateMismatchWithColumn(t *testi
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
-	endpoint := "/api/v2/auth/permissions"
+	endpoint := "/api/v2/permissions"
 	mockDB := dbmocks.NewMockDatabase(mockCtrl)
 
 	config, err := config.NewDefaultConfiguration()
@@ -336,7 +336,7 @@ func TestManagementResource_ListPermissions_DBError(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
-	endpoint := "/api/v2/auth/permissions"
+	endpoint := "/api/v2/permissions"
 	mockDB := dbmocks.NewMockDatabase(mockCtrl)
 	mockDB.EXPECT().GetAllPermissions("authority desc, name", model.SQLFilter{SQLString: "name = ?", Params: []any{"foo"}}).Return(model.Permissions{}, fmt.Errorf("foo"))
 
@@ -372,7 +372,7 @@ func TestManagementResource_ListPermissions(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
-	endpoint := "/api/v2/auth/permissions"
+	endpoint := "/api/v2/permissions"
 
 	perm1 := model.Permission{
 		Authority: "a",

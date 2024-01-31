@@ -449,29 +449,25 @@ func PostADCS(ctx context.Context, db graph.Database, groupExpansions impact.Pat
 	if !adcsEnabled {
 		return &analysis.AtomicPostProcessingStats{}, nil
 	}
-	operation := analysis.NewPostRelationshipOperation(ctx, db, "ADCS Post Processing")
 
 	if enterpriseCertAuthorities, err := FetchNodesByKind(ctx, db, ad.EnterpriseCA); err != nil {
-		operation.Done()
 		return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("failed fetching enterpriseCA nodes: %w", err)
 	} else if rootCertAuthorities, err := FetchNodesByKind(ctx, db, ad.RootCA); err != nil {
-		operation.Done()
 		return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("failed fetching rootCA nodes: %w", err)
 	} else if certTemplates, err := FetchNodesByKind(ctx, db, ad.CertTemplate); err != nil {
-		operation.Done()
 		return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("failed fetching cert template nodes: %w", err)
 	} else if domains, err := FetchNodesByKind(ctx, db, ad.Domain); err != nil {
-		operation.Done()
 		return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("failed fetching domain nodes: %w", err)
 	} else if step1Stats, err := postADCSPreProcessStep1(ctx, db, enterpriseCertAuthorities, rootCertAuthorities); err != nil {
-		operation.Done()
 		return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("failed adcs pre-processing step 1: %w", err)
 	} else if step2Stats, err := postADCSPreProcessStep2(ctx, db, certTemplates); err != nil {
-		operation.Done()
 		return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("failed adcs pre-processing step 2: %w", err)
 	} else {
+		operation := analysis.NewPostRelationshipOperation(ctx, db, "ADCS Post Processing")
+
 		operation.Stats.Merge(step1Stats)
 		operation.Stats.Merge(step2Stats)
+
 		var cache = NewADCSCache()
 		cache.BuildCache(ctx, db, enterpriseCertAuthorities, certTemplates)
 
