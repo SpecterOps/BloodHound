@@ -116,8 +116,8 @@ type Database interface {
 	GetAuthSecret(id int32) (model.AuthSecret, error)
 	UpdateAuthSecret(ctx context.Context, authSecret model.AuthSecret) error
 	DeleteAuthSecret(ctx context.Context, authSecret model.AuthSecret) error
-	CreateSAMLIdentityProvider(samlProvider model.SAMLProvider) (model.SAMLProvider, error)
-	UpdateSAMLIdentityProvider(samlProvider model.SAMLProvider) error
+	CreateSAMLIdentityProvider(ctx context.Context, samlProvider model.SAMLProvider) (model.SAMLProvider, error)
+	UpdateSAMLIdentityProvider(ctx context.Context, samlProvider model.SAMLProvider) error
 	LookupSAMLProviderByName(name string) (model.SAMLProvider, error)
 	GetAllSAMLProviders() (model.SAMLProviders, error)
 	GetSAMLProvider(id int32) (model.SAMLProvider, error)

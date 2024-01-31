@@ -306,18 +306,18 @@ func (mr *MockDatabaseMockRecorder) CreateRole(arg0 interface{}) *gomock.Call {
 }
 
 // CreateSAMLIdentityProvider mocks base method.
-func (m *MockDatabase) CreateSAMLIdentityProvider(arg0 model.SAMLProvider) (model.SAMLProvider, error) {
+func (m *MockDatabase) CreateSAMLIdentityProvider(arg0 context.Context, arg1 model.SAMLProvider) (model.SAMLProvider, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateSAMLIdentityProvider", arg0)
+	ret := m.ctrl.Call(m, "CreateSAMLIdentityProvider", arg0, arg1)
 	ret0, _ := ret[0].(model.SAMLProvider)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // CreateSAMLIdentityProvider indicates an expected call of CreateSAMLIdentityProvider.
-func (mr *MockDatabaseMockRecorder) CreateSAMLIdentityProvider(arg0 interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) CreateSAMLIdentityProvider(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateSAMLIdentityProvider", reflect.TypeOf((*MockDatabase)(nil).CreateSAMLIdentityProvider), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateSAMLIdentityProvider", reflect.TypeOf((*MockDatabase)(nil).CreateSAMLIdentityProvider), arg0, arg1)
 }
 
 // CreateSavedQuery mocks base method.
@@ -1457,17 +1457,17 @@ func (mr *MockDatabaseMockRecorder) UpdateRole(arg0 interface{}) *gomock.Call {
 }
 
 // UpdateSAMLIdentityProvider mocks base method.
-func (m *MockDatabase) UpdateSAMLIdentityProvider(arg0 model.SAMLProvider) error {
+func (m *MockDatabase) UpdateSAMLIdentityProvider(arg0 context.Context, arg1 model.SAMLProvider) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateSAMLIdentityProvider", arg0)
+	ret := m.ctrl.Call(m, "UpdateSAMLIdentityProvider", arg0, arg1)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // UpdateSAMLIdentityProvider indicates an expected call of UpdateSAMLIdentityProvider.
-func (mr *MockDatabaseMockRecorder) UpdateSAMLIdentityProvider(arg0 interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) UpdateSAMLIdentityProvider(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateSAMLIdentityProvider", reflect.TypeOf((*MockDatabase)(nil).UpdateSAMLIdentityProvider), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateSAMLIdentityProvider", reflect.TypeOf((*MockDatabase)(nil).UpdateSAMLIdentityProvider), arg0, arg1)
 }
 
 // UpdateUser mocks base method.
