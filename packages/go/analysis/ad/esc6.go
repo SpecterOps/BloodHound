@@ -203,20 +203,18 @@ func PostADCSESC6b(ctx context.Context, tx graph.Transaction, outC chan<- analys
 			}
 		}
 
-		if err := filterTempResultsForESC6(tx, tempResults, groupExpansions, validCertTemplates, cache).Each(
-			func(value uint32) (bool, error) {
+		filterTempResultsForESC6(tx, tempResults, groupExpansions, validCertTemplates, cache).Each(
+			func(value uint32) bool {
 				if !channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
 					FromID: graph.ID(value),
 					ToID:   domain.ID,
 					Kind:   ad.ADCSESC6b,
 				}) {
-					return false, nil
+					return false
 				} else {
-					return true, nil
+					return true
 				}
-			}); err != nil {
-			return err
-		}
+			})
 	}
 	return nil
 }
@@ -238,11 +236,11 @@ func isCertTemplateValidForEsc6b(reqManagerApproval, authenticationEnabled bool,
 func filterTempResultsForESC6(tx graph.Transaction, tempResults cardinality.Duplex[uint32], groupExpansions impact.PathAggregator, validCertTemplates []*graph.Node, cache ADCSCache) cardinality.Duplex[uint32] {
 	principalsEnabledForESC6 := cardinality.NewBitmap32()
 
-	tempResults.Each(func(value uint32) (bool, error) {
+	tempResults.Each(func(value uint32) bool {
 		sourceID := graph.ID(value)
 
 		if resultNode, err := tx.Nodes().Filter(query.Equals(query.NodeID(), sourceID)).First(); err != nil {
-			return true, nil
+			return true
 		} else {
 			if resultNode.Kinds.ContainsOneOf(ad.Group) {
 				//A Group will be added to the list since it requires no further conditions
@@ -259,7 +257,7 @@ func filterTempResultsForESC6(tx graph.Transaction, tempResults cardinality.Dupl
 				}
 			}
 		}
-		return true, nil
+		return true
 	})
 	return principalsEnabledForESC6
 }

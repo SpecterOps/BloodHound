@@ -58,6 +58,7 @@ func Run(cwd string, modPaths []string, env []string) ([]codeclimate.Entry, erro
 		result []codeclimate.Entry
 		args   = []string{"run", "--out-format", "code-climate", "--config", ".golangci.json", "--"}
 		outb   bytes.Buffer
+		errb   bytes.Buffer
 	)
 
 	args = append(args, slicesext.Map(modPaths, func(modPath string) string {
@@ -67,6 +68,7 @@ func Run(cwd string, modPaths []string, env []string) ([]codeclimate.Entry, erro
 	cmd := exec.Command("golangci-lint")
 	cmd.Env = env
 	cmd.Dir = cwd
+	cmd.Stderr = &errb
 	cmd.Stdout = &outb
 	cmd.Args = append(cmd.Args, args...)
 
@@ -82,6 +84,7 @@ func Run(cwd string, modPaths []string, env []string) ([]codeclimate.Entry, erro
 	log.Infof("Completed golangci-lint")
 
 	if err := json.NewDecoder(&outb).Decode(&result); err != nil {
+		log.Errorf("Failed to get valid output from golangci-lint. Error output: %s", errb)
 		return result, fmt.Errorf("failed to decode output: %w", err)
 	}
 

@@ -26,10 +26,6 @@ const (
 	deleteNodeWithIDStatement         = `delete from node where node.id = any($1)`
 	upsertNodeStatement               = `insert into node (graph_id, )`
 
-	nodePropertySetOnlyStatement      = `update node set kind_ids = $1, properties = properties || $2::jsonb where node.id = $3`
-	nodePropertyDeleteOnlyStatement   = `update node set kind_ids = $1, properties = properties - $2::text[] where node.id = $3`
-	nodePropertySetAndDeleteStatement = `update node set kind_ids = $1, properties =  properties || $2::jsonb - $3::text[]) where node.id = $4`
-
 	fetchEdgeStatement        = `select start_id, end_id, kind, properties from relationships where relationships.id = $1;`
 	fetchEdgeSliceStatement   = `select id, start_id, end_id, kind, properties from node where relationships.id = any($1);`
 	createEdgeStatement       = `insert into edge (graph_id, start_id, end_id, kind_id, properties) values ($1, $2, $3, $4, $5) returning id;`
@@ -40,17 +36,4 @@ const (
 	edgePropertySetOnlyStatement      = `update edge set properties = properties || $1::jsonb where edge.id = $2`
 	edgePropertyDeleteOnlyStatement   = `update edge set properties = properties - $1::text[] where edge.id = $2`
 	edgePropertySetAndDeleteStatement = `update edge set properties = properties || $1::jsonb - $2::text[] where edge.id = $3`
-
-	createNodesAndEdgeStatement = `with start_node as (insert into node (kinds, properties) values ($1, $2) returning id),
-end_node as (insert into node (kinds, properties) values ($3, $4) returning id)
-
-insert into relationships (start_id, end_id, kind, properties) values((select id from start_node), (select id from end_node), $5, $6);`
-
-	createStartNodeAndEdgeStatement = `with start_node as (insert into node (kinds, properties) values ($1, $2) returning id)
-
-insert into relationships (start_id, end_id, kind, properties) values((select id from start_node), $3, $4, $5);`
-
-	createEndNodeAndEdgeStatement = `with end_node as (insert into node (kinds, properties) values ($1, $2) returning id)
-
-insert into relationships (start_id, end_id, kind, properties) values($3, (select id from end_node), $4, $5);`
 )
