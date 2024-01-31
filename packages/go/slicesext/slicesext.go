@@ -118,9 +118,10 @@ func Init[T any](list []T) []T {
 	return list[:len(list)-1]
 }
 
+// Copyright 2021 The Go Authors. All rights reserved.
 // Concat returns a new slice concatenating the passed in slices.
-// This was ripped from go1.22 source and should be replaced with the stdlib
-// implementation when we move to 1.22
+// This was ripped from go1.22 source and should be replaced with the stdlib implementation when we move to 1.22
+// Original source: https://github.com/golang/go/blob/5c0d0929d3a6378c710376b55a49abd55b31a805/src/slices/slices.go#L502
 func Concat[S ~[]E, E any](s ...S) S {
 	size := 0
 	for _, slice := range s {

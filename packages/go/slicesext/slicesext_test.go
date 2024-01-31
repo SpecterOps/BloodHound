@@ -122,7 +122,9 @@ func BenchmarkTail(b *testing.B) {
 	}
 }
 
-// Ripped from go1.22 source, can be removed when we can switch to stdlib
+// Copyright 2021 The Go Authors. All rights reserved.
+// TestConcat was ripped from go1.22 source and should be replaced with the stdlib implementation when we move to 1.22
+// Original source: https://github.com/golang/go/blob/5c0d0929d3a6378c710376b55a49abd55b31a805/src/slices/slices_test.go#L1228
 func TestConcat(t *testing.T) {
 	cases := []struct {
 		s    [][]int
@@ -162,7 +164,9 @@ func TestConcat(t *testing.T) {
 	}
 }
 
-// Ripped from go1.22 source,  can be removed when we can switch to stdlib
+// Copyright 2021 The Go Authors. All rights reserved.
+// TestConcat was ripped from go1.22 source and should be replaced with the stdlib implementation when we move to 1.22
+// Original source: https://github.com/golang/go/blob/5c0d0929d3a6378c710376b55a49abd55b31a805/src/slices/slices_test.go#L1228
 func TestConcat_too_large(t *testing.T) {
 	// Use zero length element to minimize memory in testing
 	type void struct{}
