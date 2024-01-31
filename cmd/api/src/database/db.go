@@ -99,11 +99,11 @@ type Database interface {
 	CreateInstallation() (model.Installation, error)
 	GetInstallation() (model.Installation, error)
 	HasInstallation() (bool, error)
-	CreateUser(user model.User) (model.User, error)
+	CreateUser(ctx context.Context, user model.User) (model.User, error)
 	UpdateUser(ctx context.Context, user model.User) error
 	GetAllUsers(order string, filter model.SQLFilter) (model.Users, error)
 	GetUser(id uuid.UUID) (model.User, error)
-	DeleteUser(user model.User) error
+	DeleteUser(ctx context.Context, user model.User) error
 	LookupUser(principalName string) (model.User, error)
 	CreateAuthToken(ctx context.Context, authToken model.AuthToken) (model.AuthToken, error)
 	UpdateAuthToken(authToken model.AuthToken) error
@@ -115,9 +115,9 @@ type Database interface {
 	CreateAuthSecret(ctx context.Context, authSecret model.AuthSecret) (model.AuthSecret, error)
 	GetAuthSecret(id int32) (model.AuthSecret, error)
 	UpdateAuthSecret(ctx context.Context, authSecret model.AuthSecret) error
-	DeleteAuthSecret(authSecret model.AuthSecret) error
-	CreateSAMLIdentityProvider(ctx context.Context, samlProvider model.SAMLProvider) (model.SAMLProvider, error)
-	UpdateSAMLIdentityProvider(ctx context.Context, samlProvider model.SAMLProvider) error
+	DeleteAuthSecret(ctx context.Context, authSecret model.AuthSecret) error
+	CreateSAMLIdentityProvider(samlProvider model.SAMLProvider) (model.SAMLProvider, error)
+	UpdateSAMLIdentityProvider(samlProvider model.SAMLProvider) error
 	LookupSAMLProviderByName(name string) (model.SAMLProvider, error)
 	GetAllSAMLProviders() (model.SAMLProviders, error)
 	GetSAMLProvider(id int32) (model.SAMLProvider, error)

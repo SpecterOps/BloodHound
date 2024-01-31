@@ -476,7 +476,7 @@ func (s ManagementResource) CreateUser(response http.ResponseWriter, request *ht
 			}
 		}
 
-		if newUser, err := s.db.CreateUser(userTemplate); err != nil {
+		if newUser, err := s.db.CreateUser(request.Context(), userTemplate); err != nil {
 			api.HandleDatabaseError(request, response, err)
 		} else {
 			api.WriteBasicResponse(request.Context(), newUser, http.StatusOK, response)
@@ -495,7 +495,7 @@ func (s ManagementResource) updateUser(response http.ResponseWriter, request *ht
 
 func (s ManagementResource) ensureUserHasNoAuthSecret(context ctx.Context, user model.User) error {
 	if user.AuthSecret != nil {
-		if err := s.db.DeleteAuthSecret(*user.AuthSecret); err != nil {
+		if err := s.db.DeleteAuthSecret(context.ConstructGoContext(), *user.AuthSecret); err != nil {
 			return api.FormatDatabaseError(err)
 		} else {
 			return nil
@@ -602,7 +602,7 @@ func (s ManagementResource) DeleteUser(response http.ResponseWriter, request *ht
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsIDMalformed, request), response)
 	} else if user, err = s.db.GetUser(userID); err != nil {
 		api.HandleDatabaseError(request, response, err)
-	} else if err := s.db.DeleteUser(user); err != nil {
+	} else if err := s.db.DeleteUser(request.Context(), user); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
 		response.WriteHeader(http.StatusOK)

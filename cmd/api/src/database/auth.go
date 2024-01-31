@@ -343,7 +343,7 @@ func (s *BloodhoundDB) HasInstallation() (bool, error) {
 
 // CreateUser creates a new user
 // INSERT INTO users (...) VALUES (...)
-func (s *BloodhoundDB) CreateUser(user model.User) (model.User, error) {
+func (s *BloodhoundDB) CreateUser(ctx context.Context, user model.User) (model.User, error) {
 	updatedUser := user
 
 	if newID, err := uuid.NewV4(); err != nil {
@@ -355,8 +355,13 @@ func (s *BloodhoundDB) CreateUser(user model.User) (model.User, error) {
 		updatedUser.ID = newID
 	}
 
-	result := s.db.Create(&updatedUser)
-	return updatedUser, CheckError(result)
+	auditEntry := model.AuditEntry{
+		Action: "CreateUser",
+		Model:  &updatedUser,
+	}
+	return updatedUser, s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
+		return CheckError(tx.Create(&updatedUser))
+	})
 }
 
 // UpdateUser updates the roles associated with the user according to the input struct
@@ -412,18 +417,20 @@ func (s *BloodhoundDB) GetUser(id uuid.UUID) (model.User, error) {
 
 // DeleteUser removes all roles for a given user, thereby revoking all permissions
 // UPDATE users SET roles = nil WHERE user_id = ....
-func (s *BloodhoundDB) DeleteUser(user model.User) error {
-	err := s.db.Transaction(func(tx *gorm.DB) error {
+func (s *BloodhoundDB) DeleteUser(ctx context.Context, user model.User) error {
+	auditEntry := model.AuditEntry{
+		Action: "DeleteUser",
+		Model:  &user,
+	}
+
+	return s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
 		// Clear associations first
 		if err := tx.Model(&user).Association("Roles").Clear(); err != nil {
 			return err
 		}
 
-		result := tx.Delete(&user)
-		return CheckError(result)
+		return CheckError(tx.Delete(&user))
 	})
-
-	return err
 }
 
 // LookupUser retrieves the User row associated with the provided name. The name is matched against both the
@@ -571,9 +578,15 @@ func (s *BloodhoundDB) UpdateAuthSecret(ctx context.Context, authSecret model.Au
 
 // DeleteAuthSecret deletes the auth secret row corresponding to the struct specified
 // DELETE FROM auth_secrets WHERE user_id = ...
-func (s *BloodhoundDB) DeleteAuthSecret(authSecret model.AuthSecret) error {
-	result := s.db.Delete(&authSecret)
-	return CheckError(result)
+func (s *BloodhoundDB) DeleteAuthSecret(ctx context.Context, authSecret model.AuthSecret) error {
+	auditEntry := model.AuditEntry{
+		Action: "DeleteAuthSecret",
+		Model:  &authSecret,
+	}
+
+	return s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
+		return CheckError(tx.Delete(&authSecret))
+	})
 }
 
 // CreateSAMLProvider creates a new saml_providers row using the data in the input struct

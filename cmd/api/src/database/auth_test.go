@@ -65,7 +65,7 @@ func initAndCreateUser(t *testing.T) (database.Database, model.User) {
 		}
 	)
 
-	if newUser, err := dbInst.CreateUser(user); err != nil {
+	if newUser, err := dbInst.CreateUser(context.Background(), user); err != nil {
 		t.Fatalf("Error creating user: %v", err)
 	} else {
 		return dbInst, newUser
@@ -198,7 +198,7 @@ func TestDatabase_CreateGetUser(t *testing.T) {
 	)
 
 	for _, user := range users {
-		if _, err := dbInst.CreateUser(user); err != nil {
+		if _, err := dbInst.CreateUser(context.Background(), user); err != nil {
 			t.Fatalf("Error creating user: %v", err)
 		} else if newUser, err := dbInst.LookupUser(user.PrincipalName); err != nil {
 			t.Fatalf("Failed looking up user by principal %s: %v", user.PrincipalName, err)
@@ -304,7 +304,7 @@ func TestDatabase_CreateGetDeleteAuthSecret(t *testing.T) {
 			t.Fatalf("Expected updated auth secret digest to be %s but saw %s", updatedDigest, updatedSecret.Digest)
 		}
 
-		if err := dbInst.DeleteAuthSecret(newSecret); err != nil {
+		if err := dbInst.DeleteAuthSecret(ctx, newSecret); err != nil {
 			t.Fatalf("Failed to delete auth token: %v", err)
 		}
 	}

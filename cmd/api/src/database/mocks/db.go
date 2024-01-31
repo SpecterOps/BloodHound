@@ -306,18 +306,18 @@ func (mr *MockDatabaseMockRecorder) CreateRole(arg0 interface{}) *gomock.Call {
 }
 
 // CreateSAMLIdentityProvider mocks base method.
-func (m *MockDatabase) CreateSAMLIdentityProvider(arg0 context.Context, arg1 model.SAMLProvider) (model.SAMLProvider, error) {
+func (m *MockDatabase) CreateSAMLIdentityProvider(arg0 model.SAMLProvider) (model.SAMLProvider, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateSAMLIdentityProvider", arg0, arg1)
+	ret := m.ctrl.Call(m, "CreateSAMLIdentityProvider", arg0)
 	ret0, _ := ret[0].(model.SAMLProvider)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // CreateSAMLIdentityProvider indicates an expected call of CreateSAMLIdentityProvider.
-func (mr *MockDatabaseMockRecorder) CreateSAMLIdentityProvider(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) CreateSAMLIdentityProvider(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateSAMLIdentityProvider", reflect.TypeOf((*MockDatabase)(nil).CreateSAMLIdentityProvider), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateSAMLIdentityProvider", reflect.TypeOf((*MockDatabase)(nil).CreateSAMLIdentityProvider), arg0)
 }
 
 // CreateSavedQuery mocks base method.
@@ -336,18 +336,18 @@ func (mr *MockDatabaseMockRecorder) CreateSavedQuery(arg0, arg1, arg2 interface{
 }
 
 // CreateUser mocks base method.
-func (m *MockDatabase) CreateUser(arg0 model.User) (model.User, error) {
+func (m *MockDatabase) CreateUser(arg0 context.Context, arg1 model.User) (model.User, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateUser", arg0)
+	ret := m.ctrl.Call(m, "CreateUser", arg0, arg1)
 	ret0, _ := ret[0].(model.User)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // CreateUser indicates an expected call of CreateUser.
-func (mr *MockDatabaseMockRecorder) CreateUser(arg0 interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) CreateUser(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateUser", reflect.TypeOf((*MockDatabase)(nil).CreateUser), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateUser", reflect.TypeOf((*MockDatabase)(nil).CreateUser), arg0, arg1)
 }
 
 // CreateUserSession mocks base method.
@@ -394,17 +394,17 @@ func (mr *MockDatabaseMockRecorder) DeleteAssetGroupSelector(arg0, arg1 interfac
 }
 
 // DeleteAuthSecret mocks base method.
-func (m *MockDatabase) DeleteAuthSecret(arg0 model.AuthSecret) error {
+func (m *MockDatabase) DeleteAuthSecret(arg0 context.Context, arg1 model.AuthSecret) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DeleteAuthSecret", arg0)
+	ret := m.ctrl.Call(m, "DeleteAuthSecret", arg0, arg1)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // DeleteAuthSecret indicates an expected call of DeleteAuthSecret.
-func (mr *MockDatabaseMockRecorder) DeleteAuthSecret(arg0 interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) DeleteAuthSecret(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteAuthSecret", reflect.TypeOf((*MockDatabase)(nil).DeleteAuthSecret), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteAuthSecret", reflect.TypeOf((*MockDatabase)(nil).DeleteAuthSecret), arg0, arg1)
 }
 
 // DeleteAuthToken mocks base method.
@@ -464,17 +464,17 @@ func (mr *MockDatabaseMockRecorder) DeleteSavedQuery(arg0 interface{}) *gomock.C
 }
 
 // DeleteUser mocks base method.
-func (m *MockDatabase) DeleteUser(arg0 model.User) error {
+func (m *MockDatabase) DeleteUser(arg0 context.Context, arg1 model.User) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DeleteUser", arg0)
+	ret := m.ctrl.Call(m, "DeleteUser", arg0, arg1)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // DeleteUser indicates an expected call of DeleteUser.
-func (mr *MockDatabaseMockRecorder) DeleteUser(arg0 interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) DeleteUser(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteUser", reflect.TypeOf((*MockDatabase)(nil).DeleteUser), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteUser", reflect.TypeOf((*MockDatabase)(nil).DeleteUser), arg0, arg1)
 }
 
 // EndUserSession mocks base method.
@@ -1457,17 +1457,17 @@ func (mr *MockDatabaseMockRecorder) UpdateRole(arg0 interface{}) *gomock.Call {
 }
 
 // UpdateSAMLIdentityProvider mocks base method.
-func (m *MockDatabase) UpdateSAMLIdentityProvider(arg0 context.Context, arg1 model.SAMLProvider) error {
+func (m *MockDatabase) UpdateSAMLIdentityProvider(arg0 model.SAMLProvider) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateSAMLIdentityProvider", arg0, arg1)
+	ret := m.ctrl.Call(m, "UpdateSAMLIdentityProvider", arg0)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // UpdateSAMLIdentityProvider indicates an expected call of UpdateSAMLIdentityProvider.
-func (mr *MockDatabaseMockRecorder) UpdateSAMLIdentityProvider(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) UpdateSAMLIdentityProvider(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateSAMLIdentityProvider", reflect.TypeOf((*MockDatabase)(nil).UpdateSAMLIdentityProvider), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateSAMLIdentityProvider", reflect.TypeOf((*MockDatabase)(nil).UpdateSAMLIdentityProvider), arg0)
 }
 
 // UpdateUser mocks base method.
