@@ -24,7 +24,7 @@ import (
 	"os/exec"
 	"path/filepath"
 
-	slicesext "github.com/specterops/bloodhound/slicesext"
+	"github.com/specterops/bloodhound/slicesext"
 	"golang.org/x/mod/modfile"
 )
 

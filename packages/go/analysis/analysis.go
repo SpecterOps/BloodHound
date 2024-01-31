@@ -29,7 +29,7 @@ import (
 	"github.com/specterops/bloodhound/graphschema/azure"
 	"github.com/specterops/bloodhound/graphschema/common"
 	"github.com/specterops/bloodhound/log"
-	slicesext "github.com/specterops/bloodhound/slicesext"
+	"github.com/specterops/bloodhound/slicesext"
 )
 
 const (
