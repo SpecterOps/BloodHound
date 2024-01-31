@@ -535,7 +535,7 @@ func (s *BloodhoundDB) DeleteAuthToken(ctx context.Context, authToken model.Auth
 // INSERT INTO auth_secrets (...) VALUES (....)
 func (s *BloodhoundDB) CreateAuthSecret(ctx context.Context, authSecret model.AuthSecret) (model.AuthSecret, error) {
 	auditEntry := model.AuditEntry{
-		Action: "DeleteAuthToken",
+		Action: "CreateAuthSecret",
 		Model:  &authSecret,
 	}
 
