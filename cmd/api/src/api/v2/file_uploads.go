@@ -153,10 +153,9 @@ func (s Resources) EndFileUploadJob(response http.ResponseWriter, request *http.
 		api.HandleDatabaseError(request, response, err)
 	} else if fileUploadJob.Status != model.JobStatusRunning {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "job must be in running status to end", request), response)
-	} else if fileUploadJob, err := fileupload.EndFileUploadJob(s.DB, fileUploadJob); err != nil {
+	} else if err := fileupload.EndFileUploadJob(s.DB, fileUploadJob); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
-		s.TaskNotifier.NotifyOfFileUploadJobStatus(fileUploadJob)
 		response.WriteHeader(http.StatusOK)
 	}
 }

@@ -33,6 +33,15 @@ const LinuxAbuse: FC = () => {
                 }
             </Typography>
             <Typography variant='body2'>
+                If the enrollment fails with an error message stating that the Email or DNS name is unavailable and
+                cannot be added to the Subject or Subject Alternate name, then it is because the enrollee principal does
+                not have their 'mail' or 'dNSHostName' attribute set, which is required by the certificate template. The
+                'mail' attribute can be set on both user and computer objects but the 'dNSHostName' attribute can only
+                be set on computer objects. Computers have validated write permission to their own 'dNSHostName'
+                attribute by default, but neither users nor computers can write to their own 'mail' attribute by
+                default.
+            </Typography>
+            <Typography variant='body2'>
                 <Box component='span' sx={{ fontWeight: 'bold' }}>
                     Step 2:
                 </Box>{' '}
@@ -43,6 +52,12 @@ const LinuxAbuse: FC = () => {
                 {
                     "certipy req -u 'user@corp.local' -p 'password' -dc-ip 'DC_IP' -target 'ca_host' -ca 'ca_name' -template 'User' -on-behalf-of 'contoso\\administrator' -pfx 'user.pfx'"
                 }
+            </Typography>
+            <Typography variant='body2'>
+                If the enrollment fails with an error message stating that the Email or DNS name is unavailable and
+                cannot be added to the Subject or Subject Alternate name, then it is because the target principal does
+                not have their 'mail' or 'dNSHostName' attribute set, which is required by the certificate template.
+                Choose another target with the given attribute set.
             </Typography>
             <Typography variant='body2'>
                 <Box component='span' sx={{ fontWeight: 'bold' }}>

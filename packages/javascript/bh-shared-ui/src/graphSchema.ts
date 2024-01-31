@@ -128,9 +128,12 @@ export enum ActiveDirectoryRelationshipKind {
     ADCSESC4 = 'ADCSESC4',
     ADCSESC5 = 'ADCSESC5',
     ADCSESC6a = 'ADCSESC6a',
+    ADCSESC6b = 'ADCSESC6b',
     ADCSESC7 = 'ADCSESC7',
     ADCSESC9a = 'ADCSESC9a',
     ADCSESC9b = 'ADCSESC9b',
+    ADCSESC10a = 'ADCSESC10a',
+    ADCSESC10b = 'ADCSESC10b',
 }
 export function ActiveDirectoryRelationshipKindToDisplay(value: ActiveDirectoryRelationshipKind): string | undefined {
     switch (value) {
@@ -254,17 +257,31 @@ export function ActiveDirectoryRelationshipKindToDisplay(value: ActiveDirectoryR
             return 'ADCSESC5';
         case ActiveDirectoryRelationshipKind.ADCSESC6a:
             return 'ADCSESC6a';
+        case ActiveDirectoryRelationshipKind.ADCSESC6b:
+            return 'ADCSESC6b';
         case ActiveDirectoryRelationshipKind.ADCSESC7:
             return 'ADCSESC7';
         case ActiveDirectoryRelationshipKind.ADCSESC9a:
             return 'ADCSESC9a';
         case ActiveDirectoryRelationshipKind.ADCSESC9b:
             return 'ADCSESC9b';
+        case ActiveDirectoryRelationshipKind.ADCSESC10a:
+            return 'ADCSESC10a';
+        case ActiveDirectoryRelationshipKind.ADCSESC10b:
+            return 'ADCSESC10b';
         default:
             return undefined;
     }
 }
 export type ActiveDirectoryKind = ActiveDirectoryNodeKind | ActiveDirectoryRelationshipKind;
+export const EdgeCompositionRelationships = [
+    'GoldenCert',
+    'ADCSESC1',
+    'ADCSESC3',
+    'ADCSESC6a',
+    'ADCSESC9a',
+    'ADCSESC10a',
+];
 export enum ActiveDirectoryKindProperties {
     AdminCount = 'admincount',
     CASecurityCollected = 'casecuritycollected',
@@ -525,9 +542,12 @@ export function ActiveDirectoryPathfindingEdges(): ActiveDirectoryRelationshipKi
         ActiveDirectoryRelationshipKind.ADCSESC4,
         ActiveDirectoryRelationshipKind.ADCSESC5,
         ActiveDirectoryRelationshipKind.ADCSESC6a,
+        ActiveDirectoryRelationshipKind.ADCSESC6b,
         ActiveDirectoryRelationshipKind.ADCSESC7,
         ActiveDirectoryRelationshipKind.ADCSESC9a,
         ActiveDirectoryRelationshipKind.ADCSESC9b,
+        ActiveDirectoryRelationshipKind.ADCSESC10a,
+        ActiveDirectoryRelationshipKind.ADCSESC10b,
         ActiveDirectoryRelationshipKind.DCFor,
     ];
 }
