@@ -24,6 +24,7 @@ NodeKinds: [...types.#Kind]
 RelationshipKinds: [...types.#Kind]
 ACLRelationships: [...types.#Kind]
 PathfindingRelationships: [...types.#Kind]
+EdgeCompositionRelationships: [...types.#Kind]
 
 // Property name enumerations
 
@@ -996,6 +997,11 @@ ADCSESC6a: types.#Kind & {
 	schema: "active_directory"
 }
 
+ADCSESC6b: types.#Kind & {
+	symbol: "ADCSESC6b"
+	schema: "active_directory"
+}
+
 ADCSESC7: types.#Kind & {
 	symbol: "ADCSESC7"
 	schema: "active_directory"
@@ -1083,6 +1089,7 @@ RelationshipKinds: [
 	ADCSESC4,
 	ADCSESC5,
 	ADCSESC6a,
+	ADCSESC6b,
 	ADCSESC7,
 	ADCSESC9a,
 	ADCSESC9b,
@@ -1158,10 +1165,20 @@ PathfindingRelationships: [
 	ADCSESC4,
 	ADCSESC5,
 	ADCSESC6a,
+	ADCSESC6b,
 	ADCSESC7,
 	ADCSESC9a,
 	ADCSESC9b,
 	ADCSESC10a,
 	ADCSESC10b,
 	DCFor
+]
+
+EdgeCompositionRelationships: [
+	GoldenCert,
+	ADCSESC1,
+	ADCSESC3,
+	ADCSESC6a,
+	ADCSESC9a,
+	ADCSESC10a,
 ]

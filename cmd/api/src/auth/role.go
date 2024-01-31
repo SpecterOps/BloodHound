@@ -26,6 +26,7 @@ const (
 	RoleUploadOnly    = "Upload-Only"
 	RoleReadOnly      = "Read-Only"
 	RoleUser          = "User"
+	RolePowerUser     = "Power User"
 	RoleAdministrator = "Administrator"
 )
 
@@ -70,32 +71,52 @@ func Roles() map[string]RoleTemplate {
 			Name:        RoleReadOnly,
 			Description: "Used for integrations",
 			Permissions: model.Permissions{
-				permissions.GraphDBRead,
-				permissions.AuthManageSelf,
-				permissions.APsGenerateReport,
 				permissions.AppReadApplicationConfiguration,
+				permissions.APsGenerateReport,
+				permissions.AuthManageSelf,
+				permissions.GraphDBRead,
 			},
 		},
 		RoleUploadOnly: {
 			Name:        RoleUploadOnly,
 			Description: "Used for data collection clients, can post data but cannot read data",
 			Permissions: model.Permissions{
-				permissions.GraphDBWrite,
 				permissions.ClientsTasking,
+				permissions.GraphDBWrite,
 			},
 		},
 		RoleUser: {
 			Name:        RoleUser,
 			Description: "Can read data, modify asset group memberships",
 			Permissions: model.Permissions{
-				permissions.GraphDBRead,
+				permissions.AppReadApplicationConfiguration,
+				permissions.APsGenerateReport,
 				permissions.AuthCreateToken,
 				permissions.AuthManageSelf,
-				permissions.APsGenerateReport,
-				permissions.AppReadApplicationConfiguration,
+				permissions.ClientsRead,
+				permissions.GraphDBRead,
 				permissions.SavedQueriesRead,
 				permissions.SavedQueriesWrite,
+			},
+		},
+		RolePowerUser: {
+			Name:        RolePowerUser,
+			Description: "Can upload data, manage clients, and perform any action a User can",
+			Permissions: model.Permissions{
+				permissions.AppReadApplicationConfiguration,
+				permissions.AppWriteApplicationConfiguration,
+				permissions.APsGenerateReport,
+				permissions.APsManageAPs,
+				permissions.AuthCreateToken,
+				permissions.AuthManageSelf,
+				permissions.ClientsManage,
 				permissions.ClientsRead,
+				permissions.ClientsTasking,
+				permissions.CollectionManageJobs,
+				permissions.GraphDBWrite,
+				permissions.GraphDBRead,
+				permissions.SavedQueriesRead,
+				permissions.SavedQueriesWrite,
 			},
 		},
 		RoleAdministrator: {
