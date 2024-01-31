@@ -306,18 +306,18 @@ func (mr *MockDatabaseMockRecorder) CreateRole(arg0 interface{}) *gomock.Call {
 }
 
 // CreateSAMLIdentityProvider mocks base method.
-func (m *MockDatabase) CreateSAMLIdentityProvider(arg0 model.SAMLProvider) (model.SAMLProvider, error) {
+func (m *MockDatabase) CreateSAMLIdentityProvider(arg0 context.Context, arg1 model.SAMLProvider) (model.SAMLProvider, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateSAMLIdentityProvider", arg0)
+	ret := m.ctrl.Call(m, "CreateSAMLIdentityProvider", arg0, arg1)
 	ret0, _ := ret[0].(model.SAMLProvider)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // CreateSAMLIdentityProvider indicates an expected call of CreateSAMLIdentityProvider.
-func (mr *MockDatabaseMockRecorder) CreateSAMLIdentityProvider(arg0 interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) CreateSAMLIdentityProvider(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateSAMLIdentityProvider", reflect.TypeOf((*MockDatabase)(nil).CreateSAMLIdentityProvider), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateSAMLIdentityProvider", reflect.TypeOf((*MockDatabase)(nil).CreateSAMLIdentityProvider), arg0, arg1)
 }
 
 // CreateSavedQuery mocks base method.
@@ -380,17 +380,17 @@ func (mr *MockDatabaseMockRecorder) DeleteAssetGroup(arg0, arg1 interface{}) *go
 }
 
 // DeleteAssetGroupSelector mocks base method.
-func (m *MockDatabase) DeleteAssetGroupSelector(arg0 model.AssetGroupSelector) error {
+func (m *MockDatabase) DeleteAssetGroupSelector(arg0 context.Context, arg1 model.AssetGroupSelector) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DeleteAssetGroupSelector", arg0)
+	ret := m.ctrl.Call(m, "DeleteAssetGroupSelector", arg0, arg1)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // DeleteAssetGroupSelector indicates an expected call of DeleteAssetGroupSelector.
-func (mr *MockDatabaseMockRecorder) DeleteAssetGroupSelector(arg0 interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) DeleteAssetGroupSelector(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteAssetGroupSelector", reflect.TypeOf((*MockDatabase)(nil).DeleteAssetGroupSelector), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteAssetGroupSelector", reflect.TypeOf((*MockDatabase)(nil).DeleteAssetGroupSelector), arg0, arg1)
 }
 
 // DeleteAuthSecret mocks base method.
@@ -1290,20 +1290,6 @@ func (mr *MockDatabaseMockRecorder) RawFirst(arg0 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RawFirst", reflect.TypeOf((*MockDatabase)(nil).RawFirst), arg0)
 }
 
-// RemoveAssetGroupSelector mocks base method.
-func (m *MockDatabase) RemoveAssetGroupSelector(arg0 model.AssetGroupSelector) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "RemoveAssetGroupSelector", arg0)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// RemoveAssetGroupSelector indicates an expected call of RemoveAssetGroupSelector.
-func (mr *MockDatabaseMockRecorder) RemoveAssetGroupSelector(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveAssetGroupSelector", reflect.TypeOf((*MockDatabase)(nil).RemoveAssetGroupSelector), arg0)
-}
-
 // SavedQueryBelongsToUser mocks base method.
 func (m *MockDatabase) SavedQueryBelongsToUser(arg0 uuid.UUID, arg1 int) (bool, error) {
 	m.ctrl.T.Helper()
@@ -1372,31 +1358,31 @@ func (mr *MockDatabaseMockRecorder) SweepSessions() *gomock.Call {
 }
 
 // UpdateAssetGroup mocks base method.
-func (m *MockDatabase) UpdateAssetGroup(arg0 model.AssetGroup) error {
+func (m *MockDatabase) UpdateAssetGroup(arg0 context.Context, arg1 model.AssetGroup) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateAssetGroup", arg0)
+	ret := m.ctrl.Call(m, "UpdateAssetGroup", arg0, arg1)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // UpdateAssetGroup indicates an expected call of UpdateAssetGroup.
-func (mr *MockDatabaseMockRecorder) UpdateAssetGroup(arg0 interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) UpdateAssetGroup(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateAssetGroup", reflect.TypeOf((*MockDatabase)(nil).UpdateAssetGroup), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateAssetGroup", reflect.TypeOf((*MockDatabase)(nil).UpdateAssetGroup), arg0, arg1)
 }
 
 // UpdateAssetGroupSelector mocks base method.
-func (m *MockDatabase) UpdateAssetGroupSelector(arg0 model.AssetGroupSelector) error {
+func (m *MockDatabase) UpdateAssetGroupSelector(arg0 context.Context, arg1 model.AssetGroupSelector) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateAssetGroupSelector", arg0)
+	ret := m.ctrl.Call(m, "UpdateAssetGroupSelector", arg0, arg1)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // UpdateAssetGroupSelector indicates an expected call of UpdateAssetGroupSelector.
-func (mr *MockDatabaseMockRecorder) UpdateAssetGroupSelector(arg0 interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) UpdateAssetGroupSelector(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateAssetGroupSelector", reflect.TypeOf((*MockDatabase)(nil).UpdateAssetGroupSelector), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateAssetGroupSelector", reflect.TypeOf((*MockDatabase)(nil).UpdateAssetGroupSelector), arg0, arg1)
 }
 
 // UpdateAssetGroupSelectors mocks base method.
@@ -1471,17 +1457,17 @@ func (mr *MockDatabaseMockRecorder) UpdateRole(arg0 interface{}) *gomock.Call {
 }
 
 // UpdateSAMLIdentityProvider mocks base method.
-func (m *MockDatabase) UpdateSAMLIdentityProvider(arg0 model.SAMLProvider) error {
+func (m *MockDatabase) UpdateSAMLIdentityProvider(arg0 context.Context, arg1 model.SAMLProvider) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateSAMLIdentityProvider", arg0)
+	ret := m.ctrl.Call(m, "UpdateSAMLIdentityProvider", arg0, arg1)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // UpdateSAMLIdentityProvider indicates an expected call of UpdateSAMLIdentityProvider.
-func (mr *MockDatabaseMockRecorder) UpdateSAMLIdentityProvider(arg0 interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) UpdateSAMLIdentityProvider(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateSAMLIdentityProvider", reflect.TypeOf((*MockDatabase)(nil).UpdateSAMLIdentityProvider), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateSAMLIdentityProvider", reflect.TypeOf((*MockDatabase)(nil).UpdateSAMLIdentityProvider), arg0, arg1)
 }
 
 // UpdateUser mocks base method.

@@ -46,8 +46,17 @@ func (s *BloodhoundDB) CreateAssetGroup(ctx context.Context, name, tag string, s
 	})
 }
 
-func (s *BloodhoundDB) UpdateAssetGroup(assetGroup model.AssetGroup) error {
-	return CheckError(s.db.Save(&assetGroup))
+func (s *BloodhoundDB) UpdateAssetGroup(ctx context.Context, assetGroup model.AssetGroup) error {
+	var (
+		auditEntry = model.AuditEntry{
+			Action: "UpdateAssetGroup",
+			Model:  &assetGroup, // Pointer is required to ensure success log contains updated fields after transaction
+		}
+	)
+
+	return s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
+		return CheckError(tx.Save(&assetGroup))
+	})
 }
 
 func (s *BloodhoundDB) DeleteAssetGroup(ctx context.Context, assetGroup model.AssetGroup) error {
@@ -169,16 +178,30 @@ func (s *BloodhoundDB) GetAssetGroupSelector(id int32) (model.AssetGroupSelector
 	return assetGroupSelector, CheckError(s.db.Find(&assetGroupSelector, id))
 }
 
-func (s *BloodhoundDB) UpdateAssetGroupSelector(selector model.AssetGroupSelector) error {
-	return CheckError(s.db.Save(&selector))
+func (s *BloodhoundDB) UpdateAssetGroupSelector(ctx context.Context, selector model.AssetGroupSelector) error {
+	var (
+		auditEntry = model.AuditEntry{
+			Action: "UpdateAssetGroupSelector",
+			Model:  &selector, // Pointer is required to ensure success log contains updated fields after transaction
+		}
+	)
+
+	return s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
+		return CheckError(tx.Save(&selector))
+	})
 }
 
-func (s *BloodhoundDB) DeleteAssetGroupSelector(selector model.AssetGroupSelector) error {
-	return CheckError(s.db.Delete(&selector))
-}
+func (s *BloodhoundDB) DeleteAssetGroupSelector(ctx context.Context, selector model.AssetGroupSelector) error {
+	var (
+		auditEntry = model.AuditEntry{
+			Action: "DeleteAssetGroupSelector",
+			Model:  &selector, // Pointer is required to ensure success log contains updated fields after transaction
+		}
+	)
 
-func (s *BloodhoundDB) RemoveAssetGroupSelector(selector model.AssetGroupSelector) error {
-	return CheckError(s.db.Where("asset_group_id=? AND name=?", selector.AssetGroupID, selector.Name).Delete(&model.AssetGroupSelector{}))
+	return s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
+		return CheckError(tx.Delete(&selector))
+	})
 }
 
 func (s *BloodhoundDB) CreateRawAssetGroupSelector(assetGroup model.AssetGroup, name, selector string) (model.AssetGroupSelector, error) {

@@ -152,7 +152,7 @@ func (s ManagementResource) CreateSAMLProviderMultipart(response http.ResponseWr
 			samlIdentityProvider.IssuerURI = metadata.EntityID
 			samlIdentityProvider.SingleSignOnURI = ssoURL
 
-			if newSAMLProvider, err := s.db.CreateSAMLIdentityProvider(samlIdentityProvider); err != nil {
+			if newSAMLProvider, err := s.db.CreateSAMLIdentityProvider(request.Context(), samlIdentityProvider); err != nil {
 				api.HandleDatabaseError(request, response, err)
 			} else {
 				api.WriteBasicResponse(request.Context(), newSAMLProvider, http.StatusOK, response)

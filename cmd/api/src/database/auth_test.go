@@ -326,7 +326,7 @@ func TestDatabase_CreateSAMLProvider(t *testing.T) {
 		SingleSignOnURI: "https://idp.example.com/sso",
 	}
 
-	if newSAMLProvider, err := dbInst.CreateSAMLIdentityProvider(samlProvider); err != nil {
+	if newSAMLProvider, err := dbInst.CreateSAMLIdentityProvider(context.Background(), samlProvider); err != nil {
 		t.Fatalf("Failed to create SAML provider: %v", err)
 	} else {
 		user.SAMLProviderID = null.Int32From(newSAMLProvider.ID)
