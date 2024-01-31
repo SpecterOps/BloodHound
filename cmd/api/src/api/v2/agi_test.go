@@ -363,7 +363,7 @@ func TestResources_UpdateAssetGroup(t *testing.T) {
 
 	// UpdateAssetGroup DB fails
 	mockDB.EXPECT().GetAssetGroup(int32(1234)).Return(model.AssetGroup{}, nil)
-	mockDB.EXPECT().UpdateAssetGroup(model.AssetGroup{}).Return(fmt.Errorf("exploded"))
+	mockDB.EXPECT().UpdateAssetGroup(gomock.Any(), model.AssetGroup{}).Return(fmt.Errorf("exploded"))
 
 	requestTemplate.
 		WithURLPathVars(map[string]string{
@@ -376,7 +376,7 @@ func TestResources_UpdateAssetGroup(t *testing.T) {
 
 	// Success
 	mockDB.EXPECT().GetAssetGroup(int32(1234)).Return(model.AssetGroup{}, nil)
-	mockDB.EXPECT().UpdateAssetGroup(model.AssetGroup{}).Return(nil)
+	mockDB.EXPECT().UpdateAssetGroup(gomock.Any(), model.AssetGroup{}).Return(nil)
 
 	requestTemplate.
 		WithURLPathVars(map[string]string{
@@ -811,7 +811,7 @@ func TestResources_DeleteAssetGroupSelector(t *testing.T) {
 	// DeleteAssetGroupSelector DB fails
 	mockDB.EXPECT().GetAssetGroup(int32(1234)).Return(model.AssetGroup{}, nil)
 	mockDB.EXPECT().GetAssetGroupSelector(int32(1234)).Return(model.AssetGroupSelector{}, nil)
-	mockDB.EXPECT().DeleteAssetGroupSelector(model.AssetGroupSelector{}).Return(fmt.Errorf("exploded"))
+	mockDB.EXPECT().DeleteAssetGroupSelector(gomock.Any(), model.AssetGroupSelector{}).Return(fmt.Errorf("exploded"))
 
 	requestTemplate.
 		WithURLPathVars(map[string]string{
@@ -825,7 +825,7 @@ func TestResources_DeleteAssetGroupSelector(t *testing.T) {
 	// Success
 	mockDB.EXPECT().GetAssetGroup(int32(1234)).Return(model.AssetGroup{}, nil)
 	mockDB.EXPECT().GetAssetGroupSelector(int32(1234)).Return(model.AssetGroupSelector{}, nil)
-	mockDB.EXPECT().DeleteAssetGroupSelector(model.AssetGroupSelector{}).Return(nil)
+	mockDB.EXPECT().DeleteAssetGroupSelector(gomock.Any(), model.AssetGroupSelector{}).Return(nil)
 
 	requestTemplate.
 		WithURLPathVars(map[string]string{

@@ -62,7 +62,7 @@ type Database interface {
 	GetIngestTasksForJob(jobID int64) (model.IngestTasks, error)
 	GetUnfinishedIngestIDs() ([]int64, error)
 	CreateAssetGroup(ctx context.Context, name, tag string, systemGroup bool) (model.AssetGroup, error)
-	UpdateAssetGroup(assetGroup model.AssetGroup) error
+	UpdateAssetGroup(ctx context.Context, assetGroup model.AssetGroup) error
 	DeleteAssetGroup(ctx context.Context, assetGroup model.AssetGroup) error
 	GetAssetGroup(id int32) (model.AssetGroup, error)
 	GetAllAssetGroups(order string, filter model.SQLFilter) (model.AssetGroups, error)
@@ -72,9 +72,8 @@ type Database interface {
 	GetTimeRangedAssetGroupCollections(assetGroupID int32, from int64, to int64, order string) (model.AssetGroupCollections, error)
 	GetAllAssetGroupCollections() (model.AssetGroupCollections, error)
 	GetAssetGroupSelector(id int32) (model.AssetGroupSelector, error)
-	UpdateAssetGroupSelector(selector model.AssetGroupSelector) error
-	DeleteAssetGroupSelector(selector model.AssetGroupSelector) error
-	RemoveAssetGroupSelector(selector model.AssetGroupSelector) error
+	UpdateAssetGroupSelector(ctx context.Context, selector model.AssetGroupSelector) error
+	DeleteAssetGroupSelector(ctx context.Context, selector model.AssetGroupSelector) error
 	CreateRawAssetGroupSelector(assetGroup model.AssetGroup, name, selector string) (model.AssetGroupSelector, error)
 	CreateAssetGroupSelector(assetGroup model.AssetGroup, spec model.AssetGroupSelectorSpec, systemSelector bool) (model.AssetGroupSelector, error)
 	UpdateAssetGroupSelectors(ctx ctx.Context, assetGroup model.AssetGroup, selectorSpecs []model.AssetGroupSelectorSpec, systemSelector bool) (model.UpdatedAssetGroupSelectors, error)
@@ -117,8 +116,8 @@ type Database interface {
 	GetAuthSecret(id int32) (model.AuthSecret, error)
 	UpdateAuthSecret(ctx context.Context, authSecret model.AuthSecret) error
 	DeleteAuthSecret(authSecret model.AuthSecret) error
-	CreateSAMLIdentityProvider(samlProvider model.SAMLProvider) (model.SAMLProvider, error)
-	UpdateSAMLIdentityProvider(samlProvider model.SAMLProvider) error
+	CreateSAMLIdentityProvider(ctx context.Context, samlProvider model.SAMLProvider) (model.SAMLProvider, error)
+	UpdateSAMLIdentityProvider(ctx context.Context, samlProvider model.SAMLProvider) error
 	LookupSAMLProviderByName(name string) (model.SAMLProvider, error)
 	GetAllSAMLProviders() (model.SAMLProviders, error)
 	GetSAMLProvider(id int32) (model.SAMLProvider, error)

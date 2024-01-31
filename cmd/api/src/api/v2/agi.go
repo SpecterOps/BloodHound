@@ -187,7 +187,7 @@ func (s Resources) UpdateAssetGroup(response http.ResponseWriter, request *http.
 	} else {
 		assetGroup.Name = updateAssetGroupRequest.Name
 
-		if err := s.DB.UpdateAssetGroup(assetGroup); err != nil {
+		if err := s.DB.UpdateAssetGroup(request.Context(), assetGroup); err != nil {
 			api.HandleDatabaseError(request, response, err)
 		} else {
 			api.WriteBasicResponse(request.Context(), assetGroup, http.StatusOK, response)
@@ -286,7 +286,7 @@ func (s Resources) DeleteAssetGroupSelector(response http.ResponseWriter, reques
 		api.HandleDatabaseError(request, response, err)
 	} else if assetGroupSelector.SystemSelector {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusConflict, "Cannot delete a system defined asset group selector.", request), response)
-	} else if err := s.DB.DeleteAssetGroupSelector(assetGroupSelector); err != nil {
+	} else if err := s.DB.DeleteAssetGroupSelector(request.Context(), assetGroupSelector); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
 		response.WriteHeader(http.StatusOK)

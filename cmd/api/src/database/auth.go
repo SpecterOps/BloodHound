@@ -578,20 +578,34 @@ func (s *BloodhoundDB) DeleteAuthSecret(authSecret model.AuthSecret) error {
 
 // CreateSAMLProvider creates a new saml_providers row using the data in the input struct
 // INSERT INTO saml_identity_providers (...) VALUES (...)
-func (s *BloodhoundDB) CreateSAMLIdentityProvider(samlProvider model.SAMLProvider) (model.SAMLProvider, error) {
+func (s *BloodhoundDB) CreateSAMLIdentityProvider(ctx context.Context, samlProvider model.SAMLProvider) (model.SAMLProvider, error) {
 	var (
-		updatedSAMLProvider = samlProvider
-		result              = s.db.Create(&updatedSAMLProvider)
+		auditEntry = model.AuditEntry{
+			Action: "CreateSAMLIdentityProvider",
+			Model:  &samlProvider, // Pointer is required to ensure success log contains updated fields after transaction
+		}
 	)
 
-	return updatedSAMLProvider, CheckError(result)
+	err := s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
+		return CheckError(tx.Create(&samlProvider))
+	})
+
+	return samlProvider, err
 }
 
 // CreateSAMLProvider updates a saml_providers row using the data in the input struct
 // UPDATE saml_identity_providers SET (...) VALUES (...) WHERE id = ...
-func (s *BloodhoundDB) UpdateSAMLIdentityProvider(provider model.SAMLProvider) error {
-	result := s.db.Save(&provider)
-	return CheckError(result)
+func (s *BloodhoundDB) UpdateSAMLIdentityProvider(ctx context.Context, provider model.SAMLProvider) error {
+	var (
+		auditEntry = model.AuditEntry{
+			Action: "UpdateSAMLIdentityProvider",
+			Model:  &provider, // Pointer is required to ensure success log contains updated fields after transaction
+		}
+	)
+
+	return s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
+		return CheckError(tx.Save(&provider))
+	})
 }
 
 // LookupSAMLProviderByName returns a SAML provider corresponding to the name provided
