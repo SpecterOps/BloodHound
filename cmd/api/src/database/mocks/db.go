@@ -156,33 +156,33 @@ func (mr *MockDatabaseMockRecorder) CreateAssetGroupSelector(arg0, arg1, arg2 in
 }
 
 // CreateAuthSecret mocks base method.
-func (m *MockDatabase) CreateAuthSecret(arg0 model.AuthSecret) (model.AuthSecret, error) {
+func (m *MockDatabase) CreateAuthSecret(arg0 context.Context, arg1 model.AuthSecret) (model.AuthSecret, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateAuthSecret", arg0)
+	ret := m.ctrl.Call(m, "CreateAuthSecret", arg0, arg1)
 	ret0, _ := ret[0].(model.AuthSecret)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // CreateAuthSecret indicates an expected call of CreateAuthSecret.
-func (mr *MockDatabaseMockRecorder) CreateAuthSecret(arg0 interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) CreateAuthSecret(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateAuthSecret", reflect.TypeOf((*MockDatabase)(nil).CreateAuthSecret), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateAuthSecret", reflect.TypeOf((*MockDatabase)(nil).CreateAuthSecret), arg0, arg1)
 }
 
 // CreateAuthToken mocks base method.
-func (m *MockDatabase) CreateAuthToken(arg0 model.AuthToken) (model.AuthToken, error) {
+func (m *MockDatabase) CreateAuthToken(arg0 context.Context, arg1 model.AuthToken) (model.AuthToken, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateAuthToken", arg0)
+	ret := m.ctrl.Call(m, "CreateAuthToken", arg0, arg1)
 	ret0, _ := ret[0].(model.AuthToken)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // CreateAuthToken indicates an expected call of CreateAuthToken.
-func (mr *MockDatabaseMockRecorder) CreateAuthToken(arg0 interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) CreateAuthToken(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateAuthToken", reflect.TypeOf((*MockDatabase)(nil).CreateAuthToken), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateAuthToken", reflect.TypeOf((*MockDatabase)(nil).CreateAuthToken), arg0, arg1)
 }
 
 // CreateAzureDataQualityAggregation mocks base method.
@@ -408,17 +408,17 @@ func (mr *MockDatabaseMockRecorder) DeleteAuthSecret(arg0 interface{}) *gomock.C
 }
 
 // DeleteAuthToken mocks base method.
-func (m *MockDatabase) DeleteAuthToken(arg0 model.AuthToken) error {
+func (m *MockDatabase) DeleteAuthToken(arg0 context.Context, arg1 model.AuthToken) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DeleteAuthToken", arg0)
+	ret := m.ctrl.Call(m, "DeleteAuthToken", arg0, arg1)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // DeleteAuthToken indicates an expected call of DeleteAuthToken.
-func (mr *MockDatabaseMockRecorder) DeleteAuthToken(arg0 interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) DeleteAuthToken(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteAuthToken", reflect.TypeOf((*MockDatabase)(nil).DeleteAuthToken), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteAuthToken", reflect.TypeOf((*MockDatabase)(nil).DeleteAuthToken), arg0, arg1)
 }
 
 // DeleteIngestTask mocks base method.
@@ -1415,17 +1415,17 @@ func (mr *MockDatabaseMockRecorder) UpdateAssetGroupSelectors(arg0, arg1, arg2, 
 }
 
 // UpdateAuthSecret mocks base method.
-func (m *MockDatabase) UpdateAuthSecret(arg0 model.AuthSecret) error {
+func (m *MockDatabase) UpdateAuthSecret(arg0 context.Context, arg1 model.AuthSecret) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateAuthSecret", arg0)
+	ret := m.ctrl.Call(m, "UpdateAuthSecret", arg0, arg1)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // UpdateAuthSecret indicates an expected call of UpdateAuthSecret.
-func (mr *MockDatabaseMockRecorder) UpdateAuthSecret(arg0 interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) UpdateAuthSecret(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateAuthSecret", reflect.TypeOf((*MockDatabase)(nil).UpdateAuthSecret), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateAuthSecret", reflect.TypeOf((*MockDatabase)(nil).UpdateAuthSecret), arg0, arg1)
 }
 
 // UpdateAuthToken mocks base method.

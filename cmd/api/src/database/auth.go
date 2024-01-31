@@ -442,13 +442,15 @@ func (s *BloodhoundDB) LookupUser(name string) (model.User, error) {
 
 // CreateAuthToken creates a new AuthToken row using the provided struct
 // INSERT INTO auth_tokens (...) VALUES (....)
-func (s *BloodhoundDB) CreateAuthToken(authToken model.AuthToken) (model.AuthToken, error) {
-	var (
-		updatedAuthToken = authToken
-		result           = s.db.Create(&updatedAuthToken)
-	)
+func (s *BloodhoundDB) CreateAuthToken(ctx context.Context, authToken model.AuthToken) (model.AuthToken, error) {
+	auditEntry := model.AuditEntry{
+		Action: "CreateAuthToken",
+		Model:  &authToken,
+	}
 
-	return updatedAuthToken, CheckError(result)
+	return authToken, s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
+		return CheckError(tx.Create(&authToken))
+	})
 }
 
 // UpdateAuthToken updates all fields in the AuthToken row as specified in the provided struct
@@ -518,16 +520,28 @@ func (s *BloodhoundDB) GetUserToken(userId, tokenId uuid.UUID) (model.AuthToken,
 
 // DeleteAuthToken deletes the provided AuthToken row
 // DELETE FROM auth_tokens WHERE id = ...
-func (s *BloodhoundDB) DeleteAuthToken(authToken model.AuthToken) error {
-	result := s.db.Where("id = ?", authToken.ID).Delete(&authToken)
-	return CheckError(result)
+func (s *BloodhoundDB) DeleteAuthToken(ctx context.Context, authToken model.AuthToken) error {
+	auditEntry := model.AuditEntry{
+		Action: "DeleteAuthToken",
+		Model:  &authToken,
+	}
+
+	return s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
+		return CheckError(tx.Where("id = ?", authToken.ID).Delete(&authToken))
+	})
 }
 
 // CreateAuthSecret creates a new AuthSecret row
 // INSERT INTO auth_secrets (...) VALUES (....)
-func (s *BloodhoundDB) CreateAuthSecret(authSecret model.AuthSecret) (model.AuthSecret, error) {
-	result := s.db.Create(&authSecret)
-	return authSecret, CheckError(result)
+func (s *BloodhoundDB) CreateAuthSecret(ctx context.Context, authSecret model.AuthSecret) (model.AuthSecret, error) {
+	auditEntry := model.AuditEntry{
+		Action: "DeleteAuthToken",
+		Model:  &authSecret,
+	}
+
+	return authSecret, s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
+		return CheckError(tx.Create(&authSecret))
+	})
 }
 
 // GetAuthSecret retrieves the AuthSecret row associated with the provided ID
@@ -544,9 +558,15 @@ func (s *BloodhoundDB) GetAuthSecret(id int32) (model.AuthSecret, error) {
 // UpdateAuthSecret updates the auth secret with the input struct specified
 // UPDATE auth_secrets SET digest = .., hmac_method = ..., expires_at = ...
 // WHERE user_id = ....
-func (s *BloodhoundDB) UpdateAuthSecret(authSecret model.AuthSecret) error {
-	result := s.db.Save(&authSecret)
-	return CheckError(result)
+func (s *BloodhoundDB) UpdateAuthSecret(ctx context.Context, authSecret model.AuthSecret) error {
+	auditEntry := model.AuditEntry{
+		Action: "UpdateAuthSecret",
+		Model:  &authSecret,
+	}
+
+	return s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
+		return CheckError(tx.Save(&authSecret))
+	})
 }
 
 // DeleteAuthSecret deletes the auth secret row corresponding to the struct specified

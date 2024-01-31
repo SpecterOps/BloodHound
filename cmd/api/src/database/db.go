@@ -106,16 +106,16 @@ type Database interface {
 	GetUser(id uuid.UUID) (model.User, error)
 	DeleteUser(user model.User) error
 	LookupUser(principalName string) (model.User, error)
-	CreateAuthToken(authToken model.AuthToken) (model.AuthToken, error)
+	CreateAuthToken(ctx context.Context, authToken model.AuthToken) (model.AuthToken, error)
 	UpdateAuthToken(authToken model.AuthToken) error
 	GetAllAuthTokens(order string, filter model.SQLFilter) (model.AuthTokens, error)
 	GetAuthToken(id uuid.UUID) (model.AuthToken, error)
 	ListUserTokens(userID uuid.UUID, order string, filter model.SQLFilter) (model.AuthTokens, error)
 	GetUserToken(userId, tokenId uuid.UUID) (model.AuthToken, error)
-	DeleteAuthToken(authToken model.AuthToken) error
-	CreateAuthSecret(authSecret model.AuthSecret) (model.AuthSecret, error)
+	DeleteAuthToken(ctx context.Context, authToken model.AuthToken) error
+	CreateAuthSecret(ctx context.Context, authSecret model.AuthSecret) (model.AuthSecret, error)
 	GetAuthSecret(id int32) (model.AuthSecret, error)
-	UpdateAuthSecret(authSecret model.AuthSecret) error
+	UpdateAuthSecret(ctx context.Context, authSecret model.AuthSecret) error
 	DeleteAuthSecret(authSecret model.AuthSecret) error
 	CreateSAMLIdentityProvider(samlProvider model.SAMLProvider) (model.SAMLProvider, error)
 	UpdateSAMLIdentityProvider(samlProvider model.SAMLProvider) error

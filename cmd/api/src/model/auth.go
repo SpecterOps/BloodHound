@@ -155,6 +155,16 @@ type AuthToken struct {
 	Unique
 }
 
+func (s AuthToken) AuditData() AuditData {
+	return AuditData{
+		"id":          s.ID,
+		"user_id":     s.UserID,
+		"client_id":   s.ClientID,
+		"name":        s.Name,
+		"last_access": s.LastAccess,
+	}
+}
+
 func (s AuthToken) StripKey() AuthToken {
 	return AuthToken{
 		UserID:     s.UserID,
