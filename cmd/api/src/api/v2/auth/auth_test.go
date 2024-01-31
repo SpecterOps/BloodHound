@@ -81,7 +81,7 @@ func TestManagementResource_PutUserAuthSecret(t *testing.T) {
 			Duration: appcfg.DefaultPasswordExpirationWindow,
 		}),
 	}, nil).Times(1)
-	mockDB.EXPECT().CreateAuthSecret(gomock.Any()).Return(model.AuthSecret{}, nil).Times(1)
+	mockDB.EXPECT().CreateAuthSecret(gomock.Any(), gomock.Any()).Return(model.AuthSecret{}, nil).Times(1)
 
 	// Happy path
 	test.Request(t).
@@ -237,7 +237,7 @@ func TestManagementResource_ListPermissions_SortingError(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
-	endpoint := "/api/v2/auth/permissions"
+	endpoint := "/api/v2/permissions"
 	mockDB := dbmocks.NewMockDatabase(mockCtrl)
 
 	config, err := config.NewDefaultConfiguration()
@@ -270,7 +270,7 @@ func TestManagementResource_ListPermissions_InvalidFilterPredicate(t *testing.T)
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
-	endpoint := "/api/v2/auth/permissions"
+	endpoint := "/api/v2/permissions"
 	mockDB := dbmocks.NewMockDatabase(mockCtrl)
 
 	config, err := config.NewDefaultConfiguration()
@@ -303,7 +303,7 @@ func TestManagementResource_ListPermissions_PredicateMismatchWithColumn(t *testi
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
-	endpoint := "/api/v2/auth/permissions"
+	endpoint := "/api/v2/permissions"
 	mockDB := dbmocks.NewMockDatabase(mockCtrl)
 
 	config, err := config.NewDefaultConfiguration()
@@ -336,7 +336,7 @@ func TestManagementResource_ListPermissions_DBError(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
-	endpoint := "/api/v2/auth/permissions"
+	endpoint := "/api/v2/permissions"
 	mockDB := dbmocks.NewMockDatabase(mockCtrl)
 	mockDB.EXPECT().GetAllPermissions("authority desc, name", model.SQLFilter{SQLString: "name = ?", Params: []any{"foo"}}).Return(model.Permissions{}, fmt.Errorf("foo"))
 
@@ -372,7 +372,7 @@ func TestManagementResource_ListPermissions(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
-	endpoint := "/api/v2/auth/permissions"
+	endpoint := "/api/v2/permissions"
 
 	perm1 := model.Permission{
 		Authority: "a",
@@ -758,7 +758,7 @@ func TestExpireUserAuthSecret_Success(t *testing.T) {
 	resources, mockDB := apitest.NewAuthManagementResource(mockCtrl)
 
 	mockDB.EXPECT().GetUser(userId).Return(model.User{AuthSecret: &model.AuthSecret{}}, nil)
-	mockDB.EXPECT().UpdateAuthSecret(gomock.Any()).Return(nil)
+	mockDB.EXPECT().UpdateAuthSecret(gomock.Any(), gomock.Any()).Return(nil)
 
 	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
 	if req, err := http.NewRequestWithContext(ctx, "DELETE", fmt.Sprintf(endpoint, userId), nil); err != nil {
@@ -2533,7 +2533,7 @@ func TestDisenrollMFA_Success(t *testing.T) {
 	userId := test.NewUUIDv4(t)
 
 	mockDB.EXPECT().GetUser(userId).Return(model.User{AuthSecret: defaultDigestAuthSecret(t, "password")}, nil)
-	mockDB.EXPECT().UpdateAuthSecret(gomock.Any()).Return(nil)
+	mockDB.EXPECT().UpdateAuthSecret(gomock.Any(), gomock.Any()).Return(nil)
 
 	input := auth.MFAEnrollmentRequest{"password"}
 
@@ -2573,7 +2573,7 @@ func TestDisenrollMFA_Admin_Success(t *testing.T) {
 	nonAdminId := test.NewUUIDv4(t)
 
 	mockDB.EXPECT().GetUser(nonAdminId).Return(model.User{AuthSecret: defaultDigestAuthSecret(t, "password")}, nil)
-	mockDB.EXPECT().UpdateAuthSecret(gomock.Any()).Return(nil)
+	mockDB.EXPECT().UpdateAuthSecret(gomock.Any(), gomock.Any()).Return(nil)
 
 	adminContext := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
 	bhCtx := ctx.Get(adminContext)
@@ -2854,7 +2854,7 @@ func TestActivateMFA_Success(t *testing.T) {
 	endpoint := "/api/v2/auth/users/%s/mfa-activation"
 	userId := test.NewUUIDv4(t)
 	mockDB.EXPECT().GetUser(userId).Return(model.User{AuthSecret: defaultDigestAuthSecretWithTOTP(t, "password", totpSecret.Secret())}, nil)
-	mockDB.EXPECT().UpdateAuthSecret(gomock.Any()).Return(nil)
+	mockDB.EXPECT().UpdateAuthSecret(gomock.Any(), gomock.Any()).Return(nil)
 
 	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
 	inputBody := auth.MFAActivationRequest{passcode}

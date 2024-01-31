@@ -18,6 +18,7 @@ package datapipe
 
 import (
 	"context"
+	"github.com/specterops/bloodhound/src/database"
 	"os"
 
 	"github.com/specterops/bloodhound/dawgs/graph"
@@ -26,37 +27,67 @@ import (
 	"github.com/specterops/bloodhound/src/services/fileupload"
 )
 
-func (s *Daemon) failJobsUnderAnalysis() {
-	if fileUploadJobsUnderAnalysis, err := s.db.GetFileUploadJobsWithStatus(model.JobStatusAnalyzing); err != nil {
+func HasFileUploadJobsWaitingForAnalysis(db database.Database) (bool, error) {
+	if fileUploadJobsUnderAnalysis, err := db.GetFileUploadJobsWithStatus(model.JobStatusAnalyzing); err != nil {
+		return false, err
+	} else {
+		return len(fileUploadJobsUnderAnalysis) > 0, nil
+	}
+}
+
+func FailAnalyzedFileUploadJobs(ctx context.Context, db database.Database) {
+	// Because our database interfaces do not yet accept contexts this is a best-effort check to ensure that we do not
+	// commit state transitions when we are shutting down.
+	if ctx.Err() != nil {
+		return
+	}
+
+	if fileUploadJobsUnderAnalysis, err := db.GetFileUploadJobsWithStatus(model.JobStatusAnalyzing); err != nil {
 		log.Errorf("Failed to load file upload jobs under analysis: %v", err)
 	} else {
 		for _, job := range fileUploadJobsUnderAnalysis {
-			if err := fileupload.FailFileUploadJob(s.db, job.ID, "Analysis failed"); err != nil {
+			if err := fileupload.UpdateFileUploadJobStatus(db, job, model.JobStatusFailed, "Analysis failed"); err != nil {
 				log.Errorf("Failed updating file upload job %d to failed status: %v", job.ID, err)
 			}
 		}
 	}
 }
 
-func (s *Daemon) completeJobsUnderAnalysis() {
-	if fileUploadJobsUnderAnalysis, err := s.db.GetFileUploadJobsWithStatus(model.JobStatusAnalyzing); err != nil {
+func CompleteAnalyzedFileUploadJobs(ctx context.Context, db database.Database) {
+	// Because our database interfaces do not yet accept contexts this is a best-effort check to ensure that we do not
+	// commit state transitions when we are shutting down.
+	if ctx.Err() != nil {
+		return
+	}
+
+	if fileUploadJobsUnderAnalysis, err := db.GetFileUploadJobsWithStatus(model.JobStatusAnalyzing); err != nil {
 		log.Errorf("Failed to load file upload jobs under analysis: %v", err)
 	} else {
 		for _, job := range fileUploadJobsUnderAnalysis {
-			if err := fileupload.UpdateFileUploadJobStatus(s.db, job, model.JobStatusComplete, "Complete"); err != nil {
+			if err := fileupload.UpdateFileUploadJobStatus(db, job, model.JobStatusComplete, "Complete"); err != nil {
 				log.Errorf("Error updating fileupload job %d: %v", job.ID, err)
 			}
 		}
 	}
 }
 
-func (s *Daemon) processIngestedFileUploadJobs() {
-	if ingestedFileUploadJobs, err := s.db.GetFileUploadJobsWithStatus(model.JobStatusIngesting); err != nil {
+func ProcessIngestedFileUploadJobs(ctx context.Context, db database.Database) {
+	// Because our database interfaces do not yet accept contexts this is a best-effort check to ensure that we do not
+	// commit state transitions when shutting down.
+	if ctx.Err() != nil {
+		return
+	}
+
+	if ingestingFileUploadJobs, err := db.GetFileUploadJobsWithStatus(model.JobStatusIngesting); err != nil {
 		log.Errorf("Failed to look up finished file upload jobs: %v", err)
 	} else {
-		for _, ingestedFileUploadJob := range ingestedFileUploadJobs {
-			if err := fileupload.UpdateFileUploadJobStatus(s.db, ingestedFileUploadJob, model.JobStatusAnalyzing, "Analyzing"); err != nil {
-				log.Errorf("Error updating fileupload job %d: %v", ingestedFileUploadJob.ID, err)
+		for _, ingestingFileUploadJob := range ingestingFileUploadJobs {
+			if remainingIngestTasks, err := db.GetIngestTasksForJob(ingestingFileUploadJob.ID); err != nil {
+				log.Errorf("Failed looking up remaining ingest tasks for file upload job %d: %v", ingestingFileUploadJob.ID, err)
+			} else if len(remainingIngestTasks) == 0 {
+				if err := fileupload.UpdateFileUploadJobStatus(db, ingestingFileUploadJob, model.JobStatusAnalyzing, "Analyzing"); err != nil {
+					log.Errorf("Error updating fileupload job %d: %v", ingestingFileUploadJob.ID, err)
+				}
 			}
 		}
 	}
@@ -97,10 +128,8 @@ func (s *Daemon) processIngestTasks(ctx context.Context, ingestTasks model.Inges
 	for _, ingestTask := range ingestTasks {
 		// Check the context to see if we should continue processing ingest tasks. This has to be explicit since error
 		// handling assumes that all failures should be logged and not returned.
-		select {
-		case <-ctx.Done():
+		if ctx.Err() != nil {
 			return
-		default:
 		}
 
 		if err := s.processIngestFile(ctx, ingestTask.FileName); err != nil {

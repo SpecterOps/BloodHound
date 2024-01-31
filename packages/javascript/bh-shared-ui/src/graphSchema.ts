@@ -131,6 +131,8 @@ export enum ActiveDirectoryRelationshipKind {
     ADCSESC7 = 'ADCSESC7',
     ADCSESC9a = 'ADCSESC9a',
     ADCSESC9b = 'ADCSESC9b',
+    ADCSESC10a = 'ADCSESC10a',
+    ADCSESC10b = 'ADCSESC10b',
 }
 export function ActiveDirectoryRelationshipKindToDisplay(value: ActiveDirectoryRelationshipKind): string | undefined {
     switch (value) {
@@ -260,11 +262,23 @@ export function ActiveDirectoryRelationshipKindToDisplay(value: ActiveDirectoryR
             return 'ADCSESC9a';
         case ActiveDirectoryRelationshipKind.ADCSESC9b:
             return 'ADCSESC9b';
+        case ActiveDirectoryRelationshipKind.ADCSESC10a:
+            return 'ADCSESC10a';
+        case ActiveDirectoryRelationshipKind.ADCSESC10b:
+            return 'ADCSESC10b';
         default:
             return undefined;
     }
 }
 export type ActiveDirectoryKind = ActiveDirectoryNodeKind | ActiveDirectoryRelationshipKind;
+export const EdgeCompositionRelationships = [
+    'GoldenCert',
+    'ADCSESC1',
+    'ADCSESC3',
+    'ADCSESC6a',
+    'ADCSESC9a',
+    'ADCSESC10a',
+];
 export enum ActiveDirectoryKindProperties {
     AdminCount = 'admincount',
     CASecurityCollected = 'casecuritycollected',
@@ -528,6 +542,8 @@ export function ActiveDirectoryPathfindingEdges(): ActiveDirectoryRelationshipKi
         ActiveDirectoryRelationshipKind.ADCSESC7,
         ActiveDirectoryRelationshipKind.ADCSESC9a,
         ActiveDirectoryRelationshipKind.ADCSESC9b,
+        ActiveDirectoryRelationshipKind.ADCSESC10a,
+        ActiveDirectoryRelationshipKind.ADCSESC10b,
         ActiveDirectoryRelationshipKind.DCFor,
     ];
 }

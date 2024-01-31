@@ -141,7 +141,13 @@ func PostADCSESC3(ctx context.Context, tx graph.Transaction, outC chan<- analysi
 									cache.EnterpriseCAEnrollers[eca1.ID],
 									cache.EnterpriseCAEnrollers[eca2.ID],
 									delegatedAgents.Slice())
-								results.Or(tempResults)
+
+								// Add principals to result set unless it's a user and DNS is required
+								if filteredResults, err := filterUserDNSResults(tx, tempResults, certTemplateOne); err != nil {
+									log.Errorf("Error filtering user dns results: %v", err)
+								} else {
+									results.Or(filteredResults)
+								}
 							}
 						}
 					} else {
@@ -151,7 +157,12 @@ func PostADCSESC3(ctx context.Context, tx graph.Transaction, outC chan<- analysi
 								cache.CertTemplateControllers[certTemplateTwo.ID],
 								cache.EnterpriseCAEnrollers[eca1.ID],
 								cache.EnterpriseCAEnrollers[eca2.ID])
-							results.Or(tempResults)
+
+							if filteredResults, err := filterUserDNSResults(tx, tempResults, certTemplateOne); err != nil {
+								log.Errorf("Error filtering user dns results: %v", err)
+							} else {
+								results.Or(filteredResults)
+							}
 						}
 					}
 				}
@@ -172,6 +183,32 @@ func PostADCSESC3(ctx context.Context, tx graph.Transaction, outC chan<- analysi
 	})
 
 	return nil
+}
+
+func filterUserDNSResults(tx graph.Transaction, tempResults cardinality.Duplex[uint32], certTemplate *graph.Node) (cardinality.Duplex[uint32], error) {
+	if userNodes, err := ops.FetchNodeSet(tx.Nodes().Filterf(func() graph.Criteria {
+		return query.And(
+			query.KindIn(query.Node(), ad.User),
+			query.InIDs(query.NodeID(), cardinality.DuplexToGraphIDs(tempResults)...),
+		)
+	})); err != nil {
+		if !graph.IsErrNotFound(err) {
+			return nil, err
+		}
+	} else if len(userNodes) > 0 {
+		if subjRequireDns, err := certTemplate.Properties.Get(ad.SubjectAltRequireDNS.String()).Bool(); err != nil {
+			log.Debugf("Failed to retrieve subjectAltRequireDNS for template %d: %v", certTemplate.ID, err)
+			tempResults.Xor(cardinality.NodeSetToDuplex(userNodes))
+		} else if subjRequireDomainDns, err := certTemplate.Properties.Get(ad.SubjectAltRequireDomainDNS.String()).Bool(); err != nil {
+			log.Debugf("Failed to retrieve subjectAltRequireDomainDNS for template %d: %v", certTemplate.ID, err)
+			tempResults.Xor(cardinality.NodeSetToDuplex(userNodes))
+		} else if subjRequireDns || subjRequireDomainDns {
+			//If either of these properties is true, we need to remove all these users from our victims list
+			tempResults.Xor(cardinality.NodeSetToDuplex(userNodes))
+		}
+	}
+
+	return tempResults, nil
 }
 
 func principalControlsCertTemplate(principal, certTemplate *graph.Node, groupExpansions impact.PathAggregator, cache ADCSCache) bool {
@@ -412,29 +449,25 @@ func PostADCS(ctx context.Context, db graph.Database, groupExpansions impact.Pat
 	if !adcsEnabled {
 		return &analysis.AtomicPostProcessingStats{}, nil
 	}
-	operation := analysis.NewPostRelationshipOperation(ctx, db, "ADCS Post Processing")
 
 	if enterpriseCertAuthorities, err := FetchNodesByKind(ctx, db, ad.EnterpriseCA); err != nil {
-		operation.Done()
 		return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("failed fetching enterpriseCA nodes: %w", err)
 	} else if rootCertAuthorities, err := FetchNodesByKind(ctx, db, ad.RootCA); err != nil {
-		operation.Done()
 		return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("failed fetching rootCA nodes: %w", err)
 	} else if certTemplates, err := FetchNodesByKind(ctx, db, ad.CertTemplate); err != nil {
-		operation.Done()
 		return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("failed fetching cert template nodes: %w", err)
 	} else if domains, err := FetchNodesByKind(ctx, db, ad.Domain); err != nil {
-		operation.Done()
 		return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("failed fetching domain nodes: %w", err)
 	} else if step1Stats, err := postADCSPreProcessStep1(ctx, db, enterpriseCertAuthorities, rootCertAuthorities); err != nil {
-		operation.Done()
 		return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("failed adcs pre-processing step 1: %w", err)
 	} else if step2Stats, err := postADCSPreProcessStep2(ctx, db, certTemplates); err != nil {
-		operation.Done()
 		return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("failed adcs pre-processing step 2: %w", err)
 	} else {
+		operation := analysis.NewPostRelationshipOperation(ctx, db, "ADCS Post Processing")
+
 		operation.Stats.Merge(step1Stats)
 		operation.Stats.Merge(step2Stats)
+
 		var cache = NewADCSCache()
 		cache.BuildCache(ctx, db, enterpriseCertAuthorities, certTemplates)
 
@@ -483,6 +516,14 @@ func PostADCS(ctx context.Context, db graph.Database, groupExpansions impact.Pat
 					operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
 						if err := PostADCSESC9a(ctx, tx, outC, groupExpansions, innerEnterpriseCA, innerDomain, cache); err != nil {
 							log.Errorf("failed post processing for %s: %v", ad.ADCSESC9a.String(), err)
+						}
+
+						return nil
+					})
+
+					operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
+						if err := PostADCSESC10a(ctx, tx, outC, groupExpansions, innerEnterpriseCA, innerDomain, cache); err != nil {
+							log.Errorf("failed post processing for %s: %v", ad.ADCSESC10a.String(), err)
 						}
 
 						return nil

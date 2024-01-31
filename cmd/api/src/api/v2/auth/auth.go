@@ -17,6 +17,7 @@
 package auth
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"net/http"
@@ -608,19 +609,19 @@ func (s ManagementResource) DeleteUser(response http.ResponseWriter, request *ht
 	}
 }
 
-func (s ManagementResource) setUserSecret(user model.User, authSecret model.AuthSecret) error {
+func (s ManagementResource) setUserSecret(ctx context.Context, user model.User, authSecret model.AuthSecret) error {
 	if user.AuthSecret != nil {
 		user.AuthSecret.Digest = authSecret.Digest
 		user.AuthSecret.DigestMethod = authSecret.DigestMethod
 		user.AuthSecret.ExpiresAt = authSecret.ExpiresAt.UTC()
 
-		if err := s.db.UpdateAuthSecret(*user.AuthSecret); err != nil {
+		if err := s.db.UpdateAuthSecret(ctx, *user.AuthSecret); err != nil {
 			return api.FormatDatabaseError(err)
 		} else {
 			return nil
 		}
 	} else {
-		if _, err := s.db.CreateAuthSecret(authSecret); err != nil {
+		if _, err := s.db.CreateAuthSecret(ctx, authSecret); err != nil {
 			return api.FormatDatabaseError(err)
 		} else {
 			return nil
@@ -663,7 +664,7 @@ func (s ManagementResource) PutUserAuthSecret(response http.ResponseWriter, requ
 			authSecret.ExpiresAt = time.Time{}
 		}
 
-		if err := s.setUserSecret(targetUser, authSecret); err != nil {
+		if err := s.setUserSecret(request.Context(), targetUser, authSecret); err != nil {
 			api.HandleDatabaseError(request, response, err)
 		} else {
 			response.WriteHeader(http.StatusOK)
@@ -686,7 +687,7 @@ func (s ManagementResource) ExpireUserAuthSecret(response http.ResponseWriter, r
 		authSecret := targetUser.AuthSecret
 		authSecret.ExpiresAt = time.Time{}
 
-		if err := s.db.UpdateAuthSecret(*authSecret); err != nil {
+		if err := s.db.UpdateAuthSecret(request.Context(), *authSecret); err != nil {
 			api.HandleDatabaseError(request, response, err)
 		} else {
 			// NOTE: This "should" be a 204 since we're not returning a payload but am returning a 200 to retain
@@ -789,7 +790,7 @@ func (s ManagementResource) CreateAuthToken(response http.ResponseWriter, reques
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusForbidden, err.Error(), request), response)
 	} else if authToken, err := auth.NewUserAuthToken(createUserTokenRequest.UserID, createUserTokenRequest.TokenName, auth.HMAC_SHA2_256); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
-	} else if newAuthToken, err := s.db.CreateAuthToken(authToken); err != nil {
+	} else if newAuthToken, err := s.db.CreateAuthToken(request.Context(), authToken); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
 		api.WriteBasicResponse(request.Context(), newAuthToken, http.StatusOK, response)
@@ -827,7 +828,7 @@ func (s ManagementResource) DeleteAuthToken(response http.ResponseWriter, reques
 	} else if token.UserID.Valid && token.UserID.UUID != user.ID && !s.authorizer.AllowsPermission(bhCtx.AuthCtx, auth.Permissions().AuthManageUsers) {
 		log.Errorf("Bad user ID: %s != %s", token.UserID.UUID.String(), user.ID.String())
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, api.ErrorResponseDetailsResourceNotFound, request), response)
-	} else if err := s.db.DeleteAuthToken(token); err != nil {
+	} else if err := s.db.DeleteAuthToken(request.Context(), token); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
 		response.WriteHeader(http.StatusOK)
@@ -886,7 +887,7 @@ func (s ManagementResource) EnrollMFA(response http.ResponseWriter, request *htt
 	} else {
 		user.AuthSecret.TOTPSecret = totpSecret.Secret()
 
-		if err := s.db.UpdateAuthSecret(*user.AuthSecret); err != nil {
+		if err := s.db.UpdateAuthSecret(request.Context(), *user.AuthSecret); err != nil {
 			api.HandleDatabaseError(request, response, err)
 		} else if qrCode, err := auth.GenerateQRCodeBase64(*totpSecret); err != nil {
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
@@ -941,7 +942,7 @@ func (s ManagementResource) DisenrollMFA(response http.ResponseWriter, request *
 		user.AuthSecret.TOTPSecret = ""
 		user.AuthSecret.TOTPActivated = false
 
-		if err := s.db.UpdateAuthSecret(*user.AuthSecret); err != nil {
+		if err := s.db.UpdateAuthSecret(request.Context(), *user.AuthSecret); err != nil {
 			api.HandleDatabaseError(request, response, err)
 		} else {
 			responseBody := MFAStatusResponse{MFADeactivated}
@@ -992,7 +993,7 @@ func (s ManagementResource) ActivateMFA(response http.ResponseWriter, request *h
 	} else {
 		user.AuthSecret.TOTPActivated = true
 
-		if err := s.db.UpdateAuthSecret(*user.AuthSecret); err != nil {
+		if err := s.db.UpdateAuthSecret(request.Context(), *user.AuthSecret); err != nil {
 			api.HandleDatabaseError(request, response, err)
 		} else {
 			responseBody := MFAStatusResponse{MFAActivated}

@@ -18,6 +18,7 @@
 package fileupload
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -42,7 +43,13 @@ type FileUploadData interface {
 	GetFileUploadJobsWithStatus(status model.JobStatus) ([]model.FileUploadJob, error)
 }
 
-func ProcessStaleFileUploadJobs(db FileUploadData) {
+func ProcessStaleFileUploadJobs(ctx context.Context, db FileUploadData) {
+	// Because our database interfaces do not yet accept contexts this is a best-effort check to ensure that we do not
+	// commit state transitions when shutting down.
+	if ctx.Err() != nil {
+		return
+	}
+
 	var (
 		now       = time.Now().UTC()
 		threshold = now.Add(-jobActivityTimeout)

@@ -37,7 +37,7 @@ func (s *BloodhoundDB) CreateAssetGroup(ctx context.Context, name, tag string, s
 
 		auditEntry = model.AuditEntry{
 			Action: "CreateAssetGroup",
-			Model:  assetGroup.AuditData(),
+			Model:  &assetGroup, // Pointer is required to ensure success log contains updated fields after transaction
 		}
 	)
 
@@ -54,7 +54,7 @@ func (s *BloodhoundDB) DeleteAssetGroup(ctx context.Context, assetGroup model.As
 	var (
 		auditEntry = model.AuditEntry{
 			Action: "DeleteAssetGroup",
-			Model:  assetGroup.AuditData(),
+			Model:  &assetGroup, // Pointer is required to ensure success log contains updated fields after transaction
 		}
 	)
 
