@@ -33,6 +33,6 @@ use (
 	./packages/go/mediatypes
 	./packages/go/params
 	./packages/go/schemagen
-	./packages/go/slices
+	./packages/go/slicesext
 	./packages/go/stbernard
 )

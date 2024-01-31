@@ -20,21 +20,20 @@ import (
 	"encoding/json"
 	"fmt"
 	"regexp"
+	"slices"
 	"strings"
 	"time"
 
 	"github.com/bloodhoundad/azurehound/v2/constants"
 	"github.com/bloodhoundad/azurehound/v2/enums"
+	"github.com/bloodhoundad/azurehound/v2/models"
 	azure2 "github.com/bloodhoundad/azurehound/v2/models/azure"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/errors"
 	"github.com/specterops/bloodhound/graphschema/ad"
-	"github.com/specterops/bloodhound/log"
-	"github.com/specterops/bloodhound/slices"
-
-	"github.com/bloodhoundad/azurehound/v2/models"
 	"github.com/specterops/bloodhound/graphschema/azure"
 	"github.com/specterops/bloodhound/graphschema/common"
+	"github.com/specterops/bloodhound/log"
 )
 
 const (

@@ -23,6 +23,7 @@ import (
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/graphschema/azure"
+	"github.com/specterops/bloodhound/slicesext"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -46,17 +47,7 @@ func (s kindStr) Is(others ...graph.Kind) bool {
 }
 
 func validKinds() graph.Kinds {
-	var (
-		lenCalc = len(ad.NodeKinds()) + len(ad.Relationships()) + len(azure.NodeKinds()) + len(azure.Relationships())
-		kinds   = make(graph.Kinds, 0, lenCalc)
-	)
-
-	kinds = append(kinds, ad.NodeKinds()...)
-	kinds = append(kinds, ad.Relationships()...)
-	kinds = append(kinds, azure.NodeKinds()...)
-	kinds = append(kinds, azure.Relationships()...)
-
-	return kinds
+	return slicesext.Concat(ad.NodeKinds(), ad.Relationships(), azure.NodeKinds(), azure.Relationships())
 }
 
 func validKindStrings() []string {
