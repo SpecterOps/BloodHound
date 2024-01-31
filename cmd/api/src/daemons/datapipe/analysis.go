@@ -74,7 +74,7 @@ func RunAnalysisOperations(ctx context.Context, db database.Database, graphDB gr
 		agiFailed         = false
 		dataQualityFailed = false
 	)
-	
+
 	// TODO: Cleanup #ADCSFeatureFlag after full launch.
 	if adcsFlag, err := db.GetFlagByKey(appcfg.FeatureAdcs); err != nil {
 		collectedErrors = append(collectedErrors, fmt.Errorf("error retrieving ADCS feature flag: %w", err))

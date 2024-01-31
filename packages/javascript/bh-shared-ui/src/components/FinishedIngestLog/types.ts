@@ -48,5 +48,5 @@ export const FileUploadJobStatusToString: Record<FileUploadJobStatus, string> = 
     5: 'Failed',
     6: 'Ingesting',
     7: 'Analyzing',
-    8: 'PartiallyComplete',
+    8: 'Partially Complete',
 };
