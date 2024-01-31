@@ -25,6 +25,10 @@
         "path": "foldr_test\\.go",
         "text": "SA4000:",
         "severity": "warning"
+      },
+      {
+        "path": "dawgs/util/size/(.+)",
+        "linters": ["unused"]
       }
     ]
   },
