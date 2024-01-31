@@ -5,8 +5,7 @@
     ],
     "enable": [
       "gosimple",
-      "stylecheck",
-      "forcetypeassert"
+      "stylecheck"
     ]
   },
   "issues": {
@@ -46,11 +45,11 @@
     "default-severity": "error",
     "rules": [
       {
-        "linters": ["unused"],
+        "linters": ["stylecheck", "gosimple", "unused", "errcheck", "forcetypeassert"],
         "severity": "warning"
       },
       {
-        "text": "(ST\\d{4}|S\\d{4}|SA1019)",
+        "text": "SA1019:",
         "severity": "warning"
       },
       {

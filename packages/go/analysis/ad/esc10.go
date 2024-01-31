@@ -19,6 +19,7 @@ package ad
 import (
 	"context"
 	"errors"
+
 	"github.com/specterops/bloodhound/analysis"
 	"github.com/specterops/bloodhound/analysis/impact"
 	"github.com/specterops/bloodhound/dawgs/cardinality"
@@ -103,15 +104,15 @@ func PostADCSESC10a(ctx context.Context, tx graph.Transaction, outC chan<- analy
 			}
 		}
 
-		results.Each(func(value uint32) (bool, error) {
+		results.Each(func(value uint32) bool {
 			if !channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
 				FromID: graph.ID(value),
 				ToID:   domain.ID,
 				Kind:   ad.ADCSESC10a,
 			}) {
-				return false, nil
+				return false
 			} else {
-				return true, nil
+				return true
 			}
 		})
 
