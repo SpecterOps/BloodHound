@@ -141,7 +141,7 @@ func TestManagementResource_EnableUserSAML(t *testing.T) {
 	mockDB.EXPECT().GetUser(goodUserID).Return(model.User{}, nil)
 	mockDB.EXPECT().GetSAMLProvider(samlProviderID).Return(model.SAMLProvider{}, nil).Times(2)
 	mockDB.EXPECT().UpdateUser(gomock.Any(), gomock.Any()).Return(nil).Times(2)
-	mockDB.EXPECT().DeleteAuthSecret(gomock.Any()).Return(nil)
+	mockDB.EXPECT().DeleteAuthSecret(gomock.Any(), gomock.Any()).Return(nil)
 
 	// Happy path
 	test.Request(t).
@@ -1057,7 +1057,7 @@ func TestCreateUser_Failure(t *testing.T) {
 	mockDB.EXPECT().GetRoles(badRole).Return(model.Roles{}, fmt.Errorf("db error"))
 	mockDB.EXPECT().GetRoles(gomock.Not(badRole)).Return(model.Roles{}, nil).AnyTimes()
 	mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
-	mockDB.EXPECT().CreateUser(badUser).Return(model.User{}, fmt.Errorf("db error"))
+	mockDB.EXPECT().CreateUser(gomock.Any(), badUser).Return(model.User{}, fmt.Errorf("db error"))
 
 	type Input struct {
 		Body v2.CreateUserRequest
@@ -1171,7 +1171,7 @@ func TestCreateUser_Success(t *testing.T) {
 		}),
 	}, nil)
 	mockDB.EXPECT().GetRoles(gomock.Any()).Return(model.Roles{}, nil)
-	mockDB.EXPECT().CreateUser(gomock.Any()).Return(goodUser, nil).AnyTimes()
+	mockDB.EXPECT().CreateUser(gomock.Any(), gomock.Any()).Return(goodUser, nil).AnyTimes()
 
 	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
 	input := v2.CreateUserRequest{
@@ -1224,7 +1224,7 @@ func TestCreateUser_ResetPassword(t *testing.T) {
 		}),
 	}, nil)
 	mockDB.EXPECT().GetRoles(gomock.Any()).Return(model.Roles{}, nil)
-	mockDB.EXPECT().CreateUser(gomock.Any()).Return(goodUser, nil)
+	mockDB.EXPECT().CreateUser(gomock.Any(), gomock.Any()).Return(goodUser, nil)
 
 	input := struct {
 		Body v2.CreateUserRequest
@@ -1297,7 +1297,7 @@ func TestManagementResource_UpdateUser_IDMalformed(t *testing.T) {
 		}),
 	}, nil)
 	mockDB.EXPECT().GetRoles(gomock.Any()).Return(model.Roles{}, nil)
-	mockDB.EXPECT().CreateUser(gomock.Any()).Return(goodUser, nil).AnyTimes()
+	mockDB.EXPECT().CreateUser(gomock.Any(), gomock.Any()).Return(goodUser, nil).AnyTimes()
 
 	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
 	input := v2.CreateUserRequest{
@@ -1360,7 +1360,7 @@ func TestManagementResource_UpdateUser_GetUserError(t *testing.T) {
 		}),
 	}, nil)
 	mockDB.EXPECT().GetRoles(gomock.Any()).Return(model.Roles{}, nil)
-	mockDB.EXPECT().CreateUser(gomock.Any()).Return(goodUser, nil).AnyTimes()
+	mockDB.EXPECT().CreateUser(gomock.Any(), gomock.Any()).Return(goodUser, nil).AnyTimes()
 	mockDB.EXPECT().GetUser(gomock.Any()).Return(model.User{}, fmt.Errorf("foo"))
 
 	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
@@ -1424,7 +1424,7 @@ func TestManagementResource_UpdateUser_GetRolesError(t *testing.T) {
 		}),
 	}, nil)
 	mockDB.EXPECT().GetRoles(gomock.Any()).Return(model.Roles{}, nil)
-	mockDB.EXPECT().CreateUser(gomock.Any()).Return(goodUser, nil).AnyTimes()
+	mockDB.EXPECT().CreateUser(gomock.Any(), gomock.Any()).Return(goodUser, nil).AnyTimes()
 	mockDB.EXPECT().GetUser(gomock.Any()).Return(goodUser, nil)
 	mockDB.EXPECT().GetRoles(gomock.Any()).Return(model.Roles{}, fmt.Errorf("foo"))
 
@@ -1482,7 +1482,7 @@ func TestManagementResource_UpdateUser_SelfDisable(t *testing.T) {
 		}),
 	}, nil)
 	mockDB.EXPECT().GetRoles(gomock.Any()).Return(model.Roles{}, nil)
-	mockDB.EXPECT().CreateUser(gomock.Any()).Return(goodUser, nil).AnyTimes()
+	mockDB.EXPECT().CreateUser(gomock.Any(), gomock.Any()).Return(goodUser, nil).AnyTimes()
 	mockDB.EXPECT().GetUser(gomock.Any()).Return(goodUser, nil)
 	mockDB.EXPECT().GetRoles(gomock.Any()).Return(model.Roles{model.Role{
 		Name:        "admin",
@@ -1563,7 +1563,7 @@ func TestManagementResource_UpdateUser_LookupActiveSessionsError(t *testing.T) {
 		}),
 	}, nil)
 	mockDB.EXPECT().GetRoles(gomock.Any()).Return(model.Roles{}, nil)
-	mockDB.EXPECT().CreateUser(gomock.Any()).Return(goodUser, nil).AnyTimes()
+	mockDB.EXPECT().CreateUser(gomock.Any(), gomock.Any()).Return(goodUser, nil).AnyTimes()
 	mockDB.EXPECT().GetUser(gomock.Any()).Return(goodUser, nil)
 	mockDB.EXPECT().GetRoles(gomock.Any()).Return(model.Roles{model.Role{
 		Name:        "admin",
@@ -1644,7 +1644,7 @@ func TestManagementResource_UpdateUser_DBError(t *testing.T) {
 		}),
 	}, nil)
 	mockDB.EXPECT().GetRoles(gomock.Any()).Return(model.Roles{}, nil)
-	mockDB.EXPECT().CreateUser(gomock.Any()).Return(goodUser, nil).AnyTimes()
+	mockDB.EXPECT().CreateUser(gomock.Any(), gomock.Any()).Return(goodUser, nil).AnyTimes()
 	mockDB.EXPECT().GetUser(gomock.Any()).Return(goodUser, nil)
 	mockDB.EXPECT().GetRoles(gomock.Any()).Return(model.Roles{model.Role{
 		Name:        "admin",
@@ -1702,6 +1702,149 @@ func TestManagementResource_UpdateUser_DBError(t *testing.T) {
 	require.Equal(t, http.StatusInternalServerError, response.Code)
 }
 
+func TestManagementResource_DeleteUser_BadUserID(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+
+	endpoint := "/api/v2/bloodhound-users"
+	userID := "badUserID"
+
+	resources, _ := apitest.NewAuthManagementResource(mockCtrl)
+
+	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
+	req, err := http.NewRequestWithContext(ctx, "DELETE", endpoint, nil)
+	require.Nil(t, err)
+
+	req = mux.SetURLVars(req, map[string]string{api.URIPathVariableUserID: userID})
+	req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
+
+	rr := httptest.NewRecorder()
+	handler := http.HandlerFunc(resources.DeleteUser)
+	handler.ServeHTTP(rr, req)
+
+	require.Equal(t, rr.Code, http.StatusBadRequest)
+}
+
+func TestManagementResource_DeleteUser_UserNotFound(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+
+	endpoint := "/api/v2/bloodhound-users"
+
+	userID, err := uuid.NewV4()
+	require.Nil(t, err)
+
+	resources, mockDB := apitest.NewAuthManagementResource(mockCtrl)
+	mockDB.EXPECT().GetUser(userID).Return(model.User{}, database.ErrNotFound)
+
+	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
+	req, err := http.NewRequestWithContext(ctx, "DELETE", endpoint, nil)
+	require.Nil(t, err)
+
+	req = mux.SetURLVars(req, map[string]string{api.URIPathVariableUserID: userID.String()})
+	req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
+
+	rr := httptest.NewRecorder()
+	handler := http.HandlerFunc(resources.DeleteUser)
+	handler.ServeHTTP(rr, req)
+
+	require.Equal(t, rr.Code, http.StatusNotFound)
+}
+
+func TestManagementResource_DeleteUser_GetUserError(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+
+	endpoint := "/api/v2/bloodhound-users"
+
+	userID, err := uuid.NewV4()
+	require.Nil(t, err)
+
+	resources, mockDB := apitest.NewAuthManagementResource(mockCtrl)
+	mockDB.EXPECT().GetUser(userID).Return(model.User{}, fmt.Errorf("foo"))
+
+	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
+	req, err := http.NewRequestWithContext(ctx, "DELETE", endpoint, nil)
+	require.Nil(t, err)
+
+	req = mux.SetURLVars(req, map[string]string{api.URIPathVariableUserID: userID.String()})
+	req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
+
+	rr := httptest.NewRecorder()
+	handler := http.HandlerFunc(resources.DeleteUser)
+	handler.ServeHTTP(rr, req)
+
+	require.Equal(t, rr.Code, http.StatusInternalServerError)
+}
+
+func TestManagementResource_DeleteUser_DeleteUserError(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+
+	endpoint := "/api/v2/bloodhound-users"
+
+	userID, err := uuid.NewV4()
+	require.Nil(t, err)
+
+	user := model.User{
+		PrincipalName: "good user",
+		Unique: model.Unique{
+			ID: userID,
+		},
+	}
+
+	resources, mockDB := apitest.NewAuthManagementResource(mockCtrl)
+	mockDB.EXPECT().GetUser(userID).Return(user, nil)
+	mockDB.EXPECT().DeleteUser(gomock.Any(), user).Return(fmt.Errorf("foo"))
+
+	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
+	req, err := http.NewRequestWithContext(ctx, "DELETE", endpoint, nil)
+	require.Nil(t, err)
+
+	req = mux.SetURLVars(req, map[string]string{api.URIPathVariableUserID: userID.String()})
+	req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
+
+	rr := httptest.NewRecorder()
+	handler := http.HandlerFunc(resources.DeleteUser)
+	handler.ServeHTTP(rr, req)
+
+	require.Equal(t, rr.Code, http.StatusInternalServerError)
+}
+
+func TestManagementResource_DeleteUser_Success(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+
+	endpoint := "/api/v2/bloodhound-users"
+
+	userID, err := uuid.NewV4()
+	require.Nil(t, err)
+
+	user := model.User{
+		PrincipalName: "good user",
+		Unique: model.Unique{
+			ID: userID,
+		},
+	}
+
+	resources, mockDB := apitest.NewAuthManagementResource(mockCtrl)
+	mockDB.EXPECT().GetUser(userID).Return(user, nil)
+	mockDB.EXPECT().DeleteUser(gomock.Any(), user).Return(nil)
+
+	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
+	req, err := http.NewRequestWithContext(ctx, "DELETE", endpoint, nil)
+	require.Nil(t, err)
+
+	req = mux.SetURLVars(req, map[string]string{api.URIPathVariableUserID: userID.String()})
+	req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
+
+	rr := httptest.NewRecorder()
+	handler := http.HandlerFunc(resources.DeleteUser)
+	handler.ServeHTTP(rr, req)
+
+	require.Equal(t, rr.Code, http.StatusOK)
+}
+
 func TestManagementResource_UpdateUser_Success(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
@@ -1726,7 +1869,7 @@ func TestManagementResource_UpdateUser_Success(t *testing.T) {
 		}),
 	}, nil)
 	mockDB.EXPECT().GetRoles(gomock.Any()).Return(model.Roles{}, nil)
-	mockDB.EXPECT().CreateUser(gomock.Any()).Return(goodUser, nil).AnyTimes()
+	mockDB.EXPECT().CreateUser(gomock.Any(), gomock.Any()).Return(goodUser, nil).AnyTimes()
 	mockDB.EXPECT().GetUser(gomock.Any()).Return(goodUser, nil)
 	mockDB.EXPECT().GetRoles(gomock.Any()).Return(model.Roles{model.Role{
 		Name:        "admin",
