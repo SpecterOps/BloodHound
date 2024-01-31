@@ -25,10 +25,6 @@
         "path": "foldr_test\\.go",
         "text": "SA4000:",
         "severity": "warning"
-      },
-      {
-        "path": "(dawgs/util/size/(.+)|dawgs/drivers/pg/statements.go)",
-        "linters": ["unused"]
       }
     ]
   },
