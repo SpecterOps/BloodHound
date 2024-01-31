@@ -27,7 +27,7 @@ import (
 
 	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/packages/go/stbernard/analyzers/codeclimate"
-	"github.com/specterops/bloodhound/slices"
+	"github.com/specterops/bloodhound/slicesext"
 )
 
 var (
@@ -60,7 +60,7 @@ func Run(cwd string, modPaths []string, env []string) ([]codeclimate.Entry, erro
 		outb   bytes.Buffer
 	)
 
-	args = append(args, slices.Map(modPaths, func(modPath string) string {
+	args = append(args, slicesext.Map(modPaths, func(modPath string) string {
 		return path.Join(modPath, "...")
 	})...)
 

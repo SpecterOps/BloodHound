@@ -24,7 +24,7 @@ import (
 	"os/exec"
 	"path/filepath"
 
-	"github.com/specterops/bloodhound/slices"
+	"github.com/specterops/bloodhound/slicesext"
 	"golang.org/x/mod/modfile"
 )
 
@@ -106,7 +106,7 @@ func ParseJsAbsPaths(cwd string) ([]string, error) {
 	} else {
 		var workDir = filepath.Dir(ywPath)
 
-		return slices.Map(paths, func(path string) string { return filepath.Join(workDir, path) }), nil
+		return slicesext.Map(paths, func(path string) string { return filepath.Join(workDir, path) }), nil
 	}
 }
 
