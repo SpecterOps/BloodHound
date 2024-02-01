@@ -18,6 +18,7 @@ package ad
 
 import (
 	"context"
+	"errors"
 
 	"github.com/specterops/bloodhound/analysis"
 	"github.com/specterops/bloodhound/analysis/impact"
@@ -48,7 +49,11 @@ func PostADCSESC9a(ctx context.Context, tx graph.Transaction, outC chan<- analys
 	} else {
 		for _, template := range publishedCertTemplates {
 			if valid, err := isCertTemplateValidForESC9a(template); err != nil {
-				log.Debugf("Error checking cert template validity for template %d: %v", template.ID, err)
+				if !errors.Is(err, graph.ErrPropertyNotFound) {
+					log.Errorf("Error checking cert template validity for template %d: %v", template.ID, err)
+				} else {
+					log.Debugf("Error checking cert template validity for template %d: %v", template.ID, err)
+				}
 			} else if !valid {
 				continue
 			} else if certTemplateControllers, ok := cache.CertTemplateControllers[template.ID]; !ok {
@@ -129,7 +134,11 @@ func PostADCSESC9b(ctx context.Context, tx graph.Transaction, outC chan<- analys
 	} else {
 		for _, template := range publishedCertTemplates {
 			if valid, err := isCertTemplateValidForESC9b(template); err != nil {
-				log.Debugf("Error checking cert template validity for template %d: %v", template.ID, err)
+				if !errors.Is(err, graph.ErrPropertyNotFound) {
+					log.Errorf("Error checking cert template validity for template %d: %v", template.ID, err)
+				} else {
+					log.Debugf("Error checking cert template validity for template %d: %v", template.ID, err)
+				}
 			} else if !valid {
 				continue
 			} else if certTemplateControllers, ok := cache.CertTemplateControllers[template.ID]; !ok {
