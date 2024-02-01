@@ -29,7 +29,7 @@ import (
 	"github.com/specterops/bloodhound/dawgs/util/channels"
 	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/log"
-	"github.com/specterops/bloodhound/slices"
+	"github.com/specterops/bloodhound/slicesext"
 )
 
 func PostTrustedForNTAuth(ctx context.Context, db graph.Database, operation analysis.StatTrackedOperation[analysis.CreatePostRelationshipJob]) error {
@@ -150,7 +150,7 @@ func processCertChainParent(node *graph.Node, tx graph.Transaction) ([]analysis.
 		if targetNodes, err := findNodesByCertThumbprint(parentCert, tx, ad.EnterpriseCA, ad.RootCA); err != nil {
 			return []analysis.CreatePostRelationshipJob{}, err
 		} else {
-			return slices.Map(targetNodes, func(nodeId graph.ID) analysis.CreatePostRelationshipJob {
+			return slicesext.Map(targetNodes, func(nodeId graph.ID) analysis.CreatePostRelationshipJob {
 				return analysis.CreatePostRelationshipJob{
 					FromID: node.ID,
 					ToID:   nodeId,

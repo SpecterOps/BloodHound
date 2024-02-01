@@ -20,6 +20,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+
 	"github.com/specterops/bloodhound/cypher/backend/cypher"
 	"github.com/specterops/bloodhound/cypher/model"
 	"github.com/specterops/bloodhound/dawgs/graph"
@@ -33,10 +34,9 @@ var (
 type QueryBuilder struct {
 	Parameters map[string]any
 
-	query                    *model.RegularQuery
-	order                    *model.Order
-	relationshipPatternKinds graph.Kinds
-	prepared                 bool
+	query    *model.RegularQuery
+	order    *model.Order
+	prepared bool
 }
 
 func NewQueryBuilder(singleQuery *model.RegularQuery) *QueryBuilder {

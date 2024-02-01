@@ -1,8 +1,7 @@
 {
   "linters": {
     "disable": [
-      "errcheck",
-      "unused"
+      "errcheck"
     ],
     "enable": [
       "gosimple",
@@ -26,6 +25,10 @@
         "path": "foldr_test\\.go",
         "text": "SA4000:",
         "severity": "warning"
+      },
+      {
+        "path": "dawgs/util/size/(.+)",
+        "linters": ["unused"]
       }
     ]
   },
@@ -42,7 +45,11 @@
     "default-severity": "error",
     "rules": [
       {
-        "text": "(ST\\d{4}|S\\d{4}|SA1019)",
+        "linters": ["stylecheck", "gosimple", "unused", "errcheck", "forcetypeassert"],
+        "severity": "warning"
+      },
+      {
+        "text": "SA1019:",
         "severity": "warning"
       },
       {

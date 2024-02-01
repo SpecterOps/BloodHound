@@ -352,14 +352,14 @@ func CalculateCrossProductNodeSets(groupExpansions impact.PathAggregator, nodeSe
 	//Find all the groups in our secondary targets and map them to their cardinality in our expansions
 	//Saving off to a map to prevent multiple lookups on the expansions
 	//Unhandled error here is irrelevant, we can never return an error
-	unrollSet.Each(func(id uint32) (bool, error) {
+	unrollSet.Each(func(id uint32) bool {
 		//If group expansions contains this ID and its cardinality is > 0, it's a group/localgroup
 		idCardinality := groupExpansions.Cardinality(id).Cardinality()
 		if idCardinality > 0 {
 			tempMap[id] = idCardinality
 		}
 
-		return true, nil
+		return true
 	})
 
 	//Save the map keys to a new slice, this represents our list of groups in the expansion
@@ -391,12 +391,12 @@ func CalculateCrossProductNodeSets(groupExpansions impact.PathAggregator, nodeSe
 		}
 	}
 
-	unrollSet.Each(func(remainder uint32) (bool, error) {
+	unrollSet.Each(func(remainder uint32) bool {
 		if checkSet.Contains(remainder) {
 			resultEntities.Add(remainder)
 		}
 
-		return true, nil
+		return true
 	})
 
 	return resultEntities
@@ -417,7 +417,7 @@ func CalculateCrossProductBitmaps(groupExpansions impact.PathAggregator, nodeSet
 	)
 
 	//Take the second of our node sets and unroll it all into a single bitmap
-	nodeSets[1].Each(func(id uint32) (bool, error) {
+	nodeSets[1].Each(func(id uint32) bool {
 		checkSet.Add(id)
 		idCardinality := groupExpansions.Cardinality(id)
 		idCardinalityCount := getCardinalityCount(id, idCardinality, cardinalityCache)
@@ -426,14 +426,14 @@ func CalculateCrossProductBitmaps(groupExpansions impact.PathAggregator, nodeSet
 			checkSet.Or(idCardinality.(cardinality.Duplex[uint32]))
 		}
 
-		return true, nil
+		return true
 	})
 
 	//If we have more than 2 bitmaps, we need to AND everything together
 	if len(nodeSets) > 2 {
 		for i := 2; i < len(nodeSets); i++ {
 			tempSet := cardinality.NewBitmap32()
-			nodeSets[i].Each(func(id uint32) (bool, error) {
+			nodeSets[i].Each(func(id uint32) bool {
 				tempSet.Add(id)
 				idCardinality := groupExpansions.Cardinality(id)
 				idCardinalityCount := getCardinalityCount(id, idCardinality, cardinalityCache)
@@ -442,7 +442,7 @@ func CalculateCrossProductBitmaps(groupExpansions impact.PathAggregator, nodeSet
 					tempSet.Or(idCardinality.(cardinality.Duplex[uint32]))
 				}
 
-				return true, nil
+				return true
 			})
 
 			checkSet.And(tempSet)
@@ -451,7 +451,7 @@ func CalculateCrossProductBitmaps(groupExpansions impact.PathAggregator, nodeSet
 
 	//checkSet should have all the valid principals from all other sets at this point
 	//Check first degree principals in our reference set first
-	nodeSets[0].Each(func(id uint32) (bool, error) {
+	nodeSets[0].Each(func(id uint32) bool {
 		if checkSet.Contains(id) {
 			resultEntities.Add(id)
 		} else {
@@ -463,21 +463,21 @@ func CalculateCrossProductBitmaps(groupExpansions impact.PathAggregator, nodeSet
 			}
 		}
 
-		return true, nil
+		return true
 	})
 
 	tempMap := map[uint32]uint64{}
 	//Find all the groups in our secondary targets and map them to their cardinality in our expansions
 	//Saving off to a map to prevent multiple lookups on the expansions
 	//Unhandled error here is irrelevant, we can never return an error
-	unrollSet.Each(func(id uint32) (bool, error) {
+	unrollSet.Each(func(id uint32) bool {
 		//If group expansions contains this ID and its cardinality is > 0, it's a group/localgroup
 		idCardinality := groupExpansions.Cardinality(id).Cardinality()
 		if idCardinality > 0 {
 			tempMap[id] = idCardinality
 		}
 
-		return true, nil
+		return true
 	})
 
 	//Save the map keys to a new slice, this represents our list of groups in the expansion
@@ -509,12 +509,12 @@ func CalculateCrossProductBitmaps(groupExpansions impact.PathAggregator, nodeSet
 		}
 	}
 
-	unrollSet.Each(func(remainder uint32) (bool, error) {
+	unrollSet.Each(func(remainder uint32) bool {
 		if checkSet.Contains(remainder) {
 			resultEntities.Add(remainder)
 		}
 
-		return true, nil
+		return true
 	})
 
 	return resultEntities
@@ -746,6 +746,7 @@ func ADCSESC6aPath4Pattern(domainId graph.ID, enterpriseCAs cardinality.Duplex[u
 
 func GetADCSESC6aEdgeComposition(ctx context.Context, db graph.Database, edge *graph.Relationship) (graph.PathSet, error) {
 	var (
+		closureErr           error
 		startNode            *graph.Node
 		traversalInst        = traversal.New(db, analysis.MaximumDatabaseParallelWorkers)
 		lock                 = &sync.Mutex{}
@@ -844,8 +845,7 @@ func GetADCSESC6aEdgeComposition(ctx context.Context, db graph.Database, edge *g
 		log.Warnf("unable to access property %s for node with id %d: %v", common.Email.String(), startNode.ID, err)
 	}
 
-	if err := certTemplates.Each(func(value uint32) (bool, error) {
-
+	certTemplates.Each(func(value uint32) bool {
 		var certTemplate *graph.Node
 
 		if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
@@ -856,7 +856,8 @@ func GetADCSESC6aEdgeComposition(ctx context.Context, db graph.Database, edge *g
 				return nil
 			}
 		}); err != nil {
-			return false, err
+			closureErr = fmt.Errorf("could not fetch cert template node: %w", err)
+			return false
 		}
 
 		schemaVersion, err := certTemplate.Properties.Get(ad.SchemaVersion.String()).Float64()
@@ -881,7 +882,6 @@ func GetADCSESC6aEdgeComposition(ctx context.Context, db graph.Database, edge *g
 		}
 
 		for _, segment := range certTemplateSegments[graph.ID(value)] {
-
 			if startNode.Kinds.ContainsOneOf(ad.User) {
 				if subjectAltRequireDNS || subjectAltRequireDomainDNS {
 					continue
@@ -905,21 +905,20 @@ func GetADCSESC6aEdgeComposition(ctx context.Context, db graph.Database, edge *g
 
 		}
 
-		return true, nil
-	}); err != nil {
-		return paths, err
+		return true
+	})
+
+	if closureErr != nil {
+		return paths, closureErr
 	}
 
 	if paths.Len() > 0 {
-		if err := enterpriseCAs.Each(func(value uint32) (bool, error) {
+		enterpriseCAs.Each(func(value uint32) bool {
 			for _, segment := range enterpriseCASegments[graph.ID(value)] {
 				paths.AddPath(segment.Path())
 			}
-			return true, nil
-
-		}); err != nil {
-			return paths, err
-		}
+			return true
+		})
 	}
 
 	return paths, nil
@@ -1226,13 +1225,15 @@ func GetADCSESC1EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 	path1EnterpriseCAs.And(path2EnterpriseCAs)
 
 	// Render paths from the segments
-	return paths, path1EnterpriseCAs.Each(func(value uint32) (bool, error) {
+	path1EnterpriseCAs.Each(func(value uint32) bool {
 		for _, segment := range candidateSegments[graph.ID(value)] {
 			paths.AddPath(segment.Path())
 		}
 
-		return true, nil
+		return true
 	})
+
+	return paths, nil
 }
 
 func getGoldenCertEdgeComposition(tx graph.Transaction, edge *graph.Relationship) (graph.PathSet, error) {
