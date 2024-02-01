@@ -42,6 +42,18 @@ func generateToDisplaySwitch(root tsgen.File, typeSymbol string, values []model.
 		})
 }
 
+func GenerateTypeScriptArray(root tsgen.File, typeSymbol string, values []model.StringEnum) {
+	if len(values) == 0 {
+		return
+	}
+
+	root.Export().Const().ID(typeSymbol).OP("=").List(func(cursor tsgen.Cursor) {
+		for _, value := range values {
+			cursor.Literal(value.GetRepresentation())
+		}
+	})
+}
+
 func GenerateTypeScriptStringEnum(root tsgen.File, typeSymbol string, values []model.StringEnum) {
 	if len(values) == 0 {
 		return
@@ -98,6 +110,8 @@ func GenerateTypeScriptActiveDirectory(root tsgen.File, schema model.ActiveDirec
 	GenerateTypeScriptStringEnum(root, "ActiveDirectoryNodeKind", schema.NodeKinds)
 	GenerateTypeScriptStringEnum(root, "ActiveDirectoryRelationshipKind", schema.RelationshipKinds)
 	GenerateTypeScriptUnionType(root, "ActiveDirectoryKind", unionKinds...)
+
+	GenerateTypeScriptArray(root, "EdgeCompositionRelationships", schema.EdgeCompositionRelationships)
 
 	GenerateTypeScriptStringEnum(root, "ActiveDirectoryKindProperties", schema.Properties)
 

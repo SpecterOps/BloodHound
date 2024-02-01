@@ -14,7 +14,7 @@
 // 
 // SPDX-License-Identifier: Apache-2.0
 
-module github.com/specterops/bloodhound/slices
+module github.com/specterops/bloodhound/slicesext
 
 go 1.21
 

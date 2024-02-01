@@ -26,7 +26,7 @@ import (
 	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/graphschema/azure"
 	"github.com/specterops/bloodhound/params"
-	"github.com/specterops/bloodhound/slices"
+	"github.com/specterops/bloodhound/slicesext"
 	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/src/api/bloodhoundgraph"
 	"github.com/specterops/bloodhound/src/model"
@@ -62,11 +62,11 @@ func writeShortestPathsResult(paths graph.PathSet, response http.ResponseWriter,
 			graphResponse.Nodes[n.ID.String()] = model.FromDAWGSNode(n, false)
 		}
 
-		edges := slices.FlatMap(paths, func(path graph.Path) []model.UnifiedEdge {
-			return slices.Map(path.Edges, model.FromDAWGSRelationship(false))
+		edges := slicesext.FlatMap(paths, func(path graph.Path) []model.UnifiedEdge {
+			return slicesext.Map(path.Edges, model.FromDAWGSRelationship(false))
 		})
 
-		graphResponse.Edges = slices.UniqueBy(edges, func(edge model.UnifiedEdge) string {
+		graphResponse.Edges = slicesext.UniqueBy(edges, func(edge model.UnifiedEdge) string {
 			return edge.Source + edge.Kind + edge.Target
 		})
 

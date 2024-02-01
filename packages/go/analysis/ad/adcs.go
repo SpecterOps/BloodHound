@@ -79,15 +79,15 @@ func PostADCSESC1(ctx context.Context, tx graph.Transaction, outC chan<- analysi
 			}
 		}
 
-		results.Each(func(value uint32) (bool, error) {
+		results.Each(func(value uint32) bool {
 			if !channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
 				FromID: graph.ID(value),
 				ToID:   domain.ID,
 				Kind:   ad.ADCSESC1,
 			}) {
-				return false, nil
+				return false
 			} else {
-				return true, nil
+				return true
 			}
 		})
 
@@ -141,7 +141,13 @@ func PostADCSESC3(ctx context.Context, tx graph.Transaction, outC chan<- analysi
 									cache.EnterpriseCAEnrollers[eca1.ID],
 									cache.EnterpriseCAEnrollers[eca2.ID],
 									delegatedAgents.Slice())
-								results.Or(tempResults)
+
+								// Add principals to result set unless it's a user and DNS is required
+								if filteredResults, err := filterUserDNSResults(tx, tempResults, certTemplateOne); err != nil {
+									log.Errorf("Error filtering user dns results: %v", err)
+								} else {
+									results.Or(filteredResults)
+								}
 							}
 						}
 					} else {
@@ -151,7 +157,12 @@ func PostADCSESC3(ctx context.Context, tx graph.Transaction, outC chan<- analysi
 								cache.CertTemplateControllers[certTemplateTwo.ID],
 								cache.EnterpriseCAEnrollers[eca1.ID],
 								cache.EnterpriseCAEnrollers[eca2.ID])
-							results.Or(tempResults)
+
+							if filteredResults, err := filterUserDNSResults(tx, tempResults, certTemplateOne); err != nil {
+								log.Errorf("Error filtering user dns results: %v", err)
+							} else {
+								results.Or(filteredResults)
+							}
 						}
 					}
 				}
@@ -159,19 +170,45 @@ func PostADCSESC3(ctx context.Context, tx graph.Transaction, outC chan<- analysi
 		}
 	}
 
-	results.Each(func(value uint32) (bool, error) {
+	results.Each(func(value uint32) bool {
 		if !channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
 			FromID: graph.ID(value),
 			ToID:   domain.ID,
 			Kind:   ad.ADCSESC3,
 		}) {
-			return false, nil
+			return false
 		} else {
-			return true, nil
+			return true
 		}
 	})
 
 	return nil
+}
+
+func filterUserDNSResults(tx graph.Transaction, tempResults cardinality.Duplex[uint32], certTemplate *graph.Node) (cardinality.Duplex[uint32], error) {
+	if userNodes, err := ops.FetchNodeSet(tx.Nodes().Filterf(func() graph.Criteria {
+		return query.And(
+			query.KindIn(query.Node(), ad.User),
+			query.InIDs(query.NodeID(), cardinality.DuplexToGraphIDs(tempResults)...),
+		)
+	})); err != nil {
+		if !graph.IsErrNotFound(err) {
+			return nil, err
+		}
+	} else if len(userNodes) > 0 {
+		if subjRequireDns, err := certTemplate.Properties.Get(ad.SubjectAltRequireDNS.String()).Bool(); err != nil {
+			log.Debugf("Failed to retrieve subjectAltRequireDNS for template %d: %v", certTemplate.ID, err)
+			tempResults.Xor(cardinality.NodeSetToDuplex(userNodes))
+		} else if subjRequireDomainDns, err := certTemplate.Properties.Get(ad.SubjectAltRequireDomainDNS.String()).Bool(); err != nil {
+			log.Debugf("Failed to retrieve subjectAltRequireDomainDNS for template %d: %v", certTemplate.ID, err)
+			tempResults.Xor(cardinality.NodeSetToDuplex(userNodes))
+		} else if subjRequireDns || subjRequireDomainDns {
+			//If either of these properties is true, we need to remove all these users from our victims list
+			tempResults.Xor(cardinality.NodeSetToDuplex(userNodes))
+		}
+	}
+
+	return tempResults, nil
 }
 
 func principalControlsCertTemplate(principal, certTemplate *graph.Node, groupExpansions impact.PathAggregator, cache ADCSCache) bool {
@@ -211,13 +248,13 @@ func checkEmailValidity(node *graph.Node, validCertTemplates []*graph.Node, grou
 					log.Errorf("%s property access error %d: %v", ad.SubjectRequireEmail.String(), certTemplate.ID, err)
 					continue
 				} else if (!subjectAltRequireEmail && !subjectRequireEmail) || schemaVersion == 1 {
-					//Principal does not have an email set but at least one of the certTemplates it controls does not require it so add it to the list of principals enabled for ESC6a
+					//Principal does not have an email set but at least one of the certTemplates it controls does not require it so add it to the list of principals enabled for ESC6
 					return true
 				}
 			}
 		}
 	} else {
-		//Principal has an email set so add it to the list of principals enabled for ESC6a
+		//Principal has an email set so add it to the list of principals enabled for ESC6
 		return true
 	}
 	return false
@@ -238,35 +275,6 @@ func checkDNSValidity(node *graph.Node, validCertTemplates []*graph.Node, groupE
 		}
 	}
 	return false
-}
-
-func filterTempResultsForESC6a(tx graph.Transaction, tempResults cardinality.Duplex[uint32], groupExpansions impact.PathAggregator, validCertTemplates []*graph.Node, cache ADCSCache) cardinality.Duplex[uint32] {
-	principalsEnabledForESC6a := cardinality.NewBitmap32()
-
-	tempResults.Each(func(value uint32) (bool, error) {
-		sourceID := graph.ID(value)
-
-		if resultNode, err := tx.Nodes().Filter(query.Equals(query.NodeID(), sourceID)).First(); err != nil {
-			return true, nil
-		} else {
-			if resultNode.Kinds.ContainsOneOf(ad.Group) {
-				//A Group will be added to the list since it requires no further conditions
-				principalsEnabledForESC6a.Add(value)
-			} else if resultNode.Kinds.ContainsOneOf(ad.User) {
-				if checkDNSValidity(resultNode, validCertTemplates, groupExpansions, cache) {
-					if checkEmailValidity(resultNode, validCertTemplates, groupExpansions, cache) {
-						principalsEnabledForESC6a.Add(value)
-					}
-				}
-			} else if resultNode.Kinds.ContainsOneOf(ad.Computer) {
-				if checkEmailValidity(resultNode, validCertTemplates, groupExpansions, cache) {
-					principalsEnabledForESC6a.Add(value)
-				}
-			}
-		}
-		return true, nil
-	})
-	return principalsEnabledForESC6a
 }
 
 func PostADCSESC6a(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob, groupExpansions impact.PathAggregator, enterpriseCA, domain *graph.Node, cache ADCSCache) error {
@@ -321,19 +329,17 @@ func PostADCSESC6a(ctx context.Context, tx graph.Transaction, outC chan<- analys
 			}
 		}
 
-		if err := filterTempResultsForESC6a(tx, tempResults, groupExpansions, validCertTemplates, cache).Each(func(value uint32) (bool, error) {
+		filterTempResultsForESC6(tx, tempResults, groupExpansions, validCertTemplates, cache).Each(func(value uint32) bool {
 			if !channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
 				FromID: graph.ID(value),
 				ToID:   domain.ID,
 				Kind:   ad.ADCSESC6a,
 			}) {
-				return false, nil
+				return false
 			} else {
-				return true, nil
+				return true
 			}
-		}); err != nil {
-			return err
-		}
+		})
 	}
 	return nil
 }
@@ -412,29 +418,25 @@ func PostADCS(ctx context.Context, db graph.Database, groupExpansions impact.Pat
 	if !adcsEnabled {
 		return &analysis.AtomicPostProcessingStats{}, nil
 	}
-	operation := analysis.NewPostRelationshipOperation(ctx, db, "ADCS Post Processing")
 
 	if enterpriseCertAuthorities, err := FetchNodesByKind(ctx, db, ad.EnterpriseCA); err != nil {
-		operation.Done()
 		return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("failed fetching enterpriseCA nodes: %w", err)
 	} else if rootCertAuthorities, err := FetchNodesByKind(ctx, db, ad.RootCA); err != nil {
-		operation.Done()
 		return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("failed fetching rootCA nodes: %w", err)
 	} else if certTemplates, err := FetchNodesByKind(ctx, db, ad.CertTemplate); err != nil {
-		operation.Done()
 		return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("failed fetching cert template nodes: %w", err)
 	} else if domains, err := FetchNodesByKind(ctx, db, ad.Domain); err != nil {
-		operation.Done()
 		return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("failed fetching domain nodes: %w", err)
 	} else if step1Stats, err := postADCSPreProcessStep1(ctx, db, enterpriseCertAuthorities, rootCertAuthorities); err != nil {
-		operation.Done()
 		return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("failed adcs pre-processing step 1: %w", err)
 	} else if step2Stats, err := postADCSPreProcessStep2(ctx, db, certTemplates); err != nil {
-		operation.Done()
 		return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("failed adcs pre-processing step 2: %w", err)
 	} else {
+		operation := analysis.NewPostRelationshipOperation(ctx, db, "ADCS Post Processing")
+
 		operation.Stats.Merge(step1Stats)
 		operation.Stats.Merge(step2Stats)
+
 		var cache = NewADCSCache()
 		cache.BuildCache(ctx, db, enterpriseCertAuthorities, certTemplates)
 
@@ -481,8 +483,22 @@ func PostADCS(ctx context.Context, db graph.Database, groupExpansions impact.Pat
 					})
 
 					operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
+						if err := PostADCSESC6b(ctx, tx, outC, groupExpansions, innerEnterpriseCA, innerDomain, cache); err != nil {
+							log.Errorf("failed post processing for %s: %v", ad.ADCSESC6b.String(), err)
+						}
+						return nil
+					})
+
+					operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
 						if err := PostADCSESC9a(ctx, tx, outC, groupExpansions, innerEnterpriseCA, innerDomain, cache); err != nil {
 							log.Errorf("failed post processing for %s: %v", ad.ADCSESC9a.String(), err)
+						}
+						return nil
+					})
+
+					operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
+						if err := PostADCSESC10a(ctx, tx, outC, groupExpansions, innerEnterpriseCA, innerDomain, cache); err != nil {
+							log.Errorf("failed post processing for %s: %v", ad.ADCSESC10a.String(), err)
 						}
 
 						return nil
