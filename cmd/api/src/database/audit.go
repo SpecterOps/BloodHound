@@ -39,12 +39,12 @@ func newAuditLog(context context.Context, entry model.AuditEntry, idResolver aut
 	bheCtx := ctx.Get(context)
 
 	auditLog := model.AuditLog{
-		Action:    entry.Action,
-		Fields:    types.JSONUntypedObject(entry.Model.AuditData()),
-		RequestID: bheCtx.RequestID,
-		Source:    bheCtx.RequestIP,
-		Status:    string(entry.Status),
-		CommitID:  entry.CommitID,
+		Action:          entry.Action,
+		Fields:          types.JSONUntypedObject(entry.Model.AuditData()),
+		RequestID:       bheCtx.RequestID,
+		SourceIPAddress: bheCtx.RequestIP,
+		Status:          string(entry.Status),
+		CommitID:        entry.CommitID,
 	}
 
 	authContext := bheCtx.AuthCtx
