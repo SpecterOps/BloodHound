@@ -95,11 +95,11 @@ func (s threadSafeDuplex[T]) Contains(value T) bool {
 	return s.provider.Contains(value)
 }
 
-func (s threadSafeDuplex[T]) Each(delegate func(value T) (bool, error)) error {
+func (s threadSafeDuplex[T]) Each(delegate func(value T) bool) {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
-	return s.provider.Each(delegate)
+	s.provider.Each(delegate)
 }
 
 func (s threadSafeDuplex[T]) CheckedAdd(value T) bool {

@@ -23,7 +23,7 @@ import (
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/log"
-	"github.com/specterops/bloodhound/slices"
+	"github.com/specterops/bloodhound/slicesext"
 )
 
 func ConvertSessionObject(session Session) IngestibleSession {
@@ -510,7 +510,7 @@ func handleEnterpriseCAEnrollmentAgentRestrictions(enterpriseCA EnterpriseCA, re
 
 func handleEnterpriseCASecurity(enterpriseCA EnterpriseCA, relationships []IngestibleRelationship) []IngestibleRelationship {
 	if enterpriseCA.CARegistryData.CASecurity.Collected {
-		caSecurityData := slices.Filter(enterpriseCA.CARegistryData.CASecurity.Data, func(s ACE) bool {
+		caSecurityData := slicesext.Filter(enterpriseCA.CARegistryData.CASecurity.Data, func(s ACE) bool {
 			if s.PrincipalType == ad.LocalGroup.String() {
 				return false
 			}
@@ -521,7 +521,7 @@ func handleEnterpriseCASecurity(enterpriseCA EnterpriseCA, relationships []Inges
 			}
 		})
 
-		filteredACES := slices.Filter(enterpriseCA.Aces, func(s ACE) bool {
+		filteredACES := slicesext.Filter(enterpriseCA.Aces, func(s ACE) bool {
 			if s.PrincipalSID == enterpriseCA.HostingComputer {
 				return true
 			} else {

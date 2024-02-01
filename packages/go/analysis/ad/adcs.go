@@ -79,15 +79,15 @@ func PostADCSESC1(ctx context.Context, tx graph.Transaction, outC chan<- analysi
 			}
 		}
 
-		results.Each(func(value uint32) (bool, error) {
+		results.Each(func(value uint32) bool {
 			if !channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
 				FromID: graph.ID(value),
 				ToID:   domain.ID,
 				Kind:   ad.ADCSESC1,
 			}) {
-				return false, nil
+				return false
 			} else {
-				return true, nil
+				return true
 			}
 		})
 
@@ -170,15 +170,15 @@ func PostADCSESC3(ctx context.Context, tx graph.Transaction, outC chan<- analysi
 		}
 	}
 
-	results.Each(func(value uint32) (bool, error) {
+	results.Each(func(value uint32) bool {
 		if !channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
 			FromID: graph.ID(value),
 			ToID:   domain.ID,
 			Kind:   ad.ADCSESC3,
 		}) {
-			return false, nil
+			return false
 		} else {
-			return true, nil
+			return true
 		}
 	})
 
@@ -329,19 +329,17 @@ func PostADCSESC6a(ctx context.Context, tx graph.Transaction, outC chan<- analys
 			}
 		}
 
-		if err := filterTempResultsForESC6(tx, tempResults, groupExpansions, validCertTemplates, cache).Each(func(value uint32) (bool, error) {
+		filterTempResultsForESC6(tx, tempResults, groupExpansions, validCertTemplates, cache).Each(func(value uint32) bool {
 			if !channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
 				FromID: graph.ID(value),
 				ToID:   domain.ID,
 				Kind:   ad.ADCSESC6a,
 			}) {
-				return false, nil
+				return false
 			} else {
-				return true, nil
+				return true
 			}
-		}); err != nil {
-			return err
-		}
+		})
 	}
 	return nil
 }
