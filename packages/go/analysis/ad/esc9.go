@@ -18,7 +18,6 @@ package ad
 
 import (
 	"context"
-	"errors"
 
 	"github.com/specterops/bloodhound/analysis"
 	"github.com/specterops/bloodhound/analysis/impact"
@@ -44,21 +43,16 @@ func PostADCSESC9a(ctx context.Context, tx graph.Transaction, outC chan<- analys
 		return nil
 	} else if publishedCertTemplates, ok := cache.PublishedTemplateCache[eca.ID]; !ok {
 		return nil
+	} else if ecaControllers, ok := cache.EnterpriseCAEnrollers[eca.ID]; !ok {
+		return nil
 	} else {
 		for _, template := range publishedCertTemplates {
 			if valid, err := isCertTemplateValidForESC9a(template); err != nil {
-				if !errors.Is(err, graph.ErrPropertyNotFound) {
-					log.Errorf("Error checking cert template validity for template %d: %v", template.ID, err)
-				} else {
-					log.Debugf("Error checking cert template validity for template %d: %v", template.ID, err)
-				}
+				log.Debugf("Error checking cert template validity for template %d: %v", template.ID, err)
 			} else if !valid {
 				continue
 			} else if certTemplateControllers, ok := cache.CertTemplateControllers[template.ID]; !ok {
 				log.Debugf("Failed to retrieve controllers for cert template %d from cache", template.ID)
-				continue
-			} else if ecaControllers, ok := cache.EnterpriseCAEnrollers[eca.ID]; !ok {
-				log.Debugf("Failed to retrieve controllers for enterprise ca %d from cache", eca.ID)
 				continue
 			} else {
 				//Expand controllers for the eca + template completely because we don't do group shortcutting here
@@ -130,21 +124,16 @@ func PostADCSESC9b(ctx context.Context, tx graph.Transaction, outC chan<- analys
 		return nil
 	} else if publishedCertTemplates, ok := cache.PublishedTemplateCache[eca.ID]; !ok {
 		return nil
+	} else if ecaControllers, ok := cache.EnterpriseCAEnrollers[eca.ID]; !ok {
+		return nil
 	} else {
 		for _, template := range publishedCertTemplates {
 			if valid, err := isCertTemplateValidForESC9b(template); err != nil {
-				if !errors.Is(err, graph.ErrPropertyNotFound) {
-					log.Errorf("Error checking cert template validity for template %d: %v", template.ID, err)
-				} else {
-					log.Debugf("Error checking cert template validity for template %d: %v", template.ID, err)
-				}
+				log.Debugf("Error checking cert template validity for template %d: %v", template.ID, err)
 			} else if !valid {
 				continue
 			} else if certTemplateControllers, ok := cache.CertTemplateControllers[template.ID]; !ok {
 				log.Debugf("Failed to retrieve controllers for cert template %d from cache", template.ID)
-				continue
-			} else if ecaControllers, ok := cache.EnterpriseCAEnrollers[eca.ID]; !ok {
-				log.Debugf("Failed to retrieve controllers for enterprise ca %d from cache", eca.ID)
 				continue
 			} else {
 				//Expand controllers for the eca + template completely because we don't do group shortcutting here

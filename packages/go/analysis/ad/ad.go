@@ -802,7 +802,6 @@ func GetADCSESC6aEdgeComposition(ctx context.Context, db graph.Database, edge *g
 		})}); err != nil {
 		return nil, err
 	}
-	log.Infof("certtemplates %v", certTemplates.Slice())
 
 	if err := traversalInst.BreadthFirst(ctx, traversal.Plan{
 		Root: startNode,
