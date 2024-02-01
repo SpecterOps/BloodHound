@@ -1979,18 +1979,12 @@ func (s *ESC9aPrincipalHarness) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.NewRelationship(s.DC, s.Domain, ad.DCFor)
 	graphTestContext.NewRelationship(s.CertTemplate, s.EnterpriseCA, ad.PublishedTo)
 	graphTestContext.NewRelationship(s.Group1, s.User1, ad.GenericAll)
-	graphTestContext.NewRelationship(s.Group1, s.Domain, ad.ADCSESC9a)
-	graphTestContext.NewRelationship(s.Group2, s.Domain, ad.ADCSESC9a)
 	graphTestContext.NewRelationship(s.Group2, s.User1, ad.GenericWrite)
 	graphTestContext.NewRelationship(s.Group6, s.User1, ad.AllExtendedRights)
 	graphTestContext.NewRelationship(s.Group3, s.User1, ad.WriteDACL)
-	graphTestContext.NewRelationship(s.Group3, s.Domain, ad.ADCSESC9a)
-	graphTestContext.NewRelationship(s.Group4, s.Domain, ad.ADCSESC9a)
 	graphTestContext.NewRelationship(s.Group4, s.User1, ad.WriteOwner)
-	graphTestContext.NewRelationship(s.Group5, s.Domain, ad.ADCSESC9a)
 	graphTestContext.NewRelationship(s.Group5, s.User1, ad.WriteOwner)
 	graphTestContext.NewRelationship(s.User2, s.User2, ad.GenericAll)
-	graphTestContext.NewRelationship(s.User2, s.Domain, ad.ADCSESC9a)
 	graphTestContext.NewRelationship(s.User1, s.Group0, ad.MemberOf)
 	graphTestContext.NewRelationship(s.User2, s.Group0, ad.MemberOf)
 	graphTestContext.NewRelationship(s.Group0, s.CertTemplate, ad.Enroll)
@@ -2197,9 +2191,6 @@ func (s *ESC9aHarness1) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.NewRelationship(s.Group3, s.User3, ad.GenericAll)
 	graphTestContext.NewRelationship(s.Group2, s.User2, ad.GenericAll)
 	graphTestContext.NewRelationship(s.Group1, s.User1, ad.GenericAll)
-	graphTestContext.NewRelationship(s.Group3, s.Domain, ad.ADCSESC9a)
-	graphTestContext.NewRelationship(s.Group2, s.Domain, ad.ADCSESC9a)
-	graphTestContext.NewRelationship(s.Group1, s.Domain, ad.ADCSESC9a)
 }
 
 type ESC9aHarness2 struct {
@@ -2340,10 +2331,6 @@ func (s *ESC9aHarness2) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.NewRelationship(s.Group6, s.User1, ad.GenericAll)
 	graphTestContext.NewRelationship(s.Group5, s.Computer1, ad.GenericAll)
 	graphTestContext.NewRelationship(s.Group4, s.Group1, ad.GenericAll)
-	graphTestContext.NewRelationship(s.User5, s.Domain, ad.ADCSESC9a)
-	graphTestContext.NewRelationship(s.Computer5, s.Domain, ad.ADCSESC9a)
-	graphTestContext.NewRelationship(s.Group6, s.Domain, ad.ADCSESC9a)
-	graphTestContext.NewRelationship(s.Group5, s.Domain, ad.ADCSESC9a)
 }
 
 type ESC9aHarnessVictim struct {
@@ -2409,9 +2396,7 @@ func (s *ESC9aHarnessVictim) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.NewRelationship(s.User3, s.Group0, ad.MemberOf)
 	graphTestContext.NewRelationship(s.User4, s.CertTemplate1, ad.Enroll)
 	graphTestContext.NewRelationship(s.Group1, s.User1, ad.GenericAll)
-	graphTestContext.NewRelationship(s.Group1, s.Domain, ad.ADCSESC9a)
 	graphTestContext.NewRelationship(s.Group2, s.User2, ad.GenericAll)
-	graphTestContext.NewRelationship(s.Group2, s.Domain, ad.ADCSESC9a)
 	graphTestContext.NewRelationship(s.Group3, s.User3, ad.GenericAll)
 	graphTestContext.NewRelationship(s.Group4, s.User4, ad.GenericAll)
 }
@@ -2607,7 +2592,6 @@ func (s *ESC9aHarnessECA) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.NewRelationship(s.EnterpriseCA5, s.DC5, ad.CanAbuseWeakCertBinding)
 	graphTestContext.NewRelationship(s.User5, s.CertTemplate5, ad.Enroll)
 	graphTestContext.NewRelationship(s.Group1, s.User1, ad.GenericAll)
-	graphTestContext.NewRelationship(s.Group1, s.Domain1, ad.ADCSESC9a)
 	graphTestContext.NewRelationship(s.Group2, s.User2, ad.GenericAll)
 	graphTestContext.NewRelationship(s.Group5, s.User5, ad.GenericAll)
 	graphTestContext.NewRelationship(s.Group4, s.User4, ad.GenericAll)
@@ -2670,18 +2654,12 @@ func (s *ESC9bPrincipalHarness) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.NewRelationship(s.DC, s.Domain, ad.DCFor)
 	graphTestContext.NewRelationship(s.CertTemplate, s.EnterpriseCA, ad.PublishedTo)
 	graphTestContext.NewRelationship(s.Group1, s.Computer1, ad.GenericAll)
-	graphTestContext.NewRelationship(s.Group1, s.Domain, ad.ADCSESC9b)
-	graphTestContext.NewRelationship(s.Group2, s.Domain, ad.ADCSESC9b)
 	graphTestContext.NewRelationship(s.Group2, s.Computer1, ad.GenericWrite)
 	graphTestContext.NewRelationship(s.Group6, s.Computer1, ad.AllExtendedRights)
 	graphTestContext.NewRelationship(s.Group3, s.Computer1, ad.WriteDACL)
-	graphTestContext.NewRelationship(s.Group3, s.Domain, ad.ADCSESC9b)
-	graphTestContext.NewRelationship(s.Group4, s.Domain, ad.ADCSESC9b)
 	graphTestContext.NewRelationship(s.Group4, s.Computer1, ad.WriteOwner)
-	graphTestContext.NewRelationship(s.Group5, s.Domain, ad.ADCSESC9b)
 	graphTestContext.NewRelationship(s.Group5, s.Computer1, ad.WriteOwner)
 	graphTestContext.NewRelationship(s.Computer2, s.Computer2, ad.GenericAll)
-	graphTestContext.NewRelationship(s.Computer2, s.Domain, ad.ADCSESC9b)
 	graphTestContext.NewRelationship(s.Computer1, s.Group0, ad.MemberOf)
 	graphTestContext.NewRelationship(s.Computer2, s.Group0, ad.MemberOf)
 	graphTestContext.NewRelationship(s.Group0, s.CertTemplate, ad.Enroll)
@@ -2873,8 +2851,6 @@ func (s *ESC9bHarness1) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.NewRelationship(s.Group3, s.Computer3, ad.GenericAll)
 	graphTestContext.NewRelationship(s.Group2, s.Computer2, ad.GenericAll)
 	graphTestContext.NewRelationship(s.Group1, s.Computer1, ad.GenericAll)
-	graphTestContext.NewRelationship(s.Group2, s.Domain, ad.ADCSESC9b)
-	graphTestContext.NewRelationship(s.Group1, s.Domain, ad.ADCSESC9b)
 }
 
 type ESC9bHarness2 struct {
@@ -3015,8 +2991,6 @@ func (s *ESC9bHarness2) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.NewRelationship(s.Group6, s.User1, ad.GenericAll)
 	graphTestContext.NewRelationship(s.Group5, s.Computer1, ad.GenericAll)
 	graphTestContext.NewRelationship(s.Group4, s.Group1, ad.GenericAll)
-	graphTestContext.NewRelationship(s.User5, s.Domain, ad.ADCSESC9b)
-	graphTestContext.NewRelationship(s.Computer5, s.Domain, ad.ADCSESC9b)
 }
 
 type ESC9bHarnessVictim struct {
@@ -3083,9 +3057,7 @@ func (s *ESC9bHarnessVictim) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.NewRelationship(s.Computer3, s.Group0, ad.MemberOf)
 	graphTestContext.NewRelationship(s.Computer4, s.CertTemplate1, ad.Enroll)
 	graphTestContext.NewRelationship(s.Group1, s.Computer1, ad.GenericAll)
-	graphTestContext.NewRelationship(s.Group1, s.Domain, ad.ADCSESC9b)
 	graphTestContext.NewRelationship(s.Group2, s.Computer2, ad.GenericAll)
-	graphTestContext.NewRelationship(s.Group2, s.Domain, ad.ADCSESC9b)
 	graphTestContext.NewRelationship(s.Group3, s.Computer3, ad.GenericAll)
 	graphTestContext.NewRelationship(s.Group4, s.Computer4, ad.GenericAll)
 }
@@ -3286,7 +3258,6 @@ func (s *ESC9bHarnessECA) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.NewRelationship(s.EnterpriseCA5, s.DC5, ad.CanAbuseWeakCertBinding)
 	graphTestContext.NewRelationship(s.Computer5, s.CertTemplate5, ad.Enroll)
 	graphTestContext.NewRelationship(s.Group1, s.Computer1, ad.GenericAll)
-	graphTestContext.NewRelationship(s.Group1, s.Domain1, ad.ADCSESC9b)
 	graphTestContext.NewRelationship(s.Group2, s.Computer2, ad.GenericAll)
 	graphTestContext.NewRelationship(s.Group5, s.Computer5, ad.GenericAll)
 	graphTestContext.NewRelationship(s.Group4, s.Computer4, ad.GenericAll)
