@@ -33,17 +33,17 @@ const (
 )
 
 type AuditLog struct {
-	ID         int64                   `json:"id" gorm:"primaryKey"`
-	CreatedAt  time.Time               `json:"created_at" gorm:"index"`
-	ActorID    string                  `json:"actor_id" gorm:"index"`
-	ActorName  string                  `json:"actor_name"`
-	ActorEmail string                  `json:"actor_email"`
-	Action     string                  `json:"action" gorm:"index"`
-	Fields     types.JSONUntypedObject `json:"fields"`
-	RequestID  string                  `json:"request_id"`
-	Source     string                  `json:"source"`
-	Status     string                  `json:"status"`
-	CommitID   uuid.UUID               `json:"commit_id" gorm:"type:text"`
+	ID              int64                   `json:"id" gorm:"primaryKey"`
+	CreatedAt       time.Time               `json:"created_at" gorm:"index"`
+	ActorID         string                  `json:"actor_id" gorm:"index"`
+	ActorName       string                  `json:"actor_name"`
+	ActorEmail      string                  `json:"actor_email"`
+	Action          string                  `json:"action" gorm:"index"`
+	Fields          types.JSONUntypedObject `json:"fields"`
+	RequestID       string                  `json:"request_id"`
+	SourceIpAddress string                  `json:"source_ip_address"`
+	Status          string                  `json:"status"`
+	CommitID        uuid.UUID               `json:"commit_id" gorm:"type:text"`
 }
 
 func (s AuditLog) String() string {
@@ -61,7 +61,7 @@ func (s AuditLogs) IsSortable(column string) bool {
 		"action",
 		"request_id",
 		"created_at",
-		"source",
+		"source_ip_address",
 		"status":
 		return true
 	default:
@@ -71,15 +71,15 @@ func (s AuditLogs) IsSortable(column string) bool {
 
 func (s AuditLogs) ValidFilters() map[string][]FilterOperator {
 	return map[string][]FilterOperator{
-		"id":          {Equals, GreaterThan, GreaterThanOrEquals, LessThan, LessThanOrEquals, NotEquals},
-		"actor_id":    {Equals, NotEquals},
-		"actor_name":  {Equals, NotEquals},
-		"actor_email": {Equals, NotEquals},
-		"action":      {Equals, NotEquals},
-		"request_id":  {Equals, NotEquals},
-		"created_at":  {Equals, GreaterThan, GreaterThanOrEquals, LessThan, LessThanOrEquals, NotEquals},
-		"source":      {Equals, NotEquals},
-		"status":      {Equals, NotEquals},
+		"id":                {Equals, GreaterThan, GreaterThanOrEquals, LessThan, LessThanOrEquals, NotEquals},
+		"actor_id":          {Equals, NotEquals},
+		"actor_name":        {Equals, NotEquals},
+		"actor_email":       {Equals, NotEquals},
+		"action":            {Equals, NotEquals},
+		"request_id":        {Equals, NotEquals},
+		"created_at":        {Equals, GreaterThan, GreaterThanOrEquals, LessThan, LessThanOrEquals, NotEquals},
+		"source_ip_address": {Equals, NotEquals},
+		"status":            {Equals, NotEquals},
 	}
 }
 
@@ -90,7 +90,7 @@ func (s AuditLogs) IsString(column string) bool {
 		"actor_email",
 		"action",
 		"request_id",
-		"source",
+		"source_ip_address",
 		"status":
 		return true
 	default:
