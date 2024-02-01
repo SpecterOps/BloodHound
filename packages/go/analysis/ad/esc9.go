@@ -106,15 +106,11 @@ func PostADCSESC9a(ctx context.Context, tx graph.Transaction, outC chan<- analys
 		}
 
 		results.Each(func(value uint32) bool {
-			if !channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
+			return channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
 				FromID: graph.ID(value),
 				ToID:   domain.ID,
 				Kind:   ad.ADCSESC9a,
-			}) {
-				return false
-			} else {
-				return true
-			}
+			})
 		})
 
 		return nil
@@ -174,16 +170,12 @@ func PostADCSESC9b(ctx context.Context, tx graph.Transaction, outC chan<- analys
 			}
 		}
 
-		results.Each(func(value uint32) (bool, error) {
-			if !channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
+		results.Each(func(value uint32) bool {
+			return channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
 				FromID: graph.ID(value),
 				ToID:   domain.ID,
 				Kind:   ad.ADCSESC9b,
-			}) {
-				return false, nil
-			} else {
-				return true, nil
-			}
+			})
 		})
 
 		return nil
