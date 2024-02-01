@@ -19,6 +19,7 @@ package ad
 import (
 	"context"
 	"errors"
+
 	"github.com/specterops/bloodhound/analysis"
 	"github.com/specterops/bloodhound/analysis/impact"
 	"github.com/specterops/bloodhound/dawgs/cardinality"
@@ -104,15 +105,15 @@ func PostADCSESC9a(ctx context.Context, tx graph.Transaction, outC chan<- analys
 			}
 		}
 
-		results.Each(func(value uint32) (bool, error) {
+		results.Each(func(value uint32) bool {
 			if !channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
 				FromID: graph.ID(value),
 				ToID:   domain.ID,
 				Kind:   ad.ADCSESC9a,
 			}) {
-				return false, nil
+				return false
 			} else {
-				return true, nil
+				return true
 			}
 		})
 
@@ -124,13 +125,13 @@ func expandNodeSliceToBitmapWithoutGroups(nodes []*graph.Node, groupExpansions i
 	var bitmap = cardinality.NewBitmap32()
 	for _, controller := range nodes {
 		if controller.Kinds.ContainsOneOf(ad.Group) {
-			groupExpansions.Cardinality(controller.ID.Uint32()).(cardinality.Duplex[uint32]).Each(func(id uint32) (bool, error) {
+			groupExpansions.Cardinality(controller.ID.Uint32()).(cardinality.Duplex[uint32]).Each(func(id uint32) bool {
 				//Check group expansions against each id, if cardinality is 0 than its not a group
 				if groupExpansions.Cardinality(id).Cardinality() == 0 {
 					bitmap.Add(id)
 				}
 
-				return true, nil
+				return true
 			})
 		} else {
 			bitmap.Add(controller.ID.Uint32())

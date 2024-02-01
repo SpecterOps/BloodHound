@@ -17,9 +17,10 @@
 package model
 
 import (
-	"github.com/specterops/bloodhound/dawgs/graph"
 	"sort"
 	"strings"
+
+	"github.com/specterops/bloodhound/dawgs/graph"
 )
 
 type SortOrder string
@@ -1087,17 +1088,6 @@ type Properties struct {
 
 func NewProperties() *Properties {
 	return &Properties{}
-}
-
-func (s *Properties) copy() *Properties {
-	if s == nil {
-		return nil
-	}
-
-	return &Properties{
-		Map:       Copy(s.Map),
-		Parameter: Copy(s.Parameter),
-	}
 }
 
 // NodePattern Type

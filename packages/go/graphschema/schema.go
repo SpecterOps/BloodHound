@@ -21,6 +21,7 @@ import (
 	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/graphschema/azure"
 	"github.com/specterops/bloodhound/graphschema/common"
+	"github.com/specterops/bloodhound/slicesext"
 )
 
 const (
@@ -39,8 +40,8 @@ func AzureGraphName(suffix string) string {
 func CombinedGraphSchema(name string) graph.Graph {
 	return graph.Graph{
 		Name:  name,
-		Nodes: append(common.NodeKinds(), append(azure.NodeKinds(), ad.NodeKinds()...)...),
-		Edges: append(common.Relationships(), append(azure.Relationships(), ad.Relationships()...)...),
+		Nodes: slicesext.Concat(common.NodeKinds(), azure.NodeKinds(), ad.NodeKinds()),
+		Edges: slicesext.Concat(common.Relationships(), azure.Relationships(), ad.Relationships()),
 		NodeConstraints: []graph.Constraint{{
 			Field: common.ObjectID.String(),
 			Type:  graph.BTreeIndex,

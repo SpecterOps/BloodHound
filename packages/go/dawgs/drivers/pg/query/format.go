@@ -18,11 +18,12 @@ package query
 
 import (
 	"fmt"
+	"strconv"
+	"strings"
+
 	"github.com/specterops/bloodhound/dawgs/drivers/pg/model"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/graphschema/ad"
-	"strconv"
-	"strings"
 )
 
 func postgresIndexType(indexType graph.IndexType) string {
@@ -115,23 +116,6 @@ func formatConflictMatcher(propertyNames []string, defaultOnConflict string) str
 
 	builder.WriteString(") ")
 	return builder.String()
-}
-
-type idCounter struct {
-	current int
-}
-
-func newIDCounter() *idCounter {
-	return &idCounter{
-		current: 1,
-	}
-}
-
-func (s *idCounter) Next() string {
-	next := s.current
-	s.current += 1
-
-	return strconv.Itoa(next)
 }
 
 func FormatNodeUpsert(graphTarget model.Graph, identityProperties []string) string {
