@@ -474,8 +474,12 @@ func (s *User) AuditData() AuditData {
 	return AuditData{
 		"id":               s.ID,
 		"principal_name":   s.PrincipalName,
+		"first_name":       s.FirstName,
+		"last_name":        s.LastName,
+		"email_address":    s.EmailAddress,
 		"roles":            s.Roles.IDs(),
 		"saml_provider_id": s.SAMLProviderID.ValueOrZero(),
+		"is_disabled":      s.IsDisabled,
 		"eula_accepted":    s.EULAAccepted,
 	}
 }
