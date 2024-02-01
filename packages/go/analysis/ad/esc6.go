@@ -300,6 +300,7 @@ func GetADCSESC6bEdgeComposition(ctx context.Context, db graph.Database, edge *g
 	*/
 
 	var (
+		closureErr           error
 		startNode            *graph.Node
 		traversalInst        = traversal.New(db, analysis.MaximumDatabaseParallelWorkers)
 		lock                 = &sync.Mutex{}
@@ -407,8 +408,7 @@ func GetADCSESC6bEdgeComposition(ctx context.Context, db graph.Database, edge *g
 		log.Warnf("unable to access property %s for node with id %d: %v", common.Email.String(), startNode.ID, err)
 	}
 
-	if err := certTemplates.Each(func(value uint32) (bool, error) {
-
+	certTemplates.Each(func(value uint32) bool {
 		var certTemplate *graph.Node
 
 		if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
@@ -419,7 +419,8 @@ func GetADCSESC6bEdgeComposition(ctx context.Context, db graph.Database, edge *g
 				return nil
 			}
 		}); err != nil {
-			return false, err
+			closureErr = fmt.Errorf("could not fetch cert template node: %w", err)
+			return false
 		}
 
 		schemaVersion, err := certTemplate.Properties.Get(ad.SchemaVersion.String()).Float64()
@@ -444,45 +445,43 @@ func GetADCSESC6bEdgeComposition(ctx context.Context, db graph.Database, edge *g
 		}
 
 		for _, segment := range certTemplateSegments[graph.ID(value)] {
-
 			if startNode.Kinds.ContainsOneOf(ad.User) {
 				if subjectAltRequireDNS || subjectAltRequireDomainDNS {
 					continue
 				} else if email == "" && !((!subjectAltRequireEmail && !subjectRequireEmail) || schemaVersion == 1) {
 					continue
 				} else {
-					log.Infof("Found ESC6a Path: %s", graph.FormatPathSegment(segment))
+					log.Infof("Found ESC6b Path: %s", graph.FormatPathSegment(segment))
 					paths.AddPath(segment.Path())
 				}
 			} else if startNode.Kinds.ContainsOneOf(ad.Computer) {
 				if email == "" && !((!subjectAltRequireEmail && !subjectRequireEmail) || schemaVersion == 1) {
 					continue
 				} else {
-					log.Infof("Found ESC6a Path: %s", graph.FormatPathSegment(segment))
+					log.Infof("Found ESC6b Path: %s", graph.FormatPathSegment(segment))
 					paths.AddPath(segment.Path())
 				}
 			} else {
-				log.Infof("Found ESC6a Path: %s", graph.FormatPathSegment(segment))
+				log.Infof("Found ESC6b Path: %s", graph.FormatPathSegment(segment))
 				paths.AddPath(segment.Path())
 			}
 
 		}
 
-		return true, nil
-	}); err != nil {
-		return paths, err
+		return true
+	})
+
+	if closureErr != nil {
+		return paths, closureErr
 	}
 
 	if paths.Len() > 0 {
-		if err := enterpriseCAs.Each(func(value uint32) (bool, error) {
+		enterpriseCAs.Each(func(value uint32) bool {
 			for _, segment := range enterpriseCASegments[graph.ID(value)] {
 				paths.AddPath(segment.Path())
 			}
-			return true, nil
-
-		}); err != nil {
-			return paths, err
-		}
+			return true
+		})
 	}
 
 	return paths, nil
