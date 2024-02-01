@@ -69,9 +69,9 @@ func (s *hyperLogLog32) Or(provider Provider[uint32]) {
 		s.sketch.Merge(typedProvider.sketch)
 
 	case Duplex[uint32]:
-		typedProvider.Each(func(nextValue uint32) (bool, error) {
+		typedProvider.Each(func(nextValue uint32) bool {
 			s.Add(nextValue)
-			return true, nil
+			return true
 		})
 	}
 }

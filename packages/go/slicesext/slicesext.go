@@ -14,7 +14,10 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package slices
+// Package slicesext extends the standard library slices package with additional slice utilities
+package slicesext
+
+import "slices"
 
 // Filter applies a predicate function over each element in a given slice and returns a new slice containing only the elements in which the predicate returns true
 func Filter[T any](slice []T, fn func(T) bool) []T {
@@ -99,16 +102,6 @@ func UniqueBy[T any, U comparable](slice []T, fn func(T) U) []T {
 	return out
 }
 
-// Contains returns true if a slice contains an element that is equal to the given value
-func Contains[T comparable](slice []T, value T) bool {
-	for _, sliceValue := range slice {
-		if sliceValue == value {
-			return true
-		}
-	}
-	return false
-}
-
 func Head[T any](list []T) T {
 	return list[0]
 }
@@ -125,12 +118,21 @@ func Init[T any](list []T) []T {
 	return list[:len(list)-1]
 }
 
-// Reverse reverses the order of a slice by doing an in place reverse
-// This will reorder the provided slice in place, and uses zero allocations
-func Reverse[T any](list []T) []T {
-	for low, high := 0, len(list)-1; low < high; low, high = low+1, high-1 {
-		list[low], list[high] = list[high], list[low]
+// Copyright 2021 The Go Authors. All rights reserved.
+// Concat returns a new slice concatenating the passed in slices.
+// This was ripped from go1.22 source and should be replaced with the stdlib implementation when we move to 1.22
+// Original source: https://github.com/golang/go/blob/5c0d0929d3a6378c710376b55a49abd55b31a805/src/slices/slices.go#L502
+func Concat[S ~[]E, E any](s ...S) S {
+	size := 0
+	for _, slice := range s {
+		size += len(slice)
+		if size < 0 {
+			panic("len out of range")
+		}
 	}
-
-	return list
+	newslice := slices.Grow[S](nil, size)
+	for _, s := range s {
+		newslice = append(newslice, s...)
+	}
+	return newslice
 }

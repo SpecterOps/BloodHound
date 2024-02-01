@@ -73,6 +73,7 @@ func Roles() map[string]RoleTemplate {
 			Permissions: model.Permissions{
 				permissions.AppReadApplicationConfiguration,
 				permissions.APsGenerateReport,
+				permissions.AuthCreateToken,
 				permissions.AuthManageSelf,
 				permissions.GraphDBRead,
 			},

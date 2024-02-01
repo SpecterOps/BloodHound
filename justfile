@@ -140,7 +140,7 @@ prune-my-branches nuclear='no':
 
 # Run all analyzers (requires jq to be installed locally)
 analyze:
-  go run github.com/specterops/bloodhound/packages/go/stbernard analysis | jq 'sort_by(.severity) | .[] | {"severity": .severity, "description": .description, "location": "\(.location.path):\(.location.lines.begin)"}' 
+  go run github.com/specterops/bloodhound/packages/go/stbernard analysis | jq 'sort_by(.severity) | .[] | {"severity": .severity, "description": .description, "location": "\(.location.path):\(.location.lines.begin)"}'
 
 # run docker compose commands for the BH dev profile (Default: up)
 bh-dev *ARGS='up':
