@@ -33,7 +33,7 @@ func PostADCSESC10a(ctx context.Context, tx graph.Transaction, outC chan<- analy
 		if graph.IsErrNotFound(err) {
 			return nil
 		}
-		log.Errorf("unable to obtain canabuseupncertmapping rels for adcs post: %v", err)
+		return err
 	} else if len(canAbuseUPNRels) == 0 {
 		return nil
 	} else if publishedCertTemplates, ok := cache.PublishedTemplateCache[eca.ID]; !ok {
@@ -95,7 +95,7 @@ func PostADCSESC10b(ctx context.Context, tx graph.Transaction, outC chan<- analy
 		results := cardinality.NewBitmap32()
 
 		for _, template := range publishedCertTemplates {
-			if valid, err := isCertTemplateValidForESC10(template, false); err != nil {
+			if valid, err := isCertTemplateValidForESC10(template, true); err != nil {
 				log.Warnf("error validating cert template %d: %v", template.ID, err)
 				continue
 			} else if !valid {
