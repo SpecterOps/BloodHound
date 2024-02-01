@@ -1,17 +1,17 @@
 // Copyright 2023 Specter Ops, Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// 
+//
 // SPDX-License-Identifier: Apache-2.0
 
 package api
@@ -35,6 +35,7 @@ import (
 	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/src/auth"
 	"github.com/specterops/bloodhound/src/config"
+	"github.com/specterops/bloodhound/src/ctx"
 	"github.com/specterops/bloodhound/src/database"
 	"github.com/specterops/bloodhound/src/model"
 )
@@ -84,8 +85,26 @@ func NewAuthenticator(cfg config.Configuration, db database.Database, ctxInitial
 	}
 }
 
+func (s authenticator) auditLogin(requestContext *context.Context, user *model.User, loginError error) {
+	bhCtx := ctx.Get(*requestContext)
+	// TODO: Set audit log status based on presence of loginError
+	auditLog := model.AuditLog{
+		ActorID:         user.ID.String(),
+		ActorName:       user.PrincipalName,
+		ActorEmail:      user.EmailAddress.ValueOrZero(),
+		SourceIpAddress: bhCtx.RequestIP,
+	}
+	s.db.CreateAuditLog(auditLog)
+}
+
 func (s authenticator) LoginWithSecret(ctx context.Context, loginRequest LoginRequest) (LoginDetails, error) {
-	if user, err := s.db.LookupUser(loginRequest.Username); err != nil {
+	var (
+		user model.User
+		err  error
+	)
+	defer s.auditLogin(&ctx, &user, err)
+
+	if user, err = s.db.LookupUser(loginRequest.Username); err != nil {
 		if errors.Is(err, database.ErrNotFound) {
 			return LoginDetails{}, ErrInvalidAuth
 		}
