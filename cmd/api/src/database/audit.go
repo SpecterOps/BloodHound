@@ -47,6 +47,10 @@ func newAuditLog(context context.Context, entry model.AuditEntry, idResolver aut
 		CommitID:        entry.CommitID,
 	}
 
+	if entry.ErrorMsg != "" {
+		auditLog.Fields["error"] = entry.ErrorMsg
+	}
+
 	authContext := bheCtx.AuthCtx
 	if !authContext.Authenticated() {
 		return auditLog, ErrAuthContextInvalid
@@ -127,6 +131,7 @@ func (s *BloodhoundDB) AuditableTransaction(ctx context.Context, auditEntry mode
 
 	if err != nil {
 		auditEntry.Status = model.AuditStatusFailure
+		auditEntry.ErrorMsg = err.Error()
 	} else {
 		auditEntry.Status = model.AuditStatusSuccess
 	}
