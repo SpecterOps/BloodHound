@@ -101,8 +101,7 @@ type Authorizer interface {
 }
 
 type authorizer struct {
-	auditLogger         AuditLogger
-	permissionsResolver func(ctx Context) model.Permissions
+	auditLogger AuditLogger
 }
 
 func NewAuthorizer(auditLogger AuditLogger) Authorizer {
