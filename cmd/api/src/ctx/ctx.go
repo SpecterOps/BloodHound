@@ -107,37 +107,3 @@ func SetRequestContext(request *http.Request, bhCtx *Context) *http.Request {
 const (
 	ErrAuthContextInvalid = errors.Error("auth context is invalid")
 )
-
-// Audit Log Reference
-
-// func NewAuditLogFromContext(ctx Context, idResolver auth.IdentityResolver) (model.AuditLog, error) {
-// 	if ctx.AuditCtx.Model == nil {
-// 		return model.AuditLog{}, fmt.Errorf("model cannot be nil when creating a new audit log")
-// 	} else if ctx.AuditCtx.Action != model.AuditStatusFailure && ctx.AuditCtx.Action != model.AuditStatusSuccess {
-// 		return model.AuditLog{}, fmt.Errorf("invalid action specified in audit log: %s", ctx.AuditCtx.Action)
-// 	}
-// 	authContext := ctx.AuthCtx
-
-// 	if !authContext.Authenticated() {
-// 		return model.AuditLog{}, ErrAuthContextInvalid
-// 	} else if identity, err := idResolver.GetIdentity(ctx.AuthCtx); err != nil {
-// 		return model.AuditLog{}, ErrAuthContextInvalid
-// 	} else {
-// 		auditLog := model.AuditLog{
-// 			ActorID:    identity.ID.String(),
-// 			ActorName:  identity.Name,
-// 			ActorEmail: identity.Email,
-// 			Action:     ctx.AuditCtx.Action,
-// 			Fields:     types.JSONUntypedObject(ctx.AuditCtx.Model.AuditData()),
-// 			RequestID:  ctx.RequestID,
-// 			Source:     ctx.RequestIP,
-// 			Status:     ctx.AuditCtx.Status,
-// 		}
-
-// 		if auditLog.Status == model.AuditStatusFailure {
-// 			auditLog.Fields["error"] = ctx.AuditCtx.ErrorMsg
-// 		}
-
-// 		return auditLog, nil
-// 	}
-// }
