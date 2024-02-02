@@ -1485,6 +1485,56 @@ func TestADCSESC6b(t *testing.T) {
 
 			}
 
+			// run edge composition against the group1 node which has an outbound esc 6b edge
+			if edge, err := tx.Relationships().Filterf(
+				func() graph.Criteria {
+					return query.And(
+						query.Kind(query.Relationship(), ad.ADCSESC6b),
+						query.Equals(query.StartProperty(common.Name.String()), "Group1"),
+					)
+				}).First(); err != nil {
+				t.Fatalf("error fetching esc6b edge in integration test: %v", err)
+			} else {
+				composition, err := ad2.GetADCSESC6bEdgeComposition(context.Background(), db, edge)
+				require.Nil(t, err)
+
+				require.Equal(t, 8, len(composition.AllNodes()))
+				require.True(t, composition.AllNodes().Contains(harness.ESC6bTemplate1Harness.Group0))
+				require.True(t, composition.AllNodes().Contains(harness.ESC6bTemplate1Harness.Group1))
+				require.True(t, composition.AllNodes().Contains(harness.ESC6bTemplate1Harness.CertTemplate1))
+				require.True(t, composition.AllNodes().Contains(harness.ESC6bTemplate1Harness.EnterpriseCA))
+				require.True(t, composition.AllNodes().Contains(harness.ESC6bTemplate1Harness.RootCA))
+				require.True(t, composition.AllNodes().Contains(harness.ESC6bTemplate1Harness.NTAuthStore))
+				require.True(t, composition.AllNodes().Contains(harness.ESC6bTemplate1Harness.DC))
+				require.True(t, composition.AllNodes().Contains(harness.ESC6bTemplate1Harness.Domain))
+
+			}
+
+			// run edge composition against the group2 node which has an outbound esc 6b edge
+			if edge, err := tx.Relationships().Filterf(
+				func() graph.Criteria {
+					return query.And(
+						query.Kind(query.Relationship(), ad.ADCSESC6b),
+						query.Equals(query.StartProperty(common.Name.String()), "Group2"),
+					)
+				}).First(); err != nil {
+				t.Fatalf("error fetching esc6b edge in integration test: %v", err)
+			} else {
+				composition, err := ad2.GetADCSESC6bEdgeComposition(context.Background(), db, edge)
+				require.Nil(t, err)
+
+				require.Equal(t, 8, len(composition.AllNodes()))
+				require.True(t, composition.AllNodes().Contains(harness.ESC6bTemplate1Harness.Group0))
+				require.True(t, composition.AllNodes().Contains(harness.ESC6bTemplate1Harness.Group2))
+				require.True(t, composition.AllNodes().Contains(harness.ESC6bTemplate1Harness.CertTemplate2))
+				require.True(t, composition.AllNodes().Contains(harness.ESC6bTemplate1Harness.EnterpriseCA))
+				require.True(t, composition.AllNodes().Contains(harness.ESC6bTemplate1Harness.RootCA))
+				require.True(t, composition.AllNodes().Contains(harness.ESC6bTemplate1Harness.NTAuthStore))
+				require.True(t, composition.AllNodes().Contains(harness.ESC6bTemplate1Harness.DC))
+				require.True(t, composition.AllNodes().Contains(harness.ESC6bTemplate1Harness.Domain))
+
+			}
+
 			return nil
 		})
 	})
