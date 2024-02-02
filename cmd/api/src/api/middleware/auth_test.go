@@ -34,11 +34,11 @@ import (
 )
 
 func permissionsCheckAllHandler(db *dbmocks.MockDatabase, internalHandler http.HandlerFunc, permissions ...model.Permission) http.Handler {
-	return PermissionsCheckAll(db, auth.NewAuthorizer(), permissions...)(internalHandler)
+	return PermissionsCheckAll(auth.NewAuthorizer(db), permissions...)(internalHandler)
 }
 
 func permissionsCheckAtLeastOneHandler(db *dbmocks.MockDatabase, internalHandler http.HandlerFunc, permissions ...model.Permission) http.Handler {
-	return PermissionsCheckAtLeastOne(db, auth.NewAuthorizer(), permissions...)(internalHandler)
+	return PermissionsCheckAtLeastOne(auth.NewAuthorizer(db), permissions...)(internalHandler)
 }
 
 func Test_parseAuthorizationHeader(t *testing.T) {
