@@ -364,7 +364,7 @@ func GetADCSESC6bEdgeComposition(ctx context.Context, db graph.Database, edge *g
 		return nil, err
 	}
 
-	// use the enterpriseCA and certTemplate nodes from previous steps to find certTemplatess that are trusted for NTAuth (p2)
+	// use the enterpriseCA and certTemplate nodes from previous steps to find enterprise CAs that are trusted for NTAuth (p2)
 	if err := traversalInst.BreadthFirst(ctx, traversal.Plan{
 		Root: startNode,
 		Driver: ADCSESC6bPath2Pattern(edge.EndID, path1EnterpriseCAs, certTemplates).Do(
@@ -383,7 +383,7 @@ func GetADCSESC6bEdgeComposition(ctx context.Context, db graph.Database, edge *g
 		return nil, err
 	}
 
-	// find the enterpriseCAs that have an outbound CanAbuseUPNCertMapping to a computer trusted by the domain (p3)
+	// find the enterpriseCAs that have an outbound CanAbuseUPNCertMapping to a computer that is a DC for the domain (p3)
 	if err := traversalInst.BreadthFirst(ctx, traversal.Plan{
 		Root: startNode,
 		Driver: ADCSESC6bPath3Pattern(edge.EndID, path1EnterpriseCAs).Do(func(terminal *graph.PathSegment) error {
