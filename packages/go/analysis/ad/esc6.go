@@ -73,15 +73,11 @@ func PostADCSESC6a(ctx context.Context, tx graph.Transaction, outC chan<- analys
 
 		filterTempResultsForESC6(tx, tempResults, groupExpansions, validCertTemplates, cache).Each(
 			func(value uint32) bool {
-				if !channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
+				return channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
 					FromID: graph.ID(value),
 					ToID:   domain.ID,
 					Kind:   ad.ADCSESC6a,
-				}) {
-					return false
-				} else {
-					return true
-				}
+				})
 			})
 	}
 	return nil
@@ -130,12 +126,11 @@ func PostADCSESC6b(ctx context.Context, tx graph.Transaction, outC chan<- analys
 
 		filterTempResultsForESC6(tx, tempResults, groupExpansions, validCertTemplates, cache).Each(
 			func(value uint32) bool {
-				channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
+				return channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
 					FromID: graph.ID(value),
 					ToID:   domain.ID,
 					Kind:   ad.ADCSESC6b,
 				})
-				return true
 			})
 	}
 	return nil
