@@ -96,7 +96,6 @@ func (s authenticator) auditLogin(requestContext *context.Context, user *model.U
 		SourceIpAddress: bhCtx.RequestIP,
 	}
 
-	log.Infof("************** loginError is %+s", &loginError)
 	if *loginError != nil {
 		auditLog.Status = string(model.AuditStatusFailure)
 		auditLog.Fields = types.JSONUntypedObject{"error": loginError}
