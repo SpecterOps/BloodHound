@@ -565,11 +565,10 @@ func ADCSESC6bPath2Pattern(domainId graph.ID, enterpriseCAs, candidateTemplates 
 
 func ADCSESC6bPath3Pattern(domainId graph.ID, enterpriseCAs cardinality.Duplex[uint32]) traversal.PatternContinuation {
 	return traversal.NewPattern().
-		Outbound(
-			query.And(
-				query.Kind(query.Relationship(), ad.MemberOf),
-				query.Kind(query.End(), ad.Group),
-			)).
+		OutboundWithDepth(0, 0, query.And(
+			query.Kind(query.Relationship(), ad.MemberOf),
+			query.Kind(query.End(), ad.Group),
+		)).
 		Outbound(query.And(
 			query.KindIn(query.Relationship(), ad.Enroll),
 			query.KindIn(query.End(), ad.EnterpriseCA),
