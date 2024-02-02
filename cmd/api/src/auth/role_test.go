@@ -110,6 +110,21 @@ func testRoleAccess(t *testing.T, roleName string) {
 			}
 		}),
 
+		lab.TestCase(fmt.Sprintf("%s NOT be able to access others AuthCreateToken endpoints unless admin", testCondition(role, auth.Permissions().AuthCreateToken)), func(assert *require.Assertions, harness *lab.Harness) {
+			userClient, ok := lab.Unpack(harness, userClientFixture)
+			assert.True(ok)
+
+			randoUser, err := uuid.NewV4()
+			assert.Nilf(err, "failed to create rando user")
+
+			_, err = userClient.ListUserTokens(randoUser)
+			if role.Name == auth.RoleAdministrator {
+				assert.Nil(err)
+			} else {
+				requireForbidden(assert, err)
+			}
+		}),
+
 		lab.TestCase(fmt.Sprintf("%s be able to access AuthManageProviders endpoints", testCondition(role, auth.Permissions().AuthManageProviders)), func(assert *require.Assertions, harness *lab.Harness) {
 			userClient, ok := lab.Unpack(harness, userClientFixture)
 			assert.True(ok)
@@ -214,21 +229,4 @@ func TestRole_PowerUser(t *testing.T) {
 
 func TestRole_Administrator(t *testing.T) {
 	testRoleAccess(t, auth.RoleAdministrator)
-}
-
-func TestRole_Administrator_ListOtherUserTokens(t *testing.T) {
-	harness := lab.NewHarness()
-	lab.Pack(harness, fixtures.BHAdminApiClientFixture)
-	lab.NewSpec(t, harness).Run(
-		lab.TestCase("Should be able to access AuthCreateToken endpoints for other users", func(assert *require.Assertions, harness *lab.Harness) {
-			adminClient, ok := lab.Unpack(harness, fixtures.BHAdminApiClientFixture)
-			assert.True(ok)
-
-			randoUser, err := uuid.NewV4()
-			assert.Nilf(err, "failed to create rando user")
-
-			_, err = adminClient.ListUserTokens(randoUser)
-			assert.Nil(err)
-		}),
-	)
 }

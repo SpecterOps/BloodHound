@@ -19,6 +19,7 @@ package analysis
 import (
 	"context"
 	"fmt"
+	"slices"
 	"strings"
 
 	"github.com/specterops/bloodhound/dawgs/graph"
@@ -28,7 +29,7 @@ import (
 	"github.com/specterops/bloodhound/graphschema/azure"
 	"github.com/specterops/bloodhound/graphschema/common"
 	"github.com/specterops/bloodhound/log"
-	"github.com/specterops/bloodhound/slices"
+	"github.com/specterops/bloodhound/slicesext"
 )
 
 const (
@@ -110,17 +111,10 @@ func ClearSystemTags(ctx context.Context, db graph.Database) error {
 
 func ValidKinds() []graph.Kind {
 	var (
-		lenCalc = len(ad.Nodes()) + len(ad.Relationships()) + len(azure.NodeKinds()) + len(azure.Relationships())
-		kinds   = make([]graph.Kind, 0, lenCalc)
+		metaKinds = []graph.Kind{metaKind, metaDetailKind}
 	)
 
-	kinds = append(kinds, ad.Nodes()...)
-	kinds = append(kinds, ad.Relationships()...)
-	kinds = append(kinds, azure.NodeKinds()...)
-	kinds = append(kinds, azure.Relationships()...)
-	kinds = append(kinds, metaKind, metaDetailKind)
-
-	return kinds
+	return slicesext.Concat(ad.Nodes(), ad.Relationships(), azure.NodeKinds(), azure.Relationships(), metaKinds)
 }
 
 func ParseKind(rawKind string) (graph.Kind, error) {
@@ -138,7 +132,7 @@ func ParseKinds(rawKinds ...string) (graph.Kinds, error) {
 		return graph.Kinds{ad.Entity, azure.Entity}, nil
 	}
 
-	return slices.MapWithErr(rawKinds, ParseKind)
+	return slicesext.MapWithErr(rawKinds, ParseKind)
 }
 
 func nodeByIndexedKindProperty(property, value string, kind graph.Kind) graph.Criteria {
