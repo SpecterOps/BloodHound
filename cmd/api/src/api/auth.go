@@ -93,6 +93,7 @@ func (s authenticator) auditLogin(requestContext *context.Context, user *model.U
 		ActorName:       user.PrincipalName,
 		ActorEmail:      user.EmailAddress.ValueOrZero(),
 		Action:          "LoginAttempt",
+		RequestID:       bhCtx.RequestID,
 		SourceIpAddress: bhCtx.RequestIP,
 	}
 
