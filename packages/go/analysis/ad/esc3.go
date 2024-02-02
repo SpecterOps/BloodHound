@@ -18,14 +18,106 @@ package ad
 
 import (
 	"context"
+	"fmt"
 	"slices"
 
 	"github.com/specterops/bloodhound/analysis"
+	"github.com/specterops/bloodhound/analysis/impact"
+	"github.com/specterops/bloodhound/dawgs/cardinality"
 	"github.com/specterops/bloodhound/dawgs/graph"
+	"github.com/specterops/bloodhound/dawgs/ops"
+	"github.com/specterops/bloodhound/dawgs/query"
 	"github.com/specterops/bloodhound/dawgs/util/channels"
 	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/log"
 )
+
+func PostADCSESC3(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob, groupExpansions impact.PathAggregator, eca2, domain *graph.Node, cache ADCSCache) error {
+	results := cardinality.NewBitmap32()
+
+	if publishedCertTemplates, ok := cache.PublishedTemplateCache[eca2.ID]; !ok {
+		return nil
+	} else if collected, err := eca2.Properties.Get(ad.EnrollmentAgentRestrictionsCollected.String()).Bool(); err != nil {
+		return fmt.Errorf("error getting enrollmentagentcollected for eca2 %d: %w", eca2.ID, err)
+	} else if hasRestrictions, err := eca2.Properties.Get(ad.HasEnrollmentAgentRestrictions.String()).Bool(); err != nil {
+		return fmt.Errorf("error getting hasenrollmentagentrestrictions for ca %d: %w", eca2.ID, err)
+	} else {
+		for _, certTemplateTwo := range publishedCertTemplates {
+			if !isEndCertTemplateValidESC3(certTemplateTwo) {
+				continue
+			}
+
+			if inboundTemplates, err := ops.FetchStartNodes(tx.Relationships().Filterf(func() graph.Criteria {
+				return query.And(
+					query.Equals(query.EndID(), certTemplateTwo.ID),
+					query.Kind(query.Relationship(), ad.EnrollOnBehalfOf),
+					query.Kind(query.Start(), ad.CertTemplate),
+				)
+			})); err != nil {
+				if !graph.IsErrNotFound(err) {
+					log.Errorf("Error getting target nodes for esc3 for node %d: %v", certTemplateTwo.ID, err)
+				}
+			} else {
+				for _, certTemplateOne := range inboundTemplates {
+					if !isStartCertTemplateValidESC3(certTemplateOne) {
+						continue
+					}
+
+					if publishedECAs, err := FetchCertTemplateCAs(tx, certTemplateOne); err != nil {
+						log.Errorf("error getting cas for cert template %d: %v", certTemplateOne.ID, err)
+					} else if publishedECAs.Len() == 0 {
+						continue
+					} else if collected && hasRestrictions {
+						if delegatedAgents, err := fetchFirstDegreeNodes(tx, certTemplateTwo, ad.DelegatedEnrollmentAgent); err != nil {
+							log.Errorf("error getting delegated agents for cert template %d: %v", certTemplateTwo.ID, err)
+						} else {
+							for _, eca1 := range publishedECAs {
+								tempResults := CalculateCrossProductNodeSets(groupExpansions,
+									cache.CertTemplateControllers[certTemplateOne.ID],
+									cache.CertTemplateControllers[certTemplateTwo.ID],
+									cache.EnterpriseCAEnrollers[eca1.ID],
+									cache.EnterpriseCAEnrollers[eca2.ID],
+									delegatedAgents.Slice())
+
+								// Add principals to result set unless it's a user and DNS is required
+								if filteredResults, err := filterUserDNSResults(tx, tempResults, certTemplateOne); err != nil {
+									log.Errorf("Error filtering user dns results: %v", err)
+								} else {
+									results.Or(filteredResults)
+								}
+							}
+						}
+					} else {
+						for _, eca1 := range publishedECAs {
+							tempResults := CalculateCrossProductNodeSets(groupExpansions,
+								cache.CertTemplateControllers[certTemplateOne.ID],
+								cache.CertTemplateControllers[certTemplateTwo.ID],
+								cache.EnterpriseCAEnrollers[eca1.ID],
+								cache.EnterpriseCAEnrollers[eca2.ID])
+
+							if filteredResults, err := filterUserDNSResults(tx, tempResults, certTemplateOne); err != nil {
+								log.Errorf("Error filtering user dns results: %v", err)
+							} else {
+								results.Or(filteredResults)
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+	results.Each(func(value uint32) bool {
+		channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
+			FromID: graph.ID(value),
+			ToID:   domain.ID,
+			Kind:   ad.ADCSESC3,
+		})
+		return true
+	})
+
+	return nil
+}
 
 func PostEnrollOnBehalfOf(certTemplates []*graph.Node, operation analysis.StatTrackedOperation[analysis.CreatePostRelationshipJob]) error {
 	versionOneTemplates := make([]*graph.Node, 0)
@@ -172,6 +264,44 @@ func EnrollOnBehalfOfVersionOne(tx graph.Transaction, versionOneCertTemplates []
 	}
 
 	return results, nil
+}
+
+func isStartCertTemplateValidESC3(template *graph.Node) bool {
+	if reqManagerApproval, err := template.Properties.Get(ad.RequiresManagerApproval.String()).Bool(); err != nil {
+		log.Errorf("error getting reqmanagerapproval for certtemplate %d: %v", template.ID, err)
+	} else if reqManagerApproval {
+		return false
+	} else if schemaVersion, err := template.Properties.Get(ad.SchemaVersion.String()).Float64(); err != nil {
+		log.Errorf("error getting schemaversion for certtemplate %d: %v", template.ID, err)
+	} else if schemaVersion == 1 {
+		return true
+	} else if schemaVersion > 1 {
+		if authorizedSignatures, err := template.Properties.Get(ad.AuthorizedSignatures.String()).Float64(); err != nil {
+			log.Errorf("error getting authorizedsignatures for certtemplate %d: %v", template.ID, err)
+		} else if authorizedSignatures > 0 {
+			return false
+		} else {
+			return true
+		}
+	}
+
+	return false
+}
+
+func isEndCertTemplateValidESC3(template *graph.Node) bool {
+	if authEnabled, err := template.Properties.Get(ad.AuthenticationEnabled.String()).Bool(); err != nil {
+		log.Errorf("error getting authenabled for cert template %d: %v", template.ID, err)
+		return false
+	} else if !authEnabled {
+		return false
+	} else if reqManagerApproval, err := template.Properties.Get(ad.RequiresManagerApproval.String()).Bool(); err != nil {
+		log.Errorf("error getting reqManagerApproval for cert template %d: %v", template.ID, err)
+		return false
+	} else if reqManagerApproval {
+		return false
+	} else {
+		return true
+	}
 }
 
 func certTemplateHasEkuOrAll(certTemplate *graph.Node, targetEkus ...string) (bool, error) {
