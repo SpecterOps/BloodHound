@@ -95,7 +95,7 @@ func PostADCSESC9b(ctx context.Context, tx graph.Transaction, outC chan<- analys
 		return nil
 	} else {
 		for _, template := range publishedCertTemplates {
-			if valid, err := isCertTemplateValidForESC9(template, false); err != nil {
+			if valid, err := isCertTemplateValidForESC9(template, true); err != nil {
 				log.Warnf("error validating cert template %d: %v", template.ID, err)
 				continue
 			} else if !valid {
@@ -106,7 +106,7 @@ func PostADCSESC9b(ctx context.Context, tx graph.Transaction, outC chan<- analys
 			} else {
 				victimBitmap := getVictimBitmap(groupExpansions, certTemplateControllers, ecaControllers)
 
-				if attackers, err := FetchAttackersForEscalations9and10(tx, victimBitmap, false); err != nil {
+				if attackers, err := FetchAttackersForEscalations9and10(tx, victimBitmap, true); err != nil {
 					log.Warnf("Error getting start nodes for esc9a attacker nodes: %v", err)
 					continue
 				} else {
