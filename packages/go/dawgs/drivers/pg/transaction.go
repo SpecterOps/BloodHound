@@ -20,6 +20,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -54,12 +55,6 @@ func (s inspectingDriver) Query(ctx context.Context, sql string, arguments ...an
 func (s inspectingDriver) QueryRow(ctx context.Context, sql string, arguments ...any) pgx.Row {
 	inspector().Inspect(sql, arguments)
 	return s.upstreamDriver.QueryRow(ctx, sql, arguments...)
-}
-
-func newInspectingDriver(upstreamDriver driver) driver {
-	return &inspectingDriver{
-		upstreamDriver: upstreamDriver,
-	}
 }
 
 type transaction struct {

@@ -18,8 +18,9 @@ package datapipe
 
 import (
 	"context"
-	"github.com/specterops/bloodhound/src/database"
 	"os"
+
+	"github.com/specterops/bloodhound/src/database"
 
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/log"
@@ -137,11 +138,5 @@ func (s *Daemon) processIngestTasks(ctx context.Context, ingestTasks model.Inges
 		}
 
 		s.clearFileTask(ingestTask)
-	}
-}
-
-func (s *Daemon) clearTask(ingestTask model.IngestTask) {
-	if err := s.db.DeleteIngestTask(ingestTask); err != nil {
-		log.Errorf("Error removing task from db: %v", err)
 	}
 }
