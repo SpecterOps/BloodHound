@@ -154,3 +154,11 @@ type AuditEntry struct {
 	Status   AuditEntryStatus
 	ErrorMsg string
 }
+
+type AuditableURL string
+
+func (s AuditableURL) AuditData() AuditData {
+	return AuditData{
+		"request_url": s,
+	}
+}

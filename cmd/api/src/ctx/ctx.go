@@ -25,6 +25,7 @@ import (
 
 	"github.com/specterops/bloodhound/errors"
 	"github.com/specterops/bloodhound/src/auth"
+	"github.com/specterops/bloodhound/src/model"
 )
 
 // Use our own type rather than a primitive to avoid collisions
@@ -45,7 +46,7 @@ type Context struct {
 	RequestID    string
 	AuthCtx      auth.Context
 	Host         *url.URL
-	RequestedURL *url.URL
+	RequestedURL model.AuditableURL
 	RequestIP    string
 }
 
