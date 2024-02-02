@@ -46,16 +46,12 @@ func (s bitmap64) Clear() {
 	s.bitmap.Clear()
 }
 
-func (s bitmap64) Each(delegate func(nextValue uint64) (bool, error)) error {
+func (s bitmap64) Each(delegate func(nextValue uint64) bool) {
 	for itr := s.bitmap.Iterator(); itr.HasNext(); {
-		if ok, err := delegate(itr.Next()); err != nil {
-			return err
-		} else if !ok {
+		if ok := delegate(itr.Next()); !ok {
 			break
 		}
 	}
-
-	return nil
 }
 
 func (s bitmap64) Iterator() Iterator[uint64] {
@@ -92,9 +88,9 @@ func (s bitmap64) Xor(provider Provider[uint64]) {
 	case Duplex[uint64]:
 		providerCopy := roaring64.New()
 
-		typedProvider.Each(func(value uint64) (bool, error) {
+		typedProvider.Each(func(value uint64) bool {
 			providerCopy.Add(value)
-			return true, nil
+			return true
 		})
 
 		s.bitmap.Xor(providerCopy)
@@ -106,12 +102,12 @@ func (s bitmap64) And(provider Provider[uint64]) {
 		s.bitmap.And(typedProvider.bitmap)
 
 	case Duplex[uint64]:
-		s.Each(func(nextValue uint64) (bool, error) {
+		s.Each(func(nextValue uint64) bool {
 			if !typedProvider.Contains(nextValue) {
 				s.Remove(nextValue)
 			}
 
-			return true, nil
+			return true
 		})
 	}
 }
@@ -121,9 +117,9 @@ func (s bitmap64) Or(provider Provider[uint64]) {
 		s.bitmap.Or(typedProvider.bitmap)
 
 	case Duplex[uint64]:
-		typedProvider.Each(func(nextValue uint64) (bool, error) {
+		typedProvider.Each(func(nextValue uint64) bool {
 			s.Add(nextValue)
-			return true, nil
+			return true
 		})
 	}
 }

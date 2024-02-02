@@ -20,13 +20,19 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/crewjam/saml"
+	"github.com/crewjam/saml/samlsp"
+	"github.com/gofrs/uuid"
+	"github.com/gorilla/mux"
+	"github.com/pkg/errors"
+	"github.com/pquerna/otp/totp"
 	"github.com/specterops/bloodhound/crypto"
 	"github.com/specterops/bloodhound/log"
-	"github.com/specterops/bloodhound/slices"
 	"github.com/specterops/bloodhound/src/api"
 	v2 "github.com/specterops/bloodhound/src/api/v2"
 	"github.com/specterops/bloodhound/src/auth"
@@ -40,13 +46,6 @@ import (
 	"github.com/specterops/bloodhound/src/serde"
 	"github.com/specterops/bloodhound/src/utils"
 	"github.com/specterops/bloodhound/src/utils/validation"
-
-	"github.com/crewjam/saml"
-	"github.com/crewjam/saml/samlsp"
-	"github.com/gofrs/uuid"
-	"github.com/gorilla/mux"
-	"github.com/pkg/errors"
-	"github.com/pquerna/otp/totp"
 )
 
 const (
