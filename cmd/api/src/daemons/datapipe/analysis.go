@@ -36,7 +36,7 @@ import (
 
 var (
 	ErrAnalysisFailed             = errors.New("analysis failed")
-	ErrAnalysisPartiallyCompleted = errors.New("analysis partially failed")
+	ErrAnalysisPartiallyCompleted = errors.New("analysis partially completed")
 )
 
 func RunAnalysisOperations(ctx context.Context, db database.Database, graphDB graph.Database, _ config.Configuration) error {
