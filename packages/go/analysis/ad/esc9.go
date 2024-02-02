@@ -44,6 +44,8 @@ func PostADCSESC9a(ctx context.Context, tx graph.Transaction, outC chan<- analys
 		return nil
 	} else if publishedCertTemplates, ok := cache.PublishedTemplateCache[eca.ID]; !ok {
 		return nil
+	} else if ecaControllers, ok := cache.EnterpriseCAEnrollers[eca.ID]; !ok {
+		return nil
 	} else {
 		for _, template := range publishedCertTemplates {
 			if valid, err := isCertTemplateValidForESC9a(template); err != nil {
@@ -56,9 +58,6 @@ func PostADCSESC9a(ctx context.Context, tx graph.Transaction, outC chan<- analys
 				continue
 			} else if certTemplateControllers, ok := cache.CertTemplateControllers[template.ID]; !ok {
 				log.Debugf("Failed to retrieve controllers for cert template %d from cache", template.ID)
-				continue
-			} else if ecaControllers, ok := cache.EnterpriseCAEnrollers[eca.ID]; !ok {
-				log.Debugf("Failed to retrieve controllers for enterprise ca %d from cache", eca.ID)
 				continue
 			} else {
 				//Expand controllers for the eca + template completely because we don't do group shortcutting here
@@ -106,15 +105,75 @@ func PostADCSESC9a(ctx context.Context, tx graph.Transaction, outC chan<- analys
 		}
 
 		results.Each(func(value uint32) bool {
-			if !channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
+			return channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
 				FromID: graph.ID(value),
 				ToID:   domain.ID,
 				Kind:   ad.ADCSESC9a,
-			}) {
-				return false
+			})
+		})
+
+		return nil
+	}
+}
+
+func PostADCSESC9b(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob, groupExpansions impact.PathAggregator, eca, domain *graph.Node, cache ADCSCache) error {
+	results := cardinality.NewBitmap32()
+
+	if canAbuseWeakCertBindingRels, err := FetchCanAbuseWeakCertBindingRels(tx, eca); err != nil {
+		if graph.IsErrNotFound(err) {
+			return nil
+		}
+
+		return err
+	} else if len(canAbuseWeakCertBindingRels) == 0 {
+		return nil
+	} else if publishedCertTemplates, ok := cache.PublishedTemplateCache[eca.ID]; !ok {
+		return nil
+	} else if ecaControllers, ok := cache.EnterpriseCAEnrollers[eca.ID]; !ok {
+		return nil
+	} else {
+		for _, template := range publishedCertTemplates {
+			if valid, err := isCertTemplateValidForESC9b(template); err != nil {
+				if !errors.Is(err, graph.ErrPropertyNotFound) {
+					log.Errorf("Error checking cert template validity for template %d: %v", template.ID, err)
+				} else {
+					log.Debugf("Error checking cert template validity for template %d: %v", template.ID, err)
+				}
+			} else if !valid {
+				continue
+			} else if certTemplateControllers, ok := cache.CertTemplateControllers[template.ID]; !ok {
+				log.Debugf("Failed to retrieve controllers for cert template %d from cache", template.ID)
+				continue
 			} else {
-				return true
+				//Expand controllers for the eca + template completely because we don't do group shortcutting here
+				var (
+					victimBitmap = expandNodeSliceToBitmapWithoutGroups(certTemplateControllers, groupExpansions)
+					ecaBitmap    = expandNodeSliceToBitmapWithoutGroups(ecaControllers, groupExpansions)
+				)
+
+				victimBitmap.And(ecaBitmap)
+
+				if attackers, err := ops.FetchStartNodes(tx.Relationships().Filterf(func() graph.Criteria {
+					return query.And(
+						query.KindIn(query.Start(), ad.Computer, ad.User, ad.Group),
+						query.KindIn(query.Relationship(), ad.GenericAll, ad.GenericWrite, ad.Owns, ad.WriteOwner, ad.WriteDACL),
+						query.KindIn(query.End(), ad.Computer),
+						query.InIDs(query.EndID(), cardinality.DuplexToGraphIDs(victimBitmap)...),
+					)
+				})); err != nil {
+					return err
+				} else {
+					results.Or(cardinality.NodeSetToDuplex(attackers))
+				}
 			}
+		}
+
+		results.Each(func(value uint32) bool {
+			return channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
+				FromID: graph.ID(value),
+				ToID:   domain.ID,
+				Kind:   ad.ADCSESC9b,
+			})
 		})
 
 		return nil
@@ -172,5 +231,37 @@ func isCertTemplateValidForESC9a(ct *graph.Node) (bool, error) {
 		return true, nil
 	} else {
 		return false, nil
+	}
+}
+
+func isCertTemplateValidForESC9b(ct *graph.Node) (bool, error) {
+	if reqManagerApproval, err := ct.Properties.Get(ad.RequiresManagerApproval.String()).Bool(); err != nil {
+		return false, err
+	} else if reqManagerApproval {
+		return false, nil
+	} else if authenticationEnabled, err := ct.Properties.Get(ad.AuthenticationEnabled.String()).Bool(); err != nil {
+		return false, err
+	} else if !authenticationEnabled {
+		return false, nil
+	} else if noSecurityExtension, err := ct.Properties.Get(ad.NoSecurityExtension.String()).Bool(); err != nil {
+		return false, err
+	} else if !noSecurityExtension {
+		return false, nil
+	} else if enrolleeSuppliesSubject, err := ct.Properties.Get(ad.EnrolleeSuppliesSubject.String()).Bool(); err != nil {
+		return false, err
+	} else if enrolleeSuppliesSubject {
+		return false, nil
+	} else if subjectAltRequireDNS, err := ct.Properties.Get(ad.SubjectAltRequireDNS.String()).Bool(); err != nil {
+		return false, err
+	} else if !subjectAltRequireDNS {
+		return false, nil
+	} else if schemaVersion, err := ct.Properties.Get(ad.SchemaVersion.String()).Float64(); err != nil {
+		return false, err
+	} else if authorizedSignatures, err := ct.Properties.Get(ad.AuthorizedSignatures.String()).Float64(); err != nil {
+		return false, err
+	} else if schemaVersion > 1 && authorizedSignatures > 0 {
+		return false, nil
+	} else {
+		return true, nil
 	}
 }
