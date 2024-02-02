@@ -86,8 +86,8 @@ func NewAuthenticator(cfg config.Configuration, db database.Database, ctxInitial
 	}
 }
 
-func (s authenticator) auditLogin(requestContext *context.Context, user *model.User, loginError *error) {
-	bhCtx := ctx.Get(*requestContext)
+func (s authenticator) auditLogin(requestContext context.Context, user *model.User, loginError *error) {
+	bhCtx := ctx.Get(requestContext)
 	auditLog := model.AuditLog{
 		ActorID:         user.ID.String(),
 		ActorName:       user.PrincipalName,
@@ -108,13 +108,27 @@ func (s authenticator) auditLogin(requestContext *context.Context, user *model.U
 	s.db.CreateAuditLog(auditLog)
 }
 
+func (s authenticator) validateSecretLogin(ctx context.Context, user model.User, loginRequest LoginRequest) (string, error) {
+	if user.AuthSecret == nil {
+		return "", ErrNoUserSecret
+	} else if err := s.ValidateSecret(ctx, loginRequest.Secret, *user.AuthSecret); err != nil {
+		return "", err
+	} else if err = auth.ValidateTOTPSecret(loginRequest.OTP, *user.AuthSecret); err != nil {
+		return "", err
+	} else if sessionToken, err := s.CreateSession(user, *user.AuthSecret); err != nil {
+		return "", err
+	} else {
+		return sessionToken, nil
+	}
+}
+
 func (s authenticator) LoginWithSecret(ctx context.Context, loginRequest LoginRequest) (LoginDetails, error) {
 	var (
 		user         model.User
 		err          error
 		sessionToken string
 	)
-	defer s.auditLogin(&ctx, &user, &err)
+	defer s.auditLogin(ctx, &user, &err)
 
 	if user, err = s.db.LookupUser(loginRequest.Username); err != nil {
 		if errors.Is(err, database.ErrNotFound) {
@@ -122,20 +136,16 @@ func (s authenticator) LoginWithSecret(ctx context.Context, loginRequest LoginRe
 		}
 
 		return LoginDetails{}, FormatDatabaseError(err)
-	} else if user.AuthSecret == nil {
-		return LoginDetails{}, ErrNoUserSecret
-	} else if err = s.ValidateSecret(ctx, loginRequest.Secret, *user.AuthSecret); err != nil {
-		return LoginDetails{}, err
-	} else if err = auth.ValidateTOTPSecret(loginRequest.OTP, *user.AuthSecret); err != nil {
-		return LoginDetails{}, err
-	} else if sessionToken, err = s.CreateSession(user, *user.AuthSecret); err != nil {
-		return LoginDetails{}, err
-	} else {
-		return LoginDetails{
-			User:         user,
-			SessionToken: sessionToken,
-		}, nil
 	}
+
+	if sessionToken, err = s.validateSecretLogin(ctx, user, loginRequest); err != nil {
+		return LoginDetails{}, err
+	}
+
+	return LoginDetails{
+		User:         user,
+		SessionToken: sessionToken,
+	}, nil
 }
 
 func (s authenticator) Logout(userSession model.UserSession) {
