@@ -40,12 +40,13 @@ type RequestedWaitDuration struct {
 
 // Context holds contextual data that is passed around to functions. This is an extension to Golang's built in context.
 type Context struct {
-	StartTime time.Time
-	Timeout   RequestedWaitDuration
-	RequestID string
-	AuthCtx   auth.Context
-	Host      *url.URL
-	RequestIP string
+	StartTime     time.Time
+	Timeout       RequestedWaitDuration
+	RequestID     string
+	AuthCtx       auth.Context
+	Host          *url.URL
+	RequestedPath *url.URL
+	RequestIP     string
 }
 
 func (s *Context) ConstructGoContext() context.Context {

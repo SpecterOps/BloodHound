@@ -139,7 +139,8 @@ func ContextMiddleware(next http.Handler) http.Handler {
 					Scheme: getScheme(request),
 					Host:   request.Host,
 				},
-				RequestIP: parseUserIP(request),
+				RequestedPath: request.URL,
+				RequestIP:     parseUserIP(request),
 			})
 
 			// Route the request with the embedded context
