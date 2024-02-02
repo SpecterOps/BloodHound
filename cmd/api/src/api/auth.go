@@ -37,6 +37,7 @@ import (
 	"github.com/specterops/bloodhound/src/config"
 	"github.com/specterops/bloodhound/src/ctx"
 	"github.com/specterops/bloodhound/src/database"
+	"github.com/specterops/bloodhound/src/database/types"
 	"github.com/specterops/bloodhound/src/model"
 )
 
@@ -85,24 +86,35 @@ func NewAuthenticator(cfg config.Configuration, db database.Database, ctxInitial
 	}
 }
 
-func (s authenticator) auditLogin(requestContext *context.Context, user *model.User, loginError error) {
+func (s authenticator) auditLogin(requestContext *context.Context, user *model.User, loginError *error) {
 	bhCtx := ctx.Get(*requestContext)
-	// TODO: Set audit log status based on presence of loginError
 	auditLog := model.AuditLog{
 		ActorID:         user.ID.String(),
 		ActorName:       user.PrincipalName,
 		ActorEmail:      user.EmailAddress.ValueOrZero(),
+		Action:          "LoginAttempt",
 		SourceIpAddress: bhCtx.RequestIP,
 	}
+
+	log.Infof("************** loginError is %+s", &loginError)
+	if *loginError != nil {
+		auditLog.Status = string(model.AuditStatusFailure)
+		auditLog.Fields = types.JSONUntypedObject{"error": loginError}
+	} else {
+		auditLog.Status = string(model.AuditStatusSuccess)
+		auditLog.Fields = types.JSONUntypedObject{}
+	}
+
 	s.db.CreateAuditLog(auditLog)
 }
 
 func (s authenticator) LoginWithSecret(ctx context.Context, loginRequest LoginRequest) (LoginDetails, error) {
 	var (
-		user model.User
-		err  error
+		user         model.User
+		err          error
+		sessionToken string
 	)
-	defer s.auditLogin(&ctx, &user, err)
+	defer s.auditLogin(&ctx, &user, &err)
 
 	if user, err = s.db.LookupUser(loginRequest.Username); err != nil {
 		if errors.Is(err, database.ErrNotFound) {
@@ -112,11 +124,11 @@ func (s authenticator) LoginWithSecret(ctx context.Context, loginRequest LoginRe
 		return LoginDetails{}, FormatDatabaseError(err)
 	} else if user.AuthSecret == nil {
 		return LoginDetails{}, ErrNoUserSecret
-	} else if err := s.ValidateSecret(ctx, loginRequest.Secret, *user.AuthSecret); err != nil {
+	} else if err = s.ValidateSecret(ctx, loginRequest.Secret, *user.AuthSecret); err != nil {
 		return LoginDetails{}, err
-	} else if err := auth.ValidateTOTPSecret(loginRequest.OTP, *user.AuthSecret); err != nil {
+	} else if err = auth.ValidateTOTPSecret(loginRequest.OTP, *user.AuthSecret); err != nil {
 		return LoginDetails{}, err
-	} else if sessionToken, err := s.CreateSession(user, *user.AuthSecret); err != nil {
+	} else if sessionToken, err = s.CreateSession(user, *user.AuthSecret); err != nil {
 		return LoginDetails{}, err
 	} else {
 		return LoginDetails{
