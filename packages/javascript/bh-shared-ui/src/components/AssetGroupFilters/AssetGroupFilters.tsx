@@ -18,14 +18,12 @@ import { AssetGroupMemberParams } from 'js-client-library/dist/types';
 import { FC, useState } from 'react';
 import { AzureNodeKind, ActiveDirectoryNodeKind, NodeIcon } from '../..';
 import {
-    Autocomplete,
     Box,
     Button,
     Checkbox,
     Collapse,
     FormControl,
     FormControlLabel,
-    Input,
     InputLabel,
     MenuItem,
     Paper,
@@ -35,8 +33,8 @@ import {
 interface Props {
     filterParams: AssetGroupMemberParams;
     handleFilterChange: (
-        key: keyof Pick<AssetGroupMemberParams, 'primary_kind' | 'name' | 'custom_member'>,
-        value: AzureNodeKind | ActiveDirectoryNodeKind | string | boolean
+        key: keyof Pick<AssetGroupMemberParams, 'primary_kind' | 'custom_member'>,
+        value: string
     ) => void;
 }
 
@@ -45,7 +43,6 @@ const AssetGroupFilters: FC<Props> = ({ filterParams, handleFilterChange }) => {
 
     return (
         <Box sx={{ p: '10px' }} component={Paper} elevation={0} marginBottom={1}>
-            {/* <Autocomplete /> */}
             <Button onClick={() => setDisplayFilters((prev) => !prev)}>Filters</Button>
             <Collapse in={displayFilters}>
                 <FormControl sx={{ display: 'flex', flexDirection: 'row' }}>
@@ -75,7 +72,7 @@ const AssetGroupFilters: FC<Props> = ({ filterParams, handleFilterChange }) => {
                                 value={filterParams.custom_member}
                                 onChange={(e) => {
                                     console.log(e.target.checked);
-                                    handleFilterChange('custom_member', e.target.checked);
+                                    handleFilterChange('custom_member', `eq:${e.target.checked}`);
                                 }}
                             />
                         }

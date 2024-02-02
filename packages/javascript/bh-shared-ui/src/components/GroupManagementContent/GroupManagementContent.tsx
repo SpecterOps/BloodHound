@@ -26,6 +26,7 @@ import AssetGroupEdit from '../AssetGroupEdit';
 import AssetGroupMemberList from '../AssetGroupMemberList';
 import { SelectedDomain } from './types';
 import DataSelector from '../../views/DataQuality/DataSelector';
+import AssetGroupFilters from '../AssetGroupFilters';
 
 // Top level layout and shared logic for the Group Management page
 const GroupManagementContent: FC<{
@@ -80,6 +81,13 @@ const GroupManagementContent: FC<{
         return selectedAssetGroup?.name || 'Select a Group';
     };
 
+    const handleFilterChange = (
+        key: keyof Pick<AssetGroupMemberParams, 'primary_kind' | 'custom_member'>,
+        value: string
+    ) => {
+        setFilterParams((prev) => ({ ...prev, [key]: value.toString() }));
+    };
+
     // Start building a filter query for members that gets passed down to AssetGroupMemberList to make the request
     useEffect(() => {
         const filterDomain = selectedDomain || globalDomain;
@@ -126,6 +134,7 @@ const GroupManagementContent: FC<{
                             </Grid>
                         </Grid>
                     </Box>
+                    <AssetGroupFilters {...{ filterParams, handleFilterChange }} />
                     {selectedAssetGroup && <AssetGroupEdit assetGroup={selectedAssetGroup} filter={filterParams} />}
                 </Grid>
                 <Grid height={'100%'} item xs={5} md={6}>
