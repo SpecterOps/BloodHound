@@ -1182,4 +1182,5 @@ EdgeCompositionRelationships: [
 	ADCSESC6b,
 	ADCSESC9a,
 	ADCSESC10a,
+	ADCSESC10b,
 ]

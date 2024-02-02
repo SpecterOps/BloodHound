@@ -282,6 +282,7 @@ export const EdgeCompositionRelationships = [
     'ADCSESC6b',
     'ADCSESC9a',
     'ADCSESC10a',
+    'ADCSESC10b',
 ];
 export enum ActiveDirectoryKindProperties {
     AdminCount = 'admincount',
