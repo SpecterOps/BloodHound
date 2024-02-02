@@ -40,32 +40,30 @@ var (
 )
 
 func RunAnalysisOperations(ctx context.Context, db database.Database, graphDB graph.Database, _ config.Configuration) error {
-	var (
-		collectedErrors []error
-	)
+	var collectedErrors error
 
 	if err := adAnalysis.FixWellKnownNodeTypes(ctx, graphDB); err != nil {
-		collectedErrors = append(collectedErrors, fmt.Errorf("fix well known node types failed: %w", err))
+		collectedErrors = errors.Join(collectedErrors, fmt.Errorf("fix well known node types failed: %w", err))
 	}
 
 	if err := adAnalysis.RunDomainAssociations(ctx, graphDB); err != nil {
-		collectedErrors = append(collectedErrors, fmt.Errorf("domain association and pruning failed: %w", err))
+		collectedErrors = errors.Join(collectedErrors, fmt.Errorf("domain association and pruning failed: %w", err))
 	}
 
 	if err := adAnalysis.LinkWellKnownGroups(ctx, graphDB); err != nil {
-		collectedErrors = append(collectedErrors, fmt.Errorf("well known group linking failed: %w", err))
+		collectedErrors = errors.Join(collectedErrors, fmt.Errorf("well known group linking failed: %w", err))
 	}
 
 	if err := updateAssetGroupIsolationTags(ctx, db, graphDB); err != nil {
-		collectedErrors = append(collectedErrors, fmt.Errorf("asset group isolation tagging failed: %w", err))
+		collectedErrors = errors.Join(collectedErrors, fmt.Errorf("asset group isolation tagging failed: %w", err))
 	}
 
 	if err := TagActiveDirectoryTierZero(ctx, graphDB); err != nil {
-		collectedErrors = append(collectedErrors, fmt.Errorf("active directory tier zero tagging failed: %w", err))
+		collectedErrors = errors.Join(collectedErrors, fmt.Errorf("active directory tier zero tagging failed: %w", err))
 	}
 
 	if err := ParallelTagAzureTierZero(ctx, graphDB); err != nil {
-		collectedErrors = append(collectedErrors, fmt.Errorf("azure tier zero tagging failed: %w", err))
+		collectedErrors = errors.Join(collectedErrors, fmt.Errorf("azure tier zero tagging failed: %w", err))
 	}
 
 	var (
@@ -77,35 +75,33 @@ func RunAnalysisOperations(ctx context.Context, db database.Database, graphDB gr
 
 	// TODO: Cleanup #ADCSFeatureFlag after full launch.
 	if adcsFlag, err := db.GetFlagByKey(appcfg.FeatureAdcs); err != nil {
-		collectedErrors = append(collectedErrors, fmt.Errorf("error retrieving ADCS feature flag: %w", err))
+		collectedErrors = errors.Join(collectedErrors, fmt.Errorf("error retrieving ADCS feature flag: %w", err))
 	} else if stats, err := ad.Post(ctx, graphDB, adcsFlag.Enabled); err != nil {
-		collectedErrors = append(collectedErrors, fmt.Errorf("error during ad post: %w", err))
+		collectedErrors = errors.Join(collectedErrors, fmt.Errorf("error during ad post: %w", err))
 		adFailed = true
 	} else {
 		stats.LogStats()
 	}
 
 	if stats, err := azure.Post(ctx, graphDB); err != nil {
-		collectedErrors = append(collectedErrors, fmt.Errorf("error during azure post: %w", err))
+		collectedErrors = errors.Join(collectedErrors, fmt.Errorf("error during azure post: %w", err))
 		azureFailed = true
 	} else {
 		stats.LogStats()
 	}
 
 	if err := agi.RunAssetGroupIsolationCollections(ctx, db, graphDB, analysis.GetNodeKindDisplayLabel); err != nil {
-		collectedErrors = append(collectedErrors, fmt.Errorf("asset group isolation collection failed: %w", err))
+		collectedErrors = errors.Join(collectedErrors, fmt.Errorf("asset group isolation collection failed: %w", err))
 		agiFailed = true
 	}
 
 	if err := dataquality.SaveDataQuality(ctx, db, graphDB); err != nil {
-		collectedErrors = append(collectedErrors, fmt.Errorf("error saving data quality stat: %v", err))
+		collectedErrors = errors.Join(collectedErrors, fmt.Errorf("error saving data quality stat: %v", err))
 		dataQualityFailed = true
 	}
 
-	if len(collectedErrors) > 0 {
-		for _, err := range collectedErrors {
-			log.Errorf("Analysis error encountered: %v", err)
-		}
+	if collectedErrors != nil {
+		log.Errorf("Analysis errors encountered: %v", collectedErrors)
 	}
 
 	if adFailed && azureFailed && agiFailed && dataQualityFailed {
