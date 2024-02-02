@@ -111,7 +111,7 @@ func (s *Daemon) analyze() {
 		if errors.Is(err, ErrAnalysisFailed) {
 			FailAnalyzedFileUploadJobs(s.ctx, s.db)
 			s.status.Update(model.DatapipeStatusIdle, false)
-		} else if errors.Is(err, ErrAnalysisPartiallyFailed) {
+		} else if errors.Is(err, ErrAnalysisPartiallyCompleted) {
 			PartialCompleteFileUploadJobs(s.ctx, s.db)
 			s.status.Update(model.DatapipeStatusIdle, true)
 		}

@@ -35,8 +35,8 @@ import (
 )
 
 var (
-	ErrAnalysisFailed          = errors.New("analysis failed")
-	ErrAnalysisPartiallyFailed = errors.New("analysis partially failed")
+	ErrAnalysisFailed             = errors.New("analysis failed")
+	ErrAnalysisPartiallyCompleted = errors.New("analysis partially failed")
 )
 
 func RunAnalysisOperations(ctx context.Context, db database.Database, graphDB graph.Database, _ config.Configuration) error {
@@ -111,7 +111,7 @@ func RunAnalysisOperations(ctx context.Context, db database.Database, graphDB gr
 	if adFailed && azureFailed && agiFailed && dataQualityFailed {
 		return ErrAnalysisFailed
 	} else if adFailed || azureFailed || agiFailed || dataQualityFailed {
-		return ErrAnalysisPartiallyFailed
+		return ErrAnalysisPartiallyCompleted
 	}
 
 	return nil
