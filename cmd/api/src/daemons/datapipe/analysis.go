@@ -36,7 +36,7 @@ import (
 
 var (
 	ErrAnalysisFailed             = errors.New("analysis failed")
-	ErrAnalysisPartiallyCompleted = errors.New("analysis partially failed")
+	ErrAnalysisPartiallyCompleted = errors.New("analysis partially completed")
 )
 
 func RunAnalysisOperations(ctx context.Context, db database.Database, graphDB graph.Database, _ config.Configuration) error {
@@ -103,7 +103,9 @@ func RunAnalysisOperations(ctx context.Context, db database.Database, graphDB gr
 	}
 
 	if len(collectedErrors) > 0 {
-		log.Errorf("Analysis errors encountered: %v", errors.Join(collectedErrors...))
+		for _, err := range collectedErrors {
+			log.Errorf("Analysis error encountered: %v", err)
+		}
 	}
 
 	if adFailed && azureFailed && agiFailed && dataQualityFailed {
