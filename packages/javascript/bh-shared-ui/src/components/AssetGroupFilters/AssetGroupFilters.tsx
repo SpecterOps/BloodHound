@@ -36,9 +36,12 @@ interface Props {
         key: keyof Pick<AssetGroupMemberParams, 'primary_kind' | 'custom_member'>,
         value: string
     ) => void;
+    availableNodeKinds: Array<ActiveDirectoryNodeKind | AzureNodeKind>;
 }
 
-const AssetGroupFilters: FC<Props> = ({ filterParams, handleFilterChange }) => {
+const AssetGroupFilters: FC<Props> = (props) => {
+    const { filterParams, handleFilterChange, availableNodeKinds } = props;
+
     const [displayFilters, setDisplayFilters] = useState(false);
 
     return (
@@ -56,7 +59,7 @@ const AssetGroupFilters: FC<Props> = ({ filterParams, handleFilterChange }) => {
                         <MenuItem value=''>
                             <em>None</em>
                         </MenuItem>
-                        {Object.values({ ...ActiveDirectoryNodeKind, ...AzureNodeKind }).map((value) => {
+                        {availableNodeKinds.map((value) => {
                             return (
                                 <MenuItem value={`eq:${value}`}>
                                     <NodeIcon nodeType={value} />

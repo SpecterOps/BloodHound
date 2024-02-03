@@ -27,6 +27,7 @@ import AssetGroupMemberList from '../AssetGroupMemberList';
 import { SelectedDomain } from './types';
 import DataSelector from '../../views/DataQuality/DataSelector';
 import AssetGroupFilters from '../AssetGroupFilters';
+import { ActiveDirectoryNodeKind, AzureNodeKind } from '../..';
 
 // Top level layout and shared logic for the Group Management page
 const GroupManagementContent: FC<{
@@ -55,6 +56,7 @@ const GroupManagementContent: FC<{
     const [selectedDomain, setSelectedDomain] = useState<SelectedDomain | null>(null);
     const [selectedAssetGroupId, setSelectedAssetGroupId] = useState<number | null>(null);
     const [filterParams, setFilterParams] = useState<AssetGroupMemberParams>({});
+    const [availableNodeKinds, setAvailableNodeKinds] = useState<Array<AzureNodeKind | ActiveDirectoryNodeKind>>([]);
 
     const setInitialGroup = (data: AssetGroup[]) => {
         if (!selectedAssetGroupId && data?.length) {
@@ -86,6 +88,11 @@ const GroupManagementContent: FC<{
         value: string
     ) => {
         setFilterParams((prev) => ({ ...prev, [key]: value.toString() }));
+    };
+
+    const makeNodeFilterable = (node: ActiveDirectoryNodeKind | AzureNodeKind) => {
+        if (availableNodeKinds.includes(node)) return;
+        setAvailableNodeKinds((prev) => [...prev, node]);
     };
 
     // Start building a filter query for members that gets passed down to AssetGroupMemberList to make the request
@@ -134,8 +141,14 @@ const GroupManagementContent: FC<{
                             </Grid>
                         </Grid>
                     </Box>
-                    <AssetGroupFilters {...{ filterParams, handleFilterChange }} />
-                    {selectedAssetGroup && <AssetGroupEdit assetGroup={selectedAssetGroup} filter={filterParams} />}
+                    <AssetGroupFilters {...{ filterParams, handleFilterChange, availableNodeKinds }} />
+                    {selectedAssetGroup && (
+                        <AssetGroupEdit
+                            assetGroup={selectedAssetGroup}
+                            filter={filterParams}
+                            makeNodeFilterable={makeNodeFilterable}
+                        />
+                    )}
                 </Grid>
                 <Grid height={'100%'} item xs={5} md={6}>
                     <AssetGroupMemberList

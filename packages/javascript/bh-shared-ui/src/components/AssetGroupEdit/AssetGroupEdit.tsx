@@ -34,7 +34,8 @@ import { useNotifications } from '../../providers';
 const AssetGroupEdit: FC<{
     assetGroup: AssetGroup;
     filter: AssetGroupMemberParams;
-}> = ({ assetGroup, filter }) => {
+    makeNodeFilterable: (node: ActiveDirectoryNodeKind | AzureNodeKind) => void;
+}> = ({ assetGroup, filter, makeNodeFilterable }) => {
     const [changelog, setChangelog] = useState<AssetGroupChangelog>([]);
     const addRows = changelog.filter((entry) => entry.action === ChangelogAction.ADD);
     const removeRows = changelog.filter((entry) => entry.action === ChangelogAction.REMOVE);
@@ -110,24 +111,28 @@ const AssetGroupEdit: FC<{
             {Object.values(ActiveDirectoryNodeKind).map((kind) => {
                 const filterByKind = { ...filter, primary_kind: `eq:${kind}` };
                 const label = ActiveDirectoryNodeKindToDisplay(kind) || '';
+                const handleAvailableNodeKind = () => makeNodeFilterable(kind);
                 return (
                     <FilteredMemberCountDisplay
                         key={label}
                         assetGroupId={assetGroup.id}
                         label={label}
                         filter={filterByKind}
+                        handleAvailableNodeKind={handleAvailableNodeKind}
                     />
                 );
             })}
             {Object.values(AzureNodeKind).map((kind) => {
                 const filterByKind = { ...filter, primary_kind: `eq:${kind}` };
                 const label = AzureNodeKindToDisplay(kind) || '';
+                const handleAvailableNodeKind = () => makeNodeFilterable(kind);
                 return (
                     <FilteredMemberCountDisplay
                         key={label}
                         assetGroupId={assetGroup.id}
                         label={label}
                         filter={filterByKind}
+                        handleAvailableNodeKind={handleAvailableNodeKind}
                     />
                 );
             })}
@@ -139,7 +144,8 @@ const FilteredMemberCountDisplay: FC<{
     assetGroupId: number;
     label: string;
     filter: AssetGroupMemberParams;
-}> = ({ assetGroupId, label, filter }) => {
+    handleAvailableNodeKind?: () => void;
+}> = ({ assetGroupId, label, filter, handleAvailableNodeKind }) => {
     const {
         data: count,
         isError,
@@ -151,6 +157,7 @@ const FilteredMemberCountDisplay: FC<{
     const hasValidCount = !isLoading && !isError && count && count > 0;
 
     if (hasValidCount) {
+        handleAvailableNodeKind?.();
         return <SubHeader label={label} count={count} />;
     } else {
         return null;
