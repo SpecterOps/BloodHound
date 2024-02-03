@@ -65,8 +65,8 @@ func PartialCompleteFileUploadJobs(ctx context.Context, db database.Database) {
 		log.Errorf("Failed to load file upload jobs under analysis: %v", err)
 	} else {
 		for _, job := range fileUploadJobsUnderAnalysis {
-			if err := fileupload.UpdateFileUploadJobStatus(db, job, model.JobStatusPartiallyComplete, "Analysis Partially Completed"); err != nil {
-				log.Errorf("Failed updating file upload job %d to failed status: %v", job.ID, err)
+			if err := fileupload.UpdateFileUploadJobStatus(db, job, model.JobStatusPartiallyComplete, "Partially Completed"); err != nil {
+				log.Errorf("Failed updating file upload job %d to partially completed status: %v", job.ID, err)
 			}
 		}
 	}
