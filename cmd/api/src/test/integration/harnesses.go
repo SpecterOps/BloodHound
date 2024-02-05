@@ -458,6 +458,7 @@ func (s *SessionHarness) Setup(testCtx *GraphTestContext) {
 	s.GroupB = testCtx.NewActiveDirectoryGroup("GroupB", testCtx.Harness.RootADHarness.ActiveDirectoryDomainSID)
 	s.GroupC = testCtx.NewActiveDirectoryGroup("GroupC", testCtx.Harness.RootADHarness.ActiveDirectoryDomainSID)
 
+	testCtx.NewRelationship(s.ComputerA, s.GroupA, ad.MemberOf)
 	testCtx.NewRelationship(s.ComputerA, s.User, ad.HasSession)
 	testCtx.NewRelationship(s.ComputerB, s.User, ad.HasSession)
 	testCtx.NewRelationship(s.User, s.GroupA, ad.MemberOf)

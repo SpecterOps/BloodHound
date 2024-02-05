@@ -80,35 +80,42 @@ type TraversalPlan struct {
 	Direction             graph.Direction
 	BranchQuery           graph.CriteriaProvider
 	DepthExceptionHandler DepthExceptionHandler
+	expansionFilter       func(segment *graph.PathSegment) bool
 	DescentFilter         SegmentFilter
 	PathFilter            PathFilter
 	Skip                  int
 	Limit                 int
 }
 
-func nextTraversal(tx graph.Transaction, segment *graph.PathSegment, direction graph.Direction, branchFilter graph.CriteriaProvider, requireOrder bool) ([]*graph.PathSegment, error) {
+func nextTraversal(tx graph.Transaction, segment *graph.PathSegment, direction graph.Direction, branchFilter graph.CriteriaProvider, requireOrder bool, expansionFilter func(segment *graph.PathSegment) bool) ([]*graph.PathSegment, error) {
 	var (
-		branches           []*graph.PathSegment
-		nextTraversalQuery = tx.Relationships().Filterf(func() graph.Criteria {
-			var filters []graph.Criteria
-
-			if branchFilter != nil {
-				filters = append(filters, branchFilter())
-			}
-
-			switch direction {
-			case graph.DirectionOutbound:
-				filters = append(filters, query.InIDs(query.StartID(), segment.Node.ID))
-
-			case graph.DirectionInbound:
-				filters = append(filters, query.InIDs(query.EndID(), segment.Node.ID))
-			}
-
-			return query.And(
-				filters...,
-			)
-		})
+		branches []*graph.PathSegment
 	)
+
+	// If we don't want to expand the relationships for this segment, return an empty slice
+	if expansionFilter != nil && !expansionFilter(segment) {
+		return branches, nil
+	}
+
+	nextTraversalQuery := tx.Relationships().Filterf(func() graph.Criteria {
+		var filters []graph.Criteria
+
+		if branchFilter != nil {
+			filters = append(filters, branchFilter())
+		}
+
+		switch direction {
+		case graph.DirectionOutbound:
+			filters = append(filters, query.InIDs(query.StartID(), segment.Node.ID))
+
+		case graph.DirectionInbound:
+			filters = append(filters, query.InIDs(query.EndID(), segment.Node.ID))
+		}
+
+		return query.And(
+			filters...,
+		)
+	})
 
 	if requireOrder {
 		nextTraversalQuery.OrderBy(query.Order(query.Relationship(), query.Ascending()))
@@ -134,25 +141,6 @@ func nextTraversal(tx graph.Transaction, segment *graph.PathSegment, direction g
 
 type TraversalContext struct {
 	LimitSkipTracker LimitSkipTracker
-}
-
-func AcyclicTraversal(tx graph.Transaction, plan TraversalPlan, pathVisitors ...PathVisitor) error {
-	var (
-		descentFilter = plan.DescentFilter
-		visitedBitmap = roaring64.New()
-	)
-
-	plan.DescentFilter = func(ctx *TraversalContext, segment *graph.PathSegment) bool {
-		if terminalID := segment.Node.ID.Uint64(); visitedBitmap.Contains(terminalID) {
-			return false
-		} else {
-			visitedBitmap.Add(terminalID)
-		}
-
-		return descentFilter == nil || descentFilter(ctx, segment)
-	}
-
-	return Traversal(tx, plan, pathVisitors...)
 }
 
 func Traversal(tx graph.Transaction, plan TraversalPlan, pathVisitors ...PathVisitor) error {
@@ -187,7 +175,7 @@ func Traversal(tx graph.Transaction, plan TraversalPlan, pathVisitors ...PathVis
 			return fmt.Errorf("%w - Limit: %.2f MB - Memory In-Use: %.2f MB", ErrTraversalMemoryLimit, tx.TraversalMemoryLimit().Mebibytes(), pathTreeSize.Mebibytes())
 		}
 
-		if descendents, err := nextTraversal(tx, next, plan.Direction, plan.BranchQuery, requireTraversalOrder); err != nil {
+		if descendents, err := nextTraversal(tx, next, plan.Direction, plan.BranchQuery, requireTraversalOrder, plan.expansionFilter); err != nil {
 			// If the error value is the halt traversal sentinel then don't relay any error upstream
 			if err == ErrHaltTraversal {
 				break
@@ -258,14 +246,17 @@ func AcyclicTraverseNodes(tx graph.Transaction, plan TraversalPlan, nodeFilter N
 		visitedBitmap = roaring64.New()
 	)
 
-	// Wrap our descent filter so we can test candidates
-	plan.DescentFilter = func(ctx *TraversalContext, segment *graph.PathSegment) bool {
-		if terminalID := segment.Node.ID.Uint64(); visitedBitmap.Contains(terminalID) {
-			return false
-		} else {
-			visitedBitmap.Add(terminalID)
+	// Prevent expansion of already-visited nodes
+	plan.expansionFilter = func(segment *graph.PathSegment) bool {
+		if visitedBitmap.CheckedAdd(segment.Node.ID.Uint64()) {
+			return true
 		}
 
+		return false
+	}
+
+	// Wrap our descent filter so we can test candidates
+	plan.DescentFilter = func(ctx *TraversalContext, segment *graph.PathSegment) bool {
 		if descentFilter != nil && !descentFilter(ctx, segment) {
 			return false
 		}
@@ -288,28 +279,17 @@ func AcyclicTraverseNodes(tx graph.Transaction, plan TraversalPlan, nodeFilter N
 func AcyclicTraverseTerminals(tx graph.Transaction, plan TraversalPlan) (graph.NodeSet, error) {
 	var (
 		terminals     = graph.NewNodeSet()
-		descentFilter = plan.DescentFilter
 		visitedBitmap = roaring64.New()
 	)
 
-	// Wrap the existing descent filter to avoid revisiting nodes during traversal
-	plan.DescentFilter = func(ctx *TraversalContext, segment *graph.PathSegment) bool {
-		// If the descent filter is nil or if it accepts the given path check against the bitmap to see if we have
-		// visited the path terminal node already
-		if descentFilter == nil || descentFilter(ctx, segment) {
-			terminalID := segment.Node.ID.Uint64()
-
-			if !visitedBitmap.Contains(terminalID) {
-				visitedBitmap.Add(terminalID)
-				return true
-			}
+	// Prevent expansion of already-visited nodes
+	plan.expansionFilter = func(segment *graph.PathSegment) bool {
+		if visitedBitmap.CheckedAdd(segment.Node.ID.Uint64()) {
+			return true
 		}
 
 		return false
 	}
-
-	// Add the path root to the bitmap; it shouldn't be included in the result set
-	visitedBitmap.Add(plan.Root.ID.Uint64())
 
 	return terminals, Traversal(tx, plan, func(ctx *TraversalContext, segment *graph.PathSegment) error {
 		if ctx.LimitSkipTracker.ShouldCollect() {
