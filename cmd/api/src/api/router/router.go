@@ -95,11 +95,6 @@ func (s *Route) CheckFeatureFlag(db database.Database, flagKey string) *Route {
 	return s
 }
 
-// func (s *Route) CreateAuditLog(db database.Database, action string) *Route {
-// 	s.handler.Use(middleware.AuditLogMiddleware(db, action))
-// 	return s
-// }
-
 func NewRouter(cfg config.Configuration, authorizer auth.Authorizer, contentSecurityPolicy string) Router {
 	muxRouter := mux.NewRouter()
 	muxRouter.Use(middleware.SecureHandlerMiddleware(cfg, contentSecurityPolicy))

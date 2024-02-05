@@ -149,16 +149,13 @@ func ContextMiddleware(next http.Handler) http.Handler {
 }
 
 func parseUserIP(r *http.Request) string {
-	res := ""
-	if ipAddress := r.Header.Get("X-Forwarded-For"); ipAddress != "" {
-		res += "X-Forwarded-For: " + ipAddress + "; "
+	if result := r.Header.Get("X-Forwarded-For"); result == "" {
+		log.Warnf("No data found in X-Forwarded-For header for request ID %s", r.Header.Get(headers.RequestID.String()))
+		return r.RemoteAddr
 	} else {
-		log.Warnf("No data found in X-Forwarded-For, possible upstream misconfig?")
+		result += "," + r.RemoteAddr
+		return result
 	}
-
-	res += "Remote Address: " + r.RemoteAddr
-
-	return res
 }
 
 func ParseHeaderValues(values string) map[string]string {
