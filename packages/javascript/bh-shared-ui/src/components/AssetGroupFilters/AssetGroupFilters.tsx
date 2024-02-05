@@ -89,7 +89,7 @@ const AssetGroupFilters: FC<Props> = ({ filterParams, handleFilterChange, availa
             </Button>
             <Collapse in={displayFilters}>
                 <Grid container spacing={2}>
-                    <Grid item xs={12} xl={6}>
+                    <Grid item xs={12}>
                         <FormControl className={classes.formControl}>
                             <InputLabel id='nodeTypeFilter-label'>Node Type</InputLabel>
                             <Select
@@ -114,7 +114,7 @@ const AssetGroupFilters: FC<Props> = ({ filterParams, handleFilterChange, availa
                             </Select>
                         </FormControl>
                     </Grid>
-                    <Grid item xs={12} xl={6}>
+                    <Grid item xs={12}>
                         <FormControlLabel
                             label='Custom Members'
                             control={
