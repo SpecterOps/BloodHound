@@ -75,6 +75,11 @@ const AssetGroupFilters: FC<Props> = (props) => {
 
     const classes = useStyles();
 
+    const handleClearFilters = () => {
+        handleFilterChange('custom_member', '');
+        handleFilterChange('primary_kind', '');
+    };
+
     const active = !!filterParams.primary_kind || !!filterParams.custom_member;
     const activeStyles = active ? classes.active : '';
 
@@ -116,13 +121,18 @@ const AssetGroupFilters: FC<Props> = (props) => {
                             label='Custom Members'
                             control={
                                 <Checkbox
-                                    value={filterParams.custom_member}
+                                    checked={!!filterParams.custom_member}
                                     onChange={(e) => {
                                         handleFilterChange('custom_member', `eq:${e.target.checked}`);
                                     }}
                                 />
                             }
                         />
+                    </Grid>
+                    <Grid item xs={12} p={1}>
+                        <Box sx={{ width: '100%', display: 'flex', justifyContent: 'flex-end' }}>
+                            <Button onClick={handleClearFilters}>Clear Filters</Button>
+                        </Box>
                     </Grid>
                 </Grid>
             </Collapse>
