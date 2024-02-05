@@ -556,6 +556,12 @@ func GetEdgeCompositionPath(ctx context.Context, db graph.Database, edge *graph.
 			} else {
 				pathSet = results
 			}
+		} else if edge.Kind == ad.ADCSESC6b {
+			if results, err := GetADCSESC6bEdgeComposition(ctx, db, edge); err != nil {
+				return err
+			} else {
+				pathSet = results
+			}
 		} else if edge.Kind == ad.ADCSESC9a {
 			if results, err := GetADCSESC9aEdgeComposition(ctx, db, edge); err != nil {
 				return err
@@ -724,11 +730,10 @@ func ADCSESC6aPath3Pattern(domainId graph.ID, enterpriseCAs, candidateTemplates 
 
 func ADCSESC6aPath4Pattern(domainId graph.ID, enterpriseCAs cardinality.Duplex[uint32]) traversal.PatternContinuation {
 	return traversal.NewPattern().
-		Outbound(
-			query.And(
-				query.Kind(query.Relationship(), ad.MemberOf),
-				query.Kind(query.End(), ad.Group),
-			)).
+		OutboundWithDepth(0, 0, query.And(
+			query.Kind(query.Relationship(), ad.MemberOf),
+			query.Kind(query.End(), ad.Group),
+		)).
 		Outbound(query.And(
 			query.KindIn(query.Relationship(), ad.Enroll),
 			query.KindIn(query.End(), ad.EnterpriseCA),

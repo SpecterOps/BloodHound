@@ -18,14 +18,11 @@ package ad
 
 import (
 	"context"
-	"errors"
 
 	"github.com/specterops/bloodhound/analysis"
 	"github.com/specterops/bloodhound/analysis/impact"
 	"github.com/specterops/bloodhound/dawgs/cardinality"
 	"github.com/specterops/bloodhound/dawgs/graph"
-	"github.com/specterops/bloodhound/dawgs/ops"
-	"github.com/specterops/bloodhound/dawgs/query"
 	"github.com/specterops/bloodhound/dawgs/util/channels"
 	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/log"
@@ -38,7 +35,6 @@ func PostADCSESC9a(ctx context.Context, tx graph.Transaction, outC chan<- analys
 		if graph.IsErrNotFound(err) {
 			return nil
 		}
-
 		return err
 	} else if len(canAbuseWeakCertBindingRels) == 0 {
 		return nil
@@ -48,58 +44,25 @@ func PostADCSESC9a(ctx context.Context, tx graph.Transaction, outC chan<- analys
 		return nil
 	} else {
 		for _, template := range publishedCertTemplates {
-			if valid, err := isCertTemplateValidForESC9a(template); err != nil {
-				if !errors.Is(err, graph.ErrPropertyNotFound) {
-					log.Errorf("Error checking cert template validity for template %d: %v", template.ID, err)
-				} else {
-					log.Debugf("Error checking cert template validity for template %d: %v", template.ID, err)
-				}
+			if valid, err := isCertTemplateValidForESC9(template, false); err != nil {
+				log.Warnf("error validating cert template %d: %v", template.ID, err)
+				continue
 			} else if !valid {
 				continue
 			} else if certTemplateControllers, ok := cache.CertTemplateControllers[template.ID]; !ok {
 				log.Debugf("Failed to retrieve controllers for cert template %d from cache", template.ID)
 				continue
 			} else {
-				//Expand controllers for the eca + template completely because we don't do group shortcutting here
-				var (
-					victimBitmap = expandNodeSliceToBitmapWithoutGroups(certTemplateControllers, groupExpansions)
-					ecaBitmap    = expandNodeSliceToBitmapWithoutGroups(ecaControllers, groupExpansions)
-				)
+				victimBitmap := getVictimBitmap(groupExpansions, certTemplateControllers, ecaControllers)
 
-				victimBitmap.And(ecaBitmap)
-				//Use our id list to filter down to users
-				if userNodes, err := ops.FetchNodeSet(tx.Nodes().Filterf(func() graph.Criteria {
-					return query.And(
-						query.KindIn(query.Node(), ad.User),
-						query.InIDs(query.NodeID(), cardinality.DuplexToGraphIDs(victimBitmap)...),
-					)
-				})); err != nil {
-					if !graph.IsErrNotFound(err) {
-						return err
-					}
-				} else if len(userNodes) > 0 {
-					if subjRequireDns, err := template.Properties.Get(ad.SubjectAltRequireDNS.String()).Bool(); err != nil {
-						log.Debugf("Failed to retrieve subjectAltRequireDNS for template %d: %v", template.ID, err)
-						victimBitmap.Xor(cardinality.NodeSetToDuplex(userNodes))
-					} else if subjRequireDomainDns, err := template.Properties.Get(ad.SubjectAltRequireDomainDNS.String()).Bool(); err != nil {
-						log.Debugf("Failed to retrieve subjectAltRequireDomainDNS for template %d: %v", template.ID, err)
-						victimBitmap.Xor(cardinality.NodeSetToDuplex(userNodes))
-					} else if subjRequireDns || subjRequireDomainDns {
-						//If either of these properties is true, we need to remove all these users from our victims list
-						victimBitmap.Xor(cardinality.NodeSetToDuplex(userNodes))
-					}
-				}
-
-				if attackers, err := ops.FetchStartNodes(tx.Relationships().Filterf(func() graph.Criteria {
-					return query.And(
-						query.KindIn(query.Start(), ad.Group, ad.User, ad.Computer),
-						query.KindIn(query.Relationship(), ad.GenericAll, ad.GenericWrite, ad.Owns, ad.WriteOwner, ad.WriteDACL),
-						query.InIDs(query.EndID(), cardinality.DuplexToGraphIDs(victimBitmap)...),
-					)
-				})); err != nil {
-					return err
+				if filteredVictims, err := filterUserDNSResults(tx, victimBitmap, template); err != nil {
+					log.Warnf("error filtering users from victims for esc9a: %v", err)
+					continue
+				} else if attackers, err := FetchAttackersForEscalations9and10(tx, filteredVictims, false); err != nil {
+					log.Warnf("Error getting start nodes for esc9a attacker nodes: %v", err)
+					continue
 				} else {
-					results.Or(cardinality.NodeSetToDuplex(attackers))
+					results.Or(cardinality.NodeIDsToDuplex(attackers))
 				}
 			}
 		}
@@ -123,7 +86,6 @@ func PostADCSESC9b(ctx context.Context, tx graph.Transaction, outC chan<- analys
 		if graph.IsErrNotFound(err) {
 			return nil
 		}
-
 		return err
 	} else if len(canAbuseWeakCertBindingRels) == 0 {
 		return nil
@@ -133,37 +95,22 @@ func PostADCSESC9b(ctx context.Context, tx graph.Transaction, outC chan<- analys
 		return nil
 	} else {
 		for _, template := range publishedCertTemplates {
-			if valid, err := isCertTemplateValidForESC9b(template); err != nil {
-				if !errors.Is(err, graph.ErrPropertyNotFound) {
-					log.Errorf("Error checking cert template validity for template %d: %v", template.ID, err)
-				} else {
-					log.Debugf("Error checking cert template validity for template %d: %v", template.ID, err)
-				}
+			if valid, err := isCertTemplateValidForESC9(template, true); err != nil {
+				log.Warnf("error validating cert template %d: %v", template.ID, err)
+				continue
 			} else if !valid {
 				continue
 			} else if certTemplateControllers, ok := cache.CertTemplateControllers[template.ID]; !ok {
 				log.Debugf("Failed to retrieve controllers for cert template %d from cache", template.ID)
 				continue
 			} else {
-				//Expand controllers for the eca + template completely because we don't do group shortcutting here
-				var (
-					victimBitmap = expandNodeSliceToBitmapWithoutGroups(certTemplateControllers, groupExpansions)
-					ecaBitmap    = expandNodeSliceToBitmapWithoutGroups(ecaControllers, groupExpansions)
-				)
+				victimBitmap := getVictimBitmap(groupExpansions, certTemplateControllers, ecaControllers)
 
-				victimBitmap.And(ecaBitmap)
-
-				if attackers, err := ops.FetchStartNodes(tx.Relationships().Filterf(func() graph.Criteria {
-					return query.And(
-						query.KindIn(query.Start(), ad.Computer, ad.User, ad.Group),
-						query.KindIn(query.Relationship(), ad.GenericAll, ad.GenericWrite, ad.Owns, ad.WriteOwner, ad.WriteDACL),
-						query.KindIn(query.End(), ad.Computer),
-						query.InIDs(query.EndID(), cardinality.DuplexToGraphIDs(victimBitmap)...),
-					)
-				})); err != nil {
-					return err
+				if attackers, err := FetchAttackersForEscalations9and10(tx, victimBitmap, true); err != nil {
+					log.Warnf("Error getting start nodes for esc9a attacker nodes: %v", err)
+					continue
 				} else {
-					results.Or(cardinality.NodeSetToDuplex(attackers))
+					results.Or(cardinality.NodeIDsToDuplex(attackers))
 				}
 			}
 		}
@@ -175,93 +122,50 @@ func PostADCSESC9b(ctx context.Context, tx graph.Transaction, outC chan<- analys
 				Kind:   ad.ADCSESC9b,
 			})
 		})
-
 		return nil
 	}
 }
 
-func expandNodeSliceToBitmapWithoutGroups(nodes []*graph.Node, groupExpansions impact.PathAggregator) cardinality.Duplex[uint32] {
-	var bitmap = cardinality.NewBitmap32()
-	for _, controller := range nodes {
-		if controller.Kinds.ContainsOneOf(ad.Group) {
-			groupExpansions.Cardinality(controller.ID.Uint32()).(cardinality.Duplex[uint32]).Each(func(id uint32) bool {
-				//Check group expansions against each id, if cardinality is 0 than its not a group
-				if groupExpansions.Cardinality(id).Cardinality() == 0 {
-					bitmap.Add(id)
-				}
-
-				return true
-			})
+func isCertTemplateValidForESC9(ct *graph.Node, scenarioB bool) (bool, error) {
+	if reqManagerApproval, err := ct.Properties.Get(ad.RequiresManagerApproval.String()).Bool(); err != nil {
+		return false, err
+	} else if reqManagerApproval {
+		return false, nil
+	} else if authenticationEnabled, err := ct.Properties.Get(ad.AuthenticationEnabled.String()).Bool(); err != nil {
+		return false, err
+	} else if !authenticationEnabled {
+		return false, nil
+	} else if noSecurityExtension, err := ct.Properties.Get(ad.NoSecurityExtension.String()).Bool(); err != nil {
+		return false, err
+	} else if !noSecurityExtension {
+		return false, nil
+	} else if enrolleeSuppliesSubject, err := ct.Properties.Get(ad.EnrolleeSuppliesSubject.String()).Bool(); err != nil {
+		return false, err
+	} else if enrolleeSuppliesSubject {
+		return false, nil
+	} else if schemaVersion, err := ct.Properties.Get(ad.SchemaVersion.String()).Float64(); err != nil {
+		return false, err
+	} else if authorizedSignatures, err := ct.Properties.Get(ad.AuthorizedSignatures.String()).Float64(); err != nil {
+		return false, err
+	} else if schemaVersion > 1 && authorizedSignatures > 0 {
+		return false, nil
+	} else if !scenarioB {
+		if subjectAltRequireUPN, err := ct.Properties.Get(ad.SubjectAltRequireUPN.String()).Bool(); err != nil {
+			return false, err
+		} else if subjectAltRequireSPN, err := ct.Properties.Get(ad.SubjectAltRequireSPN.String()).Bool(); err != nil {
+			return false, err
+		} else if subjectAltRequireSPN || subjectAltRequireUPN {
+			return true, nil
 		} else {
-			bitmap.Add(controller.ID.Uint32())
+			return false, err
 		}
-	}
-
-	return bitmap
-}
-
-func isCertTemplateValidForESC9a(ct *graph.Node) (bool, error) {
-	if reqManagerApproval, err := ct.Properties.Get(ad.RequiresManagerApproval.String()).Bool(); err != nil {
-		return false, err
-	} else if reqManagerApproval {
-		return false, nil
-	} else if authenticationEnabled, err := ct.Properties.Get(ad.AuthenticationEnabled.String()).Bool(); err != nil {
-		return false, err
-	} else if !authenticationEnabled {
-		return false, nil
-	} else if noSecurityExtension, err := ct.Properties.Get(ad.NoSecurityExtension.String()).Bool(); err != nil {
-		return false, err
-	} else if !noSecurityExtension {
-		return false, nil
-	} else if enrolleeSuppliesSubject, err := ct.Properties.Get(ad.EnrolleeSuppliesSubject.String()).Bool(); err != nil {
-		return false, err
-	} else if enrolleeSuppliesSubject {
-		return false, nil
-	} else if schemaVersion, err := ct.Properties.Get(ad.SchemaVersion.String()).Float64(); err != nil {
-		return false, err
-	} else if authorizedSignatures, err := ct.Properties.Get(ad.AuthorizedSignatures.String()).Float64(); err != nil {
-		return false, err
-	} else if schemaVersion > 1 && authorizedSignatures > 0 {
-		return false, nil
-	} else if subjectAltRequireUPN, err := ct.Properties.Get(ad.SubjectAltRequireUPN.String()).Bool(); err != nil {
-		return false, err
-	} else if subjectAltRequireSPN, err := ct.Properties.Get(ad.SubjectAltRequireSPN.String()).Bool(); err != nil {
-		return false, err
-	} else if subjectAltRequireSPN || subjectAltRequireUPN {
-		return true, nil
 	} else {
-		return false, nil
-	}
-}
-
-func isCertTemplateValidForESC9b(ct *graph.Node) (bool, error) {
-	if reqManagerApproval, err := ct.Properties.Get(ad.RequiresManagerApproval.String()).Bool(); err != nil {
-		return false, err
-	} else if reqManagerApproval {
-		return false, nil
-	} else if authenticationEnabled, err := ct.Properties.Get(ad.AuthenticationEnabled.String()).Bool(); err != nil {
-		return false, err
-	} else if !authenticationEnabled {
-		return false, nil
-	} else if noSecurityExtension, err := ct.Properties.Get(ad.NoSecurityExtension.String()).Bool(); err != nil {
-		return false, err
-	} else if !noSecurityExtension {
-		return false, nil
-	} else if enrolleeSuppliesSubject, err := ct.Properties.Get(ad.EnrolleeSuppliesSubject.String()).Bool(); err != nil {
-		return false, err
-	} else if enrolleeSuppliesSubject {
-		return false, nil
-	} else if subjectAltRequireDNS, err := ct.Properties.Get(ad.SubjectAltRequireDNS.String()).Bool(); err != nil {
-		return false, err
-	} else if !subjectAltRequireDNS {
-		return false, nil
-	} else if schemaVersion, err := ct.Properties.Get(ad.SchemaVersion.String()).Float64(); err != nil {
-		return false, err
-	} else if authorizedSignatures, err := ct.Properties.Get(ad.AuthorizedSignatures.String()).Float64(); err != nil {
-		return false, err
-	} else if schemaVersion > 1 && authorizedSignatures > 0 {
-		return false, nil
-	} else {
-		return true, nil
+		if subjectAltRequireDNS, err := ct.Properties.Get(ad.SubjectAltRequireDNS.String()).Bool(); err != nil {
+			return false, err
+		} else if subjectAltRequireDNS {
+			return true, nil
+		} else {
+			return false, nil
+		}
 	}
 }
