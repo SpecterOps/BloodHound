@@ -35,6 +35,8 @@ const DatabaseManagement = () => {
         dataQualityHistory: false,
     });
 
+    const [error, setError] = useState(false);
+
     const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         setChecked({
             ...checked,
@@ -42,9 +44,19 @@ const DatabaseManagement = () => {
         });
     };
 
-    const handleProceed = () => {};
+    const handleProceed = () => {
+        // if nothing is checked, display error
+        if (Object.values(checked).filter(Boolean).length === 0) {
+            setError(true);
+        } else {
+            // clear out error on succesful submission
+            setError(false);
+            // todo:
+        }
+    };
 
     const { collectedGraphData, highValueSelectors, fileIngestHistory, dataQualityHistory } = checked;
+
     return (
         <ContentPage title='Clear BloodHound data'>
             <div>
@@ -56,8 +68,8 @@ const DatabaseManagement = () => {
                 </Typography>
 
                 <Box display='flex' flexDirection='column' alignItems='start'>
-                    <FormControl variant='standard' sx={{ paddingBlock: 2 }}>
-                        {/* {error ? <FormHelperText>error displayed</FormHelperText> : null} */}
+                    <FormControl variant='standard' sx={{ paddingBlock: 2 }} error={error}>
+                        {error ? <FormHelperText>Please make a selection</FormHelperText> : null}
                         <FormGroup>
                             <FormControlLabel
                                 label='Collected graph data (all nodes and edges)'
