@@ -1312,7 +1312,7 @@ func TestADCSESC6a(t *testing.T) {
 			}).First(); err != nil {
 				t.Fatalf("error fetching esc6a edges in integration test; %v", err)
 			} else {
-				composition, err := ad2.GetADCSESC6aEdgeComposition(context.Background(), db, edge)
+				composition, err := ad2.GetADCSESC6EdgeComposition(context.Background(), db, edge)
 				require.Nil(t, err)
 				names := []string{}
 				for _, node := range composition.AllNodes() {
@@ -1338,7 +1338,7 @@ func TestADCSESC6a(t *testing.T) {
 			}).First(); err != nil {
 				t.Fatalf("error fetching esc6a edges in integration test; %v", err)
 			} else {
-				composition, err := ad2.GetADCSESC6aEdgeComposition(context.Background(), db, edge)
+				composition, err := ad2.GetADCSESC6EdgeComposition(context.Background(), db, edge)
 				require.Nil(t, err)
 				names := []string{}
 				for _, node := range composition.AllNodes() {
@@ -1493,7 +1493,7 @@ func TestADCSESC6b(t *testing.T) {
 				}).First(); err != nil {
 				t.Fatalf("error fetching esc6b edge in integration test: %v", err)
 			} else {
-				composition, err := ad2.GetADCSESC6bEdgeComposition(context.Background(), db, edge)
+				composition, err := ad2.GetADCSESC6EdgeComposition(context.Background(), db, edge)
 				require.Nil(t, err)
 
 				require.Equal(t, 8, len(composition.AllNodes()))
@@ -1518,7 +1518,7 @@ func TestADCSESC6b(t *testing.T) {
 				}).First(); err != nil {
 				t.Fatalf("error fetching esc6b edge in integration test: %v", err)
 			} else {
-				composition, err := ad2.GetADCSESC6bEdgeComposition(context.Background(), db, edge)
+				composition, err := ad2.GetADCSESC6EdgeComposition(context.Background(), db, edge)
 				require.Nil(t, err)
 
 				require.Equal(t, 8, len(composition.AllNodes()))

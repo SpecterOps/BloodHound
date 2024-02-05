@@ -202,7 +202,6 @@ func expandNodeSliceToBitmapWithoutGroups(nodes []*graph.Node, groupExpansions i
 				if groupExpansions.Cardinality(id).Cardinality() == 0 {
 					bitmap.Add(id)
 				}
-
 				return true
 			})
 		} else {
@@ -211,6 +210,20 @@ func expandNodeSliceToBitmapWithoutGroups(nodes []*graph.Node, groupExpansions i
 	}
 
 	return bitmap
+}
+
+func certTemplateValidForUserVictim(certTemplate *graph.Node) bool {
+	if subjectAltRequireDNS, err := certTemplate.Properties.Get(ad.SubjectAltRequireDNS.String()).Bool(); err != nil {
+		return false
+	} else if subjectAltRequireDNS {
+		return false
+	} else if subjectAltRequireDomainDNS, err := certTemplate.Properties.Get(ad.SubjectAltRequireDomainDNS.String()).Bool(); err != nil {
+		return false
+	} else if subjectAltRequireDomainDNS {
+		return false
+	} else {
+		return true
+	}
 }
 
 func filterUserDNSResults(tx graph.Transaction, bitmap cardinality.Duplex[uint32], certTemplate *graph.Node) (cardinality.Duplex[uint32], error) {
@@ -223,17 +236,8 @@ func filterUserDNSResults(tx graph.Transaction, bitmap cardinality.Duplex[uint32
 		if !graph.IsErrNotFound(err) {
 			return nil, err
 		}
-	} else if len(userNodes) > 0 {
-		if subjRequireDns, err := certTemplate.Properties.Get(ad.SubjectAltRequireDNS.String()).Bool(); err != nil {
-			log.Debugf("Failed to retrieve subjectAltRequireDNS for template %d: %v", certTemplate.ID, err)
-			bitmap.Xor(cardinality.NodeSetToDuplex(userNodes))
-		} else if subjRequireDomainDns, err := certTemplate.Properties.Get(ad.SubjectAltRequireDomainDNS.String()).Bool(); err != nil {
-			log.Debugf("Failed to retrieve subjectAltRequireDomainDNS for template %d: %v", certTemplate.ID, err)
-			bitmap.Xor(cardinality.NodeSetToDuplex(userNodes))
-		} else if subjRequireDns || subjRequireDomainDns {
-			//If either of these properties is true, we need to remove all these users from our victims list
-			bitmap.Xor(cardinality.NodeSetToDuplex(userNodes))
-		}
+	} else if len(userNodes) > 0 && !certTemplateValidForUserVictim(certTemplate) {
+		bitmap.Xor(cardinality.NodeSetToDuplex(userNodes))
 	}
 
 	return bitmap, nil

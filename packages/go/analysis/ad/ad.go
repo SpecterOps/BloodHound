@@ -524,3 +524,47 @@ func getCardinalityCount(id uint32, expansions cardinality.Provider[uint32], car
 		return idCardinality
 	}
 }
+
+func GetEdgeCompositionPath(ctx context.Context, db graph.Database, edge *graph.Relationship) (graph.PathSet, error) {
+	pathSet := graph.NewPathSet()
+	return pathSet, db.ReadTransaction(ctx, func(tx graph.Transaction) error {
+		if edge.Kind == ad.GoldenCert {
+			if results, err := getGoldenCertEdgeComposition(tx, edge); err != nil {
+				return err
+			} else {
+				pathSet = results
+			}
+		} else if edge.Kind == ad.ADCSESC1 {
+			if results, err := GetADCSESC1EdgeComposition(ctx, db, edge); err != nil {
+				return err
+			} else {
+				pathSet = results
+			}
+		} else if edge.Kind == ad.ADCSESC3 {
+			if results, err := GetADCSESC3EdgeComposition(ctx, db, edge); err != nil {
+				return err
+			} else {
+				pathSet = results
+			}
+		} else if edge.Kind == ad.ADCSESC6a || edge.Kind == ad.ADCSESC6b {
+			if results, err := GetADCSESC6EdgeComposition(ctx, db, edge); err != nil {
+				return err
+			} else {
+				pathSet = results
+			}
+		} else if edge.Kind == ad.ADCSESC9a {
+			if results, err := GetADCSESC9aEdgeComposition(ctx, db, edge); err != nil {
+				return err
+			} else {
+				pathSet = results
+			}
+		} else if edge.Kind == ad.ADCSESC10a || edge.Kind == ad.ADCSESC10b {
+			if results, err := GetADCSESC10EdgeComposition(ctx, db, edge); err != nil {
+				return err
+			} else {
+				pathSet = results
+			}
+		}
+		return nil
+	})
+}
