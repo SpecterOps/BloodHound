@@ -1555,6 +1555,34 @@ func FetchCertTemplatePathToDomain(tx graph.Transaction, certTemplate, domain *g
 	})
 }
 
+func fetchFirstDegreeNodes(tx graph.Transaction, targetNode *graph.Node, relKinds ...graph.Kind) (graph.NodeSet, error) {
+	return ops.FetchStartNodes(tx.Relationships().Filter(
+		query.And(
+			query.Kind(query.Start(), ad.Entity),
+			query.KindIn(query.Relationship(), relKinds...),
+			query.Equals(query.EndID(), targetNode.ID),
+		),
+	))
+}
+
+func FetchAttackersForEscalations9and10(tx graph.Transaction, victimBitmap cardinality.Duplex[uint32], scenarioB bool) ([]graph.ID, error) {
+	if attackers, err := ops.FetchStartNodeIDs(tx.Relationships().Filterf(func() graph.Criteria {
+		criteria := query.And(
+			query.KindIn(query.Start(), ad.Group, ad.User, ad.Computer),
+			query.KindIn(query.Relationship(), ad.GenericAll, ad.GenericWrite, ad.Owns, ad.WriteOwner, ad.WriteDACL),
+			query.InIDs(query.EndID(), cardinality.DuplexToGraphIDs(victimBitmap)...),
+		)
+		if scenarioB {
+			return query.And(criteria, query.KindIn(query.End(), ad.Computer))
+		}
+		return criteria
+	})); err != nil {
+		return nil, err
+	} else {
+		return attackers, nil
+	}
+}
+
 func FetchCertTemplateCAs(tx graph.Transaction, certTemplate *graph.Node) (graph.NodeSet, error) {
 	return ops.FetchEndNodes(tx.Relationships().Filter(
 		FilterPublishedCAs(certTemplate),

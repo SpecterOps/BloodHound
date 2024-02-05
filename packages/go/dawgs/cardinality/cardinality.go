@@ -72,7 +72,7 @@ type Duplex[T uint32 | uint64] interface {
 	Remove(value T)
 	Slice() []T
 	Contains(value T) bool
-	Each(delegate func(value T) (bool, error)) error
+	Each(delegate func(value T) bool)
 	CheckedAdd(value T) bool
 	Clone() Duplex[T]
 }
@@ -81,9 +81,9 @@ type Duplex[T uint32 | uint64] interface {
 func DuplexToGraphIDs[T uint32 | uint64](provider Duplex[T]) []graph.ID {
 	ids := make([]graph.ID, 0, provider.Cardinality())
 
-	provider.Each(func(value T) (bool, error) {
+	provider.Each(func(value T) bool {
 		ids = append(ids, graph.ID(value))
-		return true, nil
+		return true
 	})
 
 	return ids
@@ -95,6 +95,17 @@ func NodeSetToDuplex(nodes graph.NodeSet) Duplex[uint32] {
 	duplex := NewBitmap32()
 
 	for nodeID := range nodes {
+		duplex.Add(nodeID.Uint32())
+	}
+
+	return duplex
+}
+
+// NodeSetToDuplex takes a graph NodeSet and returns a Duplex provider that contains all node IDs.
+func NodeIDsToDuplex(nodeIDs []graph.ID) Duplex[uint32] {
+	duplex := NewBitmap32()
+
+	for _, nodeID := range nodeIDs {
 		duplex.Add(nodeID.Uint32())
 	}
 

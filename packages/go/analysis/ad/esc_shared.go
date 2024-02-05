@@ -23,13 +23,15 @@ import (
 	"strings"
 
 	"github.com/specterops/bloodhound/analysis"
+	"github.com/specterops/bloodhound/analysis/impact"
+	"github.com/specterops/bloodhound/dawgs/cardinality"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/dawgs/ops"
 	"github.com/specterops/bloodhound/dawgs/query"
 	"github.com/specterops/bloodhound/dawgs/util/channels"
 	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/log"
-	"github.com/specterops/bloodhound/slices"
+	"github.com/specterops/bloodhound/slicesext"
 )
 
 func PostTrustedForNTAuth(ctx context.Context, db graph.Database, operation analysis.StatTrackedOperation[analysis.CreatePostRelationshipJob]) error {
@@ -139,6 +141,21 @@ func PostEnterpriseCAFor(operation analysis.StatTrackedOperation[analysis.Create
 	return nil
 }
 
+func PostGoldenCert(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob, domain, enterpriseCA *graph.Node) error {
+	if hostCAServiceComputers, err := FetchHostsCAServiceComputers(tx, enterpriseCA); err != nil {
+		log.Errorf("error fetching host ca computer for enterprise ca %d: %v", enterpriseCA.ID, err)
+	} else {
+		for _, computer := range hostCAServiceComputers {
+			channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
+				FromID: computer.ID,
+				ToID:   domain.ID,
+				Kind:   ad.GoldenCert,
+			})
+		}
+	}
+	return nil
+}
+
 func processCertChainParent(node *graph.Node, tx graph.Transaction) ([]analysis.CreatePostRelationshipJob, error) {
 	if certChain, err := node.Properties.Get(ad.CertChain.String()).StringSlice(); err != nil {
 		if errors.Is(err, graph.ErrPropertyNotFound) {
@@ -150,7 +167,7 @@ func processCertChainParent(node *graph.Node, tx graph.Transaction) ([]analysis.
 		if targetNodes, err := findNodesByCertThumbprint(parentCert, tx, ad.EnterpriseCA, ad.RootCA); err != nil {
 			return []analysis.CreatePostRelationshipJob{}, err
 		} else {
-			return slices.Map(targetNodes, func(nodeId graph.ID) analysis.CreatePostRelationshipJob {
+			return slicesext.Map(targetNodes, func(nodeId graph.ID) analysis.CreatePostRelationshipJob {
 				return analysis.CreatePostRelationshipJob{
 					FromID: node.ID,
 					ToID:   nodeId,
@@ -173,4 +190,63 @@ func findNodesByCertThumbprint(certThumbprint string, tx graph.Transaction, kind
 			),
 		)
 	}))
+}
+
+func expandNodeSliceToBitmapWithoutGroups(nodes []*graph.Node, groupExpansions impact.PathAggregator) cardinality.Duplex[uint32] {
+	var bitmap = cardinality.NewBitmap32()
+
+	for _, controller := range nodes {
+		if controller.Kinds.ContainsOneOf(ad.Group) {
+			groupExpansions.Cardinality(controller.ID.Uint32()).(cardinality.Duplex[uint32]).Each(func(id uint32) bool {
+				//Check group expansions against each id, if cardinality is 0 than its not a group
+				if groupExpansions.Cardinality(id).Cardinality() == 0 {
+					bitmap.Add(id)
+				}
+
+				return true
+			})
+		} else {
+			bitmap.Add(controller.ID.Uint32())
+		}
+	}
+
+	return bitmap
+}
+
+func filterUserDNSResults(tx graph.Transaction, bitmap cardinality.Duplex[uint32], certTemplate *graph.Node) (cardinality.Duplex[uint32], error) {
+	if userNodes, err := ops.FetchNodeSet(tx.Nodes().Filterf(func() graph.Criteria {
+		return query.And(
+			query.KindIn(query.Node(), ad.User),
+			query.InIDs(query.NodeID(), cardinality.DuplexToGraphIDs(bitmap)...),
+		)
+	})); err != nil {
+		if !graph.IsErrNotFound(err) {
+			return nil, err
+		}
+	} else if len(userNodes) > 0 {
+		if subjRequireDns, err := certTemplate.Properties.Get(ad.SubjectAltRequireDNS.String()).Bool(); err != nil {
+			log.Debugf("Failed to retrieve subjectAltRequireDNS for template %d: %v", certTemplate.ID, err)
+			bitmap.Xor(cardinality.NodeSetToDuplex(userNodes))
+		} else if subjRequireDomainDns, err := certTemplate.Properties.Get(ad.SubjectAltRequireDomainDNS.String()).Bool(); err != nil {
+			log.Debugf("Failed to retrieve subjectAltRequireDomainDNS for template %d: %v", certTemplate.ID, err)
+			bitmap.Xor(cardinality.NodeSetToDuplex(userNodes))
+		} else if subjRequireDns || subjRequireDomainDns {
+			//If either of these properties is true, we need to remove all these users from our victims list
+			bitmap.Xor(cardinality.NodeSetToDuplex(userNodes))
+		}
+	}
+
+	return bitmap, nil
+}
+
+func getVictimBitmap(groupExpansions impact.PathAggregator, certTemplateControllers, ecaControllers []*graph.Node) cardinality.Duplex[uint32] {
+	// Expand controllers for the eca + template completely because we don't do group shortcutting here
+	var (
+		victimBitmap = expandNodeSliceToBitmapWithoutGroups(certTemplateControllers, groupExpansions)
+		ecaBitmap    = expandNodeSliceToBitmapWithoutGroups(ecaControllers, groupExpansions)
+	)
+
+	victimBitmap.And(ecaBitmap)
+
+	return victimBitmap
 }

@@ -1,27 +1,27 @@
 // Copyright 2023 Specter Ops, Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// 
+//
 // SPDX-License-Identifier: Apache-2.0
 
-package slices_test
+package slicesext_test
 
 import (
 	"fmt"
 	"testing"
 
+	"github.com/specterops/bloodhound/slicesext"
 	"github.com/stretchr/testify/require"
-	"github.com/specterops/bloodhound/slices"
 )
 
 func sum(a, b int) int {
@@ -72,21 +72,21 @@ func TestFoldr(t *testing.T) {
 		switch c := c.(type) {
 		case Case[int, int]:
 			t.Run(c.Name, func(t *testing.T) {
-				require.Equal(t, c.Output, slices.Foldr(c.InitVal, c.List, c.Reducer))
-				require.Equal(t, c.Output, slices.FoldrEager(c.InitVal, c.List, c.Reducer))
+				require.Equal(t, c.Output, slicesext.Foldr(c.InitVal, c.List, c.Reducer))
+				require.Equal(t, c.Output, slicesext.FoldrEager(c.InitVal, c.List, c.Reducer))
 			})
 		case Case[bool, bool]:
 			t.Run(c.Name, func(t *testing.T) {
-				require.Equal(t, c.Output, slices.Foldr(c.InitVal, c.List, c.Reducer))
-				require.Equal(t, c.Output, slices.FoldrEager(c.InitVal, c.List, c.Reducer))
+				require.Equal(t, c.Output, slicesext.Foldr(c.InitVal, c.List, c.Reducer))
+				require.Equal(t, c.Output, slicesext.FoldrEager(c.InitVal, c.List, c.Reducer))
 			})
 		}
 	}
 
 	t.Run("should handle multiple reducers", func(t *testing.T) {
 		// 1*(1+(1*(1+(2*(2+5))))) = 16
-		require.Equal(t, 16, slices.Foldr(5, []int{1, 1, 2}, sum, mult))
-		require.Equal(t, 16, slices.FoldrEager(5, []int{1, 1, 2}, sum, mult))
+		require.Equal(t, 16, slicesext.Foldr(5, []int{1, 1, 2}, sum, mult))
+		require.Equal(t, 16, slicesext.FoldrEager(5, []int{1, 1, 2}, sum, mult))
 	})
 }
 
@@ -97,7 +97,7 @@ func cons(a []byte, b byte) []byte {
 func FuzzFoldr(f *testing.F) {
 	f.Add([]byte{5}, []byte{1, 2, 3, 4})
 	f.Fuzz(func(t *testing.T, a []byte, b []byte) {
-		out := slices.Foldr(a, b, cons)
+		out := slicesext.Foldr(a, b, cons)
 		require.Equal(t, len(a)+len(b), len(out))
 	})
 }
@@ -109,7 +109,7 @@ func BenchmarkFoldr(b *testing.B) {
 		b.Run(fmt.Sprintf("lazy_%d", i), func(b *testing.B) {
 			b.RunParallel(func(pb *testing.PB) {
 				for pb.Next() {
-					slices.Foldr(0, list, sum)
+					slicesext.Foldr(0, list, sum)
 				}
 			})
 		})
@@ -117,7 +117,7 @@ func BenchmarkFoldr(b *testing.B) {
 		b.Run(fmt.Sprintf("eager_%d", i), func(b *testing.B) {
 			b.RunParallel(func(pb *testing.PB) {
 				for pb.Next() {
-					slices.Foldr(0, list, sum)
+					slicesext.Foldr(0, list, sum)
 				}
 			})
 		})

@@ -19,6 +19,7 @@ import WindowsAbuse from './WindowsAbuse';
 import LinuxAbuse from './LinuxAbuse';
 import Opsec from './Opsec';
 import References from './References';
+import Composition from '../ADCSESC6a/Composition';
 
 const ADCSESC6b = {
     general: General,
@@ -26,6 +27,7 @@ const ADCSESC6b = {
     linuxAbuse: LinuxAbuse,
     opsec: Opsec,
     references: References,
+    composition: Composition,
 };
 
 export default ADCSESC6b;
