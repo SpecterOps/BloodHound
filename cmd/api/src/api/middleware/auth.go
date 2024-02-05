@@ -22,12 +22,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/specterops/bloodhound/log"
-	"github.com/specterops/bloodhound/src/ctx"
-	"github.com/specterops/bloodhound/src/database"
-
 	"github.com/gofrs/uuid"
 	"github.com/gorilla/mux"
+	"github.com/specterops/bloodhound/src/ctx"
 
 	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/src/auth"
@@ -35,22 +32,6 @@ import (
 
 	"github.com/specterops/bloodhound/headers"
 )
-
-func auditLogUnauthorizedAccess(db database.Database, request *http.Request) {
-	// Ignore read logs as they are less likely to occur from malicious access
-	if request.Method != "GET" {
-		if err := db.AppendAuditLog(
-			request.Context(),
-			model.AuditEntry{
-				Action: "UnauthorizedAccessAttempt",
-				Model:  model.AuditData{"endpoint": request.Method + " " + request.URL.Path},
-				Status: model.AuditStatusFailure,
-			},
-		); err != nil {
-			log.Errorf("error creating audit log for unauthorized access: %s", err.Error())
-		}
-	}
-}
 
 func parseAuthorizationHeader(request *http.Request) (string, string, *api.ErrorWrapper) {
 	if authorizationHeader := request.Header.Get(headers.Authorization.String()); authorizationHeader == "" {
@@ -119,13 +100,13 @@ func AuthMiddleware(authenticator api.Authenticator) mux.MiddlewareFunc {
 
 // PermissionsCheckAll is a middleware func generator that returns a http.Handler which closes around a list of
 // permissions that an actor must have in the request auth context to access the wrapped http.Handler.
-func PermissionsCheckAll(db database.Database, authorizer auth.Authorizer, permissions ...model.Permission) mux.MiddlewareFunc {
+func PermissionsCheckAll(authorizer auth.Authorizer, permissions ...model.Permission) mux.MiddlewareFunc {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
 			if bhCtx := ctx.FromRequest(request); !bhCtx.AuthCtx.Authenticated() {
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusUnauthorized, "not authenticated", request), response)
 			} else if !authorizer.AllowsAllPermissions(bhCtx.AuthCtx, permissions) {
-				auditLogUnauthorizedAccess(db, request)
+				authorizer.AuditLogUnauthorizedAccess(request)
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusForbidden, "not authorized", request), response)
 			} else {
 				next.ServeHTTP(response, request)
@@ -136,13 +117,13 @@ func PermissionsCheckAll(db database.Database, authorizer auth.Authorizer, permi
 
 // PermissionsCheckAtLeastOne is a middleware func generator that returns a http.Handler which closes around a list of
 // permissions that an actor must have at least one in the request auth context to access the wrapped http.Handler.
-func PermissionsCheckAtLeastOne(db database.Database, authorizer auth.Authorizer, permissions ...model.Permission) mux.MiddlewareFunc {
+func PermissionsCheckAtLeastOne(authorizer auth.Authorizer, permissions ...model.Permission) mux.MiddlewareFunc {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
 			if bhCtx := ctx.FromRequest(request); !bhCtx.AuthCtx.Authenticated() {
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusUnauthorized, "not authenticated", request), response)
 			} else if !authorizer.AllowsAtLeastOnePermission(bhCtx.AuthCtx, permissions) {
-				auditLogUnauthorizedAccess(db, request)
+				authorizer.AuditLogUnauthorizedAccess(request)
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusForbidden, "not authorized", request), response)
 			} else {
 				next.ServeHTTP(response, request)
@@ -180,7 +161,7 @@ func RequireUserId() mux.MiddlewareFunc {
 //
 // An actor may operate on other actor entities if they have the permission "permission://auth/ManageUsers." If not the
 // actor may only exercise auth management calls on auth entities that are explicitly owned by the actor.
-func AuthorizeAuthManagementAccess(db database.Database, permissions auth.PermissionSet, authorizer auth.Authorizer) mux.MiddlewareFunc {
+func AuthorizeAuthManagementAccess(permissions auth.PermissionSet, authorizer auth.Authorizer) mux.MiddlewareFunc {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
 			bhCtx := ctx.FromRequest(request)
@@ -208,7 +189,7 @@ func AuthorizeAuthManagementAccess(db database.Database, permissions auth.Permis
 				}
 
 				if !authorized {
-					auditLogUnauthorizedAccess(db, request)
+					authorizer.AuditLogUnauthorizedAccess(request)
 					api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusUnauthorized, fmt.Sprintf("not authorized for %s", userID), request), response)
 				} else {
 					next.ServeHTTP(response, request)

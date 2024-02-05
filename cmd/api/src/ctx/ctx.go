@@ -23,7 +23,6 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/specterops/bloodhound/errors"
 	"github.com/specterops/bloodhound/src/auth"
 )
 
@@ -103,7 +102,3 @@ func SetRequestContext(request *http.Request, bhCtx *Context) *http.Request {
 	newRequestContext := context.WithValue(request.Context(), ValueKey, bhCtx)
 	return request.WithContext(newRequestContext)
 }
-
-const (
-	ErrAuthContextInvalid = errors.Error("auth context is invalid")
-)
