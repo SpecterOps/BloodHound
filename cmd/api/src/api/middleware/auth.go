@@ -22,10 +22,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/specterops/bloodhound/src/ctx"
-
 	"github.com/gofrs/uuid"
 	"github.com/gorilla/mux"
+	"github.com/specterops/bloodhound/src/ctx"
 
 	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/src/auth"
@@ -107,6 +106,7 @@ func PermissionsCheckAll(authorizer auth.Authorizer, permissions ...model.Permis
 			if bhCtx := ctx.FromRequest(request); !bhCtx.AuthCtx.Authenticated() {
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusUnauthorized, "not authenticated", request), response)
 			} else if !authorizer.AllowsAllPermissions(bhCtx.AuthCtx, permissions) {
+				authorizer.AuditLogUnauthorizedAccess(request)
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusForbidden, "not authorized", request), response)
 			} else {
 				next.ServeHTTP(response, request)
@@ -123,6 +123,7 @@ func PermissionsCheckAtLeastOne(authorizer auth.Authorizer, permissions ...model
 			if bhCtx := ctx.FromRequest(request); !bhCtx.AuthCtx.Authenticated() {
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusUnauthorized, "not authenticated", request), response)
 			} else if !authorizer.AllowsAtLeastOnePermission(bhCtx.AuthCtx, permissions) {
+				authorizer.AuditLogUnauthorizedAccess(request)
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusForbidden, "not authorized", request), response)
 			} else {
 				next.ServeHTTP(response, request)
@@ -188,6 +189,7 @@ func AuthorizeAuthManagementAccess(permissions auth.PermissionSet, authorizer au
 				}
 
 				if !authorized {
+					authorizer.AuditLogUnauthorizedAccess(request)
 					api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusUnauthorized, fmt.Sprintf("not authorized for %s", userID), request), response)
 				} else {
 					next.ServeHTTP(response, request)

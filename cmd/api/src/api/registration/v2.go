@@ -40,7 +40,7 @@ func samlWriteAPIErrorResponse(request *http.Request, response http.ResponseWrit
 func registerV2Auth(cfg config.Configuration, db database.Database, permissions auth.PermissionSet, routerInst *router.Router, authenticator api.Authenticator) {
 	var (
 		loginResource      = authapi.NewLoginResource(cfg, authenticator, db)
-		managementResource = authapi.NewManagementResource(cfg, db, auth.NewAuthorizer())
+		managementResource = authapi.NewManagementResource(cfg, db, auth.NewAuthorizer(db))
 		samlResource       = saml.NewSAMLRootResource(cfg, db, samlWriteAPIErrorResponse)
 	)
 

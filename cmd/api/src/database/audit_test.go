@@ -20,12 +20,14 @@
 package database_test
 
 import (
+	"context"
+	"testing"
+	"time"
+
 	"github.com/specterops/bloodhound/src/auth"
 	"github.com/specterops/bloodhound/src/ctx"
 	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/test/integration"
-	"testing"
-	"time"
 )
 
 func TestDatabase_ListAuditLogs(t *testing.T) {
@@ -53,7 +55,7 @@ func TestDatabase_ListAuditLogs(t *testing.T) {
 		},
 	}
 	for i := 0; i < 7; i++ {
-		if err := dbInst.AppendAuditLog(mockCtx, "CreateUser", model.User{}); err != nil {
+		if err := dbInst.AppendAuditLog(ctx.Set(context.Background(), &mockCtx), model.AuditEntry{Model: &model.User{}, Action: "CreateUser", Status: model.AuditStatusSuccess}); err != nil {
 			t.Fatalf("Error creating audit log: %v", err)
 		}
 	}
