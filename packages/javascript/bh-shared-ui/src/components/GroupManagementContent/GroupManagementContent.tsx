@@ -90,7 +90,11 @@ const GroupManagementContent: FC<{
         // Custom Member filter displays custom members, or all members.
         // If we want to also display only non customer members, change this:
         if (key === 'custom_member' && value.toLowerCase().includes('false')) {
-            setFilterParams(({ custom_member, ...removedCustomMemberFilter }) => removedCustomMemberFilter);
+            setFilterParams((prev) => {
+                const _filterParams = { ...prev };
+                delete _filterParams.custom_member;
+                return _filterParams;
+            });
             return;
         }
         setFilterParams((prev) => ({ ...prev, [key]: value.toString() }));
