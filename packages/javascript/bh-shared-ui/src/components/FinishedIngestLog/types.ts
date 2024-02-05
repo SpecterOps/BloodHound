@@ -35,6 +35,7 @@ export enum FileUploadJobStatus {
     FAILED = 5,
     INGESTING = 6,
     ANALYZING = 7,
+    PARTIALLY_COMPLETE = 8,
 }
 
 export const FileUploadJobStatusToString: Record<FileUploadJobStatus, string> = {
@@ -47,4 +48,5 @@ export const FileUploadJobStatusToString: Record<FileUploadJobStatus, string> = 
     5: 'Failed',
     6: 'Ingesting',
     7: 'Analyzing',
+    8: 'Partially Complete',
 };
