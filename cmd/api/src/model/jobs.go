@@ -117,6 +117,7 @@ const (
 	JobStatusFailed    JobStatus = 5
 	JobStatusIngesting JobStatus = 6
 	JobStatusAnalyzing JobStatus = 7
+	JobStatusPartiallyComplete JobStatus = 8
 )
 
 func allJobStatuses() []JobStatus {
@@ -130,6 +131,7 @@ func allJobStatuses() []JobStatus {
 		JobStatusFailed,
 		JobStatusIngesting,
 		JobStatusAnalyzing,
+		JobStatusPartiallyComplete,
 	}
 }
 
@@ -170,6 +172,9 @@ func (s JobStatus) String() string {
 
 	case JobStatusAnalyzing:
 		return "ANALYZING"
+	
+	case JobStatusPartiallyComplete:
+		return "PARTIALLYCOMPLETE"
 
 	default:
 		return "INVALIDSTATUS"
