@@ -152,7 +152,11 @@ const GroupManagementContent: FC<{
                             </Grid>
                         </Grid>
                     </Box>
-                    <AssetGroupFilters {...{ filterParams, handleFilterChange, availableNodeKinds }} />
+                    <AssetGroupFilters
+                        filterParams={filterParams}
+                        handleFilterChange={handleFilterChange}
+                        availableNodeKinds={availableNodeKinds}
+                    />
                     {selectedAssetGroup && (
                         <AssetGroupEdit
                             assetGroup={selectedAssetGroup}
@@ -166,6 +170,7 @@ const GroupManagementContent: FC<{
                         assetGroup={selectedAssetGroup}
                         filter={filterParams}
                         onSelectMember={onClickMember}
+                        canFilterToEmpty={!!availableNodeKinds.length}
                     />
                 </Grid>
                 <Grid item xs={4} md={3} height={'100%'}>

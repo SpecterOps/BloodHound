@@ -129,7 +129,9 @@ const AssetGroupFilters: FC<Props> = ({ filterParams, handleFilterChange, availa
                     </Grid>
                     <Grid item xs={12} p={1}>
                         <Box sx={{ width: '100%', display: 'flex', justifyContent: 'flex-end' }}>
-                            <Button onClick={handleClearFilters}>Clear Filters</Button>
+                            <Button onClick={handleClearFilters} disabled={!active}>
+                                Clear Filters
+                            </Button>
                         </Box>
                     </Grid>
                 </Grid>
