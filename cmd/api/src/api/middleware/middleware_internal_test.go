@@ -98,6 +98,7 @@ func TestParseUserIP_Success(t *testing.T) {
 	ip1 := "192.168.1.1:8080"
 	ip2 := "192.168.1.2"
 	ip3 := "192.168.1.3"
+
 	req.Header.Set("X-Forwarded-For", strings.Join([]string{ip1, ip2, ip3}, ","))
 
 	req.RemoteAddr = "0.0.0.0:3000"
