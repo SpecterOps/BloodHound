@@ -128,9 +128,13 @@
       "source": {
         "type": "string"
       },
+      "commit_id": {
+        "type": "string"
+      },
       "status": {
         "string": "enum",
         "enum": [
+          "intent",
           "success",
           "failure"
         ]
