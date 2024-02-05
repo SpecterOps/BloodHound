@@ -150,7 +150,7 @@ func ContextMiddleware(next http.Handler) http.Handler {
 
 func parseUserIP(r *http.Request) string {
 	if result := r.Header.Get("X-Forwarded-For"); result == "" {
-		log.Warnf("No data found in X-Forwarded-For header for request ID %s", r.Header.Get(headers.RequestID.String()))
+		log.Warnf("No data found in X-Forwarded-For header")
 		return r.RemoteAddr
 	} else {
 		result += "," + r.RemoteAddr
