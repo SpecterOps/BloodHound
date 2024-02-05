@@ -281,6 +281,7 @@ export const EdgeCompositionRelationships = [
     'ADCSESC6a',
     'ADCSESC6b',
     'ADCSESC9a',
+    'ADCSESC9b',
     'ADCSESC10a',
 ];
 export enum ActiveDirectoryKindProperties {
