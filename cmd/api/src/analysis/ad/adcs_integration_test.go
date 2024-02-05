@@ -1140,7 +1140,7 @@ func TestADCSESC9b(t *testing.T) {
 			if results, err := ops.FetchRelationships(tx.Relationships().Filterf(func() graph.Criteria {
 				return query.Kind(query.Relationship(), ad.ADCSESC9b)
 			})); err != nil {
-				t.Fatalf("error fetching esc9a edges in integration test; %v", err)
+				t.Fatalf("error fetching esc9b edges in integration test; %v", err)
 			} else {
 				assert.Equal(t, 1, len(results))
 				edge := results[0]
