@@ -112,6 +112,7 @@ const GroupManagementContent: FC<{
         } else {
             filter.environment_id = `eq:${filterDomain?.id}`;
         }
+        setAvailableNodeKinds([]);
         setFilterParams(filter);
     }, [selectedDomain, globalDomain, selectedAssetGroupId]);
 
