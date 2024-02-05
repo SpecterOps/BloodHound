@@ -54,7 +54,7 @@ describe('AssetGroupEdit', () => {
     const setup = async () => {
         const user = userEvent.setup();
         const screen = await act(async () => {
-            return render(<AssetGroupEdit assetGroup={assetGroup} filter={{}} />);
+            return render(<AssetGroupEdit assetGroup={assetGroup} filter={{}} makeNodeFilterable={() => ({})} />);
         });
         return { user, screen };
     };
