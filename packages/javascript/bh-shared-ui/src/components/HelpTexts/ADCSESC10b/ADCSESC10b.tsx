@@ -19,15 +19,13 @@ import WindowsAbuse from './WindowsAbuse';
 import LinuxAbuse from './LinuxAbuse';
 import Opsec from './Opsec';
 import References from './References';
-import Composition from '../ADCSESC6a/Composition';
 
-const ADCSESC6b = {
+const ADCSESC10b = {
     general: General,
     windowsAbuse: WindowsAbuse,
     linuxAbuse: LinuxAbuse,
     opsec: Opsec,
     references: References,
-    composition: Composition,
 };
 
-export default ADCSESC6b;
+export default ADCSESC10b;
