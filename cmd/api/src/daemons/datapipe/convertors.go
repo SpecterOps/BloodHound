@@ -21,7 +21,7 @@ import (
 	"github.com/specterops/bloodhound/graphschema/ad"
 )
 
-func convertComputerData(data []ein.Computer, adcsEnabled bool) ConvertedData {
+func convertComputerData(data []ein.Computer) ConvertedData {
 	converted := ConvertedData{}
 
 	for _, computer := range data {
@@ -57,9 +57,7 @@ func convertComputerData(data []ein.Computer, adcsEnabled bool) ConvertedData {
 			}
 		}
 
-		if adcsEnabled {
-			converted.NodeProps = append(converted.NodeProps, ein.ParseDCRegistryData(computer))
-		}
+		converted.NodeProps = append(converted.NodeProps, ein.ParseDCRegistryData(computer))
 
 		converted.NodeProps = append(converted.NodeProps, baseNodeProp)
 	}
