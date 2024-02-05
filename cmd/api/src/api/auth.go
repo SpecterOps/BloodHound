@@ -97,7 +97,6 @@ func (s authenticator) auditLogin(requestContext context.Context, commitID uuid.
 		CommitID:        commitID,
 	}
 
-	log.Infof("**************** user.PrincipalName is %s", user.PrincipalName)
 	if user.PrincipalName == "" {
 		auditLog.Fields["username"] = loginRequest.Username
 	} else {
