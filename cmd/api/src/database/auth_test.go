@@ -20,6 +20,7 @@
 package database_test
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -64,7 +65,7 @@ func initAndCreateUser(t *testing.T) (database.Database, model.User) {
 		}
 	)
 
-	if newUser, err := dbInst.CreateUser(user); err != nil {
+	if newUser, err := dbInst.CreateUser(context.Background(), user); err != nil {
 		t.Fatalf("Error creating user: %v", err)
 	} else {
 		return dbInst, newUser
@@ -197,7 +198,7 @@ func TestDatabase_CreateGetUser(t *testing.T) {
 	)
 
 	for _, user := range users {
-		if _, err := dbInst.CreateUser(user); err != nil {
+		if _, err := dbInst.CreateUser(context.Background(), user); err != nil {
 			t.Fatalf("Error creating user: %v", err)
 		} else if newUser, err := dbInst.LookupUser(user.PrincipalName); err != nil {
 			t.Fatalf("Failed looking up user by principal %s: %v", user.PrincipalName, err)
@@ -219,7 +220,7 @@ func TestDatabase_CreateGetUser(t *testing.T) {
 
 			newUser.Roles = newUser.Roles.RemoveByName(roleToDelete)
 
-			if err := dbInst.UpdateUser(newUser); err != nil {
+			if err := dbInst.UpdateUser(context.Background(), newUser); err != nil {
 				t.Fatalf("Failed to update user: %v", err)
 			}
 
@@ -240,6 +241,7 @@ func TestDatabase_CreateGetUser(t *testing.T) {
 
 func TestDatabase_CreateGetDeleteAuthToken(t *testing.T) {
 	var (
+		ctx          = context.Background()
 		dbInst, user = initAndCreateUser(t)
 		expectedName = "test"
 		token        = model.AuthToken{
@@ -250,7 +252,7 @@ func TestDatabase_CreateGetDeleteAuthToken(t *testing.T) {
 		}
 	)
 
-	if newToken, err := dbInst.CreateAuthToken(token); err != nil {
+	if newToken, err := dbInst.CreateAuthToken(ctx, token); err != nil {
 		t.Fatalf("Failed to create auth token: %v", err)
 	} else if updatedUser, err := dbInst.GetUser(user.ID); err != nil {
 		t.Fatalf("Failed to fetch updated user: %v", err)
@@ -260,7 +262,7 @@ func TestDatabase_CreateGetDeleteAuthToken(t *testing.T) {
 		t.Fatalf("Expected auth token to have valid name")
 	} else if newToken.Name.String != expectedName {
 		t.Fatalf("Expected auth token to have name %s but saw %v", expectedName, newToken.Name.String)
-	} else if err := dbInst.DeleteAuthToken(newToken); err != nil {
+	} else if err := dbInst.DeleteAuthToken(ctx, newToken); err != nil {
 		t.Fatalf("Failed to delete auth token: %v", err)
 	}
 
@@ -275,6 +277,7 @@ func TestDatabase_CreateGetDeleteAuthSecret(t *testing.T) {
 	const updatedDigest = "updated"
 
 	var (
+		ctx          = context.Background()
 		dbInst, user = initAndCreateUser(t)
 		secret       = model.AuthSecret{
 			UserID:       user.ID,
@@ -284,7 +287,7 @@ func TestDatabase_CreateGetDeleteAuthSecret(t *testing.T) {
 		}
 	)
 
-	if newSecret, err := dbInst.CreateAuthSecret(secret); err != nil {
+	if newSecret, err := dbInst.CreateAuthSecret(ctx, secret); err != nil {
 		t.Fatalf("Failed to create auth secret: %v", err)
 	} else if updatedUser, err := dbInst.GetUser(user.ID); err != nil {
 		t.Fatalf("Failed to fetch updated user: %v", err)
@@ -293,7 +296,7 @@ func TestDatabase_CreateGetDeleteAuthSecret(t *testing.T) {
 	} else {
 		newSecret.Digest = updatedDigest
 
-		if err := dbInst.UpdateAuthSecret(newSecret); err != nil {
+		if err := dbInst.UpdateAuthSecret(ctx, newSecret); err != nil {
 			t.Fatalf("Failed to update auth secret %d: %v", newSecret.ID, err)
 		} else if updatedSecret, err := dbInst.GetAuthSecret(newSecret.ID); err != nil {
 			t.Fatalf("Failed to fetch updated auth secret: %v", err)
@@ -301,7 +304,7 @@ func TestDatabase_CreateGetDeleteAuthSecret(t *testing.T) {
 			t.Fatalf("Expected updated auth secret digest to be %s but saw %s", updatedDigest, updatedSecret.Digest)
 		}
 
-		if err := dbInst.DeleteAuthSecret(newSecret); err != nil {
+		if err := dbInst.DeleteAuthSecret(ctx, newSecret); err != nil {
 			t.Fatalf("Failed to delete auth token: %v", err)
 		}
 	}
@@ -323,12 +326,12 @@ func TestDatabase_CreateSAMLProvider(t *testing.T) {
 		SingleSignOnURI: "https://idp.example.com/sso",
 	}
 
-	if newSAMLProvider, err := dbInst.CreateSAMLIdentityProvider(samlProvider); err != nil {
+	if newSAMLProvider, err := dbInst.CreateSAMLIdentityProvider(context.Background(), samlProvider); err != nil {
 		t.Fatalf("Failed to create SAML provider: %v", err)
 	} else {
 		user.SAMLProviderID = null.Int32From(newSAMLProvider.ID)
 
-		if err := dbInst.UpdateUser(user); err != nil {
+		if err := dbInst.UpdateUser(context.Background(), user); err != nil {
 			t.Fatalf("Failed to update user: %v", err)
 		} else if updatedUser, err := dbInst.GetUser(user.ID); err != nil {
 			t.Fatalf("Failed to fetch updated user: %v", err)

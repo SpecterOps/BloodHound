@@ -21,6 +21,7 @@ import (
 	"crypto/tls"
 	"net/http"
 	"net/url"
+	"strings"
 	"testing"
 	"time"
 
@@ -77,6 +78,27 @@ func TestRequestWaitDuration(t *testing.T) {
 	require.Nil(t, err)
 	require.Equal(t, 1*time.Second, requestedWaitDuration.Value)
 	require.True(t, requestedWaitDuration.UserSet)
+}
+
+func TestParseUserIP_XForwardedFor_RemoteAddr(t *testing.T) {
+	req, err := http.NewRequest("GET", "/teapot", nil)
+	require.Nil(t, err)
+
+	ip1 := "192.168.1.1:8080"
+	ip2 := "192.168.1.2"
+	ip3 := "192.168.1.3"
+
+	req.Header.Set("X-Forwarded-For", strings.Join([]string{ip1, ip2, ip3}, ","))
+	req.RemoteAddr = "0.0.0.0:3000"
+
+	require.Equal(t, parseUserIP(req), strings.Join([]string{ip1, ip2, ip3, req.RemoteAddr}, ","))
+}
+
+func TestParseUserIP_RemoteAddrOnly(t *testing.T) {
+	req, err := http.NewRequest("GET", "/teapot", nil)
+	require.Nil(t, err)
+	req.RemoteAddr = "0.0.0.0:3000"
+	require.Equal(t, parseUserIP(req), req.RemoteAddr)
 }
 
 func TestParsePreferHeaderWait(t *testing.T) {
