@@ -100,3 +100,14 @@ func NodeSetToDuplex(nodes graph.NodeSet) Duplex[uint32] {
 
 	return duplex
 }
+
+// NodeSetToDuplex takes a graph NodeSet and returns a Duplex provider that contains all node IDs.
+func NodeIDsToDuplex(nodeIDs []graph.ID) Duplex[uint32] {
+	duplex := NewBitmap32()
+
+	for _, nodeID := range nodeIDs {
+		duplex.Add(nodeID.Uint32())
+	}
+
+	return duplex
+}
