@@ -208,8 +208,8 @@
         {
             "id": "n12",
             "position": {
-                "x": 75,
-                "y": 894.3371380482427
+                "x": 1055.7383287905805,
+                "y": 894.3371380482428
             },
             "caption": "User G",
             "labels": [],
@@ -295,90 +295,98 @@
         },
         {
             "id": "n6",
-            "type": "GenericWrite",
-            "style": {},
-            "properties": {},
             "fromId": "n8",
-            "toId": "n7"
+            "toId": "n7",
+            "type": "GenericWrite",
+            "properties": {},
+            "style": {}
         },
         {
             "id": "n7",
-            "type": "GenericWrite",
-            "style": {},
-            "properties": {},
             "fromId": "n9",
-            "toId": "n7"
+            "toId": "n7",
+            "type": "GenericWrite",
+            "properties": {},
+            "style": {}
         },
         {
             "id": "n8",
-            "type": "GenericWrite",
-            "style": {},
-            "properties": {},
             "fromId": "n10",
-            "toId": "n7"
+            "toId": "n7",
+            "type": "GenericWrite",
+            "properties": {},
+            "style": {}
         },
         {
             "id": "n9",
-            "type": "GenericWrite",
-            "style": {},
-            "properties": {},
             "fromId": "n11",
-            "toId": "n7"
+            "toId": "n7",
+            "type": "GenericWrite",
+            "properties": {},
+            "style": {}
         },
         {
             "id": "n10",
+            "fromId": "n12",
+            "toId": "n8",
+            "type": "MemberOf",
+            "properties": {},
+            "style": {}
+        },
+        {
+            "id": "n11",
+            "fromId": "n13",
+            "toId": "n9",
+            "type": "MemberOf",
+            "properties": {},
+            "style": {}
+        },
+        {
+            "id": "n12",
+            "fromId": "n8",
+            "toId": "n7",
+            "type": "WriteOwner",
+            "properties": {},
+            "style": {}
+        },
+        {
+            "id": "n13",
+            "fromId": "n8",
+            "toId": "n7",
+            "type": "WriteDacl",
+            "properties": {},
+            "style": {}
+        },
+        {
+            "id": "n14",
+            "fromId": "n9",
+            "toId": "n7",
+            "type": "WriteDacl",
+            "properties": {},
+            "style": {}
+        },
+        {
+            "id": "n15",
+            "fromId": "n9",
+            "toId": "n7",
+            "type": "Owns",
+            "properties": {},
+            "style": {}
+        },
+        {
+            "id": "n16",
+            "fromId": "n9",
+            "toId": "n7",
+            "type": "WriteOwner",
+            "properties": {},
+            "style": {}
+        },
+        {
+            "id": "n17",
             "type": "MemberOf",
             "style": {},
             "properties": {},
             "fromId": "n12",
-            "toId": "n8"
-        },
-        {
-            "id": "n11",
-            "type": "MemberOf",
-            "style": {},
-            "properties": {},
-            "fromId": "n13",
-            "toId": "n9"
-        },
-        {
-            "id": "n12",
-            "type": "WriteOwner",
-            "style": {},
-            "properties": {},
-            "fromId": "n8",
-            "toId": "n7"
-        },
-        {
-            "id": "n13",
-            "type": "WriteDacl",
-            "style": {},
-            "properties": {},
-            "fromId": "n8",
-            "toId": "n7"
-        },
-        {
-            "id": "n14",
-            "type": "WriteDacl",
-            "style": {},
-            "properties": {},
-            "fromId": "n9",
-            "toId": "n7"
-        },
-        {
-            "id": "n15",
-            "type": "Owns",
-            "style": {},
-            "properties": {},
-            "fromId": "n9",
-            "toId": "n7"
-        },
-        {
-            "id": "n16",
-            "type": "WriteOwner",
-            "style": {},
-            "properties": {},
-            "fromId": "n9",
             "toId": "n7"
         }
     ]
