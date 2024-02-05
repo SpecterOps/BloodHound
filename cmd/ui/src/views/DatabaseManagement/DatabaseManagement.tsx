@@ -26,6 +26,7 @@ import {
 } from '@mui/material';
 import { ContentPage } from 'bh-shared-ui';
 import { useState } from 'react';
+import ConfirmationDialog from './ConfirmationDialog';
 
 const DatabaseManagement = () => {
     const [checked, setChecked] = useState({
@@ -36,6 +37,7 @@ const DatabaseManagement = () => {
     });
 
     const [error, setError] = useState(false);
+    const [open, setOpen] = useState(false);
 
     const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         setChecked({
@@ -51,8 +53,12 @@ const DatabaseManagement = () => {
         } else {
             // clear out error on succesful submission
             setError(false);
-            // todo:
+            setOpen(true);
         }
+    };
+
+    const handleClose = () => {
+        setOpen(false);
     };
 
     const { collectedGraphData, highValueSelectors, fileIngestHistory, dataQualityHistory } = checked;
@@ -124,6 +130,8 @@ const DatabaseManagement = () => {
                     </Button>
                 </Box>
             </div>
+
+            <ConfirmationDialog open={open} handleClose={handleClose} />
         </ContentPage>
     );
 };
