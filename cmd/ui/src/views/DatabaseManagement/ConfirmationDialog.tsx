@@ -1,3 +1,5 @@
+import { faCircleXmark } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
     Box,
     Button,
@@ -9,12 +11,27 @@ import {
     Typography,
     useTheme,
 } from '@mui/material';
-import { FC } from 'react';
+import { FC, useState } from 'react';
+
+const confirmationText = 'Please delete my data';
 
 const ConfirmationDialog: FC<{ open: boolean; handleClose: () => void }> = ({ open, handleClose }) => {
     const theme = useTheme();
 
-    const handleConfirm = () => {};
+    const [input, setInput] = useState('');
+    const [error, setError] = useState(false);
+
+    const handleConfirm = () => {
+        if (input !== confirmationText) {
+            setError(true);
+        } else {
+            setError(false);
+            setInput('');
+            handleClose();
+
+            // TODO: submit to api
+        }
+    };
 
     return open ? (
         <Dialog maxWidth='lg' open>
@@ -29,7 +46,22 @@ const ConfirmationDialog: FC<{ open: boolean; handleClose: () => void }> = ({ op
                         This change is irreversible.
                     </Typography>
                     <Typography variant='body1'>Please input the phrase prior to click confirm.</Typography>
-                    <TextField placeholder='Please delete my data'></TextField>
+                    <TextField
+                        placeholder='Please delete my data'
+                        variant='standard'
+                        value={input}
+                        onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
+                            setInput(event.target.value);
+                        }}
+                        error={error}
+                        helperText={
+                            error ? (
+                                <>
+                                    <FontAwesomeIcon icon={faCircleXmark} /> Please input the phrase prior to clicking
+                                    confirm.
+                                </>
+                            ) : null
+                        }></TextField>
                 </Box>
             </DialogContent>
             <DialogActions>
