@@ -39,7 +39,7 @@ const useStyles = makeStyles((theme: Theme) =>
         formControl: {
             display: 'block',
         },
-        active: {
+        activeFilters: {
             '& button': {
                 fontWeight: 'bolder',
 
@@ -48,7 +48,7 @@ const useStyles = makeStyles((theme: Theme) =>
                 },
             },
         },
-        activeFilters: {
+        activeFiltersDot: {
             width: '6px',
             height: '6px',
             borderRadius: '100%',
@@ -81,13 +81,13 @@ const AssetGroupFilters: FC<Props> = (props) => {
     };
 
     const active = !!filterParams.primary_kind || !!filterParams.custom_member;
-    const activeStyles = active ? classes.active : '';
+    const activeStyles = active ? classes.activeFilters : '';
 
     return (
         <Box p={1} className={activeStyles} component={Paper} elevation={0} marginBottom={1}>
             <Button fullWidth onClick={() => setDisplayFilters((prev) => !prev)}>
                 Filters
-                <span className={classes.activeFilters} />
+                <span className={classes.activeFiltersDot} />
             </Button>
             <Collapse in={displayFilters}>
                 <Grid container spacing={2}>
