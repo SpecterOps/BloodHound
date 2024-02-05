@@ -18,12 +18,13 @@ package datapipe
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"github.com/specterops/bloodhound/log"
 
 	"github.com/specterops/bloodhound/analysis"
 	adAnalysis "github.com/specterops/bloodhound/analysis/ad"
 	"github.com/specterops/bloodhound/dawgs/graph"
-	"github.com/specterops/bloodhound/errors"
 	"github.com/specterops/bloodhound/src/analysis/ad"
 	"github.com/specterops/bloodhound/src/analysis/azure"
 	"github.com/specterops/bloodhound/src/config"
@@ -33,57 +34,85 @@ import (
 	"github.com/specterops/bloodhound/src/services/dataquality"
 )
 
+var (
+	ErrAnalysisFailed             = errors.New("analysis failed")
+	ErrAnalysisPartiallyCompleted = errors.New("analysis partially completed")
+)
+
 func RunAnalysisOperations(ctx context.Context, db database.Database, graphDB graph.Database, _ config.Configuration) error {
 	var (
-		collector = &errors.ErrorCollector{}
+		collectedErrors []error
 	)
 
 	if err := adAnalysis.FixWellKnownNodeTypes(ctx, graphDB); err != nil {
-		collector.Collect(fmt.Errorf("fix well known node types failed: %w", err))
+		collectedErrors = append(collectedErrors, fmt.Errorf("fix well known node types failed: %w", err))
 	}
 
 	if err := adAnalysis.RunDomainAssociations(ctx, graphDB); err != nil {
-		collector.Collect(fmt.Errorf("domain association and pruning failed: %w", err))
+		collectedErrors = append(collectedErrors, fmt.Errorf("domain association and pruning failed: %w", err))
 	}
 
 	if err := adAnalysis.LinkWellKnownGroups(ctx, graphDB); err != nil {
-		collector.Collect(fmt.Errorf("well known group linking failed: %w", err))
+		collectedErrors = append(collectedErrors, fmt.Errorf("well known group linking failed: %w", err))
 	}
 
 	if err := updateAssetGroupIsolationTags(ctx, db, graphDB); err != nil {
-		collector.Collect(fmt.Errorf("asset group isolation tagging failed: %w", err))
+		collectedErrors = append(collectedErrors, fmt.Errorf("asset group isolation tagging failed: %w", err))
 	}
 
 	if err := TagActiveDirectoryTierZero(ctx, graphDB); err != nil {
-		collector.Collect(fmt.Errorf("active directory tier zero tagging failed: %w", err))
+		collectedErrors = append(collectedErrors, fmt.Errorf("active directory tier zero tagging failed: %w", err))
 	}
 
 	if err := ParallelTagAzureTierZero(ctx, graphDB); err != nil {
-		collector.Collect(fmt.Errorf("azure tier zero tagging failed: %w", err))
+		collectedErrors = append(collectedErrors, fmt.Errorf("azure tier zero tagging failed: %w", err))
 	}
+
+	var (
+		adFailed          = false
+		azureFailed       = false
+		agiFailed         = false
+		dataQualityFailed = false
+	)
 
 	// TODO: Cleanup #ADCSFeatureFlag after full launch.
 	if adcsFlag, err := db.GetFlagByKey(appcfg.FeatureAdcs); err != nil {
-		collector.Collect(fmt.Errorf("error retrieving ADCS feature flag: %w", err))
+		collectedErrors = append(collectedErrors, fmt.Errorf("error retrieving ADCS feature flag: %w", err))
 	} else if stats, err := ad.Post(ctx, graphDB, adcsFlag.Enabled); err != nil {
-		collector.Collect(fmt.Errorf("error during ad post: %w", err))
+		collectedErrors = append(collectedErrors, fmt.Errorf("error during ad post: %w", err))
+		adFailed = true
 	} else {
 		stats.LogStats()
 	}
 
 	if stats, err := azure.Post(ctx, graphDB); err != nil {
-		collector.Collect(fmt.Errorf("error during azure post: %w", err))
+		collectedErrors = append(collectedErrors, fmt.Errorf("error during azure post: %w", err))
+		azureFailed = true
 	} else {
 		stats.LogStats()
 	}
 
 	if err := agi.RunAssetGroupIsolationCollections(ctx, db, graphDB, analysis.GetNodeKindDisplayLabel); err != nil {
-		collector.Collect(fmt.Errorf("asset group isolation collection failed: %w", err))
+		collectedErrors = append(collectedErrors, fmt.Errorf("asset group isolation collection failed: %w", err))
+		agiFailed = true
 	}
 
 	if err := dataquality.SaveDataQuality(ctx, db, graphDB); err != nil {
-		collector.Collect(fmt.Errorf("error saving data quality stat: %v", err))
+		collectedErrors = append(collectedErrors, fmt.Errorf("error saving data quality stat: %v", err))
+		dataQualityFailed = true
 	}
 
-	return collector.Return()
+	if len(collectedErrors) > 0 {
+		for _, err := range collectedErrors {
+			log.Errorf("Analysis error encountered: %v", err)
+		}
+	}
+
+	if adFailed && azureFailed && agiFailed && dataQualityFailed {
+		return ErrAnalysisFailed
+	} else if adFailed || azureFailed || agiFailed || dataQualityFailed {
+		return ErrAnalysisPartiallyCompleted
+	}
+
+	return nil
 }
