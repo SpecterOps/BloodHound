@@ -58,12 +58,6 @@ func (s *Daemon) IngestAzureData(batch graph.Batch, converted ConvertedAzureData
 }
 
 func (s *Daemon) IngestWrapper(batch graph.Batch, wrapper DataWrapper) error {
-	//Leaving this code here for re-enabling in future ADCS work
-	//adcsFlag, err := s.db.GetFlagByKey(appcfg.FeatureAdcs)
-	//if err != nil {
-	//	return fmt.Errorf("error getting ADCS feature flag: %w", err)
-	//}
-
 	switch wrapper.Metadata.Type {
 	case DataTypeComputer:
 		// We should not be getting anything with Version < 5 at this point, and we don't want to ingest it if we do as post-processing will blow it away anyways
