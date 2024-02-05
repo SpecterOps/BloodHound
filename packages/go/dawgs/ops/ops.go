@@ -129,6 +129,14 @@ func TXFetchNodesByIDBitmap(tx graph.Transaction, nodeIDs cardinality.Duplex[uin
 	return FetchNodes(tx.Nodes().Filter(query.InIDs(query.NodeID(), graph.Uint32SliceToIDs(nodeIDs.Slice())...)))
 }
 
+func FetchNodeIDsOfKindFromBitmap(tx graph.Transaction, nodeIDs cardinality.Duplex[uint32], kinds ...graph.Kind) ([]graph.ID, error) {
+	return FetchNodeIDs(tx.Nodes().Filter(
+		query.And(
+			query.InIDs(query.NodeID(), graph.Uint32SliceToIDs(nodeIDs.Slice())...),
+			query.KindIn(query.Node(), kinds...),
+		)))
+}
+
 func FetchNodes(query graph.NodeQuery) ([]*graph.Node, error) {
 	var nodes []*graph.Node
 
@@ -294,6 +302,15 @@ type RelationshipNodes struct {
 func (s *RelationshipNodes) Add(relationship *graph.Relationship) {
 	s.Start = append(s.Start, relationship.StartID)
 	s.End = append(s.End, relationship.EndID)
+}
+
+func FetchStartNodeIDs(query graph.RelationshipQuery) ([]graph.ID, error) {
+	var ids []graph.ID
+
+	return ids, ForEachStartNode(query, func(_ *graph.Relationship, node *graph.Node) error {
+		ids = append(ids, node.ID)
+		return nil
+	})
 }
 
 func FetchStartNodes(query graph.RelationshipQuery) (graph.NodeSet, error) {

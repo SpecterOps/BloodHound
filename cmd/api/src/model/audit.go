@@ -32,6 +32,7 @@ const (
 	AuditStatusIntent  AuditEntryStatus = "intent"
 )
 
+// TODO embed Basic into this struct instead of declaring the ID and CreatedAt fields. This will require a migration
 type AuditLog struct {
 	ID              int64                   `json:"id" gorm:"primaryKey"`
 	CreatedAt       time.Time               `json:"created_at" gorm:"index"`
