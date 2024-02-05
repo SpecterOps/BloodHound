@@ -86,66 +86,81 @@ func NewAuthenticator(cfg config.Configuration, db database.Database, ctxInitial
 	}
 }
 
-func (s authenticator) auditLogin(requestContext context.Context, user *model.User, loginError *error) {
+func (s authenticator) auditLogin(requestContext context.Context, commitID uuid.UUID, user model.User, loginRequest LoginRequest, status string, loginError error) {
 	bhCtx := ctx.Get(requestContext)
 	auditLog := model.AuditLog{
-		ActorID:         user.ID.String(),
-		ActorName:       user.PrincipalName,
-		ActorEmail:      user.EmailAddress.ValueOrZero(),
 		Action:          "LoginAttempt",
+		Fields:          types.JSONUntypedObject{},
 		RequestID:       bhCtx.RequestID,
 		SourceIpAddress: bhCtx.RequestIP,
+		Status:          status,
+		CommitID:        commitID,
 	}
 
-	if *loginError != nil {
-		auditLog.Status = string(model.AuditStatusFailure)
-		auditLog.Fields = types.JSONUntypedObject{"error": loginError}
+	log.Infof("**************** user.PrincipalName is %s", user.PrincipalName)
+	if user.PrincipalName == "" {
+		auditLog.Fields["username"] = loginRequest.Username
 	} else {
-		auditLog.Status = string(model.AuditStatusSuccess)
-		auditLog.Fields = types.JSONUntypedObject{}
+		auditLog.ActorID = user.ID.String()
+		auditLog.ActorName = user.PrincipalName
+		auditLog.ActorEmail = user.EmailAddress.ValueOrZero()
+	}
+
+	if status == string(model.AuditStatusFailure) {
+		auditLog.Fields["error"] = loginError
 	}
 
 	s.db.CreateAuditLog(auditLog)
 }
 
-func (s authenticator) validateSecretLogin(ctx context.Context, user model.User, loginRequest LoginRequest) (string, error) {
-	if user.AuthSecret == nil {
-		return "", ErrNoUserSecret
+func (s authenticator) validateSecretLogin(ctx context.Context, loginRequest LoginRequest) (model.User, string, error) {
+	if user, err := s.db.LookupUser(loginRequest.Username); err != nil {
+		if errors.Is(err, database.ErrNotFound) {
+			return model.User{}, "", ErrInvalidAuth
+		}
+
+		return model.User{}, "", FormatDatabaseError(err)
+	} else if user.AuthSecret == nil {
+		return model.User{}, "", ErrNoUserSecret
 	} else if err := s.ValidateSecret(ctx, loginRequest.Secret, *user.AuthSecret); err != nil {
-		return "", err
+		return model.User{}, "", err
 	} else if err = auth.ValidateTOTPSecret(loginRequest.OTP, *user.AuthSecret); err != nil {
-		return "", err
+		return model.User{}, "", err
 	} else if sessionToken, err := s.CreateSession(user, *user.AuthSecret); err != nil {
-		return "", err
+		return model.User{}, "", err
 	} else {
-		return sessionToken, nil
+		return user, sessionToken, nil
 	}
 }
 
 func (s authenticator) LoginWithSecret(ctx context.Context, loginRequest LoginRequest) (LoginDetails, error) {
 	var (
-		user         model.User
+		commitID     uuid.UUID
 		err          error
 		sessionToken string
+		user         model.User
 	)
-	defer s.auditLogin(ctx, &user, &err)
 
-	if user, err = s.db.LookupUser(loginRequest.Username); err != nil {
-		if errors.Is(err, database.ErrNotFound) {
-			return LoginDetails{}, ErrInvalidAuth
-		}
-
-		return LoginDetails{}, FormatDatabaseError(err)
-	}
-
-	if sessionToken, err = s.validateSecretLogin(ctx, user, loginRequest); err != nil {
+	commitID, err = uuid.NewV4()
+	if err != nil {
+		log.Errorf("error generating commit ID for login: %s", err)
 		return LoginDetails{}, err
 	}
 
-	return LoginDetails{
-		User:         user,
-		SessionToken: sessionToken,
-	}, nil
+	s.auditLogin(ctx, commitID, user, loginRequest, string(model.AuditStatusIntent), err)
+
+	user, sessionToken, err = s.validateSecretLogin(ctx, loginRequest)
+
+	if err != nil {
+		s.auditLogin(ctx, commitID, user, loginRequest, string(model.AuditStatusFailure), err)
+		return LoginDetails{}, err
+	} else {
+		s.auditLogin(ctx, commitID, user, loginRequest, string(model.AuditStatusSuccess), err)
+		return LoginDetails{
+			User:         user,
+			SessionToken: sessionToken,
+		}, nil
+	}
 }
 
 func (s authenticator) Logout(userSession model.UserSession) {
