@@ -68,9 +68,7 @@ interface Props {
     availableNodeKinds: Array<ActiveDirectoryNodeKind | AzureNodeKind>;
 }
 
-const AssetGroupFilters: FC<Props> = (props) => {
-    const { filterParams, handleFilterChange, availableNodeKinds } = props;
-
+const AssetGroupFilters: FC<Props> = ({ filterParams, handleFilterChange, availableNodeKinds }) => {
     const [displayFilters, setDisplayFilters] = useState(false);
 
     const classes = useStyles();
