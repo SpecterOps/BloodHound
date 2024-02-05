@@ -81,8 +81,7 @@ func TestManagementResource_PutUserAuthSecret(t *testing.T) {
 			Duration: appcfg.DefaultPasswordExpirationWindow,
 		}),
 	}, nil).Times(1)
-	mockDB.EXPECT().CreateAuthSecret(gomock.Any()).Return(model.AuthSecret{}, nil).Times(1)
-	mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).Times(1)
+	mockDB.EXPECT().CreateAuthSecret(gomock.Any(), gomock.Any()).Return(model.AuthSecret{}, nil).Times(1)
 
 	// Happy path
 	test.Request(t).
@@ -141,9 +140,8 @@ func TestManagementResource_EnableUserSAML(t *testing.T) {
 	mockDB.EXPECT().GetUser(badUserID).Return(model.User{AuthSecret: &model.AuthSecret{}}, nil)
 	mockDB.EXPECT().GetUser(goodUserID).Return(model.User{}, nil)
 	mockDB.EXPECT().GetSAMLProvider(samlProviderID).Return(model.SAMLProvider{}, nil).Times(2)
-	mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).Times(5)
-	mockDB.EXPECT().UpdateUser(gomock.Any()).Return(nil).Times(2)
-	mockDB.EXPECT().DeleteAuthSecret(gomock.Any()).Return(nil)
+	mockDB.EXPECT().UpdateUser(gomock.Any(), gomock.Any()).Return(nil).Times(2)
+	mockDB.EXPECT().DeleteAuthSecret(gomock.Any(), gomock.Any()).Return(nil)
 
 	// Happy path
 	test.Request(t).
@@ -206,12 +204,11 @@ func TestManagementResource_DeleteSAMLProvider(t *testing.T) {
 
 	mockDB.EXPECT().GetSAMLProvider(goodSAMLProvider.ID).Return(goodSAMLProvider, nil)
 	mockDB.EXPECT().GetSAMLProvider(samlProviderWithUsers.ID).Return(samlProviderWithUsers, nil)
-	mockDB.EXPECT().DeleteSAMLProvider(gomock.Eq(goodSAMLProvider)).Return(nil)
-	mockDB.EXPECT().DeleteSAMLProvider(gomock.Eq(samlProviderWithUsers)).Return(nil)
+	mockDB.EXPECT().DeleteSAMLProvider(gomock.Any(), gomock.Eq(goodSAMLProvider)).Return(nil)
+	mockDB.EXPECT().DeleteSAMLProvider(gomock.Any(), gomock.Eq(samlProviderWithUsers)).Return(nil)
 	mockDB.EXPECT().GetSAMLProviderUsers(goodSAMLProvider.ID).Return(nil, nil)
 	mockDB.EXPECT().GetSAMLProviderUsers(samlProviderWithUsers.ID).Return(model.Users{samlEnabledUser}, nil)
-	mockDB.EXPECT().UpdateUser(gomock.Eq(samlEnabledUser)).Return(nil)
-	mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).Times(3)
+	mockDB.EXPECT().UpdateUser(gomock.Any(), gomock.Eq(samlEnabledUser)).Return(nil)
 
 	// Happy path
 	test.Request(t).
@@ -247,7 +244,7 @@ func TestManagementResource_ListPermissions_SortingError(t *testing.T) {
 	require.Nilf(t, err, "Failed to create default configuration: %v", err)
 	config.Crypto.Argon2.NumIterations = 1
 	config.Crypto.Argon2.NumThreads = 1
-	resources := auth.NewManagementResource(config, mockDB, authz.NewAuthorizer())
+	resources := auth.NewManagementResource(config, mockDB, authz.NewAuthorizer(mockDB))
 
 	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
 	if req, err := http.NewRequestWithContext(ctx, "GET", endpoint, nil); err != nil {
@@ -280,7 +277,7 @@ func TestManagementResource_ListPermissions_InvalidFilterPredicate(t *testing.T)
 	require.Nilf(t, err, "Failed to create default configuration: %v", err)
 	config.Crypto.Argon2.NumIterations = 1
 	config.Crypto.Argon2.NumThreads = 1
-	resources := auth.NewManagementResource(config, mockDB, authz.NewAuthorizer())
+	resources := auth.NewManagementResource(config, mockDB, authz.NewAuthorizer(mockDB))
 
 	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
 	if req, err := http.NewRequestWithContext(ctx, "GET", endpoint, nil); err != nil {
@@ -313,7 +310,7 @@ func TestManagementResource_ListPermissions_PredicateMismatchWithColumn(t *testi
 	require.Nilf(t, err, "Failed to create default configuration: %v", err)
 	config.Crypto.Argon2.NumIterations = 1
 	config.Crypto.Argon2.NumThreads = 1
-	resources := auth.NewManagementResource(config, mockDB, authz.NewAuthorizer())
+	resources := auth.NewManagementResource(config, mockDB, authz.NewAuthorizer(mockDB))
 
 	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
 	if req, err := http.NewRequestWithContext(ctx, "GET", endpoint, nil); err != nil {
@@ -347,7 +344,7 @@ func TestManagementResource_ListPermissions_DBError(t *testing.T) {
 	require.Nilf(t, err, "Failed to create default configuration: %v", err)
 	config.Crypto.Argon2.NumIterations = 1
 	config.Crypto.Argon2.NumThreads = 1
-	resources := auth.NewManagementResource(config, mockDB, authz.NewAuthorizer())
+	resources := auth.NewManagementResource(config, mockDB, authz.NewAuthorizer(mockDB))
 
 	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
 	if req, err := http.NewRequestWithContext(ctx, "GET", endpoint, nil); err != nil {
@@ -439,7 +436,7 @@ func TestManagementResource_ListRoles_SortingError(t *testing.T) {
 	require.Nilf(t, err, "Failed to create default configuration: %v", err)
 	config.Crypto.Argon2.NumIterations = 1
 	config.Crypto.Argon2.NumThreads = 1
-	resources := auth.NewManagementResource(config, mockDB, authz.NewAuthorizer())
+	resources := auth.NewManagementResource(config, mockDB, authz.NewAuthorizer(mockDB))
 
 	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
 	if req, err := http.NewRequestWithContext(ctx, "GET", endpoint, nil); err != nil {
@@ -472,7 +469,7 @@ func TestManagementResource_ListRoles_InvalidColumn(t *testing.T) {
 	require.Nilf(t, err, "Failed to create default configuration: %v", err)
 	config.Crypto.Argon2.NumIterations = 1
 	config.Crypto.Argon2.NumThreads = 1
-	resources := auth.NewManagementResource(config, mockDB, authz.NewAuthorizer())
+	resources := auth.NewManagementResource(config, mockDB, authz.NewAuthorizer(mockDB))
 
 	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
 	if req, err := http.NewRequestWithContext(ctx, "GET", endpoint, nil); err != nil {
@@ -505,7 +502,7 @@ func TestManagementResource_ListRoles_InvalidFilterPredicate(t *testing.T) {
 	require.Nilf(t, err, "Failed to create default configuration: %v", err)
 	config.Crypto.Argon2.NumIterations = 1
 	config.Crypto.Argon2.NumThreads = 1
-	resources := auth.NewManagementResource(config, mockDB, authz.NewAuthorizer())
+	resources := auth.NewManagementResource(config, mockDB, authz.NewAuthorizer(mockDB))
 
 	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
 	if req, err := http.NewRequestWithContext(ctx, "GET", endpoint, nil); err != nil {
@@ -538,7 +535,7 @@ func TestManagementResource_ListRoles_PredicateMismatchWithColumn(t *testing.T) 
 	require.Nilf(t, err, "Failed to create default configuration: %v", err)
 	config.Crypto.Argon2.NumIterations = 1
 	config.Crypto.Argon2.NumThreads = 1
-	resources := auth.NewManagementResource(config, mockDB, authz.NewAuthorizer())
+	resources := auth.NewManagementResource(config, mockDB, authz.NewAuthorizer(mockDB))
 
 	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
 	if req, err := http.NewRequestWithContext(ctx, "GET", endpoint, nil); err != nil {
@@ -572,7 +569,7 @@ func TestManagementResource_ListRoles_DBError(t *testing.T) {
 	require.Nilf(t, err, "Failed to create default configuration: %v", err)
 	config.Crypto.Argon2.NumIterations = 1
 	config.Crypto.Argon2.NumThreads = 1
-	resources := auth.NewManagementResource(config, mockDB, authz.NewAuthorizer())
+	resources := auth.NewManagementResource(config, mockDB, authz.NewAuthorizer(mockDB))
 
 	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
 	if req, err := http.NewRequestWithContext(ctx, "GET", endpoint, nil); err != nil {
@@ -761,8 +758,7 @@ func TestExpireUserAuthSecret_Success(t *testing.T) {
 	resources, mockDB := apitest.NewAuthManagementResource(mockCtrl)
 
 	mockDB.EXPECT().GetUser(userId).Return(model.User{AuthSecret: &model.AuthSecret{}}, nil)
-	mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
-	mockDB.EXPECT().UpdateAuthSecret(gomock.Any()).Return(nil)
+	mockDB.EXPECT().UpdateAuthSecret(gomock.Any(), gomock.Any()).Return(nil)
 
 	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
 	if req, err := http.NewRequestWithContext(ctx, "DELETE", fmt.Sprintf(endpoint, userId), nil); err != nil {
@@ -788,7 +784,7 @@ func TestManagementResource_ListUsers_SortingError(t *testing.T) {
 	require.Nilf(t, err, "Failed to create default configuration: %v", err)
 	config.Crypto.Argon2.NumIterations = 1
 	config.Crypto.Argon2.NumThreads = 1
-	resources := auth.NewManagementResource(config, mockDB, authz.NewAuthorizer())
+	resources := auth.NewManagementResource(config, mockDB, authz.NewAuthorizer(mockDB))
 
 	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
 	if req, err := http.NewRequestWithContext(ctx, "GET", endpoint, nil); err != nil {
@@ -821,7 +817,7 @@ func TestManagementResource_ListUsers_InvalidColumn(t *testing.T) {
 	require.Nilf(t, err, "Failed to create default configuration: %v", err)
 	config.Crypto.Argon2.NumIterations = 1
 	config.Crypto.Argon2.NumThreads = 1
-	resources := auth.NewManagementResource(config, mockDB, authz.NewAuthorizer())
+	resources := auth.NewManagementResource(config, mockDB, authz.NewAuthorizer(mockDB))
 
 	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
 	if req, err := http.NewRequestWithContext(ctx, "GET", endpoint, nil); err != nil {
@@ -854,7 +850,7 @@ func TestManagementResource_ListUsers_InvalidFilterPredicate(t *testing.T) {
 	require.Nilf(t, err, "Failed to create default configuration: %v", err)
 	config.Crypto.Argon2.NumIterations = 1
 	config.Crypto.Argon2.NumThreads = 1
-	resources := auth.NewManagementResource(config, mockDB, authz.NewAuthorizer())
+	resources := auth.NewManagementResource(config, mockDB, authz.NewAuthorizer(mockDB))
 
 	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
 	if req, err := http.NewRequestWithContext(ctx, "GET", endpoint, nil); err != nil {
@@ -887,7 +883,7 @@ func TestManagementResource_ListUsers_PredicateMismatchWithColumn(t *testing.T) 
 	require.Nilf(t, err, "Failed to create default configuration: %v", err)
 	config.Crypto.Argon2.NumIterations = 1
 	config.Crypto.Argon2.NumThreads = 1
-	resources := auth.NewManagementResource(config, mockDB, authz.NewAuthorizer())
+	resources := auth.NewManagementResource(config, mockDB, authz.NewAuthorizer(mockDB))
 
 	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
 	if req, err := http.NewRequestWithContext(ctx, "GET", endpoint, nil); err != nil {
@@ -921,7 +917,7 @@ func TestManagementResource_ListUsers_DBError(t *testing.T) {
 	require.Nilf(t, err, "Failed to create default configuration: %v", err)
 	config.Crypto.Argon2.NumIterations = 1
 	config.Crypto.Argon2.NumThreads = 1
-	resources := auth.NewManagementResource(config, mockDB, authz.NewAuthorizer())
+	resources := auth.NewManagementResource(config, mockDB, authz.NewAuthorizer(mockDB))
 
 	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
 	if req, err := http.NewRequestWithContext(ctx, "GET", endpoint, nil); err != nil {
@@ -1060,8 +1056,8 @@ func TestCreateUser_Failure(t *testing.T) {
 	}, nil).AnyTimes()
 	mockDB.EXPECT().GetRoles(badRole).Return(model.Roles{}, fmt.Errorf("db error"))
 	mockDB.EXPECT().GetRoles(gomock.Not(badRole)).Return(model.Roles{}, nil).AnyTimes()
-	mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
-	mockDB.EXPECT().CreateUser(badUser).Return(model.User{}, fmt.Errorf("db error"))
+	mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+	mockDB.EXPECT().CreateUser(gomock.Any(), badUser).Return(model.User{}, fmt.Errorf("db error"))
 
 	type Input struct {
 		Body v2.CreateUserRequest
@@ -1175,8 +1171,7 @@ func TestCreateUser_Success(t *testing.T) {
 		}),
 	}, nil)
 	mockDB.EXPECT().GetRoles(gomock.Any()).Return(model.Roles{}, nil)
-	mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
-	mockDB.EXPECT().CreateUser(gomock.Any()).Return(goodUser, nil).AnyTimes()
+	mockDB.EXPECT().CreateUser(gomock.Any(), gomock.Any()).Return(goodUser, nil).AnyTimes()
 
 	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
 	input := v2.CreateUserRequest{
@@ -1229,8 +1224,7 @@ func TestCreateUser_ResetPassword(t *testing.T) {
 		}),
 	}, nil)
 	mockDB.EXPECT().GetRoles(gomock.Any()).Return(model.Roles{}, nil)
-	mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
-	mockDB.EXPECT().CreateUser(gomock.Any()).Return(goodUser, nil)
+	mockDB.EXPECT().CreateUser(gomock.Any(), gomock.Any()).Return(goodUser, nil)
 
 	input := struct {
 		Body v2.CreateUserRequest
@@ -1303,8 +1297,7 @@ func TestManagementResource_UpdateUser_IDMalformed(t *testing.T) {
 		}),
 	}, nil)
 	mockDB.EXPECT().GetRoles(gomock.Any()).Return(model.Roles{}, nil)
-	mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
-	mockDB.EXPECT().CreateUser(gomock.Any()).Return(goodUser, nil).AnyTimes()
+	mockDB.EXPECT().CreateUser(gomock.Any(), gomock.Any()).Return(goodUser, nil).AnyTimes()
 
 	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
 	input := v2.CreateUserRequest{
@@ -1367,8 +1360,7 @@ func TestManagementResource_UpdateUser_GetUserError(t *testing.T) {
 		}),
 	}, nil)
 	mockDB.EXPECT().GetRoles(gomock.Any()).Return(model.Roles{}, nil)
-	mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
-	mockDB.EXPECT().CreateUser(gomock.Any()).Return(goodUser, nil).AnyTimes()
+	mockDB.EXPECT().CreateUser(gomock.Any(), gomock.Any()).Return(goodUser, nil).AnyTimes()
 	mockDB.EXPECT().GetUser(gomock.Any()).Return(model.User{}, fmt.Errorf("foo"))
 
 	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
@@ -1432,8 +1424,7 @@ func TestManagementResource_UpdateUser_GetRolesError(t *testing.T) {
 		}),
 	}, nil)
 	mockDB.EXPECT().GetRoles(gomock.Any()).Return(model.Roles{}, nil)
-	mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
-	mockDB.EXPECT().CreateUser(gomock.Any()).Return(goodUser, nil).AnyTimes()
+	mockDB.EXPECT().CreateUser(gomock.Any(), gomock.Any()).Return(goodUser, nil).AnyTimes()
 	mockDB.EXPECT().GetUser(gomock.Any()).Return(goodUser, nil)
 	mockDB.EXPECT().GetRoles(gomock.Any()).Return(model.Roles{}, fmt.Errorf("foo"))
 
@@ -1491,8 +1482,7 @@ func TestManagementResource_UpdateUser_SelfDisable(t *testing.T) {
 		}),
 	}, nil)
 	mockDB.EXPECT().GetRoles(gomock.Any()).Return(model.Roles{}, nil)
-	mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
-	mockDB.EXPECT().CreateUser(gomock.Any()).Return(goodUser, nil).AnyTimes()
+	mockDB.EXPECT().CreateUser(gomock.Any(), gomock.Any()).Return(goodUser, nil).AnyTimes()
 	mockDB.EXPECT().GetUser(gomock.Any()).Return(goodUser, nil)
 	mockDB.EXPECT().GetRoles(gomock.Any()).Return(model.Roles{model.Role{
 		Name:        "admin",
@@ -1573,8 +1563,7 @@ func TestManagementResource_UpdateUser_LookupActiveSessionsError(t *testing.T) {
 		}),
 	}, nil)
 	mockDB.EXPECT().GetRoles(gomock.Any()).Return(model.Roles{}, nil)
-	mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
-	mockDB.EXPECT().CreateUser(gomock.Any()).Return(goodUser, nil).AnyTimes()
+	mockDB.EXPECT().CreateUser(gomock.Any(), gomock.Any()).Return(goodUser, nil).AnyTimes()
 	mockDB.EXPECT().GetUser(gomock.Any()).Return(goodUser, nil)
 	mockDB.EXPECT().GetRoles(gomock.Any()).Return(model.Roles{model.Role{
 		Name:        "admin",
@@ -1631,7 +1620,7 @@ func TestManagementResource_UpdateUser_LookupActiveSessionsError(t *testing.T) {
 	require.Contains(t, response.Body.String(), api.ErrorResponseDetailsInternalServerError)
 }
 
-func TestManagementResource_UpdateUser_AppendAuditLogError(t *testing.T) {
+func TestManagementResource_UpdateUser_DBError(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
@@ -1655,8 +1644,7 @@ func TestManagementResource_UpdateUser_AppendAuditLogError(t *testing.T) {
 		}),
 	}, nil)
 	mockDB.EXPECT().GetRoles(gomock.Any()).Return(model.Roles{}, nil)
-	mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
-	mockDB.EXPECT().CreateUser(gomock.Any()).Return(goodUser, nil).AnyTimes()
+	mockDB.EXPECT().CreateUser(gomock.Any(), gomock.Any()).Return(goodUser, nil).AnyTimes()
 	mockDB.EXPECT().GetUser(gomock.Any()).Return(goodUser, nil)
 	mockDB.EXPECT().GetRoles(gomock.Any()).Return(model.Roles{model.Role{
 		Name:        "admin",
@@ -1668,7 +1656,7 @@ func TestManagementResource_UpdateUser_AppendAuditLogError(t *testing.T) {
 		}},
 		Serial: model.Serial{},
 	}}, nil)
-	mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any(), gomock.Any()).Return(fmt.Errorf("foo"))
+	mockDB.EXPECT().UpdateUser(gomock.Any(), gomock.Any()).Return(fmt.Errorf("foo"))
 
 	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
 	input := v2.CreateUserRequest{
@@ -1683,8 +1671,10 @@ func TestManagementResource_UpdateUser_AppendAuditLogError(t *testing.T) {
 
 	payload, err := json.Marshal(input)
 	require.Nil(t, err)
+
 	req, err := http.NewRequestWithContext(ctx, "POST", endpoint, bytes.NewReader(payload))
 	require.Nil(t, err)
+
 	req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
 	router := mux.NewRouter()
 	router.HandleFunc(endpoint, resources.CreateUser).Methods("POST")
@@ -1712,88 +1702,147 @@ func TestManagementResource_UpdateUser_AppendAuditLogError(t *testing.T) {
 	require.Equal(t, http.StatusInternalServerError, response.Code)
 }
 
-func TestManagementResource_UpdateUser_DBError(t *testing.T) {
+func TestManagementResource_DeleteUser_BadUserID(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
-	endpoint := "/api/v2/auth/users"
+	endpoint := "/api/v2/bloodhound-users"
+	userID := "badUserID"
 
-	goodUserID, err := uuid.NewV4()
-	require.Nil(t, err)
-
-	goodUser := model.User{
-		PrincipalName: "good user",
-		Unique: model.Unique{
-			ID: goodUserID,
-		},
-	}
-
-	resources, mockDB := apitest.NewAuthManagementResource(mockCtrl)
-	mockDB.EXPECT().GetConfigurationParameter(appcfg.PasswordExpirationWindow).Return(appcfg.Parameter{
-		Key: appcfg.PasswordExpirationWindow,
-		Value: must.NewJSONBObject(appcfg.PasswordExpiration{
-			Duration: appcfg.DefaultPasswordExpirationWindow,
-		}),
-	}, nil)
-	mockDB.EXPECT().GetRoles(gomock.Any()).Return(model.Roles{}, nil)
-	mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
-	mockDB.EXPECT().CreateUser(gomock.Any()).Return(goodUser, nil).AnyTimes()
-	mockDB.EXPECT().GetUser(gomock.Any()).Return(goodUser, nil)
-	mockDB.EXPECT().GetRoles(gomock.Any()).Return(model.Roles{model.Role{
-		Name:        "admin",
-		Description: "admin",
-		Permissions: model.Permissions{model.Permission{
-			Authority: "admin",
-			Name:      "admin",
-			Serial:    model.Serial{},
-		}},
-		Serial: model.Serial{},
-	}}, nil)
-	mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
-	mockDB.EXPECT().UpdateUser(gomock.Any()).Return(fmt.Errorf("foo"))
+	resources, _ := apitest.NewAuthManagementResource(mockCtrl)
 
 	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
-	input := v2.CreateUserRequest{
-		UpdateUserRequest: v2.UpdateUserRequest{
-			Principal: "good user",
-		},
-		SetUserSecretRequest: v2.SetUserSecretRequest{
-			Secret:             "abcDEF123456$$",
-			NeedsPasswordReset: true,
-		},
-	}
-
-	payload, err := json.Marshal(input)
+	req, err := http.NewRequestWithContext(ctx, "DELETE", endpoint, nil)
 	require.Nil(t, err)
 
-	req, err := http.NewRequestWithContext(ctx, "POST", endpoint, bytes.NewReader(payload))
-	require.Nil(t, err)
-
+	req = mux.SetURLVars(req, map[string]string{api.URIPathVariableUserID: userID})
 	req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
-	router := mux.NewRouter()
-	router.HandleFunc(endpoint, resources.CreateUser).Methods("POST")
-	rr := httptest.NewRecorder()
-	router.ServeHTTP(rr, req)
 
-	require.Equal(t, rr.Code, http.StatusOK)
-	require.Contains(t, rr.Body.String(), "good user")
+	rr := httptest.NewRecorder()
+	handler := http.HandlerFunc(resources.DeleteUser)
+	handler.ServeHTTP(rr, req)
+
+	require.Equal(t, rr.Code, http.StatusBadRequest)
+}
+
+func TestManagementResource_DeleteUser_UserNotFound(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+
+	endpoint := "/api/v2/bloodhound-users"
 
 	userID, err := uuid.NewV4()
 	require.Nil(t, err)
 
-	payload, err = json.Marshal(v2.UpdateUserRequest{})
-	require.Nil(t, err)
+	resources, mockDB := apitest.NewAuthManagementResource(mockCtrl)
+	mockDB.EXPECT().GetUser(userID).Return(model.User{}, database.ErrNotFound)
 
-	endpoint = fmt.Sprintf("/api/v2/bloodhound-users/%v", userID)
-	req, err = http.NewRequestWithContext(ctx, "PATCH", endpoint, bytes.NewReader(payload))
+	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
+	req, err := http.NewRequestWithContext(ctx, "DELETE", endpoint, nil)
 	require.Nil(t, err)
 
 	req = mux.SetURLVars(req, map[string]string{api.URIPathVariableUserID: userID.String()})
 	req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
-	response := httptest.NewRecorder()
-	handler := http.HandlerFunc(resources.UpdateUser)
-	handler.ServeHTTP(response, req)
-	require.Equal(t, http.StatusInternalServerError, response.Code)
+
+	rr := httptest.NewRecorder()
+	handler := http.HandlerFunc(resources.DeleteUser)
+	handler.ServeHTTP(rr, req)
+
+	require.Equal(t, rr.Code, http.StatusNotFound)
+}
+
+func TestManagementResource_DeleteUser_GetUserError(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+
+	endpoint := "/api/v2/bloodhound-users"
+
+	userID, err := uuid.NewV4()
+	require.Nil(t, err)
+
+	resources, mockDB := apitest.NewAuthManagementResource(mockCtrl)
+	mockDB.EXPECT().GetUser(userID).Return(model.User{}, fmt.Errorf("foo"))
+
+	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
+	req, err := http.NewRequestWithContext(ctx, "DELETE", endpoint, nil)
+	require.Nil(t, err)
+
+	req = mux.SetURLVars(req, map[string]string{api.URIPathVariableUserID: userID.String()})
+	req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
+
+	rr := httptest.NewRecorder()
+	handler := http.HandlerFunc(resources.DeleteUser)
+	handler.ServeHTTP(rr, req)
+
+	require.Equal(t, rr.Code, http.StatusInternalServerError)
+}
+
+func TestManagementResource_DeleteUser_DeleteUserError(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+
+	endpoint := "/api/v2/bloodhound-users"
+
+	userID, err := uuid.NewV4()
+	require.Nil(t, err)
+
+	user := model.User{
+		PrincipalName: "good user",
+		Unique: model.Unique{
+			ID: userID,
+		},
+	}
+
+	resources, mockDB := apitest.NewAuthManagementResource(mockCtrl)
+	mockDB.EXPECT().GetUser(userID).Return(user, nil)
+	mockDB.EXPECT().DeleteUser(gomock.Any(), user).Return(fmt.Errorf("foo"))
+
+	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
+	req, err := http.NewRequestWithContext(ctx, "DELETE", endpoint, nil)
+	require.Nil(t, err)
+
+	req = mux.SetURLVars(req, map[string]string{api.URIPathVariableUserID: userID.String()})
+	req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
+
+	rr := httptest.NewRecorder()
+	handler := http.HandlerFunc(resources.DeleteUser)
+	handler.ServeHTTP(rr, req)
+
+	require.Equal(t, rr.Code, http.StatusInternalServerError)
+}
+
+func TestManagementResource_DeleteUser_Success(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+
+	endpoint := "/api/v2/bloodhound-users"
+
+	userID, err := uuid.NewV4()
+	require.Nil(t, err)
+
+	user := model.User{
+		PrincipalName: "good user",
+		Unique: model.Unique{
+			ID: userID,
+		},
+	}
+
+	resources, mockDB := apitest.NewAuthManagementResource(mockCtrl)
+	mockDB.EXPECT().GetUser(userID).Return(user, nil)
+	mockDB.EXPECT().DeleteUser(gomock.Any(), user).Return(nil)
+
+	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
+	req, err := http.NewRequestWithContext(ctx, "DELETE", endpoint, nil)
+	require.Nil(t, err)
+
+	req = mux.SetURLVars(req, map[string]string{api.URIPathVariableUserID: userID.String()})
+	req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
+
+	rr := httptest.NewRecorder()
+	handler := http.HandlerFunc(resources.DeleteUser)
+	handler.ServeHTTP(rr, req)
+
+	require.Equal(t, rr.Code, http.StatusOK)
 }
 
 func TestManagementResource_UpdateUser_Success(t *testing.T) {
@@ -1820,8 +1869,7 @@ func TestManagementResource_UpdateUser_Success(t *testing.T) {
 		}),
 	}, nil)
 	mockDB.EXPECT().GetRoles(gomock.Any()).Return(model.Roles{}, nil)
-	mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
-	mockDB.EXPECT().CreateUser(gomock.Any()).Return(goodUser, nil).AnyTimes()
+	mockDB.EXPECT().CreateUser(gomock.Any(), gomock.Any()).Return(goodUser, nil).AnyTimes()
 	mockDB.EXPECT().GetUser(gomock.Any()).Return(goodUser, nil)
 	mockDB.EXPECT().GetRoles(gomock.Any()).Return(model.Roles{model.Role{
 		Name:        "admin",
@@ -1834,8 +1882,7 @@ func TestManagementResource_UpdateUser_Success(t *testing.T) {
 		Serial: model.Serial{},
 	}}, nil)
 	mockDB.EXPECT().LookupActiveSessionsByUser(gomock.Any()).Return([]model.UserSession{}, nil)
-	mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
-	mockDB.EXPECT().UpdateUser(gomock.Any()).Return(nil)
+	mockDB.EXPECT().UpdateUser(gomock.Any(), gomock.Any()).Return(nil)
 
 	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
 	input := v2.CreateUserRequest{
@@ -1946,7 +1993,7 @@ func TestManagementResource_ListAuthTokens_SortingError(t *testing.T) {
 	require.Nilf(t, err, "Failed to create default configuration: %v", err)
 	config.Crypto.Argon2.NumIterations = 1
 	config.Crypto.Argon2.NumThreads = 1
-	resources := auth.NewManagementResource(config, mockDB, authz.NewAuthorizer())
+	resources := auth.NewManagementResource(config, mockDB, authz.NewAuthorizer(mockDB))
 
 	endpoint := "/api/v2/auth/tokens"
 	if req, err := http.NewRequestWithContext(c, "GET", endpoint, nil); err != nil {
@@ -1979,7 +2026,7 @@ func TestManagementResource_ListAuthTokens_InvalidColumn(t *testing.T) {
 	require.Nilf(t, err, "Failed to create default configuration: %v", err)
 	config.Crypto.Argon2.NumIterations = 1
 	config.Crypto.Argon2.NumThreads = 1
-	resources := auth.NewManagementResource(config, mockDB, authz.NewAuthorizer())
+	resources := auth.NewManagementResource(config, mockDB, authz.NewAuthorizer(mockDB))
 
 	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
 	if req, err := http.NewRequestWithContext(ctx, "GET", endpoint, nil); err != nil {
@@ -2012,7 +2059,7 @@ func TestManagementResource_ListAuthTokens_InvalidFilterPredicate(t *testing.T) 
 	require.Nilf(t, err, "Failed to create default configuration: %v", err)
 	config.Crypto.Argon2.NumIterations = 1
 	config.Crypto.Argon2.NumThreads = 1
-	resources := auth.NewManagementResource(config, mockDB, authz.NewAuthorizer())
+	resources := auth.NewManagementResource(config, mockDB, authz.NewAuthorizer(mockDB))
 
 	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
 	if req, err := http.NewRequestWithContext(ctx, "GET", endpoint, nil); err != nil {
@@ -2045,7 +2092,7 @@ func TestManagementResource_ListAuthTokens_PredicateMismatchWithColumn(t *testin
 	require.Nilf(t, err, "Failed to create default configuration: %v", err)
 	config.Crypto.Argon2.NumIterations = 1
 	config.Crypto.Argon2.NumThreads = 1
-	resources := auth.NewManagementResource(config, mockDB, authz.NewAuthorizer())
+	resources := auth.NewManagementResource(config, mockDB, authz.NewAuthorizer(mockDB))
 
 	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
 	if req, err := http.NewRequestWithContext(ctx, "GET", endpoint, nil); err != nil {
@@ -2094,7 +2141,7 @@ func TestManagementResource_ListAuthTokens_DBError(t *testing.T) {
 	require.Nilf(t, err, "Failed to create default configuration: %v", err)
 	config.Crypto.Argon2.NumIterations = 1
 	config.Crypto.Argon2.NumThreads = 1
-	resources := auth.NewManagementResource(config, mockDB, authz.NewAuthorizer())
+	resources := auth.NewManagementResource(config, mockDB, authz.NewAuthorizer(mockDB))
 
 	endpoint := "/api/v2/auth/tokens"
 	if req, err := http.NewRequestWithContext(c, "GET", endpoint, nil); err != nil {
@@ -2629,7 +2676,7 @@ func TestDisenrollMFA_Success(t *testing.T) {
 	userId := test.NewUUIDv4(t)
 
 	mockDB.EXPECT().GetUser(userId).Return(model.User{AuthSecret: defaultDigestAuthSecret(t, "password")}, nil)
-	mockDB.EXPECT().UpdateAuthSecret(gomock.Any()).Return(nil)
+	mockDB.EXPECT().UpdateAuthSecret(gomock.Any(), gomock.Any()).Return(nil)
 
 	input := auth.MFAEnrollmentRequest{"password"}
 
@@ -2669,7 +2716,7 @@ func TestDisenrollMFA_Admin_Success(t *testing.T) {
 	nonAdminId := test.NewUUIDv4(t)
 
 	mockDB.EXPECT().GetUser(nonAdminId).Return(model.User{AuthSecret: defaultDigestAuthSecret(t, "password")}, nil)
-	mockDB.EXPECT().UpdateAuthSecret(gomock.Any()).Return(nil)
+	mockDB.EXPECT().UpdateAuthSecret(gomock.Any(), gomock.Any()).Return(nil)
 
 	adminContext := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
 	bhCtx := ctx.Get(adminContext)
@@ -2950,7 +2997,7 @@ func TestActivateMFA_Success(t *testing.T) {
 	endpoint := "/api/v2/auth/users/%s/mfa-activation"
 	userId := test.NewUUIDv4(t)
 	mockDB.EXPECT().GetUser(userId).Return(model.User{AuthSecret: defaultDigestAuthSecretWithTOTP(t, "password", totpSecret.Secret())}, nil)
-	mockDB.EXPECT().UpdateAuthSecret(gomock.Any()).Return(nil)
+	mockDB.EXPECT().UpdateAuthSecret(gomock.Any(), gomock.Any()).Return(nil)
 
 	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
 	inputBody := auth.MFAActivationRequest{passcode}

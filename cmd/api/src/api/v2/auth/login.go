@@ -1,22 +1,23 @@
 // Copyright 2023 Specter Ops, Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// 
+//
 // SPDX-License-Identifier: Apache-2.0
 
 package auth
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"strings"
@@ -73,7 +74,7 @@ func (s LoginResource) Login(response http.ResponseWriter, request *http.Request
 
 	if err := api.ReadJSONRequestPayloadLimited(&loginRequest, request); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
-	} else if err = s.patchEULAAcceptance(loginRequest.Username); err != nil {
+	} else if err = s.patchEULAAcceptance(request.Context(), loginRequest.Username); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
 		switch strings.ToLower(loginRequest.LoginMethod) {
@@ -87,15 +88,16 @@ func (s LoginResource) Login(response http.ResponseWriter, request *http.Request
 }
 
 // EULA Acceptance does not pertain to Bloodhound Community Edition; this flag is used for Bloodhound Enterprise users.
-func (s LoginResource) patchEULAAcceptance(username string) error {
+func (s LoginResource) patchEULAAcceptance(ctx context.Context, username string) error {
 	if user, err := s.db.LookupUser(username); err != nil {
 		return err
-	} else {
+	} else if !user.EULAAccepted {
 		user.EULAAccepted = true
-		if err = s.db.UpdateUser(user); err != nil {
+		if err = s.db.UpdateUser(ctx, user); err != nil {
 			return err
 		}
 	}
+
 	return nil
 }
 

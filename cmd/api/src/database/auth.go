@@ -1,32 +1,33 @@
 // Copyright 2023 Specter Ops, Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// 
+//
 // SPDX-License-Identifier: Apache-2.0
 
 package database
 
 import (
+	"context"
 	"crypto/rand"
 	"encoding/base64"
 	"fmt"
 	"strings"
 	"time"
 
+	"github.com/gofrs/uuid"
 	"github.com/specterops/bloodhound/src/auth"
 	"github.com/specterops/bloodhound/src/database/types/null"
 	"github.com/specterops/bloodhound/src/model"
-	"github.com/gofrs/uuid"
 	"gorm.io/gorm"
 )
 
@@ -342,7 +343,7 @@ func (s *BloodhoundDB) HasInstallation() (bool, error) {
 
 // CreateUser creates a new user
 // INSERT INTO users (...) VALUES (...)
-func (s *BloodhoundDB) CreateUser(user model.User) (model.User, error) {
+func (s *BloodhoundDB) CreateUser(ctx context.Context, user model.User) (model.User, error) {
 	updatedUser := user
 
 	if newID, err := uuid.NewV4(); err != nil {
@@ -354,20 +355,34 @@ func (s *BloodhoundDB) CreateUser(user model.User) (model.User, error) {
 		updatedUser.ID = newID
 	}
 
-	result := s.db.Create(&updatedUser)
-	return updatedUser, CheckError(result)
+	auditEntry := model.AuditEntry{
+		Action: "CreateUser",
+		Model:  &updatedUser,
+	}
+	return updatedUser, s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
+		return CheckError(tx.Create(&updatedUser))
+	})
 }
 
 // UpdateUser updates the roles associated with the user according to the input struct
 // UPDATE users SET roles = ....
-func (s *BloodhoundDB) UpdateUser(user model.User) error {
-	// Update roles first
-	if err := s.db.Model(&user).Association("Roles").Replace(&user.Roles); err != nil {
-		return err
-	}
+func (s *BloodhoundDB) UpdateUser(ctx context.Context, user model.User) error {
+	var (
+		auditEntry = model.AuditEntry{
+			Action: "UpdateUser",
+			Model:  &user, // Pointer is required to ensure success log contains updated fields after transaction
+		}
+	)
 
-	result := s.db.Save(&user)
-	return CheckError(result)
+	return s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
+		// Update roles first
+		if err := tx.Model(&user).Association("Roles").Replace(&user.Roles); err != nil {
+			return err
+		}
+
+		result := tx.Save(&user)
+		return CheckError(result)
+	})
 }
 
 func (s *BloodhoundDB) GetAllUsers(order string, filter model.SQLFilter) (model.Users, error) {
@@ -402,18 +417,20 @@ func (s *BloodhoundDB) GetUser(id uuid.UUID) (model.User, error) {
 
 // DeleteUser removes all roles for a given user, thereby revoking all permissions
 // UPDATE users SET roles = nil WHERE user_id = ....
-func (s *BloodhoundDB) DeleteUser(user model.User) error {
-	err := s.db.Transaction(func(tx *gorm.DB) error {
+func (s *BloodhoundDB) DeleteUser(ctx context.Context, user model.User) error {
+	auditEntry := model.AuditEntry{
+		Action: "DeleteUser",
+		Model:  &user,
+	}
+
+	return s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
 		// Clear associations first
 		if err := tx.Model(&user).Association("Roles").Clear(); err != nil {
 			return err
 		}
 
-		result := tx.Delete(&user)
-		return CheckError(result)
+		return CheckError(tx.Delete(&user))
 	})
-
-	return err
 }
 
 // LookupUser retrieves the User row associated with the provided name. The name is matched against both the
@@ -432,13 +449,15 @@ func (s *BloodhoundDB) LookupUser(name string) (model.User, error) {
 
 // CreateAuthToken creates a new AuthToken row using the provided struct
 // INSERT INTO auth_tokens (...) VALUES (....)
-func (s *BloodhoundDB) CreateAuthToken(authToken model.AuthToken) (model.AuthToken, error) {
-	var (
-		updatedAuthToken = authToken
-		result           = s.db.Create(&updatedAuthToken)
-	)
+func (s *BloodhoundDB) CreateAuthToken(ctx context.Context, authToken model.AuthToken) (model.AuthToken, error) {
+	auditEntry := model.AuditEntry{
+		Action: "CreateAuthToken",
+		Model:  &authToken,
+	}
 
-	return updatedAuthToken, CheckError(result)
+	return authToken, s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
+		return CheckError(tx.Create(&authToken))
+	})
 }
 
 // UpdateAuthToken updates all fields in the AuthToken row as specified in the provided struct
@@ -508,16 +527,28 @@ func (s *BloodhoundDB) GetUserToken(userId, tokenId uuid.UUID) (model.AuthToken,
 
 // DeleteAuthToken deletes the provided AuthToken row
 // DELETE FROM auth_tokens WHERE id = ...
-func (s *BloodhoundDB) DeleteAuthToken(authToken model.AuthToken) error {
-	result := s.db.Where("id = ?", authToken.ID).Delete(&authToken)
-	return CheckError(result)
+func (s *BloodhoundDB) DeleteAuthToken(ctx context.Context, authToken model.AuthToken) error {
+	auditEntry := model.AuditEntry{
+		Action: "DeleteAuthToken",
+		Model:  &authToken,
+	}
+
+	return s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
+		return CheckError(tx.Where("id = ?", authToken.ID).Delete(&authToken))
+	})
 }
 
 // CreateAuthSecret creates a new AuthSecret row
 // INSERT INTO auth_secrets (...) VALUES (....)
-func (s *BloodhoundDB) CreateAuthSecret(authSecret model.AuthSecret) (model.AuthSecret, error) {
-	result := s.db.Create(&authSecret)
-	return authSecret, CheckError(result)
+func (s *BloodhoundDB) CreateAuthSecret(ctx context.Context, authSecret model.AuthSecret) (model.AuthSecret, error) {
+	auditEntry := model.AuditEntry{
+		Action: "CreateAuthSecret",
+		Model:  &authSecret,
+	}
+
+	return authSecret, s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
+		return CheckError(tx.Create(&authSecret))
+	})
 }
 
 // GetAuthSecret retrieves the AuthSecret row associated with the provided ID
@@ -534,34 +565,60 @@ func (s *BloodhoundDB) GetAuthSecret(id int32) (model.AuthSecret, error) {
 // UpdateAuthSecret updates the auth secret with the input struct specified
 // UPDATE auth_secrets SET digest = .., hmac_method = ..., expires_at = ...
 // WHERE user_id = ....
-func (s *BloodhoundDB) UpdateAuthSecret(authSecret model.AuthSecret) error {
-	result := s.db.Save(&authSecret)
-	return CheckError(result)
+func (s *BloodhoundDB) UpdateAuthSecret(ctx context.Context, authSecret model.AuthSecret) error {
+	auditEntry := model.AuditEntry{
+		Action: "UpdateAuthSecret",
+		Model:  &authSecret,
+	}
+
+	return s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
+		return CheckError(tx.Save(&authSecret))
+	})
 }
 
 // DeleteAuthSecret deletes the auth secret row corresponding to the struct specified
 // DELETE FROM auth_secrets WHERE user_id = ...
-func (s *BloodhoundDB) DeleteAuthSecret(authSecret model.AuthSecret) error {
-	result := s.db.Delete(&authSecret)
-	return CheckError(result)
+func (s *BloodhoundDB) DeleteAuthSecret(ctx context.Context, authSecret model.AuthSecret) error {
+	auditEntry := model.AuditEntry{
+		Action: "DeleteAuthSecret",
+		Model:  &authSecret,
+	}
+
+	return s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
+		return CheckError(tx.Delete(&authSecret))
+	})
 }
 
 // CreateSAMLProvider creates a new saml_providers row using the data in the input struct
 // INSERT INTO saml_identity_providers (...) VALUES (...)
-func (s *BloodhoundDB) CreateSAMLIdentityProvider(samlProvider model.SAMLProvider) (model.SAMLProvider, error) {
+func (s *BloodhoundDB) CreateSAMLIdentityProvider(ctx context.Context, samlProvider model.SAMLProvider) (model.SAMLProvider, error) {
 	var (
-		updatedSAMLProvider = samlProvider
-		result              = s.db.Create(&updatedSAMLProvider)
+		auditEntry = model.AuditEntry{
+			Action: "CreateSAMLIdentityProvider",
+			Model:  &samlProvider, // Pointer is required to ensure success log contains updated fields after transaction
+		}
 	)
 
-	return updatedSAMLProvider, CheckError(result)
+	err := s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
+		return CheckError(tx.Create(&samlProvider))
+	})
+
+	return samlProvider, err
 }
 
 // CreateSAMLProvider updates a saml_providers row using the data in the input struct
 // UPDATE saml_identity_providers SET (...) VALUES (...) WHERE id = ...
-func (s *BloodhoundDB) UpdateSAMLIdentityProvider(provider model.SAMLProvider) error {
-	result := s.db.Save(&provider)
-	return CheckError(result)
+func (s *BloodhoundDB) UpdateSAMLIdentityProvider(ctx context.Context, provider model.SAMLProvider) error {
+	var (
+		auditEntry = model.AuditEntry{
+			Action: "UpdateSAMLIdentityProvider",
+			Model:  &provider, // Pointer is required to ensure success log contains updated fields after transaction
+		}
+	)
+
+	return s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
+		return CheckError(tx.Save(&provider))
+	})
 }
 
 // LookupSAMLProviderByName returns a SAML provider corresponding to the name provided
@@ -597,8 +654,17 @@ func (s *BloodhoundDB) GetSAMLProvider(id int32) (model.SAMLProvider, error) {
 	return samlProvider, CheckError(result)
 }
 
-func (s *BloodhoundDB) DeleteSAMLProvider(provider model.SAMLProvider) error {
-	return CheckError(s.db.Delete(&provider))
+func (s *BloodhoundDB) DeleteSAMLProvider(ctx context.Context, provider model.SAMLProvider) error {
+	var (
+		auditEntry = model.AuditEntry{
+			Action: "DeleteSAMLProvider",
+			Model:  &provider, // Pointer is required to ensure success log contains updated fields after transaction
+		}
+	)
+
+	return s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
+		return CheckError(tx.Delete(&provider))
+	})
 }
 
 // GetSAMLProviderUsers returns all users that are bound to the SAML provider ID provided

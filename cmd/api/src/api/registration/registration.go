@@ -33,14 +33,14 @@ import (
 	"github.com/specterops/bloodhound/src/queries"
 )
 
-func RegisterFossGlobalMiddleware(routerInst *router.Router, cfg config.Configuration, identityResolver auth.IdentityResolver, authenticator api.Authenticator) {
+func RegisterFossGlobalMiddleware(routerInst *router.Router, cfg config.Configuration, db *database.BloodhoundDB, identityResolver auth.IdentityResolver, authenticator api.Authenticator) {
 	// Set up the middleware stack
 	routerInst.UsePrerouting(middleware.ContextMiddleware)
 	routerInst.UsePrerouting(middleware.CORSMiddleware())
 
 	// Set up logging. This must be done after ContextMiddleware is initialized so the context can be accessed in the log logic
 	if cfg.EnableAPILogging {
-		routerInst.UsePrerouting(middleware.LoggingMiddleware(cfg, identityResolver))
+		routerInst.UsePrerouting(middleware.LoggingMiddleware(cfg, identityResolver, db))
 	}
 
 	routerInst.UsePostrouting(
