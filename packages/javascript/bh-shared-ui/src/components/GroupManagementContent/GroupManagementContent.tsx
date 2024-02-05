@@ -87,6 +87,12 @@ const GroupManagementContent: FC<{
         key: keyof Pick<AssetGroupMemberParams, 'primary_kind' | 'custom_member'>,
         value: string
     ) => {
+        // Custom Member filter displays custom members, or all members.
+        // If we want to also display only non customer members, change this:
+        if (key === 'custom_member' && value.toLowerCase().includes('false')) {
+            setFilterParams(({ custom_member, ...removedCustomMemberFilter }) => removedCustomMemberFilter);
+            return;
+        }
         setFilterParams((prev) => ({ ...prev, [key]: value.toString() }));
     };
 

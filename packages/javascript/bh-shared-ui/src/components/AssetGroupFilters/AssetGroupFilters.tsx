@@ -24,11 +24,40 @@ import {
     Collapse,
     FormControl,
     FormControlLabel,
+    Grid,
     InputLabel,
     MenuItem,
     Paper,
     Select,
 } from '@mui/material';
+import createStyles from '@mui/styles/createStyles';
+import makeStyles from '@mui/styles/makeStyles';
+import { Theme } from '@mui/material/styles';
+
+const useStyles = makeStyles((theme: Theme) =>
+    createStyles({
+        formControl: {
+            display: 'block',
+        },
+        active: {
+            '& button': {
+                fontWeight: 'bolder',
+
+                '& span': {
+                    visibility: 'visible',
+                },
+            },
+        },
+        activeFilters: {
+            width: '6px',
+            height: '6px',
+            borderRadius: '100%',
+            backgroundColor: theme.palette.primary.main,
+            alignSelf: 'baseline',
+            visibility: 'hidden',
+        },
+    })
+);
 
 interface Props {
     filterParams: AssetGroupMemberParams;
@@ -44,43 +73,58 @@ const AssetGroupFilters: FC<Props> = (props) => {
 
     const [displayFilters, setDisplayFilters] = useState(false);
 
+    const classes = useStyles();
+
+    const active = !!filterParams.primary_kind || !!filterParams.custom_member;
+    const activeStyles = active ? classes.active : '';
+
     return (
-        <Box sx={{ p: '10px' }} component={Paper} elevation={0} marginBottom={1}>
-            <Button onClick={() => setDisplayFilters((prev) => !prev)}>Filters</Button>
+        <Box p={1} className={activeStyles} component={Paper} elevation={0} marginBottom={1}>
+            <Button fullWidth onClick={() => setDisplayFilters((prev) => !prev)}>
+                Filters
+                <span className={classes.activeFilters} />
+            </Button>
             <Collapse in={displayFilters}>
-                <FormControl sx={{ display: 'flex', flexDirection: 'row' }}>
-                    <InputLabel id='testwa'>Node Type</InputLabel>
-                    <Select
-                        labelId='testwa'
-                        value={filterParams.primary_kind}
-                        onChange={(e) => handleFilterChange('primary_kind', e.target.value)}
-                        sx={{ minWidth: 120 }}
-                        label='Node Type'>
-                        <MenuItem value=''>
-                            <em>None</em>
-                        </MenuItem>
-                        {availableNodeKinds.map((value) => {
-                            return (
-                                <MenuItem value={`eq:${value}`}>
-                                    <NodeIcon nodeType={value} />
-                                    {value}
+                <Grid container spacing={2}>
+                    <Grid item xs={12} xl={6}>
+                        <FormControl className={classes.formControl}>
+                            <InputLabel id='nodeTypeFilter-label'>Node Type</InputLabel>
+                            <Select
+                                id='nodeType'
+                                labelId='nodeTypeFilter-label'
+                                value={filterParams.primary_kind}
+                                onChange={(e) => handleFilterChange('primary_kind', e.target.value)}
+                                label='Node Type'
+                                variant='standard'
+                                fullWidth>
+                                <MenuItem value=''>
+                                    <em>None</em>
                                 </MenuItem>
-                            );
-                        })}
-                    </Select>
-                    <FormControlLabel
-                        label='Custom Members'
-                        control={
-                            <Checkbox
-                                value={filterParams.custom_member}
-                                onChange={(e) => {
-                                    console.log(e.target.checked);
-                                    handleFilterChange('custom_member', `eq:${e.target.checked}`);
-                                }}
-                            />
-                        }
-                    />
-                </FormControl>
+                                {availableNodeKinds.map((value) => {
+                                    return (
+                                        <MenuItem value={`eq:${value}`}>
+                                            <NodeIcon nodeType={value} />
+                                            {value}
+                                        </MenuItem>
+                                    );
+                                })}
+                            </Select>
+                        </FormControl>
+                    </Grid>
+                    <Grid item xs={12} xl={6}>
+                        <FormControlLabel
+                            label='Custom Members'
+                            control={
+                                <Checkbox
+                                    value={filterParams.custom_member}
+                                    onChange={(e) => {
+                                        handleFilterChange('custom_member', `eq:${e.target.checked}`);
+                                    }}
+                                />
+                            }
+                        />
+                    </Grid>
+                </Grid>
             </Collapse>
         </Box>
     );
