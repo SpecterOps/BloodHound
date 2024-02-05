@@ -19,6 +19,7 @@ package datapipe
 
 import (
 	"context"
+	"errors"
 	"github.com/specterops/bloodhound/src/bootstrap"
 	"os"
 	"path/filepath"
@@ -107,10 +108,13 @@ func (s *Daemon) analyze() {
 	log.LogAndMeasure(log.LevelInfo, "Graph Analysis")()
 
 	if err := RunAnalysisOperations(s.ctx, s.db, s.graphdb, s.cfg); err != nil {
-		log.Errorf("Graph analysis failed: %v", err)
-		FailAnalyzedFileUploadJobs(s.ctx, s.db)
-
-		s.status.Update(model.DatapipeStatusIdle, false)
+		if errors.Is(err, ErrAnalysisFailed) {
+			FailAnalyzedFileUploadJobs(s.ctx, s.db)
+			s.status.Update(model.DatapipeStatusIdle, false)
+		} else if errors.Is(err, ErrAnalysisPartiallyCompleted) {
+			PartialCompleteFileUploadJobs(s.ctx, s.db)
+			s.status.Update(model.DatapipeStatusIdle, true)
+		}
 	} else {
 		CompleteAnalyzedFileUploadJobs(s.ctx, s.db)
 

@@ -54,6 +54,24 @@ func FailAnalyzedFileUploadJobs(ctx context.Context, db database.Database) {
 	}
 }
 
+func PartialCompleteFileUploadJobs(ctx context.Context, db database.Database) {
+	// Because our database interfaces do not yet accept contexts this is a best-effort check to ensure that we do not
+	// commit state transitions when we are shutting down.
+	if ctx.Err() != nil {
+		return
+	}
+
+	if fileUploadJobsUnderAnalysis, err := db.GetFileUploadJobsWithStatus(model.JobStatusAnalyzing); err != nil {
+		log.Errorf("Failed to load file upload jobs under analysis: %v", err)
+	} else {
+		for _, job := range fileUploadJobsUnderAnalysis {
+			if err := fileupload.UpdateFileUploadJobStatus(db, job, model.JobStatusPartiallyComplete, "Partially Completed"); err != nil {
+				log.Errorf("Failed updating file upload job %d to partially completed status: %v", job.ID, err)
+			}
+		}
+	}
+}
+
 func CompleteAnalyzedFileUploadJobs(ctx context.Context, db database.Database) {
 	// Because our database interfaces do not yet accept contexts this is a best-effort check to ensure that we do not
 	// commit state transitions when we are shutting down.
