@@ -62,7 +62,7 @@ const AssetGroupEdit: FC<{
     };
 
     // Clear out changelog when group/domain changes
-    useEffect(() => setChangelog([]), [filter]);
+    useEffect(() => setChangelog([]), [filter.environment_id]);
 
     const mutation = useMutation({
         mutationFn: () => {
@@ -93,7 +93,11 @@ const AssetGroupEdit: FC<{
 
     return (
         <Box component={Paper} elevation={0} padding={1}>
-            <FilteredMemberCountDisplay assetGroupId={assetGroup.id} label='Total Count' filter={filter} />
+            <FilteredMemberCountDisplay
+                assetGroupId={assetGroup.id}
+                label='Total Count'
+                filter={{ environment_id: filter.environment_id }}
+            />
             <AssetGroupAutocomplete
                 assetGroup={assetGroup}
                 changelog={changelog}
@@ -109,7 +113,7 @@ const AssetGroupEdit: FC<{
                 />
             )}
             {Object.values(ActiveDirectoryNodeKind).map((kind) => {
-                const filterByKind = { ...filter, primary_kind: `eq:${kind}` };
+                const filterByKind = { primary_kind: `eq:${kind}` };
                 const label = ActiveDirectoryNodeKindToDisplay(kind) || '';
                 const handleAvailableNodeKind = () => makeNodeFilterable(kind);
                 return (
@@ -123,7 +127,7 @@ const AssetGroupEdit: FC<{
                 );
             })}
             {Object.values(AzureNodeKind).map((kind) => {
-                const filterByKind = { ...filter, primary_kind: `eq:${kind}` };
+                const filterByKind = { primary_kind: `eq:${kind}` };
                 const label = AzureNodeKindToDisplay(kind) || '';
                 const handleAvailableNodeKind = () => makeNodeFilterable(kind);
                 return (

@@ -92,7 +92,7 @@ const AssetGroupFilters: FC<Props> = (props) => {
                             <Select
                                 id='nodeType'
                                 labelId='nodeTypeFilter-label'
-                                value={filterParams.primary_kind}
+                                value={filterParams.primary_kind ?? ''}
                                 onChange={(e) => handleFilterChange('primary_kind', e.target.value)}
                                 label='Node Type'
                                 variant='standard'
@@ -102,7 +102,7 @@ const AssetGroupFilters: FC<Props> = (props) => {
                                 </MenuItem>
                                 {availableNodeKinds.map((value) => {
                                     return (
-                                        <MenuItem value={`eq:${value}`}>
+                                        <MenuItem value={`eq:${value}`} key={value}>
                                             <NodeIcon nodeType={value} />
                                             {value}
                                         </MenuItem>
