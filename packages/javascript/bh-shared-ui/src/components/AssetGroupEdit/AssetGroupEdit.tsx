@@ -62,7 +62,7 @@ const AssetGroupEdit: FC<{
     };
 
     // Clear out changelog when group/domain changes
-    useEffect(() => setChangelog([]), [filter.environment_id]);
+    useEffect(() => setChangelog([]), [filter.environment_id, filter.environment_kind]);
 
     const mutation = useMutation({
         mutationFn: () => {
@@ -113,30 +113,32 @@ const AssetGroupEdit: FC<{
                 />
             )}
             {Object.values(ActiveDirectoryNodeKind).map((kind) => {
-                const filterByKind = { primary_kind: `eq:${kind}` };
+                const { environment_id, environment_kind } = filter;
+                const narrowedFilter = { primary_kind: `eq:${kind}`, environment_id, environment_kind };
                 const label = ActiveDirectoryNodeKindToDisplay(kind) || '';
-                const handleAvailableNodeKind = () => makeNodeFilterable(kind);
+
                 return (
                     <FilteredMemberCountDisplay
                         key={label}
                         assetGroupId={assetGroup.id}
                         label={label}
-                        filter={filterByKind}
-                        handleAvailableNodeKind={handleAvailableNodeKind}
+                        filter={narrowedFilter}
+                        makeNodeKindFilterable={() => makeNodeFilterable(kind)}
                     />
                 );
             })}
             {Object.values(AzureNodeKind).map((kind) => {
-                const filterByKind = { primary_kind: `eq:${kind}` };
+                const { environment_id, environment_kind } = filter;
+                const narrowedFilter = { primary_kind: `eq:${kind}`, environment_id, environment_kind };
                 const label = AzureNodeKindToDisplay(kind) || '';
-                const handleAvailableNodeKind = () => makeNodeFilterable(kind);
+
                 return (
                     <FilteredMemberCountDisplay
                         key={label}
                         assetGroupId={assetGroup.id}
                         label={label}
-                        filter={filterByKind}
-                        handleAvailableNodeKind={handleAvailableNodeKind}
+                        filter={narrowedFilter}
+                        makeNodeKindFilterable={() => makeNodeFilterable(kind)}
                     />
                 );
             })}
@@ -148,8 +150,8 @@ const FilteredMemberCountDisplay: FC<{
     assetGroupId: number;
     label: string;
     filter: AssetGroupMemberParams;
-    handleAvailableNodeKind?: () => void;
-}> = ({ assetGroupId, label, filter, handleAvailableNodeKind }) => {
+    makeNodeKindFilterable?: () => void;
+}> = ({ assetGroupId, label, filter, makeNodeKindFilterable }) => {
     const {
         data: count,
         isError,
@@ -161,7 +163,7 @@ const FilteredMemberCountDisplay: FC<{
     const hasValidCount = !isLoading && !isError && count && count > 0;
 
     if (hasValidCount) {
-        handleAvailableNodeKind?.();
+        makeNodeKindFilterable?.();
         return <SubHeader label={label} count={count} />;
     } else {
         return null;
