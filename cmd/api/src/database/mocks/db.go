@@ -155,6 +155,20 @@ func (mr *MockDatabaseMockRecorder) CreateAssetGroupSelector(arg0, arg1, arg2 in
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateAssetGroupSelector", reflect.TypeOf((*MockDatabase)(nil).CreateAssetGroupSelector), arg0, arg1, arg2)
 }
 
+// CreateAuditLog mocks base method.
+func (m *MockDatabase) CreateAuditLog(arg0 model.AuditLog) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateAuditLog", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// CreateAuditLog indicates an expected call of CreateAuditLog.
+func (mr *MockDatabaseMockRecorder) CreateAuditLog(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateAuditLog", reflect.TypeOf((*MockDatabase)(nil).CreateAuditLog), arg0)
+}
+
 // CreateAuthSecret mocks base method.
 func (m *MockDatabase) CreateAuthSecret(arg0 context.Context, arg1 model.AuthSecret) (model.AuthSecret, error) {
 	m.ctrl.T.Helper()
