@@ -114,7 +114,7 @@ describe('AssetGroupEdit', () => {
 
     describe('Custom Member checkbox filter', () => {
         it("displays the checkbox as checked if the filter params value is 'true'", async () => {
-            const { screen } = await setup({ filterParams, availableNodeKinds });
+            const { screen } = await setup({ filterParams: { custom_member: 'eq:true' }, availableNodeKinds });
             const checkbox = screen.getByTestId('asset-groups-custom-member-filter');
 
             expect((checkbox.firstChild as HTMLInputElement)?.checked).toBe(true);
