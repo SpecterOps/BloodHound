@@ -45,9 +45,8 @@ const useStyles = makeStyles((theme: Theme) =>
             display: 'block',
         },
         activeFilters: {
-            '& button': {
+            '& button.expand-filters': {
                 fontWeight: 'bolder',
-
                 '& span': {
                     visibility: 'visible',
                 },
@@ -92,7 +91,11 @@ const AssetGroupFilters: FC<Props> = ({ filterParams, handleFilterChange, availa
             elevation={0}
             marginBottom={1}
             data-testid='asset-group-filters-container'>
-            <Button fullWidth onClick={() => setDisplayFilters((prev) => !prev)} data-testid='display-filters-button'>
+            <Button
+                className='expand-filters'
+                fullWidth
+                onClick={() => setDisplayFilters((prev) => !prev)}
+                data-testid='display-filters-button'>
                 Filters
                 <span className={classes.activeFiltersDot} />
             </Button>
@@ -126,10 +129,8 @@ const AssetGroupFilters: FC<Props> = ({ filterParams, handleFilterChange, availa
                     <Grid item xs={12}>
                         <FormControlLabel
                             label='Custom Members'
-                            key={filterParams.custom_member}
                             control={
                                 <Checkbox
-                                    key={filterParams.custom_member}
                                     checked={!!filterParams.custom_member}
                                     onChange={(e) => {
                                         handleFilterChange('custom_member', `eq:${e.target.checked}`);

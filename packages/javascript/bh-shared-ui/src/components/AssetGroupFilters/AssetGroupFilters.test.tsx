@@ -44,7 +44,7 @@ describe('AssetGroupEdit', () => {
         return { user, screen, handleFilterChange };
     };
 
-    it('renders a button that expands filter section', async () => {
+    it('renders a button that expands the filter section', async () => {
         const { screen, user } = await setup({ filterParams, availableNodeKinds });
         const filtersButton = screen.getByTestId('display-filters-button');
         const collapsedSection = screen.getByTestId('asset-group-filter-collapsible-section');
@@ -67,7 +67,7 @@ describe('AssetGroupEdit', () => {
         expect(filtersContainer.className.includes('activeFilters')).toBeTruthy();
     });
 
-    it('indicated that filters are inactive', async () => {
+    it('indicates that filters are inactive', async () => {
         const { screen } = await setup();
 
         const filtersContainer = screen.getByTestId('asset-group-filters-container');
@@ -82,7 +82,7 @@ describe('AssetGroupEdit', () => {
             const nodeTypeFilterValue = nodeTypeFilter.firstChild?.nextSibling;
 
             expect(nodeTypeFilter.textContent).toContain('Domain');
-            expect((nodeTypeFilterValue as HTMLInputElement).value).toBe('eq:Domain');
+            expect((nodeTypeFilterValue as HTMLInputElement)?.value).toBe('eq:Domain');
         });
 
         it('lists all available node kinds as options to filter by', async () => {
@@ -117,7 +117,7 @@ describe('AssetGroupEdit', () => {
             const { screen } = await setup({ filterParams, availableNodeKinds });
             const checkbox = screen.getByTestId('asset-groups-custom-member-filter');
 
-            expect((checkbox.firstChild as HTMLInputElement).checked).toBe(true);
+            expect((checkbox.firstChild as HTMLInputElement)?.checked).toBe(true);
         });
 
         it('invokes handleFilterChange with eq:false when clicked and custom_member filter is on', async () => {
@@ -130,7 +130,7 @@ describe('AssetGroupEdit', () => {
             expect(handleFilterChange).toBeCalledWith('custom_member', 'eq:false');
         });
 
-        it('invokes handleFilterChange with eq:on when clicked and custom_member filter is off', async () => {
+        it('invokes handleFilterChange with eq:true when clicked and custom_member filter is off', async () => {
             const { screen, user, handleFilterChange } = await setup();
             const checkbox = screen.getByTestId('asset-groups-custom-member-filter');
 
@@ -163,9 +163,9 @@ describe('AssetGroupEdit', () => {
 
         it('is disabled if no filters are active', async () => {
             const { screen } = await setup();
-            const clearFilersButton = screen.getByText('Clear Filters');
+            const clearFilersButton: HTMLButtonElement = screen.getByText('Clear Filters');
 
-            expect((clearFilersButton as HTMLButtonElement).disabled).toBe(true);
+            expect(clearFilersButton.disabled).toBe(true);
         });
     });
 });
