@@ -173,7 +173,6 @@ func Test_FileUploadWorkFlowVersion6(t *testing.T) {
 
 func Test_FileUploadVersion6AllOptionADCS(t *testing.T) {
 	testCtx := integration.NewFOSSContext(t)
-	testCtx.ToggleFeatureFlag("adcs")
 
 	testCtx.SendFileIngest([]string{
 		"v6/all/aiacas.json",
