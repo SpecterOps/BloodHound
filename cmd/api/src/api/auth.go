@@ -90,16 +90,14 @@ func (s authenticator) auditLogin(requestContext context.Context, commitID uuid.
 	bhCtx := ctx.Get(requestContext)
 	auditLog := model.AuditLog{
 		Action:          "LoginAttempt",
-		Fields:          types.JSONUntypedObject{},
+		Fields:          types.JSONUntypedObject{"username": loginRequest.Username},
 		RequestID:       bhCtx.RequestID,
 		SourceIpAddress: bhCtx.RequestIP,
 		Status:          status,
 		CommitID:        commitID,
 	}
 
-	if user.PrincipalName == "" {
-		auditLog.Fields["username"] = loginRequest.Username
-	} else {
+	if user.PrincipalName != "" {
 		auditLog.ActorID = user.ID.String()
 		auditLog.ActorName = user.PrincipalName
 		auditLog.ActorEmail = user.EmailAddress.ValueOrZero()
@@ -120,13 +118,13 @@ func (s authenticator) validateSecretLogin(ctx context.Context, loginRequest Log
 
 		return model.User{}, "", FormatDatabaseError(err)
 	} else if user.AuthSecret == nil {
-		return model.User{}, "", ErrNoUserSecret
+		return user, "", ErrNoUserSecret
 	} else if err := s.ValidateSecret(ctx, loginRequest.Secret, *user.AuthSecret); err != nil {
-		return model.User{}, "", err
+		return user, "", err
 	} else if err = auth.ValidateTOTPSecret(loginRequest.OTP, *user.AuthSecret); err != nil {
-		return model.User{}, "", err
+		return user, "", err
 	} else if sessionToken, err := s.CreateSession(user, *user.AuthSecret); err != nil {
-		return model.User{}, "", err
+		return user, "", err
 	} else {
 		return user, sessionToken, nil
 	}
