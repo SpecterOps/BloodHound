@@ -34,6 +34,11 @@ import createStyles from '@mui/styles/createStyles';
 import makeStyles from '@mui/styles/makeStyles';
 import { Theme } from '@mui/material/styles';
 
+export const FILTERABLE_PARAMS: Array<keyof Pick<AssetGroupMemberParams, 'primary_kind' | 'custom_member'>> = [
+    'primary_kind',
+    'custom_member',
+];
+
 const useStyles = makeStyles((theme: Theme) =>
     createStyles({
         formControl: {
@@ -61,10 +66,7 @@ const useStyles = makeStyles((theme: Theme) =>
 
 interface Props {
     filterParams: AssetGroupMemberParams;
-    handleFilterChange: (
-        key: keyof Pick<AssetGroupMemberParams, 'primary_kind' | 'custom_member'>,
-        value: string
-    ) => void;
+    handleFilterChange: (key: (typeof FILTERABLE_PARAMS)[number], value: string) => void;
     availableNodeKinds: Array<ActiveDirectoryNodeKind | AzureNodeKind>;
 }
 
@@ -74,20 +76,27 @@ const AssetGroupFilters: FC<Props> = ({ filterParams, handleFilterChange, availa
     const classes = useStyles();
 
     const handleClearFilters = () => {
-        handleFilterChange('custom_member', '');
-        handleFilterChange('primary_kind', '');
+        for (const filter of FILTERABLE_PARAMS) {
+            handleFilterChange(filter, '');
+        }
     };
 
     const active = !!filterParams.primary_kind || !!filterParams.custom_member;
     const activeStyles = active ? classes.activeFilters : '';
 
     return (
-        <Box p={1} className={activeStyles} component={Paper} elevation={0} marginBottom={1}>
-            <Button fullWidth onClick={() => setDisplayFilters((prev) => !prev)}>
+        <Box
+            p={1}
+            className={activeStyles}
+            component={Paper}
+            elevation={0}
+            marginBottom={1}
+            data-testid='asset-group-filters-container'>
+            <Button fullWidth onClick={() => setDisplayFilters((prev) => !prev)} data-testid='display-filters-button'>
                 Filters
                 <span className={classes.activeFiltersDot} />
             </Button>
-            <Collapse in={displayFilters}>
+            <Collapse in={displayFilters} data-testid='asset-group-filter-collapsible-section'>
                 <Grid container spacing={2}>
                     <Grid item xs={12}>
                         <FormControl className={classes.formControl}>
@@ -97,9 +106,9 @@ const AssetGroupFilters: FC<Props> = ({ filterParams, handleFilterChange, availa
                                 labelId='nodeTypeFilter-label'
                                 value={filterParams.primary_kind ?? ''}
                                 onChange={(e) => handleFilterChange('primary_kind', e.target.value)}
-                                label='Node Type'
                                 variant='standard'
-                                fullWidth>
+                                fullWidth
+                                data-testid='asset-groups-node-type-filter'>
                                 <MenuItem value=''>
                                     <em>None</em>
                                 </MenuItem>
@@ -117,12 +126,16 @@ const AssetGroupFilters: FC<Props> = ({ filterParams, handleFilterChange, availa
                     <Grid item xs={12}>
                         <FormControlLabel
                             label='Custom Members'
+                            key={filterParams.custom_member}
                             control={
                                 <Checkbox
+                                    key={filterParams.custom_member}
                                     checked={!!filterParams.custom_member}
                                     onChange={(e) => {
+                                        console.log('e', e.target.checked);
                                         handleFilterChange('custom_member', `eq:${e.target.checked}`);
                                     }}
+                                    data-testid='asset-groups-custom-member-filter'
                                 />
                             }
                         />

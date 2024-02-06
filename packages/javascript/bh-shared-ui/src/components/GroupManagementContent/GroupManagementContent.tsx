@@ -28,6 +28,7 @@ import { SelectedDomain } from './types';
 import DataSelector from '../../views/DataQuality/DataSelector';
 import AssetGroupFilters from '../AssetGroupFilters';
 import { ActiveDirectoryNodeKind, AzureNodeKind } from '../..';
+import { FILTERABLE_PARAMS } from '../AssetGroupFilters/AssetGroupFilters';
 
 // Top level layout and shared logic for the Group Management page
 const GroupManagementContent: FC<{
@@ -83,10 +84,7 @@ const GroupManagementContent: FC<{
         return selectedAssetGroup?.name || 'Select a Group';
     };
 
-    const handleFilterChange = (
-        key: keyof Pick<AssetGroupMemberParams, 'primary_kind' | 'custom_member'>,
-        value: string
-    ) => {
+    const handleFilterChange = (key: (typeof FILTERABLE_PARAMS)[number], value: string) => {
         // Custom Member filter displays custom members, or all members.
         // If we want to also display only non customer members, change this:
         if (key === 'custom_member' && value.toLowerCase().includes('false')) {
