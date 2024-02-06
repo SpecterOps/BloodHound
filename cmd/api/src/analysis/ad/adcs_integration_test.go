@@ -2200,6 +2200,33 @@ func TestADCSESC10b(t *testing.T) {
 			}
 			return nil
 		})
+
+		db.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
+			if results, err := ops.FetchRelationships(tx.Relationships().Filterf(func() graph.Criteria {
+				return query.Kind(query.Relationship(), ad.ADCSESC10b)
+			})); err != nil {
+				t.Fatalf("error fetching esc10a edges in integration test; %v", err)
+			} else {
+				assert.Equal(t, 1, len(results))
+				edge := results[0]
+
+				if edgeComp, err := ad2.GetEdgeCompositionPath(context.Background(), db, edge); err != nil {
+					t.Fatalf("error getting edge composition for esc10b: %v", err)
+				} else {
+					nodes := edgeComp.AllNodes().Slice()
+					assert.Contains(t, nodes, harness.ESC10bHarnessECA.Group1)
+					assert.Contains(t, nodes, harness.ESC10bHarnessECA.Computer1)
+					assert.Contains(t, nodes, harness.ESC10bHarnessECA.Domain1)
+					assert.Contains(t, nodes, harness.ESC10bHarnessECA.NTAuthStore1)
+					assert.Contains(t, nodes, harness.ESC10bHarnessECA.RootCA1)
+					assert.Contains(t, nodes, harness.ESC10bHarnessECA.ComputerDC1)
+					assert.Contains(t, nodes, harness.ESC10bHarnessECA.EnterpriseCA1)
+					assert.Contains(t, nodes, harness.ESC10bHarnessECA.CertTemplate1)
+				}
+			}
+
+			return nil
+		})
 	})
 
 	testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) error {
