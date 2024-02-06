@@ -24,6 +24,7 @@ import (
 	"time"
 
 	"github.com/specterops/bloodhound/src/auth"
+	"github.com/specterops/bloodhound/src/model"
 )
 
 // Use our own type rather than a primitive to avoid collisions
@@ -39,12 +40,13 @@ type RequestedWaitDuration struct {
 
 // Context holds contextual data that is passed around to functions. This is an extension to Golang's built in context.
 type Context struct {
-	StartTime time.Time
-	Timeout   RequestedWaitDuration
-	RequestID string
-	AuthCtx   auth.Context
-	Host      *url.URL
-	RequestIP string
+	StartTime    time.Time
+	Timeout      RequestedWaitDuration
+	RequestID    string
+	AuthCtx      auth.Context
+	Host         *url.URL
+	RequestedURL model.AuditableURL
+	RequestIP    string
 }
 
 func (s *Context) ConstructGoContext() context.Context {
