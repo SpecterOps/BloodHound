@@ -162,8 +162,13 @@ const FilteredMemberCountDisplay: FC<{
 
     const hasValidCount = !isLoading && !isError && count && count > 0;
 
+    useEffect(() => {
+        if (hasValidCount) {
+            makeNodeKindFilterable?.();
+        }
+    }, [hasValidCount, makeNodeKindFilterable]);
+
     if (hasValidCount) {
-        makeNodeKindFilterable?.();
         return <SubHeader label={label} count={count} />;
     } else {
         return null;
