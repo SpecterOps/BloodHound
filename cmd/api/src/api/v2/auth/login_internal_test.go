@@ -1,17 +1,17 @@
 // Copyright 2023 Specter Ops, Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// 
+//
 // SPDX-License-Identifier: Apache-2.0
 
 package auth
@@ -89,7 +89,7 @@ func TestLoginFailure(t *testing.T) {
 	mockAuthenticator.EXPECT().LoginWithSecret(gomock.Any(), req3).Return(api.LoginDetails{User: model.User{EULAAccepted: true}}, fmt.Errorf("db error"))
 	mockAuthenticator.EXPECT().LoginWithSecret(gomock.Any(), req4).Return(api.LoginDetails{User: model.User{EULAAccepted: true}}, api.ErrUserDisabled)
 	mockDB.EXPECT().LookupUser(gomock.Any()).Return(model.User{EULAAccepted: false}, nil).Times(5)
-	mockDB.EXPECT().UpdateUser(gomock.Any()).Return(nil).Times(5)
+	mockDB.EXPECT().UpdateUser(gomock.Any(), gomock.Any()).Return(nil).Times(5)
 
 	resources := NewLoginResource(config.Configuration{}, mockAuthenticator, mockDB)
 
@@ -211,7 +211,7 @@ func TestLoginSuccess(t *testing.T) {
 	mockAuthenticator := api_mocks.NewMockAuthenticator(mockCtrl)
 	mockAuthenticator.EXPECT().LoginWithSecret(gomock.Any(), input).Return(api.LoginDetails{User: model.User{AuthSecret: &model.AuthSecret{}, EULAAccepted: true}, SessionToken: "imasessiontoken"}, nil)
 	mockDB.EXPECT().LookupUser(gomock.Any()).Return(model.User{EULAAccepted: false}, nil)
-	mockDB.EXPECT().UpdateUser(gomock.Any()).Return(nil)
+	mockDB.EXPECT().UpdateUser(gomock.Any(), gomock.Any()).Return(nil)
 
 	resources := NewLoginResource(config.Configuration{}, mockAuthenticator, mockDB)
 

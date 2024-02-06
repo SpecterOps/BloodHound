@@ -41,7 +41,8 @@ const AssetGroupMemberList: FC<{
     assetGroup: AssetGroup | null;
     filter: AssetGroupMemberParams;
     onSelectMember: (member: any) => void;
-}> = ({ assetGroup, filter, onSelectMember }) => {
+    canFilterToEmpty: boolean;
+}> = ({ assetGroup, filter, onSelectMember, canFilterToEmpty }) => {
     const theme = useTheme();
 
     const [page, setPage] = useState(0);
@@ -119,7 +120,9 @@ const AssetGroupMemberList: FC<{
                     {isSuccess && data.length === 0 && (
                         <TableRow>
                             <TableCell sx={{ textAlign: 'center', height: '100px' }} colSpan={2}>
-                                No members in selected Asset Group
+                                {canFilterToEmpty
+                                    ? 'No members match that filter'
+                                    : 'No members in selected Asset Group'}
                             </TableCell>
                         </TableRow>
                     )}

@@ -175,20 +175,19 @@ func (s Resources) UpdateAssetGroup(response http.ResponseWriter, request *http.
 		pathVars                = mux.Vars(request)
 		rawAssetGroupID         = pathVars[api.URIPathVariableAssetGroupID]
 		updateAssetGroupRequest UpdateAssetGroupRequest
+		assetGroup              model.AssetGroup
 	)
 
 	if assetGroupID, err := strconv.Atoi(rawAssetGroupID); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsIDMalformed, request), response)
 	} else if err := api.ReadJSONRequestPayloadLimited(&updateAssetGroupRequest, request); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
-	} else if err := s.DB.AppendAuditLog(*ctx.FromRequest(request), "UpdateAssetGroup", updateAssetGroupRequest); err != nil {
-		api.HandleDatabaseError(request, response, err)
-	} else if assetGroup, err := s.DB.GetAssetGroup(int32(assetGroupID)); err != nil {
+	} else if assetGroup, err = s.DB.GetAssetGroup(int32(assetGroupID)); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
 		assetGroup.Name = updateAssetGroupRequest.Name
 
-		if err := s.DB.UpdateAssetGroup(assetGroup); err != nil {
+		if err := s.DB.UpdateAssetGroup(request.Context(), assetGroup); err != nil {
 			api.HandleDatabaseError(request, response, err)
 		} else {
 			api.WriteBasicResponse(request.Context(), assetGroup, http.StatusOK, response)
@@ -201,9 +200,7 @@ func (s Resources) CreateAssetGroup(response http.ResponseWriter, request *http.
 
 	if err := api.ReadJSONRequestPayloadLimited(&createRequest, request); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
-	} else if err := s.DB.AppendAuditLog(*ctx.FromRequest(request), "CreateAssetGroup", createRequest); err != nil {
-		api.HandleDatabaseError(request, response, err)
-	} else if newAssetGroup, err := s.DB.CreateAssetGroup(createRequest.Name, createRequest.Tag, false); err != nil {
+	} else if newAssetGroup, err := s.DB.CreateAssetGroup(request.Context(), createRequest.Name, createRequest.Tag, false); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
 		assetGroupURL := *ctx.Get(request.Context()).Host
@@ -218,17 +215,16 @@ func (s Resources) DeleteAssetGroup(response http.ResponseWriter, request *http.
 	var (
 		pathVars        = mux.Vars(request)
 		rawAssetGroupID = pathVars[api.URIPathVariableAssetGroupID]
+		assetGroup      model.AssetGroup
 	)
 
 	if assetGroupID, err := strconv.Atoi(rawAssetGroupID); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsIDMalformed, request), response)
-	} else if assetGroup, err := s.DB.GetAssetGroup(int32(assetGroupID)); err != nil {
+	} else if assetGroup, err = s.DB.GetAssetGroup(int32(assetGroupID)); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else if assetGroup.SystemGroup {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusConflict, "Cannot delete a system defined asset group.", request), response)
-	} else if err := s.DB.AppendAuditLog(*ctx.FromRequest(request), "DeleteAssetGroup", assetGroup); err != nil {
-		api.HandleDatabaseError(request, response, err)
-	} else if err := s.DB.DeleteAssetGroup(assetGroup); err != nil {
+	} else if err := s.DB.DeleteAssetGroup(request.Context(), assetGroup); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
 		response.WriteHeader(http.StatusOK)
@@ -274,6 +270,7 @@ func (s Resources) UpdateAssetGroupSelectors(response http.ResponseWriter, reque
 
 func (s Resources) DeleteAssetGroupSelector(response http.ResponseWriter, request *http.Request) {
 	var (
+		assetGroupSelector      model.AssetGroupSelector
 		pathVars                = mux.Vars(request)
 		rawAssetGroupID         = pathVars[api.URIPathVariableAssetGroupID]
 		rawAssetGroupSelectorID = pathVars[api.URIPathVariableAssetGroupSelectorID]
@@ -285,13 +282,11 @@ func (s Resources) DeleteAssetGroupSelector(response http.ResponseWriter, reques
 		api.HandleDatabaseError(request, response, err)
 	} else if assetGroupSelectorID, err := strconv.Atoi(rawAssetGroupSelectorID); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsIDMalformed, request), response)
-	} else if assetGroupSelector, err := s.DB.GetAssetGroupSelector(int32(assetGroupSelectorID)); err != nil {
+	} else if assetGroupSelector, err = s.DB.GetAssetGroupSelector(int32(assetGroupSelectorID)); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else if assetGroupSelector.SystemSelector {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusConflict, "Cannot delete a system defined asset group selector.", request), response)
-	} else if err := s.DB.AppendAuditLog(*ctx.FromRequest(request), "DeleteAssetGroupSelector", assetGroupSelector); err != nil {
-		api.HandleDatabaseError(request, response, err)
-	} else if err := s.DB.DeleteAssetGroupSelector(assetGroupSelector); err != nil {
+	} else if err := s.DB.DeleteAssetGroupSelector(request.Context(), assetGroupSelector); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
 		response.WriteHeader(http.StatusOK)

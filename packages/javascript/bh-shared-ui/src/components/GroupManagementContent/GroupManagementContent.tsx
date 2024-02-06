@@ -26,6 +26,9 @@ import AssetGroupEdit from '../AssetGroupEdit';
 import AssetGroupMemberList from '../AssetGroupMemberList';
 import { SelectedDomain } from './types';
 import DataSelector from '../../views/DataQuality/DataSelector';
+import AssetGroupFilters from '../AssetGroupFilters';
+import { ActiveDirectoryNodeKind, AzureNodeKind } from '../..';
+import { FILTERABLE_PARAMS } from '../AssetGroupFilters/AssetGroupFilters';
 
 // Top level layout and shared logic for the Group Management page
 const GroupManagementContent: FC<{
@@ -54,6 +57,7 @@ const GroupManagementContent: FC<{
     const [selectedDomain, setSelectedDomain] = useState<SelectedDomain | null>(null);
     const [selectedAssetGroupId, setSelectedAssetGroupId] = useState<number | null>(null);
     const [filterParams, setFilterParams] = useState<AssetGroupMemberParams>({});
+    const [availableNodeKinds, setAvailableNodeKinds] = useState<Array<AzureNodeKind | ActiveDirectoryNodeKind>>([]);
 
     const setInitialGroup = (data: AssetGroup[]) => {
         if (!selectedAssetGroupId && data?.length) {
@@ -80,6 +84,25 @@ const GroupManagementContent: FC<{
         return selectedAssetGroup?.name || 'Select a Group';
     };
 
+    const handleFilterChange = (key: (typeof FILTERABLE_PARAMS)[number], value: string) => {
+        // Custom Member filter displays custom members, or all members.
+        // If we want to also display only non customer members, change this:
+        if (key === 'custom_member' && value.toLowerCase().includes('false')) {
+            setFilterParams((prev) => {
+                const _filterParams = { ...prev };
+                delete _filterParams.custom_member;
+                return _filterParams;
+            });
+            return;
+        }
+        setFilterParams((prev) => ({ ...prev, [key]: value.toString() }));
+    };
+
+    const makeNodeFilterable = (node: ActiveDirectoryNodeKind | AzureNodeKind) => {
+        if (availableNodeKinds.includes(node)) return;
+        setAvailableNodeKinds((prev) => [...prev, node]);
+    };
+
     // Start building a filter query for members that gets passed down to AssetGroupMemberList to make the request
     useEffect(() => {
         const filterDomain = selectedDomain || globalDomain;
@@ -91,6 +114,7 @@ const GroupManagementContent: FC<{
         } else {
             filter.environment_id = `eq:${filterDomain?.id}`;
         }
+        setAvailableNodeKinds([]);
         setFilterParams(filter);
     }, [selectedDomain, globalDomain, selectedAssetGroupId]);
 
@@ -126,13 +150,25 @@ const GroupManagementContent: FC<{
                             </Grid>
                         </Grid>
                     </Box>
-                    {selectedAssetGroup && <AssetGroupEdit assetGroup={selectedAssetGroup} filter={filterParams} />}
+                    <AssetGroupFilters
+                        filterParams={filterParams}
+                        handleFilterChange={handleFilterChange}
+                        availableNodeKinds={availableNodeKinds}
+                    />
+                    {selectedAssetGroup && (
+                        <AssetGroupEdit
+                            assetGroup={selectedAssetGroup}
+                            filter={filterParams}
+                            makeNodeFilterable={makeNodeFilterable}
+                        />
+                    )}
                 </Grid>
                 <Grid height={'100%'} item xs={5} md={6}>
                     <AssetGroupMemberList
                         assetGroup={selectedAssetGroup}
                         filter={filterParams}
                         onSelectMember={onClickMember}
+                        canFilterToEmpty={!!availableNodeKinds.length}
                     />
                 </Grid>
                 <Grid item xs={4} md={3} height={'100%'}>
