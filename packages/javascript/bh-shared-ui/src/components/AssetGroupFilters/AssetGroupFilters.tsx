@@ -132,7 +132,6 @@ const AssetGroupFilters: FC<Props> = ({ filterParams, handleFilterChange, availa
                                     key={filterParams.custom_member}
                                     checked={!!filterParams.custom_member}
                                     onChange={(e) => {
-                                        console.log('e', e.target.checked);
                                         handleFilterChange('custom_member', `eq:${e.target.checked}`);
                                     }}
                                     data-testid='asset-groups-custom-member-filter'
