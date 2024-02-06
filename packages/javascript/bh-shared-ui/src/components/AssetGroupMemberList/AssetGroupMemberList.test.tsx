@@ -46,7 +46,12 @@ describe('AssetGroupMemberList', () => {
         const handleSelectMember = vi.fn();
         const user = userEvent.setup();
         const screen = render(
-            <AssetGroupMemberList assetGroup={assetGroup} filter={{}} onSelectMember={handleSelectMember} />
+            <AssetGroupMemberList
+                assetGroup={assetGroup}
+                filter={{}}
+                onSelectMember={handleSelectMember}
+                canFilterToEmpty={false}
+            />
         );
         return { screen, user, handleSelectMember };
     };

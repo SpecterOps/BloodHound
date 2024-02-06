@@ -111,6 +111,14 @@ func (s *BloodhoundDB) ListAuditLogs(before, after time.Time, offset, limit int,
 	return auditLogs, int(count), CheckError(result)
 }
 
+func (s *BloodhoundDB) MaybeAuditableTransaction(ctx context.Context, auditDisabled bool, auditEntry model.AuditEntry, f func(tx *gorm.DB) error, opts ...*sql.TxOptions) error {
+	if auditDisabled {
+		return s.db.Transaction(f, opts...)
+	} else {
+		return s.AuditableTransaction(ctx, auditEntry, f, opts...)
+	}
+}
+
 func (s *BloodhoundDB) AuditableTransaction(ctx context.Context, auditEntry model.AuditEntry, f func(tx *gorm.DB) error, opts ...*sql.TxOptions) error {
 	var (
 		commitID, err = uuid.NewV4()

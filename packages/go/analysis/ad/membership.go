@@ -38,8 +38,8 @@ func ResolveAllGroupMemberships(ctx context.Context, db graph.Database, addition
 		adGroupIDs []graph.ID
 
 		searchCriteria = []graph.Criteria{query.KindIn(query.Relationship(), ad.MemberOf, ad.MemberOfLocalGroup)}
-		coordC         = make(chan struct{}, analysis.MaximumDatabaseParallelWorkers)
 		traversalMap   = cardinality.ThreadSafeDuplex(cardinality.NewBitmap32())
+		traversalInst  = traversal.NewIDTraversal(db, analysis.MaximumDatabaseParallelWorkers)
 		memberships    = impact.NewThreadSafeAggregator(impact.NewIDA(func() cardinality.Provider[uint32] {
 			return cardinality.NewBitmap32()
 		}))
@@ -64,64 +64,46 @@ func ResolveAllGroupMemberships(ctx context.Context, db graph.Database, addition
 
 	log.Infof("Collected %d groups to resolve", len(adGroupIDs))
 
-	for i := 0; i < analysis.MaximumDatabaseParallelWorkers; i++ {
-		coordC <- struct{}{}
-	}
-
 	for _, adGroupID := range adGroupIDs {
 		if traversalMap.Contains(adGroupID.Uint32()) {
 			continue
 		}
 
-		<-coordC
+		if err := traversalInst.BreadthFirst(ctx, traversal.IDPlan{
+			Root: adGroupID,
+			Delegate: func(ctx context.Context, tx graph.Transaction, segment *graph.IDSegment) ([]*graph.IDSegment, error) {
+				if nextQuery, err := newTraversalQuery(tx, segment, graph.DirectionInbound, searchCriteria...); err != nil {
+					return nil, err
+				} else {
+					var nextSegments []*graph.IDSegment
 
-		go func(adGroupID graph.ID) {
-			if err := traversal.NewIDTraversal(db, analysis.MaximumDatabaseParallelWorkers).BreadthFirst(ctx, traversal.IDPlan{
-				Root: adGroupID,
-				Delegate: func(ctx context.Context, tx graph.Transaction, segment *graph.IDSegment) ([]*graph.IDSegment, error) {
-					if nextQuery, err := newTraversalQuery(tx, segment, graph.DirectionInbound, searchCriteria...); err != nil {
-						return nil, err
-					} else {
-						var nextSegments []*graph.IDSegment
-
-						if err := nextQuery.FetchTriples(func(cursor graph.Cursor[graph.RelationshipTripleResult]) error {
-							for nextTriple := range cursor.Chan() {
-								if traversalMap.CheckedAdd(nextTriple.StartID.Uint32()) {
-									nextSegments = append(nextSegments, segment.Descend(nextTriple.StartID, nextTriple.ID))
-								} else {
-									memberships.AddShortcut(segment.Descend(nextTriple.StartID, nextTriple.ID))
-								}
+					if err := nextQuery.FetchTriples(func(cursor graph.Cursor[graph.RelationshipTripleResult]) error {
+						for nextTriple := range cursor.Chan() {
+							if traversalMap.CheckedAdd(nextTriple.StartID.Uint32()) {
+								nextSegments = append(nextSegments, segment.Descend(nextTriple.StartID, nextTriple.ID))
+							} else {
+								memberships.AddShortcut(segment.Descend(nextTriple.StartID, nextTriple.ID))
 							}
-
-							return cursor.Error()
-						}); err != nil {
-							return nil, err
 						}
 
-						// Is this path terminal?
-						if len(nextSegments) == 0 {
-							memberships.AddPath(segment)
-						}
-
-						return nextSegments, nil
+						return cursor.Error()
+					}); err != nil {
+						return nil, err
 					}
-				},
-			}); err != nil {
-				log.Errorf("Error during traversal: %v", err)
-			}
 
-			coordC <- struct{}{}
-		}(adGroupID)
+					// Is this path terminal?
+					if len(nextSegments) == 0 {
+						memberships.AddPath(segment)
+					}
+
+					return nextSegments, nil
+				}
+			},
+		}); err != nil {
+			return nil, err
+		}
 	}
 
-	log.Infof("Finished submitting all groups to be traversed. Waiting...")
-
-	for finished := 0; finished < analysis.MaximumDatabaseParallelWorkers; {
-		<-coordC
-		finished++
-	}
-
-	close(coordC)
 	return memberships, nil
 }
 

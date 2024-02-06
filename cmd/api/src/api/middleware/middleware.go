@@ -35,6 +35,7 @@ import (
 	"github.com/specterops/bloodhound/src/config"
 	"github.com/specterops/bloodhound/src/ctx"
 	"github.com/specterops/bloodhound/src/database"
+	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/utils"
 	"github.com/unrolled/secure"
 )
@@ -140,7 +141,8 @@ func ContextMiddleware(next http.Handler) http.Handler {
 					Scheme: getScheme(request),
 					Host:   request.Host,
 				},
-				RequestIP: parseUserIP(request),
+				RequestedURL: model.AuditableURL(request.URL.String()),
+				RequestIP:    parseUserIP(request),
 			})
 
 			// Route the request with the embedded context
