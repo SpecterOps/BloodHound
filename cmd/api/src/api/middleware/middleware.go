@@ -19,6 +19,7 @@ package middleware
 import (
 	"context"
 	"fmt"
+	"net"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -129,8 +130,8 @@ func ContextMiddleware(next http.Handler) http.Handler {
 			// Create a new context with the timeout
 			requestCtx, cancel := context.WithTimeout(request.Context(), requestedWaitDuration.Value)
 			defer cancel()
-
 			// Insert the bh context
+
 			requestCtx = ctx.Set(requestCtx, &ctx.Context{
 				StartTime: startTime,
 				Timeout:   requestedWaitDuration,
@@ -139,12 +140,33 @@ func ContextMiddleware(next http.Handler) http.Handler {
 					Scheme: getScheme(request),
 					Host:   request.Host,
 				},
+				RequestIP: parseUserIP(request),
 			})
 
 			// Route the request with the embedded context
 			next.ServeHTTP(response, request.WithContext(requestCtx))
 		}
 	})
+}
+
+func parseUserIP(r *http.Request) string {
+	var remoteIp string
+
+	// The point of this code is to strip the port, so we don't need to save it.
+	if host, _, err := net.SplitHostPort(r.RemoteAddr); err != nil {
+		log.Warnf("Error parsing remoteAddress 's': %s", r.RemoteAddr, err)
+		remoteIp = r.RemoteAddr
+	} else {
+		remoteIp = host
+	}
+
+	if result := r.Header.Get("X-Forwarded-For"); result == "" {
+		log.Warnf("No data found in X-Forwarded-For header")
+		return remoteIp
+	} else {
+		result += "," + remoteIp
+		return result
+	}
 }
 
 func ParseHeaderValues(values string) map[string]string {

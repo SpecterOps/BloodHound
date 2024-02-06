@@ -7,6 +7,8 @@
     "collectors_base_path": "/bhapi/collectors",
     "log_level": "INFO",
     "log_path": "bhapi.log",
+    "enable_startup_wait_period": false,
+    "datapipe_interval": 1,
     "features": {
         "enable_auth": true
     },
