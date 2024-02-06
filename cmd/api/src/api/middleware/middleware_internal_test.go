@@ -91,14 +91,14 @@ func TestParseUserIP_XForwardedFor_RemoteAddr(t *testing.T) {
 	req.Header.Set("X-Forwarded-For", strings.Join([]string{ip1, ip2, ip3}, ","))
 	req.RemoteAddr = "0.0.0.0:3000"
 
-	require.Equal(t, parseUserIP(req), strings.Join([]string{ip1, ip2, ip3, req.RemoteAddr}, ","))
+	require.Equal(t, parseUserIP(req), strings.Join([]string{ip1, ip2, ip3, "0.0.0.0"}, ","))
 }
 
 func TestParseUserIP_RemoteAddrOnly(t *testing.T) {
 	req, err := http.NewRequest("GET", "/teapot", nil)
 	require.Nil(t, err)
 	req.RemoteAddr = "0.0.0.0:3000"
-	require.Equal(t, parseUserIP(req), req.RemoteAddr)
+	require.Equal(t, parseUserIP(req), "0.0.0.0")
 }
 
 func TestParsePreferHeaderWait(t *testing.T) {
