@@ -19,6 +19,7 @@ package middleware
 import (
 	"context"
 	"fmt"
+	"net"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -149,16 +150,23 @@ func ContextMiddleware(next http.Handler) http.Handler {
 }
 
 func parseUserIP(r *http.Request) string {
-	res := ""
-	if ipAddress := r.Header.Get("X-Forwarded-For"); ipAddress != "" {
-		res += "X-Forwarded-For: " + ipAddress + "; "
+	var remoteIp string
+
+	// The point of this code is to strip the port, so we don't need to save it.
+	if host, _, err := net.SplitHostPort(r.RemoteAddr); err != nil {
+		log.Warnf("Error parsing remoteAddress 's': %s", r.RemoteAddr, err)
+		remoteIp = r.RemoteAddr
 	} else {
-		log.Warnf("No data found in X-Forwarded-For, possible upstream misconfig?")
+		remoteIp = host
 	}
 
-	res += "Remote Address: " + r.RemoteAddr
-
-	return res
+	if result := r.Header.Get("X-Forwarded-For"); result == "" {
+		log.Warnf("No data found in X-Forwarded-For header")
+		return remoteIp
+	} else {
+		result += "," + remoteIp
+		return result
+	}
 }
 
 func ParseHeaderValues(values string) map[string]string {
