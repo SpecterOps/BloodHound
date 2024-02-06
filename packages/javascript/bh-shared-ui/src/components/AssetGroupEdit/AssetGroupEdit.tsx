@@ -34,7 +34,8 @@ import { useNotifications } from '../../providers';
 const AssetGroupEdit: FC<{
     assetGroup: AssetGroup;
     filter: AssetGroupMemberParams;
-}> = ({ assetGroup, filter }) => {
+    makeNodeFilterable: (node: ActiveDirectoryNodeKind | AzureNodeKind) => void;
+}> = ({ assetGroup, filter, makeNodeFilterable }) => {
     const [changelog, setChangelog] = useState<AssetGroupChangelog>([]);
     const addRows = changelog.filter((entry) => entry.action === ChangelogAction.ADD);
     const removeRows = changelog.filter((entry) => entry.action === ChangelogAction.REMOVE);
@@ -61,7 +62,7 @@ const AssetGroupEdit: FC<{
     };
 
     // Clear out changelog when group/domain changes
-    useEffect(() => setChangelog([]), [filter]);
+    useEffect(() => setChangelog([]), [filter.environment_id, filter.environment_kind]);
 
     const mutation = useMutation({
         mutationFn: () => {
@@ -92,7 +93,11 @@ const AssetGroupEdit: FC<{
 
     return (
         <Box component={Paper} elevation={0} padding={1}>
-            <FilteredMemberCountDisplay assetGroupId={assetGroup.id} label='Total Count' filter={filter} />
+            <FilteredMemberCountDisplay
+                assetGroupId={assetGroup.id}
+                label='Total Count'
+                filter={{ environment_id: filter.environment_id }}
+            />
             <AssetGroupAutocomplete
                 assetGroup={assetGroup}
                 changelog={changelog}
@@ -108,26 +113,32 @@ const AssetGroupEdit: FC<{
                 />
             )}
             {Object.values(ActiveDirectoryNodeKind).map((kind) => {
-                const filterByKind = { ...filter, primary_kind: `eq:${kind}` };
+                const { environment_id, environment_kind } = filter;
+                const narrowedFilter = { primary_kind: `eq:${kind}`, environment_id, environment_kind };
                 const label = ActiveDirectoryNodeKindToDisplay(kind) || '';
+
                 return (
                     <FilteredMemberCountDisplay
                         key={label}
                         assetGroupId={assetGroup.id}
                         label={label}
-                        filter={filterByKind}
+                        filter={narrowedFilter}
+                        makeNodeKindFilterable={() => makeNodeFilterable(kind)}
                     />
                 );
             })}
             {Object.values(AzureNodeKind).map((kind) => {
-                const filterByKind = { ...filter, primary_kind: `eq:${kind}` };
+                const { environment_id, environment_kind } = filter;
+                const narrowedFilter = { primary_kind: `eq:${kind}`, environment_id, environment_kind };
                 const label = AzureNodeKindToDisplay(kind) || '';
+
                 return (
                     <FilteredMemberCountDisplay
                         key={label}
                         assetGroupId={assetGroup.id}
                         label={label}
-                        filter={filterByKind}
+                        filter={narrowedFilter}
+                        makeNodeKindFilterable={() => makeNodeFilterable(kind)}
                     />
                 );
             })}
@@ -139,7 +150,8 @@ const FilteredMemberCountDisplay: FC<{
     assetGroupId: number;
     label: string;
     filter: AssetGroupMemberParams;
-}> = ({ assetGroupId, label, filter }) => {
+    makeNodeKindFilterable?: () => void;
+}> = ({ assetGroupId, label, filter, makeNodeKindFilterable }) => {
     const {
         data: count,
         isError,
@@ -149,6 +161,12 @@ const FilteredMemberCountDisplay: FC<{
     );
 
     const hasValidCount = !isLoading && !isError && count && count > 0;
+
+    useEffect(() => {
+        if (hasValidCount) {
+            makeNodeKindFilterable?.();
+        }
+    }, [hasValidCount, makeNodeKindFilterable]);
 
     if (hasValidCount) {
         return <SubHeader label={label} count={count} />;
