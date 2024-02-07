@@ -603,5 +603,90 @@
                 }
             }
         }
+    },
+    "/api/v2/asset-groups/{asset_group_id}/members/count": {
+        "parameters": [
+            {
+                "type": "integer",
+                "description": "Asset group ID",
+                "name": "asset_group_id",
+                "in": "path",
+                "required": true
+            }
+        ],
+        "get": {
+            "description": "List counts of members of an asset isolation group by primary kind",
+            "consumes": [
+                "application/json"
+            ],
+            "tags": [
+                "Asset Isolation",
+                "Community",
+                "Enterprise"
+            ],
+            "summary": "List counts of members of an asset isolation group by primary kind",
+            "parameters": [
+                {
+                    "$ref": "#/definitions/parameters.PreferHeader"
+                },
+                {
+                    "type": "string",
+                    "description": "Filter results by column value. Valid filter predicates are eq, neq",
+                    "name": "object_id",
+                    "in": "query",
+                    "required": false
+                },
+                {
+                    "type": "string",
+                    "description": "Filter results by column value. Valid filter predicates are eq, neq",
+                    "name": "environment_id",
+                    "in": "query",
+                    "required": false
+                },
+                {
+                    "type": "string",
+                    "description": "Filter results by column value. Valid filter predicates are eq, neq",
+                    "name": "domainsid",
+                    "in": "query",
+                    "required": false
+                },
+                {
+                    "type": "string",
+                    "description": "Filter results by column value. Valid filter predicates are eq, neq",
+                    "name": "environment_kind",
+                    "in": "query",
+                    "required": false
+                },
+                {
+                    "type": "string",
+                    "description": "Filter results by column value. Valid filter predicates are eq, neq",
+                    "name": "name",
+                    "in": "query",
+                    "required": false
+                },
+                {
+                    "type": "string",
+                    "description": "Filter results by column value. Valid filter predicates are eq, neq",
+                    "name": "custom_member",
+                    "in": "query",
+                    "required": false
+                }
+            ],
+            "responses": {
+                "200": {
+                    "description": "OK",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/definitions/v2.ListAssetGroupMembersCountResponse"
+                            }
+                        }
+                    }
+                },
+                "Error": {
+                    "$ref": "#/components/responses/defaultError"
+                }
+            }
+        }
     }
     }

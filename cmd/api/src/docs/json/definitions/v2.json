@@ -76,6 +76,24 @@
       }
     }
   },
+  "v2.ListAssetGroupMembersCountResponse": {
+        "properties": {
+            "data": {
+                "type": "object",
+                "properties": {
+                    "total_count": {
+                        "type": "integer"
+                    },
+                    "counts": {
+                        "type": "object",
+                        "items": {
+                            "type": "integer"
+                        }
+                    }
+                }
+            }
+        }
+    },
   "v2.CreateAssetGroupSelectorResponse": {
     "properties": {
       "data": {
