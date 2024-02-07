@@ -25,6 +25,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/specterops/bloodhound/crypto"
 	"github.com/specterops/bloodhound/log"
@@ -166,6 +167,11 @@ type Configuration struct {
 	DisableCypherQC         bool                      `json:"disable_cypher_qc"`
 	DisableMigrations       bool                      `json:"disable_migrations"`
 	TraversalMemoryLimit    uint16                    `json:"traversal_memory_limit"`
+	AuthSessionTTLHours     int                       `json:"auth_session_ttl_hours"`
+}
+
+func (s Configuration) AuthSessionTTL() time.Duration {
+	return time.Hour * time.Duration(s.AuthSessionTTLHours)
 }
 
 func (s Configuration) TempDirectory() string {
