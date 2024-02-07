@@ -1332,3 +1332,161 @@ func TestResources_ListAssetGroupMembers(t *testing.T) {
 			},
 		})
 }
+
+func TestResources_ListAssetGroupMembersCount(t *testing.T) {
+	var (
+		mockCtrl   = gomock.NewController(t)
+		mockGraph  = queriesMocks.NewMockGraph(mockCtrl)
+		mockDB     = dbmocks.NewMockDatabase(mockCtrl)
+		resources  = v2.Resources{DB: mockDB, GraphQuery: mockGraph}
+		collection = model.AssetGroupCollection{
+			Entries: model.AssetGroupCollectionEntries{
+				model.AssetGroupCollectionEntry{
+					ObjectID:  "a",
+					NodeLabel: "b",
+					BigSerial: model.BigSerial{ID: 1},
+				},
+				model.AssetGroupCollectionEntry{
+					ObjectID:  "c",
+					NodeLabel: "d",
+					BigSerial: model.BigSerial{ID: 2},
+				},
+			},
+			BigSerial: model.BigSerial{ID: 3},
+		}
+
+		assetGroup = model.AssetGroup{
+			Name:        "test group",
+			Tag:         "test tag",
+			SystemGroup: false,
+			Selectors: model.AssetGroupSelectors{
+				model.AssetGroupSelector{
+					AssetGroupID:   1,
+					Name:           "a",
+					Selector:       "a",
+					SystemSelector: false,
+					Serial:         model.Serial{},
+				},
+			},
+			Collections: model.AssetGroupCollections{collection},
+		}
+	)
+	defer mockCtrl.Finish()
+
+	apitest.NewHarness(t, resources.ListAssetGroupMemberCountsByKind).
+		Run([]apitest.Case{
+			{
+				Name: "InvalidAssetGroupID",
+				Input: func(input *apitest.Input) {
+					apitest.SetURLVar(input, api.URIPathVariableAssetGroupID, "invalid")
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusBadRequest)
+					apitest.BodyContains(output, api.ErrorResponseDetailsIDMalformed)
+				},
+			},
+			{
+				Name: "DatabaseGetAssetGroupError",
+				Input: func(input *apitest.Input) {
+					apitest.SetURLVar(input, api.URIPathVariableAssetGroupID, "1")
+				},
+				Setup: func() {
+					mockDB.EXPECT().
+						GetAssetGroup(gomock.Any()).
+						Return(model.AssetGroup{}, errors.New("GetAssetGroup fail"))
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusInternalServerError)
+					apitest.BodyContains(output, api.ErrorResponseDetailsInternalServerError)
+				},
+			},
+			{
+				Name: "GraphDatabaseError",
+				Input: func(input *apitest.Input) {
+					apitest.SetURLVar(input, api.URIPathVariableAssetGroupID, "1")
+				},
+				Setup: func() {
+					mockDB.EXPECT().
+						GetAssetGroup(gomock.Any()).
+						Return(assetGroup, nil)
+					mockGraph.EXPECT().
+						GetAssetGroupNodes(gomock.Any(), gomock.Any()).
+						Return(graph.NodeSet{}, fmt.Errorf("GetAssetGroupNodes fail"))
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusInternalServerError)
+				},
+			},
+			{
+				Name: "SuccessDataTest",
+				Input: func(input *apitest.Input) {
+					apitest.SetURLVar(input, api.URIPathVariableAssetGroupID, "1")
+				},
+				Setup: func() {
+					mockDB.EXPECT().
+						GetAssetGroup(gomock.Any()).
+						Return(assetGroup, nil)
+					mockGraph.EXPECT().
+						GetAssetGroupNodes(gomock.Any(), gomock.Any()).
+						Return(graph.NodeSet{
+							1: &graph.Node{
+								ID:    1,
+								Kinds: graph.Kinds{ad.Entity, ad.Domain},
+								Properties: &graph.Properties{
+									Map: map[string]any{common.ObjectID.String(): "a", common.Name.String(): "a", ad.DomainSID.String(): "a"},
+								},
+							},
+							2: &graph.Node{
+								ID:    2,
+								Kinds: graph.Kinds{ad.Entity, ad.Domain},
+								Properties: &graph.Properties{
+									Map: map[string]any{common.ObjectID.String(): "b", common.Name.String(): "b", ad.DomainSID.String(): "b"},
+								},
+							}}, nil)
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusOK)
+					result := api.ListAssetGroupMembersCountsResponse{}
+					apitest.UnmarshalData(output, &result)
+					require.Equal(t, 2, result.TotalCount)
+					require.Equal(t, 2, result.Counts[ad.Domain.String()])
+				},
+			},
+			{
+				Name: "SuccessFiltered",
+				Input: func(input *apitest.Input) {
+					apitest.AddQueryParam(input, "environment_kind", "eq:"+azure.Tenant.String())
+					apitest.SetURLVar(input, api.URIPathVariableAssetGroupID, "1")
+				},
+				Setup: func() {
+					mockDB.EXPECT().
+						GetAssetGroup(gomock.Any()).
+						Return(assetGroup, nil)
+					mockGraph.EXPECT().
+						GetAssetGroupNodes(gomock.Any(), gomock.Any()).
+						Return(graph.NodeSet{
+							1: &graph.Node{
+								ID:    1,
+								Kinds: graph.Kinds{ad.Entity, ad.Domain},
+								Properties: &graph.Properties{
+									Map: map[string]any{common.ObjectID.String(): "a", common.Name.String(): "a", ad.DomainSID.String(): "a"},
+								},
+							},
+							2: &graph.Node{
+								ID:    2,
+								Kinds: graph.Kinds{azure.Entity, azure.Tenant},
+								Properties: &graph.Properties{
+									Map: map[string]any{common.ObjectID.String(): "b", common.Name.String(): "b", azure.TenantID.String(): "b"},
+								},
+							}}, nil)
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusOK)
+					result := api.ListAssetGroupMembersCountsResponse{}
+					apitest.UnmarshalData(output, &result)
+					require.Equal(t, 1, result.TotalCount)
+					require.Equal(t, 1, result.Counts[azure.Tenant.String()])
+				},
+			},
+		})
+}
