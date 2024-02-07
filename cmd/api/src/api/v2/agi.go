@@ -430,6 +430,49 @@ func (s Resources) ListAssetGroupMembers(response http.ResponseWriter, request *
 	}
 }
 
+func (s Resources) ListAssetGroupMemberCountsByKind(response http.ResponseWriter, request *http.Request) {
+	var agMembers api.AssetGroupMembers
+
+	queryParameterFilterParser := model.NewQueryParameterFilterParser()
+	if queryFilters, err := queryParameterFilterParser.ParseQueryParameterFilters(request); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsBadQueryParameterFilters, request), response)
+		return
+	} else {
+		for name, filters := range queryFilters {
+			if validPredicates, err := agMembers.GetValidFilterPredicatesAsStrings(name); err != nil || name == "primary_kind" {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("%s: %s", api.ErrorResponseDetailsColumnNotFilterable, name), request), response)
+				return
+			} else {
+				for _, filter := range filters {
+					if !slices.Contains(validPredicates, string(filter.Operator)) {
+						api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("%s: %s %s", api.ErrorResponseDetailsFilterPredicateNotSupported, filter.Name, filter.Operator), request), response)
+						return
+					}
+				}
+			}
+		}
+
+		if assetGroupID, err := strconv.Atoi(mux.Vars(request)[api.URIPathVariableAssetGroupID]); err != nil {
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsIDMalformed, request), response)
+		} else if assetGroup, err := s.DB.GetAssetGroup(int32(assetGroupID)); err != nil {
+			api.HandleDatabaseError(request, response, err)
+		} else if assetGroupNodes, err := s.GraphQuery.GetAssetGroupNodes(request.Context(), assetGroup.Tag); err != nil {
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("Graph error fetching nodes for asset group ID %v: %v", assetGroup.ID, err), request), response)
+		} else if agMembers = parseAGMembersFromNodes(assetGroupNodes, assetGroup.Selectors, int(assetGroup.ID)); err != nil {
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
+		} else if agMembers, err = agMembers.Filter(queryFilters); err != nil {
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("error filtering asset group members: %v", err), request), response)
+		} else {
+			data := api.ListAssetGroupMembersCountsResponse{Counts: map[string]int{}}
+			for _, member := range agMembers {
+				data.Counts[member.PrimaryKind]++
+				data.TotalCount++
+			}
+			api.WriteBasicResponse(request.Context(), data, http.StatusOK, response)
+		}
+	}
+}
+
 func parseAGMembersFromNodes(nodes graph.NodeSet, selectors model.AssetGroupSelectors, assetGroupID int) api.AssetGroupMembers {
 	agMembers := api.AssetGroupMembers{}
 	for _, node := range nodes {
