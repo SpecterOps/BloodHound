@@ -20,6 +20,8 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/specterops/bloodhound/dawgs/graph"
+	"github.com/specterops/bloodhound/dawgs/ops"
 	"github.com/specterops/bloodhound/src/api"
 )
 
@@ -33,7 +35,10 @@ type DatabaseManagement struct {
 
 func (s Resources) HandleDatabaseManagement(response http.ResponseWriter, request *http.Request) {
 
-	var payload DatabaseManagement
+	var (
+		payload DatabaseManagement
+		nodeIDs []graph.ID
+	)
 
 	if err := api.ReadJSONRequestPayloadLimited(&payload, request); err != nil {
 		api.WriteErrorResponse(
@@ -41,8 +46,37 @@ func (s Resources) HandleDatabaseManagement(response http.ResponseWriter, reques
 			api.BuildErrorResponse(http.StatusBadRequest, "JSON malformed.", request),
 			response,
 		)
+	} else if payload.CollectedGraphData {
+
+		if err := s.Graph.ReadTransaction(request.Context(), func(tx graph.Transaction) error {
+			fetchedNodeIDs, err := ops.FetchNodeIDs(tx.Nodes())
+
+			nodeIDs = append(nodeIDs, fetchedNodeIDs...)
+			return err
+		}); err != nil {
+			api.WriteErrorResponse(
+				request.Context(),
+				api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("%s: %s", "error fetching all nodes", err.Error()), request),
+				response,
+			)
+		}
+
+		if err := s.Graph.BatchOperation(request.Context(), func(batch graph.Batch) error {
+			for _, nodeId := range nodeIDs {
+				if err := batch.DeleteNode(nodeId); err != nil {
+					return err
+				}
+			}
+			return nil
+		}); err != nil {
+			api.WriteErrorResponse(
+				request.Context(),
+				api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("%s: %s", "error deleting all nodes", err.Error()), request),
+				response,
+			)
+		}
+
 	} else if payload.HighValueSelectors {
-		// todo: is this the correct way to check for non-existence
 		if payload.AssetGroupId == 0 {
 			api.WriteErrorResponse(
 				request.Context(),
