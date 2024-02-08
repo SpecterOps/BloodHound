@@ -23,6 +23,7 @@ import {
     FormGroup,
     FormHelperText,
     Typography,
+    useTheme,
 } from '@mui/material';
 import { ContentPage, apiClient } from 'bh-shared-ui';
 import { useState } from 'react';
@@ -30,6 +31,8 @@ import ConfirmationDialog from './ConfirmationDialog';
 import { useMutation } from 'react-query';
 import { useSelector } from 'react-redux';
 import { selectTierZeroAssetGroupId } from 'src/ducks/assetgroups/reducer';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faCircleXmark, faCircleExclamation } from '@fortawesome/free-solid-svg-icons';
 
 type DataTypes = {
     collectedGraphData: boolean;
@@ -38,7 +41,9 @@ type DataTypes = {
     dataQualityHistory: boolean;
 };
 
-const useDBManagement = (state: DataTypes) => {
+const useDatabaseManagement = (state: DataTypes) => {
+    const [showSuccessMessage, setShowSuccessMessage] = useState(false);
+
     const tierZeroAssetGroupId = useSelector(selectTierZeroAssetGroupId);
 
     const mutation = useMutation({
@@ -51,10 +56,12 @@ const useDBManagement = (state: DataTypes) => {
         onError: () => {
             // TODO:
             // show UI message that data deletion failed
+            setShowSuccessMessage(false);
         },
         onSuccess: () => {
             // TODO:
             // show UI message that data deletion is happening
+            setShowSuccessMessage(true);
         },
     });
 
@@ -62,10 +69,12 @@ const useDBManagement = (state: DataTypes) => {
         mutation.mutate({ deleteThisData: state, assetGroupId: tierZeroAssetGroupId });
     };
 
-    return handleDelete;
+    return { handleDelete, showSuccessMessage };
 };
 
 const DatabaseManagement = () => {
+    const theme = useTheme();
+
     const [state, setState] = useState<DataTypes>({
         collectedGraphData: false,
         highValueSelectors: false,
@@ -98,7 +107,7 @@ const DatabaseManagement = () => {
         setOpen(false);
     };
 
-    const handleDelete = useDBManagement(state);
+    const { handleDelete, showSuccessMessage } = useDatabaseManagement(state);
 
     const { collectedGraphData, highValueSelectors, fileIngestHistory, dataQualityHistory } = state;
 
@@ -114,8 +123,26 @@ const DatabaseManagement = () => {
 
                 <Box display='flex' flexDirection='column' alignItems='start'>
                     <FormControl variant='standard' sx={{ paddingBlock: 2 }} error={error}>
-                        {error ? <FormHelperText>Please make a selection</FormHelperText> : null}
-                        <FormGroup>
+                        {error ? (
+                            <Box color={theme.palette.error.main} display='flex' alignItems='center' gap='0.3rem'>
+                                <FontAwesomeIcon icon={faCircleXmark} />
+                                <FormHelperText sx={{ marginTop: '1.5px', color: theme.palette.error.main }}>
+                                    Please make a selection.
+                                </FormHelperText>
+                            </Box>
+                        ) : null}
+
+                        {showSuccessMessage ? (
+                            <Box color={theme.palette.info.main} display='flex' alignItems='center' gap='0.3rem'>
+                                <FontAwesomeIcon icon={faCircleExclamation} />
+                                <FormHelperText sx={{ marginTop: '1.5px', color: theme.palette.info.main }}>
+                                    Deletion of the data is under way. Depending on data volume, this may take some time
+                                    to complete.
+                                </FormHelperText>
+                            </Box>
+                        ) : null}
+
+                        <FormGroup sx={{ paddingTop: 1 }}>
                             <FormControlLabel
                                 label='Collected graph data (all nodes and edges)'
                                 control={
