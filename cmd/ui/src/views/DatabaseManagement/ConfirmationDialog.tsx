@@ -15,7 +15,11 @@ import { FC, useState } from 'react';
 
 const confirmationText = 'Please delete my data';
 
-const ConfirmationDialog: FC<{ open: boolean; handleClose: () => void }> = ({ open, handleClose }) => {
+const ConfirmationDialog: FC<{ open: boolean; handleClose: () => void; handleDelete: () => void }> = ({
+    open,
+    handleClose,
+    handleDelete,
+}) => {
     const theme = useTheme();
 
     const [input, setInput] = useState('');
@@ -25,11 +29,13 @@ const ConfirmationDialog: FC<{ open: boolean; handleClose: () => void }> = ({ op
         if (input !== confirmationText) {
             setError(true);
         } else {
+            // resets local state
             setError(false);
             setInput('');
-            handleClose();
 
-            // TODO: submit to api
+            // handle events
+            handleClose();
+            handleDelete();
         }
     };
 

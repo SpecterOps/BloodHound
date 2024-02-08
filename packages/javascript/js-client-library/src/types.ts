@@ -252,3 +252,11 @@ export interface CreateUserQueryRequest {
     name: string;
     query: string;
 }
+
+export interface DatabaseManagementRequest {
+    collectedGraphData: boolean;
+    highValueSelectors: boolean;
+    fileIngestHistory: boolean;
+    dataQualityHistory: boolean;
+    assetGroupId: number;
+}

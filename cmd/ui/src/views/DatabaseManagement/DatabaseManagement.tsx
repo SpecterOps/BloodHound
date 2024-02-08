@@ -24,12 +24,49 @@ import {
     FormHelperText,
     Typography,
 } from '@mui/material';
-import { ContentPage } from 'bh-shared-ui';
+import { ContentPage, apiClient } from 'bh-shared-ui';
 import { useState } from 'react';
 import ConfirmationDialog from './ConfirmationDialog';
+import { useMutation } from 'react-query';
+import { useSelector } from 'react-redux';
+import { selectTierZeroAssetGroupId } from 'src/ducks/assetgroups/reducer';
+
+type DataTypes = {
+    collectedGraphData: boolean;
+    highValueSelectors: boolean;
+    fileIngestHistory: boolean;
+    dataQualityHistory: boolean;
+};
+
+const useDBManagement = (state: DataTypes) => {
+    const tierZeroAssetGroupId = useSelector(selectTierZeroAssetGroupId);
+
+    const mutation = useMutation({
+        mutationFn: async ({ deleteThisData, assetGroupId }: { deleteThisData: DataTypes; assetGroupId: number }) => {
+            return apiClient.databaseManagement({
+                ...deleteThisData,
+                assetGroupId,
+            });
+        },
+        onError: () => {
+            // TODO:
+            // show UI message that data deletion failed
+        },
+        onSuccess: () => {
+            // TODO:
+            // show UI message that data deletion is happening
+        },
+    });
+
+    const handleDelete = () => {
+        mutation.mutate({ deleteThisData: state, assetGroupId: tierZeroAssetGroupId });
+    };
+
+    return handleDelete;
+};
 
 const DatabaseManagement = () => {
-    const [checked, setChecked] = useState({
+    const [state, setState] = useState<DataTypes>({
         collectedGraphData: false,
         highValueSelectors: false,
         fileIngestHistory: false,
@@ -39,29 +76,31 @@ const DatabaseManagement = () => {
     const [error, setError] = useState(false);
     const [open, setOpen] = useState(false);
 
-    const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        setChecked({
-            ...checked,
+    const handleCheckbox = (event: React.ChangeEvent<HTMLInputElement>) => {
+        setState({
+            ...state,
             [event.target.name]: event.target.checked,
         });
     };
 
-    const handleProceed = () => {
-        // if nothing is checked, display error
-        if (Object.values(checked).filter(Boolean).length === 0) {
+    const handleProceedToDialog = () => {
+        // if no checkboxes have been checked, display error
+        if (Object.values(state).filter(Boolean).length === 0) {
             setError(true);
         } else {
-            // clear out error on succesful submission
+            // clear out any potential error state from previous submission when at least one checkbox has been checked
             setError(false);
             setOpen(true);
         }
     };
 
-    const handleClose = () => {
+    const handleCloseDialog = () => {
         setOpen(false);
     };
 
-    const { collectedGraphData, highValueSelectors, fileIngestHistory, dataQualityHistory } = checked;
+    const handleDelete = useDBManagement(state);
+
+    const { collectedGraphData, highValueSelectors, fileIngestHistory, dataQualityHistory } = state;
 
     return (
         <ContentPage title='Clear BloodHound data'>
@@ -82,7 +121,7 @@ const DatabaseManagement = () => {
                                 control={
                                     <Checkbox
                                         checked={collectedGraphData}
-                                        onChange={handleChange}
+                                        onChange={handleCheckbox}
                                         name='collectedGraphData'
                                     />
                                 }
@@ -92,7 +131,7 @@ const DatabaseManagement = () => {
                                 control={
                                     <Checkbox
                                         checked={highValueSelectors}
-                                        onChange={handleChange}
+                                        onChange={handleCheckbox}
                                         name='highValueSelectors'
                                     />
                                 }
@@ -102,7 +141,7 @@ const DatabaseManagement = () => {
                                 control={
                                     <Checkbox
                                         checked={fileIngestHistory}
-                                        onChange={handleChange}
+                                        onChange={handleCheckbox}
                                         name='fileIngestHistory'
                                     />
                                 }
@@ -112,7 +151,7 @@ const DatabaseManagement = () => {
                                 control={
                                     <Checkbox
                                         checked={dataQualityHistory}
-                                        onChange={handleChange}
+                                        onChange={handleCheckbox}
                                         name='dataQualityHistory'
                                     />
                                 }
@@ -125,13 +164,13 @@ const DatabaseManagement = () => {
                         variant='contained'
                         disableElevation
                         sx={{ width: '150px' }}
-                        onClick={handleProceed}>
+                        onClick={handleProceedToDialog}>
                         Proceed
                     </Button>
                 </Box>
             </div>
 
-            <ConfirmationDialog open={open} handleClose={handleClose} />
+            <ConfirmationDialog open={open} handleClose={handleCloseDialog} handleDelete={handleDelete} />
         </ContentPage>
     );
 };
