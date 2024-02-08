@@ -16,7 +16,6 @@
 
 import { AssetGroupMemberParams } from 'js-client-library/dist/types';
 import { FC, useState } from 'react';
-import { AzureNodeKind, ActiveDirectoryNodeKind } from '../../graphSchema';
 import {
     Box,
     Button,
@@ -33,6 +32,8 @@ import {
 import makeStyles from '@mui/styles/makeStyles';
 import { Theme } from '@mui/material/styles';
 import NodeIcon from '../NodeIcon';
+import { UseQueryResult } from 'react-query';
+import { AssetGroupMembersCountResponse } from 'js-client-library';
 
 export const FILTERABLE_PARAMS: Array<keyof Pick<AssetGroupMemberParams, 'primary_kind' | 'custom_member'>> = [
     'primary_kind',
@@ -64,10 +65,10 @@ const useStyles = makeStyles((theme: Theme) => ({
 interface Props {
     filterParams: AssetGroupMemberParams;
     handleFilterChange: (key: (typeof FILTERABLE_PARAMS)[number], value: string) => void;
-    availableNodeKinds: Array<ActiveDirectoryNodeKind | AzureNodeKind>;
+    memberCount: UseQueryResult<AssetGroupMembersCountResponse, unknown>;
 }
 
-const AssetGroupFilters: FC<Props> = ({ filterParams, handleFilterChange, availableNodeKinds }) => {
+const AssetGroupFilters: FC<Props> = ({ filterParams, handleFilterChange, memberCount }) => {
     const [displayFilters, setDisplayFilters] = useState(false);
 
     const classes = useStyles();
@@ -113,7 +114,7 @@ const AssetGroupFilters: FC<Props> = ({ filterParams, handleFilterChange, availa
                                 <MenuItem value=''>
                                     <em>None</em>
                                 </MenuItem>
-                                {availableNodeKinds.map((value) => {
+                                {Object.keys(memberCount?.data?.data?.counts ?? {}).map((value) => {
                                     return (
                                         <MenuItem value={`eq:${value}`} key={value}>
                                             <NodeIcon nodeType={value} />

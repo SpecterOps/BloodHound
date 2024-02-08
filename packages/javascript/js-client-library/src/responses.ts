@@ -97,6 +97,8 @@ export type AssetGroupResponse = BasicResponse<{ asset_groups: AssetGroup[] }>;
 
 export type AssetGroupMembersResponse = PaginatedResponse<{ members: AssetGroupMember[] }>;
 
+export type AssetGroupMembersCountResponse = BasicResponse<{ total_count: number, counts: Record<AssetGroupMember['primary_kind'], number> }>
+
 export type SavedQuery = {
     id: number;
     name: string;
