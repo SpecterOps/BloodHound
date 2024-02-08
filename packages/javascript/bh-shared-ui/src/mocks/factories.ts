@@ -16,7 +16,7 @@
 
 import { AssetGroup, AssetGroupMember, AssetGroupMemberParams } from 'js-client-library';
 import { SearchResults } from '../hooks';
-import { ActiveDirectoryNodeKind, AzureNodeKind } from '..';
+import { ActiveDirectoryNodeKind, AzureNodeKind } from '../graphSchema';
 
 export const createMockAssetGroupMembers = (): { members: AssetGroupMember[] } => {
     return {

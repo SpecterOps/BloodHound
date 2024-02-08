@@ -20,7 +20,7 @@ import AssetGroupFilters, { FILTERABLE_PARAMS } from './AssetGroupFilters';
 import userEvent from '@testing-library/user-event';
 import { Screen, waitFor } from '@testing-library/react';
 import { AssetGroupMemberParams } from 'js-client-library';
-import { ActiveDirectoryNodeKind, AzureNodeKind } from '../..';
+import { ActiveDirectoryNodeKind, AzureNodeKind } from '../../graphSchema';
 
 const filterParams = createMockAssetGroupMemberParams();
 const availableNodeKinds = createMockAvailableNodeKinds();
