@@ -39,9 +39,17 @@ func PostADCSESC3(ctx context.Context, tx graph.Transaction, outC chan<- analysi
 		return nil
 	} else if collected, err := eca2.Properties.Get(ad.EnrollmentAgentRestrictionsCollected.String()).Bool(); err != nil {
 		return fmt.Errorf("error getting enrollmentagentcollected for eca2 %d: %w", eca2.ID, err)
-	} else if hasRestrictions, err := eca2.Properties.Get(ad.HasEnrollmentAgentRestrictions.String()).Bool(); err != nil {
-		return fmt.Errorf("error getting hasenrollmentagentrestrictions for ca %d: %w", eca2.ID, err)
 	} else {
+		// Assuming no enrollement agent restrictions if not collected
+		eARestrictions := false
+		if collected {
+			if hasRestrictions, err := eca2.Properties.Get(ad.HasEnrollmentAgentRestrictions.String()).Bool(); err != nil {
+				return fmt.Errorf("error getting hasenrollmentagentrestrictions for ca %d: %w", eca2.ID, err)
+			} else {
+				eARestrictions := hasRestrictions
+			}
+		}
+
 		for _, certTemplateTwo := range publishedCertTemplates {
 			if !isEndCertTemplateValidESC3(certTemplateTwo) {
 				continue
@@ -67,7 +75,7 @@ func PostADCSESC3(ctx context.Context, tx graph.Transaction, outC chan<- analysi
 						log.Errorf("error getting cas for cert template %d: %v", certTemplateOne.ID, err)
 					} else if publishedECAs.Len() == 0 {
 						continue
-					} else if collected && hasRestrictions {
+					} else if eARestrictions {
 						if delegatedAgents, err := fetchFirstDegreeNodes(tx, certTemplateTwo, ad.DelegatedEnrollmentAgent); err != nil {
 							log.Errorf("error getting delegated agents for cert template %d: %v", certTemplateTwo.ID, err)
 						} else {

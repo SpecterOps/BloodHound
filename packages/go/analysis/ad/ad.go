@@ -1072,13 +1072,15 @@ func GetADCSESC3EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 
 				if collected, err := eca2.Properties.Get(ad.EnrollmentAgentRestrictionsCollected.String()).Bool(); err != nil {
 					log.Errorf("error getting enrollmentagentcollected for eca2 %d: %v", eca2.ID, err)
-				} else if hasRestrictions, err := eca2.Properties.Get(ad.HasEnrollmentAgentRestrictions.String()).Bool(); err != nil {
-					log.Errorf("error getting hasenrollmentagentrestrictions for ca %d: %v", eca2.ID, err)
-				} else if collected && hasRestrictions {
-					if p6, err := getDelegatedEnrollmentAgentPath(ctx, startNode, ct2, db); err != nil {
-						log.Infof("Error getting p6 for composition: %v", err)
-					} else {
-						paths.AddPathSet(p6)
+				} else if collected {
+					if hasRestrictions, err := eca2.Properties.Get(ad.HasEnrollmentAgentRestrictions.String()).Bool(); err != nil {
+						log.Errorf("error getting hasenrollmentagentrestrictions for ca %d: %v", eca2.ID, err)
+					} else if hasRestrictions {
+						if p6, err := getDelegatedEnrollmentAgentPath(ctx, startNode, ct2, db); err != nil {
+							log.Infof("Error getting p6 for composition: %v", err)
+						} else {
+							paths.AddPathSet(p6)
+						}
 					}
 				}
 			}
