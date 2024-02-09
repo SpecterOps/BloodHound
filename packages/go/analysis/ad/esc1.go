@@ -18,11 +18,15 @@ package ad
 
 import (
 	"context"
+	"sync"
 
 	"github.com/specterops/bloodhound/analysis"
 	"github.com/specterops/bloodhound/analysis/impact"
 	"github.com/specterops/bloodhound/dawgs/cardinality"
 	"github.com/specterops/bloodhound/dawgs/graph"
+	"github.com/specterops/bloodhound/dawgs/ops"
+	"github.com/specterops/bloodhound/dawgs/query"
+	"github.com/specterops/bloodhound/dawgs/traversal"
 	"github.com/specterops/bloodhound/dawgs/util/channels"
 	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/log"
@@ -77,5 +81,174 @@ func isCertTemplateValidForEsc1(ct *graph.Node) (bool, error) {
 		return false, nil
 	} else {
 		return true, nil
+	}
+}
+
+func ADCSESC1Path1Pattern(domainID graph.ID) traversal.PatternContinuation {
+	return traversal.NewPattern().OutboundWithDepth(0, 0, query.And(
+		query.Kind(query.Relationship(), ad.MemberOf),
+		query.Kind(query.End(), ad.Group),
+	)).
+		Outbound(query.And(
+			query.KindIn(query.Relationship(), ad.GenericAll, ad.Enroll, ad.AllExtendedRights),
+			query.Kind(query.End(), ad.CertTemplate),
+			query.Or(
+				query.And(
+					query.Equals(query.EndProperty(ad.RequiresManagerApproval.String()), false),
+					query.GreaterThan(query.EndProperty(ad.SchemaVersion.String()), 1),
+					query.Equals(query.EndProperty(ad.AuthorizedSignatures.String()), 0),
+					query.Equals(query.EndProperty(ad.AuthenticationEnabled.String()), true),
+					query.Equals(query.EndProperty(ad.EnrolleeSuppliesSubject.String()), true),
+				),
+				query.And(
+					query.Equals(query.EndProperty(ad.RequiresManagerApproval.String()), false),
+					query.Equals(query.EndProperty(ad.SchemaVersion.String()), 1),
+					query.Equals(query.EndProperty(ad.AuthenticationEnabled.String()), true),
+					query.Equals(query.EndProperty(ad.EnrolleeSuppliesSubject.String()), true),
+				),
+			),
+		)).
+		Outbound(query.And(
+			query.KindIn(query.Relationship(), ad.PublishedTo, ad.IssuedSignedBy),
+			query.Kind(query.End(), ad.EnterpriseCA),
+		)).
+		Outbound(query.And(
+			query.KindIn(query.Relationship(), ad.IssuedSignedBy, ad.EnterpriseCAFor),
+			query.Kind(query.End(), ad.RootCA),
+		)).
+		Outbound(query.And(
+			query.KindIn(query.Relationship(), ad.RootCAFor),
+			query.Equals(query.EndID(), domainID),
+		))
+}
+
+func ADCSESC1Path2Pattern(domainID graph.ID, enterpriseCAs cardinality.Duplex[uint32]) traversal.PatternContinuation {
+	return traversal.NewPattern().OutboundWithDepth(0, 0, query.And(
+		query.Kind(query.Relationship(), ad.MemberOf),
+		query.Kind(query.End(), ad.Group),
+	)).
+		Outbound(query.And(
+			query.KindIn(query.Relationship(), ad.Enroll),
+			query.InIDs(query.EndID(), cardinality.DuplexToGraphIDs(enterpriseCAs)...),
+		)).
+		Outbound(query.And(
+			query.KindIn(query.Relationship(), ad.TrustedForNTAuth),
+			query.Kind(query.End(), ad.NTAuthStore),
+		)).
+		Outbound(query.And(
+			query.KindIn(query.Relationship(), ad.NTAuthStoreFor),
+			query.Equals(query.EndID(), domainID),
+		))
+}
+
+func GetADCSESC1EdgeComposition(ctx context.Context, db graph.Database, edge *graph.Relationship) (graph.PathSet, error) {
+	var (
+		startNode *graph.Node
+
+		traversalInst      = traversal.New(db, analysis.MaximumDatabaseParallelWorkers)
+		paths              = graph.PathSet{}
+		candidateSegments  = map[graph.ID][]*graph.PathSegment{}
+		path1EnterpriseCAs = cardinality.NewBitmap32()
+		path2EnterpriseCAs = cardinality.NewBitmap32()
+		lock               = &sync.Mutex{}
+	)
+
+	if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
+		if node, err := ops.FetchNode(tx, edge.StartID); err != nil {
+			return err
+		} else {
+			startNode = node
+			return nil
+		}
+	}); err != nil {
+		return nil, err
+	}
+
+	if err := traversalInst.BreadthFirst(ctx, traversal.Plan{
+		Root: startNode,
+		Driver: ADCSESC1Path1Pattern(edge.EndID).Do(func(terminal *graph.PathSegment) error {
+			// Find the CA and track it before stuffing this path into the candidates
+			enterpriseCANode := terminal.Search(func(nextSegment *graph.PathSegment) bool {
+				return nextSegment.Node.Kinds.ContainsOneOf(ad.EnterpriseCA)
+			})
+
+			lock.Lock()
+			candidateSegments[enterpriseCANode.ID] = append(candidateSegments[enterpriseCANode.ID], terminal)
+			path1EnterpriseCAs.Add(enterpriseCANode.ID.Uint32())
+			lock.Unlock()
+
+			return nil
+		}),
+	}); err != nil {
+		return nil, err
+	}
+
+	if err := traversalInst.BreadthFirst(ctx, traversal.Plan{
+		Root: startNode,
+		Driver: ADCSESC1Path2Pattern(edge.EndID, path1EnterpriseCAs).Do(func(terminal *graph.PathSegment) error {
+			// Find the CA and track it before stuffing this path into the candidates
+			enterpriseCANode := terminal.Search(func(nextSegment *graph.PathSegment) bool {
+				return nextSegment.Node.Kinds.ContainsOneOf(ad.EnterpriseCA)
+			})
+
+			lock.Lock()
+			candidateSegments[enterpriseCANode.ID] = append(candidateSegments[enterpriseCANode.ID], terminal)
+			path2EnterpriseCAs.Add(enterpriseCANode.ID.Uint32())
+			lock.Unlock()
+
+			return nil
+		}),
+	}); err != nil {
+		return nil, err
+	}
+
+	// Intersect the CAs and take only those seen in both paths
+	path1EnterpriseCAs.And(path2EnterpriseCAs)
+
+	// Render paths from the segments
+	path1EnterpriseCAs.Each(func(value uint32) bool {
+		for _, segment := range candidateSegments[graph.ID(value)] {
+			paths.AddPath(segment.Path())
+		}
+
+		return true
+	})
+
+	return paths, nil
+}
+
+func getGoldenCertEdgeComposition(tx graph.Transaction, edge *graph.Relationship) (graph.PathSet, error) {
+	finalPaths := graph.NewPathSet()
+	//Grab the start node (computer) as well as the target domain node
+	if startNode, targetDomainNode, err := ops.FetchRelationshipNodes(tx, edge); err != nil {
+		return finalPaths, err
+	} else {
+		//Find hosted enterprise CA
+		if ecaPaths, err := ops.FetchPathSet(tx.Relationships().Filter(query.And(
+			query.Equals(query.StartID(), startNode.ID),
+			query.KindIn(query.End(), ad.EnterpriseCA),
+			query.KindIn(query.Relationship(), ad.HostsCAService),
+		))); err != nil {
+			log.Errorf("error getting hostscaservice edge to enterprise ca for computer %d : %v", startNode.ID, err)
+		} else {
+			for _, ecaPath := range ecaPaths {
+				eca := ecaPath.Terminal()
+				if chainToRootCAPaths, err := FetchEnterpriseCAsCertChainPathToDomain(tx, eca, targetDomainNode); err != nil {
+					log.Errorf("error getting eca %d path to domain %d: %v", eca.ID, targetDomainNode.ID, err)
+				} else if chainToRootCAPaths.Len() == 0 {
+					continue
+				} else if trustedForAuthPaths, err := FetchEnterpriseCAsTrustedForAuthPathToDomain(tx, eca, targetDomainNode); err != nil {
+					log.Errorf("error getting eca %d path to domain %d via trusted for auth: %v", eca.ID, targetDomainNode.ID, err)
+				} else if trustedForAuthPaths.Len() == 0 {
+					continue
+				} else {
+					finalPaths.AddPath(ecaPath)
+					finalPaths.AddPathSet(chainToRootCAPaths)
+					finalPaths.AddPathSet(trustedForAuthPaths)
+				}
+			}
+		}
+
+		return finalPaths, nil
 	}
 }
