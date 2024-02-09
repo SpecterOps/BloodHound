@@ -12,7 +12,7 @@ data collectors.
 
 BloodHound uses graph theory to reveal the hidden and often unintended relationships within an Active Directory or Azure
 environment. Attackers can use BloodHound to easily identify highly complex attack paths that would otherwise be
-impossible to quickly identify. Defenders can use BloodHound to identify and eliminate those same attack paths. Both blue and red
+impossible to identify quickly. Defenders can use BloodHound to identify and eliminate those same attack paths. Both blue and red
 teams can use BloodHound to easily gain a deeper understanding of privilege relationships in an Active Directory or Azure
 environment.
 
@@ -49,9 +49,9 @@ docker info
 # Attempt to stop Neo4j Service if running (on Windows)
 Stop-Service "Neo4j" -ErrorAction SilentlyContinue
 ```
-- A succesfull installation of BloodHound CE would look like below:
+- A successful installation of BloodHound CE would look like the below:
 
-https://github.com/SpecterOps/BloodHound/raw/main/cmd/ui/public/img/BloodHoundCE-Deployment-Experience-Windows.mp4
+https://github.com/SpecterOps/BloodHound/assets/12970156/ea9dc042-1866-4ccb-9839-933140cc38b9
 
 ## Useful Links
 
@@ -70,7 +70,7 @@ Please check out the [Contact page](https://github.com/SpecterOps/BloodHound/wik
 ## Licensing
 
 ```
-Copyright 2023 Specter Ops, Inc.
+Copyright 2024 Specter Ops, Inc.
 
 Licensed under the Apache License, Version 2.0
 you may not use this file except in compliance with the License.
