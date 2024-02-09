@@ -92,7 +92,7 @@ const DatabaseManagement = () => {
         });
     };
 
-    const handleProceedToDialog = () => {
+    const handleOpenDialog = () => {
         // if no checkboxes have been checked, display error
         if (Object.values(state).filter(Boolean).length === 0) {
             setError(true);
@@ -191,7 +191,7 @@ const DatabaseManagement = () => {
                         variant='contained'
                         disableElevation
                         sx={{ width: '150px' }}
-                        onClick={handleProceedToDialog}>
+                        onClick={handleOpenDialog}>
                         Proceed
                     </Button>
                 </Box>
