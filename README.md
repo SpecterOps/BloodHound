@@ -51,9 +51,7 @@ Stop-Service "Neo4j" -ErrorAction SilentlyContinue
 ```
 - A succesfull installation of BloodHound CE would look like below:
 
-<p align="center">
-    <video src="/cmd/ui/public/img/BloodHoundCE-Deployment-Experience-Windows.mp4" width="600" controls></video>
-</p>
+https://github.com/SpecterOps/BloodHound/raw/main/cmd/ui/public/img/BloodHoundCE-Deployment-Experience-Windows.mp4
 
 ## Useful Links
 
