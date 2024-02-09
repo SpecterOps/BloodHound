@@ -14,16 +14,13 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-//go:generate go run go.uber.org/mock/mockgen -copyright_file=../../../../../LICENSE.header -destination=./mocks/mock.go -package=mocks . Tasker
+//go:generate go run go.uber.org/mock/mockgen -copyright_file=../../../../../LICENSE.header -destination=./mocks/tasker.go -package=mocks . Tasker
 package datapipe
 
 import (
 	"context"
 	"errors"
 	"github.com/specterops/bloodhound/src/bootstrap"
-	"os"
-	"path/filepath"
-	"sync"
 	"sync/atomic"
 	"time"
 
@@ -47,15 +44,15 @@ type Tasker interface {
 }
 
 type Daemon struct {
-	db                     database.Database
-	graphdb                graph.Database
-	cache                  cache.Cache
-	cfg                    config.Configuration
-	analysisRequested      *atomic.Bool
-	tickInterval           time.Duration
-	status                 model.DatapipeStatusWrapper
-	ctx                    context.Context
-	clearOrphanedFilesLock *sync.Mutex
+	db                  database.Database
+	graphdb             graph.Database
+	cache               cache.Cache
+	cfg                 config.Configuration
+	analysisRequested   *atomic.Bool
+	tickInterval        time.Duration
+	status              model.DatapipeStatusWrapper
+	ctx                 context.Context
+	orphanedFileSweeper *OrphanFileSweeper
 }
 
 func (s *Daemon) Name() string {
@@ -64,14 +61,14 @@ func (s *Daemon) Name() string {
 
 func NewDaemon(ctx context.Context, cfg config.Configuration, connections bootstrap.DatabaseConnections[*database.BloodhoundDB, *graph.DatabaseSwitch], cache cache.Cache, tickInterval time.Duration) *Daemon {
 	return &Daemon{
-		db:                     connections.RDMS,
-		graphdb:                connections.Graph,
-		cache:                  cache,
-		cfg:                    cfg,
-		ctx:                    ctx,
-		analysisRequested:      &atomic.Bool{},
-		clearOrphanedFilesLock: &sync.Mutex{},
-		tickInterval:           tickInterval,
+		db:                  connections.RDMS,
+		graphdb:             connections.Graph,
+		cache:               cache,
+		cfg:                 cfg,
+		ctx:                 ctx,
+		analysisRequested:   &atomic.Bool{},
+		orphanedFileSweeper: NewOrphanFileSweeper(NewOSFileOperations(), cfg.TempDirectory()),
+		tickInterval:        tickInterval,
 		status: model.DatapipeStatusWrapper{
 			Status:    model.DatapipeStatusIdle,
 			UpdatedAt: time.Now().UTC(),
@@ -105,7 +102,7 @@ func (s *Daemon) analyze() {
 	}
 
 	s.status.Update(model.DatapipeStatusAnalyzing, false)
-	log.LogAndMeasure(log.LevelInfo, "Graph Analysis")()
+	defer log.LogAndMeasure(log.LevelInfo, "Graph Analysis")()
 
 	if err := RunAnalysisOperations(s.ctx, s.db, s.graphdb, s.cfg); err != nil {
 		if errors.Is(err, ErrAnalysisFailed) {
@@ -190,44 +187,15 @@ func (s *Daemon) Stop(ctx context.Context) error {
 }
 
 func (s *Daemon) clearOrphanedData() {
-	// Only allow one background thread to run for clearing orphaned data
-	if !s.clearOrphanedFilesLock.TryLock() {
-		return
-	}
-
-	// Release the lock once finished
-	defer s.clearOrphanedFilesLock.Unlock()
-
-	relativeTmpDir := s.cfg.TempDirectory()
-
-	if orphanFiles, err := os.ReadDir(s.cfg.TempDirectory()); err != nil {
-		log.Errorf("Failed fetching available files: %v", err)
-	} else if ingestTasks, err := s.db.GetAllIngestTasks(); err != nil {
-		log.Errorf("Failed fetching available ingest tasks: %v", err)
+	if ingestTasks, err := s.db.GetAllIngestTasks(); err != nil {
+		log.Errorf("Failed fetching available file upload ingest tasks: %v", err)
 	} else {
-		for _, ingestTask := range ingestTasks {
-			for idx, orphanFile := range orphanFiles {
-				if ingestTask.FileName == filepath.Join(relativeTmpDir, orphanFile.Name()) {
-					orphanFiles = append(orphanFiles[:idx], orphanFiles[idx+1:]...)
-				}
-			}
+		expectedFiles := make([]string, len(ingestTasks))
+
+		for idx, ingestTask := range ingestTasks {
+			expectedFiles[idx] = ingestTask.FileName
 		}
 
-		for _, orphanFile := range orphanFiles {
-			fullPath := filepath.Join(relativeTmpDir, orphanFile.Name())
-
-			if err := os.RemoveAll(fullPath); err != nil {
-				log.Errorf("Failed removing file: %s", fullPath)
-			}
-
-			// Check to see if we need to exit after every file deletion
-			if s.ctx.Err() != nil {
-				return
-			}
-		}
-
-		if len(orphanFiles) > 0 {
-			log.Infof("Finished removing %d orphaned ingest files", len(orphanFiles))
-		}
+		go s.orphanedFileSweeper.Clear(s.ctx, expectedFiles)
 	}
 }
