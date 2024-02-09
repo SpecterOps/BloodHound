@@ -24,13 +24,32 @@ original BloodHound was created by [@_wald0](https://www.twitter.com/_wald0), [@
 
 The easiest way to get up and running is to use our pre-configured Docker Compose setup. The following steps will get BloodHound CE up and running with the least amount of effort.
   
-  1. Install Docker Compose. This should be included with the [Docker Desktop](https://www.docker.com/products/docker-desktop/) installation
+  1. Install Docker Compose and ensure Docker is running. This should be included with the [Docker Desktop](https://www.docker.com/products/docker-desktop/) installation
   2. Run `curl -L https://ghst.ly/getbhce | docker compose -f - up`
   3. Locate the randomly generated password in the terminal output of Docker Compose
   4. In a browser, navigate to `http://localhost:8080/ui/login`. Login with a username of `admin` and the randomly generated password from the logs
 
 NOTE: going forward, the default `docker-compose.yml` example binds only to localhost (127.0.0.1). If you want to access BloodHound outside of localhost,
 you'll need to follow the instructions in [examples/docker-compose/README.md](examples/docker-compose/README.md) to configure the host binding for the container.
+
+## Installation Error Handling
+
+<i> Affects: Windows Users </i>
+
+- If you encounter a "failed to get console mode for stdin: The handle is invalid." ensure Docker Desktop (and associated Engine is running). Docker Desktop does not automatically register as a startup entry. <img width="302" alt="image" src="[cmd/ui/public/img/Docker-Engine-Running.png]">
+
+- If you encounter an "Error response from daemon: Ports are not available: exposing port TCP 127.0.0.1:7474 -> 0.0.0.0:0: listen tcp 127.0.0.1:7474: bind: Only one usage of each socket address (protocol/network address/port) is normally permitted." this is normally attributed to the "Neo4J Graph Database - neo4j" service already running on your local system. Please stop or delete the service to continue.
+
+```
+# Verify if Docker Engine is Running
+docker info
+
+# Attempt to stop Neo4j Service if running
+Stop-Service "Neo4j" -ErrorAction SilentlyContinue
+```
+- A succesfull installation of BloodHound CE would look like below:
+
+https://github.com/SpecterOps/BloodHound/tree/main/cmd/ui/public/img/BloodHoundCE-Deployment-Experience-Windows.mp4
 
 ## Useful Links
 
