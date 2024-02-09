@@ -1135,6 +1135,33 @@ func TestADCSESC9b(t *testing.T) {
 			}
 			return nil
 		})
+
+		db.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
+			if results, err := ops.FetchRelationships(tx.Relationships().Filterf(func() graph.Criteria {
+				return query.Kind(query.Relationship(), ad.ADCSESC9b)
+			})); err != nil {
+				t.Fatalf("error fetching esc9b edges in integration test; %v", err)
+			} else {
+				assert.Equal(t, 1, len(results))
+				edge := results[0]
+
+				if edgeComp, err := ad2.GetEdgeCompositionPath(context.Background(), db, edge); err != nil {
+					t.Fatalf("error getting edge composition for esc9: %v", err)
+				} else {
+					nodes := edgeComp.AllNodes().Slice()
+					assert.Contains(t, nodes, harness.ESC9bHarnessECA.Group1)
+					assert.Contains(t, nodes, harness.ESC9bHarnessECA.Domain1)
+					assert.Contains(t, nodes, harness.ESC9bHarnessECA.Computer1)
+					assert.Contains(t, nodes, harness.ESC9bHarnessECA.CertTemplate1)
+					assert.Contains(t, nodes, harness.ESC9bHarnessECA.EnterpriseCA1)
+					assert.Contains(t, nodes, harness.ESC9bHarnessECA.DC1)
+					assert.Contains(t, nodes, harness.ESC9bHarnessECA.NTAuthStore1)
+					assert.Contains(t, nodes, harness.ESC9bHarnessECA.RootCA1)
+				}
+			}
+
+			return nil
+		})
 	})
 }
 
