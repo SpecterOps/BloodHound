@@ -137,6 +137,12 @@ const LinuxAbuse: FC<EdgeInfoProps & { haslaps: boolean }> = ({
                         Cleanup of the added ACL can be performed later on with the same tool:
                     </Typography>
 
+                    <Typography component={'pre'}>
+                        {
+                            "dacledit.py -action 'remove' -rights 'FullControl' -principal 'controlledUser' -target 'targetUser' 'domain'/'controlledUser':'password'"
+                        }
+                    </Typography>
+
                     <Typography variant='body1'> Targeted Kerberoast </Typography>
 
                     <Typography variant='body2'>
@@ -242,6 +248,12 @@ const LinuxAbuse: FC<EdgeInfoProps & { haslaps: boolean }> = ({
                         <Typography variant='body2'>
                             Cleanup of the added ACL can be performed later on with the same tool:
                         </Typography>
+                        <Typography component={'pre'}>
+                            {
+                                "dacledit.py -action 'remove' -rights 'FullControl' -principal 'controlledUser' -target 'targetUser' 'domain'/'controlledUser':'password'"
+                            }
+                        </Typography>
+
                         <Typography variant='body1'> Retrieve LAPS Password </Typography>
                         <Typography variant='body2'>
                             Full control of a computer object is abusable when the computer's local admin account
@@ -335,6 +347,12 @@ const LinuxAbuse: FC<EdgeInfoProps & { haslaps: boolean }> = ({
                         <Typography variant='body2'>
                             Cleanup of the added ACL can be performed later on with the same tool:
                         </Typography>
+                        <Typography component={'pre'}>
+                            {
+                                "dacledit.py -action 'remove' -rights 'FullControl' -principal 'controlledUser' -target 'targetUser' 'domain'/'controlledUser':'password'"
+                            }
+                        </Typography>
+
                         <Typography variant='body1'> Resource-Based Constrained Delegation </Typography>
                         <Typography variant='body2'>
                             First, if an attacker does not control an account with an SPN set, a new attacker-controlled
@@ -408,12 +426,18 @@ const LinuxAbuse: FC<EdgeInfoProps & { haslaps: boolean }> = ({
 
                     <Typography component={'pre'}>
                         {
-                            "dacledit.py -action 'DCSync' -rights 'FullControl' -principal 'controlledUser' -target-dn 'DomainDisinguishedName' 'domain'/'controlledUser':'password'"
+                            "dacledit.py -action 'write' -rights 'DCSync' -principal 'controlledUser' -target-dn 'DomainDisinguishedName' 'domain'/'controlledUser':'password'"
                         }
                     </Typography>
 
                     <Typography variant='body2'>
                         Cleanup of the added ACL can be performed later on with the same tool:
+                    </Typography>
+
+                    <Typography component={'pre'}>
+                        {
+                            "dacledit.py -action 'remove' -rights 'DCSync' -principal 'controlledUser' -target-dn 'DomainDisinguishedName' 'domain'/'controlledUser':'password'"
+                        }
                     </Typography>
 
                     <Typography variant='body1'> DCSync </Typography>
@@ -480,6 +504,12 @@ const LinuxAbuse: FC<EdgeInfoProps & { haslaps: boolean }> = ({
 
                     <Typography variant='body2'>
                         Cleanup of the added ACL can be performed later on with the same tool:
+                    </Typography>
+
+                    <Typography component={'pre'}>
+                        {
+                            "dacledit.py -action 'remove' -rights 'FullControl' -principal 'controlledUser' -target 'targetUser' 'domain'/'controlledUser':'password'"
+                        }
                     </Typography>
 
                     <Typography variant='body2'>
