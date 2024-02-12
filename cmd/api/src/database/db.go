@@ -82,6 +82,7 @@ type Database interface {
 	RawFirst(value any) error
 	Wipe() error
 	Migrate() error
+	CreateAuditLog(auditLog model.AuditLog) error
 	AppendAuditLog(ctx context.Context, entry model.AuditEntry) error
 	ListAuditLogs(before, after time.Time, offset, limit int, order string, filter model.SQLFilter) (model.AuditLogs, int, error)
 	CreateRole(role model.Role) (model.Role, error)

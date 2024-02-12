@@ -47,6 +47,10 @@ func newAuditLog(context context.Context, entry model.AuditEntry, idResolver aut
 		CommitID:        entry.CommitID,
 	}
 
+	if entry.ErrorMsg != "" {
+		auditLog.Fields["error"] = entry.ErrorMsg
+	}
+
 	authContext := bheCtx.AuthCtx
 	if !authContext.Authenticated() {
 		return auditLog, ErrAuthContextInvalid
@@ -65,8 +69,12 @@ func (s *BloodhoundDB) AppendAuditLog(ctx context.Context, entry model.AuditEntr
 	if auditLog, err := newAuditLog(ctx, entry, s.idResolver); err != nil && err != ErrAuthContextInvalid {
 		return fmt.Errorf("audit log append: %w", err)
 	} else {
-		return CheckError(s.db.Create(&auditLog))
+		return s.CreateAuditLog(auditLog)
 	}
+}
+
+func (s *BloodhoundDB) CreateAuditLog(auditLog model.AuditLog) error {
+	return CheckError(s.db.Create(&auditLog))
 }
 
 func (s *BloodhoundDB) ListAuditLogs(before, after time.Time, offset, limit int, order string, filter model.SQLFilter) (model.AuditLogs, int, error) {
@@ -103,6 +111,14 @@ func (s *BloodhoundDB) ListAuditLogs(before, after time.Time, offset, limit int,
 	return auditLogs, int(count), CheckError(result)
 }
 
+func (s *BloodhoundDB) MaybeAuditableTransaction(ctx context.Context, auditDisabled bool, auditEntry model.AuditEntry, f func(tx *gorm.DB) error, opts ...*sql.TxOptions) error {
+	if auditDisabled {
+		return s.db.Transaction(f, opts...)
+	} else {
+		return s.AuditableTransaction(ctx, auditEntry, f, opts...)
+	}
+}
+
 func (s *BloodhoundDB) AuditableTransaction(ctx context.Context, auditEntry model.AuditEntry, f func(tx *gorm.DB) error, opts ...*sql.TxOptions) error {
 	var (
 		commitID, err = uuid.NewV4()
@@ -123,6 +139,7 @@ func (s *BloodhoundDB) AuditableTransaction(ctx context.Context, auditEntry mode
 
 	if err != nil {
 		auditEntry.Status = model.AuditStatusFailure
+		auditEntry.ErrorMsg = err.Error()
 	} else {
 		auditEntry.Status = model.AuditStatusSuccess
 	}

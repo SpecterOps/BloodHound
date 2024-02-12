@@ -1030,13 +1030,10 @@ func FetchGroupSessions(tx graph.Transaction, node *graph.Node, skip, limit int)
 		BranchQuery: func() graph.Criteria {
 			return query.KindIn(query.Relationship(), ad.HasSession, ad.MemberOf)
 		},
-		DescentFilter: func(ctx *ops.TraversalContext, segment *graph.PathSegment) bool {
-			return !(segment.Depth() > 1 && segment.Trunk.Edge.Kind.Is(ad.HasSession))
-		},
 		Skip:  skip,
 		Limit: limit,
 		PathFilter: func(ctx *ops.TraversalContext, segment *graph.PathSegment) bool {
-			return segment.Node.Kinds.ContainsOneOf(ad.Computer)
+			return segment.Edge.Kind.Is(ad.HasSession) && segment.Node.Kinds.ContainsOneOf(ad.Computer)
 		},
 	})
 }
@@ -1048,11 +1045,8 @@ func FetchGroupSessionPaths(tx graph.Transaction, node *graph.Node) (graph.PathS
 		BranchQuery: func() graph.Criteria {
 			return query.KindIn(query.Relationship(), ad.HasSession, ad.MemberOf)
 		},
-		DescentFilter: func(ctx *ops.TraversalContext, segment *graph.PathSegment) bool {
-			return !(segment.Depth() > 1 && segment.Trunk.Edge.Kind.Is(ad.HasSession))
-		},
 		PathFilter: func(ctx *ops.TraversalContext, segment *graph.PathSegment) bool {
-			return segment.Node.Kinds.ContainsOneOf(ad.Computer)
+			return segment.Edge.Kind.Is(ad.HasSession) && segment.Node.Kinds.ContainsOneOf(ad.Computer)
 		},
 	})
 }

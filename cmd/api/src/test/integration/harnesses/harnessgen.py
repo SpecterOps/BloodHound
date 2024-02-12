@@ -156,7 +156,7 @@ for node in j['nodes']:
         nodes[id] = UserNode(name)
     elif 'Group' in name:
         nodes[id] = GroupNode(name)
-    elif 'Computer' in name:
+    elif 'Computer' or 'DC' in name:
         nodes[id] = ComputerNode(name)
     elif 'OU' in name:
         nodes[id] = OUNode(name)

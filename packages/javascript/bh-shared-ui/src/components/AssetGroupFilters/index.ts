@@ -14,20 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import General from './General';
-import WindowsAbuse from './WindowsAbuse';
-import LinuxAbuse from './LinuxAbuse';
-import Opsec from './Opsec';
-import References from './References';
-import Composition from './Composition';
+import AssetGroupFilters from './AssetGroupFilters';
 
-const ADCSESC9b = {
-    general: General,
-    windowsAbuse: WindowsAbuse,
-    linuxAbuse: LinuxAbuse,
-    opsec: Opsec,
-    references: References,
-    composition: Composition,
-};
+export default AssetGroupFilters;
 
-export default ADCSESC9b;

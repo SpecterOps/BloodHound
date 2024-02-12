@@ -18,11 +18,13 @@ package toolapi
 
 import (
 	"context"
+	"net/http"
+	"net/http/pprof"
+	"time"
+
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/src/bootstrap"
 	"github.com/specterops/bloodhound/src/database"
-	"net/http"
-	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -47,7 +49,19 @@ func NewDaemon[DBType database.Database](ctx context.Context, connections bootst
 
 	router.Mount("/metrics", promhttp.Handler())
 
+	// Support normal pprof endpoints for easier consumption with standard tools
+	router.Mount("/debug/pprof/allocs", pprof.Handler("allocs"))
+	router.Mount("/debug/pprof/block", pprof.Handler("block"))
+	router.Mount("/debug/pprof/goroutine", pprof.Handler("goroutine"))
+	router.Mount("/debug/pprof/heap", pprof.Handler("heap"))
+	router.Mount("/debug/pprof/mutex", pprof.Handler("mutex"))
+	router.Mount("/debug/pprof/threadcreate", pprof.Handler("threadcreate"))
+	router.Get("/debug/pprof/profile", pprof.Profile)
+	router.Get("/debug/pprof/trace", pprof.Trace)
+
+	// TODO: remove old trace handler when we can wire up acumen to handle the above pprof endpoints instead
 	router.Get("/trace", tools.NewTraceHandler())
+
 	router.Put("/graph-db/switch/pg", pgMigrator.SwitchPostgreSQL)
 	router.Put("/graph-db/switch/neo4j", pgMigrator.SwitchNeo4j)
 	router.Put("/pg-migration/start", pgMigrator.MigrationStart)
