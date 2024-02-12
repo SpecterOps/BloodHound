@@ -22,3 +22,4 @@ export * from './entityInfoDisplay';
 export * from './passwd';
 export * from './user';
 export * from './icons';
+export * from './permissions';
