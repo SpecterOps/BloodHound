@@ -173,6 +173,20 @@ func (s *SchemaManager) AssertKinds(tx graph.Transaction, kinds graph.Kinds) ([]
 	return kindIDs, nil
 }
 
+func (s *SchemaManager) SetDefaultGraph(tx graph.Transaction, schema graph.Graph) error {
+	// Validate the schema if the graph already exists in the database
+	if definition, err := query.On(tx).SelectGraphByName(schema.Name); err != nil {
+		return err
+	} else {
+		s.graphs[schema.Name] = definition
+		
+		s.defaultGraph = definition
+		s.hasDefaultGraph = true
+	}
+
+	return nil
+}
+
 func (s *SchemaManager) AssertDefaultGraph(tx graph.Transaction, schema graph.Graph) error {
 	if graphInstance, err := s.AssertGraph(tx, schema); err != nil {
 		return err

@@ -1304,6 +1304,21 @@ func (mr *MockDatabaseMockRecorder) RawFirst(arg0 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RawFirst", reflect.TypeOf((*MockDatabase)(nil).RawFirst), arg0)
 }
 
+// RequiresMigration mocks base method.
+func (m *MockDatabase) RequiresMigration() (bool, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "RequiresMigration")
+	ret0, _ := ret[0].(bool)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// RequiresMigration indicates an expected call of RequiresMigration.
+func (mr *MockDatabaseMockRecorder) RequiresMigration() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RequiresMigration", reflect.TypeOf((*MockDatabase)(nil).RequiresMigration))
+}
+
 // SavedQueryBelongsToUser mocks base method.
 func (m *MockDatabase) SavedQueryBelongsToUser(arg0 uuid.UUID, arg1 int) (bool, error) {
 	m.ctrl.T.Helper()
