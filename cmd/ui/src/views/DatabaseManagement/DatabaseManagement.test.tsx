@@ -17,11 +17,23 @@
 import { render, screen } from 'src/test-utils';
 import DatabaseManagement from '.';
 import userEvent from '@testing-library/user-event';
+import { setupServer } from 'msw/node';
+import { rest } from 'msw';
 
 describe('DatabaseManagement', () => {
+    const server = setupServer(
+        rest.post('/api/v2/database-management', (req, res, ctx) => {
+            return res(ctx.status(204));
+        })
+    );
+
     beforeEach(() => {
         render(<DatabaseManagement />);
     });
+
+    beforeAll(() => server.listen());
+    afterEach(() => server.resetHandlers());
+    afterAll(() => server.close());
 
     it('renders', () => {
         const title = screen.getByText(/clear bloodhound data/i);
@@ -61,5 +73,24 @@ describe('DatabaseManagement', () => {
         expect(dialog).not.toBeInTheDocument();
     });
 
-    it('handles posting a mutation', async () => {});
+    it('handles posting a mutation', async () => {
+        const user = userEvent.setup();
+
+        const checkbox = screen.getByRole('checkbox', { name: /collected graph data/i });
+        await user.click(checkbox);
+
+        const proceedButton = screen.getByRole('button', { name: /proceed/i });
+        await user.click(proceedButton);
+
+        const textField = screen.getByRole('textbox');
+        await user.type(textField, 'Please delete my data');
+
+        const confirmButton = screen.getByRole('button', { name: /confirm/i });
+        await user.click(confirmButton);
+
+        const successMessage = screen.getByText(
+            /Deletion of the data is under way. Depending on data volume, this may take some time to complete./i
+        );
+        expect(successMessage).toBeInTheDocument();
+    });
 });

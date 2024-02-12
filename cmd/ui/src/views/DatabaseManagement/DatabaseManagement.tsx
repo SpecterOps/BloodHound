@@ -54,12 +54,10 @@ const useDatabaseManagement = (state: DataTypes) => {
             });
         },
         onError: () => {
-            // TODO:
             // show UI message that data deletion failed
             setShowSuccessMessage(false);
         },
         onSuccess: () => {
-            // TODO:
             // show UI message that data deletion is happening
             setShowSuccessMessage(true);
         },
