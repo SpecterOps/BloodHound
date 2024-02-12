@@ -767,6 +767,20 @@ func (mr *MockDatabaseMockRecorder) SetBatchWriteSize(interval interface{}) *gom
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetBatchWriteSize", reflect.TypeOf((*MockDatabase)(nil).SetBatchWriteSize), interval)
 }
 
+// SetDefaultGraph mocks base method.
+func (m *MockDatabase) SetDefaultGraph(ctx context.Context, graphSchema graph.Graph) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SetDefaultGraph", ctx, graphSchema)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SetDefaultGraph indicates an expected call of SetDefaultGraph.
+func (mr *MockDatabaseMockRecorder) SetDefaultGraph(ctx, graphSchema interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetDefaultGraph", reflect.TypeOf((*MockDatabase)(nil).SetDefaultGraph), ctx, graphSchema)
+}
+
 // SetWriteFlushSize mocks base method.
 func (m *MockDatabase) SetWriteFlushSize(interval int) {
 	m.ctrl.T.Helper()

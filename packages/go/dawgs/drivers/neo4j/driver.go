@@ -135,6 +135,16 @@ func (s *driver) AssertSchema(ctx context.Context, schema graph.Schema) error {
 	return assertSchema(ctx, s, schema)
 }
 
+func (s *driver) SetDefaultGraph(ctx context.Context, schema graph.Graph) error {
+	// Note: Neo4j does not support isolated physical graph namespaces. Namespacing can be emulated with Kinds but will
+	// not be supported for this driver since the fallback behavior is no different from storing all graph data in the
+	// same namespace.
+	//
+	// This is different for the PostgreSQL driver, specifically, since the driver in question supports on-disk
+	// isolation of graph namespaces.
+	return nil
+}
+
 func (s *driver) Run(ctx context.Context, query string, parameters map[string]any) error {
 	return s.WriteTransaction(ctx, func(tx graph.Transaction) error {
 		result := tx.Raw(query, parameters)

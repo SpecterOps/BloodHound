@@ -82,6 +82,7 @@ type Database interface {
 	RawFirst(value any) error
 	Wipe() error
 	Migrate() error
+	RequiresMigration() (bool, error)
 	CreateAuditLog(auditLog model.AuditLog) error
 	AppendAuditLog(ctx context.Context, entry model.AuditEntry) error
 	ListAuditLogs(before, after time.Time, offset, limit int, order string, filter model.SQLFilter) (model.AuditLogs, int, error)
@@ -224,6 +225,10 @@ func (s *BloodhoundDB) Wipe() error {
 
 		return nil
 	})
+}
+
+func (s *BloodhoundDB) RequiresMigration() (bool, error) {
+	return migration.NewMigrator(s.db).RequiresMigration()
 }
 
 func (s *BloodhoundDB) Migrate() error {
