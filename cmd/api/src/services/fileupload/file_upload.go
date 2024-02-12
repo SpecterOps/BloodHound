@@ -41,6 +41,7 @@ type FileUploadData interface {
 	GetFileUploadJob(id int64) (model.FileUploadJob, error)
 	GetAllFileUploadJobs(skip int, limit int, order string, filter model.SQLFilter) ([]model.FileUploadJob, int, error)
 	GetFileUploadJobsWithStatus(status model.JobStatus) ([]model.FileUploadJob, error)
+	DeleteAllFileUploads() error
 }
 
 func ProcessStaleFileUploadJobs(ctx context.Context, db FileUploadData) {

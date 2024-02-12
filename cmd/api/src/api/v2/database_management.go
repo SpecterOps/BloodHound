@@ -91,11 +91,23 @@ func (s Resources) HandleDatabaseManagement(response http.ResponseWriter, reques
 				response,
 			)
 		}
+	} else if payload.FileIngestHistory {
+		if err := s.DB.DeleteAllFileUploads(); err != nil {
+			api.WriteErrorResponse(
+				request.Context(),
+				api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("%s: %s", "there was an error deleting file ingest history", err.Error()), request),
+				response,
+			)
+		}
+	} else if payload.DataQualityHistory {
+		if err := s.DB.DeleteAllDataQuality(); err != nil {
+			api.WriteErrorResponse(
+				request.Context(),
+				api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("%s: %s", "there was an error deleting data quality history", err.Error()), request),
+				response,
+			)
+		}
 	} else {
 		response.WriteHeader(http.StatusNoContent)
 	}
-
-	// else if err != nil {
-	// 	api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
-	// }
 }

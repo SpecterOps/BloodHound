@@ -83,3 +83,9 @@ func (s *BloodhoundDB) GetAllFileUploadJobs(skip int, limit int, order string, f
 		return jobs, int(count), nil
 	}
 }
+
+func (s *BloodhoundDB) DeleteAllFileUploads() error {
+	return CheckError(
+		s.db.Exec("DELETE FROM file_upload_jobs"),
+	)
+}
