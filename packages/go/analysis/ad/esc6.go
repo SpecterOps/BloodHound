@@ -173,7 +173,10 @@ func PostCanAbuseUPNCertMapping(operation analysis.StatTrackedOperation[analysis
 				}
 			}
 		}
-		return collector.Return()
+		if err := collector.Return(); err != nil {
+			log.Debugf("errors in %s processing: %v", ad.CanAbuseUPNCertMapping.String(), err)
+		}
+		return nil
 	})
 	return nil
 }
@@ -215,7 +218,10 @@ func PostCanAbuseWeakCertBinding(operation analysis.StatTrackedOperation[analysi
 				}
 			}
 		}
-		return collector.Return()
+		if err := collector.Return(); err != nil {
+			log.Debugf("errors in %s processing: %v", ad.CanAbuseWeakCertBinding.String(), err)
+		}
+		return nil
 	})
 	return nil
 }
@@ -264,15 +270,24 @@ func filterTempResultsForESC6(tx graph.Transaction, tempResults cardinality.Dupl
 				//A Group will be added to the list since it requires no further conditions
 				principalsEnabledForESC6.Add(value)
 			} else if resultNode.Kinds.ContainsOneOf(ad.User) {
-				if checkDNSValidity(resultNode, validCertTemplates, groupExpansions, cache) {
-					if checkEmailValidity(resultNode, validCertTemplates, groupExpansions, cache) {
-						principalsEnabledForESC6.Add(value)
+				for _, certTemplate := range validCertTemplates {
+					if principalControlsCertTemplate(resultNode, certTemplate, groupExpansions, cache) {
+						if certTemplateValidForUserVictim(certTemplate) {
+							if checkEmailValidity(resultNode, certTemplate) {
+								principalsEnabledForESC6.Add(value)
+							}
+						}
 					}
 				}
 			} else if resultNode.Kinds.ContainsOneOf(ad.Computer) {
-				if checkEmailValidity(resultNode, validCertTemplates, groupExpansions, cache) {
-					principalsEnabledForESC6.Add(value)
+				for _, certTemplate := range validCertTemplates {
+					if principalControlsCertTemplate(resultNode, certTemplate, groupExpansions, cache) {
+						if checkEmailValidity(resultNode, certTemplate) {
+							principalsEnabledForESC6.Add(value)
+						}
+					}
 				}
+
 			}
 		}
 		return true
@@ -280,7 +295,78 @@ func filterTempResultsForESC6(tx graph.Transaction, tempResults cardinality.Dupl
 	return principalsEnabledForESC6
 }
 
-func GetADCSESC6bEdgeComposition(ctx context.Context, db graph.Database, edge *graph.Relationship) (graph.PathSet, error) {
+func principalControlsCertTemplate(principal, certTemplate *graph.Node, groupExpansions impact.PathAggregator, cache ADCSCache) bool {
+	var (
+		expandedTemplateControllers = cache.ExpandedCertTemplateControllers[certTemplate.ID]
+		principalID                 = principal.ID.Uint32()
+	)
+
+	if slices.Contains(expandedTemplateControllers, principalID) {
+		return true
+	}
+
+	if CalculateCrossProductNodeSets(groupExpansions, graph.NewNodeSet(principal).Slice(), cache.CertTemplateControllers[certTemplate.ID]).Contains(principalID) {
+		cache.ExpandedCertTemplateControllers[certTemplate.ID] = append(expandedTemplateControllers, principalID)
+		return true
+	}
+
+	return false
+}
+
+func checkEmailValidity(node *graph.Node, certTemplate *graph.Node) bool {
+	email, err := node.Properties.Get(common.Email.String()).String()
+	if err != nil {
+		log.Debugf("%s property access error %d: %v", common.Email.String(), node.ID, err)
+	}
+
+	if email == "" {
+		if schemaVersion, err := certTemplate.Properties.Get(ad.SchemaVersion.String()).Float64(); err != nil {
+			log.Debugf("%s property access error %d: %v", ad.SchemaVersion.String(), certTemplate.ID, err)
+			return false
+		} else if subjectAltRequireEmail, err := certTemplate.Properties.Get(ad.SubjectAltRequireEmail.String()).Bool(); err != nil {
+			log.Debugf("%s property access error %d: %v", ad.SubjectAltRequireEmail.String(), certTemplate.ID, err)
+			return false
+		} else if subjectRequireEmail, err := certTemplate.Properties.Get(ad.SubjectRequireEmail.String()).Bool(); err != nil {
+			log.Debugf("%s property access error %d: %v", ad.SubjectRequireEmail.String(), certTemplate.ID, err)
+			return false
+		} else if (!subjectAltRequireEmail && !subjectRequireEmail) || schemaVersion == 1 {
+			return true
+		}
+	} else {
+		return true
+	}
+	return false
+}
+
+func isCertTemplateValidForESC6(ct *graph.Node, scenarioB bool) (bool, error) {
+	if reqManagerApproval, err := ct.Properties.Get(ad.RequiresManagerApproval.String()).Bool(); err != nil {
+		return false, err
+	} else if reqManagerApproval {
+		return false, nil
+	} else if authenticationEnabled, err := ct.Properties.Get(ad.AuthenticationEnabled.String()).Bool(); err != nil {
+		return false, err
+	} else if !authenticationEnabled {
+		return false, nil
+	} else if schemaVersion, err := ct.Properties.Get(ad.SchemaVersion.String()).Float64(); err != nil {
+		return false, err
+	} else if authorizedSignatures, err := ct.Properties.Get(ad.AuthorizedSignatures.String()).Float64(); err != nil {
+		return false, err
+	} else if schemaVersion > 1 && authorizedSignatures > 0 {
+		return false, nil
+	} else if !scenarioB {
+		if noSecurityExtension, err := ct.Properties.Get(ad.NoSecurityExtension.String()).Bool(); err != nil {
+			return false, err
+		} else if !noSecurityExtension {
+			return false, nil
+		} else {
+			return true, nil
+		}
+	} else {
+		return true, nil
+	}
+}
+
+func GetADCSESC6EdgeComposition(ctx context.Context, db graph.Database, edge *graph.Relationship) (graph.PathSet, error) {
 	/*
 		MATCH (n { objectid:'S-1-5-21-3933516454-2894985453-2515407000-500' })-[:ADCSESC6b]->(d:Domain {objectid:'S-1-5-21-3933516454-2894985453-2515407000'})
 		MATCH p1 = (n)-[:MemberOf*0..]->()-[:GenericAll|Enroll|AllExtendedRights]->(ct)-[:PublishedTo]->(ca)-[:IssuedSignedBy|EnterpriseCAFor|RootCAFor*1..]->(d)
@@ -363,7 +449,7 @@ func GetADCSESC6bEdgeComposition(ctx context.Context, db graph.Database, edge *g
 	// use the enterpriseCA nodes from the previous step to gather the first set of cert templates for p1
 	if err := traversalInst.BreadthFirst(ctx, traversal.Plan{
 		Root: startNode,
-		Driver: ADCSESC6bPath1Pattern(edge.EndID, path1EnterpriseCAs).Do(
+		Driver: ADCSESC6Path1Pattern(edge.EndID, path1EnterpriseCAs, edge.Kind).Do(
 			func(terminal *graph.PathSegment) error {
 				certTemplate := terminal.Search(func(nextSegment *graph.PathSegment) bool {
 					return nextSegment.Node.Kinds.ContainsOneOf(ad.CertTemplate)
@@ -382,7 +468,7 @@ func GetADCSESC6bEdgeComposition(ctx context.Context, db graph.Database, edge *g
 	// use the enterpriseCA and certTemplate nodes from previous steps to find enterprise CAs that are trusted for NTAuth (p2)
 	if err := traversalInst.BreadthFirst(ctx, traversal.Plan{
 		Root: startNode,
-		Driver: ADCSESC6bPath2Pattern(edge.EndID, path1EnterpriseCAs, certTemplates).Do(
+		Driver: ADCSESC6Path2Pattern(edge.EndID, path1EnterpriseCAs, certTemplates).Do(
 			func(terminal *graph.PathSegment) error {
 				certTemplate := terminal.Search(func(nextSegment *graph.PathSegment) bool {
 					return nextSegment.Node.Kinds.ContainsOneOf(ad.CertTemplate)
@@ -398,10 +484,10 @@ func GetADCSESC6bEdgeComposition(ctx context.Context, db graph.Database, edge *g
 		return nil, err
 	}
 
-	// find the enterpriseCAs that have an outbound CanAbuseUPNCertMapping to a computer that is a DC for the domain (p3)
+	// find the enterpriseCAs that have an outbound CanAbuseWeakCertBinding if 6a or a CanAbuseUPNCertMapping if 6b to a computer that is a DC for the domain (p3)
 	if err := traversalInst.BreadthFirst(ctx, traversal.Plan{
 		Root: startNode,
-		Driver: ADCSESC6bPath3Pattern(edge.EndID, path1EnterpriseCAs).Do(func(terminal *graph.PathSegment) error {
+		Driver: ADCSESC6Path3Pattern(edge.EndID, path1EnterpriseCAs, edge.Kind).Do(func(terminal *graph.PathSegment) error {
 			enterpriseCA := terminal.Search(func(nextSegment *graph.PathSegment) bool {
 				return nextSegment.Node.Kinds.ContainsOneOf(ad.EnterpriseCA)
 			})
@@ -416,11 +502,6 @@ func GetADCSESC6bEdgeComposition(ctx context.Context, db graph.Database, edge *g
 		}),
 	}); err != nil {
 		return nil, err
-	}
-
-	email, err := startNode.Properties.Get(common.Email.String()).String()
-	if err != nil {
-		log.Warnf("unable to access property %s for node with id %d: %v", common.Email.String(), startNode.ID, err)
 	}
 
 	certTemplates.Each(func(value uint32) bool {
@@ -438,51 +519,25 @@ func GetADCSESC6bEdgeComposition(ctx context.Context, db graph.Database, edge *g
 			return false
 		}
 
-		schemaVersion, err := certTemplate.Properties.Get(ad.SchemaVersion.String()).Float64()
-		if err != nil {
-			log.Warnf("unable to access property %s for certTemplate with id %d: %v", ad.SchemaVersion.String(), certTemplate.ID, err)
-		}
-		subjectAltRequireEmail, err := certTemplate.Properties.Get(ad.SubjectAltRequireEmail.String()).Bool()
-		if err != nil {
-			log.Warnf("unable to access property %s for certTemplate with id %d: %v", ad.SubjectAltRequireEmail.String(), certTemplate.ID, err)
-		}
-		subjectRequireEmail, err := certTemplate.Properties.Get(ad.SubjectRequireEmail.String()).Bool()
-		if err != nil {
-			log.Warnf("unable to access property %s for certTemplate with id %d: %v", ad.SubjectRequireEmail.String(), certTemplate.ID, err)
-		}
-		subjectAltRequireDNS, err := certTemplate.Properties.Get(ad.SubjectAltRequireDNS.String()).Bool()
-		if err != nil {
-			log.Warnf("unable to access property %s for certTemplate with id %d: %v", ad.SubjectAltRequireDNS.String(), certTemplate.ID, err)
-		}
-		subjectAltRequireDomainDNS, err := certTemplate.Properties.Get(ad.SubjectAltRequireDomainDNS.String()).Bool()
-		if err != nil {
-			log.Warnf("unable to access property %s for certTemplate with id %d: %v", ad.SubjectAltRequireDomainDNS.String(), certTemplate.ID, err)
-		}
-
 		for _, segment := range certTemplateSegments[graph.ID(value)] {
 			if startNode.Kinds.ContainsOneOf(ad.User) {
-				if subjectAltRequireDNS || subjectAltRequireDomainDNS {
+				if !certTemplateValidForUserVictim(certTemplate) {
 					continue
-				} else if email == "" && !((!subjectAltRequireEmail && !subjectRequireEmail) || schemaVersion == 1) {
+				} else if checkEmailValidity(startNode, certTemplate) {
 					continue
 				} else {
-					log.Infof("Found ESC6b Path: %s", graph.FormatPathSegment(segment))
 					paths.AddPath(segment.Path())
 				}
 			} else if startNode.Kinds.ContainsOneOf(ad.Computer) {
-				if email == "" && !((!subjectAltRequireEmail && !subjectRequireEmail) || schemaVersion == 1) {
+				if checkEmailValidity(startNode, certTemplate) {
 					continue
 				} else {
-					log.Infof("Found ESC6b Path: %s", graph.FormatPathSegment(segment))
 					paths.AddPath(segment.Path())
 				}
 			} else {
-				log.Infof("Found ESC6b Path: %s", graph.FormatPathSegment(segment))
 				paths.AddPath(segment.Path())
 			}
-
 		}
-
 		return true
 	})
 
@@ -502,6 +557,44 @@ func GetADCSESC6bEdgeComposition(ctx context.Context, db graph.Database, edge *g
 	return paths, nil
 }
 
+func getESC6CertTemplateCriteria(edgeKind graph.Kind) graph.Criteria {
+	criteria := query.And(
+		query.Equals(query.EndProperty(ad.RequiresManagerApproval.String()), false),
+		query.Equals(query.EndProperty(ad.AuthenticationEnabled.String()), true),
+		query.Or(
+			query.Equals(query.EndProperty(ad.SchemaVersion.String()), 1),
+			query.And(
+				query.GreaterThan(query.EndProperty(ad.SchemaVersion.String()), 1),
+				query.Equals(query.EndProperty(ad.AuthorizedSignatures.String()), 0),
+			),
+		),
+	)
+
+	if edgeKind == ad.ADCSESC6a {
+		criteria = query.And(
+			criteria,
+			query.Equals(query.EndProperty(ad.NoSecurityExtension.String()), true),
+		)
+	}
+
+	return criteria
+}
+
+func getESC6AbuseEdgeCriteria(edgeKind graph.Kind) graph.Criteria {
+	criteria := query.KindIn(query.End(), ad.Computer)
+
+	if edgeKind == ad.ADCSESC6a {
+		return query.And(
+			query.KindIn(query.Relationship(), ad.CanAbuseWeakCertBinding),
+			criteria,
+		)
+	}
+	return query.And(
+		query.KindIn(query.Relationship(), ad.CanAbuseUPNCertMapping),
+		criteria,
+	)
+}
+
 func enterpriseCAsForPrincipal() traversal.PatternContinuation {
 	return traversal.NewPattern().
 		OutboundWithDepth(0, 0,
@@ -517,7 +610,7 @@ func enterpriseCAsForPrincipal() traversal.PatternContinuation {
 			))
 }
 
-func ADCSESC6bPath1Pattern(domainId graph.ID, enterpriseCAs cardinality.Duplex[uint32]) traversal.PatternContinuation {
+func ADCSESC6Path1Pattern(domainId graph.ID, enterpriseCAs cardinality.Duplex[uint32], edgeKind graph.Kind) traversal.PatternContinuation {
 	return traversal.NewPattern().
 		OutboundWithDepth(0, 0, query.And(
 			query.Kind(query.Relationship(), ad.MemberOf),
@@ -526,17 +619,7 @@ func ADCSESC6bPath1Pattern(domainId graph.ID, enterpriseCAs cardinality.Duplex[u
 		Outbound(query.And(
 			query.KindIn(query.Relationship(), ad.GenericAll, ad.Enroll, ad.AllExtendedRights),
 			query.Kind(query.End(), ad.CertTemplate),
-			query.And(
-				query.Equals(query.EndProperty(ad.RequiresManagerApproval.String()), false),
-				query.Equals(query.EndProperty(ad.AuthenticationEnabled.String()), true),
-				query.Or(
-					query.Equals(query.EndProperty(ad.SchemaVersion.String()), 1),
-					query.And(
-						query.GreaterThan(query.EndProperty(ad.SchemaVersion.String()), 1),
-						query.Equals(query.EndProperty(ad.AuthorizedSignatures.String()), 0),
-					),
-				),
-			),
+			getESC6CertTemplateCriteria(edgeKind),
 		)).
 		Outbound(query.And(
 			query.KindIn(query.Relationship(), ad.PublishedTo),
@@ -553,7 +636,7 @@ func ADCSESC6bPath1Pattern(domainId graph.ID, enterpriseCAs cardinality.Duplex[u
 		))
 }
 
-func ADCSESC6bPath2Pattern(domainId graph.ID, enterpriseCAs, candidateTemplates cardinality.Duplex[uint32]) traversal.PatternContinuation {
+func ADCSESC6Path2Pattern(domainId graph.ID, enterpriseCAs, candidateTemplates cardinality.Duplex[uint32]) traversal.PatternContinuation {
 	return traversal.NewPattern().
 		OutboundWithDepth(0, 0, query.And(
 			query.Kind(query.Relationship(), ad.MemberOf),
@@ -578,7 +661,7 @@ func ADCSESC6bPath2Pattern(domainId graph.ID, enterpriseCAs, candidateTemplates 
 		))
 }
 
-func ADCSESC6bPath3Pattern(domainId graph.ID, enterpriseCAs cardinality.Duplex[uint32]) traversal.PatternContinuation {
+func ADCSESC6Path3Pattern(domainId graph.ID, enterpriseCAs cardinality.Duplex[uint32], edgeKind graph.Kind) traversal.PatternContinuation {
 	return traversal.NewPattern().
 		OutboundWithDepth(0, 0, query.And(
 			query.Kind(query.Relationship(), ad.MemberOf),
@@ -589,106 +672,9 @@ func ADCSESC6bPath3Pattern(domainId graph.ID, enterpriseCAs cardinality.Duplex[u
 			query.KindIn(query.End(), ad.EnterpriseCA),
 			query.InIDs(query.End(), cardinality.DuplexToGraphIDs(enterpriseCAs)...),
 		)).
-		Outbound(query.And(
-			query.KindIn(query.Relationship(), ad.CanAbuseUPNCertMapping),
-			query.KindIn(query.End(), ad.Computer),
-		)).
+		Outbound(getESC6AbuseEdgeCriteria(edgeKind)).
 		Outbound(query.And(
 			query.KindIn(query.Relationship(), ad.DCFor, ad.TrustedBy),
 			query.Equals(query.EndID(), domainId),
 		))
-}
-
-func principalControlsCertTemplate(principal, certTemplate *graph.Node, groupExpansions impact.PathAggregator, cache ADCSCache) bool {
-	var (
-		expandedTemplateControllers = cache.ExpandedCertTemplateControllers[certTemplate.ID]
-		principalID                 = principal.ID.Uint32()
-	)
-
-	if slices.Contains(expandedTemplateControllers, principalID) {
-		return true
-	}
-
-	if CalculateCrossProductNodeSets(groupExpansions, graph.NewNodeSet(principal).Slice(), cache.CertTemplateControllers[certTemplate.ID]).Contains(principalID) {
-		cache.ExpandedCertTemplateControllers[certTemplate.ID] = append(expandedTemplateControllers, principalID)
-		return true
-	}
-
-	return false
-}
-
-func checkEmailValidity(node *graph.Node, validCertTemplates []*graph.Node, groupExpansions impact.PathAggregator, cache ADCSCache) bool {
-	email, err := node.Properties.Get(common.Email.String()).String()
-	if err != nil {
-		log.Errorf("%s property access error %d: %v", common.Email.String(), node.ID, err)
-	}
-
-	if email == "" {
-		for _, certTemplate := range validCertTemplates {
-			if principalControlsCertTemplate(node, certTemplate, groupExpansions, cache) {
-				if schemaVersion, err := certTemplate.Properties.Get(ad.SchemaVersion.String()).Float64(); err != nil {
-					log.Errorf("%s property access error %d: %v", ad.SchemaVersion.String(), certTemplate.ID, err)
-					continue
-				} else if subjectAltRequireEmail, err := certTemplate.Properties.Get(ad.SubjectAltRequireEmail.String()).Bool(); err != nil {
-					log.Errorf("%s property access error %d: %v", ad.SubjectAltRequireEmail.String(), certTemplate.ID, err)
-					continue
-				} else if subjectRequireEmail, err := certTemplate.Properties.Get(ad.SubjectRequireEmail.String()).Bool(); err != nil {
-					log.Errorf("%s property access error %d: %v", ad.SubjectRequireEmail.String(), certTemplate.ID, err)
-					continue
-				} else if (!subjectAltRequireEmail && !subjectRequireEmail) || schemaVersion == 1 {
-					//Principal does not have an email set but at least one of the certTemplates it controls does not require it so add it to the list of principals enabled for ESC6a
-					return true
-				}
-			}
-		}
-	} else {
-		//Principal has an email set so add it to the list of principals enabled for ESC6a
-		return true
-	}
-	return false
-}
-
-func checkDNSValidity(node *graph.Node, validCertTemplates []*graph.Node, groupExpansions impact.PathAggregator, cache ADCSCache) bool {
-	for _, certTemplate := range validCertTemplates {
-		if principalControlsCertTemplate(node, certTemplate, groupExpansions, cache) {
-			if subjectAltRequireDNS, err := certTemplate.Properties.Get(ad.SubjectAltRequireDNS.String()).Bool(); err != nil {
-				log.Errorf("%s property access error %d: %v", ad.SubjectAltRequireDNS.String(), certTemplate.ID, err)
-				continue
-			} else if subjectAltRequireDomainDNS, err := certTemplate.Properties.Get(ad.SubjectAltRequireDomainDNS.String()).Bool(); err != nil {
-				log.Errorf("%s property access error %d: %v", ad.SubjectAltRequireDomainDNS.String(), certTemplate.ID, err)
-				continue
-			} else if !subjectAltRequireDNS && !subjectAltRequireDomainDNS {
-				return true
-			}
-		}
-	}
-	return false
-}
-
-func isCertTemplateValidForESC6(ct *graph.Node, scenarioB bool) (bool, error) {
-	if reqManagerApproval, err := ct.Properties.Get(ad.RequiresManagerApproval.String()).Bool(); err != nil {
-		return false, err
-	} else if reqManagerApproval {
-		return false, nil
-	} else if authenticationEnabled, err := ct.Properties.Get(ad.AuthenticationEnabled.String()).Bool(); err != nil {
-		return false, err
-	} else if !authenticationEnabled {
-		return false, nil
-	} else if schemaVersion, err := ct.Properties.Get(ad.SchemaVersion.String()).Float64(); err != nil {
-		return false, err
-	} else if authorizedSignatures, err := ct.Properties.Get(ad.AuthorizedSignatures.String()).Float64(); err != nil {
-		return false, err
-	} else if schemaVersion > 1 && authorizedSignatures > 0 {
-		return false, nil
-	} else if !scenarioB {
-		if noSecurityExtension, err := ct.Properties.Get(ad.NoSecurityExtension.String()).Bool(); err != nil {
-			return false, err
-		} else if !noSecurityExtension {
-			return false, nil
-		} else {
-			return true, nil
-		}
-	} else {
-		return true, nil
-	}
 }

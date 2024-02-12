@@ -349,7 +349,7 @@ type InboundControlHarness struct {
 
 func (s *InboundControlHarness) Setup(testCtx *GraphTestContext) {
 	s.ControlledUser = testCtx.NewActiveDirectoryUser("ControlledUser", testCtx.Harness.RootADHarness.ActiveDirectoryDomainSID)
-	s.ControlledGroup = testCtx.NewActiveDirectoryUser("ControlledGroup", testCtx.Harness.RootADHarness.ActiveDirectoryDomainSID)
+	s.ControlledGroup = testCtx.NewActiveDirectoryGroup("ControlledGroup", testCtx.Harness.RootADHarness.ActiveDirectoryDomainSID)
 	s.GroupA = testCtx.NewActiveDirectoryGroup("GroupA", testCtx.Harness.RootADHarness.ActiveDirectoryDomainSID)
 	s.GroupB = testCtx.NewActiveDirectoryGroup("GroupB", testCtx.Harness.RootADHarness.ActiveDirectoryDomainSID)
 	s.GroupC = testCtx.NewActiveDirectoryGroup("GroupC", testCtx.Harness.RootADHarness.ActiveDirectoryDomainSID)
@@ -365,6 +365,7 @@ func (s *InboundControlHarness) Setup(testCtx *GraphTestContext) {
 
 	testCtx.NewRelationship(s.GroupA, s.GroupB, ad.MemberOf)
 	testCtx.NewRelationship(s.UserA, s.GroupB, ad.MemberOf)
+	testCtx.NewRelationship(s.UserG, s.ControlledGroup, ad.MemberOf)
 	testCtx.NewRelationship(s.UserG, s.GroupC, ad.MemberOf)
 	testCtx.NewRelationship(s.UserH, s.GroupD, ad.MemberOf)
 
@@ -442,6 +443,7 @@ type SessionHarness struct {
 	User      *graph.Node
 	ComputerA *graph.Node
 	ComputerB *graph.Node
+	ComputerC *graph.Node
 	GroupA    *graph.Node
 	GroupB    *graph.Node
 	GroupC    *graph.Node
@@ -450,15 +452,19 @@ type SessionHarness struct {
 func (s *SessionHarness) Setup(testCtx *GraphTestContext) {
 	s.ComputerA = testCtx.NewActiveDirectoryComputer("ComputerA", testCtx.Harness.RootADHarness.ActiveDirectoryDomainSID)
 	s.ComputerB = testCtx.NewActiveDirectoryComputer("ComputerB", testCtx.Harness.RootADHarness.ActiveDirectoryDomainSID)
+	s.ComputerC = testCtx.NewActiveDirectoryComputer("ComputerC", testCtx.Harness.RootADHarness.ActiveDirectoryDomainSID)
+
 	s.User = testCtx.NewActiveDirectoryUser("User", testCtx.Harness.RootADHarness.ActiveDirectoryDomainSID)
 	s.GroupA = testCtx.NewActiveDirectoryGroup("GroupA", testCtx.Harness.RootADHarness.ActiveDirectoryDomainSID)
 	s.GroupB = testCtx.NewActiveDirectoryGroup("GroupB", testCtx.Harness.RootADHarness.ActiveDirectoryDomainSID)
 	s.GroupC = testCtx.NewActiveDirectoryGroup("GroupC", testCtx.Harness.RootADHarness.ActiveDirectoryDomainSID)
 
+	testCtx.NewRelationship(s.ComputerA, s.GroupA, ad.MemberOf)
 	testCtx.NewRelationship(s.ComputerA, s.User, ad.HasSession)
 	testCtx.NewRelationship(s.ComputerB, s.User, ad.HasSession)
 	testCtx.NewRelationship(s.User, s.GroupA, ad.MemberOf)
 	testCtx.NewRelationship(s.User, s.GroupB, ad.MemberOf)
+	testCtx.NewRelationship(s.ComputerC, s.GroupA, ad.MemberOf)
 	testCtx.NewRelationship(s.GroupB, s.GroupC, ad.MemberOf)
 
 }

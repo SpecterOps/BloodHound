@@ -1,17 +1,17 @@
 // Copyright 2023 Specter Ops, Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// 
+//
 // SPDX-License-Identifier: Apache-2.0
 
 package api
@@ -35,7 +35,9 @@ import (
 	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/src/auth"
 	"github.com/specterops/bloodhound/src/config"
+	"github.com/specterops/bloodhound/src/ctx"
 	"github.com/specterops/bloodhound/src/database"
+	"github.com/specterops/bloodhound/src/database/types"
 	"github.com/specterops/bloodhound/src/model"
 )
 
@@ -84,22 +86,73 @@ func NewAuthenticator(cfg config.Configuration, db database.Database, ctxInitial
 	}
 }
 
-func (s authenticator) LoginWithSecret(ctx context.Context, loginRequest LoginRequest) (LoginDetails, error) {
+func (s authenticator) auditLogin(requestContext context.Context, commitID uuid.UUID, user model.User, loginRequest LoginRequest, status string, loginError error) {
+	bhCtx := ctx.Get(requestContext)
+	auditLog := model.AuditLog{
+		Action:          "LoginAttempt",
+		Fields:          types.JSONUntypedObject{"username": loginRequest.Username},
+		RequestID:       bhCtx.RequestID,
+		SourceIpAddress: bhCtx.RequestIP,
+		Status:          status,
+		CommitID:        commitID,
+	}
+
+	if user.PrincipalName != "" {
+		auditLog.ActorID = user.ID.String()
+		auditLog.ActorName = user.PrincipalName
+		auditLog.ActorEmail = user.EmailAddress.ValueOrZero()
+	}
+
+	if status == string(model.AuditStatusFailure) {
+		auditLog.Fields["error"] = loginError
+	}
+
+	s.db.CreateAuditLog(auditLog)
+}
+
+func (s authenticator) validateSecretLogin(ctx context.Context, loginRequest LoginRequest) (model.User, string, error) {
 	if user, err := s.db.LookupUser(loginRequest.Username); err != nil {
 		if errors.Is(err, database.ErrNotFound) {
-			return LoginDetails{}, ErrInvalidAuth
+			return model.User{}, "", ErrInvalidAuth
 		}
 
-		return LoginDetails{}, FormatDatabaseError(err)
+		return model.User{}, "", FormatDatabaseError(err)
 	} else if user.AuthSecret == nil {
-		return LoginDetails{}, ErrNoUserSecret
+		return user, "", ErrNoUserSecret
 	} else if err := s.ValidateSecret(ctx, loginRequest.Secret, *user.AuthSecret); err != nil {
-		return LoginDetails{}, err
-	} else if err := auth.ValidateTOTPSecret(loginRequest.OTP, *user.AuthSecret); err != nil {
-		return LoginDetails{}, err
+		return user, "", err
+	} else if err = auth.ValidateTOTPSecret(loginRequest.OTP, *user.AuthSecret); err != nil {
+		return user, "", err
 	} else if sessionToken, err := s.CreateSession(user, *user.AuthSecret); err != nil {
+		return user, "", err
+	} else {
+		return user, sessionToken, nil
+	}
+}
+
+func (s authenticator) LoginWithSecret(ctx context.Context, loginRequest LoginRequest) (LoginDetails, error) {
+	var (
+		commitID     uuid.UUID
+		err          error
+		sessionToken string
+		user         model.User
+	)
+
+	commitID, err = uuid.NewV4()
+	if err != nil {
+		log.Errorf("error generating commit ID for login: %s", err)
+		return LoginDetails{}, err
+	}
+
+	s.auditLogin(ctx, commitID, user, loginRequest, string(model.AuditStatusIntent), err)
+
+	user, sessionToken, err = s.validateSecretLogin(ctx, loginRequest)
+
+	if err != nil {
+		s.auditLogin(ctx, commitID, user, loginRequest, string(model.AuditStatusFailure), err)
 		return LoginDetails{}, err
 	} else {
+		s.auditLogin(ctx, commitID, user, loginRequest, string(model.AuditStatusSuccess), err)
 		return LoginDetails{
 			User:         user,
 			SessionToken: sessionToken,
