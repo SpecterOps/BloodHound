@@ -7,6 +7,13 @@ import (
 	"io"
 )
 
+const (
+	delimOpenBracket        = json.Delim('{')
+	delimCloseBracket       = json.Delim('}')
+	delimOpenSquareBracket  = json.Delim('[')
+	delimCloseSquareBracket = json.Delim(']')
+)
+
 func SeekToDataTag(decoder *json.Decoder) error {
 	depth := 0
 	dataTagFound := false
