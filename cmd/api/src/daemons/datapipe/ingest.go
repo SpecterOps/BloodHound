@@ -47,19 +47,12 @@ var (
 	ErrInvalidDataTag = errors.New("invalid data tag found")
 )
 
-func (s *Daemon) ReadWrapper(batch graph.Batch, reader io.ReadSeeker) error {
+func ReadFileForIngest(batch graph.Batch, reader io.ReadSeeker) error {
 	if meta, err := validateMetaTag(reader); err != nil {
-		return err
+		return fmt.Errorf("error validating meta tag: %w", err)
 	} else {
-
+		return IngestWrapper(batch, reader, meta)
 	}
-	var wrapper DataWrapper
-
-	if err := json.NewDecoder(reader).Decode(&wrapper); err != nil {
-		return err
-	}
-
-	return s.IngestWrapper(batch, wrapper)
 }
 
 func validateMetaTag(reader io.ReadSeeker) (Metadata, error) {
@@ -118,59 +111,53 @@ func IngestBasicData(batch graph.Batch, converted ConvertedData) {
 	IngestRelationships(batch, ad.Entity, converted.RelProps)
 }
 
-func (s *Daemon) IngestGroupData(batch graph.Batch, converted ConvertedGroupData) {
+func IngestGroupData(batch graph.Batch, converted ConvertedGroupData) {
 	IngestNodes(batch, ad.Entity, converted.NodeProps)
 	IngestRelationships(batch, ad.Entity, converted.RelProps)
 	IngestDNRelationships(batch, converted.DistinguishedNameProps)
 }
 
-func (s *Daemon) IngestAzureData(batch graph.Batch, converted ConvertedAzureData) {
+func IngestAzureData(batch graph.Batch, converted ConvertedAzureData) {
 	IngestNodes(batch, azure.Entity, converted.NodeProps)
 	IngestNodes(batch, ad.Entity, converted.OnPremNodes)
 	IngestRelationships(batch, azure.Entity, converted.RelProps)
 }
 
-func (s *Daemon) IngestWrapperNew(batch graph.Batch, reader io.ReadSeeker, meta Metadata) error {
+func IngestWrapper(batch graph.Batch, reader io.ReadSeeker, meta Metadata) error {
 	switch meta.Type {
 	case DataTypeComputer:
 		if meta.Version > 5 {
 			return decodeBasicData(batch, reader, convertComputerData)
 		}
-
 	case DataTypeUser:
-		return decodeBasicData(batch, reader, func(decoder *json.Decoder, convertedData *ConvertedData, user ein.User) error {
-			if err := decoder.Decode(&user); err != nil {
-				log.Errorf("Error decoding user object: %v", err)
-			} else {
-				convertUserData(user, convertedData)
-			}
-			return nil
-		})
+		return decodeBasicData(batch, reader, convertUserData)
 	case DataTypeGroup:
-		return s.decodeGroupData(batch, reader)
-
+		return decodeGroupData(batch, reader)
 	case DataTypeDomain:
-		var domain ein.Domain
-		return decodeBasicData(batch, reader, func(decoder *json.Decoder, convertedData *ConvertedData) error {
-			if err := decoder.Decode(&domain); err != nil {
-				log.Errorf("Error decoding domain object: %v", err)
-			} else {
-				convertDomainData(domain, convertedData)
-			}
-			return nil
-		})
-
+		return decodeBasicData(batch, reader, convertDomainData)
 	case DataTypeGPO:
-		var gpo ein.GPO
-		return decodeBasicData(batch, reader, func(decoder *json.Decoder, convertedData *ConvertedData) error {
-			if err := decoder.Decode(&gpo); err != nil {
-				log.Errorf("Error decoding gpo object: %v", err)
-			} else {
-				convertGPOData(gpo, convertedData)
-			}
-			return nil
-		})
+		return decodeBasicData(batch, reader, convertGPOData)
+	case DataTypeOU:
+		return decodeBasicData(batch, reader, convertOUData)
+	case DataTypeSession:
+		return decodeSessionData(batch, reader)
+	case DataTypeContainer:
+		return decodeBasicData(batch, reader, convertContainerData)
+	case DataTypeAIACA:
+		return decodeBasicData(batch, reader, convertAIACAData)
+	case DataTypeRootCA:
+		return decodeBasicData(batch, reader, convertRootCAData)
+	case DataTypeEnterpriseCA:
+		return decodeBasicData(batch, reader, convertEnterpriseCAData)
+	case DataTypeNTAuthStore:
+		return decodeBasicData(batch, reader, convertNTAuthStoreData)
+	case DataTypeCertTemplate:
+		return decodeBasicData(batch, reader, convertCertTemplateData)
+	case DataTypeAzure:
+		return decodeAzureData(batch, reader)
 	}
+
+	return nil
 }
 
 func seekToDataTag(decoder *json.Decoder) error {
@@ -225,7 +212,6 @@ func createIngestDecoder(reader io.ReadSeeker) (*json.Decoder, error) {
 	}
 }
 
-type DecodeFunc[T any] func(decoder *json.Decoder, convertedData *ConvertedData, decodeTarget T) error
 type ConversionFunc[T any] func(decoded T, converted *ConvertedData)
 
 func decodeBasicData[T any](batch graph.Batch, reader io.ReadSeeker, conversionFunc ConversionFunc[T]) error {
@@ -236,11 +222,12 @@ func decodeBasicData[T any](batch graph.Batch, reader io.ReadSeeker, conversionF
 
 	var (
 		count         = 0
+		batchCount    = 0
 		convertedData ConvertedData
-		decodeTarget  T
 	)
 
 	for decoder.More() {
+		var decodeTarget T
 		if err := decoder.Decode(&decodeTarget); err != nil {
 			log.Errorf("Error decoding %T object: %v", decodeTarget, err)
 		} else {
@@ -249,6 +236,8 @@ func decodeBasicData[T any](batch graph.Batch, reader io.ReadSeeker, conversionF
 		}
 
 		if count == ingestCountThreshold {
+			batchCount++
+			log.Infof("Sending batch %d of %d objects", batchCount, ingestCountThreshold)
 			IngestBasicData(batch, convertedData)
 			convertedData.Clear()
 			count = 0
@@ -262,23 +251,23 @@ func decodeBasicData[T any](batch graph.Batch, reader io.ReadSeeker, conversionF
 	return nil
 }
 
-func (s *Daemon) decodeGroupData(batch graph.Batch, reader io.ReadSeeker) error {
+func decodeGroupData(batch graph.Batch, reader io.ReadSeeker) error {
 	decoder, err := createIngestDecoder(reader)
 	if err != nil {
 		return err
 	}
 
 	convertedData := ConvertedGroupData{}
-	var user ein.Group
+	var group ein.Group
 	count := 0
 	for decoder.More() {
-		if err := decoder.Decode(&user); err != nil {
-			log.Errorf("Error decoding user object: %v", err)
+		if err := decoder.Decode(&group); err != nil {
+			log.Errorf("Error decoding group object: %v", err)
 		} else {
 			count++
-			convertGroupData(user, &convertedData)
+			convertGroupData(group, &convertedData)
 			if count == ingestCountThreshold {
-				s.IngestGroupData(batch, convertedData)
+				IngestGroupData(batch, convertedData)
 				convertedData.Clear()
 				count = 0
 			}
@@ -286,142 +275,68 @@ func (s *Daemon) decodeGroupData(batch graph.Batch, reader io.ReadSeeker) error 
 	}
 
 	if count > 0 {
-		s.IngestGroupData(batch, convertedData)
+		IngestGroupData(batch, convertedData)
 	}
 
 	return nil
 }
 
-func (s *Daemon) IngestWrapper(batch graph.Batch, wrapper DataWrapper) error {
-	switch wrapper.Metadata.Type {
-	case DataTypeComputer:
-		// We should not be getting anything with Version < 5 at this point, and we don't want to ingest it if we do as post-processing will blow it away anyways
-		if wrapper.Metadata.Version >= 5 {
-			var computerData []ein.Computer
+func decodeSessionData(batch graph.Batch, reader io.ReadSeeker) error {
+	decoder, err := createIngestDecoder(reader)
+	if err != nil {
+		return err
+	}
 
-			if err := json.Unmarshal(wrapper.Payload, &computerData); err != nil {
-				return err
-			} else {
-				converted := convertComputerData(computerData)
-				s.IngestBasicData(batch, converted)
+	convertedData := ConvertedSessionData{}
+	var session ein.Session
+	count := 0
+	for decoder.More() {
+		if err := decoder.Decode(&session); err != nil {
+			log.Errorf("Error decoding session object: %v", err)
+		} else {
+			count++
+			convertSessionData(session, &convertedData)
+			if count == ingestCountThreshold {
+				IngestSessions(batch, convertedData.SessionProps)
+				convertedData.Clear()
+				count = 0
 			}
 		}
+	}
 
-	case DataTypeUser:
-		var userData []ein.User
-		if err := json.Unmarshal(wrapper.Payload, &userData); err != nil {
-			return err
-		} else {
-			converted := convertUserData(userData)
-			s.IngestBasicData(batch, converted)
-		}
+	if count > 0 {
+		IngestSessions(batch, convertedData.SessionProps)
+	}
 
-	case DataTypeGroup:
-		var groupData []ein.Group
-		if err := json.Unmarshal(wrapper.Payload, &groupData); err != nil {
-			return err
-		} else {
-			converted := convertGroupData(groupData)
-			s.IngestGroupData(batch, converted)
-		}
+	return nil
+}
 
-	case DataTypeDomain:
-		var domainData []ein.Domain
-		if err := json.Unmarshal(wrapper.Payload, &domainData); err != nil {
-			return err
-		} else {
-			converted := convertDomainData(domainData)
-			s.IngestBasicData(batch, converted)
-		}
+func decodeAzureData(batch graph.Batch, reader io.ReadSeeker) error {
+	decoder, err := createIngestDecoder(reader)
+	if err != nil {
+		return err
+	}
 
-	case DataTypeGPO:
-		var gpoData []ein.GPO
-		if err := json.Unmarshal(wrapper.Payload, &gpoData); err != nil {
-			return err
+	convertedData := ConvertedAzureData{}
+	var data AzureBase
+	count := 0
+	for decoder.More() {
+		if err := decoder.Decode(&data); err != nil {
+			log.Errorf("Error decoding azure object: %v", err)
 		} else {
-			converted := convertGPOData(gpoData)
-			s.IngestBasicData(batch, converted)
+			convert := getKindConverter(data.Kind)
+			convert(data.Data, &convertedData)
+			count++
+			if count == ingestCountThreshold {
+				IngestAzureData(batch, convertedData)
+				convertedData.Clear()
+				count = 0
+			}
 		}
+	}
 
-	case DataTypeOU:
-		var ouData []ein.OU
-		if err := json.Unmarshal(wrapper.Payload, &ouData); err != nil {
-			return err
-		} else {
-			converted := convertOUData(ouData)
-			s.IngestBasicData(batch, converted)
-		}
-
-	case DataTypeSession:
-		var sessionData []ein.Session
-		if err := json.Unmarshal(wrapper.Payload, &sessionData); err != nil {
-			return err
-		} else {
-			IngestSessions(batch, convertSessionData(sessionData).SessionProps)
-		}
-
-	case DataTypeContainer:
-		var containerData []ein.Container
-		if err := json.Unmarshal(wrapper.Payload, &containerData); err != nil {
-			return err
-		} else {
-			converted := convertContainerData(containerData)
-			s.IngestBasicData(batch, converted)
-		}
-
-	case DataTypeAIACA:
-		var aiacaData []ein.AIACA
-		if err := json.Unmarshal(wrapper.Payload, &aiacaData); err != nil {
-			return err
-		} else {
-			converted := convertAIACAData(aiacaData)
-			s.IngestBasicData(batch, converted)
-		}
-
-	case DataTypeRootCA:
-		var rootcaData []ein.RootCA
-		if err := json.Unmarshal(wrapper.Payload, &rootcaData); err != nil {
-			return err
-		} else {
-			converted := convertRootCAData(rootcaData)
-			s.IngestBasicData(batch, converted)
-		}
-
-	case DataTypeEnterpriseCA:
-		var enterprisecaData []ein.EnterpriseCA
-		if err := json.Unmarshal(wrapper.Payload, &enterprisecaData); err != nil {
-			return err
-		} else {
-			converted := convertEnterpriseCAData(enterprisecaData)
-			s.IngestBasicData(batch, converted)
-		}
-
-	case DataTypeNTAuthStore:
-		var ntauthstoreData []ein.NTAuthStore
-		if err := json.Unmarshal(wrapper.Payload, &ntauthstoreData); err != nil {
-			return err
-		} else {
-			converted := convertNTAuthStoreData(ntauthstoreData)
-			s.IngestBasicData(batch, converted)
-		}
-
-	case DataTypeCertTemplate:
-		var certtemplateData []ein.CertTemplate
-		if err := json.Unmarshal(wrapper.Payload, &certtemplateData); err != nil {
-			return err
-		} else {
-			converted := convertCertTemplateData(certtemplateData)
-			s.IngestBasicData(batch, converted)
-		}
-
-	case DataTypeAzure:
-		var azureData []json.RawMessage
-		if err := json.Unmarshal(wrapper.Payload, &azureData); err != nil {
-			return err
-		} else {
-			converted := convertAzureData(azureData)
-			s.IngestAzureData(batch, converted)
-		}
+	if count > 0 {
+		IngestAzureData(batch, convertedData)
 	}
 
 	return nil

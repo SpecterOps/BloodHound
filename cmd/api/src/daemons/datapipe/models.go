@@ -230,6 +230,10 @@ type ConvertedSessionData struct {
 	SessionProps []ein.IngestibleSession
 }
 
+func (s ConvertedSessionData) Clear() {
+	s.SessionProps = make([]ein.IngestibleSession, 0)
+}
+
 type AzureBase struct {
 	Kind enums.Kind      `json:"kind"`
 	Data json.RawMessage `json:"data"`
@@ -239,6 +243,12 @@ type ConvertedAzureData struct {
 	NodeProps   []ein.IngestibleNode
 	RelProps    []ein.IngestibleRelationship
 	OnPremNodes []ein.IngestibleNode
+}
+
+func (s *ConvertedAzureData) Clear() {
+	s.NodeProps = make([]ein.IngestibleNode, 0)
+	s.RelProps = make([]ein.IngestibleRelationship, 0)
+	s.OnPremNodes = make([]ein.IngestibleNode, 0)
 }
 
 func CreateConvertedAzureData(count int) ConvertedAzureData {
