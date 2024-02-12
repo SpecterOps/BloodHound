@@ -59,6 +59,7 @@ func (s Resources) HandleDatabaseManagement(response http.ResponseWriter, reques
 				api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("%s: %s", "error fetching all nodes", err.Error()), request),
 				response,
 			)
+			return
 		}
 
 		if err := s.Graph.BatchOperation(request.Context(), func(batch graph.Batch) error {
@@ -74,6 +75,7 @@ func (s Resources) HandleDatabaseManagement(response http.ResponseWriter, reques
 				api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("%s: %s", "error deleting all nodes", err.Error()), request),
 				response,
 			)
+			return
 		}
 
 	} else if payload.HighValueSelectors {
@@ -83,6 +85,7 @@ func (s Resources) HandleDatabaseManagement(response http.ResponseWriter, reques
 				api.BuildErrorResponse(http.StatusBadRequest, "please provide an assetGroupId to delete", request),
 				response,
 			)
+			return
 		}
 		if err := s.DB.DeleteAssetGroupSelectors(request.Context(), payload.AssetGroupId); err != nil {
 			api.WriteErrorResponse(
@@ -90,6 +93,7 @@ func (s Resources) HandleDatabaseManagement(response http.ResponseWriter, reques
 				api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("%s %d: %s", "there was an error deleting asset group with id = ", payload.AssetGroupId, err.Error()), request),
 				response,
 			)
+			return
 		}
 	} else if payload.FileIngestHistory {
 		if err := s.DB.DeleteAllFileUploads(); err != nil {
@@ -98,6 +102,7 @@ func (s Resources) HandleDatabaseManagement(response http.ResponseWriter, reques
 				api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("%s: %s", "there was an error deleting file ingest history", err.Error()), request),
 				response,
 			)
+			return
 		}
 	} else if payload.DataQualityHistory {
 		if err := s.DB.DeleteAllDataQuality(); err != nil {
@@ -106,6 +111,7 @@ func (s Resources) HandleDatabaseManagement(response http.ResponseWriter, reques
 				api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("%s: %s", "there was an error deleting data quality history", err.Error()), request),
 				response,
 			)
+			return
 		}
 	} else {
 		response.WriteHeader(http.StatusNoContent)
