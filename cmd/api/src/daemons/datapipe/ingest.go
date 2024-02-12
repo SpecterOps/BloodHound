@@ -134,12 +134,48 @@ func (s *Daemon) IngestWrapperNew(batch graph.Batch, reader io.ReadSeeker, meta 
 	switch meta.Type {
 	case DataTypeComputer:
 		if meta.Version > 5 {
-			return s.decodeComputerData(batch, reader)
+			var computer ein.Computer
+			return s.decodeBasicData(batch, reader, func(decoder *json.Decoder, convertedData *ConvertedData) error {
+				if err := decoder.Decode(&computer); err != nil {
+					log.Errorf("Error decoding computer object: %v", err)
+				} else {
+					convertComputerData(computer, convertedData)
+				}
+				return nil
+			})
 		}
 	case DataTypeUser:
-		return s.decodeUserData(batch, reader)
+		var user ein.User
+		return s.decodeBasicData(batch, reader, func(decoder *json.Decoder, convertedData *ConvertedData) error {
+			if err := decoder.Decode(&user); err != nil {
+				log.Errorf("Error decoding user object: %v", err)
+			} else {
+				convertUserData(user, convertedData)
+			}
+			return nil
+		})
 	case DataTypeGroup:
-
+		return s.decodeGroupData(batch, reader)
+	case DataTypeDomain:
+		var domain ein.Domain
+		return s.decodeBasicData(batch, reader, func(decoder *json.Decoder, convertedData *ConvertedData) error {
+			if err := decoder.Decode(&domain); err != nil {
+				log.Errorf("Error decoding domain object: %v", err)
+			} else {
+				convertDomainData(domain, convertedData)
+			}
+			return nil
+		})
+	case DataTypeGPO:
+		var gpo ein.GPO
+		return s.decodeBasicData(batch, reader, func(decoder *json.Decoder, convertedData *ConvertedData) error {
+			if err := decoder.Decode(&gpo); err != nil {
+				log.Errorf("Error decoding gpo object: %v", err)
+			} else {
+				convertGPOData(gpo, convertedData)
+			}
+			return nil
+		})
 	}
 }
 
@@ -195,26 +231,25 @@ func createIngestDecoder(reader io.ReadSeeker) (*json.Decoder, error) {
 	}
 }
 
-func (s *Daemon) decodeComputerData(batch graph.Batch, reader io.ReadSeeker) error {
+type DecodeFunc func(decoder *json.Decoder, convertedData *ConvertedData) error
+
+func (s *Daemon) decodeBasicData(batch graph.Batch, reader io.ReadSeeker, decodeFunc DecodeFunc) error {
 	decoder, err := createIngestDecoder(reader)
 	if err != nil {
 		return err
 	}
 
 	convertedData := ConvertedData{}
-	var computer ein.Computer
 	count := 0
+
 	for decoder.More() {
-		if err := decoder.Decode(&computer); err != nil {
-			log.Errorf("Error decoding computer object: %v", err)
-		} else {
+		if err := decodeFunc(decoder, &convertedData); err == nil {
 			count++
-			convertComputerData(computer, &convertedData)
-			if count == ingestCountThreshold {
-				s.IngestBasicData(batch, convertedData)
-				convertedData.Clear()
-				count = 0
-			}
+		}
+		if count == ingestCountThreshold {
+			s.IngestBasicData(batch, convertedData)
+			convertedData.Clear()
+			count = 0
 		}
 	}
 
@@ -225,23 +260,23 @@ func (s *Daemon) decodeComputerData(batch graph.Batch, reader io.ReadSeeker) err
 	return nil
 }
 
-func (s *Daemon) decodeUserData(batch graph.Batch, reader io.ReadSeeker) error {
+func (s *Daemon) decodeGroupData(batch graph.Batch, reader io.ReadSeeker) error {
 	decoder, err := createIngestDecoder(reader)
 	if err != nil {
 		return err
 	}
 
-	convertedData := ConvertedData{}
-	var user ein.User
+	convertedData := ConvertedGroupData{}
+	var user ein.Group
 	count := 0
 	for decoder.More() {
 		if err := decoder.Decode(&user); err != nil {
 			log.Errorf("Error decoding user object: %v", err)
 		} else {
 			count++
-			convertUserData(user, &convertedData)
+			convertGroupData(user, &convertedData)
 			if count == ingestCountThreshold {
-				s.IngestBasicData(batch, convertedData)
+				s.IngestGroupData(batch, convertedData)
 				convertedData.Clear()
 				count = 0
 			}
@@ -249,7 +284,7 @@ func (s *Daemon) decodeUserData(batch graph.Batch, reader io.ReadSeeker) error {
 	}
 
 	if count > 0 {
-		s.IngestBasicData(batch, convertedData)
+		s.IngestGroupData(batch, convertedData)
 	}
 
 	return nil

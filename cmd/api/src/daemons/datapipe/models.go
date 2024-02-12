@@ -220,6 +220,12 @@ type ConvertedGroupData struct {
 	DistinguishedNameProps []ein.IngestibleRelationship
 }
 
+func (s ConvertedGroupData) Clear() {
+	s.NodeProps = make([]ein.IngestibleNode, 0)
+	s.RelProps = make([]ein.IngestibleRelationship, 0)
+	s.DistinguishedNameProps = make([]ein.IngestibleRelationship, 0)
+}
+
 type ConvertedSessionData struct {
 	SessionProps []ein.IngestibleSession
 }

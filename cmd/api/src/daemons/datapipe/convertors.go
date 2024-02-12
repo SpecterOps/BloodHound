@@ -80,37 +80,26 @@ func convertGroupData(group ein.Group, converted *ConvertedGroupData) {
 	converted.DistinguishedNameProps = append(converted.DistinguishedNameProps, groupMembershipData.DistinguishedNameMembers...)
 }
 
-func convertDomainData(data []ein.Domain) ConvertedData {
-	converted := ConvertedData{}
-
-	for _, domain := range data {
-		converted.NodeProps = append(converted.NodeProps, ein.ConvertObjectToNode(domain.IngestBase, ad.Domain))
-		converted.RelProps = append(converted.RelProps, ein.ParseACEData(domain.Aces, domain.ObjectIdentifier, ad.Domain)...)
-		if len(domain.ChildObjects) > 0 {
-			converted.RelProps = append(converted.RelProps, ein.ParseChildObjects(domain.ChildObjects, domain.ObjectIdentifier, ad.Domain)...)
-		}
-
-		if len(domain.Links) > 0 {
-			converted.RelProps = append(converted.RelProps, ein.ParseGpLinks(domain.Links, domain.ObjectIdentifier, ad.Domain)...)
-		}
-
-		domainTrustData := ein.ParseDomainTrusts(domain)
-		converted.RelProps = append(converted.RelProps, domainTrustData.TrustRelationships...)
-		converted.NodeProps = append(converted.NodeProps, domainTrustData.ExtraNodeProps...)
+func convertDomainData(domain ein.Domain, converted *ConvertedData) {
+	converted.NodeProps = append(converted.NodeProps, ein.ConvertObjectToNode(domain.IngestBase, ad.Domain))
+	converted.RelProps = append(converted.RelProps, ein.ParseACEData(domain.Aces, domain.ObjectIdentifier, ad.Domain)...)
+	if len(domain.ChildObjects) > 0 {
+		converted.RelProps = append(converted.RelProps, ein.ParseChildObjects(domain.ChildObjects, domain.ObjectIdentifier, ad.Domain)...)
 	}
 
-	return converted
+	if len(domain.Links) > 0 {
+		converted.RelProps = append(converted.RelProps, ein.ParseGpLinks(domain.Links, domain.ObjectIdentifier, ad.Domain)...)
+	}
+
+	domainTrustData := ein.ParseDomainTrusts(domain)
+	converted.RelProps = append(converted.RelProps, domainTrustData.TrustRelationships...)
+	converted.NodeProps = append(converted.NodeProps, domainTrustData.ExtraNodeProps...)
+
 }
 
-func convertGPOData(data []ein.GPO) ConvertedData {
-	converted := ConvertedData{}
-
-	for _, gpo := range data {
-		converted.NodeProps = append(converted.NodeProps, ein.ConvertObjectToNode(ein.IngestBase(gpo), ad.GPO))
-		converted.RelProps = append(converted.RelProps, ein.ParseACEData(gpo.Aces, gpo.ObjectIdentifier, ad.GPO)...)
-	}
-
-	return converted
+func convertGPOData(gpo ein.GPO, converted *ConvertedData) {
+	converted.NodeProps = append(converted.NodeProps, ein.ConvertObjectToNode(ein.IngestBase(gpo), ad.GPO))
+	converted.RelProps = append(converted.RelProps, ein.ParseACEData(gpo.Aces, gpo.ObjectIdentifier, ad.GPO)...)
 }
 
 func convertOUData(data []ein.OU) ConvertedData {
