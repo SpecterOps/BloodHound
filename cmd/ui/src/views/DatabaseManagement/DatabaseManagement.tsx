@@ -41,7 +41,7 @@ type DataTypes = {
     dataQualityHistory: boolean;
 };
 
-const useDatabaseManagement = (state: DataTypes) => {
+const useDatabaseManagement = (state: DataTypes, setState: React.Dispatch<React.SetStateAction<DataTypes>>) => {
     const [showSuccessMessage, setShowSuccessMessage] = useState(false);
 
     const tierZeroAssetGroupId = useSelector(selectTierZeroAssetGroupId);
@@ -60,6 +60,12 @@ const useDatabaseManagement = (state: DataTypes) => {
         onSuccess: () => {
             // show UI message that data deletion is happening
             setShowSuccessMessage(true);
+            setState({
+                collectedGraphData: false,
+                dataQualityHistory: false,
+                fileIngestHistory: false,
+                highValueSelectors: false,
+            });
         },
     });
 
@@ -105,7 +111,7 @@ const DatabaseManagement = () => {
         setOpen(false);
     };
 
-    const { handleDelete, showSuccessMessage } = useDatabaseManagement(state);
+    const { handleDelete, showSuccessMessage } = useDatabaseManagement(state, setState);
 
     const { collectedGraphData, highValueSelectors, fileIngestHistory, dataQualityHistory } = state;
 
