@@ -48,61 +48,10 @@ var (
 )
 
 func ReadFileForIngest(batch graph.Batch, reader io.ReadSeeker) error {
-	if meta, err := validateMetaTag(reader); err != nil {
+	if meta, err := ValidateMetaTag(reader); err != nil {
 		return fmt.Errorf("error validating meta tag: %w", err)
 	} else {
 		return IngestWrapper(batch, reader, meta)
-	}
-}
-
-func validateMetaTag(reader io.ReadSeeker) (Metadata, error) {
-	_, err := reader.Seek(0, io.SeekStart)
-	if err != nil {
-		return Metadata{}, fmt.Errorf("error seeking to start of file: %w", err)
-	}
-	depth := 0
-	decoder := json.NewDecoder(reader)
-	dataTagFound := false
-	metaTagFound := false
-	var meta Metadata
-	for {
-		if dataTagFound && metaTagFound {
-			return meta, nil
-		}
-		if token, err := decoder.Token(); err != nil {
-			if errors.Is(err, io.EOF) {
-				if !metaTagFound && !dataTagFound {
-					return Metadata{}, ErrNoTagFound
-				} else if !metaTagFound {
-					return Metadata{}, ErrDataNotFound
-				} else {
-					return Metadata{}, ErrMetaNotFound
-				}
-			}
-			return Metadata{}, err
-		} else {
-			switch typed := token.(type) {
-			case json.Delim:
-				switch typed {
-				case delimCloseBracket, delimCloseSquareBracket:
-					depth--
-				case delimOpenBracket, delimOpenSquareBracket:
-					depth++
-				}
-			case string:
-				if !metaTagFound && depth == 1 && typed == "meta" {
-					if err := decoder.Decode(&meta); err != nil {
-						return Metadata{}, err
-					} else if meta.IsValid() {
-						metaTagFound = true
-					}
-				}
-
-				if !dataTagFound && depth == 1 && typed == "data" {
-					dataTagFound = true
-				}
-			}
-		}
 	}
 }
 
@@ -160,62 +109,10 @@ func IngestWrapper(batch graph.Batch, reader io.ReadSeeker, meta Metadata) error
 	return nil
 }
 
-func seekToDataTag(decoder *json.Decoder) error {
-	depth := 0
-	dataTagFound := false
-	for {
-		if token, err := decoder.Token(); err != nil {
-			if errors.Is(err, io.EOF) {
-				return ErrDataNotFound
-			}
-
-			return err
-		} else {
-			//Break here to allow for one more token read, which should take us to the "[" token, exactly where we need to be
-			if dataTagFound {
-				//Do some extra checks
-				if typed, ok := token.(json.Delim); !ok {
-					return ErrInvalidDataTag
-				} else if typed != delimOpenSquareBracket {
-					return ErrInvalidDataTag
-				}
-				//Break out of our loop if we're in a good spot
-				return nil
-			}
-			switch typed := token.(type) {
-			case json.Delim:
-				switch typed {
-				case delimCloseBracket, delimCloseSquareBracket:
-					depth--
-				case delimOpenBracket, delimOpenSquareBracket:
-					depth++
-				}
-			case string:
-				if !dataTagFound && depth == 1 && typed == "data" {
-					dataTagFound = true
-				}
-			}
-		}
-	}
-}
-
-func createIngestDecoder(reader io.ReadSeeker) (*json.Decoder, error) {
-	if _, err := reader.Seek(0, io.SeekStart); err != nil {
-		return nil, fmt.Errorf("error seeking to start of file: %w", err)
-	} else {
-		decoder := json.NewDecoder(reader)
-		if err := seekToDataTag(decoder); err != nil {
-			return nil, fmt.Errorf("error seeking to data tag: %w", err)
-		} else {
-			return decoder, nil
-		}
-	}
-}
-
 type ConversionFunc[T any] func(decoded T, converted *ConvertedData)
 
 func decodeBasicData[T any](batch graph.Batch, reader io.ReadSeeker, conversionFunc ConversionFunc[T]) error {
-	decoder, err := createIngestDecoder(reader)
+	decoder, err := CreateIngestDecoder(reader)
 	if err != nil {
 		return err
 	}
@@ -237,7 +134,6 @@ func decodeBasicData[T any](batch graph.Batch, reader io.ReadSeeker, conversionF
 
 		if count == ingestCountThreshold {
 			batchCount++
-			log.Infof("Sending batch %d of %d objects", batchCount, ingestCountThreshold)
 			IngestBasicData(batch, convertedData)
 			convertedData.Clear()
 			count = 0
@@ -252,7 +148,7 @@ func decodeBasicData[T any](batch graph.Batch, reader io.ReadSeeker, conversionF
 }
 
 func decodeGroupData(batch graph.Batch, reader io.ReadSeeker) error {
-	decoder, err := createIngestDecoder(reader)
+	decoder, err := CreateIngestDecoder(reader)
 	if err != nil {
 		return err
 	}
@@ -282,7 +178,7 @@ func decodeGroupData(batch graph.Batch, reader io.ReadSeeker) error {
 }
 
 func decodeSessionData(batch graph.Batch, reader io.ReadSeeker) error {
-	decoder, err := createIngestDecoder(reader)
+	decoder, err := CreateIngestDecoder(reader)
 	if err != nil {
 		return err
 	}
@@ -312,7 +208,7 @@ func decodeSessionData(batch graph.Batch, reader io.ReadSeeker) error {
 }
 
 func decodeAzureData(batch graph.Batch, reader io.ReadSeeker) error {
-	decoder, err := createIngestDecoder(reader)
+	decoder, err := CreateIngestDecoder(reader)
 	if err != nil {
 		return err
 	}
