@@ -18,6 +18,8 @@ package datapipe
 
 import (
 	"encoding/json"
+	"fmt"
+	"github.com/specterops/bloodhound/errors"
 	"io"
 	"strings"
 	"time"
@@ -30,7 +32,27 @@ import (
 	"github.com/specterops/bloodhound/log"
 )
 
-func (s *Daemon) ReadWrapper(batch graph.Batch, reader io.Reader) error {
+const (
+	delimOpenBracket        = json.Delim('{')
+	delimCloseBracket       = json.Delim('}')
+	delimOpenSquareBracket  = json.Delim('[')
+	delimCloseSquareBracket = json.Delim(']')
+	ingestCountThreshold    = 500
+)
+
+var (
+	ErrMetaNotFound   = errors.New("no valid meta tag found")
+	ErrDataNotFound   = errors.New("no data tag found")
+	ErrNoTagFound     = errors.New("no valid meta tag or data tag found")
+	ErrInvalidDataTag = errors.New("invalid data tag found")
+)
+
+func (s *Daemon) ReadWrapper(batch graph.Batch, reader io.ReadSeeker) error {
+	if meta, err := validateMetaTag(reader); err != nil {
+		return err
+	} else {
+
+	}
 	var wrapper DataWrapper
 
 	if err := json.NewDecoder(reader).Decode(&wrapper); err != nil {
@@ -38,6 +60,57 @@ func (s *Daemon) ReadWrapper(batch graph.Batch, reader io.Reader) error {
 	}
 
 	return s.IngestWrapper(batch, wrapper)
+}
+
+func validateMetaTag(reader io.ReadSeeker) (Metadata, error) {
+	_, err := reader.Seek(0, io.SeekStart)
+	if err != nil {
+		return Metadata{}, fmt.Errorf("error seeking to start of file: %w", err)
+	}
+	depth := 0
+	decoder := json.NewDecoder(reader)
+	dataTagFound := false
+	metaTagFound := false
+	var meta Metadata
+	for {
+		if dataTagFound && metaTagFound {
+			return meta, nil
+		}
+		if token, err := decoder.Token(); err != nil {
+			if errors.Is(err, io.EOF) {
+				if !metaTagFound && !dataTagFound {
+					return Metadata{}, ErrNoTagFound
+				} else if !metaTagFound {
+					return Metadata{}, ErrDataNotFound
+				} else {
+					return Metadata{}, ErrMetaNotFound
+				}
+			}
+			return Metadata{}, err
+		} else {
+			switch typed := token.(type) {
+			case json.Delim:
+				switch typed {
+				case delimCloseBracket, delimCloseSquareBracket:
+					depth--
+				case delimOpenBracket, delimOpenSquareBracket:
+					depth++
+				}
+			case string:
+				if !metaTagFound && depth == 1 && typed == "meta" {
+					if err := decoder.Decode(&meta); err != nil {
+						return Metadata{}, err
+					} else if meta.IsValid() {
+						metaTagFound = true
+					}
+				}
+
+				if !dataTagFound && depth == 1 && typed == "data" {
+					dataTagFound = true
+				}
+			}
+		}
+	}
 }
 
 func (s *Daemon) IngestBasicData(batch graph.Batch, converted ConvertedData) {
@@ -55,6 +128,131 @@ func (s *Daemon) IngestAzureData(batch graph.Batch, converted ConvertedAzureData
 	IngestNodes(batch, azure.Entity, converted.NodeProps)
 	IngestNodes(batch, ad.Entity, converted.OnPremNodes)
 	IngestRelationships(batch, azure.Entity, converted.RelProps)
+}
+
+func (s *Daemon) IngestWrapperNew(batch graph.Batch, reader io.ReadSeeker, meta Metadata) error {
+	switch meta.Type {
+	case DataTypeComputer:
+		if meta.Version > 5 {
+			return s.decodeComputerData(batch, reader)
+		}
+	case DataTypeUser:
+		return s.decodeUserData(batch, reader)
+	case DataTypeGroup:
+
+	}
+}
+
+func seekToDataTag(decoder *json.Decoder) error {
+	depth := 0
+	dataTagFound := false
+	for {
+		if token, err := decoder.Token(); err != nil {
+			if errors.Is(err, io.EOF) {
+				return ErrDataNotFound
+			}
+
+			return err
+		} else {
+			//Break here to allow for one more token read, which should take us to the "[" token, exactly where we need to be
+			if dataTagFound {
+				//Do some extra checks
+				if typed, ok := token.(json.Delim); !ok {
+					return ErrInvalidDataTag
+				} else if typed != delimOpenSquareBracket {
+					return ErrInvalidDataTag
+				}
+				//Break out of our loop if we're in a good spot
+				return nil
+			}
+			switch typed := token.(type) {
+			case json.Delim:
+				switch typed {
+				case delimCloseBracket, delimCloseSquareBracket:
+					depth--
+				case delimOpenBracket, delimOpenSquareBracket:
+					depth++
+				}
+			case string:
+				if !dataTagFound && depth == 1 && typed == "data" {
+					dataTagFound = true
+				}
+			}
+		}
+	}
+}
+
+func createIngestDecoder(reader io.ReadSeeker) (*json.Decoder, error) {
+	if _, err := reader.Seek(0, io.SeekStart); err != nil {
+		return nil, fmt.Errorf("error seeking to start of file: %w", err)
+	} else {
+		decoder := json.NewDecoder(reader)
+		if err := seekToDataTag(decoder); err != nil {
+			return nil, fmt.Errorf("error seeking to data tag: %w", err)
+		} else {
+			return decoder, nil
+		}
+	}
+}
+
+func (s *Daemon) decodeComputerData(batch graph.Batch, reader io.ReadSeeker) error {
+	decoder, err := createIngestDecoder(reader)
+	if err != nil {
+		return err
+	}
+
+	convertedData := ConvertedData{}
+	var computer ein.Computer
+	count := 0
+	for decoder.More() {
+		if err := decoder.Decode(&computer); err != nil {
+			log.Errorf("Error decoding computer object: %v", err)
+		} else {
+			count++
+			convertComputerData(computer, &convertedData)
+			if count == ingestCountThreshold {
+				s.IngestBasicData(batch, convertedData)
+				convertedData.Clear()
+				count = 0
+			}
+		}
+	}
+
+	if count > 0 {
+		s.IngestBasicData(batch, convertedData)
+	}
+
+	return nil
+}
+
+func (s *Daemon) decodeUserData(batch graph.Batch, reader io.ReadSeeker) error {
+	decoder, err := createIngestDecoder(reader)
+	if err != nil {
+		return err
+	}
+
+	convertedData := ConvertedData{}
+	var user ein.User
+	count := 0
+	for decoder.More() {
+		if err := decoder.Decode(&user); err != nil {
+			log.Errorf("Error decoding user object: %v", err)
+		} else {
+			count++
+			convertUserData(user, &convertedData)
+			if count == ingestCountThreshold {
+				s.IngestBasicData(batch, convertedData)
+				convertedData.Clear()
+				count = 0
+			}
+		}
+	}
+
+	if count > 0 {
+		s.IngestBasicData(batch, convertedData)
+	}
+
+	return nil
 }
 
 func (s *Daemon) IngestWrapper(batch graph.Batch, wrapper DataWrapper) error {

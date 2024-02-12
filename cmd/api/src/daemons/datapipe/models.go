@@ -36,6 +36,10 @@ type Metadata struct {
 	Version int              `json:"version"`
 }
 
+func (s Metadata) IsValid() bool {
+	return s.Methods.IsValid() && s.Type.IsValid()
+}
+
 func (s Metadata) MatchKind() (graph.Kind, bool) {
 	switch s.Type {
 	case DataTypeComputer:
@@ -120,6 +124,16 @@ func AllIngestDataTypes() []DataType {
 	}
 }
 
+func (s DataType) IsValid() bool {
+	for _, method := range AllIngestDataTypes() {
+		if s == method {
+			return true
+		}
+	}
+
+	return false
+}
+
 type CollectionMethod uint64
 
 const (
@@ -193,6 +207,11 @@ func (s CollectionMethod) Or(flag CollectionMethod) CollectionMethod {
 type ConvertedData struct {
 	NodeProps []ein.IngestibleNode
 	RelProps  []ein.IngestibleRelationship
+}
+
+func (s ConvertedData) Clear() {
+	s.NodeProps = make([]ein.IngestibleNode, 0)
+	s.RelProps = make([]ein.IngestibleRelationship, 0)
 }
 
 type ConvertedGroupData struct {

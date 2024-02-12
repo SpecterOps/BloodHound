@@ -21,82 +21,63 @@ import (
 	"github.com/specterops/bloodhound/graphschema/ad"
 )
 
-func convertComputerData(data []ein.Computer) ConvertedData {
-	converted := ConvertedData{}
-
-	for _, computer := range data {
-		baseNodeProp := ein.ConvertObjectToNode(computer.IngestBase, ad.Computer)
-		converted.RelProps = append(converted.RelProps, ein.ParseACEData(computer.Aces, computer.ObjectIdentifier, ad.Computer)...)
-		if primaryGroupRel := ein.ParsePrimaryGroup(computer.IngestBase, ad.Computer, computer.PrimaryGroupSID); primaryGroupRel.IsValid() {
-			converted.RelProps = append(converted.RelProps, primaryGroupRel)
-		}
-
-		if containingPrincipalRel := ein.ParseObjectContainer(computer.IngestBase, ad.Computer); containingPrincipalRel.IsValid() {
-			converted.RelProps = append(converted.RelProps, containingPrincipalRel)
-		}
-
-		converted.RelProps = append(converted.RelProps, ein.ParseComputerMiscData(computer)...)
-		for _, localGroup := range computer.LocalGroups {
-			if !localGroup.Collected || len(localGroup.Results) == 0 {
-				continue
-			}
-
-			parsedLocalGroupData := ein.ConvertLocalGroup(localGroup, computer)
-			converted.RelProps = append(converted.RelProps, parsedLocalGroupData.Relationships...)
-			converted.NodeProps = append(converted.NodeProps, parsedLocalGroupData.Nodes...)
-		}
-
-		for _, userRight := range computer.UserRights {
-			if !userRight.Collected || len(userRight.Results) == 0 {
-				continue
-			}
-
-			if userRight.Privilege == ein.UserRightRemoteInteractiveLogon {
-				converted.RelProps = append(converted.RelProps, ein.ParseUserRightData(userRight, computer, ad.RemoteInteractiveLogonPrivilege)...)
-				baseNodeProp.PropertyMap[ad.HasURA.String()] = true
-			}
-		}
-
-		converted.NodeProps = append(converted.NodeProps, ein.ParseDCRegistryData(computer))
-
-		converted.NodeProps = append(converted.NodeProps, baseNodeProp)
+func convertComputerData(computer ein.Computer, converted *ConvertedData) {
+	baseNodeProp := ein.ConvertObjectToNode(computer.IngestBase, ad.Computer)
+	converted.RelProps = append(converted.RelProps, ein.ParseACEData(computer.Aces, computer.ObjectIdentifier, ad.Computer)...)
+	if primaryGroupRel := ein.ParsePrimaryGroup(computer.IngestBase, ad.Computer, computer.PrimaryGroupSID); primaryGroupRel.IsValid() {
+		converted.RelProps = append(converted.RelProps, primaryGroupRel)
 	}
 
-	return converted
+	if containingPrincipalRel := ein.ParseObjectContainer(computer.IngestBase, ad.Computer); containingPrincipalRel.IsValid() {
+		converted.RelProps = append(converted.RelProps, containingPrincipalRel)
+	}
+
+	converted.RelProps = append(converted.RelProps, ein.ParseComputerMiscData(computer)...)
+	for _, localGroup := range computer.LocalGroups {
+		if !localGroup.Collected || len(localGroup.Results) == 0 {
+			continue
+		}
+
+		parsedLocalGroupData := ein.ConvertLocalGroup(localGroup, computer)
+		converted.RelProps = append(converted.RelProps, parsedLocalGroupData.Relationships...)
+		converted.NodeProps = append(converted.NodeProps, parsedLocalGroupData.Nodes...)
+	}
+
+	for _, userRight := range computer.UserRights {
+		if !userRight.Collected || len(userRight.Results) == 0 {
+			continue
+		}
+
+		if userRight.Privilege == ein.UserRightRemoteInteractiveLogon {
+			converted.RelProps = append(converted.RelProps, ein.ParseUserRightData(userRight, computer, ad.RemoteInteractiveLogonPrivilege)...)
+			baseNodeProp.PropertyMap[ad.HasURA.String()] = true
+		}
+	}
+
+	converted.NodeProps = append(converted.NodeProps, ein.ParseDCRegistryData(computer))
+	converted.NodeProps = append(converted.NodeProps, baseNodeProp)
 }
 
-func convertUserData(data []ein.User) ConvertedData {
-	converted := ConvertedData{}
-
-	for _, user := range data {
-		converted.NodeProps = append(converted.NodeProps, ein.ConvertObjectToNode(user.IngestBase, ad.User))
-		converted.RelProps = append(converted.RelProps, ein.ParseACEData(user.Aces, user.ObjectIdentifier, ad.User)...)
-		if rel := ein.ParseObjectContainer(user.IngestBase, ad.User); rel.IsValid() {
-			converted.RelProps = append(converted.RelProps, rel)
-		}
-		converted.RelProps = append(converted.RelProps, ein.ParseUserMiscData(user)...)
+func convertUserData(user ein.User, converted *ConvertedData) {
+	converted.NodeProps = append(converted.NodeProps, ein.ConvertObjectToNode(user.IngestBase, ad.User))
+	converted.RelProps = append(converted.RelProps, ein.ParseACEData(user.Aces, user.ObjectIdentifier, ad.User)...)
+	if rel := ein.ParseObjectContainer(user.IngestBase, ad.User); rel.IsValid() {
+		converted.RelProps = append(converted.RelProps, rel)
 	}
-
-	return converted
+	converted.RelProps = append(converted.RelProps, ein.ParseUserMiscData(user)...)
 }
 
-func convertGroupData(data []ein.Group) ConvertedGroupData {
-	converted := ConvertedGroupData{}
+func convertGroupData(group ein.Group, converted *ConvertedGroupData) {
+	converted.NodeProps = append(converted.NodeProps, ein.ConvertObjectToNode(group.IngestBase, ad.Group))
 
-	for _, group := range data {
-		converted.NodeProps = append(converted.NodeProps, ein.ConvertObjectToNode(group.IngestBase, ad.Group))
-
-		if rel := ein.ParseObjectContainer(group.IngestBase, ad.Group); rel.Source != "" && rel.Target != "" {
-			converted.RelProps = append(converted.RelProps, rel)
-		}
-		converted.RelProps = append(converted.RelProps, ein.ParseACEData(group.Aces, group.ObjectIdentifier, ad.Group)...)
-
-		groupMembershipData := ein.ParseGroupMembershipData(group)
-		converted.RelProps = append(converted.RelProps, groupMembershipData.RegularMembers...)
-		converted.DistinguishedNameProps = append(converted.DistinguishedNameProps, groupMembershipData.DistinguishedNameMembers...)
+	if rel := ein.ParseObjectContainer(group.IngestBase, ad.Group); rel.Source != "" && rel.Target != "" {
+		converted.RelProps = append(converted.RelProps, rel)
 	}
+	converted.RelProps = append(converted.RelProps, ein.ParseACEData(group.Aces, group.ObjectIdentifier, ad.Group)...)
 
-	return converted
+	groupMembershipData := ein.ParseGroupMembershipData(group)
+	converted.RelProps = append(converted.RelProps, groupMembershipData.RegularMembers...)
+	converted.DistinguishedNameProps = append(converted.DistinguishedNameProps, groupMembershipData.DistinguishedNameMembers...)
 }
 
 func convertDomainData(data []ein.Domain) ConvertedData {
