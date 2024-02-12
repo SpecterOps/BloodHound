@@ -205,20 +205,10 @@ func (s *BloodhoundDB) DeleteAssetGroupSelector(ctx context.Context, selector mo
 }
 
 func (s *BloodhoundDB) DeleteAssetGroupSelectors(ctx context.Context, assetGroupId int) error {
-
-	var (
-		auditEntry = model.AuditEntry{
-			Action: "DeleteCustomHighValueSelectors",
-			Model:  &model.AuditData{},
-		}
+	return CheckError(
+		s.db.Where("asset_group_id = ?", assetGroupId).
+			Delete(&model.AssetGroupSelector{}),
 	)
-
-	return s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
-		return CheckError(
-			s.db.Where("asset_group_id = ?", assetGroupId).
-				Delete(&model.AssetGroupSelector{}),
-		)
-	})
 }
 
 func (s *BloodhoundDB) CreateRawAssetGroupSelector(assetGroup model.AssetGroup, name, selector string) (model.AssetGroupSelector, error) {

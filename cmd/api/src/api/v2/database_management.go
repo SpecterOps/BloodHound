@@ -23,6 +23,7 @@ import (
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/dawgs/ops"
 	"github.com/specterops/bloodhound/src/api"
+	"github.com/specterops/bloodhound/src/model"
 )
 
 type DatabaseManagement struct {
@@ -38,6 +39,7 @@ func (s Resources) HandleDatabaseManagement(response http.ResponseWriter, reques
 	var (
 		payload DatabaseManagement
 		nodeIDs []graph.ID
+		options []string
 	)
 
 	if err := api.ReadJSONRequestPayloadLimited(&payload, request); err != nil {
@@ -46,7 +48,11 @@ func (s Resources) HandleDatabaseManagement(response http.ResponseWriter, reques
 			api.BuildErrorResponse(http.StatusBadRequest, "JSON malformed.", request),
 			response,
 		)
-	} else if payload.CollectedGraphData {
+	}
+
+	// delete graph
+	if payload.CollectedGraphData {
+		options = append(options, "collected graph data")
 
 		if err := s.Graph.ReadTransaction(request.Context(), func(tx graph.Transaction) error {
 			fetchedNodeIDs, err := ops.FetchNodeIDs(tx.Nodes())
@@ -78,7 +84,12 @@ func (s Resources) HandleDatabaseManagement(response http.ResponseWriter, reques
 			return
 		}
 
-	} else if payload.HighValueSelectors {
+	}
+
+	// delete custom high value selectors
+	if payload.HighValueSelectors {
+		options = append(options, "custom high value selectors")
+
 		if payload.AssetGroupId == 0 {
 			api.WriteErrorResponse(
 				request.Context(),
@@ -95,7 +106,12 @@ func (s Resources) HandleDatabaseManagement(response http.ResponseWriter, reques
 			)
 			return
 		}
-	} else if payload.FileIngestHistory {
+	}
+
+	// delete file ingest history
+	if payload.FileIngestHistory {
+		options = append(options, "file ingest history")
+
 		if err := s.DB.DeleteAllFileUploads(); err != nil {
 			api.WriteErrorResponse(
 				request.Context(),
@@ -104,7 +120,12 @@ func (s Resources) HandleDatabaseManagement(response http.ResponseWriter, reques
 			)
 			return
 		}
-	} else if payload.DataQualityHistory {
+	}
+
+	// delete data quality history
+	if payload.DataQualityHistory {
+		options = append(options, "data quality history")
+
 		if err := s.DB.DeleteAllDataQuality(); err != nil {
 			api.WriteErrorResponse(
 				request.Context(),
@@ -113,7 +134,22 @@ func (s Resources) HandleDatabaseManagement(response http.ResponseWriter, reques
 			)
 			return
 		}
-	} else {
-		response.WriteHeader(http.StatusNoContent)
 	}
+
+	if err := s.DB.AppendAuditLog(request.Context(), model.AuditEntry{
+		Action: "DeleteBloodhoundData",
+		Model: &model.AuditData{
+			"options": options,
+		},
+		Status: model.AuditStatusSuccess,
+	}); err != nil {
+		api.WriteErrorResponse(
+			request.Context(),
+			api.BuildErrorResponse(http.StatusInternalServerError, "there was an error creating audit log for deleting Bloodhound data", request),
+			response,
+		)
+		return
+	}
+
+	response.WriteHeader(http.StatusNoContent)
 }
