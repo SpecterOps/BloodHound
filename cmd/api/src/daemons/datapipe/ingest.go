@@ -36,10 +36,10 @@ const (
 )
 
 var (
-	ErrMetaNotFound   = errors.New("no valid meta tag found")
-	ErrDataNotFound   = errors.New("no data tag found")
-	ErrNoTagFound     = errors.New("no valid meta tag or data tag found")
-	ErrInvalidDataTag = errors.New("invalid data tag found")
+	ErrMetaTagNotFound = errors.New("no valid meta tag found")
+	ErrDataTagNotFound = errors.New("no data tag found")
+	ErrNoTagFound      = errors.New("no valid meta tag or data tag found")
+	ErrInvalidDataTag  = errors.New("invalid data tag found")
 )
 
 func ReadFileForIngest(batch graph.Batch, reader io.ReadSeeker) error {
