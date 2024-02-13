@@ -41,7 +41,7 @@ func Test_DatabaseManagement(t *testing.T) {
 	lab.Pack(harness, assetGroupSelector)
 
 	lab.NewSpec(t, harness).Run(
-		lab.TestCase("dummy", func(assert *require.Assertions, harness *lab.Harness) {
+		lab.TestCase("the endpoint can delete asset group selectors", func(assert *require.Assertions, harness *lab.Harness) {
 			apiClient, ok := lab.Unpack(harness, fixtures.BHAdminApiClientFixture)
 			assert.True(ok)
 
