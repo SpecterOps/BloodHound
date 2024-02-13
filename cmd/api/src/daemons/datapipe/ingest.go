@@ -70,7 +70,7 @@ func IngestAzureData(batch graph.Batch, converted ConvertedAzureData) {
 func IngestWrapper(batch graph.Batch, reader io.ReadSeeker, meta Metadata) error {
 	switch meta.Type {
 	case DataTypeComputer:
-		if meta.Version > 5 {
+		if meta.Version >= 5 {
 			return decodeBasicData(batch, reader, convertComputerData)
 		}
 	case DataTypeUser:

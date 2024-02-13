@@ -45,7 +45,7 @@ func ValidateMetaTag(reader io.ReadSeeker) (Metadata, error) {
 				if !metaTagFound && depth == 1 && typed == "meta" {
 					if err := decoder.Decode(&meta); err != nil {
 						return Metadata{}, err
-					} else if meta.IsValid() {
+					} else if meta.Type.IsValid() {
 						metaTagFound = true
 					}
 				}

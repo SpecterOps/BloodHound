@@ -36,10 +36,6 @@ type Metadata struct {
 	Version int              `json:"version"`
 }
 
-func (s Metadata) IsValid() bool {
-	return s.Methods.IsValid() && s.Type.IsValid()
-}
-
 func (s Metadata) MatchKind() (graph.Kind, bool) {
 	switch s.Type {
 	case DataTypeComputer:
