@@ -248,11 +248,7 @@ func AcyclicTraverseNodes(tx graph.Transaction, plan TraversalPlan, nodeFilter N
 
 	// Prevent expansion of already-visited nodes
 	plan.expansionFilter = func(segment *graph.PathSegment) bool {
-		if visitedBitmap.CheckedAdd(segment.Node.ID.Uint64()) {
-			return true
-		}
-
-		return false
+		return visitedBitmap.CheckedAdd(segment.Node.ID.Uint64())
 	}
 
 	// Wrap our descent filter so we can test candidates

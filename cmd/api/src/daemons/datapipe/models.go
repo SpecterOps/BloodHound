@@ -209,7 +209,7 @@ type ConvertedData struct {
 	RelProps  []ein.IngestibleRelationship
 }
 
-func (s ConvertedData) Clear() {
+func (s *ConvertedData) Clear() {
 	s.NodeProps = make([]ein.IngestibleNode, 0)
 	s.RelProps = make([]ein.IngestibleRelationship, 0)
 }
@@ -220,7 +220,7 @@ type ConvertedGroupData struct {
 	DistinguishedNameProps []ein.IngestibleRelationship
 }
 
-func (s ConvertedGroupData) Clear() {
+func (s *ConvertedGroupData) Clear() {
 	s.NodeProps = make([]ein.IngestibleNode, 0)
 	s.RelProps = make([]ein.IngestibleRelationship, 0)
 	s.DistinguishedNameProps = make([]ein.IngestibleRelationship, 0)
@@ -230,7 +230,7 @@ type ConvertedSessionData struct {
 	SessionProps []ein.IngestibleSession
 }
 
-func (s ConvertedSessionData) Clear() {
+func (s *ConvertedSessionData) Clear() {
 	s.SessionProps = make([]ein.IngestibleSession, 0)
 }
 
