@@ -212,7 +212,7 @@ type ListAssetGroupMembersResponse struct {
 	Members AssetGroupMembers `json:"members"`
 }
 
-type ListAssetGroupMembersCountsResponse struct {
+type ListAssetGroupMemberCountsResponse struct {
 	TotalCount int            `json:"total_count"`
 	Counts     map[string]int `json:"counts"`
 }

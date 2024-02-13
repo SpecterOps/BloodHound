@@ -1446,7 +1446,7 @@ func TestResources_ListAssetGroupMembersCount(t *testing.T) {
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusOK)
-					result := api.ListAssetGroupMembersCountsResponse{}
+					result := api.ListAssetGroupMemberCountsResponse{}
 					apitest.UnmarshalData(output, &result)
 					require.Equal(t, 2, result.TotalCount)
 					require.Equal(t, 2, result.Counts[ad.Domain.String()])
@@ -1482,7 +1482,7 @@ func TestResources_ListAssetGroupMembersCount(t *testing.T) {
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusOK)
-					result := api.ListAssetGroupMembersCountsResponse{}
+					result := api.ListAssetGroupMemberCountsResponse{}
 					apitest.UnmarshalData(output, &result)
 					require.Equal(t, 1, result.TotalCount)
 					require.Equal(t, 1, result.Counts[azure.Tenant.String()])

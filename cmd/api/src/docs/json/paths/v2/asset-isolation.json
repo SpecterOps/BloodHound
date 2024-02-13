@@ -652,6 +652,13 @@
                 },
                 {
                     "type": "string",
+                    "description": "Filter results by only this primary_kind. Valid filter predicates are eq, neq",
+                    "name": "primary_kind",
+                    "in": "query",
+                    "required": false
+                },
+                {
+                    "type": "string",
                     "description": "Filter results by column value. Valid filter predicates are eq, neq",
                     "name": "environment_kind",
                     "in": "query",
@@ -678,7 +685,7 @@
                     "content": {
                         "application/json": {
                             "schema": {
-                                "$ref": "#/definitions/v2.ListAssetGroupMembersCountResponse"
+                                "$ref": "#/definitions/v2.ListAssetGroupMemberCountsResponse"
                             }
                         }
                     }

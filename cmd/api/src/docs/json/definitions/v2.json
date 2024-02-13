@@ -76,7 +76,7 @@
       }
     }
   },
-  "v2.ListAssetGroupMembersCountResponse": {
+  "v2.ListAssetGroupMemberCountsResponse": {
         "properties": {
             "data": {
                 "type": "object",
