@@ -70,7 +70,7 @@ const GroupManagement = () => {
             };
         });
     };
-    console.log('globalDomain', globalDomain);
+
     if (!globalDomain) return null;
     return (
         <GroupManagementContent
