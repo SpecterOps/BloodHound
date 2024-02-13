@@ -2,7 +2,6 @@ package api
 
 import (
 	"context"
-	"fmt"
 	"testing"
 
 	"github.com/gofrs/uuid"
@@ -34,12 +33,17 @@ func setupRequest(user model.User) (context.Context, LoginRequest) {
 	testCtx := context.Background()
 	testCtx = ctx.Set(testCtx, &bhCtx)
 
-	loginRequest := LoginRequest{Username: user.PrincipalName}
+	var loginRequest LoginRequest
+	if user.PrincipalName == "" {
+		loginRequest.Username = "nonExistentUser"
+	} else {
+		loginRequest.Username = user.PrincipalName
+	}
 
 	return testCtx, loginRequest
 }
 
-func buildAuditLogs(testCtx context.Context, user model.User, loginRequest LoginRequest) model.AuditLog {
+func buildAuditLog(testCtx context.Context, user model.User, loginRequest LoginRequest, status string, loginError error) model.AuditLog {
 	bhCtx := ctx.Get(testCtx)
 
 	auditLog := model.AuditLog{
@@ -49,14 +53,18 @@ func buildAuditLogs(testCtx context.Context, user model.User, loginRequest Login
 		Fields:          types.JSONUntypedObject{"username": loginRequest.Username},
 		RequestID:       bhCtx.RequestID,
 		SourceIpAddress: bhCtx.RequestIP,
-		Status:          string(model.AuditStatusSuccess),
+		Status:          status,
 		CommitID:        commitId,
 	}
 
 	if user.ID.String() != "00000000-0000-0000-0000-000000000000" {
 		auditLog.ActorID = user.ID.String()
 	}
-	fmt.Printf("****** auditLog is %+v\n ****** user.ID.String is %s", auditLog, user.ID.String())
+
+	if loginError != nil {
+		auditLog.Fields["error"] = loginError
+	}
+
 	return auditLog
 }
 
@@ -67,7 +75,7 @@ func TestAuditLogin(t *testing.T) {
 		db: mockDB,
 	}
 	testCtx, loginRequest := setupRequest(testyUser)
-	expectedAuditLog := buildAuditLogs(testCtx, testyUser, loginRequest)
+	expectedAuditLog := buildAuditLog(testCtx, testyUser, loginRequest, string(model.AuditStatusSuccess), nil)
 
 	mockDB.EXPECT().CreateAuditLog(expectedAuditLog)
 	a.auditLogin(testCtx, commitId, testyUser, loginRequest, string(model.AuditStatusSuccess), nil)
@@ -80,8 +88,8 @@ func TestAuditLogin_UserNotFound(t *testing.T) {
 		db: mockDB,
 	}
 	testCtx, loginRequest := setupRequest(model.User{})
-	expectedAuditLog := buildAuditLogs(testCtx, model.User{}, loginRequest)
+	expectedAuditLog := buildAuditLog(testCtx, model.User{}, loginRequest, string(model.AuditStatusFailure), ErrInvalidAuth)
 
 	mockDB.EXPECT().CreateAuditLog(expectedAuditLog)
-	a.auditLogin(testCtx, commitId, model.User{}, loginRequest, string(model.AuditStatusSuccess), nil)
+	a.auditLogin(testCtx, commitId, model.User{}, loginRequest, string(model.AuditStatusFailure), ErrInvalidAuth)
 }
