@@ -75,7 +75,8 @@ func NewAssetGroupSelectorFixture(assetGroupFixture *lab.Fixture[*model.AssetGro
 					if selector, err := db.CreateAssetGroupSelector(
 						*assetGroup,
 						model.AssetGroupSelectorSpec{
-							SelectorName: "test selector name",
+							SelectorName:   "test selector name",
+							EntityObjectID: "test object id",
 						}, false,
 					); err != nil {
 						return nil, fmt.Errorf("failure creating asset group selector: %v", err)
