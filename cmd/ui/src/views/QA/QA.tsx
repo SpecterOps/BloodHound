@@ -24,12 +24,11 @@ import {
     TenantInfo,
 } from 'bh-shared-ui';
 import { useEffect, useState } from 'react';
-import { useSelector } from 'react-redux';
-import { AppState } from 'src/store';
 import { dataCollectionMessage } from './utils';
+import { useAppSelector } from 'src/store';
 
 const QualityAssurance: React.FC = () => {
-    const domain = useSelector((state: AppState) => state.global.options.domain);
+    const domain = useAppSelector((state) => state.global.options.domain);
     const [contextType, setContextType] = useState(domain?.type || null);
     const [contextId, setContextId] = useState(domain?.id || null);
     const [dataError, setDataError] = useState(false);

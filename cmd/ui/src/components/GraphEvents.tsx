@@ -18,11 +18,10 @@ import { useRegisterEvents, useSetSettings, useSigma } from '@react-sigma/core';
 import { setSelectedEdge } from 'bh-shared-ui';
 import { AbstractGraph, Attributes } from 'graphology-types';
 import { FC, useEffect, useRef, useState } from 'react';
-import { useSelector } from 'react-redux';
 import { SigmaNodeEventPayload } from 'sigma/sigma';
 import { getEdgeDataFromKey, getEdgeSourceAndTargetDisplayData, resetCamera } from 'src/ducks/graph/utils';
 import { bezier } from 'src/rendering/utils/bezier';
-import { AppState, useAppDispatch } from 'src/store';
+import { useAppDispatch, useAppSelector } from 'src/store';
 
 export interface GraphEventProps {
     onDoubleClickNode?: (id: string) => void;
@@ -42,8 +41,8 @@ export const GraphEvents: FC<GraphEventProps> = ({
     edgeReducer,
 }) => {
     const dispatch = useAppDispatch();
-    const selectedEdge = useSelector((state: AppState) => state.edgeinfo.selectedEdge);
-    const selectedNode = useSelector((state: AppState) => state.entityinfo.selectedNode);
+    const selectedEdge = useAppSelector((state) => state.edgeinfo.selectedEdge);
+    const selectedNode = useAppSelector((state) => state.entityinfo.selectedNode);
 
     const sigma = useSigma();
     const registerEvents = useRegisterEvents();

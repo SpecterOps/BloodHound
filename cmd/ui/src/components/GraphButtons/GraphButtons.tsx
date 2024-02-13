@@ -23,10 +23,9 @@ import { random } from 'graphology-layout';
 import forceAtlas2 from 'graphology-layout-forceatlas2';
 import isEmpty from 'lodash/isEmpty';
 import { FC } from 'react';
-import { useSelector } from 'react-redux';
 import { resetCamera } from 'src/ducks/graph/utils';
 import { RankDirection, layoutDagre } from 'src/hooks/useLayoutDagre/useLayoutDagre';
-import { AppState } from 'src/store';
+import { useAppSelector } from 'src/store';
 
 interface GraphButtonsProps {
     rankDirection?: RankDirection;
@@ -43,7 +42,7 @@ const GraphButtons: FC<GraphButtonsProps> = ({ rankDirection, options, nonLayout
     if (isEmpty(options)) options = { standard: false, sequential: false };
     const { standard, sequential } = options;
 
-    const exportableGraphState = useSelector((state: AppState) => state.explore.export);
+    const exportableGraphState = useAppSelector((state) => state.explore.export);
 
     const sigma = useSigma();
     const graph = sigma.getGraph();

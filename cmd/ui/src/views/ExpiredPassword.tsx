@@ -15,19 +15,19 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import React from 'react';
-import { useSelector } from 'react-redux';
+
 import { Navigate } from 'react-router-dom';
 import { authExpiredSelector, logout, updateExpiredPassword } from 'src/ducks/auth/authSlice';
 import LoginPage from 'src/components/LoginPage';
 import PasswordResetForm from 'src/components/PasswordResetForm';
 import { ROUTE_HOME } from 'src/ducks/global/routes';
-import { AppState, useAppDispatch } from 'src/store';
+import { useAppDispatch, useAppSelector } from 'src/store';
 
 const PasswordReset: React.FC = () => {
     /* Hooks */
     const dispatch = useAppDispatch();
-    const authState = useSelector((state: AppState) => state.auth);
-    const authExpired = useSelector(authExpiredSelector);
+    const authState = useAppSelector((state) => state.auth);
+    const authExpired = useAppSelector(authExpiredSelector);
 
     /* Event Handlers */
     const handleSubmit = (password: string) => {
