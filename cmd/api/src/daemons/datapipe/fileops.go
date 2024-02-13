@@ -39,7 +39,7 @@ func SeekToDataTag(decoder *json.Decoder) error {
 				return ErrDataTagNotFound
 			}
 
-			return err
+			return fmt.Errorf("%w: %w", ErrJSONDecoderInternal, err)
 		} else {
 			//Break here to allow for one more token read, which should take us to the "[" token, exactly where we need to be
 			if dataTagFound {

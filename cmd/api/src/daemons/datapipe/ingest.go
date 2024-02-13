@@ -18,13 +18,13 @@ package datapipe
 
 import (
 	"fmt"
-	"github.com/specterops/bloodhound/errors"
 	"io"
 	"strings"
 	"time"
 
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/ein"
+	"github.com/specterops/bloodhound/errors"
 	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/graphschema/azure"
 	"github.com/specterops/bloodhound/graphschema/common"
@@ -36,10 +36,11 @@ const (
 )
 
 var (
-	ErrMetaTagNotFound = errors.New("no valid meta tag found")
-	ErrDataTagNotFound = errors.New("no data tag found")
-	ErrNoTagFound      = errors.New("no valid meta tag or data tag found")
-	ErrInvalidDataTag  = errors.New("invalid data tag found")
+	ErrMetaTagNotFound     = errors.New("no valid meta tag found")
+	ErrDataTagNotFound     = errors.New("no data tag found")
+	ErrNoTagFound          = errors.New("no valid meta tag or data tag found")
+	ErrInvalidDataTag      = errors.New("invalid data tag found")
+	ErrJSONDecoderInternal = errors.New("json decoder internal error")
 )
 
 func ReadFileForIngest(batch graph.Batch, reader io.ReadSeeker) error {
