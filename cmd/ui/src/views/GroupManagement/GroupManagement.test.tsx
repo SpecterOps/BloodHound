@@ -54,7 +54,13 @@ describe('GroupManagement', () => {
     const setup = async () =>
         await act(async () => {
             const user = userEvent.setup();
-            const screen = render(<GroupManagement />);
+            const screen = render(<GroupManagement />, {
+                initialState: {
+                    global: {
+                        options: { domain: {} },
+                    },
+                },
+            });
             return { user, screen };
         });
 
