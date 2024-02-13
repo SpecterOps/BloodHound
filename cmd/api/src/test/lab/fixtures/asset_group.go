@@ -63,7 +63,7 @@ func NewAssetGroupFixture() *lab.Fixture[*model.AssetGroup] {
 }
 
 // todo: add parameters to create different selectors
-func NewAssetGroupSelectorFixture(assetGroupFixture *lab.Fixture[*model.AssetGroup]) *lab.Fixture[*model.AssetGroupSelector] {
+func NewAssetGroupSelectorFixture(assetGroupFixture *lab.Fixture[*model.AssetGroup], selectorName, objectId string) *lab.Fixture[*model.AssetGroupSelector] {
 	fixture := lab.NewFixture(
 		func(h *lab.Harness) (*model.AssetGroupSelector, error) {
 			if assetGroup, ok := lab.Unpack(h, assetGroupFixture); !ok {
@@ -75,9 +75,10 @@ func NewAssetGroupSelectorFixture(assetGroupFixture *lab.Fixture[*model.AssetGro
 					if selector, err := db.CreateAssetGroupSelector(
 						*assetGroup,
 						model.AssetGroupSelectorSpec{
-							SelectorName:   "test selector name",
-							EntityObjectID: "test object id",
-						}, false,
+							SelectorName:   selectorName,
+							EntityObjectID: objectId,
+						},
+						false,
 					); err != nil {
 						return nil, fmt.Errorf("failure creating asset group selector: %v", err)
 					} else {
