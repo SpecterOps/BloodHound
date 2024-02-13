@@ -604,7 +604,7 @@
             }
         }
     },
-    "/api/v2/asset-groups/{asset_group_id}/members/count": {
+    "/api/v2/asset-groups/{asset_group_id}/members/counts": {
         "parameters": [
             {
                 "type": "integer",
@@ -652,7 +652,7 @@
                 },
                 {
                     "type": "string",
-                    "description": "Filter results by only this primary_kind. Valid filter predicates are eq, neq",
+                    "description": "Return counts only for the specified node kind. Valid filter predicates are eq, neq",
                     "name": "primary_kind",
                     "in": "query",
                     "required": false
