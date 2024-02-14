@@ -583,6 +583,71 @@ func TestADCSESC3(t *testing.T) {
 			return nil
 		})
 	})
+
+	testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) error {
+		harness.ESC3Harness3.Setup(testContext)
+		return nil
+	}, func(harness integration.HarnessDetails, db graph.Database) {
+		operation := analysis.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - ESC3")
+
+		groupExpansions, err := ad2.ExpandAllRDPLocalGroups(context.Background(), db)
+		require.Nil(t, err)
+		enterpriseCertAuthorities, err := ad2.FetchNodesByKind(context.Background(), db, ad.EnterpriseCA)
+		require.Nil(t, err)
+		certTemplates, err := ad2.FetchNodesByKind(context.Background(), db, ad.CertTemplate)
+		require.Nil(t, err)
+		domains, err := ad2.FetchNodesByKind(context.Background(), db, ad.Domain)
+		require.Nil(t, err)
+
+		cache := ad2.NewADCSCache()
+		cache.BuildCache(context.Background(), db, enterpriseCertAuthorities, certTemplates)
+
+		for _, domain := range domains {
+			innerDomain := domain
+
+			operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
+				if enterpriseCAs, err := ad2.FetchEnterpriseCAsTrustedForNTAuthToDomain(tx, innerDomain); err != nil {
+					return err
+				} else {
+					for _, enterpriseCA := range enterpriseCAs {
+						if cache.DoesCAChainProperlyToDomain(enterpriseCA, innerDomain) {
+							if err := ad2.PostADCSESC3(ctx, tx, outC, groupExpansions, enterpriseCA, innerDomain, cache); err != nil {
+								t.Logf("failed post processing for %s: %v", ad.ADCSESC3.String(), err)
+							} else {
+								return nil
+							}
+						}
+					}
+				}
+				return nil
+			})
+		}
+		operation.Done()
+
+		db.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
+			if results, err := ops.FetchStartNodes(tx.Relationships().Filterf(func() graph.Criteria {
+				return query.Kind(query.Relationship(), ad.ADCSESC3)
+			})); err != nil {
+				t.Fatalf("error fetching esc3 edges in integration test; %v", err)
+			} else {
+				assert.Equal(t, 1, len(results))
+
+				require.True(t, results.Contains(harness.ESC3Harness3.Group1))
+			}
+
+			if edge, err := tx.Relationships().Filterf(func() graph.Criteria {
+				return query.Kind(query.Relationship(), ad.ADCSESC3)
+			}).First(); err != nil {
+				t.Fatalf("error fetching esc3 edges in integration test; %v", err)
+			} else {
+				comp, err := ad2.GetADCSESC3EdgeComposition(context.Background(), db, edge)
+				assert.Nil(t, err)
+				assert.Equal(t, 7, len(comp.AllNodes()))
+				assert.False(t, comp.AllNodes().Contains(harness.ESC3Harness3.User2))
+			}
+			return nil
+		})
+	})
 }
 
 func TestADCSESC9a(t *testing.T) {
@@ -1135,6 +1200,33 @@ func TestADCSESC9b(t *testing.T) {
 			}
 			return nil
 		})
+
+		db.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
+			if results, err := ops.FetchRelationships(tx.Relationships().Filterf(func() graph.Criteria {
+				return query.Kind(query.Relationship(), ad.ADCSESC9b)
+			})); err != nil {
+				t.Fatalf("error fetching esc9b edges in integration test; %v", err)
+			} else {
+				assert.Equal(t, 1, len(results))
+				edge := results[0]
+
+				if edgeComp, err := ad2.GetEdgeCompositionPath(context.Background(), db, edge); err != nil {
+					t.Fatalf("error getting edge composition for esc9: %v", err)
+				} else {
+					nodes := edgeComp.AllNodes().Slice()
+					assert.Contains(t, nodes, harness.ESC9bHarnessECA.Group1)
+					assert.Contains(t, nodes, harness.ESC9bHarnessECA.Domain1)
+					assert.Contains(t, nodes, harness.ESC9bHarnessECA.Computer1)
+					assert.Contains(t, nodes, harness.ESC9bHarnessECA.CertTemplate1)
+					assert.Contains(t, nodes, harness.ESC9bHarnessECA.EnterpriseCA1)
+					assert.Contains(t, nodes, harness.ESC9bHarnessECA.DC1)
+					assert.Contains(t, nodes, harness.ESC9bHarnessECA.NTAuthStore1)
+					assert.Contains(t, nodes, harness.ESC9bHarnessECA.RootCA1)
+				}
+			}
+
+			return nil
+		})
 	})
 }
 
@@ -1279,8 +1371,6 @@ func TestADCSESC6a(t *testing.T) {
 					operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
 						if err := ad2.PostADCSESC6a(ctx, tx, outC, groupExpansions, innerEnterpriseCA, innerDomain, cache); err != nil {
 							t.Logf("failed post processing for %s: %v", ad.ADCSESC6a.String(), err)
-						} else {
-							return nil
 						}
 
 						return nil
@@ -1314,7 +1404,7 @@ func TestADCSESC6a(t *testing.T) {
 			}).First(); err != nil {
 				t.Fatalf("error fetching esc6a edges in integration test; %v", err)
 			} else {
-				composition, err := ad2.GetADCSESC6aEdgeComposition(context.Background(), db, edge)
+				composition, err := ad2.GetADCSESC6EdgeComposition(context.Background(), db, edge)
 				require.Nil(t, err)
 				names := []string{}
 				for _, node := range composition.AllNodes() {
@@ -1340,7 +1430,7 @@ func TestADCSESC6a(t *testing.T) {
 			}).First(); err != nil {
 				t.Fatalf("error fetching esc6a edges in integration test; %v", err)
 			} else {
-				composition, err := ad2.GetADCSESC6aEdgeComposition(context.Background(), db, edge)
+				composition, err := ad2.GetADCSESC6EdgeComposition(context.Background(), db, edge)
 				require.Nil(t, err)
 				names := []string{}
 				for _, node := range composition.AllNodes() {
@@ -1495,7 +1585,7 @@ func TestADCSESC6b(t *testing.T) {
 				}).First(); err != nil {
 				t.Fatalf("error fetching esc6b edge in integration test: %v", err)
 			} else {
-				composition, err := ad2.GetADCSESC6bEdgeComposition(context.Background(), db, edge)
+				composition, err := ad2.GetADCSESC6EdgeComposition(context.Background(), db, edge)
 				require.Nil(t, err)
 
 				require.Equal(t, 8, len(composition.AllNodes()))
@@ -1520,7 +1610,7 @@ func TestADCSESC6b(t *testing.T) {
 				}).First(); err != nil {
 				t.Fatalf("error fetching esc6b edge in integration test: %v", err)
 			} else {
-				composition, err := ad2.GetADCSESC6bEdgeComposition(context.Background(), db, edge)
+				composition, err := ad2.GetADCSESC6EdgeComposition(context.Background(), db, edge)
 				require.Nil(t, err)
 
 				require.Equal(t, 8, len(composition.AllNodes()))
@@ -2200,6 +2290,33 @@ func TestADCSESC10b(t *testing.T) {
 				require.True(t, results.Contains(harness.ESC10bHarnessECA.Group1))
 
 			}
+			return nil
+		})
+
+		db.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
+			if results, err := ops.FetchRelationships(tx.Relationships().Filterf(func() graph.Criteria {
+				return query.Kind(query.Relationship(), ad.ADCSESC10b)
+			})); err != nil {
+				t.Fatalf("error fetching esc10b edges in integration test; %v", err)
+			} else {
+				assert.Equal(t, 1, len(results))
+				edge := results[0]
+
+				if edgeComp, err := ad2.GetEdgeCompositionPath(context.Background(), db, edge); err != nil {
+					t.Fatalf("error getting edge composition for esc10b: %v", err)
+				} else {
+					nodes := edgeComp.AllNodes().Slice()
+					assert.Contains(t, nodes, harness.ESC10bHarnessECA.Group1)
+					assert.Contains(t, nodes, harness.ESC10bHarnessECA.Computer1)
+					assert.Contains(t, nodes, harness.ESC10bHarnessECA.Domain1)
+					assert.Contains(t, nodes, harness.ESC10bHarnessECA.NTAuthStore1)
+					assert.Contains(t, nodes, harness.ESC10bHarnessECA.RootCA1)
+					assert.Contains(t, nodes, harness.ESC10bHarnessECA.ComputerDC1)
+					assert.Contains(t, nodes, harness.ESC10bHarnessECA.EnterpriseCA1)
+					assert.Contains(t, nodes, harness.ESC10bHarnessECA.CertTemplate1)
+				}
+			}
+
 			return nil
 		})
 	})
