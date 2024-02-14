@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { AssetGroup, AssetGroupMember, AssetGroupMemberParams } from 'js-client-library';
+import { AssetGroup, AssetGroupMember, AssetGroupMemberParams, AssetGroupMembersCountResponse } from 'js-client-library';
 import { SearchResults } from '../hooks';
 import { ActiveDirectoryNodeKind, AzureNodeKind } from '../graphSchema';
 
@@ -92,10 +92,10 @@ export const createMockAssetGroupMemberParams = (): AssetGroupMemberParams => {
     }
 }
 
-export const createMockAvailableNodeKinds = (): Array<ActiveDirectoryNodeKind | AzureNodeKind> => {
-    return [
-        ActiveDirectoryNodeKind.User,
-        ActiveDirectoryNodeKind.Computer,
-        ActiveDirectoryNodeKind.Domain,
-    ]
+export const createMockMembersCount = (): AssetGroupMembersCountResponse['data'] => {
+    return {
+        total_count: 3,
+        counts: { [ActiveDirectoryNodeKind.User]: 1, [ActiveDirectoryNodeKind.Computer]: 23, [ActiveDirectoryNodeKind.Domain]: 123 }
+
+    }
 }

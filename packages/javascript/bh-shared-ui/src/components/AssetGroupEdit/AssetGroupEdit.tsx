@@ -25,7 +25,7 @@ import { FC, useEffect, useState } from 'react';
 import { AssetGroupChangelog, AssetGroupChangelogEntry, ChangelogAction } from './types';
 import AssetGroupAutocomplete from './AssetGroupAutocomplete';
 import { SubHeader } from '../../views/Explore';
-import { UseQueryResult, useMutation, useQueryClient } from 'react-query';
+import { useMutation, useQueryClient } from 'react-query';
 import { apiClient } from '../../utils';
 import AssetGroupChangelogTable from './AssetGroupChangelogTable';
 import { useNotifications } from '../../providers';
@@ -33,8 +33,8 @@ import { useNotifications } from '../../providers';
 const AssetGroupEdit: FC<{
     assetGroup: AssetGroup;
     filter: AssetGroupMemberParams;
-    memberCount: UseQueryResult<AssetGroupMembersCountResponse, unknown>;
-}> = ({ assetGroup, filter, memberCount }) => {
+    membersCount: AssetGroupMembersCountResponse['data'] | undefined;
+}> = ({ assetGroup, filter, membersCount }) => {
     const [changelog, setChangelog] = useState<AssetGroupChangelog>([]);
     const addRows = changelog.filter((entry) => entry.action === ChangelogAction.ADD);
     const removeRows = changelog.filter((entry) => entry.action === ChangelogAction.REMOVE);
@@ -92,7 +92,7 @@ const AssetGroupEdit: FC<{
 
     return (
         <Box component={Paper} elevation={0} padding={1}>
-            <SubHeader label='Total Count' count={memberCount.data?.data?.total_count} />
+            <SubHeader label='Total Count' count={membersCount?.total_count} />
             <AssetGroupAutocomplete
                 assetGroup={assetGroup}
                 changelog={changelog}
@@ -107,7 +107,7 @@ const AssetGroupEdit: FC<{
                     onSubmit={() => mutation.mutate()}
                 />
             )}
-            {Object.entries(memberCount.data?.data?.counts ?? {}).map(([kind, count]) => {
+            {Object.entries(membersCount?.counts ?? {}).map(([kind, count]) => {
                 return <SubHeader key={kind} label={kind} count={count} />;
             })}
         </Box>

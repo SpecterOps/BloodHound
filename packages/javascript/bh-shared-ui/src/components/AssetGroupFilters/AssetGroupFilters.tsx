@@ -32,7 +32,6 @@ import {
 import makeStyles from '@mui/styles/makeStyles';
 import { Theme } from '@mui/material/styles';
 import NodeIcon from '../NodeIcon';
-import { UseQueryResult } from 'react-query';
 import { AssetGroupMembersCountResponse } from 'js-client-library';
 
 export const FILTERABLE_PARAMS: Array<keyof Pick<AssetGroupMemberParams, 'primary_kind' | 'custom_member'>> = [
@@ -65,10 +64,10 @@ const useStyles = makeStyles((theme: Theme) => ({
 interface Props {
     filterParams: AssetGroupMemberParams;
     handleFilterChange: (key: (typeof FILTERABLE_PARAMS)[number], value: string) => void;
-    memberCount: UseQueryResult<AssetGroupMembersCountResponse, unknown>;
+    membersCount: AssetGroupMembersCountResponse['data'] | undefined;
 }
 
-const AssetGroupFilters: FC<Props> = ({ filterParams, handleFilterChange, memberCount }) => {
+const AssetGroupFilters: FC<Props> = ({ filterParams, handleFilterChange, membersCount }) => {
     const [displayFilters, setDisplayFilters] = useState(false);
 
     const classes = useStyles();
@@ -114,7 +113,7 @@ const AssetGroupFilters: FC<Props> = ({ filterParams, handleFilterChange, member
                                 <MenuItem value=''>
                                     <em>None</em>
                                 </MenuItem>
-                                {Object.keys(memberCount?.data?.data?.counts ?? {}).map((value) => {
+                                {Object.keys(membersCount?.counts ?? {}).map((value) => {
                                     return (
                                         <MenuItem value={`eq:${value}`} key={value}>
                                             <NodeIcon nodeType={value} />
