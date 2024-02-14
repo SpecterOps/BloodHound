@@ -138,7 +138,7 @@ class BHEAPIClient {
         options?: types.RequestOptions
     ) =>
         this.baseClient.get<AssetGroupMembersCountResponse>(
-            `/api/v2/asset-groups/${assetGroupId}/members/count`,
+            `/api/v2/asset-groups/${assetGroupId}/members/counts`,
             Object.assign({ params }, options)
         );
 
