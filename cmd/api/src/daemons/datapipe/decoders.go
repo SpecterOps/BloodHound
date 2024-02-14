@@ -126,6 +126,7 @@ func decodeAzureData(batch graph.Batch, reader io.ReadSeeker) error {
 	}
 
 	convertedData := ConvertedAzureData{}
+	convertedData.Clear()
 	var data AzureBase
 	count := 0
 	for decoder.More() {
