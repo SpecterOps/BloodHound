@@ -32,14 +32,16 @@ import (
 
 func Test_DatabaseManagement(t *testing.T) {
 	var (
-		harness            = harnesses.NewIntegrationTestHarness(fixtures.BHAdminApiClientFixture)
+		harness = harnesses.NewIntegrationTestHarness(fixtures.BHAdminApiClientFixture)
+		// harness            = lab.NewHarness()
 		assetGroup         = fixtures.NewAssetGroupFixture()
 		assetGroupSelector = fixtures.NewAssetGroupSelectorFixture(assetGroup, "2", "2")
 	)
 
 	// packing `assetGroupSelector` packs all the things it depends on too
+	// lab.Pack(harness, fixtures.BHAdminApiClientFixture)
 	lab.Pack(harness, assetGroupSelector)
-	fmt.Println("not cached")
+	fmt.Println("not cached111")
 
 	lab.NewSpec(t, harness).Run(
 		lab.TestCase("the endpoint can delete asset group selectors", func(assert *require.Assertions, harness *lab.Harness) {
@@ -60,8 +62,8 @@ func Test_DatabaseManagement(t *testing.T) {
 			assert.True(ok)
 
 			// verify that the selectors were deleted successfully
-			_, err = db.GetAssetGroupSelector(selector.ID)
-			fmt.Println("err is", err)
+			got, err := db.GetAssetGroupSelector(selector.ID)
+			fmt.Println("err is", got, err)
 			// assert.Nil(err)
 			// assert.ErrorIs(err, database.ErrNotFound)
 

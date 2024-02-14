@@ -42,6 +42,23 @@ var PostgresFixture = lab.NewFixture(func(harness *lab.Harness) (*database.Blood
 	}
 }, nil)
 
+func NewTransactionFixture() lab.Fixture[string] {
+	fixture := lab.NewFixture[string](func(h *lab.Harness) (string, error) {
+		if db, ok := lab.Unpack[*database.BloodhoundDB](PostgresFixture); !ok {
+			return nil, fmt.Errorf("unable to unpack PostgresFixture")
+		} else {
+			return db.Transaction()
+		}
+	},
+		func(h *lab.Harness, s string) error {
+			return nil
+		}
+	)
+	lab.SetDependency(fixture, PostgresFixture)
+
+	return fixture
+}
+
 func init() {
 	if err := lab.SetDependency(PostgresFixture, ConfigFixture); err != nil {
 		log.Fatalln(err)

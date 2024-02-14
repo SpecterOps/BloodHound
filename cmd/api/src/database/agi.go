@@ -41,9 +41,11 @@ func (s *BloodhoundDB) CreateAssetGroup(ctx context.Context, name, tag string, s
 		}
 	)
 
-	return assetGroup, s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
+	err := s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
 		return CheckError(tx.Create(&assetGroup))
 	})
+
+	return assetGroup, err
 }
 
 func (s *BloodhoundDB) UpdateAssetGroup(ctx context.Context, assetGroup model.AssetGroup) error {
@@ -175,7 +177,9 @@ func (s *BloodhoundDB) GetAllAssetGroupCollections() (model.AssetGroupCollection
 
 func (s *BloodhoundDB) GetAssetGroupSelector(id int32) (model.AssetGroupSelector, error) {
 	var assetGroupSelector model.AssetGroupSelector
-	return assetGroupSelector, CheckError(s.db.Find(&assetGroupSelector, id))
+	tx := s.db.Find(&assetGroupSelector, id)
+
+	return assetGroupSelector, CheckError(tx)
 }
 
 func (s *BloodhoundDB) UpdateAssetGroupSelector(ctx context.Context, selector model.AssetGroupSelector) error {

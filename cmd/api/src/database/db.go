@@ -149,11 +149,33 @@ type Database interface {
 	DeleteSavedQuery(id int) error
 	SavedQueryBelongsToUser(userID uuid.UUID, savedQueryID int) (bool, error)
 	DeleteAssetGroupSelectors(ctx context.Context, assetGroupId int) error
+	Transaction(fn func(db *BloodhoundDB) error) error
+	Begin() *BloodhoundDB
+	Commit()
 }
 
 type BloodhoundDB struct {
 	db         *gorm.DB
 	idResolver auth.IdentityResolver // TODO: this really needs to be elsewhere. something something separation of concerns
+}
+
+func (s *BloodhoundDB) Begin() *BloodhoundDB {
+	tx := s.db.Begin()
+	return NewBloodhoundDB(tx, s.idResolver)
+}
+
+func (s *BloodhoundDB) Commit() error {
+	if s.db.
+	return s.db.Commit().Error
+}
+
+func (s *BloodhoundDB) Transaction(fn func(db *BloodhoundDB) error) error {
+	return s.db.Transaction(
+		func(tx *gorm.DB) error {
+			bhDb := NewBloodhoundDB(tx, s.idResolver)
+			return fn(bhDb)
+		},
+	)
 }
 
 func (s *BloodhoundDB) Close() {

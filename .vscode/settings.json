@@ -3,6 +3,9 @@
     "go.buildFlags": [
         "-tags=integration,serial_integration"
     ],
+    "go.testFlags": [
+        "-v"
+    ],
     "go.testEnvVars": {
         "INTEGRATION_CONFIG_PATH": "${workspaceFolder}/local-harnesses/integration.config.json"
     },

@@ -27,6 +27,7 @@ import (
 
 	uuid "github.com/gofrs/uuid"
 	ctx "github.com/specterops/bloodhound/src/ctx"
+	database "github.com/specterops/bloodhound/src/database"
 	model "github.com/specterops/bloodhound/src/model"
 	appcfg "github.com/specterops/bloodhound/src/model/appcfg"
 	gomock "go.uber.org/mock/gomock"
@@ -1411,6 +1412,20 @@ func (m *MockDatabase) SweepSessions() {
 func (mr *MockDatabaseMockRecorder) SweepSessions() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SweepSessions", reflect.TypeOf((*MockDatabase)(nil).SweepSessions))
+}
+
+// Transaction mocks base method.
+func (m *MockDatabase) Transaction(arg0 func(*database.BloodhoundDB) error) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Transaction", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// Transaction indicates an expected call of Transaction.
+func (mr *MockDatabaseMockRecorder) Transaction(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Transaction", reflect.TypeOf((*MockDatabase)(nil).Transaction), arg0)
 }
 
 // UpdateAssetGroup mocks base method.

@@ -22,6 +22,7 @@ import (
 	"log"
 
 	"github.com/specterops/bloodhound/lab"
+	"github.com/specterops/bloodhound/src/database"
 	"github.com/specterops/bloodhound/src/model"
 )
 
@@ -30,25 +31,44 @@ func NewAssetGroupFixture() *lab.Fixture[*model.AssetGroup] {
 
 	fixture := lab.NewFixture(
 		func(h *lab.Harness) (*model.AssetGroup, error) {
+			var assetGroup *model.AssetGroup
+
 			if db, ok := lab.Unpack(h, PostgresFixture); !ok {
 				return nil, fmt.Errorf("unable to unpack PostgresFixture")
-			} else if assetGroup, err := db.CreateAssetGroup(
-				context.Background(),
-				"test asset group",
-				"test tag",
-				false,
-			); err != nil {
-				return nil, err
+			} else if err := db.Transaction(func(db *database.BloodhoundDB) error {
+				ag, err := db.CreateAssetGroup(
+					context.Background(),
+					"test asset group",
+					"test tag",
+					false,
+				)
+				assetGroup = &ag
+				return err
+			}); err != nil {
+				return nil, fmt.Errorf("unable to create asset group: %w", err)
 			} else {
-				return &assetGroup, nil
+				return assetGroup, nil
 			}
+
+			// assetGroup, err := db.CreateAssetGroup(
+			// 	context.Background(),
+			// 	"test asset group",
+			// 	"test tag",
+			// 	false,
+			// ); err != nil {
+			// 	return nil, err
+			// } else if err = db.Commit(); err != nil {
+			// 	return nil, err
+			// } else {
+			// 	return &assetGroup, nil
+			// }
 		},
 		func(h *lab.Harness, assetGroup *model.AssetGroup) error {
 			if db, ok := lab.Unpack(h, PostgresFixture); !ok {
 				return fmt.Errorf("unable to unpack PostgresFixture")
 			} else {
 				if err := db.DeleteAssetGroup(context.Background(), *assetGroup); err != nil {
-					return fmt.Errorf("failure deleting asset group: %v", err)
+					return fmt.Errorf("failure deleting asset group: %w", err)
 				}
 			}
 			return nil
@@ -64,8 +84,10 @@ func NewAssetGroupFixture() *lab.Fixture[*model.AssetGroup] {
 
 // todo: add parameters to create different selectors
 func NewAssetGroupSelectorFixture(assetGroupFixture *lab.Fixture[*model.AssetGroup], selectorName, objectId string) *lab.Fixture[*model.AssetGroupSelector] {
+
 	fixture := lab.NewFixture(
 		func(h *lab.Harness) (*model.AssetGroupSelector, error) {
+
 			if assetGroup, ok := lab.Unpack(h, assetGroupFixture); !ok {
 				return nil, fmt.Errorf("unable to unpack AssetGroupFixture")
 			} else {
