@@ -32,10 +32,11 @@ func ValidateMetaTag(reader io.ReadSeeker) (Metadata, error) {
 	depth := 0
 	decoder := json.NewDecoder(reader)
 	dataTagFound := false
+	dataTagValidated := false
 	metaTagFound := false
 	var meta Metadata
 	for {
-		if dataTagFound && metaTagFound {
+		if dataTagValidated && metaTagFound {
 			return meta, nil
 		}
 		if token, err := decoder.Token(); err != nil {
@@ -50,6 +51,14 @@ func ValidateMetaTag(reader io.ReadSeeker) (Metadata, error) {
 			}
 			return Metadata{}, err
 		} else {
+			//Validate that our data tag is actually opening correctly
+			if dataTagFound && !dataTagValidated {
+				if typed, ok := token.(json.Delim); ok && typed == delimOpenSquareBracket {
+					dataTagValidated = true
+				} else {
+					dataTagFound = false
+				}
+			}
 			switch typed := token.(type) {
 			case json.Delim:
 				switch typed {

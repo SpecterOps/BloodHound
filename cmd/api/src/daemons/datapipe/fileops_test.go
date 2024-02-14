@@ -14,7 +14,6 @@ type dataTagAssertion struct {
 	err       error
 }
 
-// TODO: probably some more complex cases worth considering, ideally something that we could expect would be close to a real JSON object, but variations that should fail too.
 func TestSeekToDataTag(t *testing.T) {
 	assertions := []dataTagAssertion{
 		{
@@ -44,6 +43,14 @@ func TestSeekToDataTag(t *testing.T) {
 		{
 			rawString: "{\"nothing\": [}",
 			err:       datapipe.ErrJSONDecoderInternal,
+		},
+		{
+			rawString: `{"meta": {"methods": 0, "type": "sessions", "count": 0, "version": 5}, "data": []}`,
+			err:       nil,
+		},
+		{
+			rawString: `{"test": {"data": {}}, "meta": {"methods": 0, "type": "sessions", "count": 0, "version": 5}, "data": []}`,
+			err:       nil,
 		},
 	}
 

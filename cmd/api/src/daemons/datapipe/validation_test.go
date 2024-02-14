@@ -23,72 +23,61 @@ import (
 	"testing"
 )
 
+type metaTagAssertion struct {
+	name         string
+	rawString    string
+	err          error
+	expectedType datapipe.DataType
+}
+
 func Test_ValidateMetaTag(t *testing.T) {
-	validJson := `{
-    "meta": {
-        "methods": 0,
-        "type": "sessions",
-        "count": 0,
-        "version": 5
-    },
-    "data": []
-	}`
+	assertions := []metaTagAssertion{
+		{
+			name:         "valid",
+			rawString:    `{"meta": {"methods": 0, "type": "sessions", "count": 0, "version": 5}, "data": []}`,
+			err:          nil,
+			expectedType: datapipe.DataTypeSession,
+		},
+		{
+			name:      "No data tag",
+			rawString: `{"meta": {"methods": 0, "type": "sessions", "count": 0, "version": 5}}`,
+			err:       datapipe.ErrDataTagNotFound,
+		},
+		{
+			name:      "No meta tag",
+			rawString: `{"data": []}`,
+			err:       datapipe.ErrMetaTagNotFound,
+		},
+		{
+			name:      "No valid tags",
+			rawString: `{}`,
+			err:       datapipe.ErrNoTagFound,
+		},
+		{
+			name:         "ignore invalid tag but still find correct tag",
+			rawString:    `{"meta": 0, "meta": {"methods": 0, "type": "sessions", "count": 0, "version": 5}, "data": []}`,
+			err:          nil,
+			expectedType: datapipe.DataTypeSession,
+		},
+		{
+			name:         "swapped order",
+			rawString:    `{"data": [],"meta": {"methods": 0, "type": "sessions", "count": 0, "version": 5}}`,
+			err:          nil,
+			expectedType: datapipe.DataTypeSession,
+		},
+		{
+			name:      "invalid type",
+			rawString: `{"data": [],"meta": {"methods": 0, "type": "invalid", "count": 0, "version": 5}}`,
+			err:       datapipe.ErrMetaTagNotFound,
+		},
+	}
 
-	meta, err := datapipe.ValidateMetaTag(strings.NewReader(validJson))
-	assert.Nil(t, err)
-	assert.Equal(t, datapipe.DataTypeSession, meta.Type)
+	for _, assertion := range assertions {
+		meta, err := datapipe.ValidateMetaTag(strings.NewReader(assertion.rawString))
+		assert.ErrorIs(t, err, assertion.err)
+		if assertion.err == nil {
+			assert.Equal(t, meta.Type, assertion.expectedType)
+		}
 
-	missingDataTag := `{
-    "meta": {
-        "methods": 0,
-        "type": "sessions",
-        "count": 0,
-        "version": 5
-    }
-	}`
-
-	meta, err = datapipe.ValidateMetaTag(strings.NewReader(missingDataTag))
-	assert.Equal(t, err, datapipe.ErrDataTagNotFound)
-
-	missingMetaTag := `{
-    "data": []
-	}`
-
-	meta, err = datapipe.ValidateMetaTag(strings.NewReader(missingMetaTag))
-	assert.Equal(t, err, datapipe.ErrMetaTagNotFound)
-
-	missingBothTag := `{
-	}`
-
-	meta, err = datapipe.ValidateMetaTag(strings.NewReader(missingBothTag))
-	assert.Equal(t, err, datapipe.ErrNoTagFound)
-
-	ignoreInvalidTag := `{
-	"meta": 0,
-    "meta": {
-        "methods": 0,
-        "type": "sessions",
-        "count": 0,
-        "version": 5
-    },
-    "data": []
-	}`
-
-	meta, err = datapipe.ValidateMetaTag(strings.NewReader(ignoreInvalidTag))
-	assert.Nil(t, err)
-	assert.Equal(t, datapipe.DataTypeSession, meta.Type)
-
-	swapOrder := `{
-	"data": [],
-    "meta": {
-        "methods": 0,
-        "type": "sessions",
-        "count": 0,
-        "version": 5
-    }
-	}`
-
-	meta, err = datapipe.ValidateMetaTag(strings.NewReader(swapOrder))
-	assert.Nil(t, err)
-	assert.Equal(t, datapipe.DataTypeSession, meta.Type)
+	}
 }

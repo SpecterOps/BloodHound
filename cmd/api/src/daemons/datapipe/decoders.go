@@ -33,7 +33,6 @@ func decodeBasicData[T any](batch graph.Batch, reader io.ReadSeeker, conversionF
 
 	var (
 		count         = 0
-		batchCount    = 0
 		convertedData ConvertedData
 	)
 
@@ -47,7 +46,6 @@ func decodeBasicData[T any](batch graph.Batch, reader io.ReadSeeker, conversionF
 		}
 
 		if count == ingestCountThreshold {
-			batchCount++
 			IngestBasicData(batch, convertedData)
 			convertedData.Clear()
 			count = 0
