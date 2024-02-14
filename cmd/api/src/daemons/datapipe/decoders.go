@@ -23,7 +23,11 @@ import (
 	"io"
 )
 
-// ConversionFunc is responsible for turning an individual json object into the equivalent ingest object and storing the data into ConvertedData
+/*
+ConversionFunc is responsible for turning an individual json object into the equivalent ingest object and storing the data into ConvertedData.
+
+T is any of the ingest types
+*/
 type ConversionFunc[T any] func(decoded T, converted *ConvertedData)
 
 func decodeBasicData[T any](batch graph.Batch, reader io.ReadSeeker, conversionFunc ConversionFunc[T]) error {
