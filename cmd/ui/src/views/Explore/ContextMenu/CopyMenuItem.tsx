@@ -18,8 +18,7 @@ import { faCaretRight } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { MenuItem, Tooltip, TooltipProps, styled, tooltipClasses } from '@mui/material';
 import { useNotifications } from 'bh-shared-ui';
-import { useSelector } from 'react-redux';
-import { AppState } from 'src/store';
+import { useAppSelector } from 'src/store';
 
 const StyledTooltip = styled(({ className, ...props }: TooltipProps) => (
     <Tooltip {...props} classes={{ popper: className }} />
@@ -38,7 +37,7 @@ const StyledTooltip = styled(({ className, ...props }: TooltipProps) => (
 const CopyMenuItem = () => {
     const { addNotification } = useNotifications();
 
-    const selectedNode = useSelector((state: AppState) => state.entityinfo.selectedNode);
+    const selectedNode = useAppSelector((state) => state.entityinfo.selectedNode);
 
     const handleCopyDisplayName = () => {
         if (selectedNode) {
