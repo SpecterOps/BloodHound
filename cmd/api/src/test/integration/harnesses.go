@@ -349,7 +349,7 @@ type InboundControlHarness struct {
 
 func (s *InboundControlHarness) Setup(testCtx *GraphTestContext) {
 	s.ControlledUser = testCtx.NewActiveDirectoryUser("ControlledUser", testCtx.Harness.RootADHarness.ActiveDirectoryDomainSID)
-	s.ControlledGroup = testCtx.NewActiveDirectoryUser("ControlledGroup", testCtx.Harness.RootADHarness.ActiveDirectoryDomainSID)
+	s.ControlledGroup = testCtx.NewActiveDirectoryGroup("ControlledGroup", testCtx.Harness.RootADHarness.ActiveDirectoryDomainSID)
 	s.GroupA = testCtx.NewActiveDirectoryGroup("GroupA", testCtx.Harness.RootADHarness.ActiveDirectoryDomainSID)
 	s.GroupB = testCtx.NewActiveDirectoryGroup("GroupB", testCtx.Harness.RootADHarness.ActiveDirectoryDomainSID)
 	s.GroupC = testCtx.NewActiveDirectoryGroup("GroupC", testCtx.Harness.RootADHarness.ActiveDirectoryDomainSID)
@@ -365,6 +365,7 @@ func (s *InboundControlHarness) Setup(testCtx *GraphTestContext) {
 
 	testCtx.NewRelationship(s.GroupA, s.GroupB, ad.MemberOf)
 	testCtx.NewRelationship(s.UserA, s.GroupB, ad.MemberOf)
+	testCtx.NewRelationship(s.UserG, s.ControlledGroup, ad.MemberOf)
 	testCtx.NewRelationship(s.UserG, s.GroupC, ad.MemberOf)
 	testCtx.NewRelationship(s.UserH, s.GroupD, ad.MemberOf)
 
@@ -442,6 +443,7 @@ type SessionHarness struct {
 	User      *graph.Node
 	ComputerA *graph.Node
 	ComputerB *graph.Node
+	ComputerC *graph.Node
 	GroupA    *graph.Node
 	GroupB    *graph.Node
 	GroupC    *graph.Node
@@ -450,15 +452,19 @@ type SessionHarness struct {
 func (s *SessionHarness) Setup(testCtx *GraphTestContext) {
 	s.ComputerA = testCtx.NewActiveDirectoryComputer("ComputerA", testCtx.Harness.RootADHarness.ActiveDirectoryDomainSID)
 	s.ComputerB = testCtx.NewActiveDirectoryComputer("ComputerB", testCtx.Harness.RootADHarness.ActiveDirectoryDomainSID)
+	s.ComputerC = testCtx.NewActiveDirectoryComputer("ComputerC", testCtx.Harness.RootADHarness.ActiveDirectoryDomainSID)
+
 	s.User = testCtx.NewActiveDirectoryUser("User", testCtx.Harness.RootADHarness.ActiveDirectoryDomainSID)
 	s.GroupA = testCtx.NewActiveDirectoryGroup("GroupA", testCtx.Harness.RootADHarness.ActiveDirectoryDomainSID)
 	s.GroupB = testCtx.NewActiveDirectoryGroup("GroupB", testCtx.Harness.RootADHarness.ActiveDirectoryDomainSID)
 	s.GroupC = testCtx.NewActiveDirectoryGroup("GroupC", testCtx.Harness.RootADHarness.ActiveDirectoryDomainSID)
 
+	testCtx.NewRelationship(s.ComputerA, s.GroupA, ad.MemberOf)
 	testCtx.NewRelationship(s.ComputerA, s.User, ad.HasSession)
 	testCtx.NewRelationship(s.ComputerB, s.User, ad.HasSession)
 	testCtx.NewRelationship(s.User, s.GroupA, ad.MemberOf)
 	testCtx.NewRelationship(s.User, s.GroupB, ad.MemberOf)
+	testCtx.NewRelationship(s.ComputerC, s.GroupA, ad.MemberOf)
 	testCtx.NewRelationship(s.GroupB, s.GroupC, ad.MemberOf)
 
 }
@@ -1921,6 +1927,67 @@ func (s *ESC3Harness2) Setup(c *GraphTestContext) {
 
 	s.EnterpriseCA1.Properties.Set(ad.EnrollmentAgentRestrictionsCollected.String(), true)
 	s.EnterpriseCA1.Properties.Set(ad.HasEnrollmentAgentRestrictions.String(), true)
+	c.UpdateNode(s.EnterpriseCA1)
+}
+
+type ESC3Harness3 struct {
+	CertTemplate1 *graph.Node
+	CertTemplate2 *graph.Node
+	Domain *graph.Node
+	EnterpriseCA1 *graph.Node
+	Group1 *graph.Node
+	NTAuthStore *graph.Node
+	RootCA *graph.Node
+	User2 *graph.Node
+}
+	
+func (s *ESC3Harness3) Setup(c *GraphTestContext) {
+	sid := RandomDomainSID()
+	emptyEkus := make([]string, 0)
+	s.User2 = c.NewActiveDirectoryUser("User2", sid)
+	s.Group1 = c.NewActiveDirectoryGroup("Group1", sid)
+	s.CertTemplate1 = c.NewActiveDirectoryCertTemplate("CertTemplate1", sid, CertTemplateData{
+		RequiresManagerApproval: false,
+		AuthenticationEnabled:   true,
+		EnrolleeSuppliesSubject: false,
+		SubjectAltRequireUPN:    false,
+		SubjectAltRequireSPN:    false,
+		NoSecurityExtension:     false,
+		SchemaVersion:           2,
+		AuthorizedSignatures:    0,
+		EKUS:                    emptyEkus,
+		ApplicationPolicies:     emptyEkus,
+	})
+	s.CertTemplate2 = c.NewActiveDirectoryCertTemplate("CertTemplate2", sid, CertTemplateData{
+		RequiresManagerApproval: false,
+		AuthenticationEnabled:   true,
+		EnrolleeSuppliesSubject: false,
+		SubjectAltRequireUPN:    true,
+		SubjectAltRequireSPN:    false,
+		NoSecurityExtension:     false,
+		SchemaVersion:           1,
+		AuthorizedSignatures:    0,
+		EKUS:                    emptyEkus,
+		ApplicationPolicies:     emptyEkus,
+	})
+	s.EnterpriseCA1 = c.NewActiveDirectoryEnterpriseCA("EnterpriseCA1", sid)
+	s.NTAuthStore = c.NewActiveDirectoryNTAuthStore("NTAuthStore", sid)
+	s.RootCA = c.NewActiveDirectoryRootCA("RootCA", sid)
+	s.Domain = c.NewActiveDirectoryDomain("ESC3-1Domain", sid, false, true)
+
+	c.NewRelationship(s.User2, s.Group1, ad.MemberOf)
+	c.NewRelationship(s.Group1, s.CertTemplate1, ad.Enroll)
+	c.NewRelationship(s.Group1, s.EnterpriseCA1, ad.Enroll)
+	c.NewRelationship(s.Group1, s.CertTemplate2, ad.AllExtendedRights)
+	c.NewRelationship(s.CertTemplate1, s.EnterpriseCA1, ad.PublishedTo)
+	c.NewRelationship(s.CertTemplate1, s.CertTemplate2, ad.EnrollOnBehalfOf)
+	c.NewRelationship(s.CertTemplate2, s.EnterpriseCA1, ad.PublishedTo)
+	c.NewRelationship(s.EnterpriseCA1, s.NTAuthStore, ad.TrustedForNTAuth)
+	c.NewRelationship(s.EnterpriseCA1, s.RootCA, ad.IssuedSignedBy)
+	c.NewRelationship(s.NTAuthStore, s.Domain, ad.NTAuthStoreFor)
+	c.NewRelationship(s.RootCA, s.Domain, ad.RootCAFor)
+
+	s.EnterpriseCA1.Properties.Set(ad.EnrollmentAgentRestrictionsCollected.String(), false)
 	c.UpdateNode(s.EnterpriseCA1)
 }
 
@@ -5481,6 +5548,7 @@ type HarnessDetails struct {
 	AZInboundControlHarness                         AZInboundControlHarness
 	ESC3Harness1                                    ESC3Harness1
 	ESC3Harness2                                    ESC3Harness2
+	ESC3Harness3                                    ESC3Harness3
 	ESC6aHarnessPrincipalEdges                      ESC6aHarnessPrincipalEdges
 	ESC6aHarnessECA                                 ESC6aHarnessECA
 	ESC6aHarnessTemplate1                           ESC6aHarnessTemplate1

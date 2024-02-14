@@ -211,3 +211,8 @@ func (s AssetGroupMembers) GetValidFilterPredicatesAsStrings(column string) ([]s
 type ListAssetGroupMembersResponse struct {
 	Members AssetGroupMembers `json:"members"`
 }
+
+type ListAssetGroupMemberCountsResponse struct {
+	TotalCount int            `json:"total_count"`
+	Counts     map[string]int `json:"counts"`
+}
