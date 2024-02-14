@@ -72,7 +72,7 @@ const GroupManagementContent: FC<{
 
     const selectedAssetGroup = listAssetGroups.data?.find((group) => group.id === selectedAssetGroupId) || null;
 
-    const { data: membersCounts } = useQuery({
+    const { data: memberCounts } = useQuery({
         queryKey: [
             'getAssetGroupMembersCount',
             filterParams.environment_id,
@@ -163,13 +163,13 @@ const GroupManagementContent: FC<{
                     <AssetGroupFilters
                         filterParams={filterParams}
                         handleFilterChange={handleFilterChange}
-                        membersCount={membersCounts}
+                        memberCounts={memberCounts}
                     />
                     {selectedAssetGroup && (
                         <AssetGroupEdit
                             assetGroup={selectedAssetGroup}
                             filter={filterParams}
-                            membersCount={membersCounts}
+                            memberCounts={memberCounts}
                         />
                     )}
                 </Grid>
@@ -178,7 +178,7 @@ const GroupManagementContent: FC<{
                         assetGroup={selectedAssetGroup}
                         filter={filterParams}
                         onSelectMember={onClickMember}
-                        canFilterToEmpty={(membersCounts?.total_count ?? 0) > 0}
+                        canFilterToEmpty={(memberCounts?.total_count ?? 0) > 0}
                     />
                 </Grid>
                 <Grid item xs={4} md={3} height={'100%'}>

@@ -92,7 +92,7 @@ export const createMockAssetGroupMemberParams = (): AssetGroupMemberParams => {
     }
 }
 
-export const createMockMembersCount = (): AssetGroupMembersCountResponse['data'] => {
+export const createMockMemberCounts = (): AssetGroupMembersCountResponse['data'] => {
     return {
         total_count: 3,
         counts: { [ActiveDirectoryNodeKind.User]: 1, [ActiveDirectoryNodeKind.Computer]: 23, [ActiveDirectoryNodeKind.Domain]: 123 }

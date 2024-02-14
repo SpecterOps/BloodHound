@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { setupServer } from 'msw/node';
-import { createMockAssetGroup, createMockMembersCount, createMockSearchResults } from '../../mocks/factories';
+import { createMockAssetGroup, createMockMemberCounts, createMockSearchResults } from '../../mocks/factories';
 import { act, render, waitFor } from '../../test-utils';
 import { AUTOCOMPLETE_PLACEHOLDER } from './AssetGroupAutocomplete';
 import AssetGroupEdit from './AssetGroupEdit';
@@ -24,7 +24,7 @@ import userEvent from '@testing-library/user-event';
 
 const assetGroup = createMockAssetGroup();
 const searchResults = createMockSearchResults();
-const membersCount = createMockMembersCount();
+const memberCounts = createMockMemberCounts();
 
 const server = setupServer(
     rest.get('/api/v2/search', (req, res, ctx) => {
@@ -44,7 +44,7 @@ describe('AssetGroupEdit', () => {
     const setup = async () => {
         const user = userEvent.setup();
         const screen = await act(async () => {
-            return render(<AssetGroupEdit assetGroup={assetGroup} filter={{}} membersCount={membersCount} />);
+            return render(<AssetGroupEdit assetGroup={assetGroup} filter={{}} memberCounts={memberCounts} />);
         });
         return { user, screen };
     };
@@ -58,7 +58,7 @@ describe('AssetGroupEdit', () => {
     it('should display a total count of asset group members', async () => {
         const { screen } = await setup();
         const count = screen.getByText('Total Count').nextSibling.textContent;
-        expect(count).toBe(membersCount.total_count.toString());
+        expect(count).toBe(memberCounts.total_count.toString());
     });
 
     it('should display search results when the user enters text', async () => {

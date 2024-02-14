@@ -33,8 +33,8 @@ import { useNotifications } from '../../providers';
 const AssetGroupEdit: FC<{
     assetGroup: AssetGroup;
     filter: AssetGroupMemberParams;
-    membersCount: AssetGroupMembersCountResponse['data'] | undefined;
-}> = ({ assetGroup, filter, membersCount }) => {
+    memberCounts: AssetGroupMembersCountResponse['data'] | undefined;
+}> = ({ assetGroup, filter, memberCounts }) => {
     const [changelog, setChangelog] = useState<AssetGroupChangelog>([]);
     const addRows = changelog.filter((entry) => entry.action === ChangelogAction.ADD);
     const removeRows = changelog.filter((entry) => entry.action === ChangelogAction.REMOVE);
@@ -92,7 +92,7 @@ const AssetGroupEdit: FC<{
 
     return (
         <Box component={Paper} elevation={0} padding={1}>
-            <SubHeader label='Total Count' count={membersCount?.total_count} />
+            <SubHeader label='Total Count' count={memberCounts?.total_count} />
             <AssetGroupAutocomplete
                 assetGroup={assetGroup}
                 changelog={changelog}
@@ -107,7 +107,7 @@ const AssetGroupEdit: FC<{
                     onSubmit={() => mutation.mutate()}
                 />
             )}
-            {Object.entries(membersCount?.counts ?? {}).map(([kind, count]) => {
+            {Object.entries(memberCounts?.counts ?? {}).map(([kind, count]) => {
                 return <SubHeader key={kind} label={kind} count={count} />;
             })}
         </Box>
