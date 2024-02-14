@@ -1,4 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2024 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -53,13 +53,6 @@ export const pathFiltersSaved = (filters: EdgeCheckboxType[]): types.PathFilters
     return {
         type: types.PATH_FILTERS_SAVED,
         filters,
-    };
-};
-
-export const tabChanged = (tabName: types.TabNames) => {
-    return {
-        type: types.TAB_CHANGED,
-        tabName,
     };
 };
 

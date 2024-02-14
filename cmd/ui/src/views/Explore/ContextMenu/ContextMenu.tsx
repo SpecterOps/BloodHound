@@ -1,4 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2024 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -18,11 +18,12 @@ import { Menu, MenuItem } from '@mui/material';
 
 import { FC } from 'react';
 import { useSelector } from 'react-redux';
-import { destinationNodeSelected, sourceNodeSelected, tabChanged } from 'src/ducks/searchbar/actions';
+import { destinationNodeSelected, sourceNodeSelected } from 'src/ducks/searchbar/actions';
 import { AppState, useAppDispatch } from 'src/store';
 import { selectOwnedAssetGroupId, selectTierZeroAssetGroupId } from 'src/ducks/assetgroups/reducer';
 import AssetGroupMenuItem from './AssetGroupMenuItem';
 import CopyMenuItem from './CopyMenuItem';
+import { useAppSearchParams } from 'bh-shared-ui';
 
 const ContextMenu: FC<{ contextMenu: { mouseX: number; mouseY: number } | null; handleClose: () => void }> = ({
     contextMenu,
@@ -31,13 +32,14 @@ const ContextMenu: FC<{ contextMenu: { mouseX: number; mouseY: number } | null; 
     const dispatch = useAppDispatch();
 
     const selectedNode = useSelector((state: AppState) => state.entityinfo.selectedNode);
+    const { setAppSearchParam } = useAppSearchParams();
 
     const ownedAssetGroupId = useSelector(selectOwnedAssetGroupId);
     const tierZeroAssetGroupId = useSelector(selectTierZeroAssetGroupId);
 
     const handleSetStartingNode = () => {
         if (selectedNode) {
-            dispatch(tabChanged('secondary'));
+            setAppSearchParam('graphQueryType', 'secondary');
             dispatch(
                 sourceNodeSelected(
                     {
@@ -53,7 +55,7 @@ const ContextMenu: FC<{ contextMenu: { mouseX: number; mouseY: number } | null; 
 
     const handleSetEndingNode = () => {
         if (selectedNode) {
-            dispatch(tabChanged('secondary'));
+            setAppSearchParam('graphQueryType', 'secondary');
             dispatch(
                 destinationNodeSelected({
                     name: selectedNode.name,
