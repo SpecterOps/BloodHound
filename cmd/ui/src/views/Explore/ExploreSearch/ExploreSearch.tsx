@@ -20,9 +20,8 @@ import { Box, Collapse, Paper, Tab, Tabs, Theme, useMediaQuery, useTheme } from 
 import makeStyles from '@mui/styles/makeStyles';
 import { Icon } from 'bh-shared-ui';
 import React, { useState } from 'react';
-import { useSelector } from 'react-redux';
 import { CYPHER_SEARCH, PATHFINDING_SEARCH, PRIMARY_SEARCH } from 'src/ducks/searchbar/types';
-import { AppState, useAppDispatch } from 'src/store';
+import { useAppDispatch, useAppSelector } from 'src/store';
 import CypherSearch from './CypherSearch';
 import NodeSearch from './NodeSearch';
 import PathfindingSearch from './PathfindingSearch';
@@ -61,7 +60,7 @@ const ExploreSearch = ({ handleColumns }: ExploreSearchProps) => {
     const matches = useMediaQuery(theme.breakpoints.down('md'));
     const dispatch = useAppDispatch();
 
-    const tabKey = useSelector((state: AppState) => state.search.activeTab);
+    const tabKey = useAppSelector((state) => state.search.activeTab);
     const activeTab = tabNameMap[tabKey];
 
     const [showSearchWidget, setShowSearchWidget] = useState(true);

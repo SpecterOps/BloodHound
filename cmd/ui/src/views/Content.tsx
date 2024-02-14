@@ -18,14 +18,13 @@ import { Box, CircularProgress } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
 import React, { Suspense, useEffect } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
-import { useSelector } from 'react-redux';
 import { Route, Routes } from 'react-router-dom';
 import { GenericErrorBoundaryFallback, apiClient } from 'bh-shared-ui';
 import { ListAssetGroups } from 'src/ducks/assetgroups/actionCreators';
 import { fullyAuthenticatedSelector } from 'src/ducks/auth/authSlice';
 import { fetchAssetGroups, setDomain } from 'src/ducks/global/actions';
 import * as routes from 'src/ducks/global/routes';
-import { useAppDispatch } from 'src/store';
+import { useAppDispatch, useAppSelector } from 'src/store';
 import AuthenticatedRoute from 'src/components/AuthenticatedRoute';
 
 const Login = React.lazy(() => import('src/views/Login'));
@@ -52,8 +51,8 @@ const useStyles = makeStyles({
 const Content: React.FC = () => {
     const classes = useStyles();
     const dispatch = useAppDispatch();
-    const authState = useSelector((state: any) => state.auth);
-    const isFullyAuthenticated = useSelector(fullyAuthenticatedSelector);
+    const authState = useAppSelector((state) => state.auth);
+    const isFullyAuthenticated = useAppSelector(fullyAuthenticatedSelector);
 
     useEffect(() => {
         if (isFullyAuthenticated) {

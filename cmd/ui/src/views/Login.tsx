@@ -23,10 +23,10 @@ import { useQuery, useQueryClient } from 'react-query';
 import { apiClient } from 'bh-shared-ui';
 import { Box, CircularProgress } from '@mui/material';
 import { OneTimePasscodeForm } from 'bh-shared-ui';
-import { useSelector } from 'react-redux';
+
 import { login as loginAction, logout } from 'src/ducks/auth/authSlice';
 import { ROUTE_HOME, ROUTE_USER_DISABLED } from 'src/ducks/global/routes';
-import { AppState, useAppDispatch } from 'src/store';
+import { useAppDispatch, useAppSelector } from 'src/store';
 
 const Login: React.FC = () => {
     /* Hooks */
@@ -34,7 +34,7 @@ const Login: React.FC = () => {
 
     const queryClient = useQueryClient();
 
-    const authState = useSelector((state: AppState) => state.auth);
+    const authState = useAppSelector((state) => state.auth);
 
     const [useSAML, setUseSAML] = useState(false);
 
