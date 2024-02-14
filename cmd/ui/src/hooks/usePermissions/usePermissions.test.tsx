@@ -1,19 +1,3 @@
-// Copyright 2024 Specter Ops, Inc.
-//
-// Licensed under the Apache License, Version 2.0
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-//
-// SPDX-License-Identifier: Apache-2.0
-
 import { PermissionsAuthority, PermissionsName, PermissionsSpec } from 'bh-shared-ui';
 import { renderHook } from 'src/test-utils';
 import usePermissions from './usePermissions';
@@ -52,39 +36,43 @@ describe('usePermissions', () => {
 
     const allPermissions = [manageClientsPermission, createTokenPermission, manageAppConfigPermission];
 
-    it('returns true if the user has a required permission', () => {
-        const hasPermissions = checkPermissions({
+    it('permitted if the user has a required permission', () => {
+        const permissions = checkPermissions({
             has: [manageClientsPermission],
             needs: [manageClientsPermission],
         });
 
-        expect(hasPermissions).toBe(true);
+        expect(permissions.hasAll).toBe(true);
+        expect(permissions.hasAtLeastOne).toBe(true);
     });
 
-    it('returns true if the user has multiple required permissions', () => {
-        const hasPermissions = checkPermissions({
+    it('permitted if the user has multiple required permissions', () => {
+        const permissions = checkPermissions({
             has: allPermissions,
             needs: allPermissions,
         });
 
-        expect(hasPermissions).toBe(true);
+        expect(permissions.hasAll).toBe(true);
+        expect(permissions.hasAtLeastOne).toBe(true);
     });
 
-    it('returns false if the user does not have a matching permission', () => {
-        const hasPermissions = checkPermissions({
+    it('denied if the user does not have a matching permission', () => {
+        const permissions = checkPermissions({
             has: [manageClientsPermission],
             needs: [createTokenPermission],
         });
 
-        expect(hasPermissions).toBe(false);
+        expect(permissions.hasAll).toBe(false);
+        expect(permissions.hasAtLeastOne).toBe(false);
     });
 
-    it('returns false if the user is missing one of many required permissions', () => {
-        const hasPermissions = checkPermissions({
+    it('returns hasAtLeastOne if the user is missing one of many required permissions', () => {
+        const permissions = checkPermissions({
             has: [manageClientsPermission, createTokenPermission],
             needs: allPermissions,
         });
 
-        expect(hasPermissions).toBe(false);
+        expect(permissions.hasAll).toBe(false);
+        expect(permissions.hasAtLeastOne).toBe(true);
     });
 });
