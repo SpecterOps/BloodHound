@@ -18,7 +18,7 @@ import { Box, Button, Paper } from '@mui/material';
 import { DateTime } from 'luxon';
 import { useState } from 'react';
 import { useMutation, useQuery } from 'react-query';
-import { useSelector } from 'react-redux';
+
 import {
     ConfirmationDialog,
     DataTable,
@@ -34,7 +34,7 @@ import { NewUser, UpdatedUser } from 'src/ducks/auth/types';
 import { addSnackbar } from 'src/ducks/global/actions';
 import useToggle from 'src/hooks/useToggle';
 import { User } from 'src/hooks/useUsers';
-import { AppState, useAppDispatch } from 'src/store';
+import { useAppDispatch, useAppSelector } from 'src/store';
 import CreateUserDialog from 'src/views/Users/CreateUserDialog';
 import UpdateUserDialog from 'src/views/Users/UpdateUserDialog';
 import UserActionsMenu from 'src/views/Users/UserActionsMenu';
@@ -54,7 +54,7 @@ const Users = () => {
     const [disable2FAError, setDisable2FAError] = useState('');
     const [disable2FASecret, setDisable2FASecret] = useState('');
 
-    const self = useSelector((state: AppState) => state.auth.user);
+    const self = useAppSelector((state) => state.auth.user);
 
     const getSelfQuery = useQuery(['getSelf'], ({ signal }) =>
         apiClient.getSelf({ signal }).then((res) => res.data.data)
