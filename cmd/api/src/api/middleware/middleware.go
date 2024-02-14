@@ -156,14 +156,14 @@ func parseUserIP(r *http.Request) string {
 
 	// The point of this code is to strip the port, so we don't need to save it.
 	if host, _, err := net.SplitHostPort(r.RemoteAddr); err != nil {
-		log.Warnf("Error parsing remoteAddress 's': %s", r.RemoteAddr, err)
+		log.Warnf("Error parsing remoteAddress '%s': %s", r.RemoteAddr, err)
 		remoteIp = r.RemoteAddr
 	} else {
 		remoteIp = host
 	}
 
 	if result := r.Header.Get("X-Forwarded-For"); result == "" {
-		log.Warnf("No data found in X-Forwarded-For header")
+		log.Debugf("No data found in X-Forwarded-For header")
 		return remoteIp
 	} else {
 		result += "," + remoteIp

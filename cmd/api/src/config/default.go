@@ -52,6 +52,7 @@ func NewDefaultConfiguration() (Configuration, error) {
 			DisableAnalysis:         false,
 			DisableCypherQC:         false,
 			DisableMigrations:       false,
+			AuthSessionTTLHours:     8, // Default to a logged in auth session time to live of 8 hours
 			TraversalMemoryLimit:    2, // 2 GiB by default
 			TLS:                     TLSConfiguration{},
 			SAML:                    SAMLConfiguration{},
