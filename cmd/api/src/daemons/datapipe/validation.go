@@ -29,12 +29,15 @@ func ValidateMetaTag(reader io.ReadSeeker) (Metadata, error) {
 	if err != nil {
 		return Metadata{}, fmt.Errorf("error seeking to start of file: %w", err)
 	}
-	depth := 0
-	decoder := json.NewDecoder(reader)
-	dataTagFound := false
-	dataTagValidated := false
-	metaTagFound := false
-	var meta Metadata
+	var (
+		depth            = 0
+		decoder          = json.NewDecoder(reader)
+		dataTagFound     = false
+		dataTagValidated = false
+		metaTagFound     = false
+		meta             Metadata
+	)
+
 	for {
 		if dataTagValidated && metaTagFound {
 			return meta, nil

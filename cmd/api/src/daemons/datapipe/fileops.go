@@ -31,8 +31,11 @@ const (
 )
 
 func SeekToDataTag(decoder *json.Decoder) error {
-	depth := 0
-	dataTagFound := false
+	var (
+		depth        = 0
+		dataTagFound = false
+	)
+
 	for {
 		if token, err := decoder.Token(); err != nil {
 			if errors.Is(err, io.EOF) {
