@@ -26,48 +26,22 @@ import (
 	"github.com/specterops/bloodhound/src/model"
 )
 
-// todo: parameterize name and tag
-func NewAssetGroupFixture() *lab.Fixture[*model.AssetGroup] {
-
+func NewAssetGroupFixture(db *lab.Fixture[*database.BloodhoundDB], name string, tag string, systemGroup bool) *lab.Fixture[*model.AssetGroup] {
 	fixture := lab.NewFixture(
 		func(h *lab.Harness) (*model.AssetGroup, error) {
-			var assetGroup *model.AssetGroup
-
-			if db, ok := lab.Unpack(h, PostgresFixture); !ok {
-				return nil, fmt.Errorf("unable to unpack PostgresFixture")
-			} else if err := db.Transaction(func(db *database.BloodhoundDB) error {
-				ag, err := db.CreateAssetGroup(
-					context.Background(),
-					"test asset group",
-					"test tag",
-					false,
-				)
-				assetGroup = &ag
-				return err
-			}); err != nil {
+			if tx, ok := lab.Unpack(h, db); !ok {
+				return nil, fmt.Errorf("unable to unpack BloodhoundDB")
+			} else if assetGroup, err := tx.CreateAssetGroup(context.Background(), name, tag, systemGroup); err != nil {
 				return nil, fmt.Errorf("unable to create asset group: %w", err)
 			} else {
-				return assetGroup, nil
+				return &assetGroup, nil
 			}
-
-			// assetGroup, err := db.CreateAssetGroup(
-			// 	context.Background(),
-			// 	"test asset group",
-			// 	"test tag",
-			// 	false,
-			// ); err != nil {
-			// 	return nil, err
-			// } else if err = db.Commit(); err != nil {
-			// 	return nil, err
-			// } else {
-			// 	return &assetGroup, nil
-			// }
 		},
 		func(h *lab.Harness, assetGroup *model.AssetGroup) error {
-			if db, ok := lab.Unpack(h, PostgresFixture); !ok {
-				return fmt.Errorf("unable to unpack PostgresFixture")
+			if tx, ok := lab.Unpack(h, PostgresFixture); !ok {
+				return fmt.Errorf("unable to unpack BloodhoundDB")
 			} else {
-				if err := db.DeleteAssetGroup(context.Background(), *assetGroup); err != nil {
+				if err := tx.DeleteAssetGroup(context.Background(), *assetGroup); err != nil {
 					return fmt.Errorf("failure deleting asset group: %w", err)
 				}
 			}
@@ -75,46 +49,40 @@ func NewAssetGroupFixture() *lab.Fixture[*model.AssetGroup] {
 		},
 	)
 
-	if err := lab.SetDependency(fixture, PostgresFixture); err != nil {
+	if err := lab.SetDependency(fixture, db); err != nil {
+		log.Fatalf("AssetGroupFixture dependency error: %v", err)
+	} else if err := lab.SetDependency(fixture, BHAdminApiClientFixture); err != nil {
 		log.Fatalf("AssetGroupFixture dependency error: %v", err)
 	}
 
 	return fixture
 }
 
-// todo: add parameters to create different selectors
-func NewAssetGroupSelectorFixture(assetGroupFixture *lab.Fixture[*model.AssetGroup], selectorName, objectId string) *lab.Fixture[*model.AssetGroupSelector] {
-
+func NewAssetGroupSelectorFixture(db *lab.Fixture[*database.BloodhoundDB], assetGroupFixture *lab.Fixture[*model.AssetGroup], selectorName, objectId string) *lab.Fixture[*model.AssetGroupSelector] {
 	fixture := lab.NewFixture(
 		func(h *lab.Harness) (*model.AssetGroupSelector, error) {
-
 			if assetGroup, ok := lab.Unpack(h, assetGroupFixture); !ok {
 				return nil, fmt.Errorf("unable to unpack AssetGroupFixture")
+			} else if db, ok := lab.Unpack(h, db); !ok {
+				return nil, fmt.Errorf("unable to unpack BloodhoundDB")
+			} else if selector, err := db.CreateAssetGroupSelector(
+				*assetGroup,
+				model.AssetGroupSelectorSpec{
+					SelectorName:   selectorName,
+					EntityObjectID: objectId,
+				},
+				false,
+			); err != nil {
+				return nil, fmt.Errorf("failure creating asset group selector: %v", err)
 			} else {
-				if db, ok := lab.Unpack(h, PostgresFixture); !ok {
-					return nil, fmt.Errorf("unable to unpack PostgresFixture")
-				} else {
-					if selector, err := db.CreateAssetGroupSelector(
-						*assetGroup,
-						model.AssetGroupSelectorSpec{
-							SelectorName:   selectorName,
-							EntityObjectID: objectId,
-						},
-						false,
-					); err != nil {
-						return nil, fmt.Errorf("failure creating asset group selector: %v", err)
-					} else {
-						return &selector, nil
-					}
-				}
+				return &selector, nil
 			}
 		},
 		func(harness *lab.Harness, assetGroupSelector *model.AssetGroupSelector) error {
-
-			if db, ok := lab.Unpack(harness, PostgresFixture); !ok {
+			if tx, ok := lab.Unpack(harness, PostgresFixture); !ok {
 				return fmt.Errorf("unable to unpack PostgresFixture")
 			} else {
-				if err := db.DeleteAssetGroupSelector(context.Background(), *assetGroupSelector); err != nil {
+				if err := tx.DeleteAssetGroupSelector(context.Background(), *assetGroupSelector); err != nil {
 					return fmt.Errorf("failure deleting asset group selector")
 				}
 			}
@@ -124,6 +92,10 @@ func NewAssetGroupSelectorFixture(assetGroupFixture *lab.Fixture[*model.AssetGro
 	)
 
 	if err := lab.SetDependency(fixture, assetGroupFixture); err != nil {
+		log.Fatalf("AssetGroupSelectorFixture dependency error: %v", err)
+	} else if err := lab.SetDependency(fixture, db); err != nil {
+		log.Fatalf("AssetGroupSelectorFixture dependency error: %v", err)
+	} else if err := lab.SetDependency(fixture, BHAdminApiClientFixture); err != nil {
 		log.Fatalf("AssetGroupSelectorFixture dependency error: %v", err)
 	}
 

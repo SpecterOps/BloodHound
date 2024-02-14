@@ -25,6 +25,8 @@ import (
 
 	"github.com/specterops/bloodhound/lab"
 	v2 "github.com/specterops/bloodhound/src/api/v2"
+	"github.com/specterops/bloodhound/src/database"
+	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/test/lab/fixtures"
 	"github.com/specterops/bloodhound/src/test/lab/harnesses"
 	"github.com/stretchr/testify/require"
@@ -32,16 +34,21 @@ import (
 
 func Test_DatabaseManagement(t *testing.T) {
 	var (
-		harness = harnesses.NewIntegrationTestHarness(fixtures.BHAdminApiClientFixture)
-		// harness            = lab.NewHarness()
-		assetGroup         = fixtures.NewAssetGroupFixture()
-		assetGroupSelector = fixtures.NewAssetGroupSelectorFixture(assetGroup, "2", "2")
+		harness            = harnesses.NewIntegrationTestHarness(fixtures.BHAdminApiClientFixture)
+		assetGroup         *lab.Fixture[*model.AssetGroup]
+		assetGroupSelector *lab.Fixture[*model.AssetGroupSelector]
 	)
 
+	fixtures.TransactionalFixtures(func(db *lab.Fixture[*database.BloodhoundDB]) lab.Depender {
+		assetGroup = fixtures.NewAssetGroupFixture(db, "mycoolassetgroup", "customtag", false)
+		return assetGroup
+	}, func(db *lab.Fixture[*database.BloodhoundDB]) lab.Depender {
+		assetGroupSelector = fixtures.NewAssetGroupSelectorFixture(db, assetGroup, "mycoolassetgroupselector", "someobjectid")
+		return assetGroupSelector
+	})
+
 	// packing `assetGroupSelector` packs all the things it depends on too
-	// lab.Pack(harness, fixtures.BHAdminApiClientFixture)
 	lab.Pack(harness, assetGroupSelector)
-	fmt.Println("not cached111")
 
 	lab.NewSpec(t, harness).Run(
 		lab.TestCase("the endpoint can delete asset group selectors", func(assert *require.Assertions, harness *lab.Harness) {
@@ -66,7 +73,6 @@ func Test_DatabaseManagement(t *testing.T) {
 			fmt.Println("err is", got, err)
 			// assert.Nil(err)
 			// assert.ErrorIs(err, database.ErrNotFound)
-
 		}),
 	)
 }
