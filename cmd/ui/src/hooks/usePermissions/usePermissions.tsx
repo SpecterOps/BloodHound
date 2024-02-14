@@ -1,8 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
-import { useSelector } from 'react-redux';
 import { getSelfResponse } from 'src/ducks/auth/types';
 import { PermissionsSpec } from 'bh-shared-ui';
-import { AppState } from 'src/store';
+import { useAppSelector } from 'src/store';
 
 type PermissionState = {
     hasAtLeastOne: boolean;
@@ -11,7 +10,7 @@ type PermissionState = {
 
 const usePermissions: (permissions: PermissionsSpec[]) => PermissionState = (permissions) => {
     const [permissionState, setPermissionState] = useState<PermissionState>({ hasAtLeastOne: false, hasAll: false });
-    const auth = useSelector((state: AppState) => state.auth);
+    const auth = useAppSelector((state) => state.auth);
 
     const checkUserPermissions = useCallback(
         (user: getSelfResponse): PermissionState => {
