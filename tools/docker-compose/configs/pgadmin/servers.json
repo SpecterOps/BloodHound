@@ -10,6 +10,17 @@
             "SSLMode": "prefer",
             "MaintenanceDB": "bloodhound",
             "DBRestriction": "bloodhound"
+        },
+        "2": {
+            "Name": "BloodHound Testing",
+            "Group": "Servers",
+            "Port": 5432,
+            "Username": "bloodhound",
+            "PassFile": "/pgpass",
+            "Host": "testdb",
+            "SSLMode": "prefer",
+            "MaintenanceDB": "bloodhound",
+            "DBRestriction": "bloodhound"
         }
     }
 }
