@@ -206,8 +206,8 @@ type ConvertedData struct {
 }
 
 func (s *ConvertedData) Clear() {
-	s.NodeProps = make([]ein.IngestibleNode, 0)
-	s.RelProps = make([]ein.IngestibleRelationship, 0)
+	s.NodeProps = s.NodeProps[:0]
+	s.RelProps = s.RelProps[:0]
 }
 
 type ConvertedGroupData struct {
@@ -217,9 +217,9 @@ type ConvertedGroupData struct {
 }
 
 func (s *ConvertedGroupData) Clear() {
-	s.NodeProps = make([]ein.IngestibleNode, 0)
-	s.RelProps = make([]ein.IngestibleRelationship, 0)
-	s.DistinguishedNameProps = make([]ein.IngestibleRelationship, 0)
+	s.NodeProps = s.NodeProps[:0]
+	s.RelProps = s.RelProps[:0]
+	s.DistinguishedNameProps = s.DistinguishedNameProps[:0]
 }
 
 type ConvertedSessionData struct {
@@ -227,7 +227,7 @@ type ConvertedSessionData struct {
 }
 
 func (s *ConvertedSessionData) Clear() {
-	s.SessionProps = make([]ein.IngestibleSession, 0)
+	s.SessionProps = s.SessionProps[:0]
 }
 
 type AzureBase struct {
@@ -242,15 +242,7 @@ type ConvertedAzureData struct {
 }
 
 func (s *ConvertedAzureData) Clear() {
-	s.NodeProps = make([]ein.IngestibleNode, 0)
-	s.RelProps = make([]ein.IngestibleRelationship, 0)
-	s.OnPremNodes = make([]ein.IngestibleNode, 0)
-}
-
-func CreateConvertedAzureData(count int) ConvertedAzureData {
-	converted := ConvertedAzureData{}
-	converted.NodeProps = make([]ein.IngestibleNode, count)
-	converted.RelProps = make([]ein.IngestibleRelationship, 0)
-
-	return converted
+	s.NodeProps = s.NodeProps[:0]
+	s.RelProps = s.RelProps[:0]
+	s.OnPremNodes = s.OnPremNodes[:0]
 }

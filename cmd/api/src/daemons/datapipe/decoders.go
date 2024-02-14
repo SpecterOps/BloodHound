@@ -37,6 +37,7 @@ func decodeBasicData[T any](batch graph.Batch, reader io.ReadSeeker, conversionF
 	)
 
 	for decoder.More() {
+		//This variable needs to be initialized here, otherwise the marshaller will cache the map in the struct
 		var decodeTarget T
 		if err := decoder.Decode(&decodeTarget); err != nil {
 			log.Errorf("Error decoding %T object: %v", decodeTarget, err)
@@ -65,9 +66,12 @@ func decodeGroupData(batch graph.Batch, reader io.ReadSeeker) error {
 		return err
 	}
 
-	convertedData := ConvertedGroupData{}
-	var group ein.Group
-	count := 0
+	var (
+		convertedData = ConvertedGroupData{}
+		group         ein.Group
+		count         = 0
+	)
+
 	for decoder.More() {
 		if err := decoder.Decode(&group); err != nil {
 			log.Errorf("Error decoding group object: %v", err)
@@ -95,9 +99,11 @@ func decodeSessionData(batch graph.Batch, reader io.ReadSeeker) error {
 		return err
 	}
 
-	convertedData := ConvertedSessionData{}
-	var session ein.Session
-	count := 0
+	var (
+		convertedData = ConvertedSessionData{}
+		session       ein.Session
+		count         = 0
+	)
 	for decoder.More() {
 		if err := decoder.Decode(&session); err != nil {
 			log.Errorf("Error decoding session object: %v", err)
@@ -125,9 +131,12 @@ func decodeAzureData(batch graph.Batch, reader io.ReadSeeker) error {
 		return err
 	}
 
-	convertedData := ConvertedAzureData{}
-	var data AzureBase
-	count := 0
+	var (
+		convertedData = ConvertedAzureData{}
+		data          AzureBase
+		count         = 0
+	)
+
 	for decoder.More() {
 		if err := decoder.Decode(&data); err != nil {
 			log.Errorf("Error decoding azure object: %v", err)
