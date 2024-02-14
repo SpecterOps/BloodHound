@@ -16,7 +16,7 @@
 
 import { AssetGroup, AssetGroupMember, AssetGroupMemberParams, AssetGroupMembersCountResponse } from 'js-client-library';
 import { SearchResults } from '../hooks';
-import { ActiveDirectoryNodeKind, AzureNodeKind } from '../graphSchema';
+import { ActiveDirectoryNodeKind } from '../graphSchema';
 
 export const createMockAssetGroupMembers = (): { members: AssetGroupMember[] } => {
     return {
@@ -96,6 +96,5 @@ export const createMockMembersCount = (): AssetGroupMembersCountResponse['data']
     return {
         total_count: 3,
         counts: { [ActiveDirectoryNodeKind.User]: 1, [ActiveDirectoryNodeKind.Computer]: 23, [ActiveDirectoryNodeKind.Domain]: 123 }
-
     }
 }
