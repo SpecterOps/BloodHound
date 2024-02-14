@@ -45,7 +45,7 @@ func decodeBasicData[T any](batch graph.Batch, reader io.ReadSeeker, conversionF
 			conversionFunc(decodeTarget, &convertedData)
 		}
 
-		if count == ingestCountThreshold {
+		if count == IngestCountThreshold {
 			IngestBasicData(batch, convertedData)
 			convertedData.Clear()
 			count = 0
@@ -74,7 +74,7 @@ func decodeGroupData(batch graph.Batch, reader io.ReadSeeker) error {
 		} else {
 			count++
 			convertGroupData(group, &convertedData)
-			if count == ingestCountThreshold {
+			if count == IngestCountThreshold {
 				IngestGroupData(batch, convertedData)
 				convertedData.Clear()
 				count = 0
@@ -104,7 +104,7 @@ func decodeSessionData(batch graph.Batch, reader io.ReadSeeker) error {
 		} else {
 			count++
 			convertSessionData(session, &convertedData)
-			if count == ingestCountThreshold {
+			if count == IngestCountThreshold {
 				IngestSessions(batch, convertedData.SessionProps)
 				convertedData.Clear()
 				count = 0
@@ -135,7 +135,7 @@ func decodeAzureData(batch graph.Batch, reader io.ReadSeeker) error {
 			convert := getKindConverter(data.Kind)
 			convert(data.Data, &convertedData)
 			count++
-			if count == ingestCountThreshold {
+			if count == IngestCountThreshold {
 				IngestAzureData(batch, convertedData)
 				convertedData.Clear()
 				count = 0

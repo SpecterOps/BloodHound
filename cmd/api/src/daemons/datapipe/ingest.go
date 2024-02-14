@@ -32,7 +32,7 @@ import (
 )
 
 const (
-	ingestCountThreshold = 500
+	IngestCountThreshold = 500
 )
 
 var (
