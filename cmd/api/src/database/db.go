@@ -151,7 +151,7 @@ type Database interface {
 	DeleteAssetGroupSelectors(ctx context.Context, assetGroupId int) error
 	Transaction(fn func(db *BloodhoundDB) error) error
 	Begin() *BloodhoundDB
-	Commit()
+	Commit() error
 }
 
 type BloodhoundDB struct {
@@ -165,7 +165,6 @@ func (s *BloodhoundDB) Begin() *BloodhoundDB {
 }
 
 func (s *BloodhoundDB) Commit() error {
-	if s.db.
 	return s.db.Commit().Error
 }
 
