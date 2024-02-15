@@ -274,7 +274,7 @@ func (s authenticator) CreateSession(user model.User, authProvider any) (string,
 	userSession := model.UserSession{
 		User:      user,
 		UserID:    user.ID,
-		ExpiresAt: time.Now().UTC().Add(auth.SessionTTL),
+		ExpiresAt: time.Now().UTC().Add(s.cfg.AuthSessionTTL()),
 	}
 
 	switch typedAuthProvider := authProvider.(type) {

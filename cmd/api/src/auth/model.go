@@ -37,8 +37,6 @@ const (
 	ProviderTypeSecret = "secret"
 
 	HMAC_SHA2_256 = "hmac-sha2-256"
-
-	SessionTTL = time.Hour * 8
 )
 
 type SessionData struct {
