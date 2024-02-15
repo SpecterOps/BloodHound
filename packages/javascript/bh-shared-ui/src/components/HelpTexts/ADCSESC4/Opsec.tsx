@@ -22,7 +22,7 @@ const Opsec: FC = () => {
         <Typography variant='body2'>
             When the affected certificate authority issues the certificate to the attacker, it will retain a local copy
             of that certificate in its issued certificates store. Defenders may analyze those issued certificates to
-            identify illegitimately issued certificates and identify the computer that requested the certificate, as
+            identify illegitimately issued certificates and identify the principal that requested the certificate, as
             well as the target identity the attacker is attempting to impersonate.
         </Typography>
     );

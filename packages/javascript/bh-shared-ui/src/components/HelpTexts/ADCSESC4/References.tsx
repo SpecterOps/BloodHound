@@ -20,11 +20,15 @@ import { Link, Box } from '@mui/material';
 const References: FC = () => {
     const references = [
         {
-            label: 'Certipy 4.0',
-            link: 'https://research.ifcr.dk/certipy-4-0-esc9-esc10-bloodhound-gui-new-authentication-and-request-methods-and-more-7237d88061f7',
+            label: 'Steal or Forge Authentication Certificates',
+            link: 'https://attack.mitre.org/techniques/T1649/',
         },
         {
-            label: 'Certified Pre-Owned',
+            label: 'Vulnerable Certificate Template Access Control - ESC4',
+            link: 'https://book.hacktricks.xyz/windows-hardening/active-directory-methodology/ad-certificates/domain-escalation#vulnerable-certificate-template-access-control-esc4',
+        },
+        {
+            label: 'Certified Pre-Owned - Abusing Active Directory Certificate Services',
             link: 'https://specterops.io/wp-content/uploads/sites/3/2022/06/Certified_Pre-Owned.pdf',
         },
         {
@@ -32,28 +36,16 @@ const References: FC = () => {
             link: 'https://github.com/ly4k/Certipy',
         },
         {
-            label: 'GhostPack Certipy',
+            label: 'Certify',
             link: 'https://github.com/GhostPack/Certify',
         },
         {
-            label: 'GhostPack Rubeus',
+            label: 'Impacket',
+            link: 'https://github.com/fortra/impacket',
+        },
+        {
+            label: 'Rubeus',
             link: 'https://github.com/GhostPack/Rubeus',
-        },
-        {
-            label: 'Set-DomainObject',
-            link: 'https://powersploit.readthedocs.io/en/latest/Recon/Set-DomainObject',
-        },
-        {
-            label: 'CertUtil.exe',
-            link: 'https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/certutil',
-        },
-        {
-            label: 'LDAPSearch',
-            link: 'https://linux.die.net/man/1/ldapsearch',
-        },
-        {
-            label: 'LDAPModify',
-            link: 'https://linux.die.net/man/1/ldapmodify',
         },
     ];
     return (
