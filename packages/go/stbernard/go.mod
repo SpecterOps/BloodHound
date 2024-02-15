@@ -18,4 +18,4 @@ module github.com/specterops/bloodhound/packages/go/stbernard
 
 go 1.21
 
-require golang.org/x/mod v0.11.0
+require golang.org/x/mod v0.14.0

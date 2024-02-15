@@ -46,6 +46,13 @@ func NewDatabaseSwitch(ctx context.Context, initialDB Database) *DatabaseSwitch 
 	}
 }
 
+func (s *DatabaseSwitch) SetDefaultGraph(ctx context.Context, graphSchema Graph) error {
+	s.currentDBLock.RLock()
+	defer s.currentDBLock.RUnlock()
+
+	return s.currentDB.SetDefaultGraph(ctx, graphSchema)
+}
+
 func (s *DatabaseSwitch) Switch(db Database) {
 	s.inSwitch = true
 
