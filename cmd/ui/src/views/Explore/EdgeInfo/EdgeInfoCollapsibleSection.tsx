@@ -19,8 +19,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Accordion, AccordionDetails, AccordionSummary } from '@mui/material';
 import { EdgeInfoState, EdgeSections, edgeSectionToggle, SubHeader, useCollapsibleSectionStyles } from 'bh-shared-ui';
 import React, { PropsWithChildren } from 'react';
-import { useSelector } from 'react-redux';
-import { AppState, useAppDispatch } from 'src/store';
+import { useAppDispatch, useAppSelector } from 'src/store';
 
 export const EdgeInfoCollapsibleSection: React.FC<
     PropsWithChildren<{
@@ -31,7 +30,7 @@ export const EdgeInfoCollapsibleSection: React.FC<
     const styles = useCollapsibleSectionStyles();
 
     const dispatch = useAppDispatch();
-    const edgeInfoState: EdgeInfoState = useSelector((state: AppState) => state.edgeinfo);
+    const edgeInfoState: EdgeInfoState = useAppSelector((state) => state.edgeinfo);
 
     const expanded = edgeInfoState.expandedSections[section];
 

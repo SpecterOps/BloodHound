@@ -407,6 +407,10 @@ class GolangWorkspaceBuildPlan(BuildPlan):
             # Set GOPATH since this isn't an engineer's local environment
             environment["GOPATH"] = self.project_ctx.fs.cache_path("go")
 
+        if environment.get("CGO_ENABLED") is None:
+            print("Defaulting to CGO_ENABLED=0")
+            environment["CGO_ENABLED"] = "0"
+
         for root_module in self._workspace_modules:
             for module in GoModule.main_modules(root_module.path):
                 artifact_path = self.artifact_path(artifact_name=module.artifact_name)

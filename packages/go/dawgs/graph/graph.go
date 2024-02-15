@@ -414,6 +414,9 @@ type Database interface {
 	// AssertSchema will apply the given schema to the underlying database.
 	AssertSchema(ctx context.Context, dbSchema Schema) error
 
+	// SetDefaultGraph sets the default graph namespace for the connection.
+	SetDefaultGraph(ctx context.Context, graphSchema Graph) error
+
 	// Run allows a user to pass statements directly to the database. Since results may rely on a transactional context
 	// only an error is returned from this function
 	Run(ctx context.Context, query string, parameters map[string]any) error
