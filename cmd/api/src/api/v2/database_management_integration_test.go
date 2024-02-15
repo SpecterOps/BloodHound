@@ -20,7 +20,6 @@
 package v2_test
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/specterops/bloodhound/lab"
@@ -32,20 +31,67 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func Test_DatabaseManagement(t *testing.T) {
+func Test_DatabaseManagement_FileUploadHistory(t *testing.T) {
+	var (
+		harness           = harnesses.NewIntegrationTestHarness(fixtures.BHAdminApiClientFixture)
+		userFixture       *lab.Fixture[*model.User]
+		fileUploadFixture *lab.Fixture[*model.FileUploadJobs]
+	)
+
+	fixtures.TransactionalFixtures(
+		func(db *lab.Fixture[*database.BloodhoundDB]) lab.Depender {
+			// create a user
+			userFixture = fixtures.NewUserFixture(db)
+			return userFixture
+		},
+		func(db *lab.Fixture[*database.BloodhoundDB]) lab.Depender {
+			// create some file upload jobs. file upload jobs have a fk constraint on a user
+			fileUploadFixture = fixtures.NewFileUploadFixture(db, userFixture)
+			return fileUploadFixture
+		},
+	)
+
+	lab.Pack(harness, fileUploadFixture)
+
+	lab.NewSpec(t, harness).Run(
+		lab.TestCase("the endpoint can delete file ingest history", func(assert *require.Assertions, harness *lab.Harness) {
+			apiClient, ok := lab.Unpack(harness, fixtures.BHAdminApiClientFixture)
+			assert.True(ok)
+
+			err := apiClient.HandleDatabaseManagement(
+				v2.DatabaseManagement{
+					FileIngestHistory: true,
+				})
+			assert.Nil(err, "error calling apiClient.HandleDatabaseManagement")
+
+			db, ok := lab.Unpack(harness, fixtures.PostgresFixture)
+			assert.True(ok)
+
+			_, numJobs, err := db.GetAllFileUploadJobs(0, 0, "", model.SQLFilter{})
+			assert.Nil(err)
+			assert.Zero(numJobs)
+
+			// actual, _ := db.DeleteAllFileUploads()
+		}),
+	)
+}
+
+func Test_DatabaseManagement_AssetGroupSelectors(t *testing.T) {
 	var (
 		harness            = harnesses.NewIntegrationTestHarness(fixtures.BHAdminApiClientFixture)
 		assetGroup         *lab.Fixture[*model.AssetGroup]
 		assetGroupSelector *lab.Fixture[*model.AssetGroupSelector]
 	)
 
-	fixtures.TransactionalFixtures(func(db *lab.Fixture[*database.BloodhoundDB]) lab.Depender {
-		assetGroup = fixtures.NewAssetGroupFixture(db, "mycoolassetgroup", "customtag", false)
-		return assetGroup
-	}, func(db *lab.Fixture[*database.BloodhoundDB]) lab.Depender {
-		assetGroupSelector = fixtures.NewAssetGroupSelectorFixture(db, assetGroup, "mycoolassetgroupselector", "someobjectid")
-		return assetGroupSelector
-	})
+	fixtures.TransactionalFixtures(
+		func(db *lab.Fixture[*database.BloodhoundDB]) lab.Depender {
+			assetGroup = fixtures.NewAssetGroupFixture(db, "mycoolassetgroup", "customtag", false)
+			return assetGroup
+		}, func(db *lab.Fixture[*database.BloodhoundDB]) lab.Depender {
+			assetGroupSelector = fixtures.NewAssetGroupSelectorFixture(db, assetGroup, "mycoolassetgroupselector", "someobjectid")
+			return assetGroupSelector
+		},
+	)
 
 	// packing `assetGroupSelector` packs all the things it depends on too
 	lab.Pack(harness, assetGroupSelector)
@@ -68,11 +114,10 @@ func Test_DatabaseManagement(t *testing.T) {
 			db, ok := lab.Unpack(harness, fixtures.PostgresFixture)
 			assert.True(ok)
 
-			// verify that the selectors were deleted successfully
-			got, err := db.GetAssetGroupSelector(selector.ID)
-			fmt.Println("err is", got, err)
-			// assert.Nil(err)
-			// assert.ErrorIs(err, database.ErrNotFound)
+			actual, _ := db.GetAssetGroupSelector(selector.ID)
+			expected := model.AssetGroupSelector{}
+			// when selector is not found in the db, `db.GetAssetGroupSelector` returns an empty struct.
+			assert.Equal(expected, actual)
 		}),
 	)
 }
