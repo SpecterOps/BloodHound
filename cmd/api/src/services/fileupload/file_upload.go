@@ -19,12 +19,11 @@ package fileupload
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
-	"net/http"
 	"os"
-	"strings"
 	"time"
 
 	"github.com/specterops/bloodhound/log"
@@ -33,7 +32,7 @@ import (
 
 const jobActivityTimeout = time.Minute * 20
 
-var ErrInvalidIngestFileType = errors.New("file is not a valid content type")
+var ErrInvalidJSON = errors.New("file is not valid json")
 
 type FileUploadData interface {
 	CreateFileUploadJob(job model.FileUploadJob) (model.FileUploadJob, error)
@@ -92,24 +91,26 @@ func GetFileUploadJobByID(db FileUploadData, jobID int64) (model.FileUploadJob, 
 	return db.GetFileUploadJob(jobID)
 }
 
-func SaveIngestFile(location string, fileData io.ReadCloser) (string, error) {
-	var typeBuf = make([]byte, 512)
+func WriteAndValidateJSON(src io.Reader, dst io.Writer) error {
+	tr := io.TeeReader(src, dst)
+	dc := json.NewDecoder(tr)
+	for {
+		if _, err := dc.Token(); err != nil {
+			if errors.Is(err, io.EOF) {
+				return nil
+			}
+			return ErrInvalidJSON
+		}
+	}
+}
+
+func SaveIngestFile(location string, fileData io.Reader) (string, error) {
 	tempFile, err := os.CreateTemp(location, "bh")
 	if err != nil {
 		return "", fmt.Errorf("error creating ingest file: %w", err)
 	}
 	defer tempFile.Close()
-	if _, err := io.Copy(tempFile, fileData); err != nil {
-		return "", fmt.Errorf("error writing ingest file: %w", err)
-	} else if _, err := tempFile.Seek(0, io.SeekStart); err != nil {
-		return "", fmt.Errorf("error preparing ingest file for validation: %w", err)
-	} else if n, err := tempFile.Read(typeBuf); err != nil {
-		return "", fmt.Errorf("error reading head of ingest file: %w", err)
-	} else if fileType := http.DetectContentType(typeBuf[:n]); !strings.Contains(fileType, "text/plain") {
-		return "", ErrInvalidIngestFileType
-	} else {
-		return tempFile.Name(), nil
-	}
+	return tempFile.Name(), WriteAndValidateJSON(fileData, tempFile)
 }
 
 func TouchFileUploadJobLastIngest(db FileUploadData, fileUploadJob model.FileUploadJob) error {
