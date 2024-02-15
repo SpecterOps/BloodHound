@@ -36,20 +36,6 @@ const (
 	PrincipalTypeUser             = "User"
 )
 
-func convertAzureData(data []json.RawMessage) ConvertedAzureData {
-	converted := CreateConvertedAzureData(0)
-	for _, bytes := range data {
-		var data AzureBase
-		if err := json.Unmarshal(bytes, &data); err != nil {
-			log.Error().Fault(err).Msg("Failed to convert Azure data")
-		} else {
-			convert := getKindConverter(data.Kind)
-			convert(data.Data, &converted)
-		}
-	}
-	return converted
-}
-
 func getKindConverter(kind enums.Kind) func(json.RawMessage, *ConvertedAzureData) {
 	switch kind {
 	case enums.KindAZApp:
