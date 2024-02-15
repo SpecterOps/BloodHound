@@ -14,15 +14,14 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { useSelector } from 'react-redux';
 import { Navigate, useLocation } from 'react-router-dom';
 import { authExpiredSelector } from 'src/ducks/auth/authSlice';
 import { ROUTE_EXPIRED_PASSWORD, ROUTE_LOGIN } from 'src/ducks/global/routes';
-import { AppState } from 'src/store';
+import { useAppSelector } from 'src/store';
 
 const AuthenticatedRoute: React.FC<{ children: any }> = ({ children }): React.ReactElement => {
-    const authState = useSelector((state: AppState) => state.auth);
-    const isAuthExpired = useSelector(authExpiredSelector);
+    const authState = useAppSelector((state) => state.auth);
+    const isAuthExpired = useAppSelector(authExpiredSelector);
     const location = useLocation();
 
     // If user is not authenticated, redirect to login screen
