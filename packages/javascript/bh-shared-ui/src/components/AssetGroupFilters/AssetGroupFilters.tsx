@@ -32,7 +32,7 @@ import {
 import makeStyles from '@mui/styles/makeStyles';
 import { Theme } from '@mui/material/styles';
 import NodeIcon from '../NodeIcon';
-import { AssetGroupMembersCountResponse } from 'js-client-library';
+import { AssetGroupMemberCounts } from 'js-client-library';
 
 export const FILTERABLE_PARAMS: Array<keyof Pick<AssetGroupMemberParams, 'primary_kind' | 'custom_member'>> = [
     'primary_kind',
@@ -64,7 +64,7 @@ const useStyles = makeStyles((theme: Theme) => ({
 interface Props {
     filterParams: AssetGroupMemberParams;
     handleFilterChange: (key: (typeof FILTERABLE_PARAMS)[number], value: string) => void;
-    memberCounts: AssetGroupMembersCountResponse['data'] | undefined;
+    memberCounts: AssetGroupMemberCounts | undefined;
 }
 
 const AssetGroupFilters: FC<Props> = ({ filterParams, handleFilterChange, memberCounts }) => {

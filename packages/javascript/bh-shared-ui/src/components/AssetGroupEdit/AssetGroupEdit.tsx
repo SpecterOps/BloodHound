@@ -18,7 +18,7 @@ import { Box, Paper } from '@mui/material';
 import {
     AssetGroup,
     AssetGroupMemberParams,
-    AssetGroupMembersCountResponse,
+    AssetGroupMemberCounts,
     UpdateAssetGroupSelectorRequest,
 } from 'js-client-library';
 import { FC, useEffect, useState } from 'react';
@@ -33,7 +33,7 @@ import { useNotifications } from '../../providers';
 const AssetGroupEdit: FC<{
     assetGroup: AssetGroup;
     filter: AssetGroupMemberParams;
-    memberCounts: AssetGroupMembersCountResponse['data'] | undefined;
+    memberCounts: AssetGroupMemberCounts | undefined;
 }> = ({ assetGroup, filter, memberCounts }) => {
     const [changelog, setChangelog] = useState<AssetGroupChangelog>([]);
     const addRows = changelog.filter((entry) => entry.action === ChangelogAction.ADD);
