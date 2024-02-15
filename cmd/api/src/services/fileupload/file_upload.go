@@ -91,7 +91,7 @@ func GetFileUploadJobByID(db FileUploadData, jobID int64) (model.FileUploadJob, 
 	return db.GetFileUploadJob(jobID)
 }
 
-func writeAndValidateJSON(src io.Reader, dst io.Writer) error {
+func WriteAndValidateJSON(src io.Reader, dst io.Writer) error {
 	tr := io.TeeReader(src, dst)
 	dc := json.NewDecoder(tr)
 	for {
@@ -110,8 +110,7 @@ func SaveIngestFile(location string, fileData io.Reader) (string, error) {
 		return "", fmt.Errorf("error creating ingest file: %w", err)
 	}
 	defer tempFile.Close()
-	err = writeAndValidateJSON(fileData, tempFile)
-	return tempFile.Name(), err
+	return tempFile.Name(), WriteAndValidateJSON(fileData, tempFile)
 }
 
 func TouchFileUploadJobLastIngest(db FileUploadData, fileUploadJob model.FileUploadJob) error {
