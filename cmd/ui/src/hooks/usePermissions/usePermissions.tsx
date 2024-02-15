@@ -31,17 +31,24 @@ const usePermissions: (permissions: PermissionsSpec[]) => PermissionState = (per
     const checkUserPermissions = useCallback(
         (user: getSelfResponse): PermissionState => {
             const userPermissions = user.roles.map((role) => role.permissions).flat();
+
+            const userPermMap: Record<string, boolean> = {};
+            const getPermKey = (authority: string, name: string): string => `${authority}-${name}`;
+
+            userPermissions.forEach((perm) => (userPermMap[getPermKey(perm.authority, perm.name)] = true));
+
+            let hasAll = true;
             let hasAtLeastOne = false;
 
-            const hasAll = permissions.every((permission) => {
-                return userPermissions.some((userPermission) => {
-                    const matched =
-                        userPermission.authority === permission.authority && userPermission.name === permission.name;
+            for (const perm of permissions) {
+                const match = userPermMap[getPermKey(perm.authority, perm.name)];
 
-                    if (matched && !hasAtLeastOne) hasAtLeastOne = true;
-                    return matched;
-                });
-            });
+                if (match) {
+                    hasAtLeastOne = true;
+                } else {
+                    hasAll = false;
+                }
+            }
 
             return { hasAtLeastOne, hasAll };
         },

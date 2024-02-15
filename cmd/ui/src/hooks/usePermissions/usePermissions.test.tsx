@@ -84,7 +84,7 @@ describe('usePermissions', () => {
 
     it('returns hasAtLeastOne if the user is missing one of many required permissions', () => {
         const permissions = checkPermissions({
-            has: [manageClientsPermission, createTokenPermission],
+            has: [manageAppConfigPermission, createTokenPermission],
             needs: allPermissions,
         });
 
