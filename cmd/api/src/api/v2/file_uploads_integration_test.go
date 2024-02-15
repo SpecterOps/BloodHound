@@ -117,7 +117,7 @@ func Test_FileUpload(t *testing.T) {
 		assert.Nil(tx, err)
 		resp, err := apiClient.Raw(req)
 		assert.Nil(tx, err)
-		assert.Equal(tx, http.StatusHTTPVersionNotSupported, resp.StatusCode)
+		assert.Equal(tx, http.StatusBadRequest, resp.StatusCode)
 	})
 
 	t.Run("unsupported compression type", func(tx *testing.T) {
@@ -138,7 +138,7 @@ func Test_FileUpload(t *testing.T) {
 		assert.Nil(tx, err)
 		resp, err := apiClient.Raw(req)
 		assert.Nil(tx, err)
-		assert.Equal(tx, http.StatusHTTPVersionNotSupported, resp.StatusCode)
+		assert.Equal(tx, http.StatusBadRequest, resp.StatusCode)
 	})
 }
 

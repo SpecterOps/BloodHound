@@ -129,7 +129,7 @@ func (s Resources) ProcessFileUpload(response http.ResponseWriter, request *http
 		api.HandleDatabaseError(request, response, err)
 	} else if fileName, err := fileupload.SaveIngestFile(s.Config.TempDirectory(), request.Body); err != nil {
 		if errors.Is(err, fileupload.ErrInvalidJSON) {
-			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusHTTPVersionNotSupported, fmt.Sprintf("Error saving ingest file: %v", err), request), response)
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("Error saving ingest file: %v", err), request), response)
 		} else {
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("Error saving ingest file: %v", err), request), response)
 		}
