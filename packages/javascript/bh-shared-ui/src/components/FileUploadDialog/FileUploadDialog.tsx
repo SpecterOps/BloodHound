@@ -20,14 +20,10 @@ import FileDrop from '../FileDrop';
 import FileStatusListItem from '../FileStatusListItem';
 import { FileForIngest, FileStatus, FileUploadStep } from './types';
 
-const MAX_FILE_SIZE = 1000000000;
 const ACCEPTED_MIME_TYPES = ['application/json'];
 
 const validateFile = (file: File): string[] => {
     const errors = [];
-    if (file.size > MAX_FILE_SIZE) {
-        errors.push('File cannot be larger than 1 GB');
-    }
     if (!ACCEPTED_MIME_TYPES.includes(file.type)) {
         errors.push('File must be valid JSON');
     }
