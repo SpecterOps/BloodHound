@@ -127,6 +127,24 @@ ALTER TABLE ONLY migrations ADD CONSTRAINT migrations_pkey PRIMARY KEY (id);`
 	return nil
 }
 
+func (s *Migrator) RequiresMigration() (bool, error) {
+	// check if migration table exists to determine type of manifest to generate
+	if hasTable, err := s.HasMigrationTable(); err != nil {
+		return false, fmt.Errorf("failed to check if migration table exists: %w", err)
+	} else if !hasTable {
+		// no migration table, assume this is new installation and requires migration
+		return true, nil
+	}
+
+	if lastMigration, err := s.LatestMigration(); err != nil {
+		return false, fmt.Errorf("could not get latest migration: %w", err)
+	} else if manifest, err := s.GenerateManifestAfterVersion(lastMigration.Version()); err != nil {
+		return false, fmt.Errorf("failed to generate migration manifest from previous version: %w", err)
+	} else {
+		return len(manifest.VersionTable) > 0, nil
+	}
+}
+
 // executeStepwiseMigrations will run all necessary migrations for a deployment.
 // It begins by checking if migration schema exists. If it does not, we assume the
 // deployment is a new installation, otherwise we assume it may have migration updates.

@@ -193,13 +193,17 @@ func (s *pattern) Driver(ctx context.Context, tx graph.Transaction, segment *gra
 		fetchFunc = func(cursor graph.Cursor[graph.DirectionalResult]) error {
 			for next := range cursor.Chan() {
 				nextSegment := segment.Descend(next.Node, next.Relationship)
-				nextSegment.Tag = &patternTag{
-					// Use the tag's patternIdx and depth since this is a continuation of the expansions
-					patternIdx: tag.patternIdx,
-					depth:      tag.depth + 1,
-				}
 
-				nextSegments = append(nextSegments, nextSegment)
+				// Don't emit cycles out of the fetch
+				if !nextSegment.IsCycle() {
+					nextSegment.Tag = &patternTag{
+						// Use the tag's patternIdx and depth since this is a continuation of the expansions
+						patternIdx: tag.patternIdx,
+						depth:      tag.depth + 1,
+					}
+
+					nextSegments = append(nextSegments, nextSegment)
+				}
 			}
 
 			return cursor.Error()

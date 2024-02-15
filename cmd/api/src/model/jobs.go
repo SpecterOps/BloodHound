@@ -108,15 +108,15 @@ func (s FileUploadJobs) GetValidFilterPredicatesAsStrings(column string) ([]stri
 type JobStatus int
 
 const (
-	JobStatusInvalid   JobStatus = -1
-	JobStatusReady     JobStatus = 0
-	JobStatusRunning   JobStatus = 1
-	JobStatusComplete  JobStatus = 2
-	JobStatusCanceled  JobStatus = 3
-	JobStatusTimedOut  JobStatus = 4
-	JobStatusFailed    JobStatus = 5
-	JobStatusIngesting JobStatus = 6
-	JobStatusAnalyzing JobStatus = 7
+	JobStatusInvalid           JobStatus = -1
+	JobStatusReady             JobStatus = 0
+	JobStatusRunning           JobStatus = 1
+	JobStatusComplete          JobStatus = 2
+	JobStatusCanceled          JobStatus = 3
+	JobStatusTimedOut          JobStatus = 4
+	JobStatusFailed            JobStatus = 5
+	JobStatusIngesting         JobStatus = 6
+	JobStatusAnalyzing         JobStatus = 7
 	JobStatusPartiallyComplete JobStatus = 8
 )
 
@@ -147,6 +147,10 @@ func ParseJobStatus(jobStatusStr string) (JobStatus, error) {
 	return JobStatusInvalid, fmt.Errorf("no matching job status for: %s", jobStatusStr)
 }
 
+func GetVisibleJobStatuses() []JobStatus {
+	return []JobStatus{JobStatusComplete, JobStatusCanceled, JobStatusTimedOut, JobStatusFailed, JobStatusIngesting, JobStatusAnalyzing, JobStatusPartiallyComplete}
+}
+
 func (s JobStatus) String() string {
 	switch s {
 	case JobStatusReady:
@@ -172,7 +176,7 @@ func (s JobStatus) String() string {
 
 	case JobStatusAnalyzing:
 		return "ANALYZING"
-	
+
 	case JobStatusPartiallyComplete:
 		return "PARTIALLYCOMPLETE"
 
