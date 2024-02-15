@@ -43,7 +43,7 @@ func Test_FileUpload(t *testing.T) {
 
 	jobEndpoint := fmt.Sprintf("api/v2/file-upload/%d", uploadJob.ID)
 
-	t.Run("JSON input with sucess", func(tx *testing.T) {
+	t.Run("JSON input with success", func(tx *testing.T) {
 		jsonInput := loader.GetReader("v6/ingest/computers.json")
 		defer jsonInput.Close()
 		req, err := apiClient.NewRequest(http.MethodPost, jobEndpoint, nil, jsonInput)
@@ -129,6 +129,16 @@ func Test_FileUpload(t *testing.T) {
 		resp, err := apiClient.Raw(req)
 		assert.Nil(tx, err)
 		assert.Equal(tx, http.StatusUnsupportedMediaType, resp.StatusCode)
+	})
+
+	t.Run("not valid json", func(tx *testing.T) {
+		jsonInput := loader.GetReader("v6/ingest/jker.png")
+		defer jsonInput.Close()
+		req, err := apiClient.NewRequest(http.MethodPost, jobEndpoint, nil, jsonInput)
+		assert.Nil(tx, err)
+		resp, err := apiClient.Raw(req)
+		assert.Nil(tx, err)
+		assert.Equal(tx, http.StatusBadRequest, resp.StatusCode)
 	})
 }
 
