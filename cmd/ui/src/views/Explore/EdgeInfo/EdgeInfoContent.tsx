@@ -59,8 +59,7 @@ const EdgeInfoContent: FC<{ selectedEdge: NonNullable<SelectedEdge> }> = ({ sele
     const theme = useTheme();
     const dispatch = useAppDispatch();
 
-    // const sections = EdgeInfoComponents[selectedEdge.name as keyof typeof EdgeInfoComponents];
-    const sections = EdgeInfoComponents.ADCSESC4;
+    const sections = EdgeInfoComponents[selectedEdge.name as keyof typeof EdgeInfoComponents];
     const { sourceNode, targetNode } = selectedEdge;
 
     return (
