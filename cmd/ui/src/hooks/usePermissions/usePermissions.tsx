@@ -46,16 +46,14 @@ const usePermissions = () => {
 
     const checkAllPermissions = (permissions: Permission[]): boolean => {
         for (const permission of permissions) {
-            const match = userPermMap[formatKey(permission.get())];
-            if (!match) return false;
+            if (!checkPermission(permission)) return false;
         }
         return true;
     };
 
     const checkAtLeastOnePermission = (permissions: Permission[]): boolean => {
         for (const permission of permissions) {
-            const match = userPermMap[formatKey(permission.get())];
-            if (match) return true;
+            if (checkPermission(permission)) return true;
         }
         return false;
     };
