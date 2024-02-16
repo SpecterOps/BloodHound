@@ -19,6 +19,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useAppSelector } from 'src/store';
 
 export type PermissionsFns = {
+    checkPermission: (permission: Permission) => boolean;
     checkAllPermissions: (permissions: Permission[]) => boolean;
     checkAtLeastOnePermission: (permissions: Permission[]) => boolean;
 };
@@ -39,6 +40,10 @@ const usePermissions = () => {
         }
     }, [auth.user, formatKey]);
 
+    const checkPermission = (permission: Permission): boolean => {
+        return !!userPermMap[formatKey(permission.get())];
+    };
+
     const checkAllPermissions = (permissions: Permission[]): boolean => {
         for (const perm of permissions) {
             const match = userPermMap[formatKey(perm.get())];
@@ -55,6 +60,6 @@ const usePermissions = () => {
         return false;
     };
 
-    return { checkAllPermissions, checkAtLeastOnePermission };
+    return { checkPermission, checkAllPermissions, checkAtLeastOnePermission };
 };
 export default usePermissions;

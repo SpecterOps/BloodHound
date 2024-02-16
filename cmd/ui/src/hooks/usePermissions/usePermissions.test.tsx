@@ -44,9 +44,11 @@ describe('usePermissions', () => {
     it('permitted if the user has a required permission', () => {
         const permissions = getPermissionsWithUser([Permission.CLIENTS_MANAGE]);
 
+        const has = permissions.checkPermission(Permission.CLIENTS_MANAGE);
         const hasAll = permissions.checkAllPermissions([Permission.CLIENTS_MANAGE]);
         const hasAtLeastOne = permissions.checkAtLeastOnePermission([Permission.CLIENTS_MANAGE]);
 
+        expect(has).toBe(true);
         expect(hasAll).toBe(true);
         expect(hasAtLeastOne).toBe(true);
     });
@@ -64,9 +66,11 @@ describe('usePermissions', () => {
     it('denied if the user does not have a matching permission', () => {
         const permissions = getPermissionsWithUser([Permission.CLIENTS_MANAGE]);
 
+        const has = permissions.checkPermission(Permission.AUTH_CREATE_TOKEN);
         const hasAll = permissions.checkAllPermissions([Permission.AUTH_CREATE_TOKEN]);
         const hasAtLeastOne = permissions.checkAtLeastOnePermission([Permission.AUTH_CREATE_TOKEN]);
 
+        expect(has).toBe(false);
         expect(hasAll).toBe(false);
         expect(hasAtLeastOne).toBe(false);
     });
