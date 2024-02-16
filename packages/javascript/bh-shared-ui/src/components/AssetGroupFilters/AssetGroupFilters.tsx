@@ -67,7 +67,7 @@ interface Props {
     memberCounts: AssetGroupMemberCounts | undefined;
 }
 
-const AssetGroupFilters: FC<Props> = ({ filterParams, handleFilterChange, memberCounts }) => {
+const AssetGroupFilters: FC<Props> = ({ filterParams, handleFilterChange, memberCounts = { counts: {} } }) => {
     const [displayFilters, setDisplayFilters] = useState(false);
 
     const classes = useStyles();
@@ -113,7 +113,7 @@ const AssetGroupFilters: FC<Props> = ({ filterParams, handleFilterChange, member
                                 <MenuItem value=''>
                                     <em>None</em>
                                 </MenuItem>
-                                {Object.keys(memberCounts?.counts ?? {}).map((value) => {
+                                {Object.keys(memberCounts.counts).map((value) => {
                                     return (
                                         <MenuItem value={`eq:${value}`} key={value}>
                                             <NodeIcon nodeType={value} />
