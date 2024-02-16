@@ -130,7 +130,7 @@ func (s *Daemon) processIngestFile(ctx context.Context, path string) error {
 		}()
 
 		return s.graphdb.BatchOperation(ctx, func(batch graph.Batch) error {
-			if err := s.ReadWrapper(batch, jsonFile); err != nil {
+			if err := ReadFileForIngest(batch, jsonFile); err != nil {
 				return err
 			} else {
 				return nil
