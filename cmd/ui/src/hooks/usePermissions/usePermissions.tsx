@@ -14,54 +14,47 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { Permission } from 'bh-shared-ui';
 import { useCallback, useEffect, useState } from 'react';
-import { getSelfResponse } from 'src/ducks/auth/types';
-import { PermissionsSpec } from 'bh-shared-ui';
 import { useAppSelector } from 'src/store';
 
-type PermissionState = {
-    hasAtLeastOne: boolean;
-    hasAll: boolean;
+export type PermissionsFns = {
+    checkAllPermissions: (permissions: Permission[]) => boolean;
+    checkAtLeastOnePermission: (permissions: Permission[]) => boolean;
 };
 
-const usePermissions: (permissions: PermissionsSpec[]) => PermissionState = (permissions) => {
-    const [permissionState, setPermissionState] = useState<PermissionState>({ hasAtLeastOne: false, hasAll: false });
+const usePermissions = () => {
     const auth = useAppSelector((state) => state.auth);
+    const [userPermMap, setUserPermMap] = useState<Record<string, boolean>>({});
 
-    const checkUserPermissions = useCallback(
-        (user: getSelfResponse): PermissionState => {
-            const userPermissions = user.roles.map((role) => role.permissions).flat();
-
-            const userPermMap: Record<string, boolean> = {};
-            const getPermKey = (authority: string, name: string): string => `${authority}-${name}`;
-
-            userPermissions.forEach((perm) => (userPermMap[getPermKey(perm.authority, perm.name)] = true));
-
-            let hasAll = true;
-            let hasAtLeastOne = false;
-
-            for (const perm of permissions) {
-                const match = userPermMap[getPermKey(perm.authority, perm.name)];
-
-                if (match) {
-                    hasAtLeastOne = true;
-                } else {
-                    hasAll = false;
-                }
-            }
-
-            return { hasAtLeastOne, hasAll };
-        },
-        [permissions]
-    );
+    const formatKey = useCallback((perm: { authority: string; name: string }) => `${perm.authority}-${perm.name}`, []);
 
     useEffect(() => {
-        if (auth.user) {
-            setPermissionState(checkUserPermissions(auth.user));
+        const userPermissions = auth.user?.roles.map((role) => role.permissions).flat();
+
+        if (userPermissions) {
+            const newPermMap: Record<string, boolean> = {};
+            userPermissions.forEach((perm) => (newPermMap[formatKey(perm)] = true));
+            setUserPermMap(newPermMap);
         }
-    }, [auth, checkUserPermissions]);
+    }, [auth.user, formatKey]);
 
-    return permissionState;
+    const checkAllPermissions = (permissions: Permission[]): boolean => {
+        for (const perm of permissions) {
+            const match = userPermMap[formatKey(perm.get())];
+            if (!match) return false;
+        }
+        return true;
+    };
+
+    const checkAtLeastOnePermission = (permissions: Permission[]): boolean => {
+        for (const perm of permissions) {
+            const match = userPermMap[formatKey(perm.get())];
+            if (match) return true;
+        }
+        return false;
+    };
+
+    return { checkAllPermissions, checkAtLeastOnePermission };
 };
-
 export default usePermissions;

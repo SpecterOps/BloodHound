@@ -14,19 +14,19 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { PermissionsAuthority, PermissionsName, PermissionsSpec } from 'bh-shared-ui';
+import { Permission } from 'bh-shared-ui';
 import { renderHook } from 'src/test-utils';
-import usePermissions from './usePermissions';
+import usePermissions, { PermissionsFns } from './usePermissions';
 
 describe('usePermissions', () => {
-    const checkPermissions = (permissions: { has: PermissionsSpec[]; needs: PermissionsSpec[] }) => {
-        return renderHook(() => usePermissions(permissions.needs), {
+    const getPermissionsWithUser = (permissions: Permission[]): PermissionsFns => {
+        return renderHook(() => usePermissions(), {
             initialState: {
                 auth: {
                     user: {
                         roles: [
                             {
-                                permissions: permissions.has,
+                                permissions: permissions.map((p) => p.get()),
                             },
                         ],
                     },
@@ -35,60 +35,52 @@ describe('usePermissions', () => {
         }).result.current;
     };
 
-    const manageClientsPermission = {
-        authority: PermissionsAuthority.CLIENTS,
-        name: PermissionsName.MANAGE_CLIENTS,
-    };
-
-    const createTokenPermission = {
-        authority: PermissionsAuthority.AUTH,
-        name: PermissionsName.CREATE_TOKEN,
-    };
-
-    const manageAppConfigPermission = {
-        authority: PermissionsAuthority.APP,
-        name: PermissionsName.MANAGE_APP_CONFIG,
-    };
-
-    const allPermissions = [manageClientsPermission, createTokenPermission, manageAppConfigPermission];
+    const allPermissions = [
+        Permission.CLIENTS_MANAGE,
+        Permission.AUTH_CREATE_TOKEN,
+        Permission.APP_READ_APPLICATION_CONFIGURATION,
+    ];
 
     it('permitted if the user has a required permission', () => {
-        const permissions = checkPermissions({
-            has: [manageClientsPermission],
-            needs: [manageClientsPermission],
-        });
+        const permissions = getPermissionsWithUser([Permission.CLIENTS_MANAGE]);
 
-        expect(permissions.hasAll).toBe(true);
-        expect(permissions.hasAtLeastOne).toBe(true);
+        const hasAll = permissions.checkAllPermissions([Permission.CLIENTS_MANAGE]);
+        const hasAtLeastOne = permissions.checkAtLeastOnePermission([Permission.CLIENTS_MANAGE]);
+
+        expect(hasAll).toBe(true);
+        expect(hasAtLeastOne).toBe(true);
     });
 
     it('permitted if the user has multiple required permissions', () => {
-        const permissions = checkPermissions({
-            has: allPermissions,
-            needs: allPermissions,
-        });
+        const permissions = getPermissionsWithUser(allPermissions);
 
-        expect(permissions.hasAll).toBe(true);
-        expect(permissions.hasAtLeastOne).toBe(true);
+        const hasAll = permissions.checkAllPermissions(allPermissions);
+        const hasAtLeastOne = permissions.checkAtLeastOnePermission(allPermissions);
+
+        expect(hasAll).toBe(true);
+        expect(hasAtLeastOne).toBe(true);
     });
 
     it('denied if the user does not have a matching permission', () => {
-        const permissions = checkPermissions({
-            has: [manageClientsPermission],
-            needs: [createTokenPermission],
-        });
+        const permissions = getPermissionsWithUser([Permission.CLIENTS_MANAGE]);
 
-        expect(permissions.hasAll).toBe(false);
-        expect(permissions.hasAtLeastOne).toBe(false);
+        const hasAll = permissions.checkAllPermissions([Permission.AUTH_CREATE_TOKEN]);
+        const hasAtLeastOne = permissions.checkAtLeastOnePermission([Permission.AUTH_CREATE_TOKEN]);
+
+        expect(hasAll).toBe(false);
+        expect(hasAtLeastOne).toBe(false);
     });
 
     it('returns hasAtLeastOne if the user is missing one of many required permissions', () => {
-        const permissions = checkPermissions({
-            has: [manageAppConfigPermission, createTokenPermission],
-            needs: allPermissions,
-        });
+        const permissions = getPermissionsWithUser([
+            Permission.APP_READ_APPLICATION_CONFIGURATION,
+            Permission.AUTH_CREATE_TOKEN,
+        ]);
 
-        expect(permissions.hasAll).toBe(false);
-        expect(permissions.hasAtLeastOne).toBe(true);
+        const hasAll = permissions.checkAllPermissions(allPermissions);
+        const hasAtLeastOne = permissions.checkAtLeastOnePermission(allPermissions);
+
+        expect(hasAll).toBe(false);
+        expect(hasAtLeastOne).toBe(true);
     });
 });
