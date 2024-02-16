@@ -83,7 +83,7 @@ const GroupManagementContent: FC<{
         queryFn: ({ signal }) =>
             apiClient
                 .getAssetGroupMembersCount(
-                    selectedAssetGroupId?.toString() ?? '', // TODO: this sucks, but dependent queries are better in react-query v4 and we're on v3
+                    selectedAssetGroupId?.toString() ?? '', // this query will only execute if selectedAssetGroup is not falsey.
                     { environment_id: filterParams.environment_id, environment_kind: filterParams.environment_kind },
                     { signal }
                 )
