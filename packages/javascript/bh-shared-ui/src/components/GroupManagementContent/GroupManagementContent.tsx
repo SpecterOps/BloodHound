@@ -83,7 +83,7 @@ const GroupManagementContent: FC<{
         queryFn: ({ signal }) =>
             apiClient
                 .getAssetGroupMembersCount(
-                    selectedAssetGroupId?.toString() ?? '', // This query will only execute if selectedAssetGroup is not falsey.
+                    selectedAssetGroupId?.toString() ?? '', // This query will only execute if selectedAssetGroup is truethy.
                     { environment_id: filterParams.environment_id, environment_kind: filterParams.environment_kind },
                     { signal }
                 )
