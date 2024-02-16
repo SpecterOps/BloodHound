@@ -28,7 +28,7 @@ const usePermissions = () => {
     const auth = useAppSelector((state) => state.auth);
     const [userPermMap, setUserPermMap] = useState<Record<string, boolean>>({});
 
-    const formatKey = useCallback((perm: { authority: string; name: string }) => `${perm.authority}-${perm.name}`, []);
+    const formatKey = useCallback((p: { authority: string; name: string }) => `${p.authority}-${p.name}`, []);
 
     useEffect(() => {
         const userPermissions = auth.user?.roles.map((role) => role.permissions).flat();
@@ -45,16 +45,16 @@ const usePermissions = () => {
     };
 
     const checkAllPermissions = (permissions: Permission[]): boolean => {
-        for (const perm of permissions) {
-            const match = userPermMap[formatKey(perm.get())];
+        for (const permission of permissions) {
+            const match = userPermMap[formatKey(permission.get())];
             if (!match) return false;
         }
         return true;
     };
 
     const checkAtLeastOnePermission = (permissions: Permission[]): boolean => {
-        for (const perm of permissions) {
-            const match = userPermMap[formatKey(perm.get())];
+        for (const permission of permissions) {
+            const match = userPermMap[formatKey(permission.get())];
             if (match) return true;
         }
         return false;
