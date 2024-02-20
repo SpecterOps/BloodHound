@@ -19,6 +19,7 @@ package v2
 import (
 	"errors"
 	"fmt"
+	"github.com/specterops/bloodhound/mediatypes"
 	"net/http"
 	"slices"
 	"strconv"
@@ -35,6 +36,12 @@ import (
 )
 
 const FileUploadJobIdPathParameterName = "file_upload_job_id"
+
+var AllowedFileUploadTypes = []string{
+	mediatypes.ApplicationJson.WithCharset("utf-8"),
+	// todo - Add applicationZip once zip support is complete
+	//mediatypes.ApplicationZip.String(),
+}
 
 func (s Resources) ListFileUploadJobs(response http.ResponseWriter, request *http.Request) {
 	var (
@@ -156,4 +163,8 @@ func (s Resources) EndFileUploadJob(response http.ResponseWriter, request *http.
 	} else {
 		response.WriteHeader(http.StatusOK)
 	}
+}
+
+func (s Resources) ListAcceptedFileUploadTypes(response http.ResponseWriter, request *http.Request) {
+	api.WriteBasicResponse(request.Context(), AllowedFileUploadTypes, http.StatusOK, response)
 }
