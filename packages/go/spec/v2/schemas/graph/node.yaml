@@ -1,0 +1,24 @@
+type: object
+properties:
+  label:
+    type: string
+    description: The human-readable text that identifies the node
+  kind:
+    $ref: './props/node-kind.yaml'
+  objectId:
+    $ref: './props/object-id.yaml'
+  isTierZero:
+    type: boolean
+    description: Indicates if the node has been classified as a tier zero asset
+  lastSeen:
+    $ref: './props/last-seen.yaml'
+  properties:
+    $ref: './props/properties.yaml'
+example:
+  label: DOMAIN USERS@TESTLAB.LOCAL
+  kind: Group
+  objectId: xyz789
+  isTierZero: false
+  lastSeen: 2022-12-07T15:09:51.474Z
+  properties:
+    lastseen: 2023-02-03T22:54:21.728Z

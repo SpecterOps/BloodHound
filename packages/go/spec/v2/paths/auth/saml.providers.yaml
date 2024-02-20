@@ -1,0 +1,43 @@
+post:
+  operationId: CreateSamlProvider
+  summary: Create a New SAML Provider from Metadata
+  description: Creates a new SAML provider with the given name and metadata XML.
+  tags:
+    - Auth API
+    - Community
+    - Enterprise
+  requestBody:
+    required: true
+    content:
+      multipart/form-data:
+        schema:
+          properties:
+            name:
+              type: string
+              required: true
+              description: Name of the new SAML provider.
+            metadata:
+              type: string
+              format: binary
+              required: true
+              description: Metadata XML file.
+  responses:
+    200:
+      description: OK
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                $ref: './../../schemas/model/saml-provider.yaml'
+    400:
+      $ref: './../../responses/api/bad-request.yaml'
+    401:
+      $ref: './../../responses/api/unauthorized.yaml'
+    403:
+      $ref: './../../responses/api/forbidden.yaml'
+    429:
+      $ref: './../../responses/api/too-many-requests.yaml'
+    500:
+      $ref: './../../responses/api/internal-server-error.yaml'

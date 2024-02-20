@@ -1,0 +1,26 @@
+put:
+  description: 'Endpoint for clients to update their own information at startup.
+      Note: caller must be a client. For users, this endpoint will return a 404 as
+      they are not expected or allowed to call this endpoint.'
+  tags:
+    - Clients API
+    - Enterprise
+  summary: Update Client Values
+  parameters:
+    - $ref: './../../parameters/header/prefer.yaml'
+  requestBody:
+    description: The request body for updating a client
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: "#/definitions/v2.ClientUpdateSelfRequest"
+  responses:
+    200:
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: "#/definitions/api.BasicResponse"
+    default:
+      $ref: './../../responses/api/error-response.yaml'

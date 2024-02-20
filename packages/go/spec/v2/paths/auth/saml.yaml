@@ -1,0 +1,33 @@
+parameters:
+  - $ref: './../../parameters/header/prefer.yaml'
+get:
+  operationId: ListSamlProviders
+  summary: List SAML Providers
+  description: List all registered SAML providers.
+  tags:
+    - Auth API
+    - Community
+    - Enterprise
+  responses:
+    200:
+      description: OK
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                type: object
+                properties:
+                  saml_providers:
+                    type: array
+                    items:
+                      $ref: './../../schemas/model/saml-provider.yaml'
+    401:
+      $ref: './../../responses/api/unauthorized.yaml'
+    403:
+      $ref: './../../responses/api/forbidden.yaml'
+    429:
+      $ref: './../../responses/api/too-many-requests.yaml'
+    500:
+      $ref: './../../responses/api/internal-server-error.yaml'

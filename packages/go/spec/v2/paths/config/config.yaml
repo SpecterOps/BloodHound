@@ -1,0 +1,48 @@
+get:
+  description: Lists application configuration parameters for this instance
+  tags:
+    - Config API
+    - Community
+    - Enterprise
+  summary: List application configuration parameters
+  parameters:
+    - $ref: './../../parameters/header/prefer.yaml'
+    - type: string
+      description: 'Parameter filter. Must follow the convention: parameter=eq:<value>'
+      name: parameter
+      in: query
+      required: false
+  responses:
+    200:
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: "#/definitions/api.BasicResponse"
+    default:
+      $ref: './../../responses/api/error-response.yaml'
+put:
+  description: Writes application configuration parameters for this instance
+  tags:
+    - Config API
+    - Community
+    - Enterprise
+  summary: Write application configuration parameters
+  parameters:
+    - $ref: './../../parameters/header/prefer.yaml'
+  requestBody:
+    description: The request body for updating an application config parameter
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: "#/definitions/v2.AppConfigUpdateRequest"
+  responses:
+    200:
+      description: OK
+      schema:
+        type: array
+        items:
+          $ref: "#/definitions/api.BasicResponse"
+    default:
+      $ref: './../../responses/api/error-response.yaml'

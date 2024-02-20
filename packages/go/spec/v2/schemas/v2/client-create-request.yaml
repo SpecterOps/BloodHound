@@ -1,0 +1,13 @@
+type: object
+required:
+  - name
+  - type
+properties:
+  domain_controller:
+    type: string
+  name:
+    type: string
+  type:
+    type: string
+  events:
+    type: array

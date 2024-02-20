@@ -1,0 +1,11 @@
+get:
+  description: Returns an Open API 3.0 compatible BloodHound API spec
+  tags:
+    - API Info
+    - Community
+    - Enterprise
+  responses:
+    200:
+      description: OK
+    default:
+      $ref: './../../responses/api/error-response.yaml'

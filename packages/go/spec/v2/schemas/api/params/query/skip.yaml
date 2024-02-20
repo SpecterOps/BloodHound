@@ -1,0 +1,3 @@
+type: integer
+minimum: 0
+description: The number of items to skip in a paginated response.

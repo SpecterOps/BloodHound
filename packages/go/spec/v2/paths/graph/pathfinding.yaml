@@ -1,0 +1,29 @@
+get:
+  deprecated: true
+  description: Get the result of pathfinding between two nodes in graph format
+  tags:
+    - Graph API
+    - Community
+    - Enterprise
+  summary: Get pathfinding result
+  parameters:
+    - $ref: './../../parameters/header/prefer.yaml'
+    - type: string
+      description: Start Node
+      name: start_node
+      in: query
+      required: true
+    - type: string
+      description: End Node
+      name: end_node
+      in: query
+      required: true
+  responses:
+    200:
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: "#/definitions/api.BasicResponse"
+    default:
+      $ref: './../../responses/api/error-response.yaml'

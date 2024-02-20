@@ -1,0 +1,17 @@
+type: object
+properties:
+  source:
+    type: string
+    description: The identifier of the first node in the path segment
+  target:
+    type: string
+    description: The identifier of the second node in the path segment
+  label:
+    type: string
+    description: The human-readable text that identifies the edge
+  kind:
+    $ref: './props/edge-kind.yaml'
+  lastSeen:
+    $ref: './props/last-seen.yaml'
+  properties:
+    $ref: './props/properties.yaml'

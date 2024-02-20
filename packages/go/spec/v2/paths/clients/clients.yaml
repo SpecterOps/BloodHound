@@ -1,0 +1,150 @@
+get:
+  description: Lists available clients for processing collection events
+  tags:
+    - Clients API
+    - Enterprise
+  summary: List Clients
+  parameters:
+    - $ref: './../../parameters/header/prefer.yaml'
+    - type: string
+      description: Sort by column. Can be used multiple times; prepend hyphen for
+        descending order. Sortable columns are name, ip_address, hostname, configured_user,
+        last_checkin, completed_job_count, id, created_at, updated_at, deleted_at.
+      name: sort_by
+      in: query
+      required: false
+    - type: string
+      description: Filter results by column value. Valid filter predicates are eq,
+        neq
+      name: name
+      in: query
+      required: false
+    - type: string
+      description: Filter results by column value. Valid filter predicates are eq,
+        neq
+      name: ip_address
+      in: query
+      required: false
+    - type: string
+      description: Filter results by column value. Valid filter predicates are eq,
+        neq
+      name: hostname
+      in: query
+      required: false
+    - type: string
+      description: Filter results by column value. Valid filter predicates are eq,
+        neq
+      name: configured_user
+      in: query
+      required: false
+    - type: string
+      description: Filter results by column value. Valid filter predicates are eq,
+        neq
+      name: version
+      in: query
+      required: false
+    - type: string
+      description: Filter results by column value. Valid filter predicates are eq,
+        neq
+      name: user_sid
+      in: query
+      required: false
+    - type: string
+      description: Filter results by column value. Valid filter predicates are eq,
+        neq, gt, gte, lt, lte
+      name: last_checkin
+      in: query
+      required: false
+    - type: string
+      description: Filter results by column value. Valid filter predicates are eq,
+        neq, gt, gte, lt, lte
+      name: current_job_id
+      in: query
+      required: false
+    - type: string
+      description: Filter results by column value. Valid filter predicates are eq,
+        neq, gt, gte, lt, lte
+      name: completed_job_count
+      in: query
+      required: false
+    - type: string
+      description: Filter results by column value. Valid filter predicates are eq,
+        neq
+      name: domain_controller
+      in: query
+      required: false
+    - type: string
+      description: Filter results by column value. Valid filter predicates are eq,
+        neq, gt, gte, lt, lte
+      name: id
+      in: query
+      required: false
+    - type: string
+      description: Filter results by column value. Valid filter predicates are eq,
+        neq, gt, gte, lt, lte
+      name: created_at
+      in: query
+      required: false
+    - type: string
+      description: Filter results by column value. Valid filter predicates are eq,
+        neq, gt, gte, lt, lte
+      name: updated_at
+      in: query
+      required: false
+    - type: string
+      description: Filter results by column value. Valid filter predicates are eq,
+        neq, gt, gte, lt, lte
+      name: deleted_at
+      in: query
+      required: false
+    - type: string
+      description: Valid values are `true` or `false` and defaults to `true`. When
+        a value of `true` is passed, any domains associated with scheduled and finished
+        jobs for each client will have expanded properties including `name` and `type`.
+        When a value of `false` is passed, these same domains will only return as
+        a list of `objectid`s.
+      name: hydrate_domains
+      in: query
+      required: false
+    - type: string
+      description: Valid values are `true` or `false` and defaults to `true`. When
+        a value of `true` is passed, any OUs associated with scheduled and finished
+        jobs for each client will have expanded properties including `name` and `type`.
+        When a value of `false` is passed, these same OUs will only return as a list
+        of `objectid`s.
+      name: hydrate_ous
+      in: query
+      required: false
+  responses:
+    200:
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: "#/definitions/api.BasicResponse"
+    default:
+      $ref: './../../responses/api/error-response.yaml'
+post:
+  description: Creates a client for collection events
+  tags:
+    - Clients API
+    - Enterprise
+  summary: Create Client
+  parameters:
+    - $ref: './../../parameters/header/prefer.yaml'
+  requestBody:
+    description: The request body for creating a client
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: "#/definitions/v2.ClientCreateRequest"
+  responses:
+    200:
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: "#/definitions/api.BasicResponse"
+    default:
+      $ref: './../../responses/api/error-response.yaml'

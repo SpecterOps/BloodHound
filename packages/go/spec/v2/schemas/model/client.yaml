@@ -1,0 +1,57 @@
+allOf:
+  - $ref: './components/uuid.yaml'
+  - $ref: './components/timestamps.yaml'
+type: object
+properties:
+  name:
+    type: string
+    readOnly: true
+  ip_address:
+    type: string
+    format: ipv4
+    readOnly: true
+  hostname:
+    type: string
+    format: hostname
+    readOnly: true
+  configured_user:
+    type: string
+    readOnly: true
+  last_checkin:
+    type: string
+    format: date-time
+    readOnly: true
+  events:
+    type: array
+    readOnly: true
+    items:
+      $ref: './client-schedule.yaml'
+  token:
+    allOf:
+      - $ref: './auth-token.yaml'
+      - readOnly: true
+  current_job_id:
+    allOf:
+      - $ref: './../null/int64.yaml'
+      - readOnly: true
+  current_job:
+    $ref: './client-scheduled-job.yaml'
+  completed_job_count:
+    type: integer
+    readOnly: true
+  domain_controller:
+    allOf:
+      - $ref: './../null/string.yaml'
+      - readOnly: true
+  version:
+    type: string
+    readOnly: true
+  user_sid:
+    allOf:
+      - $ref: './../null/string.yaml'
+      - readOnly: true
+  type:
+    allOf:
+      - $ref: './../enum/client-type.yaml'
+      - readOnly: true
+

@@ -1,0 +1,36 @@
+type: object
+properties:
+  completed_job_count:
+    type: integer
+  completed_task_count:
+    type: integer
+  configured_user:
+    type: string
+  current_job:
+    "$ref": "#/definitions/model.ClientJobDisplay"
+  current_task:
+    "$ref": "#/definitions/model.ClientJobDisplay"
+  current_job_id:
+    "$ref": "#/definitions/null.Int64"
+  current_task_id:
+    "$ref": "#/definitions/null.Int64"
+  domain_controller:
+    "$ref": "#/definitions/null.String"
+  events:
+    type: array
+    items:
+      "$ref": "#/definitions/model.ClientScheduleDisplay"
+  hostname:
+    type: string
+  id:
+    type: string
+  ingest_counter:
+    type: integer
+  ip_address:
+    type: string
+  last_checkin:
+    type: string
+  name:
+    type: string
+  token:
+    "$ref": "#/definitions/model.AuthToken"

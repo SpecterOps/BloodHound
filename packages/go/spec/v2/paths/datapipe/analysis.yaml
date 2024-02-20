@@ -1,0 +1,19 @@
+put:
+  operationId: StartAnalysis
+  description: Flags the API to begin analyzing ingest data.
+  summary: Start analysis
+  tags:
+    - Datapipe API
+    - Community
+    - Enterprise
+  parameters:
+    - $ref: "#/definitions/parameter.PreferHeader"
+  responses:
+    200:
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: "#/definitions/api.BasicResponse"
+    default:
+      $ref: './../../responses/api/error-response.yaml'

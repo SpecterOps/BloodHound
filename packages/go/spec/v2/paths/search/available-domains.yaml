@@ -1,0 +1,42 @@
+get:
+  description: Gets available domains along with their collection status
+  tags:
+    - Search
+    - Community
+    - Enterprise
+  summary: Get available domains
+  parameters:
+    - $ref: './../../parameters/header/prefer.yaml'
+    - type: string
+      description: Sort by column. Can be used multiple times; prepend hyphen for
+        descending order. Sortable columns are objectid, name.
+      name: sort_by
+      in: query
+      required: false
+    - type: string
+      description: Filter results by column value. Valid filter predicates are eq,
+        neq
+      name: objectid
+      in: query
+      required: false
+    - type: string
+      description: Filter results by column value. Valid filter predicates are eq,
+        neq
+      name: name
+      in: query
+      required: false
+    - type: string
+      description: Filter results by column value. Valid filter predicates are eq,
+        neq
+      name: collected
+      in: query
+      required: false
+  responses:
+    200:
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: "#/definitions/api.BasicResponse"
+    default:
+      $ref: './../../responses/api/error-response.yaml'

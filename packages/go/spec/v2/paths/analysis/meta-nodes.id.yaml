@@ -1,0 +1,22 @@
+parameters:
+  - type: string
+    description: Object ID
+    name: domain_id
+    in: path
+    required: true
+get:
+  description: Get latest tier zero combo node
+  tags:
+    - Analysis API
+    - Enterprise
+  summary: Get latest tier zero combo node
+  parameters:
+    - $ref: './../../parameters/header/prefer.yaml'
+  responses:
+    200:
+      description: OK
+      schema:
+        type: object
+        additionalProperties: true
+    default:
+      $ref: './../../responses/api/error-response.yaml'

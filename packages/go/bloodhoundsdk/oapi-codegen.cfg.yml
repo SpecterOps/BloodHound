@@ -1,0 +1,39 @@
+package: bloodhound-sdk
+generate:
+#  chi-server: true
+#  gorilla-server: true
+#  strict: true
+  client: true
+#  models: true
+#  embedded-spec: true
+#compatibility:
+#  old-merge-schemas: true
+#  old-enum-conflicts: true
+#  old-aliasing: true
+#  disable-flatten-additional-properties: true
+#  disable-required-readonly-as-pointer: true
+#  always-prefix-enum-values: true
+#  apply-chi-middleware-first-to-last: true
+#  apply-gorilla-middleware-first-to-last: true
+#  circular-reference-limit: true
+output: bloodhoundsdk.gen.go
+output-options:
+#  skip-format: true
+#  skip-prune: true
+#  include-tags: [""]
+#  exclude-tags: [""]
+#  include-operation-ids: [""]
+#  exclude-operation-ids: [""]
+#  user-templates:
+#    template: override
+#  exclude-schemas: [""]
+#  response-type-suffix: ""
+#  client-type-name: ""
+#  initialism-overrides: true
+  nullable-type: false
+#  disable-type-aliases-for-type: ["""]
+import-mapping: # ImportMapping specifies the golang package path for each external reference
+  package: path
+#additional-imports:
+#  alias: ""
+#  package: ""

@@ -1,0 +1,26 @@
+parameters:
+  - type: string
+    enum:
+      - azurehound
+      - sharphound
+    description: Collector type
+    name: collector_type
+    in: path
+    required: true
+get:
+  description: Retrieves the version manifest for a given collector
+  tags:
+    - Collectors API
+    - Enterprise
+  summary: Get collector manifest
+  parameters:
+    - $ref: "#/definitions/parameter.PreferHeader"
+  responses:
+    200:
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: "#/definitions/api.BasicResponse"
+    default:
+      $ref: './../../responses/api/error-response.yaml'

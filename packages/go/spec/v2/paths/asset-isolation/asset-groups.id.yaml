@@ -1,0 +1,63 @@
+parameters:
+  - type: string
+    description: ID of the asset_group record to retrieve
+    name: asset_group_id
+    in: path
+    required: true
+get:
+  description: Retrieve asset group by ID
+  tags:
+    - Asset Isolation API
+    - Community
+    - Enterprise
+  summary: Retrieve asset group by ID
+  parameters:
+    - $ref: './../../parameters/header/prefer.yaml'
+  responses:
+    200:
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: "#/definitions/api.BasicResponse"
+    default:
+      $ref: './../../responses/api/error-response.yaml'
+put:
+  description: Updates an asset group
+  tags:
+    - Asset Isolation API
+    - Community
+    - Enterprise
+  summary: Update an asset group
+  parameters:
+    - $ref: './../../parameters/header/prefer.yaml'
+  requestBody:
+    description: The request body for updating an asset group.
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: "#/definitions/v2.UpdateAssetGroupRequest"
+  responses:
+    200:
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: "#/definitions/api.BasicResponse"
+    default:
+      $ref: './../../responses/api/error-response.yaml'
+delete:
+  description: Deletes an asset group
+  tags:
+    - Asset Isolation API
+    - Community
+    - Enterprise
+  summary: Delete an asset group
+  parameters:
+    - $ref: './../../parameters/header/prefer.yaml'
+  responses:
+    200:
+      description: OK
+    default:
+      $ref: './../../responses/api/error-response.yaml'

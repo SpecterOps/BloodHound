@@ -1,0 +1,24 @@
+parameters:
+  - type: string
+    description: Group Object ID
+    name: object_id
+    in: path
+    required: true
+get:
+  description: Get properties and counts for this group
+  tags:
+    - Group Entity API
+    - Community
+    - Enterprise
+  summary: Get group entity info
+  parameters:
+    - $ref: './../../parameters/header/prefer.yaml'
+  responses:
+    200:
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: "#/definitions/api.BasicResponse"
+    default:
+      $ref: './../../responses/api/error-response.yaml'

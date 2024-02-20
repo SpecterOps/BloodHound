@@ -1,0 +1,32 @@
+parameters:
+  - type: string
+    description: Container Object ID
+    name: object_id
+    in: path
+    required: true
+get:
+  description: Get basic info and counts for this Container
+  tags:
+    - Container Entity API
+    - Community
+    - Enterprise
+  summary: Get container entity info
+  parameters:
+    - $ref: './../../parameters/header/prefer.yaml'
+  responses:
+    200:
+      description: OK
+      schema:
+        $ref: "#/definitions/api.BasicResponse"
+    '400':
+      description: Bad Request
+      schema:
+        $ref: "#/definitions/api.ErrorWrapper"
+    '404':
+      description: Not Found
+      schema:
+        $ref: "#/definitions/api.ErrorWrapper"
+    '504':
+      description: Gateway Timeout
+      schema:
+        $ref: "#/definitions/api.ErrorWrapper"

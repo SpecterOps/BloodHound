@@ -1,0 +1,7 @@
+type: object
+properties:
+  id:
+    type: integer
+    format: int64
+    readOnly: true
+    description: This is the unique identifier for this object.

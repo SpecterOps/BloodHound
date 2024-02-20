@@ -1,0 +1,7 @@
+type: object
+properties:
+  id:
+    type: string
+    format: uuid
+    readOnly: true
+    description: This is the unique identifier for this object.

@@ -1,0 +1,97 @@
+get:
+  description: List all asset isolation groups.
+  tags:
+    - Asset Isolation API
+    - Community
+    - Enterprise
+  summary: List all asset isolation groups
+  parameters:
+    - $ref: './../../parameters/header/prefer.yaml'
+    - type: string
+      description: Sort by column. Can be used multiple times; prepend hyphen for
+        descending order. Sortable columns are name, tag, member_count
+      name: sort_by
+      in: query
+      required: false
+    - type: string
+      description: Filter results by column value. Valid filter predicates are eq,
+        neq
+      name: name
+      in: query
+      required: false
+    - type: string
+      description: Filter results by column value. Valid filter predicates are eq,
+        neq
+      name: tag
+      in: query
+      required: false
+    - type: string
+      description: Filter results by column value. Valid filter predicates are eq,
+        neq
+      name: system_group
+      in: query
+      required: false
+    - type: string
+      description: Filter results by column value. Valid filter predicates are eq,
+        neq, gt, gte, lt, lte
+      name: member_count
+      in: query
+      required: false
+    - type: string
+      description: Filter results by column value. Valid filter predicates are eq,
+        neq, gt, gte, lt, lte
+      name: id
+      in: query
+      required: false
+    - type: string
+      description: Filter results by column value. Valid filter predicates are eq,
+        neq, gt, gte, lt, lte
+      name: created_at
+      in: query
+      required: false
+    - type: string
+      description: Filter results by column value. Valid filter predicates are eq,
+        neq, gt, gte, lt, lte
+      name: updated_at
+      in: query
+      required: false
+    - type: string
+      description: Filter results by column value. Valid filter predicates are eq,
+        neq, gt, gte, lt, lte
+      name: deleted_at
+      in: query
+      required: false
+  responses:
+    200:
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: "#/definitions/api.BasicResponse"
+    default:
+      $ref: './../../responses/api/error-response.yaml'
+post:
+  description: Creates an asset group
+  tags:
+    - Asset Isolation API
+    - Community
+    - Enterprise
+  summary: Create an asset group
+  parameters:
+    - $ref: './../../parameters/header/prefer.yaml'
+  requestBody:
+    description: The request body for creating an asset group
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: "#/definitions/v2.CreateAssetGroupRequest"
+  responses:
+    200:
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: "#/definitions/api.BasicResponse"
+    default:
+      $ref: './../../responses/api/error-response.yaml'

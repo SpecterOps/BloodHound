@@ -1,0 +1,4 @@
+type: string
+description: |
+  Sort by column. Can be used multiple times; prepend a hyphen for descending order.
+  See parameter description for details about which columns are sortable.

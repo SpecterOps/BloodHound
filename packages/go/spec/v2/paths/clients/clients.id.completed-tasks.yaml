@@ -1,0 +1,136 @@
+parameters:
+  - type: string
+    description: Client ID
+    name: client_id
+    in: path
+    required: true
+get:
+  deprecated: true
+  description: Get all completed tasks for a client
+  tags:
+    - Clients API
+    - Enterprise
+  summary: Get all completed tasks for a client
+  parameters:
+    - $ref: './../../parameters/header/prefer.yaml'
+    - type: integer
+      description: Paging Skip
+      name: skip
+      in: query
+    - type: integer
+      description: Paging Limit
+      name: limit
+      in: query
+    - type: string
+      description: Sort by column. Can be used multiple times; prepend hyphen for
+        descending order. Sortable columns are client_id, event_id, execution_time,
+        status, start_time, end_time, log_path, domain_controller, event_title, last_ingest,
+        id, created_at, updated_at, deleted_at.
+      name: sort_by
+      in: query
+      required: false
+    - type: string
+      description: Filter results by column value. Valid filter predicates are eq,
+        neq, gt, gte, lt, lte
+      name: event_id
+      in: query
+      required: false
+    - type: string
+      description: Filter results by column value. Valid filter predicates are eq,
+        neq, gt, gte, lt, lte
+      name: execution_time
+      in: query
+      required: false
+    - type: string
+      description: Filter results by column value. Valid filter predicates are eq,
+        neq
+      name: status
+      in: query
+      required: false
+    - type: string
+      description: Filter results by column value. Valid filter predicates are eq,
+        neq, gt, gte, lt, lte
+      name: start_time
+      in: path
+      required: false
+    - type: string
+      description: Filter results by column value. Valid filter predicates are eq,
+        neq, gt, gte, lt, lte
+      name: end_time
+      in: query
+      required: false
+    - type: string
+      description: Filter results by column value. Valid filter predicates are eq,
+        neq
+      name: log_path
+      in: query
+      required: false
+    - type: string
+      description: Filter results by column value. Valid filter predicates are eq,
+        neq
+      name: session_collection
+      in: query
+      required: false
+    - type: string
+      description: Filter results by column value. Valid filter predicates are eq,
+        neq
+      name: local_group_collection
+      in: query
+      required: false
+    - type: string
+      description: Filter results by column value. Valid filter predicates are eq,
+        neq
+      name: ad_structure_collection
+      in: query
+      required: false
+    - type: string
+      description: Filter results by column value. Valid filter predicates are eq,
+        neq
+      name: domain_controller
+      in: query
+      required: false
+    - type: string
+      description: Filter results by column value. Valid filter predicates are eq,
+        neq
+      name: event_title
+      in: query
+      required: false
+    - type: string
+      description: Filter results by column value. Valid filter predicates are eq,
+        neq, gt, gte, lt, lte
+      name: last_ingest
+      in: query
+      required: false
+    - type: string
+      description: Filter results by column value. Valid filter predicates are eq,
+        neq, gt, gte, lt, lte
+      name: id
+      in: query
+      required: false
+    - type: string
+      description: Filter results by column value. Valid filter predicates are eq,
+        neq, gt, gte, lt, lte
+      name: created_at
+      in: query
+      required: false
+    - type: string
+      description: Filter results by column value. Valid filter predicates are eq,
+        neq, gt, gte, lt, lte
+      name: updated_at
+      in: query
+      required: false
+    - type: string
+      description: Filter results by column value. Valid filter predicates are eq,
+        neq, gt, gte, lt, lte
+      name: deleted_at
+      in: query
+      required: false
+  responses:
+    200:
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: "#/definitions/api.ResponseWrapper"
+    default:
+      $ref: './../../responses/api/error-response.yaml'

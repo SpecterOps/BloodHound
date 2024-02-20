@@ -1,0 +1,35 @@
+parameters:
+  - type: string
+    description: Domain ID
+    name: domain_id
+    in: path
+    required: true
+get:
+  description: Lists available attack path types for a domain
+  tags:
+    - Attack Paths API
+    - Enterprise
+  summary: List available attack paths
+  parameters:
+    - $ref: './../../parameters/header/prefer.yaml'
+    - type: string
+      description: Sort by column. Can be used multiple times; prepend hyphen for
+        descending order. Sortable columns are [finding]
+      name: sort_by
+      in: query
+      required: false
+    - type: string
+      description: Filter results by column value. Valid filter predicates are eq,
+        neq. Filterable columns are [finding]
+      name: finding
+      in: query
+      required: false
+  responses:
+    200:
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: "#/definitions/api.BasicResponse"
+    default:
+      $ref: './../../responses/api/error-response.yaml'

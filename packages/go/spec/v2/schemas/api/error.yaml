@@ -1,0 +1,8 @@
+type: object
+properties:
+  context:
+    type: string
+    description: The context in which the error took place
+  message:
+    type: string
+    description: A human-readable description of the error

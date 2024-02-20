@@ -1,0 +1,20 @@
+parameters:
+  - $ref: './../../parameters/header/prefer.yaml'
+  - $ref: './../../parameters/path/object-id.yaml'
+get:
+  operationId: GetEntity
+  summary: Get entity info
+  description: Get basic info and counts for this node. #TODO: explain more
+  tags:
+    - Base Entity API
+    - Community
+    - Enterprise
+  responses:
+    200:
+      description: OK
+      content:
+        application/json:
+          schema:
+            type: object
+    default:
+      $ref: './../../responses/api/error-response.yaml'

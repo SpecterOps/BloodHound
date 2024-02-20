@@ -1,0 +1,20 @@
+parameters:
+  - type: string
+    description: ID of auth token to delete.
+    name: token_id
+    in: path
+    required: true
+delete:
+  description: Delete a request signing token for a given user.
+  tags:
+    - User Management API
+    - Community
+    - Enterprise
+  summary: Delete a User Token
+  parameters:
+    - $ref: './../../parameters/header/prefer.yaml'
+  responses:
+    200:
+      description: OK
+    default:
+      $ref: './../../responses/api/error-response.yaml'

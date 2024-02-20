@@ -1,0 +1,8 @@
+type: object
+properties:
+  int32:
+    type: integer
+    format: int32
+  valid:
+    description: Valid is true if `int32` is not `null`.
+    type: boolean

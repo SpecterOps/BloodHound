@@ -1,0 +1,5 @@
+type: string
+description: This enum describes the collector client type.
+enum:
+  - sharphound
+  - azurehound

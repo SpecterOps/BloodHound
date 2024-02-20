@@ -1,0 +1,6 @@
+name: skip
+description: This query parameter is used for determining the number of objects to skip in pagination.
+in: query
+required: false
+schema:
+  $ref: './../../schemas/api/params/query/skip.yaml'

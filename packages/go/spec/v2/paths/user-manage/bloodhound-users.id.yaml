@@ -1,0 +1,96 @@
+parameters:
+  - $ref: './../../parameters/header/prefer.yaml'
+  - name: user_id
+    description: User ID
+    in: path
+    required: true
+    schema:
+      type: string
+      format: uuid
+get:
+  operationId: GetUser
+  summary: Lookup User
+  description: Get a BloodHound user's details.
+  tags:
+    - User Management API
+    - Community
+    - Enterprise
+  responses:
+    200:
+      description: OK
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                $ref: './../../schemas/model/user.yaml'
+    400:
+      $ref: './../../responses/api/bad-request.yaml'
+    401:
+      $ref: './../../responses/api/unauthorized.yaml'
+    403:
+      $ref: './../../responses/api/forbidden.yaml'
+    404:
+      $ref: './../../responses/api/not-found.yaml'
+    429:
+      $ref: './../../responses/api/too-many-requests.yaml'
+    500:
+      $ref: './../../responses/api/internal-server-error.yaml'
+
+patch:
+  operationId: UpdateUser
+  summary: Update a User
+  description: Update a BloodHound user's properties'.
+  tags:
+    - User Management API
+    - Community
+    - Enterprise
+  requestBody:
+    description: The request body for updating a user
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: './../../schemas/api/requests/user.update.yaml'
+  responses:
+    200:
+      description: OK
+    400:
+      $ref: './../../responses/api/bad-request.yaml'
+    401:
+      $ref: './../../responses/api/unauthorized.yaml'
+    403:
+      $ref: './../../responses/api/forbidden.yaml'
+    404:
+      $ref: './../../responses/api/not-found.yaml'
+    429:
+      $ref: './../../responses/api/too-many-requests.yaml'
+    500:
+      $ref: './../../responses/api/internal-server-error.yaml'
+
+delete:
+  operationId: DeleteUser
+  summary: Delete a User
+  description: Deletes an existing BloodHound user.
+  tags:
+    - User Management API
+    - Community
+    - Enterprise
+  responses:
+    200:
+      description: OK
+    default:
+      $ref: './../../responses/api/error-response.yaml'
+    400:
+      $ref: './../../responses/api/bad-request.yaml'
+    401:
+      $ref: './../../responses/api/unauthorized.yaml'
+    403:
+      $ref: './../../responses/api/forbidden.yaml'
+    404:
+      $ref: './../../responses/api/not-found.yaml'
+    429:
+      $ref: './../../responses/api/too-many-requests.yaml'
+    500:
+      $ref: './../../responses/api/internal-server-error.yaml'

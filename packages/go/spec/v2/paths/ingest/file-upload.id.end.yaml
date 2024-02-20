@@ -1,0 +1,14 @@
+post:
+  description: End a file upload job
+  tags:
+    - Ingest API
+    - Community
+    - Enterprise
+  summary: End File Upload Job
+  parameters:
+    - $ref: './../../parameters/header/prefer.yaml'
+  responses:
+    200:
+      description: OK
+    default:
+      $ref: './../../responses/api/error-response.yaml'

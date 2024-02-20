@@ -1,0 +1,61 @@
+parameters:
+  - type: string
+    description: Asset Group ID
+    name: asset_group_id
+    in: path
+    required: true
+post:
+  deprecated: true
+  description: DEPRECATED use PUT instead. Updates asset group selectors
+  tags:
+    - Asset Isolation API
+    - Community
+    - Enterprise
+  summary: Update asset group selectors
+  parameters:
+    - $ref: './../../parameters/header/prefer.yaml'
+  requestBody:
+    description: The request body for updating asset group selectors
+    required: true
+    content:
+      application/json:
+        schema:
+          type: array
+          items:
+            $ref: "#/definitions/model.AssetGroupSelectorSpec"
+  responses:
+    '201':
+      description: Created
+      content:
+        application/json:
+          schema:
+            $ref: "#/definitions/v2.CreateAssetGroupSelectorResponse"
+    default:
+      $ref: './../../responses/api/error-response.yaml'
+put:
+  description: Updates asset group selectors
+  tags:
+    - Asset Isolation API
+    - Community
+    - Enterprise
+  summary: Update asset group selectors
+  parameters:
+    - $ref: './../../parameters/header/prefer.yaml'
+  requestBody:
+    description: The request body for updating asset group selectors
+    required: true
+    content:
+      application/json:
+        schema:
+          type: array
+          items:
+            $ref: "#/definitions/model.AssetGroupSelectorSpec"
+  responses:
+    '201':
+      description: Created
+      content:
+        application/json:
+          schema:
+            $ref: "#/definitions/v2.CreateAssetGroupSelectorResponse"
+    default:
+      $ref: './../../responses/api/error-response.yaml'

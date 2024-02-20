@@ -1,0 +1,13 @@
+type: integer
+description: This enum describes the current status of a Job.
+enum:
+  - -1 # invalid
+  - 0  # ready
+  - 1  # running
+  - 2  # complete
+  - 3  # canceled
+  - 4  # timed out
+  - 5  # failed
+  - 6  # ingesting
+  - 7  # analyzing
+  - 8  # partially complete

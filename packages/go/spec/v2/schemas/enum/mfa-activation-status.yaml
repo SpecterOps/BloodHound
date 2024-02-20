@@ -1,0 +1,6 @@
+type: string
+description: The activation status of multi-factor authentication on a BloodHound user.
+enum:
+  - activated
+  - deactivated
+  - pending

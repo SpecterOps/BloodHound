@@ -1,0 +1,23 @@
+parameters:
+  - type: string
+    description: Domain Node Object ID
+    name: domain_id
+    in: path
+    required: true
+get:
+  description: Gets meta nodes and connecting edges
+  tags:
+    - Analysis API
+    - Enterprise
+  summary: Get the graph for meta tree
+  parameters:
+    - $ref: './../../parameters/header/prefer.yaml'
+  responses:
+    200:
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: "#/definitions/api.BasicResponse"
+    default:
+      $ref: './../../responses/api/error-response.yaml'

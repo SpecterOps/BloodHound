@@ -1,0 +1,8 @@
+type: object
+properties:
+  current_version:
+    type: string
+  deprecated_version:
+    type: string
+  server_version:
+    type: string

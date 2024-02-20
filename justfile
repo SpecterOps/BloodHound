@@ -194,3 +194,7 @@ run-bhce-container platform='linux/amd64' tag='custom' version='v5.0.0' *ARGS=''
 
 check-license:
   python3 license_check.py
+
+# Generate OpenAPI code using github.com/deepmap/oapi-codegen. Valid targets can be a comma-separated list of `types,client,server,spec`. Defaults to `client`
+oapi-gen target='client':
+  @oapi-codegen -config packages/go/bloodhoundsdk/oapi-codegen.cfg.yml -generate {{target}}

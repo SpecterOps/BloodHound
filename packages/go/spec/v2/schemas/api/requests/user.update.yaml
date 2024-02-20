@@ -1,0 +1,20 @@
+type: object
+properties:
+  first_name:
+    type: string
+  last_name:
+    type: string
+  email_address:
+    type: string
+    format: email
+  principal:
+    type: string
+  roles:
+    type: array
+    items:
+      type: integer
+      format: int32
+  saml_provider_id:
+    type: string
+  is_disabled:
+    type: boolean

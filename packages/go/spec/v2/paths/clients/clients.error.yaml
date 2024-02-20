@@ -1,0 +1,20 @@
+post:
+  description: Logs a client enumeration error
+  tags:
+    - Clients API
+    - Enterprise
+  summary: Client Error
+  parameters:
+    - $ref: './../../parameters/header/prefer.yaml'
+  requestBody:
+    description: The request body for logging a client enumeration error
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: "#/definitions/v2.ClientErrorRequest"
+  responses:
+    '202':
+      description: Accepted
+    default:
+      $ref: './../../responses/api/error-response.yaml'

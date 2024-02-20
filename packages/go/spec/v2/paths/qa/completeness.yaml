@@ -1,0 +1,18 @@
+get:
+  description: Get the percentage of local admins and sessions collected
+  tags:
+    - QA
+    - Community
+    - Enterprise
+  summary: Get database completeness stats
+  parameters:
+    - $ref: "#/definitions/parameter.PreferHeader"
+  responses:
+    200:
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: "#/definitions/api.BasicResponse"
+    default:
+      $ref: './../../responses/api/error-response.yaml'

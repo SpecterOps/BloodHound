@@ -1,0 +1,27 @@
+get:
+  operationId: GetSelf
+  summary: Get self
+  description: >
+    Get the currently authenticated requester details. For Community, this will only ever be valid for users.
+    In Enterprise, this could be either a BloodHound user or a client (collector).
+  tags:
+    - Auth API
+    - Community
+    - Enterprise
+  parameters:
+    - $ref: './../../parameters/header/prefer.yaml'
+  responses:
+    200:
+      description: OK
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                nullable: true
+                oneOf:
+                  - $ref: './../../schemas/model/user.yaml'
+                  - $ref: './../../schemas/model/client.yaml'
+    429:
+      $ref: './../../responses/api/too-many-requests.yaml'

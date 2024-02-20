@@ -1,0 +1,43 @@
+allOf:
+  - $ref: './components/uuid.yaml'
+  - $ref: './components/timestamps.yaml'
+type: object
+properties:
+  saml_provider_id:
+    allOf:
+      - $ref: './../null/int32.yaml'
+      - readOnly: true
+  AuthSecret:
+    allOf:
+      - $ref: './auth-secret.yaml'
+      - readOnly: true
+  roles:
+    type: array
+    readOnly: true
+    items:
+      $ref: './role.yaml'
+  first_name:
+    allOf:
+      - $ref: './../null/string.yaml'
+      - readOnly: true
+  last_name:
+    allOf:
+      - $ref: './../null/string.yaml'
+      - readOnly: false
+  email_address:
+    allOf:
+      - $ref: './../null/string.yaml'
+      - readOnly: true
+  principal_name:
+    type: string
+    readOnly: true
+  last_login:
+    type: string
+    readOnly: true
+    format: date-time
+  is_disabled:
+    type: boolean
+    readOnly: true
+  eula_accepted:
+    type: boolean
+    readOnly: true

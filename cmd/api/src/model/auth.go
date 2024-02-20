@@ -185,7 +185,6 @@ func (s AuthTokens) IsSortable(column string) bool {
 		"client_id",
 		"name",
 		"last_access",
-		"id",
 		"created_at",
 		"updated_at",
 		"deleted_at":
@@ -201,7 +200,7 @@ func (s AuthTokens) ValidFilters() map[string][]FilterOperator {
 		"name":        {Equals, NotEquals},
 		"key":         {Equals, NotEquals},
 		"hmac_method": {Equals, NotEquals},
-		"id":          {Equals, GreaterThan, GreaterThanOrEquals, LessThan, LessThanOrEquals, NotEquals},
+		"id":          {Equals, NotEquals},
 		"last_access": {Equals, GreaterThan, GreaterThanOrEquals, LessThan, LessThanOrEquals, NotEquals},
 		"created_at":  {Equals, GreaterThan, GreaterThanOrEquals, LessThan, LessThanOrEquals, NotEquals},
 		"updated_at":  {Equals, GreaterThan, GreaterThanOrEquals, LessThan, LessThanOrEquals, NotEquals},
@@ -488,6 +487,10 @@ func (s *User) RemoveRole(role Role) {
 	s.Roles = s.Roles.RemoveByName(role.Name)
 }
 
+type Sortable interface {
+	IsSortable(string) bool
+}
+
 type Users []User
 
 func (s Users) IsSortable(column string) bool {
@@ -512,7 +515,7 @@ func (s Users) ValidFilters() map[string][]FilterOperator {
 		"last_name":      {Equals, NotEquals},
 		"email_address":  {Equals, NotEquals},
 		"principal_name": {Equals, NotEquals},
-		"id":             {Equals, GreaterThan, GreaterThanOrEquals, LessThan, LessThanOrEquals, NotEquals},
+		"id":             {Equals, NotEquals},
 		"last_login":     {Equals, GreaterThan, GreaterThanOrEquals, LessThan, LessThanOrEquals, NotEquals},
 		"created_at":     {Equals, GreaterThan, GreaterThanOrEquals, LessThan, LessThanOrEquals, NotEquals},
 		"updated_at":     {Equals, GreaterThan, GreaterThanOrEquals, LessThan, LessThanOrEquals, NotEquals},

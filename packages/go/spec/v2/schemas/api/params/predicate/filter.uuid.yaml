@@ -1,0 +1,4 @@
+type: string
+format: uuid
+description: |
+  Filter results by column string-formatted uuid value. Valid filter predicates are `eq`, `neq`.

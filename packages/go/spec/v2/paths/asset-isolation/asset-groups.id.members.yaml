@@ -1,0 +1,82 @@
+parameters:
+  - type: integer
+    description: Asset group ID
+    name: asset_group_id
+    in: path
+    required: true
+get:
+  description: List all members of an asset isolation group.
+  consumes:
+    - application/json
+  tags:
+    - Asset Isolation API
+    - Community
+    - Enterprise
+  summary: List all asset isolation group members
+  parameters:
+    - $ref: './../../parameters/header/prefer.yaml'
+    - type: integer
+      description: Paging Skip
+      name: skip
+      in: query
+    - type: integer
+      description: Paging Limit
+      name: limit
+      in: query
+    - type: string
+      description: Sort by column. Can be used multiple times; prepend hyphen for
+        descending order.
+      name: sort_by
+      in: query
+      required: false
+    - type: string
+      description: Filter results by column value. Valid filter predicates are eq,
+        neq
+      name: object_id
+      in: query
+      required: false
+    - type: string
+      description: Filter results by column value. Valid filter predicates are eq,
+        neq
+      name: primary_kind
+      in: query
+      required: false
+    - type: string
+      description: Filter results by column value. Valid filter predicates are eq,
+        neq
+      name: environment_id
+      in: query
+      required: false
+    - type: string
+      description: Filter results by column value. Valid filter predicates are eq,
+        neq
+      name: domainsid
+      in: query
+      required: false
+    - type: string
+      description: Filter results by column value. Valid filter predicates are eq,
+        neq
+      name: environment_kind
+      in: query
+      required: false
+    - type: string
+      description: Filter results by column value. Valid filter predicates are eq,
+        neq
+      name: name
+      in: query
+      required: false
+    - type: string
+      description: Filter results by column value. Valid filter predicates are eq,
+        neq
+      name: custom_member
+      in: query
+      required: false
+  responses:
+    200:
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: "#/definitions/v2.ListAssetGroupMembersResponse"
+    default:
+      $ref: './../../responses/api/error-response.yaml'

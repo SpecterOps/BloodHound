@@ -1,0 +1,13 @@
+get:
+  description: 'Bloodhound Enterprise only: Accept EULA for logged in user.'
+  tags:
+    - Auth API
+    - Enterprise
+  summary: Accept EULA
+  parameters:
+    - $ref: './../../parameters/header/prefer.yaml'
+  responses:
+    '202':
+      description: Accepted
+    default:
+      $ref: './../../responses/api/error-response.yaml'

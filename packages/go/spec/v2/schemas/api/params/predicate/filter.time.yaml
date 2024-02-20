@@ -1,0 +1,5 @@
+type: string
+format: date-time
+description: |
+  Filter results by column timestamp value formatted as an RFC-3339 string.
+  Valid filter predicates are `eq`, `neq`, `gt`, `gte`, `lt`, `lte`.

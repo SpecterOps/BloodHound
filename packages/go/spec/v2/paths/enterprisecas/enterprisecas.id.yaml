@@ -1,0 +1,27 @@
+parameters:
+  - type: string
+    description: EnterpriseCA Object ID
+    name: object_id
+    in: path
+    required: true
+get:
+  description: "Get basic info and counts for this EnterpriseCA. \n\n<b>Early Access
+      Notice:</b> This API endpoint is in early access and may undergo changes. Exercise
+      caution when integrating, and avoid critical use until it reaches stable status."
+  tags:
+    - EnterpriseCA Entity API
+    - Community
+    - Enterprise
+  summary: Get enterpriseca entity info
+  parameters:
+    - $ref: './../../parameters/header/prefer.yaml'
+    - $ref: "#/definitions/parameters.HydrateCounts"
+  responses:
+    200:
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: "#/definitions/v2.EntityWithControllersResponse"
+    default:
+      $ref: './../../responses/api/error-response.yaml'

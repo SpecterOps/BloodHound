@@ -105,11 +105,9 @@ func (s ManagementResource) ListSAMLProviders(response http.ResponseWriter, requ
 }
 
 func (s ManagementResource) GetSAMLProvider(response http.ResponseWriter, request *http.Request) {
-	pathVars := mux.Vars(request)
+	rawProviderID := mux.Vars(request)[api.URIPathVariableSAMLProviderID]
 
-	if rawProviderID, hasID := pathVars[api.URIPathVariableSAMLProviderID]; !hasID {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusUnauthorized, api.ErrorResponseDetailsAuthenticationInvalid, request), response)
-	} else if providerID, err := strconv.ParseInt(rawProviderID, 10, 32); err != nil {
+	if providerID, err := strconv.ParseInt(rawProviderID, 10, 32); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, api.ErrorResponseDetailsResourceNotFound, request), response)
 	} else if provider, err := s.db.GetSAMLProvider(int32(providerID)); err != nil {
 		api.HandleDatabaseError(request, response, err)

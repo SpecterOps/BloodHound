@@ -1,0 +1,23 @@
+allOf:
+  - $ref: './components/uuid.yaml'
+  - $ref: './components/timestamps.yaml'
+type: object
+properties:
+  user_id:
+    allOf:
+      - $ref: './../null/uuid.yaml'
+      - readOnly: true
+  name:
+    allOf:
+      - $ref: './../null/string.yaml'
+      - readOnly: true
+  key:
+    type: string
+    readOnly: true
+  hmac_method:
+    type: string
+    readOnly: true
+  last_access:
+    type: string
+    format: date-time
+    readOnly: true

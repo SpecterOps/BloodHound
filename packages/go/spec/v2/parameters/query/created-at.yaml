@@ -1,0 +1,5 @@
+name: created_at
+in: query
+description: Filter results by `created_at` value. See filter schema details for valid predicates.
+schema:
+  $ref: './../../schemas/api/params/predicate/filter.time.yaml'

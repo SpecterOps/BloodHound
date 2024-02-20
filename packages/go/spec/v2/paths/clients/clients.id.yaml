@@ -1,0 +1,60 @@
+parameters:
+  - type: string
+    description: Client ID
+    name: client_id
+    in: path
+    required: true
+get:
+  description: Gets given client for processing collection events
+  tags:
+    - Clients API
+    - Enterprise
+  summary: Retrieve Client
+  parameters:
+    - $ref: './../../parameters/header/prefer.yaml'
+  responses:
+    200:
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: "#/definitions/api.BasicResponse"
+    default:
+      $ref: './../../responses/api/error-response.yaml'
+put:
+  description: Update a client for processing collection events
+  tags:
+    - Clients API
+    - Enterprise
+  summary: Update Client
+  parameters:
+    - $ref: './../../parameters/header/prefer.yaml'
+  requestBody:
+    description: The request body for updating a client
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: "#/definitions/v2.ClientUpdateRequest"
+  responses:
+    200:
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: "#/definitions/api.BasicResponse"
+    default:
+      $ref: './../../responses/api/error-response.yaml'
+delete:
+  description: Delete a client for processing collection events
+  tags:
+    - Clients API
+    - Enterprise
+  summary: Delete Client
+  parameters:
+    - $ref: './../../parameters/header/prefer.yaml'
+  responses:
+    200:
+      description: OK
+    default:
+      $ref: './../../responses/api/error-response.yaml'

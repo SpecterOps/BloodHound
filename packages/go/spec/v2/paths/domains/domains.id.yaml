@@ -1,0 +1,49 @@
+parameters:
+  - type: string
+    description: Object ID
+    name: object_id
+    in: path
+    required: true
+get:
+  description: Get counts and properties for domain object
+  tags:
+    - Domain Entity API
+    - Community
+    - Enterprise
+  summary: Get domain entity info
+  parameters:
+    - $ref: './../../parameters/header/prefer.yaml'
+  responses:
+    200:
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: "#/definitions/api.BasicResponse"
+    default:
+      $ref: './../../responses/api/error-response.yaml'
+patch:
+  description: 'Updates the supported properties on the Domain entity. Supported
+      properties: `collected`'
+  tags:
+    - Domain Entity API
+    - Community
+    - Enterprise
+  summary: Update the Domain entity
+  parameters:
+    - $ref: './../../parameters/header/prefer.yaml'
+  requestBody:
+    description: The patch request body for updating Domain
+    content:
+      application/json:
+        schema:
+          $ref: "#/definitions/v2.DomainEntityPatch"
+  responses:
+    200:
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: "#/definitions/api.BasicResponse"
+    default:
+      $ref: './../../responses/api/error-response.yaml'

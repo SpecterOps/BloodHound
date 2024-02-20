@@ -1,0 +1,5 @@
+name: deleted_at
+in: query
+description: Filter results by `deleted_at` value. See filter schema details for valid predicates.
+schema:
+  $ref: './../../schemas/api/params/predicate/filter.time.yaml'

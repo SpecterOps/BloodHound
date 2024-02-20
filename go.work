@@ -34,5 +34,6 @@ use (
 	./packages/go/params
 	./packages/go/schemagen
 	./packages/go/slicesext
+	./packages/go/spec
 	./packages/go/stbernard
 )

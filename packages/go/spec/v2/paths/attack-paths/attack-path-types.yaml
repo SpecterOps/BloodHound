@@ -1,0 +1,29 @@
+get:
+  description: Lists all possible attack path types
+  tags:
+    - Attack Paths API
+    - Enterprise
+  summary: List all attack path types
+  parameters:
+    - $ref: './../../parameters/header/prefer.yaml'
+    - type: string
+      description: Sort by column; prepend hyphen for descending order. The only sortable
+        column is finding.
+      name: sort_by
+      in: query
+      required: false
+    - type: string
+      description: Filter results by column value. Valid filter predicates are eq,
+        neq. The only filterable column is finding
+      name: finding
+      in: query
+      required: false
+  responses:
+    200:
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: "#/definitions/api.BasicResponse"
+    default:
+      $ref: './../../responses/api/error-response.yaml'

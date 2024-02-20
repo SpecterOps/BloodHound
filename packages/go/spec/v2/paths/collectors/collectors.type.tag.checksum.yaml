@@ -1,0 +1,33 @@
+parameters:
+  - type: string
+    enum:
+      - azurehound
+      - sharphound
+    description: Collector type
+    name: collector_type
+    in: path
+    required: true
+  - type: string
+    description: Version tag (semver or "latest")
+    name: version_tag
+    in: path
+    required: true
+get:
+  description: Retrieves the checksum file for a given collector with given version
+  produces:
+    - application/octet-stream
+  tags:
+    - Collectors API
+    - Enterprise
+  summary: Get collector checksum by version
+  parameters:
+    - $ref: "#/definitions/parameter.PreferHeader"
+  responses:
+    200:
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: "#/definitions/api.BinaryResponse"
+    default:
+      $ref: './../../responses/api/error-response.yaml'

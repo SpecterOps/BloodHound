@@ -1,0 +1,18 @@
+put:
+  description: Pokes the analysis service
+  tags:
+    - Attack Paths API
+    - Enterprise
+  summary: Starts generating attack paths
+  parameters:
+    - $ref: './../../parameters/header/prefer.yaml'
+  responses:
+    200:
+      description: OK
+      content:
+        application/json:
+          schema:
+            type: object
+            additionalProperties: true
+    default:
+      $ref: './../../responses/api/error-response.yaml'

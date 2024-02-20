@@ -1,0 +1,2 @@
+type: string
+description: The type of relationship this edge represents.

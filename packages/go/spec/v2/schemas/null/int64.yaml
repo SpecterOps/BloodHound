@@ -1,0 +1,8 @@
+type: object
+properties:
+  int64:
+    type: integer
+    format: int64
+  valid:
+    description: Valid is true if `int64` is not `null`.
+    type: boolean

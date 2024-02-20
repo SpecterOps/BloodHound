@@ -1,0 +1,23 @@
+put:
+  deprecated: true
+  description: Sets a scheduled job to cancelled.
+  tags:
+    - Tasks
+    - Enterprise
+  summary: Cancels a scheduled job
+  parameters:
+    - $ref: './../../parameters/header/prefer.yaml'
+    - type: string
+      description: Job ID
+      name: task_id
+      in: path
+      required: true
+  responses:
+    200:
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: "#/definitions/api.ResponseWrapper"
+    default:
+      $ref: './../../responses/api/error-response.yaml'

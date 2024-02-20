@@ -16,6 +16,8 @@
 
 export { default as UserProfile } from './UserProfile';
 
+export { default as ApiExplorer } from './ApiExplorer';
+
 export * from './Explore';
 
 export * from './DataQuality';

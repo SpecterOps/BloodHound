@@ -1,0 +1,40 @@
+type: object
+properties:
+  nodes:
+    description: A map of nodes in the graph indexed by each node's identifier
+    type: object
+    additionalProperties:
+      "$ref": "./node.yaml"
+  edges:
+    description: A list of edges in the graph
+    type: array
+    items:
+      "$ref": "./edge.yaml"
+example:
+  nodes:
+    node1:
+      label: A@TESTLAB.LOCAL
+      kind: User
+      objectId: abc123
+      isTierZero: true
+      lastSeen: 2022-12-07T15:09:51.474Z
+      properties:
+        lastseen: 2023-02-03T22:54:21.728Z
+        system_tags: admin_tier_0
+    node2:
+      label: DOMAIN USERS@TESTLAB.LOCAL
+      kind: Group
+      objectId: xyz789
+      isTierZero: false
+      lastSeen: 2022-12-07T15:09:51.474Z
+      properties:
+        lastseen: 2023-02-03T22:54:21.728Z
+  edges:
+    - source: node1
+      target: node2
+      label: MemberOf
+      kind: MemberOf
+      lastSeen: 2022-12-07T15:09:51.474Z
+      properties:
+        lastseen: 2023-02-03T22:54:21.728Z
+        isacl: false

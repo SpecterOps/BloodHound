@@ -1,0 +1,54 @@
+type: object
+properties:
+  id:
+    type: integer
+  created_at:
+    type: string
+    format: date-time
+  updated_at:
+    type: string
+    format: date-time
+  deleted_at:
+    type: object
+    properties:
+      Time:
+        type: string
+        format: date-time
+      Valid:
+        type: boolean
+  domain_sid:
+    type: string
+  users:
+    type: integer
+  groups:
+    type: integer
+  computers:
+    type: integer
+  ous:
+    type: integer
+  containers:
+    type: integer
+  gpos:
+    type: integer
+  aiacas:
+    type: integer
+  rootcas:
+    type: integer
+  enterprisecas:
+    type: integer
+  ntauthstores:
+    type: integer
+  certtemplates:
+    type: integer
+  acls:
+    type: integer
+  sessions:
+    type: integer
+  relationships:
+    type: integer
+  session_completeness:
+    type: float
+  local_group_completeness:
+    type: float
+  run_id:
+    type: string

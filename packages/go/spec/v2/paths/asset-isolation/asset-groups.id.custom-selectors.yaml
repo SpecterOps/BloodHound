@@ -1,0 +1,27 @@
+parameters:
+  - type: string
+    description: ID of the asset_group record to retrieved selector count for
+    name: asset_group_id
+    in: path
+    required: true
+get:
+  description: Get asset group custom member count
+  tags:
+    - Asset Isolation API
+    - Community
+    - Enterprise
+  summary: Get asset group custom member count
+  parameters:
+    - $ref: './../../parameters/header/prefer.yaml'
+  responses:
+    200:
+      description: OK
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              custom_member_count:
+                type: integer
+    default:
+      $ref: './../../responses/api/error-response.yaml'

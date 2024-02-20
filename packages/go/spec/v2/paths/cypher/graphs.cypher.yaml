@@ -1,0 +1,26 @@
+post:
+  description: Runs a manual cypher query directly against the database
+  tags:
+    - Cypher API
+    - Community
+    - Enterprise
+  summary: Runs a manual cypher query directly against the database
+  requestBody:
+    content:
+      application/json:
+        schema:
+          properties:
+            query:
+              type: string
+            include_properties:
+              type: boolean
+  responses:
+    200:
+      description: Returns graph data related to the cypher query sent in the response
+        body that contains a collection of nodes and edges
+      content:
+        application/json:
+          schema:
+            $ref: "#/definitions/graphs.GraphResponse"
+    default:
+      $ref: './../../responses/api/error-response.yaml'

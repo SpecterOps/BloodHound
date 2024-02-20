@@ -1,0 +1,20 @@
+type: object
+properties:
+  created_at:
+    type: string
+  deleted_at:
+    "$ref": "#/definitions/sql.NullTime"
+  id:
+    type: integer
+  name:
+    type: string
+  selectors:
+    type: array
+    items:
+      "$ref": "#/definitions/model.AssetGroupSelector"
+  system_group:
+    type: boolean
+  tag:
+    type: string
+  updated_at:
+    type: string

@@ -1,0 +1,22 @@
+parameters:
+  - $ref: './../../parameters/header/prefer.yaml'
+  - $ref: './../../parameters/path/object-id.yaml'
+  - $ref: './../../parameters/query/skip.yaml'
+  - $ref: './../../parameters/query/limit.yaml'
+get:
+  operationId: ListEntityControllers
+  summary: List controllers
+  description: List the principals that can control this node. #TODO: explain more
+  tags:
+    - Base Entity API
+    - Community
+    - Enterprise
+  responses:
+    200:
+      description: OK
+      content:
+        application/json:
+          schema:
+            type: object
+    default:
+      $ref: './../../responses/api/error-response.yaml'

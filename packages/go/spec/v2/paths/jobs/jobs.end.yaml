@@ -1,0 +1,23 @@
+post:
+  description: 'Endpoint for clients to end a job and mark the end time. Note: caller
+      must be a client. For users, this endpoint will return a 404 as they are not
+      expected or allowed to call this endpoint.'
+  tags:
+    - Jobs API
+    - Enterprise
+  summary: Notifies the API of a job ending
+  parameters:
+    - $ref: './../../parameters/header/prefer.yaml'
+    - in: header
+      name: User-Agent
+      type: string
+      required: true
+  responses:
+    200:
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: "#/definitions/model.DisplayClientScheduledJob"
+    default:
+      $ref: './../../responses/api/error-response.yaml'

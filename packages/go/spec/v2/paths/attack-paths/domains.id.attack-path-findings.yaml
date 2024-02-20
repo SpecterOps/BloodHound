@@ -1,0 +1,30 @@
+parameters:
+  - type: string
+    description: Domain ID
+    name: domain_id
+    in: path
+    required: true
+get:
+  description: Export the finding table for a given attack path
+  produces:
+    - text/csv
+  tags:
+    - Attack Paths API
+    - Enterprise
+  summary: Export attack path findings
+  parameters:
+    - $ref: './../../parameters/header/prefer.yaml'
+    - type: string
+      description: Finding Type
+      name: finding
+      in: query
+      required: true
+  responses:
+    200:
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: "#/definitions/api.BasicResponse"
+    default:
+      $ref: './../../responses/api/error-response.yaml'

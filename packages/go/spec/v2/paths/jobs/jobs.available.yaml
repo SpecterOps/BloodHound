@@ -1,0 +1,116 @@
+get:
+  description: "Gets next scheduled job for client. \n\n<b>NOTE:</b> This endpoint
+      is intended to be used by clients and may not function properly in the API Explorer."
+  tags:
+    - Jobs API
+    - Enterprise
+  summary: Get Next Jobs
+  parameters:
+    - $ref: './../../parameters/header/prefer.yaml'
+    - type: string
+      description: Sort by column. Can be used multiple times; prepend hyphen for
+        descending order. Sortable columns are client_id, event_id, execution_time,
+        status, start_time, end_time, log_path, domain_controller, event_title, last_ingest,
+        id, created_at, updated_at, deleted_at.
+      name: sort_by
+      in: query
+      required: false
+    - type: string
+      description: Filter results by column value. Valid filter predicates are eq,
+        neq
+      name: log_path
+      in: query
+      required: false
+    - type: string
+      description: Filter results by column value. Valid filter predicates are eq,
+        neq
+      name: session_collection
+      in: query
+      required: false
+    - type: string
+      description: Filter results by column value. Valid filter predicates are eq,
+        neq
+      name: ad_structure_collection
+      in: query
+      required: false
+    - type: string
+      description: Filter results by column value. Valid filter predicates are eq,
+        neq
+      name: domain_controller
+      in: query
+      required: false
+    - type: string
+      description: Filter results by column value. Valid filter predicates are eq,
+        neq
+      name: status
+      in: query
+      required: false
+    - type: string
+      description: Filter results by column value. Valid filter predicates are eq,
+        neq
+      name: event_title
+      in: query
+      required: false
+    - type: string
+      description: Filter results by column value. Valid filter predicates are eq,
+        neq, gt, gte, lt, lte
+      name: client_id
+      in: query
+      required: false
+    - type: string
+      description: Filter results by column value. Valid filter predicates are eq,
+        neq, gt, gte, lt, lte
+      name: event_id
+      in: query
+      required: false
+    - type: string
+      description: Filter results by column value. Valid filter predicates are eq,
+        neq, gt, gte, lt, lte
+      name: execution_time
+      in: query
+      required: false
+    - type: string
+      description: Filter results by column value. Valid filter predicates are eq,
+        neq, gt, gte, lt, lte
+      name: start_time
+      in: query
+      required: false
+    - type: string
+      description: Filter results by column value. Valid filter predicates are eq,
+        neq, gt, gte, lt, lte
+      name: end_time
+      in: query
+      required: false
+    - type: string
+      description: Filter results by column value. Valid filter predicates are eq,
+        neq, gt, gte, lt, lte
+      name: last_ingest
+      in: query
+      required: false
+    - type: string
+      description: Filter results by column value. Valid filter predicates are eq,
+        neq, gt, gte, lt, lte
+      name: created_at
+      in: query
+      required: false
+    - type: string
+      description: Filter results by column value. Valid filter predicates are eq,
+        neq, gt, gte, lt, lte
+      name: updated_at
+      in: query
+      required: false
+    - type: string
+      description: Filter results by column value. Valid filter predicates are eq,
+        neq, gt, gte, lt, lte
+      name: deleted_at
+      in: query
+      required: false
+  responses:
+    200:
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: "#/definitions/api.ResponseWrapper"
+    default:
+      $ref: './../../responses/api/error-response.yaml'

@@ -1,0 +1,16 @@
+get:
+  deprecated: true
+  description: Get the status of the current client
+  summary: Get client job status
+  tags:
+    - Tasks
+    - Enterprise
+  responses:
+    200:
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: "#/definitions/model.DisplayClientScheduledJob"
+    default:
+      $ref: './../../responses/api/error-response.yaml'

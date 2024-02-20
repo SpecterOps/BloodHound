@@ -1,0 +1,8 @@
+type: object
+properties:
+  uuid:
+    type: string
+    format: uuid
+  valid:
+    description: Valid is true if `uuid` is not `null`.
+    type: boolean

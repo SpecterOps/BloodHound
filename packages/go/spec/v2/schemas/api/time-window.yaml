@@ -1,0 +1,10 @@
+type: object
+properties:
+  start:
+    type: string
+    format: date-time
+    description: The RFC-3339 timestamp to describe the beginning of a time range
+  end:
+    type: string
+    format: date-time
+    description: The RFC-3339 timestamp to describe the end of a time range

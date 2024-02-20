@@ -1,0 +1,20 @@
+parameters:
+  - $ref: './../../parameters/header/prefer.yaml'
+post:
+  operationId: Logout
+  summary: Logout of BloodHound
+  description: Logout of BloodHound and delete the user session JWT.
+  tags:
+    - Auth API
+    - Community
+    - Enterprise
+  responses:
+    200:
+      description: OK
+      headers:
+        Location:
+          description: This is the location you will be redirected to after logging out.
+          schema:
+            type: string
+    429:
+      $ref: './../../responses/api/too-many-requests.yaml'

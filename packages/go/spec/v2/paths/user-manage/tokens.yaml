@@ -1,0 +1,118 @@
+parameters:
+  - $ref: './../../parameters/header/prefer.yaml'
+get:
+  operationId: ListAuthTokens
+  summary: List Auth Tokens
+  description: Get all auth tokens.
+  tags:
+    - User Management API
+    - Community
+    - Enterprise
+  parameters:
+    - name: user_id
+      description: Provide a user id to filter tokens by. This filter is only honored
+        for Admin users.
+      in: query
+      schema:
+        $ref: './../../schemas/api/params/predicate/filter.uuid.yaml'
+    - name: sort_by
+      description: |
+        Sortable columns are `user_id`, `client_id`, `name`, `last_access`, `created_at`, `updated_at`, `deleted_at`.
+      in: query
+      schema:
+        $ref: './../../schemas/api/params/predicate/sort-by.yaml'
+    - name: name
+      in: query
+      schema:
+        $ref: './../../schemas/api/params/predicate/filter.string.yaml'
+    - name: key
+      in: query
+      schema:
+        $ref: './../../schemas/api/params/predicate/filter.string.yaml'
+    - name: hmac_method
+      in: query
+      schema:
+        $ref: './../../schemas/api/params/predicate/filter.string.yaml'
+    - name: last_access
+      in: query
+      schema:
+        $ref: './../../schemas/api/params/predicate/filter.time.yaml'
+    - name: id
+      in: query
+      schema:
+        $ref: './../../schemas/api/params/predicate/filter.uuid.yaml'
+    - $ref: './../../parameters/query/created-at.yaml'
+    - $ref: './../../parameters/query/updated-at.yaml'
+    - $ref: './../../parameters/query/deleted-at.yaml'
+  responses:
+    200:
+      description: OK
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                type: object
+                properties:
+                  tokens:
+                    type: array
+                    items:
+                      $ref: './../../schemas/model/auth-token.yaml'
+    400:
+      $ref: './../../responses/api/bad-request.yaml'
+    401:
+      $ref: './../../responses/api/unauthorized.yaml'
+    403:
+      $ref: './../../responses/api/forbidden.yaml'
+    404:
+      $ref: './../../responses/api/not-found.yaml'
+    429:
+      $ref: './../../responses/api/too-many-requests.yaml'
+    500:
+      $ref: './../../responses/api/internal-server-error.yaml'
+
+post:
+  operationId: CreateAuthToken
+  summary: Create Token for User
+  description: Create a new token to use with request signing based authentication
+    for a given user.
+  tags:
+    - User Management API
+    - Community
+    - Enterprise
+  requestBody:
+    description: The request body for creating an auth token
+    required: true
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            token_name:
+              type: string
+            user_id:
+              type: string
+              format: uuid
+  responses:
+    200:
+      description: OK
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                $ref: './../../schemas/model/auth-token.yaml'
+    400:
+      $ref: './../../responses/api/bad-request.yaml'
+    401:
+      $ref: './../../responses/api/unauthorized.yaml'
+    403:
+      $ref: './../../responses/api/forbidden.yaml'
+    404:
+      $ref: './../../responses/api/not-found.yaml'
+    429:
+      $ref: './../../responses/api/too-many-requests.yaml'
+    500:
+      $ref: './../../responses/api/internal-server-error.yaml'

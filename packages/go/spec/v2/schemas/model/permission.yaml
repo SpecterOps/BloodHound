@@ -1,0 +1,11 @@
+allOf:
+  - $ref: './components/int32.id.yaml'
+  - $ref: './components/timestamps.yaml'
+type: object
+properties:
+  authority:
+    type: string
+    readOnly: true
+  name:
+    type: string
+    readOnly: true

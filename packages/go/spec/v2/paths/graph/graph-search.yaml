@@ -1,0 +1,23 @@
+get:
+  description: Get the result of searching a graph for a node by name
+  tags:
+    - Graph API
+    - Community
+    - Enterprise
+  summary: Get search result
+  parameters:
+    - $ref: './../../parameters/header/prefer.yaml'
+    - type: string
+      description: Search query
+      name: search_query
+      in: query
+      required: true
+  responses:
+    200:
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: "#/definitions/api.BasicResponse"
+    default:
+      $ref: './../../responses/api/error-response.yaml'

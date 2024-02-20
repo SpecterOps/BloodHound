@@ -1,0 +1,46 @@
+parameters:
+  - type: string
+    description: Domain ID
+    name: domain_id
+    in: path
+    required: true
+get:
+  description: List the values that represent the sparklines for individual attack
+    paths
+  tags:
+    - Attack Paths API
+    - Enterprise
+  summary: List attack path sparkline values
+  parameters:
+    - $ref: './../../parameters/header/prefer.yaml'
+    - type: string
+      description: Sort by column. Can be used multiple times; prepend hyphen for
+        descending order. Sortable columns are CompositeRisk, FindingCount, ImpactedAssetCount,
+        domain_sid, id, created_at, updated_at, deleted_at.
+      name: sort_by
+      in: query
+      required: false
+    - type: string
+      description: Finding Type
+      name: finding
+      in: query
+      required: true
+    - type: string
+      description: Beginning datetime of range (inclusive) in RFC-3339 format; Defaults
+        to current datetime minus 30 days
+      name: from
+      in: query
+      format: date-time
+    - type: string
+      description: Ending datetime of range (exclusive) in RFC-3339 format; Defaults
+        to current datetime
+      name: to
+      in: query
+      format: date-time
+  responses:
+    200:
+      description: OK
+      schema:
+        $ref: "#/definitions/api.TimeWindowedResponse"
+    default:
+      $ref: './../../responses/api/error-response.yaml'

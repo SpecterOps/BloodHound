@@ -1,0 +1,106 @@
+parameters:
+  - $ref: './../../parameters/header/prefer.yaml'
+get:
+  operationId: ListUsers
+  summary: List Users
+  description: Gets all BloodHound user details.
+  tags:
+    - User Management API
+    - Community
+    - Enterprise
+  parameters:
+    - name: sort_by
+      description: Sortable columns are first_name, last_name, email_address,
+        principal_name, last_login, created_at, updated_at, deleted_at.
+      in: query
+      schema:
+        $ref: './../../schemas/api/params/predicate/sort-by.yaml'
+    - name: first_name
+      in: query
+      schema:
+        $ref: './../../schemas/api/params/predicate/filter.string.yaml'
+    - name: last_name
+      in: query
+      schema:
+        $ref: './../../schemas/api/params/predicate/filter.string.yaml'
+    - name: email_address
+      in: query
+      schema:
+        $ref: './../../schemas/api/params/predicate/filter.string.yaml'
+    - name: principal_name
+      in: query
+      schema:
+        $ref: './../../schemas/api/params/predicate/filter.string.yaml'
+    - name: id
+      in: query
+      schema:
+        $ref: './../../schemas/api/params/predicate/filter.uuid.yaml'
+    - name: last_login
+      in: query
+      schema:
+        $ref: './../../schemas/api/params/predicate/filter.time.yaml'
+    - $ref: './../../parameters/query/created-at.yaml'
+    - $ref: './../../parameters/query/updated-at.yaml'
+    - $ref: './../../parameters/query/deleted-at.yaml'
+  responses:
+    200:
+      description: OK
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                type: object
+                properties:
+                  users:
+                    type: array
+                    items:
+                      $ref: './../../schemas/model/user.yaml'
+    400:
+      $ref: './../../responses/api/bad-request.yaml'
+    401:
+      $ref: './../../responses/api/unauthorized.yaml'
+    403:
+      $ref: './../../responses/api/forbidden.yaml'
+    429:
+      $ref: './../../responses/api/too-many-requests.yaml'
+    500:
+      $ref: './../../responses/api/internal-server-error.yaml'
+post:
+  operationId: CreateUser
+  summary: Create a New User
+  description: Create a new BloodHound user.
+  tags:
+    - User Management API
+    - Community
+    - Enterprise
+  requestBody:
+    description: The request body for creating a user
+    required: true
+    content:
+      application/json:
+        schema:
+          allOf:
+            - $ref: './../../schemas/api/requests/user.update.yaml'
+            - $ref: './../../schemas/api/requests/user.set-secret.yaml'
+  responses:
+    200:
+      description: OK
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                $ref: './../../schemas/model/user.yaml'
+    400:
+      $ref: './../../responses/api/bad-request.yaml'
+    401:
+      $ref: './../../responses/api/unauthorized.yaml'
+    403:
+      $ref: './../../responses/api/forbidden.yaml'
+    429:
+      $ref: './../../responses/api/too-many-requests.yaml'
+    500:
+      $ref: './../../responses/api/internal-server-error.yaml'

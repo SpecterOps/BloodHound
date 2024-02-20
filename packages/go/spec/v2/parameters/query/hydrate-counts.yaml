@@ -1,0 +1,6 @@
+description: Include count of related controllers. Assumes true if unspecified.
+name: counts
+in: query
+required: false
+schema:
+  type: boolean

@@ -1,0 +1,26 @@
+post:
+  description: 'Endpoint for clients to start a new job and mark the start time.
+      Note: caller must be a client. For users, this endpoint will return a 404 as
+      they are not expected or allowed to call this endpoint.'
+  tags:
+    - Jobs API
+    - Enterprise
+  summary: Notifies the API of a job start
+  parameters:
+    - $ref: './../../parameters/header/prefer.yaml'
+  requestBody:
+    content:
+      application/json:
+        schema:
+          properties:
+            id:
+              type: integer
+  responses:
+    200:
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: "#/definitions/model.DisplayClientScheduledJob"
+    default:
+      $ref: './../../responses/api/error-response.yaml'

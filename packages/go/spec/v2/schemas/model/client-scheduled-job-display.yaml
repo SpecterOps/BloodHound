@@ -1,0 +1,42 @@
+type: object
+properties:
+  id:
+    type: integer
+  client_id:
+    type: string
+  client_name:
+    type: string
+  event_id:
+    "$ref": "#/definitions/null.Int32"
+  execution_time:
+    type: string
+  start_time:
+    type: string
+  end_time:
+    type: string
+  status:
+    type: integer
+  status_message:
+    type: string
+  session_collection:
+    type: boolean
+  local_group_collection:
+    type: boolean
+  ad_structure_collection:
+    type: boolean
+  all_trusted_domains:
+    type: boolean
+  domain_controller:
+    "$ref": "#/definitions/null.String"
+  ous:
+    type: array
+    items:
+      "$ref": "#/definitions/model.OUDetails"
+  domains:
+    type: array
+    items:
+      "$ref": "#/definitions/model.DomainDetails"
+  domain_results:
+    type: array
+    items:
+      "$ref": "#/definitions/model.DomainCollectionResult"

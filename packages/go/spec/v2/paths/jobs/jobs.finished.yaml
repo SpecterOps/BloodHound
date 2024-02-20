@@ -1,0 +1,101 @@
+get:
+  description: Gets all finished jobs
+  tags:
+    - Jobs API
+    - Enterprise
+  summary: Get Finished Jobs
+  parameters:
+    - $ref: './../../parameters/header/prefer.yaml'
+    - type: string
+      description: Sort by column. Can be used multiple times; prepend hyphen for
+        descending order. Sortable columns are client_name, client_id, event_id, execution_time,
+        status, start_time, end_time, log_path, domain_controller, event_title, last_ingest,
+        id, created_at, updated_at, deleted_at.
+      name: sort_by
+      in: query
+      required: false
+    - type: string
+      description: Filter results by column value. Valid filter predicates are eq,
+        neq, gt, gte, lt, lte
+      name: client_id
+      in: query
+      required: false
+    - type: string
+      description: Filter results by column value. Valid filter predicates are eq,
+        neq
+      name: rrule
+      in: query
+      required: false
+    - type: string
+      description: Filter results by column value. Valid filter predicates are eq,
+        neq
+      name: session_collection
+      in: query
+      required: false
+    - type: string
+      description: Filter results by column value. Valid filter predicates are eq,
+        neq
+      name: local_group_collection
+      in: query
+      required: false
+    - type: string
+      description: Filter results by column value. Valid filter predicates are eq,
+        neq
+      name: ad_structure_collection
+      in: query
+      required: false
+    - type: string
+      description: Filter results by column value. Valid filter predicates are eq,
+        neq, gt, gte, lt, lte
+      name: next_scheduled_at
+      in: query
+      required: false
+    - type: string
+      description: Filter results by column value. Valid filter predicates are eq,
+        neq, gt, gte, lt, lte
+      name: id
+      in: query
+      required: false
+    - type: string
+      description: Filter results by column value. Valid filter predicates are eq,
+        neq, gt, gte, lt, lte
+      name: created_at
+      in: query
+      required: false
+    - type: string
+      description: Filter results by column value. Valid filter predicates are eq,
+        neq, gt, gte, lt, lte
+      name: updated_at
+      in: query
+      required: false
+    - type: string
+      description: Filter results by column value. Valid filter predicates are eq,
+        neq, gt, gte, lt, lte
+      name: deleted_at
+      in: query
+      required: false
+    - type: string
+      description: Valid values are `true` or `false` and defaults to `true`. When
+        a value of `true` is passed, any domains associated with each finished job
+        will have expanded properties including `name` and `type`. When a value of
+        `false` is passed, these same domains will only return as a list of `objectid`s.
+      name: hydrate_domains
+      in: query
+      required: false
+    - type: string
+      description: Valid values are `true` or `false` and defaults to `true`. When
+        a value of `true` is passed, any OUs associated with each finished job will
+        have expanded properties including `name` and `type`. When a value of `false`
+        is passed, these same OUs will only return as a list of `objectid`s.
+      name: hydrate_ous
+      in: query
+      required: false
+  responses:
+    200:
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: "#/definitions/api.ResponseWrapper"
+    default:
+      $ref: './../../responses/api/error-response.yaml'

@@ -1,0 +1,7 @@
+type: object
+properties:
+  string:
+    type: string
+  valid:
+    description: Valid is true if `string`` is not `null`
+    type: boolean

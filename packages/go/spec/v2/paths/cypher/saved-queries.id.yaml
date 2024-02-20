@@ -1,0 +1,14 @@
+delete:
+  description: Delete an existing saved query
+  tags:
+    - Cypher API
+    - Community
+    - Enterprise
+  summary: Delete a Saved query by its ID
+  parameters:
+    - $ref: "#/definitions/parameter.PreferHeader"
+  responses:
+    '204':
+      description: No Content
+    default:
+      $ref: './../../responses/api/error-response.yaml'

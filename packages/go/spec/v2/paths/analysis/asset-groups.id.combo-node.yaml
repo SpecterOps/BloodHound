@@ -1,0 +1,28 @@
+parameters:
+  - type: string
+    description: Asset Group Object ID
+    name: asset_group_id
+    in: path
+    required: true
+get:
+  deprecated: true
+  description: Gets the combo tree for an asset group
+  tags:
+    - Analysis API
+    - Enterprise
+  summary: Get the combo tree for an asset group
+  parameters:
+    - $ref: './../../parameters/header/prefer.yaml'
+    - type: string
+      description: filter by domain security identifier
+      name: domainsid
+      in: query
+  responses:
+    200:
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: "#/definitions/api.BasicResponse"
+    default:
+      $ref: './../../responses/api/error-response.yaml'

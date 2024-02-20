@@ -1,0 +1,21 @@
+type: object
+description: ''
+properties:
+  http_status:
+    type: integer
+    description: The HTTP status code
+    minimum: 100
+    maximum: 600
+  timestamp:
+    type: string
+    format: date-time
+    description: The RFC-3339 timestamp in which the error response was sent
+  request_id:
+    type: string
+    format: uuid
+    description: The unique identifier of the request that failed
+  errors:
+    type: array
+    items:
+      "$ref": "./error.yaml"
+    description: The error(s) that occurred from processing the request

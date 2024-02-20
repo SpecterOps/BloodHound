@@ -1,0 +1,99 @@
+parameters:
+  - $ref: './../../parameters/header/prefer.yaml'
+  - name: user_id
+    description: User ID
+    in: path
+    required: true
+    schema:
+      type: string
+      format: uuid
+
+post:
+  operationId: AddUserMfa
+  summary: Enrolls user in multi-factor authentication
+  description: Enrolls user in multi-factor authentication
+  tags:
+    - User Management API
+    - Community
+    - Enterprise
+  requestBody:
+    description: The request body for enrolling a user in multi-factor authentication
+    required: true
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            secret:
+              type: string
+  responses:
+    200:
+      description: OK
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                type: object
+                properties:
+                  qr_code:
+                    type: string
+                  totp_secret:
+                    type: string
+    400:
+      $ref: './../../responses/api/bad-request.yaml'
+    401:
+      $ref: './../../responses/api/unauthorized.yaml'
+    403:
+      $ref: './../../responses/api/forbidden.yaml'
+    404:
+      $ref: './../../responses/api/not-found.yaml'
+    429:
+      $ref: './../../responses/api/too-many-requests.yaml'
+    500:
+      $ref: './../../responses/api/internal-server-error.yaml'
+
+delete:
+  operationId: RemoveUserMfa
+  summary: Unenroll user from multi-factor authentication
+  description: Unenrolls user from multi-factor authentication
+  tags:
+    - User Management API
+    - Community
+    - Enterprise
+  requestBody:
+    description: The request body for unenrolling a user from multi-factor authentication
+    required: true
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            secret:
+              type: string
+  responses:
+    200:
+      description: OK
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                type: object
+                properties:
+                  status:
+                    $ref: './../../schemas/enum/mfa-activation-status.yaml'
+    400:
+      $ref: './../../responses/api/bad-request.yaml'
+    401:
+      $ref: './../../responses/api/unauthorized.yaml'
+    403:
+      $ref: './../../responses/api/forbidden.yaml'
+    404:
+      $ref: './../../responses/api/not-found.yaml'
+    429:
+      $ref: './../../responses/api/too-many-requests.yaml'
+    500:
+      $ref: './../../responses/api/internal-server-error.yaml'

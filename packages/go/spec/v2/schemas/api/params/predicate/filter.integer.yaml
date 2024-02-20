@@ -1,0 +1,3 @@
+type: integer
+description: |
+  Filter results by column integer value. Valid filter predicates are `eq`, `neq`, `gt`, `gte`, `lt`, `lte`.

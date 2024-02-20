@@ -1,0 +1,10 @@
+type: object
+properties:
+  asset_group_collection_id:
+    type: integer
+  object_id:
+    type: string
+  node_label:
+    type: string
+  properties:
+    type: object

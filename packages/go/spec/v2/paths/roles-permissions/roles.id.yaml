@@ -1,0 +1,39 @@
+parameters:
+  - $ref: './../../parameters/header/prefer.yaml'
+  - name: role_id
+    description: ID of the role record to retrieve info for.
+    in: path
+    required: true
+    schema:
+      type: integer
+      format: int32
+get:
+  operationId: GetRole
+  summary: Get Role
+  description: Gets an authorization role's details.
+  tags:
+    - Roles & Permissions API
+    - Community
+    - Enterprise
+  responses:
+    200:
+      description: OK
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                $ref: './../../schemas/model/role.yaml'
+    400:
+      $ref: './../../responses/api/bad-request.yaml'
+    401:
+      $ref: './../../responses/api/unauthorized.yaml'
+    403:
+      $ref: './../../responses/api/forbidden.yaml'
+    404:
+      $ref: './../../responses/api/not-found.yaml'
+    429:
+      $ref: './../../responses/api/too-many-requests.yaml'
+    500:
+      $ref: './../../responses/api/internal-server-error.yaml'

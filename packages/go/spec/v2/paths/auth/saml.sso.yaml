@@ -1,0 +1,29 @@
+parameters:
+  - $ref: './../../parameters/header/prefer.yaml'
+get:
+  operationId: GetSamlSignSignOnEndpoints
+  summary: Get all SAML sign on endpoints
+  description: Get all SAML sign on endpoints
+  tags:
+    - Auth API
+    - Community
+    - Enterprise
+  responses:
+    200:
+      description: OK
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                type: object
+                properties:
+                  endpoints:
+                    type: array
+                    items:
+                      $ref: './../../schemas/model/saml-sign-on-endpoint.yaml'
+    429:
+      $ref: './../../responses/api/too-many-requests.yaml'
+    500:
+      $ref: './../../responses/api/internal-server-error.yaml'

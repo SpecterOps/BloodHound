@@ -1,0 +1,23 @@
+get:
+  deprecated: true
+  description: Creates a new scheduled job.
+  tags:
+    - Clients API
+    - Enterprise
+  summary: Creates a scheduled job
+  parameters:
+    - $ref: './../../parameters/header/prefer.yaml'
+    - type: string
+      description: Client ID
+      name: client_id
+      in: path
+      required: true
+  responses:
+    200:
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: "#/definitions/api.BasicResponse"
+    default:
+      $ref: './../../responses/api/error-response.yaml'

@@ -1,0 +1,13 @@
+post:
+  description: Ingests data from the user interface or clients
+  tags:
+    - Ingest API
+    - Enterprise
+  summary: Endpoint for data ingestion
+  parameters:
+    - $ref: "#/definitions/parameter.PreferHeader"
+  responses:
+    '202':
+      description: ''
+    default:
+      $ref: './../../responses/api/error-response.yaml'

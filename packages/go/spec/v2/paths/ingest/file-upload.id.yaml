@@ -1,0 +1,18 @@
+post:
+  description: Saves a collection file to a file upload job
+  tags:
+    - Ingest API
+    - Community
+    - Enterprise
+  summary: Upload File To Job
+  parameters:
+    - $ref: './../../parameters/header/prefer.yaml'
+    - description: File to be uploaded
+      name: file
+      in: body
+      required: true
+  responses:
+    '202':
+      description: Accepted
+    default:
+      $ref: './../../responses/api/error-response.yaml'

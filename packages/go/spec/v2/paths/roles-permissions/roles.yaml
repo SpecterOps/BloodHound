@@ -1,0 +1,50 @@
+parameters:
+  - $ref: './../../parameters/header/prefer.yaml'
+get:
+  operationId: ListRoles
+  summary: List Roles
+  description: List all authorization roles.
+  tags:
+    - Roles & Permissions API
+    - Community
+    - Enterprise
+  parameters:
+    - name: sort_by
+      description: Sortable columns are `name`, `description`, `id`, `created_at`, `updated_at`, `deleted_at`.
+      in: query
+    - name: name
+      in: query
+      schema:
+        $ref: './../../schemas/api/params/predicate/filter.string.yaml'
+    - name: id
+      in: query
+      schema:
+        $ref: './../../schemas/api/params/predicate/filter.integer.yaml'
+    - $ref: './../../parameters/query/created-at.yaml'
+    - $ref: './../../parameters/query/updated-at.yaml'
+    - $ref: './../../parameters/query/deleted-at.yaml'
+  responses:
+    200:
+      description: OK
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                type: object
+                properties:
+                  roles:
+                    type: array
+                    items:
+                      $ref: './../../schemas/model/role.yaml'
+    400:
+      $ref: './../../responses/api/bad-request.yaml'
+    401:
+      $ref: './../../responses/api/unauthorized.yaml'
+    403:
+      $ref: './../../responses/api/forbidden.yaml'
+    429:
+      $ref: './../../responses/api/too-many-requests.yaml'
+    500:
+      $ref: './../../responses/api/internal-server-error.yaml'

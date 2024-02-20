@@ -1,0 +1,23 @@
+get:
+  deprecated: true
+  description: Get the log file from a SharpHound run.
+  tags:
+    - Tasks
+    - Enterprise
+  summary: Get Job Log File
+  parameters:
+    - $ref: './../../parameters/header/prefer.yaml'
+    - type: string
+      description: Job ID
+      name: task_id
+      in: path
+      required: true
+  responses:
+    200:
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: "#/definitions/api.ResponseWrapper"
+    default:
+      $ref: './../../responses/api/error-response.yaml'

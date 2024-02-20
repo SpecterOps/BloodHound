@@ -1,0 +1,25 @@
+parameters:
+  - type: string
+    description: Asset group ID
+    name: asset_group_id
+    in: path
+    required: true
+  - type: string
+    description: Asset group selector ID
+    name: asset_group_selector_id
+    in: path
+    required: true
+delete:
+  description: Deletes an asset group selector
+  tags:
+    - Asset Isolation API
+    - Community
+    - Enterprise
+  summary: Delete an asset group selector
+  parameters:
+    - $ref: './../../parameters/header/prefer.yaml'
+  responses:
+    200:
+      description: ''
+    default:
+      $ref: './../../responses/api/error-response.yaml'

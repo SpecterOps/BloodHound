@@ -1,0 +1,20 @@
+type: object
+properties:
+  asset_group_id:
+    type: integer
+  object_id:
+    type: string
+  primary_kind:
+    type: string
+  kinds:
+    type: array
+    items:
+      type: string
+  environment_id:
+    type: string
+  environment_kind:
+    type: string
+  name:
+    type: string
+  custom_member:
+    type: boolean

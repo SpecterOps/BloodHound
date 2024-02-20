@@ -1,0 +1,23 @@
+parameters:
+  - type: string
+    description: Job ID
+    name: job_id
+    in: path
+    required: true
+put:
+  description: Sets a scheduled job to cancelled
+  tags:
+    - Jobs API
+    - Enterprise
+  summary: Cancels a scheduled job
+  parameters:
+    - $ref: './../../parameters/header/prefer.yaml'
+  responses:
+    200:
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: "#/definitions/api.ResponseWrapper"
+    default:
+      $ref: './../../responses/api/unexpected-error.yaml'

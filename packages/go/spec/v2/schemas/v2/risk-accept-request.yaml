@@ -1,0 +1,11 @@
+type: object
+required:
+  - risk_type
+  - accepted
+properties:
+  risk_type:
+    type: string
+  accept_until:
+    type: string
+  accepted:
+    type: boolean

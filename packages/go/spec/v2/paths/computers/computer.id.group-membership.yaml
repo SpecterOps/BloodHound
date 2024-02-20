@@ -1,0 +1,32 @@
+parameters:
+  - type: string
+    description: Computer Object ID
+    name: object_id
+    in: path
+    required: true
+get:
+  description: List the groups this computer is a member of
+  tags:
+    - Computer Entity API
+    - Community
+    - Enterprise
+  summary: List computer group membership
+  parameters:
+    - $ref: './../../parameters/header/prefer.yaml'
+    - type: integer
+      description: Paging Skip
+      name: skip
+      in: query
+    - type: integer
+      description: Paging Limit
+      name: limit
+      in: query
+  responses:
+    200:
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: "#/definitions/api.ResponseWrapper"
+    default:
+      $ref: './../../responses/api/error-response.yaml'

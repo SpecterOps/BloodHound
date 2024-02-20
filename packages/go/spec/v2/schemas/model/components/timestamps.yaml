@@ -1,0 +1,14 @@
+type: object
+properties:
+  created_at:
+    type: string
+    format: date-time
+    readOnly: true
+  updated_at:
+    type: string
+    format: date-time
+    readOnly: true
+  deleted_at:
+    allOf:
+      - $ref: './../../null/time.yaml'
+    readOnly: true

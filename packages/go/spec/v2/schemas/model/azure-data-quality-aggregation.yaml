@@ -1,0 +1,26 @@
+type: object
+properties:
+  tenants:
+    type: integer
+  users:
+    type: integer
+  groups:
+    type: integer
+  apps:
+    type: integer
+  service_principals:
+    type: integer
+  devices:
+    type: integer
+  management_groups:
+    type: integer
+  subscriptions:
+    type: integer
+  resource_groups:
+    type: integer
+  vms:
+    type: integer
+  relationships:
+    type: integer
+  run_id:
+    type: string

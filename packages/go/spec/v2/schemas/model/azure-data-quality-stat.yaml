@@ -1,0 +1,40 @@
+type: object
+properties:
+  created_at:
+    type: string
+    format: date-time
+  updated_at:
+    type: string
+    format: date-time
+  deleted_at:
+    type: object
+    properties:
+      Time:
+        type: string
+        format: date-time
+      Valid:
+        type: boolean
+  tenantid:
+    type: string
+  users:
+    type: integer
+  groups:
+    type: integer
+  apps:
+    type: integer
+  service_principals:
+    type: integer
+  devices:
+    type: integer
+  management_groups:
+    type: integer
+  subscriptions:
+    type: integer
+  resource_groups:
+    type: integer
+  vms:
+    type: integer
+  relationships:
+    type: integer
+  run_id:
+    type: string

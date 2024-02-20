@@ -1,0 +1,39 @@
+parameters:
+  - $ref: './../../parameters/header/prefer.yaml'
+  - name: permission_id
+    description: ID of the permission record to retrieve details for.
+    in: path
+    required: true
+    schema:
+      type: integer
+      format: int32
+get:
+  operationId: GetPermission
+  summary: Get Permission
+  description: Gets an authorization permission's details.
+  tags:
+    - Roles & Permissions API
+    - Community
+    - Enterprise
+  responses:
+    200:
+      description: OK
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                $ref: './../../schemas/model/permission.yaml'
+    400:
+      $ref: './../../responses/api/bad-request.yaml'
+    401:
+      $ref: './../../responses/api/unauthorized.yaml'
+    403:
+      $ref: './../../responses/api/forbidden.yaml'
+    404:
+      $ref: './../../responses/api/not-found.yaml'
+    429:
+      $ref: './../../responses/api/too-many-requests.yaml'
+    500:
+      $ref: './../../responses/api/internal-server-error.yaml'

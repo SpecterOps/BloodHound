@@ -1,0 +1,16 @@
+get:
+  description: Returns the supported API versions
+  tags:
+    - API Info
+    - Community
+    - Enterprise
+  summary: Returns the supported API versions
+  responses:
+    200:
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '#/definitions/v2.VersionResponse'
+    default:
+      $ref: './../../responses/api/error-response.yaml'

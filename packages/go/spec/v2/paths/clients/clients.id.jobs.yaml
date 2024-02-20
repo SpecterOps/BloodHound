@@ -1,0 +1,30 @@
+parameters:
+  - type: string
+    description: Client ID
+    name: client_id
+    in: path
+    required: true
+post:
+  description: Creates a new scheduled job
+  tags:
+    - Clients API
+    - Enterprise
+  summary: Creates a scheduled job
+  parameters:
+    - $ref: './../../parameters/header/prefer.yaml'
+  requestBody:
+    description: The request body for creating a scheduled job
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: "#/definitions/v2.CreateScheduledJobRequest"
+  responses:
+    200:
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: "#/definitions/api.ResponseWrapper"
+    default:
+      $ref: './../../responses/api/error-response.yaml'

@@ -1,0 +1,35 @@
+parameters:
+  - type: string
+    description: EnterpriseCA Object ID
+    name: object_id
+    in: path
+    required: true
+get:
+  description: "List the principals that can control this EnterpriseCA through ACLs.
+      \n\n<b>Early Access Notice:</b> This API endpoint is in early access and may
+      undergo changes. Exercise caution when integrating, and avoid critical use until
+      it reaches stable status."
+  tags:
+    - EnterpriseCA Entity API
+    - Community
+    - Enterprise
+  summary: List enterpriseca controllers
+  parameters:
+    - $ref: './../../parameters/header/prefer.yaml'
+    - type: integer
+      description: Paging Skip
+      name: skip
+      in: query
+    - type: integer
+      description: Paging Limit
+      name: limit
+      in: query
+  responses:
+    200:
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: "#/definitions/v2.EntityControllersResponse"
+    default:
+      $ref: './../../responses/api/error-response.yaml'

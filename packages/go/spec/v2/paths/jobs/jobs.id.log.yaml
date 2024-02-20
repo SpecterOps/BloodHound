@@ -1,0 +1,23 @@
+parameters:
+  - type: string
+    description: Job ID
+    name: job_id
+    in: path
+    required: true
+get:
+  description: Get the log file from a SharpHound run
+  tags:
+    - Jobs API
+    - Enterprise
+  summary: Get Job Log File
+  parameters:
+    - $ref: './../../parameters/header/prefer.yaml'
+  responses:
+    200:
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: "#/definitions/api.ResponseWrapper"
+    default:
+      $ref: './../../responses/api/error-response.yaml'

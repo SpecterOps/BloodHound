@@ -1,0 +1,30 @@
+parameters:
+  - type: string
+    description: Attack Path ID
+    name: attack_path_id
+    in: path
+    required: true
+put:
+  description: Takes a time to mark an attack path as accepted until
+  tags:
+    - Attack Paths API
+    - Enterprise
+  summary: Marks an attack path as accepted
+  parameters:
+    - $ref: './../../parameters/header/prefer.yaml'
+  requestBody:
+    description: The request body for updating risk acceptance
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: "#/definitions/v2.RiskAcceptRequest"
+  responses:
+    200:
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: "#/definitions/api.ResponseWrapper"
+    default:
+      $ref: './../../responses/api/error-response.yaml'

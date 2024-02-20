@@ -1,0 +1,18 @@
+get:
+  description: Gets the current status of the datapipe
+  tags:
+    - Datapipe API
+    - Community
+    - Enterprise
+  summary: Get datapipe status
+  parameters:
+    - $ref: "#/definitions/parameter.PreferHeader"
+  responses:
+    200:
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: "#/definitions/api.BasicResponse"
+    default:
+      $ref: './../../responses/api/error-response.yaml'

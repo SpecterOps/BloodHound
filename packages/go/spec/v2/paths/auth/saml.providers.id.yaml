@@ -1,0 +1,74 @@
+parameters:
+  - $ref: './../../parameters/header/prefer.yaml'
+  - description: SAML Provider ID
+    name: saml_provider_id
+    in: path
+    required: true
+get:
+  operationId: GetSamlProvider
+  summary: Get SAML Provider
+  description: Get the service and identity provider configuration details for a
+    SAML authentication provider.
+  tags:
+    - Auth API
+    - Community
+    - Enterprise
+  responses:
+    200:
+      description: OK
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                $ref: './../../schemas/model/saml-provider.yaml'
+    401:
+      $ref: './../../responses/api/unauthorized.yaml'
+    403:
+      $ref: './../../responses/api/forbidden.yaml'
+    404:
+      $ref: './../../responses/api/not-found.yaml'
+    429:
+      $ref: './../../responses/api/too-many-requests.yaml'
+    500:
+      $ref: './../../responses/api/internal-server-error.yaml'
+delete:
+  operationId: DeleteSamlProvider
+  summary: Delete a SAML Provider
+  description: Deletes an existing BloodHound SAML provider.
+  tags:
+    - Auth API
+    - Community
+    - Enterprise
+  responses:
+    200:
+      description: OK
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                type: object
+                properties:
+                  affected_user:
+                    type: array
+                    items:
+                      $ref: './../../schemas/model/user.yaml'
+    401:
+      $ref: './../../responses/api/unauthorized.yaml'
+    403:
+      $ref: './../../responses/api/forbidden.yaml'
+    404:
+      $ref: './../../responses/api/not-found.yaml'
+    409:
+      description: Conflict. The user is trying to delete their own SAML provider.
+      content:
+        application/json:
+          schema:
+            $ref: './../../schemas/api/error-wrapper.yaml'
+    429:
+      $ref: './../../responses/api/too-many-requests.yaml'
+    500:
+      $ref: './../../responses/api/internal-server-error.yaml'

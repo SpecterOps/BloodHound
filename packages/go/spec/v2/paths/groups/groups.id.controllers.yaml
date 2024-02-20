@@ -1,0 +1,32 @@
+parameters:
+  - type: string
+    description: Group Object ID
+    name: object_id
+    in: path
+    required: true
+get:
+  description: List the direct controllers for this group
+  tags:
+    - Group Entity API
+    - Community
+    - Enterprise
+  summary: List group direct controllers
+  parameters:
+    - $ref: './../../parameters/header/prefer.yaml'
+    - type: integer
+      description: Paging Skip
+      name: skip
+      in: query
+    - type: integer
+      description: Paging Limit
+      name: limit
+      in: query
+  responses:
+    200:
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: "#/definitions/api.ResponseWrapper"
+    default:
+      $ref: './../../responses/api/error-response.yaml'

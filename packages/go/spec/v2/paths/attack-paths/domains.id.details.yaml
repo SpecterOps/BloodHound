@@ -1,0 +1,137 @@
+parameters:
+  - type: string
+    description: Domain ID
+    name: domain_id
+    in: path
+    required: true
+get:
+  description: List the paged values for an attack path
+  tags:
+    - Attack Paths API
+    - Enterprise
+  summary: Get data for an attack path
+  parameters:
+    - $ref: './../../parameters/header/prefer.yaml'
+    - type: integer
+      description: Paging Skip
+      name: skip
+      in: query
+    - type: integer
+      description: Paging Limit
+      name: limit
+      in: query
+    - type: string
+      description: Finding Type
+      name: finding
+      in: query
+      required: true
+    - type: string
+      description: Sort by column. Can be used multiple times; prepend hyphen for
+        descending order. Sortable columns for List Risks are domain_sid, index, AcceptedUntil,
+        id, created_at, updated_at, deleted_at. Relationship risks can be sorted on
+        FromPrincipal and ToPrincipal in addition to the sortable columns for List
+        Risks.
+      name: sort_by
+      in: query
+      required: false
+    - type: string
+      description: DEPRECATED; use the from_principal filter instead. Filter Relationship
+        Findings by column value. Valid filter predicates are eq, neq
+      name: FromPrincipal
+      in: query
+      required: false
+    - type: string
+      description: DEPRECATED; use the to_principal filter instead. Filter RelationshipFindings
+        by column value. Valid filter predicates are eq, neq
+      name: ToPrincipal
+      in: query
+      required: false
+    - type: string
+      description: Filter RelationshipFindings by column value. Valid filter predicates
+        are eq, neq
+      name: from_principal
+      in: query
+      required: false
+    - type: string
+      description: Filter RelationshipFindings by column value. Valid filter predicates
+        are eq, neq
+      name: to_principal
+      in: query
+      required: false
+    - type: string
+      description: Filter RelationshipFindings by column value. Valid filter predicates
+        are eq, neq
+      name: principals_hash
+      in: query
+      required: false
+    - type: string
+      description: Filter Relationship or List Findings by column value. Valid filter
+        predicates are eq, neq
+      name: Accepted
+      in: query
+      required: false
+    - type: string
+      description: DEPRECATED; use accepted_until instead. Filter Relationship or
+        List Findings by column value. Valid filter predicates are eq, neq, gt, gte,
+        lt, lte
+      name: AcceptedUntil
+      in: query
+      required: false
+    - type: string
+      description: Filter Relationship or List Findings by column value. Valid filter
+        predicates are eq, neq, gt, gte, lt, lte
+      name: accepted_until
+      in: query
+      required: false
+    - type: string
+      description: Filter ListFindings by column value. Valid filter predicates are
+        eq, neq
+      name: Principal
+      in: query
+      required: false
+    - type: string
+      description: Filter List or Relationship Findings by column value. Valid filter
+        predicates are eq, neq
+      name: Finding
+      in: query
+      required: false
+    - type: string
+      description: Filter List or Relationship Findings by column value. Valid filter
+        predicates are eq, neq
+      name: domain_sid
+      in: query
+      required: false
+    - type: string
+      description: Filter results by column value. Valid filter predicates are eq,
+        neq, gt, gte, lt, lte
+      name: id
+      in: query
+      required: false
+    - type: string
+      description: Filter results by column value. Valid filter predicates are eq,
+        neq, gt, gte, lt, lte
+      name: created_at
+      in: query
+      required: false
+    - type: string
+      description: Filter results by column value. Valid filter predicates are eq,
+        neq, gt, gte, lt, lte
+      name: updated_at
+      in: query
+      required: false
+    - type: string
+      description: Filter results by column value. Valid filter predicates are eq,
+        neq, gt, gte, lt, lte
+      name: deleted_at
+      in: query
+      required: false
+  responses:
+    200:
+      description: OK
+      content:
+        application/json:
+          schema:
+            type: object
+            additionalProperties: true
+    default:
+      $ref: './../../responses/api/error-response.yaml'

@@ -1,0 +1,34 @@
+allOf:
+  - $ref: './components/int32.id.yaml'
+  - $ref: './components/timestamps.yaml'
+type: object
+properties:
+  name:
+    type: string
+    readOnly: true
+  display_name:
+    type: string
+    readOnly: true
+  idp_issuer_uri:
+    type: string
+    readOnly: true
+  idp_sso_uri:
+    type: string
+    readOnly: true
+  principal_attribute_mappings:
+    type: array
+    readOnly: true
+    items:
+      type: string
+  sp_issuer_uri:
+    type: string
+    readOnly: true
+  sp_sso_uri:
+    type: string
+    readOnly: true
+  sp_metadata_uri:
+    type: string
+    readOnly: true
+  sp_acs_uri:
+    type: string
+    readOnly: true

@@ -1,0 +1,36 @@
+parameters:
+  - type: string
+    description: Container Object ID
+    name: object_id
+    in: path
+    required: true
+get:
+  description: List the principals that can control this Container through ACLs
+  tags:
+    - Container Entity API
+    - Community
+    - Enterprise
+  summary: List container controllers
+  parameters:
+    - $ref: './../../parameters/header/prefer.yaml'
+    - type: integer
+      description: Paging Skip
+      name: skip
+      in: query
+    - type: integer
+      description: Paging Limit
+      name: limit
+      in: query
+  responses:
+    200:
+      description: OK
+      schema:
+        $ref: "#/definitions/api.ResponseWrapper"
+    '400':
+      description: Bad Request
+      schema:
+        $ref: "#/definitions/api.ErrorWrapper"
+    '504':
+      description: Gateway Timeout
+      schema:
+        $ref: "#/definitions/api.ErrorWrapper"
