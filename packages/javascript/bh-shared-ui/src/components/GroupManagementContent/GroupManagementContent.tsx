@@ -27,7 +27,6 @@ import AssetGroupMemberList from '../AssetGroupMemberList';
 import { SelectedDomain } from './types';
 import DataSelector from '../../views/DataQuality/DataSelector';
 import AssetGroupFilters from '../AssetGroupFilters';
-import { ActiveDirectoryNodeKind, AzureNodeKind } from '../..';
 import { FILTERABLE_PARAMS } from '../AssetGroupFilters/AssetGroupFilters';
 
 // Top level layout and shared logic for the Group Management page
@@ -57,7 +56,6 @@ const GroupManagementContent: FC<{
     const [selectedDomain, setSelectedDomain] = useState<SelectedDomain | null>(null);
     const [selectedAssetGroupId, setSelectedAssetGroupId] = useState<number | null>(null);
     const [filterParams, setFilterParams] = useState<AssetGroupMemberParams>({});
-    const [availableNodeKinds, setAvailableNodeKinds] = useState<Array<AzureNodeKind | ActiveDirectoryNodeKind>>([]);
 
     const setInitialGroup = (data: AssetGroup[]) => {
         if (!selectedAssetGroupId && data?.length) {
@@ -73,6 +71,24 @@ const GroupManagementContent: FC<{
     );
 
     const selectedAssetGroup = listAssetGroups.data?.find((group) => group.id === selectedAssetGroupId) || null;
+
+    const { data: memberCounts } = useQuery({
+        queryKey: [
+            'getAssetGroupMembersCount',
+            filterParams.environment_id,
+            filterParams.environment_kind,
+            selectedAssetGroup,
+        ],
+        enabled: !!selectedAssetGroupId,
+        queryFn: ({ signal }) =>
+            apiClient
+                .getAssetGroupMembersCount(
+                    selectedAssetGroupId?.toString() ?? '', // This query will only execute if selectedAssetGroup is truethy.
+                    { environment_id: filterParams.environment_id, environment_kind: filterParams.environment_kind },
+                    { signal }
+                )
+                .then((res) => res.data.data),
+    });
 
     const handleAssetGroupSelectorChange = (selectedAssetGroup: DropdownOption) => {
         const selected = listAssetGroups.data?.find((assetGroup) => assetGroup.id === selectedAssetGroup.key);
@@ -98,11 +114,6 @@ const GroupManagementContent: FC<{
         setFilterParams((prev) => ({ ...prev, [key]: value.toString() }));
     };
 
-    const makeNodeFilterable = (node: ActiveDirectoryNodeKind | AzureNodeKind) => {
-        if (availableNodeKinds.includes(node)) return;
-        setAvailableNodeKinds((prev) => [...prev, node]);
-    };
-
     // Start building a filter query for members that gets passed down to AssetGroupMemberList to make the request
     useEffect(() => {
         const filterDomain = selectedDomain || globalDomain;
@@ -114,7 +125,6 @@ const GroupManagementContent: FC<{
         } else {
             filter.environment_id = `eq:${filterDomain?.id}`;
         }
-        setAvailableNodeKinds([]);
         setFilterParams(filter);
     }, [selectedDomain, globalDomain, selectedAssetGroupId]);
 
@@ -153,13 +163,13 @@ const GroupManagementContent: FC<{
                     <AssetGroupFilters
                         filterParams={filterParams}
                         handleFilterChange={handleFilterChange}
-                        availableNodeKinds={availableNodeKinds}
+                        memberCounts={memberCounts}
                     />
                     {selectedAssetGroup && (
                         <AssetGroupEdit
                             assetGroup={selectedAssetGroup}
                             filter={filterParams}
-                            makeNodeFilterable={makeNodeFilterable}
+                            memberCounts={memberCounts}
                         />
                     )}
                 </Grid>
@@ -168,7 +178,7 @@ const GroupManagementContent: FC<{
                         assetGroup={selectedAssetGroup}
                         filter={filterParams}
                         onSelectMember={onClickMember}
-                        canFilterToEmpty={!!availableNodeKinds.length}
+                        canFilterToEmpty={(memberCounts?.total_count ?? 0) > 0}
                     />
                 </Grid>
                 <Grid item xs={4} md={3} height={'100%'}>
