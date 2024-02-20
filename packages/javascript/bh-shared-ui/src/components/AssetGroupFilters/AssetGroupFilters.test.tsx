@@ -19,8 +19,8 @@ import { act, render } from '../../test-utils';
 import AssetGroupFilters, { FILTERABLE_PARAMS } from './AssetGroupFilters';
 import userEvent from '@testing-library/user-event';
 import { Screen, waitFor } from '@testing-library/react';
-import { AssetGroupMemberParams, AssetGroupMembersCountResponse } from 'js-client-library';
-import { ActiveDirectoryNodeKind } from '../..';
+import { AssetGroupMemberParams, AssetGroupMemberCountsResponse } from 'js-client-library';
+import { ActiveDirectoryNodeKind } from '../../graphSchema';
 
 const filterParams = createMockAssetGroupMemberParams();
 const memberCounts = createMockMemberCounts();
@@ -28,7 +28,7 @@ const memberCounts = createMockMemberCounts();
 describe('AssetGroupEdit', () => {
     const setup = async (options?: {
         filterParams?: AssetGroupMemberParams;
-        memberCounts?: AssetGroupMembersCountResponse['data'];
+        memberCounts?: AssetGroupMemberCountsResponse['data'];
     }) => {
         const user = userEvent.setup();
         const handleFilterChange = vi.fn();
