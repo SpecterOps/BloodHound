@@ -1,4 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2024 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -23,19 +23,17 @@
  * @module
  */
 import { createEdgeCompoundProgram } from 'sigma/rendering/webgl/programs/common/edge';
-import CurvedEdgeArrowHeadProgram from './edge.curvedArrowHead';
-import CurvedEdgeProgram from './edge.curved';
-import { EdgeDisplayData, Coordinates } from 'sigma/types';
-import { EdgeDirection } from 'src/utils';
+import SelfEdgeArrowHeadProgram from './edge.selfArrowHead';
+import SelfEdgeProgram from './edge.self';
+import { EdgeDisplayData } from 'sigma/types';
 
-export type CurvedEdgeDisplayData = EdgeDisplayData & {
+export type SelfEdgeDisplayData = EdgeDisplayData & {
     groupSize?: number;
     groupPosition?: number;
-    direction?: EdgeDirection;
-    control?: Coordinates;
     inverseSqrtZoomRatio?: number;
+    framedGraphNodeRadius?: number;
 };
 
-const EdgeArrowProgram = createEdgeCompoundProgram([CurvedEdgeProgram, CurvedEdgeArrowHeadProgram]);
+const SelfEdgeArrowProgram = createEdgeCompoundProgram([SelfEdgeProgram, SelfEdgeArrowHeadProgram]);
 
-export default EdgeArrowProgram;
+export default SelfEdgeArrowProgram;

@@ -24,6 +24,7 @@ import {
     getEdgeLabelTextLength,
     getEdgeSourceAndTargetDisplayData,
 } from 'src/ducks/graph/utils';
+import { getBackgroundBoundInfo, getSelfEdgeStartingPoint } from 'src/rendering/programs/edge-label';
 import { bezier } from 'src/rendering/utils/bezier';
 import { useAppDispatch, useAppSelector } from 'src/store';
 
@@ -74,11 +75,12 @@ const GraphEdgeEvents: FC = () => {
     const handleEdgeEvents = useCallback(
         (event: any) => {
             if (event.type === 'click' || event.type === 'mousemove') {
-                const inverseSqrtZoomRatio = 1 / Math.sqrt(ratio);
-
-                const graph = sigma.getGraph();
-                const size = sigma.getSettings().edgeLabelSize * inverseSqrtZoomRatio;
                 const context = edgeLabelsCanvas.getContext('2d');
+                if (!context) return;
+
+                const inverseSqrtZoomRatio = 1 / Math.sqrt(ratio);
+                const size = sigma.getSettings().edgeLabelSize;
+                const graph = sigma.getGraph();
                 const edges = graph.edges();
 
                 for (let i = 0; i < edges.length; i++) {
@@ -99,9 +101,7 @@ const GraphEdgeEvents: FC = () => {
                         { ...sourceCoordinatesViewport, size: source.size },
                         { ...targetCoordinatesViewport, size: target.size }
                     );
-                    if (!edgeDistance.distance) continue;
-
-                    const textLength = getEdgeLabelTextLength(context!, attributes.label, edgeDistance.distance);
+                    const textLength = getEdgeLabelTextLength(context, attributes.label, edgeDistance.distance);
                     if (!textLength) continue;
 
                     let point = { x: edgeDistance.cx, y: edgeDistance.cy };
@@ -111,24 +111,38 @@ const GraphEdgeEvents: FC = () => {
                             attributes.groupPosition,
                             attributes.direction
                         );
-                        const control = bezier.getControlAtMidpoint(curveHeight, sourceCoordinates, targetCoordinates);
+                        const control = sigma.framedGraphToViewport(
+                            bezier.getControlAtMidpoint(curveHeight, sourceCoordinates, targetCoordinates)
+                        );
 
-                        point = bezier.getCoordinatesAlongCurve(
+                        point = bezier.getCoordinatesAlongQuadraticBezier(
                             sourceCoordinatesViewport,
                             targetCoordinatesViewport,
-                            sigma.framedGraphToViewport(control),
+                            control,
                             0.5
                         );
+                    } else if (attributes.type === 'self') {
+                        const radius = bezier.getLineLength(
+                            { x: 0, y: 0 },
+                            {
+                                x: source.size * inverseSqrtZoomRatio,
+                                y: target.size * inverseSqrtZoomRatio,
+                            }
+                        );
+                        point = getSelfEdgeStartingPoint(attributes, sourceCoordinatesViewport, radius * 2);
                     }
 
-                    //Determine label dimensions and position
-                    const xPadding = 4 * inverseSqrtZoomRatio;
-                    const labelWidth = textLength * 1.4 * inverseSqrtZoomRatio + 2 * xPadding;
-                    const labelHeight = size * 1.4;
-                    const x1 = point.x + (-(textLength / 2) * inverseSqrtZoomRatio - xPadding);
-                    const y1 = point.y + ((attributes.size / 2) * inverseSqrtZoomRatio - size);
-                    const x2 = x1 + labelWidth;
-                    const y2 = y1 + labelHeight;
+                    const { deltaX, deltaY, width, height } = getBackgroundBoundInfo(
+                        inverseSqrtZoomRatio,
+                        textLength,
+                        attributes,
+                        size
+                    );
+
+                    const x1 = point.x + deltaX;
+                    const y1 = point.y + deltaY;
+                    const x2 = x1 + width;
+                    const y2 = y1 + height;
 
                     const offsetY = edgeLabelsCanvas.getBoundingClientRect().y;
                     const { x: viewportX, y: viewportY } = {
