@@ -19,9 +19,8 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { IconButton, SvgIcon } from '@mui/material';
 import { useSnackbar } from 'notistack';
 import React, { useCallback, useEffect } from 'react';
-import { useSelector } from 'react-redux';
 import { removeSnackbar } from 'src/ducks/global/actions';
-import { AppState, useAppDispatch } from 'src/store';
+import { useAppDispatch, useAppSelector } from 'src/store';
 
 let displayed: string[] = [];
 
@@ -30,7 +29,7 @@ const Notifier: React.FC = () => {
 
     const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
-    const notifications = useSelector((state: AppState) => state.global.view.notifications);
+    const notifications = useAppSelector((state) => state.global.view.notifications);
 
     const storeDisplayed = (id: string) => {
         displayed = [...displayed, id];

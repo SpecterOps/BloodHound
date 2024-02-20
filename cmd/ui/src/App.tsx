@@ -18,14 +18,13 @@ import { Box } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
 import React, { useEffect } from 'react';
 import { useQueryClient } from 'react-query';
-import { useSelector } from 'react-redux';
 import { useLocation } from 'react-router-dom';
 import { AppNotifications } from 'bh-shared-ui';
 import Notifier from 'src/components/Notifier';
 import { initialize } from 'src/ducks/auth/authSlice';
 import { ROUTE_EXPIRED_PASSWORD, ROUTE_LOGIN, ROUTE_USER_DISABLED } from 'src/ducks/global/routes';
 import { featureFlagKeys, getFeatureFlags } from 'src/hooks/useFeatureFlags';
-import { AppState, useAppDispatch } from 'src/store';
+import { useAppDispatch, useAppSelector } from 'src/store';
 import { initializeBHEClient } from 'src/utils';
 import Content from 'src/views/Content';
 import Header from 'src/components/Header';
@@ -51,7 +50,7 @@ const useStyles = makeStyles((theme) => ({
 
 const App: React.FC = () => {
     const classes = useStyles();
-    const authState = useSelector((state: AppState) => state.auth);
+    const authState = useAppSelector((state) => state.auth);
     const queryClient = useQueryClient();
     const dispatch = useAppDispatch();
     const location = useLocation();

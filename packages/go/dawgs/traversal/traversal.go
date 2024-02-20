@@ -488,8 +488,6 @@ func UniquePathSegmentFilter(delegate SegmentFilter) SegmentFilter {
 // AcyclicNodeFilter is a SegmentFilter constructor that will allow traversal to a node only once. It will ignore all
 // but the first inbound or outbound edge that traverses to it.
 func AcyclicNodeFilter(filter SegmentFilter) SegmentFilter {
-	traversalBitmap := cardinality.ThreadSafeDuplex(cardinality.NewBitmap32())
-
 	return func(next *graph.PathSegment) bool {
 		// Bail on counting ourselves
 		if next.IsCycle() {
@@ -497,7 +495,7 @@ func AcyclicNodeFilter(filter SegmentFilter) SegmentFilter {
 		}
 
 		// Descend only if we've never seen this node before.
-		return filter(next) && traversalBitmap.CheckedAdd(next.Node.ID.Uint32())
+		return filter(next)
 	}
 }
 

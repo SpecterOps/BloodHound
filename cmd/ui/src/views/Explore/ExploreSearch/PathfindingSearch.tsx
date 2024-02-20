@@ -27,20 +27,19 @@ import {
 import EdgeFilter from './EdgeFilter';
 import ExploreSearchCombobox from '../ExploreSearchCombobox';
 import PathfindingSwapButton from './PathfindingSwapButton';
-import { AppState, useAppDispatch } from 'src/store';
+import { useAppDispatch, useAppSelector } from 'src/store';
 import {
     destinationNodeEdited,
     destinationNodeSelected,
     sourceNodeEdited,
     sourceNodeSelected,
 } from 'src/ducks/searchbar/actions';
-import { useSelector } from 'react-redux';
 
 const PathfindingSearch = () => {
     const dispatch = useAppDispatch();
 
-    const primary = useSelector((state: AppState) => state.search.primary);
-    const secondary = useSelector((state: AppState) => state.search.secondary);
+    const primary = useAppSelector((state) => state.search.primary);
+    const secondary = useAppSelector((state) => state.search.secondary);
 
     const { searchTerm: sourceInputValue, value: sourceSelectedItem } = primary;
     const { searchTerm: destinationInputValue, value: destinationSelectedItem } = secondary;
