@@ -120,6 +120,16 @@ func AllIngestDataTypes() []DataType {
 	}
 }
 
+func (s DataType) IsValid() bool {
+	for _, method := range AllIngestDataTypes() {
+		if s == method {
+			return true
+		}
+	}
+
+	return false
+}
+
 type CollectionMethod uint64
 
 const (
@@ -195,14 +205,29 @@ type ConvertedData struct {
 	RelProps  []ein.IngestibleRelationship
 }
 
+func (s *ConvertedData) Clear() {
+	s.NodeProps = s.NodeProps[:0]
+	s.RelProps = s.RelProps[:0]
+}
+
 type ConvertedGroupData struct {
 	NodeProps              []ein.IngestibleNode
 	RelProps               []ein.IngestibleRelationship
 	DistinguishedNameProps []ein.IngestibleRelationship
 }
 
+func (s *ConvertedGroupData) Clear() {
+	s.NodeProps = s.NodeProps[:0]
+	s.RelProps = s.RelProps[:0]
+	s.DistinguishedNameProps = s.DistinguishedNameProps[:0]
+}
+
 type ConvertedSessionData struct {
 	SessionProps []ein.IngestibleSession
+}
+
+func (s *ConvertedSessionData) Clear() {
+	s.SessionProps = s.SessionProps[:0]
 }
 
 type AzureBase struct {
@@ -216,10 +241,8 @@ type ConvertedAzureData struct {
 	OnPremNodes []ein.IngestibleNode
 }
 
-func CreateConvertedAzureData(count int) ConvertedAzureData {
-	converted := ConvertedAzureData{}
-	converted.NodeProps = make([]ein.IngestibleNode, count)
-	converted.RelProps = make([]ein.IngestibleRelationship, 0)
-
-	return converted
+func (s *ConvertedAzureData) Clear() {
+	s.NodeProps = s.NodeProps[:0]
+	s.RelProps = s.RelProps[:0]
+	s.OnPremNodes = s.OnPremNodes[:0]
 }

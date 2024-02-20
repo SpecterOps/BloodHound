@@ -20,6 +20,7 @@ import (
 	"context"
 	"database/sql"
 	"net/http"
+	"strings"
 	"testing"
 
 	"github.com/specterops/bloodhound/errors"
@@ -219,6 +220,20 @@ func TestResources_EndFileUploadJob(t *testing.T) {
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusOK)
+				},
+			},
+		})
+}
+
+func TestResources_ListAcceptedFileUploadTypes(t *testing.T) {
+	apitest.
+		NewHarness(t, v2.Resources{}.ListAcceptedFileUploadTypes).
+		Run([]apitest.Case{
+			{
+				Name: "Success",
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusOK)
+					apitest.BodyContains(output, strings.Join(v2.AllowedFileUploadTypes, ","))
 				},
 			},
 		})
