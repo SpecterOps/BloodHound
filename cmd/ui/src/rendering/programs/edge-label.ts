@@ -114,7 +114,13 @@ const getCurvedEdgeStartingPoint = (
 
 export const getSelfEdgeStartingPoint = (data: Attributes, sourceCoords: Coordinates, radius: number): Coordinates => {
     const control1 = { x: sourceCoords.x, y: sourceCoords.y };
-    const { control2, control3 } = getControlPointsFromGroupSize(data.groupPosition, radius * 3, sourceCoords, true);
+    const { control2, control3 } = getControlPointsFromGroupSize(
+        data.groupPosition,
+        radius * 3,
+        sourceCoords,
+        false,
+        true
+    );
     const control4 = control1;
 
     return bezier.getCoordinatesAlongCubicBezier(control1, control2, control3, control4, 0.5);

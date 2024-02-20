@@ -24,7 +24,7 @@
 import CurvedEdgeArrowHeadProgram from './edge.curvedArrowHead';
 import { NodeDisplayData } from 'sigma/types';
 import { floatColor } from 'sigma/utils';
-import { SelfEdgeDisplayData } from 'src/rendering/programs/edge.selfArrow';
+import { Attributes } from 'graphology-types';
 import { bezier } from 'src/rendering/utils/bezier';
 import { getNodeRadius } from 'src/rendering/utils/utils';
 import { getControlPointsFromGroupSize } from './edge.self';
@@ -41,7 +41,7 @@ export default class SelfEdgeArrowHeadProgram extends CurvedEdgeArrowHeadProgram
     process(
         sourceData: NodeDisplayData,
         targetData: NodeDisplayData,
-        data: SelfEdgeDisplayData,
+        data: Attributes,
         hidden: boolean,
         offset: number
     ): void {
@@ -59,7 +59,8 @@ export default class SelfEdgeArrowHeadProgram extends CurvedEdgeArrowHeadProgram
             data.groupPosition!,
             data.framedGraphNodeRadius! * 3,
             start,
-            true
+            false,
+            false
         );
 
         const curveCircleIntersectionApproximation = bezier.getCoordinatesAlongCubicBezier(

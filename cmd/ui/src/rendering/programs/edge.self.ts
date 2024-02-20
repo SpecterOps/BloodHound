@@ -26,8 +26,8 @@
  */
 import CurvedEdgeProgram from './edge.curved';
 import { Coordinates, NodeDisplayData } from 'sigma/types';
+import { Attributes } from 'graphology-types';
 import { floatColor } from 'sigma/utils';
-import { SelfEdgeDisplayData } from 'src/rendering/programs/edge.selfArrow';
 import { bezier } from 'src/rendering/utils/bezier';
 
 const RESOLUTION = 0.02,
@@ -39,12 +39,13 @@ export const getControlPointsFromGroupSize = (
     groupPosition: number,
     radius: number,
     center: Coordinates,
-    invertY: boolean
+    invertY: boolean,
+    invertX: boolean
 ) => {
     const step = Math.PI / 2;
 
-    const theta1 = step * groupPosition + Math.PI / 4;
-    const theta2 = theta1 + step;
+    const theta2 = step * groupPosition - Math.PI / 2;
+    const theta1 = theta2 + step;
 
     const x1Offset = radius * Math.cos(theta1);
     const y1Offset = radius * Math.sin(theta1);
@@ -52,9 +53,20 @@ export const getControlPointsFromGroupSize = (
     const x2Offset = radius * Math.cos(theta2);
     const y2Offset = radius * Math.sin(theta2);
 
-    if (invertY) {
-        const control2 = { x: center.x + x1Offset, y: center.y - y1Offset };
-        const control3 = { x: center.x + x2Offset, y: center.y - y2Offset };
+    if (invertX && !invertY) {
+        const control2 = { x: center.x + -1 * x1Offset, y: center.y + y1Offset };
+        const control3 = { x: center.x + -1 * x2Offset, y: center.y + y2Offset };
+
+        return { control2: control2, control3: control3 };
+    }
+    if (invertY && !invertX) {
+        const control2 = { x: center.x + x1Offset, y: center.y + -1 * y1Offset };
+        const control3 = { x: center.x + x2Offset, y: center.y + -1 * y2Offset };
+
+        return { control2: control2, control3: control3 };
+    } else if (invertY && invertX) {
+        const control2 = { x: center.x + -1 * x1Offset, y: center.y + -1 * y1Offset };
+        const control3 = { x: center.x + -1 * x2Offset, y: center.y + -1 * y2Offset };
 
         return { control2: control2, control3: control3 };
     } else {
@@ -73,7 +85,7 @@ export default class SelfEdgeProgram extends CurvedEdgeProgram {
     process(
         sourceData: NodeDisplayData,
         targetData: NodeDisplayData,
-        data: SelfEdgeDisplayData,
+        data: Attributes,
         hidden: boolean,
         offset: number
     ): void {
@@ -94,7 +106,8 @@ export default class SelfEdgeProgram extends CurvedEdgeProgram {
                 data.groupPosition!,
                 data.framedGraphNodeRadius! * 3,
                 start,
-                false
+                true,
+                true
             );
             const control4 = control1;
             const pointOnCurve = bezier.getCoordinatesAlongCubicBezier(control1, control2, control3, control4, t);
