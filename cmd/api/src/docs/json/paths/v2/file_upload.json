@@ -132,6 +132,36 @@
             }
         }
     },
+    "/api/v2/file-upload/accepted-types": {
+        "get": {
+            "description": "Get accepted file types for file uploads",
+            "tags": [
+                "Uploads",
+                "Community",
+                "Enterprise"
+            ],
+            "summary": "Get accepted file types for file uploads",
+            "responses": {
+                "200": {
+                    "content": {
+                        "application/json": {
+                            "schema":{
+                                "type":"object",
+                                "properties": {
+                                    "data": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
     "/api/v2/file-upload/start": {
         "post": {
             "description": "Creates a file upload job for sending collection files",
