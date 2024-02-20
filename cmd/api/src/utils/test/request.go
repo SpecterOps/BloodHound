@@ -65,7 +65,6 @@ func (s *RequestExecutor) WithURL(rawURL string, args ...any) *RequestExecutor {
 	if parsedURL, err := url.Parse(formattedRawURL); err != nil {
 		s.t.Fatalf("Failed parsing URL: %s", rawURL)
 	} else {
-		fmt.Printf("parsedURL is %+v\n", parsedURL)
 		s.request.URL = parsedURL
 	}
 
