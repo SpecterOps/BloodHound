@@ -35,9 +35,14 @@ func ConvertSessionObject(session Session) IngestibleSession {
 }
 
 func ConvertObjectToNode(item IngestBase, itemType graph.Kind) IngestibleNode {
+	itemProps := item.Properties
+	if itemProps == nil {
+		itemProps = make(map[string]any)
+	}
+
 	return IngestibleNode{
 		ObjectID:    item.ObjectIdentifier,
-		PropertyMap: item.Properties,
+		PropertyMap: itemProps,
 		Label:       itemType,
 	}
 }

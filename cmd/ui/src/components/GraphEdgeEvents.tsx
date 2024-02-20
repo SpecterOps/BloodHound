@@ -17,7 +17,6 @@
 import { useSigma } from '@react-sigma/core';
 import { setEdgeInfoOpen, setSelectedEdge } from 'bh-shared-ui';
 import { FC, useCallback } from 'react';
-import { useSelector } from 'react-redux';
 import { setEntityInfoOpen } from 'src/ducks/entityinfo/actions';
 import {
     calculateEdgeDistanceForLabel,
@@ -26,11 +25,11 @@ import {
     getEdgeSourceAndTargetDisplayData,
 } from 'src/ducks/graph/utils';
 import { bezier } from 'src/rendering/utils/bezier';
-import { AppState, useAppDispatch } from 'src/store';
+import { useAppDispatch, useAppSelector } from 'src/store';
 
 const GraphEdgeEvents: FC = () => {
     const dispatch = useAppDispatch();
-    const graphState = useSelector((state: AppState) => state.explore);
+    const graphState = useAppSelector((state) => state.explore);
 
     const sigma = useSigma();
     const camera = sigma.getCamera();

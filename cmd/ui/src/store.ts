@@ -18,7 +18,7 @@ import { combineReducers, configureStore } from '@reduxjs/toolkit';
 import { enableMapSet } from 'immer';
 import Cookies from 'js-cookie';
 import throttle from 'lodash/throttle';
-import { useDispatch } from 'react-redux';
+import { TypedUseSelectorHook, useDispatch, useSelector } from 'react-redux';
 import createSagaMiddleware from 'redux-saga';
 import * as reducers from 'src/ducks';
 import { edgeinfo } from 'bh-shared-ui';
@@ -94,6 +94,7 @@ store.subscribe(
 );
 
 export type AppState = ReturnType<typeof store.getState>;
+export const useAppSelector: TypedUseSelectorHook<AppState> = useSelector
 
 export type AppDispatch = typeof store.dispatch;
 export const useAppDispatch = () => useDispatch<AppDispatch>();

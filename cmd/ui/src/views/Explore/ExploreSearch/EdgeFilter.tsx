@@ -20,8 +20,7 @@ import { Button } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
 import { useEffect, useRef, useState } from 'react';
 import EdgeFilteringDialog, { EdgeCheckboxType } from './EdgeFilteringDialog';
-import { useSelector } from 'react-redux';
-import { AppState, useAppDispatch } from 'src/store';
+import { useAppDispatch, useAppSelector } from 'src/store';
 import { pathfindingSearch, pathFiltersSaved } from 'src/ducks/searchbar/actions';
 
 const useStyles = makeStyles((theme) => ({
@@ -44,7 +43,7 @@ const EdgeFilter = () => {
     const [isActiveFilters, setIsActiveFilters] = useState(false);
 
     const initialFilterState = useRef<EdgeCheckboxType[]>([]);
-    const pathFilters = useSelector((state: AppState) => state.search.pathFilters);
+    const pathFilters = useAppSelector((state) => state.search.pathFilters);
 
     useEffect(() => {
         // if user has applied filters, set active

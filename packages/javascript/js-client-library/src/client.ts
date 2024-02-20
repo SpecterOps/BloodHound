@@ -25,6 +25,7 @@ import {
     PaginatedResponse,
     PostureResponse,
     SavedQuery,
+    AssetGroupMemberCountsResponse,
 } from './responses';
 
 class BHEAPIClient {
@@ -128,6 +129,16 @@ class BHEAPIClient {
     ) =>
         this.baseClient.get<AssetGroupMembersResponse>(
             `/api/v2/asset-groups/${assetGroupId}/members`,
+            Object.assign({ params }, options)
+        );
+
+    getAssetGroupMembersCount = (
+        assetGroupId: string,
+        params?: Pick<types.AssetGroupMemberParams, 'environment_id' | 'environment_kind'>,
+        options?: types.RequestOptions
+    ) =>
+        this.baseClient.get<AssetGroupMemberCountsResponse>(
+            `/api/v2/asset-groups/${assetGroupId}/members/counts`,
             Object.assign({ params }, options)
         );
 

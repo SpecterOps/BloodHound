@@ -31,7 +31,6 @@ import { Attributes } from 'graphology-types';
 import { GraphNodes } from 'js-client-library';
 import isEmpty from 'lodash/isEmpty';
 import { FC, useEffect, useState } from 'react';
-import { useSelector } from 'react-redux';
 import { Link as RouterLink } from 'react-router-dom';
 import { SigmaNodeEventPayload } from 'sigma/sigma';
 import { GraphButtonOptions } from 'src/components/GraphButtons/GraphButtons';
@@ -44,7 +43,7 @@ import { GlobalOptionsState } from 'src/ducks/global/types';
 import { discardChanges } from 'src/ducks/tierzero/actions';
 import { RankDirection } from 'src/hooks/useLayoutDagre/useLayoutDagre';
 import useToggle from 'src/hooks/useToggle';
-import { AppState, useAppDispatch } from 'src/store';
+import { useAppDispatch, useAppSelector } from 'src/store';
 import { transformFlatGraphResponse } from 'src/utils';
 import EdgeInfoPane from 'src/views/Explore/EdgeInfo/EdgeInfoPane';
 import EntityInfoPanel from 'src/views/Explore/EntityInfo/EntityInfoPanel';
@@ -58,9 +57,9 @@ const GraphView: FC = () => {
     const theme = useTheme();
     const dispatch = useAppDispatch();
 
-    const graphState: GraphState = useSelector((state: AppState) => state.explore);
-    const opts: GlobalOptionsState = useSelector((state: AppState) => state.global.options);
-    const formIsDirty = Object.keys(useSelector((state: AppState) => state.tierzero).changelog).length > 0;
+    const graphState: GraphState = useAppSelector((state) => state.explore);
+    const opts: GlobalOptionsState = useAppSelector((state) => state.global.options);
+    const formIsDirty = Object.keys(useAppSelector((state) => state.tierzero).changelog).length > 0;
 
     const [graphologyGraph, setGraphologyGraph] = useState<MultiDirectedGraph<Attributes, Attributes, Attributes>>();
     const [currentNodes, setCurrentNodes] = useState<GraphNodes>({});
@@ -225,12 +224,12 @@ const GraphView: FC = () => {
 };
 
 const GridItems = () => {
-    const selectedNode = useSelector((state: AppState) => state.entityinfo.selectedNode);
+    const selectedNode = useAppSelector((state) => state.entityinfo.selectedNode);
 
     const columnsDefault = { xs: 6, md: 5, lg: 4, xl: 3 };
     const cypherSearchColumns = { xs: 6, md: 6, lg: 6, xl: 4 };
 
-    const edgeInfoState: EdgeInfoState = useSelector((state: AppState) => state.edgeinfo);
+    const edgeInfoState: EdgeInfoState = useAppSelector((state) => state.edgeinfo);
     const [columns, setColumns] = useState(columnsDefault);
     const theme = useTheme();
 

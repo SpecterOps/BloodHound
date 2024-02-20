@@ -18,10 +18,9 @@ import { Button, Dialog, DialogActions, DialogContent, DialogTitle, MenuItem } f
 import { apiClient, useNotifications } from 'bh-shared-ui';
 import { FC, useState } from 'react';
 import { useMutation, useQuery } from 'react-query';
-import { useSelector } from 'react-redux';
 import { selectTierZeroAssetGroupId } from 'src/ducks/assetgroups/reducer';
 import { toggleTierZeroNode } from 'src/ducks/explore/actions';
-import { AppState, useAppDispatch } from 'src/store';
+import { useAppDispatch, useAppSelector } from 'src/store';
 
 const AssetGroupMenuItem: FC<{ assetGroupId: string; assetGroupName: string }> = ({ assetGroupId, assetGroupName }) => {
     const { addNotification } = useNotifications();
@@ -29,8 +28,8 @@ const AssetGroupMenuItem: FC<{ assetGroupId: string; assetGroupName: string }> =
 
     const [open, setOpen] = useState(false);
 
-    const selectedNode = useSelector((state: AppState) => state.entityinfo.selectedNode);
-    const tierZeroAssetGroupId = useSelector(selectTierZeroAssetGroupId);
+    const selectedNode = useAppSelector((state) => state.entityinfo.selectedNode);
+    const tierZeroAssetGroupId = useAppSelector(selectTierZeroAssetGroupId);
 
     const isMenuItemForTierZero = assetGroupId === tierZeroAssetGroupId;
 

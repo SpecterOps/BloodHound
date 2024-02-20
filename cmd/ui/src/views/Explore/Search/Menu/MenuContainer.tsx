@@ -33,12 +33,11 @@ import createStyles from '@mui/styles/createStyles';
 import makeStyles from '@mui/styles/makeStyles';
 import withStyles from '@mui/styles/withStyles';
 import React, { useState } from 'react';
-import { useSelector } from 'react-redux';
 import { ConfirmationDialog } from 'bh-shared-ui';
 import { initGraph, startAssetGroupQuery } from 'src/ducks/explore/actions';
 import { setAssetGroupEdit, setAssetGroupIndex } from 'src/ducks/global/actions';
 import { setTierZeroSelection } from 'src/ducks/tierzero/actions';
-import { AppState, useAppDispatch } from 'src/store';
+import { useAppDispatch, useAppSelector } from 'src/store';
 import ActionsMenu from './ActionsMenu';
 
 const useStyles = makeStyles((theme) => ({
@@ -98,8 +97,8 @@ const MenuTab = withStyles(() =>
 const MenuContainer: React.FC = () => {
     const styles = useStyles();
     const dispatch = useAppDispatch();
-    const assetGroups = useSelector((state: AppState) => state.global.options.assetGroups);
-    const domain = useSelector((state: AppState) => state.global.options.domain);
+    const assetGroups = useAppSelector((state) => state.global.options.assetGroups);
+    const domain = useAppSelector((state) => state.global.options.domain);
 
     const [selectedAssetGroup, setSelectedAssetGroup] = useState<null | any>(null);
     const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);

@@ -39,10 +39,9 @@ import {
 import { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faChevronDown, faChevronUp } from '@fortawesome/free-solid-svg-icons';
-import { useSelector } from 'react-redux';
 import { pathFiltersSaved } from 'src/ducks/searchbar/actions';
 import { AllEdgeTypes, Category, Subcategory } from 'bh-shared-ui';
-import { AppState, useAppDispatch } from 'src/store';
+import { useAppDispatch, useAppSelector } from 'src/store';
 
 interface EdgeFilteringDialogProps {
     isOpen: boolean;
@@ -51,7 +50,7 @@ interface EdgeFilteringDialogProps {
 }
 
 const EdgeFilteringDialog = ({ isOpen, handleCancel, handleApply }: EdgeFilteringDialogProps) => {
-    const selectedFilters: EdgeCheckboxType[] = useSelector((state: AppState) => state.search.pathFilters);
+    const selectedFilters: EdgeCheckboxType[] = useAppSelector((state) => state.search.pathFilters);
 
     const onCancel = () => {
         handleCancel();
