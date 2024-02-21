@@ -55,6 +55,21 @@ describe('DatabaseManagement', () => {
         expect(errorMsg).toBeInTheDocument();
     });
 
+    it('clicking checkbox will remove error if present', async () => {
+        const user = userEvent.setup();
+
+        const button = screen.getByRole('button', { name: /proceed/i });
+        await user.click(button);
+
+        const errorMsg = screen.getByText(/please make a selection/i);
+        expect(errorMsg).toBeInTheDocument();
+
+        const checkbox = screen.getByRole('checkbox', { name: /collected graph data/i });
+        await user.click(checkbox);
+
+        expect(errorMsg).not.toBeInTheDocument();
+    });
+
     it('open and closes dialog', async () => {
         const user = userEvent.setup();
 

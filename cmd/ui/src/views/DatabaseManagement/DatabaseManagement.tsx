@@ -26,7 +26,7 @@ import {
     useTheme,
 } from '@mui/material';
 import { ContentPage, apiClient } from 'bh-shared-ui';
-import { useState } from 'react';
+import { useReducer } from 'react';
 import ConfirmationDialog from './ConfirmationDialog';
 import { useMutation } from 'react-query';
 import { useSelector } from 'react-redux';
@@ -41,8 +41,112 @@ type DataTypes = {
     dataQualityHistory: boolean;
 };
 
-const useDatabaseManagement = (state: DataTypes, setState: React.Dispatch<React.SetStateAction<DataTypes>>) => {
-    const [showSuccessMessage, setShowSuccessMessage] = useState(false);
+const initialState: State = {
+    collectedGraphData: false,
+    highValueSelectors: false,
+    fileIngestHistory: false,
+    dataQualityHistory: false,
+
+    noSelectionError: false,
+    mutationError: false,
+    showSuccessMessage: false,
+
+    openDialog: false,
+};
+
+type State = {
+    // checkbox state
+    collectedGraphData: boolean;
+    highValueSelectors: boolean;
+    fileIngestHistory: boolean;
+    dataQualityHistory: boolean;
+
+    // error state
+    noSelectionError: boolean;
+    mutationError: boolean;
+    showSuccessMessage: boolean;
+
+    // modal state
+    openDialog: boolean;
+};
+
+type Action =
+    | { type: 'no_selection_error' }
+    | { type: 'mutation_error' }
+    | { type: 'mutation_success' }
+    | { type: 'selection'; targetName: string; checked: boolean }
+    | { type: 'open_dialog' }
+    | { type: 'close_dialog' };
+
+const reducer = (state: State, action: Action): State => {
+    switch (action.type) {
+        case 'no_selection_error': {
+            return {
+                ...state,
+                noSelectionError: true,
+                mutationError: false,
+            };
+        }
+        case 'mutation_error': {
+            return {
+                ...state,
+                mutationError: true,
+                noSelectionError: false,
+            };
+        }
+        case 'mutation_success': {
+            return {
+                ...state,
+                // reset checkboxes
+                collectedGraphData: false,
+                dataQualityHistory: false,
+                fileIngestHistory: false,
+                highValueSelectors: false,
+
+                showSuccessMessage: true,
+            };
+        }
+        case 'selection': {
+            const { targetName, checked } = action;
+            return {
+                ...state,
+                [targetName]: checked,
+                noSelectionError: false,
+            };
+        }
+        case 'open_dialog': {
+            const { collectedGraphData, dataQualityHistory, fileIngestHistory, highValueSelectors } = state;
+            if (
+                [collectedGraphData, dataQualityHistory, fileIngestHistory, highValueSelectors].filter(Boolean)
+                    .length === 0
+            ) {
+                return {
+                    ...state,
+                    noSelectionError: true,
+                };
+            } else {
+                return {
+                    ...state,
+                    noSelectionError: false,
+                    openDialog: true,
+                };
+            }
+        }
+        case 'close_dialog': {
+            return {
+                ...state,
+                openDialog: false,
+            };
+        }
+        default: {
+            return state;
+        }
+    }
+};
+
+const useDatabaseManagement = () => {
+    const [state, dispatch] = useReducer(reducer, initialState);
+    const { collectedGraphData, highValueSelectors, fileIngestHistory, dataQualityHistory } = state;
 
     const tierZeroAssetGroupId = useSelector(selectTierZeroAssetGroupId);
 
@@ -55,65 +159,43 @@ const useDatabaseManagement = (state: DataTypes, setState: React.Dispatch<React.
         },
         onError: () => {
             // show UI message that data deletion failed
-            setShowSuccessMessage(false);
+            dispatch({ type: 'mutation_error' });
         },
         onSuccess: () => {
             // show UI message that data deletion is happening
-            setShowSuccessMessage(true);
-            setState({
-                collectedGraphData: false,
-                dataQualityHistory: false,
-                fileIngestHistory: false,
-                highValueSelectors: false,
-            });
+            dispatch({ type: 'mutation_success' });
         },
     });
 
-    const handleDelete = () => {
-        mutation.mutate({ deleteThisData: state, assetGroupId: tierZeroAssetGroupId });
+    const handleMutation = () => {
+        mutation.mutate({
+            deleteThisData: {
+                collectedGraphData,
+                dataQualityHistory,
+                fileIngestHistory,
+                highValueSelectors,
+            },
+            assetGroupId: tierZeroAssetGroupId,
+        });
     };
 
-    return { handleDelete, showSuccessMessage };
+    return { handleMutation, state, dispatch };
 };
 
 const DatabaseManagement = () => {
     const theme = useTheme();
 
-    const [state, setState] = useState<DataTypes>({
-        collectedGraphData: false,
-        highValueSelectors: false,
-        fileIngestHistory: false,
-        dataQualityHistory: false,
-    });
-
-    const [error, setError] = useState(false);
-    const [open, setOpen] = useState(false);
-
-    const handleCheckbox = (event: React.ChangeEvent<HTMLInputElement>) => {
-        setState({
-            ...state,
-            [event.target.name]: event.target.checked,
-        });
-    };
-
-    const handleOpenDialog = () => {
-        // if no checkboxes have been checked, display error
-        if (Object.values(state).filter(Boolean).length === 0) {
-            setError(true);
-        } else {
-            // clear out any potential error state from previous submission when at least one checkbox has been checked
-            setError(false);
-            setOpen(true);
-        }
-    };
-
-    const handleCloseDialog = () => {
-        setOpen(false);
-    };
-
-    const { handleDelete, showSuccessMessage } = useDatabaseManagement(state, setState);
+    const { handleMutation, state, dispatch } = useDatabaseManagement();
 
     const { collectedGraphData, highValueSelectors, fileIngestHistory, dataQualityHistory } = state;
+
+    const handleCheckbox = (event: React.ChangeEvent<HTMLInputElement>) => {
+        dispatch({
+            type: 'selection',
+            targetName: event.target.name,
+            checked: event.target.checked,
+        });
+    };
 
     return (
         <ContentPage title='Clear BloodHound data'>
@@ -126,8 +208,11 @@ const DatabaseManagement = () => {
                 </Typography>
 
                 <Box display='flex' flexDirection='column' alignItems='start'>
-                    <FormControl variant='standard' sx={{ paddingBlock: 2 }} error={error}>
-                        {error ? (
+                    <FormControl
+                        variant='standard'
+                        sx={{ paddingBlock: 2 }}
+                        error={state.noSelectionError || state.mutationError}>
+                        {state.noSelectionError ? (
                             <Box color={theme.palette.error.main} display='flex' alignItems='center' gap='0.3rem'>
                                 <FontAwesomeIcon icon={faCircleXmark} />
                                 <FormHelperText sx={{ marginTop: '1.5px', color: theme.palette.error.main }}>
@@ -136,7 +221,16 @@ const DatabaseManagement = () => {
                             </Box>
                         ) : null}
 
-                        {showSuccessMessage ? (
+                        {state.mutationError ? (
+                            <Box color={theme.palette.error.main} display='flex' alignItems='center' gap='0.3rem'>
+                                <FontAwesomeIcon icon={faCircleXmark} />
+                                <FormHelperText sx={{ marginTop: '1.5px', color: theme.palette.error.main }}>
+                                    There was an error processing your request.
+                                </FormHelperText>
+                            </Box>
+                        ) : null}
+
+                        {state.showSuccessMessage ? (
                             <Box color={theme.palette.info.main} display='flex' alignItems='center' gap='0.3rem'>
                                 <FontAwesomeIcon icon={faCircleExclamation} />
                                 <FormHelperText sx={{ marginTop: '1.5px', color: theme.palette.info.main }}>
@@ -195,13 +289,17 @@ const DatabaseManagement = () => {
                         variant='contained'
                         disableElevation
                         sx={{ width: '150px' }}
-                        onClick={handleOpenDialog}>
+                        onClick={() => dispatch({ type: 'open_dialog' })}>
                         Proceed
                     </Button>
                 </Box>
             </div>
 
-            <ConfirmationDialog open={open} handleClose={handleCloseDialog} handleDelete={handleDelete} />
+            <ConfirmationDialog
+                open={state.openDialog}
+                handleClose={() => dispatch({ type: 'close_dialog' })}
+                handleDelete={() => handleMutation()}
+            />
         </ContentPage>
     );
 };
