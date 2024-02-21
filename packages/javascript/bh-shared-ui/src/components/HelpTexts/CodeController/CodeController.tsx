@@ -23,6 +23,14 @@ export const useStyles = makeStyles((theme) => ({
         '& .scrollRight.scrollLeft': {
             'box-shadow': 'inset 5px 0px 5px 0px black, inset -5px 0px 5px 0px black',
         },
+        '& .codeController': {
+            display: 'flex',
+            justifyContent: 'flex-end',
+            position: 'absolute',
+            right: '0',
+            borderBottom: '1px solid white',
+            width: '100%',
+        },
         '& button': {
             color: 'white',
             transition: 'opacity 100ms ease-in-out',
@@ -31,19 +39,19 @@ export const useStyles = makeStyles((theme) => ({
 }));
 
 interface Props {
-    canCopy?: boolean;
-    canWrap?: boolean;
+    hideCopy?: boolean;
+    hideWrap?: boolean;
 }
 
 /**
  * Wraps <Typography component="pre"> to add controls for copy/paste and code wrapping.
  * Implementation: please wrap code block in {`<coding>`}
- * @param canCopy - default true - display copy text button
- * @param canWrap - default true - display wrap text button
+ * @param hideCopy - default true - display copy text button
+ * @param hideWrap - default true - display wrap text button
  * @returns
  */
 function CodeController(props: PropsWithChildren<Props>) {
-    const { canCopy = true, canWrap = true, children } = props;
+    const { hideCopy = false, hideWrap = false, children } = props;
 
     const [wrapped, setWrapped] = useState(true);
     const [copied, setCopied] = useState(false);
@@ -93,30 +101,22 @@ function CodeController(props: PropsWithChildren<Props>) {
                 })}
                 ref={codeRef}
                 onScroll={handleScroll}>
-                {(canCopy || canWrap) && (
+                {(!hideCopy || !hideWrap) && (
                     <>
-                        <Box
-                            sx={{
-                                display: 'flex',
-                                justifyContent: 'flex-end',
-                                position: 'absolute',
-                                right: '0',
-                                borderBottom: '1px solid white',
-                                width: '100%',
-                            }}>
-                            {canCopy && (
+                        <div className='codeController'>
+                            {!hideCopy && (
                                 <Button sx={{ p: 0.5, m: 0, fontSize: '12px' }} onClick={handleCopy}>
                                     {copied ? 'Copied!' : 'Copy'}
                                 </Button>
                             )}
-                            {canWrap && (
+                            {!hideWrap && (
                                 <Button
                                     sx={{ p: 0.5, m: 0, marginRight: '20px', fontSize: '12px' }}
                                     onClick={handleWrap}>
                                     {wrapped ? 'Unwrap' : 'Wrap'}
                                 </Button>
                             )}
-                        </Box>
+                        </div>
                         <br />
                         <br />
                     </>

