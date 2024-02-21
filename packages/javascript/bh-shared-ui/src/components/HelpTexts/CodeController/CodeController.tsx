@@ -2,11 +2,12 @@ import { Button, Typography } from '@mui/material';
 import { makeStyles } from '@mui/styles';
 import { PropsWithChildren, useRef, useState } from 'react';
 import clsx from 'clsx';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faAlignJustify, faCopy } from '@fortawesome/free-solid-svg-icons';
 
 export const useStyles = makeStyles((theme) => ({
     codeController: {
         position: 'relative',
-        'text-wrap': 'nowrap',
         '& .code': {
             'text-wrap': 'nowrap',
             overflow: 'scroll',
@@ -106,14 +107,20 @@ function CodeController(props: PropsWithChildren<Props>) {
                         <div className='codeController'>
                             {!hideCopy && (
                                 <Button sx={{ p: 0.5, m: 0, fontSize: '12px' }} onClick={handleCopy}>
-                                    {copied ? 'Copied!' : 'Copy'}
+                                    <FontAwesomeIcon icon={faCopy} />
+                                    <Typography component='span' sx={{ marginLeft: '6px' }}>
+                                        {copied ? 'Copied' : 'Copy'}
+                                    </Typography>
                                 </Button>
                             )}
                             {!hideWrap && (
                                 <Button
                                     sx={{ p: 0.5, m: 0, marginRight: '20px', fontSize: '12px' }}
                                     onClick={handleWrap}>
-                                    {wrapped ? 'Unwrap' : 'Wrap'}
+                                    <FontAwesomeIcon icon={faAlignJustify} />
+                                    <Typography component='span' sx={{ marginLeft: '6px' }}>
+                                        {wrapped ? 'Unwrap' : 'Wrap'}
+                                    </Typography>
                                 </Button>
                             )}
                         </div>
