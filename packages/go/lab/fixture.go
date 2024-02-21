@@ -22,20 +22,20 @@ import (
 	"github.com/specterops/bloodhound/lab/internal"
 )
 
-type Depender interface {
-	Dependencies() internal.Set[Depender]
+type depender interface {
+	Dependencies() internal.Set[depender]
 }
 
 func NewFixture[T any](setup func(*Harness) (T, error), teardown func(*Harness, T) error) *Fixture[T] {
 	return &Fixture[T]{
-		dependencies: make(internal.Set[Depender]),
+		dependencies: make(internal.Set[depender]),
 		setup:        setup,
 		teardown:     teardown,
 	}
 }
 
 type Fixture[T any] struct {
-	dependencies internal.Set[Depender]
+	dependencies internal.Set[depender]
 	setup        func(*Harness) (T, error)
 	teardown     func(*Harness, T) error
 }
@@ -58,14 +58,14 @@ func (s *Fixture[T]) Teardown(harness *Harness, t T) error {
 	return nil
 }
 
-func (s *Fixture[T]) Dependencies() internal.Set[Depender] {
+func (s *Fixture[T]) Dependencies() internal.Set[depender] {
 	return s.dependencies
 }
 
-func hasCycle(consumer Depender, producer Depender) bool {
+func hasCycle(consumer depender, producer depender) bool {
 	var (
-		visited                = make(internal.Set[Depender])
-		producerTransitiveDeps = []Depender{producer}
+		visited                = make(internal.Set[depender])
+		producerTransitiveDeps = []depender{producer}
 	)
 	for len(producerTransitiveDeps) > 0 {
 		fixture := producerTransitiveDeps[len(producerTransitiveDeps)-1]
@@ -86,7 +86,7 @@ func hasCycle(consumer Depender, producer Depender) bool {
 	return false
 }
 
-func setDependency(consumer Depender, provider Depender) error {
+func setDependency(consumer depender, provider depender) error {
 	if hasCycle(consumer, provider) {
 		return fmt.Errorf("unable to set dependency for %T -> %T: cycle detected", consumer, provider)
 	} else {
@@ -95,7 +95,7 @@ func setDependency(consumer Depender, provider Depender) error {
 	}
 }
 
-func SetDependency(consumer Depender, provider Depender) error {
+func SetDependency(consumer depender, provider depender) error {
 	return setDependency(consumer, provider)
 }
 
