@@ -20,6 +20,7 @@ import { PropsWithChildren, useRef, useState } from 'react';
 import clsx from 'clsx';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faAlignJustify, faCopy } from '@fortawesome/free-solid-svg-icons';
+import { copyToClipboard } from '../../../utils/copyToClipboard';
 
 export const useStyles = makeStyles((theme) => ({
     codeController: {
@@ -94,7 +95,7 @@ function CodeController(props: PropsWithChildren<Props>) {
             .map((s) => s.trim())
             .join('\n');
 
-        await navigator.clipboard.writeText(justifiedLeft);
+        await copyToClipboard(justifiedLeft);
 
         setTimeout(() => {
             setCopied(false);
