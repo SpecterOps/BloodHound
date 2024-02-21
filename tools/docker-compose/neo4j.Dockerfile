@@ -16,4 +16,6 @@
 
 FROM docker.io/library/neo4j:4.4.0 as neo4j
 RUN echo "dbms.security.auth_enabled=false" >> /var/lib/neo4j/conf/neo4j.conf
+RUN echo "dbms.security.procedures.unrestricted=apoc.*" >> /var/lib/neo4j/conf/neo4j.conf
 RUN neo4j-admin memrec >> /var/lib/neo4j/conf/neo4j.conf
+RUN wget https://github.com/neo4j-contrib/neo4j-apoc-procedures/releases/download/4.4.0.0/apoc-4.4.0.0-core.jar -P /var/lib/neo4j/plugins/
