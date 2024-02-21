@@ -53,7 +53,7 @@ export const CommonSearches: CommonSearchType[] = [
             },
             {
                 description: 'Locations of high value/Tier Zero objects',
-                cypher: `MATCH p = (:Domain)-[:Contains*1..]->(n:Base)\nWHERE n.system_tags="admin_tier_0"\nRETURN p`,
+                cypher: `MATCH p = (:Domain)-[:Contains*1..]->(n:Base)\nWHERE n.system_tags CONTAINS "admin_tier_0"\nRETURN p`,
             },
         ],
     },
@@ -83,7 +83,7 @@ export const CommonSearches: CommonSearchType[] = [
             },
             {
                 description: 'Paths from Domain Users to high value/Tier Zero targets',
-                cypher: `MATCH p=shortestPath((m:Group)-[:${adTransitEdgeTypes}*1..]->(n))\nWHERE n.system_tags="admin_tier_0" AND m.objectid ENDS WITH "-513" AND m<>n\nRETURN p`,
+                cypher: `MATCH p=shortestPath((m:Group)-[:${adTransitEdgeTypes}*1..]->(n))\nWHERE n.system_tags CONTAINS "admin_tier_0" AND m.objectid ENDS WITH "-513" AND m<>n\nRETURN p`,
             },
             {
                 description: 'Workstations where Domain Users can RDP',
@@ -109,7 +109,7 @@ export const CommonSearches: CommonSearchType[] = [
         queries: [
             {
                 description: 'Kerberoastable members of high value/Tier Zero groups',
-                cypher: `MATCH p=shortestPath((n:User)-[:MemberOf]->(g:Group))\nWHERE g.system_tags = "admin_tier_0" AND n.hasspn=true\nRETURN p`,
+                cypher: `MATCH p=shortestPath((n:User)-[:MemberOf]->(g:Group))\nWHERE g.system_tags CONTAINS "admin_tier_0" AND n.hasspn=true\nRETURN p`,
             },
             {
                 description: 'All Kerberoastable users',
@@ -143,11 +143,11 @@ export const CommonSearches: CommonSearchType[] = [
             },
             {
                 description: 'Shortest paths to high value/Tier Zero targets',
-                cypher: `MATCH p=shortestPath((n)-[:${adTransitEdgeTypes}*1..]->(m))\nWHERE m.system_tags = "admin_tier_0" AND n<>m\nRETURN p`,
+                cypher: `MATCH p=shortestPath((n)-[:${adTransitEdgeTypes}*1..]->(m))\nWHERE m.system_tags CONTAINS "admin_tier_0" AND n<>m\nRETURN p`,
             },
             {
                 description: 'Shortest paths from Domain Users to high value/Tier Zero targets',
-                cypher: `MATCH p=shortestPath((n:Group)-[:${adTransitEdgeTypes}*1..]->(m))\nWHERE m.system_tags = "admin_tier_0" AND n.objectid ENDS WITH "-513" AND n<>m\nRETURN p`,
+                cypher: `MATCH p=shortestPath((n:Group)-[:${adTransitEdgeTypes}*1..]->(m))\nWHERE m.system_tags CONTAINS "admin_tier_0" AND n.objectid ENDS WITH "-513" AND n<>m\nRETURN p`,
             },
             {
                 description: 'Shortest paths to Domain Admins',
@@ -222,7 +222,7 @@ export const CommonSearches: CommonSearchType[] = [
         queries: [
             {
                 description: 'Shortest paths to high value/Tier Zero targets',
-                cypher: `MATCH p=shortestPath((m:AZUser)-[r:${azureTransitEdgeTypes}*1..]->(n))\nWHERE n.system_tags = "admin_tier_0" AND n.name =~ '(?i)${highPrivilegedRoleDisplayNameRegex}' AND m<>n\nRETURN p`,
+                cypher: `MATCH p=shortestPath((m:AZUser)-[r:${azureTransitEdgeTypes}*1..]->(n))\nWHERE n.system_tags CONTAINS "admin_tier_0" AND n.name =~ '(?i)${highPrivilegedRoleDisplayNameRegex}' AND m<>n\nRETURN p`,
             },
             {
                 description: 'Shortest paths to privileged roles',
@@ -230,7 +230,7 @@ export const CommonSearches: CommonSearchType[] = [
             },
             {
                 description: 'Shortest paths from Azure Applications to high value/Tier Zero targets',
-                cypher: `MATCH p=shortestPath((m:AZApp)-[r:${azureTransitEdgeTypes}*1..]->(n))\nWHERE n.system_tags = "admin_tier_0" AND m<>n\nRETURN p`,
+                cypher: `MATCH p=shortestPath((m:AZApp)-[r:${azureTransitEdgeTypes}*1..]->(n))\nWHERE n.system_tags CONTAINS "admin_tier_0" AND m<>n\nRETURN p`,
             },
             {
                 description: 'Shortest paths to Azure Subscriptions',
