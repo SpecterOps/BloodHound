@@ -42,9 +42,10 @@ export const getControlPointsFromGroupSize = (
     invertY: boolean,
     invertX: boolean
 ) => {
+    const position = groupPosition++;
     const step = Math.PI / 2;
 
-    const theta2 = step * groupPosition - Math.PI / 2;
+    const theta2 = step * position - Math.PI / 2;
     const theta1 = theta2 + step;
 
     const x1Offset = radius * Math.cos(theta1);
@@ -100,17 +101,14 @@ export default class SelfEdgeProgram extends CurvedEdgeProgram {
         const points = [];
 
         for (let t = 0; t <= 1; t += RESOLUTION) {
-            // const offset = data.framedGraphNodeRadius! * 2;
-            const control1 = start;
             const { control2, control3 } = getControlPointsFromGroupSize(
-                data.groupPosition!,
-                data.framedGraphNodeRadius! * 3,
+                data.groupPosition,
+                data.framedGraphNodeRadius * 3,
                 start,
                 true,
                 true
             );
-            const control4 = control1;
-            const pointOnCurve = bezier.getCoordinatesAlongCubicBezier(control1, control2, control3, control4, t);
+            const pointOnCurve = bezier.getCoordinatesAlongCubicBezier(start, control2, control3, start, t);
             points.push(pointOnCurve);
         }
 

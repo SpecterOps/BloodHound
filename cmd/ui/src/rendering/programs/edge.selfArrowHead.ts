@@ -56,8 +56,8 @@ export default class SelfEdgeArrowHeadProgram extends CurvedEdgeArrowHeadProgram
         const radius = getNodeRadius(targetData.highlighted, inverseSqrtZoomRatio, targetData.size);
         const color = floatColor(data.color);
         const { control2, control3 } = getControlPointsFromGroupSize(
-            data.groupPosition!,
-            data.framedGraphNodeRadius! * 3,
+            data.groupPosition,
+            data.framedGraphNodeRadius * 3,
             start,
             false,
             false

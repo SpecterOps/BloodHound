@@ -58,7 +58,7 @@ const drawBackground = (
     const { deltaX, deltaY, width, height } = getBackgroundBoundInfo(
         inverseSqrtZoomRatio,
         textLength,
-        edgeData,
+        edgeData.size,
         settings.edgeLabelSize
     );
 
@@ -68,12 +68,12 @@ const drawBackground = (
 export const getBackgroundBoundInfo = (
     inverseSqrtZoomRatio: number,
     textLength: number,
-    edgeData: Attributes,
+    edgeSize: number,
     edgeLabelSize: number
 ) => {
     const xPadding = getXPadding(inverseSqrtZoomRatio);
     const deltaX = -textLength / 2 - xPadding;
-    const deltaY = (edgeData.size / 2) * inverseSqrtZoomRatio - edgeLabelSize * inverseSqrtZoomRatio;
+    const deltaY = (edgeSize / 2) * inverseSqrtZoomRatio - edgeLabelSize * inverseSqrtZoomRatio;
     const width = textLength + 2 * xPadding;
     const height = edgeLabelSize * inverseSqrtZoomRatio * 1.4;
 
@@ -112,18 +112,13 @@ const getCurvedEdgeStartingPoint = (
     return bezier.getCoordinatesAlongQuadraticBezier(sourceCoords, targetCoords, control, 0.5);
 };
 
-export const getSelfEdgeStartingPoint = (data: Attributes, sourceCoords: Coordinates, radius: number): Coordinates => {
-    const control1 = { x: sourceCoords.x, y: sourceCoords.y };
-    const { control2, control3 } = getControlPointsFromGroupSize(
-        data.groupPosition,
-        radius * 3,
-        sourceCoords,
-        false,
-        true
-    );
-    const control4 = control1;
-
-    return bezier.getCoordinatesAlongCubicBezier(control1, control2, control3, control4, 0.5);
+export const getSelfEdgeStartingPoint = (
+    c1: Coordinates,
+    c2: Coordinates,
+    c3: Coordinates,
+    c4: Coordinates
+): Coordinates => {
+    return bezier.getCoordinatesAlongCubicBezier(c1, c2, c3, c4, 0.5);
 };
 
 const getStartingPoint = (
@@ -132,23 +127,27 @@ const getStartingPoint = (
     targetData: PartialButFor<NodeDisplayData, 'x' | 'y' | 'size'>,
     edgeDistance: EdgeDistanceProperties
 ): Coordinates => {
-    const inverseSqrtZoomRatio = edgeData.inverseSqrtZoomRatio || 1;
-
     if (edgeData.controlInViewport) {
-        const sourceCoords = { x: sourceData.x, y: sourceData.y };
-        const targetCoords = { x: targetData.x, y: targetData.y };
-        return getCurvedEdgeStartingPoint(sourceCoords, targetCoords, edgeData.controlInViewport);
+        return getCurvedEdgeStartingPoint(sourceData, targetData, edgeData.controlInViewport);
     } else if (edgeData.type === 'self') {
-        const sourceCoords = { x: sourceData.x, y: sourceData.y };
+        const inverseSqrtZoomRatio = edgeData.inverseSqrtZoomRatio || 1;
         const radius = bezier.getLineLength(
             { x: 0, y: 0 },
             {
-                x: sourceData.size * inverseSqrtZoomRatio * inverseSqrtZoomRatio,
-                y: sourceData.size * inverseSqrtZoomRatio * inverseSqrtZoomRatio,
+                x: sourceData.size * Math.pow(inverseSqrtZoomRatio, 2),
+                y: sourceData.size * Math.pow(inverseSqrtZoomRatio, 2),
             }
         );
 
-        return getSelfEdgeStartingPoint(edgeData, sourceCoords, radius);
+        const { control2, control3 } = getControlPointsFromGroupSize(
+            edgeData.groupPosition,
+            radius * 3,
+            sourceData,
+            false,
+            true
+        );
+
+        return getSelfEdgeStartingPoint(sourceData, control2, control3, sourceData);
     } else {
         return { x: edgeDistance.cx, y: edgeDistance.cy };
     }
