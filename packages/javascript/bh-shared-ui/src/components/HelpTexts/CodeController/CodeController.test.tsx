@@ -53,4 +53,15 @@ describe('CodeController', () => {
 
         expect(copiedText).toBe(defaultExpected);
     });
+
+    it('indicates the code container is scrollable when the code is unwrapped', async () => {
+        const expected = Array(10).fill('testing large code block').join(' ');
+        const { screen, user } = await setup(expected);
+
+        await user.click(screen.getByText('Unwrap'));
+
+        const codeContainer = screen.getByText(expected);
+
+        expect(codeContainer.className.includes('scrollLeft')).toBeTruthy();
+    });
 });
