@@ -16,7 +16,6 @@
 
 import { AssetGroupMemberParams } from 'js-client-library/dist/types';
 import { FC, useState } from 'react';
-import { AzureNodeKind, ActiveDirectoryNodeKind, NodeIcon } from '../..';
 import {
     Box,
     Button,
@@ -30,46 +29,45 @@ import {
     Paper,
     Select,
 } from '@mui/material';
-import createStyles from '@mui/styles/createStyles';
 import makeStyles from '@mui/styles/makeStyles';
 import { Theme } from '@mui/material/styles';
+import NodeIcon from '../NodeIcon';
+import { AssetGroupMemberCounts } from 'js-client-library';
 
 export const FILTERABLE_PARAMS: Array<keyof Pick<AssetGroupMemberParams, 'primary_kind' | 'custom_member'>> = [
     'primary_kind',
     'custom_member',
 ];
 
-const useStyles = makeStyles((theme: Theme) =>
-    createStyles({
-        formControl: {
-            display: 'block',
-        },
-        activeFilters: {
-            '& button.expand-filters': {
-                fontWeight: 'bolder',
-                '& span': {
-                    visibility: 'visible',
-                },
+const useStyles = makeStyles((theme: Theme) => ({
+    formControl: {
+        display: 'block',
+    },
+    activeFilters: {
+        '& button.expand-filters': {
+            fontWeight: 'bolder',
+            '& span': {
+                visibility: 'visible',
             },
         },
-        activeFiltersDot: {
-            width: '6px',
-            height: '6px',
-            borderRadius: '100%',
-            backgroundColor: theme.palette.primary.main,
-            alignSelf: 'baseline',
-            visibility: 'hidden',
-        },
-    })
-);
+    },
+    activeFiltersDot: {
+        width: '6px',
+        height: '6px',
+        borderRadius: '100%',
+        backgroundColor: theme.palette.primary.main,
+        alignSelf: 'baseline',
+        visibility: 'hidden',
+    },
+}));
 
 interface Props {
     filterParams: AssetGroupMemberParams;
     handleFilterChange: (key: (typeof FILTERABLE_PARAMS)[number], value: string) => void;
-    availableNodeKinds: Array<ActiveDirectoryNodeKind | AzureNodeKind>;
+    memberCounts: AssetGroupMemberCounts | undefined;
 }
 
-const AssetGroupFilters: FC<Props> = ({ filterParams, handleFilterChange, availableNodeKinds }) => {
+const AssetGroupFilters: FC<Props> = ({ filterParams, handleFilterChange, memberCounts = { counts: {} } }) => {
     const [displayFilters, setDisplayFilters] = useState(false);
 
     const classes = useStyles();
@@ -115,7 +113,7 @@ const AssetGroupFilters: FC<Props> = ({ filterParams, handleFilterChange, availa
                                 <MenuItem value=''>
                                     <em>None</em>
                                 </MenuItem>
-                                {availableNodeKinds.map((value) => {
+                                {Object.keys(memberCounts.counts).map((value) => {
                                     return (
                                         <MenuItem value={`eq:${value}`} key={value}>
                                             <NodeIcon nodeType={value} />

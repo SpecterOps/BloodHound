@@ -19,9 +19,8 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Button } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
 import { useCallback } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
 import { destinationNodeSelected, sourceNodeSelected } from 'src/ducks/searchbar/actions';
-import { AppState } from 'src/store';
+import { useAppDispatch, useAppSelector } from 'src/store';
 
 const useStyles = makeStyles((theme) => ({
     swapButton: {
@@ -37,9 +36,9 @@ const useStyles = makeStyles((theme) => ({
 
 const PathfindingSwapButton = () => {
     const classes = useStyles();
-    const dispatch = useDispatch();
+    const dispatch = useAppDispatch();
 
-    const { primary, secondary } = useSelector((state: AppState) => state.search);
+    const { primary, secondary } = useAppSelector((state) => state.search);
 
     const swapPathfindingInputs = useCallback(() => {
         const newSourceNode = secondary.value;

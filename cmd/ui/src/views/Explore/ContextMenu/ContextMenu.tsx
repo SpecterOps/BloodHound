@@ -17,9 +17,8 @@
 import { Menu, MenuItem } from '@mui/material';
 
 import { FC } from 'react';
-import { useSelector } from 'react-redux';
 import { destinationNodeSelected, sourceNodeSelected, tabChanged } from 'src/ducks/searchbar/actions';
-import { AppState, useAppDispatch } from 'src/store';
+import { useAppDispatch, useAppSelector } from 'src/store';
 import { selectOwnedAssetGroupId, selectTierZeroAssetGroupId } from 'src/ducks/assetgroups/reducer';
 import AssetGroupMenuItem from './AssetGroupMenuItem';
 import CopyMenuItem from './CopyMenuItem';
@@ -30,10 +29,10 @@ const ContextMenu: FC<{ contextMenu: { mouseX: number; mouseY: number } | null; 
 }) => {
     const dispatch = useAppDispatch();
 
-    const selectedNode = useSelector((state: AppState) => state.entityinfo.selectedNode);
+    const selectedNode = useAppSelector((state) => state.entityinfo.selectedNode);
 
-    const ownedAssetGroupId = useSelector(selectOwnedAssetGroupId);
-    const tierZeroAssetGroupId = useSelector(selectTierZeroAssetGroupId);
+    const ownedAssetGroupId = useAppSelector(selectOwnedAssetGroupId);
+    const tierZeroAssetGroupId = useAppSelector(selectTierZeroAssetGroupId);
 
     const handleSetStartingNode = () => {
         if (selectedNode) {

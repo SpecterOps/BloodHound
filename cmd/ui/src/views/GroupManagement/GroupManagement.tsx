@@ -20,21 +20,19 @@ import { SelectedNode } from 'src/ducks/entityinfo/types';
 import { useState } from 'react';
 import { AssetGroup, AssetGroupMember } from 'js-client-library';
 import { faGem } from '@fortawesome/free-solid-svg-icons';
-import { useSelector } from 'react-redux';
-import { Domain } from 'src/ducks/global/types';
 import { setSelectedNode } from 'src/ducks/entityinfo/actions';
 import { useNavigate } from 'react-router-dom';
 import { ROUTE_EXPLORE } from 'src/ducks/global/routes';
 import { sourceNodeSelected } from 'src/ducks/searchbar/actions';
 import { TIER_ZERO_LABEL, TIER_ZERO_TAG } from 'src/constants';
-import { useAppDispatch } from 'src/store';
+import { useAppDispatch, useAppSelector } from 'src/store';
 import { dataCollectionMessage } from '../QA/utils';
 
 const GroupManagement = () => {
     const dispatch = useAppDispatch();
     const navigate = useNavigate();
 
-    const globalDomain: Domain = useSelector((state: any) => state.global.options.domain);
+    const globalDomain = useAppSelector((state) => state.global.options.domain);
 
     // Kept out of the shared UI due to diff between GraphNodeTypes across apps
     const [openNode, setOpenNode] = useState<SelectedNode | null>(null);
@@ -73,6 +71,7 @@ const GroupManagement = () => {
         });
     };
 
+    if (!globalDomain) return null;
     return (
         <GroupManagementContent
             globalDomain={globalDomain}
