@@ -376,29 +376,28 @@ func getLatestQueryParameter(query url.Values) (bool, error) {
 	return wantsLatest, nil
 }
 
-func (s Resources) ListAssetGroupMembers(response http.ResponseWriter, request *http.Request) {
+func (s Resources) getAssetGroupMembers(response http.ResponseWriter, request *http.Request) (api.AssetGroupMembers, error) {
 	var (
+		agMembers       = api.AssetGroupMembers{}
 		pathVars        = mux.Vars(request)
 		rawAssetGroupID = pathVars[api.URIPathVariableAssetGroupID]
-		agMembers       api.AssetGroupMembers
-		queryParams     = request.URL.Query()
-		sortByColumns   = queryParams[api.QueryParameterSortBy]
+		sortByColumns   = request.URL.Query()[api.QueryParameterSortBy]
 	)
 
 	queryParameterFilterParser := model.NewQueryParameterFilterParser()
 	if queryFilters, err := queryParameterFilterParser.ParseQueryParameterFilters(request); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsBadQueryParameterFilters, request), response)
-		return
+		return agMembers, err
 	} else {
 		for name, filters := range queryFilters {
 			if validPredicates, err := agMembers.GetValidFilterPredicatesAsStrings(name); err != nil {
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("%s: %s", api.ErrorResponseDetailsColumnNotFilterable, name), request), response)
-				return
+				return agMembers, err
 			} else {
 				for _, filter := range filters {
 					if !slices.Contains(validPredicates, string(filter.Operator)) {
 						api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("%s: %s %s", api.ErrorResponseDetailsFilterPredicateNotSupported, filter.Name, filter.Operator), request), response)
-						return
+						return agMembers, err
 					}
 				}
 			}
@@ -406,15 +405,30 @@ func (s Resources) ListAssetGroupMembers(response http.ResponseWriter, request *
 
 		if assetGroupID, err := strconv.Atoi(rawAssetGroupID); err != nil {
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsIDMalformed, request), response)
+			return agMembers, err
 		} else if assetGroup, err := s.DB.GetAssetGroup(int32(assetGroupID)); err != nil {
 			api.HandleDatabaseError(request, response, err)
+			return agMembers, err
 		} else if assetGroupNodes, err := s.GraphQuery.GetAssetGroupNodes(request.Context(), assetGroup.Tag); err != nil {
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("Graph error fetching nodes for asset group ID %v: %v", assetGroup.ID, err), request), response)
+			return agMembers, err
 		} else if agMembers, err = parseAGMembersFromNodes(assetGroupNodes, assetGroup.Selectors, int(assetGroup.ID)).SortBy(sortByColumns); err != nil {
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
+			return agMembers, err
 		} else if agMembers, err = agMembers.Filter(queryFilters); err != nil {
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("error filtering asset group members: %v", err), request), response)
-		} else if skip, err := ParseSkipQueryParameter(queryParams, 0); err != nil {
+			return agMembers, err
+		} else {
+			return agMembers, err
+		}
+	}
+}
+
+func (s Resources) ListAssetGroupMembers(response http.ResponseWriter, request *http.Request) {
+	if agMembers, err := s.getAssetGroupMembers(response, request); err == nil {
+		var queryParams = request.URL.Query()
+
+		if skip, err := ParseSkipQueryParameter(queryParams, 0); err != nil {
 			api.WriteErrorResponse(request.Context(), ErrBadQueryParameter(request, model.PaginationQueryParameterSkip, err), response)
 		} else if skip > len(agMembers) {
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf(utils.ErrorInvalidSkip, "value must be less than total count"), request), response)
@@ -427,6 +441,17 @@ func (s Resources) ListAssetGroupMembers(response http.ResponseWriter, request *
 			}
 			api.WriteResponseWrapperWithPagination(request.Context(), api.ListAssetGroupMembersResponse{Members: agMembers[skip:endIndex]}, limit, skip, len(agMembers), http.StatusOK, response)
 		}
+	}
+}
+
+func (s Resources) ListAssetGroupMemberCountsByKind(response http.ResponseWriter, request *http.Request) {
+	if agMembers, err := s.getAssetGroupMembers(response, request); err == nil {
+		data := api.ListAssetGroupMemberCountsResponse{Counts: map[string]int{}}
+		for _, member := range agMembers {
+			data.Counts[member.PrimaryKind]++
+			data.TotalCount++
+		}
+		api.WriteBasicResponse(request.Context(), data, http.StatusOK, response)
 	}
 }
 
