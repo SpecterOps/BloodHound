@@ -1,4 +1,4 @@
-import { Box, Button, Typography } from '@mui/material';
+import { Button, Typography } from '@mui/material';
 import { makeStyles } from '@mui/styles';
 import { PropsWithChildren, useRef, useState } from 'react';
 import clsx from 'clsx';

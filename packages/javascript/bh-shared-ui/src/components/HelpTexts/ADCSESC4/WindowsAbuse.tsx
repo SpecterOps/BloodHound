@@ -150,7 +150,7 @@ const WindowsAbuse: FC = () => {
                 <br />
                 <br />
                 The certificate template allows for client authentication if the CertTemplate node's{' '}
-                <em>Authentication Enabled</em>(<code>authenticationenabled</code>) is set to True. In that case,
+                <em>Authentication Enabled</em> (<code>authenticationenabled</code>) is set to True. In that case,
                 continue to the next step.
                 <br />
                 <br />
@@ -174,7 +174,7 @@ const WindowsAbuse: FC = () => {
                 Write-Host "pKIExtendedKeyUsage: $($template.Properties["pKIExtendedKeyUsage"])"
                 Write-Host "msPKI-Certificate-Application-Policy: $($template.Pro`}
             </CodeController>
-            <Typography variant='body2'>
+            <Typography variant='body2' className={classes.containsCodeEl}>
                 To run the LDAP query as another principal, replace <code>DirectoryEntry($ldapPath)</code> with{' '}
                 <code>DirectoryEntry($ldapPath, $ldapUsername, $ldapPassword)</code> to specify the credentials of the
                 principal.
@@ -250,23 +250,7 @@ const WindowsAbuse: FC = () => {
             </Typography>
             <CodeController>
                 {`$templateName = "TemplateName"   # Use CN, not display name
-                $eku = "1.3.6.1.5.5.7.3.2"       # Client Authentication EKU
-                
-                # Find the certificate template
-                $rootDSE = New-Object DirectoryServices.DirectoryEntry("LDAP://RootDSE")
-                $ldapPath = "LDAP://CN=Certificate Templates,CN=Public Key Services,CN=Services,$($rootDSE.configurationNamingContext)"
-                $ldap = New-Object DirectoryServices.DirectoryEntry($ldapPath)
-                $searcher = New-Object DirectoryServices.DirectorySearcher
-                $searcher.SearchRoot = $ldap
-                $searcher.Filter = "(&(objectClass=pKICertificateTemplate)(cn=$templateName))"
-                $template = $searcher.FindOne().GetDirectoryEntry()
-                
-                # Remove EKU from attributes
-                $template.Properties["pKIExtendedKeyUsage"].Remove($eku) | Out-Null
-                $template.Properties["msPKI-Certificate-Application-Policy"].Remove($eku) | Out-Null
-                $template.CommitChanges()
-                $ldap.Close() $templateName = "TemplateName"   # Use CN, not display name
-                
+
                 # Find the certificate template
                 $rootDSE = New-Object DirectoryServices.DirectoryEntry("LDAP://RootDSE")
                 $ldapPath = "LDAP://CN=Certificate Templates,CN=Public Key Services,CN=Services,$($rootDSE.configurationNamingContext)"
