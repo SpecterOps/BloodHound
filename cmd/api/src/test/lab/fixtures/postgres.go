@@ -42,50 +42,6 @@ var PostgresFixture = lab.NewFixture(func(harness *lab.Harness) (*database.Blood
 	}
 }, nil)
 
-func begin() *lab.Fixture[*database.BloodhoundDB] {
-	fixture := lab.NewFixture(func(harness *lab.Harness) (*database.BloodhoundDB, error) {
-		if db, ok := lab.Unpack(harness, PostgresFixture); !ok {
-			return nil, fmt.Errorf("unable to unpack BloodhoundDB")
-		} else {
-			return db.Begin(), nil
-		}
-	}, nil)
-
-	if err := lab.SetDependency(fixture, PostgresFixture); err != nil {
-		log.Fatal(err)
-	}
-	return fixture
-}
-
-func end(tx *lab.Fixture[*database.BloodhoundDB], dependencies []lab.Depender) {
-	fixture := lab.NewFixture(func(harness *lab.Harness) (*database.BloodhoundDB, error) {
-		if db, ok := lab.Unpack(harness, tx); !ok {
-			return nil, fmt.Errorf("unable to unpack BloodhoundDB transaction")
-		} else {
-			return db, db.Commit()
-		}
-	}, nil)
-
-	if err := lab.SetDependency(fixture, tx); err != nil {
-		log.Fatal(err)
-	} else {
-		for _, dep := range dependencies {
-			if err := lab.SetDependency(fixture, dep); err != nil {
-				log.Fatal(err)
-			}
-		}
-	}
-}
-
-func TransactionalFixtures(factories ...func(*lab.Fixture[*database.BloodhoundDB]) lab.Depender) {
-	tx := begin()
-	var dependencies []lab.Depender
-	for _, fn := range factories {
-		dependencies = append(dependencies, fn(tx))
-	}
-	end(tx, dependencies)
-}
-
 func init() {
 	if err := lab.SetDependency(PostgresFixture, ConfigFixture); err != nil {
 		log.Fatalln(err)
