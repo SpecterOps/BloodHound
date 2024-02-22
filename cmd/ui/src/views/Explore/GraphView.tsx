@@ -31,8 +31,8 @@ import { Attributes } from 'graphology-types';
 import { GraphNodes } from 'js-client-library';
 import isEmpty from 'lodash/isEmpty';
 import { FC, useEffect, useState } from 'react';
-import { useSelector } from 'react-redux';
 import { Link as RouterLink } from 'react-router-dom';
+import { SigmaNodeEventPayload } from 'sigma/sigma';
 import { GraphButtonOptions } from 'src/components/GraphButtons/GraphButtons';
 import SigmaChart from 'src/components/SigmaChart';
 import { setEntityInfoOpen, setSelectedNode } from 'src/ducks/entityinfo/actions';
@@ -43,22 +43,23 @@ import { GlobalOptionsState } from 'src/ducks/global/types';
 import { discardChanges } from 'src/ducks/tierzero/actions';
 import { RankDirection } from 'src/hooks/useLayoutDagre/useLayoutDagre';
 import useToggle from 'src/hooks/useToggle';
-import { AppState, useAppDispatch } from 'src/store';
+import { useAppDispatch, useAppSelector } from 'src/store';
 import { transformFlatGraphResponse } from 'src/utils';
 import EdgeInfoPane from 'src/views/Explore/EdgeInfo/EdgeInfoPane';
 import EntityInfoPanel from 'src/views/Explore/EntityInfo/EntityInfoPanel';
 import ExploreSearch from 'src/views/Explore/ExploreSearch';
 import usePrompt from 'src/views/Explore/NavigationAlert';
 import { initGraphEdges, initGraphNodes } from 'src/views/Explore/utils';
+import ContextMenu from './ContextMenu/ContextMenu';
 
 const GraphView: FC = () => {
     /* Hooks */
     const theme = useTheme();
     const dispatch = useAppDispatch();
 
-    const graphState: GraphState = useSelector((state: AppState) => state.explore);
-    const opts: GlobalOptionsState = useSelector((state: AppState) => state.global.options);
-    const formIsDirty = Object.keys(useSelector((state: AppState) => state.tierzero).changelog).length > 0;
+    const graphState: GraphState = useAppSelector((state) => state.explore);
+    const opts: GlobalOptionsState = useAppSelector((state) => state.global.options);
+    const formIsDirty = Object.keys(useAppSelector((state) => state.tierzero).changelog).length > 0;
 
     const [graphologyGraph, setGraphologyGraph] = useState<MultiDirectedGraph<Attributes, Attributes, Attributes>>();
     const [currentNodes, setCurrentNodes] = useState<GraphNodes>({});
@@ -66,10 +67,13 @@ const GraphView: FC = () => {
     const [currentSearchOpen, toggleCurrentSearch] = useToggle(false);
     const { data, isLoading, isError } = useAvailableDomains();
 
+    const [contextMenu, setContextMenu] = useState<{ mouseX: number; mouseY: number } | null>(null);
+
     useEffect(() => {
         let items: any = graphState.chartProps.items;
-        if (!items || isEmpty(items)) return;
-        if (!items.nodes || isEmpty(items.nodes)) items = transformFlatGraphResponse(items);
+        if (!items) return;
+        // `items` may be empty, or it may contain an empty `nodes` object
+        if (isEmpty(items) || isEmpty(items.nodes)) items = transformFlatGraphResponse(items);
 
         const graph = new MultiDirectedGraph();
         const nodeSize = 25;
@@ -150,11 +154,7 @@ const GraphView: FC = () => {
         },
     ];
 
-    /* Event Handlers */
-    const onClickNode = (id: string) => {
-        dispatch(setEdgeInfoOpen(false));
-        dispatch(setEntityInfoOpen(true));
-
+    const findNodeAndSelect = (id: string) => {
         const selectedItem = graphState.chartProps.items?.[id];
         if (selectedItem?.data?.nodetype) {
             dispatch(setSelectedEdge(null));
@@ -169,6 +169,26 @@ const GraphView: FC = () => {
         }
     };
 
+    /* Event Handlers */
+    const onClickNode = (id: string) => {
+        dispatch(setEdgeInfoOpen(false));
+        dispatch(setEntityInfoOpen(true));
+
+        findNodeAndSelect(id);
+    };
+
+    const handleContextMenu = (event: SigmaNodeEventPayload) => {
+        setContextMenu(contextMenu === null ? { mouseX: event.event.x, mouseY: event.event.y } : null);
+
+        const nodeId = event.node;
+
+        findNodeAndSelect(nodeId);
+    };
+
+    const handleCloseContextMenu = () => {
+        setContextMenu(null);
+    };
+
     return (
         <Box sx={{ position: 'relative', height: '100%', width: '100%', overflow: 'hidden' }} data-testid='explore'>
             <SigmaChart
@@ -180,7 +200,11 @@ const GraphView: FC = () => {
                 nonLayoutButtons={nonLayoutButtons}
                 isCurrentSearchOpen={currentSearchOpen}
                 toggleCurrentSearch={toggleCurrentSearch}
+                handleContextMenu={handleContextMenu}
             />
+
+            <ContextMenu contextMenu={contextMenu} handleClose={handleCloseContextMenu} />
+
             <Grid
                 container
                 direction='row'
@@ -200,22 +224,36 @@ const GraphView: FC = () => {
 };
 
 const GridItems = () => {
+    const selectedNode = useAppSelector((state) => state.entityinfo.selectedNode);
+
     const columnsDefault = { xs: 6, md: 5, lg: 4, xl: 3 };
     const cypherSearchColumns = { xs: 6, md: 6, lg: 6, xl: 4 };
 
-    const edgeInfoState: EdgeInfoState = useSelector((state: AppState) => state.edgeinfo);
+    const edgeInfoState: EdgeInfoState = useAppSelector((state) => state.edgeinfo);
     const [columns, setColumns] = useState(columnsDefault);
+    const theme = useTheme();
+
+    const columnStyles = { height: '100%' };
+
+    const infoPanelStyles = {
+        margin: theme.spacing(0, 4, 2, 2),
+        maxHeight: '95%',
+    };
 
     const handleCypherTab = (isCypherEditorActive: boolean) => {
         isCypherEditorActive ? setColumns(cypherSearchColumns) : setColumns(columnsDefault);
     };
 
     return [
-        <Grid item {...columns} sx={{ height: '100%' }} key={'exploreSearch'}>
+        <Grid item {...columns} sx={columnStyles} key={'exploreSearch'}>
             <ExploreSearch handleColumns={handleCypherTab} />
         </Grid>,
-        <Grid item {...columnsDefault} sx={{ height: '100%' }} key={'info'}>
-            {edgeInfoState.open ? <EdgeInfoPane selectedEdge={edgeInfoState.selectedEdge} /> : <EntityInfoPanel />}
+        <Grid item {...columnsDefault} sx={columnStyles} key={'info'}>
+            {edgeInfoState.open ? (
+                <EdgeInfoPane sx={infoPanelStyles} selectedEdge={edgeInfoState.selectedEdge} />
+            ) : (
+                <EntityInfoPanel sx={infoPanelStyles} selectedNode={selectedNode} />
+            )}
         </Grid>,
     ];
 };

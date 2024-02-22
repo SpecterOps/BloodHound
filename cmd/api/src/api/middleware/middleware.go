@@ -19,6 +19,7 @@ package middleware
 import (
 	"context"
 	"fmt"
+	"net"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -33,6 +34,8 @@ import (
 	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/src/config"
 	"github.com/specterops/bloodhound/src/ctx"
+	"github.com/specterops/bloodhound/src/database"
+	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/utils"
 	"github.com/unrolled/secure"
 )
@@ -128,8 +131,8 @@ func ContextMiddleware(next http.Handler) http.Handler {
 			// Create a new context with the timeout
 			requestCtx, cancel := context.WithTimeout(request.Context(), requestedWaitDuration.Value)
 			defer cancel()
-
 			// Insert the bh context
+
 			requestCtx = ctx.Set(requestCtx, &ctx.Context{
 				StartTime: startTime,
 				Timeout:   requestedWaitDuration,
@@ -138,12 +141,34 @@ func ContextMiddleware(next http.Handler) http.Handler {
 					Scheme: getScheme(request),
 					Host:   request.Host,
 				},
+				RequestedURL: model.AuditableURL(request.URL.String()),
+				RequestIP:    parseUserIP(request),
 			})
 
 			// Route the request with the embedded context
 			next.ServeHTTP(response, request.WithContext(requestCtx))
 		}
 	})
+}
+
+func parseUserIP(r *http.Request) string {
+	var remoteIp string
+
+	// The point of this code is to strip the port, so we don't need to save it.
+	if host, _, err := net.SplitHostPort(r.RemoteAddr); err != nil {
+		log.Warnf("Error parsing remoteAddress '%s': %s", r.RemoteAddr, err)
+		remoteIp = r.RemoteAddr
+	} else {
+		remoteIp = host
+	}
+
+	if result := r.Header.Get("X-Forwarded-For"); result == "" {
+		log.Debugf("No data found in X-Forwarded-For header")
+		return remoteIp
+	} else {
+		result += "," + remoteIp
+		return result
+	}
 }
 
 func ParseHeaderValues(values string) map[string]string {
@@ -237,4 +262,23 @@ func SecureHandlerMiddleware(cfg config.Configuration, contentSecurityPolicy str
 		// This will cause the AllowedHosts, SSLRedirect, and STSSeconds/STSIncludeSubdomains options to be ignored during development
 		IsDevelopment: !cfg.TLS.Enabled(),
 	}).Handler
+}
+
+// FeatureFlagMiddleware is a middleware that enables or disables a given endpoint based on the status of the passed feature flag.
+// It is intended to be attached directly to endpoints that should be affected by the feature flag. The feature flag determining the
+// endpoint's availability should be specified in flagKey.
+//
+// If the flag is enabled, the endpoint will work as intended. If the flag is disabled, a 404 will be returned to the user.
+func FeatureFlagMiddleware(db database.Database, flagKey string) mux.MiddlewareFunc {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
+			if flag, err := db.GetFlagByKey(flagKey); err != nil {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("error retrieving %s feature flag: %s", flagKey, err), request), response)
+			} else if flag.Enabled {
+				next.ServeHTTP(response, request)
+			} else {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, api.ErrorResponseDetailsResourceNotFound, request), response)
+			}
+		})
+	}
 }

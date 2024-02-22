@@ -90,7 +90,7 @@ func (s Client) Request(method, path string, params url.Values, body any, header
 			request.Header = header[0]
 		}
 
-		// Execute the Request and hand the response back to the user
+		// query the Request and hand the response back to the user
 		const (
 			sleepInterval = time.Second * 5
 			maxSleep      = sleepInterval * 5
@@ -149,6 +149,6 @@ func (s Client) Raw(request *http.Request) (*http.Response, error) {
 		}
 	}
 
-	// Execute the Request and hand the response back to the user
+	// query the Request and hand the response back to the user
 	return s.Http.Do(request)
 }

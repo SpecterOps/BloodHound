@@ -18,7 +18,7 @@ import { act } from 'react-dom/test-utils';
 import { render, screen } from 'src/test-utils';
 import userEvent from '@testing-library/user-event';
 import EdgeFilteringDialog from './EdgeFilteringDialog';
-import { AllEdgeTypes } from './edgeTypes';
+import { AllEdgeTypes } from 'bh-shared-ui';
 
 describe('Pathfinding', () => {
     beforeEach(async () => {

@@ -1,17 +1,17 @@
 // Copyright 2023 Specter Ops, Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// 
+//
 // SPDX-License-Identifier: Apache-2.0
 
 package analysis
@@ -19,6 +19,7 @@ package analysis
 import (
 	"context"
 	"fmt"
+	"slices"
 	"strings"
 
 	"github.com/specterops/bloodhound/dawgs/graph"
@@ -28,6 +29,7 @@ import (
 	"github.com/specterops/bloodhound/graphschema/azure"
 	"github.com/specterops/bloodhound/graphschema/common"
 	"github.com/specterops/bloodhound/log"
+	"github.com/specterops/bloodhound/slicesext"
 )
 
 const (
@@ -35,12 +37,15 @@ const (
 	MaximumDatabaseParallelWorkers = 6
 )
 
+var (
+	metaKind       = graph.StringKind("Meta")
+	metaDetailKind = graph.StringKind("MetaDetail")
+)
+
 func AllTaggedNodesFilter(additionalFilter graph.Criteria) graph.Criteria {
 	var (
 		filters = []graph.Criteria{
-			query.Not(
-				query.Equals(query.NodeProperty(common.SystemTags.String()), ""),
-			),
+			query.IsNotNull(query.NodeProperty(common.SystemTags.String())),
 		}
 	)
 
@@ -58,21 +63,21 @@ func GetNodeKindDisplayLabel(node *graph.Node) string {
 func GetNodeKind(node *graph.Node) graph.Kind {
 	var (
 		resultKind = graph.StringKind(NodeKindUnknown)
-
-		// Start with the baseKind being equal to the default resultKind of NodeKindUnknown so that fallthrough for
-		// nodes without kinds associated with them return the correct kind
-		baseKind = resultKind
+		baseKind   = resultKind
 	)
 
 	for _, kind := range node.Kinds {
-		if kind.Is(ad.Entity, azure.Entity) {
+		// If this is a BHE meta kind, return early
+		if kind.Is(metaKind, metaDetailKind) {
+			return metaKind
+		} else if kind.Is(ad.Entity, azure.Entity) {
 			baseKind = kind
 		} else if kind.Is(ad.LocalGroup) {
 			// Allow ad.LocalGroup to overwrite NodeKindUnknown, but nothing else
 			if resultKind.String() == NodeKindUnknown {
 				resultKind = kind
 			}
-		} else {
+		} else if slices.Contains(ValidKinds(), kind) {
 			resultKind = kind
 		}
 	}
@@ -104,16 +109,18 @@ func ClearSystemTags(ctx context.Context, db graph.Database) error {
 	})
 }
 
-func ParseKind(rawKind string) (graph.Kind, error) {
-	for _, adKind := range append(ad.Nodes(), ad.Relationships()...) {
-		if adKind.String() == rawKind {
-			return adKind, nil
-		}
-	}
+func ValidKinds() []graph.Kind {
+	var (
+		metaKinds = []graph.Kind{metaKind, metaDetailKind}
+	)
 
-	for _, azureKind := range append(azure.NodeKinds(), azure.Relationships()...) {
-		if azureKind.String() == rawKind {
-			return azureKind, nil
+	return slicesext.Concat(ad.Nodes(), ad.Relationships(), azure.NodeKinds(), azure.Relationships(), metaKinds)
+}
+
+func ParseKind(rawKind string) (graph.Kind, error) {
+	for _, kind := range ValidKinds() {
+		if kind.String() == rawKind {
+			return kind, nil
 		}
 	}
 
@@ -125,17 +132,7 @@ func ParseKinds(rawKinds ...string) (graph.Kinds, error) {
 		return graph.Kinds{ad.Entity, azure.Entity}, nil
 	}
 
-	kinds := make(graph.Kinds, len(rawKinds))
-
-	for idx, rawKind := range rawKinds {
-		if parsedKind, err := ParseKind(rawKind); err != nil {
-			return nil, err
-		} else {
-			kinds[idx] = parsedKind
-		}
-	}
-
-	return kinds, nil
+	return slicesext.MapWithErr(rawKinds, ParseKind)
 }
 
 func nodeByIndexedKindProperty(property, value string, kind graph.Kind) graph.Criteria {
@@ -158,6 +155,22 @@ func FetchNodeByObjectID(tx graph.Transaction, objectID string) (*graph.Node, er
 	}
 
 	return tx.Nodes().Filter(nodeByIndexedKindProperty(common.ObjectID.String(), objectID, azure.Entity)).First()
+}
+
+func FetchEdgeByStartAndEnd(ctx context.Context, graphDB graph.Database, start, end graph.ID, edgeKind graph.Kind) (*graph.Relationship, error) {
+	var result *graph.Relationship
+	return result, graphDB.ReadTransaction(ctx, func(tx graph.Transaction) error {
+		if rel, err := tx.Relationships().Filter(query.And(
+			query.Equals(query.StartID(), start),
+			query.Equals(query.EndID(), end),
+			query.Kind(query.Relationship(), edgeKind),
+		)).First(); err != nil {
+			return err
+		} else {
+			result = rel
+			return nil
+		}
+	})
 }
 
 func ExpandGroupMembershipPaths(tx graph.Transaction, candidates graph.NodeSet) (graph.PathSet, error) {

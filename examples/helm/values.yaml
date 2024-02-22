@@ -1,0 +1,126 @@
+# Copyright 2023 Specter Ops, Inc.
+#
+# Licensed under the Apache License, Version 2.0
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# SPDX-License-Identifier: Apache-2.0
+
+namespace: bloodhound
+
+appdb:
+  name: postgres
+  replicas: 1
+  appName: postgres
+  container:
+    name: postgres
+    image: docker.io/library/postgres:13.2
+    env:
+      POSTGRES_USER: "bloodhound"
+      POSTGRES_PASSWORD: "bloodhoundcommunityedition"
+      POSTGRES_DB: "bloodhound"
+    ports:
+      containerPort: 5432
+  livenessProbe:
+    user: bloodhound
+    database: bloodhound
+    port: "5432"
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 5
+  service:
+    enabled: true
+    name: app-db
+    type: ClusterIP
+    port: 5432
+    targetPort: 5432
+  volumes:
+    pvcEnabled: false 
+    persistentVolumeClaim:
+      claimName: bloodhound-postgres-pvc
+      size: "1Gi"  # Configurable storage size
+
+graphdb:
+  name: graphdb
+  replicas: 1
+  appName: graphdb
+  container:
+    name: neo4j
+    image: docker.io/library/neo4j:4.4
+    env:
+      NEO4J_AUTH_USER: "neo4j"
+      NEO4J_AUTH_PASS: "bloodhoundcommunityedition"
+      NEO4J_dbms_allow__upgrade: "true"
+    ports:
+      - containerPort: 7687
+      - containerPort: 7474
+  service:
+    enabled: true
+    name: graph-db
+    type: ClusterIP
+    ports:
+      - name: graphdb
+        protocol: TCP
+        port: 7687
+        targetPort: 7687
+      - name: http
+        protocol: TCP
+        port: 7474
+        targetPort: 7474
+  livenessProbe:
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 5
+  volumes:
+    pvcEnabled: false 
+    persistentVolumeClaim:
+      claimName: graphdb-neo4j-data-pvc
+      size: "1Gi"  # Configurable storage size
+  ingress:
+    enabled: false
+    host: graphdb.example.com
+    path: /
+  tls: 
+    enabled: true
+    customCert: false
+    certSecret: graphdb-tls
+
+bloodhound:
+  name: bloodhound
+  replicas: 1
+  appName: bloodhound
+  container:
+    name: bloodhound
+    image: docker.io/specterops/bloodhound
+    version: latest
+    env:
+      bhe_disable_cypher_qc: "false"
+    ports:
+      - containerPort: 8080
+      - containerPort: 2112
+  service:
+    enabled: true
+    type: ClusterIP
+    port: 8080
+    targetPort: 8080
+  ingress:
+    enabled: true
+    host: bloodhound.example.com
+    path: /
+  tls: 
+    enabled: true
+    customCert: false
+    certSecret: bloodhound-tls
+  configMap:
+    enabled: true
+    name: bloodhound-config

@@ -16,14 +16,14 @@
 
 module github.com/specterops/bloodhound/src
 
-go 1.20
+go 1.21
 
 require (
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751
 	github.com/beevik/etree v1.2.0
 	github.com/bloodhoundad/azurehound/v2 v2.0.1
 	github.com/channelmeter/iso8601duration v0.0.0-20150204201828-8da3af7a2a61
-	github.com/crewjam/saml v0.4.13
+	github.com/crewjam/saml v0.4.14
 	github.com/didip/tollbooth/v6 v6.1.2
 	github.com/go-chi/chi/v5 v5.0.8
 	github.com/gobeam/stringy v0.0.6
@@ -32,8 +32,10 @@ require (
 	github.com/gorilla/handlers v1.5.1
 	github.com/gorilla/mux v1.8.0
 	github.com/gorilla/schema v1.2.0
+	github.com/jackc/pgx/v5 v5.5.1
 	github.com/jedib0t/go-pretty/v6 v6.4.6
 	github.com/mattermost/xml-roundtrip-validator v0.1.0
+	github.com/neo4j/neo4j-go-driver/v5 v5.9.0
 	github.com/pkg/errors v0.9.1
 	github.com/pquerna/otp v1.4.0
 	github.com/prometheus/client_golang v1.16.0
@@ -45,8 +47,8 @@ require (
 	github.com/unrolled/secure v1.13.0
 	github.com/zenazn/goji v1.0.1
 	go.uber.org/mock v0.2.0
-	golang.org/x/crypto v0.10.0
-	golang.org/x/net v0.11.0
+	golang.org/x/crypto v0.18.0
+	golang.org/x/net v0.20.0
 	gorm.io/driver/postgres v1.3.8
 	gorm.io/gorm v1.23.8
 )
@@ -86,10 +88,11 @@ require (
 	github.com/prometheus/common v0.44.0 // indirect
 	github.com/prometheus/procfs v0.11.0 // indirect
 	github.com/rivo/uniseg v0.4.4 // indirect
-	golang.org/x/sys v0.9.0 // indirect
-	golang.org/x/text v0.10.0 // indirect
+	golang.org/x/mod v0.14.0 // indirect
+	golang.org/x/sys v0.16.0 // indirect
+	golang.org/x/text v0.14.0 // indirect
 	golang.org/x/time v0.3.0 // indirect
-	golang.org/x/tools v0.10.0 // indirect
+	golang.org/x/tools v0.13.0 // indirect
 	google.golang.org/protobuf v1.31.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

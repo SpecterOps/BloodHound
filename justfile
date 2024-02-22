@@ -17,22 +17,29 @@ init wipe="":
   #!/usr/bin/env bash
   echo "Init BloodHound CE"
   echo "Make local copies of configuration files"
-  if [[ -d "./local-harnesses/build.config.json" ]]; then
-    rm -rf "./local-harnesses/build.config.json"
-    cp ./local-harnesses/build.config.json.template ./local-harnesses/build.config.json
-  elif [[ -f "./local-harnesses/build.config.json" ]] && [[ "{{wipe}}" != "clean" ]]; then
+    if [[ -f "./local-harnesses/build.config.json" ]] && [[ "{{wipe}}" != "clean" ]]; then
     echo "Not copying build.config.json since it already exists"
+  elif [[ -f "./local-harnesses/build.config.json" ]]; then
+    echo "Backing up build.config.json and resetting"
+    mv ./local-harnesses/build.config.json ./local-harnesses/build.config.json.bak
+    cp ./local-harnesses/build.config.json.template ./local-harnesses/build.config.json
   else
     cp ./local-harnesses/build.config.json.template ./local-harnesses/build.config.json
   fi
 
-  if [[ -d "./local-harnesses/integration.config.json" ]]; then
-    rm -rf "./local-harnesses/integration.config.json"
-    cp ./local-harnesses/integration.config.json.template ./local-harnesses/integration.config.json
-  elif [[ -f "./local-harnesses/integration.config.json" ]] && [[ "{{wipe}}" != "clean" ]]; then
+  if [[ -f "./local-harnesses/integration.config.json" ]] && [[ "{{wipe}}" != "clean" ]]; then
     echo "Not copying integration.config.json since it already exists"
+  elif [[ -f "./local-harnesses/integration.config.json" ]]; then
+    echo "Backing up integration.config.json and resetting"
+    mv ./local-harnesses/integration.config.json ./local-harnesses/integration.config.json.bak
+    cp ./local-harnesses/integration.config.json.template ./local-harnesses/integration.config.json
   else
     cp ./local-harnesses/integration.config.json.template ./local-harnesses/integration.config.json
+  fi
+
+  if [[ -f "./.env" ]] && [[ "{{wipe}}" == "clean" ]]; then
+    echo "Backing up existing environment file"
+    mv ./.env ./.env.bak
   fi
 
   echo "Install additional Go tools"
@@ -131,15 +138,9 @@ prune-my-branches nuclear='no':
   echo "Remaining Git Branches:"
   git --no-pager branch
 
-# run linting for all Go modules
-go-lint:
-  #!/usr/bin/env bash
-  echo 'ensuring golangci-lint@{{golangci-lint-version}} is installed'
-  go install -v github.com/golangci/golangci-lint/cmd/golangci-lint@{{golangci-lint-version}}
-  echo 'running golangci-lint on all detected modules in your go.work'
-  # grab all the module locations from go.work and run golangci-lint on each
-  golangci-lint run $(cat go.work | { cat | grep -E '\./' | awk 'NF{print $0 "/..."}'; } | tr '\n' ' ')
-  echo 'done'
+# Run all analyzers (requires jq to be installed locally)
+analyze:
+  go run github.com/specterops/bloodhound/packages/go/stbernard analysis | jq 'sort_by(.severity) | .[] | {"severity": .severity, "description": .description, "location": "\(.location.path):\(.location.lines.begin)"}'
 
 # run docker compose commands for the BH dev profile (Default: up)
 bh-dev *ARGS='up':
@@ -171,7 +172,16 @@ bh-clear-volumes target='dev' *ARGS='':
 
 # build BH target cleanly (default profile dev with --no-cache flag)
 bh-clean-docker-build target='dev' *ARGS='':
+  # Ensure the target is down first
+  @docker compose --profile {{target}} -f docker-compose.dev.yml down
+  # Pull any updated images
+  @docker compose --profile {{target}} -f docker-compose.dev.yml pull
+  # Build without cache
   @docker compose --profile {{target}} -f docker-compose.dev.yml build --no-cache {{ARGS}}
+
+# use docker compose watch to dynamically restart/rebuild containers (requires docker compose v2.22.0+)
+bh-watch target='dev' *ARGS='--no-up':
+  @docker compose --profile {{target}} -f docker-compose.dev.yml -f docker-compose.watch.yml watch {{ARGS}}
 
 # build local BHCE container image (ex: just build-bhce-container <linux/arm64|linux/amd64> edge v5.0.0)
 build-bhce-container platform='linux/amd64' tag='edge' version='v5.0.0' *ARGS='':

@@ -1,0 +1,154 @@
+{
+  "style": {
+    "font-family": "sans-serif",
+    "background-color": "#FAFCFF",
+    "background-image": "",
+    "background-size": "100%",
+    "node-color": "#4C8EDA",
+    "border-width": 2,
+    "border-color": "#2870c2",
+    "radius": 25,
+    "node-padding": 5,
+    "node-margin": 2,
+    "outside-position": "auto",
+    "node-icon-image": "",
+    "node-background-image": "",
+    "icon-position": "inside",
+    "icon-size": 64,
+    "caption-position": "inside",
+    "caption-max-width": 200,
+    "caption-color": "#ffffff",
+    "caption-font-size": 10,
+    "caption-font-weight": "normal",
+    "label-position": "outside",
+    "label-display": "bare",
+    "label-color": "#ffffff",
+    "label-background-color": "#4C8EDA",
+    "label-border-color": "#4C8EDA",
+    "label-border-width": 0,
+    "label-font-size": 10,
+    "label-padding": 2,
+    "label-margin": 2,
+    "directionality": "directed",
+    "detail-position": "inline",
+    "detail-orientation": "parallel",
+    "arrow-width": 1,
+    "arrow-color": "#A5ABB6",
+    "margin-start": 0,
+    "margin-end": 0,
+    "margin-peer": 20,
+    "attachment-start": "normal",
+    "attachment-end": "normal",
+    "relationship-icon-image": "",
+    "type-color": "#000000",
+    "type-background-color": "#ffffff",
+    "type-border-color": "#000000",
+    "type-border-width": 0,
+    "type-font-size": 10,
+    "type-padding": 2,
+    "property-position": "outside",
+    "property-alignment": "colon",
+    "property-color": "#000000",
+    "property-font-size": 10,
+    "property-font-weight": "normal"
+  },
+  "nodes": [
+    {
+      "id": "n3",
+      "position": {
+        "x": -839.5,
+        "y": -425.9378115548395
+      },
+      "caption": "EnterpriseCA2",
+      "style": {
+        "node-color": "#f44e3b",
+        "border-color": "#d33115",
+        "radius": 35
+      },
+      "labels": [],
+      "properties": {}
+    },
+    {
+      "id": "n4",
+      "position": {
+        "x": -1076.6726114290689,
+        "y": -425.9378115548395
+      },
+      "caption": "EnterpriseCA3",
+      "style": {
+        "node-color": "#f44e3b",
+        "border-color": "#d33115",
+        "radius": 35
+      },
+      "labels": [],
+      "properties": {}
+    },
+    {
+      "id": "n5",
+      "position": {
+        "x": -599.6726114290689,
+        "y": -426.6802090032857
+      },
+      "caption": "EnterpriseCA1",
+      "style": {
+        "node-color": "#f44e3b",
+        "border-color": "#d33115",
+        "radius": 35
+      },
+      "labels": [],
+      "properties": {}
+    },
+    {
+      "id": "n6",
+      "position": {
+        "x": -359.84522285813773,
+        "y": -427.42260645173195
+      },
+      "caption": "RootCA2",
+      "style": {
+        "radius": 35
+      },
+      "labels": [],
+      "properties": {}
+    },
+    {
+      "id": "n7",
+      "position": {
+        "x": -120.01783538279034,
+        "y": -428.16503809809547
+      },
+      "caption": "RootCA1",
+      "style": {
+        "radius": 35
+      },
+      "labels": [],
+      "properties": {}
+    }
+  ],
+  "relationships": [
+    {
+      "id": "n0",
+      "type": "IssuedSignedBy",
+      "style": {},
+      "properties": {},
+      "fromId": "n3",
+      "toId": "n5"
+    },
+    {
+      "id": "n1",
+      "type": "IssuedSignedBy",
+      "style": {},
+      "properties": {},
+      "fromId": "n5",
+      "toId": "n6"
+    },
+    {
+      "id": "n2",
+      "type": "IssuedSignedBy",
+      "style": {},
+      "properties": {},
+      "fromId": "n6",
+      "toId": "n7"
+    }
+  ]
+}

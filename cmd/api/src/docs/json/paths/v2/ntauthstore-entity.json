@@ -1,0 +1,97 @@
+{
+    "/api/v2/ntauthstores/{object_id}": {
+        "parameters": [
+            {
+                "type": "string",
+                "description": "NTAuthStore Object ID",
+                "name": "object_id",
+                "in": "path",
+                "required": true
+            }
+        ],
+        "get": {
+            "description": "Get basic info and counts for this NTAuthStore. \n\n<b>Early Access Notice:</b> This API endpoint is in early access and may undergo changes. Exercise caution when integrating, and avoid critical use until it reaches stable status.",
+            "tags": [
+                "NTAuthStore Entity API",
+                "Community",
+                "Enterprise"
+            ],
+            "summary": "Get ntauthstore entity info",
+            "parameters": [
+                {
+                    "$ref": "#/definitions/parameters.PreferHeader"
+                },
+                {
+                    "$ref": "#/definitions/parameters.HydrateCounts"
+                }
+            ],
+            "responses": {
+                "200": {
+                    "description": "OK",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/definitions/v2.EntityWithControllersResponse"
+                              }
+                        }
+                    }
+                },
+                "Error": {
+                    "$ref": "#/components/responses/defaultError"
+                }
+            }
+        }
+    },
+    "/api/v2/ntauthstores/{object_id}/controllers": {
+        "parameters": [
+            {
+                "type": "string",
+                "description": "NTAuthStore Object ID",
+                "name": "object_id",
+                "in": "path",
+                "required": true
+            }
+        ],
+        "get": {
+            "description": "List the principals that can control this NTAuthStore through ACLs. \n\n<b>Early Access Notice:</b> This API endpoint is in early access and may undergo changes. Exercise caution when integrating, and avoid critical use until it reaches stable status.",
+            "tags": [
+                "NTAuthStore Entity API",
+                "Community",
+                "Enterprise"
+            ],
+            "summary": "List ntauthstore controllers",
+            "parameters": [
+                {
+                    "$ref": "#/definitions/parameters.PreferHeader"
+                },
+                {
+                    "type": "integer",
+                    "description": "Paging Skip",
+                    "name": "skip",
+                    "in": "query"
+                },
+                {
+                    "type": "integer",
+                    "description": "Paging Limit",
+                    "name": "limit",
+                    "in": "query"
+                }
+            ],
+            "responses": {
+                "200": {
+                    "description": "OK",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/definitions/v2.EntityControllersResponse"
+                              }
+                        }
+                    }
+                },
+                "Error": {
+                    "$ref": "#/components/responses/defaultError"
+                }
+            }
+        }
+    }
+}

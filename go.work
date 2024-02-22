@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-go 1.20
+go 1.21
 
 use (
 	./cmd/api/src
@@ -33,6 +33,6 @@ use (
 	./packages/go/mediatypes
 	./packages/go/params
 	./packages/go/schemagen
-	./packages/go/slices
+	./packages/go/slicesext
 	./packages/go/stbernard
 )

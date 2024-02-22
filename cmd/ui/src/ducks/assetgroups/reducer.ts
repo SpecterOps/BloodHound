@@ -17,6 +17,7 @@
 import { produce } from 'immer';
 import * as actions from './actions';
 import * as types from './types';
+import { AppState } from 'src/store';
 
 const INITIAL_STATE: types.AssetGroupsState = {
     assetGroups: [],
@@ -61,6 +62,14 @@ const asssetGroupReducer = (state: types.AssetGroupsState = INITIAL_STATE, actio
                 break;
         }
     });
+};
+
+export const selectTierZeroAssetGroupId = (state: AppState) => {
+    return state.assetgroups.assetGroups.find((assetGroup) => assetGroup.tag === 'admin_tier_0')?.id;
+};
+
+export const selectOwnedAssetGroupId = (state: AppState) => {
+    return state.assetgroups.assetGroups.find((assetGroup) => assetGroup.tag === 'owned')?.id;
 };
 
 export default asssetGroupReducer;

@@ -16,7 +16,7 @@
 
 module github.com/specterops/bloodhound/analysis
 
-go 1.20
+go 1.21
 
 require (
 	github.com/RoaringBitmap/roaring v1.3.0

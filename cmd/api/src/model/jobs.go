@@ -108,14 +108,16 @@ func (s FileUploadJobs) GetValidFilterPredicatesAsStrings(column string) ([]stri
 type JobStatus int
 
 const (
-	JobStatusInvalid   JobStatus = -1
-	JobStatusReady     JobStatus = 0
-	JobStatusRunning   JobStatus = 1
-	JobStatusComplete  JobStatus = 2
-	JobStatusCanceled  JobStatus = 3
-	JobStatusTimedOut  JobStatus = 4
-	JobStatusFailed    JobStatus = 5
-	JobStatusIngesting JobStatus = 6
+	JobStatusInvalid           JobStatus = -1
+	JobStatusReady             JobStatus = 0
+	JobStatusRunning           JobStatus = 1
+	JobStatusComplete          JobStatus = 2
+	JobStatusCanceled          JobStatus = 3
+	JobStatusTimedOut          JobStatus = 4
+	JobStatusFailed            JobStatus = 5
+	JobStatusIngesting         JobStatus = 6
+	JobStatusAnalyzing         JobStatus = 7
+	JobStatusPartiallyComplete JobStatus = 8
 )
 
 func allJobStatuses() []JobStatus {
@@ -128,6 +130,8 @@ func allJobStatuses() []JobStatus {
 		JobStatusTimedOut,
 		JobStatusFailed,
 		JobStatusIngesting,
+		JobStatusAnalyzing,
+		JobStatusPartiallyComplete,
 	}
 }
 
@@ -141,6 +145,10 @@ func ParseJobStatus(jobStatusStr string) (JobStatus, error) {
 	}
 
 	return JobStatusInvalid, fmt.Errorf("no matching job status for: %s", jobStatusStr)
+}
+
+func GetVisibleJobStatuses() []JobStatus {
+	return []JobStatus{JobStatusComplete, JobStatusCanceled, JobStatusTimedOut, JobStatusFailed, JobStatusIngesting, JobStatusAnalyzing, JobStatusPartiallyComplete}
 }
 
 func (s JobStatus) String() string {
@@ -166,6 +174,12 @@ func (s JobStatus) String() string {
 	case JobStatusIngesting:
 		return "INGESTING"
 
+	case JobStatusAnalyzing:
+		return "ANALYZING"
+
+	case JobStatusPartiallyComplete:
+		return "PARTIALLYCOMPLETE"
+
 	default:
 		return "INVALIDSTATUS"
 	}
@@ -181,17 +195,22 @@ func (s JobStatus) IsValidEndState() error {
 }
 
 type DomainCollectionResult struct {
-	JobID          int64  `json:"job_id"` // TODO remove this field to enable moving this model to FOSS
-	DomainName     string `json:"domain_name"`
-	Success        bool   `json:"success"`
-	Message        string `json:"message"`
-	UserCount      int    `json:"user_count"`
-	GroupCount     int    `json:"group_count"`
-	ComputerCount  int    `json:"computer_count"`
-	GPOCount       int    `json:"gpo_count"`
-	OUCount        int    `json:"ou_count"`
-	ContainerCount int    `json:"container_count"`
-	DeletedCount   int    `json:"deleted_count"`
+	JobID             int64  `json:"job_id"` // TODO remove this field to enable moving this model to FOSS
+	DomainName        string `json:"domain_name"`
+	Success           bool   `json:"success"`
+	Message           string `json:"message"`
+	UserCount         int    `json:"user_count"`
+	GroupCount        int    `json:"group_count"`
+	ComputerCount     int    `json:"computer_count"`
+	GPOCount          int    `json:"gpo_count"`
+	OUCount           int    `json:"ou_count"`
+	ContainerCount    int    `json:"container_count"`
+	AIACACount        int    `json:"aiaca_count" gorm:"column:aiaca_count"`
+	RootCACount       int    `json:"rootca_count" gorm:"column:rootca_count"`
+	EnterpriseCACount int    `json:"enterpriseca_count" gorm:"column:enterpriseca_count"`
+	NTAuthStoreCount  int    `json:"ntauthstore_count" gorm:"column:ntauthstore_count"`
+	CertTemplateCount int    `json:"certtemplate_count" gorm:"column:certtemplate_count"`
+	DeletedCount      int    `json:"deleted_count"`
 
 	BigSerial
 }

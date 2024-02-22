@@ -18,6 +18,8 @@ package azure
 
 import (
 	"context"
+	"strings"
+
 	"github.com/RoaringBitmap/roaring/roaring64"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/dawgs/ops"
@@ -26,7 +28,6 @@ import (
 	"github.com/specterops/bloodhound/graphschema/azure"
 	"github.com/specterops/bloodhound/graphschema/common"
 	"github.com/specterops/bloodhound/log"
-	"strings"
 )
 
 func FetchCollectedTenants(tx graph.Transaction) (graph.NodeSet, error) {
@@ -53,6 +54,8 @@ func GetCollectedTenants(ctx context.Context, db graph.Database) (graph.NodeSet,
 }
 
 func FetchGraphDBTierZeroTaggedAssets(tx graph.Transaction, tenant *graph.Node) (graph.NodeSet, error) {
+	defer log.LogAndMeasure(log.LevelInfo, "Tenant %d FetchGraphDBTierZeroTaggedAssets", tenant.ID)()
+
 	if tenantObjectID, err := tenant.Properties.Get(common.ObjectID.String()).String(); err != nil {
 		log.Errorf("Tenant node %d does not have a valid %s property: %v", tenant.ID, common.ObjectID, err)
 		return nil, err
@@ -72,8 +75,7 @@ func FetchGraphDBTierZeroTaggedAssets(tx graph.Transaction, tenant *graph.Node) 
 }
 
 func FetchAzureAttackPathRoots(tx graph.Transaction, tenant *graph.Node) (graph.NodeSet, error) {
-	log.Infof("Fetching tier zero nodes for tenant %d", tenant.ID)
-	defer log.Measure(log.LevelInfo, "Finished fetching tier zero nodes for tenant %d", tenant.ID)()
+	defer log.LogAndMeasure(log.LevelDebug, "Tenant %d FetchAzureAttackPathRoots", tenant.ID)()
 
 	attackPathRoots := graph.NewNodeKindSet()
 
@@ -87,15 +89,15 @@ func FetchAzureAttackPathRoots(tx graph.Transaction, tenant *graph.Node) (graph.
 		attackPathRoots.AddSets(customTierZeroNodes)
 	}
 
-	// The CompanyAdministratorRole, PrivilegedRoleAdministratorRole tenant roles are critical attack path roots
-	if adminRoles, err := TenantRoles(tx, tenant, azure.CompanyAdministratorRole, azure.PrivilegedRoleAdministratorRole, azure.PrivilegedAuthenticationAdministratorRole); err != nil {
+	// The CompanyAdministratorRole, PrivilegedRoleAdministratorRole, PrivilegedAuthenticationAdministratorRole, PartnerTier2SupportRole tenant roles are critical attack path roots
+	if adminRoles, err := TenantRoles(tx, tenant, azure.CompanyAdministratorRole, azure.PrivilegedRoleAdministratorRole, azure.PrivilegedAuthenticationAdministratorRole, azure.PartnerTier2SupportRole); err != nil {
 		return nil, err
 	} else {
 		attackPathRoots.AddSets(adminRoles)
 	}
 
-	// Find users that have CompanyAdministratorRole, PrivilegedRoleAdministratorRole
-	if adminRoleMembers, err := RoleMembersWithGrants(tx, tenant, azure.CompanyAdministratorRole, azure.PrivilegedRoleAdministratorRole, azure.PrivilegedAuthenticationAdministratorRole); err != nil {
+	// Find users that have CompanyAdministratorRole, PrivilegedRoleAdministratorRole, PrivilegedAuthenticationAdministratorRole, PartnerTier2SupportRole
+	if adminRoleMembers, err := RoleMembersWithGrants(tx, tenant, azure.CompanyAdministratorRole, azure.PrivilegedRoleAdministratorRole, azure.PrivilegedAuthenticationAdministratorRole, azure.PartnerTier2SupportRole); err != nil {
 		return nil, err
 	} else {
 		for _, adminRoleMember := range adminRoleMembers {
@@ -230,8 +232,6 @@ func FetchAzureAttackPathRoots(tx graph.Transaction, tenant *graph.Node) (graph.
 			inboundNodes.AddSet(inboundCollapsablePaths.AllNodes())
 		}
 	}
-
-	log.Infof("Collapsed an additional %d nodes into tier zero for non-descent relationships", inboundNodes.Len())
 
 	tierZeroNodes.AddSet(inboundNodes)
 	return tierZeroNodes, nil

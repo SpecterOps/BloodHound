@@ -1,17 +1,17 @@
 // Copyright 2023 Specter Ops, Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// 
+//
 // SPDX-License-Identifier: Apache-2.0
 
 package router
@@ -23,6 +23,7 @@ import (
 	"github.com/specterops/bloodhound/src/api/middleware"
 	"github.com/specterops/bloodhound/src/auth"
 	"github.com/specterops/bloodhound/src/config"
+	"github.com/specterops/bloodhound/src/database"
 	"github.com/specterops/bloodhound/src/model"
 )
 
@@ -67,8 +68,15 @@ func (s *Route) RequireAuth() *Route {
 	return s.RequirePermissions()
 }
 
+// Ensure that the requestor has all of the listed permissions
 func (s *Route) RequirePermissions(permissions ...model.Permission) *Route {
-	s.handler.Use(middleware.PermissionsCheck(s.authorizer, permissions...))
+	s.handler.Use(middleware.PermissionsCheckAll(s.authorizer, permissions...))
+	return s
+}
+
+// Ensure that the requestor has at least one of the listed permissions
+func (s *Route) RequireAtLeastOnePermission(permissions ...model.Permission) *Route {
+	s.handler.Use(middleware.PermissionsCheckAtLeastOne(s.authorizer, permissions...))
 	return s
 }
 
@@ -79,6 +87,11 @@ func (s *Route) AuthorizeUserManagementAccess() *Route {
 
 func (s *Route) RequireUserId() *Route {
 	s.handler.Use(middleware.RequireUserId())
+	return s
+}
+
+func (s *Route) CheckFeatureFlag(db database.Database, flagKey string) *Route {
+	s.handler.Use(middleware.FeatureFlagMiddleware(db, flagKey))
 	return s
 }
 

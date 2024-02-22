@@ -23,8 +23,8 @@ import (
 )
 
 type AssetGroupSelector struct {
-	AssetGroupID   int32  `json:"asset_group_id"`
-	Name           string `json:"name" gorm:"unique"`
+	AssetGroupID   int32  `json:"asset_group_id" gorm:"UNIQUE_INDEX:compositeindex"`
+	Name           string `json:"name" gorm:"UNIQUE_INDEX:compositeindex"`
 	Selector       string `json:"selector"`
 	SystemSelector bool   `json:"system_selector"`
 
@@ -216,6 +216,11 @@ type AssetGroupSelectorSpec struct {
 	SelectorName   string `json:"selector_name"`
 	EntityObjectID string `json:"sid"`
 	Action         string `json:"action"`
+}
+
+type UpdatedAssetGroupSelectors struct {
+	Added   AssetGroupSelectors `json:"added_selectors"`
+	Removed AssetGroupSelectors `json:"removed_selectors"`
 }
 
 const (

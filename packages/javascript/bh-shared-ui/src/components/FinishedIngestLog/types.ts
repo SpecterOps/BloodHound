@@ -34,7 +34,10 @@ export enum FileUploadJobStatus {
     TIMED_OUT = 4,
     FAILED = 5,
     INGESTING = 6,
+    ANALYZING = 7,
+    PARTIALLY_COMPLETE = 8,
 }
+
 export const FileUploadJobStatusToString: Record<FileUploadJobStatus, string> = {
     [-1]: 'Invalid',
     0: 'Ready',
@@ -44,4 +47,6 @@ export const FileUploadJobStatusToString: Record<FileUploadJobStatus, string> = 
     4: 'Timed Out',
     5: 'Failed',
     6: 'Ingesting',
+    7: 'Analyzing',
+    8: 'Partially Complete',
 };

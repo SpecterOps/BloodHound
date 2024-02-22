@@ -31,9 +31,8 @@ import {
     useCreateSavedQuery,
 } from 'bh-shared-ui';
 import { useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { setCypherQueryTerm, startCypherSearch } from 'src/ducks/searchbar/actions';
-import { AppState } from 'src/store';
+import { cypherQueryEdited, cypherSearch } from 'src/ducks/searchbar/actions';
+import { useAppDispatch, useAppSelector } from 'src/store';
 import CommonSearches from './CommonSearches';
 import SaveQueryDialog from './SaveQueryDialog';
 import { addSnackbar } from 'src/ducks/global/actions';
@@ -83,13 +82,13 @@ const schema = {
 };
 
 const useCypherEditor = () => {
-    const cypherQuery = useSelector((state: AppState) => state.search.cypher.searchTerm);
+    const cypherQuery = useAppSelector((state) => state.search.cypher.searchTerm);
 
-    const dispatch = useDispatch();
+    const dispatch = useAppDispatch();
 
-    const setCypherQuery = (query: string) => dispatch(setCypherQueryTerm(query));
+    const setCypherQuery = (query: string) => dispatch(cypherQueryEdited(query));
 
-    const performSearch = () => dispatch(startCypherSearch(cypherQuery));
+    const performSearch = () => dispatch(cypherSearch(cypherQuery));
 
     return {
         cypherQuery,
@@ -107,7 +106,7 @@ const CypherSearch = () => {
     const [showCommonQueries, setShowCommonQueries] = useState(false);
     const [showEgg, setShowEgg] = useState(false);
     const [showSaveQueryDialog, setShowSaveQueryDialog] = useState(false);
-    const dispatch = useDispatch();
+    const dispatch = useAppDispatch();
 
     const handleCypherSearch = () => {
         if (cypherQuery) {

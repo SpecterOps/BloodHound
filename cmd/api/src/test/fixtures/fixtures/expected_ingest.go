@@ -18,7 +18,7 @@ package fixtures
 
 import (
 	"bytes"
-	"github.com/specterops/bloodhound/cypher/frontend"
+	"github.com/specterops/bloodhound/cypher/backend/cypher"
 	"github.com/specterops/bloodhound/cypher/model"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/dawgs/query"
@@ -244,11 +244,19 @@ var (
 			query.Equals(query.EndProperty(common.ObjectID.String()), "S-1-5-21-3130019616-2776909439-2417379446-2117"),
 			query.Equals(query.RelationshipProperty(ad.LogonType.String()), 2)),
 	}
+	v6ingestRelationshipAssertionCriteria = []graph.Criteria{
+		query.And(
+			query.Kind(query.Start(), ad.Computer),
+			query.Equals(query.StartProperty(common.ObjectID.String()), "S-1-5-21-3130019616-2776909439-2417379446-1001"),
+			query.Kind(query.Relationship(), ad.DCFor),
+			query.Kind(query.End(), ad.Domain),
+			query.Equals(query.EndProperty(common.ObjectID.String()), "S-1-5-21-3130019616-2776909439-2417379446")),
+	}
 )
 
-func formatQueryComponent(criteria graph.Criteria) string {
+func FormatQueryComponent(criteria graph.Criteria) string {
 	var (
-		emitter      = frontend.NewCypherEmitter(false)
+		emitter      = cypher.NewCypherEmitter(false)
 		stringBuffer = &bytes.Buffer{}
 	)
 
@@ -262,6 +270,13 @@ func formatQueryComponent(criteria graph.Criteria) string {
 func IngestAssertions(testCtrl test.Controller, tx graph.Transaction) {
 	for _, assertionCriteria := range ingestRelationshipAssertionCriteria {
 		_, err := tx.Relationships().Filter(assertionCriteria).First()
-		require.Nilf(testCtrl, err, "Unable to find an expected relationship: %s", formatQueryComponent(assertionCriteria))
+		require.Nilf(testCtrl, err, "Unable to find an expected relationship: %s", FormatQueryComponent(assertionCriteria))
+	}
+}
+
+func IngestAssertionsv6(testCtrl test.Controller, tx graph.Transaction) {
+	for _, assertionCriteria := range v6ingestRelationshipAssertionCriteria {
+		_, err := tx.Relationships().Filter(assertionCriteria).First()
+		require.Nilf(testCtrl, err, "Unable to find an expected relationship: %s", FormatQueryComponent(assertionCriteria))
 	}
 }

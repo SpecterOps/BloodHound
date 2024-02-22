@@ -16,55 +16,40 @@
 
 import { List, ListItem, ListItemText, Paper, TextField, useTheme } from '@mui/material';
 import { useCombobox } from 'downshift';
-import { useState } from 'react';
-import { NodeIcon, SearchResultItem } from 'bh-shared-ui';
-import { useDebouncedValue } from 'src/hooks/useDebouncedValue';
-import { getEmptyResultsText, getKeywordAndTypeValues, SearchResult, useSearch } from 'src/hooks/useSearch';
+import {
+    NodeIcon,
+    SearchResultItem,
+    getEmptyResultsText,
+    getKeywordAndTypeValues,
+    SearchResult,
+    useSearch,
+} from 'bh-shared-ui';
+import { SearchNodeType } from 'src/ducks/searchbar/types';
 
 const ExploreSearchCombobox: React.FC<{
-    inputValue: string;
-    onInputValueChange: any;
-    selectedItem: any;
-    onSelectedItemChange: any;
     labelText: string;
     disabled?: boolean;
-}> = ({ inputValue, onInputValueChange, selectedItem, onSelectedItemChange, labelText, disabled = false }) => {
+    inputValue: string;
+    selectedItem: SearchNodeType | null;
+    handleNodeEdited: (edit: string) => any;
+    handleNodeSelected: (selection: SearchNodeType) => any;
+}> = ({ labelText, disabled = false, inputValue, selectedItem, handleNodeEdited, handleNodeSelected }) => {
     const theme = useTheme();
 
-    const [showInputIcon, setShowInputIcon] = useState(false);
-
-    const debouncedInputValue = useDebouncedValue(inputValue, 150) as string;
-    const { keyword, type } = getKeywordAndTypeValues(debouncedInputValue);
+    const { keyword, type } = getKeywordAndTypeValues(inputValue);
     const { data, error, isError, isLoading, isFetching } = useSearch(keyword, type);
 
     const { isOpen, getMenuProps, getInputProps, getComboboxProps, highlightedIndex, getItemProps, openMenu } =
         useCombobox({
             items: data || [],
-            onInputValueChange,
+            inputValue,
             selectedItem,
-            onSelectedItemChange,
-            itemToString: (item) => (item ? item.name || item.objectid : ''),
-            onStateChange: ({ type, inputValue, selectedItem }) => {
-                // remove icon when input is empty
-                if (type === useCombobox.stateChangeTypes.InputChange) {
-                    if (!inputValue) {
-                        setShowInputIcon(false);
-                    }
-                }
-
-                // show icon when item is selected via click or enter key
-                if (type === useCombobox.stateChangeTypes.ItemClick) {
-                    setShowInputIcon(true);
-                }
-                if (type === useCombobox.stateChangeTypes.InputKeyDownEnter) {
-                    setShowInputIcon(true);
-                }
-
-                // show icon when input is controlled via props
-                if (type === useCombobox.stateChangeTypes.ControlledPropUpdatedSelectedItem) {
-                    setShowInputIcon(true);
+            onSelectedItemChange: ({ type, selectedItem }) => {
+                if (selectedItem) {
+                    handleNodeSelected(selectedItem as SearchNodeType);
                 }
             },
+            itemToString: (item) => (item ? item.name || item.objectid : ''),
         });
 
     const disabledText: string = getEmptyResultsText(
@@ -72,7 +57,7 @@ const ExploreSearchCombobox: React.FC<{
         isFetching,
         isError,
         error,
-        debouncedInputValue,
+        inputValue,
         type,
         keyword,
         data
@@ -94,9 +79,15 @@ const ExploreSearchCombobox: React.FC<{
                         backgroundColor: disabled ? theme.palette.action.disabled : 'inherit',
                         fontSize: theme.typography.pxToRem(14),
                     },
-                    startAdornment: showInputIcon && selectedItem?.type && <NodeIcon nodeType={selectedItem?.type} />,
+                    startAdornment: selectedItem?.type && <NodeIcon nodeType={selectedItem?.type} />,
                 }}
-                {...getInputProps({ onFocus: openMenu })}
+                {...getInputProps({
+                    onFocus: openMenu,
+                    refKey: 'inputRef',
+                    onChange: (e) => {
+                        handleNodeEdited(e.currentTarget.value);
+                    },
+                })}
                 data-testid='explore_search_input-search'
             />
             <div

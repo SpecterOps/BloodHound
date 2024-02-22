@@ -23,3 +23,4 @@ export const MODERATE_THRESHOLD = 40;
 export const ZERO_VALUE_API_DATE = '0001-01-01T00:00:00Z';
 
 export const TIER_ZERO_TAG = 'admin_tier_0';
+export const TIER_ZERO_LABEL = 'High Value';

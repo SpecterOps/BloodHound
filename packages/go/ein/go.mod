@@ -16,7 +16,7 @@
 
 module github.com/specterops/bloodhound/ein
 
-go 1.20
+go 1.21
 
 require github.com/bloodhoundad/azurehound/v2 v2.0.1
 

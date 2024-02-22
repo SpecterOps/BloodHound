@@ -34,7 +34,7 @@ import (
 )
 
 func Test_FileUpload(t *testing.T) {
-	testCtx := integration.NewContext(t, integration.StartBHServer)
+	testCtx := integration.NewFOSSContext(t)
 	apiClient := testCtx.AdminClient()
 	loader := testCtx.FixtureLoader
 
@@ -43,7 +43,7 @@ func Test_FileUpload(t *testing.T) {
 
 	jobEndpoint := fmt.Sprintf("api/v2/file-upload/%d", uploadJob.ID)
 
-	t.Run("JSON input with sucess", func(tx *testing.T) {
+	t.Run("JSON input with success", func(tx *testing.T) {
 		jsonInput := loader.GetReader("v6/ingest/computers.json")
 		defer jsonInput.Close()
 		req, err := apiClient.NewRequest(http.MethodPost, jobEndpoint, nil, jsonInput)
@@ -130,10 +130,20 @@ func Test_FileUpload(t *testing.T) {
 		assert.Nil(tx, err)
 		assert.Equal(tx, http.StatusUnsupportedMediaType, resp.StatusCode)
 	})
+
+	t.Run("not valid json", func(tx *testing.T) {
+		jsonInput := loader.GetReader("v6/ingest/jker.png")
+		defer jsonInput.Close()
+		req, err := apiClient.NewRequest(http.MethodPost, jobEndpoint, nil, jsonInput)
+		assert.Nil(tx, err)
+		resp, err := apiClient.Raw(req)
+		assert.Nil(tx, err)
+		assert.Equal(tx, http.StatusBadRequest, resp.StatusCode)
+	})
 }
 
 func Test_FileUploadWorkFlowVersion5(t *testing.T) {
-	testCtx := integration.NewContext(t, integration.StartBHServer)
+	testCtx := integration.NewFOSSContext(t)
 
 	testCtx.SendFileIngest([]string{
 		"v5/ingest/domains.json",
@@ -152,7 +162,7 @@ func Test_FileUploadWorkFlowVersion5(t *testing.T) {
 }
 
 func Test_FileUploadWorkFlowVersion6(t *testing.T) {
-	testCtx := integration.NewContext(t, integration.StartBHServer)
+	testCtx := integration.NewFOSSContext(t)
 
 	testCtx.SendFileIngest([]string{
 		"v6/ingest/domains.json",
@@ -168,10 +178,32 @@ func Test_FileUploadWorkFlowVersion6(t *testing.T) {
 
 	//Assert that we created stuff we expected
 	testCtx.AssertIngest(fixtures.IngestAssertions)
+	testCtx.AssertIngest(fixtures.IngestAssertionsv6)
+}
+
+func Test_FileUploadVersion6AllOptionADCS(t *testing.T) {
+	testCtx := integration.NewFOSSContext(t)
+
+	testCtx.SendFileIngest([]string{
+		"v6/all/aiacas.json",
+		"v6/all/certtemplates.json",
+		"v6/all/computers.json",
+		"v6/all/containers.json",
+		"v6/all/domains.json",
+		"v6/all/enterprisecas.json",
+		"v6/all/gpos.json",
+		"v6/all/groups.json",
+		"v6/all/ntauthstores.json",
+		"v6/all/ous.json",
+		"v6/all/rootcas.json",
+		"v6/all/users.json",
+	})
+
+	testCtx.AssertIngest(fixtures.IngestADCSAssertions)
 }
 
 func Test_CompressedFileUploadWorkFlowVersion5(t *testing.T) {
-	testCtx := integration.NewContext(t, integration.StartBHServer)
+	testCtx := integration.NewFOSSContext(t)
 
 	testCtx.SendCompressedFileIngest([]string{
 		"v5/ingest/domains.json",
@@ -190,7 +222,7 @@ func Test_CompressedFileUploadWorkFlowVersion5(t *testing.T) {
 }
 
 func Test_CompressedFileUploadWorkFlowVersion6(t *testing.T) {
-	testCtx := integration.NewContext(t, integration.StartBHServer)
+	testCtx := integration.NewFOSSContext(t)
 
 	testCtx.SendCompressedFileIngest([]string{
 		"v6/ingest/domains.json",
@@ -206,4 +238,5 @@ func Test_CompressedFileUploadWorkFlowVersion6(t *testing.T) {
 
 	//Assert that we created stuff we expected
 	testCtx.AssertIngest(fixtures.IngestAssertions)
+	testCtx.AssertIngest(fixtures.IngestAssertionsv6)
 }

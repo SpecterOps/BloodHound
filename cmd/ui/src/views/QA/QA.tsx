@@ -15,16 +15,20 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Alert, AlertTitle, Box, Grid, Link } from '@mui/material';
+import {
+    ActiveDirectoryPlatformInfo,
+    AzurePlatformInfo,
+    ContentPage,
+    DataSelector,
+    DomainInfo,
+    TenantInfo,
+} from 'bh-shared-ui';
 import { useEffect, useState } from 'react';
-import { useSelector } from 'react-redux';
-import { AppState } from 'src/store';
-import { ContentPage } from 'bh-shared-ui';
-import { ActiveDirectoryPlatformInfo, DomainInfo } from 'src/views/QA/DomainInfo';
-import DataSelector from './DataSelector';
-import { AzurePlatformInfo, TenantInfo } from './TenantInfo';
+import { dataCollectionMessage } from './utils';
+import { useAppSelector } from 'src/store';
 
 const QualityAssurance: React.FC = () => {
-    const domain = useSelector((state: AppState) => state.global.options.domain);
+    const domain = useAppSelector((state) => state.global.options.domain);
     const [contextType, setContextType] = useState(domain?.type || null);
     const [contextId, setContextId] = useState(domain?.id || null);
     const [dataError, setDataError] = useState(false);
@@ -52,6 +56,8 @@ const QualityAssurance: React.FC = () => {
         }
     };
 
+    const domainErrorMessage = <>Domains unavailable. {dataCollectionMessage}</>;
+
     if (!contextType || (!contextId && (contextType === 'active-directory' || contextType === 'azure'))) {
         return (
             <ContentPage
@@ -63,6 +69,7 @@ const QualityAssurance: React.FC = () => {
                             type: contextType,
                             id: contextId,
                         }}
+                        errorMessage={domainErrorMessage}
                         onChange={({ type, id }) => {
                             setContextType(type);
                             setContextId(id);
@@ -72,15 +79,7 @@ const QualityAssurance: React.FC = () => {
                 <Alert severity='info'>
                     <AlertTitle>No Domain or Tenant Selected</AlertTitle>
                     Select a domain or tenant to view data. If you are unable to select a domain, you may need to run
-                    data collection first. See the{' '}
-                    <Link
-                        target='_blank'
-                        href={
-                            'https://support.bloodhoundenterprise.io/hc/en-us/categories/9270370014875-Data-Collection'
-                        }>
-                        Data Collection
-                    </Link>{' '}
-                    page to view instructions on how to begin data collection.
+                    data collection first. {dataCollectionMessage}
                 </Alert>
             </ContentPage>
         );
@@ -96,6 +95,7 @@ const QualityAssurance: React.FC = () => {
                         type: contextType,
                         id: contextId,
                     }}
+                    errorMessage={domainErrorMessage}
                     onChange={({ type, id }) => {
                         setContextType(type);
                         setContextId(id);

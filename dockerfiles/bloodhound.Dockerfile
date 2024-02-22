@@ -17,8 +17,8 @@
 ########
 # Global build args
 ################
-ARG SHARPHOUND_VERSION=v2.0.1
-ARG AZUREHOUND_VERSION=v2.1.3
+ARG SHARPHOUND_VERSION=v2.3.2
+ARG AZUREHOUND_VERSION=v2.1.7
 
 ########
 # Builder init
@@ -32,6 +32,7 @@ ENV CHECKOUT_HASH=${checkout_hash}
 WORKDIR /bloodhound
 
 RUN apk add --update --no-cache python3 git go
+RUN rm /usr/lib/python3.11/EXTERNALLY-MANAGED
 RUN python3 -m ensurepip
 RUN pip3 install --no-cache --upgrade pip setuptools
 

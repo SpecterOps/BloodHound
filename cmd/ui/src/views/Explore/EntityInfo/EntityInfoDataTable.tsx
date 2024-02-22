@@ -14,34 +14,15 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { EntityInfoDataTableProps, InfiniteScrollingTable, abortEntitySectionRequest } from 'bh-shared-ui';
 import { useQuery } from 'react-query';
 import { useDispatch } from 'react-redux';
-import { InfiniteScrollingTable } from 'bh-shared-ui';
+import { NODE_GRAPH_RENDER_LIMIT } from 'src/constants';
 import { putGraphData, putGraphError, saveResponseForExport, setGraphLoading } from 'src/ducks/explore/actions';
 import { addSnackbar } from 'src/ducks/global/actions';
-import { setSearchValue, startSearchSelected } from 'src/ducks/searchbar/actions';
-import { PRIMARY_SEARCH, SEARCH_TYPE_EXACT } from 'src/ducks/searchbar/types';
-import { abortRequest } from 'src/views/Explore/utils';
-import EntityInfoCollapsibleSection from './EntityInfoCollapsibleSection';
-import { NODE_GRAPH_RENDER_LIMIT } from 'src/constants';
+import { sourceNodeSelected } from 'src/ducks/searchbar/actions';
 import { transformFlatGraphResponse } from 'src/utils';
-
-export interface EntityInfoDataTableProps {
-    id: string;
-    label: string;
-    endpoint?: ({
-        counts,
-        skip,
-        limit,
-        type,
-    }: {
-        counts?: boolean;
-        skip?: number;
-        limit?: number;
-        type?: string;
-    }) => Promise<any>;
-    sections?: EntityInfoDataTableProps[];
-}
+import EntityInfoCollapsibleSection from './EntityInfoCollapsibleSection';
 
 const EntityInfoDataTable: React.FC<EntityInfoDataTableProps> = ({ id, label, endpoint, sections }) => {
     const dispatch = useDispatch();
@@ -62,7 +43,7 @@ const EntityInfoDataTable: React.FC<EntityInfoDataTableProps> = ({ id, label, en
         if (!endpoint) return;
 
         if (isOpen && countQuery.data?.count < NODE_GRAPH_RENDER_LIMIT) {
-            abortRequest();
+            abortEntitySectionRequest();
 
             dispatch(setGraphLoading(true));
 
@@ -88,27 +69,22 @@ const EntityInfoDataTable: React.FC<EntityInfoDataTableProps> = ({ id, label, en
 
     const handleOnClick = (item: any) => {
         dispatch(
-            setSearchValue(
-                {
-                    objectid: item.id,
-                    label: item.name,
-                    type: item.type,
-                    name: item.name,
-                },
-                PRIMARY_SEARCH,
-                SEARCH_TYPE_EXACT
-            )
+            sourceNodeSelected({
+                objectid: item.id,
+                type: item.type,
+                name: item.name,
+            })
         );
-        dispatch(startSearchSelected(PRIMARY_SEARCH));
     };
 
     let count: number | undefined;
     if (Array.isArray(countQuery.data)) {
         count = countQuery.data.reduce((acc, val) => {
-            return acc + val.count;
+            const count = val.count ?? 0;
+            return acc + count;
         }, 0);
     } else if (countQuery.data) {
-        count = countQuery.data.count;
+        count = countQuery.data.count ?? 0;
     }
 
     return (

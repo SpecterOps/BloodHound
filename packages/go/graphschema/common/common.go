@@ -1,4 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2024 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -125,7 +125,7 @@ func (s Property) String() string {
 	case IsInherited:
 		return string(IsInherited)
 	default:
-		panic("Invalid enumeration case: " + string(s))
+		return "Invalid enumeration case: " + string(s)
 	}
 }
 func (s Property) Name() string {
@@ -163,7 +163,7 @@ func (s Property) Name() string {
 	case IsInherited:
 		return "Is Inherited"
 	default:
-		panic("Invalid enumeration case: " + string(s))
+		return "Invalid enumeration case: " + string(s)
 	}
 }
 func (s Property) Is(others ...graph.Kind) bool {

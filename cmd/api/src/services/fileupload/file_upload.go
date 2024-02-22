@@ -18,12 +18,12 @@
 package fileupload
 
 import (
+	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
-	"net/http"
 	"os"
-	"strings"
 	"time"
 
 	"github.com/specterops/bloodhound/log"
@@ -32,7 +32,7 @@ import (
 
 const jobActivityTimeout = time.Minute * 20
 
-var InvalidIngestFileType = errors.New("file is not a valid content type")
+var ErrInvalidJSON = errors.New("file is not valid json")
 
 type FileUploadData interface {
 	CreateFileUploadJob(job model.FileUploadJob) (model.FileUploadJob, error)
@@ -42,7 +42,13 @@ type FileUploadData interface {
 	GetFileUploadJobsWithStatus(status model.JobStatus) ([]model.FileUploadJob, error)
 }
 
-func ProcessStaleFileUploadJobs(db FileUploadData) {
+func ProcessStaleFileUploadJobs(ctx context.Context, db FileUploadData) {
+	// Because our database interfaces do not yet accept contexts this is a best-effort check to ensure that we do not
+	// commit state transitions when shutting down.
+	if ctx.Err() != nil {
+		return
+	}
+
 	var (
 		now       = time.Now().UTC()
 		threshold = now.Add(-jobActivityTimeout)
@@ -85,24 +91,26 @@ func GetFileUploadJobByID(db FileUploadData, jobID int64) (model.FileUploadJob, 
 	return db.GetFileUploadJob(jobID)
 }
 
-func SaveIngestFile(location string, fileData io.ReadCloser) (string, error) {
-	var typeBuf = make([]byte, 512)
+func WriteAndValidateJSON(src io.Reader, dst io.Writer) error {
+	tr := io.TeeReader(src, dst)
+	dc := json.NewDecoder(tr)
+	for {
+		if _, err := dc.Token(); err != nil {
+			if errors.Is(err, io.EOF) {
+				return nil
+			}
+			return ErrInvalidJSON
+		}
+	}
+}
+
+func SaveIngestFile(location string, fileData io.Reader) (string, error) {
 	tempFile, err := os.CreateTemp(location, "bh")
 	if err != nil {
 		return "", fmt.Errorf("error creating ingest file: %w", err)
 	}
 	defer tempFile.Close()
-	if _, err := io.Copy(tempFile, fileData); err != nil {
-		return "", fmt.Errorf("error writing ingest file: %w", err)
-	} else if _, err := tempFile.Seek(0, io.SeekStart); err != nil {
-		return "", fmt.Errorf("error preparing ingest file for validation: %w", err)
-	} else if n, err := tempFile.Read(typeBuf); err != nil {
-		return "", fmt.Errorf("error reading head of ingest file: %w", err)
-	} else if fileType := http.DetectContentType(typeBuf[:n]); !strings.Contains(fileType, "text/plain") {
-		return "", InvalidIngestFileType
-	} else {
-		return tempFile.Name(), nil
-	}
+	return tempFile.Name(), WriteAndValidateJSON(fileData, tempFile)
 }
 
 func TouchFileUploadJobLastIngest(db FileUploadData, fileUploadJob model.FileUploadJob) error {
@@ -110,29 +118,22 @@ func TouchFileUploadJobLastIngest(db FileUploadData, fileUploadJob model.FileUpl
 	return db.UpdateFileUploadJob(fileUploadJob)
 }
 
-func EndFileUploadJob(db FileUploadData, job model.FileUploadJob) (model.FileUploadJob, error) {
+func EndFileUploadJob(db FileUploadData, job model.FileUploadJob) error {
 	job.Status = model.JobStatusIngesting
+
 	if err := db.UpdateFileUploadJob(job); err != nil {
-		return job, fmt.Errorf("error ending file upload job: %w", err)
-	} else {
-		return job, nil
+		return fmt.Errorf("error ending file upload job: %w", err)
 	}
+
+	return nil
 }
 
-func UpdateFileUploadJobStatus(db FileUploadData, jobID int64, status model.JobStatus, message string) error {
-	if job, err := db.GetFileUploadJob(jobID); err != nil {
-		return err
-	} else {
-		job.Status = status
-		job.StatusMessage = message
-		job.EndTime = time.Now().UTC()
+func UpdateFileUploadJobStatus(db FileUploadData, fileUploadJob model.FileUploadJob, status model.JobStatus, message string) error {
+	fileUploadJob.Status = status
+	fileUploadJob.StatusMessage = message
+	fileUploadJob.EndTime = time.Now().UTC()
 
-		return db.UpdateFileUploadJob(job)
-	}
-}
-
-func CompleteFileUploadJob(db FileUploadData, jobID int64) (model.FileUploadJob, error) {
-	return model.FileUploadJob{}, nil
+	return db.UpdateFileUploadJob(fileUploadJob)
 }
 
 func TimeOutUploadJob(db FileUploadData, jobID int64, message string) error {

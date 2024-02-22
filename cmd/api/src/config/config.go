@@ -19,11 +19,13 @@ package config
 import (
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/specterops/bloodhound/crypto"
 	"github.com/specterops/bloodhound/log"
@@ -138,31 +140,38 @@ type DefaultAdminConfiguration struct {
 }
 
 type Configuration struct {
-	Version                int                       `json:"version"`
-	BindAddress            string                    `json:"bind_addr"`
-	NetTimeoutSeconds      int                       `json:"net_timeout_seconds"`
-	SlowQueryThreshold     int64                     `json:"slow_query_threshold"`
-	MaxGraphQueryCacheSize int                       `json:"max_graphdb_cache_size"`
-	MaxAPICacheSize        int                       `json:"max_api_cache_size"`
-	MetricsPort            string                    `json:"metrics_port"`
-	RootURL                serde.URL                 `json:"root_url"`
-	WorkDir                string                    `json:"work_dir"`
-	LogLevel               string                    `json:"log_level"`
-	LogPath                string                    `json:"log_path"`
-	TLS                    TLSConfiguration          `json:"tls"`
-	Database               DatabaseConfiguration     `json:"database"`
-	Neo4J                  DatabaseConfiguration     `json:"neo4j"`
-	Crypto                 CryptoConfiguration       `json:"crypto"`
-	SAML                   SAMLConfiguration         `json:"saml"`
-	SpecterAuth            SpecterAuthConfiguration  `json:"specter_auth"`
-	DefaultAdmin           DefaultAdminConfiguration `json:"default_admin"`
-	CollectorsBasePath     string                    `json:"collectors_base_path"`
-	DatapipeInterval       int                       `json:"datapipe_interval"`
-	EnableAPILogging       bool                      `json:"enable_api_logging"`
-	DisableAnalysis        bool                      `json:"disable_analysis"`
-	DisableCypherQC        bool                      `json:"disable_cypher_qc"`
-	DisableMigrations      bool                      `json:"disable_migrations"`
-	TraversalMemoryLimit   uint16                    `json:"traversal_memory_limit"`
+	Version                 int                       `json:"version"`
+	BindAddress             string                    `json:"bind_addr"`
+	NetTimeoutSeconds       int                       `json:"net_timeout_seconds"`
+	SlowQueryThreshold      int64                     `json:"slow_query_threshold"`
+	MaxGraphQueryCacheSize  int                       `json:"max_graphdb_cache_size"`
+	MaxAPICacheSize         int                       `json:"max_api_cache_size"`
+	MetricsPort             string                    `json:"metrics_port"`
+	RootURL                 serde.URL                 `json:"root_url"`
+	WorkDir                 string                    `json:"work_dir"`
+	LogLevel                string                    `json:"log_level"`
+	LogPath                 string                    `json:"log_path"`
+	TLS                     TLSConfiguration          `json:"tls"`
+	GraphDriver             string                    `json:"graph_driver"`
+	Database                DatabaseConfiguration     `json:"database"`
+	Neo4J                   DatabaseConfiguration     `json:"neo4j"`
+	Crypto                  CryptoConfiguration       `json:"crypto"`
+	SAML                    SAMLConfiguration         `json:"saml"`
+	SpecterAuth             SpecterAuthConfiguration  `json:"specter_auth"`
+	DefaultAdmin            DefaultAdminConfiguration `json:"default_admin"`
+	CollectorsBasePath      string                    `json:"collectors_base_path"`
+	DatapipeInterval        int                       `json:"datapipe_interval"`
+	EnableStartupWaitPeriod bool                      `json:"enable_startup_wait_period"`
+	EnableAPILogging        bool                      `json:"enable_api_logging"`
+	DisableAnalysis         bool                      `json:"disable_analysis"`
+	DisableCypherQC         bool                      `json:"disable_cypher_qc"`
+	DisableMigrations       bool                      `json:"disable_migrations"`
+	TraversalMemoryLimit    uint16                    `json:"traversal_memory_limit"`
+	AuthSessionTTLHours     int                       `json:"auth_session_ttl_hours"`
+}
+
+func (s Configuration) AuthSessionTTL() time.Duration {
+	return time.Hour * time.Duration(s.AuthSessionTTLHours)
 }
 
 func (s Configuration) TempDirectory() string {
@@ -240,7 +249,9 @@ func SetValuesFromEnv(varPrefix string, target any, env []string) error {
 			if formattedPrefix := formatEnvironmentVariablePrefix(varPrefix); strings.HasPrefix(key, formattedPrefix) {
 				cfgKeyPath := strings.TrimPrefix(key, formattedPrefix)
 
-				if err := SetValue(target, cfgKeyPath, valueStr); err != nil {
+				if err := SetValue(target, cfgKeyPath, valueStr); errors.Is(err, ErrInvalidConfigurationPath) {
+					log.Warnf("%s", err)
+				} else if err != nil {
 					return err
 				}
 			}
@@ -252,44 +263,51 @@ func SetValuesFromEnv(varPrefix string, target any, env []string) error {
 	return nil
 }
 
-func GetConfiguration(path string) (Configuration, error) {
-	cfg, err := NewDefaultConfiguration()
-	if err != nil {
-		return cfg, fmt.Errorf("failed to create default configuration: %w", err)
-	}
-
+func getConfiguration(path string, defaultConfigFunc func() (Configuration, error)) (Configuration, error) {
 	if hasCfgFile, err := HasConfigurationFile(path); err != nil {
 		return Configuration{}, err
 	} else if hasCfgFile {
 		log.Infof("Reading configuration found at %s", path)
 
-		if readCfg, err := ReadConfigurationFile(path); err != nil {
-			return Configuration{}, err
-		} else {
-			cfg = readCfg
-		}
+		return ReadConfigurationFile(path)
 	} else {
-		log.Infof("No configuration file found at %s", path)
-	}
+		log.Infof("No configuration file found at %s. Returning defaults.", path)
 
-	if err := SetValuesFromEnv(bhAPIEnvironmentVariablePrefix, &cfg, os.Environ()); err != nil {
-		return Configuration{}, err
+		return defaultConfigFunc()
 	}
-
-	return cfg, nil
 }
 
-func (s Configuration) SaveCollectorManifests() (CollectorManifests, error) {
-	if azureHoundManifest, err := generateCollectorManifest(filepath.Join(s.CollectorsDirectory(), "azurehound")); err != nil {
-		return CollectorManifests{}, fmt.Errorf("error generating AzureHound manifest file: %w", err)
-	} else if sharpHoundManifest, err := generateCollectorManifest(filepath.Join(s.CollectorsDirectory(), "sharphound")); err != nil {
-		return CollectorManifests{}, fmt.Errorf("error generating SharpHound manifest file: %w", err)
+func GetConfiguration(path string, defaultConfigFunc func() (Configuration, error)) (Configuration, error) {
+	if cfg, err := getConfiguration(path, defaultConfigFunc); err != nil {
+		return cfg, err
+	} else if err := SetValuesFromEnv(bhAPIEnvironmentVariablePrefix, &cfg, os.Environ()); err != nil {
+		return cfg, err
 	} else {
-		return CollectorManifests{
-			"azurehound": azureHoundManifest,
-			"sharphound": sharpHoundManifest,
-		}, nil
+		return cfg, nil
 	}
+}
+
+const (
+	azureHoundCollector = "azurehound"
+	sharpHoundCollector = "sharphound"
+)
+
+func (s Configuration) SaveCollectorManifests() (CollectorManifests, error) {
+	manifests := CollectorManifests{}
+
+	if azureHoundManifest, err := generateCollectorManifest(filepath.Join(s.CollectorsDirectory(), azureHoundCollector)); err != nil {
+		log.Errorf("error generating AzureHound manifest file: %s", err)
+	} else {
+		manifests[azureHoundCollector] = azureHoundManifest
+	}
+
+	if sharpHoundManifest, err := generateCollectorManifest(filepath.Join(s.CollectorsDirectory(), sharpHoundCollector)); err != nil {
+		log.Errorf("error generating SharpHound manifest file: %s", err)
+	} else {
+		manifests[sharpHoundCollector] = sharpHoundManifest
+	}
+
+	return manifests, nil
 }
 
 func generateCollectorManifest(collectorDir string) (CollectorManifest, error) {
@@ -314,7 +332,7 @@ func generateCollectorManifest(collectorDir string) (CollectorManifest, error) {
 					collectorVersions = append(collectorVersions, CollectorVersion{
 						Version:    string(version),
 						SHA256Sum:  strings.Fields(string(sha256))[0], // Get only the SHA-256 portion
-						Deprecated: strings.Contains(collectorDir, "sharphound") && string(version) < "v2.0.0",
+						Deprecated: strings.Contains(collectorDir, sharpHoundCollector) && string(version) < "v2.0.0",
 					})
 
 					if string(version) > latestVersion {

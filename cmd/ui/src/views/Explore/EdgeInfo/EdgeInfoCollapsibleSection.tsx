@@ -17,29 +17,30 @@
 import { faMinus, faPlus } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Accordion, AccordionDetails, AccordionSummary } from '@mui/material';
-import { EdgeInfoState, EdgeSections, edgeSectionToggle } from 'bh-shared-ui';
+import { EdgeInfoState, EdgeSections, edgeSectionToggle, SubHeader, useCollapsibleSectionStyles } from 'bh-shared-ui';
 import React, { PropsWithChildren } from 'react';
-import { useSelector } from 'react-redux';
-import { AppState, useAppDispatch } from 'src/store';
-import useCollapsibleSectionStyles from 'src/views/Explore/InfoStyles/CollapsibleSection';
-import { SubHeader } from 'src/views/Explore/fragments';
+import { useAppDispatch, useAppSelector } from 'src/store';
 
 export const EdgeInfoCollapsibleSection: React.FC<
     PropsWithChildren<{
         section: keyof typeof EdgeSections;
+        onChange?: (label: string, isOpen: boolean) => void;
     }>
-> = ({ children, section }) => {
+> = ({ children, section, onChange = () => {} }) => {
     const styles = useCollapsibleSectionStyles();
 
     const dispatch = useAppDispatch();
-    const edgeInfoState: EdgeInfoState = useSelector((state: AppState) => state.edgeinfo);
+    const edgeInfoState: EdgeInfoState = useAppSelector((state) => state.edgeinfo);
 
     const expanded = edgeInfoState.expandedSections[section];
 
     return (
         <Accordion
             expanded={expanded}
-            onChange={() => dispatch(edgeSectionToggle({ section: section, expanded: !expanded }))}
+            onChange={() => {
+                dispatch(edgeSectionToggle({ section: section, expanded: !expanded }));
+                onChange(section, !expanded);
+            }}
             TransitionProps={{ unmountOnExit: true }}
             className={styles.accordionRoot}>
             <AccordionSummary

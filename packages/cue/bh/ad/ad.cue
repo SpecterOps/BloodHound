@@ -24,8 +24,101 @@ NodeKinds: [...types.#Kind]
 RelationshipKinds: [...types.#Kind]
 ACLRelationships: [...types.#Kind]
 PathfindingRelationships: [...types.#Kind]
+EdgeCompositionRelationships: [...types.#Kind]
 
 // Property name enumerations
+
+CertChain: types.#StringEnum & {
+	symbol: 		"CertChain"
+	schema: 		"ad"
+	name:           "Certificate Chain"
+	representation: "certchain"
+}
+
+CertName: types.#StringEnum & {
+	symbol: 		"CertName"
+	schema: 		"ad"
+	name:           "Certificate Name"
+	representation: "certname"
+}
+
+CertThumbprint: types.#StringEnum & {
+	symbol: 		"CertThumbprint"
+	schema: 		"ad"
+	name:           "Certificate Thumbprint"
+	representation: "certthumbprint"
+}
+
+CertThumbprints: types.#StringEnum & {
+	symbol: 		"CertThumbprints"
+	schema: 		"ad"
+	name:           "Certificate Thumbprints"
+	representation: "certthumbprints"
+}
+
+CAName: types.#StringEnum & {
+	symbol: 		"CAName"
+	schema: 		"ad"
+	name:           "CA Name"
+	representation: "caname"
+}
+
+CASecurityCollected: types.#StringEnum & {
+	symbol: 		"CASecurityCollected"
+	schema: 		"ad"
+	name:           "CA Security Collected"
+	representation: "casecuritycollected"
+}
+
+HasEnrollmentAgentRestrictions: types.#StringEnum & {
+	symbol: 		"HasEnrollmentAgentRestrictions"
+	schema: 		"ad"
+	name:           "Has Enrollment Agent Restrictions"
+	representation: "hasenrollmentagentrestrictions"
+}
+
+EnrollmentAgentRestrictionsCollected: types.#StringEnum & {
+	symbol: 		"EnrollmentAgentRestrictionsCollected"
+	schema: 		"ad"
+	name:           "Enrollment Agent Restrictions Collected"
+	representation: "enrollmentagentrestrictionscollected"
+}
+
+IsUserSpecifiesSanEnabled: types.#StringEnum & {
+	symbol: 		"IsUserSpecifiesSanEnabled"
+	schema: 		"ad"
+	name:           "Is User Specifies San Enabled"
+	representation: "isuserspecifiessanenabled"
+}
+
+IsUserSpecifiesSanEnabledCollected: types.#StringEnum & {
+	symbol: 		"IsUserSpecifiesSanEnabledCollected"
+	schema: 		"ad"
+	name:           "Is User Specifies San Enabled Collected"
+	representation: "isuserspecifiessanenabledcollected"
+}
+
+HasBasicConstraints: types.#StringEnum & {
+	symbol: 		"HasBasicConstraints"
+	schema: 		"ad"
+	name:           "Has Basic Constraints"
+	representation: "hasbasicconstraints"
+}
+
+BasicConstraintPathLength: types.#StringEnum & {
+	symbol: 		"BasicConstraintPathLength"
+	schema: 		"ad"
+	name:           "Basic Constraint Path Length"
+	representation: "basicconstraintpathlength"
+}
+
+DNSHostname: types.#StringEnum & {
+	symbol: 		"DNSHostname"
+	schema: 		"ad"
+	name:           "DNS Hostname"
+	representation: "dnshostname"
+}
+
 DistinguishedName: types.#StringEnum & {
 	symbol:         "DistinguishedName"
 	schema:         "ad"
@@ -50,7 +143,7 @@ DomainSID: types.#StringEnum & {
 Sensitive: types.#StringEnum & {
 	symbol:         "Sensitive"
 	schema:         "ad"
-	name:           "Marked sensitive"
+	name:           "Marked Sensitive"
 	representation: "sensitive"
 }
 
@@ -82,6 +175,13 @@ IsACLProtected: types.#StringEnum & {
 	representation: "isaclprotected"
 }
 
+IsDeleted: types.#StringEnum & {
+	symbol:         "IsDeleted"
+	schema:         "ad"
+	name:           "Is Deleted"
+	representation: "isdeleted"
+}
+
 Enforced: types.#StringEnum & {
 	symbol:         "Enforced"
 	schema:         "ad"
@@ -101,6 +201,13 @@ Department: types.#StringEnum & {
 	schema:         "ad"
 	name:           "Department"
 	representation: "department"
+}
+
+HasCrossCertificatePair: types.#StringEnum & {
+	symbol:         "HasCrossCertificatePair"
+	schema:         "ad"
+	name:           "Has Cross Certificate Pair"
+	representation: "hascrosscertificatepair"
 }
 
 HasSPN: types.#StringEnum & {
@@ -215,8 +322,225 @@ SamAccountName: types.#StringEnum & {
 	representation: "samaccountname"
 }
 
+HomeDirectory: types.#StringEnum & {
+	symbol: "HomeDirectory"
+	schema: "ad"
+	name: "Home Directory"
+	representation: "homedirectory"
+}
+
+CertificateMappingMethodsRaw: types.#StringEnum & {
+	symbol:         "CertificateMappingMethodsRaw"
+	schema:         "ad"
+	name:           "Certificate Mapping Methods (Raw)"
+	representation: "certificatemappingmethodsraw"
+}
+
+CertificateMappingMethods: types.#StringEnum & {
+	symbol:         "CertificateMappingMethods"
+	schema:         "ad"
+	name:           "Certificate Mapping Methods"
+	representation: "certificatemappingmethods"
+}
+
+StrongCertificateBindingEnforcementRaw: types.#StringEnum & {
+	symbol:         "StrongCertificateBindingEnforcementRaw"
+	schema:         "ad"
+	name:           "Strong Certificate Binding Enforcement (Raw)"
+	representation: "strongcertificatebindingenforcementraw"
+}
+
+StrongCertificateBindingEnforcement: types.#StringEnum & {
+	symbol:         "StrongCertificateBindingEnforcement"
+	schema:         "ad"
+	name:           "Strong Certificate Binding Enforcement"
+	representation: "strongcertificatebindingenforcement"
+}
+
+CrossCertificatePair: types.#StringEnum & {
+	symbol: "CrossCertificatePair"
+	schema: "ad"
+	name: "Cross Certificate Pair"
+	representation: "crosscertificatepair"
+}
+
+EKUs: types.#StringEnum & {
+	symbol: "EKUs"
+	schema: "ad"
+	name: "Enhanced Key Usage"
+	representation: "ekus"
+}
+
+SubjectAltRequireUPN: types.#StringEnum & {
+	symbol: "SubjectAltRequireUPN"
+	schema: "ad"
+	name: "Subject Alternative Name Require UPN"
+	representation: "subjectaltrequireupn"
+}
+
+SubjectAltRequireDNS: types.#StringEnum & {
+	symbol: "SubjectAltRequireDNS"
+	schema: "ad"
+	name: "Subject Alternative Name Require DNS"
+	representation: "subjectaltrequiredns"
+}
+
+SubjectAltRequireDomainDNS: types.#StringEnum & {
+	symbol: "SubjectAltRequireDomainDNS"
+	schema: "ad"
+	name: "Subject Alternative Name Require Domain DNS"
+	representation: "subjectaltrequiredomaindns"
+}
+
+SubjectAltRequireEmail: types.#StringEnum & {
+	symbol: "SubjectAltRequireEmail"
+	schema: "ad"
+	name: "Subject Alternative Name Require Email"
+	representation: "subjectaltrequireemail"
+}
+
+SubjectAltRequireSPN: types.#StringEnum & {
+	symbol: "SubjectAltRequireSPN"
+	schema: "ad"
+	name: "Subject Alternative Name Require SPN"
+	representation: "subjectaltrequirespn"
+}
+
+SubjectRequireEmail: types.#StringEnum & {
+	symbol: "SubjectRequireEmail"
+	schema: "ad"
+	name: "Subject Require Email"
+	representation: "subjectrequireemail"
+}
+
+AuthorizedSignatures: types.#StringEnum & {
+	symbol: "AuthorizedSignatures"
+	schema: "ad"
+	name: "Authorized Signatures Required"
+	representation: "authorizedsignatures"
+}
+
+ApplicationPolicies: types.#StringEnum & {
+	symbol: "ApplicationPolicies"
+	schema: "ad"
+	name: "Application Policies"
+	representation: "applicationpolicies"
+}
+
+IssuancePolicies: types.#StringEnum & {
+	symbol: "IssuancePolicies"
+	schema: "ad"
+	name: "Issuance Policies"
+	representation: "issuancepolicies"
+}
+
+SchemaVersion: types.#StringEnum & {
+	symbol: "SchemaVersion"
+	schema: "ad"
+	name: "Schema Version"
+	representation: "schemaversion"
+}
+
+RequiresManagerApproval: types.#StringEnum & {
+	symbol: "RequiresManagerApproval"
+	schema: "ad"
+	name: "Requires Manager Approval"
+	representation: "requiresmanagerapproval"
+}
+
+AuthenticationEnabled: types.#StringEnum & {
+	symbol: "AuthenticationEnabled"
+	schema: "ad"
+	name: "Authentication Enabled"
+	representation: "authenticationenabled"
+}
+
+EnrolleeSuppliesSubject: types.#StringEnum & {
+	symbol: "EnrolleeSuppliesSubject"
+	schema: "ad"
+	name: "Enrollee Supplies Subject"
+	representation: "enrolleesuppliessubject"
+}
+
+CertificateApplicationPolicy: types.#StringEnum & {
+	symbol: "CertificateApplicationPolicy"
+	schema: "ad"
+	name: "Certificate Application Policies"
+	representation: "certificateapplicationpolicy"
+}
+
+CertificateNameFlag: types.#StringEnum & {
+	symbol: "CertificateNameFlag"
+	schema: "ad"
+	name: "Certificate Name Flags"
+	representation: "certificatenameflag"
+}
+
+EffectiveEKUs: types.#StringEnum & {
+	symbol: "EffectiveEKUs"
+	schema: "ad"
+	name: "Effective EKUs"
+	representation: "effectiveekus"
+}
+
+EnrollmentFlag: types.#StringEnum & {
+	symbol: "EnrollmentFlag"
+	schema: "ad"
+	name: "Enrollment Flags"
+	representation: "enrollmentflag"
+}
+
+Flags: types.#StringEnum & {
+	symbol: "Flags"
+	schema: "ad"
+	name: "Flags"
+	representation: "flags"
+}
+
+NoSecurityExtension: types.#StringEnum & {
+	symbol: "NoSecurityExtension"
+	schema: "ad"
+	name: "No Security Extension"
+	representation: "nosecurityextension"
+}
+
+RenewalPeriod: types.#StringEnum & {
+	symbol: "RenewalPeriod"
+	schema: "ad"
+	name: "Renewal Period"
+	representation: "renewalperiod"
+}
+
+ValidityPeriod: types.#StringEnum & {
+	symbol: "ValidityPeriod"
+	schema: "ad"
+	name: "Validity Period"
+	representation: "validityperiod"
+}
+
+OID: types.#StringEnum & {
+	symbol: "OID"
+	schema: "ad"
+	name: "OID"
+	representation: "oid"
+}
+
 Properties: [
 	AdminCount,
+	CASecurityCollected,
+	CAName,
+	CertChain,
+	CertName,
+	CertThumbprint,
+	CertThumbprints,
+	HasEnrollmentAgentRestrictions,
+	EnrollmentAgentRestrictionsCollected,
+	IsUserSpecifiesSanEnabled,
+	IsUserSpecifiesSanEnabledCollected,
+	HasBasicConstraints,
+	BasicConstraintPathLength,
+	DNSHostname,
+	CrossCertificatePair,
 	DistinguishedName,
 	DomainFQDN,
 	DomainSID,
@@ -225,8 +549,10 @@ Properties: [
 	BlocksInheritance,
 	IsACL,
 	IsACLProtected,
+	IsDeleted,
 	Enforced,
 	Department,
+	HasCrossCertificatePair,
 	HasSPN,
 	UnconstrainedDelegation,
 	LastLogon,
@@ -242,7 +568,35 @@ Properties: [
 	TrustType,
 	SidFiltering,
 	TrustedToAuth,
-	SamAccountName
+	SamAccountName,
+	CertificateMappingMethodsRaw,
+	CertificateMappingMethods,
+	StrongCertificateBindingEnforcementRaw,
+	StrongCertificateBindingEnforcement,
+	EKUs,
+	SubjectAltRequireUPN,
+	SubjectAltRequireDNS,
+	SubjectAltRequireDomainDNS,
+	SubjectAltRequireEmail,
+	SubjectAltRequireSPN,
+	SubjectRequireEmail,
+	AuthorizedSignatures,
+	ApplicationPolicies,
+	IssuancePolicies,
+	SchemaVersion,
+	RequiresManagerApproval,
+	AuthenticationEnabled,
+	EnrolleeSuppliesSubject,
+	CertificateApplicationPolicy,
+	CertificateNameFlag,
+	EffectiveEKUs,
+	EnrollmentFlag,
+	Flags,
+	NoSecurityExtension,
+	RenewalPeriod,
+	ValidityPeriod,
+	OID,
+	HomeDirectory
 ]
 
 // Kinds
@@ -299,6 +653,31 @@ Domain: types.#Kind & {
 	schema: "active_directory"
 }
 
+AIACA: types.#Kind & {
+	symbol: "AIACA"
+	schema: "active_directory"
+}
+
+RootCA: types.#Kind & {
+	symbol: "RootCA"
+	schema: "active_directory"
+}
+
+EnterpriseCA: types.#Kind & {
+	symbol: "EnterpriseCA"
+	schema: "active_directory"
+}
+
+NTAuthStore: types.#Kind & {
+	symbol: "NTAuthStore"
+	schema: "active_directory"
+}
+
+CertTemplate: types.#Kind & {
+	symbol: "CertTemplate"
+	schema: "active_directory"
+}
+
 NodeKinds: [
 	Entity,
 	User,
@@ -310,6 +689,11 @@ NodeKinds: [
 	Domain,
 	LocalGroup,
 	LocalUser,
+	AIACA,
+	RootCA,
+	EnterpriseCA,
+	NTAuthStore,
+	CertTemplate
 ]
 
 Owns: types.#Kind & {
@@ -498,6 +882,151 @@ GetChangesInFilteredSet: types.#Kind & {
 	schema: "active_directory"
 }
 
+RootCAFor: types.#Kind & {
+	symbol: "RootCAFor"
+	schema: "active_directory"
+}
+
+DCFor: types.#Kind & {
+	symbol: "DCFor"
+	schema: "active_directory"
+}
+
+PublishedTo: types.#Kind & {
+	symbol: "PublishedTo"
+	schema: "active_directory"
+}
+
+ManageCertificates: types.#Kind & {
+	symbol: "ManageCertificates"
+	schema: "active_directory"
+}
+
+ManageCA: types.#Kind & {
+	symbol: "ManageCA"
+	schema: "active_directory"
+}
+
+DelegatedEnrollmentAgent: types.#Kind & {
+	symbol: "DelegatedEnrollmentAgent"
+	schema: "active_directory"
+}
+
+Enroll: types.#Kind & {
+	symbol: "Enroll"
+	schema: "active_directory"
+}
+
+HostsCAService: types.#Kind & {
+	symbol: "HostsCAService"
+	schema: "active_directory"
+}
+
+WritePKIEnrollmentFlag: types.#Kind & {
+	symbol: "WritePKIEnrollmentFlag"
+	schema: "active_directory"
+}
+
+WritePKINameFlag: types.#Kind & {
+	symbol: "WritePKINameFlag"
+	schema: "active_directory"
+}
+
+NTAuthStoreFor: types.#Kind & {
+	symbol: "NTAuthStoreFor"
+	schema: "active_directory"
+}
+
+TrustedForNTAuth: types.#Kind & {
+	symbol: "TrustedForNTAuth"
+	schema: "active_directory"
+}
+
+EnterpriseCAFor: types.#Kind & {
+	symbol: "EnterpriseCAFor"
+	schema: "active_directory"
+}
+
+CanAbuseUPNCertMapping: types.#Kind & {
+	symbol: "CanAbuseUPNCertMapping"
+	schema: "active_directory"
+}
+
+CanAbuseWeakCertBinding: types.#Kind & {
+	symbol: "CanAbuseWeakCertBinding"
+	schema: "active_directory"
+}
+
+IssuedSignedBy: types.#Kind & {
+	symbol: "IssuedSignedBy"
+	schema: "active_directory"
+}
+
+GoldenCert: types.#Kind & {
+	symbol: "GoldenCert"
+	schema: "active_directory"
+}
+
+EnrollOnBehalfOf: types.#Kind & {
+	symbol: "EnrollOnBehalfOf"
+	schema: "active_directory"
+}
+
+ADCSESC1: types.#Kind & {
+	symbol: "ADCSESC1"
+	schema: "active_directory"
+}
+
+ADCSESC3: types.#Kind & {
+	symbol: "ADCSESC3"
+	schema: "active_directory"
+}
+
+ADCSESC4: types.#Kind & {
+	symbol: "ADCSESC4"
+	schema: "active_directory"
+}
+
+ADCSESC5: types.#Kind & {
+	symbol: "ADCSESC5"
+	schema: "active_directory"
+}
+
+ADCSESC6a: types.#Kind & {
+	symbol: "ADCSESC6a"
+	schema: "active_directory"
+}
+
+ADCSESC6b: types.#Kind & {
+	symbol: "ADCSESC6b"
+	schema: "active_directory"
+}
+
+ADCSESC7: types.#Kind & {
+	symbol: "ADCSESC7"
+	schema: "active_directory"
+}
+
+ADCSESC9a: types.#Kind & {
+	symbol: "ADCSESC9a"
+	schema: "active_directory"
+}
+
+ADCSESC9b: types.#Kind & {
+	symbol: "ADCSESC9b"
+	schema: "active_directory"
+}
+
+ADCSESC10a: types.#Kind & {
+	symbol: "ADCSESC10a"
+	schema: "active_directory"
+}
+
+ADCSESC10b: types.#Kind & {
+	symbol: "ADCSESC10b"
+	schema: "active_directory"
+}
+
 // Relationship Kinds
 RelationshipKinds: [
 	Owns,
@@ -536,7 +1065,36 @@ RelationshipKinds: [
 	MemberOfLocalGroup,
 	RemoteInteractiveLogonPrivilege,
 	SyncLAPSPassword,
-	WriteAccountRestrictions
+	WriteAccountRestrictions,
+	RootCAFor,
+	DCFor,
+	PublishedTo,
+	ManageCertificates,
+	ManageCA,
+	DelegatedEnrollmentAgent,
+	Enroll,
+	HostsCAService,
+	WritePKIEnrollmentFlag,
+	WritePKINameFlag,
+	NTAuthStoreFor,
+	TrustedForNTAuth,
+	EnterpriseCAFor,
+	CanAbuseUPNCertMapping,
+	CanAbuseWeakCertBinding,
+	IssuedSignedBy,
+	GoldenCert,
+	EnrollOnBehalfOf,
+	ADCSESC1,
+	ADCSESC3,
+	ADCSESC4,
+	ADCSESC5,
+	ADCSESC6a,
+	ADCSESC6b,
+	ADCSESC7,
+	ADCSESC9a,
+	ADCSESC9b,
+	ADCSESC10a,
+	ADCSESC10b
 ]
 
 // ACL Relationships
@@ -561,6 +1119,11 @@ ACLRelationships: [
 	WriteAccountRestrictions,
 	SyncLAPSPassword,
 	DCSync,
+	ManageCertificates,
+	ManageCA,
+	Enroll,
+	WritePKIEnrollmentFlag,
+	WritePKINameFlag
 ]
 
 // Edges that are used in pathfinding
@@ -595,5 +1158,30 @@ PathfindingRelationships: [
 	WriteSPN,
 	AddKeyCredentialLink,
 	SyncLAPSPassword,
-	WriteAccountRestrictions
+	WriteAccountRestrictions,
+	GoldenCert,
+	ADCSESC1,
+	ADCSESC3,
+	ADCSESC4,
+	ADCSESC5,
+	ADCSESC6a,
+	ADCSESC6b,
+	ADCSESC7,
+	ADCSESC9a,
+	ADCSESC9b,
+	ADCSESC10a,
+	ADCSESC10b,
+	DCFor
+]
+
+EdgeCompositionRelationships: [
+	GoldenCert,
+	ADCSESC1,
+	ADCSESC3,
+	ADCSESC6a,
+	ADCSESC6b,
+	ADCSESC9a,
+	ADCSESC9b,
+	ADCSESC10a,
+	ADCSESC10b,
 ]

@@ -19,6 +19,7 @@ package database
 //go:generate go run go.uber.org/mock/mockgen -copyright_file=../../../../LICENSE.header -destination=./mocks/db.go -package=mocks . Database
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -51,6 +52,7 @@ type Database interface {
 	appcfg.ParameterService
 	appcfg.FeatureFlagService
 
+	Close()
 	GetConfigurationParameter(parameter string) (appcfg.Parameter, error)
 	SetConfigurationParameter(appConfig appcfg.Parameter) error
 	GetAllConfigurationParameters() (appcfg.Parameters, error)
@@ -59,9 +61,9 @@ type Database interface {
 	DeleteIngestTask(ingestTask model.IngestTask) error
 	GetIngestTasksForJob(jobID int64) (model.IngestTasks, error)
 	GetUnfinishedIngestIDs() ([]int64, error)
-	CreateAssetGroup(name, tag string, systemGroup bool) (model.AssetGroup, error)
-	UpdateAssetGroup(assetGroup model.AssetGroup) error
-	DeleteAssetGroup(assetGroup model.AssetGroup) error
+	CreateAssetGroup(ctx context.Context, name, tag string, systemGroup bool) (model.AssetGroup, error)
+	UpdateAssetGroup(ctx context.Context, assetGroup model.AssetGroup) error
+	DeleteAssetGroup(ctx context.Context, assetGroup model.AssetGroup) error
 	GetAssetGroup(id int32) (model.AssetGroup, error)
 	GetAllAssetGroups(order string, filter model.SQLFilter) (model.AssetGroups, error)
 	SweepAssetGroupCollections()
@@ -70,18 +72,19 @@ type Database interface {
 	GetTimeRangedAssetGroupCollections(assetGroupID int32, from int64, to int64, order string) (model.AssetGroupCollections, error)
 	GetAllAssetGroupCollections() (model.AssetGroupCollections, error)
 	GetAssetGroupSelector(id int32) (model.AssetGroupSelector, error)
-	UpdateAssetGroupSelector(selector model.AssetGroupSelector) error
-	DeleteAssetGroupSelector(selector model.AssetGroupSelector) error
-	RemoveAssetGroupSelector(selector model.AssetGroupSelector) error
+	UpdateAssetGroupSelector(ctx context.Context, selector model.AssetGroupSelector) error
+	DeleteAssetGroupSelector(ctx context.Context, selector model.AssetGroupSelector) error
 	CreateRawAssetGroupSelector(assetGroup model.AssetGroup, name, selector string) (model.AssetGroupSelector, error)
 	CreateAssetGroupSelector(assetGroup model.AssetGroup, spec model.AssetGroupSelectorSpec, systemSelector bool) (model.AssetGroupSelector, error)
-	UpdateAssetGroupSelectors(ctx ctx.Context, assetGroup model.AssetGroup, selectorSpecs []model.AssetGroupSelectorSpec, systemSelector bool) (map[string]model.AssetGroupSelectors, error)
+	UpdateAssetGroupSelectors(ctx ctx.Context, assetGroup model.AssetGroup, selectorSpecs []model.AssetGroupSelectorSpec, systemSelector bool) (model.UpdatedAssetGroupSelectors, error)
 	GetAllAssetGroupSelectors() (model.AssetGroupSelectors, error)
 	CreateAssetGroupCollection(collection model.AssetGroupCollection, entries model.AssetGroupCollectionEntries) error
 	RawFirst(value any) error
 	Wipe() error
 	Migrate() error
-	AppendAuditLog(ctx ctx.Context, action string, data model.Auditable) error
+	RequiresMigration() (bool, error)
+	CreateAuditLog(auditLog model.AuditLog) error
+	AppendAuditLog(ctx context.Context, entry model.AuditEntry) error
 	ListAuditLogs(before, after time.Time, offset, limit int, order string, filter model.SQLFilter) (model.AuditLogs, int, error)
 	CreateRole(role model.Role) (model.Role, error)
 	UpdateRole(role model.Role) error
@@ -98,30 +101,30 @@ type Database interface {
 	CreateInstallation() (model.Installation, error)
 	GetInstallation() (model.Installation, error)
 	HasInstallation() (bool, error)
-	CreateUser(user model.User) (model.User, error)
-	UpdateUser(user model.User) error
+	CreateUser(ctx context.Context, user model.User) (model.User, error)
+	UpdateUser(ctx context.Context, user model.User) error
 	GetAllUsers(order string, filter model.SQLFilter) (model.Users, error)
 	GetUser(id uuid.UUID) (model.User, error)
-	DeleteUser(user model.User) error
+	DeleteUser(ctx context.Context, user model.User) error
 	LookupUser(principalName string) (model.User, error)
-	CreateAuthToken(authToken model.AuthToken) (model.AuthToken, error)
+	CreateAuthToken(ctx context.Context, authToken model.AuthToken) (model.AuthToken, error)
 	UpdateAuthToken(authToken model.AuthToken) error
 	GetAllAuthTokens(order string, filter model.SQLFilter) (model.AuthTokens, error)
 	GetAuthToken(id uuid.UUID) (model.AuthToken, error)
 	ListUserTokens(userID uuid.UUID, order string, filter model.SQLFilter) (model.AuthTokens, error)
 	GetUserToken(userId, tokenId uuid.UUID) (model.AuthToken, error)
-	DeleteAuthToken(authToken model.AuthToken) error
-	CreateAuthSecret(authSecret model.AuthSecret) (model.AuthSecret, error)
+	DeleteAuthToken(ctx context.Context, authToken model.AuthToken) error
+	CreateAuthSecret(ctx context.Context, authSecret model.AuthSecret) (model.AuthSecret, error)
 	GetAuthSecret(id int32) (model.AuthSecret, error)
-	UpdateAuthSecret(authSecret model.AuthSecret) error
-	DeleteAuthSecret(authSecret model.AuthSecret) error
-	CreateSAMLIdentityProvider(samlProvider model.SAMLProvider) (model.SAMLProvider, error)
-	UpdateSAMLIdentityProvider(samlProvider model.SAMLProvider) error
+	UpdateAuthSecret(ctx context.Context, authSecret model.AuthSecret) error
+	DeleteAuthSecret(ctx context.Context, authSecret model.AuthSecret) error
+	CreateSAMLIdentityProvider(ctx context.Context, samlProvider model.SAMLProvider) (model.SAMLProvider, error)
+	UpdateSAMLIdentityProvider(ctx context.Context, samlProvider model.SAMLProvider) error
 	LookupSAMLProviderByName(name string) (model.SAMLProvider, error)
 	GetAllSAMLProviders() (model.SAMLProviders, error)
 	GetSAMLProvider(id int32) (model.SAMLProvider, error)
 	GetSAMLProviderUsers(id int32) (model.Users, error)
-	DeleteSAMLProvider(samlProvider model.SAMLProvider) error
+	DeleteSAMLProvider(ctx context.Context, samlProvider model.SAMLProvider) error
 	CreateUserSession(userSession model.UserSession) (model.UserSession, error)
 	LookupActiveSessionsByUser(user model.User) ([]model.UserSession, error)
 	EndUserSession(userSession model.UserSession)
@@ -149,6 +152,14 @@ type Database interface {
 type BloodhoundDB struct {
 	db         *gorm.DB
 	idResolver auth.IdentityResolver // TODO: this really needs to be elsewhere. something something separation of concerns
+}
+
+func (s *BloodhoundDB) Close() {
+	if sqlDBRef, err := s.db.DB(); err != nil {
+		log.Errorf("Failed to fetch SQL DB reference from GORM: %v", err)
+	} else if err := sqlDBRef.Close(); err != nil {
+		log.Errorf("Failed closing database: %v", err)
+	}
 }
 
 func (s *BloodhoundDB) preload(associations []string) *gorm.DB {
@@ -200,7 +211,7 @@ func (s *BloodhoundDB) Wipe() error {
 	return s.db.Transaction(func(tx *gorm.DB) error {
 		var tables []string
 
-		if result := tx.Raw("select table_name from information_schema.tables where table_schema = current_schema()").Scan(&tables); result.Error != nil {
+		if result := tx.Raw("select table_name from information_schema.tables where table_schema = current_schema() and not table_name ilike '%pg_stat%'").Scan(&tables); result.Error != nil {
 			return result.Error
 		}
 
@@ -216,10 +227,14 @@ func (s *BloodhoundDB) Wipe() error {
 	})
 }
 
+func (s *BloodhoundDB) RequiresMigration() (bool, error) {
+	return migration.NewMigrator(s.db).RequiresMigration()
+}
+
 func (s *BloodhoundDB) Migrate() error {
 	// Run the migrator
 	if err := migration.NewMigrator(s.db).Migrate(); err != nil {
-		log.Errorf("Error during database migration phase: %v", err)
+		log.Errorf("Error during SQL database migration phase: %v", err)
 		return err
 	}
 

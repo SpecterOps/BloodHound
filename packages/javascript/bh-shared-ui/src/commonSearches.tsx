@@ -19,11 +19,8 @@ import { ActiveDirectoryPathfindingEdges, AzurePathfindingEdges } from './graphS
 const categoryAD = 'Active Directory';
 const categoryAzure = 'Azure';
 
-// Join all elements with "|" but the last element, then append last element
-// produces element1|element2|element3
-const azureTransitEdgeTypes = AzurePathfindingEdges().slice(0, -1).join('|') + AzurePathfindingEdges().slice(-1);
-const adTransitEdgeTypes =
-    ActiveDirectoryPathfindingEdges().slice(0, -1).join('|') + '|' + ActiveDirectoryPathfindingEdges().slice(-1);
+const azureTransitEdgeTypes = AzurePathfindingEdges().join('|');
+const adTransitEdgeTypes = ActiveDirectoryPathfindingEdges().join('|');
 
 const highPrivilegedRoleDisplayNameRegex =
     'Global Administrator.*|User Administrator.*|Cloud Application Administrator.*|Authentication Policy Administrator.*|Exchange Administrator.*|Helpdesk Administrator.*|Privileged Authentication Administrator.*';
@@ -56,7 +53,7 @@ export const CommonSearches: CommonSearchType[] = [
             },
             {
                 description: 'Locations of high value/Tier Zero objects',
-                cypher: `MATCH p = (:Domain)-[:Contains*1..]->(n:Base)\nWHERE n.system_tags="admin_tier_0"\nRETURN p`,
+                cypher: `MATCH p = (:Domain)-[:Contains*1..]->(n:Base)\nWHERE "admin_tier_0" IN split(n.system_tags, ' ')\nRETURN p`,
             },
         ],
     },
@@ -86,15 +83,15 @@ export const CommonSearches: CommonSearchType[] = [
             },
             {
                 description: 'Paths from Domain Users to high value/Tier Zero targets',
-                cypher: `MATCH p=shortestPath((m:Group)-[:${adTransitEdgeTypes}*1..]->(n))\nWHERE n.system_tags="admin_tier_0" AND m.objectid ENDS WITH "-513" AND m<>n\nRETURN p`,
+                cypher: `MATCH p=shortestPath((m:Group)-[:${adTransitEdgeTypes}*1..]->(n))\nWHERE "admin_tier_0" IN split(n.system_tags, ' ') AND m.objectid ENDS WITH "-513" AND m<>n\nRETURN p`,
             },
             {
                 description: 'Workstations where Domain Users can RDP',
-                cypher: `MATCH p=(m:Group)-[:CanRDP]->(c:Computer)\nWHERE m.objectid ENDS WITH "-513" AND NOT c.operatingsystem CONTAINS "Server"\nRETURN p`,
+                cypher: `MATCH p=(m:Group)-[:CanRDP]->(c:Computer)\nWHERE m.objectid ENDS WITH "-513" AND NOT toUpper(c.operatingsystem) CONTAINS "SERVER"\nRETURN p`,
             },
             {
                 description: 'Servers where Domain Users can RDP',
-                cypher: `MATCH p=(m:Group)-[:CanRDP]->(c:Computer)\nWHERE m.objectid ENDS WITH "-513" AND c.operatingsystem CONTAINS "Server"\nRETURN p`,
+                cypher: `MATCH p=(m:Group)-[:CanRDP]->(c:Computer)\nWHERE m.objectid ENDS WITH "-513" AND toUpper(c.operatingsystem) CONTAINS "SERVER"\nRETURN p`,
             },
             {
                 description: 'Dangerous privileges for Domain Users groups',
@@ -112,7 +109,7 @@ export const CommonSearches: CommonSearchType[] = [
         queries: [
             {
                 description: 'Kerberoastable members of high value/Tier Zero groups',
-                cypher: `MATCH p=shortestPath((n:User)-[:MemberOf]->(g:Group))\nWHERE g.system_tags = "admin_tier_0" AND n.hasspn=true\nRETURN p`,
+                cypher: `MATCH p=shortestPath((n:User)-[:MemberOf]->(g:Group))\nWHERE "admin_tier_0" IN split(g.system_tags, ' ') AND n.hasspn=true\nRETURN p`,
             },
             {
                 description: 'All Kerberoastable users',
@@ -146,15 +143,62 @@ export const CommonSearches: CommonSearchType[] = [
             },
             {
                 description: 'Shortest paths to high value/Tier Zero targets',
-                cypher: `MATCH p=shortestPath((n)-[:${adTransitEdgeTypes}*1..]->(m))\nWHERE m.system_tags = "admin_tier_0" AND n<>m\nRETURN p`,
+                cypher: `MATCH p=shortestPath((n)-[:${adTransitEdgeTypes}*1..]->(m))\nWHERE "admin_tier_0" IN split(m.system_tags, ' ') AND n<>m\nRETURN p`,
             },
             {
                 description: 'Shortest paths from Domain Users to high value/Tier Zero targets',
-                cypher: `MATCH p=shortestPath((n:Group)-[:${adTransitEdgeTypes}*1..]->(m))\nWHERE m.system_tags = "admin_tier_0" AND n.objectid ENDS WITH "-513" AND n<>m\nRETURN p`,
+                cypher: `MATCH p=shortestPath((n:Group)-[:${adTransitEdgeTypes}*1..]->(m))\nWHERE "admin_tier_0" IN split(m.system_tags, ' ') AND n.objectid ENDS WITH "-513" AND n<>m\nRETURN p`,
             },
             {
                 description: 'Shortest paths to Domain Admins',
                 cypher: `MATCH p=shortestPath((n)-[:${adTransitEdgeTypes}*1..]->(g:Group))\nWHERE g.objectid ENDS WITH "-512" AND n<>g\nRETURN p`,
+            },
+        ],
+    },
+    {
+        subheader: 'Active Directory Certificate Services',
+        category: categoryAD,
+        queries: [
+            {
+                description: 'PKI hierarchy',
+                cypher: `MATCH p=()-[:HostsCAService|IssuedSignedBy|EnterpriseCAFor|RootCAFor|TrustedForNTAuth|NTAuthStoreFor*..]->()\nRETURN p`,
+            },
+            {
+                description: 'Public Key Services container',
+                cypher: `MATCH p = (c:Container)-[:Contains*..]->()\nWHERE c.distinguishedname starts with "CN=PUBLIC KEY SERVICES,CN=SERVICES,CN=CONFIGURATION,DC="\nRETURN p`,
+            },
+            {
+                description: 'Enrollment rights on published certificate templates',
+                cypher: `MATCH p = ()-[:Enroll|GenericAll|AllExtendedRights]->(ct:CertTemplate)-[:PublishedTo]->(:EnterpriseCA)\nRETURN p`,
+            },
+            {
+                description: 'Enrollment rights on published ESC1 certificate templates',
+                cypher: `MATCH p = ()-[:Enroll|GenericAll|AllExtendedRights]->(ct:CertTemplate)-[:PublishedTo]->(:EnterpriseCA)\nWHERE ct.enrolleesuppliessubject = True\nAND ct.authenticationenabled = True\nAND ct.requiresmanagerapproval = False\nRETURN p`,
+            },
+            {
+                description: 'Enrollment rights on published enrollment agent certificate templates',
+                cypher: `MATCH p = ()-[:Enroll|GenericAll|AllExtendedRights]->(ct:CertTemplate)-[:PublishedTo]->(:EnterpriseCA)\nWHERE ct.effectiveekus CONTAINS "1.3.6.1.4.1.311.20.2.1"\nOR ct.effectiveekus CONTAINS "2.5.29.37.0"\nOR SIZE(ct.effectiveekus) = 0\nRETURN p`,
+            },
+            {
+                description: 'Enrollment rights on published certificate templates with no security extension',
+                cypher: `MATCH p = ()-[:Enroll|GenericAll|AllExtendedRights]->(ct:CertTemplate)-[:PublishedTo]->(:EnterpriseCA)\nWHERE ct.nosecurityextension = true\nRETURN p`,
+            },
+            {
+                description:
+                    'Enrollment rights on certificate templates published to Enterprise CA with User Specified SAN enabled',
+                cypher: `MATCH p = ()-[:Enroll|GenericAll|AllExtendedRights]->(ct:CertTemplate)-[:PublishedTo]->(eca:EnterpriseCA)\nWHERE eca.isuserspecifiessanenabled = True\nRETURN p`,
+            },
+            {
+                description: 'CA administrators and CA managers',
+                cypher: `MATCH p = ()-[:ManageCertificates|ManageCA]->(:EnterpriseCA)\nRETURN p`,
+            },
+            {
+                description: 'Domain controllers with weak certificate binding enabled',
+                cypher: `MATCH p = (dc:Computer)-[:DCFor]->(d)\nWHERE dc.strongcertificatebindingenforcementraw = 0 OR dc.strongcertificatebindingenforcementraw = 1\nRETURN p`,
+            },
+            {
+                description: 'Domain controllers with UPN certificate mapping enabled',
+                cypher: `MATCH p = (dc:Computer)-[:DCFor]->(d)\nWHERE dc.certificatemappingmethodsraw IN [4, 5, 6, 7, 12, 13, 14, 15, 20, 21, 22, 23, 28, 29, 30, 31]\nRETURN p`,
             },
         ],
     },
@@ -178,7 +222,7 @@ export const CommonSearches: CommonSearchType[] = [
         queries: [
             {
                 description: 'Shortest paths to high value/Tier Zero targets',
-                cypher: `MATCH p=shortestPath((m:AZUser)-[r:${azureTransitEdgeTypes}*1..]->(n))\nWHERE n.system_tags = "admin_tier_0" AND n.name =~ '(?i)${highPrivilegedRoleDisplayNameRegex}' AND m<>n\nRETURN p`,
+                cypher: `MATCH p=shortestPath((m:AZUser)-[r:${azureTransitEdgeTypes}*1..]->(n))\nWHERE "admin_tier_0" IN split(n.system_tags, ' ') AND n.name =~ '(?i)${highPrivilegedRoleDisplayNameRegex}' AND m<>n\nRETURN p`,
             },
             {
                 description: 'Shortest paths to privileged roles',
@@ -186,7 +230,7 @@ export const CommonSearches: CommonSearchType[] = [
             },
             {
                 description: 'Shortest paths from Azure Applications to high value/Tier Zero targets',
-                cypher: `MATCH p=shortestPath((m:AZApp)-[r:${azureTransitEdgeTypes}*1..]->(n))\nWHERE n.system_tags = "admin_tier_0" AND m<>n\nRETURN p`,
+                cypher: `MATCH p=shortestPath((m:AZApp)-[r:${azureTransitEdgeTypes}*1..]->(n))\nWHERE "admin_tier_0" IN split(n.system_tags, ' ') AND m<>n\nRETURN p`,
             },
             {
                 description: 'Shortest paths to Azure Subscriptions',

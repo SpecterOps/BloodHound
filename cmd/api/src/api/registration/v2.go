@@ -39,7 +39,7 @@ func samlWriteAPIErrorResponse(request *http.Request, response http.ResponseWrit
 func registerV2Auth(cfg config.Configuration, db database.Database, permissions auth.PermissionSet, routerInst *router.Router, authenticator api.Authenticator) {
 	var (
 		loginResource      = authapi.NewLoginResource(cfg, authenticator, db)
-		managementResource = authapi.NewManagementResource(cfg, db, auth.NewAuthorizer())
+		managementResource = authapi.NewManagementResource(cfg, db, auth.NewAuthorizer(db))
 		samlResource       = saml.NewSAMLRootResource(cfg, db, samlWriteAPIErrorResponse)
 	)
 
@@ -104,6 +104,7 @@ func NewV2API(cfg config.Configuration, resources v2.Resources, routerInst *rout
 	// Ingest APIs
 	//TODO: What permission should we use here? GraphDB Write
 	routerInst.GET("/api/v2/file-upload", resources.ListFileUploadJobs).RequireAuth()
+	routerInst.GET("/api/v2/file-upload/accepted-types", resources.ListAcceptedFileUploadTypes).RequireAuth()
 	routerInst.POST("/api/v2/file-upload/start", resources.StartFileUploadJob).RequirePermissions(permissions.GraphDBWrite)
 	routerInst.POST(fmt.Sprintf("/api/v2/file-upload/{%s}", v2.FileUploadJobIdPathParameterName), resources.ProcessFileUpload).RequirePermissions(permissions.GraphDBWrite)
 	routerInst.POST(fmt.Sprintf("/api/v2/file-upload/{%s}/end", v2.FileUploadJobIdPathParameterName), resources.EndFileUploadJob).RequirePermissions(permissions.GraphDBWrite)
@@ -137,16 +138,21 @@ func NewV2API(cfg config.Configuration, resources v2.Resources, routerInst *rout
 		routerInst.GET(fmt.Sprintf("/api/v2/asset-groups/{%s}/custom-selectors", api.URIPathVariableAssetGroupID), resources.GetAssetGroupCustomMemberCount).RequirePermissions(permissions.GraphDBRead),
 		routerInst.DELETE(fmt.Sprintf("/api/v2/asset-groups/{%s}", api.URIPathVariableAssetGroupID), resources.DeleteAssetGroup).RequirePermissions(permissions.GraphDBWrite),
 		routerInst.PUT(fmt.Sprintf("/api/v2/asset-groups/{%s}", api.URIPathVariableAssetGroupID), resources.UpdateAssetGroup).RequirePermissions(permissions.GraphDBWrite),
-		routerInst.POST(fmt.Sprintf("/api/v2/asset-groups/{%s}/selectors", api.URIPathVariableAssetGroupID), resources.UpdateAssetGroupSelectors).RequirePermissions(permissions.GraphDBWrite),
 		routerInst.DELETE(fmt.Sprintf("/api/v2/asset-groups/{%s}/selectors/{%s}", api.URIPathVariableAssetGroupID, api.URIPathVariableAssetGroupSelectorID), resources.DeleteAssetGroupSelector).RequirePermissions(permissions.GraphDBWrite),
 		routerInst.GET(fmt.Sprintf("/api/v2/asset-groups/{%s}/collections", api.URIPathVariableAssetGroupID), resources.ListAssetGroupCollections).RequirePermissions(permissions.GraphDBRead),
 		routerInst.GET(fmt.Sprintf("/api/v2/asset-groups/{%s}/members", api.URIPathVariableAssetGroupID), resources.ListAssetGroupMembers).RequirePermissions(permissions.GraphDBRead),
+		routerInst.GET(fmt.Sprintf("/api/v2/asset-groups/{%s}/members/counts", api.URIPathVariableAssetGroupID), resources.ListAssetGroupMemberCountsByKind).RequirePermissions(permissions.GraphDBRead),
+		routerInst.PUT(fmt.Sprintf("/api/v2/asset-groups/{%s}/selectors", api.URIPathVariableAssetGroupID), resources.UpdateAssetGroupSelectors).RequirePermissions(permissions.GraphDBWrite),
+		// DEPRECATED: this has been changed to a PUT endpoint above, and must be removed for API V3
+		routerInst.POST(fmt.Sprintf("/api/v2/asset-groups/{%s}/selectors", api.URIPathVariableAssetGroupID), resources.UpdateAssetGroupSelectors).RequirePermissions(permissions.GraphDBWrite),
 
 		//QA API
 		routerInst.GET("/api/v2/completeness", resources.GetDatabaseCompleteness).RequirePermissions(permissions.GraphDBRead),
 
 		routerInst.GET("/api/v2/pathfinding", resources.GetPathfindingResult).Queries("start_node", "{start_node}", "end_node", "{end_node}").RequirePermissions(permissions.GraphDBRead),
 		routerInst.GET("/api/v2/graphs/shortest-path", resources.GetShortestPath).Queries(params.StartNode.String(), params.StartNode.RouteMatcher(), params.EndNode.String(), params.EndNode.RouteMatcher()).RequirePermissions(permissions.GraphDBRead),
+		routerInst.GET("/api/v2/graphs/edge-composition", resources.GetEdgeComposition).RequirePermissions(permissions.GraphDBRead),
+
 		// TODO discuss if this should be a post endpoint
 		routerInst.GET("/api/v2/graph-search", resources.GetSearchResult).RequirePermissions(permissions.GraphDBRead),
 
@@ -182,6 +188,10 @@ func NewV2API(cfg config.Configuration, resources v2.Resources, routerInst *rout
 		routerInst.GET(fmt.Sprintf("/api/v2/computers/{%s}/controllers", api.URIPathVariableObjectID), resources.ListADEntityControllers).RequirePermissions(permissions.GraphDBRead),
 		routerInst.GET(fmt.Sprintf("/api/v2/computers/{%s}/controllables", api.URIPathVariableObjectID), resources.ListADEntityControllables).RequirePermissions(permissions.GraphDBRead),
 
+		// Container Entity API
+		routerInst.GET(fmt.Sprintf("/api/v2/containers/{%s}", api.URIPathVariableObjectID), resources.GetContainerEntityInfo).RequirePermissions(permissions.GraphDBRead),
+		routerInst.GET(fmt.Sprintf("/api/v2/containers/{%s}/controllers", api.URIPathVariableObjectID), resources.ListADEntityControllers).RequirePermissions(permissions.GraphDBRead),
+
 		// Domain Entity API
 		routerInst.PATCH(fmt.Sprintf("/api/v2/domains/{%s}", api.URIPathVariableObjectID), resources.PatchDomain).RequirePermissions(permissions.GraphDBRead),
 		routerInst.GET(fmt.Sprintf("/api/v2/domains/{%s}", api.URIPathVariableObjectID), resources.GetDomainEntityInfo).RequirePermissions(permissions.GraphDBRead),
@@ -207,6 +217,26 @@ func NewV2API(cfg config.Configuration, resources v2.Resources, routerInst *rout
 		routerInst.GET(fmt.Sprintf("/api/v2/gpos/{%s}/controllers", api.URIPathVariableObjectID), resources.ListADEntityControllers).RequirePermissions(permissions.GraphDBRead),
 		routerInst.GET(fmt.Sprintf("/api/v2/gpos/{%s}/tier-zero", api.URIPathVariableObjectID), resources.ListADGPOAffectedTierZero).RequirePermissions(permissions.GraphDBRead),
 		routerInst.GET(fmt.Sprintf("/api/v2/gpos/{%s}/ous", api.URIPathVariableObjectID), resources.ListADGPOAffectedContainers).RequirePermissions(permissions.GraphDBRead),
+
+		// AIACA Entity API
+		routerInst.GET(fmt.Sprintf("/api/v2/aiacas/{%s}", api.URIPathVariableObjectID), resources.GetAIACAEntityInfo).RequirePermissions(permissions.GraphDBRead),
+		routerInst.GET(fmt.Sprintf("/api/v2/aiacas/{%s}/controllers", api.URIPathVariableObjectID), resources.ListADEntityControllers).RequirePermissions(permissions.GraphDBRead),
+
+		// RootCA Entity API
+		routerInst.GET(fmt.Sprintf("/api/v2/rootcas/{%s}", api.URIPathVariableObjectID), resources.GetRootCAEntityInfo).RequirePermissions(permissions.GraphDBRead),
+		routerInst.GET(fmt.Sprintf("/api/v2/rootcas/{%s}/controllers", api.URIPathVariableObjectID), resources.ListADEntityControllers).RequirePermissions(permissions.GraphDBRead),
+
+		// EnterpriseCA Entity API
+		routerInst.GET(fmt.Sprintf("/api/v2/enterprisecas/{%s}", api.URIPathVariableObjectID), resources.GetEnterpriseCAEntityInfo).RequirePermissions(permissions.GraphDBRead),
+		routerInst.GET(fmt.Sprintf("/api/v2/enterprisecas/{%s}/controllers", api.URIPathVariableObjectID), resources.ListADEntityControllers).RequirePermissions(permissions.GraphDBRead),
+
+		// NTAuthStore Entity API
+		routerInst.GET(fmt.Sprintf("/api/v2/ntauthstores/{%s}", api.URIPathVariableObjectID), resources.GetNTAuthStoreEntityInfo).RequirePermissions(permissions.GraphDBRead),
+		routerInst.GET(fmt.Sprintf("/api/v2/ntauthstores/{%s}/controllers", api.URIPathVariableObjectID), resources.ListADEntityControllers).RequirePermissions(permissions.GraphDBRead),
+
+		// CertTemplate Entity API
+		routerInst.GET(fmt.Sprintf("/api/v2/certtemplates/{%s}", api.URIPathVariableObjectID), resources.GetCertTemplateEntityInfo).RequirePermissions(permissions.GraphDBRead),
+		routerInst.GET(fmt.Sprintf("/api/v2/certtemplates/{%s}/controllers", api.URIPathVariableObjectID), resources.ListADEntityControllers).RequirePermissions(permissions.GraphDBRead),
 
 		// OU Entity API
 		routerInst.GET(fmt.Sprintf("/api/v2/ous/{%s}", api.URIPathVariableObjectID), resources.GetOUEntityInfo).RequirePermissions(permissions.GraphDBRead),

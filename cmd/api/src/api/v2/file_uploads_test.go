@@ -1,17 +1,17 @@
 // Copyright 2023 Specter Ops, Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// 
+//
 // SPDX-License-Identifier: Apache-2.0
 
 package v2_test
@@ -20,6 +20,7 @@ import (
 	"context"
 	"database/sql"
 	"net/http"
+	"strings"
 	"testing"
 
 	"github.com/specterops/bloodhound/errors"
@@ -216,10 +217,23 @@ func TestResources_EndFileUploadJob(t *testing.T) {
 						Status: model.JobStatusRunning,
 					}, nil)
 					mockDB.EXPECT().UpdateFileUploadJob(gomock.Any()).Return(nil)
-					mockTasker.EXPECT().NotifyOfFileUploadJobStatus(gomock.Any())
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusOK)
+				},
+			},
+		})
+}
+
+func TestResources_ListAcceptedFileUploadTypes(t *testing.T) {
+	apitest.
+		NewHarness(t, v2.Resources{}.ListAcceptedFileUploadTypes).
+		Run([]apitest.Case{
+			{
+				Name: "Success",
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusOK)
+					apitest.BodyContains(output, strings.Join(v2.AllowedFileUploadTypes, ","))
 				},
 			},
 		})

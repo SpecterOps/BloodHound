@@ -1,11 +1,11 @@
 {
   "linters": {
     "disable": [
-      "errcheck",
-      "unused"
+      "errcheck"
     ],
     "enable": [
-      "gosimple"
+      "gosimple",
+      "stylecheck"
     ]
   },
   "issues": {
@@ -13,30 +13,22 @@
     "max-same-issues": 0,
     "exclude-rules": [
       {
-        "path": "hyperloglog_bench_test\\.go",
-        "text": "SA6002:"
+        "path": ".go",
+        "text": "((neo4j(.+)(NewDriver|Result))|Id|database.Database|(.+)Deprecated) is deprecated"
       },
       {
         "path": "cache_test\\.go",
-        "text": "SA1026:"
-      },
-      {
-        "path": "empty\\.go",
-        "text": "SA5010:"
+        "text": "SA1026:",
+        "severity": "warning"
       },
       {
         "path": "foldr_test\\.go",
-        "text": "SA4000:"
+        "text": "SA4000:",
+        "severity": "warning"
       },
       {
-        "path": ".go",
-        "text": "((neo4j(.+)(NewDriver|Result))|Id|jwt\\.StandardClaims|database.Database|(.+)Deprecated) is deprecated"
-      },
-      {
-        "path": "(.+)_test\\.go",
-        "linters": [
-          "errcheck"
-        ]
+        "path": "dawgs/util/size/(.+)",
+        "linters": ["unused"]
       }
     ]
   },
@@ -49,11 +41,35 @@
       "serial_integration"
     ]
   },
+  "severity": {
+    "default-severity": "error",
+    "rules": [
+      {
+        "linters": ["stylecheck", "gosimple", "unused", "errcheck", "forcetypeassert"],
+        "severity": "warning"
+      },
+      {
+        "text": "SA1019:",
+        "severity": "warning"
+      },
+      {
+        "path": "hyperloglog_bench_test\\.go",
+        "text": "SA6002:",
+        "severity": "warning"
+      },
+      {
+        "path": "expected_ingest.go",
+        "text": "ST1022:",
+        "severity": "warning"
+      }
+    ]
+  },
   "linters-settings": {
     "stylecheck": {
       "checks": [
         "all",
-        "-ST1000"
+        "-ST1000",
+        "-ST1003"
       ]
     }
   }

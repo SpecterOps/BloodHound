@@ -1,17 +1,17 @@
 // Copyright 2023 Specter Ops, Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// 
+//
 // SPDX-License-Identifier: Apache-2.0
 
 package ad
@@ -21,9 +21,6 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/specterops/bloodhound/src/database/types/nan"
-	"github.com/specterops/bloodhound/src/model"
-	"github.com/specterops/bloodhound/src/queries"
 	"github.com/gofrs/uuid"
 	"github.com/specterops/bloodhound/analysis"
 	adAnalysis "github.com/specterops/bloodhound/analysis/ad"
@@ -33,6 +30,9 @@ import (
 	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/graphschema/common"
 	"github.com/specterops/bloodhound/log"
+	"github.com/specterops/bloodhound/src/database/types/nan"
+	"github.com/specterops/bloodhound/src/model"
+	"github.com/specterops/bloodhound/src/queries"
 )
 
 func ValidateDomains(ctx context.Context, queries queries.Graph, objectIDs ...string) ([]string, error) {
@@ -69,7 +69,7 @@ func GraphStats(ctx context.Context, db graph.Database) (model.ADDataQualityStat
 		adStats     = model.ADDataQualityStats{}
 		runID       string
 
-		kinds = graph.Kinds{ad.User, ad.Group, ad.Computer, ad.Container, ad.OU, ad.GPO}
+		kinds = graph.Kinds{ad.User, ad.Group, ad.Computer, ad.Container, ad.OU, ad.GPO, ad.AIACA, ad.RootCA, ad.EnterpriseCA, ad.NTAuthStore, ad.CertTemplate}
 	)
 
 	if newUUID, err := uuid.NewV4(); err != nil {
@@ -140,7 +140,28 @@ func GraphStats(ctx context.Context, db graph.Database) (model.ADDataQualityStat
 								case ad.GPO:
 									stat.GPOs = int(count)
 									aggregation.GPOs += int(count)
+
+								case ad.AIACA:
+									stat.AIACAs = int(count)
+									aggregation.AIACAs += int(count)
+
+								case ad.RootCA:
+									stat.RootCAs = int(count)
+									aggregation.RootCAs += int(count)
+
+								case ad.EnterpriseCA:
+									stat.EnterpriseCAs = int(count)
+									aggregation.EnterpriseCAs += int(count)
+
+								case ad.NTAuthStore:
+									stat.NTAuthStores = int(count)
+									aggregation.NTAuthStores += int(count)
+
+								case ad.CertTemplate:
+									stat.CertTemplates = int(count)
+									aggregation.CertTemplates += int(count)
 								}
+
 								mutex.Unlock()
 								return nil
 							}

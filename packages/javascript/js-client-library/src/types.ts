@@ -33,6 +33,21 @@ export interface CreateAssetGroupSelectorRequest {
     sid: string;
 }
 
+export interface UpdateAssetGroupSelectorRequest {
+    selector_name: string;
+    sid: string;
+    action: 'add' | 'remove';
+}
+
+export interface AssetGroupMemberParams {
+    environment_kind?: string;
+    environment_id?: string;
+    primary_kind?: string;
+    custom_member?: string;
+    skip?: number;
+    limit?: number;
+}
+
 export interface CreateSharpHoundClientRequest {
     domain_controller: string;
     name: string;
@@ -55,15 +70,22 @@ export interface UpdateAzureHoundClientRequest {
     name: string;
 }
 
-export interface CreateScheduledJobRequest {
+export interface CreateScheduledSharpHoundJobRequest {
     session_collection: boolean;
     ad_structure_collection: boolean;
     local_group_collection: boolean;
+    cert_services_collection: boolean;
+    ca_registry_collection: boolean;
+    dc_registry_collection: boolean;
     domain_controller?: string;
     ous: string[];
     domains: string[];
     all_trusted_domains: boolean;
 }
+
+export type CreateScheduledAzureHoundJobRequest = Record<string, never>;
+
+export type CreateScheduledJobRequest = CreateScheduledSharpHoundJobRequest | CreateScheduledAzureHoundJobRequest;
 
 export interface ClientStartJobRequest {
     id: number;
@@ -82,6 +104,9 @@ export interface CreateSharpHoundEventRequest {
     session_collection: boolean;
     ad_structure_collection: boolean;
     local_group_collection: boolean;
+    cert_services_collection: boolean;
+    ca_registry_collection: boolean;
+    dc_registry_collection: boolean;
     ous: string[];
     domains: string[];
     all_trusted_domains: boolean;
@@ -98,6 +123,9 @@ export interface UpdateSharpHoundEventRequest {
     session_collection: boolean;
     ad_structure_collection: boolean;
     local_group_collection: boolean;
+    cert_services_collection: boolean;
+    ca_registry_collection: boolean;
+    dc_registry_collection: boolean;
     ous: string[];
     domains: string[];
     all_trusted_domains: boolean;

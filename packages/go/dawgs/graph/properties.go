@@ -1,17 +1,17 @@
 // Copyright 2023 Specter Ops, Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// 
+//
 // SPDX-License-Identifier: Apache-2.0
 
 package graph
@@ -36,6 +36,25 @@ func int64SliceToIDSlice(int64Slice []int64) []ID {
 	}
 
 	return idSlice
+}
+
+func interfaceSliceToStringSlice(value any) ([]string, error) {
+	if typedSlice, typeOk := value.([]any); !typeOk {
+		return nil, formatPropertyTypeError("[]any", value)
+	} else {
+		stringSlice := make([]string, len(typedSlice))
+
+		for idx := 0; idx < len(typedSlice); idx++ {
+			switch typedValue := typedSlice[idx].(type) {
+			case string:
+				stringSlice[idx] = typedValue
+			default:
+				return nil, formatPropertyTypeError("string", typedSlice[idx])
+			}
+		}
+
+		return stringSlice, nil
+	}
 }
 
 func interfaceSliceToInt64Slice(value any) ([]int64, error) {
@@ -106,6 +125,14 @@ func (s safePropertyValue) IDSlice() ([]ID, error) {
 	}
 }
 
+func (s safePropertyValue) StringSlice() ([]string, error) {
+	if rawValue, err := s.getValue(); err != nil {
+		return nil, err
+	} else {
+		return interfaceSliceToStringSlice(rawValue)
+	}
+}
+
 func (s safePropertyValue) Bool() (bool, error) {
 	if rawValue, err := s.getValue(); err != nil {
 		return false, err
@@ -122,27 +149,15 @@ func (s safePropertyValue) Int() (int, error) {
 	if rawValue, err := s.getValue(); err != nil {
 		return 0, err
 	} else {
-		switch typedValue := rawValue.(type) {
-		case int:
-			return typedValue, err
-
-		case int64:
-			return int(typedValue), nil
-		}
-
-		return 0, formatPropertyTypeError("int", rawValue)
+		return AsNumeric[int](rawValue)
 	}
 }
 
 func (s safePropertyValue) Int64() (int64, error) {
 	if rawValue, err := s.getValue(); err != nil {
 		return 0, err
-	} else if typedValue, typeOK := rawValue.(int64); !typeOK {
-		err := formatPropertyTypeError("int64", rawValue)
-
-		return 0, err
 	} else {
-		return typedValue, nil
+		return AsNumeric[int64](rawValue)
 	}
 }
 
@@ -150,26 +165,15 @@ func (s safePropertyValue) Uint64() (uint64, error) {
 	if rawValue, err := s.getValue(); err != nil {
 		return 0, err
 	} else {
-		switch typedValue := rawValue.(type) {
-		case uint64:
-			return typedValue, nil
-		case int64:
-			return uint64(typedValue), nil
-		default:
-			return 0, formatPropertyTypeError("uint64", rawValue)
-		}
+		return AsNumeric[uint64](rawValue)
 	}
 }
 
 func (s safePropertyValue) Float64() (float64, error) {
 	if rawValue, err := s.getValue(); err != nil {
 		return 0, err
-	} else if typedValue, typeOK := rawValue.(float64); !typeOK {
-		err := formatPropertyTypeError("float64", rawValue)
-
-		return 0, err
 	} else {
-		return typedValue, nil
+		return AsNumeric[float64](rawValue)
 	}
 }
 
@@ -240,6 +244,33 @@ type Properties struct {
 	Map      map[string]any      `json:"map"`
 	Deleted  map[string]struct{} `json:"deleted"`
 	Modified map[string]struct{} `json:"modified"`
+}
+
+func (s *Properties) Merge(other *Properties) {
+	for otherKey, otherValue := range other.Map {
+		s.Map[otherKey] = otherValue
+	}
+
+	for otherModifiedKey := range other.Modified {
+		s.Modified[otherModifiedKey] = struct{}{}
+
+		delete(s.Deleted, otherModifiedKey)
+	}
+
+	for otherDeletedKey := range other.Deleted {
+		s.Deleted[otherDeletedKey] = struct{}{}
+
+		delete(s.Map, otherDeletedKey)
+		delete(s.Modified, otherDeletedKey)
+	}
+}
+
+func (s *Properties) MapOrEmpty() map[string]any {
+	if s == nil || s.Map == nil {
+		return map[string]any{}
+	}
+
+	return s.Map
 }
 
 func (s *Properties) SizeOf() size.Size {
@@ -406,8 +437,17 @@ func (s *Properties) Delete(key string) *Properties {
 	return s
 }
 
+// TODO: This function does not correctly communicate that it is lazily instantiated
 func NewProperties() *Properties {
 	return &Properties{}
+}
+
+func NewPropertiesRed() *Properties {
+	return &Properties{
+		Map:      map[string]any{},
+		Modified: make(map[string]struct{}),
+		Deleted:  make(map[string]struct{}),
+	}
 }
 
 type PropertyMap map[String]any

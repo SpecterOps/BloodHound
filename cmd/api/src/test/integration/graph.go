@@ -1,285 +1,172 @@
 // Copyright 2023 Specter Ops, Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// 
+//
 // SPDX-License-Identifier: Apache-2.0
 
 package integration
 
 import (
-	"context"
 	"fmt"
 	"strings"
 	"time"
 
-	"github.com/specterops/bloodhound/src/test"
-	"github.com/specterops/bloodhound/src/test/must"
-	"github.com/stretchr/testify/require"
-	"github.com/specterops/bloodhound/dawgs/cardinality"
 	_ "github.com/specterops/bloodhound/dawgs/drivers/neo4j"
 	"github.com/specterops/bloodhound/dawgs/graph"
-	"github.com/specterops/bloodhound/dawgs/ops"
 	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/graphschema/azure"
 	"github.com/specterops/bloodhound/graphschema/common"
-	"github.com/specterops/bloodhound/log"
+	"github.com/specterops/bloodhound/src/test"
+	"github.com/specterops/bloodhound/src/test/must"
 )
 
 var DefaultRelProperties = graph.AsProperties(graph.PropertyMap{
 	common.LastSeen: time.Now().Format(time.RFC3339),
 })
 
-func NewGraphTestContext(testCtrl test.Controller) *GraphTestContext {
-	testCtx := &GraphTestContext{
-		testCtrl:     testCtrl,
-		nodesCreated: cardinality.NewBitmap32(),
-		GraphDB:      OpenNeo4jGraphDB(testCtrl),
-	}
+func NewGraphTestContext(testCtrl test.Controller, schema graph.Schema) *GraphTestContext {
+	testCtx := test.NewContext(testCtrl)
 
-	testCtrl.Cleanup(testCtx.Cleanup)
-	return testCtx
+	return &GraphTestContext{
+		testCtx: testCtx,
+		Graph:   NewGraphContext(testCtx, schema),
+	}
 }
 
 type GraphTestContext struct {
-	testCtrl     test.Controller
-	tx           graph.Transaction
-	nodesCreated cardinality.Duplex[uint32]
-	Harness      HarnessDetails
-	GraphDB      graph.Database
+	testCtx test.Context
+	Harness HarnessDetails
+	Graph   *GraphContext
+}
+
+// TODO: This is a responsibility violation
+func (s *GraphTestContext) Context() test.Context {
+	return s.testCtx
 }
 
 func (s *GraphTestContext) NodeObjectID(node *graph.Node) string {
 	objectID, err := node.Properties.Get(common.ObjectID.String()).String()
-	require.Nilf(s.testCtrl, err, "Expected node %d to have a valid %s property: %v", node.ID, common.ObjectID.String(), err)
+
+	test.RequireNilErrf(s.testCtx, err, "expected node %d to have a valid %s property: %v", node.ID, common.ObjectID.String(), err)
 
 	return objectID
 }
 
 func (s *GraphTestContext) FindNode(criteria graph.Criteria) *graph.Node {
-	var node *graph.Node
+	var (
+		node *graph.Node
+		err  error
+	)
 
-	require.Nil(s.testCtrl, s.GraphDB.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
-		fetchedNode, err := tx.Nodes().Filter(criteria).First()
-		node = fetchedNode
+	s.Graph.ReadTransaction(s.testCtx, func(tx graph.Transaction) error {
+		node, err = tx.Nodes().Filter(criteria).First()
 		return err
-	}))
+	})
 
 	return node
 }
 
 func (s *GraphTestContext) UpdateNode(node *graph.Node) {
-	require.Nil(s.testCtrl, s.tx.UpdateNode(node))
+	s.Graph.WriteTransaction(s.testCtx, func(tx graph.Transaction) error {
+		return tx.UpdateNode(node)
+	})
 }
 
-func (s *GraphTestContext) Cleanup() {
-	if err := s.GraphDB.BatchOperation(context.Background(), func(batch graph.Batch) error {
-		return s.nodesCreated.Each(func(nodeID uint32) (bool, error) {
-			if err := batch.DeleteNode(graph.ID(nodeID)); err != nil {
-				return false, err
-			}
+func (s *GraphTestContext) DatabaseTest(dbDelegate func(harness HarnessDetails, db graph.Database)) {
+	s.setupActiveDirectory()
+	s.setupAzure()
 
-			return true, nil
-		})
-	}); err != nil {
-		s.testCtrl.Errorf("Failed to clear DB after tests: %v", err)
-	}
+	dbDelegate(s.Harness, s.Graph.Database)
 }
 
-func (s *GraphTestContext) EmptyDatabaseTest(dbDelegate func(harness HarnessDetails, db graph.Database) error) {
-	log.ConfigureDefaults()
-
-	require.Nil(s.testCtrl, dbDelegate(s.Harness, s.GraphDB))
+func (s *GraphTestContext) SetupHarness(setup func(harness *HarnessDetails) error) {
+	s.Graph.WriteTransaction(s.testCtx, func(tx graph.Transaction) error {
+		return setup(&s.Harness)
+	})
 }
 
-func (s *GraphTestContext) DatabaseTest(dbDelegate func(harness HarnessDetails, db graph.Database) error) {
-	log.ConfigureDefaults()
-
-	require.Nil(s.testCtrl, s.GraphDB.WriteTransaction(context.Background(), func(tx graph.Transaction) error {
-		s.tx = tx
-
-		defer func() {
-			s.tx = nil
-		}()
-
-		if err := tx.Nodes().Delete(); err != nil {
-			return err
-		}
-
-		s.setupActiveDirectory()
-		s.setupAzure()
-		return nil
-	}))
-
-	require.Nil(s.testCtrl, dbDelegate(s.Harness, s.GraphDB))
-}
-
-func (s *GraphTestContext) DatabaseTestWithSetup(setup func(harness *HarnessDetails), dbDelegate func(harness HarnessDetails, db graph.Database) error) {
-	log.Configure(&log.Configuration{
-		Level: log.LevelDebug,
+func (s *GraphTestContext) DatabaseTestWithSetup(setup func(harness *HarnessDetails) error, dbDelegate func(harness HarnessDetails, db graph.Database)) {
+	// Wipe the DB before executing the test
+	s.Graph.WriteTransaction(s.testCtx, func(tx graph.Transaction) error {
+		return tx.Nodes().Delete()
 	})
 
-	require.Nil(s.testCtrl, s.GraphDB.WriteTransaction(context.Background(), func(tx graph.Transaction) error {
-		s.tx = tx
+	s.Graph.WriteTransaction(s.testCtx, func(tx graph.Transaction) error {
+		return setup(&s.Harness)
+	})
 
-		defer func() {
-			s.tx = nil
-		}()
-
-		if err := tx.Nodes().Delete(); err != nil {
-			return err
-		}
-
-		setup(&s.Harness)
-		return nil
-	}))
-
-	require.Nil(s.testCtrl, dbDelegate(s.Harness, s.GraphDB))
+	dbDelegate(s.Harness, s.Graph.Database)
 }
 
 func (s *GraphTestContext) BatchTest(batchDelegate func(harness HarnessDetails, batch graph.Batch), assertionDelegate func(details HarnessDetails, tx graph.Transaction)) {
-	log.ConfigureDefaults()
+	s.setupActiveDirectory()
+	s.setupAzure()
 
-	require.Nil(s.testCtrl, s.GraphDB.WriteTransaction(context.Background(), func(tx graph.Transaction) error {
-		s.tx = tx
-
-		defer func() {
-			s.tx = nil
-		}()
-
-		if err := tx.Nodes().Delete(); err != nil {
-			return err
-		}
-
-		s.setupActiveDirectory()
-		s.setupAzure()
-		return nil
-	}))
-
-	require.Nil(s.testCtrl, s.GraphDB.BatchOperation(context.Background(), func(batch graph.Batch) error {
+	s.Graph.BatchOperation(s.testCtx, func(batch graph.Batch) error {
 		batchDelegate(s.Harness, batch)
 		return nil
-	}))
+	})
 
-	require.Nil(s.testCtrl, s.GraphDB.WriteTransaction(context.Background(), func(tx graph.Transaction) error {
+	s.Graph.ReadTransaction(s.testCtx, func(tx graph.Transaction) error {
 		assertionDelegate(s.Harness, tx)
 		return nil
-	}))
+	})
 }
 
 func (s *GraphTestContext) TransactionalTest(txDelegate func(harness HarnessDetails, tx graph.Transaction)) {
-	log.ConfigureDefaults()
+	s.setupActiveDirectory()
+	s.setupAzure()
 
-	require.Nil(s.testCtrl, s.GraphDB.WriteTransaction(context.Background(), func(tx graph.Transaction) error {
-		s.tx = tx
-
-		defer func() {
-			s.tx = nil
-		}()
-
-		if err := tx.Nodes().Delete(); err != nil {
-			return err
-		}
-
-		s.setupActiveDirectory()
-		s.setupAzure()
-		return nil
-	}))
-
-	require.Nil(s.testCtrl, s.GraphDB.WriteTransaction(context.Background(), func(tx graph.Transaction) error {
-		s.tx = tx
-
-		defer func() {
-			s.tx = nil
-		}()
-
+	s.Graph.WriteTransaction(s.testCtx, func(tx graph.Transaction) error {
 		txDelegate(s.Harness, tx)
 		return nil
-	}))
+	})
 }
 
-func (s *GraphTestContext) ReadTransactionTest(setup func(harness *HarnessDetails), txDelegate func(harness HarnessDetails, tx graph.Transaction)) {
-	log.ConfigureDefaults()
+func (s *GraphTestContext) ReadTransactionTestWithSetup(setup func(harness *HarnessDetails) error, txDelegate func(harness HarnessDetails, tx graph.Transaction)) {
+	s.Graph.WriteTransaction(s.testCtx, func(tx graph.Transaction) error {
+		return setup(&s.Harness)
+	})
 
-	require.Nil(s.testCtrl, s.GraphDB.WriteTransaction(context.Background(), func(tx graph.Transaction) error {
-		s.tx = tx
-
-		defer func() {
-			s.tx = nil
-		}()
-
-		if err := tx.Nodes().Delete(); err != nil {
-			return err
-		}
-
-		setup(&s.Harness)
-		return nil
-	}))
-
-	require.Nil(s.testCtrl, s.GraphDB.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
-		s.tx = tx
-
-		defer func() {
-			s.tx = nil
-		}()
-
+	s.Graph.ReadTransaction(s.testCtx, func(tx graph.Transaction) error {
 		txDelegate(s.Harness, tx)
 		return nil
-	}))
+	})
 }
 
-func (s *GraphTestContext) WriteTransactionTest(setup func(harness *HarnessDetails), txDelegate func(harness HarnessDetails, tx graph.Transaction)) {
-	log.ConfigureDefaults()
+func (s *GraphTestContext) WriteTransactionTestWithSetup(setup func(harness *HarnessDetails) error, txDelegate func(harness HarnessDetails, tx graph.Transaction)) {
+	s.Graph.WriteTransaction(s.testCtx, func(tx graph.Transaction) error {
+		return setup(&s.Harness)
+	})
 
-	require.Nil(s.testCtrl, s.GraphDB.WriteTransaction(context.Background(), func(tx graph.Transaction) error {
-		s.tx = tx
-
-		defer func() {
-			s.tx = nil
-		}()
-
-		if err := tx.Nodes().Delete(); err != nil {
-			return err
-		}
-
-		setup(&s.Harness)
-		return nil
-	}))
-
-	require.Nil(s.testCtrl, s.GraphDB.WriteTransaction(context.Background(), func(tx graph.Transaction) error {
-		s.tx = tx
-
-		defer func() {
-			s.tx = nil
-		}()
-
+	s.Graph.WriteTransaction(s.testCtx, func(tx graph.Transaction) error {
 		txDelegate(s.Harness, tx)
 		return nil
-	}))
-}
-
-func (s *GraphTestContext) DeleteNode(tx graph.Transaction, target *graph.Node) {
-	err := ops.DeleteNodes(tx, target.ID)
-	require.Nilf(s.testCtrl, err, "Error deleting node: %v", err)
-
-	s.nodesCreated.Remove(target.ID.Uint32())
+	})
 }
 
 func (s *GraphTestContext) NewNode(properties *graph.Properties, kinds ...graph.Kind) *graph.Node {
-	newNode, err := s.tx.CreateNode(properties, kinds...)
-	require.Nilf(s.testCtrl, err, "Error creating node: %v", err)
+	var (
+		node *graph.Node
+		err  error
+	)
 
-	s.nodesCreated.Add(newNode.ID.Uint32())
-	return newNode
+	s.Graph.WriteTransaction(s.testCtx, func(tx graph.Transaction) error {
+		node, err = tx.CreateNode(properties, kinds...)
+		return err
+	})
+
+	return node
 }
 
 func (s *GraphTestContext) NewAzureApplication(name, objectID, tenantID string) *graph.Node {
@@ -377,25 +264,23 @@ func (s *GraphTestContext) NewAzureSubscription(name, objectID, tenantID string)
 	}), azure.Entity, azure.Subscription)
 }
 
-func (s *GraphTestContext) NewRelationship(startNode, endNode *graph.Node, kind graph.Kind, properties ...*graph.Properties) *graph.Relationship {
-	var nodeProperties *graph.Properties
+func (s *GraphTestContext) NewRelationship(startNode, endNode *graph.Node, kind graph.Kind, propertyBags ...*graph.Properties) *graph.Relationship {
+	var (
+		relationshipProperties = graph.NewPropertiesRed()
+		relationship           *graph.Relationship
+		err                    error
+	)
 
-	if len(properties) > 0 {
-		nodeProperties = properties[0]
-
-		if len(properties) > 1 {
-			for _, additionalProperties := range properties[1:] {
-				nodeProperties.SetAll(additionalProperties.Map)
-			}
-		}
-	} else {
-		nodeProperties = graph.NewProperties()
+	for _, additionalProperties := range propertyBags {
+		relationshipProperties.Merge(additionalProperties)
 	}
 
-	newRelationship, err := s.tx.CreateRelationship(startNode, endNode, kind, nodeProperties)
+	s.Graph.WriteTransaction(s.testCtx, func(tx graph.Transaction) error {
+		relationship, err = tx.CreateRelationshipByIDs(startNode.ID, endNode.ID, kind, relationshipProperties)
+		return err
+	})
 
-	require.Nil(s.testCtrl, err, fmt.Sprintf("error: %v", err))
-	return newRelationship
+	return relationship
 }
 
 func (s *GraphTestContext) CreateAzureRelatedRoles(root *graph.Node, tenantID string, numRoles int) graph.NodeSet {
@@ -486,6 +371,86 @@ func (s *GraphTestContext) NewActiveDirectoryGPO(name, domainSID string) *graph.
 	}), ad.Entity, ad.GPO)
 }
 
+func (s *GraphTestContext) NewActiveDirectoryNTAuthStore(name, domainSID string) *graph.Node {
+	return s.NewNode(graph.AsProperties(graph.PropertyMap{
+		common.Name:        name,
+		common.ObjectID:    must.NewUUIDv4().String(),
+		ad.DomainSID:       domainSID,
+		ad.CertThumbprints: []string{"a", "b", "c"},
+	}), ad.Entity, ad.NTAuthStore)
+}
+
+func (s *GraphTestContext) NewActiveDirectoryEnterpriseCA(name, domainSID string) *graph.Node {
+	return s.NewNode(graph.AsProperties(graph.PropertyMap{
+		common.Name:     name,
+		common.ObjectID: must.NewUUIDv4().String(),
+		ad.DomainSID:    domainSID,
+	}), ad.Entity, ad.EnterpriseCA)
+}
+
+func (s *GraphTestContext) NewActiveDirectoryEnterpriseCAWithThumbprint(name, domainSID, certThumbprint string) *graph.Node {
+	return s.NewNode(graph.AsProperties(graph.PropertyMap{
+		common.Name:       name,
+		common.ObjectID:   must.NewUUIDv4().String(),
+		ad.DomainSID:      domainSID,
+		ad.CertThumbprint: certThumbprint,
+	}), ad.Entity, ad.EnterpriseCA)
+}
+
+func (s *GraphTestContext) NewActiveDirectoryRootCA(name, domainSID string) *graph.Node {
+	return s.NewNode(graph.AsProperties(graph.PropertyMap{
+		common.Name:     name,
+		common.ObjectID: must.NewUUIDv4().String(),
+		ad.DomainSID:    domainSID,
+	}), ad.Entity, ad.RootCA)
+}
+
+func (s *GraphTestContext) NewActiveDirectoryRootCAWithThumbprint(name, domainSID string, certThumbprint string) *graph.Node {
+	return s.NewNode(graph.AsProperties(graph.PropertyMap{
+		common.Name:       name,
+		common.ObjectID:   must.NewUUIDv4().String(),
+		ad.DomainSID:      domainSID,
+		ad.CertThumbprint: certThumbprint,
+	}), ad.Entity, ad.RootCA)
+}
+
+func (s *GraphTestContext) NewActiveDirectoryCertTemplate(name, domainSID string, data CertTemplateData) *graph.Node {
+	return s.NewNode(graph.AsProperties(graph.PropertyMap{
+		common.Name:                   name,
+		common.ObjectID:               must.NewUUIDv4().String(),
+		ad.DomainSID:                  domainSID,
+		ad.RequiresManagerApproval:    data.RequiresManagerApproval,
+		ad.AuthenticationEnabled:      data.AuthenticationEnabled,
+		ad.EnrolleeSuppliesSubject:    data.EnrolleeSuppliesSubject,
+		ad.NoSecurityExtension:        data.NoSecurityExtension,
+		ad.SchemaVersion:              data.SchemaVersion,
+		ad.AuthorizedSignatures:       data.AuthorizedSignatures,
+		ad.EKUs:                       data.EKUS,
+		ad.ApplicationPolicies:        data.ApplicationPolicies,
+		ad.SubjectAltRequireUPN:       data.SubjectAltRequireUPN,
+		ad.SubjectAltRequireSPN:       data.SubjectAltRequireSPN,
+		ad.SubjectAltRequireDNS:       data.SubjectAltRequireDNS,
+		ad.SubjectAltRequireDomainDNS: data.SubjectAltRequireDomainDNS,
+		ad.SubjectAltRequireEmail:     data.SubjectAltRequireEmail,
+	}), ad.Entity, ad.CertTemplate)
+}
+
+type CertTemplateData struct {
+	RequiresManagerApproval    bool
+	AuthenticationEnabled      bool
+	EnrolleeSuppliesSubject    bool
+	SubjectAltRequireUPN       bool
+	SubjectAltRequireSPN       bool
+	SubjectAltRequireDNS       bool
+	SubjectAltRequireDomainDNS bool
+	SubjectAltRequireEmail     bool
+	NoSecurityExtension        bool
+	SchemaVersion              float64
+	AuthorizedSignatures       float64
+	EKUS                       []string
+	ApplicationPolicies        []string
+}
+
 func (s *GraphTestContext) setupAzure() {
 	s.Harness.AZBaseHarness.Setup(s)
 	s.Harness.AZGroupMembership.Setup(s)
@@ -498,6 +463,7 @@ func (s *GraphTestContext) setupAzure() {
 	s.Harness.AZMGRoleManagementReadWriteDirectoryHarness.Setup(s)
 	s.Harness.AZMGServicePrincipalEndpointReadWriteAllHarness.Setup(s)
 	s.Harness.AZInboundControlHarness.Setup(s)
+	s.Harness.AZManagementGroup.Setup(s)
 }
 
 func (s *GraphTestContext) setupActiveDirectory() {
@@ -526,6 +492,7 @@ func (s *GraphTestContext) setupActiveDirectory() {
 	s.Harness.ForeignHarness.Setup(s)
 	s.Harness.TrustDCSync.Setup(s)
 	s.Harness.Completeness.Setup(s)
+	s.Harness.ShortcutHarness.Setup(s)
 
 	s.Harness.AssetGroupComboNodeHarness.Setup(s)
 }

@@ -1,0 +1,496 @@
+{
+  "style": {
+    "font-family": "sans-serif",
+    "background-color": "#ffffff",
+    "background-image": "",
+    "background-size": "100%",
+    "node-color": "#ffffff",
+    "border-width": 4,
+    "border-color": "#000000",
+    "radius": 50,
+    "node-padding": 5,
+    "node-margin": 2,
+    "outside-position": "auto",
+    "node-icon-image": "",
+    "node-background-image": "",
+    "icon-position": "inside",
+    "icon-size": 64,
+    "caption-position": "inside",
+    "caption-max-width": 200,
+    "caption-color": "#000000",
+    "caption-font-size": 50,
+    "caption-font-weight": "normal",
+    "label-position": "inside",
+    "label-display": "pill",
+    "label-color": "#000000",
+    "label-background-color": "#ffffff",
+    "label-border-color": "#000000",
+    "label-border-width": 4,
+    "label-font-size": 40,
+    "label-padding": 5,
+    "label-margin": 4,
+    "directionality": "directed",
+    "detail-position": "inline",
+    "detail-orientation": "parallel",
+    "arrow-width": 5,
+    "arrow-color": "#000000",
+    "margin-start": 5,
+    "margin-end": 5,
+    "margin-peer": 20,
+    "attachment-start": "normal",
+    "attachment-end": "normal",
+    "relationship-icon-image": "",
+    "type-color": "#000000",
+    "type-background-color": "#ffffff",
+    "type-border-color": "#000000",
+    "type-border-width": 0,
+    "type-font-size": 16,
+    "type-padding": 5,
+    "property-position": "outside",
+    "property-alignment": "colon",
+    "property-color": "#000000",
+    "property-font-size": 16,
+    "property-font-weight": "normal"
+  },
+  "nodes": [
+    {
+      "id": "n4",
+      "position": {
+        "x": 1486.2709321571501,
+        "y": -979.1603352647279
+      },
+      "caption": "Domain1",
+      "labels": [],
+      "properties": {},
+      "style": {
+        "node-color": "#68ccca"
+      }
+    },
+    {
+      "id": "n5",
+      "position": {
+        "x": 793.041742337483,
+        "y": -979.1603352647279
+      },
+      "caption": "EnterpriseCA1 ",
+      "labels": [],
+      "properties": {},
+      "style": {
+        "node-color": "#194d33",
+        "caption-color": "#ffffff"
+      }
+    },
+    {
+      "id": "n7",
+      "position": {
+        "x": 1127.6267729949955,
+        "y": -979.1603352647279
+      },
+      "caption": "NTAuthStore1",
+      "labels": [],
+      "properties": {},
+      "style": {
+        "node-color": "#57398A",
+        "caption-color": "#ffffff"
+      }
+    },
+    {
+      "id": "n16",
+      "position": {
+        "x": 1127.6267729949955,
+        "y": -1282.3056026681152
+      },
+      "caption": "RootCA1",
+      "labels": [],
+      "properties": {},
+      "style": {
+        "node-color": "#57398A",
+        "caption-color": "#ffffff"
+      }
+    },
+    {
+      "id": "n17",
+      "position": {
+        "x": 1127.6267729949955,
+        "y": -676.015067861342
+      },
+      "caption": "Computer1",
+      "style": {
+        "node-color": "#f44e3b",
+        "caption-color": "#ffffff"
+      },
+      "labels": [],
+      "properties": {}
+    },
+    {
+      "id": "n22",
+      "position": {
+        "x": 1809.5465022703704,
+        "y": -979.1603352647279
+      },
+      "caption": "EnterpriseCA22",
+      "labels": [],
+      "properties": {},
+      "style": {
+        "node-color": "#194d33",
+        "caption-color": "#ffffff"
+      }
+    },
+    {
+      "id": "n23",
+      "position": {
+        "x": 2510.084496752679,
+        "y": -730.7604726204547
+      },
+      "caption": "Domain2",
+      "labels": [],
+      "properties": {},
+      "style": {
+        "node-color": "#68ccca"
+      }
+    },
+    {
+      "id": "n24",
+      "position": {
+        "x": 1809.5465022703704,
+        "y": -730.7604726204547
+      },
+      "caption": "EnterpriseCA21",
+      "labels": [],
+      "properties": {},
+      "style": {
+        "node-color": "#194d33",
+        "caption-color": "#ffffff"
+      }
+    },
+    {
+      "id": "n25",
+      "position": {
+        "x": 2159.8154995115246,
+        "y": -730.7604726204547
+      },
+      "caption": "NTAuthStore2",
+      "labels": [],
+      "properties": {},
+      "style": {
+        "node-color": "#57398A",
+        "caption-color": "#ffffff"
+      }
+    },
+    {
+      "id": "n26",
+      "position": {
+        "x": 2159.8154995115246,
+        "y": -979.1603352647279
+      },
+      "caption": "RootCA2",
+      "labels": [],
+      "properties": {},
+      "style": {
+        "node-color": "#57398A",
+        "caption-color": "#ffffff"
+      }
+    },
+    {
+      "id": "n27",
+      "position": {
+        "x": 2159.8154995115246,
+        "y": -482.36060997618154
+      },
+      "caption": "Computer21",
+      "labels": [],
+      "properties": {},
+      "style": {
+        "node-color": "#f44e3b",
+        "caption-color": "#ffffff"
+      }
+    },
+    {
+      "id": "n28",
+      "position": {
+        "x": 2159.8154995115246,
+        "y": -1227.560197909001
+      },
+      "caption": "Computer22",
+      "labels": [],
+      "properties": {},
+      "style": {
+        "node-color": "#f44e3b",
+        "caption-color": "#ffffff"
+      }
+    },
+    {
+      "id": "n29",
+      "position": {
+        "x": 1809.5465022703704,
+        "y": -482.36060997618154
+      },
+      "caption": "EnterpriseCA23",
+      "labels": [],
+      "properties": {},
+      "style": {
+        "node-color": "#194d33",
+        "caption-color": "#ffffff"
+      }
+    },
+    {
+      "id": "n30",
+      "position": {
+        "x": 2159.8154995115246,
+        "y": -233.96074733190835
+      },
+      "caption": "Computer23",
+      "labels": [],
+      "properties": {},
+      "style": {
+        "node-color": "#f44e3b",
+        "caption-color": "#ffffff"
+      }
+    },
+    {
+      "id": "n31",
+      "position": {
+        "x": 3332.3136865723463,
+        "y": -983.1603352647293
+      },
+      "caption": "Domain3",
+      "labels": [],
+      "properties": {},
+      "style": {
+        "node-color": "#68ccca"
+      }
+    },
+    {
+      "id": "n32",
+      "position": {
+        "x": 2639.084496752679,
+        "y": -983.1603352647293
+      },
+      "caption": "EnterpriseCA3",
+      "labels": [],
+      "properties": {},
+      "style": {
+        "node-color": "#194d33",
+        "caption-color": "#ffffff"
+      }
+    },
+    {
+      "id": "n33",
+      "position": {
+        "x": 2973.6695274101917,
+        "y": -983.1603352647293
+      },
+      "caption": "NTAuthStore3",
+      "labels": [],
+      "properties": {},
+      "style": {
+        "node-color": "#57398A",
+        "caption-color": "#ffffff"
+      }
+    },
+    {
+      "id": "n34",
+      "position": {
+        "x": 2973.6695274101917,
+        "y": -1286.3056026681152
+      },
+      "caption": "RootCA3",
+      "labels": [],
+      "properties": {},
+      "style": {
+        "node-color": "#57398A",
+        "caption-color": "#ffffff"
+      }
+    },
+    {
+      "id": "n35",
+      "position": {
+        "x": 2973.6695274101917,
+        "y": -680.0150678613434
+      },
+      "caption": "Computer3",
+      "labels": [],
+      "properties": {},
+      "style": {
+        "node-color": "#f44e3b",
+        "caption-color": "#ffffff"
+      }
+    }
+  ],
+  "relationships": [
+    {
+      "id": "n4",
+      "fromId": "n5",
+      "toId": "n7",
+      "type": "TrustedForNTAuth",
+      "properties": {},
+      "style": {
+        "arrow-color": "#000000"
+      }
+    },
+    {
+      "id": "n5",
+      "fromId": "n7",
+      "toId": "n4",
+      "type": "NTAuthStoreFor",
+      "properties": {},
+      "style": {
+        "arrow-color": "#000000"
+      }
+    },
+    {
+      "id": "n20",
+      "fromId": "n16",
+      "toId": "n4",
+      "type": "RootCAFor",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n21",
+      "fromId": "n5",
+      "toId": "n16",
+      "type": "EnterpriseCAFor",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n23",
+      "type": "HostCAService",
+      "style": {},
+      "properties": {},
+      "fromId": "n17",
+      "toId": "n5"
+    },
+    {
+      "id": "n31",
+      "type": "GoldenCert",
+      "style": {
+        "arrow-color": "#d33115"
+      },
+      "properties": {},
+      "fromId": "n17",
+      "toId": "n4"
+    },
+    {
+      "id": "n36",
+      "fromId": "n25",
+      "toId": "n23",
+      "type": "NTAuthStoreFor",
+      "properties": {},
+      "style": {
+        "arrow-color": "#000000"
+      }
+    },
+    {
+      "id": "n37",
+      "fromId": "n26",
+      "toId": "n23",
+      "type": "RootCAFor",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n38",
+      "fromId": "n24",
+      "toId": "n26",
+      "type": "EnterpriseCAFor",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n39",
+      "fromId": "n27",
+      "toId": "n24",
+      "type": "HostCAService",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n40",
+      "type": "IssuedSignedBy",
+      "style": {},
+      "properties": {},
+      "fromId": "n22",
+      "toId": "n26"
+    },
+    {
+      "id": "n41",
+      "type": "HostCAService",
+      "style": {},
+      "properties": {},
+      "fromId": "n28",
+      "toId": "n22"
+    },
+    {
+      "id": "n43",
+      "type": "HostCAService",
+      "style": {},
+      "properties": {},
+      "fromId": "n30",
+      "toId": "n29"
+    },
+    {
+      "id": "n44",
+      "type": "TrustedForNTAuth",
+      "style": {},
+      "properties": {},
+      "fromId": "n29",
+      "toId": "n25"
+    },
+    {
+      "id": "n45",
+      "fromId": "n32",
+      "toId": "n33",
+      "type": "TrustedForNTAuth",
+      "properties": {},
+      "style": {
+        "arrow-color": "#000000"
+      }
+    },
+    {
+      "id": "n46",
+      "fromId": "n33",
+      "toId": "n31",
+      "type": "NTAuthStoreFor",
+      "properties": {},
+      "style": {
+        "arrow-color": "#000000"
+      }
+    },
+    {
+      "id": "n47",
+      "fromId": "n34",
+      "toId": "n31",
+      "type": "RootCAFor",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n48",
+      "type": "IssuedSignedBy",
+      "style": {},
+      "properties": {},
+      "fromId": "n32",
+      "toId": "n34"
+    },
+    {
+      "id": "n49",
+      "fromId": "n35",
+      "toId": "n32",
+      "type": "HostCAService",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n50",
+      "fromId": "n35",
+      "toId": "n31",
+      "type": "GoldenCert",
+      "properties": {},
+      "style": {
+        "arrow-color": "#d33115"
+      }
+    }
+  ]
+}
