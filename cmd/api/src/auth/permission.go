@@ -99,6 +99,6 @@ func Permissions() PermissionSet {
 		SavedQueriesRead:  model.NewPermission("saved_queries", "Read"),
 		SavedQueriesWrite: model.NewPermission("saved_queries", "Write"),
 
-		WipeDB: model.NewPermission("wipedb", "wipedb"),
+		WipeDB: model.NewPermission("db", "Wipe"),
 	}
 }

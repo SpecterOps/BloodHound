@@ -15,6 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import {
+    Alert,
     Box,
     Button,
     Checkbox,
@@ -198,46 +199,29 @@ const DatabaseManagement = () => {
     };
 
     return (
-        <ContentPage title='Clear BloodHound data'>
-            <div>
+        <ContentPage title='Clear BloodHound Data'>
+            <Box>
                 <Typography variant='body1'>
                     Manage your BloodHound data. Select from the options below which data should be deleted.
                 </Typography>
-                <Typography variant='body1'>
+                <Alert severity='warning' sx={{ mt: '1rem' }}>
                     <strong>Caution: </strong> This change is irreversible and will delete data from your environment.
-                </Typography>
+                </Alert>
 
                 <Box display='flex' flexDirection='column' alignItems='start'>
                     <FormControl
                         variant='standard'
                         sx={{ paddingBlock: 2 }}
                         error={state.noSelectionError || state.mutationError}>
-                        {state.noSelectionError ? (
-                            <Box color={theme.palette.error.main} display='flex' alignItems='center' gap='0.3rem'>
-                                <FontAwesomeIcon icon={faCircleXmark} />
-                                <FormHelperText sx={{ marginTop: '1.5px', color: theme.palette.error.main }}>
-                                    Please make a selection.
-                                </FormHelperText>
-                            </Box>
-                        ) : null}
-
+                        {state.noSelectionError ? <Alert severity='error'>Please make a selection.</Alert> : null}
                         {state.mutationError ? (
-                            <Box color={theme.palette.error.main} display='flex' alignItems='center' gap='0.3rem'>
-                                <FontAwesomeIcon icon={faCircleXmark} />
-                                <FormHelperText sx={{ marginTop: '1.5px', color: theme.palette.error.main }}>
-                                    There was an error processing your request.
-                                </FormHelperText>
-                            </Box>
+                            <Alert severity='error'>There was an error processing your request.</Alert>
                         ) : null}
-
                         {state.showSuccessMessage ? (
-                            <Box color={theme.palette.info.main} display='flex' alignItems='center' gap='0.3rem'>
-                                <FontAwesomeIcon icon={faCircleExclamation} />
-                                <FormHelperText sx={{ marginTop: '1.5px', color: theme.palette.info.main }}>
-                                    Deletion of the data is under way. Depending on data volume, this may take some time
-                                    to complete.
-                                </FormHelperText>
-                            </Box>
+                            <Alert severity='info'>
+                                Deletion of the data is under way. Depending on data volume, this may take some time to
+                                complete.
+                            </Alert>
                         ) : null}
 
                         <FormGroup sx={{ paddingTop: 1 }}>
@@ -293,7 +277,7 @@ const DatabaseManagement = () => {
                         Proceed
                     </Button>
                 </Box>
-            </div>
+            </Box>
 
             <ConfirmationDialog
                 open={state.openDialog}
