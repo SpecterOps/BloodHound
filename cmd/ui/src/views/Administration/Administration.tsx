@@ -18,7 +18,7 @@ import { Box, CircularProgress, Container } from '@mui/material';
 import React, { Suspense } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 import { Navigate, Route, Routes } from 'react-router-dom';
-import { GenericErrorBoundaryFallback } from 'bh-shared-ui';
+import { GenericErrorBoundaryFallback, FileIngest } from 'bh-shared-ui';
 import LeftNav from 'src/components/LeftNav';
 import {
     ROUTE_ADMINISTRATION_FILE_INGEST,
@@ -27,7 +27,6 @@ import {
     ROUTE_ADMINISTRATION_MANAGE_USERS,
     ROUTE_ADMINISTRATION_SAML_CONFIGURATION,
 } from 'src/ducks/global/routes';
-const FileIngest = React.lazy(() => import('src/views/FileIngest'));
 const QA = React.lazy(() => import('src/views/QA'));
 const Users = React.lazy(() => import('src/views/Users'));
 const SAMLConfiguration = React.lazy(() => import('src/views/SAMLConfiguration'));

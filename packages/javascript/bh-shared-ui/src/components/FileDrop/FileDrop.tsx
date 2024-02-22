@@ -21,7 +21,8 @@ import { useState, DragEvent, MouseEvent, useRef, ChangeEvent } from 'react';
 
 const FileDrop: React.FC<{
     onDrop: (files: any) => void;
-}> = ({ onDrop }) => {
+    disabled: boolean;
+}> = ({ onDrop, disabled }) => {
     const theme = useTheme();
     const inputRef = useRef<HTMLInputElement>(null);
     const [isDragActive, setDragActive] = useState(false);
@@ -72,6 +73,7 @@ const FileDrop: React.FC<{
             textAlign='center'>
             <input
                 data-testid='ingest-file-upload'
+                disabled={disabled}
                 ref={inputRef}
                 type='file'
                 multiple={true}
