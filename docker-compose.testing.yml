@@ -14,20 +14,8 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-version: "3"
+version: '3'
 services:
-  proxy:
-    image: docker.io/library/traefik:latest
-    command:
-      - --api.insecure=true
-      - --providers.docker
-      - --providers.docker.exposedbydefault=false
-    ports:
-      - ${WEB_PORT:-127.0.0.1:80}:80
-      - ${TRAEFIK_PORT:-127.0.0.1:8000}:8080
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-
   testdb:
     restart: unless-stopped
     image: docker.io/library/postgres:13.2
@@ -40,35 +28,6 @@ services:
       - 127.0.0.1:65432:5432
     volumes:
       - test-postgres-data:/var/lib/postgresql/data
-    healthcheck:
-      test:
-        [
-          "CMD-SHELL",
-          "pg_isready -U ${BH_POSTGRES_USER:-bloodhound} -d 'dbname=${BH_POSTGRES_DB:-bloodhound}' -h 127.0.0.1 -p 5432",
-        ]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
-
-  pgadmin:
-    build:
-      context: tools/docker-compose
-      dockerfile: pgadmin.Dockerfile
-    environment:
-      PGADMIN_DEFAULT_EMAIL: ${BH_PG_ADMIN_EMAIL:-bloodhound@specterops.io}
-      PGADMIN_DEFAULT_PASSWORD: ${BH_PG_ADMIN_PASSWORD:-bloodhoundcommunityedition}
-      PGADMIN_LISTEN_PORT: 5050
-    ports:
-      - ${BH_PG_ADMIN_PORT:-127.0.0.1:5050}:5050
-    labels:
-      - traefik.enable=true
-      - traefik.http.routers.pgadmin.rule=Host(`${BH_PG_ADMIN_HOSTNAME:-testpgadmin.localhost}`)
-      - traefik.http.routers.pgadmin.service=pgadmin
-      - traefik.http.services.pgadmin.loadbalancer.server.port=5050
-    depends_on:
-      testdb:
-        condition: service_healthy
 
   testgraph:
     restart: unless-stopped
