@@ -39,9 +39,11 @@ func (s *BloodhoundDB) CreateAssetGroup(ctx context.Context, name, tag string, s
 			Action: "CreateAssetGroup",
 			Model:  &assetGroup, // Pointer is required to ensure success log contains updated fields after transaction
 		}
+
+		err error
 	)
 
-	err := s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
+	err = s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
 		return CheckError(tx.Create(&assetGroup))
 	})
 
@@ -176,8 +178,11 @@ func (s *BloodhoundDB) GetAllAssetGroupCollections() (model.AssetGroupCollection
 }
 
 func (s *BloodhoundDB) GetAssetGroupSelector(id int32) (model.AssetGroupSelector, error) {
-	var assetGroupSelector model.AssetGroupSelector
-	tx := s.db.Find(&assetGroupSelector, id)
+	var (
+		assetGroupSelector model.AssetGroupSelector
+		tx                 *gorm.DB
+	)
+	tx = s.db.Find(&assetGroupSelector, id)
 
 	return assetGroupSelector, CheckError(tx)
 }

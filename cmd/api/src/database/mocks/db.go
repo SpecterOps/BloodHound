@@ -27,7 +27,6 @@ import (
 
 	uuid "github.com/gofrs/uuid"
 	ctx "github.com/specterops/bloodhound/src/ctx"
-	database "github.com/specterops/bloodhound/src/database"
 	model "github.com/specterops/bloodhound/src/model"
 	appcfg "github.com/specterops/bloodhound/src/model/appcfg"
 	gomock "go.uber.org/mock/gomock"
@@ -70,20 +69,6 @@ func (mr *MockDatabaseMockRecorder) AppendAuditLog(arg0, arg1 interface{}) *gomo
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AppendAuditLog", reflect.TypeOf((*MockDatabase)(nil).AppendAuditLog), arg0, arg1)
 }
 
-// Begin mocks base method.
-func (m *MockDatabase) Begin() *database.BloodhoundDB {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Begin")
-	ret0, _ := ret[0].(*database.BloodhoundDB)
-	return ret0
-}
-
-// Begin indicates an expected call of Begin.
-func (mr *MockDatabaseMockRecorder) Begin() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Begin", reflect.TypeOf((*MockDatabase)(nil).Begin))
-}
-
 // Close mocks base method.
 func (m *MockDatabase) Close() {
 	m.ctrl.T.Helper()
@@ -94,20 +79,6 @@ func (m *MockDatabase) Close() {
 func (mr *MockDatabaseMockRecorder) Close() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Close", reflect.TypeOf((*MockDatabase)(nil).Close))
-}
-
-// Commit mocks base method.
-func (m *MockDatabase) Commit() error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Commit")
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// Commit indicates an expected call of Commit.
-func (mr *MockDatabaseMockRecorder) Commit() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Commit", reflect.TypeOf((*MockDatabase)(nil).Commit))
 }
 
 // CreateADDataQualityAggregation mocks base method.
@@ -1455,20 +1426,6 @@ func (m *MockDatabase) SweepSessions() {
 func (mr *MockDatabaseMockRecorder) SweepSessions() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SweepSessions", reflect.TypeOf((*MockDatabase)(nil).SweepSessions))
-}
-
-// Transaction mocks base method.
-func (m *MockDatabase) Transaction(arg0 func(*database.BloodhoundDB) error) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Transaction", arg0)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// Transaction indicates an expected call of Transaction.
-func (mr *MockDatabaseMockRecorder) Transaction(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Transaction", reflect.TypeOf((*MockDatabase)(nil).Transaction), arg0)
 }
 
 // UpdateAssetGroup mocks base method.
