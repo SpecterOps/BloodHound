@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { setupServer } from 'msw/node';
-import { createMockAssetGroup, createMockAssetGroupMembers, createMockSearchResults } from '../../mocks/factories';
+import { createMockAssetGroup, createMockMemberCounts, createMockSearchResults } from '../../mocks/factories';
 import { act, render, waitFor } from '../../test-utils';
 import { AUTOCOMPLETE_PLACEHOLDER } from './AssetGroupAutocomplete';
 import AssetGroupEdit from './AssetGroupEdit';
@@ -23,20 +23,10 @@ import { rest } from 'msw';
 import userEvent from '@testing-library/user-event';
 
 const assetGroup = createMockAssetGroup();
-const assetGroupMembers = createMockAssetGroupMembers();
 const searchResults = createMockSearchResults();
+const memberCounts = createMockMemberCounts();
 
 const server = setupServer(
-    rest.get('/api/v2/asset-groups/1/members', (req, res, ctx) => {
-        return res(
-            ctx.json({
-                count: assetGroupMembers.members.length,
-                limit: 100,
-                skip: 0,
-                data: assetGroupMembers,
-            })
-        );
-    }),
     rest.get('/api/v2/search', (req, res, ctx) => {
         return res(
             ctx.json({
@@ -54,7 +44,7 @@ describe('AssetGroupEdit', () => {
     const setup = async () => {
         const user = userEvent.setup();
         const screen = await act(async () => {
-            return render(<AssetGroupEdit assetGroup={assetGroup} filter={{}} makeNodeFilterable={() => ({})} />);
+            return render(<AssetGroupEdit assetGroup={assetGroup} filter={{}} memberCounts={memberCounts} />);
         });
         return { user, screen };
     };
@@ -68,7 +58,7 @@ describe('AssetGroupEdit', () => {
     it('should display a total count of asset group members', async () => {
         const { screen } = await setup();
         const count = screen.getByText('Total Count').nextSibling.textContent;
-        expect(count).toBe(assetGroupMembers.members.length.toString());
+        expect(count).toBe(memberCounts.total_count.toString());
     });
 
     it('should display search results when the user enters text', async () => {

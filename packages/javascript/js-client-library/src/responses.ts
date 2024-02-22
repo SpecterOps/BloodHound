@@ -93,9 +93,16 @@ export type AssetGroupMember = {
     primary_kind: string;
 };
 
+export type AssetGroupMemberCounts = {
+    total_count: number;
+    counts: Record<AssetGroupMember['primary_kind'], number>;
+};
+
 export type AssetGroupResponse = BasicResponse<{ asset_groups: AssetGroup[] }>;
 
 export type AssetGroupMembersResponse = PaginatedResponse<{ members: AssetGroupMember[] }>;
+
+export type AssetGroupMemberCountsResponse = BasicResponse<AssetGroupMemberCounts>
 
 export type SavedQuery = {
     id: number;
