@@ -92,11 +92,6 @@ func WriteErrorResponse(ctx context.Context, untypedError any, response http.Res
 // somewhere in the middleware (but that would be a larger refactor, hence leaving it out of BED-2257)
 
 func WriteBasicResponse(ctx context.Context, inputData any, statusCode int, response http.ResponseWriter) {
-	if errors.Is(ctx.Err(), context.DeadlineExceeded) {
-		log.Warnf("Writing API Error. Context Deadline Exceeded while writing basic response.")
-		return
-	}
-
 	if data, err := ToJSONRawMessage(inputData); err != nil {
 		log.Errorf("Failed marshaling data for basic response: %v", err)
 		response.WriteHeader(http.StatusInternalServerError)
@@ -108,11 +103,6 @@ func WriteBasicResponse(ctx context.Context, inputData any, statusCode int, resp
 }
 
 func WriteResponseWrapperWithPagination(ctx context.Context, data any, limit int, skip, count, statusCode int, response http.ResponseWriter) {
-	if errors.Is(ctx.Err(), context.DeadlineExceeded) {
-		log.Warnf("Writing API Error. Context Deadline Exceeded while writing response wrapper with pagination.")
-		return
-	}
-
 	wrapper := ResponseWrapper{}
 	wrapper.Data = data
 	wrapper.Skip = skip
@@ -129,11 +119,6 @@ func WriteResponseWrapperWithPagination(ctx context.Context, data any, limit int
 }
 
 func WriteTimeWindowedResponse(ctx context.Context, data any, start, end time.Time, statusCode int, response http.ResponseWriter) {
-	if errors.Is(ctx.Err(), context.DeadlineExceeded) {
-		log.Warnf("Writing API Error. Context Deadline Exceeded while writing time windowed response.")
-		return
-	}
-
 	timeWindowedResponse := TimeWindowedResponse{}
 	timeWindowedResponse.Data = data
 
@@ -149,11 +134,6 @@ func WriteTimeWindowedResponse(ctx context.Context, data any, start, end time.Ti
 }
 
 func WriteResponseWrapperWithTimeWindowAndPagination(ctx context.Context, data any, start, end time.Time, limit int, skip, count, statusCode int, response http.ResponseWriter) {
-	if errors.Is(ctx.Err(), context.DeadlineExceeded) {
-		log.Warnf("Writing API Error. Context Deadline Exceeded while writing response wrapper with time window and pagination.")
-		return
-	}
-
 	wrapper := ResponseWrapper{}
 	wrapper.Data = data
 	wrapper.Skip = skip
@@ -177,12 +157,7 @@ func WriteResponseWrapperWithTimeWindowAndPagination(ctx context.Context, data a
 	WriteJSONResponse(ctx, wrapper, statusCode, response)
 }
 
-func WriteJSONResponse(ctx context.Context, message any, statusCode int, response http.ResponseWriter) {
-	if errors.Is(ctx.Err(), context.DeadlineExceeded) {
-		log.Warnf("Writing API Error. Context Deadline Exceeded while writing JSON response.")
-		return
-	}
-
+func WriteJSONResponse(_ context.Context, message any, statusCode int, response http.ResponseWriter) {
 	response.Header().Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
 	if content, err := json.Marshal(message); err != nil {
 		log.Errorf("Failed to marshal value into JSON for request: %v: for message: %+v", err, message)
@@ -195,12 +170,7 @@ func WriteJSONResponse(ctx context.Context, message any, statusCode int, respons
 	}
 }
 
-func WriteCSVResponse(ctx context.Context, message model.CSVWriter, statusCode int, response http.ResponseWriter) {
-	if errors.Is(ctx.Err(), context.DeadlineExceeded) {
-		log.Warnf("Writing API Error. Context Deadline Exceeded while writing CSV response.")
-		return
-	}
-
+func WriteCSVResponse(_ context.Context, message model.CSVWriter, statusCode int, response http.ResponseWriter) {
 	response.Header().Set(headers.ContentType.String(), mediatypes.TextCsv.String())
 	response.WriteHeader(statusCode)
 
@@ -209,12 +179,7 @@ func WriteCSVResponse(ctx context.Context, message model.CSVWriter, statusCode i
 	}
 }
 
-func WriteBinaryResponse(ctx context.Context, data []byte, filename string, statusCode int, response http.ResponseWriter) {
-	if errors.Is(ctx.Err(), context.DeadlineExceeded) {
-		log.Warnf("Writing API Error. Context Deadline Exceeded whil writing binary response.")
-		return
-	}
-
+func WriteBinaryResponse(_ context.Context, data []byte, filename string, statusCode int, response http.ResponseWriter) {
 	response.Header().Set(headers.ContentType.String(), mediatypes.ApplicationOctetStream.String())
 	response.Header().Set(headers.ContentDisposition.String(), fmt.Sprintf(utils.ContentDispositionAttachmentTemplate, filename))
 	response.WriteHeader(statusCode)
@@ -283,20 +248,6 @@ func ReadAPIV2ErrorResponsePayload(value *ErrorWrapper, response *http.Response)
 	}
 }
 
-func ReadJsonRequestPayload(value any, request *http.Request) error {
-	if !HeaderMatches(headers.ContentType.String(), mediatypes.ApplicationJson.String(), request.Header) {
-		return ErrorContentTypeJson
-	}
-
-	decoder := json.NewDecoder(request.Body)
-
-	if err := decoder.Decode(value); err != nil {
-		return fmt.Errorf("could not decode request into value: %w", err)
-	} else {
-		return nil
-	}
-}
-
 func ReadJSONRequestPayloadLimited(value any, request *http.Request) error {
 	if !HeaderMatches(headers.ContentType.String(), mediatypes.ApplicationJson.String(), request.Header) {
 		return ErrorContentTypeJson
@@ -313,23 +264,6 @@ func ReadJSONRequestPayloadLimited(value any, request *http.Request) error {
 
 	if err := decoder.Decode(value); err != nil {
 		return fmt.Errorf("could not decode limited payload request into value: %w", err)
-	} else {
-		return nil
-	}
-}
-
-func ReadJSONResponsePayloadLimited(value any, response *http.Response) error {
-	if !HeaderMatches(headers.ContentType.String(), mediatypes.ApplicationJson.String(), response.Header) {
-		return ErrorContentTypeJson
-	}
-
-	var (
-		limitedReader = stream.NewLimitedReader(DefaultAPIPayloadReadLimitBytes, response.Body)
-		decoder       = json.NewDecoder(limitedReader)
-	)
-
-	if err := decoder.Decode(value); err != nil {
-		return fmt.Errorf("could not decode limited payload response into value: %w", err)
 	} else {
 		return nil
 	}
