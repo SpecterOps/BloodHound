@@ -89,8 +89,8 @@ class BHEAPIClient {
         return this.baseClient.delete(`/api/v2/saved-queries/${queryId}`, options);
     };
 
-    databaseManagement = (payload: types.DatabaseManagementRequest, options?: types.RequestOptions) => {
-        return this.baseClient.post('/api/v2/database-management', payload, options);
+    clearDatabase = (payload: types.ClearDatabaseRequest, options?: types.RequestOptions) => {
+        return this.baseClient.post('/api/v2/clear-database', payload, options);
     };
 
     getAvailableDomains = (options?: types.RequestOptions) => this.baseClient.get('/api/v2/available-domains', options);

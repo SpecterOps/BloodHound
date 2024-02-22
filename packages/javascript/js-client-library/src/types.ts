@@ -254,10 +254,10 @@ export interface CreateUserQueryRequest {
     query: string;
 }
 
-export interface DatabaseManagementRequest {
-    collectedGraphData: boolean;
-    highValueSelectors: boolean;
-    fileIngestHistory: boolean;
-    dataQualityHistory: boolean;
+export interface ClearDatabaseRequest {
+    deleteCollectedGraphData: boolean;
+    deleteHighValueSelectors: boolean;
+    deleteFileIngestHistory: boolean;
+    deleteDataQualityHistory: boolean;
     assetGroupId: number;
 }

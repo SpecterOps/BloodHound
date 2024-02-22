@@ -27,14 +27,14 @@ import (
 )
 
 type DatabaseManagement struct {
-	CollectedGraphData bool `json:"collectedGraphData"`
-	HighValueSelectors bool `json:"highValueSelectors"`
-	FileIngestHistory  bool `json:"fileIngestHistory"`
-	DataQualityHistory bool `json:"dataQualityHistory"`
-	AssetGroupId       int  `json:"assetGroupId"`
+	DeleteCollectedGraphData bool `json:"deleteCollectedGraphData"`
+	DeleteHighValueSelectors bool `json:"deleteHighValueSelectors"`
+	DeleteFileIngestHistory  bool `json:"deleteFileIngestHistory"`
+	DeleteDataQualityHistory bool `json:"deleteDataQualityHistory"`
+	AssetGroupId             int  `json:"assetGroupId"`
 }
 
-func (s Resources) HandleDatabaseManagement(response http.ResponseWriter, request *http.Request) {
+func (s Resources) HandleDatabaseWipe(response http.ResponseWriter, request *http.Request) {
 
 	var (
 		payload DatabaseManagement
@@ -51,7 +51,7 @@ func (s Resources) HandleDatabaseManagement(response http.ResponseWriter, reques
 	}
 
 	// delete graph
-	if payload.CollectedGraphData {
+	if payload.DeleteCollectedGraphData {
 		options = append(options, "collected graph data")
 
 		if err := s.Graph.ReadTransaction(request.Context(), func(tx graph.Transaction) error {
@@ -70,6 +70,7 @@ func (s Resources) HandleDatabaseManagement(response http.ResponseWriter, reques
 
 		if err := s.Graph.BatchOperation(request.Context(), func(batch graph.Batch) error {
 			for _, nodeId := range nodeIDs {
+				// deleting a node also deletes all of its edges due to a sql trigger
 				if err := batch.DeleteNode(nodeId); err != nil {
 					return err
 				}
@@ -87,7 +88,7 @@ func (s Resources) HandleDatabaseManagement(response http.ResponseWriter, reques
 	}
 
 	// delete custom high value selectors
-	if payload.HighValueSelectors {
+	if payload.DeleteHighValueSelectors {
 		options = append(options, "custom high value selectors")
 
 		if payload.AssetGroupId == 0 {
@@ -109,7 +110,7 @@ func (s Resources) HandleDatabaseManagement(response http.ResponseWriter, reques
 	}
 
 	// delete file ingest history
-	if payload.FileIngestHistory {
+	if payload.DeleteFileIngestHistory {
 		options = append(options, "file ingest history")
 
 		if err := s.DB.DeleteAllFileUploads(); err != nil {
@@ -123,7 +124,7 @@ func (s Resources) HandleDatabaseManagement(response http.ResponseWriter, reques
 	}
 
 	// delete data quality history
-	if payload.DataQualityHistory {
+	if payload.DeleteDataQualityHistory {
 		options = append(options, "data quality history")
 
 		if err := s.DB.DeleteAllDataQuality(); err != nil {

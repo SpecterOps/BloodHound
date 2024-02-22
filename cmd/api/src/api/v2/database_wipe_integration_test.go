@@ -1,4 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2024 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -32,7 +32,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestDatabaseManagement_CollectedGraphData(t *testing.T) {
+func TestDatabaseWipe_CollectedGraphData(t *testing.T) {
 	var (
 		harness       = harnesses.NewIntegrationTestHarness(fixtures.BHAdminApiClientFixture)
 		graphdb       = fixtures.NewGraphDBFixture()
@@ -54,18 +54,32 @@ func TestDatabaseManagement_CollectedGraphData(t *testing.T) {
 			apiClient, ok := lab.Unpack(harness, fixtures.BHAdminApiClientFixture)
 			assert.True(ok)
 
-			err := apiClient.HandleDatabaseManagement(
-				v2.DatabaseManagement{
-					CollectedGraphData: true,
-				})
-			assert.Nil(err, "error calling apiClient.HandleDatabaseManagement")
-
 			graphdb, ok := lab.Unpack(harness, fixtures.GraphDBFixture)
 			assert.True(ok)
 
+			// verify that nodes exist
 			graphdb.ReadTransaction(context.Background(),
 				func(tx graph.Transaction) error {
+					nodeCount, err := tx.Nodes().Count()
 
+					require.Nil(t, err)
+					require.NotZero(t, nodeCount)
+					return nil
+				})
+
+			err := apiClient.HandleDatabaseManagement(
+				v2.DatabaseManagement{
+					DeleteCollectedGraphData: true,
+				})
+			assert.Nil(err, "error calling apiClient.HandleDatabaseWipe")
+
+			// verify that zero nodes exist
+			graphdb.ReadTransaction(context.Background(),
+				func(tx graph.Transaction) error {
+					nodeCount, err := tx.Nodes().Count()
+
+					require.Nil(t, err)
+					require.Zero(t, nodeCount)
 					return nil
 				})
 

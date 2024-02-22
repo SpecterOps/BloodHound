@@ -23,17 +23,17 @@ import { useSelector } from 'react-redux';
 import { selectTierZeroAssetGroupId } from 'src/ducks/assetgroups/reducer';
 
 type DataTypes = {
-    collectedGraphData: boolean;
-    highValueSelectors: boolean;
-    fileIngestHistory: boolean;
-    dataQualityHistory: boolean;
+    deleteCollectedGraphData: boolean;
+    deleteHighValueSelectors: boolean;
+    deleteFileIngestHistory: boolean;
+    deleteDataQualityHistory: boolean;
 };
 
 const initialState: State = {
-    collectedGraphData: false,
-    highValueSelectors: false,
-    fileIngestHistory: false,
-    dataQualityHistory: false,
+    deleteCollectedGraphData: false,
+    deleteHighValueSelectors: false,
+    deleteFileIngestHistory: false,
+    deleteDataQualityHistory: false,
 
     noSelectionError: false,
     mutationError: false,
@@ -44,10 +44,10 @@ const initialState: State = {
 
 type State = {
     // checkbox state
-    collectedGraphData: boolean;
-    highValueSelectors: boolean;
-    fileIngestHistory: boolean;
-    dataQualityHistory: boolean;
+    deleteCollectedGraphData: boolean;
+    deleteHighValueSelectors: boolean;
+    deleteFileIngestHistory: boolean;
+    deleteDataQualityHistory: boolean;
 
     // error state
     noSelectionError: boolean;
@@ -86,10 +86,10 @@ const reducer = (state: State, action: Action): State => {
             return {
                 ...state,
                 // reset checkboxes
-                collectedGraphData: false,
-                dataQualityHistory: false,
-                fileIngestHistory: false,
-                highValueSelectors: false,
+                deleteCollectedGraphData: false,
+                deleteDataQualityHistory: false,
+                deleteFileIngestHistory: false,
+                deleteHighValueSelectors: false,
 
                 showSuccessMessage: true,
             };
@@ -103,10 +103,19 @@ const reducer = (state: State, action: Action): State => {
             };
         }
         case 'open_dialog': {
-            const { collectedGraphData, dataQualityHistory, fileIngestHistory, highValueSelectors } = state;
+            const {
+                deleteCollectedGraphData,
+                deleteDataQualityHistory,
+                deleteFileIngestHistory,
+                deleteHighValueSelectors,
+            } = state;
             if (
-                [collectedGraphData, dataQualityHistory, fileIngestHistory, highValueSelectors].filter(Boolean)
-                    .length === 0
+                [
+                    deleteCollectedGraphData,
+                    deleteDataQualityHistory,
+                    deleteFileIngestHistory,
+                    deleteHighValueSelectors,
+                ].filter(Boolean).length === 0
             ) {
                 return {
                     ...state,
@@ -134,13 +143,14 @@ const reducer = (state: State, action: Action): State => {
 
 const useDatabaseManagement = () => {
     const [state, dispatch] = useReducer(reducer, initialState);
-    const { collectedGraphData, highValueSelectors, fileIngestHistory, dataQualityHistory } = state;
+    const { deleteCollectedGraphData, deleteHighValueSelectors, deleteFileIngestHistory, deleteDataQualityHistory } =
+        state;
 
     const tierZeroAssetGroupId = useSelector(selectTierZeroAssetGroupId);
 
     const mutation = useMutation({
         mutationFn: async ({ deleteThisData, assetGroupId }: { deleteThisData: DataTypes; assetGroupId: number }) => {
-            return apiClient.databaseManagement({
+            return apiClient.clearDatabase({
                 ...deleteThisData,
                 assetGroupId,
             });
@@ -158,10 +168,10 @@ const useDatabaseManagement = () => {
     const handleMutation = () => {
         mutation.mutate({
             deleteThisData: {
-                collectedGraphData,
-                dataQualityHistory,
-                fileIngestHistory,
-                highValueSelectors,
+                deleteCollectedGraphData,
+                deleteDataQualityHistory,
+                deleteFileIngestHistory,
+                deleteHighValueSelectors,
             },
             assetGroupId: tierZeroAssetGroupId,
         });
@@ -173,7 +183,8 @@ const useDatabaseManagement = () => {
 const DatabaseManagement = () => {
     const { handleMutation, state, dispatch } = useDatabaseManagement();
 
-    const { collectedGraphData, highValueSelectors, fileIngestHistory, dataQualityHistory } = state;
+    const { deleteCollectedGraphData, deleteHighValueSelectors, deleteFileIngestHistory, deleteDataQualityHistory } =
+        state;
 
     const handleCheckbox = (event: React.ChangeEvent<HTMLInputElement>) => {
         dispatch({
@@ -214,9 +225,9 @@ const DatabaseManagement = () => {
                                 label='Collected graph data (all nodes and edges)'
                                 control={
                                     <Checkbox
-                                        checked={collectedGraphData}
+                                        checked={deleteCollectedGraphData}
                                         onChange={handleCheckbox}
-                                        name='collectedGraphData'
+                                        name='deleteCollectedGraphData'
                                     />
                                 }
                             />
@@ -224,9 +235,9 @@ const DatabaseManagement = () => {
                                 label='Custom High Value selectors'
                                 control={
                                     <Checkbox
-                                        checked={highValueSelectors}
+                                        checked={deleteHighValueSelectors}
                                         onChange={handleCheckbox}
-                                        name='highValueSelectors'
+                                        name='deleteHighValueSelectors'
                                     />
                                 }
                             />
@@ -234,9 +245,9 @@ const DatabaseManagement = () => {
                                 label='File Ingest Log history'
                                 control={
                                     <Checkbox
-                                        checked={fileIngestHistory}
+                                        checked={deleteFileIngestHistory}
                                         onChange={handleCheckbox}
-                                        name='fileIngestHistory'
+                                        name='deleteFileIngestHistory'
                                     />
                                 }
                             />
@@ -244,9 +255,9 @@ const DatabaseManagement = () => {
                                 label='Data Quality history'
                                 control={
                                     <Checkbox
-                                        checked={dataQualityHistory}
+                                        checked={deleteDataQualityHistory}
                                         onChange={handleCheckbox}
-                                        name='dataQualityHistory'
+                                        name='deleteDataQualityHistory'
                                     />
                                 }
                             />

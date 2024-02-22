@@ -22,7 +22,7 @@ import { rest } from 'msw';
 
 describe('DatabaseManagement', () => {
     const server = setupServer(
-        rest.post('/api/v2/database-management', (req, res, ctx) => {
+        rest.post('/api/v2/clear-database', (req, res, ctx) => {
             return res(ctx.status(204));
         })
     );
