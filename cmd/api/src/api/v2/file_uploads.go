@@ -19,6 +19,7 @@ package v2
 import (
 	"errors"
 	"fmt"
+	"github.com/specterops/bloodhound/headers"
 	"github.com/specterops/bloodhound/mediatypes"
 	"net/http"
 	"slices"
@@ -130,11 +131,13 @@ func (s Resources) ProcessFileUpload(response http.ResponseWriter, request *http
 		fileUploadJobIdString = mux.Vars(request)[FileUploadJobIdPathParameterName]
 	)
 
-	if fileUploadJobID, err := strconv.Atoi(fileUploadJobIdString); err != nil {
+	if !api.HeaderMatches(headers.ContentType.String(), mediatypes.ApplicationJson.String(), request.Header) && !api.HeaderMatches(headers.ContentType.String(), mediatypes.ApplicationZip.String(), request.Header) {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("Content type must be application/json or application/zip"), request), response)
+	} else if fileUploadJobID, err := strconv.Atoi(fileUploadJobIdString); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsIDMalformed, request), response)
 	} else if fileUploadJob, err := fileupload.GetFileUploadJobByID(s.DB, int64(fileUploadJobID)); err != nil {
 		api.HandleDatabaseError(request, response, err)
-	} else if fileName, err := fileupload.SaveIngestFile(s.Config.TempDirectory(), request.Body); errors.Is(err, fileupload.ErrInvalidJSON) {
+	} else if fileName, err := fileupload.SaveIngestFile(s.Config.TempDirectory(), request); errors.Is(err, fileupload.ErrInvalidJSON) {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("Error saving ingest file: %v", err), request), response)
 	} else if err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("Error saving ingest file: %v", err), request), response)
