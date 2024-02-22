@@ -29,7 +29,7 @@ import {
 } from '@mui/material';
 import { FC, useState } from 'react';
 
-const confirmationText = 'Please delete my data';
+const confirmationText = 'please delete my data';
 
 const ConfirmationDialog: FC<{ open: boolean; handleClose: () => void; handleDelete: () => void }> = ({
     open,
@@ -42,7 +42,7 @@ const ConfirmationDialog: FC<{ open: boolean; handleClose: () => void; handleDel
     const [error, setError] = useState(false);
 
     const handleConfirm = () => {
-        if (input !== confirmationText) {
+        if (input.toLowerCase() !== confirmationText) {
             setError(true);
         } else {
             // resets local state

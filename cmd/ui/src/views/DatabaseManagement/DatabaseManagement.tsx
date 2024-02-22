@@ -14,26 +14,13 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import {
-    Alert,
-    Box,
-    Button,
-    Checkbox,
-    FormControl,
-    FormControlLabel,
-    FormGroup,
-    FormHelperText,
-    Typography,
-    useTheme,
-} from '@mui/material';
+import { Alert, Box, Button, Checkbox, FormControl, FormControlLabel, FormGroup, Typography } from '@mui/material';
 import { ContentPage, apiClient } from 'bh-shared-ui';
 import { useReducer } from 'react';
 import ConfirmationDialog from './ConfirmationDialog';
 import { useMutation } from 'react-query';
 import { useSelector } from 'react-redux';
 import { selectTierZeroAssetGroupId } from 'src/ducks/assetgroups/reducer';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCircleXmark, faCircleExclamation } from '@fortawesome/free-solid-svg-icons';
 
 type DataTypes = {
     collectedGraphData: boolean;
@@ -184,8 +171,6 @@ const useDatabaseManagement = () => {
 };
 
 const DatabaseManagement = () => {
-    const theme = useTheme();
-
     const { handleMutation, state, dispatch } = useDatabaseManagement();
 
     const { collectedGraphData, highValueSelectors, fileIngestHistory, dataQualityHistory } = state;

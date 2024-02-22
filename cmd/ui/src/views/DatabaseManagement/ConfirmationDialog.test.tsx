@@ -52,7 +52,7 @@ describe('Confirmation Dialog', () => {
         const user = userEvent.setup();
 
         const textField = screen.getByRole('textbox');
-        await user.type(textField, 'Please delete my data');
+        await user.type(textField, 'please delete my data');
 
         const confirmButton = screen.getByRole('button', { name: /confirm/i });
         await user.click(confirmButton);
