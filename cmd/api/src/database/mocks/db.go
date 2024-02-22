@@ -1229,20 +1229,6 @@ func (mr *MockDatabaseMockRecorder) Migrate() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Migrate", reflect.TypeOf((*MockDatabase)(nil).Migrate))
 }
 
-// RawFirst mocks base method.
-func (m *MockDatabase) RawFirst(arg0 interface{}) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "RawFirst", arg0)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// RawFirst indicates an expected call of RawFirst.
-func (mr *MockDatabaseMockRecorder) RawFirst(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RawFirst", reflect.TypeOf((*MockDatabase)(nil).RawFirst), arg0)
-}
-
 // RequiresMigration mocks base method.
 func (m *MockDatabase) RequiresMigration() (bool, error) {
 	m.ctrl.T.Helper()

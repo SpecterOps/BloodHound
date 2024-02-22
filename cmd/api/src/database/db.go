@@ -75,7 +75,7 @@ type Database interface {
 	DeleteAssetGroupSelector(ctx context.Context, selector model.AssetGroupSelector) error
 	UpdateAssetGroupSelectors(ctx context.Context, assetGroup model.AssetGroup, selectorSpecs []model.AssetGroupSelectorSpec, systemSelector bool) (model.UpdatedAssetGroupSelectors, error)
 	CreateAssetGroupCollection(ctx context.Context, collection model.AssetGroupCollection, entries model.AssetGroupCollectionEntries) error
-	RawFirst(value any) error
+
 	Wipe() error
 	Migrate() error
 	RequiresMigration() (bool, error)
@@ -193,10 +193,6 @@ func OpenDatabase(connection string) (*gorm.DB, error) {
 	} else {
 		return db, nil
 	}
-}
-
-func (s *BloodhoundDB) RawFirst(value any) error {
-	return CheckError(s.db.Model(value).First(value))
 }
 
 func (s *BloodhoundDB) RawDelete(value any) error {
