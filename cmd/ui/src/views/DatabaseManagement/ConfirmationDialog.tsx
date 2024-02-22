@@ -29,7 +29,7 @@ import {
 } from '@mui/material';
 import { FC, useState } from 'react';
 
-const confirmationText = 'please delete my data';
+const confirmationText = 'Please delete my data';
 
 const ConfirmationDialog: FC<{ open: boolean; handleClose: () => void; handleDelete: () => void }> = ({
     open,
@@ -42,7 +42,7 @@ const ConfirmationDialog: FC<{ open: boolean; handleClose: () => void; handleDel
     const [error, setError] = useState(false);
 
     const handleConfirm = () => {
-        if (input.toLowerCase() !== confirmationText) {
+        if (input.toLowerCase() !== confirmationText.toLowerCase()) {
             setError(true);
         } else {
             // resets local state
@@ -53,6 +53,17 @@ const ConfirmationDialog: FC<{ open: boolean; handleClose: () => void; handleDel
             handleClose();
             handleDelete();
         }
+    };
+
+    const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const newInput = event.target.value;
+        // clear out error state once the user types the phrase
+        if (newInput.toLowerCase() === confirmationText.toLowerCase()) {
+            setError(false);
+        } else {
+            setError(true);
+        }
+        setInput(newInput);
     };
 
     return open ? (
@@ -69,12 +80,10 @@ const ConfirmationDialog: FC<{ open: boolean; handleClose: () => void; handleDel
                     </Typography>
                     <Typography variant='body1'>Please input the phrase prior to click confirm.</Typography>
                     <TextField
-                        placeholder='Please delete my data'
+                        placeholder={confirmationText}
                         variant='standard'
                         value={input}
-                        onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
-                            setInput(event.target.value);
-                        }}
+                        onChange={handleChange}
                         error={error}
                         helperText={
                             error ? (
@@ -87,7 +96,15 @@ const ConfirmationDialog: FC<{ open: boolean; handleClose: () => void; handleDel
                 </Box>
             </DialogContent>
             <DialogActions>
-                <Button onClick={handleClose}>Cancel</Button>
+                <Button
+                    onClick={() => {
+                        handleClose();
+                        setError(false);
+                        setInput('');
+                    }}
+                    sx={{ color: 'black' }}>
+                    Cancel
+                </Button>
                 <Button onClick={handleConfirm}>Confirm</Button>
             </DialogActions>
         </Dialog>

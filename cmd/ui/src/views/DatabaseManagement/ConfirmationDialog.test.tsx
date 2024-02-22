@@ -48,6 +48,24 @@ describe('Confirmation Dialog', () => {
         expect(errMessage).toBeInTheDocument();
     });
 
+    it('removes the error message when user tries fully types the message', async () => {
+        const user = userEvent.setup();
+
+        // user types some of the phrase
+        const textField = screen.getByRole('textbox');
+        await user.type(textField, 'please');
+
+        const confirmButton = screen.getByRole('button', { name: /confirm/i });
+        await user.click(confirmButton);
+
+        const errMessage = screen.getByText(/please input the phrase prior to clicking confirm/i);
+        expect(errMessage).toBeInTheDocument();
+
+        // user types all of the phrase
+        await user.type(textField, ' delete my data');
+        expect(errMessage).not.toBeInTheDocument();
+    });
+
     it('handles a submission when the user has typed the phrase', async () => {
         const user = userEvent.setup();
 

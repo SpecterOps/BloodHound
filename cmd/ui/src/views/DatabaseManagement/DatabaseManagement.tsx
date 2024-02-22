@@ -103,20 +103,15 @@ const reducer = (state: State, action: Action): State => {
             };
         }
         case 'open_dialog': {
-            const {
-                deleteCollectedGraphData,
-                deleteDataQualityHistory,
-                deleteFileIngestHistory,
-                deleteHighValueSelectors,
-            } = state;
-            if (
+            const noSelection =
                 [
-                    deleteCollectedGraphData,
-                    deleteDataQualityHistory,
-                    deleteFileIngestHistory,
-                    deleteHighValueSelectors,
-                ].filter(Boolean).length === 0
-            ) {
+                    state.deleteCollectedGraphData,
+                    state.deleteDataQualityHistory,
+                    state.deleteFileIngestHistory,
+                    state.deleteHighValueSelectors,
+                ].filter(Boolean).length === 0;
+
+            if (noSelection) {
                 return {
                     ...state,
                     noSelectionError: true,
