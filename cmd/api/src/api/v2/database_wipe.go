@@ -99,7 +99,7 @@ func (s Resources) HandleDatabaseWipe(response http.ResponseWriter, request *htt
 			)
 			return
 		}
-		if err := s.DB.DeleteAssetGroupSelectors(request.Context(), payload.AssetGroupId); err != nil {
+		if err := s.DB.DeleteAssetGroupSelectorsForAssetGroup(request.Context(), payload.AssetGroupId); err != nil {
 			api.WriteErrorResponse(
 				request.Context(),
 				api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("%s %d: %s", "there was an error deleting asset group with id = ", payload.AssetGroupId, err.Error()), request),
