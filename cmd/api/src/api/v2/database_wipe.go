@@ -85,6 +85,8 @@ func (s Resources) HandleDatabaseWipe(response http.ResponseWriter, request *htt
 			return
 		}
 
+		// if succesful, kick off analysis
+		s.TaskNotifier.RequestAnalysis()
 	}
 
 	// delete custom high value selectors
@@ -107,6 +109,9 @@ func (s Resources) HandleDatabaseWipe(response http.ResponseWriter, request *htt
 			)
 			return
 		}
+
+		// if succesful, kick off analysis
+		s.TaskNotifier.RequestAnalysis()
 	}
 
 	// delete file ingest history
