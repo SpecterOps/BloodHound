@@ -38,7 +38,7 @@ const RESOLUTION = 0.02,
     ATTRIBUTES = 6,
     STRIDE = POINTS * ATTRIBUTES;
 
-export default class EdgeClampedProgram extends AbstractEdgeProgram {
+export default class CurvedEdgeProgram extends AbstractEdgeProgram {
     IndicesArray: Uint32ArrayConstructor | Uint16ArrayConstructor;
     indicesArray: Uint32Array | Uint16Array;
     indicesBuffer: WebGLBuffer;
@@ -164,7 +164,7 @@ export default class EdgeClampedProgram extends AbstractEdgeProgram {
         const points = [];
 
         for (let t = 0; t <= 1; t += RESOLUTION) {
-            const pointOnCurve = bezier.getCoordinatesAlongCurve(start, end, control, t);
+            const pointOnCurve = bezier.getCoordinatesAlongQuadraticBezier(start, end, control, t);
             points.push(pointOnCurve);
         }
 

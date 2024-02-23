@@ -71,10 +71,9 @@ export type LinkedNode = {
     y: number;
 };
 
-export const calculateEdgeDistanceForLabel = (
-    source: LinkedNode,
-    target: LinkedNode
-): { distance: number; cx: number; cy: number } => {
+export type EdgeDistanceProperties = { distance: number; cx: number; cy: number };
+//This is for a single linear edge
+export const calculateEdgeDistanceForLabel = (source: LinkedNode, target: LinkedNode): EdgeDistanceProperties => {
     // Computing positions without considering nodes sizes:
     const sSize = source.size;
     const tSize = target.size;
@@ -112,7 +111,7 @@ export const getEdgeLabelTextLength = (
     let label = edgeLabel;
     let textLength = context.measureText(label).width;
 
-    if (textLength > edgeDistance) {
+    if (textLength > edgeDistance && edgeDistance !== 0) {
         const ellipsis = '…';
         label = label + ellipsis;
         textLength = context.measureText(label).width;
@@ -127,7 +126,7 @@ export const getEdgeLabelTextLength = (
     return textLength;
 };
 
-const graphToFramedGraph = (
+export const graphToFramedGraph = (
     sigma: Sigma<AbstractGraph<Attributes, Attributes, Attributes>>,
     coordinates: Coordinates
 ): Coordinates => {
