@@ -85,22 +85,18 @@ func getScheme(request *http.Request) string {
 	}
 }
 
-func requestWaitDuration(request *http.Request, defaultWaitDuration time.Duration) (ctx.RequestedWaitDuration, error) {
+func requestWaitDuration(request *http.Request) (time.Duration, error) {
+	var (
+		requestedWaitDuration time.Duration
+		err                   error
+	)
+
 	if preferValue := request.Header.Get(headers.Prefer.String()); len(preferValue) > 0 {
-		if requestedWaitDuration, err := parsePreferHeaderWait(preferValue, defaultWaitDuration); err != nil {
-			return ctx.RequestedWaitDuration{}, err
-		} else {
-			return ctx.RequestedWaitDuration{
-				Value:   requestedWaitDuration,
-				UserSet: true,
-			}, nil
+		if requestedWaitDuration, err = parsePreferHeaderWait(preferValue); err != nil {
+			return 0, err
 		}
 	}
-
-	return ctx.RequestedWaitDuration{
-		Value:   defaultWaitDuration,
-		UserSet: false,
-	}, nil
+	return requestedWaitDuration, nil
 }
 
 // ContextMiddleware is a middleware function that sets the BloodHound context per-request. It also sets the request ID.
@@ -118,7 +114,7 @@ func ContextMiddleware(next http.Handler) http.Handler {
 			requestID = newUUID.String()
 		}
 
-		if requestedWaitDuration, err := requestWaitDuration(request, defaultTimeout); err != nil {
+		if requestedWaitDuration, err := requestWaitDuration(request); err != nil {
 			// If there is a failure or other expectation mismatch with the client, respond right away with the relevant
 			// error information
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("Prefer header has an invalid value: %v", err), request), response)
@@ -126,17 +122,25 @@ func ContextMiddleware(next http.Handler) http.Handler {
 			// Set the request ID and applied preferences headers
 			response.Header().Set(headers.RequestID.String(), requestID)
 			response.Header().Set(headers.StrictTransportSecurity.String(), utils.HSTSSetting)
-			response.Header().Set(headers.PreferenceApplied.String(), fmt.Sprintf("wait=%.2f", requestedWaitDuration.Value.Seconds()))
 
-			// Create a new context with the timeout
-			requestCtx, cancel := context.WithTimeout(request.Context(), requestedWaitDuration.Value)
-			defer cancel()
+			var (
+				requestCtx = request.Context()
+				cancel     context.CancelFunc
+			)
+
+			// API requests don't have a timeout set by default. Below, we set a custom timeout to the request only if specified in the prefer header
+			if requestedWaitDuration > 0 {
+				response.Header().Set(headers.PreferenceApplied.String(), fmt.Sprintf("wait=%.2f", requestedWaitDuration.Seconds()))
+
+				requestCtx, cancel = context.WithTimeout(request.Context(), requestedWaitDuration)
+				defer cancel()
+			}
+
 			// Insert the bh context
-
 			requestCtx = ctx.Set(requestCtx, &ctx.Context{
 				StartTime: startTime,
-				Timeout:   requestedWaitDuration,
 				RequestID: requestID,
+				Timeout:   requestedWaitDuration,
 				Host: &url.URL{
 					Scheme: getScheme(request),
 					Host:   request.Host,
@@ -195,21 +199,16 @@ func ParseHeaderValues(values string) map[string]string {
 	return parsed
 }
 
-func parsePreferHeaderWait(value string, defaultWaitDuration time.Duration) (time.Duration, error) {
-	var (
-		values                    = ParseHeaderValues(value)
-		waitStr, hasWaitSpecified = values["wait"]
-	)
-
-	if hasWaitSpecified {
+func parsePreferHeaderWait(value string) (time.Duration, error) {
+	if waitStr, hasWaitSpecified := ParseHeaderValues(value)["wait"]; hasWaitSpecified {
 		if parsedNumSeconds, err := strconv.Atoi(waitStr); err != nil {
 			return 0, err
 		} else {
 			return time.Second * time.Duration(parsedNumSeconds), nil
 		}
+	} else {
+		return 0, nil
 	}
-
-	return defaultWaitDuration, nil
 }
 
 // CORSMiddleware is a middleware function that sets our CORS options per-request and answers to client OPTIONS requests
