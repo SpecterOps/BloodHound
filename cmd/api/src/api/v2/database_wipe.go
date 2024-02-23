@@ -19,9 +19,12 @@ package v2
 import (
 	"fmt"
 	"net/http"
+	"strings"
 
+	"github.com/gofrs/uuid"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/dawgs/ops"
+	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/src/model"
 )
@@ -39,7 +42,8 @@ func (s Resources) HandleDatabaseWipe(response http.ResponseWriter, request *htt
 	var (
 		payload DatabaseManagement
 		nodeIDs []graph.ID
-		options []string
+		// use this struct to flag any fields that failed to delete
+		errors DatabaseManagement
 	)
 
 	if err := api.ReadJSONRequestPayloadLimited(&payload, request); err != nil {
@@ -48,11 +52,49 @@ func (s Resources) HandleDatabaseWipe(response http.ResponseWriter, request *htt
 			api.BuildErrorResponse(http.StatusBadRequest, "JSON malformed.", request),
 			response,
 		)
+		return
+	}
+
+	if payload.DeleteHighValueSelectors && payload.AssetGroupId == 0 {
+		api.WriteErrorResponse(
+			request.Context(),
+			api.BuildErrorResponse(http.StatusBadRequest, "please provide an assetGroupId to delete", request),
+			response,
+		)
+		return
+	}
+
+	commitID, err := uuid.NewV4()
+	if err != nil {
+		api.WriteErrorResponse(
+			request.Context(),
+			api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("failure generating uuid: %v", err.Error()), request),
+			response,
+		)
+		return
+	}
+
+	auditEntry := &model.AuditEntry{
+		Action: "DeleteBloodhoundData",
+		Model: &model.AuditData{
+			"options": payload,
+		},
+		Status:   model.AuditStatusIntent,
+		CommitID: commitID,
+	}
+
+	// create an intent audit log
+	if err := s.DB.AppendAuditLog(request.Context(), *auditEntry); err != nil {
+		api.WriteErrorResponse(
+			request.Context(),
+			api.BuildErrorResponse(http.StatusInternalServerError, "failure creating an intent audit log", request),
+			response,
+		)
+		return
 	}
 
 	// delete graph
 	if payload.DeleteCollectedGraphData {
-		options = append(options, "collected graph data")
 
 		if err := s.Graph.ReadTransaction(request.Context(), func(tx graph.Transaction) error {
 			fetchedNodeIDs, err := ops.FetchNodeIDs(tx.Nodes())
@@ -60,15 +102,10 @@ func (s Resources) HandleDatabaseWipe(response http.ResponseWriter, request *htt
 			nodeIDs = append(nodeIDs, fetchedNodeIDs...)
 			return err
 		}); err != nil {
-			api.WriteErrorResponse(
-				request.Context(),
-				api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("%s: %s", "error fetching all nodes", err.Error()), request),
-				response,
-			)
-			return
-		}
+			log.Errorf("%s: %s", "error fetching all nodes", err.Error())
+			errors.DeleteCollectedGraphData = true
 
-		if err := s.Graph.BatchOperation(request.Context(), func(batch graph.Batch) error {
+		} else if err := s.Graph.BatchOperation(request.Context(), func(batch graph.Batch) error {
 			for _, nodeId := range nodeIDs {
 				// deleting a node also deletes all of its edges due to a sql trigger
 				if err := batch.DeleteNode(nodeId); err != nil {
@@ -77,12 +114,9 @@ func (s Resources) HandleDatabaseWipe(response http.ResponseWriter, request *htt
 			}
 			return nil
 		}); err != nil {
-			api.WriteErrorResponse(
-				request.Context(),
-				api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("%s: %s", "error deleting all nodes", err.Error()), request),
-				response,
-			)
-			return
+			log.Errorf("%s: %s", "error deleting all nodes", err.Error())
+			errors.DeleteCollectedGraphData = true
+
 		}
 
 		// if succesful, kick off analysis
@@ -91,23 +125,9 @@ func (s Resources) HandleDatabaseWipe(response http.ResponseWriter, request *htt
 
 	// delete custom high value selectors
 	if payload.DeleteHighValueSelectors {
-		options = append(options, "custom high value selectors")
-
-		if payload.AssetGroupId == 0 {
-			api.WriteErrorResponse(
-				request.Context(),
-				api.BuildErrorResponse(http.StatusBadRequest, "please provide an assetGroupId to delete", request),
-				response,
-			)
-			return
-		}
 		if err := s.DB.DeleteAssetGroupSelectorsForAssetGroup(request.Context(), payload.AssetGroupId); err != nil {
-			api.WriteErrorResponse(
-				request.Context(),
-				api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("%s %d: %s", "there was an error deleting asset group with id = ", payload.AssetGroupId, err.Error()), request),
-				response,
-			)
-			return
+			log.Errorf("%s %d: %s", "there was an error deleting asset group with id = ", payload.AssetGroupId, err.Error())
+			errors.DeleteHighValueSelectors = true
 		}
 
 		// if succesful, kick off analysis
@@ -116,39 +136,39 @@ func (s Resources) HandleDatabaseWipe(response http.ResponseWriter, request *htt
 
 	// delete file ingest history
 	if payload.DeleteFileIngestHistory {
-		options = append(options, "file ingest history")
-
 		if err := s.DB.DeleteAllFileUploads(); err != nil {
-			api.WriteErrorResponse(
-				request.Context(),
-				api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("%s: %s", "there was an error deleting file ingest history", err.Error()), request),
-				response,
-			)
-			return
+			log.Errorf("%s: %s", "there was an error deleting file ingest history", err.Error())
+			errors.DeleteFileIngestHistory = true
 		}
 	}
 
 	// delete data quality history
 	if payload.DeleteDataQualityHistory {
-		options = append(options, "data quality history")
-
 		if err := s.DB.DeleteAllDataQuality(); err != nil {
+			log.Errorf("%s: %s", "there was an error deleting data quality history", err.Error())
+			errors.DeleteDataQualityHistory = true
+		}
+	}
+
+	// append a failure audit log if anything failed
+	if errors.DeleteCollectedGraphData || errors.DeleteHighValueSelectors || errors.DeleteDataQualityHistory || errors.DeleteFileIngestHistory {
+		auditEntry.Status = model.AuditStatusFailure
+		auditEntry.Model = model.AuditData{
+			"deletionFailures": buildMessageForFailureAudit(errors),
+		}
+
+		if err := s.DB.AppendAuditLog(request.Context(), *auditEntry); err != nil {
 			api.WriteErrorResponse(
 				request.Context(),
-				api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("%s: %s", "there was an error deleting data quality history", err.Error()), request),
+				api.BuildErrorResponse(http.StatusInternalServerError, "there was an error creating audit log for deleting Bloodhound data", request),
 				response,
 			)
 			return
 		}
 	}
-
-	if err := s.DB.AppendAuditLog(request.Context(), model.AuditEntry{
-		Action: "DeleteBloodhoundData",
-		Model: &model.AuditData{
-			"options": options,
-		},
-		Status: model.AuditStatusSuccess,
-	}); err != nil {
+	// otherwise append a success audit log
+	auditEntry.Status = model.AuditStatusSuccess
+	if err := s.DB.AppendAuditLog(request.Context(), *auditEntry); err != nil {
 		api.WriteErrorResponse(
 			request.Context(),
 			api.BuildErrorResponse(http.StatusInternalServerError, "there was an error creating audit log for deleting Bloodhound data", request),
@@ -158,4 +178,19 @@ func (s Resources) HandleDatabaseWipe(response http.ResponseWriter, request *htt
 	}
 
 	response.WriteHeader(http.StatusNoContent)
+}
+
+func buildMessageForFailureAudit(failures DatabaseManagement) string {
+	var message []string
+	if failures.DeleteCollectedGraphData {
+		message = append(message, "collected graph data")
+	} else if failures.DeleteDataQualityHistory {
+		message = append(message, "data quality history")
+	} else if failures.DeleteFileIngestHistory {
+		message = append(message, "file ingest history")
+	} else if failures.DeleteHighValueSelectors {
+		message = append(message, "high value selectors")
+	}
+
+	return strings.Join(message, ", ")
 }
