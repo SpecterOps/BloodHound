@@ -207,7 +207,7 @@ func parsePreferHeaderWait(value string) (time.Duration, error) {
 			return time.Second * time.Duration(parsedNumSeconds), nil
 		}
 	} else {
-		return time.Duration(0), nil
+		return 0, nil
 	}
 }
 
