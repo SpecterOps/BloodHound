@@ -111,7 +111,7 @@ export type SavedQuery = {
     user_id: string;
 };
 
-export type FileIngestJob = {
+export type FileIngestJob = TimestampFields & {
     user_id: string;
     user_email_address: string;
     status: number;
@@ -122,6 +122,8 @@ export type FileIngestJob = {
     id: number;
 };
 
-export type StartFileIngestResponse = BasicResponse<FileIngestJob & TimestampFields>;
+export type ListFileIngestJobsResponse = PaginatedResponse<FileIngestJob[]>;
 
-export type ListFilesForIngestResponse = BasicResponse<string[]>;
+export type ListFileTypesForIngestResponse = BasicResponse<string[]>;
+
+export type StartFileIngestResponse = BasicResponse<FileIngestJob>;

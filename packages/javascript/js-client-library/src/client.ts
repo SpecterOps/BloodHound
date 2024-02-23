@@ -27,7 +27,8 @@ import {
     SavedQuery,
     AssetGroupMemberCountsResponse,
     StartFileIngestResponse,
-    ListFilesForIngestResponse,
+    ListFileTypesForIngestResponse,
+    ListFileIngestJobsResponse,
 } from './responses';
 
 class BHEAPIClient {
@@ -413,7 +414,7 @@ class BHEAPIClient {
 
     /* file ingest */
     listFileIngestJobs = (skip?: number, limit?: number, sortBy?: string) =>
-        this.baseClient.get(
+        this.baseClient.get<ListFileIngestJobsResponse>(
             'api/v2/file-upload',
             Object.assign({
                 params: {
@@ -425,12 +426,15 @@ class BHEAPIClient {
         );
 
     listFileTypesForIngest = () =>
-        this.baseClient.get<ListFilesForIngestResponse>('/api/v2/file-upload/accepted-types');
+        this.baseClient.get<ListFileTypesForIngestResponse>('/api/v2/file-upload/accepted-types');
 
     startFileIngest = () => this.baseClient.post<StartFileIngestResponse>('/api/v2/file-upload/start');
 
-    uploadFileToIngestJob = (ingestId: string, json: any) => {
-        return this.baseClient.post(`/api/v2/file-upload/${ingestId}`, json);
+    uploadFileToIngestJob = (ingestId: string, json: any, contentType: string) => {
+        const headers = {
+            'Content-Type': contentType,
+        };
+        return this.baseClient.post(`/api/v2/file-upload/${ingestId}`, json, { headers });
     };
 
     endFileIngest = (ingestId: string) => this.baseClient.post(`/api/v2/file-upload/${ingestId}/end`);

@@ -8,8 +8,16 @@ export const listFileTypesForIngest = () => apiClient.listFileTypesForIngest().t
 
 export const startFileIngestJob = () => apiClient.startFileIngest().then((res) => res.data);
 
-export const uploadFileToIngestJob = ({ jobId, json }: { jobId: string; json: any }) => {
-    return apiClient.uploadFileToIngestJob(jobId, json).then((res) => res.data);
+export const uploadFileToIngestJob = ({
+    jobId,
+    fileContents,
+    contentType = 'application/json',
+}: {
+    jobId: string;
+    fileContents: any;
+    contentType?: string;
+}) => {
+    return apiClient.uploadFileToIngestJob(jobId, fileContents, contentType).then((res) => res.data);
 };
 
 export const endFileIngestJob = ({ jobId }: { jobId: string }) =>

@@ -126,7 +126,7 @@ const FileUploadDialog: React.FC<{
 
     const uploadFile = async (jobId: string, ingestFile: FileForIngest) => {
         return uploadFileToIngestJob.mutateAsync(
-            { jobId, json: ingestFile.file },
+            { jobId, fileContents: ingestFile.file },
             {
                 onSuccess: () => setNewFileStatus(ingestFile.file.name, FileStatus.DONE),
                 onError: () => {
