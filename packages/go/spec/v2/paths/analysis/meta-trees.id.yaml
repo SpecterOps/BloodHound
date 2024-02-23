@@ -1,23 +1,44 @@
 parameters:
-  - type: string
-    description: Domain Node Object ID
-    name: domain_id
+  - $ref: './../../parameters/header/prefer.yaml'
+  - name: domain_id
+    description: Domain ID
     in: path
     required: true
+    schema:
+      type: string
 get:
+  operationId: GetComboTreeGraph
+  summary: Get the graph for meta tree
+  # TODO: Somebody who understands this endpoint better should improve this description
+  # It appears to do two different things base on whether node_id is set
   description: Gets meta nodes and connecting edges
   tags:
     - Analysis API
     - Enterprise
-  summary: Get the graph for meta tree
   parameters:
-    - $ref: './../../parameters/header/prefer.yaml'
+    - name: node_id
+      description: Node ID # TODO: improve the description to explain what this does
+      in: query
+      schema:
+        type: integer
+        format: int64
   responses:
     200:
       description: OK
       content:
         application/json:
           schema:
-            $ref: "#/definitions/api.BasicResponse"
-    default:
-      $ref: './../../responses/api/error-response.yaml'
+            type: object
+            properties:
+              data:
+                $ref: './../../schemas/model/bh-graph/graph.yaml'
+    400:
+      $ref: './../../responses/bad-request.yaml'
+    401:
+      $ref: './../../responses/unauthorized.yaml'
+    403:
+      $ref: './../../responses/forbidden.yaml'
+    429:
+      $ref: './../../responses/too-many-requests.yaml'
+    500:
+      $ref: './../../responses/internal-server-error.yaml'

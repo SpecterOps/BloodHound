@@ -1,21 +1,8 @@
+allOf:
+  - $ref: './components/int32.id.yaml'
+  - $ref: './components/timestamps.yaml'
 type: object
 properties:
-  id:
-    type: integer
-  created_at:
-    type: string
-    format: date-time
-  updated_at:
-    type: string
-    format: date-time
-  deleted_at:
-    type: object
-    properties:
-      Time:
-        type: string
-        format: date-time
-      Valid:
-        type: boolean
   domain_sid:
     type: string
   users:
@@ -48,7 +35,10 @@ properties:
     type: integer
   session_completeness:
     type: float
+    format: double
   local_group_completeness:
     type: float
+    format: double
   run_id:
     type: string
+    format: uuid

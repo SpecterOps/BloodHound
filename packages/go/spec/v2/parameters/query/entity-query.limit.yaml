@@ -1,0 +1,7 @@
+name: limit
+description: The number of entries to limit in the response. Only available for `type=list`.
+in: query
+schema:
+  type: integer
+  minimum: 0
+  default: 10

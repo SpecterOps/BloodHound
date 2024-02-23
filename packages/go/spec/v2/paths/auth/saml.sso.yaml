@@ -24,6 +24,6 @@ get:
                     items:
                       $ref: './../../schemas/model/saml-sign-on-endpoint.yaml'
     429:
-      $ref: './../../responses/api/too-many-requests.yaml'
+      $ref: './../../responses/too-many-requests.yaml'
     500:
-      $ref: './../../responses/api/internal-server-error.yaml'
+      $ref: './../../responses/internal-server-error.yaml'

@@ -1,0 +1,8 @@
+type: string
+pattern: "^(in|nin):(\\w+)(,\\s*\\w+)*$"
+description: |
+  The contains predicate checks a property against the values in a given comma separated list.
+  - `in` checks if the property matches an element in the given comma separated list.
+    - `in:Contains,GetChangesAll,MemberOf`
+  - `nin` checks if the property does not match an element in the given comma separated list.
+    - `nin:LocalToComputer,MemberOfLocalGroup`

@@ -1,95 +1,97 @@
+parameters:
+  - $ref: './../../parameters/header/prefer.yaml'
 get:
-  description: Gets audit logs
+  operationId: ListAuditLogs
+  summary: List audit logs
+  description: Returns a list of audit logs.
   tags:
     - Audit API
     - Community
     - Enterprise
-  summary: Get audit logs
   parameters:
-    - $ref: './../../parameters/header/prefer.yaml'
-    - $ref: "#/definitions/parameters.PagingSkip"
-    - $ref: "#/definitions/parameters.PagingLimit"
-    - type: string
-      description: Sort by column. Can be used multiple times; prepend hyphen for
-        descending order. Sortable columns are `id`, `actor_id`, `actor_name`, `actor_email`,
+    - $ref: './../../parameters/query/skip.yaml'
+    - $ref: './../../parameters/query/limit.yaml'
+    - $ref: './../../parameters/query/created-at.yaml'
+    - name: sort_by
+      description: >
+        Sortable columns are `id`, `actor_id`, `actor_name`, `actor_email`,
         `action`, `request_id`, `created_at`, `source`, and `status`.
-      name: sort_by
       in: query
-      required: false
-    - type: string
+      schema:
+        $ref: './../../schemas/api/params/predicate/sort-by.yaml'
+    - name: before
       description: Return logs created before the specified time. Value should be
-        in the format `2020-01-01T00:00:00Z`. If not supplied, this will default to
+        in the RFC-3339 format. If not supplied, this will default to
         the current time.
-      name: before
       in: query
-      required: false
-    - type: string
+      schema:
+        type: string
+        format: date-time
+    - name: after
       description: Return logs created after the specified time. Value should be in
-        the format `2020-01-01T00:00:00Z`. If not supplied, this will default to 1
+        the RFC-3339 format. If not supplied, this will default to 1
         year before the current time.
-      name: after
       in: query
-      required: false
-    - type: string
-      description: Filter results by column value. Valid filter predicates are `eq`,
-        `neq`
-      name: id
+      schema:
+        type: string
+        format: date-time
+    - name: id
       in: query
-      required: false
-    - type: string
-      description: Filter results by column value. Valid filter predicates are `eq`,
-        `neq`
-      name: actor_id
+      schema:
+        $ref: './../../schemas/api/params/predicate/filter.string.yaml'
+    - name: actor_id
       in: query
-      required: false
-    - type: string
-      description: Filter results by column value. Valid filter predicates are `eq`,
-        `neq`
-      name: actor_name
+      schema:
+        $ref: './../../schemas/api/params/predicate/filter.string.yaml'
+    - name: actor_name
       in: query
-      required: false
-    - type: string
-      description: Filter results by column value. Valid filter predicates are `eq`,
-        `neq`
-      name: actor_email
+      schema:
+        $ref: './../../schemas/api/params/predicate/filter.string.yaml'
+    - name: actor_email
       in: query
-      required: false
-    - type: string
-      description: Filter results by column value. Valid filter predicates are `eq`,
-        `neq`
-      name: action
+      schema:
+        $ref: './../../schemas/api/params/predicate/filter.string.yaml'
+    - name: action
       in: query
-      required: false
-    - type: string
-      description: Filter results by column value. Valid filter predicates are `eq`,
-        `neq`
-      name: request_id
+      schema:
+        $ref: './../../schemas/api/params/predicate/filter.string.yaml'
+    - name: request_id
       in: query
-      required: false
-    - type: string
-      description: Filter results by column value. Valid filter predicates are `eq`,
-        `neq`, `gt`, `gte`, `lt`, `lte`
-      name: created_at
+      schema:
+        $ref: './../../schemas/api/params/predicate/filter.string.yaml'
+    - name: source
       in: query
-      required: false
-    - type: string
-      description: Filter results by column value. Valid filter predicates are `eq`,
-        `neq`
-      name: source
-      in: query
-      required: false
-    - type: string
+      schema:
+        $ref: './../../schemas/api/params/predicate/filter.string.yaml'
+    - name: status
       description: Filter results by column value. Valid filter predicates are `eq`,
         `neq`. Valid values are `success` and `failure`.
-      name: status
       in: query
-      required: false
+      schema:
+        # this might be suitable for a pattern match
+        $ref: './../../schemas/api/params/predicate/filter.string.yaml'
   responses:
     200:
       description: OK
       content:
         application/json:
           schema:
-            $ref: "#/definitions/v2.ListAuditLogsResponse"
-    default:
-      $ref: './../../responses/api/error-response.yaml'
+            type: object
+            properties:
+              data:
+                type: object
+                properties:
+                  logs:
+                    type: array
+                    items:
+                      $ref: './../../schemas/model/audit-log.yaml'
+    400:
+      $ref: './../../responses/bad-request.yaml'
+    401:
+      $ref: './../../responses/unauthorized.yaml'
+    403:
+      $ref: './../../responses/forbidden.yaml'
+    429:
+      $ref: './../../responses/too-many-requests.yaml'
+    500:
+      $ref: './../../responses/internal-server-error.yaml'

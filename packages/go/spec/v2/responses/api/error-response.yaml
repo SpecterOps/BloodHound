@@ -1,5 +1,0 @@
-description: The standard error response wrapper.
-content:
-  application/json:
-    schema:
-      $ref: './../../schemas/api/error-wrapper.yaml'

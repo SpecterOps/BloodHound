@@ -20,4 +20,4 @@ put:
           schema:
             $ref: "#/definitions/api.ResponseWrapper"
     default:
-      $ref: './../../responses/api/unexpected-error.yaml'
+      $ref: './../../responses/unexpected-error.yaml'

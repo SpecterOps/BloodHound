@@ -1,10 +1,18 @@
+allOf:
+  - $ref: './components/int64.id.yaml'
+  - $ref: './components/timestamps.yaml'
 type: object
 properties:
   asset_group_collection_id:
     type: integer
+    format: int64
+    writeOnly: true
   object_id:
     type: string
+    readOnly: true
   node_label:
     type: string
+    readOnly: true
   properties:
     type: object
+    readOnly: true

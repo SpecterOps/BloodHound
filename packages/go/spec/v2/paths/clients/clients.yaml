@@ -123,7 +123,7 @@ get:
           schema:
             $ref: "#/definitions/api.BasicResponse"
     default:
-      $ref: './../../responses/api/error-response.yaml'
+      $ref: './../../responses/error-response.yaml'
 post:
   description: Creates a client for collection events
   tags:
@@ -147,4 +147,4 @@ post:
           schema:
             $ref: "#/definitions/api.BasicResponse"
     default:
-      $ref: './../../responses/api/error-response.yaml'
+      $ref: './../../responses/error-response.yaml'

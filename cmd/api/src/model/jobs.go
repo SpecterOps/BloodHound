@@ -43,8 +43,7 @@ type FileUploadJobs []FileUploadJob
 
 func (s FileUploadJobs) IsSortable(column string) bool {
 	switch column {
-	case "user_id",
-		"user_email_address",
+	case "user_email_address",
 		"status",
 		"status_message",
 		"start_time",
@@ -108,15 +107,15 @@ func (s FileUploadJobs) GetValidFilterPredicatesAsStrings(column string) ([]stri
 type JobStatus int
 
 const (
-	JobStatusInvalid   JobStatus = -1
-	JobStatusReady     JobStatus = 0
-	JobStatusRunning   JobStatus = 1
-	JobStatusComplete  JobStatus = 2
-	JobStatusCanceled  JobStatus = 3
-	JobStatusTimedOut  JobStatus = 4
-	JobStatusFailed    JobStatus = 5
-	JobStatusIngesting JobStatus = 6
-	JobStatusAnalyzing JobStatus = 7
+	JobStatusInvalid           JobStatus = -1
+	JobStatusReady             JobStatus = 0
+	JobStatusRunning           JobStatus = 1
+	JobStatusComplete          JobStatus = 2
+	JobStatusCanceled          JobStatus = 3
+	JobStatusTimedOut          JobStatus = 4
+	JobStatusFailed            JobStatus = 5
+	JobStatusIngesting         JobStatus = 6
+	JobStatusAnalyzing         JobStatus = 7
 	JobStatusPartiallyComplete JobStatus = 8
 )
 
@@ -172,7 +171,7 @@ func (s JobStatus) String() string {
 
 	case JobStatusAnalyzing:
 		return "ANALYZING"
-	
+
 	case JobStatusPartiallyComplete:
 		return "PARTIALLYCOMPLETE"
 

@@ -1,21 +1,11 @@
+allOf:
+  - $ref: './components/int32.id.yaml'
+  - $ref: './components/timestamps.yaml'
 type: object
 properties:
-  created_at:
-    type: string
-    format: date-time
-  updated_at:
-    type: string
-    format: date-time
-  deleted_at:
-    type: object
-    properties:
-      Time:
-        type: string
-        format: date-time
-      Valid:
-        type: boolean
   tenantid:
     type: string
+    format: uuid
   users:
     type: integer
   groups:
@@ -34,7 +24,10 @@ properties:
     type: integer
   vms:
     type: integer
+  key_vaults:
+    type: integer
   relationships:
     type: integer
   run_id:
     type: string
+    format: uuid

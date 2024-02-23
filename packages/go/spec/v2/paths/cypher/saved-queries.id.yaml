@@ -1,14 +1,25 @@
+parameters:
+  - $ref: './../../parameters/header/prefer.yaml'
 delete:
-  description: Delete an existing saved query
+  operationId: DeleteSavedQuery
+  summary: Delete a saved query
+  description: Delete an existing saved query by ID
   tags:
     - Cypher API
     - Community
     - Enterprise
-  summary: Delete a Saved query by its ID
-  parameters:
-    - $ref: "#/definitions/parameter.PreferHeader"
   responses:
-    '204':
-      description: No Content
-    default:
-      $ref: './../../responses/api/error-response.yaml'
+    204:
+      $ref: './../../responses/success-empty.yaml'
+    400:
+      $ref: './../../responses/bad-request.yaml'
+    401:
+      $ref: './../../responses/unauthorized.yaml'
+    403:
+      $ref: './../../responses/forbidden.yaml'
+    404:
+      $ref: './../../responses/not-found.yaml'
+    429:
+      $ref: './../../responses/too-many-requests.yaml'
+    500:
+      $ref: './../../responses/internal-server-error.yaml'

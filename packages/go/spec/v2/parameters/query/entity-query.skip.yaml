@@ -1,0 +1,7 @@
+name: skip
+description: The number of entries to skip for pagination. Only available for `type=list`.
+in: query
+schema:
+  type: integer
+  minimum: 0
+  default: 0

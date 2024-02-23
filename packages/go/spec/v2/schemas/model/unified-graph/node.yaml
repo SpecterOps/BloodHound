@@ -1,0 +1,17 @@
+type: object
+properties:
+  label:
+    type: string
+  kind:
+    type: string
+  objectId:
+    type: string
+  isTierZero:
+    type: string
+  lastSeen:
+    type: string
+    format: date-time
+  properties:
+    type: object
+    additionalProperties:
+      type: object

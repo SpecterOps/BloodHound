@@ -1,0 +1,13 @@
+name: type
+description: |
+  The type of return data requested. If no type is provided, query will default to `list`,
+  but invalid types will result in a `count` query. Some entity query endpoints do not
+  support the `graph` type.
+in: query
+schema:
+  type: string
+  default: list
+  enum:
+    - list
+    - graph
+    - count

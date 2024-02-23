@@ -1,20 +1,32 @@
 parameters:
-  - type: string
+  - name: token_id
     description: ID of auth token to delete.
-    name: token_id
     in: path
     required: true
+    schema:
+      type: string
+      format: uuid
+  - $ref: './../../parameters/header/prefer.yaml'
 delete:
+  operationId: DeleteAuthToken
+  summary: Delete a User Token
   description: Delete a request signing token for a given user.
   tags:
     - User Management API
     - Community
     - Enterprise
-  summary: Delete a User Token
-  parameters:
-    - $ref: './../../parameters/header/prefer.yaml'
   responses:
     200:
-      description: OK
-    default:
-      $ref: './../../responses/api/error-response.yaml'
+      $ref: './../../responses/success-empty.yaml'
+    400:
+      $ref: './../../responses/bad-request.yaml'
+    401:
+      $ref: './../../responses/unauthorized.yaml'
+    403:
+      $ref: './../../responses/forbidden.yaml'
+    404:
+      $ref: './../../responses/not-found.yaml'
+    429:
+      $ref: './../../responses/too-many-requests.yaml'
+    500:
+      $ref: './../../responses/internal-server-error.yaml'

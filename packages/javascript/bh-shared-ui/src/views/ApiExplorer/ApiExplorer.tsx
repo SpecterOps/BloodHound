@@ -45,7 +45,15 @@ const RedocStandalone = React.lazy(() => import('redoc').then((module) => ({ def
 const ApiExplorer: React.FC = () => {
     return (
         <Suspense fallback={<GraphProgress loading={true}/>}>
-            <RedocStandalone specUrl='/api/v2/spec/openapi.yaml' />
+            <RedocStandalone
+                specUrl='/api/v2/spec/openapi.yaml'
+                options={{
+                    sortTagsAlphabetically: true,
+                    hideDownloadButton: true,
+                    pathInMiddlePanel: true,
+                    expandResponses: '200'
+                }}
+            />
             {/*<SwaggerUI*/}
             {/*    url='/api/v2/spec/openapi.yaml'*/}
             {/*    requestInterceptor={authInterceptor}*/}

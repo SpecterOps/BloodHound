@@ -83,4 +83,4 @@ get:
           schema:
             $ref: "#/definitions/api.BasicResponse"
     default:
-      $ref: './../../responses/api/error-response.yaml'
+      $ref: './../../responses/error-response.yaml'

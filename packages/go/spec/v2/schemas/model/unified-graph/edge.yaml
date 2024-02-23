@@ -1,0 +1,17 @@
+type: object
+properties:
+  source:
+    type: string
+  target:
+    type: string
+  label:
+    type: string
+  kind:
+    type: string
+  lastSeen:
+    type: string
+    format: date-time
+  properties:
+    type: object
+    additionalProperties:
+      type: object

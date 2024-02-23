@@ -1,13 +1,16 @@
+allOf:
+  - $ref: './components/int64.id.yaml'
+  - $ref: './components/timestamps.yaml'
 type: object
 properties:
-  id:
-    type: integer
   user_id:
     type: string
+    format: uuid
   user_email_address:
     type: string
+    format: email
   status:
-    type: integer
+    $ref: './../enum/job-status.yaml'
   status_message:
     type: string
   start_time:

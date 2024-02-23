@@ -1,0 +1,58 @@
+allOf:
+  - $ref: './item.yaml'
+type: object
+properties:
+  border:
+    type: object # node-border
+    properties:
+      color:
+        type: string
+      lineStyle:
+        type: string
+      width:
+        type: integer
+  coordinates:
+    type: object # node-coords
+    properties:
+      lat:
+        type: integer
+      lng:
+        type: integer
+  cutout:
+    type: boolean
+  fontIcon:
+    $ref: './font-icon.yaml'
+  halos:
+    type: array
+    items:
+      type: object # node-halo
+      properties:
+        color:
+          type: string
+        radius:
+          type: integer
+        width:
+          type: integer
+  image:
+    type: string
+  label:
+    type: object # node-label
+    properties:
+      backgroundColor:
+        type: string
+      bold:
+        type: boolean
+      center:
+        type: boolean
+      color:
+        type: string
+      fontFamily:
+        type: string
+      fontSize:
+        type: integer
+      text:
+        type: string
+  shape:
+    type: string
+  size:
+    type: int

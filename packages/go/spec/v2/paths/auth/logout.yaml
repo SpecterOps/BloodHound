@@ -10,11 +10,18 @@ post:
     - Enterprise
   responses:
     200:
-      description: OK
+      description: |
+        **Success**
+        This response will contain no response body.
+      content:
+        text/plain:
+          schema:
+            type: string
+          example: '[this request has no response data]'
       headers:
         Location:
           description: This is the location you will be redirected to after logging out.
           schema:
             type: string
     429:
-      $ref: './../../responses/api/too-many-requests.yaml'
+      $ref: './../../responses/too-many-requests.yaml'

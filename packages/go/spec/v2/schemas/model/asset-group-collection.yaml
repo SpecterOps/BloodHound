@@ -1,0 +1,10 @@
+allOf:
+  - $ref: './components/int64.id.yaml'
+  - $ref: './components/timestamps.yaml'
+type: object
+properties:
+  entries:
+    type: array
+    readOnly: true
+    items:
+      $ref: './asset-group-collection-entry.yaml'

@@ -60,17 +60,15 @@ get:
                     items:
                       $ref: './../../schemas/model/auth-token.yaml'
     400:
-      $ref: './../../responses/api/bad-request.yaml'
+      $ref: './../../responses/bad-request.yaml'
     401:
-      $ref: './../../responses/api/unauthorized.yaml'
+      $ref: './../../responses/unauthorized.yaml'
     403:
-      $ref: './../../responses/api/forbidden.yaml'
-    404:
-      $ref: './../../responses/api/not-found.yaml'
+      $ref: './../../responses/forbidden.yaml'
     429:
-      $ref: './../../responses/api/too-many-requests.yaml'
+      $ref: './../../responses/too-many-requests.yaml'
     500:
-      $ref: './../../responses/api/internal-server-error.yaml'
+      $ref: './../../responses/internal-server-error.yaml'
 
 post:
   operationId: CreateAuthToken
@@ -105,14 +103,12 @@ post:
               data:
                 $ref: './../../schemas/model/auth-token.yaml'
     400:
-      $ref: './../../responses/api/bad-request.yaml'
+      $ref: './../../responses/bad-request.yaml'
     401:
-      $ref: './../../responses/api/unauthorized.yaml'
+      $ref: './../../responses/unauthorized.yaml'
     403:
-      $ref: './../../responses/api/forbidden.yaml'
-    404:
-      $ref: './../../responses/api/not-found.yaml'
+      $ref: './../../responses/forbidden.yaml'
     429:
-      $ref: './../../responses/api/too-many-requests.yaml'
+      $ref: './../../responses/too-many-requests.yaml'
     500:
-      $ref: './../../responses/api/internal-server-error.yaml'
+      $ref: './../../responses/internal-server-error.yaml'

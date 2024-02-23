@@ -1,13 +1,20 @@
+parameters:
+  - $ref: './../../parameters/header/prefer.yaml'
 post:
+  operationId: IngestData
+  summary: Endpoint for data ingestion
   description: Ingests data from the user interface or clients
   tags:
     - Ingest API
     - Enterprise
-  summary: Endpoint for data ingestion
-  parameters:
-    - $ref: "#/definitions/parameter.PreferHeader"
   responses:
-    '202':
-      description: ''
-    default:
-      $ref: './../../responses/api/error-response.yaml'
+    202:
+      $ref: './../../responses/success-empty.yaml'
+    400:
+      $ref: './../../responses/bad-request.yaml'
+    401:
+      $ref: './../../responses/unauthorized.yaml'
+    403:
+      $ref: './../../responses/forbidden.yaml'
+    500:
+      $ref: './../../responses/internal-server-error.yaml'

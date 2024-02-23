@@ -1,13 +1,22 @@
+parameters:
+  - $ref: './../../parameters/header/prefer.yaml'
 get:
-  description: 'Bloodhound Enterprise only: Accept EULA for logged in user.'
+  operationId: AcceptEula
+  summary: Accept EULA
+  description: Accept BloodHound Enterprise EULA for logged in user (EULA applies to BHE customers only).
   tags:
     - Auth API
     - Enterprise
-  summary: Accept EULA
-  parameters:
-    - $ref: './../../parameters/header/prefer.yaml'
   responses:
     '202':
-      description: Accepted
-    default:
-      $ref: './../../responses/api/error-response.yaml'
+      $ref: './../../responses/success-empty.yaml'
+    400:
+      $ref: './../../responses/bad-request.yaml'
+    401:
+      $ref: './../../responses/unauthorized.yaml'
+    403:
+      $ref: './../../responses/forbidden.yaml'
+    429:
+      $ref: './../../responses/too-many-requests.yaml'
+    500:
+      $ref: './../../responses/internal-server-error.yaml'

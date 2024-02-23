@@ -1,82 +1,81 @@
 parameters:
-  - type: integer
-    description: Asset group ID
-    name: asset_group_id
+  - $ref: './../../parameters/header/prefer.yaml'
+  - name: asset_group_id
+    description: ID of the asset_group record to retrieve
     in: path
     required: true
+    schema:
+      type: integer
+      format: int32
+
 get:
+  operationId: ListAssetGroupMembers
+  summary: List all asset isolation group members
   description: List all members of an asset isolation group.
-  consumes:
-    - application/json
   tags:
     - Asset Isolation API
     - Community
     - Enterprise
-  summary: List all asset isolation group members
   parameters:
-    - $ref: './../../parameters/header/prefer.yaml'
-    - type: integer
-      description: Paging Skip
-      name: skip
+    - $ref: './../../parameters/query/skip.yaml'
+    - $ref: './../../parameters/query/limit.yaml'
+    - name: sort_by
       in: query
-    - type: integer
-      description: Paging Limit
-      name: limit
+      description: >
+        Sortable columns are `object_id`, `asset_group_id`, `primary_kind`, `environment_id`,
+        `environment_kind`, and `name`.
+      schema:
+        $ref: './../../schemas/api/params/predicate/sort-by.yaml'
+    - name: object_id
       in: query
-    - type: string
-      description: Sort by column. Can be used multiple times; prepend hyphen for
-        descending order.
-      name: sort_by
+      schema:
+        $ref: './../../schemas/api/params/predicate/filter.string.yaml'
+    - name: primary_kind
       in: query
-      required: false
-    - type: string
-      description: Filter results by column value. Valid filter predicates are eq,
-        neq
-      name: object_id
+      schema:
+        $ref: './../../schemas/api/params/predicate/filter.string.yaml'
+    - name: environment_id
       in: query
-      required: false
-    - type: string
-      description: Filter results by column value. Valid filter predicates are eq,
-        neq
-      name: primary_kind
+      schema:
+        $ref: './../../schemas/api/params/predicate/filter.string.yaml'
+    - name: environment_kind
       in: query
-      required: false
-    - type: string
-      description: Filter results by column value. Valid filter predicates are eq,
-        neq
-      name: environment_id
+      schema:
+        $ref: './../../schemas/api/params/predicate/filter.string.yaml'
+    - name: name
       in: query
-      required: false
-    - type: string
-      description: Filter results by column value. Valid filter predicates are eq,
-        neq
-      name: domainsid
+      schema:
+        $ref: './../../schemas/api/params/predicate/filter.string.yaml'
+    - name: custom_member
       in: query
-      required: false
-    - type: string
-      description: Filter results by column value. Valid filter predicates are eq,
-        neq
-      name: environment_kind
-      in: query
-      required: false
-    - type: string
-      description: Filter results by column value. Valid filter predicates are eq,
-        neq
-      name: name
-      in: query
-      required: false
-    - type: string
-      description: Filter results by column value. Valid filter predicates are eq,
-        neq
-      name: custom_member
-      in: query
-      required: false
+      schema:
+        $ref: './../../schemas/api/params/predicate/filter.string.yaml'
   responses:
     200:
       description: OK
       content:
         application/json:
           schema:
-            $ref: "#/definitions/v2.ListAssetGroupMembersResponse"
-    default:
-      $ref: './../../responses/api/error-response.yaml'
+            allOf:
+              - $ref: './../../schemas/api/response/pagination.yaml'
+            type: object
+            properties:
+              data:
+                type: object
+                properties:
+                  members:
+                    type: array
+                    items:
+                      $ref: './../../schemas/model/asset-group-member.yaml'
+    400:
+      $ref: './../../responses/bad-request.yaml'
+    401:
+      $ref: './../../responses/unauthorized.yaml'
+    403:
+      $ref: './../../responses/forbidden.yaml'
+    404:
+      $ref: './../../responses/not-found.yaml'
+    429:
+      $ref: './../../responses/too-many-requests.yaml'
+    500:
+      $ref: './../../responses/internal-server-error.yaml'

@@ -1,22 +1,37 @@
 parameters:
-  - type: string
-    description: Object ID
-    name: domain_id
+  - $ref: './../../parameters/header/prefer.yaml'
+  - name: domain_id
+    description: Domain ID
     in: path
     required: true
+    schema:
+      type: string
 get:
+  operationId: GetLatestTierZeroComboNode
+  summary: Get latest tier zero combo node
   description: Get latest tier zero combo node
   tags:
     - Analysis API
     - Enterprise
-  summary: Get latest tier zero combo node
-  parameters:
-    - $ref: './../../parameters/header/prefer.yaml'
   responses:
     200:
       description: OK
-      schema:
-        type: object
-        additionalProperties: true
-    default:
-      $ref: './../../responses/api/error-response.yaml'
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                type: object
+                additionalProperties:
+                  $ref: './../../schemas/model/bh-graph/node.yaml'
+    401:
+      $ref: './../../responses/unauthorized.yaml'
+    403:
+      $ref: './../../responses/forbidden.yaml'
+    404:
+      $ref: './../../responses/not-found.yaml'
+    429:
+      $ref: './../../responses/too-many-requests.yaml'
+    500:
+      $ref: './../../responses/internal-server-error.yaml'

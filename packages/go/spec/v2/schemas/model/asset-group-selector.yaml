@@ -1,18 +1,14 @@
+allOf:
+  - $ref: './components/int32.id.yaml'
+  - $ref: './components/timestamps.yaml'
 type: object
 properties:
-  created_at:
-    type: string
-  deleted_at:
-    "$ref": "#/definitions/sql.NullTime"
   asset_group_id:
     type: integer
-  id:
-    type: integer
+    format: int32
   name:
     type: string
   selector:
     type: string
   system_selector:
     type: boolean
-  updated_at:
-    type: string

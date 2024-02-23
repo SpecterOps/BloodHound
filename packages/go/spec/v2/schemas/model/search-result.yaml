@@ -2,11 +2,16 @@ type: object
 properties:
   objectid:
     type: string
+    readOnly: true
   type:
     type: string
+    readOnly: true
   name:
     type: string
+    readOnly: true
   distinguishedname:
     type: string
+    readOnly: true
   system_tags:
     type: string
+    readOnly: true

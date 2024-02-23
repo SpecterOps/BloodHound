@@ -1,3 +1,5 @@
+parameters:
+  - $ref: './../../parameters/header/prefer.yaml'
 get:
   description: A graph of the shortest path from `start_node` to `end_node`.
   tags:
@@ -6,35 +8,41 @@ get:
     - Enterprise
   summary: Get the shortest path graph
   parameters:
-    - $ref: './../../parameters/header/prefer.yaml'
     - name: start_node
       description: The start node objectId
       in: query
       required: true
+      schema:
+        type: integer
+        format: int32
     - name: end_node
       description: The end node objectId
       in: query
       required: true
-    - name: relationship_kinds
-      description: Filter the kinds of relationships traversed between the start node
-        and the end node.
-      in: query
-      required: false
       schema:
-        $ref: "#/components/schemas/predicates.ContainsPredicate"
-      examples:
-        in:
-          value: in:Contains,GetChangesAll,MemberOf
-          summary: Only traverse specific kinds of relationships
-        nin:
-          value: nin:LocalToComputer,MemberOfLocalGroup
-          summary: Exclude traversing specific kinds of relationships
+        type: integer
+        format: int32
+    - name: relationship_kinds
+      in: query
+      schema:
+        $ref: './../../schemas/api/params/predicate/filter.contains.yaml'
   responses:
     200:
       description: A graph of the shortest path from `start_node` to `end_node`.
       content:
         application/json:
           schema:
-            $ref: "#/definitions/graphs.GraphResponse"
-    default:
-      $ref: './../../responses/api/error-response.yaml'
+            type: object
+            properties:
+              data:
+                $ref: './../../schemas/model/unified-graph/graph.yaml'
+    400:
+      $ref: './../../responses/bad-request.yaml'
+    401:
+      $ref: './../../responses/unauthorized.yaml'
+    403:
+      $ref: './../../responses/forbidden.yaml'
+    429:
+      $ref: './../../responses/too-many-requests.yaml'
+    500:
+      $ref: './../../responses/internal-server-error.yaml'

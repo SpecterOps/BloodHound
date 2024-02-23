@@ -1,23 +1,47 @@
+parameters:
+  - $ref: './../../parameters/header/prefer.yaml'
 get:
+  operationId: GetSearchResult
+  summary: Get search result
   description: Get the result of searching a graph for a node by name
   tags:
     - Graph API
     - Community
     - Enterprise
-  summary: Get search result
   parameters:
-    - $ref: './../../parameters/header/prefer.yaml'
-    - type: string
+    - name: search_query
       description: Search query
-      name: search_query
       in: query
       required: true
+      schema:
+        type: string
+    - name: type
+      description: The type of search strategy to use. Default is `fuzzy`.
+      in: query
+      schema:
+        type: string
+        enum:
+          - fuzzy
+          - exact
   responses:
     200:
       description: OK
       content:
         application/json:
           schema:
-            $ref: "#/definitions/api.BasicResponse"
-    default:
-      $ref: './../../responses/api/error-response.yaml'
+            type: object
+            properties:
+              data:
+                type: object
+                additionalProperties:
+                  $ref: './../../schemas/model/bh-graph/node.yaml'
+    400:
+      $ref: './../../responses/bad-request.yaml'
+    401:
+      $ref: './../../responses/unauthorized.yaml'
+    403:
+      $ref: './../../responses/forbidden.yaml'
+    429:
+      $ref: './../../responses/too-many-requests.yaml'
+    500:
+      $ref: './../../responses/internal-server-error.yaml'

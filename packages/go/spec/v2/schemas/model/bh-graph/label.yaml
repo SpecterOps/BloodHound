@@ -1,0 +1,6 @@
+allOf:
+  - $ref: './font-icon.yaml'
+type: object
+properties:
+  bold:
+    type: boolean

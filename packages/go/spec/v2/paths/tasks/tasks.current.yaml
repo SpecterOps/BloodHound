@@ -13,4 +13,4 @@ get:
           schema:
             $ref: "#/definitions/model.DisplayClientScheduledJob"
     default:
-      $ref: './../../responses/api/error-response.yaml'
+      $ref: './../../responses/error-response.yaml'

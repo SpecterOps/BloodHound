@@ -1,19 +1,22 @@
 parameters:
-  - type: string
-    description: Asset Group ID
-    name: asset_group_id
+  - $ref: './../../parameters/header/prefer.yaml'
+  - name: asset_group_id
+    description: ID of the asset_group record to retrieve
     in: path
     required: true
+    schema:
+      type: integer
+      format: int32
+
 post:
+  operationId: UpdateAssetGroupSelectorsDeprecated
   deprecated: true
-  description: DEPRECATED use PUT instead. Updates asset group selectors
+  summary: Update asset group selectors
+  description: DEPRECATED use PUT instead. Updates asset group selectors.
   tags:
     - Asset Isolation API
     - Community
     - Enterprise
-  summary: Update asset group selectors
-  parameters:
-    - $ref: './../../parameters/header/prefer.yaml'
   requestBody:
     description: The request body for updating asset group selectors
     required: true
@@ -22,25 +25,48 @@ post:
         schema:
           type: array
           items:
-            $ref: "#/definitions/model.AssetGroupSelectorSpec"
+            $ref: './../../schemas/model/asset-group-selector-spec.yaml'
   responses:
-    '201':
+    201:
       description: Created
       content:
         application/json:
           schema:
-            $ref: "#/definitions/v2.CreateAssetGroupSelectorResponse"
-    default:
-      $ref: './../../responses/api/error-response.yaml'
+            type: object
+            properties:
+              data:
+                type: object
+                properties:
+                  added_selectors:
+                    type: array
+                    items:
+                      $ref: './../../schemas/model/asset-group-selector.yaml'
+                  removed_selectors:
+                    type: array
+                    items:
+                      $ref: './../../schemas/model/asset-group-selector.yaml'
+
+    400:
+      $ref: './../../responses/bad-request.yaml'
+    401:
+      $ref: './../../responses/unauthorized.yaml'
+    403:
+      $ref: './../../responses/forbidden.yaml'
+    404:
+      $ref: './../../responses/not-found.yaml'
+    429:
+      $ref: './../../responses/too-many-requests.yaml'
+    500:
+      $ref: './../../responses/internal-server-error.yaml'
+
 put:
+  operationId: UpdateAssetGroupSelectors
+  summary: Update asset group selectors
   description: Updates asset group selectors
   tags:
     - Asset Isolation API
     - Community
     - Enterprise
-  summary: Update asset group selectors
-  parameters:
-    - $ref: './../../parameters/header/prefer.yaml'
   requestBody:
     description: The request body for updating asset group selectors
     required: true
@@ -49,13 +75,36 @@ put:
         schema:
           type: array
           items:
-            $ref: "#/definitions/model.AssetGroupSelectorSpec"
+            $ref: './../../schemas/model/asset-group-selector-spec.yaml'
   responses:
-    '201':
+    201:
       description: Created
       content:
         application/json:
           schema:
-            $ref: "#/definitions/v2.CreateAssetGroupSelectorResponse"
-    default:
-      $ref: './../../responses/api/error-response.yaml'
+            type: object
+            properties:
+              data:
+                type: object
+                properties:
+                  added_selectors:
+                    type: array
+                    items:
+                      $ref: './../../schemas/model/asset-group-selector.yaml'
+                  removed_selectors:
+                    type: array
+                    items:
+                      $ref: './../../schemas/model/asset-group-selector.yaml'
+
+    400:
+      $ref: './../../responses/bad-request.yaml'
+    401:
+      $ref: './../../responses/unauthorized.yaml'
+    403:
+      $ref: './../../responses/forbidden.yaml'
+    404:
+      $ref: './../../responses/not-found.yaml'
+    429:
+      $ref: './../../responses/too-many-requests.yaml'
+    500:
+      $ref: './../../responses/internal-server-error.yaml'

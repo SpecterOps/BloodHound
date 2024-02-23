@@ -1,0 +1,13 @@
+description: |
+  **OK**
+  This response will contain binary content.
+headers:
+  Content-Disposition:
+    schema:
+      type: string
+content:
+  application/octet-stream:
+    schema:
+      type: string
+      format: binary
+    example: '[this request has a binary response]'

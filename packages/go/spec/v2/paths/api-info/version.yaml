@@ -1,16 +1,36 @@
+parameters:
+  - $ref: './../../parameters/header/prefer.yaml'
 get:
-  description: Returns the supported API versions
+  operationId: GetApiVersion
+  summary: Get API version
+  description: Returns the supported API versions.
   tags:
     - API Info
     - Community
     - Enterprise
-  summary: Returns the supported API versions
   responses:
     200:
       description: OK
       content:
         application/json:
           schema:
-            $ref: '#/definitions/v2.VersionResponse'
-    default:
-      $ref: './../../responses/api/error-response.yaml'
+            type: object
+            properties:
+              data:
+                type: object
+                properties:
+                  API:
+                    type: object
+                    properties:
+                      current_version:
+                        type: string
+                      deprecated_version:
+                        type: string
+                  server_version:
+                    type: string
+    401:
+      $ref: './../../responses/unauthorized.yaml'
+    429:
+      $ref: './../../responses/too-many-requests.yaml'
+    500:
+      $ref: './../../responses/internal-server-error.yaml'

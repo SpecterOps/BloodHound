@@ -1,11 +1,14 @@
 type: object
 properties:
+  selector_name:
+    type: string
+    required: true
+  sid:
+    type: string
+    required: true
   action:
     type: string
+    required: true
     enum:
       - add
       - remove
-  selector_name:
-    type: string
-  sid:
-    type: string

@@ -1,0 +1,31 @@
+description: |
+  **OK**
+
+  This endpoint returns a polymorphic response dependent upon which return type is requested
+  by the `type` parameter.
+content:
+  application/json:
+    schema:
+      oneOf:
+        - allOf:
+          - $ref: './../schemas/model/bh-graph/graph.yaml'
+          - title: graph
+        - title: count
+          type: integer
+        - allOf:
+            - $ref: './../schemas/api/response/pagination.yaml'
+            - title: list
+              type: object
+              properties:
+                data:
+                  type: array
+                  items:
+                    title: paged-node-list-entry
+                    type: object
+                    properties:
+                      objectID:
+                        type: string
+                      name:
+                        type: string
+                      label:
+                        type: string

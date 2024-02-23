@@ -1,33 +1,31 @@
 parameters:
-  - type: string
-    enum:
-      - azurehound
-      - sharphound
+  - $ref: './../../parameters/header/prefer.yaml'
+  - name: collector_type
     description: Collector type
-    name: collector_type
     in: path
     required: true
-  - type: string
-    description: Version tag (semver or "latest")
-    name: version_tag
+    schema:
+      $ref: './../../schemas/enum/client-type.yaml'
+  - name: release_tag
+    description: Release tag (semver or "latest")
     in: path
     required: true
+    schema:
+      type: string
 get:
+  operationId: GetCollectorChecksum
+  summary: Get collector checksum by version
   description: Retrieves the checksum file for a given collector with given version
-  produces:
-    - application/octet-stream
   tags:
     - Collectors API
+    - Community
     - Enterprise
-  summary: Get collector checksum by version
-  parameters:
-    - $ref: "#/definitions/parameter.PreferHeader"
   responses:
     200:
-      description: OK
-      content:
-        application/json:
-          schema:
-            $ref: "#/definitions/api.BinaryResponse"
-    default:
-      $ref: './../../responses/api/error-response.yaml'
+      $ref: './../../responses/binary-response.yaml'
+    400:
+      $ref: './../../responses/bad-request.yaml'
+    401:
+      $ref: './../../responses/unauthorized.yaml'
+    500:
+      $ref: './../../responses/internal-server-error.yaml'

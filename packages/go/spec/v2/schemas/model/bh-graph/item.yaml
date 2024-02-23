@@ -1,0 +1,14 @@
+type: object
+properties:
+  color:
+    type: string
+  fade:
+    type: boolean
+  data:
+    type: object
+    additionalProperties:
+      type: object
+  glyphs:
+    type: array
+    items:
+      $ref: './glyph.yaml'

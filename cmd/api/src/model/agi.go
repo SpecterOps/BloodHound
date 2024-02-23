@@ -63,7 +63,7 @@ type AssetGroup struct {
 	Name        string                `json:"name"`
 	Tag         string                `json:"tag"`
 	SystemGroup bool                  `json:"system_group"`
-	Selectors   AssetGroupSelectors   `gorm:"constraint:OnDelete:CASCADE;"`
+	Selectors   AssetGroupSelectors   `json:"selectors" gorm:"constraint:OnDelete:CASCADE;"`
 	Collections AssetGroupCollections `json:"-" gorm:"constraint:OnDelete:CASCADE;"`
 	MemberCount int                   `json:"member_count" gorm:"-"`
 

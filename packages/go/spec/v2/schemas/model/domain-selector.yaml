@@ -1,0 +1,14 @@
+type: object
+properties:
+  type:
+    type: string
+    readOnly: true
+  name:
+    type: string
+    readOnly: true
+  id:
+    type: string
+    readOnly: true
+  collected:
+    type: boolean
+    readOnly: true

@@ -1,0 +1,23 @@
+allOf:
+  - $ref: './item.yaml'
+type: object
+properties:
+  end1:
+    $ref: './link-end.yaml'
+  end2:
+    $ref: './link-end.yaml'
+  flow:
+    type: object # link-flow
+    properties:
+      velocity:
+        type: integer
+  id1:
+    type: string
+  id2:
+    type: string
+  label:
+    $ref: './label.yaml'
+  lineStyle:
+    type: string
+  width:
+    type: integer

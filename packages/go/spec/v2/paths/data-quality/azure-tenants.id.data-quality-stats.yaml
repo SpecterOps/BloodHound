@@ -1,54 +1,65 @@
 parameters:
-  - type: string
+  - $ref: './../../parameters/header/prefer.yaml'
+  - name: tenant_id
     description: Tenant ID
-    name: tenant_id
     in: path
     required: true
+    schema:
+      type: string
 get:
+  operationId: GetAzureTenantDataQualityStats
+  summary: Get Azure tenant data quality stats
   description: Time series list of data quality stats for a given Azure tenant
   tags:
     - Data Quality API
     - Community
     - Enterprise
-  summary: Time series list of data quality stats for a given Azure tenant
   parameters:
-    - $ref: './../../parameters/header/prefer.yaml'
-    - type: string
-      description: Sort by column. Can be used multiple times; prepend hyphen for
-        descending order. Sortable columns are created_at, updated_at.
-      name: sort_by
+    - name: sort_by
+      description: Sortable columns are created_at, updated_at.
       in: query
-      required: false
-    - type: string
+      schema:
+        $ref: './../../schemas/api/params/predicate/sort-by.yaml'
+    - name: start
       description: Beginning datetime of range (inclusive) in RFC-3339 format; Defaults
         to current datetime minus 30 days
-      name: start
       in: query
-      format: date-time
-    - type: string
+      schema:
+        type: string
+        format: date-time
+    - name: end
       description: Ending datetime of range (exclusive) in RFC-3339 format; Defaults
         to current datetime
-      name: end
       in: query
-      format: date-time
-    - type: integer
-      description: Paging Skip
-      name: skip
-      in: query
-    - type: integer
-      description: Paging Limit
-      name: limit
-      in: query
-    - type: integer
-      description: Number of records per page
-      name: count
-      in: query
+      schema:
+        type: string
+        format: date-time
+    - $ref: './../../parameters/query/skip.yaml'
+    - $ref: './../../parameters/query/limit.yaml'
   responses:
     200:
       description: OK
       content:
         application/json:
           schema:
-            $ref: "#/definitions/v2.ListAzureDataQualityStatsResponse"
-    default:
-      $ref: './../../responses/api/error-response.yaml'
+            allOf:
+              - $ref: './../../schemas/api/response/pagination.yaml'
+              - $ref: './../../schemas/api/response/time-window.yaml'
+              - type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: './../../schemas/model/azure-data-quality-stat.yaml'
+    400:
+      $ref: './../../responses/bad-request.yaml'
+    401:
+      $ref: './../../responses/unauthorized.yaml'
+    403:
+      $ref: './../../responses/forbidden.yaml'
+    404:
+      $ref: './../../responses/not-found.yaml'
+    429:
+      $ref: './../../responses/too-many-requests.yaml'
+    500:
+      $ref: './../../responses/internal-server-error.yaml'

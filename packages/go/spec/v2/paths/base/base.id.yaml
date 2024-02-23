@@ -4,17 +4,25 @@ parameters:
 get:
   operationId: GetEntity
   summary: Get entity info
-  description: Get basic info and counts for this node. #TODO: explain more
+  description: Get basic info and counts for this node.
   tags:
     - Base Entity API
     - Community
     - Enterprise
+  parameters:
+    - $ref: './../../parameters/query/hydrate-counts.yaml'
   responses:
     200:
-      description: OK
-      content:
-        application/json:
-          schema:
-            type: object
-    default:
-      $ref: './../../responses/api/error-response.yaml'
+      $ref: './../../responses/entity-info-query-results.yaml'
+    400:
+      $ref: './../../responses/bad-request.yaml'
+    401:
+      $ref: './../../responses/unauthorized.yaml'
+    403:
+      $ref: './../../responses/forbidden.yaml'
+    404:
+      $ref: './../../responses/not-found.yaml'
+    429:
+      $ref: './../../responses/too-many-requests.yaml'
+    500:
+      $ref: './../../responses/internal-server-error.yaml'

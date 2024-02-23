@@ -24,4 +24,4 @@ get:
                   - $ref: './../../schemas/model/user.yaml'
                   - $ref: './../../schemas/model/client.yaml'
     429:
-      $ref: './../../responses/api/too-many-requests.yaml'
+      $ref: './../../responses/too-many-requests.yaml'

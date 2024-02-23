@@ -1,82 +1,77 @@
+parameters:
+  - $ref: './../../parameters/header/prefer.yaml'
+
 get:
-  description: List all asset isolation groups.
+  operationId: ListAssetGroups
+  summary: List all asset isolation groups
+  description: Lists all asset isolation groups.
   tags:
     - Asset Isolation API
     - Community
     - Enterprise
-  summary: List all asset isolation groups
   parameters:
-    - $ref: './../../parameters/header/prefer.yaml'
-    - type: string
-      description: Sort by column. Can be used multiple times; prepend hyphen for
-        descending order. Sortable columns are name, tag, member_count
-      name: sort_by
+    - name: sort_by
+      description: Sortable columns are `name`, `tag`, and `member_count`.
       in: query
-      required: false
-    - type: string
-      description: Filter results by column value. Valid filter predicates are eq,
-        neq
-      name: name
+      schema:
+        $ref: './../../schemas/api/params/predicate/sort-by.yaml'
+    - name: name
       in: query
-      required: false
-    - type: string
-      description: Filter results by column value. Valid filter predicates are eq,
-        neq
-      name: tag
+      schema:
+        $ref: './../../schemas/api/params/predicate/filter.string.yaml'
+    - name: tag
       in: query
-      required: false
-    - type: string
-      description: Filter results by column value. Valid filter predicates are eq,
-        neq
-      name: system_group
+      schema:
+        $ref: './../../schemas/api/params/predicate/filter.string.yaml'
+    - name: system_group
       in: query
-      required: false
-    - type: string
-      description: Filter results by column value. Valid filter predicates are eq,
-        neq, gt, gte, lt, lte
-      name: member_count
+      schema:
+        $ref: './../../schemas/api/params/predicate/filter.string.yaml'
+    - name: member_count
       in: query
-      required: false
-    - type: string
-      description: Filter results by column value. Valid filter predicates are eq,
-        neq, gt, gte, lt, lte
-      name: id
+      schema:
+        $ref: './../../schemas/api/params/predicate/filter.integer.yaml'
+    - name: id
       in: query
-      required: false
-    - type: string
-      description: Filter results by column value. Valid filter predicates are eq,
-        neq, gt, gte, lt, lte
-      name: created_at
-      in: query
-      required: false
-    - type: string
-      description: Filter results by column value. Valid filter predicates are eq,
-        neq, gt, gte, lt, lte
-      name: updated_at
-      in: query
-      required: false
-    - type: string
-      description: Filter results by column value. Valid filter predicates are eq,
-        neq, gt, gte, lt, lte
-      name: deleted_at
-      in: query
-      required: false
+      schema:
+        $ref: './../../schemas/api/params/predicate/filter.integer.yaml'
+    - $ref: './../../parameters/query/created-at.yaml'
+    - $ref: './../../parameters/query/updated-at.yaml'
+    - $ref: './../../parameters/query/deleted-at.yaml'
   responses:
     200:
       description: OK
       content:
         application/json:
           schema:
-            $ref: "#/definitions/api.BasicResponse"
-    default:
-      $ref: './../../responses/api/error-response.yaml'
+            type: object
+            properties:
+              data:
+                type: object
+                properties:
+                  asset_groups:
+                    type: array
+                    items:
+                      $ref: './../../schemas/model/asset-group.yaml'
+    400:
+      $ref: './../../responses/bad-request.yaml'
+    401:
+      $ref: './../../responses/unauthorized.yaml'
+    403:
+      $ref: './../../responses/forbidden.yaml'
+    429:
+      $ref: './../../responses/too-many-requests.yaml'
+    500:
+      $ref: './../../responses/internal-server-error.yaml'
+
 post:
+  operationId: CreateAssetGroup
+  summary: Create an asset group
   description: Creates an asset group
   tags:
     - Asset Isolation API
     - Community
     - Enterprise
-  summary: Create an asset group
   parameters:
     - $ref: './../../parameters/header/prefer.yaml'
   requestBody:
@@ -85,13 +80,24 @@ post:
     content:
       application/json:
         schema:
-          $ref: "#/definitions/v2.CreateAssetGroupRequest"
+          $ref: './../../schemas/model/asset-group.yaml'
   responses:
     200:
       description: OK
       content:
         application/json:
           schema:
-            $ref: "#/definitions/api.BasicResponse"
-    default:
-      $ref: './../../responses/api/error-response.yaml'
+            type: object
+            properties:
+              data:
+                $ref: './../../schemas/model/asset-group.yaml'
+    400:
+      $ref: './../../responses/bad-request.yaml'
+    401:
+      $ref: './../../responses/unauthorized.yaml'
+    403:
+      $ref: './../../responses/forbidden.yaml'
+    429:
+      $ref: './../../responses/too-many-requests.yaml'
+    500:
+      $ref: './../../responses/internal-server-error.yaml'

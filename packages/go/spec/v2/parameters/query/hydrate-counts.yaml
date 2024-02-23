@@ -1,6 +1,6 @@
-description: Include count of related controllers. Assumes true if unspecified.
+description: Include counts of related entities. Default value is `true`.
 name: counts
 in: query
-required: false
 schema:
   type: boolean
+  default: true

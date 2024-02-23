@@ -1,3 +1,6 @@
+allOf:
+  - $ref: './components/int32.id.yaml'
+  - $ref: './components/timestamps.yaml'
 type: object
 properties:
   tenants:
@@ -20,7 +23,10 @@ properties:
     type: integer
   vms:
     type: integer
+  key_vaults:
+    type: integer
   relationships:
     type: integer
   run_id:
     type: string
+    format: uuid

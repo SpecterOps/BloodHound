@@ -1,32 +1,29 @@
 parameters:
-  - type: string
-    description: Object ID
-    name: object_id
-    in: path
-    required: true
+  - $ref: './../../parameters/header/prefer.yaml'
+  - $ref: './../../parameters/path/object-id.yaml'
 get:
-  description: List the groups belonging to the specified domain
+  operationId: GetDomainEntityGroups
+  summary: Get domain entity groups
+  description: Get a list or count of the groups in this domain.
   tags:
     - Domain Entity API
     - Community
     - Enterprise
-  summary: List domain groups
   parameters:
-    - $ref: './../../parameters/header/prefer.yaml'
-    - type: integer
-      description: Paging Skip
-      name: skip
-      in: query
-    - type: integer
-      description: Paging Limit
-      name: limit
-      in: query
+    - $ref: './../../parameters/query/entity-query.skip.yaml'
+    - $ref: './../../parameters/query/entity-query.limit.yaml'
+    - $ref: './../../parameters/query/entity-query.type.yaml'
+    - $ref: './../../parameters/query/entity-query.sort-by.yaml'
   responses:
     200:
-      description: OK
-      content:
-        application/json:
-          schema:
-            $ref: "#/definitions/api.ResponseWrapper"
-    default:
-      $ref: './../../responses/api/error-response.yaml'
+      $ref: './../../responses/related-entity-query-results.yaml'
+    400:
+      $ref: './../../responses/bad-request.yaml'
+    401:
+      $ref: './../../responses/unauthorized.yaml'
+    403:
+      $ref: './../../responses/forbidden.yaml'
+    429:
+      $ref: './../../responses/too-many-requests.yaml'
+    500:
+      $ref: './../../responses/internal-server-error.yaml'

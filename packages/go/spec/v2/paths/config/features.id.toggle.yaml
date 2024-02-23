@@ -1,24 +1,39 @@
 parameters:
-  - type: string
+  - $ref: './../../parameters/header/prefer.yaml'
+  - name: feature_id
     description: Feature ID
-    name: feature_id
     in: path
     required: true
 put:
+  operationId: ToggleFeatureFlag
+  summary: Toggle a feature flag's enabled status to either enable or disable it.
   description: Writes application configuration parameters for this instance
   tags:
     - Config API
     - Community
     - Enterprise
-  summary: Toggle a feature flag's enabled status to either enable or disable it.
-  parameters:
-    - $ref: './../../parameters/header/prefer.yaml'
   responses:
     200:
       description: OK
       content:
         application/json:
           schema:
-            $ref: "#/definitions/api.BasicResponse"
-    default:
-      $ref: './../../responses/api/error-response.yaml'
+            type: object
+            properties:
+              data:
+                type: object
+                properties:
+                  enabled:
+                    type: boolean
+    400:
+      $ref: './../../responses/bad-request.yaml'
+    401:
+      $ref: './../../responses/unauthorized.yaml'
+    403:
+      $ref: './../../responses/forbidden.yaml'
+    404:
+      $ref: './../../responses/not-found.yaml'
+    429:
+      $ref: './../../responses/too-many-requests.yaml'
+    500:
+      $ref: './../../responses/internal-server-error.yaml'

@@ -1,0 +1,13 @@
+allOf:
+  - $ref: './components/int64.id.yaml'
+  - $ref: './components/timestamps.yaml'
+type: object
+properties:
+  user_id:
+    type: string
+    format: uuid
+    readOnly: true
+  name:
+    type: string
+  query:
+    type: string

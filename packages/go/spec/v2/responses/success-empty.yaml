@@ -1,0 +1,8 @@
+description: |
+  **Success**
+  This response will contain no response body.
+content:
+  text/plain:
+    schema:
+      type: string
+    example: '[this request has no response data]'

@@ -1,5 +1,5 @@
 name: object_id
-description: This path parameter represents the unique identifier of the object being operated on.
+description: The object id of the entity being operated on.
 in: path
 required: true
 schema:

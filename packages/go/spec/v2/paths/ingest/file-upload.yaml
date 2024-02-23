@@ -1,3 +1,5 @@
+parameters:
+  - $ref: './../../parameters/header/prefer.yaml'
 get:
   description: Lists available file upload jobs
   tags:
@@ -6,99 +8,67 @@ get:
     - Enterprise
   summary: List File Upload Jobs
   parameters:
-    - $ref: './../../parameters/header/prefer.yaml'
-    - type: integer
-      description: Paging Skip
-      name: skip
+    - name: sort_by
+      description: >
+        Sortable columns are `user_email_address`, `status`, `status_message`, `start_time`,
+        `end_time`, `last_ingest`, `id`, `created_at`, `updated_at`, and `deleted_at`.
       in: query
-    - type: integer
-      description: Paging Limit
-      name: limit
+      schema:
+        $ref: './../../schemas/api/params/predicate/sort-by.yaml'
+    - name: user_id
       in: query
-    - type: integer
-      description: Number of records to return
-      name: count
+      schema:
+        $ref: './../../schemas/api/params/predicate/filter.string.yaml'
+    - name: user_email_address
       in: query
-    - type: string
-      description: Sort by column. Can be used multiple times; prepend hyphen for
-        descending order. Sortable columns are user_id, user_email_address, status,
-        status_message, start_time, end_time, last_ingest, id, created_at, updated_at,
-        and deleted_at.
-      name: sort_by
+      schema:
+        $ref: './../../schemas/api/params/predicate/filter.string.yaml'
+    - name: status
       in: query
-      required: false
-    - type: string
-      description: Filter results by column value. Valid filter predicates are eq,
-        neq
-      name: user_id
+      schema:
+        $ref: './../../schemas/api/params/predicate/filter.integer.yaml'
+    - name: status_message
       in: query
-      required: false
-    - type: string
-      description: Filter results by column value. Valid filter predicates are eq,
-        neq
-      name: user_email_address
+      schema:
+        $ref: './../../schemas/api/params/predicate/filter.string.yaml'
+    - name: start_time
       in: query
-      required: false
-    - type: string
-      description: Filter results by column value. Valid filter predicates are eq,
-        neq
-      name: status
+      schema:
+        $ref: './../../schemas/api/params/predicate/filter.time.yaml'
+    - name: end_time
       in: query
-      required: false
-    - type: string
-      description: Filter results by column value. Valid filter predicates are eq,
-        neq
-      name: status_message
+      schema:
+        $ref: './../../schemas/api/params/predicate/filter.time.yaml'
+    - name: last_ingest
       in: query
-      required: false
-    - type: string
-      description: Filter results by column value. Valid filter predicates are eq,
-        neq, gt, gte, lt, lte
-      name: start_time
+      schema:
+        $ref: './../../schemas/api/params/predicate/filter.time.yaml'
+    - name: id
       in: query
-      required: false
-    - type: string
-      description: Filter results by column value. Valid filter predicates are eq,
-        neq, gt, gte, lt, lte
-      name: end_time
-      in: query
-      required: false
-    - type: string
-      description: Filter results by column value. Valid filter predicates are eq,
-        neq, gt, gte, lt, lte
-      name: last_ingest
-      in: query
-      required: false
-    - type: string
-      description: Filter results by column value. Valid filter predicates are eq,
-        neq, gt, gte, lt, lte
-      name: id
-      in: query
-      required: false
-    - type: string
-      description: Filter results by column value. Valid filter predicates are eq,
-        neq, gt, gte, lt, lte
-      name: created_at
-      in: query
-      required: false
-    - type: string
-      description: Filter results by column value. Valid filter predicates are eq,
-        neq, gt, gte, lt, lte
-      name: updated_at
-      in: query
-      required: false
-    - type: string
-      description: Filter results by column value. Valid filter predicates are eq,
-        neq, gt, gte, lt, lte
-      name: deleted_at
-      in: query
-      required: false
+      schema:
+        $ref: './../../schemas/api/params/predicate/filter.integer.yaml'
+    - $ref: './../../parameters/query/created-at.yaml'
+    - $ref: './../../parameters/query/updated-at.yaml'
+    - $ref: './../../parameters/query/deleted-at.yaml'
+    - $ref: './../../parameters/query/skip.yaml'
+    - $ref: './../../parameters/query/limit.yaml'
   responses:
     200:
       description: OK
       content:
         application/json:
           schema:
-            $ref: "#/definitions/v2.ListFileUploadJobsResponse"
-    default:
-      $ref: './../../responses/api/error-response.yaml'
+            allOf:
+              - $ref: './../../schemas/api/response/pagination.yaml'
+            type: object
+            properties:
+              data:
+                type: array
+                items:
+                  $ref: './../../schemas/model/file-upload-job.yaml'
+    400:
+      $ref: './../../responses/bad-request.yaml'
+    401:
+      $ref: './../../responses/unauthorized.yaml'
+    500:
+      $ref: './../../responses/internal-server-error.yaml'

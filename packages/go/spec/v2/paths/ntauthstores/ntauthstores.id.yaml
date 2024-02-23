@@ -1,27 +1,28 @@
 parameters:
-  - type: string
-    description: NTAuthStore Object ID
-    name: object_id
-    in: path
-    required: true
+  - $ref: './../../parameters/header/prefer.yaml'
+  - $ref: './../../parameters/path/object-id.yaml'
 get:
-  description: "Get basic info and counts for this NTAuthStore. \n\n<b>Early Access
-      Notice:</b> This API endpoint is in early access and may undergo changes. Exercise
-      caution when integrating, and avoid critical use until it reaches stable status."
+  operationId: GetNtAuthStoreEntity
+  summary: Get NTAuthStore entity info
+  description: Get info and counts for this NTAuthStore node.
   tags:
     - NTAuthStore Entity API
     - Community
     - Enterprise
-  summary: Get ntauthstore entity info
   parameters:
-    - $ref: './../../parameters/header/prefer.yaml'
-    - $ref: "#/definitions/parameters.HydrateCounts"
+    - $ref: './../../parameters/query/hydrate-counts.yaml'
   responses:
     200:
-      description: OK
-      content:
-        application/json:
-          schema:
-            $ref: "#/definitions/v2.EntityWithControllersResponse"
-    default:
-      $ref: './../../responses/api/error-response.yaml'
+      $ref: './../../responses/entity-info-query-results.yaml'
+    400:
+      $ref: './../../responses/bad-request.yaml'
+    401:
+      $ref: './../../responses/unauthorized.yaml'
+    403:
+      $ref: './../../responses/forbidden.yaml'
+    404:
+      $ref: './../../responses/not-found.yaml'
+    429:
+      $ref: './../../responses/too-many-requests.yaml'
+    500:
+      $ref: './../../responses/internal-server-error.yaml'

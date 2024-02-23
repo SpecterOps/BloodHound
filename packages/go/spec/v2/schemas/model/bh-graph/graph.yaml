@@ -1,0 +1,5 @@
+type: object
+additionalProperties:
+  anyOf:
+    - $ref: './node.yaml'
+    - $ref: './edge.yaml'

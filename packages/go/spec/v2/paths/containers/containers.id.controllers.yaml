@@ -1,36 +1,29 @@
 parameters:
-  - type: string
-    description: Container Object ID
-    name: object_id
-    in: path
-    required: true
+  - $ref: './../../parameters/header/prefer.yaml'
+  - $ref: './../../parameters/path/object-id.yaml'
 get:
-  description: List the principals that can control this Container through ACLs
+  operationId: GetContainerEntityControllers
+  summary: Get container entity controllers
+  description: Get a list, graph, or count of the principals that can control this container.
   tags:
     - Container Entity API
     - Community
     - Enterprise
-  summary: List container controllers
   parameters:
-    - $ref: './../../parameters/header/prefer.yaml'
-    - type: integer
-      description: Paging Skip
-      name: skip
-      in: query
-    - type: integer
-      description: Paging Limit
-      name: limit
-      in: query
+    - $ref: './../../parameters/query/entity-query.skip.yaml'
+    - $ref: './../../parameters/query/entity-query.limit.yaml'
+    - $ref: './../../parameters/query/entity-query.type.yaml'
+    - $ref: './../../parameters/query/entity-query.sort-by.yaml'
   responses:
     200:
-      description: OK
-      schema:
-        $ref: "#/definitions/api.ResponseWrapper"
-    '400':
-      description: Bad Request
-      schema:
-        $ref: "#/definitions/api.ErrorWrapper"
-    '504':
-      description: Gateway Timeout
-      schema:
-        $ref: "#/definitions/api.ErrorWrapper"
+      $ref: './../../responses/related-entity-query-results.yaml'
+    400:
+      $ref: './../../responses/bad-request.yaml'
+    401:
+      $ref: './../../responses/unauthorized.yaml'
+    403:
+      $ref: './../../responses/forbidden.yaml'
+    429:
+      $ref: './../../responses/too-many-requests.yaml'
+    500:
+      $ref: './../../responses/internal-server-error.yaml'

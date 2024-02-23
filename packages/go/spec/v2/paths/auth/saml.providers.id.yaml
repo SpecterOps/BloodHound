@@ -24,15 +24,15 @@ get:
               data:
                 $ref: './../../schemas/model/saml-provider.yaml'
     401:
-      $ref: './../../responses/api/unauthorized.yaml'
+      $ref: './../../responses/unauthorized.yaml'
     403:
-      $ref: './../../responses/api/forbidden.yaml'
+      $ref: './../../responses/forbidden.yaml'
     404:
-      $ref: './../../responses/api/not-found.yaml'
+      $ref: './../../responses/not-found.yaml'
     429:
-      $ref: './../../responses/api/too-many-requests.yaml'
+      $ref: './../../responses/too-many-requests.yaml'
     500:
-      $ref: './../../responses/api/internal-server-error.yaml'
+      $ref: './../../responses/internal-server-error.yaml'
 delete:
   operationId: DeleteSamlProvider
   summary: Delete a SAML Provider
@@ -57,11 +57,11 @@ delete:
                     items:
                       $ref: './../../schemas/model/user.yaml'
     401:
-      $ref: './../../responses/api/unauthorized.yaml'
+      $ref: './../../responses/unauthorized.yaml'
     403:
-      $ref: './../../responses/api/forbidden.yaml'
+      $ref: './../../responses/forbidden.yaml'
     404:
-      $ref: './../../responses/api/not-found.yaml'
+      $ref: './../../responses/not-found.yaml'
     409:
       description: Conflict. The user is trying to delete their own SAML provider.
       content:
@@ -69,6 +69,6 @@ delete:
           schema:
             $ref: './../../schemas/api/error-wrapper.yaml'
     429:
-      $ref: './../../responses/api/too-many-requests.yaml'
+      $ref: './../../responses/too-many-requests.yaml'
     500:
-      $ref: './../../responses/api/internal-server-error.yaml'
+      $ref: './../../responses/internal-server-error.yaml'

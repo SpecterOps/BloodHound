@@ -51,18 +51,20 @@ level, query params will often be at the operation level.
 - $ref: './../../parameters/query/created-at.yaml'
 - $ref: './../../parameters/query/updated-at.yaml'
 - $ref: './../../parameters/query/deleted-at.yaml'
-
+- $ref: './../../parameters/query/skip.yaml'
+- $ref: './../../parameters/query/limit.yaml'
+  
 # Filter params with predicates
 - name: sort_by
   in: query
-  description: Sortable columns are list_columns_here.
+  description: Sortable columns are [list_columns_here].
   schema:
       $ref: './../../schemas/api/params/predicate/sort-by.yaml'
-- name: string_param_name
+- name: [string_param_name]
   in: query
   schema:
     $ref: './../../schemas/api/params/predicate/filter.string.yaml'
-- name: int_param_name
+- name: [int_param_name]
   in: query
   schema:
     $ref: './../../schemas/api/params/predicate/filter.integer.yaml'
@@ -81,15 +83,15 @@ return `401` and `403` before ever making it to the handler.
 ```yaml
 # For your copy-paste convenience:
 400:
-  $ref: './../../responses/api/bad-request.yaml'
+  $ref: './../../responses/bad-request.yaml'
 401:
-  $ref: './../../responses/api/unauthorized.yaml'
+  $ref: './../../responses/unauthorized.yaml'
 403:
-  $ref: './../../responses/api/forbidden.yaml'
+  $ref: './../../responses/forbidden.yaml'
 404:
-  $ref: './../../responses/api/not-found.yaml'
+  $ref: './../../responses/not-found.yaml'
 429:
-  $ref: './../../responses/api/too-many-requests.yaml'
+  $ref: './../../responses/too-many-requests.yaml'
 500:
-  $ref: './../../responses/api/internal-server-error.yaml'
+  $ref: './../../responses/internal-server-error.yaml'
 ```

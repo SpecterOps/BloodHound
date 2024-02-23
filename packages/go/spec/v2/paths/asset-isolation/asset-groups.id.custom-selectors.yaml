@@ -1,18 +1,20 @@
 parameters:
-  - type: string
-    description: ID of the asset_group record to retrieved selector count for
-    name: asset_group_id
+  - $ref: './../../parameters/header/prefer.yaml'
+  - name: asset_group_id
+    description: ID of the asset_group record to retrieve
     in: path
     required: true
+    schema:
+      type: integer
+      format: int32
 get:
+  operationId: GetAssetGroupCustomMemberCount
+  summary: Get asset group custom member count
   description: Get asset group custom member count
   tags:
     - Asset Isolation API
     - Community
     - Enterprise
-  summary: Get asset group custom member count
-  parameters:
-    - $ref: './../../parameters/header/prefer.yaml'
   responses:
     200:
       description: OK
@@ -23,5 +25,15 @@ get:
             properties:
               custom_member_count:
                 type: integer
-    default:
-      $ref: './../../responses/api/error-response.yaml'
+    400:
+      $ref: './../../responses/bad-request.yaml'
+    401:
+      $ref: './../../responses/unauthorized.yaml'
+    403:
+      $ref: './../../responses/forbidden.yaml'
+    404:
+      $ref: './../../responses/not-found.yaml'
+    429:
+      $ref: './../../responses/too-many-requests.yaml'
+    500:
+      $ref: './../../responses/internal-server-error.yaml'

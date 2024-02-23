@@ -1,18 +1,24 @@
+parameters:
+  - $ref: './../../parameters/header/prefer.yaml'
 post:
+  operationId: CreateFileUploadJob
+  summary: Create File Upload Job
   description: Creates a file upload job for sending collection files
   tags:
     - Ingest API
     - Community
     - Enterprise
-  summary: Create File Upload Job
-  parameters:
-    - $ref: './../../parameters/header/prefer.yaml'
   responses:
-    '201':
+    201:
       description: Created
       content:
         application/json:
           schema:
-            $ref: "#/definitions/v2.FileUploadJobResponse"
-    default:
-      $ref: './../../responses/api/error-response.yaml'
+            type: object
+            properties:
+              data:
+                $ref: './../../schemas/model/file-upload-job.yaml'
+    401:
+      $ref: './../../responses/unauthorized.yaml'
+    500:
+      $ref: './../../responses/internal-server-error.yaml'

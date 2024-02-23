@@ -1,18 +1,31 @@
+parameters:
+  - $ref: './../../parameters/header/prefer.yaml'
 get:
+  operationId: GetCompletenessStats
+  summary: Get database completeness stats
   description: Get the percentage of local admins and sessions collected
   tags:
     - QA
     - Community
     - Enterprise
-  summary: Get database completeness stats
-  parameters:
-    - $ref: "#/definitions/parameter.PreferHeader"
   responses:
     200:
       description: OK
       content:
         application/json:
           schema:
-            $ref: "#/definitions/api.BasicResponse"
-    default:
-      $ref: './../../responses/api/error-response.yaml'
+            type: object
+            properties:
+              data:
+                type: object
+                additionalProperties:
+                  type: number
+                  format: double
+    401:
+      $ref: './../../responses/unauthorized.yaml'
+    403:
+      $ref: './../../responses/forbidden.yaml'
+    429:
+      $ref: './../../responses/too-many-requests.yaml'
+    500:
+      $ref: './../../responses/internal-server-error.yaml'

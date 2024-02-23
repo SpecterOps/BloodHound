@@ -1,52 +1,86 @@
 parameters:
-  - type: string
+  - $ref: './../../parameters/header/prefer.yaml'
+  - name: asset_group_id
     description: ID of the asset_group record to retrieve
-    name: asset_group_id
     in: path
     required: true
+    schema:
+      type: integer
+      format: int32
+
 get:
+  operationId: GetAssetGroup
+  summary: Get asset group by ID
   description: Retrieve asset group by ID
   tags:
     - Asset Isolation API
     - Community
     - Enterprise
-  summary: Retrieve asset group by ID
-  parameters:
-    - $ref: './../../parameters/header/prefer.yaml'
   responses:
     200:
       description: OK
       content:
         application/json:
           schema:
-            $ref: "#/definitions/api.BasicResponse"
-    default:
-      $ref: './../../responses/api/error-response.yaml'
+            type: object
+            properties:
+              data:
+                $ref: './../../schemas/model/asset-group.yaml'
+    400:
+      $ref: './../../responses/bad-request.yaml'
+    401:
+      $ref: './../../responses/unauthorized.yaml'
+    403:
+      $ref: './../../responses/forbidden.yaml'
+    404:
+      $ref: './../../responses/not-found.yaml'
+    429:
+      $ref: './../../responses/too-many-requests.yaml'
+    500:
+      $ref: './../../responses/internal-server-error.yaml'
+
 put:
+  operationId: UpdateAssetGroup
+  summary: Update an asset group
   description: Updates an asset group
   tags:
     - Asset Isolation API
     - Community
     - Enterprise
-  summary: Update an asset group
-  parameters:
-    - $ref: './../../parameters/header/prefer.yaml'
   requestBody:
     description: The request body for updating an asset group.
     required: true
     content:
       application/json:
         schema:
-          $ref: "#/definitions/v2.UpdateAssetGroupRequest"
+          type: object
+          properties:
+            name:
+              type: string
+              required: true
   responses:
     200:
       description: OK
       content:
         application/json:
           schema:
-            $ref: "#/definitions/api.BasicResponse"
-    default:
-      $ref: './../../responses/api/error-response.yaml'
+            type: object
+            properties:
+              data:
+                $ref: './../../schemas/model/asset-group.yaml'
+    400:
+      $ref: './../../responses/bad-request.yaml'
+    401:
+      $ref: './../../responses/unauthorized.yaml'
+    403:
+      $ref: './../../responses/forbidden.yaml'
+    404:
+      $ref: './../../responses/not-found.yaml'
+    429:
+      $ref: './../../responses/too-many-requests.yaml'
+    500:
+      $ref: './../../responses/internal-server-error.yaml'
+
 delete:
   description: Deletes an asset group
   tags:
@@ -54,10 +88,33 @@ delete:
     - Community
     - Enterprise
   summary: Delete an asset group
-  parameters:
-    - $ref: './../../parameters/header/prefer.yaml'
   responses:
     200:
-      description: OK
-    default:
-      $ref: './../../responses/api/error-response.yaml'
+      $ref: './../../responses/success-empty.yaml'
+    400:
+      $ref: './../../responses/bad-request.yaml'
+    401:
+      $ref: './../../responses/unauthorized.yaml'
+    403:
+      $ref: './../../responses/forbidden.yaml'
+    404:
+      $ref: './../../responses/not-found.yaml'
+    409:
+      description: |
+        **Conflict**
+        The client tried to delete a system defined asset group.
+      content:
+        application/json:
+          schema:
+            $ref: './../../schemas/api/error-wrapper.yaml'
+          example:
+            http_status: 409
+            timestamp: 2024-02-19T19:27:43.866Z
+            request_id: 3fa85f64-5717-4562-b3fc-2c963f66afa6
+            errors:
+              - context: agi
+                message: Cannot delete a system defined asset group.
+    429:
+      $ref: './../../responses/too-many-requests.yaml'
+    500:
+      $ref: './../../responses/internal-server-error.yaml'

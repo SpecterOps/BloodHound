@@ -1,0 +1,12 @@
+type: object
+properties:
+  nodes:
+    type: object
+    additionalProperties:
+      $ref: './node.yaml'
+  edges:
+    type: array
+    items:
+      $ref: './edge.yaml'
+
+

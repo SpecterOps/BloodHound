@@ -1,35 +1,45 @@
+parameters:
+  - $ref: './../../parameters/header/prefer.yaml'
 get:
+  operationId: Search
+  summary: Search for objects
+  description: Search for graph objects by name or object ID, filtered by type.
   tags:
     - Search
     - Community
     - Enterprise
-  summary: Get api
   parameters:
-    - $ref: './../../parameters/header/prefer.yaml'
-    - type: string
+    - name: q
       description: Search parameter for the name or object ID of a node.
-      name: q
       in: query
       required: true
-    - type: integer
-      description: Paging Skip
-      name: skip
+    - name: type
+      description: |
+        Node type.
+        Some AD examples: `Base`, `User`, `Computer`, `Group`, `Container`.
+        Some Azure examples: `AZBase`, `AZApp`, `AZDevice`.
       in: query
-    - type: integer
-      description: Paging Limit
-      name: limit
-      in: query
-    - type: string
-      description: 'Node type. Some AD examples: Base, User, Computer, Group, Container.
-        Some Azure examples: AZBase, AZApp, AZDevice.'
-      name: type
-      in: query
+    - $ref: './../../parameters/query/skip.yaml'
+    - $ref: './../../parameters/query/limit.yaml'
   responses:
     200:
       description: OK
       content:
         application/json:
           schema:
-            $ref: "#/definitions/v2.SearchResponse"
-    default:
-      $ref: './../../responses/api/error-response.yaml'
+            type: object
+            properties:
+              data:
+                type: array
+                items:
+                  $ref: './../../schemas/model/search-result.yaml'
+    400:
+      $ref: './../../responses/bad-request.yaml'
+    401:
+      $ref: './../../responses/unauthorized.yaml'
+    403:
+      $ref: './../../responses/forbidden.yaml'
+    429:
+      $ref: './../../responses/too-many-requests.yaml'
+    500:
+      $ref: './../../responses/internal-server-error.yaml'

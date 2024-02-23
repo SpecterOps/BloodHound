@@ -1,4 +1,8 @@
+parameters:
+  - $ref: './../../parameters/header/prefer.yaml'
 get:
+  operationId: GetApiSpec
+  summary: Get API Spec
   description: Returns an Open API 3.0 compatible BloodHound API spec
   tags:
     - API Info
@@ -7,5 +11,16 @@ get:
   responses:
     200:
       description: OK
-    default:
-      $ref: './../../responses/api/error-response.yaml'
+      content:
+        text/x-yaml:
+          schema:
+            type: object
+          example: |
+            openapi: 3.O.3
+            servers:
+              - url: /
+            ...[truncated example]
+    429:
+      $ref: './../../responses/too-many-requests.yaml'
+    500:
+      $ref: './../../responses/internal-server-error.yaml'

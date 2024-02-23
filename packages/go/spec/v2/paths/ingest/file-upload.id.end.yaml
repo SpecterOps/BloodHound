@@ -1,14 +1,21 @@
+parameters:
+  - $ref: './../../parameters/header/prefer.yaml'
 post:
+  operationId: EndFileUploadJob
+  summary: End File Upload Job
   description: End a file upload job
   tags:
     - Ingest API
     - Community
     - Enterprise
-  summary: End File Upload Job
-  parameters:
-    - $ref: './../../parameters/header/prefer.yaml'
   responses:
     200:
-      description: OK
-    default:
-      $ref: './../../responses/api/error-response.yaml'
+      $ref: './../../responses/success-empty.yaml'
+    400:
+      $ref: './../../responses/bad-request.yaml'
+    401:
+      $ref: './../../responses/unauthorized.yaml'
+    404:
+      $ref: './../../responses/not-found.yaml'
+    500:
+      $ref: './../../responses/internal-server-error.yaml'

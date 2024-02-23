@@ -1,0 +1,22 @@
+type: object
+properties:
+  angle:
+    type: integer
+  blink:
+    type: boolean
+  border:
+    $ref: './item-border.yaml'
+  color:
+    type: string
+  fontIcon:
+    $ref: './font-icon.yaml'
+  image:
+    type: string
+  label:
+    $ref: './label.yaml'
+  position:
+    type: string
+  radius:
+    type: integer
+  size:
+    type: integer

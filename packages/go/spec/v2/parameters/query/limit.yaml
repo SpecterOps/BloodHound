@@ -1,6 +1,5 @@
 name: limit
 description: This query parameter is used for setting an upper limit of objects returned in paginated responses.
 in: query
-required: false
 schema:
   $ref: './../../schemas/api/params/query/limit.yaml'

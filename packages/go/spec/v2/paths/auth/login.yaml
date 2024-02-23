@@ -3,7 +3,7 @@ parameters:
 post:
   operationId: Login
   summary: Login to BloodHound
-  description: Login to BloodHound with user credentials or a One Time Password
+  description: Login to BloodHound with user credentials or a one time password.
   tags:
     - Auth API
     - Community
@@ -62,12 +62,12 @@ post:
               auth_expired: false
               session_token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiNTQ2MjM1NjYtMjEzYS00NDkwLTljNjgtYWM0NGMzOWI2NTkwIiwidXNlciI6ImNvb2xfdXNlckBibG9vZGhvdW5kZW50ZXJwcmlzZS5pbyIsImlhdCI6MTUxNjIzOTAyMn0.1WWo7XpE9a-v6MQ9tHC8ikxmvmS3PuD7bJyNi4hPr_Y
     400:
-      $ref: './../../responses/api/bad-request.yaml'
+      $ref: './../../responses/bad-request.yaml'
     401:
-      $ref: './../../responses/api/unauthorized.yaml'
+      $ref: './../../responses/unauthorized.yaml'
     403:
-      $ref: './../../responses/api/forbidden.yaml'
+      $ref: './../../responses/forbidden.yaml'
     429:
-      $ref: './../../responses/api/too-many-requests.yaml'
+      $ref: './../../responses/too-many-requests.yaml'
     500:
-      $ref: './../../responses/api/internal-server-error.yaml'
+      $ref: './../../responses/internal-server-error.yaml'

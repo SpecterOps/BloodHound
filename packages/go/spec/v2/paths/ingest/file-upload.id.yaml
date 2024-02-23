@@ -1,18 +1,32 @@
+parameters:
+  - $ref: './../../parameters/header/prefer.yaml'
+  - name: file_upload_job_id
+    description: The ID for the file upload job.
+    in: path
+    required: true
 post:
+  operationId: UploadFileToJob
+  summary: Upload File To Job
   description: Saves a collection file to a file upload job
   tags:
     - Ingest API
     - Community
     - Enterprise
-  summary: Upload File To Job
-  parameters:
-    - $ref: './../../parameters/header/prefer.yaml'
-    - description: File to be uploaded
-      name: file
-      in: body
-      required: true
+  requestBody:
+    description: The body of the file upload request.
+    content:
+      application/json:
+        schema:
+          type: object
+          # TODO: we should make an effort to actually document the schema of the collection files at some point.
   responses:
-    '202':
-      description: Accepted
-    default:
-      $ref: './../../responses/api/error-response.yaml'
+    202:
+      $ref: './../../responses/success-empty.yaml'
+    400:
+      $ref: './../../responses/bad-request.yaml'
+    401:
+      $ref: './../../responses/unauthorized.yaml'
+    404:
+      $ref: './../../responses/not-found.yaml'
+    500:
+      $ref: './../../responses/internal-server-error.yaml'

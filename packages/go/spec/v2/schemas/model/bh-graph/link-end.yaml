@@ -1,0 +1,14 @@
+type: object
+properties:
+  arrow:
+    type: boolean
+  backOff:
+    type: integer
+  color:
+    type: string
+  glyphs:
+    type: array
+    items:
+      $ref: './glyph.yaml'
+  label:
+    $ref: './label.yaml'

@@ -1,29 +1,44 @@
+parameters:
+  - $ref: './../../parameters/header/prefer.yaml'
 get:
+  operationId: Pathfinding
   deprecated: true
-  description: Get the result of pathfinding between two nodes in graph format
+  summary: Get pathfinding result
+  description: DEPRECATED use GetShortestPath instead. Get the result of pathfinding between two nodes in graph format.
   tags:
     - Graph API
     - Community
     - Enterprise
-  summary: Get pathfinding result
   parameters:
-    - $ref: './../../parameters/header/prefer.yaml'
-    - type: string
+    - name: start_node
       description: Start Node
-      name: start_node
       in: query
       required: true
-    - type: string
+      schema:
+        type: string
+    - name: end_node
       description: End Node
-      name: end_node
       in: query
       required: true
+      schema:
+        type: string
   responses:
     200:
       description: OK
       content:
         application/json:
           schema:
-            $ref: "#/definitions/api.BasicResponse"
-    default:
-      $ref: './../../responses/api/error-response.yaml'
+            type: object
+            properties:
+              data:
+                $ref: './../../schemas/model/bh-graph/graph.yaml'
+    400:
+      $ref: './../../responses/bad-request.yaml'
+    401:
+      $ref: './../../responses/unauthorized.yaml'
+    403:
+      $ref: './../../responses/forbidden.yaml'
+    429:
+      $ref: './../../responses/too-many-requests.yaml'
+    500:
+      $ref: './../../responses/internal-server-error.yaml'

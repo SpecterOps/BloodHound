@@ -1,0 +1,4 @@
+name: sort_by
+description: |
+  Sort by column. Can be used multiple times; prepend a hyphen for descending order. Columns available
+  for sorting are dependent on the entity object kind.

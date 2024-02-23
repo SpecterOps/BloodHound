@@ -1,14 +1,18 @@
+parameters:
+  - $ref: './../../parameters/header/prefer.yaml'
 post:
+  operationId: RunCypherQuery
+  summary: Run a cypher query
   description: Runs a manual cypher query directly against the database
   tags:
     - Cypher API
     - Community
     - Enterprise
-  summary: Runs a manual cypher query directly against the database
   requestBody:
     content:
       application/json:
         schema:
+          type: object
           properties:
             query:
               type: string
@@ -16,11 +20,21 @@ post:
               type: boolean
   responses:
     200:
-      description: Returns graph data related to the cypher query sent in the response
-        body that contains a collection of nodes and edges
+      description: OK
       content:
         application/json:
           schema:
-            $ref: "#/definitions/graphs.GraphResponse"
-    default:
-      $ref: './../../responses/api/error-response.yaml'
+            type: object
+            properties:
+              data:
+                $ref: './../../schemas/model/unified-graph/graph.yaml'
+    400:
+      $ref: './../../responses/bad-request.yaml'
+    401:
+      $ref: './../../responses/unauthorized.yaml'
+    403:
+      $ref: './../../responses/forbidden.yaml'
+    429:
+      $ref: './../../responses/too-many-requests.yaml'
+    500:
+      $ref: './../../responses/internal-server-error.yaml'

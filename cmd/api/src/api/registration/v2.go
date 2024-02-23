@@ -169,7 +169,7 @@ func NewV2API(cfg config.Configuration, resources v2.Resources, routerInst *rout
 		routerInst.GET(fmt.Sprintf("/api/v2/computers/{%s}", api.URIPathVariableObjectID), resources.GetComputerEntityInfo).RequirePermissions(permissions.GraphDBRead),
 		routerInst.GET(fmt.Sprintf("/api/v2/computers/{%s}/sessions", api.URIPathVariableObjectID), resources.ListADComputerSessions).RequirePermissions(permissions.GraphDBRead),
 		routerInst.GET(fmt.Sprintf("/api/v2/computers/{%s}/admin-users", api.URIPathVariableObjectID), resources.ListADComputerAdmins).RequirePermissions(permissions.GraphDBRead),
-		routerInst.GET(fmt.Sprintf("/api/v2/computers/{%s}/rdp-users", api.URIPathVariableObjectID), resources.ListADCovmputerRDPUsers).RequirePermissions(permissions.GraphDBRead),
+		routerInst.GET(fmt.Sprintf("/api/v2/computers/{%s}/rdp-users", api.URIPathVariableObjectID), resources.ListADComputerRDPUsers).RequirePermissions(permissions.GraphDBRead),
 		routerInst.GET(fmt.Sprintf("/api/v2/computers/{%s}/dcom-users", api.URIPathVariableObjectID), resources.ListADComputerDCOMUsers).RequirePermissions(permissions.GraphDBRead),
 		routerInst.GET(fmt.Sprintf("/api/v2/computers/{%s}/ps-remote-users", api.URIPathVariableObjectID), resources.ListADComputerPSRemoteUsers).RequirePermissions(permissions.GraphDBRead),
 		routerInst.GET(fmt.Sprintf("/api/v2/computers/{%s}/sql-admins", api.URIPathVariableObjectID), resources.ListADComputerSQLAdmins).RequirePermissions(permissions.GraphDBRead),

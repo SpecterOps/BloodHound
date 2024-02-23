@@ -1,0 +1,8 @@
+type: object
+properties:
+  version:
+    type: string
+  sha256sum:
+    type: string
+  deprecated:
+    type: boolean

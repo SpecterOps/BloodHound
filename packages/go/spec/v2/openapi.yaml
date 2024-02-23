@@ -22,6 +22,19 @@ info:
     name: Apache-2.0
     url: https://www.apache.org/licenses/LICENSE-2.0
   version: 'v2'
+
+#x-tagGroups:
+#  - name: Community
+#    tags: ['Community']
+#  - name: Enterprise
+#    tags: ['Enterprise']
+
+tags:
+  - name: Community
+    description: This tag denotes an endpoint that is available in BloodHound Community Edition.
+  - name: Enterprise
+    description: This tag denotes an endpoint that is available in BloodHound Enterprise Edition.
+
 paths:
   ##
   # Community + Enterprise Endpoints
@@ -87,9 +100,9 @@ paths:
     $ref: './paths/ingest/file-upload.yaml'
   /api/v2/file-upload/start:
     $ref: './paths/ingest/file-upload.start.yaml'
-  /api/v2/file-upload/{file_upload_id}:
+  /api/v2/file-upload/{file_upload_job_id}:
     $ref: './paths/ingest/file-upload.id.yaml'
-  /api/v2/file-upload/{file_upload_id}/end:
+  /api/v2/file-upload/{file_upload_job_id}/end:
     $ref: './paths/ingest/file-upload.id.end.yaml'
 
   # api info
@@ -99,10 +112,10 @@ paths:
     $ref: './paths/api-info/spec.yaml'
 
   # search
-  /api/v2/available-domains:
-    $ref: './paths/search/available-domains.yaml'
   /api/v2/search:
     $ref: './paths/search/search.yaml'
+  /api/v2/available-domains:
+    $ref: './paths/search/available-domains.yaml'
 
   # audit
   /api/v2/audit:
@@ -360,7 +373,7 @@ paths:
   # Enterprise Endpoints
   ##
 
-  # auth (todo: deprecate bhe-users)
+  # auth
   /api/v2/accept-eula:
     $ref: './paths/auth/accept-eula.yaml'
 
@@ -389,94 +402,94 @@ paths:
     $ref: './paths/ingest/ingest.yaml'
 
   # clients
-  /api/v2/clients:
-    $ref: './paths/clients/clients.yaml'
-  /api/v2/clients/error:
-    $ref: './paths/clients/clients.error.yaml'
-  /api/v2/clients/update:
-    $ref: './paths/clients/clients.update.yaml'
-  /api/v2/clients/{client_id}:
-    $ref: './paths/clients/clients.id.yaml'
-  /api/v2/clients/{client_id}/token:
-    $ref: './paths/clients/clients.id.token.yaml'
-  /api/v2/clients/{client_id}/completed-tasks:
-    $ref: './paths/clients/clients.id.completed-tasks.yaml'
-  /api/v2/clients/{client_id}/completed-jobs:
-    $ref: './paths/clients/clients.id.completed-jobs.yaml'
-  /api/v2/clients/{client_id}/tasks:
-    $ref: './paths/clients/clients.id.tasks.yaml'
-  /api/v2/clients/{client_id}/jobs:
-    $ref: './paths/clients/clients.id.jobs.yaml'
-
-  # jobs
-  /api/v2/jobs/available:
-    $ref: './paths/jobs/jobs.available.yaml'
-  /api/v2/jobs/finished:
-    $ref: './paths/jobs/jobs.finished.yaml'
-  /api/v2/jobs:
-    $ref: './paths/jobs/jobs.yaml'
-  /api/v2/jobs/current:
-    $ref: './paths/jobs/jobs.current.yaml'
-  /api/v2/jobs/start:
-    $ref: './paths/jobs/jobs.start.yaml'
-  /api/v2/jobs/end:
-    $ref: './paths/jobs/jobs.end.yaml'
-  /api/v2/jobs/{job_id}:
-    $ref: './paths/jobs/jobs.id.yaml'
-  /api/v2/jobs/{job_id}/cancel:
-    $ref: './paths/jobs/jobs.id.cancel.yaml'
-  /api/v2/jobs/{job_id}/log:
-    $ref: './paths/jobs/jobs.id.log.yaml'
-
-  # tasks (deprecated)
-  /api/v2/tasks/available:
-    $ref: './paths/tasks/tasks.available.yaml'
-  /api/v2/tasks/finished:
-    $ref: './paths/tasks/tasks.finished.yaml'
-  /api/v2/tasks/end:
-    $ref: './paths/tasks/tasks.end.yaml'
-  /api/v2/tasks/start:
-    $ref: './paths/tasks/tasks.start.yaml'
-  /api/v2/tasks:
-    $ref: './paths/tasks/tasks.yaml'
-  /api/v2/tasks/{task_id}:
-    $ref: './paths/tasks/tasks.id.yaml'
-  /api/v2/tasks/{task_id}/cancel:
-    $ref: './paths/tasks/tasks.id.cancel.yaml'
-  /api/v2/tasks/{task_id}/log:
-    $ref: './paths/tasks/tasks.id.log.yaml'
-  /api/v2/tasks/current:
-    $ref: './paths/tasks/tasks.current.yaml'
-
-  # events
-  /api/v2/events:
-    $ref: './paths/events/events.yaml'
-  /api/v2/events/{event_id}:
-    $ref: './paths/events/events.id.yaml'
-
-  # attack paths
-  /api/v2/domains/{domain_id}/attack-path-findings:
-    $ref: './paths/attack-paths/domains.id.attack-path-findings.yaml'
-  /api/v2/attack-path-types:
-    $ref: './paths/attack-paths/attack-path-types.yaml'
-  /api/v2/attack-paths:
-    $ref: './paths/attack-paths/attack-paths.yaml'
-  /api/v2/domains/{domain_id}/available-types:
-    $ref: './paths/attack-paths/domains.id.available-types.yaml'
-  /api/v2/domains/{domain_id}/details:
-    $ref: './paths/attack-paths/domains.id.details.yaml'
-  /api/v2/domains/{domain_id}/sparkline:
-    $ref: './paths/attack-paths/domains.id.sparkline.yaml'
-  /api/v2/attack-paths/{attack_path_id}/acceptance:
-    $ref: './paths/attack-paths/attack-paths.id.acceptance.yaml'
-
-  # qa
-  /api/v2/posture-stats:
-    $ref: './paths/qa/posture-stats.yaml'
-
-  # meta entity
-  /api/v2/meta/{object_id}:
-    $ref: './paths/meta-entity/meta.id.yaml'
+#  /api/v2/clients:
+#    $ref: './paths/clients/clients.yaml'
+#  /api/v2/clients/error:
+#    $ref: './paths/clients/clients.error.yaml'
+#  /api/v2/clients/update:
+#    $ref: './paths/clients/clients.update.yaml'
+#  /api/v2/clients/{client_id}:
+#    $ref: './paths/clients/clients.id.yaml'
+#  /api/v2/clients/{client_id}/token:
+#    $ref: './paths/clients/clients.id.token.yaml'
+#  /api/v2/clients/{client_id}/completed-tasks:
+#    $ref: './paths/clients/clients.id.completed-tasks.yaml'
+#  /api/v2/clients/{client_id}/completed-jobs:
+#    $ref: './paths/clients/clients.id.completed-jobs.yaml'
+#  /api/v2/clients/{client_id}/tasks:
+#    $ref: './paths/clients/clients.id.tasks.yaml'
+#  /api/v2/clients/{client_id}/jobs:
+#    $ref: './paths/clients/clients.id.jobs.yaml'
+#
+#  # jobs
+#  /api/v2/jobs/available:
+#    $ref: './paths/jobs/jobs.available.yaml'
+#  /api/v2/jobs/finished:
+#    $ref: './paths/jobs/jobs.finished.yaml'
+#  /api/v2/jobs:
+#    $ref: './paths/jobs/jobs.yaml'
+#  /api/v2/jobs/current:
+#    $ref: './paths/jobs/jobs.current.yaml'
+#  /api/v2/jobs/start:
+#    $ref: './paths/jobs/jobs.start.yaml'
+#  /api/v2/jobs/end:
+#    $ref: './paths/jobs/jobs.end.yaml'
+#  /api/v2/jobs/{job_id}:
+#    $ref: './paths/jobs/jobs.id.yaml'
+#  /api/v2/jobs/{job_id}/cancel:
+#    $ref: './paths/jobs/jobs.id.cancel.yaml'
+#  /api/v2/jobs/{job_id}/log:
+#    $ref: './paths/jobs/jobs.id.log.yaml'
+#
+#  # tasks (deprecated)
+#  /api/v2/tasks/available:
+#    $ref: './paths/tasks/tasks.available.yaml'
+#  /api/v2/tasks/finished:
+#    $ref: './paths/tasks/tasks.finished.yaml'
+#  /api/v2/tasks/end:
+#    $ref: './paths/tasks/tasks.end.yaml'
+#  /api/v2/tasks/start:
+#    $ref: './paths/tasks/tasks.start.yaml'
+#  /api/v2/tasks:
+#    $ref: './paths/tasks/tasks.yaml'
+#  /api/v2/tasks/{task_id}:
+#    $ref: './paths/tasks/tasks.id.yaml'
+#  /api/v2/tasks/{task_id}/cancel:
+#    $ref: './paths/tasks/tasks.id.cancel.yaml'
+#  /api/v2/tasks/{task_id}/log:
+#    $ref: './paths/tasks/tasks.id.log.yaml'
+#  /api/v2/tasks/current:
+#    $ref: './paths/tasks/tasks.current.yaml'
+#
+#  # events
+#  /api/v2/events:
+#    $ref: './paths/events/events.yaml'
+#  /api/v2/events/{event_id}:
+#    $ref: './paths/events/events.id.yaml'
+#
+#  # attack paths
+#  /api/v2/domains/{domain_id}/attack-path-findings:
+#    $ref: './paths/attack-paths/domains.id.attack-path-findings.yaml'
+#  /api/v2/attack-path-types:
+#    $ref: './paths/attack-paths/attack-path-types.yaml'
+#  /api/v2/attack-paths:
+#    $ref: './paths/attack-paths/attack-paths.yaml'
+#  /api/v2/domains/{domain_id}/available-types:
+#    $ref: './paths/attack-paths/domains.id.available-types.yaml'
+#  /api/v2/domains/{domain_id}/details:
+#    $ref: './paths/attack-paths/domains.id.details.yaml'
+#  /api/v2/domains/{domain_id}/sparkline:
+#    $ref: './paths/attack-paths/domains.id.sparkline.yaml'
+#  /api/v2/attack-paths/{attack_path_id}/acceptance:
+#    $ref: './paths/attack-paths/attack-paths.id.acceptance.yaml'
+#
+#  # qa
+#  /api/v2/posture-stats:
+#    $ref: './paths/qa/posture-stats.yaml'
+#
+#  # meta entity
+#  /api/v2/meta/{object_id}:
+#    $ref: './paths/meta-entity/meta.id.yaml'
 
 components:
   ##
@@ -492,143 +505,145 @@ components:
       $ref: './schemas/null/time.yaml'
     null.String:
       $ref: './schemas/null/string.yaml'
-
-    # api types
-    api.TimeWindow:
-      $ref: './schemas/api/time-window.yaml'
-    api.Pagination:
-      $ref: './schemas/api/pagination.yaml'
-    api.ErrorWrapper:
-      $ref: './schemas/api/error-wrapper.yaml'
-    api.Error:
-      $ref: './schemas/api/error.yaml'
-
-    # graph types
-    graph.GraphResponse: # TODO: remove graphs.GraphResponse
-      type: object
-      properties:
-        data:
-          "$ref": "#/components/schemas/graph.Graph"
-    graph.Graph:
-      $ref: './schemas/graph/graph.yaml'
-    graph.Node:
-      $ref: './schemas/graph/node.yaml'
-    graph.Edge:
-      $ref: './schemas/graph/edge.yaml'
-
-    # graph property types TODO: these may not be necessary
-#    graph.ObjectID:
-#      $ref: './schemas/graph/props/object-id.yaml'
-#    graph.LastSeen:
-#      $ref: './schemas/graph/props/last-seen.yaml'
-#    graph.ObjectProperties:
-#      $ref: './schemas/graph/props/properties.yaml'
-#    graph.EdgeKind:
-#      $ref: './schemas/graph/props/edge-kind.yaml'
-#    graph.NodeKind:
-#      $ref: './schemas/graph/props/node-kind.yaml'
-
-    # models
-    model.AssetGroup:
-      $ref: './schemas/model/asset-group.yaml'
-    model.AssetGroupSelector:
-      $ref: './schemas/model/asset-group-selector.yaml'
-    model.AssetGroupSelectorSpec:
-      $ref: './schemas/model/asset-group-selector-spec.yaml'
-    model.AuthSecret:
-      $ref: './schemas/model/auth-secret.yaml'
-    model.AuditLog:
-      $ref: './schemas/model/audit-log.yaml'
-    model.AuthToken:
-      $ref: './schemas/model/auth-token.yaml'
-    model.Client:
-      $ref: './schemas/model/client.yaml'
-    model.ClientDisplay:
-      $ref: './schemas/model/client-display.yaml'
-    model.ClientSchedule:
-      $ref: './schemas/model/client-schedule.yaml'
-    model.ClientScheduledJob:
-      $ref: './schemas/model/client-scheduled-job.yaml'
-    model.Permission:
-      $ref: './schemas/model/permission.yaml'
-    model.Role:
-      $ref: './schemas/model/role.yaml'
-    model.SAMLSignOnEndpoint:
-      $ref: './schemas/model/saml-sign-on-endpoint.yaml'
-    model.SAMLProvider:
-      $ref: './schemas/model/saml-provider.yaml'
-    model.User:
-      $ref: './schemas/model/user.yaml'
-    model.ClientScheduleDisplay:
-      $ref: './schemas/model/client-schedule-display.yaml'
-    model.ClientJobDisplay:
-      $ref: './schemas/model/client-job-display.yaml'
-    model.DatapipeStatus:
-      $ref: './schemas/model/datapipe-status.yaml'
-    model.ADDataQualityStat:
-      $ref: './schemas/model/ad-data-quality-stat.yaml'
-    model.ADDataQualityAggregation:
-      $ref: './schemas/model/ad-data-quality-aggregation.yaml'
-    model.AzureDataQualityStat:
-      $ref: './schemas/model/azure-data-quality-stat.yaml'
-    model.AzureDataQualityAggregation:
-      $ref: './schemas/model/azure-data-quality-aggregation.yaml'
-    model.DomainCollectionResult:
-      $ref: './schemas/model/domain-collection-result.yaml'
-    model.ClientScheduledJobDisplay:
-      $ref: './schemas/model/client-scheduled-job-display.yaml'
-    model.OUDetails:
-      $ref: './schemas/model/ou-details.yaml'
-    model.DomainDetails:
-      $ref: './schemas/model/domain-details.yaml'
-    model.AssetGroupCollectionEntry:
-      $ref: './schemas/model/asset-group-collection-entry.yaml'
-    model.AssetGroupMember:
-      $ref: './schemas/model/asset-group-member.yaml'
-    model.FileUploadJob:
-      $ref: './schemas/model/file-upload-job.yaml'
-    model.SearchResult:
-      $ref: './schemas/model/search-result.yaml'
-    model.EntityController:
-      $ref: './schemas/model/entity-controller.yaml'
+    null.Uuid:
+      $ref: './schemas/null/uuid.yaml'
+#
+#    # api types
+#    api.TimeWindow:
+#      $ref: './schemas/api/time-window.yaml'
+#    api.Pagination:
+#      $ref: './schemas/api/pagination.yaml'
+#    api.ErrorWrapper:
+#      $ref: './schemas/api/error-wrapper.yaml'
+#    api.Error:
+#      $ref: './schemas/api/error.yaml'
+#
+#    # graph types
+#    graph.GraphResponse: # TODO: remove graphs.GraphResponse
+#      type: object
+#      properties:
+#        data:
+#          "$ref": "#/components/schemas/graph.Graph"
+#    graph.Graph:
+#      $ref: './schemas/graph/graph.yaml'
+#    graph.Node:
+#      $ref: './schemas/graph/node.yaml'
+#    graph.Edge:
+#      $ref: './schemas/graph/edge.yaml'
+#
+#    # graph property types TODO: these may not be necessary
+##    graph.ObjectID:
+##      $ref: './schemas/graph/props/object-id.yaml'
+##    graph.LastSeen:
+##      $ref: './schemas/graph/props/last-seen.yaml'
+##    graph.ObjectProperties:
+##      $ref: './schemas/graph/props/properties.yaml'
+##    graph.EdgeKind:
+##      $ref: './schemas/graph/props/edge-kind.yaml'
+##    graph.NodeKind:
+##      $ref: './schemas/graph/props/node-kind.yaml'
+#
+#    # models
+#    model.AssetGroup:
+#      $ref: './schemas/model/asset-group.yaml'
+#    model.AssetGroupSelector:
+#      $ref: './schemas/model/asset-group-selector.yaml'
+#    model.AssetGroupSelectorSpec:
+#      $ref: './schemas/model/asset-group-selector-spec.yaml'
+#    model.AuthSecret:
+#      $ref: './schemas/model/auth-secret.yaml'
+#    model.AuditLog:
+#      $ref: './schemas/model/audit-log.yaml'
+#    model.AuthToken:
+#      $ref: './schemas/model/auth-token.yaml'
+#    model.Client:
+#      $ref: './schemas/model/client.yaml'
+#    model.ClientDisplay:
+#      $ref: './schemas/model/client-display.yaml'
+#    model.ClientSchedule:
+#      $ref: './schemas/model/client-schedule.yaml'
+#    model.ClientScheduledJob:
+#      $ref: './schemas/model/client-scheduled-job.yaml'
+#    model.Permission:
+#      $ref: './schemas/model/permission.yaml'
+#    model.Role:
+#      $ref: './schemas/model/role.yaml'
+#    model.SAMLSignOnEndpoint:
+#      $ref: './schemas/model/saml-sign-on-endpoint.yaml'
+#    model.SAMLProvider:
+#      $ref: './schemas/model/saml-provider.yaml'
+#    model.User:
+#      $ref: './schemas/model/user.yaml'
+#    model.ClientScheduleDisplay:
+#      $ref: './schemas/model/client-schedule-display.yaml'
+#    model.ClientJobDisplay:
+#      $ref: './schemas/model/client-job-display.yaml'
+#    model.DatapipeStatus:
+#      $ref: './schemas/model/datapipe-status.yaml'
+#    model.ADDataQualityStat:
+#      $ref: './schemas/model/ad-data-quality-stat.yaml'
+#    model.ADDataQualityAggregation:
+#      $ref: './schemas/model/ad-data-quality-aggregation.yaml'
+#    model.AzureDataQualityStat:
+#      $ref: './schemas/model/azure-data-quality-stat.yaml'
+#    model.AzureDataQualityAggregation:
+#      $ref: './schemas/model/azure-data-quality-aggregation.yaml'
+#    model.DomainCollectionResult:
+#      $ref: './schemas/model/domain-collection-result.yaml'
+#    model.ClientScheduledJobDisplay:
+#      $ref: './schemas/model/client-scheduled-job-display.yaml'
+#    model.OUDetails:
+#      $ref: './schemas/model/ou-details.yaml'
+#    model.DomainDetails:
+#      $ref: './schemas/model/domain-details.yaml'
+#    model.AssetGroupCollectionEntry:
+#      $ref: './schemas/model/asset-group-collection-entry.yaml'
+#    model.AssetGroupMember:
+#      $ref: './schemas/model/asset-group-member.yaml'
+#    model.FileUploadJob:
+#      $ref: './schemas/model/file-upload-job.yaml'
+#    model.SearchResult:
+#      $ref: './schemas/model/search-result.yaml'
+#    model.EntityController:
+#      $ref: './schemas/model/entity-controller.yaml'
 
   ##
   # RESPONSES
   ##
   responses:
-    api.BadRequestResponse:
-      $ref: './responses/api/bad-request.yaml'
-    api.UnauthorizedResponse:
-      $ref: './responses/api/unauthorized.yaml'
-    api.ForbiddenResponse:
-      $ref: './responses/api/forbidden.yaml'
-    api.NotFoundResponse:
-      $ref: './responses/api/not-found.yaml'
-    api.InternalServerErrorResponse:
-      $ref: './responses/api/internal-server-error.yaml'
-    api.TooManyRequestsResponse:
-      $ref: './responses/api/too-many-requests.yaml'
-    api.ErrorResponse:
-      $ref: './responses/api/error-response.yaml'
+    BadRequest:
+      $ref: './responses/bad-request.yaml'
+    Unauthorized:
+      $ref: './responses/unauthorized.yaml'
+    Forbidden:
+      $ref: './responses/forbidden.yaml'
+    NotFound:
+      $ref: './responses/not-found.yaml'
+    InternalServerError:
+      $ref: './responses/internal-server-error.yaml'
+    TooManyRequests:
+      $ref: './responses/too-many-requests.yaml'
+    BasicErrorResponse:
+      $ref: './responses/error-response.yaml'
 
   ##
   # PARAMETERS
   ##
   parameters:
     # header params
-    params.PreferHeader:
+    header.Prefer:
       $ref: './parameters/header/prefer.yaml'
 
     # path params
-    params.EntityObjectID:
+    path.EntityObjectID:
       $ref: './parameters/path/object-id.yaml'
 
     # query params
-    params.PaginationSkip:
+    query.PaginationSkip:
       $ref: './parameters/query/skip.yaml'
-    params.PaginationLimit:
+    query.PaginationLimit:
       $ref: './parameters/query/limit.yaml'
-    params.HydrateCounts:
+    query.HydrateCounts:
       $ref: './parameters/query/hydrate-counts.yaml'
 
   securitySchemes:
