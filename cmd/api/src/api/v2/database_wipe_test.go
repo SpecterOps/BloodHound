@@ -180,5 +180,94 @@ func TestDatabaseWipe(t *testing.T) {
 					apitest.BodyContains(output, "we encountered an error while deleting file ingest history")
 				},
 			},
+			{
+				Name: "successful deletion of file ingest history",
+				Input: func(input *apitest.Input) {
+					apitest.SetHeader(input, headers.ContentType.String(), mediatypes.ApplicationJson.String())
+					apitest.BodyStruct(input, v2.DatabaseManagement{DeleteFileIngestHistory: true})
+				},
+				Setup: func() {
+					successfulAuditLogIntent := mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil).Times(1)
+					successfulFileIngestHistoryDelete := mockDB.EXPECT().DeleteAllFileUploads().Return(nil).Times(1)
+					successfulAuditLogSuccess := mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil).Times(1)
+
+					gomock.InOrder(successfulAuditLogIntent, successfulFileIngestHistoryDelete, successfulAuditLogSuccess)
+
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusNoContent)
+				},
+			},
+			{
+				Name: "failed deletion of data quality history",
+				Input: func(input *apitest.Input) {
+					apitest.SetHeader(input, headers.ContentType.String(), mediatypes.ApplicationJson.String())
+					apitest.BodyStruct(input, v2.DatabaseManagement{DeleteDataQualityHistory: true})
+				},
+				Setup: func() {
+					successfulAuditLogIntent := mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil).Times(1)
+					failedDataQualityHistoryDelete := mockDB.EXPECT().DeleteAllDataQuality().Return(errors.New("oopsy!")).Times(1)
+					successfulAuditLogFailure := mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil).Times(1)
+
+					gomock.InOrder(successfulAuditLogIntent, failedDataQualityHistoryDelete, successfulAuditLogFailure)
+
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusInternalServerError)
+					apitest.BodyContains(output, "we encountered an error while deleting data quality history")
+				},
+			},
+			{
+				Name: "succesful deletion of data quality history",
+				Input: func(input *apitest.Input) {
+					apitest.SetHeader(input, headers.ContentType.String(), mediatypes.ApplicationJson.String())
+					apitest.BodyStruct(input, v2.DatabaseManagement{DeleteDataQualityHistory: true})
+				},
+				Setup: func() {
+					successfulAuditLogIntent := mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil).Times(1)
+					successfulDataQualityHistoryDelete := mockDB.EXPECT().DeleteAllDataQuality().Return(nil).Times(1)
+					successfulAuditLogSuccess := mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil).Times(1)
+
+					gomock.InOrder(successfulAuditLogIntent, successfulDataQualityHistoryDelete, successfulAuditLogSuccess)
+
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusNoContent)
+				},
+			},
+			{
+				Name: "correctly forms the error message when multiple delete operations fail",
+				Input: func(input *apitest.Input) {
+					apitest.SetHeader(input, headers.ContentType.String(), mediatypes.ApplicationJson.String())
+					apitest.BodyStruct(input, v2.DatabaseManagement{DeleteDataQualityHistory: true, DeleteFileIngestHistory: true})
+				},
+				Setup: func() {
+					successfulAuditLogIntent := mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil).Times(1)
+
+					failedFileIngestHistoryDelete := mockDB.EXPECT().DeleteAllFileUploads().Return(errors.New("oopsy!")).Times(1)
+					failedDataQualityHistoryDelete := mockDB.EXPECT().DeleteAllDataQuality().Return(errors.New("oopsy!")).Times(1)
+
+					successfulAuditLogFailure := mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil).Times(1)
+
+					gomock.InOrder(successfulAuditLogIntent, failedFileIngestHistoryDelete, failedDataQualityHistoryDelete, successfulAuditLogFailure)
+
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusInternalServerError)
+					apitest.BodyContains(output, "we encountered an error while deleting data quality history, file ingest history")
+				},
+			},
 		})
+}
+
+func Test_BuildMessageForFailureAudit(t *testing.T) {
+
+	got := v2.BuildMessageForFailureAudit(v2.DatabaseManagement{
+		DeleteCollectedGraphData: true,
+		DeleteHighValueSelectors: true,
+	})
+
+	if got != "collected graph data, high value selectors" {
+		t.Fatalf("helper doesn't concat correctly")
+	}
 }

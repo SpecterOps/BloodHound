@@ -155,7 +155,7 @@ func (s Resources) HandleDatabaseWipe(response http.ResponseWriter, request *htt
 	if errors.DeleteCollectedGraphData || errors.DeleteHighValueSelectors || errors.DeleteDataQualityHistory || errors.DeleteFileIngestHistory {
 		auditEntry.Status = model.AuditStatusFailure
 		auditEntry.Model = model.AuditData{
-			"deletionFailures": buildMessageForFailureAudit(errors),
+			"deletionFailures": BuildMessageForFailureAudit(errors),
 		}
 
 		if err := s.DB.AppendAuditLog(request.Context(), *auditEntry); err != nil {
@@ -170,7 +170,7 @@ func (s Resources) HandleDatabaseWipe(response http.ResponseWriter, request *htt
 		// return a user friendly error message indicating what operations failed
 		api.WriteErrorResponse(
 			request.Context(),
-			api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("we encountered an error while deleting %s.  please submit your request again.", buildMessageForFailureAudit(errors)), request),
+			api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("we encountered an error while deleting %s.  please submit your request again.", BuildMessageForFailureAudit(errors)), request),
 			response,
 		)
 		return
@@ -190,15 +190,18 @@ func (s Resources) HandleDatabaseWipe(response http.ResponseWriter, request *htt
 	response.WriteHeader(http.StatusNoContent)
 }
 
-func buildMessageForFailureAudit(failures DatabaseManagement) string {
+func BuildMessageForFailureAudit(failures DatabaseManagement) string {
 	var message []string
 	if failures.DeleteCollectedGraphData {
 		message = append(message, "collected graph data")
-	} else if failures.DeleteDataQualityHistory {
+	}
+	if failures.DeleteDataQualityHistory {
 		message = append(message, "data quality history")
-	} else if failures.DeleteFileIngestHistory {
+	}
+	if failures.DeleteFileIngestHistory {
 		message = append(message, "file ingest history")
-	} else if failures.DeleteHighValueSelectors {
+	}
+	if failures.DeleteHighValueSelectors {
 		message = append(message, "high value selectors")
 	}
 
