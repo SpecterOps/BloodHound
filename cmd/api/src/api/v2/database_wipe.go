@@ -116,11 +116,11 @@ func (s Resources) HandleDatabaseWipe(response http.ResponseWriter, request *htt
 		}); err != nil {
 			log.Errorf("%s: %s", "error deleting all nodes", err.Error())
 			errors.DeleteCollectedGraphData = true
-
+		} else {
+			// if succesful, kick off analysis
+			s.TaskNotifier.RequestAnalysis()
 		}
 
-		// if succesful, kick off analysis
-		s.TaskNotifier.RequestAnalysis()
 	}
 
 	// delete custom high value selectors
@@ -128,10 +128,11 @@ func (s Resources) HandleDatabaseWipe(response http.ResponseWriter, request *htt
 		if err := s.DB.DeleteAssetGroupSelectorsForAssetGroup(request.Context(), payload.AssetGroupId); err != nil {
 			log.Errorf("%s %d: %s", "there was an error deleting asset group with id = ", payload.AssetGroupId, err.Error())
 			errors.DeleteHighValueSelectors = true
+		} else {
+			// if succesful, kick off analysis
+			s.TaskNotifier.RequestAnalysis()
 		}
 
-		// if succesful, kick off analysis
-		s.TaskNotifier.RequestAnalysis()
 	}
 
 	// delete file ingest history
