@@ -202,6 +202,8 @@ func TestDatabase_CreateGetUser(t *testing.T) {
 			t.Fatalf("Error creating user: %v", err)
 		} else if newUser, err := dbInst.LookupUser(user.PrincipalName); err != nil {
 			t.Fatalf("Failed looking up user by principal %s: %v", user.PrincipalName, err)
+		} else if err := verifyAuditLogs(t, dbInst, "CreateUser", "principal_name", newUser.PrincipalName); err != nil {
+			t.Fatalf("Failed to validate CreateUser audit logs:\n%v", err)
 		} else {
 			for _, role := range roles {
 				found := false
@@ -217,16 +219,14 @@ func TestDatabase_CreateGetUser(t *testing.T) {
 					t.Fatalf("Missing role %s", role.Name)
 				}
 			}
-			verifyAuditLogs(t, dbInst, "CreateUser", newUser)
 
 			newUser.Roles = newUser.Roles.RemoveByName(roleToDelete)
 
 			if err := dbInst.UpdateUser(context.Background(), newUser); err != nil {
 				t.Fatalf("Failed to update user: %v", err)
-			}
-			verifyAuditLogs(t, dbInst, "UpdateUser", newUser)
-
-			if updatedUser, err := dbInst.LookupUser(user.PrincipalName); err != nil {
+			} else if verifyAuditLogs(t, dbInst, "UpdateUser", "principal_name", newUser.PrincipalName); err != nil {
+				t.Fatalf("Failed to validate UpdateUser audit logs:\n%v", err)
+			} else if updatedUser, err := dbInst.LookupUser(user.PrincipalName); err != nil {
 				t.Fatalf("Failed looking up user by principal %s: %v", user.PrincipalName, err)
 			} else if _, found := updatedUser.Roles.FindByName(roleToDelete); found {
 				t.Fatalf("Found role %s on user %s but expected it to be removed", roleToDelete, user.PrincipalName)
@@ -256,6 +256,8 @@ func TestDatabase_CreateGetDeleteAuthToken(t *testing.T) {
 
 	if newToken, err := dbInst.CreateAuthToken(ctx, token); err != nil {
 		t.Fatalf("Failed to create auth token: %v", err)
+	} else if err = verifyAuditLogs(t, dbInst, "CreateAuthToken", "id", newToken.ID.String()); err != nil {
+		t.Fatalf("Failed to validate CreateAuthToken audit logs:\n%v", err)
 	} else if updatedUser, err := dbInst.GetUser(user.ID); err != nil {
 		t.Fatalf("Failed to fetch updated user: %v", err)
 	} else if len(updatedUser.AuthTokens) != 1 {
@@ -264,8 +266,10 @@ func TestDatabase_CreateGetDeleteAuthToken(t *testing.T) {
 		t.Fatalf("Expected auth token to have valid name")
 	} else if newToken.Name.String != expectedName {
 		t.Fatalf("Expected auth token to have name %s but saw %v", expectedName, newToken.Name.String)
-	} else if err := dbInst.DeleteAuthToken(ctx, newToken); err != nil {
+	} else if err = dbInst.DeleteAuthToken(ctx, newToken); err != nil {
 		t.Fatalf("Failed to delete auth token: %v", err)
+	} else if err = verifyAuditLogs(t, dbInst, "DeleteAuthToken", "id", newToken.ID.String()); err != nil {
+		t.Fatalf("Failed to validate DeleteAuthToken audit logs:\n%v", err)
 	}
 
 	if updatedUser, err := dbInst.GetUser(user.ID); err != nil {
@@ -291,6 +295,8 @@ func TestDatabase_CreateGetDeleteAuthSecret(t *testing.T) {
 
 	if newSecret, err := dbInst.CreateAuthSecret(ctx, secret); err != nil {
 		t.Fatalf("Failed to create auth secret: %v", err)
+	} else if err = verifyAuditLogs(t, dbInst, "CreateAuthSecret", "secret_user_id", newSecret.UserID.String()); err != nil {
+		t.Fatalf("Failed to validate CreateAuthSecret audit logs:\n%v", err)
 	} else if updatedUser, err := dbInst.GetUser(user.ID); err != nil {
 		t.Fatalf("Failed to fetch updated user: %v", err)
 	} else if updatedUser.AuthSecret.ID != newSecret.ID {
@@ -300,6 +306,8 @@ func TestDatabase_CreateGetDeleteAuthSecret(t *testing.T) {
 
 		if err := dbInst.UpdateAuthSecret(ctx, newSecret); err != nil {
 			t.Fatalf("Failed to update auth secret %d: %v", newSecret.ID, err)
+		} else if err = verifyAuditLogs(t, dbInst, "UpdateAuthSecret", "secret_user_id", newSecret.UserID.String()); err != nil {
+			t.Fatalf("Failed to validate UpdateAuthSecret audit logs:\n%v", err)
 		} else if updatedSecret, err := dbInst.GetAuthSecret(newSecret.ID); err != nil {
 			t.Fatalf("Failed to fetch updated auth secret: %v", err)
 		} else if updatedSecret.Digest != updatedDigest {
@@ -308,6 +316,8 @@ func TestDatabase_CreateGetDeleteAuthSecret(t *testing.T) {
 
 		if err := dbInst.DeleteAuthSecret(ctx, newSecret); err != nil {
 			t.Fatalf("Failed to delete auth token: %v", err)
+		} else if err = verifyAuditLogs(t, dbInst, "DeleteAuthSecret", "secret_user_id", newSecret.UserID.String()); err != nil {
+			t.Fatalf("Failed to validate DeleteAuthSecret audit logs:\n%v", err)
 		}
 	}
 
@@ -330,6 +340,8 @@ func TestDatabase_CreateSAMLProvider(t *testing.T) {
 
 	if newSAMLProvider, err := dbInst.CreateSAMLIdentityProvider(context.Background(), samlProvider); err != nil {
 		t.Fatalf("Failed to create SAML provider: %v", err)
+	} else if err = verifyAuditLogs(t, dbInst, "CreateSAMLIdentityProvider", "saml_name", newSAMLProvider.Name); err != nil {
+		t.Fatalf("Failed to validate CreateSAMLIdentityProvider audit logs:\n%v", err)
 	} else {
 		user.SAMLProviderID = null.Int32From(newSAMLProvider.ID)
 
