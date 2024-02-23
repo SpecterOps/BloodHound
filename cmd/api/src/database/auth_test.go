@@ -217,12 +217,14 @@ func TestDatabase_CreateGetUser(t *testing.T) {
 					t.Fatalf("Missing role %s", role.Name)
 				}
 			}
+			verifyAuditLogs(t, dbInst, "CreateUser", newUser)
 
 			newUser.Roles = newUser.Roles.RemoveByName(roleToDelete)
 
 			if err := dbInst.UpdateUser(context.Background(), newUser); err != nil {
 				t.Fatalf("Failed to update user: %v", err)
 			}
+			verifyAuditLogs(t, dbInst, "UpdateUser", newUser)
 
 			if updatedUser, err := dbInst.LookupUser(user.PrincipalName); err != nil {
 				t.Fatalf("Failed looking up user by principal %s: %v", user.PrincipalName, err)
