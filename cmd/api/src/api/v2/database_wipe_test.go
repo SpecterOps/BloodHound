@@ -161,5 +161,24 @@ func TestDatabaseWipe(t *testing.T) {
 					apitest.StatusCode(output, http.StatusNoContent)
 				},
 			},
+			{
+				Name: "failed deletion of file ingest history",
+				Input: func(input *apitest.Input) {
+					apitest.SetHeader(input, headers.ContentType.String(), mediatypes.ApplicationJson.String())
+					apitest.BodyStruct(input, v2.DatabaseManagement{DeleteFileIngestHistory: true})
+				},
+				Setup: func() {
+					successfulAuditLogIntent := mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil).Times(1)
+					failedFileIngestHistoryDelete := mockDB.EXPECT().DeleteAllFileUploads().Return(errors.New("oopsy!")).Times(1)
+					successfulAuditLogFailure := mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil).Times(1)
+
+					gomock.InOrder(successfulAuditLogIntent, failedFileIngestHistoryDelete, successfulAuditLogFailure)
+
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusInternalServerError)
+					apitest.BodyContains(output, "we encountered an error while deleting file ingest history")
+				},
+			},
 		})
 }
