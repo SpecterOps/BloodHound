@@ -102,7 +102,7 @@ export type AssetGroupResponse = BasicResponse<{ asset_groups: AssetGroup[] }>;
 
 export type AssetGroupMembersResponse = PaginatedResponse<{ members: AssetGroupMember[] }>;
 
-export type AssetGroupMemberCountsResponse = BasicResponse<AssetGroupMemberCounts>
+export type AssetGroupMemberCountsResponse = BasicResponse<AssetGroupMemberCounts>;
 
 export type SavedQuery = {
     id: number;
