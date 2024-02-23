@@ -4,6 +4,8 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/specterops/bloodhound/headers"
+	"github.com/specterops/bloodhound/mediatypes"
 	v2 "github.com/specterops/bloodhound/src/api/v2"
 	"github.com/specterops/bloodhound/src/api/v2/apitest"
 	taskerMocks "github.com/specterops/bloodhound/src/daemons/datapipe/mocks"
@@ -31,6 +33,7 @@ func TestDatabaseWipe(t *testing.T) {
 			{
 				Name: "asset group id must be provided if deleting asset group selectors",
 				Input: func(input *apitest.Input) {
+					apitest.SetHeader(input, headers.ContentType.String(), mediatypes.ApplicationJson.String())
 					apitest.BodyStruct(input, v2.DatabaseManagement{
 						DeleteHighValueSelectors: true,
 					})

@@ -165,7 +165,16 @@ func (s Resources) HandleDatabaseWipe(response http.ResponseWriter, request *htt
 			)
 			return
 		}
+
+		// return a user friendly error message indicating what operations failed
+		api.WriteErrorResponse(
+			request.Context(),
+			api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("we encountered an error while deleting %s.  please submit your request again.", buildMessageForFailureAudit(errors)), request),
+			response,
+		)
+		return
 	}
+
 	// otherwise append a success audit log
 	auditEntry.Status = model.AuditStatusSuccess
 	if err := s.DB.AppendAuditLog(request.Context(), *auditEntry); err != nil {
