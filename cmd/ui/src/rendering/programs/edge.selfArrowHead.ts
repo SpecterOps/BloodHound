@@ -14,13 +14,6 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-/**
- * Sigma.js WebGL Renderer Arrow Program
- * ======================================
- *
- * Program rendering direction arrows as a simple triangle.
- * @module
- */
 import CurvedEdgeArrowHeadProgram from './edge.curvedArrowHead';
 import { NodeDisplayData } from 'sigma/types';
 import { floatColor } from 'sigma/utils';
@@ -31,13 +24,10 @@ import { getControlPointsFromGroupSize } from './edge.self';
 
 const POINTS = 3,
     ATTRIBUTES = 9,
+    INTERSECT_APPROXIMATION_T = 0.8975,
     STRIDE = POINTS * ATTRIBUTES;
 
 export default class SelfEdgeArrowHeadProgram extends CurvedEdgeArrowHeadProgram {
-    constructor(gl: WebGLRenderingContext) {
-        super(gl);
-    }
-
     process(
         sourceData: NodeDisplayData,
         targetData: NodeDisplayData,
@@ -68,7 +58,7 @@ export default class SelfEdgeArrowHeadProgram extends CurvedEdgeArrowHeadProgram
             control2,
             control3,
             start,
-            0.8975
+            INTERSECT_APPROXIMATION_T
         );
 
         const normal = bezier.getNormals(start, curveCircleIntersectionApproximation);

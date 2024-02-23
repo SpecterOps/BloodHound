@@ -14,16 +14,6 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-/**
- * Sigma.js WebGL Renderer Edge Program
- * =====================================
- *
- * Program rendering edges as thick lines but with a twist: the end of edge
- * does not sit in the middle of target node but instead stays by some margin.
- *
- * This is useful when combined with arrows to draw directed edges.
- * @module
- */
 import CurvedEdgeProgram from './edge.curved';
 import { Coordinates, NodeDisplayData } from 'sigma/types';
 import { Attributes } from 'graphology-types';
@@ -79,10 +69,6 @@ export const getControlPointsFromGroupSize = (
 };
 
 export default class SelfEdgeProgram extends CurvedEdgeProgram {
-    constructor(gl: WebGLRenderingContext) {
-        super(gl);
-    }
-
     process(
         sourceData: NodeDisplayData,
         targetData: NodeDisplayData,

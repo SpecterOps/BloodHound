@@ -14,14 +14,6 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-/**
- * Sigma.js WebGL Renderer Edge Curved Arrow Program
- * ===========================================
- *
- * Compound program rendering edges as a curved arrow from the source to the target.
- * Spreads curves out based on their position in the group.
- * @module
- */
 import { createEdgeCompoundProgram } from 'sigma/rendering/webgl/programs/common/edge';
 import SelfEdgeArrowHeadProgram from './edge.selfArrowHead';
 import SelfEdgeProgram from './edge.self';
