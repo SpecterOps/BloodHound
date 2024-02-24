@@ -1,0 +1,12 @@
+description: |
+  **OK**
+  This response will contain csv text content.
+content:
+  text/csv:
+    schema:
+      type: string
+    example: |
+      header1,header2,header3
+      cell1,cell2,cell3
+      cell4,cell5,cell6
+      ...

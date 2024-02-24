@@ -1,0 +1,4 @@
+name: event_id
+in: query
+schema:
+  $ref: './../../../schemas/api/params/predicate/filter.integer.yaml'

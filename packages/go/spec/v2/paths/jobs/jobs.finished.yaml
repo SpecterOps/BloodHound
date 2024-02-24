@@ -1,101 +1,64 @@
+parameters:
+  - $ref: './../../parameters/header/prefer.yaml'
 get:
+  operationId: ListClientFinishedJobs
+  summary: List finished jobs
   description: Gets all finished jobs
   tags:
     - Jobs API
     - Enterprise
-  summary: Get Finished Jobs
   parameters:
-    - $ref: './../../parameters/header/prefer.yaml'
-    - type: string
-      description: Sort by column. Can be used multiple times; prepend hyphen for
-        descending order. Sortable columns are client_name, client_id, event_id, execution_time,
-        status, start_time, end_time, log_path, domain_controller, event_title, last_ingest,
-        id, created_at, updated_at, deleted_at.
-      name: sort_by
+    - name: sort_by
+      description: Sortable columns are `client_name`, `event_id`, `execution_time`, `status`,
+        `start_time`, `end_time`, `log_path`, `domain_controller`, `event_title`, `last_ingest`,
+        `id`, `created_at`, `updated_at`, `deleted_at`.
       in: query
-      required: false
-    - type: string
-      description: Filter results by column value. Valid filter predicates are eq,
-        neq, gt, gte, lt, lte
-      name: client_id
-      in: query
-      required: false
-    - type: string
-      description: Filter results by column value. Valid filter predicates are eq,
-        neq
-      name: rrule
-      in: query
-      required: false
-    - type: string
-      description: Filter results by column value. Valid filter predicates are eq,
-        neq
-      name: session_collection
-      in: query
-      required: false
-    - type: string
-      description: Filter results by column value. Valid filter predicates are eq,
-        neq
-      name: local_group_collection
-      in: query
-      required: false
-    - type: string
-      description: Filter results by column value. Valid filter predicates are eq,
-        neq
-      name: ad_structure_collection
-      in: query
-      required: false
-    - type: string
-      description: Filter results by column value. Valid filter predicates are eq,
-        neq, gt, gte, lt, lte
-      name: next_scheduled_at
-      in: query
-      required: false
-    - type: string
-      description: Filter results by column value. Valid filter predicates are eq,
-        neq, gt, gte, lt, lte
-      name: id
-      in: query
-      required: false
-    - type: string
-      description: Filter results by column value. Valid filter predicates are eq,
-        neq, gt, gte, lt, lte
-      name: created_at
-      in: query
-      required: false
-    - type: string
-      description: Filter results by column value. Valid filter predicates are eq,
-        neq, gt, gte, lt, lte
-      name: updated_at
-      in: query
-      required: false
-    - type: string
-      description: Filter results by column value. Valid filter predicates are eq,
-        neq, gt, gte, lt, lte
-      name: deleted_at
-      in: query
-      required: false
-    - type: string
-      description: Valid values are `true` or `false` and defaults to `true`. When
-        a value of `true` is passed, any domains associated with each finished job
-        will have expanded properties including `name` and `type`. When a value of
-        `false` is passed, these same domains will only return as a list of `objectid`s.
-      name: hydrate_domains
-      in: query
-      required: false
-    - type: string
-      description: Valid values are `true` or `false` and defaults to `true`. When
-        a value of `true` is passed, any OUs associated with each finished job will
-        have expanded properties including `name` and `type`. When a value of `false`
-        is passed, these same OUs will only return as a list of `objectid`s.
-      name: hydrate_ous
-      in: query
-      required: false
+      schema:
+        $ref: './../../schemas/api/params/predicate/sort-by.yaml'
+    - $ref: './../../parameters/query/clients/job.log-path.yaml'
+    - $ref: './../../parameters/query/clients/job.session-collection.yaml'
+    - $ref: './../../parameters/query/clients/job.local-group-collection.yaml'
+    - $ref: './../../parameters/query/clients/job.cert-services-collection.yaml'
+    - $ref: './../../parameters/query/clients/job.ca-registry-collection.yaml'
+    - $ref: './../../parameters/query/clients/job.dc-registry-collection.yaml'
+    - $ref: './../../parameters/query/clients/job.ad-structure-collection.yaml'
+    - $ref: './../../parameters/query/clients/job.domain-controller.yaml'
+    - $ref: './../../parameters/query/clients/job.status.yaml'
+    - $ref: './../../parameters/query/clients/job.event-title.yaml'
+    - $ref: './../../parameters/query/clients/job.client-id.yaml'
+    - $ref: './../../parameters/query/clients/job.event-id.yaml'
+    - $ref: './../../parameters/query/clients/job.execution-time.yaml'
+    - $ref: './../../parameters/query/clients/job.start-time.yaml'
+    - $ref: './../../parameters/query/clients/job.end-time.yaml'
+    - $ref: './../../parameters/query/clients/job.last-ingest.yaml'
+    - $ref: './../../parameters/query/clients/hydrate-domains.yaml'
+    - $ref: './../../parameters/query/clients/hydrate-ous.yaml'
+    - $ref: './../../parameters/query/created-at.yaml'
+    - $ref: './../../parameters/query/updated-at.yaml'
+    - $ref: './../../parameters/query/deleted-at.yaml'
+    - $ref: './../../parameters/query/skip.yaml'
+    - $ref: './../../parameters/query/limit.yaml'
   responses:
     200:
       description: OK
       content:
         application/json:
           schema:
-            $ref: "#/definitions/api.ResponseWrapper"
-    default:
-      $ref: './../../responses/error-response.yaml'
+            allOf:
+              - $ref: './../../schemas/api/response/pagination.yaml'
+              - type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: './../../schemas/model/client-scheduled-job-display.yaml'
+    400:
+      $ref: './../../responses/bad-request.yaml'
+    401:
+      $ref: './../../responses/unauthorized.yaml'
+    403:
+      $ref: './../../responses/forbidden.yaml'
+    429:
+      $ref: './../../responses/too-many-requests.yaml'
+    500:
+      $ref: './../../responses/internal-server-error.yaml'

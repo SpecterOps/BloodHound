@@ -1,21 +1,25 @@
+allOf:
+  - $ref: './components/int64.id.yaml'
 type: object
 properties:
-  id:
-    type: integer
   client_id:
     type: string
+    format: uuid
   client_name:
     type: string
   event_id:
-    "$ref": "#/definitions/null.Int32"
+    $ref: './../null/int32.yaml'
   execution_time:
     type: string
+    format: date-time
   start_time:
     type: string
+    format: date-time
   end_time:
     type: string
+    format: date-time
   status:
-    type: integer
+    $ref: './../enum/job-status.yaml'
   status_message:
     type: string
   session_collection:
@@ -24,19 +28,25 @@ properties:
     type: boolean
   ad_structure_collection:
     type: boolean
+  cert_services_collection:
+    type: boolean
+  ca_registry_collection:
+    type: boolean
+  dc_registry_collection:
+    type: boolean
   all_trusted_domains:
     type: boolean
   domain_controller:
-    "$ref": "#/definitions/null.String"
+    type: string
   ous:
     type: array
     items:
-      "$ref": "#/definitions/model.OUDetails"
+      $ref: './ou-details.yaml'
   domains:
     type: array
     items:
-      "$ref": "#/definitions/model.DomainDetails"
+      $ref: './domain-details.yaml'
   domain_results:
     type: array
     items:
-      "$ref": "#/definitions/model.DomainCollectionResult"
+      $ref: './domain-collection-result.yaml'

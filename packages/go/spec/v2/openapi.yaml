@@ -12,7 +12,14 @@ info:
 
     Contact information listed is for BloodHound Enterprise customers. To get help with
     BloodHound Community Edition, please join our
-    [Slack community](https://bloodhoundgang.herokuapp.com/).
+    [Slack community](https://ghst.ly/BHSlack/).
+
+    For documentation about how to work with authentication in the API, please
+    refer to this support doc:
+    [Working with the BloodHound API](https://support.bloodhoundenterprise.io/hc/en-us/articles/11311053342619-Working-with-the-BloodHound-API)
+
+    ## Authentication
+    <!-- Redoc-Inject: <security-definitions> -->
   #termsOfService: TBD
   contact:
     name: BloodHound Enterprise Support
@@ -23,11 +30,25 @@ info:
     url: https://www.apache.org/licenses/LICENSE-2.0
   version: 'v2'
 
+security:
+  - JWTBearerToken: []
+  - SignedRequest: []
+    RequestDate: []
+    HMACSignature: []
+
 #x-tagGroups:
-#  - name: Community
-#    tags: ['Community']
-#  - name: Enterprise
-#    tags: ['Enterprise']
+#  - name: Community & Enterprise
+#    tags:
+#      - User Management API
+#  - name: Enterprise Only
+#    tags:
+#      - Analysis API
+#      - Meta Entity API
+#  - name: Entity APIs
+#    tags:
+#      - Computer Entity API
+#      - Domain Entity API
+#      - GPO Entity API
 
 tags:
   - name: Community
@@ -402,46 +423,46 @@ paths:
     $ref: './paths/ingest/ingest.yaml'
 
   # clients
-#  /api/v2/clients:
-#    $ref: './paths/clients/clients.yaml'
-#  /api/v2/clients/error:
-#    $ref: './paths/clients/clients.error.yaml'
-#  /api/v2/clients/update:
-#    $ref: './paths/clients/clients.update.yaml'
-#  /api/v2/clients/{client_id}:
-#    $ref: './paths/clients/clients.id.yaml'
-#  /api/v2/clients/{client_id}/token:
-#    $ref: './paths/clients/clients.id.token.yaml'
-#  /api/v2/clients/{client_id}/completed-tasks:
-#    $ref: './paths/clients/clients.id.completed-tasks.yaml'
-#  /api/v2/clients/{client_id}/completed-jobs:
-#    $ref: './paths/clients/clients.id.completed-jobs.yaml'
-#  /api/v2/clients/{client_id}/tasks:
-#    $ref: './paths/clients/clients.id.tasks.yaml'
-#  /api/v2/clients/{client_id}/jobs:
-#    $ref: './paths/clients/clients.id.jobs.yaml'
-#
-#  # jobs
-#  /api/v2/jobs/available:
-#    $ref: './paths/jobs/jobs.available.yaml'
-#  /api/v2/jobs/finished:
-#    $ref: './paths/jobs/jobs.finished.yaml'
-#  /api/v2/jobs:
-#    $ref: './paths/jobs/jobs.yaml'
-#  /api/v2/jobs/current:
-#    $ref: './paths/jobs/jobs.current.yaml'
-#  /api/v2/jobs/start:
-#    $ref: './paths/jobs/jobs.start.yaml'
-#  /api/v2/jobs/end:
-#    $ref: './paths/jobs/jobs.end.yaml'
-#  /api/v2/jobs/{job_id}:
-#    $ref: './paths/jobs/jobs.id.yaml'
-#  /api/v2/jobs/{job_id}/cancel:
-#    $ref: './paths/jobs/jobs.id.cancel.yaml'
-#  /api/v2/jobs/{job_id}/log:
-#    $ref: './paths/jobs/jobs.id.log.yaml'
-#
-#  # tasks (deprecated)
+  /api/v2/clients:
+    $ref: './paths/clients/clients.yaml'
+  /api/v2/clients/error:
+    $ref: './paths/clients/clients.error.yaml'
+  /api/v2/clients/update:
+    $ref: './paths/clients/clients.update.yaml'
+  /api/v2/clients/{client_id}:
+    $ref: './paths/clients/clients.id.yaml'
+  /api/v2/clients/{client_id}/token:
+    $ref: './paths/clients/clients.id.token.yaml'
+  /api/v2/clients/{client_id}/completed-tasks:
+    $ref: './paths/clients/clients.id.completed-tasks.yaml'
+  /api/v2/clients/{client_id}/completed-jobs:
+    $ref: './paths/clients/clients.id.completed-jobs.yaml'
+  /api/v2/clients/{client_id}/tasks:
+    $ref: './paths/clients/clients.id.tasks.yaml'
+  /api/v2/clients/{client_id}/jobs:
+    $ref: './paths/clients/clients.id.jobs.yaml'
+
+  # jobs
+  /api/v2/jobs/available:
+    $ref: './paths/jobs/jobs.available.yaml'
+  /api/v2/jobs/finished:
+    $ref: './paths/jobs/jobs.finished.yaml'
+  /api/v2/jobs:
+    $ref: './paths/jobs/jobs.yaml'
+  /api/v2/jobs/current:
+    $ref: './paths/jobs/jobs.current.yaml'
+  /api/v2/jobs/start:
+    $ref: './paths/jobs/jobs.start.yaml'
+  /api/v2/jobs/end:
+    $ref: './paths/jobs/jobs.end.yaml'
+  /api/v2/jobs/{job_id}:
+    $ref: './paths/jobs/jobs.id.yaml'
+  /api/v2/jobs/{job_id}/cancel:
+    $ref: './paths/jobs/jobs.id.cancel.yaml'
+  /api/v2/jobs/{job_id}/log:
+    $ref: './paths/jobs/jobs.id.log.yaml'
+
+  # tasks (deprecated)
 #  /api/v2/tasks/available:
 #    $ref: './paths/tasks/tasks.available.yaml'
 #  /api/v2/tasks/finished:
@@ -460,38 +481,141 @@ paths:
 #    $ref: './paths/tasks/tasks.id.log.yaml'
 #  /api/v2/tasks/current:
 #    $ref: './paths/tasks/tasks.current.yaml'
-#
-#  # events
-#  /api/v2/events:
-#    $ref: './paths/events/events.yaml'
-#  /api/v2/events/{event_id}:
-#    $ref: './paths/events/events.id.yaml'
-#
-#  # attack paths
-#  /api/v2/domains/{domain_id}/attack-path-findings:
-#    $ref: './paths/attack-paths/domains.id.attack-path-findings.yaml'
-#  /api/v2/attack-path-types:
-#    $ref: './paths/attack-paths/attack-path-types.yaml'
-#  /api/v2/attack-paths:
-#    $ref: './paths/attack-paths/attack-paths.yaml'
-#  /api/v2/domains/{domain_id}/available-types:
-#    $ref: './paths/attack-paths/domains.id.available-types.yaml'
+
+  # events
+  /api/v2/events:
+    $ref: './paths/events/events.yaml'
+  /api/v2/events/{event_id}:
+    $ref: './paths/events/events.id.yaml'
+
+  # attack paths
+  /api/v2/domains/{domain_id}/attack-path-findings:
+    $ref: './paths/attack-paths/domains.id.attack-path-findings.yaml'
+  /api/v2/attack-path-types:
+    $ref: './paths/attack-paths/attack-path-types.yaml'
+  /api/v2/attack-paths:
+    $ref: './paths/attack-paths/attack-paths.yaml'
+  /api/v2/domains/{domain_id}/available-types:
+    $ref: './paths/attack-paths/domains.id.available-types.yaml'
 #  /api/v2/domains/{domain_id}/details:
 #    $ref: './paths/attack-paths/domains.id.details.yaml'
 #  /api/v2/domains/{domain_id}/sparkline:
 #    $ref: './paths/attack-paths/domains.id.sparkline.yaml'
 #  /api/v2/attack-paths/{attack_path_id}/acceptance:
 #    $ref: './paths/attack-paths/attack-paths.id.acceptance.yaml'
-#
-#  # qa
-#  /api/v2/posture-stats:
-#    $ref: './paths/qa/posture-stats.yaml'
-#
-#  # meta entity
-#  /api/v2/meta/{object_id}:
-#    $ref: './paths/meta-entity/meta.id.yaml'
+
+  # qa
+  /api/v2/posture-stats:
+    $ref: './paths/qa/posture-stats.yaml'
+
+  # meta entity
+  /api/v2/meta/{object_id}:
+    $ref: './paths/meta-entity/meta.id.yaml'
 
 components:
+  ##
+  # SECURITY
+  ##
+  securitySchemes:
+    # JWT Bearer token
+    JWTBearerToken:
+      description: |
+        Standard JWT bearer token Authorization header. For quick tests or one-time calls, the
+        JWT used by your browser may be the simplest route. The API will accept calls using the
+        following header structure in the HTTP request:
+
+        `Authorization: Bearer $JWT_TOKEN`
+
+        If you open the Network tab within your browser, you will see calls against the API
+        made utilizing this structure.
+      type: http
+      scheme: Bearer
+      bearerFormat: JWT
+    # BHE Signature
+    SignedRequest:
+      description: |
+        For long-running API integrations, BloodHound's API utilizes hash-based message
+        authentication code (HMAC) authentication using the API key as the secret key to verify
+        the authenticity and integrity of the request. Calls against the API must include the
+        following headers:
+        ```
+        Authorization: bhesignature $TOKEN_ID
+        RequestDate: $RFC3339_DATETIME
+        Signature: $BASE64ENCODED_HMAC_SIGNATURE
+        ```
+        Each API token generated in the BloodHound API comes with two parts: The Token ID, which is used
+        in the `Authorization` header, and the Token Key, which is used as part of the HMAC hashing process.
+      type: apiKey
+      name: Authorization
+      in: header
+    RequestDate:
+      description: |
+        This header is used as part of the HMAC signing chain for `bhesignature` auth. It is expected to
+        be formatted to RFC-3339 standard and sent with any signed requests.
+      type: apiKey
+      name: RequestDate
+      in: header
+    HMACSignature:
+      description: |
+        This header contains the base64 encoded HMAC hash used to verify the request. Below is a
+        pseudo-code example showing how the signature is created:
+        ```python
+        # Digester is initialized with HMAC-SHA-256 using
+        # the token key as the HMAC digest key.
+        digester = hmac.new(sha256, api_token_key)
+
+        # OperationKey is the first HMAC digest link in the
+        # signature chain. This prevents replay attacks that
+        # seek to modify the request method or URI. It is
+        # composed of concatenating the request method and
+        # the request URI with no delimiter and computing
+        # the HMAC digest using the token key as the digest
+        # secret.
+        #
+        # Example: GET /api/v2/test/resource HTTP/1.1
+        # Signature Component: GET/api/v2/test/resource
+        digester.write(request_method + request_uri)
+
+        # Update the digester for further chaining
+        digester = hmac.New(sha256, digester.hash())
+
+        # DateKey is the next HMAC digest link in the
+        # signature chain. This encodes the RFC3339
+        # formatted datetime value as part of the
+        # signature to the hour to prevent replay
+        # attacks that are older than max two hours.
+        # This value is added to the signature chain
+        # by cutting off all values from the RFC3339
+        # formatted datetime from the hours value
+        # forward:
+        #
+        # Example: 2020-12-01T23:59:60Z
+        # Signature Component: 2020-12-01T23
+        digester.write(request_datetime[:13])
+
+        # Update the digester for further chaining
+        digester = hmac.New(sha256, digester.hash())
+
+        # Body signing is the last HMAC digest link
+        # in the signature chain. This encodes the
+        # request body as part of the signature to
+        # prevent replay attacks that seek to modify
+        # the payload of a signed request. In the
+        # case where there is no body content the
+        # HMAC digest is computed anyway, simply
+        # with no values written to the digester.
+        if request.body is not empty:
+          digester.write(request.body)
+
+        # Base64 encode the final hash and add it to
+        # the `Signature` header:
+        encoded_hash = base64_encode(digester.hash())
+        request.header.write('Signature', encoded_hash)
+        ```
+      type: apiKey
+      name: Signature
+      in: header
+
   ##
   # SCHEMAS
   ##
@@ -645,7 +769,3 @@ components:
       $ref: './parameters/query/limit.yaml'
     query.HydrateCounts:
       $ref: './parameters/query/hydrate-counts.yaml'
-
-  securitySchemes:
-    OAuth2PasswordBearer:
-      type: oauth2

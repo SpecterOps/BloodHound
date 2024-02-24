@@ -1,0 +1,8 @@
+type: object
+properties:
+  objectid:
+    type: string
+  name:
+    type: string
+  exists:
+    type: boolean

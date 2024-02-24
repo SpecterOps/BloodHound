@@ -1,0 +1,4 @@
+name: dc_registry_collection
+in: query
+schema:
+  $ref: './../../../schemas/api/params/predicate/filter.boolean.yaml'

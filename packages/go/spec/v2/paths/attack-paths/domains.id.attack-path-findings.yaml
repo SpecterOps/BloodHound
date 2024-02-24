@@ -1,30 +1,45 @@
 parameters:
-  - type: string
+  - $ref: './../../parameters/header/prefer.yaml'
+  - name: domain_id
     description: Domain ID
-    name: domain_id
     in: path
     required: true
 get:
+  operationId: ExportAttackPathFindings
+  summary: Export attack path findings
   description: Export the finding table for a given attack path
-  produces:
-    - text/csv
   tags:
     - Attack Paths API
     - Enterprise
-  summary: Export attack path findings
   parameters:
-    - $ref: './../../parameters/header/prefer.yaml'
-    - type: string
+    - name: finding
       description: Finding Type
-      name: finding
       in: query
       required: true
+      schema:
+        type: string
+    - name: filterAccepted
+      description: Risk acceptance filter
+      in: query
+      schema:
+        $ref: './../../schemas/enum/risk-acceptance.yaml'
+    - name: sort_by
+      description: Sort by column. The only sortable column is `finding`.
+      in: query
+      schema:
+        $ref: './../../schemas/api/params/predicate/sort-by.yaml'
   responses:
     200:
-      description: OK
-      content:
-        application/json:
-          schema:
-            $ref: "#/definitions/api.BasicResponse"
-    default:
-      $ref: './../../responses/error-response.yaml'
+      $ref: './../../responses/csv-response.yaml'
+    400:
+      $ref: './../../responses/bad-request.yaml'
+    401:
+      $ref: './../../responses/unauthorized.yaml'
+    403:
+      $ref: './../../responses/forbidden.yaml'
+    404:
+      $ref: './../../responses/not-found.yaml'
+    429:
+      $ref: './../../responses/too-many-requests.yaml'
+    500:
+      $ref: './../../responses/internal-server-error.yaml'

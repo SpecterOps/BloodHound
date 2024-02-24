@@ -1,8 +1,0 @@
-type: object
-properties:
-  status:
-    type: string
-  updated_at:
-    type: string
-  last_complete_analysis_at:
-    type: string

@@ -1,23 +1,38 @@
 parameters:
-  - type: string
+  - $ref: './../../parameters/header/prefer.yaml'
+  - name: job_id
     description: Job ID
-    name: job_id
     in: path
     required: true
+    schema:
+      type: integer
+      format: int64
 get:
+  operationId: GetClientJob
+  summary: Get client job
   description: Gets client job
   tags:
     - Jobs API
     - Enterprise
-  summary: Get Job
-  parameters:
-    - $ref: './../../parameters/header/prefer.yaml'
   responses:
     200:
       description: OK
       content:
         application/json:
           schema:
-            $ref: "#/definitions/api.ResponseWrapper"
-    default:
-      $ref: './../../responses/error-response.yaml'
+            type: object
+            properties:
+              data:
+                $ref: './../../schemas/model/client-scheduled-job-display.yaml'
+    400:
+      $ref: './../../responses/bad-request.yaml'
+    401:
+      $ref: './../../responses/unauthorized.yaml'
+    403:
+      $ref: './../../responses/forbidden.yaml'
+    404:
+      $ref: './../../responses/not-found.yaml'
+    429:
+      $ref: './../../responses/too-many-requests.yaml'
+    500:
+      $ref: './../../responses/internal-server-error.yaml'

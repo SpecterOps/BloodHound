@@ -34,9 +34,11 @@ properties:
   relationships:
     type: integer
   session_completeness:
-    type: float
+    type: number
+    format: float
   local_group_completeness:
-    type: float
+    type: number
+    format: float
   run_id:
     type: string
     format: uuid

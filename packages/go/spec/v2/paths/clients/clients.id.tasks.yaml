@@ -1,23 +1,49 @@
-get:
+parameters:
+  - $ref: './../../parameters/header/prefer.yaml'
+  - name: client_id
+    description: Client ID
+    in: path
+    required: true
+    schema:
+      type: string
+      format: uuid
+
+post:
+  operationId: CreateClientScheduledTask
   deprecated: true
-  description: Creates a new scheduled job.
+  summary: Creates a scheduled task
+  description: Creates a new scheduled task
   tags:
     - Clients API
     - Enterprise
-  summary: Creates a scheduled job
   parameters:
     - $ref: './../../parameters/header/prefer.yaml'
-    - type: string
-      description: Client ID
-      name: client_id
-      in: path
-      required: true
+  requestBody:
+    description: The request body for creating a scheduled task
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: './../../schemas/model/client-scheduled-job.yaml'
   responses:
     200:
       description: OK
       content:
         application/json:
           schema:
-            $ref: "#/definitions/api.BasicResponse"
-    default:
-      $ref: './../../responses/error-response.yaml'
+            type: object
+            properties:
+              data:
+                $ref: './../../schemas/model/client-scheduled-job.yaml'
+    400:
+      $ref: './../../responses/bad-request.yaml'
+    401:
+      $ref: './../../responses/unauthorized.yaml'
+    403:
+      $ref: './../../responses/forbidden.yaml'
+    404:
+      $ref: './../../responses/not-found.yaml'
+    429:
+      $ref: './../../responses/too-many-requests.yaml'
+    500:
+      $ref: './../../responses/internal-server-error.yaml'

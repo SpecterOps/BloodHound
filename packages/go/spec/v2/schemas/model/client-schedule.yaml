@@ -9,39 +9,29 @@ properties:
     readOnly: true
   rrule:
     type: string
-    readOnly: true
   session_collection:
     type: boolean
-    readOnly: true
   local_group_collection:
     type: boolean
-    readOnly: true
   ad_structure_collection:
     type: boolean
-    readOnly: true
   cert_services_collection:
     type: boolean
-    readOnly: true
   ca_registry_collection:
     type: boolean
-    readOnly: true
   dc_registry_collection:
     type: boolean
-    readOnly: true
   all_trusted_domains:
     type: boolean
-    readOnly: true
   next_scheduled_at:
     type: string
     format: date-time
     readOnly: true
   ous:
     type: array
-    readOnly: true
     items:
       type: string
   domains:
     type: array
-    readOnly: true
     items:
       type: string

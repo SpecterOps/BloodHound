@@ -1,18 +1,20 @@
+parameters:
+  - $ref: './../../parameters/header/prefer.yaml'
 put:
-  description: Pokes the analysis service
+  operationId: StartAnalysis
+  summary: Start analysis
+  description: Starts generating attack paths
   tags:
     - Attack Paths API
     - Enterprise
-  summary: Starts generating attack paths
-  parameters:
-    - $ref: './../../parameters/header/prefer.yaml'
   responses:
-    200:
-      description: OK
-      content:
-        application/json:
-          schema:
-            type: object
-            additionalProperties: true
-    default:
-      $ref: './../../responses/error-response.yaml'
+    202:
+      $ref: './../../responses/success-empty.yaml'
+    401:
+      $ref: './../../responses/unauthorized.yaml'
+    403:
+      $ref: './../../responses/forbidden.yaml'
+    429:
+      $ref: './../../responses/too-many-requests.yaml'
+    500:
+      $ref: './../../responses/internal-server-error.yaml'

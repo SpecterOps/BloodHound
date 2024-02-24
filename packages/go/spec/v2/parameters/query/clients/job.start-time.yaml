@@ -1,0 +1,4 @@
+name: start_time
+in: query
+schema:
+  $ref: './../../../schemas/api/params/predicate/filter.time.yaml'

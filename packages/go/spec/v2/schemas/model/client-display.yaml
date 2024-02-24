@@ -1,36 +1,44 @@
+allOf:
+  - $ref: './components/uuid.yaml'
 type: object
 properties:
-  completed_job_count:
-    type: integer
-  completed_task_count:
-    type: integer
-  configured_user:
+  name:
     type: string
-  current_job:
-    "$ref": "#/definitions/model.ClientJobDisplay"
-  current_task:
-    "$ref": "#/definitions/model.ClientJobDisplay"
-  current_job_id:
-    "$ref": "#/definitions/null.Int64"
-  current_task_id:
-    "$ref": "#/definitions/null.Int64"
-  domain_controller:
-    "$ref": "#/definitions/null.String"
-  events:
-    type: array
-    items:
-      "$ref": "#/definitions/model.ClientScheduleDisplay"
+  ip_address:
+    type: string
+    format: ipv4
   hostname:
     type: string
-  id:
-    type: string
-  ingest_counter:
-    type: integer
-  ip_address:
+  configured_user:
     type: string
   last_checkin:
     type: string
-  name:
-    type: string
+    format: date-time
+  events: # schedules
+    type: array
+    items:
+      $ref: "./client-schedule-display.yaml"
   token:
-    "$ref": "#/definitions/model.AuthToken"
+    $ref: './auth-token.yaml'
+  current_job_id:
+    $ref: './../null/int64.yaml'
+  current_task_id:
+    $ref: './../null/int64.yaml'
+  current_job:
+    $ref: './client-scheduled-job-display.yaml'
+  current_task:
+    $ref: './client-scheduled-job-display.yaml'
+  completed_job_count:
+    type: integer
+    format: int32
+  completed_task_count:
+    type: integer
+    format: int32
+  domain_controller:
+    $ref: './../null/string.yaml'
+  version:
+    type: string
+  user_sid:
+    $ref: './../null/string.yaml'
+  type:
+    $ref: './../enum/client-type.yaml'

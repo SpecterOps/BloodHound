@@ -1,0 +1,4 @@
+name: log_path
+in: query
+schema:
+  $ref: './../../../schemas/api/params/predicate/filter.string.yaml'

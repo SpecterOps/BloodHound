@@ -1,23 +1,39 @@
 parameters:
-  - type: string
+  - $ref: './../../parameters/header/prefer.yaml'
+  - name: job_id
     description: Job ID
-    name: job_id
     in: path
     required: true
+    schema:
+      type: integer
+      format: int64
 get:
+  operationId: GetClientJobLog
+  summary: Get Job Log File
   description: Get the log file from a SharpHound run
   tags:
     - Jobs API
     - Enterprise
-  summary: Get Job Log File
-  parameters:
-    - $ref: './../../parameters/header/prefer.yaml'
   responses:
     200:
       description: OK
       content:
         application/json:
           schema:
-            $ref: "#/definitions/api.ResponseWrapper"
-    default:
-      $ref: './../../responses/error-response.yaml'
+            type: object
+            properties:
+              data:
+                type: object
+                properties:
+                  log:
+                    type: string
+    401:
+      $ref: './../../responses/unauthorized.yaml'
+    403:
+      $ref: './../../responses/forbidden.yaml'
+    404:
+      $ref: './../../responses/not-found.yaml'
+    429:
+      $ref: './../../responses/too-many-requests.yaml'
+    500:
+      $ref: './../../responses/internal-server-error.yaml'

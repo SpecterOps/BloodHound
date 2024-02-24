@@ -1,84 +1,79 @@
+parameters:
+  - $ref: './../../parameters/header/prefer.yaml'
 get:
+  operationId: GetPostureStats
+  summary: Get Posture Statistics
   description: Gets the history of database stats saved in the database
   tags:
     - QA
     - Enterprise
-  summary: Get Posture Statistics
   parameters:
-    - $ref: './../../parameters/header/prefer.yaml'
-    - type: string
-      description: Sort by column. Can be used multiple times; prepend hyphen for
-        descending order. Sortable columns are domain_sid, exposure_index, tier_zero_count,
-        critical_risk_count, id, created_at, updated_at, deleted_at.
-      name: sort_by
+    - name: sort_by
+      description: Sortable columns are `domain_sid`, `exposure_index`, `tier_zero_count`,
+        `critical_risk_count`, `id`, `created_at`, `updated_at`, `deleted_at`.
       in: query
-      required: false
-    - type: string
+      schema:
+        $ref: './../../schemas/api/params/predicate/sort-by.yaml'
+    - name: from
+      deprecated: true
       description: Lower bound for created_at; to return posture stats starting at
         a specific date/time
-      name: from
       in: query
-      required: false
-    - type: string
+      schema:
+        type: string
+        format: date-time
+    - name: to
+      deprecated: true
       description: Upper bound for created_at; to return posture stats upto a specific
         date/time
-      name: to
       in: query
-      required: false
-    - type: string
-      description: Filter results by column value. Valid filter predicates are eq,
-        neq
-      name: domain_sid
+      schema:
+        type: string
+        format: date-time
+    - name: domain_sid
       in: query
-      required: false
-    - type: string
-      description: Filter results by column value. Valid filter predicates are eq,
-        neq, gt, lt, lte, gte
-      name: exposure_index
+      schema:
+        $ref: './../../schemas/api/params/predicate/filter.string.yaml'
+    - name: exposure_index
       in: query
-      required: false
-    - type: string
-      description: Filter results by column value. Valid filter predicates are eq,
-        neq, gt, gte, lt, lte
-      name: tier_zero_count
+      schema:
+        $ref: './../../schemas/api/params/predicate/filter.integer.yaml'
+    - name: tier_zero_count
       in: query
-      required: false
-    - type: string
-      description: Filter results by column value. Valid filter predicates are eq,
-        neq, gt, gte, lt, lte
-      name: critical_risk_count
+      schema:
+        $ref: './../../schemas/api/params/predicate/filter.integer.yaml'
+    - name: critical_risk_count
       in: query
-      required: false
-    - type: string
-      description: Filter results by column value. Valid filter predicates are eq,
-        neq, gt, gte, lt, lte
-      name: id
+      schema:
+        $ref: './../../schemas/api/params/predicate/filter.integer.yaml'
+    - name: id
       in: query
-      required: false
-    - type: string
-      description: Filter results by column value. Valid filter predicates are eq,
-        neq, gt, gte, lt, lte
-      name: created_at
-      in: query
-      required: false
-    - type: string
-      description: Filter results by column value. Valid filter predicates are eq,
-        neq, gt, gte, lt, lte
-      name: updated_at
-      in: query
-      required: false
-    - type: string
-      description: Filter results by column value. Valid filter predicates are eq,
-        neq, gt, gte, lt, lte
-      name: deleted_at
-      in: query
-      required: false
+      schema:
+        $ref: './../../schemas/api/params/predicate/filter.integer.yaml'
   responses:
     200:
       description: OK
       content:
         application/json:
           schema:
-            $ref: "#/definitions/api.BasicResponse"
-    default:
-      $ref: './../../responses/error-response.yaml'
+            allOf:
+              - $ref: './../../schemas/api/response/pagination.yaml'
+              - $ref: './../../schemas/api/response/time-window.yaml'
+              - type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: './../../schemas/model/risk-posture-stat.yaml'
+    400:
+      $ref: './../../responses/bad-request.yaml'
+    401:
+      $ref: './../../responses/unauthorized.yaml'
+    403:
+      $ref: './../../responses/forbidden.yaml'
+    404:
+      $ref: './../../responses/not-found.yaml'
+    429:
+      $ref: './../../responses/too-many-requests.yaml'
+    500:
+      $ref: './../../responses/internal-server-error.yaml'

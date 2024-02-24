@@ -16,29 +16,6 @@
 
 import React, { Suspense } from 'react';
 import { GraphProgress } from '../../components';
-// import { HideEditionTagsPlugin } from './swagger/HideEditionTagsPlugin';
-// import { OperationsFilterPlugin } from './swagger/OperationsFilterPlugin';
-// import { OperationsLayoutPlugin } from './swagger/OperationsLayoutPlugin';
-// import 'swagger-ui-react/swagger-ui.css';
-// import { OperationsEditionPlugin } from './swagger/OperationsEditionPlugin';
-//
-// const SwaggerUI = React.lazy(() => import('swagger-ui-react'));
-//
-// const authInterceptor = (req: any) => {
-//     const state = localStorage.getItem('persistedState');
-//     if (state) {
-//         try {
-//             const persistedState = JSON.parse(state);
-//             const token = persistedState?.auth?.sessionToken;
-//             if (token) {
-//                 req.headers.Authorization = `Bearer ${token}`;
-//             }
-//         } catch (e) {
-//             // no-op; couldn't parse persistedState
-//         }
-//     }
-//     return req;
-// };
 
 const RedocStandalone = React.lazy(() => import('redoc').then((module) => ({ default: module.RedocStandalone })));
 
@@ -54,18 +31,6 @@ const ApiExplorer: React.FC = () => {
                     expandResponses: '200'
                 }}
             />
-            {/*<SwaggerUI*/}
-            {/*    url='/api/v2/spec/openapi.yaml'*/}
-            {/*    requestInterceptor={authInterceptor}*/}
-            {/*    plugins={[*/}
-            {/*        HideEditionTagsPlugin,*/}
-            {/*        OperationsLayoutPlugin,*/}
-            {/*        OperationsFilterPlugin,*/}
-            {/*        OperationsEditionPlugin,*/}
-            {/*    ]}*/}
-            {/*    layout='OperationsLayout'*/}
-            {/*    filter={true}*/}
-            {/*/>*/}
         </Suspense>
     );
 };

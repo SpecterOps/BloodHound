@@ -1,23 +1,37 @@
 parameters:
-  - type: string
+  - $ref: './../../parameters/header/prefer.yaml'
+  - name: client_id
     description: Client ID
-    name: client_id
     in: path
     required: true
+    schema:
+      type: string
+      format: uuid
+
 put:
+  operationId: ReplaceClientToken
+  summary: Regenerate the authentication token for a client
   description: Regenerate the authentication token for a client
   tags:
     - Clients API
     - Enterprise
-  summary: Regenerate the authentication token for a client
-  parameters:
-    - $ref: './../../parameters/header/prefer.yaml'
   responses:
     200:
       description: OK
       content:
         application/json:
           schema:
-            $ref: "#/definitions/api.ResponseWrapper"
-    default:
-      $ref: './../../responses/error-response.yaml'
+            type: object
+            properties:
+              data:
+                $ref: './../../schemas/model/auth-token.yaml'
+    401:
+      $ref: './../../responses/unauthorized.yaml'
+    403:
+      $ref: './../../responses/forbidden.yaml'
+    404:
+      $ref: './../../responses/not-found.yaml'
+    429:
+      $ref: './../../responses/too-many-requests.yaml'
+    500:
+      $ref: './../../responses/internal-server-error.yaml'

@@ -1,26 +1,50 @@
+parameters:
+  - $ref: './../../parameters/header/prefer.yaml'
 put:
-  description: 'Endpoint for clients to update their own information at startup.
-      Note: caller must be a client. For users, this endpoint will return a 404 as
-      they are not expected or allowed to call this endpoint.'
+  summary: Update Client Values
+  description: |
+    Endpoint for clients to update their own information at startup.
+
+    Note: caller must be a client. For users, this endpoint will return a 404 as
+    they are not expected or allowed to call this endpoint.
   tags:
     - Clients API
     - Enterprise
-  summary: Update Client Values
-  parameters:
-    - $ref: './../../parameters/header/prefer.yaml'
   requestBody:
     description: The request body for updating a client
     required: true
     content:
       application/json:
         schema:
-          $ref: "#/definitions/v2.ClientUpdateSelfRequest"
+          type: object
+          properties:
+            address:
+              type: string
+            hostname:
+              type: string
+            username:
+              type: string
+            version:
+              type: string
+            usersid:
+              type: string
   responses:
     200:
       description: OK
       content:
         application/json:
           schema:
-            $ref: "#/definitions/api.BasicResponse"
-    default:
-      $ref: './../../responses/error-response.yaml'
+            type: object
+            properties:
+              data:
+                $ref: './../../schemas/model/client.yaml'
+    400:
+      $ref: './../../responses/bad-request.yaml'
+    401:
+      $ref: './../../responses/unauthorized.yaml'
+    403:
+      $ref: './../../responses/forbidden.yaml'
+    404:
+      $ref: './../../responses/not-found.yaml'
+    500:
+      $ref: './../../responses/internal-server-error.yaml'

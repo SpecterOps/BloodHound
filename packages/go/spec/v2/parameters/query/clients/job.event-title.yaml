@@ -1,0 +1,4 @@
+name: event_title
+in: query
+schema:
+  $ref: './../../../schemas/api/params/predicate/filter.string.yaml'

@@ -1,0 +1,6 @@
+type: string
+enum:
+  - accepted
+  - unaccepted
+  - all
+  - ''

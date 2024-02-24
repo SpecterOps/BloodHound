@@ -1,19 +1,33 @@
+parameters:
+  - $ref: './../../parameters/header/prefer.yaml'
 get:
-  description: 'Get the status of the current client. Note: caller must be a client.
-      For users, this endpoint will return a 404 as they are not expected or allowed
-      to call this endpoint.'
+  operationId: GetClientCurrentJob
+  summary: Get client current job
+  description: |
+    Gets the current job for the authenticated client.
+
+    Note: caller must be a client. For users, this endpoint will return a 404 as
+    they are not expected or allowed to call this endpoint.
   tags:
     - Jobs API
     - Enterprise
-  summary: Get client job status
-  parameters:
-    - $ref: './../../parameters/header/prefer.yaml'
   responses:
     200:
       description: OK
       content:
         application/json:
           schema:
-            $ref: "#/definitions/model.DisplayClientScheduledJob"
-    default:
-      $ref: './../../responses/error-response.yaml'
+            type: object
+            properties:
+              data:
+                $ref: './../../schemas/model/client-scheduled-job-display.yaml'
+    400:
+      $ref: './../../responses/bad-request.yaml'
+    401:
+      $ref: './../../responses/unauthorized.yaml'
+    403:
+      $ref: './../../responses/forbidden.yaml'
+    404:
+      $ref: './../../responses/not-found.yaml'
+    500:
+      $ref: './../../responses/internal-server-error.yaml'

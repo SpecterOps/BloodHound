@@ -1,0 +1,4 @@
+name: local_group_collection
+in: query
+schema:
+  $ref: './../../../schemas/api/params/predicate/filter.boolean.yaml'

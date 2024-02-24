@@ -1,20 +1,40 @@
+parameters:
+  - $ref: './../../parameters/header/prefer.yaml'
 post:
-  description: Logs a client enumeration error
+  operationId: LogClientError
+  summary: Client Error
+  description: |
+    Endpoint for clients to log enumeration errors.
+
+    Note: caller must be a client. For users, this endpoint will return a 404 as
+    they are not expected or allowed to call this endpoint.
   tags:
     - Clients API
     - Enterprise
-  summary: Client Error
-  parameters:
-    - $ref: './../../parameters/header/prefer.yaml'
   requestBody:
     description: The request body for logging a client enumeration error
     required: true
     content:
       application/json:
         schema:
-          $ref: "#/definitions/v2.ClientErrorRequest"
+          type: object
+          properties:
+            task_error:
+              type: string
+            additional:
+              type: object
+              additionalProperties:
+                type: string
   responses:
-    '202':
-      description: Accepted
-    default:
-      $ref: './../../responses/error-response.yaml'
+    202:
+      $ref: './../../responses/success-empty.yaml'
+    400:
+      $ref: './../../responses/bad-request.yaml'
+    401:
+      $ref: './../../responses/unauthorized.yaml'
+    403:
+      $ref: './../../responses/forbidden.yaml'
+    404:
+      $ref: './../../responses/not-found.yaml'
+    500:
+      $ref: './../../responses/internal-server-error.yaml'

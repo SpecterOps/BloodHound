@@ -35,9 +35,12 @@ properties:
       - $ref: './../null/int64.yaml'
       - readOnly: true
   current_job:
-    $ref: './client-scheduled-job.yaml'
+    allOf:
+      - $ref: './client-scheduled-job.yaml'
+      - readOnly: true
   completed_job_count:
     type: integer
+    format: int32
     readOnly: true
   domain_controller:
     allOf:

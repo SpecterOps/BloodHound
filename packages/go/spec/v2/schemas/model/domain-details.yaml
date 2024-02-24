@@ -1,10 +1,6 @@
+allOf:
+  - $ref: './components/base-ad-entity.yaml'
 type: object
 properties:
-  name:
-    type: string
-  objectid:
-    type: string
-  exists:
-    type: string
   type:
     type: string

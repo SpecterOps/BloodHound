@@ -1,150 +1,136 @@
+parameters:
+  - $ref: './../../parameters/header/prefer.yaml'
 get:
-  description: Lists available clients for processing collection events
+  operationId: ListClients
+  summary: List Clients
+  description: Lists available clients for processing collection events.
   tags:
     - Clients API
     - Enterprise
-  summary: List Clients
   parameters:
-    - $ref: './../../parameters/header/prefer.yaml'
-    - type: string
-      description: Sort by column. Can be used multiple times; prepend hyphen for
-        descending order. Sortable columns are name, ip_address, hostname, configured_user,
-        last_checkin, completed_job_count, id, created_at, updated_at, deleted_at.
-      name: sort_by
+    - $ref: './../../parameters/query/created-at.yaml'
+    - $ref: './../../parameters/query/updated-at.yaml'
+    - $ref: './../../parameters/query/deleted-at.yaml'
+    - $ref: './../../parameters/query/clients/hydrate-domains.yaml'
+    - $ref: './../../parameters/query/clients/hydrate-ous.yaml'
+    - $ref: './../../parameters/query/skip.yaml'
+    - $ref: './../../parameters/query/limit.yaml'
+    - name: sort_by
+      description: Sortable columns are `name`, `ip_address`, `hostname`, `configured_user`,
+        `last_checkin`, `completed_job_count`, `created_at`, `updated_at`, `deleted_at`.
       in: query
-      required: false
-    - type: string
-      description: Filter results by column value. Valid filter predicates are eq,
-        neq
-      name: name
+      schema:
+        $ref: './../../schemas/api/params/predicate/sort-by.yaml'
+    - name: name
       in: query
-      required: false
-    - type: string
-      description: Filter results by column value. Valid filter predicates are eq,
-        neq
-      name: ip_address
+      schema:
+        $ref: './../../schemas/api/params/predicate/filter.string.yaml'
+    - name: ip_address
       in: query
-      required: false
-    - type: string
-      description: Filter results by column value. Valid filter predicates are eq,
-        neq
-      name: hostname
+      schema:
+        $ref: './../../schemas/api/params/predicate/filter.string.yaml'
+    - name: hostname
       in: query
-      required: false
-    - type: string
-      description: Filter results by column value. Valid filter predicates are eq,
-        neq
-      name: configured_user
+      schema:
+        $ref: './../../schemas/api/params/predicate/filter.string.yaml'
+    - name: configured_user
       in: query
-      required: false
-    - type: string
-      description: Filter results by column value. Valid filter predicates are eq,
-        neq
-      name: version
+      schema:
+        $ref: './../../schemas/api/params/predicate/filter.string.yaml'
+    - name: version
       in: query
-      required: false
-    - type: string
-      description: Filter results by column value. Valid filter predicates are eq,
-        neq
-      name: user_sid
+      schema:
+        $ref: './../../schemas/api/params/predicate/filter.string.yaml'
+    - name: user_sid
       in: query
-      required: false
-    - type: string
-      description: Filter results by column value. Valid filter predicates are eq,
-        neq, gt, gte, lt, lte
-      name: last_checkin
+      schema:
+        $ref: './../../schemas/api/params/predicate/filter.string.yaml'
+    - name: last_checkin
       in: query
-      required: false
-    - type: string
-      description: Filter results by column value. Valid filter predicates are eq,
-        neq, gt, gte, lt, lte
-      name: current_job_id
+      schema:
+        $ref: './../../schemas/api/params/predicate/filter.string.yaml'
+    - name: current_job_id
       in: query
-      required: false
-    - type: string
-      description: Filter results by column value. Valid filter predicates are eq,
-        neq, gt, gte, lt, lte
-      name: completed_job_count
+      schema:
+        $ref: './../../schemas/api/params/predicate/filter.integer.yaml'
+    - name: completed_job_count
       in: query
-      required: false
-    - type: string
-      description: Filter results by column value. Valid filter predicates are eq,
-        neq
-      name: domain_controller
+      schema:
+        $ref: './../../schemas/api/params/predicate/filter.integer.yaml'
+    - name: domain_controller
       in: query
-      required: false
-    - type: string
-      description: Filter results by column value. Valid filter predicates are eq,
-        neq, gt, gte, lt, lte
-      name: id
+      schema:
+        $ref: './../../schemas/api/params/predicate/filter.string.yaml'
+    - name: id
       in: query
-      required: false
-    - type: string
-      description: Filter results by column value. Valid filter predicates are eq,
-        neq, gt, gte, lt, lte
-      name: created_at
-      in: query
-      required: false
-    - type: string
-      description: Filter results by column value. Valid filter predicates are eq,
-        neq, gt, gte, lt, lte
-      name: updated_at
-      in: query
-      required: false
-    - type: string
-      description: Filter results by column value. Valid filter predicates are eq,
-        neq, gt, gte, lt, lte
-      name: deleted_at
-      in: query
-      required: false
-    - type: string
-      description: Valid values are `true` or `false` and defaults to `true`. When
-        a value of `true` is passed, any domains associated with scheduled and finished
-        jobs for each client will have expanded properties including `name` and `type`.
-        When a value of `false` is passed, these same domains will only return as
-        a list of `objectid`s.
-      name: hydrate_domains
-      in: query
-      required: false
-    - type: string
-      description: Valid values are `true` or `false` and defaults to `true`. When
-        a value of `true` is passed, any OUs associated with scheduled and finished
-        jobs for each client will have expanded properties including `name` and `type`.
-        When a value of `false` is passed, these same OUs will only return as a list
-        of `objectid`s.
-      name: hydrate_ous
-      in: query
-      required: false
+      schema:
+        $ref: './../../schemas/api/params/predicate/filter.uuid.yaml'
   responses:
     200:
       description: OK
       content:
         application/json:
           schema:
-            $ref: "#/definitions/api.BasicResponse"
-    default:
-      $ref: './../../responses/error-response.yaml'
+            allOf:
+              - $ref: './../../schemas/api/response/pagination.yaml'
+              - type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: './../../schemas/model/client-display.yaml'
+    400:
+      $ref: './../../responses/bad-request.yaml'
+    401:
+      $ref: './../../responses/unauthorized.yaml'
+    403:
+      $ref: './../../responses/forbidden.yaml'
+    429:
+      $ref: './../../responses/too-many-requests.yaml'
+    500:
+      $ref: './../../responses/internal-server-error.yaml'
 post:
+  operationId: CreateClient
+  summary: Create Client
   description: Creates a client for collection events
   tags:
     - Clients API
     - Enterprise
-  summary: Create Client
-  parameters:
-    - $ref: './../../parameters/header/prefer.yaml'
   requestBody:
     description: The request body for creating a client
     required: true
     content:
       application/json:
         schema:
-          $ref: "#/definitions/v2.ClientCreateRequest"
+          type: object
+          properties:
+            name:
+              type: string
+            domain_controller:
+              type: string
+            type:
+              $ref: './../../schemas/enum/client-type.yaml'
+            events:
+              type: array
+              items:
+                $ref: './../../schemas/model/client-schedule.yaml'
   responses:
     200:
       description: OK
       content:
         application/json:
           schema:
-            $ref: "#/definitions/api.BasicResponse"
-    default:
-      $ref: './../../responses/error-response.yaml'
+            type: object
+            properties:
+              data:
+                $ref: './../../schemas/model/client.yaml'
+    400:
+      $ref: './../../responses/bad-request.yaml'
+    401:
+      $ref: './../../responses/unauthorized.yaml'
+    403:
+      $ref: './../../responses/forbidden.yaml'
+    429:
+      $ref: './../../responses/too-many-requests.yaml'
+    500:
+      $ref: './../../responses/internal-server-error.yaml'

@@ -1,0 +1,4 @@
+name: last_ingest
+in: query
+schema:
+  $ref: './../../../schemas/api/params/predicate/filter.time.yaml'

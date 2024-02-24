@@ -34,10 +34,10 @@ properties:
   relationships:
     type: integer
   session_completeness:
-    type: float
+    type: number
     format: double
   local_group_completeness:
-    type: float
+    type: number
     format: double
   run_id:
     type: string

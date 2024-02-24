@@ -1,60 +1,102 @@
 parameters:
-  - type: string
+  - $ref: './../../parameters/header/prefer.yaml'
+  - name: client_id
     description: Client ID
-    name: client_id
     in: path
     required: true
+    schema:
+      type: string
+      format: uuid
+
 get:
+  operationId: GetClient
+  summary: Get Client
   description: Gets given client for processing collection events
   tags:
     - Clients API
     - Enterprise
-  summary: Retrieve Client
-  parameters:
-    - $ref: './../../parameters/header/prefer.yaml'
   responses:
     200:
       description: OK
       content:
         application/json:
           schema:
-            $ref: "#/definitions/api.BasicResponse"
-    default:
-      $ref: './../../responses/error-response.yaml'
+            type: object
+            properties:
+              data:
+                $ref: './../../schemas/model/client-display.yaml'
+    400:
+      $ref: './../../responses/bad-request.yaml'
+    401:
+      $ref: './../../responses/unauthorized.yaml'
+    403:
+      $ref: './../../responses/forbidden.yaml'
+    404:
+      $ref: './../../responses/not-found.yaml'
+    429:
+      $ref: './../../responses/too-many-requests.yaml'
+    500:
+      $ref: './../../responses/internal-server-error.yaml'
+
 put:
+  operationId: UpdateClient
+  summary: Update Client
   description: Update a client for processing collection events
   tags:
     - Clients API
     - Enterprise
-  summary: Update Client
-  parameters:
-    - $ref: './../../parameters/header/prefer.yaml'
   requestBody:
     description: The request body for updating a client
     required: true
     content:
       application/json:
         schema:
-          $ref: "#/definitions/v2.ClientUpdateRequest"
+          type: object
+          properties:
+            name:
+              type: string
+            domain_controller:
+              type: string
   responses:
     200:
       description: OK
       content:
         application/json:
           schema:
-            $ref: "#/definitions/api.BasicResponse"
-    default:
-      $ref: './../../responses/error-response.yaml'
+            type: object
+            properties:
+              data:
+                $ref: './../../schemas/model/client.yaml'
+    400:
+      $ref: './../../responses/bad-request.yaml'
+    401:
+      $ref: './../../responses/unauthorized.yaml'
+    403:
+      $ref: './../../responses/forbidden.yaml'
+    404:
+      $ref: './../../responses/not-found.yaml'
+    429:
+      $ref: './../../responses/too-many-requests.yaml'
+    500:
+      $ref: './../../responses/internal-server-error.yaml'
+
 delete:
+  operationId: DeleteClient
+  summary: Delete Client
   description: Delete a client for processing collection events
   tags:
     - Clients API
     - Enterprise
-  summary: Delete Client
-  parameters:
-    - $ref: './../../parameters/header/prefer.yaml'
   responses:
     200:
-      description: OK
-    default:
-      $ref: './../../responses/error-response.yaml'
+      $ref: './../../responses/success-empty.yaml'
+    401:
+      $ref: './../../responses/unauthorized.yaml'
+    403:
+      $ref: './../../responses/forbidden.yaml'
+    404:
+      $ref: './../../responses/not-found.yaml'
+    429:
+      $ref: './../../responses/too-many-requests.yaml'
+    500:
+      $ref: './../../responses/internal-server-error.yaml'

@@ -1,35 +1,49 @@
 parameters:
-  - type: string
+  - $ref: './../../parameters/header/prefer.yaml'
+  - name: domain_id
     description: Domain ID
-    name: domain_id
     in: path
     required: true
+    schema:
+      type: string
 get:
+  operationId: ListAvailableAttackPathTypesForDomain
+  summary: List available attack paths
   description: Lists available attack path types for a domain
   tags:
     - Attack Paths API
     - Enterprise
-  summary: List available attack paths
   parameters:
-    - $ref: './../../parameters/header/prefer.yaml'
-    - type: string
-      description: Sort by column. Can be used multiple times; prepend hyphen for
-        descending order. Sortable columns are [finding]
-      name: sort_by
+    - name: sort_by
+      description: Sort by column. The only sortable column is `finding`.
       in: query
-      required: false
-    - type: string
-      description: Filter results by column value. Valid filter predicates are eq,
-        neq. Filterable columns are [finding]
-      name: finding
+      schema:
+        $ref: './../../schemas/api/params/predicate/sort-by.yaml'
+    - name: finding
       in: query
-      required: false
+      schema:
+        $ref: './../../schemas/api/params/predicate/filter.string.yaml'
   responses:
     200:
       description: OK
       content:
         application/json:
           schema:
-            $ref: "#/definitions/api.BasicResponse"
-    default:
-      $ref: './../../responses/error-response.yaml'
+            type: object
+            properties:
+              data:
+                type: array
+                items:
+                  type: string
+    400:
+      $ref: './../../responses/bad-request.yaml'
+    401:
+      $ref: './../../responses/unauthorized.yaml'
+    403:
+      $ref: './../../responses/forbidden.yaml'
+    404:
+      $ref: './../../responses/not-found.yaml'
+    429:
+      $ref: './../../responses/too-many-requests.yaml'
+    500:
+      $ref: './../../responses/internal-server-error.yaml'

@@ -48,9 +48,7 @@ properties:
   all_trusted_domains:
     type: boolean
   domain_controller:
-    allOf:
-      - $ref: './../null/string.yaml'
-      - readOnly: true
+    $ref: './../null/string.yaml'
   event_title:
     type: string
     readOnly: true
