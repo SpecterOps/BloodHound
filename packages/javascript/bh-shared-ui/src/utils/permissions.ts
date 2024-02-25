@@ -13,41 +13,112 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-export class Permission {
-    private constructor(private readonly authority: string, private readonly name: string) {
-        this.name = name;
-        this.authority = authority;
-    }
-
-    get() {
-        return {
-            name: this.name,
-            authority: this.authority,
-        };
-    }
-
-    static readonly APP_READ_APPLICATION_CONFIGURATION = new Permission('app', 'ReadAppConfig');
-    static readonly APP_WRITE_APPLICATION_CONFIGURATION = new Permission('app', 'WriteAppConfig');
-
-    static readonly APS_GENERATE_REPORT = new Permission('risks', 'GenerateReport');
-    static readonly APS_MANAGE_APS = new Permission('risks', 'ManageRisks');
-
-    static readonly AUTH_ACCEPT_EULA = new Permission('auth', 'AcceptEULA');
-    static readonly AUTH_CREATE_TOKEN = new Permission('auth', 'CreateToken');
-    static readonly AUTH_MANAGE_APPLICATION_CONFIGURATIONS = new Permission('auth', 'ManageAppConfig');
-    static readonly AUTH_MANAGE_PROVIDERS = new Permission('auth', 'ManageProviders');
-    static readonly AUTH_MANAGE_SELF = new Permission('auth', 'ManageSelf');
-    static readonly AUTH_MANAGE_USERS = new Permission('auth', 'ManageUsers');
-
-    static readonly CLIENTS_MANAGE = new Permission('clients', 'Manage');
-    static readonly CLIENTS_READ = new Permission('clients', 'Read');
-    static readonly CLIENTS_TASKING = new Permission('clients', 'Tasking');
-
-    static readonly COLLECTION_MANAGE_JOBS = new Permission('collection', 'ManageJobs');
-
-    static readonly GRAPH_DB_READ = new Permission('graphdb', 'Read');
-    static readonly GRAPH_DB_WRITE = new Permission('graphdb', 'Write');
-
-    static readonly SAVED_QUERIES_READ = new Permission('saved_queries', 'Read');
-    static readonly SAVED_QUERIES_WRITE = new Permission('saved_queries', 'Write');
+export enum Permission {
+    APP_READ_APPLICATION_CONFIGURATION,
+    APP_WRITE_APPLICATION_CONFIGURATION,
+    APS_GENERATE_REPORT,
+    APS_MANAGE_APS,
+    AUTH_ACCEPT_EULA,
+    AUTH_CREATE_TOKEN,
+    AUTH_MANAGE_APPLICATION_CONFIGURATIONS,
+    AUTH_MANAGE_PROVIDERS,
+    AUTH_MANAGE_SELF,
+    AUTH_MANAGE_USERS,
+    CLIENTS_MANAGE,
+    CLIENTS_READ,
+    CLIENTS_TASKING,
+    COLLECTION_MANAGE_JOBS,
+    GRAPH_DB_READ,
+    GRAPH_DB_WRITE,
+    SAVED_QUERIES_READ,
+    SAVED_QUERIES_WRITE,
+    FAKE_PERMISSION,
 }
+
+export type PermissionDefinition = {
+    authority: string;
+    name: string;
+};
+
+export type PermissionDefinitions = {
+    [index: number]: PermissionDefinition;
+};
+
+export const PERMISSIONS: PermissionDefinitions = {
+    [Permission.APP_READ_APPLICATION_CONFIGURATION]: {
+        authority: 'app',
+        name: 'ReadAppConfig',
+    },
+    [Permission.APP_WRITE_APPLICATION_CONFIGURATION]: {
+        authority: 'app',
+        name: 'WriteAppConfig',
+    },
+    [Permission.APS_GENERATE_REPORT]: {
+        authority: 'risks',
+        name: 'GenerateReport',
+    },
+    [Permission.APS_MANAGE_APS]: {
+        authority: 'risks',
+        name: 'ManageRisks',
+    },
+    [Permission.AUTH_ACCEPT_EULA]: {
+        authority: 'auth',
+        name: 'AcceptEULA',
+    },
+    [Permission.AUTH_CREATE_TOKEN]: {
+        authority: 'auth',
+        name: 'CreateToken',
+    },
+    [Permission.AUTH_MANAGE_APPLICATION_CONFIGURATIONS]: {
+        authority: 'auth',
+        name: 'ManageAppConfig',
+    },
+    [Permission.AUTH_MANAGE_PROVIDERS]: {
+        authority: 'auth',
+        name: 'ManageProviders',
+    },
+    [Permission.AUTH_MANAGE_SELF]: {
+        authority: 'auth',
+        name: 'ManageSelf',
+    },
+    [Permission.AUTH_MANAGE_USERS]: {
+        authority: 'auth',
+        name: 'ManageUsers',
+    },
+    [Permission.CLIENTS_MANAGE]: {
+        authority: 'clients',
+        name: 'Manage',
+    },
+    [Permission.CLIENTS_READ]: {
+        authority: 'clients',
+        name: 'Read',
+    },
+    [Permission.CLIENTS_TASKING]: {
+        authority: 'clients',
+        name: 'Tasking',
+    },
+    [Permission.COLLECTION_MANAGE_JOBS]: {
+        authority: 'collection',
+        name: 'ManageJobs',
+    },
+    [Permission.GRAPH_DB_READ]: {
+        authority: 'graphdb',
+        name: 'Read',
+    },
+    [Permission.GRAPH_DB_WRITE]: {
+        authority: 'graphdb',
+        name: 'Write',
+    },
+    [Permission.SAVED_QUERIES_READ]: {
+        authority: 'saved_queries',
+        name: 'Read',
+    },
+    [Permission.SAVED_QUERIES_WRITE]: {
+        authority: 'saved_queries',
+        name: 'Write',
+    },
+    [Permission.FAKE_PERMISSION]: {
+        authority: 'fake',
+        name: 'permission',
+    },
+};

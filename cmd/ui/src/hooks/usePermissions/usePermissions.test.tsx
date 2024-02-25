@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Permission } from 'bh-shared-ui';
+import { Permission, PERMISSIONS } from 'bh-shared-ui';
 import { renderHook } from 'src/test-utils';
 import usePermissions, { PermissionsFns } from './usePermissions';
 
@@ -26,7 +26,7 @@ describe('usePermissions', () => {
                     user: {
                         roles: [
                             {
-                                permissions: permissions.map((p) => p.get()),
+                                permissions: permissions.map((p) => PERMISSIONS[p]),
                             },
                         ],
                     },
@@ -41,7 +41,7 @@ describe('usePermissions', () => {
         Permission.APP_READ_APPLICATION_CONFIGURATION,
     ];
 
-    it('permitted if the user has a required permission', () => {
+    it('passes check if the user has a required permission', () => {
         const permissions = getPermissionsWithUser([Permission.CLIENTS_MANAGE]);
 
         const has = permissions.checkPermission(Permission.CLIENTS_MANAGE);
@@ -53,7 +53,7 @@ describe('usePermissions', () => {
         expect(hasAtLeastOne).toBe(true);
     });
 
-    it('permitted if the user has multiple required permissions', () => {
+    it('passes checks if the user has multiple required permissions', () => {
         const permissions = getPermissionsWithUser(allPermissions);
 
         const hasAll = permissions.checkAllPermissions(allPermissions);
@@ -63,7 +63,7 @@ describe('usePermissions', () => {
         expect(hasAtLeastOne).toBe(true);
     });
 
-    it('denied if the user does not have a matching permission', () => {
+    it('fails checks if the user does not have a matching permission', () => {
         const permissions = getPermissionsWithUser([Permission.CLIENTS_MANAGE]);
 
         const has = permissions.checkPermission(Permission.AUTH_CREATE_TOKEN);
@@ -75,7 +75,7 @@ describe('usePermissions', () => {
         expect(hasAtLeastOne).toBe(false);
     });
 
-    it('returns hasAtLeastOne if the user is missing one of many required permissions', () => {
+    it('passes the check for at least one permission if the user is missing one of many required permissions', () => {
         const permissions = getPermissionsWithUser([
             Permission.APP_READ_APPLICATION_CONFIGURATION,
             Permission.AUTH_CREATE_TOKEN,
@@ -86,5 +86,16 @@ describe('usePermissions', () => {
 
         expect(hasAll).toBe(false);
         expect(hasAtLeastOne).toBe(true);
+    });
+
+    it('returns a list of the users current permissions', () => {
+        const permissions = getPermissionsWithUser(allPermissions);
+        const userPermissionsResult = permissions.getUserPermissions();
+
+        expect(allPermissions.length).toEqual(userPermissionsResult.length);
+
+        for (const permission of allPermissions) {
+            expect(userPermissionsResult).toContain(permission);
+        }
     });
 });
