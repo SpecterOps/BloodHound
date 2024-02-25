@@ -58,14 +58,14 @@ type Driver struct {
 	batchWriteSize            int
 }
 
-func (s *Driver) KindMapper() KindMapper {
-	return s.schemaManager
+func (s *Driver) SetDefaultGraph(ctx context.Context, graphSchema graph.Graph) error {
+	return s.ReadTransaction(ctx, func(tx graph.Transaction) error {
+		return s.schemaManager.SetDefaultGraph(tx, graphSchema)
+	})
 }
 
-func (s *Driver) SetDefaultGraph(ctx context.Context, graphSchema graph.Graph) error {
-	return s.WriteTransaction(ctx, func(tx graph.Transaction) error {
-		return s.schemaManager.AssertDefaultGraph(tx, graphSchema)
-	})
+func (s *Driver) KindMapper() KindMapper {
+	return s.schemaManager
 }
 
 func (s *Driver) SetBatchWriteSize(size int) {
@@ -177,7 +177,13 @@ func (s *Driver) FetchSchema(ctx context.Context) (graph.Schema, error) {
 
 func (s *Driver) AssertSchema(ctx context.Context, schema graph.Schema) error {
 	if err := s.WriteTransaction(ctx, func(tx graph.Transaction) error {
-		return s.schemaManager.AssertSchema(tx, schema)
+		if err := s.schemaManager.AssertSchema(tx, schema); err != nil {
+			return err
+		} else if schema.DefaultGraph.Name != "" {
+			return s.schemaManager.AssertDefaultGraph(tx, schema.DefaultGraph)
+		}
+
+		return nil
 	}, OptionSetQueryExecMode(pgx.QueryExecModeSimpleProtocol)); err != nil {
 		return err
 	} else {
@@ -185,11 +191,7 @@ func (s *Driver) AssertSchema(ctx context.Context, schema graph.Schema) error {
 		s.pool.Reset()
 	}
 
-	if schema.DefaultGraph.Name == "" {
-		return nil
-	}
-
-	return s.SetDefaultGraph(ctx, schema.DefaultGraph)
+	return nil
 }
 
 func (s *Driver) Run(ctx context.Context, query string, parameters map[string]any) error {

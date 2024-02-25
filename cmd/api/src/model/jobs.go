@@ -146,6 +146,10 @@ func ParseJobStatus(jobStatusStr string) (JobStatus, error) {
 	return JobStatusInvalid, fmt.Errorf("no matching job status for: %s", jobStatusStr)
 }
 
+func GetVisibleJobStatuses() []JobStatus {
+	return []JobStatus{JobStatusComplete, JobStatusCanceled, JobStatusTimedOut, JobStatusFailed, JobStatusIngesting, JobStatusAnalyzing, JobStatusPartiallyComplete}
+}
+
 func (s JobStatus) String() string {
 	switch s {
 	case JobStatusReady:

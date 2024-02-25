@@ -27,6 +27,7 @@ import { RankDirection } from 'src/hooks/useLayoutDagre/useLayoutDagre';
 import drawEdgeLabel from 'src/rendering/programs/edge-label';
 import EdgeArrowProgram from 'src/rendering/programs/edge.arrow';
 import CurvedEdgeArrowProgram from 'src/rendering/programs/edge.curvedArrow';
+import SelfEdgeArrowProgram from 'src/rendering/programs/edge.selfArrow';
 import drawHover from 'src/rendering/programs/node-hover';
 import drawLabel from 'src/rendering/programs/node-label';
 import getNodeCombinedProgram from 'src/rendering/programs/node.combined';
@@ -88,7 +89,11 @@ const SigmaChart: FC<Partial<SigmaChartProps>> = ({
                         combined: getNodeCombinedProgram(),
                         glyphs: getNodeGlyphsProgram(),
                     },
-                    edgeProgramClasses: { curved: CurvedEdgeArrowProgram, arrow: EdgeArrowProgram },
+                    edgeProgramClasses: {
+                        curved: CurvedEdgeArrowProgram,
+                        self: SelfEdgeArrowProgram,
+                        arrow: EdgeArrowProgram,
+                    },
                     renderEdgeLabels: true,
                     hoverRenderer: drawHover,
                     edgeLabelRenderer: drawEdgeLabel,

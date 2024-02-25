@@ -1,0 +1,26 @@
+parameters:
+  - $ref: './../../parameters/header/prefer.yaml'
+get:
+  operationId: ListAcceptedFileUploadTypes
+  summary: List accepted file upload types
+  description: List accepted file types for collection file uploads
+  tags:
+    - Collection Uploads
+    - Community
+    - Enterprise
+  responses:
+    200:
+      description: OK
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                type: array
+                items:
+                  type: string
+    401:
+      $ref: './../../responses/unauthorized.yaml'
+    429:
+      $ref: './../../responses/too-many-requests.yaml'

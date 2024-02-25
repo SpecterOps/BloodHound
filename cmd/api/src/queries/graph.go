@@ -440,22 +440,27 @@ func (s *GraphQuery) RawCypherSearch(ctx context.Context, rawCypher string, incl
 
 			return nil
 		}, func(config *graph.TransactionConfig) {
-			// Rely on the context timeout to set our query upper-bound
-			availableRuntime := bhCtxInst.Timeout.Value
+			// The upperbound for this query must be either the custom request timeout, or if it isn't
+			// supplied then 30 minutes- since that's a reasonable duration at which to deem the transaction
+			// as having been stuck in a deadlock or other error
+			availableRuntime := bhCtxInst.Timeout
+			if availableRuntime > 0 {
+				log.Debugf("Available timeout for query is set to: %.2f seconds", availableRuntime.Seconds())
+			} else {
+				availableRuntime = time.Minute * 30
 
-			log.Debugf("Available timeout for query is set to: %.2f seconds", availableRuntime.Seconds())
+				if !s.DisableCypherQC {
+					// The weight of the query is divided by 5 to get a runtime reduction factor. This means that query weights
+					// of 5 or less will get the full runtime duration.
+					if reductionFactor := time.Duration(preparedQuery.complexity.Weight) / 5; reductionFactor > 0 {
+						availableRuntime /= reductionFactor
 
-			if !s.DisableCypherQC && !bhCtxInst.Timeout.UserSet {
-				// The weight of the query is divided by 5 to get a runtime reduction factor. This means that query weights
-				// of 5 or less will get the full runtime duration.
-				if reductionFactor := time.Duration(preparedQuery.complexity.Weight) / 5; reductionFactor > 0 {
-					availableRuntime /= reductionFactor
-
-					log.Infof("Cypher query cost is: %.2f. Reduction factor for query is: %d. Available timeout for query is now set to: %.2f seconds", preparedQuery.complexity.Weight, reductionFactor, availableRuntime.Seconds())
+						log.Infof("Cypher query cost is: %.2f. Reduction factor for query is: %d. Available timeout for query is now set to: %.2f minutes", preparedQuery.complexity.Weight, reductionFactor, availableRuntime.Minutes())
+					}
 				}
 			}
 
-			// Set a sane timeout for this DB interaction
+			// Set the timeout for this DB interaction
 			config.Timeout = availableRuntime
 		})
 	}

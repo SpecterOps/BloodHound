@@ -1,12 +1,13 @@
 parameters:
   - $ref: './../../parameters/header/prefer.yaml'
 get:
+  operationId: ListFileUploadJobs
+  summary: List File Upload Jobs
   description: Lists available file upload jobs
   tags:
     - Collection Uploads
     - Community
     - Enterprise
-  summary: List File Upload Jobs
   parameters:
     - name: sort_by
       description: >

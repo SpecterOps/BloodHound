@@ -43,34 +43,23 @@ const DefaultRateLimit = 55
 //	router.Handle("/teapot", RateLimitHandler(limiter, handler))
 func RateLimitHandler(limiter *limiter.Limiter, handler http.Handler) http.Handler {
 	return http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
+		if err := tollbooth.LimitByRequest(limiter, response, request); err != nil {
+			// In case SetOnLimitReached was called
+			limiter.ExecOnLimitReached(response, request)
 
-		ctx := request.Context()
-		select {
-		case <-ctx.Done():
-			api.WriteErrorResponse(request.Context(), &api.ErrorResponse{
-				HTTPStatus: http.StatusBadRequest,
-				Error:      "client closed the connection before the request could be completed",
-			}, response)
-		default:
-			if err := tollbooth.LimitByRequest(limiter, response, request); err != nil {
-				// In case SetOnLimitReached was called
-				limiter.ExecOnLimitReached(response, request)
-
-				api.WriteErrorResponse(request.Context(), &api.ErrorWrapper{
-					HTTPStatus: err.StatusCode,
-					Timestamp:  time.Now(),
-					RequestID:  request.Header.Get(headers.RequestID.String()),
-					Errors: []api.ErrorDetails{
-						{
-							Context: "middleware",
-							Message: err.Error(),
-						},
+			api.WriteErrorResponse(request.Context(), &api.ErrorWrapper{
+				HTTPStatus: err.StatusCode,
+				Timestamp:  time.Now(),
+				RequestID:  request.Header.Get(headers.RequestID.String()),
+				Errors: []api.ErrorDetails{
+					{
+						Context: "middleware",
+						Message: err.Error(),
 					},
-				}, response)
-			} else {
-				handler.ServeHTTP(response, request)
-			}
-
+				},
+			}, response)
+		} else {
+			handler.ServeHTTP(response, request)
 		}
 	})
 }
