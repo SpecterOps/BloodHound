@@ -142,7 +142,6 @@ security:
     RequestDate: []
     HMACSignature: []
 
-
 ##
 # This section is used by ReDoc to organize endpoint groups in the sidebar.
 # Two top level tag groups help users find Community and Enterprise features.
@@ -267,7 +266,6 @@ paths:
     $ref: './paths/collection-uploads/file-upload.id.end.yaml'
   /api/v2/file-upload/accepted-types:
     $ref: './paths/collection-uploads/file-upload.accepted-types.yaml'
-
 
   # api info
   /api/version:

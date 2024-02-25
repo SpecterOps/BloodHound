@@ -15,6 +15,9 @@
 # SPDX-License-Identifier: Apache-2.0
 
 name: sort_by
+in: query
 description: |
   Sort by column. Can be used multiple times; prepend a hyphen for descending order. Columns available
   for sorting are dependent on the entity object kind.
+schema:
+  $ref: './../../schemas/api/params/predicate/sort-by.yaml'

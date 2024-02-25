@@ -17,7 +17,7 @@
 parameters:
   - $ref: './../../parameters/header/prefer.yaml'
 put:
-  operationId: StartAnalysis
+  operationId: StartAnalysisBhe
   summary: Start analysis
   description: Starts generating attack paths
   tags:

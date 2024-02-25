@@ -28,6 +28,8 @@ get:
     - name: sort_by
       description: Sortable columns are `name`, `description`, `id`, `created_at`, `updated_at`, `deleted_at`.
       in: query
+      schema:
+        $ref: './../../schemas/api/params/predicate/sort-by.yaml'
     - name: name
       in: query
       schema:

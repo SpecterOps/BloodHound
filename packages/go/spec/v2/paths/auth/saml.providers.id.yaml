@@ -20,6 +20,9 @@ parameters:
     name: saml_provider_id
     in: path
     required: true
+    schema:
+      type: integer
+      format: int32
 get:
   operationId: GetSamlProvider
   summary: Get SAML Provider

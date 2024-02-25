@@ -20,6 +20,9 @@ parameters:
     description: Feature ID
     in: path
     required: true
+    schema:
+      type: integer
+      format: int32
 put:
   operationId: ToggleFeatureFlag
   summary: Toggle a feature flag's enabled status to either enable or disable it.

@@ -29,12 +29,16 @@ get:
       description: Search parameter for the name or object ID of a node.
       in: query
       required: true
+      schema:
+        type: string
     - name: type
       description: |
         Node type.
         Some AD examples: `Base`, `User`, `Computer`, `Group`, `Container`.
         Some Azure examples: `AZBase`, `AZApp`, `AZDevice`.
       in: query
+      schema:
+        type: string
     - $ref: './../../parameters/query/skip.yaml'
     - $ref: './../../parameters/query/limit.yaml'
   responses:

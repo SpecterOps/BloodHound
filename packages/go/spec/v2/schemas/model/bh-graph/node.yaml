@@ -71,4 +71,4 @@ properties:
   shape:
     type: string
   size:
-    type: int
+    type: integer

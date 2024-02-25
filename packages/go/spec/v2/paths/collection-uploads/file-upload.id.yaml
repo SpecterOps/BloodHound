@@ -20,6 +20,9 @@ parameters:
     description: The ID for the file upload job.
     in: path
     required: true
+    schema:
+      type: integer
+      format: int64
 post:
   operationId: UploadFileToJob
   summary: Upload File To Job

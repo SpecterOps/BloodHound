@@ -20,6 +20,8 @@ parameters:
     description: Domain ID
     in: path
     required: true
+    schema:
+      type: string
 get:
   operationId: ExportAttackPathFindings
   summary: Export attack path findings

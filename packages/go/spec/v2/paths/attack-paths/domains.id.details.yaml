@@ -117,7 +117,7 @@ get:
                             - type: object
                               properties:
                                 Accepted:
-                                  type: bool
+                                  type: boolean
               - allOf: # display list finding with pagination
                   - $ref: './../../schemas/api/response/pagination.yaml'
                   - type: object
@@ -130,7 +130,7 @@ get:
                             - type: object
                               properties:
                                 Accepted:
-                                  type: bool
+                                  type: boolean
     400:
       $ref: './../../responses/bad-request.yaml'
     401:

@@ -30,6 +30,8 @@ get:
       description: >
         Parameter filter. Must follow the convention: parameter=eq:value
       in: query
+      schema:
+        type: string
   responses:
     200:
       description: OK

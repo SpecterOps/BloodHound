@@ -17,7 +17,7 @@
 parameters:
   - $ref: './../../parameters/header/prefer.yaml'
   - name: asset_group_id
-    description: ID of the asset_group record to retrieve
+    description: ID of the asset group record to retrieve
     in: path
     required: true
     schema:
@@ -73,7 +73,6 @@ put:
           properties:
             name:
               type: string
-              required: true
   responses:
     200:
       description: OK

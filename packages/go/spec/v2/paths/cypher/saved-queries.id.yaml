@@ -16,6 +16,13 @@
 
 parameters:
   - $ref: './../../parameters/header/prefer.yaml'
+  - name: saved_query_id
+    description: ID of the saved query
+    in: path
+    required: true
+    schema:
+      type: integer
+      format: int32
 delete:
   operationId: DeleteSavedQuery
   summary: Delete a saved query

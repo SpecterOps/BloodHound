@@ -31,7 +31,8 @@ get:
       content:
         text/x-yaml:
           schema:
-            type: object
+            type: string
+            format: binary
           example: |
             openapi: 3.0.3
             servers:
