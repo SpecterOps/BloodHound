@@ -14,7 +14,7 @@ get:
   summary: Get platform data quality aggregate
   description: Time series list of aggregate data quality stats for a given platform
   tags:
-    - Data Quality API
+    - Data Quality
     - Community
     - Enterprise
   parameters:

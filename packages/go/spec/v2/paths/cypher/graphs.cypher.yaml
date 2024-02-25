@@ -5,7 +5,7 @@ post:
   summary: Run a cypher query
   description: Runs a manual cypher query directly against the database
   tags:
-    - Cypher API
+    - Cypher
     - Community
     - Enterprise
   requestBody:

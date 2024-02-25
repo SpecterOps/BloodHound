@@ -6,7 +6,7 @@ get:
   summary: Get OU entity GPOs
   description: Get a list, graph, or count of the GPOs that affect this OU.
   tags:
-    - OU Entity API
+    - OUs
     - Community
     - Enterprise
   parameters:

@@ -1,25 +1,10 @@
 post:
+  operationId: EndClientTask
   deprecated: true
-  description: Endpoint for clients to end a job and mark the end time.
+  summary: End client task
+  description: This endpoint has been deprecated. Please use `POST /api/v2/jobs/end` instead.
   tags:
     - Tasks
     - Enterprise
-  summary: Notifies the API of a job ending
-  parameters:
-    - $ref: './../../parameters/header/prefer.yaml'
-  requestBody:
-    description: The request body for endint a task
-    required: true
-    content:
-      application/json:
-        schema:
-          $ref: "#/definitions/v2.ClientCompleteJobRequest"
-  responses:
-    200:
-      description: OK
-      content:
-        application/json:
-          schema:
-            $ref: "#/definitions/api.BasicResponse"
-    default:
-      $ref: './../../responses/error-response.yaml'
+  security: []
+  responses: {}

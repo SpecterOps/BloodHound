@@ -6,7 +6,7 @@ get:
   summary: Get Group entity sessions
   description: Get a list, graph, or count of the active sessions for users that belong to this group.
   tags:
-    - Group Entity API
+    - Groups
     - Community
     - Enterprise
   parameters:

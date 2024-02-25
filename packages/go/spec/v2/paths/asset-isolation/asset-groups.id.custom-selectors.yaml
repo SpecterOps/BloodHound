@@ -12,7 +12,7 @@ get:
   summary: Get asset group custom member count
   description: Get asset group custom member count
   tags:
-    - Asset Isolation API
+    - Asset Isolation
     - Community
     - Enterprise
   responses:

@@ -5,7 +5,7 @@ get:
   summary: List finished jobs
   description: Gets all finished jobs
   tags:
-    - Jobs API
+    - Jobs
     - Enterprise
   parameters:
     - name: sort_by

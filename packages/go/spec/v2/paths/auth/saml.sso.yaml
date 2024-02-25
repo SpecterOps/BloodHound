@@ -5,9 +5,10 @@ get:
   summary: Get all SAML sign on endpoints
   description: Get all SAML sign on endpoints
   tags:
-    - Auth API
+    - Auth
     - Community
     - Enterprise
+  security: []
   responses:
     200:
       description: OK

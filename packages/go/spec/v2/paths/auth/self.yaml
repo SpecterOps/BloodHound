@@ -5,9 +5,10 @@ get:
     Get the currently authenticated requester details. For Community, this will only ever be valid for users.
     In Enterprise, this could be either a BloodHound user or a client (collector).
   tags:
-    - Auth API
+    - Auth
     - Community
     - Enterprise
+  security: []
   parameters:
     - $ref: './../../parameters/header/prefer.yaml'
   responses:

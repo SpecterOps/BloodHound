@@ -1,8 +1,8 @@
+name: hydrate_ous
 description: When a value of `true` is passed, any OUs associated with scheduled
   and finished jobs for each client will have expanded properties including
   `name` and `type`. When a value of `false` is passed, these same OUs will only
   return as a list of `objectid`s.
-name: hydrate_ous
 in: query
 schema:
   type: boolean

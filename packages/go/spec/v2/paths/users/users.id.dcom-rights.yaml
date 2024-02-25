@@ -6,7 +6,7 @@ get:
   summary: Get User entity DCOM rights
   description: Get a list, graph, or count of the systems this user can execute DCOM on.
   tags:
-    - User Entity API
+    - AD Users
     - Community
     - Enterprise
   parameters:

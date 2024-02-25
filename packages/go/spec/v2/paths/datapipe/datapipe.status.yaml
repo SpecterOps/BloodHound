@@ -5,7 +5,7 @@ get:
   summary: Get datapipe status
   description: Gets the current status of the datapipe
   tags:
-    - Datapipe API
+    - Datapipe
     - Community
     - Enterprise
   responses:

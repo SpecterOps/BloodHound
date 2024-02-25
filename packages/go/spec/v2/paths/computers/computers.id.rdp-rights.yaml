@@ -6,7 +6,7 @@ get:
   summary: Get computer entity RDP rights
   description: Get a list, graph, or count of the systems this computer can RDP to.
   tags:
-    - Computer Entity API
+    - Computers
     - Community
     - Enterprise
   parameters:

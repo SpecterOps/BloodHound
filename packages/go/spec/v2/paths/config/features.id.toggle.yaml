@@ -9,7 +9,7 @@ put:
   summary: Toggle a feature flag's enabled status to either enable or disable it.
   description: Writes application configuration parameters for this instance
   tags:
-    - Config API
+    - Config
     - Community
     - Enterprise
   responses:

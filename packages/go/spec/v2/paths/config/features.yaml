@@ -5,7 +5,7 @@ get:
   summary: List feature flags
   description: Lists all feature flags for this instance
   tags:
-    - Config API
+    - Config
     - Community
     - Enterprise
   responses:

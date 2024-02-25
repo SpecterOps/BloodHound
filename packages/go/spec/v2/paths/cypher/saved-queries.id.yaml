@@ -5,7 +5,7 @@ delete:
   summary: Delete a saved query
   description: Delete an existing saved query by ID
   tags:
-    - Cypher API
+    - Cypher
     - Community
     - Enterprise
   responses:

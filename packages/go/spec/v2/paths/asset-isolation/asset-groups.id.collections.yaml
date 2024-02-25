@@ -13,7 +13,7 @@ get:
   summary: List asset group collections
   description: Returns all historical memberships if no URL params are specified.
   tags:
-    - Asset Isolation API
+    - Asset Isolation
     - Community
     - Enterprise
   parameters:

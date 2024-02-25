@@ -11,7 +11,7 @@ get:
   summary: List available attack paths
   description: Lists available attack path types for a domain
   tags:
-    - Attack Paths API
+    - Attack Paths
     - Enterprise
   parameters:
     - name: sort_by

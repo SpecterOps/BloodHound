@@ -6,7 +6,7 @@ get:
   summary: Get computer entity admin rights
   description: Get a list, graph, or count of the systems this computer has admin rights to.
   tags:
-    - Computer Entity API
+    - Computers
     - Community
     - Enterprise
   parameters:

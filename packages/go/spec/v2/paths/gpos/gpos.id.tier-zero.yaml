@@ -6,7 +6,7 @@ get:
   summary: Get GPO entity tier-zero
   description: Get a list, graph, or count of the tier-zero principals associated with this GPO.
   tags:
-    - GPO Entity API
+    - GPOs
     - Community
     - Enterprise
   parameters:

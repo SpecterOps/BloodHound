@@ -13,7 +13,7 @@ post:
   summary: Creates a scheduled job
   description: Creates a new scheduled job
   tags:
-    - Clients API
+    - Clients
     - Enterprise
   parameters:
     - $ref: './../../parameters/header/prefer.yaml'

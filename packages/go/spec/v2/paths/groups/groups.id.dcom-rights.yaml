@@ -6,7 +6,7 @@ get:
   summary: Get Group entity DCOMRights
   description: Get a list, graph, or count of the systems this group can execute DCOM on.
   tags:
-    - Group Entity API
+    - Groups
     - Community
     - Enterprise
   parameters:

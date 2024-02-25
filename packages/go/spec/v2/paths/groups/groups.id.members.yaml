@@ -6,7 +6,7 @@ get:
   summary: Get Group entity members
   description: Get a list, graph, or count of the principals that are a member of this group.
   tags:
-    - Group Entity API
+    - Groups
     - Community
     - Enterprise
   parameters:

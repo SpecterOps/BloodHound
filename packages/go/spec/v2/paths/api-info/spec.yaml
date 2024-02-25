@@ -8,6 +8,7 @@ get:
     - API Info
     - Community
     - Enterprise
+  security: []
   responses:
     200:
       description: OK
@@ -16,7 +17,7 @@ get:
           schema:
             type: object
           example: |
-            openapi: 3.O.3
+            openapi: 3.0.3
             servers:
               - url: /
             ...[truncated example]

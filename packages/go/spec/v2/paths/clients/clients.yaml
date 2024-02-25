@@ -5,7 +5,7 @@ get:
   summary: List Clients
   description: Lists available clients for processing collection events.
   tags:
-    - Clients API
+    - Clients
     - Enterprise
   parameters:
     - $ref: './../../parameters/query/created-at.yaml'
@@ -94,7 +94,7 @@ post:
   summary: Create Client
   description: Creates a client for collection events
   tags:
-    - Clients API
+    - Clients
     - Enterprise
   requestBody:
     description: The request body for creating a client

@@ -13,7 +13,7 @@ get:
   summary: List asset group member count by kind
   description: List counts of members of an asset isolation group by primary kind.
   tags:
-    - Asset Isolation API
+    - Asset Isolation
     - Community
     - Enterprise
   parameters:

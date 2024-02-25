@@ -9,7 +9,7 @@ get:
   summary: Export attack path findings
   description: Export the finding table for a given attack path
   tags:
-    - Attack Paths API
+    - Attack Paths
     - Enterprise
   parameters:
     - name: finding

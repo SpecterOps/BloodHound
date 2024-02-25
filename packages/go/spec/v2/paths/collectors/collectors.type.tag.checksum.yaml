@@ -17,7 +17,7 @@ get:
   summary: Get collector checksum by version
   description: Retrieves the checksum file for a given collector with given version
   tags:
-    - Collectors API
+    - Collectors
     - Community
     - Enterprise
   responses:

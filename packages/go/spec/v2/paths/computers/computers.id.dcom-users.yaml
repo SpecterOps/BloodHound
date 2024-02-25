@@ -6,7 +6,7 @@ get:
   summary: Get computer entity DCOM users
   description: Get a list, graph, or count of the principals that can execute DCOM on this computer.
   tags:
-    - Computer Entity API
+    - Computers
     - Community
     - Enterprise
   parameters:

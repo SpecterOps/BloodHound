@@ -6,7 +6,7 @@ get:
   summary: Get entity info
   description: Get basic info and counts for this node.
   tags:
-    - Base Entity API
+    - AD Base Entities
     - Community
     - Enterprise
   parameters:

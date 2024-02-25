@@ -6,7 +6,7 @@ get:
   summary: Get domain entity inbound trusts
   description: Get a list, graph, or count of the inbound trusts for this domain.
   tags:
-    - Domain Entity API
+    - Domains
     - Community
     - Enterprise
   parameters:

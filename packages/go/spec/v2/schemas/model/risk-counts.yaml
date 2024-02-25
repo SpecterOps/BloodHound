@@ -1,0 +1,16 @@
+allOf:
+  - $ref: './components/int64.id.yaml'
+  - $ref: './components/timestamps.yaml'
+type: object
+properties:
+  CompositeRisk:
+    type: number
+    format: double
+  FindingCount:
+    type: integer
+  ImpactedAssetCount:
+    type: integer
+  DomainSID:
+    type: string
+  Finding:
+    type: string

@@ -6,7 +6,7 @@ get:
   summary: Get Group entity memberships
   description: Get a list, graph, or count of the groups this group is a member of.
   tags:
-    - Group Entity API
+    - Groups
     - Community
     - Enterprise
   parameters:

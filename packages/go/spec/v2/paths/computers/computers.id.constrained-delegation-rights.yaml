@@ -6,7 +6,7 @@ get:
   summary: Get computer entity constrained delegation rights
   description: Get a list, graph, or count of the principals that this computer has constrained delegations rights to.
   tags:
-    - Computer Entity API
+    - Computers
     - Community
     - Enterprise
   parameters:

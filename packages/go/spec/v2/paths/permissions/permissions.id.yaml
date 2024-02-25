@@ -12,7 +12,7 @@ get:
   summary: Get Permission
   description: Gets an authorization permission's details.
   tags:
-    - Roles & Permissions API
+    - Permissions
     - Community
     - Enterprise
   responses:

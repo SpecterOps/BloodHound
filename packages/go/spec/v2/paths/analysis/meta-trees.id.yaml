@@ -13,7 +13,7 @@ get:
   # It appears to do two different things base on whether node_id is set
   description: Gets meta nodes and connecting edges
   tags:
-    - Analysis API
+    - Analysis
     - Enterprise
   parameters:
     - name: node_id

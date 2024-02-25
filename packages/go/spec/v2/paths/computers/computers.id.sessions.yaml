@@ -6,7 +6,7 @@ get:
   summary: Get computer entity sessions
   description: Get a list, graph, or count of the principals with active sessions on this computer.
   tags:
-    - Computer Entity API
+    - Computers
     - Community
     - Enterprise
   parameters:

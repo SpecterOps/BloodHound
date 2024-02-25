@@ -12,7 +12,7 @@ delete:
   summary: Delete a User Token
   description: Delete a request signing token for a given user.
   tags:
-    - User Management API
+    - API Tokens
     - Community
     - Enterprise
   responses:

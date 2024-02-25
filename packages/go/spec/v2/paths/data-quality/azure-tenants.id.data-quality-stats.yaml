@@ -11,7 +11,7 @@ get:
   summary: Get Azure tenant data quality stats
   description: Time series list of data quality stats for a given Azure tenant
   tags:
-    - Data Quality API
+    - Data Quality
     - Community
     - Enterprise
   parameters:

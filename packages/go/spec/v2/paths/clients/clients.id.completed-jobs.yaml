@@ -13,7 +13,7 @@ get:
   summary: List all completed jobs for a client
   description: List all completed jobs for a client
   tags:
-    - Clients API
+    - Clients
     - Enterprise
   parameters:
     - $ref: './../../parameters/query/created-at.yaml'

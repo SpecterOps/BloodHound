@@ -20,7 +20,7 @@ delete:
   summary: Delete an asset group selector
   description: Deletes an asset group selector
   tags:
-    - Asset Isolation API
+    - Asset Isolation
     - Community
     - Enterprise
   responses:

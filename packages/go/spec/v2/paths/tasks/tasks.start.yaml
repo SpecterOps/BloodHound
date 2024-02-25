@@ -1,25 +1,10 @@
 post:
+  operationId: StartClientTask
   deprecated: true
-  description: Endpoint for clients to start a new job and mark the start time.
+  summary: Start client task
+  description: This endpoint has been deprecated. Please use `POST /api/v2/jobs/start` instead.
   tags:
     - Tasks
     - Enterprise
-  summary: Notifies the API of a job start
-  parameters:
-    - $ref: './../../parameters/header/prefer.yaml'
-  requestBody:
-    description: The request body for starting a task
-    required: true
-    content:
-      application/json:
-        schema:
-          $ref: "#/definitions/v2.JobStartRequest"
-  responses:
-    200:
-      description: OK
-      content:
-        application/json:
-          schema:
-            $ref: "#/definitions/api.BasicResponse"
-    default:
-      $ref: './../../responses/error-response.yaml'
+  security: []
+  responses: {}

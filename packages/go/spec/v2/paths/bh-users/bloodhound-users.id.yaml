@@ -12,7 +12,7 @@ get:
   summary: Get a user
   description: Get a BloodHound user's details.
   tags:
-    - User Management API
+    - BloodHound Users
     - Community
     - Enterprise
   responses:
@@ -43,7 +43,7 @@ patch:
   summary: Update a User
   description: Update a BloodHound user's properties'.
   tags:
-    - User Management API
+    - BloodHound Users
     - Community
     - Enterprise
   requestBody:
@@ -74,7 +74,7 @@ delete:
   summary: Delete a User
   description: Deletes an existing BloodHound user.
   tags:
-    - User Management API
+    - BloodHound Users
     - Community
     - Enterprise
   responses:

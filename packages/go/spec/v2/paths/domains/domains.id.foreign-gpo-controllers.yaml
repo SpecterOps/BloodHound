@@ -8,7 +8,7 @@ get:
     Get a list, graph, or count of the principals outside of this domain that can control
     GPOs inside this domain.
   tags:
-    - Domain Entity API
+    - Domains
     - Community
     - Enterprise
   parameters:

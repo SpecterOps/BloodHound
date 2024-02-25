@@ -1,17 +1,23 @@
 parameters:
   - $ref: './../../parameters/header/prefer.yaml'
 get:
-  operationId: ListRoles
-  summary: List Roles
-  description: List all authorization roles.
+  operationId: ListPermissions
+  summary: List Permissions
+  description: List all authorization permissions.
   tags:
-    - Roles & Permissions API
+    - Permissions
     - Community
     - Enterprise
   parameters:
     - name: sort_by
-      description: Sortable columns are `name`, `description`, `id`, `created_at`, `updated_at`, `deleted_at`.
       in: query
+      description: Sortable columns are `authority`, `name`, `id`, `created_at`, `updated_at`, `deleted_at`.
+      schema:
+        $ref: './../../schemas/api/params/predicate/sort-by.yaml'
+    - name: authority
+      in: query
+      schema:
+        $ref: './../../schemas/api/params/predicate/filter.string.yaml'
     - name: name
       in: query
       schema:
@@ -34,10 +40,10 @@ get:
               data:
                 type: object
                 properties:
-                  roles:
+                  permissions:
                     type: array
                     items:
-                      $ref: './../../schemas/model/role.yaml'
+                      $ref: './../../schemas/model/permission.yaml'
     400:
       $ref: './../../responses/bad-request.yaml'
     401:

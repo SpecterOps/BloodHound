@@ -1,137 +1,129 @@
 parameters:
-  - type: string
+  - $ref: './../../parameters/header/prefer.yaml'
+  - name: domain_id
     description: Domain ID
-    name: domain_id
     in: path
     required: true
+    schema:
+      type: string
 get:
-  description: List the paged values for an attack path
+  operationId: ListDomainAttackPathsDetails
+  summary: List domain attack paths details
+  description: Lists detailed data about attack paths for a domain.
   tags:
-    - Attack Paths API
+    - Attack Paths
     - Enterprise
-  summary: Get data for an attack path
   parameters:
-    - $ref: './../../parameters/header/prefer.yaml'
-    - type: integer
-      description: Paging Skip
-      name: skip
+    - name: finding
       in: query
-    - type: integer
-      description: Paging Limit
-      name: limit
-      in: query
-    - type: string
-      description: Finding Type
-      name: finding
-      in: query
-      required: true
-    - type: string
-      description: Sort by column. Can be used multiple times; prepend hyphen for
-        descending order. Sortable columns for List Risks are domain_sid, index, AcceptedUntil,
-        id, created_at, updated_at, deleted_at. Relationship risks can be sorted on
-        FromPrincipal and ToPrincipal in addition to the sortable columns for List
+      schema:
+        $ref: './../../schemas/api/params/predicate/filter.string.yaml'
+    - name: sort_by
+      description: Sortable columns are `domain_sid`, `index`, `AcceptedUntil`,
+        `id`, `created_at`, `updated_at`, `deleted_at`. Relationship risks can be sorted on
+        `FromPrincipal` and `ToPrincipal` in addition to the sortable columns for List
         Risks.
-      name: sort_by
       in: query
-      required: false
-    - type: string
-      description: DEPRECATED; use the from_principal filter instead. Filter Relationship
-        Findings by column value. Valid filter predicates are eq, neq
-      name: FromPrincipal
+      schema:
+        $ref: './../../schemas/api/params/predicate/sort-by.yaml'
+    - name: FromPrincipal
+      deprecated: true
       in: query
-      required: false
-    - type: string
-      description: DEPRECATED; use the to_principal filter instead. Filter RelationshipFindings
-        by column value. Valid filter predicates are eq, neq
-      name: ToPrincipal
+      schema:
+        $ref: './../../schemas/api/params/predicate/filter.string.yaml'
+    - name: ToPrincipal
+      deprecated: true
       in: query
-      required: false
-    - type: string
-      description: Filter RelationshipFindings by column value. Valid filter predicates
-        are eq, neq
-      name: from_principal
+      schema:
+        $ref: './../../schemas/api/params/predicate/filter.string.yaml'
+    - name: from_principal
       in: query
-      required: false
-    - type: string
-      description: Filter RelationshipFindings by column value. Valid filter predicates
-        are eq, neq
-      name: to_principal
+      schema:
+        $ref: './../../schemas/api/params/predicate/filter.string.yaml'
+    - name: to_principal
       in: query
-      required: false
-    - type: string
-      description: Filter RelationshipFindings by column value. Valid filter predicates
-        are eq, neq
-      name: principals_hash
+      schema:
+        $ref: './../../schemas/api/params/predicate/filter.string.yaml'
+    - name: principals_hash
       in: query
-      required: false
-    - type: string
-      description: Filter Relationship or List Findings by column value. Valid filter
-        predicates are eq, neq
-      name: Accepted
+      schema:
+        $ref: './../../schemas/api/params/predicate/filter.string.yaml'
+    - name: Accepted
       in: query
-      required: false
-    - type: string
-      description: DEPRECATED; use accepted_until instead. Filter Relationship or
-        List Findings by column value. Valid filter predicates are eq, neq, gt, gte,
-        lt, lte
-      name: AcceptedUntil
+      schema:
+        $ref: './../../schemas/api/params/predicate/filter.string.yaml'
+    - name: AcceptedUntil
+      deprecated: true
       in: query
-      required: false
-    - type: string
-      description: Filter Relationship or List Findings by column value. Valid filter
-        predicates are eq, neq, gt, gte, lt, lte
-      name: accepted_until
+      schema:
+        $ref: './../../schemas/api/params/predicate/filter.time.yaml'
+    - name: accepted_until
       in: query
-      required: false
-    - type: string
-      description: Filter ListFindings by column value. Valid filter predicates are
-        eq, neq
-      name: Principal
+      schema:
+        $ref: './../../schemas/api/params/predicate/filter.time.yaml'
+    - name: Principal
       in: query
-      required: false
-    - type: string
-      description: Filter List or Relationship Findings by column value. Valid filter
-        predicates are eq, neq
-      name: Finding
+      schema:
+        $ref: './../../schemas/api/params/predicate/filter.string.yaml'
+    - name: Finding
       in: query
-      required: false
-    - type: string
-      description: Filter List or Relationship Findings by column value. Valid filter
-        predicates are eq, neq
-      name: domain_sid
+      schema:
+        $ref: './../../schemas/api/params/predicate/filter.string.yaml'
+    - name: domain_sid
       in: query
-      required: false
-    - type: string
-      description: Filter results by column value. Valid filter predicates are eq,
-        neq, gt, gte, lt, lte
-      name: id
+      schema:
+        $ref: './../../schemas/api/params/predicate/filter.string.yaml'
+    - name: id
       in: query
-      required: false
-    - type: string
-      description: Filter results by column value. Valid filter predicates are eq,
-        neq, gt, gte, lt, lte
-      name: created_at
-      in: query
-      required: false
-    - type: string
-      description: Filter results by column value. Valid filter predicates are eq,
-        neq, gt, gte, lt, lte
-      name: updated_at
-      in: query
-      required: false
-    - type: string
-      description: Filter results by column value. Valid filter predicates are eq,
-        neq, gt, gte, lt, lte
-      name: deleted_at
-      in: query
-      required: false
+      schema:
+        $ref: './../../schemas/api/params/predicate/filter.integer.yaml'
+    - $ref: './../../parameters/query/created-at.yaml'
+    - $ref: './../../parameters/query/updated-at.yaml'
+    - $ref: './../../parameters/query/deleted-at.yaml'
+    - $ref: './../../parameters/query/skip.yaml'
+    - $ref: './../../parameters/query/limit.yaml'
   responses:
     200:
       description: OK
       content:
         application/json:
           schema:
-            type: object
-            additionalProperties: true
-    default:
-      $ref: './../../responses/error-response.yaml'
+            oneOf:
+              - allOf: # display relationship finding with pagination
+                  - $ref: './../../schemas/api/response/pagination.yaml'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          allOf:
+                            - $ref: './../../schemas/model/relationship-finding.yaml'
+                            - type: object
+                              properties:
+                                Accepted:
+                                  type: bool
+              - allOf: # display list finding with pagination
+                  - $ref: './../../schemas/api/response/pagination.yaml'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          allOf:
+                            - $ref: './../../schemas/model/list-finding.yaml'
+                            - type: object
+                              properties:
+                                Accepted:
+                                  type: bool
+    400:
+      $ref: './../../responses/bad-request.yaml'
+    401:
+      $ref: './../../responses/unauthorized.yaml'
+    403:
+      $ref: './../../responses/forbidden.yaml'
+    404:
+      $ref: './../../responses/not-found.yaml'
+    429:
+      $ref: './../../responses/too-many-requests.yaml'
+    500:
+      $ref: './../../responses/internal-server-error.yaml'

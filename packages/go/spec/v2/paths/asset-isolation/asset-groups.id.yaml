@@ -13,7 +13,7 @@ get:
   summary: Get asset group by ID
   description: Retrieve asset group by ID
   tags:
-    - Asset Isolation API
+    - Asset Isolation
     - Community
     - Enterprise
   responses:
@@ -44,7 +44,7 @@ put:
   summary: Update an asset group
   description: Updates an asset group
   tags:
-    - Asset Isolation API
+    - Asset Isolation
     - Community
     - Enterprise
   requestBody:
@@ -84,7 +84,7 @@ put:
 delete:
   description: Deletes an asset group
   tags:
-    - Asset Isolation API
+    - Asset Isolation
     - Community
     - Enterprise
   summary: Delete an asset group

@@ -5,7 +5,7 @@ get:
   summary: Get jobs
   description: Gets client jobs
   tags:
-    - Jobs API
+    - Jobs
     - Enterprise
   parameters:
     - name: sort_by

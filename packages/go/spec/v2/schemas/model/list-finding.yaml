@@ -1,0 +1,20 @@
+allOf:
+  - $ref: './components/int32.id.yaml'
+  - $ref: './components/timestamps.yaml'
+type: object
+properties:
+  Principal:
+    type: string
+  PrincipalKind:
+    type: string
+  Finding:
+    type: string
+  DomainSID:
+    type: string
+  Props:
+    type: object
+    additionalProperties:
+      type: object
+  accepted_until:
+    type: string
+    format: date-time

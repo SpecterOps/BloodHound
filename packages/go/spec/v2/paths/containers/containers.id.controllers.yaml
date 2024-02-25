@@ -6,7 +6,7 @@ get:
   summary: Get container entity controllers
   description: Get a list, graph, or count of the principals that can control this container.
   tags:
-    - Container Entity API
+    - Containers
     - Community
     - Enterprise
   parameters:

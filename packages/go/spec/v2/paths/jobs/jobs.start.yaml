@@ -9,7 +9,7 @@ post:
     Note: caller must be a client. For users, this endpoint will return a 404 as
     they are not expected or allowed to call this endpoint.
   tags:
-    - Jobs API
+    - Jobs
     - Enterprise
   requestBody:
     content:

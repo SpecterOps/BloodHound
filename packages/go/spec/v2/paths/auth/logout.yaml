@@ -5,9 +5,10 @@ post:
   summary: Logout of BloodHound
   description: Logout of BloodHound and delete the user session JWT.
   tags:
-    - Auth API
+    - Auth
     - Community
     - Enterprise
+  security: []
   responses:
     200:
       description: |

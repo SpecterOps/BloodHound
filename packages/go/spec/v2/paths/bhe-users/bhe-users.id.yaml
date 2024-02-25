@@ -1,0 +1,32 @@
+get:
+  operationId: GetBheUser
+  deprecated: true
+  summary: Get BHE user
+  description: This endpoint has been deprecated. Please use `GET /api/v2/bloodhound-users/{user-id}` instead.
+  tags:
+    - BHE Users
+    - Enterprise
+  security: []
+  responses: {}
+
+patch:
+  operationId: UpdateBheUser
+  deprecated: true
+  summary: Update BHE user
+  description: This endpoint has been deprecated. Please use `PATCH /api/v2/bloodhound-users/{user-id}` instead.
+  tags:
+    - BHE Users
+    - Enterprise
+  security: []
+  responses: {}
+
+delete:
+  operationId: DeleteBheUser
+  deprecated: true
+  summary: Delete BHE user
+  description: This endpoint has been deprecated. Please use `DELETE /api/v2/bloodhound-users/{user-id}` instead.
+  tags:
+    - BHE Users
+    - Enterprise
+  security: [ ]
+  responses: {}

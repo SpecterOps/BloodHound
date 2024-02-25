@@ -6,7 +6,7 @@ get:
   summary: Get entity controllers
   description: Get a list, graph, or count of the principals that can control this node.
   tags:
-    - Base Entity API
+    - AD Base Entities
     - Community
     - Enterprise
   parameters:

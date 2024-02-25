@@ -5,7 +5,7 @@ get:
   summary: Accept EULA
   description: Accept BloodHound Enterprise EULA for logged in user (EULA applies to BHE customers only).
   tags:
-    - Auth API
+    - EULA
     - Enterprise
   responses:
     '202':

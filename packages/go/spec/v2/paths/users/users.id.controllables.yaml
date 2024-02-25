@@ -6,7 +6,7 @@ get:
   summary: Get User entity controllables
   description: Get a list, graph, or count of the principals this user can control.
   tags:
-    - User Entity API
+    - AD Users
     - Community
     - Enterprise
   parameters:

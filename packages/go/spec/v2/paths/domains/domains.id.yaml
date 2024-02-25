@@ -6,7 +6,7 @@ get:
   summary: Get domain entity info
   description: Get basic info and counts for this domain node.
   tags:
-    - Domain Entity API
+    - Domains
     - Community
     - Enterprise
   parameters:
@@ -29,7 +29,7 @@ get:
 patch:
   description: Updates the supported properties on the Domain entity.
   tags:
-    - Domain Entity API
+    - Domains
     - Community
     - Enterprise
   summary: Update the Domain entity

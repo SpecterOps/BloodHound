@@ -12,7 +12,7 @@ put:
   summary: Cancels a scheduled job
   description: Cancels a scheduled job
   tags:
-    - Jobs API
+    - Jobs
     - Enterprise
   responses:
     200:

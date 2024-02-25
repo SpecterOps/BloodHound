@@ -1,21 +1,20 @@
 parameters:
   - $ref: './../../parameters/header/prefer.yaml'
 post:
-  operationId: EndFileUploadJob
-  summary: End File Upload Job
-  description: End a file upload job
+  operationId: IngestData
+  summary: Endpoint for data ingestion
+  description: Ingests data from collector clients
   tags:
-    - Ingest API
-    - Community
+    - Client Ingest
     - Enterprise
   responses:
-    200:
+    202:
       $ref: './../../responses/success-empty.yaml'
     400:
       $ref: './../../responses/bad-request.yaml'
     401:
       $ref: './../../responses/unauthorized.yaml'
-    404:
-      $ref: './../../responses/not-found.yaml'
+    403:
+      $ref: './../../responses/forbidden.yaml'
     500:
       $ref: './../../responses/internal-server-error.yaml'

@@ -6,7 +6,7 @@ get:
   summary: Get User entity membership
   description: Get a list, graph, or count of the groups this user is a member of.
   tags:
-    - User Entity API
+    - AD Users
     - Community
     - Enterprise
   parameters:

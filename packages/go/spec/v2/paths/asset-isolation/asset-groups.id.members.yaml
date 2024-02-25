@@ -13,7 +13,7 @@ get:
   summary: List all asset isolation group members
   description: List all members of an asset isolation group.
   tags:
-    - Asset Isolation API
+    - Asset Isolation
     - Community
     - Enterprise
   parameters:

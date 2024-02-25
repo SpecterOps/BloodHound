@@ -14,7 +14,7 @@ post:
   summary: Update asset group selectors
   description: DEPRECATED use PUT instead. Updates asset group selectors.
   tags:
-    - Asset Isolation API
+    - Asset Isolation
     - Community
     - Enterprise
   requestBody:
@@ -64,7 +64,7 @@ put:
   summary: Update asset group selectors
   description: Updates asset group selectors
   tags:
-    - Asset Isolation API
+    - Asset Isolation
     - Community
     - Enterprise
   requestBody:

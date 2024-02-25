@@ -5,7 +5,7 @@ get:
   summary: Get search result
   description: Get the result of searching a graph for a node by name
   tags:
-    - Graph API
+    - Graph
     - Community
     - Enterprise
   parameters:

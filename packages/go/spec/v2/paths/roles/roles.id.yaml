@@ -12,7 +12,7 @@ get:
   summary: Get Role
   description: Gets an authorization role's details.
   tags:
-    - Roles & Permissions API
+    - Roles
     - Community
     - Enterprise
   responses:

@@ -6,7 +6,7 @@ get:
   summary: Get domain entity controllers
   description: Get a list, graph, or count of the principals that can control this domain.
   tags:
-    - Domain Entity API
+    - Domains
     - Community
     - Enterprise
   parameters:

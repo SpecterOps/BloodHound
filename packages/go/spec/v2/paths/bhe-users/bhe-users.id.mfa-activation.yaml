@@ -1,0 +1,23 @@
+get:
+  operationId: GetBheUserMfaStatus
+  deprecated: true
+  summary: Get BHE user MFA status
+  description: This endpoint has been deprecated.
+    Please use `GET /api/v2/bloodhound-users/{user-id}/mfa-activation` instead.
+  tags:
+    - BHE Users
+    - Enterprise
+  security: []
+  responses: {}
+
+post:
+  operationId: ActivateBheUserMfa
+  deprecated: true
+  summary: Activate BHE user MFA
+  description: This endpoint has been deprecated.
+    Please use `POST /api/v2/bloodhound-users/{user-id}/mfa-activation` instead.
+  tags:
+    - BHE Users
+    - Enterprise
+  security: []
+  responses: {}

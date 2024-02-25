@@ -1,23 +1,10 @@
 put:
+  operationId: CancelClientTask
   deprecated: true
-  description: Sets a scheduled job to cancelled.
+  summary: Cancel client task
+  description: This endpoint has been deprecated. Please use `PUT /api/v2/jobs/{job_id}/cancel` instead.
   tags:
     - Tasks
     - Enterprise
-  summary: Cancels a scheduled job
-  parameters:
-    - $ref: './../../parameters/header/prefer.yaml'
-    - type: string
-      description: Job ID
-      name: task_id
-      in: path
-      required: true
-  responses:
-    200:
-      description: OK
-      content:
-        application/json:
-          schema:
-            $ref: "#/definitions/api.ResponseWrapper"
-    default:
-      $ref: './../../responses/error-response.yaml'
+  security: []
+  responses: {}

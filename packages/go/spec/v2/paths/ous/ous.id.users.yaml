@@ -6,7 +6,7 @@ get:
   summary: Get OU entity users
   description: Get a list, graph, or count of the users contained by this OU.
   tags:
-    - OU Entity API
+    - OUs
     - Community
     - Enterprise
   parameters:

@@ -12,7 +12,7 @@ get:
   summary: Get Event
   description: Gets a scheduled job event by ID.
   tags:
-    - Events API
+    - Events (Schedules)
     - Enterprise
   responses:
     200:
@@ -40,7 +40,7 @@ put:
   summary: Update Event
   description: Updates a scheduled event
   tags:
-    - Events API
+    - Events (Schedules)
     - Enterprise
   parameters:
     - $ref: './../../parameters/header/prefer.yaml'
@@ -77,7 +77,7 @@ delete:
   summary: Delete Event
   description: Deletes a scheduled event and associated tasks by id
   tags:
-    - Events API
+    - Events (Schedules)
     - Enterprise
   responses:
     200:

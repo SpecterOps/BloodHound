@@ -5,7 +5,7 @@ get:
   summary: List audit logs
   description: Returns a list of audit logs.
   tags:
-    - Audit API
+    - Audit
     - Community
     - Enterprise
   parameters:

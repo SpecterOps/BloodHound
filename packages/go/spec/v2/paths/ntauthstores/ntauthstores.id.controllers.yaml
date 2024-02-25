@@ -3,10 +3,10 @@ parameters:
   - $ref: './../../parameters/path/object-id.yaml'
 get:
   operationId: GetNtAuthStoreEntityControllers
-  summary: Get NTAuthStore entity controllers
-  description: Get a list, graph, or count of the principals that can control this NTAuthStore.
+  summary: Get NT Auth Store entity controllers
+  description: Get a list, graph, or count of the principals that can control this NT Auth Store.
   tags:
-    - NTAuthStore Entity API
+    - NT Auth Stores
     - Community
     - Enterprise
   parameters:

@@ -14,7 +14,7 @@ get:
   summary: List all completed tasks for a client
   description: List all completed tasks for a client
   tags:
-    - Clients API
+    - Clients
     - Enterprise
   parameters:
     - $ref: './../../parameters/query/created-at.yaml'

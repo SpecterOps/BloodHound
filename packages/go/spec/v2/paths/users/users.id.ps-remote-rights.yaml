@@ -6,7 +6,7 @@ get:
   summary: Get User entity PowerShell remote rights
   description: Get a list, graph, or count of the systems this user can execute PowerShell remote on.
   tags:
-    - User Entity API
+    - AD Users
     - Community
     - Enterprise
   parameters:

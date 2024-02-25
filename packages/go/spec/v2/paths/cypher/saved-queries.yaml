@@ -5,7 +5,7 @@ get:
   summary: List saved queries
   description: Get all saved queries for the current user
   tags:
-    - Cypher API
+    - Cypher
     - Community
     - Enterprise
   parameters:
@@ -58,7 +58,7 @@ post:
   summary: Create a saved query
   description: Create a new saved query
   tags:
-    - Cypher API
+    - Cypher
     - Community
     - Enterprise
   requestBody:

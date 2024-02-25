@@ -3,10 +3,10 @@ parameters:
   - $ref: './../../parameters/path/object-id.yaml'
 get:
   operationId: GetCertTemplateEntityControllers
-  summary: Get CertTemplate entity controllers
-  description: Get a list, graph, or count of the principals that can control this CertTemplate.
+  summary: Get Cert Template entity controllers
+  description: Get a list, graph, or count of the principals that can control this Cert Template.
   tags:
-    - CertTemplate Entity API
+    - Cert Templates
     - Community
     - Enterprise
   parameters:

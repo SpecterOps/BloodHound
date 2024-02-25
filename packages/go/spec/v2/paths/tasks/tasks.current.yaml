@@ -1,16 +1,10 @@
 get:
+  operationId: GetClientCurrentTask
   deprecated: true
-  description: Get the status of the current client
-  summary: Get client job status
+  summary: Get client current task
+  description: This endpoint has been deprecated. Please use `GET /api/v2/jobs/current` instead.
   tags:
     - Tasks
     - Enterprise
-  responses:
-    200:
-      description: OK
-      content:
-        application/json:
-          schema:
-            $ref: "#/definitions/model.DisplayClientScheduledJob"
-    default:
-      $ref: './../../responses/error-response.yaml'
+  security: []
+  responses: {}

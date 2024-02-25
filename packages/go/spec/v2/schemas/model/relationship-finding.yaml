@@ -1,0 +1,36 @@
+allOf:
+  - $ref: './components/int32.id.yaml'
+  - $ref: './components/timestamps.yaml'
+type: object
+properties:
+  FromPrincipal:
+    type: string
+  ToPrincipal:
+    type: string
+  FromPrincipalProps:
+    type: object
+    additionalProperties:
+      type: object
+  FromPrincipalKind:
+    type: string
+  ToPrincipalProps:
+    type: object
+    additionalProperties:
+      type: object
+  ToPrincipalKind:
+    type: string
+  RelProps:
+    type: object
+    additionalProperties:
+      type: object
+  ComboGraphRelationID:
+    $ref: './../null/int64.yaml'
+  Finding:
+    type: string
+  DomainSID:
+    type: string
+  PrincipalHash:
+    type: string
+  AcceptedUntil:
+    type: string
+    format: date-time

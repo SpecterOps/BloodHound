@@ -5,7 +5,7 @@ get:
   summary: Get Posture Statistics
   description: Gets the history of database stats saved in the database
   tags:
-    - QA
+    - Risk Posture
     - Enterprise
   parameters:
     - name: sort_by

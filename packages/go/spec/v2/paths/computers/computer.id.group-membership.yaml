@@ -6,7 +6,7 @@ get:
   summary: Get computer entity group membership
   description: Get a list, graph, or count of the groups this computer is a member of.
   tags:
-    - Computer Entity API
+    - Computers
     - Community
     - Enterprise
   parameters:

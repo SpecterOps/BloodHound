@@ -10,7 +10,7 @@ get:
   description: Get the service and identity provider configuration details for a
     SAML authentication provider.
   tags:
-    - Auth API
+    - Auth
     - Community
     - Enterprise
   responses:

@@ -6,7 +6,7 @@ get:
   summary: Get Meta entity info
   description: Get info and counts for this Meta node.
   tags:
-    - Meta Entity API
+    - Meta Entities
     - Enterprise
   responses:
     200:

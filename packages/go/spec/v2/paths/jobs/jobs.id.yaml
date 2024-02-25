@@ -12,7 +12,7 @@ get:
   summary: Get client job
   description: Gets client job
   tags:
-    - Jobs API
+    - Jobs
     - Enterprise
   responses:
     200:

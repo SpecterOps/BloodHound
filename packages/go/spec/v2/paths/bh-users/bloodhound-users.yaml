@@ -1,46 +1,44 @@
 parameters:
   - $ref: './../../parameters/header/prefer.yaml'
 get:
-  operationId: ListAuthTokens
-  summary: List Auth Tokens
-  description: Get all auth tokens.
+  operationId: ListUsers
+  summary: List Users
+  description: Gets all BloodHound user details.
   tags:
-    - User Management API
+    - BloodHound Users
     - Community
     - Enterprise
   parameters:
-    - name: user_id
-      description: Provide a user id to filter tokens by. This filter is only honored
-        for Admin users.
-      in: query
-      schema:
-        $ref: './../../schemas/api/params/predicate/filter.uuid.yaml'
     - name: sort_by
-      description: |
-        Sortable columns are `user_id`, `client_id`, `name`, `last_access`, `created_at`, `updated_at`, `deleted_at`.
+      description: Sortable columns are first_name, last_name, email_address,
+        principal_name, last_login, created_at, updated_at, deleted_at.
       in: query
       schema:
         $ref: './../../schemas/api/params/predicate/sort-by.yaml'
-    - name: name
+    - name: first_name
       in: query
       schema:
         $ref: './../../schemas/api/params/predicate/filter.string.yaml'
-    - name: key
+    - name: last_name
       in: query
       schema:
         $ref: './../../schemas/api/params/predicate/filter.string.yaml'
-    - name: hmac_method
+    - name: email_address
       in: query
       schema:
         $ref: './../../schemas/api/params/predicate/filter.string.yaml'
-    - name: last_access
+    - name: principal_name
       in: query
       schema:
-        $ref: './../../schemas/api/params/predicate/filter.time.yaml'
+        $ref: './../../schemas/api/params/predicate/filter.string.yaml'
     - name: id
       in: query
       schema:
         $ref: './../../schemas/api/params/predicate/filter.uuid.yaml'
+    - name: last_login
+      in: query
+      schema:
+        $ref: './../../schemas/api/params/predicate/filter.time.yaml'
     - $ref: './../../parameters/query/created-at.yaml'
     - $ref: './../../parameters/query/updated-at.yaml'
     - $ref: './../../parameters/query/deleted-at.yaml'
@@ -55,10 +53,10 @@ get:
               data:
                 type: object
                 properties:
-                  tokens:
+                  users:
                     type: array
                     items:
-                      $ref: './../../schemas/model/auth-token.yaml'
+                      $ref: './../../schemas/model/user.yaml'
     400:
       $ref: './../../responses/bad-request.yaml'
     401:
@@ -69,29 +67,23 @@ get:
       $ref: './../../responses/too-many-requests.yaml'
     500:
       $ref: './../../responses/internal-server-error.yaml'
-
 post:
-  operationId: CreateAuthToken
-  summary: Create Token for User
-  description: Create a new token to use with request signing based authentication
-    for a given user.
+  operationId: CreateUser
+  summary: Create a New User
+  description: Create a new BloodHound user.
   tags:
-    - User Management API
+    - BloodHound Users
     - Community
     - Enterprise
   requestBody:
-    description: The request body for creating an auth token
+    description: The request body for creating a user
     required: true
     content:
       application/json:
         schema:
-          type: object
-          properties:
-            token_name:
-              type: string
-            user_id:
-              type: string
-              format: uuid
+          allOf:
+            - $ref: './../../schemas/api/requests/user.update.yaml'
+            - $ref: './../../schemas/api/requests/user.set-secret.yaml'
   responses:
     200:
       description: OK
@@ -101,7 +93,7 @@ post:
             type: object
             properties:
               data:
-                $ref: './../../schemas/model/auth-token.yaml'
+                $ref: './../../schemas/model/user.yaml'
     400:
       $ref: './../../responses/bad-request.yaml'
     401:

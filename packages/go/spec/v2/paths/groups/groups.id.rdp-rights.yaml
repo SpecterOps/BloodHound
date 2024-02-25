@@ -6,7 +6,7 @@ get:
   summary: Get Group entity RDP rights
   description: Get a list, graph, or count of the systems this group can RDP to.
   tags:
-    - Group Entity API
+    - Groups
     - Community
     - Enterprise
   parameters:

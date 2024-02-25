@@ -13,7 +13,7 @@ put:
   summary: Regenerate the authentication token for a client
   description: Regenerate the authentication token for a client
   tags:
-    - Clients API
+    - Clients
     - Enterprise
   responses:
     200:

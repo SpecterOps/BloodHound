@@ -1,30 +1,55 @@
 parameters:
-  - type: string
+  - $ref: './../../parameters/header/prefer.yaml'
+  - name: attack_path_id
     description: Attack Path ID
-    name: attack_path_id
     in: path
     required: true
+    schema:
+      type: integer
+      format: int64
 put:
-  description: Takes a time to mark an attack path as accepted until
+  operationId: UpdateAttackPathRisk
+  summary: Update attack path risk
+  description: Updates an attack path as an accepted or unaccepted risk until a given time.
   tags:
-    - Attack Paths API
+    - Attack Paths
     - Enterprise
-  summary: Marks an attack path as accepted
-  parameters:
-    - $ref: './../../parameters/header/prefer.yaml'
   requestBody:
     description: The request body for updating risk acceptance
     required: true
     content:
       application/json:
         schema:
-          $ref: "#/definitions/v2.RiskAcceptRequest"
+          type: object
+          properties:
+            risk_type:
+              type: string
+            accept_until:
+              type: string
+              format: date-time
+            accepted:
+              type: boolean
   responses:
     200:
       description: OK
       content:
         application/json:
           schema:
-            $ref: "#/definitions/api.ResponseWrapper"
-    default:
-      $ref: './../../responses/error-response.yaml'
+            type: object
+            properties:
+              data:
+                oneOf:
+                  - $ref: './../../schemas/model/list-finding.yaml'
+                  - $ref: './../../schemas/model/relationship-finding.yaml'
+    400:
+      $ref: './../../responses/bad-request.yaml'
+    401:
+      $ref: './../../responses/unauthorized.yaml'
+    403:
+      $ref: './../../responses/forbidden.yaml'
+    404:
+      $ref: './../../responses/not-found.yaml'
+    429:
+      $ref: './../../responses/too-many-requests.yaml'
+    500:
+      $ref: './../../responses/internal-server-error.yaml'

@@ -8,7 +8,7 @@ get:
     Get a list, graph, or count of the principals outside of this domain that have admin
     rights on principals in this domain.
   tags:
-    - Domain Entity API
+    - Domains
     - Community
     - Enterprise
   parameters:

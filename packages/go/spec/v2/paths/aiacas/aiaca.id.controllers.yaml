@@ -2,11 +2,11 @@ parameters:
   - $ref: './../../parameters/header/prefer.yaml'
   - $ref: './../../parameters/path/object-id.yaml'
 get:
-  operationId: GetAiacaEntityControllers
-  summary: Get AIACA entity controllers
-  description: Get a list, graph, or count of the principals that can control this AIACA.
+  operationId: GetAiaCaEntityControllers
+  summary: Get AIA CA entity controllers
+  description: Get a list, graph, or count of the principals that can control this AIA CA.
   tags:
-    - AIACA Entity API
+    - AIA CAs
     - Community
     - Enterprise
   parameters:

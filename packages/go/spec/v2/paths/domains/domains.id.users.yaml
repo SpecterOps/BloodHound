@@ -6,7 +6,7 @@ get:
   summary: Get domain entity users
   description: Get a list or count of the users in this domain.
   tags:
-    - Domain Entity API
+    - Domains
     - Community
     - Enterprise
   parameters:

@@ -6,7 +6,7 @@ get:
   summary: Get domain entity linked GPOs
   description: Get a list, graph, or count of the GPOs linked to this domain.
   tags:
-    - Domain Entity API
+    - Domains
     - Community
     - Enterprise
   parameters:

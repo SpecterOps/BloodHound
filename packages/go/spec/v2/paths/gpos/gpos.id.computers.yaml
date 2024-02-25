@@ -6,7 +6,7 @@ get:
   summary: Get GPO entity computer
   description: Get a list, graph, or count of the computers affected by this GPO.
   tags:
-    - GPO Entity API
+    - GPOs
     - Community
     - Enterprise
   parameters:

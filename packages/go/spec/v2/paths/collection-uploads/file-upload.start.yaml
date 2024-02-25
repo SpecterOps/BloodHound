@@ -5,7 +5,7 @@ post:
   summary: Create File Upload Job
   description: Creates a file upload job for sending collection files
   tags:
-    - Ingest API
+    - Collection Uploads
     - Community
     - Enterprise
   responses:

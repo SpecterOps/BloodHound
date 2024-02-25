@@ -6,7 +6,7 @@ get:
   summary: Get pathfinding result
   description: DEPRECATED use GetShortestPath instead. Get the result of pathfinding between two nodes in graph format.
   tags:
-    - Graph API
+    - Graph
     - Community
     - Enterprise
   parameters:

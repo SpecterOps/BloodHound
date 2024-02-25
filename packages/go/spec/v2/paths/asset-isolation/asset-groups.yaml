@@ -6,7 +6,7 @@ get:
   summary: List all asset isolation groups
   description: Lists all asset isolation groups.
   tags:
-    - Asset Isolation API
+    - Asset Isolation
     - Community
     - Enterprise
   parameters:
@@ -69,7 +69,7 @@ post:
   summary: Create an asset group
   description: Creates an asset group
   tags:
-    - Asset Isolation API
+    - Asset Isolation
     - Community
     - Enterprise
   parameters:

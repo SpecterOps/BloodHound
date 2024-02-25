@@ -13,7 +13,7 @@ get:
   summary: Get the combo tree for an asset group
   description: Gets the combo tree for an asset group
   tags:
-    - Analysis API
+    - Analysis
     - Enterprise
   parameters:
     - name: domainsid

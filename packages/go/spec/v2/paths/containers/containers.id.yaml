@@ -6,7 +6,7 @@ get:
   summary: Get container entity info
   description: Get basic info and counts for this container node.
   tags:
-    - Container Entity API
+    - Containers
     - Community
     - Enterprise
   parameters:

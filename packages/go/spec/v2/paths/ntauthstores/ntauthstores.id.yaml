@@ -3,10 +3,10 @@ parameters:
   - $ref: './../../parameters/path/object-id.yaml'
 get:
   operationId: GetNtAuthStoreEntity
-  summary: Get NTAuthStore entity info
-  description: Get info and counts for this NTAuthStore node.
+  summary: Get NT Auth Store entity info
+  description: Get info and counts for this NT Auth Store node.
   tags:
-    - NTAuthStore Entity API
+    - NT Auth Stores
     - Community
     - Enterprise
   parameters:

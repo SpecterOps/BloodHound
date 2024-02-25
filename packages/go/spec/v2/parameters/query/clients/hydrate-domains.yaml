@@ -1,8 +1,8 @@
+name: hydrate_domains
 description: When a value of `true` is passed, any Domains associated with scheduled
   and finished jobs for each client will have expanded properties including
   `name` and `type`. When a value of `false` is passed, these same Domains will only
   return as a list of `objectid`s.
-name: hydrate_domains
 in: query
 schema:
   type: boolean

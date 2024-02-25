@@ -1,0 +1,21 @@
+get:
+  operationId: ListBheUsers
+  deprecated: true
+  summary: List BHE users
+  description: This endpoint has been deprecated. Please use `GET /api/v2/bloodhound-users` instead.
+  tags:
+    - BHE Users
+    - Enterprise
+  security: []
+  responses: {}
+
+post:
+  operationId: CreateBheUser
+  deprecated: true
+  summary: Create BHE user
+  description: This endpoint has been deprecated. Please use `POST /api/v2/bloodhound-users` instead.
+  tags:
+    - BHE Users
+    - Enterprise
+  security: []
+  responses: {}

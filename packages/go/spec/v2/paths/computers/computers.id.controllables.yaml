@@ -6,7 +6,7 @@ get:
   summary: Get computer entity controllables
   description: Get a list, graph, or count of the principals this computer can control.
   tags:
-    - Computer Entity API
+    - Computers
     - Community
     - Enterprise
   parameters:

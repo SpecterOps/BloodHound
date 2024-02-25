@@ -8,14 +8,24 @@ parameters:
       type: string
       format: uuid
 
-get:
-  operationId: GetMfaActivationStatus
-  summary: Returns MFA activation status for a user
-  description: Returns multi-factor authentication status for a user
+post:
+  operationId: AddUserMfa
+  summary: Enrolls user in multi-factor authentication
+  description: Enrolls user in multi-factor authentication
   tags:
-    - User Management API
+    - BloodHound Users
     - Community
     - Enterprise
+  requestBody:
+    description: The request body for enrolling a user in multi-factor authentication
+    required: true
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            secret:
+              type: string
   responses:
     200:
       description: OK
@@ -27,8 +37,10 @@ get:
               data:
                 type: object
                 properties:
-                  status:
-                    $ref: './../../schemas/enum/mfa-activation-status.yaml'
+                  qr_code:
+                    type: string
+                  totp_secret:
+                    type: string
     400:
       $ref: './../../responses/bad-request.yaml'
     401:
@@ -42,24 +54,23 @@ get:
     500:
       $ref: './../../responses/internal-server-error.yaml'
 
-post:
-  operationId: ActivateUserMfa
-  summary: Activates MFA for an enrolled user
-  description: Activates multi-factor authentication for an enrolled user
+delete:
+  operationId: RemoveUserMfa
+  summary: Unenroll user from multi-factor authentication
+  description: Unenrolls user from multi-factor authentication
   tags:
-    - User Management API
+    - BloodHound Users
     - Community
     - Enterprise
   requestBody:
-    description: The request body for activating multi-factor authentication for
-      an enrolled user
+    description: The request body for unenrolling a user from multi-factor authentication
     required: true
     content:
       application/json:
         schema:
           type: object
           properties:
-            otp:
+            secret:
               type: string
   responses:
     200:

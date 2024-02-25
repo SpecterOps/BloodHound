@@ -5,7 +5,7 @@ put:
   summary: Start analysis
   description: Starts generating attack paths
   tags:
-    - Attack Paths API
+    - Attack Paths
     - Enterprise
   responses:
     202:

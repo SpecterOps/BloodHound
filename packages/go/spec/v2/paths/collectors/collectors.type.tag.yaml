@@ -17,7 +17,7 @@ get:
   summary: Get collector download by version
   description: Retrieves the download for a given collector with given version
   tags:
-    - Collectors API
+    - Collectors
     - Community
     - Enterprise
   responses:

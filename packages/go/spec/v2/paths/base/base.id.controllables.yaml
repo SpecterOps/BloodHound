@@ -6,7 +6,7 @@ get:
   summary: Get entity controllables
   description: Get a list, graph, or count of the principals this node can control.
   tags:
-    - Base Entity API
+    - AD Base Entities
     - Community
     - Enterprise
   parameters:

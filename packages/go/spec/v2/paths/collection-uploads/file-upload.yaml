@@ -3,7 +3,7 @@ parameters:
 get:
   description: Lists available file upload jobs
   tags:
-    - Ingest API
+    - Collection Uploads
     - Community
     - Enterprise
   summary: List File Upload Jobs

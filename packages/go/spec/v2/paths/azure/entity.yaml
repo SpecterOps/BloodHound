@@ -17,7 +17,7 @@ get:
     related to a single entity. The `type` parameter will morph the response data structure. The `list`
     value for the `type` parameter also accepts `skip` and `limit` parameters.
   tags:
-    - Azure Entity API
+    - Azure Entities
     - Community
     - Enterprise
   parameters:

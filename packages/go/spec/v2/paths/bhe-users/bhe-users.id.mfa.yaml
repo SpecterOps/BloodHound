@@ -1,0 +1,23 @@
+post:
+  operationId: AddBheUserMfa
+  deprecated: true
+  summary: Add BHE user MFA
+  description: This endpoint has been deprecated.
+    Please use `POST /api/v2/bloodhound-users/{user-id}/mfa` instead.
+  tags:
+    - BHE Users
+    - Enterprise
+  security: []
+  responses: {}
+
+delete:
+  operationId: RemoveBheUserMfa
+  deprecated: true
+  summary: Remove BHE user MFA
+  description: This endpoint has been deprecated.
+    Please use `DELETE /api/v2/bloodhound-users/{user-id}/mfa` instead.
+  tags:
+    - BHE Users
+    - Enterprise
+  security: []
+  responses: {}

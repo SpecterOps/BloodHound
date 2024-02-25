@@ -3,10 +3,10 @@ parameters:
   - $ref: './../../parameters/path/object-id.yaml'
 get:
   operationId: GetEnterpriseCaEntityControllers
-  summary: Get EnterpriseCA entity controllers
-  description: Get a list, graph, or count of the principals that can control this EnterpriseCA.
+  summary: Get Enterprise CA entity controllers
+  description: Get a list, graph, or count of the principals that can control this Enterprise CA.
   tags:
-    - EnterpriseCA Entity API
+    - Enterprise CAs
     - Community
     - Enterprise
   parameters:

@@ -11,7 +11,7 @@ get:
   summary: Get collector manifest
   description: Retrieves the version manifest for a given collector
   tags:
-    - Collectors API
+    - Collectors
     - Community
     - Enterprise
   responses:

@@ -13,7 +13,7 @@ get:
   summary: Get Client
   description: Gets given client for processing collection events
   tags:
-    - Clients API
+    - Clients
     - Enterprise
   responses:
     200:
@@ -43,7 +43,7 @@ put:
   summary: Update Client
   description: Update a client for processing collection events
   tags:
-    - Clients API
+    - Clients
     - Enterprise
   requestBody:
     description: The request body for updating a client
@@ -85,7 +85,7 @@ delete:
   summary: Delete Client
   description: Delete a client for processing collection events
   tags:
-    - Clients API
+    - Clients
     - Enterprise
   responses:
     200:

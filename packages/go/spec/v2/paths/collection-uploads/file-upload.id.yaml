@@ -9,7 +9,7 @@ post:
   summary: Upload File To Job
   description: Saves a collection file to a file upload job
   tags:
-    - Ingest API
+    - Collection Uploads
     - Community
     - Enterprise
   requestBody:

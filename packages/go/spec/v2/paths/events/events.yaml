@@ -6,7 +6,7 @@ get:
   summary: List events
   description: Gets all client scheduled events.
   tags:
-    - Events API
+    - Events (Schedules)
     - Enterprise
   parameters:
     - name: sort_by
@@ -69,7 +69,7 @@ post:
   summary: Create Event
   description: Creates a scheduled event for data collection
   tags:
-    - Events API
+    - Events (Schedules)
     - Enterprise
   requestBody:
     description: The request body for creating an event

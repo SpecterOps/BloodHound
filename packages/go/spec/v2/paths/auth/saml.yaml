@@ -5,7 +5,7 @@ get:
   summary: List SAML Providers
   description: List all registered SAML providers.
   tags:
-    - Auth API
+    - Auth
     - Community
     - Enterprise
   responses:

@@ -12,7 +12,7 @@ get:
   summary: Get Job Log File
   description: Get the log file from a SharpHound run
   tags:
-    - Jobs API
+    - Jobs
     - Enterprise
   responses:
     200:

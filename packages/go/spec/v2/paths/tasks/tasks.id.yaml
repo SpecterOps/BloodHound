@@ -1,23 +1,10 @@
 get:
+  operationId: GetClientTask
   deprecated: true
-  description: Gets client job.
+  summary: Get client task
+  description: This endpoint has been deprecated. Please use `GET /api/v2/jobs/{job_id}` instead.
   tags:
     - Tasks
     - Enterprise
-  summary: Get Job
-  parameters:
-    - $ref: './../../parameters/header/prefer.yaml'
-    - type: string
-      description: Job ID
-      name: task_id
-      in: path
-      required: true
-  responses:
-    200:
-      description: OK
-      content:
-        application/json:
-          schema:
-            $ref: "#/definitions/api.BasicResponse"
-    default:
-      $ref: './../../responses/error-response.yaml'
+  security: []
+  responses: {}

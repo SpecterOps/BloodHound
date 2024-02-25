@@ -6,7 +6,7 @@ get:
   summary: Get computer entity remote PowerShell rights
   description: Get a list, graph, or count of the systems this computer has remote PowerShell rights on.
   tags:
-    - Computer Entity API
+    - Computers
     - Community
     - Enterprise
   parameters:

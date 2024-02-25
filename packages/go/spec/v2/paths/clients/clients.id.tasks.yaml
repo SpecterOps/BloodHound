@@ -14,7 +14,7 @@ post:
   summary: Creates a scheduled task
   description: Creates a new scheduled task
   tags:
-    - Clients API
+    - Clients
     - Enterprise
   parameters:
     - $ref: './../../parameters/header/prefer.yaml'

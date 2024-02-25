@@ -11,7 +11,7 @@ get:
   summary: Get latest tier zero combo node
   description: Get latest tier zero combo node
   tags:
-    - Analysis API
+    - Analysis
     - Enterprise
   responses:
     200:

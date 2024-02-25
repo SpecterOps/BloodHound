@@ -6,7 +6,7 @@ get:
   summary: Get GPO entity info
   description: Get info and counts for this GPO node.
   tags:
-    - GPO Entity API
+    - GPOs
     - Community
     - Enterprise
   parameters:

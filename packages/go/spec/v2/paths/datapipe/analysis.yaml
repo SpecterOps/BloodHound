@@ -5,7 +5,7 @@ put:
   summary: Start analysis
   description: Flags the API to begin analyzing ingest data.
   tags:
-    - Datapipe API
+    - Datapipe
     - Community
     - Enterprise
   responses:

@@ -6,7 +6,7 @@ get:
   summary: Get User entity sessions
   description: Get a list, graph, or count of the systems this user has an active session on.
   tags:
-    - User Entity API
+    - AD Users
     - Community
     - Enterprise
   parameters:

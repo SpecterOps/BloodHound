@@ -3,10 +3,10 @@ parameters:
   - $ref: './../../parameters/path/object-id.yaml'
 get:
   operationId: GetRootCaEntityControllers
-  summary: Get RootCA entity controllers
-  description: Get a list, graph, or count of the principals that can control this RootCA.
+  summary: Get Root CA entity controllers
+  description: Get a list, graph, or count of the principals that can control this Root CA.
   tags:
-    - RootCA Entity API
+    - Root CAs
     - Community
     - Enterprise
   parameters:

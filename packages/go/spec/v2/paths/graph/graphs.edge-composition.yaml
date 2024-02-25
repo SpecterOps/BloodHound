@@ -3,7 +3,7 @@ parameters:
 get:
   description: Returns a graph representing the various nodes and edges that make up the complex post-processed edge.
   tags:
-    - Graph API
+    - Graph
     - Community
     - Enterprise
   parameters:

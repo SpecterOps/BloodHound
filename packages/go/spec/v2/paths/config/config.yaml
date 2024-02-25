@@ -6,7 +6,7 @@ get:
   summary: List application config parameters
   description: Lists application configuration parameters for this instance
   tags:
-    - Config API
+    - Config
     - Community
     - Enterprise
   parameters:

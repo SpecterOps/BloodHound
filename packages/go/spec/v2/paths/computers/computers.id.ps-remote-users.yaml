@@ -6,7 +6,7 @@ get:
   summary: Get computer entity remote PowerShell users
   description: Get a list, graph, or count of the principals that have remote PowerShell rights on this computer.
   tags:
-    - Computer Entity API
+    - Computers
     - Community
     - Enterprise
   parameters:

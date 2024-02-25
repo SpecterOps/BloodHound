@@ -6,7 +6,7 @@ get:
   summary: Get GPO entity users
   description: Get a list, graph, or count of the users affected by this GPO.
   tags:
-    - GPO Entity API
+    - GPOs
     - Community
     - Enterprise
   parameters:

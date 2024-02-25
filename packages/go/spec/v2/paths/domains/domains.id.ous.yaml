@@ -6,7 +6,7 @@ get:
   summary: Get domain entity OUs
   description: Get a list or count of the OUs in this domain.
   tags:
-    - Domain Entity API
+    - Domains
     - Community
     - Enterprise
   parameters:

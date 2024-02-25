@@ -14,12 +14,102 @@ info:
     BloodHound Community Edition, please join our
     [Slack community](https://ghst.ly/BHSlack/).
 
-    For documentation about how to work with authentication in the API, please
-    refer to this support doc:
-    [Working with the BloodHound API](https://support.bloodhoundenterprise.io/hc/en-us/articles/11311053342619-Working-with-the-BloodHound-API)
-
     ## Authentication
-    <!-- Redoc-Inject: <security-definitions> -->
+
+    The BloodHound API supports two kinds of authentication: JWT bearer tokens and Signed Requests.
+    For quick tests or one-time calls, the JWT used by your browser may be the simplest route. For
+    more secure and long lived API integrations, the recommended option is signed requests.
+
+    ### JWT Bearer Token
+
+    The API will accept calls using the following header structure in the HTTP request:
+    ```
+    Authorization: Bearer $JWT_TOKEN
+    ```
+    If you open the Network tab within your browser, you will see calls against the API made utilizing
+    this structure. JWT bearer tokens are supported by the BloodHound API, however it is recommended
+    they only be used for temporary access. JWT tokens expire after a set amount of time and require
+    re-authentication using secret credentials.
+
+    ### Signed Requests
+
+    Signed requests are the recommended form of authentication for the BloodHound API. Not only are
+    signed requests better for long lived integrations, they also provide more security for the
+    requests being sent. They provide authentication of the client, as well as verification of request
+    integrity when received by the server.
+
+    Signed requests consist of three main parts: The client token ID, the request timestamp, and a
+    base64 encoded HMAC signature. These three pieces of information are sent with the request using
+    the following header structure:
+
+    ```
+    Authorization: bhesignature $TOKEN_ID
+    RequestDate: $RFC3339_DATETIME
+    Signature: $BASE64ENCODED_HMAC_SIGNATURE
+    ```
+
+    To use signed requests, you will need to generate an API token. Each API token generated in the
+    BloodHound API comes with two parts: The Token ID, which is used in the `Authorization` header,
+    and the Token Key, which is used as part of the HMAC hashing process. The token ID should be
+    considered as public (like a username) and the token key should be considered secret (like a
+    password). Once an API token is generated, you can use the key to sign requests.
+
+    For more documentation about how to work with authentication in the API, including examples
+    of how to generate an API token in the BloodHound UI, please refer to this support doc:
+    [Working with the BloodHound API](https://support.bloodhoundenterprise.io/hc/en-us/articles/11311053342619-Working-with-the-BloodHound-API).
+
+    #### Signed Request Pseudo-code Example
+
+    First, a digest is initiated with HMAC-SHA-256 using the token key as the digest key:
+    ```python
+    digester = hmac.new(sha256, api_token_key)
+    ```
+
+    OperationKey is the first HMAC digest link in the signature chain. This prevents replay attacks that
+    seek to modify the request method or URI. It is composed of concatenating the request method and
+    the request URI with no delimiter and computing the HMAC digest using the token key as the digest
+    secret:
+    ```python
+    # Example: GET /api/v2/test/resource HTTP/1.1
+    # Signature Component: GET/api/v2/test/resource
+    digester.write(request_method + request_uri)
+
+    # Update the digester for further chaining
+    digester = hmac.New(sha256, digester.hash())
+    ```
+
+    DateKey is the next HMAC digest link in the signature chain. This encodes the RFC3339
+    formatted datetime value as part of the signature to the hour to prevent replay
+    attacks that are older than max two hours. This value is added to the signature chain
+    by cutting off all values from the RFC3339 formatted datetime from the hours value
+    forward:
+    ```python
+    # Example: 2020-12-01T23:59:60Z
+    # Signature Component: 2020-12-01T23
+    request_datetime = date.now()
+    digester.write(request_datetime[:13])
+
+    # Update the digester for further chaining
+    digester = hmac.New(sha256, digester.hash())
+    ```
+
+    Body signing is the last HMAC digest link in the signature chain. This encodes the
+    request body as part of the signature to prevent replay attacks that seek to modify
+    the payload of a signed request. In the case where there is no body content the
+    HMAC digest is computed anyway, simply with no values written to the digester:
+    ```python
+    if request.body is not empty:
+      digester.write(request.body)
+    ```
+
+    Finally, base64 encode the final hash and write the three required headers before
+    sending the request:
+    ```python
+    encoded_hash = base64_encode(digester.hash())
+    request.header.write('Authorization', 'bhesignature ' + token_id)
+    request.header.write('RequestDate', request_datetime)
+    request.header.write('Signature', encoded_hash)
+    ```
   #termsOfService: TBD
   contact:
     name: BloodHound Enterprise Support
@@ -36,25 +126,57 @@ security:
     RequestDate: []
     HMACSignature: []
 
-#x-tagGroups:
-#  - name: Community & Enterprise
-#    tags:
-#      - User Management API
-#  - name: Enterprise Only
-#    tags:
-#      - Analysis API
-#      - Meta Entity API
-#  - name: Entity APIs
-#    tags:
-#      - Computer Entity API
-#      - Domain Entity API
-#      - GPO Entity API
 
-tags:
-  - name: Community
-    description: This tag denotes an endpoint that is available in BloodHound Community Edition.
-  - name: Enterprise
-    description: This tag denotes an endpoint that is available in BloodHound Enterprise Edition.
+##
+# This section is used by ReDoc to organize endpoint groups in the sidebar.
+# Two top level tag groups help users find Community and Enterprise features.
+#
+## ALL TAGS MUST BE LISTED HERE TO SHOW UP IN THE NAVIGATION. ##
+x-tagGroups:
+  - name: Community & Enterprise
+    tags:
+      - Auth
+      - Roles
+      - Permissions
+      - API Tokens
+      - BloodHound Users
+      - Collectors
+      - Collection Uploads
+      - API Info
+      - Search
+      - Audit
+      - Config
+      - Asset Isolation
+      - Graph
+      - Azure Entities
+      - AD Base Entities
+      - Computers
+      - Containers
+      - Domains
+      - GPOs
+      - AIA CAs
+      - Root CAs
+      - Enterprise CAs
+      - NT Auth Stores
+      - Cert Templates
+      - OUs
+      - AD Users
+      - Groups
+      - Data Quality
+      - Datapipe
+  - name: Enterprise Only
+    tags:
+      - EULA
+      - BHE Users
+      - Analysis
+      - Client Ingest
+      - Clients
+      - Jobs
+      - Tasks
+      - Events (Schedules)
+      - Attack Paths
+      - Risk Posture
+      - Meta Entities
 
 paths:
   ##
@@ -77,36 +199,38 @@ paths:
   /api/v2/saml/providers/{saml_provider_id}:
     $ref: './paths/auth/saml.providers.id.yaml'
 
-  # Undocumented, not sure how this endpoint actually works, appears to be
-  # some kind of file serving endpoint
+  # Undocumented, not sure how this endpoint actually works.
   #/api/v2/login/saml/{saml_provider_name}:
 
-
-  # roles & permissions
+  # permissions
   /api/v2/permissions:
-    $ref: './paths/roles-permissions/permissions.yaml'
+    $ref: './paths/permissions/permissions.yaml'
   /api/v2/permissions/{permission_id}:
-    $ref: './paths/roles-permissions/permissions.id.yaml'
+    $ref: './paths/permissions/permissions.id.yaml'
+
+  # roles
   /api/v2/roles:
-    $ref: './paths/roles-permissions/roles.yaml'
+    $ref: './paths/roles/roles.yaml'
   /api/v2/roles/{role_id}:
-    $ref: './paths/roles-permissions/roles.id.yaml'
+    $ref: './paths/roles/roles.id.yaml'
+
+  # api tokens
+  /api/v2/tokens:
+    $ref: './paths/tokens/tokens.yaml'
+  /api/v2/tokens/{token_id}:
+    $ref: './paths/tokens/tokens.id.yaml'
 
   # user management
   /api/v2/bloodhound-users:
-    $ref: './paths/user-manage/bloodhound-users.yaml'
+    $ref: './paths/bh-users/bloodhound-users.yaml'
   /api/v2/bloodhound-users/{user_id}:
-    $ref: './paths/user-manage/bloodhound-users.id.yaml'
+    $ref: './paths/bh-users/bloodhound-users.id.yaml'
   /api/v2/bloodhound-users/{user_id}/secret:
-    $ref: './paths/user-manage/bloodhound-users.id.secret.yaml'
+    $ref: './paths/bh-users/bloodhound-users.id.secret.yaml'
   /api/v2/bloodhound-users/{user_id}/mfa:
-    $ref: './paths/user-manage/bloodhound-users.id.mfa.yaml'
+    $ref: './paths/bh-users/bloodhound-users.id.mfa.yaml'
   /api/v2/bloodhound-users/{user_id}/mfa-activation:
-    $ref: './paths/user-manage/bloodhound-users.id.mfa-activation.yaml'
-  /api/v2/tokens:
-    $ref: './paths/user-manage/tokens.yaml'
-  /api/v2/tokens/{token_id}:
-    $ref: './paths/user-manage/tokens.id.yaml'
+    $ref: './paths/bh-users/bloodhound-users.id.mfa-activation.yaml'
 
   # collectors
   /api/v2/collectors/{collector_type}:
@@ -116,15 +240,15 @@ paths:
   /api/v2/collectors/{collector_type}/{release_tag}/checksum:
     $ref: './paths/collectors/collectors.type.tag.checksum.yaml'
 
-  # ingest
+  # collection uploads
   /api/v2/file-upload:
-    $ref: './paths/ingest/file-upload.yaml'
+    $ref: './paths/collection-uploads/file-upload.yaml'
   /api/v2/file-upload/start:
-    $ref: './paths/ingest/file-upload.start.yaml'
+    $ref: './paths/collection-uploads/file-upload.start.yaml'
   /api/v2/file-upload/{file_upload_job_id}:
-    $ref: './paths/ingest/file-upload.id.yaml'
+    $ref: './paths/collection-uploads/file-upload.id.yaml'
   /api/v2/file-upload/{file_upload_job_id}/end:
-    $ref: './paths/ingest/file-upload.id.end.yaml'
+    $ref: './paths/collection-uploads/file-upload.id.end.yaml'
 
   # api info
   /api/version:
@@ -168,10 +292,6 @@ paths:
   /api/v2/asset-groups/{asset_group_id}/members/counts:
     $ref: './paths/asset-isolation/asset-groups.id.members.counts.yaml'
 
-  # qa
-  /api/v2/completeness:
-    $ref: './paths/qa/completeness.yaml'
-
   # graph
   /api/v2/pathfinding:
     $ref: './paths/graph/pathfinding.yaml'
@@ -190,11 +310,11 @@ paths:
   /api/v2/graphs/cypher:
     $ref: './paths/cypher/graphs.cypher.yaml'
 
-  # azure
+  # azure entities
   /api/v2/azure/{entity_type}:
     $ref: './paths/azure/entity.yaml'
 
-  # base
+  # ad base entities
   /api/v2/base/{object_id}:
     $ref: './paths/base/base.id.yaml'
   /api/v2/base/{object_id}/controllables:
@@ -306,7 +426,7 @@ paths:
   /api/v2/enterprisecas/{object_id}/controllers:
     $ref: './paths/enterprisecas/enterprisecas.id.yaml'
 
-  # nt auth store
+  # nt auth stores
   /api/v2/ntauthstores/{object_id}:
     $ref: './paths/ntauthstores/ntauthstores.id.yaml'
   /api/v2/ntauthstores/{object_id}/controllers:
@@ -330,7 +450,7 @@ paths:
   /api/v2/ous/{object_id}/users:
     $ref: './paths/ous/ous.id.users.yaml'
 
-  # users
+  # ad users
   /api/v2/users/{object_id}:
     $ref: './paths/users/users.id.yaml'
   /api/v2/users/{object_id}/admin-rights:
@@ -377,6 +497,8 @@ paths:
     $ref: './paths/groups/groups.id.sessions.yaml'
 
   # data quality
+  /api/v2/completeness:
+    $ref: './paths/data-quality/completeness.yaml'
   /api/v2/ad-domains/{domain_id}/data-quality-stats:
     $ref: './paths/data-quality/ad-domains.id.data-quality-stats.yaml'
   /api/v2/azure-tenants/{tenant_id}/data-quality-stats:
@@ -396,19 +518,19 @@ paths:
 
   # auth
   /api/v2/accept-eula:
-    $ref: './paths/auth/accept-eula.yaml'
+    $ref: './paths/eula/accept-eula.yaml'
 
-  # user management (deprecated)
-#  /api/v2/bhe-users:
-#    $ref: './paths/auth/bloodhound-users.yaml'
-#  /api/v2/bhe-users/{user_id}:
-#    $ref: './paths/auth/bloodhound-users.id.yaml'
-#  /api/v2/bhe-users/{user_id}/secret:
-#    $ref: './paths/auth/bloodhound-users.id.secret.yaml'
-#  /api/v2/bhe-users/{user_id}/mfa:
-#    $ref: './paths/auth/bloodhound-users.id.mfa.yaml'
-#  /api/v2/bhe-users/{user_id}/mfa-activation:
-#    $ref: './paths/auth/bloodhound-users.id.mfa-activation.yaml'
+  # bhe user management (deprecated)
+  /api/v2/bhe-users:
+    $ref: './paths/bhe-users/bhe-users.yaml'
+  /api/v2/bhe-users/{user_id}:
+    $ref: './paths/bhe-users/bhe-users.id.yaml'
+  /api/v2/bhe-users/{user_id}/secret:
+    $ref: './paths/bhe-users/bhe-users.id.secret.yaml'
+  /api/v2/bhe-users/{user_id}/mfa:
+    $ref: './paths/bhe-users/bhe-users.id.mfa.yaml'
+  /api/v2/bhe-users/{user_id}/mfa-activation:
+    $ref: './paths/bhe-users/bhe-users.id.mfa-activation.yaml'
 
   # analysis
   /api/v2/meta-nodes/{domain_id}:
@@ -418,9 +540,9 @@ paths:
   /api/v2/asset-groups/{asset_group_id}/combo-node:
     $ref: './paths/analysis/asset-groups.id.combo-node.yaml'
 
-  # ingest
+  # client ingest
   /api/v2/ingest:
-    $ref: './paths/ingest/ingest.yaml'
+    $ref: './paths/client-ingest/ingest.yaml'
 
   # clients
   /api/v2/clients:
@@ -463,24 +585,24 @@ paths:
     $ref: './paths/jobs/jobs.id.log.yaml'
 
   # tasks (deprecated)
-#  /api/v2/tasks/available:
-#    $ref: './paths/tasks/tasks.available.yaml'
-#  /api/v2/tasks/finished:
-#    $ref: './paths/tasks/tasks.finished.yaml'
-#  /api/v2/tasks/end:
-#    $ref: './paths/tasks/tasks.end.yaml'
-#  /api/v2/tasks/start:
-#    $ref: './paths/tasks/tasks.start.yaml'
-#  /api/v2/tasks:
-#    $ref: './paths/tasks/tasks.yaml'
-#  /api/v2/tasks/{task_id}:
-#    $ref: './paths/tasks/tasks.id.yaml'
-#  /api/v2/tasks/{task_id}/cancel:
-#    $ref: './paths/tasks/tasks.id.cancel.yaml'
-#  /api/v2/tasks/{task_id}/log:
-#    $ref: './paths/tasks/tasks.id.log.yaml'
-#  /api/v2/tasks/current:
-#    $ref: './paths/tasks/tasks.current.yaml'
+  /api/v2/tasks/available:
+    $ref: './paths/tasks/tasks.available.yaml'
+  /api/v2/tasks/finished:
+    $ref: './paths/tasks/tasks.finished.yaml'
+  /api/v2/tasks/end:
+    $ref: './paths/tasks/tasks.end.yaml'
+  /api/v2/tasks/start:
+    $ref: './paths/tasks/tasks.start.yaml'
+  /api/v2/tasks:
+    $ref: './paths/tasks/tasks.yaml'
+  /api/v2/tasks/{task_id}:
+    $ref: './paths/tasks/tasks.id.yaml'
+  /api/v2/tasks/{task_id}/cancel:
+    $ref: './paths/tasks/tasks.id.cancel.yaml'
+  /api/v2/tasks/{task_id}/log:
+    $ref: './paths/tasks/tasks.id.log.yaml'
+  /api/v2/tasks/current:
+    $ref: './paths/tasks/tasks.current.yaml'
 
   # events
   /api/v2/events:
@@ -497,16 +619,16 @@ paths:
     $ref: './paths/attack-paths/attack-paths.yaml'
   /api/v2/domains/{domain_id}/available-types:
     $ref: './paths/attack-paths/domains.id.available-types.yaml'
-#  /api/v2/domains/{domain_id}/details:
-#    $ref: './paths/attack-paths/domains.id.details.yaml'
-#  /api/v2/domains/{domain_id}/sparkline:
-#    $ref: './paths/attack-paths/domains.id.sparkline.yaml'
-#  /api/v2/attack-paths/{attack_path_id}/acceptance:
-#    $ref: './paths/attack-paths/attack-paths.id.acceptance.yaml'
+  /api/v2/domains/{domain_id}/details:
+    $ref: './paths/attack-paths/domains.id.details.yaml'
+  /api/v2/domains/{domain_id}/sparkline:
+    $ref: './paths/attack-paths/domains.id.sparkline.yaml'
+  /api/v2/attack-paths/{attack_path_id}/acceptance:
+    $ref: './paths/attack-paths/attack-paths.id.acceptance.yaml'
 
-  # qa
+  # risk posture
   /api/v2/posture-stats:
-    $ref: './paths/qa/posture-stats.yaml'
+    $ref: './paths/risk-posture/posture-stats.yaml'
 
   # meta entity
   /api/v2/meta/{object_id}:
@@ -520,98 +642,26 @@ components:
     # JWT Bearer token
     JWTBearerToken:
       description: |
-        Standard JWT bearer token Authorization header. For quick tests or one-time calls, the
-        JWT used by your browser may be the simplest route. The API will accept calls using the
-        following header structure in the HTTP request:
-
         `Authorization: Bearer $JWT_TOKEN`
-
-        If you open the Network tab within your browser, you will see calls against the API
-        made utilizing this structure.
       type: http
       scheme: Bearer
       bearerFormat: JWT
     # BHE Signature
     SignedRequest:
       description: |
-        For long-running API integrations, BloodHound's API utilizes hash-based message
-        authentication code (HMAC) authentication using the API key as the secret key to verify
-        the authenticity and integrity of the request. Calls against the API must include the
-        following headers:
-        ```
-        Authorization: bhesignature $TOKEN_ID
-        RequestDate: $RFC3339_DATETIME
-        Signature: $BASE64ENCODED_HMAC_SIGNATURE
-        ```
-        Each API token generated in the BloodHound API comes with two parts: The Token ID, which is used
-        in the `Authorization` header, and the Token Key, which is used as part of the HMAC hashing process.
+        `Authorization: bhesignature $TOKEN_ID`
       type: apiKey
       name: Authorization
       in: header
     RequestDate:
       description: |
-        This header is used as part of the HMAC signing chain for `bhesignature` auth. It is expected to
-        be formatted to RFC-3339 standard and sent with any signed requests.
+        `RequestDate: $RFC3339_DATETIME`
       type: apiKey
       name: RequestDate
       in: header
     HMACSignature:
       description: |
-        This header contains the base64 encoded HMAC hash used to verify the request. Below is a
-        pseudo-code example showing how the signature is created:
-        ```python
-        # Digester is initialized with HMAC-SHA-256 using
-        # the token key as the HMAC digest key.
-        digester = hmac.new(sha256, api_token_key)
-
-        # OperationKey is the first HMAC digest link in the
-        # signature chain. This prevents replay attacks that
-        # seek to modify the request method or URI. It is
-        # composed of concatenating the request method and
-        # the request URI with no delimiter and computing
-        # the HMAC digest using the token key as the digest
-        # secret.
-        #
-        # Example: GET /api/v2/test/resource HTTP/1.1
-        # Signature Component: GET/api/v2/test/resource
-        digester.write(request_method + request_uri)
-
-        # Update the digester for further chaining
-        digester = hmac.New(sha256, digester.hash())
-
-        # DateKey is the next HMAC digest link in the
-        # signature chain. This encodes the RFC3339
-        # formatted datetime value as part of the
-        # signature to the hour to prevent replay
-        # attacks that are older than max two hours.
-        # This value is added to the signature chain
-        # by cutting off all values from the RFC3339
-        # formatted datetime from the hours value
-        # forward:
-        #
-        # Example: 2020-12-01T23:59:60Z
-        # Signature Component: 2020-12-01T23
-        digester.write(request_datetime[:13])
-
-        # Update the digester for further chaining
-        digester = hmac.New(sha256, digester.hash())
-
-        # Body signing is the last HMAC digest link
-        # in the signature chain. This encodes the
-        # request body as part of the signature to
-        # prevent replay attacks that seek to modify
-        # the payload of a signed request. In the
-        # case where there is no body content the
-        # HMAC digest is computed anyway, simply
-        # with no values written to the digester.
-        if request.body is not empty:
-          digester.write(request.body)
-
-        # Base64 encode the final hash and add it to
-        # the `Signature` header:
-        encoded_hash = base64_encode(digester.hash())
-        request.header.write('Signature', encoded_hash)
-        ```
+        `Signature: $BASE64ENCODED_HMAC_SIGNATURE`
       type: apiKey
       name: Signature
       in: header
@@ -643,11 +693,6 @@ components:
 #      $ref: './schemas/api/error.yaml'
 #
 #    # graph types
-#    graph.GraphResponse: # TODO: remove graphs.GraphResponse
-#      type: object
-#      properties:
-#        data:
-#          "$ref": "#/components/schemas/graph.Graph"
 #    graph.Graph:
 #      $ref: './schemas/graph/graph.yaml'
 #    graph.Node:

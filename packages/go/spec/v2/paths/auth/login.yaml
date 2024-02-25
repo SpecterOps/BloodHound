@@ -5,9 +5,10 @@ post:
   summary: Login to BloodHound
   description: Login to BloodHound with user credentials or a one time password.
   tags:
-    - Auth API
+    - Auth
     - Community
     - Enterprise
+  security: []
   requestBody:
     description: >
       The request body for logging into the application. `secret` *or* `otp` is required, but not both.

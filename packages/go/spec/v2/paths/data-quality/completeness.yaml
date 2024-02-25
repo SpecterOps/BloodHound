@@ -5,7 +5,7 @@ get:
   summary: Get database completeness stats
   description: Get the percentage of local admins and sessions collected
   tags:
-    - QA
+    - Data Quality
     - Community
     - Enterprise
   responses:
