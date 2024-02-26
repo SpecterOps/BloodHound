@@ -186,7 +186,7 @@ func (s Resources) HandleDatabaseWipe(response http.ResponseWriter, request *htt
 	if errors.DeleteCollectedGraphData || errors.DeleteHighValueSelectors || errors.DeleteDataQualityHistory || errors.DeleteFileIngestHistory {
 		api.WriteErrorResponse(
 			request.Context(),
-			api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("we encountered an error while deleting %s.  please submit your request again.", BuildMessageForFailureAudit(errors)), request),
+			api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("we encountered an error while deleting %s.  please submit your request again.", BuildFailureMessageForUI(errors)), request),
 			response,
 		)
 		return
@@ -200,12 +200,12 @@ func (s Resources) handleAuditLog(ctx context.Context, auditEntry *model.AuditEn
 	if success {
 		auditEntry.Status = model.AuditStatusSuccess
 		auditEntry.Model = model.AuditData{
-			"deleted": msg,
+			"delete_successful": msg,
 		}
 	} else {
 		auditEntry.Status = model.AuditStatusFailure
 		auditEntry.Model = model.AuditData{
-			"not_deleted": msg,
+			"delete_failed": msg,
 		}
 	}
 
@@ -216,7 +216,7 @@ func (s Resources) handleAuditLog(ctx context.Context, auditEntry *model.AuditEn
 	return nil
 }
 
-func BuildMessageForFailureAudit(failures DatabaseWipe) string {
+func BuildFailureMessageForUI(failures DatabaseWipe) string {
 	var message []string
 	if failures.DeleteCollectedGraphData {
 		message = append(message, "collected graph data")

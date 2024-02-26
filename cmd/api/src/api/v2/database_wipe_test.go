@@ -318,7 +318,7 @@ func TestDatabaseWipe(t *testing.T) {
 
 func Test_BuildMessageForFailureAudit(t *testing.T) {
 
-	got := v2.BuildMessageForFailureAudit(v2.DatabaseWipe{
+	got := v2.BuildFailureMessageForUI(v2.DatabaseWipe{
 		DeleteCollectedGraphData: true,
 		DeleteHighValueSelectors: true,
 	})
