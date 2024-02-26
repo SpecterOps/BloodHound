@@ -185,9 +185,7 @@ func (s *BloodhoundDB) GetAzureDataQualityAggregations(start time.Time, end time
 }
 
 func (s *BloodhoundDB) DeleteAllDataQuality(ctx context.Context) error {
-	err := CheckError(
+	return CheckError(
 		s.db.WithContext(ctx).Exec("DELETE FROM ad_data_quality_aggregations; DELETE FROM ad_data_quality_stats; DELETE FROM azure_data_quality_aggregations; DELETE FROM azure_data_quality_stats;"),
 	)
-
-	return err
 }
