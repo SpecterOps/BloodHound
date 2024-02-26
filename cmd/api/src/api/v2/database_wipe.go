@@ -117,7 +117,7 @@ func (s Resources) HandleDatabaseWipe(response http.ResponseWriter, request *htt
 		}); err != nil {
 			errors.DeleteCollectedGraphData = true
 			log.Errorf("%s: %s", "error fetching all nodes", err.Error())
-			s.handleAuditLog(request.Context(), auditEntry, false, "collected graph data")
+			s.handleAuditLogForDatabaseWipe(request.Context(), auditEntry, false, "collected graph data")
 
 		} else if err := s.Graph.BatchOperation(request.Context(), func(batch graph.Batch) error {
 			for _, nodeId := range nodeIDs {
@@ -130,11 +130,11 @@ func (s Resources) HandleDatabaseWipe(response http.ResponseWriter, request *htt
 		}); err != nil {
 			errors.DeleteCollectedGraphData = true
 			log.Errorf("%s: %s", "error deleting all nodes", err.Error())
-			s.handleAuditLog(request.Context(), auditEntry, false, "collected graph data")
+			s.handleAuditLogForDatabaseWipe(request.Context(), auditEntry, false, "collected graph data")
 
 		} else {
 			// if successful, handle audit log and kick off analysis
-			s.handleAuditLog(request.Context(), auditEntry, true, "collected graph data")
+			s.handleAuditLogForDatabaseWipe(request.Context(), auditEntry, true, "collected graph data")
 			kickoffAnalysis = true
 		}
 
@@ -145,10 +145,10 @@ func (s Resources) HandleDatabaseWipe(response http.ResponseWriter, request *htt
 		if err := s.DB.DeleteAssetGroupSelectorsForAssetGroup(request.Context(), payload.AssetGroupId); err != nil {
 			errors.DeleteHighValueSelectors = true
 			log.Errorf("%s %d: %s", "there was an error deleting asset group with id = ", payload.AssetGroupId, err.Error())
-			s.handleAuditLog(request.Context(), auditEntry, false, "high value selectors")
+			s.handleAuditLogForDatabaseWipe(request.Context(), auditEntry, false, "high value selectors")
 		} else {
 			// if succesful, handle audit log and kick off analysis
-			s.handleAuditLog(request.Context(), auditEntry, true, "high value selectors")
+			s.handleAuditLogForDatabaseWipe(request.Context(), auditEntry, true, "high value selectors")
 			kickoffAnalysis = true
 		}
 	}
@@ -163,10 +163,10 @@ func (s Resources) HandleDatabaseWipe(response http.ResponseWriter, request *htt
 		if err := s.DB.DeleteAllFileUploads(); err != nil {
 			errors.DeleteFileIngestHistory = true
 			log.Errorf("%s: %s", "there was an error deleting file ingest history", err.Error())
-			s.handleAuditLog(request.Context(), auditEntry, false, "file ingest history")
+			s.handleAuditLogForDatabaseWipe(request.Context(), auditEntry, false, "file ingest history")
 
 		} else {
-			s.handleAuditLog(request.Context(), auditEntry, true, "file ingest history")
+			s.handleAuditLogForDatabaseWipe(request.Context(), auditEntry, true, "file ingest history")
 		}
 	}
 
@@ -175,10 +175,10 @@ func (s Resources) HandleDatabaseWipe(response http.ResponseWriter, request *htt
 		if err := s.DB.DeleteAllDataQuality(); err != nil {
 			errors.DeleteDataQualityHistory = true
 			log.Errorf("%s: %s", "there was an error deleting data quality history", err.Error())
-			s.handleAuditLog(request.Context(), auditEntry, false, "data quality history")
+			s.handleAuditLogForDatabaseWipe(request.Context(), auditEntry, false, "data quality history")
 
 		} else {
-			s.handleAuditLog(request.Context(), auditEntry, true, "data quality history")
+			s.handleAuditLogForDatabaseWipe(request.Context(), auditEntry, true, "data quality history")
 		}
 	}
 
@@ -196,7 +196,7 @@ func (s Resources) HandleDatabaseWipe(response http.ResponseWriter, request *htt
 
 }
 
-func (s Resources) handleAuditLog(ctx context.Context, auditEntry *model.AuditEntry, success bool, msg string) error {
+func (s Resources) handleAuditLogForDatabaseWipe(ctx context.Context, auditEntry *model.AuditEntry, success bool, msg string) error {
 	if success {
 		auditEntry.Status = model.AuditStatusSuccess
 		auditEntry.Model = model.AuditData{

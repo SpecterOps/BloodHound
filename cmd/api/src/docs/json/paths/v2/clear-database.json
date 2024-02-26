@@ -10,9 +10,33 @@
                 "content": {
                     "application/json": {
                         "schema": {
-                            "$ref": "#/definitions/v2.CreateSavedQueryRequest"
+                            "$ref": "#/definitions/v2.DatabaseWipeRequest"
+                        },
+                        "examples": {
+                            "Delete collected graph data": {
+                                "value": {
+                                    "deleteCollectedGraphData": true
+                                }
+                            },
+                            "Delete custom high value selectors": {
+                                "value": {
+                                    "deleteHighValueSelectors": true,
+                                    "assetGroupId": 1
+                                }
+                            }
                         }
                     }
+                }
+            },
+            "responses": {
+                "204": {
+                    "description": "No Content. Successful deletion!"
+                },
+                "400": {
+                    "description": "Bad Request.  This endpoint returns a 400 error if the request body is empty, or if `deleteHighValueSelectors` is set to `true` without also providing a value for `assetGroupId`"
+                },
+                "500": {
+                    "description": "This endpoint returns a 500 error if any of the delete operations fails."
                 }
             }
         }

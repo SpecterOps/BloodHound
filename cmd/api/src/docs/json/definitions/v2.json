@@ -1017,6 +1017,7 @@
     },
     "v2.DatabaseWipeRequest": {
         "type": "object",
+        "required": true,
         "properties": {
             "deleteCollectedGraphData": {
                 "type": "boolean"
