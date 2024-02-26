@@ -108,8 +108,7 @@ func (s Resources) HandleDatabaseWipe(response http.ResponseWriter, request *htt
 
 	// delete graph
 	if payload.DeleteCollectedGraphData {
-		failed := s.deleteCollectedGraphData(request.Context(), auditEntry)
-		if failed {
+		if failed := s.deleteCollectedGraphData(request.Context(), auditEntry); failed {
 			errors = append(errors, "collected graph data")
 		} else {
 			kickoffAnalysis = true
@@ -118,8 +117,7 @@ func (s Resources) HandleDatabaseWipe(response http.ResponseWriter, request *htt
 
 	// delete custom high value selectors
 	if payload.DeleteHighValueSelectors {
-		failed := s.deleteHighValueSelectors(request.Context(), payload.AssetGroupId, auditEntry)
-		if failed {
+		if failed := s.deleteHighValueSelectors(request.Context(), payload.AssetGroupId, auditEntry); failed {
 			errors = append(errors, "custom high value selectors")
 		} else {
 			kickoffAnalysis = true
