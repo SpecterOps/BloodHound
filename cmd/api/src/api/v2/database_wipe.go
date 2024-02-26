@@ -228,7 +228,7 @@ func (s Resources) deleteDataQualityHistory(ctx context.Context, auditEntry *mod
 	}
 }
 
-func (s Resources) handleAuditLogForDatabaseWipe(ctx context.Context, auditEntry *model.AuditEntry, success bool, msg string) error {
+func (s Resources) handleAuditLogForDatabaseWipe(ctx context.Context, auditEntry *model.AuditEntry, success bool, msg string) {
 	if success {
 		auditEntry.Status = model.AuditStatusSuccess
 		auditEntry.Model = model.AuditData{
@@ -242,8 +242,6 @@ func (s Resources) handleAuditLogForDatabaseWipe(ctx context.Context, auditEntry
 	}
 
 	if err := s.DB.AppendAuditLog(ctx, *auditEntry); err != nil {
-		return err
+		log.Errorf("%s: %s", "error writing to audit log", err.Error())
 	}
-
-	return nil
 }
