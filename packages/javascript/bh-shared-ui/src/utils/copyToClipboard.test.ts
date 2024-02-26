@@ -1,4 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2024 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -14,12 +14,18 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-export * from './api';
-export * from './content';
-export * from './datetime';
-export * from './exportGraphData';
-export * from './entityInfoDisplay';
-export * from './passwd';
-export * from './user';
-export * from './icons';
-export * from './copyToClipboard'
+import userEvent from "@testing-library/user-event";
+import { copyToClipboard } from "."
+
+describe('copyToClipboard', () => {
+	it('takes a string and copys to the navigator clipboard', async () => {
+		userEvent.setup(); // replaces window.navigator.clipboard with a stub
+
+		const expected = 'test copying capabilities'
+		await copyToClipboard(expected)
+
+		const result = await navigator.clipboard.readText()
+
+		expect(result).toBe(expected)
+	})
+})
