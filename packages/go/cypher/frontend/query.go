@@ -186,6 +186,12 @@ type RangeLiteralVisitor struct {
 	PatternRange *model.PatternRange
 }
 
+func NewRangeLiteralVisitor() *RangeLiteralVisitor {
+	return &RangeLiteralVisitor{
+		PatternRange: &model.PatternRange{},
+	}
+}
+
 func (s *RangeLiteralVisitor) EnterOC_IntegerLiteral(ctx *parser.OC_IntegerLiteralContext) {
 	if value, err := strconv.ParseInt(ctx.GetText(), 10, 64); err != nil {
 		s.ctx.AddErrors(fmt.Errorf("failed parsing range literal: %w", err))
