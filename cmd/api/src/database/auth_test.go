@@ -174,7 +174,7 @@ func TestDatabase_UpdateRole(t *testing.T) {
 	}
 }
 
-func TestDatabase_CreateGetUser(t *testing.T) {
+func TestDatabase_CreateGetDeleteUser(t *testing.T) {
 	var (
 		dbInst, roles = initAndGetRoles(t)
 
@@ -195,6 +195,8 @@ func TestDatabase_CreateGetUser(t *testing.T) {
 				PrincipalName: user2Principal,
 			},
 		}
+
+		createdUsers []model.User
 	)
 
 	for _, user := range users {
@@ -202,7 +204,7 @@ func TestDatabase_CreateGetUser(t *testing.T) {
 			t.Fatalf("Error creating user: %v", err)
 		} else if newUser, err := dbInst.LookupUser(user.PrincipalName); err != nil {
 			t.Fatalf("Failed looking up user by principal %s: %v", user.PrincipalName, err)
-		} else if err := verifyAuditLogs(t, dbInst, "CreateUser", "principal_name", newUser.PrincipalName); err != nil {
+		} else if err = verifyAuditLogs(t, dbInst, "CreateUser", "principal_name", newUser.PrincipalName); err != nil {
 			t.Fatalf("Failed to validate CreateUser audit logs:\n%v", err)
 		} else {
 			for _, role := range roles {
@@ -219,12 +221,13 @@ func TestDatabase_CreateGetUser(t *testing.T) {
 					t.Fatalf("Missing role %s", role.Name)
 				}
 			}
+			createdUsers = append(createdUsers, newUser)
 
 			newUser.Roles = newUser.Roles.RemoveByName(roleToDelete)
 
 			if err := dbInst.UpdateUser(context.Background(), newUser); err != nil {
 				t.Fatalf("Failed to update user: %v", err)
-			} else if verifyAuditLogs(t, dbInst, "UpdateUser", "principal_name", newUser.PrincipalName); err != nil {
+			} else if err = verifyAuditLogs(t, dbInst, "UpdateUser", "principal_name", newUser.PrincipalName); err != nil {
 				t.Fatalf("Failed to validate UpdateUser audit logs:\n%v", err)
 			} else if updatedUser, err := dbInst.LookupUser(user.PrincipalName); err != nil {
 				t.Fatalf("Failed looking up user by principal %s: %v", user.PrincipalName, err)
@@ -234,10 +237,18 @@ func TestDatabase_CreateGetUser(t *testing.T) {
 		}
 	}
 
+	if err := dbInst.DeleteUser(context.Background(), createdUsers[1]); err != nil {
+		t.Fatalf("Failed to delete user: %v", err)
+	} else if err = verifyAuditLogs(t, dbInst, "DeleteUser", "principal_name", users[1].PrincipalName); err != nil {
+		t.Fatalf("Failed to validate Deleteuser audit logs:\n%v", err)
+	}
+
 	if usersResponse, err := dbInst.GetAllUsers("first_name", model.SQLFilter{}); err != nil {
 		t.Fatalf("Error getting users: %v", err)
 	} else if usersResponse[0].FirstName.String != "First" {
 		t.Fatalf("ListUsers returned incorrectly sorted data")
+	} else if len(usersResponse) > 1 {
+		t.Fatalf("User '%s' exists but should have been deleted. Response: %v", createdUsers[1].PrincipalName, usersResponse)
 	}
 }
 
@@ -328,17 +339,22 @@ func TestDatabase_CreateGetDeleteAuthSecret(t *testing.T) {
 	}
 }
 
-func TestDatabase_CreateSAMLProvider(t *testing.T) {
-	dbInst, user := initAndCreateUser(t)
+func TestDatabase_CreateUpdateDeleteSAMLProvider(t *testing.T) {
+	var (
+		dbInst, user = initAndCreateUser(t)
 
-	samlProvider := model.SAMLProvider{
-		Name:            "provider",
-		DisplayName:     "provider name",
-		IssuerURI:       "https://idp.example.com/idp.xml",
-		SingleSignOnURI: "https://idp.example.com/sso",
-	}
+		samlProvider = model.SAMLProvider{
+			Name:            "provider",
+			DisplayName:     "provider name",
+			IssuerURI:       "https://idp.example.com/idp.xml",
+			SingleSignOnURI: "https://idp.example.com/sso",
+		}
 
-	if newSAMLProvider, err := dbInst.CreateSAMLIdentityProvider(context.Background(), samlProvider); err != nil {
+		newSAMLProvider = model.SAMLProvider{}
+		err             error
+	)
+
+	if newSAMLProvider, err = dbInst.CreateSAMLIdentityProvider(context.Background(), samlProvider); err != nil {
 		t.Fatalf("Failed to create SAML provider: %v", err)
 	} else if err = verifyAuditLogs(t, dbInst, "CreateSAMLIdentityProvider", "saml_name", newSAMLProvider.Name); err != nil {
 		t.Fatalf("Failed to validate CreateSAMLIdentityProvider audit logs:\n%v", err)
@@ -358,6 +374,29 @@ func TestDatabase_CreateSAMLProvider(t *testing.T) {
 		}
 	}
 
+	updatedSAMLProvider := model.SAMLProvider{
+		Serial: model.Serial{
+			ID: newSAMLProvider.ID,
+		},
+		Name:            "updated provider",
+		DisplayName:     newSAMLProvider.DisplayName,
+		IssuerURI:       newSAMLProvider.IssuerURI,
+		SingleSignOnURI: newSAMLProvider.SingleSignOnURI,
+	}
+	if err := dbInst.UpdateSAMLIdentityProvider(context.Background(), updatedSAMLProvider); err != nil {
+		t.Fatalf("Failed to update SAML provider: %v", err)
+	} else if err = verifyAuditLogs(t, dbInst, "UpdateSAMLIdentityProvider", "saml_name", "updated provider"); err != nil {
+		t.Fatalf("Failed to validate UpdateSAMLIdentityProvider audit logs:\n%v", err)
+	}
+
+	user.SAMLProviderID = null.Int32{}
+	if err := dbInst.UpdateUser(context.Background(), user); err != nil {
+		t.Fatalf("Failed to update user: %v", err)
+	} else if err := dbInst.DeleteSAMLProvider(context.Background(), newSAMLProvider); err != nil {
+		t.Fatalf("Failed to delete SAML provider: %v", err)
+	} else if err = verifyAuditLogs(t, dbInst, "DeleteSAMLIdentityProvider", "saml_name", "provider"); err != nil {
+		t.Fatalf("Failed to validate DeleteSAMLIdentityProvider audit logs:\n%v", err)
+	}
 }
 
 func TestDatabase_CreateUserSession(t *testing.T) {
