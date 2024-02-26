@@ -65,8 +65,8 @@ interface Props {
 /**
  * Wraps <Typography component="pre"> to add controls for copy/paste and code wrapping.
  * Implementation: please wrap code block in {`<coding>`}
- * @param hideCopy - default true - display copy text button
- * @param hideWrap - default true - display wrap text button
+ * @param hideCopy - default false - display copy text button
+ * @param hideWrap - default false - display wrap text button
  * @returns
  */
 function CodeController(props: PropsWithChildren<Props>) {
