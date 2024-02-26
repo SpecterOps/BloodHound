@@ -17,9 +17,12 @@
 package frontend
 
 import (
+	"fmt"
+	"github.com/antlr4-go/antlr/v4"
 	"github.com/specterops/bloodhound/cypher/model"
 	"github.com/specterops/bloodhound/cypher/parser"
 	"github.com/specterops/bloodhound/dawgs/graph"
+	"strconv"
 )
 
 type WhereVisitor struct {
@@ -145,13 +148,52 @@ func (s *RelationshipPatternVisitor) ExitOC_RightArrowHead(ctx *parser.OC_RightA
 }
 
 func (s *RelationshipPatternVisitor) EnterOC_RangeLiteral(ctx *parser.OC_RangeLiteralContext) {
-	s.ctx.Enter(&RangeLiteralVisitor{
-		PatternRange: &model.PatternRange{},
-	})
+	const (
+		stateStart int = iota
+		stateFirstIndex
+		stateSecondIndex
+	)
+
+	// Create a new relationship pattern range for the relationship pattern being built
+	s.RelationshipPattern.Range = &model.PatternRange{}
+
+	// Start at the start state for the mini-parser below
+	state := stateStart
+
+	for _, tokenLeaf := range ctx.GetChildren() {
+		switch typedTokenLeaf := tokenLeaf.(type) {
+		case *antlr.TerminalNodeImpl:
+			switch typedTokenLeaf.GetSymbol().GetTokenType() {
+			case TokenTypeAsterisk:
+				state = stateFirstIndex
+
+			case TokenTypeRange:
+				state = stateSecondIndex
+
+			default:
+				s.ctx.AddErrors(fmt.Errorf("unexpected token in pattern range: %s", typedTokenLeaf.GetText()))
+			}
+
+		case *parser.OC_IntegerLiteralContext:
+			if value, err := strconv.ParseInt(typedTokenLeaf.GetText(), 10, 64); err != nil {
+				s.ctx.AddErrors(fmt.Errorf("failed parsing range literal: %w", err))
+			} else {
+				switch state {
+				case stateFirstIndex:
+					s.RelationshipPattern.Range.StartIndex = &value
+
+				case stateSecondIndex:
+					s.RelationshipPattern.Range.EndIndex = &value
+
+				default:
+					s.ctx.AddErrors(fmt.Errorf("invalid integer literal state: %d", state))
+				}
+			}
+		}
+	}
 }
 
 func (s *RelationshipPatternVisitor) ExitOC_RangeLiteral(ctx *parser.OC_RangeLiteralContext) {
-	s.RelationshipPattern.Range = s.ctx.Exit().(*RangeLiteralVisitor).PatternRange
 }
 
 func (s *RelationshipPatternVisitor) EnterOC_Properties(ctx *parser.OC_PropertiesContext) {
