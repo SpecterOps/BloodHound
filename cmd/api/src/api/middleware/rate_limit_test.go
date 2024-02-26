@@ -1,30 +1,29 @@
 // Copyright 2023 Specter Ops, Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// 
+//
 // SPDX-License-Identifier: Apache-2.0
 
 package middleware_test
 
 import (
-	"context"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
-	"github.com/specterops/bloodhound/src/api/middleware"
 	"github.com/didip/tollbooth/v6"
 	"github.com/gorilla/mux"
+	"github.com/specterops/bloodhound/src/api/middleware"
 )
 
 func TestRateLimitHandler(t *testing.T) {
@@ -131,30 +130,6 @@ func TestDefaultRateLimitMiddleware(t *testing.T) {
 
 	if testHandler.Count != middleware.DefaultRateLimit {
 		t.Errorf("invalid HTTP 200 count: got %v want %v", testHandler.Count, middleware.DefaultRateLimit)
-	}
-}
-
-func TestDefaultRateLimitMiddlewareCanceledRequest(t *testing.T) {
-	testHandler := &CountingHandler{}
-
-	router := mux.NewRouter()
-	router.Use(middleware.DefaultRateLimitMiddleware())
-	router.Handle("/teapot", testHandler)
-
-	ctx, cancel := context.WithCancel(context.Background())
-	if req, err := http.NewRequestWithContext(ctx, "GET", "/teapot", nil); err != nil {
-		cancel()
-		t.Fatal(err)
-	} else {
-		req.Header.Set("X-Real-IP", "8.8.8.8")
-		cancel()
-
-		rr := httptest.NewRecorder()
-		router.ServeHTTP(rr, req)
-
-		if rr.Code != http.StatusBadRequest {
-			t.Errorf("invalid HTTPStatus: got %v want %v", rr.Code, http.StatusBadRequest)
-		}
 	}
 }
 

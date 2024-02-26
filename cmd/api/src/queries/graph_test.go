@@ -49,10 +49,7 @@ func TestGraphQuery_RawCypherSearch(t *testing.T) {
 		gq             = queries.NewGraphQuery(mockGraphDB, cache.Cache{}, config.Configuration{})
 		outerBHCtxInst = &bhCtx.Context{
 			StartTime: time.Now(),
-			Timeout: bhCtx.RequestedWaitDuration{
-				Value:   time.Second * 5,
-				UserSet: true,
-			},
+			Timeout:   time.Second * 5,
 			RequestID: must.NewUUIDv4().String(),
 			AuthCtx:   auth.Context{},
 			Host: &url.URL{
@@ -66,8 +63,7 @@ func TestGraphQuery_RawCypherSearch(t *testing.T) {
 	mockGraphDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, txDelegate graph.TransactionDelegate, options ...graph.TransactionOption) error {
 		innerBHCtxInst := bhCtx.Get(ctx)
 
-		require.Equal(t, outerBHCtxInst.Timeout.UserSet, innerBHCtxInst.Timeout.UserSet)
-		require.Equal(t, outerBHCtxInst.Timeout.Value, innerBHCtxInst.Timeout.Value)
+		require.Equal(t, outerBHCtxInst.Timeout, innerBHCtxInst.Timeout)
 
 		// Validate that the options are being set correctly
 		if len(options) != 1 {
@@ -78,7 +74,7 @@ func TestGraphQuery_RawCypherSearch(t *testing.T) {
 		config := &graph.TransactionConfig{}
 		options[0](config)
 
-		require.Equal(t, outerBHCtxInst.Timeout.Value, config.Timeout)
+		require.Equal(t, outerBHCtxInst.Timeout, config.Timeout)
 
 		return nil
 	})
@@ -97,21 +93,21 @@ func TestGraphQuery_RawCypherSearch(t *testing.T) {
 		config := &graph.TransactionConfig{}
 		options[0](config)
 
-		require.Equal(t, time.Second*20, config.Timeout)
+		require.Equal(t, time.Minute*10, config.Timeout)
 
 		return nil
 	}).Times(2)
 
 	// Unset the user-set timeout in the BH context to validate QC runtime reduction of a complex query
-	outerBHCtxInst.Timeout.UserSet = false
-	outerBHCtxInst.Timeout.Value = time.Minute
+	// This will be set to a default of 30 min, with a reduction factor of 3, so we should have a 10 min config timeout
+	outerBHCtxInst.Timeout = 0
 
 	_, err = gq.RawCypherSearch(outerBHCtxInst.ConstructGoContext(), "match ()-[:HasSession*..]->()-[:MemberOf*..]->() return n;", false)
 	require.Nil(t, err)
 
 	// Prove that overriding QC with a user-preference works
-	outerBHCtxInst.Timeout.UserSet = true
-	outerBHCtxInst.Timeout.Value = time.Second * 20
+	// This will be directly used as the config timeout, without any reduction factor
+	outerBHCtxInst.Timeout = time.Minute * 10
 
 	_, err = gq.RawCypherSearch(outerBHCtxInst.ConstructGoContext(), "match ()-[:HasSession*..]->()-[:MemberOf*..]->() return n;", false)
 	require.Nil(t, err)
