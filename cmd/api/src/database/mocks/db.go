@@ -380,31 +380,31 @@ func (mr *MockDatabaseMockRecorder) CreateUserSession(arg0 interface{}) *gomock.
 }
 
 // DeleteAllDataQuality mocks base method.
-func (m *MockDatabase) DeleteAllDataQuality() error {
+func (m *MockDatabase) DeleteAllDataQuality(arg0 context.Context) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DeleteAllDataQuality")
+	ret := m.ctrl.Call(m, "DeleteAllDataQuality", arg0)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // DeleteAllDataQuality indicates an expected call of DeleteAllDataQuality.
-func (mr *MockDatabaseMockRecorder) DeleteAllDataQuality() *gomock.Call {
+func (mr *MockDatabaseMockRecorder) DeleteAllDataQuality(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteAllDataQuality", reflect.TypeOf((*MockDatabase)(nil).DeleteAllDataQuality))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteAllDataQuality", reflect.TypeOf((*MockDatabase)(nil).DeleteAllDataQuality), arg0)
 }
 
 // DeleteAllFileUploads mocks base method.
-func (m *MockDatabase) DeleteAllFileUploads() error {
+func (m *MockDatabase) DeleteAllFileUploads(arg0 context.Context) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DeleteAllFileUploads")
+	ret := m.ctrl.Call(m, "DeleteAllFileUploads", arg0)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // DeleteAllFileUploads indicates an expected call of DeleteAllFileUploads.
-func (mr *MockDatabaseMockRecorder) DeleteAllFileUploads() *gomock.Call {
+func (mr *MockDatabaseMockRecorder) DeleteAllFileUploads(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteAllFileUploads", reflect.TypeOf((*MockDatabase)(nil).DeleteAllFileUploads))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteAllFileUploads", reflect.TypeOf((*MockDatabase)(nil).DeleteAllFileUploads), arg0)
 }
 
 // DeleteAssetGroup mocks base method.

@@ -207,7 +207,7 @@ func (s Resources) deleteHighValueSelectors(ctx context.Context, assetGroupId in
 }
 
 func (s Resources) deleteFileIngestHistory(ctx context.Context, auditEntry *model.AuditEntry) (failure bool) {
-	if err := s.DB.DeleteAllFileUploads(); err != nil {
+	if err := s.DB.DeleteAllFileUploads(ctx); err != nil {
 		log.Errorf("%s: %s", "there was an error deleting file ingest history", err.Error())
 		s.handleAuditLogForDatabaseWipe(ctx, auditEntry, false, "file ingest history")
 		return true
@@ -218,7 +218,7 @@ func (s Resources) deleteFileIngestHistory(ctx context.Context, auditEntry *mode
 }
 
 func (s Resources) deleteDataQualityHistory(ctx context.Context, auditEntry *model.AuditEntry) (failure bool) {
-	if err := s.DB.DeleteAllDataQuality(); err != nil {
+	if err := s.DB.DeleteAllDataQuality(ctx); err != nil {
 		log.Errorf("%s: %s", "there was an error deleting data quality history", err.Error())
 		s.handleAuditLogForDatabaseWipe(ctx, auditEntry, false, "data quality history")
 		return true

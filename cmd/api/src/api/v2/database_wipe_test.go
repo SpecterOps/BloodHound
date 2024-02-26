@@ -180,7 +180,7 @@ func TestDatabaseWipe(t *testing.T) {
 				},
 				Setup: func() {
 					successfulAuditLogIntent := mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil).Times(1)
-					failedFileIngestHistoryDelete := mockDB.EXPECT().DeleteAllFileUploads().Return(errors.New("oopsy!")).Times(1)
+					failedFileIngestHistoryDelete := mockDB.EXPECT().DeleteAllFileUploads(gomock.Any()).Return(errors.New("oopsy!")).Times(1)
 					successfulAuditLogFailure := mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil).Times(1)
 
 					gomock.InOrder(successfulAuditLogIntent, failedFileIngestHistoryDelete, successfulAuditLogFailure)
@@ -199,7 +199,7 @@ func TestDatabaseWipe(t *testing.T) {
 				},
 				Setup: func() {
 					successfulAuditLogIntent := mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil).Times(1)
-					successfulFileIngestHistoryDelete := mockDB.EXPECT().DeleteAllFileUploads().Return(nil).Times(1)
+					successfulFileIngestHistoryDelete := mockDB.EXPECT().DeleteAllFileUploads(gomock.Any()).Return(nil).Times(1)
 					successfulAuditLogSuccess := mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil).Times(1)
 
 					gomock.InOrder(successfulAuditLogIntent, successfulFileIngestHistoryDelete, successfulAuditLogSuccess)
@@ -217,7 +217,7 @@ func TestDatabaseWipe(t *testing.T) {
 				},
 				Setup: func() {
 					successfulAuditLogIntent := mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil).Times(1)
-					failedDataQualityHistoryDelete := mockDB.EXPECT().DeleteAllDataQuality().Return(errors.New("oopsy!")).Times(1)
+					failedDataQualityHistoryDelete := mockDB.EXPECT().DeleteAllDataQuality(gomock.Any()).Return(errors.New("oopsy!")).Times(1)
 					successfulAuditLogFailure := mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil).Times(1)
 
 					gomock.InOrder(successfulAuditLogIntent, failedDataQualityHistoryDelete, successfulAuditLogFailure)
@@ -236,7 +236,7 @@ func TestDatabaseWipe(t *testing.T) {
 				},
 				Setup: func() {
 					successfulAuditLogIntent := mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil).Times(1)
-					successfulDataQualityHistoryDelete := mockDB.EXPECT().DeleteAllDataQuality().Return(nil).Times(1)
+					successfulDataQualityHistoryDelete := mockDB.EXPECT().DeleteAllDataQuality(gomock.Any()).Return(nil).Times(1)
 					successfulAuditLogSuccess := mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil).Times(1)
 
 					gomock.InOrder(successfulAuditLogIntent, successfulDataQualityHistoryDelete, successfulAuditLogSuccess)
@@ -255,10 +255,10 @@ func TestDatabaseWipe(t *testing.T) {
 				Setup: func() {
 					successfulAuditLogIntent := mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil).Times(1)
 
-					failedFileIngestHistoryDelete := mockDB.EXPECT().DeleteAllFileUploads().Return(errors.New("oopsy!")).Times(1)
+					failedFileIngestHistoryDelete := mockDB.EXPECT().DeleteAllFileUploads(gomock.Any()).Return(errors.New("oopsy!")).Times(1)
 					successfulAuditLogFileHistoryFailure := mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil).Times(1)
 
-					failedDataQualityHistoryDelete := mockDB.EXPECT().DeleteAllDataQuality().Return(errors.New("oopsy!")).Times(1)
+					failedDataQualityHistoryDelete := mockDB.EXPECT().DeleteAllDataQuality(gomock.Any()).Return(errors.New("oopsy!")).Times(1)
 					successfulAuditLogDataQualityHistoryFailure := mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil).Times(1)
 
 					gomock.InOrder(successfulAuditLogIntent, failedFileIngestHistoryDelete, successfulAuditLogFileHistoryFailure, failedDataQualityHistoryDelete, successfulAuditLogDataQualityHistoryFailure)
@@ -300,12 +300,12 @@ func TestDatabaseWipe(t *testing.T) {
 					gomock.InOrder(assetGroupSelectorsDelete, assetGroupSelectorsAuditLog, analysisKickoff)
 
 					// file ingest history operations
-					deleteFileHistory := mockDB.EXPECT().DeleteAllFileUploads().Return(nil).Times(1)
+					deleteFileHistory := mockDB.EXPECT().DeleteAllFileUploads(gomock.Any()).Return(nil).Times(1)
 					fileHistoryAuditLog := mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil).Times(1)
 					gomock.InOrder(deleteFileHistory, fileHistoryAuditLog)
 
 					// data quality history operations
-					deleteDataQuality := mockDB.EXPECT().DeleteAllDataQuality().Return(nil).Times(1)
+					deleteDataQuality := mockDB.EXPECT().DeleteAllDataQuality(gomock.Any()).Return(nil).Times(1)
 					dataQualityAuditLog := mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil).Times(1)
 					gomock.InOrder(deleteDataQuality, dataQualityAuditLog)
 				},

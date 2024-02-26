@@ -17,6 +17,7 @@
 package database
 
 import (
+	"context"
 	"time"
 
 	"github.com/specterops/bloodhound/src/model"
@@ -183,9 +184,9 @@ func (s *BloodhoundDB) GetAzureDataQualityAggregations(start time.Time, end time
 	return azureDataQualityAggregations, int(count), nil
 }
 
-func (s *BloodhoundDB) DeleteAllDataQuality() error {
+func (s *BloodhoundDB) DeleteAllDataQuality(ctx context.Context) error {
 	err := CheckError(
-		s.db.Exec("DELETE FROM ad_data_quality_aggregations; DELETE FROM ad_data_quality_stats; DELETE FROM azure_data_quality_aggregations; DELETE FROM azure_data_quality_stats;"),
+		s.db.WithContext(ctx).Exec("DELETE FROM ad_data_quality_aggregations; DELETE FROM ad_data_quality_stats; DELETE FROM azure_data_quality_aggregations; DELETE FROM azure_data_quality_stats;"),
 	)
 
 	return err
