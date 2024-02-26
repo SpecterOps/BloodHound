@@ -16,7 +16,7 @@
 
 import { Button, Typography } from '@mui/material';
 import { makeStyles } from '@mui/styles';
-import { PropsWithChildren, useRef, useState } from 'react';
+import { PropsWithChildren, useMemo, useRef, useState } from 'react';
 import clsx from 'clsx';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faAlignJustify, faCopy } from '@fortawesome/free-solid-svg-icons';
@@ -26,11 +26,11 @@ export const useStyles = makeStyles((theme) => ({
     codeController: {
         position: 'relative',
         '& .code': {
-            'text-wrap': 'nowrap',
+            'white-space': 'pre',
             overflow: 'scroll',
         },
         '& .wrapped': {
-            'text-wrap': 'wrap',
+            'white-space': 'pre-line',
         },
         '& .scrollLeft': {
             'box-shadow': 'inset -5px 0px 5px black;',
@@ -87,13 +87,17 @@ function CodeController(props: PropsWithChildren<Props>) {
         setScrollRight(scrollLeft > 0);
     };
 
+    // Trims off tab spacing at the beginning and end of new lines
+    const justifiedLeft = useMemo(() => {
+        const perLine = (children?.toString() ?? '').split('\n');
+        const nextNonBlankLine = perLine.find((x, i) => i !== 0 && !!x.trim());
+
+        const startingIndex = nextNonBlankLine?.split('').findIndex((x) => !!x.trim());
+        return perLine?.map((x) => x.slice(startingIndex)).join('\n');
+    }, [children]);
+
     const handleCopy = async () => {
         setCopied(true);
-        // Trims off the white space at the beginning and end of new lines
-        const justifiedLeft = (children?.toString() ?? '')
-            .split('\n')
-            .map((s) => s.trim())
-            .join('\n');
 
         await copyToClipboard(justifiedLeft);
 
@@ -146,7 +150,7 @@ function CodeController(props: PropsWithChildren<Props>) {
                         <br />
                     </>
                 )}
-                {children}
+                {justifiedLeft}
             </Typography>
         </div>
     );
