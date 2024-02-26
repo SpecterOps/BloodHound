@@ -108,7 +108,13 @@ func (s Resources) HandleDatabaseWipe(response http.ResponseWriter, request *htt
 
 	// delete graph
 	if payload.DeleteCollectedGraphData {
-		s.deleteCollectedGraphData(request.Context(), &errors, auditEntry, &kickoffAnalysis)
+		failed, analysisNeeded := s.deleteCollectedGraphData(request.Context(), auditEntry)
+		if failed {
+			errors.DeleteCollectedGraphData = true
+		}
+		if analysisNeeded {
+			kickoffAnalysis = true
+		}
 	}
 
 	// delete custom high value selectors
@@ -145,7 +151,7 @@ func (s Resources) HandleDatabaseWipe(response http.ResponseWriter, request *htt
 
 }
 
-func (s Resources) deleteCollectedGraphData(ctx context.Context, errors *DatabaseWipe, auditEntry *model.AuditEntry, kickoffAnalysis *bool) {
+func (s Resources) deleteCollectedGraphData(ctx context.Context, auditEntry *model.AuditEntry) (failure bool, kickoffAnalysis bool) {
 	var nodeIDs []graph.ID
 
 	if err := s.Graph.ReadTransaction(ctx,
@@ -156,10 +162,9 @@ func (s Resources) deleteCollectedGraphData(ctx context.Context, errors *Databas
 			return err
 		},
 	); err != nil {
-		errors.DeleteCollectedGraphData = true
 		log.Errorf("%s: %s", "error fetching all nodes", err.Error())
 		s.handleAuditLogForDatabaseWipe(ctx, auditEntry, false, "collected graph data")
-
+		return true, false
 	} else if err := s.Graph.BatchOperation(ctx, func(batch graph.Batch) error {
 		for _, nodeId := range nodeIDs {
 			// deleting a node also deletes all of its edges due to a sql trigger
@@ -169,14 +174,13 @@ func (s Resources) deleteCollectedGraphData(ctx context.Context, errors *Databas
 		}
 		return nil
 	}); err != nil {
-		errors.DeleteCollectedGraphData = true
 		log.Errorf("%s: %s", "error deleting all nodes", err.Error())
 		s.handleAuditLogForDatabaseWipe(ctx, auditEntry, false, "collected graph data")
-
+		return true, false
 	} else {
 		// if successful, handle audit log and kick off analysis
 		s.handleAuditLogForDatabaseWipe(ctx, auditEntry, true, "collected graph data")
-		*kickoffAnalysis = true
+		return false, true
 	}
 }
 
