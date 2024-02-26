@@ -148,12 +148,14 @@ func (s Resources) HandleDatabaseWipe(response http.ResponseWriter, request *htt
 func (s Resources) deleteCollectedGraphData(ctx context.Context, errors *DatabaseWipe, auditEntry *model.AuditEntry, kickoffAnalysis *bool) {
 	var nodeIDs []graph.ID
 
-	if err := s.Graph.ReadTransaction(ctx, func(tx graph.Transaction) error {
-		fetchedNodeIDs, err := ops.FetchNodeIDs(tx.Nodes())
+	if err := s.Graph.ReadTransaction(ctx,
+		func(tx graph.Transaction) error {
+			fetchedNodeIDs, err := ops.FetchNodeIDs(tx.Nodes())
 
-		nodeIDs = append(nodeIDs, fetchedNodeIDs...)
-		return err
-	}); err != nil {
+			nodeIDs = append(nodeIDs, fetchedNodeIDs...)
+			return err
+		},
+	); err != nil {
 		errors.DeleteCollectedGraphData = true
 		log.Errorf("%s: %s", "error fetching all nodes", err.Error())
 		s.handleAuditLogForDatabaseWipe(ctx, auditEntry, false, "collected graph data")
