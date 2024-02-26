@@ -57,6 +57,7 @@ func (s Resources) HandleDatabaseWipe(response http.ResponseWriter, request *htt
 		return
 	}
 
+	// return `BadRequest` if request specifies high value selectors without an asset group ID
 	if payload.DeleteHighValueSelectors && payload.AssetGroupId == 0 {
 		api.WriteErrorResponse(
 			request.Context(),
@@ -66,7 +67,7 @@ func (s Resources) HandleDatabaseWipe(response http.ResponseWriter, request *htt
 		return
 	}
 
-	// if request is empty
+	// return `BadRequest` if request is empty
 	if !payload.DeleteCollectedGraphData && !payload.DeleteDataQualityHistory && !payload.DeleteHighValueSelectors && !payload.DeleteFileIngestHistory {
 		api.WriteErrorResponse(
 			request.Context(),

@@ -52,10 +52,21 @@ func TestDatabaseWipe(t *testing.T) {
 				},
 			},
 			{
-				Name: "failure creating an intent audit log",
+				Name: "endpoint returns a 400 error if the request body is empty",
 				Input: func(input *apitest.Input) {
 					apitest.SetHeader(input, headers.ContentType.String(), mediatypes.ApplicationJson.String())
 					apitest.BodyStruct(input, v2.DatabaseWipe{})
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusBadRequest)
+					apitest.BodyContains(output, "please select something to delete")
+				},
+			},
+			{
+				Name: "failure creating an intent audit log",
+				Input: func(input *apitest.Input) {
+					apitest.SetHeader(input, headers.ContentType.String(), mediatypes.ApplicationJson.String())
+					apitest.BodyStruct(input, v2.DatabaseWipe{DeleteCollectedGraphData: true})
 				},
 				Setup: func() {
 					mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(errors.New("oopsy! "))
@@ -113,10 +124,10 @@ func TestDatabaseWipe(t *testing.T) {
 					successfulAuditLogIntent := mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil).Times(1)
 					successfulFetchNodesToDelete := mockGraph.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil).Times(1)
 					successfulBatchDelete := mockGraph.EXPECT().BatchOperation(gomock.Any(), gomock.Any()).Return(nil).Times(1)
-					sucsessfulAnalysisKickoff := mockTasker.EXPECT().RequestAnalysis().Times(1)
 					successfulAuditLogSuccess := mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil).Times(1)
+					sucsessfulAnalysisKickoff := mockTasker.EXPECT().RequestAnalysis().Times(1)
 
-					gomock.InOrder(successfulAuditLogIntent, successfulFetchNodesToDelete, successfulBatchDelete, sucsessfulAnalysisKickoff, successfulAuditLogSuccess)
+					gomock.InOrder(successfulAuditLogIntent, successfulFetchNodesToDelete, successfulBatchDelete, successfulAuditLogSuccess, sucsessfulAnalysisKickoff)
 
 				},
 				Test: func(output apitest.Output) {
@@ -151,10 +162,10 @@ func TestDatabaseWipe(t *testing.T) {
 				Setup: func() {
 					successfulAuditLogIntent := mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil).Times(1)
 					successfulAssetGroupSelectorsDelete := mockDB.EXPECT().DeleteAssetGroupSelectorsForAssetGroup(gomock.Any(), gomock.Any()).Return(nil).Times(1)
-					successfulAnalysisKickoff := mockTasker.EXPECT().RequestAnalysis().Times(1)
 					successfulAuditLogSuccess := mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil).Times(1)
+					successfulAnalysisKickoff := mockTasker.EXPECT().RequestAnalysis().Times(1)
 
-					gomock.InOrder(successfulAuditLogIntent, successfulAssetGroupSelectorsDelete, successfulAnalysisKickoff, successfulAuditLogSuccess)
+					gomock.InOrder(successfulAuditLogIntent, successfulAssetGroupSelectorsDelete, successfulAuditLogSuccess, successfulAnalysisKickoff)
 
 				},
 				Test: func(output apitest.Output) {
@@ -245,16 +256,61 @@ func TestDatabaseWipe(t *testing.T) {
 					successfulAuditLogIntent := mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil).Times(1)
 
 					failedFileIngestHistoryDelete := mockDB.EXPECT().DeleteAllFileUploads().Return(errors.New("oopsy!")).Times(1)
+					successfulAuditLogFileHistoryFailure := mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil).Times(1)
+
 					failedDataQualityHistoryDelete := mockDB.EXPECT().DeleteAllDataQuality().Return(errors.New("oopsy!")).Times(1)
+					successfulAuditLogDataQualityHistoryFailure := mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil).Times(1)
 
-					successfulAuditLogFailure := mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil).Times(1)
-
-					gomock.InOrder(successfulAuditLogIntent, failedFileIngestHistoryDelete, failedDataQualityHistoryDelete, successfulAuditLogFailure)
-
+					gomock.InOrder(successfulAuditLogIntent, failedFileIngestHistoryDelete, successfulAuditLogFileHistoryFailure, failedDataQualityHistoryDelete, successfulAuditLogDataQualityHistoryFailure)
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusInternalServerError)
 					apitest.BodyContains(output, "we encountered an error while deleting data quality history, file ingest history")
+				},
+			},
+			{
+				Name: "handler produces one `AuditLogIntent` and 4 `AuditLogSuccess` entries if all four data types are deleted successfully",
+				Input: func(input *apitest.Input) {
+					apitest.SetHeader(input, headers.ContentType.String(), mediatypes.ApplicationJson.String())
+					apitest.BodyStruct(input, v2.DatabaseWipe{
+						DeleteCollectedGraphData: true,
+						DeleteHighValueSelectors: true,
+						AssetGroupId:             1,
+						DeleteFileIngestHistory:  true,
+						DeleteDataQualityHistory: true,
+					})
+				},
+				Setup: func() {
+					// intent
+					successfulAuditLogIntent := mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil).Times(1)
+
+					// collected graph data operations
+					fetchNodesToDelete := mockGraph.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil).Times(1)
+					batchDelete := mockGraph.EXPECT().BatchOperation(gomock.Any(), gomock.Any()).Return(nil).Times(1)
+					nodesDeletedAuditLog := mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil).Times(1)
+					gomock.InOrder(successfulAuditLogIntent, fetchNodesToDelete, batchDelete, nodesDeletedAuditLog)
+
+					// high value selector operations
+					assetGroupSelectorsDelete := mockDB.EXPECT().DeleteAssetGroupSelectorsForAssetGroup(gomock.Any(), gomock.Any()).Return(nil).Times(1)
+					assetGroupSelectorsAuditLog := mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil).Times(1)
+
+					// analysis kickoff
+					analysisKickoff := mockTasker.EXPECT().RequestAnalysis().Times(1)
+
+					gomock.InOrder(assetGroupSelectorsDelete, assetGroupSelectorsAuditLog, analysisKickoff)
+
+					// file ingest history operations
+					deleteFileHistory := mockDB.EXPECT().DeleteAllFileUploads().Return(nil).Times(1)
+					fileHistoryAuditLog := mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil).Times(1)
+					gomock.InOrder(deleteFileHistory, fileHistoryAuditLog)
+
+					// data quality history operations
+					deleteDataQuality := mockDB.EXPECT().DeleteAllDataQuality().Return(nil).Times(1)
+					dataQualityAuditLog := mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil).Times(1)
+					gomock.InOrder(deleteDataQuality, dataQualityAuditLog)
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusNoContent)
 				},
 			},
 		})
