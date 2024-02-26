@@ -91,7 +91,7 @@ func TestDatabaseWipe(t *testing.T) {
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusInternalServerError)
-					apitest.BodyContains(output, "we encountered an error while deleting collected graph data")
+					apitest.BodyContains(output, "We encountered an error while deleting collected graph data")
 				},
 			},
 			{
@@ -111,7 +111,7 @@ func TestDatabaseWipe(t *testing.T) {
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusInternalServerError)
-					apitest.BodyContains(output, "we encountered an error while deleting collected graph data")
+					apitest.BodyContains(output, "We encountered an error while deleting collected graph data")
 				},
 			},
 			{
@@ -150,7 +150,7 @@ func TestDatabaseWipe(t *testing.T) {
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusInternalServerError)
-					apitest.BodyContains(output, "we encountered an error while deleting custom high value selectors")
+					apitest.BodyContains(output, "We encountered an error while deleting custom high value selectors")
 				},
 			},
 			{
@@ -188,7 +188,7 @@ func TestDatabaseWipe(t *testing.T) {
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusInternalServerError)
-					apitest.BodyContains(output, "we encountered an error while deleting file ingest history")
+					apitest.BodyContains(output, "We encountered an error while deleting file ingest history")
 				},
 			},
 			{
@@ -225,7 +225,7 @@ func TestDatabaseWipe(t *testing.T) {
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusInternalServerError)
-					apitest.BodyContains(output, "we encountered an error while deleting data quality history")
+					apitest.BodyContains(output, "We encountered an error while deleting data quality history")
 				},
 			},
 			{
@@ -265,7 +265,7 @@ func TestDatabaseWipe(t *testing.T) {
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusInternalServerError)
-					apitest.BodyContains(output, "we encountered an error while deleting file ingest history, data quality history")
+					apitest.BodyContains(output, "We encountered an error while deleting file ingest history, data quality history")
 				},
 			},
 			{

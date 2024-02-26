@@ -151,7 +151,7 @@ func (s Resources) HandleDatabaseWipe(response http.ResponseWriter, request *htt
 	if len(errors) > 0 {
 		api.WriteErrorResponse(
 			request.Context(),
-			api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("we encountered an error while deleting %s.  please submit your request again.", strings.Join(errors, ", ")), request),
+			api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("We encountered an error while deleting %s.  Please submit your request again.", strings.Join(errors, ", ")), request),
 			response,
 		)
 		return

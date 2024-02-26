@@ -52,6 +52,7 @@ type State = {
     // error state
     noSelectionError: boolean;
     mutationError: boolean;
+    mutationErrorMessage?: string;
     showSuccessMessage: boolean;
 
     // modal state
@@ -60,7 +61,7 @@ type State = {
 
 type Action =
     | { type: 'no_selection_error' }
-    | { type: 'mutation_error' }
+    | { type: 'mutation_error'; message?: string }
     | { type: 'mutation_success' }
     | { type: 'selection'; targetName: string; checked: boolean }
     | { type: 'open_dialog' }
@@ -80,6 +81,7 @@ const reducer = (state: State, action: Action): State => {
                 ...state,
                 mutationError: true,
                 noSelectionError: false,
+                mutationErrorMessage: action.message,
             };
         }
         case 'mutation_success': {
@@ -150,9 +152,14 @@ const useDatabaseManagement = () => {
                 assetGroupId,
             });
         },
-        onError: () => {
+        onError: (error: any) => {
             // show UI message that data deletion failed
-            dispatch({ type: 'mutation_error' });
+            if (error?.response?.status === 500 && error?.response?.data?.errors?.length > 0) {
+                const message = error?.response?.data?.errors?.[0].message;
+                dispatch({ type: 'mutation_error', message });
+            } else {
+                dispatch({ type: 'mutation_error' });
+            }
         },
         onSuccess: () => {
             // show UI message that data deletion is happening
@@ -206,7 +213,11 @@ const DatabaseManagement = () => {
                         error={state.noSelectionError || state.mutationError}>
                         {state.noSelectionError ? <Alert severity='error'>Please make a selection.</Alert> : null}
                         {state.mutationError ? (
-                            <Alert severity='error'>There was an error processing your request.</Alert>
+                            <Alert severity='error'>
+                                {state.mutationErrorMessage
+                                    ? state.mutationErrorMessage
+                                    : 'There was an error processing your request.'}
+                            </Alert>
                         ) : null}
                         {state.showSuccessMessage ? (
                             <Alert severity='info'>
