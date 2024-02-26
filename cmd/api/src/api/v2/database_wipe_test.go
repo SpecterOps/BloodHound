@@ -150,7 +150,7 @@ func TestDatabaseWipe(t *testing.T) {
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusInternalServerError)
-					apitest.BodyContains(output, "we encountered an error while deleting high value selectors")
+					apitest.BodyContains(output, "we encountered an error while deleting custom high value selectors")
 				},
 			},
 			{
@@ -265,7 +265,7 @@ func TestDatabaseWipe(t *testing.T) {
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusInternalServerError)
-					apitest.BodyContains(output, "we encountered an error while deleting data quality history, file ingest history")
+					apitest.BodyContains(output, "we encountered an error while deleting file ingest history, data quality history")
 				},
 			},
 			{
@@ -314,16 +314,4 @@ func TestDatabaseWipe(t *testing.T) {
 				},
 			},
 		})
-}
-
-func Test_BuildMessageForFailureAudit(t *testing.T) {
-
-	got := v2.BuildFailureMessageForUI(v2.DatabaseWipe{
-		DeleteCollectedGraphData: true,
-		DeleteHighValueSelectors: true,
-	})
-
-	if got != "collected graph data, high value selectors" {
-		t.Fatalf("helper doesn't concat correctly")
-	}
 }

@@ -43,7 +43,7 @@ func (s Resources) HandleDatabaseWipe(response http.ResponseWriter, request *htt
 	var (
 		payload DatabaseWipe
 		// use this struct to flag any fields that failed to delete
-		errors DatabaseWipe
+		errors []string
 		// deleting collected graph data OR high value selectors starts analsyis
 		kickoffAnalysis bool
 	)
@@ -110,7 +110,7 @@ func (s Resources) HandleDatabaseWipe(response http.ResponseWriter, request *htt
 	if payload.DeleteCollectedGraphData {
 		failed, analysisNeeded := s.deleteCollectedGraphData(request.Context(), auditEntry)
 		if failed {
-			errors.DeleteCollectedGraphData = true
+			errors = append(errors, "collected graph data")
 		}
 		if analysisNeeded {
 			kickoffAnalysis = true
@@ -119,7 +119,13 @@ func (s Resources) HandleDatabaseWipe(response http.ResponseWriter, request *htt
 
 	// delete custom high value selectors
 	if payload.DeleteHighValueSelectors {
-		s.deleteHighValueSelectors(request.Context(), &errors, payload.AssetGroupId, auditEntry, &kickoffAnalysis)
+		failed, analysisNeeded := s.deleteHighValueSelectors(request.Context(), payload.AssetGroupId, auditEntry)
+		if failed {
+			errors = append(errors, "custom high value selectors")
+		}
+		if analysisNeeded {
+			kickoffAnalysis = true
+		}
 	}
 
 	// if deleting `nodes` or deleting `asset group selectors` is successful, kickoff an analysis
@@ -129,19 +135,23 @@ func (s Resources) HandleDatabaseWipe(response http.ResponseWriter, request *htt
 
 	// delete file ingest history
 	if payload.DeleteFileIngestHistory {
-		s.deleteFileIngestHistory(request.Context(), &errors, auditEntry)
+		if failure := s.deleteFileIngestHistory(request.Context(), auditEntry); failure {
+			errors = append(errors, "file ingest history")
+		}
 	}
 
 	// delete data quality history
 	if payload.DeleteDataQualityHistory {
-		s.deleteDataQualityHistory(request.Context(), &errors, auditEntry)
+		if failure := s.deleteDataQualityHistory(request.Context(), auditEntry); failure {
+			errors = append(errors, "data quality history")
+		}
 	}
 
 	// return a user friendly error message indicating what operations failed
-	if errors.DeleteCollectedGraphData || errors.DeleteHighValueSelectors || errors.DeleteDataQualityHistory || errors.DeleteFileIngestHistory {
+	if len(errors) > 0 {
 		api.WriteErrorResponse(
 			request.Context(),
-			api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("we encountered an error while deleting %s.  please submit your request again.", BuildFailureMessageForUI(errors)), request),
+			api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("we encountered an error while deleting %s.  please submit your request again.", strings.Join(errors, ", ")), request),
 			response,
 		)
 		return
@@ -184,35 +194,37 @@ func (s Resources) deleteCollectedGraphData(ctx context.Context, auditEntry *mod
 	}
 }
 
-func (s Resources) deleteHighValueSelectors(ctx context.Context, errors *DatabaseWipe, assetGroupId int, auditEntry *model.AuditEntry, kickoffAnalysis *bool) {
+func (s Resources) deleteHighValueSelectors(ctx context.Context, assetGroupId int, auditEntry *model.AuditEntry) (failure bool, kickoffAnalysis bool) {
 	if err := s.DB.DeleteAssetGroupSelectorsForAssetGroup(ctx, assetGroupId); err != nil {
-		errors.DeleteHighValueSelectors = true
 		log.Errorf("%s %d: %s", "there was an error deleting asset group with id = ", assetGroupId, err.Error())
 		s.handleAuditLogForDatabaseWipe(ctx, auditEntry, false, "high value selectors")
+		return true, false
 	} else {
 		// if succesful, handle audit log and kick off analysis
 		s.handleAuditLogForDatabaseWipe(ctx, auditEntry, true, "high value selectors")
-		*kickoffAnalysis = true
+		return false, true
 	}
 }
 
-func (s Resources) deleteFileIngestHistory(ctx context.Context, errors *DatabaseWipe, auditEntry *model.AuditEntry) {
+func (s Resources) deleteFileIngestHistory(ctx context.Context, auditEntry *model.AuditEntry) (failure bool) {
 	if err := s.DB.DeleteAllFileUploads(); err != nil {
-		errors.DeleteFileIngestHistory = true
 		log.Errorf("%s: %s", "there was an error deleting file ingest history", err.Error())
 		s.handleAuditLogForDatabaseWipe(ctx, auditEntry, false, "file ingest history")
+		return true
 	} else {
 		s.handleAuditLogForDatabaseWipe(ctx, auditEntry, true, "file ingest history")
+		return false
 	}
 }
 
-func (s Resources) deleteDataQualityHistory(ctx context.Context, errors *DatabaseWipe, auditEntry *model.AuditEntry) {
+func (s Resources) deleteDataQualityHistory(ctx context.Context, auditEntry *model.AuditEntry) (failure bool) {
 	if err := s.DB.DeleteAllDataQuality(); err != nil {
-		errors.DeleteDataQualityHistory = true
 		log.Errorf("%s: %s", "there was an error deleting data quality history", err.Error())
 		s.handleAuditLogForDatabaseWipe(ctx, auditEntry, false, "data quality history")
+		return true
 	} else {
 		s.handleAuditLogForDatabaseWipe(ctx, auditEntry, true, "data quality history")
+		return false
 	}
 }
 
@@ -234,22 +246,4 @@ func (s Resources) handleAuditLogForDatabaseWipe(ctx context.Context, auditEntry
 	}
 
 	return nil
-}
-
-func BuildFailureMessageForUI(failures DatabaseWipe) string {
-	var message []string
-	if failures.DeleteCollectedGraphData {
-		message = append(message, "collected graph data")
-	}
-	if failures.DeleteDataQualityHistory {
-		message = append(message, "data quality history")
-	}
-	if failures.DeleteFileIngestHistory {
-		message = append(message, "file ingest history")
-	}
-	if failures.DeleteHighValueSelectors {
-		message = append(message, "high value selectors")
-	}
-
-	return strings.Join(message, ", ")
 }
