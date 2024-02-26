@@ -108,22 +108,20 @@ func (s Resources) HandleDatabaseWipe(response http.ResponseWriter, request *htt
 
 	// delete graph
 	if payload.DeleteCollectedGraphData {
-		failed, analysisNeeded := s.deleteCollectedGraphData(request.Context(), auditEntry)
+		failed := s.deleteCollectedGraphData(request.Context(), auditEntry)
 		if failed {
 			errors = append(errors, "collected graph data")
-		}
-		if analysisNeeded {
+		} else {
 			kickoffAnalysis = true
 		}
 	}
 
 	// delete custom high value selectors
 	if payload.DeleteHighValueSelectors {
-		failed, analysisNeeded := s.deleteHighValueSelectors(request.Context(), payload.AssetGroupId, auditEntry)
+		failed := s.deleteHighValueSelectors(request.Context(), payload.AssetGroupId, auditEntry)
 		if failed {
 			errors = append(errors, "custom high value selectors")
-		}
-		if analysisNeeded {
+		} else {
 			kickoffAnalysis = true
 		}
 	}
@@ -161,7 +159,7 @@ func (s Resources) HandleDatabaseWipe(response http.ResponseWriter, request *htt
 
 }
 
-func (s Resources) deleteCollectedGraphData(ctx context.Context, auditEntry *model.AuditEntry) (failure bool, kickoffAnalysis bool) {
+func (s Resources) deleteCollectedGraphData(ctx context.Context, auditEntry *model.AuditEntry) (failure bool) {
 	var nodeIDs []graph.ID
 
 	if err := s.Graph.ReadTransaction(ctx,
@@ -174,7 +172,7 @@ func (s Resources) deleteCollectedGraphData(ctx context.Context, auditEntry *mod
 	); err != nil {
 		log.Errorf("%s: %s", "error fetching all nodes", err.Error())
 		s.handleAuditLogForDatabaseWipe(ctx, auditEntry, false, "collected graph data")
-		return true, false
+		return true
 	} else if err := s.Graph.BatchOperation(ctx, func(batch graph.Batch) error {
 		for _, nodeId := range nodeIDs {
 			// deleting a node also deletes all of its edges due to a sql trigger
@@ -186,23 +184,23 @@ func (s Resources) deleteCollectedGraphData(ctx context.Context, auditEntry *mod
 	}); err != nil {
 		log.Errorf("%s: %s", "error deleting all nodes", err.Error())
 		s.handleAuditLogForDatabaseWipe(ctx, auditEntry, false, "collected graph data")
-		return true, false
+		return true
 	} else {
 		// if successful, handle audit log and kick off analysis
 		s.handleAuditLogForDatabaseWipe(ctx, auditEntry, true, "collected graph data")
-		return false, true
+		return false
 	}
 }
 
-func (s Resources) deleteHighValueSelectors(ctx context.Context, assetGroupId int, auditEntry *model.AuditEntry) (failure bool, kickoffAnalysis bool) {
+func (s Resources) deleteHighValueSelectors(ctx context.Context, assetGroupId int, auditEntry *model.AuditEntry) (failure bool) {
 	if err := s.DB.DeleteAssetGroupSelectorsForAssetGroup(ctx, assetGroupId); err != nil {
 		log.Errorf("%s %d: %s", "there was an error deleting asset group with id = ", assetGroupId, err.Error())
 		s.handleAuditLogForDatabaseWipe(ctx, auditEntry, false, "high value selectors")
-		return true, false
+		return true
 	} else {
 		// if succesful, handle audit log and kick off analysis
 		s.handleAuditLogForDatabaseWipe(ctx, auditEntry, true, "high value selectors")
-		return false, true
+		return false
 	}
 }
 
