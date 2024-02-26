@@ -17,6 +17,7 @@
 package v2
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"strings"
@@ -29,7 +30,7 @@ import (
 	"github.com/specterops/bloodhound/src/model"
 )
 
-type DatabaseManagement struct {
+type DatabaseWipe struct {
 	DeleteCollectedGraphData bool `json:"deleteCollectedGraphData"`
 	DeleteHighValueSelectors bool `json:"deleteHighValueSelectors"`
 	DeleteFileIngestHistory  bool `json:"deleteFileIngestHistory"`
@@ -40,10 +41,11 @@ type DatabaseManagement struct {
 func (s Resources) HandleDatabaseWipe(response http.ResponseWriter, request *http.Request) {
 
 	var (
-		payload DatabaseManagement
+		payload DatabaseWipe
 		nodeIDs []graph.ID
 		// use this struct to flag any fields that failed to delete
-		errors DatabaseManagement
+		errors          DatabaseWipe
+		kickoffAnalysis bool
 	)
 
 	if err := api.ReadJSONRequestPayloadLimited(&payload, request); err != nil {
@@ -59,6 +61,16 @@ func (s Resources) HandleDatabaseWipe(response http.ResponseWriter, request *htt
 		api.WriteErrorResponse(
 			request.Context(),
 			api.BuildErrorResponse(http.StatusBadRequest, "please provide an assetGroupId to delete", request),
+			response,
+		)
+		return
+	}
+
+	// if request is empty
+	if !payload.DeleteCollectedGraphData && !payload.DeleteDataQualityHistory && !payload.DeleteHighValueSelectors && !payload.DeleteFileIngestHistory {
+		api.WriteErrorResponse(
+			request.Context(),
+			api.BuildErrorResponse(http.StatusBadRequest, "please select something to delete", request),
 			response,
 		)
 		return
@@ -102,8 +114,9 @@ func (s Resources) HandleDatabaseWipe(response http.ResponseWriter, request *htt
 			nodeIDs = append(nodeIDs, fetchedNodeIDs...)
 			return err
 		}); err != nil {
-			log.Errorf("%s: %s", "error fetching all nodes", err.Error())
 			errors.DeleteCollectedGraphData = true
+			log.Errorf("%s: %s", "error fetching all nodes", err.Error())
+			s.handleAuditLog(request.Context(), auditEntry, false, "collected graph data")
 
 		} else if err := s.Graph.BatchOperation(request.Context(), func(batch graph.Batch) error {
 			for _, nodeId := range nodeIDs {
@@ -114,11 +127,14 @@ func (s Resources) HandleDatabaseWipe(response http.ResponseWriter, request *htt
 			}
 			return nil
 		}); err != nil {
-			log.Errorf("%s: %s", "error deleting all nodes", err.Error())
 			errors.DeleteCollectedGraphData = true
+			log.Errorf("%s: %s", "error deleting all nodes", err.Error())
+			s.handleAuditLog(request.Context(), auditEntry, false, "collected graph data")
+
 		} else {
-			// if succesful, kick off analysis
-			s.TaskNotifier.RequestAnalysis()
+			// if successful, handle audit log and kick off analysis
+			s.handleAuditLog(request.Context(), auditEntry, true, "collected graph data")
+			kickoffAnalysis = true
 		}
 
 	}
@@ -126,71 +142,80 @@ func (s Resources) HandleDatabaseWipe(response http.ResponseWriter, request *htt
 	// delete custom high value selectors
 	if payload.DeleteHighValueSelectors {
 		if err := s.DB.DeleteAssetGroupSelectorsForAssetGroup(request.Context(), payload.AssetGroupId); err != nil {
-			log.Errorf("%s %d: %s", "there was an error deleting asset group with id = ", payload.AssetGroupId, err.Error())
 			errors.DeleteHighValueSelectors = true
+			log.Errorf("%s %d: %s", "there was an error deleting asset group with id = ", payload.AssetGroupId, err.Error())
+			s.handleAuditLog(request.Context(), auditEntry, false, "high value selectors")
 		} else {
-			// if succesful, kick off analysis
-			s.TaskNotifier.RequestAnalysis()
+			// if succesful, handle audit log and kick off analysis
+			s.handleAuditLog(request.Context(), auditEntry, true, "high value selectors")
+			kickoffAnalysis = true
 		}
+	}
 
+	// if deleting `nodes` or deleting `asset group selectors` is successful, kickoff an analysis
+	if kickoffAnalysis {
+		s.TaskNotifier.RequestAnalysis()
 	}
 
 	// delete file ingest history
 	if payload.DeleteFileIngestHistory {
 		if err := s.DB.DeleteAllFileUploads(); err != nil {
-			log.Errorf("%s: %s", "there was an error deleting file ingest history", err.Error())
 			errors.DeleteFileIngestHistory = true
+			log.Errorf("%s: %s", "there was an error deleting file ingest history", err.Error())
+			s.handleAuditLog(request.Context(), auditEntry, false, "file ingest history")
+
+		} else {
+			s.handleAuditLog(request.Context(), auditEntry, true, "file ingest history")
 		}
 	}
 
 	// delete data quality history
 	if payload.DeleteDataQualityHistory {
 		if err := s.DB.DeleteAllDataQuality(); err != nil {
-			log.Errorf("%s: %s", "there was an error deleting data quality history", err.Error())
 			errors.DeleteDataQualityHistory = true
+			log.Errorf("%s: %s", "there was an error deleting data quality history", err.Error())
+			s.handleAuditLog(request.Context(), auditEntry, false, "data quality history")
+
+		} else {
+			s.handleAuditLog(request.Context(), auditEntry, true, "data quality history")
 		}
 	}
 
-	// append a failure audit log if anything failed
+	// return a user friendly error message indicating what operations failed
 	if errors.DeleteCollectedGraphData || errors.DeleteHighValueSelectors || errors.DeleteDataQualityHistory || errors.DeleteFileIngestHistory {
-		auditEntry.Status = model.AuditStatusFailure
-		auditEntry.Model = model.AuditData{
-			"deletionFailures": BuildMessageForFailureAudit(errors),
-		}
-
-		if err := s.DB.AppendAuditLog(request.Context(), *auditEntry); err != nil {
-			api.WriteErrorResponse(
-				request.Context(),
-				api.BuildErrorResponse(http.StatusInternalServerError, "there was an error creating audit log for deleting Bloodhound data", request),
-				response,
-			)
-			return
-		}
-
-		// return a user friendly error message indicating what operations failed
 		api.WriteErrorResponse(
 			request.Context(),
 			api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("we encountered an error while deleting %s.  please submit your request again.", BuildMessageForFailureAudit(errors)), request),
 			response,
 		)
 		return
+	} else {
+		response.WriteHeader(http.StatusNoContent)
 	}
 
-	// otherwise append a success audit log
-	auditEntry.Status = model.AuditStatusSuccess
-	if err := s.DB.AppendAuditLog(request.Context(), *auditEntry); err != nil {
-		api.WriteErrorResponse(
-			request.Context(),
-			api.BuildErrorResponse(http.StatusInternalServerError, "there was an error creating audit log for deleting Bloodhound data", request),
-			response,
-		)
-		return
-	}
-
-	response.WriteHeader(http.StatusNoContent)
 }
 
-func BuildMessageForFailureAudit(failures DatabaseManagement) string {
+func (s Resources) handleAuditLog(ctx context.Context, auditEntry *model.AuditEntry, success bool, msg string) error {
+	if success {
+		auditEntry.Status = model.AuditStatusSuccess
+		auditEntry.Model = model.AuditData{
+			"deleted": msg,
+		}
+	} else {
+		auditEntry.Status = model.AuditStatusFailure
+		auditEntry.Model = model.AuditData{
+			"not_deleted": msg,
+		}
+	}
+
+	if err := s.DB.AppendAuditLog(ctx, *auditEntry); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func BuildMessageForFailureAudit(failures DatabaseWipe) string {
 	var message []string
 	if failures.DeleteCollectedGraphData {
 		message = append(message, "collected graph data")

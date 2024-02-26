@@ -214,7 +214,7 @@ func testRoleAccess(t *testing.T, roleName string) {
 			userClient, ok := lab.Unpack(harness, userClientFixture)
 			assert.True(ok)
 
-			err := userClient.HandleDatabaseWipe(v2.DatabaseManagement{})
+			err := userClient.HandleDatabaseWipe(v2.DatabaseWipe{})
 			if role.Permissions.Has(auth.Permissions().WipeDB) {
 				assert.Nil(err)
 			} else {

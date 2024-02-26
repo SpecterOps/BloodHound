@@ -23,7 +23,7 @@ import (
 	v2 "github.com/specterops/bloodhound/src/api/v2"
 )
 
-func (s Client) HandleDatabaseWipe(request v2.DatabaseManagement) error {
+func (s Client) HandleDatabaseWipe(request v2.DatabaseWipe) error {
 
 	if response, err := s.Request(http.MethodPost, "api/v2/clear-database", nil, request); err != nil {
 		return err

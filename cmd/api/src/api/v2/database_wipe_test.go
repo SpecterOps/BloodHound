@@ -42,7 +42,7 @@ func TestDatabaseWipe(t *testing.T) {
 				Name: "asset group id must be provided if deleting asset group selectors",
 				Input: func(input *apitest.Input) {
 					apitest.SetHeader(input, headers.ContentType.String(), mediatypes.ApplicationJson.String())
-					apitest.BodyStruct(input, v2.DatabaseManagement{
+					apitest.BodyStruct(input, v2.DatabaseWipe{
 						DeleteHighValueSelectors: true,
 					})
 				},
@@ -55,7 +55,7 @@ func TestDatabaseWipe(t *testing.T) {
 				Name: "failure creating an intent audit log",
 				Input: func(input *apitest.Input) {
 					apitest.SetHeader(input, headers.ContentType.String(), mediatypes.ApplicationJson.String())
-					apitest.BodyStruct(input, v2.DatabaseManagement{})
+					apitest.BodyStruct(input, v2.DatabaseWipe{})
 				},
 				Setup: func() {
 					mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(errors.New("oopsy! "))
@@ -69,7 +69,7 @@ func TestDatabaseWipe(t *testing.T) {
 				Name: "failed fetching nodes during attempt to delete collected graph data",
 				Input: func(input *apitest.Input) {
 					apitest.SetHeader(input, headers.ContentType.String(), mediatypes.ApplicationJson.String())
-					apitest.BodyStruct(input, v2.DatabaseManagement{DeleteCollectedGraphData: true})
+					apitest.BodyStruct(input, v2.DatabaseWipe{DeleteCollectedGraphData: true})
 				},
 				Setup: func() {
 					successfulAuditLogIntent := mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil).Times(1)
@@ -87,7 +87,7 @@ func TestDatabaseWipe(t *testing.T) {
 				Name: "failed batch operation to delete nodes during attempt to delete collected graph data",
 				Input: func(input *apitest.Input) {
 					apitest.SetHeader(input, headers.ContentType.String(), mediatypes.ApplicationJson.String())
-					apitest.BodyStruct(input, v2.DatabaseManagement{DeleteCollectedGraphData: true})
+					apitest.BodyStruct(input, v2.DatabaseWipe{DeleteCollectedGraphData: true})
 				},
 				Setup: func() {
 					successfulAuditLogIntent := mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil).Times(1)
@@ -107,7 +107,7 @@ func TestDatabaseWipe(t *testing.T) {
 				Name: "succesful deletion of collected graph data kicks of analysis",
 				Input: func(input *apitest.Input) {
 					apitest.SetHeader(input, headers.ContentType.String(), mediatypes.ApplicationJson.String())
-					apitest.BodyStruct(input, v2.DatabaseManagement{DeleteCollectedGraphData: true})
+					apitest.BodyStruct(input, v2.DatabaseWipe{DeleteCollectedGraphData: true})
 				},
 				Setup: func() {
 					successfulAuditLogIntent := mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil).Times(1)
@@ -127,7 +127,7 @@ func TestDatabaseWipe(t *testing.T) {
 				Name: "failed deletion of high value selectors",
 				Input: func(input *apitest.Input) {
 					apitest.SetHeader(input, headers.ContentType.String(), mediatypes.ApplicationJson.String())
-					apitest.BodyStruct(input, v2.DatabaseManagement{DeleteHighValueSelectors: true, AssetGroupId: 1})
+					apitest.BodyStruct(input, v2.DatabaseWipe{DeleteHighValueSelectors: true, AssetGroupId: 1})
 				},
 				Setup: func() {
 					successfulAuditLogIntent := mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil).Times(1)
@@ -146,7 +146,7 @@ func TestDatabaseWipe(t *testing.T) {
 				Name: "successful deletion of high value selectors",
 				Input: func(input *apitest.Input) {
 					apitest.SetHeader(input, headers.ContentType.String(), mediatypes.ApplicationJson.String())
-					apitest.BodyStruct(input, v2.DatabaseManagement{DeleteHighValueSelectors: true, AssetGroupId: 1})
+					apitest.BodyStruct(input, v2.DatabaseWipe{DeleteHighValueSelectors: true, AssetGroupId: 1})
 				},
 				Setup: func() {
 					successfulAuditLogIntent := mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil).Times(1)
@@ -165,7 +165,7 @@ func TestDatabaseWipe(t *testing.T) {
 				Name: "failed deletion of file ingest history",
 				Input: func(input *apitest.Input) {
 					apitest.SetHeader(input, headers.ContentType.String(), mediatypes.ApplicationJson.String())
-					apitest.BodyStruct(input, v2.DatabaseManagement{DeleteFileIngestHistory: true})
+					apitest.BodyStruct(input, v2.DatabaseWipe{DeleteFileIngestHistory: true})
 				},
 				Setup: func() {
 					successfulAuditLogIntent := mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil).Times(1)
@@ -184,7 +184,7 @@ func TestDatabaseWipe(t *testing.T) {
 				Name: "successful deletion of file ingest history",
 				Input: func(input *apitest.Input) {
 					apitest.SetHeader(input, headers.ContentType.String(), mediatypes.ApplicationJson.String())
-					apitest.BodyStruct(input, v2.DatabaseManagement{DeleteFileIngestHistory: true})
+					apitest.BodyStruct(input, v2.DatabaseWipe{DeleteFileIngestHistory: true})
 				},
 				Setup: func() {
 					successfulAuditLogIntent := mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil).Times(1)
@@ -202,7 +202,7 @@ func TestDatabaseWipe(t *testing.T) {
 				Name: "failed deletion of data quality history",
 				Input: func(input *apitest.Input) {
 					apitest.SetHeader(input, headers.ContentType.String(), mediatypes.ApplicationJson.String())
-					apitest.BodyStruct(input, v2.DatabaseManagement{DeleteDataQualityHistory: true})
+					apitest.BodyStruct(input, v2.DatabaseWipe{DeleteDataQualityHistory: true})
 				},
 				Setup: func() {
 					successfulAuditLogIntent := mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil).Times(1)
@@ -221,7 +221,7 @@ func TestDatabaseWipe(t *testing.T) {
 				Name: "succesful deletion of data quality history",
 				Input: func(input *apitest.Input) {
 					apitest.SetHeader(input, headers.ContentType.String(), mediatypes.ApplicationJson.String())
-					apitest.BodyStruct(input, v2.DatabaseManagement{DeleteDataQualityHistory: true})
+					apitest.BodyStruct(input, v2.DatabaseWipe{DeleteDataQualityHistory: true})
 				},
 				Setup: func() {
 					successfulAuditLogIntent := mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil).Times(1)
@@ -239,7 +239,7 @@ func TestDatabaseWipe(t *testing.T) {
 				Name: "correctly forms the error message when multiple delete operations fail",
 				Input: func(input *apitest.Input) {
 					apitest.SetHeader(input, headers.ContentType.String(), mediatypes.ApplicationJson.String())
-					apitest.BodyStruct(input, v2.DatabaseManagement{DeleteDataQualityHistory: true, DeleteFileIngestHistory: true})
+					apitest.BodyStruct(input, v2.DatabaseWipe{DeleteDataQualityHistory: true, DeleteFileIngestHistory: true})
 				},
 				Setup: func() {
 					successfulAuditLogIntent := mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil).Times(1)
@@ -262,7 +262,7 @@ func TestDatabaseWipe(t *testing.T) {
 
 func Test_BuildMessageForFailureAudit(t *testing.T) {
 
-	got := v2.BuildMessageForFailureAudit(v2.DatabaseManagement{
+	got := v2.BuildMessageForFailureAudit(v2.DatabaseWipe{
 		DeleteCollectedGraphData: true,
 		DeleteHighValueSelectors: true,
 	})

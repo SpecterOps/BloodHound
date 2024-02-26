@@ -68,7 +68,7 @@ func TestDatabaseWipe_CollectedGraphData(t *testing.T) {
 				})
 
 			err := apiClient.HandleDatabaseWipe(
-				v2.DatabaseManagement{
+				v2.DatabaseWipe{
 					DeleteCollectedGraphData: true,
 				})
 			assert.Nil(err, "error calling apiClient.HandleDatabaseWipe")
