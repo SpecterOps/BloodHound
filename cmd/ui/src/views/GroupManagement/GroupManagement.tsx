@@ -71,7 +71,6 @@ const GroupManagement = () => {
         });
     };
 
-    if (!globalDomain) return null;
     return (
         <GroupManagementContent
             globalDomain={globalDomain}
