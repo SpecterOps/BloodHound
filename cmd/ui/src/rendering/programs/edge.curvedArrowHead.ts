@@ -35,7 +35,7 @@ const POINTS = 3,
     ATTRIBUTES = 9,
     STRIDE = POINTS * ATTRIBUTES;
 
-export default class EdgeArrowHeadProgram extends AbstractEdgeProgram {
+export default class CurvedEdgeArrowHeadProgram extends AbstractEdgeProgram {
     // Locations
     positionLocation: GLint;
     colorLocation: GLint;

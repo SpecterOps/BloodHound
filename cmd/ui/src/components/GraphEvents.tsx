@@ -17,10 +17,16 @@
 import { useRegisterEvents, useSetSettings, useSigma } from '@react-sigma/core';
 import { setSelectedEdge } from 'bh-shared-ui';
 import { AbstractGraph, Attributes } from 'graphology-types';
-import { FC, useEffect, useRef, useState } from 'react';
+import { FC, useCallback, useEffect, useRef, useState } from 'react';
 import { SigmaNodeEventPayload } from 'sigma/sigma';
-import { getEdgeDataFromKey, getEdgeSourceAndTargetDisplayData, resetCamera } from 'src/ducks/graph/utils';
+import {
+    getEdgeDataFromKey,
+    getEdgeSourceAndTargetDisplayData,
+    graphToFramedGraph,
+    resetCamera,
+} from 'src/ducks/graph/utils';
 import { bezier } from 'src/rendering/utils/bezier';
+import { getNodeRadius } from 'src/rendering/utils/utils';
 import { useAppDispatch, useAppSelector } from 'src/store';
 
 export interface GraphEventProps {
@@ -59,6 +65,7 @@ export const GraphEvents: FC<GraphEventProps> = ({
     const prevent = useRef(false);
 
     const sigmaContainer = document.getElementById('sigma-container');
+    const { getControlAtMidpoint, getLineLength, calculateCurveHeight } = bezier;
 
     const clearDraggedNode = () => {
         setDraggedNode(null);
@@ -66,6 +73,48 @@ export const GraphEvents: FC<GraphEventProps> = ({
         clearTimeout(dragTimerRef.current);
         isLongPress.current = false;
     };
+
+    const curvedEdgeReducer = useCallback(
+        (edge: string, data: Attributes, newData: Attributes) => {
+            // We calculate control points for all curved edges here and pass those along as edge attributes in both viewport and framed graph
+            // coordinates. We can then use those control points in our edge, edge label, and edge arrow programs.
+            const edgeData = getEdgeDataFromKey(edge);
+            if (edgeData !== null) {
+                const nodeDisplayData = getEdgeSourceAndTargetDisplayData(edgeData.source, edgeData.target, sigma);
+                if (nodeDisplayData !== null) {
+                    const sourceCoordinates = { x: nodeDisplayData.source.x, y: nodeDisplayData.source.y };
+                    const targetCoordinates = { x: nodeDisplayData.target.x, y: nodeDisplayData.target.y };
+
+                    const height = calculateCurveHeight(data.groupSize, data.groupPosition, data.direction);
+                    const control = getControlAtMidpoint(height, sourceCoordinates, targetCoordinates);
+
+                    newData.control = control;
+                    newData.controlInViewport = sigma.framedGraphToViewport(control);
+                }
+            }
+        },
+        [sigma, calculateCurveHeight, getControlAtMidpoint]
+    );
+
+    const selfEdgeReducer = useCallback(
+        (edge: string, newData: Attributes) => {
+            const edgeData = getEdgeDataFromKey(edge);
+            if (edgeData !== null) {
+                const nodeDisplayData = getEdgeSourceAndTargetDisplayData(edgeData.source, edgeData.target, sigma);
+                if (nodeDisplayData !== null) {
+                    const nodeRadius = getNodeRadius(false, newData.inverseSqrtZoomRatio, nodeDisplayData.source.size);
+
+                    const framedGraphNodeRadius = getLineLength(
+                        graphToFramedGraph(sigma, { x: 0, y: 0 }),
+                        graphToFramedGraph(sigma, { x: nodeRadius, y: nodeRadius })
+                    );
+
+                    newData.framedGraphNodeRadius = framedGraphNodeRadius;
+                }
+            }
+        },
+        [sigma, getLineLength]
+    );
 
     useEffect(() => {
         registerEvents({
@@ -188,39 +237,26 @@ export const GraphEvents: FC<GraphEventProps> = ({
                     newData.selected = false;
                 }
 
-                // We calculate control points for all curved edges here and pass those along as edge attributes in both viewport and framed graph
-                // coordinates. We can then use those control points in our edge, edge label, and edge arrow programs.
-                if (data.type === 'curved') {
-                    const edgeData = getEdgeDataFromKey(edge);
-                    if (edgeData !== null) {
-                        const nodeDisplayData = getEdgeSourceAndTargetDisplayData(
-                            edgeData.source,
-                            edgeData.target,
-                            sigma
-                        );
-                        if (nodeDisplayData !== null) {
-                            const sourceCoordinates = { x: nodeDisplayData.source.x, y: nodeDisplayData.source.y };
-                            const targetCoordinates = { x: nodeDisplayData.target.x, y: nodeDisplayData.target.y };
+                if (data.type === 'curved') curvedEdgeReducer(edge, data, newData);
 
-                            const height = bezier.calculateCurveHeight(
-                                data.groupSize,
-                                data.groupPosition,
-                                data.direction
-                            );
-                            const control = bezier.getControlAtMidpoint(height, sourceCoordinates, targetCoordinates);
-
-                            newData.control = control;
-                            newData.controlInViewport = sigma.framedGraphToViewport(control);
-                        }
-                    }
-                }
+                if (data.type === 'self') selfEdgeReducer(edge, newData);
 
                 if (edgeReducer) return edgeReducer(edge, newData, graph);
 
                 return newData;
             },
         });
-    }, [hoveredNode, draggedNode, highlightedNode, selectedEdge, edgeReducer, setSettings, sigma]);
+    }, [
+        hoveredNode,
+        draggedNode,
+        highlightedNode,
+        selectedEdge,
+        curvedEdgeReducer,
+        selfEdgeReducer,
+        edgeReducer,
+        setSettings,
+        sigma,
+    ]);
 
     // Toggle off edge labels when dragging a node. Since these are rendered on a 2d canvas, dragging nodes with lots of edges
     // can tank performance

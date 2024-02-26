@@ -191,6 +191,7 @@ export const initGraphEdges = (graph: MultiDirectedGraph, edges: GraphEdges) => 
 
             // Groups with odd-numbered totals should have a straight edge first, then curve the rest
             const edgeShouldBeCurved = groupSize > 1;
+            const isSelfEdge = edge.source === edge.target;
 
             // Handle edge groups that have a mix of directions that edges travel between source and target.
             // We can use the value of the enum to indicate which direction the curve should bend
@@ -202,6 +203,11 @@ export const initGraphEdges = (graph: MultiDirectedGraph, edges: GraphEdges) => 
                 edgeParams.groupPosition = i;
                 edgeParams.groupSize = groupSize;
                 edgeParams.direction = edgeDirection;
+            }
+            if (isSelfEdge) {
+                edgeParams.type = 'self';
+                edgeParams.groupPosition = i;
+                edgeParams.groupSize = groupSize;
             }
 
             graph.addEdgeWithKey(key, edge.source, edge.target, edgeParams);

@@ -58,17 +58,17 @@ describe('bezier', () => {
         control = bezier.getOffsetVertex(startpoint1, endpoint1, midpoint, offset1);
 
         t = 0;
-        point = bezier.getCoordinatesAlongCurve(startpoint1, endpoint1, control, t);
+        point = bezier.getCoordinatesAlongQuadraticBezier(startpoint1, endpoint1, control, t);
         expect(point.x).toBeCloseTo(startpoint1.x);
         expect(point.y).toBeCloseTo(startpoint1.y);
 
         t = 0.5;
-        point = bezier.getCoordinatesAlongCurve(startpoint1, endpoint1, control, t);
+        point = bezier.getCoordinatesAlongQuadraticBezier(startpoint1, endpoint1, control, t);
         expect(point.x).toBeCloseTo(57.0711);
         expect(point.y).toBeCloseTo(42.9289);
 
         t = 1;
-        point = bezier.getCoordinatesAlongCurve(startpoint1, endpoint1, control, t);
+        point = bezier.getCoordinatesAlongQuadraticBezier(startpoint1, endpoint1, control, t);
         expect(point.x).toBeCloseTo(endpoint1.x);
         expect(point.y).toBeCloseTo(endpoint1.y);
 
@@ -76,17 +76,17 @@ describe('bezier', () => {
         control = bezier.getOffsetVertex(startpoint2, endpoint2, midpoint, offset2);
 
         t = 0;
-        point = bezier.getCoordinatesAlongCurve(startpoint2, endpoint2, control, t);
+        point = bezier.getCoordinatesAlongQuadraticBezier(startpoint2, endpoint2, control, t);
         expect(point.x).toBeCloseTo(startpoint2.x);
         expect(point.y).toBeCloseTo(startpoint2.y);
 
         t = 0.5;
-        point = bezier.getCoordinatesAlongCurve(startpoint2, endpoint2, control, t);
+        point = bezier.getCoordinatesAlongQuadraticBezier(startpoint2, endpoint2, control, t);
         expect(point.x).toBeCloseTo(34.8076);
         expect(point.y).toBeCloseTo(63.6264);
 
         t = 1;
-        point = bezier.getCoordinatesAlongCurve(startpoint2, endpoint2, control, t);
+        point = bezier.getCoordinatesAlongQuadraticBezier(startpoint2, endpoint2, control, t);
         expect(point.x).toBeCloseTo(endpoint2.x);
         expect(point.y).toBeCloseTo(endpoint2.y);
     });
