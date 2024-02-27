@@ -23,6 +23,8 @@ import (
 	"github.com/specterops/bloodhound/analysis/impact"
 	"github.com/specterops/bloodhound/dawgs/cardinality"
 	"github.com/specterops/bloodhound/dawgs/graph"
+	"github.com/specterops/bloodhound/dawgs/ops"
+	"github.com/specterops/bloodhound/dawgs/query"
 	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/log"
 )
@@ -40,12 +42,24 @@ func PostADCSESC4(ctx context.Context, tx graph.Transaction, outC chan<- analysi
 		} else if !valid {
 			continue
 		} else {
-			principals.Or(CalculateCrossProductNodeSets(
-				groupExpansions,
-				// `CertTemplateControllers` is populated by principals that fulfill 2a and 2b
-				cache.CertTemplateControllers[certTemplate.ID],
-				cache.EnterpriseCAEnrollers[enterpriseCA.ID],
-			))
+
+			// 2b. fetch principals with `Generic Write` + `Enroll` combinations on the cert template
+			if principalsWithGenericWrite, err := FetchPrincipalsWithGenericWriteOnCertTemplate(tx, certTemplate); err != nil {
+				log.Warnf("error fetching principals with generic write on cert template: %v", err)
+			} else if principalsWithEnroll, err := FetchPrincipalsWithEnrollOrAllExtendedRightsOnCertTemplate(tx, certTemplate); err != nil {
+				log.Warnf("error fetching principals with enroll or all extended rights on cert template: %v", err)
+			} else {
+				principals.Or(
+					CalculateCrossProductNodeSets(
+						groupExpansions,
+						cache.EnterpriseCAEnrollers[enterpriseCA.ID],
+						// 2a. `CertTemplateControllers` is populated by principals that fulfill 2a
+						cache.CertTemplateControllers[certTemplate.ID],
+						principalsWithGenericWrite.Slice(),
+						principalsWithEnroll.Slice(),
+					))
+			}
+
 		}
 	}
 	return nil
@@ -64,5 +78,38 @@ func isCertTemplateValidForESC4(ct *graph.Node) (bool, error) {
 		return false, nil
 	} else {
 		return true, nil
+	}
+}
+
+func FetchPrincipalsWithGenericWriteOnCertTemplate(tx graph.Transaction, certTemplate *graph.Node) (graph.NodeSet, error) {
+	if nodes, err := ops.FetchStartNodes(tx.Relationships().Filterf(
+		func() graph.Criteria {
+			return query.And(
+				query.Equals(query.EndID(), certTemplate.ID),
+				query.Kind(query.Relationship(), ad.GenericWrite),
+			)
+		},
+	)); err != nil {
+		return nil, err
+	} else {
+		return nodes, nil
+	}
+}
+
+func FetchPrincipalsWithEnrollOrAllExtendedRightsOnCertTemplate(tx graph.Transaction, certTemplate *graph.Node) (graph.NodeSet, error) {
+	if nodes, err := ops.FetchStartNodes(tx.Relationships().Filterf(
+		func() graph.Criteria {
+			return query.And(
+				query.Equals(query.EndID(), certTemplate.ID),
+				query.Or(
+					query.Kind(query.Relationship(), ad.Enroll),
+					query.Kind(query.Relationship(), ad.AllExtendedRights),
+				),
+			)
+		},
+	)); err != nil {
+		return nil, err
+	} else {
+		return nodes, nil
 	}
 }

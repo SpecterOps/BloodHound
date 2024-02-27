@@ -58,16 +58,10 @@ func (s ADCSCache) BuildCache(ctx context.Context, db graph.Database, enterprise
 			}
 
 			// cert template controllers
-			// TODO: what is a good name for firstDegreePrincipals1 and 2?
-			if firstDegreePrincipals1, err := fetchFirstDegreeNodes(tx, ct, ad.Owns, ad.GenericAll, ad.WriteDACL, ad.WriteOwner); err != nil {
-				// TODO: what should this log say?
+			if firstDegreePrincipals, err := fetchFirstDegreeNodes(tx, ct, ad.Owns, ad.GenericAll, ad.WriteDACL, ad.WriteOwner); err != nil {
 				log.Errorf("error fetching controllers for cert template %d: %v", ct.ID, err)
-			} else if firstDegreePrincipals2, err := FetchESC4PrinciaplsForCertTemplate(tx, ct); err != nil {
-				// TODO: what should this log say?
-				log.Errorf("error fetching more controllers for cert template %d: %v", ct.ID, err)
 			} else {
-				firstDegreePrincipals1.AddSet(firstDegreePrincipals2)
-				s.CertTemplateControllers[ct.ID] = firstDegreePrincipals1.Slice()
+				s.CertTemplateControllers[ct.ID] = firstDegreePrincipals.Slice()
 			}
 
 		}

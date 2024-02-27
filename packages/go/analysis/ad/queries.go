@@ -1419,24 +1419,6 @@ func FetchCertTemplatesPublishedToCA(tx graph.Transaction, ca *graph.Node) (grap
 	}))
 }
 
-// TODO: what should this be named?
-func FetchESC4PrinciaplsForCertTemplate(tx graph.Transaction, certTemplate *graph.Node) (graph.NodeSet, error) {
-	return ops.FetchStartNodes(
-		tx.Relationships().Filterf(
-			func() graph.Criteria {
-				return query.And(
-					query.Kind(query.Start(), ad.Entity),
-					query.Equals(query.EndID, certTemplate.ID),
-					query.Kind(query.Relationship(), ad.GenericWrite),
-					query.Or(
-						query.Kind(query.Relationship(), ad.Enroll),
-						query.Kind(query.Relationship(), ad.AllExtendedRights),
-					),
-				)
-			}),
-	)
-}
-
 func FetchCanAbuseWeakCertBindingRels(tx graph.Transaction, node *graph.Node) ([]*graph.Relationship, error) {
 	if rels, err := ops.FetchRelationships(tx.Relationships().Filterf(func() graph.Criteria {
 		return query.And(
