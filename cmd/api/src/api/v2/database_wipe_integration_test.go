@@ -35,7 +35,6 @@ import (
 func TestDatabaseWipe_CollectedGraphData(t *testing.T) {
 	var (
 		harness       = harnesses.NewIntegrationTestHarness(fixtures.BHAdminApiClientFixture)
-		graphdb       = fixtures.NewGraphDBFixture()
 		computer1UUID = uuid.Must(uuid.NewV4())
 		computer1     = fixtures.NewComputerFixture(computer1UUID, "computer 1", fixtures.BasicDomainFixture)
 		computer2UUID = uuid.Must(uuid.NewV4())
@@ -44,7 +43,6 @@ func TestDatabaseWipe_CollectedGraphData(t *testing.T) {
 		computer3     = fixtures.NewComputerFixture(computer3UUID, "computer 3", fixtures.BasicDomainFixture)
 	)
 
-	lab.Pack(harness, graphdb)
 	lab.Pack(harness, computer1)
 	lab.Pack(harness, computer2)
 	lab.Pack(harness, computer3)
