@@ -21,6 +21,7 @@ package v2_test
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	"github.com/gofrs/uuid"
@@ -33,6 +34,9 @@ import (
 )
 
 func TestDatabaseWipe_CollectedGraphData(t *testing.T) {
+	fmt.Println(">>> HERE I AM STARTING")
+	defer fmt.Println(">>> HERE I AM ENDING")
+
 	var (
 		harness       = harnesses.NewIntegrationTestHarness(fixtures.BHAdminApiClientFixture)
 		computer1UUID = uuid.Must(uuid.NewV4())
