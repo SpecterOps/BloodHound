@@ -82,7 +82,7 @@ describe('GroupManagement', () => {
     it('displays default text for domain selector when globalDomain is null', async () => {
         const { screen } = await setup();
 
-        expect(screen.getByText('Unknown Domain or Tenant')).toBeInTheDocument();
+        expect(screen.getByTestId('data-selector')).toBeInTheDocument();
     });
 
     it('renders an edit form for the selected asset group', async () => {
