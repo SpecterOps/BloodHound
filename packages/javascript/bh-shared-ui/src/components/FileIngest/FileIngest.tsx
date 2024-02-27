@@ -27,7 +27,7 @@ const FileIngest = () => {
     const [rowsPerPage, setRowsPerPage] = useState(10);
     const [totalCount, setTotalCount] = useState(0);
 
-    const { data: listFileIngestJobsData, refetch: refetchIngestJobs } = useListFileIngestJobs(page, rowsPerPage);
+    const { data: listFileIngestJobsData } = useListFileIngestJobs(page, rowsPerPage);
 
     useEffect(() => setTotalCount(listFileIngestJobsData?.count || 0), [listFileIngestJobsData]);
 
@@ -73,11 +73,7 @@ const FileIngest = () => {
                 />
             </ContentPage>
 
-            <FileUploadDialog
-                open={fileUploadDialogOpen}
-                refetchIngestJobs={() => refetchIngestJobs()}
-                onClose={toggleFileUploadDialog}
-            />
+            <FileUploadDialog open={fileUploadDialogOpen} onClose={toggleFileUploadDialog} />
         </>
     );
 };

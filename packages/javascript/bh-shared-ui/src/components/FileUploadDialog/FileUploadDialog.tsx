@@ -30,9 +30,8 @@ import { useNotifications } from '../../providers';
 
 const FileUploadDialog: React.FC<{
     open: boolean;
-    refetchIngestJobs: () => void;
     onClose: () => void;
-}> = ({ open, refetchIngestJobs, onClose }) => {
+}> = ({ open, onClose }) => {
     const [filesForIngest, setFilesForIngest] = useState<FileForIngest[]>([]);
     const [fileUploadStep, setFileUploadStep] = useState<FileUploadStep>(FileUploadStep.ADD_FILES);
     const [submitDialogDisabled, setSubmitDialogDisabled] = useState<boolean>(false);
@@ -156,8 +155,6 @@ const FileUploadDialog: React.FC<{
                             ? 'Some files have failed to upload and have not been included for ingest.'
                             : 'All files have successfully been uploaded for ingest.';
                     setUploadMessage(uploadMessage);
-
-                    refetchIngestJobs();
 
                     addNotification(
                         `Successfully uploaded ${filesForIngest.length - filesWithErrors.length} files for ingest`,

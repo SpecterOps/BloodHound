@@ -1,4 +1,4 @@
-import { useMutation, useQuery } from 'react-query';
+import { useMutation, useQuery, useQueryClient } from 'react-query';
 import { apiClient } from '../utils/api';
 
 export const listFileIngestJobs = (skip?: number, limit?: number, sortBy?: string) =>
@@ -23,16 +23,24 @@ export const uploadFileToIngestJob = ({
 export const endFileIngestJob = ({ jobId }: { jobId: string }) =>
     apiClient.endFileIngest(jobId).then((res) => res.data);
 
+export const fileUploadKeys = {
+    all: ['file-upload'] as const,
+    listJobs: () => [...fileUploadKeys.all, 'list-jobs'] as const,
+    listJobsPaginated: (page: number, rowsPerPage: number) =>
+        [...fileUploadKeys.listJobs(), page, rowsPerPage] as const,
+    listFileTypes: () => [...fileUploadKeys.all, 'accepted-types'] as const,
+};
+
 export const useListFileIngestJobs = (page: number, rowsPerPage: number) => {
     return useQuery(
-        ['listFileIngestJobs', page, rowsPerPage],
+        fileUploadKeys.listJobsPaginated(page, rowsPerPage),
         () => listFileIngestJobs(page * rowsPerPage, rowsPerPage, '-id'),
         { refetchInterval: 5000 }
     );
 };
 
 export const useListFileTypesForIngest = () => {
-    return useQuery(['listFileTypesForIngest'], listFileTypesForIngest);
+    return useQuery(fileUploadKeys.listFileTypes(), listFileTypesForIngest, { refetchOnWindowFocus: false });
 };
 
 export const useStartFileIngestJob = () => {
@@ -44,5 +52,10 @@ export const useUploadFileToIngestJob = () => {
 };
 
 export const useEndFileIngestJob = () => {
-    return useMutation(endFileIngestJob);
+    const queryClient = useQueryClient();
+    return useMutation(endFileIngestJob, {
+        onSettled: () => {
+            queryClient.invalidateQueries(fileUploadKeys.listJobs());
+        },
+    });
 };

@@ -56,9 +56,7 @@ const FileDrop: React.FC<{
     const handleMouseEnter = (_e: MouseEvent) => setHoverActive(true);
     const handleMouseLeave = (_e: MouseEvent) => setHoverActive(false);
 
-    const formatAcceptList = () => {
-        return accept && accept.length ? accept.join(',') : undefined;
-    };
+    const formatAcceptList = () => (accept && accept.length ? accept.join(',') : undefined);
 
     return (
         <Box
