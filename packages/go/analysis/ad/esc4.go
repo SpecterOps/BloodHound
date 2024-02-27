@@ -40,10 +40,10 @@ func PostADCSESC4(ctx context.Context, tx graph.Transaction, outC chan<- analysi
 		} else if !valid {
 			continue
 		} else {
-			// 2a.
 			principals.Or(CalculateCrossProductNodeSets(
 				groupExpansions,
-				cache.CertTemplateXXX[certTemplate.ID],
+				// `CertTemplateControllers` is populated by principals that fulfill 2a and 2b
+				cache.CertTemplateControllers[certTemplate.ID],
 				cache.EnterpriseCAEnrollers[enterpriseCA.ID],
 			))
 		}

@@ -53,7 +53,7 @@ func PostADCSESC10a(ctx context.Context, tx graph.Transaction, outC chan<- analy
 				continue
 			} else if !valid {
 				continue
-			} else if certTemplateControllers, ok := cache.CertTemplateControllers[template.ID]; !ok {
+			} else if certTemplateControllers, ok := cache.CertTemplateEnrollers[template.ID]; !ok {
 				log.Debugf("Failed to retrieve controllers for cert template %d from cache", template.ID)
 				continue
 			} else {
@@ -104,7 +104,7 @@ func PostADCSESC10b(ctx context.Context, tx graph.Transaction, outC chan<- analy
 				continue
 			} else if !valid {
 				continue
-			} else if certTemplateControllers, ok := cache.CertTemplateControllers[template.ID]; !ok {
+			} else if certTemplateControllers, ok := cache.CertTemplateEnrollers[template.ID]; !ok {
 				log.Debugf("Failed to retrieve controllers for cert template %d from cache", template.ID)
 				continue
 			} else {
