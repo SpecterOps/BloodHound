@@ -60,7 +60,7 @@ func TestRequestWaitDuration_Failure(t *testing.T) {
 	req.Header.Set(headers.Prefer.String(), "wait=1.5")
 	req.URL.RawQuery = q.Encode()
 
-	_, err = requestWaitDuration(req, 30*time.Second)
+	_, err = requestWaitDuration(req)
 	require.NotNil(t, err)
 }
 
@@ -74,10 +74,9 @@ func TestRequestWaitDuration(t *testing.T) {
 	req.Header.Set(headers.Prefer.String(), "wait=1")
 	req.URL.RawQuery = q.Encode()
 
-	requestedWaitDuration, err := requestWaitDuration(req, 30*time.Second)
+	requestedWaitDuration, err := requestWaitDuration(req)
 	require.Nil(t, err)
-	require.Equal(t, 1*time.Second, requestedWaitDuration.Value)
-	require.True(t, requestedWaitDuration.UserSet)
+	require.Equal(t, 1*time.Second, requestedWaitDuration)
 }
 
 func TestParseUserIP_XForwardedFor_RemoteAddr(t *testing.T) {
@@ -102,14 +101,14 @@ func TestParseUserIP_RemoteAddrOnly(t *testing.T) {
 }
 
 func TestParsePreferHeaderWait(t *testing.T) {
-	_, err := parsePreferHeaderWait("wait=1.5", 30*time.Second)
+	_, err := parsePreferHeaderWait("wait=1.5")
 	require.NotNil(t, err)
 
-	duration, err := parsePreferHeaderWait("wait=5", 30*time.Second)
+	duration, err := parsePreferHeaderWait("wait=5")
 	require.Nil(t, err)
 	require.Equal(t, 5*time.Second, duration)
 
-	duration, err = parsePreferHeaderWait("", 30*time.Second)
+	duration, err = parsePreferHeaderWait("")
 	require.Nil(t, err)
-	require.Equal(t, 30*time.Second, duration)
+	require.Equal(t, time.Duration(0), duration)
 }

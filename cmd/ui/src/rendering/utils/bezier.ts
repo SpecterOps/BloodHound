@@ -43,10 +43,39 @@ export const bezier = {
     },
 
     // Use parametric formula to calculate point along quadratic bezier curve based on 0 < t < 1
-    getCoordinatesAlongCurve: (start: Coordinates, end: Coordinates, control: Coordinates, t: number): Coordinates => {
+    getCoordinatesAlongQuadraticBezier: (
+        start: Coordinates,
+        end: Coordinates,
+        control: Coordinates,
+        t: number
+    ): Coordinates => {
         return {
             x: (1 - t) * (1 - t) * start.x + 2 * (1 - t) * t * control.x + t * t * end.x,
             y: (1 - t) * (1 - t) * start.y + 2 * (1 - t) * t * control.y + t * t * end.y,
+        };
+    },
+
+    getCoordinatesAlongCubicBezier: (
+        c1: Coordinates,
+        c2: Coordinates,
+        c3: Coordinates,
+        c4: Coordinates,
+        t: number
+    ): Coordinates => {
+        //x(t) = (1 – t)^3*c0 + 3(1 – t)^2*t*c1 + 3(1 – t)*t^2*c2 + t^3*c3
+        //y(t) = (1 – t)^3*c0 + 3(1 – t)^2*t*c1 + 3(1 – t)*t^2*c2 + t^3*c3
+        return {
+            x:
+                Math.pow(1 - t, 3) * c1.x +
+                3 * Math.pow(1 - t, 2) * t * c2.x +
+                3 * (1 - t) * Math.pow(t, 2) * c3.x +
+                Math.pow(t, 3) * c4.x,
+
+            y:
+                Math.pow(1 - t, 3) * c1.y +
+                3 * Math.pow(1 - t, 2) * t * c2.y +
+                3 * (1 - t) * Math.pow(t, 2) * c3.y +
+                Math.pow(t, 3) * c4.y,
         };
     },
 

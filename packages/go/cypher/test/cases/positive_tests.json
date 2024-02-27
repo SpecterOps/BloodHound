@@ -1035,6 +1035,14 @@
             }
         },
         {
+            "name": "Find Shortest Paths to Domain Admins with Traversal Limit",
+            "type": "string_match",
+            "details": {
+                "query": "match p = shortestPath((n)-[:HasSession|AdminTo|Contains|AZLogicAppContributor*5..1]->(m:Group {name: 'DOMAIN ADMINS@DOMAIN.PAIN'})) where not (n = m) return p",
+                "complexity": 7.0
+            }
+        },
+        {
             "name": "Find Computers with Unsupported Operating Systems",
             "type": "string_match",
             "details": {

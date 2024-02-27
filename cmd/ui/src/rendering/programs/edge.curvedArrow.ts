@@ -23,8 +23,8 @@
  * @module
  */
 import { createEdgeCompoundProgram } from 'sigma/rendering/webgl/programs/common/edge';
-import EdgeCurvedArrowHeadProgram from './edge.curvedArrowHead';
-import EdgeCurvedProgram from './edge.curved';
+import CurvedEdgeArrowHeadProgram from './edge.curvedArrowHead';
+import CurvedEdgeProgram from './edge.curved';
 import { EdgeDisplayData, Coordinates } from 'sigma/types';
 import { EdgeDirection } from 'src/utils';
 
@@ -36,6 +36,6 @@ export type CurvedEdgeDisplayData = EdgeDisplayData & {
     inverseSqrtZoomRatio?: number;
 };
 
-const EdgeArrowProgram = createEdgeCompoundProgram([EdgeCurvedProgram, EdgeCurvedArrowHeadProgram]);
+const EdgeArrowProgram = createEdgeCompoundProgram([CurvedEdgeProgram, CurvedEdgeArrowHeadProgram]);
 
 export default EdgeArrowProgram;
