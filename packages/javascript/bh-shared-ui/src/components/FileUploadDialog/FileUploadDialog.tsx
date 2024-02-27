@@ -19,6 +19,7 @@ import { useEffect, useState } from 'react';
 import FileDrop from '../FileDrop';
 import FileStatusListItem from '../FileStatusListItem';
 import { FileForIngest, FileStatus, FileUploadStep } from './types';
+import { ErrorResponse } from 'js-client-library';
 import {
     useEndFileIngestJob,
     useListFileTypesForIngest,
@@ -129,8 +130,15 @@ const FileUploadDialog: React.FC<{
             { jobId, fileContents: ingestFile.file },
             {
                 onSuccess: () => setNewFileStatus(ingestFile.file.name, FileStatus.DONE),
-                onError: () => {
-                    addNotification(`File upload failed for ${ingestFile.file.name}`, 'IngestFileUploadFail');
+                onError: (error) => {
+                    const apiError = error as ErrorResponse;
+
+                    if (apiError?.errors[0]?.message?.length) {
+                        addNotification(`Upload failed: ${apiError.errors[0].message}`, 'IngestFileUploadFail');
+                    } else {
+                        addNotification(`File upload failed for ${ingestFile.file.name}`, 'IngestFileUploadFail');
+                    }
+
                     setUploadFailureError(ingestFile.file.name, 'Upload Failed');
                 },
             }
@@ -199,7 +207,11 @@ const FileUploadDialog: React.FC<{
             <DialogContent>
                 <>
                     {fileUploadStep === FileUploadStep.ADD_FILES && (
-                        <FileDrop onDrop={handleFileDrop} disabled={listFileTypesForIngest.isLoading} />
+                        <FileDrop
+                            onDrop={handleFileDrop}
+                            disabled={listFileTypesForIngest.isLoading}
+                            accept={listFileTypesForIngest.data?.data}
+                        />
                     )}
                     {(fileUploadStep === FileUploadStep.CONFIRMATION || fileUploadStep === FileUploadStep.UPLOAD) && (
                         <Box fontSize={20} marginBottom={5}>
