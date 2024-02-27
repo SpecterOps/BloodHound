@@ -281,18 +281,16 @@ func FetchAppRoleAssignmentsTransitPaths(tx graph.Transaction, root *graph.Node,
 	})
 }
 
-func InboundControlDescentFilter(ctx *ops.TraversalContext, segment *graph.PathSegment) bool {
-	// The first traversal must be a control relationship for expansion
+func InboundControlDescentFilter(_ *ops.TraversalContext, segment *graph.PathSegment) bool {
+	// The first traversal must be a control relationship for expansion or memberOf / contains due to FilterControlsRelationships
 	if segment.Depth() == 1 {
-		return !segment.Edge.Kind.Is(azure.MemberOf)
-	} else if segment.Depth() > 1 {
-		return segment.Edge.Kind.Is(azure.MemberOf)
+		return true
+	} else {
+		return segment.Edge.Kind.Is(azure.MemberOf) || segment.Edge.Kind.Is(azure.Contains)
 	}
-
-	return true
 }
 
-func OutboundControlDescentFilter(ctx *ops.TraversalContext, segment *graph.PathSegment) bool {
+func OutboundControlDescentFilter(_ *ops.TraversalContext, segment *graph.PathSegment) bool {
 	var (
 		shouldDescend = true
 		sawControlRel = false
@@ -320,7 +318,7 @@ func OutboundControlDescentFilter(ctx *ops.TraversalContext, segment *graph.Path
 }
 
 func OutboundControlPathFilter(_ *ops.TraversalContext, segment *graph.PathSegment) bool {
-	return !segment.Edge.Kind.Is(azure.MemberOf)
+	return !(segment.Edge.Kind.Is(azure.MemberOf) || segment.Edge.Kind.Is(azure.Contains))
 }
 
 func FetchOutboundEntityObjectControlPaths(tx graph.Transaction, root *graph.Node) (graph.PathSet, error) {
