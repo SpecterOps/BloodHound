@@ -60,15 +60,6 @@ func FilterAbusableAppRoleAssignmentRelationships() graph.Criteria {
 	return query.KindIn(query.Relationship(), azure.AbusableAppRoleRelationshipKinds()...)
 }
 
-func FilterDescendents(kinds ...graph.Kind) graph.CriteriaProvider {
-	return func() graph.Criteria {
-		return query.And(
-			query.Kind(query.Relationship(), azure.Contains),
-			query.KindIn(query.End(), kinds...),
-		)
-	}
-}
-
 func FilterGroupMembership() graph.Criteria {
 	return query.Kind(query.Relationship(), azure.MemberOf)
 }
