@@ -21,7 +21,6 @@ package azure_test
 import (
 	"context"
 	schema "github.com/specterops/bloodhound/graphschema"
-	"sort"
 	"testing"
 
 	"github.com/specterops/bloodhound/graphschema/azure"
@@ -36,14 +35,6 @@ import (
 	"github.com/specterops/bloodhound/dawgs/query"
 	"github.com/specterops/bloodhound/src/test/integration"
 )
-
-func SortIDs(ids []graph.ID) []graph.ID {
-	sort.Slice(ids, func(i, j int) bool {
-		return ids[i].Int64() > ids[j].Int64()
-	})
-
-	return ids
-}
 
 func TestFetchEntityByObjectID(t *testing.T) {
 	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
@@ -787,7 +778,7 @@ func TestFetchInboundEntityObjectControlPaths(t *testing.T) {
 		paths, err := azureanalysis.FetchInboundEntityObjectControlPaths(tx, harness.AZInboundControlHarness.ControlledAZUser)
 		require.Nil(t, err)
 		nodes := paths.AllNodes().IDs()
-		require.Equal(t, 7, len(nodes))
+		require.Equal(t, 8, len(nodes))
 		require.NotContains(t, nodes, harness.AZInboundControlHarness.AZAppA.ID)
 		require.Contains(t, nodes, harness.AZInboundControlHarness.ControlledAZUser.ID)
 		require.Contains(t, nodes, harness.AZInboundControlHarness.AZGroupA.ID)
@@ -796,6 +787,7 @@ func TestFetchInboundEntityObjectControlPaths(t *testing.T) {
 		require.Contains(t, nodes, harness.AZInboundControlHarness.AZServicePrincipalB.ID)
 		require.Contains(t, nodes, harness.AZInboundControlHarness.AZUserA.ID)
 		require.Contains(t, nodes, harness.AZInboundControlHarness.AZUserB.ID)
+		require.Contains(t, nodes, harness.AZInboundControlHarness.AZTenant.ID)
 	})
 }
 
@@ -809,7 +801,7 @@ func TestFetchInboundEntityObjectControllers(t *testing.T) {
 		control, err := azureanalysis.FetchInboundEntityObjectControllers(tx, harness.AZInboundControlHarness.ControlledAZUser, 0, 0)
 		require.Nil(t, err)
 		nodes := control.IDs()
-		require.Equal(t, 6, len(nodes))
+		require.Equal(t, 7, len(nodes))
 		require.NotContains(t, nodes, harness.AZInboundControlHarness.ControlledAZUser.ID)
 		require.NotContains(t, nodes, harness.AZInboundControlHarness.AZAppA.ID)
 		require.Contains(t, nodes, harness.AZInboundControlHarness.AZGroupA.ID)
@@ -818,6 +810,7 @@ func TestFetchInboundEntityObjectControllers(t *testing.T) {
 		require.Contains(t, nodes, harness.AZInboundControlHarness.AZServicePrincipalB.ID)
 		require.Contains(t, nodes, harness.AZInboundControlHarness.AZUserA.ID)
 		require.Contains(t, nodes, harness.AZInboundControlHarness.AZUserB.ID)
+		require.Contains(t, nodes, harness.AZInboundControlHarness.AZTenant.ID)
 		control, err = azureanalysis.FetchInboundEntityObjectControllers(tx, harness.AZInboundControlHarness.ControlledAZUser, 0, 1)
 		require.Nil(t, err)
 		require.Equal(t, 1, control.Len())
