@@ -406,6 +406,19 @@ func TestResources_CreateAssetGroup(t *testing.T) {
 		Require().
 		ResponseStatusCode(http.StatusBadRequest)
 
+	// Whitespace in asset group tag must error
+	jsonBody, err := json.Marshal(v2.CreateAssetGroupRequest{Tag: "a b"})
+	require.Nil(t, err)
+
+	requestTemplate.
+		WithContext(&ctx.Context{
+			Host: &url.URL{},
+		}).
+		WithBody(jsonBody).
+		OnHandlerFunc(resources.CreateAssetGroup).
+		Require().
+		ResponseStatusCode(http.StatusBadRequest)
+
 	// Create DB Query fails
 	mockDB.EXPECT().CreateAssetGroup(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(model.AssetGroup{}, fmt.Errorf("exploded"))
 
