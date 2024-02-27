@@ -2,7 +2,6 @@ package database_test
 
 import (
 	"fmt"
-	"testing"
 	"time"
 
 	"github.com/specterops/bloodhound/src/database"
@@ -27,7 +26,7 @@ func findReleventAuditLogs(auditLogs model.AuditLogs, action string, fieldKey st
 	return intentAuditLog, resultAuditLog
 }
 
-func verifyAuditLogs(t *testing.T, dbInst database.Database, action string, fieldKey string, fieldData string) error {
+func verifyAuditLogs(dbInst database.Database, action string, fieldKey string, fieldData string) error {
 	auditLogs, count, err := dbInst.ListAuditLogs(time.Now(), time.Now().Add(-24*time.Hour), 0, 10, "", model.SQLFilter{})
 	if err != nil {
 		return fmt.Errorf("Error getting verifying audit logs: %v", err)
