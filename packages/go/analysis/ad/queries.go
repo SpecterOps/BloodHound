@@ -1419,6 +1419,7 @@ func FetchCertTemplatesPublishedToCA(tx graph.Transaction, ca *graph.Node) (grap
 	}))
 }
 
+// TODO: what should this be named?
 func FetchESC4PrinciaplsForCertTemplate(tx graph.Transaction, certTemplate *graph.Node) (graph.NodeSet, error) {
 	return ops.FetchStartNodes(
 		tx.Relationships().Filterf(
