@@ -31,7 +31,7 @@ const QA = React.lazy(() => import('src/views/QA'));
 const Users = React.lazy(() => import('src/views/Users'));
 const SAMLConfiguration = React.lazy(() => import('src/views/SAMLConfiguration'));
 const EarlyAccessFeatures = React.lazy(() => import('src/views/EarlyAccessFeatures'));
-const FileIngest = React.lazy(() => import('src/views/FileIngest'));
+const FileIngest = React.lazy(() => import('bh-shared-ui').then((module) => ({ default: module.FileIngest })));
 
 const Administration: React.FC = () => {
     const sections = [
