@@ -158,7 +158,7 @@ type AuditEntry struct {
 }
 
 // Necessary function for testing. Ensures all fields except CommitID match so mocking checks pass.
-func (s AuditEntry) Matches(x interface{}) bool {
+func (s AuditEntry) Matches(x any) bool {
 	if expected, ok := x.(AuditEntry); !ok {
 		return false
 	} else if s.Action != expected.Action {
