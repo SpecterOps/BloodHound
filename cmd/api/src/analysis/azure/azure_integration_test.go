@@ -784,7 +784,7 @@ func TestFetchInboundEntityObjectControlPaths(t *testing.T) {
 		harness.AZInboundControlHarness.Setup(testContext)
 		return nil
 	}, func(harness integration.HarnessDetails, tx graph.Transaction) {
-		paths, err := azureanalysis.FetchInboundEntityObjectControlPaths(tx, harness.AZInboundControlHarness.ControlledAZUser, graph.DirectionInbound)
+		paths, err := azureanalysis.FetchInboundEntityObjectControlPaths(tx, harness.AZInboundControlHarness.ControlledAZUser)
 		require.Nil(t, err)
 		nodes := paths.AllNodes().IDs()
 		require.Equal(t, 7, len(nodes))
@@ -806,7 +806,7 @@ func TestFetchInboundEntityObjectControllers(t *testing.T) {
 		harness.AZInboundControlHarness.Setup(testContext)
 		return nil
 	}, func(harness integration.HarnessDetails, tx graph.Transaction) {
-		control, err := azureanalysis.FetchInboundEntityObjectControllers(tx, harness.AZInboundControlHarness.ControlledAZUser, graph.DirectionInbound, 0, 0)
+		control, err := azureanalysis.FetchInboundEntityObjectControllers(tx, harness.AZInboundControlHarness.ControlledAZUser, 0, 0)
 		require.Nil(t, err)
 		nodes := control.IDs()
 		require.Equal(t, 6, len(nodes))
@@ -818,7 +818,7 @@ func TestFetchInboundEntityObjectControllers(t *testing.T) {
 		require.Contains(t, nodes, harness.AZInboundControlHarness.AZServicePrincipalB.ID)
 		require.Contains(t, nodes, harness.AZInboundControlHarness.AZUserA.ID)
 		require.Contains(t, nodes, harness.AZInboundControlHarness.AZUserB.ID)
-		control, err = azureanalysis.FetchInboundEntityObjectControllers(tx, harness.AZInboundControlHarness.ControlledAZUser, graph.DirectionInbound, 0, 1)
+		control, err = azureanalysis.FetchInboundEntityObjectControllers(tx, harness.AZInboundControlHarness.ControlledAZUser, 0, 1)
 		require.Nil(t, err)
 		require.Equal(t, 1, control.Len())
 	})
