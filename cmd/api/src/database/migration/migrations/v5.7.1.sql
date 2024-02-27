@@ -14,7 +14,5 @@
 --
 -- SPDX-License-Identifier: Apache-2.0
 
--- Add new columns for audit_logs
-
 UPDATE asset_groups
 SET tag = REPLACE(tag, ' ', '');
