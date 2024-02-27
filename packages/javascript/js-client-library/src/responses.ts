@@ -127,3 +127,7 @@ export type ListFileIngestJobsResponse = PaginatedResponse<FileIngestJob[]>;
 export type ListFileTypesForIngestResponse = BasicResponse<string[]>;
 
 export type StartFileIngestResponse = BasicResponse<FileIngestJob>;
+
+export type UploadFileToIngestResponse = null;
+
+export type EndFileIngestResponse = null;
