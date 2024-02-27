@@ -61,7 +61,7 @@ describe('GroupManagement', () => {
             const screen = render(<GroupManagement />, {
                 initialState: {
                     global: {
-                        options: { domain: {} },
+                        options: { domain: null },
                     },
                 },
             });
@@ -77,6 +77,12 @@ describe('GroupManagement', () => {
         expect(screen.getByText('Environment:')).toBeInTheDocument();
         expect(groupSelector).toBeInTheDocument();
         expect(tenantSelector).toBeInTheDocument();
+    });
+
+    it('displays default text for domain selector when globalDomain is null', async () => {
+        const { screen } = await setup();
+
+        expect(screen.getByTestId('data-selector')).toBeInTheDocument();
     });
 
     it('renders an edit form for the selected asset group', async () => {
