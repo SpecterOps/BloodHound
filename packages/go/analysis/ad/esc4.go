@@ -43,21 +43,43 @@ func PostADCSESC4(ctx context.Context, tx graph.Transaction, outC chan<- analysi
 			continue
 		} else {
 
-			// 2b. fetch principals with `Generic Write` + `Enroll` combinations on the cert template
 			if principalsWithGenericWrite, err := FetchPrincipalsWithGenericWriteOnCertTemplate(tx, certTemplate); err != nil {
-				log.Warnf("error fetching principals with generic write on cert template: %v", err)
-			} else if principalsWithEnroll, err := FetchPrincipalsWithEnrollOrAllExtendedRightsOnCertTemplate(tx, certTemplate); err != nil {
-				log.Warnf("error fetching principals with enroll or all extended rights on cert template: %v", err)
+				log.Warnf("error fetching principals with %s on cert template: %v", ad.GenericWrite, err)
+			} else if principalsWithEnrollOrAllExtendedRights, err := FetchPrincipalsWithEnrollOrAllExtendedRightsOnCertTemplate(tx, certTemplate); err != nil {
+				log.Warnf("error fetching principals with %s or %s on cert template: %v", ad.Enroll, ad.AllExtendedRights, err)
+			} else if principalsWithPKINameFlag, err := FetchPrincipalsWithWritePKINameFlagOnCertTemplate(tx, certTemplate); err != nil {
+				log.Warnf("error fetching principals with %s on cert template: %v", ad.WritePKINameFlag, err)
+			} else if principalsWithPKIEnrollmentFlag, err := FetchPrincipalsWithWritePKIEnrollmentFlagOnCertTemplate(tx, certTemplate); err != nil {
+				log.Warnf("error fetching principals with %s on cert template: %v", ad.WritePKIEnrollmentFlag, err)
 			} else {
+
+				// 2a. principals that control the cert template
 				principals.Or(
 					CalculateCrossProductNodeSets(
 						groupExpansions,
 						cache.EnterpriseCAEnrollers[enterpriseCA.ID],
-						// 2a. `CertTemplateControllers` is populated by principals that fulfill 2a
 						cache.CertTemplateControllers[certTemplate.ID],
-						principalsWithGenericWrite.Slice(),
-						principalsWithEnroll.Slice(),
 					))
+
+				// 2b. principals with `Enroll/AllExtendedRights` + `Generic Write` combinations on the cert template
+				principals.Or(
+					CalculateCrossProductNodeSets(
+						groupExpansions,
+						cache.EnterpriseCAEnrollers[enterpriseCA.ID],
+						principalsWithGenericWrite.Slice(),
+						principalsWithEnrollOrAllExtendedRights.Slice(),
+					),
+				)
+
+				// 2d. principals with `Enroll/AllExtendedRights` + `WritePKINameFlag` + `WritePKIEnrollmentFlag` on the cert template
+				principals.Or(
+					CalculateCrossProductNodeSets(
+						groupExpansions,
+						cache.EnterpriseCAEnrollers[enterpriseCA.ID],
+						principalsWithPKINameFlag.Slice(),
+						principalsWithPKIEnrollmentFlag.Slice(),
+					),
+				)
 			}
 
 		}
@@ -97,17 +119,50 @@ func FetchPrincipalsWithGenericWriteOnCertTemplate(tx graph.Transaction, certTem
 }
 
 func FetchPrincipalsWithEnrollOrAllExtendedRightsOnCertTemplate(tx graph.Transaction, certTemplate *graph.Node) (graph.NodeSet, error) {
-	if nodes, err := ops.FetchStartNodes(tx.Relationships().Filterf(
-		func() graph.Criteria {
-			return query.And(
-				query.Equals(query.EndID(), certTemplate.ID),
-				query.Or(
-					query.Kind(query.Relationship(), ad.Enroll),
-					query.Kind(query.Relationship(), ad.AllExtendedRights),
-				),
-			)
-		},
-	)); err != nil {
+	if nodes, err := ops.FetchStartNodes(
+		tx.Relationships().Filterf(
+			func() graph.Criteria {
+				return query.And(
+					query.Equals(query.EndID(), certTemplate.ID),
+					query.Or(
+						query.Kind(query.Relationship(), ad.Enroll),
+						query.Kind(query.Relationship(), ad.AllExtendedRights),
+					),
+				)
+			},
+		)); err != nil {
+		return nil, err
+	} else {
+		return nodes, nil
+	}
+}
+
+func FetchPrincipalsWithWritePKINameFlagOnCertTemplate(tx graph.Transaction, certTemplate *graph.Node) (graph.NodeSet, error) {
+	if nodes, err := ops.FetchStartNodes(
+		tx.Relationships().Filterf(
+			func() graph.Criteria {
+				return query.And(
+					query.Equals(query.EndID(), certTemplate.ID),
+					query.Kind(query.Relationship(), ad.WritePKINameFlag),
+				)
+			},
+		)); err != nil {
+		return nil, err
+	} else {
+		return nodes, nil
+	}
+}
+
+func FetchPrincipalsWithWritePKIEnrollmentFlagOnCertTemplate(tx graph.Transaction, certTemplate *graph.Node) (graph.NodeSet, error) {
+	if nodes, err := ops.FetchStartNodes(
+		tx.Relationships().Filterf(
+			func() graph.Criteria {
+				return query.And(
+					query.Equals(query.EndID(), certTemplate.ID),
+					query.Kind(query.Relationship(), ad.WritePKIEnrollmentFlag),
+				)
+			},
+		)); err != nil {
 		return nil, err
 	} else {
 		return nodes, nil
