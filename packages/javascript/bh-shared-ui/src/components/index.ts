@@ -26,6 +26,9 @@ export { default as CollectorCard } from './CollectorCard';
 export * from './CollectorCardList';
 export { default as CollectorCardList } from './CollectorCardList';
 
+export * from './CommunityIcon';
+export { default as CommunityIcon } from './CommunityIcon';
+
 export * from './ConfirmationDialog';
 export { default as ConfirmationDialog } from './ConfirmationDialog';
 
@@ -46,6 +49,9 @@ export { default as Disable2FADialog } from './Disable2FADialog';
 
 export * from './Enable2FADialog';
 export { default as Enable2FADialog } from './Enable2FADialog';
+
+export * from './EnterpriseIcon';
+export { default as EnterpriseIcon } from './EnterpriseIcon';
 
 export * from './FileUploadDialog';
 export { default as FileUploadDialog } from './FileUploadDialog';
