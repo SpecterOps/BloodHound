@@ -35,6 +35,7 @@ const FileUploadDialog: React.FC<{
     const [filesForIngest, setFilesForIngest] = useState<FileForIngest[]>([]);
     const [fileUploadStep, setFileUploadStep] = useState<FileUploadStep>(FileUploadStep.ADD_FILES);
     const [submitDialogDisabled, setSubmitDialogDisabled] = useState<boolean>(false);
+    const [uploadDialogDisabled, setUploadDialogDisabled] = useState<boolean>(false);
     const [uploadMessage, setUploadMessage] = useState<string>('');
 
     const { addNotification } = useNotifications();
@@ -47,10 +48,16 @@ const FileUploadDialog: React.FC<{
         const filesHaveErrors = filesForIngest.filter((file) => file.errors).length > 0;
         const filesAreUploading = filesForIngest.filter((file) => file.status === FileStatus.UPLOADING).length > 0;
 
-        if (filesHaveErrors || filesAreUploading || !filesForIngest.length) {
+        if (filesHaveErrors || !filesForIngest.length) {
             setSubmitDialogDisabled(true);
         } else {
             setSubmitDialogDisabled(false);
+        }
+
+        if (filesAreUploading) {
+            setUploadDialogDisabled(true);
+        } else {
+            setUploadDialogDisabled(false);
         }
     }, [filesForIngest]);
 
@@ -102,14 +109,25 @@ const FileUploadDialog: React.FC<{
 
         try {
             const response = await startUpload();
-            const currentIngestJobId = response.data.id.toString();
+            const currentIngestJobId = response?.data?.id?.toString();
+
+            // Counting errors manually here to avoid race conditions with react state updates
+            let errorCount = 0;
 
             if (currentIngestJobId) {
                 for (const ingestFile of filesForIngest) {
-                    await uploadFile(currentIngestJobId.toString(), ingestFile);
+                    // Separate error handling so we can continue on when a file fails
+                    try {
+                        await uploadFile(currentIngestJobId, ingestFile);
+                    } catch (error) {
+                        errorCount += 1;
+                    }
+                    setNewFileStatus(ingestFile.file.name, FileStatus.DONE);
                 }
-                await finishUpload(currentIngestJobId.toString());
             }
+            await finishUpload(currentIngestJobId);
+
+            logFinishedIngestJob(errorCount);
         } catch (error) {
             console.error(error);
         }
@@ -128,43 +146,47 @@ const FileUploadDialog: React.FC<{
         return uploadFileToIngestJob.mutateAsync(
             { jobId, fileContents: ingestFile.file },
             {
-                onSuccess: () => setNewFileStatus(ingestFile.file.name, FileStatus.DONE),
-                onError: (error) => {
-                    const apiError = error as ErrorResponse;
+                onError: (error: any) => {
+                    const apiError = error?.response?.data as ErrorResponse;
 
-                    if (apiError?.errors[0]?.message?.length) {
-                        addNotification(`Upload failed: ${apiError.errors[0].message}`, 'IngestFileUploadFail');
+                    if (apiError?.errors?.length && apiError.errors[0].message?.length) {
+                        const { message } = apiError.errors[0];
+                        addNotification(`Upload failed: ${message}`, 'IngestFileUploadFail');
+                        setUploadFailureError(ingestFile.file.name, truncateStatusMessage(message, 60));
                     } else {
                         addNotification(`File upload failed for ${ingestFile.file.name}`, 'IngestFileUploadFail');
+                        setUploadFailureError(ingestFile.file.name, 'Upload Failed');
                     }
-
-                    setUploadFailureError(ingestFile.file.name, 'Upload Failed');
                 },
             }
         );
+    };
+
+    const truncateStatusMessage = (message: string, length: number) => {
+        return message.length > length ? `${message.substring(0, length)}...` : message;
     };
 
     const finishUpload = async (jobId: string) => {
         return endFileIngestJob.mutateAsync(
             { jobId },
             {
-                onSuccess: () => {
-                    const filesWithErrors = filesForIngest.filter((file) => file.errors);
-                    const uploadMessage =
-                        filesWithErrors.length > 0
-                            ? 'Some files have failed to upload and have not been included for ingest.'
-                            : 'All files have successfully been uploaded for ingest.';
-                    setUploadMessage(uploadMessage);
-
-                    addNotification(
-                        `Successfully uploaded ${filesForIngest.length - filesWithErrors.length} files for ingest`,
-                        'FileIngestSuccess'
-                    );
-                },
                 onError: () => {
                     addNotification('Failed to close out ingest job', 'EndFileIngestFail');
                 },
             }
+        );
+    };
+
+    const logFinishedIngestJob = (errorCount: number) => {
+        const uploadMessage =
+            errorCount > 0
+                ? 'Some files have failed to upload and have not been included for ingest.'
+                : 'All files have successfully been uploaded for ingest.';
+        setUploadMessage(uploadMessage);
+
+        addNotification(
+            `Successfully uploaded ${filesForIngest.length - errorCount} files for ingest`,
+            'FileIngestSuccess'
         );
     };
 
@@ -260,9 +282,9 @@ const FileUploadDialog: React.FC<{
                     <Button
                         color='primary'
                         onClick={onClose}
-                        disabled={submitDialogDisabled}
+                        disabled={uploadDialogDisabled}
                         data-testid='confirmation-dialog_button-yes'>
-                        {submitDialogDisabled ? 'Uploading Files' : 'Close'}
+                        {uploadDialogDisabled ? 'Uploading Files' : 'Close'}
                     </Button>
                 )}
             </DialogActions>
