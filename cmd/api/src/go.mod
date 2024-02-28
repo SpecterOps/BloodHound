@@ -47,6 +47,7 @@ require (
 	github.com/unrolled/secure v1.13.0
 	github.com/zenazn/goji v1.0.1
 	go.uber.org/mock v0.2.0
+	go.uber.org/zap v1.13.0
 	golang.org/x/crypto v0.18.0
 	golang.org/x/net v0.20.0
 	gorm.io/driver/postgres v1.3.8

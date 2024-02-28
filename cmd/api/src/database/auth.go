@@ -16,6 +16,8 @@
 
 package database
 
+//go:generate go run go.uber.org/mock/mockgen -copyright_file=../../../../LICENSE.header -destination=./mocks/auth.go -package=mocks . AuthContextInitializer
+
 import (
 	"context"
 	"crypto/rand"
@@ -266,12 +268,10 @@ func (s *BloodhoundDB) CreateUser(ctx context.Context, user model.User) (model.U
 // UpdateUser updates the roles associated with the user according to the input struct
 // UPDATE users SET roles = ....
 func (s *BloodhoundDB) UpdateUser(ctx context.Context, user model.User) error {
-	var (
-		auditEntry = model.AuditEntry{
-			Action: "UpdateUser",
-			Model:  &user, // Pointer is required to ensure success log contains updated fields after transaction
-		}
-	)
+	auditEntry := model.AuditEntry{
+		Action: "UpdateUser",
+		Model:  &user, // Pointer is required to ensure success log contains updated fields after transaction
+	}
 
 	return s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
 		// Update roles first
@@ -471,12 +471,10 @@ func (s *BloodhoundDB) DeleteAuthSecret(ctx context.Context, authSecret model.Au
 // CreateSAMLProvider creates a new saml_providers row using the data in the input struct
 // INSERT INTO saml_identity_providers (...) VALUES (...)
 func (s *BloodhoundDB) CreateSAMLIdentityProvider(ctx context.Context, samlProvider model.SAMLProvider) (model.SAMLProvider, error) {
-	var (
-		auditEntry = model.AuditEntry{
-			Action: "CreateSAMLIdentityProvider",
-			Model:  &samlProvider, // Pointer is required to ensure success log contains updated fields after transaction
-		}
-	)
+	auditEntry := model.AuditEntry{
+		Action: "CreateSAMLIdentityProvider",
+		Model:  &samlProvider, // Pointer is required to ensure success log contains updated fields after transaction
+	}
 
 	err := s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
 		return CheckError(tx.WithContext(ctx).Create(&samlProvider))
@@ -488,12 +486,10 @@ func (s *BloodhoundDB) CreateSAMLIdentityProvider(ctx context.Context, samlProvi
 // CreateSAMLProvider updates a saml_providers row using the data in the input struct
 // UPDATE saml_identity_providers SET (...) VALUES (...) WHERE id = ...
 func (s *BloodhoundDB) UpdateSAMLIdentityProvider(ctx context.Context, provider model.SAMLProvider) error {
-	var (
-		auditEntry = model.AuditEntry{
-			Action: "UpdateSAMLIdentityProvider",
-			Model:  &provider, // Pointer is required to ensure success log contains updated fields after transaction
-		}
-	)
+	auditEntry := model.AuditEntry{
+		Action: "UpdateSAMLIdentityProvider",
+		Model:  &provider, // Pointer is required to ensure success log contains updated fields after transaction
+	}
 
 	return s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
 		return CheckError(tx.WithContext(ctx).Save(&provider))
@@ -534,12 +530,10 @@ func (s *BloodhoundDB) GetSAMLProvider(ctx context.Context, id int32) (model.SAM
 }
 
 func (s *BloodhoundDB) DeleteSAMLProvider(ctx context.Context, provider model.SAMLProvider) error {
-	var (
-		auditEntry = model.AuditEntry{
-			Action: "DeleteSAMLIdentityProvider",
-			Model:  &provider, // Pointer is required to ensure success log contains updated fields after transaction
-		}
-	)
+	auditEntry := model.AuditEntry{
+		Action: "DeleteSAMLIdentityProvider",
+		Model:  &provider, // Pointer is required to ensure success log contains updated fields after transaction
+	}
 
 	return s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
 		return CheckError(tx.WithContext(ctx).Delete(&provider))
