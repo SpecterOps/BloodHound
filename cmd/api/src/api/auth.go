@@ -270,14 +270,15 @@ func (s authenticator) ValidateRequestSignature(tokenID uuid.UUID, request *http
 		}
 
 		if digestNow, err := NewRequestSignature(sha256.New, authToken.Key, requestDate.Format(time.RFC3339), request.Method, request.RequestURI, teeReader); err != nil {
+			if readCloser != nil {
+				readCloser.Close()
+			}
 			return authContext, http.StatusInternalServerError, err
 		} else {
-			if sdtf, ok := readCloser.(*SelfDestructingTempFile); ok {
-				sdtf.Seek(0, io.SeekStart)
-			}
-			request.Body = readCloser
-
 			if subtle.ConstantTimeCompare(signatureBytes, digestNow) != 1 {
+				if readCloser != nil {
+					readCloser.Close()
+				}
 				return authContext, http.StatusUnauthorized, fmt.Errorf("digest validation failed: signature digest mismatch")
 			}
 
@@ -286,6 +287,12 @@ func (s authenticator) ValidateRequestSignature(tokenID uuid.UUID, request *http
 			if err := s.db.UpdateAuthToken(request.Context(), authToken); err != nil {
 				log.Errorf("Error updating last access on AuthToken: %v", err)
 			}
+
+			if sdtf, ok := readCloser.(*SelfDestructingTempFile); ok {
+				sdtf.Seek(0, io.SeekStart)
+			}
+
+			request.Body = readCloser
 
 			return authContext, http.StatusOK, nil
 		}
