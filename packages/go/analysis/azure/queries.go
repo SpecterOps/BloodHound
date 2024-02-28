@@ -286,7 +286,7 @@ func InboundControlDescentFilter(_ *ops.TraversalContext, segment *graph.PathSeg
 	if segment.Depth() == 1 {
 		return true
 	} else {
-		return segment.Edge.Kind.Is(azure.MemberOf) || segment.Edge.Kind.Is(azure.Contains)
+		return segment.Edge.Kind.Is(azure.MemberOf, azure.Contains)
 	}
 }
 
@@ -318,7 +318,7 @@ func OutboundControlDescentFilter(_ *ops.TraversalContext, segment *graph.PathSe
 }
 
 func OutboundControlPathFilter(_ *ops.TraversalContext, segment *graph.PathSegment) bool {
-	return !(segment.Edge.Kind.Is(azure.MemberOf) || segment.Edge.Kind.Is(azure.Contains))
+	return !segment.Edge.Kind.Is(azure.MemberOf, azure.Contains)
 }
 
 func FetchOutboundEntityObjectControlPaths(tx graph.Transaction, root *graph.Node) (graph.PathSet, error) {
