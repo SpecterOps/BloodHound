@@ -159,6 +159,9 @@ func PostCanAbuseUPNCertMapping(operation analysis.StatTrackedOperation[analysis
 							if cmmrProperty, err := dcForNode.Properties.Get(ad.CertificateMappingMethodsRaw.String()).Int(); err != nil {
 								log.Warnf("error in PostCanAbuseUPNCertMapping: unable to fetch %v property for node ID %v: %v", ad.StrongCertificateBindingEnforcementRaw.String(), dcForNode.ID, err)
 								continue
+							} else if cmmrProperty == -1 {
+								// -1 means Registry value does not exist
+								continue
 							} else if cmmrProperty&0x04 == 0x04 {
 								if !channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
 									FromID: eca.ID,
