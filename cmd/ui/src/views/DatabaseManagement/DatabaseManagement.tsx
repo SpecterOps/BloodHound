@@ -19,8 +19,6 @@ import { ContentPage, apiClient } from 'bh-shared-ui';
 import { useReducer } from 'react';
 import ConfirmationDialog from './ConfirmationDialog';
 import { useMutation } from 'react-query';
-import { useSelector } from 'react-redux';
-import { selectTierZeroAssetGroupId } from 'src/ducks/assetgroups/reducer';
 
 type DataTypes = {
     deleteCollectedGraphData: boolean;
@@ -143,13 +141,10 @@ const useDatabaseManagement = () => {
     const { deleteCollectedGraphData, deleteHighValueSelectors, deleteFileIngestHistory, deleteDataQualityHistory } =
         state;
 
-    const tierZeroAssetGroupId = useSelector(selectTierZeroAssetGroupId);
-
     const mutation = useMutation({
-        mutationFn: async ({ deleteThisData, assetGroupId }: { deleteThisData: DataTypes; assetGroupId: number }) => {
+        mutationFn: async ({ deleteThisData }: { deleteThisData: DataTypes }) => {
             return apiClient.clearDatabase({
                 ...deleteThisData,
-                assetGroupId,
             });
         },
         onError: (error: any) => {
@@ -175,7 +170,6 @@ const useDatabaseManagement = () => {
                 deleteFileIngestHistory,
                 deleteHighValueSelectors,
             },
-            assetGroupId: tierZeroAssetGroupId,
         });
     };
 

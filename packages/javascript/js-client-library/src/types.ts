@@ -259,5 +259,4 @@ export interface ClearDatabaseRequest {
     deleteHighValueSelectors: boolean;
     deleteFileIngestHistory: boolean;
     deleteDataQualityHistory: boolean;
-    assetGroupId: number;
 }
