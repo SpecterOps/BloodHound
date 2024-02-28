@@ -137,7 +137,7 @@ func PostADCSESC6b(ctx context.Context, tx graph.Transaction, outC chan<- analys
 }
 
 func PostCanAbuseUPNCertMapping(operation analysis.StatTrackedOperation[analysis.CreatePostRelationshipJob], enterpriseCertAuthorities []*graph.Node) error {
-	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
+	return operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
 		collector := errors.ErrorCollector{}
 		for _, eca := range enterpriseCertAuthorities {
 			if ecaDomainSID, err := eca.Properties.Get(ad.DomainSID.String()).String(); err != nil {
@@ -157,7 +157,7 @@ func PostCanAbuseUPNCertMapping(operation analysis.StatTrackedOperation[analysis
 					} else {
 						for _, dcForNode := range dcForNodes {
 							if cmmrProperty, err := dcForNode.Properties.Get(ad.CertificateMappingMethodsRaw.String()).Int(); err != nil {
-								log.Warnf("error in PostCanAbuseUPNCertMapping: unable to fetch %v property for node ID %v: %v", ad.StrongCertificateBindingEnforcementRaw.String(), dcForNode.ID, err)
+								log.Warnf("error in PostCanAbuseUPNCertMapping: unable to fetch %v property for node ID %v: %v", ad.CertificateMappingMethodsRaw.String(), dcForNode.ID, err)
 								continue
 							} else if cmmrProperty == -1 {
 								// -1 means Registry value does not exist
@@ -181,11 +181,10 @@ func PostCanAbuseUPNCertMapping(operation analysis.StatTrackedOperation[analysis
 		}
 		return nil
 	})
-	return nil
 }
 
 func PostCanAbuseWeakCertBinding(operation analysis.StatTrackedOperation[analysis.CreatePostRelationshipJob], enterpriseCertAuthorities []*graph.Node) error {
-	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
+	return operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
 		collector := errors.ErrorCollector{}
 		for _, eca := range enterpriseCertAuthorities {
 			if ecaDomainSID, err := eca.Properties.Get(ad.DomainSID.String()).String(); err != nil {
@@ -226,7 +225,6 @@ func PostCanAbuseWeakCertBinding(operation analysis.StatTrackedOperation[analysi
 		}
 		return nil
 	})
-	return nil
 }
 
 func fetchNodesWithTrustedByParentChildRelationship(tx graph.Transaction, root *graph.Node) (graph.NodeSet, error) {
