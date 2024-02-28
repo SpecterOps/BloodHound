@@ -15,4 +15,4 @@
 -- SPDX-License-Identifier: Apache-2.0
 
 UPDATE asset_groups
-SET tag = REPLACE(tag, ' ', '');
+SET tag = REGEXP_REPLACE(tag, '\s', '', 'g');
