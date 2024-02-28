@@ -657,7 +657,7 @@ func (s *BloodhoundDB) GetSAMLProvider(id int32) (model.SAMLProvider, error) {
 func (s *BloodhoundDB) DeleteSAMLProvider(ctx context.Context, provider model.SAMLProvider) error {
 	var (
 		auditEntry = model.AuditEntry{
-			Action: "DeleteSAMLProvider",
+			Action: "DeleteSAMLIdentityProvider",
 			Model:  &provider, // Pointer is required to ensure success log contains updated fields after transaction
 		}
 	)
