@@ -215,7 +215,7 @@ func (s *BloodhoundDB) DeleteAssetGroupSelector(ctx context.Context, selector mo
 
 func (s *BloodhoundDB) DeleteAssetGroupSelectorsForAssetGroup(ctx context.Context, assetGroupId int) error {
 	return CheckError(
-		s.db.Where("asset_group_id = ?", assetGroupId).
+		s.db.WithContext(ctx).Where("asset_group_id = ?", assetGroupId).
 			Delete(&model.AssetGroupSelector{}),
 	)
 }
