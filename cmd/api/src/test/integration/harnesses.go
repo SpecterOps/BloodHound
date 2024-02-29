@@ -1654,28 +1654,23 @@ func (s *WeakCertBindingAndUPNCertMappingHarness) Setup(graphTestContext *GraphT
 
 	// Set up Computer nodes
 	s.Computer1 = graphTestContext.NewActiveDirectoryComputer("Computer1", domainSid1)
-	s.Computer1.Properties.Set(ad.CertificateMappingMethodsRaw.String(), []string{"4"})
-	s.Computer1.Properties.Set(ad.StrongCertificateBindingEnforcementRaw.String(), []string{"1"})
+	s.Computer1.Properties.Set(ad.CertificateMappingMethodsRaw.String(), "4")
 	graphTestContext.UpdateNode(s.Computer1)
 
 	s.Computer2 = graphTestContext.NewActiveDirectoryComputer("Computer2", domainSid2)
-	s.Computer2.Properties.Set(ad.CertificateMappingMethodsRaw.String(), []string{"11"})
-	s.Computer2.Properties.Set(ad.StrongCertificateBindingEnforcementRaw.String(), []string{"0"})
+	s.Computer2.Properties.Set(ad.CertificateMappingMethodsRaw.String(), "11")
 	graphTestContext.UpdateNode(s.Computer2)
 
 	s.Computer3 = graphTestContext.NewActiveDirectoryComputer("Computer3", domainSid2)
-	s.Computer3.Properties.Set(ad.CertificateMappingMethodsRaw.String(), []string{"31"})
-	s.Computer3.Properties.Set(ad.StrongCertificateBindingEnforcementRaw.String(), []string{"2"})
+	s.Computer3.Properties.Set(ad.CertificateMappingMethodsRaw.String(), "31")
 	graphTestContext.UpdateNode(s.Computer3)
 
 	s.Computer4 = graphTestContext.NewActiveDirectoryComputer("Computer4", domainSid2)
-	s.Computer4.Properties.Set(ad.CertificateMappingMethodsRaw.String(), nil)
-	s.Computer4.Properties.Set(ad.StrongCertificateBindingEnforcementRaw.String(), nil)
+	s.Computer4.Properties.Set(ad.CertificateMappingMethodsRaw.String(), "-1")
 	graphTestContext.UpdateNode(s.Computer4)
 
 	s.Computer5 = graphTestContext.NewActiveDirectoryComputer("Computer5", domainSid3)
-	s.Computer5.Properties.Set(ad.CertificateMappingMethodsRaw.String(), []string{"15"})
-	s.Computer5.Properties.Set(ad.StrongCertificateBindingEnforcementRaw.String(), []string{"2"})
+	s.Computer5.Properties.Set(ad.CertificateMappingMethodsRaw.String(), "15")
 	graphTestContext.UpdateNode(s.Computer5)
 
 	// Set up edges from ECA nodes
@@ -1933,14 +1928,14 @@ func (s *ESC3Harness2) Setup(c *GraphTestContext) {
 type ESC3Harness3 struct {
 	CertTemplate1 *graph.Node
 	CertTemplate2 *graph.Node
-	Domain *graph.Node
+	Domain        *graph.Node
 	EnterpriseCA1 *graph.Node
-	Group1 *graph.Node
-	NTAuthStore *graph.Node
-	RootCA *graph.Node
-	User2 *graph.Node
+	Group1        *graph.Node
+	NTAuthStore   *graph.Node
+	RootCA        *graph.Node
+	User2         *graph.Node
 }
-	
+
 func (s *ESC3Harness3) Setup(c *GraphTestContext) {
 	sid := RandomDomainSID()
 	emptyEkus := make([]string, 0)
