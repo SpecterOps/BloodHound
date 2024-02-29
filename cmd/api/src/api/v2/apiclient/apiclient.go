@@ -78,6 +78,51 @@ func ReadAPIError(response *http.Response) error {
 	return apiError
 }
 
+func (s Client) ZipRequest(method, path string, params url.Values, body []byte) (*http.Response, error) {
+	endpoint := api.URLJoinPath(s.ServiceURL, path)
+	endpoint.RawQuery = params.Encode()
+
+	if request, err := http.NewRequest(method, endpoint.String(), nil); err != nil {
+		return nil, err
+	} else {
+		// query the Request and hand the response back to the user
+		const (
+			sleepInterval = time.Second * 5
+			maxSleep      = sleepInterval * 5
+		)
+
+		started := time.Now()
+
+		for {
+			// Serialize the Request body - we expect a JSON serializable object here
+			// This must be done on every retry, otherwise the buffer will be empty because it had been read
+			if body != nil {
+				request.Header.Set(headers.ContentType.String(), mediatypes.ApplicationZip.String())
+				request.Body = io.NopCloser(bytes.NewReader(body))
+			}
+
+			// Set our credentials either via signage or bearer token session
+			// Credentials also have to be set with every attempt due to request signing
+			if s.Credentials != nil {
+				if err := s.Credentials.Handle(request); err != nil {
+					return nil, err
+				}
+			}
+
+			if response, err := s.Http.Do(request); err != nil {
+				if time.Since(started) >= maxSleep {
+					return nil, fmt.Errorf("waited %f seconds while retrying - Request failure cause: %w", maxSleep.Seconds(), err)
+				}
+
+				log.Infof("Request to %s failed with error: %v. Attempting a retry.", endpoint.String(), err)
+				time.Sleep(sleepInterval)
+			} else {
+				return response, nil
+			}
+		}
+	}
+}
+
 func (s Client) Request(method, path string, params url.Values, body any, header ...http.Header) (*http.Response, error) {
 	endpoint := api.URLJoinPath(s.ServiceURL, path)
 	endpoint.RawQuery = params.Encode()
@@ -134,11 +179,17 @@ func (s Client) Request(method, path string, params url.Values, body any, header
 	}
 }
 
-func (s Client) NewRequest(method string, path string, params url.Values, body io.ReadCloser) (*http.Request, error) {
+func (s Client) NewRequest(method string, path string, params url.Values, body io.ReadCloser, header ...http.Header) (*http.Request, error) {
 	endpoint := api.URLJoinPath(s.ServiceURL, path)
 	endpoint.RawQuery = params.Encode()
 
-	return http.NewRequest(method, endpoint.String(), body)
+	request, err := http.NewRequest(method, endpoint.String(), body)
+
+	if len(header) > 0 {
+		request.Header = header[0]
+	}
+
+	return request, err
 }
 
 func (s Client) Raw(request *http.Request) (*http.Response, error) {

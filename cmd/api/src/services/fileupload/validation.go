@@ -24,7 +24,7 @@ import (
 	"io"
 )
 
-var zipMagicBytes = []byte{0x50, 0x4b, 0x03, 0x04}
+var ZipMagicBytes = []byte{0x50, 0x4b, 0x03, 0x04}
 
 func ValidateMetaTag(reader io.Reader) (ingest.Metadata, error) {
 	var (
@@ -94,11 +94,15 @@ func ValidateZipFile(reader io.Reader) error {
 		return ingest.ErrInvalidZipFile
 	} else {
 		for i := 0; i < 4; i++ {
-			if bytes[i] != zipMagicBytes[i] {
+			if bytes[i] != ZipMagicBytes[i] {
 				return ingest.ErrInvalidZipFile
 			}
 		}
 
-		return nil
+		_, err := io.Copy(io.Discard, reader)
+
+		return err
 	}
 }
+
+//MATCH (n:Entity)-[r]->(c:CertTemplate) WHERE r:GenericWrite AND r:

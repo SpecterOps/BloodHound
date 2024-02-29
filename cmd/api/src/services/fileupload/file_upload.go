@@ -105,11 +105,11 @@ func WriteAndValidateJSON(src io.Reader, dst io.Writer) error {
 	return err
 }
 
-func SaveIngestFile(location string, request *http.Request) (string, error) {
+func SaveIngestFile(location string, request *http.Request) (string, model.FileType, error) {
 	fileData := request.Body
 	tempFile, err := os.CreateTemp(location, "bh")
 	if err != nil {
-		return "", fmt.Errorf("error creating ingest file: %w", err)
+		return "", model.FileTypeJson, fmt.Errorf("error creating ingest file: %w", err)
 	}
 
 	err = nil
@@ -121,12 +121,12 @@ func SaveIngestFile(location string, request *http.Request) (string, error) {
 			} else if err := os.Remove(tempFile.Name()); err != nil {
 				log.Errorf("Error deleting temp file %s: %v", tempFile.Name(), err)
 			}
-			return "", err
+			return "", model.FileTypeJson, err
 		} else {
 			if err := tempFile.Close(); err != nil {
 				log.Errorf("Error closing temp file with successful validation %s: %v", tempFile.Name(), err)
 			}
-			return tempFile.Name(), nil
+			return tempFile.Name(), model.FileTypeJson, nil
 		}
 	} else if api.HeaderMatches(headers.ContentType.String(), mediatypes.ApplicationZip.String(), request.Header) {
 		if err := WriteAndValidateZip(fileData, tempFile); err != nil {
@@ -135,16 +135,16 @@ func SaveIngestFile(location string, request *http.Request) (string, error) {
 			} else if err := os.Remove(tempFile.Name()); err != nil {
 				log.Errorf("Error deleting temp file %s: %v", tempFile.Name(), err)
 			}
-			return "", err
+			return "", model.FileTypeZip, err
 		} else {
 			if err := tempFile.Close(); err != nil {
 				log.Errorf("Error closing temp file with successful validation %s: %v", tempFile.Name(), err)
 			}
-			return tempFile.Name(), nil
+			return tempFile.Name(), model.FileTypeZip, nil
 		}
 	} else {
 		//We should never get here since this is checked a level above
-		return "", fmt.Errorf("nvalid content type for ingest file")
+		return "", model.FileTypeJson, fmt.Errorf("nvalid content type for ingest file")
 	}
 }
 
