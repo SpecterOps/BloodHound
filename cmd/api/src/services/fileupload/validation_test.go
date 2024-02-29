@@ -74,7 +74,7 @@ func Test_ValidateMetaTag(t *testing.T) {
 	}
 
 	for _, assertion := range assertions {
-		meta, err := fileupload.ValidateMetaTag(strings.NewReader(assertion.rawString))
+		meta, err := fileupload.ValidateMetaTag(strings.NewReader(assertion.rawString), false)
 		assert.ErrorIs(t, err, assertion.err)
 		if assertion.err == nil {
 			assert.Equal(t, meta.Type, assertion.expectedType)

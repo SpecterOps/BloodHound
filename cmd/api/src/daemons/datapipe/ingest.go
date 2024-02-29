@@ -37,7 +37,7 @@ const (
 )
 
 func ReadFileForIngest(batch graph.Batch, reader io.ReadSeeker) error {
-	if meta, err := fileupload.ValidateMetaTag(reader); err != nil {
+	if meta, err := fileupload.ValidateMetaTag(reader, false); err != nil {
 		return fmt.Errorf("error validating meta tag: %w", err)
 	} else {
 		return IngestWrapper(batch, reader, meta)

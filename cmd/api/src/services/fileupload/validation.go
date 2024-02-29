@@ -26,7 +26,9 @@ import (
 
 var ZipMagicBytes = []byte{0x50, 0x4b, 0x03, 0x04}
 
-func ValidateMetaTag(reader io.Reader) (ingest.Metadata, error) {
+// ValidateMetaTag ensures that the correct tags are present in a json file for data ingest.
+// If readToEnd is set to true, the stream will read to the end of the file (needed for TeeReader)
+func ValidateMetaTag(reader io.Reader, readToEnd bool) (ingest.Metadata, error) {
 	var (
 		depth            = 0
 		decoder          = json.NewDecoder(reader)
@@ -38,7 +40,7 @@ func ValidateMetaTag(reader io.Reader) (ingest.Metadata, error) {
 
 	for {
 		if dataTagValidated && metaTagFound {
-			return meta, nil
+			break
 		}
 		if token, err := decoder.Token(); err != nil {
 			if errors.Is(err, io.EOF) {
@@ -84,6 +86,14 @@ func ValidateMetaTag(reader io.Reader) (ingest.Metadata, error) {
 			}
 		}
 	}
+
+	if readToEnd {
+		if _, err := io.Copy(io.Discard, reader); err != nil {
+			return ingest.Metadata{}, err
+		}
+	}
+
+	return meta, nil
 }
 
 func ValidateZipFile(reader io.Reader) error {

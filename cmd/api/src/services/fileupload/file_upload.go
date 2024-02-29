@@ -101,7 +101,7 @@ func WriteAndValidateZip(src io.Reader, dst io.Writer) error {
 
 func WriteAndValidateJSON(src io.Reader, dst io.Writer) error {
 	tr := io.TeeReader(src, dst)
-	_, err := ValidateMetaTag(tr)
+	_, err := ValidateMetaTag(tr, true)
 	return err
 }
 
