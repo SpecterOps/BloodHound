@@ -18,6 +18,7 @@ package ad
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/specterops/bloodhound/analysis"
 	"github.com/specterops/bloodhound/analysis/impact"
@@ -27,6 +28,7 @@ import (
 	"github.com/specterops/bloodhound/dawgs/query"
 	"github.com/specterops/bloodhound/dawgs/util/channels"
 	"github.com/specterops/bloodhound/graphschema/ad"
+	"github.com/specterops/bloodhound/graphschema/common"
 	"github.com/specterops/bloodhound/log"
 )
 
@@ -36,6 +38,7 @@ func PostADCSESC4(ctx context.Context, tx graph.Transaction, outC chan<- analysi
 
 	// 2. iterate certtemplates that have an outbound `PublishedTo` edge to eca
 	for _, certTemplate := range cache.PublishedTemplateCache[enterpriseCA.ID] {
+		fmt.Println(certTemplate.Properties.Get(string(common.Name)))
 		// 2c. kick out early if cert template does meet conditions for ESC4
 		if valid, err := isCertTemplateValidForESC4(certTemplate); err != nil {
 			log.Warnf("error validating cert template %d: %v", certTemplate.ID, err)
@@ -65,6 +68,31 @@ func PostADCSESC4(ctx context.Context, tx graph.Transaction, outC chan<- analysi
 						cache.EnterpriseCAEnrollers[enterpriseCA.ID],
 						cache.CertTemplateControllers[certTemplate.ID],
 					))
+
+				var (
+					enrollerNames   []string
+					controllerNames []string
+				)
+
+				principalCount := principals.Cardinality()
+				principalList := principals.Slice()
+
+				ecaEnrollers := cache.EnterpriseCAEnrollers[enterpriseCA.ID]
+				for _, enroller := range ecaEnrollers {
+					name, _ := enroller.Properties.Get(string(common.Name)).String()
+					enrollerNames = append(enrollerNames, name)
+				}
+
+				certTemplateControllers := cache.CertTemplateControllers[certTemplate.ID]
+				for _, controller := range certTemplateControllers {
+					name, _ := controller.Properties.Get(string(common.Name)).String()
+					controllerNames = append(controllerNames, name)
+				}
+				// TEST NOTE: group 4.1 should satisfy 2a
+				fmt.Println(">>>", principalCount)
+				fmt.Println(">>>", principalList)
+				fmt.Println(">>>", enrollerNames)
+				fmt.Println(">>>", controllerNames)
 
 				// 2b. principals with `Enroll/AllExtendedRights` + `Generic Write` combination on the cert template
 				principals.Or(
@@ -112,6 +140,9 @@ func PostADCSESC4(ctx context.Context, tx graph.Transaction, outC chan<- analysi
 				}
 
 			}
+
+			principalList := principals.Slice()
+			fmt.Println(principalList)
 
 			principals.Each(func(value uint32) bool {
 				channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
