@@ -207,6 +207,12 @@
                     "$ref": "#/definitions/parameters.PreferHeader"
                 },
                 {
+                    "name": "content-type",
+                    "description": "content-type header describing type of file being sent (valid options are application/json or application/zip)",
+                    "in": "header",
+                    "required": true
+                },
+                {
                     "description": "File to be uploaded",
                     "name": "file",
                     "in": "body",
