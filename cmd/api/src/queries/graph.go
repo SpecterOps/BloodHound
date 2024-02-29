@@ -22,11 +22,6 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"github.com/specterops/bloodhound/cypher/backend/cypher"
-	"github.com/specterops/bloodhound/cypher/backend/pgsql"
-	"github.com/specterops/bloodhound/dawgs/drivers/pg"
-	"github.com/specterops/bloodhound/src/config"
-	"github.com/specterops/bloodhound/src/services/agi"
 	"net/http"
 	"net/url"
 	"sort"
@@ -34,6 +29,12 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/specterops/bloodhound/cypher/backend/cypher"
+	"github.com/specterops/bloodhound/cypher/backend/pgsql"
+	"github.com/specterops/bloodhound/dawgs/drivers/pg"
+	"github.com/specterops/bloodhound/src/config"
+	"github.com/specterops/bloodhound/src/services/agi"
 
 	bhCtx "github.com/specterops/bloodhound/src/ctx"
 
@@ -90,16 +91,15 @@ func GetEntityObjectIDFromRequestPath(request *http.Request) (string, error) {
 }
 
 func GetRequestedType(params url.Values) model.DataType {
-	if typeString := params.Get("type"); typeString == "" {
+	switch params.Get("type") {
+	case "", "list":
 		return model.DataTypeList
-	} else {
-		if typeString == "graph" {
-			return model.DataTypeGraph
-		} else if typeString == "list" {
-			return model.DataTypeList
-		} else {
-			return model.DataTypeCount
-		}
+	case "graph":
+		return model.DataTypeGraph
+	case "count":
+		return model.DataTypeCount
+	default:
+		return model.DataTypeCount
 	}
 }
 
