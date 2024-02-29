@@ -271,7 +271,8 @@ func (s AuthSecret) Expired() bool {
 
 func (s AuthSecret) AuditData() AuditData {
 	return AuditData{
-		"secret_user_id":    s.ID,
+		"id":                s.ID,
+		"secret_user_id":    s.UserID,
 		"secret_expires_at": s.ExpiresAt.UTC(),
 	}
 }
@@ -474,9 +475,9 @@ func (s *User) AuditData() AuditData {
 	return AuditData{
 		"id":               s.ID,
 		"principal_name":   s.PrincipalName,
-		"first_name":       s.FirstName,
-		"last_name":        s.LastName,
-		"email_address":    s.EmailAddress,
+		"first_name":       s.FirstName.ValueOrZero(),
+		"last_name":        s.LastName.ValueOrZero(),
+		"email_address":    s.EmailAddress.ValueOrZero(),
 		"roles":            s.Roles.IDs(),
 		"saml_provider_id": s.SAMLProviderID.ValueOrZero(),
 		"is_disabled":      s.IsDisabled,

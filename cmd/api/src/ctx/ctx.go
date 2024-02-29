@@ -33,15 +33,10 @@ type CtxKey string
 
 const ValueKey = CtxKey("ctx.bhe")
 
-type RequestedWaitDuration struct {
-	Value   time.Duration
-	UserSet bool
-}
-
 // Context holds contextual data that is passed around to functions. This is an extension to Golang's built in context.
 type Context struct {
 	StartTime    time.Time
-	Timeout      RequestedWaitDuration
+	Timeout      time.Duration
 	RequestID    string
 	AuthCtx      auth.Context
 	Host         *url.URL
