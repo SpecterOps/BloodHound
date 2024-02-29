@@ -17,11 +17,7 @@
 package model
 
 import (
-	"os"
-
-	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/src/database/types/null"
-	"gorm.io/gorm"
 )
 
 type IngestTask struct {
@@ -34,14 +30,6 @@ type IngestTask struct {
 }
 
 type IngestTasks []IngestTask
-
-func (s *IngestTask) AfterDelete(tx *gorm.DB) (err error) {
-	if err := os.Remove(s.FileName); err != nil {
-		log.Errorf("Error removing ingest file %v: %v", s.FileName, err)
-	}
-
-	return nil
-}
 
 type FileType int
 
