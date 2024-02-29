@@ -177,8 +177,14 @@ func NewRequestSignature(hasher func() hash.Hash, key string, datetime string, r
 // for the DateKey portion of the signature digest.
 func SignRequestAtTime(hasher func() hash.Hash, id string, token string, datetime time.Time, request *http.Request) error {
 	datetimeFormatted := datetime.Format(time.RFC3339)
-	var buffer bytes.Buffer
-	tee := io.TeeReader(request.Body, &buffer)
+	var (
+		buffer bytes.Buffer
+		tee    io.Reader
+	)
+
+	if request.Body != nil {
+		tee = io.TeeReader(request.Body, &buffer)
+	}
 
 	if signature, err := NewRequestSignature(hasher, token, datetimeFormatted, request.Method, request.URL.Path, tee); err != nil {
 		return err
