@@ -84,17 +84,15 @@ func (s *Resources) handleAdEntityInfoQuery(response http.ResponseWriter, reques
 
 func (s *Resources) GetBaseEntityInfo(response http.ResponseWriter, request *http.Request) {
 	var (
-		entityType   = ad.Entity
 		countQueries = map[string]any{
 			"controllables": adAnalysis.FetchOutboundADEntityControl,
 		}
 	)
-	s.handleAdEntityInfoQuery(response, request, entityType, countQueries)
+	s.handleAdEntityInfoQuery(response, request, ad.Entity, countQueries)
 }
 
 func (s *Resources) GetComputerEntityInfo(response http.ResponseWriter, request *http.Request) {
 	var (
-		entityType   = ad.Computer
 		countQueries = map[string]any{
 			"sessions":         adAnalysis.FetchComputerSessions,
 			"adminUsers":       adAnalysis.CreateInboundLocalGroupListDelegate(ad.AdminTo),
@@ -115,23 +113,21 @@ func (s *Resources) GetComputerEntityInfo(response http.ResponseWriter, request 
 		}
 	)
 
-	s.handleAdEntityInfoQuery(response, request, entityType, countQueries)
+	s.handleAdEntityInfoQuery(response, request, ad.Computer, countQueries)
 }
 
 func (s *Resources) GetContainerEntityInfo(response http.ResponseWriter, request *http.Request) {
 	var (
-		entityType   = ad.Container
 		countQueries = map[string]any{
 			"controllers": adAnalysis.FetchInboundADEntityControllers,
 		}
 	)
 
-	s.handleAdEntityInfoQuery(response, request, entityType, countQueries)
+	s.handleAdEntityInfoQuery(response, request, ad.Container, countQueries)
 }
 
 func (s *Resources) GetDomainEntityInfo(response http.ResponseWriter, request *http.Request) {
 	var (
-		entityType   = ad.Domain
 		countQueries = map[string]any{
 			"users":                 adAnalysis.CreateDomainContainedEntityListDelegate(ad.User),
 			"groups":                adAnalysis.CreateDomainContainedEntityListDelegate(ad.Group),
@@ -150,12 +146,11 @@ func (s *Resources) GetDomainEntityInfo(response http.ResponseWriter, request *h
 		}
 	)
 
-	s.handleAdEntityInfoQuery(response, request, entityType, countQueries)
+	s.handleAdEntityInfoQuery(response, request, ad.Domain, countQueries)
 }
 
 func (s *Resources) GetGPOEntityInfo(response http.ResponseWriter, request *http.Request) {
 	var (
-		entityType   = ad.GPO
 		countQueries = map[string]any{
 			"ous":         adAnalysis.CreateGPOAffectedIntermediariesListDelegate(adAnalysis.SelectGPOContainerCandidateFilter),
 			"computers":   adAnalysis.CreateGPOAffectedIntermediariesListDelegate(adAnalysis.SelectComputersCandidateFilter),
@@ -164,65 +159,59 @@ func (s *Resources) GetGPOEntityInfo(response http.ResponseWriter, request *http
 			"tierzero":    adAnalysis.CreateGPOAffectedIntermediariesListDelegate(adAnalysis.SelectGPOTierZeroCandidateFilter),
 		}
 	)
-	s.handleAdEntityInfoQuery(response, request, entityType, countQueries)
+	s.handleAdEntityInfoQuery(response, request, ad.GPO, countQueries)
 }
 
 func (s *Resources) GetAIACAEntityInfo(response http.ResponseWriter, request *http.Request) {
 	var (
-		entityType   = ad.AIACA
 		countQueries = map[string]any{
 			"controllers": adAnalysis.FetchInboundADEntityControllers,
 		}
 	)
 
-	s.handleAdEntityInfoQuery(response, request, entityType, countQueries)
+	s.handleAdEntityInfoQuery(response, request, ad.AIACA, countQueries)
 }
 
 func (s *Resources) GetRootCAEntityInfo(response http.ResponseWriter, request *http.Request) {
 	var (
-		entityType   = ad.RootCA
 		countQueries = map[string]any{
 			"controllers": adAnalysis.FetchInboundADEntityControllers,
 		}
 	)
 
-	s.handleAdEntityInfoQuery(response, request, entityType, countQueries)
+	s.handleAdEntityInfoQuery(response, request, ad.RootCA, countQueries)
 }
 
 func (s *Resources) GetEnterpriseCAEntityInfo(response http.ResponseWriter, request *http.Request) {
 	var (
-		entityType   = ad.EnterpriseCA
 		countQueries = map[string]any{
 			"controllers": adAnalysis.FetchInboundADEntityControllers,
 		}
 	)
-	s.handleAdEntityInfoQuery(response, request, entityType, countQueries)
+	s.handleAdEntityInfoQuery(response, request, ad.EnterpriseCA, countQueries)
 }
 
 func (s *Resources) GetNTAuthStoreEntityInfo(response http.ResponseWriter, request *http.Request) {
 	var (
-		entityType   = ad.NTAuthStore
 		countQueries = map[string]any{
 			"controllers": adAnalysis.FetchInboundADEntityControllers,
 		}
 	)
-	s.handleAdEntityInfoQuery(response, request, entityType, countQueries)
+	s.handleAdEntityInfoQuery(response, request, ad.NTAuthStore, countQueries)
 }
 
 func (s *Resources) GetCertTemplateEntityInfo(response http.ResponseWriter, request *http.Request) {
 	var (
-		entityType   = ad.CertTemplate
 		countQueries = map[string]any{
 			"controllers": adAnalysis.FetchInboundADEntityControllers,
 		}
 	)
 
-	s.handleAdEntityInfoQuery(response, request, entityType, countQueries)
+	s.handleAdEntityInfoQuery(response, request, ad.CertTemplate, countQueries)
 }
 
 func (s *Resources) GetOUEntityInfo(response http.ResponseWriter, request *http.Request) {
 	var (
-		entityType   = ad.OU
 		countQueries = map[string]any{
 			"gpos":      adAnalysis.FetchEntityLinkedGPOList,
 			"users":     adAnalysis.CreateOUContainedListDelegate(ad.User),
@@ -231,12 +220,11 @@ func (s *Resources) GetOUEntityInfo(response http.ResponseWriter, request *http.
 		}
 	)
 
-	s.handleAdEntityInfoQuery(response, request, entityType, countQueries)
+	s.handleAdEntityInfoQuery(response, request, ad.OU, countQueries)
 }
 
 func (s *Resources) GetUserEntityInfo(response http.ResponseWriter, request *http.Request) {
 	var (
-		entityType   = ad.User
 		countQueries = map[string]any{
 			"sessions":              adAnalysis.FetchUserSessions,
 			"groupMembership":       adAnalysis.FetchEntityGroupMembership,
@@ -252,12 +240,11 @@ func (s *Resources) GetUserEntityInfo(response http.ResponseWriter, request *htt
 		}
 	)
 
-	s.handleAdEntityInfoQuery(response, request, entityType, countQueries)
+	s.handleAdEntityInfoQuery(response, request, ad.User, countQueries)
 }
 
 func (s *Resources) GetGroupEntityInfo(response http.ResponseWriter, request *http.Request) {
 	var (
-		entityType   = ad.Group
 		countQueries = map[string]any{
 			"sessions":       adAnalysis.FetchGroupSessions,
 			"members":        adAnalysis.FetchGroupMembers,
@@ -271,5 +258,5 @@ func (s *Resources) GetGroupEntityInfo(response http.ResponseWriter, request *ht
 		}
 	)
 
-	s.handleAdEntityInfoQuery(response, request, entityType, countQueries)
+	s.handleAdEntityInfoQuery(response, request, ad.Group, countQueries)
 }
