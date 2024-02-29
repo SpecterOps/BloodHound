@@ -112,8 +112,6 @@ func SaveIngestFile(location string, request *http.Request) (string, model.FileT
 		return "", model.FileTypeJson, fmt.Errorf("error creating ingest file: %w", err)
 	}
 
-	err = nil
-
 	if api.HeaderMatches(headers.ContentType.String(), mediatypes.ApplicationJson.String(), request.Header) {
 		if err := WriteAndValidateJSON(fileData, tempFile); err != nil {
 			if err := tempFile.Close(); err != nil {
