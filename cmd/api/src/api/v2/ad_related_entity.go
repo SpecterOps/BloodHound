@@ -151,7 +151,7 @@ func (s *Resources) ListADDomainContainedOUs(response http.ResponseWriter, reque
 }
 
 func (s *Resources) ListADDomainContainedGPOs(response http.ResponseWriter, request *http.Request) {
-	s.handleAdRelatedEntityQuery(response, request, "ListADDomainContainedGPOs", mil, adAnalysis.CreateDomainContainedEntityListDelegate(ad.GPO))
+	s.handleAdRelatedEntityQuery(response, request, "ListADDomainContainedGPOs", nil, adAnalysis.CreateDomainContainedEntityListDelegate(ad.GPO))
 }
 
 func (s *Resources) ListADDomainForeignGroups(response http.ResponseWriter, request *http.Request) {
