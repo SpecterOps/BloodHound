@@ -114,5 +114,3 @@ func ValidateZipFile(reader io.Reader) error {
 		return err
 	}
 }
-
-//MATCH (n:Entity)-[r]->(c:CertTemplate) WHERE r:GenericWrite AND r:
