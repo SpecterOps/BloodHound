@@ -90,10 +90,23 @@ export const GraphEvents: FC<GraphEventProps> = ({
 
                     newData.control = control;
                     newData.controlInViewport = sigma.framedGraphToViewport(control);
+
+                    const nodeRadius = getNodeRadius(
+                        nodeDisplayData.target.highlighted,
+                        newData.inverseSqrtZoomRatio,
+                        nodeDisplayData.source.size
+                    );
+
+                    const framedGraphNodeRadius = getLineLength(
+                        sigma.viewportToFramedGraph({ x: 0, y: 0 }),
+                        sigma.viewportToFramedGraph({ x: 0, y: nodeRadius })
+                    );
+
+                    newData.framedGraphNodeRadius = framedGraphNodeRadius;
                 }
             }
         },
-        [sigma, calculateCurveHeight, getControlAtMidpoint]
+        [sigma, calculateCurveHeight, getControlAtMidpoint, getLineLength]
     );
 
     const selfEdgeReducer = useCallback(

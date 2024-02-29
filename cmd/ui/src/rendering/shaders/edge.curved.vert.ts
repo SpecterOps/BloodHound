@@ -50,7 +50,9 @@ void main() {
   vec2 compensationVector = vec2(-direction * unitNormal.y, direction * unitNormal.x) * (adaptedWebGLNodeRadius + adaptedWebGLArrowHeadLength);
 
   // Here is the proper position of the vertex
-  gl_Position = vec4((u_matrix * vec3(a_position + unitNormal * adaptedWebGLThickness + compensationVector, 1)).xy, 0, 1);
+  vec2 position = (u_matrix * vec3(a_position + unitNormal * adaptedWebGLThickness + compensationVector, 1)).xy;
+
+  gl_Position = vec4(position, 0, 1);
 
   v_thickness = webGLThickness / u_sqrtZoomRatio;
 

@@ -120,6 +120,7 @@ export type EdgeParams = {
     label: string;
     color: string;
     exploreGraphId: string;
+    needsPerformance: boolean;
     groupPosition?: number;
     groupSize?: number;
     direction?: EdgeDirection;

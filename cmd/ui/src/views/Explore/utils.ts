@@ -156,6 +156,8 @@ export const initGraphNodes = (graph: MultiDirectedGraph, nodes: GraphNodes, nod
     });
 };
 
+export const defaultEdgeColor = '#000000C0';
+
 export const initGraphEdges = (graph: MultiDirectedGraph, edges: GraphEdges) => {
     // Group edges with the same start and end nodes into arrays. Should be grouped regardless of direction
     const groupedEdges = edges.reduce<Record<string, GraphEdges>>((groups, edge) => {
@@ -182,11 +184,12 @@ export const initGraphEdges = (graph: MultiDirectedGraph, edges: GraphEdges) => 
                 size: 3,
                 type: 'arrow',
                 label: edge.label,
-                color: '#000000C0',
+                color: defaultEdgeColor,
                 groupPosition: 0,
                 groupSize: 1,
                 exploreGraphId: edge.exploreGraphId || key,
                 forceLabel: true,
+                needsPerformance: edges.length > 250,
             };
 
             // Groups with odd-numbered totals should have a straight edge first, then curve the rest

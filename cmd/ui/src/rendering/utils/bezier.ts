@@ -18,6 +18,7 @@ import { Coordinates } from 'sigma/types';
 import { EdgeDirection } from 'src/utils';
 import { GROUP_SPREAD } from 'src/ducks/graph/utils';
 
+export type BezierCoordinate = Coordinates & { t: number };
 // Collection of helper functions for working with 2D Coordinates
 export const bezier = {
     getNormals(start: Coordinates, end: Coordinates): Coordinates {
@@ -30,6 +31,38 @@ export const bezier = {
             x: dx * dist,
             y: dy * dist,
         };
+    },
+
+    getLUT(controlPoints: Coordinates[], numberOfPoints: number): BezierCoordinate[] {
+        const LUT = [];
+        const resolution = 1 / numberOfPoints;
+
+        if (controlPoints.length === 3) {
+            for (let t = 0; t <= 1; t += resolution) {
+                const pointOnCurve = bezier.getCoordinatesAlongQuadraticBezier(
+                    controlPoints[0],
+                    controlPoints[1],
+                    controlPoints[2],
+                    t
+                );
+                LUT.push(pointOnCurve);
+            }
+        } else if (controlPoints.length === 4) {
+            for (let t = 0; t <= 1; t += resolution) {
+                const pointOnCurve = bezier.getCoordinatesAlongCubicBezier(
+                    controlPoints[0],
+                    controlPoints[1],
+                    controlPoints[2],
+                    controlPoints[3],
+                    t
+                );
+                LUT.push(pointOnCurve);
+            }
+        } else {
+            throw new Error('getLUT requires either 3 or 4 control points');
+        }
+
+        return LUT;
     },
 
     // Gets a point along the perpindicular line that intersects the target line segment at a certain offset
@@ -48,10 +81,11 @@ export const bezier = {
         end: Coordinates,
         control: Coordinates,
         t: number
-    ): Coordinates => {
+    ): BezierCoordinate => {
         return {
             x: (1 - t) * (1 - t) * start.x + 2 * (1 - t) * t * control.x + t * t * end.x,
             y: (1 - t) * (1 - t) * start.y + 2 * (1 - t) * t * control.y + t * t * end.y,
+            t: t,
         };
     },
 
@@ -61,7 +95,7 @@ export const bezier = {
         c3: Coordinates,
         c4: Coordinates,
         t: number
-    ): Coordinates => {
+    ): BezierCoordinate => {
         //x(t) = (1 – t)^3*c0 + 3(1 – t)^2*t*c1 + 3(1 – t)*t^2*c2 + t^3*c3
         //y(t) = (1 – t)^3*c0 + 3(1 – t)^2*t*c1 + 3(1 – t)*t^2*c2 + t^3*c3
         return {
@@ -76,6 +110,7 @@ export const bezier = {
                 3 * Math.pow(1 - t, 2) * t * c2.y +
                 3 * (1 - t) * Math.pow(t, 2) * c3.y +
                 Math.pow(t, 3) * c4.y,
+            t: t,
         };
     },
 

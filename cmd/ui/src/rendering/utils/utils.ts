@@ -13,6 +13,8 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+import { Coordinates } from 'sigma/types';
+import { bezier } from './bezier';
 
 export const HIGHLIGHTED_LABEL_BACKGROUND_COLOR = '#FF6D66';
 export const HIGHLIGHTED_LABEL_FONT_COLOR = '#FFF';
@@ -42,4 +44,79 @@ export const getNodeRadius = (highlighted: boolean, inverseSqrtZoomRatio: number
     else radius = size * inverseSqrtZoomRatio;
 
     return radius;
+};
+
+//This was sourced from https://pomax.github.io/bezierinfo/#circleintersection where the steps are explained in detail
+export const getCurveCircleIntersection = (
+    LUT: Coordinates[],
+    circleCenter: Coordinates,
+    radius: number,
+    deltaEpsilon = 0.01
+) => {
+    const values = [];
+    const maxIterations = 25;
+    let start = 0,
+        count = 0;
+
+    while (++count < maxIterations) {
+        if (!LUT[start - 2] || !LUT[start - 1]) {
+            start = start + 1;
+            continue;
+        }
+        const closest = findClosest(
+            circleCenter.x,
+            circleCenter.y,
+            LUT.slice(start),
+            bezier.getLineLength(LUT[start - 2], circleCenter),
+            bezier.getLineLength(LUT[start - 1], circleCenter),
+            radius,
+            deltaEpsilon
+        );
+        const i = start + closest;
+
+        if (i < start) break;
+        if (i > 0 && i === start) break;
+        values.push(i);
+        start = i + 2; // We need to add 2, because findClosest already tells us that i+1 cannot be a viable candidate.
+    }
+    return values;
+};
+
+const findClosest = (
+    x: number,
+    y: number,
+    LUT: Coordinates[],
+    pd2: number,
+    pd1: number,
+    radius: number,
+    distanceEpsilon: number
+): number => {
+    let distance = Infinity,
+        prevDistance2 = pd2 || distance,
+        prevDistance1 = pd1 || distance,
+        i = -1;
+
+    for (let index = 0; index < LUT.length; index++) {
+        const pointOnCurve = LUT[index];
+        const pointDistance = Math.abs(
+            bezier.getLineLength({ x: x, y: y }, { x: pointOnCurve.x, y: pointOnCurve.y }) - radius
+        );
+
+        // Realistically, there's only going to be an intersection if
+        // the distance to the circle center is already approximately
+        // the circle's radius.
+        if (prevDistance1 < distanceEpsilon && prevDistance2 > prevDistance1 && prevDistance1 < pointDistance) {
+            i = index - 1;
+            break;
+        }
+
+        if (pointDistance < distance) {
+            distance = pointDistance;
+        }
+
+        prevDistance2 = prevDistance1;
+        prevDistance1 = pointDistance;
+    }
+
+    return i;
 };

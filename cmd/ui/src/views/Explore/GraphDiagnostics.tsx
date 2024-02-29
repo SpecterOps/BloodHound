@@ -132,14 +132,14 @@ export const GraphDiagnostics = () => {
                             x: mouseCoords.x - boxRef.current?.getBoundingClientRect().x,
                             y: mouseCoords.y - boxRef.current?.getBoundingClientRect().y,
                         })
-                        .x.toFixed(2)}
+                        .x.toFixed(4)}
                     ,{' '}
                     {sigmaState
                         .viewportToFramedGraph({
                             x: mouseCoords.x - boxRef.current?.getBoundingClientRect().x,
                             y: mouseCoords.y - boxRef.current?.getBoundingClientRect().y,
                         })
-                        .y.toFixed(2)}
+                        .y.toFixed(4)}
                     <br />
                 </p>
                 {/* <p>
