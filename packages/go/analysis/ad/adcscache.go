@@ -29,9 +29,9 @@ type ADCSCache struct {
 	AuthStoreForChainValid          map[graph.ID]cardinality.Duplex[uint32]
 	RootCAForChainValid             map[graph.ID]cardinality.Duplex[uint32]
 	ExpandedCertTemplateControllers map[graph.ID][]uint32
-	CertTemplateEnrollers           map[graph.ID][]*graph.Node // principals that have enrollment on a cert template
-	CertTemplateControllers         map[graph.ID][]*graph.Node // principals that have privileges on a cert template (owner, generic all, write dacl, write owner)
-	EnterpriseCAEnrollers           map[graph.ID][]*graph.Node // principals that have enrollment rights on an enterprise ca
+	CertTemplateEnrollers           map[graph.ID][]*graph.Node // principals that have enrollment on a cert template via `enroll`, `generic all`, `all extended rights` edges
+	CertTemplateControllers         map[graph.ID][]*graph.Node // principals that have privileges on a cert template via `owner`, `generic all`, `write dacl`, `write owner` edges
+	EnterpriseCAEnrollers           map[graph.ID][]*graph.Node // principals that have enrollment rights on an enterprise ca via `enroll` edge
 	PublishedTemplateCache          map[graph.ID][]*graph.Node // cert templates that are published to an enterprise ca
 }
 

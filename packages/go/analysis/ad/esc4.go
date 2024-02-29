@@ -25,6 +25,7 @@ import (
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/dawgs/ops"
 	"github.com/specterops/bloodhound/dawgs/query"
+	"github.com/specterops/bloodhound/dawgs/util/channels"
 	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/log"
 )
@@ -51,6 +52,10 @@ func PostADCSESC4(ctx context.Context, tx graph.Transaction, outC chan<- analysi
 				log.Warnf("error fetching principals with %s on cert template: %v", ad.WritePKINameFlag, err)
 			} else if principalsWithPKIEnrollmentFlag, err := FetchPrincipalsWithWritePKIEnrollmentFlagOnCertTemplate(tx, certTemplate); err != nil {
 				log.Warnf("error fetching principals with %s on cert template: %v", ad.WritePKIEnrollmentFlag, err)
+			} else if enrolleeSuppliesSubject, err := certTemplate.Properties.Get(string(ad.EnrolleeSuppliesSubject)).Bool(); err != nil {
+				log.Warnf("error fetching %s property on cert template: %v", ad.EnrolleeSuppliesSubject, err)
+			} else if requiresManagerApproval, err := certTemplate.Properties.Get(string(ad.RequiresManagerApproval)).Bool(); err != nil {
+				log.Warnf("error fetching %s property on cert template: %v", ad.RequiresManagerApproval, err)
 			} else {
 
 				// 2a. principals that control the cert template
@@ -61,7 +66,7 @@ func PostADCSESC4(ctx context.Context, tx graph.Transaction, outC chan<- analysi
 						cache.CertTemplateControllers[certTemplate.ID],
 					))
 
-				// 2b. principals with `Enroll/AllExtendedRights` + `Generic Write` combinations on the cert template
+				// 2b. principals with `Enroll/AllExtendedRights` + `Generic Write` combination on the cert template
 				principals.Or(
 					CalculateCrossProductNodeSets(
 						groupExpansions,
@@ -76,11 +81,46 @@ func PostADCSESC4(ctx context.Context, tx graph.Transaction, outC chan<- analysi
 					CalculateCrossProductNodeSets(
 						groupExpansions,
 						cache.EnterpriseCAEnrollers[enterpriseCA.ID],
+						principalsWithEnrollOrAllExtendedRights.Slice(),
 						principalsWithPKINameFlag.Slice(),
 						principalsWithPKIEnrollmentFlag.Slice(),
 					),
 				)
+
+				// 2e.
+				if enrolleeSuppliesSubject {
+					principals.Or(
+						CalculateCrossProductNodeSets(
+							groupExpansions,
+							cache.EnterpriseCAEnrollers[enterpriseCA.ID],
+							principalsWithEnrollOrAllExtendedRights.Slice(),
+							principalsWithPKIEnrollmentFlag.Slice(),
+						),
+					)
+				}
+
+				// 2f.
+				if !requiresManagerApproval {
+					principals.Or(
+						CalculateCrossProductNodeSets(
+							groupExpansions,
+							cache.EnterpriseCAEnrollers[enterpriseCA.ID],
+							principalsWithEnrollOrAllExtendedRights.Slice(),
+							principalsWithPKINameFlag.Slice(),
+						),
+					)
+				}
+
 			}
+
+			principals.Each(func(value uint32) bool {
+				channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
+					FromID: graph.ID(value),
+					ToID:   domain.ID,
+					Kind:   ad.ADCSESC4,
+				})
+				return true
+			})
 
 		}
 	}
