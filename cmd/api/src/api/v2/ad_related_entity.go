@@ -54,352 +54,158 @@ func (s *Resources) handleAdRelatedEntityQuery(response http.ResponseWriter, req
 }
 
 func (s *Resources) ListADUserSessions(response http.ResponseWriter, request *http.Request) {
-	var (
-		queryName    = "ListADUserSessions"
-		pathDelegate = adAnalysis.FetchUserSessionPaths
-		listDelegate = adAnalysis.FetchUserSessions
-	)
-	s.handleAdRelatedEntityQuery(response, request, queryName, pathDelegate, listDelegate)
+	s.handleAdRelatedEntityQuery(response, request, "ListADUserSessions", adAnalysis.FetchUserSessionPaths, adAnalysis.FetchUserSessions)
 }
 
 func (s *Resources) ListADUserSQLAdminRights(response http.ResponseWriter, request *http.Request) {
-	var (
-		queryName    = "ListADUserSQLAdminRights"
-		pathDelegate = adAnalysis.CreateSQLAdminPathDelegate(graph.DirectionOutbound)
-		listDelegate = adAnalysis.CreateSQLAdminListDelegate(graph.DirectionOutbound)
-	)
-	s.handleAdRelatedEntityQuery(response, request, queryName, pathDelegate, listDelegate)
+	s.handleAdRelatedEntityQuery(response, request, "ListADUserSQLAdminRights", adAnalysis.CreateSQLAdminPathDelegate(graph.DirectionOutbound), adAnalysis.CreateSQLAdminListDelegate(graph.DirectionOutbound))
 }
 
 func (s *Resources) ListADGroupSessions(response http.ResponseWriter, request *http.Request) {
-	var (
-		queryName    = "ListADGroupSessions"
-		pathDelegate = adAnalysis.FetchGroupSessionPaths
-		listDelegate = adAnalysis.FetchGroupSessions
-	)
-	s.handleAdRelatedEntityQuery(response, request, queryName, pathDelegate, listDelegate)
+	s.handleAdRelatedEntityQuery(response, request, "ListADGroupSessions", adAnalysis.FetchGroupSessionPaths, adAnalysis.FetchGroupSessions)
 }
 
 func (s *Resources) ListADComputerSessions(response http.ResponseWriter, request *http.Request) {
-	var (
-		queryName    = "ListADComputerSessions"
-		pathDelegate = adAnalysis.FetchComputerSessionPaths
-		listDelegate = adAnalysis.FetchComputerSessions
-	)
-	s.handleAdRelatedEntityQuery(response, request, queryName, pathDelegate, listDelegate)
+	s.handleAdRelatedEntityQuery(response, request, "ListADComputerSessions", adAnalysis.FetchComputerSessionPaths, adAnalysis.FetchComputerSessions)
 }
 
 func (s *Resources) ListADComputerAdmins(response http.ResponseWriter, request *http.Request) {
-	var (
-		queryName    = "ListADComputerAdmins"
-		pathDelegate = adAnalysis.CreateInboundLocalGroupPathDelegate(ad.AdminTo)
-		listDelegate = adAnalysis.CreateInboundLocalGroupListDelegate(ad.AdminTo)
-	)
-	s.handleAdRelatedEntityQuery(response, request, queryName, pathDelegate, listDelegate)
+	s.handleAdRelatedEntityQuery(response, request, "ListADComputerAdmins", adAnalysis.CreateInboundLocalGroupPathDelegate(ad.AdminTo), adAnalysis.CreateInboundLocalGroupListDelegate(ad.AdminTo))
 }
 
 func (s *Resources) ListADComputerPSRemoteUsers(response http.ResponseWriter, request *http.Request) {
-	var (
-		queryName    = "ListADComputerPSRemoteUsers"
-		pathDelegate = adAnalysis.CreateInboundLocalGroupPathDelegate(ad.CanPSRemote)
-		listDelegate = adAnalysis.CreateInboundLocalGroupListDelegate(ad.CanPSRemote)
-	)
-	s.handleAdRelatedEntityQuery(response, request, queryName, pathDelegate, listDelegate)
+	s.handleAdRelatedEntityQuery(response, request, "ListADComputerPSRemoteUsers", adAnalysis.CreateInboundLocalGroupPathDelegate(ad.CanPSRemote), adAnalysis.CreateInboundLocalGroupListDelegate(ad.CanPSRemote))
 }
 
 func (s *Resources) ListADComputerRDPUsers(response http.ResponseWriter, request *http.Request) {
-	var (
-		queryName    = "ListADComputerRDPUsers"
-		pathDelegate = adAnalysis.CreateInboundLocalGroupPathDelegate(ad.CanRDP)
-		listDelegate = adAnalysis.CreateInboundLocalGroupListDelegate(ad.CanRDP)
-	)
-	s.handleAdRelatedEntityQuery(response, request, queryName, pathDelegate, listDelegate)
+	s.handleAdRelatedEntityQuery(response, request, "ListADComputerRDPUsers", adAnalysis.CreateInboundLocalGroupPathDelegate(ad.CanRDP), adAnalysis.CreateInboundLocalGroupListDelegate(ad.CanRDP))
 }
 
 func (s *Resources) ListADComputerDCOMUsers(response http.ResponseWriter, request *http.Request) {
-	var (
-		queryName    = "ListADComputerDCOMUsers"
-		pathDelegate = adAnalysis.CreateInboundLocalGroupPathDelegate(ad.ExecuteDCOM)
-		listDelegate = adAnalysis.CreateInboundLocalGroupListDelegate(ad.ExecuteDCOM)
-	)
-	s.handleAdRelatedEntityQuery(response, request, queryName, pathDelegate, listDelegate)
+	s.handleAdRelatedEntityQuery(response, request, "ListADComputerDCOMUsers", adAnalysis.CreateInboundLocalGroupPathDelegate(ad.ExecuteDCOM), adAnalysis.CreateInboundLocalGroupListDelegate(ad.ExecuteDCOM))
 }
 
 func (s *Resources) ListADGroupMembership(response http.ResponseWriter, request *http.Request) {
-	var (
-		queryName    = "ListADGroupMembership"
-		pathDelegate = adAnalysis.FetchEntityGroupMembershipPaths
-		listDelegate = adAnalysis.FetchEntityGroupMembership
-	)
-	s.handleAdRelatedEntityQuery(response, request, queryName, pathDelegate, listDelegate)
+	s.handleAdRelatedEntityQuery(response, request, "ListADGroupMembership", adAnalysis.FetchEntityGroupMembershipPaths, adAnalysis.FetchEntityGroupMembership)
 }
 
 func (s *Resources) ListADGroupMembers(response http.ResponseWriter, request *http.Request) {
-	var (
-		queryName    = "ListADGroupMembers"
-		pathDelegate = adAnalysis.FetchGroupMemberPaths
-		listDelegate = adAnalysis.FetchGroupMembers
-	)
-	s.handleAdRelatedEntityQuery(response, request, queryName, pathDelegate, listDelegate)
+	s.handleAdRelatedEntityQuery(response, request, "ListADGroupMembers", adAnalysis.FetchGroupMemberPaths, adAnalysis.FetchGroupMembers)
 }
 
 func (s *Resources) ListADComputerSQLAdmins(response http.ResponseWriter, request *http.Request) {
-	var (
-		queryName    = "ListADComputerSQLAdmins"
-		pathDelegate = adAnalysis.CreateSQLAdminPathDelegate(graph.DirectionInbound)
-		listDelegate = adAnalysis.CreateSQLAdminListDelegate(graph.DirectionInbound)
-	)
-	s.handleAdRelatedEntityQuery(response, request, queryName, pathDelegate, listDelegate)
+	s.handleAdRelatedEntityQuery(response, request, "ListADComputerSQLAdmins", adAnalysis.CreateSQLAdminPathDelegate(graph.DirectionInbound), adAnalysis.CreateSQLAdminListDelegate(graph.DirectionInbound))
 }
 
 func (s *Resources) ListADComputerConstrainedDelegationUsers(response http.ResponseWriter, request *http.Request) {
-	var (
-		queryName    = "ListADComputerConstrainedDelegationUsers"
-		pathDelegate = adAnalysis.CreateConstrainedDelegationPathDelegate(graph.DirectionInbound)
-		listDelegate = adAnalysis.CreateConstrainedDelegationListDelegate(graph.DirectionInbound)
-	)
-	s.handleAdRelatedEntityQuery(response, request, queryName, pathDelegate, listDelegate)
+	s.handleAdRelatedEntityQuery(response, request, "ListADComputerConstrainedDelegationUsers", adAnalysis.CreateConstrainedDelegationPathDelegate(graph.DirectionInbound), adAnalysis.CreateConstrainedDelegationListDelegate(graph.DirectionInbound))
 }
 
 func (s *Resources) ListADEntityConstrainedDelegationRights(response http.ResponseWriter, request *http.Request) {
-	var (
-		queryName    = "ListADEntityConstrainedDelegationRights"
-		pathDelegate = adAnalysis.CreateConstrainedDelegationPathDelegate(graph.DirectionOutbound)
-		listDelegate = adAnalysis.CreateConstrainedDelegationListDelegate(graph.DirectionOutbound)
-	)
-	s.handleAdRelatedEntityQuery(response, request, queryName, pathDelegate, listDelegate)
+	s.handleAdRelatedEntityQuery(response, request, "ListADEntityConstrainedDelegationRights", adAnalysis.CreateConstrainedDelegationPathDelegate(graph.DirectionOutbound), adAnalysis.CreateConstrainedDelegationListDelegate(graph.DirectionOutbound))
 }
 
 func (s *Resources) ListADEntityAdminRights(response http.ResponseWriter, request *http.Request) {
-	var (
-		queryName    = "ListADEntityAdminRights"
-		pathDelegate = adAnalysis.CreateOutboundLocalGroupPathDelegate(ad.AdminTo)
-		listDelegate = adAnalysis.CreateOutboundLocalGroupListDelegate(ad.AdminTo)
-	)
-	s.handleAdRelatedEntityQuery(response, request, queryName, pathDelegate, listDelegate)
+	s.handleAdRelatedEntityQuery(response, request, "ListADEntityAdminRights", adAnalysis.CreateOutboundLocalGroupPathDelegate(ad.AdminTo), adAnalysis.CreateOutboundLocalGroupListDelegate(ad.AdminTo))
 }
 
 func (s *Resources) ListADEntityRDPRights(response http.ResponseWriter, request *http.Request) {
-	var (
-		queryName    = "ListADEntityRDPRights"
-		pathDelegate = adAnalysis.CreateOutboundLocalGroupPathDelegate(ad.CanRDP)
-		listDelegate = adAnalysis.CreateOutboundLocalGroupListDelegate(ad.CanRDP)
-	)
-	s.handleAdRelatedEntityQuery(response, request, queryName, pathDelegate, listDelegate)
+	s.handleAdRelatedEntityQuery(response, request, "ListADEntityRDPRights", adAnalysis.CreateOutboundLocalGroupPathDelegate(ad.CanRDP), adAnalysis.CreateOutboundLocalGroupListDelegate(ad.CanRDP))
 }
 
 func (s *Resources) ListADEntityPSRemoteRights(response http.ResponseWriter, request *http.Request) {
-	var (
-		queryName    = "ListADEntityPSRemoteRights"
-		pathDelegate = adAnalysis.CreateOutboundLocalGroupPathDelegate(ad.CanPSRemote)
-		listDelegate = adAnalysis.CreateOutboundLocalGroupListDelegate(ad.CanPSRemote)
-	)
-	s.handleAdRelatedEntityQuery(response, request, queryName, pathDelegate, listDelegate)
+	s.handleAdRelatedEntityQuery(response, request, "ListADEntityPSRemoteRights", adAnalysis.CreateOutboundLocalGroupPathDelegate(ad.CanPSRemote), adAnalysis.CreateOutboundLocalGroupListDelegate(ad.CanPSRemote))
 }
 
 func (s *Resources) ListADEntityDCOMRights(response http.ResponseWriter, request *http.Request) {
-	var (
-		queryName    = "ListADEntityDCOMRights"
-		pathDelegate = adAnalysis.CreateOutboundLocalGroupPathDelegate(ad.ExecuteDCOM)
-		listDelegate = adAnalysis.CreateOutboundLocalGroupListDelegate(ad.ExecuteDCOM)
-	)
-	s.handleAdRelatedEntityQuery(response, request, queryName, pathDelegate, listDelegate)
+	s.handleAdRelatedEntityQuery(response, request, "ListADEntityDCOMRights", adAnalysis.CreateOutboundLocalGroupPathDelegate(ad.ExecuteDCOM), adAnalysis.CreateOutboundLocalGroupListDelegate(ad.ExecuteDCOM))
 }
 
 func (s *Resources) ListADEntityControllers(response http.ResponseWriter, request *http.Request) {
-	var (
-		queryName    = "ListADEntityControllers"
-		pathDelegate = adAnalysis.FetchInboundADEntityControllerPaths
-		listDelegate = adAnalysis.FetchInboundADEntityControllers
-	)
-	s.handleAdRelatedEntityQuery(response, request, queryName, pathDelegate, listDelegate)
+
+	s.handleAdRelatedEntityQuery(response, request, "ListADEntityControllers", adAnalysis.FetchInboundADEntityControllerPaths, adAnalysis.FetchInboundADEntityControllers)
 }
 
 func (s *Resources) ListADEntityControllables(response http.ResponseWriter, request *http.Request) {
-	var (
-		queryName    = "ListADEntityControllables"
-		pathDelegate = adAnalysis.FetchOutboundADEntityControlPaths
-		listDelegate = adAnalysis.FetchOutboundADEntityControl
-	)
-	s.handleAdRelatedEntityQuery(response, request, queryName, pathDelegate, listDelegate)
+	s.handleAdRelatedEntityQuery(response, request, "ListADEntityControllables", adAnalysis.FetchOutboundADEntityControlPaths, adAnalysis.FetchOutboundADEntityControl)
 }
 
 func (s *Resources) ListADEntityLinkedGPOs(response http.ResponseWriter, request *http.Request) {
-	var (
-		queryName    = "ListADEntityLinkedGPOs"
-		pathDelegate = adAnalysis.FetchEntityLinkedGPOPaths
-		listDelegate = adAnalysis.FetchEntityLinkedGPOList
-	)
-	s.handleAdRelatedEntityQuery(response, request, queryName, pathDelegate, listDelegate)
+	s.handleAdRelatedEntityQuery(response, request, "ListADEntityLinkedGPOs", adAnalysis.FetchEntityLinkedGPOPaths, adAnalysis.FetchEntityLinkedGPOList)
 }
 
 func (s *Resources) ListADDomainContainedUsers(response http.ResponseWriter, request *http.Request) {
-	var (
-		queryName        = "ListADDomainContainedUsers"
-		pathDelegate any = nil
-		listDelegate     = adAnalysis.CreateDomainContainedEntityListDelegate(ad.User)
-	)
-	s.handleAdRelatedEntityQuery(response, request, queryName, pathDelegate, listDelegate)
+	s.handleAdRelatedEntityQuery(response, request, "ListADDomainContainedUsers", nil, adAnalysis.CreateDomainContainedEntityListDelegate(ad.User))
 }
 
 func (s *Resources) ListADDomainContainedComputers(response http.ResponseWriter, request *http.Request) {
-	var (
-		queryName        = "ListADDomainContainedComputers"
-		pathDelegate any = nil
-		listDelegate     = adAnalysis.CreateDomainContainedEntityListDelegate(ad.Computer)
-	)
-	s.handleAdRelatedEntityQuery(response, request, queryName, pathDelegate, listDelegate)
+	s.handleAdRelatedEntityQuery(response, request, "ListADDomainContainedComputers", nil, adAnalysis.CreateDomainContainedEntityListDelegate(ad.Computer))
 }
 
 func (s *Resources) ListADDomainContainedGroups(response http.ResponseWriter, request *http.Request) {
-	var (
-		queryName        = "ListADDomainContainedGroups"
-		pathDelegate any = nil
-		listDelegate     = adAnalysis.CreateDomainContainedEntityListDelegate(ad.Group)
-	)
-	s.handleAdRelatedEntityQuery(response, request, queryName, pathDelegate, listDelegate)
+	s.handleAdRelatedEntityQuery(response, request, "ListADDomainContainedGroups", nil, adAnalysis.CreateDomainContainedEntityListDelegate(ad.Group))
 }
 
 func (s *Resources) ListADDomainContainedOUs(response http.ResponseWriter, request *http.Request) {
-	var (
-		queryName        = "ListADDomainContainedOUs"
-		pathDelegate any = nil
-		listDelegate     = adAnalysis.CreateDomainContainedEntityListDelegate(ad.OU)
-	)
-	s.handleAdRelatedEntityQuery(response, request, queryName, pathDelegate, listDelegate)
+	s.handleAdRelatedEntityQuery(response, request, "ListADDomainContainedOUs", nil, adAnalysis.CreateDomainContainedEntityListDelegate(ad.OU))
 }
 
 func (s *Resources) ListADDomainContainedGPOs(response http.ResponseWriter, request *http.Request) {
-	var (
-		queryName        = "ListADDomainContainedGPOs"
-		pathDelegate any = nil
-		listDelegate     = adAnalysis.CreateDomainContainedEntityListDelegate(ad.GPO)
-	)
-	s.handleAdRelatedEntityQuery(response, request, queryName, pathDelegate, listDelegate)
+	s.handleAdRelatedEntityQuery(response, request, "ListADDomainContainedGPOs", mil, adAnalysis.CreateDomainContainedEntityListDelegate(ad.GPO))
 }
 
 func (s *Resources) ListADDomainForeignGroups(response http.ResponseWriter, request *http.Request) {
-	var (
-		queryName    = "ListADDomainForeignGroups"
-		pathDelegate = adAnalysis.CreateForeignEntityMembershipPathDelegate(ad.Group)
-		listDelegate = adAnalysis.CreateForeignEntityMembershipListDelegate(ad.Group)
-	)
-	s.handleAdRelatedEntityQuery(response, request, queryName, pathDelegate, listDelegate)
+	s.handleAdRelatedEntityQuery(response, request, "ListADDomainForeignGroups", adAnalysis.CreateForeignEntityMembershipPathDelegate(ad.Group), adAnalysis.CreateForeignEntityMembershipListDelegate(ad.Group))
 }
 
 func (s *Resources) ListADDomainForeignUsers(response http.ResponseWriter, request *http.Request) {
-	var (
-		queryName    = "ListADDomainForeignUsers"
-		pathDelegate = adAnalysis.CreateForeignEntityMembershipPathDelegate(ad.User)
-		listDelegate = adAnalysis.CreateForeignEntityMembershipListDelegate(ad.User)
-	)
-	s.handleAdRelatedEntityQuery(response, request, queryName, pathDelegate, listDelegate)
+	s.handleAdRelatedEntityQuery(response, request, "ListADDomainForeignUsers", adAnalysis.CreateForeignEntityMembershipPathDelegate(ad.User), adAnalysis.CreateForeignEntityMembershipListDelegate(ad.User))
 }
 
 func (s *Resources) ListADDomainForeignAdmins(response http.ResponseWriter, request *http.Request) {
-	var (
-		queryName    = "ListADDomainForeignAdmins"
-		pathDelegate = adAnalysis.FetchForeignAdminPaths
-		listDelegate = adAnalysis.FetchForeignAdmins
-	)
-	s.handleAdRelatedEntityQuery(response, request, queryName, pathDelegate, listDelegate)
+	s.handleAdRelatedEntityQuery(response, request, "ListADDomainForeignAdmins", adAnalysis.FetchForeignAdminPaths, adAnalysis.FetchForeignAdmins)
 }
 
 func (s *Resources) ListADDomainForeignGPOControllers(response http.ResponseWriter, request *http.Request) {
-	var (
-		queryName    = "ListADDomainForeignGPOControllers"
-		pathDelegate = adAnalysis.FetchForeignGPOControllerPaths
-		listDelegate = adAnalysis.FetchForeignGPOControllers
-	)
-	s.handleAdRelatedEntityQuery(response, request, queryName, pathDelegate, listDelegate)
+	s.handleAdRelatedEntityQuery(response, request, "ListADDomainForeignGPOControllers", adAnalysis.FetchForeignGPOControllerPaths, adAnalysis.FetchForeignGPOControllers)
 }
 
 func (s *Resources) ListADDomainOutboundTrusts(response http.ResponseWriter, request *http.Request) {
-	var (
-		queryName    = "ListADDomainOutboundTrusts"
-		pathDelegate = adAnalysis.CreateDomainTrustPathDelegate(graph.DirectionOutbound)
-		listDelegate = adAnalysis.CreateDomainTrustListDelegate(graph.DirectionOutbound)
-	)
-	s.handleAdRelatedEntityQuery(response, request, queryName, pathDelegate, listDelegate)
+	s.handleAdRelatedEntityQuery(response, request, "ListADDomainOutboundTrusts", adAnalysis.CreateDomainTrustPathDelegate(graph.DirectionOutbound), adAnalysis.CreateDomainTrustListDelegate(graph.DirectionOutbound))
 }
 
 func (s *Resources) ListADDomainInboundTrusts(response http.ResponseWriter, request *http.Request) {
-	var (
-		queryName    = "ListADDomainInboundTrusts"
-		pathDelegate = adAnalysis.CreateDomainTrustPathDelegate(graph.DirectionInbound)
-		listDelegate = adAnalysis.CreateDomainTrustListDelegate(graph.DirectionInbound)
-	)
-	s.handleAdRelatedEntityQuery(response, request, queryName, pathDelegate, listDelegate)
+	s.handleAdRelatedEntityQuery(response, request, "ListADDomainInboundTrusts", adAnalysis.CreateDomainTrustPathDelegate(graph.DirectionInbound), adAnalysis.CreateDomainTrustListDelegate(graph.DirectionInbound))
 }
 
 func (s *Resources) ListADDomainDCSyncers(response http.ResponseWriter, request *http.Request) {
-	var (
-		queryName    = "ListADDomainDCSyncers"
-		pathDelegate = adAnalysis.FetchDCSyncerPaths
-		listDelegate = adAnalysis.FetchDCSyncers
-	)
-	s.handleAdRelatedEntityQuery(response, request, queryName, pathDelegate, listDelegate)
+	s.handleAdRelatedEntityQuery(response, request, "ListADDomainDCSyncers", adAnalysis.FetchDCSyncerPaths, adAnalysis.FetchDCSyncers)
 }
 
 func (s *Resources) ListADOUContainedUsers(response http.ResponseWriter, request *http.Request) {
-	var (
-		queryName    = "ListADOUContainedUsers"
-		pathDelegate = adAnalysis.CreateOUContainedPathDelegate(ad.User)
-		listDelegate = adAnalysis.CreateOUContainedListDelegate(ad.User)
-	)
-	s.handleAdRelatedEntityQuery(response, request, queryName, pathDelegate, listDelegate)
+	s.handleAdRelatedEntityQuery(response, request, "ListADOUContainedUsers", adAnalysis.CreateOUContainedPathDelegate(ad.User), adAnalysis.CreateOUContainedListDelegate(ad.User))
 }
 
 func (s *Resources) ListADOUContainedGroups(response http.ResponseWriter, request *http.Request) {
-	var (
-		queryName    = "ListADOUContainedGroups"
-		pathDelegate = adAnalysis.CreateOUContainedPathDelegate(ad.Group)
-		listDelegate = adAnalysis.CreateOUContainedListDelegate(ad.Group)
-	)
-	s.handleAdRelatedEntityQuery(response, request, queryName, pathDelegate, listDelegate)
+	s.handleAdRelatedEntityQuery(response, request, "ListADOUContainedGroups", adAnalysis.CreateOUContainedPathDelegate(ad.Group), adAnalysis.CreateOUContainedListDelegate(ad.Group))
 }
 
 func (s *Resources) ListADOUContainedComputers(response http.ResponseWriter, request *http.Request) {
-	var (
-		queryName    = "ListADOUContainedComputers"
-		pathDelegate = adAnalysis.CreateOUContainedPathDelegate(ad.Computer)
-		listDelegate = adAnalysis.CreateOUContainedListDelegate(ad.Computer)
-	)
-	s.handleAdRelatedEntityQuery(response, request, queryName, pathDelegate, listDelegate)
+	s.handleAdRelatedEntityQuery(response, request, "ListADOUContainedComputers", adAnalysis.CreateOUContainedPathDelegate(ad.Computer), adAnalysis.CreateOUContainedListDelegate(ad.Computer))
 }
 
 func (s *Resources) ListADGPOAffectedContainers(response http.ResponseWriter, request *http.Request) {
-	var (
-		queryName    = "ListADGPOAffectedContainers"
-		pathDelegate = adAnalysis.FetchGPOAffectedContainerPaths
-		listDelegate = adAnalysis.CreateGPOAffectedIntermediariesListDelegate(adAnalysis.SelectGPOContainerCandidateFilter)
-	)
-	s.handleAdRelatedEntityQuery(response, request, queryName, pathDelegate, listDelegate)
+	s.handleAdRelatedEntityQuery(response, request, "ListADGPOAffectedContainers", adAnalysis.FetchGPOAffectedContainerPaths, adAnalysis.CreateGPOAffectedIntermediariesListDelegate(adAnalysis.SelectGPOContainerCandidateFilter))
 }
 
 func (s *Resources) ListADGPOAffectedUsers(response http.ResponseWriter, request *http.Request) {
-	var (
-		queryName    = "ListADGPOAffectedUsers"
-		pathDelegate = adAnalysis.CreateGPOAffectedIntermediariesPathDelegate(ad.User)
-		listDelegate = adAnalysis.CreateGPOAffectedIntermediariesListDelegate(adAnalysis.SelectUsersCandidateFilter)
-	)
-	s.handleAdRelatedEntityQuery(response, request, queryName, pathDelegate, listDelegate)
+	s.handleAdRelatedEntityQuery(response, request, "ListADGPOAffectedUsers", adAnalysis.CreateGPOAffectedIntermediariesPathDelegate(ad.User), adAnalysis.CreateGPOAffectedIntermediariesListDelegate(adAnalysis.SelectUsersCandidateFilter))
 }
 
 func (s *Resources) ListADGPOAffectedComputers(response http.ResponseWriter, request *http.Request) {
-	var (
-		queryName    = "ListADGPOAffectedComputers"
-		pathDelegate = adAnalysis.CreateGPOAffectedIntermediariesPathDelegate(ad.Computer)
-		listDelegate = adAnalysis.CreateGPOAffectedIntermediariesListDelegate(adAnalysis.SelectComputersCandidateFilter)
-	)
-	s.handleAdRelatedEntityQuery(response, request, queryName, pathDelegate, listDelegate)
+	s.handleAdRelatedEntityQuery(response, request, "ListADGPOAffectedComputers", adAnalysis.CreateGPOAffectedIntermediariesPathDelegate(ad.Computer), adAnalysis.CreateGPOAffectedIntermediariesListDelegate(adAnalysis.SelectComputersCandidateFilter))
 }
 
 func (s *Resources) ListADGPOAffectedTierZero(response http.ResponseWriter, request *http.Request) {
-	var (
-		queryName    = "ListADGPOAffectedTierZero"
-		pathDelegate = adAnalysis.FetchGPOAffectedTierZeroPathDelegate
-		listDelegate = adAnalysis.CreateGPOAffectedIntermediariesListDelegate(adAnalysis.SelectGPOTierZeroCandidateFilter)
-	)
-	s.handleAdRelatedEntityQuery(response, request, queryName, pathDelegate, listDelegate)
+	s.handleAdRelatedEntityQuery(response, request, "ListADGPOAffectedTierZero", adAnalysis.FetchGPOAffectedTierZeroPathDelegate, adAnalysis.CreateGPOAffectedIntermediariesListDelegate(adAnalysis.SelectGPOTierZeroCandidateFilter))
 }
