@@ -1,17 +1,17 @@
 // Copyright 2023 Specter Ops, Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// 
+//
 // SPDX-License-Identifier: Apache-2.0
 
 package apiclient
@@ -174,9 +174,13 @@ func (s Client) UpdateAssetGroup(assetGroupID int32, request v2.UpdateAssetGroup
 }
 
 func (s Client) CreateAssetGroupSelector(assetGroupID int32, spec model.AssetGroupSelectorSpec) (model.AssetGroupSelector, error) {
+	type assetGroupSelectorResponse struct {
+		AddedSelectors model.AssetGroupSelectors `json:"added_selectors"`
+	}
+	var createResponse assetGroupSelectorResponse
 	var assetGroupSelector model.AssetGroupSelector
 
-	if response, err := s.Request(http.MethodPost, fmt.Sprintf("api/v2/asset-groups/%d/selectors", assetGroupID), nil, []model.AssetGroupSelectorSpec{spec}); err != nil {
+	if response, err := s.Request(http.MethodPut, fmt.Sprintf("api/v2/asset-groups/%d/selectors", assetGroupID), nil, []model.AssetGroupSelectorSpec{spec}); err != nil {
 		return assetGroupSelector, err
 	} else {
 		defer response.Body.Close()
@@ -185,6 +189,14 @@ func (s Client) CreateAssetGroupSelector(assetGroupID int32, spec model.AssetGro
 			return assetGroupSelector, ReadAPIError(response)
 		}
 
-		return assetGroupSelector, api.ReadAPIV2ResponsePayload(&assetGroupSelector, response)
+		if err := api.ReadAPIV2ResponsePayload(&createResponse, response); err != nil {
+			return assetGroupSelector, err
+		}
+
+		if len(createResponse.AddedSelectors) >= 1 {
+			return createResponse.AddedSelectors[0], nil
+		} else {
+			return assetGroupSelector, fmt.Errorf("returned response did not contain any asset group selectors %v", createResponse)
+		}
 	}
 }
