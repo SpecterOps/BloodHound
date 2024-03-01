@@ -694,6 +694,7 @@ func TestADCSESC4(t *testing.T) {
 			}
 
 		}
+
 		operation.Done()
 
 		db.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
@@ -704,12 +705,23 @@ func TestADCSESC4(t *testing.T) {
 			} else {
 				require.Equal(t, 14, len(results))
 
-				// require.True(t, results.Contains(harness.ESC6bTemplate1Harness.Group1))
-				// require.True(t, results.Contains(harness.ESC6bTemplate1Harness.Group1))
+				require.True(t, results.Contains(harness.ESC4Template1.Group11))
+				require.True(t, results.Contains(harness.ESC4Template1.Group12))
+				require.True(t, results.Contains(harness.ESC4Template1.Group13))
+				require.True(t, results.Contains(harness.ESC4Template1.Group14))
+				require.True(t, results.Contains(harness.ESC4Template1.Group15))
 
-				// require.False(t, results.Contains(harness.ESC6bTemplate1Harness.Group3))
-				// require.False(t, results.Contains(harness.ESC6bTemplate1Harness.Group4))
-				// require.False(t, results.Contains(harness.ESC6bTemplate1Harness.Group5))
+				require.True(t, results.Contains(harness.ESC4Template1.Group21))
+				require.True(t, results.Contains(harness.ESC4Template1.Group22))
+
+				require.True(t, results.Contains(harness.ESC4Template1.Group31))
+				require.True(t, results.Contains(harness.ESC4Template1.Group32))
+
+				require.True(t, results.Contains(harness.ESC4Template1.Group41))
+				require.True(t, results.Contains(harness.ESC4Template1.Group42))
+				require.True(t, results.Contains(harness.ESC4Template1.Group43))
+				require.True(t, results.Contains(harness.ESC4Template1.Group44))
+				require.True(t, results.Contains(harness.ESC4Template1.Group45))
 
 			}
 

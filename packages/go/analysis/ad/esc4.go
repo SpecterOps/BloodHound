@@ -62,31 +62,6 @@ func PostADCSESC4(ctx context.Context, tx graph.Transaction, outC chan<- analysi
 					cache.CertTemplateControllers[certTemplate.ID],
 				))
 
-			var (
-				enrollerNames   []string
-				controllerNames []string
-			)
-
-			principalCount := principals.Cardinality()
-			principalList := principals.Slice()
-
-			ecaEnrollers := cache.EnterpriseCAEnrollers[enterpriseCA.ID]
-			for _, enroller := range ecaEnrollers {
-				name, _ := enroller.Properties.Get(string(common.Name)).String()
-				enrollerNames = append(enrollerNames, name)
-			}
-
-			certTemplateControllers := cache.CertTemplateControllers[certTemplate.ID]
-			for _, controller := range certTemplateControllers {
-				name, _ := controller.Properties.Get(string(common.Name)).String()
-				controllerNames = append(controllerNames, name)
-			}
-			// TEST NOTE: group 4.1 should satisfy 2a
-			fmt.Println(">>>", principalCount)
-			fmt.Println(">>>", principalList)
-			fmt.Println(">>>", enrollerNames)
-			fmt.Println(">>>", controllerNames)
-
 			// 2b. principals with `Enroll/AllExtendedRights` + `Generic Write` combination on the cert template
 			principals.Or(
 				CalculateCrossProductNodeSets(
@@ -139,21 +114,18 @@ func PostADCSESC4(ctx context.Context, tx graph.Transaction, outC chan<- analysi
 					),
 				)
 			}
-
-			principalList = principals.Slice()
-			fmt.Println(principalList)
-
-			principals.Each(func(value uint32) bool {
-				channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
-					FromID: graph.ID(value),
-					ToID:   domain.ID,
-					Kind:   ad.ADCSESC4,
-				})
-				return true
-			})
-
 		}
 	}
+
+	principals.Each(func(value uint32) bool {
+		channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
+			FromID: graph.ID(value),
+			ToID:   domain.ID,
+			Kind:   ad.ADCSESC4,
+		})
+		return true
+	})
+
 	return nil
 }
 

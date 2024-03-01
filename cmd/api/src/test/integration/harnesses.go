@@ -5544,7 +5544,7 @@ type ESC4Template1 struct {
 	Group45 *graph.Node
 }
 
-func (s ESC4Template1) Setup(graphTestContext *GraphTestContext) {
+func (s *ESC4Template1) Setup(graphTestContext *GraphTestContext) {
 	domainSid := RandomDomainSID()
 	s.CertTemplate1 = graphTestContext.NewActiveDirectoryCertTemplate("CertTemplate1", domainSid, CertTemplateData{
 		ApplicationPolicies:     []string{},
