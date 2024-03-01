@@ -280,7 +280,7 @@ const DatabaseManagement = () => {
                                 }
                             />
                             <FormControlLabel
-                                label='File Ingest Log history'
+                                label='File ingest log history'
                                 control={
                                     <Checkbox
                                         checked={deleteFileIngestHistory}
@@ -290,7 +290,7 @@ const DatabaseManagement = () => {
                                 }
                             />
                             <FormControlLabel
-                                label='Data Quality history'
+                                label='Data quality history'
                                 control={
                                     <Checkbox
                                         checked={deleteDataQualityHistory}

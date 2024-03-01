@@ -1022,8 +1022,11 @@
             "deleteCollectedGraphData": {
                 "type": "boolean"
             },
-            "deleteHighValueSelectors": {
-                "type": "boolean"
+            "deleteAssetGroupSelectors": {
+                "type": "array",
+                "items": {
+                    "type": "integer"
+                }
             },
             "deleteFileIngestHistory": {
                 "type": "boolean"
