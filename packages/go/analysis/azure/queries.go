@@ -281,18 +281,16 @@ func FetchAppRoleAssignmentsTransitPaths(tx graph.Transaction, root *graph.Node,
 	})
 }
 
-func InboundControlDescentFilter(ctx *ops.TraversalContext, segment *graph.PathSegment) bool {
-	// The first traversal must be a control relationship for expansion
+func InboundControlDescentFilter(_ *ops.TraversalContext, segment *graph.PathSegment) bool {
+	// The first traversal must be a control relationship for expansion or memberOf / contains due to FilterControlsRelationships
 	if segment.Depth() == 1 {
-		return !segment.Edge.Kind.Is(azure.MemberOf)
-	} else if segment.Depth() > 1 {
-		return segment.Edge.Kind.Is(azure.MemberOf)
+		return true
+	} else {
+		return segment.Edge.Kind.Is(azure.MemberOf, azure.Contains)
 	}
-
-	return true
 }
 
-func OutboundControlDescentFilter(ctx *ops.TraversalContext, segment *graph.PathSegment) bool {
+func OutboundControlDescentFilter(_ *ops.TraversalContext, segment *graph.PathSegment) bool {
 	var (
 		shouldDescend = true
 		sawControlRel = false
@@ -319,33 +317,33 @@ func OutboundControlDescentFilter(ctx *ops.TraversalContext, segment *graph.Path
 	return shouldDescend
 }
 
-func OutboundControlPathFilter(ctx *ops.TraversalContext, segment *graph.PathSegment) bool {
-	return !segment.Edge.Kind.Is(azure.MemberOf)
+func OutboundControlPathFilter(_ *ops.TraversalContext, segment *graph.PathSegment) bool {
+	return !segment.Edge.Kind.Is(azure.MemberOf, azure.Contains)
 }
 
-func FetchOutboundEntityObjectControlPaths(tx graph.Transaction, root *graph.Node, direction graph.Direction) (graph.PathSet, error) {
+func FetchOutboundEntityObjectControlPaths(tx graph.Transaction, root *graph.Node) (graph.PathSet, error) {
 	return ops.TraversePaths(tx, ops.TraversalPlan{
 		Root:          root,
-		Direction:     direction,
+		Direction:     graph.DirectionOutbound,
 		BranchQuery:   FilterControlsRelationships,
 		DescentFilter: OutboundControlDescentFilter,
 		PathFilter:    OutboundControlPathFilter,
 	})
 }
 
-func FetchInboundEntityObjectControlPaths(tx graph.Transaction, root *graph.Node, direction graph.Direction) (graph.PathSet, error) {
+func FetchInboundEntityObjectControlPaths(tx graph.Transaction, root *graph.Node) (graph.PathSet, error) {
 	return ops.TraversePaths(tx, ops.TraversalPlan{
 		Root:          root,
-		Direction:     direction,
+		Direction:     graph.DirectionInbound,
 		BranchQuery:   FilterControlsRelationships,
 		DescentFilter: InboundControlDescentFilter,
 	})
 }
 
-func FetchOutboundEntityObjectControl(tx graph.Transaction, root *graph.Node, direction graph.Direction, skip, limit int) (graph.NodeSet, error) {
+func FetchOutboundEntityObjectControl(tx graph.Transaction, root *graph.Node, skip, limit int) (graph.NodeSet, error) {
 	return ops.AcyclicTraverseTerminals(tx, ops.TraversalPlan{
 		Root:          root,
-		Direction:     direction,
+		Direction:     graph.DirectionOutbound,
 		Skip:          skip,
 		Limit:         limit,
 		BranchQuery:   FilterControlsRelationships,
@@ -354,10 +352,10 @@ func FetchOutboundEntityObjectControl(tx graph.Transaction, root *graph.Node, di
 	})
 }
 
-func FetchInboundEntityObjectControllers(tx graph.Transaction, root *graph.Node, direction graph.Direction, skip, limit int) (graph.NodeSet, error) {
+func FetchInboundEntityObjectControllers(tx graph.Transaction, root *graph.Node, skip, limit int) (graph.NodeSet, error) {
 	return ops.AcyclicTraverseNodes(tx, ops.TraversalPlan{
 		Root:          root,
-		Direction:     direction,
+		Direction:     graph.DirectionInbound,
 		Skip:          skip,
 		Limit:         limit,
 		BranchQuery:   FilterControlsRelationships,

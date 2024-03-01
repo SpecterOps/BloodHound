@@ -70,14 +70,9 @@ type Database interface {
 	GetAssetGroupCollections(assetGroupID int32, order string, filter model.SQLFilter) (model.AssetGroupCollections, error)
 	GetLatestAssetGroupCollection(assetGroupID int32) (model.AssetGroupCollection, error)
 	GetTimeRangedAssetGroupCollections(assetGroupID int32, from int64, to int64, order string) (model.AssetGroupCollections, error)
-	GetAllAssetGroupCollections() (model.AssetGroupCollections, error)
 	GetAssetGroupSelector(id int32) (model.AssetGroupSelector, error)
-	UpdateAssetGroupSelector(ctx context.Context, selector model.AssetGroupSelector) error
 	DeleteAssetGroupSelector(ctx context.Context, selector model.AssetGroupSelector) error
-	CreateRawAssetGroupSelector(assetGroup model.AssetGroup, name, selector string) (model.AssetGroupSelector, error)
-	CreateAssetGroupSelector(assetGroup model.AssetGroup, spec model.AssetGroupSelectorSpec, systemSelector bool) (model.AssetGroupSelector, error)
 	UpdateAssetGroupSelectors(ctx ctx.Context, assetGroup model.AssetGroup, selectorSpecs []model.AssetGroupSelectorSpec, systemSelector bool) (model.UpdatedAssetGroupSelectors, error)
-	GetAllAssetGroupSelectors() (model.AssetGroupSelectors, error)
 	CreateAssetGroupCollection(collection model.AssetGroupCollection, entries model.AssetGroupCollectionEntries) error
 	RawFirst(value any) error
 	Wipe() error

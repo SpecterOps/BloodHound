@@ -141,7 +141,6 @@ func (s *BloodhoundDB) GetAssetGroupCollections(assetGroupID int32, order string
 	return collections, CheckError(result)
 }
 
-// GetLatestAssetGroupCollection has been DEPRECATED as part of V1 and will be deleted. Use GetAllAssetGroupCollections with filters and limits instead
 func (s *BloodhoundDB) GetLatestAssetGroupCollection(assetGroupID int32) (model.AssetGroupCollection, error) {
 	var collection model.AssetGroupCollection
 
@@ -149,7 +148,6 @@ func (s *BloodhoundDB) GetLatestAssetGroupCollection(assetGroupID int32) (model.
 	return collection, CheckError(result)
 }
 
-// GetTimeRangedAssetGroupCollections has been DEPRECATED as part of V1 and will be deleted. Use GetAllAssetGroupCollections with filters instead
 func (s *BloodhoundDB) GetTimeRangedAssetGroupCollections(assetGroupID int32, from int64, to int64, order string) (model.AssetGroupCollections, error) {
 	var (
 		collections model.AssetGroupCollections
@@ -170,13 +168,6 @@ func (s *BloodhoundDB) GetTimeRangedAssetGroupCollections(assetGroupID int32, fr
 	return collections, CheckError(result)
 }
 
-func (s *BloodhoundDB) GetAllAssetGroupCollections() (model.AssetGroupCollections, error) {
-	var collections model.AssetGroupCollections
-
-	result := s.preload(model.AssetGroupCollectionAssociations()).Find(&collections)
-	return collections, CheckError(result)
-}
-
 func (s *BloodhoundDB) GetAssetGroupSelector(id int32) (model.AssetGroupSelector, error) {
 	var (
 		assetGroupSelector model.AssetGroupSelector
@@ -185,19 +176,6 @@ func (s *BloodhoundDB) GetAssetGroupSelector(id int32) (model.AssetGroupSelector
 	tx = s.db.Find(&assetGroupSelector, id)
 
 	return assetGroupSelector, CheckError(tx)
-}
-
-func (s *BloodhoundDB) UpdateAssetGroupSelector(ctx context.Context, selector model.AssetGroupSelector) error {
-	var (
-		auditEntry = model.AuditEntry{
-			Action: "UpdateAssetGroupSelector",
-			Model:  &selector, // Pointer is required to ensure success log contains updated fields after transaction
-		}
-	)
-
-	return s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
-		return CheckError(tx.Save(&selector))
-	})
 }
 
 func (s *BloodhoundDB) DeleteAssetGroupSelector(ctx context.Context, selector model.AssetGroupSelector) error {
@@ -218,27 +196,6 @@ func (s *BloodhoundDB) DeleteAssetGroupSelectorsForAssetGroups(ctx context.Conte
 		s.db.WithContext(ctx).Where("asset_group_id IN ?", assetGroupIds).
 			Delete(&model.AssetGroupSelector{}),
 	)
-}
-
-func (s *BloodhoundDB) CreateRawAssetGroupSelector(assetGroup model.AssetGroup, name, selector string) (model.AssetGroupSelector, error) {
-	assetGroupSelector := model.AssetGroupSelector{
-		AssetGroupID: assetGroup.ID,
-		Name:         name,
-		Selector:     selector,
-	}
-
-	return assetGroupSelector, CheckError(s.db.Create(&assetGroupSelector))
-}
-
-func (s *BloodhoundDB) CreateAssetGroupSelector(assetGroup model.AssetGroup, spec model.AssetGroupSelectorSpec, systemSelector bool) (model.AssetGroupSelector, error) {
-	assetGroupSelector := model.AssetGroupSelector{
-		AssetGroupID:   assetGroup.ID,
-		Name:           spec.SelectorName,
-		Selector:       spec.EntityObjectID,
-		SystemSelector: systemSelector,
-	}
-
-	return assetGroupSelector, CheckError(s.db.Create(&assetGroupSelector))
 }
 
 func (s *BloodhoundDB) UpdateAssetGroupSelectors(ctx ctx.Context, assetGroup model.AssetGroup, selectorSpecs []model.AssetGroupSelectorSpec, systemSelector bool) (model.UpdatedAssetGroupSelectors, error) {
@@ -281,12 +238,6 @@ func (s *BloodhoundDB) UpdateAssetGroupSelectors(ctx ctx.Context, assetGroup mod
 	})
 
 	return updatedSelectors, err
-}
-
-func (s *BloodhoundDB) GetAllAssetGroupSelectors() (model.AssetGroupSelectors, error) {
-	var assetGroupSelectors model.AssetGroupSelectors
-
-	return assetGroupSelectors, CheckError(s.db.Find(&assetGroupSelectors))
 }
 
 func (s *BloodhoundDB) CreateAssetGroupCollection(collection model.AssetGroupCollection, entries model.AssetGroupCollectionEntries) error {
