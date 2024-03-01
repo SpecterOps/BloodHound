@@ -39,109 +39,108 @@ func PostADCSESC4(ctx context.Context, tx graph.Transaction, outC chan<- analysi
 	// 2. iterate certtemplates that have an outbound `PublishedTo` edge to eca
 	for _, certTemplate := range cache.PublishedTemplateCache[enterpriseCA.ID] {
 		fmt.Println(certTemplate.Properties.Get(string(common.Name)))
-		// 2c. kick out early if cert template does meet conditions for ESC4
-		if valid, err := isCertTemplateValidForESC4(certTemplate); err != nil {
-			log.Warnf("error validating cert template %d: %v", certTemplate.ID, err)
-			continue
-		} else if !valid {
-			continue
+
+		if principalsWithGenericWrite, err := FetchPrincipalsWithGenericWriteOnCertTemplate(tx, certTemplate); err != nil {
+			log.Warnf("error fetching principals with %s on cert template: %v", ad.GenericWrite, err)
+		} else if principalsWithEnrollOrAllExtendedRights, err := FetchPrincipalsWithEnrollOrAllExtendedRightsOnCertTemplate(tx, certTemplate); err != nil {
+			log.Warnf("error fetching principals with %s or %s on cert template: %v", ad.Enroll, ad.AllExtendedRights, err)
+		} else if principalsWithPKINameFlag, err := FetchPrincipalsWithWritePKINameFlagOnCertTemplate(tx, certTemplate); err != nil {
+			log.Warnf("error fetching principals with %s on cert template: %v", ad.WritePKINameFlag, err)
+		} else if principalsWithPKIEnrollmentFlag, err := FetchPrincipalsWithWritePKIEnrollmentFlagOnCertTemplate(tx, certTemplate); err != nil {
+			log.Warnf("error fetching principals with %s on cert template: %v", ad.WritePKIEnrollmentFlag, err)
+		} else if enrolleeSuppliesSubject, err := certTemplate.Properties.Get(string(ad.EnrolleeSuppliesSubject)).Bool(); err != nil {
+			log.Warnf("error fetching %s property on cert template: %v", ad.EnrolleeSuppliesSubject, err)
+		} else if requiresManagerApproval, err := certTemplate.Properties.Get(string(ad.RequiresManagerApproval)).Bool(); err != nil {
+			log.Warnf("error fetching %s property on cert template: %v", ad.RequiresManagerApproval, err)
 		} else {
 
-			if principalsWithGenericWrite, err := FetchPrincipalsWithGenericWriteOnCertTemplate(tx, certTemplate); err != nil {
-				log.Warnf("error fetching principals with %s on cert template: %v", ad.GenericWrite, err)
-			} else if principalsWithEnrollOrAllExtendedRights, err := FetchPrincipalsWithEnrollOrAllExtendedRightsOnCertTemplate(tx, certTemplate); err != nil {
-				log.Warnf("error fetching principals with %s or %s on cert template: %v", ad.Enroll, ad.AllExtendedRights, err)
-			} else if principalsWithPKINameFlag, err := FetchPrincipalsWithWritePKINameFlagOnCertTemplate(tx, certTemplate); err != nil {
-				log.Warnf("error fetching principals with %s on cert template: %v", ad.WritePKINameFlag, err)
-			} else if principalsWithPKIEnrollmentFlag, err := FetchPrincipalsWithWritePKIEnrollmentFlagOnCertTemplate(tx, certTemplate); err != nil {
-				log.Warnf("error fetching principals with %s on cert template: %v", ad.WritePKIEnrollmentFlag, err)
-			} else if enrolleeSuppliesSubject, err := certTemplate.Properties.Get(string(ad.EnrolleeSuppliesSubject)).Bool(); err != nil {
-				log.Warnf("error fetching %s property on cert template: %v", ad.EnrolleeSuppliesSubject, err)
-			} else if requiresManagerApproval, err := certTemplate.Properties.Get(string(ad.RequiresManagerApproval)).Bool(); err != nil {
-				log.Warnf("error fetching %s property on cert template: %v", ad.RequiresManagerApproval, err)
-			} else {
+			// 2a. principals that control the cert template
+			principals.Or(
+				CalculateCrossProductNodeSets(
+					groupExpansions,
+					cache.EnterpriseCAEnrollers[enterpriseCA.ID],
+					cache.CertTemplateControllers[certTemplate.ID],
+				))
 
-				// 2a. principals that control the cert template
+			var (
+				enrollerNames   []string
+				controllerNames []string
+			)
+
+			principalCount := principals.Cardinality()
+			principalList := principals.Slice()
+
+			ecaEnrollers := cache.EnterpriseCAEnrollers[enterpriseCA.ID]
+			for _, enroller := range ecaEnrollers {
+				name, _ := enroller.Properties.Get(string(common.Name)).String()
+				enrollerNames = append(enrollerNames, name)
+			}
+
+			certTemplateControllers := cache.CertTemplateControllers[certTemplate.ID]
+			for _, controller := range certTemplateControllers {
+				name, _ := controller.Properties.Get(string(common.Name)).String()
+				controllerNames = append(controllerNames, name)
+			}
+			// TEST NOTE: group 4.1 should satisfy 2a
+			fmt.Println(">>>", principalCount)
+			fmt.Println(">>>", principalList)
+			fmt.Println(">>>", enrollerNames)
+			fmt.Println(">>>", controllerNames)
+
+			// 2b. principals with `Enroll/AllExtendedRights` + `Generic Write` combination on the cert template
+			principals.Or(
+				CalculateCrossProductNodeSets(
+					groupExpansions,
+					cache.EnterpriseCAEnrollers[enterpriseCA.ID],
+					principalsWithGenericWrite.Slice(),
+					principalsWithEnrollOrAllExtendedRights.Slice(),
+				),
+			)
+
+			// 2c. kick out early if cert template does meet conditions for ESC4
+			if valid, err := isCertTemplateValidForESC4(certTemplate); err != nil {
+				log.Warnf("error validating cert template %d: %v", certTemplate.ID, err)
+				continue
+			} else if !valid {
+				continue
+			}
+
+			// 2d. principals with `Enroll/AllExtendedRights` + `WritePKINameFlag` + `WritePKIEnrollmentFlag` on the cert template
+			principals.Or(
+				CalculateCrossProductNodeSets(
+					groupExpansions,
+					cache.EnterpriseCAEnrollers[enterpriseCA.ID],
+					principalsWithEnrollOrAllExtendedRights.Slice(),
+					principalsWithPKINameFlag.Slice(),
+					principalsWithPKIEnrollmentFlag.Slice(),
+				),
+			)
+
+			// 2e.
+			if enrolleeSuppliesSubject {
 				principals.Or(
 					CalculateCrossProductNodeSets(
 						groupExpansions,
 						cache.EnterpriseCAEnrollers[enterpriseCA.ID],
-						cache.CertTemplateControllers[certTemplate.ID],
-					))
-
-				var (
-					enrollerNames   []string
-					controllerNames []string
-				)
-
-				principalCount := principals.Cardinality()
-				principalList := principals.Slice()
-
-				ecaEnrollers := cache.EnterpriseCAEnrollers[enterpriseCA.ID]
-				for _, enroller := range ecaEnrollers {
-					name, _ := enroller.Properties.Get(string(common.Name)).String()
-					enrollerNames = append(enrollerNames, name)
-				}
-
-				certTemplateControllers := cache.CertTemplateControllers[certTemplate.ID]
-				for _, controller := range certTemplateControllers {
-					name, _ := controller.Properties.Get(string(common.Name)).String()
-					controllerNames = append(controllerNames, name)
-				}
-				// TEST NOTE: group 4.1 should satisfy 2a
-				fmt.Println(">>>", principalCount)
-				fmt.Println(">>>", principalList)
-				fmt.Println(">>>", enrollerNames)
-				fmt.Println(">>>", controllerNames)
-
-				// 2b. principals with `Enroll/AllExtendedRights` + `Generic Write` combination on the cert template
-				principals.Or(
-					CalculateCrossProductNodeSets(
-						groupExpansions,
-						cache.EnterpriseCAEnrollers[enterpriseCA.ID],
-						principalsWithGenericWrite.Slice(),
 						principalsWithEnrollOrAllExtendedRights.Slice(),
+						principalsWithPKIEnrollmentFlag.Slice(),
 					),
 				)
+			}
 
-				// 2d. principals with `Enroll/AllExtendedRights` + `WritePKINameFlag` + `WritePKIEnrollmentFlag` on the cert template
+			// 2f.
+			if !requiresManagerApproval {
 				principals.Or(
 					CalculateCrossProductNodeSets(
 						groupExpansions,
 						cache.EnterpriseCAEnrollers[enterpriseCA.ID],
 						principalsWithEnrollOrAllExtendedRights.Slice(),
 						principalsWithPKINameFlag.Slice(),
-						principalsWithPKIEnrollmentFlag.Slice(),
 					),
 				)
-
-				// 2e.
-				if enrolleeSuppliesSubject {
-					principals.Or(
-						CalculateCrossProductNodeSets(
-							groupExpansions,
-							cache.EnterpriseCAEnrollers[enterpriseCA.ID],
-							principalsWithEnrollOrAllExtendedRights.Slice(),
-							principalsWithPKIEnrollmentFlag.Slice(),
-						),
-					)
-				}
-
-				// 2f.
-				if !requiresManagerApproval {
-					principals.Or(
-						CalculateCrossProductNodeSets(
-							groupExpansions,
-							cache.EnterpriseCAEnrollers[enterpriseCA.ID],
-							principalsWithEnrollOrAllExtendedRights.Slice(),
-							principalsWithPKINameFlag.Slice(),
-						),
-					)
-				}
-
 			}
 
-			principalList := principals.Slice()
+			principalList = principals.Slice()
 			fmt.Println(principalList)
 
 			principals.Each(func(value uint32) bool {
