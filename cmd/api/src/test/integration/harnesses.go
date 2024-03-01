@@ -5986,6 +5986,70 @@ func (s *ESC4Template3) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.NewRelationship(s.Group19, s.Group0, ad.MemberOf)
 }
 
+type ESC4Template4 struct {
+	CertTemplate1 *graph.Node
+	Computer1     *graph.Node
+	Domain        *graph.Node
+	EnterpriseCA  *graph.Node
+	Group0        *graph.Node
+	Group1        *graph.Node
+	Group12       *graph.Node
+	Group13       *graph.Node
+	NTAuthStore   *graph.Node
+	RootCA        *graph.Node
+	User1         *graph.Node
+}
+
+func (s *ESC4Template4) Setup(graphTestContext *GraphTestContext) {
+	domainSid := RandomDomainSID()
+	s.CertTemplate1 = graphTestContext.NewActiveDirectoryCertTemplate("CertTemplate1", domainSid, CertTemplateData{
+		ApplicationPolicies:     []string{},
+		AuthenticationEnabled:   true,
+		AuthorizedSignatures:    0,
+		EKUS:                    []string{},
+		EnrolleeSuppliesSubject: true,
+		NoSecurityExtension:     false,
+		RequiresManagerApproval: false,
+		SchemaVersion:           1,
+		SubjectAltRequireSPN:    false,
+		SubjectAltRequireUPN:    false,
+	})
+	s.Computer1 = graphTestContext.NewActiveDirectoryComputer("Computer1", domainSid)
+	s.Domain = graphTestContext.NewActiveDirectoryDomain("Domain", domainSid, false, true)
+	s.EnterpriseCA = graphTestContext.NewActiveDirectoryEnterpriseCA("EnterpriseCA", domainSid)
+	s.Group0 = graphTestContext.NewActiveDirectoryGroup("Group0", domainSid)
+	s.Group1 = graphTestContext.NewActiveDirectoryGroup("Group1", domainSid)
+	s.Group12 = graphTestContext.NewActiveDirectoryGroup("Group12", domainSid)
+	s.Group13 = graphTestContext.NewActiveDirectoryGroup("Group13", domainSid)
+	s.NTAuthStore = graphTestContext.NewActiveDirectoryNTAuthStore("NTAuthStore", domainSid)
+	s.RootCA = graphTestContext.NewActiveDirectoryRootCA("RootCA", domainSid)
+	s.User1 = graphTestContext.NewActiveDirectoryUser("User1", domainSid)
+	graphTestContext.NewRelationship(s.RootCA, s.Domain, ad.RootCAFor)
+	graphTestContext.NewRelationship(s.EnterpriseCA, s.RootCA, ad.IssuedSignedBy)
+	graphTestContext.NewRelationship(s.EnterpriseCA, s.NTAuthStore, ad.TrustedForNTAuth)
+	graphTestContext.NewRelationship(s.Group0, s.EnterpriseCA, ad.Enroll)
+	graphTestContext.NewRelationship(s.NTAuthStore, s.Domain, ad.NTAuthStoreFor)
+	graphTestContext.NewRelationship(s.CertTemplate1, s.EnterpriseCA, ad.PublishedTo)
+	graphTestContext.NewRelationship(s.Group1, s.CertTemplate1, ad.GenericAll)
+	graphTestContext.NewRelationship(s.Group1, s.Group0, ad.MemberOf)
+	graphTestContext.NewRelationship(s.Computer1, s.CertTemplate1, ad.AllExtendedRights)
+	graphTestContext.NewRelationship(s.Computer1, s.Group0, ad.MemberOf)
+	graphTestContext.NewRelationship(s.User1, s.CertTemplate1, ad.AllExtendedRights)
+	graphTestContext.NewRelationship(s.User1, s.Group0, ad.MemberOf)
+	graphTestContext.NewRelationship(s.Computer1, s.CertTemplate1, ad.GenericWrite)
+	graphTestContext.NewRelationship(s.User1, s.CertTemplate1, ad.WritePKINameFlag)
+
+	graphTestContext.NewRelationship(s.Group12, s.CertTemplate1, ad.AllExtendedRights)
+	graphTestContext.NewRelationship(s.Group12, s.Group0, ad.MemberOf)
+	graphTestContext.NewRelationship(s.Group12, s.CertTemplate1, ad.WritePKIEnrollmentFlag)
+
+	graphTestContext.NewRelationship(s.Group13, s.CertTemplate1, ad.AllExtendedRights)
+	graphTestContext.NewRelationship(s.Group13, s.Group0, ad.MemberOf)
+	graphTestContext.NewRelationship(s.Group13, s.CertTemplate1, ad.WritePKIEnrollmentFlag)
+	graphTestContext.NewRelationship(s.Group13, s.CertTemplate1, ad.WritePKINameFlag)
+
+}
+
 type HarnessDetails struct {
 	RDP                                             RDPHarness
 	RDPB                                            RDPHarness2
@@ -6057,4 +6121,5 @@ type HarnessDetails struct {
 	ESC4Template1                                   ESC4Template1
 	ESC4Template2                                   ESC4Template2
 	ESC4Template3                                   ESC4Template3
+	ESC4Template4                                   ESC4Template4
 }
