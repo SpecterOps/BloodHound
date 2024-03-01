@@ -41,7 +41,7 @@ describe('DatabaseManagement', () => {
         const button = screen.getByRole('button', { name: /proceed/i });
 
         expect(title).toBeInTheDocument();
-        expect(checkboxes.length).toEqual(4);
+        expect(checkboxes.length).toEqual(5);
         expect(button).toBeInTheDocument();
     });
 
