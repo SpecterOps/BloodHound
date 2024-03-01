@@ -28,7 +28,6 @@ import (
 	"github.com/specterops/bloodhound/src/api/v2/apitest"
 	taskerMocks "github.com/specterops/bloodhound/src/daemons/datapipe/mocks"
 	dbMocks "github.com/specterops/bloodhound/src/database/mocks"
-	"github.com/specterops/bloodhound/src/model"
 	"go.uber.org/mock/gomock"
 )
 
@@ -142,15 +141,14 @@ func TestDatabaseWipe(t *testing.T) {
 				Name: "failed deletion of high value selectors",
 				Input: func(input *apitest.Input) {
 					apitest.SetHeader(input, headers.ContentType.String(), mediatypes.ApplicationJson.String())
-					apitest.BodyStruct(input, v2.DatabaseWipe{DeleteAssetGroupSelectors: true})
+					apitest.BodyStruct(input, v2.DatabaseWipe{DeleteAssetGroupSelectors: []int{1}})
 				},
 				Setup: func() {
 					successfulAuditLogIntent := mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil).Times(1)
-					successfulFetchAssetGroup := mockDB.EXPECT().GetHighValueAssetGroup(gomock.Any()).Return(model.AssetGroup{}, nil).Times(1)
-					failedAssetGroupSelectorsDelete := mockDB.EXPECT().DeleteAssetGroupSelectorsForAssetGroup(gomock.Any(), gomock.Any()).Return(errors.New("oopsy1")).Times(1)
+					failedAssetGroupSelectorsDelete := mockDB.EXPECT().DeleteAssetGroupSelectorsForAssetGroups(gomock.Any(), gomock.Any()).Return(errors.New("oopsy1")).Times(1)
 					successfulAuditLogFailure := mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil).Times(1)
 
-					gomock.InOrder(successfulAuditLogIntent, successfulFetchAssetGroup, failedAssetGroupSelectorsDelete, successfulAuditLogFailure)
+					gomock.InOrder(successfulAuditLogIntent, failedAssetGroupSelectorsDelete, successfulAuditLogFailure)
 
 				},
 				Test: func(output apitest.Output) {
@@ -162,16 +160,15 @@ func TestDatabaseWipe(t *testing.T) {
 				Name: "successful deletion of high value selectors",
 				Input: func(input *apitest.Input) {
 					apitest.SetHeader(input, headers.ContentType.String(), mediatypes.ApplicationJson.String())
-					apitest.BodyStruct(input, v2.DatabaseWipe{DeleteAssetGroupSelectors: true})
+					apitest.BodyStruct(input, v2.DatabaseWipe{DeleteAssetGroupSelectors: []int{1}})
 				},
 				Setup: func() {
 					successfulAuditLogIntent := mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil).Times(1)
-					successfulFetchAssetGroup := mockDB.EXPECT().GetHighValueAssetGroup(gomock.Any()).Return(model.AssetGroup{}, nil).Times(1)
-					successfulAssetGroupSelectorsDelete := mockDB.EXPECT().DeleteAssetGroupSelectorsForAssetGroup(gomock.Any(), gomock.Any()).Return(nil).Times(1)
+					successfulAssetGroupSelectorsDelete := mockDB.EXPECT().DeleteAssetGroupSelectorsForAssetGroups(gomock.Any(), gomock.Any()).Return(nil).Times(1)
 					successfulAuditLogSuccess := mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil).Times(1)
 					successfulAnalysisKickoff := mockTasker.EXPECT().RequestAnalysis().Times(1)
 
-					gomock.InOrder(successfulAuditLogIntent, successfulFetchAssetGroup, successfulAssetGroupSelectorsDelete, successfulAuditLogSuccess, successfulAnalysisKickoff)
+					gomock.InOrder(successfulAuditLogIntent, successfulAssetGroupSelectorsDelete, successfulAuditLogSuccess, successfulAnalysisKickoff)
 
 				},
 				Test: func(output apitest.Output) {
@@ -280,7 +277,7 @@ func TestDatabaseWipe(t *testing.T) {
 					apitest.SetHeader(input, headers.ContentType.String(), mediatypes.ApplicationJson.String())
 					apitest.BodyStruct(input, v2.DatabaseWipe{
 						DeleteCollectedGraphData:  true,
-						DeleteAssetGroupSelectors: true,
+						DeleteAssetGroupSelectors: []int{1},
 						DeleteFileIngestHistory:   true,
 						DeleteDataQualityHistory:  true,
 					})
@@ -296,14 +293,13 @@ func TestDatabaseWipe(t *testing.T) {
 					gomock.InOrder(successfulAuditLogIntent, fetchNodesToDelete, batchDelete, nodesDeletedAuditLog)
 
 					// high value selector operations
-					assetGroupFetch := mockDB.EXPECT().GetHighValueAssetGroup(gomock.Any()).Return(model.AssetGroup{}, nil).Times(1)
-					assetGroupSelectorsDelete := mockDB.EXPECT().DeleteAssetGroupSelectorsForAssetGroup(gomock.Any(), gomock.Any()).Return(nil).Times(1)
+					assetGroupSelectorsDelete := mockDB.EXPECT().DeleteAssetGroupSelectorsForAssetGroups(gomock.Any(), gomock.Any()).Return(nil).Times(1)
 					assetGroupSelectorsAuditLog := mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil).Times(1)
 
 					// analysis kickoff
 					analysisKickoff := mockTasker.EXPECT().RequestAnalysis().Times(1)
 
-					gomock.InOrder(assetGroupFetch, assetGroupSelectorsDelete, assetGroupSelectorsAuditLog, analysisKickoff)
+					gomock.InOrder(assetGroupSelectorsDelete, assetGroupSelectorsAuditLog, analysisKickoff)
 
 					// file ingest history operations
 					deleteFileHistory := mockDB.EXPECT().DeleteAllFileUploads(gomock.Any()).Return(nil).Times(1)
