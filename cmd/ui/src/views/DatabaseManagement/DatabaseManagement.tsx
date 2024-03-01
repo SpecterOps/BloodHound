@@ -19,17 +19,14 @@ import { ContentPage, apiClient } from 'bh-shared-ui';
 import { useReducer } from 'react';
 import ConfirmationDialog from './ConfirmationDialog';
 import { useMutation } from 'react-query';
-
-type DataTypes = {
-    deleteCollectedGraphData: boolean;
-    deleteHighValueSelectors: boolean;
-    deleteFileIngestHistory: boolean;
-    deleteDataQualityHistory: boolean;
-};
+import { useSelector } from 'react-redux';
+import { selectAllAssetGroupIds, selectTierZeroAssetGroupId } from 'src/ducks/assetgroups/reducer';
+import { ClearDatabaseRequest } from 'js-client-library';
 
 const initialState: State = {
     deleteCollectedGraphData: false,
-    deleteHighValueSelectors: false,
+    deleteCustomHighValueSelectors: false,
+    deleteAllAssetGroupSelectors: false,
     deleteFileIngestHistory: false,
     deleteDataQualityHistory: false,
 
@@ -43,7 +40,8 @@ const initialState: State = {
 type State = {
     // checkbox state
     deleteCollectedGraphData: boolean;
-    deleteHighValueSelectors: boolean;
+    deleteCustomHighValueSelectors: boolean;
+    deleteAllAssetGroupSelectors: boolean;
     deleteFileIngestHistory: boolean;
     deleteDataQualityHistory: boolean;
 
@@ -87,9 +85,10 @@ const reducer = (state: State, action: Action): State => {
                 ...state,
                 // reset checkboxes
                 deleteCollectedGraphData: false,
+                deleteCustomHighValueSelectors: false,
+                deleteAllAssetGroupSelectors: false,
                 deleteDataQualityHistory: false,
                 deleteFileIngestHistory: false,
-                deleteHighValueSelectors: false,
 
                 showSuccessMessage: true,
             };
@@ -108,7 +107,8 @@ const reducer = (state: State, action: Action): State => {
                     state.deleteCollectedGraphData,
                     state.deleteDataQualityHistory,
                     state.deleteFileIngestHistory,
-                    state.deleteHighValueSelectors,
+                    state.deleteAllAssetGroupSelectors,
+                    state.deleteCustomHighValueSelectors,
                 ].filter(Boolean).length === 0;
 
             if (noSelection) {
@@ -138,11 +138,20 @@ const reducer = (state: State, action: Action): State => {
 
 const useDatabaseManagement = () => {
     const [state, dispatch] = useReducer(reducer, initialState);
-    const { deleteCollectedGraphData, deleteHighValueSelectors, deleteFileIngestHistory, deleteDataQualityHistory } =
-        state;
+
+    const allAssetGroupIds = useSelector(selectAllAssetGroupIds);
+    const highValueAssetGroupId = useSelector(selectTierZeroAssetGroupId);
+
+    const {
+        deleteCollectedGraphData,
+        deleteCustomHighValueSelectors,
+        deleteAllAssetGroupSelectors,
+        deleteFileIngestHistory,
+        deleteDataQualityHistory,
+    } = state;
 
     const mutation = useMutation({
-        mutationFn: async ({ deleteThisData }: { deleteThisData: DataTypes }) => {
+        mutationFn: async ({ deleteThisData }: { deleteThisData: ClearDatabaseRequest }) => {
             return apiClient.clearDatabase({
                 ...deleteThisData,
             });
@@ -163,12 +172,26 @@ const useDatabaseManagement = () => {
     });
 
     const handleMutation = () => {
+        const assetGroupIds = [];
+        if (deleteAllAssetGroupSelectors) {
+            assetGroupIds.push(...allAssetGroupIds);
+        } else if (deleteCustomHighValueSelectors) {
+            assetGroupIds.push(highValueAssetGroupId);
+        }
+
+        // dedupe high value asset group id if both checkboxes are selected
+        const dedupe = (arr: number[]): number[] => {
+            return arr.filter((value, index) => arr.indexOf(value) === index);
+        };
+
+        const deleteAssetGroupSelectors = dedupe(assetGroupIds);
+
         mutation.mutate({
             deleteThisData: {
                 deleteCollectedGraphData,
                 deleteDataQualityHistory,
                 deleteFileIngestHistory,
-                deleteHighValueSelectors,
+                deleteAssetGroupSelectors,
             },
         });
     };
@@ -179,8 +202,13 @@ const useDatabaseManagement = () => {
 const DatabaseManagement = () => {
     const { handleMutation, state, dispatch } = useDatabaseManagement();
 
-    const { deleteCollectedGraphData, deleteHighValueSelectors, deleteFileIngestHistory, deleteDataQualityHistory } =
-        state;
+    const {
+        deleteCollectedGraphData,
+        deleteAllAssetGroupSelectors,
+        deleteCustomHighValueSelectors,
+        deleteFileIngestHistory,
+        deleteDataQualityHistory,
+    } = state;
 
     const handleCheckbox = (event: React.ChangeEvent<HTMLInputElement>) => {
         dispatch({
@@ -235,9 +263,19 @@ const DatabaseManagement = () => {
                                 label='Custom High Value selectors'
                                 control={
                                     <Checkbox
-                                        checked={deleteHighValueSelectors}
+                                        checked={deleteCustomHighValueSelectors}
                                         onChange={handleCheckbox}
-                                        name='deleteHighValueSelectors'
+                                        name='deleteCustomHighValueSelectors'
+                                    />
+                                }
+                            />
+                            <FormControlLabel
+                                label='All asset group selectors'
+                                control={
+                                    <Checkbox
+                                        checked={deleteAllAssetGroupSelectors}
+                                        onChange={handleCheckbox}
+                                        name='deleteAllAssetGroupSelectors'
                                     />
                                 }
                             />

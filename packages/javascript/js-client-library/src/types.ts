@@ -256,7 +256,7 @@ export interface CreateUserQueryRequest {
 
 export interface ClearDatabaseRequest {
     deleteCollectedGraphData: boolean;
-    deleteHighValueSelectors: boolean;
     deleteFileIngestHistory: boolean;
     deleteDataQualityHistory: boolean;
+    deleteAssetGroupSelectors: number[];
 }

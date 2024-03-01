@@ -64,12 +64,16 @@ const asssetGroupReducer = (state: types.AssetGroupsState = INITIAL_STATE, actio
     });
 };
 
-export const selectTierZeroAssetGroupId = (state: AppState) => {
+export const selectTierZeroAssetGroupId = (state: AppState): number => {
     return state.assetgroups.assetGroups.find((assetGroup) => assetGroup.tag === 'admin_tier_0')?.id;
 };
 
-export const selectOwnedAssetGroupId = (state: AppState) => {
+export const selectOwnedAssetGroupId = (state: AppState): number => {
     return state.assetgroups.assetGroups.find((assetGroup) => assetGroup.tag === 'owned')?.id;
+};
+
+export const selectAllAssetGroupIds = (state: AppState): number[] => {
+    return state.assetgroups.assetGroups.map((assetGroup) => assetGroup.id);
 };
 
 export default asssetGroupReducer;
