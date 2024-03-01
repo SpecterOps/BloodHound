@@ -213,9 +213,9 @@ func (s *BloodhoundDB) DeleteAssetGroupSelector(ctx context.Context, selector mo
 	})
 }
 
-func (s *BloodhoundDB) DeleteAssetGroupSelectorsForAssetGroup(ctx context.Context, assetGroupId int) error {
+func (s *BloodhoundDB) DeleteAssetGroupSelectorsForAssetGroups(ctx context.Context, assetGroupIds []int) error {
 	return CheckError(
-		s.db.WithContext(ctx).Where("asset_group_id = ?", assetGroupId).
+		s.db.WithContext(ctx).Where("asset_group_id IN ?", assetGroupIds).
 			Delete(&model.AssetGroupSelector{}),
 	)
 }
@@ -325,17 +325,4 @@ func (s *BloodhoundDB) CreateAssetGroupCollection(collection model.AssetGroupCol
 
 		return nil
 	})
-}
-
-func (s *BloodhoundDB) GetHighValueAssetGroup(ctx context.Context) (model.AssetGroup, error) {
-	var (
-		assetGroup model.AssetGroup
-		result     *gorm.DB
-	)
-
-	result = s.db.WithContext(ctx).
-		Where("tag = ? ", "admin_tier_0").
-		Find(&assetGroup)
-
-	return assetGroup, CheckError(result)
 }

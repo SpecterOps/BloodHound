@@ -142,7 +142,7 @@ func TestDatabaseWipe(t *testing.T) {
 				Name: "failed deletion of high value selectors",
 				Input: func(input *apitest.Input) {
 					apitest.SetHeader(input, headers.ContentType.String(), mediatypes.ApplicationJson.String())
-					apitest.BodyStruct(input, v2.DatabaseWipe{DeleteHighValueSelectors: true})
+					apitest.BodyStruct(input, v2.DatabaseWipe{DeleteAssetGroupSelectors: true})
 				},
 				Setup: func() {
 					successfulAuditLogIntent := mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil).Times(1)
@@ -162,7 +162,7 @@ func TestDatabaseWipe(t *testing.T) {
 				Name: "successful deletion of high value selectors",
 				Input: func(input *apitest.Input) {
 					apitest.SetHeader(input, headers.ContentType.String(), mediatypes.ApplicationJson.String())
-					apitest.BodyStruct(input, v2.DatabaseWipe{DeleteHighValueSelectors: true})
+					apitest.BodyStruct(input, v2.DatabaseWipe{DeleteAssetGroupSelectors: true})
 				},
 				Setup: func() {
 					successfulAuditLogIntent := mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil).Times(1)
@@ -279,10 +279,10 @@ func TestDatabaseWipe(t *testing.T) {
 				Input: func(input *apitest.Input) {
 					apitest.SetHeader(input, headers.ContentType.String(), mediatypes.ApplicationJson.String())
 					apitest.BodyStruct(input, v2.DatabaseWipe{
-						DeleteCollectedGraphData: true,
-						DeleteHighValueSelectors: true,
-						DeleteFileIngestHistory:  true,
-						DeleteDataQualityHistory: true,
+						DeleteCollectedGraphData:  true,
+						DeleteAssetGroupSelectors: true,
+						DeleteFileIngestHistory:   true,
+						DeleteDataQualityHistory:  true,
 					})
 				},
 				Setup: func() {

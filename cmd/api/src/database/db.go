@@ -149,8 +149,7 @@ type Database interface {
 	CreateSavedQuery(userID uuid.UUID, name string, query string) (model.SavedQuery, error)
 	DeleteSavedQuery(id int) error
 	SavedQueryBelongsToUser(userID uuid.UUID, savedQueryID int) (bool, error)
-	DeleteAssetGroupSelectorsForAssetGroup(ctx context.Context, assetGroupId int) error
-	GetHighValueAssetGroup(ctx context.Context) (model.AssetGroup, error)
+	DeleteAssetGroupSelectorsForAssetGroups(ctx context.Context, assetGroupIds []int) error
 }
 
 type BloodhoundDB struct {

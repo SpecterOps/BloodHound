@@ -31,10 +31,10 @@ import (
 )
 
 type DatabaseWipe struct {
-	DeleteCollectedGraphData bool `json:"deleteCollectedGraphData"`
-	DeleteHighValueSelectors bool `json:"deleteHighValueSelectors"`
-	DeleteFileIngestHistory  bool `json:"deleteFileIngestHistory"`
-	DeleteDataQualityHistory bool `json:"deleteDataQualityHistory"`
+	DeleteCollectedGraphData  bool  `json:"deleteCollectedGraphData"`
+	DeleteFileIngestHistory   bool  `json:"deleteFileIngestHistory"`
+	DeleteDataQualityHistory  bool  `json:"deleteDataQualityHistory"`
+	DeleteAssetGroupSelectors []int `json:"deleteAssetGroupSelectors"`
 }
 
 func (s Resources) HandleDatabaseWipe(response http.ResponseWriter, request *http.Request) {
@@ -57,7 +57,7 @@ func (s Resources) HandleDatabaseWipe(response http.ResponseWriter, request *htt
 	}
 
 	// return `BadRequest` if request is empty
-	if !payload.DeleteCollectedGraphData && !payload.DeleteDataQualityHistory && !payload.DeleteHighValueSelectors && !payload.DeleteFileIngestHistory {
+	if !payload.DeleteCollectedGraphData && !payload.DeleteDataQualityHistory && !payload.DeleteFileIngestHistory && len(payload.DeleteAssetGroupSelectors) == 0 {
 		api.WriteErrorResponse(
 			request.Context(),
 			api.BuildErrorResponse(http.StatusBadRequest, "please select something to delete", request),
@@ -104,9 +104,9 @@ func (s Resources) HandleDatabaseWipe(response http.ResponseWriter, request *htt
 		}
 	}
 
-	// delete custom high value selectors
-	if payload.DeleteHighValueSelectors {
-		if failed := s.deleteHighValueSelectors(request.Context(), auditEntry); failed {
+	// delete asset group selectors
+	if len(payload.DeleteAssetGroupSelectors) > 0 {
+		if failed := s.deleteHighValueSelectors(request.Context(), auditEntry, payload.DeleteAssetGroupSelectors); failed {
 			errors = append(errors, "custom high value selectors")
 		} else {
 			kickoffAnalysis = true
@@ -179,14 +179,10 @@ func (s Resources) deleteCollectedGraphData(ctx context.Context, auditEntry *mod
 	}
 }
 
-func (s Resources) deleteHighValueSelectors(ctx context.Context, auditEntry *model.AuditEntry) (failure bool) {
+func (s Resources) deleteHighValueSelectors(ctx context.Context, auditEntry *model.AuditEntry, assetGroupIDs []int) (failure bool) {
 
-	if assetGroup, err := s.DB.GetHighValueAssetGroup(ctx); err != nil {
-		log.Errorf("%s: %s", "there was an error fetching the tier zero asset group ", err.Error())
-		s.handleAuditLogForDatabaseWipe(ctx, auditEntry, false, "high value selectors")
-		return true
-	} else if err := s.DB.DeleteAssetGroupSelectorsForAssetGroup(ctx, int(assetGroup.ID)); err != nil {
-		log.Errorf("%s %d: %s", "there was an error deleting asset group with id = ", assetGroup.ID, err.Error())
+	if err := s.DB.DeleteAssetGroupSelectorsForAssetGroups(ctx, assetGroupIDs); err != nil {
+		log.Errorf("%s: %s", "there was an error deleting asset group selectors ", err.Error())
 		s.handleAuditLogForDatabaseWipe(ctx, auditEntry, false, "high value selectors")
 		return true
 	} else {

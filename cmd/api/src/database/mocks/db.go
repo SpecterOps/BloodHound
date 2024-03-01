@@ -435,18 +435,18 @@ func (mr *MockDatabaseMockRecorder) DeleteAssetGroupSelector(arg0, arg1 interfac
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteAssetGroupSelector", reflect.TypeOf((*MockDatabase)(nil).DeleteAssetGroupSelector), arg0, arg1)
 }
 
-// DeleteAssetGroupSelectorsForAssetGroup mocks base method.
-func (m *MockDatabase) DeleteAssetGroupSelectorsForAssetGroup(arg0 context.Context, arg1 int) error {
+// DeleteAssetGroupSelectorsForAssetGroups mocks base method.
+func (m *MockDatabase) DeleteAssetGroupSelectorsForAssetGroups(arg0 context.Context, arg1 []int) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DeleteAssetGroupSelectorsForAssetGroup", arg0, arg1)
+	ret := m.ctrl.Call(m, "DeleteAssetGroupSelectorsForAssetGroups", arg0, arg1)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// DeleteAssetGroupSelectorsForAssetGroup indicates an expected call of DeleteAssetGroupSelectorsForAssetGroup.
-func (mr *MockDatabaseMockRecorder) DeleteAssetGroupSelectorsForAssetGroup(arg0, arg1 interface{}) *gomock.Call {
+// DeleteAssetGroupSelectorsForAssetGroups indicates an expected call of DeleteAssetGroupSelectorsForAssetGroups.
+func (mr *MockDatabaseMockRecorder) DeleteAssetGroupSelectorsForAssetGroups(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteAssetGroupSelectorsForAssetGroup", reflect.TypeOf((*MockDatabase)(nil).DeleteAssetGroupSelectorsForAssetGroup), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteAssetGroupSelectorsForAssetGroups", reflect.TypeOf((*MockDatabase)(nil).DeleteAssetGroupSelectorsForAssetGroups), arg0, arg1)
 }
 
 // DeleteAuthSecret mocks base method.
@@ -953,21 +953,6 @@ func (m *MockDatabase) GetFlagByKey(arg0 string) (appcfg.FeatureFlag, error) {
 func (mr *MockDatabaseMockRecorder) GetFlagByKey(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetFlagByKey", reflect.TypeOf((*MockDatabase)(nil).GetFlagByKey), arg0)
-}
-
-// GetHighValueAssetGroup mocks base method.
-func (m *MockDatabase) GetHighValueAssetGroup(arg0 context.Context) (model.AssetGroup, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetHighValueAssetGroup", arg0)
-	ret0, _ := ret[0].(model.AssetGroup)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetHighValueAssetGroup indicates an expected call of GetHighValueAssetGroup.
-func (mr *MockDatabaseMockRecorder) GetHighValueAssetGroup(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetHighValueAssetGroup", reflect.TypeOf((*MockDatabase)(nil).GetHighValueAssetGroup), arg0)
 }
 
 // GetIngestTasksForJob mocks base method.
