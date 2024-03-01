@@ -167,6 +167,12 @@
                         }
                     }
                 },
+                "400": {
+                    "description": "Bad Request",
+                    "schema": {
+                        "$ref": "#/definitions/api.ErrorWrapper"
+                    }
+                },
                 "Error": {
                     "$ref": "#/components/responses/defaultError"
                 }
