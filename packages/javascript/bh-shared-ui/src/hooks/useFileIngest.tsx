@@ -24,11 +24,11 @@ export const endFileIngestJob = ({ jobId }: { jobId: string }) =>
     apiClient.endFileIngest(jobId).then((res) => res.data);
 
 export const fileUploadKeys = {
-    all: ['file-upload'] as const,
-    listJobs: () => [...fileUploadKeys.all, 'list-jobs'] as const,
+    all: 'file-upload' as const,
+    listJobs: () => [fileUploadKeys.all, 'list-jobs'] as const,
     listJobsPaginated: (page: number, rowsPerPage: number) =>
         [...fileUploadKeys.listJobs(), page, rowsPerPage] as const,
-    listFileTypes: () => [...fileUploadKeys.all, 'accepted-types'] as const,
+    listFileTypes: () => [fileUploadKeys.all, 'accepted-types'] as const,
 };
 
 export const useListFileIngestJobs = (page: number, rowsPerPage: number) => {

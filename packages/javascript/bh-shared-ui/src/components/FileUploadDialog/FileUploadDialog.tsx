@@ -48,17 +48,9 @@ const FileUploadDialog: React.FC<{
         const filesHaveErrors = filesForIngest.filter((file) => file.errors).length > 0;
         const filesAreUploading = filesForIngest.filter((file) => file.status === FileStatus.UPLOADING).length > 0;
 
-        if (filesHaveErrors || !filesForIngest.length) {
-            setSubmitDialogDisabled(true);
-        } else {
-            setSubmitDialogDisabled(false);
-        }
-
-        if (filesAreUploading) {
-            setUploadDialogDisabled(true);
-        } else {
-            setUploadDialogDisabled(false);
-        }
+        const shouldDisableSubmit = filesHaveErrors || !filesForIngest.length;
+        setSubmitDialogDisabled(shouldDisableSubmit);
+        setUploadDialogDisabled(filesAreUploading);
     }, [filesForIngest]);
 
     const handleRemoveFile = (index: number) => {
@@ -152,7 +144,7 @@ const FileUploadDialog: React.FC<{
                     if (apiError?.errors?.length && apiError.errors[0].message?.length) {
                         const { message } = apiError.errors[0];
                         addNotification(`Upload failed: ${message}`, 'IngestFileUploadFail');
-                        setUploadFailureError(ingestFile.file.name, truncateStatusMessage(message, 60));
+                        setUploadFailureError(ingestFile.file.name, message);
                     } else {
                         addNotification(`File upload failed for ${ingestFile.file.name}`, 'IngestFileUploadFail');
                         setUploadFailureError(ingestFile.file.name, 'Upload Failed');
@@ -160,10 +152,6 @@ const FileUploadDialog: React.FC<{
                 },
             }
         );
-    };
-
-    const truncateStatusMessage = (message: string, length: number) => {
-        return message.length > length ? `${message.substring(0, length)}...` : message;
     };
 
     const finishUpload = async (jobId: string) => {
