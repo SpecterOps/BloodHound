@@ -2,12 +2,12 @@ package database_test
 
 import (
 	"context"
+	"slices"
 	"testing"
 
 	"github.com/specterops/bloodhound/src/database"
 	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/test/integration"
-	"golang.org/x/exp/slices"
 )
 
 func setupDB(t *testing.T) database.Database {
