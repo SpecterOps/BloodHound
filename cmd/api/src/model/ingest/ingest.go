@@ -110,25 +110,25 @@ func (s DataType) IsValid() bool {
 type CollectionMethod uint64
 
 const (
-	CollectionMethodGroup         CollectionMethod = 1
-	CollectionMethodLocalAdmin    CollectionMethod = 1 << 1
-	CollectionMethodGPOLocalGroup CollectionMethod = 1 << 2
-	CollectionMethodSession       CollectionMethod = 1 << 3
-	CollectionMethodLoggedOn      CollectionMethod = 1 << 4
-	CollectionMethodTrusts        CollectionMethod = 1 << 5
-	CollectionMethodACL           CollectionMethod = 1 << 6
-	CollectionMethodContainer     CollectionMethod = 1 << 7
-	CollectionMethodRDP           CollectionMethod = 1 << 8
-	CollectionMethodObjectProps   CollectionMethod = 1 << 9
-	CollectionMethodSessionLoop   CollectionMethod = 1 << 10
-	CollectionMethodLoggedOnLoop  CollectionMethod = 1 << 11
-	CollectionMethodDCOM          CollectionMethod = 1 << 12
-	CollectionMethodSPNTargets    CollectionMethod = 1 << 13
-	CollectionMethodPSRemote      CollectionMethod = 1 << 14
-	CollectionMethodUserRights    CollectionMethod = 1 << 15
-	CollectionMethodCARegistry    CollectionMethod = 1 << 16
-	CollectionMethodDCRegistry    CollectionMethod = 1 << 17
-	CollectionMethodCertServices  CollectionMethod = 1 << 18
+	CollectionMethodGroup CollectionMethod = 1 << iota
+	CollectionMethodLocalAdmin
+	CollectionMethodGPOLocalGroup
+	CollectionMethodSession
+	CollectionMethodLoggedOn
+	CollectionMethodTrusts
+	CollectionMethodACL
+	CollectionMethodContainer
+	CollectionMethodRDP
+	CollectionMethodObjectProps
+	CollectionMethodSessionLoop
+	CollectionMethodLoggedOnLoop
+	CollectionMethodDCOM
+	CollectionMethodSPNTargets
+	CollectionMethodPSRemote
+	CollectionMethodUserRights
+	CollectionMethodCARegistry
+	CollectionMethodDCRegistry
+	CollectionMethodCertServices
 )
 
 func AllCollectionMethods() []CollectionMethod {
