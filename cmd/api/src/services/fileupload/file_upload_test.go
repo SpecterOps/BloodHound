@@ -2,6 +2,7 @@ package fileupload
 
 import (
 	"bytes"
+	"github.com/specterops/bloodhound/src/model/ingest"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/zap/buffer"
 	"io"
