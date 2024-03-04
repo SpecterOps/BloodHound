@@ -26,7 +26,6 @@ import (
 	time "time"
 
 	uuid "github.com/gofrs/uuid"
-	ctx "github.com/specterops/bloodhound/src/ctx"
 	model "github.com/specterops/bloodhound/src/model"
 	appcfg "github.com/specterops/bloodhound/src/model/appcfg"
 	gomock "go.uber.org/mock/gomock"
@@ -127,17 +126,17 @@ func (mr *MockDatabaseMockRecorder) CreateAssetGroup(arg0, arg1, arg2, arg3 inte
 }
 
 // CreateAssetGroupCollection mocks base method.
-func (m *MockDatabase) CreateAssetGroupCollection(arg0 model.AssetGroupCollection, arg1 model.AssetGroupCollectionEntries) error {
+func (m *MockDatabase) CreateAssetGroupCollection(arg0 context.Context, arg1 model.AssetGroupCollection, arg2 model.AssetGroupCollectionEntries) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateAssetGroupCollection", arg0, arg1)
+	ret := m.ctrl.Call(m, "CreateAssetGroupCollection", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // CreateAssetGroupCollection indicates an expected call of CreateAssetGroupCollection.
-func (mr *MockDatabaseMockRecorder) CreateAssetGroupCollection(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) CreateAssetGroupCollection(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateAssetGroupCollection", reflect.TypeOf((*MockDatabase)(nil).CreateAssetGroupCollection), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateAssetGroupCollection", reflect.TypeOf((*MockDatabase)(nil).CreateAssetGroupCollection), arg0, arg1, arg2)
 }
 
 // CreateAuditLog mocks base method.
@@ -506,18 +505,18 @@ func (mr *MockDatabaseMockRecorder) GetADDataQualityStats(arg0, arg1, arg2, arg3
 }
 
 // GetAllAssetGroups mocks base method.
-func (m *MockDatabase) GetAllAssetGroups(arg0 string, arg1 model.SQLFilter) (model.AssetGroups, error) {
+func (m *MockDatabase) GetAllAssetGroups(arg0 context.Context, arg1 string, arg2 model.SQLFilter) (model.AssetGroups, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetAllAssetGroups", arg0, arg1)
+	ret := m.ctrl.Call(m, "GetAllAssetGroups", arg0, arg1, arg2)
 	ret0, _ := ret[0].(model.AssetGroups)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetAllAssetGroups indicates an expected call of GetAllAssetGroups.
-func (mr *MockDatabaseMockRecorder) GetAllAssetGroups(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) GetAllAssetGroups(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllAssetGroups", reflect.TypeOf((*MockDatabase)(nil).GetAllAssetGroups), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllAssetGroups", reflect.TypeOf((*MockDatabase)(nil).GetAllAssetGroups), arg0, arg1, arg2)
 }
 
 // GetAllAuthTokens mocks base method.
@@ -657,48 +656,48 @@ func (mr *MockDatabaseMockRecorder) GetAllUsers(arg0, arg1 interface{}) *gomock.
 }
 
 // GetAssetGroup mocks base method.
-func (m *MockDatabase) GetAssetGroup(arg0 int32) (model.AssetGroup, error) {
+func (m *MockDatabase) GetAssetGroup(arg0 context.Context, arg1 int32) (model.AssetGroup, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetAssetGroup", arg0)
+	ret := m.ctrl.Call(m, "GetAssetGroup", arg0, arg1)
 	ret0, _ := ret[0].(model.AssetGroup)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetAssetGroup indicates an expected call of GetAssetGroup.
-func (mr *MockDatabaseMockRecorder) GetAssetGroup(arg0 interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) GetAssetGroup(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAssetGroup", reflect.TypeOf((*MockDatabase)(nil).GetAssetGroup), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAssetGroup", reflect.TypeOf((*MockDatabase)(nil).GetAssetGroup), arg0, arg1)
 }
 
 // GetAssetGroupCollections mocks base method.
-func (m *MockDatabase) GetAssetGroupCollections(arg0 int32, arg1 string, arg2 model.SQLFilter) (model.AssetGroupCollections, error) {
+func (m *MockDatabase) GetAssetGroupCollections(arg0 context.Context, arg1 int32, arg2 string, arg3 model.SQLFilter) (model.AssetGroupCollections, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetAssetGroupCollections", arg0, arg1, arg2)
+	ret := m.ctrl.Call(m, "GetAssetGroupCollections", arg0, arg1, arg2, arg3)
 	ret0, _ := ret[0].(model.AssetGroupCollections)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetAssetGroupCollections indicates an expected call of GetAssetGroupCollections.
-func (mr *MockDatabaseMockRecorder) GetAssetGroupCollections(arg0, arg1, arg2 interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) GetAssetGroupCollections(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAssetGroupCollections", reflect.TypeOf((*MockDatabase)(nil).GetAssetGroupCollections), arg0, arg1, arg2)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAssetGroupCollections", reflect.TypeOf((*MockDatabase)(nil).GetAssetGroupCollections), arg0, arg1, arg2, arg3)
 }
 
 // GetAssetGroupSelector mocks base method.
-func (m *MockDatabase) GetAssetGroupSelector(arg0 int32) (model.AssetGroupSelector, error) {
+func (m *MockDatabase) GetAssetGroupSelector(arg0 context.Context, arg1 int32) (model.AssetGroupSelector, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetAssetGroupSelector", arg0)
+	ret := m.ctrl.Call(m, "GetAssetGroupSelector", arg0, arg1)
 	ret0, _ := ret[0].(model.AssetGroupSelector)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetAssetGroupSelector indicates an expected call of GetAssetGroupSelector.
-func (mr *MockDatabaseMockRecorder) GetAssetGroupSelector(arg0 interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) GetAssetGroupSelector(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAssetGroupSelector", reflect.TypeOf((*MockDatabase)(nil).GetAssetGroupSelector), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAssetGroupSelector", reflect.TypeOf((*MockDatabase)(nil).GetAssetGroupSelector), arg0, arg1)
 }
 
 // GetAuthSecret mocks base method.
@@ -884,18 +883,18 @@ func (mr *MockDatabaseMockRecorder) GetInstallation() *gomock.Call {
 }
 
 // GetLatestAssetGroupCollection mocks base method.
-func (m *MockDatabase) GetLatestAssetGroupCollection(arg0 int32) (model.AssetGroupCollection, error) {
+func (m *MockDatabase) GetLatestAssetGroupCollection(arg0 context.Context, arg1 int32) (model.AssetGroupCollection, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetLatestAssetGroupCollection", arg0)
+	ret := m.ctrl.Call(m, "GetLatestAssetGroupCollection", arg0, arg1)
 	ret0, _ := ret[0].(model.AssetGroupCollection)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetLatestAssetGroupCollection indicates an expected call of GetLatestAssetGroupCollection.
-func (mr *MockDatabaseMockRecorder) GetLatestAssetGroupCollection(arg0 interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) GetLatestAssetGroupCollection(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetLatestAssetGroupCollection", reflect.TypeOf((*MockDatabase)(nil).GetLatestAssetGroupCollection), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetLatestAssetGroupCollection", reflect.TypeOf((*MockDatabase)(nil).GetLatestAssetGroupCollection), arg0, arg1)
 }
 
 // GetPermission mocks base method.
@@ -989,18 +988,18 @@ func (mr *MockDatabaseMockRecorder) GetSAMLProviderUsers(arg0 interface{}) *gomo
 }
 
 // GetTimeRangedAssetGroupCollections mocks base method.
-func (m *MockDatabase) GetTimeRangedAssetGroupCollections(arg0 int32, arg1, arg2 int64, arg3 string) (model.AssetGroupCollections, error) {
+func (m *MockDatabase) GetTimeRangedAssetGroupCollections(arg0 context.Context, arg1 int32, arg2, arg3 int64, arg4 string) (model.AssetGroupCollections, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetTimeRangedAssetGroupCollections", arg0, arg1, arg2, arg3)
+	ret := m.ctrl.Call(m, "GetTimeRangedAssetGroupCollections", arg0, arg1, arg2, arg3, arg4)
 	ret0, _ := ret[0].(model.AssetGroupCollections)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetTimeRangedAssetGroupCollections indicates an expected call of GetTimeRangedAssetGroupCollections.
-func (mr *MockDatabaseMockRecorder) GetTimeRangedAssetGroupCollections(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) GetTimeRangedAssetGroupCollections(arg0, arg1, arg2, arg3, arg4 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTimeRangedAssetGroupCollections", reflect.TypeOf((*MockDatabase)(nil).GetTimeRangedAssetGroupCollections), arg0, arg1, arg2, arg3)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTimeRangedAssetGroupCollections", reflect.TypeOf((*MockDatabase)(nil).GetTimeRangedAssetGroupCollections), arg0, arg1, arg2, arg3, arg4)
 }
 
 // GetUnfinishedIngestIDs mocks base method.
@@ -1230,20 +1229,6 @@ func (mr *MockDatabaseMockRecorder) Migrate() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Migrate", reflect.TypeOf((*MockDatabase)(nil).Migrate))
 }
 
-// RawFirst mocks base method.
-func (m *MockDatabase) RawFirst(arg0 interface{}) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "RawFirst", arg0)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// RawFirst indicates an expected call of RawFirst.
-func (mr *MockDatabaseMockRecorder) RawFirst(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RawFirst", reflect.TypeOf((*MockDatabase)(nil).RawFirst), arg0)
-}
-
 // RequiresMigration mocks base method.
 func (m *MockDatabase) RequiresMigration() (bool, error) {
 	m.ctrl.T.Helper()
@@ -1341,7 +1326,7 @@ func (mr *MockDatabaseMockRecorder) UpdateAssetGroup(arg0, arg1 interface{}) *go
 }
 
 // UpdateAssetGroupSelectors mocks base method.
-func (m *MockDatabase) UpdateAssetGroupSelectors(arg0 ctx.Context, arg1 model.AssetGroup, arg2 []model.AssetGroupSelectorSpec, arg3 bool) (model.UpdatedAssetGroupSelectors, error) {
+func (m *MockDatabase) UpdateAssetGroupSelectors(arg0 context.Context, arg1 model.AssetGroup, arg2 []model.AssetGroupSelectorSpec, arg3 bool) (model.UpdatedAssetGroupSelectors, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateAssetGroupSelectors", arg0, arg1, arg2, arg3)
 	ret0, _ := ret[0].(model.UpdatedAssetGroupSelectors)
