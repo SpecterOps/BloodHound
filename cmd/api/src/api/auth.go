@@ -232,7 +232,7 @@ func (s authenticator) ValidateRequestSignature(tokenID uuid.UUID, request *http
 		return auth.Context{}, http.StatusBadRequest, fmt.Errorf("malformed signature header: %w", err)
 	} else if authToken, err := s.db.GetAuthToken(tokenID); err != nil {
 		return handleAuthDBError(err)
-	} else if authContext, err := s.ctxInitializer.InitContextFromToken(authToken); err != nil {
+	} else if authContext, err := s.ctxInitializer.InitContextFromToken(request.Context(), authToken); err != nil {
 		return handleAuthDBError(err)
 	} else if user, isUser := auth.GetUserFromAuthCtx(authContext); isUser && user.IsDisabled {
 		return authContext, http.StatusForbidden, errors.Error("user disabled")
