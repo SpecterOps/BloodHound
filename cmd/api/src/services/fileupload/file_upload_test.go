@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"github.com/specterops/bloodhound/src/model/ingest"
 	"github.com/stretchr/testify/assert"
-	"go.uber.org/zap/buffer"
 	"io"
 	"os"
 	"strings"
@@ -34,7 +33,7 @@ func TestWriteAndValidateJSON(t *testing.T) {
 func TestWriteAndValidateZip(t *testing.T) {
 	t.Run("valid zip file is ok", func(t *testing.T) {
 		var (
-			writer = buffer.Buffer{}
+			writer = bytes.Buffer{}
 		)
 
 		file, err := os.Open("../../test/fixtures/fixtures/goodzip.zip")
@@ -46,7 +45,7 @@ func TestWriteAndValidateZip(t *testing.T) {
 
 	t.Run("invalid bytes causes error", func(t *testing.T) {
 		var (
-			writer = buffer.Buffer{}
+			writer = bytes.Buffer{}
 			badZip = strings.NewReader("123123")
 		)
 
