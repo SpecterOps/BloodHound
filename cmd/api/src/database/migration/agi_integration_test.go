@@ -20,6 +20,7 @@
 package migration_test
 
 import (
+	"context"
 	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/test/integration"
 	"github.com/stretchr/testify/require"
@@ -34,7 +35,7 @@ func TestMigration_AssetGroups(t *testing.T) {
 		t.Fatalf("Failed preparing DB: %v", err)
 	}
 
-	assetGroups, err := dbInst.GetAllAssetGroups("", model.SQLFilter{})
+	assetGroups, err := dbInst.GetAllAssetGroups(context.Background(), "", model.SQLFilter{})
 	require.Nil(t, err)
 	require.Equal(t, expectedNumAssetGroups, len(assetGroups))
 }

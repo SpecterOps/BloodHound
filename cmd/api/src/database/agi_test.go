@@ -31,7 +31,7 @@ func TestCreateGetUpdateDeleteAssetGroup(t *testing.T) {
 		t.Fatalf("Error verifying CreateAssetGroup audit logs:\n%v", err)
 	}
 
-	if assetGroups, err := dbInst.GetAllAssetGroups("", model.SQLFilter{}); err != nil {
+	if assetGroups, err := dbInst.GetAllAssetGroups(context.Background(), "", model.SQLFilter{}); err != nil {
 		t.Fatalf("Error retrieving asset groups: %v", err)
 	} else if !slices.ContainsFunc(assetGroups, func(ag model.AssetGroup) bool { return ag.Name == "test asset group" }) {
 		t.Fatalf("Created asset group not returned:\n%#v", assetGroups)

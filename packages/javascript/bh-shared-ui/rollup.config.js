@@ -57,5 +57,6 @@ export default {
         'notistack',
         'react-query',
         'js-client-library',
+        'remark-gfm',
     ],
 };
