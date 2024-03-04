@@ -55,6 +55,16 @@ func Test_FileUpload(t *testing.T) {
 		assert.Equal(tx, http.StatusAccepted, resp.StatusCode)
 	})
 
+	t.Run("JSON input with charset header success", func(tx *testing.T) {
+		jsonInput := loader.GetReader("v6/ingest/computers.json")
+		defer jsonInput.Close()
+		req, err := apiClient.NewRequest(http.MethodPost, jobEndpoint, nil, jsonInput, http.Header{headers.ContentType.String(): []string{mediatypes.ApplicationJson.WithCharset("utf-8")}})
+		assert.Nil(tx, err)
+		resp, err := apiClient.Raw(req)
+		assert.Nil(tx, err)
+		assert.Equal(tx, http.StatusAccepted, resp.StatusCode)
+	})
+
 	t.Run("JSON input with incorrect compression header", func(tx *testing.T) {
 		jsonInput := loader.GetReader("v6/ingest/containers.json")
 		defer jsonInput.Close()

@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"github.com/specterops/bloodhound/headers"
 	"github.com/specterops/bloodhound/mediatypes"
+	"mime"
 	"net/http"
 	"slices"
 	"strconv"
@@ -39,7 +40,7 @@ import (
 const FileUploadJobIdPathParameterName = "file_upload_job_id"
 
 var AllowedFileUploadTypes = []string{
-	mediatypes.ApplicationJson.WithCharset("utf-8"),
+	mediatypes.ApplicationJson.String(),
 	mediatypes.ApplicationZip.String(),
 }
 
@@ -172,6 +173,12 @@ func (s Resources) ListAcceptedFileUploadTypes(response http.ResponseWriter, req
 }
 
 func IsValidContentTypeForUpload(header http.Header) bool {
-	value := header.Get(headers.ContentType.String())
-	return value != "" && slices.Contains(AllowedFileUploadTypes, value)
+	rawValue := header.Get(headers.ContentType.String())
+	if rawValue == "" {
+		return false
+	} else if parsed, _, err := mime.ParseMediaType(rawValue); err != nil {
+		return false
+	} else {
+		return slices.Contains(AllowedFileUploadTypes, parsed)
+	}
 }
