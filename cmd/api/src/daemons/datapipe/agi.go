@@ -182,7 +182,7 @@ func TagActiveDirectoryTierZero(ctx context.Context, db graph.Database) error {
 func RunAssetGroupIsolationCollections(ctx context.Context, db database.Database, graphDB graph.Database, kindGetter func(*graph.Node) string) error {
 	defer log.Measure(log.LevelInfo, "Asset Group Isolation Collections")()
 
-	if assetGroups, err := db.GetAllAssetGroups("", model.SQLFilter{}); err != nil {
+	if assetGroups, err := db.GetAllAssetGroups(ctx, "", model.SQLFilter{}); err != nil {
 		return err
 	} else {
 		return graphDB.WriteTransaction(ctx, func(tx graph.Transaction) error {
@@ -221,7 +221,7 @@ func RunAssetGroupIsolationCollections(ctx context.Context, db database.Database
 					}
 
 					// Enter a collection, even if it's empty to signal that we did do a tagging/collection run
-					if err := db.CreateAssetGroupCollection(collection, entries); err != nil {
+					if err := db.CreateAssetGroupCollection(ctx, collection, entries); err != nil {
 						return err
 					}
 				}

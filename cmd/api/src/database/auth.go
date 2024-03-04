@@ -63,7 +63,7 @@ func NewClientAuthToken(ownerID uuid.UUID, hmacMethod string) (model.AuthToken, 
 }
 
 type AuthContextInitializer interface {
-	InitContextFromToken(authToken model.AuthToken) (auth.Context, error)
+	InitContextFromToken(ctx context.Context, authToken model.AuthToken) (auth.Context, error)
 }
 
 type contextInitializer struct {
@@ -74,7 +74,7 @@ func NewContextInitializer(db Database) AuthContextInitializer {
 	return contextInitializer{db: db}
 }
 
-func (s contextInitializer) InitContextFromToken(authToken model.AuthToken) (auth.Context, error) {
+func (s contextInitializer) InitContextFromToken(_ context.Context, authToken model.AuthToken) (auth.Context, error) {
 	if authToken.UserID.Valid {
 		if user, err := s.db.GetUser(authToken.UserID.UUID); err != nil {
 			return auth.Context{}, err
@@ -657,7 +657,7 @@ func (s *BloodhoundDB) GetSAMLProvider(id int32) (model.SAMLProvider, error) {
 func (s *BloodhoundDB) DeleteSAMLProvider(ctx context.Context, provider model.SAMLProvider) error {
 	var (
 		auditEntry = model.AuditEntry{
-			Action: "DeleteSAMLProvider",
+			Action: "DeleteSAMLIdentityProvider",
 			Model:  &provider, // Pointer is required to ensure success log contains updated fields after transaction
 		}
 	)
