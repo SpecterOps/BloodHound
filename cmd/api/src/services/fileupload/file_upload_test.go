@@ -1,7 +1,7 @@
 package fileupload
 
 import (
-	"github.com/specterops/bloodhound/src/model/ingest"
+	"bytes"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/zap/buffer"
 	"io"
@@ -13,7 +13,7 @@ import (
 func TestWriteAndValidateJSON(t *testing.T) {
 	t.Run("trigger invalid json on bad json", func(t *testing.T) {
 		var (
-			writer  = buffer.Buffer{}
+			writer  = bytes.Buffer{}
 			badJSON = strings.NewReader("{[]}")
 		)
 		err := WriteAndValidateJSON(badJSON, &writer)
@@ -22,7 +22,7 @@ func TestWriteAndValidateJSON(t *testing.T) {
 
 	t.Run("succeed on good json", func(t *testing.T) {
 		var (
-			writer  = buffer.Buffer{}
+			writer  = bytes.Buffer{}
 			badJSON = strings.NewReader(`{"meta": {"methods": 0, "type": "sessions", "count": 0, "version": 5}, "data": []}`)
 		)
 		err := WriteAndValidateJSON(badJSON, &writer)
