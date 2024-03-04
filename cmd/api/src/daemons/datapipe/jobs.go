@@ -161,27 +161,25 @@ func (s *Daemon) preProcessIngestFile(path string, fileType model.FileType) ([]s
 }
 
 func (s *Daemon) processIngestFile(ctx context.Context, path string, fileType model.FileType) error {
-	paths, err := s.preProcessIngestFile(path, fileType)
-
-	if err != nil {
+	if paths, err := s.preProcessIngestFile(path, fileType); err != nil {
 		return err
-	}
-
-	return s.graphdb.BatchOperation(ctx, func(batch graph.Batch) error {
-		for _, filePath := range paths {
-			if file, err := os.Open(filePath); err != nil {
-				return err
-			} else if err := ReadFileForIngest(batch, file); err != nil {
-				log.Errorf("Error reading ingest file %s: %v", filePath, err)
-			} else if err := file.Close(); err != nil {
-				log.Errorf("Error closing ingest file %s: %v", filePath, err)
-			} else if err := os.Remove(filePath); err != nil {
-				log.Errorf("Error removing ingest file %s: %v", filePath, err)
+	} else {
+		return s.graphdb.BatchOperation(ctx, func(batch graph.Batch) error {
+			for _, filePath := range paths {
+				if file, err := os.Open(filePath); err != nil {
+					return err
+				} else if err := ReadFileForIngest(batch, file); err != nil {
+					log.Errorf("Error reading ingest file %s: %v", filePath, err)
+				} else if err := file.Close(); err != nil {
+					log.Errorf("Error closing ingest file %s: %v", filePath, err)
+				} else if err := os.Remove(filePath); err != nil {
+					log.Errorf("Error removing ingest file %s: %v", filePath, err)
+				}
 			}
-		}
 
-		return nil
-	})
+			return nil
+		})
+	}
 }
 
 // processIngestTasks covers the generic file upload case for ingested data.

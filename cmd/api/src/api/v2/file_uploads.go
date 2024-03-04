@@ -40,8 +40,7 @@ const FileUploadJobIdPathParameterName = "file_upload_job_id"
 
 var AllowedFileUploadTypes = []string{
 	mediatypes.ApplicationJson.WithCharset("utf-8"),
-	// todo - Add applicationZip once zip support is complete
-	//mediatypes.ApplicationZip.String(),
+	mediatypes.ApplicationZip.String(),
 }
 
 func (s Resources) ListFileUploadJobs(response http.ResponseWriter, request *http.Request) {
@@ -131,7 +130,7 @@ func (s Resources) ProcessFileUpload(response http.ResponseWriter, request *http
 		fileUploadJobIdString = mux.Vars(request)[FileUploadJobIdPathParameterName]
 	)
 
-	if !api.HeaderMatches(headers.ContentType.String(), mediatypes.ApplicationJson.String(), request.Header) && !api.HeaderMatches(headers.ContentType.String(), mediatypes.ApplicationZip.String(), request.Header) {
+	if !IsValidContentTypeForUpload(request.Header) {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("Content type must be application/json or application/zip"), request), response)
 	} else if fileUploadJobID, err := strconv.Atoi(fileUploadJobIdString); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsIDMalformed, request), response)
@@ -170,4 +169,9 @@ func (s Resources) EndFileUploadJob(response http.ResponseWriter, request *http.
 
 func (s Resources) ListAcceptedFileUploadTypes(response http.ResponseWriter, request *http.Request) {
 	api.WriteBasicResponse(request.Context(), AllowedFileUploadTypes, http.StatusOK, response)
+}
+
+func IsValidContentTypeForUpload(header http.Header) bool {
+	value := header.Get(headers.ContentType.String())
+	return value != "" && slices.Contains(AllowedFileUploadTypes, value)
 }
