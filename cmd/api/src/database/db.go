@@ -52,9 +52,6 @@ type Database interface {
 	appcfg.FeatureFlagService
 
 	Close()
-	GetConfigurationParameter(parameter string) (appcfg.Parameter, error)
-	SetConfigurationParameter(ctx context.Context, appConfig appcfg.Parameter) error
-	GetAllConfigurationParameters(ctx context.Context) (appcfg.Parameters, error)
 	CreateIngestTask(ingestTask model.IngestTask) (model.IngestTask, error)
 	GetAllIngestTasks() (model.IngestTasks, error)
 	DeleteIngestTask(ingestTask model.IngestTask) error
