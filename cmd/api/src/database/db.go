@@ -54,7 +54,7 @@ type Database interface {
 	Close()
 	GetConfigurationParameter(parameter string) (appcfg.Parameter, error)
 	SetConfigurationParameter(appConfig appcfg.Parameter) error
-	GetAllConfigurationParameters() (appcfg.Parameters, error)
+	GetAllConfigurationParameters(ctx context.Context) (appcfg.Parameters, error)
 	CreateIngestTask(ingestTask model.IngestTask) (model.IngestTask, error)
 	GetAllIngestTasks() (model.IngestTasks, error)
 	DeleteIngestTask(ingestTask model.IngestTask) error

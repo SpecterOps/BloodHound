@@ -535,18 +535,18 @@ func (mr *MockDatabaseMockRecorder) GetAllAuthTokens(arg0, arg1 interface{}) *go
 }
 
 // GetAllConfigurationParameters mocks base method.
-func (m *MockDatabase) GetAllConfigurationParameters() (appcfg.Parameters, error) {
+func (m *MockDatabase) GetAllConfigurationParameters(arg0 context.Context) (appcfg.Parameters, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetAllConfigurationParameters")
+	ret := m.ctrl.Call(m, "GetAllConfigurationParameters", arg0)
 	ret0, _ := ret[0].(appcfg.Parameters)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetAllConfigurationParameters indicates an expected call of GetAllConfigurationParameters.
-func (mr *MockDatabaseMockRecorder) GetAllConfigurationParameters() *gomock.Call {
+func (mr *MockDatabaseMockRecorder) GetAllConfigurationParameters(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllConfigurationParameters", reflect.TypeOf((*MockDatabase)(nil).GetAllConfigurationParameters))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllConfigurationParameters", reflect.TypeOf((*MockDatabase)(nil).GetAllConfigurationParameters), arg0)
 }
 
 // GetAllFileUploadJobs mocks base method.
