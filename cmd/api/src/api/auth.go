@@ -255,7 +255,7 @@ func (s authenticator) ValidateRequestSignature(tokenID uuid.UUID, request *http
 		if request.Body != nil {
 			if request.ContentLength > ThresholdLargePayload || request.ContentLength == -1 {
 				// Request payload is "large" or the size is unknown; tee byte stream to disk for subsequent reads to avoid exhausting system memory
-				if tempFile, err := NewSelfDestructingTempFile("", "bh-request-"); err != nil {
+				if tempFile, err := NewSelfDestructingTempFile(s.cfg.TempDirectory(), "bh-request-"); err != nil {
 					return auth.Context{}, http.StatusInternalServerError, fmt.Errorf("unabled to validate request signature: %w", err)
 				} else {
 					readCloser = tempFile
