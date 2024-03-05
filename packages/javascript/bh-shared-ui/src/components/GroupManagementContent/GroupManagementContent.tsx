@@ -31,7 +31,7 @@ import { FILTERABLE_PARAMS } from '../AssetGroupFilters/AssetGroupFilters';
 
 // Top level layout and shared logic for the Group Management page
 const GroupManagementContent: FC<{
-    globalDomain: SelectedDomain;
+    globalDomain: SelectedDomain | null;
     showExplorePageLink: boolean;
     tierZeroLabel: string;
     tierZeroTag: string;
