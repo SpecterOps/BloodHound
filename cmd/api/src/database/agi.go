@@ -22,7 +22,6 @@ import (
 
 	"gorm.io/gorm"
 
-	"github.com/specterops/bloodhound/src/ctx"
 	"github.com/specterops/bloodhound/src/database/types"
 	"github.com/specterops/bloodhound/src/model"
 )
@@ -72,28 +71,28 @@ func (s *BloodhoundDB) DeleteAssetGroup(ctx context.Context, assetGroup model.As
 	})
 }
 
-func (s *BloodhoundDB) GetAssetGroup(id int32) (model.AssetGroup, error) {
+func (s *BloodhoundDB) GetAssetGroup(ctx context.Context, id int32) (model.AssetGroup, error) {
 	var (
 		assetGroup model.AssetGroup
-		result     = s.preload(model.AssetGroupAssociations()).First(&assetGroup, id)
+		result     = s.preload(model.AssetGroupAssociations()).WithContext(ctx).First(&assetGroup, id)
 	)
 	return assetGroup, CheckError(result)
 }
 
-func (s *BloodhoundDB) GetAllAssetGroups(order string, filter model.SQLFilter) (model.AssetGroups, error) {
+func (s *BloodhoundDB) GetAllAssetGroups(ctx context.Context, order string, filter model.SQLFilter) (model.AssetGroups, error) {
 	var (
 		assetGroups model.AssetGroups
 		result      *gorm.DB
 	)
 
 	if order != "" && filter.SQLString == "" {
-		result = s.preload(model.AssetGroupAssociations()).Order(order).Find(&assetGroups)
+		result = s.preload(model.AssetGroupAssociations()).WithContext(ctx).Order(order).Find(&assetGroups)
 	} else if order != "" && filter.SQLString != "" {
-		result = s.preload(model.AssetGroupAssociations()).Where(filter.SQLString, filter.Params).Order(order).Find(&assetGroups)
+		result = s.preload(model.AssetGroupAssociations()).WithContext(ctx).Where(filter.SQLString, filter.Params).Order(order).Find(&assetGroups)
 	} else if order == "" && filter.SQLString != "" {
-		result = s.preload(model.AssetGroupAssociations()).Where(filter.SQLString, filter.Params).Find(&assetGroups)
+		result = s.preload(model.AssetGroupAssociations()).WithContext(ctx).Where(filter.SQLString, filter.Params).Find(&assetGroups)
 	} else {
-		result = s.preload(model.AssetGroupAssociations()).Find(&assetGroups)
+		result = s.preload(model.AssetGroupAssociations()).WithContext(ctx).Find(&assetGroups)
 	}
 
 	if result.Error != nil {
@@ -101,7 +100,7 @@ func (s *BloodhoundDB) GetAllAssetGroups(order string, filter model.SQLFilter) (
 	}
 
 	for idx, assetGroup := range assetGroups {
-		if latestCollection, err := s.GetLatestAssetGroupCollection(assetGroup.ID); err != nil {
+		if latestCollection, err := s.GetLatestAssetGroupCollection(ctx, assetGroup.ID); err != nil {
 			if err == ErrNotFound {
 				assetGroup.MemberCount = 0
 			} else {
@@ -119,45 +118,43 @@ func (s *BloodhoundDB) SweepAssetGroupCollections() {
 	s.db.Where("created_at < now() - INTERVAL '30 DAYS'").Delete(&model.AssetGroupCollection{})
 }
 
-func (s *BloodhoundDB) GetAssetGroupCollections(assetGroupID int32, order string, filter model.SQLFilter) (model.AssetGroupCollections, error) {
+func (s *BloodhoundDB) GetAssetGroupCollections(ctx context.Context, assetGroupID int32, order string, filter model.SQLFilter) (model.AssetGroupCollections, error) {
 	var (
 		collections model.AssetGroupCollections
 		result      *gorm.DB
 	)
 
 	if order == "" && filter.SQLString == "" {
-		result = s.preload(model.AssetGroupCollectionAssociations()).Where("asset_group_id = ?", assetGroupID).Find(&collections)
+		result = s.preload(model.AssetGroupCollectionAssociations()).WithContext(ctx).Where("asset_group_id = ?", assetGroupID).Find(&collections)
 	} else if order != "" && filter.SQLString == "" {
-		result = s.preload(model.AssetGroupCollectionAssociations()).Order(order).Where("asset_group_id = ?", assetGroupID).Find(&collections)
+		result = s.preload(model.AssetGroupCollectionAssociations()).WithContext(ctx).Order(order).Where("asset_group_id = ?", assetGroupID).Find(&collections)
 	} else if order == "" && filter.SQLString != "" {
-		result = s.preload(model.AssetGroupCollectionAssociations()).Where("asset_group_id = ?", assetGroupID).Where(filter.SQLString, filter.Params).Find(&collections)
+		result = s.preload(model.AssetGroupCollectionAssociations()).WithContext(ctx).Where("asset_group_id = ?", assetGroupID).Where(filter.SQLString, filter.Params).Find(&collections)
 	} else {
-		result = s.preload(model.AssetGroupCollectionAssociations()).Order(order).Where("asset_group_id = ?", assetGroupID).Where(filter.SQLString, filter.Params).Find(&collections)
+		result = s.preload(model.AssetGroupCollectionAssociations()).WithContext(ctx).Order(order).Where("asset_group_id = ?", assetGroupID).Where(filter.SQLString, filter.Params).Find(&collections)
 	}
 	return collections, CheckError(result)
 }
 
-// GetLatestAssetGroupCollection has been DEPRECATED as part of V1 and will be deleted. Use GetAllAssetGroupCollections with filters and limits instead
-func (s *BloodhoundDB) GetLatestAssetGroupCollection(assetGroupID int32) (model.AssetGroupCollection, error) {
+func (s *BloodhoundDB) GetLatestAssetGroupCollection(ctx context.Context, assetGroupID int32) (model.AssetGroupCollection, error) {
 	var collection model.AssetGroupCollection
 
-	result := s.preload(model.AssetGroupCollectionAssociations()).Where("asset_group_id = ?", assetGroupID).Last(&collection)
+	result := s.preload(model.AssetGroupCollectionAssociations()).WithContext(ctx).Where("asset_group_id = ?", assetGroupID).Last(&collection)
 	return collection, CheckError(result)
 }
 
-// GetTimeRangedAssetGroupCollections has been DEPRECATED as part of V1 and will be deleted. Use GetAllAssetGroupCollections with filters instead
-func (s *BloodhoundDB) GetTimeRangedAssetGroupCollections(assetGroupID int32, from int64, to int64, order string) (model.AssetGroupCollections, error) {
+func (s *BloodhoundDB) GetTimeRangedAssetGroupCollections(ctx context.Context, assetGroupID int32, from int64, to int64, order string) (model.AssetGroupCollections, error) {
 	var (
 		collections model.AssetGroupCollections
 		result      *gorm.DB
 	)
 
 	if order == "" {
-		result = s.preload(model.AssetGroupCollectionAssociations()).
+		result = s.preload(model.AssetGroupCollectionAssociations()).WithContext(ctx).
 			Where("asset_group_id = ? AND created_at BETWEEN ? AND ?", assetGroupID, from, to).
 			Find(&collections)
 	} else {
-		result = s.preload(model.AssetGroupCollectionAssociations()).
+		result = s.preload(model.AssetGroupCollectionAssociations()).WithContext(ctx).
 			Order(order).
 			Where("asset_group_id = ? AND created_at BETWEEN ? AND ?", assetGroupID, from, to).
 			Find(&collections)
@@ -166,29 +163,9 @@ func (s *BloodhoundDB) GetTimeRangedAssetGroupCollections(assetGroupID int32, fr
 	return collections, CheckError(result)
 }
 
-func (s *BloodhoundDB) GetAllAssetGroupCollections() (model.AssetGroupCollections, error) {
-	var collections model.AssetGroupCollections
-
-	result := s.preload(model.AssetGroupCollectionAssociations()).Find(&collections)
-	return collections, CheckError(result)
-}
-
-func (s *BloodhoundDB) GetAssetGroupSelector(id int32) (model.AssetGroupSelector, error) {
+func (s *BloodhoundDB) GetAssetGroupSelector(ctx context.Context, id int32) (model.AssetGroupSelector, error) {
 	var assetGroupSelector model.AssetGroupSelector
-	return assetGroupSelector, CheckError(s.db.Find(&assetGroupSelector, id))
-}
-
-func (s *BloodhoundDB) UpdateAssetGroupSelector(ctx context.Context, selector model.AssetGroupSelector) error {
-	var (
-		auditEntry = model.AuditEntry{
-			Action: "UpdateAssetGroupSelector",
-			Model:  &selector, // Pointer is required to ensure success log contains updated fields after transaction
-		}
-	)
-
-	return s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
-		return CheckError(tx.Save(&selector))
-	})
+	return assetGroupSelector, CheckError(s.db.WithContext(ctx).Find(&assetGroupSelector, id))
 }
 
 func (s *BloodhoundDB) DeleteAssetGroupSelector(ctx context.Context, selector model.AssetGroupSelector) error {
@@ -204,31 +181,10 @@ func (s *BloodhoundDB) DeleteAssetGroupSelector(ctx context.Context, selector mo
 	})
 }
 
-func (s *BloodhoundDB) CreateRawAssetGroupSelector(assetGroup model.AssetGroup, name, selector string) (model.AssetGroupSelector, error) {
-	assetGroupSelector := model.AssetGroupSelector{
-		AssetGroupID: assetGroup.ID,
-		Name:         name,
-		Selector:     selector,
-	}
-
-	return assetGroupSelector, CheckError(s.db.Create(&assetGroupSelector))
-}
-
-func (s *BloodhoundDB) CreateAssetGroupSelector(assetGroup model.AssetGroup, spec model.AssetGroupSelectorSpec, systemSelector bool) (model.AssetGroupSelector, error) {
-	assetGroupSelector := model.AssetGroupSelector{
-		AssetGroupID:   assetGroup.ID,
-		Name:           spec.SelectorName,
-		Selector:       spec.EntityObjectID,
-		SystemSelector: systemSelector,
-	}
-
-	return assetGroupSelector, CheckError(s.db.Create(&assetGroupSelector))
-}
-
-func (s *BloodhoundDB) UpdateAssetGroupSelectors(ctx ctx.Context, assetGroup model.AssetGroup, selectorSpecs []model.AssetGroupSelectorSpec, systemSelector bool) (model.UpdatedAssetGroupSelectors, error) {
+func (s *BloodhoundDB) UpdateAssetGroupSelectors(ctx context.Context, assetGroup model.AssetGroup, selectorSpecs []model.AssetGroupSelectorSpec, systemSelector bool) (model.UpdatedAssetGroupSelectors, error) {
 	var updatedSelectors = model.UpdatedAssetGroupSelectors{}
 
-	err := s.db.Transaction(func(tx *gorm.DB) error {
+	err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		for _, selectorSpec := range selectorSpecs {
 			switch selectorSpec.Action {
 			case model.SelectorSpecActionAdd:
@@ -267,18 +223,12 @@ func (s *BloodhoundDB) UpdateAssetGroupSelectors(ctx ctx.Context, assetGroup mod
 	return updatedSelectors, err
 }
 
-func (s *BloodhoundDB) GetAllAssetGroupSelectors() (model.AssetGroupSelectors, error) {
-	var assetGroupSelectors model.AssetGroupSelectors
-
-	return assetGroupSelectors, CheckError(s.db.Find(&assetGroupSelectors))
-}
-
-func (s *BloodhoundDB) CreateAssetGroupCollection(collection model.AssetGroupCollection, entries model.AssetGroupCollectionEntries) error {
+func (s *BloodhoundDB) CreateAssetGroupCollection(ctx context.Context, collection model.AssetGroupCollection, entries model.AssetGroupCollectionEntries) error {
 	const CreateAssetGroupCollectionQuery = `INSERT INTO "asset_group_collection_entries"
     ("asset_group_collection_id","object_id","node_label","properties","created_at","updated_at")
 	(SELECT * FROM unnest($1::bigint[], $2::text[], $3::text[], $4::jsonb[], $5::timestamp[], $5::timestamp[]));`
 
-	return s.db.Transaction(func(tx *gorm.DB) error {
+	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		var newCollection = collection
 
 		if result := tx.Create(&newCollection); result.Error != nil {

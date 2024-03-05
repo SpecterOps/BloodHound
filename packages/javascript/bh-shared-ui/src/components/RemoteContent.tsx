@@ -19,6 +19,7 @@ import React, { useEffect, useState } from 'react';
 import DOMPurify from 'dompurify';
 import { Divider, Link, Typography } from '@mui/material';
 import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 const getComponents = (baseURL?: string) => {
     const COMPONENTS = {
@@ -156,7 +157,12 @@ const RemoteContent: React.FC<{
 
     if (error || data?.charAt(0) === '<') return <p style={{ margin: '1rem 0' }}>{fallback}</p>;
 
-    if (markdown) return <ReactMarkdown components={getComponents(baseURL)}>{data!}</ReactMarkdown>;
+    if (markdown)
+        return (
+            <ReactMarkdown remarkPlugins={[remarkGfm]} components={getComponents(baseURL)}>
+                {data!}
+            </ReactMarkdown>
+        );
 
     return <div>{DOMPurify.sanitize(data!)}</div>;
 };
