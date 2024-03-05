@@ -47,7 +47,7 @@ func (s Resources) GetApplicationConfigurations(response http.ResponseWriter, re
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("%s: %s %s", api.ErrorResponseDetailsFilterPredicateNotSupported, parameterFilter.Name, parameterFilter.Operator), request), response)
 		} else if !cfgParameter.IsValid(parameterFilter.Value) {
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("Configuration parameter %s is not valid.", parameterFilter.Value), request), response)
-		} else if cfgParameter, err = s.DB.GetConfigurationParameter(parameterFilter.Value); err != nil {
+		} else if cfgParameter, err = s.DB.GetConfigurationParameter(request.Context(), parameterFilter.Value); err != nil {
 			api.HandleDatabaseError(request, response, err)
 		} else {
 			api.WriteBasicResponse(request.Context(), appcfg.Parameters{cfgParameter}, http.StatusOK, response)

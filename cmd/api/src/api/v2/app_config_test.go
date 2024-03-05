@@ -95,7 +95,7 @@ func Test_GetApplicationConfigurations(t *testing.T) {
 		ResponseStatusCode(http.StatusBadRequest)
 
 	mockDB.EXPECT().
-		GetConfigurationParameter(appcfg.PasswordExpirationWindow).
+		GetConfigurationParameter(gomock.Any(), appcfg.PasswordExpirationWindow).
 		Return(appcfg.Parameter{}, errors.Error("db error"))
 
 	test.Request(t).
@@ -113,7 +113,7 @@ func Test_GetApplicationConfigurations(t *testing.T) {
 		ResponseStatusCode(http.StatusBadRequest)
 
 	mockDB.EXPECT().
-		GetConfigurationParameter(appcfg.PasswordExpirationWindow).
+		GetConfigurationParameter(gomock.Any(), appcfg.PasswordExpirationWindow).
 		Return(expectedAppConfig, nil)
 
 	test.Request(t).

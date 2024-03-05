@@ -79,7 +79,7 @@ type ParameterService interface {
 	GetAllConfigurationParameters(ctx context.Context) (Parameters, error)
 
 	// GetConfigurationParameter attempts to fetch a Parameter struct by its parameter name.
-	GetConfigurationParameter(parameter string) (Parameter, error)
+	GetConfigurationParameter(ctx context.Context, parameter string) (Parameter, error)
 
 	// SetConfigurationParameter attempts to store or update the given Parameter.
 	SetConfigurationParameter(ctx context.Context, configurationParameter Parameter) error
@@ -126,10 +126,10 @@ func (s PasswordExpiration) ParseDuration() (time.Duration, error) {
 	}
 }
 
-func GetPasswordExpiration(service ParameterService) (time.Duration, error) {
+func GetPasswordExpiration(ctx context.Context, service ParameterService) (time.Duration, error) {
 	var expiration PasswordExpiration
 
-	if cfg, err := service.GetConfigurationParameter(PasswordExpirationWindow); err != nil {
+	if cfg, err := service.GetConfigurationParameter(ctx, PasswordExpirationWindow); err != nil {
 		return 0, err
 	} else if err := cfg.Map(&expiration); err != nil {
 		return 0, err
@@ -143,10 +143,10 @@ type Neo4jParameters struct {
 	BatchWriteSize int `json:"batch_write_size,omitempty"`
 }
 
-func GetNeo4jParameters(service ParameterService) Neo4jParameters {
+func GetNeo4jParameters(ctx context.Context, service ParameterService) Neo4jParameters {
 	var result Neo4jParameters
 
-	if neo4jParametersCfg, err := service.GetConfigurationParameter(Neo4jConfigs); err != nil {
+	if neo4jParametersCfg, err := service.GetConfigurationParameter(ctx, Neo4jConfigs); err != nil {
 		log.Errorf("failed to fetch neo4j configuration; returning default values")
 		result = Neo4jParameters{
 			WriteFlushSize: neo4j.DefaultWriteFlushSize,

@@ -448,7 +448,7 @@ func (s ManagementResource) CreateUser(response http.ResponseWriter, request *ht
 				log.Errorf("Error while attempting to digest secret for user: %v", err)
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
 				return
-			} else if passwordExpiration, err := appcfg.GetPasswordExpiration(s.db); err != nil {
+			} else if passwordExpiration, err := appcfg.GetPasswordExpiration(request.Context(), s.db); err != nil {
 				log.Errorf("Error while attempting to fetch password expiration window: %v", err)
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
 			} else {
@@ -647,7 +647,7 @@ func (s ManagementResource) PutUserAuthSecret(response http.ResponseWriter, requ
 		api.HandleDatabaseError(request, response, err)
 	} else if targetUser.SAMLProviderID.Valid {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "Invalid operation, user is SSO", request), response)
-	} else if passwordExpiration, err := appcfg.GetPasswordExpiration(s.db); err != nil {
+	} else if passwordExpiration, err := appcfg.GetPasswordExpiration(request.Context(), s.db); err != nil {
 		log.Errorf("Error while attempting to fetch password expiration window: %v", err)
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseCodeInternalServerError, request), response)
 	} else if secretDigest, err := s.secretDigester.Digest(setUserSecretRequest.Secret); err != nil {
