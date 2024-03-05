@@ -18,8 +18,6 @@ package database
 
 import (
 	"context"
-	"strings"
-
 	"github.com/specterops/bloodhound/src/model/appcfg"
 	"gorm.io/gorm/clause"
 )
@@ -51,17 +49,6 @@ func (s *BloodhoundDB) GetAllConfigurationParameters(ctx context.Context) (appcf
 func (s *BloodhoundDB) GetConfigurationParameter(parameterKey string) (appcfg.Parameter, error) {
 	var parameter appcfg.Parameter
 	return parameter, CheckError(s.db.First(&parameter, "key = ?", parameterKey))
-}
-
-func (s *BloodhoundDB) GetConfigurationParametersByPrefix(parameterKeyPrefix string) (appcfg.Parameters, error) {
-	const matchAllWildcard = "%"
-
-	if !strings.HasSuffix(parameterKeyPrefix, matchAllWildcard) {
-		parameterKeyPrefix += matchAllWildcard
-	}
-
-	var parameters appcfg.Parameters
-	return parameters, CheckError(s.db.First(&parameters, "key like ?", parameterKeyPrefix))
 }
 
 func (s *BloodhoundDB) SetConfigurationParameter(ctx context.Context, parameter appcfg.Parameter) error {

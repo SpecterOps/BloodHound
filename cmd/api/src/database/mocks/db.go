@@ -777,21 +777,6 @@ func (mr *MockDatabaseMockRecorder) GetConfigurationParameter(arg0 interface{}) 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetConfigurationParameter", reflect.TypeOf((*MockDatabase)(nil).GetConfigurationParameter), arg0)
 }
 
-// GetConfigurationParametersByPrefix mocks base method.
-func (m *MockDatabase) GetConfigurationParametersByPrefix(arg0 string) (appcfg.Parameters, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetConfigurationParametersByPrefix", arg0)
-	ret0, _ := ret[0].(appcfg.Parameters)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetConfigurationParametersByPrefix indicates an expected call of GetConfigurationParametersByPrefix.
-func (mr *MockDatabaseMockRecorder) GetConfigurationParametersByPrefix(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetConfigurationParametersByPrefix", reflect.TypeOf((*MockDatabase)(nil).GetConfigurationParametersByPrefix), arg0)
-}
-
 // GetFileUploadJob mocks base method.
 func (m *MockDatabase) GetFileUploadJob(arg0 int64) (model.FileUploadJob, error) {
 	m.ctrl.T.Helper()

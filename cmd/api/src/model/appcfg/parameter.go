@@ -81,10 +81,6 @@ type ParameterService interface {
 	// GetConfigurationParameter attempts to fetch a Parameter struct by its parameter name.
 	GetConfigurationParameter(parameter string) (Parameter, error)
 
-	// GetConfigurationParametersByPrefix attempts to fetch all Parameters that have a parameter name that
-	// starts with the given prefix.
-	GetConfigurationParametersByPrefix(prefix string) (Parameters, error)
-
 	// SetConfigurationParameter attempts to store or update the given Parameter.
 	SetConfigurationParameter(ctx context.Context, configurationParameter Parameter) error
 }
