@@ -70,7 +70,7 @@ func (s Resources) SetApplicationConfiguration(response http.ResponseWriter, req
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("Configuration update request not converted to a parameter: %s", parameter.Key), request), response)
 	} else if !parameter.IsValid(parameter.Key) {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("Configuration parameter %s is not valid.", parameter.Key), request), response)
-	} else if err = s.DB.SetConfigurationParameter(parameter); err != nil {
+	} else if err = s.DB.SetConfigurationParameter(request.Context(), parameter); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
 		api.WriteBasicResponse(request.Context(), appConfig, http.StatusOK, response)

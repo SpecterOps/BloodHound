@@ -64,8 +64,8 @@ func (s *BloodhoundDB) GetConfigurationParametersByPrefix(parameterKeyPrefix str
 	return parameters, CheckError(s.db.First(&parameters, "key like ?", parameterKeyPrefix))
 }
 
-func (s *BloodhoundDB) SetConfigurationParameter(parameter appcfg.Parameter) error {
-	return CheckError(s.db.Clauses(clause.OnConflict{
+func (s *BloodhoundDB) SetConfigurationParameter(ctx context.Context, parameter appcfg.Parameter) error {
+	return CheckError(s.db.WithContext(ctx).Clauses(clause.OnConflict{
 		Columns:   []clause.Column{{Name: "key"}},
 		DoUpdates: clause.AssignmentColumns([]string{"value"}),
 	}).Create(&parameter))

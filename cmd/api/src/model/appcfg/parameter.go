@@ -86,7 +86,7 @@ type ParameterService interface {
 	GetConfigurationParametersByPrefix(prefix string) (Parameters, error)
 
 	// SetConfigurationParameter attempts to store or update the given Parameter.
-	SetConfigurationParameter(configurationParameter Parameter) error
+	SetConfigurationParameter(ctx context.Context, configurationParameter Parameter) error
 }
 
 func AvailableParameters() (ParameterSet, error) {
