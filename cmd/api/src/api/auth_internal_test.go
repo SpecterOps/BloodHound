@@ -128,8 +128,12 @@ func TestAuditLogin_UserNotFound(t *testing.T) {
 
 func TestValidateRequestSignature(t *testing.T) {
 	NewTestAuthenticator := func(ctrl *gomock.Controller) authenticator {
+		cfg := config.Configuration{
+			WorkDir: os.TempDir(),
+		}
+		os.Mkdir(cfg.TempDirectory(), 0755)
 		return authenticator{
-			cfg:             config.Configuration{},
+			cfg:             cfg,
 			db:              dbMocks.NewMockDatabase(ctrl),
 			ctxInitializer:  dbMocks.NewMockAuthContextInitializer(ctrl),
 			secretDigester:  cryptoMocks.NewMockSecretDigester(ctrl),
@@ -328,7 +332,7 @@ func TestValidateRequestSignature(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, http.StatusOK, status)
 
-		tmpFiles, err := os.ReadDir(os.TempDir())
+		tmpFiles, err := os.ReadDir(authenticator.cfg.TempDirectory())
 		assert.NoError(t, err)
 		assert.Len(t, slicesext.Filter[fs.DirEntry](tmpFiles, func(file fs.DirEntry) bool {
 			return strings.HasPrefix(file.Name(), "bh-request-")
