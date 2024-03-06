@@ -410,7 +410,7 @@ func (s ManagementResource) ListUsers(response http.ResponseWriter, request *htt
 		if sqlFilter, err := queryFilters.BuildSQLFilter(); err != nil {
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "error building SQL for filter", request), response)
 			return
-		} else if users, err = s.db.GetAllUsers(strings.Join(order, ", "), sqlFilter); err != nil {
+		} else if users, err = s.db.GetAllUsers(request.Context(), strings.Join(order, ", "), sqlFilter); err != nil {
 			api.HandleDatabaseError(request, response, err)
 		} else {
 			api.WriteBasicResponse(request.Context(), v2.ListUsersResponse{Users: users}, http.StatusOK, response)

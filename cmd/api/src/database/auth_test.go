@@ -244,7 +244,7 @@ func TestDatabase_CreateGetDeleteUser(t *testing.T) {
 		t.Fatalf("Failed to validate Deleteuser audit logs:\n%v", err)
 	}
 
-	if usersResponse, err := dbInst.GetAllUsers("first_name", model.SQLFilter{}); err != nil {
+	if usersResponse, err := dbInst.GetAllUsers(context.Background(), "first_name", model.SQLFilter{}); err != nil {
 		t.Fatalf("Error getting users: %v", err)
 	} else if usersResponse[0].FirstName.String != "First" {
 		t.Fatalf("ListUsers returned incorrectly sorted data")

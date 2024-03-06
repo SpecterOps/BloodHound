@@ -385,20 +385,21 @@ func (s *BloodhoundDB) UpdateUser(ctx context.Context, user model.User) error {
 	})
 }
 
-func (s *BloodhoundDB) GetAllUsers(order string, filter model.SQLFilter) (model.Users, error) {
+func (s *BloodhoundDB) GetAllUsers(ctx context.Context, order string, filter model.SQLFilter) (model.Users, error) {
 	var (
 		users  model.Users
 		result *gorm.DB
+		cursor = s.preload(model.UserAssociations()).WithContext(ctx)
 	)
 
-	if order != "" && filter.SQLString == "" {
-		result = s.preload(model.UserAssociations()).Order(order).Find(&users)
-	} else if order != "" && filter.SQLString != "" {
-		result = s.preload(model.UserAssociations()).Where(filter.SQLString, filter.Params).Order(order).Find(&users)
-	} else if order == "" && filter.SQLString != "" {
-		result = s.preload(model.UserAssociations()).Where(filter.SQLString, filter.Params).Find(&users)
+	if order != "" {
+		cursor = cursor.Order(order)
+	}
+
+	if filter.SQLString != "" {
+		result = cursor.Where(filter.SQLString, filter.Params).Find(&users)
 	} else {
-		result = s.preload(model.UserAssociations()).Find(&users)
+		result = cursor.Find(&users)
 	}
 
 	return users, CheckError(result)
