@@ -69,12 +69,12 @@ func (s *BloodhoundDB) AppendAuditLog(ctx context.Context, entry model.AuditEntr
 	if auditLog, err := newAuditLog(ctx, entry, s.idResolver); err != nil && err != ErrAuthContextInvalid {
 		return fmt.Errorf("audit log append: %w", err)
 	} else {
-		return s.CreateAuditLog(auditLog)
+		return s.CreateAuditLog(ctx, auditLog)
 	}
 }
 
-func (s *BloodhoundDB) CreateAuditLog(auditLog model.AuditLog) error {
-	return CheckError(s.db.Create(&auditLog))
+func (s *BloodhoundDB) CreateAuditLog(ctx context.Context, auditLog model.AuditLog) error {
+	return CheckError(s.db.WithContext(ctx).Create(&auditLog))
 }
 
 func (s *BloodhoundDB) ListAuditLogs(before, after time.Time, offset, limit int, order string, filter model.SQLFilter) (model.AuditLogs, int, error) {

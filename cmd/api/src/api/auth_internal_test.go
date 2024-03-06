@@ -77,7 +77,7 @@ func TestAuditLogin(t *testing.T) {
 	testCtx, loginRequest := setupRequest(testyUser)
 	expectedAuditLog := buildAuditLog(testCtx, testyUser, loginRequest, string(model.AuditStatusSuccess), nil)
 
-	mockDB.EXPECT().CreateAuditLog(expectedAuditLog)
+	mockDB.EXPECT().CreateAuditLog(testCtx, expectedAuditLog)
 	a.auditLogin(testCtx, commitId, testyUser, loginRequest, string(model.AuditStatusSuccess), nil)
 }
 
@@ -90,6 +90,6 @@ func TestAuditLogin_UserNotFound(t *testing.T) {
 	testCtx, loginRequest := setupRequest(model.User{})
 	expectedAuditLog := buildAuditLog(testCtx, model.User{}, loginRequest, string(model.AuditStatusFailure), ErrInvalidAuth)
 
-	mockDB.EXPECT().CreateAuditLog(expectedAuditLog)
+	mockDB.EXPECT().CreateAuditLog(testCtx, expectedAuditLog)
 	a.auditLogin(testCtx, commitId, model.User{}, loginRequest, string(model.AuditStatusFailure), ErrInvalidAuth)
 }
