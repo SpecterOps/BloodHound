@@ -151,6 +151,11 @@ func (s *Daemon) processIngestTasks(ctx context.Context, ingestTasks model.Inges
 			return
 		}
 
+		if s.cfg.DisableIngest {
+			log.Warnf("Skipped processing of ingestTasks due to config flag.")
+			return
+		}
+
 		if err := s.processIngestFile(ctx, ingestTask.FileName); err != nil {
 			log.Errorf("Failed processing ingest task %d with file %s: %v", ingestTask.ID, ingestTask.FileName, err)
 		}

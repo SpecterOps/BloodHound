@@ -152,11 +152,6 @@ func (s *Daemon) Start() {
 
 	s.clearOrphanedData()
 
-	if s.cfg.DisableIngest {
-		log.Warnf("Prevented Data Pipe Daemon from starting as it is disabled by configuration.")
-		return
-	}
-
 	for {
 		select {
 		case <-pruningTicker.C:
