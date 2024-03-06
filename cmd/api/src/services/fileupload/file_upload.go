@@ -143,7 +143,7 @@ func SaveIngestFile(location string, request *http.Request) (string, model.FileT
 		}
 	} else {
 		//We should never get here since this is checked a level above
-		return "", model.FileTypeJson, fmt.Errorf("nvalid content type for ingest file")
+		return "", model.FileTypeJson, fmt.Errorf("invalid content type for ingest file")
 	}
 }
 
