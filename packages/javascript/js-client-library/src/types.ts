@@ -253,3 +253,10 @@ export interface CreateUserQueryRequest {
     name: string;
     query: string;
 }
+
+export interface ClearDatabaseRequest {
+    deleteCollectedGraphData: boolean;
+    deleteFileIngestHistory: boolean;
+    deleteDataQualityHistory: boolean;
+    deleteAssetGroupSelectors: number[];
+}
