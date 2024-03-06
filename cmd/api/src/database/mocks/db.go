@@ -140,17 +140,17 @@ func (mr *MockDatabaseMockRecorder) CreateAssetGroupCollection(arg0, arg1, arg2 
 }
 
 // CreateAuditLog mocks base method.
-func (m *MockDatabase) CreateAuditLog(arg0 model.AuditLog) error {
+func (m *MockDatabase) CreateAuditLog(arg0 context.Context, arg1 model.AuditLog) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateAuditLog", arg0)
+	ret := m.ctrl.Call(m, "CreateAuditLog", arg0, arg1)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // CreateAuditLog indicates an expected call of CreateAuditLog.
-func (mr *MockDatabaseMockRecorder) CreateAuditLog(arg0 interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) CreateAuditLog(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateAuditLog", reflect.TypeOf((*MockDatabase)(nil).CreateAuditLog), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateAuditLog", reflect.TypeOf((*MockDatabase)(nil).CreateAuditLog), arg0, arg1)
 }
 
 // CreateAuthSecret mocks base method.
@@ -348,6 +348,34 @@ func (mr *MockDatabaseMockRecorder) CreateUserSession(arg0 interface{}) *gomock.
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateUserSession", reflect.TypeOf((*MockDatabase)(nil).CreateUserSession), arg0)
 }
 
+// DeleteAllDataQuality mocks base method.
+func (m *MockDatabase) DeleteAllDataQuality(arg0 context.Context) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteAllDataQuality", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteAllDataQuality indicates an expected call of DeleteAllDataQuality.
+func (mr *MockDatabaseMockRecorder) DeleteAllDataQuality(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteAllDataQuality", reflect.TypeOf((*MockDatabase)(nil).DeleteAllDataQuality), arg0)
+}
+
+// DeleteAllFileUploads mocks base method.
+func (m *MockDatabase) DeleteAllFileUploads(arg0 context.Context) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteAllFileUploads", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteAllFileUploads indicates an expected call of DeleteAllFileUploads.
+func (mr *MockDatabaseMockRecorder) DeleteAllFileUploads(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteAllFileUploads", reflect.TypeOf((*MockDatabase)(nil).DeleteAllFileUploads), arg0)
+}
+
 // DeleteAssetGroup mocks base method.
 func (m *MockDatabase) DeleteAssetGroup(arg0 context.Context, arg1 model.AssetGroup) error {
 	m.ctrl.T.Helper()
@@ -374,6 +402,20 @@ func (m *MockDatabase) DeleteAssetGroupSelector(arg0 context.Context, arg1 model
 func (mr *MockDatabaseMockRecorder) DeleteAssetGroupSelector(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteAssetGroupSelector", reflect.TypeOf((*MockDatabase)(nil).DeleteAssetGroupSelector), arg0, arg1)
+}
+
+// DeleteAssetGroupSelectorsForAssetGroups mocks base method.
+func (m *MockDatabase) DeleteAssetGroupSelectorsForAssetGroups(arg0 context.Context, arg1 []int) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteAssetGroupSelectorsForAssetGroups", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteAssetGroupSelectorsForAssetGroups indicates an expected call of DeleteAssetGroupSelectorsForAssetGroups.
+func (mr *MockDatabaseMockRecorder) DeleteAssetGroupSelectorsForAssetGroups(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteAssetGroupSelectorsForAssetGroups", reflect.TypeOf((*MockDatabase)(nil).DeleteAssetGroupSelectorsForAssetGroups), arg0, arg1)
 }
 
 // DeleteAuthSecret mocks base method.
@@ -535,18 +577,18 @@ func (mr *MockDatabaseMockRecorder) GetAllAuthTokens(arg0, arg1 interface{}) *go
 }
 
 // GetAllConfigurationParameters mocks base method.
-func (m *MockDatabase) GetAllConfigurationParameters() (appcfg.Parameters, error) {
+func (m *MockDatabase) GetAllConfigurationParameters(arg0 context.Context) (appcfg.Parameters, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetAllConfigurationParameters")
+	ret := m.ctrl.Call(m, "GetAllConfigurationParameters", arg0)
 	ret0, _ := ret[0].(appcfg.Parameters)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetAllConfigurationParameters indicates an expected call of GetAllConfigurationParameters.
-func (mr *MockDatabaseMockRecorder) GetAllConfigurationParameters() *gomock.Call {
+func (mr *MockDatabaseMockRecorder) GetAllConfigurationParameters(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllConfigurationParameters", reflect.TypeOf((*MockDatabase)(nil).GetAllConfigurationParameters))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllConfigurationParameters", reflect.TypeOf((*MockDatabase)(nil).GetAllConfigurationParameters), arg0)
 }
 
 // GetAllFileUploadJobs mocks base method.
@@ -763,33 +805,18 @@ func (mr *MockDatabaseMockRecorder) GetAzureDataQualityStats(arg0, arg1, arg2, a
 }
 
 // GetConfigurationParameter mocks base method.
-func (m *MockDatabase) GetConfigurationParameter(arg0 string) (appcfg.Parameter, error) {
+func (m *MockDatabase) GetConfigurationParameter(arg0 context.Context, arg1 string) (appcfg.Parameter, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetConfigurationParameter", arg0)
+	ret := m.ctrl.Call(m, "GetConfigurationParameter", arg0, arg1)
 	ret0, _ := ret[0].(appcfg.Parameter)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetConfigurationParameter indicates an expected call of GetConfigurationParameter.
-func (mr *MockDatabaseMockRecorder) GetConfigurationParameter(arg0 interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) GetConfigurationParameter(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetConfigurationParameter", reflect.TypeOf((*MockDatabase)(nil).GetConfigurationParameter), arg0)
-}
-
-// GetConfigurationParametersByPrefix mocks base method.
-func (m *MockDatabase) GetConfigurationParametersByPrefix(arg0 string) (appcfg.Parameters, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetConfigurationParametersByPrefix", arg0)
-	ret0, _ := ret[0].(appcfg.Parameters)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetConfigurationParametersByPrefix indicates an expected call of GetConfigurationParametersByPrefix.
-func (mr *MockDatabaseMockRecorder) GetConfigurationParametersByPrefix(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetConfigurationParametersByPrefix", reflect.TypeOf((*MockDatabase)(nil).GetConfigurationParametersByPrefix), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetConfigurationParameter", reflect.TypeOf((*MockDatabase)(nil).GetConfigurationParameter), arg0, arg1)
 }
 
 // GetFileUploadJob mocks base method.
@@ -1109,9 +1136,9 @@ func (mr *MockDatabaseMockRecorder) InitializeSecretAuth(arg0, arg1 interface{})
 }
 
 // ListAuditLogs mocks base method.
-func (m *MockDatabase) ListAuditLogs(arg0, arg1 time.Time, arg2, arg3 int, arg4 string, arg5 model.SQLFilter) (model.AuditLogs, int, error) {
+func (m *MockDatabase) ListAuditLogs(arg0 context.Context, arg1, arg2 time.Time, arg3, arg4 int, arg5 string, arg6 model.SQLFilter) (model.AuditLogs, int, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ListAuditLogs", arg0, arg1, arg2, arg3, arg4, arg5)
+	ret := m.ctrl.Call(m, "ListAuditLogs", arg0, arg1, arg2, arg3, arg4, arg5, arg6)
 	ret0, _ := ret[0].(model.AuditLogs)
 	ret1, _ := ret[1].(int)
 	ret2, _ := ret[2].(error)
@@ -1119,9 +1146,9 @@ func (m *MockDatabase) ListAuditLogs(arg0, arg1 time.Time, arg2, arg3 int, arg4 
 }
 
 // ListAuditLogs indicates an expected call of ListAuditLogs.
-func (mr *MockDatabaseMockRecorder) ListAuditLogs(arg0, arg1, arg2, arg3, arg4, arg5 interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) ListAuditLogs(arg0, arg1, arg2, arg3, arg4, arg5, arg6 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListAuditLogs", reflect.TypeOf((*MockDatabase)(nil).ListAuditLogs), arg0, arg1, arg2, arg3, arg4, arg5)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListAuditLogs", reflect.TypeOf((*MockDatabase)(nil).ListAuditLogs), arg0, arg1, arg2, arg3, arg4, arg5, arg6)
 }
 
 // ListSavedQueries mocks base method.
@@ -1260,17 +1287,17 @@ func (mr *MockDatabaseMockRecorder) SavedQueryBelongsToUser(arg0, arg1 interface
 }
 
 // SetConfigurationParameter mocks base method.
-func (m *MockDatabase) SetConfigurationParameter(arg0 appcfg.Parameter) error {
+func (m *MockDatabase) SetConfigurationParameter(arg0 context.Context, arg1 appcfg.Parameter) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SetConfigurationParameter", arg0)
+	ret := m.ctrl.Call(m, "SetConfigurationParameter", arg0, arg1)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // SetConfigurationParameter indicates an expected call of SetConfigurationParameter.
-func (mr *MockDatabaseMockRecorder) SetConfigurationParameter(arg0 interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) SetConfigurationParameter(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetConfigurationParameter", reflect.TypeOf((*MockDatabase)(nil).SetConfigurationParameter), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetConfigurationParameter", reflect.TypeOf((*MockDatabase)(nil).SetConfigurationParameter), arg0, arg1)
 }
 
 // SetFlag mocks base method.

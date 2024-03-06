@@ -2,6 +2,7 @@ package database_test
 
 import (
 	"context"
+	"github.com/specterops/bloodhound/src/utils/test"
 	"slices"
 	"testing"
 
@@ -27,7 +28,7 @@ func TestCreateGetUpdateDeleteAssetGroup(t *testing.T) {
 
 	if newAssetGroup, err = dbInst.CreateAssetGroup(context.Background(), "test asset group", "test", false); err != nil {
 		t.Fatalf("Error creating asset group: %v", err)
-	} else if err = verifyAuditLogs(dbInst, "CreateAssetGroup", "asset_group_name", newAssetGroup.Name); err != nil {
+	} else if err = test.VerifyAuditLogs(dbInst, "CreateAssetGroup", "asset_group_name", newAssetGroup.Name); err != nil {
 		t.Fatalf("Error verifying CreateAssetGroup audit logs:\n%v", err)
 	}
 
@@ -50,13 +51,13 @@ func TestCreateGetUpdateDeleteAssetGroup(t *testing.T) {
 	}
 	if err = dbInst.UpdateAssetGroup(context.Background(), updatedAssetGroup); err != nil {
 		t.Fatalf("Error updating asset group: %v", err)
-	} else if err = verifyAuditLogs(dbInst, "UpdateAssetGroup", "asset_group_name", "updated asset group"); err != nil {
+	} else if err = test.VerifyAuditLogs(dbInst, "UpdateAssetGroup", "asset_group_name", "updated asset group"); err != nil {
 		t.Fatalf("Error veriying UpdateAssetGroup audit logs:\n%v", err)
 	}
 
 	if err = dbInst.DeleteAssetGroup(context.Background(), updatedAssetGroup); err != nil {
 		t.Fatalf("Error deleting asset group: %v", err)
-	} else if err = verifyAuditLogs(dbInst, "DeleteAssetGroup", "asset_group_name", "updated asset group"); err != nil {
+	} else if err = test.VerifyAuditLogs(dbInst, "DeleteAssetGroup", "asset_group_name", "updated asset group"); err != nil {
 		t.Fatalf("Error veriying DeleteAssetGroup audit logs:\n%v", err)
 	}
 }
