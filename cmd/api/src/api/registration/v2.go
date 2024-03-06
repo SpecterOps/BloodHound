@@ -131,6 +131,8 @@ func NewV2API(cfg config.Configuration, resources v2.Resources, routerInst *rout
 		routerInst.GET("/api/v2/features", resources.GetFlags).RequirePermissions(permissions.AppReadApplicationConfiguration),
 		routerInst.PUT("/api/v2/features/{feature_id}/toggle", resources.ToggleFlag).RequirePermissions(permissions.AppWriteApplicationConfiguration),
 
+		routerInst.POST("/api/v2/clear-database", resources.HandleDatabaseWipe).RequirePermissions(permissions.WipeDB),
+
 		// Asset Groups API
 		routerInst.GET("/api/v2/asset-groups", resources.ListAssetGroups).RequirePermissions(permissions.GraphDBRead),
 		routerInst.POST("/api/v2/asset-groups", resources.CreateAssetGroup).RequirePermissions(permissions.GraphDBWrite),
