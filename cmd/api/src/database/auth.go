@@ -356,7 +356,7 @@ func (s *BloodhoundDB) CreateUser(ctx context.Context, user model.User) (model.U
 	}
 
 	auditEntry := model.AuditEntry{
-		Action: "CreateUser",
+		Action: model.AuditLogActionCreateUser,
 		Model:  &updatedUser,
 	}
 	return updatedUser, s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
@@ -369,7 +369,7 @@ func (s *BloodhoundDB) CreateUser(ctx context.Context, user model.User) (model.U
 func (s *BloodhoundDB) UpdateUser(ctx context.Context, user model.User) error {
 	var (
 		auditEntry = model.AuditEntry{
-			Action: "UpdateUser",
+			Action: model.AuditLogActionUpdateUser,
 			Model:  &user, // Pointer is required to ensure success log contains updated fields after transaction
 		}
 	)
@@ -419,7 +419,7 @@ func (s *BloodhoundDB) GetUser(id uuid.UUID) (model.User, error) {
 // UPDATE users SET roles = nil WHERE user_id = ....
 func (s *BloodhoundDB) DeleteUser(ctx context.Context, user model.User) error {
 	auditEntry := model.AuditEntry{
-		Action: "DeleteUser",
+		Action: model.AuditLogActionDeleteUser,
 		Model:  &user,
 	}
 
@@ -451,7 +451,7 @@ func (s *BloodhoundDB) LookupUser(name string) (model.User, error) {
 // INSERT INTO auth_tokens (...) VALUES (....)
 func (s *BloodhoundDB) CreateAuthToken(ctx context.Context, authToken model.AuthToken) (model.AuthToken, error) {
 	auditEntry := model.AuditEntry{
-		Action: "CreateAuthToken",
+		Action: model.AuditLogActionCreateAuthToken,
 		Model:  &authToken,
 	}
 
@@ -529,7 +529,7 @@ func (s *BloodhoundDB) GetUserToken(userId, tokenId uuid.UUID) (model.AuthToken,
 // DELETE FROM auth_tokens WHERE id = ...
 func (s *BloodhoundDB) DeleteAuthToken(ctx context.Context, authToken model.AuthToken) error {
 	auditEntry := model.AuditEntry{
-		Action: "DeleteAuthToken",
+		Action: model.AuditLogActionDeleteAuthToken,
 		Model:  &authToken,
 	}
 
@@ -542,7 +542,7 @@ func (s *BloodhoundDB) DeleteAuthToken(ctx context.Context, authToken model.Auth
 // INSERT INTO auth_secrets (...) VALUES (....)
 func (s *BloodhoundDB) CreateAuthSecret(ctx context.Context, authSecret model.AuthSecret) (model.AuthSecret, error) {
 	auditEntry := model.AuditEntry{
-		Action: "CreateAuthSecret",
+		Action: model.AuditLogActionCreateAuthSecret,
 		Model:  &authSecret,
 	}
 
@@ -567,7 +567,7 @@ func (s *BloodhoundDB) GetAuthSecret(id int32) (model.AuthSecret, error) {
 // WHERE user_id = ....
 func (s *BloodhoundDB) UpdateAuthSecret(ctx context.Context, authSecret model.AuthSecret) error {
 	auditEntry := model.AuditEntry{
-		Action: "UpdateAuthSecret",
+		Action: model.AuditLogActionUpdateAuthSecret,
 		Model:  &authSecret,
 	}
 
@@ -580,7 +580,7 @@ func (s *BloodhoundDB) UpdateAuthSecret(ctx context.Context, authSecret model.Au
 // DELETE FROM auth_secrets WHERE user_id = ...
 func (s *BloodhoundDB) DeleteAuthSecret(ctx context.Context, authSecret model.AuthSecret) error {
 	auditEntry := model.AuditEntry{
-		Action: "DeleteAuthSecret",
+		Action: model.AuditLogActionDeleteAuthSecret,
 		Model:  &authSecret,
 	}
 
@@ -594,7 +594,7 @@ func (s *BloodhoundDB) DeleteAuthSecret(ctx context.Context, authSecret model.Au
 func (s *BloodhoundDB) CreateSAMLIdentityProvider(ctx context.Context, samlProvider model.SAMLProvider) (model.SAMLProvider, error) {
 	var (
 		auditEntry = model.AuditEntry{
-			Action: "CreateSAMLIdentityProvider",
+			Action: model.AuditLogActionCreateSAMLIdentityProvider,
 			Model:  &samlProvider, // Pointer is required to ensure success log contains updated fields after transaction
 		}
 	)
@@ -611,7 +611,7 @@ func (s *BloodhoundDB) CreateSAMLIdentityProvider(ctx context.Context, samlProvi
 func (s *BloodhoundDB) UpdateSAMLIdentityProvider(ctx context.Context, provider model.SAMLProvider) error {
 	var (
 		auditEntry = model.AuditEntry{
-			Action: "UpdateSAMLIdentityProvider",
+			Action: model.AuditLogActionUpdateSAMLIdentityProvider,
 			Model:  &provider, // Pointer is required to ensure success log contains updated fields after transaction
 		}
 	)
@@ -657,7 +657,7 @@ func (s *BloodhoundDB) GetSAMLProvider(id int32) (model.SAMLProvider, error) {
 func (s *BloodhoundDB) DeleteSAMLProvider(ctx context.Context, provider model.SAMLProvider) error {
 	var (
 		auditEntry = model.AuditEntry{
-			Action: "DeleteSAMLIdentityProvider",
+			Action: model.AuditLogActionDeleteSAMLIdentityProvider,
 			Model:  &provider, // Pointer is required to ensure success log contains updated fields after transaction
 		}
 	)

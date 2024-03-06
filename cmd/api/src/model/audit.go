@@ -25,12 +25,48 @@ import (
 	"github.com/specterops/bloodhound/src/database/types"
 )
 
-type AuditEntryStatus string
+type AuditLogEntryStatus string
 
 const (
-	AuditStatusSuccess AuditEntryStatus = "success"
-	AuditStatusFailure AuditEntryStatus = "failure"
-	AuditStatusIntent  AuditEntryStatus = "intent"
+	AuditLogStatusSuccess AuditLogEntryStatus = "success"
+	AuditLogStatusFailure AuditLogEntryStatus = "failure"
+	AuditLogStatusIntent  AuditLogEntryStatus = "intent"
+)
+
+type AuditLogAction string
+
+const (
+	AuditLogActionAcceptEULA = "AcceptEULA"
+
+	AuditLogActionLoginAttempt              = "LoginAttempt"
+	AuditLogActionUnauthorizedAccessAttempt = "UnauthorizedAccessAttempt"
+
+	AuditLogActionCreateUser = "CreateUser"
+	AuditLogActionUpdateUser = "UpdateUser"
+	AuditLogActionDeleteUser = "DeleteUser"
+
+	AuditLogActionCreateAssetGroup = "CreateAssetGroup"
+	AuditLogActionUpdateAssetGroup = "UpdateAssetGroup"
+	AuditLogActionDeleteAssetGroup = "DeleteAssetGroup"
+
+	AuditLogActionDeleteAssetGroupSelector = "DeleteAssetGroupSelector"
+
+	AuditLogActionCreateAuthToken = "CreateAuthToken"
+	AuditLogActionDeleteAuthToken = "DeleteAuthToken"
+
+	AuditLogActionCreateAuthSecret = "CreateAuthSecret"
+	AuditLogActionUpdateAuthSecret = "UpdateAuthSecret"
+	AuditLogActionDeleteAuthSecret = "DeleteAuthSecret"
+
+	AuditLogActionCreateSAMLIdentityProvider = "CreateSAMLIdentityProvider"
+	AuditLogActionUpdateSAMLIdentityProvider = "UpdateSAMLIdentityProvider"
+	AuditLogActionDeleteSAMLIdentityProvider = "DeleteSAMLIdentityProvider"
+
+	AuditLogActionAcceptRisk   = "AcceptRisk"
+	AuditLogActionUnacceptRisk = "UnacceptRisk"
+
+	AuditLogActionExportRelationshipRisks = "ExportRelationshipRisks"
+	AuditLogActionExportListRisks         = "ExportListRisks"
 )
 
 // TODO embed Basic into this struct instead of declaring the ID and CreatedAt fields. This will require a migration
@@ -40,7 +76,7 @@ type AuditLog struct {
 	ActorID         string                  `json:"actor_id" gorm:"index"`
 	ActorName       string                  `json:"actor_name"`
 	ActorEmail      string                  `json:"actor_email"`
-	Action          string                  `json:"action" gorm:"index"`
+	Action          AuditLogAction          `json:"action" gorm:"index"`
 	Fields          types.JSONUntypedObject `json:"fields"`
 	RequestID       string                  `json:"request_id"`
 	SourceIpAddress string                  `json:"source_ip_address"`
@@ -151,9 +187,9 @@ type Auditable interface {
 
 type AuditEntry struct {
 	CommitID uuid.UUID
-	Action   string
+	Action   AuditLogAction
 	Model    Auditable
-	Status   AuditEntryStatus
+	Status   AuditLogEntryStatus
 	ErrorMsg string
 }
 
