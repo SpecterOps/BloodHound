@@ -20,6 +20,7 @@ import (
 	"github.com/specterops/bloodhound/packages/go/stbernard/command/analysis"
 	"github.com/specterops/bloodhound/packages/go/stbernard/command/builder"
 	"github.com/specterops/bloodhound/packages/go/stbernard/command/envdump"
+	"github.com/specterops/bloodhound/packages/go/stbernard/command/generate"
 	"github.com/specterops/bloodhound/packages/go/stbernard/command/modsync"
 )
 
@@ -32,6 +33,7 @@ const (
 	EnvDump
 	Analysis
 	Build
+	Generate
 )
 
 // String implements Stringer for the Command enum
@@ -45,6 +47,8 @@ func (s Command) String() string {
 		return analysis.Name
 	case Build:
 		return builder.Name
+	case Generate:
+		return generate.Name
 	default:
 		return "invalid command"
 	}
@@ -52,7 +56,7 @@ func (s Command) String() string {
 
 // Commands returns our valid set of Command options
 func Commands() []Command {
-	return []Command{ModSync, EnvDump, Analysis, Build}
+	return []Command{ModSync, EnvDump, Analysis, Build, Generate}
 }
 
 // Commands usage returns a slice of Command usage statements indexed by their enum
@@ -63,6 +67,7 @@ func CommandsUsage() []string {
 	usage[EnvDump] = envdump.Usage
 	usage[Analysis] = analysis.Usage
 	usage[Build] = builder.Usage
+	usage[Generate] = generate.Usage
 
 	return usage
 }

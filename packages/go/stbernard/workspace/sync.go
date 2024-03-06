@@ -23,6 +23,34 @@ import (
 	"sync"
 )
 
+// TidyModules runs go mod tidy for all module paths passed
+func TidyModules(modPaths []string, env []string) error {
+	var (
+		errs []error
+		wg   sync.WaitGroup
+		mu   sync.Mutex
+	)
+
+	for _, modPath := range modPaths {
+		wg.Add(1)
+		go func(modPath string) {
+			wg.Done()
+			cmd := exec.Command("go", "mod", "tidy")
+			cmd.Env = env
+			cmd.Dir = modPath
+			if err := cmd.Run(); err != nil {
+				mu.Lock()
+				errs = append(errs, fmt.Errorf("failure when running go mod tidy in %s: %w", modPath, err))
+				mu.Unlock()
+			}
+		}(modPath)
+	}
+
+	wg.Wait()
+
+	return errors.Join(errs...)
+}
+
 // DownloadModules runs go mod download for all module paths passed
 func DownloadModules(modPaths []string, env []string) error {
 	var (
