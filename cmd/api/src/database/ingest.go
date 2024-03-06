@@ -27,9 +27,9 @@ func (s *BloodhoundDB) CreateIngestTask(ctx context.Context, ingestTask model.In
 	return ingestTask, CheckError(result)
 }
 
-func (s *BloodhoundDB) GetAllIngestTasks() (model.IngestTasks, error) {
+func (s *BloodhoundDB) GetAllIngestTasks(ctx context.Context) (model.IngestTasks, error) {
 	var ingestTasks model.IngestTasks
-	result := s.db.Find(&ingestTasks)
+	result := s.db.WithContext(ctx).Find(&ingestTasks)
 
 	return ingestTasks, CheckError(result)
 }
