@@ -69,19 +69,19 @@ func (s *BloodhoundDB) AppendAuditLog(ctx context.Context, entry model.AuditEntr
 	if auditLog, err := newAuditLog(ctx, entry, s.idResolver); err != nil && err != ErrAuthContextInvalid {
 		return fmt.Errorf("audit log append: %w", err)
 	} else {
-		return s.CreateAuditLog(auditLog)
+		return s.CreateAuditLog(ctx, auditLog)
 	}
 }
 
-func (s *BloodhoundDB) CreateAuditLog(auditLog model.AuditLog) error {
-	return CheckError(s.db.Create(&auditLog))
+func (s *BloodhoundDB) CreateAuditLog(ctx context.Context, auditLog model.AuditLog) error {
+	return CheckError(s.db.WithContext(ctx).Create(&auditLog))
 }
 
-func (s *BloodhoundDB) ListAuditLogs(before, after time.Time, offset, limit int, order string, filter model.SQLFilter) (model.AuditLogs, int, error) {
+func (s *BloodhoundDB) ListAuditLogs(ctx context.Context, before, after time.Time, offset, limit int, order string, filter model.SQLFilter) (model.AuditLogs, int, error) {
 	var (
 		auditLogs model.AuditLogs
 		result    *gorm.DB
-		cursor    = s.Scope(Paginate(offset, limit)).Where("created_at between ? and ?", after, before).Order("created_at desc")
+		cursor    = s.Scope(Paginate(offset, limit)).WithContext(ctx).Where("created_at between ? and ?", after, before)
 		count     int64
 	)
 
@@ -89,23 +89,23 @@ func (s *BloodhoundDB) ListAuditLogs(before, after time.Time, offset, limit int,
 	// See the comments here for more information: https://github.com/SpecterOps/BloodHound/pull/297#issuecomment-1887640827
 
 	if filter.SQLString != "" {
-		result = s.db.Model(&auditLogs).Where(filter.SQLString, filter.Params).Count(&count)
+		result = s.db.Model(&auditLogs).WithContext(ctx).Where(filter.SQLString, filter.Params).Count(&count)
 	} else {
-		result = s.db.Model(&auditLogs).Count(&count)
+		result = s.db.Model(&auditLogs).WithContext(ctx).Count(&count)
 	}
 
 	if result.Error != nil {
 		return nil, 0, CheckError(result)
 	}
 
-	if order != "" && filter.SQLString == "" {
-		result = cursor.Order(order).Find(&auditLogs)
-	} else if order != "" && filter.SQLString != "" {
+	if order == "" {
+		order = "created_at desc"
+	}
+
+	if filter.SQLString != "" {
 		result = cursor.Where(filter.SQLString, filter.Params).Order(order).Find(&auditLogs)
-	} else if order == "" && filter.SQLString != "" {
-		result = cursor.Where(filter.SQLString, filter.Params).Find(&auditLogs)
 	} else {
-		result = cursor.Find(&auditLogs)
+		result = cursor.Order(order).Find(&auditLogs)
 	}
 
 	return auditLogs, int(count), CheckError(result)
@@ -113,7 +113,7 @@ func (s *BloodhoundDB) ListAuditLogs(before, after time.Time, offset, limit int,
 
 func (s *BloodhoundDB) MaybeAuditableTransaction(ctx context.Context, auditDisabled bool, auditEntry model.AuditEntry, f func(tx *gorm.DB) error, opts ...*sql.TxOptions) error {
 	if auditDisabled {
-		return s.db.Transaction(f, opts...)
+		return s.db.WithContext(ctx).Transaction(f, opts...)
 	} else {
 		return s.AuditableTransaction(ctx, auditEntry, f, opts...)
 	}

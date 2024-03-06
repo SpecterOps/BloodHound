@@ -76,9 +76,12 @@ type Database interface {
 	Wipe() error
 	Migrate() error
 	RequiresMigration() (bool, error)
-	CreateAuditLog(auditLog model.AuditLog) error
+
+	// Audit Logs
+	CreateAuditLog(ctx context.Context, auditLog model.AuditLog) error
 	AppendAuditLog(ctx context.Context, entry model.AuditEntry) error
-	ListAuditLogs(before, after time.Time, offset, limit int, order string, filter model.SQLFilter) (model.AuditLogs, int, error)
+	ListAuditLogs(ctx context.Context, before, after time.Time, offset, limit int, order string, filter model.SQLFilter) (model.AuditLogs, int, error)
+
 	CreateRole(role model.Role) (model.Role, error)
 	UpdateRole(role model.Role) error
 	GetAllRoles(order string, filter model.SQLFilter) (model.Roles, error)
