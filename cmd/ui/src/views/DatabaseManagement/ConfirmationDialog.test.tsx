@@ -19,8 +19,8 @@ import ConfirmationDialog from './ConfirmationDialog';
 import userEvent from '@testing-library/user-event';
 
 describe('Confirmation Dialog', () => {
-    const handleClose = jest.fn();
-    const handleDelete = jest.fn();
+    const handleClose = vi.fn();
+    const handleDelete = vi.fn();
 
     beforeEach(() => {
         render(<ConfirmationDialog open handleClose={handleClose} handleDelete={handleDelete} />);
