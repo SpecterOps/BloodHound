@@ -38,7 +38,7 @@ func TestCreateGetUpdateDeleteAssetGroup(t *testing.T) {
 
 	if newAssetGroup, err = dbInst.CreateAssetGroup(testCtx, "test asset group", "test", false); err != nil {
 		t.Fatalf("Error creating asset group: %v", err)
-	} else if err = test.VerifyAuditLogs(dbInst, "CreateAssetGroup", "asset_group_name", newAssetGroup.Name); err != nil {
+	} else if err = test.VerifyAuditLogs(dbInst, model.AuditLogActionCreateAssetGroup, "asset_group_name", newAssetGroup.Name); err != nil {
 		t.Fatalf("Error verifying CreateAssetGroup audit logs:\n%v", err)
 	}
 
@@ -61,13 +61,13 @@ func TestCreateGetUpdateDeleteAssetGroup(t *testing.T) {
 	}
 	if err = dbInst.UpdateAssetGroup(testCtx, updatedAssetGroup); err != nil {
 		t.Fatalf("Error updating asset group: %v", err)
-	} else if err = test.VerifyAuditLogs(dbInst, "UpdateAssetGroup", "asset_group_name", "updated asset group"); err != nil {
+	} else if err = test.VerifyAuditLogs(dbInst, model.AuditLogActionUpdateAssetGroup, "asset_group_name", "updated asset group"); err != nil {
 		t.Fatalf("Error veriying UpdateAssetGroup audit logs:\n%v", err)
 	}
 
 	if err = dbInst.DeleteAssetGroup(testCtx, updatedAssetGroup); err != nil {
 		t.Fatalf("Error deleting asset group: %v", err)
-	} else if err = test.VerifyAuditLogs(dbInst, "DeleteAssetGroup", "asset_group_name", "updated asset group"); err != nil {
+	} else if err = test.VerifyAuditLogs(dbInst, model.AuditLogActionDeleteAssetGroup, "asset_group_name", "updated asset group"); err != nil {
 		t.Fatalf("Error veriying DeleteAssetGroup audit logs:\n%v", err)
 	}
 }

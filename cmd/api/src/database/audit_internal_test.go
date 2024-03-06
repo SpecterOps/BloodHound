@@ -37,7 +37,7 @@ var (
 		CommitID: commitId,
 		Action:   "TestAction",
 		Model:    auditData,
-		Status:   model.AuditStatusSuccess,
+		Status:   model.AuditLogStatusSuccess,
 	}
 	idResolver  = auth.NewIdentityResolver()
 	requestID   = "12345"
@@ -74,7 +74,7 @@ func TestNewAuditLog(t *testing.T) {
 		t.Errorf("error creating audit log: %s", err.Error())
 	}
 
-	require.Equal(t, auditLog.Action, "TestAction")
+	require.Equal(t, string(auditLog.Action), "TestAction")
 	require.Equal(t, testyUser.EmailAddress.ValueOrZero(), auditLog.ActorEmail)
 	require.Equal(t, testyUser.ID.String(), auditLog.ActorID)
 	require.Equal(t, testyUser.PrincipalName, auditLog.ActorName)
@@ -82,13 +82,13 @@ func TestNewAuditLog(t *testing.T) {
 	require.Equal(t, fmt.Sprintf("%s", auditData), fmt.Sprintf("%s", auditLog.Fields))
 	require.Equal(t, requestID, auditLog.RequestID)
 	require.Equal(t, requestIP, auditLog.SourceIpAddress)
-	require.Equal(t, string(model.AuditStatusSuccess), auditLog.Status)
+	require.Equal(t, string(model.AuditLogStatusSuccess), auditLog.Status)
 }
 
 func TestNewAuditLog_Error(t *testing.T) {
 	testCtx := setupRequest(testyUser)
 	errorEntry := entry
-	errorEntry.Status = model.AuditStatusFailure
+	errorEntry.Status = model.AuditLogStatusFailure
 	errorEntry.ErrorMsg = "this is a test error message"
 
 	auditLog, err := newAuditLog(testCtx, errorEntry, idResolver)
@@ -96,7 +96,7 @@ func TestNewAuditLog_Error(t *testing.T) {
 		t.Errorf("error creating audit log: %s", err.Error())
 	}
 
-	require.Equal(t, string(model.AuditStatusFailure), auditLog.Status)
+	require.Equal(t, string(model.AuditLogStatusFailure), auditLog.Status)
 	require.Equal(t, auditLog.Fields, types.JSONUntypedObject{"error": "this is a test error message", "test": "message"})
 }
 
@@ -113,7 +113,7 @@ func TestNewAuditLog_BadAuthContext(t *testing.T) {
 		CommitID: commitId,
 		Action:   "TestAction",
 		Model:    auditData,
-		Status:   model.AuditStatusFailure,
+		Status:   model.AuditLogStatusFailure,
 		ErrorMsg: "this is a test error message",
 	}
 

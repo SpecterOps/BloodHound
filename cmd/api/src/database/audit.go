@@ -129,7 +129,7 @@ func (s *BloodhoundDB) AuditableTransaction(ctx context.Context, auditEntry mode
 	}
 
 	auditEntry.CommitID = commitID
-	auditEntry.Status = model.AuditStatusIntent
+	auditEntry.Status = model.AuditLogStatusIntent
 
 	if err := s.AppendAuditLog(ctx, auditEntry); err != nil {
 		return fmt.Errorf("could not append intent to audit log: %w", err)
@@ -138,10 +138,10 @@ func (s *BloodhoundDB) AuditableTransaction(ctx context.Context, auditEntry mode
 	err = s.db.WithContext(ctx).Transaction(f, opts...)
 
 	if err != nil {
-		auditEntry.Status = model.AuditStatusFailure
+		auditEntry.Status = model.AuditLogStatusFailure
 		auditEntry.ErrorMsg = err.Error()
 	} else {
-		auditEntry.Status = model.AuditStatusSuccess
+		auditEntry.Status = model.AuditLogStatusSuccess
 	}
 
 	if err := s.AppendAuditLog(ctx, auditEntry); err != nil {

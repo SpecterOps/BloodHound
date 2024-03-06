@@ -35,7 +35,7 @@ func (s *BloodhoundDB) CreateAssetGroup(ctx context.Context, name, tag string, s
 		}
 
 		auditEntry = model.AuditEntry{
-			Action: "CreateAssetGroup",
+			Action: model.AuditLogActionCreateAssetGroup,
 			Model:  &assetGroup, // Pointer is required to ensure success log contains updated fields after transaction
 		}
 
@@ -52,7 +52,7 @@ func (s *BloodhoundDB) CreateAssetGroup(ctx context.Context, name, tag string, s
 func (s *BloodhoundDB) UpdateAssetGroup(ctx context.Context, assetGroup model.AssetGroup) error {
 	var (
 		auditEntry = model.AuditEntry{
-			Action: "UpdateAssetGroup",
+			Action: model.AuditLogActionUpdateAssetGroup,
 			Model:  &assetGroup, // Pointer is required to ensure success log contains updated fields after transaction
 		}
 	)
@@ -65,7 +65,7 @@ func (s *BloodhoundDB) UpdateAssetGroup(ctx context.Context, assetGroup model.As
 func (s *BloodhoundDB) DeleteAssetGroup(ctx context.Context, assetGroup model.AssetGroup) error {
 	var (
 		auditEntry = model.AuditEntry{
-			Action: "DeleteAssetGroup",
+			Action: model.AuditLogActionDeleteAssetGroup,
 			Model:  &assetGroup, // Pointer is required to ensure success log contains updated fields after transaction
 		}
 	)
@@ -175,7 +175,7 @@ func (s *BloodhoundDB) GetAssetGroupSelector(ctx context.Context, id int32) (mod
 func (s *BloodhoundDB) DeleteAssetGroupSelector(ctx context.Context, selector model.AssetGroupSelector) error {
 	var (
 		auditEntry = model.AuditEntry{
-			Action: "DeleteAssetGroupSelector",
+			Action: model.AuditLogActionDeleteAssetGroupSelector,
 			Model:  &selector, // Pointer is required to ensure success log contains updated fields after transaction
 		}
 	)
