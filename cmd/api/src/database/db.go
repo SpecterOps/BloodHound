@@ -21,6 +21,8 @@ package database
 import (
 	"context"
 	"fmt"
+	"github.com/specterops/bloodhound/src/services/agi"
+	"github.com/specterops/bloodhound/src/services/ingest"
 	"time"
 
 	"github.com/gofrs/uuid"
@@ -52,18 +54,19 @@ type Database interface {
 	appcfg.FeatureFlagService
 
 	Close()
-	CreateIngestTask(ingestTask model.IngestTask) (model.IngestTask, error)
+
+	// Ingest
+	ingest.IngestData
 	GetAllIngestTasks() (model.IngestTasks, error)
 	DeleteIngestTask(ingestTask model.IngestTask) error
 	GetIngestTasksForJob(jobID int64) (model.IngestTasks, error)
 	GetUnfinishedIngestIDs() ([]int64, error)
 
 	// Asset Groups
+	agi.AgiData
 	CreateAssetGroup(ctx context.Context, name, tag string, systemGroup bool) (model.AssetGroup, error)
 	UpdateAssetGroup(ctx context.Context, assetGroup model.AssetGroup) error
 	DeleteAssetGroup(ctx context.Context, assetGroup model.AssetGroup) error
-	GetAssetGroup(ctx context.Context, id int32) (model.AssetGroup, error)
-	GetAllAssetGroups(ctx context.Context, order string, filter model.SQLFilter) (model.AssetGroups, error)
 	SweepAssetGroupCollections()
 	GetAssetGroupCollections(ctx context.Context, assetGroupID int32, order string, filter model.SQLFilter) (model.AssetGroupCollections, error)
 	GetLatestAssetGroupCollection(ctx context.Context, assetGroupID int32) (model.AssetGroupCollection, error)
@@ -71,7 +74,6 @@ type Database interface {
 	GetAssetGroupSelector(ctx context.Context, id int32) (model.AssetGroupSelector, error)
 	DeleteAssetGroupSelector(ctx context.Context, selector model.AssetGroupSelector) error
 	UpdateAssetGroupSelectors(ctx context.Context, assetGroup model.AssetGroup, selectorSpecs []model.AssetGroupSelectorSpec, systemSelector bool) (model.UpdatedAssetGroupSelectors, error)
-	CreateAssetGroupCollection(ctx context.Context, collection model.AssetGroupCollection, entries model.AssetGroupCollectionEntries) error
 
 	Wipe() error
 	Migrate() error
