@@ -447,17 +447,17 @@ func (mr *MockDatabaseMockRecorder) DeleteAuthToken(arg0, arg1 interface{}) *gom
 }
 
 // DeleteIngestTask mocks base method.
-func (m *MockDatabase) DeleteIngestTask(arg0 model.IngestTask) error {
+func (m *MockDatabase) DeleteIngestTask(arg0 context.Context, arg1 model.IngestTask) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DeleteIngestTask", arg0)
+	ret := m.ctrl.Call(m, "DeleteIngestTask", arg0, arg1)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // DeleteIngestTask indicates an expected call of DeleteIngestTask.
-func (mr *MockDatabaseMockRecorder) DeleteIngestTask(arg0 interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) DeleteIngestTask(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteIngestTask", reflect.TypeOf((*MockDatabase)(nil).DeleteIngestTask), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteIngestTask", reflect.TypeOf((*MockDatabase)(nil).DeleteIngestTask), arg0, arg1)
 }
 
 // DeleteSAMLProvider mocks base method.

@@ -113,8 +113,8 @@ func ProcessIngestedFileUploadJobs(ctx context.Context, db database.Database) {
 }
 
 // clearFileTask removes a generic file upload task for ingested data.
-func (s *Daemon) clearFileTask(ingestTask model.IngestTask) {
-	if err := s.db.DeleteIngestTask(ingestTask); err != nil {
+func (s *Daemon) clearFileTask(ctx context.Context, ingestTask model.IngestTask) {
+	if err := s.db.DeleteIngestTask(ctx, ingestTask); err != nil {
 		log.Errorf("Error removing file upload task from db: %v", err)
 	}
 }
@@ -160,6 +160,6 @@ func (s *Daemon) processIngestTasks(ctx context.Context, ingestTasks model.Inges
 			log.Errorf("Failed processing ingest task %d with file %s: %v", ingestTask.ID, ingestTask.FileName, err)
 		}
 
-		s.clearFileTask(ingestTask)
+		s.clearFileTask(ctx, ingestTask)
 	}
 }

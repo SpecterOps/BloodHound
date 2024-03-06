@@ -34,8 +34,8 @@ func (s *BloodhoundDB) GetAllIngestTasks(ctx context.Context) (model.IngestTasks
 	return ingestTasks, CheckError(result)
 }
 
-func (s *BloodhoundDB) DeleteIngestTask(ingestTask model.IngestTask) error {
-	result := s.db.Delete(&ingestTask)
+func (s *BloodhoundDB) DeleteIngestTask(ctx context.Context, ingestTask model.IngestTask) error {
+	result := s.db.WithContext(ctx).Delete(&ingestTask)
 	return CheckError(result)
 }
 
