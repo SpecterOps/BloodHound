@@ -99,7 +99,7 @@ func Entrypoint(ctx context.Context, cfg config.Configuration, connections boots
 		registration.RegisterFossRoutes(&routerInst, cfg, connections.RDMS, connections.Graph, graphQuery, apiCache, collectorManifests, authenticator, datapipeDaemon)
 
 		// Set neo4j batch and flush sizes
-		neo4jParameters := appcfg.GetNeo4jParameters(connections.RDMS)
+		neo4jParameters := appcfg.GetNeo4jParameters(ctx, connections.RDMS)
 		connections.Graph.SetBatchWriteSize(neo4jParameters.BatchWriteSize)
 		connections.Graph.SetWriteFlushSize(neo4jParameters.WriteFlushSize)
 
