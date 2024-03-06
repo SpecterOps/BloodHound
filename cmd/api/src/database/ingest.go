@@ -45,10 +45,3 @@ func (s *BloodhoundDB) GetIngestTasksForJob(ctx context.Context, jobID int64) (m
 
 	return ingestTasks, CheckError(result)
 }
-
-func (s *BloodhoundDB) GetUnfinishedIngestIDs() ([]int64, error) {
-	var ids []int64
-	result := s.db.Model(&model.IngestTask{}).Distinct("task_id").Pluck("task_id", &ids)
-
-	return ids, CheckError(result)
-}

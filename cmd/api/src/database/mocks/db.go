@@ -1029,21 +1029,6 @@ func (mr *MockDatabaseMockRecorder) GetTimeRangedAssetGroupCollections(arg0, arg
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTimeRangedAssetGroupCollections", reflect.TypeOf((*MockDatabase)(nil).GetTimeRangedAssetGroupCollections), arg0, arg1, arg2, arg3, arg4)
 }
 
-// GetUnfinishedIngestIDs mocks base method.
-func (m *MockDatabase) GetUnfinishedIngestIDs() ([]int64, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetUnfinishedIngestIDs")
-	ret0, _ := ret[0].([]int64)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetUnfinishedIngestIDs indicates an expected call of GetUnfinishedIngestIDs.
-func (mr *MockDatabaseMockRecorder) GetUnfinishedIngestIDs() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUnfinishedIngestIDs", reflect.TypeOf((*MockDatabase)(nil).GetUnfinishedIngestIDs))
-}
-
 // GetUser mocks base method.
 func (m *MockDatabase) GetUser(arg0 uuid.UUID) (model.User, error) {
 	m.ctrl.T.Helper()
