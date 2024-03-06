@@ -76,9 +76,12 @@ type Database interface {
 	Wipe() error
 	Migrate() error
 	RequiresMigration() (bool, error)
-	CreateAuditLog(auditLog model.AuditLog) error
+
+	// Audit Logs
+	CreateAuditLog(ctx context.Context, auditLog model.AuditLog) error
 	AppendAuditLog(ctx context.Context, entry model.AuditEntry) error
-	ListAuditLogs(before, after time.Time, offset, limit int, order string, filter model.SQLFilter) (model.AuditLogs, int, error)
+	ListAuditLogs(ctx context.Context, before, after time.Time, offset, limit int, order string, filter model.SQLFilter) (model.AuditLogs, int, error)
+
 	CreateRole(role model.Role) (model.Role, error)
 	UpdateRole(role model.Role) error
 	GetAllRoles(order string, filter model.SQLFilter) (model.Roles, error)
@@ -131,15 +134,18 @@ type Database interface {
 	GetAzureDataQualityStats(tenantId string, start time.Time, end time.Time, sort_by string, limit int, skip int) (model.AzureDataQualityStats, int, error)
 	CreateAzureDataQualityAggregation(aggregation model.AzureDataQualityAggregation) (model.AzureDataQualityAggregation, error)
 	GetAzureDataQualityAggregations(start time.Time, end time.Time, sort_by string, limit int, skip int) (model.AzureDataQualityAggregations, int, error)
+	DeleteAllDataQuality(ctx context.Context) error
 	CreateFileUploadJob(job model.FileUploadJob) (model.FileUploadJob, error)
 	UpdateFileUploadJob(job model.FileUploadJob) error
 	GetFileUploadJob(id int64) (model.FileUploadJob, error)
 	GetAllFileUploadJobs(skip int, limit int, order string, filter model.SQLFilter) ([]model.FileUploadJob, int, error)
 	GetFileUploadJobsWithStatus(status model.JobStatus) ([]model.FileUploadJob, error)
+	DeleteAllFileUploads(ctx context.Context) error
 	ListSavedQueries(userID uuid.UUID, order string, filter model.SQLFilter, skip, limit int) (model.SavedQueries, int, error)
 	CreateSavedQuery(userID uuid.UUID, name string, query string) (model.SavedQuery, error)
 	DeleteSavedQuery(id int) error
 	SavedQueryBelongsToUser(userID uuid.UUID, savedQueryID int) (bool, error)
+	DeleteAssetGroupSelectorsForAssetGroups(ctx context.Context, assetGroupIds []int) error
 }
 
 type BloodhoundDB struct {

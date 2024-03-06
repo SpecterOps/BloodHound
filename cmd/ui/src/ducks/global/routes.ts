@@ -27,6 +27,7 @@ export const ROUTE_DOWNLOAD_COLLECTORS = '/download-collectors';
 export const ROUTE_ADMINISTRATION_ROOT = '/administration/*';
 export const ROUTE_ADMINISTRATION_FILE_INGEST = '/administration/file-ingest';
 export const ROUTE_ADMINISTRATION_DATA_QUALITY = '/administration/data-quality';
+export const ROUTE_ADMINISTRATION_DB_MANAGEMENT = '/administration/database-management';
 export const ROUTE_ADMINISTRATION_MANAGE_USERS = '/administration/manage-users';
 export const ROUTE_ADMINISTRATION_SAML_CONFIGURATION = '/administration/saml-configuration';
 export const ROUTE_ADMINISTRATION_EARLY_ACCESS_FEATURES = '/administration/early-access-features';
