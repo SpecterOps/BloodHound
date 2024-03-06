@@ -57,6 +57,7 @@ const (
 	ErrorResponseMultipleCollectionScopesProvided   = "may only scope collection by exactly one of OU, Domain, or All Trusted Domains"
 	ErrorResponsePayloadUnmarshalError              = "error unmarshalling JSON payload"
 	ErrorResponseUserSelfDisable                    = "user attempted to disable themselves"
+	ErrorResponseAGTagWhiteSpace                    = "asset group tags must not contain whitespace"
 
 	FmtErrorResponseDetailsBadQueryParameters = "there are errors in the query parameters: %v"
 )
