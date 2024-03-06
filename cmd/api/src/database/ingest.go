@@ -39,9 +39,9 @@ func (s *BloodhoundDB) DeleteIngestTask(ctx context.Context, ingestTask model.In
 	return CheckError(result)
 }
 
-func (s *BloodhoundDB) GetIngestTasksForJob(jobID int64) (model.IngestTasks, error) {
+func (s *BloodhoundDB) GetIngestTasksForJob(ctx context.Context, jobID int64) (model.IngestTasks, error) {
 	var ingestTasks model.IngestTasks
-	result := s.db.Where("task_id=?", jobID).Find(&ingestTasks)
+	result := s.db.WithContext(ctx).Where("task_id=?", jobID).Find(&ingestTasks)
 
 	return ingestTasks, CheckError(result)
 }

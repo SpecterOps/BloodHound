@@ -59,7 +59,7 @@ type Database interface {
 	ingest.IngestData
 	GetAllIngestTasks(ctx context.Context) (model.IngestTasks, error)
 	DeleteIngestTask(ctx context.Context, ingestTask model.IngestTask) error
-	GetIngestTasksForJob(jobID int64) (model.IngestTasks, error)
+	GetIngestTasksForJob(ctx context.Context, jobID int64) (model.IngestTasks, error)
 	GetUnfinishedIngestIDs() ([]int64, error)
 
 	// Asset Groups

@@ -101,7 +101,7 @@ func ProcessIngestedFileUploadJobs(ctx context.Context, db database.Database) {
 		log.Errorf("Failed to look up finished file upload jobs: %v", err)
 	} else {
 		for _, ingestingFileUploadJob := range ingestingFileUploadJobs {
-			if remainingIngestTasks, err := db.GetIngestTasksForJob(ingestingFileUploadJob.ID); err != nil {
+			if remainingIngestTasks, err := db.GetIngestTasksForJob(ctx, ingestingFileUploadJob.ID); err != nil {
 				log.Errorf("Failed looking up remaining ingest tasks for file upload job %d: %v", ingestingFileUploadJob.ID, err)
 			} else if len(remainingIngestTasks) == 0 {
 				if err := fileupload.UpdateFileUploadJobStatus(db, ingestingFileUploadJob, model.JobStatusAnalyzing, "Analyzing"); err != nil {
