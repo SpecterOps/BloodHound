@@ -535,18 +535,18 @@ func (mr *MockDatabaseMockRecorder) GetAllAuthTokens(arg0, arg1 interface{}) *go
 }
 
 // GetAllConfigurationParameters mocks base method.
-func (m *MockDatabase) GetAllConfigurationParameters() (appcfg.Parameters, error) {
+func (m *MockDatabase) GetAllConfigurationParameters(arg0 context.Context) (appcfg.Parameters, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetAllConfigurationParameters")
+	ret := m.ctrl.Call(m, "GetAllConfigurationParameters", arg0)
 	ret0, _ := ret[0].(appcfg.Parameters)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetAllConfigurationParameters indicates an expected call of GetAllConfigurationParameters.
-func (mr *MockDatabaseMockRecorder) GetAllConfigurationParameters() *gomock.Call {
+func (mr *MockDatabaseMockRecorder) GetAllConfigurationParameters(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllConfigurationParameters", reflect.TypeOf((*MockDatabase)(nil).GetAllConfigurationParameters))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllConfigurationParameters", reflect.TypeOf((*MockDatabase)(nil).GetAllConfigurationParameters), arg0)
 }
 
 // GetAllFileUploadJobs mocks base method.
@@ -763,33 +763,18 @@ func (mr *MockDatabaseMockRecorder) GetAzureDataQualityStats(arg0, arg1, arg2, a
 }
 
 // GetConfigurationParameter mocks base method.
-func (m *MockDatabase) GetConfigurationParameter(arg0 string) (appcfg.Parameter, error) {
+func (m *MockDatabase) GetConfigurationParameter(arg0 context.Context, arg1 string) (appcfg.Parameter, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetConfigurationParameter", arg0)
+	ret := m.ctrl.Call(m, "GetConfigurationParameter", arg0, arg1)
 	ret0, _ := ret[0].(appcfg.Parameter)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetConfigurationParameter indicates an expected call of GetConfigurationParameter.
-func (mr *MockDatabaseMockRecorder) GetConfigurationParameter(arg0 interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) GetConfigurationParameter(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetConfigurationParameter", reflect.TypeOf((*MockDatabase)(nil).GetConfigurationParameter), arg0)
-}
-
-// GetConfigurationParametersByPrefix mocks base method.
-func (m *MockDatabase) GetConfigurationParametersByPrefix(arg0 string) (appcfg.Parameters, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetConfigurationParametersByPrefix", arg0)
-	ret0, _ := ret[0].(appcfg.Parameters)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetConfigurationParametersByPrefix indicates an expected call of GetConfigurationParametersByPrefix.
-func (mr *MockDatabaseMockRecorder) GetConfigurationParametersByPrefix(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetConfigurationParametersByPrefix", reflect.TypeOf((*MockDatabase)(nil).GetConfigurationParametersByPrefix), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetConfigurationParameter", reflect.TypeOf((*MockDatabase)(nil).GetConfigurationParameter), arg0, arg1)
 }
 
 // GetFileUploadJob mocks base method.
@@ -1260,17 +1245,17 @@ func (mr *MockDatabaseMockRecorder) SavedQueryBelongsToUser(arg0, arg1 interface
 }
 
 // SetConfigurationParameter mocks base method.
-func (m *MockDatabase) SetConfigurationParameter(arg0 appcfg.Parameter) error {
+func (m *MockDatabase) SetConfigurationParameter(arg0 context.Context, arg1 appcfg.Parameter) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SetConfigurationParameter", arg0)
+	ret := m.ctrl.Call(m, "SetConfigurationParameter", arg0, arg1)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // SetConfigurationParameter indicates an expected call of SetConfigurationParameter.
-func (mr *MockDatabaseMockRecorder) SetConfigurationParameter(arg0 interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) SetConfigurationParameter(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetConfigurationParameter", reflect.TypeOf((*MockDatabase)(nil).SetConfigurationParameter), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetConfigurationParameter", reflect.TypeOf((*MockDatabase)(nil).SetConfigurationParameter), arg0, arg1)
 }
 
 // SetFlag mocks base method.

@@ -75,7 +75,7 @@ func TestManagementResource_PutUserAuthSecret(t *testing.T) {
 
 	mockDB.EXPECT().GetUser(badUserID).Return(model.User{SAMLProviderID: null.Int32From(1)}, nil)
 	mockDB.EXPECT().GetUser(goodUserID).Return(model.User{}, nil)
-	mockDB.EXPECT().GetConfigurationParameter(appcfg.PasswordExpirationWindow).Return(appcfg.Parameter{
+	mockDB.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.PasswordExpirationWindow).Return(appcfg.Parameter{
 		Key: appcfg.PasswordExpirationWindow,
 		Value: must.NewJSONBObject(appcfg.PasswordExpiration{
 			Duration: appcfg.DefaultPasswordExpirationWindow,
@@ -1048,7 +1048,7 @@ func TestCreateUser_Failure(t *testing.T) {
 	}
 
 	resources, mockDB := apitest.NewAuthManagementResource(mockCtrl)
-	mockDB.EXPECT().GetConfigurationParameter(appcfg.PasswordExpirationWindow).Return(appcfg.Parameter{
+	mockDB.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.PasswordExpirationWindow).Return(appcfg.Parameter{
 		Key: appcfg.PasswordExpirationWindow,
 		Value: must.NewJSONBObject(appcfg.PasswordExpiration{
 			Duration: appcfg.DefaultPasswordExpirationWindow,
@@ -1164,7 +1164,7 @@ func TestCreateUser_Success(t *testing.T) {
 	goodUser := model.User{PrincipalName: "good user"}
 
 	resources, mockDB := apitest.NewAuthManagementResource(mockCtrl)
-	mockDB.EXPECT().GetConfigurationParameter(appcfg.PasswordExpirationWindow).Return(appcfg.Parameter{
+	mockDB.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.PasswordExpirationWindow).Return(appcfg.Parameter{
 		Key: appcfg.PasswordExpirationWindow,
 		Value: must.NewJSONBObject(appcfg.PasswordExpiration{
 			Duration: appcfg.DefaultPasswordExpirationWindow,
@@ -1217,7 +1217,7 @@ func TestCreateUser_ResetPassword(t *testing.T) {
 	defer mockCtrl.Finish()
 
 	resources, mockDB := apitest.NewAuthManagementResource(mockCtrl)
-	mockDB.EXPECT().GetConfigurationParameter(appcfg.PasswordExpirationWindow).Return(appcfg.Parameter{
+	mockDB.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.PasswordExpirationWindow).Return(appcfg.Parameter{
 		Key: appcfg.PasswordExpirationWindow,
 		Value: must.NewJSONBObject(appcfg.PasswordExpiration{
 			Duration: appcfg.DefaultPasswordExpirationWindow,
@@ -1290,7 +1290,7 @@ func TestManagementResource_UpdateUser_IDMalformed(t *testing.T) {
 	}
 
 	resources, mockDB := apitest.NewAuthManagementResource(mockCtrl)
-	mockDB.EXPECT().GetConfigurationParameter(appcfg.PasswordExpirationWindow).Return(appcfg.Parameter{
+	mockDB.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.PasswordExpirationWindow).Return(appcfg.Parameter{
 		Key: appcfg.PasswordExpirationWindow,
 		Value: must.NewJSONBObject(appcfg.PasswordExpiration{
 			Duration: appcfg.DefaultPasswordExpirationWindow,
@@ -1353,7 +1353,7 @@ func TestManagementResource_UpdateUser_GetUserError(t *testing.T) {
 	}
 
 	resources, mockDB := apitest.NewAuthManagementResource(mockCtrl)
-	mockDB.EXPECT().GetConfigurationParameter(appcfg.PasswordExpirationWindow).Return(appcfg.Parameter{
+	mockDB.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.PasswordExpirationWindow).Return(appcfg.Parameter{
 		Key: appcfg.PasswordExpirationWindow,
 		Value: must.NewJSONBObject(appcfg.PasswordExpiration{
 			Duration: appcfg.DefaultPasswordExpirationWindow,
@@ -1417,7 +1417,7 @@ func TestManagementResource_UpdateUser_GetRolesError(t *testing.T) {
 	}
 
 	resources, mockDB := apitest.NewAuthManagementResource(mockCtrl)
-	mockDB.EXPECT().GetConfigurationParameter(appcfg.PasswordExpirationWindow).Return(appcfg.Parameter{
+	mockDB.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.PasswordExpirationWindow).Return(appcfg.Parameter{
 		Key: appcfg.PasswordExpirationWindow,
 		Value: must.NewJSONBObject(appcfg.PasswordExpiration{
 			Duration: appcfg.DefaultPasswordExpirationWindow,
@@ -1475,7 +1475,7 @@ func TestManagementResource_UpdateUser_SelfDisable(t *testing.T) {
 	goodUser := model.User{PrincipalName: "good user"}
 
 	resources, mockDB := apitest.NewAuthManagementResource(mockCtrl)
-	mockDB.EXPECT().GetConfigurationParameter(appcfg.PasswordExpirationWindow).Return(appcfg.Parameter{
+	mockDB.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.PasswordExpirationWindow).Return(appcfg.Parameter{
 		Key: appcfg.PasswordExpirationWindow,
 		Value: must.NewJSONBObject(appcfg.PasswordExpiration{
 			Duration: appcfg.DefaultPasswordExpirationWindow,
@@ -1556,7 +1556,7 @@ func TestManagementResource_UpdateUser_LookupActiveSessionsError(t *testing.T) {
 	}
 
 	resources, mockDB := apitest.NewAuthManagementResource(mockCtrl)
-	mockDB.EXPECT().GetConfigurationParameter(appcfg.PasswordExpirationWindow).Return(appcfg.Parameter{
+	mockDB.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.PasswordExpirationWindow).Return(appcfg.Parameter{
 		Key: appcfg.PasswordExpirationWindow,
 		Value: must.NewJSONBObject(appcfg.PasswordExpiration{
 			Duration: appcfg.DefaultPasswordExpirationWindow,
@@ -1637,7 +1637,7 @@ func TestManagementResource_UpdateUser_DBError(t *testing.T) {
 	}
 
 	resources, mockDB := apitest.NewAuthManagementResource(mockCtrl)
-	mockDB.EXPECT().GetConfigurationParameter(appcfg.PasswordExpirationWindow).Return(appcfg.Parameter{
+	mockDB.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.PasswordExpirationWindow).Return(appcfg.Parameter{
 		Key: appcfg.PasswordExpirationWindow,
 		Value: must.NewJSONBObject(appcfg.PasswordExpiration{
 			Duration: appcfg.DefaultPasswordExpirationWindow,
@@ -1862,7 +1862,7 @@ func TestManagementResource_UpdateUser_Success(t *testing.T) {
 	}
 
 	resources, mockDB := apitest.NewAuthManagementResource(mockCtrl)
-	mockDB.EXPECT().GetConfigurationParameter(appcfg.PasswordExpirationWindow).Return(appcfg.Parameter{
+	mockDB.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.PasswordExpirationWindow).Return(appcfg.Parameter{
 		Key: appcfg.PasswordExpirationWindow,
 		Value: must.NewJSONBObject(appcfg.PasswordExpiration{
 			Duration: appcfg.DefaultPasswordExpirationWindow,
