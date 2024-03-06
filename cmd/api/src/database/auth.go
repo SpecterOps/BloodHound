@@ -360,7 +360,7 @@ func (s *BloodhoundDB) CreateUser(ctx context.Context, user model.User) (model.U
 		Model:  &updatedUser,
 	}
 	return updatedUser, s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
-		return CheckError(tx.Create(&updatedUser))
+		return CheckError(tx.WithContext(ctx).Create(&updatedUser))
 	})
 }
 
@@ -376,11 +376,11 @@ func (s *BloodhoundDB) UpdateUser(ctx context.Context, user model.User) error {
 
 	return s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
 		// Update roles first
-		if err := tx.Model(&user).Association("Roles").Replace(&user.Roles); err != nil {
+		if err := tx.Model(&user).WithContext(ctx).Association("Roles").Replace(&user.Roles); err != nil {
 			return err
 		}
 
-		result := tx.Save(&user)
+		result := tx.WithContext(ctx).Save(&user)
 		return CheckError(result)
 	})
 }
