@@ -107,7 +107,7 @@ func (s authenticator) auditLogin(requestContext context.Context, commitID uuid.
 		auditLog.Fields["error"] = loginError
 	}
 
-	s.db.CreateAuditLog(auditLog)
+	s.db.CreateAuditLog(requestContext, auditLog)
 }
 
 func (s authenticator) validateSecretLogin(ctx context.Context, loginRequest LoginRequest) (model.User, string, error) {
