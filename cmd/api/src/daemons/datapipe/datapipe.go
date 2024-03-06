@@ -20,13 +20,13 @@ package datapipe
 import (
 	"context"
 	"errors"
-	"github.com/specterops/bloodhound/src/bootstrap"
 	"sync/atomic"
 	"time"
 
 	"github.com/specterops/bloodhound/cache"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/log"
+	"github.com/specterops/bloodhound/src/bootstrap"
 	"github.com/specterops/bloodhound/src/config"
 	"github.com/specterops/bloodhound/src/database"
 	"github.com/specterops/bloodhound/src/model"
