@@ -9,13 +9,14 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"strings"
 	"sync"
 
+	"github.com/specterops/bloodhound/slicesext"
 	"golang.org/x/mod/modfile"
 )
 
-type Package struct {
+// GoPackage represents a parsed Go package
+type GoPackage struct {
 	Name   string `json:"name"`
 	Dir    string `json:"dir"`
 	Import string `json:"importpath"`
@@ -75,99 +76,28 @@ func ParseModulesAbsPaths(cwd string) ([]string, error) {
 	}
 }
 
-// DownloadModules runs go mod download for all module paths passed
-func DownloadModules(modPaths []string) error {
+// ParseJsAbsPaths parses list of yarn workspaces from `yarn-workspaces.json` in cwd
+func ParseJsAbsPaths(cwd string) ([]string, error) {
 	var (
-		errs []error
-		wg   sync.WaitGroup
-		mu   sync.Mutex
+		paths  []string
+		ywPath = filepath.Join(cwd, "yarn-workspaces.json")
 	)
 
-	for _, modPath := range modPaths {
-		wg.Add(1)
-		go func(modPath string) {
-			wg.Done()
-			cmd := exec.Command("go", "mod", "download")
-			cmd.Dir = modPath
-			if err := cmd.Run(); err != nil {
-				mu.Lock()
-				errs = append(errs, fmt.Errorf("failure when running go mod download in %s: %w", modPath, err))
-				mu.Unlock()
-			}
-		}(modPath)
-	}
-
-	wg.Wait()
-
-	return errors.Join(errs...)
-}
-
-// WorkspaceGenerate runs go generate ./... for all module paths passed
-func WorkspaceGenerate(modPaths []string) error {
-	var (
-		errs []error
-		wg   sync.WaitGroup
-		mu   sync.Mutex
-	)
-
-	for _, modPath := range modPaths {
-		wg.Add(1)
-		go func(modPath string) {
-			defer wg.Done()
-			if err := moduleGenerate(modPath); err != nil {
-				mu.Lock()
-				errs = append(errs, fmt.Errorf("failure running code generation for module %s: %w", modPath, err))
-				mu.Unlock()
-			}
-		}(modPath)
-	}
-
-	wg.Wait()
-
-	return errors.Join(errs...)
-}
-
-// SyncWorkspace runs go work sync in the given directory
-func SyncWorkspace(cwd string) error {
-	cmd := exec.Command("go", "work", "sync")
-	cmd.Dir = cwd
-	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("failed running go work sync: %w", err)
+	if data, err := os.ReadFile(ywPath); err != nil {
+		return paths, fmt.Errorf("could not read yarn-workspaces.json file: %w", err)
+	} else if err := json.Unmarshal(data, &paths); err != nil {
+		return paths, fmt.Errorf("could not unmarshal yarn-workspaces.json file: %w", err)
 	} else {
-		return nil
+		var workDir = filepath.Dir(ywPath)
+
+		return slicesext.Map(paths, func(path string) string { return filepath.Join(workDir, path) }), nil
 	}
-}
-
-// BuildMainPackages builds all main packages for a list of module paths
-func BuildMainPackages(workRoot string, modPaths []string) error {
-	var (
-		errs     []error
-		wg       sync.WaitGroup
-		mu       sync.Mutex
-		buildDir = filepath.Join(workRoot, "dist") + string(filepath.Separator)
-	)
-
-	for _, modPath := range modPaths {
-		wg.Add(1)
-		go func(buildDir, modPath string) {
-			defer wg.Done()
-			if err := buildModuleMainPackages(buildDir, modPath); err != nil {
-				mu.Lock()
-				errs = append(errs, fmt.Errorf("failed to build main package: %w", err))
-				mu.Unlock()
-			}
-		}(buildDir, modPath)
-	}
-
-	wg.Wait()
-
-	return errors.Join(errs...)
 }
 
 // moduleListPackages runs go list for the given module and returns the list of packages in that module
-func moduleListPackages(modPath string) ([]Package, error) {
+func moduleListPackages(modPath string) ([]GoPackage, error) {
 	var (
-		packages = make([]Package, 0)
+		packages = make([]GoPackage, 0)
 	)
 
 	cmd := exec.Command("go", "list", "-json", "./...")
@@ -179,7 +109,7 @@ func moduleListPackages(modPath string) ([]Package, error) {
 	} else {
 		decoder := json.NewDecoder(out)
 		for {
-			var p Package
+			var p GoPackage
 			if err := decoder.Decode(&p); err == io.EOF {
 				break
 			} else if err != nil {
@@ -189,41 +119,6 @@ func moduleListPackages(modPath string) ([]Package, error) {
 		}
 		cmd.Wait()
 		return packages, nil
-	}
-}
-
-// buildModuleMainPackages runs go build for all main packages in a given module
-func buildModuleMainPackages(buildDir string, modPath string) error {
-	var (
-		wg   sync.WaitGroup
-		errs []error
-		mu   sync.Mutex
-	)
-
-	if packages, err := moduleListPackages(modPath); err != nil {
-		return fmt.Errorf("failed to list module packages: %w", err)
-	} else {
-		for _, p := range packages {
-			if p.Name == "main" && !strings.Contains(p.Dir, "plugin") {
-				wg.Add(1)
-				go func(p Package) {
-					defer wg.Done()
-					cmd := exec.Command("go", "build", "-o", buildDir)
-					cmd.Dir = p.Dir
-					if err := cmd.Run(); err != nil {
-						mu.Lock()
-						errs = append(errs, fmt.Errorf("failed running go build for package %s: %w", p.Import, err))
-						mu.Unlock()
-					} else {
-						slog.Info("Built package", "package", p.Import, "dir", p.Dir)
-					}
-				}(p)
-			}
-		}
-
-		wg.Wait()
-
-		return errors.Join(errs...)
 	}
 }
 
@@ -251,7 +146,7 @@ func moduleGenerate(modPath string) error {
 	} else {
 		for _, pkg := range packages {
 			wg.Add(1)
-			go func(pkg Package) {
+			go func(pkg GoPackage) {
 				defer wg.Done()
 				cmd := exec.Command("go", "generate", pkg.Dir)
 				cmd.Dir = modPath
