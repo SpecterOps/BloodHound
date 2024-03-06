@@ -21,7 +21,6 @@ package ad_test
 
 import (
 	"context"
-
 	"github.com/specterops/bloodhound/analysis"
 	"github.com/specterops/bloodhound/analysis/impact"
 	"github.com/specterops/bloodhound/graphschema"
@@ -208,16 +207,29 @@ func TestCanAbuseUPNCertMapping(t *testing.T) {
 				// Positive Cases
 				assert.True(t, results.Contains(harness.WeakCertBindingAndUPNCertMappingHarness.EnterpriseCA1))
 				assert.True(t, results.Contains(harness.WeakCertBindingAndUPNCertMappingHarness.EnterpriseCA2))
+			}
+
+			if results, err := ops.FetchEndNodes(tx.Relationships().Filterf(func() graph.Criteria {
+				return query.Kind(query.Relationship(), ad.CanAbuseUPNCertMapping)
+			})); err != nil {
+				t.Fatalf("error fetching CanAbuseUPNCertMapping relationships; %v", err)
+			} else {
+				assert.True(t, len(results) == 3)
 
 				// Negative Cases
-				assert.False(t, results.Contains(harness.WeakCertBindingAndUPNCertMappingHarness.Computer1))
+				assert.False(t, results.Contains(harness.WeakCertBindingAndUPNCertMappingHarness.EnterpriseCA1))
+				assert.False(t, results.Contains(harness.WeakCertBindingAndUPNCertMappingHarness.EnterpriseCA2))
+
 				assert.False(t, results.Contains(harness.WeakCertBindingAndUPNCertMappingHarness.Computer2))
-				assert.False(t, results.Contains(harness.WeakCertBindingAndUPNCertMappingHarness.Computer3))
 				assert.False(t, results.Contains(harness.WeakCertBindingAndUPNCertMappingHarness.Computer4))
-				assert.False(t, results.Contains(harness.WeakCertBindingAndUPNCertMappingHarness.Computer5))
 				assert.False(t, results.Contains(harness.WeakCertBindingAndUPNCertMappingHarness.Domain1))
 				assert.False(t, results.Contains(harness.WeakCertBindingAndUPNCertMappingHarness.Domain2))
 				assert.False(t, results.Contains(harness.WeakCertBindingAndUPNCertMappingHarness.Domain3))
+
+				// Positive Cases
+				assert.True(t, results.Contains(harness.WeakCertBindingAndUPNCertMappingHarness.Computer1))
+				assert.True(t, results.Contains(harness.WeakCertBindingAndUPNCertMappingHarness.Computer3))
+				assert.True(t, results.Contains(harness.WeakCertBindingAndUPNCertMappingHarness.Computer5))
 			}
 			return nil
 		})

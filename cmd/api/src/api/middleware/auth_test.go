@@ -17,15 +17,18 @@
 package middleware
 
 import (
+	"context"
 	"net/http"
 	"testing"
 	"time"
 
+	"github.com/gofrs/uuid"
 	"github.com/specterops/bloodhound/headers"
 	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/src/auth"
 	"github.com/specterops/bloodhound/src/ctx"
 	dbmocks "github.com/specterops/bloodhound/src/database/mocks"
+	"github.com/specterops/bloodhound/src/database/types/null"
 	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/test/must"
 	"github.com/specterops/bloodhound/src/utils/test"
@@ -39,6 +42,20 @@ func permissionsCheckAllHandler(db *dbmocks.MockDatabase, internalHandler http.H
 
 func permissionsCheckAtLeastOneHandler(db *dbmocks.MockDatabase, internalHandler http.HandlerFunc, permissions ...model.Permission) http.Handler {
 	return PermissionsCheckAtLeastOne(auth.NewAuthorizer(db), permissions...)(internalHandler)
+}
+
+func auditEntryAndContext(bhCtx ctx.Context, action string, fields model.AuditData, status model.AuditEntryStatus) (context.Context, model.AuditEntry) {
+	testCtx := context.Background()
+	testCtx = ctx.Set(testCtx, &bhCtx)
+
+	auditEntry := model.AuditEntry{
+		CommitID: uuid.FromStringOrNil("11111111-1111-1111-1111-111111111111"),
+		Action:   action,
+		Model:    fields,
+		Status:   status,
+	}
+
+	return testCtx, auditEntry
 }
 
 func Test_parseAuthorizationHeader(t *testing.T) {
@@ -63,48 +80,33 @@ func TestPermissionsCheckAll(t *testing.T) {
 		handlerReturn200 = func(response http.ResponseWriter, request *http.Request) {
 			response.WriteHeader(http.StatusOK)
 		}
-		mockCtrl = gomock.NewController(t)
-		mockDB   = dbmocks.NewMockDatabase(mockCtrl)
-	)
-	defer mockCtrl.Finish()
-
-	mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
-	test.Request(t).
-		WithURL("http//example.com").
-		WithHeader(headers.RequestID.String(), "requestID").
-		WithContext(&ctx.Context{}).
-		OnHandler(permissionsCheckAllHandler(mockDB, handlerReturn200, auth.Permissions().AuthManageSelf)).
-		Require().
-		ResponseStatusCode(http.StatusUnauthorized)
-
-	test.Request(t).
-		WithURL("http//example.com").
-		WithContext(&ctx.Context{
+		mockCtrl   = gomock.NewController(t)
+		mockDB     = dbmocks.NewMockDatabase(mockCtrl)
+		noPermsCtx = ctx.Context{
 			AuthCtx: auth.Context{
 				PermissionOverrides: auth.PermissionOverrides{},
 				Owner: model.User{
+					EmailAddress:  null.StringFrom("no@permissions.com"),
+					PrincipalName: "noPermissions",
 					Roles: model.Roles{
 						{
 							Name:        "Big Boy",
 							Description: "The big boy.",
 						},
 					},
+					Unique: model.Unique{
+						ID: uuid.FromStringOrNil("22222222-2222-2222-2222-222222222222"),
+					},
 				},
 				Session: model.UserSession{},
 			},
-		}).
-		OnHandler(permissionsCheckAllHandler(mockDB, handlerReturn200, auth.Permissions().AuthManageSelf)).
-		Require().
-		ResponseStatusCode(http.StatusForbidden)
-
-	mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil).Times(0) // No audit logs should be created on successful login
-	test.Request(t).
-		WithURL("http//example.com").
-		WithHeader(headers.RequestID.String(), "requestID").
-		WithContext(&ctx.Context{
+		}
+		allPermsCtx = ctx.Context{
 			AuthCtx: auth.Context{
 				PermissionOverrides: auth.PermissionOverrides{},
 				Owner: model.User{
+					EmailAddress:  null.StringFrom("all@permissions.com"),
+					PrincipalName: "allPermissions",
 					Roles: model.Roles{
 						{
 							Name:        "Big Boy",
@@ -112,13 +114,46 @@ func TestPermissionsCheckAll(t *testing.T) {
 							Permissions: auth.Permissions().All(),
 						},
 					},
+					Unique: model.Unique{
+						ID: uuid.FromStringOrNil("33333333-3333-3333-3333-333333333333"),
+					},
 				},
 				Session: model.UserSession{},
 			},
-		}).
+		}
+	)
+	defer mockCtrl.Finish()
+
+	mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil).Times(0) // No audit logs should be created on successful login or missing auth context
+	test.Request(t).
+		WithURL("http://example.com/test").
+		WithHeader(headers.RequestID.String(), "requestID").
+		WithContext(&ctx.Context{}).
+		OnHandler(permissionsCheckAllHandler(mockDB, handlerReturn200, auth.Permissions().AuthManageSelf)).
+		Require().
+		ResponseStatusCode(http.StatusUnauthorized)
+
+	test.Request(t).
+		WithURL("http://example.com/test").
+		WithHeader(headers.RequestID.String(), "requestID").
+		WithContext(&allPermsCtx).
 		OnHandler(permissionsCheckAllHandler(mockDB, handlerReturn200, auth.Permissions().AuthManageSelf)).
 		Require().
 		ResponseStatusCode(http.StatusOK)
+
+	auditContext, noPermsEntry := auditEntryAndContext(
+		noPermsCtx, "UnauthorizedAccessAttempt",
+		model.AuditData{"endpoint": "POST /test"},
+		model.AuditStatusFailure,
+	)
+	mockDB.EXPECT().AppendAuditLog(auditContext, noPermsEntry).Times(1)
+	test.Request(t).
+		WithURL("http://example.com/test").
+		WithMethod(http.MethodPost).
+		WithContext(&noPermsCtx).
+		OnHandler(permissionsCheckAllHandler(mockDB, handlerReturn200, auth.Permissions().AuthManageSelf)).
+		Require().
+		ResponseStatusCode(http.StatusForbidden)
 }
 
 func TestPermissionsCheckAtLeastOne(t *testing.T) {
@@ -126,14 +161,29 @@ func TestPermissionsCheckAtLeastOne(t *testing.T) {
 		handlerReturn200 = func(response http.ResponseWriter, request *http.Request) {
 			response.WriteHeader(http.StatusOK)
 		}
-		mockCtrl = gomock.NewController(t)
-		mockDB   = dbmocks.NewMockDatabase(mockCtrl)
+		mockCtrl        = gomock.NewController(t)
+		mockDB          = dbmocks.NewMockDatabase(mockCtrl)
+		missingPermsCtx = ctx.Context{
+			AuthCtx: auth.Context{
+				PermissionOverrides: auth.PermissionOverrides{},
+				Owner: model.User{
+					Roles: model.Roles{
+						{
+							Name:        "Big Boy",
+							Description: "The big boy.",
+							Permissions: model.Permissions{auth.Permissions().AuthManageSelf, auth.Permissions().GraphDBRead},
+						},
+					},
+				},
+				Session: model.UserSession{},
+			},
+		}
 	)
 	defer mockCtrl.Finish()
 
 	mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil).Times(0)
 	test.Request(t).
-		WithURL("http//example.com").
+		WithURL("http://example.com/test").
 		WithContext(&ctx.Context{
 			AuthCtx: auth.Context{
 				PermissionOverrides: auth.PermissionOverrides{},
@@ -154,7 +204,7 @@ func TestPermissionsCheckAtLeastOne(t *testing.T) {
 		ResponseStatusCode(http.StatusOK)
 
 	test.Request(t).
-		WithURL("http//example.com").
+		WithURL("http://example.com/test").
 		WithContext(&ctx.Context{
 			AuthCtx: auth.Context{
 				PermissionOverrides: auth.PermissionOverrides{},
@@ -175,7 +225,7 @@ func TestPermissionsCheckAtLeastOne(t *testing.T) {
 		ResponseStatusCode(http.StatusOK)
 
 	test.Request(t).
-		WithURL("http//example.com").
+		WithURL("http://example.com/test").
 		WithContext(&ctx.Context{
 			AuthCtx: auth.Context{
 				PermissionOverrides: auth.PermissionOverrides{},
@@ -196,7 +246,7 @@ func TestPermissionsCheckAtLeastOne(t *testing.T) {
 		ResponseStatusCode(http.StatusOK)
 
 	test.Request(t).
-		WithURL("http//example.com").
+		WithURL("http://example.com/test").
 		WithHeader(headers.RequestID.String(), "requestID").
 		WithContext(&ctx.Context{
 			AuthCtx: auth.Context{
@@ -217,24 +267,16 @@ func TestPermissionsCheckAtLeastOne(t *testing.T) {
 		Require().
 		ResponseStatusCode(http.StatusOK)
 
-	mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil).Times(1)
+	auditContext, missingPermsEntry := auditEntryAndContext(
+		missingPermsCtx, "UnauthorizedAccessAttempt",
+		model.AuditData{"endpoint": "PUT /test"},
+		model.AuditStatusFailure,
+	)
+	mockDB.EXPECT().AppendAuditLog(auditContext, missingPermsEntry).Times(1)
 	test.Request(t).
-		WithURL("http//example.com").
-		WithContext(&ctx.Context{
-			AuthCtx: auth.Context{
-				PermissionOverrides: auth.PermissionOverrides{},
-				Owner: model.User{
-					Roles: model.Roles{
-						{
-							Name:        "Big Boy",
-							Description: "The big boy.",
-							Permissions: model.Permissions{auth.Permissions().AuthManageSelf, auth.Permissions().GraphDBRead},
-						},
-					},
-				},
-				Session: model.UserSession{},
-			},
-		}).
+		WithURL("http://example.com/test").
+		WithMethod(http.MethodPut).
+		WithContext(&missingPermsCtx).
 		OnHandler(permissionsCheckAtLeastOneHandler(mockDB, handlerReturn200, auth.Permissions().GraphDBWrite)).
 		Require().
 		ResponseStatusCode(http.StatusForbidden)

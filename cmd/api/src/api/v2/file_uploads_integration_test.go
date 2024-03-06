@@ -132,7 +132,7 @@ func Test_FileUpload(t *testing.T) {
 	})
 
 	t.Run("not valid json", func(tx *testing.T) {
-		jsonInput := loader.GetReader("v6/ingest/jker.png")
+		jsonInput := loader.GetReader("v6/ingest/jker.jpg")
 		defer jsonInput.Close()
 		req, err := apiClient.NewRequest(http.MethodPost, jobEndpoint, nil, jsonInput)
 		assert.Nil(tx, err)
