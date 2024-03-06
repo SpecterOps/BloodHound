@@ -140,17 +140,17 @@ func (mr *MockDatabaseMockRecorder) CreateAssetGroupCollection(arg0, arg1, arg2 
 }
 
 // CreateAuditLog mocks base method.
-func (m *MockDatabase) CreateAuditLog(arg0 model.AuditLog) error {
+func (m *MockDatabase) CreateAuditLog(arg0 context.Context, arg1 model.AuditLog) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateAuditLog", arg0)
+	ret := m.ctrl.Call(m, "CreateAuditLog", arg0, arg1)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // CreateAuditLog indicates an expected call of CreateAuditLog.
-func (mr *MockDatabaseMockRecorder) CreateAuditLog(arg0 interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) CreateAuditLog(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateAuditLog", reflect.TypeOf((*MockDatabase)(nil).CreateAuditLog), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateAuditLog", reflect.TypeOf((*MockDatabase)(nil).CreateAuditLog), arg0, arg1)
 }
 
 // CreateAuthSecret mocks base method.
@@ -1094,9 +1094,9 @@ func (mr *MockDatabaseMockRecorder) InitializeSecretAuth(arg0, arg1 interface{})
 }
 
 // ListAuditLogs mocks base method.
-func (m *MockDatabase) ListAuditLogs(arg0, arg1 time.Time, arg2, arg3 int, arg4 string, arg5 model.SQLFilter) (model.AuditLogs, int, error) {
+func (m *MockDatabase) ListAuditLogs(arg0 context.Context, arg1, arg2 time.Time, arg3, arg4 int, arg5 string, arg6 model.SQLFilter) (model.AuditLogs, int, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ListAuditLogs", arg0, arg1, arg2, arg3, arg4, arg5)
+	ret := m.ctrl.Call(m, "ListAuditLogs", arg0, arg1, arg2, arg3, arg4, arg5, arg6)
 	ret0, _ := ret[0].(model.AuditLogs)
 	ret1, _ := ret[1].(int)
 	ret2, _ := ret[2].(error)
@@ -1104,9 +1104,9 @@ func (m *MockDatabase) ListAuditLogs(arg0, arg1 time.Time, arg2, arg3 int, arg4 
 }
 
 // ListAuditLogs indicates an expected call of ListAuditLogs.
-func (mr *MockDatabaseMockRecorder) ListAuditLogs(arg0, arg1, arg2, arg3, arg4, arg5 interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) ListAuditLogs(arg0, arg1, arg2, arg3, arg4, arg5, arg6 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListAuditLogs", reflect.TypeOf((*MockDatabase)(nil).ListAuditLogs), arg0, arg1, arg2, arg3, arg4, arg5)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListAuditLogs", reflect.TypeOf((*MockDatabase)(nil).ListAuditLogs), arg0, arg1, arg2, arg3, arg4, arg5, arg6)
 }
 
 // ListSavedQueries mocks base method.
