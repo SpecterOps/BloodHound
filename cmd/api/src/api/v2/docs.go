@@ -42,7 +42,7 @@ var (
 		Description:  "This is the API that drives BloodHound Enterprise and Community Edition.\nEndpoint availability is denoted using the `Community` and `Enterprise` tags.\n\nContact information listed is for BloodHound Enterprise customers. To get help with\nBloodHound Community Edition, please join our\n[Slack community](https://ghst.ly/BHSlack/).",
 		SupportName:  "BloodHound Enterprise Support",
 		SupportUrl:   "https://support.bloodhoundenterprise.io/",
-		SupportEmail: "bloodhoundenterprise@specterops.io",
+		SupportEmail: "support@specterops.io",
 	}
 )
 

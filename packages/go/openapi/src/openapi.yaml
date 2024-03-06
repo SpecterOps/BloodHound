@@ -25,7 +25,7 @@ info:
   contact:
     name: BloodHound Enterprise Support
     url: https://support.bloodhoundenterprise.io/
-    email: bloodhoundenterprise@specterops.io
+    email: support@specterops.io
   license:
     name: Apache-2.0
     url: https://www.apache.org/licenses/LICENSE-2.0
