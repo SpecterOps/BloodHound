@@ -26,6 +26,7 @@ import (
 	"github.com/specterops/bloodhound/packages/go/stbernard/command/analysis"
 	"github.com/specterops/bloodhound/packages/go/stbernard/command/builder"
 	"github.com/specterops/bloodhound/packages/go/stbernard/command/envdump"
+	"github.com/specterops/bloodhound/packages/go/stbernard/command/generate"
 	"github.com/specterops/bloodhound/packages/go/stbernard/command/modsync"
 )
 
@@ -87,6 +88,14 @@ func ParseCLI() (Commander, error) {
 	case Build.String():
 		config := builder.Config{Environment: environment()}
 		if cmd, err := builder.Create(config); err != nil {
+			return nil, fmt.Errorf("%w: %w", ErrFailedCreateCmd, err)
+		} else {
+			return cmd, nil
+		}
+
+	case Generate.String():
+		config := generate.Config{Environment: environment()}
+		if cmd, err := generate.Create(config); err != nil {
 			return nil, fmt.Errorf("%w: %w", ErrFailedCreateCmd, err)
 		} else {
 			return cmd, nil

@@ -18,4 +18,20 @@ module github.com/specterops/bloodhound/packages/go/stbernard
 
 go 1.21
 
-require golang.org/x/mod v0.14.0
+require (
+	github.com/specterops/bloodhound/log v0.0.0-00010101000000-000000000000
+	github.com/specterops/bloodhound/slicesext v0.0.0-00010101000000-000000000000
+	golang.org/x/mod v0.14.0
+)
+
+require (
+	github.com/mattn/go-colorable v0.1.13 // indirect
+	github.com/mattn/go-isatty v0.0.19 // indirect
+	github.com/rs/zerolog v1.29.1 // indirect
+	golang.org/x/sys v0.16.0 // indirect
+)
+
+replace (
+	github.com/specterops/bloodhound/log => ../log
+	github.com/specterops/bloodhound/slicesext => ../slicesext
+)
