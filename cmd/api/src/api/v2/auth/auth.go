@@ -186,7 +186,7 @@ func (s ManagementResource) DeleteSAMLProvider(response http.ResponseWriter, req
 		api.HandleDatabaseError(request, response, err)
 	} else if user, isUser := auth.GetUserFromAuthCtx(requestContext.AuthCtx); isUser && int64(user.SAMLProviderID.Int32) == providerID {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusConflict, "user may not delete their own SAML auth provider", request), response)
-	} else if providerUsers, err := s.db.GetSAMLProviderUsers(identityProvider.ID); err != nil {
+	} else if providerUsers, err := s.db.GetSAMLProviderUsers(request.Context(), identityProvider.ID); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else if err := s.disassociateUsersFromSAMLProvider(request, providerUsers); err != nil {
 		api.HandleDatabaseError(request, response, err)

@@ -123,7 +123,7 @@ type Database interface {
 	LookupSAMLProviderByName(ctx context.Context, name string) (model.SAMLProvider, error)
 	GetAllSAMLProviders(ctx context.Context) (model.SAMLProviders, error)
 	GetSAMLProvider(ctx context.Context, id int32) (model.SAMLProvider, error)
-	GetSAMLProviderUsers(id int32) (model.Users, error)
+	GetSAMLProviderUsers(ctx context.Context, id int32) (model.Users, error)
 	DeleteSAMLProvider(ctx context.Context, samlProvider model.SAMLProvider) error
 
 	CreateUserSession(userSession model.UserSession) (model.UserSession, error)

@@ -548,9 +548,9 @@ func (s *BloodhoundDB) DeleteSAMLProvider(ctx context.Context, provider model.SA
 
 // GetSAMLProviderUsers returns all users that are bound to the SAML provider ID provided
 // SELECT * FROM users WHERE saml_provider_id = ..
-func (s *BloodhoundDB) GetSAMLProviderUsers(id int32) (model.Users, error) {
+func (s *BloodhoundDB) GetSAMLProviderUsers(ctx context.Context, id int32) (model.Users, error) {
 	var users model.Users
-	return users, CheckError(s.preload(model.UserAssociations()).Where("saml_provider_id = ?", id).Find(&users))
+	return users, CheckError(s.preload(model.UserAssociations()).WithContext(ctx).Where("saml_provider_id = ?", id).Find(&users))
 }
 
 // CreateUserSession creates a new UserSession row

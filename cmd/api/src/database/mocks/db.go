@@ -955,18 +955,18 @@ func (mr *MockDatabaseMockRecorder) GetSAMLProvider(arg0, arg1 interface{}) *gom
 }
 
 // GetSAMLProviderUsers mocks base method.
-func (m *MockDatabase) GetSAMLProviderUsers(arg0 int32) (model.Users, error) {
+func (m *MockDatabase) GetSAMLProviderUsers(arg0 context.Context, arg1 int32) (model.Users, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetSAMLProviderUsers", arg0)
+	ret := m.ctrl.Call(m, "GetSAMLProviderUsers", arg0, arg1)
 	ret0, _ := ret[0].(model.Users)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetSAMLProviderUsers indicates an expected call of GetSAMLProviderUsers.
-func (mr *MockDatabaseMockRecorder) GetSAMLProviderUsers(arg0 interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) GetSAMLProviderUsers(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSAMLProviderUsers", reflect.TypeOf((*MockDatabase)(nil).GetSAMLProviderUsers), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSAMLProviderUsers", reflect.TypeOf((*MockDatabase)(nil).GetSAMLProviderUsers), arg0, arg1)
 }
 
 // GetTimeRangedAssetGroupCollections mocks base method.
