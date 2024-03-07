@@ -20,10 +20,13 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
 	"sync"
+
+	"github.com/specterops/bloodhound/log"
 )
 
 // BuildGoMainPackages builds all main packages for a list of module paths
@@ -58,7 +61,21 @@ func buildGoModuleMainPackages(buildDir string, modPath string) error {
 		wg   sync.WaitGroup
 		errs []error
 		mu   sync.Mutex
+
+		majorVersion      = "9"
+		minorVersion      = "9"
+		patchVersion      = "9"
+		prereleaseVersion = "rc9"
+
+		majorString      = fmt.Sprintf("-X 'github.com/specterops/bloodhound/src/version.majorVersion=%s'", majorVersion)
+		minorString      = fmt.Sprintf("-X 'github.com/specterops/bloodhound/src/version.minorVersion=%s'", minorVersion)
+		patchString      = fmt.Sprintf("-X 'github.com/specterops/bloodhound/src/version.patchVersion=%s'", patchVersion)
+		prereleaseString = fmt.Sprintf("-X 'github.com/specterops/bloodhound/src/version.prereleaseVersion=%s'", prereleaseVersion)
+
+		ldflags = strings.Join([]string{majorString, minorString, patchString, prereleaseString}, " ")
 	)
+
+	var args = []string{"-ldflags", ldflags, "-o", buildDir}
 
 	if packages, err := moduleListPackages(modPath); err != nil {
 		return fmt.Errorf("failed to list module packages: %w", err)
@@ -68,8 +85,14 @@ func buildGoModuleMainPackages(buildDir string, modPath string) error {
 				wg.Add(1)
 				go func(p GoPackage) {
 					defer wg.Done()
-					cmd := exec.Command("go", "build", "-o", buildDir)
+					cmd := exec.Command("go", "build")
+					cmd.Args = append(cmd.Args, args...)
 					cmd.Dir = p.Dir
+					if log.GlobalAccepts(log.LevelDebug) {
+						cmd.Stdout = os.Stderr
+						cmd.Stderr = os.Stderr
+					}
+
 					if err := cmd.Run(); err != nil {
 						mu.Lock()
 						errs = append(errs, fmt.Errorf("failed running go build for package %s: %w", p.Import, err))

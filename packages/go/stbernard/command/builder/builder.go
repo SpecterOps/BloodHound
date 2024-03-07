@@ -87,9 +87,7 @@ func Create(config Config) (command, error) {
 func (s command) runJSBuild(cwd string) error {
 	var env = s.config.Environment
 
-	if _, ok := env["BUILD_PATH"]; !ok {
-		env["BUILD_PATH"] = filepath.Join(cwd, "dist", "bh-ui")
-	}
+	env.SetIfEmpty("BUILD_PATH", filepath.Join(cwd, "dist", "bh-ui"))
 
 	if jsPaths, err := workspace.ParseJSAbsPaths(cwd); err != nil {
 		return fmt.Errorf("could not retrieve JS paths: %w", err)
@@ -131,7 +129,7 @@ func clearFiles(path string, entry os.DirEntry, err error) error {
 		return nil
 	}
 
-	log.Infof("Removing %s", filepath.Join(path, entry.Name()))
+	log.Debugf("Removing %s", filepath.Join(path, entry.Name()))
 
 	if entry.IsDir() {
 		if err := os.RemoveAll(filepath.Join(path, entry.Name())); err != nil {
@@ -147,6 +145,10 @@ func clearFiles(path string, entry os.DirEntry, err error) error {
 }
 
 func (s command) runGoBuild(cwd string) error {
+	var env = s.config.Environment
+
+	env.SetIfEmpty("CGO_ENABLED", "0")
+
 	if modPaths, err := workspace.ParseModulesAbsPaths(cwd); err != nil {
 		return fmt.Errorf("could not parse module absolute paths: %w", err)
 	} else if err := workspace.BuildGoMainPackages(cwd, modPaths); err != nil {
