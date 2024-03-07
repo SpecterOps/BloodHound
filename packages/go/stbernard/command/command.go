@@ -28,6 +28,7 @@ import (
 	"github.com/specterops/bloodhound/packages/go/stbernard/command/envdump"
 	"github.com/specterops/bloodhound/packages/go/stbernard/command/generate"
 	"github.com/specterops/bloodhound/packages/go/stbernard/command/modsync"
+	"github.com/specterops/bloodhound/packages/go/stbernard/environment"
 )
 
 // Commander is an interface for commands, allowing commands to implement the minimum
@@ -51,6 +52,8 @@ var ErrFailedCreateCmd = errors.New("failed to create command")
 // It does not support flags of its own, each subcommand is responsible for parsing
 // their flags.
 func ParseCLI() (Commander, error) {
+	var env = environment.NewEnvironment()
+
 	// Generate a nice usage message
 	flag.Usage = usage
 
@@ -62,7 +65,7 @@ func ParseCLI() (Commander, error) {
 
 	switch os.Args[1] {
 	case ModSync.String():
-		config := modsync.Config{Environment: environment()}
+		config := modsync.Config{Environment: env}
 		if cmd, err := modsync.Create(config); err != nil {
 			return nil, fmt.Errorf("%w: %w", ErrFailedCreateCmd, err)
 		} else {
@@ -70,7 +73,7 @@ func ParseCLI() (Commander, error) {
 		}
 
 	case EnvDump.String():
-		config := envdump.Config{Environment: environment()}
+		config := envdump.Config{Environment: env}
 		if cmd, err := envdump.Create(config); err != nil {
 			return nil, fmt.Errorf("%w: %w", ErrFailedCreateCmd, err)
 		} else {
@@ -78,7 +81,7 @@ func ParseCLI() (Commander, error) {
 		}
 
 	case Analysis.String():
-		config := analysis.Config{Environment: environment()}
+		config := analysis.Config{Environment: env}
 		if cmd, err := analysis.Create(config); err != nil {
 			return nil, fmt.Errorf("%w: %w", ErrFailedCreateCmd, err)
 		} else {
@@ -86,7 +89,7 @@ func ParseCLI() (Commander, error) {
 		}
 
 	case Build.String():
-		config := builder.Config{Environment: environment()}
+		config := builder.Config{Environment: env}
 		if cmd, err := builder.Create(config); err != nil {
 			return nil, fmt.Errorf("%w: %w", ErrFailedCreateCmd, err)
 		} else {
@@ -94,7 +97,7 @@ func ParseCLI() (Commander, error) {
 		}
 
 	case Generate.String():
-		config := generate.Config{Environment: environment()}
+		config := generate.Config{}
 		if cmd, err := generate.Create(config); err != nil {
 			return nil, fmt.Errorf("%w: %w", ErrFailedCreateCmd, err)
 		} else {
@@ -126,24 +129,4 @@ func usage() {
 		padding := strings.Repeat(" ", longestCmdLen-len(cmdStr))
 		fmt.Fprintf(w, "  %s%s    %s\n", cmdStr, padding, usage)
 	}
-}
-
-// environment is used to add default env vars as needed to the existing environment variables
-func environment() []string {
-	var envMap = make(map[string]string)
-
-	for _, env := range os.Environ() {
-		envTuple := strings.SplitN(env, "=", 2)
-		envMap[envTuple[0]] = envTuple[1]
-	}
-
-	// Make any changes here
-	envMap["FOO"] = "foo" // For illustrative purposes only
-
-	var envSlice = make([]string, 0, len(envMap))
-	for key, val := range envMap {
-		envSlice = append(envSlice, strings.Join([]string{key, val}, "="))
-	}
-
-	return envSlice
 }

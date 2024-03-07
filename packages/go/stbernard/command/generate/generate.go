@@ -30,9 +30,7 @@ const (
 	Usage = "Run code generation in current workspace"
 )
 
-type Config struct {
-	Environment []string
-}
+type Config struct{}
 
 type command struct {
 	config Config

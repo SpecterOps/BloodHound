@@ -25,6 +25,7 @@ import (
 
 	"github.com/specterops/bloodhound/packages/go/stbernard/analyzers"
 	"github.com/specterops/bloodhound/packages/go/stbernard/analyzers/golang"
+	"github.com/specterops/bloodhound/packages/go/stbernard/environment"
 	"github.com/specterops/bloodhound/packages/go/stbernard/workspace"
 	"github.com/specterops/bloodhound/packages/go/stbernard/yarn"
 )
@@ -35,7 +36,7 @@ const (
 )
 
 type Config struct {
-	Environment []string
+	Environment environment.Environment
 }
 
 type command struct {
@@ -51,15 +52,17 @@ func (s command) Name() string {
 }
 
 func (s command) Run() error {
+	var env = s.config.Environment
+
 	if cwd, err := workspace.FindRoot(); err != nil {
 		return fmt.Errorf("could not find workspace root: %w", err)
 	} else if modPaths, err := workspace.ParseModulesAbsPaths(cwd); err != nil {
 		return fmt.Errorf("could not parse module absolute paths: %w", err)
 	} else if jsPaths, err := workspace.ParseJSAbsPaths(cwd); err != nil {
 		return fmt.Errorf("could not parse JS absolute paths: %w", err)
-	} else if err := preAnalysisSetup(jsPaths, s.config.Environment); err != nil {
+	} else if err := preAnalysisSetup(jsPaths, env.Slice()); err != nil {
 		return fmt.Errorf("could not complete environmental setup: %w", err)
-	} else if result, err := analyzers.Run(cwd, modPaths, jsPaths, s.config.Environment); errors.Is(err, analyzers.ErrSeverityExit) {
+	} else if result, err := analyzers.Run(cwd, modPaths, jsPaths, env.Slice()); errors.Is(err, analyzers.ErrSeverityExit) {
 		fmt.Println(result)
 		return err
 	} else if err != nil {
