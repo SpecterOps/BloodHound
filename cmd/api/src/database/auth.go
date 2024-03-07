@@ -412,10 +412,10 @@ func (s *BloodhoundDB) UpdateAuthToken(ctx context.Context, authToken model.Auth
 
 // GetAuthToken retrieves the AuthToken row associated with the provided ID
 // SELECT * FROM auth_tokens WHERE id = ....
-func (s *BloodhoundDB) GetAuthToken(id uuid.UUID) (model.AuthToken, error) {
+func (s *BloodhoundDB) GetAuthToken(ctx context.Context, id uuid.UUID) (model.AuthToken, error) {
 	var (
 		authToken model.AuthToken
-		result    = s.db.First(&authToken, id)
+		result    = s.db.WithContext(ctx).First(&authToken, id)
 	)
 
 	return authToken, CheckError(result)

@@ -822,7 +822,7 @@ func (s ManagementResource) DeleteAuthToken(response http.ResponseWriter, reques
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
 	} else if tokenID, err := uuid.FromString(rawTokenID); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsIDMalformed, request), response)
-	} else if token, err := s.db.GetAuthToken(tokenID); err != nil {
+	} else if token, err := s.db.GetAuthToken(request.Context(), tokenID); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else if token.UserID.Valid && token.UserID.UUID != user.ID && !s.authorizer.AllowsPermission(bhCtx.AuthCtx, auth.Permissions().AuthManageUsers) {
 		log.Errorf("Bad user ID: %s != %s", token.UserID.UUID.String(), user.ID.String())
