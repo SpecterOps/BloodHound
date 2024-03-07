@@ -95,7 +95,6 @@ type Database interface {
 	// Permissions
 	GetAllPermissions(ctx context.Context, order string, filter model.SQLFilter) (model.Permissions, error)
 	GetPermission(ctx context.Context, id int) (model.Permission, error)
-	CreatePermission(permission model.Permission) (model.Permission, error)
 
 	InitializeSAMLAuth(adminUser model.User, samlProvider model.SAMLProvider) (model.SAMLProvider, model.Installation, error)
 	InitializeSecretAuth(adminUser model.User, authSecret model.AuthSecret) (model.Installation, error)

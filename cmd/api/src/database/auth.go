@@ -204,17 +204,6 @@ func (s *BloodhoundDB) GetPermission(ctx context.Context, id int) (model.Permiss
 	return permission, CheckError(result)
 }
 
-// CreatePermission creates a new permission row with the struct provided
-// INSERT INTO permissions (id, authority, name) VALUES (ID, authority, name)
-func (s *BloodhoundDB) CreatePermission(permission model.Permission) (model.Permission, error) {
-	var (
-		updatedPermission = permission
-		result            = s.db.Create(&updatedPermission)
-	)
-
-	return updatedPermission, CheckError(result)
-}
-
 // InitializeSAMLAuth creates new SAMLProvider, User and Installation entries based on the input provided
 func (s *BloodhoundDB) InitializeSAMLAuth(adminUser model.User, samlProvider model.SAMLProvider) (model.SAMLProvider, model.Installation, error) {
 	var (

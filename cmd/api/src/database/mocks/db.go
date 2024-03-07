@@ -258,21 +258,6 @@ func (mr *MockDatabaseMockRecorder) CreateInstallation() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateInstallation", reflect.TypeOf((*MockDatabase)(nil).CreateInstallation))
 }
 
-// CreatePermission mocks base method.
-func (m *MockDatabase) CreatePermission(arg0 model.Permission) (model.Permission, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreatePermission", arg0)
-	ret0, _ := ret[0].(model.Permission)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// CreatePermission indicates an expected call of CreatePermission.
-func (mr *MockDatabaseMockRecorder) CreatePermission(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreatePermission", reflect.TypeOf((*MockDatabase)(nil).CreatePermission), arg0)
-}
-
 // CreateRole mocks base method.
 func (m *MockDatabase) CreateRole(arg0 model.Role) (model.Role, error) {
 	m.ctrl.T.Helper()
