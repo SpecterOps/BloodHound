@@ -67,7 +67,7 @@ type Authenticator interface {
 	Logout(userSession model.UserSession)
 	ValidateSecret(ctx context.Context, secret string, authSecret model.AuthSecret) error
 	ValidateRequestSignature(tokenID uuid.UUID, request *http.Request, serverTime time.Time) (auth.Context, int, error)
-	CreateSession(user model.User, authProvider any) (string, error)
+	CreateSession(ctx context.Context, user model.User, authProvider any) (string, error)
 	ValidateSession(jwtTokenString string) (auth.Context, error)
 }
 
@@ -126,7 +126,7 @@ func (s authenticator) validateSecretLogin(ctx context.Context, loginRequest Log
 		return user, "", err
 	} else if err = auth.ValidateTOTPSecret(loginRequest.OTP, *user.AuthSecret); err != nil {
 		return user, "", err
-	} else if sessionToken, err := s.CreateSession(user, *user.AuthSecret); err != nil {
+	} else if sessionToken, err := s.CreateSession(ctx, user, *user.AuthSecret); err != nil {
 		return user, "", err
 	} else {
 		return user, sessionToken, nil
@@ -299,7 +299,7 @@ func (s authenticator) ValidateRequestSignature(tokenID uuid.UUID, request *http
 	}
 }
 
-func (s authenticator) CreateSession(user model.User, authProvider any) (string, error) {
+func (s authenticator) CreateSession(ctx context.Context, user model.User, authProvider any) (string, error) {
 	if user.IsDisabled {
 		return "", ErrUserDisabled
 	}
@@ -322,7 +322,7 @@ func (s authenticator) CreateSession(user model.User, authProvider any) (string,
 		userSession.AuthProviderID = typedAuthProvider.ID
 	}
 
-	if newSession, err := s.db.CreateUserSession(userSession); err != nil {
+	if newSession, err := s.db.CreateUserSession(ctx, userSession); err != nil {
 		return "", FormatDatabaseError(err)
 	} else if signingKeyBytes, err := s.cfg.Crypto.JWT.SigningKeyBytes(); err != nil {
 		return "", err

@@ -362,6 +362,7 @@ func TestDatabase_CreateUpdateDeleteSAMLProvider(t *testing.T) {
 
 func TestDatabase_CreateUserSession(t *testing.T) {
 	var (
+		testCtx      = context.Background()
 		dbInst, user = initAndCreateUser(t)
 		userSession  = model.UserSession{
 			User:      user,
@@ -370,7 +371,7 @@ func TestDatabase_CreateUserSession(t *testing.T) {
 		}
 	)
 
-	if newUserSession, err := dbInst.CreateUserSession(userSession); err != nil {
+	if newUserSession, err := dbInst.CreateUserSession(testCtx, userSession); err != nil {
 		t.Fatalf("Failed to create new user session: %v", err)
 	} else if newUserSession.Expired() {
 		t.Fatalf("Expected user session to remain valid. Session expires at: %s", newUserSession.ExpiresAt)
@@ -381,7 +382,7 @@ func TestDatabase_CreateUserSession(t *testing.T) {
 	// Test expiry
 	userSession.ExpiresAt = time.Now().UTC().Add(-time.Hour)
 
-	if newUserSession, err := dbInst.CreateUserSession(userSession); err != nil {
+	if newUserSession, err := dbInst.CreateUserSession(testCtx, userSession); err != nil {
 		t.Fatalf("Failed to create new user session: %v", err)
 	} else if !newUserSession.Expired() {
 		t.Fatalf("Expected user session to be expired. Session expires at: %s", newUserSession.ExpiresAt)

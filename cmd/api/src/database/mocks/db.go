@@ -304,18 +304,18 @@ func (mr *MockDatabaseMockRecorder) CreateUser(arg0, arg1 interface{}) *gomock.C
 }
 
 // CreateUserSession mocks base method.
-func (m *MockDatabase) CreateUserSession(arg0 model.UserSession) (model.UserSession, error) {
+func (m *MockDatabase) CreateUserSession(arg0 context.Context, arg1 model.UserSession) (model.UserSession, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateUserSession", arg0)
+	ret := m.ctrl.Call(m, "CreateUserSession", arg0, arg1)
 	ret0, _ := ret[0].(model.UserSession)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // CreateUserSession indicates an expected call of CreateUserSession.
-func (mr *MockDatabaseMockRecorder) CreateUserSession(arg0 interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) CreateUserSession(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateUserSession", reflect.TypeOf((*MockDatabase)(nil).CreateUserSession), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateUserSession", reflect.TypeOf((*MockDatabase)(nil).CreateUserSession), arg0, arg1)
 }
 
 // DeleteAllDataQuality mocks base method.

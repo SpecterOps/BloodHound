@@ -127,7 +127,8 @@ type Database interface {
 	GetSAMLProviderUsers(ctx context.Context, id int32) (model.Users, error)
 	DeleteSAMLProvider(ctx context.Context, samlProvider model.SAMLProvider) error
 
-	CreateUserSession(userSession model.UserSession) (model.UserSession, error)
+	// Sessions
+	CreateUserSession(ctx context.Context, userSession model.UserSession) (model.UserSession, error)
 	LookupActiveSessionsByUser(user model.User) ([]model.UserSession, error)
 	EndUserSession(userSession model.UserSession)
 	GetUserSession(id int64) (model.UserSession, error)

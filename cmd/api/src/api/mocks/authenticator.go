@@ -57,18 +57,18 @@ func (m *MockAuthenticator) EXPECT() *MockAuthenticatorMockRecorder {
 }
 
 // CreateSession mocks base method.
-func (m *MockAuthenticator) CreateSession(arg0 model.User, arg1 interface{}) (string, error) {
+func (m *MockAuthenticator) CreateSession(arg0 context.Context, arg1 model.User, arg2 interface{}) (string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateSession", arg0, arg1)
+	ret := m.ctrl.Call(m, "CreateSession", arg0, arg1, arg2)
 	ret0, _ := ret[0].(string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // CreateSession indicates an expected call of CreateSession.
-func (mr *MockAuthenticatorMockRecorder) CreateSession(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockAuthenticatorMockRecorder) CreateSession(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateSession", reflect.TypeOf((*MockAuthenticator)(nil).CreateSession), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateSession", reflect.TypeOf((*MockAuthenticator)(nil).CreateSession), arg0, arg1, arg2)
 }
 
 // LoginWithSecret mocks base method.

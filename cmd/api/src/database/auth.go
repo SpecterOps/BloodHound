@@ -549,10 +549,10 @@ func (s *BloodhoundDB) GetSAMLProviderUsers(ctx context.Context, id int32) (mode
 
 // CreateUserSession creates a new UserSession row
 // INSERT INTO user_sessions (...) VALUES (..)
-func (s *BloodhoundDB) CreateUserSession(userSession model.UserSession) (model.UserSession, error) {
+func (s *BloodhoundDB) CreateUserSession(ctx context.Context, userSession model.UserSession) (model.UserSession, error) {
 	var (
 		newUserSession = userSession
-		result         = s.db.Create(&newUserSession)
+		result         = s.db.WithContext(ctx).Create(&newUserSession)
 	)
 
 	return newUserSession, CheckError(result)
