@@ -564,10 +564,10 @@ func (s *BloodhoundDB) EndUserSession(userSession model.UserSession) {
 	s.db.Model(&userSession).Update("expires_at", gorm.Expr("NOW()"))
 }
 
-func (s *BloodhoundDB) LookupActiveSessionsByUser(user model.User) ([]model.UserSession, error) {
+func (s *BloodhoundDB) LookupActiveSessionsByUser(ctx context.Context, user model.User) ([]model.UserSession, error) {
 	var userSessions []model.UserSession
 
-	result := s.db.Where("expires_at >= NOW() AND user_id = ?", user.ID).Find(&userSessions)
+	result := s.db.WithContext(ctx).Where("expires_at >= NOW() AND user_id = ?", user.ID).Find(&userSessions)
 	return userSessions, CheckError(result)
 }
 

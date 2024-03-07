@@ -1092,18 +1092,18 @@ func (mr *MockDatabaseMockRecorder) ListSavedQueries(arg0, arg1, arg2, arg3, arg
 }
 
 // LookupActiveSessionsByUser mocks base method.
-func (m *MockDatabase) LookupActiveSessionsByUser(arg0 model.User) ([]model.UserSession, error) {
+func (m *MockDatabase) LookupActiveSessionsByUser(arg0 context.Context, arg1 model.User) ([]model.UserSession, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "LookupActiveSessionsByUser", arg0)
+	ret := m.ctrl.Call(m, "LookupActiveSessionsByUser", arg0, arg1)
 	ret0, _ := ret[0].([]model.UserSession)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // LookupActiveSessionsByUser indicates an expected call of LookupActiveSessionsByUser.
-func (mr *MockDatabaseMockRecorder) LookupActiveSessionsByUser(arg0 interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) LookupActiveSessionsByUser(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LookupActiveSessionsByUser", reflect.TypeOf((*MockDatabase)(nil).LookupActiveSessionsByUser), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LookupActiveSessionsByUser", reflect.TypeOf((*MockDatabase)(nil).LookupActiveSessionsByUser), arg0, arg1)
 }
 
 // LookupSAMLProviderByName mocks base method.
