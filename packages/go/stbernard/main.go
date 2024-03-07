@@ -43,12 +43,10 @@ func main() {
 		log.SetGlobalLevel(lvl)
 	}
 
-	if cmd, err := command.ParseCLI(); err != nil {
-		if errors.Is(err, command.ErrNoCmd) {
-			log.Fatalf("No command specified")
-		} else {
-			log.Fatalf("Error while parsing command: %v", err)
-		}
+	if cmd, err := command.ParseCLI(); errors.Is(err, command.ErrNoCmd) {
+		log.Fatalf("No command specified")
+	} else if err != nil {
+		log.Fatalf("Error while parsing command: %v", err)
 	} else if err := cmd.Run(); err != nil {
 		log.Fatalf("Failed to run command %s: %v", cmd.Name(), err)
 	} else {
