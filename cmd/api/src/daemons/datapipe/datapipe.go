@@ -134,7 +134,7 @@ func resetCache(cacher cache.Cache, cacheEnabled bool) {
 }
 
 func (s *Daemon) ingestAvailableTasks() {
-	if ingestTasks, err := s.db.GetAllIngestTasks(); err != nil {
+	if ingestTasks, err := s.db.GetAllIngestTasks(s.ctx); err != nil {
 		log.Errorf("Failed fetching available ingest tasks: %v", err)
 	} else {
 		s.processIngestTasks(s.ctx, ingestTasks)
@@ -187,7 +187,7 @@ func (s *Daemon) Stop(ctx context.Context) error {
 }
 
 func (s *Daemon) clearOrphanedData() {
-	if ingestTasks, err := s.db.GetAllIngestTasks(); err != nil {
+	if ingestTasks, err := s.db.GetAllIngestTasks(s.ctx); err != nil {
 		log.Errorf("Failed fetching available file upload ingest tasks: %v", err)
 	} else {
 		expectedFiles := make([]string, len(ingestTasks))
