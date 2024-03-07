@@ -133,8 +133,8 @@ func resetCache(cacher cache.Cache, cacheEnabled bool) {
 	}
 }
 
-func (s *Daemon) ingestAvailableTasks(ctx context.Context) {
-	if ingestTasks, err := s.db.GetAllIngestTasks(ctx); err != nil {
+func (s *Daemon) ingestAvailableTasks() {
+	if ingestTasks, err := s.db.GetAllIngestTasks(s.ctx); err != nil {
 		log.Errorf("Failed fetching available ingest tasks: %v", err)
 	} else {
 		s.processIngestTasks(s.ctx, ingestTasks)
@@ -150,16 +150,16 @@ func (s *Daemon) Start() {
 	defer datapipeLoopTimer.Stop()
 	defer pruningTicker.Stop()
 
-	s.clearOrphanedData(s.ctx)
+	s.clearOrphanedData()
 
 	for {
 		select {
 		case <-pruningTicker.C:
-			s.clearOrphanedData(s.ctx)
+			s.clearOrphanedData()
 
 		case <-datapipeLoopTimer.C:
 			// Ingest all available ingest tasks
-			s.ingestAvailableTasks(s.ctx)
+			s.ingestAvailableTasks()
 
 			// Manage time-out state progression for file upload jobs
 			fileupload.ProcessStaleFileUploadJobs(s.ctx, s.db)
@@ -186,8 +186,8 @@ func (s *Daemon) Stop(ctx context.Context) error {
 	return nil
 }
 
-func (s *Daemon) clearOrphanedData(ctx context.Context) {
-	if ingestTasks, err := s.db.GetAllIngestTasks(ctx); err != nil {
+func (s *Daemon) clearOrphanedData() {
+	if ingestTasks, err := s.db.GetAllIngestTasks(s.ctx); err != nil {
 		log.Errorf("Failed fetching available file upload ingest tasks: %v", err)
 	} else {
 		expectedFiles := make([]string, len(ingestTasks))
