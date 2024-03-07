@@ -360,12 +360,7 @@ func (s Resources) ListAssetGroupCollections(response http.ResponseWriter, reque
 		} else if collections, err := s.DB.GetAssetGroupCollections(request.Context(), assetGroup.ID, strings.Join(order, ", "), sqlFilter); err != nil {
 			api.HandleDatabaseError(request, response, err)
 		} else {
-			data := make([]any, 0)
-			for _, dataElement := range collections {
-				data = append(data, dataElement)
-			}
-
-			api.WriteBasicResponse(request.Context(), data, http.StatusOK, response)
+			api.WriteBasicResponse(request.Context(), collections, http.StatusOK, response)
 		}
 	}
 }

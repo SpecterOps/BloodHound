@@ -56,7 +56,7 @@ func (s Resources) GetDatabaseCompleteness(response http.ResponseWriter, request
 
 		return nil
 	}); err != nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("Error getting quality stat: %v", err), request), response)
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("Error getting quality stat: %v", err), request), response)
 	} else {
 		api.WriteBasicResponse(request.Context(), result, http.StatusOK, response)
 	}
