@@ -911,7 +911,7 @@ func (s *GraphQuery) UpdateSelectorTags(ctx context.Context, db agi.AgiData, sel
 }
 
 func addTagsToSelector(ctx context.Context, graphQuery *GraphQuery, db agi.AgiData, selector model.AssetGroupSelector) error {
-	if assetGroup, err := db.GetAssetGroup(selector.AssetGroupID); err != nil {
+	if assetGroup, err := db.GetAssetGroup(ctx, selector.AssetGroupID); err != nil {
 		return err
 	} else {
 		return graphQuery.Graph.WriteTransaction(ctx, func(tx graph.Transaction) error {
@@ -949,7 +949,7 @@ func addTagsToSelector(ctx context.Context, graphQuery *GraphQuery, db agi.AgiDa
 }
 
 func removeTagsFromSelector(ctx context.Context, graphQuery *GraphQuery, db agi.AgiData, selector model.AssetGroupSelector) error {
-	if assetGroup, err := db.GetAssetGroup(selector.AssetGroupID); err != nil {
+	if assetGroup, err := db.GetAssetGroup(ctx, selector.AssetGroupID); err != nil {
 		return err
 	} else {
 		return graphQuery.Graph.WriteTransaction(ctx, func(tx graph.Transaction) error {
