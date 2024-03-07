@@ -468,7 +468,7 @@ func (s *BloodhoundDB) CreateAuthSecret(ctx context.Context, authSecret model.Au
 	}
 
 	return authSecret, s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
-		return CheckError(tx.Create(&authSecret))
+		return CheckError(tx.WithContext(ctx).Create(&authSecret))
 	})
 }
 
