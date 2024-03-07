@@ -14,17 +14,19 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+//go:build integration
+
 package database_test
 
 import (
 	"context"
-	"github.com/specterops/bloodhound/src/utils/test"
 	"slices"
 	"testing"
 
 	"github.com/specterops/bloodhound/src/database"
 	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/test/integration"
+	"github.com/specterops/bloodhound/src/utils/test"
 )
 
 func setupDB(t *testing.T) database.Database {
