@@ -59,10 +59,12 @@ const AssetGroupMemberList: FC<{
                 sort_by: 'name',
                 ...filter,
             };
-            return apiClient.listAssetGroupMembers(`${assetGroup?.id}`, paginatedFilter, { signal }).then((res) => {
-                setCount(res.data.count);
-                return res.data.data.members;
-            });
+            if (assetGroup && assetGroup.id) {
+                return apiClient.listAssetGroupMembers(assetGroup.id, paginatedFilter, { signal }).then((res) => {
+                    setCount(res.data.count);
+                    return res.data.data.members;
+                });
+            }
         },
         {
             enabled: !!assetGroup,
