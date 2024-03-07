@@ -1,0 +1,43 @@
+{
+    "api/v2/clear-database": {
+        "post": {
+            "description": "Delete your Bloodhound data",
+            "tags": ["Database", "Community", "Enterprise"],
+            "summary": "Wipes your Bloodhound data permanently.  Specify the data to delete in the request body.  Possible data includes collected graph data, custom high value selectors, file ingest history, and data quality history.",
+            "requestBody": {
+                "description": "The request body for creating a saved query",
+                "required": true,
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "$ref": "#/definitions/v2.DatabaseWipeRequest"
+                        },
+                        "examples": {
+                            "Delete collected graph data": {
+                                "value": {
+                                    "deleteCollectedGraphData": true
+                                }
+                            },
+                            "Delete custom high value selectors": {
+                                "value": {
+                                    "deleteAssetGroupSelectors": [1]
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "responses": {
+                "204": {
+                    "description": "No Content. Successful deletion!"
+                },
+                "400": {
+                    "description": "Bad Request.  This endpoint returns a 400 error if the request body is empty"
+                },
+                "500": {
+                    "description": "This endpoint returns a 500 error if any of the delete operations fails."
+                }
+            }
+        }
+    }
+}

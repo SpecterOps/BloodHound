@@ -21,6 +21,7 @@
 package mocks
 
 import (
+	context "context"
 	reflect "reflect"
 
 	model "github.com/specterops/bloodhound/src/model"
@@ -63,6 +64,20 @@ func (m *MockFileUploadData) CreateFileUploadJob(arg0 model.FileUploadJob) (mode
 func (mr *MockFileUploadDataMockRecorder) CreateFileUploadJob(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateFileUploadJob", reflect.TypeOf((*MockFileUploadData)(nil).CreateFileUploadJob), arg0)
+}
+
+// DeleteAllFileUploads mocks base method.
+func (m *MockFileUploadData) DeleteAllFileUploads(arg0 context.Context) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteAllFileUploads", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteAllFileUploads indicates an expected call of DeleteAllFileUploads.
+func (mr *MockFileUploadDataMockRecorder) DeleteAllFileUploads(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteAllFileUploads", reflect.TypeOf((*MockFileUploadData)(nil).DeleteAllFileUploads), arg0)
 }
 
 // GetAllFileUploadJobs mocks base method.

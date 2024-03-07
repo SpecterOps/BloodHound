@@ -148,3 +148,13 @@ func (s *Context) AssertIngest(assertion IngestAssertion) {
 		return nil
 	}), "Unexpected database error during reconciliation assertion")
 }
+
+func (s *Context) AssertIngestProperties(assertion IngestAssertion) {
+	graphDB := integration.OpenGraphDB(s.TestCtrl)
+	defer graphDB.Close(s.ctx)
+
+	require.Nil(s.TestCtrl, graphDB.ReadTransaction(s.ctx, func(tx graph.Transaction) error {
+		assertion(s.TestCtrl, tx)
+		return nil
+	}), "Unexpected database error during reconciliation assertion")
+}
