@@ -123,7 +123,7 @@ func (s *RootResource) fetchInstance(organization string, ctx context.Context) (
 	if instance, hasInstance := s.getInstance(organization); !hasInstance {
 		// Create a new instance if we don't have one at the ready
 		return s.initInstance(organization, ctx)
-	} else if _, err := s.db.GetSAMLProvider(instance.serviceProvider.Config.ID); err != nil {
+	} else if _, err := s.db.GetSAMLProvider(ctx, instance.serviceProvider.Config.ID); err != nil {
 		// In the case where the provider is no longer in the database we must clean up the existing ref and recreate it
 		if errors.Is(err, database.ErrNotFound) {
 			s.clearInstance(organization)

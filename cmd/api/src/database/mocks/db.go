@@ -940,18 +940,18 @@ func (mr *MockDatabaseMockRecorder) GetRoles(arg0, arg1 interface{}) *gomock.Cal
 }
 
 // GetSAMLProvider mocks base method.
-func (m *MockDatabase) GetSAMLProvider(arg0 int32) (model.SAMLProvider, error) {
+func (m *MockDatabase) GetSAMLProvider(arg0 context.Context, arg1 int32) (model.SAMLProvider, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetSAMLProvider", arg0)
+	ret := m.ctrl.Call(m, "GetSAMLProvider", arg0, arg1)
 	ret0, _ := ret[0].(model.SAMLProvider)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetSAMLProvider indicates an expected call of GetSAMLProvider.
-func (mr *MockDatabaseMockRecorder) GetSAMLProvider(arg0 interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) GetSAMLProvider(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSAMLProvider", reflect.TypeOf((*MockDatabase)(nil).GetSAMLProvider), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSAMLProvider", reflect.TypeOf((*MockDatabase)(nil).GetSAMLProvider), arg0, arg1)
 }
 
 // GetSAMLProviderUsers mocks base method.

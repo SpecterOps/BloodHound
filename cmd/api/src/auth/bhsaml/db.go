@@ -47,7 +47,7 @@ func GetSAMLProviderByName(db database.Database, name string, requestContext con
 }
 
 func GetSAMLProviderByID(db database.Database, id int32, requestContext context.Context) (model.SAMLProvider, error) {
-	if samlProvider, err := db.GetSAMLProvider(id); err != nil {
+	if samlProvider, err := db.GetSAMLProvider(requestContext, id); err != nil {
 		return model.SAMLProvider{}, err
 	} else {
 		return formatSAMLProviderURLs(requestContext, samlProvider)[0], nil

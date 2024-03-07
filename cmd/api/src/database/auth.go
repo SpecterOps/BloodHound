@@ -524,10 +524,10 @@ func (s *BloodhoundDB) GetAllSAMLProviders(ctx context.Context) (model.SAMLProvi
 
 // GetSAMLProvider returns a SAML provider corresponding to the ID provided
 // SELECT * FOM saml_providers WHERE id = ..
-func (s *BloodhoundDB) GetSAMLProvider(id int32) (model.SAMLProvider, error) {
+func (s *BloodhoundDB) GetSAMLProvider(ctx context.Context, id int32) (model.SAMLProvider, error) {
 	var (
 		samlProvider model.SAMLProvider
-		result       = s.db.First(&samlProvider, id)
+		result       = s.db.WithContext(ctx).First(&samlProvider, id)
 	)
 
 	return samlProvider, CheckError(result)

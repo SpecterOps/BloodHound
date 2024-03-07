@@ -139,7 +139,7 @@ func TestManagementResource_EnableUserSAML(t *testing.T) {
 	mockDB.EXPECT().GetRoles(gomock.Any(), gomock.Eq(goodRoles)).Return(model.Roles{}, nil).AnyTimes()
 	mockDB.EXPECT().GetUser(gomock.Any(), badUserID).Return(model.User{AuthSecret: &model.AuthSecret{}}, nil)
 	mockDB.EXPECT().GetUser(gomock.Any(), goodUserID).Return(model.User{}, nil)
-	mockDB.EXPECT().GetSAMLProvider(samlProviderID).Return(model.SAMLProvider{}, nil).Times(2)
+	mockDB.EXPECT().GetSAMLProvider(gomock.Any(), samlProviderID).Return(model.SAMLProvider{}, nil).Times(2)
 	mockDB.EXPECT().UpdateUser(gomock.Any(), gomock.Any()).Return(nil).Times(2)
 	mockDB.EXPECT().DeleteAuthSecret(gomock.Any(), gomock.Any()).Return(nil)
 
@@ -202,8 +202,8 @@ func TestManagementResource_DeleteSAMLProvider(t *testing.T) {
 
 	defer mockCtrl.Finish()
 
-	mockDB.EXPECT().GetSAMLProvider(goodSAMLProvider.ID).Return(goodSAMLProvider, nil)
-	mockDB.EXPECT().GetSAMLProvider(samlProviderWithUsers.ID).Return(samlProviderWithUsers, nil)
+	mockDB.EXPECT().GetSAMLProvider(gomock.Any(), goodSAMLProvider.ID).Return(goodSAMLProvider, nil)
+	mockDB.EXPECT().GetSAMLProvider(gomock.Any(), samlProviderWithUsers.ID).Return(samlProviderWithUsers, nil)
 	mockDB.EXPECT().DeleteSAMLProvider(gomock.Any(), gomock.Eq(goodSAMLProvider)).Return(nil)
 	mockDB.EXPECT().DeleteSAMLProvider(gomock.Any(), gomock.Eq(samlProviderWithUsers)).Return(nil)
 	mockDB.EXPECT().GetSAMLProviderUsers(goodSAMLProvider.ID).Return(nil, nil)
