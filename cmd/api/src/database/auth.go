@@ -455,7 +455,7 @@ func (s *BloodhoundDB) DeleteAuthToken(ctx context.Context, authToken model.Auth
 	}
 
 	return s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
-		return CheckError(tx.Where("id = ?", authToken.ID).Delete(&authToken))
+		return CheckError(tx.WithContext(ctx).Where("id = ?", authToken.ID).Delete(&authToken))
 	})
 }
 
