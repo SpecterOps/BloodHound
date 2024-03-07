@@ -39,9 +39,6 @@ func ValidateMetaTag(reader io.Reader, readToEnd bool) (ingest.Metadata, error) 
 	)
 
 	for {
-		if dataTagValidated && metaTagFound {
-			break
-		}
 		if token, err := decoder.Token(); err != nil {
 			if errors.Is(err, io.EOF) {
 				if !metaTagFound && !dataTagFound {
@@ -84,6 +81,10 @@ func ValidateMetaTag(reader io.Reader, readToEnd bool) (ingest.Metadata, error) 
 					dataTagFound = true
 				}
 			}
+		}
+
+		if dataTagValidated && metaTagFound {
+			break
 		}
 	}
 

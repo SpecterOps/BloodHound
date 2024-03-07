@@ -114,36 +114,38 @@ func SaveIngestFile(location string, request *http.Request) (string, model.FileT
 	}
 
 	if api.HeaderMatches(headers.ContentType.String(), mediatypes.ApplicationJson.String(), request.Header) {
-		if err := WriteAndValidateJSON(fileData, tempFile); err != nil {
-			if err := tempFile.Close(); err != nil {
-				log.Errorf("Error closing temp file %s with failed validation: %v", tempFile.Name(), err)
-			} else if err := os.Remove(tempFile.Name()); err != nil {
-				log.Errorf("Error deleting temp file %s: %v", tempFile.Name(), err)
-			}
+		if err := WriteAndValidateFile(fileData, tempFile, WriteAndValidateJSON); err != nil {
 			return "", model.FileTypeJson, err
 		} else {
-			if err := tempFile.Close(); err != nil {
-				log.Errorf("Error closing temp file with successful validation %s: %v", tempFile.Name(), err)
-			}
 			return tempFile.Name(), model.FileTypeJson, nil
 		}
 	} else if api.HeaderMatches(headers.ContentType.String(), mediatypes.ApplicationZip.String(), request.Header) {
-		if err := WriteAndValidateZip(fileData, tempFile); err != nil {
-			if err := tempFile.Close(); err != nil {
-				log.Errorf("Error closing temp file %s with failed validation: %v", tempFile.Name(), err)
-			} else if err := os.Remove(tempFile.Name()); err != nil {
-				log.Errorf("Error deleting temp file %s: %v", tempFile.Name(), err)
-			}
+		if err := WriteAndValidateFile(fileData, tempFile, WriteAndValidateZip); err != nil {
 			return "", model.FileTypeZip, err
 		} else {
-			if err := tempFile.Close(); err != nil {
-				log.Errorf("Error closing temp file with successful validation %s: %v", tempFile.Name(), err)
-			}
 			return tempFile.Name(), model.FileTypeZip, nil
 		}
 	} else {
 		//We should never get here since this is checked a level above
 		return "", model.FileTypeJson, fmt.Errorf("invalid content type for ingest file")
+	}
+}
+
+type FileValidator func(src io.Reader, dst io.Writer) error
+
+func WriteAndValidateFile(fileData io.ReadCloser, tempFile *os.File, validationFunc FileValidator) error {
+	if err := validationFunc(fileData, tempFile); err != nil {
+		if err := tempFile.Close(); err != nil {
+			log.Errorf("Error closing temp file %s with failed validation: %v", tempFile.Name(), err)
+		} else if err := os.Remove(tempFile.Name()); err != nil {
+			log.Errorf("Error deleting temp file %s: %v", tempFile.Name(), err)
+		}
+		return err
+	} else {
+		if err := tempFile.Close(); err != nil {
+			log.Errorf("Error closing temp file with successful validation %s: %v", tempFile.Name(), err)
+		}
+		return nil
 	}
 }
 
