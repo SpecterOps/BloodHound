@@ -23,8 +23,8 @@ import AssetGroupMenuItem from './AssetGroupMenuItem';
 import { apiClient } from 'bh-shared-ui';
 
 describe('AssetGroupMenuItem', async () => {
-    const tierZeroAssetGroup = { id: '1', name: 'high value' };
-    const ownedAssetGroup = { id: '2', name: 'owned' };
+    const tierZeroAssetGroup = { id: 1, name: 'high value' };
+    const ownedAssetGroup = { id: 2, name: 'owned' };
 
     const getEntityInfoTestProps = () => ({
         entityinfo: {
@@ -48,7 +48,7 @@ describe('AssetGroupMenuItem', async () => {
         const server = setupServer(
             rest.get('/api/v2/asset-groups/:assetGroupId/members', (req, res, ctx) => {
                 // handle `tier zero` requests
-                if (req.params.assetGroupId === tierZeroAssetGroup.id) {
+                if (req.params.assetGroupId === tierZeroAssetGroup.id.toString()) {
                     return res(
                         ctx.json({
                             data: {
@@ -56,7 +56,7 @@ describe('AssetGroupMenuItem', async () => {
                             },
                         })
                     );
-                } else if (req.params.assetGroupId === ownedAssetGroup.id) {
+                } else if (req.params.assetGroupId === ownedAssetGroup.id.toString()) {
                     // handle `owned` requests
                     return res(
                         ctx.json({
@@ -152,7 +152,7 @@ describe('AssetGroupMenuItem', async () => {
         });
 
         it('renders null if network fails to return valid asset group membership list', async () => {
-            render(<AssetGroupMenuItem assetGroupId={'3'} assetGroupName={'blah'} />, {});
+            render(<AssetGroupMenuItem assetGroupId={3} assetGroupName={'blah'} />, {});
 
             expect(document.body.firstChild).toBeEmptyDOMElement();
         });
@@ -162,7 +162,7 @@ describe('AssetGroupMenuItem', async () => {
         const server = setupServer(
             rest.get('/api/v2/asset-groups/:assetGroupId/members', (req, res, ctx) => {
                 // handle `tier zero` requests
-                if (req.params.assetGroupId === tierZeroAssetGroup.id) {
+                if (req.params.assetGroupId === tierZeroAssetGroup.id.toString()) {
                     return res(
                         ctx.json({
                             data: {
@@ -170,7 +170,7 @@ describe('AssetGroupMenuItem', async () => {
                             },
                         })
                     );
-                } else if (req.params.assetGroupId === ownedAssetGroup.id) {
+                } else if (req.params.assetGroupId === ownedAssetGroup.id.toString()) {
                     // handle `owned` requests
                     return res(
                         ctx.json({

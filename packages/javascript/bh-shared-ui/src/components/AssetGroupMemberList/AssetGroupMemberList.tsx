@@ -59,10 +59,12 @@ const AssetGroupMemberList: FC<{
                 sort_by: 'name',
                 ...filter,
             };
-            return apiClient.listAssetGroupMembers(`${assetGroup?.id}`, paginatedFilter, { signal }).then((res) => {
-                setCount(res.data.count);
-                return res.data.data.members;
-            });
+            if (assetGroup && assetGroup.id) {
+                return apiClient.listAssetGroupMembers(assetGroup.id, paginatedFilter, { signal }).then((res) => {
+                    setCount(res.data.count);
+                    return res.data.data.members;
+                });
+            }
         },
         {
             enabled: !!assetGroup,
@@ -108,7 +110,7 @@ const AssetGroupMemberList: FC<{
                 <TableBody sx={{ height: '100%', overflow: 'auto' }}>
                     {isLoading && getLoadingRows(10)}
                     {isSuccess &&
-                        !!data.length &&
+                        !!data?.length &&
                         data.map((member) => (
                             <AssetGroupMemberRow
                                 member={member}
@@ -117,7 +119,7 @@ const AssetGroupMemberList: FC<{
                                 disabled={isPreviousData}
                             />
                         ))}
-                    {isSuccess && data.length === 0 && (
+                    {isSuccess && data?.length === 0 && (
                         <TableRow>
                             <TableCell sx={{ textAlign: 'center', height: '100px' }} colSpan={2}>
                                 {canFilterToEmpty
@@ -127,7 +129,7 @@ const AssetGroupMemberList: FC<{
                         </TableRow>
                     )}
                 </TableBody>
-                {isSuccess && !!data.length && (
+                {isSuccess && !!data?.length && (
                     <TableFooter>
                         <TableRow>
                             <TablePagination
