@@ -1030,18 +1030,18 @@ func (mr *MockDatabaseMockRecorder) GetTimeRangedAssetGroupCollections(arg0, arg
 }
 
 // GetUser mocks base method.
-func (m *MockDatabase) GetUser(arg0 uuid.UUID) (model.User, error) {
+func (m *MockDatabase) GetUser(arg0 context.Context, arg1 uuid.UUID) (model.User, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetUser", arg0)
+	ret := m.ctrl.Call(m, "GetUser", arg0, arg1)
 	ret0, _ := ret[0].(model.User)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetUser indicates an expected call of GetUser.
-func (mr *MockDatabaseMockRecorder) GetUser(arg0 interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) GetUser(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUser", reflect.TypeOf((*MockDatabase)(nil).GetUser), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUser", reflect.TypeOf((*MockDatabase)(nil).GetUser), arg0, arg1)
 }
 
 // GetUserSession mocks base method.

@@ -74,9 +74,9 @@ func NewContextInitializer(db Database) AuthContextInitializer {
 	return contextInitializer{db: db}
 }
 
-func (s contextInitializer) InitContextFromToken(_ context.Context, authToken model.AuthToken) (auth.Context, error) {
+func (s contextInitializer) InitContextFromToken(ctx context.Context, authToken model.AuthToken) (auth.Context, error) {
 	if authToken.UserID.Valid {
-		if user, err := s.db.GetUser(authToken.UserID.UUID); err != nil {
+		if user, err := s.db.GetUser(ctx, authToken.UserID.UUID); err != nil {
 			return auth.Context{}, err
 		} else {
 			return auth.Context{
@@ -407,10 +407,10 @@ func (s *BloodhoundDB) GetAllUsers(ctx context.Context, order string, filter mod
 
 // GetUser returns the user associated with the provided ID
 // SELECT * FROM users WHERE id = ...
-func (s *BloodhoundDB) GetUser(id uuid.UUID) (model.User, error) {
+func (s *BloodhoundDB) GetUser(ctx context.Context, id uuid.UUID) (model.User, error) {
 	var (
 		user   model.User
-		result = s.preload(model.UserAssociations()).First(&user, id)
+		result = s.preload(model.UserAssociations()).WithContext(ctx).First(&user, id)
 	)
 
 	return user, CheckError(result)

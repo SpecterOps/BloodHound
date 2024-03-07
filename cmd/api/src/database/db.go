@@ -107,7 +107,7 @@ type Database interface {
 	CreateUser(ctx context.Context, user model.User) (model.User, error)
 	UpdateUser(ctx context.Context, user model.User) error
 	GetAllUsers(ctx context.Context, order string, filter model.SQLFilter) (model.Users, error)
-	GetUser(id uuid.UUID) (model.User, error)
+	GetUser(ctx context.Context, id uuid.UUID) (model.User, error)
 	DeleteUser(ctx context.Context, user model.User) error
 	LookupUser(principalName string) (model.User, error)
 
