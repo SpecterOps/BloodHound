@@ -158,14 +158,14 @@ func (s *BloodhoundDB) GetPermission(ctx context.Context, id int) (model.Permiss
 }
 
 // InitializeSecretAuth creates new AuthSecret, User and Installation entries based on the input provided
-func (s *BloodhoundDB) InitializeSecretAuth(adminUser model.User, authSecret model.AuthSecret) (model.Installation, error) {
+func (s *BloodhoundDB) InitializeSecretAuth(ctx context.Context, adminUser model.User, authSecret model.AuthSecret) (model.Installation, error) {
 	var (
 		updatedAdminUser  = adminUser
 		updatedAuthSecret = authSecret
 		newInstallation   model.Installation
 	)
 
-	err := s.db.Transaction(func(tx *gorm.DB) error {
+	err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		if newInstallationID, err := uuid.NewV4(); err != nil {
 			return err
 		} else {

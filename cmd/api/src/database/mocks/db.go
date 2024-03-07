@@ -1045,18 +1045,18 @@ func (mr *MockDatabaseMockRecorder) HasInstallation() *gomock.Call {
 }
 
 // InitializeSecretAuth mocks base method.
-func (m *MockDatabase) InitializeSecretAuth(arg0 model.User, arg1 model.AuthSecret) (model.Installation, error) {
+func (m *MockDatabase) InitializeSecretAuth(arg0 context.Context, arg1 model.User, arg2 model.AuthSecret) (model.Installation, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "InitializeSecretAuth", arg0, arg1)
+	ret := m.ctrl.Call(m, "InitializeSecretAuth", arg0, arg1, arg2)
 	ret0, _ := ret[0].(model.Installation)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // InitializeSecretAuth indicates an expected call of InitializeSecretAuth.
-func (mr *MockDatabaseMockRecorder) InitializeSecretAuth(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) InitializeSecretAuth(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InitializeSecretAuth", reflect.TypeOf((*MockDatabase)(nil).InitializeSecretAuth), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InitializeSecretAuth", reflect.TypeOf((*MockDatabase)(nil).InitializeSecretAuth), arg0, arg1, arg2)
 }
 
 // ListAuditLogs mocks base method.
