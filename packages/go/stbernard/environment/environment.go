@@ -21,6 +21,12 @@ func NewEnvironment() Environment {
 	return envMap
 }
 
+func (s Environment) SetIfEmpty(key string, value string) {
+	if _, ok := s[key]; !ok {
+		s[key] = value
+	}
+}
+
 func (s Environment) Slice() []string {
 	var envSlice = make([]string, 0, len(s))
 	for key, val := range s {
