@@ -158,7 +158,7 @@ func TestResources_ListAuditLogs_DBError(t *testing.T) {
 	)
 	defer mockCtrl.Finish()
 
-	mockDB.EXPECT().ListAuditLogs(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), "id, actor_name desc", model.SQLFilter{}).Return(model.AuditLogs{}, 0, fmt.Errorf("foo"))
+	mockDB.EXPECT().ListAuditLogs(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), "id, actor_name desc", model.SQLFilter{}).Return(model.AuditLogs{}, 0, fmt.Errorf("foo"))
 
 	endpoint := "/api/v2/audit"
 
@@ -190,7 +190,7 @@ func TestResources_ListAuditLogs(t *testing.T) {
 	)
 	defer mockCtrl.Finish()
 
-	mockDB.EXPECT().ListAuditLogs(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), "id, actor_name desc", model.SQLFilter{}).Return(model.AuditLogs{}, 1000, nil)
+	mockDB.EXPECT().ListAuditLogs(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), "id, actor_name desc", model.SQLFilter{}).Return(model.AuditLogs{}, 1000, nil)
 
 	endpoint := "/api/v2/audit"
 
@@ -221,7 +221,7 @@ func TestResources_ListAuditLogs_Filtered(t *testing.T) {
 	)
 	defer mockCtrl.Finish()
 
-	mockDB.EXPECT().ListAuditLogs(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), "", model.SQLFilter{SQLString: "actor_name = ?", Params: []any{"foo"}}).Return(model.AuditLogs{}, 1000, nil)
+	mockDB.EXPECT().ListAuditLogs(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), "", model.SQLFilter{SQLString: "actor_name = ?", Params: []any{"foo"}}).Return(model.AuditLogs{}, 1000, nil)
 	endpoint := "/api/v2/audit"
 
 	if req, err := http.NewRequest("GET", endpoint, nil); err != nil {

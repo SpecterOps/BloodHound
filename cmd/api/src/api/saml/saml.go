@@ -224,7 +224,7 @@ func (s ProviderResource) emailAttributeNames() []string {
 	return []string{bhsaml.ObjectIDEmail, bhsaml.XMLSOAPClaimsEmailAddress}
 }
 
-func (s ProviderResource) lookupSAMLUser(assertion *saml.Assertion) (model.User, error) {
+func (s ProviderResource) lookupSAMLUser(ctx context.Context, assertion *saml.Assertion) (model.User, error) {
 	for _, attrStmt := range assertion.AttributeStatements {
 		for _, attr := range attrStmt.Attributes {
 			for _, value := range attr.Values {
@@ -238,7 +238,7 @@ func (s ProviderResource) lookupSAMLUser(assertion *saml.Assertion) (model.User,
 	if principalName, err := assertionFindString(assertion, s.emailAttributeNames()...); err != nil {
 		return model.User{}, ErrorSAMLAssertion
 	} else {
-		if user, err := s.db.LookupUser(principalName); err != nil {
+		if user, err := s.db.LookupUser(ctx, principalName); err != nil {
 			if !errors.Is(err, database.ErrNotFound) {
 				return model.User{}, api.FormatDatabaseError(err)
 			} else {
@@ -273,7 +273,7 @@ func domainValue(host url.URL) string {
 func (s ProviderResource) createSessionFromAssertion(request *http.Request, response http.ResponseWriter, expires time.Time, assertion *saml.Assertion) {
 	hostURL := *ctx.FromRequest(request).Host
 
-	if user, err := s.lookupSAMLUser(assertion); err != nil {
+	if user, err := s.lookupSAMLUser(request.Context(), assertion); err != nil {
 		log.Errorf("[SAML] Failed to lookup user for SAML provider %s: %v", s.serviceProvider.Config.Name, err)
 
 		switch err {

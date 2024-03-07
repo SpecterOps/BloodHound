@@ -89,6 +89,10 @@ class BHEAPIClient {
         return this.baseClient.delete(`/api/v2/saved-queries/${queryId}`, options);
     };
 
+    clearDatabase = (payload: types.ClearDatabaseRequest, options?: types.RequestOptions) => {
+        return this.baseClient.post('/api/v2/clear-database', payload, options);
+    };
+
     getAvailableDomains = (options?: types.RequestOptions) => this.baseClient.get('/api/v2/available-domains', options);
 
     /* audit */
@@ -111,7 +115,7 @@ class BHEAPIClient {
     ) => this.baseClient.put(`/api/v2/asset-groups/${assetGroupId}`, assetGroup, options);
 
     updateAssetGroupSelector = (
-        assetGroupId: string,
+        assetGroupId: number,
         selectorChangeset: types.UpdateAssetGroupSelectorRequest[],
         options?: types.RequestOptions
     ) => this.baseClient.put(`/api/v2/asset-groups/${assetGroupId}/selectors`, selectorChangeset, options);
@@ -123,7 +127,7 @@ class BHEAPIClient {
         this.baseClient.get(`/api/v2/asset-groups/${assetGroupId}/collections`, options);
 
     listAssetGroupMembers = (
-        assetGroupId: string,
+        assetGroupId: number,
         params?: types.AssetGroupMemberParams,
         options?: types.RequestOptions
     ) =>
