@@ -55,7 +55,7 @@ func (s command) Run() error {
 		return fmt.Errorf("could not find workspace root: %w", err)
 	} else if modPaths, err := workspace.ParseModulesAbsPaths(cwd); err != nil {
 		return fmt.Errorf("could not parse module absolute paths: %w", err)
-	} else if jsPaths, err := workspace.ParseJsAbsPaths(cwd); err != nil {
+	} else if jsPaths, err := workspace.ParseJSAbsPaths(cwd); err != nil {
 		return fmt.Errorf("could not parse JS absolute paths: %w", err)
 	} else if err := preAnalysisSetup(jsPaths, s.config.Environment); err != nil {
 		return fmt.Errorf("could not complete environmental setup: %w", err)
