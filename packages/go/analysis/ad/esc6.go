@@ -19,9 +19,10 @@ package ad
 import (
 	"context"
 	"fmt"
-	"github.com/specterops/bloodhound/ein"
 	"slices"
 	"sync"
+
+	"github.com/specterops/bloodhound/ein"
 
 	"github.com/specterops/bloodhound/analysis"
 	"github.com/specterops/bloodhound/analysis/impact"
@@ -429,7 +430,9 @@ func GetADCSESC6EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 	if err := traversalInst.BreadthFirst(ctx,
 		traversal.Plan{
 			Root: startNode,
-			Driver: enterpriseCAsForPrincipal().Do(
+			Driver: enterpriseCAsForPrincipal(
+				query.Equals(query.EndProperty(ad.IsUserSpecifiesSanEnabled.String()), true),
+			).Do(
 				func(terminal *graph.PathSegment) error {
 
 					enterpriseCA := terminal.Search(
@@ -596,7 +599,7 @@ func getESC6AbuseEdgeCriteria(edgeKind graph.Kind) graph.Criteria {
 	)
 }
 
-func enterpriseCAsForPrincipal() traversal.PatternContinuation {
+func enterpriseCAsForPrincipal(ecaProperties ...graph.Criteria) traversal.PatternContinuation {
 	return traversal.NewPattern().
 		OutboundWithDepth(0, 0,
 			query.And(
@@ -607,7 +610,7 @@ func enterpriseCAsForPrincipal() traversal.PatternContinuation {
 			query.And(
 				query.KindIn(query.Relationship(), ad.Enroll),
 				query.KindIn(query.End(), ad.EnterpriseCA),
-				query.Equals(query.EndProperty(ad.IsUserSpecifiesSanEnabled.String()), true),
+				ecaProperties,
 			))
 }
 

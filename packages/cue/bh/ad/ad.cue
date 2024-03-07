@@ -1178,6 +1178,7 @@ EdgeCompositionRelationships: [
 	GoldenCert,
 	ADCSESC1,
 	ADCSESC3,
+	ADCSESC4,
 	ADCSESC6a,
 	ADCSESC6b,
 	ADCSESC9a,
