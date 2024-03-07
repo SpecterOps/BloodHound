@@ -479,7 +479,7 @@ func (s *BloodhoundDB) CreateSAMLIdentityProvider(ctx context.Context, samlProvi
 	)
 
 	err := s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
-		return CheckError(tx.Create(&samlProvider))
+		return CheckError(tx.WithContext(ctx).Create(&samlProvider))
 	})
 
 	return samlProvider, err

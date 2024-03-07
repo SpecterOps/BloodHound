@@ -117,6 +117,7 @@ type Database interface {
 	DeleteAuthSecret(ctx context.Context, authSecret model.AuthSecret) error
 	InitializeSecretAuth(ctx context.Context, adminUser model.User, authSecret model.AuthSecret) (model.Installation, error)
 
+	// SAML
 	CreateSAMLIdentityProvider(ctx context.Context, samlProvider model.SAMLProvider) (model.SAMLProvider, error)
 	UpdateSAMLIdentityProvider(ctx context.Context, samlProvider model.SAMLProvider) error
 	LookupSAMLProviderByName(name string) (model.SAMLProvider, error)
@@ -124,6 +125,7 @@ type Database interface {
 	GetSAMLProvider(id int32) (model.SAMLProvider, error)
 	GetSAMLProviderUsers(id int32) (model.Users, error)
 	DeleteSAMLProvider(ctx context.Context, samlProvider model.SAMLProvider) error
+
 	CreateUserSession(userSession model.UserSession) (model.UserSession, error)
 	LookupActiveSessionsByUser(user model.User) ([]model.UserSession, error)
 	EndUserSession(userSession model.UserSession)
