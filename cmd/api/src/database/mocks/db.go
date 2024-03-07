@@ -1044,22 +1044,6 @@ func (mr *MockDatabaseMockRecorder) HasInstallation() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "HasInstallation", reflect.TypeOf((*MockDatabase)(nil).HasInstallation))
 }
 
-// InitializeSAMLAuth mocks base method.
-func (m *MockDatabase) InitializeSAMLAuth(arg0 model.User, arg1 model.SAMLProvider) (model.SAMLProvider, model.Installation, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "InitializeSAMLAuth", arg0, arg1)
-	ret0, _ := ret[0].(model.SAMLProvider)
-	ret1, _ := ret[1].(model.Installation)
-	ret2, _ := ret[2].(error)
-	return ret0, ret1, ret2
-}
-
-// InitializeSAMLAuth indicates an expected call of InitializeSAMLAuth.
-func (mr *MockDatabaseMockRecorder) InitializeSAMLAuth(arg0, arg1 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InitializeSAMLAuth", reflect.TypeOf((*MockDatabase)(nil).InitializeSAMLAuth), arg0, arg1)
-}
-
 // InitializeSecretAuth mocks base method.
 func (m *MockDatabase) InitializeSecretAuth(arg0 model.User, arg1 model.AuthSecret) (model.Installation, error) {
 	m.ctrl.T.Helper()

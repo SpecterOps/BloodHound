@@ -26,7 +26,6 @@ import (
 
 	"github.com/gofrs/uuid"
 	"github.com/specterops/bloodhound/src/auth"
-	"github.com/specterops/bloodhound/src/database/types/null"
 	"github.com/specterops/bloodhound/src/model"
 	"gorm.io/gorm"
 )
@@ -156,47 +155,6 @@ func (s *BloodhoundDB) GetPermission(ctx context.Context, id int) (model.Permiss
 	)
 
 	return permission, CheckError(result)
-}
-
-// InitializeSAMLAuth creates new SAMLProvider, User and Installation entries based on the input provided
-func (s *BloodhoundDB) InitializeSAMLAuth(adminUser model.User, samlProvider model.SAMLProvider) (model.SAMLProvider, model.Installation, error) {
-	var (
-		updatedAdminUser    = adminUser
-		updatedSAMLProvider = samlProvider
-		newInstallation     model.Installation
-	)
-
-	err := s.db.Transaction(func(tx *gorm.DB) error {
-		if newInstallationID, err := uuid.NewV4(); err != nil {
-			return err
-		} else {
-			newInstallation.ID = newInstallationID
-
-			if result := tx.Create(&newInstallation); result.Error != nil {
-				return CheckError(result)
-			}
-		}
-
-		if result := tx.Create(&updatedSAMLProvider); result.Error != nil {
-			return CheckError(result)
-		}
-
-		if newUserID, err := uuid.NewV4(); err != nil {
-			return err
-		} else {
-			updatedAdminUser.ID = newUserID
-			updatedAdminUser.SAMLProvider = &updatedSAMLProvider
-			updatedAdminUser.SAMLProviderID = null.Int32From(updatedSAMLProvider.ID)
-
-			if result := tx.Create(&updatedAdminUser); result.Error != nil {
-				return CheckError(result)
-			}
-		}
-
-		return nil
-	})
-
-	return updatedSAMLProvider, newInstallation, err
 }
 
 // InitializeSecretAuth creates new AuthSecret, User and Installation entries based on the input provided
