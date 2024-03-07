@@ -151,7 +151,7 @@ func (s command) runGoBuild(cwd string) error {
 
 	if modPaths, err := workspace.ParseModulesAbsPaths(cwd); err != nil {
 		return fmt.Errorf("could not parse module absolute paths: %w", err)
-	} else if err := workspace.BuildGoMainPackages(cwd, modPaths); err != nil {
+	} else if err := workspace.BuildGoMainPackages(cwd, modPaths, env.Slice()); err != nil {
 		return fmt.Errorf("could not build main packages: %w", err)
 	} else {
 		return nil
