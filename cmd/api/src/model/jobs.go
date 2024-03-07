@@ -43,8 +43,7 @@ type FileUploadJobs []FileUploadJob
 
 func (s FileUploadJobs) IsSortable(column string) bool {
 	switch column {
-	case "user_id",
-		"user_email_address",
+	case "user_email_address",
 		"status",
 		"status_message",
 		"start_time",

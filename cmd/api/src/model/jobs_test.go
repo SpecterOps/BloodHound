@@ -17,13 +17,14 @@
 package model
 
 import (
-	"github.com/stretchr/testify/require"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 func TestFileUploadJobs_IsSortable(t *testing.T) {
 	fuj := FileUploadJobs{}
-	require.True(t, fuj.IsSortable("user_id"))
+	require.False(t, fuj.IsSortable("user_id"))
 	require.True(t, fuj.IsSortable("status"))
 	require.True(t, fuj.IsSortable("user_email_address"))
 	require.True(t, fuj.IsSortable("status_message"))
