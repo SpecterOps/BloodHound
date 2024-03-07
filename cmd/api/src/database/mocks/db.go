@@ -1000,18 +1000,18 @@ func (mr *MockDatabaseMockRecorder) GetUser(arg0, arg1 interface{}) *gomock.Call
 }
 
 // GetUserSession mocks base method.
-func (m *MockDatabase) GetUserSession(arg0 int64) (model.UserSession, error) {
+func (m *MockDatabase) GetUserSession(arg0 context.Context, arg1 int64) (model.UserSession, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetUserSession", arg0)
+	ret := m.ctrl.Call(m, "GetUserSession", arg0, arg1)
 	ret0, _ := ret[0].(model.UserSession)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetUserSession indicates an expected call of GetUserSession.
-func (mr *MockDatabaseMockRecorder) GetUserSession(arg0 interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) GetUserSession(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserSession", reflect.TypeOf((*MockDatabase)(nil).GetUserSession), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserSession", reflect.TypeOf((*MockDatabase)(nil).GetUserSession), arg0, arg1)
 }
 
 // GetUserToken mocks base method.

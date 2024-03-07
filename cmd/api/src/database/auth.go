@@ -573,10 +573,10 @@ func (s *BloodhoundDB) LookupActiveSessionsByUser(ctx context.Context, user mode
 
 // GetUserSession retrieves the UserSession row associated with the provided ID
 // SELECT * FROM user_sessions WHERE id = ...
-func (s *BloodhoundDB) GetUserSession(id int64) (model.UserSession, error) {
+func (s *BloodhoundDB) GetUserSession(ctx context.Context, id int64) (model.UserSession, error) {
 	var (
 		userSession model.UserSession
-		result      = s.preload(model.UserSessionAssociations()).Find(&userSession, id)
+		result      = s.preload(model.UserSessionAssociations()).WithContext(ctx).Find(&userSession, id)
 	)
 
 	return userSession, CheckError(result)

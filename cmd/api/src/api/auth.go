@@ -68,7 +68,7 @@ type Authenticator interface {
 	ValidateSecret(ctx context.Context, secret string, authSecret model.AuthSecret) error
 	ValidateRequestSignature(tokenID uuid.UUID, request *http.Request, serverTime time.Time) (auth.Context, int, error)
 	CreateSession(ctx context.Context, user model.User, authProvider any) (string, error)
-	ValidateSession(jwtTokenString string) (auth.Context, error)
+	ValidateSession(ctx context.Context, jwtTokenString string) (auth.Context, error)
 }
 
 type authenticator struct {
@@ -348,7 +348,7 @@ func (s authenticator) jwtSigningKey(token *jwt.Token) (any, error) {
 	return s.cfg.Crypto.JWT.SigningKeyBytes()
 }
 
-func (s authenticator) ValidateSession(jwtTokenString string) (auth.Context, error) {
+func (s authenticator) ValidateSession(ctx context.Context, jwtTokenString string) (auth.Context, error) {
 	claims := auth.SessionData{}
 
 	if token, err := jwt.ParseWithClaims(jwtTokenString, &claims, s.jwtSigningKey); err != nil {
@@ -363,7 +363,7 @@ func (s authenticator) ValidateSession(jwtTokenString string) (auth.Context, err
 	} else if sessionID, err := claims.SessionID(); err != nil {
 		log.Infof("Session ID %s invalid: %v", claims.Id, err)
 		return auth.Context{}, ErrInvalidAuth
-	} else if session, err := s.db.GetUserSession(sessionID); err != nil {
+	} else if session, err := s.db.GetUserSession(ctx, sessionID); err != nil {
 		log.Infof("Unable to find session %d", sessionID)
 		return auth.Context{}, ErrInvalidAuth
 	} else if session.Expired() {

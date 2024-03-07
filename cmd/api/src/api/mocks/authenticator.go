@@ -129,16 +129,16 @@ func (mr *MockAuthenticatorMockRecorder) ValidateSecret(arg0, arg1, arg2 interfa
 }
 
 // ValidateSession mocks base method.
-func (m *MockAuthenticator) ValidateSession(arg0 string) (auth.Context, error) {
+func (m *MockAuthenticator) ValidateSession(arg0 context.Context, arg1 string) (auth.Context, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ValidateSession", arg0)
+	ret := m.ctrl.Call(m, "ValidateSession", arg0, arg1)
 	ret0, _ := ret[0].(auth.Context)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // ValidateSession indicates an expected call of ValidateSession.
-func (mr *MockAuthenticatorMockRecorder) ValidateSession(arg0 interface{}) *gomock.Call {
+func (mr *MockAuthenticatorMockRecorder) ValidateSession(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ValidateSession", reflect.TypeOf((*MockAuthenticator)(nil).ValidateSession), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ValidateSession", reflect.TypeOf((*MockAuthenticator)(nil).ValidateSession), arg0, arg1)
 }

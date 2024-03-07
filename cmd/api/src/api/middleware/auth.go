@@ -66,7 +66,7 @@ func AuthMiddleware(authenticator api.Authenticator) mux.MiddlewareFunc {
 			} else {
 				switch authScheme {
 				case api.AuthorizationSchemeBearer:
-					if userAuth, err := authenticator.ValidateSession(schemeParameter); err != nil {
+					if userAuth, err := authenticator.ValidateSession(request.Context(), schemeParameter); err != nil {
 						api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusUnauthorized, api.ErrorResponseDetailsAuthenticationInvalid, request), response)
 						return
 					} else {
