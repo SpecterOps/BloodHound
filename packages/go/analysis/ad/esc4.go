@@ -18,6 +18,8 @@ package ad
 
 import (
 	"context"
+	"fmt"
+	"sync"
 
 	"github.com/specterops/bloodhound/analysis"
 	"github.com/specterops/bloodhound/analysis/impact"
@@ -25,6 +27,7 @@ import (
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/dawgs/ops"
 	"github.com/specterops/bloodhound/dawgs/query"
+	"github.com/specterops/bloodhound/dawgs/traversal"
 	"github.com/specterops/bloodhound/dawgs/util/channels"
 	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/log"
@@ -205,4 +208,233 @@ func FetchPrincipalsWithWritePKIEnrollmentFlagOnCertTemplate(tx graph.Transactio
 	} else {
 		return nodes, nil
 	}
+}
+
+func GetADCSESC4EdgeComposition(ctx context.Context, db graph.Database, edge *graph.Relationship) (graph.PathSet, error) {
+	/*
+		MATCH p1 = (n1)-[:MemberOf*0..]->()-[:GenericAll|Owns|WriteOwner|WriteDacl]->(ct)-[:PublishedTo]->(ca)-[:IssuedSignedBy|EnterpriseCAFor|RootCAFor*1..]->(d)
+		MATCH p2 = (n1)-[:MemberOf*0..]->()-[:Enroll]->(ca)-[:TrustedForNTAuth]->(nt)-[:NTAuthStoreFor]->(d)
+
+		MATCH p3 = (n2)-[:MemberOf*0..]->()-[:GenericWrite]->(ct2)-[:PublishedTo]->(ca2)-[:IssuedSignedBy|EnterpriseCAFor|RootCAFor*1..]->(d)
+		MATCH p4 = (n2)-[:MemberOf*0..]->()-[:Enroll|AllExtendedRights]->(ct2)
+		MATCH p5 = (n2)-[:MemberOf*0..]->()-[:Enroll]->(ca2)-[:TrustedForNTAuth]->(nt)-[:NTAuthStoreFor]->(d)
+
+		MATCH p6 = (n3)-[:MemberOf*0..]->()-[:WritePKINameFlag]->(ct3)-[:PublishedTo]->(ca3)-[:IssuedSignedBy|EnterpriseCAFor|RootCAFor*1..]->(d)
+		MATCH p7 = (n3)-[:MemberOf*0..]->()-[:Enroll|AllExtendedRights]->(ct3)
+		WHERE ct3.requiresmanagerapproval = false
+		  AND ct3.authenticationenabled = true
+		  AND (
+		    ct3.authorizedsignatures = 0 OR ct3.schemaversion = 1
+		  )
+		MATCH p8 = (n3)-[:MemberOf*0..]->()-[:Enroll]->(ca3)-[:TrustedForNTAuth]->(nt)-[:NTAuthStoreFor]->(d)
+
+
+		MATCH p9 = (n4)-[:MemberOf*0..]->()-[:WritePKIEnrollmentFlag]->(ct4)-[:PublishedTo]->(ca4)-[:IssuedSignedBy|EnterpriseCAFor|RootCAFor*1..]->(d)
+		MATCH p10 = (n4)-[:MemberOf*0..]->()-[:Enroll|AllExtendedRights]->(ct4)
+		WHERE ct4.enrolleesuppliessubject = true
+		  AND ct4.authenticationenabled = true
+		  AND (
+		    ct4.authorizedsignatures = 0 OR ct4.schemaversion = 1
+		  )
+		MATCH p11 = (n4)-[:MemberOf*0..]->()-[:Enroll]->(ca4)-[:TrustedForNTAuth]->(nt)-[:NTAuthStoreFor]->(d)
+
+		MATCH p12 = (n5)-[:MemberOf*0..]->()-[:WritePKIEnrollmentFlag]->(ct5)-[:PublishedTo]->(ca5)-[:IssuedSignedBy|EnterpriseCAFor|RootCAFor*1..]->(d)
+		MATCH p13 = (n5)-[:MemberOf*0..]->()-[:Enroll|AllExtendedRights]->(ct5)
+		MATCH p14 = (n5)-[:MemberOf*0..]->()-[:WritePKINameFlag]->(ct5)
+		WHERE ct5.authenticationenabled = true
+		  AND (
+		    ct5.authorizedsignatures = 0 OR ct5.schemaversion = 1
+		  )
+		MATCH p15 = (n5)-[:MemberOf*0..]->()-[:Enroll]->(ca5)-[:TrustedForNTAuth]->(nt)-[:NTAuthStoreFor]->(d)
+
+		RETURN p1,p2,p3,p4,p5,p6,p7,p8,p9,p10,p11,p12,p13,p14,p15
+	*/
+
+	var (
+		closureErr           error
+		startNode            *graph.Node
+		traversalInst        = traversal.New(db, analysis.MaximumDatabaseParallelWorkers)
+		lock                 = &sync.Mutex{}
+		paths                = graph.PathSet{}
+		certTemplateSegments = map[graph.ID][]*graph.PathSegment{}
+		enterpriseCASegments = map[graph.ID][]*graph.PathSegment{}
+		pattern1Segments     = map[graph.ID][]*graph.PathSegment{}
+		certTemplates        = cardinality.NewBitmap32()
+		enterpriseCAs        = cardinality.NewBitmap32()
+		path1EnterpriseCAs   = cardinality.NewBitmap32()
+	)
+
+	if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
+		if node, err := ops.FetchNode(tx, edge.StartID); err != nil {
+			return err
+		} else {
+			startNode = node
+			return nil
+		}
+	}); err != nil {
+		return nil, err
+	}
+
+	// Start by fetching all EnterpriseCA nodes that our user has Enroll rights on via group membership or directly
+	if err := traversalInst.BreadthFirst(ctx,
+		traversal.Plan{
+			Root: startNode,
+			Driver: enterpriseCAsForPrincipal().Do(
+				func(terminal *graph.PathSegment) error {
+
+					enterpriseCA := terminal.Search(
+						func(nextSegment *graph.PathSegment) bool {
+							return nextSegment.Node.Kinds.ContainsOneOf(ad.EnterpriseCA)
+						})
+
+					lock.Lock()
+					path1EnterpriseCAs.Add(enterpriseCA.ID.Uint32())
+					lock.Unlock()
+
+					return nil
+				}),
+		}); err != nil {
+		return nil, err
+	}
+
+	// use the enterpriseCA nodes from the previous step to gather the first set of cert templates for p1
+	if err := traversalInst.BreadthFirst(ctx, traversal.Plan{
+		Root: startNode,
+		Driver: ESC4Path1Pattern(edge.EndID, path1EnterpriseCAs).Do(
+			func(terminal *graph.PathSegment) error {
+				certTemplate := terminal.Search(
+					func(nextSegment *graph.PathSegment) bool {
+						return nextSegment.Node.Kinds.ContainsOneOf(ad.CertTemplate)
+					})
+
+				lock.Lock()
+				certTemplateSegments[certTemplate.ID] = append(certTemplateSegments[certTemplate.ID], terminal)
+				certTemplates.Add(certTemplate.ID.Uint32())
+				lock.Unlock()
+
+				return nil
+			})}); err != nil {
+		return nil, err
+	}
+
+	// use the enterpriseCA and certTemplate nodes from previous steps to find enterprise CAs that are trusted for NTAuth (p2)
+	if err := traversalInst.BreadthFirst(ctx, traversal.Plan{
+		Root: startNode,
+		Driver: ADCSESC6Path2Pattern(edge.EndID, path1EnterpriseCAs, certTemplates).Do(
+			func(terminal *graph.PathSegment) error {
+				certTemplate := terminal.Search(func(nextSegment *graph.PathSegment) bool {
+					return nextSegment.Node.Kinds.ContainsOneOf(ad.CertTemplate)
+				})
+
+				lock.Lock()
+				certTemplateSegments[certTemplate.ID] = append(certTemplateSegments[certTemplate.ID], terminal)
+				certTemplates.Add(certTemplate.ID.Uint32())
+				lock.Unlock()
+
+				return nil
+			})}); err != nil {
+		return nil, err
+	}
+
+	// find the enterpriseCAs that have an outbound CanAbuseWeakCertBinding if 6a or a CanAbuseUPNCertMapping if 6b to a computer that is a DC for the domain (p3)
+	if err := traversalInst.BreadthFirst(ctx, traversal.Plan{
+		Root: startNode,
+		Driver: ADCSESC6Path3Pattern(edge.EndID, path1EnterpriseCAs, edge.Kind).Do(func(terminal *graph.PathSegment) error {
+			enterpriseCA := terminal.Search(func(nextSegment *graph.PathSegment) bool {
+				return nextSegment.Node.Kinds.ContainsOneOf(ad.EnterpriseCA)
+			})
+
+			lock.Lock()
+			paths.AddPath(terminal.Path())
+			enterpriseCASegments[enterpriseCA.ID] = append(enterpriseCASegments[enterpriseCA.ID], terminal)
+			enterpriseCAs.Add(enterpriseCA.ID.Uint32())
+			lock.Unlock()
+
+			return nil
+		}),
+	}); err != nil {
+		return nil, err
+	}
+
+	certTemplates.Each(func(value uint32) bool {
+		var certTemplate *graph.Node
+
+		if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
+			if node, err := ops.FetchNode(tx, graph.ID(value)); err != nil {
+				return err
+			} else {
+				certTemplate = node
+				return nil
+			}
+		}); err != nil {
+			closureErr = fmt.Errorf("could not fetch cert template node: %w", err)
+			return false
+		}
+
+		for _, segment := range certTemplateSegments[graph.ID(value)] {
+			if startNode.Kinds.ContainsOneOf(ad.User) {
+				if !certTemplateValidForUserVictim(certTemplate) {
+					continue
+				} else if checkEmailValidity(startNode, certTemplate) {
+					continue
+				} else {
+					paths.AddPath(segment.Path())
+				}
+			} else if startNode.Kinds.ContainsOneOf(ad.Computer) {
+				if checkEmailValidity(startNode, certTemplate) {
+					continue
+				} else {
+					paths.AddPath(segment.Path())
+				}
+			} else {
+				paths.AddPath(segment.Path())
+			}
+		}
+		return true
+	})
+
+	if closureErr != nil {
+		return paths, closureErr
+	}
+
+	if paths.Len() > 0 {
+		enterpriseCAs.Each(func(value uint32) bool {
+			for _, segment := range enterpriseCASegments[graph.ID(value)] {
+				paths.AddPath(segment.Path())
+			}
+			return true
+		})
+	}
+
+	return paths, nil
+}
+
+func ESC4Path1Pattern(domainId graph.ID, enterpriseCAs cardinality.Duplex[uint32]) traversal.PatternContinuation {
+	return traversal.NewPattern().
+		OutboundWithDepth(0, 0,
+			query.And(
+				query.Kind(query.Relationship(), ad.MemberOf),
+				query.Kind(query.End(), ad.Group),
+			)).
+		Outbound(
+			query.And(
+				query.KindIn(query.Relationship(), ad.GenericAll, ad.Owns, ad.WriteOwner, ad.WriteDACL),
+				query.Kind(query.End(), ad.CertTemplate),
+			)).
+		Outbound(
+			query.And(
+				query.KindIn(query.Relationship(), ad.PublishedTo),
+				query.InIDs(query.End(), cardinality.DuplexToGraphIDs(enterpriseCAs)...),
+				query.Kind(query.End(), ad.EnterpriseCA),
+			)).
+		Outbound(
+			query.And(
+				query.KindIn(query.Relationship(), ad.IssuedSignedBy, ad.EnterpriseCAFor),
+				query.Kind(query.End(), ad.RootCA),
+			)).
+		Outbound(
+			query.And(
+				query.KindIn(query.Relationship(), ad.RootCAFor),
+				query.Equals(query.EndID(), domainId),
+			))
 }
