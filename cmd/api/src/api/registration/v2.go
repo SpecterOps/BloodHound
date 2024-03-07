@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/specterops/bloodhound/openapi"
 	"github.com/specterops/bloodhound/params"
 	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/src/api/middleware"
@@ -112,8 +113,9 @@ func NewV2API(cfg config.Configuration, resources v2.Resources, routerInst *rout
 		// Version API
 		routerInst.GET("/api/version", v2.GetVersion).RequireAuth(),
 
-		// Swagger API
+		// API Spec
 		routerInst.PathPrefix("/api/v2/swagger", v2.SwaggerHandler()),
+		routerInst.GET("/api/v2/spec", openapi.HttpHandler),
 
 		// Search API
 		routerInst.GET("/api/v2/search", resources.SearchHandler).RequirePermissions(permissions.GraphDBRead),
