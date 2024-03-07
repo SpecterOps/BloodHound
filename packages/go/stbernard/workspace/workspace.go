@@ -38,34 +38,54 @@ type GoPackage struct {
 	Import string `json:"importpath"`
 }
 
+// Config represents a St Bernard configuration
+type Config struct {
+	DistDir   string `json:"dist_dir"`
+	AssetsDir string `json:"assets_dir"`
+}
+
 // FindRoot will attempt to crawl up the path until it finds a go.work file
 func FindRoot() (string, error) {
-	if cwd, err := os.Getwd(); err != nil {
+	cwd, err := os.Getwd()
+	if err != nil {
 		return "", fmt.Errorf("could not get current working directory: %w", err)
-	} else {
-		var found bool
+	}
 
-		for !found {
-			found, err = workFileExists(cwd)
-			if err != nil {
-				return cwd, fmt.Errorf("error while trying to find go.work file: %w", err)
-			}
+	var found bool
 
-			if found {
-				break
-			}
-
-			prevCwd := cwd
-
-			// Go up a directory before retrying
-			cwd = filepath.Dir(cwd)
-
-			if cwd == prevCwd {
-				return cwd, errors.New("found root path without finding go.work file")
-			}
+	for !found {
+		found, err = projectDirExists(cwd)
+		if err != nil {
+			return cwd, fmt.Errorf("error while trying to find project root: %w", err)
 		}
 
-		return cwd, nil
+		if found {
+			break
+		}
+
+		prevCwd := cwd
+
+		// Go up a directory before retrying
+		cwd = filepath.Dir(cwd)
+
+		if cwd == prevCwd {
+			return cwd, errors.New("found root path without finding project root")
+		}
+	}
+
+	return cwd, nil
+}
+
+// ParseConfig parses a configuration file in the .stbernard directory for the given workspace path
+func ParseConfig(cwd string) (Config, error) {
+	var cfg Config
+
+	if bytes, err := os.ReadFile(filepath.Join(cwd, ".stbernard", "config.json")); err != nil {
+		return cfg, fmt.Errorf("could not read config file: %w", err)
+	} else if err := json.Unmarshal(bytes, &cfg); err != nil {
+		return cfg, fmt.Errorf("could not unmarshal config file contents: %w", err)
+	} else {
+		return cfg, nil
 	}
 }
 
@@ -138,12 +158,12 @@ func moduleListPackages(modPath string) ([]GoPackage, error) {
 	}
 }
 
-// workFileExists checks if a go.work file exists in the given directory
-func workFileExists(cwd string) (bool, error) {
-	if _, err := os.Stat(filepath.Join(cwd, "go.work")); errors.Is(err, os.ErrNotExist) {
+// projectDirExists checks if a .stbernard directory exists in the given working directory
+func projectDirExists(cwd string) (bool, error) {
+	if _, err := os.Stat(filepath.Join(cwd, ".stbernard")); errors.Is(err, os.ErrNotExist) {
 		return false, nil
 	} else if err != nil {
-		return false, fmt.Errorf("could not stat go.work file: %w", err)
+		return false, fmt.Errorf("could not stat .stbernard file: %w", err)
 	} else {
 		return true, nil
 	}
