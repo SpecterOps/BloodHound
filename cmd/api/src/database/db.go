@@ -93,9 +93,8 @@ type Database interface {
 	LookupRoleByName(name string) (model.Role, error)
 
 	// Permissions
-	GetAllPermissions(order string, filter model.SQLFilter) (model.Permissions, error)
-	GetPermission(id int) (model.Permission, error)
-	CreatePermission(permission model.Permission) (model.Permission, error)
+	GetAllPermissions(ctx context.Context, order string, filter model.SQLFilter) (model.Permissions, error)
+	GetPermission(ctx context.Context, id int) (model.Permission, error)
 
 	InitializeSAMLAuth(adminUser model.User, samlProvider model.SAMLProvider) (model.SAMLProvider, model.Installation, error)
 	InitializeSecretAuth(adminUser model.User, authSecret model.AuthSecret) (model.Installation, error)
