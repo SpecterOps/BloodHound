@@ -25,7 +25,7 @@ type IngestData interface {
 	CreateIngestTask(task model.IngestTask) (model.IngestTask, error)
 }
 
-func CreateIngestTask(db IngestData, filename string, requestID string, jobID int64, fileType model.FileType) (model.IngestTask, error) {
+func CreateIngestTask(db IngestData, filename string, fileType model.FileType, requestID string, jobID int64) (model.IngestTask, error) {
 	newIngestTask := model.IngestTask{
 		FileName:    filename,
 		RequestGUID: requestID,
