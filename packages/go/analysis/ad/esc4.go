@@ -276,7 +276,7 @@ func GetADCSESC4EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 		return nil, err
 	}
 
-	// Start by fetching all EnterpriseCA nodes that our user has Enroll rights on via group membership or directly
+	// Start by fetching all EnterpriseCA nodes that our user has enrollment rights on via group membership or directly
 	if err := traversalInst.BreadthFirst(ctx,
 		traversal.Plan{
 			Root: startNode,
@@ -331,7 +331,7 @@ func GetADCSESC4EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 
 				lock.Lock()
 				enterpriseCASegments[enterpriseCA.ID] = append(enterpriseCASegments[enterpriseCA.ID], terminal)
-				certTemplates.Add(enterpriseCA.ID.Uint32())
+				enterpriseCAs.Add(enterpriseCA.ID.Uint32())
 				lock.Unlock()
 
 				return nil
@@ -339,26 +339,6 @@ func GetADCSESC4EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 	}); err != nil {
 		return nil, err
 	}
-
-	// find the enterpriseCAs that have an outbound CanAbuseWeakCertBinding if 6a or a CanAbuseUPNCertMapping if 6b to a computer that is a DC for the domain (p3)
-	// if err := traversalInst.BreadthFirst(ctx, traversal.Plan{
-	// 	Root: startNode,
-	// 	Driver: ADCSESC6Path3Pattern(edge.EndID, path1EnterpriseCAs, edge.Kind).Do(func(terminal *graph.PathSegment) error {
-	// 		enterpriseCA := terminal.Search(func(nextSegment *graph.PathSegment) bool {
-	// 			return nextSegment.Node.Kinds.ContainsOneOf(ad.EnterpriseCA)
-	// 		})
-
-	// 		lock.Lock()
-	// 		paths.AddPath(terminal.Path())
-	// 		enterpriseCASegments[enterpriseCA.ID] = append(enterpriseCASegments[enterpriseCA.ID], terminal)
-	// 		enterpriseCAs.Add(enterpriseCA.ID.Uint32())
-	// 		lock.Unlock()
-
-	// 		return nil
-	// 	}),
-	// }); err != nil {
-	// 	return nil, err
-	// }
 
 	// validate cert template properties
 	certTemplates.Each(func(value uint32) bool {
@@ -378,23 +358,7 @@ func GetADCSESC4EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 		// }
 
 		for _, segment := range certTemplateSegments[graph.ID(value)] {
-			// if startNode.Kinds.ContainsOneOf(ad.User) {
-			// 	if !certTemplateValidForUserVictim(certTemplate) {
-			// 		continue
-			// 	} else if checkEmailValidity(startNode, certTemplate) {
-			// 		continue
-			// 	} else {
-			// 		paths.AddPath(segment.Path())
-			// 	}
-			// } else if startNode.Kinds.ContainsOneOf(ad.Computer) {
-			// 	if checkEmailValidity(startNode, certTemplate) {
-			// 		continue
-			// 	} else {
-			// 		paths.AddPath(segment.Path())
-			// 	}
-			// } else {
 			paths.AddPath(segment.Path())
-			// }
 		}
 		return true
 	})
