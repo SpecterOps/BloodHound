@@ -713,18 +713,18 @@ func (mr *MockDatabaseMockRecorder) GetAssetGroupSelector(arg0, arg1 interface{}
 }
 
 // GetAuthSecret mocks base method.
-func (m *MockDatabase) GetAuthSecret(arg0 int32) (model.AuthSecret, error) {
+func (m *MockDatabase) GetAuthSecret(arg0 context.Context, arg1 int32) (model.AuthSecret, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetAuthSecret", arg0)
+	ret := m.ctrl.Call(m, "GetAuthSecret", arg0, arg1)
 	ret0, _ := ret[0].(model.AuthSecret)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetAuthSecret indicates an expected call of GetAuthSecret.
-func (mr *MockDatabaseMockRecorder) GetAuthSecret(arg0 interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) GetAuthSecret(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAuthSecret", reflect.TypeOf((*MockDatabase)(nil).GetAuthSecret), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAuthSecret", reflect.TypeOf((*MockDatabase)(nil).GetAuthSecret), arg0, arg1)
 }
 
 // GetAuthToken mocks base method.

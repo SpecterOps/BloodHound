@@ -112,7 +112,7 @@ type Database interface {
 	GetUserToken(ctx context.Context, userId, tokenId uuid.UUID) (model.AuthToken, error)
 	DeleteAuthToken(ctx context.Context, authToken model.AuthToken) error
 	CreateAuthSecret(ctx context.Context, authSecret model.AuthSecret) (model.AuthSecret, error)
-	GetAuthSecret(id int32) (model.AuthSecret, error)
+	GetAuthSecret(ctx context.Context, id int32) (model.AuthSecret, error)
 	UpdateAuthSecret(ctx context.Context, authSecret model.AuthSecret) error
 	DeleteAuthSecret(ctx context.Context, authSecret model.AuthSecret) error
 	InitializeSAMLAuth(adminUser model.User, samlProvider model.SAMLProvider) (model.SAMLProvider, model.Installation, error)

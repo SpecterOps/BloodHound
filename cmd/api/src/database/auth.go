@@ -474,10 +474,10 @@ func (s *BloodhoundDB) CreateAuthSecret(ctx context.Context, authSecret model.Au
 
 // GetAuthSecret retrieves the AuthSecret row associated with the provided ID
 // SELECT * FROM auth_secrets WHERE id = ....
-func (s *BloodhoundDB) GetAuthSecret(id int32) (model.AuthSecret, error) {
+func (s *BloodhoundDB) GetAuthSecret(ctx context.Context, id int32) (model.AuthSecret, error) {
 	var (
 		authSecret model.AuthSecret
-		result     = s.db.Find(&authSecret, id)
+		result     = s.db.WithContext(ctx).Find(&authSecret, id)
 	)
 
 	return authSecret, CheckError(result)

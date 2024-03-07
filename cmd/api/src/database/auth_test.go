@@ -286,7 +286,7 @@ func TestDatabase_CreateGetDeleteAuthSecret(t *testing.T) {
 			t.Fatalf("Failed to update auth secret %d: %v", newSecret.ID, err)
 		} else if err = test.VerifyAuditLogs(dbInst, "UpdateAuthSecret", "secret_user_id", newSecret.UserID.String()); err != nil {
 			t.Fatalf("Failed to validate UpdateAuthSecret audit logs:\n%v", err)
-		} else if updatedSecret, err := dbInst.GetAuthSecret(newSecret.ID); err != nil {
+		} else if updatedSecret, err := dbInst.GetAuthSecret(ctx, newSecret.ID); err != nil {
 			t.Fatalf("Failed to fetch updated auth secret: %v", err)
 		} else if updatedSecret.Digest != updatedDigest {
 			t.Fatalf("Expected updated auth secret digest to be %s but saw %s", updatedDigest, updatedSecret.Digest)
