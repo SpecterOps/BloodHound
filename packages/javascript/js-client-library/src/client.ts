@@ -115,7 +115,7 @@ class BHEAPIClient {
     ) => this.baseClient.put(`/api/v2/asset-groups/${assetGroupId}`, assetGroup, options);
 
     updateAssetGroupSelector = (
-        assetGroupId: string,
+        assetGroupId: number,
         selectorChangeset: types.UpdateAssetGroupSelectorRequest[],
         options?: types.RequestOptions
     ) => this.baseClient.put(`/api/v2/asset-groups/${assetGroupId}/selectors`, selectorChangeset, options);
@@ -127,7 +127,7 @@ class BHEAPIClient {
         this.baseClient.get(`/api/v2/asset-groups/${assetGroupId}/collections`, options);
 
     listAssetGroupMembers = (
-        assetGroupId: string,
+        assetGroupId: number,
         params?: types.AssetGroupMemberParams,
         options?: types.RequestOptions
     ) =>
