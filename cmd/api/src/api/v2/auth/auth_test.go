@@ -136,7 +136,7 @@ func TestManagementResource_EnableUserSAML(t *testing.T) {
 
 	defer mockCtrl.Finish()
 
-	mockDB.EXPECT().GetRoles(gomock.Any(), gomock.Eq(goodRoles)).Return(model.Roles{}, nil).AnyTimes()
+	mockDB.EXPECT().GetRoles(gomock.Any(), gomock.Any(), gomock.Eq(goodRoles)).Return(model.Roles{}, nil).AnyTimes()
 	mockDB.EXPECT().GetUser(gomock.Any(), badUserID).Return(model.User{AuthSecret: &model.AuthSecret{}}, nil)
 	mockDB.EXPECT().GetUser(gomock.Any(), goodUserID).Return(model.User{}, nil)
 	mockDB.EXPECT().GetSAMLProvider(samlProviderID).Return(model.SAMLProvider{}, nil).Times(2)
@@ -1054,8 +1054,8 @@ func TestCreateUser_Failure(t *testing.T) {
 			Duration: appcfg.DefaultPasswordExpirationWindow,
 		}),
 	}, nil).AnyTimes()
-	mockDB.EXPECT().GetRoles(gomock.Any(), badRole).Return(model.Roles{}, fmt.Errorf("db error"))
-	mockDB.EXPECT().GetRoles(gomock.Any(), gomock.Not(badRole)).Return(model.Roles{}, nil).AnyTimes()
+	mockDB.EXPECT().GetRoles(gomock.Any(), gomock.Any(), badRole).Return(model.Roles{}, fmt.Errorf("db error"))
+	mockDB.EXPECT().GetRoles(gomock.Any(), gomock.Any(), gomock.Not(badRole)).Return(model.Roles{}, nil).AnyTimes()
 	mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 	mockDB.EXPECT().CreateUser(gomock.Any(), badUser).Return(model.User{}, fmt.Errorf("db error"))
 
@@ -1170,7 +1170,7 @@ func TestCreateUser_Success(t *testing.T) {
 			Duration: appcfg.DefaultPasswordExpirationWindow,
 		}),
 	}, nil)
-	mockDB.EXPECT().GetRoles(gomock.Any()).Return(model.Roles{}, nil)
+	mockDB.EXPECT().GetRoles(gomock.Any(), gomock.Any()).Return(model.Roles{}, nil)
 	mockDB.EXPECT().CreateUser(gomock.Any(), gomock.Any()).Return(goodUser, nil).AnyTimes()
 
 	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
@@ -1223,7 +1223,7 @@ func TestCreateUser_ResetPassword(t *testing.T) {
 			Duration: appcfg.DefaultPasswordExpirationWindow,
 		}),
 	}, nil)
-	mockDB.EXPECT().GetRoles(gomock.Any()).Return(model.Roles{}, nil)
+	mockDB.EXPECT().GetRoles(gomock.Any(), gomock.Any()).Return(model.Roles{}, nil)
 	mockDB.EXPECT().CreateUser(gomock.Any(), gomock.Any()).Return(goodUser, nil)
 
 	input := struct {
@@ -1296,7 +1296,7 @@ func TestManagementResource_UpdateUser_IDMalformed(t *testing.T) {
 			Duration: appcfg.DefaultPasswordExpirationWindow,
 		}),
 	}, nil)
-	mockDB.EXPECT().GetRoles(gomock.Any()).Return(model.Roles{}, nil)
+	mockDB.EXPECT().GetRoles(gomock.Any(), gomock.Any()).Return(model.Roles{}, nil)
 	mockDB.EXPECT().CreateUser(gomock.Any(), gomock.Any()).Return(goodUser, nil).AnyTimes()
 
 	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
@@ -1359,7 +1359,7 @@ func TestManagementResource_UpdateUser_GetUserError(t *testing.T) {
 			Duration: appcfg.DefaultPasswordExpirationWindow,
 		}),
 	}, nil)
-	mockDB.EXPECT().GetRoles(gomock.Any()).Return(model.Roles{}, nil)
+	mockDB.EXPECT().GetRoles(gomock.Any(), gomock.Any()).Return(model.Roles{}, nil)
 	mockDB.EXPECT().CreateUser(gomock.Any(), gomock.Any()).Return(goodUser, nil).AnyTimes()
 	mockDB.EXPECT().GetUser(gomock.Any(), gomock.Any()).Return(model.User{}, fmt.Errorf("foo"))
 
@@ -1423,10 +1423,10 @@ func TestManagementResource_UpdateUser_GetRolesError(t *testing.T) {
 			Duration: appcfg.DefaultPasswordExpirationWindow,
 		}),
 	}, nil)
-	mockDB.EXPECT().GetRoles(gomock.Any()).Return(model.Roles{}, nil)
+	mockDB.EXPECT().GetRoles(gomock.Any(), gomock.Any()).Return(model.Roles{}, nil)
 	mockDB.EXPECT().CreateUser(gomock.Any(), gomock.Any()).Return(goodUser, nil).AnyTimes()
 	mockDB.EXPECT().GetUser(gomock.Any(), gomock.Any()).Return(goodUser, nil)
-	mockDB.EXPECT().GetRoles(gomock.Any()).Return(model.Roles{}, fmt.Errorf("foo"))
+	mockDB.EXPECT().GetRoles(gomock.Any(), gomock.Any()).Return(model.Roles{}, fmt.Errorf("foo"))
 
 	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
 	input := v2.CreateUserRequest{
@@ -1481,10 +1481,10 @@ func TestManagementResource_UpdateUser_SelfDisable(t *testing.T) {
 			Duration: appcfg.DefaultPasswordExpirationWindow,
 		}),
 	}, nil)
-	mockDB.EXPECT().GetRoles(gomock.Any()).Return(model.Roles{}, nil)
+	mockDB.EXPECT().GetRoles(gomock.Any(), gomock.Any()).Return(model.Roles{}, nil)
 	mockDB.EXPECT().CreateUser(gomock.Any(), gomock.Any()).Return(goodUser, nil).AnyTimes()
 	mockDB.EXPECT().GetUser(gomock.Any(), gomock.Any()).Return(goodUser, nil)
-	mockDB.EXPECT().GetRoles(gomock.Any()).Return(model.Roles{model.Role{
+	mockDB.EXPECT().GetRoles(gomock.Any(), gomock.Any()).Return(model.Roles{model.Role{
 		Name:        "admin",
 		Description: "admin",
 		Permissions: model.Permissions{model.Permission{
@@ -1562,10 +1562,10 @@ func TestManagementResource_UpdateUser_LookupActiveSessionsError(t *testing.T) {
 			Duration: appcfg.DefaultPasswordExpirationWindow,
 		}),
 	}, nil)
-	mockDB.EXPECT().GetRoles(gomock.Any()).Return(model.Roles{}, nil)
+	mockDB.EXPECT().GetRoles(gomock.Any(), gomock.Any()).Return(model.Roles{}, nil)
 	mockDB.EXPECT().CreateUser(gomock.Any(), gomock.Any()).Return(goodUser, nil).AnyTimes()
 	mockDB.EXPECT().GetUser(gomock.Any(), gomock.Any()).Return(goodUser, nil)
-	mockDB.EXPECT().GetRoles(gomock.Any()).Return(model.Roles{model.Role{
+	mockDB.EXPECT().GetRoles(gomock.Any(), gomock.Any()).Return(model.Roles{model.Role{
 		Name:        "admin",
 		Description: "admin",
 		Permissions: model.Permissions{model.Permission{
@@ -1643,10 +1643,10 @@ func TestManagementResource_UpdateUser_DBError(t *testing.T) {
 			Duration: appcfg.DefaultPasswordExpirationWindow,
 		}),
 	}, nil)
-	mockDB.EXPECT().GetRoles(gomock.Any()).Return(model.Roles{}, nil)
+	mockDB.EXPECT().GetRoles(gomock.Any(), gomock.Any()).Return(model.Roles{}, nil)
 	mockDB.EXPECT().CreateUser(gomock.Any(), gomock.Any()).Return(goodUser, nil).AnyTimes()
 	mockDB.EXPECT().GetUser(gomock.Any(), gomock.Any()).Return(goodUser, nil)
-	mockDB.EXPECT().GetRoles(gomock.Any()).Return(model.Roles{model.Role{
+	mockDB.EXPECT().GetRoles(gomock.Any(), gomock.Any()).Return(model.Roles{model.Role{
 		Name:        "admin",
 		Description: "admin",
 		Permissions: model.Permissions{model.Permission{
@@ -1868,10 +1868,10 @@ func TestManagementResource_UpdateUser_Success(t *testing.T) {
 			Duration: appcfg.DefaultPasswordExpirationWindow,
 		}),
 	}, nil)
-	mockDB.EXPECT().GetRoles(gomock.Any()).Return(model.Roles{}, nil)
+	mockDB.EXPECT().GetRoles(gomock.Any(), gomock.Any()).Return(model.Roles{}, nil)
 	mockDB.EXPECT().CreateUser(gomock.Any(), gomock.Any()).Return(goodUser, nil).AnyTimes()
 	mockDB.EXPECT().GetUser(gomock.Any(), gomock.Any()).Return(goodUser, nil)
-	mockDB.EXPECT().GetRoles(gomock.Any()).Return(model.Roles{model.Role{
+	mockDB.EXPECT().GetRoles(gomock.Any(), gomock.Any()).Return(model.Roles{model.Role{
 		Name:        "admin",
 		Description: "admin",
 		Permissions: model.Permissions{model.Permission{

@@ -119,10 +119,10 @@ func (s *BloodhoundDB) GetRoles(ctx context.Context, ids []int32) (model.Roles, 
 
 // GetRole retrieves the role associated with the provided ID
 // SELECT * FROM roles WHERE role_id = ....
-func (s *BloodhoundDB) GetRole(id int32) (model.Role, error) {
+func (s *BloodhoundDB) GetRole(ctx context.Context, id int32) (model.Role, error) {
 	var (
 		role   model.Role
-		result = s.preload(model.RoleAssociations()).First(&role, id)
+		result = s.preload(model.RoleAssociations()).WithContext(ctx).First(&role, id)
 	)
 
 	return role, CheckError(result)

@@ -348,7 +348,7 @@ func (s ManagementResource) GetRole(response http.ResponseWriter, request *http.
 
 	if roleID, err := strconv.ParseInt(rawRoleID, 10, 32); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsIDMalformed, request), response)
-	} else if role, err := s.db.GetRole(int32(roleID)); err != nil {
+	} else if role, err := s.db.GetRole(request.Context(), int32(roleID)); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
 		api.WriteBasicResponse(request.Context(), role, http.StatusOK, response)
