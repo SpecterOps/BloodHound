@@ -438,10 +438,10 @@ func (s *BloodhoundDB) GetAllAuthTokens(ctx context.Context, order string, filte
 	return tokens, CheckError(cursor.Find(&tokens))
 }
 
-func (s *BloodhoundDB) GetUserToken(userId, tokenId uuid.UUID) (model.AuthToken, error) {
+func (s *BloodhoundDB) GetUserToken(ctx context.Context, userId, tokenId uuid.UUID) (model.AuthToken, error) {
 	var (
 		authToken model.AuthToken
-		result    = s.db.First(&authToken, "id = ? AND user_id = ?", tokenId, userId)
+		result    = s.db.WithContext(ctx).First(&authToken, "id = ? AND user_id = ?", tokenId, userId)
 	)
 	return authToken, CheckError(result)
 }

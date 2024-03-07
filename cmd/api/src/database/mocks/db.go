@@ -1015,18 +1015,18 @@ func (mr *MockDatabaseMockRecorder) GetUserSession(arg0 interface{}) *gomock.Cal
 }
 
 // GetUserToken mocks base method.
-func (m *MockDatabase) GetUserToken(arg0, arg1 uuid.UUID) (model.AuthToken, error) {
+func (m *MockDatabase) GetUserToken(arg0 context.Context, arg1, arg2 uuid.UUID) (model.AuthToken, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetUserToken", arg0, arg1)
+	ret := m.ctrl.Call(m, "GetUserToken", arg0, arg1, arg2)
 	ret0, _ := ret[0].(model.AuthToken)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetUserToken indicates an expected call of GetUserToken.
-func (mr *MockDatabaseMockRecorder) GetUserToken(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) GetUserToken(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserToken", reflect.TypeOf((*MockDatabase)(nil).GetUserToken), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserToken", reflect.TypeOf((*MockDatabase)(nil).GetUserToken), arg0, arg1, arg2)
 }
 
 // HasInstallation mocks base method.

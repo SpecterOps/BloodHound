@@ -109,7 +109,7 @@ type Database interface {
 	UpdateAuthToken(ctx context.Context, authToken model.AuthToken) error
 	GetAllAuthTokens(ctx context.Context, order string, filter model.SQLFilter) (model.AuthTokens, error)
 	GetAuthToken(ctx context.Context, id uuid.UUID) (model.AuthToken, error)
-	GetUserToken(userId, tokenId uuid.UUID) (model.AuthToken, error)
+	GetUserToken(ctx context.Context, userId, tokenId uuid.UUID) (model.AuthToken, error)
 	DeleteAuthToken(ctx context.Context, authToken model.AuthToken) error
 	CreateAuthSecret(ctx context.Context, authSecret model.AuthSecret) (model.AuthSecret, error)
 	GetAuthSecret(id int32) (model.AuthSecret, error)
