@@ -28,6 +28,12 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+type PropertyAssertion struct {
+	ObjectID      string
+	Property      string
+	ExpectedValue any
+}
+
 var (
 	ingestRelationshipAssertionCriteria = []graph.Criteria{
 		//// DOMAINS
@@ -252,6 +258,19 @@ var (
 			query.Kind(query.End(), ad.Domain),
 			query.Equals(query.EndProperty(common.ObjectID.String()), "S-1-5-21-3130019616-2776909439-2417379446")),
 	}
+
+	propertyAssertionCriteria = []PropertyAssertion{
+		{
+			ObjectID:      "TESTLAB.LOCAL-S-1-5-32-550",
+			Property:      common.Name.String(),
+			ExpectedValue: "PRINT OPERATORS@TESTLAB.LOCAL",
+		},
+		{
+			ObjectID:      "S-1-5-21-3130019616-2776909439-2417379446-521",
+			Property:      common.Name.String(),
+			ExpectedValue: "READ-ONLY DOMAIN CONTROLLERS@TESTLAB.LOCAL",
+		},
+	}
 )
 
 func FormatQueryComponent(criteria graph.Criteria) string {
@@ -277,6 +296,18 @@ func IngestAssertions(testCtrl test.Controller, tx graph.Transaction) {
 func IngestAssertionsv6(testCtrl test.Controller, tx graph.Transaction) {
 	for _, assertionCriteria := range v6ingestRelationshipAssertionCriteria {
 		_, err := tx.Relationships().Filter(assertionCriteria).First()
+		require.Nilf(testCtrl, err, "Unable to find an expected relationship: %s", FormatQueryComponent(assertionCriteria))
+	}
+}
+
+func PropertyAssertions(testCtrl test.Controller, tx graph.Transaction) {
+	for _, assertionCriteria := range propertyAssertionCriteria {
+		node, err := tx.Nodes().Filterf(func() graph.Criteria {
+			return query.Equals(query.NodeProperty(common.ObjectID.String()), assertionCriteria.ObjectID)
+		}).First()
+		require.Nilf(testCtrl, err, "Unable to find expected node %s", assertionCriteria.ObjectID)
+		prop := node.Properties.Get(assertionCriteria.Property).Any()
+		require.Equal(testCtrl, assertionCriteria.ExpectedValue, prop)
 		require.Nilf(testCtrl, err, "Unable to find an expected relationship: %s", FormatQueryComponent(assertionCriteria))
 	}
 }

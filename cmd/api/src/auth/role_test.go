@@ -22,6 +22,10 @@ package auth_test
 import (
 	"encoding/json"
 	"fmt"
+	"net/http"
+	"testing"
+	"time"
+
 	"github.com/gofrs/uuid"
 	"github.com/specterops/bloodhound/lab"
 	"github.com/specterops/bloodhound/src/api"
@@ -31,9 +35,6 @@ import (
 	"github.com/specterops/bloodhound/src/model/appcfg"
 	"github.com/specterops/bloodhound/src/test/lab/fixtures"
 	"github.com/stretchr/testify/require"
-	"net/http"
-	"testing"
-	"time"
 )
 
 func testCondition(role auth.RoleTemplate, permission model.Permission) string {
@@ -203,6 +204,18 @@ func testRoleAccess(t *testing.T, roleName string) {
 
 			_, err := userClient.CreateSavedQuery()
 			if role.Permissions.Has(auth.Permissions().SavedQueriesWrite) {
+				assert.Nil(err)
+			} else {
+				requireForbidden(assert, err)
+			}
+		}),
+
+		lab.TestCase(fmt.Sprintf("%s be able to access WipeDB endpoints", testCondition(role, auth.Permissions().WipeDB)), func(assert *require.Assertions, harness *lab.Harness) {
+			userClient, ok := lab.Unpack(harness, userClientFixture)
+			assert.True(ok)
+
+			err := userClient.HandleDatabaseWipe(v2.DatabaseWipe{DeleteCollectedGraphData: true})
+			if role.Permissions.Has(auth.Permissions().WipeDB) {
 				assert.Nil(err)
 			} else {
 				requireForbidden(assert, err)

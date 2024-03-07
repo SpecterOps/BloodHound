@@ -27,7 +27,6 @@ import (
 	"github.com/specterops/bloodhound/errors"
 	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/src/auth"
-	"github.com/specterops/bloodhound/src/ctx"
 	"github.com/specterops/bloodhound/src/database/migration"
 	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/model/appcfg"
@@ -53,34 +52,36 @@ type Database interface {
 	appcfg.FeatureFlagService
 
 	Close()
-	GetConfigurationParameter(parameter string) (appcfg.Parameter, error)
-	SetConfigurationParameter(appConfig appcfg.Parameter) error
-	GetAllConfigurationParameters() (appcfg.Parameters, error)
 	CreateIngestTask(ingestTask model.IngestTask) (model.IngestTask, error)
 	GetAllIngestTasks() (model.IngestTasks, error)
 	DeleteIngestTask(ingestTask model.IngestTask) error
 	GetIngestTasksForJob(jobID int64) (model.IngestTasks, error)
 	GetUnfinishedIngestIDs() ([]int64, error)
+
+	// Asset Groups
 	CreateAssetGroup(ctx context.Context, name, tag string, systemGroup bool) (model.AssetGroup, error)
 	UpdateAssetGroup(ctx context.Context, assetGroup model.AssetGroup) error
 	DeleteAssetGroup(ctx context.Context, assetGroup model.AssetGroup) error
-	GetAssetGroup(id int32) (model.AssetGroup, error)
-	GetAllAssetGroups(order string, filter model.SQLFilter) (model.AssetGroups, error)
+	GetAssetGroup(ctx context.Context, id int32) (model.AssetGroup, error)
+	GetAllAssetGroups(ctx context.Context, order string, filter model.SQLFilter) (model.AssetGroups, error)
 	SweepAssetGroupCollections()
-	GetAssetGroupCollections(assetGroupID int32, order string, filter model.SQLFilter) (model.AssetGroupCollections, error)
-	GetLatestAssetGroupCollection(assetGroupID int32) (model.AssetGroupCollection, error)
-	GetTimeRangedAssetGroupCollections(assetGroupID int32, from int64, to int64, order string) (model.AssetGroupCollections, error)
-	GetAssetGroupSelector(id int32) (model.AssetGroupSelector, error)
+	GetAssetGroupCollections(ctx context.Context, assetGroupID int32, order string, filter model.SQLFilter) (model.AssetGroupCollections, error)
+	GetLatestAssetGroupCollection(ctx context.Context, assetGroupID int32) (model.AssetGroupCollection, error)
+	GetTimeRangedAssetGroupCollections(ctx context.Context, assetGroupID int32, from int64, to int64, order string) (model.AssetGroupCollections, error)
+	GetAssetGroupSelector(ctx context.Context, id int32) (model.AssetGroupSelector, error)
 	DeleteAssetGroupSelector(ctx context.Context, selector model.AssetGroupSelector) error
-	UpdateAssetGroupSelectors(ctx ctx.Context, assetGroup model.AssetGroup, selectorSpecs []model.AssetGroupSelectorSpec, systemSelector bool) (model.UpdatedAssetGroupSelectors, error)
-	CreateAssetGroupCollection(collection model.AssetGroupCollection, entries model.AssetGroupCollectionEntries) error
-	RawFirst(value any) error
+	UpdateAssetGroupSelectors(ctx context.Context, assetGroup model.AssetGroup, selectorSpecs []model.AssetGroupSelectorSpec, systemSelector bool) (model.UpdatedAssetGroupSelectors, error)
+	CreateAssetGroupCollection(ctx context.Context, collection model.AssetGroupCollection, entries model.AssetGroupCollectionEntries) error
+
 	Wipe() error
 	Migrate() error
 	RequiresMigration() (bool, error)
-	CreateAuditLog(auditLog model.AuditLog) error
+
+	// Audit Logs
+	CreateAuditLog(ctx context.Context, auditLog model.AuditLog) error
 	AppendAuditLog(ctx context.Context, entry model.AuditEntry) error
-	ListAuditLogs(before, after time.Time, offset, limit int, order string, filter model.SQLFilter) (model.AuditLogs, int, error)
+	ListAuditLogs(ctx context.Context, before, after time.Time, offset, limit int, order string, filter model.SQLFilter) (model.AuditLogs, int, error)
+
 	CreateRole(role model.Role) (model.Role, error)
 	UpdateRole(role model.Role) error
 	GetAllRoles(order string, filter model.SQLFilter) (model.Roles, error)
@@ -133,15 +134,18 @@ type Database interface {
 	GetAzureDataQualityStats(tenantId string, start time.Time, end time.Time, sort_by string, limit int, skip int) (model.AzureDataQualityStats, int, error)
 	CreateAzureDataQualityAggregation(aggregation model.AzureDataQualityAggregation) (model.AzureDataQualityAggregation, error)
 	GetAzureDataQualityAggregations(start time.Time, end time.Time, sort_by string, limit int, skip int) (model.AzureDataQualityAggregations, int, error)
+	DeleteAllDataQuality(ctx context.Context) error
 	CreateFileUploadJob(job model.FileUploadJob) (model.FileUploadJob, error)
 	UpdateFileUploadJob(job model.FileUploadJob) error
 	GetFileUploadJob(id int64) (model.FileUploadJob, error)
 	GetAllFileUploadJobs(skip int, limit int, order string, filter model.SQLFilter) ([]model.FileUploadJob, int, error)
 	GetFileUploadJobsWithStatus(status model.JobStatus) ([]model.FileUploadJob, error)
+	DeleteAllFileUploads(ctx context.Context) error
 	ListSavedQueries(userID uuid.UUID, order string, filter model.SQLFilter, skip, limit int) (model.SavedQueries, int, error)
 	CreateSavedQuery(userID uuid.UUID, name string, query string) (model.SavedQuery, error)
 	DeleteSavedQuery(id int) error
 	SavedQueryBelongsToUser(userID uuid.UUID, savedQueryID int) (bool, error)
+	DeleteAssetGroupSelectorsForAssetGroups(ctx context.Context, assetGroupIds []int) error
 }
 
 type BloodhoundDB struct {
@@ -192,10 +196,6 @@ func OpenDatabase(connection string) (*gorm.DB, error) {
 	} else {
 		return db, nil
 	}
-}
-
-func (s *BloodhoundDB) RawFirst(value any) error {
-	return CheckError(s.db.Model(value).First(value))
 }
 
 func (s *BloodhoundDB) RawDelete(value any) error {

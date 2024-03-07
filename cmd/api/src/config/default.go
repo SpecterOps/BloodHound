@@ -51,6 +51,7 @@ func NewDefaultConfiguration() (Configuration, error) {
 			EnableAPILogging:        true,
 			DisableAnalysis:         false,
 			DisableCypherQC:         false,
+			DisableIngest:           false,
 			DisableMigrations:       false,
 			AuthSessionTTLHours:     8, // Default to a logged in auth session time to live of 8 hours
 			TraversalMemoryLimit:    2, // 2 GiB by default

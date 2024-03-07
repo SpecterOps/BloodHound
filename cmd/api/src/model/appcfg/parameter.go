@@ -1,30 +1,31 @@
 // Copyright 2023 Specter Ops, Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// 
+//
 // SPDX-License-Identifier: Apache-2.0
 
 package appcfg
 
 import (
+	"context"
 	"fmt"
 	"time"
 
-	"github.com/specterops/bloodhound/src/database/types"
-	"github.com/specterops/bloodhound/src/model"
 	iso8601 "github.com/channelmeter/iso8601duration"
 	"github.com/specterops/bloodhound/dawgs/drivers/neo4j"
 	"github.com/specterops/bloodhound/log"
+	"github.com/specterops/bloodhound/src/database/types"
+	"github.com/specterops/bloodhound/src/model"
 )
 
 const (
@@ -75,17 +76,13 @@ type ParameterSet map[string]Parameter
 // abstract backend storage.
 type ParameterService interface {
 	// GetAllConfigurationParameters gets all available runtime Parameters for the application.
-	GetAllConfigurationParameters() (Parameters, error)
+	GetAllConfigurationParameters(ctx context.Context) (Parameters, error)
 
 	// GetConfigurationParameter attempts to fetch a Parameter struct by its parameter name.
-	GetConfigurationParameter(parameter string) (Parameter, error)
-
-	// GetConfigurationParametersByPrefix attempts to fetch all Parameters that have a parameter name that
-	// starts with the given prefix.
-	GetConfigurationParametersByPrefix(prefix string) (Parameters, error)
+	GetConfigurationParameter(ctx context.Context, parameter string) (Parameter, error)
 
 	// SetConfigurationParameter attempts to store or update the given Parameter.
-	SetConfigurationParameter(configurationParameter Parameter) error
+	SetConfigurationParameter(ctx context.Context, configurationParameter Parameter) error
 }
 
 func AvailableParameters() (ParameterSet, error) {
@@ -129,10 +126,10 @@ func (s PasswordExpiration) ParseDuration() (time.Duration, error) {
 	}
 }
 
-func GetPasswordExpiration(service ParameterService) (time.Duration, error) {
+func GetPasswordExpiration(ctx context.Context, service ParameterService) (time.Duration, error) {
 	var expiration PasswordExpiration
 
-	if cfg, err := service.GetConfigurationParameter(PasswordExpirationWindow); err != nil {
+	if cfg, err := service.GetConfigurationParameter(ctx, PasswordExpirationWindow); err != nil {
 		return 0, err
 	} else if err := cfg.Map(&expiration); err != nil {
 		return 0, err
@@ -146,10 +143,10 @@ type Neo4jParameters struct {
 	BatchWriteSize int `json:"batch_write_size,omitempty"`
 }
 
-func GetNeo4jParameters(service ParameterService) Neo4jParameters {
+func GetNeo4jParameters(ctx context.Context, service ParameterService) Neo4jParameters {
 	var result Neo4jParameters
 
-	if neo4jParametersCfg, err := service.GetConfigurationParameter(Neo4jConfigs); err != nil {
+	if neo4jParametersCfg, err := service.GetConfigurationParameter(ctx, Neo4jConfigs); err != nil {
 		log.Errorf("failed to fetch neo4j configuration; returning default values")
 		result = Neo4jParameters{
 			WriteFlushSize: neo4j.DefaultWriteFlushSize,
