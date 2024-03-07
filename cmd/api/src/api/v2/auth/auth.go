@@ -539,7 +539,7 @@ func (s ManagementResource) UpdateUser(response http.ResponseWriter, request *ht
 				return
 			} else {
 				for _, session := range userSessions {
-					s.db.EndUserSession(session)
+					s.db.EndUserSession(request.Context(), session)
 				}
 			}
 		}

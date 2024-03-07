@@ -130,7 +130,7 @@ type Database interface {
 	// Sessions
 	CreateUserSession(ctx context.Context, userSession model.UserSession) (model.UserSession, error)
 	LookupActiveSessionsByUser(ctx context.Context, user model.User) ([]model.UserSession, error)
-	EndUserSession(userSession model.UserSession)
+	EndUserSession(ctx context.Context, userSession model.UserSession)
 	GetUserSession(id int64) (model.UserSession, error)
 	SweepSessions()
 

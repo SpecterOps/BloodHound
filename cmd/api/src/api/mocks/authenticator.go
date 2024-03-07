@@ -87,15 +87,15 @@ func (mr *MockAuthenticatorMockRecorder) LoginWithSecret(arg0, arg1 interface{})
 }
 
 // Logout mocks base method.
-func (m *MockAuthenticator) Logout(arg0 model.UserSession) {
+func (m *MockAuthenticator) Logout(arg0 context.Context, arg1 model.UserSession) {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "Logout", arg0)
+	m.ctrl.Call(m, "Logout", arg0, arg1)
 }
 
 // Logout indicates an expected call of Logout.
-func (mr *MockAuthenticatorMockRecorder) Logout(arg0 interface{}) *gomock.Call {
+func (mr *MockAuthenticatorMockRecorder) Logout(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Logout", reflect.TypeOf((*MockAuthenticator)(nil).Logout), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Logout", reflect.TypeOf((*MockAuthenticator)(nil).Logout), arg0, arg1)
 }
 
 // ValidateRequestSignature mocks base method.

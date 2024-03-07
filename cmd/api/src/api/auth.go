@@ -64,7 +64,7 @@ func parseRequestDate(rawDate string) (time.Time, error) {
 
 type Authenticator interface {
 	LoginWithSecret(ctx context.Context, loginRequest LoginRequest) (LoginDetails, error)
-	Logout(userSession model.UserSession)
+	Logout(ctx context.Context, userSession model.UserSession)
 	ValidateSecret(ctx context.Context, secret string, authSecret model.AuthSecret) error
 	ValidateRequestSignature(tokenID uuid.UUID, request *http.Request, serverTime time.Time) (auth.Context, int, error)
 	CreateSession(ctx context.Context, user model.User, authProvider any) (string, error)
@@ -163,8 +163,8 @@ func (s authenticator) LoginWithSecret(ctx context.Context, loginRequest LoginRe
 	}
 }
 
-func (s authenticator) Logout(userSession model.UserSession) {
-	s.db.EndUserSession(userSession)
+func (s authenticator) Logout(ctx context.Context, userSession model.UserSession) {
+	s.db.EndUserSession(ctx, userSession)
 }
 
 func (s authenticator) ValidateSecret(ctx context.Context, secret string, authSecret model.AuthSecret) error {

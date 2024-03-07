@@ -473,15 +473,15 @@ func (mr *MockDatabaseMockRecorder) DeleteUser(arg0, arg1 interface{}) *gomock.C
 }
 
 // EndUserSession mocks base method.
-func (m *MockDatabase) EndUserSession(arg0 model.UserSession) {
+func (m *MockDatabase) EndUserSession(arg0 context.Context, arg1 model.UserSession) {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "EndUserSession", arg0)
+	m.ctrl.Call(m, "EndUserSession", arg0, arg1)
 }
 
 // EndUserSession indicates an expected call of EndUserSession.
-func (mr *MockDatabaseMockRecorder) EndUserSession(arg0 interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) EndUserSession(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EndUserSession", reflect.TypeOf((*MockDatabase)(nil).EndUserSession), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EndUserSession", reflect.TypeOf((*MockDatabase)(nil).EndUserSession), arg0, arg1)
 }
 
 // GetADDataQualityAggregations mocks base method.
