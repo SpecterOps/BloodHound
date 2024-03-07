@@ -430,9 +430,7 @@ func GetADCSESC6EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 	if err := traversalInst.BreadthFirst(ctx,
 		traversal.Plan{
 			Root: startNode,
-			Driver: enterpriseCAsForPrincipal(
-				query.Equals(query.EndProperty(ad.IsUserSpecifiesSanEnabled.String()), true),
-			).Do(
+			Driver: enterpriseCAsForPrincipal().Do(
 				func(terminal *graph.PathSegment) error {
 
 					enterpriseCA := terminal.Search(
@@ -599,7 +597,7 @@ func getESC6AbuseEdgeCriteria(edgeKind graph.Kind) graph.Criteria {
 	)
 }
 
-func enterpriseCAsForPrincipal(ecaProperties ...graph.Criteria) traversal.PatternContinuation {
+func enterpriseCAsForPrincipal() traversal.PatternContinuation {
 	return traversal.NewPattern().
 		OutboundWithDepth(0, 0,
 			query.And(
@@ -610,7 +608,7 @@ func enterpriseCAsForPrincipal(ecaProperties ...graph.Criteria) traversal.Patter
 			query.And(
 				query.KindIn(query.Relationship(), ad.Enroll),
 				query.KindIn(query.End(), ad.EnterpriseCA),
-				ecaProperties,
+				query.Equals(query.EndProperty(ad.IsUserSpecifiesSanEnabled.String()), true),
 			))
 }
 

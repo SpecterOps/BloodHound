@@ -280,7 +280,7 @@ func GetADCSESC4EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 	if err := traversalInst.BreadthFirst(ctx,
 		traversal.Plan{
 			Root: startNode,
-			Driver: enterpriseCAsForPrincipal().Do(
+			Driver: ESC4EnterpriseCAs().Do(
 				func(terminal *graph.PathSegment) error {
 
 					enterpriseCA := terminal.Search(
@@ -411,6 +411,20 @@ func GetADCSESC4EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 	}
 
 	return paths, nil
+}
+
+func ESC4EnterpriseCAs() traversal.PatternContinuation {
+	return traversal.NewPattern().
+		OutboundWithDepth(0, 0,
+			query.And(
+				query.Kind(query.Relationship(), ad.MemberOf),
+				query.Kind(query.End(), ad.Group),
+			)).
+		Outbound(
+			query.And(
+				query.KindIn(query.Relationship(), ad.Enroll),
+				query.KindIn(query.End(), ad.EnterpriseCA),
+			))
 }
 
 func ESC4Path1Pattern(domainId graph.ID, enterpriseCAs cardinality.Duplex[uint32]) traversal.PatternContinuation {
