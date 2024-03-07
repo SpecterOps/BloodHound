@@ -195,10 +195,10 @@ func (s *BloodhoundDB) GetAllPermissions(ctx context.Context, order string, filt
 
 // GetPermission retrieves a row in the Permissions table corresponding to the ID provided
 // SELECT * FROM permissions WHERE permission_id = ...
-func (s *BloodhoundDB) GetPermission(id int) (model.Permission, error) {
+func (s *BloodhoundDB) GetPermission(ctx context.Context, id int) (model.Permission, error) {
 	var (
 		permission model.Permission
-		result     = s.db.First(&permission, id)
+		result     = s.db.WithContext(ctx).First(&permission, id)
 	)
 
 	return permission, CheckError(result)

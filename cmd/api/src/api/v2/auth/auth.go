@@ -270,7 +270,7 @@ func (s ManagementResource) GetPermission(response http.ResponseWriter, request 
 
 	if permissionID, err := strconv.Atoi(rawPermissionID); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsIDMalformed, request), response)
-	} else if permission, err := s.db.GetPermission(permissionID); err != nil {
+	} else if permission, err := s.db.GetPermission(request.Context(), permissionID); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
 		api.WriteBasicResponse(request.Context(), permission, http.StatusOK, response)
