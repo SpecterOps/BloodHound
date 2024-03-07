@@ -69,7 +69,7 @@ func ConnectDatabases(ctx context.Context, cfg config.Configuration) (bootstrap.
 
 func Entrypoint(ctx context.Context, cfg config.Configuration, connections bootstrap.DatabaseConnections[*database.BloodhoundDB, *graph.DatabaseSwitch]) ([]daemons.Daemon, error) {
 	if !cfg.DisableMigrations {
-		if err := bootstrap.MigrateDB(cfg, connections.RDMS); err != nil {
+		if err := bootstrap.MigrateDB(ctx, cfg, connections.RDMS); err != nil {
 			return nil, fmt.Errorf("rdms migration error: %w", err)
 		} else if err := bootstrap.MigrateGraph(ctx, connections.Graph, schema.DefaultGraphSchema()); err != nil {
 			return nil, fmt.Errorf("graph migration error: %w", err)

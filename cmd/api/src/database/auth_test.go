@@ -45,7 +45,7 @@ func initAndGetRoles(t *testing.T) (database.Database, model.Roles) {
 		t.Fatalf("Failed preparing DB: %v", err)
 	}
 
-	if roles, err := dbInst.GetAllRoles("", model.SQLFilter{}); err != nil {
+	if roles, err := dbInst.GetAllRoles(context.Background(), "", model.SQLFilter{}); err != nil {
 		t.Fatalf("Error fetching roles: %v", err)
 	} else {
 		return dbInst, roles

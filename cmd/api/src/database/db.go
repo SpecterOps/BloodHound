@@ -84,7 +84,7 @@ type Database interface {
 	ListAuditLogs(ctx context.Context, before, after time.Time, offset, limit int, order string, filter model.SQLFilter) (model.AuditLogs, int, error)
 
 	// Roles
-	GetAllRoles(order string, filter model.SQLFilter) (model.Roles, error)
+	GetAllRoles(ctx context.Context, order string, filter model.SQLFilter) (model.Roles, error)
 	GetRoles(ids []int32) (model.Roles, error)
 	GetRolesByName(names []string) (model.Roles, error)
 	GetRole(id int32) (model.Role, error)

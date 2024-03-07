@@ -90,23 +90,20 @@ func (s contextInitializer) InitContextFromToken(ctx context.Context, authToken 
 
 // GetAllRoles retrieves all available roles in the db
 // SELECT * FROM roles
-func (s *BloodhoundDB) GetAllRoles(order string, filter model.SQLFilter) (model.Roles, error) {
+func (s *BloodhoundDB) GetAllRoles(ctx context.Context, order string, filter model.SQLFilter) (model.Roles, error) {
 	var (
 		roles  model.Roles
-		result *gorm.DB
+		cursor = s.preload(model.RoleAssociations()).WithContext(ctx)
 	)
 
-	if order == "" && filter.SQLString == "" {
-		result = s.preload(model.RoleAssociations()).Find(&roles)
-	} else if order == "" && filter.SQLString != "" {
-		result = s.preload(model.RoleAssociations()).Where(filter.SQLString, filter.Params).Find(&roles)
-	} else if order != "" && filter.SQLString == "" {
-		result = s.preload(model.RoleAssociations()).Order(order).Find(&roles)
-	} else {
-		result = s.preload(model.RoleAssociations()).Where(filter.SQLString, filter.Params).Order(order).Find(&roles)
+	if order != "" && filter.SQLString == "" {
+		cursor = cursor.Order(order)
+	}
+	if filter.SQLString != "" {
+		cursor = cursor.Where(filter.SQLString, filter.Params)
 	}
 
-	return roles, CheckError(result)
+	return roles, CheckError(cursor.Find(&roles))
 }
 
 // GetRoles retrieves all rows in the Roles table corresponding to the provided list of IDs

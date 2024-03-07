@@ -563,7 +563,7 @@ func TestManagementResource_ListRoles_DBError(t *testing.T) {
 
 	endpoint := "/api/v2/auth/roles"
 	mockDB := dbmocks.NewMockDatabase(mockCtrl)
-	mockDB.EXPECT().GetAllRoles("description desc, name", model.SQLFilter{}).Return(model.Roles{}, fmt.Errorf("foo"))
+	mockDB.EXPECT().GetAllRoles(gomock.Any(), "description desc, name", model.SQLFilter{}).Return(model.Roles{}, fmt.Errorf("foo"))
 
 	config, err := config.NewDefaultConfiguration()
 	require.Nilf(t, err, "Failed to create default configuration: %v", err)
@@ -613,7 +613,7 @@ func TestManagementResource_ListRoles(t *testing.T) {
 	}
 
 	resources, mockDB := apitest.NewAuthManagementResource(mockCtrl)
-	mockDB.EXPECT().GetAllRoles("description desc, name", model.SQLFilter{}).Return(model.Roles{role1, role2}, nil)
+	mockDB.EXPECT().GetAllRoles(gomock.Any(), "description desc, name", model.SQLFilter{}).Return(model.Roles{role1, role2}, nil)
 
 	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
 	if req, err := http.NewRequestWithContext(ctx, "GET", endpoint, nil); err != nil {
@@ -656,7 +656,7 @@ func TestManagementResource_ListRoles_Filtered(t *testing.T) {
 	}
 
 	resources, mockDB := apitest.NewAuthManagementResource(mockCtrl)
-	mockDB.EXPECT().GetAllRoles("", model.SQLFilter{SQLString: "name = ?", Params: []any{"a"}}).Return(model.Roles{role1}, nil)
+	mockDB.EXPECT().GetAllRoles(gomock.Any(), "", model.SQLFilter{SQLString: "name = ?", Params: []any{"a"}}).Return(model.Roles{role1}, nil)
 
 	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
 	if req, err := http.NewRequestWithContext(ctx, "GET", endpoint, nil); err != nil {

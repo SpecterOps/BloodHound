@@ -332,7 +332,7 @@ func (s ManagementResource) ListRoles(response http.ResponseWriter, request *htt
 		if sqlFilter, err := queryFilters.BuildSQLFilter(); err != nil {
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "error building SQL for filter", request), response)
 			return
-		} else if roles, err = s.db.GetAllRoles(strings.Join(order, ", "), sqlFilter); err != nil {
+		} else if roles, err = s.db.GetAllRoles(request.Context(), strings.Join(order, ", "), sqlFilter); err != nil {
 			api.HandleDatabaseError(request, response, err)
 		} else {
 			api.WriteBasicResponse(request.Context(), v2.ListRolesResponse{Roles: roles}, http.StatusOK, response)
