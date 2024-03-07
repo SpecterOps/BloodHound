@@ -260,9 +260,9 @@ func GetADCSESC4EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 		certTemplateSegments = map[graph.ID][]*graph.PathSegment{}
 		enterpriseCASegments = map[graph.ID][]*graph.PathSegment{}
 		// pattern1Segments     = map[graph.ID][]*graph.PathSegment{}
-		certTemplates      = cardinality.NewBitmap32()
-		enterpriseCAs      = cardinality.NewBitmap32()
-		path1EnterpriseCAs = cardinality.NewBitmap32()
+		certTemplates = cardinality.NewBitmap32()
+		enterpriseCAs = cardinality.NewBitmap32()
+		// path1EnterpriseCAs = cardinality.NewBitmap32()
 	)
 
 	if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
@@ -289,7 +289,7 @@ func GetADCSESC4EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 						})
 
 					lock.Lock()
-					path1EnterpriseCAs.Add(enterpriseCA.ID.Uint32())
+					enterpriseCAs.Add(enterpriseCA.ID.Uint32())
 					lock.Unlock()
 
 					return nil
@@ -301,7 +301,7 @@ func GetADCSESC4EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 	// use the enterpriseCA nodes from the previous step to gather the first set of cert templates for p1
 	if err := traversalInst.BreadthFirst(ctx, traversal.Plan{
 		Root: startNode,
-		Driver: ESC4Path1Pattern(edge.EndID, path1EnterpriseCAs).Do(
+		Driver: ESC4Path1Pattern(edge.EndID, enterpriseCAs).Do(
 			func(terminal *graph.PathSegment) error {
 				certTemplate := terminal.Search(
 					func(nextSegment *graph.PathSegment) bool {
@@ -314,27 +314,29 @@ func GetADCSESC4EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 				lock.Unlock()
 
 				return nil
-			})}); err != nil {
+			}),
+	}); err != nil {
 		return nil, err
 	}
 
 	// use the enterpriseCA and certTemplate nodes from previous steps to find enterprise CAs that are trusted for NTAuth (p2)
 	if err := traversalInst.BreadthFirst(ctx, traversal.Plan{
 		Root: startNode,
-		Driver: ESC4Path2Pattern(edge.EndID, path1EnterpriseCAs, certTemplates).Do(
+		Driver: ESC4Path2Pattern(edge.EndID, enterpriseCAs).Do(
 			func(terminal *graph.PathSegment) error {
-				certTemplate := terminal.Search(
+				enterpriseCA := terminal.Search(
 					func(nextSegment *graph.PathSegment) bool {
-						return nextSegment.Node.Kinds.ContainsOneOf(ad.CertTemplate)
+						return nextSegment.Node.Kinds.ContainsOneOf(ad.EnterpriseCA)
 					})
 
 				lock.Lock()
-				certTemplateSegments[certTemplate.ID] = append(certTemplateSegments[certTemplate.ID], terminal)
-				certTemplates.Add(certTemplate.ID.Uint32())
+				enterpriseCASegments[enterpriseCA.ID] = append(enterpriseCASegments[enterpriseCA.ID], terminal)
+				certTemplates.Add(enterpriseCA.ID.Uint32())
 				lock.Unlock()
 
 				return nil
-			})}); err != nil {
+			}),
+	}); err != nil {
 		return nil, err
 	}
 
@@ -457,27 +459,27 @@ func ESC4Path1Pattern(domainId graph.ID, enterpriseCAs cardinality.Duplex[uint32
 			))
 }
 
-func ESC4Path2Pattern(domainId graph.ID, enterpriseCAs, candidateTemplates cardinality.Duplex[uint32]) traversal.PatternContinuation {
+func ESC4Path2Pattern(domainId graph.ID, enterpriseCAs cardinality.Duplex[uint32]) traversal.PatternContinuation {
 	return traversal.NewPattern().
-		OutboundWithDepth(0, 0, query.And(
-			query.Kind(query.Relationship(), ad.MemberOf),
-			query.Kind(query.End(), ad.Group),
-		)).
-		Outbound(query.And(
-			query.KindIn(query.Relationship(), ad.GenericAll, ad.Enroll, ad.AllExtendedRights),
-			query.KindIn(query.End(), ad.CertTemplate),
-			query.InIDs(query.EndID(), cardinality.DuplexToGraphIDs(candidateTemplates)...),
-		)).
-		Outbound(query.And(
-			query.KindIn(query.Relationship(), ad.PublishedTo),
-			query.KindIn(query.End(), ad.EnterpriseCA),
-			query.InIDs(query.End(), cardinality.DuplexToGraphIDs(enterpriseCAs)...))).
-		Outbound(query.And(
-			query.KindIn(query.Relationship(), ad.TrustedForNTAuth),
-			query.Kind(query.End(), ad.NTAuthStore),
-		)).
-		Outbound(query.And(
-			query.KindIn(query.Relationship(), ad.NTAuthStoreFor),
-			query.Equals(query.EndID(), domainId),
-		))
+		OutboundWithDepth(0, 0,
+			query.And(
+				query.Kind(query.Relationship(), ad.MemberOf),
+				query.Kind(query.End(), ad.Group),
+			)).
+		Outbound(
+			query.And(
+				query.KindIn(query.Relationship(), ad.Enroll),
+				query.KindIn(query.End(), ad.EnterpriseCA),
+				query.InIDs(query.EndID(), cardinality.DuplexToGraphIDs(enterpriseCAs)...),
+			)).
+		Outbound(
+			query.And(
+				query.KindIn(query.Relationship(), ad.TrustedForNTAuth),
+				query.Kind(query.End(), ad.NTAuthStore),
+			)).
+		Outbound(
+			query.And(
+				query.KindIn(query.Relationship(), ad.NTAuthStoreFor),
+				query.Equals(query.EndID(), domainId),
+			))
 }
