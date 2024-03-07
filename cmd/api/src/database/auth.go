@@ -513,10 +513,10 @@ func (s *BloodhoundDB) LookupSAMLProviderByName(ctx context.Context, name string
 
 // GetAllSAMLProviders returns all SAML providers
 // SELECT * FROM saml_providers
-func (s *BloodhoundDB) GetAllSAMLProviders() (model.SAMLProviders, error) {
+func (s *BloodhoundDB) GetAllSAMLProviders(ctx context.Context) (model.SAMLProviders, error) {
 	var (
 		samlProviders model.SAMLProviders
-		result        = s.db.Find(&samlProviders)
+		result        = s.db.WithContext(ctx).Find(&samlProviders)
 	)
 
 	return samlProviders, CheckError(result)

@@ -121,7 +121,7 @@ type Database interface {
 	CreateSAMLIdentityProvider(ctx context.Context, samlProvider model.SAMLProvider) (model.SAMLProvider, error)
 	UpdateSAMLIdentityProvider(ctx context.Context, samlProvider model.SAMLProvider) error
 	LookupSAMLProviderByName(ctx context.Context, name string) (model.SAMLProvider, error)
-	GetAllSAMLProviders() (model.SAMLProviders, error)
+	GetAllSAMLProviders(ctx context.Context) (model.SAMLProviders, error)
 	GetSAMLProvider(id int32) (model.SAMLProvider, error)
 	GetSAMLProviderUsers(id int32) (model.Users, error)
 	DeleteSAMLProvider(ctx context.Context, samlProvider model.SAMLProvider) error
