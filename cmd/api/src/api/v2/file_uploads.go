@@ -117,7 +117,7 @@ func (s Resources) StartFileUploadJob(response http.ResponseWriter, request *htt
 
 	if user, valid := auth.GetUserFromAuthCtx(reqCtx.AuthCtx); !valid {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusUnauthorized, api.ErrorResponseDetailsAuthenticationInvalid, request), response)
-	} else if fileUploadJob, err := fileupload.StartFileUploadJob(s.DB, user); err != nil {
+	} else if fileUploadJob, err := fileupload.StartFileUploadJob(request.Context(), s.DB, user); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
 		api.WriteBasicResponse(request.Context(), fileUploadJob, http.StatusCreated, response)

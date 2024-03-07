@@ -35,7 +35,7 @@ const jobActivityTimeout = time.Minute * 20
 var ErrInvalidJSON = errors.New("file is not valid json")
 
 type FileUploadData interface {
-	CreateFileUploadJob(job model.FileUploadJob) (model.FileUploadJob, error)
+	CreateFileUploadJob(ctx context.Context, job model.FileUploadJob) (model.FileUploadJob, error)
 	UpdateFileUploadJob(job model.FileUploadJob) error
 	GetFileUploadJob(id int64) (model.FileUploadJob, error)
 	GetAllFileUploadJobs(skip int, limit int, order string, filter model.SQLFilter) ([]model.FileUploadJob, int, error)
@@ -77,7 +77,7 @@ func GetAllFileUploadJobs(db FileUploadData, skip int, limit int, order string, 
 	return db.GetAllFileUploadJobs(skip, limit, order, filter)
 }
 
-func StartFileUploadJob(db FileUploadData, user model.User) (model.FileUploadJob, error) {
+func StartFileUploadJob(ctx context.Context, db FileUploadData, user model.User) (model.FileUploadJob, error) {
 	job := model.FileUploadJob{
 		UserID:     user.ID,
 		User:       user,
@@ -85,7 +85,7 @@ func StartFileUploadJob(db FileUploadData, user model.User) (model.FileUploadJob
 		StartTime:  time.Now().UTC(),
 		LastIngest: time.Now().UTC(),
 	}
-	return db.CreateFileUploadJob(job)
+	return db.CreateFileUploadJob(ctx, job)
 }
 
 func GetFileUploadJobByID(db FileUploadData, jobID int64) (model.FileUploadJob, error) {

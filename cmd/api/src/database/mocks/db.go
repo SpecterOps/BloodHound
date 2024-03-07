@@ -214,18 +214,18 @@ func (mr *MockDatabaseMockRecorder) CreateAzureDataQualityStats(arg0 interface{}
 }
 
 // CreateFileUploadJob mocks base method.
-func (m *MockDatabase) CreateFileUploadJob(arg0 model.FileUploadJob) (model.FileUploadJob, error) {
+func (m *MockDatabase) CreateFileUploadJob(arg0 context.Context, arg1 model.FileUploadJob) (model.FileUploadJob, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateFileUploadJob", arg0)
+	ret := m.ctrl.Call(m, "CreateFileUploadJob", arg0, arg1)
 	ret0, _ := ret[0].(model.FileUploadJob)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // CreateFileUploadJob indicates an expected call of CreateFileUploadJob.
-func (mr *MockDatabaseMockRecorder) CreateFileUploadJob(arg0 interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) CreateFileUploadJob(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateFileUploadJob", reflect.TypeOf((*MockDatabase)(nil).CreateFileUploadJob), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateFileUploadJob", reflect.TypeOf((*MockDatabase)(nil).CreateFileUploadJob), arg0, arg1)
 }
 
 // CreateIngestTask mocks base method.

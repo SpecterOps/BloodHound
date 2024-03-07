@@ -123,7 +123,7 @@ func TestResources_StartFileUploadJob(t *testing.T) {
 					apitest.SetContext(input, userCtx)
 				},
 				Setup: func() {
-					mockDB.EXPECT().CreateFileUploadJob(gomock.Any()).Return(model.FileUploadJob{}, errors.New("db error"))
+					mockDB.EXPECT().CreateFileUploadJob(gomock.Any(), gomock.Any()).Return(model.FileUploadJob{}, errors.New("db error"))
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusInternalServerError)
@@ -135,7 +135,7 @@ func TestResources_StartFileUploadJob(t *testing.T) {
 					apitest.SetContext(input, userCtx)
 				},
 				Setup: func() {
-					mockDB.EXPECT().CreateFileUploadJob(gomock.Any()).Return(model.FileUploadJob{}, nil)
+					mockDB.EXPECT().CreateFileUploadJob(gomock.Any(), gomock.Any()).Return(model.FileUploadJob{}, nil)
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusCreated)

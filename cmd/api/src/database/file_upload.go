@@ -28,8 +28,8 @@ func (s *BloodhoundDB) UpdateFileUploadJob(job model.FileUploadJob) error {
 	return CheckError(result)
 }
 
-func (s *BloodhoundDB) CreateFileUploadJob(job model.FileUploadJob) (model.FileUploadJob, error) {
-	result := s.db.Create(&job)
+func (s *BloodhoundDB) CreateFileUploadJob(ctx context.Context, job model.FileUploadJob) (model.FileUploadJob, error) {
+	result := s.db.WithContext(ctx).Create(&job)
 	return job, CheckError(result)
 }
 
