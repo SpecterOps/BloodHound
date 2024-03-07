@@ -73,11 +73,11 @@ func decodeGroupData(batch graph.Batch, reader io.ReadSeeker) error {
 
 	var (
 		convertedData = ConvertedGroupData{}
-		group         ein.Group
 		count         = 0
 	)
 
 	for decoder.More() {
+		var group ein.Group
 		if err := decoder.Decode(&group); err != nil {
 			log.Errorf("Error decoding group object: %v", err)
 		} else {
@@ -106,10 +106,10 @@ func decodeSessionData(batch graph.Batch, reader io.ReadSeeker) error {
 
 	var (
 		convertedData = ConvertedSessionData{}
-		session       ein.Session
 		count         = 0
 	)
 	for decoder.More() {
+		var session ein.Session
 		if err := decoder.Decode(&session); err != nil {
 			log.Errorf("Error decoding session object: %v", err)
 		} else {
@@ -138,11 +138,11 @@ func decodeAzureData(batch graph.Batch, reader io.ReadSeeker) error {
 
 	var (
 		convertedData = ConvertedAzureData{}
-		data          AzureBase
 		count         = 0
 	)
 
 	for decoder.More() {
+		var data AzureBase
 		if err := decoder.Decode(&data); err != nil {
 			log.Errorf("Error decoding azure object: %v", err)
 		} else {
