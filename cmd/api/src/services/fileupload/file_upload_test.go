@@ -23,9 +23,9 @@ func TestWriteAndValidateJSON(t *testing.T) {
 	t.Run("succeed on good json", func(t *testing.T) {
 		var (
 			writer  = bytes.Buffer{}
-			badJSON = strings.NewReader(`{"meta": {"methods": 0, "type": "sessions", "count": 0, "version": 5}, "data": []}`)
+			goodJSON = strings.NewReader(`{"meta": {"methods": 0, "type": "sessions", "count": 0, "version": 5}, "data": []}`)
 		)
-		err := WriteAndValidateJSON(badJSON, &writer)
+		err := WriteAndValidateJSON(goodJSON, &writer)
 		assert.Nil(t, err)
 	})
 }
