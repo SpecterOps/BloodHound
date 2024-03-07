@@ -438,25 +438,6 @@ func (s *BloodhoundDB) GetAllAuthTokens(ctx context.Context, order string, filte
 	return tokens, CheckError(cursor.Find(&tokens))
 }
 
-func (s *BloodhoundDB) ListUserTokens(userID uuid.UUID, order string, filter model.SQLFilter) (model.AuthTokens, error) {
-	var (
-		authTokens model.AuthTokens
-		result     *gorm.DB
-	)
-
-	if order != "" && filter.SQLString == "" {
-		result = s.db.Where("user_id = ?", userID).Order(order).Find(&authTokens)
-	} else if order == "" && filter.SQLString == "" {
-		result = s.db.Where("user_id = ?", userID).Find(&authTokens)
-	} else if order == "" && filter.SQLString != "" {
-		result = s.db.Where("user_id = ?", userID).Where(filter.SQLString, filter.Params).Find(&authTokens)
-	} else {
-		result = s.db.Where("user_id = ?", userID).Where(filter.SQLString, filter.Params).Order(order).Find(&authTokens)
-	}
-
-	return authTokens, CheckError(result)
-}
-
 func (s *BloodhoundDB) GetUserToken(userId, tokenId uuid.UUID) (model.AuthToken, error) {
 	var (
 		authToken model.AuthToken

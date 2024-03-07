@@ -1107,21 +1107,6 @@ func (mr *MockDatabaseMockRecorder) ListSavedQueries(arg0, arg1, arg2, arg3, arg
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListSavedQueries", reflect.TypeOf((*MockDatabase)(nil).ListSavedQueries), arg0, arg1, arg2, arg3, arg4)
 }
 
-// ListUserTokens mocks base method.
-func (m *MockDatabase) ListUserTokens(arg0 uuid.UUID, arg1 string, arg2 model.SQLFilter) (model.AuthTokens, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ListUserTokens", arg0, arg1, arg2)
-	ret0, _ := ret[0].(model.AuthTokens)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// ListUserTokens indicates an expected call of ListUserTokens.
-func (mr *MockDatabaseMockRecorder) ListUserTokens(arg0, arg1, arg2 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListUserTokens", reflect.TypeOf((*MockDatabase)(nil).ListUserTokens), arg0, arg1, arg2)
-}
-
 // LookupActiveSessionsByUser mocks base method.
 func (m *MockDatabase) LookupActiveSessionsByUser(arg0 model.User) ([]model.UserSession, error) {
 	m.ctrl.T.Helper()
