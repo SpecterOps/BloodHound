@@ -88,27 +88,6 @@ func (s contextInitializer) InitContextFromToken(ctx context.Context, authToken 
 	return auth.Context{}, ErrNotFound
 }
 
-func (s *BloodhoundDB) CreateRole(role model.Role) (model.Role, error) {
-	var (
-		updatedRole = role
-		result      = s.db.Create(&updatedRole)
-	)
-
-	return updatedRole, CheckError(result)
-}
-
-// UpdateRole updates permissions for the row matching the provided Role struct
-// UPDATE roles SET permissions=.... WHERE role_id = ...
-func (s *BloodhoundDB) UpdateRole(role model.Role) error {
-	// Update permissions first
-	if err := s.db.Model(&role).Association("Permissions").Replace(&role.Permissions); err != nil {
-		return err
-	}
-
-	result := s.db.Save(&role)
-	return CheckError(result)
-}
-
 // GetAllRoles retrieves all available roles in the db
 // SELECT * FROM roles
 func (s *BloodhoundDB) GetAllRoles(order string, filter model.SQLFilter) (model.Roles, error) {
