@@ -765,7 +765,7 @@ func (s ManagementResource) ListAuthTokens(response http.ResponseWriter, request
 		if sqlFilter, err := queryFilters.BuildSQLFilter(); err != nil {
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "error building SQL for filter", request), response)
 			return
-		} else if authTokens, err := s.db.GetAllAuthTokens(strings.Join(order, ", "), sqlFilter); err != nil {
+		} else if authTokens, err := s.db.GetAllAuthTokens(request.Context(), strings.Join(order, ", "), sqlFilter); err != nil {
 			api.HandleDatabaseError(request, response, err)
 		} else {
 			api.WriteBasicResponse(request.Context(), v2.ListTokensResponse{Tokens: authTokens.StripKeys()}, http.StatusOK, response)

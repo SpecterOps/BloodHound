@@ -532,18 +532,18 @@ func (mr *MockDatabaseMockRecorder) GetAllAssetGroups(arg0, arg1, arg2 interface
 }
 
 // GetAllAuthTokens mocks base method.
-func (m *MockDatabase) GetAllAuthTokens(arg0 string, arg1 model.SQLFilter) (model.AuthTokens, error) {
+func (m *MockDatabase) GetAllAuthTokens(arg0 context.Context, arg1 string, arg2 model.SQLFilter) (model.AuthTokens, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetAllAuthTokens", arg0, arg1)
+	ret := m.ctrl.Call(m, "GetAllAuthTokens", arg0, arg1, arg2)
 	ret0, _ := ret[0].(model.AuthTokens)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetAllAuthTokens indicates an expected call of GetAllAuthTokens.
-func (mr *MockDatabaseMockRecorder) GetAllAuthTokens(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) GetAllAuthTokens(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllAuthTokens", reflect.TypeOf((*MockDatabase)(nil).GetAllAuthTokens), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllAuthTokens", reflect.TypeOf((*MockDatabase)(nil).GetAllAuthTokens), arg0, arg1, arg2)
 }
 
 // GetAllConfigurationParameters mocks base method.

@@ -421,23 +421,21 @@ func (s *BloodhoundDB) GetAuthToken(id uuid.UUID) (model.AuthToken, error) {
 	return authToken, CheckError(result)
 }
 
-func (s *BloodhoundDB) GetAllAuthTokens(order string, filter model.SQLFilter) (model.AuthTokens, error) {
+func (s *BloodhoundDB) GetAllAuthTokens(ctx context.Context, order string, filter model.SQLFilter) (model.AuthTokens, error) {
 	var (
 		tokens model.AuthTokens
-		result *gorm.DB
+		cursor = s.db.WithContext(ctx)
 	)
 
-	if order != "" && filter.SQLString == "" {
-		result = s.db.Order(order).Find(&tokens)
-	} else if order != "" && filter.SQLString != "" {
-		result = s.db.Where(filter.SQLString, filter.Params).Order(order).Find(&tokens)
-	} else if order == "" && filter.SQLString != "" {
-		result = s.db.Where(filter.SQLString, filter.Params).Find(&tokens)
-	} else {
-		result = s.db.Find(&tokens)
+	if order != "" {
+		cursor = cursor.Order(order)
 	}
 
-	return tokens, CheckError(result)
+	if filter.SQLString != "" {
+		cursor = cursor.Where(filter.SQLString, filter.Params)
+	}
+
+	return tokens, CheckError(cursor.Find(&tokens))
 }
 
 func (s *BloodhoundDB) ListUserTokens(userID uuid.UUID, order string, filter model.SQLFilter) (model.AuthTokens, error) {

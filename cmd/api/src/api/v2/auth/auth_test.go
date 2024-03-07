@@ -2135,7 +2135,7 @@ func TestManagementResource_ListAuthTokens_DBError(t *testing.T) {
 	require.True(t, isUser)
 
 	mockDB := dbmocks.NewMockDatabase(mockCtrl)
-	mockDB.EXPECT().GetAllAuthTokens("name, last_access desc", model.SQLFilter{SQLString: "user_id = ?", Params: []any{user.ID.String()}}).Return(model.AuthTokens{}, fmt.Errorf("foo"))
+	mockDB.EXPECT().GetAllAuthTokens(gomock.Any(), "name, last_access desc", model.SQLFilter{SQLString: "user_id = ?", Params: []any{user.ID.String()}}).Return(model.AuthTokens{}, fmt.Errorf("foo"))
 
 	config, err := config.NewDefaultConfiguration()
 	require.Nilf(t, err, "Failed to create default configuration: %v", err)
@@ -2257,7 +2257,7 @@ func TestManagementResource_ListAuthTokens_Admin(t *testing.T) {
 	require.True(t, isUser)
 
 	resources, mockDB := apitest.NewAuthManagementResource(mockCtrl)
-	mockDB.EXPECT().GetAllAuthTokens("name, last_access desc", model.SQLFilter{}).Return(allAuthTokens, nil)
+	mockDB.EXPECT().GetAllAuthTokens(gomock.Any(), "name, last_access desc", model.SQLFilter{}).Return(allAuthTokens, nil)
 
 	config, err := config.NewDefaultConfiguration()
 	require.Nilf(t, err, "Failed to create default configuration: %v", err)
@@ -2378,7 +2378,7 @@ func TestManagementResource_ListAuthTokens_NonAdmin(t *testing.T) {
 	require.True(t, isUser)
 
 	resources, mockDB := apitest.NewAuthManagementResource(mockCtrl)
-	mockDB.EXPECT().GetAllAuthTokens("name, last_access desc", model.SQLFilter{SQLString: "user_id = ?", Params: []any{user.ID.String()}}).Return(user.AuthTokens, nil)
+	mockDB.EXPECT().GetAllAuthTokens(gomock.Any(), "name, last_access desc", model.SQLFilter{SQLString: "user_id = ?", Params: []any{user.ID.String()}}).Return(user.AuthTokens, nil)
 
 	config, err := config.NewDefaultConfiguration()
 	require.Nilf(t, err, "Failed to create default configuration: %v", err)
@@ -2454,8 +2454,8 @@ func TestManagementResource_ListAuthTokens_Filtered(t *testing.T) {
 	resources, mockDB := apitest.NewAuthManagementResource(mockCtrl)
 	// The filters are stored in a map before parsing, which means we don't know what order the resulted SQLFilter will be in.
 	// Mock out both possibilities to catch both cases.
-	mockDB.EXPECT().GetAllAuthTokens("", model.SQLFilter{SQLString: "name = ? AND user_id = ?", Params: []any{"a", user.ID.String()}}).AnyTimes().Return(model.AuthTokens{authToken1}, nil)
-	mockDB.EXPECT().GetAllAuthTokens("", model.SQLFilter{SQLString: "user_id = ? AND name = ?", Params: []any{user.ID.String(), "a"}}).AnyTimes().Return(model.AuthTokens{authToken1}, nil)
+	mockDB.EXPECT().GetAllAuthTokens(gomock.Any(), "", model.SQLFilter{SQLString: "name = ? AND user_id = ?", Params: []any{"a", user.ID.String()}}).AnyTimes().Return(model.AuthTokens{authToken1}, nil)
+	mockDB.EXPECT().GetAllAuthTokens(gomock.Any(), "", model.SQLFilter{SQLString: "user_id = ? AND name = ?", Params: []any{user.ID.String(), "a"}}).AnyTimes().Return(model.AuthTokens{authToken1}, nil)
 
 	config, err := config.NewDefaultConfiguration()
 	require.Nilf(t, err, "Failed to create default configuration: %v", err)
