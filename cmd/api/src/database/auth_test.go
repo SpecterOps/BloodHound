@@ -96,7 +96,7 @@ func TestDatabase_InitializePermissions(t *testing.T) {
 		t.Fatalf("Failed preparing DB: %v", err)
 	}
 
-	if permissions, err := dbInst.GetAllPermissions("", model.SQLFilter{}); err != nil {
+	if permissions, err := dbInst.GetAllPermissions(context.Background(), "", model.SQLFilter{}); err != nil {
 		t.Fatalf("Error fetching permissions: %v", err)
 	} else {
 		templates := auth.Permissions().All()
@@ -145,7 +145,7 @@ func TestDatabase_UpdateRole(t *testing.T) {
 
 	if role, found := roles.FindByName(auth.RoleReadOnly); !found {
 		t.Fatal("Unable to find role")
-	} else if allPermissions, err := dbInst.GetAllPermissions("", model.SQLFilter{}); err != nil {
+	} else if allPermissions, err := dbInst.GetAllPermissions(context.Background(), "", model.SQLFilter{}); err != nil {
 		t.Fatalf("Failed fetching all permissions: %v", err)
 	} else {
 		role.Permissions = allPermissions

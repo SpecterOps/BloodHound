@@ -93,7 +93,7 @@ type Database interface {
 	LookupRoleByName(name string) (model.Role, error)
 
 	// Permissions
-	GetAllPermissions(order string, filter model.SQLFilter) (model.Permissions, error)
+	GetAllPermissions(ctx context.Context, order string, filter model.SQLFilter) (model.Permissions, error)
 	GetPermission(id int) (model.Permission, error)
 	CreatePermission(permission model.Permission) (model.Permission, error)
 

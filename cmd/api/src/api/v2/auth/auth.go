@@ -253,7 +253,7 @@ func (s ManagementResource) ListPermissions(response http.ResponseWriter, reques
 		if sqlFilter, err := queryFilters.BuildSQLFilter(); err != nil {
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "error building SQL for filter", request), response)
 			return
-		} else if permissions, err = s.db.GetAllPermissions(strings.Join(order, ", "), sqlFilter); err != nil {
+		} else if permissions, err = s.db.GetAllPermissions(request.Context(), strings.Join(order, ", "), sqlFilter); err != nil {
 			api.HandleDatabaseError(request, response, err)
 			return
 		} else {

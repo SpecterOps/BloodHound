@@ -176,23 +176,21 @@ func (s *BloodhoundDB) LookupRoleByName(name string) (model.Role, error) {
 
 // GetAllPermissions retrieves all rows from the Permissions table
 // SELECT * FROM permissions
-func (s *BloodhoundDB) GetAllPermissions(order string, filter model.SQLFilter) (model.Permissions, error) {
+func (s *BloodhoundDB) GetAllPermissions(ctx context.Context, order string, filter model.SQLFilter) (model.Permissions, error) {
 	var (
 		permissions model.Permissions
-		result      *gorm.DB
+		cursor      = s.db.WithContext(ctx)
 	)
 
-	if order == "" && filter.SQLString == "" {
-		result = s.db.Find(&permissions)
-	} else if order != "" && filter.SQLString == "" {
-		result = s.db.Order(order).Find(&permissions)
-	} else if order == "" && filter.SQLString != "" {
-		result = s.db.Where(filter.SQLString, filter.Params).Find(&permissions)
-	} else {
-		result = s.db.Where(filter.SQLString, filter.Params).Order(order).Find(&permissions)
+	if order != "" {
+		cursor = cursor.Order(order)
 	}
 
-	return permissions, CheckError(result)
+	if filter.SQLString != "" {
+		cursor = cursor.Where(filter.SQLString, filter.Params)
+	}
+
+	return permissions, CheckError(cursor.Find(&permissions))
 }
 
 // GetPermission retrieves a row in the Permissions table corresponding to the ID provided
