@@ -405,8 +405,8 @@ func (s *BloodhoundDB) CreateAuthToken(ctx context.Context, authToken model.Auth
 // UpdateAuthToken updates all fields in the AuthToken row as specified in the provided struct
 // UPDATE auth_tokens SET key = ..., hmac_method = ..., last_access = ...
 // WHERE user_id = ... AND client_id = ...
-func (s *BloodhoundDB) UpdateAuthToken(authToken model.AuthToken) error {
-	result := s.db.Save(&authToken)
+func (s *BloodhoundDB) UpdateAuthToken(ctx context.Context, authToken model.AuthToken) error {
+	result := s.db.WithContext(ctx).Save(&authToken)
 	return CheckError(result)
 }
 

@@ -1307,17 +1307,17 @@ func (mr *MockDatabaseMockRecorder) UpdateAuthSecret(arg0, arg1 interface{}) *go
 }
 
 // UpdateAuthToken mocks base method.
-func (m *MockDatabase) UpdateAuthToken(arg0 model.AuthToken) error {
+func (m *MockDatabase) UpdateAuthToken(arg0 context.Context, arg1 model.AuthToken) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateAuthToken", arg0)
+	ret := m.ctrl.Call(m, "UpdateAuthToken", arg0, arg1)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // UpdateAuthToken indicates an expected call of UpdateAuthToken.
-func (mr *MockDatabaseMockRecorder) UpdateAuthToken(arg0 interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) UpdateAuthToken(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateAuthToken", reflect.TypeOf((*MockDatabase)(nil).UpdateAuthToken), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateAuthToken", reflect.TypeOf((*MockDatabase)(nil).UpdateAuthToken), arg0, arg1)
 }
 
 // UpdateFileUploadJob mocks base method.

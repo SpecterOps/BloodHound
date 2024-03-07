@@ -255,7 +255,7 @@ func (s authenticator) ValidateRequestSignature(tokenID uuid.UUID, request *http
 
 			authToken.LastAccess = time.Now().UTC()
 
-			if err := s.db.UpdateAuthToken(authToken); err != nil {
+			if err := s.db.UpdateAuthToken(request.Context(), authToken); err != nil {
 				log.Errorf("Error updating last access on AuthToken: %v", err)
 			}
 
