@@ -125,7 +125,7 @@ func TestProcessIngestedFileUploadJobs(t *testing.T) {
 			Status: model.JobStatusIngesting,
 		}}, nil)
 
-		dbMock.EXPECT().GetIngestTasksForJob(jobID).Return([]model.IngestTask{}, nil)
+		dbMock.EXPECT().GetIngestTasksForJob(gomock.Any(), jobID).Return([]model.IngestTask{}, nil)
 		dbMock.EXPECT().UpdateFileUploadJob(gomock.Any()).DoAndReturn(func(fileUploadJob model.FileUploadJob) error {
 			require.Equal(t, model.JobStatusAnalyzing, fileUploadJob.Status)
 			return nil
@@ -142,7 +142,7 @@ func TestProcessIngestedFileUploadJobs(t *testing.T) {
 			Status: model.JobStatusIngesting,
 		}}, nil)
 
-		dbMock.EXPECT().GetIngestTasksForJob(jobID).Return([]model.IngestTask{{}}, nil)
+		dbMock.EXPECT().GetIngestTasksForJob(gomock.Any(), jobID).Return([]model.IngestTask{{}}, nil)
 
 		datapipe.ProcessIngestedFileUploadJobs(context.Background(), dbMock)
 	})

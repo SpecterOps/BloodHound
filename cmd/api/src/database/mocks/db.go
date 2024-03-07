@@ -229,18 +229,18 @@ func (mr *MockDatabaseMockRecorder) CreateFileUploadJob(arg0 interface{}) *gomoc
 }
 
 // CreateIngestTask mocks base method.
-func (m *MockDatabase) CreateIngestTask(arg0 model.IngestTask) (model.IngestTask, error) {
+func (m *MockDatabase) CreateIngestTask(arg0 context.Context, arg1 model.IngestTask) (model.IngestTask, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateIngestTask", arg0)
+	ret := m.ctrl.Call(m, "CreateIngestTask", arg0, arg1)
 	ret0, _ := ret[0].(model.IngestTask)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // CreateIngestTask indicates an expected call of CreateIngestTask.
-func (mr *MockDatabaseMockRecorder) CreateIngestTask(arg0 interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) CreateIngestTask(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateIngestTask", reflect.TypeOf((*MockDatabase)(nil).CreateIngestTask), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateIngestTask", reflect.TypeOf((*MockDatabase)(nil).CreateIngestTask), arg0, arg1)
 }
 
 // CreateInstallation mocks base method.
@@ -447,17 +447,17 @@ func (mr *MockDatabaseMockRecorder) DeleteAuthToken(arg0, arg1 interface{}) *gom
 }
 
 // DeleteIngestTask mocks base method.
-func (m *MockDatabase) DeleteIngestTask(arg0 model.IngestTask) error {
+func (m *MockDatabase) DeleteIngestTask(arg0 context.Context, arg1 model.IngestTask) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DeleteIngestTask", arg0)
+	ret := m.ctrl.Call(m, "DeleteIngestTask", arg0, arg1)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // DeleteIngestTask indicates an expected call of DeleteIngestTask.
-func (mr *MockDatabaseMockRecorder) DeleteIngestTask(arg0 interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) DeleteIngestTask(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteIngestTask", reflect.TypeOf((*MockDatabase)(nil).DeleteIngestTask), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteIngestTask", reflect.TypeOf((*MockDatabase)(nil).DeleteIngestTask), arg0, arg1)
 }
 
 // DeleteSAMLProvider mocks base method.
@@ -623,18 +623,18 @@ func (mr *MockDatabaseMockRecorder) GetAllFlags() *gomock.Call {
 }
 
 // GetAllIngestTasks mocks base method.
-func (m *MockDatabase) GetAllIngestTasks() (model.IngestTasks, error) {
+func (m *MockDatabase) GetAllIngestTasks(arg0 context.Context) (model.IngestTasks, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetAllIngestTasks")
+	ret := m.ctrl.Call(m, "GetAllIngestTasks", arg0)
 	ret0, _ := ret[0].(model.IngestTasks)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetAllIngestTasks indicates an expected call of GetAllIngestTasks.
-func (mr *MockDatabaseMockRecorder) GetAllIngestTasks() *gomock.Call {
+func (mr *MockDatabaseMockRecorder) GetAllIngestTasks(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllIngestTasks", reflect.TypeOf((*MockDatabase)(nil).GetAllIngestTasks))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllIngestTasks", reflect.TypeOf((*MockDatabase)(nil).GetAllIngestTasks), arg0)
 }
 
 // GetAllPermissions mocks base method.
@@ -880,18 +880,18 @@ func (mr *MockDatabaseMockRecorder) GetFlagByKey(arg0 interface{}) *gomock.Call 
 }
 
 // GetIngestTasksForJob mocks base method.
-func (m *MockDatabase) GetIngestTasksForJob(arg0 int64) (model.IngestTasks, error) {
+func (m *MockDatabase) GetIngestTasksForJob(arg0 context.Context, arg1 int64) (model.IngestTasks, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetIngestTasksForJob", arg0)
+	ret := m.ctrl.Call(m, "GetIngestTasksForJob", arg0, arg1)
 	ret0, _ := ret[0].(model.IngestTasks)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetIngestTasksForJob indicates an expected call of GetIngestTasksForJob.
-func (mr *MockDatabaseMockRecorder) GetIngestTasksForJob(arg0 interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) GetIngestTasksForJob(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetIngestTasksForJob", reflect.TypeOf((*MockDatabase)(nil).GetIngestTasksForJob), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetIngestTasksForJob", reflect.TypeOf((*MockDatabase)(nil).GetIngestTasksForJob), arg0, arg1)
 }
 
 // GetInstallation mocks base method.
@@ -1027,21 +1027,6 @@ func (m *MockDatabase) GetTimeRangedAssetGroupCollections(arg0 context.Context, 
 func (mr *MockDatabaseMockRecorder) GetTimeRangedAssetGroupCollections(arg0, arg1, arg2, arg3, arg4 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTimeRangedAssetGroupCollections", reflect.TypeOf((*MockDatabase)(nil).GetTimeRangedAssetGroupCollections), arg0, arg1, arg2, arg3, arg4)
-}
-
-// GetUnfinishedIngestIDs mocks base method.
-func (m *MockDatabase) GetUnfinishedIngestIDs() ([]int64, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetUnfinishedIngestIDs")
-	ret0, _ := ret[0].([]int64)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetUnfinishedIngestIDs indicates an expected call of GetUnfinishedIngestIDs.
-func (mr *MockDatabaseMockRecorder) GetUnfinishedIngestIDs() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUnfinishedIngestIDs", reflect.TypeOf((*MockDatabase)(nil).GetUnfinishedIngestIDs))
 }
 
 // GetUser mocks base method.
