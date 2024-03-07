@@ -30,7 +30,7 @@ import (
 )
 
 // BuildGoMainPackages builds all main packages for a list of module paths
-func BuildGoMainPackages(workRoot string, modPaths []string) error {
+func BuildGoMainPackages(workRoot string, modPaths []string, env []string) error {
 	var (
 		errs     []error
 		wg       sync.WaitGroup
@@ -42,7 +42,7 @@ func BuildGoMainPackages(workRoot string, modPaths []string) error {
 		wg.Add(1)
 		go func(buildDir, modPath string) {
 			defer wg.Done()
-			if err := buildGoModuleMainPackages(buildDir, modPath); err != nil {
+			if err := buildGoModuleMainPackages(buildDir, modPath, env); err != nil {
 				mu.Lock()
 				errs = append(errs, fmt.Errorf("failed to build main package: %w", err))
 				mu.Unlock()
@@ -56,7 +56,7 @@ func BuildGoMainPackages(workRoot string, modPaths []string) error {
 }
 
 // buildGoModuleMainPackages runs go build for all main packages in a given module
-func buildGoModuleMainPackages(buildDir string, modPath string) error {
+func buildGoModuleMainPackages(buildDir string, modPath string, env []string) error {
 	var (
 		wg   sync.WaitGroup
 		errs []error
@@ -87,6 +87,7 @@ func buildGoModuleMainPackages(buildDir string, modPath string) error {
 					defer wg.Done()
 					cmd := exec.Command("go", "build")
 					cmd.Args = append(cmd.Args, args...)
+					cmd.Env = env
 					cmd.Dir = p.Dir
 					if log.GlobalAccepts(log.LevelDebug) {
 						cmd.Stdout = os.Stderr
