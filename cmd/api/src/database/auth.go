@@ -502,10 +502,10 @@ func (s *BloodhoundDB) UpdateSAMLIdentityProvider(ctx context.Context, provider 
 
 // LookupSAMLProviderByName returns a SAML provider corresponding to the name provided
 // SELECT * FROM saml_providers WHERE name = ....
-func (s *BloodhoundDB) LookupSAMLProviderByName(name string) (model.SAMLProvider, error) {
+func (s *BloodhoundDB) LookupSAMLProviderByName(ctx context.Context, name string) (model.SAMLProvider, error) {
 	var (
 		samlProvider model.SAMLProvider
-		result       = s.db.Where("name = ?", name).Find(&samlProvider)
+		result       = s.db.WithContext(ctx).Where("name = ?", name).Find(&samlProvider)
 	)
 
 	return samlProvider, CheckError(result)
