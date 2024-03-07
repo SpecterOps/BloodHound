@@ -683,18 +683,18 @@ func (mr *MockDatabaseMockRecorder) GetAllSAMLProviders() *gomock.Call {
 }
 
 // GetAllUsers mocks base method.
-func (m *MockDatabase) GetAllUsers(arg0 string, arg1 model.SQLFilter) (model.Users, error) {
+func (m *MockDatabase) GetAllUsers(arg0 context.Context, arg1 string, arg2 model.SQLFilter) (model.Users, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetAllUsers", arg0, arg1)
+	ret := m.ctrl.Call(m, "GetAllUsers", arg0, arg1, arg2)
 	ret0, _ := ret[0].(model.Users)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetAllUsers indicates an expected call of GetAllUsers.
-func (mr *MockDatabaseMockRecorder) GetAllUsers(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) GetAllUsers(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllUsers", reflect.TypeOf((*MockDatabase)(nil).GetAllUsers), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllUsers", reflect.TypeOf((*MockDatabase)(nil).GetAllUsers), arg0, arg1, arg2)
 }
 
 // GetAssetGroup mocks base method.
@@ -1030,18 +1030,18 @@ func (mr *MockDatabaseMockRecorder) GetTimeRangedAssetGroupCollections(arg0, arg
 }
 
 // GetUser mocks base method.
-func (m *MockDatabase) GetUser(arg0 uuid.UUID) (model.User, error) {
+func (m *MockDatabase) GetUser(arg0 context.Context, arg1 uuid.UUID) (model.User, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetUser", arg0)
+	ret := m.ctrl.Call(m, "GetUser", arg0, arg1)
 	ret0, _ := ret[0].(model.User)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetUser indicates an expected call of GetUser.
-func (mr *MockDatabaseMockRecorder) GetUser(arg0 interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) GetUser(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUser", reflect.TypeOf((*MockDatabase)(nil).GetUser), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUser", reflect.TypeOf((*MockDatabase)(nil).GetUser), arg0, arg1)
 }
 
 // GetUserSession mocks base method.
@@ -1213,18 +1213,18 @@ func (mr *MockDatabaseMockRecorder) LookupSAMLProviderByName(arg0 interface{}) *
 }
 
 // LookupUser mocks base method.
-func (m *MockDatabase) LookupUser(arg0 string) (model.User, error) {
+func (m *MockDatabase) LookupUser(arg0 context.Context, arg1 string) (model.User, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "LookupUser", arg0)
+	ret := m.ctrl.Call(m, "LookupUser", arg0, arg1)
 	ret0, _ := ret[0].(model.User)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // LookupUser indicates an expected call of LookupUser.
-func (mr *MockDatabaseMockRecorder) LookupUser(arg0 interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) LookupUser(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LookupUser", reflect.TypeOf((*MockDatabase)(nil).LookupUser), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LookupUser", reflect.TypeOf((*MockDatabase)(nil).LookupUser), arg0, arg1)
 }
 
 // Migrate mocks base method.

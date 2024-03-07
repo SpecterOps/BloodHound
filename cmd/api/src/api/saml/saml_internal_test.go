@@ -114,7 +114,7 @@ func TestProviderResource_createSessionFromAssertion(t *testing.T) {
 	httpRequest, _ := http.NewRequestWithContext(context.WithValue(context.TODO(), ctx.ValueKey, &ctx.Context{Host: &resource.cfg.RootURL.URL}), http.MethodPost, "http://localhost", nil)
 
 	// Test happy path
-	mockDB.EXPECT().LookupUser(goodUsername).Return(goodUser, nil)
+	mockDB.EXPECT().LookupUser(gomock.Any(), goodUsername).Return(goodUser, nil)
 	mockAuthenticator.EXPECT().CreateSession(goodUser, gomock.Any()).Return(goodJWT, nil)
 
 	resource.createSessionFromAssertion(httpRequest, response, expires, testAssertion)
@@ -126,7 +126,7 @@ func TestProviderResource_createSessionFromAssertion(t *testing.T) {
 	// Change the assertion statement attribute to the bad username to assert we get a 403
 	testAssertion.AttributeStatements[0].Attributes[0].Values[0].Value = badUsername
 
-	mockDB.EXPECT().LookupUser(badUsername).Return(model.User{}, database.ErrNotFound)
+	mockDB.EXPECT().LookupUser(gomock.Any(), badUsername).Return(model.User{}, database.ErrNotFound)
 
 	response = httptest.NewRecorder()
 
@@ -134,7 +134,7 @@ func TestProviderResource_createSessionFromAssertion(t *testing.T) {
 	require.Equal(t, http.StatusForbidden, response.Code)
 
 	// Change the db return to a user that isn't associated with a SAML Provider
-	mockDB.EXPECT().LookupUser(badUsername).Return(model.User{}, nil)
+	mockDB.EXPECT().LookupUser(gomock.Any(), badUsername).Return(model.User{}, nil)
 
 	response = httptest.NewRecorder()
 
@@ -142,7 +142,7 @@ func TestProviderResource_createSessionFromAssertion(t *testing.T) {
 	require.Equal(t, http.StatusForbidden, response.Code)
 
 	// Change the db return to a user that isn't associated with this SAML Provider
-	mockDB.EXPECT().LookupUser(badUsername).Return(model.User{
+	mockDB.EXPECT().LookupUser(gomock.Any(), badUsername).Return(model.User{
 		SAMLProviderID: null.Int32From(2),
 		SAMLProvider: &model.SAMLProvider{
 			Serial: model.Serial{

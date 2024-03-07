@@ -74,9 +74,9 @@ func NewContextInitializer(db Database) AuthContextInitializer {
 	return contextInitializer{db: db}
 }
 
-func (s contextInitializer) InitContextFromToken(_ context.Context, authToken model.AuthToken) (auth.Context, error) {
+func (s contextInitializer) InitContextFromToken(ctx context.Context, authToken model.AuthToken) (auth.Context, error) {
 	if authToken.UserID.Valid {
-		if user, err := s.db.GetUser(authToken.UserID.UUID); err != nil {
+		if user, err := s.db.GetUser(ctx, authToken.UserID.UUID); err != nil {
 			return auth.Context{}, err
 		} else {
 			return auth.Context{
@@ -360,7 +360,7 @@ func (s *BloodhoundDB) CreateUser(ctx context.Context, user model.User) (model.U
 		Model:  &updatedUser,
 	}
 	return updatedUser, s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
-		return CheckError(tx.Create(&updatedUser))
+		return CheckError(tx.WithContext(ctx).Create(&updatedUser))
 	})
 }
 
@@ -376,29 +376,30 @@ func (s *BloodhoundDB) UpdateUser(ctx context.Context, user model.User) error {
 
 	return s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
 		// Update roles first
-		if err := tx.Model(&user).Association("Roles").Replace(&user.Roles); err != nil {
+		if err := tx.Model(&user).WithContext(ctx).Association("Roles").Replace(&user.Roles); err != nil {
 			return err
 		}
 
-		result := tx.Save(&user)
+		result := tx.WithContext(ctx).Save(&user)
 		return CheckError(result)
 	})
 }
 
-func (s *BloodhoundDB) GetAllUsers(order string, filter model.SQLFilter) (model.Users, error) {
+func (s *BloodhoundDB) GetAllUsers(ctx context.Context, order string, filter model.SQLFilter) (model.Users, error) {
 	var (
 		users  model.Users
 		result *gorm.DB
+		cursor = s.preload(model.UserAssociations()).WithContext(ctx)
 	)
 
-	if order != "" && filter.SQLString == "" {
-		result = s.preload(model.UserAssociations()).Order(order).Find(&users)
-	} else if order != "" && filter.SQLString != "" {
-		result = s.preload(model.UserAssociations()).Where(filter.SQLString, filter.Params).Order(order).Find(&users)
-	} else if order == "" && filter.SQLString != "" {
-		result = s.preload(model.UserAssociations()).Where(filter.SQLString, filter.Params).Find(&users)
+	if order != "" {
+		cursor = cursor.Order(order)
+	}
+
+	if filter.SQLString != "" {
+		result = cursor.Where(filter.SQLString, filter.Params).Find(&users)
 	} else {
-		result = s.preload(model.UserAssociations()).Find(&users)
+		result = cursor.Find(&users)
 	}
 
 	return users, CheckError(result)
@@ -406,10 +407,10 @@ func (s *BloodhoundDB) GetAllUsers(order string, filter model.SQLFilter) (model.
 
 // GetUser returns the user associated with the provided ID
 // SELECT * FROM users WHERE id = ...
-func (s *BloodhoundDB) GetUser(id uuid.UUID) (model.User, error) {
+func (s *BloodhoundDB) GetUser(ctx context.Context, id uuid.UUID) (model.User, error) {
 	var (
 		user   model.User
-		result = s.preload(model.UserAssociations()).First(&user, id)
+		result = s.preload(model.UserAssociations()).WithContext(ctx).First(&user, id)
 	)
 
 	return user, CheckError(result)
@@ -425,11 +426,11 @@ func (s *BloodhoundDB) DeleteUser(ctx context.Context, user model.User) error {
 
 	return s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
 		// Clear associations first
-		if err := tx.Model(&user).Association("Roles").Clear(); err != nil {
+		if err := tx.Model(&user).WithContext(ctx).Association("Roles").Clear(); err != nil {
 			return err
 		}
 
-		return CheckError(tx.Delete(&user))
+		return CheckError(tx.WithContext(ctx).Delete(&user))
 	})
 }
 
@@ -437,11 +438,11 @@ func (s *BloodhoundDB) DeleteUser(ctx context.Context, user model.User) error {
 // principal_name and email address fields of a user.
 //
 // SELECT * FROM users WHERE lower(principal_name) = ... or lower(email_address) = ...
-func (s *BloodhoundDB) LookupUser(name string) (model.User, error) {
+func (s *BloodhoundDB) LookupUser(ctx context.Context, name string) (model.User, error) {
 	var (
 		user          model.User
 		formattedName = strings.ToLower(name)
-		result        = s.preload(model.UserAssociations()).Where("principal_name = ? or lower(email_address) = ?", name, formattedName).First(&user)
+		result        = s.preload(model.UserAssociations()).WithContext(ctx).Where("principal_name = ? or lower(email_address) = ?", name, formattedName).First(&user)
 	)
 
 	return user, CheckError(result)
