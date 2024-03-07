@@ -31,15 +31,15 @@ import (
 )
 
 type AgiData interface {
-	GetAllAssetGroups(order string, filter model.SQLFilter) (model.AssetGroups, error)
-	GetAssetGroup(id int32) (model.AssetGroup, error)
-	CreateAssetGroupCollection(collection model.AssetGroupCollection, entries model.AssetGroupCollectionEntries) error
+	GetAllAssetGroups(ctx context.Context, order string, filter model.SQLFilter) (model.AssetGroups, error)
+	GetAssetGroup(ctx context.Context, id int32) (model.AssetGroup, error)
+	CreateAssetGroupCollection(ctx context.Context, collection model.AssetGroupCollection, entries model.AssetGroupCollectionEntries) error
 }
 
 func RunAssetGroupIsolationCollections(ctx context.Context, db AgiData, graphDB graph.Database, kindGetter func(*graph.Node) string) error {
 	defer log.Measure(log.LevelInfo, "Asset Group Isolation Collections")()
 
-	if assetGroups, err := db.GetAllAssetGroups("", model.SQLFilter{}); err != nil {
+	if assetGroups, err := db.GetAllAssetGroups(ctx, "", model.SQLFilter{}); err != nil {
 		return err
 	} else {
 		return graphDB.WriteTransaction(ctx, func(tx graph.Transaction) error {
@@ -78,7 +78,7 @@ func RunAssetGroupIsolationCollections(ctx context.Context, db AgiData, graphDB 
 					}
 
 					// Enter a collection, even if it's empty to signal that we did do a tagging/collection run
-					if err := db.CreateAssetGroupCollection(collection, entries); err != nil {
+					if err := db.CreateAssetGroupCollection(ctx, collection, entries); err != nil {
 						return err
 					}
 				}
@@ -90,7 +90,7 @@ func RunAssetGroupIsolationCollections(ctx context.Context, db AgiData, graphDB 
 }
 
 func UpdateAssetGroupIsolationTags(ctx context.Context, db AgiData, graphDb graph.Database) error {
-	if assetGroups, err := db.GetAllAssetGroups("", model.SQLFilter{}); err != nil {
+	if assetGroups, err := db.GetAllAssetGroups(ctx, "", model.SQLFilter{}); err != nil {
 		return err
 	} else {
 		return graphDb.WriteTransaction(ctx, func(tx graph.Transaction) error {
