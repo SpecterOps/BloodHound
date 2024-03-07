@@ -84,13 +84,9 @@ type Database interface {
 	ListAuditLogs(ctx context.Context, before, after time.Time, offset, limit int, order string, filter model.SQLFilter) (model.AuditLogs, int, error)
 
 	// Roles
-	CreateRole(role model.Role) (model.Role, error)
-	UpdateRole(role model.Role) error
-	GetAllRoles(order string, filter model.SQLFilter) (model.Roles, error)
-	GetRoles(ids []int32) (model.Roles, error)
-	GetRolesByName(names []string) (model.Roles, error)
-	GetRole(id int32) (model.Role, error)
-	LookupRoleByName(name string) (model.Role, error)
+	GetAllRoles(ctx context.Context, order string, filter model.SQLFilter) (model.Roles, error)
+	GetRoles(ctx context.Context, ids []int32) (model.Roles, error)
+	GetRole(ctx context.Context, id int32) (model.Role, error)
 
 	// Permissions
 	GetAllPermissions(ctx context.Context, order string, filter model.SQLFilter) (model.Permissions, error)

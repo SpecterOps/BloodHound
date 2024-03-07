@@ -332,7 +332,7 @@ func (s ManagementResource) ListRoles(response http.ResponseWriter, request *htt
 		if sqlFilter, err := queryFilters.BuildSQLFilter(); err != nil {
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "error building SQL for filter", request), response)
 			return
-		} else if roles, err = s.db.GetAllRoles(strings.Join(order, ", "), sqlFilter); err != nil {
+		} else if roles, err = s.db.GetAllRoles(request.Context(), strings.Join(order, ", "), sqlFilter); err != nil {
 			api.HandleDatabaseError(request, response, err)
 		} else {
 			api.WriteBasicResponse(request.Context(), v2.ListRolesResponse{Roles: roles}, http.StatusOK, response)
@@ -348,7 +348,7 @@ func (s ManagementResource) GetRole(response http.ResponseWriter, request *http.
 
 	if roleID, err := strconv.ParseInt(rawRoleID, 10, 32); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsIDMalformed, request), response)
-	} else if role, err := s.db.GetRole(int32(roleID)); err != nil {
+	} else if role, err := s.db.GetRole(request.Context(), int32(roleID)); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
 		api.WriteBasicResponse(request.Context(), role, http.StatusOK, response)
@@ -428,7 +428,7 @@ func (s ManagementResource) CreateUser(response http.ResponseWriter, request *ht
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
 	} else if len(createUserRequest.Roles) > 1 {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, ErrorResponseDetailsNumRoles, request), response)
-	} else if roles, err := s.db.GetRoles(createUserRequest.Roles); err != nil {
+	} else if roles, err := s.db.GetRoles(request.Context(), createUserRequest.Roles); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
 		userTemplate.Roles = roles
@@ -520,7 +520,7 @@ func (s ManagementResource) UpdateUser(response http.ResponseWriter, request *ht
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
 	} else if len(updateUserRequest.Roles) > 1 {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "a user can only have one role", request), response)
-	} else if roles, err := s.db.GetRoles(updateUserRequest.Roles); err != nil {
+	} else if roles, err := s.db.GetRoles(request.Context(), updateUserRequest.Roles); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
 		user.Roles = roles

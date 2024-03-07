@@ -45,7 +45,7 @@ func initAndGetRoles(t *testing.T) (database.Database, model.Roles) {
 		t.Fatalf("Failed preparing DB: %v", err)
 	}
 
-	if roles, err := dbInst.GetAllRoles("", model.SQLFilter{}); err != nil {
+	if roles, err := dbInst.GetAllRoles(context.Background(), "", model.SQLFilter{}); err != nil {
 		t.Fatalf("Error fetching roles: %v", err)
 	} else {
 		return dbInst, roles
@@ -136,41 +136,6 @@ func TestDatabase_InitializeRoles(t *testing.T) {
 
 		if !found {
 			t.Fatalf("Missing role %s", roleTemplate.Name)
-		}
-	}
-}
-
-func TestDatabase_UpdateRole(t *testing.T) {
-	dbInst, roles := initAndGetRoles(t)
-
-	if role, found := roles.FindByName(auth.RoleReadOnly); !found {
-		t.Fatal("Unable to find role")
-	} else if allPermissions, err := dbInst.GetAllPermissions(context.Background(), "", model.SQLFilter{}); err != nil {
-		t.Fatalf("Failed fetching all permissions: %v", err)
-	} else {
-		role.Permissions = allPermissions
-
-		if err := dbInst.UpdateRole(role); err != nil {
-			t.Fatalf("Failed updating role %s: %v", role.Name, err)
-		}
-
-		if updatedRole, err := dbInst.GetRole(role.ID); err != nil {
-			t.Fatalf("Failed fetching updated role %s: %v", role.Name, err)
-		} else {
-			for _, permission := range role.Permissions {
-				found := false
-
-				for _, updatedPermission := range updatedRole.Permissions {
-					if permission.Equals(updatedPermission) {
-						found = true
-						break
-					}
-				}
-
-				if !found {
-					t.Fatalf("Updated role %s missing expected permission %s", role.Name, permission)
-				}
-			}
 		}
 	}
 }
