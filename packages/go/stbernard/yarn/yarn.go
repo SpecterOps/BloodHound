@@ -34,14 +34,12 @@ func InstallWorkspaceDeps(jsPaths []string, env []string) error {
 	return nil
 }
 
-func BuildWorkspace(jsPaths []string, env []string) error {
-	for _, path := range jsPaths {
-		if err := yarnBuild(path, env); err != nil {
-			return fmt.Errorf("failed to run yarn build at %v: %w", path, err)
-		}
+func BuildWorkspace(cwd string, env []string) error {
+	if err := yarnBuild(cwd, env); err != nil {
+		return fmt.Errorf("failed to run yarn build at %v: %w", cwd, err)
+	} else {
+		return nil
 	}
-
-	return nil
 }
 
 func yarnInstall(path string, env []string) error {

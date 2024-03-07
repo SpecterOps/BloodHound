@@ -22,6 +22,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/specterops/bloodhound/packages/go/stbernard/environment"
 	"github.com/specterops/bloodhound/packages/go/stbernard/workspace"
 	"github.com/specterops/bloodhound/packages/go/stbernard/yarn"
 )
@@ -32,7 +33,7 @@ const (
 )
 
 type Config struct {
-	Environment []string
+	Environment environment.Environment
 }
 
 type command struct {
@@ -77,11 +78,17 @@ func Create(config Config) (command, error) {
 }
 
 func (s command) runJSBuild(cwd string) error {
+	var env = s.config.Environment
+
+	if _, ok := env["BUILD_PATH"]; !ok {
+		env["BUILD_PATH"] = filepath.Join(cwd, "dist", "bh-ui")
+	}
+
 	if jsPaths, err := workspace.ParseJSAbsPaths(cwd); err != nil {
 		return fmt.Errorf("could not retrieve JS paths: %w", err)
-	} else if err := yarn.InstallWorkspaceDeps(jsPaths, s.config.Environment); err != nil {
+	} else if err := yarn.InstallWorkspaceDeps(jsPaths, env.Slice()); err != nil {
 		return fmt.Errorf("could not install JS deps: %w", err)
-	} else if err := yarn.BuildWorkspace(jsPaths, s.config.Environment); err != nil {
+	} else if err := yarn.BuildWorkspace(cwd, env.Slice()); err != nil {
 		return fmt.Errorf("could not build JS workspace: %w", err)
 	} else {
 		return nil

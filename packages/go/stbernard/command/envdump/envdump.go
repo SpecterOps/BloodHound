@@ -21,7 +21,8 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
+
+	"github.com/specterops/bloodhound/packages/go/stbernard/environment"
 )
 
 const (
@@ -30,7 +31,7 @@ const (
 )
 
 type Config struct {
-	Environment []string
+	Environment environment.Environment
 }
 
 type command struct {
@@ -47,9 +48,8 @@ func (s command) Usage() string {
 
 func (s command) Run() error {
 	fmt.Print("Environment:\n\n")
-	for _, env := range s.config.Environment {
-		envTuple := strings.SplitN(env, "=", 2)
-		fmt.Printf("%s: %s\n", envTuple[0], envTuple[1])
+	for key, val := range s.config.Environment {
+		fmt.Printf("%s: %s\n", key, val)
 	}
 	fmt.Print("\n")
 
