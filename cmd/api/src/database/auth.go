@@ -426,11 +426,11 @@ func (s *BloodhoundDB) DeleteUser(ctx context.Context, user model.User) error {
 
 	return s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
 		// Clear associations first
-		if err := tx.Model(&user).Association("Roles").Clear(); err != nil {
+		if err := tx.Model(&user).WithContext(ctx).Association("Roles").Clear(); err != nil {
 			return err
 		}
 
-		return CheckError(tx.Delete(&user))
+		return CheckError(tx.WithContext(ctx).Delete(&user))
 	})
 }
 
