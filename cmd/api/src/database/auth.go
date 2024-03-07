@@ -496,7 +496,7 @@ func (s *BloodhoundDB) UpdateSAMLIdentityProvider(ctx context.Context, provider 
 	)
 
 	return s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
-		return CheckError(tx.Save(&provider))
+		return CheckError(tx.WithContext(ctx).Save(&provider))
 	})
 }
 
