@@ -108,10 +108,10 @@ func (s *BloodhoundDB) GetAllRoles(ctx context.Context, order string, filter mod
 
 // GetRoles retrieves all rows in the Roles table corresponding to the provided list of IDs
 // SELECT * FROM roles where ID in (...)
-func (s *BloodhoundDB) GetRoles(ids []int32) (model.Roles, error) {
+func (s *BloodhoundDB) GetRoles(ctx context.Context, ids []int32) (model.Roles, error) {
 	var (
 		roles  model.Roles
-		result = s.preload(model.RoleAssociations()).Where("id in ?", ids).Find(&roles)
+		result = s.preload(model.RoleAssociations()).WithContext(ctx).Where("id in ?", ids).Find(&roles)
 	)
 
 	return roles, CheckError(result)

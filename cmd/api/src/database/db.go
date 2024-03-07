@@ -85,7 +85,7 @@ type Database interface {
 
 	// Roles
 	GetAllRoles(ctx context.Context, order string, filter model.SQLFilter) (model.Roles, error)
-	GetRoles(ids []int32) (model.Roles, error)
+	GetRoles(ctx context.Context, ids []int32) (model.Roles, error)
 	GetRolesByName(names []string) (model.Roles, error)
 	GetRole(id int32) (model.Role, error)
 	LookupRoleByName(name string) (model.Role, error)

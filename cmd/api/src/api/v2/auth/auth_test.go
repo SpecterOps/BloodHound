@@ -136,7 +136,7 @@ func TestManagementResource_EnableUserSAML(t *testing.T) {
 
 	defer mockCtrl.Finish()
 
-	mockDB.EXPECT().GetRoles(gomock.Eq(goodRoles)).Return(model.Roles{}, nil).AnyTimes()
+	mockDB.EXPECT().GetRoles(gomock.Any(), gomock.Eq(goodRoles)).Return(model.Roles{}, nil).AnyTimes()
 	mockDB.EXPECT().GetUser(gomock.Any(), badUserID).Return(model.User{AuthSecret: &model.AuthSecret{}}, nil)
 	mockDB.EXPECT().GetUser(gomock.Any(), goodUserID).Return(model.User{}, nil)
 	mockDB.EXPECT().GetSAMLProvider(samlProviderID).Return(model.SAMLProvider{}, nil).Times(2)
@@ -1054,8 +1054,8 @@ func TestCreateUser_Failure(t *testing.T) {
 			Duration: appcfg.DefaultPasswordExpirationWindow,
 		}),
 	}, nil).AnyTimes()
-	mockDB.EXPECT().GetRoles(badRole).Return(model.Roles{}, fmt.Errorf("db error"))
-	mockDB.EXPECT().GetRoles(gomock.Not(badRole)).Return(model.Roles{}, nil).AnyTimes()
+	mockDB.EXPECT().GetRoles(gomock.Any(), badRole).Return(model.Roles{}, fmt.Errorf("db error"))
+	mockDB.EXPECT().GetRoles(gomock.Any(), gomock.Not(badRole)).Return(model.Roles{}, nil).AnyTimes()
 	mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 	mockDB.EXPECT().CreateUser(gomock.Any(), badUser).Return(model.User{}, fmt.Errorf("db error"))
 

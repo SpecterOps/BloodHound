@@ -428,7 +428,7 @@ func (s ManagementResource) CreateUser(response http.ResponseWriter, request *ht
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
 	} else if len(createUserRequest.Roles) > 1 {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, ErrorResponseDetailsNumRoles, request), response)
-	} else if roles, err := s.db.GetRoles(createUserRequest.Roles); err != nil {
+	} else if roles, err := s.db.GetRoles(request.Context(), createUserRequest.Roles); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
 		userTemplate.Roles = roles
@@ -520,7 +520,7 @@ func (s ManagementResource) UpdateUser(response http.ResponseWriter, request *ht
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
 	} else if len(updateUserRequest.Roles) > 1 {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "a user can only have one role", request), response)
-	} else if roles, err := s.db.GetRoles(updateUserRequest.Roles); err != nil {
+	} else if roles, err := s.db.GetRoles(request.Context(), updateUserRequest.Roles); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
 		user.Roles = roles
