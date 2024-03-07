@@ -128,17 +128,6 @@ func (s *BloodhoundDB) GetRole(ctx context.Context, id int32) (model.Role, error
 	return role, CheckError(result)
 }
 
-// LookupRoleByName retrieves a row from the Roles table corresponding to the role name provided
-// SELECT * FROM roles WHERE role_name = ....
-func (s *BloodhoundDB) LookupRoleByName(name string) (model.Role, error) {
-	var (
-		role   model.Role
-		result = s.preload(model.RoleAssociations()).Where("name = ?", name).First(&role)
-	)
-
-	return role, CheckError(result)
-}
-
 // GetAllPermissions retrieves all rows from the Permissions table
 // SELECT * FROM permissions
 func (s *BloodhoundDB) GetAllPermissions(ctx context.Context, order string, filter model.SQLFilter) (model.Permissions, error) {

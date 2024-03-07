@@ -1137,21 +1137,6 @@ func (mr *MockDatabaseMockRecorder) LookupActiveSessionsByUser(arg0 interface{})
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LookupActiveSessionsByUser", reflect.TypeOf((*MockDatabase)(nil).LookupActiveSessionsByUser), arg0)
 }
 
-// LookupRoleByName mocks base method.
-func (m *MockDatabase) LookupRoleByName(arg0 string) (model.Role, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "LookupRoleByName", arg0)
-	ret0, _ := ret[0].(model.Role)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// LookupRoleByName indicates an expected call of LookupRoleByName.
-func (mr *MockDatabaseMockRecorder) LookupRoleByName(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LookupRoleByName", reflect.TypeOf((*MockDatabase)(nil).LookupRoleByName), arg0)
-}
-
 // LookupSAMLProviderByName mocks base method.
 func (m *MockDatabase) LookupSAMLProviderByName(arg0 string) (model.SAMLProvider, error) {
 	m.ctrl.T.Helper()
