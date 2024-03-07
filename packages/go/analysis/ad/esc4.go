@@ -298,7 +298,7 @@ func GetADCSESC4EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 		return nil, err
 	}
 
-	// use the enterpriseCA nodes from the previous step to gather the first set of cert templates for p1
+	// use the enterpriseCA nodes to gather the set of cert templates for p1
 	if err := traversalInst.BreadthFirst(ctx, traversal.Plan{
 		Root: startNode,
 		Driver: ESC4Path1Pattern(edge.EndID, enterpriseCAs).Do(
@@ -319,7 +319,28 @@ func GetADCSESC4EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 		return nil, err
 	}
 
-	// use the enterpriseCA and certTemplate nodes from previous steps to find enterprise CAs that are trusted for NTAuth (p2)
+	// use the enterpriseCA nodes to gather the set of cert templates for p3
+	if err := traversalInst.BreadthFirst(ctx, traversal.Plan{
+		Root: startNode,
+		Driver: ESC4Path3Pattern(edge.EndID, enterpriseCAs).Do(
+			func(terminal *graph.PathSegment) error {
+				certTemplate := terminal.Search(
+					func(nextSegment *graph.PathSegment) bool {
+						return nextSegment.Node.Kinds.ContainsOneOf(ad.CertTemplate)
+					})
+
+				lock.Lock()
+				certTemplateSegments[certTemplate.ID] = append(certTemplateSegments[certTemplate.ID], terminal)
+				certTemplates.Add(certTemplate.ID.Uint32())
+				lock.Unlock()
+
+				return nil
+			}),
+	}); err != nil {
+		return nil, err
+	}
+
+	// use the enterpriseCA nodes from previous steps to find enterprise CAs that are trusted for NTAuth (p2)
 	if err := traversalInst.BreadthFirst(ctx, traversal.Plan{
 		Root: startNode,
 		Driver: ESC4Path2Pattern(edge.EndID, enterpriseCAs).Do(
@@ -446,4 +467,36 @@ func ESC4Path2Pattern(domainId graph.ID, enterpriseCAs cardinality.Duplex[uint32
 				query.KindIn(query.Relationship(), ad.NTAuthStoreFor),
 				query.Equals(query.EndID(), domainId),
 			))
+}
+
+func ESC4Path3Pattern(domainId graph.ID, enterpriseCAs cardinality.Duplex[uint32]) traversal.PatternContinuation {
+	return traversal.NewPattern().
+		OutboundWithDepth(0, 0,
+			query.And(
+				query.Kind(query.Relationship(), ad.MemberOf),
+				query.Kind(query.End(), ad.Group),
+			)).
+		// TODO: this outbound edge is the only difference from `Path1Pattern`
+		Outbound(
+			query.And(
+				query.KindIn(query.Relationship(), ad.GenericWrite),
+				query.Kind(query.End(), ad.CertTemplate),
+			)).
+		Outbound(
+			query.And(
+				query.KindIn(query.Relationship(), ad.PublishedTo),
+				query.InIDs(query.End(), cardinality.DuplexToGraphIDs(enterpriseCAs)...),
+				query.Kind(query.End(), ad.EnterpriseCA),
+			)).
+		Outbound(
+			query.And(
+				query.KindIn(query.Relationship(), ad.IssuedSignedBy, ad.EnterpriseCAFor),
+				query.Kind(query.End(), ad.RootCA),
+			)).
+		Outbound(
+			query.And(
+				query.KindIn(query.Relationship(), ad.RootCAFor),
+				query.Equals(query.EndID(), domainId),
+			))
+
 }
