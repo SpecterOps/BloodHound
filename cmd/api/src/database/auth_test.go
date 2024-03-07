@@ -177,6 +177,7 @@ func TestDatabase_UpdateRole(t *testing.T) {
 
 func TestDatabase_CreateGetDeleteUser(t *testing.T) {
 	var (
+		ctx           = context.Background()
 		dbInst, roles = initAndGetRoles(t)
 
 		users = model.Users{
@@ -201,9 +202,9 @@ func TestDatabase_CreateGetDeleteUser(t *testing.T) {
 	)
 
 	for _, user := range users {
-		if _, err := dbInst.CreateUser(context.Background(), user); err != nil {
+		if _, err := dbInst.CreateUser(ctx, user); err != nil {
 			t.Fatalf("Error creating user: %v", err)
-		} else if newUser, err := dbInst.LookupUser(user.PrincipalName); err != nil {
+		} else if newUser, err := dbInst.LookupUser(ctx, user.PrincipalName); err != nil {
 			t.Fatalf("Failed looking up user by principal %s: %v", user.PrincipalName, err)
 		} else if err = test.VerifyAuditLogs(dbInst, "CreateUser", "principal_name", newUser.PrincipalName); err != nil {
 			t.Fatalf("Failed to validate CreateUser audit logs:\n%v", err)
@@ -226,11 +227,11 @@ func TestDatabase_CreateGetDeleteUser(t *testing.T) {
 
 			newUser.Roles = newUser.Roles.RemoveByName(roleToDelete)
 
-			if err := dbInst.UpdateUser(context.Background(), newUser); err != nil {
+			if err := dbInst.UpdateUser(ctx, newUser); err != nil {
 				t.Fatalf("Failed to update user: %v", err)
 			} else if err = test.VerifyAuditLogs(dbInst, "UpdateUser", "principal_name", newUser.PrincipalName); err != nil {
 				t.Fatalf("Failed to validate UpdateUser audit logs:\n%v", err)
-			} else if updatedUser, err := dbInst.LookupUser(user.PrincipalName); err != nil {
+			} else if updatedUser, err := dbInst.LookupUser(ctx, user.PrincipalName); err != nil {
 				t.Fatalf("Failed looking up user by principal %s: %v", user.PrincipalName, err)
 			} else if _, found := updatedUser.Roles.FindByName(roleToDelete); found {
 				t.Fatalf("Found role %s on user %s but expected it to be removed", roleToDelete, user.PrincipalName)
@@ -238,13 +239,13 @@ func TestDatabase_CreateGetDeleteUser(t *testing.T) {
 		}
 	}
 
-	if err := dbInst.DeleteUser(context.Background(), createdUsers[1]); err != nil {
+	if err := dbInst.DeleteUser(ctx, createdUsers[1]); err != nil {
 		t.Fatalf("Failed to delete user: %v", err)
 	} else if err = test.VerifyAuditLogs(dbInst, "DeleteUser", "principal_name", users[1].PrincipalName); err != nil {
 		t.Fatalf("Failed to validate Deleteuser audit logs:\n%v", err)
 	}
 
-	if usersResponse, err := dbInst.GetAllUsers(context.Background(), "first_name", model.SQLFilter{}); err != nil {
+	if usersResponse, err := dbInst.GetAllUsers(ctx, "first_name", model.SQLFilter{}); err != nil {
 		t.Fatalf("Error getting users: %v", err)
 	} else if usersResponse[0].FirstName.String != "First" {
 		t.Fatalf("ListUsers returned incorrectly sorted data")

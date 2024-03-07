@@ -109,7 +109,7 @@ type Database interface {
 	GetAllUsers(ctx context.Context, order string, filter model.SQLFilter) (model.Users, error)
 	GetUser(ctx context.Context, id uuid.UUID) (model.User, error)
 	DeleteUser(ctx context.Context, user model.User) error
-	LookupUser(principalName string) (model.User, error)
+	LookupUser(ctx context.Context, principalName string) (model.User, error)
 
 	CreateAuthToken(ctx context.Context, authToken model.AuthToken) (model.AuthToken, error)
 	UpdateAuthToken(authToken model.AuthToken) error

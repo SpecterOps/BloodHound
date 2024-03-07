@@ -438,11 +438,11 @@ func (s *BloodhoundDB) DeleteUser(ctx context.Context, user model.User) error {
 // principal_name and email address fields of a user.
 //
 // SELECT * FROM users WHERE lower(principal_name) = ... or lower(email_address) = ...
-func (s *BloodhoundDB) LookupUser(name string) (model.User, error) {
+func (s *BloodhoundDB) LookupUser(ctx context.Context, name string) (model.User, error) {
 	var (
 		user          model.User
 		formattedName = strings.ToLower(name)
-		result        = s.preload(model.UserAssociations()).Where("principal_name = ? or lower(email_address) = ?", name, formattedName).First(&user)
+		result        = s.preload(model.UserAssociations()).WithContext(ctx).Where("principal_name = ? or lower(email_address) = ?", name, formattedName).First(&user)
 	)
 
 	return user, CheckError(result)

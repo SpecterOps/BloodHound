@@ -1213,18 +1213,18 @@ func (mr *MockDatabaseMockRecorder) LookupSAMLProviderByName(arg0 interface{}) *
 }
 
 // LookupUser mocks base method.
-func (m *MockDatabase) LookupUser(arg0 string) (model.User, error) {
+func (m *MockDatabase) LookupUser(arg0 context.Context, arg1 string) (model.User, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "LookupUser", arg0)
+	ret := m.ctrl.Call(m, "LookupUser", arg0, arg1)
 	ret0, _ := ret[0].(model.User)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // LookupUser indicates an expected call of LookupUser.
-func (mr *MockDatabaseMockRecorder) LookupUser(arg0 interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) LookupUser(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LookupUser", reflect.TypeOf((*MockDatabase)(nil).LookupUser), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LookupUser", reflect.TypeOf((*MockDatabase)(nil).LookupUser), arg0, arg1)
 }
 
 // Migrate mocks base method.
