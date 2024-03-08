@@ -21,6 +21,7 @@ package database_test
 
 import (
 	"context"
+	"github.com/specterops/bloodhound/src/test/integration"
 	"github.com/specterops/bloodhound/src/utils/test"
 	"testing"
 	"time"
@@ -29,7 +30,6 @@ import (
 	"github.com/specterops/bloodhound/src/database"
 	"github.com/specterops/bloodhound/src/database/types/null"
 	"github.com/specterops/bloodhound/src/model"
-	"github.com/specterops/bloodhound/src/test/integration"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -40,10 +40,7 @@ const (
 )
 
 func initAndGetRoles(t *testing.T) (database.Database, model.Roles) {
-	dbInst := integration.OpenDatabase(t)
-	if err := integration.Prepare(dbInst); err != nil {
-		t.Fatalf("Failed preparing DB: %v", err)
-	}
+	dbInst := integration.SetupDB(t)
 
 	if roles, err := dbInst.GetAllRoles(context.Background(), "", model.SQLFilter{}); err != nil {
 		t.Fatalf("Error fetching roles: %v", err)
@@ -76,10 +73,7 @@ func initAndCreateUser(t *testing.T) (database.Database, model.User) {
 }
 
 func TestDatabase_Installation(t *testing.T) {
-	dbInst := integration.OpenDatabase(t)
-	if err := integration.Prepare(dbInst); err != nil {
-		t.Fatalf("Failed preparing DB: %v", err)
-	}
+	dbInst := integration.SetupDB(t)
 
 	if installation, err := dbInst.CreateInstallation(); err != nil {
 		t.Fatalf("Error creating installation: %v", err)
@@ -91,10 +85,7 @@ func TestDatabase_Installation(t *testing.T) {
 }
 
 func TestDatabase_InitializePermissions(t *testing.T) {
-	dbInst := integration.OpenDatabase(t)
-	if err := integration.Prepare(dbInst); err != nil {
-		t.Fatalf("Failed preparing DB: %v", err)
-	}
+	dbInst := integration.SetupDB(t)
 
 	if permissions, err := dbInst.GetAllPermissions(context.Background(), "", model.SQLFilter{}); err != nil {
 		t.Fatalf("Error fetching permissions: %v", err)

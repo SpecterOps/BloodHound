@@ -76,7 +76,7 @@ type Database interface {
 	DeleteAssetGroupSelector(ctx context.Context, selector model.AssetGroupSelector) error
 	UpdateAssetGroupSelectors(ctx context.Context, assetGroup model.AssetGroup, selectorSpecs []model.AssetGroupSelectorSpec, systemSelector bool) (model.UpdatedAssetGroupSelectors, error)
 
-	Wipe() error
+	Wipe(ctx context.Context) error
 	Migrate() error
 	RequiresMigration() (bool, error)
 
@@ -207,8 +207,8 @@ func (s *BloodhoundDB) RawDelete(value any) error {
 	return CheckError(s.db.Delete(value))
 }
 
-func (s *BloodhoundDB) Wipe() error {
-	return s.db.Transaction(func(tx *gorm.DB) error {
+func (s *BloodhoundDB) Wipe(ctx context.Context) error {
+	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		var tables []string
 
 		if result := tx.Raw("select table_name from information_schema.tables where table_schema = current_schema() and not table_name ilike '%pg_stat%'").Scan(&tables); result.Error != nil {

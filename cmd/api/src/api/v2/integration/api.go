@@ -85,7 +85,7 @@ func (s *Context) EnableAPI() {
 				Configuration: cfg,
 				DBConnector:   services.ConnectDatabases,
 				Entrypoint: func(ctx context.Context, cfg config.Configuration, databaseConnections bootstrap.DatabaseConnections[*database.BloodhoundDB, *graph.DatabaseSwitch]) ([]daemons.Daemon, error) {
-					if err := databaseConnections.RDMS.Wipe(); err != nil {
+					if err := databaseConnections.RDMS.Wipe(ctx); err != nil {
 						return nil, err
 					}
 

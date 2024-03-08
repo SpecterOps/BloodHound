@@ -1332,15 +1332,15 @@ func (mr *MockDatabaseMockRecorder) UpdateUser(arg0, arg1 interface{}) *gomock.C
 }
 
 // Wipe mocks base method.
-func (m *MockDatabase) Wipe() error {
+func (m *MockDatabase) Wipe(arg0 context.Context) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Wipe")
+	ret := m.ctrl.Call(m, "Wipe", arg0)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // Wipe indicates an expected call of Wipe.
-func (mr *MockDatabaseMockRecorder) Wipe() *gomock.Call {
+func (mr *MockDatabaseMockRecorder) Wipe(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Wipe", reflect.TypeOf((*MockDatabase)(nil).Wipe))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Wipe", reflect.TypeOf((*MockDatabase)(nil).Wipe), arg0)
 }

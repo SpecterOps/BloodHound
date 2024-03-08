@@ -21,18 +21,18 @@ package database_test
 
 import (
 	"context"
+	"github.com/specterops/bloodhound/src/test/integration"
 	"testing"
 	"time"
 
 	"github.com/specterops/bloodhound/src/auth"
 	"github.com/specterops/bloodhound/src/ctx"
 	"github.com/specterops/bloodhound/src/model"
-	"github.com/specterops/bloodhound/src/test/integration"
 )
 
 func TestDatabase_ListAuditLogs(t *testing.T) {
 	var (
-		dbInst = integration.OpenDatabase(t)
+		dbInst = integration.SetupDB(t)
 
 		auditLogIdFilter = model.QueryParameterFilter{
 			Name:         "id",
@@ -51,10 +51,6 @@ func TestDatabase_ListAuditLogs(t *testing.T) {
 		}
 		testCtx = ctx.Set(context.Background(), &mockCtx)
 	)
-
-	if err := integration.Prepare(dbInst); err != nil {
-		t.Fatalf("Failed preparing DB: %v", err)
-	}
 
 	for i := 0; i < 7; i++ {
 		if err := dbInst.AppendAuditLog(testCtx, model.AuditEntry{Model: &model.User{}, Action: "CreateUser", Status: model.AuditStatusSuccess}); err != nil {
