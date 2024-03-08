@@ -258,36 +258,6 @@ func (mr *MockDatabaseMockRecorder) CreateInstallation() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateInstallation", reflect.TypeOf((*MockDatabase)(nil).CreateInstallation))
 }
 
-// CreatePermission mocks base method.
-func (m *MockDatabase) CreatePermission(arg0 model.Permission) (model.Permission, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreatePermission", arg0)
-	ret0, _ := ret[0].(model.Permission)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// CreatePermission indicates an expected call of CreatePermission.
-func (mr *MockDatabaseMockRecorder) CreatePermission(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreatePermission", reflect.TypeOf((*MockDatabase)(nil).CreatePermission), arg0)
-}
-
-// CreateRole mocks base method.
-func (m *MockDatabase) CreateRole(arg0 model.Role) (model.Role, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateRole", arg0)
-	ret0, _ := ret[0].(model.Role)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// CreateRole indicates an expected call of CreateRole.
-func (mr *MockDatabaseMockRecorder) CreateRole(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateRole", reflect.TypeOf((*MockDatabase)(nil).CreateRole), arg0)
-}
-
 // CreateSAMLIdentityProvider mocks base method.
 func (m *MockDatabase) CreateSAMLIdentityProvider(arg0 context.Context, arg1 model.SAMLProvider) (model.SAMLProvider, error) {
 	m.ctrl.T.Helper()
@@ -638,33 +608,33 @@ func (mr *MockDatabaseMockRecorder) GetAllIngestTasks(arg0 interface{}) *gomock.
 }
 
 // GetAllPermissions mocks base method.
-func (m *MockDatabase) GetAllPermissions(arg0 string, arg1 model.SQLFilter) (model.Permissions, error) {
+func (m *MockDatabase) GetAllPermissions(arg0 context.Context, arg1 string, arg2 model.SQLFilter) (model.Permissions, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetAllPermissions", arg0, arg1)
+	ret := m.ctrl.Call(m, "GetAllPermissions", arg0, arg1, arg2)
 	ret0, _ := ret[0].(model.Permissions)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetAllPermissions indicates an expected call of GetAllPermissions.
-func (mr *MockDatabaseMockRecorder) GetAllPermissions(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) GetAllPermissions(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllPermissions", reflect.TypeOf((*MockDatabase)(nil).GetAllPermissions), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllPermissions", reflect.TypeOf((*MockDatabase)(nil).GetAllPermissions), arg0, arg1, arg2)
 }
 
 // GetAllRoles mocks base method.
-func (m *MockDatabase) GetAllRoles(arg0 string, arg1 model.SQLFilter) (model.Roles, error) {
+func (m *MockDatabase) GetAllRoles(arg0 context.Context, arg1 string, arg2 model.SQLFilter) (model.Roles, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetAllRoles", arg0, arg1)
+	ret := m.ctrl.Call(m, "GetAllRoles", arg0, arg1, arg2)
 	ret0, _ := ret[0].(model.Roles)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetAllRoles indicates an expected call of GetAllRoles.
-func (mr *MockDatabaseMockRecorder) GetAllRoles(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) GetAllRoles(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllRoles", reflect.TypeOf((*MockDatabase)(nil).GetAllRoles), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllRoles", reflect.TypeOf((*MockDatabase)(nil).GetAllRoles), arg0, arg1, arg2)
 }
 
 // GetAllSAMLProviders mocks base method.
@@ -925,63 +895,48 @@ func (mr *MockDatabaseMockRecorder) GetLatestAssetGroupCollection(arg0, arg1 int
 }
 
 // GetPermission mocks base method.
-func (m *MockDatabase) GetPermission(arg0 int) (model.Permission, error) {
+func (m *MockDatabase) GetPermission(arg0 context.Context, arg1 int) (model.Permission, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetPermission", arg0)
+	ret := m.ctrl.Call(m, "GetPermission", arg0, arg1)
 	ret0, _ := ret[0].(model.Permission)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetPermission indicates an expected call of GetPermission.
-func (mr *MockDatabaseMockRecorder) GetPermission(arg0 interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) GetPermission(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPermission", reflect.TypeOf((*MockDatabase)(nil).GetPermission), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPermission", reflect.TypeOf((*MockDatabase)(nil).GetPermission), arg0, arg1)
 }
 
 // GetRole mocks base method.
-func (m *MockDatabase) GetRole(arg0 int32) (model.Role, error) {
+func (m *MockDatabase) GetRole(arg0 context.Context, arg1 int32) (model.Role, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetRole", arg0)
+	ret := m.ctrl.Call(m, "GetRole", arg0, arg1)
 	ret0, _ := ret[0].(model.Role)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetRole indicates an expected call of GetRole.
-func (mr *MockDatabaseMockRecorder) GetRole(arg0 interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) GetRole(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRole", reflect.TypeOf((*MockDatabase)(nil).GetRole), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRole", reflect.TypeOf((*MockDatabase)(nil).GetRole), arg0, arg1)
 }
 
 // GetRoles mocks base method.
-func (m *MockDatabase) GetRoles(arg0 []int32) (model.Roles, error) {
+func (m *MockDatabase) GetRoles(arg0 context.Context, arg1 []int32) (model.Roles, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetRoles", arg0)
+	ret := m.ctrl.Call(m, "GetRoles", arg0, arg1)
 	ret0, _ := ret[0].(model.Roles)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetRoles indicates an expected call of GetRoles.
-func (mr *MockDatabaseMockRecorder) GetRoles(arg0 interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) GetRoles(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRoles", reflect.TypeOf((*MockDatabase)(nil).GetRoles), arg0)
-}
-
-// GetRolesByName mocks base method.
-func (m *MockDatabase) GetRolesByName(arg0 []string) (model.Roles, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetRolesByName", arg0)
-	ret0, _ := ret[0].(model.Roles)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetRolesByName indicates an expected call of GetRolesByName.
-func (mr *MockDatabaseMockRecorder) GetRolesByName(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRolesByName", reflect.TypeOf((*MockDatabase)(nil).GetRolesByName), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRoles", reflect.TypeOf((*MockDatabase)(nil).GetRoles), arg0, arg1)
 }
 
 // GetSAMLProvider mocks base method.
@@ -1182,21 +1137,6 @@ func (mr *MockDatabaseMockRecorder) LookupActiveSessionsByUser(arg0 interface{})
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LookupActiveSessionsByUser", reflect.TypeOf((*MockDatabase)(nil).LookupActiveSessionsByUser), arg0)
 }
 
-// LookupRoleByName mocks base method.
-func (m *MockDatabase) LookupRoleByName(arg0 string) (model.Role, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "LookupRoleByName", arg0)
-	ret0, _ := ret[0].(model.Role)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// LookupRoleByName indicates an expected call of LookupRoleByName.
-func (mr *MockDatabaseMockRecorder) LookupRoleByName(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LookupRoleByName", reflect.TypeOf((*MockDatabase)(nil).LookupRoleByName), arg0)
-}
-
 // LookupSAMLProviderByName mocks base method.
 func (m *MockDatabase) LookupSAMLProviderByName(arg0 string) (model.SAMLProvider, error) {
 	m.ctrl.T.Helper()
@@ -1392,20 +1332,6 @@ func (m *MockDatabase) UpdateFileUploadJob(arg0 model.FileUploadJob) error {
 func (mr *MockDatabaseMockRecorder) UpdateFileUploadJob(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateFileUploadJob", reflect.TypeOf((*MockDatabase)(nil).UpdateFileUploadJob), arg0)
-}
-
-// UpdateRole mocks base method.
-func (m *MockDatabase) UpdateRole(arg0 model.Role) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateRole", arg0)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// UpdateRole indicates an expected call of UpdateRole.
-func (mr *MockDatabaseMockRecorder) UpdateRole(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateRole", reflect.TypeOf((*MockDatabase)(nil).UpdateRole), arg0)
 }
 
 // UpdateSAMLIdentityProvider mocks base method.

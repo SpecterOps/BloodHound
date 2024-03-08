@@ -66,7 +66,7 @@ func MigrateGraph(ctx context.Context, db graph.Database, schema graph.Schema) e
 }
 
 // MigrateDB runs database migrations on PG
-func MigrateDB(cfg config.Configuration, db database.Database) error {
+func MigrateDB(ctx context.Context, cfg config.Configuration, db database.Database) error {
 	if err := db.Migrate(); err != nil {
 		return err
 	}
@@ -79,7 +79,7 @@ func MigrateDB(cfg config.Configuration, db database.Database) error {
 
 	secretDigester := cfg.Crypto.Argon2.NewDigester()
 
-	if roles, err := db.GetAllRoles("", model.SQLFilter{}); err != nil {
+	if roles, err := db.GetAllRoles(ctx, "", model.SQLFilter{}); err != nil {
 		return fmt.Errorf("error while attempting to fetch user roles: %w", err)
 	} else if secretDigest, err := secretDigester.Digest(cfg.DefaultAdmin.Password); err != nil {
 		return fmt.Errorf("error while attempting to digest secret for user: %w", err)

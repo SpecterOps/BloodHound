@@ -88,65 +88,30 @@ func (s contextInitializer) InitContextFromToken(ctx context.Context, authToken 
 	return auth.Context{}, ErrNotFound
 }
 
-func (s *BloodhoundDB) CreateRole(role model.Role) (model.Role, error) {
-	var (
-		updatedRole = role
-		result      = s.db.Create(&updatedRole)
-	)
-
-	return updatedRole, CheckError(result)
-}
-
-// UpdateRole updates permissions for the row matching the provided Role struct
-// UPDATE roles SET permissions=.... WHERE role_id = ...
-func (s *BloodhoundDB) UpdateRole(role model.Role) error {
-	// Update permissions first
-	if err := s.db.Model(&role).Association("Permissions").Replace(&role.Permissions); err != nil {
-		return err
-	}
-
-	result := s.db.Save(&role)
-	return CheckError(result)
-}
-
 // GetAllRoles retrieves all available roles in the db
 // SELECT * FROM roles
-func (s *BloodhoundDB) GetAllRoles(order string, filter model.SQLFilter) (model.Roles, error) {
+func (s *BloodhoundDB) GetAllRoles(ctx context.Context, order string, filter model.SQLFilter) (model.Roles, error) {
 	var (
 		roles  model.Roles
-		result *gorm.DB
+		cursor = s.preload(model.RoleAssociations()).WithContext(ctx)
 	)
 
-	if order == "" && filter.SQLString == "" {
-		result = s.preload(model.RoleAssociations()).Find(&roles)
-	} else if order == "" && filter.SQLString != "" {
-		result = s.preload(model.RoleAssociations()).Where(filter.SQLString, filter.Params).Find(&roles)
-	} else if order != "" && filter.SQLString == "" {
-		result = s.preload(model.RoleAssociations()).Order(order).Find(&roles)
-	} else {
-		result = s.preload(model.RoleAssociations()).Where(filter.SQLString, filter.Params).Order(order).Find(&roles)
+	if order != "" && filter.SQLString == "" {
+		cursor = cursor.Order(order)
+	}
+	if filter.SQLString != "" {
+		cursor = cursor.Where(filter.SQLString, filter.Params)
 	}
 
-	return roles, CheckError(result)
+	return roles, CheckError(cursor.Find(&roles))
 }
 
 // GetRoles retrieves all rows in the Roles table corresponding to the provided list of IDs
 // SELECT * FROM roles where ID in (...)
-func (s *BloodhoundDB) GetRoles(ids []int32) (model.Roles, error) {
+func (s *BloodhoundDB) GetRoles(ctx context.Context, ids []int32) (model.Roles, error) {
 	var (
 		roles  model.Roles
-		result = s.preload(model.RoleAssociations()).Where("id in ?", ids).Find(&roles)
-	)
-
-	return roles, CheckError(result)
-}
-
-// GetRolesByName retrieves all rows in the Roles table corresponding to the provided list of role names
-// SELECT * FROM roles WHERE role_name IN (..)
-func (s *BloodhoundDB) GetRolesByName(names []string) (model.Roles, error) {
-	var (
-		roles  model.Roles
-		result = s.preload(model.RoleAssociations()).Where("name in ?", names).Find(&roles)
+		result = s.preload(model.RoleAssociations()).WithContext(ctx).Where("id in ?", ids).Find(&roles)
 	)
 
 	return roles, CheckError(result)
@@ -154,21 +119,10 @@ func (s *BloodhoundDB) GetRolesByName(names []string) (model.Roles, error) {
 
 // GetRole retrieves the role associated with the provided ID
 // SELECT * FROM roles WHERE role_id = ....
-func (s *BloodhoundDB) GetRole(id int32) (model.Role, error) {
+func (s *BloodhoundDB) GetRole(ctx context.Context, id int32) (model.Role, error) {
 	var (
 		role   model.Role
-		result = s.preload(model.RoleAssociations()).First(&role, id)
-	)
-
-	return role, CheckError(result)
-}
-
-// LookupRoleByName retrieves a row from the Roles table corresponding to the role name provided
-// SELECT * FROM roles WHERE role_name = ....
-func (s *BloodhoundDB) LookupRoleByName(name string) (model.Role, error) {
-	var (
-		role   model.Role
-		result = s.preload(model.RoleAssociations()).Where("name = ?", name).First(&role)
+		result = s.preload(model.RoleAssociations()).WithContext(ctx).First(&role, id)
 	)
 
 	return role, CheckError(result)
@@ -176,45 +130,32 @@ func (s *BloodhoundDB) LookupRoleByName(name string) (model.Role, error) {
 
 // GetAllPermissions retrieves all rows from the Permissions table
 // SELECT * FROM permissions
-func (s *BloodhoundDB) GetAllPermissions(order string, filter model.SQLFilter) (model.Permissions, error) {
+func (s *BloodhoundDB) GetAllPermissions(ctx context.Context, order string, filter model.SQLFilter) (model.Permissions, error) {
 	var (
 		permissions model.Permissions
-		result      *gorm.DB
+		cursor      = s.db.WithContext(ctx)
 	)
 
-	if order == "" && filter.SQLString == "" {
-		result = s.db.Find(&permissions)
-	} else if order != "" && filter.SQLString == "" {
-		result = s.db.Order(order).Find(&permissions)
-	} else if order == "" && filter.SQLString != "" {
-		result = s.db.Where(filter.SQLString, filter.Params).Find(&permissions)
-	} else {
-		result = s.db.Where(filter.SQLString, filter.Params).Order(order).Find(&permissions)
+	if order != "" {
+		cursor = cursor.Order(order)
 	}
 
-	return permissions, CheckError(result)
+	if filter.SQLString != "" {
+		cursor = cursor.Where(filter.SQLString, filter.Params)
+	}
+
+	return permissions, CheckError(cursor.Find(&permissions))
 }
 
 // GetPermission retrieves a row in the Permissions table corresponding to the ID provided
 // SELECT * FROM permissions WHERE permission_id = ...
-func (s *BloodhoundDB) GetPermission(id int) (model.Permission, error) {
+func (s *BloodhoundDB) GetPermission(ctx context.Context, id int) (model.Permission, error) {
 	var (
 		permission model.Permission
-		result     = s.db.First(&permission, id)
+		result     = s.db.WithContext(ctx).First(&permission, id)
 	)
 
 	return permission, CheckError(result)
-}
-
-// CreatePermission creates a new permission row with the struct provided
-// INSERT INTO permissions (id, authority, name) VALUES (ID, authority, name)
-func (s *BloodhoundDB) CreatePermission(permission model.Permission) (model.Permission, error) {
-	var (
-		updatedPermission = permission
-		result            = s.db.Create(&updatedPermission)
-	)
-
-	return updatedPermission, CheckError(result)
 }
 
 // InitializeSAMLAuth creates new SAMLProvider, User and Installation entries based on the input provided
