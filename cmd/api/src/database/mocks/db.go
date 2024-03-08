@@ -1166,18 +1166,18 @@ func (mr *MockDatabaseMockRecorder) RequiresMigration() *gomock.Call {
 }
 
 // SavedQueryBelongsToUser mocks base method.
-func (m *MockDatabase) SavedQueryBelongsToUser(arg0 uuid.UUID, arg1 int) (bool, error) {
+func (m *MockDatabase) SavedQueryBelongsToUser(arg0 context.Context, arg1 uuid.UUID, arg2 int) (bool, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SavedQueryBelongsToUser", arg0, arg1)
+	ret := m.ctrl.Call(m, "SavedQueryBelongsToUser", arg0, arg1, arg2)
 	ret0, _ := ret[0].(bool)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // SavedQueryBelongsToUser indicates an expected call of SavedQueryBelongsToUser.
-func (mr *MockDatabaseMockRecorder) SavedQueryBelongsToUser(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) SavedQueryBelongsToUser(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SavedQueryBelongsToUser", reflect.TypeOf((*MockDatabase)(nil).SavedQueryBelongsToUser), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SavedQueryBelongsToUser", reflect.TypeOf((*MockDatabase)(nil).SavedQueryBelongsToUser), arg0, arg1, arg2)
 }
 
 // SetConfigurationParameter mocks base method.

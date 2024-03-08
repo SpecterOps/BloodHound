@@ -64,9 +64,9 @@ func (s *BloodhoundDB) DeleteSavedQuery(ctx context.Context, id int) error {
 	return CheckError(s.db.WithContext(ctx).Delete(&model.SavedQuery{}, id))
 }
 
-func (s *BloodhoundDB) SavedQueryBelongsToUser(userID uuid.UUID, savedQueryID int) (bool, error) {
+func (s *BloodhoundDB) SavedQueryBelongsToUser(ctx context.Context, userID uuid.UUID, savedQueryID int) (bool, error) {
 	var savedQuery model.SavedQuery
-	if result := s.db.First(&savedQuery, savedQueryID); result.Error != nil {
+	if result := s.db.WithContext(ctx).First(&savedQuery, savedQueryID); result.Error != nil {
 		return false, CheckError(result)
 	} else if savedQuery.UserID == userID.String() {
 		return true, nil
