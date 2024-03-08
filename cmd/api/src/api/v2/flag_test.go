@@ -89,7 +89,7 @@ func TestResources_ToggleFlag(t *testing.T) {
 	mockDB.EXPECT().GetFlag(gomock.Any(), featureID).Return(appcfg.FeatureFlag{
 		UserUpdatable: true,
 	}, nil)
-	mockDB.EXPECT().SetFlag(gomock.Any()).Return(nil)
+	mockDB.EXPECT().SetFlag(gomock.Any(), gomock.Any()).Return(nil)
 
 	requestSetup.Require().
 		ResponseStatusCode(http.StatusOK).

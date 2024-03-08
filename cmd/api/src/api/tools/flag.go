@@ -59,7 +59,7 @@ func (s ToolContainer) ToggleFlag(response http.ResponseWriter, request *http.Re
 	} else {
 		featureFlag.Enabled = !featureFlag.Enabled
 
-		if err := s.db.SetFlag(featureFlag); err != nil {
+		if err := s.db.SetFlag(request.Context(), featureFlag); err != nil {
 			api.HandleDatabaseError(request, response, err)
 		} else {
 			api.WriteBasicResponse(request.Context(), ToggleFlagResponse{

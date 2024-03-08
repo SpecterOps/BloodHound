@@ -54,7 +54,7 @@ func (s Resources) ToggleFlag(response http.ResponseWriter, request *http.Reques
 	} else {
 		featureFlag.Enabled = !featureFlag.Enabled
 
-		if err := s.DB.SetFlag(featureFlag); err != nil {
+		if err := s.DB.SetFlag(request.Context(), featureFlag); err != nil {
 			api.HandleDatabaseError(request, response, err)
 		} else {
 			// TODO: Cleanup #ADCSFeatureFlag after full launch.

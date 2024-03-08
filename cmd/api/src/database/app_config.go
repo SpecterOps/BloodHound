@@ -37,8 +37,8 @@ func (s *BloodhoundDB) GetAllFlags(ctx context.Context) ([]appcfg.FeatureFlag, e
 	return flags, CheckError(s.db.WithContext(ctx).Find(&flags))
 }
 
-func (s *BloodhoundDB) SetFlag(flag appcfg.FeatureFlag) error {
-	return CheckError(s.db.Save(&flag))
+func (s *BloodhoundDB) SetFlag(ctx context.Context, flag appcfg.FeatureFlag) error {
+	return CheckError(s.db.WithContext(ctx).Save(&flag))
 }
 
 func (s *BloodhoundDB) GetAllConfigurationParameters(ctx context.Context) (appcfg.Parameters, error) {

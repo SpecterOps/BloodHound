@@ -1195,17 +1195,17 @@ func (mr *MockDatabaseMockRecorder) SetConfigurationParameter(arg0, arg1 interfa
 }
 
 // SetFlag mocks base method.
-func (m *MockDatabase) SetFlag(arg0 appcfg.FeatureFlag) error {
+func (m *MockDatabase) SetFlag(arg0 context.Context, arg1 appcfg.FeatureFlag) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SetFlag", arg0)
+	ret := m.ctrl.Call(m, "SetFlag", arg0, arg1)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // SetFlag indicates an expected call of SetFlag.
-func (mr *MockDatabaseMockRecorder) SetFlag(arg0 interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) SetFlag(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetFlag", reflect.TypeOf((*MockDatabase)(nil).SetFlag), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetFlag", reflect.TypeOf((*MockDatabase)(nil).SetFlag), arg0, arg1)
 }
 
 // SweepAssetGroupCollections mocks base method.
