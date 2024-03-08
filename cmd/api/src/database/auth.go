@@ -26,7 +26,6 @@ import (
 
 	"github.com/gofrs/uuid"
 	"github.com/specterops/bloodhound/src/auth"
-	"github.com/specterops/bloodhound/src/database/types/null"
 	"github.com/specterops/bloodhound/src/model"
 	"gorm.io/gorm"
 )
@@ -158,56 +157,15 @@ func (s *BloodhoundDB) GetPermission(ctx context.Context, id int) (model.Permiss
 	return permission, CheckError(result)
 }
 
-// InitializeSAMLAuth creates new SAMLProvider, User and Installation entries based on the input provided
-func (s *BloodhoundDB) InitializeSAMLAuth(adminUser model.User, samlProvider model.SAMLProvider) (model.SAMLProvider, model.Installation, error) {
-	var (
-		updatedAdminUser    = adminUser
-		updatedSAMLProvider = samlProvider
-		newInstallation     model.Installation
-	)
-
-	err := s.db.Transaction(func(tx *gorm.DB) error {
-		if newInstallationID, err := uuid.NewV4(); err != nil {
-			return err
-		} else {
-			newInstallation.ID = newInstallationID
-
-			if result := tx.Create(&newInstallation); result.Error != nil {
-				return CheckError(result)
-			}
-		}
-
-		if result := tx.Create(&updatedSAMLProvider); result.Error != nil {
-			return CheckError(result)
-		}
-
-		if newUserID, err := uuid.NewV4(); err != nil {
-			return err
-		} else {
-			updatedAdminUser.ID = newUserID
-			updatedAdminUser.SAMLProvider = &updatedSAMLProvider
-			updatedAdminUser.SAMLProviderID = null.Int32From(updatedSAMLProvider.ID)
-
-			if result := tx.Create(&updatedAdminUser); result.Error != nil {
-				return CheckError(result)
-			}
-		}
-
-		return nil
-	})
-
-	return updatedSAMLProvider, newInstallation, err
-}
-
 // InitializeSecretAuth creates new AuthSecret, User and Installation entries based on the input provided
-func (s *BloodhoundDB) InitializeSecretAuth(adminUser model.User, authSecret model.AuthSecret) (model.Installation, error) {
+func (s *BloodhoundDB) InitializeSecretAuth(ctx context.Context, adminUser model.User, authSecret model.AuthSecret) (model.Installation, error) {
 	var (
 		updatedAdminUser  = adminUser
 		updatedAuthSecret = authSecret
 		newInstallation   model.Installation
 	)
 
-	err := s.db.Transaction(func(tx *gorm.DB) error {
+	err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		if newInstallationID, err := uuid.NewV4(); err != nil {
 			return err
 		} else {
@@ -398,71 +356,50 @@ func (s *BloodhoundDB) CreateAuthToken(ctx context.Context, authToken model.Auth
 	}
 
 	return authToken, s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
-		return CheckError(tx.Create(&authToken))
+		return CheckError(tx.WithContext(ctx).Create(&authToken))
 	})
 }
 
 // UpdateAuthToken updates all fields in the AuthToken row as specified in the provided struct
 // UPDATE auth_tokens SET key = ..., hmac_method = ..., last_access = ...
 // WHERE user_id = ... AND client_id = ...
-func (s *BloodhoundDB) UpdateAuthToken(authToken model.AuthToken) error {
-	result := s.db.Save(&authToken)
+func (s *BloodhoundDB) UpdateAuthToken(ctx context.Context, authToken model.AuthToken) error {
+	result := s.db.WithContext(ctx).Save(&authToken)
 	return CheckError(result)
 }
 
 // GetAuthToken retrieves the AuthToken row associated with the provided ID
 // SELECT * FROM auth_tokens WHERE id = ....
-func (s *BloodhoundDB) GetAuthToken(id uuid.UUID) (model.AuthToken, error) {
+func (s *BloodhoundDB) GetAuthToken(ctx context.Context, id uuid.UUID) (model.AuthToken, error) {
 	var (
 		authToken model.AuthToken
-		result    = s.db.First(&authToken, id)
+		result    = s.db.WithContext(ctx).First(&authToken, id)
 	)
 
 	return authToken, CheckError(result)
 }
 
-func (s *BloodhoundDB) GetAllAuthTokens(order string, filter model.SQLFilter) (model.AuthTokens, error) {
+func (s *BloodhoundDB) GetAllAuthTokens(ctx context.Context, order string, filter model.SQLFilter) (model.AuthTokens, error) {
 	var (
 		tokens model.AuthTokens
-		result *gorm.DB
+		cursor = s.db.WithContext(ctx)
 	)
 
-	if order != "" && filter.SQLString == "" {
-		result = s.db.Order(order).Find(&tokens)
-	} else if order != "" && filter.SQLString != "" {
-		result = s.db.Where(filter.SQLString, filter.Params).Order(order).Find(&tokens)
-	} else if order == "" && filter.SQLString != "" {
-		result = s.db.Where(filter.SQLString, filter.Params).Find(&tokens)
-	} else {
-		result = s.db.Find(&tokens)
+	if order != "" {
+		cursor = cursor.Order(order)
 	}
 
-	return tokens, CheckError(result)
-}
-
-func (s *BloodhoundDB) ListUserTokens(userID uuid.UUID, order string, filter model.SQLFilter) (model.AuthTokens, error) {
-	var (
-		authTokens model.AuthTokens
-		result     *gorm.DB
-	)
-
-	if order != "" && filter.SQLString == "" {
-		result = s.db.Where("user_id = ?", userID).Order(order).Find(&authTokens)
-	} else if order == "" && filter.SQLString == "" {
-		result = s.db.Where("user_id = ?", userID).Find(&authTokens)
-	} else if order == "" && filter.SQLString != "" {
-		result = s.db.Where("user_id = ?", userID).Where(filter.SQLString, filter.Params).Find(&authTokens)
-	} else {
-		result = s.db.Where("user_id = ?", userID).Where(filter.SQLString, filter.Params).Order(order).Find(&authTokens)
+	if filter.SQLString != "" {
+		cursor = cursor.Where(filter.SQLString, filter.Params)
 	}
 
-	return authTokens, CheckError(result)
+	return tokens, CheckError(cursor.Find(&tokens))
 }
 
-func (s *BloodhoundDB) GetUserToken(userId, tokenId uuid.UUID) (model.AuthToken, error) {
+func (s *BloodhoundDB) GetUserToken(ctx context.Context, userId, tokenId uuid.UUID) (model.AuthToken, error) {
 	var (
 		authToken model.AuthToken
-		result    = s.db.First(&authToken, "id = ? AND user_id = ?", tokenId, userId)
+		result    = s.db.WithContext(ctx).First(&authToken, "id = ? AND user_id = ?", tokenId, userId)
 	)
 	return authToken, CheckError(result)
 }
@@ -476,7 +413,7 @@ func (s *BloodhoundDB) DeleteAuthToken(ctx context.Context, authToken model.Auth
 	}
 
 	return s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
-		return CheckError(tx.Where("id = ?", authToken.ID).Delete(&authToken))
+		return CheckError(tx.WithContext(ctx).Where("id = ?", authToken.ID).Delete(&authToken))
 	})
 }
 
@@ -489,16 +426,16 @@ func (s *BloodhoundDB) CreateAuthSecret(ctx context.Context, authSecret model.Au
 	}
 
 	return authSecret, s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
-		return CheckError(tx.Create(&authSecret))
+		return CheckError(tx.WithContext(ctx).Create(&authSecret))
 	})
 }
 
 // GetAuthSecret retrieves the AuthSecret row associated with the provided ID
 // SELECT * FROM auth_secrets WHERE id = ....
-func (s *BloodhoundDB) GetAuthSecret(id int32) (model.AuthSecret, error) {
+func (s *BloodhoundDB) GetAuthSecret(ctx context.Context, id int32) (model.AuthSecret, error) {
 	var (
 		authSecret model.AuthSecret
-		result     = s.db.Find(&authSecret, id)
+		result     = s.db.WithContext(ctx).Find(&authSecret, id)
 	)
 
 	return authSecret, CheckError(result)
@@ -514,7 +451,7 @@ func (s *BloodhoundDB) UpdateAuthSecret(ctx context.Context, authSecret model.Au
 	}
 
 	return s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
-		return CheckError(tx.Save(&authSecret))
+		return CheckError(tx.WithContext(ctx).Save(&authSecret))
 	})
 }
 
@@ -527,7 +464,7 @@ func (s *BloodhoundDB) DeleteAuthSecret(ctx context.Context, authSecret model.Au
 	}
 
 	return s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
-		return CheckError(tx.Delete(&authSecret))
+		return CheckError(tx.WithContext(ctx).Delete(&authSecret))
 	})
 }
 

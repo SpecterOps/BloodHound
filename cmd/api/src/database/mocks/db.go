@@ -532,18 +532,18 @@ func (mr *MockDatabaseMockRecorder) GetAllAssetGroups(arg0, arg1, arg2 interface
 }
 
 // GetAllAuthTokens mocks base method.
-func (m *MockDatabase) GetAllAuthTokens(arg0 string, arg1 model.SQLFilter) (model.AuthTokens, error) {
+func (m *MockDatabase) GetAllAuthTokens(arg0 context.Context, arg1 string, arg2 model.SQLFilter) (model.AuthTokens, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetAllAuthTokens", arg0, arg1)
+	ret := m.ctrl.Call(m, "GetAllAuthTokens", arg0, arg1, arg2)
 	ret0, _ := ret[0].(model.AuthTokens)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetAllAuthTokens indicates an expected call of GetAllAuthTokens.
-func (mr *MockDatabaseMockRecorder) GetAllAuthTokens(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) GetAllAuthTokens(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllAuthTokens", reflect.TypeOf((*MockDatabase)(nil).GetAllAuthTokens), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllAuthTokens", reflect.TypeOf((*MockDatabase)(nil).GetAllAuthTokens), arg0, arg1, arg2)
 }
 
 // GetAllConfigurationParameters mocks base method.
@@ -713,33 +713,33 @@ func (mr *MockDatabaseMockRecorder) GetAssetGroupSelector(arg0, arg1 interface{}
 }
 
 // GetAuthSecret mocks base method.
-func (m *MockDatabase) GetAuthSecret(arg0 int32) (model.AuthSecret, error) {
+func (m *MockDatabase) GetAuthSecret(arg0 context.Context, arg1 int32) (model.AuthSecret, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetAuthSecret", arg0)
+	ret := m.ctrl.Call(m, "GetAuthSecret", arg0, arg1)
 	ret0, _ := ret[0].(model.AuthSecret)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetAuthSecret indicates an expected call of GetAuthSecret.
-func (mr *MockDatabaseMockRecorder) GetAuthSecret(arg0 interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) GetAuthSecret(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAuthSecret", reflect.TypeOf((*MockDatabase)(nil).GetAuthSecret), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAuthSecret", reflect.TypeOf((*MockDatabase)(nil).GetAuthSecret), arg0, arg1)
 }
 
 // GetAuthToken mocks base method.
-func (m *MockDatabase) GetAuthToken(arg0 uuid.UUID) (model.AuthToken, error) {
+func (m *MockDatabase) GetAuthToken(arg0 context.Context, arg1 uuid.UUID) (model.AuthToken, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetAuthToken", arg0)
+	ret := m.ctrl.Call(m, "GetAuthToken", arg0, arg1)
 	ret0, _ := ret[0].(model.AuthToken)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetAuthToken indicates an expected call of GetAuthToken.
-func (mr *MockDatabaseMockRecorder) GetAuthToken(arg0 interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) GetAuthToken(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAuthToken", reflect.TypeOf((*MockDatabase)(nil).GetAuthToken), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAuthToken", reflect.TypeOf((*MockDatabase)(nil).GetAuthToken), arg0, arg1)
 }
 
 // GetAzureDataQualityAggregations mocks base method.
@@ -1015,18 +1015,18 @@ func (mr *MockDatabaseMockRecorder) GetUserSession(arg0 interface{}) *gomock.Cal
 }
 
 // GetUserToken mocks base method.
-func (m *MockDatabase) GetUserToken(arg0, arg1 uuid.UUID) (model.AuthToken, error) {
+func (m *MockDatabase) GetUserToken(arg0 context.Context, arg1, arg2 uuid.UUID) (model.AuthToken, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetUserToken", arg0, arg1)
+	ret := m.ctrl.Call(m, "GetUserToken", arg0, arg1, arg2)
 	ret0, _ := ret[0].(model.AuthToken)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetUserToken indicates an expected call of GetUserToken.
-func (mr *MockDatabaseMockRecorder) GetUserToken(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) GetUserToken(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserToken", reflect.TypeOf((*MockDatabase)(nil).GetUserToken), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserToken", reflect.TypeOf((*MockDatabase)(nil).GetUserToken), arg0, arg1, arg2)
 }
 
 // HasInstallation mocks base method.
@@ -1044,35 +1044,19 @@ func (mr *MockDatabaseMockRecorder) HasInstallation() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "HasInstallation", reflect.TypeOf((*MockDatabase)(nil).HasInstallation))
 }
 
-// InitializeSAMLAuth mocks base method.
-func (m *MockDatabase) InitializeSAMLAuth(arg0 model.User, arg1 model.SAMLProvider) (model.SAMLProvider, model.Installation, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "InitializeSAMLAuth", arg0, arg1)
-	ret0, _ := ret[0].(model.SAMLProvider)
-	ret1, _ := ret[1].(model.Installation)
-	ret2, _ := ret[2].(error)
-	return ret0, ret1, ret2
-}
-
-// InitializeSAMLAuth indicates an expected call of InitializeSAMLAuth.
-func (mr *MockDatabaseMockRecorder) InitializeSAMLAuth(arg0, arg1 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InitializeSAMLAuth", reflect.TypeOf((*MockDatabase)(nil).InitializeSAMLAuth), arg0, arg1)
-}
-
 // InitializeSecretAuth mocks base method.
-func (m *MockDatabase) InitializeSecretAuth(arg0 model.User, arg1 model.AuthSecret) (model.Installation, error) {
+func (m *MockDatabase) InitializeSecretAuth(arg0 context.Context, arg1 model.User, arg2 model.AuthSecret) (model.Installation, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "InitializeSecretAuth", arg0, arg1)
+	ret := m.ctrl.Call(m, "InitializeSecretAuth", arg0, arg1, arg2)
 	ret0, _ := ret[0].(model.Installation)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // InitializeSecretAuth indicates an expected call of InitializeSecretAuth.
-func (mr *MockDatabaseMockRecorder) InitializeSecretAuth(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) InitializeSecretAuth(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InitializeSecretAuth", reflect.TypeOf((*MockDatabase)(nil).InitializeSecretAuth), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InitializeSecretAuth", reflect.TypeOf((*MockDatabase)(nil).InitializeSecretAuth), arg0, arg1, arg2)
 }
 
 // ListAuditLogs mocks base method.
@@ -1105,21 +1089,6 @@ func (m *MockDatabase) ListSavedQueries(arg0 uuid.UUID, arg1 string, arg2 model.
 func (mr *MockDatabaseMockRecorder) ListSavedQueries(arg0, arg1, arg2, arg3, arg4 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListSavedQueries", reflect.TypeOf((*MockDatabase)(nil).ListSavedQueries), arg0, arg1, arg2, arg3, arg4)
-}
-
-// ListUserTokens mocks base method.
-func (m *MockDatabase) ListUserTokens(arg0 uuid.UUID, arg1 string, arg2 model.SQLFilter) (model.AuthTokens, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ListUserTokens", arg0, arg1, arg2)
-	ret0, _ := ret[0].(model.AuthTokens)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// ListUserTokens indicates an expected call of ListUserTokens.
-func (mr *MockDatabaseMockRecorder) ListUserTokens(arg0, arg1, arg2 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListUserTokens", reflect.TypeOf((*MockDatabase)(nil).ListUserTokens), arg0, arg1, arg2)
 }
 
 // LookupActiveSessionsByUser mocks base method.
@@ -1307,17 +1276,17 @@ func (mr *MockDatabaseMockRecorder) UpdateAuthSecret(arg0, arg1 interface{}) *go
 }
 
 // UpdateAuthToken mocks base method.
-func (m *MockDatabase) UpdateAuthToken(arg0 model.AuthToken) error {
+func (m *MockDatabase) UpdateAuthToken(arg0 context.Context, arg1 model.AuthToken) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateAuthToken", arg0)
+	ret := m.ctrl.Call(m, "UpdateAuthToken", arg0, arg1)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // UpdateAuthToken indicates an expected call of UpdateAuthToken.
-func (mr *MockDatabaseMockRecorder) UpdateAuthToken(arg0 interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) UpdateAuthToken(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateAuthToken", reflect.TypeOf((*MockDatabase)(nil).UpdateAuthToken), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateAuthToken", reflect.TypeOf((*MockDatabase)(nil).UpdateAuthToken), arg0, arg1)
 }
 
 // UpdateFileUploadJob mocks base method.
