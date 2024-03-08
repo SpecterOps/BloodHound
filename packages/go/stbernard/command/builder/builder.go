@@ -57,7 +57,7 @@ func (s command) Run() error {
 		return fmt.Errorf("could not get build configuration file: %w", err)
 	} else if err := filepath.WalkDir(filepath.Join(cwd, cfg.AssetsDir), clearFiles); err != nil {
 		return fmt.Errorf("could not clear asset directory: %w", err)
-	} else if err := s.runJSBuild(cwd); err != nil {
+	} else if err := s.runJSBuild(cwd, filepath.Join(cwd, cfg.AssetsDir)); err != nil {
 		return fmt.Errorf("could not build JS artifacts: %w", err)
 	} else if err := s.runGoBuild(cwd); err != nil {
 		return fmt.Errorf("could not build Go artifacts: %w", err)
@@ -83,10 +83,10 @@ func Create(config Config) (command, error) {
 	}
 }
 
-func (s command) runJSBuild(cwd string) error {
+func (s command) runJSBuild(cwd string, buildPath string) error {
 	var env = s.config.Environment
 
-	env.SetIfEmpty("BUILD_PATH", filepath.Join(cwd, "dist", "bh-ui"))
+	env.SetIfEmpty("BUILD_PATH", buildPath)
 
 	if jsPaths, err := workspace.ParseJSAbsPaths(cwd); err != nil {
 		return fmt.Errorf("could not retrieve JS paths: %w", err)
