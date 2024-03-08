@@ -96,18 +96,18 @@ func (mr *MockDatabaseMockRecorder) CreateADDataQualityAggregation(arg0 interfac
 }
 
 // CreateADDataQualityStats mocks base method.
-func (m *MockDatabase) CreateADDataQualityStats(arg0 model.ADDataQualityStats) (model.ADDataQualityStats, error) {
+func (m *MockDatabase) CreateADDataQualityStats(arg0 context.Context, arg1 model.ADDataQualityStats) (model.ADDataQualityStats, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateADDataQualityStats", arg0)
+	ret := m.ctrl.Call(m, "CreateADDataQualityStats", arg0, arg1)
 	ret0, _ := ret[0].(model.ADDataQualityStats)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // CreateADDataQualityStats indicates an expected call of CreateADDataQualityStats.
-func (mr *MockDatabaseMockRecorder) CreateADDataQualityStats(arg0 interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) CreateADDataQualityStats(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateADDataQualityStats", reflect.TypeOf((*MockDatabase)(nil).CreateADDataQualityStats), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateADDataQualityStats", reflect.TypeOf((*MockDatabase)(nil).CreateADDataQualityStats), arg0, arg1)
 }
 
 // CreateAssetGroup mocks base method.

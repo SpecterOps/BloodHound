@@ -24,8 +24,8 @@ import (
 	"gorm.io/gorm"
 )
 
-func (s *BloodhoundDB) CreateADDataQualityStats(stats model.ADDataQualityStats) (model.ADDataQualityStats, error) {
-	result := s.db.Create(&stats)
+func (s *BloodhoundDB) CreateADDataQualityStats(ctx context.Context, stats model.ADDataQualityStats) (model.ADDataQualityStats, error) {
+	result := s.db.WithContext(ctx).Create(&stats)
 	return stats, CheckError(result)
 }
 

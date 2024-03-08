@@ -21,6 +21,7 @@
 package mocks
 
 import (
+	context "context"
 	reflect "reflect"
 
 	model "github.com/specterops/bloodhound/src/model"
@@ -66,18 +67,18 @@ func (mr *MockDataQualityDataMockRecorder) CreateADDataQualityAggregation(arg0 i
 }
 
 // CreateADDataQualityStats mocks base method.
-func (m *MockDataQualityData) CreateADDataQualityStats(arg0 model.ADDataQualityStats) (model.ADDataQualityStats, error) {
+func (m *MockDataQualityData) CreateADDataQualityStats(arg0 context.Context, arg1 model.ADDataQualityStats) (model.ADDataQualityStats, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateADDataQualityStats", arg0)
+	ret := m.ctrl.Call(m, "CreateADDataQualityStats", arg0, arg1)
 	ret0, _ := ret[0].(model.ADDataQualityStats)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // CreateADDataQualityStats indicates an expected call of CreateADDataQualityStats.
-func (mr *MockDataQualityDataMockRecorder) CreateADDataQualityStats(arg0 interface{}) *gomock.Call {
+func (mr *MockDataQualityDataMockRecorder) CreateADDataQualityStats(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateADDataQualityStats", reflect.TypeOf((*MockDataQualityData)(nil).CreateADDataQualityStats), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateADDataQualityStats", reflect.TypeOf((*MockDataQualityData)(nil).CreateADDataQualityStats), arg0, arg1)
 }
 
 // CreateAzureDataQualityAggregation mocks base method.
