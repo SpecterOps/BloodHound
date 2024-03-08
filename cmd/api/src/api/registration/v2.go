@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/specterops/bloodhound/openapi"
 	"github.com/specterops/bloodhound/params"
 	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/src/api/middleware"
@@ -101,8 +102,7 @@ func NewV2API(cfg config.Configuration, resources v2.Resources, routerInst *rout
 	routerInst.GET(fmt.Sprintf("/api/v2/collectors/{%s}/{%s:v[0-9]+.[0-9]+.[0-9]+|latest}", v2.CollectorTypePathParameterName, v2.CollectorReleaseTagPathParameterName), resources.DownloadCollectorByVersion).RequireAuth()
 	routerInst.GET(fmt.Sprintf("/api/v2/collectors/{%s}/{%s:v[0-9]+.[0-9]+.[0-9]+|latest}/checksum", v2.CollectorTypePathParameterName, v2.CollectorReleaseTagPathParameterName), resources.DownloadCollectorChecksumByVersion).RequireAuth()
 
-	// Ingest APIs
-	//TODO: What permission should we use here? GraphDB Write
+	// Collection File Upload API
 	routerInst.GET("/api/v2/file-upload", resources.ListFileUploadJobs).RequireAuth()
 	routerInst.GET("/api/v2/file-upload/accepted-types", resources.ListAcceptedFileUploadTypes).RequireAuth()
 	routerInst.POST("/api/v2/file-upload/start", resources.StartFileUploadJob).RequirePermissions(permissions.GraphDBWrite)
@@ -113,8 +113,9 @@ func NewV2API(cfg config.Configuration, resources v2.Resources, routerInst *rout
 		// Version API
 		routerInst.GET("/api/version", v2.GetVersion).RequireAuth(),
 
-		// Swagger API
+		// API Spec
 		routerInst.PathPrefix("/api/v2/swagger", v2.SwaggerHandler()),
+		routerInst.GET("/api/v2/spec", openapi.HttpHandler),
 
 		// Search API
 		routerInst.GET("/api/v2/search", resources.SearchHandler).RequirePermissions(permissions.GraphDBRead),
@@ -130,6 +131,8 @@ func NewV2API(cfg config.Configuration, resources v2.Resources, routerInst *rout
 
 		routerInst.GET("/api/v2/features", resources.GetFlags).RequirePermissions(permissions.AppReadApplicationConfiguration),
 		routerInst.PUT("/api/v2/features/{feature_id}/toggle", resources.ToggleFlag).RequirePermissions(permissions.AppWriteApplicationConfiguration),
+
+		routerInst.POST("/api/v2/clear-database", resources.HandleDatabaseWipe).RequirePermissions(permissions.WipeDB),
 
 		// Asset Groups API
 		routerInst.GET("/api/v2/asset-groups", resources.ListAssetGroups).RequirePermissions(permissions.GraphDBRead),

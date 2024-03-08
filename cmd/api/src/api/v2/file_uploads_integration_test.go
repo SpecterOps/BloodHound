@@ -132,7 +132,7 @@ func Test_FileUpload(t *testing.T) {
 	})
 
 	t.Run("not valid json", func(tx *testing.T) {
-		jsonInput := loader.GetReader("v6/ingest/jker.png")
+		jsonInput := loader.GetReader("v6/ingest/jker.jpg")
 		defer jsonInput.Close()
 		req, err := apiClient.NewRequest(http.MethodPost, jobEndpoint, nil, jsonInput)
 		assert.Nil(tx, err)
@@ -179,6 +179,7 @@ func Test_FileUploadWorkFlowVersion6(t *testing.T) {
 	//Assert that we created stuff we expected
 	testCtx.AssertIngest(fixtures.IngestAssertions)
 	testCtx.AssertIngest(fixtures.IngestAssertionsv6)
+	testCtx.AssertIngest(fixtures.PropertyAssertions)
 }
 
 func Test_FileUploadVersion6AllOptionADCS(t *testing.T) {
@@ -219,6 +220,7 @@ func Test_CompressedFileUploadWorkFlowVersion5(t *testing.T) {
 
 	//Assert that we created stuff we expected
 	testCtx.AssertIngest(fixtures.IngestAssertions)
+	testCtx.AssertIngest(fixtures.PropertyAssertions)
 }
 
 func Test_CompressedFileUploadWorkFlowVersion6(t *testing.T) {
@@ -239,4 +241,5 @@ func Test_CompressedFileUploadWorkFlowVersion6(t *testing.T) {
 	//Assert that we created stuff we expected
 	testCtx.AssertIngest(fixtures.IngestAssertions)
 	testCtx.AssertIngest(fixtures.IngestAssertionsv6)
+	testCtx.AssertIngest(fixtures.PropertyAssertions)
 }

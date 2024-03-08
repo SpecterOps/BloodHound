@@ -17,6 +17,8 @@
 package database
 
 import (
+	"context"
+
 	"github.com/specterops/bloodhound/src/model"
 	"gorm.io/gorm"
 )
@@ -82,4 +84,10 @@ func (s *BloodhoundDB) GetAllFileUploadJobs(skip int, limit int, order string, f
 		}
 		return jobs, int(count), nil
 	}
+}
+
+func (s *BloodhoundDB) DeleteAllFileUploads(ctx context.Context) error {
+	return CheckError(
+		s.db.WithContext(ctx).Exec("DELETE FROM file_upload_jobs"),
+	)
 }

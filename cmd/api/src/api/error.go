@@ -17,6 +17,7 @@
 package api
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"net/http"
@@ -56,6 +57,7 @@ const (
 	ErrorResponseDetailsToMalformed                 = "to parameter should be formatted as RFC3339 i.e 2021-04-21T07:20:50.52Z"
 	ErrorResponseMultipleCollectionScopesProvided   = "may only scope collection by exactly one of OU, Domain, or All Trusted Domains"
 	ErrorResponsePayloadUnmarshalError              = "error unmarshalling JSON payload"
+	ErrorResponseRequestTimeout                     = "request timed out"
 	ErrorResponseUserSelfDisable                    = "user attempted to disable themselves"
 	ErrorResponseAGTagWhiteSpace                    = "asset group tags must not contain whitespace"
 
@@ -114,6 +116,8 @@ func BuildErrorResponse(httpStatus int, message string, request *http.Request) *
 func HandleDatabaseError(request *http.Request, response http.ResponseWriter, err error) {
 	if errors.Is(err, database.ErrNotFound) {
 		WriteErrorResponse(request.Context(), BuildErrorResponse(http.StatusNotFound, ErrorResponseDetailsResourceNotFound, request), response)
+	} else if errors.Is(err, context.DeadlineExceeded) {
+		WriteErrorResponse(request.Context(), BuildErrorResponse(http.StatusInternalServerError, ErrorResponseRequestTimeout, request), response)
 	} else {
 		log.Errorf("Unexpected database error: %v", err)
 		WriteErrorResponse(request.Context(), BuildErrorResponse(http.StatusInternalServerError, ErrorResponseDetailsInternalServerError, request), response)

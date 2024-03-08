@@ -591,6 +591,7 @@ func ParseNTAuthStoreData(ntAuthStore NTAuthStore) []IngestibleRelationship {
 type CertificateMappingMethod int
 
 const (
+	RegistryValueDoesNotExist                                                 = -1
 	CertificateMappingManytoMany                     CertificateMappingMethod = 1
 	CertificateMappingOneToOne                       CertificateMappingMethod = 1 << 1
 	CertificateMappingUserPrincipalName              CertificateMappingMethod = 1 << 2
@@ -621,7 +622,7 @@ func ParseDCRegistryData(computer Computer) IngestibleNode {
 		propMap[ad.CertificateMappingMethodsRaw.String()] = computer.DCRegistryData.CertificateMappingMethods.Value
 		var prettyMappings []string
 
-		if computer.DCRegistryData.CertificateMappingMethods.Value == -1 {
+		if computer.DCRegistryData.CertificateMappingMethods.Value == RegistryValueDoesNotExist {
 			prettyMappings = append(prettyMappings, RegValNotExisting)
 		} else {
 			if computer.DCRegistryData.CertificateMappingMethods.Value&int(CertificateMappingManytoMany) != 0 {

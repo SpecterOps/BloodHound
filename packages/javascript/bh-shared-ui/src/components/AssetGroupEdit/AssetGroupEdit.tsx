@@ -66,7 +66,7 @@ const AssetGroupEdit: FC<{
     const mutation = useMutation({
         mutationFn: () => {
             const selectors = mapChangelogToSelectors();
-            return apiClient.updateAssetGroupSelector(assetGroup.id.toString(), selectors);
+            return apiClient.updateAssetGroupSelector(assetGroup.id, selectors);
         },
         onSuccess: () => {
             setChangelog([]);

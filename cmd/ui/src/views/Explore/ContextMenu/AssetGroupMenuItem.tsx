@@ -22,7 +22,7 @@ import { selectTierZeroAssetGroupId } from 'src/ducks/assetgroups/reducer';
 import { toggleTierZeroNode } from 'src/ducks/explore/actions';
 import { useAppDispatch, useAppSelector } from 'src/store';
 
-const AssetGroupMenuItem: FC<{ assetGroupId: string; assetGroupName: string }> = ({ assetGroupId, assetGroupName }) => {
+const AssetGroupMenuItem: FC<{ assetGroupId: number; assetGroupName: string }> = ({ assetGroupId, assetGroupName }) => {
     const { addNotification } = useNotifications();
     const dispatch = useAppDispatch();
 

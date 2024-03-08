@@ -64,22 +64,6 @@ type BloodHoundGraphNodeCoords struct {
 	Longitude int `json:"lng,omitempty"`
 }
 
-type BloodHoundGraphNodeDonutBorder struct {
-	Color string `json:"color,omitempty"`
-	Width int    `json:"width,omitempty"`
-}
-
-type BloodHoundGraphNodeDonutSegment struct {
-	Color string `json:"color,omitempty"`
-	Size  int    `json:"size,omitempty"`
-}
-
-type BloodHoundGraphNodeDonut struct {
-	Border   *BloodHoundGraphNodeDonutBorder    `json:"border,omitempty"`
-	Segments *[]BloodHoundGraphNodeDonutSegment `json:"segments,omitempty"`
-	Width    int                                `json:"number,omitempty"`
-}
-
 type BloodHoundGraphNodeHalo struct {
 	Color  string `json:"color,omitempty"`
 	Radius int    `json:"radius,omitempty"`

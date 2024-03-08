@@ -123,7 +123,7 @@ func (s *RootResource) fetchInstance(organization string, ctx context.Context) (
 	if instance, hasInstance := s.getInstance(organization); !hasInstance {
 		// Create a new instance if we don't have one at the ready
 		return s.initInstance(organization, ctx)
-	} else if _, err := s.db.GetSAMLProvider(instance.serviceProvider.Config.ID); err != nil {
+	} else if _, err := s.db.GetSAMLProvider(ctx, instance.serviceProvider.Config.ID); err != nil {
 		// In the case where the provider is no longer in the database we must clean up the existing ref and recreate it
 		if errors.Is(err, database.ErrNotFound) {
 			s.clearInstance(organization)
@@ -224,7 +224,7 @@ func (s ProviderResource) emailAttributeNames() []string {
 	return []string{bhsaml.ObjectIDEmail, bhsaml.XMLSOAPClaimsEmailAddress}
 }
 
-func (s ProviderResource) lookupSAMLUser(assertion *saml.Assertion) (model.User, error) {
+func (s ProviderResource) lookupSAMLUser(ctx context.Context, assertion *saml.Assertion) (model.User, error) {
 	for _, attrStmt := range assertion.AttributeStatements {
 		for _, attr := range attrStmt.Attributes {
 			for _, value := range attr.Values {
@@ -238,7 +238,7 @@ func (s ProviderResource) lookupSAMLUser(assertion *saml.Assertion) (model.User,
 	if principalName, err := assertionFindString(assertion, s.emailAttributeNames()...); err != nil {
 		return model.User{}, ErrorSAMLAssertion
 	} else {
-		if user, err := s.db.LookupUser(principalName); err != nil {
+		if user, err := s.db.LookupUser(ctx, principalName); err != nil {
 			if !errors.Is(err, database.ErrNotFound) {
 				return model.User{}, api.FormatDatabaseError(err)
 			} else {
@@ -273,7 +273,7 @@ func domainValue(host url.URL) string {
 func (s ProviderResource) createSessionFromAssertion(request *http.Request, response http.ResponseWriter, expires time.Time, assertion *saml.Assertion) {
 	hostURL := *ctx.FromRequest(request).Host
 
-	if user, err := s.lookupSAMLUser(assertion); err != nil {
+	if user, err := s.lookupSAMLUser(request.Context(), assertion); err != nil {
 		log.Errorf("[SAML] Failed to lookup user for SAML provider %s: %v", s.serviceProvider.Config.Name, err)
 
 		switch err {

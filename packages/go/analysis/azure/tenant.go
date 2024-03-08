@@ -57,7 +57,7 @@ func PopulateTenantEntityDetailsCounts(tx graph.Transaction, node *graph.Node, d
 		details.Descendents = descendents
 	}
 
-	if inboundObjectControl, err := FetchInboundEntityObjectControllers(tx, node, graph.DirectionInbound, 0, 0); err != nil {
+	if inboundObjectControl, err := FetchInboundEntityObjectControllers(tx, node, 0, 0); err != nil {
 		return details, err
 	} else {
 		details.InboundObjectControl = inboundObjectControl.Len()
