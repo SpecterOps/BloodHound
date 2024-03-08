@@ -399,6 +399,13 @@ func GetADCSESC3EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 
 			lock.Lock()
 			path1CandidateSegments[certTemplateNode.ID] = append(path1CandidateSegments[certTemplateNode.ID], terminal)
+
+			// if the start node is a user and the CT requires a DNS name, then we can skip this CT.
+			userStartNode := startNode.Kinds.ContainsOneOf(ad.User)
+			if !userStartNode || (userStartNode && certTemplateValidForUserVictim(certTemplateNode)) {
+				path1CertTemplates.Add(certTemplateNode.ID.Uint32())
+			}
+
 			path1CertTemplates.Add(certTemplateNode.ID.Uint32())
 			lock.Unlock()
 
@@ -425,6 +432,7 @@ func GetADCSESC3EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 	}
 
 	for _, path := range enrollOnBehalfOfPaths {
+		log.Infof("✅✅✅✅  path 2 template %v", path.Terminal().Properties.Get("name"))
 		path2CandidateTemplates.Add(path.Terminal().ID.Uint32())
 	}
 
