@@ -501,9 +501,9 @@ func (mr *MockDatabaseMockRecorder) GetADDataQualityAggregations(arg0, arg1, arg
 }
 
 // GetADDataQualityStats mocks base method.
-func (m *MockDatabase) GetADDataQualityStats(arg0 string, arg1, arg2 time.Time, arg3 string, arg4, arg5 int) (model.ADDataQualityStats, int, error) {
+func (m *MockDatabase) GetADDataQualityStats(arg0 context.Context, arg1 string, arg2, arg3 time.Time, arg4 string, arg5, arg6 int) (model.ADDataQualityStats, int, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetADDataQualityStats", arg0, arg1, arg2, arg3, arg4, arg5)
+	ret := m.ctrl.Call(m, "GetADDataQualityStats", arg0, arg1, arg2, arg3, arg4, arg5, arg6)
 	ret0, _ := ret[0].(model.ADDataQualityStats)
 	ret1, _ := ret[1].(int)
 	ret2, _ := ret[2].(error)
@@ -511,9 +511,9 @@ func (m *MockDatabase) GetADDataQualityStats(arg0 string, arg1, arg2 time.Time, 
 }
 
 // GetADDataQualityStats indicates an expected call of GetADDataQualityStats.
-func (mr *MockDatabaseMockRecorder) GetADDataQualityStats(arg0, arg1, arg2, arg3, arg4, arg5 interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) GetADDataQualityStats(arg0, arg1, arg2, arg3, arg4, arg5, arg6 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetADDataQualityStats", reflect.TypeOf((*MockDatabase)(nil).GetADDataQualityStats), arg0, arg1, arg2, arg3, arg4, arg5)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetADDataQualityStats", reflect.TypeOf((*MockDatabase)(nil).GetADDataQualityStats), arg0, arg1, arg2, arg3, arg4, arg5, arg6)
 }
 
 // GetAllAssetGroups mocks base method.

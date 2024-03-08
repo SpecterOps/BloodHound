@@ -29,7 +29,7 @@ func (s *BloodhoundDB) CreateADDataQualityStats(ctx context.Context, stats model
 	return stats, CheckError(result)
 }
 
-func (s *BloodhoundDB) GetADDataQualityStats(domainSid string, start time.Time, end time.Time, order string, limit int, skip int) (model.ADDataQualityStats, int, error) {
+func (s *BloodhoundDB) GetADDataQualityStats(ctx context.Context, domainSid string, start time.Time, end time.Time, order string, limit int, skip int) (model.ADDataQualityStats, int, error) {
 	const (
 		defaultOrder = "created_at desc"
 		defaultWhere = "domain_sid = ? and (created_at between ? and ?)"
@@ -41,24 +41,18 @@ func (s *BloodhoundDB) GetADDataQualityStats(domainSid string, start time.Time, 
 		result             *gorm.DB
 	)
 
-	if order != "" {
-		result = s.Scope(Paginate(skip, limit)).Where(defaultWhere, domainSid, start, end).Order(order).Find(&adDataQualityStats)
-		if CheckError(result) != nil {
-			return adDataQualityStats, 0, result.Error
-		}
-		result = s.db.Model(model.ADDataQualityStats{}).Where(defaultWhere, domainSid, start, end).Order(order).Count(&count)
-		if CheckError(result) != nil {
-			return adDataQualityStats, 0, result.Error
-		}
-	} else {
-		result = s.Scope(Paginate(skip, limit)).Where(defaultWhere, domainSid, start, end).Order(defaultOrder).Find(&adDataQualityStats)
-		if CheckError(result) != nil {
-			return adDataQualityStats, 0, result.Error
-		}
-		result = s.db.Model(model.ADDataQualityStats{}).Where(defaultWhere, domainSid, start, end).Order(defaultOrder).Model(model.ADDataQualityStats{}).Count(&count)
-		if CheckError(result) != nil {
-			return adDataQualityStats, 0, result.Error
-		}
+	result = s.db.Model(model.ADDataQualityStats{}).WithContext(ctx).Where(defaultWhere, domainSid, start, end).Count(&count)
+	if CheckError(result) != nil {
+		return adDataQualityStats, 0, result.Error
+	}
+
+	if order == "" {
+		order = defaultOrder
+	}
+
+	result = s.Scope(Paginate(skip, limit)).WithContext(ctx).Where(defaultWhere, domainSid, start, end).Order(order).Find(&adDataQualityStats)
+	if CheckError(result) != nil {
+		return adDataQualityStats, 0, result.Error
 	}
 
 	return adDataQualityStats, int(count), nil
