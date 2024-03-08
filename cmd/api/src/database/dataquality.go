@@ -104,8 +104,8 @@ func (s *BloodhoundDB) GetADDataQualityAggregations(start time.Time, end time.Ti
 	return adDataQualityAggregations, int(count), nil
 }
 
-func (s *BloodhoundDB) CreateAzureDataQualityStats(stats model.AzureDataQualityStats) (model.AzureDataQualityStats, error) {
-	result := s.db.Create(&stats)
+func (s *BloodhoundDB) CreateAzureDataQualityStats(ctx context.Context, stats model.AzureDataQualityStats) (model.AzureDataQualityStats, error) {
+	result := s.db.WithContext(ctx).Create(&stats)
 	return stats, CheckError(result)
 }
 
