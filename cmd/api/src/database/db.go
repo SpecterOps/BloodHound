@@ -55,7 +55,7 @@ type Database interface {
 	appcfg.ParameterService
 	appcfg.FeatureFlagService
 
-	Close()
+	Close(ctx context.Context)
 
 	// Ingest
 	ingest.IngestData
@@ -158,8 +158,8 @@ type BloodhoundDB struct {
 	idResolver auth.IdentityResolver // TODO: this really needs to be elsewhere. something something separation of concerns
 }
 
-func (s *BloodhoundDB) Close() {
-	if sqlDBRef, err := s.db.DB(); err != nil {
+func (s *BloodhoundDB) Close(ctx context.Context) {
+	if sqlDBRef, err := s.db.WithContext(ctx).DB(); err != nil {
 		log.Errorf("Failed to fetch SQL DB reference from GORM: %v", err)
 	} else if err := sqlDBRef.Close(); err != nil {
 		log.Errorf("Failed closing database: %v", err)

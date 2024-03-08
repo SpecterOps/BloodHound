@@ -69,15 +69,15 @@ func (mr *MockDatabaseMockRecorder) AppendAuditLog(arg0, arg1 interface{}) *gomo
 }
 
 // Close mocks base method.
-func (m *MockDatabase) Close() {
+func (m *MockDatabase) Close(arg0 context.Context) {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "Close")
+	m.ctrl.Call(m, "Close", arg0)
 }
 
 // Close indicates an expected call of Close.
-func (mr *MockDatabaseMockRecorder) Close() *gomock.Call {
+func (mr *MockDatabaseMockRecorder) Close(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Close", reflect.TypeOf((*MockDatabase)(nil).Close))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Close", reflect.TypeOf((*MockDatabase)(nil).Close), arg0)
 }
 
 // CreateADDataQualityAggregation mocks base method.
