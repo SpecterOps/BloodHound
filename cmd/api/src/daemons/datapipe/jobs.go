@@ -28,8 +28,8 @@ import (
 	"github.com/specterops/bloodhound/src/services/fileupload"
 )
 
-func HasFileUploadJobsWaitingForAnalysis(db database.Database) (bool, error) {
-	if fileUploadJobsUnderAnalysis, err := db.GetFileUploadJobsWithStatus(model.JobStatusAnalyzing); err != nil {
+func HasFileUploadJobsWaitingForAnalysis(ctx context.Context, db database.Database) (bool, error) {
+	if fileUploadJobsUnderAnalysis, err := db.GetFileUploadJobsWithStatus(ctx, model.JobStatusAnalyzing); err != nil {
 		return false, err
 	} else {
 		return len(fileUploadJobsUnderAnalysis) > 0, nil
@@ -43,11 +43,11 @@ func FailAnalyzedFileUploadJobs(ctx context.Context, db database.Database) {
 		return
 	}
 
-	if fileUploadJobsUnderAnalysis, err := db.GetFileUploadJobsWithStatus(model.JobStatusAnalyzing); err != nil {
+	if fileUploadJobsUnderAnalysis, err := db.GetFileUploadJobsWithStatus(ctx, model.JobStatusAnalyzing); err != nil {
 		log.Errorf("Failed to load file upload jobs under analysis: %v", err)
 	} else {
 		for _, job := range fileUploadJobsUnderAnalysis {
-			if err := fileupload.UpdateFileUploadJobStatus(db, job, model.JobStatusFailed, "Analysis failed"); err != nil {
+			if err := fileupload.UpdateFileUploadJobStatus(ctx, db, job, model.JobStatusFailed, "Analysis failed"); err != nil {
 				log.Errorf("Failed updating file upload job %d to failed status: %v", job.ID, err)
 			}
 		}
@@ -61,11 +61,11 @@ func PartialCompleteFileUploadJobs(ctx context.Context, db database.Database) {
 		return
 	}
 
-	if fileUploadJobsUnderAnalysis, err := db.GetFileUploadJobsWithStatus(model.JobStatusAnalyzing); err != nil {
+	if fileUploadJobsUnderAnalysis, err := db.GetFileUploadJobsWithStatus(ctx, model.JobStatusAnalyzing); err != nil {
 		log.Errorf("Failed to load file upload jobs under analysis: %v", err)
 	} else {
 		for _, job := range fileUploadJobsUnderAnalysis {
-			if err := fileupload.UpdateFileUploadJobStatus(db, job, model.JobStatusPartiallyComplete, "Partially Completed"); err != nil {
+			if err := fileupload.UpdateFileUploadJobStatus(ctx, db, job, model.JobStatusPartiallyComplete, "Partially Completed"); err != nil {
 				log.Errorf("Failed updating file upload job %d to partially completed status: %v", job.ID, err)
 			}
 		}
@@ -79,11 +79,11 @@ func CompleteAnalyzedFileUploadJobs(ctx context.Context, db database.Database) {
 		return
 	}
 
-	if fileUploadJobsUnderAnalysis, err := db.GetFileUploadJobsWithStatus(model.JobStatusAnalyzing); err != nil {
+	if fileUploadJobsUnderAnalysis, err := db.GetFileUploadJobsWithStatus(ctx, model.JobStatusAnalyzing); err != nil {
 		log.Errorf("Failed to load file upload jobs under analysis: %v", err)
 	} else {
 		for _, job := range fileUploadJobsUnderAnalysis {
-			if err := fileupload.UpdateFileUploadJobStatus(db, job, model.JobStatusComplete, "Complete"); err != nil {
+			if err := fileupload.UpdateFileUploadJobStatus(ctx, db, job, model.JobStatusComplete, "Complete"); err != nil {
 				log.Errorf("Error updating fileupload job %d: %v", job.ID, err)
 			}
 		}
@@ -97,14 +97,14 @@ func ProcessIngestedFileUploadJobs(ctx context.Context, db database.Database) {
 		return
 	}
 
-	if ingestingFileUploadJobs, err := db.GetFileUploadJobsWithStatus(model.JobStatusIngesting); err != nil {
+	if ingestingFileUploadJobs, err := db.GetFileUploadJobsWithStatus(ctx, model.JobStatusIngesting); err != nil {
 		log.Errorf("Failed to look up finished file upload jobs: %v", err)
 	} else {
 		for _, ingestingFileUploadJob := range ingestingFileUploadJobs {
 			if remainingIngestTasks, err := db.GetIngestTasksForJob(ctx, ingestingFileUploadJob.ID); err != nil {
 				log.Errorf("Failed looking up remaining ingest tasks for file upload job %d: %v", ingestingFileUploadJob.ID, err)
 			} else if len(remainingIngestTasks) == 0 {
-				if err := fileupload.UpdateFileUploadJobStatus(db, ingestingFileUploadJob, model.JobStatusAnalyzing, "Analyzing"); err != nil {
+				if err := fileupload.UpdateFileUploadJobStatus(ctx, db, ingestingFileUploadJob, model.JobStatusAnalyzing, "Analyzing"); err != nil {
 					log.Errorf("Error updating fileupload job %d: %v", ingestingFileUploadJob.ID, err)
 				}
 			}

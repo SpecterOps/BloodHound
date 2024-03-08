@@ -111,7 +111,7 @@ func MigrateDB(ctx context.Context, cfg config.Configuration, db database.Databa
 			authSecret.ExpiresAt = time.Now().Add(defaultWindow.ToDuration())
 		}
 
-		if _, err := db.InitializeSecretAuth(adminUser, authSecret); err != nil {
+		if _, err := db.InitializeSecretAuth(ctx, adminUser, authSecret); err != nil {
 			return fmt.Errorf("error in database while initalizing auth: %w", err)
 		} else {
 			passwordMsg := fmt.Sprintf("# Initial Password Set To:    %s    #", cfg.DefaultAdmin.Password)
