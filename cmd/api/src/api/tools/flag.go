@@ -54,7 +54,7 @@ func (s ToolContainer) ToggleFlag(response http.ResponseWriter, request *http.Re
 
 	if featureID, err := strconv.ParseInt(rawFeatureID, 10, 32); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsIDMalformed, request), response)
-	} else if featureFlag, err := s.db.GetFlag(int32(featureID)); err != nil {
+	} else if featureFlag, err := s.db.GetFlag(request.Context(), int32(featureID)); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
 		featureFlag.Enabled = !featureFlag.Enabled

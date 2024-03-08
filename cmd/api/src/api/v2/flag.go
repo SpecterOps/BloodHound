@@ -47,7 +47,7 @@ func (s Resources) ToggleFlag(response http.ResponseWriter, request *http.Reques
 
 	if featureID, err := strconv.ParseInt(rawFeatureID, 10, 32); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsIDMalformed, request), response)
-	} else if featureFlag, err := s.DB.GetFlag(int32(featureID)); err != nil {
+	} else if featureFlag, err := s.DB.GetFlag(request.Context(), int32(featureID)); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else if !featureFlag.UserUpdatable {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusForbidden, fmt.Sprintf("Feature flag %s(%d) is not user updatable.", featureFlag.Key, featureID), request), response)

@@ -22,9 +22,9 @@ import (
 	"gorm.io/gorm/clause"
 )
 
-func (s *BloodhoundDB) GetFlag(id int32) (appcfg.FeatureFlag, error) {
+func (s *BloodhoundDB) GetFlag(ctx context.Context, id int32) (appcfg.FeatureFlag, error) {
 	var flag appcfg.FeatureFlag
-	return flag, CheckError(s.db.Find(&flag, id))
+	return flag, CheckError(s.db.WithContext(ctx).Find(&flag, id))
 }
 
 func (s *BloodhoundDB) GetFlagByKey(key string) (appcfg.FeatureFlag, error) {

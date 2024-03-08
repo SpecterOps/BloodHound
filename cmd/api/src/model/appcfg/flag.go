@@ -121,7 +121,7 @@ type FeatureFlagService interface {
 	GetAllFlags(ctx context.Context) ([]FeatureFlag, error)
 
 	// GetFlag attempts to fetch a FeatureFlag by its ID.
-	GetFlag(id int32) (FeatureFlag, error)
+	GetFlag(ctx context.Context, id int32) (FeatureFlag, error)
 
 	// GetFlagByKey attempts to fetch a FeatureFlag by its key.
 	GetFlagByKey(key string) (FeatureFlag, error)

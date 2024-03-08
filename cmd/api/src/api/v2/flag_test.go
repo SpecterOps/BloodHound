@@ -80,13 +80,13 @@ func TestResources_ToggleFlag(t *testing.T) {
 
 	defer mockCtrl.Finish()
 
-	mockDB.EXPECT().GetFlag(featureID).Return(appcfg.FeatureFlag{
+	mockDB.EXPECT().GetFlag(gomock.Any(), featureID).Return(appcfg.FeatureFlag{
 		UserUpdatable: false,
 	}, nil)
 
 	requestSetup.Require().ResponseStatusCode(http.StatusForbidden)
 
-	mockDB.EXPECT().GetFlag(featureID).Return(appcfg.FeatureFlag{
+	mockDB.EXPECT().GetFlag(gomock.Any(), featureID).Return(appcfg.FeatureFlag{
 		UserUpdatable: true,
 	}, nil)
 	mockDB.EXPECT().SetFlag(gomock.Any()).Return(nil)
