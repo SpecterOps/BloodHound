@@ -21,6 +21,7 @@ package ad_test
 
 import (
 	"context"
+
 	"github.com/specterops/bloodhound/analysis"
 	"github.com/specterops/bloodhound/analysis/impact"
 	"github.com/specterops/bloodhound/graphschema"
@@ -571,6 +572,7 @@ func TestADCSESC3(t *testing.T) {
 		}
 		operation.Done()
 
+		// harness2
 		db.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
 			if results, err := ops.FetchStartNodes(tx.Relationships().Filterf(func() graph.Criteria {
 				return query.Kind(query.Relationship(), ad.ADCSESC3)
@@ -587,8 +589,10 @@ func TestADCSESC3(t *testing.T) {
 			}).First(); err != nil {
 				t.Fatalf("error fetching esc3 edges in integration test; %v", err)
 			} else {
+				t.Logf("HARNESS 1🥳🥳🥳🥳🥳")
 				comp, err := ad2.GetADCSESC3EdgeComposition(context.Background(), db, edge)
 				assert.Nil(t, err)
+				// todo this should fail with 2 more nodes
 				assert.Equal(t, 8, len(comp.AllNodes()))
 				assert.False(t, comp.AllNodes().Contains(harness.ESC3Harness2.User2))
 			}
