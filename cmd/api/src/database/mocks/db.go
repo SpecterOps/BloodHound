@@ -578,18 +578,18 @@ func (mr *MockDatabaseMockRecorder) GetAllFileUploadJobs(arg0, arg1, arg2, arg3,
 }
 
 // GetAllFlags mocks base method.
-func (m *MockDatabase) GetAllFlags() ([]appcfg.FeatureFlag, error) {
+func (m *MockDatabase) GetAllFlags(arg0 context.Context) ([]appcfg.FeatureFlag, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetAllFlags")
+	ret := m.ctrl.Call(m, "GetAllFlags", arg0)
 	ret0, _ := ret[0].([]appcfg.FeatureFlag)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetAllFlags indicates an expected call of GetAllFlags.
-func (mr *MockDatabaseMockRecorder) GetAllFlags() *gomock.Call {
+func (mr *MockDatabaseMockRecorder) GetAllFlags(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllFlags", reflect.TypeOf((*MockDatabase)(nil).GetAllFlags))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllFlags", reflect.TypeOf((*MockDatabase)(nil).GetAllFlags), arg0)
 }
 
 // GetAllIngestTasks mocks base method.

@@ -20,9 +20,9 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/src/database"
-	"github.com/go-chi/chi/v5"
 )
 
 const (
@@ -42,7 +42,7 @@ func NewToolContainer(db database.Database) ToolContainer {
 }
 
 func (s ToolContainer) GetFlags(response http.ResponseWriter, request *http.Request) {
-	if flags, err := s.db.GetAllFlags(); err != nil {
+	if flags, err := s.db.GetAllFlags(request.Context()); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
 		api.WriteBasicResponse(request.Context(), flags, http.StatusOK, response)

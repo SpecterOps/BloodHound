@@ -32,9 +32,9 @@ func (s *BloodhoundDB) GetFlagByKey(key string) (appcfg.FeatureFlag, error) {
 	return flag, CheckError(s.db.Where("key = ?", key).First(&flag))
 }
 
-func (s *BloodhoundDB) GetAllFlags() ([]appcfg.FeatureFlag, error) {
+func (s *BloodhoundDB) GetAllFlags(ctx context.Context) ([]appcfg.FeatureFlag, error) {
 	var flags []appcfg.FeatureFlag
-	return flags, CheckError(s.db.Find(&flags))
+	return flags, CheckError(s.db.WithContext(ctx).Find(&flags))
 }
 
 func (s *BloodhoundDB) SetFlag(flag appcfg.FeatureFlag) error {

@@ -31,7 +31,7 @@ type ListFlagsResponse struct {
 }
 
 func (s Resources) GetFlags(response http.ResponseWriter, request *http.Request) {
-	if flags, err := s.DB.GetAllFlags(); err != nil {
+	if flags, err := s.DB.GetAllFlags(request.Context()); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
 		api.WriteBasicResponse(request.Context(), flags, http.StatusOK, response)
