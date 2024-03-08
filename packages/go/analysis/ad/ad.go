@@ -30,14 +30,12 @@ import (
 	"github.com/specterops/bloodhound/dawgs/ops"
 	"github.com/specterops/bloodhound/dawgs/query"
 	"github.com/specterops/bloodhound/dawgs/util"
-	"github.com/specterops/bloodhound/errors"
 	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/graphschema/common"
 	"github.com/specterops/bloodhound/log"
 )
 
 var (
-	ErrNoSuchGroup   = errors.New("no group found")
 	AdminGroupSuffix = "-544"
 	RDPGroupSuffix   = "-555"
 )

@@ -22,6 +22,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/specterops/bloodhound/src/services/agi"
+	"github.com/specterops/bloodhound/src/services/dataquality"
 	"github.com/specterops/bloodhound/src/services/fileupload"
 	"github.com/specterops/bloodhound/src/services/ingest"
 	"time"
@@ -132,7 +133,9 @@ type Database interface {
 	EndUserSession(userSession model.UserSession)
 	GetUserSession(id int64) (model.UserSession, error)
 	SweepSessions()
-	CreateADDataQualityStats(stats model.ADDataQualityStats) (model.ADDataQualityStats, error)
+
+	// Data Quality
+	dataquality.DataQualityData
 	GetADDataQualityStats(domainSid string, start time.Time, end time.Time, sort_by string, limit int, skip int) (model.ADDataQualityStats, int, error)
 	CreateADDataQualityAggregation(aggregation model.ADDataQualityAggregation) (model.ADDataQualityAggregation, error)
 	GetADDataQualityAggregations(start time.Time, end time.Time, sort_by string, limit int, skip int) (model.ADDataQualityAggregations, int, error)
@@ -144,7 +147,6 @@ type Database interface {
 
 	// File Upload
 	fileupload.FileUploadData
-
 	ListSavedQueries(userID uuid.UUID, order string, filter model.SQLFilter, skip, limit int) (model.SavedQueries, int, error)
 	CreateSavedQuery(userID uuid.UUID, name string, query string) (model.SavedQuery, error)
 	DeleteSavedQuery(id int) error
