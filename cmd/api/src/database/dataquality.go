@@ -31,7 +31,6 @@ func (s *BloodhoundDB) CreateADDataQualityStats(ctx context.Context, stats model
 
 func (s *BloodhoundDB) GetADDataQualityStats(ctx context.Context, domainSid string, start time.Time, end time.Time, order string, limit int, skip int) (model.ADDataQualityStats, int, error) {
 	const (
-		defaultOrder = "created_at desc"
 		defaultWhere = "domain_sid = ? and (created_at between ? and ?)"
 	)
 
@@ -47,7 +46,7 @@ func (s *BloodhoundDB) GetADDataQualityStats(ctx context.Context, domainSid stri
 	}
 
 	if order == "" {
-		order = defaultOrder
+		order = "created_at desc"
 	}
 
 	result = s.Scope(Paginate(skip, limit)).WithContext(ctx).Where(defaultWhere, domainSid, start, end).Order(order).Find(&adDataQualityStats)
@@ -65,7 +64,6 @@ func (s *BloodhoundDB) CreateADDataQualityAggregation(ctx context.Context, aggre
 
 func (s *BloodhoundDB) GetADDataQualityAggregations(ctx context.Context, start time.Time, end time.Time, order string, limit int, skip int) (model.ADDataQualityAggregations, int, error) {
 	const (
-		defaultOrder = "created_at desc"
 		defaultWhere = "created_at between ? and ?"
 	)
 
@@ -81,7 +79,7 @@ func (s *BloodhoundDB) GetADDataQualityAggregations(ctx context.Context, start t
 	}
 
 	if order == "" {
-		order = defaultOrder
+		order = "created_at desc"
 	}
 
 	result = s.Scope(Paginate(skip, limit)).WithContext(ctx).Where(defaultWhere, start, end).Order(order).Find(&adDataQualityAggregations)
@@ -99,7 +97,6 @@ func (s *BloodhoundDB) CreateAzureDataQualityStats(ctx context.Context, stats mo
 
 func (s *BloodhoundDB) GetAzureDataQualityStats(ctx context.Context, tenantId string, start time.Time, end time.Time, order string, limit int, skip int) (model.AzureDataQualityStats, int, error) {
 	const (
-		defaultOrder = "created_at desc"
 		defaultWhere = "tenant_id = ? and (created_at between ? and ?)"
 	)
 
@@ -115,7 +112,7 @@ func (s *BloodhoundDB) GetAzureDataQualityStats(ctx context.Context, tenantId st
 	}
 
 	if order == "" {
-		order = defaultOrder
+		order = "created_at desc"
 	}
 
 	result = s.Scope(Paginate(skip, limit)).WithContext(ctx).Where(defaultWhere, tenantId, start, end).Order(order).Find(&azureDataQualityStats)
@@ -131,9 +128,8 @@ func (s *BloodhoundDB) CreateAzureDataQualityAggregation(ctx context.Context, ag
 	return aggregation, CheckError(result)
 }
 
-func (s *BloodhoundDB) GetAzureDataQualityAggregations(start time.Time, end time.Time, order string, limit int, skip int) (model.AzureDataQualityAggregations, int, error) {
+func (s *BloodhoundDB) GetAzureDataQualityAggregations(ctx context.Context, start time.Time, end time.Time, order string, limit int, skip int) (model.AzureDataQualityAggregations, int, error) {
 	const (
-		defaultOrder = "created_at desc"
 		defaultWhere = "created_at between ? and ?"
 	)
 
@@ -143,24 +139,18 @@ func (s *BloodhoundDB) GetAzureDataQualityAggregations(start time.Time, end time
 		result                       *gorm.DB
 	)
 
-	if order != "" {
-		result = s.Scope(Paginate(skip, limit)).Where(defaultWhere, start, end).Order(order).Find(&azureDataQualityAggregations)
-		if CheckError(result) != nil {
-			return azureDataQualityAggregations, 0, result.Error
-		}
-		result = s.db.Model(model.AzureDataQualityAggregations{}).Where(defaultWhere, start, end).Order(order).Count(&count)
-		if CheckError(result) != nil {
-			return azureDataQualityAggregations, 0, result.Error
-		}
-	} else {
-		result = s.Scope(Paginate(skip, limit)).Where(defaultWhere, start, end).Order(defaultOrder).Find(&azureDataQualityAggregations)
-		if CheckError(result) != nil {
-			return azureDataQualityAggregations, 0, result.Error
-		}
-		result = s.db.Model(model.AzureDataQualityAggregations{}).Where(defaultWhere, start, end).Order(defaultOrder).Count(&count)
-		if CheckError(result) != nil {
-			return azureDataQualityAggregations, 0, result.Error
-		}
+	result = s.db.Model(model.AzureDataQualityAggregations{}).WithContext(ctx).Where(defaultWhere, start, end).Count(&count)
+	if CheckError(result) != nil {
+		return azureDataQualityAggregations, 0, result.Error
+	}
+
+	if order == "" {
+		order = "created_at desc"
+	}
+
+	result = s.Scope(Paginate(skip, limit)).WithContext(ctx).Where(defaultWhere, start, end).Order(order).Find(&azureDataQualityAggregations)
+	if CheckError(result) != nil {
+		return azureDataQualityAggregations, 0, result.Error
 	}
 
 	return azureDataQualityAggregations, int(count), nil

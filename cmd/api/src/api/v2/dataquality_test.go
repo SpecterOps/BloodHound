@@ -522,7 +522,7 @@ func TestGetPlatformAggregateStats_Failure(t *testing.T) {
 
 	mockDB := mocks.NewMockDatabase(mockCtrl)
 	mockDB.EXPECT().GetADDataQualityAggregations(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, 0, fmt.Errorf("db error"))
-	mockDB.EXPECT().GetAzureDataQualityAggregations(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, 0, fmt.Errorf("db error"))
+	mockDB.EXPECT().GetAzureDataQualityAggregations(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, 0, fmt.Errorf("db error"))
 
 	resources := v2.Resources{DB: mockDB}
 
@@ -730,7 +730,7 @@ func TestGetPlatformAggregateStats_Success(t *testing.T) {
 
 	mockDB := mocks.NewMockDatabase(mockCtrl)
 	mockDB.EXPECT().GetADDataQualityAggregations(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(model.ADDataQualityAggregations{}, 0, nil).AnyTimes()
-	mockDB.EXPECT().GetAzureDataQualityAggregations(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(model.AzureDataQualityAggregations{}, 0, nil).AnyTimes()
+	mockDB.EXPECT().GetAzureDataQualityAggregations(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(model.AzureDataQualityAggregations{}, 0, nil).AnyTimes()
 
 	resources := v2.Resources{DB: mockDB}
 

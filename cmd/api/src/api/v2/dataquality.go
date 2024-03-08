@@ -203,7 +203,7 @@ func (s *Resources) GetPlatformAggregateStats(response http.ResponseWriter, requ
 				return
 			}
 		case "azure":
-			stats, count, err = s.DB.GetAzureDataQualityAggregations(start, end, strings.Join(order, ", "), limit, skip)
+			stats, count, err = s.DB.GetAzureDataQualityAggregations(request.Context(), start, end, strings.Join(order, ", "), limit, skip)
 			if err != nil {
 				api.HandleDatabaseError(request, response, err)
 				return
