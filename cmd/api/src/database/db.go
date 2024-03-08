@@ -92,8 +92,6 @@ type Database interface {
 	GetAllPermissions(ctx context.Context, order string, filter model.SQLFilter) (model.Permissions, error)
 	GetPermission(ctx context.Context, id int) (model.Permission, error)
 
-	InitializeSAMLAuth(adminUser model.User, samlProvider model.SAMLProvider) (model.SAMLProvider, model.Installation, error)
-	InitializeSecretAuth(adminUser model.User, authSecret model.AuthSecret) (model.Installation, error)
 	CreateInstallation() (model.Installation, error)
 	GetInstallation() (model.Installation, error)
 	HasInstallation() (bool, error)
@@ -106,17 +104,19 @@ type Database interface {
 	DeleteUser(ctx context.Context, user model.User) error
 	LookupUser(ctx context.Context, principalName string) (model.User, error)
 
+	// Auth
 	CreateAuthToken(ctx context.Context, authToken model.AuthToken) (model.AuthToken, error)
-	UpdateAuthToken(authToken model.AuthToken) error
-	GetAllAuthTokens(order string, filter model.SQLFilter) (model.AuthTokens, error)
-	GetAuthToken(id uuid.UUID) (model.AuthToken, error)
-	ListUserTokens(userID uuid.UUID, order string, filter model.SQLFilter) (model.AuthTokens, error)
-	GetUserToken(userId, tokenId uuid.UUID) (model.AuthToken, error)
+	UpdateAuthToken(ctx context.Context, authToken model.AuthToken) error
+	GetAllAuthTokens(ctx context.Context, order string, filter model.SQLFilter) (model.AuthTokens, error)
+	GetAuthToken(ctx context.Context, id uuid.UUID) (model.AuthToken, error)
+	GetUserToken(ctx context.Context, userId, tokenId uuid.UUID) (model.AuthToken, error)
 	DeleteAuthToken(ctx context.Context, authToken model.AuthToken) error
 	CreateAuthSecret(ctx context.Context, authSecret model.AuthSecret) (model.AuthSecret, error)
-	GetAuthSecret(id int32) (model.AuthSecret, error)
+	GetAuthSecret(ctx context.Context, id int32) (model.AuthSecret, error)
 	UpdateAuthSecret(ctx context.Context, authSecret model.AuthSecret) error
 	DeleteAuthSecret(ctx context.Context, authSecret model.AuthSecret) error
+	InitializeSecretAuth(ctx context.Context, adminUser model.User, authSecret model.AuthSecret) (model.Installation, error)
+
 	CreateSAMLIdentityProvider(ctx context.Context, samlProvider model.SAMLProvider) (model.SAMLProvider, error)
 	UpdateSAMLIdentityProvider(ctx context.Context, samlProvider model.SAMLProvider) error
 	LookupSAMLProviderByName(name string) (model.SAMLProvider, error)
