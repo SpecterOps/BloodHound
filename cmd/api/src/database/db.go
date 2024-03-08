@@ -21,6 +21,8 @@ package database
 import (
 	"context"
 	"fmt"
+	"github.com/specterops/bloodhound/src/services/agi"
+	"github.com/specterops/bloodhound/src/services/ingest"
 	"time"
 
 	"github.com/gofrs/uuid"
@@ -52,18 +54,18 @@ type Database interface {
 	appcfg.FeatureFlagService
 
 	Close()
-	CreateIngestTask(ingestTask model.IngestTask) (model.IngestTask, error)
-	GetAllIngestTasks() (model.IngestTasks, error)
-	DeleteIngestTask(ingestTask model.IngestTask) error
-	GetIngestTasksForJob(jobID int64) (model.IngestTasks, error)
-	GetUnfinishedIngestIDs() ([]int64, error)
+
+	// Ingest
+	ingest.IngestData
+	GetAllIngestTasks(ctx context.Context) (model.IngestTasks, error)
+	DeleteIngestTask(ctx context.Context, ingestTask model.IngestTask) error
+	GetIngestTasksForJob(ctx context.Context, jobID int64) (model.IngestTasks, error)
 
 	// Asset Groups
+	agi.AgiData
 	CreateAssetGroup(ctx context.Context, name, tag string, systemGroup bool) (model.AssetGroup, error)
 	UpdateAssetGroup(ctx context.Context, assetGroup model.AssetGroup) error
 	DeleteAssetGroup(ctx context.Context, assetGroup model.AssetGroup) error
-	GetAssetGroup(ctx context.Context, id int32) (model.AssetGroup, error)
-	GetAllAssetGroups(ctx context.Context, order string, filter model.SQLFilter) (model.AssetGroups, error)
 	SweepAssetGroupCollections()
 	GetAssetGroupCollections(ctx context.Context, assetGroupID int32, order string, filter model.SQLFilter) (model.AssetGroupCollections, error)
 	GetLatestAssetGroupCollection(ctx context.Context, assetGroupID int32) (model.AssetGroupCollection, error)
@@ -71,35 +73,39 @@ type Database interface {
 	GetAssetGroupSelector(ctx context.Context, id int32) (model.AssetGroupSelector, error)
 	DeleteAssetGroupSelector(ctx context.Context, selector model.AssetGroupSelector) error
 	UpdateAssetGroupSelectors(ctx context.Context, assetGroup model.AssetGroup, selectorSpecs []model.AssetGroupSelectorSpec, systemSelector bool) (model.UpdatedAssetGroupSelectors, error)
-	CreateAssetGroupCollection(ctx context.Context, collection model.AssetGroupCollection, entries model.AssetGroupCollectionEntries) error
 
 	Wipe() error
 	Migrate() error
 	RequiresMigration() (bool, error)
-	CreateAuditLog(auditLog model.AuditLog) error
+
+	// Audit Logs
+	CreateAuditLog(ctx context.Context, auditLog model.AuditLog) error
 	AppendAuditLog(ctx context.Context, entry model.AuditEntry) error
-	ListAuditLogs(before, after time.Time, offset, limit int, order string, filter model.SQLFilter) (model.AuditLogs, int, error)
-	CreateRole(role model.Role) (model.Role, error)
-	UpdateRole(role model.Role) error
-	GetAllRoles(order string, filter model.SQLFilter) (model.Roles, error)
-	GetRoles(ids []int32) (model.Roles, error)
-	GetRolesByName(names []string) (model.Roles, error)
-	GetRole(id int32) (model.Role, error)
-	LookupRoleByName(name string) (model.Role, error)
-	GetAllPermissions(order string, filter model.SQLFilter) (model.Permissions, error)
-	GetPermission(id int) (model.Permission, error)
-	CreatePermission(permission model.Permission) (model.Permission, error)
+	ListAuditLogs(ctx context.Context, before, after time.Time, offset, limit int, order string, filter model.SQLFilter) (model.AuditLogs, int, error)
+
+	// Roles
+	GetAllRoles(ctx context.Context, order string, filter model.SQLFilter) (model.Roles, error)
+	GetRoles(ctx context.Context, ids []int32) (model.Roles, error)
+	GetRole(ctx context.Context, id int32) (model.Role, error)
+
+	// Permissions
+	GetAllPermissions(ctx context.Context, order string, filter model.SQLFilter) (model.Permissions, error)
+	GetPermission(ctx context.Context, id int) (model.Permission, error)
+
 	InitializeSAMLAuth(adminUser model.User, samlProvider model.SAMLProvider) (model.SAMLProvider, model.Installation, error)
 	InitializeSecretAuth(adminUser model.User, authSecret model.AuthSecret) (model.Installation, error)
 	CreateInstallation() (model.Installation, error)
 	GetInstallation() (model.Installation, error)
 	HasInstallation() (bool, error)
+
+	// Users
 	CreateUser(ctx context.Context, user model.User) (model.User, error)
 	UpdateUser(ctx context.Context, user model.User) error
-	GetAllUsers(order string, filter model.SQLFilter) (model.Users, error)
-	GetUser(id uuid.UUID) (model.User, error)
+	GetAllUsers(ctx context.Context, order string, filter model.SQLFilter) (model.Users, error)
+	GetUser(ctx context.Context, id uuid.UUID) (model.User, error)
 	DeleteUser(ctx context.Context, user model.User) error
-	LookupUser(principalName string) (model.User, error)
+	LookupUser(ctx context.Context, principalName string) (model.User, error)
+
 	CreateAuthToken(ctx context.Context, authToken model.AuthToken) (model.AuthToken, error)
 	UpdateAuthToken(authToken model.AuthToken) error
 	GetAllAuthTokens(order string, filter model.SQLFilter) (model.AuthTokens, error)
@@ -131,15 +137,18 @@ type Database interface {
 	GetAzureDataQualityStats(tenantId string, start time.Time, end time.Time, sort_by string, limit int, skip int) (model.AzureDataQualityStats, int, error)
 	CreateAzureDataQualityAggregation(aggregation model.AzureDataQualityAggregation) (model.AzureDataQualityAggregation, error)
 	GetAzureDataQualityAggregations(start time.Time, end time.Time, sort_by string, limit int, skip int) (model.AzureDataQualityAggregations, int, error)
+	DeleteAllDataQuality(ctx context.Context) error
 	CreateFileUploadJob(job model.FileUploadJob) (model.FileUploadJob, error)
 	UpdateFileUploadJob(job model.FileUploadJob) error
 	GetFileUploadJob(id int64) (model.FileUploadJob, error)
 	GetAllFileUploadJobs(skip int, limit int, order string, filter model.SQLFilter) ([]model.FileUploadJob, int, error)
 	GetFileUploadJobsWithStatus(status model.JobStatus) ([]model.FileUploadJob, error)
+	DeleteAllFileUploads(ctx context.Context) error
 	ListSavedQueries(userID uuid.UUID, order string, filter model.SQLFilter, skip, limit int) (model.SavedQueries, int, error)
 	CreateSavedQuery(userID uuid.UUID, name string, query string) (model.SavedQuery, error)
 	DeleteSavedQuery(id int) error
 	SavedQueryBelongsToUser(userID uuid.UUID, savedQueryID int) (bool, error)
+	DeleteAssetGroupSelectorsForAssetGroups(ctx context.Context, assetGroupIds []int) error
 }
 
 type BloodhoundDB struct {

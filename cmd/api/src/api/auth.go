@@ -107,11 +107,11 @@ func (s authenticator) auditLogin(requestContext context.Context, commitID uuid.
 		auditLog.Fields["error"] = loginError
 	}
 
-	s.db.CreateAuditLog(auditLog)
+	s.db.CreateAuditLog(requestContext, auditLog)
 }
 
 func (s authenticator) validateSecretLogin(ctx context.Context, loginRequest LoginRequest) (model.User, string, error) {
-	if user, err := s.db.LookupUser(loginRequest.Username); err != nil {
+	if user, err := s.db.LookupUser(ctx, loginRequest.Username); err != nil {
 		if errors.Is(err, database.ErrNotFound) {
 			return model.User{}, "", ErrInvalidAuth
 		}

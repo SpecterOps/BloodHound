@@ -101,7 +101,7 @@ func ProcessIngestedFileUploadJobs(ctx context.Context, db database.Database) {
 		log.Errorf("Failed to look up finished file upload jobs: %v", err)
 	} else {
 		for _, ingestingFileUploadJob := range ingestingFileUploadJobs {
-			if remainingIngestTasks, err := db.GetIngestTasksForJob(ingestingFileUploadJob.ID); err != nil {
+			if remainingIngestTasks, err := db.GetIngestTasksForJob(ctx, ingestingFileUploadJob.ID); err != nil {
 				log.Errorf("Failed looking up remaining ingest tasks for file upload job %d: %v", ingestingFileUploadJob.ID, err)
 			} else if len(remainingIngestTasks) == 0 {
 				if err := fileupload.UpdateFileUploadJobStatus(db, ingestingFileUploadJob, model.JobStatusAnalyzing, "Analyzing"); err != nil {
@@ -114,7 +114,7 @@ func ProcessIngestedFileUploadJobs(ctx context.Context, db database.Database) {
 
 // clearFileTask removes a generic file upload task for ingested data.
 func (s *Daemon) clearFileTask(ingestTask model.IngestTask) {
-	if err := s.db.DeleteIngestTask(ingestTask); err != nil {
+	if err := s.db.DeleteIngestTask(s.ctx, ingestTask); err != nil {
 		log.Errorf("Error removing file upload task from db: %v", err)
 	}
 }
@@ -148,6 +148,11 @@ func (s *Daemon) processIngestTasks(ctx context.Context, ingestTasks model.Inges
 		// Check the context to see if we should continue processing ingest tasks. This has to be explicit since error
 		// handling assumes that all failures should be logged and not returned.
 		if ctx.Err() != nil {
+			return
+		}
+
+		if s.cfg.DisableIngest {
+			log.Warnf("Skipped processing of ingestTasks due to config flag.")
 			return
 		}
 

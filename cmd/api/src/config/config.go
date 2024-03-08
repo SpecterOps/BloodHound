@@ -165,6 +165,7 @@ type Configuration struct {
 	EnableAPILogging        bool                      `json:"enable_api_logging"`
 	DisableAnalysis         bool                      `json:"disable_analysis"`
 	DisableCypherQC         bool                      `json:"disable_cypher_qc"`
+	DisableIngest           bool                      `json:"disable_ingest"`
 	DisableMigrations       bool                      `json:"disable_migrations"`
 	TraversalMemoryLimit    uint16                    `json:"traversal_memory_limit"`
 	AuthSessionTTLHours     int                       `json:"auth_session_ttl_hours"`
