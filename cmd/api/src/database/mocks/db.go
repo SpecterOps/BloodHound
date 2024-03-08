@@ -445,17 +445,17 @@ func (mr *MockDatabaseMockRecorder) DeleteSAMLProvider(arg0, arg1 interface{}) *
 }
 
 // DeleteSavedQuery mocks base method.
-func (m *MockDatabase) DeleteSavedQuery(arg0 int) error {
+func (m *MockDatabase) DeleteSavedQuery(arg0 context.Context, arg1 int) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DeleteSavedQuery", arg0)
+	ret := m.ctrl.Call(m, "DeleteSavedQuery", arg0, arg1)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // DeleteSavedQuery indicates an expected call of DeleteSavedQuery.
-func (mr *MockDatabaseMockRecorder) DeleteSavedQuery(arg0 interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) DeleteSavedQuery(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteSavedQuery", reflect.TypeOf((*MockDatabase)(nil).DeleteSavedQuery), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteSavedQuery", reflect.TypeOf((*MockDatabase)(nil).DeleteSavedQuery), arg0, arg1)
 }
 
 // DeleteUser mocks base method.

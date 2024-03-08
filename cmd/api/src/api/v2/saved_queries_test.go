@@ -547,7 +547,7 @@ func TestResources_DeleteSavedQuery_RecordNotFound_EdgeCase(t *testing.T) {
 	savedQueryId := "1"
 
 	mockDB.EXPECT().SavedQueryBelongsToUser(gomock.Any(), gomock.Any()).Return(true, nil)
-	mockDB.EXPECT().DeleteSavedQuery(gomock.Any()).Return(database.ErrNotFound)
+	mockDB.EXPECT().DeleteSavedQuery(gomock.Any(), gomock.Any()).Return(database.ErrNotFound)
 
 	req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), "DELETE", fmt.Sprintf(endpoint, savedQueryId), nil)
 	require.Nil(t, err)
@@ -578,7 +578,7 @@ func TestResources_DeleteSavedQuery_DeleteError(t *testing.T) {
 	savedQueryId := "1"
 
 	mockDB.EXPECT().SavedQueryBelongsToUser(gomock.Any(), gomock.Any()).Return(true, nil)
-	mockDB.EXPECT().DeleteSavedQuery(gomock.Any()).Return(fmt.Errorf("foo"))
+	mockDB.EXPECT().DeleteSavedQuery(gomock.Any(), gomock.Any()).Return(fmt.Errorf("foo"))
 
 	req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), "DELETE", fmt.Sprintf(endpoint, savedQueryId), nil)
 	require.Nil(t, err)
@@ -609,7 +609,7 @@ func TestResources_DeleteSavedQuery(t *testing.T) {
 	savedQueryId := "1"
 
 	mockDB.EXPECT().SavedQueryBelongsToUser(gomock.Any(), gomock.Any()).Return(true, nil)
-	mockDB.EXPECT().DeleteSavedQuery(gomock.Any()).Return(nil)
+	mockDB.EXPECT().DeleteSavedQuery(gomock.Any(), gomock.Any()).Return(nil)
 
 	req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), "DELETE", fmt.Sprintf(endpoint, savedQueryId), nil)
 	require.Nil(t, err)
