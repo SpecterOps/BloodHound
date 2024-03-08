@@ -114,17 +114,9 @@ func SaveIngestFile(location string, request *http.Request) (string, model.FileT
 	}
 
 	if api.HeaderMatches(headers.ContentType.String(), mediatypes.ApplicationJson.String(), request.Header) {
-		if err := WriteAndValidateFile(fileData, tempFile, WriteAndValidateJSON); err != nil {
-			return "", model.FileTypeJson, err
-		} else {
-			return tempFile.Name(), model.FileTypeJson, nil
-		}
+		return tempFile.Name(), model.FileTypeJson, WriteAndValidateFile(fileData, tempFile, WriteAndValidateJSON)
 	} else if api.HeaderMatches(headers.ContentType.String(), mediatypes.ApplicationZip.String(), request.Header) {
-		if err := WriteAndValidateFile(fileData, tempFile, WriteAndValidateZip); err != nil {
-			return "", model.FileTypeZip, err
-		} else {
-			return tempFile.Name(), model.FileTypeZip, nil
-		}
+		return tempFile.Name(), model.FileTypeZip, WriteAndValidateFile(fileData, tempFile, WriteAndValidateZip)
 	} else {
 		//We should never get here since this is checked a level above
 		return "", model.FileTypeJson, fmt.Errorf("invalid content type for ingest file")
