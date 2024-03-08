@@ -214,18 +214,18 @@ func (mr *MockDatabaseMockRecorder) CreateAzureDataQualityStats(arg0 interface{}
 }
 
 // CreateFileUploadJob mocks base method.
-func (m *MockDatabase) CreateFileUploadJob(arg0 model.FileUploadJob) (model.FileUploadJob, error) {
+func (m *MockDatabase) CreateFileUploadJob(arg0 context.Context, arg1 model.FileUploadJob) (model.FileUploadJob, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateFileUploadJob", arg0)
+	ret := m.ctrl.Call(m, "CreateFileUploadJob", arg0, arg1)
 	ret0, _ := ret[0].(model.FileUploadJob)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // CreateFileUploadJob indicates an expected call of CreateFileUploadJob.
-func (mr *MockDatabaseMockRecorder) CreateFileUploadJob(arg0 interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) CreateFileUploadJob(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateFileUploadJob", reflect.TypeOf((*MockDatabase)(nil).CreateFileUploadJob), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateFileUploadJob", reflect.TypeOf((*MockDatabase)(nil).CreateFileUploadJob), arg0, arg1)
 }
 
 // CreateIngestTask mocks base method.
@@ -562,9 +562,9 @@ func (mr *MockDatabaseMockRecorder) GetAllConfigurationParameters(arg0 interface
 }
 
 // GetAllFileUploadJobs mocks base method.
-func (m *MockDatabase) GetAllFileUploadJobs(arg0, arg1 int, arg2 string, arg3 model.SQLFilter) ([]model.FileUploadJob, int, error) {
+func (m *MockDatabase) GetAllFileUploadJobs(arg0 context.Context, arg1, arg2 int, arg3 string, arg4 model.SQLFilter) ([]model.FileUploadJob, int, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetAllFileUploadJobs", arg0, arg1, arg2, arg3)
+	ret := m.ctrl.Call(m, "GetAllFileUploadJobs", arg0, arg1, arg2, arg3, arg4)
 	ret0, _ := ret[0].([]model.FileUploadJob)
 	ret1, _ := ret[1].(int)
 	ret2, _ := ret[2].(error)
@@ -572,9 +572,9 @@ func (m *MockDatabase) GetAllFileUploadJobs(arg0, arg1 int, arg2 string, arg3 mo
 }
 
 // GetAllFileUploadJobs indicates an expected call of GetAllFileUploadJobs.
-func (mr *MockDatabaseMockRecorder) GetAllFileUploadJobs(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) GetAllFileUploadJobs(arg0, arg1, arg2, arg3, arg4 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllFileUploadJobs", reflect.TypeOf((*MockDatabase)(nil).GetAllFileUploadJobs), arg0, arg1, arg2, arg3)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllFileUploadJobs", reflect.TypeOf((*MockDatabase)(nil).GetAllFileUploadJobs), arg0, arg1, arg2, arg3, arg4)
 }
 
 // GetAllFlags mocks base method.
@@ -790,33 +790,33 @@ func (mr *MockDatabaseMockRecorder) GetConfigurationParameter(arg0, arg1 interfa
 }
 
 // GetFileUploadJob mocks base method.
-func (m *MockDatabase) GetFileUploadJob(arg0 int64) (model.FileUploadJob, error) {
+func (m *MockDatabase) GetFileUploadJob(arg0 context.Context, arg1 int64) (model.FileUploadJob, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetFileUploadJob", arg0)
+	ret := m.ctrl.Call(m, "GetFileUploadJob", arg0, arg1)
 	ret0, _ := ret[0].(model.FileUploadJob)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetFileUploadJob indicates an expected call of GetFileUploadJob.
-func (mr *MockDatabaseMockRecorder) GetFileUploadJob(arg0 interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) GetFileUploadJob(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetFileUploadJob", reflect.TypeOf((*MockDatabase)(nil).GetFileUploadJob), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetFileUploadJob", reflect.TypeOf((*MockDatabase)(nil).GetFileUploadJob), arg0, arg1)
 }
 
 // GetFileUploadJobsWithStatus mocks base method.
-func (m *MockDatabase) GetFileUploadJobsWithStatus(arg0 model.JobStatus) ([]model.FileUploadJob, error) {
+func (m *MockDatabase) GetFileUploadJobsWithStatus(arg0 context.Context, arg1 model.JobStatus) ([]model.FileUploadJob, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetFileUploadJobsWithStatus", arg0)
+	ret := m.ctrl.Call(m, "GetFileUploadJobsWithStatus", arg0, arg1)
 	ret0, _ := ret[0].([]model.FileUploadJob)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetFileUploadJobsWithStatus indicates an expected call of GetFileUploadJobsWithStatus.
-func (mr *MockDatabaseMockRecorder) GetFileUploadJobsWithStatus(arg0 interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) GetFileUploadJobsWithStatus(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetFileUploadJobsWithStatus", reflect.TypeOf((*MockDatabase)(nil).GetFileUploadJobsWithStatus), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetFileUploadJobsWithStatus", reflect.TypeOf((*MockDatabase)(nil).GetFileUploadJobsWithStatus), arg0, arg1)
 }
 
 // GetFlag mocks base method.
@@ -1290,17 +1290,17 @@ func (mr *MockDatabaseMockRecorder) UpdateAuthToken(arg0, arg1 interface{}) *gom
 }
 
 // UpdateFileUploadJob mocks base method.
-func (m *MockDatabase) UpdateFileUploadJob(arg0 model.FileUploadJob) error {
+func (m *MockDatabase) UpdateFileUploadJob(arg0 context.Context, arg1 model.FileUploadJob) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateFileUploadJob", arg0)
+	ret := m.ctrl.Call(m, "UpdateFileUploadJob", arg0, arg1)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // UpdateFileUploadJob indicates an expected call of UpdateFileUploadJob.
-func (mr *MockDatabaseMockRecorder) UpdateFileUploadJob(arg0 interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) UpdateFileUploadJob(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateFileUploadJob", reflect.TypeOf((*MockDatabase)(nil).UpdateFileUploadJob), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateFileUploadJob", reflect.TypeOf((*MockDatabase)(nil).UpdateFileUploadJob), arg0, arg1)
 }
 
 // UpdateSAMLIdentityProvider mocks base method.

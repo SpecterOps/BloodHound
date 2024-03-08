@@ -168,7 +168,7 @@ func (s *Daemon) Start() {
 			ProcessIngestedFileUploadJobs(s.ctx, s.db)
 
 			// If there are completed file upload jobs or if analysis was user-requested, perform analysis.
-			if hasJobsWaitingForAnalysis, err := HasFileUploadJobsWaitingForAnalysis(s.db); err != nil {
+			if hasJobsWaitingForAnalysis, err := HasFileUploadJobsWaitingForAnalysis(s.ctx, s.db); err != nil {
 				log.Errorf("Failed looking up jobs waiting for analysis: %v", err)
 			} else if hasJobsWaitingForAnalysis || s.getAnalysisRequested() {
 				s.analyze()
