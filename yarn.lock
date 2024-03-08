@@ -3810,6 +3810,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/prop-types@npm:^15":
+  version: 15.7.11
+  resolution: "@types/prop-types@npm:15.7.11"
+  checksum: 7519ff11d06fbf6b275029fe03fff9ec377b4cb6e864cac34d87d7146c7f5a7560fd164bdc1d2dbe00b60c43713631251af1fd3d34d46c69cd354602bc0c7c54
+  languageName: node
+  linkType: hard
+
 "@types/ramda@npm:~0.29.6":
   version: 0.29.10
   resolution: "@types/ramda@npm:0.29.10"
@@ -4853,8 +4860,12 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "bloodhound-ce@workspace:."
   dependencies:
+    "@types/prop-types": ^15
     all-contributors-cli: ^6.26.1
+    immutable: ^5.0.0-beta.5
     prettier: ^2.8.8
+    prop-types: ^15.8.1
+    react-immutable-proptypes: ^2.2.0
     typescript: ^5.1.6
   languageName: unknown
   linkType: soft
@@ -7512,6 +7523,13 @@ __metadata:
   version: 4.3.1
   resolution: "immutable@npm:4.3.1"
   checksum: a3a5ba29bd43f3f9a2e4d599763d7455d11a0ea57e50bf43f2836672fc80003e90d69f2a4f5b589f1f3d6986faf97f08ce1e253583740dd33c00adebab88b217
+  languageName: node
+  linkType: hard
+
+"immutable@npm:^5.0.0-beta.5":
+  version: 5.0.0-beta.5
+  resolution: "immutable@npm:5.0.0-beta.5"
+  checksum: 4c675013cd20ed99f725603bb510ec33e23f5ddedcdd396847902b923621040a5de08e5d8e23733092dadb71dc058e36b21c16c23b4f374b84f9c152d5e26d5d
   languageName: node
   linkType: hard
 
@@ -10626,7 +10644,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-immutable-proptypes@npm:2.2.0":
+"react-immutable-proptypes@npm:2.2.0, react-immutable-proptypes@npm:^2.2.0":
   version: 2.2.0
   resolution: "react-immutable-proptypes@npm:2.2.0"
   dependencies:
