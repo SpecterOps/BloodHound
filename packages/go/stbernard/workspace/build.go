@@ -26,7 +26,9 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/Masterminds/semver/v3"
 	"github.com/specterops/bloodhound/log"
+	"github.com/specterops/bloodhound/packages/go/stbernard/git"
 )
 
 // BuildGoMainPackages builds all main packages for a list of module paths
@@ -38,11 +40,18 @@ func BuildGoMainPackages(workRoot string, modPaths []string, env []string) error
 		buildDir = filepath.Join(workRoot, "dist") + string(filepath.Separator)
 	)
 
+	version, err := git.ParseLatestVersionFromTags(workRoot, env)
+	if err != nil {
+		return fmt.Errorf("failed to parse latest version from git tags: %w", err)
+	}
+
+	log.Infof("Building for version %s", version.Original())
+
 	for _, modPath := range modPaths {
 		wg.Add(1)
 		go func(buildDir, modPath string) {
 			defer wg.Done()
-			if err := buildGoModuleMainPackages(buildDir, modPath, env); err != nil {
+			if err := buildGoModuleMainPackages(buildDir, modPath, version, env); err != nil {
 				mu.Lock()
 				errs = append(errs, fmt.Errorf("failed to build main package: %w", err))
 				mu.Unlock()
@@ -56,26 +65,26 @@ func BuildGoMainPackages(workRoot string, modPaths []string, env []string) error
 }
 
 // buildGoModuleMainPackages runs go build for all main packages in a given module
-func buildGoModuleMainPackages(buildDir string, modPath string, env []string) error {
+func buildGoModuleMainPackages(buildDir string, modPath string, version semver.Version, env []string) error {
 	var (
 		wg   sync.WaitGroup
 		errs []error
 		mu   sync.Mutex
 
-		majorVersion      = "9"
-		minorVersion      = "9"
-		patchVersion      = "9"
-		prereleaseVersion = "rc9"
-
-		majorString      = fmt.Sprintf("-X 'github.com/specterops/bloodhound/src/version.majorVersion=%s'", majorVersion)
-		minorString      = fmt.Sprintf("-X 'github.com/specterops/bloodhound/src/version.minorVersion=%s'", minorVersion)
-		patchString      = fmt.Sprintf("-X 'github.com/specterops/bloodhound/src/version.patchVersion=%s'", patchVersion)
-		prereleaseString = fmt.Sprintf("-X 'github.com/specterops/bloodhound/src/version.prereleaseVersion=%s'", prereleaseVersion)
-
-		ldflags = strings.Join([]string{majorString, minorString, patchString, prereleaseString}, " ")
+		majorString         = fmt.Sprintf("-X 'github.com/specterops/bloodhound/src/version.majorVersion=%d'", version.Major())
+		minorString         = fmt.Sprintf("-X 'github.com/specterops/bloodhound/src/version.minorVersion=%d'", version.Minor())
+		patchString         = fmt.Sprintf("-X 'github.com/specterops/bloodhound/src/version.patchVersion=%d'", version.Patch())
+		prereleaseString    = fmt.Sprintf("-X 'github.com/specterops/bloodhound/src/version.prereleaseVersion=%s'", version.Prerelease())
+		ldflagArgComponents = []string{majorString, minorString, patchString}
 	)
 
-	var args = []string{"-ldflags", ldflags, "-o", buildDir}
+	if version.Prerelease() != "" {
+		ldflagArgComponents = append(ldflagArgComponents, prereleaseString)
+	}
+
+	args := []string{"-ldflags", strings.Join(ldflagArgComponents, " "), "-o", buildDir}
+
+	fmt.Printf("Running with args: %+v\n", args)
 
 	if packages, err := moduleListPackages(modPath); err != nil {
 		return fmt.Errorf("failed to list module packages: %w", err)
