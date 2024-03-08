@@ -19,7 +19,6 @@ package workspace
 import (
 	"errors"
 	"fmt"
-	"log/slog"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -84,8 +83,6 @@ func buildGoModuleMainPackages(buildDir string, modPath string, version semver.V
 
 	args := []string{"-ldflags", strings.Join(ldflagArgComponents, " "), "-o", buildDir}
 
-	fmt.Printf("Running with args: %+v\n", args)
-
 	if packages, err := moduleListPackages(modPath); err != nil {
 		return fmt.Errorf("failed to list module packages: %w", err)
 	} else {
@@ -108,7 +105,7 @@ func buildGoModuleMainPackages(buildDir string, modPath string, version semver.V
 						errs = append(errs, fmt.Errorf("failed running go build for package %s: %w", p.Import, err))
 						mu.Unlock()
 					} else {
-						slog.Info("Built package", "package", p.Import, "dir", p.Dir)
+						log.Infof("Built package %s", p.Import)
 					}
 				}(p)
 			}
