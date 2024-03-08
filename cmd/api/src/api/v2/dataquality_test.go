@@ -284,7 +284,7 @@ func TestGetAzureDataQualityStats_Failure(t *testing.T) {
 	endpoint := "/api/v2/azure-tenants/%s/data-quality-stats%s"
 
 	mockDB := mocks.NewMockDatabase(mockCtrl)
-	mockDB.EXPECT().GetAzureDataQualityStats(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, 0, fmt.Errorf("db error"))
+	mockDB.EXPECT().GetAzureDataQualityStats(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, 0, fmt.Errorf("db error"))
 
 	resources := v2.Resources{DB: mockDB}
 
@@ -406,7 +406,7 @@ func TestGetAzureDataQualityStats_Success(t *testing.T) {
 	endpoint := "/api/v2/azure-tenants/%s/data-quality-stats%s"
 
 	mockDB := mocks.NewMockDatabase(mockCtrl)
-	mockDB.EXPECT().GetAzureDataQualityStats(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(model.AzureDataQualityStats{}, 0, nil).AnyTimes()
+	mockDB.EXPECT().GetAzureDataQualityStats(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(model.AzureDataQualityStats{}, 0, nil).AnyTimes()
 
 	resources := v2.Resources{DB: mockDB}
 

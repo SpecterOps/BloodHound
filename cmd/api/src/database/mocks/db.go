@@ -759,9 +759,9 @@ func (mr *MockDatabaseMockRecorder) GetAzureDataQualityAggregations(arg0, arg1, 
 }
 
 // GetAzureDataQualityStats mocks base method.
-func (m *MockDatabase) GetAzureDataQualityStats(arg0 string, arg1, arg2 time.Time, arg3 string, arg4, arg5 int) (model.AzureDataQualityStats, int, error) {
+func (m *MockDatabase) GetAzureDataQualityStats(arg0 context.Context, arg1 string, arg2, arg3 time.Time, arg4 string, arg5, arg6 int) (model.AzureDataQualityStats, int, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetAzureDataQualityStats", arg0, arg1, arg2, arg3, arg4, arg5)
+	ret := m.ctrl.Call(m, "GetAzureDataQualityStats", arg0, arg1, arg2, arg3, arg4, arg5, arg6)
 	ret0, _ := ret[0].(model.AzureDataQualityStats)
 	ret1, _ := ret[1].(int)
 	ret2, _ := ret[2].(error)
@@ -769,9 +769,9 @@ func (m *MockDatabase) GetAzureDataQualityStats(arg0 string, arg1, arg2 time.Tim
 }
 
 // GetAzureDataQualityStats indicates an expected call of GetAzureDataQualityStats.
-func (mr *MockDatabaseMockRecorder) GetAzureDataQualityStats(arg0, arg1, arg2, arg3, arg4, arg5 interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) GetAzureDataQualityStats(arg0, arg1, arg2, arg3, arg4, arg5, arg6 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAzureDataQualityStats", reflect.TypeOf((*MockDatabase)(nil).GetAzureDataQualityStats), arg0, arg1, arg2, arg3, arg4, arg5)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAzureDataQualityStats", reflect.TypeOf((*MockDatabase)(nil).GetAzureDataQualityStats), arg0, arg1, arg2, arg3, arg4, arg5, arg6)
 }
 
 // GetConfigurationParameter mocks base method.

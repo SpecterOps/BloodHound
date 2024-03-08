@@ -97,7 +97,7 @@ func (s *BloodhoundDB) CreateAzureDataQualityStats(ctx context.Context, stats mo
 	return stats, CheckError(result)
 }
 
-func (s *BloodhoundDB) GetAzureDataQualityStats(tenantId string, start time.Time, end time.Time, order string, limit int, skip int) (model.AzureDataQualityStats, int, error) {
+func (s *BloodhoundDB) GetAzureDataQualityStats(ctx context.Context, tenantId string, start time.Time, end time.Time, order string, limit int, skip int) (model.AzureDataQualityStats, int, error) {
 	const (
 		defaultOrder = "created_at desc"
 		defaultWhere = "tenant_id = ? and (created_at between ? and ?)"
@@ -109,24 +109,18 @@ func (s *BloodhoundDB) GetAzureDataQualityStats(tenantId string, start time.Time
 		result                *gorm.DB
 	)
 
-	if order != "" {
-		result = s.Scope(Paginate(skip, limit)).Where(defaultWhere, tenantId, start, end).Order(order).Find(&azureDataQualityStats)
-		if CheckError(result) != nil {
-			return azureDataQualityStats, 0, result.Error
-		}
-		result = s.db.Model(model.AzureDataQualityStats{}).Where(defaultWhere, tenantId, start, end).Order(order).Count(&count)
-		if CheckError(result) != nil {
-			return azureDataQualityStats, 0, result.Error
-		}
-	} else {
-		result = s.Scope(Paginate(skip, limit)).Where(defaultWhere, tenantId, start, end).Order(defaultOrder).Find(&azureDataQualityStats)
-		if CheckError(result) != nil {
-			return azureDataQualityStats, 0, result.Error
-		}
-		result = s.db.Model(model.AzureDataQualityStats{}).Where(defaultWhere, tenantId, start, end).Order(defaultOrder).Count(&count)
-		if CheckError(result) != nil {
-			return azureDataQualityStats, 0, result.Error
-		}
+	result = s.db.Model(model.AzureDataQualityStats{}).WithContext(ctx).Where(defaultWhere, tenantId, start, end).Count(&count)
+	if CheckError(result) != nil {
+		return azureDataQualityStats, 0, result.Error
+	}
+
+	if order == "" {
+		order = defaultOrder
+	}
+
+	result = s.Scope(Paginate(skip, limit)).WithContext(ctx).Where(defaultWhere, tenantId, start, end).Order(order).Find(&azureDataQualityStats)
+	if CheckError(result) != nil {
+		return azureDataQualityStats, 0, result.Error
 	}
 
 	return azureDataQualityStats, int(count), nil
