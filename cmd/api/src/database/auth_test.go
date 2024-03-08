@@ -73,11 +73,13 @@ func initAndCreateUser(t *testing.T) (database.Database, model.User) {
 }
 
 func TestDatabase_Installation(t *testing.T) {
-	dbInst := integration.SetupDB(t)
-
-	if installation, err := dbInst.CreateInstallation(); err != nil {
+	var (
+		dbInst  = integration.SetupDB(t)
+		testCtx = context.Background()
+	)
+	if installation, err := dbInst.CreateInstallation(testCtx); err != nil {
 		t.Fatalf("Error creating installation: %v", err)
-	} else if fetchedInstallation, err := dbInst.GetInstallation(); err != nil {
+	} else if fetchedInstallation, err := dbInst.GetInstallation(testCtx); err != nil {
 		t.Fatalf("Failed to fetch installation: %v", err)
 	} else if installation.ID.String() != fetchedInstallation.ID.String() {
 		t.Fatalf("Installation fetched does not match the initially created installation")

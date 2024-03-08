@@ -202,7 +202,7 @@ func (s *BloodhoundDB) InitializeSecretAuth(ctx context.Context, adminUser model
 
 // CreateInstallation creates a new Installation row
 // INSERT INTO installations(....) VALUES (...)
-func (s *BloodhoundDB) CreateInstallation() (model.Installation, error) {
+func (s *BloodhoundDB) CreateInstallation(ctx context.Context) (model.Installation, error) {
 	if newID, err := uuid.NewV4(); err != nil {
 		return model.Installation{}, err
 	} else {
@@ -212,17 +212,17 @@ func (s *BloodhoundDB) CreateInstallation() (model.Installation, error) {
 			},
 		}
 
-		result := s.db.Create(&installation)
+		result := s.db.WithContext(ctx).Create(&installation)
 		return installation, CheckError(result)
 	}
 }
 
 // GetInstallation retrieves the first row from installations
 // SELECT TOP 1 * FROM installations
-func (s *BloodhoundDB) GetInstallation() (model.Installation, error) {
+func (s *BloodhoundDB) GetInstallation(ctx context.Context) (model.Installation, error) {
 	var (
 		installation model.Installation
-		result       = s.db.First(&installation)
+		result       = s.db.WithContext(ctx).First(&installation)
 	)
 
 	return installation, CheckError(result)
@@ -230,8 +230,8 @@ func (s *BloodhoundDB) GetInstallation() (model.Installation, error) {
 
 // HasInstallation checks if an installation exists
 // SELECT CASE WHEN EXISTS (SELECT 1 FROM installations) THEN true ELSE false END
-func (s *BloodhoundDB) HasInstallation() (bool, error) {
-	if _, err := s.GetInstallation(); err != nil {
+func (s *BloodhoundDB) HasInstallation(ctx context.Context) (bool, error) {
+	if _, err := s.GetInstallation(ctx); err != nil {
 		if err == ErrNotFound {
 			return false, nil
 		}

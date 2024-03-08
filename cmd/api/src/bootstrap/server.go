@@ -71,7 +71,7 @@ func MigrateDB(ctx context.Context, cfg config.Configuration, db database.Databa
 		return err
 	}
 
-	if hasInstallation, err := db.HasInstallation(); err != nil {
+	if hasInstallation, err := db.HasInstallation(ctx); err != nil {
 		return err
 	} else if hasInstallation {
 		return nil

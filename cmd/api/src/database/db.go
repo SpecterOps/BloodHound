@@ -79,6 +79,9 @@ type Database interface {
 	Wipe(ctx context.Context) error
 	Migrate(ctx context.Context) error
 	RequiresMigration(ctx context.Context) (bool, error)
+	CreateInstallation(ctx context.Context) (model.Installation, error)
+	GetInstallation(ctx context.Context) (model.Installation, error)
+	HasInstallation(ctx context.Context) (bool, error)
 
 	// Audit Logs
 	CreateAuditLog(ctx context.Context, auditLog model.AuditLog) error
@@ -93,10 +96,6 @@ type Database interface {
 	// Permissions
 	GetAllPermissions(ctx context.Context, order string, filter model.SQLFilter) (model.Permissions, error)
 	GetPermission(ctx context.Context, id int) (model.Permission, error)
-
-	CreateInstallation() (model.Installation, error)
-	GetInstallation() (model.Installation, error)
-	HasInstallation() (bool, error)
 
 	// Users
 	CreateUser(ctx context.Context, user model.User) (model.User, error)
