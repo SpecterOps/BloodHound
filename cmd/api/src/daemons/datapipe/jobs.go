@@ -28,8 +28,8 @@ import (
 	"github.com/specterops/bloodhound/src/services/fileupload"
 )
 
-func HasFileUploadJobsWaitingForAnalysis(db database.Database) (bool, error) {
-	if fileUploadJobsUnderAnalysis, err := db.GetFileUploadJobsWithStatus(model.JobStatusAnalyzing); err != nil {
+func HasFileUploadJobsWaitingForAnalysis(ctx context.Context, db database.Database) (bool, error) {
+	if fileUploadJobsUnderAnalysis, err := db.GetFileUploadJobsWithStatus(ctx, model.JobStatusAnalyzing); err != nil {
 		return false, err
 	} else {
 		return len(fileUploadJobsUnderAnalysis) > 0, nil
@@ -43,7 +43,7 @@ func FailAnalyzedFileUploadJobs(ctx context.Context, db database.Database) {
 		return
 	}
 
-	if fileUploadJobsUnderAnalysis, err := db.GetFileUploadJobsWithStatus(model.JobStatusAnalyzing); err != nil {
+	if fileUploadJobsUnderAnalysis, err := db.GetFileUploadJobsWithStatus(ctx, model.JobStatusAnalyzing); err != nil {
 		log.Errorf("Failed to load file upload jobs under analysis: %v", err)
 	} else {
 		for _, job := range fileUploadJobsUnderAnalysis {
@@ -61,7 +61,7 @@ func PartialCompleteFileUploadJobs(ctx context.Context, db database.Database) {
 		return
 	}
 
-	if fileUploadJobsUnderAnalysis, err := db.GetFileUploadJobsWithStatus(model.JobStatusAnalyzing); err != nil {
+	if fileUploadJobsUnderAnalysis, err := db.GetFileUploadJobsWithStatus(ctx, model.JobStatusAnalyzing); err != nil {
 		log.Errorf("Failed to load file upload jobs under analysis: %v", err)
 	} else {
 		for _, job := range fileUploadJobsUnderAnalysis {
@@ -79,7 +79,7 @@ func CompleteAnalyzedFileUploadJobs(ctx context.Context, db database.Database) {
 		return
 	}
 
-	if fileUploadJobsUnderAnalysis, err := db.GetFileUploadJobsWithStatus(model.JobStatusAnalyzing); err != nil {
+	if fileUploadJobsUnderAnalysis, err := db.GetFileUploadJobsWithStatus(ctx, model.JobStatusAnalyzing); err != nil {
 		log.Errorf("Failed to load file upload jobs under analysis: %v", err)
 	} else {
 		for _, job := range fileUploadJobsUnderAnalysis {
@@ -97,7 +97,7 @@ func ProcessIngestedFileUploadJobs(ctx context.Context, db database.Database) {
 		return
 	}
 
-	if ingestingFileUploadJobs, err := db.GetFileUploadJobsWithStatus(model.JobStatusIngesting); err != nil {
+	if ingestingFileUploadJobs, err := db.GetFileUploadJobsWithStatus(ctx, model.JobStatusIngesting); err != nil {
 		log.Errorf("Failed to look up finished file upload jobs: %v", err)
 	} else {
 		for _, ingestingFileUploadJob := range ingestingFileUploadJobs {

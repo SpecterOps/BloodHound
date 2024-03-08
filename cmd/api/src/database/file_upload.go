@@ -42,9 +42,9 @@ func (s *BloodhoundDB) GetFileUploadJob(ctx context.Context, id int64) (model.Fi
 	}
 }
 
-func (s *BloodhoundDB) GetFileUploadJobsWithStatus(status model.JobStatus) ([]model.FileUploadJob, error) {
+func (s *BloodhoundDB) GetFileUploadJobsWithStatus(ctx context.Context, status model.JobStatus) ([]model.FileUploadJob, error) {
 	var jobs model.FileUploadJobs
-	result := s.db.Where("status = ?", status).Find(&jobs)
+	result := s.db.WithContext(ctx).Where("status = ?", status).Find(&jobs)
 
 	return jobs, CheckError(result)
 }

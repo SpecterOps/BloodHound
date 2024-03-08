@@ -35,18 +35,18 @@ func TestHasJobsWaitingForAnalysis(t *testing.T) {
 	defer mockCtrl.Finish()
 
 	t.Run("Has Jobs Waiting for Analysis", func(t *testing.T) {
-		dbMock.EXPECT().GetFileUploadJobsWithStatus(model.JobStatusAnalyzing).Return([]model.FileUploadJob{{}}, nil)
+		dbMock.EXPECT().GetFileUploadJobsWithStatus(gomock.Any(), model.JobStatusAnalyzing).Return([]model.FileUploadJob{{}}, nil)
 
-		hasJobs, err := datapipe.HasFileUploadJobsWaitingForAnalysis(dbMock)
+		hasJobs, err := datapipe.HasFileUploadJobsWaitingForAnalysis(context.Background(), dbMock)
 
 		require.True(t, hasJobs)
 		require.Nil(t, err)
 	})
 
 	t.Run("Has No Jobs Waiting for Analysis", func(t *testing.T) {
-		dbMock.EXPECT().GetFileUploadJobsWithStatus(model.JobStatusAnalyzing).Return([]model.FileUploadJob{}, nil)
+		dbMock.EXPECT().GetFileUploadJobsWithStatus(gomock.Any(), model.JobStatusAnalyzing).Return([]model.FileUploadJob{}, nil)
 
-		hasJobs, err := datapipe.HasFileUploadJobsWaitingForAnalysis(dbMock)
+		hasJobs, err := datapipe.HasFileUploadJobsWaitingForAnalysis(context.Background(), dbMock)
 
 		require.False(t, hasJobs)
 		require.Nil(t, err)
@@ -64,7 +64,7 @@ func TestFailAnalyzedFileUploadJobs(t *testing.T) {
 	defer mockCtrl.Finish()
 
 	t.Run("Fail Analyzed File Upload Jobs", func(t *testing.T) {
-		dbMock.EXPECT().GetFileUploadJobsWithStatus(model.JobStatusAnalyzing).Return([]model.FileUploadJob{{
+		dbMock.EXPECT().GetFileUploadJobsWithStatus(gomock.Any(), model.JobStatusAnalyzing).Return([]model.FileUploadJob{{
 			BigSerial: model.BigSerial{
 				ID: jobID,
 			},
@@ -91,7 +91,7 @@ func TestCompleteAnalyzedFileUploadJobs(t *testing.T) {
 	defer mockCtrl.Finish()
 
 	t.Run("Complete Analyzed File Upload Jobs", func(t *testing.T) {
-		dbMock.EXPECT().GetFileUploadJobsWithStatus(model.JobStatusAnalyzing).Return([]model.FileUploadJob{{
+		dbMock.EXPECT().GetFileUploadJobsWithStatus(gomock.Any(), model.JobStatusAnalyzing).Return([]model.FileUploadJob{{
 			BigSerial: model.BigSerial{
 				ID: jobID,
 			},
@@ -118,7 +118,7 @@ func TestProcessIngestedFileUploadJobs(t *testing.T) {
 	defer mockCtrl.Finish()
 
 	t.Run("Transition Jobs with No Remaining Ingest Tasks", func(t *testing.T) {
-		dbMock.EXPECT().GetFileUploadJobsWithStatus(model.JobStatusIngesting).Return([]model.FileUploadJob{{
+		dbMock.EXPECT().GetFileUploadJobsWithStatus(gomock.Any(), model.JobStatusIngesting).Return([]model.FileUploadJob{{
 			BigSerial: model.BigSerial{
 				ID: jobID,
 			},
@@ -135,7 +135,7 @@ func TestProcessIngestedFileUploadJobs(t *testing.T) {
 	})
 
 	t.Run("Don't Transition Jobs with Remaining Ingest Tasks", func(t *testing.T) {
-		dbMock.EXPECT().GetFileUploadJobsWithStatus(model.JobStatusIngesting).Return([]model.FileUploadJob{{
+		dbMock.EXPECT().GetFileUploadJobsWithStatus(gomock.Any(), model.JobStatusIngesting).Return([]model.FileUploadJob{{
 			BigSerial: model.BigSerial{
 				ID: jobID,
 			},

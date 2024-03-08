@@ -39,7 +39,7 @@ type FileUploadData interface {
 	UpdateFileUploadJob(ctx context.Context, job model.FileUploadJob) error
 	GetFileUploadJob(ctx context.Context, id int64) (model.FileUploadJob, error)
 	GetAllFileUploadJobs(ctx context.Context, skip int, limit int, order string, filter model.SQLFilter) ([]model.FileUploadJob, int, error)
-	GetFileUploadJobsWithStatus(status model.JobStatus) ([]model.FileUploadJob, error)
+	GetFileUploadJobsWithStatus(ctx context.Context, status model.JobStatus) ([]model.FileUploadJob, error)
 	DeleteAllFileUploads(ctx context.Context) error
 }
 
@@ -55,7 +55,7 @@ func ProcessStaleFileUploadJobs(ctx context.Context, db FileUploadData) {
 		threshold = now.Add(-jobActivityTimeout)
 	)
 
-	if jobs, err := db.GetFileUploadJobsWithStatus(model.JobStatusRunning); err != nil {
+	if jobs, err := db.GetFileUploadJobsWithStatus(ctx, model.JobStatusRunning); err != nil {
 		log.Errorf("Error getting running jobs: %v", err)
 	} else {
 		for _, job := range jobs {

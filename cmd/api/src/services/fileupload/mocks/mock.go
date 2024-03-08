@@ -112,18 +112,18 @@ func (mr *MockFileUploadDataMockRecorder) GetFileUploadJob(arg0, arg1 interface{
 }
 
 // GetFileUploadJobsWithStatus mocks base method.
-func (m *MockFileUploadData) GetFileUploadJobsWithStatus(arg0 model.JobStatus) ([]model.FileUploadJob, error) {
+func (m *MockFileUploadData) GetFileUploadJobsWithStatus(arg0 context.Context, arg1 model.JobStatus) ([]model.FileUploadJob, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetFileUploadJobsWithStatus", arg0)
+	ret := m.ctrl.Call(m, "GetFileUploadJobsWithStatus", arg0, arg1)
 	ret0, _ := ret[0].([]model.FileUploadJob)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetFileUploadJobsWithStatus indicates an expected call of GetFileUploadJobsWithStatus.
-func (mr *MockFileUploadDataMockRecorder) GetFileUploadJobsWithStatus(arg0 interface{}) *gomock.Call {
+func (mr *MockFileUploadDataMockRecorder) GetFileUploadJobsWithStatus(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetFileUploadJobsWithStatus", reflect.TypeOf((*MockFileUploadData)(nil).GetFileUploadJobsWithStatus), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetFileUploadJobsWithStatus", reflect.TypeOf((*MockFileUploadData)(nil).GetFileUploadJobsWithStatus), arg0, arg1)
 }
 
 // UpdateFileUploadJob mocks base method.
