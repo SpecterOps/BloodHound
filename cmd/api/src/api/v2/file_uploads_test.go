@@ -73,7 +73,7 @@ func TestResources_ListFileUploadJobs(t *testing.T) {
 			{
 				Name: "GetAllFileUploadJobsDatabaseError",
 				Setup: func() {
-					mockDB.EXPECT().GetAllFileUploadJobs(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, 0, errors.New("database error"))
+					mockDB.EXPECT().GetAllFileUploadJobs(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, 0, errors.New("database error"))
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusInternalServerError)
@@ -88,7 +88,7 @@ func TestResources_ListFileUploadJobs(t *testing.T) {
 					apitest.AddQueryParam(input, "user_id", "eq:123")
 				},
 				Setup: func() {
-					mockDB.EXPECT().GetAllFileUploadJobs(1, 2, "start_time", model.SQLFilter{SQLString: "user_id = ?", Params: []any{"123"}}).Return([]model.FileUploadJob{}, 0, nil)
+					mockDB.EXPECT().GetAllFileUploadJobs(gomock.Any(), 1, 2, "start_time", model.SQLFilter{SQLString: "user_id = ?", Params: []any{"123"}}).Return([]model.FileUploadJob{}, 0, nil)
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusOK)

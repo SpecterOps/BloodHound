@@ -49,7 +49,7 @@ func (s *BloodhoundDB) GetFileUploadJobsWithStatus(status model.JobStatus) ([]mo
 	return jobs, CheckError(result)
 }
 
-func (s *BloodhoundDB) GetAllFileUploadJobs(skip int, limit int, order string, filter model.SQLFilter) ([]model.FileUploadJob, int, error) {
+func (s *BloodhoundDB) GetAllFileUploadJobs(ctx context.Context, skip int, limit int, order string, filter model.SQLFilter) ([]model.FileUploadJob, int, error) {
 	var (
 		jobs   []model.FileUploadJob
 		result *gorm.DB
@@ -61,9 +61,9 @@ func (s *BloodhoundDB) GetAllFileUploadJobs(skip int, limit int, order string, f
 	}
 
 	if filter.SQLString != "" {
-		result = s.db.Model(model.FileUploadJob{}).Where(filter.SQLString, filter.Params).Count(&count)
+		result = s.db.Model(model.FileUploadJob{}).WithContext(ctx).Where(filter.SQLString, filter.Params).Count(&count)
 	} else {
-		result = s.db.Model(model.FileUploadJob{}).Count(&count)
+		result = s.db.Model(model.FileUploadJob{}).WithContext(ctx).Count(&count)
 	}
 
 	if result.Error != nil {
@@ -71,9 +71,9 @@ func (s *BloodhoundDB) GetAllFileUploadJobs(skip int, limit int, order string, f
 	}
 
 	if filter.SQLString != "" {
-		result = s.Scope(Paginate(skip, limit)).Preload("User").Where(filter.SQLString, filter.Params).Order(order).Find(&jobs)
+		result = s.Scope(Paginate(skip, limit)).WithContext(ctx).Preload("User").Where(filter.SQLString, filter.Params).Order(order).Find(&jobs)
 	} else {
-		result = s.Scope(Paginate(skip, limit)).Preload("User").Order(order).Find(&jobs)
+		result = s.Scope(Paginate(skip, limit)).WithContext(ctx).Preload("User").Order(order).Find(&jobs)
 	}
 
 	if result.Error != nil {

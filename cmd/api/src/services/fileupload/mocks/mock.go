@@ -81,9 +81,9 @@ func (mr *MockFileUploadDataMockRecorder) DeleteAllFileUploads(arg0 interface{})
 }
 
 // GetAllFileUploadJobs mocks base method.
-func (m *MockFileUploadData) GetAllFileUploadJobs(arg0, arg1 int, arg2 string, arg3 model.SQLFilter) ([]model.FileUploadJob, int, error) {
+func (m *MockFileUploadData) GetAllFileUploadJobs(arg0 context.Context, arg1, arg2 int, arg3 string, arg4 model.SQLFilter) ([]model.FileUploadJob, int, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetAllFileUploadJobs", arg0, arg1, arg2, arg3)
+	ret := m.ctrl.Call(m, "GetAllFileUploadJobs", arg0, arg1, arg2, arg3, arg4)
 	ret0, _ := ret[0].([]model.FileUploadJob)
 	ret1, _ := ret[1].(int)
 	ret2, _ := ret[2].(error)
@@ -91,9 +91,9 @@ func (m *MockFileUploadData) GetAllFileUploadJobs(arg0, arg1 int, arg2 string, a
 }
 
 // GetAllFileUploadJobs indicates an expected call of GetAllFileUploadJobs.
-func (mr *MockFileUploadDataMockRecorder) GetAllFileUploadJobs(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
+func (mr *MockFileUploadDataMockRecorder) GetAllFileUploadJobs(arg0, arg1, arg2, arg3, arg4 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllFileUploadJobs", reflect.TypeOf((*MockFileUploadData)(nil).GetAllFileUploadJobs), arg0, arg1, arg2, arg3)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllFileUploadJobs", reflect.TypeOf((*MockFileUploadData)(nil).GetAllFileUploadJobs), arg0, arg1, arg2, arg3, arg4)
 }
 
 // GetFileUploadJob mocks base method.

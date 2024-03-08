@@ -38,7 +38,7 @@ type FileUploadData interface {
 	CreateFileUploadJob(ctx context.Context, job model.FileUploadJob) (model.FileUploadJob, error)
 	UpdateFileUploadJob(ctx context.Context, job model.FileUploadJob) error
 	GetFileUploadJob(ctx context.Context, id int64) (model.FileUploadJob, error)
-	GetAllFileUploadJobs(skip int, limit int, order string, filter model.SQLFilter) ([]model.FileUploadJob, int, error)
+	GetAllFileUploadJobs(ctx context.Context, skip int, limit int, order string, filter model.SQLFilter) ([]model.FileUploadJob, int, error)
 	GetFileUploadJobsWithStatus(status model.JobStatus) ([]model.FileUploadJob, error)
 	DeleteAllFileUploads(ctx context.Context) error
 }
@@ -73,8 +73,8 @@ func ProcessStaleFileUploadJobs(ctx context.Context, db FileUploadData) {
 	}
 }
 
-func GetAllFileUploadJobs(db FileUploadData, skip int, limit int, order string, filter model.SQLFilter) ([]model.FileUploadJob, int, error) {
-	return db.GetAllFileUploadJobs(skip, limit, order, filter)
+func GetAllFileUploadJobs(ctx context.Context, db FileUploadData, skip int, limit int, order string, filter model.SQLFilter) ([]model.FileUploadJob, int, error) {
+	return db.GetAllFileUploadJobs(ctx, skip, limit, order, filter)
 }
 
 func StartFileUploadJob(ctx context.Context, db FileUploadData, user model.User) (model.FileUploadJob, error) {
