@@ -115,7 +115,7 @@ func (s *Daemon) analyze() {
 	} else {
 		CompleteAnalyzedFileUploadJobs(s.ctx, s.db)
 
-		if entityPanelCachingFlag, err := s.db.GetFlagByKey(appcfg.FeatureEntityPanelCaching); err != nil {
+		if entityPanelCachingFlag, err := s.db.GetFlagByKey(s.ctx, appcfg.FeatureEntityPanelCaching); err != nil {
 			log.Errorf("Error retrieving entity panel caching flag: %v", err)
 		} else {
 			resetCache(s.cache, entityPanelCachingFlag.Enabled)

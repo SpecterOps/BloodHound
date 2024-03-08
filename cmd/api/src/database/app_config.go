@@ -27,9 +27,9 @@ func (s *BloodhoundDB) GetFlag(ctx context.Context, id int32) (appcfg.FeatureFla
 	return flag, CheckError(s.db.WithContext(ctx).Find(&flag, id))
 }
 
-func (s *BloodhoundDB) GetFlagByKey(key string) (appcfg.FeatureFlag, error) {
+func (s *BloodhoundDB) GetFlagByKey(ctx context.Context, key string) (appcfg.FeatureFlag, error) {
 	var flag appcfg.FeatureFlag
-	return flag, CheckError(s.db.Where("key = ?", key).First(&flag))
+	return flag, CheckError(s.db.WithContext(ctx).Where("key = ?", key).First(&flag))
 }
 
 func (s *BloodhoundDB) GetAllFlags(ctx context.Context) ([]appcfg.FeatureFlag, error) {
