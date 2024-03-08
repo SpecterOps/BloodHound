@@ -23,7 +23,6 @@ import (
 	"path/filepath"
 	"slices"
 
-	cp "github.com/otiai10/copy"
 	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/packages/go/stbernard/environment"
 	"github.com/specterops/bloodhound/packages/go/stbernard/workspace"
@@ -56,10 +55,10 @@ func (s command) Run() error {
 		return fmt.Errorf("could not find workspace root: %w", err)
 	} else if cfg, err := workspace.ParseConfig(cwd); err != nil {
 		return fmt.Errorf("could not get build configuration file: %w", err)
+	} else if err := filepath.WalkDir(filepath.Join(cwd, cfg.AssetsDir), clearFiles); err != nil {
+		return fmt.Errorf("could not clear asset directory: %w", err)
 	} else if err := s.runJSBuild(cwd); err != nil {
 		return fmt.Errorf("could not build JS artifacts: %w", err)
-	} else if err := s.copyAssets(filepath.Join(cwd, cfg.DistDir), filepath.Join(cwd, cfg.AssetsDir)); err != nil {
-		return fmt.Errorf("could not copy assets: %w", err)
 	} else if err := s.runGoBuild(cwd); err != nil {
 		return fmt.Errorf("could not build Go artifacts: %w", err)
 	} else {
@@ -95,25 +94,6 @@ func (s command) runJSBuild(cwd string) error {
 		return fmt.Errorf("could not install JS deps: %w", err)
 	} else if err := yarn.BuildWorkspace(cwd, env.Slice()); err != nil {
 		return fmt.Errorf("could not build JS workspace: %w", err)
-	} else {
-		return nil
-	}
-}
-
-// copyAssets currently has a dependency on https://github.com/otiai10/copy, but in Go 1.23 we'll be able to use os.CopyFS
-func (s command) copyAssets(distPath string, assetPath string) error {
-	if dir, err := os.Stat(distPath); err != nil {
-		return err
-	} else if !dir.IsDir() {
-		return fmt.Errorf("%s is not a directory", distPath)
-	} else if dir, err := os.Stat(assetPath); err != nil {
-		return err
-	} else if !dir.IsDir() {
-		return fmt.Errorf("%s is not a directory", assetPath)
-	} else if err := filepath.WalkDir(assetPath, clearFiles); err != nil {
-		return fmt.Errorf("failed to clear git keep files out of %s: %w", distPath, err)
-	} else if err := cp.Copy(distPath, assetPath); err != nil {
-		return fmt.Errorf("failed to copy assets from %s to %s: %w", distPath, assetPath, err)
 	} else {
 		return nil
 	}
