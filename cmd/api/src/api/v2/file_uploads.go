@@ -103,7 +103,7 @@ func (s Resources) ListFileUploadJobs(response http.ResponseWriter, request *htt
 			api.WriteErrorResponse(request.Context(), ErrBadQueryParameter(request, model.PaginationQueryParameterSkip, err), response)
 		} else if limit, err := ParseLimitQueryParameter(queryParams, 100); err != nil {
 			api.WriteErrorResponse(request.Context(), ErrBadQueryParameter(request, model.PaginationQueryParameterLimit, err), response)
-		} else if fileUploadJobs, count, err := fileupload.GetAllFileUploadJobs(s.DB, skip, limit, strings.Join(order, ", "), sqlFilter); err != nil {
+		} else if fileUploadJobs, count, err := fileupload.GetAllFileUploadJobs(request.Context(), s.DB, skip, limit, strings.Join(order, ", "), sqlFilter); err != nil {
 			api.HandleDatabaseError(request, response, err)
 		} else {
 			api.WriteResponseWrapperWithPagination(request.Context(), fileUploadJobs, limit, skip, count, http.StatusOK, response)
@@ -117,7 +117,7 @@ func (s Resources) StartFileUploadJob(response http.ResponseWriter, request *htt
 
 	if user, valid := auth.GetUserFromAuthCtx(reqCtx.AuthCtx); !valid {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusUnauthorized, api.ErrorResponseDetailsAuthenticationInvalid, request), response)
-	} else if fileUploadJob, err := fileupload.StartFileUploadJob(s.DB, user); err != nil {
+	} else if fileUploadJob, err := fileupload.StartFileUploadJob(request.Context(), s.DB, user); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
 		api.WriteBasicResponse(request.Context(), fileUploadJob, http.StatusCreated, response)
@@ -132,7 +132,7 @@ func (s Resources) ProcessFileUpload(response http.ResponseWriter, request *http
 
 	if fileUploadJobID, err := strconv.Atoi(fileUploadJobIdString); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsIDMalformed, request), response)
-	} else if fileUploadJob, err := fileupload.GetFileUploadJobByID(s.DB, int64(fileUploadJobID)); err != nil {
+	} else if fileUploadJob, err := fileupload.GetFileUploadJobByID(request.Context(), s.DB, int64(fileUploadJobID)); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else if fileName, err := fileupload.SaveIngestFile(s.Config.TempDirectory(), request.Body); errors.Is(err, fileupload.ErrInvalidJSON) {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("Error saving ingest file: %v", err), request), response)
@@ -140,7 +140,7 @@ func (s Resources) ProcessFileUpload(response http.ResponseWriter, request *http
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("Error saving ingest file: %v", err), request), response)
 	} else if _, err = ingest.CreateIngestTask(request.Context(), s.DB, fileName, requestId, int64(fileUploadJobID)); err != nil {
 		api.HandleDatabaseError(request, response, err)
-	} else if err = fileupload.TouchFileUploadJobLastIngest(s.DB, fileUploadJob); err != nil {
+	} else if err = fileupload.TouchFileUploadJobLastIngest(request.Context(), s.DB, fileUploadJob); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
 		response.WriteHeader(http.StatusAccepted)
@@ -154,11 +154,11 @@ func (s Resources) EndFileUploadJob(response http.ResponseWriter, request *http.
 
 	if fileUploadJobID, err := strconv.Atoi(fileUploadJobIdString); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsIDMalformed, request), response)
-	} else if fileUploadJob, err := fileupload.GetFileUploadJobByID(s.DB, int64(fileUploadJobID)); err != nil {
+	} else if fileUploadJob, err := fileupload.GetFileUploadJobByID(request.Context(), s.DB, int64(fileUploadJobID)); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else if fileUploadJob.Status != model.JobStatusRunning {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "job must be in running status to end", request), response)
-	} else if err := fileupload.EndFileUploadJob(s.DB, fileUploadJob); err != nil {
+	} else if err := fileupload.EndFileUploadJob(request.Context(), s.DB, fileUploadJob); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
 		response.WriteHeader(http.StatusOK)

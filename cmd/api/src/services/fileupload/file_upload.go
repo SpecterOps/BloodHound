@@ -35,11 +35,11 @@ const jobActivityTimeout = time.Minute * 20
 var ErrInvalidJSON = errors.New("file is not valid json")
 
 type FileUploadData interface {
-	CreateFileUploadJob(job model.FileUploadJob) (model.FileUploadJob, error)
-	UpdateFileUploadJob(job model.FileUploadJob) error
-	GetFileUploadJob(id int64) (model.FileUploadJob, error)
-	GetAllFileUploadJobs(skip int, limit int, order string, filter model.SQLFilter) ([]model.FileUploadJob, int, error)
-	GetFileUploadJobsWithStatus(status model.JobStatus) ([]model.FileUploadJob, error)
+	CreateFileUploadJob(ctx context.Context, job model.FileUploadJob) (model.FileUploadJob, error)
+	UpdateFileUploadJob(ctx context.Context, job model.FileUploadJob) error
+	GetFileUploadJob(ctx context.Context, id int64) (model.FileUploadJob, error)
+	GetAllFileUploadJobs(ctx context.Context, skip int, limit int, order string, filter model.SQLFilter) ([]model.FileUploadJob, int, error)
+	GetFileUploadJobsWithStatus(ctx context.Context, status model.JobStatus) ([]model.FileUploadJob, error)
 	DeleteAllFileUploads(ctx context.Context) error
 }
 
@@ -55,7 +55,7 @@ func ProcessStaleFileUploadJobs(ctx context.Context, db FileUploadData) {
 		threshold = now.Add(-jobActivityTimeout)
 	)
 
-	if jobs, err := db.GetFileUploadJobsWithStatus(model.JobStatusRunning); err != nil {
+	if jobs, err := db.GetFileUploadJobsWithStatus(ctx, model.JobStatusRunning); err != nil {
 		log.Errorf("Error getting running jobs: %v", err)
 	} else {
 		for _, job := range jobs {
@@ -65,7 +65,7 @@ func ProcessStaleFileUploadJobs(ctx context.Context, db FileUploadData) {
 					now.Sub(threshold).Minutes(),
 					job.LastIngest.Format(time.RFC3339))
 
-				if err := TimeOutUploadJob(db, job.ID, fmt.Sprintf("Ingest timeout: No ingest activity observed in %f minutes. Upload incomplete.", now.Sub(threshold).Minutes())); err != nil {
+				if err := TimeOutUploadJob(ctx, db, job.ID, fmt.Sprintf("Ingest timeout: No ingest activity observed in %f minutes. Upload incomplete.", now.Sub(threshold).Minutes())); err != nil {
 					log.Errorf("Error marking file upload job %d as timed out: %v", job.ID, err)
 				}
 			}
@@ -73,11 +73,11 @@ func ProcessStaleFileUploadJobs(ctx context.Context, db FileUploadData) {
 	}
 }
 
-func GetAllFileUploadJobs(db FileUploadData, skip int, limit int, order string, filter model.SQLFilter) ([]model.FileUploadJob, int, error) {
-	return db.GetAllFileUploadJobs(skip, limit, order, filter)
+func GetAllFileUploadJobs(ctx context.Context, db FileUploadData, skip int, limit int, order string, filter model.SQLFilter) ([]model.FileUploadJob, int, error) {
+	return db.GetAllFileUploadJobs(ctx, skip, limit, order, filter)
 }
 
-func StartFileUploadJob(db FileUploadData, user model.User) (model.FileUploadJob, error) {
+func StartFileUploadJob(ctx context.Context, db FileUploadData, user model.User) (model.FileUploadJob, error) {
 	job := model.FileUploadJob{
 		UserID:     user.ID,
 		User:       user,
@@ -85,11 +85,11 @@ func StartFileUploadJob(db FileUploadData, user model.User) (model.FileUploadJob
 		StartTime:  time.Now().UTC(),
 		LastIngest: time.Now().UTC(),
 	}
-	return db.CreateFileUploadJob(job)
+	return db.CreateFileUploadJob(ctx, job)
 }
 
-func GetFileUploadJobByID(db FileUploadData, jobID int64) (model.FileUploadJob, error) {
-	return db.GetFileUploadJob(jobID)
+func GetFileUploadJobByID(ctx context.Context, db FileUploadData, jobID int64) (model.FileUploadJob, error) {
+	return db.GetFileUploadJob(ctx, jobID)
 }
 
 func WriteAndValidateJSON(src io.Reader, dst io.Writer) error {
@@ -114,49 +114,37 @@ func SaveIngestFile(location string, fileData io.Reader) (string, error) {
 	return tempFile.Name(), WriteAndValidateJSON(fileData, tempFile)
 }
 
-func TouchFileUploadJobLastIngest(db FileUploadData, fileUploadJob model.FileUploadJob) error {
+func TouchFileUploadJobLastIngest(ctx context.Context, db FileUploadData, fileUploadJob model.FileUploadJob) error {
 	fileUploadJob.LastIngest = time.Now().UTC()
-	return db.UpdateFileUploadJob(fileUploadJob)
+	return db.UpdateFileUploadJob(ctx, fileUploadJob)
 }
 
-func EndFileUploadJob(db FileUploadData, job model.FileUploadJob) error {
+func EndFileUploadJob(ctx context.Context, db FileUploadData, job model.FileUploadJob) error {
 	job.Status = model.JobStatusIngesting
 
-	if err := db.UpdateFileUploadJob(job); err != nil {
+	if err := db.UpdateFileUploadJob(ctx, job); err != nil {
 		return fmt.Errorf("error ending file upload job: %w", err)
 	}
 
 	return nil
 }
 
-func UpdateFileUploadJobStatus(db FileUploadData, fileUploadJob model.FileUploadJob, status model.JobStatus, message string) error {
+func UpdateFileUploadJobStatus(ctx context.Context, db FileUploadData, fileUploadJob model.FileUploadJob, status model.JobStatus, message string) error {
 	fileUploadJob.Status = status
 	fileUploadJob.StatusMessage = message
 	fileUploadJob.EndTime = time.Now().UTC()
 
-	return db.UpdateFileUploadJob(fileUploadJob)
+	return db.UpdateFileUploadJob(ctx, fileUploadJob)
 }
 
-func TimeOutUploadJob(db FileUploadData, jobID int64, message string) error {
-	if job, err := db.GetFileUploadJob(jobID); err != nil {
+func TimeOutUploadJob(ctx context.Context, db FileUploadData, jobID int64, message string) error {
+	if job, err := db.GetFileUploadJob(ctx, jobID); err != nil {
 		return err
 	} else {
 		job.Status = model.JobStatusTimedOut
 		job.StatusMessage = message
 		job.EndTime = time.Now().UTC()
 
-		return db.UpdateFileUploadJob(job)
-	}
-}
-
-func FailFileUploadJob(db FileUploadData, jobID int64, message string) error {
-	if job, err := db.GetFileUploadJob(jobID); err != nil {
-		return err
-	} else {
-		job.Status = model.JobStatusFailed
-		job.StatusMessage = message
-		job.EndTime = time.Now().UTC()
-
-		return db.UpdateFileUploadJob(job)
+		return db.UpdateFileUploadJob(ctx, job)
 	}
 }
