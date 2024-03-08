@@ -34,8 +34,6 @@ func parseLatestVersion(versions []string) (semver.Version, error) {
 		return semver.Version{}, ErrNoValidSemverFound
 	}
 
-	fmt.Printf("\n%+v\n\n", versions)
-
 	semversions := make([]*semver.Version, 0, len(versions))
 
 	for _, version := range versions {
