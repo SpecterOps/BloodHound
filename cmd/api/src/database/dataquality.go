@@ -144,8 +144,8 @@ func (s *BloodhoundDB) GetAzureDataQualityStats(tenantId string, start time.Time
 	return azureDataQualityStats, int(count), nil
 }
 
-func (s *BloodhoundDB) CreateAzureDataQualityAggregation(aggregation model.AzureDataQualityAggregation) (model.AzureDataQualityAggregation, error) {
-	result := s.db.Create(&aggregation)
+func (s *BloodhoundDB) CreateAzureDataQualityAggregation(ctx context.Context, aggregation model.AzureDataQualityAggregation) (model.AzureDataQualityAggregation, error) {
+	result := s.db.WithContext(ctx).Create(&aggregation)
 	return aggregation, CheckError(result)
 }
 

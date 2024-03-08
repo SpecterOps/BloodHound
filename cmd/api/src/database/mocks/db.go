@@ -184,18 +184,18 @@ func (mr *MockDatabaseMockRecorder) CreateAuthToken(arg0, arg1 interface{}) *gom
 }
 
 // CreateAzureDataQualityAggregation mocks base method.
-func (m *MockDatabase) CreateAzureDataQualityAggregation(arg0 model.AzureDataQualityAggregation) (model.AzureDataQualityAggregation, error) {
+func (m *MockDatabase) CreateAzureDataQualityAggregation(arg0 context.Context, arg1 model.AzureDataQualityAggregation) (model.AzureDataQualityAggregation, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateAzureDataQualityAggregation", arg0)
+	ret := m.ctrl.Call(m, "CreateAzureDataQualityAggregation", arg0, arg1)
 	ret0, _ := ret[0].(model.AzureDataQualityAggregation)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // CreateAzureDataQualityAggregation indicates an expected call of CreateAzureDataQualityAggregation.
-func (mr *MockDatabaseMockRecorder) CreateAzureDataQualityAggregation(arg0 interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) CreateAzureDataQualityAggregation(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateAzureDataQualityAggregation", reflect.TypeOf((*MockDatabase)(nil).CreateAzureDataQualityAggregation), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateAzureDataQualityAggregation", reflect.TypeOf((*MockDatabase)(nil).CreateAzureDataQualityAggregation), arg0, arg1)
 }
 
 // CreateAzureDataQualityStats mocks base method.
