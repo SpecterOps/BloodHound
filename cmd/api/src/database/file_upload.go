@@ -23,8 +23,8 @@ import (
 	"gorm.io/gorm"
 )
 
-func (s *BloodhoundDB) UpdateFileUploadJob(job model.FileUploadJob) error {
-	result := s.db.Save(&job)
+func (s *BloodhoundDB) UpdateFileUploadJob(ctx context.Context, job model.FileUploadJob) error {
+	result := s.db.WithContext(ctx).Save(&job)
 	return CheckError(result)
 }
 

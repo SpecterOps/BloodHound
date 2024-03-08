@@ -144,11 +144,6 @@ type Database interface {
 
 	// File Uploads
 	fileupload.FileUploadData
-	UpdateFileUploadJob(job model.FileUploadJob) error
-	GetFileUploadJob(id int64) (model.FileUploadJob, error)
-	GetAllFileUploadJobs(skip int, limit int, order string, filter model.SQLFilter) ([]model.FileUploadJob, int, error)
-	GetFileUploadJobsWithStatus(status model.JobStatus) ([]model.FileUploadJob, error)
-	DeleteAllFileUploads(ctx context.Context) error
 
 	ListSavedQueries(userID uuid.UUID, order string, filter model.SQLFilter, skip, limit int) (model.SavedQueries, int, error)
 	CreateSavedQuery(userID uuid.UUID, name string, query string) (model.SavedQuery, error)

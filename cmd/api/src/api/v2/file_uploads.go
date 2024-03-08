@@ -140,7 +140,7 @@ func (s Resources) ProcessFileUpload(response http.ResponseWriter, request *http
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("Error saving ingest file: %v", err), request), response)
 	} else if _, err = ingest.CreateIngestTask(request.Context(), s.DB, fileName, requestId, int64(fileUploadJobID)); err != nil {
 		api.HandleDatabaseError(request, response, err)
-	} else if err = fileupload.TouchFileUploadJobLastIngest(s.DB, fileUploadJob); err != nil {
+	} else if err = fileupload.TouchFileUploadJobLastIngest(request.Context(), s.DB, fileUploadJob); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
 		response.WriteHeader(http.StatusAccepted)
@@ -158,7 +158,7 @@ func (s Resources) EndFileUploadJob(response http.ResponseWriter, request *http.
 		api.HandleDatabaseError(request, response, err)
 	} else if fileUploadJob.Status != model.JobStatusRunning {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "job must be in running status to end", request), response)
-	} else if err := fileupload.EndFileUploadJob(s.DB, fileUploadJob); err != nil {
+	} else if err := fileupload.EndFileUploadJob(request.Context(), s.DB, fileUploadJob); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
 		response.WriteHeader(http.StatusOK)

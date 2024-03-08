@@ -71,7 +71,7 @@ func TestFailAnalyzedFileUploadJobs(t *testing.T) {
 			Status: model.JobStatusAnalyzing,
 		}}, nil)
 
-		dbMock.EXPECT().UpdateFileUploadJob(gomock.Any()).DoAndReturn(func(fileUploadJob model.FileUploadJob) error {
+		dbMock.EXPECT().UpdateFileUploadJob(gomock.Any(), gomock.Any()).DoAndReturn(func(fileUploadJob model.FileUploadJob) error {
 			require.Equal(t, model.JobStatusFailed, fileUploadJob.Status)
 			return nil
 		})
@@ -98,7 +98,7 @@ func TestCompleteAnalyzedFileUploadJobs(t *testing.T) {
 			Status: model.JobStatusAnalyzing,
 		}}, nil)
 
-		dbMock.EXPECT().UpdateFileUploadJob(gomock.Any()).DoAndReturn(func(fileUploadJob model.FileUploadJob) error {
+		dbMock.EXPECT().UpdateFileUploadJob(gomock.Any(), gomock.Any()).DoAndReturn(func(fileUploadJob model.FileUploadJob) error {
 			require.Equal(t, model.JobStatusComplete, fileUploadJob.Status)
 			return nil
 		})
@@ -126,7 +126,7 @@ func TestProcessIngestedFileUploadJobs(t *testing.T) {
 		}}, nil)
 
 		dbMock.EXPECT().GetIngestTasksForJob(gomock.Any(), jobID).Return([]model.IngestTask{}, nil)
-		dbMock.EXPECT().UpdateFileUploadJob(gomock.Any()).DoAndReturn(func(fileUploadJob model.FileUploadJob) error {
+		dbMock.EXPECT().UpdateFileUploadJob(gomock.Any(), gomock.Any()).DoAndReturn(func(fileUploadJob model.FileUploadJob) error {
 			require.Equal(t, model.JobStatusAnalyzing, fileUploadJob.Status)
 			return nil
 		})

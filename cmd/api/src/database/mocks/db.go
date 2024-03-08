@@ -1290,17 +1290,17 @@ func (mr *MockDatabaseMockRecorder) UpdateAuthToken(arg0, arg1 interface{}) *gom
 }
 
 // UpdateFileUploadJob mocks base method.
-func (m *MockDatabase) UpdateFileUploadJob(arg0 model.FileUploadJob) error {
+func (m *MockDatabase) UpdateFileUploadJob(arg0 context.Context, arg1 model.FileUploadJob) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateFileUploadJob", arg0)
+	ret := m.ctrl.Call(m, "UpdateFileUploadJob", arg0, arg1)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // UpdateFileUploadJob indicates an expected call of UpdateFileUploadJob.
-func (mr *MockDatabaseMockRecorder) UpdateFileUploadJob(arg0 interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) UpdateFileUploadJob(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateFileUploadJob", reflect.TypeOf((*MockDatabase)(nil).UpdateFileUploadJob), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateFileUploadJob", reflect.TypeOf((*MockDatabase)(nil).UpdateFileUploadJob), arg0, arg1)
 }
 
 // UpdateSAMLIdentityProvider mocks base method.

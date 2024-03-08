@@ -201,7 +201,7 @@ func TestResources_EndFileUploadJob(t *testing.T) {
 					mockDB.EXPECT().GetFileUploadJob(gomock.Any()).Return(model.FileUploadJob{
 						Status: model.JobStatusRunning,
 					}, nil)
-					mockDB.EXPECT().UpdateFileUploadJob(gomock.Any()).Return(errors.New("database error"))
+					mockDB.EXPECT().UpdateFileUploadJob(gomock.Any(), gomock.Any()).Return(errors.New("database error"))
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusInternalServerError)
@@ -216,7 +216,7 @@ func TestResources_EndFileUploadJob(t *testing.T) {
 					mockDB.EXPECT().GetFileUploadJob(gomock.Any()).Return(model.FileUploadJob{
 						Status: model.JobStatusRunning,
 					}, nil)
-					mockDB.EXPECT().UpdateFileUploadJob(gomock.Any()).Return(nil)
+					mockDB.EXPECT().UpdateFileUploadJob(gomock.Any(), gomock.Any()).Return(nil)
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusOK)
