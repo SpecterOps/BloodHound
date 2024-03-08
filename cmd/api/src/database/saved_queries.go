@@ -17,24 +17,25 @@
 package database
 
 import (
+	"context"
 	"github.com/gofrs/uuid"
 	"github.com/specterops/bloodhound/src/model"
 	"gorm.io/gorm"
 )
 
-func (s *BloodhoundDB) ListSavedQueries(userID uuid.UUID, order string, filter model.SQLFilter, skip, limit int) (model.SavedQueries, int, error) {
+func (s *BloodhoundDB) ListSavedQueries(ctx context.Context, userID uuid.UUID, order string, filter model.SQLFilter, skip, limit int) (model.SavedQueries, int, error) {
 	var (
 		queries model.SavedQueries
 		result  *gorm.DB
 		count   int64
-		cursor  = s.Scope(Paginate(skip, limit)).Where("user_id = ?", userID)
+		cursor  = s.Scope(Paginate(skip, limit)).WithContext(ctx).Where("user_id = ?", userID)
 	)
 
 	if filter.SQLString != "" {
 		cursor = cursor.Where(filter.SQLString, filter.Params)
-		result = s.db.Model(&queries).Where("user_id = ?", userID).Where(filter.SQLString, filter.Params).Count(&count)
+		result = s.db.Model(&queries).WithContext(ctx).Where("user_id = ?", userID).Where(filter.SQLString, filter.Params).Count(&count)
 	} else {
-		result = s.db.Model(&queries).Where("user_id = ?", userID).Count(&count)
+		result = s.db.Model(&queries).WithContext(ctx).Where("user_id = ?", userID).Count(&count)
 	}
 
 	if result.Error != nil {

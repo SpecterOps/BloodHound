@@ -20,6 +20,7 @@
 package database_test
 
 import (
+	"context"
 	"fmt"
 	"github.com/gofrs/uuid"
 	"github.com/specterops/bloodhound/src/model"
@@ -30,7 +31,8 @@ import (
 
 func TestSavedQueries_ListSavedQueries(t *testing.T) {
 	var (
-		dbInst = integration.OpenDatabase(t)
+		testCtx = context.Background()
+		dbInst  = integration.OpenDatabase(t)
 
 		savedQueriesFilter = model.QueryParameterFilter{
 			Name:         "id",
@@ -54,14 +56,14 @@ func TestSavedQueries_ListSavedQueries(t *testing.T) {
 		}
 	}
 
-	if _, count, err := dbInst.ListSavedQueries(userUUID, "", model.SQLFilter{}, 0, 10); err != nil {
+	if _, count, err := dbInst.ListSavedQueries(testCtx, userUUID, "", model.SQLFilter{}, 0, 10); err != nil {
 		t.Fatalf("Failed to list all saved queries: %v", err)
 	} else if count != 7 {
 		t.Fatalf("Expected 7 saved queries to be returned")
 	} else if filter, err := savedQueriesFilterMap.BuildSQLFilter(); err != nil {
 		t.Fatalf("Failed to generate SQL Filter: %v", err)
 		// Limit is set to 1 to verify that count is total filtered count, not response size
-	} else if _, count, err = dbInst.ListSavedQueries(userUUID, "", filter, 0, 1); err != nil {
+	} else if _, count, err = dbInst.ListSavedQueries(testCtx, userUUID, "", filter, 0, 1); err != nil {
 		t.Fatalf("Failed to list filtered saved queries: %v", err)
 	} else if count != 3 {
 		t.Fatalf("Expected 3 saved queries to be returned")

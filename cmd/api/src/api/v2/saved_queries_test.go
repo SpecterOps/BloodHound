@@ -204,7 +204,7 @@ func TestResources_ListSavedQueries_DBError(t *testing.T) {
 	userId, err := uuid2.NewV4()
 	require.Nil(t, err)
 
-	mockDB.EXPECT().ListSavedQueries(userId, "", model.SQLFilter{}, 0, 10000).Return(model.SavedQueries{}, 0, fmt.Errorf("foo"))
+	mockDB.EXPECT().ListSavedQueries(gomock.Any(), userId, "", model.SQLFilter{}, 0, 10000).Return(model.SavedQueries{}, 0, fmt.Errorf("foo"))
 
 	if req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), "GET", endpoint, nil); err != nil {
 		t.Fatal(err)
@@ -233,7 +233,7 @@ func TestResources_ListSavedQueries(t *testing.T) {
 	userId, err := uuid2.NewV4()
 	require.Nil(t, err)
 
-	mockDB.EXPECT().ListSavedQueries(userId, gomock.Any(), gomock.Any(), 1, 10).Return(model.SavedQueries{
+	mockDB.EXPECT().ListSavedQueries(gomock.Any(), userId, gomock.Any(), gomock.Any(), 1, 10).Return(model.SavedQueries{
 		{
 			UserID: userId.String(),
 			Name:   "myQuery",

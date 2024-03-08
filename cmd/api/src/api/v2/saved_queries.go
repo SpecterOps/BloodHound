@@ -89,7 +89,7 @@ func (s Resources) ListSavedQueries(response http.ResponseWriter, request *http.
 			api.WriteErrorResponse(request.Context(), ErrBadQueryParameter(request, model.PaginationQueryParameterSkip, err), response)
 		} else if limit, err := ParseLimitQueryParameter(queryParams, 10000); err != nil {
 			api.WriteErrorResponse(request.Context(), ErrBadQueryParameter(request, model.PaginationQueryParameterLimit, err), response)
-		} else if queries, count, err := s.DB.ListSavedQueries(user.ID, strings.Join(order, ", "), sqlFilter, skip, limit); err != nil {
+		} else if queries, count, err := s.DB.ListSavedQueries(request.Context(), user.ID, strings.Join(order, ", "), sqlFilter, skip, limit); err != nil {
 			api.HandleDatabaseError(request, response, err)
 		} else {
 			api.WriteResponseWrapperWithPagination(request.Context(), queries, limit, skip, count, http.StatusOK, response)

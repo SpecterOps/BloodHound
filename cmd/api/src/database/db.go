@@ -144,7 +144,9 @@ type Database interface {
 
 	// File Upload
 	fileupload.FileUploadData
-	ListSavedQueries(userID uuid.UUID, order string, filter model.SQLFilter, skip, limit int) (model.SavedQueries, int, error)
+
+	// Saved Queries
+	ListSavedQueries(ctx context.Context, userID uuid.UUID, order string, filter model.SQLFilter, skip, limit int) (model.SavedQueries, int, error)
 	CreateSavedQuery(userID uuid.UUID, name string, query string) (model.SavedQuery, error)
 	DeleteSavedQuery(id int) error
 	SavedQueryBelongsToUser(userID uuid.UUID, savedQueryID int) (bool, error)

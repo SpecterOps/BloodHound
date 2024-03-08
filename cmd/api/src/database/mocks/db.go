@@ -1076,9 +1076,9 @@ func (mr *MockDatabaseMockRecorder) ListAuditLogs(arg0, arg1, arg2, arg3, arg4, 
 }
 
 // ListSavedQueries mocks base method.
-func (m *MockDatabase) ListSavedQueries(arg0 uuid.UUID, arg1 string, arg2 model.SQLFilter, arg3, arg4 int) (model.SavedQueries, int, error) {
+func (m *MockDatabase) ListSavedQueries(arg0 context.Context, arg1 uuid.UUID, arg2 string, arg3 model.SQLFilter, arg4, arg5 int) (model.SavedQueries, int, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ListSavedQueries", arg0, arg1, arg2, arg3, arg4)
+	ret := m.ctrl.Call(m, "ListSavedQueries", arg0, arg1, arg2, arg3, arg4, arg5)
 	ret0, _ := ret[0].(model.SavedQueries)
 	ret1, _ := ret[1].(int)
 	ret2, _ := ret[2].(error)
@@ -1086,9 +1086,9 @@ func (m *MockDatabase) ListSavedQueries(arg0 uuid.UUID, arg1 string, arg2 model.
 }
 
 // ListSavedQueries indicates an expected call of ListSavedQueries.
-func (mr *MockDatabaseMockRecorder) ListSavedQueries(arg0, arg1, arg2, arg3, arg4 interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) ListSavedQueries(arg0, arg1, arg2, arg3, arg4, arg5 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListSavedQueries", reflect.TypeOf((*MockDatabase)(nil).ListSavedQueries), arg0, arg1, arg2, arg3, arg4)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListSavedQueries", reflect.TypeOf((*MockDatabase)(nil).ListSavedQueries), arg0, arg1, arg2, arg3, arg4, arg5)
 }
 
 // LookupActiveSessionsByUser mocks base method.
