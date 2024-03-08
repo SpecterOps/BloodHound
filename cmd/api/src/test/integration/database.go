@@ -62,7 +62,7 @@ func SetupDB(t *testing.T) database.Database {
 func Prepare(ctx context.Context, db database.Database) error {
 	if err := db.Wipe(ctx); err != nil {
 		return fmt.Errorf("failed to clear database: %v", err)
-	} else if err := db.Migrate(); err != nil {
+	} else if err := db.Migrate(ctx); err != nil {
 		return fmt.Errorf("failed to migrate database: %v", err)
 	}
 

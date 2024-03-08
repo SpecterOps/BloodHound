@@ -1137,32 +1137,32 @@ func (mr *MockDatabaseMockRecorder) LookupUser(arg0, arg1 interface{}) *gomock.C
 }
 
 // Migrate mocks base method.
-func (m *MockDatabase) Migrate() error {
+func (m *MockDatabase) Migrate(arg0 context.Context) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Migrate")
+	ret := m.ctrl.Call(m, "Migrate", arg0)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // Migrate indicates an expected call of Migrate.
-func (mr *MockDatabaseMockRecorder) Migrate() *gomock.Call {
+func (mr *MockDatabaseMockRecorder) Migrate(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Migrate", reflect.TypeOf((*MockDatabase)(nil).Migrate))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Migrate", reflect.TypeOf((*MockDatabase)(nil).Migrate), arg0)
 }
 
 // RequiresMigration mocks base method.
-func (m *MockDatabase) RequiresMigration() (bool, error) {
+func (m *MockDatabase) RequiresMigration(arg0 context.Context) (bool, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "RequiresMigration")
+	ret := m.ctrl.Call(m, "RequiresMigration", arg0)
 	ret0, _ := ret[0].(bool)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // RequiresMigration indicates an expected call of RequiresMigration.
-func (mr *MockDatabaseMockRecorder) RequiresMigration() *gomock.Call {
+func (mr *MockDatabaseMockRecorder) RequiresMigration(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RequiresMigration", reflect.TypeOf((*MockDatabase)(nil).RequiresMigration))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RequiresMigration", reflect.TypeOf((*MockDatabase)(nil).RequiresMigration), arg0)
 }
 
 // SavedQueryBelongsToUser mocks base method.

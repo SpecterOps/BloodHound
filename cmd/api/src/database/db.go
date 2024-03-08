@@ -77,8 +77,8 @@ type Database interface {
 	UpdateAssetGroupSelectors(ctx context.Context, assetGroup model.AssetGroup, selectorSpecs []model.AssetGroupSelectorSpec, systemSelector bool) (model.UpdatedAssetGroupSelectors, error)
 
 	Wipe(ctx context.Context) error
-	Migrate() error
-	RequiresMigration() (bool, error)
+	Migrate(ctx context.Context) error
+	RequiresMigration(ctx context.Context) (bool, error)
 
 	// Audit Logs
 	CreateAuditLog(ctx context.Context, auditLog model.AuditLog) error
@@ -227,13 +227,13 @@ func (s *BloodhoundDB) Wipe(ctx context.Context) error {
 	})
 }
 
-func (s *BloodhoundDB) RequiresMigration() (bool, error) {
-	return migration.NewMigrator(s.db).RequiresMigration()
+func (s *BloodhoundDB) RequiresMigration(ctx context.Context) (bool, error) {
+	return migration.NewMigrator(s.db.WithContext(ctx)).RequiresMigration()
 }
 
-func (s *BloodhoundDB) Migrate() error {
+func (s *BloodhoundDB) Migrate(ctx context.Context) error {
 	// Run the migrator
-	if err := migration.NewMigrator(s.db).Migrate(); err != nil {
+	if err := migration.NewMigrator(s.db.WithContext(ctx)).Migrate(); err != nil {
 		log.Errorf("Error during SQL database migration phase: %v", err)
 		return err
 	}
