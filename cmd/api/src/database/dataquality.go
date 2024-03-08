@@ -63,7 +63,7 @@ func (s *BloodhoundDB) CreateADDataQualityAggregation(ctx context.Context, aggre
 	return aggregation, CheckError(result)
 }
 
-func (s *BloodhoundDB) GetADDataQualityAggregations(start time.Time, end time.Time, order string, limit int, skip int) (model.ADDataQualityAggregations, int, error) {
+func (s *BloodhoundDB) GetADDataQualityAggregations(ctx context.Context, start time.Time, end time.Time, order string, limit int, skip int) (model.ADDataQualityAggregations, int, error) {
 	const (
 		defaultOrder = "created_at desc"
 		defaultWhere = "created_at between ? and ?"
@@ -75,24 +75,18 @@ func (s *BloodhoundDB) GetADDataQualityAggregations(start time.Time, end time.Ti
 		result                    *gorm.DB
 	)
 
-	if order != "" {
-		result = s.Scope(Paginate(skip, limit)).Where(defaultWhere, start, end).Order(order).Find(&adDataQualityAggregations)
-		if CheckError(result) != nil {
-			return adDataQualityAggregations, 0, result.Error
-		}
-		result = s.db.Model(model.ADDataQualityAggregations{}).Where(defaultWhere, start, end).Order(order).Count(&count)
-		if CheckError(result) != nil {
-			return adDataQualityAggregations, 0, result.Error
-		}
-	} else {
-		result = s.Scope(Paginate(skip, limit)).Where(defaultWhere, start, end).Order(defaultOrder).Find(&adDataQualityAggregations)
-		if CheckError(result) != nil {
-			return adDataQualityAggregations, 0, result.Error
-		}
-		result = s.db.Model(model.ADDataQualityAggregations{}).Where(defaultWhere, start, end).Order(defaultOrder).Count(&count)
-		if CheckError(result) != nil {
-			return adDataQualityAggregations, 0, result.Error
-		}
+	result = s.db.Model(model.ADDataQualityAggregations{}).WithContext(ctx).Where(defaultWhere, start, end).Count(&count)
+	if CheckError(result) != nil {
+		return adDataQualityAggregations, 0, result.Error
+	}
+
+	if order == "" {
+		order = defaultOrder
+	}
+
+	result = s.Scope(Paginate(skip, limit)).WithContext(ctx).Where(defaultWhere, start, end).Order(order).Find(&adDataQualityAggregations)
+	if CheckError(result) != nil {
+		return adDataQualityAggregations, 0, result.Error
 	}
 
 	return adDataQualityAggregations, int(count), nil

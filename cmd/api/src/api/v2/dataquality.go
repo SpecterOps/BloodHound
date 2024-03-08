@@ -197,7 +197,7 @@ func (s *Resources) GetPlatformAggregateStats(response http.ResponseWriter, requ
 
 		switch id {
 		case "ad":
-			stats, count, err = s.DB.GetADDataQualityAggregations(start, end, strings.Join(order, ", "), limit, skip)
+			stats, count, err = s.DB.GetADDataQualityAggregations(request.Context(), start, end, strings.Join(order, ", "), limit, skip)
 			if err != nil {
 				api.HandleDatabaseError(request, response, err)
 				return
