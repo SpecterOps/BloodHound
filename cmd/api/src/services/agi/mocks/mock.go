@@ -21,6 +21,7 @@
 package mocks
 
 import (
+	context "context"
 	reflect "reflect"
 
 	model "github.com/specterops/bloodhound/src/model"
@@ -51,45 +52,45 @@ func (m *MockAgiData) EXPECT() *MockAgiDataMockRecorder {
 }
 
 // CreateAssetGroupCollection mocks base method.
-func (m *MockAgiData) CreateAssetGroupCollection(arg0 model.AssetGroupCollection, arg1 model.AssetGroupCollectionEntries) error {
+func (m *MockAgiData) CreateAssetGroupCollection(arg0 context.Context, arg1 model.AssetGroupCollection, arg2 model.AssetGroupCollectionEntries) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateAssetGroupCollection", arg0, arg1)
+	ret := m.ctrl.Call(m, "CreateAssetGroupCollection", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // CreateAssetGroupCollection indicates an expected call of CreateAssetGroupCollection.
-func (mr *MockAgiDataMockRecorder) CreateAssetGroupCollection(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockAgiDataMockRecorder) CreateAssetGroupCollection(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateAssetGroupCollection", reflect.TypeOf((*MockAgiData)(nil).CreateAssetGroupCollection), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateAssetGroupCollection", reflect.TypeOf((*MockAgiData)(nil).CreateAssetGroupCollection), arg0, arg1, arg2)
 }
 
 // GetAllAssetGroups mocks base method.
-func (m *MockAgiData) GetAllAssetGroups(arg0 string, arg1 model.SQLFilter) (model.AssetGroups, error) {
+func (m *MockAgiData) GetAllAssetGroups(arg0 context.Context, arg1 string, arg2 model.SQLFilter) (model.AssetGroups, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetAllAssetGroups", arg0, arg1)
+	ret := m.ctrl.Call(m, "GetAllAssetGroups", arg0, arg1, arg2)
 	ret0, _ := ret[0].(model.AssetGroups)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetAllAssetGroups indicates an expected call of GetAllAssetGroups.
-func (mr *MockAgiDataMockRecorder) GetAllAssetGroups(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockAgiDataMockRecorder) GetAllAssetGroups(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllAssetGroups", reflect.TypeOf((*MockAgiData)(nil).GetAllAssetGroups), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllAssetGroups", reflect.TypeOf((*MockAgiData)(nil).GetAllAssetGroups), arg0, arg1, arg2)
 }
 
 // GetAssetGroup mocks base method.
-func (m *MockAgiData) GetAssetGroup(arg0 int32) (model.AssetGroup, error) {
+func (m *MockAgiData) GetAssetGroup(arg0 context.Context, arg1 int32) (model.AssetGroup, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetAssetGroup", arg0)
+	ret := m.ctrl.Call(m, "GetAssetGroup", arg0, arg1)
 	ret0, _ := ret[0].(model.AssetGroup)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetAssetGroup indicates an expected call of GetAssetGroup.
-func (mr *MockAgiDataMockRecorder) GetAssetGroup(arg0 interface{}) *gomock.Call {
+func (mr *MockAgiDataMockRecorder) GetAssetGroup(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAssetGroup", reflect.TypeOf((*MockAgiData)(nil).GetAssetGroup), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAssetGroup", reflect.TypeOf((*MockAgiData)(nil).GetAssetGroup), arg0, arg1)
 }

@@ -18,6 +18,7 @@ import { produce } from 'immer';
 import * as actions from './actions';
 import * as types from './types';
 import { AppState } from 'src/store';
+import { createSelector } from '@reduxjs/toolkit';
 
 const INITIAL_STATE: types.AssetGroupsState = {
     assetGroups: [],
@@ -64,12 +65,19 @@ const asssetGroupReducer = (state: types.AssetGroupsState = INITIAL_STATE, actio
     });
 };
 
-export const selectTierZeroAssetGroupId = (state: AppState) => {
+export const selectTierZeroAssetGroupId = (state: AppState): number => {
     return state.assetgroups.assetGroups.find((assetGroup) => assetGroup.tag === 'admin_tier_0')?.id;
 };
 
-export const selectOwnedAssetGroupId = (state: AppState) => {
+export const selectOwnedAssetGroupId = (state: AppState): number => {
     return state.assetgroups.assetGroups.find((assetGroup) => assetGroup.tag === 'owned')?.id;
 };
+
+// use `createSelector` to memoize this selector because it returns an array which is
+// always different from the previous render because === on reference types will be false
+const selectAssetGroups = (state: AppState) => state.assetgroups.assetGroups;
+export const selectAllAssetGroupIds = createSelector([selectAssetGroups], (assetGroups) => {
+    return assetGroups.map((assetGroup) => assetGroup.id);
+});
 
 export default asssetGroupReducer;

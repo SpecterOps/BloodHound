@@ -57,11 +57,9 @@ type AuditLogs []AuditLog
 func (s AuditLogs) IsSortable(column string) bool {
 	switch column {
 	case "id",
-		"actor_id",
 		"actor_name",
 		"actor_email",
 		"action",
-		"request_id",
 		"created_at",
 		"source_ip_address",
 		"status":

@@ -107,11 +107,11 @@ func (s authenticator) auditLogin(requestContext context.Context, commitID uuid.
 		auditLog.Fields["error"] = loginError
 	}
 
-	s.db.CreateAuditLog(auditLog)
+	s.db.CreateAuditLog(requestContext, auditLog)
 }
 
 func (s authenticator) validateSecretLogin(ctx context.Context, loginRequest LoginRequest) (model.User, string, error) {
-	if user, err := s.db.LookupUser(loginRequest.Username); err != nil {
+	if user, err := s.db.LookupUser(ctx, loginRequest.Username); err != nil {
 		if errors.Is(err, database.ErrNotFound) {
 			return model.User{}, "", ErrInvalidAuth
 		}
@@ -230,9 +230,9 @@ func (s authenticator) ValidateRequestSignature(tokenID uuid.UUID, request *http
 		return auth.Context{}, http.StatusBadRequest, fmt.Errorf("no signature header")
 	} else if signatureBytes, err := base64.StdEncoding.DecodeString(signatureHeader); err != nil {
 		return auth.Context{}, http.StatusBadRequest, fmt.Errorf("malformed signature header: %w", err)
-	} else if authToken, err := s.db.GetAuthToken(tokenID); err != nil {
+	} else if authToken, err := s.db.GetAuthToken(request.Context(), tokenID); err != nil {
 		return handleAuthDBError(err)
-	} else if authContext, err := s.ctxInitializer.InitContextFromToken(authToken); err != nil {
+	} else if authContext, err := s.ctxInitializer.InitContextFromToken(request.Context(), authToken); err != nil {
 		return handleAuthDBError(err)
 	} else if user, isUser := auth.GetUserFromAuthCtx(authContext); isUser && user.IsDisabled {
 		return authContext, http.StatusForbidden, errors.Error("user disabled")
@@ -255,7 +255,7 @@ func (s authenticator) ValidateRequestSignature(tokenID uuid.UUID, request *http
 
 			authToken.LastAccess = time.Now().UTC()
 
-			if err := s.db.UpdateAuthToken(authToken); err != nil {
+			if err := s.db.UpdateAuthToken(request.Context(), authToken); err != nil {
 				log.Errorf("Error updating last access on AuthToken: %v", err)
 			}
 
