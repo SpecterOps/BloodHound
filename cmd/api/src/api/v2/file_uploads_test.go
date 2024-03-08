@@ -171,7 +171,7 @@ func TestResources_EndFileUploadJob(t *testing.T) {
 					apitest.SetURLVar(input, v2.FileUploadJobIdPathParameterName, "123")
 				},
 				Setup: func() {
-					mockDB.EXPECT().GetFileUploadJob(gomock.Any()).Return(model.FileUploadJob{}, errors.New("db error"))
+					mockDB.EXPECT().GetFileUploadJob(gomock.Any(), gomock.Any()).Return(model.FileUploadJob{}, errors.New("db error"))
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusInternalServerError)
@@ -183,7 +183,7 @@ func TestResources_EndFileUploadJob(t *testing.T) {
 					apitest.SetURLVar(input, v2.FileUploadJobIdPathParameterName, "123")
 				},
 				Setup: func() {
-					mockDB.EXPECT().GetFileUploadJob(gomock.Any()).Return(model.FileUploadJob{
+					mockDB.EXPECT().GetFileUploadJob(gomock.Any(), gomock.Any()).Return(model.FileUploadJob{
 						Status: model.JobStatusComplete,
 					}, nil)
 				},
@@ -198,7 +198,7 @@ func TestResources_EndFileUploadJob(t *testing.T) {
 					apitest.SetURLVar(input, v2.FileUploadJobIdPathParameterName, "123")
 				},
 				Setup: func() {
-					mockDB.EXPECT().GetFileUploadJob(gomock.Any()).Return(model.FileUploadJob{
+					mockDB.EXPECT().GetFileUploadJob(gomock.Any(), gomock.Any()).Return(model.FileUploadJob{
 						Status: model.JobStatusRunning,
 					}, nil)
 					mockDB.EXPECT().UpdateFileUploadJob(gomock.Any(), gomock.Any()).Return(errors.New("database error"))
@@ -213,7 +213,7 @@ func TestResources_EndFileUploadJob(t *testing.T) {
 					apitest.SetURLVar(input, v2.FileUploadJobIdPathParameterName, "123")
 				},
 				Setup: func() {
-					mockDB.EXPECT().GetFileUploadJob(gomock.Any()).Return(model.FileUploadJob{
+					mockDB.EXPECT().GetFileUploadJob(gomock.Any(), gomock.Any()).Return(model.FileUploadJob{
 						Status: model.JobStatusRunning,
 					}, nil)
 					mockDB.EXPECT().UpdateFileUploadJob(gomock.Any(), gomock.Any()).Return(nil)

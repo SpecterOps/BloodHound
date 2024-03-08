@@ -37,7 +37,7 @@ var ErrInvalidJSON = errors.New("file is not valid json")
 type FileUploadData interface {
 	CreateFileUploadJob(ctx context.Context, job model.FileUploadJob) (model.FileUploadJob, error)
 	UpdateFileUploadJob(ctx context.Context, job model.FileUploadJob) error
-	GetFileUploadJob(id int64) (model.FileUploadJob, error)
+	GetFileUploadJob(ctx context.Context, id int64) (model.FileUploadJob, error)
 	GetAllFileUploadJobs(skip int, limit int, order string, filter model.SQLFilter) ([]model.FileUploadJob, int, error)
 	GetFileUploadJobsWithStatus(status model.JobStatus) ([]model.FileUploadJob, error)
 	DeleteAllFileUploads(ctx context.Context) error
@@ -88,8 +88,8 @@ func StartFileUploadJob(ctx context.Context, db FileUploadData, user model.User)
 	return db.CreateFileUploadJob(ctx, job)
 }
 
-func GetFileUploadJobByID(db FileUploadData, jobID int64) (model.FileUploadJob, error) {
-	return db.GetFileUploadJob(jobID)
+func GetFileUploadJobByID(ctx context.Context, db FileUploadData, jobID int64) (model.FileUploadJob, error) {
+	return db.GetFileUploadJob(ctx, jobID)
 }
 
 func WriteAndValidateJSON(src io.Reader, dst io.Writer) error {
@@ -138,7 +138,7 @@ func UpdateFileUploadJobStatus(ctx context.Context, db FileUploadData, fileUploa
 }
 
 func TimeOutUploadJob(ctx context.Context, db FileUploadData, jobID int64, message string) error {
-	if job, err := db.GetFileUploadJob(jobID); err != nil {
+	if job, err := db.GetFileUploadJob(ctx, jobID); err != nil {
 		return err
 	} else {
 		job.Status = model.JobStatusTimedOut

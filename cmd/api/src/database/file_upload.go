@@ -33,9 +33,9 @@ func (s *BloodhoundDB) CreateFileUploadJob(ctx context.Context, job model.FileUp
 	return job, CheckError(result)
 }
 
-func (s *BloodhoundDB) GetFileUploadJob(id int64) (model.FileUploadJob, error) {
+func (s *BloodhoundDB) GetFileUploadJob(ctx context.Context, id int64) (model.FileUploadJob, error) {
 	var job model.FileUploadJob
-	if result := s.db.Preload("User").First(&job, id); result.Error != nil {
+	if result := s.db.Preload("User").WithContext(ctx).First(&job, id); result.Error != nil {
 		return job, CheckError(result)
 	} else {
 		return job, nil
