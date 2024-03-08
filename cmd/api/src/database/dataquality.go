@@ -64,8 +64,8 @@ func (s *BloodhoundDB) GetADDataQualityStats(domainSid string, start time.Time, 
 	return adDataQualityStats, int(count), nil
 }
 
-func (s *BloodhoundDB) CreateADDataQualityAggregation(aggregation model.ADDataQualityAggregation) (model.ADDataQualityAggregation, error) {
-	result := s.db.Create(&aggregation)
+func (s *BloodhoundDB) CreateADDataQualityAggregation(ctx context.Context, aggregation model.ADDataQualityAggregation) (model.ADDataQualityAggregation, error) {
+	result := s.db.WithContext(ctx).Create(&aggregation)
 	return aggregation, CheckError(result)
 }
 

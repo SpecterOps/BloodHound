@@ -30,7 +30,7 @@ import (
 
 type DataQualityData interface {
 	CreateADDataQualityStats(ctx context.Context, stats model.ADDataQualityStats) (model.ADDataQualityStats, error)
-	CreateADDataQualityAggregation(aggregation model.ADDataQualityAggregation) (model.ADDataQualityAggregation, error)
+	CreateADDataQualityAggregation(ctx context.Context, aggregation model.ADDataQualityAggregation) (model.ADDataQualityAggregation, error)
 	CreateAzureDataQualityStats(stats model.AzureDataQualityStats) (model.AzureDataQualityStats, error)
 	CreateAzureDataQualityAggregation(aggregation model.AzureDataQualityAggregation) (model.AzureDataQualityAggregation, error)
 }
@@ -45,7 +45,7 @@ func SaveDataQuality(ctx context.Context, db DataQualityData, graphDB graph.Data
 		// We only want to save stats if there are stats to save
 		if _, err := db.CreateADDataQualityStats(ctx, stats); err != nil {
 			return fmt.Errorf("could not save active directory data quality stats: %w", err)
-		} else if _, err := db.CreateADDataQualityAggregation(aggregation); err != nil {
+		} else if _, err := db.CreateADDataQualityAggregation(ctx, aggregation); err != nil {
 			return fmt.Errorf("could not save active directory data quality aggregation: %w", err)
 		}
 	}

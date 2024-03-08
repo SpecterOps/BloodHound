@@ -81,18 +81,18 @@ func (mr *MockDatabaseMockRecorder) Close() *gomock.Call {
 }
 
 // CreateADDataQualityAggregation mocks base method.
-func (m *MockDatabase) CreateADDataQualityAggregation(arg0 model.ADDataQualityAggregation) (model.ADDataQualityAggregation, error) {
+func (m *MockDatabase) CreateADDataQualityAggregation(arg0 context.Context, arg1 model.ADDataQualityAggregation) (model.ADDataQualityAggregation, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateADDataQualityAggregation", arg0)
+	ret := m.ctrl.Call(m, "CreateADDataQualityAggregation", arg0, arg1)
 	ret0, _ := ret[0].(model.ADDataQualityAggregation)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // CreateADDataQualityAggregation indicates an expected call of CreateADDataQualityAggregation.
-func (mr *MockDatabaseMockRecorder) CreateADDataQualityAggregation(arg0 interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) CreateADDataQualityAggregation(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateADDataQualityAggregation", reflect.TypeOf((*MockDatabase)(nil).CreateADDataQualityAggregation), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateADDataQualityAggregation", reflect.TypeOf((*MockDatabase)(nil).CreateADDataQualityAggregation), arg0, arg1)
 }
 
 // CreateADDataQualityStats mocks base method.
