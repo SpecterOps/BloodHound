@@ -329,7 +329,7 @@ func TestResources_CreateSavedQuery_DuplicateName(t *testing.T) {
 	userId, err := uuid2.NewV4()
 	require.Nil(t, err)
 
-	mockDB.EXPECT().CreateSavedQuery(gomock.Any(), gomock.Any(), gomock.Any()).Return(model.SavedQuery{}, fmt.Errorf("duplicate key value violates unique constraint \"idx_saved_queries_composite_index\""))
+	mockDB.EXPECT().CreateSavedQuery(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(model.SavedQuery{}, fmt.Errorf("duplicate key value violates unique constraint \"idx_saved_queries_composite_index\""))
 
 	payload := v2.CreateSavedQueryRequest{
 		Query: "Match(n) return n",
@@ -367,7 +367,7 @@ func TestResources_CreateSavedQuery_CreateFailure(t *testing.T) {
 		Name:  "myCustomQuery1",
 	}
 
-	mockDB.EXPECT().CreateSavedQuery(userId, payload.Name, payload.Query).Return(model.SavedQuery{}, fmt.Errorf("foo"))
+	mockDB.EXPECT().CreateSavedQuery(gomock.Any(), userId, payload.Name, payload.Query).Return(model.SavedQuery{}, fmt.Errorf("foo"))
 
 	req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), "POST", endpoint, must.MarshalJSONReader(payload))
 	require.Nil(t, err)
@@ -399,7 +399,7 @@ func TestResources_CreateSavedQuery(t *testing.T) {
 		Name:  "myCustomQuery1",
 	}
 
-	mockDB.EXPECT().CreateSavedQuery(userId, payload.Name, payload.Query).Return(model.SavedQuery{
+	mockDB.EXPECT().CreateSavedQuery(gomock.Any(), userId, payload.Name, payload.Query).Return(model.SavedQuery{
 		UserID: userId.String(),
 		Name:   payload.Name,
 		Query:  payload.Query,

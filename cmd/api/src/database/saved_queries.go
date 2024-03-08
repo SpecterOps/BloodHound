@@ -50,14 +50,14 @@ func (s *BloodhoundDB) ListSavedQueries(ctx context.Context, userID uuid.UUID, o
 	return queries, int(count), CheckError(result)
 }
 
-func (s *BloodhoundDB) CreateSavedQuery(userID uuid.UUID, name string, query string) (model.SavedQuery, error) {
+func (s *BloodhoundDB) CreateSavedQuery(ctx context.Context, userID uuid.UUID, name string, query string) (model.SavedQuery, error) {
 	savedQuery := model.SavedQuery{
 		UserID: userID.String(),
 		Name:   name,
 		Query:  query,
 	}
 
-	return savedQuery, CheckError(s.db.Create(&savedQuery))
+	return savedQuery, CheckError(s.db.WithContext(ctx).Create(&savedQuery))
 }
 
 func (s *BloodhoundDB) DeleteSavedQuery(id int) error {
