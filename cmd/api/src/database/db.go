@@ -142,7 +142,7 @@ type Database interface {
 	GetAzureDataQualityAggregations(start time.Time, end time.Time, sort_by string, limit int, skip int) (model.AzureDataQualityAggregations, int, error)
 	DeleteAllDataQuality(ctx context.Context) error
 
-	// File Uploads
+	// File Upload
 	fileupload.FileUploadData
 
 	ListSavedQueries(userID uuid.UUID, order string, filter model.SQLFilter, skip, limit int) (model.SavedQueries, int, error)
