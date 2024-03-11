@@ -400,7 +400,7 @@ func GetADCSESC3EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 			lock.Lock()
 			path1CandidateSegments[certTemplateNode.ID] = append(path1CandidateSegments[certTemplateNode.ID], terminal)
 
-			// if the start node is a user and the CT requires a DNS name, then we can skip this CT.
+			// Check that CT is valid for user start nodes
 			userStartNode := startNode.Kinds.ContainsOneOf(ad.User)
 			if !userStartNode || certTemplateValidForUserVictim(certTemplateNode) {
 				path1CertTemplates.Add(certTemplateNode.ID.Uint32())
