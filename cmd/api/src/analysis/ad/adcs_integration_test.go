@@ -1044,7 +1044,7 @@ func TestADCSESC4Composition(t *testing.T) {
 
 		operation.Done()
 
-		// first scenario: composition reveals that principal `Group11`` has esc4 on the domain via enrollment on ECA and GenericAll on `CertTemplate1`
+		// first scenario: composition reveals that principal `Group11` has esc4 on the domain via enrollment on ECA and GenericAll on `CertTemplate1`
 		// MATCH p1 = (n1)-[:MemberOf*0..]->()-[:GenericAll|Owns|WriteOwner|WriteDacl]->(ct)-[:PublishedTo]->(ca)-[:IssuedSignedBy|EnterpriseCAFor|RootCAFor*1..]->(d)
 		// MATCH p2 = (n1)-[:MemberOf*0..]->()-[:Enroll]->(ca)-[:TrustedForNTAuth]->(nt)-[:NTAuthStoreFor]->(d)
 		db.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
@@ -1074,7 +1074,7 @@ func TestADCSESC4Composition(t *testing.T) {
 			return nil
 		})
 
-		// second scenario: composition reveals that principal `Group12`` has esc4 on the domain via enrollment on ECA and GenericWrite on `CertTemplate1`
+		// second scenario: composition reveals that principal `Group12` has esc4 on the domain via enrollment on ECA and GenericWrite on `CertTemplate1`
 		// MATCH p3 = (n2 {objectid:'2cbd5ea3-8270-417a-a586-d4791b45cbad'})-[:MemberOf*0..]->()-[:GenericWrite]->(ct2)-[:PublishedTo]->(ca2)-[:IssuedSignedBy|EnterpriseCAFor|RootCAFor*1..]->(d)
 		// MATCH p4 = (n2)-[:MemberOf*0..]->()-[:Enroll|AllExtendedRights]->(ct2)
 		// MATCH p5 = (n2)-[:MemberOf*0..]->()-[:Enroll]->(ca2)-[:TrustedForNTAuth]->(nt)-[:NTAuthStoreFor]->(d)
@@ -1100,11 +1100,53 @@ func TestADCSESC4Composition(t *testing.T) {
 				require.True(t, composition.AllNodes().Contains(harness.ESC4Template1.NTAuthStore))
 				require.True(t, composition.AllNodes().Contains(harness.ESC4Template1.Domain))
 
-				// asset that this composition contains an enroll edge to the cert template
+				// assert that this composition contains an enroll edge to the cert template
 				filterPathsByEnrollEdge := composition.IncludeByEdgeKinds([]graph.Kind{ad.Enroll})
 				require.Equal(t, 2, len(filterPathsByEnrollEdge.AllNodes()))
 				require.True(t, filterPathsByEnrollEdge.AllNodes().Contains(harness.ESC4Template1.Group12))
 				require.True(t, filterPathsByEnrollEdge.AllNodes().Contains(harness.ESC4Template1.CertTemplate1))
+
+			}
+
+			return nil
+		})
+
+		// third scenario: composition reveals that principal `Group13` has esc4 on the domain via enrollment on ECA and `Enroll` and WritePKINameFlag` on `CertTemplate1`
+		// MATCH p6 = (n3)-[:MemberOf*0..]->()-[:WritePKINameFlag]->(ct3)-[:PublishedTo]->(ca3)-[:IssuedSignedBy|EnterpriseCAFor|RootCAFor*1..]->(d)
+		// MATCH p7 = (n3)-[:MemberOf*0..]->()-[:Enroll|AllExtendedRights]->(ct3)
+		// WHERE ct3.requiresmanagerapproval = false
+		//   AND ct3.authenticationenabled = true
+		//   AND (
+		//     ct3.authorizedsignatures = 0 OR ct3.schemaversion = 1
+		//   )
+		// MATCH p8 = (n3)-[:MemberOf*0..]->()-[:Enroll]->(ca3)-[:TrustedForNTAuth]->(nt)-[:NTAuthStoreFor]->(d)
+		db.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
+			if edge, err := tx.Relationships().Filterf(
+				func() graph.Criteria {
+					return query.And(
+						query.Kind(query.Relationship(), ad.ADCSESC4),
+						query.Equals(query.StartProperty(common.Name.String()), "Group13"),
+					)
+				}).First(); err != nil {
+				t.Fatalf("error fetching esc4 edge in integration test: %v", err)
+			} else {
+				composition, err := ad2.GetADCSESC4EdgeComposition(context.Background(), db, edge)
+				require.Nil(t, err)
+
+				require.Equal(t, 7, len(composition.AllNodes()))
+				require.True(t, composition.AllNodes().Contains(harness.ESC4Template1.Group13))
+				require.True(t, composition.AllNodes().Contains(harness.ESC4Template1.Group0))
+				require.True(t, composition.AllNodes().Contains(harness.ESC4Template1.CertTemplate1))
+				require.True(t, composition.AllNodes().Contains(harness.ESC4Template1.EnterpriseCA))
+				require.True(t, composition.AllNodes().Contains(harness.ESC4Template1.RootCA))
+				require.True(t, composition.AllNodes().Contains(harness.ESC4Template1.NTAuthStore))
+				require.True(t, composition.AllNodes().Contains(harness.ESC4Template1.Domain))
+
+				// assert that this composition contains an enroll edge to the cert template
+				filterPathsByEdges := composition.IncludeByEdgeKinds([]graph.Kind{ad.Enroll, ad.WritePKINameFlag})
+				require.Equal(t, 2, len(filterPathsByEdges.AllNodes()))
+				require.True(t, filterPathsByEdges.AllNodes().Contains(harness.ESC4Template1.Group13))
+				require.True(t, filterPathsByEdges.AllNodes().Contains(harness.ESC4Template1.CertTemplate1))
 
 			}
 

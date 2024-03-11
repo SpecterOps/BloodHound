@@ -18,7 +18,6 @@ package ad
 
 import (
 	"context"
-	"fmt"
 	"sync"
 
 	"github.com/specterops/bloodhound/analysis"
@@ -263,7 +262,8 @@ func GetADCSESC4EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 		certTemplates = cardinality.NewBitmap32()
 		enterpriseCAs = cardinality.NewBitmap32()
 
-		certTemplatesRemainingAfterValidation = cardinality.NewBitmap32()
+		certTemplatesIDs3     = cardinality.NewBitmap32()
+		certTemplateSegments3 = map[graph.ID][]*graph.PathSegment{}
 	)
 
 	if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
@@ -300,7 +300,7 @@ func GetADCSESC4EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 		return nil, err
 	}
 
-	// use the enterpriseCA nodes to gather the set of cert templates for p1
+	// p1: use the enterpriseCA nodes to gather the set of cert templates with an inbound `GenericAll`
 	if err := traversalInst.BreadthFirst(ctx, traversal.Plan{
 		Root: startNode,
 		Driver: ESC4Path1Pattern(edge.EndID, enterpriseCAs).Do(
@@ -323,7 +323,7 @@ func GetADCSESC4EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 		return nil, err
 	}
 
-	// use the enterpriseCA nodes to gather the set of cert templates for p3
+	// p3: use the enterpriseCA nodes to gather the set of cert templates with an inbound `GenericWrite`
 	if err := traversalInst.BreadthFirst(ctx, traversal.Plan{
 		Root: startNode,
 		Driver: ESC4Path3Pattern(edge.EndID, enterpriseCAs).Do(
@@ -346,6 +346,7 @@ func GetADCSESC4EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 		return nil, err
 	}
 
+	// todo: p4, can it become generic to accomdate p7, p10, p13?
 	if err := traversalInst.BreadthFirst(ctx, traversal.Plan{
 		Root: startNode,
 		Driver: ESC4Path4Pattern(certTemplates).Do(
@@ -367,7 +368,53 @@ func GetADCSESC4EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 		return nil, err
 	}
 
-	// use the enterpriseCA nodes from previous steps to find enterprise CAs that are trusted for NTAuth (p2)
+	// p6: use the enterpriseCA nodes to gather the set of cert templates with an inbound `WritePKINameFlag`
+	if err := traversalInst.BreadthFirst(ctx, traversal.Plan{
+		Root: startNode,
+		Driver: ESC4Path6Pattern(edge.EndID, enterpriseCAs).Do(
+			func(terminal *graph.PathSegment) error {
+
+				certTemplate := terminal.Search(
+					func(nextSegment *graph.PathSegment) bool {
+						return nextSegment.Node.Kinds.ContainsOneOf(ad.CertTemplate)
+					},
+				)
+
+				lock.Lock()
+				certTemplateSegments3[certTemplate.ID] = append(certTemplateSegments3[certTemplate.ID], terminal)
+				certTemplatesIDs3.Add(certTemplate.ID.Uint32())
+				lock.Unlock()
+
+				return nil
+			}),
+	}); err != nil {
+		return nil, err
+	}
+
+	// p7: find cert templates with a valid combination of properties that have an inbound `Enroll` OR `AllExtendedRights` edge
+	if err := traversalInst.BreadthFirst(ctx, traversal.Plan{
+		Root: startNode,
+		Driver: ESC4Path7Pattern(certTemplatesIDs3).Do(
+			func(terminal *graph.PathSegment) error {
+
+				certTemplate := terminal.Search(
+					func(nextSegment *graph.PathSegment) bool {
+						return nextSegment.Node.Kinds.ContainsOneOf(ad.CertTemplate)
+					},
+				)
+
+				lock.Lock()
+				certTemplateSegments[certTemplate.ID] = append(certTemplateSegments[certTemplate.ID], terminal)
+				certTemplates.Add(certTemplate.ID.Uint32())
+				lock.Unlock()
+
+				return nil
+			}),
+	}); err != nil {
+		return nil, err
+	}
+
+	// todo: p2, p5, p8?-- use the enterpriseCA nodes from previous steps to find enterprise CAs that are trusted for NTAuth
 	if err := traversalInst.BreadthFirst(ctx, traversal.Plan{
 		Root: startNode,
 		Driver: ESC4Path2Pattern(edge.EndID, enterpriseCAs).Do(
@@ -398,34 +445,46 @@ func GetADCSESC4EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 				paths.AddPath(segment.Path())
 			}
 
+			// TODO: i might not need to perform validation on cert templates here.
 			// filter down the remaining cert templates, to satisfy p6-p15 requirements
-			var certTemplate *graph.Node
+			// var certTemplate *graph.Node
 
-			// hydrate `certTemplate` by fetching by id
-			if err := db.ReadTransaction(ctx,
-				func(tx graph.Transaction) error {
-					if node, err := ops.FetchNode(tx, graph.ID(value)); err != nil {
-						return err
-					} else {
-						certTemplate = node
-						return nil
-					}
-				}); err != nil {
-				closureErr = fmt.Errorf("could not fetch cert template node: %w", err)
-				return false
-			}
+			// // hydrate `certTemplate` by fetching by id
+			// if err := db.ReadTransaction(ctx,
+			// 	func(tx graph.Transaction) error {
+			// 		if node, err := ops.FetchNode(tx, graph.ID(value)); err != nil {
+			// 			return err
+			// 		} else {
+			// 			certTemplate = node
+			// 			return nil
+			// 		}
+			// 	}); err != nil {
+			// 	closureErr = fmt.Errorf("could not fetch cert template node: %w", err)
+			// 	return false
+			// }
 
-			if valid, err := isCertTemplateValidForESC4(certTemplate); err != nil {
-				log.Infof("cert template not valid for esc4 %d: %v", certTemplate.ID, err)
-				return false
-			} else if !valid {
-				return true
-			} else {
-				certTemplatesRemainingAfterValidation.Add(uint32(certTemplate.ID))
-			}
+			// if valid, err := isCertTemplateValidForESC4(certTemplate); err != nil {
+			// 	log.Infof("cert template not valid for esc4 %d: %v", certTemplate.ID, err)
+			// 	return false
+			// } else if !valid {
+			// 	return true
+			// } else {
+			// 	certTemplatesRemainingAfterValidation.Add(uint32(certTemplate.ID))
+			// }
 
 			return true
-		})
+		},
+	)
+
+	// rinse and repeat
+	certTemplatesIDs3.Each(
+		func(value uint32) bool {
+			for _, segment := range certTemplateSegments3[graph.ID(value)] {
+				paths.AddPath(segment.Path())
+			}
+			return true
+		},
+	)
 
 	if closureErr != nil {
 		return paths, closureErr
@@ -590,4 +649,28 @@ func ESC4Path6Pattern(domainId graph.ID, enterpriseCAs cardinality.Duplex[uint32
 				query.Equals(query.EndID(), domainId),
 			))
 
+}
+
+func ESC4Path7Pattern(certTemplates cardinality.Duplex[uint32]) traversal.PatternContinuation {
+	return traversal.NewPattern().
+		OutboundWithDepth(0, 0,
+			query.And(
+				query.Kind(query.Relationship(), ad.MemberOf),
+				query.Kind(query.End(), ad.Group),
+			)).
+		Outbound(
+			query.And(
+				query.KindIn(query.Relationship(), ad.Enroll, ad.AllExtendedRights),
+				query.InIDs(query.End(), cardinality.DuplexToGraphIDs(certTemplates)...),
+				// ct.requiresmanagerapproval == false
+				query.Equals(query.EndProperty(ad.RequiresManagerApproval.String()), false),
+				// ct.authenticationenabled == true
+				query.Equals(query.EndProperty(ad.AuthenticationEnabled.String()), true),
+				query.Or(
+					// ct.authorizedsignatures == 0
+					query.Equals(query.EndProperty(ad.AuthorizedSignatures.String()), 0),
+					// ct.schemaversion == 1
+					query.Equals(query.EndProperty(ad.SchemaVersion.String()), 1),
+				),
+			))
 }
