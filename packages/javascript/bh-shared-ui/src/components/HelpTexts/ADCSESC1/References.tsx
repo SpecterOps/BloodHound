@@ -24,29 +24,29 @@ const References: FC = () => {
                 target='_blank'
                 rel='noopener'
                 href='https://specterops.io/wp-content/uploads/sites/3/2022/06/Certified_Pre-Owned.pdf'>
-                https://specterops.io/wp-content/uploads/sites/3/2022/06/Certified_Pre-Owned.pdf
+                Certified Pre-Owned - Abusing Active Directory Certificate Services
             </Link>
             <br />
             <Link
                 target='_blank'
                 rel='noopener'
                 href='https://book.hacktricks.xyz/windows-hardening/active-directory-methodology/ad-certificates/domain-escalation#misconfigured-certificate-templates-esc1'>
-                https://book.hacktricks.xyz/windows-hardening/active-directory-methodology/ad-certificates/domain-escalation#misconfigured-certificate-templates-esc1
+                Misconfigured Certificate Templates - ESC1
             </Link>
             <br />
             <Link
                 target='_blank'
                 rel='noopener'
                 href='https://hideandsec.sh/books/cheatsheets-82c/page/active-directory-certificate-services'>
-                https://hideandsec.sh/books/cheatsheets-82c/page/active-directory-certificate-services
+                HIDEANDSEC - ADCS
             </Link>
             <br />
             <Link target='_blank' rel='noopener' href='https://github.com/ly4k/Certipy'>
-                https://github.com/ly4k/Certipy
+                Certipy
             </Link>
             <br />
             <Link target='_blank' rel='noopener' href='https://github.com/GhostPack/Rubeus'>
-                https://github.com/GhostPack/Rubeus
+                Rubeus
             </Link>
         </Box>
     );
