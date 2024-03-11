@@ -34,7 +34,7 @@ import { useNavigate } from 'react-router-dom';
 import { logout } from 'src/ducks/auth/authSlice';
 import * as routes from 'src/ducks/global/routes';
 import { useAppDispatch } from 'src/store';
-import { EnterpriseIcon } from 'src/views/ApiExplorer/swagger/EnterpriseIcon';
+import { EnterpriseIcon } from 'bh-shared-ui';
 
 interface Props {
     anchorEl: null | HTMLElement;

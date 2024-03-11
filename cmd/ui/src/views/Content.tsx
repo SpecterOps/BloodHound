@@ -36,7 +36,7 @@ const ExploreGraphView = React.lazy(() => import('./Explore/GraphView'));
 const UserProfile = React.lazy(() => import('bh-shared-ui').then((module) => ({ default: module.UserProfile })));
 const DownloadCollectors = React.lazy(() => import('./DownloadCollectors'));
 const Administration = React.lazy(() => import('./Administration'));
-const ApiExplorer = React.lazy(() => import('./ApiExplorer'));
+const ApiExplorer = React.lazy(() => import('bh-shared-ui').then((module) => ({ default: module.ApiExplorer })));
 const GroupManagement = React.lazy(() => import('./GroupManagement/GroupManagement'));
 
 const useStyles = makeStyles({
