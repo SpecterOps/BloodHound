@@ -1865,6 +1865,7 @@ type ESC3Harness2 struct {
 	CertTemplate1 *graph.Node
 	CertTemplate2 *graph.Node
 	CertTemplate3 *graph.Node
+	CertTemplate4 *graph.Node
 	EnterpriseCA1 *graph.Node
 
 	NTAuthStore *graph.Node
@@ -1917,6 +1918,18 @@ func (s *ESC3Harness2) Setup(c *GraphTestContext) {
 		EKUS:                    emptyEkus,
 		ApplicationPolicies:     emptyEkus,
 	})
+	s.CertTemplate4 = c.NewActiveDirectoryCertTemplate("CertTemplate4", sid, CertTemplateData{
+		RequiresManagerApproval: false,
+		AuthenticationEnabled:   true,
+		EnrolleeSuppliesSubject: false,
+		SubjectAltRequireUPN:    true,
+		SubjectAltRequireSPN:    false,
+		NoSecurityExtension:     false,
+		SchemaVersion:           1,
+		AuthorizedSignatures:    0,
+		EKUS:                    emptyEkus,
+		ApplicationPolicies:     emptyEkus,
+	})
 	s.EnterpriseCA1 = c.NewActiveDirectoryEnterpriseCA("EnterpriseCA1", sid)
 	s.NTAuthStore = c.NewActiveDirectoryNTAuthStore("NTAuthStore", sid)
 	s.RootCA = c.NewActiveDirectoryRootCA("RootCA", sid)
@@ -1931,11 +1944,14 @@ func (s *ESC3Harness2) Setup(c *GraphTestContext) {
 	c.NewRelationship(s.Group1, s.CertTemplate2, ad.AllExtendedRights)
 	c.NewRelationship(s.User3, s.CertTemplate3, ad.Enroll)
 	c.NewRelationship(s.User3, s.EnterpriseCA1, ad.Enroll)
+	c.NewRelationship(s.Group1, s.CertTemplate4, ad.Enroll)
 	c.NewRelationship(s.CertTemplate1, s.EnterpriseCA1, ad.PublishedTo)
 	c.NewRelationship(s.CertTemplate1, s.CertTemplate2, ad.EnrollOnBehalfOf)
+	c.NewRelationship(s.CertTemplate1, s.CertTemplate4, ad.EnrollOnBehalfOf)
 	c.NewRelationship(s.CertTemplate3, s.CertTemplate3, ad.EnrollOnBehalfOf)
 	c.NewRelationship(s.CertTemplate3, s.EnterpriseCA1, ad.PublishedTo)
 	c.NewRelationship(s.CertTemplate2, s.EnterpriseCA1, ad.PublishedTo)
+	c.NewRelationship(s.CertTemplate4, s.EnterpriseCA1, ad.PublishedTo)
 	c.NewRelationship(s.EnterpriseCA1, s.NTAuthStore, ad.TrustedForNTAuth)
 	c.NewRelationship(s.EnterpriseCA1, s.RootCA, ad.IssuedSignedBy)
 	c.NewRelationship(s.NTAuthStore, s.Domain, ad.NTAuthStoreFor)
