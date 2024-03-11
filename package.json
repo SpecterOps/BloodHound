@@ -21,14 +21,8 @@
     },
     "packageManager": "yarn@3.5.1",
     "devDependencies": {
-        "@types/prop-types": "^15",
         "all-contributors-cli": "^6.26.1",
         "prettier": "^2.8.8",
         "typescript": "^5.1.6"
-    },
-    "dependencies": {
-        "immutable": "^5.0.0-beta.5",
-        "prop-types": "^15.8.1",
-        "react-immutable-proptypes": "^2.2.0"
     }
 }
