@@ -34,7 +34,6 @@ import (
 )
 
 func PostADCSESC4(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob, groupExpansions impact.PathAggregator, enterpriseCA, domain *graph.Node, cache ADCSCache) error {
-	fmt.Println(">>> ecs4")
 	// 1.
 	principals := cardinality.NewBitmap32()
 
@@ -252,17 +251,19 @@ func GetADCSESC4EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 	*/
 
 	var (
-		closureErr           error
-		startNode            *graph.Node
-		traversalInst        = traversal.New(db, analysis.MaximumDatabaseParallelWorkers)
-		lock                 = &sync.Mutex{}
-		paths                = graph.PathSet{}
+		closureErr    error
+		startNode     *graph.Node
+		traversalInst = traversal.New(db, analysis.MaximumDatabaseParallelWorkers)
+		lock          = &sync.Mutex{}
+		paths         = graph.PathSet{}
+
 		certTemplateSegments = map[graph.ID][]*graph.PathSegment{}
 		enterpriseCASegments = map[graph.ID][]*graph.PathSegment{}
-		// pattern1Segments     = map[graph.ID][]*graph.PathSegment{}
+
 		certTemplates = cardinality.NewBitmap32()
 		enterpriseCAs = cardinality.NewBitmap32()
-		// path1EnterpriseCAs = cardinality.NewBitmap32()
+
+		certTemplatesRemainingAfterValidation = cardinality.NewBitmap32()
 	)
 
 	if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
@@ -286,7 +287,8 @@ func GetADCSESC4EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 					enterpriseCA := terminal.Search(
 						func(nextSegment *graph.PathSegment) bool {
 							return nextSegment.Node.Kinds.ContainsOneOf(ad.EnterpriseCA)
-						})
+						},
+					)
 
 					lock.Lock()
 					enterpriseCAs.Add(enterpriseCA.ID.Uint32())
@@ -303,10 +305,12 @@ func GetADCSESC4EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 		Root: startNode,
 		Driver: ESC4Path1Pattern(edge.EndID, enterpriseCAs).Do(
 			func(terminal *graph.PathSegment) error {
+
 				certTemplate := terminal.Search(
 					func(nextSegment *graph.PathSegment) bool {
 						return nextSegment.Node.Kinds.ContainsOneOf(ad.CertTemplate)
-					})
+					},
+				)
 
 				lock.Lock()
 				certTemplateSegments[certTemplate.ID] = append(certTemplateSegments[certTemplate.ID], terminal)
@@ -324,14 +328,37 @@ func GetADCSESC4EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 		Root: startNode,
 		Driver: ESC4Path3Pattern(edge.EndID, enterpriseCAs).Do(
 			func(terminal *graph.PathSegment) error {
+
 				certTemplate := terminal.Search(
 					func(nextSegment *graph.PathSegment) bool {
 						return nextSegment.Node.Kinds.ContainsOneOf(ad.CertTemplate)
-					})
+					},
+				)
 
 				lock.Lock()
 				certTemplateSegments[certTemplate.ID] = append(certTemplateSegments[certTemplate.ID], terminal)
 				certTemplates.Add(certTemplate.ID.Uint32())
+				lock.Unlock()
+
+				return nil
+			}),
+	}); err != nil {
+		return nil, err
+	}
+
+	if err := traversalInst.BreadthFirst(ctx, traversal.Plan{
+		Root: startNode,
+		Driver: ESC4Path4Pattern(certTemplates).Do(
+			func(terminal *graph.PathSegment) error {
+
+				certTemplate := terminal.Search(
+					func(nextSegment *graph.PathSegment) bool {
+						return nextSegment.Node.Kinds.ContainsOneOf(ad.CertTemplate)
+					},
+				)
+
+				lock.Lock()
+				certTemplateSegments[certTemplate.ID] = append(certTemplateSegments[certTemplate.ID], terminal)
 				lock.Unlock()
 
 				return nil
@@ -345,10 +372,12 @@ func GetADCSESC4EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 		Root: startNode,
 		Driver: ESC4Path2Pattern(edge.EndID, enterpriseCAs).Do(
 			func(terminal *graph.PathSegment) error {
+
 				enterpriseCA := terminal.Search(
 					func(nextSegment *graph.PathSegment) bool {
 						return nextSegment.Node.Kinds.ContainsOneOf(ad.EnterpriseCA)
-					})
+					},
+				)
 
 				lock.Lock()
 				enterpriseCASegments[enterpriseCA.ID] = append(enterpriseCASegments[enterpriseCA.ID], terminal)
@@ -362,40 +391,57 @@ func GetADCSESC4EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 	}
 
 	// validate cert template properties
-	certTemplates.Each(func(value uint32) bool {
-		// var certTemplate *graph.Node
+	certTemplates.Each(
+		func(value uint32) bool {
+			// add the cert templates we have found already, which satisfy p1-p5 requirements
+			for _, segment := range certTemplateSegments[graph.ID(value)] {
+				paths.AddPath(segment.Path())
+			}
 
-		// hydrate `certTemplate` by fetching by id
-		// if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
-		// 	if node, err := ops.FetchNode(tx, graph.ID(value)); err != nil {
-		// 		return err
-		// 	} else {
-		// 		certTemplate = node
-		// 		return nil
-		// 	}
-		// }); err != nil {
-		// 	closureErr = fmt.Errorf("could not fetch cert template node: %w", err)
-		// 	return false
-		// }
+			// filter down the remaining cert templates, to satisfy p6-p15 requirements
+			var certTemplate *graph.Node
 
-		for _, segment := range certTemplateSegments[graph.ID(value)] {
-			paths.AddPath(segment.Path())
-		}
-		return true
-	})
+			// hydrate `certTemplate` by fetching by id
+			if err := db.ReadTransaction(ctx,
+				func(tx graph.Transaction) error {
+					if node, err := ops.FetchNode(tx, graph.ID(value)); err != nil {
+						return err
+					} else {
+						certTemplate = node
+						return nil
+					}
+				}); err != nil {
+				closureErr = fmt.Errorf("could not fetch cert template node: %w", err)
+				return false
+			}
+
+			if valid, err := isCertTemplateValidForESC4(certTemplate); err != nil {
+				log.Infof("cert template not valid for esc4 %d: %v", certTemplate.ID, err)
+				return false
+			} else if !valid {
+				return true
+			} else {
+				certTemplatesRemainingAfterValidation.Add(uint32(certTemplate.ID))
+			}
+
+			return true
+		})
 
 	if closureErr != nil {
 		return paths, closureErr
 	}
 
 	if paths.Len() > 0 {
-		enterpriseCAs.Each(func(value uint32) bool {
-			for _, segment := range enterpriseCASegments[graph.ID(value)] {
-				paths.AddPath(segment.Path())
-			}
-			return true
-		})
+		enterpriseCAs.Each(
+			func(value uint32) bool {
+				for _, segment := range enterpriseCASegments[graph.ID(value)] {
+					paths.AddPath(segment.Path())
+				}
+				return true
+			})
 	}
+
+	// todo: p6-p15
 
 	return paths, nil
 }
@@ -480,6 +526,51 @@ func ESC4Path3Pattern(domainId graph.ID, enterpriseCAs cardinality.Duplex[uint32
 		Outbound(
 			query.And(
 				query.KindIn(query.Relationship(), ad.GenericWrite),
+				query.Kind(query.End(), ad.CertTemplate),
+			)).
+		Outbound(
+			query.And(
+				query.KindIn(query.Relationship(), ad.PublishedTo),
+				query.InIDs(query.End(), cardinality.DuplexToGraphIDs(enterpriseCAs)...),
+				query.Kind(query.End(), ad.EnterpriseCA),
+			)).
+		Outbound(
+			query.And(
+				query.KindIn(query.Relationship(), ad.IssuedSignedBy, ad.EnterpriseCAFor),
+				query.Kind(query.End(), ad.RootCA),
+			)).
+		Outbound(
+			query.And(
+				query.KindIn(query.Relationship(), ad.RootCAFor),
+				query.Equals(query.EndID(), domainId),
+			))
+}
+
+func ESC4Path4Pattern(certTemplates cardinality.Duplex[uint32]) traversal.PatternContinuation {
+	return traversal.NewPattern().
+		OutboundWithDepth(0, 0,
+			query.And(
+				query.Kind(query.Relationship(), ad.MemberOf),
+				query.Kind(query.End(), ad.Group),
+			)).
+		Outbound(
+			query.And(
+				query.KindIn(query.Relationship(), ad.Enroll, ad.AllExtendedRights),
+				query.InIDs(query.End(), cardinality.DuplexToGraphIDs(certTemplates)...),
+			))
+}
+
+func ESC4Path6Pattern(domainId graph.ID, enterpriseCAs cardinality.Duplex[uint32]) traversal.PatternContinuation {
+	return traversal.NewPattern().
+		OutboundWithDepth(0, 0,
+			query.And(
+				query.Kind(query.Relationship(), ad.MemberOf),
+				query.Kind(query.End(), ad.Group),
+			)).
+		// TODO: this outbound edge is the only difference from `Path1Pattern`
+		Outbound(
+			query.And(
+				query.KindIn(query.Relationship(), ad.WritePKINameFlag),
 				query.Kind(query.End(), ad.CertTemplate),
 			)).
 		Outbound(
