@@ -214,6 +214,23 @@
       "style": {
         "node-color": "#fda1ff"
       }
+    },
+    {
+      "id": "n11",
+      "position": {
+        "x": 944.5198290567125,
+        "y": 582.9139310027565
+      },
+      "caption": "CertTemplate4",
+      "labels": [],
+      "properties": {
+        "AuthenticationEnabled": "True",
+        "RequiresManagerApproval": "False",
+        "SubjectAltRequireUPN": "True"
+      },
+      "style": {
+        "node-color": "#fda1ff"
+      }
     }
   ],
   "relationships": [
@@ -368,6 +385,33 @@
       "type": "Enroll",
       "properties": {},
       "style": {}
+    },
+    {
+      "id": "n18",
+      "type": "EnrollOnBehalfOf",
+      "style": {},
+      "properties": {},
+      "fromId": "n6",
+      "toId": "n11"
+    },
+    {
+      "id": "n19",
+      "type": "PublishTo",
+      "style": {},
+      "properties": {},
+      "fromId": "n11",
+      "toId": "n3"
+    },
+    {
+      "id": "n20",
+      "type": "Enroll",
+      "style": {
+        "attachment-end": "normal",
+        "directionality": "directed"
+      },
+      "properties": {},
+      "fromId": "n7",
+      "toId": "n11"
     }
   ]
 }
