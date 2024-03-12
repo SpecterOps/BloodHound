@@ -209,7 +209,7 @@ func FetchPrincipalsWithWritePKIEnrollmentFlagOnCertTemplate(tx graph.Transactio
 	}
 }
 
-// p1
+// composition: p1
 func traversalToDomainThroughGenericAll(
 	ctx context.Context,
 	db graph.Database,
@@ -254,7 +254,7 @@ func traversalToDomainThroughGenericAll(
 	}
 }
 
-// p3 + p4
+// composition: p3 + p4
 func traversalToDomainThroughGenericWrite(
 	ctx context.Context,
 	db graph.Database,
@@ -319,7 +319,7 @@ func traversalToDomainThroughGenericWrite(
 	return certTemplateSegments, certTemplates, nil
 }
 
-// p6 + p7
+// composition: p6 + p7
 func traversalToDomainThroughWritePKINameFlag(
 	ctx context.Context,
 	db graph.Database,
@@ -393,7 +393,7 @@ func traversalToDomainThroughWritePKINameFlag(
 	return certTemplateSegments, certTemplates, nil
 }
 
-// p9 + p10
+// composition: p9 + p10
 func traversalToDomainThroughWritePKIEnrollmentFlag(
 	ctx context.Context,
 	db graph.Database,
@@ -467,7 +467,7 @@ func traversalToDomainThroughWritePKIEnrollmentFlag(
 	return certTemplateSegments, certTemplates, nil
 }
 
-// p12, p13, p14
+// composition: p12, p13, p14
 func traversalToDomainThroughPKIFlags(
 	ctx context.Context,
 	db graph.Database,
@@ -554,6 +554,75 @@ func traversalToDomainThroughPKIFlags(
 	return certTemplateSegments, certTemplates, nil
 }
 
+// composition: p2, p5, p8, p11, p15
+func findPathsToDomainThroughEnterpriseCAsTrustedForNTAuth(
+	ctx context.Context,
+	db graph.Database,
+	startNode *graph.Node,
+	domainID graph.ID) (
+	map[graph.ID][]*graph.PathSegment,
+	cardinality.Duplex[uint32],
+	error,
+) {
+
+	var (
+		traversalInst = traversal.New(db, analysis.MaximumDatabaseParallelWorkers)
+		lock          = &sync.Mutex{}
+
+		enterpriseCASegments = map[graph.ID][]*graph.PathSegment{}
+		enterpriseCAs        = cardinality.NewBitmap32()
+	)
+
+	// Start by fetching all EnterpriseCA nodes that our user has enrollment rights on via group membership or directly
+	if err := traversalInst.BreadthFirst(ctx,
+		traversal.Plan{
+			Root: startNode,
+			Driver: ESC4EnterpriseCAs().Do(
+				func(terminal *graph.PathSegment) error {
+
+					enterpriseCA := terminal.Search(
+						func(nextSegment *graph.PathSegment) bool {
+							return nextSegment.Node.Kinds.ContainsOneOf(ad.EnterpriseCA)
+						},
+					)
+
+					lock.Lock()
+					enterpriseCAs.Add(enterpriseCA.ID.Uint32())
+					lock.Unlock()
+
+					return nil
+				}),
+		}); err != nil {
+
+		return enterpriseCASegments, enterpriseCAs, err
+	}
+
+	// every scenario must contain a path from the enterpriseCA nodes found in the previous step to find enterprise CAs that are trusted for NTAuth
+	if err := traversalInst.BreadthFirst(ctx, traversal.Plan{
+		Root: startNode,
+		Driver: FindPathToDomainViaNTAuthStore(domainID, enterpriseCAs).Do(
+			func(terminal *graph.PathSegment) error {
+
+				enterpriseCA := terminal.Search(
+					func(nextSegment *graph.PathSegment) bool {
+						return nextSegment.Node.Kinds.ContainsOneOf(ad.EnterpriseCA)
+					},
+				)
+
+				lock.Lock()
+				enterpriseCASegments[enterpriseCA.ID] = append(enterpriseCASegments[enterpriseCA.ID], terminal)
+				lock.Unlock()
+
+				return nil
+			}),
+	}); err != nil {
+		return enterpriseCASegments, enterpriseCAs, err
+	}
+
+	return enterpriseCASegments, enterpriseCAs, nil
+
+}
+
 func GetADCSESC4EdgeComposition(ctx context.Context, db graph.Database, edge *graph.Relationship) (graph.PathSet, error) {
 	/*
 		MATCH p1 = (n1)-[:MemberOf*0..]->()-[:GenericAll|Owns|WriteOwner|WriteDacl]->(ct)-[:PublishedTo]->(ca)-[:IssuedSignedBy|EnterpriseCAFor|RootCAFor*1..]->(d)
@@ -595,16 +664,15 @@ func GetADCSESC4EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 	*/
 
 	var (
-		startNode     *graph.Node
-		domainID      = edge.EndID
-		traversalInst = traversal.New(db, analysis.MaximumDatabaseParallelWorkers)
-		lock          = &sync.Mutex{}
-		paths         = graph.PathSet{}
+		startNode *graph.Node
+		domainID  = edge.EndID
+		paths     = graph.PathSet{}
 
 		enterpriseCASegments = map[graph.ID][]*graph.PathSegment{}
 		enterpriseCAs        = cardinality.NewBitmap32()
 	)
 
+	// hydrate the start node
 	if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		if node, err := ops.FetchNode(tx, edge.StartID); err != nil {
 			return err
@@ -616,49 +684,12 @@ func GetADCSESC4EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 		return nil, err
 	}
 
-	// Start by fetching all EnterpriseCA nodes that our user has enrollment rights on via group membership or directly
-	if err := traversalInst.BreadthFirst(ctx,
-		traversal.Plan{
-			Root: startNode,
-			Driver: ESC4EnterpriseCAs().Do(
-				func(terminal *graph.PathSegment) error {
-
-					enterpriseCA := terminal.Search(
-						func(nextSegment *graph.PathSegment) bool {
-							return nextSegment.Node.Kinds.ContainsOneOf(ad.EnterpriseCA)
-						},
-					)
-
-					lock.Lock()
-					enterpriseCAs.Add(enterpriseCA.ID.Uint32())
-					lock.Unlock()
-
-					return nil
-				}),
-		}); err != nil {
+	// p2, p5, p8, p11, p15: require same logic. find the paths to domain like: eca -> nt auth store -> domain
+	if paths, ecaIDs, err := findPathsToDomainThroughEnterpriseCAsTrustedForNTAuth(ctx, db, startNode, domainID); err != nil {
 		return nil, err
-	}
-
-	// every scenario must contain a path from the enterpriseCA nodes found in the previous step to find enterprise CAs that are trusted for NTAuth
-	if err := traversalInst.BreadthFirst(ctx, traversal.Plan{
-		Root: startNode,
-		Driver: FindPathToDomainViaNTAuthStore(edge.EndID, enterpriseCAs).Do(
-			func(terminal *graph.PathSegment) error {
-
-				enterpriseCA := terminal.Search(
-					func(nextSegment *graph.PathSegment) bool {
-						return nextSegment.Node.Kinds.ContainsOneOf(ad.EnterpriseCA)
-					},
-				)
-
-				lock.Lock()
-				enterpriseCASegments[enterpriseCA.ID] = append(enterpriseCASegments[enterpriseCA.ID], terminal)
-				lock.Unlock()
-
-				return nil
-			}),
-	}); err != nil {
-		return nil, err
+	} else {
+		enterpriseCASegments = paths
+		enterpriseCAs = ecaIDs
 	}
 
 	// p1, p2
@@ -741,6 +772,7 @@ func GetADCSESC4EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 		)
 	}
 
+	// if we have found paths already, materialize the paths we found from the enterprise CAs -> NTAuthStore -> Domain
 	if paths.Len() > 0 {
 		enterpriseCAs.Each(
 			func(value uint32) bool {
