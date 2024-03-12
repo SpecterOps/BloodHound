@@ -51,7 +51,6 @@ import (
 	"github.com/specterops/bloodhound/graphschema/azure"
 	"github.com/specterops/bloodhound/graphschema/common"
 	"github.com/specterops/bloodhound/log"
-	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/src/api/bloodhoundgraph"
 	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/utils"
@@ -136,7 +135,7 @@ type Graph interface {
 	GetAllShortestPaths(ctx context.Context, startNodeID string, endNodeID string, filter graph.Criteria) (graph.PathSet, error)
 	SearchNodesByName(ctx context.Context, nodeKinds graph.Kinds, nameQuery string, skip int, limit int) ([]model.SearchResult, error)
 	SearchByNameOrObjectID(ctx context.Context, searchValue string, searchType string) (graph.NodeSet, error)
-	GetADEntityQueryResult(ctx context.Context, params EntityQueryParameters, cacheEnabled bool) (any, error)
+	GetADEntityQueryResult(ctx context.Context, params EntityQueryParameters, cacheEnabled bool) (any, int, error)
 	GetEntityByObjectId(ctx context.Context, objectID string, kinds ...graph.Kind) (*graph.Node, error)
 	GetEntityCountResults(ctx context.Context, node *graph.Node, delegates map[string]any) map[string]any
 	GetNodesByKind(ctx context.Context, kinds ...graph.Kind) (graph.NodeSet, error)
@@ -530,17 +529,17 @@ func (s *GraphQuery) SearchByNameOrObjectID(ctx context.Context, searchValue str
 	return nodes, nil
 }
 
-func (s *GraphQuery) GetADEntityQueryResult(ctx context.Context, params EntityQueryParameters, cacheEnabled bool) (any, error) {
+func (s *GraphQuery) GetADEntityQueryResult(ctx context.Context, params EntityQueryParameters, cacheEnabled bool) (any, int, error) {
 	if params.RequestedType == model.DataTypeGraph && params.PathDelegate == nil {
-		return nil, ErrGraphUnsupported
+		return nil, 0, ErrGraphUnsupported
 	}
 
 	if params.RequestedType == model.DataTypeCount || params.RequestedType == model.DataTypeList && params.ListDelegate == nil {
-		return nil, ErrUnsupportedDataType
+		return nil, 0, ErrUnsupportedDataType
 	}
 
 	if node, err := s.GetEntityByObjectId(ctx, params.ObjectID, ad.Entity); err != nil {
-		return nil, fmt.Errorf("error getting entity node: %w", err)
+		return nil, 0, fmt.Errorf("error getting entity node: %w", err)
 	} else {
 		return s.GetEntityResults(ctx, node, params, cacheEnabled)
 	}
@@ -584,7 +583,7 @@ func (s *GraphQuery) GetEntityCountResults(ctx context.Context, node *graph.Node
 		go func(delegateKey string, delegate any) {
 			defer waitGroup.Done()
 
-			if result, err := RunListQuery(ctx, s.Graph, delegate, node, 0, 0); err != nil {
+			if result, err := runEntityQuery(ctx, s.Graph, delegate, node, 0, 0); err != nil {
 				log.Errorf("error running entity query for key %s: %v", delegateKey, err)
 				data.Store(delegateKey, 0)
 			} else {
@@ -742,7 +741,7 @@ func (s *GraphQuery) cacheQueryResult(queryStart time.Time, cacheKey string, res
 	}
 }
 
-func RunListQuery(ctx context.Context, db graph.Database, delegate any, node *graph.Node, skip, limit int) (graph.NodeSet, error) {
+func runEntityQuery(ctx context.Context, db graph.Database, delegate any, node *graph.Node, skip, limit int) (graph.NodeSet, error) {
 	var result graph.NodeSet
 
 	switch typedDelegate := delegate.(type) {
@@ -773,67 +772,72 @@ func RunListQuery(ctx context.Context, db graph.Database, delegate any, node *gr
 	return result, nil
 }
 
-func (s *GraphQuery) runListEntityQuery(ctx context.Context, node *graph.Node, params EntityQueryParameters, cacheEnabled bool) (any, error) {
+func (s *GraphQuery) runMaybeCachedEntityQuery(ctx context.Context, node *graph.Node, params EntityQueryParameters, cacheEnabled bool) (graph.NodeSet, error) {
 	var (
-		cacheKey   = fmt.Sprintf("ad-entity-query_%s_%s_%d", params.QueryName, params.ObjectID, params.RequestedType)
 		queryStart = time.Now()
-		skip       = params.Skip
-		limit      = params.Limit
-		mustFetch  = !cacheEnabled
+		cacheKey   = fmt.Sprintf("ad-entity-query_%s_%s_%d", params.QueryName, params.ObjectID, params.RequestedType)
+
+		foundResultInCache = false
 
 		result graph.NodeSet
 	)
 
 	if cacheEnabled {
-		if hasResult, err := s.Cache.Get(cacheKey, &result); err != nil {
+		var err error
+		if foundResultInCache, err = s.Cache.Get(cacheKey, &result); err != nil {
 			return nil, fmt.Errorf("error getting cache entry for %s: %w", cacheKey, err)
-		} else {
-			mustFetch = !hasResult
 		}
 	}
 
-	if mustFetch {
+	if !cacheEnabled || !foundResultInCache {
 		// Fetch the entire result for caching purposes
-		if fetchedResult, err := RunListQuery(ctx, s.Graph, params.ListDelegate, node, 0, 0); err != nil {
+		if fetchedResult, err := runEntityQuery(ctx, s.Graph, params.ListDelegate, node, 0, 0); err != nil {
 			return nil, err
 		} else {
 			result = fetchedResult
 		}
 	}
 
-	// Return early if this is just a count request
-	if params.RequestedType == model.DataTypeCount {
-		return result.Len(), nil
-	}
-
-	if skip > result.Len() {
-		return nil, errors.New(fmt.Sprintf(utils.ErrorInvalidSkip, skip))
-	}
-
-	if skip+limit > result.Len() {
-		limit = result.Len() - skip
-	}
-
-	if params.QueryName != "" && cacheEnabled && mustFetch {
+	if params.QueryName != "" && cacheEnabled && !foundResultInCache {
 		s.cacheQueryResult(queryStart, cacheKey, result)
 	}
 
-	return api.ResponseWrapper{
-		Count: result.Len(),
-		Limit: params.Limit,
-		Skip:  params.Skip,
-
-		// Slice the result set to match skip/limit and return the packaged response
-		Data: fromGraphNodes(graph.NewNodeSet(nodeSetToOrderedSlice(result)[skip : skip+limit]...)),
-	}, nil
+	return result, nil
 }
 
-func RunPathQuery(ctx context.Context, db graph.Database, node *graph.Node, pathDelegate any) (graph.PathSet, error) {
+func (s *GraphQuery) runListQuery(ctx context.Context, node *graph.Node, params EntityQueryParameters, cacheEnabled bool) ([]model.PagedNodeListEntry, int, error) {
+	var (
+		skip  = params.Skip
+		limit = params.Limit
+	)
+
+	if result, err := s.runMaybeCachedEntityQuery(ctx, node, params, cacheEnabled); err != nil {
+		return nil, 0, err
+	} else if skip > result.Len() {
+		return nil, 0, errors.New(fmt.Sprintf(utils.ErrorInvalidSkip, skip))
+	} else {
+		if skip+limit > result.Len() {
+			limit = result.Len() - skip
+		}
+
+		return fromGraphNodes(graph.NewNodeSet(nodeSetToOrderedSlice(result)[skip : skip+limit]...)), result.Len(), nil
+	}
+}
+
+func (s *GraphQuery) runCountQuery(ctx context.Context, node *graph.Node, params EntityQueryParameters, cacheEnabled bool) (any, int, error) {
+	result, err := s.runMaybeCachedEntityQuery(ctx, node, params, cacheEnabled)
+	return nil, result.Len(), err
+}
+
+func runPathQuery(ctx context.Context, db graph.Database, node *graph.Node, pathDelegate any) (map[string]any, int, error) {
+	var (
+		result graph.PathSet
+		err    error
+	)
+
 	switch typedDelegate := pathDelegate.(type) {
 	case analysis.PathDelegate:
-		var result graph.PathSet
-
-		return result, db.ReadTransaction(ctx, func(tx graph.Transaction) error {
+		err = db.ReadTransaction(ctx, func(tx graph.Transaction) error {
 			if fetchedResult, err := typedDelegate(tx, node); err != nil {
 				return err
 			} else {
@@ -842,26 +846,31 @@ func RunPathQuery(ctx context.Context, db graph.Database, node *graph.Node, path
 
 			return nil
 		})
-
 	case analysis.ParallelPathDelegate:
-		return typedDelegate(ctx, db, node)
-
+		result, err = typedDelegate(ctx, db, node)
 	default:
-		return nil, fmt.Errorf("unsupported path delegate type %T", typedDelegate)
+		err = fmt.Errorf("unsupported path delegate type %T", typedDelegate)
+	}
+
+	if err != nil {
+		return nil, 0, err
+	} else {
+		return bloodhoundgraph.PathSetToBloodHoundGraph(result), result.Len(), nil
 	}
 }
 
-func (s *GraphQuery) GetEntityResults(ctx context.Context, node *graph.Node, params EntityQueryParameters, cacheEnabled bool) (any, error) {
+func (s *GraphQuery) GetEntityResults(ctx context.Context, node *graph.Node, params EntityQueryParameters, cacheEnabled bool) (any, int, error) {
 	// Graph type isn't currently under a caching model and is handled separately from other supported RequestedTypes
-	if params.RequestedType == model.DataTypeGraph {
-		if result, err := RunPathQuery(ctx, s.Graph, node, params.PathDelegate); err != nil {
-			return nil, err
-		} else {
-			return bloodhoundgraph.PathSetToBloodHoundGraph(result), nil
-		}
+	switch params.RequestedType {
+	case model.DataTypeGraph:
+		return runPathQuery(ctx, s.Graph, node, params.PathDelegate)
+	case model.DataTypeList:
+		return s.runListQuery(ctx, node, params, cacheEnabled)
+	case model.DataTypeCount:
+		return s.runCountQuery(ctx, node, params, cacheEnabled)
+	default:
+		return nil, 0, fmt.Errorf("unknown data type requested")
 	}
-
-	return s.runListEntityQuery(ctx, node, params, cacheEnabled)
 }
 
 func fromGraphNodes(nodes graph.NodeSet) []model.PagedNodeListEntry {

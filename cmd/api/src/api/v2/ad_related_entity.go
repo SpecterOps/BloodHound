@@ -40,7 +40,7 @@ func (s *Resources) handleAdRelatedEntityQuery(response http.ResponseWriter, req
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf(api.FmtErrorResponseDetailsBadQueryParameters, err), request), response)
 	} else if entityPanelCachingFlag, err := s.DB.GetFlagByKey(appcfg.FeatureEntityPanelCaching); err != nil {
 		api.HandleDatabaseError(request, response, err)
-	} else if results, err := s.GraphQuery.GetADEntityQueryResult(request.Context(), params, entityPanelCachingFlag.Enabled); err != nil {
+	} else if results, count, err := s.GraphQuery.GetADEntityQueryResult(request.Context(), params, entityPanelCachingFlag.Enabled); err != nil {
 		if errors.Is(err, queries.ErrGraphUnsupported) || errors.Is(err, queries.ErrUnsupportedDataType) {
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf(api.FmtErrorResponseDetailsBadQueryParameters, err), request), response)
 		} else if errors.Is(err, ops.ErrTraversalMemoryLimit) {
@@ -49,7 +49,7 @@ func (s *Resources) handleAdRelatedEntityQuery(response http.ResponseWriter, req
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "an unknown error occurred during the request", request), response)
 		}
 	} else {
-		api.WriteJSONResponse(request.Context(), results, http.StatusOK, response)
+		api.WriteResponseWrapperWithPagination(request.Context(), results, params.Limit, params.Skip, count, http.StatusOK, response)
 	}
 }
 
