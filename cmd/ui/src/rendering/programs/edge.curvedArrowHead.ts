@@ -153,8 +153,8 @@ export default class CurvedEdgeArrowHeadProgram extends AbstractEdgeProgram {
 
         let start, end: Coordinates;
         if (data.direction === EdgeDirection.BACKWARDS) {
-            end = { x: sourceData.x, y: sourceData.y };
             start = { x: targetData.x, y: targetData.y };
+            end = { x: sourceData.x, y: sourceData.y };
         } else {
             start = { x: sourceData.x, y: sourceData.y };
             end = { x: targetData.x, y: targetData.y };
