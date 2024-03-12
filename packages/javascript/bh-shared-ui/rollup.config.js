@@ -58,5 +58,11 @@ export default {
         'react-query',
         'js-client-library',
         'remark-gfm',
+        'swagger-ui-react',
+        'swagger-ui-react/swagger-ui.css',
+        'prop-types',
+        'immutable',
+        'react-immutable-proptypes',
+        'lodash/toString',
     ],
 };
