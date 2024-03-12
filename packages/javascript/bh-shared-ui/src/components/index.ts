@@ -140,3 +140,6 @@ export { default as AssetGroupEdit } from './AssetGroupEdit';
 
 export * from './GroupManagementContent';
 export { default as GroupManagementContent } from './GroupManagementContent';
+
+export * from './FileIngest';
+export { default as FileIngest } from './FileIngest';

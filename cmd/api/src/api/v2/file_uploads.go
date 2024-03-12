@@ -19,7 +19,6 @@ package v2
 import (
 	"errors"
 	"fmt"
-	"github.com/specterops/bloodhound/mediatypes"
 	"net/http"
 	"slices"
 	"strconv"
@@ -27,6 +26,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/specterops/bloodhound/log"
+	"github.com/specterops/bloodhound/mediatypes"
 	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/src/auth"
 	"github.com/specterops/bloodhound/src/ctx"
@@ -38,7 +38,7 @@ import (
 const FileUploadJobIdPathParameterName = "file_upload_job_id"
 
 var AllowedFileUploadTypes = []string{
-	mediatypes.ApplicationJson.WithCharset("utf-8"),
+	mediatypes.ApplicationJson.String(),
 	// todo - Add applicationZip once zip support is complete
 	//mediatypes.ApplicationZip.String(),
 }

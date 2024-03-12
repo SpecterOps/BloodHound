@@ -14,10 +14,10 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { fireEvent, render, waitFor } from 'src/test-utils';
 import FileIngest from '.';
 import { setupServer } from 'msw/node';
 import { rest } from 'msw';
+import { fireEvent, render, waitFor } from '../../test-utils';
 
 const server = setupServer(
     rest.post('/api/v2/file-upload/start', (req, res, ctx) => {
@@ -65,6 +65,13 @@ const server = setupServer(
                 statusText: 'OK',
             })
         );
+    }),
+    rest.get('/api/v2/file-upload/accepted-types', (req, res, ctx) => {
+        return res(
+            ctx.json({
+                data: ['application/json'],
+            })
+        );
     })
 );
 
@@ -81,12 +88,14 @@ describe('FileIngest', () => {
         const openButton = getByText('Upload File(s)');
 
         fireEvent.click(openButton);
+
         const fileInput = getByTestId('ingest-file-upload');
+        await waitFor(() => expect(fileInput).toBeEnabled());
 
         await waitFor(() => fireEvent.change(fileInput, { target: { files: [testFile] } }));
 
         const submitButton = getByTestId('confirmation-dialog_button-yes');
-        expect(submitButton).toBeEnabled();
+        await expect(submitButton).toBeEnabled();
 
         fireEvent.click(submitButton);
         expect(getByText('Press "Upload" to continue.')).toBeInTheDocument();
@@ -101,7 +110,9 @@ describe('FileIngest', () => {
         const openButton = getByText('Upload File(s)');
 
         fireEvent.click(openButton);
+
         const fileInput = getByTestId('ingest-file-upload');
+        await waitFor(() => expect(fileInput).toBeEnabled());
 
         await waitFor(() => fireEvent.change(fileInput, { target: { files: [errorFile] } }));
 
