@@ -1,82 +1,82 @@
 {
-  "v2.VersionResponse": {
-    "type": "object",
-    "properties": {
-      "current_version": {
-        "type": "string"
-      },
-      "deprecated_version": {
-        "type": "string"
-      },
-      "server_version": {
-        "type": "string"
-      }
-    }
-  },
-  "v2.ErrorDetails": {
-    "type": "object",
-    "properties": {
-      "context": {
-        "type": "string",
-        "description": "An optional description of the location where this error occurred."
-      },
-      "message": {
-        "type": "string",
-        "description": "A short description explaining the error that occurred."
-      }
-    }
-  },
-  "v2.RiskAcceptRequest": {
-    "type": "object",
-    "required": ["risk_type", "accepted"],
-    "properties": {
-      "risk_type": {
-        "type": "string"
-      },
-      "accept_until": {
-        "type": "string"
-      },
-      "accepted": {
-        "type": "boolean"
-      }
-    }
-  },
-  "v2.AssetGroupCollectionsResponse": {
-    "type": "object",
-    "properties": {
-      "data": {
-        "type": "array",
-        "items": {
-          "type": "object"
-        }
-      }
-    }
-  },
-  "v2.ListAssetGroupMembersResponse": {
-    "properties": {
-      "data": {
+    "v2.VersionResponse": {
         "type": "object",
         "properties": {
-          "count": {
-            "type": "integer"
-          },
-          "limit": {
-            "type": "integer"
-          },
-          "skip": {
-            "type": "integer"
-          },
-          "members": {
-            "type": "array",
-            "items": {
-              "$ref": "#/definitions/model.AssetGroupMember"
+            "current_version": {
+                "type": "string"
+            },
+            "deprecated_version": {
+                "type": "string"
+            },
+            "server_version": {
+                "type": "string"
             }
-          }
         }
-      }
-    }
-  },
-  "v2.ListAssetGroupMemberCountsResponse": {
+    },
+    "v2.ErrorDetails": {
+        "type": "object",
+        "properties": {
+            "context": {
+                "type": "string",
+                "description": "An optional description of the location where this error occurred."
+            },
+            "message": {
+                "type": "string",
+                "description": "A short description explaining the error that occurred."
+            }
+        }
+    },
+    "v2.RiskAcceptRequest": {
+        "type": "object",
+        "required": ["risk_type", "accepted"],
+        "properties": {
+            "risk_type": {
+                "type": "string"
+            },
+            "accept_until": {
+                "type": "string"
+            },
+            "accepted": {
+                "type": "boolean"
+            }
+        }
+    },
+    "v2.AssetGroupCollectionsResponse": {
+        "type": "object",
+        "properties": {
+            "data": {
+                "type": "array",
+                "items": {
+                    "type": "object"
+                }
+            }
+        }
+    },
+    "v2.ListAssetGroupMembersResponse": {
+        "properties": {
+            "data": {
+                "type": "object",
+                "properties": {
+                    "count": {
+                        "type": "integer"
+                    },
+                    "limit": {
+                        "type": "integer"
+                    },
+                    "skip": {
+                        "type": "integer"
+                    },
+                    "members": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/definitions/model.AssetGroupMember"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "v2.ListAssetGroupMemberCountsResponse": {
         "properties": {
             "data": {
                 "type": "object",
@@ -94,925 +94,949 @@
             }
         }
     },
-  "v2.CreateAssetGroupSelectorResponse": {
-    "properties": {
-      "data": {
-        "type": "object",
+    "v2.CreateAssetGroupSelectorResponse": {
         "properties": {
-          "addedMembers": {
-            "type": "array",
-            "items": {
-              "$ref": "#/definitions/model.AssetGroupSelector"
+            "data": {
+                "type": "object",
+                "properties": {
+                    "addedMembers": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/definitions/model.AssetGroupSelector"
+                        }
+                    },
+                    "removedMembers": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/definitions/model.AssetGroupSelector"
+                        }
+                    }
+                }
             }
-          },
-          "removedMembers": {
-            "type": "array",
-            "items": {
-              "$ref": "#/definitions/model.AssetGroupSelector"
+        }
+    },
+    "v2.ClientCreateRequest": {
+        "type": "object",
+        "required": ["name", "type"],
+        "properties": {
+            "domain_controller": {
+                "type": "string"
+            },
+            "name": {
+                "type": "string"
+            },
+            "type": {
+                "type": "string"
+            },
+            "events": {
+                "type": "array"
             }
-          }
         }
-      }
-    }
-  },
-  "v2.ClientCreateRequest": {
-    "type": "object",
-    "required": ["name", "type"],
-    "properties": {
-      "domain_controller": {
-        "type": "string"
-      },
-      "name": {
-        "type": "string"
-      },
-      "type": {
-        "type": "string"
-      },
-      "events": {
-        "type": "array"
-      }
-    }
-  },
-  "v2.ClientUpdateRequest": {
-    "type": "object",
-    "required": ["name"],
-    "properties": {
-      "name": {
-        "type": "string"
-      },
-      "domain_controller": {
-        "type": "string"
-      }
-    }
-  },
-  "v2.ClientUpdateSelfRequest": {
-    "type": "object",
-    "properties": {
-      "address": {
-        "type": "string"
-      },
-      "hostname": {
-        "type": "string"
-      },
-      "username": {
-        "type": "string"
-      },
-      "version": {
-        "type": "string"
-      },
-      "usersid": {
-        "type": "string"
-      }
-    }
-  },
-  "v2.DomainResult": {
-    "type": "object",
-    "properties": {
-      "status": {
-        "description": "A status message for a domain enumeration result",
-        "type": "string",
-        "required": true
-      },
-      "success": {
-        "description": "A boolean value indicating whether the domain enumeration succeeded",
-        "type": "boolean",
-        "required": true
-      },
-      "users": {
-        "Description": "A count of users enumerated",
-        "type": "integer",
-        "required": true
-      },
-      "groups": {
-        "Description": "A count of groups enumerated",
-        "type": "integer",
-        "required": true
-      },
-      "computers": {
-        "Description": "A count of computers enumerated",
-        "type": "integer",
-        "required": true
-      },
-      "containers": {
-        "Description": "A count of containers enumerated",
-        "type": "integer",
-        "required": true
-      },
-      "gpos": {
-        "Description": "A count of gpos enumerated",
-        "type": "integer",
-        "required": true
-      },
-      "aiacas": {
-        "Description": "A count of aiacas enumerated",
-        "type": "integer",
-        "required": true
-      },
-      "rootcas": {
-        "Description": "A count of rootcas enumerated",
-        "type": "integer",
-        "required": true
-      },
-      "enterprisecas": {
-        "Description": "A count of enterprisecas enumerated",
-        "type": "integer",
-        "required": true
-      },
-      "ntauthstores": {
-        "Description": "A count of ntauthstores enumerated",
-        "type": "integer",
-        "required": true
-      },
-      "certtemplates": {
-        "Description": "A count of certtemplates enumerated",
-        "type": "integer",
-        "required": true
-      },
-      "ous": {
-        "Description": "A count of ous enumerated",
-        "type": "integer",
-        "required": true
-      },
-      "deleted": {
-        "Description": "A count of deleted objects enumerated",
-        "type": "integer",
-        "required": true
-      }
-    }
-  },
-  "v2.ClientCompleteJobRequest": {
-    "type": "object",
-    "properties": {
-      "status": {
-        "description": "Status code for complete (2) or failed (5)",
-        "type": "integer",
-        "enum": [2, 5],
-        "required": true
-      },
-      "message": {
-        "type": "string"
-      },
-      "domain_results": {
-        "description": "Results from each domain enumeration",
-        "type": "map",
-        "keys": {
-          "type": "string"
-        },
-        "values": {
-          "type": "v2.DomainResult"
-        }
-      }
-    }
-  },
-  "v2.CreateAssetGroupRequest": {
-    "type": "object",
-    "properties": {
-      "name": {
-        "type": "string"
-      },
-      "tag": {
-        "type": "string"
-      }
-    }
-  },
-  "v2.CreateAuthTokenRequest": {
-    "type": "object",
-    "properties": {
-      "token_name": {
-        "type": "string"
-      },
-      "user_id": {
-        "type": "string"
-      }
-    }
-  },
-  "v2.CreateSAMLAuthProviderRequest": {
-    "type": "object",
-    "properties": {
-      "idp_name": {
-        "type": "string"
-      },
-      "idp_url": {
-        "type": "string"
-      },
-      "sp_certificate": {
-        "type": "string"
-      },
-      "sp_private_key": {
-        "type": "string"
-      }
-    }
-  },
-  "v2.EventCreateRequest": {
-    "type": "object",
-    "properties": {
-      "rrule": {
-        "type": "string"
-      },
-      "session_collection": {
-        "type": "boolean"
-      },
-      "local_group_collection": {
-        "type": "boolean"
-      },
-      "ad_structure_collection": {
-        "type": "boolean"
-      },
-      "client_id": {
-        "type": "string"
-      },
-      "ous": {
-        "type": "array",
-        "items": {
-          "type": "string"
-        }
-      },
-      "domains": {
-        "type": "array",
-        "items": {
-          "type": "string"
-        }
-      },
-      "all_trusted_domains": {
-        "type": "boolean"
-      },
-      "useAzureActiveDirectoryData": {
-        "type": "boolean"
-      },
-      "useSubscriptionsData": {
-        "type": "boolean"
-      }
-    }
-  },
-  "v2.EventUpdateRequest": {
-    "type": "object",
-    "properties": {
-      "rrule": {
-        "type": "string"
-      },
-      "session_collection": {
-        "type": "boolean"
-      },
-      "local_group_collection": {
-        "type": "boolean"
-      },
-      "ad_structure_collection": {
-        "type": "boolean"
-      },
-      "ous": {
-        "type": "array",
-        "items": {
-          "type": "string"
-        }
-      },
-      "domains": {
-        "type": "array",
-        "items": {
-          "type": "string"
-        }
-      },
-      "all_trusted_domains": {
-        "type": "boolean"
-      }
-    }
-  },
-  "v2.ListAssetGroupsResponse": {
-    "type": "object",
-    "properties": {
-      "asset_groups": {
-        "type": "array",
-        "items": {
-          "$ref": "#/definitions/model.AssetGroup"
-        }
-      }
-    }
-  },
-  "v2.PermissionResponse": {
-    "type": "object",
-    "properties": {
-      "data": {
-        "$ref": "#/definitions/model.Permission"
-      }
-    }
-  },
-  "v2.ListPermissionsResponse": {
-    "type": "object",
-    "properties": {
-      "data": {
+    },
+    "v2.ClientUpdateRequest": {
         "type": "object",
+        "required": ["name"],
         "properties": {
-          "permissions": {
-            "type": "array",
-            "items": {
-              "$ref": "#/definitions/model.Permission"
+            "name": {
+                "type": "string"
+            },
+            "domain_controller": {
+                "type": "string"
             }
-          }
         }
-      }
-    }
-  },
-  "v2.RoleResponse": {
-    "type": "object",
-    "properties": {
-      "data": {
-        "$ref": "#/definitions/model.Role"
-      }
-    }
-  },
-  "v2.ListRolesResponse": {
-    "type": "object",
-    "properties": {
-      "data": {
+    },
+    "v2.ClientUpdateSelfRequest": {
         "type": "object",
         "properties": {
-          "roles": {
-            "type": "array",
-            "items": {
-              "$ref": "#/definitions/model.Role"
+            "address": {
+                "type": "string"
+            },
+            "hostname": {
+                "type": "string"
+            },
+            "username": {
+                "type": "string"
+            },
+            "version": {
+                "type": "string"
+            },
+            "usersid": {
+                "type": "string"
             }
-          }
         }
-      }
-    }
-  },
-  "v2.SAMLProviderResponse": {
-    "type": "object",
-    "properties": {
-      "data": {
-        "$ref": "#/definitions/model.SAMLProvider"
-      }
-    }
-  },
-  "v2.ListSAMLSignOnEndpoints": {
-    "type": "object",
-    "properties": {
-      "data": {
+    },
+    "v2.DomainResult": {
         "type": "object",
         "properties": {
-          "endpoints": {
-            "type": "array",
-            "items": {
-              "$ref": "#/definitions/model.SAMLSignOnEndpoint"
+            "status": {
+                "description": "A status message for a domain enumeration result",
+                "type": "string",
+                "required": true
+            },
+            "success": {
+                "description": "A boolean value indicating whether the domain enumeration succeeded",
+                "type": "boolean",
+                "required": true
+            },
+            "users": {
+                "Description": "A count of users enumerated",
+                "type": "integer",
+                "required": true
+            },
+            "groups": {
+                "Description": "A count of groups enumerated",
+                "type": "integer",
+                "required": true
+            },
+            "computers": {
+                "Description": "A count of computers enumerated",
+                "type": "integer",
+                "required": true
+            },
+            "containers": {
+                "Description": "A count of containers enumerated",
+                "type": "integer",
+                "required": true
+            },
+            "gpos": {
+                "Description": "A count of gpos enumerated",
+                "type": "integer",
+                "required": true
+            },
+            "aiacas": {
+                "Description": "A count of aiacas enumerated",
+                "type": "integer",
+                "required": true
+            },
+            "rootcas": {
+                "Description": "A count of rootcas enumerated",
+                "type": "integer",
+                "required": true
+            },
+            "enterprisecas": {
+                "Description": "A count of enterprisecas enumerated",
+                "type": "integer",
+                "required": true
+            },
+            "ntauthstores": {
+                "Description": "A count of ntauthstores enumerated",
+                "type": "integer",
+                "required": true
+            },
+            "certtemplates": {
+                "Description": "A count of certtemplates enumerated",
+                "type": "integer",
+                "required": true
+            },
+            "ous": {
+                "Description": "A count of ous enumerated",
+                "type": "integer",
+                "required": true
+            },
+            "deleted": {
+                "Description": "A count of deleted objects enumerated",
+                "type": "integer",
+                "required": true
             }
-          }
         }
-      }
-    }
-  },
-  "v2.ListSAMLProvidersResponse": {
-    "type": "object",
-    "properties": {
-      "data": {
+    },
+    "v2.ClientCompleteJobRequest": {
         "type": "object",
         "properties": {
-          "saml_providers": {
-            "type": "array",
-            "items": {
-              "$ref": "#/definitions/model.SAMLProvider"
+            "status": {
+                "description": "Status code for complete (2) or failed (5)",
+                "type": "integer",
+                "enum": [2, 5],
+                "required": true
+            },
+            "message": {
+                "type": "string"
+            },
+            "domain_results": {
+                "description": "Results from each domain enumeration",
+                "type": "map",
+                "keys": {
+                    "type": "string"
+                },
+                "values": {
+                    "type": "v2.DomainResult"
+                }
             }
-          }
         }
-      }
-    }
-  },
-  "v2.TokenResponse": {
-    "type": "object",
-    "properties": {
-      "data": {
-        "$ref": "#/definitions/model.AuthToken"
-      }
-    }
-  },
-  "v2.ListTokensResponse": {
-    "type": "object",
-    "properties": {
-      "data": {
+    },
+    "v2.CreateAssetGroupRequest": {
         "type": "object",
         "properties": {
-          "tokens": {
-            "type": "array",
-            "items": {
-              "$ref": "#/definitions/model.AuthToken"
+            "name": {
+                "type": "string"
+            },
+            "tag": {
+                "type": "string"
             }
-          }
         }
-      }
-    }
-  },
-  "v2.CreateUserRequest": {
-    "type": "object",
-    "required": ["email_address", "roles"],
-    "properties": {
-      "email_address": {
-        "type": "string",
-        "description": "The user's email address"
-      },
-      "first_name": {
-        "type": "string",
-        "description": "The user's first name"
-      },
-      "last_name": {
-        "type": "string",
-        "description": "The user's last name"
-      },
-      "principal": {
-        "type": "string",
-        "description": "The user's principal name"
-      },
-      "roles": {
-        "type": "array",
-        "description": "The IDs of the roles to assign to the user",
-        "items": {
-          "type": "integer"
-        }
-      },
-      "secret": {
-        "type": "string",
-        "description": "the user secret/password"
-      }
-    }
-  },
-  "v2.UserResponse": {
-    "type": "object",
-    "properties": {
-      "data": {
-        "$ref": "#/definitions/model.User"
-      }
-    }
-  },
-  "v2.ListUsersResponse": {
-    "type": "object",
-    "properties": {
-      "data": {
+    },
+    "v2.CreateAuthTokenRequest": {
         "type": "object",
         "properties": {
-          "users": {
-            "type": "array",
-            "items": {
-              "$ref": "#/definitions/model.User"
+            "token_name": {
+                "type": "string"
+            },
+            "user_id": {
+                "type": "string"
             }
-          }
         }
-      }
-    }
-  },
-  "v2.LoginRequest": {
-    "type": "object",
-    "properties": {
-      "login_method": {
-        "type": "string"
-      },
-      "secret": {
-        "type": "string"
-      },
-      "username": {
-        "type": "string"
-      }
-    }
-  },
-  "v2.SetUserSecretRequest": {
-    "type": "object",
-    "properties": {
-      "needs_password_reset": {
-        "type": "boolean"
-      },
-      "secret": {
-        "type": "string"
-      }
-    }
-  },
-  "v2.JobFinishRequest": {
-    "type": "object",
-    "properties": {
-      "domain_sid": {
-        "type": "string"
-      },
-      "end_time": {
-        "type": "string"
-      },
-      "id": {
-        "type": "integer"
-      },
-      "log": {
-        "type": "string"
-      }
-    }
-  },
-  "v2.JobStartRequest": {
-    "type": "object",
-    "properties": {
-      "id": {
-        "type": "integer"
-      },
-      "start_time": {
-        "type": "string"
-      }
-    }
-  },
-  "v2.UpdateAssetGroupRequest": {
-    "type": "object",
-    "properties": {
-      "name": {
-        "type": "string"
-      }
-    }
-  },
-  "v2.UpdateUserRequest": {
-    "type": "object",
-    "properties": {
-      "email_address": {
-        "type": "string"
-      },
-      "first_name": {
-        "type": "string"
-      },
-      "last_name": {
-        "type": "string"
-      },
-      "principal": {
-        "type": "string"
-      },
-      "roles": {
-        "type": "array",
-        "items": {
-          "type": "integer"
-        }
-      }
-    }
-  },
-  "v2.ListAppConfigParametersResponse": {
-    "type": "object",
-    "required": ["data"],
-    "properties": {
-      "data": {
-        "type": "object"
-      }
-    }
-  },
-  "v2.ListFlagsResponse": {
-    "type": "object",
-    "required": ["data"],
-    "properties": {
-      "data": {
-        "type": "object"
-      }
-    }
-  },
-  "v2.ToggleFlagResponse": {
-    "type": "object",
-    "required": ["enabled"],
-    "properties": {
-      "enabled": {
-        "type": "boolean"
-      }
-    }
-  },
-  "v2.ListSAMLSignOnEndpointsResponse": {
-    "type": "object",
-    "required": ["endpoints"],
-    "properties": {
-      "endpoints": {
-        "type": "boolean"
-      }
-    }
-  },
-  "v2.IDPValidationResponse": {
-    "type": "object",
-    "required": ["successful"],
-    "properties": {
-      "error_message": {
-        "type": "string"
-      },
-      "successful": {
-        "type": "boolean"
-      }
-    }
-  },
-  "v2.UpdateSAMLAuthProviderRequest": {
-    "type": "object",
-    "properties": {
-      "name": {
-        "type": "string"
-      },
-      "display_name": {
-        "type": "string"
-      },
-      "signing_certificate": {
-        "type": "string"
-      },
-      "issuer_uri": {
-        "type": "string"
-      },
-      "single_signon_uri": {
-        "type": "string"
-      },
-      "principal_attribute_mappings": {
-        "type": "array"
-      }
-    }
-  },
-  "v2.DeleteSAMLProviderResponse": {
-    "type": "object",
-    "properties": {
-      "affected_users": {
-        "type": "object"
-      }
-    }
-  },
-  "v2.MFAEnrollmentRequest": {
-    "type": "object",
-    "required": ["secret"],
-    "properties": {
-      "secret": {
-        "type": "string"
-      }
-    }
-  },
-  "v2.MFAEnrollmentReponse": {
-    "type": "object",
-    "properties": {
-      "qr_code": {
-        "type": "string"
-      },
-      "totp_secret": {
-        "type": "string"
-      }
-    }
-  },
-  "v2.MFAStatusResponse": {
-    "type": "object",
-    "required": ["status"],
-    "properties": {
-      "data": {
+    },
+    "v2.CreateSAMLAuthProviderRequest": {
         "type": "object",
         "properties": {
-          "status": {
-            "type": "string"
-          }
-        }
-      }
-    }
-  },
-  "v2.MFAActivationRequest": {
-    "type": "object",
-    "required": ["otp"],
-    "properties": {
-      "otp": {
-        "type": "string"
-      }
-    }
-  },
-  "v2.LoginResponse": {
-    "type": "object",
-    "required": ["status"],
-    "properties": {
-      "data": {
-        "type": "object",
-        "properties": {
-          "user_id": {
-            "type": "string"
-          },
-          "auth_expired": {
-            "type": "datetime"
-          },
-          "session_token": {
-            "type": "string"
-          }
-        }
-      }
-    }
-  },
-  "v2.ClientErrorRequest": {
-    "type": "object",
-    "required": ["task_error"],
-    "properties": {
-      "task_error": {
-        "type": "string"
-      },
-      "additional": {
-        "type": "object"
-      }
-    }
-  },
-  "v2.PagedNodeListEntry": {
-    "type": "object",
-    "required": ["object_id"],
-    "properties": {
-      "object_id": {
-        "type": "string"
-      },
-      "name": {
-        "type": "string"
-      },
-      "label": {
-        "type": "string"
-      }
-    }
-  },
-  "v2.DomainEntityPatch": {
-    "type": "object",
-    "properties": {
-      "collected": {
-        "type": "boolean"
-      }
-    }
-  },
-  "v2.CreateScheduledJobRequest": {
-    "type": "object",
-    "properties": {
-      "session_collection": {
-        "type": "boolean"
-      },
-      "local_group_collection": {
-        "type": "boolean"
-      },
-      "ad_structure_collection": {
-        "type": "boolean"
-      },
-      "client_id": {
-        "type": "string"
-      },
-      "execution_time": {
-        "type": "string"
-      },
-      "status": {
-        "type": "integer"
-      },
-      "domain_controller": {
-        "type": "string"
-      }
-    }
-  },
-  "v2.AppConfigUpdateRequest": {
-    "type": "object",
-    "properties": {
-      "key": {
-        "type": "string"
-      },
-      "value": {
-        "type": "object"
-      }
-    }
-  },
-  "v2.FileUploadJobResponse": {
-    "type": "object",
-    "properties": {
-      "data": {
-        "$ref": "#/definitions/model.FileUploadJob"
-      }
-    }
-  },
-  "v2.ListFileUploadJobsResponse": {
-    "type": "object",
-    "properties": {
-      "count": {
-        "type": "integer"
-      },
-      "limit": {
-        "type": "integer"
-      },
-      "skip": {
-        "type": "integer"
-      },
-      "data": {
-        "type": "array",
-        "items": {
-          "$ref": "#/definitions/model.FileUploadJob"
-        }
-      }
-    }
-  },
-  "v2.ListAdDataQualityStatsResponse": {
-    "type": "object",
-    "properties": {
-      "count": {
-        "type": "integer"
-      },
-      "limit": {
-        "type": "integer"
-      },
-      "skip": {
-        "type": "integer"
-      },
-      "start": {
-        "type": "string",
-        "format": "date-time",
-        "description": "The beginning of the window from which the data was collected"
-      },
-      "end": {
-        "type": "string",
-        "format": "date-time",
-        "description": "The end of the window from which the data was collected"
-      },
-      "data": {
-        "type": "array",
-        "items": {
-          "$ref": "#/definitions/model.ADDataQualityStat"
-        }
-      }
-    }
-  },
-  "v2.ListAzureDataQualityStatsResponse": {
-    "type": "object",
-    "properties": {
-      "count": {
-        "type": "integer"
-      },
-      "limit": {
-        "type": "integer"
-      },
-      "skip": {
-        "type": "integer"
-      },
-      "start": {
-        "type": "string",
-        "format": "date-time",
-        "description": "The beginning of the window from which the data was collected"
-      },
-      "end": {
-        "type": "string",
-        "format": "date-time",
-        "description": "The end of the window from which the data was collected"
-      },
-      "data": {
-        "type": "array",
-        "items": {
-          "$ref": "#/definitions/model.AzureDataQualityStat"
-        }
-      }
-    }
-  },
-  "v2.CreateSavedQueryRequest": {
-    "type": "object",
-    "required": ["name", "query"],
-    "properties": {
-      "query": {
-        "type": "string"
-      },
-      "name": {
-        "type": "string"
-      }
-    }
-  },
-  "v2.SearchResponse": {
-    "type": "object",
-    "properties": {
-      "data": {
-        "type": "array",
-        "items": {
-          "$ref": "#/definitions/model.SearchResult"
-        }
-      }
-    }
-  },
-  "v2.EntityWithControllersResponse": {
-    "type": "object",
-    "properties": {
-      "data": {
-        "type": "object",
-        "properties": {
-          "controllers": {
-            "type": "integer",
-            "description": "A count of the number of controllers associated with this entity."
-          },
-          "properties": {
-            "type": "object"
-          }
-        }
-      }
-    }
-  },
-  "v2.EntityControllersResponse": {
-    "type": "object",
-    "properties": {
-      "count": { "$ref": "#/definitions/attributes.PagingCount" },
-      "limit": { "$ref": "#/definitions/attributes.PagingLimit" },
-      "skip": { "$ref": "#/definitions/attributes.PagingSkip" },
-      "data": {
-        "type": "array",
-        "items": {
-          "$ref": "#/definitions/model.EntityController"
-        }
-      }
-    }
-  },
-  "v2.ListAuditLogsResponse": {
-    "type": "object",
-    "properties": {
-      "count": { "$ref": "#/definitions/attributes.PagingCount" },
-      "limit": { "$ref": "#/definitions/attributes.PagingLimit" },
-      "skip": { "$ref": "#/definitions/attributes.PagingSkip" },
-      "data": {
-        "type": "object",
-        "properties": {
-          "logs": {
-            "type": "array",
-            "items": {
-              "$ref": "#/definitions/model.AuditLog"
+            "idp_name": {
+                "type": "string"
+            },
+            "idp_url": {
+                "type": "string"
+            },
+            "sp_certificate": {
+                "type": "string"
+            },
+            "sp_private_key": {
+                "type": "string"
             }
-          }
         }
-      }
+    },
+    "v2.EventCreateRequest": {
+        "type": "object",
+        "properties": {
+            "rrule": {
+                "type": "string"
+            },
+            "session_collection": {
+                "type": "boolean"
+            },
+            "local_group_collection": {
+                "type": "boolean"
+            },
+            "ad_structure_collection": {
+                "type": "boolean"
+            },
+            "client_id": {
+                "type": "string"
+            },
+            "ous": {
+                "type": "array",
+                "items": {
+                    "type": "string"
+                }
+            },
+            "domains": {
+                "type": "array",
+                "items": {
+                    "type": "string"
+                }
+            },
+            "all_trusted_domains": {
+                "type": "boolean"
+            },
+            "useAzureActiveDirectoryData": {
+                "type": "boolean"
+            },
+            "useSubscriptionsData": {
+                "type": "boolean"
+            }
+        }
+    },
+    "v2.EventUpdateRequest": {
+        "type": "object",
+        "properties": {
+            "rrule": {
+                "type": "string"
+            },
+            "session_collection": {
+                "type": "boolean"
+            },
+            "local_group_collection": {
+                "type": "boolean"
+            },
+            "ad_structure_collection": {
+                "type": "boolean"
+            },
+            "ous": {
+                "type": "array",
+                "items": {
+                    "type": "string"
+                }
+            },
+            "domains": {
+                "type": "array",
+                "items": {
+                    "type": "string"
+                }
+            },
+            "all_trusted_domains": {
+                "type": "boolean"
+            }
+        }
+    },
+    "v2.ListAssetGroupsResponse": {
+        "type": "object",
+        "properties": {
+            "asset_groups": {
+                "type": "array",
+                "items": {
+                    "$ref": "#/definitions/model.AssetGroup"
+                }
+            }
+        }
+    },
+    "v2.PermissionResponse": {
+        "type": "object",
+        "properties": {
+            "data": {
+                "$ref": "#/definitions/model.Permission"
+            }
+        }
+    },
+    "v2.ListPermissionsResponse": {
+        "type": "object",
+        "properties": {
+            "data": {
+                "type": "object",
+                "properties": {
+                    "permissions": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/definitions/model.Permission"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "v2.RoleResponse": {
+        "type": "object",
+        "properties": {
+            "data": {
+                "$ref": "#/definitions/model.Role"
+            }
+        }
+    },
+    "v2.ListRolesResponse": {
+        "type": "object",
+        "properties": {
+            "data": {
+                "type": "object",
+                "properties": {
+                    "roles": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/definitions/model.Role"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "v2.SAMLProviderResponse": {
+        "type": "object",
+        "properties": {
+            "data": {
+                "$ref": "#/definitions/model.SAMLProvider"
+            }
+        }
+    },
+    "v2.ListSAMLSignOnEndpoints": {
+        "type": "object",
+        "properties": {
+            "data": {
+                "type": "object",
+                "properties": {
+                    "endpoints": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/definitions/model.SAMLSignOnEndpoint"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "v2.ListSAMLProvidersResponse": {
+        "type": "object",
+        "properties": {
+            "data": {
+                "type": "object",
+                "properties": {
+                    "saml_providers": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/definitions/model.SAMLProvider"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "v2.TokenResponse": {
+        "type": "object",
+        "properties": {
+            "data": {
+                "$ref": "#/definitions/model.AuthToken"
+            }
+        }
+    },
+    "v2.ListTokensResponse": {
+        "type": "object",
+        "properties": {
+            "data": {
+                "type": "object",
+                "properties": {
+                    "tokens": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/definitions/model.AuthToken"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "v2.CreateUserRequest": {
+        "type": "object",
+        "required": ["email_address", "roles"],
+        "properties": {
+            "email_address": {
+                "type": "string",
+                "description": "The user's email address"
+            },
+            "first_name": {
+                "type": "string",
+                "description": "The user's first name"
+            },
+            "last_name": {
+                "type": "string",
+                "description": "The user's last name"
+            },
+            "principal": {
+                "type": "string",
+                "description": "The user's principal name"
+            },
+            "roles": {
+                "type": "array",
+                "description": "The IDs of the roles to assign to the user",
+                "items": {
+                    "type": "integer"
+                }
+            },
+            "secret": {
+                "type": "string",
+                "description": "the user secret/password"
+            }
+        }
+    },
+    "v2.UserResponse": {
+        "type": "object",
+        "properties": {
+            "data": {
+                "$ref": "#/definitions/model.User"
+            }
+        }
+    },
+    "v2.ListUsersResponse": {
+        "type": "object",
+        "properties": {
+            "data": {
+                "type": "object",
+                "properties": {
+                    "users": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/definitions/model.User"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "v2.LoginRequest": {
+        "type": "object",
+        "properties": {
+            "login_method": {
+                "type": "string"
+            },
+            "secret": {
+                "type": "string"
+            },
+            "username": {
+                "type": "string"
+            }
+        }
+    },
+    "v2.SetUserSecretRequest": {
+        "type": "object",
+        "properties": {
+            "needs_password_reset": {
+                "type": "boolean"
+            },
+            "secret": {
+                "type": "string"
+            }
+        }
+    },
+    "v2.JobFinishRequest": {
+        "type": "object",
+        "properties": {
+            "domain_sid": {
+                "type": "string"
+            },
+            "end_time": {
+                "type": "string"
+            },
+            "id": {
+                "type": "integer"
+            },
+            "log": {
+                "type": "string"
+            }
+        }
+    },
+    "v2.JobStartRequest": {
+        "type": "object",
+        "properties": {
+            "id": {
+                "type": "integer"
+            },
+            "start_time": {
+                "type": "string"
+            }
+        }
+    },
+    "v2.UpdateAssetGroupRequest": {
+        "type": "object",
+        "properties": {
+            "name": {
+                "type": "string"
+            }
+        }
+    },
+    "v2.UpdateUserRequest": {
+        "type": "object",
+        "properties": {
+            "email_address": {
+                "type": "string"
+            },
+            "first_name": {
+                "type": "string"
+            },
+            "last_name": {
+                "type": "string"
+            },
+            "principal": {
+                "type": "string"
+            },
+            "roles": {
+                "type": "array",
+                "items": {
+                    "type": "integer"
+                }
+            }
+        }
+    },
+    "v2.ListAppConfigParametersResponse": {
+        "type": "object",
+        "required": ["data"],
+        "properties": {
+            "data": {
+                "type": "object"
+            }
+        }
+    },
+    "v2.ListFlagsResponse": {
+        "type": "object",
+        "required": ["data"],
+        "properties": {
+            "data": {
+                "type": "object"
+            }
+        }
+    },
+    "v2.ToggleFlagResponse": {
+        "type": "object",
+        "required": ["enabled"],
+        "properties": {
+            "enabled": {
+                "type": "boolean"
+            }
+        }
+    },
+    "v2.ListSAMLSignOnEndpointsResponse": {
+        "type": "object",
+        "required": ["endpoints"],
+        "properties": {
+            "endpoints": {
+                "type": "boolean"
+            }
+        }
+    },
+    "v2.IDPValidationResponse": {
+        "type": "object",
+        "required": ["successful"],
+        "properties": {
+            "error_message": {
+                "type": "string"
+            },
+            "successful": {
+                "type": "boolean"
+            }
+        }
+    },
+    "v2.UpdateSAMLAuthProviderRequest": {
+        "type": "object",
+        "properties": {
+            "name": {
+                "type": "string"
+            },
+            "display_name": {
+                "type": "string"
+            },
+            "signing_certificate": {
+                "type": "string"
+            },
+            "issuer_uri": {
+                "type": "string"
+            },
+            "single_signon_uri": {
+                "type": "string"
+            },
+            "principal_attribute_mappings": {
+                "type": "array"
+            }
+        }
+    },
+    "v2.DeleteSAMLProviderResponse": {
+        "type": "object",
+        "properties": {
+            "affected_users": {
+                "type": "object"
+            }
+        }
+    },
+    "v2.MFAEnrollmentRequest": {
+        "type": "object",
+        "required": ["secret"],
+        "properties": {
+            "secret": {
+                "type": "string"
+            }
+        }
+    },
+    "v2.MFAEnrollmentReponse": {
+        "type": "object",
+        "properties": {
+            "qr_code": {
+                "type": "string"
+            },
+            "totp_secret": {
+                "type": "string"
+            }
+        }
+    },
+    "v2.MFAStatusResponse": {
+        "type": "object",
+        "required": ["status"],
+        "properties": {
+            "data": {
+                "type": "object",
+                "properties": {
+                    "status": {
+                        "type": "string"
+                    }
+                }
+            }
+        }
+    },
+    "v2.MFAActivationRequest": {
+        "type": "object",
+        "required": ["otp"],
+        "properties": {
+            "otp": {
+                "type": "string"
+            }
+        }
+    },
+    "v2.LoginResponse": {
+        "type": "object",
+        "required": ["status"],
+        "properties": {
+            "data": {
+                "type": "object",
+                "properties": {
+                    "user_id": {
+                        "type": "string"
+                    },
+                    "auth_expired": {
+                        "type": "datetime"
+                    },
+                    "session_token": {
+                        "type": "string"
+                    }
+                }
+            }
+        }
+    },
+    "v2.ClientErrorRequest": {
+        "type": "object",
+        "required": ["task_error"],
+        "properties": {
+            "task_error": {
+                "type": "string"
+            },
+            "additional": {
+                "type": "object"
+            }
+        }
+    },
+    "v2.PagedNodeListEntry": {
+        "type": "object",
+        "required": ["object_id"],
+        "properties": {
+            "object_id": {
+                "type": "string"
+            },
+            "name": {
+                "type": "string"
+            },
+            "label": {
+                "type": "string"
+            }
+        }
+    },
+    "v2.DomainEntityPatch": {
+        "type": "object",
+        "properties": {
+            "collected": {
+                "type": "boolean"
+            }
+        }
+    },
+    "v2.CreateScheduledJobRequest": {
+        "type": "object",
+        "properties": {
+            "session_collection": {
+                "type": "boolean"
+            },
+            "local_group_collection": {
+                "type": "boolean"
+            },
+            "ad_structure_collection": {
+                "type": "boolean"
+            },
+            "client_id": {
+                "type": "string"
+            },
+            "execution_time": {
+                "type": "string"
+            },
+            "status": {
+                "type": "integer"
+            },
+            "domain_controller": {
+                "type": "string"
+            }
+        }
+    },
+    "v2.AppConfigUpdateRequest": {
+        "type": "object",
+        "properties": {
+            "key": {
+                "type": "string"
+            },
+            "value": {
+                "type": "object"
+            }
+        }
+    },
+    "v2.FileUploadJobResponse": {
+        "type": "object",
+        "properties": {
+            "data": {
+                "$ref": "#/definitions/model.FileUploadJob"
+            }
+        }
+    },
+    "v2.ListFileUploadJobsResponse": {
+        "type": "object",
+        "properties": {
+            "count": {
+                "type": "integer"
+            },
+            "limit": {
+                "type": "integer"
+            },
+            "skip": {
+                "type": "integer"
+            },
+            "data": {
+                "type": "array",
+                "items": {
+                    "$ref": "#/definitions/model.FileUploadJob"
+                }
+            }
+        }
+    },
+    "v2.ListAdDataQualityStatsResponse": {
+        "type": "object",
+        "properties": {
+            "count": {
+                "type": "integer"
+            },
+            "limit": {
+                "type": "integer"
+            },
+            "skip": {
+                "type": "integer"
+            },
+            "start": {
+                "type": "string",
+                "format": "date-time",
+                "description": "The beginning of the window from which the data was collected"
+            },
+            "end": {
+                "type": "string",
+                "format": "date-time",
+                "description": "The end of the window from which the data was collected"
+            },
+            "data": {
+                "type": "array",
+                "items": {
+                    "$ref": "#/definitions/model.ADDataQualityStat"
+                }
+            }
+        }
+    },
+    "v2.ListAzureDataQualityStatsResponse": {
+        "type": "object",
+        "properties": {
+            "count": {
+                "type": "integer"
+            },
+            "limit": {
+                "type": "integer"
+            },
+            "skip": {
+                "type": "integer"
+            },
+            "start": {
+                "type": "string",
+                "format": "date-time",
+                "description": "The beginning of the window from which the data was collected"
+            },
+            "end": {
+                "type": "string",
+                "format": "date-time",
+                "description": "The end of the window from which the data was collected"
+            },
+            "data": {
+                "type": "array",
+                "items": {
+                    "$ref": "#/definitions/model.AzureDataQualityStat"
+                }
+            }
+        }
+    },
+    "v2.CreateSavedQueryRequest": {
+        "type": "object",
+        "required": ["name", "query"],
+        "properties": {
+            "query": {
+                "type": "string"
+            },
+            "name": {
+                "type": "string"
+            }
+        }
+    },
+    "v2.SearchResponse": {
+        "type": "object",
+        "properties": {
+            "data": {
+                "type": "array",
+                "items": {
+                    "$ref": "#/definitions/model.SearchResult"
+                }
+            }
+        }
+    },
+    "v2.EntityWithControllersResponse": {
+        "type": "object",
+        "properties": {
+            "data": {
+                "type": "object",
+                "properties": {
+                    "controllers": {
+                        "type": "integer",
+                        "description": "A count of the number of controllers associated with this entity."
+                    },
+                    "properties": {
+                        "type": "object"
+                    }
+                }
+            }
+        }
+    },
+    "v2.EntityControllersResponse": {
+        "type": "object",
+        "properties": {
+            "count": { "$ref": "#/definitions/attributes.PagingCount" },
+            "limit": { "$ref": "#/definitions/attributes.PagingLimit" },
+            "skip": { "$ref": "#/definitions/attributes.PagingSkip" },
+            "data": {
+                "type": "array",
+                "items": {
+                    "$ref": "#/definitions/model.EntityController"
+                }
+            }
+        }
+    },
+    "v2.ListAuditLogsResponse": {
+        "type": "object",
+        "properties": {
+            "count": { "$ref": "#/definitions/attributes.PagingCount" },
+            "limit": { "$ref": "#/definitions/attributes.PagingLimit" },
+            "skip": { "$ref": "#/definitions/attributes.PagingSkip" },
+            "data": {
+                "type": "object",
+                "properties": {
+                    "logs": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/definitions/model.AuditLog"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "v2.DatabaseWipeRequest": {
+        "type": "object",
+        "required": true,
+        "properties": {
+            "deleteCollectedGraphData": {
+                "type": "boolean"
+            },
+            "deleteAssetGroupSelectors": {
+                "type": "array",
+                "items": {
+                    "type": "integer"
+                }
+            },
+            "deleteFileIngestHistory": {
+                "type": "boolean"
+            },
+            "deleteDataQualityHistory": {
+                "type": "boolean"
+            },
+            "assetGroupId": {
+                "type": "integer"
+            }
+        }
     }
-  }
 }

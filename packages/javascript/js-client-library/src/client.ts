@@ -26,6 +26,11 @@ import {
     PostureResponse,
     SavedQuery,
     AssetGroupMemberCountsResponse,
+    StartFileIngestResponse,
+    ListFileTypesForIngestResponse,
+    ListFileIngestJobsResponse,
+    UploadFileToIngestResponse,
+    EndFileIngestResponse,
 } from './responses';
 
 class BHEAPIClient {
@@ -89,6 +94,10 @@ class BHEAPIClient {
         return this.baseClient.delete(`/api/v2/saved-queries/${queryId}`, options);
     };
 
+    clearDatabase = (payload: types.ClearDatabaseRequest, options?: types.RequestOptions) => {
+        return this.baseClient.post('/api/v2/clear-database', payload, options);
+    };
+
     getAvailableDomains = (options?: types.RequestOptions) => this.baseClient.get('/api/v2/available-domains', options);
 
     /* audit */
@@ -111,7 +120,7 @@ class BHEAPIClient {
     ) => this.baseClient.put(`/api/v2/asset-groups/${assetGroupId}`, assetGroup, options);
 
     updateAssetGroupSelector = (
-        assetGroupId: string,
+        assetGroupId: number,
         selectorChangeset: types.UpdateAssetGroupSelectorRequest[],
         options?: types.RequestOptions
     ) => this.baseClient.put(`/api/v2/asset-groups/${assetGroupId}/selectors`, selectorChangeset, options);
@@ -123,7 +132,7 @@ class BHEAPIClient {
         this.baseClient.get(`/api/v2/asset-groups/${assetGroupId}/collections`, options);
 
     listAssetGroupMembers = (
-        assetGroupId: string,
+        assetGroupId: number,
         params?: types.AssetGroupMemberParams,
         options?: types.RequestOptions
     ) =>
@@ -411,7 +420,7 @@ class BHEAPIClient {
 
     /* file ingest */
     listFileIngestJobs = (skip?: number, limit?: number, sortBy?: string) =>
-        this.baseClient.get(
+        this.baseClient.get<ListFileIngestJobsResponse>(
             'api/v2/file-upload',
             Object.assign({
                 params: {
@@ -422,13 +431,20 @@ class BHEAPIClient {
             })
         );
 
-    startFileIngest = () => this.baseClient.post('/api/v2/file-upload/start');
+    listFileTypesForIngest = () =>
+        this.baseClient.get<ListFileTypesForIngestResponse>('/api/v2/file-upload/accepted-types');
 
-    uploadFileToIngestJob = (ingestId: string, json: any) => {
-        return this.baseClient.post(`/api/v2/file-upload/${ingestId}`, json);
+    startFileIngest = () => this.baseClient.post<StartFileIngestResponse>('/api/v2/file-upload/start');
+
+    uploadFileToIngestJob = (ingestId: string, json: any, contentType: string) => {
+        const headers = {
+            'Content-Type': contentType,
+        };
+        return this.baseClient.post<UploadFileToIngestResponse>(`/api/v2/file-upload/${ingestId}`, json, { headers });
     };
 
-    endFileIngest = (ingestId: string) => this.baseClient.post(`/api/v2/file-upload/${ingestId}/end`);
+    endFileIngest = (ingestId: string) =>
+        this.baseClient.post<EndFileIngestResponse>(`/api/v2/file-upload/${ingestId}/end`);
 
     /* jobs */
     getJobs = (hydrateDomains?: boolean, hydrateOUs?: boolean, options?: types.RequestOptions) =>

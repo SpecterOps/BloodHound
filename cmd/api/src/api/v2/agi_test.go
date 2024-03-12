@@ -91,7 +91,7 @@ func TestResources_ListAssetGroups(t *testing.T) {
 				Name: "DatabaseError",
 				Setup: func() {
 					mockDB.EXPECT().
-						GetAllAssetGroups(gomock.Any(), gomock.Any()).
+						GetAllAssetGroups(gomock.Any(), gomock.Any(), gomock.Any()).
 						Return(model.AssetGroups{}, errors.New("database error"))
 				},
 				Test: func(output apitest.Output) {
@@ -103,7 +103,7 @@ func TestResources_ListAssetGroups(t *testing.T) {
 				Name: "SuccessDataTest",
 				Setup: func() {
 					mockDB.EXPECT().
-						GetAllAssetGroups(gomock.Any(), gomock.Any()).
+						GetAllAssetGroups(gomock.Any(), gomock.Any(), gomock.Any()).
 						Return(model.AssetGroups{ag1, ag2}, nil)
 				},
 				Test: func(output apitest.Output) {
@@ -120,7 +120,7 @@ func TestResources_ListAssetGroups(t *testing.T) {
 				},
 				Setup: func() {
 					mockDB.EXPECT().
-						GetAllAssetGroups("name", gomock.Any()).
+						GetAllAssetGroups(gomock.Any(), "name", gomock.Any()).
 						Return(model.AssetGroups{ag1, ag2}, nil)
 				},
 				Test: func(output apitest.Output) {
@@ -134,7 +134,7 @@ func TestResources_ListAssetGroups(t *testing.T) {
 				},
 				Setup: func() {
 					mockDB.EXPECT().
-						GetAllAssetGroups("name desc", gomock.Any()).
+						GetAllAssetGroups(gomock.Any(), "name desc", gomock.Any()).
 						Return(model.AssetGroups{ag2, ag1}, nil)
 				},
 				Test: func(output apitest.Output) {
@@ -148,7 +148,7 @@ func TestResources_ListAssetGroups(t *testing.T) {
 				},
 				Setup: func() {
 					mockDB.EXPECT().
-						GetAllAssetGroups("", model.SQLFilter{SQLString: "name = ?", Params: []any{"ag1"}}).
+						GetAllAssetGroups(gomock.Any(), "", model.SQLFilter{SQLString: "name = ?", Params: []any{"ag1"}}).
 						Return(model.AssetGroups{ag1}, nil)
 				},
 				Test: func(output apitest.Output) {
@@ -180,7 +180,7 @@ func TestResources_GetAssetGroup(t *testing.T) {
 		ResponseStatusCode(http.StatusBadRequest)
 
 	// DB fails
-	mockDB.EXPECT().GetAssetGroup(int32(1234)).Return(model.AssetGroup{}, fmt.Errorf("explosions"))
+	mockDB.EXPECT().GetAssetGroup(gomock.Any(), int32(1234)).Return(model.AssetGroup{}, fmt.Errorf("explosions"))
 
 	requestTemplate.
 		WithURLPathVars(map[string]string{
@@ -191,7 +191,7 @@ func TestResources_GetAssetGroup(t *testing.T) {
 		ResponseStatusCode(http.StatusInternalServerError)
 
 	// Happy path
-	mockDB.EXPECT().GetAssetGroup(int32(1234)).Return(model.AssetGroup{}, nil)
+	mockDB.EXPECT().GetAssetGroup(gomock.Any(), int32(1234)).Return(model.AssetGroup{}, nil)
 
 	requestTemplate.
 		WithURLPathVars(map[string]string{
@@ -230,7 +230,7 @@ func TestResources_GetAssetGroupMemberCount_DBError(t *testing.T) {
 
 	req = mux.SetURLVars(req, map[string]string{api.URIPathVariableAssetGroupID: "1"})
 	mockDB := dbmocks.NewMockDatabase(mockCtrl)
-	mockDB.EXPECT().GetAssetGroup(gomock.Any()).Return(model.AssetGroup{}, fmt.Errorf("test error"))
+	mockDB.EXPECT().GetAssetGroup(req.Context(), gomock.Any()).Return(model.AssetGroup{}, fmt.Errorf("test error"))
 
 	resources := v2.Resources{DB: mockDB}
 
@@ -301,7 +301,7 @@ func TestResources_GetAssetGroupMemberCount_Success(t *testing.T) {
 
 	req = mux.SetURLVars(req, map[string]string{api.URIPathVariableAssetGroupID: "1"})
 	mockDB := dbmocks.NewMockDatabase(mockCtrl)
-	mockDB.EXPECT().GetAssetGroup(gomock.Any()).Return(assetGroup, nil)
+	mockDB.EXPECT().GetAssetGroup(req.Context(), gomock.Any()).Return(assetGroup, nil)
 
 	resources := v2.Resources{DB: mockDB}
 
@@ -350,7 +350,7 @@ func TestResources_UpdateAssetGroup(t *testing.T) {
 		ResponseStatusCode(http.StatusBadRequest)
 
 	// GetAssetGroup DB fails
-	mockDB.EXPECT().GetAssetGroup(int32(1234)).Return(model.AssetGroup{}, fmt.Errorf("exploded"))
+	mockDB.EXPECT().GetAssetGroup(gomock.Any(), int32(1234)).Return(model.AssetGroup{}, fmt.Errorf("exploded"))
 
 	requestTemplate.
 		WithURLPathVars(map[string]string{
@@ -362,7 +362,7 @@ func TestResources_UpdateAssetGroup(t *testing.T) {
 		ResponseStatusCode(http.StatusInternalServerError)
 
 	// UpdateAssetGroup DB fails
-	mockDB.EXPECT().GetAssetGroup(int32(1234)).Return(model.AssetGroup{}, nil)
+	mockDB.EXPECT().GetAssetGroup(gomock.Any(), int32(1234)).Return(model.AssetGroup{}, nil)
 	mockDB.EXPECT().UpdateAssetGroup(gomock.Any(), model.AssetGroup{}).Return(fmt.Errorf("exploded"))
 
 	requestTemplate.
@@ -375,7 +375,7 @@ func TestResources_UpdateAssetGroup(t *testing.T) {
 		ResponseStatusCode(http.StatusInternalServerError)
 
 	// Success
-	mockDB.EXPECT().GetAssetGroup(int32(1234)).Return(model.AssetGroup{}, nil)
+	mockDB.EXPECT().GetAssetGroup(gomock.Any(), int32(1234)).Return(model.AssetGroup{}, nil)
 	mockDB.EXPECT().UpdateAssetGroup(gomock.Any(), model.AssetGroup{}).Return(nil)
 
 	requestTemplate.
@@ -483,7 +483,7 @@ func TestResources_UpdateAssetGroupSelectors_GetAssetGroupError(t *testing.T) {
 	req = mux.SetURLVars(req, map[string]string{api.URIPathVariableAssetGroupID: "1"})
 
 	mockDB := dbmocks.NewMockDatabase(mockCtrl)
-	mockDB.EXPECT().GetAssetGroup(gomock.Any()).Return(model.AssetGroup{}, fmt.Errorf("test error"))
+	mockDB.EXPECT().GetAssetGroup(req.Context(), gomock.Any()).Return(model.AssetGroup{}, fmt.Errorf("test error"))
 	handlers := v2.Resources{DB: mockDB}
 
 	response := httptest.NewRecorder()
@@ -513,7 +513,7 @@ func TestResources_UpdateAssetGroupSelectors_PayloadError(t *testing.T) {
 	}
 
 	mockDB := dbmocks.NewMockDatabase(mockCtrl)
-	mockDB.EXPECT().GetAssetGroup(gomock.Any()).Return(assetGroup, nil)
+	mockDB.EXPECT().GetAssetGroup(req.Context(), gomock.Any()).Return(assetGroup, nil)
 	handlers := v2.Resources{DB: mockDB}
 
 	response := httptest.NewRecorder()
@@ -588,7 +588,7 @@ func TestResources_UpdateAssetGroupSelectors_SuccessT0(t *testing.T) {
 	mockDB := dbmocks.NewMockDatabase(mockCtrl)
 	mockGraph := queriesMocks.NewMockGraph(mockCtrl)
 
-	mockDB.EXPECT().GetAssetGroup(gomock.Any()).Return(assetGroup, nil)
+	mockDB.EXPECT().GetAssetGroup(req.Context(), gomock.Any()).Return(assetGroup, nil)
 	mockDB.EXPECT().UpdateAssetGroupSelectors(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(expectedResult, nil)
 	mockGraph.EXPECT().UpdateSelectorTags(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 
@@ -682,7 +682,7 @@ func TestResources_UpdateAssetGroupSelectors_SuccessOwned(t *testing.T) {
 	mockDB := dbmocks.NewMockDatabase(mockCtrl)
 	mockGraph := queriesMocks.NewMockGraph(mockCtrl)
 
-	mockDB.EXPECT().GetAssetGroup(gomock.Any()).Return(assetGroup, nil)
+	mockDB.EXPECT().GetAssetGroup(req.Context(), gomock.Any()).Return(assetGroup, nil)
 	mockDB.EXPECT().UpdateAssetGroupSelectors(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(expectedResult, nil)
 
 	mockGraph.EXPECT().UpdateSelectorTags(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
@@ -740,7 +740,7 @@ func TestResources_DeleteAssetGroup(t *testing.T) {
 		ResponseStatusCode(http.StatusBadRequest)
 
 	// GetAssetGroup DB fails
-	mockDB.EXPECT().GetAssetGroup(int32(1234)).Return(model.AssetGroup{}, fmt.Errorf("exploded"))
+	mockDB.EXPECT().GetAssetGroup(gomock.Any(), int32(1234)).Return(model.AssetGroup{}, fmt.Errorf("exploded"))
 
 	requestTemplate.
 		WithURLPathVars(map[string]string{
@@ -751,7 +751,7 @@ func TestResources_DeleteAssetGroup(t *testing.T) {
 		ResponseStatusCode(http.StatusInternalServerError)
 
 	// DeleteAssetGroup DB fails
-	mockDB.EXPECT().GetAssetGroup(int32(1234)).Return(model.AssetGroup{}, nil)
+	mockDB.EXPECT().GetAssetGroup(gomock.Any(), int32(1234)).Return(model.AssetGroup{}, nil)
 	mockDB.EXPECT().DeleteAssetGroup(gomock.Any(), model.AssetGroup{}).Return(fmt.Errorf("exploded"))
 
 	requestTemplate.
@@ -763,7 +763,7 @@ func TestResources_DeleteAssetGroup(t *testing.T) {
 		ResponseStatusCode(http.StatusInternalServerError)
 
 	// Success
-	mockDB.EXPECT().GetAssetGroup(int32(1234)).Return(model.AssetGroup{}, nil)
+	mockDB.EXPECT().GetAssetGroup(gomock.Any(), int32(1234)).Return(model.AssetGroup{}, nil)
 	mockDB.EXPECT().DeleteAssetGroup(gomock.Any(), model.AssetGroup{}).Return(nil)
 
 	requestTemplate.
@@ -797,7 +797,7 @@ func TestResources_DeleteAssetGroupSelector(t *testing.T) {
 		ResponseStatusCode(http.StatusBadRequest)
 
 	// GetAssetGroup DB fails
-	mockDB.EXPECT().GetAssetGroup(int32(1234)).Return(model.AssetGroup{}, fmt.Errorf("exploded"))
+	mockDB.EXPECT().GetAssetGroup(gomock.Any(), int32(1234)).Return(model.AssetGroup{}, fmt.Errorf("exploded"))
 
 	requestTemplate.
 		WithURLPathVars(map[string]string{
@@ -808,7 +808,7 @@ func TestResources_DeleteAssetGroupSelector(t *testing.T) {
 		ResponseStatusCode(http.StatusInternalServerError)
 
 	// Error where AG Selector ID is not a valid int
-	mockDB.EXPECT().GetAssetGroup(int32(1234)).Return(model.AssetGroup{}, nil)
+	mockDB.EXPECT().GetAssetGroup(gomock.Any(), int32(1234)).Return(model.AssetGroup{}, nil)
 
 	requestTemplate.
 		WithURLPathVars(map[string]string{
@@ -820,8 +820,8 @@ func TestResources_DeleteAssetGroupSelector(t *testing.T) {
 		ResponseStatusCode(http.StatusBadRequest)
 
 	// GetAssetGroupSelector DB fails
-	mockDB.EXPECT().GetAssetGroup(int32(1234)).Return(model.AssetGroup{}, nil)
-	mockDB.EXPECT().GetAssetGroupSelector(int32(1234)).Return(model.AssetGroupSelector{}, fmt.Errorf("exploded"))
+	mockDB.EXPECT().GetAssetGroup(gomock.Any(), int32(1234)).Return(model.AssetGroup{}, nil)
+	mockDB.EXPECT().GetAssetGroupSelector(gomock.Any(), int32(1234)).Return(model.AssetGroupSelector{}, fmt.Errorf("exploded"))
 
 	requestTemplate.
 		WithURLPathVars(map[string]string{
@@ -833,8 +833,8 @@ func TestResources_DeleteAssetGroupSelector(t *testing.T) {
 		ResponseStatusCode(http.StatusInternalServerError)
 
 	// Is System Selector should fail
-	mockDB.EXPECT().GetAssetGroup(int32(1234)).Return(model.AssetGroup{}, nil)
-	mockDB.EXPECT().GetAssetGroupSelector(int32(1234)).Return(model.AssetGroupSelector{SystemSelector: true}, nil)
+	mockDB.EXPECT().GetAssetGroup(gomock.Any(), int32(1234)).Return(model.AssetGroup{}, nil)
+	mockDB.EXPECT().GetAssetGroupSelector(gomock.Any(), int32(1234)).Return(model.AssetGroupSelector{SystemSelector: true}, nil)
 
 	requestTemplate.
 		WithURLPathVars(map[string]string{
@@ -846,8 +846,8 @@ func TestResources_DeleteAssetGroupSelector(t *testing.T) {
 		ResponseStatusCode(http.StatusConflict)
 
 	// DeleteAssetGroupSelector DB fails
-	mockDB.EXPECT().GetAssetGroup(int32(1234)).Return(model.AssetGroup{}, nil)
-	mockDB.EXPECT().GetAssetGroupSelector(int32(1234)).Return(model.AssetGroupSelector{}, nil)
+	mockDB.EXPECT().GetAssetGroup(gomock.Any(), int32(1234)).Return(model.AssetGroup{}, nil)
+	mockDB.EXPECT().GetAssetGroupSelector(gomock.Any(), int32(1234)).Return(model.AssetGroupSelector{}, nil)
 	mockDB.EXPECT().DeleteAssetGroupSelector(gomock.Any(), model.AssetGroupSelector{}).Return(fmt.Errorf("exploded"))
 
 	requestTemplate.
@@ -860,8 +860,8 @@ func TestResources_DeleteAssetGroupSelector(t *testing.T) {
 		ResponseStatusCode(http.StatusInternalServerError)
 
 	// Success
-	mockDB.EXPECT().GetAssetGroup(int32(1234)).Return(model.AssetGroup{}, nil)
-	mockDB.EXPECT().GetAssetGroupSelector(int32(1234)).Return(model.AssetGroupSelector{}, nil)
+	mockDB.EXPECT().GetAssetGroup(gomock.Any(), int32(1234)).Return(model.AssetGroup{}, nil)
+	mockDB.EXPECT().GetAssetGroupSelector(gomock.Any(), int32(1234)).Return(model.AssetGroupSelector{}, nil)
 	mockDB.EXPECT().DeleteAssetGroupSelector(gomock.Any(), model.AssetGroupSelector{}).Return(nil)
 
 	requestTemplate.
@@ -940,7 +940,7 @@ func TestResources_ListAssetGroupCollections(t *testing.T) {
 				Name: "DatabaseGetAssetGroupError",
 				Setup: func() {
 					mockDB.EXPECT().
-						GetAssetGroup(gomock.Any()).
+						GetAssetGroup(gomock.Any(), gomock.Any()).
 						Return(model.AssetGroup{}, errors.New("GetAssetGroup fail"))
 				},
 				Test: func(output apitest.Output) {
@@ -952,10 +952,10 @@ func TestResources_ListAssetGroupCollections(t *testing.T) {
 				Name: "DatabaseGetAssetGroupCollectionsError",
 				Setup: func() {
 					mockDB.EXPECT().
-						GetAssetGroup(gomock.Any()).
+						GetAssetGroup(gomock.Any(), gomock.Any()).
 						Return(assetGroup, nil)
 					mockDB.EXPECT().
-						GetAssetGroupCollections(gomock.Any(), "", gomock.Any()).
+						GetAssetGroupCollections(gomock.Any(), gomock.Any(), "", gomock.Any()).
 						Return(nil, errors.New("GetAssetGroupCollectionsError"))
 				},
 				Test: func(output apitest.Output) {
@@ -966,10 +966,10 @@ func TestResources_ListAssetGroupCollections(t *testing.T) {
 				Name: "SuccessDataTest",
 				Setup: func() {
 					mockDB.EXPECT().
-						GetAssetGroup(gomock.Any()).
+						GetAssetGroup(gomock.Any(), gomock.Any()).
 						Return(assetGroup, nil)
 					mockDB.EXPECT().
-						GetAssetGroupCollections(gomock.Any(), "", gomock.Any()).
+						GetAssetGroupCollections(gomock.Any(), gomock.Any(), "", gomock.Any()).
 						Return(collections, nil)
 				},
 				Test: func(output apitest.Output) {
@@ -994,10 +994,10 @@ func TestResources_ListAssetGroupCollections(t *testing.T) {
 				},
 				Setup: func() {
 					mockDB.EXPECT().
-						GetAssetGroup(gomock.Any()).
+						GetAssetGroup(gomock.Any(), gomock.Any()).
 						Return(assetGroup, nil)
 					mockDB.EXPECT().
-						GetAssetGroupCollections(gomock.Any(), "created_at", gomock.Any()).
+						GetAssetGroupCollections(gomock.Any(), gomock.Any(), "created_at", gomock.Any()).
 						Return(collections, nil)
 				},
 				Test: func(output apitest.Output) {
@@ -1011,10 +1011,10 @@ func TestResources_ListAssetGroupCollections(t *testing.T) {
 				},
 				Setup: func() {
 					mockDB.EXPECT().
-						GetAssetGroup(gomock.Any()).
+						GetAssetGroup(gomock.Any(), gomock.Any()).
 						Return(assetGroup, nil)
 					mockDB.EXPECT().
-						GetAssetGroupCollections(gomock.Any(), "created_at desc", gomock.Any()).
+						GetAssetGroupCollections(gomock.Any(), gomock.Any(), "created_at desc", gomock.Any()).
 						Return(collections, nil)
 				},
 				Test: func(output apitest.Output) {
@@ -1028,9 +1028,9 @@ func TestResources_ListAssetGroupCollections(t *testing.T) {
 					apitest.SetURLVar(input, api.URIPathVariableAssetGroupID, "1")
 				},
 				Setup: func() {
-					mockDB.EXPECT().GetAssetGroup(gomock.Any()).Return(assetGroup, nil)
+					mockDB.EXPECT().GetAssetGroup(gomock.Any(), gomock.Any()).Return(assetGroup, nil)
 					mockDB.EXPECT().
-						GetAssetGroupCollections(gomock.Any(), "",
+						GetAssetGroupCollections(gomock.Any(), gomock.Any(), "",
 							model.SQLFilter{SQLString: "id = ?", Params: []any{"1"}}).
 						Return(collections, nil)
 				},
@@ -1100,7 +1100,7 @@ func TestResources_ListAssetGroupMembers(t *testing.T) {
 				},
 				Setup: func() {
 					mockDB.EXPECT().
-						GetAssetGroup(gomock.Any()).
+						GetAssetGroup(gomock.Any(), gomock.Any()).
 						Return(model.AssetGroup{}, errors.New("GetAssetGroup fail"))
 				},
 				Test: func(output apitest.Output) {
@@ -1115,7 +1115,7 @@ func TestResources_ListAssetGroupMembers(t *testing.T) {
 				},
 				Setup: func() {
 					mockDB.EXPECT().
-						GetAssetGroup(gomock.Any()).
+						GetAssetGroup(gomock.Any(), gomock.Any()).
 						Return(assetGroup, nil)
 					mockGraph.EXPECT().
 						GetAssetGroupNodes(gomock.Any(), gomock.Any()).
@@ -1132,7 +1132,7 @@ func TestResources_ListAssetGroupMembers(t *testing.T) {
 				},
 				Setup: func() {
 					mockDB.EXPECT().
-						GetAssetGroup(gomock.Any()).
+						GetAssetGroup(gomock.Any(), gomock.Any()).
 						Return(assetGroup, nil)
 					mockGraph.EXPECT().
 						GetAssetGroupNodes(gomock.Any(), gomock.Any()).
@@ -1182,7 +1182,7 @@ func TestResources_ListAssetGroupMembers(t *testing.T) {
 				},
 				Setup: func() {
 					mockDB.EXPECT().
-						GetAssetGroup(gomock.Any()).
+						GetAssetGroup(gomock.Any(), gomock.Any()).
 						Return(assetGroup, nil)
 					mockGraph.EXPECT().
 						GetAssetGroupNodes(gomock.Any(), gomock.Any()).
@@ -1218,7 +1218,7 @@ func TestResources_ListAssetGroupMembers(t *testing.T) {
 				},
 				Setup: func() {
 					mockDB.EXPECT().
-						GetAssetGroup(gomock.Any()).
+						GetAssetGroup(gomock.Any(), gomock.Any()).
 						Return(assetGroup, nil)
 					mockGraph.EXPECT().
 						GetAssetGroupNodes(gomock.Any(), gomock.Any()).
@@ -1259,7 +1259,7 @@ func TestResources_ListAssetGroupMembers(t *testing.T) {
 				},
 				Setup: func() {
 					mockDB.EXPECT().
-						GetAssetGroup(gomock.Any()).
+						GetAssetGroup(gomock.Any(), gomock.Any()).
 						Return(assetGroup, nil)
 					mockGraph.EXPECT().
 						GetAssetGroupNodes(gomock.Any(), gomock.Any()).
@@ -1302,7 +1302,7 @@ func TestResources_ListAssetGroupMembers(t *testing.T) {
 				},
 				Setup: func() {
 					mockDB.EXPECT().
-						GetAssetGroup(gomock.Any()).
+						GetAssetGroup(gomock.Any(), gomock.Any()).
 						Return(assetGroup, nil)
 					mockGraph.EXPECT().
 						GetAssetGroupNodes(gomock.Any(), gomock.Any()).
@@ -1337,7 +1337,7 @@ func TestResources_ListAssetGroupMembers(t *testing.T) {
 				},
 				Setup: func() {
 					mockDB.EXPECT().
-						GetAssetGroup(gomock.Any()).
+						GetAssetGroup(gomock.Any(), gomock.Any()).
 						Return(assetGroup, nil)
 					mockGraph.EXPECT().
 						GetAssetGroupNodes(gomock.Any(), gomock.Any()).
@@ -1429,7 +1429,7 @@ func TestResources_ListAssetGroupMembersCount(t *testing.T) {
 				},
 				Setup: func() {
 					mockDB.EXPECT().
-						GetAssetGroup(gomock.Any()).
+						GetAssetGroup(gomock.Any(), gomock.Any()).
 						Return(model.AssetGroup{}, errors.New("GetAssetGroup fail"))
 				},
 				Test: func(output apitest.Output) {
@@ -1444,7 +1444,7 @@ func TestResources_ListAssetGroupMembersCount(t *testing.T) {
 				},
 				Setup: func() {
 					mockDB.EXPECT().
-						GetAssetGroup(gomock.Any()).
+						GetAssetGroup(gomock.Any(), gomock.Any()).
 						Return(assetGroup, nil)
 					mockGraph.EXPECT().
 						GetAssetGroupNodes(gomock.Any(), gomock.Any()).
@@ -1461,7 +1461,7 @@ func TestResources_ListAssetGroupMembersCount(t *testing.T) {
 				},
 				Setup: func() {
 					mockDB.EXPECT().
-						GetAssetGroup(gomock.Any()).
+						GetAssetGroup(gomock.Any(), gomock.Any()).
 						Return(assetGroup, nil)
 					mockGraph.EXPECT().
 						GetAssetGroupNodes(gomock.Any(), gomock.Any()).
@@ -1497,7 +1497,7 @@ func TestResources_ListAssetGroupMembersCount(t *testing.T) {
 				},
 				Setup: func() {
 					mockDB.EXPECT().
-						GetAssetGroup(gomock.Any()).
+						GetAssetGroup(gomock.Any(), gomock.Any()).
 						Return(assetGroup, nil)
 					mockGraph.EXPECT().
 						GetAssetGroupNodes(gomock.Any(), gomock.Any()).
