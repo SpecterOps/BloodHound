@@ -268,8 +268,8 @@ func GetADCSESC4EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 		certTemplatesIDs4     = cardinality.NewBitmap32()
 		certTemplateSegments4 = map[graph.ID][]*graph.PathSegment{}
 
-		certTemplatesIDs5     = cardinality.NewBitmap32()
-		certTemplateSegments5 = map[graph.ID][]*graph.PathSegment{}
+		// certTemplatesIDs5     = cardinality.NewBitmap32()
+		// certTemplateSegments5 = map[graph.ID][]*graph.PathSegment{}
 	)
 
 	if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
@@ -303,6 +303,28 @@ func GetADCSESC4EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 					return nil
 				}),
 		}); err != nil {
+		return nil, err
+	}
+
+	// every scenario must contain a path from the enterpriseCA nodes found in the previous step to find enterprise CAs that are trusted for NTAuth
+	if err := traversalInst.BreadthFirst(ctx, traversal.Plan{
+		Root: startNode,
+		Driver: ESC4Path2Pattern(edge.EndID, enterpriseCAs).Do(
+			func(terminal *graph.PathSegment) error {
+
+				enterpriseCA := terminal.Search(
+					func(nextSegment *graph.PathSegment) bool {
+						return nextSegment.Node.Kinds.ContainsOneOf(ad.EnterpriseCA)
+					},
+				)
+
+				lock.Lock()
+				enterpriseCASegments[enterpriseCA.ID] = append(enterpriseCASegments[enterpriseCA.ID], terminal)
+				lock.Unlock()
+
+				return nil
+			}),
+	}); err != nil {
 		return nil, err
 	}
 
@@ -456,29 +478,6 @@ func GetADCSESC4EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 
 				lock.Lock()
 				certTemplateSegments4[certTemplate.ID] = append(certTemplateSegments4[certTemplate.ID], terminal)
-				lock.Unlock()
-
-				return nil
-			}),
-	}); err != nil {
-		return nil, err
-	}
-
-	// todo: p2, p5, p8?-- use the enterpriseCA nodes from previous steps to find enterprise CAs that are trusted for NTAuth
-	if err := traversalInst.BreadthFirst(ctx, traversal.Plan{
-		Root: startNode,
-		Driver: ESC4Path2Pattern(edge.EndID, enterpriseCAs).Do(
-			func(terminal *graph.PathSegment) error {
-
-				enterpriseCA := terminal.Search(
-					func(nextSegment *graph.PathSegment) bool {
-						return nextSegment.Node.Kinds.ContainsOneOf(ad.EnterpriseCA)
-					},
-				)
-
-				lock.Lock()
-				enterpriseCASegments[enterpriseCA.ID] = append(enterpriseCASegments[enterpriseCA.ID], terminal)
-				enterpriseCAs.Add(enterpriseCA.ID.Uint32())
 				lock.Unlock()
 
 				return nil
