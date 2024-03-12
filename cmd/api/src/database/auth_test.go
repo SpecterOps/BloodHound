@@ -45,7 +45,7 @@ func initAndGetRoles(t *testing.T) (database.Database, model.Roles) {
 		t.Fatalf("Failed preparing DB: %v", err)
 	}
 
-	if roles, err := dbInst.GetAllRoles("", model.SQLFilter{}); err != nil {
+	if roles, err := dbInst.GetAllRoles(context.Background(), "", model.SQLFilter{}); err != nil {
 		t.Fatalf("Error fetching roles: %v", err)
 	} else {
 		return dbInst, roles
@@ -96,7 +96,7 @@ func TestDatabase_InitializePermissions(t *testing.T) {
 		t.Fatalf("Failed preparing DB: %v", err)
 	}
 
-	if permissions, err := dbInst.GetAllPermissions("", model.SQLFilter{}); err != nil {
+	if permissions, err := dbInst.GetAllPermissions(context.Background(), "", model.SQLFilter{}); err != nil {
 		t.Fatalf("Error fetching permissions: %v", err)
 	} else {
 		templates := auth.Permissions().All()
@@ -136,41 +136,6 @@ func TestDatabase_InitializeRoles(t *testing.T) {
 
 		if !found {
 			t.Fatalf("Missing role %s", roleTemplate.Name)
-		}
-	}
-}
-
-func TestDatabase_UpdateRole(t *testing.T) {
-	dbInst, roles := initAndGetRoles(t)
-
-	if role, found := roles.FindByName(auth.RoleReadOnly); !found {
-		t.Fatal("Unable to find role")
-	} else if allPermissions, err := dbInst.GetAllPermissions("", model.SQLFilter{}); err != nil {
-		t.Fatalf("Failed fetching all permissions: %v", err)
-	} else {
-		role.Permissions = allPermissions
-
-		if err := dbInst.UpdateRole(role); err != nil {
-			t.Fatalf("Failed updating role %s: %v", role.Name, err)
-		}
-
-		if updatedRole, err := dbInst.GetRole(role.ID); err != nil {
-			t.Fatalf("Failed fetching updated role %s: %v", role.Name, err)
-		} else {
-			for _, permission := range role.Permissions {
-				found := false
-
-				for _, updatedPermission := range updatedRole.Permissions {
-					if permission.Equals(updatedPermission) {
-						found = true
-						break
-					}
-				}
-
-				if !found {
-					t.Fatalf("Updated role %s missing expected permission %s", role.Name, permission)
-				}
-			}
 		}
 	}
 }
@@ -321,7 +286,7 @@ func TestDatabase_CreateGetDeleteAuthSecret(t *testing.T) {
 			t.Fatalf("Failed to update auth secret %d: %v", newSecret.ID, err)
 		} else if err = test.VerifyAuditLogs(dbInst, "UpdateAuthSecret", "secret_user_id", newSecret.UserID.String()); err != nil {
 			t.Fatalf("Failed to validate UpdateAuthSecret audit logs:\n%v", err)
-		} else if updatedSecret, err := dbInst.GetAuthSecret(newSecret.ID); err != nil {
+		} else if updatedSecret, err := dbInst.GetAuthSecret(ctx, newSecret.ID); err != nil {
 			t.Fatalf("Failed to fetch updated auth secret: %v", err)
 		} else if updatedSecret.Digest != updatedDigest {
 			t.Fatalf("Expected updated auth secret digest to be %s but saw %s", updatedDigest, updatedSecret.Digest)
