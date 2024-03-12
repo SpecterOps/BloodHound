@@ -229,7 +229,7 @@ func traversalToDomainThroughGenericAll(
 	// p1: use the enterpriseCA nodes to gather the set of cert templates with an inbound `GenericAll`
 	if err := traversalInst.BreadthFirst(ctx, traversal.Plan{
 		Root: startNode,
-		Driver: ESC4Path1Pattern(domainID, enterpriseCAs).Do(
+		Driver: FindPathToDomainThroughCertTemplateWithGivenPrivilege([]graph.Kind{ad.GenericAll, ad.Owns, ad.WriteOwner, ad.WriteDACL}, domainID, enterpriseCAs).Do(
 			func(terminal *graph.PathSegment) error {
 
 				certTemplate := terminal.Search(
@@ -274,7 +274,7 @@ func traversalToDomainThroughGenericWrite(
 	// p3: use the enterpriseCA nodes to gather the set of cert templates with an inbound `GenericWrite`
 	if err := traversalInst.BreadthFirst(ctx, traversal.Plan{
 		Root: startNode,
-		Driver: ESC4Path3Pattern(domainID, enterpriseCAs).Do(
+		Driver: FindPathToDomainThroughCertTemplateWithGivenPrivilege([]graph.Kind{ad.GenericWrite}, domainID, enterpriseCAs).Do(
 			func(terminal *graph.PathSegment) error {
 
 				certTemplate := terminal.Search(
@@ -297,7 +297,7 @@ func traversalToDomainThroughGenericWrite(
 	// p4: find paths from the prinipal to cert template through `Enroll` or `AllExtendedRights`
 	if err := traversalInst.BreadthFirst(ctx, traversal.Plan{
 		Root: startNode,
-		Driver: ESC4Path4Pattern(certTemplates).Do(
+		Driver: FindPathToCertTemplateWithEnrollmentRights(certTemplates).Do(
 			func(terminal *graph.PathSegment) error {
 
 				certTemplate := terminal.Search(
@@ -339,7 +339,7 @@ func traversalToDomainThroughWritePKINameFlag(
 	// p6: use the enterpriseCA nodes to gather the set of cert templates with an inbound `WritePKINameFlag`
 	if err := traversalInst.BreadthFirst(ctx, traversal.Plan{
 		Root: startNode,
-		Driver: ESC4Path6Pattern(domainID, enterpriseCAs).Do(
+		Driver: FindPathToDomainThroughCertTemplateWithGivenPrivilege([]graph.Kind{ad.WritePKINameFlag}, domainID, enterpriseCAs).Do(
 			func(terminal *graph.PathSegment) error {
 
 				certTemplate := terminal.Search(
@@ -359,10 +359,19 @@ func traversalToDomainThroughWritePKINameFlag(
 		return certTemplateSegments, certTemplates, err
 	}
 
+	certTemplateCriteria := query.And(
+		query.Equals(query.EndProperty(ad.RequiresManagerApproval.String()), false),
+		query.Equals(query.EndProperty(ad.AuthenticationEnabled.String()), true),
+		query.Or(
+			query.Equals(query.EndProperty(ad.AuthorizedSignatures.String()), 0),
+			query.Equals(query.EndProperty(ad.SchemaVersion.String()), 1),
+		),
+	)
+
 	// p7: find cert templates with a valid combination of properties that have an inbound `Enroll` OR `AllExtendedRights` edge
 	if err := traversalInst.BreadthFirst(ctx, traversal.Plan{
 		Root: startNode,
-		Driver: ESC4Path7Pattern(certTemplates).Do(
+		Driver: FindPathToCertTemplateWithEnrollmentRightsAndCriteria(certTemplates, certTemplateCriteria).Do(
 			func(terminal *graph.PathSegment) error {
 
 				certTemplate := terminal.Search(
@@ -404,7 +413,7 @@ func traversalToDomainThroughWritePKIEnrollmentFlag(
 	// p9: use the enterpriseCA nodes to gather the set of cert templates with an inbound `WritePKIEnrollmentFlag`
 	if err := traversalInst.BreadthFirst(ctx, traversal.Plan{
 		Root: startNode,
-		Driver: ESC4Path9Pattern(domainID, enterpriseCAs).Do(
+		Driver: FindPathToDomainThroughCertTemplateWithGivenPrivilege([]graph.Kind{ad.WritePKIEnrollmentFlag}, domainID, enterpriseCAs).Do(
 			func(terminal *graph.PathSegment) error {
 
 				certTemplate := terminal.Search(
@@ -424,10 +433,19 @@ func traversalToDomainThroughWritePKIEnrollmentFlag(
 		return certTemplateSegments, certTemplates, err
 	}
 
+	certTemplateCriteria := query.And(
+		query.Equals(query.EndProperty(ad.EnrolleeSuppliesSubject.String()), true),
+		query.Equals(query.EndProperty(ad.AuthenticationEnabled.String()), true),
+		query.Or(
+			query.Equals(query.EndProperty(ad.AuthorizedSignatures.String()), 0),
+			query.Equals(query.EndProperty(ad.SchemaVersion.String()), 1),
+		),
+	)
+
 	// p10: find cert templates with a valid combination of properties that have an inbound `Enroll` OR `AllExtendedRights` edge
 	if err := traversalInst.BreadthFirst(ctx, traversal.Plan{
 		Root: startNode,
-		Driver: ESC4Path10Pattern(certTemplates).Do(
+		Driver: FindPathToCertTemplateWithEnrollmentRightsAndCriteria(certTemplates, certTemplateCriteria).Do(
 			func(terminal *graph.PathSegment) error {
 
 				certTemplate := terminal.Search(
@@ -469,7 +487,7 @@ func traversalToDomainThroughPKIFlags(
 	// p9: use the enterpriseCA nodes to gather the set of cert templates with an inbound `WritePKIEnrollmentFlag`
 	if err := traversalInst.BreadthFirst(ctx, traversal.Plan{
 		Root: startNode,
-		Driver: ESC4Path9Pattern(domainID, enterpriseCAs).Do(
+		Driver: FindPathToDomainThroughCertTemplateWithGivenPrivilege([]graph.Kind{ad.WritePKIEnrollmentFlag}, domainID, enterpriseCAs).Do(
 			func(terminal *graph.PathSegment) error {
 
 				certTemplate := terminal.Search(
@@ -492,7 +510,7 @@ func traversalToDomainThroughPKIFlags(
 	// p10: (reuse p4 logic): find cert templates that have an inbound `Enroll` OR `AllExtendedRights` edge
 	if err := traversalInst.BreadthFirst(ctx, traversal.Plan{
 		Root: startNode,
-		Driver: ESC4Path4Pattern(certTemplates).Do(
+		Driver: FindPathToCertTemplateWithEnrollmentRights(certTemplates).Do(
 			func(terminal *graph.PathSegment) error {
 
 				certTemplate := terminal.Search(
@@ -514,7 +532,7 @@ func traversalToDomainThroughPKIFlags(
 	// p14: find cert templates with valid combination of properties that has an inbound `WritePKIName` edge
 	if err := traversalInst.BreadthFirst(ctx, traversal.Plan{
 		Root: startNode,
-		Driver: ESC4Path14Pattern(certTemplates).Do(
+		Driver: FindPathToCertTemplateWithWritePKINameFlag(certTemplates).Do(
 			func(terminal *graph.PathSegment) error {
 
 				certTemplate := terminal.Search(
@@ -577,7 +595,6 @@ func GetADCSESC4EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 	*/
 
 	var (
-		closureErr    error
 		startNode     *graph.Node
 		domainID      = edge.EndID
 		traversalInst = traversal.New(db, analysis.MaximumDatabaseParallelWorkers)
@@ -625,7 +642,7 @@ func GetADCSESC4EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 	// every scenario must contain a path from the enterpriseCA nodes found in the previous step to find enterprise CAs that are trusted for NTAuth
 	if err := traversalInst.BreadthFirst(ctx, traversal.Plan{
 		Root: startNode,
-		Driver: ESC4Path2Pattern(edge.EndID, enterpriseCAs).Do(
+		Driver: FindPathToDomainViaNTAuthStore(edge.EndID, enterpriseCAs).Do(
 			func(terminal *graph.PathSegment) error {
 
 				enterpriseCA := terminal.Search(
@@ -724,10 +741,6 @@ func GetADCSESC4EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 		)
 	}
 
-	if closureErr != nil {
-		return paths, closureErr
-	}
-
 	if paths.Len() > 0 {
 		enterpriseCAs.Each(
 			func(value uint32) bool {
@@ -755,37 +768,7 @@ func ESC4EnterpriseCAs() traversal.PatternContinuation {
 			))
 }
 
-func ESC4Path1Pattern(domainId graph.ID, enterpriseCAs cardinality.Duplex[uint32]) traversal.PatternContinuation {
-	return traversal.NewPattern().
-		OutboundWithDepth(0, 0,
-			query.And(
-				query.Kind(query.Relationship(), ad.MemberOf),
-				query.Kind(query.End(), ad.Group),
-			)).
-		Outbound(
-			query.And(
-				query.KindIn(query.Relationship(), ad.GenericAll, ad.Owns, ad.WriteOwner, ad.WriteDACL),
-				query.Kind(query.End(), ad.CertTemplate),
-			)).
-		Outbound(
-			query.And(
-				query.KindIn(query.Relationship(), ad.PublishedTo),
-				query.InIDs(query.End(), cardinality.DuplexToGraphIDs(enterpriseCAs)...),
-				query.Kind(query.End(), ad.EnterpriseCA),
-			)).
-		Outbound(
-			query.And(
-				query.KindIn(query.Relationship(), ad.IssuedSignedBy, ad.EnterpriseCAFor),
-				query.Kind(query.End(), ad.RootCA),
-			)).
-		Outbound(
-			query.And(
-				query.KindIn(query.Relationship(), ad.RootCAFor),
-				query.Equals(query.EndID(), domainId),
-			))
-}
-
-func ESC4Path2Pattern(domainId graph.ID, enterpriseCAs cardinality.Duplex[uint32]) traversal.PatternContinuation {
+func FindPathToDomainViaNTAuthStore(domainId graph.ID, enterpriseCAs cardinality.Duplex[uint32]) traversal.PatternContinuation {
 	return traversal.NewPattern().
 		OutboundWithDepth(0, 0,
 			query.And(
@@ -810,17 +793,17 @@ func ESC4Path2Pattern(domainId graph.ID, enterpriseCAs cardinality.Duplex[uint32
 			))
 }
 
-func ESC4Path3Pattern(domainId graph.ID, enterpriseCAs cardinality.Duplex[uint32]) traversal.PatternContinuation {
+// This traversal goes from principal -> domain via a cert template that has an inbound edge corresponding to whatever `priveleges` are provided
+func FindPathToDomainThroughCertTemplateWithGivenPrivilege(priveleges graph.Kinds, domainID graph.ID, enterpriseCAs cardinality.Duplex[uint32]) traversal.PatternContinuation {
 	return traversal.NewPattern().
 		OutboundWithDepth(0, 0,
 			query.And(
 				query.Kind(query.Relationship(), ad.MemberOf),
 				query.Kind(query.End(), ad.Group),
 			)).
-		// TODO: this outbound edge is the only difference from `Path1Pattern`
 		Outbound(
 			query.And(
-				query.KindIn(query.Relationship(), ad.GenericWrite),
+				query.KindIn(query.Relationship(), priveleges...),
 				query.Kind(query.End(), ad.CertTemplate),
 			)).
 		Outbound(
@@ -837,11 +820,11 @@ func ESC4Path3Pattern(domainId graph.ID, enterpriseCAs cardinality.Duplex[uint32
 		Outbound(
 			query.And(
 				query.KindIn(query.Relationship(), ad.RootCAFor),
-				query.Equals(query.EndID(), domainId),
+				query.Equals(query.EndID(), domainID),
 			))
 }
 
-func ESC4Path4Pattern(certTemplates cardinality.Duplex[uint32]) traversal.PatternContinuation {
+func FindPathToCertTemplateWithEnrollmentRights(certTemplates cardinality.Duplex[uint32]) traversal.PatternContinuation {
 	return traversal.NewPattern().
 		OutboundWithDepth(0, 0,
 			query.And(
@@ -855,126 +838,31 @@ func ESC4Path4Pattern(certTemplates cardinality.Duplex[uint32]) traversal.Patter
 			))
 }
 
-func ESC4Path6Pattern(domainId graph.ID, enterpriseCAs cardinality.Duplex[uint32]) traversal.PatternContinuation {
+func FindPathToCertTemplateWithEnrollmentRightsAndCriteria(certTemplates cardinality.Duplex[uint32], criteria graph.Criteria) traversal.PatternContinuation {
 	return traversal.NewPattern().
 		OutboundWithDepth(0, 0,
 			query.And(
 				query.Kind(query.Relationship(), ad.MemberOf),
 				query.Kind(query.End(), ad.Group),
 			)).
-		// TODO: this outbound edge is the only difference from `Path1Pattern`
+		Outbound(
+			query.And(
+				query.KindIn(query.Relationship(), ad.Enroll, ad.AllExtendedRights),
+				query.InIDs(query.End(), cardinality.DuplexToGraphIDs(certTemplates)...),
+				criteria,
+			))
+}
+
+func FindPathToCertTemplateWithWritePKINameFlag(certTemplates cardinality.Duplex[uint32]) traversal.PatternContinuation {
+	return traversal.NewPattern().
+		OutboundWithDepth(0, 0,
+			query.And(
+				query.Kind(query.Relationship(), ad.MemberOf),
+				query.Kind(query.End(), ad.Group),
+			)).
 		Outbound(
 			query.And(
 				query.KindIn(query.Relationship(), ad.WritePKINameFlag),
-				query.Kind(query.End(), ad.CertTemplate),
-			)).
-		Outbound(
-			query.And(
-				query.KindIn(query.Relationship(), ad.PublishedTo),
-				query.InIDs(query.End(), cardinality.DuplexToGraphIDs(enterpriseCAs)...),
-				query.Kind(query.End(), ad.EnterpriseCA),
-			)).
-		Outbound(
-			query.And(
-				query.KindIn(query.Relationship(), ad.IssuedSignedBy, ad.EnterpriseCAFor),
-				query.Kind(query.End(), ad.RootCA),
-			)).
-		Outbound(
-			query.And(
-				query.KindIn(query.Relationship(), ad.RootCAFor),
-				query.Equals(query.EndID(), domainId),
-			))
-
-}
-
-func ESC4Path7Pattern(certTemplates cardinality.Duplex[uint32]) traversal.PatternContinuation {
-	return traversal.NewPattern().
-		OutboundWithDepth(0, 0,
-			query.And(
-				query.Kind(query.Relationship(), ad.MemberOf),
-				query.Kind(query.End(), ad.Group),
-			)).
-		Outbound(
-			query.And(
-				query.KindIn(query.Relationship(), ad.Enroll, ad.AllExtendedRights),
-				query.InIDs(query.End(), cardinality.DuplexToGraphIDs(certTemplates)...),
-				// ct.requiresmanagerapproval == false
-				query.Equals(query.EndProperty(ad.RequiresManagerApproval.String()), false),
-				// ct.authenticationenabled == true
-				query.Equals(query.EndProperty(ad.AuthenticationEnabled.String()), true),
-				query.Or(
-					// ct.authorizedsignatures == 0
-					query.Equals(query.EndProperty(ad.AuthorizedSignatures.String()), 0),
-					// ct.schemaversion == 1
-					query.Equals(query.EndProperty(ad.SchemaVersion.String()), 1),
-				),
-			))
-}
-
-func ESC4Path9Pattern(domainId graph.ID, enterpriseCAs cardinality.Duplex[uint32]) traversal.PatternContinuation {
-	return traversal.NewPattern().
-		OutboundWithDepth(0, 0,
-			query.And(
-				query.Kind(query.Relationship(), ad.MemberOf),
-				query.Kind(query.End(), ad.Group),
-			)).
-		Outbound(
-			query.And(
-				query.KindIn(query.Relationship(), ad.WritePKIEnrollmentFlag),
-				query.Kind(query.End(), ad.CertTemplate),
-			)).
-		Outbound(
-			query.And(
-				query.KindIn(query.Relationship(), ad.PublishedTo),
-				query.InIDs(query.End(), cardinality.DuplexToGraphIDs(enterpriseCAs)...),
-				query.Kind(query.End(), ad.EnterpriseCA),
-			)).
-		Outbound(
-			query.And(
-				query.KindIn(query.Relationship(), ad.IssuedSignedBy, ad.EnterpriseCAFor),
-				query.Kind(query.End(), ad.RootCA),
-			)).
-		Outbound(
-			query.And(
-				query.KindIn(query.Relationship(), ad.RootCAFor),
-				query.Equals(query.EndID(), domainId),
-			))
-}
-
-func ESC4Path10Pattern(certTemplates cardinality.Duplex[uint32]) traversal.PatternContinuation {
-	return traversal.NewPattern().
-		OutboundWithDepth(0, 0,
-			query.And(
-				query.Kind(query.Relationship(), ad.MemberOf),
-				query.Kind(query.End(), ad.Group),
-			)).
-		Outbound(
-			query.And(
-				query.KindIn(query.Relationship(), ad.Enroll, ad.AllExtendedRights),
-				query.InIDs(query.End(), cardinality.DuplexToGraphIDs(certTemplates)...),
-				// ct.enrolleesuppliessubject == true
-				query.Equals(query.EndProperty(ad.EnrolleeSuppliesSubject.String()), true),
-				// ct.authenticationenabled == true
-				query.Equals(query.EndProperty(ad.AuthenticationEnabled.String()), true),
-				query.Or(
-					// ct.authorizedsignatures == 0
-					query.Equals(query.EndProperty(ad.AuthorizedSignatures.String()), 0),
-					// ct.schemaversion == 1
-					query.Equals(query.EndProperty(ad.SchemaVersion.String()), 1),
-				),
-			))
-}
-
-func ESC4Path14Pattern(certTemplates cardinality.Duplex[uint32]) traversal.PatternContinuation {
-	return traversal.NewPattern().
-		OutboundWithDepth(0, 0,
-			query.And(
-				query.Kind(query.Relationship(), ad.MemberOf),
-				query.Kind(query.End(), ad.Group),
-			)).
-		Outbound(
-			query.And(
-				query.KindIn(query.Relationship(), ad.Enroll, ad.AllExtendedRights),
 				query.InIDs(query.End(), cardinality.DuplexToGraphIDs(certTemplates)...),
 				// ct.authenticationenabled == true
 				query.Equals(query.EndProperty(ad.AuthenticationEnabled.String()), true),
