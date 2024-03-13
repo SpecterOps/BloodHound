@@ -83,8 +83,8 @@ func PostADCSESC3(ctx context.Context, tx graph.Transaction, outC chan<- analysi
 						} else {
 							for _, eca1 := range publishedECAs {
 								tempResults := CalculateCrossProductNodeSets(groupExpansions,
-									cache.CertTemplateControllers[certTemplateOne.ID],
-									cache.CertTemplateControllers[certTemplateTwo.ID],
+									cache.CertTemplateEnrollers[certTemplateOne.ID],
+									cache.CertTemplateEnrollers[certTemplateTwo.ID],
 									cache.EnterpriseCAEnrollers[eca1.ID],
 									cache.EnterpriseCAEnrollers[eca2.ID],
 									delegatedAgents.Slice())
@@ -100,8 +100,8 @@ func PostADCSESC3(ctx context.Context, tx graph.Transaction, outC chan<- analysi
 					} else {
 						for _, eca1 := range publishedECAs {
 							tempResults := CalculateCrossProductNodeSets(groupExpansions,
-								cache.CertTemplateControllers[certTemplateOne.ID],
-								cache.CertTemplateControllers[certTemplateTwo.ID],
+								cache.CertTemplateEnrollers[certTemplateOne.ID],
+								cache.CertTemplateEnrollers[certTemplateTwo.ID],
 								cache.EnterpriseCAEnrollers[eca1.ID],
 								cache.EnterpriseCAEnrollers[eca2.ID])
 

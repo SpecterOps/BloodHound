@@ -89,12 +89,13 @@ func (mr *MockGraphMockRecorder) FetchNodesByObjectIDs(arg0 interface{}, arg1 ..
 }
 
 // GetADEntityQueryResult mocks base method.
-func (m *MockGraph) GetADEntityQueryResult(arg0 context.Context, arg1 queries.EntityQueryParameters, arg2 bool) (interface{}, error) {
+func (m *MockGraph) GetADEntityQueryResult(arg0 context.Context, arg1 queries.EntityQueryParameters, arg2 bool) (interface{}, int, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetADEntityQueryResult", arg0, arg1, arg2)
 	ret0, _ := ret[0].(interface{})
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	ret1, _ := ret[1].(int)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
 }
 
 // GetADEntityQueryResult indicates an expected call of GetADEntityQueryResult.

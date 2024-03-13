@@ -35,7 +35,6 @@ import (
 	graphMocks "github.com/specterops/bloodhound/dawgs/graph/mocks"
 	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/graphschema/common"
-	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/queries"
 	"github.com/stretchr/testify/require"
@@ -252,11 +251,8 @@ func TestQueries_GetEntityResults(t *testing.T) {
 		return delegate(nil)
 	})
 
-	results, err := graphQuery.GetEntityResults(context.Background(), node, params, true)
+	results, count, err := graphQuery.GetEntityResults(context.Background(), node, params, true)
 	require.Nil(t, err)
-	castResult, ok := results.(api.ResponseWrapper)
-	require.True(t, ok)
-	require.Equal(t, 0, castResult.Skip)
-	require.Equal(t, 10, castResult.Limit)
-	require.Len(t, castResult.Data, 10)
+	require.Len(t, results, 10)
+	require.Equal(t, count, 20)
 }

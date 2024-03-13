@@ -21,7 +21,6 @@ package queries_test
 
 import (
 	"context"
-	"encoding/json"
 	schema "github.com/specterops/bloodhound/graphschema"
 	"github.com/specterops/bloodhound/src/config"
 	"testing"
@@ -33,7 +32,6 @@ import (
 	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/graphschema/azure"
 	"github.com/specterops/bloodhound/graphschema/common"
-	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/src/api/bloodhoundgraph"
 	"github.com/specterops/bloodhound/src/queries"
 	"github.com/specterops/bloodhound/src/test/integration"
@@ -184,19 +182,11 @@ func TestGetEntityResults(t *testing.T) {
 			ListDelegate:  adAnalysis.FetchInboundADEntityControllers,
 		}
 
-		resultsInterface, err := graphQuery.GetADEntityQueryResult(context.Background(), params, false)
+		results, count, err := graphQuery.GetADEntityQueryResult(context.Background(), params, false)
 		require.Nil(t, err)
 
-		resultsJSON, err := json.Marshal(resultsInterface)
-		require.Nil(t, err)
-
-		results := api.ResponseWrapper{}
-		require.Nil(t, json.Unmarshal(resultsJSON, &results))
-
-		require.Equal(t, 4, results.Count)
-		require.Equal(t, 2, results.Limit)
-		require.Equal(t, 1, results.Skip)
-		require.LessOrEqual(t, 2, len(results.Data.([]any)))
+		require.Equal(t, 4, count)
+		require.Len(t, results, 2)
 		require.Equal(t, 0, queryCache.Len())
 	})
 }
@@ -225,19 +215,11 @@ func TestGetEntityResults_QueryShorterThanSlowQueryThreshold(t *testing.T) {
 			ListDelegate:  adAnalysis.FetchInboundADEntityControllers,
 		}
 
-		resultsInterface, err := graphQuery.GetADEntityQueryResult(context.Background(), params, true)
+		results, count, err := graphQuery.GetADEntityQueryResult(context.Background(), params, true)
 		require.Nil(t, err)
 
-		resultsJSON, err := json.Marshal(resultsInterface)
-		require.Nil(t, err)
-
-		results := api.ResponseWrapper{}
-		require.Nil(t, json.Unmarshal(resultsJSON, &results))
-
-		require.Equal(t, 4, results.Count)
-		require.Equal(t, 2, results.Limit)
-		require.Equal(t, 1, results.Skip)
-		require.LessOrEqual(t, 2, len(results.Data.([]any)))
+		require.Equal(t, 4, count)
+		require.Len(t, results, 2)
 		require.Equal(t, 0, queryCache.Len())
 	})
 }
@@ -268,35 +250,19 @@ func TestGetEntityResults_Cache(t *testing.T) {
 		}
 
 		// Get results and check that an entry was added to the cache
-		resultsInterface, err := graphQuery.GetADEntityQueryResult(context.Background(), params, true)
+		results, count, err := graphQuery.GetADEntityQueryResult(context.Background(), params, true)
 		require.Nil(t, err)
 
-		resultsJSON, err := json.Marshal(resultsInterface)
-		require.Nil(t, err)
-
-		results := api.ResponseWrapper{}
-		require.Nil(t, json.Unmarshal(resultsJSON, &results))
-
-		require.Equal(t, 4, results.Count)
-		require.Equal(t, 2, results.Limit)
-		require.Equal(t, 1, results.Skip)
-		require.LessOrEqual(t, 2, len(results.Data.([]any)))
+		require.Equal(t, 4, count)
+		require.Len(t, results, 2)
 		require.Equal(t, 1, queryCache.Len())
 
 		// Ensure that after being cached, we get the same results
-		resultsInterface, err = graphQuery.GetADEntityQueryResult(context.Background(), params, true)
+		results, count, err = graphQuery.GetADEntityQueryResult(context.Background(), params, true)
 		require.Nil(t, err)
 
-		resultsJSON, err = json.Marshal(resultsInterface)
-		require.Nil(t, err)
-
-		results = api.ResponseWrapper{}
-		require.Nil(t, json.Unmarshal(resultsJSON, &results))
-
-		require.Equal(t, 4, results.Count)
-		require.Equal(t, 2, results.Limit)
-		require.Equal(t, 1, results.Skip)
-		require.LessOrEqual(t, 2, len(results.Data.([]any)))
+		require.Equal(t, 4, count)
+		require.Len(t, results, 2)
 		require.Equal(t, 1, queryCache.Len())
 	})
 }
