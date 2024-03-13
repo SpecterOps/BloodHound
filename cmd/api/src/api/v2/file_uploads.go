@@ -19,8 +19,6 @@ package v2
 import (
 	"errors"
 	"fmt"
-	"github.com/specterops/bloodhound/headers"
-	"github.com/specterops/bloodhound/mediatypes"
 	"mime"
 	"net/http"
 	"slices"
@@ -28,7 +26,9 @@ import (
 	"strings"
 
 	"github.com/gorilla/mux"
+	"github.com/specterops/bloodhound/headers"
 	"github.com/specterops/bloodhound/log"
+	"github.com/specterops/bloodhound/mediatypes"
 	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/src/auth"
 	"github.com/specterops/bloodhound/src/ctx"
@@ -114,7 +114,7 @@ func (s Resources) ListFileUploadJobs(response http.ResponseWriter, request *htt
 
 func (s Resources) StartFileUploadJob(response http.ResponseWriter, request *http.Request) {
 	defer log.Measure(log.LevelDebug, "Starting new file upload job")()
-	var reqCtx = ctx.Get(request.Context())
+	reqCtx := ctx.Get(request.Context())
 
 	if user, valid := auth.GetUserFromAuthCtx(reqCtx.AuthCtx); !valid {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusUnauthorized, api.ErrorResponseDetailsAuthenticationInvalid, request), response)
@@ -130,6 +130,10 @@ func (s Resources) ProcessFileUpload(response http.ResponseWriter, request *http
 		requestId             = ctx.FromRequest(request).RequestID
 		fileUploadJobIdString = mux.Vars(request)[FileUploadJobIdPathParameterName]
 	)
+
+	if request.Body != nil {
+		defer request.Body.Close()
+	}
 
 	if !IsValidContentTypeForUpload(request.Header) {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("Content type must be application/json or application/zip"), request), response)
@@ -153,7 +157,7 @@ func (s Resources) ProcessFileUpload(response http.ResponseWriter, request *http
 func (s Resources) EndFileUploadJob(response http.ResponseWriter, request *http.Request) {
 	defer log.Measure(log.LevelDebug, "Finished file upload job")()
 
-	var fileUploadJobIdString = mux.Vars(request)[FileUploadJobIdPathParameterName]
+	fileUploadJobIdString := mux.Vars(request)[FileUploadJobIdPathParameterName]
 
 	if fileUploadJobID, err := strconv.Atoi(fileUploadJobIdString); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsIDMalformed, request), response)
