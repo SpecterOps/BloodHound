@@ -21,6 +21,7 @@ package database_test
 
 import (
 	"context"
+	"github.com/specterops/bloodhound/src/test/integration"
 	"github.com/specterops/bloodhound/src/utils/test"
 	"testing"
 	"time"
@@ -29,7 +30,6 @@ import (
 	"github.com/specterops/bloodhound/src/database"
 	"github.com/specterops/bloodhound/src/database/types/null"
 	"github.com/specterops/bloodhound/src/model"
-	"github.com/specterops/bloodhound/src/test/integration"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -40,10 +40,7 @@ const (
 )
 
 func initAndGetRoles(t *testing.T) (database.Database, model.Roles) {
-	dbInst := integration.OpenDatabase(t)
-	if err := integration.Prepare(dbInst); err != nil {
-		t.Fatalf("Failed preparing DB: %v", err)
-	}
+	dbInst := integration.SetupDB(t)
 
 	if roles, err := dbInst.GetAllRoles(context.Background(), "", model.SQLFilter{}); err != nil {
 		t.Fatalf("Error fetching roles: %v", err)
@@ -76,14 +73,13 @@ func initAndCreateUser(t *testing.T) (database.Database, model.User) {
 }
 
 func TestDatabase_Installation(t *testing.T) {
-	dbInst := integration.OpenDatabase(t)
-	if err := integration.Prepare(dbInst); err != nil {
-		t.Fatalf("Failed preparing DB: %v", err)
-	}
-
-	if installation, err := dbInst.CreateInstallation(); err != nil {
+	var (
+		dbInst  = integration.SetupDB(t)
+		testCtx = context.Background()
+	)
+	if installation, err := dbInst.CreateInstallation(testCtx); err != nil {
 		t.Fatalf("Error creating installation: %v", err)
-	} else if fetchedInstallation, err := dbInst.GetInstallation(); err != nil {
+	} else if fetchedInstallation, err := dbInst.GetInstallation(testCtx); err != nil {
 		t.Fatalf("Failed to fetch installation: %v", err)
 	} else if installation.ID.String() != fetchedInstallation.ID.String() {
 		t.Fatalf("Installation fetched does not match the initially created installation")
@@ -91,10 +87,7 @@ func TestDatabase_Installation(t *testing.T) {
 }
 
 func TestDatabase_InitializePermissions(t *testing.T) {
-	dbInst := integration.OpenDatabase(t)
-	if err := integration.Prepare(dbInst); err != nil {
-		t.Fatalf("Failed preparing DB: %v", err)
-	}
+	dbInst := integration.SetupDB(t)
 
 	if permissions, err := dbInst.GetAllPermissions(context.Background(), "", model.SQLFilter{}); err != nil {
 		t.Fatalf("Error fetching permissions: %v", err)

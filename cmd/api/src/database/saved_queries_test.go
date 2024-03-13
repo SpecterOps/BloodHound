@@ -32,7 +32,7 @@ import (
 func TestSavedQueries_ListSavedQueries(t *testing.T) {
 	var (
 		testCtx = context.Background()
-		dbInst  = integration.OpenDatabase(t)
+		dbInst  = integration.SetupDB(t)
 
 		savedQueriesFilter = model.QueryParameterFilter{
 			Name:         "id",
@@ -42,10 +42,6 @@ func TestSavedQueries_ListSavedQueries(t *testing.T) {
 		}
 		savedQueriesFilterMap = model.QueryParameterFilterMap{savedQueriesFilter.Name: model.QueryParameterFilters{savedQueriesFilter}}
 	)
-
-	if err := integration.Prepare(dbInst); err != nil {
-		t.Fatalf("Failed preparing DB: %v", err)
-	}
 
 	userUUID, err := uuid.NewV4()
 	require.Nil(t, err)

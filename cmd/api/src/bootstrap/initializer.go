@@ -64,8 +64,8 @@ func (s Initializer[DBType, GraphType]) Launch(parentCtx context.Context, handle
 		return fmt.Errorf("failed to start services: %w", err)
 	} else {
 		// Ensure that the database instances are closed once we're ready to exit regardless of p
-		defer databaseConnections.RDMS.Close()
-		defer databaseConnections.Graph.Close(context.Background())
+		defer databaseConnections.RDMS.Close(ctx)
+		defer databaseConnections.Graph.Close(ctx)
 
 		daemonManager.Start(daemonInstances...)
 	}

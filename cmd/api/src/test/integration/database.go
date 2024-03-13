@@ -17,6 +17,7 @@
 package integration
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -50,10 +51,18 @@ func OpenCache(t *testing.T) cache.Cache {
 	return cache.Cache{}
 }
 
-func Prepare(db database.Database) error {
-	if err := db.Wipe(); err != nil {
+func SetupDB(t *testing.T) database.Database {
+	dbInst := OpenDatabase(t)
+	if err := Prepare(context.Background(), dbInst); err != nil {
+		t.Fatalf("Error preparing DB: %v", err)
+	}
+	return dbInst
+}
+
+func Prepare(ctx context.Context, db database.Database) error {
+	if err := db.Wipe(ctx); err != nil {
 		return fmt.Errorf("failed to clear database: %v", err)
-	} else if err := db.Migrate(); err != nil {
+	} else if err := db.Migrate(ctx); err != nil {
 		return fmt.Errorf("failed to migrate database: %v", err)
 	}
 

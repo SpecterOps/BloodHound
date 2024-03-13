@@ -69,15 +69,15 @@ func (mr *MockDatabaseMockRecorder) AppendAuditLog(arg0, arg1 interface{}) *gomo
 }
 
 // Close mocks base method.
-func (m *MockDatabase) Close() {
+func (m *MockDatabase) Close(arg0 context.Context) {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "Close")
+	m.ctrl.Call(m, "Close", arg0)
 }
 
 // Close indicates an expected call of Close.
-func (mr *MockDatabaseMockRecorder) Close() *gomock.Call {
+func (mr *MockDatabaseMockRecorder) Close(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Close", reflect.TypeOf((*MockDatabase)(nil).Close))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Close", reflect.TypeOf((*MockDatabase)(nil).Close), arg0)
 }
 
 // CreateADDataQualityAggregation mocks base method.
@@ -244,18 +244,18 @@ func (mr *MockDatabaseMockRecorder) CreateIngestTask(arg0, arg1 interface{}) *go
 }
 
 // CreateInstallation mocks base method.
-func (m *MockDatabase) CreateInstallation() (model.Installation, error) {
+func (m *MockDatabase) CreateInstallation(arg0 context.Context) (model.Installation, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateInstallation")
+	ret := m.ctrl.Call(m, "CreateInstallation", arg0)
 	ret0, _ := ret[0].(model.Installation)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // CreateInstallation indicates an expected call of CreateInstallation.
-func (mr *MockDatabaseMockRecorder) CreateInstallation() *gomock.Call {
+func (mr *MockDatabaseMockRecorder) CreateInstallation(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateInstallation", reflect.TypeOf((*MockDatabase)(nil).CreateInstallation))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateInstallation", reflect.TypeOf((*MockDatabase)(nil).CreateInstallation), arg0)
 }
 
 // CreateSAMLIdentityProvider mocks base method.
@@ -865,18 +865,18 @@ func (mr *MockDatabaseMockRecorder) GetIngestTasksForJob(arg0, arg1 interface{})
 }
 
 // GetInstallation mocks base method.
-func (m *MockDatabase) GetInstallation() (model.Installation, error) {
+func (m *MockDatabase) GetInstallation(arg0 context.Context) (model.Installation, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetInstallation")
+	ret := m.ctrl.Call(m, "GetInstallation", arg0)
 	ret0, _ := ret[0].(model.Installation)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetInstallation indicates an expected call of GetInstallation.
-func (mr *MockDatabaseMockRecorder) GetInstallation() *gomock.Call {
+func (mr *MockDatabaseMockRecorder) GetInstallation(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetInstallation", reflect.TypeOf((*MockDatabase)(nil).GetInstallation))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetInstallation", reflect.TypeOf((*MockDatabase)(nil).GetInstallation), arg0)
 }
 
 // GetLatestAssetGroupCollection mocks base method.
@@ -1030,18 +1030,18 @@ func (mr *MockDatabaseMockRecorder) GetUserToken(arg0, arg1, arg2 interface{}) *
 }
 
 // HasInstallation mocks base method.
-func (m *MockDatabase) HasInstallation() (bool, error) {
+func (m *MockDatabase) HasInstallation(arg0 context.Context) (bool, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "HasInstallation")
+	ret := m.ctrl.Call(m, "HasInstallation", arg0)
 	ret0, _ := ret[0].(bool)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // HasInstallation indicates an expected call of HasInstallation.
-func (mr *MockDatabaseMockRecorder) HasInstallation() *gomock.Call {
+func (mr *MockDatabaseMockRecorder) HasInstallation(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "HasInstallation", reflect.TypeOf((*MockDatabase)(nil).HasInstallation))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "HasInstallation", reflect.TypeOf((*MockDatabase)(nil).HasInstallation), arg0)
 }
 
 // InitializeSecretAuth mocks base method.
@@ -1137,32 +1137,32 @@ func (mr *MockDatabaseMockRecorder) LookupUser(arg0, arg1 interface{}) *gomock.C
 }
 
 // Migrate mocks base method.
-func (m *MockDatabase) Migrate() error {
+func (m *MockDatabase) Migrate(arg0 context.Context) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Migrate")
+	ret := m.ctrl.Call(m, "Migrate", arg0)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // Migrate indicates an expected call of Migrate.
-func (mr *MockDatabaseMockRecorder) Migrate() *gomock.Call {
+func (mr *MockDatabaseMockRecorder) Migrate(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Migrate", reflect.TypeOf((*MockDatabase)(nil).Migrate))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Migrate", reflect.TypeOf((*MockDatabase)(nil).Migrate), arg0)
 }
 
 // RequiresMigration mocks base method.
-func (m *MockDatabase) RequiresMigration() (bool, error) {
+func (m *MockDatabase) RequiresMigration(arg0 context.Context) (bool, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "RequiresMigration")
+	ret := m.ctrl.Call(m, "RequiresMigration", arg0)
 	ret0, _ := ret[0].(bool)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // RequiresMigration indicates an expected call of RequiresMigration.
-func (mr *MockDatabaseMockRecorder) RequiresMigration() *gomock.Call {
+func (mr *MockDatabaseMockRecorder) RequiresMigration(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RequiresMigration", reflect.TypeOf((*MockDatabase)(nil).RequiresMigration))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RequiresMigration", reflect.TypeOf((*MockDatabase)(nil).RequiresMigration), arg0)
 }
 
 // SavedQueryBelongsToUser mocks base method.
@@ -1332,15 +1332,15 @@ func (mr *MockDatabaseMockRecorder) UpdateUser(arg0, arg1 interface{}) *gomock.C
 }
 
 // Wipe mocks base method.
-func (m *MockDatabase) Wipe() error {
+func (m *MockDatabase) Wipe(arg0 context.Context) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Wipe")
+	ret := m.ctrl.Call(m, "Wipe", arg0)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // Wipe indicates an expected call of Wipe.
-func (mr *MockDatabaseMockRecorder) Wipe() *gomock.Call {
+func (mr *MockDatabaseMockRecorder) Wipe(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Wipe", reflect.TypeOf((*MockDatabase)(nil).Wipe))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Wipe", reflect.TypeOf((*MockDatabase)(nil).Wipe), arg0)
 }
