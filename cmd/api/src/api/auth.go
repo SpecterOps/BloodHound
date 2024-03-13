@@ -64,11 +64,11 @@ func parseRequestDate(rawDate string) (time.Time, error) {
 
 type Authenticator interface {
 	LoginWithSecret(ctx context.Context, loginRequest LoginRequest) (LoginDetails, error)
-	Logout(userSession model.UserSession)
+	Logout(ctx context.Context, userSession model.UserSession)
 	ValidateSecret(ctx context.Context, secret string, authSecret model.AuthSecret) error
 	ValidateRequestSignature(tokenID uuid.UUID, request *http.Request, serverTime time.Time) (auth.Context, int, error)
-	CreateSession(user model.User, authProvider any) (string, error)
-	ValidateSession(jwtTokenString string) (auth.Context, error)
+	CreateSession(ctx context.Context, user model.User, authProvider any) (string, error)
+	ValidateSession(ctx context.Context, jwtTokenString string) (auth.Context, error)
 }
 
 type authenticator struct {
@@ -126,7 +126,7 @@ func (s authenticator) validateSecretLogin(ctx context.Context, loginRequest Log
 		return user, "", err
 	} else if err = auth.ValidateTOTPSecret(loginRequest.OTP, *user.AuthSecret); err != nil {
 		return user, "", err
-	} else if sessionToken, err := s.CreateSession(user, *user.AuthSecret); err != nil {
+	} else if sessionToken, err := s.CreateSession(ctx, user, *user.AuthSecret); err != nil {
 		return user, "", err
 	} else {
 		return user, sessionToken, nil
@@ -163,8 +163,8 @@ func (s authenticator) LoginWithSecret(ctx context.Context, loginRequest LoginRe
 	}
 }
 
-func (s authenticator) Logout(userSession model.UserSession) {
-	s.db.EndUserSession(userSession)
+func (s authenticator) Logout(ctx context.Context, userSession model.UserSession) {
+	s.db.EndUserSession(ctx, userSession)
 }
 
 func (s authenticator) ValidateSecret(ctx context.Context, secret string, authSecret model.AuthSecret) error {
@@ -299,7 +299,7 @@ func (s authenticator) ValidateRequestSignature(tokenID uuid.UUID, request *http
 	}
 }
 
-func (s authenticator) CreateSession(user model.User, authProvider any) (string, error) {
+func (s authenticator) CreateSession(ctx context.Context, user model.User, authProvider any) (string, error) {
 	if user.IsDisabled {
 		return "", ErrUserDisabled
 	}
@@ -322,7 +322,7 @@ func (s authenticator) CreateSession(user model.User, authProvider any) (string,
 		userSession.AuthProviderID = typedAuthProvider.ID
 	}
 
-	if newSession, err := s.db.CreateUserSession(userSession); err != nil {
+	if newSession, err := s.db.CreateUserSession(ctx, userSession); err != nil {
 		return "", FormatDatabaseError(err)
 	} else if signingKeyBytes, err := s.cfg.Crypto.JWT.SigningKeyBytes(); err != nil {
 		return "", err
@@ -348,7 +348,7 @@ func (s authenticator) jwtSigningKey(token *jwt.Token) (any, error) {
 	return s.cfg.Crypto.JWT.SigningKeyBytes()
 }
 
-func (s authenticator) ValidateSession(jwtTokenString string) (auth.Context, error) {
+func (s authenticator) ValidateSession(ctx context.Context, jwtTokenString string) (auth.Context, error) {
 	claims := auth.SessionData{}
 
 	if token, err := jwt.ParseWithClaims(jwtTokenString, &claims, s.jwtSigningKey); err != nil {
@@ -363,7 +363,7 @@ func (s authenticator) ValidateSession(jwtTokenString string) (auth.Context, err
 	} else if sessionID, err := claims.SessionID(); err != nil {
 		log.Infof("Session ID %s invalid: %v", claims.Id, err)
 		return auth.Context{}, ErrInvalidAuth
-	} else if session, err := s.db.GetUserSession(sessionID); err != nil {
+	} else if session, err := s.db.GetUserSession(ctx, sessionID); err != nil {
 		log.Infof("Unable to find session %d", sessionID)
 		return auth.Context{}, ErrInvalidAuth
 	} else if session.Expired() {

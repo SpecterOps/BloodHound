@@ -549,10 +549,10 @@ func (s *BloodhoundDB) GetSAMLProviderUsers(ctx context.Context, id int32) (mode
 
 // CreateUserSession creates a new UserSession row
 // INSERT INTO user_sessions (...) VALUES (..)
-func (s *BloodhoundDB) CreateUserSession(userSession model.UserSession) (model.UserSession, error) {
+func (s *BloodhoundDB) CreateUserSession(ctx context.Context, userSession model.UserSession) (model.UserSession, error) {
 	var (
 		newUserSession = userSession
-		result         = s.db.Create(&newUserSession)
+		result         = s.db.WithContext(ctx).Create(&newUserSession)
 	)
 
 	return newUserSession, CheckError(result)
@@ -560,29 +560,29 @@ func (s *BloodhoundDB) CreateUserSession(userSession model.UserSession) (model.U
 
 // EndUserSession terminates the provided session
 // UPDATE user_sessions SET expires_at = <now> WHERE user_id = ...
-func (s *BloodhoundDB) EndUserSession(userSession model.UserSession) {
-	s.db.Model(&userSession).Update("expires_at", gorm.Expr("NOW()"))
+func (s *BloodhoundDB) EndUserSession(ctx context.Context, userSession model.UserSession) {
+	s.db.Model(&userSession).WithContext(ctx).Update("expires_at", gorm.Expr("NOW()"))
 }
 
-func (s *BloodhoundDB) LookupActiveSessionsByUser(user model.User) ([]model.UserSession, error) {
+func (s *BloodhoundDB) LookupActiveSessionsByUser(ctx context.Context, user model.User) ([]model.UserSession, error) {
 	var userSessions []model.UserSession
 
-	result := s.db.Where("expires_at >= NOW() AND user_id = ?", user.ID).Find(&userSessions)
+	result := s.db.WithContext(ctx).Where("expires_at >= NOW() AND user_id = ?", user.ID).Find(&userSessions)
 	return userSessions, CheckError(result)
 }
 
 // GetUserSession retrieves the UserSession row associated with the provided ID
 // SELECT * FROM user_sessions WHERE id = ...
-func (s *BloodhoundDB) GetUserSession(id int64) (model.UserSession, error) {
+func (s *BloodhoundDB) GetUserSession(ctx context.Context, id int64) (model.UserSession, error) {
 	var (
 		userSession model.UserSession
-		result      = s.preload(model.UserSessionAssociations()).Find(&userSession, id)
+		result      = s.preload(model.UserSessionAssociations()).WithContext(ctx).Find(&userSession, id)
 	)
 
 	return userSession, CheckError(result)
 }
 
 // SweepSessions deletes all sessions that have already expired
-func (s *BloodhoundDB) SweepSessions() {
-	s.db.Where("expires_at < NOW()").Delete(&model.UserSession{})
+func (s *BloodhoundDB) SweepSessions(ctx context.Context) {
+	s.db.WithContext(ctx).Where("expires_at < NOW()").Delete(&model.UserSession{})
 }

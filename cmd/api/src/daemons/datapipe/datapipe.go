@@ -141,7 +141,7 @@ func (s *Daemon) ingestAvailableTasks() {
 	}
 }
 
-func (s *Daemon) Start() {
+func (s *Daemon) Start(ctx context.Context) {
 	var (
 		datapipeLoopTimer = time.NewTimer(s.tickInterval)
 		pruningTicker     = time.NewTicker(pruningInterval)

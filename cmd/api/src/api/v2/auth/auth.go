@@ -534,12 +534,12 @@ func (s ManagementResource) UpdateUser(response http.ResponseWriter, request *ht
 			if loggedInUser, _ := auth.GetUserFromAuthCtx(context.AuthCtx); user.ID == loggedInUser.ID {
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseUserSelfDisable, request), response)
 				return
-			} else if userSessions, err := s.db.LookupActiveSessionsByUser(user); err != nil {
+			} else if userSessions, err := s.db.LookupActiveSessionsByUser(request.Context(), user); err != nil {
 				api.HandleDatabaseError(request, response, err)
 				return
 			} else {
 				for _, session := range userSessions {
-					s.db.EndUserSession(session)
+					s.db.EndUserSession(request.Context(), session)
 				}
 			}
 		}
