@@ -69,7 +69,7 @@ func ConnectDatabases(ctx context.Context, cfg config.Configuration) (bootstrap.
 
 func Entrypoint(ctx context.Context, cfg config.Configuration, connections bootstrap.DatabaseConnections[*database.BloodhoundDB, *graph.DatabaseSwitch]) ([]daemons.Daemon, error) {
 	if !cfg.DisableMigrations {
-		if err := bootstrap.MigrateDB(cfg, connections.RDMS); err != nil {
+		if err := bootstrap.MigrateDB(ctx, cfg, connections.RDMS); err != nil {
 			return nil, fmt.Errorf("rdms migration error: %w", err)
 		} else if err := bootstrap.MigrateGraph(ctx, connections.Graph, schema.DefaultGraphSchema()); err != nil {
 			return nil, fmt.Errorf("graph migration error: %w", err)
@@ -99,7 +99,7 @@ func Entrypoint(ctx context.Context, cfg config.Configuration, connections boots
 		registration.RegisterFossRoutes(&routerInst, cfg, connections.RDMS, connections.Graph, graphQuery, apiCache, collectorManifests, authenticator, datapipeDaemon)
 
 		// Set neo4j batch and flush sizes
-		neo4jParameters := appcfg.GetNeo4jParameters(connections.RDMS)
+		neo4jParameters := appcfg.GetNeo4jParameters(ctx, connections.RDMS)
 		connections.Graph.SetBatchWriteSize(neo4jParameters.BatchWriteSize)
 		connections.Graph.SetWriteFlushSize(neo4jParameters.WriteFlushSize)
 

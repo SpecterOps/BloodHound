@@ -181,11 +181,8 @@ type AuthTokens []AuthToken
 
 func (s AuthTokens) IsSortable(column string) bool {
 	switch column {
-	case "user_id",
-		"client_id",
-		"name",
+	case "name",
 		"last_access",
-		"id",
 		"created_at",
 		"updated_at",
 		"deleted_at":
@@ -201,7 +198,7 @@ func (s AuthTokens) ValidFilters() map[string][]FilterOperator {
 		"name":        {Equals, NotEquals},
 		"key":         {Equals, NotEquals},
 		"hmac_method": {Equals, NotEquals},
-		"id":          {Equals, GreaterThan, GreaterThanOrEquals, LessThan, LessThanOrEquals, NotEquals},
+		"id":          {Equals, NotEquals},
 		"last_access": {Equals, GreaterThan, GreaterThanOrEquals, LessThan, LessThanOrEquals, NotEquals},
 		"created_at":  {Equals, GreaterThan, GreaterThanOrEquals, LessThan, LessThanOrEquals, NotEquals},
 		"updated_at":  {Equals, GreaterThan, GreaterThanOrEquals, LessThan, LessThanOrEquals, NotEquals},
@@ -271,7 +268,8 @@ func (s AuthSecret) Expired() bool {
 
 func (s AuthSecret) AuditData() AuditData {
 	return AuditData{
-		"secret_user_id":    s.ID,
+		"id":                s.ID,
+		"secret_user_id":    s.UserID,
 		"secret_expires_at": s.ExpiresAt.UTC(),
 	}
 }
@@ -474,9 +472,9 @@ func (s *User) AuditData() AuditData {
 	return AuditData{
 		"id":               s.ID,
 		"principal_name":   s.PrincipalName,
-		"first_name":       s.FirstName,
-		"last_name":        s.LastName,
-		"email_address":    s.EmailAddress,
+		"first_name":       s.FirstName.ValueOrZero(),
+		"last_name":        s.LastName.ValueOrZero(),
+		"email_address":    s.EmailAddress.ValueOrZero(),
 		"roles":            s.Roles.IDs(),
 		"saml_provider_id": s.SAMLProviderID.ValueOrZero(),
 		"is_disabled":      s.IsDisabled,
@@ -512,7 +510,7 @@ func (s Users) ValidFilters() map[string][]FilterOperator {
 		"last_name":      {Equals, NotEquals},
 		"email_address":  {Equals, NotEquals},
 		"principal_name": {Equals, NotEquals},
-		"id":             {Equals, GreaterThan, GreaterThanOrEquals, LessThan, LessThanOrEquals, NotEquals},
+		"id":             {Equals, NotEquals},
 		"last_login":     {Equals, GreaterThan, GreaterThanOrEquals, LessThan, LessThanOrEquals, NotEquals},
 		"created_at":     {Equals, GreaterThan, GreaterThanOrEquals, LessThan, LessThanOrEquals, NotEquals},
 		"updated_at":     {Equals, GreaterThan, GreaterThanOrEquals, LessThan, LessThanOrEquals, NotEquals},

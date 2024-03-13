@@ -18,6 +18,7 @@ package model
 
 import (
 	"fmt"
+	"reflect"
 	"time"
 
 	"github.com/gofrs/uuid"
@@ -56,11 +57,9 @@ type AuditLogs []AuditLog
 func (s AuditLogs) IsSortable(column string) bool {
 	switch column {
 	case "id",
-		"actor_id",
 		"actor_name",
 		"actor_email",
 		"action",
-		"request_id",
 		"created_at",
 		"source_ip_address",
 		"status":
@@ -154,6 +153,27 @@ type AuditEntry struct {
 	Model    Auditable
 	Status   AuditEntryStatus
 	ErrorMsg string
+}
+
+// Necessary function for testing. Ensures all fields except CommitID match so mocking checks pass.
+func (s AuditEntry) Matches(x any) bool {
+	if expected, ok := x.(AuditEntry); !ok {
+		return false
+	} else if s.Action != expected.Action {
+		return false
+	} else if s.ErrorMsg != expected.ErrorMsg {
+		return false
+	} else if s.Status != expected.Status {
+		return false
+	} else if !reflect.DeepEqual(s.Model, expected.Model) {
+		return false
+	}
+
+	return true
+}
+
+func (s AuditEntry) String() string {
+	return fmt.Sprintf("%#v", s)
 }
 
 type AuditableURL string

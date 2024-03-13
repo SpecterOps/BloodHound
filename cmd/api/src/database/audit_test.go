@@ -41,33 +41,35 @@ func TestDatabase_ListAuditLogs(t *testing.T) {
 			IsStringData: false,
 		}
 		auditLogIdFilterMap = model.QueryParameterFilterMap{auditLogIdFilter.Name: model.QueryParameterFilters{auditLogIdFilter}}
+
+		mockCtx = ctx.Context{
+			RequestID: "requestID",
+			AuthCtx: auth.Context{
+				Owner:   model.User{},
+				Session: model.UserSession{},
+			},
+		}
+		testCtx = ctx.Set(context.Background(), &mockCtx)
 	)
 
 	if err := integration.Prepare(dbInst); err != nil {
 		t.Fatalf("Failed preparing DB: %v", err)
 	}
 
-	mockCtx := ctx.Context{
-		RequestID: "requestID",
-		AuthCtx: auth.Context{
-			Owner:   model.User{},
-			Session: model.UserSession{},
-		},
-	}
 	for i := 0; i < 7; i++ {
-		if err := dbInst.AppendAuditLog(ctx.Set(context.Background(), &mockCtx), model.AuditEntry{Model: &model.User{}, Action: "CreateUser", Status: model.AuditStatusSuccess}); err != nil {
+		if err := dbInst.AppendAuditLog(testCtx, model.AuditEntry{Model: &model.User{}, Action: "CreateUser", Status: model.AuditStatusSuccess}); err != nil {
 			t.Fatalf("Error creating audit log: %v", err)
 		}
 	}
 
-	if _, count, err := dbInst.ListAuditLogs(time.Now(), time.Now(), 0, 10, "", model.SQLFilter{}); err != nil {
+	if _, count, err := dbInst.ListAuditLogs(testCtx, time.Now(), time.Now(), 0, 10, "", model.SQLFilter{}); err != nil {
 		t.Fatalf("Failed to list all audit logs: %v", err)
 	} else if count != 7 {
 		t.Fatalf("Expected 7 audit logs to be returned")
 	} else if filter, err := auditLogIdFilterMap.BuildSQLFilter(); err != nil {
 		t.Fatalf("Failed to generate SQL Filter: %v", err)
 		// Limit is set to 1 to verify that count is total filtered count, not response size
-	} else if _, count, err = dbInst.ListAuditLogs(time.Now(), time.Now(), 0, 1, "", filter); err != nil {
+	} else if _, count, err = dbInst.ListAuditLogs(testCtx, time.Now(), time.Now(), 0, 1, "", filter); err != nil {
 		t.Fatalf("Failed to list filtered events: %v", err)
 	} else if count != 3 {
 		t.Fatalf("Expected 3 audit logs to be returned")

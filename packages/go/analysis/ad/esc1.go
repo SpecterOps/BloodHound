@@ -44,7 +44,7 @@ func PostADCSESC1(ctx context.Context, tx graph.Transaction, outC chan<- analysi
 			} else if !valid {
 				continue
 			} else {
-				results.Or(CalculateCrossProductNodeSets(expandedGroups, cache.CertTemplateControllers[certTemplate.ID], cache.EnterpriseCAEnrollers[enterpriseCA.ID]))
+				results.Or(CalculateCrossProductNodeSets(expandedGroups, cache.CertTemplateEnrollers[certTemplate.ID], cache.EnterpriseCAEnrollers[enterpriseCA.ID]))
 			}
 		}
 	}

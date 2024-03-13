@@ -19,6 +19,7 @@ package ad
 import (
 	"context"
 	"fmt"
+	"github.com/specterops/bloodhound/ein"
 	"slices"
 	"sync"
 
@@ -64,8 +65,8 @@ func PostADCSESC6a(ctx context.Context, tx graph.Transaction, outC chan<- analys
 			} else {
 				validCertTemplates = append(validCertTemplates, publishedCertTemplate)
 
-				for _, controller := range cache.CertTemplateControllers[publishedCertTemplate.ID] {
-					tempResults.Or(CalculateCrossProductNodeSets(groupExpansions, graph.NewNodeSet(controller).Slice(), cache.EnterpriseCAEnrollers[enterpriseCA.ID]))
+				for _, enroller := range cache.CertTemplateEnrollers[publishedCertTemplate.ID] {
+					tempResults.Or(CalculateCrossProductNodeSets(groupExpansions, graph.NewNodeSet(enroller).Slice(), cache.EnterpriseCAEnrollers[enterpriseCA.ID]))
 				}
 
 			}
@@ -111,11 +112,11 @@ func PostADCSESC6b(ctx context.Context, tx graph.Transaction, outC chan<- analys
 			} else {
 				validCertTemplates = append(validCertTemplates, publishedCertTemplate)
 
-				for _, controller := range cache.CertTemplateControllers[publishedCertTemplate.ID] {
+				for _, enroller := range cache.CertTemplateEnrollers[publishedCertTemplate.ID] {
 					tempResults.Or(
 						CalculateCrossProductNodeSets(
 							groupExpansions,
-							graph.NewNodeSet(controller).Slice(),
+							graph.NewNodeSet(enroller).Slice(),
 							cache.EnterpriseCAEnrollers[enterpriseCA.ID],
 						),
 					)
@@ -137,7 +138,7 @@ func PostADCSESC6b(ctx context.Context, tx graph.Transaction, outC chan<- analys
 }
 
 func PostCanAbuseUPNCertMapping(operation analysis.StatTrackedOperation[analysis.CreatePostRelationshipJob], enterpriseCertAuthorities []*graph.Node) error {
-	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
+	return operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
 		collector := errors.ErrorCollector{}
 		for _, eca := range enterpriseCertAuthorities {
 			if ecaDomainSID, err := eca.Properties.Get(ad.DomainSID.String()).String(); err != nil {
@@ -157,9 +158,11 @@ func PostCanAbuseUPNCertMapping(operation analysis.StatTrackedOperation[analysis
 					} else {
 						for _, dcForNode := range dcForNodes {
 							if cmmrProperty, err := dcForNode.Properties.Get(ad.CertificateMappingMethodsRaw.String()).Int(); err != nil {
-								log.Warnf("error in PostCanAbuseUPNCertMapping: unable to fetch %v property for node ID %v: %v", ad.StrongCertificateBindingEnforcementRaw.String(), dcForNode.ID, err)
+								log.Warnf("error in PostCanAbuseUPNCertMapping: unable to fetch %v property for node ID %v: %v", ad.CertificateMappingMethodsRaw.String(), dcForNode.ID, err)
 								continue
-							} else if cmmrProperty&0x04 == 0x04 {
+							} else if cmmrProperty == ein.RegistryValueDoesNotExist {
+								continue
+							} else if cmmrProperty&int(ein.CertificateMappingUserPrincipalName) == int(ein.CertificateMappingUserPrincipalName) {
 								if !channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
 									FromID: eca.ID,
 									ToID:   dcForNode.ID,
@@ -178,11 +181,10 @@ func PostCanAbuseUPNCertMapping(operation analysis.StatTrackedOperation[analysis
 		}
 		return nil
 	})
-	return nil
 }
 
 func PostCanAbuseWeakCertBinding(operation analysis.StatTrackedOperation[analysis.CreatePostRelationshipJob], enterpriseCertAuthorities []*graph.Node) error {
-	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
+	return operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
 		collector := errors.ErrorCollector{}
 		for _, eca := range enterpriseCertAuthorities {
 			if ecaDomainSID, err := eca.Properties.Get(ad.DomainSID.String()).String(); err != nil {
@@ -223,7 +225,6 @@ func PostCanAbuseWeakCertBinding(operation analysis.StatTrackedOperation[analysi
 		}
 		return nil
 	})
-	return nil
 }
 
 func fetchNodesWithTrustedByParentChildRelationship(tx graph.Transaction, root *graph.Node) (graph.NodeSet, error) {
@@ -305,7 +306,7 @@ func principalControlsCertTemplate(principal, certTemplate *graph.Node, groupExp
 		return true
 	}
 
-	if CalculateCrossProductNodeSets(groupExpansions, graph.NewNodeSet(principal).Slice(), cache.CertTemplateControllers[certTemplate.ID]).Contains(principalID) {
+	if CalculateCrossProductNodeSets(groupExpansions, graph.NewNodeSet(principal).Slice(), cache.CertTemplateEnrollers[certTemplate.ID]).Contains(principalID) {
 		cache.ExpandedCertTemplateControllers[certTemplate.ID] = append(expandedTemplateControllers, principalID)
 		return true
 	}
