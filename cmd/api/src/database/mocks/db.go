@@ -1221,15 +1221,15 @@ func (mr *MockDatabaseMockRecorder) SweepAssetGroupCollections() *gomock.Call {
 }
 
 // SweepSessions mocks base method.
-func (m *MockDatabase) SweepSessions() {
+func (m *MockDatabase) SweepSessions(arg0 context.Context) {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "SweepSessions")
+	m.ctrl.Call(m, "SweepSessions", arg0)
 }
 
 // SweepSessions indicates an expected call of SweepSessions.
-func (mr *MockDatabaseMockRecorder) SweepSessions() *gomock.Call {
+func (mr *MockDatabaseMockRecorder) SweepSessions(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SweepSessions", reflect.TypeOf((*MockDatabase)(nil).SweepSessions))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SweepSessions", reflect.TypeOf((*MockDatabase)(nil).SweepSessions), arg0)
 }
 
 // UpdateAssetGroup mocks base method.

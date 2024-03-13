@@ -583,6 +583,6 @@ func (s *BloodhoundDB) GetUserSession(ctx context.Context, id int64) (model.User
 }
 
 // SweepSessions deletes all sessions that have already expired
-func (s *BloodhoundDB) SweepSessions() {
-	s.db.Where("expires_at < NOW()").Delete(&model.UserSession{})
+func (s *BloodhoundDB) SweepSessions(ctx context.Context) {
+	s.db.WithContext(ctx).Where("expires_at < NOW()").Delete(&model.UserSession{})
 }

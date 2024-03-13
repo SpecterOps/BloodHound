@@ -67,7 +67,7 @@ func (s Initializer[DBType, GraphType]) Launch(parentCtx context.Context, handle
 		defer databaseConnections.RDMS.Close(ctx)
 		defer databaseConnections.Graph.Close(ctx)
 
-		daemonManager.Start(daemonInstances...)
+		daemonManager.Start(ctx, daemonInstances...)
 	}
 
 	// Log successful start and wait for a signal to exit
