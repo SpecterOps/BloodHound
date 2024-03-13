@@ -14,7 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { useTheme } from '@mui/material/styles';
+import { faChevronDown, faChevronUp } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
     Box,
     Button,
@@ -36,11 +37,9 @@ import {
     SvgIcon,
     Typography,
 } from '@mui/material';
+import { useTheme } from '@mui/material/styles';
+import { AllEdgeTypes, Category, EdgeCheckboxType, Subcategory, searchbarActions } from 'bh-shared-ui';
 import { useState } from 'react';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faChevronDown, faChevronUp } from '@fortawesome/free-solid-svg-icons';
-import { pathFiltersSaved } from 'src/ducks/searchbar/actions';
-import { AllEdgeTypes, Category, Subcategory } from 'bh-shared-ui';
 import { useAppDispatch, useAppSelector } from 'src/store';
 
 interface EdgeFilteringDialogProps {
@@ -83,13 +82,6 @@ const EdgeFilteringDialog = ({ isOpen, handleCancel, handleApply }: EdgeFilterin
     );
 };
 
-export type EdgeCheckboxType = {
-    category: string;
-    subcategory: string;
-    edgeType: string;
-    checked: boolean;
-};
-
 interface CategoryListProps {
     selectedFilters: Array<EdgeCheckboxType>;
 }
@@ -106,7 +98,9 @@ const CategoryList = ({ selectedFilters }: CategoryListProps) => {
                         key={categoryName}
                         category={category}
                         checked={selectedFilters}
-                        setChecked={(checked: EdgeCheckboxType[]) => dispatch(pathFiltersSaved(checked))}
+                        setChecked={(checked: EdgeCheckboxType[]) =>
+                            dispatch(searchbarActions.pathFiltersSaved(checked))
+                        }
                     />
                 );
             })}

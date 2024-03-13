@@ -14,18 +14,17 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import EntityInfoPanel from '../Explore/EntityInfo/EntityInfoPanel';
-import { DropdownOption, GroupManagementContent, EntityKinds } from 'bh-shared-ui';
-import { SelectedNode } from 'src/ducks/entityinfo/types';
-import { useState } from 'react';
-import { AssetGroup, AssetGroupMember } from 'js-client-library';
 import { faGem } from '@fortawesome/free-solid-svg-icons';
-import { setSelectedNode } from 'src/ducks/entityinfo/actions';
+import { DropdownOption, EntityKinds, GroupManagementContent, searchbarActions } from 'bh-shared-ui';
+import { AssetGroup, AssetGroupMember } from 'js-client-library';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ROUTE_EXPLORE } from 'src/ducks/global/routes';
-import { sourceNodeSelected } from 'src/ducks/searchbar/actions';
 import { TIER_ZERO_LABEL, TIER_ZERO_TAG } from 'src/constants';
+import { setSelectedNode } from 'src/ducks/entityinfo/actions';
+import { SelectedNode } from 'src/ducks/entityinfo/types';
+import { ROUTE_EXPLORE } from 'src/ducks/global/routes';
 import { useAppDispatch, useAppSelector } from 'src/store';
+import EntityInfoPanel from '../Explore/EntityInfo/EntityInfoPanel';
 import { dataCollectionMessage } from '../QA/utils';
 
 const GroupManagement = () => {
@@ -52,7 +51,7 @@ const GroupManagement = () => {
                 label: openNode.name,
                 ...openNode,
             };
-            dispatch(sourceNodeSelected(searchNode));
+            dispatch(searchbarActions.sourceNodeSelected(searchNode));
             dispatch(setSelectedNode(openNode));
 
             navigate(ROUTE_EXPLORE);

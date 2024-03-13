@@ -16,6 +16,13 @@
 
 import { ActiveDirectoryRelationshipKind, AzureRelationshipKind } from '../../../graphSchema';
 
+export type EdgeCheckboxType = {
+    category: string;
+    subcategory: string;
+    edgeType: string;
+    checked: boolean;
+};
+
 export type Category = {
     categoryName: string;
     subcategories: Subcategory[];

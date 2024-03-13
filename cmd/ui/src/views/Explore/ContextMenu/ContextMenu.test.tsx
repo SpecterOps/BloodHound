@@ -14,13 +14,13 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import userEvent from '@testing-library/user-event';
+import { rest } from 'msw';
+import { setupServer } from 'msw/node';
 import { act } from 'react-dom/test-utils';
 import { render, screen, waitFor } from 'src/test-utils';
-import userEvent from '@testing-library/user-event';
 import ContextMenu from './ContextMenu';
-import * as actions from 'src/ducks/searchbar/actions';
-import { setupServer } from 'msw/node';
-import { rest } from 'msw';
+import { searchbarActions as actions } from 'bh-shared-ui';
 
 describe('ContextMenu', async () => {
     const server = setupServer(

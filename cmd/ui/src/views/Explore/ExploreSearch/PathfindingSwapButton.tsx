@@ -18,8 +18,8 @@ import { faExchangeAlt } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Button } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
+import { searchbarActions } from 'bh-shared-ui';
 import { useCallback } from 'react';
-import { destinationNodeSelected, sourceNodeSelected } from 'src/ducks/searchbar/actions';
 import { useAppDispatch, useAppSelector } from 'src/store';
 
 const useStyles = makeStyles((theme) => ({
@@ -44,8 +44,8 @@ const PathfindingSwapButton = () => {
         const newSourceNode = secondary.value;
         const newDestinationNode = primary.value;
 
-        dispatch(sourceNodeSelected(newSourceNode));
-        dispatch(destinationNodeSelected(newDestinationNode));
+        dispatch(searchbarActions.sourceNodeSelected(newSourceNode));
+        dispatch(searchbarActions.destinationNodeSelected(newDestinationNode));
     }, [primary, secondary, dispatch]);
 
     return (

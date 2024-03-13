@@ -16,9 +16,8 @@
 
 import { produce } from 'immer';
 import cloneDeep from 'lodash/cloneDeep';
-import * as types from 'src/ducks/searchbar/types';
-import { EdgeCheckboxType } from 'src/views/Explore/ExploreSearch/EdgeFilteringDialog';
-import { AllEdgeTypes, Category, Subcategory } from 'bh-shared-ui';
+import { AllEdgeTypes, Category, EdgeCheckboxType, Subcategory } from '../../views/Explore/ExploreSearch/edgeTypes';
+import * as types from './types';
 
 // by default: all checkboxes are selected
 const initialPathFilters: EdgeCheckboxType[] = [];
@@ -42,13 +41,13 @@ export const initialSearchState: types.SearchState = {
     primary: {
         searchTerm: '',
         loading: false,
-        value: null,
+        value: undefined,
         options: [],
     },
     secondary: {
         searchTerm: '',
         loading: false,
-        value: null,
+        value: undefined,
         options: [],
     },
     cypher: {
@@ -58,7 +57,7 @@ export const initialSearchState: types.SearchState = {
     activeTab: 'primary',
 };
 
-const searchReducer = (state = initialSearchState, action: types.SearchbarActionTypes) => {
+export const searchReducer = (state = initialSearchState, action: types.SearchbarActionTypes) => {
     switch (action.type) {
         case types.SEARCH_RESET: {
             return cloneDeep(initialSearchState);
@@ -96,20 +95,15 @@ const searchReducer = (state = initialSearchState, action: types.SearchbarAction
                 draft.primary.options = [];
 
                 // any edits to the source node should clear out the previously saved primary.value
-                draft.primary.value = null;
+                draft.primary.value = undefined;
                 break;
             }
 
             case types.SOURCE_NODE_SELECTED: {
                 draft.searchType = types.SEARCH_TYPE_EXACT;
-
                 draft.primary.value = action.node;
+                draft.primary.searchTerm = action.node?.name || action.node?.objectid || '';
 
-                if (action.node) {
-                    draft.primary.searchTerm = action.node.name;
-                } else {
-                    draft.primary.searchTerm = '';
-                }
                 break;
             }
 
@@ -119,25 +113,18 @@ const searchReducer = (state = initialSearchState, action: types.SearchbarAction
                 draft.secondary.options = [];
 
                 // any edits to the destination node should clear out the previously saved destination.value
-                draft.secondary.value = null;
+                draft.secondary.value = undefined;
 
                 break;
             }
 
             case types.DESTINATION_NODE_SELECTED: {
                 draft.searchType = types.SEARCH_TYPE_EXACT;
-
                 draft.secondary.value = action.node;
+                draft.secondary.searchTerm = action.node?.name || action.node?.objectid || '';
 
-                if (action.node) {
-                    draft.secondary.searchTerm = action.node.name;
-                } else {
-                    draft.secondary.searchTerm = '';
-                }
                 break;
             }
         }
     });
 };
-
-export default searchReducer;

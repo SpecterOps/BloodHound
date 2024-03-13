@@ -15,9 +15,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Box } from '@mui/material';
-import { NodeIcon, Field, AzureNodeKind, EntityKinds } from 'bh-shared-ui';
+import { AzureNodeKind, EntityKinds, Field, NodeIcon, searchbarActions } from 'bh-shared-ui';
 import { TIER_ZERO_TAG } from 'src/constants';
-import { sourceNodeSelected } from 'src/ducks/searchbar/actions';
 import { useAppDispatch } from 'src/store';
 
 interface BasicObjectInfoFieldsProps {
@@ -42,7 +41,7 @@ const RelatedKindField = (fieldLabel: string, relatedKind: EntityKinds, id: stri
                 <Box
                     onClick={() => {
                         dispatch(
-                            sourceNodeSelected({
+                            searchbarActions.sourceNodeSelected({
                                 objectid: id,
                                 type: relatedKind,
                                 name: name || '',
