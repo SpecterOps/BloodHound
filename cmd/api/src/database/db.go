@@ -22,6 +22,8 @@ import (
 	"context"
 	"fmt"
 	"github.com/specterops/bloodhound/src/services/agi"
+	"github.com/specterops/bloodhound/src/services/dataquality"
+	"github.com/specterops/bloodhound/src/services/fileupload"
 	"github.com/specterops/bloodhound/src/services/ingest"
 	"time"
 
@@ -83,65 +85,65 @@ type Database interface {
 	AppendAuditLog(ctx context.Context, entry model.AuditEntry) error
 	ListAuditLogs(ctx context.Context, before, after time.Time, offset, limit int, order string, filter model.SQLFilter) (model.AuditLogs, int, error)
 
-	CreateRole(role model.Role) (model.Role, error)
-	UpdateRole(role model.Role) error
-	GetAllRoles(order string, filter model.SQLFilter) (model.Roles, error)
-	GetRoles(ids []int32) (model.Roles, error)
-	GetRolesByName(names []string) (model.Roles, error)
-	GetRole(id int32) (model.Role, error)
-	LookupRoleByName(name string) (model.Role, error)
-	GetAllPermissions(order string, filter model.SQLFilter) (model.Permissions, error)
-	GetPermission(id int) (model.Permission, error)
-	CreatePermission(permission model.Permission) (model.Permission, error)
-	InitializeSAMLAuth(adminUser model.User, samlProvider model.SAMLProvider) (model.SAMLProvider, model.Installation, error)
-	InitializeSecretAuth(adminUser model.User, authSecret model.AuthSecret) (model.Installation, error)
+	// Roles
+	GetAllRoles(ctx context.Context, order string, filter model.SQLFilter) (model.Roles, error)
+	GetRoles(ctx context.Context, ids []int32) (model.Roles, error)
+	GetRole(ctx context.Context, id int32) (model.Role, error)
+
+	// Permissions
+	GetAllPermissions(ctx context.Context, order string, filter model.SQLFilter) (model.Permissions, error)
+	GetPermission(ctx context.Context, id int) (model.Permission, error)
+
 	CreateInstallation() (model.Installation, error)
 	GetInstallation() (model.Installation, error)
 	HasInstallation() (bool, error)
+
+	// Users
 	CreateUser(ctx context.Context, user model.User) (model.User, error)
 	UpdateUser(ctx context.Context, user model.User) error
-	GetAllUsers(order string, filter model.SQLFilter) (model.Users, error)
-	GetUser(id uuid.UUID) (model.User, error)
+	GetAllUsers(ctx context.Context, order string, filter model.SQLFilter) (model.Users, error)
+	GetUser(ctx context.Context, id uuid.UUID) (model.User, error)
 	DeleteUser(ctx context.Context, user model.User) error
-	LookupUser(principalName string) (model.User, error)
+	LookupUser(ctx context.Context, principalName string) (model.User, error)
+
+	// Auth
 	CreateAuthToken(ctx context.Context, authToken model.AuthToken) (model.AuthToken, error)
-	UpdateAuthToken(authToken model.AuthToken) error
-	GetAllAuthTokens(order string, filter model.SQLFilter) (model.AuthTokens, error)
-	GetAuthToken(id uuid.UUID) (model.AuthToken, error)
-	ListUserTokens(userID uuid.UUID, order string, filter model.SQLFilter) (model.AuthTokens, error)
-	GetUserToken(userId, tokenId uuid.UUID) (model.AuthToken, error)
+	UpdateAuthToken(ctx context.Context, authToken model.AuthToken) error
+	GetAllAuthTokens(ctx context.Context, order string, filter model.SQLFilter) (model.AuthTokens, error)
+	GetAuthToken(ctx context.Context, id uuid.UUID) (model.AuthToken, error)
+	GetUserToken(ctx context.Context, userId, tokenId uuid.UUID) (model.AuthToken, error)
 	DeleteAuthToken(ctx context.Context, authToken model.AuthToken) error
 	CreateAuthSecret(ctx context.Context, authSecret model.AuthSecret) (model.AuthSecret, error)
-	GetAuthSecret(id int32) (model.AuthSecret, error)
+	GetAuthSecret(ctx context.Context, id int32) (model.AuthSecret, error)
 	UpdateAuthSecret(ctx context.Context, authSecret model.AuthSecret) error
 	DeleteAuthSecret(ctx context.Context, authSecret model.AuthSecret) error
+	InitializeSecretAuth(ctx context.Context, adminUser model.User, authSecret model.AuthSecret) (model.Installation, error)
+
+	// SAML
 	CreateSAMLIdentityProvider(ctx context.Context, samlProvider model.SAMLProvider) (model.SAMLProvider, error)
 	UpdateSAMLIdentityProvider(ctx context.Context, samlProvider model.SAMLProvider) error
-	LookupSAMLProviderByName(name string) (model.SAMLProvider, error)
-	GetAllSAMLProviders() (model.SAMLProviders, error)
-	GetSAMLProvider(id int32) (model.SAMLProvider, error)
-	GetSAMLProviderUsers(id int32) (model.Users, error)
+	LookupSAMLProviderByName(ctx context.Context, name string) (model.SAMLProvider, error)
+	GetAllSAMLProviders(ctx context.Context) (model.SAMLProviders, error)
+	GetSAMLProvider(ctx context.Context, id int32) (model.SAMLProvider, error)
+	GetSAMLProviderUsers(ctx context.Context, id int32) (model.Users, error)
 	DeleteSAMLProvider(ctx context.Context, samlProvider model.SAMLProvider) error
+
 	CreateUserSession(userSession model.UserSession) (model.UserSession, error)
 	LookupActiveSessionsByUser(user model.User) ([]model.UserSession, error)
 	EndUserSession(userSession model.UserSession)
 	GetUserSession(id int64) (model.UserSession, error)
 	SweepSessions()
-	CreateADDataQualityStats(stats model.ADDataQualityStats) (model.ADDataQualityStats, error)
-	GetADDataQualityStats(domainSid string, start time.Time, end time.Time, sort_by string, limit int, skip int) (model.ADDataQualityStats, int, error)
-	CreateADDataQualityAggregation(aggregation model.ADDataQualityAggregation) (model.ADDataQualityAggregation, error)
-	GetADDataQualityAggregations(start time.Time, end time.Time, sort_by string, limit int, skip int) (model.ADDataQualityAggregations, int, error)
-	CreateAzureDataQualityStats(stats model.AzureDataQualityStats) (model.AzureDataQualityStats, error)
-	GetAzureDataQualityStats(tenantId string, start time.Time, end time.Time, sort_by string, limit int, skip int) (model.AzureDataQualityStats, int, error)
-	CreateAzureDataQualityAggregation(aggregation model.AzureDataQualityAggregation) (model.AzureDataQualityAggregation, error)
-	GetAzureDataQualityAggregations(start time.Time, end time.Time, sort_by string, limit int, skip int) (model.AzureDataQualityAggregations, int, error)
+
+	// Data Quality
+	dataquality.DataQualityData
+	GetADDataQualityStats(ctx context.Context, domainSid string, start time.Time, end time.Time, sort_by string, limit int, skip int) (model.ADDataQualityStats, int, error)
+	GetADDataQualityAggregations(ctx context.Context, start time.Time, end time.Time, sort_by string, limit int, skip int) (model.ADDataQualityAggregations, int, error)
+	GetAzureDataQualityStats(ctx context.Context, tenantId string, start time.Time, end time.Time, sort_by string, limit int, skip int) (model.AzureDataQualityStats, int, error)
+	GetAzureDataQualityAggregations(ctx context.Context, start time.Time, end time.Time, sort_by string, limit int, skip int) (model.AzureDataQualityAggregations, int, error)
 	DeleteAllDataQuality(ctx context.Context) error
-	CreateFileUploadJob(job model.FileUploadJob) (model.FileUploadJob, error)
-	UpdateFileUploadJob(job model.FileUploadJob) error
-	GetFileUploadJob(id int64) (model.FileUploadJob, error)
-	GetAllFileUploadJobs(skip int, limit int, order string, filter model.SQLFilter) ([]model.FileUploadJob, int, error)
-	GetFileUploadJobsWithStatus(status model.JobStatus) ([]model.FileUploadJob, error)
-	DeleteAllFileUploads(ctx context.Context) error
+
+	// File Upload
+	fileupload.FileUploadData
 	ListSavedQueries(userID uuid.UUID, order string, filter model.SQLFilter, skip, limit int) (model.SavedQueries, int, error)
 	CreateSavedQuery(userID uuid.UUID, name string, query string) (model.SavedQuery, error)
 	DeleteSavedQuery(id int) error

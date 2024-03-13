@@ -99,7 +99,7 @@ func (s *Resources) GetADDataQualityStats(response http.ResponseWriter, request 
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf(utils.ErrorInvalidLimit, queryParams["limit"]), request), response)
 	} else if skip, err := ParseSkipQueryParameter(queryParams, 0); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf(utils.ErrorInvalidSkip, queryParams["skip"]), request), response)
-	} else if stats, count, err := s.DB.GetADDataQualityStats(id, start, end, strings.Join(order, ", "), limit, skip); err != nil {
+	} else if stats, count, err := s.DB.GetADDataQualityStats(request.Context(), id, start, end, strings.Join(order, ", "), limit, skip); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
 		api.WriteResponseWrapperWithTimeWindowAndPagination(request.Context(), stats, start, end, limit, skip, count, http.StatusOK, response)
@@ -143,7 +143,7 @@ func (s *Resources) GetAzureDataQualityStats(response http.ResponseWriter, reque
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf(utils.ErrorInvalidLimit, queryParams["limit"]), request), response)
 	} else if skip, err := ParseSkipQueryParameter(queryParams, 0); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf(utils.ErrorInvalidSkip, queryParams["skip"]), request), response)
-	} else if stats, count, err := s.DB.GetAzureDataQualityStats(id, start, end, strings.Join(order, ", "), limit, skip); err != nil {
+	} else if stats, count, err := s.DB.GetAzureDataQualityStats(request.Context(), id, start, end, strings.Join(order, ", "), limit, skip); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
 		api.WriteResponseWrapperWithTimeWindowAndPagination(request.Context(), stats, start, end, limit, skip, count, http.StatusOK, response)
@@ -197,13 +197,13 @@ func (s *Resources) GetPlatformAggregateStats(response http.ResponseWriter, requ
 
 		switch id {
 		case "ad":
-			stats, count, err = s.DB.GetADDataQualityAggregations(start, end, strings.Join(order, ", "), limit, skip)
+			stats, count, err = s.DB.GetADDataQualityAggregations(request.Context(), start, end, strings.Join(order, ", "), limit, skip)
 			if err != nil {
 				api.HandleDatabaseError(request, response, err)
 				return
 			}
 		case "azure":
-			stats, count, err = s.DB.GetAzureDataQualityAggregations(start, end, strings.Join(order, ", "), limit, skip)
+			stats, count, err = s.DB.GetAzureDataQualityAggregations(request.Context(), start, end, strings.Join(order, ", "), limit, skip)
 			if err != nil {
 				api.HandleDatabaseError(request, response, err)
 				return

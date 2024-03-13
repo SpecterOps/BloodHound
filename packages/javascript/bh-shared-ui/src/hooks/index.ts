@@ -25,3 +25,5 @@ export * from './useSearch';
 export * from './useDataQualityStats';
 
 export * from './useSavedQueries';
+
+export * from './useFileIngest';

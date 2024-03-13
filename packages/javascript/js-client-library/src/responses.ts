@@ -102,7 +102,7 @@ export type AssetGroupResponse = BasicResponse<{ asset_groups: AssetGroup[] }>;
 
 export type AssetGroupMembersResponse = PaginatedResponse<{ members: AssetGroupMember[] }>;
 
-export type AssetGroupMemberCountsResponse = BasicResponse<AssetGroupMemberCounts>
+export type AssetGroupMemberCountsResponse = BasicResponse<AssetGroupMemberCounts>;
 
 export type SavedQuery = {
     id: number;
@@ -110,3 +110,24 @@ export type SavedQuery = {
     query: string;
     user_id: string;
 };
+
+export type FileIngestJob = TimestampFields & {
+    user_id: string;
+    user_email_address: string;
+    status: number;
+    status_message: string;
+    start_time: string;
+    end_time: string;
+    last_ingest: string;
+    id: number;
+};
+
+export type ListFileIngestJobsResponse = PaginatedResponse<FileIngestJob[]>;
+
+export type ListFileTypesForIngestResponse = BasicResponse<string[]>;
+
+export type StartFileIngestResponse = BasicResponse<FileIngestJob>;
+
+export type UploadFileToIngestResponse = null;
+
+export type EndFileIngestResponse = null;

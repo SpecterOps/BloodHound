@@ -81,33 +81,33 @@ func (mr *MockDatabaseMockRecorder) Close() *gomock.Call {
 }
 
 // CreateADDataQualityAggregation mocks base method.
-func (m *MockDatabase) CreateADDataQualityAggregation(arg0 model.ADDataQualityAggregation) (model.ADDataQualityAggregation, error) {
+func (m *MockDatabase) CreateADDataQualityAggregation(arg0 context.Context, arg1 model.ADDataQualityAggregation) (model.ADDataQualityAggregation, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateADDataQualityAggregation", arg0)
+	ret := m.ctrl.Call(m, "CreateADDataQualityAggregation", arg0, arg1)
 	ret0, _ := ret[0].(model.ADDataQualityAggregation)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // CreateADDataQualityAggregation indicates an expected call of CreateADDataQualityAggregation.
-func (mr *MockDatabaseMockRecorder) CreateADDataQualityAggregation(arg0 interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) CreateADDataQualityAggregation(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateADDataQualityAggregation", reflect.TypeOf((*MockDatabase)(nil).CreateADDataQualityAggregation), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateADDataQualityAggregation", reflect.TypeOf((*MockDatabase)(nil).CreateADDataQualityAggregation), arg0, arg1)
 }
 
 // CreateADDataQualityStats mocks base method.
-func (m *MockDatabase) CreateADDataQualityStats(arg0 model.ADDataQualityStats) (model.ADDataQualityStats, error) {
+func (m *MockDatabase) CreateADDataQualityStats(arg0 context.Context, arg1 model.ADDataQualityStats) (model.ADDataQualityStats, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateADDataQualityStats", arg0)
+	ret := m.ctrl.Call(m, "CreateADDataQualityStats", arg0, arg1)
 	ret0, _ := ret[0].(model.ADDataQualityStats)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // CreateADDataQualityStats indicates an expected call of CreateADDataQualityStats.
-func (mr *MockDatabaseMockRecorder) CreateADDataQualityStats(arg0 interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) CreateADDataQualityStats(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateADDataQualityStats", reflect.TypeOf((*MockDatabase)(nil).CreateADDataQualityStats), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateADDataQualityStats", reflect.TypeOf((*MockDatabase)(nil).CreateADDataQualityStats), arg0, arg1)
 }
 
 // CreateAssetGroup mocks base method.
@@ -184,48 +184,48 @@ func (mr *MockDatabaseMockRecorder) CreateAuthToken(arg0, arg1 interface{}) *gom
 }
 
 // CreateAzureDataQualityAggregation mocks base method.
-func (m *MockDatabase) CreateAzureDataQualityAggregation(arg0 model.AzureDataQualityAggregation) (model.AzureDataQualityAggregation, error) {
+func (m *MockDatabase) CreateAzureDataQualityAggregation(arg0 context.Context, arg1 model.AzureDataQualityAggregation) (model.AzureDataQualityAggregation, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateAzureDataQualityAggregation", arg0)
+	ret := m.ctrl.Call(m, "CreateAzureDataQualityAggregation", arg0, arg1)
 	ret0, _ := ret[0].(model.AzureDataQualityAggregation)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // CreateAzureDataQualityAggregation indicates an expected call of CreateAzureDataQualityAggregation.
-func (mr *MockDatabaseMockRecorder) CreateAzureDataQualityAggregation(arg0 interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) CreateAzureDataQualityAggregation(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateAzureDataQualityAggregation", reflect.TypeOf((*MockDatabase)(nil).CreateAzureDataQualityAggregation), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateAzureDataQualityAggregation", reflect.TypeOf((*MockDatabase)(nil).CreateAzureDataQualityAggregation), arg0, arg1)
 }
 
 // CreateAzureDataQualityStats mocks base method.
-func (m *MockDatabase) CreateAzureDataQualityStats(arg0 model.AzureDataQualityStats) (model.AzureDataQualityStats, error) {
+func (m *MockDatabase) CreateAzureDataQualityStats(arg0 context.Context, arg1 model.AzureDataQualityStats) (model.AzureDataQualityStats, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateAzureDataQualityStats", arg0)
+	ret := m.ctrl.Call(m, "CreateAzureDataQualityStats", arg0, arg1)
 	ret0, _ := ret[0].(model.AzureDataQualityStats)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // CreateAzureDataQualityStats indicates an expected call of CreateAzureDataQualityStats.
-func (mr *MockDatabaseMockRecorder) CreateAzureDataQualityStats(arg0 interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) CreateAzureDataQualityStats(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateAzureDataQualityStats", reflect.TypeOf((*MockDatabase)(nil).CreateAzureDataQualityStats), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateAzureDataQualityStats", reflect.TypeOf((*MockDatabase)(nil).CreateAzureDataQualityStats), arg0, arg1)
 }
 
 // CreateFileUploadJob mocks base method.
-func (m *MockDatabase) CreateFileUploadJob(arg0 model.FileUploadJob) (model.FileUploadJob, error) {
+func (m *MockDatabase) CreateFileUploadJob(arg0 context.Context, arg1 model.FileUploadJob) (model.FileUploadJob, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateFileUploadJob", arg0)
+	ret := m.ctrl.Call(m, "CreateFileUploadJob", arg0, arg1)
 	ret0, _ := ret[0].(model.FileUploadJob)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // CreateFileUploadJob indicates an expected call of CreateFileUploadJob.
-func (mr *MockDatabaseMockRecorder) CreateFileUploadJob(arg0 interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) CreateFileUploadJob(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateFileUploadJob", reflect.TypeOf((*MockDatabase)(nil).CreateFileUploadJob), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateFileUploadJob", reflect.TypeOf((*MockDatabase)(nil).CreateFileUploadJob), arg0, arg1)
 }
 
 // CreateIngestTask mocks base method.
@@ -256,36 +256,6 @@ func (m *MockDatabase) CreateInstallation() (model.Installation, error) {
 func (mr *MockDatabaseMockRecorder) CreateInstallation() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateInstallation", reflect.TypeOf((*MockDatabase)(nil).CreateInstallation))
-}
-
-// CreatePermission mocks base method.
-func (m *MockDatabase) CreatePermission(arg0 model.Permission) (model.Permission, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreatePermission", arg0)
-	ret0, _ := ret[0].(model.Permission)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// CreatePermission indicates an expected call of CreatePermission.
-func (mr *MockDatabaseMockRecorder) CreatePermission(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreatePermission", reflect.TypeOf((*MockDatabase)(nil).CreatePermission), arg0)
-}
-
-// CreateRole mocks base method.
-func (m *MockDatabase) CreateRole(arg0 model.Role) (model.Role, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateRole", arg0)
-	ret0, _ := ret[0].(model.Role)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// CreateRole indicates an expected call of CreateRole.
-func (mr *MockDatabaseMockRecorder) CreateRole(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateRole", reflect.TypeOf((*MockDatabase)(nil).CreateRole), arg0)
 }
 
 // CreateSAMLIdentityProvider mocks base method.
@@ -515,9 +485,9 @@ func (mr *MockDatabaseMockRecorder) EndUserSession(arg0 interface{}) *gomock.Cal
 }
 
 // GetADDataQualityAggregations mocks base method.
-func (m *MockDatabase) GetADDataQualityAggregations(arg0, arg1 time.Time, arg2 string, arg3, arg4 int) (model.ADDataQualityAggregations, int, error) {
+func (m *MockDatabase) GetADDataQualityAggregations(arg0 context.Context, arg1, arg2 time.Time, arg3 string, arg4, arg5 int) (model.ADDataQualityAggregations, int, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetADDataQualityAggregations", arg0, arg1, arg2, arg3, arg4)
+	ret := m.ctrl.Call(m, "GetADDataQualityAggregations", arg0, arg1, arg2, arg3, arg4, arg5)
 	ret0, _ := ret[0].(model.ADDataQualityAggregations)
 	ret1, _ := ret[1].(int)
 	ret2, _ := ret[2].(error)
@@ -525,15 +495,15 @@ func (m *MockDatabase) GetADDataQualityAggregations(arg0, arg1 time.Time, arg2 s
 }
 
 // GetADDataQualityAggregations indicates an expected call of GetADDataQualityAggregations.
-func (mr *MockDatabaseMockRecorder) GetADDataQualityAggregations(arg0, arg1, arg2, arg3, arg4 interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) GetADDataQualityAggregations(arg0, arg1, arg2, arg3, arg4, arg5 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetADDataQualityAggregations", reflect.TypeOf((*MockDatabase)(nil).GetADDataQualityAggregations), arg0, arg1, arg2, arg3, arg4)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetADDataQualityAggregations", reflect.TypeOf((*MockDatabase)(nil).GetADDataQualityAggregations), arg0, arg1, arg2, arg3, arg4, arg5)
 }
 
 // GetADDataQualityStats mocks base method.
-func (m *MockDatabase) GetADDataQualityStats(arg0 string, arg1, arg2 time.Time, arg3 string, arg4, arg5 int) (model.ADDataQualityStats, int, error) {
+func (m *MockDatabase) GetADDataQualityStats(arg0 context.Context, arg1 string, arg2, arg3 time.Time, arg4 string, arg5, arg6 int) (model.ADDataQualityStats, int, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetADDataQualityStats", arg0, arg1, arg2, arg3, arg4, arg5)
+	ret := m.ctrl.Call(m, "GetADDataQualityStats", arg0, arg1, arg2, arg3, arg4, arg5, arg6)
 	ret0, _ := ret[0].(model.ADDataQualityStats)
 	ret1, _ := ret[1].(int)
 	ret2, _ := ret[2].(error)
@@ -541,9 +511,9 @@ func (m *MockDatabase) GetADDataQualityStats(arg0 string, arg1, arg2 time.Time, 
 }
 
 // GetADDataQualityStats indicates an expected call of GetADDataQualityStats.
-func (mr *MockDatabaseMockRecorder) GetADDataQualityStats(arg0, arg1, arg2, arg3, arg4, arg5 interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) GetADDataQualityStats(arg0, arg1, arg2, arg3, arg4, arg5, arg6 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetADDataQualityStats", reflect.TypeOf((*MockDatabase)(nil).GetADDataQualityStats), arg0, arg1, arg2, arg3, arg4, arg5)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetADDataQualityStats", reflect.TypeOf((*MockDatabase)(nil).GetADDataQualityStats), arg0, arg1, arg2, arg3, arg4, arg5, arg6)
 }
 
 // GetAllAssetGroups mocks base method.
@@ -562,18 +532,18 @@ func (mr *MockDatabaseMockRecorder) GetAllAssetGroups(arg0, arg1, arg2 interface
 }
 
 // GetAllAuthTokens mocks base method.
-func (m *MockDatabase) GetAllAuthTokens(arg0 string, arg1 model.SQLFilter) (model.AuthTokens, error) {
+func (m *MockDatabase) GetAllAuthTokens(arg0 context.Context, arg1 string, arg2 model.SQLFilter) (model.AuthTokens, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetAllAuthTokens", arg0, arg1)
+	ret := m.ctrl.Call(m, "GetAllAuthTokens", arg0, arg1, arg2)
 	ret0, _ := ret[0].(model.AuthTokens)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetAllAuthTokens indicates an expected call of GetAllAuthTokens.
-func (mr *MockDatabaseMockRecorder) GetAllAuthTokens(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) GetAllAuthTokens(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllAuthTokens", reflect.TypeOf((*MockDatabase)(nil).GetAllAuthTokens), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllAuthTokens", reflect.TypeOf((*MockDatabase)(nil).GetAllAuthTokens), arg0, arg1, arg2)
 }
 
 // GetAllConfigurationParameters mocks base method.
@@ -592,9 +562,9 @@ func (mr *MockDatabaseMockRecorder) GetAllConfigurationParameters(arg0 interface
 }
 
 // GetAllFileUploadJobs mocks base method.
-func (m *MockDatabase) GetAllFileUploadJobs(arg0, arg1 int, arg2 string, arg3 model.SQLFilter) ([]model.FileUploadJob, int, error) {
+func (m *MockDatabase) GetAllFileUploadJobs(arg0 context.Context, arg1, arg2 int, arg3 string, arg4 model.SQLFilter) ([]model.FileUploadJob, int, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetAllFileUploadJobs", arg0, arg1, arg2, arg3)
+	ret := m.ctrl.Call(m, "GetAllFileUploadJobs", arg0, arg1, arg2, arg3, arg4)
 	ret0, _ := ret[0].([]model.FileUploadJob)
 	ret1, _ := ret[1].(int)
 	ret2, _ := ret[2].(error)
@@ -602,9 +572,9 @@ func (m *MockDatabase) GetAllFileUploadJobs(arg0, arg1 int, arg2 string, arg3 mo
 }
 
 // GetAllFileUploadJobs indicates an expected call of GetAllFileUploadJobs.
-func (mr *MockDatabaseMockRecorder) GetAllFileUploadJobs(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) GetAllFileUploadJobs(arg0, arg1, arg2, arg3, arg4 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllFileUploadJobs", reflect.TypeOf((*MockDatabase)(nil).GetAllFileUploadJobs), arg0, arg1, arg2, arg3)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllFileUploadJobs", reflect.TypeOf((*MockDatabase)(nil).GetAllFileUploadJobs), arg0, arg1, arg2, arg3, arg4)
 }
 
 // GetAllFlags mocks base method.
@@ -638,63 +608,63 @@ func (mr *MockDatabaseMockRecorder) GetAllIngestTasks(arg0 interface{}) *gomock.
 }
 
 // GetAllPermissions mocks base method.
-func (m *MockDatabase) GetAllPermissions(arg0 string, arg1 model.SQLFilter) (model.Permissions, error) {
+func (m *MockDatabase) GetAllPermissions(arg0 context.Context, arg1 string, arg2 model.SQLFilter) (model.Permissions, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetAllPermissions", arg0, arg1)
+	ret := m.ctrl.Call(m, "GetAllPermissions", arg0, arg1, arg2)
 	ret0, _ := ret[0].(model.Permissions)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetAllPermissions indicates an expected call of GetAllPermissions.
-func (mr *MockDatabaseMockRecorder) GetAllPermissions(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) GetAllPermissions(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllPermissions", reflect.TypeOf((*MockDatabase)(nil).GetAllPermissions), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllPermissions", reflect.TypeOf((*MockDatabase)(nil).GetAllPermissions), arg0, arg1, arg2)
 }
 
 // GetAllRoles mocks base method.
-func (m *MockDatabase) GetAllRoles(arg0 string, arg1 model.SQLFilter) (model.Roles, error) {
+func (m *MockDatabase) GetAllRoles(arg0 context.Context, arg1 string, arg2 model.SQLFilter) (model.Roles, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetAllRoles", arg0, arg1)
+	ret := m.ctrl.Call(m, "GetAllRoles", arg0, arg1, arg2)
 	ret0, _ := ret[0].(model.Roles)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetAllRoles indicates an expected call of GetAllRoles.
-func (mr *MockDatabaseMockRecorder) GetAllRoles(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) GetAllRoles(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllRoles", reflect.TypeOf((*MockDatabase)(nil).GetAllRoles), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllRoles", reflect.TypeOf((*MockDatabase)(nil).GetAllRoles), arg0, arg1, arg2)
 }
 
 // GetAllSAMLProviders mocks base method.
-func (m *MockDatabase) GetAllSAMLProviders() (model.SAMLProviders, error) {
+func (m *MockDatabase) GetAllSAMLProviders(arg0 context.Context) (model.SAMLProviders, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetAllSAMLProviders")
+	ret := m.ctrl.Call(m, "GetAllSAMLProviders", arg0)
 	ret0, _ := ret[0].(model.SAMLProviders)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetAllSAMLProviders indicates an expected call of GetAllSAMLProviders.
-func (mr *MockDatabaseMockRecorder) GetAllSAMLProviders() *gomock.Call {
+func (mr *MockDatabaseMockRecorder) GetAllSAMLProviders(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllSAMLProviders", reflect.TypeOf((*MockDatabase)(nil).GetAllSAMLProviders))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllSAMLProviders", reflect.TypeOf((*MockDatabase)(nil).GetAllSAMLProviders), arg0)
 }
 
 // GetAllUsers mocks base method.
-func (m *MockDatabase) GetAllUsers(arg0 string, arg1 model.SQLFilter) (model.Users, error) {
+func (m *MockDatabase) GetAllUsers(arg0 context.Context, arg1 string, arg2 model.SQLFilter) (model.Users, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetAllUsers", arg0, arg1)
+	ret := m.ctrl.Call(m, "GetAllUsers", arg0, arg1, arg2)
 	ret0, _ := ret[0].(model.Users)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetAllUsers indicates an expected call of GetAllUsers.
-func (mr *MockDatabaseMockRecorder) GetAllUsers(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) GetAllUsers(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllUsers", reflect.TypeOf((*MockDatabase)(nil).GetAllUsers), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllUsers", reflect.TypeOf((*MockDatabase)(nil).GetAllUsers), arg0, arg1, arg2)
 }
 
 // GetAssetGroup mocks base method.
@@ -743,39 +713,39 @@ func (mr *MockDatabaseMockRecorder) GetAssetGroupSelector(arg0, arg1 interface{}
 }
 
 // GetAuthSecret mocks base method.
-func (m *MockDatabase) GetAuthSecret(arg0 int32) (model.AuthSecret, error) {
+func (m *MockDatabase) GetAuthSecret(arg0 context.Context, arg1 int32) (model.AuthSecret, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetAuthSecret", arg0)
+	ret := m.ctrl.Call(m, "GetAuthSecret", arg0, arg1)
 	ret0, _ := ret[0].(model.AuthSecret)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetAuthSecret indicates an expected call of GetAuthSecret.
-func (mr *MockDatabaseMockRecorder) GetAuthSecret(arg0 interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) GetAuthSecret(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAuthSecret", reflect.TypeOf((*MockDatabase)(nil).GetAuthSecret), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAuthSecret", reflect.TypeOf((*MockDatabase)(nil).GetAuthSecret), arg0, arg1)
 }
 
 // GetAuthToken mocks base method.
-func (m *MockDatabase) GetAuthToken(arg0 uuid.UUID) (model.AuthToken, error) {
+func (m *MockDatabase) GetAuthToken(arg0 context.Context, arg1 uuid.UUID) (model.AuthToken, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetAuthToken", arg0)
+	ret := m.ctrl.Call(m, "GetAuthToken", arg0, arg1)
 	ret0, _ := ret[0].(model.AuthToken)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetAuthToken indicates an expected call of GetAuthToken.
-func (mr *MockDatabaseMockRecorder) GetAuthToken(arg0 interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) GetAuthToken(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAuthToken", reflect.TypeOf((*MockDatabase)(nil).GetAuthToken), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAuthToken", reflect.TypeOf((*MockDatabase)(nil).GetAuthToken), arg0, arg1)
 }
 
 // GetAzureDataQualityAggregations mocks base method.
-func (m *MockDatabase) GetAzureDataQualityAggregations(arg0, arg1 time.Time, arg2 string, arg3, arg4 int) (model.AzureDataQualityAggregations, int, error) {
+func (m *MockDatabase) GetAzureDataQualityAggregations(arg0 context.Context, arg1, arg2 time.Time, arg3 string, arg4, arg5 int) (model.AzureDataQualityAggregations, int, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetAzureDataQualityAggregations", arg0, arg1, arg2, arg3, arg4)
+	ret := m.ctrl.Call(m, "GetAzureDataQualityAggregations", arg0, arg1, arg2, arg3, arg4, arg5)
 	ret0, _ := ret[0].(model.AzureDataQualityAggregations)
 	ret1, _ := ret[1].(int)
 	ret2, _ := ret[2].(error)
@@ -783,15 +753,15 @@ func (m *MockDatabase) GetAzureDataQualityAggregations(arg0, arg1 time.Time, arg
 }
 
 // GetAzureDataQualityAggregations indicates an expected call of GetAzureDataQualityAggregations.
-func (mr *MockDatabaseMockRecorder) GetAzureDataQualityAggregations(arg0, arg1, arg2, arg3, arg4 interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) GetAzureDataQualityAggregations(arg0, arg1, arg2, arg3, arg4, arg5 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAzureDataQualityAggregations", reflect.TypeOf((*MockDatabase)(nil).GetAzureDataQualityAggregations), arg0, arg1, arg2, arg3, arg4)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAzureDataQualityAggregations", reflect.TypeOf((*MockDatabase)(nil).GetAzureDataQualityAggregations), arg0, arg1, arg2, arg3, arg4, arg5)
 }
 
 // GetAzureDataQualityStats mocks base method.
-func (m *MockDatabase) GetAzureDataQualityStats(arg0 string, arg1, arg2 time.Time, arg3 string, arg4, arg5 int) (model.AzureDataQualityStats, int, error) {
+func (m *MockDatabase) GetAzureDataQualityStats(arg0 context.Context, arg1 string, arg2, arg3 time.Time, arg4 string, arg5, arg6 int) (model.AzureDataQualityStats, int, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetAzureDataQualityStats", arg0, arg1, arg2, arg3, arg4, arg5)
+	ret := m.ctrl.Call(m, "GetAzureDataQualityStats", arg0, arg1, arg2, arg3, arg4, arg5, arg6)
 	ret0, _ := ret[0].(model.AzureDataQualityStats)
 	ret1, _ := ret[1].(int)
 	ret2, _ := ret[2].(error)
@@ -799,9 +769,9 @@ func (m *MockDatabase) GetAzureDataQualityStats(arg0 string, arg1, arg2 time.Tim
 }
 
 // GetAzureDataQualityStats indicates an expected call of GetAzureDataQualityStats.
-func (mr *MockDatabaseMockRecorder) GetAzureDataQualityStats(arg0, arg1, arg2, arg3, arg4, arg5 interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) GetAzureDataQualityStats(arg0, arg1, arg2, arg3, arg4, arg5, arg6 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAzureDataQualityStats", reflect.TypeOf((*MockDatabase)(nil).GetAzureDataQualityStats), arg0, arg1, arg2, arg3, arg4, arg5)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAzureDataQualityStats", reflect.TypeOf((*MockDatabase)(nil).GetAzureDataQualityStats), arg0, arg1, arg2, arg3, arg4, arg5, arg6)
 }
 
 // GetConfigurationParameter mocks base method.
@@ -820,33 +790,33 @@ func (mr *MockDatabaseMockRecorder) GetConfigurationParameter(arg0, arg1 interfa
 }
 
 // GetFileUploadJob mocks base method.
-func (m *MockDatabase) GetFileUploadJob(arg0 int64) (model.FileUploadJob, error) {
+func (m *MockDatabase) GetFileUploadJob(arg0 context.Context, arg1 int64) (model.FileUploadJob, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetFileUploadJob", arg0)
+	ret := m.ctrl.Call(m, "GetFileUploadJob", arg0, arg1)
 	ret0, _ := ret[0].(model.FileUploadJob)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetFileUploadJob indicates an expected call of GetFileUploadJob.
-func (mr *MockDatabaseMockRecorder) GetFileUploadJob(arg0 interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) GetFileUploadJob(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetFileUploadJob", reflect.TypeOf((*MockDatabase)(nil).GetFileUploadJob), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetFileUploadJob", reflect.TypeOf((*MockDatabase)(nil).GetFileUploadJob), arg0, arg1)
 }
 
 // GetFileUploadJobsWithStatus mocks base method.
-func (m *MockDatabase) GetFileUploadJobsWithStatus(arg0 model.JobStatus) ([]model.FileUploadJob, error) {
+func (m *MockDatabase) GetFileUploadJobsWithStatus(arg0 context.Context, arg1 model.JobStatus) ([]model.FileUploadJob, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetFileUploadJobsWithStatus", arg0)
+	ret := m.ctrl.Call(m, "GetFileUploadJobsWithStatus", arg0, arg1)
 	ret0, _ := ret[0].([]model.FileUploadJob)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetFileUploadJobsWithStatus indicates an expected call of GetFileUploadJobsWithStatus.
-func (mr *MockDatabaseMockRecorder) GetFileUploadJobsWithStatus(arg0 interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) GetFileUploadJobsWithStatus(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetFileUploadJobsWithStatus", reflect.TypeOf((*MockDatabase)(nil).GetFileUploadJobsWithStatus), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetFileUploadJobsWithStatus", reflect.TypeOf((*MockDatabase)(nil).GetFileUploadJobsWithStatus), arg0, arg1)
 }
 
 // GetFlag mocks base method.
@@ -925,93 +895,78 @@ func (mr *MockDatabaseMockRecorder) GetLatestAssetGroupCollection(arg0, arg1 int
 }
 
 // GetPermission mocks base method.
-func (m *MockDatabase) GetPermission(arg0 int) (model.Permission, error) {
+func (m *MockDatabase) GetPermission(arg0 context.Context, arg1 int) (model.Permission, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetPermission", arg0)
+	ret := m.ctrl.Call(m, "GetPermission", arg0, arg1)
 	ret0, _ := ret[0].(model.Permission)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetPermission indicates an expected call of GetPermission.
-func (mr *MockDatabaseMockRecorder) GetPermission(arg0 interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) GetPermission(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPermission", reflect.TypeOf((*MockDatabase)(nil).GetPermission), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPermission", reflect.TypeOf((*MockDatabase)(nil).GetPermission), arg0, arg1)
 }
 
 // GetRole mocks base method.
-func (m *MockDatabase) GetRole(arg0 int32) (model.Role, error) {
+func (m *MockDatabase) GetRole(arg0 context.Context, arg1 int32) (model.Role, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetRole", arg0)
+	ret := m.ctrl.Call(m, "GetRole", arg0, arg1)
 	ret0, _ := ret[0].(model.Role)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetRole indicates an expected call of GetRole.
-func (mr *MockDatabaseMockRecorder) GetRole(arg0 interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) GetRole(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRole", reflect.TypeOf((*MockDatabase)(nil).GetRole), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRole", reflect.TypeOf((*MockDatabase)(nil).GetRole), arg0, arg1)
 }
 
 // GetRoles mocks base method.
-func (m *MockDatabase) GetRoles(arg0 []int32) (model.Roles, error) {
+func (m *MockDatabase) GetRoles(arg0 context.Context, arg1 []int32) (model.Roles, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetRoles", arg0)
+	ret := m.ctrl.Call(m, "GetRoles", arg0, arg1)
 	ret0, _ := ret[0].(model.Roles)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetRoles indicates an expected call of GetRoles.
-func (mr *MockDatabaseMockRecorder) GetRoles(arg0 interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) GetRoles(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRoles", reflect.TypeOf((*MockDatabase)(nil).GetRoles), arg0)
-}
-
-// GetRolesByName mocks base method.
-func (m *MockDatabase) GetRolesByName(arg0 []string) (model.Roles, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetRolesByName", arg0)
-	ret0, _ := ret[0].(model.Roles)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetRolesByName indicates an expected call of GetRolesByName.
-func (mr *MockDatabaseMockRecorder) GetRolesByName(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRolesByName", reflect.TypeOf((*MockDatabase)(nil).GetRolesByName), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRoles", reflect.TypeOf((*MockDatabase)(nil).GetRoles), arg0, arg1)
 }
 
 // GetSAMLProvider mocks base method.
-func (m *MockDatabase) GetSAMLProvider(arg0 int32) (model.SAMLProvider, error) {
+func (m *MockDatabase) GetSAMLProvider(arg0 context.Context, arg1 int32) (model.SAMLProvider, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetSAMLProvider", arg0)
+	ret := m.ctrl.Call(m, "GetSAMLProvider", arg0, arg1)
 	ret0, _ := ret[0].(model.SAMLProvider)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetSAMLProvider indicates an expected call of GetSAMLProvider.
-func (mr *MockDatabaseMockRecorder) GetSAMLProvider(arg0 interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) GetSAMLProvider(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSAMLProvider", reflect.TypeOf((*MockDatabase)(nil).GetSAMLProvider), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSAMLProvider", reflect.TypeOf((*MockDatabase)(nil).GetSAMLProvider), arg0, arg1)
 }
 
 // GetSAMLProviderUsers mocks base method.
-func (m *MockDatabase) GetSAMLProviderUsers(arg0 int32) (model.Users, error) {
+func (m *MockDatabase) GetSAMLProviderUsers(arg0 context.Context, arg1 int32) (model.Users, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetSAMLProviderUsers", arg0)
+	ret := m.ctrl.Call(m, "GetSAMLProviderUsers", arg0, arg1)
 	ret0, _ := ret[0].(model.Users)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetSAMLProviderUsers indicates an expected call of GetSAMLProviderUsers.
-func (mr *MockDatabaseMockRecorder) GetSAMLProviderUsers(arg0 interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) GetSAMLProviderUsers(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSAMLProviderUsers", reflect.TypeOf((*MockDatabase)(nil).GetSAMLProviderUsers), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSAMLProviderUsers", reflect.TypeOf((*MockDatabase)(nil).GetSAMLProviderUsers), arg0, arg1)
 }
 
 // GetTimeRangedAssetGroupCollections mocks base method.
@@ -1030,18 +985,18 @@ func (mr *MockDatabaseMockRecorder) GetTimeRangedAssetGroupCollections(arg0, arg
 }
 
 // GetUser mocks base method.
-func (m *MockDatabase) GetUser(arg0 uuid.UUID) (model.User, error) {
+func (m *MockDatabase) GetUser(arg0 context.Context, arg1 uuid.UUID) (model.User, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetUser", arg0)
+	ret := m.ctrl.Call(m, "GetUser", arg0, arg1)
 	ret0, _ := ret[0].(model.User)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetUser indicates an expected call of GetUser.
-func (mr *MockDatabaseMockRecorder) GetUser(arg0 interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) GetUser(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUser", reflect.TypeOf((*MockDatabase)(nil).GetUser), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUser", reflect.TypeOf((*MockDatabase)(nil).GetUser), arg0, arg1)
 }
 
 // GetUserSession mocks base method.
@@ -1060,18 +1015,18 @@ func (mr *MockDatabaseMockRecorder) GetUserSession(arg0 interface{}) *gomock.Cal
 }
 
 // GetUserToken mocks base method.
-func (m *MockDatabase) GetUserToken(arg0, arg1 uuid.UUID) (model.AuthToken, error) {
+func (m *MockDatabase) GetUserToken(arg0 context.Context, arg1, arg2 uuid.UUID) (model.AuthToken, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetUserToken", arg0, arg1)
+	ret := m.ctrl.Call(m, "GetUserToken", arg0, arg1, arg2)
 	ret0, _ := ret[0].(model.AuthToken)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetUserToken indicates an expected call of GetUserToken.
-func (mr *MockDatabaseMockRecorder) GetUserToken(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) GetUserToken(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserToken", reflect.TypeOf((*MockDatabase)(nil).GetUserToken), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserToken", reflect.TypeOf((*MockDatabase)(nil).GetUserToken), arg0, arg1, arg2)
 }
 
 // HasInstallation mocks base method.
@@ -1089,35 +1044,19 @@ func (mr *MockDatabaseMockRecorder) HasInstallation() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "HasInstallation", reflect.TypeOf((*MockDatabase)(nil).HasInstallation))
 }
 
-// InitializeSAMLAuth mocks base method.
-func (m *MockDatabase) InitializeSAMLAuth(arg0 model.User, arg1 model.SAMLProvider) (model.SAMLProvider, model.Installation, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "InitializeSAMLAuth", arg0, arg1)
-	ret0, _ := ret[0].(model.SAMLProvider)
-	ret1, _ := ret[1].(model.Installation)
-	ret2, _ := ret[2].(error)
-	return ret0, ret1, ret2
-}
-
-// InitializeSAMLAuth indicates an expected call of InitializeSAMLAuth.
-func (mr *MockDatabaseMockRecorder) InitializeSAMLAuth(arg0, arg1 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InitializeSAMLAuth", reflect.TypeOf((*MockDatabase)(nil).InitializeSAMLAuth), arg0, arg1)
-}
-
 // InitializeSecretAuth mocks base method.
-func (m *MockDatabase) InitializeSecretAuth(arg0 model.User, arg1 model.AuthSecret) (model.Installation, error) {
+func (m *MockDatabase) InitializeSecretAuth(arg0 context.Context, arg1 model.User, arg2 model.AuthSecret) (model.Installation, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "InitializeSecretAuth", arg0, arg1)
+	ret := m.ctrl.Call(m, "InitializeSecretAuth", arg0, arg1, arg2)
 	ret0, _ := ret[0].(model.Installation)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // InitializeSecretAuth indicates an expected call of InitializeSecretAuth.
-func (mr *MockDatabaseMockRecorder) InitializeSecretAuth(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) InitializeSecretAuth(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InitializeSecretAuth", reflect.TypeOf((*MockDatabase)(nil).InitializeSecretAuth), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InitializeSecretAuth", reflect.TypeOf((*MockDatabase)(nil).InitializeSecretAuth), arg0, arg1, arg2)
 }
 
 // ListAuditLogs mocks base method.
@@ -1152,21 +1091,6 @@ func (mr *MockDatabaseMockRecorder) ListSavedQueries(arg0, arg1, arg2, arg3, arg
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListSavedQueries", reflect.TypeOf((*MockDatabase)(nil).ListSavedQueries), arg0, arg1, arg2, arg3, arg4)
 }
 
-// ListUserTokens mocks base method.
-func (m *MockDatabase) ListUserTokens(arg0 uuid.UUID, arg1 string, arg2 model.SQLFilter) (model.AuthTokens, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ListUserTokens", arg0, arg1, arg2)
-	ret0, _ := ret[0].(model.AuthTokens)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// ListUserTokens indicates an expected call of ListUserTokens.
-func (mr *MockDatabaseMockRecorder) ListUserTokens(arg0, arg1, arg2 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListUserTokens", reflect.TypeOf((*MockDatabase)(nil).ListUserTokens), arg0, arg1, arg2)
-}
-
 // LookupActiveSessionsByUser mocks base method.
 func (m *MockDatabase) LookupActiveSessionsByUser(arg0 model.User) ([]model.UserSession, error) {
 	m.ctrl.T.Helper()
@@ -1182,49 +1106,34 @@ func (mr *MockDatabaseMockRecorder) LookupActiveSessionsByUser(arg0 interface{})
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LookupActiveSessionsByUser", reflect.TypeOf((*MockDatabase)(nil).LookupActiveSessionsByUser), arg0)
 }
 
-// LookupRoleByName mocks base method.
-func (m *MockDatabase) LookupRoleByName(arg0 string) (model.Role, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "LookupRoleByName", arg0)
-	ret0, _ := ret[0].(model.Role)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// LookupRoleByName indicates an expected call of LookupRoleByName.
-func (mr *MockDatabaseMockRecorder) LookupRoleByName(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LookupRoleByName", reflect.TypeOf((*MockDatabase)(nil).LookupRoleByName), arg0)
-}
-
 // LookupSAMLProviderByName mocks base method.
-func (m *MockDatabase) LookupSAMLProviderByName(arg0 string) (model.SAMLProvider, error) {
+func (m *MockDatabase) LookupSAMLProviderByName(arg0 context.Context, arg1 string) (model.SAMLProvider, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "LookupSAMLProviderByName", arg0)
+	ret := m.ctrl.Call(m, "LookupSAMLProviderByName", arg0, arg1)
 	ret0, _ := ret[0].(model.SAMLProvider)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // LookupSAMLProviderByName indicates an expected call of LookupSAMLProviderByName.
-func (mr *MockDatabaseMockRecorder) LookupSAMLProviderByName(arg0 interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) LookupSAMLProviderByName(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LookupSAMLProviderByName", reflect.TypeOf((*MockDatabase)(nil).LookupSAMLProviderByName), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LookupSAMLProviderByName", reflect.TypeOf((*MockDatabase)(nil).LookupSAMLProviderByName), arg0, arg1)
 }
 
 // LookupUser mocks base method.
-func (m *MockDatabase) LookupUser(arg0 string) (model.User, error) {
+func (m *MockDatabase) LookupUser(arg0 context.Context, arg1 string) (model.User, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "LookupUser", arg0)
+	ret := m.ctrl.Call(m, "LookupUser", arg0, arg1)
 	ret0, _ := ret[0].(model.User)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // LookupUser indicates an expected call of LookupUser.
-func (mr *MockDatabaseMockRecorder) LookupUser(arg0 interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) LookupUser(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LookupUser", reflect.TypeOf((*MockDatabase)(nil).LookupUser), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LookupUser", reflect.TypeOf((*MockDatabase)(nil).LookupUser), arg0, arg1)
 }
 
 // Migrate mocks base method.
@@ -1367,45 +1276,31 @@ func (mr *MockDatabaseMockRecorder) UpdateAuthSecret(arg0, arg1 interface{}) *go
 }
 
 // UpdateAuthToken mocks base method.
-func (m *MockDatabase) UpdateAuthToken(arg0 model.AuthToken) error {
+func (m *MockDatabase) UpdateAuthToken(arg0 context.Context, arg1 model.AuthToken) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateAuthToken", arg0)
+	ret := m.ctrl.Call(m, "UpdateAuthToken", arg0, arg1)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // UpdateAuthToken indicates an expected call of UpdateAuthToken.
-func (mr *MockDatabaseMockRecorder) UpdateAuthToken(arg0 interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) UpdateAuthToken(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateAuthToken", reflect.TypeOf((*MockDatabase)(nil).UpdateAuthToken), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateAuthToken", reflect.TypeOf((*MockDatabase)(nil).UpdateAuthToken), arg0, arg1)
 }
 
 // UpdateFileUploadJob mocks base method.
-func (m *MockDatabase) UpdateFileUploadJob(arg0 model.FileUploadJob) error {
+func (m *MockDatabase) UpdateFileUploadJob(arg0 context.Context, arg1 model.FileUploadJob) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateFileUploadJob", arg0)
+	ret := m.ctrl.Call(m, "UpdateFileUploadJob", arg0, arg1)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // UpdateFileUploadJob indicates an expected call of UpdateFileUploadJob.
-func (mr *MockDatabaseMockRecorder) UpdateFileUploadJob(arg0 interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) UpdateFileUploadJob(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateFileUploadJob", reflect.TypeOf((*MockDatabase)(nil).UpdateFileUploadJob), arg0)
-}
-
-// UpdateRole mocks base method.
-func (m *MockDatabase) UpdateRole(arg0 model.Role) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateRole", arg0)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// UpdateRole indicates an expected call of UpdateRole.
-func (mr *MockDatabaseMockRecorder) UpdateRole(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateRole", reflect.TypeOf((*MockDatabase)(nil).UpdateRole), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateFileUploadJob", reflect.TypeOf((*MockDatabase)(nil).UpdateFileUploadJob), arg0, arg1)
 }
 
 // UpdateSAMLIdentityProvider mocks base method.
