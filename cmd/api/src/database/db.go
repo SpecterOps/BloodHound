@@ -144,10 +144,12 @@ type Database interface {
 
 	// File Upload
 	fileupload.FileUploadData
-	ListSavedQueries(userID uuid.UUID, order string, filter model.SQLFilter, skip, limit int) (model.SavedQueries, int, error)
-	CreateSavedQuery(userID uuid.UUID, name string, query string) (model.SavedQuery, error)
-	DeleteSavedQuery(id int) error
-	SavedQueryBelongsToUser(userID uuid.UUID, savedQueryID int) (bool, error)
+
+	// Saved Queries
+	ListSavedQueries(ctx context.Context, userID uuid.UUID, order string, filter model.SQLFilter, skip, limit int) (model.SavedQueries, int, error)
+	CreateSavedQuery(ctx context.Context, userID uuid.UUID, name string, query string) (model.SavedQuery, error)
+	DeleteSavedQuery(ctx context.Context, id int) error
+	SavedQueryBelongsToUser(ctx context.Context, userID uuid.UUID, savedQueryID int) (bool, error)
 	DeleteAssetGroupSelectorsForAssetGroups(ctx context.Context, assetGroupIds []int) error
 }
 
