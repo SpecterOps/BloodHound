@@ -23,7 +23,7 @@ import (
 	"fmt"
 	"github.com/specterops/bloodhound/headers"
 	"github.com/specterops/bloodhound/mediatypes"
-	"github.com/specterops/bloodhound/src/api"
+	"github.com/specterops/bloodhound/src/utils"
 	"io"
 	"net/http"
 	"os"
@@ -113,9 +113,9 @@ func SaveIngestFile(location string, request *http.Request) (string, model.FileT
 		return "", model.FileTypeJson, fmt.Errorf("error creating ingest file: %w", err)
 	}
 
-	if api.HeaderMatches(headers.ContentType.String(), mediatypes.ApplicationJson.String(), request.Header) {
+	if utils.HeaderMatches(headers.ContentType.String(), mediatypes.ApplicationJson.String(), request.Header) {
 		return tempFile.Name(), model.FileTypeJson, WriteAndValidateFile(fileData, tempFile, WriteAndValidateJSON)
-	} else if api.HeaderMatches(headers.ContentType.String(), mediatypes.ApplicationZip.String(), request.Header) {
+	} else if utils.HeaderMatches(headers.ContentType.String(), mediatypes.ApplicationZip.String(), request.Header) {
 		return tempFile.Name(), model.FileTypeZip, WriteAndValidateFile(fileData, tempFile, WriteAndValidateZip)
 	} else {
 		//We should never get here since this is checked a level above
