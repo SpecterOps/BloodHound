@@ -39,7 +39,7 @@ func TestResources_GetFlags(t *testing.T) {
 
 	defer mockCtrl.Finish()
 
-	mockDB.EXPECT().GetAllFlags().Return([]appcfg.FeatureFlag{}, nil)
+	mockDB.EXPECT().GetAllFlags(gomock.Any()).Return([]appcfg.FeatureFlag{}, nil)
 
 	test.Request(t).
 		WithMethod(http.MethodGet).
@@ -51,7 +51,7 @@ func TestResources_GetFlags(t *testing.T) {
 			Data: []appcfg.FeatureFlag{},
 		})
 
-	mockDB.EXPECT().GetAllFlags().Return(nil, errors.Error("db error"))
+	mockDB.EXPECT().GetAllFlags(gomock.Any()).Return(nil, errors.Error("db error"))
 
 	test.Request(t).
 		WithMethod(http.MethodGet).
@@ -80,16 +80,16 @@ func TestResources_ToggleFlag(t *testing.T) {
 
 	defer mockCtrl.Finish()
 
-	mockDB.EXPECT().GetFlag(featureID).Return(appcfg.FeatureFlag{
+	mockDB.EXPECT().GetFlag(gomock.Any(), featureID).Return(appcfg.FeatureFlag{
 		UserUpdatable: false,
 	}, nil)
 
 	requestSetup.Require().ResponseStatusCode(http.StatusForbidden)
 
-	mockDB.EXPECT().GetFlag(featureID).Return(appcfg.FeatureFlag{
+	mockDB.EXPECT().GetFlag(gomock.Any(), featureID).Return(appcfg.FeatureFlag{
 		UserUpdatable: true,
 	}, nil)
-	mockDB.EXPECT().SetFlag(gomock.Any()).Return(nil)
+	mockDB.EXPECT().SetFlag(gomock.Any(), gomock.Any()).Return(nil)
 
 	requestSetup.Require().
 		ResponseStatusCode(http.StatusOK).

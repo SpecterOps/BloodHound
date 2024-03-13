@@ -38,7 +38,7 @@ import (
 func (s *Resources) handleAdRelatedEntityQuery(response http.ResponseWriter, request *http.Request, queryName string, pathDelegate any, listDelegate any) {
 	if params, err := queries.BuildEntityQueryParams(request, queryName, pathDelegate, listDelegate); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf(api.FmtErrorResponseDetailsBadQueryParameters, err), request), response)
-	} else if entityPanelCachingFlag, err := s.DB.GetFlagByKey(appcfg.FeatureEntityPanelCaching); err != nil {
+	} else if entityPanelCachingFlag, err := s.DB.GetFlagByKey(request.Context(), appcfg.FeatureEntityPanelCaching); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else if results, count, err := s.GraphQuery.GetADEntityQueryResult(request.Context(), params, entityPanelCachingFlag.Enabled); err != nil {
 		if errors.Is(err, queries.ErrGraphUnsupported) || errors.Is(err, queries.ErrUnsupportedDataType) {

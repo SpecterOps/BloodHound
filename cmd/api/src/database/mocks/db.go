@@ -578,18 +578,18 @@ func (mr *MockDatabaseMockRecorder) GetAllFileUploadJobs(arg0, arg1, arg2, arg3,
 }
 
 // GetAllFlags mocks base method.
-func (m *MockDatabase) GetAllFlags() ([]appcfg.FeatureFlag, error) {
+func (m *MockDatabase) GetAllFlags(arg0 context.Context) ([]appcfg.FeatureFlag, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetAllFlags")
+	ret := m.ctrl.Call(m, "GetAllFlags", arg0)
 	ret0, _ := ret[0].([]appcfg.FeatureFlag)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetAllFlags indicates an expected call of GetAllFlags.
-func (mr *MockDatabaseMockRecorder) GetAllFlags() *gomock.Call {
+func (mr *MockDatabaseMockRecorder) GetAllFlags(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllFlags", reflect.TypeOf((*MockDatabase)(nil).GetAllFlags))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllFlags", reflect.TypeOf((*MockDatabase)(nil).GetAllFlags), arg0)
 }
 
 // GetAllIngestTasks mocks base method.
@@ -820,33 +820,33 @@ func (mr *MockDatabaseMockRecorder) GetFileUploadJobsWithStatus(arg0, arg1 inter
 }
 
 // GetFlag mocks base method.
-func (m *MockDatabase) GetFlag(arg0 int32) (appcfg.FeatureFlag, error) {
+func (m *MockDatabase) GetFlag(arg0 context.Context, arg1 int32) (appcfg.FeatureFlag, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetFlag", arg0)
+	ret := m.ctrl.Call(m, "GetFlag", arg0, arg1)
 	ret0, _ := ret[0].(appcfg.FeatureFlag)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetFlag indicates an expected call of GetFlag.
-func (mr *MockDatabaseMockRecorder) GetFlag(arg0 interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) GetFlag(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetFlag", reflect.TypeOf((*MockDatabase)(nil).GetFlag), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetFlag", reflect.TypeOf((*MockDatabase)(nil).GetFlag), arg0, arg1)
 }
 
 // GetFlagByKey mocks base method.
-func (m *MockDatabase) GetFlagByKey(arg0 string) (appcfg.FeatureFlag, error) {
+func (m *MockDatabase) GetFlagByKey(arg0 context.Context, arg1 string) (appcfg.FeatureFlag, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetFlagByKey", arg0)
+	ret := m.ctrl.Call(m, "GetFlagByKey", arg0, arg1)
 	ret0, _ := ret[0].(appcfg.FeatureFlag)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetFlagByKey indicates an expected call of GetFlagByKey.
-func (mr *MockDatabaseMockRecorder) GetFlagByKey(arg0 interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) GetFlagByKey(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetFlagByKey", reflect.TypeOf((*MockDatabase)(nil).GetFlagByKey), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetFlagByKey", reflect.TypeOf((*MockDatabase)(nil).GetFlagByKey), arg0, arg1)
 }
 
 // GetIngestTasksForJob mocks base method.
@@ -1195,17 +1195,17 @@ func (mr *MockDatabaseMockRecorder) SetConfigurationParameter(arg0, arg1 interfa
 }
 
 // SetFlag mocks base method.
-func (m *MockDatabase) SetFlag(arg0 appcfg.FeatureFlag) error {
+func (m *MockDatabase) SetFlag(arg0 context.Context, arg1 appcfg.FeatureFlag) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SetFlag", arg0)
+	ret := m.ctrl.Call(m, "SetFlag", arg0, arg1)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // SetFlag indicates an expected call of SetFlag.
-func (mr *MockDatabaseMockRecorder) SetFlag(arg0 interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) SetFlag(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetFlag", reflect.TypeOf((*MockDatabase)(nil).SetFlag), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetFlag", reflect.TypeOf((*MockDatabase)(nil).SetFlag), arg0, arg1)
 }
 
 // SweepAssetGroupCollections mocks base method.
