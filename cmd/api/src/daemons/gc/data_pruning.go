@@ -51,14 +51,14 @@ func (s *Daemon) Start(ctx context.Context) {
 
 	// prune sessions and collections once when the daemon starts up
 	s.db.SweepSessions(ctx)
-	s.db.SweepAssetGroupCollections()
+	s.db.SweepAssetGroupCollections(ctx)
 
 	// thereafter, prune conditionally once a day
 	for {
 		select {
 		case <-ticker.C:
 			s.db.SweepSessions(ctx)
-			s.db.SweepAssetGroupCollections()
+			s.db.SweepAssetGroupCollections(ctx)
 
 		case <-s.exitC:
 			return

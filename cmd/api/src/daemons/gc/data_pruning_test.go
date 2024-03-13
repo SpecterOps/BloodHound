@@ -55,7 +55,7 @@ func TestGC_Start(t *testing.T) {
 		// simulate some work being done
 		time.Sleep(1 * time.Millisecond)
 	})
-	mockDB.EXPECT().SweepAssetGroupCollections().Do(func() {
+	mockDB.EXPECT().SweepAssetGroupCollections(gomock.Any()).Do(func(ctx context.Context) {
 		time.Sleep(1 * time.Millisecond)
 	})
 

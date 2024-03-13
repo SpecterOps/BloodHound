@@ -68,7 +68,7 @@ type Database interface {
 	CreateAssetGroup(ctx context.Context, name, tag string, systemGroup bool) (model.AssetGroup, error)
 	UpdateAssetGroup(ctx context.Context, assetGroup model.AssetGroup) error
 	DeleteAssetGroup(ctx context.Context, assetGroup model.AssetGroup) error
-	SweepAssetGroupCollections()
+	SweepAssetGroupCollections(ctx context.Context)
 	GetAssetGroupCollections(ctx context.Context, assetGroupID int32, order string, filter model.SQLFilter) (model.AssetGroupCollections, error)
 	GetLatestAssetGroupCollection(ctx context.Context, assetGroupID int32) (model.AssetGroupCollection, error)
 	GetTimeRangedAssetGroupCollections(ctx context.Context, assetGroupID int32, from int64, to int64, order string) (model.AssetGroupCollections, error)
