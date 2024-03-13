@@ -29,9 +29,10 @@ type ADCSCache struct {
 	AuthStoreForChainValid          map[graph.ID]cardinality.Duplex[uint32]
 	RootCAForChainValid             map[graph.ID]cardinality.Duplex[uint32]
 	ExpandedCertTemplateControllers map[graph.ID][]uint32
-	CertTemplateControllers         map[graph.ID][]*graph.Node
-	EnterpriseCAEnrollers           map[graph.ID][]*graph.Node
-	PublishedTemplateCache          map[graph.ID][]*graph.Node
+	CertTemplateEnrollers           map[graph.ID][]*graph.Node // principals that have enrollment on a cert template via `enroll`, `generic all`, `all extended rights` edges
+	CertTemplateControllers         map[graph.ID][]*graph.Node // principals that have privileges on a cert template via `owner`, `generic all`, `write dacl`, `write owner` edges
+	EnterpriseCAEnrollers           map[graph.ID][]*graph.Node // principals that have enrollment rights on an enterprise ca via `enroll` edge
+	PublishedTemplateCache          map[graph.ID][]*graph.Node // cert templates that are published to an enterprise ca
 }
 
 func NewADCSCache() ADCSCache {
@@ -39,6 +40,7 @@ func NewADCSCache() ADCSCache {
 		AuthStoreForChainValid:          make(map[graph.ID]cardinality.Duplex[uint32]),
 		RootCAForChainValid:             make(map[graph.ID]cardinality.Duplex[uint32]),
 		ExpandedCertTemplateControllers: make(map[graph.ID][]uint32),
+		CertTemplateEnrollers:           make(map[graph.ID][]*graph.Node),
 		CertTemplateControllers:         make(map[graph.ID][]*graph.Node),
 		EnterpriseCAEnrollers:           make(map[graph.ID][]*graph.Node),
 		PublishedTemplateCache:          make(map[graph.ID][]*graph.Node),
@@ -48,11 +50,20 @@ func NewADCSCache() ADCSCache {
 func (s ADCSCache) BuildCache(ctx context.Context, db graph.Database, enterpriseCAs, certTemplates []*graph.Node) {
 	db.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		for _, ct := range certTemplates {
+			// cert template enrollers
 			if firstDegreePrincipals, err := fetchFirstDegreeNodes(tx, ct, ad.Enroll, ad.GenericAll, ad.AllExtendedRights); err != nil {
 				log.Errorf("error fetching enrollers for cert template %d: %v", ct.ID, err)
 			} else {
+				s.CertTemplateEnrollers[ct.ID] = firstDegreePrincipals.Slice()
+			}
+
+			// cert template controllers
+			if firstDegreePrincipals, err := fetchFirstDegreeNodes(tx, ct, ad.Owns, ad.GenericAll, ad.WriteDACL, ad.WriteOwner); err != nil {
+				log.Errorf("error fetching controllers for cert template %d: %v", ct.ID, err)
+			} else {
 				s.CertTemplateControllers[ct.ID] = firstDegreePrincipals.Slice()
 			}
+
 		}
 
 		for _, eca := range enterpriseCAs {

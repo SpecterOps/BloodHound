@@ -21,6 +21,7 @@
 package mocks
 
 import (
+	context "context"
 	reflect "reflect"
 
 	model "github.com/specterops/bloodhound/src/model"
@@ -51,61 +52,61 @@ func (m *MockDataQualityData) EXPECT() *MockDataQualityDataMockRecorder {
 }
 
 // CreateADDataQualityAggregation mocks base method.
-func (m *MockDataQualityData) CreateADDataQualityAggregation(arg0 model.ADDataQualityAggregation) (model.ADDataQualityAggregation, error) {
+func (m *MockDataQualityData) CreateADDataQualityAggregation(arg0 context.Context, arg1 model.ADDataQualityAggregation) (model.ADDataQualityAggregation, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateADDataQualityAggregation", arg0)
+	ret := m.ctrl.Call(m, "CreateADDataQualityAggregation", arg0, arg1)
 	ret0, _ := ret[0].(model.ADDataQualityAggregation)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // CreateADDataQualityAggregation indicates an expected call of CreateADDataQualityAggregation.
-func (mr *MockDataQualityDataMockRecorder) CreateADDataQualityAggregation(arg0 interface{}) *gomock.Call {
+func (mr *MockDataQualityDataMockRecorder) CreateADDataQualityAggregation(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateADDataQualityAggregation", reflect.TypeOf((*MockDataQualityData)(nil).CreateADDataQualityAggregation), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateADDataQualityAggregation", reflect.TypeOf((*MockDataQualityData)(nil).CreateADDataQualityAggregation), arg0, arg1)
 }
 
 // CreateADDataQualityStats mocks base method.
-func (m *MockDataQualityData) CreateADDataQualityStats(arg0 model.ADDataQualityStats) (model.ADDataQualityStats, error) {
+func (m *MockDataQualityData) CreateADDataQualityStats(arg0 context.Context, arg1 model.ADDataQualityStats) (model.ADDataQualityStats, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateADDataQualityStats", arg0)
+	ret := m.ctrl.Call(m, "CreateADDataQualityStats", arg0, arg1)
 	ret0, _ := ret[0].(model.ADDataQualityStats)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // CreateADDataQualityStats indicates an expected call of CreateADDataQualityStats.
-func (mr *MockDataQualityDataMockRecorder) CreateADDataQualityStats(arg0 interface{}) *gomock.Call {
+func (mr *MockDataQualityDataMockRecorder) CreateADDataQualityStats(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateADDataQualityStats", reflect.TypeOf((*MockDataQualityData)(nil).CreateADDataQualityStats), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateADDataQualityStats", reflect.TypeOf((*MockDataQualityData)(nil).CreateADDataQualityStats), arg0, arg1)
 }
 
 // CreateAzureDataQualityAggregation mocks base method.
-func (m *MockDataQualityData) CreateAzureDataQualityAggregation(arg0 model.AzureDataQualityAggregation) (model.AzureDataQualityAggregation, error) {
+func (m *MockDataQualityData) CreateAzureDataQualityAggregation(arg0 context.Context, arg1 model.AzureDataQualityAggregation) (model.AzureDataQualityAggregation, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateAzureDataQualityAggregation", arg0)
+	ret := m.ctrl.Call(m, "CreateAzureDataQualityAggregation", arg0, arg1)
 	ret0, _ := ret[0].(model.AzureDataQualityAggregation)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // CreateAzureDataQualityAggregation indicates an expected call of CreateAzureDataQualityAggregation.
-func (mr *MockDataQualityDataMockRecorder) CreateAzureDataQualityAggregation(arg0 interface{}) *gomock.Call {
+func (mr *MockDataQualityDataMockRecorder) CreateAzureDataQualityAggregation(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateAzureDataQualityAggregation", reflect.TypeOf((*MockDataQualityData)(nil).CreateAzureDataQualityAggregation), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateAzureDataQualityAggregation", reflect.TypeOf((*MockDataQualityData)(nil).CreateAzureDataQualityAggregation), arg0, arg1)
 }
 
 // CreateAzureDataQualityStats mocks base method.
-func (m *MockDataQualityData) CreateAzureDataQualityStats(arg0 model.AzureDataQualityStats) (model.AzureDataQualityStats, error) {
+func (m *MockDataQualityData) CreateAzureDataQualityStats(arg0 context.Context, arg1 model.AzureDataQualityStats) (model.AzureDataQualityStats, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateAzureDataQualityStats", arg0)
+	ret := m.ctrl.Call(m, "CreateAzureDataQualityStats", arg0, arg1)
 	ret0, _ := ret[0].(model.AzureDataQualityStats)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // CreateAzureDataQualityStats indicates an expected call of CreateAzureDataQualityStats.
-func (mr *MockDataQualityDataMockRecorder) CreateAzureDataQualityStats(arg0 interface{}) *gomock.Call {
+func (mr *MockDataQualityDataMockRecorder) CreateAzureDataQualityStats(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateAzureDataQualityStats", reflect.TypeOf((*MockDataQualityData)(nil).CreateAzureDataQualityStats), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateAzureDataQualityStats", reflect.TypeOf((*MockDataQualityData)(nil).CreateAzureDataQualityStats), arg0, arg1)
 }

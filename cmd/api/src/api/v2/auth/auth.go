@@ -111,7 +111,7 @@ func (s ManagementResource) GetSAMLProvider(response http.ResponseWriter, reques
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusUnauthorized, api.ErrorResponseDetailsAuthenticationInvalid, request), response)
 	} else if providerID, err := strconv.ParseInt(rawProviderID, 10, 32); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, api.ErrorResponseDetailsResourceNotFound, request), response)
-	} else if provider, err := s.db.GetSAMLProvider(int32(providerID)); err != nil {
+	} else if provider, err := s.db.GetSAMLProvider(request.Context(), int32(providerID)); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
 		api.WriteBasicResponse(request.Context(), provider, http.StatusOK, response)
@@ -182,11 +182,11 @@ func (s ManagementResource) DeleteSAMLProvider(response http.ResponseWriter, req
 
 	if providerID, err := strconv.ParseInt(rawProviderID, 10, 32); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, api.ErrorResponseDetailsResourceNotFound, request), response)
-	} else if identityProvider, err = s.db.GetSAMLProvider(int32(providerID)); err != nil {
+	} else if identityProvider, err = s.db.GetSAMLProvider(request.Context(), int32(providerID)); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else if user, isUser := auth.GetUserFromAuthCtx(requestContext.AuthCtx); isUser && int64(user.SAMLProviderID.Int32) == providerID {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusConflict, "user may not delete their own SAML auth provider", request), response)
-	} else if providerUsers, err := s.db.GetSAMLProviderUsers(identityProvider.ID); err != nil {
+	} else if providerUsers, err := s.db.GetSAMLProviderUsers(request.Context(), identityProvider.ID); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else if err := s.disassociateUsersFromSAMLProvider(request, providerUsers); err != nil {
 		api.HandleDatabaseError(request, response, err)
@@ -467,7 +467,7 @@ func (s ManagementResource) CreateUser(response http.ResponseWriter, request *ht
 		if createUserRequest.SAMLProviderID != "" {
 			if samlProviderID, err := serde.ParseInt32(createUserRequest.SAMLProviderID); err != nil {
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("SAML Provider ID must be a number: %v", err.Error()), request), response)
-			} else if samlProvider, err := s.db.GetSAMLProvider(samlProviderID); err != nil {
+			} else if samlProvider, err := s.db.GetSAMLProvider(request.Context(), samlProviderID); err != nil {
 				log.Errorf("Error while attempting to fetch SAML provider %d: %v", createUserRequest.SAMLProviderID, err)
 				api.HandleDatabaseError(request, response, err)
 			} else {
@@ -550,7 +550,7 @@ func (s ManagementResource) UpdateUser(response http.ResponseWriter, request *ht
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("SAML Provider ID must be a number: %v", err.Error()), request), response)
 			} else if err := s.ensureUserHasNoAuthSecret(request.Context(), user); err != nil {
 				api.HandleDatabaseError(request, response, err)
-			} else if provider, err := s.db.GetSAMLProvider(samlProviderID); err != nil {
+			} else if provider, err := s.db.GetSAMLProvider(request.Context(), samlProviderID); err != nil {
 				api.HandleDatabaseError(request, response, err)
 			} else {
 				// Ensure that the AuthSecret reference is nil and that the SAML provider is set
