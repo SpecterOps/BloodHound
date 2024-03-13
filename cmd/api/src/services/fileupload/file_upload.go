@@ -19,10 +19,13 @@ package fileupload
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/specterops/bloodhound/headers"
+	"github.com/specterops/bloodhound/mediatypes"
+	"github.com/specterops/bloodhound/src/utils"
 	"io"
+	"net/http"
 	"os"
 	"time"
 
@@ -92,26 +95,50 @@ func GetFileUploadJobByID(ctx context.Context, db FileUploadData, jobID int64) (
 	return db.GetFileUploadJob(ctx, jobID)
 }
 
+func WriteAndValidateZip(src io.Reader, dst io.Writer) error {
+	tr := io.TeeReader(src, dst)
+	return ValidateZipFile(tr)
+}
+
 func WriteAndValidateJSON(src io.Reader, dst io.Writer) error {
 	tr := io.TeeReader(src, dst)
-	dc := json.NewDecoder(tr)
-	for {
-		if _, err := dc.Token(); err != nil {
-			if errors.Is(err, io.EOF) {
-				return nil
-			}
-			return ErrInvalidJSON
-		}
+	_, err := ValidateMetaTag(tr, true)
+	return err
+}
+
+func SaveIngestFile(location string, request *http.Request) (string, model.FileType, error) {
+	fileData := request.Body
+	tempFile, err := os.CreateTemp(location, "bh")
+	if err != nil {
+		return "", model.FileTypeJson, fmt.Errorf("error creating ingest file: %w", err)
+	}
+
+	if utils.HeaderMatches(headers.ContentType.String(), mediatypes.ApplicationJson.String(), request.Header) {
+		return tempFile.Name(), model.FileTypeJson, WriteAndValidateFile(fileData, tempFile, WriteAndValidateJSON)
+	} else if utils.HeaderMatches(headers.ContentType.String(), mediatypes.ApplicationZip.String(), request.Header) {
+		return tempFile.Name(), model.FileTypeZip, WriteAndValidateFile(fileData, tempFile, WriteAndValidateZip)
+	} else {
+		//We should never get here since this is checked a level above
+		return "", model.FileTypeJson, fmt.Errorf("invalid content type for ingest file")
 	}
 }
 
-func SaveIngestFile(location string, fileData io.Reader) (string, error) {
-	tempFile, err := os.CreateTemp(location, "bh")
-	if err != nil {
-		return "", fmt.Errorf("error creating ingest file: %w", err)
+type FileValidator func(src io.Reader, dst io.Writer) error
+
+func WriteAndValidateFile(fileData io.ReadCloser, tempFile *os.File, validationFunc FileValidator) error {
+	if err := validationFunc(fileData, tempFile); err != nil {
+		if err := tempFile.Close(); err != nil {
+			log.Errorf("Error closing temp file %s with failed validation: %v", tempFile.Name(), err)
+		} else if err := os.Remove(tempFile.Name()); err != nil {
+			log.Errorf("Error deleting temp file %s: %v", tempFile.Name(), err)
+		}
+		return err
+	} else {
+		if err := tempFile.Close(); err != nil {
+			log.Errorf("Error closing temp file with successful validation %s: %v", tempFile.Name(), err)
+		}
+		return nil
 	}
-	defer tempFile.Close()
-	return tempFile.Name(), WriteAndValidateJSON(fileData, tempFile)
 }
 
 func TouchFileUploadJobLastIngest(ctx context.Context, db FileUploadData, fileUploadJob model.FileUploadJob) error {

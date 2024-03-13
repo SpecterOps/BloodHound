@@ -18,7 +18,10 @@ package fileupload
 
 import (
 	"bytes"
+	"github.com/specterops/bloodhound/src/model/ingest"
 	"github.com/stretchr/testify/assert"
+	"io"
+	"os"
 	"strings"
 	"testing"
 )
@@ -36,9 +39,33 @@ func TestWriteAndValidateJSON(t *testing.T) {
 	t.Run("succeed on good json", func(t *testing.T) {
 		var (
 			writer  = bytes.Buffer{}
-			badJSON = strings.NewReader("{\"redPill\": true, \"bluePill\": false}")
+			goodJSON = strings.NewReader(`{"meta": {"methods": 0, "type": "sessions", "count": 0, "version": 5}, "data": []}`)
 		)
-		err := WriteAndValidateJSON(badJSON, &writer)
+		err := WriteAndValidateJSON(goodJSON, &writer)
 		assert.Nil(t, err)
+	})
+}
+
+func TestWriteAndValidateZip(t *testing.T) {
+	t.Run("valid zip file is ok", func(t *testing.T) {
+		var (
+			writer = bytes.Buffer{}
+		)
+
+		file, err := os.Open("../../test/fixtures/fixtures/goodzip.zip")
+		assert.Nil(t, err)
+
+		err = WriteAndValidateZip(io.Reader(file), &writer)
+		assert.Nil(t, err)
+	})
+
+	t.Run("invalid bytes causes error", func(t *testing.T) {
+		var (
+			writer = bytes.Buffer{}
+			badZip = strings.NewReader("123123")
+		)
+
+		err := WriteAndValidateZip(badZip, &writer)
+		assert.Equal(t, err, ingest.ErrInvalidZipFile)
 	})
 }

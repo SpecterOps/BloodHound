@@ -17,6 +17,7 @@
 package datapipe
 
 import (
+	"errors"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/ein"
 	"github.com/specterops/bloodhound/log"
@@ -46,6 +47,9 @@ func decodeBasicData[T any](batch graph.Batch, reader io.ReadSeeker, conversionF
 		var decodeTarget T
 		if err := decoder.Decode(&decodeTarget); err != nil {
 			log.Errorf("Error decoding %T object: %v", decodeTarget, err)
+			if errors.Is(err, io.EOF) {
+				break
+			}
 		} else {
 			count++
 			conversionFunc(decodeTarget, &convertedData)
@@ -80,6 +84,9 @@ func decodeGroupData(batch graph.Batch, reader io.ReadSeeker) error {
 		var group ein.Group
 		if err := decoder.Decode(&group); err != nil {
 			log.Errorf("Error decoding group object: %v", err)
+			if errors.Is(err, io.EOF) {
+				break
+			}
 		} else {
 			count++
 			convertGroupData(group, &convertedData)
@@ -112,6 +119,9 @@ func decodeSessionData(batch graph.Batch, reader io.ReadSeeker) error {
 		var session ein.Session
 		if err := decoder.Decode(&session); err != nil {
 			log.Errorf("Error decoding session object: %v", err)
+			if errors.Is(err, io.EOF) {
+				break
+			}
 		} else {
 			count++
 			convertSessionData(session, &convertedData)
@@ -145,6 +155,9 @@ func decodeAzureData(batch graph.Batch, reader io.ReadSeeker) error {
 		var data AzureBase
 		if err := decoder.Decode(&data); err != nil {
 			log.Errorf("Error decoding azure object: %v", err)
+			if errors.Is(err, io.EOF) {
+				break
+			}
 		} else {
 			convert := getKindConverter(data.Kind)
 			convert(data.Data, &convertedData)

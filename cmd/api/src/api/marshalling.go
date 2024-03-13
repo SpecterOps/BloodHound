@@ -22,7 +22,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"strings"
 	"time"
 
 	"github.com/specterops/bloodhound/errors"
@@ -190,7 +189,7 @@ func WriteBinaryResponse(_ context.Context, data []byte, filename string, status
 }
 
 func ReadJsonResponsePayload(value any, response *http.Response) error {
-	if !HeaderMatches(headers.ContentType.String(), mediatypes.ApplicationJson.String(), response.Header) {
+	if !utils.HeaderMatches(headers.ContentType.String(), mediatypes.ApplicationJson.String(), response.Header) {
 		return ErrorContentTypeJson
 	}
 
@@ -203,7 +202,7 @@ func ReadJsonResponsePayload(value any, response *http.Response) error {
 }
 
 func ReadAPIV2ResponsePayload(value any, response *http.Response) error {
-	if !HeaderMatches(headers.ContentType.String(), mediatypes.ApplicationJson.String(), response.Header) {
+	if !utils.HeaderMatches(headers.ContentType.String(), mediatypes.ApplicationJson.String(), response.Header) {
 		return ErrorContentTypeJson
 	}
 
@@ -221,7 +220,7 @@ func ReadAPIV2ResponsePayload(value any, response *http.Response) error {
 }
 
 func ReadAPIV2ResponseWrapperPayload(value any, response *http.Response) error {
-	if !HeaderMatches(headers.ContentType.String(), mediatypes.ApplicationJson.String(), response.Header) {
+	if !utils.HeaderMatches(headers.ContentType.String(), mediatypes.ApplicationJson.String(), response.Header) {
 		return ErrorContentTypeJson
 	}
 
@@ -235,7 +234,7 @@ func ReadAPIV2ResponseWrapperPayload(value any, response *http.Response) error {
 }
 
 func ReadAPIV2ErrorResponsePayload(value *ErrorWrapper, response *http.Response) error {
-	if !HeaderMatches(headers.ContentType.String(), mediatypes.ApplicationJson.String(), response.Header) {
+	if !utils.HeaderMatches(headers.ContentType.String(), mediatypes.ApplicationJson.String(), response.Header) {
 		return ErrorContentTypeJson
 	}
 
@@ -249,7 +248,7 @@ func ReadAPIV2ErrorResponsePayload(value *ErrorWrapper, response *http.Response)
 }
 
 func ReadJSONRequestPayloadLimited(value any, request *http.Request) error {
-	if !HeaderMatches(headers.ContentType.String(), mediatypes.ApplicationJson.String(), request.Header) {
+	if !utils.HeaderMatches(headers.ContentType.String(), mediatypes.ApplicationJson.String(), request.Header) {
 		return ErrorContentTypeJson
 	}
 
@@ -267,9 +266,4 @@ func ReadJSONRequestPayloadLimited(value any, request *http.Request) error {
 	} else {
 		return nil
 	}
-}
-
-func HeaderMatches(key, target string, headers http.Header) bool {
-	value := headers.Get(key)
-	return value != "" && strings.Contains(strings.ToLower(value), strings.ToLower(target))
 }

@@ -18,6 +18,7 @@ package datapipe_test
 
 import (
 	"encoding/json"
+	"github.com/specterops/bloodhound/src/model/ingest"
 	"strings"
 	"testing"
 
@@ -38,27 +39,27 @@ func TestSeekToDataTag(t *testing.T) {
 		},
 		{
 			rawString: "{\"data\": {}}",
-			err:       datapipe.ErrInvalidDataTag,
+			err:       ingest.ErrInvalidDataTag,
 		},
 		{
 			rawString: "{\"data\": ]}",
-			err:       datapipe.ErrJSONDecoderInternal,
+			err:       ingest.ErrJSONDecoderInternal,
 		},
 		{
 			rawString: "",
-			err:       datapipe.ErrDataTagNotFound,
+			err:       ingest.ErrDataTagNotFound,
 		},
 		{
 			rawString: "{[]}",
-			err:       datapipe.ErrJSONDecoderInternal,
+			err:       ingest.ErrJSONDecoderInternal,
 		},
 		{
 			rawString: "{\"data\": \"oops\"}",
-			err:       datapipe.ErrInvalidDataTag,
+			err:       ingest.ErrInvalidDataTag,
 		},
 		{
 			rawString: "{\"nothing\": [}",
-			err:       datapipe.ErrJSONDecoderInternal,
+			err:       ingest.ErrJSONDecoderInternal,
 		},
 		{
 			rawString: `{"meta": {"methods": 0, "type": "sessions", "count": 0, "version": 5}, "data": []}`,
