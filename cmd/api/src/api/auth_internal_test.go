@@ -79,7 +79,7 @@ func buildAuditLog(testCtx context.Context, user model.User, loginRequest LoginR
 	bhCtx := ctx.Get(testCtx)
 
 	auditLog := model.AuditLog{
-		Action:          "LoginAttempt",
+		Action:          model.AuditLogActionLoginAttempt,
 		ActorName:       user.PrincipalName,
 		ActorEmail:      user.EmailAddress.ValueOrZero(),
 		Fields:          types.JSONUntypedObject{"username": loginRequest.Username},
@@ -107,10 +107,10 @@ func TestAuditLogin(t *testing.T) {
 		db: mockDB,
 	}
 	testCtx, loginRequest := setupRequest(testyUser)
-	expectedAuditLog := buildAuditLog(testCtx, testyUser, loginRequest, string(model.AuditStatusSuccess), nil)
+	expectedAuditLog := buildAuditLog(testCtx, testyUser, loginRequest, string(model.AuditLogStatusSuccess), nil)
 
 	mockDB.EXPECT().CreateAuditLog(testCtx, expectedAuditLog)
-	a.auditLogin(testCtx, commitId, testyUser, loginRequest, string(model.AuditStatusSuccess), nil)
+	a.auditLogin(testCtx, commitId, testyUser, loginRequest, string(model.AuditLogStatusSuccess), nil)
 }
 
 func TestAuditLogin_UserNotFound(t *testing.T) {
@@ -120,10 +120,10 @@ func TestAuditLogin_UserNotFound(t *testing.T) {
 		db: mockDB,
 	}
 	testCtx, loginRequest := setupRequest(model.User{})
-	expectedAuditLog := buildAuditLog(testCtx, model.User{}, loginRequest, string(model.AuditStatusFailure), ErrInvalidAuth)
+	expectedAuditLog := buildAuditLog(testCtx, model.User{}, loginRequest, string(model.AuditLogStatusFailure), ErrInvalidAuth)
 
 	mockDB.EXPECT().CreateAuditLog(testCtx, expectedAuditLog)
-	a.auditLogin(testCtx, commitId, model.User{}, loginRequest, string(model.AuditStatusFailure), ErrInvalidAuth)
+	a.auditLogin(testCtx, commitId, model.User{}, loginRequest, string(model.AuditLogStatusFailure), ErrInvalidAuth)
 }
 
 func TestValidateRequestSignature(t *testing.T) {

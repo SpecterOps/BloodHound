@@ -25,12 +25,50 @@ import (
 	"github.com/specterops/bloodhound/src/database/types"
 )
 
-type AuditEntryStatus string
+type AuditLogEntryStatus string
 
 const (
-	AuditStatusSuccess AuditEntryStatus = "success"
-	AuditStatusFailure AuditEntryStatus = "failure"
-	AuditStatusIntent  AuditEntryStatus = "intent"
+	AuditLogStatusSuccess AuditLogEntryStatus = "success"
+	AuditLogStatusFailure AuditLogEntryStatus = "failure"
+	AuditLogStatusIntent  AuditLogEntryStatus = "intent"
+)
+
+type AuditLogAction string
+
+const (
+	AuditLogActionAcceptEULA AuditLogAction = "AcceptEULA"
+
+	AuditLogActionLoginAttempt              AuditLogAction = "LoginAttempt"
+	AuditLogActionUnauthorizedAccessAttempt AuditLogAction = "UnauthorizedAccessAttempt"
+
+	AuditLogActionCreateUser AuditLogAction = "CreateUser"
+	AuditLogActionUpdateUser AuditLogAction = "UpdateUser"
+	AuditLogActionDeleteUser AuditLogAction = "DeleteUser"
+
+	AuditLogActionCreateAssetGroup AuditLogAction = "CreateAssetGroup"
+	AuditLogActionUpdateAssetGroup AuditLogAction = "UpdateAssetGroup"
+	AuditLogActionDeleteAssetGroup AuditLogAction = "DeleteAssetGroup"
+
+	AuditLogActionDeleteAssetGroupSelector AuditLogAction = "DeleteAssetGroupSelector"
+
+	AuditLogActionCreateAuthToken AuditLogAction = "CreateAuthToken"
+	AuditLogActionDeleteAuthToken AuditLogAction = "DeleteAuthToken"
+
+	AuditLogActionCreateAuthSecret AuditLogAction = "CreateAuthSecret"
+	AuditLogActionUpdateAuthSecret AuditLogAction = "UpdateAuthSecret"
+	AuditLogActionDeleteAuthSecret AuditLogAction = "DeleteAuthSecret"
+
+	AuditLogActionCreateSAMLIdentityProvider AuditLogAction = "CreateSAMLIdentityProvider"
+	AuditLogActionUpdateSAMLIdentityProvider AuditLogAction = "UpdateSAMLIdentityProvider"
+	AuditLogActionDeleteSAMLIdentityProvider AuditLogAction = "DeleteSAMLIdentityProvider"
+
+	AuditLogActionAcceptRisk   AuditLogAction = "AcceptRisk"
+	AuditLogActionUnacceptRisk AuditLogAction = "UnacceptRisk"
+
+	AuditLogActionExportRelationshipRisks AuditLogAction = "ExportRelationshipRisks"
+	AuditLogActionExportListRisks         AuditLogAction = "ExportListRisks"
+
+	AuditLogActionDeleteBloodhoundData AuditLogAction = "DeleteBloodhoundData"
 )
 
 // TODO embed Basic into this struct instead of declaring the ID and CreatedAt fields. This will require a migration
@@ -40,7 +78,7 @@ type AuditLog struct {
 	ActorID         string                  `json:"actor_id" gorm:"index"`
 	ActorName       string                  `json:"actor_name"`
 	ActorEmail      string                  `json:"actor_email"`
-	Action          string                  `json:"action" gorm:"index"`
+	Action          AuditLogAction          `json:"action" gorm:"index"`
 	Fields          types.JSONUntypedObject `json:"fields"`
 	RequestID       string                  `json:"request_id"`
 	SourceIpAddress string                  `json:"source_ip_address"`
@@ -149,9 +187,9 @@ type Auditable interface {
 
 type AuditEntry struct {
 	CommitID uuid.UUID
-	Action   string
+	Action   AuditLogAction
 	Model    Auditable
-	Status   AuditEntryStatus
+	Status   AuditLogEntryStatus
 	ErrorMsg string
 }
 

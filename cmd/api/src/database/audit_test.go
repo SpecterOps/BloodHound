@@ -53,7 +53,7 @@ func TestDatabase_ListAuditLogs(t *testing.T) {
 	)
 
 	for i := 0; i < 7; i++ {
-		if err := dbInst.AppendAuditLog(testCtx, model.AuditEntry{Model: &model.User{}, Action: "CreateUser", Status: model.AuditStatusSuccess}); err != nil {
+		if err := dbInst.AppendAuditLog(testCtx, model.AuditEntry{Model: &model.User{}, Action: model.AuditLogActionCreateUser, Status: model.AuditLogStatusSuccess}); err != nil {
 			t.Fatalf("Error creating audit log: %v", err)
 		}
 	}
