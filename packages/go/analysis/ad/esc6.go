@@ -19,10 +19,9 @@ package ad
 import (
 	"context"
 	"fmt"
+	"github.com/specterops/bloodhound/ein"
 	"slices"
 	"sync"
-
-	"github.com/specterops/bloodhound/ein"
 
 	"github.com/specterops/bloodhound/analysis"
 	"github.com/specterops/bloodhound/analysis/impact"

@@ -952,14 +952,16 @@ func TestADCSESC4Composition(t *testing.T) {
 				composition, err := ad2.GetADCSESC4EdgeComposition(context.Background(), db, edge)
 				require.Nil(t, err)
 
-				require.Equal(t, 7, len(composition.AllNodes()))
-				require.True(t, composition.AllNodes().Contains(harness.ESC4Template1.Group11))
-				require.True(t, composition.AllNodes().Contains(harness.ESC4Template1.Group0))
-				require.True(t, composition.AllNodes().Contains(harness.ESC4Template1.CertTemplate1))
-				require.True(t, composition.AllNodes().Contains(harness.ESC4Template1.EnterpriseCA))
-				require.True(t, composition.AllNodes().Contains(harness.ESC4Template1.RootCA))
-				require.True(t, composition.AllNodes().Contains(harness.ESC4Template1.NTAuthStore))
-				require.True(t, composition.AllNodes().Contains(harness.ESC4Template1.Domain))
+				nodes := composition.AllNodes()
+
+				require.Equal(t, 7, len(nodes))
+				require.True(t, nodes.Contains(harness.ESC4Template1.Group11))
+				require.True(t, nodes.Contains(harness.ESC4Template1.Group0))
+				require.True(t, nodes.Contains(harness.ESC4Template1.CertTemplate1))
+				require.True(t, nodes.Contains(harness.ESC4Template1.EnterpriseCA))
+				require.True(t, nodes.Contains(harness.ESC4Template1.RootCA))
+				require.True(t, nodes.Contains(harness.ESC4Template1.NTAuthStore))
+				require.True(t, nodes.Contains(harness.ESC4Template1.Domain))
 			}
 			return nil
 		})
@@ -980,14 +982,16 @@ func TestADCSESC4Composition(t *testing.T) {
 					composition, err := ad2.GetADCSESC4EdgeComposition(context.Background(), db, edge)
 					require.Nil(t, err)
 
-					require.Equal(t, 7, len(composition.AllNodes()))
-					require.True(t, composition.AllNodes().Contains(harness.ESC4Template1.Group12))
-					require.True(t, composition.AllNodes().Contains(harness.ESC4Template1.Group0))
-					require.True(t, composition.AllNodes().Contains(harness.ESC4Template1.CertTemplate1))
-					require.True(t, composition.AllNodes().Contains(harness.ESC4Template1.EnterpriseCA))
-					require.True(t, composition.AllNodes().Contains(harness.ESC4Template1.RootCA))
-					require.True(t, composition.AllNodes().Contains(harness.ESC4Template1.NTAuthStore))
-					require.True(t, composition.AllNodes().Contains(harness.ESC4Template1.Domain))
+					nodes := composition.AllNodes()
+
+					require.Equal(t, 7, len(nodes))
+					require.True(t, nodes.Contains(harness.ESC4Template1.Group12))
+					require.True(t, nodes.Contains(harness.ESC4Template1.Group0))
+					require.True(t, nodes.Contains(harness.ESC4Template1.CertTemplate1))
+					require.True(t, nodes.Contains(harness.ESC4Template1.EnterpriseCA))
+					require.True(t, nodes.Contains(harness.ESC4Template1.RootCA))
+					require.True(t, nodes.Contains(harness.ESC4Template1.NTAuthStore))
+					require.True(t, nodes.Contains(harness.ESC4Template1.Domain))
 
 					// assert that `GenericWrite` and `Enroll` edges exist between group12 and cert template
 					for _, p := range composition.Paths() {
@@ -1018,14 +1022,16 @@ func TestADCSESC4Composition(t *testing.T) {
 				composition, err := ad2.GetADCSESC4EdgeComposition(context.Background(), db, edge)
 				require.Nil(t, err)
 
-				require.Equal(t, 7, len(composition.AllNodes()))
-				require.True(t, composition.AllNodes().Contains(harness.ESC4Template1.Group13))
-				require.True(t, composition.AllNodes().Contains(harness.ESC4Template1.Group0))
-				require.True(t, composition.AllNodes().Contains(harness.ESC4Template1.CertTemplate1))
-				require.True(t, composition.AllNodes().Contains(harness.ESC4Template1.EnterpriseCA))
-				require.True(t, composition.AllNodes().Contains(harness.ESC4Template1.RootCA))
-				require.True(t, composition.AllNodes().Contains(harness.ESC4Template1.NTAuthStore))
-				require.True(t, composition.AllNodes().Contains(harness.ESC4Template1.Domain))
+				nodes := composition.AllNodes()
+
+				require.Equal(t, 7, len(nodes))
+				require.True(t, nodes.Contains(harness.ESC4Template1.Group13))
+				require.True(t, nodes.Contains(harness.ESC4Template1.Group0))
+				require.True(t, nodes.Contains(harness.ESC4Template1.CertTemplate1))
+				require.True(t, nodes.Contains(harness.ESC4Template1.EnterpriseCA))
+				require.True(t, nodes.Contains(harness.ESC4Template1.RootCA))
+				require.True(t, nodes.Contains(harness.ESC4Template1.NTAuthStore))
+				require.True(t, nodes.Contains(harness.ESC4Template1.Domain))
 
 				// assert that group13 has outbound edges `WritePKINameFlag` and `Enroll` to CertTemplate1
 				for _, p := range composition.Paths() {
@@ -1056,14 +1062,16 @@ func TestADCSESC4Composition(t *testing.T) {
 				composition, err := ad2.GetADCSESC4EdgeComposition(context.Background(), db, edge)
 				require.Nil(t, err)
 
-				require.Equal(t, 7, len(composition.AllNodes()))
-				require.True(t, composition.AllNodes().Contains(harness.ESC4Template1.Group14))
-				require.True(t, composition.AllNodes().Contains(harness.ESC4Template1.Group0))
-				require.True(t, composition.AllNodes().Contains(harness.ESC4Template1.CertTemplate1))
-				require.True(t, composition.AllNodes().Contains(harness.ESC4Template1.EnterpriseCA))
-				require.True(t, composition.AllNodes().Contains(harness.ESC4Template1.RootCA))
-				require.True(t, composition.AllNodes().Contains(harness.ESC4Template1.NTAuthStore))
-				require.True(t, composition.AllNodes().Contains(harness.ESC4Template1.Domain))
+				nodes := composition.AllNodes()
+
+				require.Equal(t, 7, len(nodes))
+				require.True(t, nodes.Contains(harness.ESC4Template1.Group14))
+				require.True(t, nodes.Contains(harness.ESC4Template1.Group0))
+				require.True(t, nodes.Contains(harness.ESC4Template1.CertTemplate1))
+				require.True(t, nodes.Contains(harness.ESC4Template1.EnterpriseCA))
+				require.True(t, nodes.Contains(harness.ESC4Template1.RootCA))
+				require.True(t, nodes.Contains(harness.ESC4Template1.NTAuthStore))
+				require.True(t, nodes.Contains(harness.ESC4Template1.Domain))
 
 				// assert that group14 has outbound edges `WritePKIEnrollmentFlag` and `Enroll` to CertTemplate1
 				for _, p := range composition.Paths() {
@@ -1094,14 +1102,16 @@ func TestADCSESC4Composition(t *testing.T) {
 				composition, err := ad2.GetADCSESC4EdgeComposition(context.Background(), db, edge)
 				require.Nil(t, err)
 
-				require.Equal(t, 7, len(composition.AllNodes()))
-				require.True(t, composition.AllNodes().Contains(harness.ESC4Template1.Group15))
-				require.True(t, composition.AllNodes().Contains(harness.ESC4Template1.Group0))
-				require.True(t, composition.AllNodes().Contains(harness.ESC4Template1.CertTemplate1))
-				require.True(t, composition.AllNodes().Contains(harness.ESC4Template1.EnterpriseCA))
-				require.True(t, composition.AllNodes().Contains(harness.ESC4Template1.RootCA))
-				require.True(t, composition.AllNodes().Contains(harness.ESC4Template1.NTAuthStore))
-				require.True(t, composition.AllNodes().Contains(harness.ESC4Template1.Domain))
+				nodes := composition.AllNodes()
+
+				require.Equal(t, 7, len(nodes))
+				require.True(t, nodes.Contains(harness.ESC4Template1.Group15))
+				require.True(t, nodes.Contains(harness.ESC4Template1.Group0))
+				require.True(t, nodes.Contains(harness.ESC4Template1.CertTemplate1))
+				require.True(t, nodes.Contains(harness.ESC4Template1.EnterpriseCA))
+				require.True(t, nodes.Contains(harness.ESC4Template1.RootCA))
+				require.True(t, nodes.Contains(harness.ESC4Template1.NTAuthStore))
+				require.True(t, nodes.Contains(harness.ESC4Template1.Domain))
 
 				// assert that group15 has 3 outbound edges: `WritePKIEnrollmentFlag`, `WritePKINameFlag`, and `Enroll` to CertTemplate1
 				for _, p := range composition.Paths() {
