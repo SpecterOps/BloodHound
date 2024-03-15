@@ -28,21 +28,16 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/specterops/bloodhound/headers"
 	"github.com/specterops/bloodhound/log"
-	"github.com/specterops/bloodhound/mediatypes"
 	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/src/auth"
 	"github.com/specterops/bloodhound/src/ctx"
 	"github.com/specterops/bloodhound/src/model"
+	ingestModel "github.com/specterops/bloodhound/src/model/ingest"
 	"github.com/specterops/bloodhound/src/services/fileupload"
 	"github.com/specterops/bloodhound/src/services/ingest"
 )
 
 const FileUploadJobIdPathParameterName = "file_upload_job_id"
-
-var AllowedFileUploadTypes = []string{
-	mediatypes.ApplicationJson.String(),
-	mediatypes.ApplicationZip.String(),
-}
 
 func (s Resources) ListFileUploadJobs(response http.ResponseWriter, request *http.Request) {
 	var (
@@ -173,7 +168,7 @@ func (s Resources) EndFileUploadJob(response http.ResponseWriter, request *http.
 }
 
 func (s Resources) ListAcceptedFileUploadTypes(response http.ResponseWriter, request *http.Request) {
-	api.WriteBasicResponse(request.Context(), AllowedFileUploadTypes, http.StatusOK, response)
+	api.WriteBasicResponse(request.Context(), ingestModel.AllowedFileUploadTypes, http.StatusOK, response)
 }
 
 func IsValidContentTypeForUpload(header http.Header) bool {
@@ -183,6 +178,6 @@ func IsValidContentTypeForUpload(header http.Header) bool {
 	} else if parsed, _, err := mime.ParseMediaType(rawValue); err != nil {
 		return false
 	} else {
-		return slices.Contains(AllowedFileUploadTypes, parsed)
+		return slices.Contains(ingestModel.AllowedFileUploadTypes, parsed)
 	}
 }
