@@ -34,6 +34,7 @@ type FileUploadJob struct {
 	StartTime        time.Time   `json:"start_time"`
 	EndTime          time.Time   `json:"end_time"`
 	LastIngest       time.Time   `json:"last_ingest"`
+	FailedFiles      int         `json:"failed_files"`
 	//DomainResults []DomainCollectionResult `json:"domain_results" gorm:"-"`
 
 	BigSerial
@@ -44,6 +45,7 @@ type FileUploadJobs []FileUploadJob
 func (s FileUploadJobs) IsSortable(column string) bool {
 	switch column {
 	case "user_email_address",
+		"failed_files",
 		"status",
 		"status_message",
 		"start_time",
@@ -72,6 +74,7 @@ func (s FileUploadJobs) ValidFilters() map[string][]FilterOperator {
 		"created_at":         {Equals, GreaterThan, GreaterThanOrEquals, LessThan, LessThanOrEquals, NotEquals},
 		"updated_at":         {Equals, GreaterThan, GreaterThanOrEquals, LessThan, LessThanOrEquals, NotEquals},
 		"deleted_at":         {Equals, GreaterThan, GreaterThanOrEquals, LessThan, LessThanOrEquals, NotEquals},
+		"failed_files":       {Equals, GreaterThan, GreaterThanOrEquals, LessThan, LessThanOrEquals, NotEquals},
 	}
 }
 

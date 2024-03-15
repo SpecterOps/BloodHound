@@ -41,6 +41,7 @@ func (s *BloodhoundDB) DeleteIngestTask(ctx context.Context, ingestTask model.In
 
 func (s *BloodhoundDB) GetIngestTasksForJob(ctx context.Context, jobID int64) (model.IngestTasks, error) {
 	var ingestTasks model.IngestTasks
+	// TODO rename this PG column to job_id, it's very confusing
 	result := s.db.WithContext(ctx).Where("task_id=?", jobID).Find(&ingestTasks)
 
 	return ingestTasks, CheckError(result)
