@@ -30,10 +30,7 @@ import (
 func TestMigration_AssetGroups(t *testing.T) {
 	// We expect a new DB to have the T0 group and the Owned group
 	expectedNumAssetGroups := 2
-	dbInst := integration.OpenDatabase(t)
-	if err := integration.Prepare(dbInst); err != nil {
-		t.Fatalf("Failed preparing DB: %v", err)
-	}
+	dbInst := integration.SetupDB(t)
 
 	assetGroups, err := dbInst.GetAllAssetGroups(context.Background(), "", model.SQLFilter{})
 	require.Nil(t, err)

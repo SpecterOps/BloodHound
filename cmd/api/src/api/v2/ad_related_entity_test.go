@@ -58,9 +58,9 @@ func setupCases(mockGraph *graphMocks.MockGraph, mockDB *dbMocks.MockDatabase) [
 			Setup: func() {
 				mockGraph.EXPECT().
 					GetADEntityQueryResult(gomock.Any(), gomock.Any(), gomock.Any()).
-					Return(nil, queries.ErrGraphUnsupported)
+					Return(nil, 0, queries.ErrGraphUnsupported)
 				mockDB.EXPECT().
-					GetFlagByKey("entity_panel_cache").
+					GetFlagByKey(gomock.Any(), "entity_panel_cache").
 					Return(appcfg.FeatureFlag{Enabled: true}, nil)
 			},
 			Test: func(output apitest.Output) {
@@ -76,9 +76,9 @@ func setupCases(mockGraph *graphMocks.MockGraph, mockDB *dbMocks.MockDatabase) [
 			Setup: func() {
 				mockGraph.EXPECT().
 					GetADEntityQueryResult(gomock.Any(), gomock.Any(), gomock.Any()).
-					Return(nil, queries.ErrUnsupportedDataType)
+					Return(nil, 0, queries.ErrUnsupportedDataType)
 				mockDB.EXPECT().
-					GetFlagByKey("entity_panel_cache").
+					GetFlagByKey(gomock.Any(), "entity_panel_cache").
 					Return(appcfg.FeatureFlag{Enabled: true}, nil)
 			},
 			Test: func(output apitest.Output) {
@@ -94,9 +94,9 @@ func setupCases(mockGraph *graphMocks.MockGraph, mockDB *dbMocks.MockDatabase) [
 			Setup: func() {
 				mockGraph.EXPECT().
 					GetADEntityQueryResult(gomock.Any(), gomock.Any(), gomock.Any()).
-					Return(nil, ops.ErrTraversalMemoryLimit)
+					Return(nil, 0, ops.ErrTraversalMemoryLimit)
 				mockDB.EXPECT().
-					GetFlagByKey("entity_panel_cache").
+					GetFlagByKey(gomock.Any(), "entity_panel_cache").
 					Return(appcfg.FeatureFlag{Enabled: true}, nil)
 			},
 			Test: func(output apitest.Output) {
@@ -112,9 +112,9 @@ func setupCases(mockGraph *graphMocks.MockGraph, mockDB *dbMocks.MockDatabase) [
 			Setup: func() {
 				mockGraph.EXPECT().
 					GetADEntityQueryResult(gomock.Any(), gomock.Any(), gomock.Any()).
-					Return(nil, errors.New("any other error"))
+					Return(nil, 0, errors.New("any other error"))
 				mockDB.EXPECT().
-					GetFlagByKey("entity_panel_cache").
+					GetFlagByKey(gomock.Any(), "entity_panel_cache").
 					Return(appcfg.FeatureFlag{Enabled: true}, nil)
 			},
 			Test: func(output apitest.Output) {
@@ -130,9 +130,9 @@ func setupCases(mockGraph *graphMocks.MockGraph, mockDB *dbMocks.MockDatabase) [
 			Setup: func() {
 				mockGraph.EXPECT().
 					GetADEntityQueryResult(gomock.Any(), gomock.Any(), gomock.Any()).
-					Return(nil, nil)
+					Return(nil, 0, nil)
 				mockDB.EXPECT().
-					GetFlagByKey("entity_panel_cache").
+					GetFlagByKey(gomock.Any(), "entity_panel_cache").
 					Return(appcfg.FeatureFlag{Enabled: true}, nil)
 			},
 			Test: func(output apitest.Output) {

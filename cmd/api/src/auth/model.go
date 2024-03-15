@@ -159,9 +159,9 @@ func (s authorizer) AuditLogUnauthorizedAccess(request *http.Request) {
 		if err := s.auditLogger.AppendAuditLog(
 			request.Context(),
 			model.AuditEntry{
-				Action:   "UnauthorizedAccessAttempt",
+				Action:   model.AuditLogActionUnauthorizedAccessAttempt,
 				Model:    model.AuditData{"endpoint": request.Method + " " + request.URL.Path},
-				Status:   model.AuditStatusFailure,
+				Status:   model.AuditLogStatusFailure,
 				CommitID: commitId,
 			},
 		); err != nil {

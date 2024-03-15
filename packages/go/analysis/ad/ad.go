@@ -30,14 +30,12 @@ import (
 	"github.com/specterops/bloodhound/dawgs/ops"
 	"github.com/specterops/bloodhound/dawgs/query"
 	"github.com/specterops/bloodhound/dawgs/util"
-	"github.com/specterops/bloodhound/errors"
 	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/graphschema/common"
 	"github.com/specterops/bloodhound/log"
 )
 
 var (
-	ErrNoSuchGroup   = errors.New("no group found")
 	AdminGroupSuffix = "-544"
 	RDPGroupSuffix   = "-555"
 )
@@ -300,6 +298,7 @@ func createOrUpdateWellKnownLink(tx graph.Transaction, startNode *graph.Node, en
 	}
 }
 
+// CalculateCrossProductNodeSets finds the intersection of the given sets of nodes.
 func CalculateCrossProductNodeSets(groupExpansions impact.PathAggregator, nodeSets ...[]*graph.Node) cardinality.Duplex[uint32] {
 	if len(nodeSets) < 2 {
 		log.Errorf("cross products require at least 2 nodesets")
@@ -542,6 +541,12 @@ func GetEdgeCompositionPath(ctx context.Context, db graph.Database, edge *graph.
 			}
 		} else if edge.Kind == ad.ADCSESC3 {
 			if results, err := GetADCSESC3EdgeComposition(ctx, db, edge); err != nil {
+				return err
+			} else {
+				pathSet = results
+			}
+		} else if edge.Kind == ad.ADCSESC4 {
+			if results, err := GetADCSESC4EdgeComposition(ctx, db, edge); err != nil {
 				return err
 			} else {
 				pathSet = results

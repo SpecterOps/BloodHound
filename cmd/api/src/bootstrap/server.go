@@ -67,11 +67,11 @@ func MigrateGraph(ctx context.Context, db graph.Database, schema graph.Schema) e
 
 // MigrateDB runs database migrations on PG
 func MigrateDB(ctx context.Context, cfg config.Configuration, db database.Database) error {
-	if err := db.Migrate(); err != nil {
+	if err := db.Migrate(ctx); err != nil {
 		return err
 	}
 
-	if hasInstallation, err := db.HasInstallation(); err != nil {
+	if hasInstallation, err := db.HasInstallation(ctx); err != nil {
 		return err
 	} else if hasInstallation {
 		return nil

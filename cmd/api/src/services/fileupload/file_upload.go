@@ -18,11 +18,16 @@
 package fileupload
 
 import (
+	"bufio"
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/specterops/bloodhound/headers"
+	"github.com/specterops/bloodhound/mediatypes"
+	"github.com/specterops/bloodhound/src/model/ingest"
+	"github.com/specterops/bloodhound/src/utils"
 	"io"
+	"net/http"
 	"os"
 	"time"
 
@@ -31,6 +36,12 @@ import (
 )
 
 const jobActivityTimeout = time.Minute * 20
+
+const (
+	UTF8BOM1 = 0xef
+	UTF8BOM2 = 0xbb
+	UTF8BMO3 = 0xbf
+)
 
 var ErrInvalidJSON = errors.New("file is not valid json")
 
@@ -92,26 +103,60 @@ func GetFileUploadJobByID(ctx context.Context, db FileUploadData, jobID int64) (
 	return db.GetFileUploadJob(ctx, jobID)
 }
 
+func WriteAndValidateZip(src io.Reader, dst io.Writer) error {
+	tr := io.TeeReader(src, dst)
+	return ValidateZipFile(tr)
+}
+
 func WriteAndValidateJSON(src io.Reader, dst io.Writer) error {
 	tr := io.TeeReader(src, dst)
-	dc := json.NewDecoder(tr)
-	for {
-		if _, err := dc.Token(); err != nil {
-			if errors.Is(err, io.EOF) {
-				return nil
+	bufReader := bufio.NewReader(tr)
+	if b, err := bufReader.Peek(3); err != nil {
+		return err
+	} else {
+		if b[0] == UTF8BOM1 && b[1] == UTF8BOM2 && b[2] == UTF8BMO3 {
+			if _, err := bufReader.Discard(3); err != nil {
+				return err
 			}
-			return ErrInvalidJSON
 		}
+	}
+	_, err := ValidateMetaTag(bufReader, true)
+	return err
+}
+
+func SaveIngestFile(location string, request *http.Request) (string, model.FileType, error) {
+	fileData := request.Body
+	tempFile, err := os.CreateTemp(location, "bh")
+	if err != nil {
+		return "", model.FileTypeJson, fmt.Errorf("error creating ingest file: %w", err)
+	}
+
+	if utils.HeaderMatches(request.Header, headers.ContentType.String(), mediatypes.ApplicationJson.String()) {
+		return tempFile.Name(), model.FileTypeJson, WriteAndValidateFile(fileData, tempFile, WriteAndValidateJSON)
+	} else if utils.HeaderMatches(request.Header, headers.ContentType.String(), ingest.AllowedZipFileUploadTypes...) {
+		return tempFile.Name(), model.FileTypeZip, WriteAndValidateFile(fileData, tempFile, WriteAndValidateZip)
+	} else {
+		//We should never get here since this is checked a level above
+		return "", model.FileTypeJson, fmt.Errorf("invalid content type for ingest file")
 	}
 }
 
-func SaveIngestFile(location string, fileData io.Reader) (string, error) {
-	tempFile, err := os.CreateTemp(location, "bh")
-	if err != nil {
-		return "", fmt.Errorf("error creating ingest file: %w", err)
+type FileValidator func(src io.Reader, dst io.Writer) error
+
+func WriteAndValidateFile(fileData io.ReadCloser, tempFile *os.File, validationFunc FileValidator) error {
+	if err := validationFunc(fileData, tempFile); err != nil {
+		if err := tempFile.Close(); err != nil {
+			log.Errorf("Error closing temp file %s with failed validation: %v", tempFile.Name(), err)
+		} else if err := os.Remove(tempFile.Name()); err != nil {
+			log.Errorf("Error deleting temp file %s: %v", tempFile.Name(), err)
+		}
+		return err
+	} else {
+		if err := tempFile.Close(); err != nil {
+			log.Errorf("Error closing temp file with successful validation %s: %v", tempFile.Name(), err)
+		}
+		return nil
 	}
-	defer tempFile.Close()
-	return tempFile.Name(), WriteAndValidateJSON(fileData, tempFile)
 }
 
 func TouchFileUploadJobLastIngest(ctx context.Context, db FileUploadData, fileUploadJob model.FileUploadJob) error {

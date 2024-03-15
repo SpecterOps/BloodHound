@@ -19,10 +19,13 @@ package api
 //go:generate go run go.uber.org/mock/mockgen -copyright_file=../../../../LICENSE.header -destination=./mocks/authenticator.go -package=mocks . Authenticator
 
 import (
+	"bytes"
 	"context"
+	"crypto/sha256"
 	"crypto/subtle"
 	"encoding/base64"
 	"fmt"
+	"io"
 	"net/http"
 	"strconv"
 	"time"
@@ -61,11 +64,11 @@ func parseRequestDate(rawDate string) (time.Time, error) {
 
 type Authenticator interface {
 	LoginWithSecret(ctx context.Context, loginRequest LoginRequest) (LoginDetails, error)
-	Logout(userSession model.UserSession)
+	Logout(ctx context.Context, userSession model.UserSession)
 	ValidateSecret(ctx context.Context, secret string, authSecret model.AuthSecret) error
 	ValidateRequestSignature(tokenID uuid.UUID, request *http.Request, serverTime time.Time) (auth.Context, int, error)
-	CreateSession(user model.User, authProvider any) (string, error)
-	ValidateSession(jwtTokenString string) (auth.Context, error)
+	CreateSession(ctx context.Context, user model.User, authProvider any) (string, error)
+	ValidateSession(ctx context.Context, jwtTokenString string) (auth.Context, error)
 }
 
 type authenticator struct {
@@ -89,7 +92,7 @@ func NewAuthenticator(cfg config.Configuration, db database.Database, ctxInitial
 func (s authenticator) auditLogin(requestContext context.Context, commitID uuid.UUID, user model.User, loginRequest LoginRequest, status string, loginError error) {
 	bhCtx := ctx.Get(requestContext)
 	auditLog := model.AuditLog{
-		Action:          "LoginAttempt",
+		Action:          model.AuditLogActionLoginAttempt,
 		Fields:          types.JSONUntypedObject{"username": loginRequest.Username},
 		RequestID:       bhCtx.RequestID,
 		SourceIpAddress: bhCtx.RequestIP,
@@ -103,7 +106,7 @@ func (s authenticator) auditLogin(requestContext context.Context, commitID uuid.
 		auditLog.ActorEmail = user.EmailAddress.ValueOrZero()
 	}
 
-	if status == string(model.AuditStatusFailure) {
+	if status == string(model.AuditLogStatusFailure) {
 		auditLog.Fields["error"] = loginError
 	}
 
@@ -123,7 +126,7 @@ func (s authenticator) validateSecretLogin(ctx context.Context, loginRequest Log
 		return user, "", err
 	} else if err = auth.ValidateTOTPSecret(loginRequest.OTP, *user.AuthSecret); err != nil {
 		return user, "", err
-	} else if sessionToken, err := s.CreateSession(user, *user.AuthSecret); err != nil {
+	} else if sessionToken, err := s.CreateSession(ctx, user, *user.AuthSecret); err != nil {
 		return user, "", err
 	} else {
 		return user, sessionToken, nil
@@ -144,15 +147,15 @@ func (s authenticator) LoginWithSecret(ctx context.Context, loginRequest LoginRe
 		return LoginDetails{}, err
 	}
 
-	s.auditLogin(ctx, commitID, user, loginRequest, string(model.AuditStatusIntent), err)
+	s.auditLogin(ctx, commitID, user, loginRequest, string(model.AuditLogStatusIntent), err)
 
 	user, sessionToken, err = s.validateSecretLogin(ctx, loginRequest)
 
 	if err != nil {
-		s.auditLogin(ctx, commitID, user, loginRequest, string(model.AuditStatusFailure), err)
+		s.auditLogin(ctx, commitID, user, loginRequest, string(model.AuditLogStatusFailure), err)
 		return LoginDetails{}, err
 	} else {
-		s.auditLogin(ctx, commitID, user, loginRequest, string(model.AuditStatusSuccess), err)
+		s.auditLogin(ctx, commitID, user, loginRequest, string(model.AuditLogStatusSuccess), err)
 		return LoginDetails{
 			User:         user,
 			SessionToken: sessionToken,
@@ -160,8 +163,8 @@ func (s authenticator) LoginWithSecret(ctx context.Context, loginRequest LoginRe
 	}
 }
 
-func (s authenticator) Logout(userSession model.UserSession) {
-	s.db.EndUserSession(userSession)
+func (s authenticator) Logout(ctx context.Context, userSession model.UserSession) {
+	s.db.EndUserSession(ctx, userSession)
 }
 
 func (s authenticator) ValidateSecret(ctx context.Context, secret string, authSecret model.AuthSecret) error {
@@ -221,6 +224,11 @@ func handleAuthDBError(err error) (auth.Context, int, error) {
 	}
 }
 
+// ThresholdLargePayload represents the request payload size in bytes before signed requests are validated in a manner that doesn't run the risk of exhausting system memory.
+// This value was derived assuming the host system operates on a SSD with maximum read/write throughput of ~500MiBps and targets an optimal validation time of ~0.1s for "large" payloads.
+// e.g. - 500 MiBps * 0.1s = 50MiB
+const ThresholdLargePayload int64 = 50 << 20
+
 func (s authenticator) ValidateRequestSignature(tokenID uuid.UUID, request *http.Request, serverTime time.Time) (auth.Context, int, error) {
 	if requestDateHeader := request.Header.Get(headers.RequestDate.String()); requestDateHeader == "" {
 		return auth.Context{}, http.StatusBadRequest, fmt.Errorf("no request date header")
@@ -239,17 +247,38 @@ func (s authenticator) ValidateRequestSignature(tokenID uuid.UUID, request *http
 	} else if err := validateRequestTime(serverTime, requestDate); err != nil {
 		return auth.Context{}, http.StatusUnauthorized, err
 	} else {
-		// Read the body of the request to compute the actual signature. This forces the body into memory so there may
-		// be a scaling pain-point here.
-		if readBody, digestNow, err := GenerateRequestSignature(authToken.Key, requestDate.Format(time.RFC3339), auth.HMAC_SHA2_256, request.Method, request.RequestURI, request.Body); err != nil {
+		var (
+			readCloser io.ReadCloser
+			teeReader  io.Reader
+		)
+
+		if request.Body != nil {
+			if request.ContentLength > ThresholdLargePayload || request.ContentLength == -1 {
+				// Request payload is "large" or the size is unknown; tee byte stream to disk for subsequent reads to avoid exhausting system memory
+				if tempFile, err := NewSelfDestructingTempFile(s.cfg.TempDirectory(), "bh-request-"); err != nil {
+					return auth.Context{}, http.StatusInternalServerError, fmt.Errorf("unable to validate request signature: %w", err)
+				} else {
+					readCloser = tempFile
+					teeReader = io.TeeReader(request.Body, tempFile)
+				}
+			} else {
+				// Request payload is "small"; tee byte stream to buffer for subsequent reads
+				var buf bytes.Buffer
+				teeReader = io.TeeReader(request.Body, &buf)
+				readCloser = io.NopCloser(&buf)
+			}
+		}
+
+		if digestNow, err := NewRequestSignature(sha256.New, authToken.Key, requestDate.Format(time.RFC3339), request.Method, request.RequestURI, teeReader); err != nil {
+			if readCloser != nil {
+				readCloser.Close()
+			}
 			return authContext, http.StatusInternalServerError, err
 		} else {
-			request.Body = &readerDelegatedCloser{
-				source: readBody,
-				closer: request.Body,
-			}
-
 			if subtle.ConstantTimeCompare(signatureBytes, digestNow) != 1 {
+				if readCloser != nil {
+					readCloser.Close()
+				}
 				return authContext, http.StatusUnauthorized, fmt.Errorf("digest validation failed: signature digest mismatch")
 			}
 
@@ -259,12 +288,18 @@ func (s authenticator) ValidateRequestSignature(tokenID uuid.UUID, request *http
 				log.Errorf("Error updating last access on AuthToken: %v", err)
 			}
 
+			if sdtf, ok := readCloser.(*SelfDestructingTempFile); ok {
+				sdtf.Seek(0, io.SeekStart)
+			}
+
+			request.Body = readCloser
+
 			return authContext, http.StatusOK, nil
 		}
 	}
 }
 
-func (s authenticator) CreateSession(user model.User, authProvider any) (string, error) {
+func (s authenticator) CreateSession(ctx context.Context, user model.User, authProvider any) (string, error) {
 	if user.IsDisabled {
 		return "", ErrUserDisabled
 	}
@@ -287,7 +322,7 @@ func (s authenticator) CreateSession(user model.User, authProvider any) (string,
 		userSession.AuthProviderID = typedAuthProvider.ID
 	}
 
-	if newSession, err := s.db.CreateUserSession(userSession); err != nil {
+	if newSession, err := s.db.CreateUserSession(ctx, userSession); err != nil {
 		return "", FormatDatabaseError(err)
 	} else if signingKeyBytes, err := s.cfg.Crypto.JWT.SigningKeyBytes(); err != nil {
 		return "", err
@@ -313,7 +348,7 @@ func (s authenticator) jwtSigningKey(token *jwt.Token) (any, error) {
 	return s.cfg.Crypto.JWT.SigningKeyBytes()
 }
 
-func (s authenticator) ValidateSession(jwtTokenString string) (auth.Context, error) {
+func (s authenticator) ValidateSession(ctx context.Context, jwtTokenString string) (auth.Context, error) {
 	claims := auth.SessionData{}
 
 	if token, err := jwt.ParseWithClaims(jwtTokenString, &claims, s.jwtSigningKey); err != nil {
@@ -328,7 +363,7 @@ func (s authenticator) ValidateSession(jwtTokenString string) (auth.Context, err
 	} else if sessionID, err := claims.SessionID(); err != nil {
 		log.Infof("Session ID %s invalid: %v", claims.Id, err)
 		return auth.Context{}, ErrInvalidAuth
-	} else if session, err := s.db.GetUserSession(sessionID); err != nil {
+	} else if session, err := s.db.GetUserSession(ctx, sessionID); err != nil {
 		log.Infof("Unable to find session %d", sessionID)
 		return auth.Context{}, ErrInvalidAuth
 	} else if session.Expired() {

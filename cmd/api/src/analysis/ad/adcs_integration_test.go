@@ -667,6 +667,473 @@ func TestADCSESC3(t *testing.T) {
 	})
 }
 
+func TestADCSESC4(t *testing.T) {
+	testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
+
+	testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) error {
+		harness.ESC4Template1.Setup(testContext)
+		return nil
+	}, func(harness integration.HarnessDetails, db graph.Database) {
+		operation := analysis.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - ESC4 template 1")
+
+		groupExpansions, _, _, domains, cache, err := FetchADCSPrereqs(db)
+		require.Nil(t, err)
+
+		for _, domain := range domains {
+			innerDomain := domain
+
+			operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
+				if enterpriseCAs, err := ad2.FetchEnterpriseCAsTrustedForNTAuthToDomain(tx, innerDomain); err != nil {
+					return err
+				} else {
+					for _, enterpriseCA := range enterpriseCAs {
+						if cache.DoesCAChainProperlyToDomain(enterpriseCA, innerDomain) {
+							if err := ad2.PostADCSESC4(ctx, tx, outC, groupExpansions, enterpriseCA, innerDomain, cache); err != nil {
+								t.Logf("failed post processing for %s: %v", ad.ADCSESC4.String(), err)
+							} else {
+								return nil
+							}
+						}
+					}
+				}
+				return nil
+			})
+		}
+
+		operation.Done()
+
+		db.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
+			if results, err := ops.FetchStartNodes(tx.Relationships().Filterf(func() graph.Criteria {
+				return query.Kind(query.Relationship(), ad.ADCSESC4)
+			})); err != nil {
+				t.Fatalf("error fetching esc4 edges in integration test; %v", err)
+			} else {
+				require.Equal(t, 14, len(results))
+
+				require.True(t, results.Contains(harness.ESC4Template1.Group11))
+				require.True(t, results.Contains(harness.ESC4Template1.Group12))
+				require.True(t, results.Contains(harness.ESC4Template1.Group13))
+				require.True(t, results.Contains(harness.ESC4Template1.Group14))
+				require.True(t, results.Contains(harness.ESC4Template1.Group15))
+
+				require.True(t, results.Contains(harness.ESC4Template1.Group21))
+				require.True(t, results.Contains(harness.ESC4Template1.Group22))
+
+				require.True(t, results.Contains(harness.ESC4Template1.Group31))
+				require.True(t, results.Contains(harness.ESC4Template1.Group32))
+
+				require.True(t, results.Contains(harness.ESC4Template1.Group41))
+				require.True(t, results.Contains(harness.ESC4Template1.Group42))
+				require.True(t, results.Contains(harness.ESC4Template1.Group43))
+				require.True(t, results.Contains(harness.ESC4Template1.Group44))
+				require.True(t, results.Contains(harness.ESC4Template1.Group45))
+
+			}
+
+			return nil
+		})
+	})
+
+	testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) error {
+		harness.ESC4Template2.Setup(testContext)
+		return nil
+	}, func(harness integration.HarnessDetails, db graph.Database) {
+		operation := analysis.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - ESC4 template 2")
+
+		groupExpansions, _, _, domains, cache, err := FetchADCSPrereqs(db)
+		require.Nil(t, err)
+
+		for _, domain := range domains {
+			innerDomain := domain
+
+			operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
+				if enterpriseCAs, err := ad2.FetchEnterpriseCAsTrustedForNTAuthToDomain(tx, innerDomain); err != nil {
+					return err
+				} else {
+					for _, enterpriseCA := range enterpriseCAs {
+						if cache.DoesCAChainProperlyToDomain(enterpriseCA, innerDomain) {
+							if err := ad2.PostADCSESC4(ctx, tx, outC, groupExpansions, enterpriseCA, innerDomain, cache); err != nil {
+								t.Logf("failed post processing for %s: %v", ad.ADCSESC4.String(), err)
+							} else {
+								return nil
+							}
+						}
+					}
+				}
+				return nil
+			})
+		}
+
+		operation.Done()
+
+		db.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
+			if results, err := ops.FetchStartNodes(tx.Relationships().Filterf(func() graph.Criteria {
+				return query.Kind(query.Relationship(), ad.ADCSESC4)
+			})); err != nil {
+				t.Fatalf("error fetching esc4 edges in integration test; %v", err)
+			} else {
+				require.Equal(t, 18, len(results))
+
+				require.True(t, results.Contains(harness.ESC4Template2.Group11))
+				require.True(t, results.Contains(harness.ESC4Template2.Group12))
+
+				require.True(t, results.Contains(harness.ESC4Template2.Group21))
+				require.True(t, results.Contains(harness.ESC4Template2.Group22))
+				require.True(t, results.Contains(harness.ESC4Template2.Group25))
+
+				require.True(t, results.Contains(harness.ESC4Template2.Group31))
+				require.True(t, results.Contains(harness.ESC4Template2.Group32))
+				require.True(t, results.Contains(harness.ESC4Template2.Group33))
+				require.True(t, results.Contains(harness.ESC4Template2.Group35))
+
+				require.True(t, results.Contains(harness.ESC4Template2.Group41))
+				require.True(t, results.Contains(harness.ESC4Template2.Group42))
+				require.True(t, results.Contains(harness.ESC4Template2.Group44))
+				require.True(t, results.Contains(harness.ESC4Template2.Group45))
+
+				require.True(t, results.Contains(harness.ESC4Template2.Group51))
+				require.True(t, results.Contains(harness.ESC4Template2.Group52))
+				require.True(t, results.Contains(harness.ESC4Template2.Group53))
+				require.True(t, results.Contains(harness.ESC4Template2.Group54))
+				require.True(t, results.Contains(harness.ESC4Template2.Group55))
+
+			}
+
+			return nil
+		})
+	})
+
+	testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) error {
+		harness.ESC4Template3.Setup(testContext)
+		return nil
+	}, func(harness integration.HarnessDetails, db graph.Database) {
+		operation := analysis.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - ESC4 template 3")
+
+		groupExpansions, _, _, domains, cache, err := FetchADCSPrereqs(db)
+		require.Nil(t, err)
+
+		for _, domain := range domains {
+			innerDomain := domain
+
+			operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
+				if enterpriseCAs, err := ad2.FetchEnterpriseCAsTrustedForNTAuthToDomain(tx, innerDomain); err != nil {
+					return err
+				} else {
+					for _, enterpriseCA := range enterpriseCAs {
+						if cache.DoesCAChainProperlyToDomain(enterpriseCA, innerDomain) {
+							if err := ad2.PostADCSESC4(ctx, tx, outC, groupExpansions, enterpriseCA, innerDomain, cache); err != nil {
+								t.Logf("failed post processing for %s: %v", ad.ADCSESC4.String(), err)
+							} else {
+								return nil
+							}
+						}
+					}
+				}
+				return nil
+			})
+		}
+
+		operation.Done()
+
+		db.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
+			if results, err := ops.FetchStartNodes(tx.Relationships().Filterf(func() graph.Criteria {
+				return query.Kind(query.Relationship(), ad.ADCSESC4)
+			})); err != nil {
+				t.Fatalf("error fetching esc4 edges in integration test; %v", err)
+			} else {
+				require.Equal(t, 4, len(results))
+
+				require.True(t, results.Contains(harness.ESC4Template3.Group11))
+				require.True(t, results.Contains(harness.ESC4Template3.Group17))
+				require.True(t, results.Contains(harness.ESC4Template3.Group18))
+				require.True(t, results.Contains(harness.ESC4Template3.Group19))
+			}
+
+			return nil
+		})
+	})
+
+	testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) error {
+		harness.ESC4Template4.Setup(testContext)
+		return nil
+	}, func(harness integration.HarnessDetails, db graph.Database) {
+		operation := analysis.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - ESC4 template 4")
+
+		groupExpansions, _, _, domains, cache, err := FetchADCSPrereqs(db)
+		require.Nil(t, err)
+
+		for _, domain := range domains {
+			innerDomain := domain
+
+			operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
+				if enterpriseCAs, err := ad2.FetchEnterpriseCAsTrustedForNTAuthToDomain(tx, innerDomain); err != nil {
+					return err
+				} else {
+					for _, enterpriseCA := range enterpriseCAs {
+						if cache.DoesCAChainProperlyToDomain(enterpriseCA, innerDomain) {
+							if err := ad2.PostADCSESC4(ctx, tx, outC, groupExpansions, enterpriseCA, innerDomain, cache); err != nil {
+								t.Logf("failed post processing for %s: %v", ad.ADCSESC4.String(), err)
+							} else {
+								return nil
+							}
+						}
+					}
+				}
+				return nil
+			})
+		}
+
+		operation.Done()
+
+		db.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
+			if results, err := ops.FetchStartNodes(tx.Relationships().Filterf(func() graph.Criteria {
+				return query.Kind(query.Relationship(), ad.ADCSESC4)
+			})); err != nil {
+				t.Fatalf("error fetching esc4 edges in integration test; %v", err)
+			} else {
+				require.Equal(t, 5, len(results))
+
+				require.True(t, results.Contains(harness.ESC4Template4.Group1))
+				require.True(t, results.Contains(harness.ESC4Template4.Computer1))
+				require.True(t, results.Contains(harness.ESC4Template4.User1))
+				require.True(t, results.Contains(harness.ESC4Template4.Group12))
+				require.True(t, results.Contains(harness.ESC4Template4.Group13))
+			}
+
+			return nil
+		})
+
+	})
+
+}
+
+func TestADCSESC4Composition(t *testing.T) {
+	testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
+
+	testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) error {
+		harness.ESC4Template1.Setup(testContext)
+		return nil
+	}, func(harness integration.HarnessDetails, db graph.Database) {
+		operation := analysis.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - ESC4 template 1")
+
+		groupExpansions, _, _, domains, cache, err := FetchADCSPrereqs(db)
+		require.Nil(t, err)
+
+		for _, domain := range domains {
+			innerDomain := domain
+
+			operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
+				if enterpriseCAs, err := ad2.FetchEnterpriseCAsTrustedForNTAuthToDomain(tx, innerDomain); err != nil {
+					return err
+				} else {
+					for _, enterpriseCA := range enterpriseCAs {
+						if cache.DoesCAChainProperlyToDomain(enterpriseCA, innerDomain) {
+							if err := ad2.PostADCSESC4(ctx, tx, outC, groupExpansions, enterpriseCA, innerDomain, cache); err != nil {
+								t.Logf("failed post processing for %s: %v", ad.ADCSESC4.String(), err)
+							} else {
+								return nil
+							}
+						}
+					}
+				}
+				return nil
+			})
+		}
+
+		operation.Done()
+
+		// first scenario: composition reveals that principal `Group11` has esc4 on the domain via enrollment on ECA and GenericAll on `CertTemplate1`
+		db.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
+			if edge, err := tx.Relationships().Filterf(
+				func() graph.Criteria {
+					return query.And(
+						query.Kind(query.Relationship(), ad.ADCSESC4),
+						query.Equals(query.StartProperty(common.Name.String()), "Group11"),
+					)
+				}).First(); err != nil {
+				t.Fatalf("error fetching esc4 edge in integration test: %v", err)
+			} else {
+				composition, err := ad2.GetADCSESC4EdgeComposition(context.Background(), db, edge)
+				require.Nil(t, err)
+
+				nodes := composition.AllNodes()
+
+				require.Equal(t, 7, len(nodes))
+				require.True(t, nodes.Contains(harness.ESC4Template1.Group11))
+				require.True(t, nodes.Contains(harness.ESC4Template1.Group0))
+				require.True(t, nodes.Contains(harness.ESC4Template1.CertTemplate1))
+				require.True(t, nodes.Contains(harness.ESC4Template1.EnterpriseCA))
+				require.True(t, nodes.Contains(harness.ESC4Template1.RootCA))
+				require.True(t, nodes.Contains(harness.ESC4Template1.NTAuthStore))
+				require.True(t, nodes.Contains(harness.ESC4Template1.Domain))
+			}
+			return nil
+		})
+
+		// second scenario: composition reveals that principal `Group12` has esc4 on the domain via enrollment on ECA, and GenericWrite on `CertTemplate1`
+		db.ReadTransaction(
+			context.Background(),
+			func(tx graph.Transaction) error {
+				if edge, err := tx.Relationships().Filterf(
+					func() graph.Criteria {
+						return query.And(
+							query.Kind(query.Relationship(), ad.ADCSESC4),
+							query.Equals(query.StartProperty(common.Name.String()), "Group12"),
+						)
+					}).First(); err != nil {
+					t.Fatalf("error fetching esc4 edge in integration test: %v", err)
+				} else {
+					composition, err := ad2.GetADCSESC4EdgeComposition(context.Background(), db, edge)
+					require.Nil(t, err)
+
+					nodes := composition.AllNodes()
+
+					require.Equal(t, 7, len(nodes))
+					require.True(t, nodes.Contains(harness.ESC4Template1.Group12))
+					require.True(t, nodes.Contains(harness.ESC4Template1.Group0))
+					require.True(t, nodes.Contains(harness.ESC4Template1.CertTemplate1))
+					require.True(t, nodes.Contains(harness.ESC4Template1.EnterpriseCA))
+					require.True(t, nodes.Contains(harness.ESC4Template1.RootCA))
+					require.True(t, nodes.Contains(harness.ESC4Template1.NTAuthStore))
+					require.True(t, nodes.Contains(harness.ESC4Template1.Domain))
+
+					// assert that `GenericWrite` and `Enroll` edges exist between group12 and cert template
+					for _, p := range composition.Paths() {
+						for _, rel := range p.Edges {
+							if rel.Kind.Is(ad.GenericWrite) || rel.Kind.Is(ad.Enroll) && rel.StartID == harness.ESC4Template1.Group12.ID {
+								require.True(t, rel.StartID == harness.ESC4Template1.Group12.ID)
+								require.True(t, rel.EndID == harness.ESC4Template1.CertTemplate1.ID)
+							}
+
+						}
+					}
+				}
+
+				return nil
+			})
+
+		// third scenario: composition reveals that principal `Group13` has esc4 on the domain via enrollment on ECA, and `Enroll` and WritePKINameFlag` on `CertTemplate1`
+		db.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
+			if edge, err := tx.Relationships().Filterf(
+				func() graph.Criteria {
+					return query.And(
+						query.Kind(query.Relationship(), ad.ADCSESC4),
+						query.Equals(query.StartProperty(common.Name.String()), "Group13"),
+					)
+				}).First(); err != nil {
+				t.Fatalf("error fetching esc4 edge in integration test: %v", err)
+			} else {
+				composition, err := ad2.GetADCSESC4EdgeComposition(context.Background(), db, edge)
+				require.Nil(t, err)
+
+				nodes := composition.AllNodes()
+
+				require.Equal(t, 7, len(nodes))
+				require.True(t, nodes.Contains(harness.ESC4Template1.Group13))
+				require.True(t, nodes.Contains(harness.ESC4Template1.Group0))
+				require.True(t, nodes.Contains(harness.ESC4Template1.CertTemplate1))
+				require.True(t, nodes.Contains(harness.ESC4Template1.EnterpriseCA))
+				require.True(t, nodes.Contains(harness.ESC4Template1.RootCA))
+				require.True(t, nodes.Contains(harness.ESC4Template1.NTAuthStore))
+				require.True(t, nodes.Contains(harness.ESC4Template1.Domain))
+
+				// assert that group13 has outbound edges `WritePKINameFlag` and `Enroll` to CertTemplate1
+				for _, p := range composition.Paths() {
+					for _, rel := range p.Edges {
+						if (rel.Kind.Is(ad.WritePKINameFlag) || rel.Kind.Is(ad.Enroll)) && rel.StartID == harness.ESC4Template1.Group13.ID {
+							require.True(t, rel.StartID == harness.ESC4Template1.Group13.ID)
+							require.True(t, rel.EndID == harness.ESC4Template1.CertTemplate1.ID)
+						}
+
+					}
+				}
+			}
+
+			return nil
+		})
+
+		// fourth scenario: composition reveals that principal `Group14` has esc4 on the domain via enrollment on ECA, and `Enroll` and WritePKINameFlag` on `CertTemplate1`
+		db.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
+			if edge, err := tx.Relationships().Filterf(
+				func() graph.Criteria {
+					return query.And(
+						query.Kind(query.Relationship(), ad.ADCSESC4),
+						query.Equals(query.StartProperty(common.Name.String()), "Group14"),
+					)
+				}).First(); err != nil {
+				t.Fatalf("error fetching esc4 edge in integration test: %v", err)
+			} else {
+				composition, err := ad2.GetADCSESC4EdgeComposition(context.Background(), db, edge)
+				require.Nil(t, err)
+
+				nodes := composition.AllNodes()
+
+				require.Equal(t, 7, len(nodes))
+				require.True(t, nodes.Contains(harness.ESC4Template1.Group14))
+				require.True(t, nodes.Contains(harness.ESC4Template1.Group0))
+				require.True(t, nodes.Contains(harness.ESC4Template1.CertTemplate1))
+				require.True(t, nodes.Contains(harness.ESC4Template1.EnterpriseCA))
+				require.True(t, nodes.Contains(harness.ESC4Template1.RootCA))
+				require.True(t, nodes.Contains(harness.ESC4Template1.NTAuthStore))
+				require.True(t, nodes.Contains(harness.ESC4Template1.Domain))
+
+				// assert that group14 has outbound edges `WritePKIEnrollmentFlag` and `Enroll` to CertTemplate1
+				for _, p := range composition.Paths() {
+					for _, rel := range p.Edges {
+						if (rel.Kind.Is(ad.WritePKIEnrollmentFlag) || rel.Kind.Is(ad.Enroll)) && rel.StartID == harness.ESC4Template1.Group14.ID {
+							require.True(t, rel.StartID == harness.ESC4Template1.Group14.ID)
+							require.True(t, rel.EndID == harness.ESC4Template1.CertTemplate1.ID)
+						}
+
+					}
+				}
+			}
+
+			return nil
+		})
+
+		// fifth scenario: composition reveals that principal `Group15` has esc4 on the domain via enrollment on ECA, and `Enroll`, `WritePKINameFlag`, and `WritePKIEnrollmentFlag` on `CertTemplate1`
+		db.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
+			if edge, err := tx.Relationships().Filterf(
+				func() graph.Criteria {
+					return query.And(
+						query.Kind(query.Relationship(), ad.ADCSESC4),
+						query.Equals(query.StartProperty(common.Name.String()), "Group15"),
+					)
+				}).First(); err != nil {
+				t.Fatalf("error fetching esc4 edge in integration test: %v", err)
+			} else {
+				composition, err := ad2.GetADCSESC4EdgeComposition(context.Background(), db, edge)
+				require.Nil(t, err)
+
+				nodes := composition.AllNodes()
+
+				require.Equal(t, 7, len(nodes))
+				require.True(t, nodes.Contains(harness.ESC4Template1.Group15))
+				require.True(t, nodes.Contains(harness.ESC4Template1.Group0))
+				require.True(t, nodes.Contains(harness.ESC4Template1.CertTemplate1))
+				require.True(t, nodes.Contains(harness.ESC4Template1.EnterpriseCA))
+				require.True(t, nodes.Contains(harness.ESC4Template1.RootCA))
+				require.True(t, nodes.Contains(harness.ESC4Template1.NTAuthStore))
+				require.True(t, nodes.Contains(harness.ESC4Template1.Domain))
+
+				// assert that group15 has 3 outbound edges: `WritePKIEnrollmentFlag`, `WritePKINameFlag`, and `Enroll` to CertTemplate1
+				for _, p := range composition.Paths() {
+					for _, rel := range p.Edges {
+						if (rel.Kind.Is(ad.WritePKIEnrollmentFlag) || rel.Kind.Is(ad.WritePKINameFlag) || rel.Kind.Is(ad.Enroll)) && rel.StartID == harness.ESC4Template1.Group15.ID {
+							require.True(t, rel.StartID == harness.ESC4Template1.Group15.ID)
+							require.True(t, rel.EndID == harness.ESC4Template1.CertTemplate1.ID)
+						}
+
+					}
+				}
+			}
+
+			return nil
+		})
+	})
+}
+
 func TestADCSESC9a(t *testing.T) {
 	testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
 

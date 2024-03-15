@@ -14,6 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+export { default as ApiExplorer } from './ApiExplorer';
+
 export { default as UserProfile } from './UserProfile';
 
 export * from './Explore';

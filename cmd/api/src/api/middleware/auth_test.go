@@ -44,7 +44,7 @@ func permissionsCheckAtLeastOneHandler(db *dbmocks.MockDatabase, internalHandler
 	return PermissionsCheckAtLeastOne(auth.NewAuthorizer(db), permissions...)(internalHandler)
 }
 
-func auditEntryAndContext(bhCtx ctx.Context, action string, fields model.AuditData, status model.AuditEntryStatus) (context.Context, model.AuditEntry) {
+func auditEntryAndContext(bhCtx ctx.Context, action model.AuditLogAction, fields model.AuditData, status model.AuditLogEntryStatus) (context.Context, model.AuditEntry) {
 	testCtx := context.Background()
 	testCtx = ctx.Set(testCtx, &bhCtx)
 
@@ -142,9 +142,9 @@ func TestPermissionsCheckAll(t *testing.T) {
 		ResponseStatusCode(http.StatusOK)
 
 	auditContext, noPermsEntry := auditEntryAndContext(
-		noPermsCtx, "UnauthorizedAccessAttempt",
+		noPermsCtx, model.AuditLogActionUnauthorizedAccessAttempt,
 		model.AuditData{"endpoint": "POST /test"},
-		model.AuditStatusFailure,
+		model.AuditLogStatusFailure,
 	)
 	mockDB.EXPECT().AppendAuditLog(auditContext, noPermsEntry).Times(1)
 	test.Request(t).
@@ -268,9 +268,9 @@ func TestPermissionsCheckAtLeastOne(t *testing.T) {
 		ResponseStatusCode(http.StatusOK)
 
 	auditContext, missingPermsEntry := auditEntryAndContext(
-		missingPermsCtx, "UnauthorizedAccessAttempt",
+		missingPermsCtx, model.AuditLogActionUnauthorizedAccessAttempt,
 		model.AuditData{"endpoint": "PUT /test"},
-		model.AuditStatusFailure,
+		model.AuditLogStatusFailure,
 	)
 	mockDB.EXPECT().AppendAuditLog(auditContext, missingPermsEntry).Times(1)
 	test.Request(t).

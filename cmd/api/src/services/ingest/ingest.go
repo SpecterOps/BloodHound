@@ -26,11 +26,12 @@ type IngestData interface {
 	CreateIngestTask(ctx context.Context, task model.IngestTask) (model.IngestTask, error)
 }
 
-func CreateIngestTask(ctx context.Context, db IngestData, filename string, requestID string, jobID int64) (model.IngestTask, error) {
+func CreateIngestTask(ctx context.Context, db IngestData, filename string,fileType model.FileType, requestID string, jobID int64) (model.IngestTask, error) {
 	newIngestTask := model.IngestTask{
 		FileName:    filename,
 		RequestGUID: requestID,
 		TaskID:      null.Int64From(jobID),
+		FileType:    fileType,
 	}
 
 	return db.CreateIngestTask(ctx, newIngestTask)

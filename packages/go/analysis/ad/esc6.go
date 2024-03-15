@@ -65,8 +65,8 @@ func PostADCSESC6a(ctx context.Context, tx graph.Transaction, outC chan<- analys
 			} else {
 				validCertTemplates = append(validCertTemplates, publishedCertTemplate)
 
-				for _, controller := range cache.CertTemplateControllers[publishedCertTemplate.ID] {
-					tempResults.Or(CalculateCrossProductNodeSets(groupExpansions, graph.NewNodeSet(controller).Slice(), cache.EnterpriseCAEnrollers[enterpriseCA.ID]))
+				for _, enroller := range cache.CertTemplateEnrollers[publishedCertTemplate.ID] {
+					tempResults.Or(CalculateCrossProductNodeSets(groupExpansions, graph.NewNodeSet(enroller).Slice(), cache.EnterpriseCAEnrollers[enterpriseCA.ID]))
 				}
 
 			}
@@ -112,11 +112,11 @@ func PostADCSESC6b(ctx context.Context, tx graph.Transaction, outC chan<- analys
 			} else {
 				validCertTemplates = append(validCertTemplates, publishedCertTemplate)
 
-				for _, controller := range cache.CertTemplateControllers[publishedCertTemplate.ID] {
+				for _, enroller := range cache.CertTemplateEnrollers[publishedCertTemplate.ID] {
 					tempResults.Or(
 						CalculateCrossProductNodeSets(
 							groupExpansions,
-							graph.NewNodeSet(controller).Slice(),
+							graph.NewNodeSet(enroller).Slice(),
 							cache.EnterpriseCAEnrollers[enterpriseCA.ID],
 						),
 					)
@@ -306,7 +306,7 @@ func principalControlsCertTemplate(principal, certTemplate *graph.Node, groupExp
 		return true
 	}
 
-	if CalculateCrossProductNodeSets(groupExpansions, graph.NewNodeSet(principal).Slice(), cache.CertTemplateControllers[certTemplate.ID]).Contains(principalID) {
+	if CalculateCrossProductNodeSets(groupExpansions, graph.NewNodeSet(principal).Slice(), cache.CertTemplateEnrollers[certTemplate.ID]).Contains(principalID) {
 		cache.ExpandedCertTemplateControllers[certTemplate.ID] = append(expandedTemplateControllers, principalID)
 		return true
 	}

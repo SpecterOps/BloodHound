@@ -21,6 +21,7 @@ import (
 	"compress/gzip"
 	"errors"
 	"fmt"
+	"github.com/specterops/bloodhound/mediatypes"
 	"io"
 	"net/http"
 
@@ -75,6 +76,20 @@ func (s Client) SendFileUploadData(payload map[string]any, id int64) error {
 	}
 }
 
+func (s Client) SendZipFileUploadData(payload []byte, id int64) error {
+	if response, err := s.ZipRequest(http.MethodPost, fmt.Sprintf("api/v2/file-upload/%d", id), nil, payload); err != nil {
+		return err
+	} else {
+		defer response.Body.Close()
+
+		if api.IsErrorResponse(response) {
+			return ReadAPIError(response)
+		}
+
+		return nil
+	}
+}
+
 func (s Client) SendCompressedFileUploadData(jsonFile io.Reader, id int64) error {
 	var (
 		body bytes.Buffer
@@ -89,7 +104,7 @@ func (s Client) SendCompressedFileUploadData(jsonFile io.Reader, id int64) error
 		return fmt.Errorf("failed to close gzip writer: %w", err)
 	}
 
-	request, err := s.NewRequest(http.MethodPost, fmt.Sprintf("api/v2/file-upload/%d", id), nil, io.NopCloser(&body))
+	request, err := s.NewRequest(http.MethodPost, fmt.Sprintf("api/v2/file-upload/%d", id), nil, io.NopCloser(&body), http.Header{headers.ContentType.String(): []string{mediatypes.ApplicationJson.String()}})
 	if err != nil {
 		return fmt.Errorf("failed to create compressed ingest request: %w", err)
 	}

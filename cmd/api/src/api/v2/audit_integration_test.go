@@ -20,6 +20,7 @@
 package v2_test
 
 import (
+	"github.com/specterops/bloodhound/src/model"
 	"testing"
 	"time"
 
@@ -41,8 +42,8 @@ func Test_ListAuditLogs(t *testing.T) {
 
 		testCtx.DeleteAssetGroup(newAssetGroup.ID)
 
-		testCtx.AssertAuditLogHasAction("CreateAssetGroup", expectedAuditLogFields)
-		testCtx.AssertAuditLogHasAction("DeleteAssetGroup", expectedAuditLogFields)
+		testCtx.AssertAuditLogHasAction(model.AuditLogActionCreateAssetGroup, expectedAuditLogFields)
+		testCtx.AssertAuditLogHasAction(model.AuditLogActionDeleteAssetGroup, expectedAuditLogFields)
 	})
 
 	t.Run("Test Getting Audit Logs by Time Range", func(t *testing.T) {
@@ -69,12 +70,12 @@ func Test_ListAuditLogs(t *testing.T) {
 		require.Equal(t, auditLogs[0].Status, "success")
 		require.Equal(t, auditLogs[1].Status, "intent")
 
-		testCtx.AssetAuditLog(auditLogs[0], "DeleteAssetGroup", map[string]any{
+		testCtx.AssetAuditLog(auditLogs[0], model.AuditLogActionDeleteAssetGroup, map[string]any{
 			"asset_group_name": newAssetGroup.Name,
 			"asset_group_tag":  newAssetGroup.Tag,
 		})
 
-		testCtx.AssetAuditLog(auditLogs[1], "DeleteAssetGroup", map[string]any{
+		testCtx.AssetAuditLog(auditLogs[1], model.AuditLogActionDeleteAssetGroup, map[string]any{
 			"asset_group_name": newAssetGroup.Name,
 			"asset_group_tag":  newAssetGroup.Tag,
 		})

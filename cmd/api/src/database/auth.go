@@ -16,6 +16,8 @@
 
 package database
 
+//go:generate go run go.uber.org/mock/mockgen -copyright_file=../../../../LICENSE.header -destination=./mocks/auth.go -package=mocks . AuthContextInitializer
+
 import (
 	"context"
 	"crypto/rand"
@@ -200,7 +202,7 @@ func (s *BloodhoundDB) InitializeSecretAuth(ctx context.Context, adminUser model
 
 // CreateInstallation creates a new Installation row
 // INSERT INTO installations(....) VALUES (...)
-func (s *BloodhoundDB) CreateInstallation() (model.Installation, error) {
+func (s *BloodhoundDB) CreateInstallation(ctx context.Context) (model.Installation, error) {
 	if newID, err := uuid.NewV4(); err != nil {
 		return model.Installation{}, err
 	} else {
@@ -210,17 +212,17 @@ func (s *BloodhoundDB) CreateInstallation() (model.Installation, error) {
 			},
 		}
 
-		result := s.db.Create(&installation)
+		result := s.db.WithContext(ctx).Create(&installation)
 		return installation, CheckError(result)
 	}
 }
 
 // GetInstallation retrieves the first row from installations
 // SELECT TOP 1 * FROM installations
-func (s *BloodhoundDB) GetInstallation() (model.Installation, error) {
+func (s *BloodhoundDB) GetInstallation(ctx context.Context) (model.Installation, error) {
 	var (
 		installation model.Installation
-		result       = s.db.First(&installation)
+		result       = s.db.WithContext(ctx).First(&installation)
 	)
 
 	return installation, CheckError(result)
@@ -228,8 +230,8 @@ func (s *BloodhoundDB) GetInstallation() (model.Installation, error) {
 
 // HasInstallation checks if an installation exists
 // SELECT CASE WHEN EXISTS (SELECT 1 FROM installations) THEN true ELSE false END
-func (s *BloodhoundDB) HasInstallation() (bool, error) {
-	if _, err := s.GetInstallation(); err != nil {
+func (s *BloodhoundDB) HasInstallation(ctx context.Context) (bool, error) {
+	if _, err := s.GetInstallation(ctx); err != nil {
 		if err == ErrNotFound {
 			return false, nil
 		}
@@ -255,7 +257,7 @@ func (s *BloodhoundDB) CreateUser(ctx context.Context, user model.User) (model.U
 	}
 
 	auditEntry := model.AuditEntry{
-		Action: "CreateUser",
+		Action: model.AuditLogActionCreateUser,
 		Model:  &updatedUser,
 	}
 	return updatedUser, s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
@@ -266,12 +268,10 @@ func (s *BloodhoundDB) CreateUser(ctx context.Context, user model.User) (model.U
 // UpdateUser updates the roles associated with the user according to the input struct
 // UPDATE users SET roles = ....
 func (s *BloodhoundDB) UpdateUser(ctx context.Context, user model.User) error {
-	var (
-		auditEntry = model.AuditEntry{
-			Action: "UpdateUser",
-			Model:  &user, // Pointer is required to ensure success log contains updated fields after transaction
-		}
-	)
+	auditEntry := model.AuditEntry{
+		Action: model.AuditLogActionUpdateUser,
+		Model:  &user, // Pointer is required to ensure success log contains updated fields after transaction
+	}
 
 	return s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
 		// Update roles first
@@ -319,7 +319,7 @@ func (s *BloodhoundDB) GetUser(ctx context.Context, id uuid.UUID) (model.User, e
 // UPDATE users SET roles = nil WHERE user_id = ....
 func (s *BloodhoundDB) DeleteUser(ctx context.Context, user model.User) error {
 	auditEntry := model.AuditEntry{
-		Action: "DeleteUser",
+		Action: model.AuditLogActionDeleteUser,
 		Model:  &user,
 	}
 
@@ -351,7 +351,7 @@ func (s *BloodhoundDB) LookupUser(ctx context.Context, name string) (model.User,
 // INSERT INTO auth_tokens (...) VALUES (....)
 func (s *BloodhoundDB) CreateAuthToken(ctx context.Context, authToken model.AuthToken) (model.AuthToken, error) {
 	auditEntry := model.AuditEntry{
-		Action: "CreateAuthToken",
+		Action: model.AuditLogActionCreateAuthToken,
 		Model:  &authToken,
 	}
 
@@ -408,7 +408,7 @@ func (s *BloodhoundDB) GetUserToken(ctx context.Context, userId, tokenId uuid.UU
 // DELETE FROM auth_tokens WHERE id = ...
 func (s *BloodhoundDB) DeleteAuthToken(ctx context.Context, authToken model.AuthToken) error {
 	auditEntry := model.AuditEntry{
-		Action: "DeleteAuthToken",
+		Action: model.AuditLogActionDeleteAuthToken,
 		Model:  &authToken,
 	}
 
@@ -421,7 +421,7 @@ func (s *BloodhoundDB) DeleteAuthToken(ctx context.Context, authToken model.Auth
 // INSERT INTO auth_secrets (...) VALUES (....)
 func (s *BloodhoundDB) CreateAuthSecret(ctx context.Context, authSecret model.AuthSecret) (model.AuthSecret, error) {
 	auditEntry := model.AuditEntry{
-		Action: "CreateAuthSecret",
+		Action: model.AuditLogActionCreateAuthSecret,
 		Model:  &authSecret,
 	}
 
@@ -446,7 +446,7 @@ func (s *BloodhoundDB) GetAuthSecret(ctx context.Context, id int32) (model.AuthS
 // WHERE user_id = ....
 func (s *BloodhoundDB) UpdateAuthSecret(ctx context.Context, authSecret model.AuthSecret) error {
 	auditEntry := model.AuditEntry{
-		Action: "UpdateAuthSecret",
+		Action: model.AuditLogActionUpdateAuthSecret,
 		Model:  &authSecret,
 	}
 
@@ -459,7 +459,7 @@ func (s *BloodhoundDB) UpdateAuthSecret(ctx context.Context, authSecret model.Au
 // DELETE FROM auth_secrets WHERE user_id = ...
 func (s *BloodhoundDB) DeleteAuthSecret(ctx context.Context, authSecret model.AuthSecret) error {
 	auditEntry := model.AuditEntry{
-		Action: "DeleteAuthSecret",
+		Action: model.AuditLogActionDeleteAuthSecret,
 		Model:  &authSecret,
 	}
 
@@ -471,12 +471,10 @@ func (s *BloodhoundDB) DeleteAuthSecret(ctx context.Context, authSecret model.Au
 // CreateSAMLProvider creates a new saml_providers row using the data in the input struct
 // INSERT INTO saml_identity_providers (...) VALUES (...)
 func (s *BloodhoundDB) CreateSAMLIdentityProvider(ctx context.Context, samlProvider model.SAMLProvider) (model.SAMLProvider, error) {
-	var (
-		auditEntry = model.AuditEntry{
-			Action: "CreateSAMLIdentityProvider",
-			Model:  &samlProvider, // Pointer is required to ensure success log contains updated fields after transaction
-		}
-	)
+	auditEntry := model.AuditEntry{
+		Action: model.AuditLogActionCreateSAMLIdentityProvider,
+		Model:  &samlProvider, // Pointer is required to ensure success log contains updated fields after transaction
+	}
 
 	err := s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
 		return CheckError(tx.WithContext(ctx).Create(&samlProvider))
@@ -488,12 +486,10 @@ func (s *BloodhoundDB) CreateSAMLIdentityProvider(ctx context.Context, samlProvi
 // CreateSAMLProvider updates a saml_providers row using the data in the input struct
 // UPDATE saml_identity_providers SET (...) VALUES (...) WHERE id = ...
 func (s *BloodhoundDB) UpdateSAMLIdentityProvider(ctx context.Context, provider model.SAMLProvider) error {
-	var (
-		auditEntry = model.AuditEntry{
-			Action: "UpdateSAMLIdentityProvider",
-			Model:  &provider, // Pointer is required to ensure success log contains updated fields after transaction
-		}
-	)
+	auditEntry := model.AuditEntry{
+		Action: model.AuditLogActionUpdateSAMLIdentityProvider,
+		Model:  &provider, // Pointer is required to ensure success log contains updated fields after transaction
+	}
 
 	return s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
 		return CheckError(tx.WithContext(ctx).Save(&provider))
@@ -534,12 +530,10 @@ func (s *BloodhoundDB) GetSAMLProvider(ctx context.Context, id int32) (model.SAM
 }
 
 func (s *BloodhoundDB) DeleteSAMLProvider(ctx context.Context, provider model.SAMLProvider) error {
-	var (
-		auditEntry = model.AuditEntry{
-			Action: "DeleteSAMLIdentityProvider",
-			Model:  &provider, // Pointer is required to ensure success log contains updated fields after transaction
-		}
-	)
+	auditEntry := model.AuditEntry{
+		Action: model.AuditLogActionDeleteSAMLIdentityProvider,
+		Model:  &provider, // Pointer is required to ensure success log contains updated fields after transaction
+	}
 
 	return s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
 		return CheckError(tx.WithContext(ctx).Delete(&provider))
@@ -555,10 +549,10 @@ func (s *BloodhoundDB) GetSAMLProviderUsers(ctx context.Context, id int32) (mode
 
 // CreateUserSession creates a new UserSession row
 // INSERT INTO user_sessions (...) VALUES (..)
-func (s *BloodhoundDB) CreateUserSession(userSession model.UserSession) (model.UserSession, error) {
+func (s *BloodhoundDB) CreateUserSession(ctx context.Context, userSession model.UserSession) (model.UserSession, error) {
 	var (
 		newUserSession = userSession
-		result         = s.db.Create(&newUserSession)
+		result         = s.db.WithContext(ctx).Create(&newUserSession)
 	)
 
 	return newUserSession, CheckError(result)
@@ -566,29 +560,29 @@ func (s *BloodhoundDB) CreateUserSession(userSession model.UserSession) (model.U
 
 // EndUserSession terminates the provided session
 // UPDATE user_sessions SET expires_at = <now> WHERE user_id = ...
-func (s *BloodhoundDB) EndUserSession(userSession model.UserSession) {
-	s.db.Model(&userSession).Update("expires_at", gorm.Expr("NOW()"))
+func (s *BloodhoundDB) EndUserSession(ctx context.Context, userSession model.UserSession) {
+	s.db.Model(&userSession).WithContext(ctx).Update("expires_at", gorm.Expr("NOW()"))
 }
 
-func (s *BloodhoundDB) LookupActiveSessionsByUser(user model.User) ([]model.UserSession, error) {
+func (s *BloodhoundDB) LookupActiveSessionsByUser(ctx context.Context, user model.User) ([]model.UserSession, error) {
 	var userSessions []model.UserSession
 
-	result := s.db.Where("expires_at >= NOW() AND user_id = ?", user.ID).Find(&userSessions)
+	result := s.db.WithContext(ctx).Where("expires_at >= NOW() AND user_id = ?", user.ID).Find(&userSessions)
 	return userSessions, CheckError(result)
 }
 
 // GetUserSession retrieves the UserSession row associated with the provided ID
 // SELECT * FROM user_sessions WHERE id = ...
-func (s *BloodhoundDB) GetUserSession(id int64) (model.UserSession, error) {
+func (s *BloodhoundDB) GetUserSession(ctx context.Context, id int64) (model.UserSession, error) {
 	var (
 		userSession model.UserSession
-		result      = s.preload(model.UserSessionAssociations()).Find(&userSession, id)
+		result      = s.preload(model.UserSessionAssociations()).WithContext(ctx).Find(&userSession, id)
 	)
 
 	return userSession, CheckError(result)
 }
 
 // SweepSessions deletes all sessions that have already expired
-func (s *BloodhoundDB) SweepSessions() {
-	s.db.Where("expires_at < NOW()").Delete(&model.UserSession{})
+func (s *BloodhoundDB) SweepSessions(ctx context.Context) {
+	s.db.WithContext(ctx).Where("expires_at < NOW()").Delete(&model.UserSession{})
 }

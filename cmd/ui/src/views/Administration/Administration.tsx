@@ -28,12 +28,12 @@ import {
     ROUTE_ADMINISTRATION_SAML_CONFIGURATION,
     ROUTE_ADMINISTRATION_DB_MANAGEMENT,
 } from 'src/ducks/global/routes';
-const FileIngest = React.lazy(() => import('src/views/FileIngest'));
 const DatabaseManagement = React.lazy(() => import('src/views/DatabaseManagement'));
 const QA = React.lazy(() => import('src/views/QA'));
 const Users = React.lazy(() => import('src/views/Users'));
 const SAMLConfiguration = React.lazy(() => import('src/views/SAMLConfiguration'));
 const EarlyAccessFeatures = React.lazy(() => import('src/views/EarlyAccessFeatures'));
+const FileIngest = React.lazy(() => import('bh-shared-ui').then((module) => ({ default: module.FileIngest })));
 
 const Administration: React.FC = () => {
     const sections = [

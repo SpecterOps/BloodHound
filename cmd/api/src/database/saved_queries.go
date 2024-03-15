@@ -17,24 +17,25 @@
 package database
 
 import (
+	"context"
 	"github.com/gofrs/uuid"
 	"github.com/specterops/bloodhound/src/model"
 	"gorm.io/gorm"
 )
 
-func (s *BloodhoundDB) ListSavedQueries(userID uuid.UUID, order string, filter model.SQLFilter, skip, limit int) (model.SavedQueries, int, error) {
+func (s *BloodhoundDB) ListSavedQueries(ctx context.Context, userID uuid.UUID, order string, filter model.SQLFilter, skip, limit int) (model.SavedQueries, int, error) {
 	var (
 		queries model.SavedQueries
 		result  *gorm.DB
 		count   int64
-		cursor  = s.Scope(Paginate(skip, limit)).Where("user_id = ?", userID)
+		cursor  = s.Scope(Paginate(skip, limit)).WithContext(ctx).Where("user_id = ?", userID)
 	)
 
 	if filter.SQLString != "" {
 		cursor = cursor.Where(filter.SQLString, filter.Params)
-		result = s.db.Model(&queries).Where("user_id = ?", userID).Where(filter.SQLString, filter.Params).Count(&count)
+		result = s.db.Model(&queries).WithContext(ctx).Where("user_id = ?", userID).Where(filter.SQLString, filter.Params).Count(&count)
 	} else {
-		result = s.db.Model(&queries).Where("user_id = ?", userID).Count(&count)
+		result = s.db.Model(&queries).WithContext(ctx).Where("user_id = ?", userID).Count(&count)
 	}
 
 	if result.Error != nil {
@@ -49,23 +50,23 @@ func (s *BloodhoundDB) ListSavedQueries(userID uuid.UUID, order string, filter m
 	return queries, int(count), CheckError(result)
 }
 
-func (s *BloodhoundDB) CreateSavedQuery(userID uuid.UUID, name string, query string) (model.SavedQuery, error) {
+func (s *BloodhoundDB) CreateSavedQuery(ctx context.Context, userID uuid.UUID, name string, query string) (model.SavedQuery, error) {
 	savedQuery := model.SavedQuery{
 		UserID: userID.String(),
 		Name:   name,
 		Query:  query,
 	}
 
-	return savedQuery, CheckError(s.db.Create(&savedQuery))
+	return savedQuery, CheckError(s.db.WithContext(ctx).Create(&savedQuery))
 }
 
-func (s *BloodhoundDB) DeleteSavedQuery(id int) error {
-	return CheckError(s.db.Delete(&model.SavedQuery{}, id))
+func (s *BloodhoundDB) DeleteSavedQuery(ctx context.Context, id int) error {
+	return CheckError(s.db.WithContext(ctx).Delete(&model.SavedQuery{}, id))
 }
 
-func (s *BloodhoundDB) SavedQueryBelongsToUser(userID uuid.UUID, savedQueryID int) (bool, error) {
+func (s *BloodhoundDB) SavedQueryBelongsToUser(ctx context.Context, userID uuid.UUID, savedQueryID int) (bool, error) {
 	var savedQuery model.SavedQuery
-	if result := s.db.First(&savedQuery, savedQueryID); result.Error != nil {
+	if result := s.db.WithContext(ctx).First(&savedQuery, savedQueryID); result.Error != nil {
 		return false, CheckError(result)
 	} else if savedQuery.UserID == userID.String() {
 		return true, nil

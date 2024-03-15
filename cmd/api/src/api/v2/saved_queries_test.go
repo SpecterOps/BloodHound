@@ -204,7 +204,7 @@ func TestResources_ListSavedQueries_DBError(t *testing.T) {
 	userId, err := uuid2.NewV4()
 	require.Nil(t, err)
 
-	mockDB.EXPECT().ListSavedQueries(userId, "", model.SQLFilter{}, 0, 10000).Return(model.SavedQueries{}, 0, fmt.Errorf("foo"))
+	mockDB.EXPECT().ListSavedQueries(gomock.Any(), userId, "", model.SQLFilter{}, 0, 10000).Return(model.SavedQueries{}, 0, fmt.Errorf("foo"))
 
 	if req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), "GET", endpoint, nil); err != nil {
 		t.Fatal(err)
@@ -233,7 +233,7 @@ func TestResources_ListSavedQueries(t *testing.T) {
 	userId, err := uuid2.NewV4()
 	require.Nil(t, err)
 
-	mockDB.EXPECT().ListSavedQueries(userId, gomock.Any(), gomock.Any(), 1, 10).Return(model.SavedQueries{
+	mockDB.EXPECT().ListSavedQueries(gomock.Any(), userId, gomock.Any(), gomock.Any(), 1, 10).Return(model.SavedQueries{
 		{
 			UserID: userId.String(),
 			Name:   "myQuery",
@@ -329,7 +329,7 @@ func TestResources_CreateSavedQuery_DuplicateName(t *testing.T) {
 	userId, err := uuid2.NewV4()
 	require.Nil(t, err)
 
-	mockDB.EXPECT().CreateSavedQuery(gomock.Any(), gomock.Any(), gomock.Any()).Return(model.SavedQuery{}, fmt.Errorf("duplicate key value violates unique constraint \"idx_saved_queries_composite_index\""))
+	mockDB.EXPECT().CreateSavedQuery(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(model.SavedQuery{}, fmt.Errorf("duplicate key value violates unique constraint \"idx_saved_queries_composite_index\""))
 
 	payload := v2.CreateSavedQueryRequest{
 		Query: "Match(n) return n",
@@ -367,7 +367,7 @@ func TestResources_CreateSavedQuery_CreateFailure(t *testing.T) {
 		Name:  "myCustomQuery1",
 	}
 
-	mockDB.EXPECT().CreateSavedQuery(userId, payload.Name, payload.Query).Return(model.SavedQuery{}, fmt.Errorf("foo"))
+	mockDB.EXPECT().CreateSavedQuery(gomock.Any(), userId, payload.Name, payload.Query).Return(model.SavedQuery{}, fmt.Errorf("foo"))
 
 	req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), "POST", endpoint, must.MarshalJSONReader(payload))
 	require.Nil(t, err)
@@ -399,7 +399,7 @@ func TestResources_CreateSavedQuery(t *testing.T) {
 		Name:  "myCustomQuery1",
 	}
 
-	mockDB.EXPECT().CreateSavedQuery(userId, payload.Name, payload.Query).Return(model.SavedQuery{
+	mockDB.EXPECT().CreateSavedQuery(gomock.Any(), userId, payload.Name, payload.Query).Return(model.SavedQuery{
 		UserID: userId.String(),
 		Name:   payload.Name,
 		Query:  payload.Query,
@@ -457,7 +457,7 @@ func TestResources_DeleteSavedQuery_DBError(t *testing.T) {
 	endpoint := "/api/v2/saved-queries/%s"
 	savedQueryId := "1"
 
-	mockDB.EXPECT().SavedQueryBelongsToUser(gomock.Any(), gomock.Any()).Return(false, fmt.Errorf("foo"))
+	mockDB.EXPECT().SavedQueryBelongsToUser(gomock.Any(), gomock.Any(), gomock.Any()).Return(false, fmt.Errorf("foo"))
 
 	req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), "DELETE", fmt.Sprintf(endpoint, savedQueryId), nil)
 	require.Nil(t, err)
@@ -486,7 +486,7 @@ func TestResources_DeleteSavedQuery_QueryDoesNotBelongToUser(t *testing.T) {
 	endpoint := "/api/v2/saved-queries/%s"
 	savedQueryId := "1"
 
-	mockDB.EXPECT().SavedQueryBelongsToUser(gomock.Any(), gomock.Any()).Return(false, nil)
+	mockDB.EXPECT().SavedQueryBelongsToUser(gomock.Any(), gomock.Any(), gomock.Any()).Return(false, nil)
 
 	req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), "DELETE", fmt.Sprintf(endpoint, savedQueryId), nil)
 	require.Nil(t, err)
@@ -516,7 +516,7 @@ func TestResources_DeleteSavedQuery_RecordNotFound(t *testing.T) {
 	endpoint := "/api/v2/saved-queries/%s"
 	savedQueryId := "1"
 
-	mockDB.EXPECT().SavedQueryBelongsToUser(gomock.Any(), gomock.Any()).Return(false, database.ErrNotFound)
+	mockDB.EXPECT().SavedQueryBelongsToUser(gomock.Any(), gomock.Any(), gomock.Any()).Return(false, database.ErrNotFound)
 
 	req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), "DELETE", fmt.Sprintf(endpoint, savedQueryId), nil)
 	require.Nil(t, err)
@@ -546,8 +546,8 @@ func TestResources_DeleteSavedQuery_RecordNotFound_EdgeCase(t *testing.T) {
 	endpoint := "/api/v2/saved-queries/%s"
 	savedQueryId := "1"
 
-	mockDB.EXPECT().SavedQueryBelongsToUser(gomock.Any(), gomock.Any()).Return(true, nil)
-	mockDB.EXPECT().DeleteSavedQuery(gomock.Any()).Return(database.ErrNotFound)
+	mockDB.EXPECT().SavedQueryBelongsToUser(gomock.Any(), gomock.Any(), gomock.Any()).Return(true, nil)
+	mockDB.EXPECT().DeleteSavedQuery(gomock.Any(), gomock.Any()).Return(database.ErrNotFound)
 
 	req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), "DELETE", fmt.Sprintf(endpoint, savedQueryId), nil)
 	require.Nil(t, err)
@@ -577,8 +577,8 @@ func TestResources_DeleteSavedQuery_DeleteError(t *testing.T) {
 	endpoint := "/api/v2/saved-queries/%s"
 	savedQueryId := "1"
 
-	mockDB.EXPECT().SavedQueryBelongsToUser(gomock.Any(), gomock.Any()).Return(true, nil)
-	mockDB.EXPECT().DeleteSavedQuery(gomock.Any()).Return(fmt.Errorf("foo"))
+	mockDB.EXPECT().SavedQueryBelongsToUser(gomock.Any(), gomock.Any(), gomock.Any()).Return(true, nil)
+	mockDB.EXPECT().DeleteSavedQuery(gomock.Any(), gomock.Any()).Return(fmt.Errorf("foo"))
 
 	req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), "DELETE", fmt.Sprintf(endpoint, savedQueryId), nil)
 	require.Nil(t, err)
@@ -608,8 +608,8 @@ func TestResources_DeleteSavedQuery(t *testing.T) {
 	endpoint := "/api/v2/saved-queries/%s"
 	savedQueryId := "1"
 
-	mockDB.EXPECT().SavedQueryBelongsToUser(gomock.Any(), gomock.Any()).Return(true, nil)
-	mockDB.EXPECT().DeleteSavedQuery(gomock.Any()).Return(nil)
+	mockDB.EXPECT().SavedQueryBelongsToUser(gomock.Any(), gomock.Any(), gomock.Any()).Return(true, nil)
+	mockDB.EXPECT().DeleteSavedQuery(gomock.Any(), gomock.Any()).Return(nil)
 
 	req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), "DELETE", fmt.Sprintf(endpoint, savedQueryId), nil)
 	require.Nil(t, err)

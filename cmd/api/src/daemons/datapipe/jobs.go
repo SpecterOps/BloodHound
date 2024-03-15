@@ -17,7 +17,9 @@
 package datapipe
 
 import (
+	"archive/zip"
 	"context"
+	"io"
 	"os"
 
 	"github.com/specterops/bloodhound/src/database"
@@ -119,22 +121,63 @@ func (s *Daemon) clearFileTask(ingestTask model.IngestTask) {
 	}
 }
 
-func (s *Daemon) processIngestFile(ctx context.Context, path string) error {
-	if jsonFile, err := os.Open(path); err != nil {
+// preProcessIngestFile will take a path and extract zips if necessary, returning the paths for files to process
+func (s *Daemon) preProcessIngestFile(path string, fileType model.FileType) ([]string, error) {
+	if fileType == model.FileTypeJson {
+		//If this isn't a zip file, just return a slice with the path in it and let stuff process as normal
+		return []string{path}, nil
+	} else if archive, err := zip.OpenReader(path); err != nil {
+		return []string{}, err
+	} else {
+		filePaths := make([]string, len(archive.File))
+		for i, f := range archive.File {
+			//skip directories
+			if f.FileInfo().IsDir() {
+				continue
+			}
+			//Break out on an error creating files
+			if tempFile, err := os.CreateTemp(s.cfg.TempDirectory(), "bh"); err != nil {
+				return []string{}, err
+			} else if srcFile, err := f.Open(); err != nil {
+				log.Errorf("Error opening file %s in archive %s: %v", f.Name, path, err)
+			} else if _, err := io.Copy(tempFile, srcFile); err != nil {
+				log.Errorf("Error extracting file %s in archive %s: %v", f.Name, path, err)
+			} else if err := tempFile.Close(); err != nil {
+				log.Errorf("Error closing temp file %s: %v", f.Name, err)
+			} else {
+				filePaths[i] = tempFile.Name()
+			}
+		}
+
+		//Close the archive and delete it
+		if err := archive.Close(); err != nil {
+			log.Errorf("Error closing archive %s: %v", path, err)
+		} else if err := os.Remove(path); err != nil {
+			log.Errorf("Error deleting archive %s: %v", path, err)
+		}
+
+		return filePaths, nil
+	}
+}
+
+func (s *Daemon) processIngestFile(ctx context.Context, path string, fileType model.FileType) error {
+	if paths, err := s.preProcessIngestFile(path, fileType); err != nil {
 		return err
 	} else {
-		defer func() {
-			if err := jsonFile.Close(); err != nil {
-				log.Errorf("Failed closing ingest file %s: %v", path, err)
-			}
-		}()
-
 		return s.graphdb.BatchOperation(ctx, func(batch graph.Batch) error {
-			if err := ReadFileForIngest(batch, jsonFile); err != nil {
-				return err
-			} else {
-				return nil
+			for _, filePath := range paths {
+				if file, err := os.Open(filePath); err != nil {
+					return err
+				} else if err := ReadFileForIngest(batch, file); err != nil {
+					log.Errorf("Error reading ingest file %s: %v", filePath, err)
+				} else if err := file.Close(); err != nil {
+					log.Errorf("Error closing ingest file %s: %v", filePath, err)
+				} else if err := os.Remove(filePath); err != nil {
+					log.Errorf("Error removing ingest file %s: %v", filePath, err)
+				}
 			}
+
+			return nil
 		})
 	}
 }
@@ -156,7 +199,7 @@ func (s *Daemon) processIngestTasks(ctx context.Context, ingestTasks model.Inges
 			return
 		}
 
-		if err := s.processIngestFile(ctx, ingestTask.FileName); err != nil {
+		if err := s.processIngestFile(ctx, ingestTask.FileName, ingestTask.FileType); err != nil {
 			log.Errorf("Failed processing ingest task %d with file %s: %v", ingestTask.ID, ingestTask.FileName, err)
 		}
 

@@ -97,7 +97,7 @@ func (s Daemon) Name() string {
 }
 
 // Start begins the daemon and waits for a stop signal in the exit channel
-func (s Daemon) Start() {
+func (s Daemon) Start(ctx context.Context) {
 	if s.cfg.TLS.Enabled() {
 		if err := s.server.ListenAndServeTLS(s.cfg.TLS.CertFile, s.cfg.TLS.KeyFile); err != nil {
 			if err != http.ErrServerClosed {

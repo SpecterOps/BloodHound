@@ -21,7 +21,9 @@ import { useState, DragEvent, MouseEvent, useRef, ChangeEvent } from 'react';
 
 const FileDrop: React.FC<{
     onDrop: (files: any) => void;
-}> = ({ onDrop }) => {
+    disabled: boolean;
+    accept?: string[];
+}> = ({ onDrop, disabled, accept }) => {
     const theme = useTheme();
     const inputRef = useRef<HTMLInputElement>(null);
     const [isDragActive, setDragActive] = useState(false);
@@ -54,6 +56,8 @@ const FileDrop: React.FC<{
     const handleMouseEnter = (_e: MouseEvent) => setHoverActive(true);
     const handleMouseLeave = (_e: MouseEvent) => setHoverActive(false);
 
+    const formatAcceptList = () => (accept && accept.length ? accept.join(',') : undefined);
+
     return (
         <Box
             height={300}
@@ -72,11 +76,13 @@ const FileDrop: React.FC<{
             textAlign='center'>
             <input
                 data-testid='ingest-file-upload'
+                disabled={disabled}
                 ref={inputRef}
                 type='file'
                 multiple={true}
                 onChange={handleChange}
                 hidden
+                accept={formatAcceptList()}
             />
             <FontAwesomeIcon icon={isDragActive ? faArrowDown : faInbox} size='3x' />
             <p>Click here or drag and drop to upload files</p>

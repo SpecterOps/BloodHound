@@ -23,6 +23,8 @@ import (
 	"bytes"
 	"compress/gzip"
 	"fmt"
+	"github.com/specterops/bloodhound/mediatypes"
+	"github.com/specterops/bloodhound/src/services/fileupload"
 	"io"
 	"net/http"
 	"testing"
@@ -46,7 +48,17 @@ func Test_FileUpload(t *testing.T) {
 	t.Run("JSON input with success", func(tx *testing.T) {
 		jsonInput := loader.GetReader("v6/ingest/computers.json")
 		defer jsonInput.Close()
-		req, err := apiClient.NewRequest(http.MethodPost, jobEndpoint, nil, jsonInput)
+		req, err := apiClient.NewRequest(http.MethodPost, jobEndpoint, nil, jsonInput, http.Header{headers.ContentType.String(): []string{mediatypes.ApplicationJson.String()}})
+		assert.Nil(tx, err)
+		resp, err := apiClient.Raw(req)
+		assert.Nil(tx, err)
+		assert.Equal(tx, http.StatusAccepted, resp.StatusCode)
+	})
+
+	t.Run("JSON input with charset header success", func(tx *testing.T) {
+		jsonInput := loader.GetReader("v6/ingest/computers.json")
+		defer jsonInput.Close()
+		req, err := apiClient.NewRequest(http.MethodPost, jobEndpoint, nil, jsonInput, http.Header{headers.ContentType.String(): []string{mediatypes.ApplicationJson.WithCharset("utf-8")}})
 		assert.Nil(tx, err)
 		resp, err := apiClient.Raw(req)
 		assert.Nil(tx, err)
@@ -75,7 +87,7 @@ func Test_FileUpload(t *testing.T) {
 		assert.Nil(tx, err)
 		assert.NotEqual(tx, 0, n)
 		assert.Nil(tx, gw.Close())
-		req, err := apiClient.NewRequest(http.MethodPost, jobEndpoint, nil, io.NopCloser(&body))
+		req, err := apiClient.NewRequest(http.MethodPost, jobEndpoint, nil, io.NopCloser(&body), http.Header{headers.ContentType.String(): []string{mediatypes.ApplicationJson.String()}})
 		assert.Nil(tx, err)
 		req.Header.Set(headers.ContentEncoding.String(), "gzip")
 		resp, err := apiClient.Raw(req)
@@ -203,6 +215,14 @@ func Test_FileUploadVersion6AllOptionADCS(t *testing.T) {
 	testCtx.AssertIngest(fixtures.IngestADCSAssertions)
 }
 
+func Test_FileUploadVersion6AllOptionADCSZip(t *testing.T) {
+	testCtx := integration.NewFOSSContext(t)
+
+	testCtx.SendZipFileIngest("v6/all/adcs.zip")
+
+	testCtx.AssertIngest(fixtures.IngestADCSAssertions)
+}
+
 func Test_CompressedFileUploadWorkFlowVersion5(t *testing.T) {
 	testCtx := integration.NewFOSSContext(t)
 
@@ -242,4 +262,10 @@ func Test_CompressedFileUploadWorkFlowVersion6(t *testing.T) {
 	testCtx.AssertIngest(fixtures.IngestAssertions)
 	testCtx.AssertIngest(fixtures.IngestAssertionsv6)
 	testCtx.AssertIngest(fixtures.PropertyAssertions)
+}
+
+func Test_BadFileUploadError(t *testing.T) {
+	testCtx := integration.NewFOSSContext(t)
+
+	testCtx.SendInvalidFileIngest("v6/ingest/jker.jpg", fileupload.ErrInvalidJSON)
 }

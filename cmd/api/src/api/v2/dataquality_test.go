@@ -1,17 +1,17 @@
 // Copyright 2023 Specter Ops, Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// 
+//
 // SPDX-License-Identifier: Apache-2.0
 
 package v2_test
@@ -32,8 +32,8 @@ import (
 	"github.com/specterops/bloodhound/src/model"
 	"github.com/stretchr/testify/require"
 
-	"github.com/specterops/bloodhound/src/database/mocks"
 	"github.com/gorilla/mux"
+	"github.com/specterops/bloodhound/src/database/mocks"
 	"go.uber.org/mock/gomock"
 )
 
@@ -46,7 +46,7 @@ func TestGetADDataQualityStats_Failure(t *testing.T) {
 	endpoint := "/api/v2/ad-domains/%s/data-quality-stats%s"
 
 	mockDB := mocks.NewMockDatabase(mockCtrl)
-	mockDB.EXPECT().GetADDataQualityStats(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, 0, fmt.Errorf("db error"))
+	mockDB.EXPECT().GetADDataQualityStats(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, 0, fmt.Errorf("db error"))
 
 	resources := v2.Resources{DB: mockDB}
 
@@ -168,7 +168,7 @@ func TestGetADDataQualityStats_Success(t *testing.T) {
 	endpoint := "/api/v2/ad-domains/%s/data-quality-stats%s"
 
 	mockDB := mocks.NewMockDatabase(mockCtrl)
-	mockDB.EXPECT().GetADDataQualityStats(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(model.ADDataQualityStats{}, 0, nil).AnyTimes()
+	mockDB.EXPECT().GetADDataQualityStats(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(model.ADDataQualityStats{}, 0, nil).AnyTimes()
 
 	resources := v2.Resources{DB: mockDB}
 
@@ -284,7 +284,7 @@ func TestGetAzureDataQualityStats_Failure(t *testing.T) {
 	endpoint := "/api/v2/azure-tenants/%s/data-quality-stats%s"
 
 	mockDB := mocks.NewMockDatabase(mockCtrl)
-	mockDB.EXPECT().GetAzureDataQualityStats(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, 0, fmt.Errorf("db error"))
+	mockDB.EXPECT().GetAzureDataQualityStats(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, 0, fmt.Errorf("db error"))
 
 	resources := v2.Resources{DB: mockDB}
 
@@ -406,7 +406,7 @@ func TestGetAzureDataQualityStats_Success(t *testing.T) {
 	endpoint := "/api/v2/azure-tenants/%s/data-quality-stats%s"
 
 	mockDB := mocks.NewMockDatabase(mockCtrl)
-	mockDB.EXPECT().GetAzureDataQualityStats(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(model.AzureDataQualityStats{}, 0, nil).AnyTimes()
+	mockDB.EXPECT().GetAzureDataQualityStats(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(model.AzureDataQualityStats{}, 0, nil).AnyTimes()
 
 	resources := v2.Resources{DB: mockDB}
 
@@ -521,8 +521,8 @@ func TestGetPlatformAggregateStats_Failure(t *testing.T) {
 	endpoint := "/api/v2/platform/%s/data-quality-stats%s"
 
 	mockDB := mocks.NewMockDatabase(mockCtrl)
-	mockDB.EXPECT().GetADDataQualityAggregations(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, 0, fmt.Errorf("db error"))
-	mockDB.EXPECT().GetAzureDataQualityAggregations(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, 0, fmt.Errorf("db error"))
+	mockDB.EXPECT().GetADDataQualityAggregations(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, 0, fmt.Errorf("db error"))
+	mockDB.EXPECT().GetAzureDataQualityAggregations(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, 0, fmt.Errorf("db error"))
 
 	resources := v2.Resources{DB: mockDB}
 
@@ -729,8 +729,8 @@ func TestGetPlatformAggregateStats_Success(t *testing.T) {
 	endpoint := "/api/v2/platform/%s/data-quality-stats%s"
 
 	mockDB := mocks.NewMockDatabase(mockCtrl)
-	mockDB.EXPECT().GetADDataQualityAggregations(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(model.ADDataQualityAggregations{}, 0, nil).AnyTimes()
-	mockDB.EXPECT().GetAzureDataQualityAggregations(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(model.AzureDataQualityAggregations{}, 0, nil).AnyTimes()
+	mockDB.EXPECT().GetADDataQualityAggregations(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(model.ADDataQualityAggregations{}, 0, nil).AnyTimes()
+	mockDB.EXPECT().GetAzureDataQualityAggregations(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(model.AzureDataQualityAggregations{}, 0, nil).AnyTimes()
 
 	resources := v2.Resources{DB: mockDB}
 

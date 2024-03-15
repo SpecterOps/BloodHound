@@ -20,9 +20,9 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/src/database"
-	"github.com/go-chi/chi/v5"
 )
 
 const (
@@ -42,7 +42,7 @@ func NewToolContainer(db database.Database) ToolContainer {
 }
 
 func (s ToolContainer) GetFlags(response http.ResponseWriter, request *http.Request) {
-	if flags, err := s.db.GetAllFlags(); err != nil {
+	if flags, err := s.db.GetAllFlags(request.Context()); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
 		api.WriteBasicResponse(request.Context(), flags, http.StatusOK, response)
@@ -54,12 +54,12 @@ func (s ToolContainer) ToggleFlag(response http.ResponseWriter, request *http.Re
 
 	if featureID, err := strconv.ParseInt(rawFeatureID, 10, 32); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsIDMalformed, request), response)
-	} else if featureFlag, err := s.db.GetFlag(int32(featureID)); err != nil {
+	} else if featureFlag, err := s.db.GetFlag(request.Context(), int32(featureID)); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
 		featureFlag.Enabled = !featureFlag.Enabled
 
-		if err := s.db.SetFlag(featureFlag); err != nil {
+		if err := s.db.SetFlag(request.Context(), featureFlag); err != nil {
 			api.HandleDatabaseError(request, response, err)
 		} else {
 			api.WriteBasicResponse(request.Context(), ToggleFlagResponse{

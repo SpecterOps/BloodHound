@@ -89,7 +89,7 @@ func (s Resources) ListSavedQueries(response http.ResponseWriter, request *http.
 			api.WriteErrorResponse(request.Context(), ErrBadQueryParameter(request, model.PaginationQueryParameterSkip, err), response)
 		} else if limit, err := ParseLimitQueryParameter(queryParams, 10000); err != nil {
 			api.WriteErrorResponse(request.Context(), ErrBadQueryParameter(request, model.PaginationQueryParameterLimit, err), response)
-		} else if queries, count, err := s.DB.ListSavedQueries(user.ID, strings.Join(order, ", "), sqlFilter, skip, limit); err != nil {
+		} else if queries, count, err := s.DB.ListSavedQueries(request.Context(), user.ID, strings.Join(order, ", "), sqlFilter, skip, limit); err != nil {
 			api.HandleDatabaseError(request, response, err)
 		} else {
 			api.WriteResponseWrapperWithPagination(request.Context(), queries, limit, skip, count, http.StatusOK, response)
@@ -114,7 +114,7 @@ func (s Resources) CreateSavedQuery(response http.ResponseWriter, request *http.
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
 	} else if createRequest.Name == "" || createRequest.Query == "" {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "the name and/or query field is empty", request), response)
-	} else if savedQuery, err := s.DB.CreateSavedQuery(user.ID, createRequest.Name, createRequest.Query); err != nil {
+	} else if savedQuery, err := s.DB.CreateSavedQuery(request.Context(), user.ID, createRequest.Name, createRequest.Query); err != nil {
 		if strings.Contains(err.Error(), "duplicate key value violates unique constraint") {
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "duplicate name for saved query: please choose a different name", request), response)
 		} else {
@@ -134,13 +134,13 @@ func (s Resources) DeleteSavedQuery(response http.ResponseWriter, request *http.
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "No associated user found", request), response)
 	} else if savedQueryID, err := strconv.Atoi(rawSavedQueryID); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsIDMalformed, request), response)
-	} else if savedQueryBelongsToUser, err := s.DB.SavedQueryBelongsToUser(user.ID, savedQueryID); errors.Is(err, database.ErrNotFound) {
+	} else if savedQueryBelongsToUser, err := s.DB.SavedQueryBelongsToUser(request.Context(), user.ID, savedQueryID); errors.Is(err, database.ErrNotFound) {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, "query does not exist", request), response)
 	} else if err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
 	} else if !savedQueryBelongsToUser {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "invalid saved_query_id supplied", request), response)
-	} else if err := s.DB.DeleteSavedQuery(savedQueryID); errors.Is(err, database.ErrNotFound) {
+	} else if err := s.DB.DeleteSavedQuery(request.Context(), savedQueryID); errors.Is(err, database.ErrNotFound) {
 		// This is an edge case and can only occur if the database has a concurrent operation that deletes the saved query
 		// after the check at s.DB.SavedQueryBelongsToUser but before getting here.
 		// Still, adding in the same check for good measure.

@@ -22,23 +22,23 @@ import (
 	"gorm.io/gorm/clause"
 )
 
-func (s *BloodhoundDB) GetFlag(id int32) (appcfg.FeatureFlag, error) {
+func (s *BloodhoundDB) GetFlag(ctx context.Context, id int32) (appcfg.FeatureFlag, error) {
 	var flag appcfg.FeatureFlag
-	return flag, CheckError(s.db.Find(&flag, id))
+	return flag, CheckError(s.db.WithContext(ctx).Find(&flag, id))
 }
 
-func (s *BloodhoundDB) GetFlagByKey(key string) (appcfg.FeatureFlag, error) {
+func (s *BloodhoundDB) GetFlagByKey(ctx context.Context, key string) (appcfg.FeatureFlag, error) {
 	var flag appcfg.FeatureFlag
-	return flag, CheckError(s.db.Where("key = ?", key).First(&flag))
+	return flag, CheckError(s.db.WithContext(ctx).Where("key = ?", key).First(&flag))
 }
 
-func (s *BloodhoundDB) GetAllFlags() ([]appcfg.FeatureFlag, error) {
+func (s *BloodhoundDB) GetAllFlags(ctx context.Context) ([]appcfg.FeatureFlag, error) {
 	var flags []appcfg.FeatureFlag
-	return flags, CheckError(s.db.Find(&flags))
+	return flags, CheckError(s.db.WithContext(ctx).Find(&flags))
 }
 
-func (s *BloodhoundDB) SetFlag(flag appcfg.FeatureFlag) error {
-	return CheckError(s.db.Save(&flag))
+func (s *BloodhoundDB) SetFlag(ctx context.Context, flag appcfg.FeatureFlag) error {
+	return CheckError(s.db.WithContext(ctx).Save(&flag))
 }
 
 func (s *BloodhoundDB) GetAllConfigurationParameters(ctx context.Context) (appcfg.Parameters, error) {

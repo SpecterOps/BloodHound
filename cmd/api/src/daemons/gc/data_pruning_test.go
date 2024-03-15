@@ -17,6 +17,7 @@
 package gc
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -50,11 +51,11 @@ func TestGC_Start(t *testing.T) {
 
 	mockDB := mocks.NewMockDatabase(mockCtrl)
 
-	mockDB.EXPECT().SweepSessions().Do(func() {
+	mockDB.EXPECT().SweepSessions(gomock.Any()).Do(func(ctx context.Context) {
 		// simulate some work being done
 		time.Sleep(1 * time.Millisecond)
 	})
-	mockDB.EXPECT().SweepAssetGroupCollections().Do(func() {
+	mockDB.EXPECT().SweepAssetGroupCollections(gomock.Any()).Do(func(ctx context.Context) {
 		time.Sleep(1 * time.Millisecond)
 	})
 
@@ -67,5 +68,5 @@ func TestGC_Start(t *testing.T) {
 		daemon.exitC <- struct{}{}
 	}()
 
-	daemon.Start()
+	daemon.Start(context.Background())
 }

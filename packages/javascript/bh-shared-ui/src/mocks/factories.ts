@@ -88,13 +88,17 @@ export const createMockAssetGroupMemberParams = (): AssetGroupMemberParams => {
     return {
         environment_id: '000-000-000',
         primary_kind: 'eq:Domain',
-        custom_member: 'eq:true'
-    }
-}
+        custom_member: 'eq:true',
+    };
+};
 
 export const createMockMemberCounts = (): AssetGroupMemberCounts => {
     return {
         total_count: 3,
-        counts: { [ActiveDirectoryNodeKind.User]: 1, [ActiveDirectoryNodeKind.Computer]: 23, [ActiveDirectoryNodeKind.Domain]: 123 }
-    }
-}
+        counts: {
+            [ActiveDirectoryNodeKind.User]: 1,
+            [ActiveDirectoryNodeKind.Computer]: 23,
+            [ActiveDirectoryNodeKind.Domain]: 123,
+        },
+    };
+};
