@@ -42,6 +42,8 @@ const FileUploadJobIdPathParameterName = "file_upload_job_id"
 var AllowedFileUploadTypes = []string{
 	mediatypes.ApplicationJson.String(),
 	mediatypes.ApplicationZip.String(),
+	mediatypes.ApplicationZipCompressed.String(),
+	mediatypes.ApplicationXZipCompressed.String(),
 }
 
 func (s Resources) ListFileUploadJobs(response http.ResponseWriter, request *http.Request) {
