@@ -36,7 +36,11 @@ import (
 
 const jobActivityTimeout = time.Minute * 20
 
-var UTF8BOMBytes = []byte{0xef, 0xbb, 0xbf}
+const (
+	UTF8BOM1 = 0xef
+	UTF8BOM2 = 0xbb
+	UTF8BMO3 = 0xbf
+)
 
 var ErrInvalidJSON = errors.New("file is not valid json")
 
@@ -109,7 +113,7 @@ func WriteAndValidateJSON(src io.Reader, dst io.Writer) error {
 	if b, err := bufReader.Peek(3); err != nil {
 		return err
 	} else {
-		if b[0] == UTF8BOMBytes[0] && b[1] == UTF8BOMBytes[1] && b[2] == UTF8BOMBytes[2] {
+		if b[0] == UTF8BOM1 && b[1] == UTF8BOM2 && b[2] == UTF8BMO3 {
 			if _, err := bufReader.Discard(3); err != nil {
 				return err
 			}
