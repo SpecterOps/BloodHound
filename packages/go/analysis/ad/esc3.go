@@ -399,7 +399,12 @@ func GetADCSESC3EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 
 			lock.Lock()
 			path1CandidateSegments[certTemplateNode.ID] = append(path1CandidateSegments[certTemplateNode.ID], terminal)
-			path1CertTemplates.Add(certTemplateNode.ID.Uint32())
+
+			// Check that CT is valid for user start nodes
+			userStartNode := startNode.Kinds.ContainsOneOf(ad.User)
+			if !userStartNode || certTemplateValidForUserVictim(certTemplateNode) {
+				path1CertTemplates.Add(certTemplateNode.ID.Uint32())
+			}
 			lock.Unlock()
 
 			return nil
@@ -462,6 +467,26 @@ func GetADCSESC3EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 		p1paths := path1CandidateSegments[ct1.ID]
 		p2paths := path2CandidateSegments[ct2.ID]
 
+		/*
+			MATCH p1 = (x)-[:GenericAll|Enroll|AllExtendedRights]->(ct1:CertTemplate)-[PublishedTo]->(eca1:EnterpriseCA)-[:IssuedSignedBy|EnterpriseCAFor*1..]->(rca:RootCA)-[:RootCAFor]->(d:Domain)
+			WHERE x.objectid = "<principal objectid>"
+			WHERE d.objectid = "<domain objectid>"
+			AND ct1.requiresmanagerapproval = false
+			AND ct1.schemaversion = 1 OR (ct1.schemaversion > 1 AND ct1.authorizedsignatures = 0)
+
+			MATCH p2 = (x)-[:GenericAll|Enroll|AllExtendedRights]->(ct2:CertTemplate)-[PublishedTo]->(eca2:EnterpriseCA)-[:TrustedForNTAuth]->(:NTAuthStore)-[:NTAuthStoreFor]->(d)
+			WHERE ct2.authenticationenabled = true
+			AND ct2.requiresmanagerapproval = false
+
+			MATCH p3 = (ct1)-[:EnrollOnBehalfOf]->(ct2)
+
+			MATCH p4 = (x)-[:Enroll]->(eca1)
+
+			MATCH p5 = (x)-[:Enroll]->(eca2)
+
+			RETURN p1,p2,p3,p4,p5
+		*/
+
 		for _, p1 := range p1paths {
 			eca1 := p1.Search(func(nextSegment *graph.PathSegment) bool {
 				return nextSegment.Node.Kinds.ContainsOneOf(ad.EnterpriseCA) && enterpriseCANodes.Contains(nextSegment.Node.ID.Uint32())
@@ -472,18 +497,6 @@ func GetADCSESC3EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 					return nextSegment.Node.Kinds.ContainsOneOf(ad.EnterpriseCA) && enterpriseCANodes.Contains(nextSegment.Node.ID.Uint32())
 				})
 
-				for _, p4 := range enterpriseCASegments[eca1.ID] {
-					paths.AddPath(p4.Path())
-				}
-
-				for _, p5 := range enterpriseCASegments[eca2.ID] {
-					paths.AddPath(p5.Path())
-				}
-
-				paths.AddPath(p3)
-				paths.AddPath(p1.Path())
-				paths.AddPath(p2.Path())
-
 				if collected, err := eca2.Properties.Get(ad.EnrollmentAgentRestrictionsCollected.String()).Bool(); err != nil {
 					log.Errorf("error getting enrollmentagentcollected for eca2 %d: %v", eca2.ID, err)
 				} else if collected {
@@ -492,11 +505,35 @@ func GetADCSESC3EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 					} else if hasRestrictions {
 						if p6, err := getDelegatedEnrollmentAgentPath(ctx, startNode, ct2, db); err != nil {
 							log.Infof("Error getting p6 for composition: %v", err)
-						} else {
+						} else if p6.Len() > 0 {
+							for _, p4 := range enterpriseCASegments[eca1.ID] {
+								paths.AddPath(p4.Path())
+							}
+
+							for _, p5 := range enterpriseCASegments[eca2.ID] {
+								paths.AddPath(p5.Path())
+							}
+
+							paths.AddPath(p3)
+							paths.AddPath(p1.Path())
+							paths.AddPath(p2.Path())
 							paths.AddPathSet(p6)
 						}
 					}
+				} else {
+					for _, p4 := range enterpriseCASegments[eca1.ID] {
+						paths.AddPath(p4.Path())
+					}
+
+					for _, p5 := range enterpriseCASegments[eca2.ID] {
+						paths.AddPath(p5.Path())
+					}
+
+					paths.AddPath(p3)
+					paths.AddPath(p1.Path())
+					paths.AddPath(p2.Path())
 				}
+
 			}
 		}
 	}

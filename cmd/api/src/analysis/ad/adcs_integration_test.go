@@ -592,6 +592,10 @@ func TestADCSESC3(t *testing.T) {
 				assert.Nil(t, err)
 				assert.Equal(t, 8, len(comp.AllNodes()))
 				assert.False(t, comp.AllNodes().Contains(harness.ESC3Harness2.User2))
+				// CT3 requires DNS name meaning user3 -> domain is not a valid ESC3
+				assert.False(t, comp.AllNodes().Contains(harness.ESC3Harness2.User3))
+				// Enroller does not have DelegatedEnrollmentAgent edge on CT4
+				assert.False(t, comp.AllNodes().Contains(harness.ESC3Harness2.CertTemplate4))
 			}
 			return nil
 		})
