@@ -16,7 +16,10 @@
 
 package appcfg
 
-import "github.com/specterops/bloodhound/src/model"
+import (
+	"context"
+	"github.com/specterops/bloodhound/src/model"
+)
 
 const (
 	FeatureButterflyAnalysis   = "butterfly_analysis"
@@ -115,14 +118,14 @@ type FeatureFlagSet map[string]FeatureFlag
 // FeatureFlagService defines a contract for fetching and setting feature flags.
 type FeatureFlagService interface {
 	// GetAllFlags gets all available runtime feature flags as a FeatureFlagSet for the application.
-	GetAllFlags() ([]FeatureFlag, error)
+	GetAllFlags(ctx context.Context) ([]FeatureFlag, error)
 
 	// GetFlag attempts to fetch a FeatureFlag by its ID.
-	GetFlag(id int32) (FeatureFlag, error)
+	GetFlag(ctx context.Context, id int32) (FeatureFlag, error)
 
 	// GetFlagByKey attempts to fetch a FeatureFlag by its key.
-	GetFlagByKey(key string) (FeatureFlag, error)
+	GetFlagByKey(ctx context.Context, key string) (FeatureFlag, error)
 
 	// SetFlag attempts to store or update the given FeatureFlag by its feature Key.
-	SetFlag(value FeatureFlag) error
+	SetFlag(ctx context.Context, value FeatureFlag) error
 }

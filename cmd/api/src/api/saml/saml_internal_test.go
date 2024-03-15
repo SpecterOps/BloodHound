@@ -115,7 +115,7 @@ func TestProviderResource_createSessionFromAssertion(t *testing.T) {
 
 	// Test happy path
 	mockDB.EXPECT().LookupUser(gomock.Any(), goodUsername).Return(goodUser, nil)
-	mockAuthenticator.EXPECT().CreateSession(goodUser, gomock.Any()).Return(goodJWT, nil)
+	mockAuthenticator.EXPECT().CreateSession(gomock.Any(), goodUser, gomock.Any()).Return(goodJWT, nil)
 
 	resource.createSessionFromAssertion(httpRequest, response, expires, testAssertion)
 

@@ -14,10 +14,11 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package datapipe_test
+package fileupload_test
 
 import (
-	"github.com/specterops/bloodhound/src/daemons/datapipe"
+	"github.com/specterops/bloodhound/src/model/ingest"
+	"github.com/specterops/bloodhound/src/services/fileupload"
 	"github.com/stretchr/testify/assert"
 	"strings"
 	"testing"
@@ -27,7 +28,7 @@ type metaTagAssertion struct {
 	name         string
 	rawString    string
 	err          error
-	expectedType datapipe.DataType
+	expectedType ingest.DataType
 }
 
 func Test_ValidateMetaTag(t *testing.T) {
@@ -36,48 +37,47 @@ func Test_ValidateMetaTag(t *testing.T) {
 			name:         "valid",
 			rawString:    `{"meta": {"methods": 0, "type": "sessions", "count": 0, "version": 5}, "data": []}`,
 			err:          nil,
-			expectedType: datapipe.DataTypeSession,
+			expectedType: ingest.DataTypeSession,
 		},
 		{
 			name:      "No data tag",
 			rawString: `{"meta": {"methods": 0, "type": "sessions", "count": 0, "version": 5}}`,
-			err:       datapipe.ErrDataTagNotFound,
+			err:       ingest.ErrDataTagNotFound,
 		},
 		{
 			name:      "No meta tag",
 			rawString: `{"data": []}`,
-			err:       datapipe.ErrMetaTagNotFound,
+			err:       ingest.ErrMetaTagNotFound,
 		},
 		{
 			name:      "No valid tags",
 			rawString: `{}`,
-			err:       datapipe.ErrNoTagFound,
+			err:       ingest.ErrNoTagFound,
 		},
 		{
 			name:         "ignore invalid tag but still find correct tag",
 			rawString:    `{"meta": 0, "meta": {"methods": 0, "type": "sessions", "count": 0, "version": 5}, "data": []}`,
 			err:          nil,
-			expectedType: datapipe.DataTypeSession,
+			expectedType: ingest.DataTypeSession,
 		},
 		{
 			name:         "swapped order",
 			rawString:    `{"data": [],"meta": {"methods": 0, "type": "sessions", "count": 0, "version": 5}}`,
 			err:          nil,
-			expectedType: datapipe.DataTypeSession,
+			expectedType: ingest.DataTypeSession,
 		},
 		{
 			name:      "invalid type",
 			rawString: `{"data": [],"meta": {"methods": 0, "type": "invalid", "count": 0, "version": 5}}`,
-			err:       datapipe.ErrMetaTagNotFound,
+			err:       ingest.ErrMetaTagNotFound,
 		},
 	}
 
 	for _, assertion := range assertions {
-		meta, err := datapipe.ValidateMetaTag(strings.NewReader(assertion.rawString))
+		meta, err := fileupload.ValidateMetaTag(strings.NewReader(assertion.rawString), false)
 		assert.ErrorIs(t, err, assertion.err)
 		if assertion.err == nil {
 			assert.Equal(t, meta.Type, assertion.expectedType)
 		}
-
 	}
 }

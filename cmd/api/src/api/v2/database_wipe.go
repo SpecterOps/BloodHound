@@ -77,11 +77,11 @@ func (s Resources) HandleDatabaseWipe(response http.ResponseWriter, request *htt
 	}
 
 	auditEntry := &model.AuditEntry{
-		Action: "DeleteBloodhoundData",
+		Action: model.AuditLogActionDeleteBloodhoundData,
 		Model: &model.AuditData{
 			"options": payload,
 		},
-		Status:   model.AuditStatusIntent,
+		Status:   model.AuditLogStatusIntent,
 		CommitID: commitID,
 	}
 
@@ -216,12 +216,12 @@ func (s Resources) deleteDataQualityHistory(ctx context.Context, auditEntry *mod
 
 func (s Resources) handleAuditLogForDatabaseWipe(ctx context.Context, auditEntry *model.AuditEntry, success bool, msg string) {
 	if success {
-		auditEntry.Status = model.AuditStatusSuccess
+		auditEntry.Status = model.AuditLogStatusSuccess
 		auditEntry.Model = model.AuditData{
 			"delete_successful": msg,
 		}
 	} else {
-		auditEntry.Status = model.AuditStatusFailure
+		auditEntry.Status = model.AuditLogStatusFailure
 		auditEntry.Model = model.AuditData{
 			"delete_failed": msg,
 		}

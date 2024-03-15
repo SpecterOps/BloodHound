@@ -21,6 +21,7 @@ package database_test
 
 import (
 	"context"
+	"github.com/specterops/bloodhound/src/test/integration"
 	"github.com/specterops/bloodhound/src/utils/test"
 	"testing"
 	"time"
@@ -29,7 +30,6 @@ import (
 	"github.com/specterops/bloodhound/src/database"
 	"github.com/specterops/bloodhound/src/database/types/null"
 	"github.com/specterops/bloodhound/src/model"
-	"github.com/specterops/bloodhound/src/test/integration"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -40,10 +40,7 @@ const (
 )
 
 func initAndGetRoles(t *testing.T) (database.Database, model.Roles) {
-	dbInst := integration.OpenDatabase(t)
-	if err := integration.Prepare(dbInst); err != nil {
-		t.Fatalf("Failed preparing DB: %v", err)
-	}
+	dbInst := integration.SetupDB(t)
 
 	if roles, err := dbInst.GetAllRoles(context.Background(), "", model.SQLFilter{}); err != nil {
 		t.Fatalf("Error fetching roles: %v", err)
@@ -76,14 +73,13 @@ func initAndCreateUser(t *testing.T) (database.Database, model.User) {
 }
 
 func TestDatabase_Installation(t *testing.T) {
-	dbInst := integration.OpenDatabase(t)
-	if err := integration.Prepare(dbInst); err != nil {
-		t.Fatalf("Failed preparing DB: %v", err)
-	}
-
-	if installation, err := dbInst.CreateInstallation(); err != nil {
+	var (
+		dbInst  = integration.SetupDB(t)
+		testCtx = context.Background()
+	)
+	if installation, err := dbInst.CreateInstallation(testCtx); err != nil {
 		t.Fatalf("Error creating installation: %v", err)
-	} else if fetchedInstallation, err := dbInst.GetInstallation(); err != nil {
+	} else if fetchedInstallation, err := dbInst.GetInstallation(testCtx); err != nil {
 		t.Fatalf("Failed to fetch installation: %v", err)
 	} else if installation.ID.String() != fetchedInstallation.ID.String() {
 		t.Fatalf("Installation fetched does not match the initially created installation")
@@ -91,10 +87,7 @@ func TestDatabase_Installation(t *testing.T) {
 }
 
 func TestDatabase_InitializePermissions(t *testing.T) {
-	dbInst := integration.OpenDatabase(t)
-	if err := integration.Prepare(dbInst); err != nil {
-		t.Fatalf("Failed preparing DB: %v", err)
-	}
+	dbInst := integration.SetupDB(t)
 
 	if permissions, err := dbInst.GetAllPermissions(context.Background(), "", model.SQLFilter{}); err != nil {
 		t.Fatalf("Error fetching permissions: %v", err)
@@ -171,7 +164,7 @@ func TestDatabase_CreateGetDeleteUser(t *testing.T) {
 			t.Fatalf("Error creating user: %v", err)
 		} else if newUser, err := dbInst.LookupUser(ctx, user.PrincipalName); err != nil {
 			t.Fatalf("Failed looking up user by principal %s: %v", user.PrincipalName, err)
-		} else if err = test.VerifyAuditLogs(dbInst, "CreateUser", "principal_name", newUser.PrincipalName); err != nil {
+		} else if err = test.VerifyAuditLogs(dbInst, model.AuditLogActionCreateUser, "principal_name", newUser.PrincipalName); err != nil {
 			t.Fatalf("Failed to validate CreateUser audit logs:\n%v", err)
 		} else {
 			for _, role := range roles {
@@ -194,7 +187,7 @@ func TestDatabase_CreateGetDeleteUser(t *testing.T) {
 
 			if err := dbInst.UpdateUser(ctx, newUser); err != nil {
 				t.Fatalf("Failed to update user: %v", err)
-			} else if err = test.VerifyAuditLogs(dbInst, "UpdateUser", "principal_name", newUser.PrincipalName); err != nil {
+			} else if err = test.VerifyAuditLogs(dbInst, model.AuditLogActionUpdateUser, "principal_name", newUser.PrincipalName); err != nil {
 				t.Fatalf("Failed to validate UpdateUser audit logs:\n%v", err)
 			} else if updatedUser, err := dbInst.LookupUser(ctx, user.PrincipalName); err != nil {
 				t.Fatalf("Failed looking up user by principal %s: %v", user.PrincipalName, err)
@@ -206,7 +199,7 @@ func TestDatabase_CreateGetDeleteUser(t *testing.T) {
 
 	if err := dbInst.DeleteUser(ctx, createdUsers[1]); err != nil {
 		t.Fatalf("Failed to delete user: %v", err)
-	} else if err = test.VerifyAuditLogs(dbInst, "DeleteUser", "principal_name", users[1].PrincipalName); err != nil {
+	} else if err = test.VerifyAuditLogs(dbInst, model.AuditLogActionDeleteUser, "principal_name", users[1].PrincipalName); err != nil {
 		t.Fatalf("Failed to validate Deleteuser audit logs:\n%v", err)
 	}
 
@@ -234,7 +227,7 @@ func TestDatabase_CreateGetDeleteAuthToken(t *testing.T) {
 
 	if newToken, err := dbInst.CreateAuthToken(ctx, token); err != nil {
 		t.Fatalf("Failed to create auth token: %v", err)
-	} else if err = test.VerifyAuditLogs(dbInst, "CreateAuthToken", "id", newToken.ID.String()); err != nil {
+	} else if err = test.VerifyAuditLogs(dbInst, model.AuditLogActionCreateAuthToken, "id", newToken.ID.String()); err != nil {
 		t.Fatalf("Failed to validate CreateAuthToken audit logs:\n%v", err)
 	} else if updatedUser, err := dbInst.GetUser(ctx, user.ID); err != nil {
 		t.Fatalf("Failed to fetch updated user: %v", err)
@@ -246,7 +239,7 @@ func TestDatabase_CreateGetDeleteAuthToken(t *testing.T) {
 		t.Fatalf("Expected auth token to have name %s but saw %v", expectedName, newToken.Name.String)
 	} else if err = dbInst.DeleteAuthToken(ctx, newToken); err != nil {
 		t.Fatalf("Failed to delete auth token: %v", err)
-	} else if err = test.VerifyAuditLogs(dbInst, "DeleteAuthToken", "id", newToken.ID.String()); err != nil {
+	} else if err = test.VerifyAuditLogs(dbInst, model.AuditLogActionDeleteAuthToken, "id", newToken.ID.String()); err != nil {
 		t.Fatalf("Failed to validate DeleteAuthToken audit logs:\n%v", err)
 	}
 
@@ -273,7 +266,7 @@ func TestDatabase_CreateGetDeleteAuthSecret(t *testing.T) {
 
 	if newSecret, err := dbInst.CreateAuthSecret(ctx, secret); err != nil {
 		t.Fatalf("Failed to create auth secret: %v", err)
-	} else if err = test.VerifyAuditLogs(dbInst, "CreateAuthSecret", "secret_user_id", newSecret.UserID.String()); err != nil {
+	} else if err = test.VerifyAuditLogs(dbInst, model.AuditLogActionCreateAuthSecret, "secret_user_id", newSecret.UserID.String()); err != nil {
 		t.Fatalf("Failed to validate CreateAuthSecret audit logs:\n%v", err)
 	} else if updatedUser, err := dbInst.GetUser(ctx, user.ID); err != nil {
 		t.Fatalf("Failed to fetch updated user: %v", err)
@@ -284,7 +277,7 @@ func TestDatabase_CreateGetDeleteAuthSecret(t *testing.T) {
 
 		if err := dbInst.UpdateAuthSecret(ctx, newSecret); err != nil {
 			t.Fatalf("Failed to update auth secret %d: %v", newSecret.ID, err)
-		} else if err = test.VerifyAuditLogs(dbInst, "UpdateAuthSecret", "secret_user_id", newSecret.UserID.String()); err != nil {
+		} else if err = test.VerifyAuditLogs(dbInst, model.AuditLogActionUpdateAuthSecret, "secret_user_id", newSecret.UserID.String()); err != nil {
 			t.Fatalf("Failed to validate UpdateAuthSecret audit logs:\n%v", err)
 		} else if updatedSecret, err := dbInst.GetAuthSecret(ctx, newSecret.ID); err != nil {
 			t.Fatalf("Failed to fetch updated auth secret: %v", err)
@@ -294,7 +287,7 @@ func TestDatabase_CreateGetDeleteAuthSecret(t *testing.T) {
 
 		if err := dbInst.DeleteAuthSecret(ctx, newSecret); err != nil {
 			t.Fatalf("Failed to delete auth token: %v", err)
-		} else if err = test.VerifyAuditLogs(dbInst, "DeleteAuthSecret", "secret_user_id", newSecret.UserID.String()); err != nil {
+		} else if err = test.VerifyAuditLogs(dbInst, model.AuditLogActionDeleteAuthSecret, "secret_user_id", newSecret.UserID.String()); err != nil {
 			t.Fatalf("Failed to validate DeleteAuthSecret audit logs:\n%v", err)
 		}
 	}
@@ -324,7 +317,7 @@ func TestDatabase_CreateUpdateDeleteSAMLProvider(t *testing.T) {
 
 	if newSAMLProvider, err = dbInst.CreateSAMLIdentityProvider(ctx, samlProvider); err != nil {
 		t.Fatalf("Failed to create SAML provider: %v", err)
-	} else if err = test.VerifyAuditLogs(dbInst, "CreateSAMLIdentityProvider", "saml_name", newSAMLProvider.Name); err != nil {
+	} else if err = test.VerifyAuditLogs(dbInst, model.AuditLogActionCreateSAMLIdentityProvider, "saml_name", newSAMLProvider.Name); err != nil {
 		t.Fatalf("Failed to validate CreateSAMLIdentityProvider audit logs:\n%v", err)
 	} else {
 		user.SAMLProviderID = null.Int32From(newSAMLProvider.ID)
@@ -353,7 +346,7 @@ func TestDatabase_CreateUpdateDeleteSAMLProvider(t *testing.T) {
 	}
 	if err := dbInst.UpdateSAMLIdentityProvider(ctx, updatedSAMLProvider); err != nil {
 		t.Fatalf("Failed to update SAML provider: %v", err)
-	} else if err = test.VerifyAuditLogs(dbInst, "UpdateSAMLIdentityProvider", "saml_name", "updated provider"); err != nil {
+	} else if err = test.VerifyAuditLogs(dbInst, model.AuditLogActionUpdateSAMLIdentityProvider, "saml_name", "updated provider"); err != nil {
 		t.Fatalf("Failed to validate UpdateSAMLIdentityProvider audit logs:\n%v", err)
 	}
 
@@ -362,13 +355,14 @@ func TestDatabase_CreateUpdateDeleteSAMLProvider(t *testing.T) {
 		t.Fatalf("Failed to update user: %v", err)
 	} else if err := dbInst.DeleteSAMLProvider(ctx, newSAMLProvider); err != nil {
 		t.Fatalf("Failed to delete SAML provider: %v", err)
-	} else if err = test.VerifyAuditLogs(dbInst, "DeleteSAMLIdentityProvider", "saml_name", "provider"); err != nil {
+	} else if err = test.VerifyAuditLogs(dbInst, model.AuditLogActionDeleteSAMLIdentityProvider, "saml_name", "provider"); err != nil {
 		t.Fatalf("Failed to validate DeleteSAMLIdentityProvider audit logs:\n%v", err)
 	}
 }
 
 func TestDatabase_CreateUserSession(t *testing.T) {
 	var (
+		testCtx      = context.Background()
 		dbInst, user = initAndCreateUser(t)
 		userSession  = model.UserSession{
 			User:      user,
@@ -377,7 +371,7 @@ func TestDatabase_CreateUserSession(t *testing.T) {
 		}
 	)
 
-	if newUserSession, err := dbInst.CreateUserSession(userSession); err != nil {
+	if newUserSession, err := dbInst.CreateUserSession(testCtx, userSession); err != nil {
 		t.Fatalf("Failed to create new user session: %v", err)
 	} else if newUserSession.Expired() {
 		t.Fatalf("Expected user session to remain valid. Session expires at: %s", newUserSession.ExpiresAt)
@@ -388,7 +382,7 @@ func TestDatabase_CreateUserSession(t *testing.T) {
 	// Test expiry
 	userSession.ExpiresAt = time.Now().UTC().Add(-time.Hour)
 
-	if newUserSession, err := dbInst.CreateUserSession(userSession); err != nil {
+	if newUserSession, err := dbInst.CreateUserSession(testCtx, userSession); err != nil {
 		t.Fatalf("Failed to create new user session: %v", err)
 	} else if !newUserSession.Expired() {
 		t.Fatalf("Expected user session to be expired. Session expires at: %s", newUserSession.ExpiresAt)

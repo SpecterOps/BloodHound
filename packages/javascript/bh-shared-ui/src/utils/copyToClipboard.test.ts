@@ -14,18 +14,18 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import userEvent from "@testing-library/user-event";
-import { copyToClipboard } from "."
+import userEvent from '@testing-library/user-event';
+import { copyToClipboard } from '.';
 
 describe('copyToClipboard', () => {
-	it('takes a string and copys to the navigator clipboard', async () => {
-		userEvent.setup(); // replaces window.navigator.clipboard with a stub
+    it('takes a string and copys to the navigator clipboard', async () => {
+        userEvent.setup(); // replaces window.navigator.clipboard with a stub
 
-		const expected = 'test copying capabilities'
-		await copyToClipboard(expected)
+        const expected = 'test copying capabilities';
+        await copyToClipboard(expected);
 
-		const result = await navigator.clipboard.readText()
+        const result = await navigator.clipboard.readText();
 
-		expect(result).toBe(expected)
-	})
-})
+        expect(result).toBe(expected);
+    });
+});

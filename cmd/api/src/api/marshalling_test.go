@@ -110,15 +110,3 @@ func TestWriteBinaryResponse(t *testing.T) {
 	require.Contains(t, response.Body.String(), "foo")
 	require.Contains(t, response.Header().Values(headers.ContentType.String()), mediatypes.ApplicationOctetStream.String())
 }
-
-func TestHeaderMatches(t *testing.T) {
-	const jsonContentTypeWithCharset = "application/json; charset=utf-8"
-
-	header := http.Header{
-		headers.ContentType.String(): []string{jsonContentTypeWithCharset},
-	}
-
-	if !api.HeaderMatches(headers.ContentType.String(), mediatypes.ApplicationJson.String(), header) {
-		t.Fatalf("Expected content type %s to match %s", mediatypes.ApplicationJson.String(), jsonContentTypeWithCharset)
-	}
-}

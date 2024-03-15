@@ -1,17 +1,17 @@
 // Copyright 2023 Specter Ops, Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// 
+//
 // SPDX-License-Identifier: Apache-2.0
 
 package daemons
@@ -25,7 +25,7 @@ import (
 )
 
 type Daemon interface {
-	Start()
+	Start(ctx context.Context)
 	Name() string
 	Stop(ctx context.Context) error
 }
@@ -43,13 +43,13 @@ func NewManager(shutdownTimeout time.Duration) *Manager {
 	}
 }
 
-func (s *Manager) Start(daemons ...Daemon) {
+func (s *Manager) Start(ctx context.Context, daemons ...Daemon) {
 	s.daemonsLock.Lock()
 	defer s.daemonsLock.Unlock()
 
 	for _, daemon := range daemons {
 		log.Infof("Starting daemon %s", daemon.Name())
-		go daemon.Start()
+		go daemon.Start(ctx)
 
 		s.daemons = append(s.daemons, daemon)
 	}

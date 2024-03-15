@@ -285,7 +285,7 @@ func (s ProviderResource) createSessionFromAssertion(request *http.Request, resp
 		default:
 			s.writeAPIErrorResponse(request, response, http.StatusInternalServerError, "session creation failure")
 		}
-	} else if sessionJWT, err := s.authenticator.CreateSession(user, s.serviceProvider.Config); err != nil {
+	} else if sessionJWT, err := s.authenticator.CreateSession(request.Context(), user, s.serviceProvider.Config); err != nil {
 		if locationURL := api.URLJoinPath(hostURL, api.UserDisabledPath); err == ErrorUserDisabled {
 			response.Header().Add(headers.Location.String(), locationURL.String())
 			response.WriteHeader(http.StatusFound)

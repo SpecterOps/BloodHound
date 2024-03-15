@@ -17,4 +17,3 @@
 import AssetGroupFilters from './AssetGroupFilters';
 
 export default AssetGroupFilters;
-

@@ -19,8 +19,9 @@ package v2_test
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
+	"github.com/specterops/bloodhound/src/model/ingest"
 	"net/http"
-	"strings"
 	"testing"
 
 	"github.com/specterops/bloodhound/errors"
@@ -226,6 +227,10 @@ func TestResources_EndFileUploadJob(t *testing.T) {
 }
 
 func TestResources_ListAcceptedFileUploadTypes(t *testing.T) {
+	bytes, err := json.Marshal(ingest.AllowedFileUploadTypes)
+	if err != nil {
+		t.Fatalf("Error marshalling obj: %v", err)
+	}
 	apitest.
 		NewHarness(t, v2.Resources{}.ListAcceptedFileUploadTypes).
 		Run([]apitest.Case{
@@ -233,7 +238,7 @@ func TestResources_ListAcceptedFileUploadTypes(t *testing.T) {
 				Name: "Success",
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusOK)
-					apitest.BodyContains(output, strings.Join(v2.AllowedFileUploadTypes, ","))
+					apitest.BodyContains(output, string(bytes))
 				},
 			},
 		})

@@ -69,15 +69,15 @@ func (mr *MockDatabaseMockRecorder) AppendAuditLog(arg0, arg1 interface{}) *gomo
 }
 
 // Close mocks base method.
-func (m *MockDatabase) Close() {
+func (m *MockDatabase) Close(arg0 context.Context) {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "Close")
+	m.ctrl.Call(m, "Close", arg0)
 }
 
 // Close indicates an expected call of Close.
-func (mr *MockDatabaseMockRecorder) Close() *gomock.Call {
+func (mr *MockDatabaseMockRecorder) Close(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Close", reflect.TypeOf((*MockDatabase)(nil).Close))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Close", reflect.TypeOf((*MockDatabase)(nil).Close), arg0)
 }
 
 // CreateADDataQualityAggregation mocks base method.
@@ -244,18 +244,18 @@ func (mr *MockDatabaseMockRecorder) CreateIngestTask(arg0, arg1 interface{}) *go
 }
 
 // CreateInstallation mocks base method.
-func (m *MockDatabase) CreateInstallation() (model.Installation, error) {
+func (m *MockDatabase) CreateInstallation(arg0 context.Context) (model.Installation, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateInstallation")
+	ret := m.ctrl.Call(m, "CreateInstallation", arg0)
 	ret0, _ := ret[0].(model.Installation)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // CreateInstallation indicates an expected call of CreateInstallation.
-func (mr *MockDatabaseMockRecorder) CreateInstallation() *gomock.Call {
+func (mr *MockDatabaseMockRecorder) CreateInstallation(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateInstallation", reflect.TypeOf((*MockDatabase)(nil).CreateInstallation))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateInstallation", reflect.TypeOf((*MockDatabase)(nil).CreateInstallation), arg0)
 }
 
 // CreateSAMLIdentityProvider mocks base method.
@@ -274,18 +274,18 @@ func (mr *MockDatabaseMockRecorder) CreateSAMLIdentityProvider(arg0, arg1 interf
 }
 
 // CreateSavedQuery mocks base method.
-func (m *MockDatabase) CreateSavedQuery(arg0 uuid.UUID, arg1, arg2 string) (model.SavedQuery, error) {
+func (m *MockDatabase) CreateSavedQuery(arg0 context.Context, arg1 uuid.UUID, arg2, arg3 string) (model.SavedQuery, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateSavedQuery", arg0, arg1, arg2)
+	ret := m.ctrl.Call(m, "CreateSavedQuery", arg0, arg1, arg2, arg3)
 	ret0, _ := ret[0].(model.SavedQuery)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // CreateSavedQuery indicates an expected call of CreateSavedQuery.
-func (mr *MockDatabaseMockRecorder) CreateSavedQuery(arg0, arg1, arg2 interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) CreateSavedQuery(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateSavedQuery", reflect.TypeOf((*MockDatabase)(nil).CreateSavedQuery), arg0, arg1, arg2)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateSavedQuery", reflect.TypeOf((*MockDatabase)(nil).CreateSavedQuery), arg0, arg1, arg2, arg3)
 }
 
 // CreateUser mocks base method.
@@ -304,18 +304,18 @@ func (mr *MockDatabaseMockRecorder) CreateUser(arg0, arg1 interface{}) *gomock.C
 }
 
 // CreateUserSession mocks base method.
-func (m *MockDatabase) CreateUserSession(arg0 model.UserSession) (model.UserSession, error) {
+func (m *MockDatabase) CreateUserSession(arg0 context.Context, arg1 model.UserSession) (model.UserSession, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateUserSession", arg0)
+	ret := m.ctrl.Call(m, "CreateUserSession", arg0, arg1)
 	ret0, _ := ret[0].(model.UserSession)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // CreateUserSession indicates an expected call of CreateUserSession.
-func (mr *MockDatabaseMockRecorder) CreateUserSession(arg0 interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) CreateUserSession(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateUserSession", reflect.TypeOf((*MockDatabase)(nil).CreateUserSession), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateUserSession", reflect.TypeOf((*MockDatabase)(nil).CreateUserSession), arg0, arg1)
 }
 
 // DeleteAllDataQuality mocks base method.
@@ -445,17 +445,17 @@ func (mr *MockDatabaseMockRecorder) DeleteSAMLProvider(arg0, arg1 interface{}) *
 }
 
 // DeleteSavedQuery mocks base method.
-func (m *MockDatabase) DeleteSavedQuery(arg0 int) error {
+func (m *MockDatabase) DeleteSavedQuery(arg0 context.Context, arg1 int) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DeleteSavedQuery", arg0)
+	ret := m.ctrl.Call(m, "DeleteSavedQuery", arg0, arg1)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // DeleteSavedQuery indicates an expected call of DeleteSavedQuery.
-func (mr *MockDatabaseMockRecorder) DeleteSavedQuery(arg0 interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) DeleteSavedQuery(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteSavedQuery", reflect.TypeOf((*MockDatabase)(nil).DeleteSavedQuery), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteSavedQuery", reflect.TypeOf((*MockDatabase)(nil).DeleteSavedQuery), arg0, arg1)
 }
 
 // DeleteUser mocks base method.
@@ -473,15 +473,15 @@ func (mr *MockDatabaseMockRecorder) DeleteUser(arg0, arg1 interface{}) *gomock.C
 }
 
 // EndUserSession mocks base method.
-func (m *MockDatabase) EndUserSession(arg0 model.UserSession) {
+func (m *MockDatabase) EndUserSession(arg0 context.Context, arg1 model.UserSession) {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "EndUserSession", arg0)
+	m.ctrl.Call(m, "EndUserSession", arg0, arg1)
 }
 
 // EndUserSession indicates an expected call of EndUserSession.
-func (mr *MockDatabaseMockRecorder) EndUserSession(arg0 interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) EndUserSession(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EndUserSession", reflect.TypeOf((*MockDatabase)(nil).EndUserSession), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EndUserSession", reflect.TypeOf((*MockDatabase)(nil).EndUserSession), arg0, arg1)
 }
 
 // GetADDataQualityAggregations mocks base method.
@@ -578,18 +578,18 @@ func (mr *MockDatabaseMockRecorder) GetAllFileUploadJobs(arg0, arg1, arg2, arg3,
 }
 
 // GetAllFlags mocks base method.
-func (m *MockDatabase) GetAllFlags() ([]appcfg.FeatureFlag, error) {
+func (m *MockDatabase) GetAllFlags(arg0 context.Context) ([]appcfg.FeatureFlag, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetAllFlags")
+	ret := m.ctrl.Call(m, "GetAllFlags", arg0)
 	ret0, _ := ret[0].([]appcfg.FeatureFlag)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetAllFlags indicates an expected call of GetAllFlags.
-func (mr *MockDatabaseMockRecorder) GetAllFlags() *gomock.Call {
+func (mr *MockDatabaseMockRecorder) GetAllFlags(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllFlags", reflect.TypeOf((*MockDatabase)(nil).GetAllFlags))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllFlags", reflect.TypeOf((*MockDatabase)(nil).GetAllFlags), arg0)
 }
 
 // GetAllIngestTasks mocks base method.
@@ -820,33 +820,33 @@ func (mr *MockDatabaseMockRecorder) GetFileUploadJobsWithStatus(arg0, arg1 inter
 }
 
 // GetFlag mocks base method.
-func (m *MockDatabase) GetFlag(arg0 int32) (appcfg.FeatureFlag, error) {
+func (m *MockDatabase) GetFlag(arg0 context.Context, arg1 int32) (appcfg.FeatureFlag, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetFlag", arg0)
+	ret := m.ctrl.Call(m, "GetFlag", arg0, arg1)
 	ret0, _ := ret[0].(appcfg.FeatureFlag)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetFlag indicates an expected call of GetFlag.
-func (mr *MockDatabaseMockRecorder) GetFlag(arg0 interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) GetFlag(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetFlag", reflect.TypeOf((*MockDatabase)(nil).GetFlag), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetFlag", reflect.TypeOf((*MockDatabase)(nil).GetFlag), arg0, arg1)
 }
 
 // GetFlagByKey mocks base method.
-func (m *MockDatabase) GetFlagByKey(arg0 string) (appcfg.FeatureFlag, error) {
+func (m *MockDatabase) GetFlagByKey(arg0 context.Context, arg1 string) (appcfg.FeatureFlag, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetFlagByKey", arg0)
+	ret := m.ctrl.Call(m, "GetFlagByKey", arg0, arg1)
 	ret0, _ := ret[0].(appcfg.FeatureFlag)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetFlagByKey indicates an expected call of GetFlagByKey.
-func (mr *MockDatabaseMockRecorder) GetFlagByKey(arg0 interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) GetFlagByKey(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetFlagByKey", reflect.TypeOf((*MockDatabase)(nil).GetFlagByKey), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetFlagByKey", reflect.TypeOf((*MockDatabase)(nil).GetFlagByKey), arg0, arg1)
 }
 
 // GetIngestTasksForJob mocks base method.
@@ -865,18 +865,18 @@ func (mr *MockDatabaseMockRecorder) GetIngestTasksForJob(arg0, arg1 interface{})
 }
 
 // GetInstallation mocks base method.
-func (m *MockDatabase) GetInstallation() (model.Installation, error) {
+func (m *MockDatabase) GetInstallation(arg0 context.Context) (model.Installation, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetInstallation")
+	ret := m.ctrl.Call(m, "GetInstallation", arg0)
 	ret0, _ := ret[0].(model.Installation)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetInstallation indicates an expected call of GetInstallation.
-func (mr *MockDatabaseMockRecorder) GetInstallation() *gomock.Call {
+func (mr *MockDatabaseMockRecorder) GetInstallation(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetInstallation", reflect.TypeOf((*MockDatabase)(nil).GetInstallation))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetInstallation", reflect.TypeOf((*MockDatabase)(nil).GetInstallation), arg0)
 }
 
 // GetLatestAssetGroupCollection mocks base method.
@@ -1000,18 +1000,18 @@ func (mr *MockDatabaseMockRecorder) GetUser(arg0, arg1 interface{}) *gomock.Call
 }
 
 // GetUserSession mocks base method.
-func (m *MockDatabase) GetUserSession(arg0 int64) (model.UserSession, error) {
+func (m *MockDatabase) GetUserSession(arg0 context.Context, arg1 int64) (model.UserSession, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetUserSession", arg0)
+	ret := m.ctrl.Call(m, "GetUserSession", arg0, arg1)
 	ret0, _ := ret[0].(model.UserSession)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetUserSession indicates an expected call of GetUserSession.
-func (mr *MockDatabaseMockRecorder) GetUserSession(arg0 interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) GetUserSession(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserSession", reflect.TypeOf((*MockDatabase)(nil).GetUserSession), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserSession", reflect.TypeOf((*MockDatabase)(nil).GetUserSession), arg0, arg1)
 }
 
 // GetUserToken mocks base method.
@@ -1030,18 +1030,18 @@ func (mr *MockDatabaseMockRecorder) GetUserToken(arg0, arg1, arg2 interface{}) *
 }
 
 // HasInstallation mocks base method.
-func (m *MockDatabase) HasInstallation() (bool, error) {
+func (m *MockDatabase) HasInstallation(arg0 context.Context) (bool, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "HasInstallation")
+	ret := m.ctrl.Call(m, "HasInstallation", arg0)
 	ret0, _ := ret[0].(bool)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // HasInstallation indicates an expected call of HasInstallation.
-func (mr *MockDatabaseMockRecorder) HasInstallation() *gomock.Call {
+func (mr *MockDatabaseMockRecorder) HasInstallation(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "HasInstallation", reflect.TypeOf((*MockDatabase)(nil).HasInstallation))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "HasInstallation", reflect.TypeOf((*MockDatabase)(nil).HasInstallation), arg0)
 }
 
 // InitializeSecretAuth mocks base method.
@@ -1076,9 +1076,9 @@ func (mr *MockDatabaseMockRecorder) ListAuditLogs(arg0, arg1, arg2, arg3, arg4, 
 }
 
 // ListSavedQueries mocks base method.
-func (m *MockDatabase) ListSavedQueries(arg0 uuid.UUID, arg1 string, arg2 model.SQLFilter, arg3, arg4 int) (model.SavedQueries, int, error) {
+func (m *MockDatabase) ListSavedQueries(arg0 context.Context, arg1 uuid.UUID, arg2 string, arg3 model.SQLFilter, arg4, arg5 int) (model.SavedQueries, int, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ListSavedQueries", arg0, arg1, arg2, arg3, arg4)
+	ret := m.ctrl.Call(m, "ListSavedQueries", arg0, arg1, arg2, arg3, arg4, arg5)
 	ret0, _ := ret[0].(model.SavedQueries)
 	ret1, _ := ret[1].(int)
 	ret2, _ := ret[2].(error)
@@ -1086,24 +1086,24 @@ func (m *MockDatabase) ListSavedQueries(arg0 uuid.UUID, arg1 string, arg2 model.
 }
 
 // ListSavedQueries indicates an expected call of ListSavedQueries.
-func (mr *MockDatabaseMockRecorder) ListSavedQueries(arg0, arg1, arg2, arg3, arg4 interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) ListSavedQueries(arg0, arg1, arg2, arg3, arg4, arg5 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListSavedQueries", reflect.TypeOf((*MockDatabase)(nil).ListSavedQueries), arg0, arg1, arg2, arg3, arg4)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListSavedQueries", reflect.TypeOf((*MockDatabase)(nil).ListSavedQueries), arg0, arg1, arg2, arg3, arg4, arg5)
 }
 
 // LookupActiveSessionsByUser mocks base method.
-func (m *MockDatabase) LookupActiveSessionsByUser(arg0 model.User) ([]model.UserSession, error) {
+func (m *MockDatabase) LookupActiveSessionsByUser(arg0 context.Context, arg1 model.User) ([]model.UserSession, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "LookupActiveSessionsByUser", arg0)
+	ret := m.ctrl.Call(m, "LookupActiveSessionsByUser", arg0, arg1)
 	ret0, _ := ret[0].([]model.UserSession)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // LookupActiveSessionsByUser indicates an expected call of LookupActiveSessionsByUser.
-func (mr *MockDatabaseMockRecorder) LookupActiveSessionsByUser(arg0 interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) LookupActiveSessionsByUser(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LookupActiveSessionsByUser", reflect.TypeOf((*MockDatabase)(nil).LookupActiveSessionsByUser), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LookupActiveSessionsByUser", reflect.TypeOf((*MockDatabase)(nil).LookupActiveSessionsByUser), arg0, arg1)
 }
 
 // LookupSAMLProviderByName mocks base method.
@@ -1137,47 +1137,47 @@ func (mr *MockDatabaseMockRecorder) LookupUser(arg0, arg1 interface{}) *gomock.C
 }
 
 // Migrate mocks base method.
-func (m *MockDatabase) Migrate() error {
+func (m *MockDatabase) Migrate(arg0 context.Context) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Migrate")
+	ret := m.ctrl.Call(m, "Migrate", arg0)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // Migrate indicates an expected call of Migrate.
-func (mr *MockDatabaseMockRecorder) Migrate() *gomock.Call {
+func (mr *MockDatabaseMockRecorder) Migrate(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Migrate", reflect.TypeOf((*MockDatabase)(nil).Migrate))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Migrate", reflect.TypeOf((*MockDatabase)(nil).Migrate), arg0)
 }
 
 // RequiresMigration mocks base method.
-func (m *MockDatabase) RequiresMigration() (bool, error) {
+func (m *MockDatabase) RequiresMigration(arg0 context.Context) (bool, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "RequiresMigration")
+	ret := m.ctrl.Call(m, "RequiresMigration", arg0)
 	ret0, _ := ret[0].(bool)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // RequiresMigration indicates an expected call of RequiresMigration.
-func (mr *MockDatabaseMockRecorder) RequiresMigration() *gomock.Call {
+func (mr *MockDatabaseMockRecorder) RequiresMigration(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RequiresMigration", reflect.TypeOf((*MockDatabase)(nil).RequiresMigration))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RequiresMigration", reflect.TypeOf((*MockDatabase)(nil).RequiresMigration), arg0)
 }
 
 // SavedQueryBelongsToUser mocks base method.
-func (m *MockDatabase) SavedQueryBelongsToUser(arg0 uuid.UUID, arg1 int) (bool, error) {
+func (m *MockDatabase) SavedQueryBelongsToUser(arg0 context.Context, arg1 uuid.UUID, arg2 int) (bool, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SavedQueryBelongsToUser", arg0, arg1)
+	ret := m.ctrl.Call(m, "SavedQueryBelongsToUser", arg0, arg1, arg2)
 	ret0, _ := ret[0].(bool)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // SavedQueryBelongsToUser indicates an expected call of SavedQueryBelongsToUser.
-func (mr *MockDatabaseMockRecorder) SavedQueryBelongsToUser(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) SavedQueryBelongsToUser(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SavedQueryBelongsToUser", reflect.TypeOf((*MockDatabase)(nil).SavedQueryBelongsToUser), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SavedQueryBelongsToUser", reflect.TypeOf((*MockDatabase)(nil).SavedQueryBelongsToUser), arg0, arg1, arg2)
 }
 
 // SetConfigurationParameter mocks base method.
@@ -1195,41 +1195,41 @@ func (mr *MockDatabaseMockRecorder) SetConfigurationParameter(arg0, arg1 interfa
 }
 
 // SetFlag mocks base method.
-func (m *MockDatabase) SetFlag(arg0 appcfg.FeatureFlag) error {
+func (m *MockDatabase) SetFlag(arg0 context.Context, arg1 appcfg.FeatureFlag) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SetFlag", arg0)
+	ret := m.ctrl.Call(m, "SetFlag", arg0, arg1)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // SetFlag indicates an expected call of SetFlag.
-func (mr *MockDatabaseMockRecorder) SetFlag(arg0 interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) SetFlag(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetFlag", reflect.TypeOf((*MockDatabase)(nil).SetFlag), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetFlag", reflect.TypeOf((*MockDatabase)(nil).SetFlag), arg0, arg1)
 }
 
 // SweepAssetGroupCollections mocks base method.
-func (m *MockDatabase) SweepAssetGroupCollections() {
+func (m *MockDatabase) SweepAssetGroupCollections(arg0 context.Context) {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "SweepAssetGroupCollections")
+	m.ctrl.Call(m, "SweepAssetGroupCollections", arg0)
 }
 
 // SweepAssetGroupCollections indicates an expected call of SweepAssetGroupCollections.
-func (mr *MockDatabaseMockRecorder) SweepAssetGroupCollections() *gomock.Call {
+func (mr *MockDatabaseMockRecorder) SweepAssetGroupCollections(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SweepAssetGroupCollections", reflect.TypeOf((*MockDatabase)(nil).SweepAssetGroupCollections))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SweepAssetGroupCollections", reflect.TypeOf((*MockDatabase)(nil).SweepAssetGroupCollections), arg0)
 }
 
 // SweepSessions mocks base method.
-func (m *MockDatabase) SweepSessions() {
+func (m *MockDatabase) SweepSessions(arg0 context.Context) {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "SweepSessions")
+	m.ctrl.Call(m, "SweepSessions", arg0)
 }
 
 // SweepSessions indicates an expected call of SweepSessions.
-func (mr *MockDatabaseMockRecorder) SweepSessions() *gomock.Call {
+func (mr *MockDatabaseMockRecorder) SweepSessions(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SweepSessions", reflect.TypeOf((*MockDatabase)(nil).SweepSessions))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SweepSessions", reflect.TypeOf((*MockDatabase)(nil).SweepSessions), arg0)
 }
 
 // UpdateAssetGroup mocks base method.
@@ -1332,15 +1332,15 @@ func (mr *MockDatabaseMockRecorder) UpdateUser(arg0, arg1 interface{}) *gomock.C
 }
 
 // Wipe mocks base method.
-func (m *MockDatabase) Wipe() error {
+func (m *MockDatabase) Wipe(arg0 context.Context) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Wipe")
+	ret := m.ctrl.Call(m, "Wipe", arg0)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // Wipe indicates an expected call of Wipe.
-func (mr *MockDatabaseMockRecorder) Wipe() *gomock.Call {
+func (mr *MockDatabaseMockRecorder) Wipe(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Wipe", reflect.TypeOf((*MockDatabase)(nil).Wipe))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Wipe", reflect.TypeOf((*MockDatabase)(nil).Wipe), arg0)
 }

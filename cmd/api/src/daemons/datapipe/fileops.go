@@ -20,14 +20,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/specterops/bloodhound/src/model/ingest"
 	"io"
-)
-
-const (
-	delimOpenBracket        = json.Delim('{')
-	delimCloseBracket       = json.Delim('}')
-	delimOpenSquareBracket  = json.Delim('[')
-	delimCloseSquareBracket = json.Delim(']')
 )
 
 func SeekToDataTag(decoder *json.Decoder) error {
@@ -39,18 +33,18 @@ func SeekToDataTag(decoder *json.Decoder) error {
 	for {
 		if token, err := decoder.Token(); err != nil {
 			if errors.Is(err, io.EOF) {
-				return ErrDataTagNotFound
+				return ingest.ErrDataTagNotFound
 			}
 
-			return fmt.Errorf("%w: %w", ErrJSONDecoderInternal, err)
+			return fmt.Errorf("%w: %w", ingest.ErrJSONDecoderInternal, err)
 		} else {
 			//Break here to allow for one more token read, which should take us to the "[" token, exactly where we need to be
 			if dataTagFound {
 				//Do some extra checks
 				if typed, ok := token.(json.Delim); !ok {
-					return ErrInvalidDataTag
-				} else if typed != delimOpenSquareBracket {
-					return ErrInvalidDataTag
+					return ingest.ErrInvalidDataTag
+				} else if typed != ingest.DelimOpenSquareBracket {
+					return ingest.ErrInvalidDataTag
 				}
 				//Break out of our loop if we're in a good spot
 				return nil
@@ -58,9 +52,9 @@ func SeekToDataTag(decoder *json.Decoder) error {
 			switch typed := token.(type) {
 			case json.Delim:
 				switch typed {
-				case delimCloseBracket, delimCloseSquareBracket:
+				case ingest.DelimCloseBracket, ingest.DelimCloseSquareBracket:
 					depth--
-				case delimOpenBracket, delimOpenSquareBracket:
+				case ingest.DelimOpenBracket, ingest.DelimOpenSquareBracket:
 					depth++
 				}
 			case string:

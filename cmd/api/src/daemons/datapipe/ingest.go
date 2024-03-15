@@ -18,13 +18,14 @@ package datapipe
 
 import (
 	"fmt"
+	"github.com/specterops/bloodhound/src/model/ingest"
+	"github.com/specterops/bloodhound/src/services/fileupload"
 	"io"
 	"strings"
 	"time"
 
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/ein"
-	"github.com/specterops/bloodhound/errors"
 	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/graphschema/azure"
 	"github.com/specterops/bloodhound/graphschema/common"
@@ -35,16 +36,8 @@ const (
 	IngestCountThreshold = 500
 )
 
-var (
-	ErrMetaTagNotFound     = errors.New("no valid meta tag found")
-	ErrDataTagNotFound     = errors.New("no data tag found")
-	ErrNoTagFound          = errors.New("no valid meta tag or data tag found")
-	ErrInvalidDataTag      = errors.New("invalid data tag found")
-	ErrJSONDecoderInternal = errors.New("json decoder internal error")
-)
-
 func ReadFileForIngest(batch graph.Batch, reader io.ReadSeeker) error {
-	if meta, err := ValidateMetaTag(reader); err != nil {
+	if meta, err := fileupload.ValidateMetaTag(reader, false); err != nil {
 		return fmt.Errorf("error validating meta tag: %w", err)
 	} else {
 		return IngestWrapper(batch, reader, meta)
@@ -68,37 +61,37 @@ func IngestAzureData(batch graph.Batch, converted ConvertedAzureData) {
 	IngestRelationships(batch, azure.Entity, converted.RelProps)
 }
 
-func IngestWrapper(batch graph.Batch, reader io.ReadSeeker, meta Metadata) error {
+func IngestWrapper(batch graph.Batch, reader io.ReadSeeker, meta ingest.Metadata) error {
 	switch meta.Type {
-	case DataTypeComputer:
+	case ingest.DataTypeComputer:
 		if meta.Version >= 5 {
 			return decodeBasicData(batch, reader, convertComputerData)
 		}
-	case DataTypeUser:
+	case ingest.DataTypeUser:
 		return decodeBasicData(batch, reader, convertUserData)
-	case DataTypeGroup:
+	case ingest.DataTypeGroup:
 		return decodeGroupData(batch, reader)
-	case DataTypeDomain:
+	case ingest.DataTypeDomain:
 		return decodeBasicData(batch, reader, convertDomainData)
-	case DataTypeGPO:
+	case ingest.DataTypeGPO:
 		return decodeBasicData(batch, reader, convertGPOData)
-	case DataTypeOU:
+	case ingest.DataTypeOU:
 		return decodeBasicData(batch, reader, convertOUData)
-	case DataTypeSession:
+	case ingest.DataTypeSession:
 		return decodeSessionData(batch, reader)
-	case DataTypeContainer:
+	case ingest.DataTypeContainer:
 		return decodeBasicData(batch, reader, convertContainerData)
-	case DataTypeAIACA:
+	case ingest.DataTypeAIACA:
 		return decodeBasicData(batch, reader, convertAIACAData)
-	case DataTypeRootCA:
+	case ingest.DataTypeRootCA:
 		return decodeBasicData(batch, reader, convertRootCAData)
-	case DataTypeEnterpriseCA:
+	case ingest.DataTypeEnterpriseCA:
 		return decodeBasicData(batch, reader, convertEnterpriseCAData)
-	case DataTypeNTAuthStore:
+	case ingest.DataTypeNTAuthStore:
 		return decodeBasicData(batch, reader, convertNTAuthStoreData)
-	case DataTypeCertTemplate:
+	case ingest.DataTypeCertTemplate:
 		return decodeBasicData(batch, reader, convertCertTemplateData)
-	case DataTypeAzure:
+	case ingest.DataTypeAzure:
 		return decodeAzureData(batch, reader)
 	}
 

@@ -94,7 +94,7 @@ store.subscribe(
 );
 
 export type AppState = ReturnType<typeof store.getState>;
-export const useAppSelector: TypedUseSelectorHook<AppState> = useSelector
+export const useAppSelector: TypedUseSelectorHook<AppState> = useSelector;
 
 export type AppDispatch = typeof store.dispatch;
 export const useAppDispatch = () => useDispatch<AppDispatch>();

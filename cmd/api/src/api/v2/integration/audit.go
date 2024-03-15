@@ -37,7 +37,7 @@ func (s *Context) ListAuditLogs(after, before time.Time, offset, limit int) mode
 	return auditLogsResponse.Logs
 }
 
-func (s *Context) AssetAuditLog(auditLog model.AuditLog, expectedAction string, expectedFields map[string]any) {
+func (s *Context) AssetAuditLog(auditLog model.AuditLog, expectedAction model.AuditLogAction, expectedFields map[string]any) {
 	assert.Equal(s.TestCtrl, auditLog.Action, expectedAction)
 
 	for expectedFieldName, expectedFieldValue := range expectedFields {
@@ -48,7 +48,7 @@ func (s *Context) AssetAuditLog(auditLog model.AuditLog, expectedAction string, 
 	}
 }
 
-func (s *Context) AssertAuditLogHasAction(action string, expectedFields map[string]any) {
+func (s *Context) AssertAuditLogHasAction(action model.AuditLogAction, expectedFields map[string]any) {
 	found := false
 
 	for _, auditLog := range s.GetLatestAuditLogs() {
