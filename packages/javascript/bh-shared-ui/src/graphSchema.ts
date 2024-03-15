@@ -134,6 +134,7 @@ export enum ActiveDirectoryRelationshipKind {
     ADCSESC9b = 'ADCSESC9b',
     ADCSESC10a = 'ADCSESC10a',
     ADCSESC10b = 'ADCSESC10b',
+    ADCSESC13 = 'ADCSESC13',
 }
 export function ActiveDirectoryRelationshipKindToDisplay(value: ActiveDirectoryRelationshipKind): string | undefined {
     switch (value) {
@@ -269,6 +270,8 @@ export function ActiveDirectoryRelationshipKindToDisplay(value: ActiveDirectoryR
             return 'ADCSESC10a';
         case ActiveDirectoryRelationshipKind.ADCSESC10b:
             return 'ADCSESC10b';
+        case ActiveDirectoryRelationshipKind.ADCSESC13:
+            return 'ADCSESC13';
         default:
             return undefined;
     }
@@ -552,6 +555,7 @@ export function ActiveDirectoryPathfindingEdges(): ActiveDirectoryRelationshipKi
         ActiveDirectoryRelationshipKind.ADCSESC9b,
         ActiveDirectoryRelationshipKind.ADCSESC10a,
         ActiveDirectoryRelationshipKind.ADCSESC10b,
+        ActiveDirectoryRelationshipKind.ADCSESC13,
         ActiveDirectoryRelationshipKind.DCFor,
     ];
 }
