@@ -260,11 +260,7 @@ const CreateUserForm: React.FC<{
                                             rules={{
                                                 required: 'SAML Provider is required',
                                             }}
-                                            render={({
-                                                field: { onChange, onBlur, value, ref },
-                                                formState,
-                                                fieldState,
-                                            }) => (
+                                            render={({ field: { onChange, onBlur, value, ref } }) => (
                                                 <FormControl error={!!errors.SAMLProviderId}>
                                                     <InputLabel
                                                         id='SAMLProviderId-label'

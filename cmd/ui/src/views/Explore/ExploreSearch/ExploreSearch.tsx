@@ -115,7 +115,10 @@ const ExploreSearch = ({ handleColumns }: ExploreSearchProps) => {
 
             <Collapse in={showSearchWidget}>
                 <Paper sx={{ mt: 1, p: 1 }} elevation={0}>
-                    <TabPanels tabs={[<NodeSearch />, <PathfindingSearch />, <CypherSearch />]} activeTab={activeTab} />
+                    <TabPanels
+                        tabs={[<NodeSearch key={0} />, <PathfindingSearch key={1} />, <CypherSearch key={2} />]}
+                        activeTab={activeTab}
+                    />
                 </Paper>
             </Collapse>
         </Box>
