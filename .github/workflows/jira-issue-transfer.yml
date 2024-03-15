@@ -35,7 +35,7 @@ jobs:
                 project: BP
                 issuetype: 'Bug Report'
                 summary: ${{ github.event.issue.title }}
-                description: ${{ github.event.issue.body }}
+                description: "Github Issue Link: ${{ github.event.issue.url}} \r\n ${{ github.event.issue.body }}"
                 fields: '{"labels":["GitHubReport"]}'
           env:
                 GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
