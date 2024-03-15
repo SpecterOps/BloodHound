@@ -18,6 +18,7 @@
 package fileupload
 
 import (
+	"bufio"
 	"context"
 	"errors"
 	"fmt"
@@ -34,6 +35,12 @@ import (
 )
 
 const jobActivityTimeout = time.Minute * 20
+
+const (
+	UTF8BOM1 = 0xef
+	UTF8BOM2 = 0xbb
+	UTF8BMO3 = 0xbf
+)
 
 var ErrInvalidJSON = errors.New("file is not valid json")
 
@@ -102,7 +109,17 @@ func WriteAndValidateZip(src io.Reader, dst io.Writer) error {
 
 func WriteAndValidateJSON(src io.Reader, dst io.Writer) error {
 	tr := io.TeeReader(src, dst)
-	_, err := ValidateMetaTag(tr, true)
+	bufReader := bufio.NewReader(tr)
+	if b, err := bufReader.Peek(3); err != nil {
+		return err
+	} else {
+		if b[0] == UTF8BOM1 && b[1] == UTF8BOM2 && b[2] == UTF8BMO3 {
+			if _, err := bufReader.Discard(3); err != nil {
+				return err
+			}
+		}
+	}
+	_, err := ValidateMetaTag(bufReader, true)
 	return err
 }
 
