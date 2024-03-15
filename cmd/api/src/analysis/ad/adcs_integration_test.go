@@ -898,6 +898,235 @@ func TestADCSESC4(t *testing.T) {
 
 			return nil
 		})
+
+	})
+
+}
+
+func TestADCSESC4Composition(t *testing.T) {
+	testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
+
+	testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) error {
+		harness.ESC4Template1.Setup(testContext)
+		return nil
+	}, func(harness integration.HarnessDetails, db graph.Database) {
+		operation := analysis.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - ESC4 template 1")
+
+		groupExpansions, _, _, domains, cache, err := FetchADCSPrereqs(db)
+		require.Nil(t, err)
+
+		for _, domain := range domains {
+			innerDomain := domain
+
+			operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
+				if enterpriseCAs, err := ad2.FetchEnterpriseCAsTrustedForNTAuthToDomain(tx, innerDomain); err != nil {
+					return err
+				} else {
+					for _, enterpriseCA := range enterpriseCAs {
+						if cache.DoesCAChainProperlyToDomain(enterpriseCA, innerDomain) {
+							if err := ad2.PostADCSESC4(ctx, tx, outC, groupExpansions, enterpriseCA, innerDomain, cache); err != nil {
+								t.Logf("failed post processing for %s: %v", ad.ADCSESC4.String(), err)
+							} else {
+								return nil
+							}
+						}
+					}
+				}
+				return nil
+			})
+		}
+
+		operation.Done()
+
+		// first scenario: composition reveals that principal `Group11` has esc4 on the domain via enrollment on ECA and GenericAll on `CertTemplate1`
+		db.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
+			if edge, err := tx.Relationships().Filterf(
+				func() graph.Criteria {
+					return query.And(
+						query.Kind(query.Relationship(), ad.ADCSESC4),
+						query.Equals(query.StartProperty(common.Name.String()), "Group11"),
+					)
+				}).First(); err != nil {
+				t.Fatalf("error fetching esc4 edge in integration test: %v", err)
+			} else {
+				composition, err := ad2.GetADCSESC4EdgeComposition(context.Background(), db, edge)
+				require.Nil(t, err)
+
+				nodes := composition.AllNodes()
+
+				require.Equal(t, 7, len(nodes))
+				require.True(t, nodes.Contains(harness.ESC4Template1.Group11))
+				require.True(t, nodes.Contains(harness.ESC4Template1.Group0))
+				require.True(t, nodes.Contains(harness.ESC4Template1.CertTemplate1))
+				require.True(t, nodes.Contains(harness.ESC4Template1.EnterpriseCA))
+				require.True(t, nodes.Contains(harness.ESC4Template1.RootCA))
+				require.True(t, nodes.Contains(harness.ESC4Template1.NTAuthStore))
+				require.True(t, nodes.Contains(harness.ESC4Template1.Domain))
+			}
+			return nil
+		})
+
+		// second scenario: composition reveals that principal `Group12` has esc4 on the domain via enrollment on ECA, and GenericWrite on `CertTemplate1`
+		db.ReadTransaction(
+			context.Background(),
+			func(tx graph.Transaction) error {
+				if edge, err := tx.Relationships().Filterf(
+					func() graph.Criteria {
+						return query.And(
+							query.Kind(query.Relationship(), ad.ADCSESC4),
+							query.Equals(query.StartProperty(common.Name.String()), "Group12"),
+						)
+					}).First(); err != nil {
+					t.Fatalf("error fetching esc4 edge in integration test: %v", err)
+				} else {
+					composition, err := ad2.GetADCSESC4EdgeComposition(context.Background(), db, edge)
+					require.Nil(t, err)
+
+					nodes := composition.AllNodes()
+
+					require.Equal(t, 7, len(nodes))
+					require.True(t, nodes.Contains(harness.ESC4Template1.Group12))
+					require.True(t, nodes.Contains(harness.ESC4Template1.Group0))
+					require.True(t, nodes.Contains(harness.ESC4Template1.CertTemplate1))
+					require.True(t, nodes.Contains(harness.ESC4Template1.EnterpriseCA))
+					require.True(t, nodes.Contains(harness.ESC4Template1.RootCA))
+					require.True(t, nodes.Contains(harness.ESC4Template1.NTAuthStore))
+					require.True(t, nodes.Contains(harness.ESC4Template1.Domain))
+
+					// assert that `GenericWrite` and `Enroll` edges exist between group12 and cert template
+					for _, p := range composition.Paths() {
+						for _, rel := range p.Edges {
+							if rel.Kind.Is(ad.GenericWrite) || rel.Kind.Is(ad.Enroll) && rel.StartID == harness.ESC4Template1.Group12.ID {
+								require.True(t, rel.StartID == harness.ESC4Template1.Group12.ID)
+								require.True(t, rel.EndID == harness.ESC4Template1.CertTemplate1.ID)
+							}
+
+						}
+					}
+				}
+
+				return nil
+			})
+
+		// third scenario: composition reveals that principal `Group13` has esc4 on the domain via enrollment on ECA, and `Enroll` and WritePKINameFlag` on `CertTemplate1`
+		db.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
+			if edge, err := tx.Relationships().Filterf(
+				func() graph.Criteria {
+					return query.And(
+						query.Kind(query.Relationship(), ad.ADCSESC4),
+						query.Equals(query.StartProperty(common.Name.String()), "Group13"),
+					)
+				}).First(); err != nil {
+				t.Fatalf("error fetching esc4 edge in integration test: %v", err)
+			} else {
+				composition, err := ad2.GetADCSESC4EdgeComposition(context.Background(), db, edge)
+				require.Nil(t, err)
+
+				nodes := composition.AllNodes()
+
+				require.Equal(t, 7, len(nodes))
+				require.True(t, nodes.Contains(harness.ESC4Template1.Group13))
+				require.True(t, nodes.Contains(harness.ESC4Template1.Group0))
+				require.True(t, nodes.Contains(harness.ESC4Template1.CertTemplate1))
+				require.True(t, nodes.Contains(harness.ESC4Template1.EnterpriseCA))
+				require.True(t, nodes.Contains(harness.ESC4Template1.RootCA))
+				require.True(t, nodes.Contains(harness.ESC4Template1.NTAuthStore))
+				require.True(t, nodes.Contains(harness.ESC4Template1.Domain))
+
+				// assert that group13 has outbound edges `WritePKINameFlag` and `Enroll` to CertTemplate1
+				for _, p := range composition.Paths() {
+					for _, rel := range p.Edges {
+						if (rel.Kind.Is(ad.WritePKINameFlag) || rel.Kind.Is(ad.Enroll)) && rel.StartID == harness.ESC4Template1.Group13.ID {
+							require.True(t, rel.StartID == harness.ESC4Template1.Group13.ID)
+							require.True(t, rel.EndID == harness.ESC4Template1.CertTemplate1.ID)
+						}
+
+					}
+				}
+			}
+
+			return nil
+		})
+
+		// fourth scenario: composition reveals that principal `Group14` has esc4 on the domain via enrollment on ECA, and `Enroll` and WritePKINameFlag` on `CertTemplate1`
+		db.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
+			if edge, err := tx.Relationships().Filterf(
+				func() graph.Criteria {
+					return query.And(
+						query.Kind(query.Relationship(), ad.ADCSESC4),
+						query.Equals(query.StartProperty(common.Name.String()), "Group14"),
+					)
+				}).First(); err != nil {
+				t.Fatalf("error fetching esc4 edge in integration test: %v", err)
+			} else {
+				composition, err := ad2.GetADCSESC4EdgeComposition(context.Background(), db, edge)
+				require.Nil(t, err)
+
+				nodes := composition.AllNodes()
+
+				require.Equal(t, 7, len(nodes))
+				require.True(t, nodes.Contains(harness.ESC4Template1.Group14))
+				require.True(t, nodes.Contains(harness.ESC4Template1.Group0))
+				require.True(t, nodes.Contains(harness.ESC4Template1.CertTemplate1))
+				require.True(t, nodes.Contains(harness.ESC4Template1.EnterpriseCA))
+				require.True(t, nodes.Contains(harness.ESC4Template1.RootCA))
+				require.True(t, nodes.Contains(harness.ESC4Template1.NTAuthStore))
+				require.True(t, nodes.Contains(harness.ESC4Template1.Domain))
+
+				// assert that group14 has outbound edges `WritePKIEnrollmentFlag` and `Enroll` to CertTemplate1
+				for _, p := range composition.Paths() {
+					for _, rel := range p.Edges {
+						if (rel.Kind.Is(ad.WritePKIEnrollmentFlag) || rel.Kind.Is(ad.Enroll)) && rel.StartID == harness.ESC4Template1.Group14.ID {
+							require.True(t, rel.StartID == harness.ESC4Template1.Group14.ID)
+							require.True(t, rel.EndID == harness.ESC4Template1.CertTemplate1.ID)
+						}
+
+					}
+				}
+			}
+
+			return nil
+		})
+
+		// fifth scenario: composition reveals that principal `Group15` has esc4 on the domain via enrollment on ECA, and `Enroll`, `WritePKINameFlag`, and `WritePKIEnrollmentFlag` on `CertTemplate1`
+		db.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
+			if edge, err := tx.Relationships().Filterf(
+				func() graph.Criteria {
+					return query.And(
+						query.Kind(query.Relationship(), ad.ADCSESC4),
+						query.Equals(query.StartProperty(common.Name.String()), "Group15"),
+					)
+				}).First(); err != nil {
+				t.Fatalf("error fetching esc4 edge in integration test: %v", err)
+			} else {
+				composition, err := ad2.GetADCSESC4EdgeComposition(context.Background(), db, edge)
+				require.Nil(t, err)
+
+				nodes := composition.AllNodes()
+
+				require.Equal(t, 7, len(nodes))
+				require.True(t, nodes.Contains(harness.ESC4Template1.Group15))
+				require.True(t, nodes.Contains(harness.ESC4Template1.Group0))
+				require.True(t, nodes.Contains(harness.ESC4Template1.CertTemplate1))
+				require.True(t, nodes.Contains(harness.ESC4Template1.EnterpriseCA))
+				require.True(t, nodes.Contains(harness.ESC4Template1.RootCA))
+				require.True(t, nodes.Contains(harness.ESC4Template1.NTAuthStore))
+				require.True(t, nodes.Contains(harness.ESC4Template1.Domain))
+
+				// assert that group15 has 3 outbound edges: `WritePKIEnrollmentFlag`, `WritePKINameFlag`, and `Enroll` to CertTemplate1
+				for _, p := range composition.Paths() {
+					for _, rel := range p.Edges {
+						if (rel.Kind.Is(ad.WritePKIEnrollmentFlag) || rel.Kind.Is(ad.WritePKINameFlag) || rel.Kind.Is(ad.Enroll)) && rel.StartID == harness.ESC4Template1.Group15.ID {
+							require.True(t, rel.StartID == harness.ESC4Template1.Group15.ID)
+							require.True(t, rel.EndID == harness.ESC4Template1.CertTemplate1.ID)
+						}
+
+					}
+				}
+			}
+
+			return nil
+		})
 	})
 }
 
