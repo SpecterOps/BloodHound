@@ -201,7 +201,7 @@ const Users = () => {
         user.principal_name,
         user.email_address,
         `${user.first_name} ${user.last_name}`,
-        <span key={index} style={{ whiteSpace: 'pre' }}>
+        <span key={3} style={{ whiteSpace: 'pre' }}>
             {DateTime.fromISO(user.created_at).toFormat(LuxonFormat.DATETIME)}
         </span>,
         user.roles?.[0]?.name,
@@ -225,7 +225,7 @@ const Users = () => {
             onManageUserTokens={toggleManageUserTokensDialog}
             onDisableUserMfa={setDisable2FADialogOpen}
             index={index}
-            key={index}
+            key={7}
         />,
     ]);
 

@@ -23,7 +23,7 @@ import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 
 const server = setupServer(
-    rest.get(`/api/v2/self`, (req, res, ctx) => {
+    rest.get(`/api/v2/self`, (req, res) => {
         return res();
     })
 );

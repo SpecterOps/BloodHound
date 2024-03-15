@@ -49,7 +49,7 @@ const createItemData = memoize((items, onClick) => ({
     onClick,
 }));
 
-const Row = memo(({ data, index, style }: ListChildComponentProps) => {
+const Row = memo(function Row({ data, index, style }: ListChildComponentProps) {
     const { items, onClick } = data;
     const item = items[index];
     const itemClass = index % 2 ? 'odd-item' : 'even-item';
