@@ -18,10 +18,10 @@ import { faFilter } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Button } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
+import { EdgeCheckboxType, searchbarActions } from 'bh-shared-ui';
 import { useEffect, useRef, useState } from 'react';
-import EdgeFilteringDialog, { EdgeCheckboxType } from './EdgeFilteringDialog';
 import { useAppDispatch, useAppSelector } from 'src/store';
-import { pathfindingSearch, pathFiltersSaved } from 'src/ducks/searchbar/actions';
+import EdgeFilteringDialog from './EdgeFilteringDialog';
 
 const useStyles = makeStyles((theme) => ({
     pathfindingButton: {
@@ -55,7 +55,7 @@ const EdgeFilter = () => {
     }, [pathFilters]);
 
     const handlePathfindingSearch = () => {
-        dispatch(pathfindingSearch());
+        dispatch(searchbarActions.pathfindingSearch());
     };
 
     return (
@@ -76,7 +76,7 @@ const EdgeFilter = () => {
                     setIsOpenDialog(false);
 
                     // rollback changes made in dialog.
-                    dispatch(pathFiltersSaved(initialFilterState.current));
+                    dispatch(searchbarActions.pathFiltersSaved(initialFilterState.current));
                 }}
                 handleApply={() => {
                     setIsOpenDialog(false);

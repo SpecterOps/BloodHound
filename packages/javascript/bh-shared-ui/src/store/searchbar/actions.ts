@@ -14,8 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { EdgeCheckboxType } from 'src/views/Explore/ExploreSearch/EdgeFilteringDialog';
 import * as types from './types';
+import { EdgeCheckboxType } from '../../views/Explore/ExploreSearch/edgeTypes';
 
 export const primarySearch = () => {
     return {
@@ -71,7 +71,7 @@ export const sourceNodeEdited = (searchTerm: string): types.SourceNodeEditedActi
 };
 
 export const sourceNodeSelected = (
-    node: types.SearchNodeType | null,
+    node?: types.SearchValue,
     doPathfindSearch: boolean = false // sometimes, selecting a source node should trigger a pathfinding search, and other times it should only trigger a single node search
 ): types.SourceNodeSelectedAction => {
     return {
@@ -88,7 +88,7 @@ export const destinationNodeEdited = (searchTerm: string): types.DestinationNode
     };
 };
 
-export const destinationNodeSelected = (node: types.SearchNodeType | null): types.DestinationNodeSelectedAction => {
+export const destinationNodeSelected = (node?: types.SearchValue): types.DestinationNodeSelectedAction => {
     return {
         type: types.DESTINATION_NODE_SELECTED,
         node,

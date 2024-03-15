@@ -28,14 +28,14 @@ import {
     AzureNodeKind,
     AzureRelationshipKind,
     CommonKindProperties,
+    searchbarActions,
     useCreateSavedQuery,
 } from 'bh-shared-ui';
 import { useState } from 'react';
-import { cypherQueryEdited, cypherSearch } from 'src/ducks/searchbar/actions';
+import { addSnackbar } from 'src/ducks/global/actions';
 import { useAppDispatch, useAppSelector } from 'src/store';
 import CommonSearches from './CommonSearches';
 import SaveQueryDialog from './SaveQueryDialog';
-import { addSnackbar } from 'src/ducks/global/actions';
 
 const useStyles = makeStyles((theme) => ({
     button: {
@@ -86,9 +86,9 @@ const useCypherEditor = () => {
 
     const dispatch = useAppDispatch();
 
-    const setCypherQuery = (query: string) => dispatch(cypherQueryEdited(query));
+    const setCypherQuery = (query: string) => dispatch(searchbarActions.cypherQueryEdited(query));
 
-    const performSearch = () => dispatch(cypherSearch(cypherQuery));
+    const performSearch = () => dispatch(searchbarActions.cypherSearch(cypherQuery));
 
     return {
         cypherQuery,

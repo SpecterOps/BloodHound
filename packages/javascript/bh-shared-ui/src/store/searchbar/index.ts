@@ -14,6 +14,6 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import searchReducer from './reducer';
-
-export default searchReducer;
+export * as searchbarActions from './actions';
+export * from './reducer';
+export * from './types';

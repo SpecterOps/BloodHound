@@ -14,10 +14,9 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import ExploreSearchCombobox from '../ExploreSearchCombobox';
-import { SearchNodeType, SourceNodeEditedAction, SourceNodeSelectedAction } from 'src/ducks/searchbar/types';
+import { SearchValue, SourceNodeEditedAction, SourceNodeSelectedAction, searchbarActions } from 'bh-shared-ui';
 import { useAppDispatch, useAppSelector } from 'src/store';
-import { sourceNodeEdited, sourceNodeSelected } from 'src/ducks/searchbar/actions';
+import ExploreSearchCombobox from '../ExploreSearchCombobox';
 
 const NodeSearch = () => {
     const dispatch = useAppDispatch();
@@ -25,15 +24,16 @@ const NodeSearch = () => {
     const primary = useAppSelector((state) => state.search.primary);
     const { searchTerm, value: selectedItem } = primary;
 
-    const handleNodeEdited = (edit: string): SourceNodeEditedAction => dispatch(sourceNodeEdited(edit));
-    const handleNodeSelected = (selected: SearchNodeType): SourceNodeSelectedAction =>
-        dispatch(sourceNodeSelected(selected));
+    const handleNodeEdited = (edit: string): SourceNodeEditedAction =>
+        dispatch(searchbarActions.sourceNodeEdited(edit));
+    const handleNodeSelected = (selected?: SearchValue): SourceNodeSelectedAction =>
+        dispatch(searchbarActions.sourceNodeSelected(selected));
 
     return (
         <ExploreSearchCombobox
             labelText={'Search Nodes'}
             inputValue={searchTerm}
-            selectedItem={selectedItem}
+            selectedItem={selectedItem || null}
             handleNodeEdited={handleNodeEdited}
             handleNodeSelected={handleNodeSelected}
         />

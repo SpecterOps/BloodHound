@@ -15,25 +15,25 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { List, ListItem, ListItemText, Paper, TextField, useTheme } from '@mui/material';
-import { useCombobox } from 'downshift';
 import {
     NodeIcon,
+    SearchValue,
+    SearchResult,
     SearchResultItem,
     getEmptyResultsText,
     getKeywordAndTypeValues,
-    SearchResult,
     useSearch,
 } from 'bh-shared-ui';
-import { SearchNodeType } from 'src/ducks/searchbar/types';
+import { useCombobox } from 'downshift';
 
 const ExploreSearchCombobox: React.FC<{
     labelText: string;
-    disabled?: boolean;
     inputValue: string;
-    selectedItem: SearchNodeType | null;
+    selectedItem: SearchValue | null;
     handleNodeEdited: (edit: string) => any;
-    handleNodeSelected: (selection: SearchNodeType) => any;
-}> = ({ labelText, disabled = false, inputValue, selectedItem, handleNodeEdited, handleNodeSelected }) => {
+    handleNodeSelected: (selection: SearchValue) => any;
+    disabled?: boolean;
+}> = ({ labelText, inputValue, selectedItem, handleNodeEdited, handleNodeSelected, disabled = false }) => {
     const theme = useTheme();
 
     const { keyword, type } = getKeywordAndTypeValues(inputValue);
@@ -46,10 +46,10 @@ const ExploreSearchCombobox: React.FC<{
             selectedItem,
             onSelectedItemChange: ({ type, selectedItem }) => {
                 if (selectedItem) {
-                    handleNodeSelected(selectedItem as SearchNodeType);
+                    handleNodeSelected(selectedItem);
                 }
             },
-            itemToString: (item) => (item ? item.name || item.objectid : ''),
+            itemToString: (item) => item?.name || item?.objectid || '',
         });
 
     const disabledText: string = getEmptyResultsText(
