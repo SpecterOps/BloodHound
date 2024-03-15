@@ -67,6 +67,10 @@ func PopulateRoleEntityDetailsCounts(tx graph.Transaction, node *graph.Node, det
 	return details, nil
 }
 
+func IsRoleNode(node *graph.Node) bool {
+	return node.Kinds.ContainsOneOf(azure.Role)
+}
+
 type RoleAssignmentMap map[graph.ID]map[string]struct{}
 
 func (s RoleAssignmentMap) UserHasRoles(user *graph.Node) bool {
@@ -276,4 +280,23 @@ func RoleMembersWithGrants(tx graph.Transaction, tenant *graph.Node, roleTemplat
 	} else {
 		return roleMembers(tx, tenantRoles, azure.GrantSelf)
 	}
+}
+
+// RoleScopedTo returns the NodeSet of scoped to entities for a given role.
+func RoleScopedTo(tx graph.Transaction, role *graph.Node) (graph.NodeSet, error) {
+	defer log.LogAndMeasure(log.LevelInfo, "Role %d RoleScopedTo", role.ID)()
+
+	if !IsRoleNode(role) {
+		return nil, fmt.Errorf("cannot fetch roles scoped to - node %d must be of kind %s", role.ID, azure.Role)
+	}
+
+	conditions := []graph.Criteria{
+		query.Equals(query.StartID(), role.ID),
+		query.Kind(query.Relationship(), azure.ScopedTo),
+		query.KindIn(query.End(), azure.App, azure.Tenant),
+	}
+
+	return ops.FetchEndNodes(tx.Relationships().Filterf(func() graph.Criteria {
+		return query.And(conditions...)
+	}))
 }

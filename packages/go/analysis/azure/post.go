@@ -65,6 +65,13 @@ func ResetPasswordRoleIDs() []string {
 	}
 }
 
+func AddSecretRoleIDs() []string {
+	return []string{
+		constants.ApplicationAdministratorRoleID,
+		constants.CloudApplicationAdministratorRoleID,
+	}
+}
+
 func HelpdeskAdministratorPasswordResetTargetRoles() []string {
 	return []string{
 		azure.ReportsReaderRole,
@@ -150,24 +157,6 @@ func EndNodes(tx graph.Transaction, root *graph.Node, relationship graph.Kind, n
 	}))
 }
 
-func fetchAppOwnerRelationships(ctx context.Context, db graph.Database) ([]*graph.Relationship, error) {
-	var appOwnerRels []*graph.Relationship
-	return appOwnerRels, db.ReadTransaction(ctx, func(tx graph.Transaction) error {
-		var err error
-		if appOwnerRels, err = ops.FetchRelationships(tx.Relationships().Filterf(func() graph.Criteria {
-			return query.And(
-				query.Kind(query.Start(), azure.Entity),
-				query.Kind(query.Relationship(), azure.Owns),
-				query.Kind(query.End(), azure.App),
-			)
-		})); err != nil {
-			return err
-		} else {
-			return nil
-		}
-	})
-}
-
 func fetchTenantContainsReadWriteAllGroupRelationships(tx graph.Transaction, tenant *graph.Node) ([]*graph.Relationship, error) {
 	return ops.FetchRelationships(tx.Relationships().Filterf(func() graph.Criteria {
 		return query.And(
@@ -243,9 +232,11 @@ func AppRoleAssignments(ctx context.Context, db graph.Database) (*analysis.Atomi
 					return err
 				} else if err := createAZMGServicePrincipalEndpointReadWriteAllEdges(ctx, db, operation, tenant, tenantContainsServicePrincipalRelationships); err != nil {
 					return err
-				} else {
-					return nil
+				} else if err := addSecret(ctx, db, operation, tenant); err != nil {
+					return err
 				}
+
+				return nil
 			}); err != nil {
 				operation.Done()
 				return &operation.Stats, err
@@ -664,68 +655,70 @@ func createAZMGServicePrincipalEndpointReadWriteAllEdges(ctx context.Context, db
 	}
 }
 
-func AddSecret(ctx context.Context, db graph.Database) (*analysis.AtomicPostProcessingStats, error) {
-	if appOwnerRels, err := fetchAppOwnerRelationships(ctx, db); err != nil {
-		return &analysis.AtomicPostProcessingStats{}, err
-	} else if tenants, err := FetchTenants(ctx, db); err != nil {
-		return &analysis.AtomicPostProcessingStats{}, err
-	} else {
-		operation := analysis.NewPostRelationshipOperation(ctx, db, "AZAddSecret Post Processing")
+func addSecretEdge(ctx context.Context, outC chan<- analysis.CreatePostRelationshipJob, targets *roaring.Bitmap, roleId graph.ID) {
+	iter := targets.Iterator()
+	for iter.HasNext() {
+		targetId := graph.ID(iter.Next())
+		log.Debugf("Adding AZAddSecret edge from role %d to app %d", roleId, targetId)
+		nextJob := analysis.CreatePostRelationshipJob{
+			FromID: roleId,
+			ToID:   targetId,
+			Kind:   azure.AddSecret,
+		}
 
-		operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
-			for _, appOwner := range appOwnerRels {
-				nextJob := analysis.CreatePostRelationshipJob{
-					FromID: appOwner.StartID,
-					ToID:   appOwner.EndID,
-					Kind:   azure.AddSecret,
-				}
+		if !channels.Submit(ctx, outC, nextJob) {
+			return
+		}
+	}
+}
 
-				if !channels.Submit(ctx, outC, nextJob) {
-					return nil
-				}
+func addSecret(_ context.Context, _ graph.Database, operation analysis.StatTrackedOperation[analysis.CreatePostRelationshipJob], tenant *graph.Node) error {
+	return operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
+		if addSecretRoles, err := TenantRoles(tx, tenant, AddSecretRoleIDs()...); err != nil {
+			return err
+		} else if tenantApps, err := TenantApplications(tx, tenant); err != nil {
+			return err
+		} else {
+			var (
+				tenantAppIds      = roaring.New()
+				tenantScopedRoles = roaring.New()
+			)
+			// Build bitmap of tenant app ids for adding edges to tenant scoped roles
+			for _, ta := range tenantApps {
+				tenantAppIds.Add(ta.ID.Uint32())
 			}
 
-			return nil
-		})
-
-		if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
-			for _, tenant := range tenants {
-				if tenantContainsAppRelationships, err := fetchTenantContainsRelationships(tx, tenant, azure.App); err != nil {
-					return err
-				} else if len(tenantContainsAppRelationships) == 0 {
-					return nil
-				} else if roleMembers, err := RoleMembers(tx, tenant, azure.ApplicationAdministratorRole, azure.CloudApplicationAdministratorRole); err != nil {
-					return err
+			for _, role := range addSecretRoles {
+				if scopes, err := RoleScopedTo(tx, role); err != nil {
+					log.Errorf("unable to continue processing addsecret for role %d: %v", role.ID, err)
+					continue
 				} else {
-					for _, roleMember := range roleMembers {
-						innerRoleMember := roleMember
-						operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
-							for _, tenantContainsAppsRelationship := range tenantContainsAppRelationships {
-								nextJob := analysis.CreatePostRelationshipJob{
-									FromID: innerRoleMember.ID,
-									ToID:   tenantContainsAppsRelationship.EndID,
-									Kind:   azure.AddSecret,
-								}
-
-								if !channels.Submit(ctx, outC, nextJob) {
-									return nil
-								}
-							}
-
-							return nil
-						})
+					appScoped := roaring.New()
+					for _, s := range scopes {
+						if s.Kinds.ContainsOneOf(azure.Tenant) {
+							tenantScopedRoles.Add(role.ID.Uint32())
+							// There's no need to continue processing as we'll add the edges at the end to all tenant scoped roles
+							break
+						}
+						appScoped.Add(s.ID.Uint32())
+					}
+					// Add all AZAddSecret edges to app scoped roles
+					if !tenantScopedRoles.Contains(role.ID.Uint32()) {
+						addSecretEdge(ctx, outC, appScoped, role.ID)
 					}
 				}
 			}
-			return nil
-		}); err != nil {
-			// Hit done to close out the operation so it doesn't hang in the background
-			operation.Done()
-			return &operation.Stats, err
-		} else {
-			return &operation.Stats, operation.Done()
+			// Add all AZAddSecret edges to tenant scoped roles
+			iter := tenantScopedRoles.Iterator()
+			for iter.HasNext() {
+				targetId := graph.ID(iter.Next())
+				log.Debugf("Adding AZAddSecret edge to all tenant app for tenant scoped role role %d", targetId)
+				addSecretEdge(ctx, outC, tenantAppIds, targetId)
+			}
 		}
-	}
+
+		return nil
+	})
 }
 
 func ExecuteCommand(ctx context.Context, db graph.Database) (*analysis.AtomicPostProcessingStats, error) {
@@ -777,7 +770,7 @@ func ExecuteCommand(ctx context.Context, db graph.Database) (*analysis.AtomicPos
 	}
 }
 
-func resetPassword(ctx context.Context, db graph.Database, operation analysis.StatTrackedOperation[analysis.CreatePostRelationshipJob], tenant *graph.Node, roleAssignments RoleAssignments) error {
+func resetPassword(_ context.Context, _ graph.Database, operation analysis.StatTrackedOperation[analysis.CreatePostRelationshipJob], tenant *graph.Node, roleAssignments RoleAssignments) error {
 	return operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
 		if pwResetRoles, err := TenantRoles(tx, tenant, ResetPasswordRoleIDs()...); err != nil {
 			return err
