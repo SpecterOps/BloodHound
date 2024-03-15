@@ -1554,7 +1554,6 @@ const (
 	ApplicationXopXml                                                                             MediaType = "application/xop+xml"                                                                  // [Mark_Nottingham],
 	ApplicationXsltXml                                                                            MediaType = "application/xslt+xml"                                                                 // [W3C][http://www.w3.org/TR/2007/REC-xslt20-20070123/#media-type-registration],
 	ApplicationXvXml                                                                              MediaType = "application/xv+xml"                                                                   // [RFC4374],
-	ApplicationXZipCompressed MediaType = "application/x-zip-compressed"
 	ApplicationYang                                                                               MediaType = "application/yang"                                                                     // [RFC6020],
 	ApplicationYangDataCbor                                                                       MediaType = "application/yang-data+cbor"                                                           // [RFC9254],
 	ApplicationYangDataJson                                                                       MediaType = "application/yang-data+json"                                                           // [RFC8040],
@@ -1563,7 +1562,6 @@ const (
 	ApplicationYangPatchXml                                                                       MediaType = "application/yang-patch+xml"                                                           // [RFC8072],
 	ApplicationYinXml                                                                             MediaType = "application/yin+xml"                                                                  // [RFC6020],
 	ApplicationZip                                                                                MediaType = "application/zip"                                                                      // [Paul_Lindner],
-	ApplicationZipCompressed MediaType = "application/zip-compressed"
 	ApplicationZlib                                                                               MediaType = "application/zlib"                                                                     // [RFC6713],
 	ApplicationZstd                                                                               MediaType = "application/zstd"                                                                     // [RFC8878],
 )

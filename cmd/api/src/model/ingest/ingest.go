@@ -5,7 +5,16 @@ import (
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/errors"
 	"github.com/specterops/bloodhound/graphschema/ad"
+	"github.com/specterops/bloodhound/mediatypes"
 )
+
+var AllowedZipFileUploadTypes = []string{
+	mediatypes.ApplicationZip.String(),
+	"application/x-zip-compressed", // Not currently available in mediatypes
+	"application/zip-compressed",   // Not currently available in mediatypes
+}
+
+var AllowedFileUploadTypes = append([]string{mediatypes.ApplicationJson.String()}, AllowedZipFileUploadTypes...)
 
 type Metadata struct {
 	Type    DataType         `json:"type"`

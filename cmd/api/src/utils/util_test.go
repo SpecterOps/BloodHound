@@ -235,13 +235,11 @@ func TestGetOrderForNeo4jQuery(t *testing.T) {
 }
 
 func TestHeaderMatches(t *testing.T) {
-	const jsonContentTypeWithCharset = "application/json; charset=utf-8"
-
 	header := http.Header{
-		headers.ContentType.String(): []string{jsonContentTypeWithCharset},
+		headers.ContentType.String(): []string{mediatypes.ApplicationJson.String()},
 	}
 
-	if !utils.HeaderMatches(headers.ContentType.String(), mediatypes.ApplicationJson.String(), header) {
-		t.Fatalf("Expected content type %s to match %s", mediatypes.ApplicationJson.String(), jsonContentTypeWithCharset)
+	if !utils.HeaderMatches(header, headers.ContentType.String(), mediatypes.ApplicationJson.String()) {
+		t.Fatalf("Expected content type %s to match %s", mediatypes.ApplicationJson.String(), mediatypes.ApplicationJson.String())
 	}
 }
