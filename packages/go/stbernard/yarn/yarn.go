@@ -18,64 +18,36 @@ package yarn
 
 import (
 	"fmt"
-	"os"
-	"os/exec"
 
-	"github.com/specterops/bloodhound/log"
+	"github.com/specterops/bloodhound/packages/go/stbernard/cmdrunner"
 )
 
+// InstallWorkspaceDeps runs yarn install for a given list of jsPaths
 func InstallWorkspaceDeps(jsPaths []string, env []string) error {
+	var (
+		command = "yarn"
+		args    = []string{"install"}
+	)
+
 	for _, path := range jsPaths {
-		if err := yarnInstall(path, env); err != nil {
-			return fmt.Errorf("failed to run yarn install at %v: %w", path, err)
+		if err := cmdrunner.RunAtPathWithEnv(command, args, path, env); err != nil {
+			return fmt.Errorf("yarn install at %v: %w", path, err)
 		}
 	}
 
 	return nil
 }
 
+// BuildWorkspace runs yarn build for the current working directory
 func BuildWorkspace(cwd string, env []string) error {
-	if err := yarnBuild(cwd, env); err != nil {
-		return fmt.Errorf("failed to run yarn build at %v: %w", cwd, err)
+	var (
+		command = "yarn"
+		args    = []string{"build"}
+	)
+
+	if err := cmdrunner.RunAtPathWithEnv(command, args, cwd, env); err != nil {
+		return fmt.Errorf("yarn build at %v: %w", cwd, err)
 	} else {
-		return nil
-	}
-}
-
-func yarnInstall(path string, env []string) error {
-	cmd := exec.Command("yarn", "install")
-	cmd.Env = env
-	cmd.Dir = path
-	if log.GlobalAccepts(log.LevelDebug) {
-		cmd.Stdout = os.Stderr
-		cmd.Stderr = os.Stderr
-	}
-
-	log.Infof("Running yarn install for %v", path)
-
-	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("yarn install: %w", err)
-	} else {
-		log.Infof("Finished yarn install for %v", path)
-		return nil
-	}
-}
-
-func yarnBuild(path string, env []string) error {
-	cmd := exec.Command("yarn", "build")
-	cmd.Env = env
-	cmd.Dir = path
-	if log.GlobalAccepts(log.LevelDebug) {
-		cmd.Stdout = os.Stderr
-		cmd.Stderr = os.Stderr
-	}
-
-	log.Infof("Running yarn build for %v", path)
-
-	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("yarn build: %w", err)
-	} else {
-		log.Infof("Finished yarn build for %v", path)
 		return nil
 	}
 }

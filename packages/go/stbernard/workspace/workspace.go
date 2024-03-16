@@ -21,12 +21,12 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log/slog"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"sync"
 
+	"github.com/specterops/bloodhound/packages/go/stbernard/cmdrunner"
 	"github.com/specterops/bloodhound/slicesext"
 	"golang.org/x/mod/modfile"
 )
@@ -124,9 +124,7 @@ func ParseJSAbsPaths(cwd string) ([]string, error) {
 	} else if err := json.Unmarshal(data, &paths); err != nil {
 		return paths, fmt.Errorf("could not unmarshal yarn-workspaces.json file: %w", err)
 	} else {
-		var workDir = filepath.Dir(ywPath)
-
-		return slicesext.Map(paths, func(path string) string { return filepath.Join(workDir, path) }), nil
+		return slicesext.Map(paths, func(path string) string { return filepath.Join(filepath.Dir(ywPath), path) }), nil
 	}
 }
 
@@ -184,12 +182,15 @@ func moduleGenerate(modPath string) error {
 			wg.Add(1)
 			go func(pkg GoPackage) {
 				defer wg.Done()
-				cmd := exec.Command("go", "generate", pkg.Dir)
-				cmd.Dir = modPath
-				slog.Info("Generating code for package", "package", pkg.Name, "path", pkg.Dir)
-				if err := cmd.Run(); err != nil {
+
+				var (
+					command = "go"
+					args    = []string{"generate", pkg.Dir}
+				)
+
+				if err := cmdrunner.Run(command, args); err != nil {
 					mu.Lock()
-					errs = append(errs, fmt.Errorf("failed to generate code for package %s: %w", pkg, err))
+					errs = append(errs, fmt.Errorf("generate code for package %s: %w", pkg, err))
 					mu.Unlock()
 				}
 			}(pkg)

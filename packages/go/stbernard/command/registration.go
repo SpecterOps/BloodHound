@@ -28,13 +28,14 @@ import (
 type Command int
 
 const (
-	InvalidCommand Command = iota - 1
-	ModSync
+	ModSync Command = iota
 	EnvDump
 	Analysis
 	Build
 	Generate
 )
+
+const InvalidCommand = "invalid command"
 
 // String implements Stringer for the Command enum
 func (s Command) String() string {
@@ -50,13 +51,8 @@ func (s Command) String() string {
 	case Generate:
 		return generate.Name
 	default:
-		return "invalid command"
+		return InvalidCommand
 	}
-}
-
-// Commands returns our valid set of Command options
-func Commands() []Command {
-	return []Command{ModSync, EnvDump, Analysis, Build, Generate}
 }
 
 // Commands usage returns a slice of Command usage statements indexed by their enum
@@ -70,4 +66,9 @@ func CommandsUsage() []string {
 	usage[Generate] = generate.Usage
 
 	return usage
+}
+
+// Commands returns our valid set of Command options
+func Commands() []Command {
+	return []Command{ModSync, EnvDump, Analysis, Build, Generate}
 }
