@@ -19,8 +19,9 @@ package workspace
 import (
 	"errors"
 	"fmt"
-	"os/exec"
 	"sync"
+
+	"github.com/specterops/bloodhound/packages/go/stbernard/cmdrunner"
 )
 
 // TidyModules runs go mod tidy for all module paths passed
@@ -35,13 +36,16 @@ func TidyModules(modPaths []string, env []string) error {
 	for _, modPath := range modPaths {
 		wg.Add(1)
 		go func(modPath string) {
-			wg.Done()
-			cmd := exec.Command("go", "mod", "tidy")
-			cmd.Env = env
-			cmd.Dir = modPath
-			if err := cmd.Run(); err != nil {
+			defer wg.Done()
+
+			var (
+				command = "go"
+				args    = []string{"mod", "tidy"}
+			)
+
+			if err := cmdrunner.RunAtPathWithEnv(command, args, modPath, env); err != nil {
 				mu.Lock()
-				errs = append(errs, fmt.Errorf("failure when running go mod tidy in %s: %w", modPath, err))
+				errs = append(errs, fmt.Errorf("go mod tidy in %s: %w", modPath, err))
 				mu.Unlock()
 			}
 		}(modPath)
@@ -63,13 +67,16 @@ func DownloadModules(modPaths []string, env []string) error {
 	for _, modPath := range modPaths {
 		wg.Add(1)
 		go func(modPath string) {
-			wg.Done()
-			cmd := exec.Command("go", "mod", "download")
-			cmd.Env = env
-			cmd.Dir = modPath
-			if err := cmd.Run(); err != nil {
+			defer wg.Done()
+
+			var (
+				command = "go"
+				args    = []string{"mod", "download"}
+			)
+
+			if err := cmdrunner.RunAtPathWithEnv(command, args, modPath, env); err != nil {
 				mu.Lock()
-				errs = append(errs, fmt.Errorf("failure when running go mod download in %s: %w", modPath, err))
+				errs = append(errs, fmt.Errorf("go mod download in %s: %w", modPath, err))
 				mu.Unlock()
 			}
 		}(modPath)
@@ -83,11 +90,13 @@ func DownloadModules(modPaths []string, env []string) error {
 // SyncWorkspace runs go work sync in the given directory with a given set of environment
 // variables
 func SyncWorkspace(cwd string, env []string) error {
-	cmd := exec.Command("go", "work", "sync")
-	cmd.Env = env
-	cmd.Dir = cwd
-	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("failed running go work sync: %w", err)
+	var (
+		command = "go"
+		args    = []string{"work", "sync"}
+	)
+
+	if err := cmdrunner.RunAtPathWithEnv(command, args, cwd, env); err != nil {
+		return fmt.Errorf("go work sync: %w", err)
 	} else {
 		return nil
 	}

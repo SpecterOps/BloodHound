@@ -36,7 +36,7 @@ func WorkspaceGenerate(modPaths []string) error {
 			defer wg.Done()
 			if err := moduleGenerate(modPath); err != nil {
 				mu.Lock()
-				errs = append(errs, fmt.Errorf("failure running code generation for module %s: %w", modPath, err))
+				errs = append(errs, fmt.Errorf("code generation for module %s: %w", modPath, err))
 				mu.Unlock()
 			}
 		}(modPath)

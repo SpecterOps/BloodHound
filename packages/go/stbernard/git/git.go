@@ -17,18 +17,20 @@ var (
 	ErrNoValidSemverFound = errors.New("no valid semver found")
 )
 
+// ParseLatestVersionFromTags gets the latest semver tag in the repository
 func ParseLatestVersionFromTags(path string, env []string) (semver.Version, error) {
 	var (
 		version semver.Version
 	)
 
 	if versions, err := getAllVersionTags(path, env); err != nil {
-		return version, fmt.Errorf("could not get version tags from git: %w", err)
+		return version, fmt.Errorf("get version tags from git: %w", err)
 	} else {
 		return parseLatestVersion(versions)
 	}
 }
 
+// parseLatestVersion parses a list of found versions and returns the latest from among them
 func parseLatestVersion(versions []string) (semver.Version, error) {
 	if len(versions) == 0 {
 		return semver.Version{}, ErrNoValidSemverFound
@@ -54,6 +56,7 @@ func parseLatestVersion(versions []string) (semver.Version, error) {
 	return *semversions[len(semversions)-1], nil
 }
 
+// getAllVersionTags gets the version tags from git and dumps them into a []string
 func getAllVersionTags(path string, env []string) ([]string, error) {
 	var (
 		output bytes.Buffer
@@ -63,6 +66,7 @@ func getAllVersionTags(path string, env []string) ([]string, error) {
 	cmd.Env = env
 	cmd.Dir = path
 	cmd.Stdout = &output
+
 	if log.GlobalAccepts(log.LevelDebug) {
 		cmd.Stderr = os.Stderr
 	}

@@ -19,14 +19,13 @@ package workspace
 import (
 	"errors"
 	"fmt"
-	"os"
-	"os/exec"
 	"path/filepath"
 	"strings"
 	"sync"
 
 	"github.com/Masterminds/semver/v3"
 	"github.com/specterops/bloodhound/log"
+	"github.com/specterops/bloodhound/packages/go/stbernard/cmdrunner"
 	"github.com/specterops/bloodhound/packages/go/stbernard/git"
 )
 
@@ -41,7 +40,7 @@ func BuildGoMainPackages(workRoot string, modPaths []string, env []string) error
 
 	version, err := git.ParseLatestVersionFromTags(workRoot, env)
 	if err != nil {
-		return fmt.Errorf("failed to parse latest version from git tags: %w", err)
+		return fmt.Errorf("parse latest version from git tags: %w", err)
 	}
 
 	log.Infof("Building for version %s", version.Original())
@@ -52,7 +51,7 @@ func BuildGoMainPackages(workRoot string, modPaths []string, env []string) error
 			defer wg.Done()
 			if err := buildGoModuleMainPackages(buildDir, modPath, version, env); err != nil {
 				mu.Lock()
-				errs = append(errs, fmt.Errorf("failed to build main package: %w", err))
+				errs = append(errs, fmt.Errorf("build main package: %w", err))
 				mu.Unlock()
 			}
 		}(buildDir, modPath)
@@ -70,6 +69,7 @@ func buildGoModuleMainPackages(buildDir string, modPath string, version semver.V
 		errs []error
 		mu   sync.Mutex
 
+		command             = "go"
 		majorString         = fmt.Sprintf("-X 'github.com/specterops/bloodhound/src/version.majorVersion=%d'", version.Major())
 		minorString         = fmt.Sprintf("-X 'github.com/specterops/bloodhound/src/version.minorVersion=%d'", version.Minor())
 		patchString         = fmt.Sprintf("-X 'github.com/specterops/bloodhound/src/version.patchVersion=%d'", version.Patch())
@@ -81,33 +81,25 @@ func buildGoModuleMainPackages(buildDir string, modPath string, version semver.V
 		ldflagArgComponents = append(ldflagArgComponents, prereleaseString)
 	}
 
-	args := []string{"-ldflags", strings.Join(ldflagArgComponents, " "), "-o", buildDir}
+	args := []string{"build", "-ldflags", strings.Join(ldflagArgComponents, " "), "-o", buildDir}
 
 	if packages, err := moduleListPackages(modPath); err != nil {
-		return fmt.Errorf("failed to list module packages: %w", err)
+		return fmt.Errorf("list module packages: %w", err)
 	} else {
-		for _, p := range packages {
-			if p.Name == "main" && !strings.Contains(p.Dir, "plugin") {
+		for _, pkg := range packages {
+			if pkg.Name == "main" && !strings.Contains(pkg.Dir, "plugin") {
 				wg.Add(1)
 				go func(p GoPackage) {
 					defer wg.Done()
-					cmd := exec.Command("go", "build")
-					cmd.Args = append(cmd.Args, args...)
-					cmd.Env = env
-					cmd.Dir = p.Dir
-					if log.GlobalAccepts(log.LevelDebug) {
-						cmd.Stdout = os.Stderr
-						cmd.Stderr = os.Stderr
+
+					if err := cmdrunner.RunAtPathWithEnv(command, args, p.Dir, env); err != nil {
+						mu.Lock()
+						errs = append(errs, fmt.Errorf("go build for package %s: %w", p.Import, err))
+						mu.Unlock()
 					}
 
-					if err := cmd.Run(); err != nil {
-						mu.Lock()
-						errs = append(errs, fmt.Errorf("failed running go build for package %s: %w", p.Import, err))
-						mu.Unlock()
-					} else {
-						log.Infof("Built package %s", p.Import)
-					}
-				}(p)
+					log.Infof("Built package %s", p.Import)
+				}(pkg)
 			}
 		}
 
