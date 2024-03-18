@@ -24,6 +24,7 @@ import (
 )
 
 // TidyModules runs go mod tidy for all module paths passed
+// Do not use currently, since go mod tidy is not compatible with go workspaces out of the box
 func TidyModules(modPaths []string, env []string) error {
 	var (
 		errs []error

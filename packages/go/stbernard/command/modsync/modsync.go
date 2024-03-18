@@ -56,8 +56,6 @@ func (s command) Run() error {
 		return fmt.Errorf("could not find workspace root: %w", err)
 	} else if modPaths, err := workspace.ParseModulesAbsPaths(cwd); err != nil {
 		return fmt.Errorf("could not parse module absolute paths: %w", err)
-	} else if err := workspace.TidyModules(modPaths, s.config.Environment); err != nil {
-		return fmt.Errorf("could not tidy go modules: %w", err)
 	} else if err := workspace.DownloadModules(modPaths, s.config.Environment); err != nil {
 		return fmt.Errorf("could not download go modules: %w", err)
 	} else if err := workspace.SyncWorkspace(cwd, s.config.Environment); err != nil {
