@@ -44,7 +44,7 @@ func TidyModules(modPaths []string, env environment.Environment) error {
 				args    = []string{"mod", "tidy"}
 			)
 
-			if err := cmdrunner.RunAtPathWithEnv(command, args, modPath, env); err != nil {
+			if err := cmdrunner.Run(command, args, modPath, env); err != nil {
 				mu.Lock()
 				errs = append(errs, fmt.Errorf("go mod tidy in %s: %w", modPath, err))
 				mu.Unlock()
@@ -75,7 +75,7 @@ func DownloadModules(modPaths []string, env environment.Environment) error {
 				args    = []string{"mod", "download"}
 			)
 
-			if err := cmdrunner.RunAtPathWithEnv(command, args, modPath, env); err != nil {
+			if err := cmdrunner.Run(command, args, modPath, env); err != nil {
 				mu.Lock()
 				errs = append(errs, fmt.Errorf("go mod download in %s: %w", modPath, err))
 				mu.Unlock()
@@ -96,7 +96,7 @@ func SyncWorkspace(cwd string, env environment.Environment) error {
 		args    = []string{"work", "sync"}
 	)
 
-	if err := cmdrunner.RunAtPathWithEnv(command, args, cwd, env); err != nil {
+	if err := cmdrunner.Run(command, args, cwd, env); err != nil {
 		return fmt.Errorf("go work sync: %w", err)
 	} else {
 		return nil

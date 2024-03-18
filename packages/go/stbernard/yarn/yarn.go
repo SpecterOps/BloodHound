@@ -31,7 +31,7 @@ func InstallWorkspaceDeps(jsPaths []string, env environment.Environment) error {
 	)
 
 	for _, path := range jsPaths {
-		if err := cmdrunner.RunAtPathWithEnv(command, args, path, env); err != nil {
+		if err := cmdrunner.Run(command, args, path, env); err != nil {
 			return fmt.Errorf("yarn install at %v: %w", path, err)
 		}
 	}
@@ -46,7 +46,7 @@ func BuildWorkspace(cwd string, env environment.Environment) error {
 		args    = []string{"build"}
 	)
 
-	if err := cmdrunner.RunAtPathWithEnv(command, args, cwd, env); err != nil {
+	if err := cmdrunner.Run(command, args, cwd, env); err != nil {
 		return fmt.Errorf("yarn build at %v: %w", cwd, err)
 	} else {
 		return nil

@@ -20,10 +20,12 @@ import (
 	"errors"
 	"fmt"
 	"sync"
+
+	"github.com/specterops/bloodhound/packages/go/stbernard/environment"
 )
 
 // WorkspaceGenerate runs go generate ./... for all module paths passed
-func WorkspaceGenerate(modPaths []string) error {
+func WorkspaceGenerate(modPaths []string, env environment.Environment) error {
 	var (
 		errs []error
 		wg   sync.WaitGroup
@@ -34,7 +36,7 @@ func WorkspaceGenerate(modPaths []string) error {
 		wg.Add(1)
 		go func(modPath string) {
 			defer wg.Done()
-			if err := moduleGenerate(modPath); err != nil {
+			if err := moduleGenerate(modPath, env); err != nil {
 				mu.Lock()
 				errs = append(errs, fmt.Errorf("code generation for module %s: %w", modPath, err))
 				mu.Unlock()
