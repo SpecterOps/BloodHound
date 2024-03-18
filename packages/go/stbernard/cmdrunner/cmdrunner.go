@@ -27,16 +27,18 @@ func Run(command string, args []string, path string, env environment.Environment
 	var (
 		exitErr error
 
-		cmdstr = command + strings.Join(args, " ")
-		cmd    = exec.Command(command, args...)
+		cmdstr       = command + " " + args[0]
+		cmd          = exec.Command(command, args...)
+		debugEnabled = log.GlobalAccepts(log.LevelDebug)
 	)
 
 	cmd.Env = env.Slice()
 	cmd.Dir = path
 
-	if log.GlobalAccepts(log.LevelDebug) {
+	if debugEnabled {
 		cmd.Stdout = os.Stderr
 		cmd.Stderr = os.Stderr
+		cmdstr = command + " " + strings.Join(args, " ")
 	}
 
 	// If we got any cmdModifiers, apply them in order
