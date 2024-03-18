@@ -25,6 +25,7 @@ import (
 
 	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/packages/go/stbernard/analyzers/codeclimate"
+	"github.com/specterops/bloodhound/packages/go/stbernard/environment"
 )
 
 var (
@@ -46,7 +47,7 @@ type esLintMessage struct {
 	Line     uint64 `json:"line"`
 }
 
-func Run(jsPaths []string, env []string) ([]codeclimate.Entry, error) {
+func Run(jsPaths []string, env environment.Environment) ([]codeclimate.Entry, error) {
 	var (
 		exitError error = nil
 		result          = make([]codeclimate.Entry, 0, len(jsPaths))
@@ -69,7 +70,7 @@ func Run(jsPaths []string, env []string) ([]codeclimate.Entry, error) {
 	return result, exitError
 }
 
-func runEslint(cwd string, env []string) ([]codeclimate.Entry, error) {
+func runEslint(cwd string, env environment.Environment) ([]codeclimate.Entry, error) {
 	var (
 		result    []codeclimate.Entry
 		rawResult []esLintEntry
@@ -77,7 +78,7 @@ func runEslint(cwd string, env []string) ([]codeclimate.Entry, error) {
 	)
 
 	cmd := exec.Command("yarn", "run", "lint", "--format", "json")
-	cmd.Env = env
+	cmd.Env = env.Slice()
 	cmd.Dir = cwd
 	cmd.Stdout = &outb
 

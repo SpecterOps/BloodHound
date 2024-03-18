@@ -31,12 +31,7 @@ const (
 	Usage = "Sync all modules in current workspace"
 )
 
-type flags struct {
-	verbose bool
-}
-
 type Config struct {
-	flags       flags
 	Environment environment.Environment
 }
 
@@ -53,15 +48,13 @@ func (s command) Name() string {
 }
 
 func (s command) Run() error {
-	var env = s.config.Environment
-
 	if cwd, err := workspace.FindRoot(); err != nil {
 		return fmt.Errorf("could not find workspace root: %w", err)
 	} else if modPaths, err := workspace.ParseModulesAbsPaths(cwd); err != nil {
 		return fmt.Errorf("could not parse module absolute paths: %w", err)
-	} else if err := workspace.DownloadModules(modPaths, env.Slice()); err != nil {
+	} else if err := workspace.DownloadModules(modPaths, s.config.Environment); err != nil {
 		return fmt.Errorf("could not download go modules: %w", err)
-	} else if err := workspace.SyncWorkspace(cwd, env.Slice()); err != nil {
+	} else if err := workspace.SyncWorkspace(cwd, s.config.Environment); err != nil {
 		return fmt.Errorf("could not sync go workspace: %w", err)
 	} else {
 		return nil
@@ -70,7 +63,6 @@ func (s command) Run() error {
 
 func Create(config Config) (command, error) {
 	modsyncCmd := flag.NewFlagSet(Name, flag.ExitOnError)
-	modsyncCmd.BoolVar(&config.flags.verbose, "v", false, "Print verbose logs")
 
 	modsyncCmd.Usage = func() {
 		w := flag.CommandLine.Output()

@@ -27,6 +27,7 @@ import (
 
 	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/packages/go/stbernard/analyzers/codeclimate"
+	"github.com/specterops/bloodhound/packages/go/stbernard/environment"
 	"github.com/specterops/bloodhound/slicesext"
 )
 
@@ -34,9 +35,9 @@ var (
 	ErrNonZeroExit = errors.New("non-zero exit status")
 )
 
-func InstallGolangCiLint(env []string) error {
+func InstallGolangCiLint(env environment.Environment) error {
 	cmd := exec.Command("go", "install", "github.com/golangci/golangci-lint/cmd/golangci-lint@v1.55.2")
-	cmd.Env = env
+	cmd.Env = env.Slice()
 	if log.GlobalAccepts(log.LevelDebug) {
 		cmd.Stdout = os.Stderr
 		cmd.Stderr = os.Stderr
@@ -53,7 +54,7 @@ func InstallGolangCiLint(env []string) error {
 
 }
 
-func Run(cwd string, modPaths []string, env []string) ([]codeclimate.Entry, error) {
+func Run(cwd string, modPaths []string, env environment.Environment) ([]codeclimate.Entry, error) {
 	var (
 		result []codeclimate.Entry
 		args   = []string{"run", "--out-format", "code-climate", "--config", ".golangci.json", "--"}
@@ -66,7 +67,7 @@ func Run(cwd string, modPaths []string, env []string) ([]codeclimate.Entry, erro
 	})...)
 
 	cmd := exec.Command("golangci-lint")
-	cmd.Env = env
+	cmd.Env = env.Slice()
 	cmd.Dir = cwd
 	cmd.Stderr = &errb
 	cmd.Stdout = &outb

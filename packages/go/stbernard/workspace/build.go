@@ -26,11 +26,12 @@ import (
 	"github.com/Masterminds/semver/v3"
 	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/packages/go/stbernard/cmdrunner"
+	"github.com/specterops/bloodhound/packages/go/stbernard/environment"
 	"github.com/specterops/bloodhound/packages/go/stbernard/git"
 )
 
 // BuildGoMainPackages builds all main packages for a list of module paths
-func BuildGoMainPackages(workRoot string, modPaths []string, env []string) error {
+func BuildGoMainPackages(workRoot string, modPaths []string, env environment.Environment) error {
 	var (
 		errs     []error
 		wg       sync.WaitGroup
@@ -63,7 +64,7 @@ func BuildGoMainPackages(workRoot string, modPaths []string, env []string) error
 }
 
 // buildGoModuleMainPackages runs go build for all main packages in a given module
-func buildGoModuleMainPackages(buildDir string, modPath string, version semver.Version, env []string) error {
+func buildGoModuleMainPackages(buildDir string, modPath string, version semver.Version, env environment.Environment) error {
 	var (
 		wg   sync.WaitGroup
 		errs []error

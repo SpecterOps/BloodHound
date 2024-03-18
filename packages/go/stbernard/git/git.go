@@ -11,6 +11,7 @@ import (
 
 	"github.com/Masterminds/semver/v3"
 	"github.com/specterops/bloodhound/log"
+	"github.com/specterops/bloodhound/packages/go/stbernard/environment"
 )
 
 var (
@@ -18,7 +19,7 @@ var (
 )
 
 // ParseLatestVersionFromTags gets the latest semver tag in the repository
-func ParseLatestVersionFromTags(path string, env []string) (semver.Version, error) {
+func ParseLatestVersionFromTags(path string, env environment.Environment) (semver.Version, error) {
 	var (
 		version semver.Version
 	)
@@ -57,13 +58,13 @@ func parseLatestVersion(versions []string) (semver.Version, error) {
 }
 
 // getAllVersionTags gets the version tags from git and dumps them into a []string
-func getAllVersionTags(path string, env []string) ([]string, error) {
+func getAllVersionTags(path string, env environment.Environment) ([]string, error) {
 	var (
 		output bytes.Buffer
 	)
 
 	cmd := exec.Command("git", "tag", "--list", "v*")
-	cmd.Env = env
+	cmd.Env = env.Slice()
 	cmd.Dir = path
 	cmd.Stdout = &output
 

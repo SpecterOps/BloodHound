@@ -124,7 +124,7 @@ func ParseCLI() (Commander, error) {
 		}
 
 	case Generate.String():
-		config := generate.Config{}
+		config := generate.Config{Environment: env}
 		if cmd, err := generate.Create(config); err != nil {
 			return nil, fmt.Errorf("%w: %w", ErrFailedCreateCmd, err)
 		} else {
