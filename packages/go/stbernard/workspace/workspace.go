@@ -27,6 +27,7 @@ import (
 	"sync"
 
 	"github.com/specterops/bloodhound/packages/go/stbernard/cmdrunner"
+	"github.com/specterops/bloodhound/packages/go/stbernard/environment"
 	"github.com/specterops/bloodhound/slicesext"
 	"golang.org/x/mod/modfile"
 )
@@ -168,7 +169,7 @@ func projectDirExists(cwd string) (bool, error) {
 }
 
 // moduleGenerate runs go generate in each package of the given module
-func moduleGenerate(modPath string) error {
+func moduleGenerate(modPath string, env environment.Environment) error {
 	var (
 		errs []error
 		wg   sync.WaitGroup
@@ -188,7 +189,7 @@ func moduleGenerate(modPath string) error {
 					args    = []string{"generate", pkg.Dir}
 				)
 
-				if err := cmdrunner.Run(command, args); err != nil {
+				if err := cmdrunner.Run(command, args, pkg.Dir, env); err != nil {
 					mu.Lock()
 					errs = append(errs, fmt.Errorf("generate code for package %s: %w", pkg, err))
 					mu.Unlock()

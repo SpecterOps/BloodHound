@@ -52,7 +52,7 @@ func (s command) Run() error {
 		return fmt.Errorf("could not find workspace root: %w", err)
 	} else if modPaths, err := workspace.ParseModulesAbsPaths(cwd); err != nil {
 		return fmt.Errorf("could not parse module absolute paths: %w", err)
-	} else if err := workspace.WorkspaceGenerate(modPaths); err != nil {
+	} else if err := workspace.WorkspaceGenerate(modPaths, s.config.Environment); err != nil {
 		return fmt.Errorf("could not build main packages: %w", err)
 	} else {
 		return nil

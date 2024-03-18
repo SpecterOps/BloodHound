@@ -25,6 +25,7 @@ import (
 	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/packages/go/stbernard/analyzers/golang"
 	"github.com/specterops/bloodhound/packages/go/stbernard/analyzers/js"
+	"github.com/specterops/bloodhound/packages/go/stbernard/cmdrunner"
 	"github.com/specterops/bloodhound/packages/go/stbernard/environment"
 )
 
@@ -32,20 +33,24 @@ var (
 	ErrSeverityExit = errors.New("high severity linter result")
 )
 
+// Run runs all registered analyzers and collects the results into a CodeClimate-like JSON string
+//
+// If one or more entries have a severity of "error", this function will return a valid JSON string AND an error stating
+// that a high severity result was found
 func Run(cwd string, modPaths []string, jsPaths []string, env environment.Environment) (string, error) {
 	var (
 		severityError bool
 	)
 
 	golint, err := golang.Run(cwd, modPaths, env)
-	if errors.Is(err, golang.ErrNonZeroExit) {
+	if errors.Is(err, cmdrunner.ErrNonZeroExit) {
 		log.Debug().Msg("Ignoring golangci-lint exit code")
 	} else if err != nil {
 		return "", fmt.Errorf("golangci-lint: %w", err)
 	}
 
 	eslint, err := js.Run(jsPaths, env)
-	if errors.Is(err, js.ErrNonZeroExit) {
+	if errors.Is(err, cmdrunner.ErrNonZeroExit) {
 		log.Debug().Msg("Ignoring eslint exit code")
 	} else if err != nil {
 		return "", fmt.Errorf("eslint: %w", err)

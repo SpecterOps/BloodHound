@@ -58,7 +58,7 @@ func (s command) Run() error {
 		return fmt.Errorf("could not parse module absolute paths: %w", err)
 	} else if jsPaths, err := workspace.ParseJSAbsPaths(cwd); err != nil {
 		return fmt.Errorf("could not parse JS absolute paths: %w", err)
-	} else if err := preAnalysisSetup(jsPaths, s.config.Environment); err != nil {
+	} else if err := preAnalysisSetup(cwd, jsPaths, s.config.Environment); err != nil {
 		return fmt.Errorf("could not complete environmental setup: %w", err)
 	} else if result, err := analyzers.Run(cwd, modPaths, jsPaths, s.config.Environment); errors.Is(err, analyzers.ErrSeverityExit) {
 		fmt.Println(result)
@@ -88,8 +88,8 @@ func Create(config Config) (command, error) {
 	}
 }
 
-func preAnalysisSetup(jsPaths []string, env environment.Environment) error {
-	if err := golang.InstallGolangCiLint(env); err != nil {
+func preAnalysisSetup(cwd string, jsPaths []string, env environment.Environment) error {
+	if err := golang.InstallGolangCiLint(cwd, env); err != nil {
 		return fmt.Errorf("golangci-lint failed to install: %w", err)
 	} else if err := yarn.InstallWorkspaceDeps(jsPaths, env); err != nil {
 		return fmt.Errorf("yarn install failed: %w", err)
