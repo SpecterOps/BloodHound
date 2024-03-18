@@ -41,9 +41,12 @@ type Commander interface {
 	Run() error
 }
 
-var ErrNoCmd = errors.New("no command specified")
-var ErrInvalidCmd = errors.New("invalid command specified")
-var ErrFailedCreateCmd = errors.New("failed to create command")
+var (
+	ErrNoCmd           = errors.New("no command specified")
+	ErrInvalidCmd      = errors.New("invalid command specified")
+	ErrFailedCreateCmd = errors.New("failed to create command")
+	ErrMultipleCmd     = errors.New("multiple commands specified")
+)
 
 // ParseCLI parses for a subcommand as the first argument to the calling binary,
 // and initializes the command (if it exists). It also provides the default usage
@@ -52,7 +55,12 @@ var ErrFailedCreateCmd = errors.New("failed to create command")
 // It does not support flags of its own, each subcommand is responsible for parsing
 // their flags.
 func ParseCLI() (Commander, error) {
-	var env = environment.NewEnvironment()
+	var (
+		cmdName string
+		err     error
+
+		env = environment.NewEnvironment()
+	)
 
 	// Generate a nice usage message
 	flag.Usage = usage
@@ -63,7 +71,26 @@ func ParseCLI() (Commander, error) {
 		return nil, ErrNoCmd
 	}
 
-	switch os.Args[1] {
+	for _, arg := range os.Args[1:] {
+		if cmdName != "" {
+			err = ErrMultipleCmd
+			break
+		}
+
+		for _, command := range Commands() {
+			if arg == command.String() {
+				cmdName = command.String()
+			}
+		}
+	}
+
+	if err != nil {
+		flag.Parse()
+		flag.Usage()
+		return nil, err
+	}
+
+	switch cmdName {
 	case ModSync.String():
 		config := modsync.Config{Environment: env}
 		if cmd, err := modsync.Create(config); err != nil {
