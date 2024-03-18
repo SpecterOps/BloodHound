@@ -90,9 +90,9 @@ func (s command) runJSBuild(cwd string, buildPath string) error {
 
 	if jsPaths, err := workspace.ParseJSAbsPaths(cwd); err != nil {
 		return fmt.Errorf("could not retrieve JS paths: %w", err)
-	} else if err := yarn.InstallWorkspaceDeps(jsPaths, env.Slice()); err != nil {
+	} else if err := yarn.InstallWorkspaceDeps(jsPaths, s.config.Environment); err != nil {
 		return fmt.Errorf("could not install JS deps: %w", err)
-	} else if err := yarn.BuildWorkspace(cwd, env.Slice()); err != nil {
+	} else if err := yarn.BuildWorkspace(cwd, s.config.Environment); err != nil {
 		return fmt.Errorf("could not build JS workspace: %w", err)
 	} else {
 		return nil
@@ -131,7 +131,7 @@ func (s command) runGoBuild(cwd string) error {
 
 	if modPaths, err := workspace.ParseModulesAbsPaths(cwd); err != nil {
 		return fmt.Errorf("could not parse module absolute paths: %w", err)
-	} else if err := workspace.BuildGoMainPackages(cwd, modPaths, env.Slice()); err != nil {
+	} else if err := workspace.BuildGoMainPackages(cwd, modPaths, s.config.Environment); err != nil {
 		return fmt.Errorf("could not build main packages: %w", err)
 	} else {
 		return nil

@@ -25,13 +25,14 @@ import (
 	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/packages/go/stbernard/analyzers/golang"
 	"github.com/specterops/bloodhound/packages/go/stbernard/analyzers/js"
+	"github.com/specterops/bloodhound/packages/go/stbernard/environment"
 )
 
 var (
 	ErrSeverityExit = errors.New("high severity linter result")
 )
 
-func Run(cwd string, modPaths []string, jsPaths []string, env []string) (string, error) {
+func Run(cwd string, modPaths []string, jsPaths []string, env environment.Environment) (string, error) {
 	var (
 		severityError bool
 	)

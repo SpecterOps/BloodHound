@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/specterops/bloodhound/log"
+	"github.com/specterops/bloodhound/packages/go/stbernard/environment"
 )
 
 // Run runs a command with args
@@ -29,13 +30,13 @@ func Run(command string, args []string) error {
 
 // RunWithEnv runs a command with args and environment variables set
 // If debug log level is set globally, command output will be combined and sent to os.Stderr
-func RunWithEnv(command string, args []string, env []string) error {
+func RunWithEnv(command string, args []string, env environment.Environment) error {
 	var (
 		cmdstr = command + strings.Join(args, " ")
 		cmd    = genCmd(command, args)
 	)
 
-	cmd.Env = env
+	cmd.Env = env.Slice()
 
 	log.Infof("Running %s", cmdstr)
 
@@ -49,13 +50,13 @@ func RunWithEnv(command string, args []string, env []string) error {
 
 // RunAtPathWithEnv runs a command with ars and environment variables set at a specified path
 // If debug log level is set globally, command output will be combined and sent to os.Stderr
-func RunAtPathWithEnv(command string, args []string, path string, env []string) error {
+func RunAtPathWithEnv(command string, args []string, path string, env environment.Environment) error {
 	var (
 		cmdstr = command + strings.Join(args, " ")
 		cmd    = genCmd(command, args)
 	)
 
-	cmd.Env = env
+	cmd.Env = env.Slice()
 	cmd.Dir = path
 
 	log.Infof("Running %s for %s", cmdstr, path)

@@ -20,10 +20,11 @@ import (
 	"fmt"
 
 	"github.com/specterops/bloodhound/packages/go/stbernard/cmdrunner"
+	"github.com/specterops/bloodhound/packages/go/stbernard/environment"
 )
 
 // InstallWorkspaceDeps runs yarn install for a given list of jsPaths
-func InstallWorkspaceDeps(jsPaths []string, env []string) error {
+func InstallWorkspaceDeps(jsPaths []string, env environment.Environment) error {
 	var (
 		command = "yarn"
 		args    = []string{"install"}
@@ -39,7 +40,7 @@ func InstallWorkspaceDeps(jsPaths []string, env []string) error {
 }
 
 // BuildWorkspace runs yarn build for the current working directory
-func BuildWorkspace(cwd string, env []string) error {
+func BuildWorkspace(cwd string, env environment.Environment) error {
 	var (
 		command = "yarn"
 		args    = []string{"build"}

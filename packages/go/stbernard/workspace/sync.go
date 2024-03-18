@@ -22,11 +22,12 @@ import (
 	"sync"
 
 	"github.com/specterops/bloodhound/packages/go/stbernard/cmdrunner"
+	"github.com/specterops/bloodhound/packages/go/stbernard/environment"
 )
 
 // TidyModules runs go mod tidy for all module paths passed
 // Do not use currently, since go mod tidy is not compatible with go workspaces out of the box
-func TidyModules(modPaths []string, env []string) error {
+func TidyModules(modPaths []string, env environment.Environment) error {
 	var (
 		errs []error
 		wg   sync.WaitGroup
@@ -57,7 +58,7 @@ func TidyModules(modPaths []string, env []string) error {
 }
 
 // DownloadModules runs go mod download for all module paths passed
-func DownloadModules(modPaths []string, env []string) error {
+func DownloadModules(modPaths []string, env environment.Environment) error {
 	var (
 		errs []error
 		wg   sync.WaitGroup
@@ -89,7 +90,7 @@ func DownloadModules(modPaths []string, env []string) error {
 
 // SyncWorkspace runs go work sync in the given directory with a given set of environment
 // variables
-func SyncWorkspace(cwd string, env []string) error {
+func SyncWorkspace(cwd string, env environment.Environment) error {
 	var (
 		command = "go"
 		args    = []string{"work", "sync"}

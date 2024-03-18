@@ -22,6 +22,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/specterops/bloodhound/packages/go/stbernard/environment"
 	"github.com/specterops/bloodhound/packages/go/stbernard/workspace"
 )
 
@@ -30,7 +31,9 @@ const (
 	Usage = "Run code generation in current workspace"
 )
 
-type Config struct{}
+type Config struct {
+	Environment environment.Environment
+}
 
 type command struct {
 	config Config
