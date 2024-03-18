@@ -200,6 +200,17 @@ export const CommonSearches: CommonSearchType[] = [
                 description: 'Domain controllers with UPN certificate mapping enabled',
                 cypher: `MATCH p = (dc:Computer)-[:DCFor]->(d)\nWHERE dc.certificatemappingmethodsraw IN [4, 5, 6, 7, 12, 13, 14, 15, 20, 21, 22, 23, 28, 29, 30, 31]\nRETURN p`,
             },
+            {
+                description: 'Non-Default Permissions on IssuancePolicy Nodes',
+                cypher: `MATCH p = (n)-[:GenericAll|GenericWrite|Owns|WriteOwner|WriteDacl]->(:IssuancePolicy)
+                WHERE NOT n.objectid ENDS WITH "-512" AND NOT n.objectid ENDS WITH "-519"
+                RETURN p`,
+            },
+            {
+                description: 'Enrollment Rights on CertTemplates with OIDGroupLink',
+                cypher: `MATCH p = ()-[:Enroll|GenericAll|AllExtendedRights]->(ct:CertTemplate)-[:ExtendedByPolicy]->(:IssuancePolicy)-[:OIDGroupLink]->(g)
+                RETURN p`,
+            },
         ],
     },
     {

@@ -1027,6 +1027,11 @@ ADCSESC10b: types.#Kind & {
 	schema: "active_directory"
 }
 
+ADCSESC13: types.#Kind & {
+	symbol: "ADCSESC13"
+	schema: "active_directory"
+}
+
 // Relationship Kinds
 RelationshipKinds: [
 	Owns,
@@ -1094,7 +1099,8 @@ RelationshipKinds: [
 	ADCSESC9a,
 	ADCSESC9b,
 	ADCSESC10a,
-	ADCSESC10b
+	ADCSESC10b,
+	ADCSESC13
 ]
 
 // ACL Relationships
@@ -1171,6 +1177,7 @@ PathfindingRelationships: [
 	ADCSESC9b,
 	ADCSESC10a,
 	ADCSESC10b,
+	ADCSESC13,
 	DCFor
 ]
 
