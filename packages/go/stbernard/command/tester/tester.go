@@ -1,20 +1,4 @@
-// Copyright 2024 Specter Ops, Inc.
-//
-// Licensed under the Apache License, Version 2.0
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-//
-// SPDX-License-Identifier: Apache-2.0
-
-package generate
+package tester
 
 import (
 	"flag"
@@ -27,8 +11,8 @@ import (
 )
 
 const (
-	Name  = "generate"
-	Usage = "Run code generation in current workspace"
+	Name  = "test"
+	Usage = "Run tests for entire workspace"
 )
 
 type Config struct {
@@ -52,9 +36,11 @@ func (s command) Run() error {
 		return fmt.Errorf("finding workspace root: %w", err)
 	} else if modPaths, err := workspace.ParseModulesAbsPaths(cwd); err != nil {
 		return fmt.Errorf("parsing module absolute paths: %w", err)
-	} else if err := workspace.WorkspaceGenerate(modPaths, s.config.Environment); err != nil {
-		return fmt.Errorf("building main packages: %w", err)
+	} else if jsPaths, err := workspace.ParseJSAbsPaths(cwd); err != nil {
+		return fmt.Errorf("parsing JS absolute paths: %w", err)
 	} else {
+		fmt.Println(modPaths)
+		fmt.Println(jsPaths)
 		return nil
 	}
 }
@@ -70,7 +56,7 @@ func Create(config Config) (command, error) {
 
 	if err := cmd.Parse(os.Args[2:]); err != nil {
 		cmd.Usage()
-		return command{}, fmt.Errorf("parsing generate command: %w", err)
+		return command{}, fmt.Errorf("parsing %s command: %w", Name, err)
 	} else {
 		return command{config: config}, nil
 	}

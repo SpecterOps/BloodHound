@@ -22,6 +22,7 @@ import (
 	"github.com/specterops/bloodhound/packages/go/stbernard/command/envdump"
 	"github.com/specterops/bloodhound/packages/go/stbernard/command/generate"
 	"github.com/specterops/bloodhound/packages/go/stbernard/command/modsync"
+	"github.com/specterops/bloodhound/packages/go/stbernard/command/tester"
 )
 
 // Command enum represents our subcommands
@@ -29,10 +30,11 @@ type Command int
 
 const (
 	ModSync Command = iota
-	EnvDump
-	Analysis
-	Build
 	Generate
+	Analysis
+	Test
+	Build
+	EnvDump
 )
 
 const InvalidCommand = "invalid command"
@@ -42,14 +44,16 @@ func (s Command) String() string {
 	switch s {
 	case ModSync:
 		return modsync.Name
-	case EnvDump:
-		return envdump.Name
-	case Analysis:
-		return analysis.Name
-	case Build:
-		return builder.Name
 	case Generate:
 		return generate.Name
+	case Analysis:
+		return analysis.Name
+	case Test:
+		return tester.Name
+	case Build:
+		return builder.Name
+	case EnvDump:
+		return envdump.Name
 	default:
 		return InvalidCommand
 	}
@@ -60,15 +64,16 @@ func CommandsUsage() []string {
 	var usage = make([]string, len(Commands()))
 
 	usage[ModSync] = modsync.Usage
-	usage[EnvDump] = envdump.Usage
-	usage[Analysis] = analysis.Usage
-	usage[Build] = builder.Usage
 	usage[Generate] = generate.Usage
+	usage[Analysis] = analysis.Usage
+	usage[Test] = tester.Usage
+	usage[Build] = builder.Usage
+	usage[EnvDump] = envdump.Usage
 
 	return usage
 }
 
 // Commands returns our valid set of Command options
 func Commands() []Command {
-	return []Command{ModSync, EnvDump, Analysis, Build, Generate}
+	return []Command{ModSync, Generate, Analysis, Test, Build, EnvDump}
 }

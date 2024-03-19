@@ -64,7 +64,7 @@ func Run(cwd string, modPaths []string, env environment.Environment) ([]codeclim
 	cmdErr := cmdrunner.Run(command, args, cwd, env, redirectStdout)
 	// If the command has a non-zero exit, we're going to return it up the stack, but we want to attempt to process the output anyway
 	if cmdErr != nil && !errors.Is(cmdErr, cmdrunner.ErrNonZeroExit) {
-		return result, fmt.Errorf("unexpected failure: %w", cmdErr)
+		return result, fmt.Errorf("unexpected run error: %w", cmdErr)
 	}
 
 	if err := json.NewDecoder(&outb).Decode(&result); err != nil {

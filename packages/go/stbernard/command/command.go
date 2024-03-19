@@ -28,6 +28,7 @@ import (
 	"github.com/specterops/bloodhound/packages/go/stbernard/command/envdump"
 	"github.com/specterops/bloodhound/packages/go/stbernard/command/generate"
 	"github.com/specterops/bloodhound/packages/go/stbernard/command/modsync"
+	"github.com/specterops/bloodhound/packages/go/stbernard/command/tester"
 	"github.com/specterops/bloodhound/packages/go/stbernard/environment"
 )
 
@@ -44,7 +45,7 @@ type Commander interface {
 var (
 	ErrNoCmd           = errors.New("no command specified")
 	ErrInvalidCmd      = errors.New("invalid command specified")
-	ErrFailedCreateCmd = errors.New("failed to create command")
+	ErrFailedCreateCmd = errors.New("command creation failed")
 	ErrMultipleCmd     = errors.New("multiple commands specified")
 )
 
@@ -99,9 +100,17 @@ func ParseCLI() (Commander, error) {
 			return cmd, nil
 		}
 
-	case EnvDump.String():
-		config := envdump.Config{Environment: env}
-		if cmd, err := envdump.Create(config); err != nil {
+	case Generate.String():
+		config := generate.Config{Environment: env}
+		if cmd, err := generate.Create(config); err != nil {
+			return nil, fmt.Errorf("%w: %w", ErrFailedCreateCmd, err)
+		} else {
+			return cmd, nil
+		}
+
+	case Test.String():
+		config := tester.Config{Environment: env}
+		if cmd, err := tester.Create(config); err != nil {
 			return nil, fmt.Errorf("%w: %w", ErrFailedCreateCmd, err)
 		} else {
 			return cmd, nil
@@ -123,9 +132,9 @@ func ParseCLI() (Commander, error) {
 			return cmd, nil
 		}
 
-	case Generate.String():
-		config := generate.Config{Environment: env}
-		if cmd, err := generate.Create(config); err != nil {
+	case EnvDump.String():
+		config := envdump.Config{Environment: env}
+		if cmd, err := envdump.Create(config); err != nil {
 			return nil, fmt.Errorf("%w: %w", ErrFailedCreateCmd, err)
 		} else {
 			return cmd, nil

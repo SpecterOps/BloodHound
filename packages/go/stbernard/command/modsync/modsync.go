@@ -49,13 +49,13 @@ func (s command) Name() string {
 
 func (s command) Run() error {
 	if cwd, err := workspace.FindRoot(); err != nil {
-		return fmt.Errorf("could not find workspace root: %w", err)
+		return fmt.Errorf("finding workspace root: %w", err)
 	} else if modPaths, err := workspace.ParseModulesAbsPaths(cwd); err != nil {
-		return fmt.Errorf("could not parse module absolute paths: %w", err)
+		return fmt.Errorf("parsing module absolute paths: %w", err)
 	} else if err := workspace.DownloadModules(modPaths, s.config.Environment); err != nil {
-		return fmt.Errorf("could not download go modules: %w", err)
+		return fmt.Errorf("downloading go modules: %w", err)
 	} else if err := workspace.SyncWorkspace(cwd, s.config.Environment); err != nil {
-		return fmt.Errorf("could not sync go workspace: %w", err)
+		return fmt.Errorf("syncing go workspace: %w", err)
 	} else {
 		return nil
 	}
@@ -72,7 +72,7 @@ func Create(config Config) (command, error) {
 
 	if err := modsyncCmd.Parse(os.Args[2:]); err != nil {
 		modsyncCmd.Usage()
-		return command{}, fmt.Errorf("failed to parse modsync command: %w", err)
+		return command{}, fmt.Errorf("parsing modsync command: %w", err)
 	} else {
 		return command{config: config}, nil
 	}

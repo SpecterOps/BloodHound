@@ -58,7 +58,7 @@ func Run(jsPaths []string, env environment.Environment) ([]codeclimate.Entry, er
 		if errors.Is(err, cmdrunner.ErrNonZeroExit) {
 			exitError = err
 		} else if err != nil {
-			return result, fmt.Errorf("failed to run eslint at %v: %w", path, err)
+			return result, fmt.Errorf("running eslint at %v: %w", path, err)
 		}
 		result = append(result, entries...)
 	}
@@ -85,7 +85,7 @@ func runEslint(path string, env environment.Environment) ([]codeclimate.Entry, e
 	cmdErr := cmdrunner.Run(command, args, path, env, redirectStdout)
 	// If the command has a non-zero exit, we're going to return it up the stack, but we want to attempt to process the output anyway
 	if cmdErr != nil && !errors.Is(cmdErr, cmdrunner.ErrNonZeroExit) {
-		return result, fmt.Errorf("unexpected failure: %w", cmdErr)
+		return result, fmt.Errorf("unexpected run error: %w", cmdErr)
 	}
 
 	if err := json.NewDecoder(&outb).Decode(&rawResult); err != nil {
