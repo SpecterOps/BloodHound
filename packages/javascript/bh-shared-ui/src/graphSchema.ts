@@ -134,6 +134,7 @@ export enum ActiveDirectoryRelationshipKind {
     ADCSESC9b = 'ADCSESC9b',
     ADCSESC10a = 'ADCSESC10a',
     ADCSESC10b = 'ADCSESC10b',
+    ExtendedByPolicy = 'ExtendedByPolicy',
 }
 export function ActiveDirectoryRelationshipKindToDisplay(value: ActiveDirectoryRelationshipKind): string | undefined {
     switch (value) {
@@ -269,6 +270,8 @@ export function ActiveDirectoryRelationshipKindToDisplay(value: ActiveDirectoryR
             return 'ADCSESC10a';
         case ActiveDirectoryRelationshipKind.ADCSESC10b:
             return 'ADCSESC10b';
+        case ActiveDirectoryRelationshipKind.ExtendedByPolicy:
+            return 'ExtendedByPolicy';
         default:
             return undefined;
     }

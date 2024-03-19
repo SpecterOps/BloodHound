@@ -1027,6 +1027,11 @@ ADCSESC10b: types.#Kind & {
 	schema: "active_directory"
 }
 
+ExtendedByPolicy: types.#Kind & {
+	symbol: "ExtendedByPolicy"
+	schema: "active_directory"
+}
+
 // Relationship Kinds
 RelationshipKinds: [
 	Owns,
@@ -1094,7 +1099,8 @@ RelationshipKinds: [
 	ADCSESC9a,
 	ADCSESC9b,
 	ADCSESC10a,
-	ADCSESC10b
+	ADCSESC10b,
+	ExtendedByPolicy
 ]
 
 // ACL Relationships
