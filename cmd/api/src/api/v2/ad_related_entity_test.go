@@ -123,9 +123,10 @@ func setupCases(mockGraph *graphMocks.MockGraph, mockDB *dbMocks.MockDatabase) [
 			},
 		},
 		{
-			Name: "Success",
+			Name: "GraphDBGetADEntityQueryResultTypeGraphNotPaginatedResults",
 			Input: func(input *apitest.Input) {
 				apitest.SetURLVar(input, "object_id", "1")
+				apitest.AddQueryParam(input, "type", "graph")
 			},
 			Setup: func() {
 				mockGraph.EXPECT().
@@ -137,6 +138,36 @@ func setupCases(mockGraph *graphMocks.MockGraph, mockDB *dbMocks.MockDatabase) [
 			},
 			Test: func(output apitest.Output) {
 				apitest.StatusCode(output, http.StatusOK)
+				//This flat unnested shape maintains the current api contract for a type=graph query
+				//Assert that the response does not contain pagination properties
+				apitest.BodyNotContains(output, "data")
+				apitest.BodyNotContains(output, "skip")
+				apitest.BodyNotContains(output, "limit")
+				apitest.BodyNotContains(output, "count")
+			},
+		},
+		{
+			Name: "Success",
+			Input: func(input *apitest.Input) {
+				apitest.SetURLVar(input, "object_id", "1")
+				//Delete the type=graph param so that we get list results
+				apitest.DeleteQueryParam(input, "type")
+			},
+			Setup: func() {
+				mockGraph.EXPECT().
+					GetADEntityQueryResult(gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(nil, 0, nil)
+				mockDB.EXPECT().
+					GetFlagByKey(gomock.Any(), "entity_panel_cache").
+					Return(appcfg.FeatureFlag{Enabled: true}, nil)
+			},
+			Test: func(output apitest.Output) {
+				apitest.StatusCode(output, http.StatusOK)
+				//List results are nested under "data" and the response contains other pagination properties
+				apitest.BodyContains(output, "data")
+				apitest.BodyContains(output, "skip")
+				apitest.BodyContains(output, "limit")
+				apitest.BodyContains(output, "count")
 			},
 		},
 	}
