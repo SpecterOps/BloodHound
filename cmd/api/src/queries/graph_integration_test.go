@@ -21,9 +21,10 @@ package queries_test
 
 import (
 	"context"
+	"testing"
+
 	schema "github.com/specterops/bloodhound/graphschema"
 	"github.com/specterops/bloodhound/src/config"
-	"testing"
 
 	adAnalysis "github.com/specterops/bloodhound/analysis/ad"
 	"github.com/specterops/bloodhound/cache"
