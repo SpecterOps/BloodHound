@@ -160,7 +160,7 @@ func TestSearchNodesByName_ExactMatch_ObjectID(t *testing.T) {
 		})
 }
 
-func TestGetEntityResults_ListTypeParam(t *testing.T) {
+func TestGetEntityResults(t *testing.T) {
 	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
 	queryCache, err := cache.NewCache(cache.Config{MaxSize: 1})
 	require.Nil(t, err)
@@ -191,37 +191,6 @@ func TestGetEntityResults_ListTypeParam(t *testing.T) {
 		require.Equal(t, 0, queryCache.Len())
 	})
 }
-
-// func TestGetEntityResults_GraphTypeParam(t *testing.T) {
-// 	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
-// 	queryCache, err := cache.NewCache(cache.Config{MaxSize: 1})
-// 	require.Nil(t, err)
-
-// 	testContext.DatabaseTest(func(harness integration.HarnessDetails, db graph.Database) {
-// 		objectID, err := harness.InboundControl.ControlledUser.Properties.Get(common.ObjectID.String()).String()
-// 		require.Nil(t, err)
-
-// 		graphQuery := queries.GraphQuery{
-// 			Graph: db,
-// 			Cache: queryCache,
-// 		}
-// 		params := queries.EntityQueryParameters{
-// 			QueryName:     "InboundADEntityController",
-// 			ObjectID:      objectID,
-// 			RequestedType: 0,
-// 			PathDelegate:  adAnalysis.FetchInboundADEntityControllerPaths,
-// 			ListDelegate:  adAnalysis.FetchInboundADEntityControllers,
-// 		}
-
-// 		results, count, err := graphQuery.GetADEntityQueryResult(context.Background(), params, false)
-// 		require.Nil(t, err)
-
-// 		require.Equal(t, 4, count)
-// 		require.Len(t, results, 2)
-// 		require.Nil(t, results.data)
-// 		require.Equal(t, 0, queryCache.Len())
-// 	})
-// }
 
 func TestGetEntityResults_QueryShorterThanSlowQueryThreshold(t *testing.T) {
 	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
