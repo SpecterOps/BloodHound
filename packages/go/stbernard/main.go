@@ -33,7 +33,7 @@ func main() {
 	log.ConfigureDefaults()
 
 	if rawLvl == "" {
-		rawLvl = "info"
+		rawLvl = "warn"
 	}
 
 	if lvl, err := log.ParseLevel(rawLvl); err != nil {
@@ -43,7 +43,10 @@ func main() {
 	}
 
 	if cmd, err := command.ParseCLI(); errors.Is(err, command.ErrNoCmd) {
-		log.Fatalf("No command specified")
+		log.Fatalf("No valid command specified")
+	} else if errors.Is(err, command.ErrHelpRequested) {
+		// No need to exit 1 if help was requested
+		return
 	} else if err != nil {
 		log.Fatalf("Error while parsing command: %v", err)
 	} else if err := cmd.Run(); err != nil {

@@ -23,13 +23,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/specterops/bloodhound/packages/go/stbernard/command/analysis"
-	"github.com/specterops/bloodhound/packages/go/stbernard/command/builder"
-	"github.com/specterops/bloodhound/packages/go/stbernard/command/envdump"
-	"github.com/specterops/bloodhound/packages/go/stbernard/command/generate"
-	"github.com/specterops/bloodhound/packages/go/stbernard/command/modsync"
-	"github.com/specterops/bloodhound/packages/go/stbernard/command/tester"
-	"github.com/specterops/bloodhound/packages/go/stbernard/environment"
+	"github.com/specterops/bloodhound/log"
 )
 
 // Commander is an interface for commands, allowing commands to implement the minimum
@@ -47,7 +41,10 @@ var (
 	ErrInvalidCmd      = errors.New("invalid command specified")
 	ErrFailedCreateCmd = errors.New("command creation failed")
 	ErrMultipleCmd     = errors.New("multiple commands specified")
+	ErrHelpRequested   = errors.New("help requested")
 )
+
+type usageFunc func()
 
 // ParseCLI parses for a subcommand as the first argument to the calling binary,
 // and initializes the command (if it exists). It also provides the default usage
@@ -57,112 +54,89 @@ var (
 // their flags.
 func ParseCLI() (Commander, error) {
 	var (
-		cmdName string
-		err     error
+		verboseEnabled *bool
+		debugEnabled   *bool
+		cmdStartIdx    int
+		command        Command
 
-		env = environment.NewEnvironment()
+		commands = Commands()
 	)
 
-	// Generate a nice usage message
-	flag.Usage = usage
+	mainCmd := flag.NewFlagSet("main", flag.ExitOnError)
 
-	// Default usage if no arguments provided
-	if len(os.Args) < 2 {
-		flag.Usage()
-		return nil, ErrNoCmd
-	}
+	verboseEnabled = mainCmd.Bool("v", false, "Verbose output")
+	debugEnabled = mainCmd.Bool("vv", false, "Debug output")
 
-	for _, arg := range os.Args[1:] {
-		if cmdName != "" {
-			err = ErrMultipleCmd
+	for idx, arg := range os.Args {
+		if idx == 0 {
+			// Skip main command name
+			continue
+		}
+
+		if cmdStartIdx > 0 {
 			break
 		}
 
-		for _, command := range Commands() {
-			if arg == command.String() {
-				cmdName = command.String()
+		if strings.HasPrefix(arg, "-") {
+			continue
+		}
+
+		for _, cmd := range commands {
+			if arg == cmd.Name() {
+				cmdStartIdx = idx
+				command = cmd
+				break
 			}
 		}
 	}
 
-	if err != nil {
-		flag.Parse()
-		flag.Usage()
-		return nil, err
+	mainCmd.Usage = usageGenerator(mainCmd, commands)
+
+	if err := mainCmd.Parse(os.Args[1:]); errors.Is(err, flag.ErrHelp) {
+		mainCmd.Usage()
+		return nil, ErrHelpRequested
 	}
 
-	switch cmdName {
-	case ModSync.String():
-		config := modsync.Config{Environment: env}
-		if cmd, err := modsync.Create(config); err != nil {
-			return nil, fmt.Errorf("%w: %w", ErrFailedCreateCmd, err)
-		} else {
-			return cmd, nil
-		}
-
-	case Generate.String():
-		config := generate.Config{Environment: env}
-		if cmd, err := generate.Create(config); err != nil {
-			return nil, fmt.Errorf("%w: %w", ErrFailedCreateCmd, err)
-		} else {
-			return cmd, nil
-		}
-
-	case Test.String():
-		config := tester.Config{Environment: env}
-		if cmd, err := tester.Create(config); err != nil {
-			return nil, fmt.Errorf("%w: %w", ErrFailedCreateCmd, err)
-		} else {
-			return cmd, nil
-		}
-
-	case Analysis.String():
-		config := analysis.Config{Environment: env}
-		if cmd, err := analysis.Create(config); err != nil {
-			return nil, fmt.Errorf("%w: %w", ErrFailedCreateCmd, err)
-		} else {
-			return cmd, nil
-		}
-
-	case Build.String():
-		config := builder.Config{Environment: env}
-		if cmd, err := builder.Create(config); err != nil {
-			return nil, fmt.Errorf("%w: %w", ErrFailedCreateCmd, err)
-		} else {
-			return cmd, nil
-		}
-
-	case EnvDump.String():
-		config := envdump.Config{Environment: env}
-		if cmd, err := envdump.Create(config); err != nil {
-			return nil, fmt.Errorf("%w: %w", ErrFailedCreateCmd, err)
-		} else {
-			return cmd, nil
-		}
-
-	default:
-		flag.Parse()
-		flag.Usage()
-		return nil, ErrInvalidCmd
+	if cmdStartIdx == 0 {
+		mainCmd.Usage()
+		return nil, ErrNoCmd
 	}
+
+	if *verboseEnabled {
+		log.SetGlobalLevel(log.LevelInfo)
+	}
+
+	if *debugEnabled {
+		log.SetGlobalLevel(log.LevelDebug)
+	}
+
+	return command, command.Parse(cmdStartIdx)
 }
 
 // usage creates a pretty usage message for our main command
-func usage() {
-	var longestCmdLen int
+func usageGenerator(flagset *flag.FlagSet, commands []Command) usageFunc {
+	return func() {
+		var longestCmdLen int
 
-	w := flag.CommandLine.Output()
-	fmt.Fprint(w, "A BloodHound Swiss Army Knife\n\nUsage:  stbernard COMMAND\n\nCommands:\n")
-
-	for _, cmd := range Commands() {
-		if len(cmd.String()) > longestCmdLen {
-			longestCmdLen = len(cmd.String())
+		for _, cmd := range commands {
+			if len(cmd.Name()) > longestCmdLen {
+				longestCmdLen = len(cmd.Name())
+			}
 		}
-	}
 
-	for cmd, usage := range CommandsUsage() {
-		cmdStr := Command(cmd).String()
-		padding := strings.Repeat(" ", longestCmdLen-len(cmdStr))
-		fmt.Fprintf(w, "  %s%s    %s\n", cmdStr, padding, usage)
+		w := flag.CommandLine.Output()
+		fmt.Fprint(w, "A BloodHound Swiss Army Knife\n\nUsage:  stbernard [OPTIONS] COMMAND\n\nOptions:\n")
+
+		flagset.VisitAll(func(f *flag.Flag) {
+			padding := strings.Repeat(" ", longestCmdLen-len(f.Name)-1)
+			fmt.Fprintf(w, "  -%s%s    %v\n", f.Name, padding, f.Usage)
+		})
+
+		fmt.Fprintf(w, "\nCommands:\n")
+
+		for _, cmd := range commands {
+			padding := strings.Repeat(" ", longestCmdLen-len(cmd.Name()))
+			fmt.Fprintf(w, "  %s%s    %s\n", cmd.Name(), padding, cmd.Usage())
+		}
 	}
 }
