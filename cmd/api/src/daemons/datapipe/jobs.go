@@ -180,7 +180,7 @@ func (s *Daemon) preProcessIngestFile(path string, fileType model.FileType) ([]s
 // archive, the number of files that failed to ingest as JSON, and an error
 func (s *Daemon) processIngestFile(ctx context.Context, path string, fileType model.FileType) (int, int, error) {
 	if paths, err := s.preProcessIngestFile(path, fileType); err != nil {
-		return len(paths), 0, err
+		return 0, 0, err
 	} else {
 		failed := 0
 		return len(paths), failed, s.graphdb.BatchOperation(ctx, func(batch graph.Batch) error {
