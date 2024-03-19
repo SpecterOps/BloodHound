@@ -31,20 +31,39 @@ const (
 	Usage = "Sync all modules in current workspace"
 )
 
-type Config struct {
-	Environment environment.Environment
-}
-
 type command struct {
-	config Config
+	env environment.Environment
 }
 
-func (s command) Usage() string {
+func Create(env environment.Environment) *command {
+	return &command{
+		env: env,
+	}
+}
+
+func (s *command) Usage() string {
 	return Usage
 }
 
-func (s command) Name() string {
+func (s *command) Name() string {
 	return Name
+}
+
+func (s *command) Parse(cmdIndex int) error {
+	cmd := flag.NewFlagSet(Name, flag.ExitOnError)
+
+	cmd.Usage = func() {
+		w := flag.CommandLine.Output()
+		fmt.Fprintf(w, "%s\n\nUsage: %s %s [OPTIONS]\n\nOptions:\n", Usage, filepath.Base(os.Args[0]), Name)
+		cmd.PrintDefaults()
+	}
+
+	if err := cmd.Parse(os.Args[cmdIndex+1:]); err != nil {
+		cmd.Usage()
+		return fmt.Errorf("parsing %s command: %w", Name, err)
+	}
+
+	return nil
 }
 
 func (s command) Run() error {
@@ -52,28 +71,11 @@ func (s command) Run() error {
 		return fmt.Errorf("finding workspace root: %w", err)
 	} else if modPaths, err := workspace.ParseModulesAbsPaths(cwd); err != nil {
 		return fmt.Errorf("parsing module absolute paths: %w", err)
-	} else if err := workspace.DownloadModules(modPaths, s.config.Environment); err != nil {
+	} else if err := workspace.DownloadModules(modPaths, s.env); err != nil {
 		return fmt.Errorf("downloading go modules: %w", err)
-	} else if err := workspace.SyncWorkspace(cwd, s.config.Environment); err != nil {
+	} else if err := workspace.SyncWorkspace(cwd, s.env); err != nil {
 		return fmt.Errorf("syncing go workspace: %w", err)
 	} else {
 		return nil
-	}
-}
-
-func Create(config Config) (command, error) {
-	modsyncCmd := flag.NewFlagSet(Name, flag.ExitOnError)
-
-	modsyncCmd.Usage = func() {
-		w := flag.CommandLine.Output()
-		fmt.Fprintf(w, "%s\n\nUsage: %s %s [OPTIONS]\n\nOptions:\n", Usage, filepath.Base(os.Args[0]), Name)
-		modsyncCmd.PrintDefaults()
-	}
-
-	if err := modsyncCmd.Parse(os.Args[2:]); err != nil {
-		modsyncCmd.Usage()
-		return command{}, fmt.Errorf("parsing modsync command: %w", err)
-	} else {
-		return command{config: config}, nil
 	}
 }

@@ -34,23 +34,42 @@ const (
 	Usage = "Build commands in current workspace"
 )
 
-type Config struct {
-	Environment environment.Environment
-}
-
 type command struct {
-	config Config
+	env environment.Environment
 }
 
-func (s command) Usage() string {
+func Create(env environment.Environment) *command {
+	return &command{
+		env: env,
+	}
+}
+
+func (s *command) Usage() string {
 	return Usage
 }
 
-func (s command) Name() string {
+func (s *command) Name() string {
 	return Name
 }
 
-func (s command) Run() error {
+func (s *command) Parse(cmdIndex int) error {
+	cmd := flag.NewFlagSet(Name, flag.ExitOnError)
+
+	cmd.Usage = func() {
+		w := flag.CommandLine.Output()
+		fmt.Fprintf(w, "%s\n\nUsage: %s %s [OPTIONS]\n\nOptions:\n", Usage, filepath.Base(os.Args[0]), Name)
+		cmd.PrintDefaults()
+	}
+
+	if err := cmd.Parse(os.Args[cmdIndex+1:]); err != nil {
+		cmd.Usage()
+		return fmt.Errorf("parsing %s command: %w", Name, err)
+	}
+
+	return nil
+}
+
+func (s *command) Run() error {
 	if cwd, err := workspace.FindRoot(); err != nil {
 		return fmt.Errorf("finding workspace root: %w", err)
 	} else if cfg, err := workspace.ParseConfig(cwd); err != nil {
@@ -66,34 +85,27 @@ func (s command) Run() error {
 	}
 }
 
-func Create(config Config) (command, error) {
-	cmd := flag.NewFlagSet(Name, flag.ExitOnError)
-
-	cmd.Usage = func() {
-		w := flag.CommandLine.Output()
-		fmt.Fprintf(w, "%s\n\nUsage: %s %s [OPTIONS]\n\nOptions:\n", Usage, filepath.Base(os.Args[0]), Name)
-		cmd.PrintDefaults()
-	}
-
-	if err := cmd.Parse(os.Args[2:]); err != nil {
-		cmd.Usage()
-		return command{}, fmt.Errorf("parsing build command: %w", err)
-	} else {
-		return command{config: config}, nil
-	}
-}
-
-func (s command) runJSBuild(cwd string, buildPath string) error {
-	var env = s.config.Environment
-
-	env.SetIfEmpty("BUILD_PATH", buildPath)
+func (s *command) runJSBuild(cwd string, buildPath string) error {
+	s.env.SetIfEmpty("BUILD_PATH", buildPath)
 
 	if jsPaths, err := workspace.ParseJSAbsPaths(cwd); err != nil {
 		return fmt.Errorf("retrieving JS paths: %w", err)
-	} else if err := yarn.InstallWorkspaceDeps(jsPaths, s.config.Environment); err != nil {
+	} else if err := yarn.InstallWorkspaceDeps(jsPaths, s.env); err != nil {
 		return fmt.Errorf("installing JS deps: %w", err)
-	} else if err := yarn.BuildWorkspace(cwd, s.config.Environment); err != nil {
+	} else if err := yarn.BuildWorkspace(cwd, s.env); err != nil {
 		return fmt.Errorf("building JS workspace: %w", err)
+	} else {
+		return nil
+	}
+}
+
+func (s command) runGoBuild(cwd string) error {
+	s.env.SetIfEmpty("CGO_ENABLED", "0")
+
+	if modPaths, err := workspace.ParseModulesAbsPaths(cwd); err != nil {
+		return fmt.Errorf("parsing module absolute paths: %w", err)
+	} else if err := workspace.BuildGoMainPackages(cwd, modPaths, s.env); err != nil {
+		return fmt.Errorf("building main packages: %w", err)
 	} else {
 		return nil
 	}
@@ -122,18 +134,4 @@ func clearFiles(path string, entry os.DirEntry, err error) error {
 	}
 
 	return nil
-}
-
-func (s command) runGoBuild(cwd string) error {
-	var env = s.config.Environment
-
-	env.SetIfEmpty("CGO_ENABLED", "0")
-
-	if modPaths, err := workspace.ParseModulesAbsPaths(cwd); err != nil {
-		return fmt.Errorf("parsing module absolute paths: %w", err)
-	} else if err := workspace.BuildGoMainPackages(cwd, modPaths, s.config.Environment); err != nil {
-		return fmt.Errorf("building main packages: %w", err)
-	} else {
-		return nil
-	}
 }

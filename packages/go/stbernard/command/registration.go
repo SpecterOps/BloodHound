@@ -23,57 +23,30 @@ import (
 	"github.com/specterops/bloodhound/packages/go/stbernard/command/generate"
 	"github.com/specterops/bloodhound/packages/go/stbernard/command/modsync"
 	"github.com/specterops/bloodhound/packages/go/stbernard/command/tester"
+	"github.com/specterops/bloodhound/packages/go/stbernard/environment"
 )
 
-// Command enum represents our subcommands
-type Command int
-
-const (
-	ModSync Command = iota
-	Generate
-	Analysis
-	Test
-	Build
-	EnvDump
-)
-
-const InvalidCommand = "invalid command"
-
-// String implements Stringer for the Command enum
-func (s Command) String() string {
-	switch s {
-	case ModSync:
-		return modsync.Name
-	case Generate:
-		return generate.Name
-	case Analysis:
-		return analysis.Name
-	case Test:
-		return tester.Name
-	case Build:
-		return builder.Name
-	case EnvDump:
-		return envdump.Name
-	default:
-		return InvalidCommand
-	}
-}
-
-// Commands usage returns a slice of Command usage statements indexed by their enum
-func CommandsUsage() []string {
-	var usage = make([]string, len(Commands()))
-
-	usage[ModSync] = modsync.Usage
-	usage[Generate] = generate.Usage
-	usage[Analysis] = analysis.Usage
-	usage[Test] = tester.Usage
-	usage[Build] = builder.Usage
-	usage[EnvDump] = envdump.Usage
-
-	return usage
+type Command interface {
+	// Name gets the name of the Command
+	Name() string
+	// Usage gets the usage string for the Command
+	Usage() string
+	// Parse parses flags for the command using the command index as the starting point
+	Parse(cmdIdx int) error
+	// Run will run the command and return any errors
+	Run() error
 }
 
 // Commands returns our valid set of Command options
 func Commands() []Command {
-	return []Command{ModSync, Generate, Analysis, Test, Build, EnvDump}
+	var env = environment.NewEnvironment()
+
+	return []Command{
+		envdump.Create(env),
+		modsync.Create(env),
+		generate.Create(env),
+		analysis.Create(env),
+		tester.Create(env),
+		builder.Create(env),
+	}
 }

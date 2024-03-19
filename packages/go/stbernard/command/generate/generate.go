@@ -31,35 +31,25 @@ const (
 	Usage = "Run code generation in current workspace"
 )
 
-type Config struct {
-	Environment environment.Environment
-}
-
 type command struct {
-	config Config
+	env environment.Environment
 }
 
-func (s command) Usage() string {
-	return Usage
-}
-
-func (s command) Name() string {
-	return Name
-}
-
-func (s command) Run() error {
-	if cwd, err := workspace.FindRoot(); err != nil {
-		return fmt.Errorf("finding workspace root: %w", err)
-	} else if modPaths, err := workspace.ParseModulesAbsPaths(cwd); err != nil {
-		return fmt.Errorf("parsing module absolute paths: %w", err)
-	} else if err := workspace.WorkspaceGenerate(modPaths, s.config.Environment); err != nil {
-		return fmt.Errorf("building main packages: %w", err)
-	} else {
-		return nil
+func Create(env environment.Environment) *command {
+	return &command{
+		env: env,
 	}
 }
 
-func Create(config Config) (command, error) {
+func (s *command) Usage() string {
+	return Usage
+}
+
+func (s *command) Name() string {
+	return Name
+}
+
+func (s *command) Parse(cmdIndex int) error {
 	cmd := flag.NewFlagSet(Name, flag.ExitOnError)
 
 	cmd.Usage = func() {
@@ -68,10 +58,22 @@ func Create(config Config) (command, error) {
 		cmd.PrintDefaults()
 	}
 
-	if err := cmd.Parse(os.Args[2:]); err != nil {
+	if err := cmd.Parse(os.Args[cmdIndex+1:]); err != nil {
 		cmd.Usage()
-		return command{}, fmt.Errorf("parsing generate command: %w", err)
+		return fmt.Errorf("parsing %s command: %w", Name, err)
+	}
+
+	return nil
+}
+
+func (s *command) Run() error {
+	if cwd, err := workspace.FindRoot(); err != nil {
+		return fmt.Errorf("finding workspace root: %w", err)
+	} else if modPaths, err := workspace.ParseModulesAbsPaths(cwd); err != nil {
+		return fmt.Errorf("parsing module absolute paths: %w", err)
+	} else if err := workspace.WorkspaceGenerate(modPaths, s.env); err != nil {
+		return fmt.Errorf("building main packages: %w", err)
 	} else {
-		return command{config: config}, nil
+		return nil
 	}
 }

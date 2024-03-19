@@ -30,44 +30,45 @@ const (
 	Usage = "Dump your environment variables"
 )
 
-type Config struct {
-	Environment environment.Environment
-}
-
 type command struct {
-	config Config
+	env environment.Environment
 }
 
-func (s command) Name() string {
+func Create(env environment.Environment) *command {
+	return &command{env: env}
+}
+
+func (s *command) Name() string {
 	return Name
 }
 
-func (s command) Usage() string {
+func (s *command) Usage() string {
 	return Usage
 }
 
-func (s command) Run() error {
+func (s *command) Parse(cmdIndex int) error {
+	cmd := flag.NewFlagSet(Name, flag.ExitOnError)
+
+	cmd.Usage = func() {
+		w := flag.CommandLine.Output()
+		fmt.Fprintf(w, "%s\n\nUsage: %s %s [OPTIONS]\n\nOptions:\n", Usage, filepath.Base(os.Args[0]), Name)
+		cmd.PrintDefaults()
+	}
+
+	if err := cmd.Parse(os.Args[cmdIndex+1:]); err != nil {
+		cmd.Usage()
+		return fmt.Errorf("parsing %s command: %w", Name, err)
+	}
+
+	return nil
+}
+
+func (s *command) Run() error {
 	fmt.Print("Environment:\n\n")
-	for key, val := range s.config.Environment {
+	for key, val := range s.env {
 		fmt.Printf("%s: %s\n", key, val)
 	}
 	fmt.Print("\n")
 
 	return nil
-}
-
-func Create(config Config) (command, error) {
-	envdumpCmd := flag.NewFlagSet(Name, flag.ExitOnError)
-
-	envdumpCmd.Usage = func() {
-		w := flag.CommandLine.Output()
-		fmt.Fprintf(w, "%s\n\nUsage: %s %s [OPTIONS]\n", Usage, filepath.Base(os.Args[0]), Name)
-	}
-
-	if err := envdumpCmd.Parse(os.Args[2:]); err != nil {
-		envdumpCmd.Usage()
-		return command{}, fmt.Errorf("parsing %s command: %w", Name, err)
-	} else {
-		return command{config: config}, nil
-	}
 }
