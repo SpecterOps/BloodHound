@@ -93,7 +93,8 @@ function CodeController(props: PropsWithChildren<Props>) {
         const nextNonBlankLine = perLine.find((x, i) => i !== 0 && !!x.trim());
 
         const startingIndex = nextNonBlankLine?.split('').findIndex((x) => !!x.trim());
-        return perLine?.map((x) => x.slice(startingIndex)).join('\n');
+        return perLine?.map((x, i) => (i === 0 ? x : x.slice(startingIndex))).join('\n');
+        // return perLine?.map((x, i) =>  x.slice(startingIndex)).join('\n');
     }, [children]);
 
     const handleCopy = async () => {
