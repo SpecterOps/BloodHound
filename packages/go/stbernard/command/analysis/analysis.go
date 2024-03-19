@@ -53,18 +53,18 @@ func (s command) Name() string {
 
 func (s command) Run() error {
 	if cwd, err := workspace.FindRoot(); err != nil {
-		return fmt.Errorf("could not find workspace root: %w", err)
+		return fmt.Errorf("finding workspace root: %w", err)
 	} else if modPaths, err := workspace.ParseModulesAbsPaths(cwd); err != nil {
-		return fmt.Errorf("could not parse module absolute paths: %w", err)
+		return fmt.Errorf("parsing module absolute paths: %w", err)
 	} else if jsPaths, err := workspace.ParseJSAbsPaths(cwd); err != nil {
-		return fmt.Errorf("could not parse JS absolute paths: %w", err)
+		return fmt.Errorf("parsing JS absolute paths: %w", err)
 	} else if err := preAnalysisSetup(cwd, jsPaths, s.config.Environment); err != nil {
-		return fmt.Errorf("could not complete environmental setup: %w", err)
+		return fmt.Errorf("completing environmental setup: %w", err)
 	} else if result, err := analyzers.Run(cwd, modPaths, jsPaths, s.config.Environment); errors.Is(err, analyzers.ErrSeverityExit) {
 		fmt.Println(result)
 		return err
 	} else if err != nil {
-		return fmt.Errorf("analyzers could not run completely: %w", err)
+		return fmt.Errorf("analyzers incomplete: %w", err)
 	} else {
 		fmt.Println(result)
 		return nil
@@ -82,7 +82,7 @@ func Create(config Config) (command, error) {
 
 	if err := analysisCmd.Parse(os.Args[2:]); err != nil {
 		analysisCmd.Usage()
-		return command{}, fmt.Errorf("failed to parse analysis command: %w", err)
+		return command{}, fmt.Errorf("parsing analysis command: %w", err)
 	} else {
 		return command{config: config}, nil
 	}
@@ -90,9 +90,9 @@ func Create(config Config) (command, error) {
 
 func preAnalysisSetup(cwd string, jsPaths []string, env environment.Environment) error {
 	if err := golang.InstallGolangCiLint(cwd, env); err != nil {
-		return fmt.Errorf("golangci-lint failed to install: %w", err)
+		return fmt.Errorf("installing golangci-lint: %w", err)
 	} else if err := yarn.InstallWorkspaceDeps(jsPaths, env); err != nil {
-		return fmt.Errorf("yarn install failed: %w", err)
+		return fmt.Errorf("yarn install: %w", err)
 	} else {
 		return nil
 	}

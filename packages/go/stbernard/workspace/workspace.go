@@ -49,7 +49,7 @@ type Config struct {
 func FindRoot() (string, error) {
 	cwd, err := os.Getwd()
 	if err != nil {
-		return "", fmt.Errorf("could not get current working directory: %w", err)
+		return "", fmt.Errorf("getting current working directory: %w", err)
 	}
 
 	var found bool
@@ -57,7 +57,7 @@ func FindRoot() (string, error) {
 	for !found {
 		found, err = projectDirExists(cwd)
 		if err != nil {
-			return cwd, fmt.Errorf("error while trying to find project root: %w", err)
+			return cwd, fmt.Errorf("finding project root: %w", err)
 		}
 
 		if found {
@@ -82,9 +82,9 @@ func ParseConfig(cwd string) (Config, error) {
 	var cfg Config
 
 	if bytes, err := os.ReadFile(filepath.Join(cwd, ".stbernard", "config.json")); err != nil {
-		return cfg, fmt.Errorf("could not read config file: %w", err)
+		return cfg, fmt.Errorf("reading config file: %w", err)
 	} else if err := json.Unmarshal(bytes, &cfg); err != nil {
-		return cfg, fmt.Errorf("could not unmarshal config file contents: %w", err)
+		return cfg, fmt.Errorf("unmarshaling config file contents: %w", err)
 	} else {
 		return cfg, nil
 	}
@@ -96,9 +96,9 @@ func ParseModulesAbsPaths(cwd string) ([]string, error) {
 	var workfilePath = filepath.Join(cwd, "go.work")
 	// go.work files aren't particularly heavy, so we'll just read into memory
 	if data, err := os.ReadFile(workfilePath); err != nil {
-		return nil, fmt.Errorf("could not read go.work file: %w", err)
+		return nil, fmt.Errorf("reading go.work file: %w", err)
 	} else if workfile, err := modfile.ParseWork(workfilePath, data, nil); err != nil {
-		return nil, fmt.Errorf("could not parse go.work file: %w", err)
+		return nil, fmt.Errorf("parsing go.work file: %w", err)
 	} else {
 		var (
 			modulePaths = make([]string, 0, len(workfile.Use))
@@ -121,9 +121,9 @@ func ParseJSAbsPaths(cwd string) ([]string, error) {
 	)
 
 	if data, err := os.ReadFile(ywPath); err != nil {
-		return paths, fmt.Errorf("could not read yarn-workspaces.json file: %w", err)
+		return paths, fmt.Errorf("reading yarn-workspaces.json file: %w", err)
 	} else if err := json.Unmarshal(data, &paths); err != nil {
-		return paths, fmt.Errorf("could not unmarshal yarn-workspaces.json file: %w", err)
+		return paths, fmt.Errorf("unmarshaling yarn-workspaces.json file: %w", err)
 	} else {
 		return slicesext.Map(paths, func(path string) string { return filepath.Join(filepath.Dir(ywPath), path) }), nil
 	}
@@ -138,9 +138,9 @@ func moduleListPackages(modPath string) ([]GoPackage, error) {
 	cmd := exec.Command("go", "list", "-json", "./...")
 	cmd.Dir = modPath
 	if out, err := cmd.StdoutPipe(); err != nil {
-		return packages, fmt.Errorf("failed to create stdout pipe for module %s: %w", modPath, err)
+		return packages, fmt.Errorf("creating stdout pipe for module %s: %w", modPath, err)
 	} else if err := cmd.Start(); err != nil {
-		return packages, fmt.Errorf("failed to list packages for module %s: %w", modPath, err)
+		return packages, fmt.Errorf("listing packages for module %s: %w", modPath, err)
 	} else {
 		decoder := json.NewDecoder(out)
 		for {
@@ -148,7 +148,7 @@ func moduleListPackages(modPath string) ([]GoPackage, error) {
 			if err := decoder.Decode(&p); err == io.EOF {
 				break
 			} else if err != nil {
-				return packages, fmt.Errorf("failed to decode package in module %s: %w", modPath, err)
+				return packages, fmt.Errorf("decoding package in module %s: %w", modPath, err)
 			}
 			packages = append(packages, p)
 		}
@@ -162,7 +162,7 @@ func projectDirExists(cwd string) (bool, error) {
 	if _, err := os.Stat(filepath.Join(cwd, ".stbernard")); errors.Is(err, os.ErrNotExist) {
 		return false, nil
 	} else if err != nil {
-		return false, fmt.Errorf("could not stat .stbernard file: %w", err)
+		return false, fmt.Errorf("stat .stbernard file: %w", err)
 	} else {
 		return true, nil
 	}
@@ -177,7 +177,7 @@ func moduleGenerate(modPath string, env environment.Environment) error {
 	)
 
 	if packages, err := moduleListPackages(modPath); err != nil {
-		return fmt.Errorf("could not list packages for module %s: %w", modPath, err)
+		return fmt.Errorf("listing packages for module %s: %w", modPath, err)
 	} else {
 		for _, pkg := range packages {
 			wg.Add(1)

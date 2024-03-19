@@ -66,7 +66,7 @@ func Create(config Config) (command, error) {
 
 	if err := envdumpCmd.Parse(os.Args[2:]); err != nil {
 		envdumpCmd.Usage()
-		return command{}, fmt.Errorf("failed to parse %s command: %w", Name, err)
+		return command{}, fmt.Errorf("parsing %s command: %w", Name, err)
 	} else {
 		return command{config: config}, nil
 	}

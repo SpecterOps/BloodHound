@@ -52,15 +52,15 @@ func (s command) Name() string {
 
 func (s command) Run() error {
 	if cwd, err := workspace.FindRoot(); err != nil {
-		return fmt.Errorf("could not find workspace root: %w", err)
+		return fmt.Errorf("finding workspace root: %w", err)
 	} else if cfg, err := workspace.ParseConfig(cwd); err != nil {
-		return fmt.Errorf("could not get build configuration file: %w", err)
+		return fmt.Errorf("getting build configuration file: %w", err)
 	} else if err := filepath.WalkDir(filepath.Join(cwd, cfg.AssetsDir), clearFiles); err != nil {
-		return fmt.Errorf("could not clear asset directory: %w", err)
+		return fmt.Errorf("clearing asset directory: %w", err)
 	} else if err := s.runJSBuild(cwd, filepath.Join(cwd, cfg.AssetsDir)); err != nil {
-		return fmt.Errorf("could not build JS artifacts: %w", err)
+		return fmt.Errorf("building JS artifacts: %w", err)
 	} else if err := s.runGoBuild(cwd); err != nil {
-		return fmt.Errorf("could not build Go artifacts: %w", err)
+		return fmt.Errorf("building Go artifacts: %w", err)
 	} else {
 		return nil
 	}
@@ -77,7 +77,7 @@ func Create(config Config) (command, error) {
 
 	if err := cmd.Parse(os.Args[2:]); err != nil {
 		cmd.Usage()
-		return command{}, fmt.Errorf("failed to parse build command: %w", err)
+		return command{}, fmt.Errorf("parsing build command: %w", err)
 	} else {
 		return command{config: config}, nil
 	}
@@ -89,11 +89,11 @@ func (s command) runJSBuild(cwd string, buildPath string) error {
 	env.SetIfEmpty("BUILD_PATH", buildPath)
 
 	if jsPaths, err := workspace.ParseJSAbsPaths(cwd); err != nil {
-		return fmt.Errorf("could not retrieve JS paths: %w", err)
+		return fmt.Errorf("retrieving JS paths: %w", err)
 	} else if err := yarn.InstallWorkspaceDeps(jsPaths, s.config.Environment); err != nil {
-		return fmt.Errorf("could not install JS deps: %w", err)
+		return fmt.Errorf("installing JS deps: %w", err)
 	} else if err := yarn.BuildWorkspace(cwd, s.config.Environment); err != nil {
-		return fmt.Errorf("could not build JS workspace: %w", err)
+		return fmt.Errorf("building JS workspace: %w", err)
 	} else {
 		return nil
 	}
@@ -130,9 +130,9 @@ func (s command) runGoBuild(cwd string) error {
 	env.SetIfEmpty("CGO_ENABLED", "0")
 
 	if modPaths, err := workspace.ParseModulesAbsPaths(cwd); err != nil {
-		return fmt.Errorf("could not parse module absolute paths: %w", err)
+		return fmt.Errorf("parsing module absolute paths: %w", err)
 	} else if err := workspace.BuildGoMainPackages(cwd, modPaths, s.config.Environment); err != nil {
-		return fmt.Errorf("could not build main packages: %w", err)
+		return fmt.Errorf("building main packages: %w", err)
 	} else {
 		return nil
 	}

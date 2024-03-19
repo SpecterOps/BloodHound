@@ -72,7 +72,7 @@ func Run(cwd string, modPaths []string, jsPaths []string, env environment.Enviro
 	}
 
 	if jsonBytes, err := json.MarshalIndent(codeClimateReport, "", "    "); err != nil {
-		return "", fmt.Errorf("could not marshal code climate report: %w", err)
+		return "", fmt.Errorf("marshaling code climate report: %w", err)
 	} else if severityError {
 		return string(jsonBytes), ErrSeverityExit
 	} else {
