@@ -92,8 +92,13 @@ func CompleteAnalyzedFileUploadJobs(ctx context.Context, db database.Database) {
 			)
 
 			if job.FailedFiles > 0 {
-				status = model.JobStatusPartiallyComplete
-				message = fmt.Sprintf("%d Files failed to ingest as JSON Content", job.FailedFiles)
+				if job.FailedFiles < job.TotalFiles {
+					status = model.JobStatusPartiallyComplete
+					message = fmt.Sprintf("%d Files failed to ingest as JSON Content", job.FailedFiles)
+				} else {
+					status = model.JobStatusFailed
+					message = "All files failed to ingest as JSON Content"
+				}
 			}
 
 			if err := fileupload.UpdateFileUploadJobStatus(ctx, db, job, status, message); err != nil {
@@ -171,14 +176,14 @@ func (s *Daemon) preProcessIngestFile(path string, fileType model.FileType) ([]s
 	}
 }
 
-// processIngestFile reads the files at the path supplied, and returns the total number of files that
-// failed to ingest as JSON
-func (s *Daemon) processIngestFile(ctx context.Context, path string, fileType model.FileType) (int, error) {
+// processIngestFile reads the files at the path supplied, and returns the total number of files in the
+// archive, the number of files that failed to ingest as JSON, and an error
+func (s *Daemon) processIngestFile(ctx context.Context, path string, fileType model.FileType) (int, int, error) {
 	if paths, err := s.preProcessIngestFile(path, fileType); err != nil {
-		return 0, err
+		return len(paths), 0, err
 	} else {
 		failed := 0
-		return failed, s.graphdb.BatchOperation(ctx, func(batch graph.Batch) error {
+		return len(paths), failed, s.graphdb.BatchOperation(ctx, func(batch graph.Batch) error {
 			for _, filePath := range paths {
 				file, err := os.Open(filePath)
 				if err != nil {
@@ -220,9 +225,10 @@ func (s *Daemon) processIngestTasks(ctx context.Context, ingestTasks model.Inges
 
 		if job, err := s.db.GetFileUploadJob(ctx, ingestTask.TaskID.ValueOrZero()); err != nil {
 			log.Errorf("Failed to fetch job for ingest task %d: %v", ingestTask.ID, err)
-		} else if failed, err := s.processIngestFile(ctx, ingestTask.FileName, ingestTask.FileType); err != nil {
+		} else if total, failed, err := s.processIngestFile(ctx, ingestTask.FileName, ingestTask.FileType); err != nil {
 			log.Errorf("Failed processing ingest task %d with file %s: %v", ingestTask.ID, ingestTask.FileName, err)
 		} else {
+			job.TotalFiles = total
 			job.FailedFiles += failed
 			if err = s.db.UpdateFileUploadJob(ctx, job); err != nil {
 				log.Errorf("Failed to update number of failed files for file upload job ID %s: %v", job.ID, err)

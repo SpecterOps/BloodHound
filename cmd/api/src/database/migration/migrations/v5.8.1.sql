@@ -15,4 +15,7 @@
 -- SPDX-License-Identifier: Apache-2.0
 
 ALTER TABLE file_upload_jobs
+  ADD COLUMN IF NOT EXISTS total_files integer DEFAULT 0;
+
+ALTER TABLE file_upload_jobs
   ADD COLUMN IF NOT EXISTS failed_files integer DEFAULT 0;
