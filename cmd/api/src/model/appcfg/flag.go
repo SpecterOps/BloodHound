@@ -140,5 +140,5 @@ type FeatureFlagService interface {
 
 type GetFlagByKeyer interface {
 	// GetFlagByKey attempts to fetch a FeatureFlag by its key.
-	GetFlagByKey(key string) (FeatureFlag, error)
+	GetFlagByKey(context.Context, string) (FeatureFlag, error)
 }
