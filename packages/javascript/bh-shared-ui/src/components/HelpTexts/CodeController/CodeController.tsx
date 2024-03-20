@@ -87,13 +87,19 @@ function CodeController(props: PropsWithChildren<Props>) {
         setScrollRight(scrollLeft > 0);
     };
 
-    // Trims off tab spacing at the beginning and end of new lines
     const justifiedLeft = useMemo(() => {
         const perLine = (children?.toString() ?? '').split('\n');
         const nextNonBlankLine = perLine.find((x, i) => i !== 0 && !!x.trim());
+        const leftIndentationIndex = nextNonBlankLine?.split('').findIndex((x) => !!x.trim());
 
-        const startingIndex = nextNonBlankLine?.split('').findIndex((x) => !!x.trim());
-        return perLine?.map((x) => x.slice(startingIndex)).join('\n');
+        return perLine
+            ?.map((line, i) => {
+                if (i === 0) return line;
+                const leftIndentation = line.slice(0, leftIndentationIndex).trim();
+                const content = line.slice(leftIndentationIndex);
+                return leftIndentation + content;
+            })
+            .join('\n');
     }, [children]);
 
     const handleCopy = async () => {
