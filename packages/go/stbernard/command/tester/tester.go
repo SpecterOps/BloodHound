@@ -6,9 +6,9 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/packages/go/stbernard/environment"
 	"github.com/specterops/bloodhound/packages/go/stbernard/workspace"
+	"github.com/specterops/bloodhound/packages/go/stbernard/yarn"
 )
 
 const (
@@ -61,18 +61,29 @@ func (s *command) Parse(cmdIndex int) error {
 func (s *command) Run() error {
 	if cwd, err := workspace.FindRoot(); err != nil {
 		return fmt.Errorf("finding workspace root: %w", err)
+	} else if _, err := workspace.ParseJSAbsPaths(cwd); err != nil {
+		return fmt.Errorf("parsing yarn workspace absolute paths: %w", err)
 	} else if modPaths, err := workspace.ParseModulesAbsPaths(cwd); err != nil {
 		return fmt.Errorf("parsing module absolute paths: %w", err)
-	} else if jsPaths, err := workspace.ParseJSAbsPaths(cwd); err != nil {
-		return fmt.Errorf("parsing JS absolute paths: %w", err)
+	} else if err := s.runTests(cwd, modPaths); err != nil {
+		return fmt.Errorf("running tests: %w", err)
 	} else {
-		if !s.yarnOnly {
-			fmt.Println(modPaths)
-		}
-		if !s.goOnly {
-			fmt.Println(jsPaths)
-		}
-		log.Debugf("Test")
 		return nil
 	}
+}
+
+func (s *command) runTests(cwd string, modPaths []string) error {
+	if !s.goOnly {
+		if err := yarn.TestWorkspace(cwd, s.env); err != nil {
+			return fmt.Errorf("testing yarn workspace: %w", err)
+		}
+	}
+
+	if !s.yarnOnly {
+		if err := workspace.TestWorkspace(cwd, modPaths, s.env); err != nil {
+			return fmt.Errorf("testing go workspace: %w", err)
+		}
+	}
+
+	return nil
 }

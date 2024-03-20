@@ -79,7 +79,7 @@ func (s *command) Run() error {
 		return fmt.Errorf("parsing JS absolute paths: %w", err)
 	} else if err := golang.InstallGolangCiLint(cwd, s.env); err != nil {
 		return fmt.Errorf("installing golangci-lint: %w", err)
-	} else if err := yarn.InstallWorkspaceDeps(jsPaths, s.env); err != nil {
+	} else if err := yarn.InstallWorkspaceDeps(cwd, jsPaths, s.env); err != nil {
 		return fmt.Errorf("yarn install: %w", err)
 	} else if result, err := analyzers.Run(cwd, modPaths, jsPaths, s.env); errors.Is(err, analyzers.ErrSeverityExit) {
 		fmt.Println(result)

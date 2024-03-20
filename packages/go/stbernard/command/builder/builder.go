@@ -90,7 +90,7 @@ func (s *command) runJSBuild(cwd string, buildPath string) error {
 
 	if jsPaths, err := workspace.ParseJSAbsPaths(cwd); err != nil {
 		return fmt.Errorf("retrieving JS paths: %w", err)
-	} else if err := yarn.InstallWorkspaceDeps(jsPaths, s.env); err != nil {
+	} else if err := yarn.InstallWorkspaceDeps(cwd, jsPaths, s.env); err != nil {
 		return fmt.Errorf("installing JS deps: %w", err)
 	} else if err := yarn.BuildWorkspace(cwd, s.env); err != nil {
 		return fmt.Errorf("building JS workspace: %w", err)
