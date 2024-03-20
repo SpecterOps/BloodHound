@@ -198,12 +198,12 @@ const Users = () => {
     };
 
     const usersTableRows = listUsersQuery.data?.map((user: any, index: number) => [
+        // This linting rule is disabled because the elements in this array do not require a key prop.
+        /* eslint-disable react/jsx-key */
         user.principal_name,
         user.email_address,
         `${user.first_name} ${user.last_name}`,
-        <span key={3} style={{ whiteSpace: 'pre' }}>
-            {DateTime.fromISO(user.created_at).toFormat(LuxonFormat.DATETIME)}
-        </span>,
+        <span style={{ whiteSpace: 'pre' }}>{DateTime.fromISO(user.created_at).toFormat(LuxonFormat.DATETIME)}</span>,
         user.roles?.[0]?.name,
         getUserStatusText(user),
         getAuthMethodText(user),
@@ -225,8 +225,8 @@ const Users = () => {
             onManageUserTokens={toggleManageUserTokensDialog}
             onDisableUserMfa={setDisable2FADialogOpen}
             index={index}
-            key={7}
         />,
+        /* eslint-enable react/jsx-key */
     ]);
 
     return (

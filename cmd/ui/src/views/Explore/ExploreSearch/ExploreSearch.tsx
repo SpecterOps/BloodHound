@@ -116,7 +116,14 @@ const ExploreSearch = ({ handleColumns }: ExploreSearchProps) => {
             <Collapse in={showSearchWidget}>
                 <Paper sx={{ mt: 1, p: 1 }} elevation={0}>
                     <TabPanels
-                        tabs={[<NodeSearch key={0} />, <PathfindingSearch key={1} />, <CypherSearch key={2} />]}
+                        tabs={[
+                            // This linting rule is disabled because the elements in this array do not require a key prop.
+                            /* eslint-disable react/jsx-key */
+                            <NodeSearch />,
+                            <PathfindingSearch />,
+                            <CypherSearch />,
+                            /* eslint-enable react/jsx-key */
+                        ]}
                         activeTab={activeTab}
                     />
                 </Paper>
