@@ -92,8 +92,8 @@ function CodeController(props: PropsWithChildren<Props>) {
         const perLine = (children?.toString() ?? '').split('\n');
         const nextNonBlankLine = perLine.find((x, i) => i !== 0 && !!x.trim());
 
-        const startingIndex = nextNonBlankLine?.split('').findIndex((x) => !!x.trim());
-        return perLine?.map((x, i) => i === 0 ? x : x.slice(startingIndex)).join('\n');
+        const leftIndentationIndex = nextNonBlankLine?.split('').findIndex((x) => !!x.trim());
+        return perLine?.map((x, i) => i === 0 ? x : x.slice(leftIndentationIndex)).join('\n');
     }, [children]);
 
     const handleCopy = async () => {
