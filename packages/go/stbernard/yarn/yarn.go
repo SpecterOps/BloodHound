@@ -24,7 +24,7 @@ import (
 )
 
 // InstallWorkspaceDeps runs yarn install for a given list of jsPaths
-func InstallWorkspaceDeps(jsPaths []string, env environment.Environment) error {
+func InstallWorkspaceDeps(cwd string, jsPaths []string, env environment.Environment) error {
 	var (
 		command = "yarn"
 		args    = []string{"install"}
@@ -48,6 +48,20 @@ func BuildWorkspace(cwd string, env environment.Environment) error {
 
 	if err := cmdrunner.Run(command, args, cwd, env); err != nil {
 		return fmt.Errorf("yarn build at %v: %w", cwd, err)
+	} else {
+		return nil
+	}
+}
+
+// TestWorkspace runs yarn tests for all yarn workspaces
+func TestWorkspace(cwd string, env environment.Environment) error {
+	var (
+		command = "yarn"
+		args    = []string{"test", "--coverage", "--run"}
+	)
+
+	if err := cmdrunner.Run(command, args, cwd, env); err != nil {
+		return fmt.Errorf("yarn test at %v: %w", cwd, err)
 	} else {
 		return nil
 	}
