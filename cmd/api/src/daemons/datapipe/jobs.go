@@ -19,6 +19,7 @@ package datapipe
 import (
 	"archive/zip"
 	"context"
+	"fmt"
 	"io"
 	"os"
 
@@ -85,8 +86,23 @@ func CompleteAnalyzedFileUploadJobs(ctx context.Context, db database.Database) {
 		log.Errorf("Failed to load file upload jobs under analysis: %v", err)
 	} else {
 		for _, job := range fileUploadJobsUnderAnalysis {
-			if err := fileupload.UpdateFileUploadJobStatus(ctx, db, job, model.JobStatusComplete, "Complete"); err != nil {
-				log.Errorf("Error updating fileupload job %d: %v", job.ID, err)
+			var (
+				status  = model.JobStatusComplete
+				message = "Complete"
+			)
+
+			if job.FailedFiles > 0 {
+				if job.FailedFiles < job.TotalFiles {
+					status = model.JobStatusPartiallyComplete
+					message = fmt.Sprintf("%d File(s) failed to ingest as JSON Content", job.FailedFiles)
+				} else {
+					status = model.JobStatusFailed
+					message = "All files failed to ingest as JSON Content"
+				}
+			}
+
+			if err := fileupload.UpdateFileUploadJobStatus(ctx, db, job, status, message); err != nil {
+				log.Errorf("Error updating file upload job %d: %v", job.ID, err)
 			}
 		}
 	}
@@ -160,17 +176,25 @@ func (s *Daemon) preProcessIngestFile(path string, fileType model.FileType) ([]s
 	}
 }
 
-func (s *Daemon) processIngestFile(ctx context.Context, path string, fileType model.FileType) error {
+// processIngestFile reads the files at the path supplied, and returns the total number of files in the
+// archive, the number of files that failed to ingest as JSON, and an error
+func (s *Daemon) processIngestFile(ctx context.Context, path string, fileType model.FileType) (int, int, error) {
 	if paths, err := s.preProcessIngestFile(path, fileType); err != nil {
-		return err
+		return 0, 0, err
 	} else {
-		return s.graphdb.BatchOperation(ctx, func(batch graph.Batch) error {
+		failed := 0
+		return len(paths), failed, s.graphdb.BatchOperation(ctx, func(batch graph.Batch) error {
 			for _, filePath := range paths {
-				if file, err := os.Open(filePath); err != nil {
+				file, err := os.Open(filePath)
+				if err != nil {
+					failed++
 					return err
 				} else if err := ReadFileForIngest(batch, file); err != nil {
+					failed++
 					log.Errorf("Error reading ingest file %s: %v", filePath, err)
-				} else if err := file.Close(); err != nil {
+				}
+
+				if err := file.Close(); err != nil {
 					log.Errorf("Error closing ingest file %s: %v", filePath, err)
 				} else if err := os.Remove(filePath); err != nil {
 					log.Errorf("Error removing ingest file %s: %v", filePath, err)
@@ -199,8 +223,16 @@ func (s *Daemon) processIngestTasks(ctx context.Context, ingestTasks model.Inges
 			return
 		}
 
-		if err := s.processIngestFile(ctx, ingestTask.FileName, ingestTask.FileType); err != nil {
+		if job, err := s.db.GetFileUploadJob(ctx, ingestTask.TaskID.ValueOrZero()); err != nil {
+			log.Errorf("Failed to fetch job for ingest task %d: %v", ingestTask.ID, err)
+		} else if total, failed, err := s.processIngestFile(ctx, ingestTask.FileName, ingestTask.FileType); err != nil {
 			log.Errorf("Failed processing ingest task %d with file %s: %v", ingestTask.ID, ingestTask.FileName, err)
+		} else {
+			job.TotalFiles = total
+			job.FailedFiles += failed
+			if err = s.db.UpdateFileUploadJob(ctx, job); err != nil {
+				log.Errorf("Failed to update number of failed files for file upload job ID %s: %v", job.ID, err)
+			}
 		}
 
 		s.clearFileTask(ingestTask)
