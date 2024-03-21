@@ -40,11 +40,6 @@ import (
 	"github.com/unrolled/secure"
 )
 
-const (
-	// Default timeout for any request is thirty seconds
-	defaultTimeout = 30 * time.Second
-)
-
 // Wrapper is an iterator for middleware function application that wraps around a http.Handler.
 type Wrapper struct {
 	middleware []mux.MiddlewareFunc
