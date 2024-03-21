@@ -26,11 +26,11 @@ import (
 	"github.com/specterops/bloodhound/log"
 )
 
-// Commander is an interface for commands, allowing commands to implement the minimum
+// CommandRunner is an interface for commands, allowing commands to implement the minimum
 // set of requirements to observe and run the command from above. It is used as a return
 // type to allow passing a usable command to the caller after parsing and creating
 // the command implementation
-type Commander interface {
+type CommandRunner interface {
 	Name() string
 	Usage() string
 	Run() error
@@ -52,12 +52,12 @@ type usageFunc func()
 //
 // It does not support flags of its own, each subcommand is responsible for parsing
 // their flags.
-func ParseCLI() (Commander, error) {
+func ParseCLI() (CommandRunner, error) {
 	var (
 		verboseEnabled *bool
 		debugEnabled   *bool
 		cmdStartIdx    int
-		command        Command
+		command        command
 
 		commands = Commands()
 	)
@@ -114,7 +114,7 @@ func ParseCLI() (Commander, error) {
 }
 
 // usage creates a pretty usage message for our main command
-func usageGenerator(flagset *flag.FlagSet, commands []Command) usageFunc {
+func usageGenerator(flagset *flag.FlagSet, commands []command) usageFunc {
 	return func() {
 		var longestCmdLen int
 
