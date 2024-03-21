@@ -94,7 +94,7 @@ func CompleteAnalyzedFileUploadJobs(ctx context.Context, db database.Database) {
 			if job.FailedFiles > 0 {
 				if job.FailedFiles < job.TotalFiles {
 					status = model.JobStatusPartiallyComplete
-					message = fmt.Sprintf("%d Files failed to ingest as JSON Content", job.FailedFiles)
+					message = fmt.Sprintf("%d File(s) failed to ingest as JSON Content", job.FailedFiles)
 				} else {
 					status = model.JobStatusFailed
 					message = "All files failed to ingest as JSON Content"
