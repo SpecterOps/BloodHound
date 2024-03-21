@@ -38,20 +38,19 @@ import (
 // type to allow passing a usable command to the caller after parsing and creating
 // the command implementation
 type CommandRunner interface {
-	Name() string
-	Usage() string
-	Run() error
-}
-
-type command interface {
 	// Name gets the name of the Command
 	Name() string
 	// Usage gets the usage string for the Command
 	Usage() string
-	// Parse parses flags for the command using the command index as the starting point
-	Parse(cmdIdx int) error
 	// Run will run the command and return any errors
 	Run() error
+}
+
+type command interface {
+	CommandRunner
+
+	// Parse parses flags for the command using the command index as the starting point
+	Parse(cmdIdx int) error
 }
 
 var (

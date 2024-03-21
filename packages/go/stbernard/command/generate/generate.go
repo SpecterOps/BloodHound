@@ -72,7 +72,7 @@ func (s *command) Run() error {
 	} else if modPaths, err := workspace.ParseModulesAbsPaths(cwd); err != nil {
 		return fmt.Errorf("parsing module absolute paths: %w", err)
 	} else if err := workspace.WorkspaceGenerate(modPaths, s.env); err != nil {
-		return fmt.Errorf("building main packages: %w", err)
+		return fmt.Errorf("generating code for workspace: %w", err)
 	} else {
 		return nil
 	}
