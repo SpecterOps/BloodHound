@@ -71,6 +71,8 @@ services:
 
   graph-db:
     build:
+      args:
+        memconfig: true
       context: tools/docker-compose
       dockerfile: neo4j.Dockerfile
     environment:
