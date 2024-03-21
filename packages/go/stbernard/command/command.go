@@ -24,6 +24,13 @@ import (
 	"strings"
 
 	"github.com/specterops/bloodhound/log"
+	"github.com/specterops/bloodhound/packages/go/stbernard/command/analysis"
+	"github.com/specterops/bloodhound/packages/go/stbernard/command/builder"
+	"github.com/specterops/bloodhound/packages/go/stbernard/command/envdump"
+	"github.com/specterops/bloodhound/packages/go/stbernard/command/generate"
+	"github.com/specterops/bloodhound/packages/go/stbernard/command/modsync"
+	"github.com/specterops/bloodhound/packages/go/stbernard/command/tester"
+	"github.com/specterops/bloodhound/packages/go/stbernard/environment"
 )
 
 // CommandRunner is an interface for commands, allowing commands to implement the minimum
@@ -33,6 +40,17 @@ import (
 type CommandRunner interface {
 	Name() string
 	Usage() string
+	Run() error
+}
+
+type command interface {
+	// Name gets the name of the Command
+	Name() string
+	// Usage gets the usage string for the Command
+	Usage() string
+	// Parse parses flags for the command using the command index as the starting point
+	Parse(cmdIdx int) error
+	// Run will run the command and return any errors
 	Run() error
 }
 
@@ -57,9 +75,17 @@ func ParseCLI() (CommandRunner, error) {
 		verboseEnabled *bool
 		debugEnabled   *bool
 		cmdStartIdx    int
-		command        command
+		currentCmd     command
 
-		commands = Commands()
+		env      = environment.NewEnvironment()
+		commands = []command{
+			envdump.Create(env),
+			modsync.Create(env),
+			generate.Create(env),
+			analysis.Create(env),
+			tester.Create(env),
+			builder.Create(env),
+		}
 	)
 
 	mainCmd := flag.NewFlagSet("main", flag.ExitOnError)
@@ -84,7 +110,7 @@ func ParseCLI() (CommandRunner, error) {
 		for _, cmd := range commands {
 			if arg == cmd.Name() {
 				cmdStartIdx = idx
-				command = cmd
+				currentCmd = cmd
 				break
 			}
 		}
@@ -110,7 +136,7 @@ func ParseCLI() (CommandRunner, error) {
 		log.SetGlobalLevel(log.LevelDebug)
 	}
 
-	return command, command.Parse(cmdStartIdx)
+	return currentCmd, currentCmd.Parse(cmdStartIdx)
 }
 
 // usage creates a pretty usage message for our main command
