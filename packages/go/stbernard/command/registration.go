@@ -26,7 +26,7 @@ import (
 	"github.com/specterops/bloodhound/packages/go/stbernard/environment"
 )
 
-type Command interface {
+type command interface {
 	// Name gets the name of the Command
 	Name() string
 	// Usage gets the usage string for the Command
@@ -38,10 +38,10 @@ type Command interface {
 }
 
 // Commands returns our valid set of Command options
-func Commands() []Command {
+func Commands() []command {
 	var env = environment.NewEnvironment()
 
-	return []Command{
+	return []command{
 		envdump.Create(env),
 		modsync.Create(env),
 		generate.Create(env),
