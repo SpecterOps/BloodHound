@@ -1,4 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2024 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package modsync
+package generate
 
 import (
 	"flag"
@@ -22,23 +22,15 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/specterops/bloodhound/packages/go/stbernard/environment"
 	"github.com/specterops/bloodhound/packages/go/stbernard/workspace"
 )
 
 const (
-	Name  = "modsync"
-	Usage = "Sync all modules in current workspace"
+	Name  = "generate"
+	Usage = "Run code generation in current workspace"
 )
 
-type flags struct {
-	verbose bool
-}
-
-type Config struct {
-	flags       flags
-	Environment environment.Environment
-}
+type Config struct{}
 
 type command struct {
 	config Config
@@ -53,34 +45,29 @@ func (s command) Name() string {
 }
 
 func (s command) Run() error {
-	var env = s.config.Environment
-
 	if cwd, err := workspace.FindRoot(); err != nil {
 		return fmt.Errorf("could not find workspace root: %w", err)
 	} else if modPaths, err := workspace.ParseModulesAbsPaths(cwd); err != nil {
 		return fmt.Errorf("could not parse module absolute paths: %w", err)
-	} else if err := workspace.DownloadModules(modPaths, env.Slice()); err != nil {
-		return fmt.Errorf("could not download go modules: %w", err)
-	} else if err := workspace.SyncWorkspace(cwd, env.Slice()); err != nil {
-		return fmt.Errorf("could not sync go workspace: %w", err)
+	} else if err := workspace.WorkspaceGenerate(modPaths); err != nil {
+		return fmt.Errorf("could not build main packages: %w", err)
 	} else {
 		return nil
 	}
 }
 
 func Create(config Config) (command, error) {
-	modsyncCmd := flag.NewFlagSet(Name, flag.ExitOnError)
-	modsyncCmd.BoolVar(&config.flags.verbose, "v", false, "Print verbose logs")
+	cmd := flag.NewFlagSet(Name, flag.ExitOnError)
 
-	modsyncCmd.Usage = func() {
+	cmd.Usage = func() {
 		w := flag.CommandLine.Output()
 		fmt.Fprintf(w, "%s\n\nUsage: %s %s [OPTIONS]\n\nOptions:\n", Usage, filepath.Base(os.Args[0]), Name)
-		modsyncCmd.PrintDefaults()
+		cmd.PrintDefaults()
 	}
 
-	if err := modsyncCmd.Parse(os.Args[2:]); err != nil {
-		modsyncCmd.Usage()
-		return command{}, fmt.Errorf("failed to parse modsync command: %w", err)
+	if err := cmd.Parse(os.Args[2:]); err != nil {
+		cmd.Usage()
+		return command{}, fmt.Errorf("failed to parse generate command: %w", err)
 	} else {
 		return command{config: config}, nil
 	}
