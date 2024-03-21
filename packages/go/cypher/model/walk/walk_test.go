@@ -14,25 +14,20 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package model_test
+package walk_test
 
 import (
+	"github.com/specterops/bloodhound/cypher/model/cypher"
+	"github.com/specterops/bloodhound/cypher/model/walk"
 	"testing"
 
 	"github.com/specterops/bloodhound/cypher/frontend"
-	"github.com/specterops/bloodhound/cypher/model"
 	"github.com/specterops/bloodhound/cypher/test"
 	"github.com/stretchr/testify/require"
 )
 
-type walker struct{}
-
-func (w walker) Enter(stack *model.WalkStack, expression model.Expression) error {
-	return nil
-}
-
-func (w walker) Exit(stack *model.WalkStack, expression model.Expression) error {
-	return nil
+type walker struct {
+	walk.HierarchicalVisitor[cypher.Expression]
 }
 
 func TestWalk(t *testing.T) {
@@ -50,7 +45,9 @@ func TestWalk(t *testing.T) {
 				t.Fatalf("Parser errors: %s", parseErr.Error())
 			}
 
-			require.Nil(t, model.Walk(queryModel, &walker{}))
+			require.Nil(t, walk.Cypher(queryModel, &walker{
+				HierarchicalVisitor: walk.NewComposableHierarchicalVisitor[cypher.Expression](),
+			}))
 		}
 	}
 }

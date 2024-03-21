@@ -18,26 +18,27 @@ package neo4j
 
 import (
 	"fmt"
+	"github.com/specterops/bloodhound/cypher/model/cypher"
+	"github.com/specterops/bloodhound/cypher/model/walk"
 
-	"github.com/specterops/bloodhound/cypher/model"
 	"github.com/specterops/bloodhound/dawgs/query"
 )
 
-func RemoveEmptyExpressionLists(stack *model.WalkStack, element model.Expression) error {
+func RemoveEmptyExpressionLists(stack *walk.WalkStack, element cypher.Expression) error {
 	var (
 		shouldRemove  = false
 		shouldReplace = false
 
-		replacementExpression model.Expression
+		replacementExpression cypher.Expression
 	)
 
 	switch typedElement := element.(type) {
-	case model.ExpressionList:
+	case cypher.ExpressionList:
 		shouldRemove = typedElement.Len() == 0
 
-	case *model.Parenthetical:
+	case *cypher.Parenthetical:
 		switch typedParentheticalElement := typedElement.Expression.(type) {
-		case model.ExpressionList:
+		case cypher.ExpressionList:
 			numExpressions := typedParentheticalElement.Len()
 
 			shouldRemove = numExpressions == 0
@@ -53,12 +54,12 @@ func RemoveEmptyExpressionLists(stack *model.WalkStack, element model.Expression
 
 	if shouldRemove {
 		switch typedParent := stack.Trunk().(type) {
-		case model.ExpressionList:
+		case cypher.ExpressionList:
 			typedParent.Remove(element)
 		}
 	} else if shouldReplace {
 		switch typedParent := stack.Trunk().(type) {
-		case model.ExpressionList:
+		case cypher.ExpressionList:
 			typedParent.Replace(typedParent.IndexOf(element), replacementExpression)
 		}
 	}
@@ -66,26 +67,26 @@ func RemoveEmptyExpressionLists(stack *model.WalkStack, element model.Expression
 	return nil
 }
 
-func StringNegationRewriter(stack *model.WalkStack, element model.Expression) error {
+func StringNegationRewriter(stack *walk.WalkStack, element cypher.Expression) error {
 	var rewritten any
 
 	switch negation := element.(type) {
-	case *model.Negation:
+	case *cypher.Negation:
 		// If this is a negation then we should check to see if it's a comparison
 		switch comparison := negation.Expression.(type) {
-		case *model.Comparison:
+		case *cypher.Comparison:
 			firstPartial := comparison.FirstPartial()
 
 			// If the negated expression is a comparison check to see if it's a string comparison. This is done since
 			// Neo4j comparison semantics for strings regarding `null` has edge cases that must be accounted for
 			switch firstPartial.Operator {
-			case model.OperatorStartsWith, model.OperatorEndsWith, model.OperatorContains:
+			case cypher.OperatorStartsWith, cypher.OperatorEndsWith, cypher.OperatorContains:
 				// Rewrite this comparison is a disjunction of the negation and a follow-on comparison to handle null
 				// checks
-				rewritten = &model.Parenthetical{
-					Expression: model.NewDisjunction(
+				rewritten = &cypher.Parenthetical{
+					Expression: cypher.NewDisjunction(
 						negation,
-						model.NewComparison(comparison.Left, model.OperatorIs, query.Literal(nil)),
+						cypher.NewComparison(comparison.Left, cypher.OperatorIs, query.Literal(nil)),
 					),
 				}
 			}
@@ -95,7 +96,7 @@ func StringNegationRewriter(stack *model.WalkStack, element model.Expression) er
 	// If we rewrote this element, replace it
 	if rewritten != nil {
 		switch typedParent := stack.Trunk().(type) {
-		case model.ExpressionList:
+		case cypher.ExpressionList:
 			for idx, expression := range typedParent.GetAll() {
 				if expression == element {
 					typedParent.Replace(idx, rewritten)

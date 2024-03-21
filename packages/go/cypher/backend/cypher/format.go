@@ -17,12 +17,13 @@
 package cypher
 
 import (
+	"bytes"
 	"fmt"
+	"github.com/specterops/bloodhound/cypher/model/cypher"
 	"io"
 	"strconv"
 	"strings"
 
-	"github.com/specterops/bloodhound/cypher/model"
 	"github.com/specterops/bloodhound/dawgs/graph"
 )
 
@@ -44,6 +45,16 @@ func writeJoinedKinds(output io.Writer, delimiter string, kinds graph.Kinds) err
 	return nil
 }
 
+func FormatString(query *cypher.RegularQuery, stripLiterals bool) (string, error) {
+	var (
+		buffer  = &bytes.Buffer{}
+		emitter = NewCypherEmitter(stripLiterals)
+		err     = emitter.Write(query, buffer)
+	)
+
+	return buffer.String(), err
+}
+
 type Emitter struct {
 	StripLiterals bool
 }
@@ -54,7 +65,7 @@ func NewCypherEmitter(stripLiterals bool) Emitter {
 	}
 }
 
-func (s Emitter) formatNodePattern(output io.Writer, nodePattern *model.NodePattern) error {
+func (s Emitter) formatNodePattern(output io.Writer, nodePattern *cypher.NodePattern) error {
 	if _, err := io.WriteString(output, "("); err != nil {
 		return err
 	}
@@ -92,7 +103,7 @@ func (s Emitter) formatNodePattern(output io.Writer, nodePattern *model.NodePatt
 	return nil
 }
 
-func (s Emitter) formatRelationshipPattern(output io.Writer, relationshipPattern *model.RelationshipPattern) error {
+func (s Emitter) formatRelationshipPattern(output io.Writer, relationshipPattern *cypher.RelationshipPattern) error {
 	switch relationshipPattern.Direction {
 	case graph.DirectionOutbound:
 		if _, err := io.WriteString(output, "-["); err != nil {
@@ -178,7 +189,7 @@ func (s Emitter) formatRelationshipPattern(output io.Writer, relationshipPattern
 	return nil
 }
 
-func (s Emitter) formatPatternElements(output io.Writer, patternElements []*model.PatternElement) error {
+func (s Emitter) formatPatternElements(output io.Writer, patternElements []*cypher.PatternElement) error {
 	for idx, patternElement := range patternElements {
 		if nodePattern, isNodePattern := patternElement.AsNodePattern(); isNodePattern {
 			// If this is another node pattern then output a delimiter
@@ -203,7 +214,7 @@ func (s Emitter) formatPatternElements(output io.Writer, patternElements []*mode
 	return nil
 }
 
-func (s Emitter) formatPatternPart(output io.Writer, patternPart *model.PatternPart) error {
+func (s Emitter) formatPatternPart(output io.Writer, patternPart *cypher.PatternPart) error {
 	if patternPart.Binding != nil {
 		if err := s.WriteExpression(output, patternPart.Binding); err != nil {
 			return err
@@ -239,7 +250,7 @@ func (s Emitter) formatPatternPart(output io.Writer, patternPart *model.PatternP
 	return nil
 }
 
-func (s Emitter) formatProjection(output io.Writer, projection *model.Projection) error {
+func (s Emitter) formatProjection(output io.Writer, projection *cypher.Projection) error {
 	if projection.Distinct {
 		if _, err := io.WriteString(output, "distinct "); err != nil {
 			return err
@@ -309,7 +320,7 @@ func (s Emitter) formatProjection(output io.Writer, projection *model.Projection
 	return nil
 }
 
-func (s Emitter) formatReturn(output io.Writer, returnClause *model.Return) error {
+func (s Emitter) formatReturn(output io.Writer, returnClause *cypher.Return) error {
 	if _, err := io.WriteString(output, " return "); err != nil {
 		return err
 	}
@@ -321,7 +332,7 @@ func (s Emitter) formatReturn(output io.Writer, returnClause *model.Return) erro
 	return nil
 }
 
-func (s Emitter) formatWhere(output io.Writer, whereClause *model.Where) error {
+func (s Emitter) formatWhere(output io.Writer, whereClause *cypher.Where) error {
 	if len(whereClause.Expressions) > 0 {
 		if _, err := io.WriteString(output, " where "); err != nil {
 			return err
@@ -337,7 +348,7 @@ func (s Emitter) formatWhere(output io.Writer, whereClause *model.Where) error {
 	return nil
 }
 
-func (s Emitter) formatMapLiteral(output io.Writer, mapLiteral model.MapLiteral) error {
+func (s Emitter) formatMapLiteral(output io.Writer, mapLiteral cypher.MapLiteral) error {
 	if _, err := io.WriteString(output, "{"); err != nil {
 		return err
 	}
@@ -372,7 +383,7 @@ func (s Emitter) formatMapLiteral(output io.Writer, mapLiteral model.MapLiteral)
 	return nil
 }
 
-func (s Emitter) formatLiteral(output io.Writer, literal *model.Literal) error {
+func (s Emitter) formatLiteral(output io.Writer, literal *cypher.Literal) error {
 	const literalNullToken = "null"
 
 	// Check for a null literal first
@@ -455,12 +466,12 @@ func (s Emitter) formatLiteral(output io.Writer, literal *model.Literal) error {
 			return err
 		}
 
-	case model.MapLiteral:
+	case cypher.MapLiteral:
 		if err := s.formatMapLiteral(output, typedLiteral); err != nil {
 			return err
 		}
 
-	case *model.ListLiteral:
+	case *cypher.ListLiteral:
 		if _, err := io.WriteString(output, "["); err != nil {
 			return err
 		}
@@ -488,9 +499,9 @@ func (s Emitter) formatLiteral(output io.Writer, literal *model.Literal) error {
 	return nil
 }
 
-func (s Emitter) WriteExpression(writer io.Writer, expression model.Expression) error {
+func (s Emitter) WriteExpression(writer io.Writer, expression cypher.Expression) error {
 	switch typedExpression := expression.(type) {
-	case *model.ProjectionItem:
+	case *cypher.ProjectionItem:
 		if err := s.WriteExpression(writer, typedExpression.Expression); err != nil {
 			return err
 		}
@@ -505,13 +516,13 @@ func (s Emitter) WriteExpression(writer io.Writer, expression model.Expression) 
 			}
 		}
 
-	case *model.Negation:
+	case *cypher.Negation:
 		if _, err := io.WriteString(writer, "not "); err != nil {
 			return err
 		}
 
 		switch innerExpression := typedExpression.Expression.(type) {
-		case *model.Parenthetical:
+		case *cypher.Parenthetical:
 			if err := s.WriteExpression(writer, innerExpression); err != nil {
 				return err
 			}
@@ -530,7 +541,7 @@ func (s Emitter) WriteExpression(writer io.Writer, expression model.Expression) 
 			}
 		}
 
-	case *model.IDInCollection:
+	case *cypher.IDInCollection:
 		if err := s.WriteExpression(writer, typedExpression.Variable); err != nil {
 			return err
 		}
@@ -543,7 +554,7 @@ func (s Emitter) WriteExpression(writer io.Writer, expression model.Expression) 
 			return err
 		}
 
-	case *model.FilterExpression:
+	case *cypher.FilterExpression:
 		if err := s.WriteExpression(writer, typedExpression.Specifier); err != nil {
 			return err
 		}
@@ -554,7 +565,7 @@ func (s Emitter) WriteExpression(writer io.Writer, expression model.Expression) 
 			}
 		}
 
-	case *model.Quantifier:
+	case *cypher.Quantifier:
 		if _, err := io.WriteString(writer, typedExpression.Type.String()); err != nil {
 			return err
 		}
@@ -571,7 +582,7 @@ func (s Emitter) WriteExpression(writer io.Writer, expression model.Expression) 
 			return err
 		}
 
-	case *model.Parenthetical:
+	case *cypher.Parenthetical:
 		if _, err := io.WriteString(writer, "("); err != nil {
 			return err
 		}
@@ -584,7 +595,7 @@ func (s Emitter) WriteExpression(writer io.Writer, expression model.Expression) 
 			return err
 		}
 
-	case *model.Disjunction:
+	case *cypher.Disjunction:
 		for idx, joinedExpression := range typedExpression.Expressions {
 			if idx > 0 {
 				if _, err := io.WriteString(writer, " or "); err != nil {
@@ -597,7 +608,7 @@ func (s Emitter) WriteExpression(writer io.Writer, expression model.Expression) 
 			}
 		}
 
-	case *model.ExclusiveDisjunction:
+	case *cypher.ExclusiveDisjunction:
 		for idx, joinedExpression := range typedExpression.Expressions {
 			if idx > 0 {
 				if _, err := io.WriteString(writer, " xor "); err != nil {
@@ -610,7 +621,7 @@ func (s Emitter) WriteExpression(writer io.Writer, expression model.Expression) 
 			}
 		}
 
-	case *model.Conjunction:
+	case *cypher.Conjunction:
 		for idx, joinedExpression := range typedExpression.Expressions {
 			if idx > 0 {
 				if _, err := io.WriteString(writer, " and "); err != nil {
@@ -623,7 +634,7 @@ func (s Emitter) WriteExpression(writer io.Writer, expression model.Expression) 
 			}
 		}
 
-	case *model.Comparison:
+	case *cypher.Comparison:
 		if err := s.WriteExpression(writer, typedExpression.Left); err != nil {
 			return err
 		}
@@ -634,7 +645,7 @@ func (s Emitter) WriteExpression(writer io.Writer, expression model.Expression) 
 			}
 		}
 
-	case *model.PartialComparison:
+	case *cypher.PartialComparison:
 		if _, err := io.WriteString(writer, " "); err != nil {
 			return err
 		}
@@ -651,7 +662,7 @@ func (s Emitter) WriteExpression(writer io.Writer, expression model.Expression) 
 			return err
 		}
 
-	case *model.Properties:
+	case *cypher.Properties:
 		if typedExpression.Map != nil {
 			if err := s.formatMapLiteral(writer, typedExpression.Map); err != nil {
 				return err
@@ -660,12 +671,12 @@ func (s Emitter) WriteExpression(writer io.Writer, expression model.Expression) 
 			return err
 		}
 
-	case *model.Variable:
+	case *cypher.Variable:
 		if _, err := io.WriteString(writer, typedExpression.Symbol); err != nil {
 			return err
 		}
 
-	case *model.Parameter:
+	case *cypher.Parameter:
 		if _, err := io.WriteString(writer, "$"); err != nil {
 			return err
 		}
@@ -674,7 +685,7 @@ func (s Emitter) WriteExpression(writer io.Writer, expression model.Expression) 
 			return err
 		}
 
-	case *model.PropertyLookup:
+	case *cypher.PropertyLookup:
 		if err := s.WriteExpression(writer, typedExpression.Atom); err != nil {
 			return err
 		}
@@ -687,7 +698,7 @@ func (s Emitter) WriteExpression(writer io.Writer, expression model.Expression) 
 			return err
 		}
 
-	case *model.FunctionInvocation:
+	case *cypher.FunctionInvocation:
 		if _, err := io.WriteString(writer, strings.Join(typedExpression.Namespace, ".")); err != nil {
 			return err
 		}
@@ -740,7 +751,7 @@ func (s Emitter) WriteExpression(writer io.Writer, expression model.Expression) 
 			return err
 		}
 
-	case *model.KindMatcher:
+	case *cypher.KindMatcher:
 		if err := s.WriteExpression(writer, typedExpression.Reference); err != nil {
 			return err
 		}
@@ -755,23 +766,23 @@ func (s Emitter) WriteExpression(writer io.Writer, expression model.Expression) 
 			}
 		}
 
-	case *model.RangeQuantifier:
+	case *cypher.RangeQuantifier:
 		if _, err := io.WriteString(writer, typedExpression.Value); err != nil {
 			return err
 		}
 
-	case model.Operator:
+	case cypher.Operator:
 		if _, err := io.WriteString(writer, typedExpression.String()); err != nil {
 			return err
 		}
 
-	case *model.Skip:
+	case *cypher.Skip:
 		return s.WriteExpression(writer, typedExpression.Value)
 
-	case *model.Limit:
+	case *cypher.Limit:
 		return s.WriteExpression(writer, typedExpression.Value)
 
-	case *model.Literal:
+	case *cypher.Literal:
 		if !s.StripLiterals {
 			return s.formatLiteral(writer, typedExpression)
 		} else {
@@ -779,10 +790,10 @@ func (s Emitter) WriteExpression(writer io.Writer, expression model.Expression) 
 			return err
 		}
 
-	case *model.PatternPredicate:
+	case *cypher.PatternPredicate:
 		return s.formatPatternElements(writer, typedExpression.PatternElements)
 
-	case *model.ArithmeticExpression:
+	case *cypher.ArithmeticExpression:
 		if err := s.WriteExpression(writer, typedExpression.Left); err != nil {
 			return err
 		}
@@ -793,7 +804,7 @@ func (s Emitter) WriteExpression(writer io.Writer, expression model.Expression) 
 			}
 		}
 
-	case *model.PartialArithmeticExpression:
+	case *cypher.PartialArithmeticExpression:
 		if _, err := io.WriteString(writer, " "); err != nil {
 			return err
 		}
@@ -815,7 +826,7 @@ func (s Emitter) WriteExpression(writer io.Writer, expression model.Expression) 
 	return nil
 }
 
-func (s Emitter) formatRemove(output io.Writer, remove *model.Remove) error {
+func (s Emitter) formatRemove(output io.Writer, remove *cypher.Remove) error {
 	if _, err := io.WriteString(output, "remove "); err != nil {
 		return err
 	}
@@ -827,7 +838,7 @@ func (s Emitter) formatRemove(output io.Writer, remove *model.Remove) error {
 			}
 		}
 
-		var expression model.Expression
+		var expression cypher.Expression
 
 		if removeItem.KindMatcher != nil {
 			expression = removeItem.KindMatcher
@@ -845,7 +856,7 @@ func (s Emitter) formatRemove(output io.Writer, remove *model.Remove) error {
 	return nil
 }
 
-func (s Emitter) formatSet(output io.Writer, set *model.Set) error {
+func (s Emitter) formatSet(output io.Writer, set *cypher.Set) error {
 	if _, err := io.WriteString(output, "set "); err != nil {
 		return err
 	}
@@ -862,7 +873,7 @@ func (s Emitter) formatSet(output io.Writer, set *model.Set) error {
 		}
 
 		switch setItem.Operator {
-		case model.OperatorLabelAssignment:
+		case cypher.OperatorLabelAssignment:
 		default:
 			if _, err := io.WriteString(output, " "); err != nil {
 				return err
@@ -885,7 +896,7 @@ func (s Emitter) formatSet(output io.Writer, set *model.Set) error {
 	return nil
 }
 
-func (s Emitter) formatDelete(output io.Writer, delete *model.Delete) error {
+func (s Emitter) formatDelete(output io.Writer, delete *cypher.Delete) error {
 	if delete.Detach {
 		if _, err := io.WriteString(output, "detach delete "); err != nil {
 			return err
@@ -909,7 +920,7 @@ func (s Emitter) formatDelete(output io.Writer, delete *model.Delete) error {
 	return nil
 }
 
-func (s Emitter) formatPattern(output io.Writer, pattern []*model.PatternPart) error {
+func (s Emitter) formatPattern(output io.Writer, pattern []*cypher.PatternPart) error {
 	for idx, patternPart := range pattern {
 		if idx > 0 {
 			if _, err := io.WriteString(output, ", "); err != nil {
@@ -925,7 +936,7 @@ func (s Emitter) formatPattern(output io.Writer, pattern []*model.PatternPart) e
 	return nil
 }
 
-func (s Emitter) formatCreate(output io.Writer, create *model.Create) error {
+func (s Emitter) formatCreate(output io.Writer, create *cypher.Create) error {
 	if _, err := io.WriteString(output, "create "); err != nil {
 		return err
 	}
@@ -933,18 +944,18 @@ func (s Emitter) formatCreate(output io.Writer, create *model.Create) error {
 	return s.formatPattern(output, create.Pattern)
 }
 
-func (s Emitter) formatUpdatingClause(output io.Writer, updatingClause *model.UpdatingClause) error {
+func (s Emitter) formatUpdatingClause(output io.Writer, updatingClause *cypher.UpdatingClause) error {
 	switch typedClause := updatingClause.Clause.(type) {
-	case *model.Create:
+	case *cypher.Create:
 		return s.formatCreate(output, typedClause)
 
-	case *model.Remove:
+	case *cypher.Remove:
 		return s.formatRemove(output, typedClause)
 
-	case *model.Set:
+	case *cypher.Set:
 		return s.formatSet(output, typedClause)
 
-	case *model.Delete:
+	case *cypher.Delete:
 		return s.formatDelete(output, typedClause)
 
 	default:
@@ -952,7 +963,7 @@ func (s Emitter) formatUpdatingClause(output io.Writer, updatingClause *model.Up
 	}
 }
 
-func (s Emitter) formatReadingClause(output io.Writer, readingClause *model.ReadingClause) error {
+func (s Emitter) formatReadingClause(output io.Writer, readingClause *cypher.ReadingClause) error {
 	if readingClause.Match != nil {
 		if readingClause.Match.Optional {
 			if _, err := io.WriteString(output, "optional "); err != nil {
@@ -1004,7 +1015,7 @@ func (s Emitter) formatReadingClause(output io.Writer, readingClause *model.Read
 	return nil
 }
 
-func (s Emitter) formatSinglePartQuery(writer io.Writer, singlePartQuery *model.SinglePartQuery) error {
+func (s Emitter) formatSinglePartQuery(writer io.Writer, singlePartQuery *cypher.SinglePartQuery) error {
 	for idx, readingClause := range singlePartQuery.ReadingClauses {
 		if idx > 0 {
 			if _, err := io.WriteString(writer, " "); err != nil {
@@ -1031,7 +1042,7 @@ func (s Emitter) formatSinglePartQuery(writer io.Writer, singlePartQuery *model.
 				}
 			}
 
-			if typedUpdatingClause, typeOK := updatingClause.(*model.UpdatingClause); !typeOK {
+			if typedUpdatingClause, typeOK := updatingClause.(*cypher.UpdatingClause); !typeOK {
 				return fmt.Errorf("unexpected updating clause type %T", updatingClause)
 			} else if err := s.formatUpdatingClause(writer, typedUpdatingClause); err != nil {
 				return err
@@ -1046,7 +1057,7 @@ func (s Emitter) formatSinglePartQuery(writer io.Writer, singlePartQuery *model.
 	return nil
 }
 
-func (s Emitter) formatWith(output io.Writer, with *model.With) error {
+func (s Emitter) formatWith(output io.Writer, with *cypher.With) error {
 	if _, err := io.WriteString(output, "with "); err != nil {
 		return err
 	}
@@ -1064,7 +1075,7 @@ func (s Emitter) formatWith(output io.Writer, with *model.With) error {
 	return nil
 }
 
-func (s Emitter) formatMultiPartQuery(output io.Writer, multiPartQuery *model.MultiPartQuery) error {
+func (s Emitter) formatMultiPartQuery(output io.Writer, multiPartQuery *cypher.MultiPartQuery) error {
 	for idx, multiPartQueryPart := range multiPartQuery.Parts {
 		var (
 			numReadingClauses  = len(multiPartQueryPart.ReadingClauses)
@@ -1135,7 +1146,7 @@ func (s Emitter) formatMultiPartQuery(output io.Writer, multiPartQuery *model.Mu
 	return nil
 }
 
-func (s Emitter) Write(regularQuery *model.RegularQuery, writer io.Writer) error {
+func (s Emitter) Write(regularQuery *cypher.RegularQuery, writer io.Writer) error {
 	if regularQuery.SingleQuery != nil {
 		if regularQuery.SingleQuery.MultiPartQuery != nil {
 			if err := s.formatMultiPartQuery(writer, regularQuery.SingleQuery.MultiPartQuery); err != nil {

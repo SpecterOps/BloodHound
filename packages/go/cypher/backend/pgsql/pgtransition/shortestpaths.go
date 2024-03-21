@@ -21,8 +21,9 @@ import (
 	"fmt"
 	"github.com/specterops/bloodhound/cypher/analyzer"
 	"github.com/specterops/bloodhound/cypher/backend/pgsql"
-	"github.com/specterops/bloodhound/cypher/model"
+	"github.com/specterops/bloodhound/cypher/model/cypher"
 	"github.com/specterops/bloodhound/cypher/model/pg"
+	"github.com/specterops/bloodhound/cypher/model/walk"
 	"github.com/specterops/bloodhound/dawgs/query"
 )
 
@@ -33,9 +34,9 @@ type AllShortestPathsArguments struct {
 	MaxDepth          int
 }
 
-func RewriteParameters(regularQuery *model.RegularQuery) error {
+func RewriteParameters(regularQuery *cypher.RegularQuery) error {
 	return analyzer.Analyze(regularQuery, func(analyzerInst *analyzer.Analyzer) {
-		analyzer.WithVisitor(analyzerInst, func(stack *model.WalkStack, node *model.Parameter) error {
+		analyzer.WithVisitor(analyzerInst, func(stack *walk.WalkStack, node *cypher.Parameter) error {
 			parameterValue := node.Value
 
 			switch typedParameterValue := parameterValue.(type) {
@@ -45,10 +46,10 @@ func RewriteParameters(regularQuery *model.RegularQuery) error {
 			}
 
 			switch typedTrunk := stack.Trunk().(type) {
-			case model.ExpressionList:
+			case cypher.ExpressionList:
 				typedTrunk.Replace(typedTrunk.IndexOf(node), query.Literal(parameterValue))
 
-			case *model.PartialComparison:
+			case *cypher.PartialComparison:
 				typedTrunk.Right = query.Literal(parameterValue)
 			}
 
@@ -57,21 +58,21 @@ func RewriteParameters(regularQuery *model.RegularQuery) error {
 	})
 }
 
-func RemoveEmptyExpressionLists(stack *model.WalkStack, element model.Expression) error {
+func RemoveEmptyExpressionLists(stack *walk.WalkStack, element cypher.Expression) error {
 	var (
 		shouldRemove  = false
 		shouldReplace = false
 
-		replacementExpression model.Expression
+		replacementExpression cypher.Expression
 	)
 
 	switch typedElement := element.(type) {
-	case model.ExpressionList:
+	case cypher.ExpressionList:
 		shouldRemove = typedElement.Len() == 0
 
-	case *model.Parenthetical:
+	case *cypher.Parenthetical:
 		switch typedParentheticalElement := typedElement.Expression.(type) {
-		case model.ExpressionList:
+		case cypher.ExpressionList:
 			numExpressions := typedParentheticalElement.Len()
 
 			shouldRemove = numExpressions == 0
@@ -87,12 +88,12 @@ func RemoveEmptyExpressionLists(stack *model.WalkStack, element model.Expression
 
 	if shouldRemove {
 		switch typedParent := stack.Trunk().(type) {
-		case model.ExpressionList:
+		case cypher.ExpressionList:
 			typedParent.Remove(element)
 		}
 	} else if shouldReplace {
 		switch typedParent := stack.Trunk().(type) {
-		case model.ExpressionList:
+		case cypher.ExpressionList:
 			typedParent.Replace(typedParent.IndexOf(element), replacementExpression)
 		}
 	}
@@ -104,12 +105,12 @@ type Ripper struct {
 	targetVariableSymbol string
 }
 
-func (s *Ripper) Enter(stack *model.WalkStack, expression model.Expression) error {
-	if expressionList, isExpressionList := stack.Trunk().(model.ExpressionList); isExpressionList {
+func (s *Ripper) Enter(stack *walk.WalkStack, expression cypher.Expression) error {
+	if expressionList, isExpressionList := stack.Trunk().(cypher.ExpressionList); isExpressionList {
 		switch typedExpression := expression.(type) {
-		case *model.KindMatcher:
+		case *cypher.KindMatcher:
 			// Look for constraints
-			if variable, typeOK := typedExpression.Reference.(*model.Variable); !typeOK {
+			if variable, typeOK := typedExpression.Reference.(*cypher.Variable); !typeOK {
 				return fmt.Errorf("expected variable in all shortests paths kind matcher but saw: %T", typedExpression.Reference)
 			} else if variable.Symbol != s.targetVariableSymbol {
 				// Rip this expression since it's a comparison that targets a variable we don't care about
@@ -127,17 +128,17 @@ func (s *Ripper) Enter(stack *model.WalkStack, expression model.Expression) erro
 				}
 			}
 
-		case *model.Comparison:
+		case *cypher.Comparison:
 			var leftHandNode = typedExpression.Left
 
 			// Unwrap function invocations that may wrap the left hand expression
 			switch typedNode := leftHandNode.(type) {
-			case *model.Variable:
-			case *model.PropertyLookup:
+			case *cypher.Variable:
+			case *cypher.PropertyLookup:
 				leftHandNode = typedNode.Atom
 
-			case *model.FunctionInvocation:
-				if typedNode.Name == model.IdentityFunction {
+			case *cypher.FunctionInvocation:
+				if typedNode.Name == cypher.IdentityFunction {
 					// Validate the length of the arguments for sanity checking
 					if len(typedNode.Arguments) != 1 {
 						return fmt.Errorf("expected only 1 argument")
@@ -152,7 +153,7 @@ func (s *Ripper) Enter(stack *model.WalkStack, expression model.Expression) erro
 			}
 
 			// Look for constraints
-			if variable, typeOK := leftHandNode.(*model.Variable); !typeOK {
+			if variable, typeOK := leftHandNode.(*cypher.Variable); !typeOK {
 				return fmt.Errorf("expected *pgsql.AnnotatedVariable in all shortests paths comparison but saw: %T", leftHandNode)
 			} else if variable.Symbol != s.targetVariableSymbol {
 				// Rip this expression since it's a comparison that targets a variable we don't care about
@@ -164,11 +165,11 @@ func (s *Ripper) Enter(stack *model.WalkStack, expression model.Expression) erro
 	return nil
 }
 
-func (s *Ripper) Exit(stack *model.WalkStack, expression model.Expression) error {
+func (s *Ripper) Exit(stack *walk.WalkStack, expression cypher.Expression) error {
 	return nil
 }
 
-func TranslateAllShortestPaths(regularQuery *model.RegularQuery, kindMapper pgsql.KindMapper) (AllShortestPathsArguments, error) {
+func TranslateAllShortestPaths(regularQuery *cypher.RegularQuery, kindMapper pgsql.KindMapper) (AllShortestPathsArguments, error) {
 	aspArguments := AllShortestPathsArguments{
 		MaxDepth: 12,
 	}
@@ -195,28 +196,28 @@ func TranslateAllShortestPaths(regularQuery *model.RegularQuery, kindMapper pgsq
 		return aspArguments, fmt.Errorf("expected where clause to have only one top-level and expression")
 	}
 
-	if topLevelConjunction, typeOK := readingClause.Match.Where.Expressions[0].(*model.Conjunction); !typeOK {
+	if topLevelConjunction, typeOK := readingClause.Match.Where.Expressions[0].(*cypher.Conjunction); !typeOK {
 		return aspArguments, fmt.Errorf("expected where clause to have only one top-level and expression")
 	} else {
 		var (
-			rootNodeCopy     = model.Copy(topLevelConjunction)
-			edgeCopy         = model.Copy(topLevelConjunction)
-			terminalNodeCopy = model.Copy(topLevelConjunction)
+			rootNodeCopy     = cypher.Copy(topLevelConjunction)
+			edgeCopy         = cypher.Copy(topLevelConjunction)
+			terminalNodeCopy = cypher.Copy(topLevelConjunction)
 		)
 
-		if err := model.Walk(rootNodeCopy, &Ripper{
+		if err := walk.Walk(rootNodeCopy, &Ripper{
 			targetVariableSymbol: query.EdgeStartSymbol,
 		}); err != nil {
 			return aspArguments, err
 		}
 
-		if err := model.Walk(edgeCopy, &Ripper{
+		if err := walk.Walk(edgeCopy, &Ripper{
 			targetVariableSymbol: query.EdgeSymbol,
 		}); err != nil {
 			return aspArguments, err
 		}
 
-		if err := model.Walk(terminalNodeCopy, &Ripper{
+		if err := walk.Walk(terminalNodeCopy, &Ripper{
 			targetVariableSymbol: query.EdgeEndSymbol,
 		}); err != nil {
 			return aspArguments, err

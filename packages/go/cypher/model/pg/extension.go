@@ -16,10 +16,13 @@
 
 package pg
 
-import "github.com/specterops/bloodhound/cypher/model"
+import (
+	"github.com/specterops/bloodhound/cypher/model/cypher"
+	"github.com/specterops/bloodhound/cypher/model/walk"
+)
 
 func Copy[T any](value T) T {
-	return model.Copy(value, func(value T) (T, bool) {
+	return cypher.Copy(value, func(value T) (T, bool) {
 		var valueCopy T
 
 		switch typedValue := any(value).(type) {
@@ -37,42 +40,42 @@ func Copy[T any](value T) T {
 	})
 }
 
-func CollectPGSQLTypes(nextCursor *model.WalkCursor, expression model.Expression) bool {
+func CollectPGSQLTypes(nextCursor *walk.WalkCursor, expression cypher.Expression) bool {
 	switch typedExpression := expression.(type) {
 	case *PropertiesReference:
-		model.Collect(nextCursor, typedExpression.Reference)
+		walk.Collect(nextCursor, typedExpression.Reference)
 
 	case *AnnotatedPropertyLookup:
-		model.CollectExpression(nextCursor, typedExpression.Atom)
+		walk.CollectExpression(nextCursor, typedExpression.Atom)
 
 	case *AnnotatedKindMatcher:
-		model.CollectExpression(nextCursor, typedExpression.Reference)
+		walk.CollectExpression(nextCursor, typedExpression.Reference)
 
 	case *Entity:
-		model.Collect(nextCursor, typedExpression.Binding)
+		walk.Collect(nextCursor, typedExpression.Binding)
 
 	case *Subquery:
-		model.CollectSlice(nextCursor, typedExpression.PatternElements)
-		model.CollectExpression(nextCursor, typedExpression.Filter)
+		walk.CollectSlice(nextCursor, typedExpression.PatternElements)
+		walk.CollectExpression(nextCursor, typedExpression.Filter)
 
 	case *PropertyMutation:
-		model.Collect(nextCursor, typedExpression.Reference)
-		model.Collect(nextCursor, typedExpression.Removals)
-		model.Collect(nextCursor, typedExpression.Additions)
+		walk.Collect(nextCursor, typedExpression.Reference)
+		walk.Collect(nextCursor, typedExpression.Removals)
+		walk.Collect(nextCursor, typedExpression.Additions)
 
 	case *Delete:
-		model.Collect(nextCursor, typedExpression.Binding)
+		walk.Collect(nextCursor, typedExpression.Binding)
 
 	case *KindMutation:
-		model.Collect(nextCursor, typedExpression.Variable)
-		model.Collect(nextCursor, typedExpression.Removals)
-		model.Collect(nextCursor, typedExpression.Additions)
+		walk.Collect(nextCursor, typedExpression.Variable)
+		walk.Collect(nextCursor, typedExpression.Removals)
+		walk.Collect(nextCursor, typedExpression.Additions)
 
 	case *NodeKindsReference:
-		model.CollectExpression(nextCursor, typedExpression.Variable)
+		walk.CollectExpression(nextCursor, typedExpression.Variable)
 
 	case *EdgeKindReference:
-		model.CollectExpression(nextCursor, typedExpression.Variable)
+		walk.CollectExpression(nextCursor, typedExpression.Variable)
 
 	case *AnnotatedLiteral, *AnnotatedVariable, *AnnotatedParameter:
 		// Valid types but no descent

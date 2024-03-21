@@ -22,7 +22,7 @@ import (
 	"github.com/jackc/pgtype"
 	"github.com/specterops/bloodhound/cypher/backend/pgsql"
 	"github.com/specterops/bloodhound/cypher/frontend"
-	"github.com/specterops/bloodhound/cypher/model"
+	"github.com/specterops/bloodhound/cypher/model/cypher"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/dawgs/query"
 	"github.com/specterops/bloodhound/graphschema/ad"
@@ -102,9 +102,10 @@ func Suite() []TestCase {
 			Expected: "select (s.id, s.kind_ids, s.properties)::nodeComposite as s, (r.id, r.start_id, r.end_id, r.kind_id, r.properties)::edgeComposite as r, (e.id, e.kind_ids, e.properties)::nodeComposite as e from node as s join edge r on r.start_id = s.id join node e on e.id = r.end_id where (s.properties->>'value')::text = 'PII' and (r.properties->'other')::int8 = 234 and (e.properties->'that')::int8 = 456 and (s.properties->>'other')::text = 'more pii' and (e.properties->'number')::int8 = 411",
 		},
 		{
-			ID:       6,
-			Source:   "match (s)-[r:EdgeKindA|EdgeKindB]->(e) return s.name, e.name",
-			Expected: "select s.properties->'name' as \"s.name\", e.properties->'name' as \"e.name\" from node as s join edge r on r.start_id = s.id join node e on e.id = r.end_id where r.kind_id = any(array[100, 101]::int2[])",
+			ID:        6,
+			Source:    "match (a)-[*1..2]->(b) where a:NodeKindA and b:NodeKindB return a.name",
+			Expected:  "select s.properties->'name' as \"s.name\", e.properties->'name' as \"e.name\" from node as s join edge r on r.start_id = s.id join node e on e.id = r.end_id where r.kind_id = any(array[100, 101]::int2[])",
+			Exclusive: true,
 		},
 		{
 			ID:       7,
@@ -631,7 +632,7 @@ func TestPGSQLEmitter(t *testing.T) {
 	}
 
 	for _, testCase := range runnable {
-		var regularQuery *model.RegularQuery
+		var regularQuery *cypher.RegularQuery
 
 		if testCase.Query != nil {
 			builtQuery, err := testCase.Query.Build()

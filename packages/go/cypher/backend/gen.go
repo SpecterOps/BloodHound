@@ -20,13 +20,13 @@ import (
 	"bytes"
 	"github.com/specterops/bloodhound/cypher/backend/cypher"
 	"github.com/specterops/bloodhound/cypher/frontend"
-	"github.com/specterops/bloodhound/cypher/model"
+	cypher2 "github.com/specterops/bloodhound/cypher/model/cypher"
 	"io"
 )
 
 type Emitter interface {
-	Write(query *model.RegularQuery, writer io.Writer) error
-	WriteExpression(output io.Writer, expression model.Expression) error
+	Write(query *cypher2.RegularQuery, writer io.Writer) error
+	WriteExpression(output io.Writer, expression cypher2.Expression) error
 }
 
 func CypherToCypher(ctx *frontend.Context, input string) (string, error) {

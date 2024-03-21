@@ -18,7 +18,7 @@ package pgsql
 
 import (
 	"fmt"
-	"github.com/specterops/bloodhound/cypher/model"
+	"github.com/specterops/bloodhound/cypher/model/cypher"
 	pgModel "github.com/specterops/bloodhound/cypher/model/pg"
 	pgDriverModel "github.com/specterops/bloodhound/dawgs/drivers/pg/model"
 	"github.com/specterops/bloodhound/dawgs/graph"
@@ -44,7 +44,7 @@ func NewEmitter(stripLiterals bool, kindMapper KindMapper) *Emitter {
 	}
 }
 
-func (s *Emitter) formatMapLiteral(output io.Writer, mapLiteral model.MapLiteral) error {
+func (s *Emitter) formatMapLiteral(output io.Writer, mapLiteral cypher.MapLiteral) error {
 	if _, err := io.WriteString(output, "{"); err != nil {
 		return err
 	}
@@ -79,7 +79,7 @@ func (s *Emitter) formatMapLiteral(output io.Writer, mapLiteral model.MapLiteral
 	return nil
 }
 
-func (s *Emitter) formatLiteral(output io.Writer, literal *model.Literal) error {
+func (s *Emitter) formatLiteral(output io.Writer, literal *cypher.Literal) error {
 	const literalNullToken = "null"
 
 	// Check for a null literal first
@@ -169,12 +169,12 @@ func (s *Emitter) formatLiteral(output io.Writer, literal *model.Literal) error 
 			return err
 		}
 
-	case model.MapLiteral:
+	case cypher.MapLiteral:
 		if err := s.formatMapLiteral(output, typedLiteral); err != nil {
 			return err
 		}
 
-	case *model.ListLiteral:
+	case *cypher.ListLiteral:
 		if _, err := io.WriteString(output, "array["); err != nil {
 			return err
 		}
@@ -202,7 +202,7 @@ func (s *Emitter) formatLiteral(output io.Writer, literal *model.Literal) error 
 	return nil
 }
 
-func (s *Emitter) writeReturn(writer io.Writer, returnClause *model.Return) error {
+func (s *Emitter) writeReturn(writer io.Writer, returnClause *cypher.Return) error {
 	if returnClause.Projection.Distinct {
 		if _, err := WriteStrings(writer, "distinct "); err != nil {
 			return err
@@ -224,7 +224,7 @@ func (s *Emitter) writeReturn(writer io.Writer, returnClause *model.Return) erro
 	return nil
 }
 
-func (s *Emitter) writeWhere(writer io.Writer, whereClause *model.Where) error {
+func (s *Emitter) writeWhere(writer io.Writer, whereClause *cypher.Where) error {
 	if len(whereClause.Expressions) > 0 {
 		if _, err := io.WriteString(writer, " where "); err != nil {
 			return err
@@ -240,206 +240,174 @@ func (s *Emitter) writeWhere(writer io.Writer, whereClause *model.Where) error {
 	return nil
 }
 
-func (s *Emitter) writePatternElements(writer io.Writer, patternElements []*model.PatternElement) error {
-	for idx, patternElement := range patternElements {
-		if nodePattern, isNodePattern := patternElement.AsNodePattern(); isNodePattern {
-			if idx == 0 {
-				if _, err := io.WriteString(writer, pgDriverModel.NodeTable); err != nil {
-					return nil
-				}
+const traversalHeader = `with recursive `
+const traversalTablePrefix = `pathspace_`
+const traversalTableDef = `(next_node_id, depth, is_cycle, path) as (`
 
-				if _, err := io.WriteString(writer, " as "); err != nil {
-					return nil
-				}
+func expressionAsType[T any](expr cypher.Expression) (T, error) {
+	if typed, isType := expr.(T); !isType {
+		var empty T
+		return empty, fmt.Errorf("expected type %T but received %T", empty, expr)
+	} else {
+		return typed, nil
+	}
+}
 
-				if err := s.WriteExpression(writer, nodePattern.Binding); err != nil {
-					return nil
-				}
+func formatVariableExpression(expr cypher.Expression, defaultBinding string) (string, error) {
+	if expr == nil {
+		return defaultBinding, nil
+	}
+
+	if variable, err := expressionAsType[*pgModel.AnnotatedVariable](expr); err != nil {
+		return "", err
+	} else {
+		return variable.Symbol, nil
+	}
+}
+
+const (
+	defaultNodeBinding = "n"
+	defaultEdgeBinding = "r"
+)
+
+// ()-[]
+// ()<-[]
+
+func (s *Emitter) startRelationshipPattern(writer io.Writer, idx int, nodeBinding string, nodePattern *cypher.NodePattern, relationshipBinding string, relationshipPattern *cypher.RelationshipPattern, where *cypher.Where) error {
+	var (
+		pathspaceTable = traversalTablePrefix + strconv.Itoa(idx)
+	)
+
+	// Each relationship element should be authored as a recursive CTE
+	if _, err := WriteStrings(writer, traversalHeader, pathspaceTable, traversalTableDef); err != nil {
+		return err
+	}
+
+	// Author the initial condition
+	switch relationshipPattern.Direction {
+	case graph.DirectionOutbound:
+		if _, err := WriteStrings(writer, "select ", relationshipBinding, ".end_id, 0, false, array[", relationshipBinding, ".id] from edge ", relationshipBinding, " "); err != nil {
+			return err
+		}
+
+		if nodePattern.Binding != nil {
+			if _, err := WriteStrings(writer, "join node ", nodeBinding, " on ", nodeBinding, ".id = ", relationshipBinding, ".start_id"); err != nil {
+				return err
+			}
+		}
+
+	case graph.DirectionInbound:
+		if _, err := WriteStrings(writer, "select ", relationshipBinding, ".start_id, 0, false, array[", relationshipBinding, ".id] from edge ", relationshipBinding, " "); err != nil {
+			return err
+		}
+
+		if nodePattern.Binding != nil {
+			if _, err := WriteStrings(writer, "join node ", nodeBinding, " on ", nodeBinding, ".id = ", relationshipBinding, ".end_id"); err != nil {
+				return err
+			}
+		}
+
+	default:
+		return fmt.Errorf("unsupported direction: %s(%d)", relationshipPattern.Direction, relationshipPattern.Direction)
+	}
+
+	return nil
+}
+
+// []->()
+// []-()
+func (s *Emitter) endRelationshipPattern(writer io.Writer, idx int, nodeBinding string, nodePattern *cypher.NodePattern, relationshipBinding string, relationshipPattern *cypher.RelationshipPattern, where *cypher.Where) error {
+	var (
+		// Make sure to use idx-1 since the end of a relationship pattern assumes that the previous index is the
+		// relationship pattern element
+		pathspaceTable = traversalTablePrefix + strconv.Itoa(idx-1)
+	)
+
+	if where != nil {
+		if _, err := WriteStrings(writer, " where true "); err != nil {
+			return err
+		}
+	}
+
+	if _, err := WriteStrings(writer, " union all "); err != nil {
+		return err
+	}
+
+	// Author the recursive portion of the query
+	switch relationshipPattern.Direction {
+	case graph.DirectionOutbound:
+		if _, err := WriteStrings(writer, "select ", relationshipBinding, ".end_id, ", pathspaceTable, ".depth + 1, false, ", pathspaceTable, ".path || ", relationshipBinding, ".id from edge ", relationshipBinding, ", ", pathspaceTable); err != nil {
+			return err
+		}
+
+		if nodePattern.Binding != nil {
+			if _, err := WriteStrings(writer, " join node ", nodeBinding, " on ", nodeBinding, ".id = ", relationshipBinding, ".start_id"); err != nil {
+				return err
+			}
+		}
+
+	case graph.DirectionInbound:
+		if _, err := WriteStrings(writer, "select ", relationshipBinding, ".start_id, ", pathspaceTable, ".depth + 1, false, ", pathspaceTable, ".path || ", relationshipBinding, ".id from edge ", relationshipBinding, ", ", pathspaceTable); err != nil {
+			return err
+		}
+
+		if nodePattern.Binding != nil {
+			if _, err := WriteStrings(writer, " join node ", nodeBinding, " on ", nodeBinding, ".id = ", relationshipBinding, ".end_id"); err != nil {
+				return err
+			}
+		}
+
+	default:
+		return fmt.Errorf("unsupported direction: %s(%d)", relationshipPattern.Direction, relationshipPattern.Direction)
+	}
+
+	if where != nil {
+		if _, err := WriteStrings(writer, " where true "); err != nil {
+			return err
+		}
+	}
+
+	if _, err := WriteStrings(writer, ")"); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *Emitter) writePatternElements(writer io.Writer, patternElements []*cypher.PatternElement, where *cypher.Where) error {
+	for idx := range patternElements {
+		if _, isNodePattern := patternElements[idx].AsNodePattern(); isNodePattern {
+			nodePattern, _ := patternElements[idx].AsNodePattern()
+
+			if nodeBinding, err := formatVariableExpression(nodePattern.Binding, defaultNodeBinding); err != nil {
+				return err
 			} else {
-				previousRelationshipPattern, _ := patternElements[idx-1].AsRelationshipPattern()
-
-				if _, err := WriteStrings(writer, " join ", pgDriverModel.NodeTable, " "); err != nil {
-					return err
-				}
-
-				if err := s.WriteExpression(writer, nodePattern.Binding); err != nil {
-					return err
-				}
-
-				if _, err := WriteStrings(writer, " on "); err != nil {
-					return err
-				}
-
-				switch previousRelationshipPattern.Direction {
-				case graph.DirectionOutbound:
-					if err := s.WriteExpression(writer, nodePattern.Binding); err != nil {
-						return err
-					}
-
-					if _, err := WriteStrings(writer, ".id = "); err != nil {
-						return err
-					}
-
-					if err := s.WriteExpression(writer, previousRelationshipPattern.Binding); err != nil {
-						return err
-					}
-
-					if _, err := WriteStrings(writer, ".end_id"); err != nil {
-						return err
-					}
-
-				case graph.DirectionInbound:
-					if err := s.WriteExpression(writer, nodePattern.Binding); err != nil {
-						return err
-					}
-
-					if _, err := WriteStrings(writer, ".id = "); err != nil {
-						return err
-					}
-
-					if err := s.WriteExpression(writer, previousRelationshipPattern.Binding); err != nil {
-						return err
-					}
-
-					if _, err := WriteStrings(writer, ".start_id"); err != nil {
-						return err
-					}
-
-				default:
-					if err := s.WriteExpression(writer, nodePattern.Binding); err != nil {
-						return err
-					}
-
-					if _, err := WriteStrings(writer, ".id = "); err != nil {
-						return err
-					}
-
-					if err := s.WriteExpression(writer, previousRelationshipPattern.Binding); err != nil {
-						return err
-					}
-
-					if _, err := WriteStrings(writer, ".start_id or "); err != nil {
-						return err
-					}
-
-					if err := s.WriteExpression(writer, nodePattern.Binding); err != nil {
-						return err
-					}
-
-					if _, err := WriteStrings(writer, ".id = "); err != nil {
-						return err
-					}
-
-					if err := s.WriteExpression(writer, previousRelationshipPattern.Binding); err != nil {
-						return err
-					}
-
-					if _, err := WriteStrings(writer, ".end_id "); err != nil {
-						return err
+				if idx > 0 {
+					if relationshipPattern, isRelationshipPattern := patternElements[idx-1].AsRelationshipPattern(); isRelationshipPattern {
+						if relationshipBinding, err := formatVariableExpression(relationshipPattern.Binding, defaultEdgeBinding); err != nil {
+							return err
+						} else if err := s.endRelationshipPattern(writer, idx, nodeBinding, nodePattern, relationshipBinding, relationshipPattern, where); err != nil {
+							return err
+						}
+					} else {
+						// TODO: Subsequent node patterns
 					}
 				}
 			}
 		} else {
-			relationshipPattern, _ := patternElement.AsRelationshipPattern()
+			var (
+				// The assumption is that the cypher parser would never allow something strange like a bare []->() or
+				// a nil relationship pattern so errors are ignored here
+				nodePattern, _         = patternElements[idx-1].AsNodePattern()
+				relationshipPattern, _ = patternElements[idx].AsRelationshipPattern()
+			)
 
-			if idx == 0 {
-				if _, err := io.WriteString(writer, pgDriverModel.EdgeTable); err != nil {
-					return nil
-				}
-
-				if _, err := io.WriteString(writer, " as "); err != nil {
-					return nil
-				}
-
-				if err := s.WriteExpression(writer, relationshipPattern.Binding); err != nil {
-					return nil
-				}
-			} else {
-				previousNodePattern, _ := patternElements[idx-1].AsNodePattern()
-
-				if _, err := WriteStrings(writer, " join ", pgDriverModel.EdgeTable, " "); err != nil {
-					return err
-				}
-
-				if err := s.WriteExpression(writer, relationshipPattern.Binding); err != nil {
-					return err
-				}
-
-				if _, err := WriteStrings(writer, " on "); err != nil {
-					return err
-				}
-
-				switch relationshipPattern.Direction {
-				case graph.DirectionOutbound:
-					if err := s.WriteExpression(writer, relationshipPattern.Binding); err != nil {
-						return err
-					}
-
-					if _, err := WriteStrings(writer, ".start_id = "); err != nil {
-						return err
-					}
-
-					if err := s.WriteExpression(writer, previousNodePattern.Binding); err != nil {
-						return err
-					}
-
-					if _, err := WriteStrings(writer, ".id"); err != nil {
-						return err
-					}
-
-				case graph.DirectionInbound:
-					if err := s.WriteExpression(writer, relationshipPattern.Binding); err != nil {
-						return err
-					}
-
-					if _, err := WriteStrings(writer, ".end_id = "); err != nil {
-						return err
-					}
-
-					if err := s.WriteExpression(writer, previousNodePattern.Binding); err != nil {
-						return err
-					}
-
-					if _, err := WriteStrings(writer, ".id"); err != nil {
-						return err
-					}
-
-				case graph.DirectionBoth:
-					if err := s.WriteExpression(writer, relationshipPattern.Binding); err != nil {
-						return err
-					}
-
-					if _, err := WriteStrings(writer, ".start_id = "); err != nil {
-						return err
-					}
-
-					if err := s.WriteExpression(writer, previousNodePattern.Binding); err != nil {
-						return err
-					}
-
-					if _, err := WriteStrings(writer, ".id or "); err != nil {
-						return err
-					}
-
-					if err := s.WriteExpression(writer, relationshipPattern.Binding); err != nil {
-						return err
-					}
-
-					if _, err := WriteStrings(writer, ".end_id = "); err != nil {
-						return err
-					}
-
-					if err := s.WriteExpression(writer, previousNodePattern.Binding); err != nil {
-						return err
-					}
-
-					if _, err := WriteStrings(writer, ".id"); err != nil {
-						return err
-					}
-
-				default:
-					return fmt.Errorf("unsupported pattern direction: %s", relationshipPattern.Direction)
-				}
+			if nodeBinding, err := formatVariableExpression(nodePattern.Binding, defaultNodeBinding); err != nil {
+				return err
+			} else if relationshipBinding, err := formatVariableExpression(relationshipPattern.Binding, defaultEdgeBinding); err != nil {
+				return err
+			} else if err := s.startRelationshipPattern(writer, idx, nodeBinding, nodePattern, relationshipBinding, relationshipPattern, where); err != nil {
+				return err
 			}
 		}
 	}
@@ -447,7 +415,7 @@ func (s *Emitter) writePatternElements(writer io.Writer, patternElements []*mode
 	return nil
 }
 
-func (s *Emitter) writeMatch(writer io.Writer, matchClause *model.Match) error {
+func (s *Emitter) writeMatch(writer io.Writer, matchClause *cypher.Match) error {
 	for idx, pattern := range matchClause.Pattern {
 		if idx > 0 {
 			if _, err := io.WriteString(writer, ", "); err != nil {
@@ -455,13 +423,7 @@ func (s *Emitter) writeMatch(writer io.Writer, matchClause *model.Match) error {
 			}
 		}
 
-		if err := s.writePatternElements(writer, pattern.PatternElements); err != nil {
-			return err
-		}
-	}
-
-	if matchClause.Where != nil {
-		if err := s.writeWhere(writer, matchClause.Where); err != nil {
+		if err := s.writePatternElements(writer, pattern.PatternElements, matchClause.Where); err != nil {
 			return err
 		}
 	}
@@ -469,7 +431,7 @@ func (s *Emitter) writeMatch(writer io.Writer, matchClause *model.Match) error {
 	return nil
 }
 
-func (s *Emitter) writeSelect(writer io.Writer, singlePartQuery *model.SinglePartQuery) error {
+func (s *Emitter) writeSelect(writer io.Writer, singlePartQuery *cypher.SinglePartQuery) error {
 	if _, err := io.WriteString(writer, "select "); err != nil {
 		return err
 	}
@@ -545,7 +507,7 @@ func (s *Emitter) writeSelect(writer io.Writer, singlePartQuery *model.SinglePar
 	return nil
 }
 
-func (s *Emitter) writeDelete(writer io.Writer, singlePartQuery *model.SinglePartQuery, delete *pgModel.Delete) error {
+func (s *Emitter) writeDelete(writer io.Writer, singlePartQuery *cypher.SinglePartQuery, delete *pgModel.Delete) error {
 	if delete.NodeDelete {
 		if _, err := WriteStrings(writer, "delete from ", pgDriverModel.NodeTable, " as ", delete.Binding.Symbol); err != nil {
 			return err
@@ -669,7 +631,7 @@ func (s *Emitter) writeDelete(writer io.Writer, singlePartQuery *model.SinglePar
 	return nil
 }
 
-func (s *Emitter) writeUpdates(writer io.Writer, singlePartQuery *model.SinglePartQuery) error {
+func (s *Emitter) writeUpdates(writer io.Writer, singlePartQuery *cypher.SinglePartQuery) error {
 	if _, err := io.WriteString(writer, "update "); err != nil {
 		return err
 	}
@@ -683,7 +645,7 @@ func (s *Emitter) writeUpdates(writer io.Writer, singlePartQuery *model.SinglePa
 					}
 				}
 
-				if err := s.writePatternElements(writer, pattern.PatternElements); err != nil {
+				if err := s.writePatternElements(writer, pattern.PatternElements, nil); err != nil {
 					return err
 				}
 			}
@@ -818,7 +780,7 @@ func (s *Emitter) writeUpdates(writer io.Writer, singlePartQuery *model.SinglePa
 	return nil
 }
 
-func (s *Emitter) writeUpdatingClauses(writer io.Writer, singlePartQuery *model.SinglePartQuery) error {
+func (s *Emitter) writeUpdatingClauses(writer io.Writer, singlePartQuery *cypher.SinglePartQuery) error {
 	// Delete statements must be rendered as their own outputs
 	numDeletes := 0
 
@@ -842,7 +804,7 @@ func (s *Emitter) writeUpdatingClauses(writer io.Writer, singlePartQuery *model.
 	return nil
 }
 
-func (s *Emitter) writeSinglePartQuery(writer io.Writer, singlePartQuery *model.SinglePartQuery) error {
+func (s *Emitter) writeSinglePartQuery(writer io.Writer, singlePartQuery *cypher.SinglePartQuery) error {
 	if len(singlePartQuery.UpdatingClauses) > 0 {
 		return s.writeUpdatingClauses(writer, singlePartQuery)
 	} else {
@@ -851,16 +813,16 @@ func (s *Emitter) writeSinglePartQuery(writer io.Writer, singlePartQuery *model.
 }
 
 func (s *Emitter) writeSubquery(writer io.Writer, subquery *pgModel.Subquery) error {
-	if _, err := io.WriteString(writer, "exists(select * from "); err != nil {
+	if _, err := io.WriteString(writer, "exists(select 1 from "); err != nil {
 		return err
 	}
 
-	if err := s.writePatternElements(writer, subquery.PatternElements); err != nil {
+	if err := s.writePatternElements(writer, subquery.PatternElements, nil); err != nil {
 		return err
 	}
 
 	if subquery.Filter != nil {
-		subQueryWhereClause := model.NewWhere()
+		subQueryWhereClause := cypher.NewWhere()
 		subQueryWhereClause.Add(subquery.Filter)
 
 		if err := s.writeWhere(writer, subQueryWhereClause); err != nil {
@@ -875,14 +837,14 @@ func (s *Emitter) writeSubquery(writer io.Writer, subquery *pgModel.Subquery) er
 	return nil
 }
 
-func (s *Emitter) WriteExpression(writer io.Writer, expression model.Expression) error {
+func (s *Emitter) WriteExpression(writer io.Writer, expression cypher.Expression) error {
 	switch typedExpression := expression.(type) {
 	case *pgModel.Subquery:
 		if err := s.writeSubquery(writer, typedExpression); err != nil {
 			return err
 		}
 
-	case *model.Negation:
+	case *cypher.Negation:
 		if _, err := io.WriteString(writer, "not "); err != nil {
 			return err
 		}
@@ -891,7 +853,7 @@ func (s *Emitter) WriteExpression(writer io.Writer, expression model.Expression)
 			return err
 		}
 
-	case *model.Disjunction:
+	case *cypher.Disjunction:
 		for idx, joinedExpression := range typedExpression.Expressions {
 			if idx > 0 {
 				if _, err := io.WriteString(writer, " or "); err != nil {
@@ -904,7 +866,7 @@ func (s *Emitter) WriteExpression(writer io.Writer, expression model.Expression)
 			}
 		}
 
-	case *model.Conjunction:
+	case *cypher.Conjunction:
 		for idx, joinedExpression := range typedExpression.Expressions {
 			if idx > 0 {
 				if _, err := io.WriteString(writer, " and "); err != nil {
@@ -917,7 +879,7 @@ func (s *Emitter) WriteExpression(writer io.Writer, expression model.Expression)
 			}
 		}
 
-	case *model.Comparison:
+	case *cypher.Comparison:
 		if err := s.WriteExpression(writer, typedExpression.Left); err != nil {
 			return err
 		}
@@ -928,7 +890,7 @@ func (s *Emitter) WriteExpression(writer io.Writer, expression model.Expression)
 			}
 		}
 
-	case *model.PartialComparison:
+	case *cypher.PartialComparison:
 		if _, err := WriteStrings(writer, " ", typedExpression.Operator.String(), " "); err != nil {
 			return err
 		}
@@ -942,7 +904,7 @@ func (s *Emitter) WriteExpression(writer io.Writer, expression model.Expression)
 			return err
 		}
 
-	case *model.Literal:
+	case *cypher.Literal:
 		if !s.StripLiterals {
 			return s.formatLiteral(writer, typedExpression)
 		} else {
@@ -950,7 +912,7 @@ func (s *Emitter) WriteExpression(writer io.Writer, expression model.Expression)
 			return err
 		}
 
-	case *model.Variable:
+	case *cypher.Variable:
 		if _, err := io.WriteString(writer, typedExpression.Symbol); err != nil {
 			return err
 		}
@@ -1031,7 +993,7 @@ func (s *Emitter) WriteExpression(writer io.Writer, expression model.Expression)
 			return nil
 		}
 
-	case *model.PropertyLookup:
+	case *cypher.PropertyLookup:
 		if err := s.WriteExpression(writer, typedExpression.Atom); err != nil {
 			return err
 		}
@@ -1063,12 +1025,12 @@ func (s *Emitter) WriteExpression(writer io.Writer, expression model.Expression)
 			}
 		}
 
-	case *model.FunctionInvocation:
+	case *cypher.FunctionInvocation:
 		if err := s.translateFunctionInvocation(writer, typedExpression); err != nil {
 			return err
 		}
 
-	case *model.Parameter:
+	case *cypher.Parameter:
 		if _, err := WriteStrings(writer, "@", typedExpression.Symbol); err != nil {
 			return err
 		}
@@ -1078,7 +1040,7 @@ func (s *Emitter) WriteExpression(writer io.Writer, expression model.Expression)
 			return err
 		}
 
-	case *model.Parenthetical:
+	case *cypher.Parenthetical:
 		if _, err := WriteStrings(writer, "("); err != nil {
 			return err
 		}
@@ -1100,7 +1062,7 @@ func (s *Emitter) WriteExpression(writer io.Writer, expression model.Expression)
 			return err
 		}
 
-	case *model.ProjectionItem:
+	case *cypher.ProjectionItem:
 		if err := s.WriteExpression(writer, typedExpression.Expression); err != nil {
 			return err
 		}
@@ -1129,12 +1091,12 @@ func (s *Emitter) WriteExpression(writer io.Writer, expression model.Expression)
 					return err
 				}
 
-			case *model.FunctionInvocation:
+			case *cypher.FunctionInvocation:
 				if err := s.WriteExpression(writer, typedProjectionExpression); err != nil {
 					return err
 				}
 
-			case *model.PropertyLookup:
+			case *cypher.PropertyLookup:
 				if err := s.WriteExpression(writer, typedProjectionExpression.Atom); err != nil {
 					return err
 				}
@@ -1177,7 +1139,7 @@ func (s *Emitter) WriteExpression(writer io.Writer, expression model.Expression)
 	return nil
 }
 
-func (s *Emitter) translateFunctionInvocation(writer io.Writer, functionInvocation *model.FunctionInvocation) error {
+func (s *Emitter) translateFunctionInvocation(writer io.Writer, functionInvocation *cypher.FunctionInvocation) error {
 	switch functionInvocation.Name {
 	case cypherIdentityFunction:
 		if err := s.WriteExpression(writer, functionInvocation.Arguments[0]); err != nil {
@@ -1301,7 +1263,7 @@ func (s *Emitter) translateFunctionInvocation(writer io.Writer, functionInvocati
 	return nil
 }
 
-func (s *Emitter) Write(regularQuery *model.RegularQuery, writer io.Writer) error {
+func (s *Emitter) Write(regularQuery *cypher.RegularQuery, writer io.Writer) error {
 	if regularQuery.SingleQuery != nil {
 		if regularQuery.SingleQuery.MultiPartQuery != nil {
 			return fmt.Errorf("not supported yet")

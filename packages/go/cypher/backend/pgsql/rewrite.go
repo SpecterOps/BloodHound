@@ -18,29 +18,30 @@ package pgsql
 
 import (
 	"fmt"
-	"github.com/specterops/bloodhound/cypher/model"
+	"github.com/specterops/bloodhound/cypher/model/cypher"
+	"github.com/specterops/bloodhound/cypher/model/walk"
 )
 
-func rewrite(stack *model.WalkStack, original, rewritten model.Expression) error {
+func rewrite(stack *walk.WalkStack, original, rewritten cypher.Expression) error {
 	switch typedTrunk := stack.Trunk().(type) {
-	case model.ExpressionList:
+	case cypher.ExpressionList:
 		for idx, expression := range typedTrunk.GetAll() {
 			if expression == original {
 				typedTrunk.Replace(idx, rewritten)
 			}
 		}
 
-	case *model.FunctionInvocation:
+	case *cypher.FunctionInvocation:
 		for idx, expression := range typedTrunk.Arguments {
 			if expression == original {
 				typedTrunk.Arguments[idx] = rewritten
 			}
 		}
-		
-	case *model.ProjectionItem:
+
+	case *cypher.ProjectionItem:
 		typedTrunk.Expression = rewritten
 
-	case *model.SetItem:
+	case *cypher.SetItem:
 		if typedTrunk.Right == original {
 			typedTrunk.Right = rewritten
 		} else if typedTrunk.Left == original {
@@ -49,31 +50,31 @@ func rewrite(stack *model.WalkStack, original, rewritten model.Expression) error
 			return fmt.Errorf("unable to match original expression against SetItem left and right operands")
 		}
 
-	case *model.PartialComparison:
+	case *cypher.PartialComparison:
 		typedTrunk.Right = rewritten
 
-	case *model.RemoveItem:
+	case *cypher.RemoveItem:
 		switch typedRewritten := rewritten.(type) {
-		case *model.KindMatcher:
+		case *cypher.KindMatcher:
 			typedTrunk.KindMatcher = typedRewritten
 		}
 
-	case *model.Projection:
+	case *cypher.Projection:
 		for idx, projectionItem := range typedTrunk.Items {
 			if projectionItem == original {
 				typedTrunk.Items[idx] = rewritten
 			}
 		}
 
-	case *model.Negation:
+	case *cypher.Negation:
 		typedTrunk.Expression = rewritten
 
-	case *model.Comparison:
+	case *cypher.Comparison:
 		if typedTrunk.Left == original {
 			typedTrunk.Left = rewritten
 		}
 
-	case *model.Parenthetical:
+	case *cypher.Parenthetical:
 		if typedTrunk.Expression == original {
 			typedTrunk.Expression = rewritten
 		}

@@ -17,9 +17,9 @@
 package query
 
 import (
+	"github.com/specterops/bloodhound/cypher/model/cypher"
+	"github.com/specterops/bloodhound/cypher/model/walk"
 	"strconv"
-
-	"github.com/specterops/bloodhound/cypher/model"
 )
 
 type ParameterRewriter struct {
@@ -34,9 +34,9 @@ func NewParameterRewriter() *ParameterRewriter {
 	}
 }
 
-func (s *ParameterRewriter) Visit(stack *model.WalkStack, element model.Expression) error {
+func (s *ParameterRewriter) Visit(stack *walk.WalkStack, element cypher.Expression) error {
 	switch typedElement := element.(type) {
-	case *model.Parameter:
+	case *cypher.Parameter:
 		var (
 			nextParameterIndex    = s.parameterIndex
 			nextParameterIndexStr = "p" + strconv.Itoa(nextParameterIndex)

@@ -19,10 +19,10 @@ package pg
 import (
 	"errors"
 	"fmt"
+	"github.com/specterops/bloodhound/cypher/model/cypher"
 	"time"
 
 	"github.com/jackc/pgtype"
-	"github.com/specterops/bloodhound/cypher/model"
 	pgModel "github.com/specterops/bloodhound/dawgs/drivers/pg/model"
 	"github.com/specterops/bloodhound/dawgs/graph"
 )
@@ -99,11 +99,11 @@ func (s DataType) String() string {
 var CompositeTypes = []DataType{Node, NodeArray, Edge, EdgeArray, Path}
 
 type AnnotatedKindMatcher struct {
-	model.KindMatcher
+	cypher.KindMatcher
 	Type DataType
 }
 
-func NewAnnotatedKindMatcher(kindMatcher *model.KindMatcher, dataType DataType) *AnnotatedKindMatcher {
+func NewAnnotatedKindMatcher(kindMatcher *cypher.KindMatcher, dataType DataType) *AnnotatedKindMatcher {
 	return &AnnotatedKindMatcher{
 		KindMatcher: *kindMatcher,
 		Type:        dataType,
@@ -112,7 +112,7 @@ func NewAnnotatedKindMatcher(kindMatcher *model.KindMatcher, dataType DataType) 
 
 func (s *AnnotatedKindMatcher) copy() *AnnotatedKindMatcher {
 	return &AnnotatedKindMatcher{
-		KindMatcher: model.KindMatcher{
+		KindMatcher: cypher.KindMatcher{
 			Reference: s.Reference,
 			Kinds:     s.Kinds,
 		},
@@ -121,11 +121,11 @@ func (s *AnnotatedKindMatcher) copy() *AnnotatedKindMatcher {
 }
 
 type AnnotatedParameter struct {
-	model.Parameter
+	cypher.Parameter
 	Type DataType
 }
 
-func NewAnnotatedParameter(parameter *model.Parameter, dataType DataType) *AnnotatedParameter {
+func NewAnnotatedParameter(parameter *cypher.Parameter, dataType DataType) *AnnotatedParameter {
 	return &AnnotatedParameter{
 		Parameter: *parameter,
 		Type:      dataType,
@@ -143,11 +143,11 @@ func NewEntity(variable *AnnotatedVariable) *Entity {
 }
 
 type AnnotatedVariable struct {
-	model.Variable
+	cypher.Variable
 	Type DataType
 }
 
-func NewAnnotatedVariable(variable *model.Variable, dataType DataType) *AnnotatedVariable {
+func NewAnnotatedVariable(variable *cypher.Variable, dataType DataType) *AnnotatedVariable {
 	return &AnnotatedVariable{
 		Variable: *variable,
 		Type:     dataType,
@@ -160,19 +160,27 @@ func (s *AnnotatedVariable) copy() *AnnotatedVariable {
 	}
 
 	return &AnnotatedVariable{
-		Variable: model.Variable{
+		Variable: cypher.Variable{
 			Symbol: s.Symbol,
 		},
 		Type: s.Type,
 	}
 }
 
+func (s *AnnotatedVariable) String() (string, bool) {
+	if s != nil {
+		return s.Variable.Symbol, true
+	}
+
+	return "", false
+}
+
 type AnnotatedPropertyLookup struct {
-	model.PropertyLookup
+	cypher.PropertyLookup
 	Type DataType
 }
 
-func NewAnnotatedPropertyLookup(propertyLookup *model.PropertyLookup, dataType DataType) *AnnotatedPropertyLookup {
+func NewAnnotatedPropertyLookup(propertyLookup *cypher.PropertyLookup, dataType DataType) *AnnotatedPropertyLookup {
 	return &AnnotatedPropertyLookup{
 		PropertyLookup: *propertyLookup,
 		Type:           dataType,
@@ -180,11 +188,11 @@ func NewAnnotatedPropertyLookup(propertyLookup *model.PropertyLookup, dataType D
 }
 
 type AnnotatedLiteral struct {
-	model.Literal
+	cypher.Literal
 	Type DataType
 }
 
-func NewAnnotatedLiteral(literal *model.Literal, dataType DataType) *AnnotatedLiteral {
+func NewAnnotatedLiteral(literal *cypher.Literal, dataType DataType) *AnnotatedLiteral {
 	return &AnnotatedLiteral{
 		Literal: *literal,
 		Type:    dataType,
@@ -192,7 +200,7 @@ func NewAnnotatedLiteral(literal *model.Literal, dataType DataType) *AnnotatedLi
 }
 
 func NewStringLiteral(value string) *AnnotatedLiteral {
-	return NewAnnotatedLiteral(model.NewStringLiteral(value), Text)
+	return NewAnnotatedLiteral(cypher.NewStringLiteral(value), Text)
 }
 
 type PropertiesReference struct {
@@ -200,31 +208,31 @@ type PropertiesReference struct {
 }
 
 type Subquery struct {
-	PatternElements []*model.PatternElement
-	Filter          model.Expression
+	PatternElements []*cypher.PatternElement
+	Filter          cypher.Expression
 }
 
 type SubQueryAnnotation struct {
-	FilterExpression model.Expression
+	FilterExpression cypher.Expression
 }
 
 type SQLTypeAnnotation struct {
 	Type DataType
 }
 
-func NewSQLTypeAnnotationFromExpression(expression model.Expression) (*SQLTypeAnnotation, error) {
+func NewSQLTypeAnnotationFromExpression(expression cypher.Expression) (*SQLTypeAnnotation, error) {
 	switch typedExpression := expression.(type) {
-	case *model.Parameter:
+	case *cypher.Parameter:
 		return NewSQLTypeAnnotationFromValue(typedExpression.Value)
 
-	case *model.Literal:
+	case *cypher.Literal:
 		return NewSQLTypeAnnotationFromLiteral(typedExpression)
 
-	case *model.ListLiteral:
+	case *cypher.ListLiteral:
 		var expectedTypeAnnotation *SQLTypeAnnotation
 
 		for _, listExpressionItem := range *typedExpression {
-			if listExpressionItemLiteral, isLiteral := listExpressionItem.(*model.Literal); isLiteral {
+			if listExpressionItemLiteral, isLiteral := listExpressionItem.(*cypher.Literal); isLiteral {
 				if literalTypeAnnotation, err := NewSQLTypeAnnotationFromLiteral(listExpressionItemLiteral); err != nil {
 					return nil, err
 				} else if expectedTypeAnnotation != nil && expectedTypeAnnotation.Type != literalTypeAnnotation.Type {
@@ -242,7 +250,7 @@ func NewSQLTypeAnnotationFromExpression(expression model.Expression) (*SQLTypeAn
 	}
 }
 
-func NewSQLTypeAnnotationFromLiteral(literal *model.Literal) (*SQLTypeAnnotation, error) {
+func NewSQLTypeAnnotationFromLiteral(literal *cypher.Literal) (*SQLTypeAnnotation, error) {
 	if literal.Null {
 		return &SQLTypeAnnotation{
 			Type: Null,
@@ -335,7 +343,7 @@ func NewSQLTypeAnnotationFromValue(value any) (*SQLTypeAnnotation, error) {
 			Type: TextArray,
 		}, nil
 
-	case *model.ListLiteral:
+	case *cypher.ListLiteral:
 		return NewSQLTypeAnnotationFromExpression(typedValue)
 
 	default:
@@ -344,7 +352,7 @@ func NewSQLTypeAnnotationFromValue(value any) (*SQLTypeAnnotation, error) {
 }
 
 type NodeKindsReference struct {
-	Variable model.Expression
+	Variable cypher.Expression
 }
 
 func NewNodeKindsReference(ref *AnnotatedVariable) *NodeKindsReference {
@@ -354,7 +362,7 @@ func NewNodeKindsReference(ref *AnnotatedVariable) *NodeKindsReference {
 }
 
 type EdgeKindReference struct {
-	Variable model.Expression
+	Variable cypher.Expression
 }
 
 func NewEdgeKindReference(ref *AnnotatedVariable) *EdgeKindReference {

@@ -18,16 +18,16 @@ package pgsql
 
 import (
 	"fmt"
-	cypherModel "github.com/specterops/bloodhound/cypher/model"
+	"github.com/specterops/bloodhound/cypher/model/cypher"
 	"github.com/specterops/bloodhound/cypher/model/pg"
 
 	"github.com/specterops/bloodhound/dawgs/graph"
 )
 
 const (
-	OperatorJSONBFieldExists    cypherModel.Operator = "?"
-	OperatorLike                cypherModel.Operator = "like"
-	OperatorLikeCaseInsensitive cypherModel.Operator = "ilike"
+	OperatorJSONBFieldExists    cypher.Operator = "?"
+	OperatorLike                cypher.Operator = "like"
+	OperatorLikeCaseInsensitive cypher.Operator = "ilike"
 )
 
 type UpdatingClauseRewriter struct {
@@ -78,8 +78,8 @@ func (s *UpdatingClauseRewriter) newKindMutation(symbol string) (*pg.KindMutatio
 	}
 }
 
-func (s *UpdatingClauseRewriter) ToUpdatingClause() ([]cypherModel.Expression, error) {
-	var updatingClauses []cypherModel.Expression
+func (s *UpdatingClauseRewriter) ToUpdatingClause() ([]cypher.Expression, error) {
+	var updatingClauses []cypher.Expression
 
 	if s.deletion.NodeDelete || s.deletion.EdgeDelete {
 		updatingClauses = append(updatingClauses, s.deletion)
@@ -148,7 +148,7 @@ func (s *UpdatingClauseRewriter) ToUpdatingClause() ([]cypherModel.Expression, e
 	return updatingClauses, nil
 }
 
-func (s *UpdatingClauseRewriter) rewriteDeleteClause(singlePartQuery *cypherModel.SinglePartQuery, deleteClause *cypherModel.Delete) error {
+func (s *UpdatingClauseRewriter) rewriteDeleteClause(singlePartQuery *cypher.SinglePartQuery, deleteClause *cypher.Delete) error {
 	for _, deleteStatementExpression := range deleteClause.Expressions {
 		switch typedExpression := deleteStatementExpression.(type) {
 		case *pg.AnnotatedVariable:
@@ -184,7 +184,7 @@ func (s *UpdatingClauseRewriter) rewriteDeleteClause(singlePartQuery *cypherMode
 
 	for _, readingClause := range singlePartQuery.ReadingClauses {
 		if matchClause := readingClause.Match; matchClause != nil {
-			var additionalWhereClauses []cypherModel.Expression
+			var additionalWhereClauses []cypher.Expression
 
 			for _, pattern := range matchClause.Pattern {
 				if len(pattern.PatternElements) <= 1 {
@@ -229,9 +229,9 @@ func (s *UpdatingClauseRewriter) rewriteDeleteClause(singlePartQuery *cypherMode
 							bindingCopy := pg.Copy(relBinding)
 							bindingCopy.Symbol += ".end_id"
 
-							additionalWhereClauses = append(additionalWhereClauses, cypherModel.NewComparison(
-								cypherModel.NewSimpleFunctionInvocation(cypherIdentityFunction, nodePattern.Binding),
-								cypherModel.OperatorEquals,
+							additionalWhereClauses = append(additionalWhereClauses, cypher.NewComparison(
+								cypher.NewSimpleFunctionInvocation(cypherIdentityFunction, nodePattern.Binding),
+								cypher.OperatorEquals,
 								bindingCopy,
 							))
 
@@ -239,9 +239,9 @@ func (s *UpdatingClauseRewriter) rewriteDeleteClause(singlePartQuery *cypherMode
 							bindingCopy := pg.Copy(relBinding)
 							bindingCopy.Symbol += ".start_id"
 
-							additionalWhereClauses = append(additionalWhereClauses, cypherModel.NewComparison(
-								cypherModel.NewSimpleFunctionInvocation(cypherIdentityFunction, nodePattern.Binding),
-								cypherModel.OperatorEquals,
+							additionalWhereClauses = append(additionalWhereClauses, cypher.NewComparison(
+								cypher.NewSimpleFunctionInvocation(cypherIdentityFunction, nodePattern.Binding),
+								cypher.OperatorEquals,
 								bindingCopy,
 							))
 
@@ -253,15 +253,15 @@ func (s *UpdatingClauseRewriter) rewriteDeleteClause(singlePartQuery *cypherMode
 			}
 
 			if len(additionalWhereClauses) > 0 {
-				additionalWhereClause := cypherModel.NewConjunction(additionalWhereClauses...)
+				additionalWhereClause := cypher.NewConjunction(additionalWhereClauses...)
 
 				if matchClause.Where == nil {
-					matchClause.Where = cypherModel.NewWhere()
+					matchClause.Where = cypher.NewWhere()
 				}
 
 				if len(matchClause.Where.Expressions) > 0 {
-					matchClause.Where.Expressions = []cypherModel.Expression{
-						cypherModel.NewConjunction(append(matchClause.Where.Expressions, additionalWhereClause)...),
+					matchClause.Where.Expressions = []cypher.Expression{
+						cypher.NewConjunction(append(matchClause.Where.Expressions, additionalWhereClause)...),
 					}
 				} else {
 					matchClause.Where.Add(additionalWhereClause)
@@ -273,27 +273,27 @@ func (s *UpdatingClauseRewriter) rewriteDeleteClause(singlePartQuery *cypherMode
 	return nil
 }
 
-func (s *UpdatingClauseRewriter) RewriteUpdatingClauses(singlePartQuery *cypherModel.SinglePartQuery) error {
+func (s *UpdatingClauseRewriter) RewriteUpdatingClauses(singlePartQuery *cypher.SinglePartQuery) error {
 	for _, updatingClause := range singlePartQuery.UpdatingClauses {
-		typedUpdatingClause, isUpdatingClause := updatingClause.(*cypherModel.UpdatingClause)
+		typedUpdatingClause, isUpdatingClause := updatingClause.(*cypher.UpdatingClause)
 
 		if !isUpdatingClause {
 			return fmt.Errorf("unexpected type for updating clause: %T", updatingClause)
 		}
 
 		switch typedClause := typedUpdatingClause.Clause.(type) {
-		case *cypherModel.Create:
+		case *cypher.Create:
 			return fmt.Errorf("create unsupported")
 
-		case *cypherModel.Delete:
+		case *cypher.Delete:
 			if err := s.rewriteDeleteClause(singlePartQuery, typedClause); err != nil {
 				return err
 			}
 
-		case *cypherModel.Set:
+		case *cypher.Set:
 			for _, setItem := range typedClause.Items {
 				switch leftHandOperand := setItem.Left.(type) {
-				case *cypherModel.Variable:
+				case *cypher.Variable:
 					switch rightHandOperand := setItem.Right.(type) {
 					case graph.Kinds:
 						s.TrackKindAddition(leftHandOperand.Symbol, rightHandOperand...)
@@ -302,24 +302,24 @@ func (s *UpdatingClauseRewriter) RewriteUpdatingClauses(singlePartQuery *cypherM
 						return fmt.Errorf("unexpected right side operand type %T for kind setter", setItem.Right)
 					}
 
-				case *cypherModel.PropertyLookup:
+				case *cypher.PropertyLookup:
 					switch setItem.Operator {
-					case cypherModel.OperatorAssignment:
+					case cypher.OperatorAssignment:
 						var (
 							// TODO: Type negotiation
-							referenceSymbol = leftHandOperand.Atom.(*cypherModel.Variable).Symbol
+							referenceSymbol = leftHandOperand.Atom.(*cypher.Variable).Symbol
 							propertyName    = leftHandOperand.Symbols[0]
 						)
 
 						switch rightHandOperand := setItem.Right.(type) {
-						case *cypherModel.Literal:
+						case *cypher.Literal:
 							// TODO: Negotiate null literals
 							s.TrackPropertyAddition(referenceSymbol, propertyName, rightHandOperand.Value)
 
 						case *pg.AnnotatedLiteral:
 							s.TrackPropertyAddition(referenceSymbol, propertyName, rightHandOperand.Value)
 
-						case *cypherModel.Parameter:
+						case *cypher.Parameter:
 							s.TrackPropertyAddition(referenceSymbol, propertyName, rightHandOperand.Value)
 
 						case *pg.AnnotatedParameter:
@@ -335,12 +335,12 @@ func (s *UpdatingClauseRewriter) RewriteUpdatingClauses(singlePartQuery *cypherM
 				}
 			}
 
-		case *cypherModel.Remove:
+		case *cypher.Remove:
 			for _, removeItem := range typedClause.Items {
 				if removeItem.KindMatcher != nil {
-					if kindMatcher, typeOK := removeItem.KindMatcher.(*cypherModel.KindMatcher); !typeOK {
+					if kindMatcher, typeOK := removeItem.KindMatcher.(*cypher.KindMatcher); !typeOK {
 						return fmt.Errorf("unexpected remove item kind matcher expression: %T", removeItem.KindMatcher)
-					} else if kindMatcherReference, typeOK := kindMatcher.Reference.(*cypherModel.Variable); !typeOK {
+					} else if kindMatcherReference, typeOK := kindMatcher.Reference.(*cypher.Variable); !typeOK {
 						return fmt.Errorf("unexpected remove matcher reference expression: %T", kindMatcher.Reference)
 					} else {
 						s.TrackKindRemoval(kindMatcherReference.Symbol, kindMatcher.Kinds...)
@@ -350,7 +350,7 @@ func (s *UpdatingClauseRewriter) RewriteUpdatingClauses(singlePartQuery *cypherM
 				if removeItem.Property != nil {
 					var (
 						// TODO: Type negotiation
-						referenceSymbol = removeItem.Property.Atom.(*cypherModel.Variable).Symbol
+						referenceSymbol = removeItem.Property.Atom.(*cypher.Variable).Symbol
 						propertyName    = removeItem.Property.Symbols[0]
 					)
 

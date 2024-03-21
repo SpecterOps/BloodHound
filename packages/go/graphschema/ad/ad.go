@@ -580,9 +580,9 @@ func (s Property) Name() string {
 	case CertificateMappingMethods:
 		return "Certificate Mapping Methods"
 	case StrongCertificateBindingEnforcementRaw:
-		return "Strong Certificate Binding Enforcement (Raw)"
+		return "Strong Certificate Alias Enforcement (Raw)"
 	case StrongCertificateBindingEnforcement:
-		return "Strong Certificate Binding Enforcement"
+		return "Strong Certificate Alias Enforcement"
 	case EKUs:
 		return "Enhanced Key Usage"
 	case SubjectAltRequireUPN:

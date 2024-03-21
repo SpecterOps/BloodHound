@@ -18,10 +18,10 @@ package query
 
 import (
 	"fmt"
+	"github.com/specterops/bloodhound/cypher/model/cypher"
 	"strings"
 	"time"
 
-	cypherModel "github.com/specterops/bloodhound/cypher/model"
 	"github.com/specterops/bloodhound/dawgs/graph"
 )
 
@@ -37,52 +37,52 @@ func convertCriteria[T any](criteria ...graph.Criteria) []T {
 	return converted
 }
 
-func Update(clauses ...*cypherModel.UpdatingClause) []*cypherModel.UpdatingClause {
+func Update(clauses ...*cypher.UpdatingClause) []*cypher.UpdatingClause {
 	return clauses
 }
 
-func Updatef(provider graph.CriteriaProvider) []*cypherModel.UpdatingClause {
+func Updatef(provider graph.CriteriaProvider) []*cypher.UpdatingClause {
 	switch typedCriteria := provider().(type) {
-	case []*cypherModel.UpdatingClause:
+	case []*cypher.UpdatingClause:
 		return typedCriteria
 
 	case []graph.Criteria:
-		return convertCriteria[*cypherModel.UpdatingClause](typedCriteria...)
+		return convertCriteria[*cypher.UpdatingClause](typedCriteria...)
 
-	case *cypherModel.UpdatingClause:
-		return []*cypherModel.UpdatingClause{typedCriteria}
+	case *cypher.UpdatingClause:
+		return []*cypher.UpdatingClause{typedCriteria}
 
 	default:
-		return []*cypherModel.UpdatingClause{
-			cypherModel.WithErrors(&cypherModel.UpdatingClause{}, fmt.Errorf("invalid type %T for update clause", typedCriteria)),
+		return []*cypher.UpdatingClause{
+			cypher.WithErrors(&cypher.UpdatingClause{}, fmt.Errorf("invalid type %T for update clause", typedCriteria)),
 		}
 	}
 }
 
-func AddKind(reference graph.Criteria, kind graph.Kind) *cypherModel.UpdatingClause {
-	return cypherModel.NewUpdatingClause(&cypherModel.Set{
-		Items: []*cypherModel.SetItem{{
+func AddKind(reference graph.Criteria, kind graph.Kind) *cypher.UpdatingClause {
+	return cypher.NewUpdatingClause(&cypher.Set{
+		Items: []*cypher.SetItem{{
 			Left:     reference,
-			Operator: cypherModel.OperatorLabelAssignment,
+			Operator: cypher.OperatorLabelAssignment,
 			Right:    graph.Kinds{kind},
 		}},
 	})
 }
 
-func AddKinds(reference graph.Criteria, kinds graph.Kinds) *cypherModel.UpdatingClause {
-	return cypherModel.NewUpdatingClause(&cypherModel.Set{
-		Items: []*cypherModel.SetItem{{
+func AddKinds(reference graph.Criteria, kinds graph.Kinds) *cypher.UpdatingClause {
+	return cypher.NewUpdatingClause(&cypher.Set{
+		Items: []*cypher.SetItem{{
 			Left:     reference,
-			Operator: cypherModel.OperatorLabelAssignment,
+			Operator: cypher.OperatorLabelAssignment,
 			Right:    kinds,
 		}},
 	})
 }
 
-func DeleteKind(reference graph.Criteria, kind graph.Kind) *cypherModel.UpdatingClause {
-	return cypherModel.NewUpdatingClause(&cypherModel.Remove{
-		Items: []*cypherModel.RemoveItem{{
-			KindMatcher: &cypherModel.KindMatcher{
+func DeleteKind(reference graph.Criteria, kind graph.Kind) *cypher.UpdatingClause {
+	return cypher.NewUpdatingClause(&cypher.Remove{
+		Items: []*cypher.RemoveItem{{
+			KindMatcher: &cypher.KindMatcher{
 				Reference: reference,
 				Kinds:     graph.Kinds{kind},
 			},
@@ -90,10 +90,10 @@ func DeleteKind(reference graph.Criteria, kind graph.Kind) *cypherModel.Updating
 	})
 }
 
-func DeleteKinds(reference graph.Criteria, kinds graph.Kinds) *cypherModel.Remove {
-	return &cypherModel.Remove{
-		Items: []*cypherModel.RemoveItem{{
-			KindMatcher: &cypherModel.KindMatcher{
+func DeleteKinds(reference graph.Criteria, kinds graph.Kinds) *cypher.Remove {
+	return &cypher.Remove{
+		Items: []*cypher.RemoveItem{{
+			KindMatcher: &cypher.KindMatcher{
 				Reference: reference,
 				Kinds:     kinds,
 			},
@@ -101,58 +101,58 @@ func DeleteKinds(reference graph.Criteria, kinds graph.Kinds) *cypherModel.Remov
 	}
 }
 
-func SetProperty(reference graph.Criteria, value any) *cypherModel.UpdatingClause {
-	return cypherModel.NewUpdatingClause(&cypherModel.Set{
-		Items: []*cypherModel.SetItem{{
+func SetProperty(reference graph.Criteria, value any) *cypher.UpdatingClause {
+	return cypher.NewUpdatingClause(&cypher.Set{
+		Items: []*cypher.SetItem{{
 			Left:     reference,
-			Operator: cypherModel.OperatorAssignment,
+			Operator: cypher.OperatorAssignment,
 			Right:    Parameter(value),
 		}},
 	})
 }
 
-func SetProperties(reference graph.Criteria, properties map[string]any) *cypherModel.UpdatingClause {
-	set := &cypherModel.Set{}
+func SetProperties(reference graph.Criteria, properties map[string]any) *cypher.UpdatingClause {
+	set := &cypher.Set{}
 
 	for key, value := range properties {
-		set.Items = append(set.Items, &cypherModel.SetItem{
+		set.Items = append(set.Items, &cypher.SetItem{
 			Left:     Property(reference, key),
-			Operator: cypherModel.OperatorAssignment,
+			Operator: cypher.OperatorAssignment,
 			Right:    Parameter(value),
 		})
 	}
 
-	return cypherModel.NewUpdatingClause(set)
+	return cypher.NewUpdatingClause(set)
 }
 
-func DeleteProperty(reference *cypherModel.PropertyLookup) *cypherModel.UpdatingClause {
-	return cypherModel.NewUpdatingClause(&cypherModel.Remove{
-		Items: []*cypherModel.RemoveItem{{
+func DeleteProperty(reference *cypher.PropertyLookup) *cypher.UpdatingClause {
+	return cypher.NewUpdatingClause(&cypher.Remove{
+		Items: []*cypher.RemoveItem{{
 			Property: reference,
 		}},
 	})
 }
 
-func DeleteProperties(reference graph.Criteria, propertyNames ...string) *cypherModel.UpdatingClause {
-	removeClause := &cypherModel.Remove{}
+func DeleteProperties(reference graph.Criteria, propertyNames ...string) *cypher.UpdatingClause {
+	removeClause := &cypher.Remove{}
 
 	for _, propertyName := range propertyNames {
-		removeClause.Items = append(removeClause.Items, &cypherModel.RemoveItem{
+		removeClause.Items = append(removeClause.Items, &cypher.RemoveItem{
 			Property: Property(reference, propertyName),
 		})
 	}
 
-	return cypherModel.NewUpdatingClause(removeClause)
+	return cypher.NewUpdatingClause(removeClause)
 }
 
-func Kind(reference graph.Criteria, kind graph.Kind) *cypherModel.KindMatcher {
-	return &cypherModel.KindMatcher{
+func Kind(reference graph.Criteria, kind graph.Kind) *cypher.KindMatcher {
+	return &cypher.KindMatcher{
 		Reference: reference,
 		Kinds:     graph.Kinds{kind},
 	}
 }
 
-func KindIn(reference graph.Criteria, kinds ...graph.Kind) *cypherModel.Parenthetical {
+func KindIn(reference graph.Criteria, kinds ...graph.Kind) *cypher.Parenthetical {
 	expressions := make([]graph.Criteria, len(kinds))
 
 	for idx, kind := range kinds {
@@ -162,258 +162,258 @@ func KindIn(reference graph.Criteria, kinds ...graph.Kind) *cypherModel.Parenthe
 	return Or(expressions...)
 }
 
-func NodeProperty(name string) *cypherModel.PropertyLookup {
-	return cypherModel.NewPropertyLookup(NodeSymbol, name)
+func NodeProperty(name string) *cypher.PropertyLookup {
+	return cypher.NewPropertyLookup(NodeSymbol, name)
 }
 
-func RelationshipProperty(name string) *cypherModel.PropertyLookup {
-	return cypherModel.NewPropertyLookup(EdgeSymbol, name)
+func RelationshipProperty(name string) *cypher.PropertyLookup {
+	return cypher.NewPropertyLookup(EdgeSymbol, name)
 }
 
-func StartProperty(name string) *cypherModel.PropertyLookup {
-	return cypherModel.NewPropertyLookup(EdgeStartSymbol, name)
+func StartProperty(name string) *cypher.PropertyLookup {
+	return cypher.NewPropertyLookup(EdgeStartSymbol, name)
 }
 
-func EndProperty(name string) *cypherModel.PropertyLookup {
-	return cypherModel.NewPropertyLookup(EdgeEndSymbol, name)
+func EndProperty(name string) *cypher.PropertyLookup {
+	return cypher.NewPropertyLookup(EdgeEndSymbol, name)
 }
 
-func Property(qualifier graph.Criteria, name string) *cypherModel.PropertyLookup {
-	return &cypherModel.PropertyLookup{
-		Atom:    qualifier.(*cypherModel.Variable),
+func Property(qualifier graph.Criteria, name string) *cypher.PropertyLookup {
+	return &cypher.PropertyLookup{
+		Atom:    qualifier.(*cypher.Variable),
 		Symbols: []string{name},
 	}
 }
 
-func Count(reference graph.Criteria) *cypherModel.FunctionInvocation {
-	return &cypherModel.FunctionInvocation{
+func Count(reference graph.Criteria) *cypher.FunctionInvocation {
+	return &cypher.FunctionInvocation{
 		Name:      "count",
-		Arguments: []cypherModel.Expression{reference},
+		Arguments: []cypher.Expression{reference},
 	}
 }
 
-func CountDistinct(reference graph.Criteria) *cypherModel.FunctionInvocation {
-	return &cypherModel.FunctionInvocation{
+func CountDistinct(reference graph.Criteria) *cypher.FunctionInvocation {
+	return &cypher.FunctionInvocation{
 		Name:      "count",
 		Distinct:  true,
-		Arguments: []cypherModel.Expression{reference},
+		Arguments: []cypher.Expression{reference},
 	}
 }
 
-func And(criteria ...graph.Criteria) *cypherModel.Conjunction {
-	return cypherModel.NewConjunction(convertCriteria[cypherModel.Expression](criteria...)...)
+func And(criteria ...graph.Criteria) *cypher.Conjunction {
+	return cypher.NewConjunction(convertCriteria[cypher.Expression](criteria...)...)
 }
 
-func Or(criteria ...graph.Criteria) *cypherModel.Parenthetical {
-	return &cypherModel.Parenthetical{
-		Expression: cypherModel.NewDisjunction(convertCriteria[cypherModel.Expression](criteria...)...),
+func Or(criteria ...graph.Criteria) *cypher.Parenthetical {
+	return &cypher.Parenthetical{
+		Expression: cypher.NewDisjunction(convertCriteria[cypher.Expression](criteria...)...),
 	}
 }
 
-func Xor(criteria ...graph.Criteria) *cypherModel.ExclusiveDisjunction {
-	return cypherModel.NewExclusiveDisjunction(convertCriteria[cypherModel.Expression](criteria...)...)
+func Xor(criteria ...graph.Criteria) *cypher.ExclusiveDisjunction {
+	return cypher.NewExclusiveDisjunction(convertCriteria[cypher.Expression](criteria...)...)
 }
 
-func Parameter(value any) *cypherModel.Parameter {
-	if parameter, isParameter := value.(*cypherModel.Parameter); isParameter {
+func Parameter(value any) *cypher.Parameter {
+	if parameter, isParameter := value.(*cypher.Parameter); isParameter {
 		return parameter
 	}
 
-	return &cypherModel.Parameter{
+	return &cypher.Parameter{
 		Value: value,
 	}
 }
 
-func Literal(value any) *cypherModel.Literal {
-	return &cypherModel.Literal{
+func Literal(value any) *cypher.Literal {
+	return &cypher.Literal{
 		Value: value,
 		Null:  value == nil,
 	}
 }
 
-func KindsOf(ref graph.Criteria) *cypherModel.FunctionInvocation {
+func KindsOf(ref graph.Criteria) *cypher.FunctionInvocation {
 	switch typedRef := ref.(type) {
-	case *cypherModel.Variable:
+	case *cypher.Variable:
 		switch typedRef.Symbol {
 		case NodeSymbol, EdgeStartSymbol, EdgeEndSymbol:
-			return &cypherModel.FunctionInvocation{
+			return &cypher.FunctionInvocation{
 				Name:      "labels",
-				Arguments: []cypherModel.Expression{ref},
+				Arguments: []cypher.Expression{ref},
 			}
 
 		case EdgeSymbol:
-			return &cypherModel.FunctionInvocation{
+			return &cypher.FunctionInvocation{
 				Name:      "type",
-				Arguments: []cypherModel.Expression{ref},
+				Arguments: []cypher.Expression{ref},
 			}
 
 		default:
-			return cypherModel.WithErrors(&cypherModel.FunctionInvocation{}, fmt.Errorf("invalid variable reference for KindsOf: %s", typedRef.Symbol))
+			return cypher.WithErrors(&cypher.FunctionInvocation{}, fmt.Errorf("invalid variable reference for KindsOf: %s", typedRef.Symbol))
 		}
 
 	default:
-		return cypherModel.WithErrors(&cypherModel.FunctionInvocation{}, fmt.Errorf("invalid reference type for KindsOf: %T", ref))
+		return cypher.WithErrors(&cypher.FunctionInvocation{}, fmt.Errorf("invalid reference type for KindsOf: %T", ref))
 	}
 }
 
-func Limit(limit int) *cypherModel.Limit {
-	return &cypherModel.Limit{
+func Limit(limit int) *cypher.Limit {
+	return &cypher.Limit{
 		Value: Literal(limit),
 	}
 }
 
-func Offset(offset int) *cypherModel.Skip {
-	return &cypherModel.Skip{
+func Offset(offset int) *cypher.Skip {
+	return &cypher.Skip{
 		Value: Literal(offset),
 	}
 }
 
-func StringContains(reference graph.Criteria, value string) *cypherModel.Comparison {
-	return cypherModel.NewComparison(reference, cypherModel.OperatorContains, Parameter(value))
+func StringContains(reference graph.Criteria, value string) *cypher.Comparison {
+	return cypher.NewComparison(reference, cypher.OperatorContains, Parameter(value))
 }
 
-func StringStartsWith(reference graph.Criteria, value string) *cypherModel.Comparison {
-	return cypherModel.NewComparison(reference, cypherModel.OperatorStartsWith, Parameter(value))
+func StringStartsWith(reference graph.Criteria, value string) *cypher.Comparison {
+	return cypher.NewComparison(reference, cypher.OperatorStartsWith, Parameter(value))
 }
 
-func StringEndsWith(reference graph.Criteria, value string) *cypherModel.Comparison {
-	return cypherModel.NewComparison(reference, cypherModel.OperatorEndsWith, Parameter(value))
+func StringEndsWith(reference graph.Criteria, value string) *cypher.Comparison {
+	return cypher.NewComparison(reference, cypher.OperatorEndsWith, Parameter(value))
 }
 
-func CaseInsensitiveStringContains(reference graph.Criteria, value string) *cypherModel.Comparison {
-	return cypherModel.NewComparison(
-		cypherModel.NewSimpleFunctionInvocation("toLower", convertCriteria[cypherModel.Expression](reference)...),
-		cypherModel.OperatorContains,
+func CaseInsensitiveStringContains(reference graph.Criteria, value string) *cypher.Comparison {
+	return cypher.NewComparison(
+		cypher.NewSimpleFunctionInvocation("toLower", convertCriteria[cypher.Expression](reference)...),
+		cypher.OperatorContains,
 		Parameter(strings.ToLower(value)),
 	)
 }
 
-func CaseInsensitiveStringStartsWith(reference graph.Criteria, value string) *cypherModel.Comparison {
-	return cypherModel.NewComparison(
-		cypherModel.NewSimpleFunctionInvocation("toLower", convertCriteria[cypherModel.Expression](reference)...),
-		cypherModel.OperatorStartsWith,
+func CaseInsensitiveStringStartsWith(reference graph.Criteria, value string) *cypher.Comparison {
+	return cypher.NewComparison(
+		cypher.NewSimpleFunctionInvocation("toLower", convertCriteria[cypher.Expression](reference)...),
+		cypher.OperatorStartsWith,
 		Parameter(strings.ToLower(value)),
 	)
 }
 
-func CaseInsensitiveStringEndsWith(reference graph.Criteria, value string) *cypherModel.Comparison {
-	return cypherModel.NewComparison(
-		cypherModel.NewSimpleFunctionInvocation("toLower", convertCriteria[cypherModel.Expression](reference)...),
-		cypherModel.OperatorEndsWith,
+func CaseInsensitiveStringEndsWith(reference graph.Criteria, value string) *cypher.Comparison {
+	return cypher.NewComparison(
+		cypher.NewSimpleFunctionInvocation("toLower", convertCriteria[cypher.Expression](reference)...),
+		cypher.OperatorEndsWith,
 		Parameter(strings.ToLower(value)),
 	)
 }
 
-func Equals(reference graph.Criteria, value any) *cypherModel.Comparison {
-	return cypherModel.NewComparison(reference, cypherModel.OperatorEquals, Parameter(value))
+func Equals(reference graph.Criteria, value any) *cypher.Comparison {
+	return cypher.NewComparison(reference, cypher.OperatorEquals, Parameter(value))
 }
 
-func GreaterThan(reference graph.Criteria, value any) *cypherModel.Comparison {
-	return cypherModel.NewComparison(reference, cypherModel.OperatorGreaterThan, Parameter(value))
+func GreaterThan(reference graph.Criteria, value any) *cypher.Comparison {
+	return cypher.NewComparison(reference, cypher.OperatorGreaterThan, Parameter(value))
 }
 
-func After(reference graph.Criteria, value any) *cypherModel.Comparison {
+func After(reference graph.Criteria, value any) *cypher.Comparison {
 	return GreaterThan(reference, value)
 }
 
-func GreaterThanOrEquals(reference graph.Criteria, value any) *cypherModel.Comparison {
-	return cypherModel.NewComparison(reference, cypherModel.OperatorGreaterThanOrEqualTo, Parameter(value))
+func GreaterThanOrEquals(reference graph.Criteria, value any) *cypher.Comparison {
+	return cypher.NewComparison(reference, cypher.OperatorGreaterThanOrEqualTo, Parameter(value))
 }
 
-func LessThan(reference graph.Criteria, value any) *cypherModel.Comparison {
-	return cypherModel.NewComparison(reference, cypherModel.OperatorLessThan, Parameter(value))
+func LessThan(reference graph.Criteria, value any) *cypher.Comparison {
+	return cypher.NewComparison(reference, cypher.OperatorLessThan, Parameter(value))
 }
 
-func Before(reference graph.Criteria, value time.Time) *cypherModel.Comparison {
+func Before(reference graph.Criteria, value time.Time) *cypher.Comparison {
 	return LessThan(reference, value)
 }
 
-func LessThanOrEquals(reference graph.Criteria, value any) *cypherModel.Comparison {
-	return cypherModel.NewComparison(reference, cypherModel.OperatorLessThanOrEqualTo, Parameter(value))
+func LessThanOrEquals(reference graph.Criteria, value any) *cypher.Comparison {
+	return cypher.NewComparison(reference, cypher.OperatorLessThanOrEqualTo, Parameter(value))
 }
 
-func Exists(reference graph.Criteria) *cypherModel.Comparison {
-	return cypherModel.NewComparison(
+func Exists(reference graph.Criteria) *cypher.Comparison {
+	return cypher.NewComparison(
 		reference,
-		cypherModel.OperatorIsNot,
-		cypherModel.NewLiteral(nil, true),
+		cypher.OperatorIsNot,
+		cypher.NewLiteral(nil, true),
 	)
 }
 
-func HasRelationships(reference *cypherModel.Variable) *cypherModel.PatternPredicate {
-	patternPredicate := cypherModel.NewPatternPredicate()
+func HasRelationships(reference *cypher.Variable) *cypher.PatternPredicate {
+	patternPredicate := cypher.NewPatternPredicate()
 
-	patternPredicate.AddElement(&cypherModel.NodePattern{
-		Binding: cypherModel.NewVariableWithSymbol(reference.Symbol),
+	patternPredicate.AddElement(&cypher.NodePattern{
+		Binding: cypher.NewVariableWithSymbol(reference.Symbol),
 	})
 
-	patternPredicate.AddElement(&cypherModel.RelationshipPattern{
+	patternPredicate.AddElement(&cypher.RelationshipPattern{
 		Direction: graph.DirectionBoth,
 	})
 
-	patternPredicate.AddElement(&cypherModel.NodePattern{})
+	patternPredicate.AddElement(&cypher.NodePattern{})
 
 	return patternPredicate
 }
 
-func In(reference graph.Criteria, value any) *cypherModel.Comparison {
-	return cypherModel.NewComparison(reference, cypherModel.OperatorIn, Parameter(value))
+func In(reference graph.Criteria, value any) *cypher.Comparison {
+	return cypher.NewComparison(reference, cypher.OperatorIn, Parameter(value))
 }
 
-func InIDs[T *cypherModel.FunctionInvocation | *cypherModel.Variable](reference T, ids ...graph.ID) *cypherModel.Comparison {
+func InIDs[T *cypher.FunctionInvocation | *cypher.Variable](reference T, ids ...graph.ID) *cypher.Comparison {
 	switch any(reference).(type) {
-	case *cypherModel.FunctionInvocation:
-		return cypherModel.NewComparison(reference, cypherModel.OperatorIn, Parameter(ids))
+	case *cypher.FunctionInvocation:
+		return cypher.NewComparison(reference, cypher.OperatorIn, Parameter(ids))
 
 	default:
-		return cypherModel.NewComparison(Identity(any(reference).(*cypherModel.Variable)), cypherModel.OperatorIn, Parameter(ids))
+		return cypher.NewComparison(Identity(any(reference).(*cypher.Variable)), cypher.OperatorIn, Parameter(ids))
 	}
 }
 
-func Where(expression graph.Criteria) *cypherModel.Where {
-	whereClause := cypherModel.NewWhere()
-	whereClause.AddSlice(convertCriteria[cypherModel.Expression](expression))
+func Where(expression graph.Criteria) *cypher.Where {
+	whereClause := cypher.NewWhere()
+	whereClause.AddSlice(convertCriteria[cypher.Expression](expression))
 
 	return whereClause
 }
 
-func OrderBy(leaves ...graph.Criteria) *cypherModel.Order {
-	return &cypherModel.Order{
-		Items: convertCriteria[*cypherModel.SortItem](leaves...),
+func OrderBy(leaves ...graph.Criteria) *cypher.Order {
+	return &cypher.Order{
+		Items: convertCriteria[*cypher.SortItem](leaves...),
 	}
 }
 
-func Order(reference, direction graph.Criteria) *cypherModel.SortItem {
+func Order(reference, direction graph.Criteria) *cypher.SortItem {
 	switch direction {
-	case cypherModel.SortDescending:
-		return &cypherModel.SortItem{
+	case cypher.SortDescending:
+		return &cypher.SortItem{
 			Ascending:  false,
 			Expression: reference,
 		}
 
 	default:
-		return &cypherModel.SortItem{
+		return &cypher.SortItem{
 			Ascending:  true,
 			Expression: reference,
 		}
 	}
 }
 
-func Ascending() cypherModel.SortOrder {
-	return cypherModel.SortAscending
+func Ascending() cypher.SortOrder {
+	return cypher.SortAscending
 }
 
-func Descending() cypherModel.SortOrder {
-	return cypherModel.SortDescending
+func Descending() cypher.SortOrder {
+	return cypher.SortDescending
 }
 
-func Delete(leaves ...graph.Criteria) *cypherModel.UpdatingClause {
-	deleteClause := &cypherModel.Delete{
+func Delete(leaves ...graph.Criteria) *cypher.UpdatingClause {
+	deleteClause := &cypher.Delete{
 		Detach: true,
 	}
 
 	for _, leaf := range leaves {
-		switch leaf.(*cypherModel.Variable).Symbol {
+		switch leaf.(*cypher.Variable).Symbol {
 		case EdgeSymbol, EdgeStartSymbol, EdgeEndSymbol:
 			deleteClause.Detach = false
 		}
@@ -421,70 +421,70 @@ func Delete(leaves ...graph.Criteria) *cypherModel.UpdatingClause {
 		deleteClause.Expressions = append(deleteClause.Expressions, leaf)
 	}
 
-	return cypherModel.NewUpdatingClause(deleteClause)
+	return cypher.NewUpdatingClause(deleteClause)
 }
 
-func NodePattern(kinds graph.Kinds, properties *cypherModel.Parameter) *cypherModel.NodePattern {
-	return &cypherModel.NodePattern{
-		Binding:    cypherModel.NewVariableWithSymbol(NodeSymbol),
+func NodePattern(kinds graph.Kinds, properties *cypher.Parameter) *cypher.NodePattern {
+	return &cypher.NodePattern{
+		Binding:    cypher.NewVariableWithSymbol(NodeSymbol),
 		Kinds:      kinds,
 		Properties: properties,
 	}
 }
 
-func StartNodePattern(kinds graph.Kinds, properties *cypherModel.Parameter) *cypherModel.NodePattern {
-	return &cypherModel.NodePattern{
-		Binding:    cypherModel.NewVariableWithSymbol(EdgeStartSymbol),
+func StartNodePattern(kinds graph.Kinds, properties *cypher.Parameter) *cypher.NodePattern {
+	return &cypher.NodePattern{
+		Binding:    cypher.NewVariableWithSymbol(EdgeStartSymbol),
 		Kinds:      kinds,
 		Properties: properties,
 	}
 }
 
-func EndNodePattern(kinds graph.Kinds, properties *cypherModel.Parameter) *cypherModel.NodePattern {
-	return &cypherModel.NodePattern{
-		Binding:    cypherModel.NewVariableWithSymbol(EdgeEndSymbol),
+func EndNodePattern(kinds graph.Kinds, properties *cypher.Parameter) *cypher.NodePattern {
+	return &cypher.NodePattern{
+		Binding:    cypher.NewVariableWithSymbol(EdgeEndSymbol),
 		Kinds:      kinds,
 		Properties: properties,
 	}
 }
 
-func RelationshipPattern(kind graph.Kind, properties *cypherModel.Parameter, direction graph.Direction) *cypherModel.RelationshipPattern {
-	return &cypherModel.RelationshipPattern{
-		Binding:    cypherModel.NewVariableWithSymbol(EdgeSymbol),
+func RelationshipPattern(kind graph.Kind, properties *cypher.Parameter, direction graph.Direction) *cypher.RelationshipPattern {
+	return &cypher.RelationshipPattern{
+		Binding:    cypher.NewVariableWithSymbol(EdgeSymbol),
 		Kinds:      graph.Kinds{kind},
 		Properties: properties,
 		Direction:  direction,
 	}
 }
 
-func Create(elements ...graph.Criteria) *cypherModel.UpdatingClause {
+func Create(elements ...graph.Criteria) *cypher.UpdatingClause {
 	var (
-		pattern      = &cypherModel.PatternPart{}
-		createClause = &cypherModel.Create{
+		pattern      = &cypher.PatternPart{}
+		createClause = &cypher.Create{
 			// Note: Unique is Neo4j specific and will not be supported here. Use of constraints for
 			// uniqueness is expected instead.
 			Unique:  false,
-			Pattern: []*cypherModel.PatternPart{pattern},
+			Pattern: []*cypher.PatternPart{pattern},
 		}
 	)
 
 	for _, element := range elements {
 		switch typedElement := element.(type) {
-		case *cypherModel.Variable:
+		case *cypher.Variable:
 			switch typedElement.Symbol {
 			case NodeSymbol, EdgeStartSymbol, EdgeEndSymbol:
-				pattern.AddPatternElements(&cypherModel.NodePattern{
-					Binding: cypherModel.NewVariableWithSymbol(typedElement.Symbol),
+				pattern.AddPatternElements(&cypher.NodePattern{
+					Binding: cypher.NewVariableWithSymbol(typedElement.Symbol),
 				})
 
 			default:
 				createClause.AddError(fmt.Errorf("invalid variable reference create: %s", typedElement.Symbol))
 			}
 
-		case *cypherModel.NodePattern:
+		case *cypher.NodePattern:
 			pattern.AddPatternElements(typedElement)
 
-		case *cypherModel.RelationshipPattern:
+		case *cypher.RelationshipPattern:
 			pattern.AddPatternElements(typedElement)
 
 		default:
@@ -492,57 +492,57 @@ func Create(elements ...graph.Criteria) *cypherModel.UpdatingClause {
 		}
 	}
 
-	return cypherModel.NewUpdatingClause(createClause)
+	return cypher.NewUpdatingClause(createClause)
 }
 
-func ReturningDistinct(elements ...graph.Criteria) *cypherModel.Return {
+func ReturningDistinct(elements ...graph.Criteria) *cypher.Return {
 	returnCriteria := Returning(elements...)
 	returnCriteria.Projection.Distinct = true
 
 	return returnCriteria
 }
 
-func Returning(elements ...graph.Criteria) *cypherModel.Return {
-	projection := &cypherModel.Projection{}
+func Returning(elements ...graph.Criteria) *cypher.Return {
+	projection := &cypher.Projection{}
 
 	for _, element := range elements {
 		switch typedElement := element.(type) {
-		case *cypherModel.Order:
+		case *cypher.Order:
 			projection.Order = typedElement
 
-		case *cypherModel.Limit:
+		case *cypher.Limit:
 			projection.Limit = typedElement
 
-		case *cypherModel.Skip:
+		case *cypher.Skip:
 			projection.Skip = typedElement
 
 		default:
-			projection.Items = append(projection.Items, &cypherModel.ProjectionItem{
+			projection.Items = append(projection.Items, &cypher.ProjectionItem{
 				Expression: element,
 			})
 		}
 	}
 
-	return &cypherModel.Return{
+	return &cypher.Return{
 		Projection: projection,
 	}
 }
 
-func Not(expression graph.Criteria) *cypherModel.Negation {
-	return &cypherModel.Negation{
+func Not(expression graph.Criteria) *cypher.Negation {
+	return &cypher.Negation{
 		Expression: expression,
 	}
 }
 
-func IsNull(reference graph.Criteria) *cypherModel.Comparison {
-	return cypherModel.NewComparison(reference, cypherModel.OperatorIs, Literal(nil))
+func IsNull(reference graph.Criteria) *cypher.Comparison {
+	return cypher.NewComparison(reference, cypher.OperatorIs, Literal(nil))
 }
 
-func IsNotNull(reference graph.Criteria) *cypherModel.Comparison {
-	return cypherModel.NewComparison(reference, cypherModel.OperatorIsNot, Literal(nil))
+func IsNotNull(reference graph.Criteria) *cypher.Comparison {
+	return cypher.NewComparison(reference, cypher.OperatorIsNot, Literal(nil))
 }
 
-func GetFirstReadingClause(query *cypherModel.RegularQuery) *cypherModel.ReadingClause {
+func GetFirstReadingClause(query *cypher.RegularQuery) *cypher.ReadingClause {
 	if query.SingleQuery != nil && query.SingleQuery.SinglePartQuery != nil {
 		readingClauses := query.SingleQuery.SinglePartQuery.ReadingClauses
 
@@ -554,11 +554,11 @@ func GetFirstReadingClause(query *cypherModel.RegularQuery) *cypherModel.Reading
 	return nil
 }
 
-func SinglePartQuery(expressions ...graph.Criteria) *cypherModel.RegularQuery {
+func SinglePartQuery(expressions ...graph.Criteria) *cypher.RegularQuery {
 	var (
-		singlePartQuery = &cypherModel.SinglePartQuery{}
-		query           = &cypherModel.RegularQuery{
-			SingleQuery: &cypherModel.SingleQuery{
+		singlePartQuery = &cypher.SinglePartQuery{}
+		query           = &cypher.RegularQuery{
+			SingleQuery: &cypher.SingleQuery{
 				SinglePartQuery: singlePartQuery,
 			},
 		}
@@ -566,40 +566,40 @@ func SinglePartQuery(expressions ...graph.Criteria) *cypherModel.RegularQuery {
 
 	for _, expression := range expressions {
 		switch typedExpression := expression.(type) {
-		case *cypherModel.Where:
+		case *cypher.Where:
 			if firstReadingClause := GetFirstReadingClause(query); firstReadingClause != nil {
 				firstReadingClause.Match.Where = typedExpression
 			} else {
-				singlePartQuery.AddReadingClause(&cypherModel.ReadingClause{
-					Match: &cypherModel.Match{
+				singlePartQuery.AddReadingClause(&cypher.ReadingClause{
+					Match: &cypher.Match{
 						Where: typedExpression,
 					},
 					Unwind: nil,
 				})
 			}
 
-		case *cypherModel.Return:
+		case *cypher.Return:
 			singlePartQuery.Return = typedExpression
 
-		case *cypherModel.Limit:
+		case *cypher.Limit:
 			if singlePartQuery.Return != nil {
 				singlePartQuery.Return.Projection.Limit = typedExpression
 			}
 
-		case *cypherModel.Skip:
+		case *cypher.Skip:
 			if singlePartQuery.Return != nil {
 				singlePartQuery.Return.Projection.Skip = typedExpression
 			}
 
-		case *cypherModel.Order:
+		case *cypher.Order:
 			if singlePartQuery.Return != nil {
 				singlePartQuery.Return.Projection.Order = typedExpression
 			}
 
-		case *cypherModel.UpdatingClause:
+		case *cypher.UpdatingClause:
 			singlePartQuery.AddUpdatingClause(typedExpression)
 
-		case []*cypherModel.UpdatingClause:
+		case []*cypher.UpdatingClause:
 			for _, updatingClause := range typedExpression {
 				singlePartQuery.AddUpdatingClause(updatingClause)
 			}
@@ -612,10 +612,10 @@ func SinglePartQuery(expressions ...graph.Criteria) *cypherModel.RegularQuery {
 	return query
 }
 
-func EmptySinglePartQuery() *cypherModel.RegularQuery {
-	return &cypherModel.RegularQuery{
-		SingleQuery: &cypherModel.SingleQuery{
-			SinglePartQuery: &cypherModel.SinglePartQuery{},
+func EmptySinglePartQuery() *cypher.RegularQuery {
+	return &cypher.RegularQuery{
+		SingleQuery: &cypher.SingleQuery{
+			SinglePartQuery: &cypher.SinglePartQuery{},
 		},
 	}
 }

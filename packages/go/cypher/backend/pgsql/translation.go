@@ -20,15 +20,16 @@ import (
 	"fmt"
 	"github.com/jackc/pgtype"
 	"github.com/specterops/bloodhound/cypher/analyzer"
-	"github.com/specterops/bloodhound/cypher/model"
+	"github.com/specterops/bloodhound/cypher/model/cypher"
 	"github.com/specterops/bloodhound/cypher/model/pg"
+	"github.com/specterops/bloodhound/cypher/model/walk"
 	"strconv"
 	"strings"
 )
 
-func GetSymbol(expression model.Expression) (string, error) {
+func GetSymbol(expression cypher.Expression) (string, error) {
 	switch typedExpression := expression.(type) {
-	case *model.PatternElement:
+	case *cypher.PatternElement:
 		if nodePattern, isNodePattern := typedExpression.AsNodePattern(); isNodePattern {
 			if nodePattern.Binding != nil {
 				return GetSymbol(nodePattern.Binding)
@@ -39,12 +40,12 @@ func GetSymbol(expression model.Expression) (string, error) {
 			}
 		}
 
-	case *model.PatternPart:
+	case *cypher.PatternPart:
 		if typedExpression.Binding != nil {
 			return GetSymbol(typedExpression.Binding)
 		}
 
-	case *model.Variable:
+	case *cypher.Variable:
 		return typedExpression.Symbol, nil
 
 	case *pg.AnnotatedVariable:
@@ -89,12 +90,12 @@ func (s *Binder) Parameters() map[string]any {
 	return parametersCopy
 }
 
-func (s *Binder) BindVariable(variable *model.Variable, bindingType pg.DataType) *pg.AnnotatedVariable {
+func (s *Binder) BindVariable(variable *cypher.Variable, bindingType pg.DataType) *pg.AnnotatedVariable {
 	s.bindingTypeMappings[variable.Symbol] = bindingType
 	return pg.NewAnnotatedVariable(variable, bindingType)
 }
 
-func (s *Binder) BindPatternVariable(variable *model.Variable, bindingType pg.DataType) *pg.AnnotatedVariable {
+func (s *Binder) BindPatternVariable(variable *cypher.Variable, bindingType pg.DataType) *pg.AnnotatedVariable {
 	s.patternBindings[variable.Symbol] = struct{}{}
 	return s.BindVariable(variable, bindingType)
 }
@@ -109,7 +110,7 @@ func (s *Binder) BindingType(binding string) (pg.DataType, bool) {
 
 func (s *Binder) LookupVariable(symbol string) (*pg.AnnotatedVariable, bool) {
 	if dataType, isBound := s.BindingType(symbol); isBound {
-		return pg.NewAnnotatedVariable(model.NewVariableWithSymbol(symbol), dataType), true
+		return pg.NewAnnotatedVariable(cypher.NewVariableWithSymbol(symbol), dataType), true
 	}
 
 	return nil, false
@@ -147,8 +148,8 @@ func (s *Binder) NewAnnotatedVariable(prefix string, bindingType pg.DataType) *p
 	return s.BindVariable(s.NewVariable(prefix), bindingType)
 }
 
-func (s *Binder) NewVariable(prefix string) *model.Variable {
-	return model.NewVariableWithSymbol(s.NewBinding(prefix))
+func (s *Binder) NewVariable(prefix string) *cypher.Variable {
+	return cypher.NewVariableWithSymbol(s.NewBinding(prefix))
 }
 
 func (s *Binder) NewParameterSymbol() string {
@@ -166,7 +167,7 @@ func (s *Binder) NewParameter(value any) (*pg.AnnotatedParameter, error) {
 	if parameterTypeAnnotation, err := pg.NewSQLTypeAnnotationFromValue(value); err != nil {
 		return nil, err
 	} else {
-		parameter := pg.NewAnnotatedParameter(model.NewParameter(parameterSymbol, value), parameterTypeAnnotation.Type)
+		parameter := pg.NewAnnotatedParameter(cypher.NewParameter(parameterSymbol, value), parameterTypeAnnotation.Type)
 
 		// Record the parameter's value for mapping to the query later
 		s.parameters[parameterSymbol] = parameter
@@ -174,7 +175,7 @@ func (s *Binder) NewParameter(value any) (*pg.AnnotatedParameter, error) {
 	}
 }
 
-func (s *Binder) NewLiteral(literal *model.Literal) (*pg.AnnotatedLiteral, error) {
+func (s *Binder) NewLiteral(literal *cypher.Literal) (*pg.AnnotatedLiteral, error) {
 	if literalTypeAnnotation, err := pg.NewSQLTypeAnnotationFromValue(literal.Value); err != nil {
 		return nil, err
 	} else {
@@ -182,7 +183,7 @@ func (s *Binder) NewLiteral(literal *model.Literal) (*pg.AnnotatedLiteral, error
 	}
 }
 
-func (s *Binder) NewAlias(originalSymbol string, alias *model.Variable) *pg.AnnotatedVariable {
+func (s *Binder) NewAlias(originalSymbol string, alias *cypher.Variable) *pg.AnnotatedVariable {
 	s.aliases[originalSymbol] = alias.Symbol
 
 	if originalBindingType, isBound := s.bindingTypeMappings[originalSymbol]; isBound {
@@ -192,9 +193,9 @@ func (s *Binder) NewAlias(originalSymbol string, alias *model.Variable) *pg.Anno
 	return s.BindVariable(alias, pg.UnknownDataType)
 }
 
-func (s *Binder) Scan(regularQuery *model.RegularQuery) error {
+func (s *Binder) Scan(regularQuery *cypher.RegularQuery) error {
 	if err := analyzer.Analyze(regularQuery, func(analyzerInst *analyzer.Analyzer) {
-		analyzer.WithVisitor(analyzerInst, func(stack *model.WalkStack, node *model.Parameter) error {
+		analyzer.WithVisitor(analyzerInst, func(stack *walk.WalkStack, node *cypher.Parameter) error {
 			// Rewrite all parameter symbols and collect their values
 			if annotatedParameter, err := s.NewParameter(node.Value); err != nil {
 				return err
@@ -203,7 +204,7 @@ func (s *Binder) Scan(regularQuery *model.RegularQuery) error {
 			}
 		})
 
-		analyzer.WithVisitor(analyzerInst, func(stack *model.WalkStack, node *model.Literal) error {
+		analyzer.WithVisitor(analyzerInst, func(stack *walk.WalkStack, node *cypher.Literal) error {
 			// Rewrite all parameter symbols and collect their values
 			if annotatedLiteral, err := s.NewLiteral(node); err != nil {
 				return err
@@ -212,9 +213,9 @@ func (s *Binder) Scan(regularQuery *model.RegularQuery) error {
 			}
 		})
 
-		analyzer.WithVisitor(analyzerInst, func(stack *model.WalkStack, patternPart *model.PatternPart) error {
+		analyzer.WithVisitor(analyzerInst, func(stack *walk.WalkStack, patternPart *cypher.PatternPart) error {
 			if patternPart.Binding != nil {
-				if bindingVariable, typeOK := patternPart.Binding.(*model.Variable); !typeOK {
+				if bindingVariable, typeOK := patternPart.Binding.(*cypher.Variable); !typeOK {
 					return fmt.Errorf("expected variable for pattern part binding but got: %T", patternPart.Binding)
 				} else {
 					patternPart.Binding = s.BindPatternVariable(bindingVariable, pg.Path)
@@ -223,14 +224,14 @@ func (s *Binder) Scan(regularQuery *model.RegularQuery) error {
 			return nil
 		})
 
-		analyzer.WithVisitor(analyzerInst, func(stack *model.WalkStack, patternElement *model.PatternElement) error {
+		analyzer.WithVisitor(analyzerInst, func(stack *walk.WalkStack, patternElement *cypher.PatternElement) error {
 			// Eagerly bind all ReadingClause pattern elements to simplify referencing when crafting SQL join statements
 			if nodePattern, isNodePattern := patternElement.AsNodePattern(); isNodePattern {
 				if nodePattern.Binding == nil {
 					nodePattern.Binding = s.NewAnnotatedVariable("n", pg.Node)
-				} else if bindingVariable, typeOK := nodePattern.Binding.(*model.Variable); !typeOK {
+				} else if bindingVariable, typeOK := nodePattern.Binding.(*cypher.Variable); !typeOK {
 					return fmt.Errorf("expected variable for node pattern binding but got: %T", nodePattern.Binding)
-				} else if _, isPatternPredicate := stack.Trunk().(*model.PatternPredicate); isPatternPredicate {
+				} else if _, isPatternPredicate := stack.Trunk().(*cypher.PatternPredicate); isPatternPredicate {
 					nodePattern.Binding = s.BindVariable(bindingVariable, pg.Node)
 				} else {
 					nodePattern.Binding = s.BindPatternVariable(bindingVariable, pg.Node)
@@ -240,9 +241,9 @@ func (s *Binder) Scan(regularQuery *model.RegularQuery) error {
 
 				if relationshipPattern.Binding == nil {
 					relationshipPattern.Binding = s.NewAnnotatedVariable("e", pg.Edge)
-				} else if bindingVariable, typeOK := relationshipPattern.Binding.(*model.Variable); !typeOK {
+				} else if bindingVariable, typeOK := relationshipPattern.Binding.(*cypher.Variable); !typeOK {
 					return fmt.Errorf("expected variable for relationship pattern binding but got: %T", relationshipPattern.Binding)
-				} else if _, isPatternPredicate := stack.Trunk().(*model.PatternPredicate); isPatternPredicate {
+				} else if _, isPatternPredicate := stack.Trunk().(*cypher.PatternPredicate); isPatternPredicate {
 					relationshipPattern.Binding = s.BindVariable(bindingVariable, pg.Edge)
 				} else {
 					relationshipPattern.Binding = s.BindPatternVariable(bindingVariable, pg.Edge)
@@ -252,9 +253,9 @@ func (s *Binder) Scan(regularQuery *model.RegularQuery) error {
 			return nil
 		})
 
-		analyzer.WithVisitor(analyzerInst, func(_ *model.WalkStack, node *model.ProjectionItem) error {
-			if bindingVariable, isVariable := node.Binding.(*model.Variable); node.Binding != nil && isVariable {
-				if projectionVariable, isVariable := node.Expression.(*model.Variable); isVariable {
+		analyzer.WithVisitor(analyzerInst, func(_ *walk.WalkStack, node *cypher.ProjectionItem) error {
+			if bindingVariable, isVariable := node.Binding.(*cypher.Variable); node.Binding != nil && isVariable {
+				if projectionVariable, isVariable := node.Expression.(*cypher.Variable); isVariable {
 					node.Binding = s.NewAlias(projectionVariable.Symbol, bindingVariable)
 				}
 			}
@@ -262,10 +263,10 @@ func (s *Binder) Scan(regularQuery *model.RegularQuery) error {
 			return nil
 		})
 
-		analyzer.WithVisitor(analyzerInst, func(_ *model.WalkStack, node *model.Delete) error {
+		analyzer.WithVisitor(analyzerInst, func(_ *walk.WalkStack, node *cypher.Delete) error {
 			for idx, expression := range node.Expressions {
 				switch typedExpression := expression.(type) {
-				case *model.Variable:
+				case *cypher.Variable:
 					if annotatedVariable, isAnnotated := s.LookupVariable(typedExpression.Symbol); !isAnnotated {
 						return fmt.Errorf("unable to look up type annotation for variable reference: %s", typedExpression.Symbol)
 					} else {
@@ -287,10 +288,10 @@ type Translator struct {
 	builder      *strings.Builder
 	Bindings     *Binder
 	kindMapper   KindMapper
-	regularQuery *model.RegularQuery
+	regularQuery *cypher.RegularQuery
 }
 
-func NewTranslator(kindMapper KindMapper, bindings *Binder, regularQuery *model.RegularQuery) *Translator {
+func NewTranslator(kindMapper KindMapper, bindings *Binder, regularQuery *cypher.RegularQuery) *Translator {
 	return &Translator{
 		builder:      &strings.Builder{},
 		kindMapper:   kindMapper,
@@ -299,24 +300,24 @@ func NewTranslator(kindMapper KindMapper, bindings *Binder, regularQuery *model.
 	}
 }
 
-func (s *Translator) rewriteUpdatingClauses(_ *model.WalkStack, singlePartQuery *model.SinglePartQuery) error {
+func (s *Translator) rewriteUpdatingClauses(_ *walk.WalkStack, singlePartQuery *cypher.SinglePartQuery) error {
 	return NewUpdateClauseRewriter(s.Bindings, s.kindMapper).RewriteUpdatingClauses(singlePartQuery)
 }
 
-func (s *Translator) liftNodePatternCriteria(_ *model.WalkStack, nodePattern *model.NodePattern) ([]model.Expression, error) {
-	var criteria []model.Expression
+func (s *Translator) liftNodePatternCriteria(_ *walk.WalkStack, nodePattern *cypher.NodePattern) ([]cypher.Expression, error) {
+	var criteria []cypher.Expression
 
 	if nodePattern.Binding == nil {
 		nodePattern.Binding = s.Bindings.NewVariable("n")
 	}
 
 	if len(nodePattern.Kinds) > 0 {
-		kindMatcher := model.NewKindMatcher(nodePattern.Binding, nodePattern.Kinds)
+		kindMatcher := cypher.NewKindMatcher(nodePattern.Binding, nodePattern.Kinds)
 		criteria = append(criteria, pg.NewAnnotatedKindMatcher(kindMatcher, pg.Node))
 	}
 
 	if nodePattern.Properties != nil {
-		nodePropertyMatchers := nodePattern.Properties.(*model.Properties)
+		nodePropertyMatchers := nodePattern.Properties.(*cypher.Properties)
 
 		if nodePropertyMatchers.Parameter != nil {
 			return nil, fmt.Errorf("unable to translate property matcher paramter for node %s", nodePattern.Binding)
@@ -326,14 +327,14 @@ func (s *Translator) liftNodePatternCriteria(_ *model.WalkStack, nodePattern *mo
 			if bindingVariable, typeOK := nodePattern.Binding.(*pg.AnnotatedVariable); !typeOK {
 				return nil, fmt.Errorf("unexpected node pattern binding type for node pattern: %T", nodePattern.Binding)
 			} else {
-				propertyLookup := model.NewPropertyLookup(bindingVariable.Symbol, propertyName)
+				propertyLookup := cypher.NewPropertyLookup(bindingVariable.Symbol, propertyName)
 
 				if annotation, err := pg.NewSQLTypeAnnotationFromExpression(matcherValue); err != nil {
 					return nil, err
 				} else {
-					criteria = append(criteria, model.NewComparison(
+					criteria = append(criteria, cypher.NewComparison(
 						pg.NewAnnotatedPropertyLookup(propertyLookup, annotation.Type),
-						model.OperatorEquals,
+						cypher.OperatorEquals,
 						matcherValue,
 					))
 				}
@@ -344,20 +345,20 @@ func (s *Translator) liftNodePatternCriteria(_ *model.WalkStack, nodePattern *mo
 	return criteria, nil
 }
 
-func (s *Translator) liftRelationshipPatternCriteria(_ *model.WalkStack, relationshipPattern *model.RelationshipPattern) ([]model.Expression, error) {
-	var criteria []model.Expression
+func (s *Translator) liftRelationshipPatternCriteria(_ *walk.WalkStack, relationshipPattern *cypher.RelationshipPattern) ([]cypher.Expression, error) {
+	var criteria []cypher.Expression
 
 	if relationshipPattern.Binding == nil {
 		relationshipPattern.Binding = s.Bindings.NewVariable("e")
 	}
 
 	if len(relationshipPattern.Kinds) > 0 {
-		kindMatcher := model.NewKindMatcher(relationshipPattern.Binding, relationshipPattern.Kinds)
+		kindMatcher := cypher.NewKindMatcher(relationshipPattern.Binding, relationshipPattern.Kinds)
 		criteria = append(criteria, pg.NewAnnotatedKindMatcher(kindMatcher, pg.Edge))
 	}
 
 	if relationshipPattern.Properties != nil {
-		edgePropertyMatchers := relationshipPattern.Properties.(*model.Properties)
+		edgePropertyMatchers := relationshipPattern.Properties.(*cypher.Properties)
 
 		if edgePropertyMatchers.Parameter != nil {
 			return nil, fmt.Errorf("unable to translate property matcher paramter for edge %s", relationshipPattern.Binding)
@@ -367,14 +368,14 @@ func (s *Translator) liftRelationshipPatternCriteria(_ *model.WalkStack, relatio
 			if bindingVariable, typeOK := relationshipPattern.Binding.(*pg.AnnotatedVariable); !typeOK {
 				return nil, fmt.Errorf("unexpected relationship pattern binding type: %T", relationshipPattern.Binding)
 			} else {
-				propertyLookup := model.NewPropertyLookup(bindingVariable.Symbol, propertyName)
+				propertyLookup := cypher.NewPropertyLookup(bindingVariable.Symbol, propertyName)
 
 				if annotation, err := pg.NewSQLTypeAnnotationFromExpression(matcherValue); err != nil {
 					return nil, err
 				} else {
-					criteria = append(criteria, model.NewComparison(
+					criteria = append(criteria, cypher.NewComparison(
 						pg.NewAnnotatedPropertyLookup(propertyLookup, annotation.Type),
-						model.OperatorEquals,
+						cypher.OperatorEquals,
 						matcherValue,
 					))
 				}
@@ -385,7 +386,7 @@ func (s *Translator) liftRelationshipPatternCriteria(_ *model.WalkStack, relatio
 	return criteria, nil
 }
 
-func (s *Translator) liftPatternElementCriteria(stack *model.WalkStack, patternElement *model.PatternElement) ([]model.Expression, error) {
+func (s *Translator) liftPatternElementCriteria(stack *walk.WalkStack, patternElement *cypher.PatternElement) ([]cypher.Expression, error) {
 	if nodePattern, isNodePattern := patternElement.AsNodePattern(); isNodePattern {
 		return s.liftNodePatternCriteria(stack, nodePattern)
 	}
@@ -394,9 +395,9 @@ func (s *Translator) liftPatternElementCriteria(stack *model.WalkStack, patternE
 	return s.liftRelationshipPatternCriteria(stack, relationshipPattern)
 }
 
-func (s *Translator) translatePatternPredicates(stack *model.WalkStack, patternPredicate *model.PatternPredicate) error {
+func (s *Translator) translatePatternPredicates(stack *walk.WalkStack, patternPredicate *cypher.PatternPredicate) error {
 	var (
-		subqueryFilters []model.Expression
+		subqueryFilters []cypher.Expression
 		subquery        = &pg.Subquery{
 			PatternElements: patternPredicate.PatternElements,
 		}
@@ -416,13 +417,13 @@ func (s *Translator) translatePatternPredicates(stack *model.WalkStack, patternP
 				)
 
 				nodePattern.Binding = newBinding
-				subqueryFilters = append(subqueryFilters, model.NewComparison(
-					model.NewSimpleFunctionInvocation(
+				subqueryFilters = append(subqueryFilters, cypher.NewComparison(
+					cypher.NewSimpleFunctionInvocation(
 						cypherIdentityFunction,
 						oldBinding,
 					),
-					model.OperatorEquals,
-					model.NewSimpleFunctionInvocation(
+					cypher.OperatorEquals,
+					cypher.NewSimpleFunctionInvocation(
 						cypherIdentityFunction,
 						newBinding,
 					),
@@ -449,13 +450,13 @@ func (s *Translator) translatePatternPredicates(stack *model.WalkStack, patternP
 				)
 
 				relationshipPattern.Binding = newBinding
-				subqueryFilters = append(subqueryFilters, model.NewComparison(
-					model.NewSimpleFunctionInvocation(
+				subqueryFilters = append(subqueryFilters, cypher.NewComparison(
+					cypher.NewSimpleFunctionInvocation(
 						cypherIdentityFunction,
 						oldBinding,
 					),
-					model.OperatorEquals,
-					model.NewSimpleFunctionInvocation(
+					cypher.OperatorEquals,
+					cypher.NewSimpleFunctionInvocation(
 						cypherIdentityFunction,
 						newBinding,
 					),
@@ -472,7 +473,7 @@ func (s *Translator) translatePatternPredicates(stack *model.WalkStack, patternP
 	}
 
 	if len(subqueryFilters) > 0 {
-		subquery.Filter = model.NewConjunction(subqueryFilters...)
+		subquery.Filter = cypher.NewConjunction(subqueryFilters...)
 
 		return rewrite(stack, patternPredicate, subquery)
 	}
@@ -480,8 +481,8 @@ func (s *Translator) translatePatternPredicates(stack *model.WalkStack, patternP
 	return nil
 }
 
-func (s *Translator) liftMatchCriteria(stack *model.WalkStack, match *model.Match) error {
-	var additionalCriteria []model.Expression
+func (s *Translator) liftMatchCriteria(stack *walk.WalkStack, match *cypher.Match) error {
+	var additionalCriteria []cypher.Expression
 
 	for _, patternPart := range match.Pattern {
 		for _, patternElement := range patternPart.PatternElements {
@@ -495,23 +496,23 @@ func (s *Translator) liftMatchCriteria(stack *model.WalkStack, match *model.Matc
 
 	if len(additionalCriteria) > 0 {
 		if match.Where == nil {
-			match.Where = model.NewWhere()
+			match.Where = cypher.NewWhere()
 		}
 
-		match.Where.Expressions = []model.Expression{
-			model.NewConjunction(append(additionalCriteria, match.Where.Expressions...)...),
+		match.Where.Expressions = []cypher.Expression{
+			cypher.NewConjunction(append(additionalCriteria, match.Where.Expressions...)...),
 		}
 	}
 
 	return nil
 }
 
-func (s *Translator) annotateKindMatchers(stack *model.WalkStack, kindMatcher *model.KindMatcher) error {
+func (s *Translator) annotateKindMatchers(stack *walk.WalkStack, kindMatcher *cypher.KindMatcher) error {
 	switch typedExpression := kindMatcher.Reference.(type) {
 	case *pg.AnnotatedVariable:
 		return rewrite(stack, kindMatcher, pg.NewAnnotatedKindMatcher(kindMatcher, typedExpression.Type))
 
-	case *model.Variable:
+	case *cypher.Variable:
 		if dataType, hasBindingType := s.Bindings.BindingType(typedExpression.Symbol); !hasBindingType {
 			return fmt.Errorf("unable to locate a binding type for variable %s", typedExpression.Symbol)
 		} else {
@@ -523,10 +524,10 @@ func (s *Translator) annotateKindMatchers(stack *model.WalkStack, kindMatcher *m
 	}
 }
 
-func (s *Translator) rewriteComparison(stack *model.WalkStack, comparison *model.Comparison) (bool, error) {
+func (s *Translator) rewriteComparison(stack *walk.WalkStack, comparison *cypher.Comparison) (bool, error) {
 	// Is this a property lookup comparison?
 	switch typedLeftOperand := comparison.Left.(type) {
-	case *model.PropertyLookup:
+	case *cypher.PropertyLookup:
 		// Try to suss out if this is a property existence check
 		if len(comparison.Partials) == 1 {
 			comparisonPartial := comparison.Partials[0]
@@ -536,12 +537,12 @@ func (s *Translator) rewriteComparison(stack *model.WalkStack, comparison *model
 				if typedRightHand.Null {
 					// This is a null check for a property and must be rewritten for SQL
 					switch comparisonPartial.Operator {
-					case model.OperatorIsNot:
-						if leftOperandVariable, isVariable := typedLeftOperand.Atom.(*model.Variable); !isVariable {
+					case cypher.OperatorIsNot:
+						if leftOperandVariable, isVariable := typedLeftOperand.Atom.(*cypher.Variable); !isVariable {
 							return false, fmt.Errorf("unexpected expression as left operand %T", typedLeftOperand.Atom)
 						} else if leftOperandTypedVariable, isBound := s.Bindings.LookupVariable(leftOperandVariable.Symbol); !isBound {
 							return false, fmt.Errorf("left operand varaible %s is not bound", leftOperandTypedVariable.Symbol)
-						} else if err := rewrite(stack, comparison, model.NewComparison(
+						} else if err := rewrite(stack, comparison, cypher.NewComparison(
 							&pg.PropertiesReference{
 								// TODO: Might need a copy?
 								Reference: leftOperandTypedVariable,
@@ -552,13 +553,13 @@ func (s *Translator) rewriteComparison(stack *model.WalkStack, comparison *model
 							return false, err
 						}
 
-					case model.OperatorIs:
-						if leftOperandVariable, isVariable := typedLeftOperand.Atom.(*model.Variable); !isVariable {
+					case cypher.OperatorIs:
+						if leftOperandVariable, isVariable := typedLeftOperand.Atom.(*cypher.Variable); !isVariable {
 							return false, fmt.Errorf("unexpected expression as left operand %T", typedLeftOperand.Atom)
 						} else if leftOperandTypedVariable, isBound := s.Bindings.LookupVariable(leftOperandVariable.Symbol); !isBound {
 							return false, fmt.Errorf("left operand varaible %s is not bound", leftOperandTypedVariable.Symbol)
-						} else if err := rewrite(stack, comparison, model.NewNegation(
-							model.NewComparison(
+						} else if err := rewrite(stack, comparison, cypher.NewNegation(
+							cypher.NewComparison(
 								&pg.PropertiesReference{
 									Reference: leftOperandTypedVariable,
 								},
@@ -579,17 +580,17 @@ func (s *Translator) rewriteComparison(stack *model.WalkStack, comparison *model
 	return false, nil
 }
 
-func (s *Translator) rewritePartialComparison(_ *model.WalkStack, partial *model.PartialComparison) error {
+func (s *Translator) rewritePartialComparison(_ *walk.WalkStack, partial *cypher.PartialComparison) error {
 	switch partial.Operator {
-	case model.OperatorIn:
+	case cypher.OperatorIn:
 		switch partial.Right.(type) {
-		case *model.Parameter, *pg.AnnotatedParameter:
+		case *cypher.Parameter, *pg.AnnotatedParameter:
 			// When the "in" operator addresses right-hand parameter it must be rewritten as: "= any($param)"
-			partial.Operator = model.OperatorEquals
-			partial.Right = model.NewSimpleFunctionInvocation(pgsqlAnyFunction, partial.Right)
+			partial.Operator = cypher.OperatorEquals
+			partial.Right = cypher.NewSimpleFunctionInvocation(pgsqlAnyFunction, partial.Right)
 		}
 
-	case model.OperatorStartsWith:
+	case cypher.OperatorStartsWith:
 		// Replace this operator with the like operator
 		partial.Operator = OperatorLike
 
@@ -624,7 +625,7 @@ func (s *Translator) rewritePartialComparison(_ *model.WalkStack, partial *model
 			return fmt.Errorf("string operator \"%s\" expects a string literal or parameter as its right opperand", partial.Operator.String())
 		}
 
-	case model.OperatorContains:
+	case cypher.OperatorContains:
 		// Replace this operator with the like operator
 		partial.Operator = OperatorLike
 
@@ -660,7 +661,7 @@ func (s *Translator) rewritePartialComparison(_ *model.WalkStack, partial *model
 			return fmt.Errorf("string operator \"%s\" expects a string literal or parameter as its right opperand", partial.Operator.String())
 		}
 
-	case model.OperatorEndsWith:
+	case cypher.OperatorEndsWith:
 		// Replace this operator with the like operator
 		partial.Operator = OperatorLike
 
@@ -695,12 +696,12 @@ func (s *Translator) rewritePartialComparison(_ *model.WalkStack, partial *model
 			return fmt.Errorf("string operator \"%s\" expects a string literal or parameter as its right opperand", partial.Operator.String())
 		}
 
-	case model.OperatorEquals:
+	case cypher.OperatorEquals:
 		switch typedRightOperand := partial.Right.(type) {
 		case *pg.AnnotatedLiteral:
 			// If this is an array type then first wrap it in the `to_jsonb` function
 			if typedRightOperand.Type.IsArrayType() {
-				partial.Right = model.NewSimpleFunctionInvocation(pgsqlToJSONBFunction, partial.Right)
+				partial.Right = cypher.NewSimpleFunctionInvocation(pgsqlToJSONBFunction, partial.Right)
 			}
 
 		case *pg.AnnotatedParameter:
@@ -720,10 +721,10 @@ func (s *Translator) rewritePartialComparison(_ *model.WalkStack, partial *model
 	return nil
 }
 
-func (s *Translator) annotateComparisons(stack *model.WalkStack, comparison *model.Comparison) error {
+func (s *Translator) annotateComparisons(stack *walk.WalkStack, comparison *cypher.Comparison) error {
 	var (
 		typeAnnotation *pg.SQLTypeAnnotation
-		operator       model.Operator
+		operator       cypher.Operator
 	)
 
 	if rewritten, err := s.rewriteComparison(stack, comparison); err != nil {
@@ -732,19 +733,19 @@ func (s *Translator) annotateComparisons(stack *model.WalkStack, comparison *mod
 		return nil
 	}
 
-	for comparisonWalkStack := []model.Expression{comparison}; len(comparisonWalkStack) > 0; {
+	for comparisonWalkStack := []cypher.Expression{comparison}; len(comparisonWalkStack) > 0; {
 		next := comparisonWalkStack[len(comparisonWalkStack)-1]
 		comparisonWalkStack = comparisonWalkStack[:len(comparisonWalkStack)-1]
 
 		switch typedNode := next.(type) {
-		case *model.Comparison:
+		case *cypher.Comparison:
 			comparisonWalkStack = append(comparisonWalkStack, typedNode.Left)
 
 			for _, partial := range typedNode.Partials {
 				comparisonWalkStack = append(comparisonWalkStack, partial)
 			}
 
-		case *model.PartialComparison:
+		case *cypher.PartialComparison:
 			// TODO: Overloading the operator means that we may miss partial comparison continuations
 			operator = typedNode.Operator
 
@@ -772,7 +773,7 @@ func (s *Translator) annotateComparisons(stack *model.WalkStack, comparison *mod
 				return fmt.Errorf("comparison contains mixed types: %s and %s", typeAnnotation.Type, typedNode.Type)
 			}
 
-		case *model.FunctionInvocation:
+		case *cypher.FunctionInvocation:
 			var functionInvocationTypeAnnotation *pg.SQLTypeAnnotation
 
 			switch typedNode.Name {
@@ -824,13 +825,13 @@ func (s *Translator) annotateComparisons(stack *model.WalkStack, comparison *mod
 	}
 
 	if typeAnnotation != nil {
-		if leftHandPropertyLookup, typeOK := comparison.Left.(*model.PropertyLookup); typeOK {
+		if leftHandPropertyLookup, typeOK := comparison.Left.(*cypher.PropertyLookup); typeOK {
 			leftOperandType := typeAnnotation.Type
 
 			// If this is an array type we need to do some special rewriting negotiation for different operators
 			if typeAnnotation.Type.IsArrayType() {
 				switch operator {
-				case model.OperatorIn:
+				case cypher.OperatorIn:
 					// If this is an operation such that <left> in <array-type> then we must wrap the right hand
 					// operand using the pgsql any() function and type the left hand operand to the array's base type
 					if baseType, err := typeAnnotation.Type.ArrayBaseType(); err != nil {
@@ -851,7 +852,7 @@ func (s *Translator) annotateComparisons(stack *model.WalkStack, comparison *mod
 
 			for _, partialComparison := range comparison.Partials {
 				switch typedPartialComparison := partialComparison.Right.(type) {
-				case *model.PropertyLookup:
+				case *cypher.PropertyLookup:
 					// Make sure right hand operand property lookups are correctly type annotated
 					annotatedPropertyLookup := pg.NewAnnotatedPropertyLookup(typedPartialComparison, typeAnnotation.Type)
 
@@ -866,34 +867,34 @@ func (s *Translator) annotateComparisons(stack *model.WalkStack, comparison *mod
 	return nil
 }
 
-func (s *Translator) rewriteNegations(_ *model.WalkStack, negation *model.Negation) error {
+func (s *Translator) rewriteNegations(_ *walk.WalkStack, negation *cypher.Negation) error {
 	// Wrap negations that contain a list of expressions in a parenthetical expression to ensure that evaluation
 	// happens as intended by the author of the query
-	if _, isExpressionList := negation.Expression.(model.ExpressionList); isExpressionList {
-		negation.Expression = model.NewParenthetical(negation.Expression)
+	if _, isExpressionList := negation.Expression.(cypher.ExpressionList); isExpressionList {
+		negation.Expression = cypher.NewParenthetical(negation.Expression)
 	}
 
 	return nil
 }
 
-func (s *Translator) rewriteStringNegations(stack *model.WalkStack, negation *model.Negation) error {
+func (s *Translator) rewriteStringNegations(stack *walk.WalkStack, negation *cypher.Negation) error {
 	var rewritten any
 
 	// If this is a negation then we should check to see if it's a comparison
 	switch comparison := negation.Expression.(type) {
-	case *model.Comparison:
+	case *cypher.Comparison:
 		firstPartial := comparison.FirstPartial()
 
 		// If the negated expression is a comparison check to see if it's a string comparison. This is done since
 		// comparison semantics for strings regarding `null` has edge cases that must be accounted for
 		switch firstPartial.Operator {
-		case model.OperatorStartsWith, model.OperatorEndsWith, model.OperatorContains:
+		case cypher.OperatorStartsWith, cypher.OperatorEndsWith, cypher.OperatorContains:
 			// Rewrite this comparison is a disjunction of the negation and a follow-on comparison to handle null
 			// checks
-			rewritten = &model.Parenthetical{
-				Expression: model.NewDisjunction(
+			rewritten = &cypher.Parenthetical{
+				Expression: cypher.NewDisjunction(
 					negation,
-					model.NewComparison(comparison.Left, model.OperatorIs, pg.NewAnnotatedLiteral(model.NewLiteral(nil, true), pg.Null)),
+					cypher.NewComparison(comparison.Left, cypher.OperatorIs, pg.NewAnnotatedLiteral(cypher.NewLiteral(nil, true), pg.Null)),
 				),
 			}
 		}
@@ -902,7 +903,7 @@ func (s *Translator) rewriteStringNegations(stack *model.WalkStack, negation *mo
 	// If we rewrote this element, replace it
 	if rewritten != nil {
 		switch typedParent := stack.Trunk().(type) {
-		case model.ExpressionList:
+		case cypher.ExpressionList:
 			for idx, expression := range typedParent.GetAll() {
 				if expression == negation {
 					typedParent.Replace(idx, rewritten)
@@ -918,11 +919,11 @@ func (s *Translator) rewriteStringNegations(stack *model.WalkStack, negation *mo
 	return nil
 }
 
-func (s *Translator) rewriteFunctionInvocations(stack *model.WalkStack, functionInvocation *model.FunctionInvocation) error {
+func (s *Translator) rewriteFunctionInvocations(stack *walk.WalkStack, functionInvocation *cypher.FunctionInvocation) error {
 	switch functionInvocation.Name {
 	case cypherNodeLabelsFunction:
 		switch typedArgument := functionInvocation.Arguments[0].(type) {
-		case *model.Variable:
+		case *cypher.Variable:
 			return rewrite(stack, functionInvocation, pg.NewNodeKindsReference(pg.NewAnnotatedVariable(typedArgument, pg.Node)))
 
 		case *pg.AnnotatedVariable:
@@ -934,7 +935,7 @@ func (s *Translator) rewriteFunctionInvocations(stack *model.WalkStack, function
 
 	case cypherEdgeTypeFunction:
 		switch typedArgument := functionInvocation.Arguments[0].(type) {
-		case *model.Variable:
+		case *cypher.Variable:
 			return rewrite(stack, functionInvocation, pg.NewEdgeKindReference(pg.NewAnnotatedVariable(typedArgument, pg.Edge)))
 
 		case *pg.AnnotatedVariable:
@@ -946,7 +947,7 @@ func (s *Translator) rewriteFunctionInvocations(stack *model.WalkStack, function
 
 	case cypherToLowerFunction:
 		switch typedArgument := functionInvocation.Arguments[0].(type) {
-		case *model.PropertyLookup:
+		case *cypher.PropertyLookup:
 			functionInvocation.Arguments[0] = pg.NewAnnotatedPropertyLookup(typedArgument, pg.Text)
 		}
 	}
@@ -954,9 +955,9 @@ func (s *Translator) rewriteFunctionInvocations(stack *model.WalkStack, function
 	return nil
 }
 
-func (s *Translator) annotateProjectionItems(_ *model.WalkStack, projectionItem *model.ProjectionItem) error {
+func (s *Translator) annotateProjectionItems(_ *walk.WalkStack, projectionItem *cypher.ProjectionItem) error {
 	switch typedExpression := projectionItem.Expression.(type) {
-	case *model.Variable:
+	case *cypher.Variable:
 		if bindingType, isBound := s.Bindings.BindingType(typedExpression.Symbol); !isBound {
 			return fmt.Errorf("variable %s for projection item is not bound", typedExpression.Symbol)
 		} else {
@@ -972,28 +973,28 @@ func (s *Translator) annotateProjectionItems(_ *model.WalkStack, projectionItem 
 	return nil
 }
 
-func (s *Translator) validatePropertyLookups(_ *model.WalkStack, propertyLookup *model.PropertyLookup) error {
+func (s *Translator) validatePropertyLookups(_ *walk.WalkStack, propertyLookup *cypher.PropertyLookup) error {
 	if len(propertyLookup.Symbols) != 1 {
 		return fmt.Errorf("expected a single-depth propertly lookup")
 	}
 
 	return nil
 }
-func (s *Translator) removeEmptyExpressionLists(stack *model.WalkStack, element model.Expression) error {
+func (s *Translator) removeEmptyExpressionLists(stack *walk.WalkStack, element cypher.Expression) error {
 	var (
 		shouldRemove  = false
 		shouldReplace = false
 
-		replacementExpression model.Expression
+		replacementExpression cypher.Expression
 	)
 
 	switch typedElement := element.(type) {
-	case model.ExpressionList:
+	case cypher.ExpressionList:
 		shouldRemove = typedElement.Len() == 0
 
-	case *model.Parenthetical:
+	case *cypher.Parenthetical:
 		switch typedParentheticalElement := typedElement.Expression.(type) {
-		case model.ExpressionList:
+		case cypher.ExpressionList:
 			numExpressions := typedParentheticalElement.Len()
 
 			shouldRemove = numExpressions == 0
@@ -1009,12 +1010,12 @@ func (s *Translator) removeEmptyExpressionLists(stack *model.WalkStack, element 
 
 	if shouldRemove {
 		switch typedParent := stack.Trunk().(type) {
-		case model.ExpressionList:
+		case cypher.ExpressionList:
 			typedParent.Remove(element)
 		}
 	} else if shouldReplace {
 		switch typedParent := stack.Trunk().(type) {
-		case model.ExpressionList:
+		case cypher.ExpressionList:
 			typedParent.Replace(typedParent.IndexOf(element), replacementExpression)
 		}
 	}
@@ -1022,10 +1023,10 @@ func (s *Translator) removeEmptyExpressionLists(stack *model.WalkStack, element 
 	return nil
 }
 
-func (s *Translator) rewriteKindFilters(stack *model.WalkStack, disjunction *model.Disjunction) error {
+func (s *Translator) rewriteKindFilters(stack *walk.WalkStack, disjunction *cypher.Disjunction) error {
 	var (
 		kindsByRef                = map[string]*pg.AnnotatedKindMatcher{}
-		nonKindMatcherExpressions []model.Expression
+		nonKindMatcherExpressions []cypher.Expression
 	)
 
 	for _, expression := range disjunction.GetAll() {
@@ -1044,7 +1045,7 @@ func (s *Translator) rewriteKindFilters(stack *model.WalkStack, disjunction *mod
 		}
 	}
 
-	kindMatchers := make([]model.Expression, 0, len(kindsByRef))
+	kindMatchers := make([]cypher.Expression, 0, len(kindsByRef))
 
 	for _, kindMatcher := range kindsByRef {
 		kindMatchers = append(kindMatchers, kindMatcher)
@@ -1054,16 +1055,16 @@ func (s *Translator) rewriteKindFilters(stack *model.WalkStack, disjunction *mod
 		if len(kindMatchers) == 1 {
 			return rewrite(stack, disjunction, kindMatchers[0])
 		} else {
-			return rewrite(stack, disjunction, model.NewDisjunction(kindMatchers...))
+			return rewrite(stack, disjunction, cypher.NewDisjunction(kindMatchers...))
 		}
 	} else if len(kindMatchers) > 0 {
-		return rewrite(stack, disjunction, model.NewDisjunction(append(nonKindMatcherExpressions, kindMatchers...)...))
+		return rewrite(stack, disjunction, cypher.NewDisjunction(append(nonKindMatcherExpressions, kindMatchers...)...))
 	}
 
 	return nil
 }
 
-func Translate(regularQuery *model.RegularQuery, kindMapper KindMapper) (map[string]any, error) {
+func Translate(regularQuery *cypher.RegularQuery, kindMapper KindMapper) (map[string]any, error) {
 	var (
 		bindings = NewBinder()
 		rewriter = NewTranslator(kindMapper, bindings, regularQuery)

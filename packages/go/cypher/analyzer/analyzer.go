@@ -19,15 +19,16 @@ package analyzer
 import (
 	"errors"
 	"fmt"
-	"github.com/specterops/bloodhound/cypher/model"
+	"github.com/specterops/bloodhound/cypher/model/cypher"
+	"github.com/specterops/bloodhound/cypher/model/walk"
 	"github.com/specterops/bloodhound/dawgs/graph"
 )
 
 type Analyzer struct {
-	handlers []func(stack *model.WalkStack, node model.Expression) error
+	handlers []func(stack *walk.WalkStack, node cypher.Expression) error
 }
 
-func (s *Analyzer) walkFunc(stack *model.WalkStack, expression model.Expression) error {
+func (s *Analyzer) walkFunc(stack *walk.WalkStack, expression cypher.Expression) error {
 	var errs []error
 
 	for _, handler := range s.handlers {
@@ -39,21 +40,21 @@ func (s *Analyzer) walkFunc(stack *model.WalkStack, expression model.Expression)
 	return errors.Join(errs...)
 }
 
-func (s *Analyzer) Analyze(query any, extensions ...model.CollectorFunc) error {
-	return model.Walk(query, model.NewVisitor(s.walkFunc, nil), extensions...)
+func (s *Analyzer) Analyze(query any, extensions ...walk.CollectorFunc) error {
+	return walk.Walk(query, walk.NewVisitor(s.walkFunc, nil), extensions...)
 }
 
-func Analyze(query any, registrationFunc func(analyzerInst *Analyzer), extensions ...model.CollectorFunc) error {
+func Analyze(query any, registrationFunc func(analyzerInst *Analyzer), extensions ...walk.CollectorFunc) error {
 	analyzer := &Analyzer{}
 	registrationFunc(analyzer)
 
 	return analyzer.Analyze(query, extensions...)
 }
 
-type TypedVisitor[T model.Expression] func(stack *model.WalkStack, node T) error
+type TypedVisitor[T cypher.Expression] func(stack *walk.WalkStack, node T) error
 
-func WithVisitor[T model.Expression](analyzer *Analyzer, visitorFunc TypedVisitor[T]) {
-	analyzer.handlers = append(analyzer.handlers, func(walkStack *model.WalkStack, node model.Expression) error {
+func WithVisitor[T cypher.Expression](analyzer *Analyzer, visitorFunc TypedVisitor[T]) {
+	analyzer.handlers = append(analyzer.handlers, func(walkStack *walk.WalkStack, node cypher.Expression) error {
 		if typedNode, typeOK := node.(T); typeOK {
 			if err := visitorFunc(walkStack, typedNode); err != nil {
 				return err
@@ -80,7 +81,7 @@ type ComplexityMeasure struct {
 	nodeLookupKinds map[string]graph.Kinds
 }
 
-func (s *ComplexityMeasure) onFunctionInvocation(_ *model.WalkStack, node *model.FunctionInvocation) error {
+func (s *ComplexityMeasure) onFunctionInvocation(_ *walk.WalkStack, node *cypher.FunctionInvocation) error {
 	switch node.Name {
 	case "collect":
 		// Collect will force an eager aggregation
@@ -94,23 +95,23 @@ func (s *ComplexityMeasure) onFunctionInvocation(_ *model.WalkStack, node *model
 	return nil
 }
 
-func (s *ComplexityMeasure) onQuantifier(_ *model.WalkStack, _ *model.Quantifier) error {
+func (s *ComplexityMeasure) onQuantifier(_ *walk.WalkStack, _ *cypher.Quantifier) error {
 	// Quantifier expressions may increase the size of an inline projection to apply its contained filter and should
 	// be weighted
 	s.Weight += Weight1
 	return nil
 }
 
-func (s *ComplexityMeasure) onFilterExpression(_ *model.WalkStack, _ *model.FilterExpression) error {
+func (s *ComplexityMeasure) onFilterExpression(_ *walk.WalkStack, _ *cypher.FilterExpression) error {
 	// Filter expressions convert directly into a filter in the query plan which may or may not take advantage
 	// of indexes and should be weighted accordingly
 	s.Weight += Weight1
 	return nil
 }
 
-func (s *ComplexityMeasure) onKindMatcher(_ *model.WalkStack, node *model.KindMatcher) error {
+func (s *ComplexityMeasure) onKindMatcher(_ *walk.WalkStack, node *cypher.KindMatcher) error {
 	switch typedReference := node.Reference.(type) {
-	case *model.Variable:
+	case *cypher.Variable:
 		// This kind matcher narrows a node reference's kind and will result in an indexed lookup
 		s.nodeLookupKinds[typedReference.Symbol] = s.nodeLookupKinds[typedReference.Symbol].Add(node.Kinds...)
 	}
@@ -118,7 +119,7 @@ func (s *ComplexityMeasure) onKindMatcher(_ *model.WalkStack, node *model.KindMa
 	return nil
 }
 
-func (s *ComplexityMeasure) onPatternPart(_ *model.WalkStack, node *model.PatternPart) error {
+func (s *ComplexityMeasure) onPatternPart(_ *walk.WalkStack, node *cypher.PatternPart) error {
 	// All pattern parts incur a compounding weight
 	s.numPatterns += 1
 	s.Weight += s.numPatterns
@@ -137,13 +138,13 @@ func (s *ComplexityMeasure) onPatternPart(_ *model.WalkStack, node *model.Patter
 	return nil
 }
 
-func (s *ComplexityMeasure) onSortItem(_ *model.WalkStack, _ *model.SortItem) error {
+func (s *ComplexityMeasure) onSortItem(_ *walk.WalkStack, _ *cypher.SortItem) error {
 	// Sorting incurs a weight since it will change how the projection is materialized
 	s.Weight += Weight1
 	return nil
 }
 
-func (s *ComplexityMeasure) onProjection(_ *model.WalkStack, node *model.Projection) error {
+func (s *ComplexityMeasure) onProjection(_ *walk.WalkStack, node *cypher.Projection) error {
 	// We want to capture the cost of additional inline projections so ignore the first projection
 	s.Weight += s.numProjections
 	s.numProjections += 1
@@ -156,9 +157,9 @@ func (s *ComplexityMeasure) onProjection(_ *model.WalkStack, node *model.Project
 	return nil
 }
 
-func (s *ComplexityMeasure) onPartialComparison(_ *model.WalkStack, node *model.PartialComparison) error {
+func (s *ComplexityMeasure) onPartialComparison(_ *walk.WalkStack, node *cypher.PartialComparison) error {
 	switch node.Operator {
-	case model.OperatorRegexMatch:
+	case cypher.OperatorRegexMatch:
 		// Regular expression matching incurs a weight since it can be far more involved than any of the other
 		// string operators
 		s.Weight += Weight1
@@ -167,13 +168,13 @@ func (s *ComplexityMeasure) onPartialComparison(_ *model.WalkStack, node *model.
 	return nil
 }
 
-func (s *ComplexityMeasure) onNodePattern(_ *model.WalkStack, node *model.NodePattern) error {
+func (s *ComplexityMeasure) onNodePattern(_ *walk.WalkStack, node *cypher.NodePattern) error {
 	if node.Binding == nil {
 		if len(node.Kinds) == 0 {
 			// Unlabeled, unbound nodes will incur a lookup of all nodes in the graph
 			s.Weight += Weight2
 		}
-	} else if nodePatternBinding, typeOK := node.Binding.(*model.Variable); !typeOK {
+	} else if nodePatternBinding, typeOK := node.Binding.(*cypher.Variable); !typeOK {
 		return fmt.Errorf("expected variable for node pattern binding but got: %T", node.Binding)
 	} else {
 		nodeLookupKinds, hasBinding := s.nodeLookupKinds[nodePatternBinding.Symbol]
@@ -191,7 +192,7 @@ func (s *ComplexityMeasure) onNodePattern(_ *model.WalkStack, node *model.NodePa
 	return nil
 }
 
-func (s *ComplexityMeasure) onRelationshipPattern(_ *model.WalkStack, node *model.RelationshipPattern) error {
+func (s *ComplexityMeasure) onRelationshipPattern(_ *walk.WalkStack, node *cypher.RelationshipPattern) error {
 	numKindMatchers := len(node.Kinds)
 
 	// All relationship lookups incur a weight
@@ -239,7 +240,7 @@ func (s *ComplexityMeasure) onExit() {
 	}
 }
 
-func QueryComplexity(query *model.RegularQuery) (*ComplexityMeasure, error) {
+func QueryComplexity(query *cypher.RegularQuery) (*ComplexityMeasure, error) {
 	var (
 		analyzer = &Analyzer{}
 		measure  = &ComplexityMeasure{

@@ -823,7 +823,7 @@ begin
     end loop;
 
   -- Loop until either the current depth exceeds the max allowed depth or if any of the paths are terminal
-  while depth < step.max_depth and
+  while (step.max_depth = 0 or depth < step.max_depth) and
         exists(select true from pathspace_current p where not p.terminal and not p.exhausted)
     loop
       raise notice 'Incomplete paths:';

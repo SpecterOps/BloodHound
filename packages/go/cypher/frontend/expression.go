@@ -1,26 +1,26 @@
 // Copyright 2023 Specter Ops, Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// 
+//
 // SPDX-License-Identifier: Apache-2.0
 
 package frontend
 
 import (
+	"github.com/specterops/bloodhound/cypher/model/cypher"
 	"strings"
 
 	"github.com/antlr4-go/antlr/v4"
-	"github.com/specterops/bloodhound/cypher/model"
 	"github.com/specterops/bloodhound/cypher/parser"
 	"github.com/specterops/bloodhound/dawgs/graph"
 )
@@ -31,12 +31,12 @@ import (
 type PropertiesVisitor struct {
 	BaseVisitor
 
-	Properties *model.Properties
+	Properties *cypher.Properties
 }
 
 func NewPropertiesVisitor() *PropertiesVisitor {
 	return &PropertiesVisitor{
-		Properties: model.NewProperties(),
+		Properties: cypher.NewProperties(),
 	}
 }
 
@@ -54,11 +54,11 @@ func (s *PropertiesVisitor) EnterOC_Parameter(ctx *parser.OC_ParameterContext) {
 
 func (s *PropertiesVisitor) ExitOC_Parameter(ctx *parser.OC_ParameterContext) {
 	if symbolicName := s.ctx.Exit().(*SymbolicNameOrReservedWordVisitor).Name; symbolicName == "" {
-		s.Properties.Parameter = &model.Parameter{
+		s.Properties.Parameter = &cypher.Parameter{
 			Symbol: strings.TrimPrefix(ctx.GetText(), "$"),
 		}
 	} else {
-		s.Properties.Parameter = &model.Parameter{
+		s.Properties.Parameter = &cypher.Parameter{
 			Symbol: symbolicName,
 		}
 	}
@@ -67,7 +67,7 @@ func (s *PropertiesVisitor) ExitOC_Parameter(ctx *parser.OC_ParameterContext) {
 type ExpressionVisitor struct {
 	BaseVisitor
 
-	Expression model.Expression
+	Expression cypher.Expression
 }
 
 func NewExpressionVisitor() Visitor {
@@ -91,7 +91,7 @@ func (s *ExpressionVisitor) ExitOC_NonArithmeticOperatorExpression(ctx *parser.O
 func (s *ExpressionVisitor) EnterOC_OrExpression(ctx *parser.OC_OrExpressionContext) {
 	if len(ctx.AllOR()) > 0 {
 		s.ctx.Enter(&JoiningVisitor{
-			Joined: &model.Disjunction{},
+			Joined: &cypher.Disjunction{},
 		})
 	}
 }
@@ -106,7 +106,7 @@ func (s *ExpressionVisitor) ExitOC_OrExpression(ctx *parser.OC_OrExpressionConte
 func (s *ExpressionVisitor) EnterOC_XorExpression(ctx *parser.OC_XorExpressionContext) {
 	if len(ctx.AllXOR()) > 0 {
 		s.ctx.Enter(&JoiningVisitor{
-			Joined: &model.ExclusiveDisjunction{},
+			Joined: &cypher.ExclusiveDisjunction{},
 		})
 	}
 }
@@ -121,7 +121,7 @@ func (s *ExpressionVisitor) ExitOC_XorExpression(ctx *parser.OC_XorExpressionCon
 func (s *ExpressionVisitor) EnterOC_AndExpression(ctx *parser.OC_AndExpressionContext) {
 	if len(ctx.AllAND()) > 0 {
 		s.ctx.Enter(&JoiningVisitor{
-			Joined: &model.Conjunction{},
+			Joined: &cypher.Conjunction{},
 		})
 	}
 }
@@ -149,7 +149,7 @@ func (s *ExpressionVisitor) ExitOC_ComparisonExpression(ctx *parser.OC_Compariso
 func (s *ExpressionVisitor) EnterOC_NotExpression(ctx *parser.OC_NotExpressionContext) {
 	if len(ctx.AllNOT()) > 0 {
 		s.ctx.Enter(&NegationVisitor{
-			Negation: &model.Negation{},
+			Negation: &cypher.Negation{},
 		})
 	}
 }
@@ -211,8 +211,8 @@ func (s *tokenLiteralIterator) NextToken() string {
 	return nextToken
 }
 
-func (s *tokenLiteralIterator) NextOperator() model.Operator {
-	nextOperator, _ := model.ParseOperator(s.NextToken())
+func (s *tokenLiteralIterator) NextOperator() cypher.Operator {
+	nextOperator, _ := cypher.ParseOperator(s.NextToken())
 	return nextOperator
 }
 
@@ -220,7 +220,7 @@ type ArithmeticExpressionVisitor struct {
 	BaseVisitor
 
 	operatorTokens *tokenLiteralIterator
-	Expression     model.Expression
+	Expression     cypher.Expression
 }
 
 func NewArithmeticExpressionVisitor(operatorTokens *tokenLiteralIterator) *ArithmeticExpressionVisitor {
@@ -229,17 +229,17 @@ func NewArithmeticExpressionVisitor(operatorTokens *tokenLiteralIterator) *Arith
 	}
 }
 
-func (s *ArithmeticExpressionVisitor) assignExpression(expression model.Expression) {
+func (s *ArithmeticExpressionVisitor) assignExpression(expression cypher.Expression) {
 	if s.operatorTokens.HasTokens() {
 		// If there's no expression in this visitor but there are collected operators then this AST node
 		// is the left-most expression of the arithmetic operator expression
 		if s.Expression == nil {
-			s.Expression = &model.ArithmeticExpression{
+			s.Expression = &cypher.ArithmeticExpression{
 				Left: expression,
 			}
 		} else {
 			// This is a subsequent component of the arithmetic operator expression
-			s.Expression.(*model.ArithmeticExpression).AddArithmeticExpressionPart(&model.PartialArithmeticExpression{
+			s.Expression.(*cypher.ArithmeticExpression).AddArithmeticExpressionPart(&cypher.PartialArithmeticExpression{
 				Operator: s.operatorTokens.NextOperator(),
 				Right:    expression,
 			})
@@ -299,7 +299,7 @@ func (s *ArithmeticExpressionVisitor) ExitOC_NonArithmeticOperatorExpression(ctx
 type StringListNullPredicateExpressionVisitor struct {
 	BaseVisitor
 
-	Expression model.Expression
+	Expression cypher.Expression
 }
 
 func (s *StringListNullPredicateExpressionVisitor) EnterOC_AddOrSubtractExpression(ctx *parser.OC_AddOrSubtractExpressionContext) {
@@ -310,7 +310,7 @@ func (s *StringListNullPredicateExpressionVisitor) ExitOC_AddOrSubtractExpressio
 	expression := s.ctx.Exit().(*ArithmeticExpressionVisitor).Expression
 
 	switch typedExpression := s.Expression.(type) {
-	case *model.Comparison:
+	case *cypher.Comparison:
 		typedExpression.LastPartial().Right = expression
 
 	default:
@@ -319,10 +319,10 @@ func (s *StringListNullPredicateExpressionVisitor) ExitOC_AddOrSubtractExpressio
 }
 
 func (s *StringListNullPredicateExpressionVisitor) EnterOC_RegularExpression(ctx *parser.OC_RegularExpressionContext) {
-	s.Expression = &model.Comparison{
+	s.Expression = &cypher.Comparison{
 		Left: s.Expression,
-		Partials: []*model.PartialComparison{{
-			Operator: model.OperatorRegexMatch,
+		Partials: []*cypher.PartialComparison{{
+			Operator: cypher.OperatorRegexMatch,
 		}},
 	}
 }
@@ -332,10 +332,10 @@ func (s *StringListNullPredicateExpressionVisitor) ExitOC_RegularExpression(ctx 
 
 func (s *StringListNullPredicateExpressionVisitor) EnterOC_ListPredicateExpression(ctx *parser.OC_ListPredicateExpressionContext) {
 	if ctx.GetToken(parser.CypherLexerIN, 0) != nil {
-		s.Expression = &model.Comparison{
+		s.Expression = &cypher.Comparison{
 			Left: s.Expression,
-			Partials: []*model.PartialComparison{{
-				Operator: model.OperatorIn,
+			Partials: []*cypher.PartialComparison{{
+				Operator: cypher.OperatorIn,
 			}},
 		}
 	}
@@ -345,24 +345,24 @@ func (s *StringListNullPredicateExpressionVisitor) ExitOC_ListPredicateExpressio
 }
 
 func (s *StringListNullPredicateExpressionVisitor) EnterOC_NullPredicateExpression(ctx *parser.OC_NullPredicateExpressionContext) {
-	literalNull := &model.Literal{
+	literalNull := &cypher.Literal{
 		Null: true,
 	}
 
 	if HasTokens(ctx, parser.CypherLexerIS) {
 		if HasTokens(ctx, parser.CypherLexerNOT) {
-			s.Expression = &model.Comparison{
+			s.Expression = &cypher.Comparison{
 				Left: s.Expression,
-				Partials: []*model.PartialComparison{{
-					Operator: model.OperatorIsNot,
+				Partials: []*cypher.PartialComparison{{
+					Operator: cypher.OperatorIsNot,
 					Right:    literalNull,
 				}},
 			}
 		} else {
-			s.Expression = &model.Comparison{
+			s.Expression = &cypher.Comparison{
 				Left: s.Expression,
-				Partials: []*model.PartialComparison{{
-					Operator: model.OperatorIs,
+				Partials: []*cypher.PartialComparison{{
+					Operator: cypher.OperatorIs,
 					Right:    literalNull,
 				}},
 			}
@@ -375,24 +375,24 @@ func (s *StringListNullPredicateExpressionVisitor) ExitOC_NullPredicateExpressio
 
 func (s *StringListNullPredicateExpressionVisitor) EnterOC_StringPredicateExpression(ctx *parser.OC_StringPredicateExpressionContext) {
 	if HasTokens(ctx, parser.CypherLexerSTARTS, parser.CypherLexerWITH) {
-		s.Expression = &model.Comparison{
+		s.Expression = &cypher.Comparison{
 			Left: s.Expression,
-			Partials: []*model.PartialComparison{{
-				Operator: model.OperatorStartsWith,
+			Partials: []*cypher.PartialComparison{{
+				Operator: cypher.OperatorStartsWith,
 			}},
 		}
 	} else if HasTokens(ctx, parser.CypherLexerENDS, parser.CypherLexerWITH) {
-		s.Expression = &model.Comparison{
+		s.Expression = &cypher.Comparison{
 			Left: s.Expression,
-			Partials: []*model.PartialComparison{{
-				Operator: model.OperatorEndsWith,
+			Partials: []*cypher.PartialComparison{{
+				Operator: cypher.OperatorEndsWith,
 			}},
 		}
 	} else if HasTokens(ctx, parser.CypherLexerCONTAINS) {
-		s.Expression = &model.Comparison{
+		s.Expression = &cypher.Comparison{
 			Left: s.Expression,
-			Partials: []*model.PartialComparison{{
-				Operator: model.OperatorContains,
+			Partials: []*cypher.PartialComparison{{
+				Operator: cypher.OperatorContains,
 			}},
 		}
 	}
@@ -405,12 +405,12 @@ func (s *StringListNullPredicateExpressionVisitor) ExitOC_StringPredicateExpress
 type NonArithmeticOperatorExpressionVisitor struct {
 	BaseVisitor
 
-	Expression      model.Expression
+	Expression      cypher.Expression
 	PropertyKeyName string
 }
 
 func (s *NonArithmeticOperatorExpressionVisitor) EnterOC_NodeLabels(ctx *parser.OC_NodeLabelsContext) {
-	s.Expression = &model.KindMatcher{
+	s.Expression = &cypher.KindMatcher{
 		Reference: s.Expression,
 	}
 }
@@ -423,7 +423,7 @@ func (s *NonArithmeticOperatorExpressionVisitor) EnterOC_NodeLabel(ctx *parser.O
 }
 
 func (s *NonArithmeticOperatorExpressionVisitor) ExitOC_NodeLabel(ctx *parser.OC_NodeLabelContext) {
-	matcher := s.Expression.(*model.KindMatcher)
+	matcher := s.Expression.(*cypher.KindMatcher)
 	matcher.Kinds = append(matcher.Kinds, graph.StringKind(s.ctx.Exit().(*SymbolicNameOrReservedWordVisitor).Name))
 }
 
@@ -435,9 +435,9 @@ func (s *NonArithmeticOperatorExpressionVisitor) EnterOC_Atom(ctx *parser.OC_Ato
 
 func (s *NonArithmeticOperatorExpressionVisitor) ExitOC_Atom(ctx *parser.OC_AtomContext) {
 	if HasTokens(ctx, parser.CypherLexerCOUNT) {
-		s.Expression = &model.FunctionInvocation{
+		s.Expression = &cypher.FunctionInvocation{
 			Name:      "count",
-			Arguments: []model.Expression{model.GreedyRangeQuantifier},
+			Arguments: []cypher.Expression{cypher.GreedyRangeQuantifier},
 		}
 	} else {
 		s.Expression = s.ctx.Exit().(*AtomVisitor).Atom
@@ -445,13 +445,13 @@ func (s *NonArithmeticOperatorExpressionVisitor) ExitOC_Atom(ctx *parser.OC_Atom
 }
 
 func (s *NonArithmeticOperatorExpressionVisitor) EnterOC_PropertyLookup(ctx *parser.OC_PropertyLookupContext) {
-	s.Expression = &model.PropertyLookup{
+	s.Expression = &cypher.PropertyLookup{
 		Atom: s.Expression,
 	}
 }
 
 func (s *NonArithmeticOperatorExpressionVisitor) ExitOC_PropertyLookup(ctx *parser.OC_PropertyLookupContext) {
-	s.Expression.(*model.PropertyLookup).AddLookupSymbol(s.PropertyKeyName)
+	s.Expression.(*cypher.PropertyLookup).AddLookupSymbol(s.PropertyKeyName)
 }
 
 func (s *NonArithmeticOperatorExpressionVisitor) EnterOC_PropertyKeyName(ctx *parser.OC_PropertyKeyNameContext) {
