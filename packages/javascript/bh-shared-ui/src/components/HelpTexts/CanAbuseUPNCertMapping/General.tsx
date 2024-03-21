@@ -18,7 +18,7 @@ import { FC } from 'react';
 import { EdgeInfoProps } from '../index';
 import { Typography } from '@mui/material';
 
-const General: FC<EdgeInfoProps> = ({ sourceName, sourceType, targetName }) => {
+const General: FC<EdgeInfoProps> = () => {
     return (
         <Typography variant='body2'>
             This edge is created when BloodHound identifies a domain controller with particular certificate mapping

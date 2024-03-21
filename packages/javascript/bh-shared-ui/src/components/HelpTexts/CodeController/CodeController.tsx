@@ -22,7 +22,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faAlignJustify, faCopy } from '@fortawesome/free-solid-svg-icons';
 import { copyToClipboard } from '../../../utils/copyToClipboard';
 
-export const useStyles = makeStyles((theme) => ({
+export const useStyles = makeStyles(() => ({
     codeController: {
         position: 'relative',
         '& .code': {

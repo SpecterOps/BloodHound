@@ -44,7 +44,7 @@ export const typeFormat = (type: string | undefined): string => {
     }
 };
 
-export const useHelpTextStyles = makeStyles((theme) => ({
+export const useHelpTextStyles = makeStyles(() => ({
     containsCodeEl: {
         '& code': {
             backgroundColor: 'darkgrey',

@@ -18,7 +18,7 @@ import { FC } from 'react';
 import { Link, Typography } from '@mui/material';
 import { EdgeInfoProps } from '../index';
 
-const LinuxAbuse: FC<EdgeInfoProps> = ({ sourceName, sourceType, targetType }) => {
+const LinuxAbuse: FC<EdgeInfoProps> = ({ targetType }) => {
     switch (targetType) {
         case 'Group':
             return (

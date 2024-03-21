@@ -42,7 +42,7 @@ const server = setupServer(
     rest.get(`/api/v2/self`, (req, res, ctx) => {
         return res(ctx.json({ data: testUser }));
     }),
-    rest.delete(`/api/v2/bloodhound-users/${testUser.id}/mfa`, (req, res, ctx) => {
+    rest.delete(`/api/v2/bloodhound-users/${testUser.id}/mfa`, (req, res) => {
         return res();
     })
 );

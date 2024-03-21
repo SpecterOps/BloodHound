@@ -18,7 +18,7 @@ import { FC } from 'react';
 import { EdgeInfoProps } from '../index';
 import { Typography } from '@mui/material';
 
-const Abuse: FC<EdgeInfoProps> = ({ sourceName, sourceType, targetName, targetType }) => {
+const Abuse: FC<EdgeInfoProps> = ({ sourceName, targetName }) => {
     return (
         <>
             <Typography variant='body2'>

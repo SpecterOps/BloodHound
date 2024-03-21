@@ -18,13 +18,7 @@ import { FC } from 'react';
 import { Link, Typography } from '@mui/material';
 import { EdgeInfoProps } from '../index';
 
-const LinuxAbuse: FC<EdgeInfoProps & { haslaps: boolean }> = ({
-    sourceName,
-    sourceType,
-    targetName,
-    targetType,
-    haslaps,
-}) => {
+const LinuxAbuse: FC<EdgeInfoProps & { haslaps: boolean }> = ({ sourceName, targetName, targetType, haslaps }) => {
     switch (targetType) {
         case 'Group':
             return (

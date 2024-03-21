@@ -44,7 +44,7 @@ const ExploreSearchCombobox: React.FC<{
             items: data || [],
             inputValue,
             selectedItem,
-            onSelectedItemChange: ({ type, selectedItem }) => {
+            onSelectedItemChange: ({ selectedItem }) => {
                 if (selectedItem) {
                     handleNodeSelected(selectedItem);
                 }

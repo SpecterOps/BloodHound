@@ -19,7 +19,7 @@ import { useHelpTextStyles, groupSpecialFormat } from '../utils';
 import { EdgeInfoProps } from '../index';
 import { Typography } from '@mui/material';
 
-const General: FC<EdgeInfoProps> = ({ sourceName, sourceType, targetName }) => {
+const General: FC<EdgeInfoProps> = ({ sourceName, sourceType }) => {
     const classes = useHelpTextStyles();
     return (
         <>

@@ -198,6 +198,8 @@ const Users = () => {
     };
 
     const usersTableRows = listUsersQuery.data?.map((user: any, index: number) => [
+        // This linting rule is disabled because the elements in this array do not require a key prop.
+        /* eslint-disable react/jsx-key */
         user.principal_name,
         user.email_address,
         `${user.first_name} ${user.last_name}`,
@@ -224,6 +226,7 @@ const Users = () => {
             onDisableUserMfa={setDisable2FADialogOpen}
             index={index}
         />,
+        /* eslint-enable react/jsx-key */
     ]);
 
     return (
