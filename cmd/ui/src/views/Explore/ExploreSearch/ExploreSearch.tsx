@@ -18,14 +18,12 @@ import { faCode, faDirections, faMinus, faPlus, faSearch } from '@fortawesome/fr
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Box, Collapse, Paper, Tab, Tabs, Theme, useMediaQuery, useTheme } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
-import { Icon } from 'bh-shared-ui';
+import { CYPHER_SEARCH, Icon, PATHFINDING_SEARCH, PRIMARY_SEARCH, searchbarActions } from 'bh-shared-ui';
 import React, { useState } from 'react';
-import { CYPHER_SEARCH, PATHFINDING_SEARCH, PRIMARY_SEARCH } from 'src/ducks/searchbar/types';
 import { useAppDispatch, useAppSelector } from 'src/store';
 import CypherSearch from './CypherSearch';
 import NodeSearch from './NodeSearch';
 import PathfindingSearch from './PathfindingSearch';
-import { tabChanged, primarySearch, pathfindingSearch, cypherSearch } from 'src/ducks/searchbar/actions';
 
 const useStyles = makeStyles((theme) => ({
     menuButton: {
@@ -68,14 +66,14 @@ const ExploreSearch = ({ handleColumns }: ExploreSearchProps) => {
     const handleTabChange = (newTabIndex: number) => {
         switch (newTabIndex) {
             case 0:
-                dispatch(primarySearch());
-                return dispatch(tabChanged(PRIMARY_SEARCH));
+                dispatch(searchbarActions.primarySearch());
+                return dispatch(searchbarActions.tabChanged(PRIMARY_SEARCH));
             case 1:
-                dispatch(pathfindingSearch());
-                return dispatch(tabChanged(PATHFINDING_SEARCH));
+                dispatch(searchbarActions.pathfindingSearch());
+                return dispatch(searchbarActions.tabChanged(PATHFINDING_SEARCH));
             case 2:
-                dispatch(cypherSearch());
-                return dispatch(tabChanged(CYPHER_SEARCH));
+                dispatch(searchbarActions.cypherSearch());
+                return dispatch(searchbarActions.tabChanged(CYPHER_SEARCH));
         }
 
         const cypherTabIndex = 2;

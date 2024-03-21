@@ -21,7 +21,7 @@ import throttle from 'lodash/throttle';
 import { TypedUseSelectorHook, useDispatch, useSelector } from 'react-redux';
 import createSagaMiddleware from 'redux-saga';
 import * as reducers from 'src/ducks';
-import { edgeinfo } from 'bh-shared-ui';
+import { edgeinfo, searchReducer as search } from 'bh-shared-ui';
 import rootSaga from 'src/rootSaga';
 
 enableMapSet();
@@ -31,6 +31,7 @@ const sagaMiddleware = createSagaMiddleware();
 const appReducer = combineReducers({
     ...reducers,
     edgeinfo,
+    search,
 });
 
 export const rootReducer = (state: any, action: any) => {

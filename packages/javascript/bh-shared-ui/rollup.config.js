@@ -62,7 +62,9 @@ export default {
         'swagger-ui-react/swagger-ui.css',
         'prop-types',
         'immutable',
+        'immer',
         'react-immutable-proptypes',
         'lodash/toString',
+        'lodash/cloneDeep',
     ],
 };

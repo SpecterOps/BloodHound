@@ -16,10 +16,10 @@
 
 import { Menu, MenuItem } from '@mui/material';
 
+import { searchbarActions } from 'bh-shared-ui';
 import { FC } from 'react';
-import { destinationNodeSelected, sourceNodeSelected, tabChanged } from 'src/ducks/searchbar/actions';
-import { useAppDispatch, useAppSelector } from 'src/store';
 import { selectOwnedAssetGroupId, selectTierZeroAssetGroupId } from 'src/ducks/assetgroups/reducer';
+import { useAppDispatch, useAppSelector } from 'src/store';
 import AssetGroupMenuItem from './AssetGroupMenuItem';
 import CopyMenuItem from './CopyMenuItem';
 
@@ -36,9 +36,9 @@ const ContextMenu: FC<{ contextMenu: { mouseX: number; mouseY: number } | null; 
 
     const handleSetStartingNode = () => {
         if (selectedNode) {
-            dispatch(tabChanged('secondary'));
+            dispatch(searchbarActions.tabChanged('secondary'));
             dispatch(
-                sourceNodeSelected(
+                searchbarActions.sourceNodeSelected(
                     {
                         name: selectedNode.name,
                         objectid: selectedNode.id,
@@ -52,9 +52,9 @@ const ContextMenu: FC<{ contextMenu: { mouseX: number; mouseY: number } | null; 
 
     const handleSetEndingNode = () => {
         if (selectedNode) {
-            dispatch(tabChanged('secondary'));
+            dispatch(searchbarActions.tabChanged('secondary'));
             dispatch(
-                destinationNodeSelected({
+                searchbarActions.destinationNodeSelected({
                     name: selectedNode.name,
                     objectid: selectedNode.id,
                     type: selectedNode.type,

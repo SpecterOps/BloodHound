@@ -239,7 +239,15 @@ const (
 	ErrorInvalidLimit string = "invalid limit: %v"
 )
 
-func HeaderMatches(key, target string, headers http.Header) bool {
-	value := headers.Get(key)
-	return value != "" && strings.Contains(strings.ToLower(value), strings.ToLower(target))
+func HeaderMatches(headers http.Header, key string, target ...string) bool {
+	value := strings.ToLower(headers.Get(key))
+	if value == "" {
+		return false
+	}
+	for _, t := range target {
+		if strings.Contains(value, strings.ToLower(t)) {
+			return true
+		}
+	}
+	return false
 }

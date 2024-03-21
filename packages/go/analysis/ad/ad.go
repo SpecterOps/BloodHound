@@ -545,6 +545,12 @@ func GetEdgeCompositionPath(ctx context.Context, db graph.Database, edge *graph.
 			} else {
 				pathSet = results
 			}
+		} else if edge.Kind == ad.ADCSESC4 {
+			if results, err := GetADCSESC4EdgeComposition(ctx, db, edge); err != nil {
+				return err
+			} else {
+				pathSet = results
+			}
 		} else if edge.Kind == ad.ADCSESC6a || edge.Kind == ad.ADCSESC6b {
 			if results, err := GetADCSESC6EdgeComposition(ctx, db, edge); err != nil {
 				return err

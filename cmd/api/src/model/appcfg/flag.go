@@ -18,17 +18,19 @@ package appcfg
 
 import (
 	"context"
+
 	"github.com/specterops/bloodhound/src/model"
 )
 
 const (
-	FeatureButterflyAnalysis   = "butterfly_analysis"
-	FeatureEnableSAMLSSO       = "enable_saml_sso"
-	FeatureScopeCollectionByOU = "scope_collection_by_ou"
-	FeatureAzureSupport        = "azure_support"
-	FeatureReconciliation      = "reconciliation"
-	FeatureEntityPanelCaching  = "entity_panel_cache"
-	FeatureAdcs                = "adcs"
+	FeatureButterflyAnalysis          = "butterfly_analysis"
+	FeatureEnableSAMLSSO              = "enable_saml_sso"
+	FeatureScopeCollectionByOU        = "scope_collection_by_ou"
+	FeatureAzureSupport               = "azure_support"
+	FeatureReconciliation             = "reconciliation"
+	FeatureEntityPanelCaching         = "entity_panel_cache"
+	FeatureAdcs                       = "adcs"
+	FeatureRiskExposureNewCalculation = "risk_exposure_new_calculation"
 )
 
 // AvailableFlags returns a FeatureFlagSet of expected feature flags. Feature flag defaults introduced here will become the initial
@@ -84,6 +86,13 @@ func AvailableFlags() FeatureFlagSet {
 			Enabled:       false,
 			UserUpdatable: false,
 		},
+		FeatureRiskExposureNewCalculation: {
+			Key:           FeatureRiskExposureNewCalculation,
+			Name:          "Use new tier zero risk exposure calculation",
+			Description:   "Enables the use of new tier zero risk exposure metatree metrics.",
+			Enabled:       false,
+			UserUpdatable: false,
+		},
 	}
 }
 
@@ -117,15 +126,19 @@ type FeatureFlagSet map[string]FeatureFlag
 
 // FeatureFlagService defines a contract for fetching and setting feature flags.
 type FeatureFlagService interface {
+	GetFlagByKeyer
+
 	// GetAllFlags gets all available runtime feature flags as a FeatureFlagSet for the application.
 	GetAllFlags(ctx context.Context) ([]FeatureFlag, error)
 
 	// GetFlag attempts to fetch a FeatureFlag by its ID.
 	GetFlag(ctx context.Context, id int32) (FeatureFlag, error)
 
-	// GetFlagByKey attempts to fetch a FeatureFlag by its key.
-	GetFlagByKey(ctx context.Context, key string) (FeatureFlag, error)
-
 	// SetFlag attempts to store or update the given FeatureFlag by its feature Key.
 	SetFlag(ctx context.Context, value FeatureFlag) error
+}
+
+type GetFlagByKeyer interface {
+	// GetFlagByKey attempts to fetch a FeatureFlag by its key.
+	GetFlagByKey(context.Context, string) (FeatureFlag, error)
 }

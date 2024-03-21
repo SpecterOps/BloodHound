@@ -14,14 +14,17 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-export type ErrorMessage = {
-    context: string;
-    message: string;
+import { FC } from 'react';
+import { Typography } from '@mui/material';
+
+const Opsec: FC = () => {
+    return (
+        <Typography variant='body2'>
+            When the affected certificate authority issues the certificate to the attacker, it will retain a local copy
+            of that certificate in its issued certificates store. Defenders may analyze those issued certificates to
+            identify illegitimately issued certificates and identify the principal that requested the certificate.
+        </Typography>
+    );
 };
 
-export type ErrorResponse = {
-    http_status: number;
-    timestamp: string;
-    request_id: string;
-    errors: ErrorMessage[];
-};
+export default Opsec;

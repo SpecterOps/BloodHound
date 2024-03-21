@@ -85,7 +85,11 @@ describe('Getting the text for the disabled item display for a search when there
 });
 
 describe('Parsing the debounced input for type and keyword values', () => {
-    test('No input is provided', () => {
+    test('`undefined` input is provided', () => {
+        expect(getKeywordAndTypeValues(undefined)).toEqual({ keyword: '', type: undefined });
+    });
+
+    test('Empty input is provided', () => {
         expect(getKeywordAndTypeValues('')).toEqual({ keyword: '', type: undefined });
     });
 
