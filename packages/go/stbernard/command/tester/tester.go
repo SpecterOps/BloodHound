@@ -1,20 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
-//
-// Licensed under the Apache License, Version 2.0
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-//
-// SPDX-License-Identifier: Apache-2.0
-
-package modsync
+package tester
 
 import (
 	"flag"
@@ -24,15 +8,18 @@ import (
 
 	"github.com/specterops/bloodhound/packages/go/stbernard/environment"
 	"github.com/specterops/bloodhound/packages/go/stbernard/workspace"
+	"github.com/specterops/bloodhound/packages/go/stbernard/yarn"
 )
 
 const (
-	Name  = "modsync"
-	Usage = "Sync all modules in current workspace"
+	Name  = "test"
+	Usage = "Run tests for entire workspace"
 )
 
 type command struct {
-	env environment.Environment
+	env      environment.Environment
+	yarnOnly bool
+	goOnly   bool
 }
 
 func Create(env environment.Environment) *command {
@@ -51,6 +38,8 @@ func (s *command) Name() string {
 
 func (s *command) Parse(cmdIndex int) error {
 	cmd := flag.NewFlagSet(Name, flag.ExitOnError)
+	yarnOnly := cmd.Bool("y", false, "Yarn only")
+	goOnly := cmd.Bool("g", false, "Go only")
 
 	cmd.Usage = func() {
 		w := flag.CommandLine.Output()
@@ -61,21 +50,40 @@ func (s *command) Parse(cmdIndex int) error {
 	if err := cmd.Parse(os.Args[cmdIndex+1:]); err != nil {
 		cmd.Usage()
 		return fmt.Errorf("parsing %s command: %w", Name, err)
+	} else if yarnOnly != goOnly {
+		s.yarnOnly = *yarnOnly
+		s.goOnly = *goOnly
 	}
 
 	return nil
 }
 
-func (s command) Run() error {
+func (s *command) Run() error {
 	if cwd, err := workspace.FindRoot(); err != nil {
 		return fmt.Errorf("finding workspace root: %w", err)
+	} else if _, err := workspace.ParseJSAbsPaths(cwd); err != nil {
+		return fmt.Errorf("parsing yarn workspace absolute paths: %w", err)
 	} else if modPaths, err := workspace.ParseModulesAbsPaths(cwd); err != nil {
 		return fmt.Errorf("parsing module absolute paths: %w", err)
-	} else if err := workspace.DownloadModules(modPaths, s.env); err != nil {
-		return fmt.Errorf("downloading go modules: %w", err)
-	} else if err := workspace.SyncWorkspace(cwd, s.env); err != nil {
-		return fmt.Errorf("syncing go workspace: %w", err)
+	} else if err := s.runTests(cwd, modPaths); err != nil {
+		return fmt.Errorf("running tests: %w", err)
 	} else {
 		return nil
 	}
+}
+
+func (s *command) runTests(cwd string, modPaths []string) error {
+	if !s.goOnly {
+		if err := yarn.TestWorkspace(cwd, s.env); err != nil {
+			return fmt.Errorf("testing yarn workspace: %w", err)
+		}
+	}
+
+	if !s.yarnOnly {
+		if err := workspace.TestWorkspace(cwd, modPaths, s.env); err != nil {
+			return fmt.Errorf("testing go workspace: %w", err)
+		}
+	}
+
+	return nil
 }

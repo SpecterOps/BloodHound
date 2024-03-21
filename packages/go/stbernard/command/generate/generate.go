@@ -14,25 +14,21 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package analysis
+package generate
 
 import (
-	"errors"
 	"flag"
 	"fmt"
 	"os"
 	"path/filepath"
 
-	"github.com/specterops/bloodhound/packages/go/stbernard/analyzers"
-	"github.com/specterops/bloodhound/packages/go/stbernard/analyzers/golang"
 	"github.com/specterops/bloodhound/packages/go/stbernard/environment"
 	"github.com/specterops/bloodhound/packages/go/stbernard/workspace"
-	"github.com/specterops/bloodhound/packages/go/stbernard/yarn"
 )
 
 const (
-	Name  = "analysis"
-	Usage = "Run static analyzers"
+	Name  = "generate"
+	Usage = "Run code generation in current workspace"
 )
 
 type command struct {
@@ -75,19 +71,9 @@ func (s *command) Run() error {
 		return fmt.Errorf("finding workspace root: %w", err)
 	} else if modPaths, err := workspace.ParseModulesAbsPaths(cwd); err != nil {
 		return fmt.Errorf("parsing module absolute paths: %w", err)
-	} else if jsPaths, err := workspace.ParseJSAbsPaths(cwd); err != nil {
-		return fmt.Errorf("parsing JS absolute paths: %w", err)
-	} else if err := golang.InstallGolangCiLint(cwd, s.env); err != nil {
-		return fmt.Errorf("installing golangci-lint: %w", err)
-	} else if err := yarn.InstallWorkspaceDeps(cwd, jsPaths, s.env); err != nil {
-		return fmt.Errorf("yarn install: %w", err)
-	} else if result, err := analyzers.Run(cwd, modPaths, jsPaths, s.env); errors.Is(err, analyzers.ErrSeverityExit) {
-		fmt.Println(result)
-		return err
-	} else if err != nil {
-		return fmt.Errorf("analyzers incomplete: %w", err)
+	} else if err := workspace.WorkspaceGenerate(modPaths, s.env); err != nil {
+		return fmt.Errorf("generating code for workspace: %w", err)
 	} else {
-		fmt.Println(result)
 		return nil
 	}
 }
