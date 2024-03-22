@@ -18,37 +18,37 @@ package yarn
 
 import (
 	"fmt"
-	"os"
-	"os/exec"
 
-	"github.com/specterops/bloodhound/log"
+	"github.com/specterops/bloodhound/packages/go/stbernard/cmdrunner"
+	"github.com/specterops/bloodhound/packages/go/stbernard/environment"
 )
 
-func InstallWorkspaceDeps(jsPaths []string, env []string) error {
+// InstallWorkspaceDeps runs yarn install for a given list of jsPaths
+func InstallWorkspaceDeps(jsPaths []string, env environment.Environment) error {
+	var (
+		command = "yarn"
+		args    = []string{"install"}
+	)
+
 	for _, path := range jsPaths {
-		if err := yarnInstall(path, env); err != nil {
-			return fmt.Errorf("failed to run yarn install at %v: %w", path, err)
+		if err := cmdrunner.Run(command, args, path, env); err != nil {
+			return fmt.Errorf("yarn install at %v: %w", path, err)
 		}
 	}
 
 	return nil
 }
 
-func yarnInstall(path string, env []string) error {
-	cmd := exec.Command("yarn", "install")
-	cmd.Env = env
-	cmd.Dir = path
-	if log.GlobalAccepts(log.LevelDebug) {
-		cmd.Stdout = os.Stderr
-		cmd.Stderr = os.Stderr
-	}
+// BuildWorkspace runs yarn build for the current working directory
+func BuildWorkspace(cwd string, env environment.Environment) error {
+	var (
+		command = "yarn"
+		args    = []string{"build"}
+	)
 
-	log.Infof("Running yarn install for %v", path)
-
-	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("yarn install: %w", err)
+	if err := cmdrunner.Run(command, args, cwd, env); err != nil {
+		return fmt.Errorf("yarn build at %v: %w", cwd, err)
 	} else {
-		log.Infof("Finished yarn install for %v", path)
 		return nil
 	}
 }

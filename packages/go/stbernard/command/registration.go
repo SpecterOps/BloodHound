@@ -18,46 +18,35 @@ package command
 
 import (
 	"github.com/specterops/bloodhound/packages/go/stbernard/command/analysis"
+	"github.com/specterops/bloodhound/packages/go/stbernard/command/builder"
 	"github.com/specterops/bloodhound/packages/go/stbernard/command/envdump"
+	"github.com/specterops/bloodhound/packages/go/stbernard/command/generate"
 	"github.com/specterops/bloodhound/packages/go/stbernard/command/modsync"
+	"github.com/specterops/bloodhound/packages/go/stbernard/command/tester"
+	"github.com/specterops/bloodhound/packages/go/stbernard/environment"
 )
 
-// Command enum represents our subcommands
-type Command int
-
-const (
-	InvalidCommand Command = iota - 1
-	ModSync
-	EnvDump
-	Analysis
-)
-
-// String implements Stringer for the Command enum
-func (s Command) String() string {
-	switch s {
-	case ModSync:
-		return modsync.Name
-	case EnvDump:
-		return envdump.Name
-	case Analysis:
-		return analysis.Name
-	default:
-		return "invalid command"
-	}
+type Command interface {
+	// Name gets the name of the Command
+	Name() string
+	// Usage gets the usage string for the Command
+	Usage() string
+	// Parse parses flags for the command using the command index as the starting point
+	Parse(cmdIdx int) error
+	// Run will run the command and return any errors
+	Run() error
 }
 
 // Commands returns our valid set of Command options
 func Commands() []Command {
-	return []Command{ModSync, EnvDump, Analysis}
-}
+	var env = environment.NewEnvironment()
 
-// Commands usage returns a slice of Command usage statements indexed by their enum
-func CommandsUsage() []string {
-	var usage = make([]string, len(Commands()))
-
-	usage[ModSync] = modsync.Usage
-	usage[EnvDump] = envdump.Usage
-	usage[Analysis] = analysis.Usage
-
-	return usage
+	return []Command{
+		envdump.Create(env),
+		modsync.Create(env),
+		generate.Create(env),
+		analysis.Create(env),
+		tester.Create(env),
+		builder.Create(env),
+	}
 }
