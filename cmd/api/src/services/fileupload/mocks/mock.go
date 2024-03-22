@@ -51,6 +51,20 @@ func (m *MockFileUploadData) EXPECT() *MockFileUploadDataMockRecorder {
 	return m.recorder
 }
 
+// CancelAllFileUploads mocks base method.
+func (m *MockFileUploadData) CancelAllFileUploads(arg0 context.Context) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CancelAllFileUploads", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// CancelAllFileUploads indicates an expected call of CancelAllFileUploads.
+func (mr *MockFileUploadDataMockRecorder) CancelAllFileUploads(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CancelAllFileUploads", reflect.TypeOf((*MockFileUploadData)(nil).CancelAllFileUploads), arg0)
+}
+
 // CreateFileUploadJob mocks base method.
 func (m *MockFileUploadData) CreateFileUploadJob(arg0 context.Context, arg1 model.FileUploadJob) (model.FileUploadJob, error) {
 	m.ctrl.T.Helper()
@@ -78,6 +92,20 @@ func (m *MockFileUploadData) DeleteAllFileUploads(arg0 context.Context) error {
 func (mr *MockFileUploadDataMockRecorder) DeleteAllFileUploads(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteAllFileUploads", reflect.TypeOf((*MockFileUploadData)(nil).DeleteAllFileUploads), arg0)
+}
+
+// DeleteAllIngestTasks mocks base method.
+func (m *MockFileUploadData) DeleteAllIngestTasks(arg0 context.Context) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteAllIngestTasks", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteAllIngestTasks indicates an expected call of DeleteAllIngestTasks.
+func (mr *MockFileUploadDataMockRecorder) DeleteAllIngestTasks(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteAllIngestTasks", reflect.TypeOf((*MockFileUploadData)(nil).DeleteAllIngestTasks), arg0)
 }
 
 // GetAllFileUploadJobs mocks base method.

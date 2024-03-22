@@ -75,3 +75,15 @@ func (mr *MockTaskerMockRecorder) RequestAnalysis() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RequestAnalysis", reflect.TypeOf((*MockTasker)(nil).RequestAnalysis))
 }
+
+// RequestDeletion mocks base method.
+func (m *MockTasker) RequestDeletion() {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "RequestDeletion")
+}
+
+// RequestDeletion indicates an expected call of RequestDeletion.
+func (mr *MockTaskerMockRecorder) RequestDeletion() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RequestDeletion", reflect.TypeOf((*MockTasker)(nil).RequestDeletion))
+}
