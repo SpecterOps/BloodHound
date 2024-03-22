@@ -30,7 +30,6 @@ func DeleteCollectedGraphData(ctx context.Context, graphDB graph.Database) error
 	}); err != nil {
 		return fmt.Errorf("error deleting all nodes: %w", err)
 	} else {
-		// if successful, handle audit log and kick off analysis
 		return nil
 	}
 }
