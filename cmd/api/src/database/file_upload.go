@@ -98,5 +98,5 @@ func (s *BloodhoundDB) DeleteAllFileUploads(ctx context.Context) error {
 }
 
 func (s *BloodhoundDB) DeleteAllIngestTasks(ctx context.Context) error {
-	return CheckError(s.db.WithContext(ctx).Delete(&model.IngestTask{}))
+	return CheckError(s.db.WithContext(ctx).Exec("DELETE FROM ingest_tasks"))
 }
