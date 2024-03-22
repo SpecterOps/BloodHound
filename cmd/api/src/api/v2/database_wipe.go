@@ -97,11 +97,8 @@ func (s Resources) HandleDatabaseWipe(response http.ResponseWriter, request *htt
 
 	// delete graph
 	if payload.DeleteCollectedGraphData {
-		if failed := s.deleteCollectedGraphData(request.Context(), auditEntry); failed {
-			errors = append(errors, "collected graph data")
-		} else {
-			kickoffAnalysis = true
-		}
+		s.TaskNotifier.RequestDeletion()
+		s.handleAuditLogForDatabaseWipe(request.Context(), auditEntry, true, "collected graph data")
 	}
 
 	// delete asset group selectors
