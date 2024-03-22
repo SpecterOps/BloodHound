@@ -208,16 +208,20 @@ func (s *Daemon) Start(ctx context.Context) {
 
 func (s *Daemon) deleteData() {
 	defer func() {
+		s.status.Update(model.DatapipeStatusIdle, false)
 		s.setDeletionRequested(false)
 		s.setAnalysisRequested(true)
 	}()
+	defer log.Measure(log.LevelInfo, "Purge Graph Data Completed")()
+	s.status.Update(model.DatapipeStatusPurging, false)
+	log.Infof("Begin Purge Graph Data")
 
 	if err := s.db.CancelAllFileUploads(s.ctx); err != nil {
-		log.Errorf("error cancelling jobs during data deletion: %v", err)
+		log.Errorf("Error cancelling jobs during data deletion: %v", err)
 	} else if err := s.db.DeleteAllIngestTasks(s.ctx); err != nil {
-		log.Errorf("error deleting ingest tasks during data deletion: %v", err)
+		log.Errorf("Error deleting ingest tasks during data deletion: %v", err)
 	} else if err := DeleteCollectedGraphData(s.ctx, s.graphdb); err != nil {
-		log.Errorf("error deleting graph data: %v", err)
+		log.Errorf("Error deleting graph data: %v", err)
 	}
 }
 
