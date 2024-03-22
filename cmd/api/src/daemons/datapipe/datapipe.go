@@ -40,6 +40,7 @@ const (
 
 type Tasker interface {
 	RequestAnalysis()
+	RequestDeletion()
 	GetStatus() model.DatapipeStatusWrapper
 }
 
@@ -49,6 +50,7 @@ type Daemon struct {
 	cache               cache.Cache
 	cfg                 config.Configuration
 	analysisRequested   *atomic.Bool
+	deletionRequested   *atomic.Bool
 	tickInterval        time.Duration
 	status              model.DatapipeStatusWrapper
 	ctx                 context.Context
@@ -66,6 +68,7 @@ func NewDaemon(ctx context.Context, cfg config.Configuration, connections bootst
 		cache:               cache,
 		cfg:                 cfg,
 		ctx:                 ctx,
+		deletionRequested:   &atomic.Bool{},
 		analysisRequested:   &atomic.Bool{},
 		orphanedFileSweeper: NewOrphanFileSweeper(NewOSFileOperations(), cfg.TempDirectory()),
 		tickInterval:        tickInterval,
@@ -77,7 +80,16 @@ func NewDaemon(ctx context.Context, cfg config.Configuration, connections bootst
 }
 
 func (s *Daemon) RequestAnalysis() {
+	if s.getDeletionRequested() {
+		log.Warnf("Rejecting analysis request as deletion is in progress")
+		return
+	}
 	s.setAnalysisRequested(true)
+}
+
+func (s *Daemon) RequestDeletion() {
+	s.setAnalysisRequested(false)
+	s.setDeletionRequested(true)
 }
 
 func (s *Daemon) GetStatus() model.DatapipeStatusWrapper {
@@ -90,6 +102,14 @@ func (s *Daemon) getAnalysisRequested() bool {
 
 func (s *Daemon) setAnalysisRequested(requested bool) {
 	s.analysisRequested.Store(requested)
+}
+
+func (s *Daemon) setDeletionRequested(requested bool) {
+	s.deletionRequested.Store(requested)
+}
+
+func (s *Daemon) getDeletionRequested() bool {
+	return s.deletionRequested.Load()
 }
 
 func (s *Daemon) analyze() {
@@ -158,6 +178,10 @@ func (s *Daemon) Start(ctx context.Context) {
 			s.clearOrphanedData()
 
 		case <-datapipeLoopTimer.C:
+			if s.getDeletionRequested() {
+				s.deleteData()
+			}
+
 			// Ingest all available ingest tasks
 			s.ingestAvailableTasks()
 
@@ -179,6 +203,25 @@ func (s *Daemon) Start(ctx context.Context) {
 		case <-s.ctx.Done():
 			return
 		}
+	}
+}
+
+func (s *Daemon) deleteData() {
+	defer func() {
+		s.status.Update(model.DatapipeStatusIdle, false)
+		s.setDeletionRequested(false)
+		s.setAnalysisRequested(true)
+	}()
+	defer log.Measure(log.LevelInfo, "Purge Graph Data Completed")()
+	s.status.Update(model.DatapipeStatusPurging, false)
+	log.Infof("Begin Purge Graph Data")
+
+	if err := s.db.CancelAllFileUploads(s.ctx); err != nil {
+		log.Errorf("Error cancelling jobs during data deletion: %v", err)
+	} else if err := s.db.DeleteAllIngestTasks(s.ctx); err != nil {
+		log.Errorf("Error deleting ingest tasks during data deletion: %v", err)
+	} else if err := DeleteCollectedGraphData(s.ctx, s.graphdb); err != nil {
+		log.Errorf("Error deleting graph data: %v", err)
 	}
 }
 
