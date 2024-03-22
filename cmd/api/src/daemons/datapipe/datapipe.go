@@ -88,8 +88,8 @@ func (s *Daemon) RequestAnalysis() {
 }
 
 func (s *Daemon) RequestDeletion() {
-	s.setDeletionRequested(true)
 	s.setAnalysisRequested(false)
+	s.setDeletionRequested(true)
 }
 
 func (s *Daemon) GetStatus() model.DatapipeStatusWrapper {
