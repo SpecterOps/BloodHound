@@ -88,6 +88,25 @@ test *FLAGS:
 modsync:
   @go run github.com/specterops/bloodhound/packages/go/stbernard modsync
 
+# run code generation
+generate:
+  @go run github.com/specterops/bloodhound/packages/go/stbernard generate
+
+# run the code generation from the cue schema
+schemagen: yarn-local && check-license (yarn "format")
+  go run github.com/specterops/bloodhound/schemagen
+
+# Run all analyzers (requires jq to be installed locally)
+analyze:
+  go run github.com/specterops/bloodhound/packages/go/stbernard analysis | jq 'sort_by(.severity) | .[] | {"severity": .severity, "description": .description, "location": "\(.location.path):\(.location.lines.begin)"}'
+
+# prepare for code review (requires jq)
+prepare-for-codereview:
+  @just modsync
+  @just generate
+  @just schemagen
+  @just analyze
+
 # updates favicon.ico, logo192.png and logo512.png from logo.svg
 update-favicon:
   @just imagemagick convert -background none ./cmd/ui/public/logo-light.svg -define icon:auto-resize ./cmd/ui/public/favicon-light.ico
@@ -115,10 +134,6 @@ build-js-client *ARGS="":
 build-shared-ui *ARGS="":
   @cd packages/javascript/bh-shared-ui && yarn build
 
-# run the code generation from the cue schema
-schemagen: yarn-local && check-license (yarn "format")
-  go run github.com/specterops/bloodhound/schemagen
-
 # run imagemagick commands in the context of the project root
 imagemagick *ARGS:
   @docker run -it --rm -v {{justfile_directory()}}:/workdir -w /workdir --entrypoint magick cblunt/imagemagick {{ARGS}}
@@ -137,10 +152,6 @@ prune-my-branches nuclear='no':
   fi
   echo "Remaining Git Branches:"
   git --no-pager branch
-
-# Run all analyzers (requires jq to be installed locally)
-analyze:
-  go run github.com/specterops/bloodhound/packages/go/stbernard analysis | jq 'sort_by(.severity) | .[] | {"severity": .severity, "description": .description, "location": "\(.location.path):\(.location.lines.begin)"}'
 
 # run docker compose commands for the BH dev profile (Default: up)
 bh-dev *ARGS='up':
