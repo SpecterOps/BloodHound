@@ -6243,6 +6243,23 @@ func (s *ESC4ECA) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.NewRelationship(s.Computer7, s.CertTemplate7, ad.GenericAll)
 }
 
+type DBMigrateHarness struct {
+	Group1    *graph.Node
+	Computer1 *graph.Node
+	User1     *graph.Node
+}
+
+func (s *DBMigrateHarness) Setup(graphTestContext *GraphTestContext) {
+	sid := RandomDomainSID()
+	s.Group1 = graphTestContext.NewActiveDirectoryGroup("GROUP ONE", sid)
+	s.Computer1 = graphTestContext.NewActiveDirectoryComputer("COMPUTER ONE", sid)
+	s.User1 = graphTestContext.NewActiveDirectoryUser("USER ONE", sid, false)
+
+	graphTestContext.NewRelationship(s.Group1, s.Computer1, ad.GenericAll)
+	graphTestContext.NewRelationship(s.Computer1, s.User1, ad.HasSession)
+	graphTestContext.NewRelationship(s.User1, s.Group1, ad.MemberOf)
+}
+
 type HarnessDetails struct {
 	RDP                                             RDPHarness
 	RDPB                                            RDPHarness2
@@ -6316,4 +6333,5 @@ type HarnessDetails struct {
 	ESC4Template3                                   ESC4Template3
 	ESC4Template4                                   ESC4Template4
 	ESC4ECA                                         ESC4ECA
+	DBMigrateHarness                                DBMigrateHarness
 }

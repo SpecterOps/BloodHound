@@ -18,7 +18,7 @@ version: '3'
 services:
   testdb:
     restart: unless-stopped
-    image: docker.io/library/postgres:13.2
+    image: docker.io/library/postgres:16.2
     command: "-c log_statement=all"
     environment:
       - POSTGRES_USER=bloodhound
