@@ -18,6 +18,7 @@ package appcfg
 
 import (
 	"context"
+
 	"github.com/specterops/bloodhound/src/model"
 )
 
@@ -29,6 +30,7 @@ const (
 	FeatureReconciliation      = "reconciliation"
 	FeatureEntityPanelCaching  = "entity_panel_cache"
 	FeatureAdcs                = "adcs"
+	FeatureClearGraphData      = "clear_graph_data"
 )
 
 // AvailableFlags returns a FeatureFlagSet of expected feature flags. Feature flag defaults introduced here will become the initial
@@ -82,6 +84,13 @@ func AvailableFlags() FeatureFlagSet {
 			Name:          "Enable collection and processing of Active Directory Certificate Services Data",
 			Description:   "Enables the ability to collect, analyze, and explore Active Directory Certificate Services data and previews new attack paths.",
 			Enabled:       false,
+			UserUpdatable: false,
+		},
+		FeatureClearGraphData: {
+			Key:           FeatureClearGraphData,
+			Name:          "Clear Graph Data",
+			Description:   "Enables the ability to delete all nodes and edges from the graph database.",
+			Enabled:       true,
 			UserUpdatable: false,
 		},
 	}
