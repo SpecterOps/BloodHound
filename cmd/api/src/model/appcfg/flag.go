@@ -30,7 +30,7 @@ const (
 	FeatureReconciliation      = "reconciliation"
 	FeatureEntityPanelCaching  = "entity_panel_cache"
 	FeatureAdcs                = "adcs"
-	FeatureClearGraphData      = "clear-graph-data"
+	FeatureClearGraphData      = "clear_graph_data"
 )
 
 // AvailableFlags returns a FeatureFlagSet of expected feature flags. Feature flag defaults introduced here will become the initial

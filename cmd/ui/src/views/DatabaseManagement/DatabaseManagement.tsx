@@ -251,7 +251,7 @@ const DatabaseManagement = () => {
 
                         <FormGroup sx={{ paddingTop: 1 }}>
                             <FeatureFlag
-                                flagKey='clear-graph-data'
+                                flagKey='clear_graph_data'
                                 enabled={
                                     <FormControlLabel
                                         label='Collected graph data (all nodes and edges)'
