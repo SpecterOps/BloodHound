@@ -28,6 +28,7 @@ import (
 	"github.com/specterops/bloodhound/src/api/v2/apitest"
 	taskerMocks "github.com/specterops/bloodhound/src/daemons/datapipe/mocks"
 	dbMocks "github.com/specterops/bloodhound/src/database/mocks"
+	"github.com/specterops/bloodhound/src/model/appcfg"
 	"go.uber.org/mock/gomock"
 )
 
@@ -86,6 +87,10 @@ func TestDatabaseWipe(t *testing.T) {
 					apitest.BodyStruct(input, v2.DatabaseWipe{DeleteCollectedGraphData: true})
 				},
 				Setup: func() {
+					mockDB.EXPECT().GetFlagByKey(gomock.Any(), gomock.Any()).Return(appcfg.FeatureFlag{
+						Enabled: true,
+					}, nil)
+
 					taskerIntent := mockTasker.EXPECT().RequestDeletion().Times(1)
 					successfulAuditLogIntent := mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil).Times(1)
 					successfulAuditLogWipe := mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil).Times(1)
@@ -247,6 +252,9 @@ func TestDatabaseWipe(t *testing.T) {
 					successfulAuditLogIntent := mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil).Times(1)
 
 					// collected graph data operations
+					mockDB.EXPECT().GetFlagByKey(gomock.Any(), gomock.Any()).Return(appcfg.FeatureFlag{
+						Enabled: true,
+					}, nil)
 					taskerIntent := mockTasker.EXPECT().RequestDeletion().Times(1)
 					nodesDeletedAuditLog := mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil).Times(1)
 					gomock.InOrder(successfulAuditLogIntent, taskerIntent, nodesDeletedAuditLog)
