@@ -41,7 +41,7 @@ describe('DatabaseManagement', () => {
         const button = screen.getByRole('button', { name: /proceed/i });
 
         expect(title).toBeInTheDocument();
-        expect(checkboxes.length).toEqual(5);
+        expect(checkboxes.length).toEqual(4);
         expect(button).toBeInTheDocument();
     });
 
@@ -64,7 +64,7 @@ describe('DatabaseManagement', () => {
         const errorMsg = screen.getByText(/please make a selection/i);
         expect(errorMsg).toBeInTheDocument();
 
-        const checkbox = screen.getByRole('checkbox', { name: /collected graph data/i });
+        const checkbox = screen.getByRole('checkbox', { name: /All asset group selectors/i });
         await user.click(checkbox);
 
         expect(errorMsg).not.toBeInTheDocument();
@@ -73,7 +73,7 @@ describe('DatabaseManagement', () => {
     it('open and closes dialog', async () => {
         const user = userEvent.setup();
 
-        const checkbox = screen.getByRole('checkbox', { name: /collected graph data/i });
+        const checkbox = screen.getByRole('checkbox', { name: /All asset group selectors/i });
         await user.click(checkbox);
 
         const button = screen.getByRole('button', { name: /proceed/i });
@@ -91,7 +91,7 @@ describe('DatabaseManagement', () => {
     it('handles posting a mutation', async () => {
         const user = userEvent.setup();
 
-        const checkbox = screen.getByRole('checkbox', { name: /collected graph data/i });
+        const checkbox = screen.getByRole('checkbox', { name: /All asset group selectors/i });
         await user.click(checkbox);
 
         const proceedButton = screen.getByRole('button', { name: /proceed/i });
