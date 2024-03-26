@@ -90,8 +90,8 @@ func AvailableFlags() FeatureFlagSet {
 			Key:           FeatureClearGraphData,
 			Name:          "Clear Graph Data",
 			Description:   "Enables the ability to delete all nodes and edges from the graph database.",
-			Enabled:       false,
-			UserUpdatable: false,
+			Enabled:       true,
+			UserUpdatable: true,
 		},
 	}
 }

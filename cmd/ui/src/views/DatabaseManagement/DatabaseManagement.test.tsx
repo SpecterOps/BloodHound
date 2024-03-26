@@ -34,8 +34,8 @@ describe('DatabaseManagement', () => {
                             key: 'clear_graph_data',
                             name: 'Clear Graph Data',
                             description: 'Enables the ability to delete all nodes and edges from the graph database.',
-                            enabled: false,
-                            user_updatable: false,
+                            enabled: true,
+                            user_updatable: true,
                         },
                     ],
                 })
@@ -51,13 +51,15 @@ describe('DatabaseManagement', () => {
     afterEach(() => server.resetHandlers());
     afterAll(() => server.close());
 
-    it('renders', () => {
+    it('renders', async () => {
         const title = screen.getByText(/clear bloodhound data/i);
-        const checkboxes = screen.getAllByRole('checkbox');
         const button = screen.getByRole('button', { name: /proceed/i });
 
         expect(title).toBeInTheDocument();
-        expect(checkboxes.length).toEqual(4);
+        expect(await screen.findByRole('checkbox', { name: /Collected graph data/i })).toBeInTheDocument();
+
+        const checkboxes = screen.getAllByRole('checkbox');
+        expect(checkboxes.length).toEqual(5);
         expect(button).toBeInTheDocument();
     });
 
