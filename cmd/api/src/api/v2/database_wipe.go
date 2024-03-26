@@ -95,8 +95,12 @@ func (s Resources) HandleDatabaseWipe(response http.ResponseWriter, request *htt
 
 	// delete graph
 	if payload.DeleteCollectedGraphData {
-		s.TaskNotifier.RequestDeletion()
-		s.handleAuditLogForDatabaseWipe(request.Context(), auditEntry, true, "collected graph data")
+		api.WriteErrorResponse(
+			request.Context(),
+			api.BuildErrorResponse(http.StatusBadRequest, "deleting graph data is not currently supported", request),
+			response,
+		)
+		return
 	}
 
 	// delete asset group selectors

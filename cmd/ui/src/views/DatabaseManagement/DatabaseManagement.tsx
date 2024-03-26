@@ -39,7 +39,7 @@ const initialState: State = {
 
 type State = {
     // checkbox state
-    deleteCollectedGraphData: boolean;
+    deleteCollectedGraphData: false;
     deleteCustomHighValueSelectors: boolean;
     deleteAllAssetGroupSelectors: boolean;
     deleteFileIngestHistory: boolean;
@@ -203,7 +203,6 @@ const DatabaseManagement = () => {
     const { handleMutation, state, dispatch } = useDatabaseManagement();
 
     const {
-        deleteCollectedGraphData,
         deleteAllAssetGroupSelectors,
         deleteCustomHighValueSelectors,
         deleteFileIngestHistory,
@@ -249,16 +248,6 @@ const DatabaseManagement = () => {
                         ) : null}
 
                         <FormGroup sx={{ paddingTop: 1 }}>
-                            <FormControlLabel
-                                label='Collected graph data (all nodes and edges)'
-                                control={
-                                    <Checkbox
-                                        checked={deleteCollectedGraphData}
-                                        onChange={handleCheckbox}
-                                        name='deleteCollectedGraphData'
-                                    />
-                                }
-                            />
                             <FormControlLabel
                                 label='Custom High Value selectors'
                                 control={
