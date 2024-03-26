@@ -24,6 +24,22 @@ describe('DatabaseManagement', () => {
     const server = setupServer(
         rest.post('/api/v2/clear-database', (req, res, ctx) => {
             return res(ctx.status(204));
+        }),
+        rest.get('/api/v2/features', async (req, res, ctx) => {
+            return res(
+                ctx.json({
+                    data: [
+                        {
+                            id: 1,
+                            key: 'clear_graph_data',
+                            name: 'Clear Graph Data',
+                            description: 'Enables the ability to delete all nodes and edges from the graph database.',
+                            enabled: false,
+                            user_updatable: false,
+                        },
+                    ],
+                })
+            );
         })
     );
 
