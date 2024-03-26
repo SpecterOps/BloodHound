@@ -17,10 +17,14 @@
 package neo4j
 
 import (
+	"bytes"
 	"sort"
 	"strings"
 
+	"github.com/specterops/bloodhound/cypher/backend/cypher"
+	"github.com/specterops/bloodhound/cypher/frontend"
 	"github.com/specterops/bloodhound/dawgs/graph"
+	"github.com/specterops/bloodhound/log"
 )
 
 func updateKey(identityKind graph.Kind, identityProperties []string, updateKinds graph.Kinds) string {
@@ -282,4 +286,19 @@ func cypherBuildNodeUpdateQueryBatch(updates []graph.NodeUpdate) ([]string, []ma
 	}
 
 	return queries, queryParameters
+}
+
+func stripCypherQuery(rawQuery string) string {
+	var (
+		strippedEmitter = cypher.NewCypherEmitter(true)
+		buffer          = &bytes.Buffer{}
+	)
+
+	if queryModel, err := frontend.ParseCypher(frontend.DefaultCypherContext(), rawQuery); err != nil {
+		log.Errorf("error occurred parsing cypher query during sanitization: %v", err)
+	} else if err = strippedEmitter.Write(queryModel, buffer); err != nil {
+		log.Errorf("error occurred sanitizing cypher query: %v", err)
+	}
+
+	return buffer.String()
 }
