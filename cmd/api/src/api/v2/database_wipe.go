@@ -26,6 +26,7 @@ import (
 	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/src/model"
+	"github.com/specterops/bloodhound/src/model/appcfg"
 )
 
 type DatabaseWipe struct {
@@ -95,8 +96,25 @@ func (s Resources) HandleDatabaseWipe(response http.ResponseWriter, request *htt
 
 	// delete graph
 	if payload.DeleteCollectedGraphData {
-		s.TaskNotifier.RequestDeletion()
-		s.handleAuditLogForDatabaseWipe(request.Context(), auditEntry, true, "collected graph data")
+		if clearGraphDataFlag, err := s.DB.GetFlagByKey(request.Context(), appcfg.FeatureClearGraphData); err != nil {
+			api.WriteErrorResponse(
+				request.Context(),
+				api.BuildErrorResponse(http.StatusInternalServerError, "unable to inspect the feature flag for clearing graph data", request),
+				response,
+			)
+			return
+		} else if !clearGraphDataFlag.Enabled {
+			api.WriteErrorResponse(
+				request.Context(),
+				api.BuildErrorResponse(http.StatusBadRequest, "deleting graph data is currently disabled", request),
+				response,
+			)
+			return
+		} else {
+			s.TaskNotifier.RequestDeletion()
+			s.handleAuditLogForDatabaseWipe(request.Context(), auditEntry, true, "collected graph data")
+		}
+
 	}
 
 	// delete asset group selectors
