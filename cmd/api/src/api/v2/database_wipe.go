@@ -99,7 +99,7 @@ func (s Resources) HandleDatabaseWipe(response http.ResponseWriter, request *htt
 		if clearGraphDataFlag, err := s.DB.GetFlagByKey(request.Context(), appcfg.FeatureClearGraphData); err != nil {
 			api.WriteErrorResponse(
 				request.Context(),
-				api.BuildErrorResponse(http.StatusBadRequest, "deleting graph data is not currently supported", request),
+				api.BuildErrorResponse(http.StatusInternalServerError, "unable to inspect the feature flag for clearing graph data", request),
 				response,
 			)
 		} else if clearGraphDataFlag.Enabled {
@@ -108,7 +108,7 @@ func (s Resources) HandleDatabaseWipe(response http.ResponseWriter, request *htt
 		} else {
 			api.WriteErrorResponse(
 				request.Context(),
-				api.BuildErrorResponse(http.StatusBadRequest, "deleting graph data is not currently supported", request),
+				api.BuildErrorResponse(http.StatusBadRequest, "deleting graph data is currently disabled", request),
 				response,
 			)
 			return
