@@ -19,3 +19,5 @@ SET tag = REGEXP_REPLACE(tag, '\s', '', 'g');
 
 ALTER TABLE ingest_tasks
 ADD COLUMN IF NOT EXISTS file_type integer DEFAULT 0;
+
+UPDATE feature_flags SET enabled = true, user_updatable = false WHERE key = 'clear_graph_data';
