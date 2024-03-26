@@ -102,16 +102,17 @@ func (s Resources) HandleDatabaseWipe(response http.ResponseWriter, request *htt
 				api.BuildErrorResponse(http.StatusInternalServerError, "unable to inspect the feature flag for clearing graph data", request),
 				response,
 			)
-		} else if clearGraphDataFlag.Enabled {
-			s.TaskNotifier.RequestDeletion()
-			s.handleAuditLogForDatabaseWipe(request.Context(), auditEntry, true, "collected graph data")
-		} else {
+			return
+		} else if !clearGraphDataFlag.Enabled {
 			api.WriteErrorResponse(
 				request.Context(),
 				api.BuildErrorResponse(http.StatusBadRequest, "deleting graph data is currently disabled", request),
 				response,
 			)
 			return
+		} else {
+			s.TaskNotifier.RequestDeletion()
+			s.handleAuditLogForDatabaseWipe(request.Context(), auditEntry, true, "collected graph data")
 		}
 
 	}
