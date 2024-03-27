@@ -15,13 +15,17 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import userEvent from '@testing-library/user-event';
+import {
+    CYPHER_SEARCH,
+    PATHFINDING_SEARCH,
+    PRIMARY_SEARCH,
+    initialSearchState,
+    searchbarActions as actions,
+} from 'bh-shared-ui';
+import { rest } from 'msw';
+import { setupServer } from 'msw/node';
 import { act, render, screen, waitFor } from 'src/test-utils';
 import ExploreSearch from '.';
-import { setupServer } from 'msw/node';
-import { rest } from 'msw';
-import * as actions from 'src/ducks/searchbar/actions';
-import { PRIMARY_SEARCH, PATHFINDING_SEARCH, CYPHER_SEARCH } from 'src/ducks/searchbar/types';
-import { initialSearchState } from 'src/ducks/searchbar/reducer';
 
 describe('ExploreSearch rendering per tab', async () => {
     let container: HTMLElement;

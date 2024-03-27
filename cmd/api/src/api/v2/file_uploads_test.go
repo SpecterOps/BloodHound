@@ -20,6 +20,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"github.com/specterops/bloodhound/src/model/ingest"
 	"net/http"
 	"testing"
 
@@ -226,7 +227,7 @@ func TestResources_EndFileUploadJob(t *testing.T) {
 }
 
 func TestResources_ListAcceptedFileUploadTypes(t *testing.T) {
-	bytes, err := json.Marshal(v2.AllowedFileUploadTypes)
+	bytes, err := json.Marshal(ingest.AllowedFileUploadTypes)
 	if err != nil {
 		t.Fatalf("Error marshalling obj: %v", err)
 	}

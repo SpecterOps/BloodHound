@@ -52,7 +52,7 @@ export const useSearch = (keyword: string, type: ActiveDirectoryNodeKind | Azure
 };
 
 export const getKeywordAndTypeValues = (
-    inputValue: string
+    inputValue = ''
 ): { keyword: string; type: ActiveDirectoryNodeKind | AzureNodeKind | undefined } => {
     const splitValue = inputValue.split(':');
 

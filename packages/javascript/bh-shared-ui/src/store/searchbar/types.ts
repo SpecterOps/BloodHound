@@ -14,8 +14,9 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { EntityKinds } from 'bh-shared-ui';
-import { EdgeCheckboxType } from 'src/views/Explore/ExploreSearch/EdgeFilteringDialog';
+import { EntityKinds } from '../../utils/content';
+import { EdgeCheckboxType } from '../../views/Explore/ExploreSearch/edgeTypes';
+import { SearchResult } from '../../hooks/useSearch';
 
 const SEARCH_RESET = 'app/search/RESET';
 const CYPHER_QUERY_EDITED = 'app/search/CYPHER_QUERY_EDITED';
@@ -52,16 +53,24 @@ export {
     PATH_FILTERS_SAVED,
 };
 
+//The search value usually aligns with the results from hitting the search endpoint but when
+//we are pulling the data from a different page and filling out the value ourselves it might
+//not conform to our expected type
+export type SearchValue = SearchNodeType | SearchResult;
+
 export interface SearchBarState {
-    options: SearchNodeType[];
+    options: SearchResult[];
     searchTerm: string;
     loading: boolean;
-    value: SearchNodeType | null;
+    //value is set to optional to safeguard against possibly passing undefined when the value
+    //is not derived from direct user interaction with the search input
+    value?: SearchValue;
 }
+
 export interface SearchNodeType {
     objectid: string;
-    type: EntityKinds;
-    name: string;
+    type?: EntityKinds;
+    name?: string;
 }
 
 export interface CypherSearchState {
@@ -104,7 +113,7 @@ export interface CypherQueryEditedAction {
 
 export interface SourceNodeSelectedAction {
     type: typeof SOURCE_NODE_SELECTED;
-    node: SearchNodeType | null;
+    node?: SearchValue;
     doPathfindSearch: boolean;
 }
 
@@ -115,7 +124,7 @@ export interface SourceNodeEditedAction {
 
 export interface DestinationNodeSelectedAction {
     type: typeof DESTINATION_NODE_SELECTED;
-    node: SearchNodeType | null;
+    node?: SearchValue;
 }
 
 export interface DestinationNodeEditedAction {

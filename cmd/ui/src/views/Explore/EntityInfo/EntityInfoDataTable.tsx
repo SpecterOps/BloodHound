@@ -14,13 +14,17 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { EntityInfoDataTableProps, InfiniteScrollingTable, abortEntitySectionRequest } from 'bh-shared-ui';
+import {
+    EntityInfoDataTableProps,
+    InfiniteScrollingTable,
+    abortEntitySectionRequest,
+    searchbarActions,
+} from 'bh-shared-ui';
 import { useQuery } from 'react-query';
 import { useDispatch } from 'react-redux';
 import { NODE_GRAPH_RENDER_LIMIT } from 'src/constants';
 import { putGraphData, putGraphError, saveResponseForExport, setGraphLoading } from 'src/ducks/explore/actions';
 import { addSnackbar } from 'src/ducks/global/actions';
-import { sourceNodeSelected } from 'src/ducks/searchbar/actions';
 import { transformFlatGraphResponse } from 'src/utils';
 import EntityInfoCollapsibleSection from './EntityInfoCollapsibleSection';
 
@@ -69,7 +73,7 @@ const EntityInfoDataTable: React.FC<EntityInfoDataTableProps> = ({ id, label, en
 
     const handleOnClick = (item: any) => {
         dispatch(
-            sourceNodeSelected({
+            searchbarActions.sourceNodeSelected({
                 objectid: item.id,
                 type: item.type,
                 name: item.name,

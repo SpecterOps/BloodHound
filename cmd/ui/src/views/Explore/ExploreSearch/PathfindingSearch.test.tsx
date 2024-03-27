@@ -14,13 +14,13 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import userEvent from '@testing-library/user-event';
+import { searchbarActions as actions } from 'bh-shared-ui';
+import { rest } from 'msw';
+import { setupServer } from 'msw/node';
 import { act } from 'react-dom/test-utils';
 import { render, screen } from 'src/test-utils';
 import PathfindingSearch from './PathfindingSearch';
-import userEvent from '@testing-library/user-event';
-import { setupServer } from 'msw/node';
-import { rest } from 'msw';
-import * as actions from 'src/ducks/searchbar/actions';
 
 describe('Pathfinding: interaction', () => {
     const comboboxLookaheadOptions = {

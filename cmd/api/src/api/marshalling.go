@@ -189,7 +189,7 @@ func WriteBinaryResponse(_ context.Context, data []byte, filename string, status
 }
 
 func ReadJsonResponsePayload(value any, response *http.Response) error {
-	if !utils.HeaderMatches(headers.ContentType.String(), mediatypes.ApplicationJson.String(), response.Header) {
+	if !utils.HeaderMatches(response.Header, headers.ContentType.String(), mediatypes.ApplicationJson.String()) {
 		return ErrorContentTypeJson
 	}
 
@@ -202,7 +202,7 @@ func ReadJsonResponsePayload(value any, response *http.Response) error {
 }
 
 func ReadAPIV2ResponsePayload(value any, response *http.Response) error {
-	if !utils.HeaderMatches(headers.ContentType.String(), mediatypes.ApplicationJson.String(), response.Header) {
+	if !utils.HeaderMatches(response.Header, headers.ContentType.String(), mediatypes.ApplicationJson.String()) {
 		return ErrorContentTypeJson
 	}
 
@@ -220,7 +220,7 @@ func ReadAPIV2ResponsePayload(value any, response *http.Response) error {
 }
 
 func ReadAPIV2ResponseWrapperPayload(value any, response *http.Response) error {
-	if !utils.HeaderMatches(headers.ContentType.String(), mediatypes.ApplicationJson.String(), response.Header) {
+	if !utils.HeaderMatches(response.Header, headers.ContentType.String(), mediatypes.ApplicationJson.String()) {
 		return ErrorContentTypeJson
 	}
 
@@ -234,7 +234,7 @@ func ReadAPIV2ResponseWrapperPayload(value any, response *http.Response) error {
 }
 
 func ReadAPIV2ErrorResponsePayload(value *ErrorWrapper, response *http.Response) error {
-	if !utils.HeaderMatches(headers.ContentType.String(), mediatypes.ApplicationJson.String(), response.Header) {
+	if !utils.HeaderMatches(response.Header, headers.ContentType.String(), mediatypes.ApplicationJson.String()) {
 		return ErrorContentTypeJson
 	}
 
@@ -248,7 +248,7 @@ func ReadAPIV2ErrorResponsePayload(value *ErrorWrapper, response *http.Response)
 }
 
 func ReadJSONRequestPayloadLimited(value any, request *http.Request) error {
-	if !utils.HeaderMatches(headers.ContentType.String(), mediatypes.ApplicationJson.String(), request.Header) {
+	if !utils.HeaderMatches(request.Header, headers.ContentType.String(), mediatypes.ApplicationJson.String()) {
 		return ErrorContentTypeJson
 	}
 

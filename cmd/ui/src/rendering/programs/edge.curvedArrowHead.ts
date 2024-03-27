@@ -23,13 +23,14 @@
  */
 import { AbstractEdgeProgram } from 'sigma/rendering/webgl/programs/common/edge';
 import { RenderParams } from 'sigma/rendering/webgl/programs/common/program';
-import { NodeDisplayData } from 'sigma/types';
+import { Coordinates, NodeDisplayData } from 'sigma/types';
 import { floatColor } from 'sigma/utils';
 import { CurvedEdgeDisplayData } from 'src/rendering/programs/edge.curvedArrow';
 import { fragmentShaderSource } from 'src/rendering/shaders/edge.arrowHead.frag';
 import { vertexShaderSource } from 'src/rendering/shaders/edge.arrowHead.vert';
 import { bezier } from 'src/rendering/utils/bezier';
 import { getNodeRadius } from 'src/rendering/utils/utils';
+import { EdgeDirection } from 'src/utils';
 
 const POINTS = 3,
     ATTRIBUTES = 9,
@@ -150,9 +151,16 @@ export default class CurvedEdgeArrowHeadProgram extends AbstractEdgeProgram {
             return;
         }
 
+        let start, end: Coordinates;
+        if (data.direction === EdgeDirection.BACKWARDS) {
+            start = { x: targetData.x, y: targetData.y };
+            end = { x: sourceData.x, y: sourceData.y };
+        } else {
+            start = { x: sourceData.x, y: sourceData.y };
+            end = { x: targetData.x, y: targetData.y };
+        }
+
         const inverseSqrtZoomRatio = data.inverseSqrtZoomRatio || 1;
-        const start = { x: sourceData.x, y: sourceData.y };
-        const end = { x: targetData.x, y: targetData.y };
         const thickness = data.size || 1;
         const radius = getNodeRadius(targetData.highlighted, inverseSqrtZoomRatio, targetData.size);
         const color = floatColor(data.color);
@@ -172,7 +180,7 @@ export default class CurvedEdgeArrowHeadProgram extends AbstractEdgeProgram {
         }
 
         const control = bezier.getControlAtMidpoint(adjustedHeight, start, end);
-        const normal = bezier.getNormals(control, end);
+        const normal = bezier.getNormals(control, targetData);
 
         const vOffset = {
             x: normal.x * thickness,
@@ -184,8 +192,8 @@ export default class CurvedEdgeArrowHeadProgram extends AbstractEdgeProgram {
         const array = this.array;
 
         // First point
-        array[i++] = end.x;
-        array[i++] = end.y;
+        array[i++] = targetData.x;
+        array[i++] = targetData.y;
         array[i++] = -vOffset.y;
         array[i++] = -vOffset.x;
         array[i++] = radius;
@@ -195,8 +203,8 @@ export default class CurvedEdgeArrowHeadProgram extends AbstractEdgeProgram {
         array[i++] = 0;
 
         // Second point
-        array[i++] = end.x;
-        array[i++] = end.y;
+        array[i++] = targetData.x;
+        array[i++] = targetData.y;
         array[i++] = -vOffset.y;
         array[i++] = -vOffset.x;
         array[i++] = radius;
@@ -206,8 +214,8 @@ export default class CurvedEdgeArrowHeadProgram extends AbstractEdgeProgram {
         array[i++] = 0;
 
         // Third point
-        array[i++] = end.x;
-        array[i++] = end.y;
+        array[i++] = targetData.x;
+        array[i++] = targetData.y;
         array[i++] = -vOffset.y;
         array[i++] = -vOffset.x;
         array[i++] = radius;
