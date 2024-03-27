@@ -194,3 +194,7 @@ run-bhce-container platform='linux/amd64' tag='custom' version='v5.0.0' *ARGS=''
 
 check-license:
   python3 license_check.py
+
+# generates the openapi json doc from the yaml source (requires `redocly` cli)
+gen-spec:
+  @cd packages/go/openapi && redocly bundle src/openapi.yaml --output doc/openapi.json
