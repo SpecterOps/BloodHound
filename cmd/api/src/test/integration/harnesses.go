@@ -23,6 +23,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/bloodhoundad/azurehound/v2/constants"
 	"github.com/gofrs/uuid"
 	"github.com/specterops/bloodhound/analysis"
 	adAnalysis "github.com/specterops/bloodhound/analysis/ad"
@@ -6280,6 +6281,69 @@ func (s *ESC4ECA) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.NewRelationship(s.Computer7, s.CertTemplate7, ad.GenericAll)
 }
 
+type AZAddSecretHarness struct {
+	AZApp1             *graph.Node
+	AZApp2             *graph.Node
+	AZApp3             *graph.Node
+	AZGroup1           *graph.Node
+	AZGroup2           *graph.Node
+	AZServicePrincipal *graph.Node
+	AZTenant           *graph.Node
+	AZUser1            *graph.Node
+	AZUser2            *graph.Node
+	AppAdminRole1      *graph.Node
+	AppAdminRole2      *graph.Node
+	CloudAppAdminRole1 *graph.Node
+	CloudAppAdminRole2 *graph.Node
+}
+
+func (s *AZAddSecretHarness) Setup(graphTestContext *GraphTestContext) {
+	tenantID := RandomObjectID(graphTestContext.testCtx)
+	s.AZTenant = graphTestContext.NewAzureTenant(tenantID)
+
+	s.AZApp1 = graphTestContext.NewAzureApplication("AZApp1", RandomObjectID(graphTestContext.testCtx), tenantID)
+	s.AZApp2 = graphTestContext.NewAzureApplication("AZApp2", RandomObjectID(graphTestContext.testCtx), tenantID)
+	s.AZApp3 = graphTestContext.NewAzureApplication("AZApp3", RandomObjectID(graphTestContext.testCtx), tenantID)
+
+	s.AZGroup1 = graphTestContext.NewAzureGroup("AZGroup1", RandomObjectID(graphTestContext.testCtx), tenantID)
+	s.AZGroup2 = graphTestContext.NewAzureGroup("AZGroup2", RandomObjectID(graphTestContext.testCtx), tenantID)
+
+	s.AZServicePrincipal = graphTestContext.NewAzureServicePrincipal("AZServicePrincipal", RandomObjectID(graphTestContext.testCtx), tenantID)
+
+	s.AZUser1 = graphTestContext.NewAzureUser("AZUser1", "AZUser1", "", RandomObjectID(graphTestContext.testCtx), "", tenantID, false)
+	s.AZUser2 = graphTestContext.NewAzureUser("AZUser2", "AZUser2", "", RandomObjectID(graphTestContext.testCtx), "", tenantID, false)
+
+	s.AppAdminRole1 = graphTestContext.NewAzureRole("AppAdminRole1", RandomObjectID(graphTestContext.testCtx), constants.ApplicationAdministratorRoleID, tenantID)
+	s.AppAdminRole2 = graphTestContext.NewAzureRole("AppAdminRole2", RandomObjectID(graphTestContext.testCtx), constants.ApplicationAdministratorRoleID, tenantID)
+
+	s.CloudAppAdminRole1 = graphTestContext.NewAzureRole("CloudAppAdminRole1 ", RandomObjectID(graphTestContext.testCtx), constants.CloudApplicationAdministratorRoleID, tenantID)
+	s.CloudAppAdminRole2 = graphTestContext.NewAzureRole("CloudAppAdminRole2 ", RandomObjectID(graphTestContext.testCtx), constants.CloudApplicationAdministratorRoleID, tenantID)
+
+	graphTestContext.NewRelationship(s.AZTenant, s.AZUser1, azure.Contains)
+	graphTestContext.NewRelationship(s.AZTenant, s.AZApp1, azure.Contains)
+	graphTestContext.NewRelationship(s.AZTenant, s.AZApp2, azure.Contains)
+	graphTestContext.NewRelationship(s.AZTenant, s.AZApp3, azure.Contains)
+	graphTestContext.NewRelationship(s.AZTenant, s.AZGroup1, azure.Contains)
+	graphTestContext.NewRelationship(s.AZTenant, s.AZGroup2, azure.Contains)
+	graphTestContext.NewRelationship(s.AZTenant, s.AZServicePrincipal, azure.Contains)
+	graphTestContext.NewRelationship(s.AZTenant, s.AppAdminRole1, azure.Contains)
+	graphTestContext.NewRelationship(s.AZTenant, s.AppAdminRole2, azure.Contains)
+	graphTestContext.NewRelationship(s.AZTenant, s.CloudAppAdminRole1, azure.Contains)
+	graphTestContext.NewRelationship(s.AZTenant, s.CloudAppAdminRole2, azure.Contains)
+
+	graphTestContext.NewRelationship(s.AZUser1, s.AppAdminRole1, azure.HasRole)
+	graphTestContext.NewRelationship(s.AZServicePrincipal, s.AppAdminRole2, azure.HasRole)
+	graphTestContext.NewRelationship(s.AZGroup1, s.CloudAppAdminRole1, azure.HasRole)
+	graphTestContext.NewRelationship(s.AZGroup2, s.CloudAppAdminRole2, azure.HasRole)
+
+	graphTestContext.NewRelationship(s.AppAdminRole1, s.AZTenant, azure.ScopedTo)
+	graphTestContext.NewRelationship(s.AppAdminRole2, s.AZApp3, azure.ScopedTo)
+	graphTestContext.NewRelationship(s.CloudAppAdminRole1, s.AZTenant, azure.ScopedTo)
+	graphTestContext.NewRelationship(s.CloudAppAdminRole2, s.AZApp3, azure.ScopedTo)
+
+	graphTestContext.NewRelationship(s.AZUser2, s.AZApp3, azure.Owns)
+}
+
 type HarnessDetails struct {
 	RDP                                             RDPHarness
 	RDPB                                            RDPHarness2
@@ -6317,6 +6381,7 @@ type HarnessDetails struct {
 	TrustedForNTAuthHarness                         TrustedForNTAuthHarness
 	NumCollectedActiveDirectoryDomains              int
 	AZInboundControlHarness                         AZInboundControlHarness
+	AZAddSecretHarness                              AZAddSecretHarness
 	ESC3Harness1                                    ESC3Harness1
 	ESC3Harness2                                    ESC3Harness2
 	ESC3Harness3                                    ESC3Harness3
