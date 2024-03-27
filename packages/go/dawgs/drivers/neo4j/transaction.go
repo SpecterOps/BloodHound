@@ -20,10 +20,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/specterops/bloodhound/dawgs/drivers"
-	"github.com/specterops/bloodhound/log"
 	"sort"
 	"strings"
+
+	"github.com/specterops/bloodhound/dawgs/drivers"
+	"github.com/specterops/bloodhound/log"
 
 	"github.com/specterops/bloodhound/dawgs/query/neo4j"
 	"github.com/specterops/bloodhound/dawgs/util/size"
@@ -226,7 +227,8 @@ func (s *neo4jTransaction) updateNode(updatedNode *graph.Node) error {
 	if err := queryBuilder.Prepare(); err != nil {
 		return err
 	} else if cypherQuery, err := queryBuilder.Render(); err != nil {
-		return graph.NewError(cypherQuery, err)
+		strippedQuery := stripCypherQuery(cypherQuery)
+		return graph.NewError(strippedQuery, err)
 	} else if result := s.Raw(cypherQuery, queryBuilder.Parameters); result.Error() != nil {
 		return result.Error()
 	}
@@ -454,7 +456,8 @@ func (s *neo4jTransaction) UpdateRelationship(relationship *graph.Relationship) 
 	if err := queryBuilder.Prepare(); err != nil {
 		return err
 	} else if cypherQuery, err := queryBuilder.Render(); err != nil {
-		return graph.NewError(cypherQuery, err)
+		strippedQuery := stripCypherQuery(cypherQuery)
+		return graph.NewError(strippedQuery, err)
 	} else {
 		return s.runAndLog(cypherQuery, queryBuilder.Parameters, 1).Error()
 	}

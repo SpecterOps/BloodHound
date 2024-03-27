@@ -57,7 +57,8 @@ func (s *internalResult) Error() error {
 	}
 
 	if s.driverResult != nil && s.driverResult.Err() != nil {
-		return graph.NewError(s.query, s.driverResult.Err())
+		strippedQuery := stripCypherQuery(s.query)
+		return graph.NewError(strippedQuery, s.driverResult.Err())
 	}
 
 	return nil

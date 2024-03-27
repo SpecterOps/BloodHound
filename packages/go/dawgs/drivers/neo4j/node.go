@@ -160,7 +160,8 @@ func (s *NodeQuery) Update(properties *graph.Properties) error {
 	if err := s.queryBuilder.Prepare(); err != nil {
 		return err
 	} else if cypherQuery, err := s.queryBuilder.Render(); err != nil {
-		return graph.NewError(cypherQuery, err)
+		strippedQuery := stripCypherQuery(cypherQuery)
+		return graph.NewError(strippedQuery, err)
 	} else if result := s.run(cypherQuery, s.queryBuilder.Parameters); result.Error() != nil {
 		return result.Error()
 	}
