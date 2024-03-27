@@ -99,7 +99,7 @@ update-favicon:
 
 # run go commands in the context of the api project
 go *ARGS:
-  @cd cmd/api/src && GODEBUG=cgocheck=2 go {{ARGS}}
+  @cd cmd/api/src && go {{ARGS}}
 
 # run yarn commands in the context of the workspace root
 yarn-local *ARGS="":

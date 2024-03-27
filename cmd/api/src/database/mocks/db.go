@@ -68,6 +68,20 @@ func (mr *MockDatabaseMockRecorder) AppendAuditLog(arg0, arg1 interface{}) *gomo
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AppendAuditLog", reflect.TypeOf((*MockDatabase)(nil).AppendAuditLog), arg0, arg1)
 }
 
+// CancelAllFileUploads mocks base method.
+func (m *MockDatabase) CancelAllFileUploads(arg0 context.Context) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CancelAllFileUploads", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// CancelAllFileUploads indicates an expected call of CancelAllFileUploads.
+func (mr *MockDatabaseMockRecorder) CancelAllFileUploads(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CancelAllFileUploads", reflect.TypeOf((*MockDatabase)(nil).CancelAllFileUploads), arg0)
+}
+
 // Close mocks base method.
 func (m *MockDatabase) Close(arg0 context.Context) {
 	m.ctrl.T.Helper()
@@ -344,6 +358,20 @@ func (m *MockDatabase) DeleteAllFileUploads(arg0 context.Context) error {
 func (mr *MockDatabaseMockRecorder) DeleteAllFileUploads(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteAllFileUploads", reflect.TypeOf((*MockDatabase)(nil).DeleteAllFileUploads), arg0)
+}
+
+// DeleteAllIngestTasks mocks base method.
+func (m *MockDatabase) DeleteAllIngestTasks(arg0 context.Context) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteAllIngestTasks", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteAllIngestTasks indicates an expected call of DeleteAllIngestTasks.
+func (mr *MockDatabaseMockRecorder) DeleteAllIngestTasks(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteAllIngestTasks", reflect.TypeOf((*MockDatabase)(nil).DeleteAllIngestTasks), arg0)
 }
 
 // DeleteAssetGroup mocks base method.

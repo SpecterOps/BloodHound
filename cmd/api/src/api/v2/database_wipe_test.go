@@ -28,6 +28,7 @@ import (
 	"github.com/specterops/bloodhound/src/api/v2/apitest"
 	taskerMocks "github.com/specterops/bloodhound/src/daemons/datapipe/mocks"
 	dbMocks "github.com/specterops/bloodhound/src/database/mocks"
+	"github.com/specterops/bloodhound/src/model/appcfg"
 	"go.uber.org/mock/gomock"
 )
 
@@ -80,57 +81,21 @@ func TestDatabaseWipe(t *testing.T) {
 				},
 			},
 			{
-				Name: "failed fetching nodes during attempt to delete collected graph data",
+				Name: "deletion of collected graph data kicks off tasker",
 				Input: func(input *apitest.Input) {
 					apitest.SetHeader(input, headers.ContentType.String(), mediatypes.ApplicationJson.String())
 					apitest.BodyStruct(input, v2.DatabaseWipe{DeleteCollectedGraphData: true})
 				},
 				Setup: func() {
+					mockDB.EXPECT().GetFlagByKey(gomock.Any(), gomock.Any()).Return(appcfg.FeatureFlag{
+						Enabled: true,
+					}, nil)
+
+					taskerIntent := mockTasker.EXPECT().RequestDeletion().Times(1)
 					successfulAuditLogIntent := mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil).Times(1)
-					failedFetchNodesToDelete := mockGraph.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(errors.New("oopsy!")).Times(1)
-					successfulAuditLogFailure := mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil).Times(1)
+					successfulAuditLogWipe := mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil).Times(1)
 
-					gomock.InOrder(successfulAuditLogIntent, failedFetchNodesToDelete, successfulAuditLogFailure)
-				},
-				Test: func(output apitest.Output) {
-					apitest.StatusCode(output, http.StatusInternalServerError)
-					apitest.BodyContains(output, "We encountered an error while deleting collected graph data")
-				},
-			},
-			{
-				Name: "failed batch operation to delete nodes during attempt to delete collected graph data",
-				Input: func(input *apitest.Input) {
-					apitest.SetHeader(input, headers.ContentType.String(), mediatypes.ApplicationJson.String())
-					apitest.BodyStruct(input, v2.DatabaseWipe{DeleteCollectedGraphData: true})
-				},
-				Setup: func() {
-					successfulAuditLogIntent := mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil).Times(1)
-					successfulFetchNodesToDelete := mockGraph.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil).Times(1)
-					failedBatchDelete := mockGraph.EXPECT().BatchOperation(gomock.Any(), gomock.Any()).Return(errors.New("oopsy!")).Times(1)
-					successfulAuditLogFailure := mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil).Times(1)
-
-					gomock.InOrder(successfulAuditLogIntent, successfulFetchNodesToDelete, failedBatchDelete, successfulAuditLogFailure)
-
-				},
-				Test: func(output apitest.Output) {
-					apitest.StatusCode(output, http.StatusInternalServerError)
-					apitest.BodyContains(output, "We encountered an error while deleting collected graph data")
-				},
-			},
-			{
-				Name: "succesful deletion of collected graph data kicks of analysis",
-				Input: func(input *apitest.Input) {
-					apitest.SetHeader(input, headers.ContentType.String(), mediatypes.ApplicationJson.String())
-					apitest.BodyStruct(input, v2.DatabaseWipe{DeleteCollectedGraphData: true})
-				},
-				Setup: func() {
-					successfulAuditLogIntent := mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil).Times(1)
-					successfulFetchNodesToDelete := mockGraph.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil).Times(1)
-					successfulBatchDelete := mockGraph.EXPECT().BatchOperation(gomock.Any(), gomock.Any()).Return(nil).Times(1)
-					successfulAuditLogSuccess := mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil).Times(1)
-					sucsessfulAnalysisKickoff := mockTasker.EXPECT().RequestAnalysis().Times(1)
-
-					gomock.InOrder(successfulAuditLogIntent, successfulFetchNodesToDelete, successfulBatchDelete, successfulAuditLogSuccess, sucsessfulAnalysisKickoff)
+					gomock.InOrder(successfulAuditLogIntent, taskerIntent, successfulAuditLogWipe)
 
 				},
 				Test: func(output apitest.Output) {
@@ -287,10 +252,12 @@ func TestDatabaseWipe(t *testing.T) {
 					successfulAuditLogIntent := mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil).Times(1)
 
 					// collected graph data operations
-					fetchNodesToDelete := mockGraph.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil).Times(1)
-					batchDelete := mockGraph.EXPECT().BatchOperation(gomock.Any(), gomock.Any()).Return(nil).Times(1)
+					mockDB.EXPECT().GetFlagByKey(gomock.Any(), gomock.Any()).Return(appcfg.FeatureFlag{
+						Enabled: true,
+					}, nil)
+					taskerIntent := mockTasker.EXPECT().RequestDeletion().Times(1)
 					nodesDeletedAuditLog := mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil).Times(1)
-					gomock.InOrder(successfulAuditLogIntent, fetchNodesToDelete, batchDelete, nodesDeletedAuditLog)
+					gomock.InOrder(successfulAuditLogIntent, taskerIntent, nodesDeletedAuditLog)
 
 					// high value selector operations
 					assetGroupSelectorsDelete := mockDB.EXPECT().DeleteAssetGroupSelectorsForAssetGroups(gomock.Any(), gomock.Any()).Return(nil).Times(1)

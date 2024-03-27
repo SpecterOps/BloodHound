@@ -23,11 +23,10 @@ import (
 	"strings"
 
 	"github.com/gofrs/uuid"
-	"github.com/specterops/bloodhound/dawgs/graph"
-	"github.com/specterops/bloodhound/dawgs/ops"
 	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/src/model"
+	"github.com/specterops/bloodhound/src/model/appcfg"
 )
 
 type DatabaseWipe struct {
@@ -97,11 +96,25 @@ func (s Resources) HandleDatabaseWipe(response http.ResponseWriter, request *htt
 
 	// delete graph
 	if payload.DeleteCollectedGraphData {
-		if failed := s.deleteCollectedGraphData(request.Context(), auditEntry); failed {
-			errors = append(errors, "collected graph data")
+		if clearGraphDataFlag, err := s.DB.GetFlagByKey(request.Context(), appcfg.FeatureClearGraphData); err != nil {
+			api.WriteErrorResponse(
+				request.Context(),
+				api.BuildErrorResponse(http.StatusInternalServerError, "unable to inspect the feature flag for clearing graph data", request),
+				response,
+			)
+			return
+		} else if !clearGraphDataFlag.Enabled {
+			api.WriteErrorResponse(
+				request.Context(),
+				api.BuildErrorResponse(http.StatusBadRequest, "deleting graph data is currently disabled", request),
+				response,
+			)
+			return
 		} else {
-			kickoffAnalysis = true
+			s.TaskNotifier.RequestDeletion()
+			s.handleAuditLogForDatabaseWipe(request.Context(), auditEntry, true, "collected graph data")
 		}
+
 	}
 
 	// delete asset group selectors
@@ -146,39 +159,6 @@ func (s Resources) HandleDatabaseWipe(response http.ResponseWriter, request *htt
 
 }
 
-func (s Resources) deleteCollectedGraphData(ctx context.Context, auditEntry *model.AuditEntry) (failure bool) {
-	var nodeIDs []graph.ID
-
-	if err := s.Graph.ReadTransaction(ctx,
-		func(tx graph.Transaction) error {
-			fetchedNodeIDs, err := ops.FetchNodeIDs(tx.Nodes())
-
-			nodeIDs = append(nodeIDs, fetchedNodeIDs...)
-			return err
-		},
-	); err != nil {
-		log.Errorf("%s: %s", "error fetching all nodes", err.Error())
-		s.handleAuditLogForDatabaseWipe(ctx, auditEntry, false, "collected graph data")
-		return true
-	} else if err := s.Graph.BatchOperation(ctx, func(batch graph.Batch) error {
-		for _, nodeId := range nodeIDs {
-			// deleting a node also deletes all of its edges due to a sql trigger
-			if err := batch.DeleteNode(nodeId); err != nil {
-				return err
-			}
-		}
-		return nil
-	}); err != nil {
-		log.Errorf("%s: %s", "error deleting all nodes", err.Error())
-		s.handleAuditLogForDatabaseWipe(ctx, auditEntry, false, "collected graph data")
-		return true
-	} else {
-		// if successful, handle audit log and kick off analysis
-		s.handleAuditLogForDatabaseWipe(ctx, auditEntry, true, "collected graph data")
-		return false
-	}
-}
-
 func (s Resources) deleteHighValueSelectors(ctx context.Context, auditEntry *model.AuditEntry, assetGroupIDs []int) (failure bool) {
 
 	if err := s.DB.DeleteAssetGroupSelectorsForAssetGroups(ctx, assetGroupIDs); err != nil {
@@ -218,7 +198,7 @@ func (s Resources) handleAuditLogForDatabaseWipe(ctx context.Context, auditEntry
 	if success {
 		auditEntry.Status = model.AuditLogStatusSuccess
 		auditEntry.Model = model.AuditData{
-			"delete_successful": msg,
+			"delete_request_successful": msg,
 		}
 	} else {
 		auditEntry.Status = model.AuditLogStatusFailure

@@ -26,6 +26,7 @@ import (
 	"github.com/specterops/bloodhound/dawgs/ops"
 	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/src/api"
+	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/model/appcfg"
 	"github.com/specterops/bloodhound/src/queries"
 )
@@ -48,6 +49,8 @@ func (s *Resources) handleAdRelatedEntityQuery(response http.ResponseWriter, req
 		} else {
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "an unknown error occurred during the request", request), response)
 		}
+	} else if params.RequestedType == model.DataTypeGraph {
+		api.WriteJSONResponse(request.Context(), results, http.StatusOK, response)
 	} else {
 		api.WriteResponseWrapperWithPagination(request.Context(), results, params.Limit, params.Skip, count, http.StatusOK, response)
 	}

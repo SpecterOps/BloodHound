@@ -16,6 +16,8 @@
 
 package bloodhoundgraph
 
+//TODO: Move styling responsibilites to the UI or move shared styling definitions to a cue file to generate from one source of truth
+
 type BloodHoundGraphGlyph struct {
 	Angle    int                        `json:"angle,omitempty"`
 	Blink    bool                       `json:"blink,omitempty"`
@@ -234,7 +236,7 @@ func (s *BloodHoundGraphNode) SetIcon(nType string) {
 		}
 	case "AIACA":
 		s.FontIcon = &BloodHoundGraphFontIcon{
-			Text: "fa-box",
+			Text: "fa-arrows-left-right-to-line",
 		}
 	case "RootCA":
 		s.FontIcon = &BloodHoundGraphFontIcon{

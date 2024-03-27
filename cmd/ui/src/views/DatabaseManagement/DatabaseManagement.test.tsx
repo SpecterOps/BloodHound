@@ -24,6 +24,22 @@ describe('DatabaseManagement', () => {
     const server = setupServer(
         rest.post('/api/v2/clear-database', (req, res, ctx) => {
             return res(ctx.status(204));
+        }),
+        rest.get('/api/v2/features', async (req, res, ctx) => {
+            return res(
+                ctx.json({
+                    data: [
+                        {
+                            id: 1,
+                            key: 'clear_graph_data',
+                            name: 'Clear Graph Data',
+                            description: 'Enables the ability to delete all nodes and edges from the graph database.',
+                            enabled: true,
+                            user_updatable: true,
+                        },
+                    ],
+                })
+            );
         })
     );
 
@@ -35,12 +51,14 @@ describe('DatabaseManagement', () => {
     afterEach(() => server.resetHandlers());
     afterAll(() => server.close());
 
-    it('renders', () => {
+    it('renders', async () => {
         const title = screen.getByText(/clear bloodhound data/i);
-        const checkboxes = screen.getAllByRole('checkbox');
         const button = screen.getByRole('button', { name: /proceed/i });
 
         expect(title).toBeInTheDocument();
+        expect(await screen.findByRole('checkbox', { name: /Collected graph data/i })).toBeInTheDocument();
+
+        const checkboxes = screen.getAllByRole('checkbox');
         expect(checkboxes.length).toEqual(5);
         expect(button).toBeInTheDocument();
     });
@@ -64,7 +82,7 @@ describe('DatabaseManagement', () => {
         const errorMsg = screen.getByText(/please make a selection/i);
         expect(errorMsg).toBeInTheDocument();
 
-        const checkbox = screen.getByRole('checkbox', { name: /collected graph data/i });
+        const checkbox = screen.getByRole('checkbox', { name: /All asset group selectors/i });
         await user.click(checkbox);
 
         expect(errorMsg).not.toBeInTheDocument();
@@ -73,7 +91,7 @@ describe('DatabaseManagement', () => {
     it('open and closes dialog', async () => {
         const user = userEvent.setup();
 
-        const checkbox = screen.getByRole('checkbox', { name: /collected graph data/i });
+        const checkbox = screen.getByRole('checkbox', { name: /All asset group selectors/i });
         await user.click(checkbox);
 
         const button = screen.getByRole('button', { name: /proceed/i });
@@ -91,7 +109,7 @@ describe('DatabaseManagement', () => {
     it('handles posting a mutation', async () => {
         const user = userEvent.setup();
 
-        const checkbox = screen.getByRole('checkbox', { name: /collected graph data/i });
+        const checkbox = screen.getByRole('checkbox', { name: /All asset group selectors/i });
         await user.click(checkbox);
 
         const proceedButton = screen.getByRole('button', { name: /proceed/i });
