@@ -67,13 +67,13 @@ func (s *command) Parse(cmdIndex int) error {
 }
 
 func (s command) Run() error {
-	if cwd, err := workspace.FindRoot(); err != nil {
+	if paths, err := workspace.FindPaths(s.env); err != nil {
 		return fmt.Errorf("finding workspace root: %w", err)
-	} else if modPaths, err := workspace.ParseModulesAbsPaths(cwd); err != nil {
+	} else if modPaths, err := workspace.ParseModulesAbsPaths(paths.Root); err != nil {
 		return fmt.Errorf("parsing module absolute paths: %w", err)
 	} else if err := workspace.DownloadModules(modPaths, s.env); err != nil {
 		return fmt.Errorf("downloading go modules: %w", err)
-	} else if err := workspace.SyncWorkspace(cwd, s.env); err != nil {
+	} else if err := workspace.SyncWorkspace(paths.Root, s.env); err != nil {
 		return fmt.Errorf("syncing go workspace: %w", err)
 	} else {
 		return nil

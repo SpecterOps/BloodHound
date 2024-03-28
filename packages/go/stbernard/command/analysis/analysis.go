@@ -71,17 +71,17 @@ func (s *command) Parse(cmdIndex int) error {
 }
 
 func (s *command) Run() error {
-	if cwd, err := workspace.FindRoot(); err != nil {
+	if paths, err := workspace.FindPaths(s.env); err != nil {
 		return fmt.Errorf("finding workspace root: %w", err)
-	} else if modPaths, err := workspace.ParseModulesAbsPaths(cwd); err != nil {
+	} else if modPaths, err := workspace.ParseModulesAbsPaths(paths.Root); err != nil {
 		return fmt.Errorf("parsing module absolute paths: %w", err)
-	} else if jsPaths, err := workspace.ParseJSAbsPaths(cwd); err != nil {
+	} else if jsPaths, err := workspace.ParseJSAbsPaths(paths.Root); err != nil {
 		return fmt.Errorf("parsing JS absolute paths: %w", err)
-	} else if err := golang.InstallGolangCiLint(cwd, s.env); err != nil {
+	} else if err := golang.InstallGolangCiLint(paths.Root, s.env); err != nil {
 		return fmt.Errorf("installing golangci-lint: %w", err)
-	} else if err := yarn.InstallWorkspaceDeps(cwd, jsPaths, s.env); err != nil {
+	} else if err := yarn.InstallWorkspaceDeps(paths.Root, jsPaths, s.env); err != nil {
 		return fmt.Errorf("yarn install: %w", err)
-	} else if result, err := analyzers.Run(cwd, modPaths, jsPaths, s.env); errors.Is(err, analyzers.ErrSeverityExit) {
+	} else if result, err := analyzers.Run(paths.Root, modPaths, jsPaths, s.env); errors.Is(err, analyzers.ErrSeverityExit) {
 		fmt.Println(result)
 		return err
 	} else if err != nil {

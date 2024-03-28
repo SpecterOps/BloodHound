@@ -70,15 +70,15 @@ func (s *command) Parse(cmdIndex int) error {
 }
 
 func (s *command) Run() error {
-	if cwd, err := workspace.FindRoot(); err != nil {
+	if paths, err := workspace.FindPaths(s.env); err != nil {
 		return fmt.Errorf("finding workspace root: %w", err)
-	} else if cfg, err := workspace.ParseConfig(cwd); err != nil {
+	} else if cfg, err := workspace.ParseConfig(paths.Root); err != nil {
 		return fmt.Errorf("getting build configuration file: %w", err)
-	} else if err := filepath.WalkDir(filepath.Join(cwd, cfg.AssetsDir), clearFiles); err != nil {
+	} else if err := filepath.WalkDir(filepath.Join(paths.Root, cfg.AssetsDir), clearFiles); err != nil {
 		return fmt.Errorf("clearing asset directory: %w", err)
-	} else if err := s.runJSBuild(cwd, filepath.Join(cwd, cfg.AssetsDir)); err != nil {
+	} else if err := s.runJSBuild(paths.Root, filepath.Join(paths.Root, cfg.AssetsDir)); err != nil {
 		return fmt.Errorf("building JS artifacts: %w", err)
-	} else if err := s.runGoBuild(cwd); err != nil {
+	} else if err := s.runGoBuild(paths.Root); err != nil {
 		return fmt.Errorf("building Go artifacts: %w", err)
 	} else {
 		return nil

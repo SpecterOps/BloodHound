@@ -32,6 +32,23 @@ import (
 	"golang.org/x/mod/modfile"
 )
 
+const (
+	CoverageManifest = "manifest.json"
+	CoverageExt      = ".coverage"
+	CombinedCoverage = "combined" + CoverageExt
+)
+
+var (
+	DefaultCoveragePath          = filepath.Join("tmp", "coverage")
+	DefaultIntegrationConfigPath = filepath.Join("local-harnesses", "integration.config.json")
+)
+
+// WorkspacePaths defines important paths for the current workspace
+type WorkspacePaths struct {
+	Root     string
+	Coverage string
+}
+
 // GoPackage represents a parsed Go package
 type GoPackage struct {
 	Name   string `json:"name"`
@@ -45,11 +62,11 @@ type Config struct {
 	AssetsDir string `json:"assets_dir"`
 }
 
-// FindRoot will attempt to crawl up the path until it finds a go.work file
-func FindRoot() (string, error) {
+// FindPaths will attempt to crawl up the path until it finds a go.work file, then calculate all WorkspacePaths
+func FindPaths(env environment.Environment) (WorkspacePaths, error) {
 	cwd, err := os.Getwd()
 	if err != nil {
-		return "", fmt.Errorf("getting current working directory: %w", err)
+		return WorkspacePaths{}, fmt.Errorf("getting current working directory: %w", err)
 	}
 
 	var found bool
@@ -57,7 +74,7 @@ func FindRoot() (string, error) {
 	for !found {
 		found, err = projectDirExists(cwd)
 		if err != nil {
-			return cwd, fmt.Errorf("finding project root: %w", err)
+			return WorkspacePaths{}, fmt.Errorf("finding project root: %w", err)
 		}
 
 		if found {
@@ -70,11 +87,18 @@ func FindRoot() (string, error) {
 		cwd = filepath.Dir(cwd)
 
 		if cwd == prevCwd {
-			return cwd, errors.New("found root path without finding project root")
+			return WorkspacePaths{}, errors.New("found root path without finding project root")
 		}
 	}
 
-	return cwd, nil
+	path, ok := env["SB_COVERAGE_PATH"]
+	if !ok || path == "" {
+		path = filepath.Join(cwd, DefaultCoveragePath)
+	} else if !filepath.IsAbs(path) {
+		path = filepath.Join(cwd, path)
+	}
+
+	return WorkspacePaths{Root: cwd, Coverage: path}, nil
 }
 
 // ParseConfig parses a configuration file in the .stbernard directory for the given workspace path

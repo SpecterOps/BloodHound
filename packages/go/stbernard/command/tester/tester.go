@@ -3,9 +3,11 @@ package tester
 import (
 	"flag"
 	"fmt"
+	"io/fs"
 	"os"
 	"path/filepath"
 
+	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/packages/go/stbernard/environment"
 	"github.com/specterops/bloodhound/packages/go/stbernard/workspace"
 	"github.com/specterops/bloodhound/packages/go/stbernard/yarn"
@@ -17,9 +19,10 @@ const (
 )
 
 type command struct {
-	env      environment.Environment
-	yarnOnly bool
-	goOnly   bool
+	env         environment.Environment
+	yarnOnly    bool
+	goOnly      bool
+	integration bool
 }
 
 func Create(env environment.Environment) *command {
@@ -40,6 +43,7 @@ func (s *command) Parse(cmdIndex int) error {
 	cmd := flag.NewFlagSet(Name, flag.ExitOnError)
 	yarnOnly := cmd.Bool("y", false, "Yarn only")
 	goOnly := cmd.Bool("g", false, "Go only")
+	integration := cmd.Bool("i", false, "Include integration tests")
 
 	cmd.Usage = func() {
 		w := flag.CommandLine.Output()
@@ -55,24 +59,26 @@ func (s *command) Parse(cmdIndex int) error {
 		s.goOnly = *goOnly
 	}
 
+	s.integration = *integration
+
 	return nil
 }
 
 func (s *command) Run() error {
-	if cwd, err := workspace.FindRoot(); err != nil {
+	if paths, err := workspace.FindPaths(s.env); err != nil {
 		return fmt.Errorf("finding workspace root: %w", err)
-	} else if _, err := workspace.ParseJSAbsPaths(cwd); err != nil {
+	} else if _, err := workspace.ParseJSAbsPaths(paths.Root); err != nil {
 		return fmt.Errorf("parsing yarn workspace absolute paths: %w", err)
-	} else if modPaths, err := workspace.ParseModulesAbsPaths(cwd); err != nil {
+	} else if modPaths, err := workspace.ParseModulesAbsPaths(paths.Root); err != nil {
 		return fmt.Errorf("parsing module absolute paths: %w", err)
-	} else if err := s.runTests(cwd, modPaths); err != nil {
+	} else if err := s.runTests(paths.Root, paths.Coverage, modPaths); err != nil {
 		return fmt.Errorf("running tests: %w", err)
 	} else {
 		return nil
 	}
 }
 
-func (s *command) runTests(cwd string, modPaths []string) error {
+func (s *command) runTests(cwd string, coverPath string, modPaths []string) error {
 	if !s.goOnly {
 		if err := yarn.TestWorkspace(cwd, s.env); err != nil {
 			return fmt.Errorf("testing yarn workspace: %w", err)
@@ -80,7 +86,23 @@ func (s *command) runTests(cwd string, modPaths []string) error {
 	}
 
 	if !s.yarnOnly {
-		if err := workspace.TestWorkspace(cwd, modPaths, s.env); err != nil {
+		log.Infof("Checking coverage directory")
+		if err := os.MkdirAll(coverPath, os.ModeDir+fs.ModePerm); err != nil {
+			return fmt.Errorf("making coverage directory: %w", err)
+		} else if dirList, err := os.ReadDir(coverPath); err != nil {
+			return fmt.Errorf("listing coverage directory: %w", err)
+		} else {
+			for _, entry := range dirList {
+				if filepath.Ext(entry.Name()) == workspace.CoverageExt {
+					log.Debugf("Removing %s", filepath.Join(coverPath, entry.Name()))
+					if err := os.Remove(filepath.Join(coverPath, entry.Name())); err != nil {
+						return fmt.Errorf("removing %s: %w", filepath.Join(coverPath, entry.Name()), err)
+					}
+				}
+			}
+		}
+
+		if err := workspace.TestWorkspace(cwd, modPaths, coverPath, s.env, s.integration); err != nil {
 			return fmt.Errorf("testing go workspace: %w", err)
 		}
 	}

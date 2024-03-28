@@ -67,9 +67,9 @@ func (s *command) Parse(cmdIndex int) error {
 }
 
 func (s *command) Run() error {
-	if cwd, err := workspace.FindRoot(); err != nil {
+	if paths, err := workspace.FindPaths(s.env); err != nil {
 		return fmt.Errorf("finding workspace root: %w", err)
-	} else if modPaths, err := workspace.ParseModulesAbsPaths(cwd); err != nil {
+	} else if modPaths, err := workspace.ParseModulesAbsPaths(paths.Root); err != nil {
 		return fmt.Errorf("parsing module absolute paths: %w", err)
 	} else if err := workspace.WorkspaceGenerate(modPaths, s.env); err != nil {
 		return fmt.Errorf("generating code for workspace: %w", err)
