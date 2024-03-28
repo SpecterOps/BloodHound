@@ -38,10 +38,21 @@ func TestWriteAndValidateJSON(t *testing.T) {
 
 	t.Run("succeed on good json", func(t *testing.T) {
 		var (
-			writer  = bytes.Buffer{}
+			writer   = bytes.Buffer{}
 			goodJSON = strings.NewReader(`{"meta": {"methods": 0, "type": "sessions", "count": 0, "version": 5}, "data": []}`)
 		)
 		err := WriteAndValidateJSON(goodJSON, &writer)
+		assert.Nil(t, err)
+	})
+
+	t.Run("succeed on utf-8 BOM json", func(t *testing.T) {
+		var (
+			writer = bytes.Buffer{}
+		)
+
+		file, err := os.Open("../../test/fixtures/fixtures/utf8bomjson.json")
+		assert.Nil(t, err)
+		err = WriteAndValidateJSON(io.Reader(file), &writer)
 		assert.Nil(t, err)
 	})
 }

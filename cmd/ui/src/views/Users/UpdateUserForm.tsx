@@ -250,7 +250,7 @@ const UpdateUserFormInner: React.FC<{
                                 rules={{
                                     required: 'Authentication Method is required',
                                 }}
-                                render={({ field: { onChange, onBlur, value, ref }, formState, fieldState }) => (
+                                render={({ field: { onChange, onBlur, value, ref } }) => (
                                     <FormControl>
                                         <InputLabel id='authenticationMethod-label' sx={{ ml: '-14px', mt: '8px' }}>
                                             Authentication Method
@@ -282,7 +282,7 @@ const UpdateUserFormInner: React.FC<{
                                     rules={{
                                         required: 'SAML Provider is required',
                                     }}
-                                    render={({ field: { onChange, onBlur, value, ref }, formState, fieldState }) => (
+                                    render={({ field: { onChange, onBlur, value, ref } }) => (
                                         <FormControl>
                                             <InputLabel id='SAMLProviderId-label' sx={{ ml: '-14px', mt: '8px' }}>
                                                 SAML Provider

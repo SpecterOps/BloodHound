@@ -106,7 +106,7 @@ const QualityAssurance: React.FC = () => {
                 <Box paddingBottom={2}>
                     <Alert severity='warning'>
                         <AlertTitle>Data Quality Warning</AlertTitle>
-                        It looks like data is incomplete or hasn't been collected yet. See the{' '}
+                        It looks like data is incomplete or has not been collected yet. See the{' '}
                         <Link
                             target='_blank'
                             href={

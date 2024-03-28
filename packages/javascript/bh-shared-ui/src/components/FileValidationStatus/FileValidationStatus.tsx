@@ -16,7 +16,7 @@
 
 import { faCheck, faSync, faTimes } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Avatar, Box, Typography } from '@mui/material';
+import { Avatar, Box } from '@mui/material';
 import { FileForIngest, FileStatus } from '../FileUploadDialog/types';
 
 const FileValidationStatus: React.FC<{ file: FileForIngest }> = ({ file }) => {

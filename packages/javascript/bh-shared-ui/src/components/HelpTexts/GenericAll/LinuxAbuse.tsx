@@ -20,10 +20,8 @@ import { EdgeInfoProps } from '../index';
 
 const LinuxAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> = ({
     sourceName,
-    sourceType,
     targetName,
     targetType,
-    targetId,
     haslaps,
 }) => {
     switch (targetType) {

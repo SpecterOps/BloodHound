@@ -18,11 +18,13 @@
 package fileupload
 
 import (
+	"bufio"
 	"context"
 	"errors"
 	"fmt"
 	"github.com/specterops/bloodhound/headers"
 	"github.com/specterops/bloodhound/mediatypes"
+	"github.com/specterops/bloodhound/src/model/ingest"
 	"github.com/specterops/bloodhound/src/utils"
 	"io"
 	"net/http"
@@ -35,6 +37,12 @@ import (
 
 const jobActivityTimeout = time.Minute * 20
 
+const (
+	UTF8BOM1 = 0xef
+	UTF8BOM2 = 0xbb
+	UTF8BMO3 = 0xbf
+)
+
 var ErrInvalidJSON = errors.New("file is not valid json")
 
 type FileUploadData interface {
@@ -44,6 +52,8 @@ type FileUploadData interface {
 	GetAllFileUploadJobs(ctx context.Context, skip int, limit int, order string, filter model.SQLFilter) ([]model.FileUploadJob, int, error)
 	GetFileUploadJobsWithStatus(ctx context.Context, status model.JobStatus) ([]model.FileUploadJob, error)
 	DeleteAllFileUploads(ctx context.Context) error
+	CancelAllFileUploads(ctx context.Context) error
+	DeleteAllIngestTasks(ctx context.Context) error
 }
 
 func ProcessStaleFileUploadJobs(ctx context.Context, db FileUploadData) {
@@ -76,6 +86,14 @@ func ProcessStaleFileUploadJobs(ctx context.Context, db FileUploadData) {
 	}
 }
 
+func CancelAllFileUploads(ctx context.Context, db FileUploadData) error {
+	return db.CancelAllFileUploads(ctx)
+}
+
+func DeleteAllIngestTasks(ctx context.Context, db FileUploadData) error {
+	return db.DeleteAllIngestTasks(ctx)
+}
+
 func GetAllFileUploadJobs(ctx context.Context, db FileUploadData, skip int, limit int, order string, filter model.SQLFilter) ([]model.FileUploadJob, int, error) {
 	return db.GetAllFileUploadJobs(ctx, skip, limit, order, filter)
 }
@@ -102,7 +120,17 @@ func WriteAndValidateZip(src io.Reader, dst io.Writer) error {
 
 func WriteAndValidateJSON(src io.Reader, dst io.Writer) error {
 	tr := io.TeeReader(src, dst)
-	_, err := ValidateMetaTag(tr, true)
+	bufReader := bufio.NewReader(tr)
+	if b, err := bufReader.Peek(3); err != nil {
+		return err
+	} else {
+		if b[0] == UTF8BOM1 && b[1] == UTF8BOM2 && b[2] == UTF8BMO3 {
+			if _, err := bufReader.Discard(3); err != nil {
+				return err
+			}
+		}
+	}
+	_, err := ValidateMetaTag(bufReader, true)
 	return err
 }
 
@@ -113,9 +141,9 @@ func SaveIngestFile(location string, request *http.Request) (string, model.FileT
 		return "", model.FileTypeJson, fmt.Errorf("error creating ingest file: %w", err)
 	}
 
-	if utils.HeaderMatches(headers.ContentType.String(), mediatypes.ApplicationJson.String(), request.Header) {
+	if utils.HeaderMatches(request.Header, headers.ContentType.String(), mediatypes.ApplicationJson.String()) {
 		return tempFile.Name(), model.FileTypeJson, WriteAndValidateFile(fileData, tempFile, WriteAndValidateJSON)
-	} else if utils.HeaderMatches(headers.ContentType.String(), mediatypes.ApplicationZip.String(), request.Header) {
+	} else if utils.HeaderMatches(request.Header, headers.ContentType.String(), ingest.AllowedZipFileUploadTypes...) {
 		return tempFile.Name(), model.FileTypeZip, WriteAndValidateFile(fileData, tempFile, WriteAndValidateZip)
 	} else {
 		//We should never get here since this is checked a level above

@@ -17,7 +17,14 @@
 /* eslint-env node */
 module.exports = {
     env: { browser: true, es2020: true },
-    extends: ['eslint:recommended', 'plugin:@typescript-eslint/recommended', 'react-app', 'prettier'],
+    extends: [
+        'eslint:recommended',
+        'plugin:@typescript-eslint/recommended',
+        'plugin:react/recommended',
+        'plugin:react/jsx-runtime',
+        'plugin:react-hooks/recommended',
+        'prettier',
+    ],
     parser: '@typescript-eslint/parser',
     parserOptions: { ecmaVersion: 'latest', sourceType: 'module' },
     plugins: [],
@@ -27,6 +34,14 @@ module.exports = {
         '@typescript-eslint/no-explicit-any': 'off',
         '@typescript-eslint/no-inferrable-types': 'off',
         '@typescript-eslint/no-empty-function': 'off',
+        '@typescript-eslint/no-unused-vars': ['error', { ignoreRestSiblings: true }],
+        'react/prop-types': 'off',
+        'react/no-unescaped-entities': 'off',
+    },
+    settings: {
+        react: {
+            version: 'detect',
+        },
     },
     ignorePatterns: ['rollup.config.js'],
 };

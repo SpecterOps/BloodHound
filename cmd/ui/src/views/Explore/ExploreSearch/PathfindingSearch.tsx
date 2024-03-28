@@ -14,26 +14,21 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Box } from '@mui/material';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faBullseye, faCircle } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { Box } from '@mui/material';
 import {
-    SourceNodeEditedAction,
-    SearchNodeType,
-    SourceNodeSelectedAction,
     DestinationNodeEditedAction,
     DestinationNodeSelectedAction,
-} from 'src/ducks/searchbar/types';
-import EdgeFilter from './EdgeFilter';
-import ExploreSearchCombobox from '../ExploreSearchCombobox';
-import PathfindingSwapButton from './PathfindingSwapButton';
+    SearchValue,
+    SourceNodeEditedAction,
+    SourceNodeSelectedAction,
+    searchbarActions,
+} from 'bh-shared-ui';
 import { useAppDispatch, useAppSelector } from 'src/store';
-import {
-    destinationNodeEdited,
-    destinationNodeSelected,
-    sourceNodeEdited,
-    sourceNodeSelected,
-} from 'src/ducks/searchbar/actions';
+import ExploreSearchCombobox from '../ExploreSearchCombobox';
+import EdgeFilter from './EdgeFilter';
+import PathfindingSwapButton from './PathfindingSwapButton';
 
 const PathfindingSearch = () => {
     const dispatch = useAppDispatch();
@@ -44,16 +39,17 @@ const PathfindingSearch = () => {
     const { searchTerm: sourceInputValue, value: sourceSelectedItem } = primary;
     const { searchTerm: destinationInputValue, value: destinationSelectedItem } = secondary;
 
-    const handleSourceNodeEdited = (edit: string): SourceNodeEditedAction => dispatch(sourceNodeEdited(edit));
+    const handleSourceNodeEdited = (edit: string): SourceNodeEditedAction =>
+        dispatch(searchbarActions.sourceNodeEdited(edit));
 
     const handleDestinationNodeEdited = (edit: string): DestinationNodeEditedAction =>
-        dispatch(destinationNodeEdited(edit));
+        dispatch(searchbarActions.destinationNodeEdited(edit));
 
-    const handleSourceNodeSelected = (selected: SearchNodeType): SourceNodeSelectedAction =>
-        dispatch(sourceNodeSelected(selected));
+    const handleSourceNodeSelected = (selected: SearchValue): SourceNodeSelectedAction =>
+        dispatch(searchbarActions.sourceNodeSelected(selected));
 
-    const handleDestinationNodeSelected = (selected: SearchNodeType): DestinationNodeSelectedAction =>
-        dispatch(destinationNodeSelected(selected));
+    const handleDestinationNodeSelected = (selected: SearchValue): DestinationNodeSelectedAction =>
+        dispatch(searchbarActions.destinationNodeSelected(selected));
 
     return (
         <Box display={'flex'} alignItems={'center'} gap={1}>
@@ -64,14 +60,14 @@ const PathfindingSearch = () => {
                     handleNodeEdited={handleSourceNodeEdited}
                     handleNodeSelected={handleSourceNodeSelected}
                     inputValue={sourceInputValue}
-                    selectedItem={sourceSelectedItem}
+                    selectedItem={sourceSelectedItem || null}
                     labelText='Start Node'
                 />
                 <ExploreSearchCombobox
                     handleNodeEdited={handleDestinationNodeEdited}
                     handleNodeSelected={handleDestinationNodeSelected}
                     inputValue={destinationInputValue}
-                    selectedItem={destinationSelectedItem}
+                    selectedItem={destinationSelectedItem || null}
                     labelText='Destination Node'
                 />
             </Box>

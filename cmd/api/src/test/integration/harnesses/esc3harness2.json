@@ -1,251 +1,4 @@
 {
-  "nodes": [
-    {
-      "id": "n0",
-      "position": {
-        "x": 972.2765363078156,
-        "y": 933.6361632998663
-      },
-      "caption": "Domain",
-      "labels": [],
-      "properties": {},
-      "style": {
-        "node-color": "#68ccca"
-      }
-    },
-    {
-      "id": "n8",
-      "position": {
-        "x": 525.5619645062626,
-        "y": 812.9478184942836
-      },
-      "caption": "NTAuthStore",
-      "labels": [],
-      "properties": {},
-      "style": {
-        "node-color": "#653294",
-        "caption-color": "#ffffff"
-      }
-    },
-    {
-      "id": "n9",
-      "position": {
-        "x": 525.5619645062626,
-        "y": 1098.834752553724
-      },
-      "caption": "RootCA",
-      "labels": [],
-      "properties": {},
-      "style": {
-        "node-color": "#653294",
-        "caption-color": "#ffffff"
-      }
-    },
-    {
-      "id": "n11",
-      "position": {
-        "x": 210.51171900343365,
-        "y": 933.6361632998663
-      },
-      "caption": "EnterpriseCA1",
-      "labels": [],
-      "properties": {
-        "HasEnrollmentAgentRestrictions": "True"
-      },
-      "style": {
-        "node-color": "#194d33",
-        "caption-color": "#ffffff"
-      }
-    },
-    {
-      "id": "n17",
-      "position": {
-        "x": -833.951562713471,
-        "y": 1098.834752553724
-      },
-      "caption": "User1",
-      "labels": [],
-      "properties": {},
-      "style": {
-        "border-color": "#d33115"
-      }
-    },
-    {
-      "id": "n23",
-      "position": {
-        "x": -220.73005653827033,
-        "y": 1098.834752553724
-      },
-      "caption": "CertTemplate2",
-      "labels": [],
-      "properties": {
-        "AuthenticationEnabled": "True",
-        "RequiresManagerApproval": "False",
-        "SubjectAltRequireUPN": "True"
-      },
-      "style": {
-        "node-color": "#fda1ff"
-      }
-    },
-    {
-      "id": "n24",
-      "position": {
-        "x": -220.7300565382701,
-        "y": 812.9478184942836
-      },
-      "caption": "CertTemplate1",
-      "labels": [],
-      "properties": {
-        "RequiresManagerApproval": "False",
-        "AuthorizedSignatures": "0",
-        "SchemaVersion": "2"
-      },
-      "style": {
-        "node-color": "#fda1ff"
-      }
-    },
-    {
-      "id": "n26",
-      "position": {
-        "x": -551.2530983009483,
-        "y": 933.6361632998663
-      },
-      "caption": "Group1",
-      "labels": [],
-      "properties": {},
-      "style": {
-        "node-color": "#ffffff",
-        "border-color": "#009ce0"
-      }
-    },
-    {
-      "id": "n27",
-      "position": {
-        "x": -833.951562713471,
-        "y": 812.9478184942836
-      },
-      "caption": "User2",
-      "labels": [],
-      "properties": {},
-      "style": {
-        "border-color": "#009ce0"
-      }
-    }
-  ],
-  "relationships": [
-    {
-      "id": "n13",
-      "fromId": "n9",
-      "toId": "n0",
-      "type": "RootCAFor",
-      "properties": {},
-      "style": {
-        "arrow-color": "#000000"
-      }
-    },
-    {
-      "id": "n57",
-      "fromId": "n11",
-      "toId": "n9",
-      "type": "IssuedSignedBy",
-      "properties": {},
-      "style": {
-        "arrow-color": "#000000"
-      }
-    },
-    {
-      "id": "n59",
-      "fromId": "n8",
-      "toId": "n0",
-      "type": "NTAuthStoreFor",
-      "properties": {},
-      "style": {
-        "arrow-color": "#000000"
-      }
-    },
-    {
-      "id": "n60",
-      "fromId": "n11",
-      "toId": "n8",
-      "type": "TrustedForNTAuth",
-      "properties": {},
-      "style": {
-        "arrow-color": "#000000"
-      }
-    },
-    {
-      "id": "n78",
-      "fromId": "n23",
-      "toId": "n11",
-      "type": "PublishedTo",
-      "properties": {},
-      "style": {}
-    },
-    {
-      "id": "n79",
-      "fromId": "n24",
-      "toId": "n11",
-      "type": "PublishedTo",
-      "properties": {},
-      "style": {}
-    },
-    {
-      "id": "n82",
-      "fromId": "n24",
-      "toId": "n23",
-      "type": "EnrollOnBehalfOf",
-      "properties": {},
-      "style": {}
-    },
-    {
-      "id": "n86",
-      "fromId": "n26",
-      "toId": "n11",
-      "type": "Enroll",
-      "properties": {},
-      "style": {}
-    },
-    {
-      "id": "n87",
-      "fromId": "n17",
-      "toId": "n26",
-      "type": "MemberOf",
-      "properties": {},
-      "style": {}
-    },
-    {
-      "id": "n92",
-      "fromId": "n27",
-      "toId": "n26",
-      "type": "MemberOf",
-      "properties": {},
-      "style": {}
-    },
-    {
-      "id": "n93",
-      "fromId": "n26",
-      "toId": "n23",
-      "type": "AllExtendedRights",
-      "properties": {},
-      "style": {}
-    },
-    {
-      "id": "n94",
-      "fromId": "n26",
-      "toId": "n24",
-      "type": "Enroll",
-      "properties": {},
-      "style": {}
-    },
-    {
-      "id": "n95",
-      "fromId": "n17",
-      "toId": "n23",
-      "type": "DelegatedEnrollmentAgent",
-      "properties": {},
-      "style": {}
-    }
-  ],
   "style": {
     "font-family": "sans-serif",
     "background-color": "#ffffff",
@@ -298,5 +51,367 @@
     "property-color": "#000000",
     "property-font-size": 16,
     "property-font-weight": "normal"
-  }
+  },
+  "nodes": [
+    {
+      "id": "n0",
+      "position": {
+        "x": 1881.2280990212867,
+        "y": 170.6883448055827
+      },
+      "caption": "Domain",
+      "labels": [],
+      "properties": {},
+      "style": {
+        "node-color": "#68ccca"
+      }
+    },
+    {
+      "id": "n1",
+      "position": {
+        "x": 1434.5135272197335,
+        "y": 50
+      },
+      "caption": "NTAuthStore",
+      "labels": [],
+      "properties": {},
+      "style": {
+        "node-color": "#653294",
+        "caption-color": "#ffffff"
+      }
+    },
+    {
+      "id": "n2",
+      "position": {
+        "x": 1434.5135272197335,
+        "y": 335.88693405944036
+      },
+      "caption": "RootCA",
+      "labels": [],
+      "properties": {},
+      "style": {
+        "node-color": "#653294",
+        "caption-color": "#ffffff"
+      }
+    },
+    {
+      "id": "n3",
+      "position": {
+        "x": 1119.4632817169047,
+        "y": 170.6883448055827
+      },
+      "caption": "EnterpriseCA1",
+      "labels": [],
+      "properties": {
+        "HasEnrollmentAgentRestrictions": "True"
+      },
+      "style": {
+        "node-color": "#194d33",
+        "caption-color": "#ffffff"
+      }
+    },
+    {
+      "id": "n4",
+      "position": {
+        "x": 75,
+        "y": 335.88693405944036
+      },
+      "caption": "User1",
+      "labels": [],
+      "properties": {},
+      "style": {
+        "border-color": "#d33115"
+      }
+    },
+    {
+      "id": "n5",
+      "position": {
+        "x": 688.2215061752007,
+        "y": 335.88693405944036
+      },
+      "caption": "CertTemplate2",
+      "labels": [],
+      "properties": {
+        "AuthenticationEnabled": "True",
+        "RequiresManagerApproval": "False",
+        "SubjectAltRequireUPN": "True"
+      },
+      "style": {
+        "node-color": "#fda1ff"
+      }
+    },
+    {
+      "id": "n6",
+      "position": {
+        "x": 688.221506175201,
+        "y": 50
+      },
+      "caption": "CertTemplate1",
+      "labels": [],
+      "properties": {
+        "RequiresManagerApproval": "False",
+        "AuthorizedSignatures": "0",
+        "SchemaVersion": "2"
+      },
+      "style": {
+        "node-color": "#fda1ff"
+      }
+    },
+    {
+      "id": "n7",
+      "position": {
+        "x": 357.69846441252275,
+        "y": 170.6883448055827
+      },
+      "caption": "Group1",
+      "labels": [],
+      "properties": {},
+      "style": {
+        "node-color": "#ffffff",
+        "border-color": "#009ce0"
+      }
+    },
+    {
+      "id": "n8",
+      "position": {
+        "x": 75,
+        "y": 50
+      },
+      "caption": "User2",
+      "labels": [],
+      "properties": {},
+      "style": {
+        "border-color": "#009ce0"
+      }
+    },
+    {
+      "id": "n9",
+      "position": {
+        "x": 660.4508583163075,
+        "y": -185.68788351173677
+      },
+      "caption": "User3",
+      "labels": [],
+      "properties": {},
+      "style": {
+        "border-color": "#009ce0"
+      }
+    },
+    {
+      "id": "n10",
+      "position": {
+        "x": 944.5198290567125,
+        "y": -185.68788351173677
+      },
+      "caption": "CertTemplate3",
+      "labels": [],
+      "properties": {
+        "RequiresManagerApproval": "False",
+        "AuthorizedSignatures": "0",
+        "SchemaVersion": "1",
+        "SubjectAltRequireDNS": "True"
+      },
+      "style": {
+        "node-color": "#fda1ff"
+      }
+    },
+    {
+      "id": "n11",
+      "position": {
+        "x": 944.5198290567125,
+        "y": 582.9139310027565
+      },
+      "caption": "CertTemplate4",
+      "labels": [],
+      "properties": {
+        "AuthenticationEnabled": "True",
+        "RequiresManagerApproval": "False",
+        "SubjectAltRequireUPN": "True"
+      },
+      "style": {
+        "node-color": "#fda1ff"
+      }
+    }
+  ],
+  "relationships": [
+    {
+      "id": "n0",
+      "fromId": "n2",
+      "toId": "n0",
+      "type": "RootCAFor",
+      "properties": {},
+      "style": {
+        "arrow-color": "#000000"
+      }
+    },
+    {
+      "id": "n1",
+      "fromId": "n3",
+      "toId": "n2",
+      "type": "IssuedSignedBy",
+      "properties": {},
+      "style": {
+        "arrow-color": "#000000"
+      }
+    },
+    {
+      "id": "n2",
+      "fromId": "n1",
+      "toId": "n0",
+      "type": "NTAuthStoreFor",
+      "properties": {},
+      "style": {
+        "arrow-color": "#000000"
+      }
+    },
+    {
+      "id": "n3",
+      "fromId": "n3",
+      "toId": "n1",
+      "type": "TrustedForNTAuth",
+      "properties": {},
+      "style": {
+        "arrow-color": "#000000"
+      }
+    },
+    {
+      "id": "n4",
+      "fromId": "n5",
+      "toId": "n3",
+      "type": "PublishedTo",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n5",
+      "fromId": "n6",
+      "toId": "n3",
+      "type": "PublishedTo",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n6",
+      "fromId": "n6",
+      "toId": "n5",
+      "type": "EnrollOnBehalfOf",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n7",
+      "fromId": "n7",
+      "toId": "n3",
+      "type": "Enroll",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n8",
+      "fromId": "n4",
+      "toId": "n7",
+      "type": "MemberOf",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n9",
+      "fromId": "n8",
+      "toId": "n7",
+      "type": "MemberOf",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n10",
+      "fromId": "n7",
+      "toId": "n5",
+      "type": "AllExtendedRights",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n11",
+      "fromId": "n7",
+      "toId": "n6",
+      "type": "Enroll",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n12",
+      "fromId": "n4",
+      "toId": "n5",
+      "type": "DelegatedEnrollmentAgent",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n13",
+      "fromId": "n10",
+      "toId": "n10",
+      "type": "EnrollOnBehalfOf",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n14",
+      "fromId": "n9",
+      "toId": "n10",
+      "type": "Enroll",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n15",
+      "fromId": "n9",
+      "toId": "n10",
+      "type": "DelegatedEnrollmentAgent",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n16",
+      "fromId": "n10",
+      "toId": "n3",
+      "type": "PublishTo",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n17",
+      "fromId": "n9",
+      "toId": "n3",
+      "type": "Enroll",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n18",
+      "type": "EnrollOnBehalfOf",
+      "style": {},
+      "properties": {},
+      "fromId": "n6",
+      "toId": "n11"
+    },
+    {
+      "id": "n19",
+      "type": "PublishTo",
+      "style": {},
+      "properties": {},
+      "fromId": "n11",
+      "toId": "n3"
+    },
+    {
+      "id": "n20",
+      "type": "Enroll",
+      "style": {
+        "attachment-end": "normal",
+        "directionality": "directed"
+      },
+      "properties": {},
+      "fromId": "n7",
+      "toId": "n11"
+    }
+  ]
 }

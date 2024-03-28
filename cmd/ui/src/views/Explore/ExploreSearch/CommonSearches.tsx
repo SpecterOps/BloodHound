@@ -14,19 +14,23 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Box, Tabs, Tab, Typography } from '@mui/material';
-import { useState } from 'react';
-import { PrebuiltSearchList, CommonSearches as prebuiltSearchList, PersonalSearchList } from 'bh-shared-ui';
+import { Box, Tab, Tabs, Typography } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
+import {
+    PersonalSearchList,
+    PrebuiltSearchList,
+    searchbarActions,
+    CommonSearches as prebuiltSearchList,
+} from 'bh-shared-ui';
+import { useState } from 'react';
 import { useDispatch } from 'react-redux';
-import { cypherQueryEdited } from 'src/ducks/searchbar/actions';
 import { startCypherQuery } from 'src/ducks/explore/actions';
 
 const AD_TAB = 'Active Directory';
 const AZ_TAB = 'Azure';
 const CUSTOM_TAB = 'Custom Searches';
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles(() => ({
     tabs: {
         height: '35px',
         minHeight: '35px',
@@ -64,7 +68,7 @@ const CommonSearches = () => {
         .map(({ subheader, queries }) => ({ subheader, lineItems: queries }));
 
     const handleClick = (query: string) => {
-        dispatch(cypherQueryEdited(query));
+        dispatch(searchbarActions.cypherQueryEdited(query));
         dispatch(startCypherQuery(query));
     };
 

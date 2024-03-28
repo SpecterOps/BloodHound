@@ -50,7 +50,7 @@ const defaultTheme = {
         high: 'rgb(205, 0, 117)',
         critical: 'rgb(76, 29, 143)',
     },
-}
+};
 
 const createDefaultQueryClient = () => {
     return new QueryClient({
@@ -59,8 +59,8 @@ const createDefaultQueryClient = () => {
                 retry: false,
             },
         },
-    })
-}
+    });
+};
 
 const createDefaultStore = (state) => {
     return configureStore({
@@ -69,11 +69,11 @@ const createDefaultStore = (state) => {
         middleware: (getDefaultMiddleware) => {
             return [...getDefaultMiddleware({ serializableCheck: false }), createSagaMiddleware()];
         },
-    })
-}
+    });
+};
 
 const createProviders = ({ queryClient, history, theme, store, children }) => {
-    return (    
+    return (
         <Provider store={store}>
             <QueryClientProvider client={queryClient}>
                 <StyledEngineProvider injectFirst>
@@ -87,9 +87,9 @@ const createProviders = ({ queryClient, history, theme, store, children }) => {
                     </ThemeProvider>
                 </StyledEngineProvider>
             </QueryClientProvider>
-        </Provider>    
-    )
-}
+        </Provider>
+    );
+};
 
 const customRender = (
     ui,

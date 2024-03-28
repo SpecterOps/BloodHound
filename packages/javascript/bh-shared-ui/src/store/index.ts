@@ -16,3 +16,5 @@
 
 export * from './edgeinfo/edgeSlice';
 export { default as edgeinfo } from './edgeinfo/edgeSlice';
+
+export * from './searchbar/index';

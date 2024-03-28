@@ -22,7 +22,7 @@ import { useQuery } from 'react-query';
 import VirtualizedNodeList, { VirtualizedNodeListItem } from '../../VirtualizedNodeList';
 
 const Composition: FC<EdgeInfoProps> = ({ sourceDBId, targetDBId, edgeName }) => {
-    const { data, isLoading, isError } = useQuery(['edgeComposition', sourceDBId, targetDBId, edgeName], ({ signal }) =>
+    const { data, isLoading, isError } = useQuery(['edgeComposition', sourceDBId, targetDBId, edgeName], () =>
         apiClient.getEdgeComposition(sourceDBId!, targetDBId!, edgeName!).then((result) => result.data)
     );
 
