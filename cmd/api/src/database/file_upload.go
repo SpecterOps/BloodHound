@@ -49,6 +49,11 @@ func (s *BloodhoundDB) GetFileUploadJobsWithStatus(ctx context.Context, status m
 	return jobs, CheckError(result)
 }
 
+func (s *BloodhoundDB) CancelAllFileUploads(ctx context.Context) error {
+	runningStates := []model.JobStatus{model.JobStatusAnalyzing, model.JobStatusRunning, model.JobStatusIngesting}
+	return CheckError(s.db.Model(model.FileUploadJob{}).WithContext(ctx).Where("status in ?", runningStates).Update("status", model.JobStatusCanceled))
+}
+
 func (s *BloodhoundDB) GetAllFileUploadJobs(ctx context.Context, skip int, limit int, order string, filter model.SQLFilter) ([]model.FileUploadJob, int, error) {
 	var (
 		jobs   []model.FileUploadJob
@@ -90,4 +95,8 @@ func (s *BloodhoundDB) DeleteAllFileUploads(ctx context.Context) error {
 	return CheckError(
 		s.db.WithContext(ctx).Exec("DELETE FROM file_upload_jobs"),
 	)
+}
+
+func (s *BloodhoundDB) DeleteAllIngestTasks(ctx context.Context) error {
+	return CheckError(s.db.WithContext(ctx).Exec("DELETE FROM ingest_tasks"))
 }
