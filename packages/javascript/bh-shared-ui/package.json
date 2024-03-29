@@ -75,10 +75,10 @@
         "prettier": "^3.2.5",
         "react": "^18.2.0",
         "react-dom": "^18.2.0",
-        "rollup": "^4.13.0",
+        "rollup": "^4.13.2",
         "rollup-plugin-delete": "^2.0.0",
         "typescript": "^5.1.6",
-        "vite": "^5.1.6",
+        "vite": "^5.2.7",
         "vitest": "^1.4.0",
         "whatwg-fetch": "^3.6.2"
     },
