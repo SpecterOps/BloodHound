@@ -487,7 +487,7 @@ const WindowsAbuse: FC = () => {
     );
     const step5 = (
         <>
-            <Typography variant='body2'>
+            <Typography variant='body2' className={classes.containsCodeEl}>
                 <b>Step 5: </b>Ensure the principal has enrollment rights on the certificate template.
                 <br />
                 <br />
