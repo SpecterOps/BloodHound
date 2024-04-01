@@ -14,19 +14,16 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import React, { useState, useEffect } from 'react';
-import { Box, Table, TableBody, TableContainer, Paper, TableHead, TableRow, TableCell } from '@mui/material';
-import makeStyles from '@mui/styles/makeStyles';
-import LoadContainer from './LoadContainer';
-import { faUsers, faChartPie, faSignInAlt, faStream } from '@fortawesome/free-solid-svg-icons';
+import { faChartPie, faSignInAlt, faStream, faUsers } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { Box, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@mui/material';
+import makeStyles from '@mui/styles/makeStyles';
+import { ActiveDirectoryQualityStat } from 'js-client-library';
+import React, { useEffect, useState } from 'react';
 import { NodeIcon } from '../../components';
-import {
-    useActiveDirectoryDataQualityStatsQuery,
-    useActiveDirectoryPlatformsDataQualityStatsQuery,
-    ActiveDirectoryQualityStat,
-} from '../../hooks';
 import { ActiveDirectoryNodeKind } from '../../graphSchema';
+import { useActiveDirectoryDataQualityStatsQuery, useActiveDirectoryPlatformsDataQualityStatsQuery } from '../../hooks';
+import LoadContainer from './LoadContainer';
 
 const useStyles = makeStyles({
     print: {
@@ -35,6 +32,34 @@ const useStyles = makeStyles({
         },
     },
 });
+
+export const DomainMap = {
+    users: { displayText: 'Users', kind: ActiveDirectoryNodeKind.User },
+    groups: { displayText: 'Groups', kind: ActiveDirectoryNodeKind.Group },
+    computers: { displayText: 'Computers', kind: ActiveDirectoryNodeKind.Computer },
+    ous: {
+        displayText: 'OUs',
+        kind: ActiveDirectoryNodeKind.OU,
+    },
+    gpos: { displayText: 'GPOs', kind: ActiveDirectoryNodeKind.GPO },
+    aiacas: {
+        displayText: 'AIACAs',
+        kind: ActiveDirectoryNodeKind.AIACA,
+    },
+    rootcas: { displayText: 'RootCAs', kind: ActiveDirectoryNodeKind.RootCA },
+    enterprisecas: { displayText: 'EnterpriseCAs', kind: ActiveDirectoryNodeKind.EnterpriseCA },
+    ntauthstores: { displayText: 'NTAuthStores', kind: ActiveDirectoryNodeKind.NTAuthStore },
+    certtemplates: { displayText: 'CertTemplates', kind: ActiveDirectoryNodeKind.CertTemplate },
+    issuancepolicies: { displayText: 'IssuancePolicies', kind: ActiveDirectoryNodeKind.IssuancePolicy },
+    containers: {
+        displayText: 'Containers',
+        kind: ActiveDirectoryNodeKind.Container,
+    },
+    domains: {
+        displayText: 'Domains',
+        kind: ActiveDirectoryNodeKind.Domain,
+    },
+};
 
 export const DomainInfo: React.FC<{ contextId: string; headers?: boolean; onDataError?: () => void }> = ({
     contextId,
@@ -60,7 +85,7 @@ export const DomainInfo: React.FC<{ contextId: string; headers?: boolean; onData
         return <Layout stats={null} headers={headers} loading={false} />;
     }
 
-    const stats = domainData.data[0] as ActiveDirectoryQualityStat;
+    const stats = domainData.data[0];
 
     return <Layout stats={stats} headers={headers} loading={false} />;
 };
@@ -85,7 +110,7 @@ export const ActiveDirectoryPlatformInfo: React.FC<{ onDataError?: () => void }>
         return <Layout stats={null} loading={false} />;
     }
 
-    const stats = adPlatformData.data[0] as ActiveDirectoryQualityStat;
+    const stats = adPlatformData.data[0];
 
     return <Layout stats={stats} loading={false} />;
 };
@@ -109,97 +134,21 @@ const Layout: React.FC<{
                         </TableHead>
                     )}
                     <TableBody>
-                        <LoadContainer
-                            icon={<NodeIcon nodeType={ActiveDirectoryNodeKind.User} />}
-                            display='Users'
-                            value={stats?.users}
-                            loading={loading}
-                        />
+                        {Object.keys(DomainMap).map((key) => {
+                            if (key === 'domains' && stats?.domains === undefined) return null;
 
-                        <LoadContainer
-                            icon={<NodeIcon nodeType={ActiveDirectoryNodeKind.Group} />}
-                            display='Groups'
-                            value={stats?.groups}
-                            loading={loading}
-                        />
+                            const mapValue = DomainMap[key as keyof typeof DomainMap];
+                            const value = stats?.[key as keyof ActiveDirectoryQualityStat] as number;
 
-                        <LoadContainer
-                            icon={<NodeIcon nodeType={ActiveDirectoryNodeKind.Computer} />}
-                            display='Computers'
-                            value={stats?.computers}
-                            loading={loading}
-                        />
-
-                        <LoadContainer
-                            icon={<NodeIcon nodeType={ActiveDirectoryNodeKind.OU} />}
-                            display='OUs'
-                            value={stats?.ous}
-                            loading={loading}
-                        />
-
-                        <LoadContainer
-                            icon={<NodeIcon nodeType={ActiveDirectoryNodeKind.GPO} />}
-                            display='GPOs'
-                            value={stats?.gpos}
-                            loading={loading}
-                        />
-
-                        <LoadContainer
-                            icon={<NodeIcon nodeType={ActiveDirectoryNodeKind.AIACA} />}
-                            display='AIACAs'
-                            value={stats?.aiacas}
-                            loading={loading}
-                        />
-
-                        <LoadContainer
-                            icon={<NodeIcon nodeType={ActiveDirectoryNodeKind.RootCA} />}
-                            display='RootCAs'
-                            value={stats?.rootcas}
-                            loading={loading}
-                        />
-
-                        <LoadContainer
-                            icon={<NodeIcon nodeType={ActiveDirectoryNodeKind.EnterpriseCA} />}
-                            display='EnterpriseCAs'
-                            value={stats?.enterprisecas}
-                            loading={loading}
-                        />
-
-                        <LoadContainer
-                            icon={<NodeIcon nodeType={ActiveDirectoryNodeKind.NTAuthStore} />}
-                            display='NTAuthStores'
-                            value={stats?.ntauthstores}
-                            loading={loading}
-                        />
-
-                        <LoadContainer
-                            icon={<NodeIcon nodeType={ActiveDirectoryNodeKind.CertTemplate} />}
-                            display='CertTemplates'
-                            value={stats?.certtemplates}
-                            loading={loading}
-                        />
-                        <LoadContainer
-                            icon={<NodeIcon nodeType={'IssuancePolicy'} />}
-                            display='IssuancePolicies'
-                            value={dbInfo?.issuancepolicies || 0}
-                            loading={loading}
-                        />
-
-                        <LoadContainer
-                            icon={<NodeIcon nodeType={ActiveDirectoryNodeKind.Container} />}
-                            display='Containers'
-                            value={stats?.containers}
-                            loading={loading}
-                        />
-
-                        {stats?.domains !== undefined && (
-                            <LoadContainer
-                                icon={<NodeIcon nodeType={ActiveDirectoryNodeKind.Domain} />}
-                                display='Domains'
-                                value={stats.domains}
-                                loading={loading}
-                            />
-                        )}
+                            return (
+                                <LoadContainer
+                                    icon={<NodeIcon nodeType={mapValue.kind} />}
+                                    display={mapValue.displayText}
+                                    value={value}
+                                    loading={loading}
+                                />
+                            );
+                        })}
                     </TableBody>
                 </Table>
             </TableContainer>

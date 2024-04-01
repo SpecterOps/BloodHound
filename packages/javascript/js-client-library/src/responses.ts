@@ -39,6 +39,55 @@ type TimestampFields = {
     };
 };
 
+export type ActiveDirectoryQualityStat = TimestampFields & {
+    users: number;
+    computers: number;
+    groups: number;
+    ous: number;
+    gpos: number;
+    aiacas: number;
+    rootcas: number;
+    enterprisecas: number;
+    ntauthstores: number;
+    certtemplates: number;
+    issuancepolicies: number;
+    acls: number;
+    relationships: number;
+    sessions: number;
+    local_group_completeness: number;
+    session_completeness: number;
+    containers?: number;
+    domains?: number;
+};
+
+export type ActiveDirectoryDataQualityResponse = PaginatedResponse<ActiveDirectoryQualityStat[]>;
+
+export type AzureDataQualityStat = TimestampFields & {
+    run_id: string;
+    relationships: number;
+    users: number;
+    groups: number;
+    apps: number;
+    service_principals: number;
+    devices: number;
+    management_groups: number;
+    subscriptions: number;
+    resource_groups: number;
+    vms: number;
+    key_vaults: number;
+    automation_accounts: number;
+    container_registries: number;
+    function_apps: number;
+    logic_apps: number;
+    managed_clusters: number;
+    vm_scale_sets: number;
+    web_apps: number;
+    tenants?: number;
+    tenantid?: string;
+};
+
+export type AzureDataQualityResponse = PaginatedResponse<AzureDataQualityStat[]>;
+
 type PostureStat = TimestampFields & {
     domain_sid: string;
     exposure_index: number;

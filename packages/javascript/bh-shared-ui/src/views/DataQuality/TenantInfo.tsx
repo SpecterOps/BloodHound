@@ -14,19 +14,16 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import React, { useEffect, useState } from 'react';
-import { Box, Table, TableBody, TableContainer, Paper, TableHead, TableCell, TableRow } from '@mui/material';
-import makeStyles from '@mui/styles/makeStyles';
-import {
-    useAzureDataQualityStatsQuery,
-    useAzurePlatformsDataQualityStatsQuery,
-    AzureDataQualityStat,
-} from '../../hooks';
-import LoadContainer from './LoadContainer';
 import { faUsers } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { Box, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@mui/material';
+import makeStyles from '@mui/styles/makeStyles';
+import { AzureDataQualityStat } from 'js-client-library';
+import React, { useEffect, useState } from 'react';
 import { NodeIcon } from '../../components';
 import { AzureNodeKind } from '../../graphSchema';
+import { useAzureDataQualityStatsQuery, useAzurePlatformsDataQualityStatsQuery } from '../../hooks';
+import LoadContainer from './LoadContainer';
 
 const useStyles = makeStyles({
     print: {
@@ -35,6 +32,39 @@ const useStyles = makeStyles({
         },
     },
 });
+
+export const TenantMap = {
+    users: { displayText: 'Users', kind: AzureNodeKind.User },
+    groups: { displayText: 'Groups', kind: AzureNodeKind.Group },
+    apps: { displayText: 'Apps', kind: AzureNodeKind.App },
+    service_principals: {
+        displayText: 'Service Principals',
+        kind: AzureNodeKind.ServicePrincipal,
+    },
+    devices: { displayText: 'Devices', kind: AzureNodeKind.Device },
+    management_groups: {
+        displayText: 'Management Groups',
+        kind: AzureNodeKind.ManagementGroup,
+    },
+    subscriptions: { displayText: 'Subscriptions', kind: AzureNodeKind.Subscription },
+    resource_groups: { displayText: 'Resource Groups', kind: AzureNodeKind.ResourceGroup },
+    vms: { displayText: 'VMs', kind: AzureNodeKind.VM },
+    key_vaults: { displayText: 'Key Vaults', kind: AzureNodeKind.KeyVault },
+    automation_accounts: {
+        displayText: 'Automation Accounts',
+        kind: AzureNodeKind.AutomationAccount,
+    },
+    container_registries: {
+        displayText: 'Container Registries',
+        kind: AzureNodeKind.ContainerRegistry,
+    },
+    function_apps: { displayText: 'Function Apps', kind: AzureNodeKind.FunctionApp },
+    logic_apps: { displayText: 'Logic Apps', kind: AzureNodeKind.LogicApp },
+    managed_clusters: { displayText: 'Managed Clusters', kind: AzureNodeKind.ManagedCluster },
+    vm_scale_sets: { displayText: 'VM Scale Sets', kind: AzureNodeKind.VMScaleSet },
+    web_apps: { displayText: 'Web Apps', kind: AzureNodeKind.WebApp },
+    tenants: { displayText: 'Tenants', kind: AzureNodeKind.Tenant },
+};
 
 export const TenantInfo: React.FC<{ contextId: string; headers?: boolean; onDataError?: () => void }> = ({
     contextId,
@@ -60,7 +90,7 @@ export const TenantInfo: React.FC<{ contextId: string; headers?: boolean; onData
         return <Layout stats={null} headers={headers} loading={false} />;
     }
 
-    const stats = tenantData.data[0] as AzureDataQualityStat;
+    const stats = tenantData.data[0];
 
     return <Layout stats={stats} headers={headers} loading={false} />;
 };
@@ -85,7 +115,7 @@ export const AzurePlatformInfo: React.FC<{ onDataError?: () => void }> = ({ onDa
         return <Layout stats={null} loading={false} />;
     }
 
-    const stats = platformData.data[0] as AzureDataQualityStat;
+    const stats = platformData.data[0];
 
     return <Layout stats={stats} loading={false} />;
 };
@@ -109,116 +139,21 @@ const Layout: React.FC<{
                         </TableHead>
                     )}
                     <TableBody>
-                        <LoadContainer
-                            icon={<NodeIcon nodeType={AzureNodeKind.User} />}
-                            display='Users'
-                            value={stats?.users}
-                            loading={loading}
-                        />
-                        <LoadContainer
-                            icon={<NodeIcon nodeType={AzureNodeKind.Group} />}
-                            display='Groups'
-                            value={stats?.groups}
-                            loading={loading}
-                        />
-                        <LoadContainer
-                            icon={<NodeIcon nodeType={AzureNodeKind.App} />}
-                            display='Apps'
-                            value={stats?.apps}
-                            loading={loading}
-                        />
-                        <LoadContainer
-                            icon={<NodeIcon nodeType={AzureNodeKind.ServicePrincipal} />}
-                            display='Service Principals'
-                            value={stats?.service_principals}
-                            loading={loading}
-                        />
-                        <LoadContainer
-                            icon={<NodeIcon nodeType={AzureNodeKind.Device} />}
-                            display='Devices'
-                            value={stats?.devices}
-                            loading={loading}
-                        />
-                        <LoadContainer
-                            icon={<NodeIcon nodeType={AzureNodeKind.ManagementGroup} />}
-                            display='Management Groups'
-                            value={stats?.management_groups}
-                            loading={loading}
-                        />
-                        <LoadContainer
-                            icon={<NodeIcon nodeType={AzureNodeKind.Subscription} />}
-                            display='Subscriptions'
-                            value={stats?.subscriptions}
-                            loading={loading}
-                        />
-                        <LoadContainer
-                            icon={<NodeIcon nodeType={AzureNodeKind.ResourceGroup} />}
-                            display='Resource Groups'
-                            value={stats?.resource_groups}
-                            loading={loading}
-                        />
-                        <LoadContainer
-                            icon={<NodeIcon nodeType={AzureNodeKind.VM} />}
-                            display='VMs'
-                            value={stats?.vms}
-                            loading={loading}
-                        />
-                        <LoadContainer
-                            icon={<NodeIcon nodeType={AzureNodeKind.KeyVault} />}
-                            display='Key Vaults'
-                            value={stats?.key_vaults}
-                            loading={loading}
-                        />
-                        <LoadContainer
-                            icon={<NodeIcon nodeType={AzureNodeKind.AutomationAccount} />}
-                            display='Automation Accounts'
-                            value={stats?.automation_accounts}
-                            loading={loading}
-                        />
-                        <LoadContainer
-                            icon={<NodeIcon nodeType={AzureNodeKind.ContainerRegistry} />}
-                            display='Container Registries'
-                            value={stats?.container_registries}
-                            loading={loading}
-                        />
-                        <LoadContainer
-                            icon={<NodeIcon nodeType={AzureNodeKind.FunctionApp} />}
-                            display='Function Apps'
-                            value={stats?.function_apps}
-                            loading={loading}
-                        />
-                        <LoadContainer
-                            icon={<NodeIcon nodeType={AzureNodeKind.LogicApp} />}
-                            display='Logic Apps'
-                            value={stats?.logic_apps}
-                            loading={loading}
-                        />
-                        <LoadContainer
-                            icon={<NodeIcon nodeType={AzureNodeKind.ManagedCluster} />}
-                            display='Managed Clusters'
-                            value={stats?.managed_clusters}
-                            loading={loading}
-                        />
-                        <LoadContainer
-                            icon={<NodeIcon nodeType={AzureNodeKind.VMScaleSet} />}
-                            display='VM Scale Sets'
-                            value={stats?.vm_scale_sets}
-                            loading={loading}
-                        />
-                        <LoadContainer
-                            icon={<NodeIcon nodeType={AzureNodeKind.WebApp} />}
-                            display='Web Apps'
-                            value={stats?.web_apps}
-                            loading={loading}
-                        />
-                        {stats?.tenants !== undefined && (
-                            <LoadContainer
-                                icon={<NodeIcon nodeType={AzureNodeKind.Tenant} />}
-                                display='Tenants'
-                                value={stats?.tenants}
-                                loading={loading}
-                            />
-                        )}
+                        {Object.keys(TenantMap).map((key) => {
+                            if (key === 'tenants' && stats?.tenants === undefined) return null;
+
+                            const mapValue = TenantMap[key as keyof typeof TenantMap];
+                            const value = stats?.[key as keyof AzureDataQualityStat] as number;
+
+                            return (
+                                <LoadContainer
+                                    icon={<NodeIcon nodeType={mapValue.kind} />}
+                                    display={mapValue.displayText}
+                                    value={value}
+                                    loading={loading}
+                                />
+                            );
+                        })}
                     </TableBody>
                 </Table>
             </TableContainer>
