@@ -1,10 +1,14 @@
 package golang
 
 import (
+	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
+	"regexp"
 
 	"github.com/gofrs/uuid"
 	"github.com/specterops/bloodhound/packages/go/stbernard/cmdrunner"
@@ -22,6 +26,7 @@ const (
 var (
 	DefaultCoveragePath          = filepath.Join("tmp", "coverage")
 	DefaultIntegrationConfigPath = filepath.Join("local-harnesses", "integration.config.json")
+	ErrTotalCoverageNotFound     = errors.New("total coverage not found")
 )
 
 func TestWorkspace(cwd string, modPaths []string, profileDir string, env environment.Environment, integration bool) error {
@@ -81,5 +86,32 @@ func GetModuleName(modPath string) (string, error) {
 		return "", fmt.Errorf("reading go.mod file for %s: %w", modPath, err)
 	} else {
 		return modfile.ModulePath(modFile), nil
+	}
+}
+
+func GetCombinedCoverage(coverFile string, env environment.Environment) (string, error) {
+	var (
+		output bytes.Buffer
+
+		args       = []string{"tool", "cover", "-func", filepath.Base(coverFile)}
+		channelOut = func(c *exec.Cmd) {
+			c.Stdout = &output
+		}
+	)
+
+	if err := cmdrunner.Run("go", args, filepath.Dir(coverFile), env, channelOut); err != nil {
+		return "", fmt.Errorf("combined coverage: %w", err)
+	} else if re, err := regexp.Compile(`total:\s+\(.*?\)\s+(\d+(?:.\d+)?%)`); err != nil {
+		return "", fmt.Errorf("regex failed to compile: %w", err)
+	} else {
+		matches := re.FindStringSubmatch(output.String())
+
+		// This regex has only one capture group, so we expect the percentage to be in the capture group portion of the matches
+		// There should be two matches since the first match result is the full string that was matched, and the second is the result of our capture group
+		if len(matches) == 2 {
+			return matches[1], nil
+		}
+
+		return "", ErrTotalCoverageNotFound
 	}
 }

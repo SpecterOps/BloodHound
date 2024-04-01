@@ -11,6 +11,7 @@ import (
 	"github.com/specterops/bloodhound/packages/go/stbernard/environment"
 	"github.com/specterops/bloodhound/packages/go/stbernard/workspace"
 	"github.com/specterops/bloodhound/packages/go/stbernard/workspace/golang"
+	"github.com/specterops/bloodhound/packages/go/stbernard/workspace/yarn"
 	"golang.org/x/tools/cover"
 )
 
@@ -55,11 +56,19 @@ func (s *command) Parse(cmdIndex int) error {
 func (s *command) Run() error {
 	if paths, err := workspace.FindPaths(s.env); err != nil {
 		return fmt.Errorf("finding workspace root: %w", err)
+	} else if yarnAbsPaths, err := yarn.ParseYarnAbsPaths(paths.Root); err != nil {
+		return fmt.Errorf("parsing yarn workspace paths: %w", err)
 	} else if profiles, err := getProfilesFromManifest(paths.Coverage); err != nil {
 		return fmt.Errorf("getting coverage manifest: %w", err)
 	} else if err := writeCombinedProfiles(filepath.Join(paths.Coverage, golang.CombinedCoverage), profiles); err != nil {
 		return fmt.Errorf("writing combined profiles: %w", err)
+	} else if goCovPercent, err := golang.GetCombinedCoverage(filepath.Join(paths.Coverage, golang.CombinedCoverage), s.env); err != nil {
+		return fmt.Errorf("getting total go coverage: %w", err)
+	} else if yarnCovPercent, err := yarn.GetCombinedCoverage(yarnAbsPaths, s.env); err != nil {
+		return fmt.Errorf("getting total yarn coverage: %w", err)
 	} else {
+		fmt.Printf("Total Go Test Coverage in %s: %s\n", paths.Root, goCovPercent)
+		fmt.Printf("Total Yarn Test Coverage in %s: %s\n", paths.Root, yarnCovPercent)
 		return nil
 	}
 }

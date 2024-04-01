@@ -15,15 +15,12 @@ var (
 	ErrNonZeroExit = errors.New("non-zero exit status")
 )
 
-// CmdModifier describes a function that mutates a generated *exec.Cmd before running it
-type CmdModifier func(*exec.Cmd)
-
 // Run runs a command with ars and environment variables set at a specified path
 //
 // The CmdModifiers parameter is an optional list of modifying functions that can alter the generated *exec.Cmd after default setup.
 //
 // If debug log level is set globally, command output will be combined and sent to os.Stderr.
-func Run(command string, args []string, path string, env environment.Environment, cmdModifiers ...CmdModifier) error {
+func Run(command string, args []string, path string, env environment.Environment, cmdModifiers ...func(*exec.Cmd)) error {
 	var (
 		exitErr error
 
