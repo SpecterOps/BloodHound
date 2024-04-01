@@ -42,7 +42,6 @@ const globalViewReducer = (state = initialGlobalState, action: types.GlobalViewA
 };
 
 const initialOptionsState: types.GlobalOptionsState = {
-    baseUrl: '',
     domain: null,
     assetGroups: [],
     assetGroupIndex: null,

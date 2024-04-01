@@ -56,7 +56,8 @@ export type ActiveDirectoryDataQualityResponse = {
 };
 
 export type AzureDataQualityStat = {
-    tenantid: string;
+    run_id: string;
+    relationships: number;
     users: number;
     groups: number;
     apps: number;
@@ -64,12 +65,18 @@ export type AzureDataQualityStat = {
     devices: number;
     management_groups: number;
     subscriptions: number;
-    tenants?: number;
     resource_groups: number;
     vms: number;
     key_vaults: number;
-    relationships: number;
-    run_id: string;
+    automation_accounts: number;
+    container_registries: number;
+    function_apps: number;
+    logic_apps: number;
+    managed_clusters: number;
+    vm_scale_sets: number;
+    web_apps: number;
+    tenants?: number;
+    tenantid?: string;
 };
 
 export type AzureDataQualityResponse = {

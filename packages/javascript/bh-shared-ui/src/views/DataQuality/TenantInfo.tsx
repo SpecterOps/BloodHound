@@ -52,16 +52,16 @@ export const TenantInfo: React.FC<{ contextId: string; headers?: boolean; onData
     }, [isError, onDataError]);
 
     if (isLoading) {
-        return <Layout dbInfo={null} isPlatform={false} headers={headers} loading={true} />;
+        return <Layout stats={null} headers={headers} loading={true} />;
     }
 
     if (isError || !tenantData) {
-        return <Layout dbInfo={null} isPlatform={false} headers={headers} loading={false} />;
+        return <Layout stats={null} headers={headers} loading={false} />;
     }
 
-    const dbInfo = tenantData.data[0] as AzureDataQualityStat;
+    const stats = tenantData.data[0] as AzureDataQualityStat;
 
-    return <Layout dbInfo={dbInfo} headers={headers} loading={false} />;
+    return <Layout stats={stats} headers={headers} loading={false} />;
 };
 
 export const AzurePlatformInfo: React.FC<{ onDataError?: () => void }> = ({ onDataError = () => {} }) => {
@@ -77,24 +77,23 @@ export const AzurePlatformInfo: React.FC<{ onDataError?: () => void }> = ({ onDa
     }, [isError, onDataError]);
 
     if (isLoading || !platformData) {
-        return <Layout dbInfo={null} isPlatform={true} loading={true} />;
+        return <Layout stats={null} loading={true} />;
     }
 
     if (isError) {
-        return <Layout dbInfo={null} isPlatform={true} loading={false} />;
+        return <Layout stats={null} loading={false} />;
     }
 
-    const dbInfo = platformData.data[0] as AzureDataQualityStat;
+    const stats = platformData.data[0] as AzureDataQualityStat;
 
-    return <Layout dbInfo={dbInfo} isPlatform={true} loading={false} />;
+    return <Layout stats={stats} loading={false} />;
 };
 
 const Layout: React.FC<{
-    dbInfo: AzureDataQualityStat | null;
+    stats: AzureDataQualityStat | null;
     loading: boolean;
-    isPlatform?: boolean;
     headers?: boolean;
-}> = ({ dbInfo, loading, isPlatform, headers }) => {
+}> = ({ stats, loading, headers }) => {
     const classes = useStyles();
     return (
         <Box position='relative'>
@@ -112,68 +111,68 @@ const Layout: React.FC<{
                         <LoadContainer
                             icon={<NodeIcon nodeType={'AZUser'} />}
                             display='Users'
-                            value={dbInfo?.users || 0}
+                            value={stats?.users}
                             loading={loading}
                         />
                         <LoadContainer
                             icon={<NodeIcon nodeType={'AZGroup'} />}
                             display='Groups'
-                            value={dbInfo?.groups || 0}
+                            value={stats?.groups}
                             loading={loading}
                         />
                         <LoadContainer
                             icon={<NodeIcon nodeType={'AZApp'} />}
                             display='Apps'
-                            value={dbInfo?.apps || 0}
+                            value={stats?.apps}
                             loading={loading}
                         />
                         <LoadContainer
                             icon={<NodeIcon nodeType={'AZServicePrincipal'} />}
                             display='Service Principals'
-                            value={dbInfo?.service_principals || 0}
+                            value={stats?.service_principals}
                             loading={loading}
                         />
                         <LoadContainer
                             icon={<NodeIcon nodeType={'AZDevice'} />}
                             display='Devices'
-                            value={dbInfo?.devices || 0}
+                            value={stats?.devices}
                             loading={loading}
                         />
                         <LoadContainer
                             icon={<NodeIcon nodeType={'AZManagementGroup'} />}
                             display='Management Groups'
-                            value={dbInfo?.management_groups || 0}
+                            value={stats?.management_groups}
                             loading={loading}
                         />
                         <LoadContainer
                             icon={<NodeIcon nodeType={'AZSubscription'} />}
                             display='Subscriptions'
-                            value={dbInfo?.subscriptions || 0}
+                            value={stats?.subscriptions}
                             loading={loading}
                         />
                         <LoadContainer
                             icon={<NodeIcon nodeType={'AZResourceGroup'} />}
                             display='Resource Groups'
-                            value={dbInfo?.resource_groups || 0}
+                            value={stats?.resource_groups}
                             loading={loading}
                         />
                         <LoadContainer
                             icon={<NodeIcon nodeType={'AZVM'} />}
                             display='VMs'
-                            value={dbInfo?.vms || 0}
+                            value={stats?.vms}
                             loading={loading}
                         />
                         <LoadContainer
                             icon={<NodeIcon nodeType={'AZKeyVault'} />}
                             display='Key Vaults'
-                            value={dbInfo?.key_vaults || 0}
+                            value={stats?.key_vaults}
                             loading={loading}
                         />
-                        {isPlatform && (
+                        {stats?.tenants !== undefined && (
                             <LoadContainer
                                 icon={<NodeIcon nodeType={'AZTenant'} />}
                                 display='Tenants'
-                                value={dbInfo?.tenants || 0}
+                                value={stats?.tenants}
                                 loading={loading}
                             />
                         )}
@@ -186,7 +185,7 @@ const Layout: React.FC<{
                         <LoadContainer
                             icon={<FontAwesomeIcon icon={faUsers} />}
                             display='Relationships'
-                            value={dbInfo?.relationships || 0}
+                            value={stats?.relationships}
                             loading={loading}
                         />
                     </TableBody>

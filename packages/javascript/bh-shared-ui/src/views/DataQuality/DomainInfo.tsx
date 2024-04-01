@@ -52,16 +52,16 @@ export const DomainInfo: React.FC<{ contextId: string; headers?: boolean; onData
     }, [isError, onDataError]);
 
     if (isLoading || !domainData) {
-        return <Layout dbInfo={null} isPlatform={false} headers={headers} loading={true} />;
+        return <Layout stats={null} headers={headers} loading={true} />;
     }
 
     if (isError) {
-        return <Layout dbInfo={null} isPlatform={false} headers={headers} loading={false} />;
+        return <Layout stats={null} headers={headers} loading={false} />;
     }
 
-    const dbInfo = domainData.data[0] as ActiveDirectoryQualityStat;
+    const stats = domainData.data[0] as ActiveDirectoryQualityStat;
 
-    return <Layout dbInfo={dbInfo} headers={headers} loading={false} />;
+    return <Layout stats={stats} headers={headers} loading={false} />;
 };
 
 export const ActiveDirectoryPlatformInfo: React.FC<{ onDataError?: () => void }> = ({ onDataError = () => {} }) => {
@@ -77,24 +77,23 @@ export const ActiveDirectoryPlatformInfo: React.FC<{ onDataError?: () => void }>
     }, [isError, onDataError]);
 
     if (isLoading) {
-        return <Layout dbInfo={null} isPlatform={true} loading={true} />;
+        return <Layout stats={null} loading={true} />;
     }
 
     if (isError || !adPlatformData) {
-        return <Layout dbInfo={null} isPlatform={true} loading={false} />;
+        return <Layout stats={null} loading={false} />;
     }
 
-    const dbInfo = adPlatformData.data[0] as ActiveDirectoryQualityStat;
+    const stats = adPlatformData.data[0] as ActiveDirectoryQualityStat;
 
-    return <Layout dbInfo={dbInfo} isPlatform={true} loading={false} />;
+    return <Layout stats={stats} loading={false} />;
 };
 
 const Layout: React.FC<{
-    dbInfo: ActiveDirectoryQualityStat | null;
+    stats: ActiveDirectoryQualityStat | null;
     loading: boolean;
-    isPlatform?: boolean;
     headers?: boolean;
-}> = ({ dbInfo, loading, isPlatform, headers }) => {
+}> = ({ stats, loading, headers }) => {
     const classes = useStyles();
     return (
         <Box position='relative'>
@@ -112,69 +111,70 @@ const Layout: React.FC<{
                         <LoadContainer
                             icon={<NodeIcon nodeType={'User'} />}
                             display='Users'
-                            value={dbInfo?.users || 0}
+                            value={stats?.users}
                             loading={loading}
                         />
 
                         <LoadContainer
                             icon={<NodeIcon nodeType={'Group'} />}
                             display='Groups'
-                            value={dbInfo?.groups || 0}
+                            value={stats?.groups}
                             loading={loading}
                         />
 
                         <LoadContainer
                             icon={<NodeIcon nodeType={'Computer'} />}
                             display='Computers'
-                            value={dbInfo?.computers || 0}
+                            value={stats?.computers}
+                            loading={loading}
                         />
 
                         <LoadContainer
                             icon={<NodeIcon nodeType={'OU'} />}
                             display='OUs'
-                            value={dbInfo?.ous || 0}
+                            value={stats?.ous}
                             loading={loading}
                         />
 
                         <LoadContainer
                             icon={<NodeIcon nodeType={'GPO'} />}
                             display='GPOs'
-                            value={dbInfo?.gpos || 0}
+                            value={stats?.gpos}
                             loading={loading}
                         />
 
                         <LoadContainer
                             icon={<NodeIcon nodeType={'AIACA'} />}
                             display='AIACAs'
-                            value={dbInfo?.aiacas || 0}
+                            value={stats?.aiacas}
                             loading={loading}
                         />
 
                         <LoadContainer
                             icon={<NodeIcon nodeType={'RootCA'} />}
                             display='RootCAs'
-                            value={dbInfo?.rootcas || 0}
+                            value={stats?.rootcas}
                             loading={loading}
                         />
 
                         <LoadContainer
                             icon={<NodeIcon nodeType={'EnterpriseCA'} />}
                             display='EnterpriseCAs'
-                            value={dbInfo?.enterprisecas || 0}
+                            value={stats?.enterprisecas}
                             loading={loading}
                         />
 
                         <LoadContainer
                             icon={<NodeIcon nodeType={'NTAuthStore'} />}
                             display='NTAuthStores'
-                            value={dbInfo?.ntauthstores || 0}
+                            value={stats?.ntauthstores}
                             loading={loading}
                         />
 
                         <LoadContainer
                             icon={<NodeIcon nodeType={'CertTemplate'} />}
                             display='CertTemplates'
-                            value={dbInfo?.certtemplates || 0}
+                            value={stats?.certtemplates}
                             loading={loading}
                         />
                         <LoadContainer
@@ -187,15 +187,15 @@ const Layout: React.FC<{
                         <LoadContainer
                             icon={<NodeIcon nodeType={'Container'} />}
                             display='Containers'
-                            value={dbInfo?.containers || 0}
+                            value={stats?.containers}
                             loading={loading}
                         />
 
-                        {isPlatform && (
+                        {stats?.domains !== undefined && (
                             <LoadContainer
                                 icon={<NodeIcon nodeType={'Domain'} />}
                                 display='Domains'
-                                value={dbInfo?.domains || 0}
+                                value={stats.domains}
                                 loading={loading}
                             />
                         )}
@@ -208,21 +208,21 @@ const Layout: React.FC<{
                         <LoadContainer
                             icon={<FontAwesomeIcon icon={faSignInAlt} />}
                             display='Sessions'
-                            value={dbInfo?.sessions || 0}
+                            value={stats?.sessions}
                             loading={loading}
                         />
 
                         <LoadContainer
                             icon={<FontAwesomeIcon icon={faStream} />}
                             display='ACLs'
-                            value={dbInfo?.acls || 0}
+                            value={stats?.acls}
                             loading={loading}
                         />
 
                         <LoadContainer
                             icon={<FontAwesomeIcon icon={faUsers} />}
                             display='Relationships'
-                            value={dbInfo?.relationships || 0}
+                            value={stats?.relationships}
                             loading={loading}
                         />
                     </TableBody>
@@ -234,7 +234,7 @@ const Layout: React.FC<{
                         <LoadContainer
                             icon={<FontAwesomeIcon icon={faChartPie} />}
                             display='Group Completeness'
-                            value={dbInfo?.local_group_completeness || 0}
+                            value={stats?.local_group_completeness}
                             loading={loading}
                             type='percent'
                         />
@@ -242,7 +242,7 @@ const Layout: React.FC<{
                         <LoadContainer
                             icon={<FontAwesomeIcon icon={faChartPie} />}
                             display='Session Completeness'
-                            value={dbInfo?.session_completeness || 0}
+                            value={stats?.session_completeness}
                             loading={loading}
                             type='percent'
                         />
