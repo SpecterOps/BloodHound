@@ -40,6 +40,7 @@ export type ActiveDirectoryQualityStat = {
     users: number;
     containers?: number;
     computers: number;
+    issuancepolicies: number;
     domains?: number;
     sessions: number;
     local_group_completeness: number;

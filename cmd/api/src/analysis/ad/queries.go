@@ -160,6 +160,10 @@ func GraphStats(ctx context.Context, db graph.Database) (model.ADDataQualityStat
 								case ad.CertTemplate:
 									stat.CertTemplates = int(count)
 									aggregation.CertTemplates += int(count)
+
+								case ad.IssuancePolicy:
+									stat.IssuancePolicies = int(count)
+									aggregation.IssuancePolicies += int(count)
 								}
 
 								mutex.Unlock()
