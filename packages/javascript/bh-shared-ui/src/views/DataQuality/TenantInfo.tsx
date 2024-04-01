@@ -26,6 +26,7 @@ import LoadContainer from './LoadContainer';
 import { faUsers } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { NodeIcon } from '../../components';
+import { AzureNodeKind } from '../../graphSchema';
 
 const useStyles = makeStyles({
     print: {
@@ -109,68 +110,110 @@ const Layout: React.FC<{
                     )}
                     <TableBody>
                         <LoadContainer
-                            icon={<NodeIcon nodeType={'AZUser'} />}
+                            icon={<NodeIcon nodeType={AzureNodeKind.User} />}
                             display='Users'
                             value={stats?.users}
                             loading={loading}
                         />
                         <LoadContainer
-                            icon={<NodeIcon nodeType={'AZGroup'} />}
+                            icon={<NodeIcon nodeType={AzureNodeKind.Group} />}
                             display='Groups'
                             value={stats?.groups}
                             loading={loading}
                         />
                         <LoadContainer
-                            icon={<NodeIcon nodeType={'AZApp'} />}
+                            icon={<NodeIcon nodeType={AzureNodeKind.App} />}
                             display='Apps'
                             value={stats?.apps}
                             loading={loading}
                         />
                         <LoadContainer
-                            icon={<NodeIcon nodeType={'AZServicePrincipal'} />}
+                            icon={<NodeIcon nodeType={AzureNodeKind.ServicePrincipal} />}
                             display='Service Principals'
                             value={stats?.service_principals}
                             loading={loading}
                         />
                         <LoadContainer
-                            icon={<NodeIcon nodeType={'AZDevice'} />}
+                            icon={<NodeIcon nodeType={AzureNodeKind.Device} />}
                             display='Devices'
                             value={stats?.devices}
                             loading={loading}
                         />
                         <LoadContainer
-                            icon={<NodeIcon nodeType={'AZManagementGroup'} />}
+                            icon={<NodeIcon nodeType={AzureNodeKind.ManagementGroup} />}
                             display='Management Groups'
                             value={stats?.management_groups}
                             loading={loading}
                         />
                         <LoadContainer
-                            icon={<NodeIcon nodeType={'AZSubscription'} />}
+                            icon={<NodeIcon nodeType={AzureNodeKind.Subscription} />}
                             display='Subscriptions'
                             value={stats?.subscriptions}
                             loading={loading}
                         />
                         <LoadContainer
-                            icon={<NodeIcon nodeType={'AZResourceGroup'} />}
+                            icon={<NodeIcon nodeType={AzureNodeKind.ResourceGroup} />}
                             display='Resource Groups'
                             value={stats?.resource_groups}
                             loading={loading}
                         />
                         <LoadContainer
-                            icon={<NodeIcon nodeType={'AZVM'} />}
+                            icon={<NodeIcon nodeType={AzureNodeKind.VM} />}
                             display='VMs'
                             value={stats?.vms}
                             loading={loading}
                         />
                         <LoadContainer
-                            icon={<NodeIcon nodeType={'AZKeyVault'} />}
+                            icon={<NodeIcon nodeType={AzureNodeKind.KeyVault} />}
                             display='Key Vaults'
                             value={stats?.key_vaults}
                             loading={loading}
                         />
+                        <LoadContainer
+                            icon={<NodeIcon nodeType={AzureNodeKind.AutomationAccount} />}
+                            display='Automation Accounts'
+                            value={stats?.automation_accounts}
+                            loading={loading}
+                        />
+                        <LoadContainer
+                            icon={<NodeIcon nodeType={AzureNodeKind.ContainerRegistry} />}
+                            display='Container Registries'
+                            value={stats?.container_registries}
+                            loading={loading}
+                        />
+                        <LoadContainer
+                            icon={<NodeIcon nodeType={AzureNodeKind.FunctionApp} />}
+                            display='Function Apps'
+                            value={stats?.function_apps}
+                            loading={loading}
+                        />
+                        <LoadContainer
+                            icon={<NodeIcon nodeType={AzureNodeKind.LogicApp} />}
+                            display='Logic Apps'
+                            value={stats?.logic_apps}
+                            loading={loading}
+                        />
+                        <LoadContainer
+                            icon={<NodeIcon nodeType={AzureNodeKind.ManagedCluster} />}
+                            display='Managed Clusters'
+                            value={stats?.managed_clusters}
+                            loading={loading}
+                        />
+                        <LoadContainer
+                            icon={<NodeIcon nodeType={AzureNodeKind.VMScaleSet} />}
+                            display='VM Scale Sets'
+                            value={stats?.vm_scale_sets}
+                            loading={loading}
+                        />
+                        <LoadContainer
+                            icon={<NodeIcon nodeType={AzureNodeKind.WebApp} />}
+                            display='Web Apps'
+                            value={stats?.web_apps}
+                            loading={loading}
+                        />
                         {stats?.tenants !== undefined && (
                             <LoadContainer
-                                icon={<NodeIcon nodeType={'AZTenant'} />}
+                                icon={<NodeIcon nodeType={AzureNodeKind.Tenant} />}
                                 display='Tenants'
                                 value={stats?.tenants}
                                 loading={loading}

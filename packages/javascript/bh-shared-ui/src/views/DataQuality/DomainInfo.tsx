@@ -26,6 +26,7 @@ import {
     useActiveDirectoryPlatformsDataQualityStatsQuery,
     ActiveDirectoryQualityStat,
 } from '../../hooks';
+import { ActiveDirectoryNodeKind } from '../../graphSchema';
 
 const useStyles = makeStyles({
     print: {
@@ -109,70 +110,70 @@ const Layout: React.FC<{
                     )}
                     <TableBody>
                         <LoadContainer
-                            icon={<NodeIcon nodeType={'User'} />}
+                            icon={<NodeIcon nodeType={ActiveDirectoryNodeKind.User} />}
                             display='Users'
                             value={stats?.users}
                             loading={loading}
                         />
 
                         <LoadContainer
-                            icon={<NodeIcon nodeType={'Group'} />}
+                            icon={<NodeIcon nodeType={ActiveDirectoryNodeKind.Group} />}
                             display='Groups'
                             value={stats?.groups}
                             loading={loading}
                         />
 
                         <LoadContainer
-                            icon={<NodeIcon nodeType={'Computer'} />}
+                            icon={<NodeIcon nodeType={ActiveDirectoryNodeKind.Computer} />}
                             display='Computers'
                             value={stats?.computers}
                             loading={loading}
                         />
 
                         <LoadContainer
-                            icon={<NodeIcon nodeType={'OU'} />}
+                            icon={<NodeIcon nodeType={ActiveDirectoryNodeKind.OU} />}
                             display='OUs'
                             value={stats?.ous}
                             loading={loading}
                         />
 
                         <LoadContainer
-                            icon={<NodeIcon nodeType={'GPO'} />}
+                            icon={<NodeIcon nodeType={ActiveDirectoryNodeKind.GPO} />}
                             display='GPOs'
                             value={stats?.gpos}
                             loading={loading}
                         />
 
                         <LoadContainer
-                            icon={<NodeIcon nodeType={'AIACA'} />}
+                            icon={<NodeIcon nodeType={ActiveDirectoryNodeKind.AIACA} />}
                             display='AIACAs'
                             value={stats?.aiacas}
                             loading={loading}
                         />
 
                         <LoadContainer
-                            icon={<NodeIcon nodeType={'RootCA'} />}
+                            icon={<NodeIcon nodeType={ActiveDirectoryNodeKind.RootCA} />}
                             display='RootCAs'
                             value={stats?.rootcas}
                             loading={loading}
                         />
 
                         <LoadContainer
-                            icon={<NodeIcon nodeType={'EnterpriseCA'} />}
+                            icon={<NodeIcon nodeType={ActiveDirectoryNodeKind.EnterpriseCA} />}
                             display='EnterpriseCAs'
                             value={stats?.enterprisecas}
                             loading={loading}
                         />
 
                         <LoadContainer
-                            icon={<NodeIcon nodeType={'NTAuthStore'} />}
+                            icon={<NodeIcon nodeType={ActiveDirectoryNodeKind.NTAuthStore} />}
                             display='NTAuthStores'
                             value={stats?.ntauthstores}
                             loading={loading}
                         />
 
                         <LoadContainer
-                            icon={<NodeIcon nodeType={'CertTemplate'} />}
+                            icon={<NodeIcon nodeType={ActiveDirectoryNodeKind.CertTemplate} />}
                             display='CertTemplates'
                             value={stats?.certtemplates}
                             loading={loading}
@@ -185,7 +186,7 @@ const Layout: React.FC<{
                         />
 
                         <LoadContainer
-                            icon={<NodeIcon nodeType={'Container'} />}
+                            icon={<NodeIcon nodeType={ActiveDirectoryNodeKind.Container} />}
                             display='Containers'
                             value={stats?.containers}
                             loading={loading}
@@ -193,7 +194,7 @@ const Layout: React.FC<{
 
                         {stats?.domains !== undefined && (
                             <LoadContainer
-                                icon={<NodeIcon nodeType={'Domain'} />}
+                                icon={<NodeIcon nodeType={ActiveDirectoryNodeKind.Domain} />}
                                 display='Domains'
                                 value={stats.domains}
                                 loading={loading}
