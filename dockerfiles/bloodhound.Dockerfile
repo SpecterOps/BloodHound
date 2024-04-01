@@ -23,7 +23,7 @@ ARG AZUREHOUND_VERSION=v2.1.8
 ########
 # Builder init
 ################
-FROM --platform=$BUILDPLATFORM docker.io/library/node:18-alpine AS deps
+FROM --platform=$BUILDPLATFORM docker.io/library/node:20-alpine AS deps
 ARG version=v999.999.999
 ARG checkout_hash=""
 ENV PYTHONUNBUFFERED=1
