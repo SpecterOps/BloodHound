@@ -17,10 +17,14 @@
 package yarn
 
 import (
+	"encoding/json"
 	"fmt"
+	"os"
+	"path/filepath"
 
 	"github.com/specterops/bloodhound/packages/go/stbernard/cmdrunner"
 	"github.com/specterops/bloodhound/packages/go/stbernard/environment"
+	"github.com/specterops/bloodhound/slicesext"
 )
 
 // InstallWorkspaceDeps runs yarn install for a given list of jsPaths
@@ -64,5 +68,21 @@ func TestWorkspace(cwd string, env environment.Environment) error {
 		return fmt.Errorf("yarn test at %v: %w", cwd, err)
 	} else {
 		return nil
+	}
+}
+
+// ParseYarnAbsPaths parses list of yarn workspaces from `yarn-workspaces.json` in cwd
+func ParseYarnAbsPaths(cwd string) ([]string, error) {
+	var (
+		paths  []string
+		ywPath = filepath.Join(cwd, "yarn-workspaces.json")
+	)
+
+	if data, err := os.ReadFile(ywPath); err != nil {
+		return paths, fmt.Errorf("reading yarn-workspaces.json file: %w", err)
+	} else if err := json.Unmarshal(data, &paths); err != nil {
+		return paths, fmt.Errorf("unmarshaling yarn-workspaces.json file: %w", err)
+	} else {
+		return slicesext.Map(paths, func(path string) string { return filepath.Join(filepath.Dir(ywPath), path) }), nil
 	}
 }

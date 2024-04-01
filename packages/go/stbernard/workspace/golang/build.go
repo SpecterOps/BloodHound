@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package workspace
+package golang
 
 import (
 	"errors"
@@ -30,8 +30,8 @@ import (
 	"github.com/specterops/bloodhound/packages/go/stbernard/git"
 )
 
-// BuildGoMainPackages builds all main packages for a list of module paths
-func BuildGoMainPackages(workRoot string, modPaths []string, env environment.Environment) error {
+// BuildMainPackages builds all main packages for a list of module paths
+func BuildMainPackages(workRoot string, modPaths []string, env environment.Environment) error {
 	var (
 		errs     []error
 		wg       sync.WaitGroup
@@ -50,7 +50,7 @@ func BuildGoMainPackages(workRoot string, modPaths []string, env environment.Env
 		wg.Add(1)
 		go func(buildDir, modPath string) {
 			defer wg.Done()
-			if err := buildGoModuleMainPackages(buildDir, modPath, version, env); err != nil {
+			if err := buildModuleMainPackages(buildDir, modPath, version, env); err != nil {
 				mu.Lock()
 				errs = append(errs, fmt.Errorf("build main package: %w", err))
 				mu.Unlock()
@@ -63,8 +63,8 @@ func BuildGoMainPackages(workRoot string, modPaths []string, env environment.Env
 	return errors.Join(errs...)
 }
 
-// buildGoModuleMainPackages runs go build for all main packages in a given module
-func buildGoModuleMainPackages(buildDir string, modPath string, version semver.Version, env environment.Environment) error {
+// buildModuleMainPackages runs go build for all main packages in a given module
+func buildModuleMainPackages(buildDir string, modPath string, version semver.Version, env environment.Environment) error {
 	var (
 		wg   sync.WaitGroup
 		errs []error

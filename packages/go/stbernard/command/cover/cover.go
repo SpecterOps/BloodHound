@@ -10,6 +10,7 @@ import (
 	"github.com/specterops/bloodhound/packages/go/stbernard/coverfiles"
 	"github.com/specterops/bloodhound/packages/go/stbernard/environment"
 	"github.com/specterops/bloodhound/packages/go/stbernard/workspace"
+	"github.com/specterops/bloodhound/packages/go/stbernard/workspace/golang"
 	"golang.org/x/tools/cover"
 )
 
@@ -56,7 +57,7 @@ func (s *command) Run() error {
 		return fmt.Errorf("finding workspace root: %w", err)
 	} else if profiles, err := getProfilesFromManifest(paths.Coverage); err != nil {
 		return fmt.Errorf("getting coverage manifest: %w", err)
-	} else if err := writeCombinedProfiles(filepath.Join(paths.Coverage, workspace.CombinedCoverage), profiles); err != nil {
+	} else if err := writeCombinedProfiles(filepath.Join(paths.Coverage, golang.CombinedCoverage), profiles); err != nil {
 		return fmt.Errorf("writing combined profiles: %w", err)
 	} else {
 		return nil
@@ -67,7 +68,7 @@ func getProfilesFromManifest(coverPath string) ([]*cover.Profile, error) {
 	var (
 		profiles []*cover.Profile
 
-		manifestFile = filepath.Join(coverPath, workspace.CoverageManifest)
+		manifestFile = filepath.Join(coverPath, golang.CoverageManifest)
 		manifest     = make(map[string]string)
 	)
 

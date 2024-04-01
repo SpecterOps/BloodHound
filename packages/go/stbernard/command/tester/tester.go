@@ -10,7 +10,8 @@ import (
 	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/packages/go/stbernard/environment"
 	"github.com/specterops/bloodhound/packages/go/stbernard/workspace"
-	"github.com/specterops/bloodhound/packages/go/stbernard/yarn"
+	"github.com/specterops/bloodhound/packages/go/stbernard/workspace/golang"
+	"github.com/specterops/bloodhound/packages/go/stbernard/workspace/yarn"
 )
 
 const (
@@ -67,9 +68,9 @@ func (s *command) Parse(cmdIndex int) error {
 func (s *command) Run() error {
 	if paths, err := workspace.FindPaths(s.env); err != nil {
 		return fmt.Errorf("finding workspace root: %w", err)
-	} else if _, err := workspace.ParseJSAbsPaths(paths.Root); err != nil {
+	} else if _, err := yarn.ParseYarnAbsPaths(paths.Root); err != nil {
 		return fmt.Errorf("parsing yarn workspace absolute paths: %w", err)
-	} else if modPaths, err := workspace.ParseModulesAbsPaths(paths.Root); err != nil {
+	} else if modPaths, err := golang.ParseModulesAbsPaths(paths.Root); err != nil {
 		return fmt.Errorf("parsing module absolute paths: %w", err)
 	} else if err := s.runTests(paths.Root, paths.Coverage, modPaths); err != nil {
 		return fmt.Errorf("running tests: %w", err)
@@ -93,7 +94,7 @@ func (s *command) runTests(cwd string, coverPath string, modPaths []string) erro
 			return fmt.Errorf("listing coverage directory: %w", err)
 		} else {
 			for _, entry := range dirList {
-				if filepath.Ext(entry.Name()) == workspace.CoverageExt {
+				if filepath.Ext(entry.Name()) == golang.CoverageExt {
 					log.Debugf("Removing %s", filepath.Join(coverPath, entry.Name()))
 					if err := os.Remove(filepath.Join(coverPath, entry.Name())); err != nil {
 						return fmt.Errorf("removing %s: %w", filepath.Join(coverPath, entry.Name()), err)
@@ -102,7 +103,7 @@ func (s *command) runTests(cwd string, coverPath string, modPaths []string) erro
 			}
 		}
 
-		if err := workspace.TestWorkspace(cwd, modPaths, coverPath, s.env, s.integration); err != nil {
+		if err := golang.TestWorkspace(cwd, modPaths, coverPath, s.env, s.integration); err != nil {
 			return fmt.Errorf("testing go workspace: %w", err)
 		}
 	}

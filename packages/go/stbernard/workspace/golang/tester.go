@@ -1,4 +1,4 @@
-package workspace
+package golang
 
 import (
 	"encoding/json"
@@ -11,6 +11,17 @@ import (
 	"github.com/specterops/bloodhound/packages/go/stbernard/environment"
 	"github.com/specterops/bloodhound/slicesext"
 	"golang.org/x/mod/modfile"
+)
+
+const (
+	CoverageManifest = "manifest.json"
+	CoverageExt      = ".coverage"
+	CombinedCoverage = "combined" + CoverageExt
+)
+
+var (
+	DefaultCoveragePath          = filepath.Join("tmp", "coverage")
+	DefaultIntegrationConfigPath = filepath.Join("local-harnesses", "integration.config.json")
 )
 
 func TestWorkspace(cwd string, modPaths []string, profileDir string, env environment.Environment, integration bool) error {
@@ -71,5 +82,4 @@ func GetModuleName(modPath string) (string, error) {
 	} else {
 		return modfile.ModulePath(modFile), nil
 	}
-
 }

@@ -24,6 +24,7 @@ import (
 
 	"github.com/specterops/bloodhound/packages/go/stbernard/environment"
 	"github.com/specterops/bloodhound/packages/go/stbernard/workspace"
+	"github.com/specterops/bloodhound/packages/go/stbernard/workspace/golang"
 )
 
 const (
@@ -69,11 +70,11 @@ func (s *command) Parse(cmdIndex int) error {
 func (s command) Run() error {
 	if paths, err := workspace.FindPaths(s.env); err != nil {
 		return fmt.Errorf("finding workspace root: %w", err)
-	} else if modPaths, err := workspace.ParseModulesAbsPaths(paths.Root); err != nil {
+	} else if modPaths, err := golang.ParseModulesAbsPaths(paths.Root); err != nil {
 		return fmt.Errorf("parsing module absolute paths: %w", err)
-	} else if err := workspace.DownloadModules(modPaths, s.env); err != nil {
+	} else if err := golang.DownloadModules(modPaths, s.env); err != nil {
 		return fmt.Errorf("downloading go modules: %w", err)
-	} else if err := workspace.SyncWorkspace(paths.Root, s.env); err != nil {
+	} else if err := golang.SyncWorkspace(paths.Root, s.env); err != nil {
 		return fmt.Errorf("syncing go workspace: %w", err)
 	} else {
 		return nil

@@ -26,7 +26,8 @@ import (
 	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/packages/go/stbernard/environment"
 	"github.com/specterops/bloodhound/packages/go/stbernard/workspace"
-	"github.com/specterops/bloodhound/packages/go/stbernard/yarn"
+	"github.com/specterops/bloodhound/packages/go/stbernard/workspace/golang"
+	"github.com/specterops/bloodhound/packages/go/stbernard/workspace/yarn"
 )
 
 const (
@@ -88,7 +89,7 @@ func (s *command) Run() error {
 func (s *command) runJSBuild(cwd string, buildPath string) error {
 	s.env.SetIfEmpty("BUILD_PATH", buildPath)
 
-	if jsPaths, err := workspace.ParseJSAbsPaths(cwd); err != nil {
+	if jsPaths, err := yarn.ParseYarnAbsPaths(cwd); err != nil {
 		return fmt.Errorf("retrieving JS paths: %w", err)
 	} else if err := yarn.InstallWorkspaceDeps(cwd, jsPaths, s.env); err != nil {
 		return fmt.Errorf("installing JS deps: %w", err)
@@ -102,9 +103,9 @@ func (s *command) runJSBuild(cwd string, buildPath string) error {
 func (s command) runGoBuild(cwd string) error {
 	s.env.SetIfEmpty("CGO_ENABLED", "0")
 
-	if modPaths, err := workspace.ParseModulesAbsPaths(cwd); err != nil {
+	if modPaths, err := golang.ParseModulesAbsPaths(cwd); err != nil {
 		return fmt.Errorf("parsing module absolute paths: %w", err)
-	} else if err := workspace.BuildGoMainPackages(cwd, modPaths, s.env); err != nil {
+	} else if err := golang.BuildMainPackages(cwd, modPaths, s.env); err != nil {
 		return fmt.Errorf("building main packages: %w", err)
 	} else {
 		return nil

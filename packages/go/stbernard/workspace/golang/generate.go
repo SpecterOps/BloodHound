@@ -14,13 +14,14 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package workspace
+package golang
 
 import (
 	"errors"
 	"fmt"
 	"sync"
 
+	"github.com/specterops/bloodhound/packages/go/stbernard/cmdrunner"
 	"github.com/specterops/bloodhound/packages/go/stbernard/environment"
 )
 
@@ -47,4 +48,39 @@ func WorkspaceGenerate(modPaths []string, env environment.Environment) error {
 	wg.Wait()
 
 	return errors.Join(errs...)
+}
+
+// moduleGenerate runs go generate in each package of the given module
+func moduleGenerate(modPath string, env environment.Environment) error {
+	var (
+		errs []error
+		wg   sync.WaitGroup
+		mu   sync.Mutex
+	)
+
+	if packages, err := moduleListPackages(modPath); err != nil {
+		return fmt.Errorf("listing packages for module %s: %w", modPath, err)
+	} else {
+		for _, pkg := range packages {
+			wg.Add(1)
+			go func(pkg GoPackage) {
+				defer wg.Done()
+
+				var (
+					command = "go"
+					args    = []string{"generate", pkg.Dir}
+				)
+
+				if err := cmdrunner.Run(command, args, pkg.Dir, env); err != nil {
+					mu.Lock()
+					errs = append(errs, fmt.Errorf("generate code for package %s: %w", pkg, err))
+					mu.Unlock()
+				}
+			}(pkg)
+		}
+
+		wg.Wait()
+
+		return errors.Join(errs...)
+	}
 }

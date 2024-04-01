@@ -24,10 +24,10 @@ import (
 	"path/filepath"
 
 	"github.com/specterops/bloodhound/packages/go/stbernard/analyzers"
-	"github.com/specterops/bloodhound/packages/go/stbernard/analyzers/golang"
 	"github.com/specterops/bloodhound/packages/go/stbernard/environment"
 	"github.com/specterops/bloodhound/packages/go/stbernard/workspace"
-	"github.com/specterops/bloodhound/packages/go/stbernard/yarn"
+	"github.com/specterops/bloodhound/packages/go/stbernard/workspace/golang"
+	"github.com/specterops/bloodhound/packages/go/stbernard/workspace/yarn"
 )
 
 const (
@@ -73,9 +73,9 @@ func (s *command) Parse(cmdIndex int) error {
 func (s *command) Run() error {
 	if paths, err := workspace.FindPaths(s.env); err != nil {
 		return fmt.Errorf("finding workspace root: %w", err)
-	} else if modPaths, err := workspace.ParseModulesAbsPaths(paths.Root); err != nil {
+	} else if modPaths, err := golang.ParseModulesAbsPaths(paths.Root); err != nil {
 		return fmt.Errorf("parsing module absolute paths: %w", err)
-	} else if jsPaths, err := workspace.ParseJSAbsPaths(paths.Root); err != nil {
+	} else if jsPaths, err := yarn.ParseYarnAbsPaths(paths.Root); err != nil {
 		return fmt.Errorf("parsing JS absolute paths: %w", err)
 	} else if err := golang.InstallGolangCiLint(paths.Root, s.env); err != nil {
 		return fmt.Errorf("installing golangci-lint: %w", err)
