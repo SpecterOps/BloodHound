@@ -29,6 +29,8 @@ import (
 	"github.com/specterops/bloodhound/slicesext"
 )
 
+const yarnWorkFile = "yarn-workspaces.json"
+
 var (
 	CoverageFile         = filepath.Join("coverage", "coverage-summary.json")
 	ErrNoStatementsFound = errors.New("no statements found in coverage")
@@ -45,6 +47,11 @@ type covTotal struct {
 type statements struct {
 	Total   int `json:"total"`
 	Covered int `json:"covered"`
+}
+
+type Workspace struct {
+	AssetsDir  string   `json:"assets_dir"`
+	Workspaces []string `json:"workspaces"`
 }
 
 // InstallWorkspaceDeps runs yarn install for a given list of jsPaths
@@ -91,20 +98,29 @@ func TestWorkspace(cwd string, env environment.Environment) error {
 	}
 }
 
-// ParseYarnAbsPaths parses list of yarn workspaces from `yarn-workspaces.json` in cwd
-func ParseYarnAbsPaths(cwd string) ([]string, error) {
+// ParseWorkspace parses `yarn-workspaces.json` for paths
+func ParseWorkspace(cwd string) (Workspace, error) {
 	var (
-		paths  []string
-		ywPath = filepath.Join(cwd, "yarn-workspaces.json")
+		relWorkspace Workspace
+		ywPath       = filepath.Join(cwd, yarnWorkFile)
 	)
 
-	if data, err := os.ReadFile(ywPath); err != nil {
-		return paths, fmt.Errorf("reading yarn-workspaces.json file: %w", err)
-	} else if err := json.Unmarshal(data, &paths); err != nil {
-		return paths, fmt.Errorf("unmarshaling yarn-workspaces.json file: %w", err)
+	if b, err := os.ReadFile(ywPath); err != nil {
+		return relWorkspace, fmt.Errorf("reading yarn-workspaces.json file: %w", err)
+	} else if err := json.Unmarshal(b, &relWorkspace); err != nil {
+		return relWorkspace, fmt.Errorf("unmarshaling yarn-workspaces.json file: %w", err)
 	} else {
-		return slicesext.Map(paths, func(path string) string { return filepath.Join(filepath.Dir(ywPath), path) }), nil
+		return relWorkspaceToAbsWorkspace(cwd, relWorkspace), nil
 	}
+}
+
+func relWorkspaceToAbsWorkspace(cwd string, relWorkspace Workspace) Workspace {
+	var absWorkspace Workspace
+
+	absWorkspace.AssetsDir = filepath.Join(cwd, relWorkspace.AssetsDir)
+	absWorkspace.Workspaces = slicesext.Map(relWorkspace.Workspaces, func(path string) string { return filepath.Join(cwd, path) })
+
+	return absWorkspace
 }
 
 // GetCombinedCoverage combines statement coverage for given yarn workspaces and returns a single percentage value as a string

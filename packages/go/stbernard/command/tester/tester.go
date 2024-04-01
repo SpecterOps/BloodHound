@@ -68,7 +68,7 @@ func (s *command) Parse(cmdIndex int) error {
 func (s *command) Run() error {
 	if paths, err := workspace.FindPaths(s.env); err != nil {
 		return fmt.Errorf("finding workspace root: %w", err)
-	} else if _, err := yarn.ParseYarnAbsPaths(paths.Root); err != nil {
+	} else if _, err := yarn.ParseWorkspace(paths.Root); err != nil {
 		return fmt.Errorf("parsing yarn workspace absolute paths: %w", err)
 	} else if modPaths, err := golang.ParseModulesAbsPaths(paths.Root); err != nil {
 		return fmt.Errorf("parsing module absolute paths: %w", err)

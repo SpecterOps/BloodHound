@@ -75,13 +75,13 @@ func (s *command) Run() error {
 		return fmt.Errorf("finding workspace root: %w", err)
 	} else if modPaths, err := golang.ParseModulesAbsPaths(paths.Root); err != nil {
 		return fmt.Errorf("parsing module absolute paths: %w", err)
-	} else if jsPaths, err := yarn.ParseYarnAbsPaths(paths.Root); err != nil {
+	} else if yarnWork, err := yarn.ParseWorkspace(paths.Root); err != nil {
 		return fmt.Errorf("parsing JS absolute paths: %w", err)
 	} else if err := golang.InstallGolangCiLint(paths.Root, s.env); err != nil {
 		return fmt.Errorf("installing golangci-lint: %w", err)
-	} else if err := yarn.InstallWorkspaceDeps(paths.Root, jsPaths, s.env); err != nil {
+	} else if err := yarn.InstallWorkspaceDeps(paths.Root, yarnWork.Workspaces, s.env); err != nil {
 		return fmt.Errorf("yarn install: %w", err)
-	} else if result, err := analyzers.Run(paths.Root, modPaths, jsPaths, s.env); errors.Is(err, analyzers.ErrSeverityExit) {
+	} else if result, err := analyzers.Run(paths.Root, modPaths, yarnWork.Workspaces, s.env); errors.Is(err, analyzers.ErrSeverityExit) {
 		fmt.Println(result)
 		return err
 	} else if err != nil {

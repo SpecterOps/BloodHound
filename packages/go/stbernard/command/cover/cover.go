@@ -56,7 +56,7 @@ func (s *command) Parse(cmdIndex int) error {
 func (s *command) Run() error {
 	if paths, err := workspace.FindPaths(s.env); err != nil {
 		return fmt.Errorf("finding workspace root: %w", err)
-	} else if yarnAbsPaths, err := yarn.ParseYarnAbsPaths(paths.Root); err != nil {
+	} else if yarnWork, err := yarn.ParseWorkspace(paths.Root); err != nil {
 		return fmt.Errorf("parsing yarn workspace paths: %w", err)
 	} else if profiles, err := getProfilesFromManifest(paths.Coverage); err != nil {
 		return fmt.Errorf("getting coverage manifest: %w", err)
@@ -64,7 +64,7 @@ func (s *command) Run() error {
 		return fmt.Errorf("writing combined profiles: %w", err)
 	} else if goCovPercent, err := golang.GetCombinedCoverage(filepath.Join(paths.Coverage, golang.CombinedCoverage), s.env); err != nil {
 		return fmt.Errorf("getting total go coverage: %w", err)
-	} else if yarnCovPercent, err := yarn.GetCombinedCoverage(yarnAbsPaths, s.env); err != nil {
+	} else if yarnCovPercent, err := yarn.GetCombinedCoverage(yarnWork.Workspaces, s.env); err != nil {
 		return fmt.Errorf("getting total yarn coverage: %w", err)
 	} else {
 		fmt.Printf("Total Go Test Coverage in %s: %s\n", paths.Root, goCovPercent)

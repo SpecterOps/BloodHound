@@ -17,7 +17,6 @@
 package workspace
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
@@ -31,12 +30,6 @@ import (
 type WorkspacePaths struct {
 	Root     string
 	Coverage string
-}
-
-// Config represents a St Bernard configuration
-type Config struct {
-	DistDir   string `json:"dist_dir"`
-	AssetsDir string `json:"assets_dir"`
 }
 
 // FindPaths will attempt to crawl up the path until it finds a go.work file, then calculate all WorkspacePaths
@@ -78,25 +71,12 @@ func FindPaths(env environment.Environment) (WorkspacePaths, error) {
 	return WorkspacePaths{Root: cwd, Coverage: path}, nil
 }
 
-// ParseConfig parses a configuration file in the .stbernard directory for the given workspace path
-func ParseConfig(cwd string) (Config, error) {
-	var cfg Config
-
-	if bytes, err := os.ReadFile(filepath.Join(cwd, ".stbernard", "config.json")); err != nil {
-		return cfg, fmt.Errorf("reading config file: %w", err)
-	} else if err := json.Unmarshal(bytes, &cfg); err != nil {
-		return cfg, fmt.Errorf("unmarshaling config file contents: %w", err)
-	} else {
-		return cfg, nil
-	}
-}
-
-// projectDirExists checks if a .stbernard directory exists in the given working directory
+// projectDirExists checks if a go.work file exists in the given working directory
 func projectDirExists(cwd string) (bool, error) {
-	if _, err := os.Stat(filepath.Join(cwd, ".stbernard")); errors.Is(err, os.ErrNotExist) {
+	if _, err := os.Stat(filepath.Join(cwd, "go.work")); errors.Is(err, os.ErrNotExist) {
 		return false, nil
 	} else if err != nil {
-		return false, fmt.Errorf("stat .stbernard file: %w", err)
+		return false, fmt.Errorf("stat go.work file: %w", err)
 	} else {
 		return true, nil
 	}

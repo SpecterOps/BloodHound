@@ -73,11 +73,11 @@ func (s *command) Parse(cmdIndex int) error {
 func (s *command) Run() error {
 	if paths, err := workspace.FindPaths(s.env); err != nil {
 		return fmt.Errorf("finding workspace root: %w", err)
-	} else if cfg, err := workspace.ParseConfig(paths.Root); err != nil {
+	} else if yarnWork, err := yarn.ParseWorkspace(paths.Root); err != nil {
 		return fmt.Errorf("getting build configuration file: %w", err)
-	} else if err := filepath.WalkDir(filepath.Join(paths.Root, cfg.AssetsDir), clearFiles); err != nil {
+	} else if err := filepath.WalkDir(yarnWork.AssetsDir, clearFiles); err != nil {
 		return fmt.Errorf("clearing asset directory: %w", err)
-	} else if err := s.runJSBuild(paths.Root, filepath.Join(paths.Root, cfg.AssetsDir)); err != nil {
+	} else if err := s.runJSBuild(paths.Root, yarnWork.AssetsDir); err != nil {
 		return fmt.Errorf("building JS artifacts: %w", err)
 	} else if err := s.runGoBuild(paths.Root); err != nil {
 		return fmt.Errorf("building Go artifacts: %w", err)
@@ -89,9 +89,9 @@ func (s *command) Run() error {
 func (s *command) runJSBuild(cwd string, buildPath string) error {
 	s.env.SetIfEmpty("BUILD_PATH", buildPath)
 
-	if jsPaths, err := yarn.ParseYarnAbsPaths(cwd); err != nil {
+	if yarnWork, err := yarn.ParseWorkspace(cwd); err != nil {
 		return fmt.Errorf("retrieving JS paths: %w", err)
-	} else if err := yarn.InstallWorkspaceDeps(cwd, jsPaths, s.env); err != nil {
+	} else if err := yarn.InstallWorkspaceDeps(cwd, yarnWork.Workspaces, s.env); err != nil {
 		return fmt.Errorf("installing JS deps: %w", err)
 	} else if err := yarn.BuildWorkspace(cwd, s.env); err != nil {
 		return fmt.Errorf("building JS workspace: %w", err)
