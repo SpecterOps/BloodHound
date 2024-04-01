@@ -19,3 +19,10 @@ ALTER TABLE file_upload_jobs
 
 ALTER TABLE file_upload_jobs
   ADD COLUMN IF NOT EXISTS failed_files integer DEFAULT 0;
+
+ALTER TABLE ad_data_quality_stats
+  ADD COLUMN IF NOT EXISTS issuancepolicies BIGINT DEFAULT 0;
+
+ALTER TABLE ad_data_quality_aggregations
+  ADD COLUMN IF NOT EXISTS issuancepolicies BIGINT DEFAULT 0;
+
