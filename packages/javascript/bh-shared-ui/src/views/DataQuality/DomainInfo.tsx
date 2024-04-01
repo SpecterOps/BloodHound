@@ -142,6 +142,7 @@ const Layout: React.FC<{
 
                             return (
                                 <LoadContainer
+                                    key={key}
                                     icon={<NodeIcon nodeType={mapValue.kind} />}
                                     display={mapValue.displayText}
                                     value={value}
