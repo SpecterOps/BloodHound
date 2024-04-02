@@ -52,6 +52,6 @@ func main() {
 	} else if err := cmd.Run(); err != nil {
 		log.Fatalf("Failed to run command %s: %v", cmd.Name(), err)
 	} else {
-		log.Infof("Command %s completed successfully", cmd.Name())
+		log.Infof("Command `%s` completed successfully", cmd.Name())
 	}
 }

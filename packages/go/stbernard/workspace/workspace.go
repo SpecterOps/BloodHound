@@ -23,13 +23,19 @@ import (
 	"path/filepath"
 
 	"github.com/specterops/bloodhound/packages/go/stbernard/environment"
+	"github.com/specterops/bloodhound/packages/go/stbernard/git"
 	"github.com/specterops/bloodhound/packages/go/stbernard/workspace/golang"
+)
+
+var (
+	ErrNoWorkspaceFound = errors.New("found root path without finding project root")
 )
 
 // WorkspacePaths defines important paths for the current workspace
 type WorkspacePaths struct {
-	Root     string
-	Coverage string
+	Root       string
+	Coverage   string
+	Submodules []string
 }
 
 // FindPaths will attempt to crawl up the path until it finds a go.work file, then calculate all WorkspacePaths
@@ -57,10 +63,11 @@ func FindPaths(env environment.Environment) (WorkspacePaths, error) {
 		cwd = filepath.Dir(cwd)
 
 		if cwd == prevCwd {
-			return WorkspacePaths{}, errors.New("found root path without finding project root")
+			return WorkspacePaths{}, ErrNoWorkspaceFound
 		}
 	}
 
+	// Build coverage path
 	path, ok := env["SB_COVERAGE_PATH"]
 	if !ok || path == "" {
 		path = filepath.Join(cwd, golang.DefaultCoveragePath)
@@ -68,7 +75,13 @@ func FindPaths(env environment.Environment) (WorkspacePaths, error) {
 		path = filepath.Join(cwd, path)
 	}
 
-	return WorkspacePaths{Root: cwd, Coverage: path}, nil
+	// Build submodule paths
+	subPaths, err := git.ListSubmodulePaths(cwd, env)
+	if err != nil {
+		return WorkspacePaths{}, fmt.Errorf("listing submodule paths: %w", err)
+	}
+
+	return WorkspacePaths{Root: cwd, Coverage: path, Submodules: subPaths}, nil
 }
 
 // projectDirExists checks if a go.work file exists in the given working directory

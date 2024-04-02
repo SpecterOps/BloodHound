@@ -27,9 +27,11 @@ import (
 	"github.com/specterops/bloodhound/packages/go/stbernard/command/analysis"
 	"github.com/specterops/bloodhound/packages/go/stbernard/command/builder"
 	"github.com/specterops/bloodhound/packages/go/stbernard/command/cover"
+	"github.com/specterops/bloodhound/packages/go/stbernard/command/deps"
 	"github.com/specterops/bloodhound/packages/go/stbernard/command/envdump"
 	"github.com/specterops/bloodhound/packages/go/stbernard/command/generate"
 	"github.com/specterops/bloodhound/packages/go/stbernard/command/modsync"
+	"github.com/specterops/bloodhound/packages/go/stbernard/command/show"
 	"github.com/specterops/bloodhound/packages/go/stbernard/command/tester"
 	"github.com/specterops/bloodhound/packages/go/stbernard/environment"
 )
@@ -80,8 +82,10 @@ func ParseCLI() (CommandRunner, error) {
 		env      = environment.NewEnvironment()
 		commands = []command{
 			envdump.Create(env),
+			deps.Create(env),
 			modsync.Create(env),
 			generate.Create(env),
+			show.Create(env),
 			analysis.Create(env),
 			tester.Create(env),
 			builder.Create(env),
