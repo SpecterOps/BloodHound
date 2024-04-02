@@ -22,7 +22,6 @@ import (
 	"strings"
 
 	"github.com/RoaringBitmap/roaring"
-	"github.com/bloodhoundad/azurehound/v2/constants"
 	"github.com/specterops/bloodhound/analysis"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/dawgs/ops"
@@ -54,14 +53,14 @@ func AddMemberGroupNotRoleAssignableTargetRoles() []string {
 
 func ResetPasswordRoleIDs() []string {
 	return []string{
-		constants.GlobalAdministratorRoleID,
-		constants.PrivilegedAuthenticationAdministratorRoleID,
-		constants.PartnerTier2SupportRoleID,
-		constants.HelpdeskAdministratorRoleID,
-		constants.AuthenticationAdministratorRoleID,
-		constants.UserAdministratorRoleID,
-		constants.PasswordAdministratorRoleID,
-		constants.PartnerTier1SupportRoleID,
+		azure.CompanyAdministratorRole,
+		azure.PrivilegedAuthenticationAdministratorRole,
+		azure.PartnerTier2SupportRole,
+		azure.HelpdeskAdministratorRole,
+		azure.AuthenticationAdministratorRole,
+		azure.UserAccountAdministratorRole,
+		azure.PasswordAdministratorRole,
+		azure.PartnerTier1SupportRole,
 	}
 }
 
@@ -731,7 +730,7 @@ func ExecuteCommand(ctx context.Context, db graph.Database) (*analysis.AtomicPos
 	}
 }
 
-func resetPassword(ctx context.Context, db graph.Database, operation analysis.StatTrackedOperation[analysis.CreatePostRelationshipJob], tenant *graph.Node, roleAssignments RoleAssignments) error {
+func resetPassword(_ context.Context, _ graph.Database, operation analysis.StatTrackedOperation[analysis.CreatePostRelationshipJob], tenant *graph.Node, roleAssignments RoleAssignments) error {
 	return operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
 		if pwResetRoles, err := TenantRoles(tx, tenant, ResetPasswordRoleIDs()...); err != nil {
 			return err
@@ -768,21 +767,21 @@ func resetPasswordEndNodeBitmapForRole(role *graph.Node, roleAssignments RoleAss
 	} else {
 		result := roaring.New()
 		switch roleTemplateID {
-		case constants.GlobalAdministratorRoleID, constants.PrivilegedAuthenticationAdministratorRoleID, constants.PartnerTier2SupportRoleID:
+		case azure.CompanyAdministratorRole, azure.PrivilegedAuthenticationAdministratorRole, azure.PartnerTier2SupportRole:
 			result.Or(roleAssignments.Users())
-		case constants.UserAdministratorRoleID:
+		case azure.UserAccountAdministratorRole:
 			result.Or(roleAssignments.UsersWithoutRoles())
 			result.Or(roleAssignments.UsersWithRolesExclusive(UserAdministratorPasswordResetTargetRoles()...))
-		case constants.HelpdeskAdministratorRoleID:
+		case azure.HelpdeskAdministratorRole:
 			result.Or(roleAssignments.UsersWithoutRoles())
 			result.Or(roleAssignments.UsersWithRolesExclusive(HelpdeskAdministratorPasswordResetTargetRoles()...))
-		case constants.AuthenticationAdministratorRoleID:
+		case azure.AuthenticationAdministratorRole:
 			result.Or(roleAssignments.UsersWithoutRoles())
 			result.Or(roleAssignments.UsersWithRolesExclusive(AuthenticationAdministratorPasswordResetTargetRoles()...))
-		case constants.PasswordAdministratorRoleID:
+		case azure.PasswordAdministratorRole:
 			result.Or(roleAssignments.UsersWithoutRoles())
 			result.Or(roleAssignments.UsersWithRolesExclusive(PasswordAdministratorPasswordResetTargetRoles()...))
-		case constants.PartnerTier1SupportRoleID:
+		case azure.PartnerTier1SupportRole:
 			result.Or(roleAssignments.UsersWithoutRoles())
 		default:
 			return nil, fmt.Errorf("role node %d has unsupported role template id '%s'", role.ID, roleTemplateID)
@@ -793,7 +792,7 @@ func resetPasswordEndNodeBitmapForRole(role *graph.Node, roleAssignments RoleAss
 
 func globalAdmins(roleAssignments RoleAssignments, tenant *graph.Node, operation analysis.StatTrackedOperation[analysis.CreatePostRelationshipJob]) {
 	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
-		iter := roleAssignments.PrincipalsWithRole(constants.GlobalAdministratorRoleID).Iterator()
+		iter := roleAssignments.PrincipalsWithRole(azure.CompanyAdministratorRole).Iterator()
 		for iter.HasNext() {
 			nextJob := analysis.CreatePostRelationshipJob{
 				FromID: graph.ID(iter.Next()),
@@ -812,7 +811,7 @@ func globalAdmins(roleAssignments RoleAssignments, tenant *graph.Node, operation
 
 func privilegedRoleAdmins(roleAssignments RoleAssignments, tenant *graph.Node, operation analysis.StatTrackedOperation[analysis.CreatePostRelationshipJob]) {
 	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
-		iter := roleAssignments.PrincipalsWithRole(constants.PrivilegedRoleAdministratorRoleID).Iterator()
+		iter := roleAssignments.PrincipalsWithRole(azure.PrivilegedRoleAdministratorRole).Iterator()
 		for iter.HasNext() {
 			nextJob := analysis.CreatePostRelationshipJob{
 				FromID: graph.ID(iter.Next()),
@@ -831,7 +830,7 @@ func privilegedRoleAdmins(roleAssignments RoleAssignments, tenant *graph.Node, o
 
 func privilegedAuthAdmins(roleAssignments RoleAssignments, tenant *graph.Node, operation analysis.StatTrackedOperation[analysis.CreatePostRelationshipJob]) {
 	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
-		iter := roleAssignments.PrincipalsWithRole(constants.PrivilegedAuthenticationAdministratorRoleID).Iterator()
+		iter := roleAssignments.PrincipalsWithRole(azure.PrivilegedAuthenticationAdministratorRole).Iterator()
 		for iter.HasNext() {
 			nextJob := analysis.CreatePostRelationshipJob{
 				FromID: graph.ID(iter.Next()),
