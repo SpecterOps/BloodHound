@@ -82,7 +82,10 @@ func CheckClean(cwd string, env environment.Environment) (bool, error) {
 
 	log.Infof("Checking repository clean for %s", cwd)
 
-	if err := cmd.Run(); err != nil {
+	// We need to run git status first to ensure we don't hit a cache issue
+	if err := cmdrunner.Run("git", []string{"status"}, cwd, env); err != nil {
+		return false, fmt.Errorf("git status: %w", err)
+	} else if err := cmd.Run(); err != nil {
 		if exiterr, ok := err.(*exec.ExitError); !ok || exiterr.ExitCode() != 1 {
 			return false, fmt.Errorf("git diff-index --quiet HEAD --: %w", err)
 		} else {
