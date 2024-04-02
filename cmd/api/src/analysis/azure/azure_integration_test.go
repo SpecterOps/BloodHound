@@ -648,6 +648,20 @@ func TestRoleEntityDetails(t *testing.T) {
 	})
 }
 
+func TestRoleAddSecretDetails(t *testing.T) {
+	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
+	testContext.ReadTransactionTestWithSetup(func(harness *integration.HarnessDetails) error {
+		harness.AZAddSecretHarness.Setup(testContext)
+		return nil
+	}, func(harness integration.HarnessDetails, tx graph.Transaction) {
+
+		postProcessingStats, err := azureanalysis.AppRoleAssignments(context.Background(), testContext.Graph.Database)
+		require.Nil(t, err)
+		require.NotNil(t, postProcessingStats.RelationshipsCreated[azure.AddSecret])
+		assert.Equal(t, 4, int(*postProcessingStats.RelationshipsCreated[azure.AddSecret]))
+	})
+}
+
 func TestServicePrincipalEntityDetails(t *testing.T) {
 	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
 	testContext.ReadTransactionTestWithSetup(func(harness *integration.HarnessDetails) error {
