@@ -20,6 +20,7 @@ go 1.21
 
 require (
 	github.com/Masterminds/semver/v3 v3.2.1
+	github.com/gofrs/uuid v4.4.0+incompatible
 	github.com/specterops/bloodhound/log v0.0.0-00010101000000-000000000000
 	github.com/specterops/bloodhound/slicesext v0.0.0-00010101000000-000000000000
 	github.com/stretchr/testify v1.8.4
