@@ -9,6 +9,7 @@ export CGO_ENABLED := "0"
 export GOOS := env_var_or_default("GOOS", host_os)
 export GOARCH := env_var_or_default("GOARCH", host_arch)
 export INTEGRATION_CONFIG_PATH := env_var_or_default("INTEGRATION_CONFIG_PATH", absolute_path("./local-harnesses/integration.config.json"))
+export SB_LOG_LEVEL := env_var_or_default("SB_LOG_LEVEL", "info")
 
 set positional-arguments
 
