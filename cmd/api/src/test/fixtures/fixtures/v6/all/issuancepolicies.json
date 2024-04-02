@@ -1,0 +1,196 @@
+{
+    "data": [
+        {
+            "Properties": {
+                "domain": "TESTLAB.LOCAL",
+                "name": "LOW ASSURANCE@TESTLAB.LOCAL",
+                "distinguishedname": "CN=400.031E754FE9CE51DB698FA6F04E181946,CN=OID,CN=PUBLIC KEY SERVICES,CN=SERVICES,CN=CONFIGURATION,DC=TESTLAB,DC=LOCAL",
+                "domainsid": "S-1-5-21-318463681-1533741871-3192839656",
+                "isaclprotected": false,
+                "description": null,
+                "whencreated": 1705486852,
+                "displayname": "Low Assurance",
+                "oid": "1.3.6.1.4.1.311.21.8.13791726.4349508.5000099.2617275.11656885.78.1.400"
+            },
+            "GroupLink": {
+                "ObjectIdentifier": null,
+                "ObjectType": "Base"
+            },
+            "Aces": [
+                {
+                    "PrincipalSID": "S-1-5-21-318463681-1533741871-3192839656-519",
+                    "PrincipalType": "Group",
+                    "RightName": "Owns",
+                    "IsInherited": false
+                },
+                {
+                    "PrincipalSID": "S-1-5-21-318463681-1533741871-3192839656-512",
+                    "PrincipalType": "Group",
+                    "RightName": "GenericAll",
+                    "IsInherited": false
+                },
+                {
+                    "PrincipalSID": "S-1-5-21-318463681-1533741871-3192839656-519",
+                    "PrincipalType": "Group",
+                    "RightName": "GenericAll",
+                    "IsInherited": true
+                },
+                {
+                    "PrincipalSID": "S-1-5-21-318463681-1533741871-3192839656-512",
+                    "PrincipalType": "Group",
+                    "RightName": "WriteDacl",
+                    "IsInherited": true
+                },
+                {
+                    "PrincipalSID": "S-1-5-21-318463681-1533741871-3192839656-512",
+                    "PrincipalType": "Group",
+                    "RightName": "WriteOwner",
+                    "IsInherited": true
+                },
+                {
+                    "PrincipalSID": "S-1-5-21-318463681-1533741871-3192839656-512",
+                    "PrincipalType": "Group",
+                    "RightName": "GenericWrite",
+                    "IsInherited": true
+                }
+            ],
+            "ObjectIdentifier": "8A0CF606-AED8-44B1-A336-1A3A9E37D10B",
+            "IsDeleted": false,
+            "IsACLProtected": false,
+            "ContainedBy": {
+                "ObjectIdentifier": "42EE71D2-445E-4B4C-A327-EFBBB1DEB54E",
+                "ObjectType": "Container"
+            }
+        },
+        {
+            "Properties": {
+                "domain": "TESTLAB.LOCAL",
+                "name": "MEDIUM ASSURANCE@TESTLAB.LOCAL",
+                "distinguishedname": "CN=401.84988B1DE55C29BFECC2A9977110026B,CN=OID,CN=PUBLIC KEY SERVICES,CN=SERVICES,CN=CONFIGURATION,DC=TESTLAB,DC=LOCAL",
+                "domainsid": "S-1-5-21-318463681-1533741871-3192839656",
+                "isaclprotected": false,
+                "description": null,
+                "whencreated": 1705486852,
+                "displayname": "Medium Assurance",
+                "oid": "1.3.6.1.4.1.311.21.8.13791726.4349508.5000099.2617275.11656885.78.1.401"
+            },
+            "GroupLink": {
+                "ObjectIdentifier": null,
+                "ObjectType": "Base"
+            },
+            "Aces": [
+                {
+                    "PrincipalSID": "S-1-5-21-318463681-1533741871-3192839656-519",
+                    "PrincipalType": "Group",
+                    "RightName": "Owns",
+                    "IsInherited": false
+                },
+                {
+                    "PrincipalSID": "S-1-5-21-318463681-1533741871-3192839656-512",
+                    "PrincipalType": "Group",
+                    "RightName": "GenericAll",
+                    "IsInherited": false
+                },
+                {
+                    "PrincipalSID": "S-1-5-21-318463681-1533741871-3192839656-519",
+                    "PrincipalType": "Group",
+                    "RightName": "GenericAll",
+                    "IsInherited": true
+                },
+                {
+                    "PrincipalSID": "S-1-5-21-318463681-1533741871-3192839656-512",
+                    "PrincipalType": "Group",
+                    "RightName": "WriteDacl",
+                    "IsInherited": true
+                },
+                {
+                    "PrincipalSID": "S-1-5-21-318463681-1533741871-3192839656-512",
+                    "PrincipalType": "Group",
+                    "RightName": "WriteOwner",
+                    "IsInherited": true
+                },
+                {
+                    "PrincipalSID": "S-1-5-21-318463681-1533741871-3192839656-512",
+                    "PrincipalType": "Group",
+                    "RightName": "GenericWrite",
+                    "IsInherited": true
+                }
+            ],
+            "ObjectIdentifier": "52CF9382-B034-4F77-B505-61A1921CB59E",
+            "IsDeleted": false,
+            "IsACLProtected": false,
+            "ContainedBy": {
+                "ObjectIdentifier": "42EE71D2-445E-4B4C-A327-EFBBB1DEB54E",
+                "ObjectType": "Container"
+            }
+        },
+        {
+            "Properties": {
+                "domain": "TESTLAB.LOCAL",
+                "name": "HIGH ASSURANCE@TESTLAB.LOCAL",
+                "distinguishedname": "CN=402.9EE015C624E731C549E2F131E160596F,CN=OID,CN=PUBLIC KEY SERVICES,CN=SERVICES,CN=CONFIGURATION,DC=TESTLAB,DC=LOCAL",
+                "domainsid": "S-1-5-21-318463681-1533741871-3192839656",
+                "isaclprotected": false,
+                "description": null,
+                "whencreated": 1705486852,
+                "displayname": "High Assurance",
+                "oid": "1.3.6.1.4.1.311.21.8.13791726.4349508.5000099.2617275.11656885.78.1.402"
+            },
+            "GroupLink": {
+                "ObjectIdentifier": null,
+                "ObjectType": "Base"
+            },
+            "Aces": [
+                {
+                    "PrincipalSID": "S-1-5-21-318463681-1533741871-3192839656-519",
+                    "PrincipalType": "Group",
+                    "RightName": "Owns",
+                    "IsInherited": false
+                },
+                {
+                    "PrincipalSID": "S-1-5-21-318463681-1533741871-3192839656-512",
+                    "PrincipalType": "Group",
+                    "RightName": "GenericAll",
+                    "IsInherited": false
+                },
+                {
+                    "PrincipalSID": "S-1-5-21-318463681-1533741871-3192839656-519",
+                    "PrincipalType": "Group",
+                    "RightName": "GenericAll",
+                    "IsInherited": true
+                },
+                {
+                    "PrincipalSID": "S-1-5-21-318463681-1533741871-3192839656-512",
+                    "PrincipalType": "Group",
+                    "RightName": "WriteDacl",
+                    "IsInherited": true
+                },
+                {
+                    "PrincipalSID": "S-1-5-21-318463681-1533741871-3192839656-512",
+                    "PrincipalType": "Group",
+                    "RightName": "WriteOwner",
+                    "IsInherited": true
+                },
+                {
+                    "PrincipalSID": "S-1-5-21-318463681-1533741871-3192839656-512",
+                    "PrincipalType": "Group",
+                    "RightName": "GenericWrite",
+                    "IsInherited": true
+                }
+            ],
+            "ObjectIdentifier": "EA844D50-3260-47C4-B5CA-C45C026E243A",
+            "IsDeleted": false,
+            "IsACLProtected": false,
+            "ContainedBy": {
+                "ObjectIdentifier": "42EE71D2-445E-4B4C-A327-EFBBB1DEB54E",
+                "ObjectType": "Container"
+            }
+        }
+    ],
+    "meta": {
+        "methods": 262144,
+        "type": "issuancepolicies",
+        "count": 3,
+        "version": 6
+    }
+}
