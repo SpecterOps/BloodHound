@@ -88,7 +88,7 @@ func (s *command) Run() error {
 		for _, repo := range repos {
 			fmt.Printf("Repository Report For %s\n", repo.path)
 			fmt.Printf("Current HEAD: %s\n", repo.sha)
-			fmt.Printf("Detected versions: %s\n", repo.version)
+			fmt.Printf("Detected version: %s\n", repo.version)
 			if !repo.clean {
 				fmt.Println("CHANGES DETECTED")
 				return fmt.Errorf("changes detected in git repository")
