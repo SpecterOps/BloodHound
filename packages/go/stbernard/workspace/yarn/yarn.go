@@ -49,6 +49,7 @@ type statements struct {
 	Covered int `json:"covered"`
 }
 
+// Workspace contains Yarn-related directories
 type Workspace struct {
 	AssetsDir  string   `json:"assets_dir"`
 	Workspaces []string `json:"workspaces"`
@@ -128,15 +129,6 @@ func ParseWorkspace(cwd string) (Workspace, error) {
 	}
 }
 
-func relWorkspaceToAbsWorkspace(cwd string, relWorkspace Workspace) Workspace {
-	var absWorkspace Workspace
-
-	absWorkspace.AssetsDir = filepath.Join(cwd, relWorkspace.AssetsDir)
-	absWorkspace.Workspaces = slicesext.Map(relWorkspace.Workspaces, func(path string) string { return filepath.Join(cwd, path) })
-
-	return absWorkspace
-}
-
 // GetCombinedCoverage combines statement coverage for given yarn workspaces and returns a single percentage value as a string
 func GetCombinedCoverage(yarnAbsPaths []string, env environment.Environment) (string, error) {
 	var (
@@ -158,6 +150,15 @@ func GetCombinedCoverage(yarnAbsPaths []string, env environment.Environment) (st
 	}
 
 	return fmt.Sprintf("%.1f%%", float64(coveredAccumulator)/float64(totalAccumulator)*100), nil
+}
+
+func relWorkspaceToAbsWorkspace(cwd string, relWorkspace Workspace) Workspace {
+	var absWorkspace Workspace
+
+	absWorkspace.AssetsDir = filepath.Join(cwd, relWorkspace.AssetsDir)
+	absWorkspace.Workspaces = slicesext.Map(relWorkspace.Workspaces, func(path string) string { return filepath.Join(cwd, path) })
+
+	return absWorkspace
 }
 
 func getCoverage(coverFile string) (coverage, error) {

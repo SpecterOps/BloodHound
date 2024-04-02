@@ -78,6 +78,7 @@ func ParseCLI() (CommandRunner, error) {
 		debugEnabled   *bool
 		cmdStartIdx    int
 		currentCmd     command
+		helpRequested  bool
 
 		env      = environment.NewEnvironment()
 		commands = []command{
@@ -112,6 +113,11 @@ func ParseCLI() (CommandRunner, error) {
 			continue
 		}
 
+		if arg == "help" {
+			helpRequested = true
+			break
+		}
+
 		for _, cmd := range commands {
 			if arg == cmd.Name() {
 				cmdStartIdx = idx
@@ -123,7 +129,7 @@ func ParseCLI() (CommandRunner, error) {
 
 	mainCmd.Usage = usageGenerator(mainCmd, commands)
 
-	if err := mainCmd.Parse(os.Args[1:]); errors.Is(err, flag.ErrHelp) {
+	if err := mainCmd.Parse(os.Args[1:]); errors.Is(err, flag.ErrHelp) || helpRequested {
 		mainCmd.Usage()
 		return nil, ErrHelpRequested
 	}
@@ -144,7 +150,6 @@ func ParseCLI() (CommandRunner, error) {
 	return currentCmd, currentCmd.Parse(cmdStartIdx)
 }
 
-// usage creates a pretty usage message for our main command
 func usageGenerator(flagset *flag.FlagSet, commands []command) usageFunc {
 	return func() {
 		var longestCmdLen int

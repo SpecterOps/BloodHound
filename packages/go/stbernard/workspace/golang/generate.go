@@ -50,7 +50,6 @@ func WorkspaceGenerate(modPaths []string, env environment.Environment) error {
 	return errors.Join(errs...)
 }
 
-// moduleGenerate runs go generate in each package of the given module
 func moduleGenerate(modPath string, env environment.Environment) error {
 	var (
 		errs []error

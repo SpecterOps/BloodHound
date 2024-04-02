@@ -63,7 +63,6 @@ func BuildMainPackages(workRoot string, modPaths []string, env environment.Envir
 	return errors.Join(errs...)
 }
 
-// buildModuleMainPackages runs go build for all main packages in a given module
 func buildModuleMainPackages(buildDir string, modPath string, version semver.Version, env environment.Environment) error {
 	var (
 		wg   sync.WaitGroup

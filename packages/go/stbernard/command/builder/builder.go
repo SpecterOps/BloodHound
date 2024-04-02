@@ -39,20 +39,24 @@ type command struct {
 	env environment.Environment
 }
 
+// Create new instance of command to capture given environment
 func Create(env environment.Environment) *command {
 	return &command{
 		env: env,
 	}
 }
 
+// Usage of command
 func (s *command) Usage() string {
 	return Usage
 }
 
+// Name of command
 func (s *command) Name() string {
 	return Name
 }
 
+// Parse command flags
 func (s *command) Parse(cmdIndex int) error {
 	cmd := flag.NewFlagSet(Name, flag.ExitOnError)
 
@@ -70,6 +74,7 @@ func (s *command) Parse(cmdIndex int) error {
 	return nil
 }
 
+// Run build command
 func (s *command) Run() error {
 	if paths, err := workspace.FindPaths(s.env); err != nil {
 		return fmt.Errorf("finding workspace root: %w", err)

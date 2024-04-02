@@ -29,6 +29,7 @@ var (
 	ErrNoProfiles = errors.New("no profiles")
 )
 
+// WriteProfile combines a list of cover profiles and writes them all to a single new file
 func WriteProfile(w io.Writer, profiles []*cover.Profile) error {
 	if len(profiles) == 0 {
 		return ErrNoProfiles

@@ -30,6 +30,7 @@ import (
 )
 
 var (
+	// No workspace was found in current path
 	ErrNoWorkspaceFound = errors.New("found root path without finding project root")
 )
 
@@ -130,7 +131,6 @@ func GenerateSchema(cwd string, env environment.Environment) error {
 	}
 }
 
-// projectDirExists checks if a go.work file exists in the given working directory
 func projectDirExists(cwd string) (bool, error) {
 	if _, err := os.Stat(filepath.Join(cwd, "go.work")); errors.Is(err, os.ErrNotExist) {
 		return false, nil

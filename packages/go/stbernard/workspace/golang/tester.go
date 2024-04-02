@@ -34,17 +34,25 @@ import (
 )
 
 const (
+	// CoverageManifest is the manifest filename
 	CoverageManifest = "manifest.json"
-	CoverageExt      = ".coverage"
+	// CoverageExt is the file extension used by coverage files
+	CoverageExt = ".coverage"
+	// CombinedCoverage is the combined coverage report filename
 	CombinedCoverage = "combined" + CoverageExt
 )
 
 var (
-	DefaultCoveragePath          = filepath.Join("tmp", "coverage")
-	DefaultIntegrationConfigPath = filepath.Join("local-harnesses", "integration.config.json")
-	ErrTotalCoverageNotFound     = errors.New("total coverage not found")
+	ErrTotalCoverageNotFound = errors.New("total coverage not found")
 )
 
+var (
+	// Default path to store Go coverage
+	DefaultCoveragePath          = filepath.Join("tmp", "coverage")
+	defaultIntegrationConfigPath = filepath.Join("local-harnesses", "integration.config.json")
+)
+
+// TestWorkspace runs all Go tests for a given workspace. Setting integration to true will run integration tests, otherwise we only run unit tests
 func TestWorkspace(cwd string, modPaths []string, profileDir string, env environment.Environment, integration bool) error {
 	var (
 		manifest = make(map[string]string, len(modPaths))
@@ -54,7 +62,7 @@ func TestWorkspace(cwd string, modPaths []string, profileDir string, env environ
 
 	if integration {
 		if integrationConfigPath, ok := env["INTEGRATION_CONFIG_PATH"]; !ok || integrationConfigPath == "" {
-			env["INTEGRATION_CONFIG_PATH"] = filepath.Join(cwd, DefaultIntegrationConfigPath)
+			env["INTEGRATION_CONFIG_PATH"] = filepath.Join(cwd, defaultIntegrationConfigPath)
 		} else if !filepath.IsAbs(integrationConfigPath) {
 			env["INTEGRATION_CONFIG_PATH"] = filepath.Join(cwd, integrationConfigPath)
 		}
@@ -63,7 +71,7 @@ func TestWorkspace(cwd string, modPaths []string, profileDir string, env environ
 	}
 
 	for _, modPath := range modPaths {
-		modName, err := GetModuleName(modPath)
+		modName, err := getModuleName(modPath)
 		if err != nil {
 			return err
 		}
@@ -97,14 +105,7 @@ func TestWorkspace(cwd string, modPaths []string, profileDir string, env environ
 	}
 }
 
-func GetModuleName(modPath string) (string, error) {
-	if modFile, err := os.ReadFile(filepath.Join(modPath, "go.mod")); err != nil {
-		return "", fmt.Errorf("reading go.mod file for %s: %w", modPath, err)
-	} else {
-		return modfile.ModulePath(modFile), nil
-	}
-}
-
+// GetCombinedCoverage takes a coverage file and returns a string representation of percentage of statements covered
 func GetCombinedCoverage(coverFile string, env environment.Environment) (string, error) {
 	var (
 		output bytes.Buffer
@@ -129,5 +130,13 @@ func GetCombinedCoverage(coverFile string, env environment.Environment) (string,
 		}
 
 		return "", ErrTotalCoverageNotFound
+	}
+}
+
+func getModuleName(modPath string) (string, error) {
+	if modFile, err := os.ReadFile(filepath.Join(modPath, "go.mod")); err != nil {
+		return "", fmt.Errorf("reading go.mod file for %s: %w", modPath, err)
+	} else {
+		return modfile.ModulePath(modFile), nil
 	}
 }

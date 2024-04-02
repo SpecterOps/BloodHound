@@ -50,7 +50,6 @@ func ParseModulesAbsPaths(cwd string) ([]string, error) {
 	}
 }
 
-// moduleListPackages runs go list for the given module and returns the list of packages in that module
 func moduleListPackages(modPath string) ([]GoPackage, error) {
 	var (
 		packages = make([]GoPackage, 0)
