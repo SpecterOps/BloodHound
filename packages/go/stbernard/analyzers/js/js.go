@@ -44,7 +44,7 @@ type esLintMessage struct {
 	Line     uint64 `json:"line"`
 }
 
-// Run runs eslint for all passed jsPaths and returns a slice of CodeClimate-like entries
+// Run eslint for all passed jsPaths and returns a slice of CodeClimate-like entries
 func Run(jsPaths []string, env environment.Environment) ([]codeclimate.Entry, error) {
 	var (
 		exitError error

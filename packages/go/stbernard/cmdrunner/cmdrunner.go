@@ -31,7 +31,7 @@ var (
 	ErrNonZeroExit = errors.New("non-zero exit status")
 )
 
-// Run runs a command with ars and environment variables set at a specified path
+// Run a command with ars and environment variables set at a specified path
 //
 // The CmdModifiers parameter is an optional list of modifying functions that can alter the generated *exec.Cmd after default setup.
 //

@@ -33,7 +33,7 @@ var (
 	ErrSeverityExit = errors.New("high severity linter result")
 )
 
-// Run runs all registered analyzers and collects the results into a CodeClimate-like JSON string
+// Run all registered analyzers and collects the results into a CodeClimate-like JSON string
 //
 // If one or more entries have a severity of "error", this function will return a valid JSON string AND an error stating
 // that a high severity result was found

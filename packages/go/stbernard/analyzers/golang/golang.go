@@ -30,7 +30,7 @@ import (
 	"github.com/specterops/bloodhound/slicesext"
 )
 
-// Run runs golangci-lint for all module paths passed to it
+// Run golangci-lint for all module paths passed to it
 //
 // This is a single runner that accepts the paths for all passed modules, rather than separate runs for each path
 func Run(cwd string, modPaths []string, env environment.Environment) ([]codeclimate.Entry, error) {
