@@ -25,6 +25,7 @@ import (
 	"github.com/specterops/bloodhound/packages/go/stbernard/environment"
 	"github.com/specterops/bloodhound/packages/go/stbernard/workspace"
 	"github.com/specterops/bloodhound/packages/go/stbernard/workspace/golang"
+	"github.com/specterops/bloodhound/packages/go/stbernard/workspace/yarn"
 )
 
 const (
@@ -72,6 +73,10 @@ func (s *command) Run() error {
 		return fmt.Errorf("finding workspace root: %w", err)
 	} else if err := golang.WorkspaceGenerate(paths.GoModules, s.env); err != nil {
 		return fmt.Errorf("generating code for workspace: %w", err)
+	} else if err := workspace.GenerateSchema(paths.Root, s.env); err != nil {
+		return fmt.Errorf("generating schema for workspace: %w", err)
+	} else if err := yarn.Format(paths.Root, s.env); err != nil {
+		return fmt.Errorf("formatting javascript: %w", err)
 	} else {
 		return nil
 	}

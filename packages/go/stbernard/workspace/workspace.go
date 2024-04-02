@@ -22,6 +22,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/specterops/bloodhound/packages/go/stbernard/cmdrunner"
 	"github.com/specterops/bloodhound/packages/go/stbernard/environment"
 	"github.com/specterops/bloodhound/packages/go/stbernard/git"
 	"github.com/specterops/bloodhound/packages/go/stbernard/workspace/golang"
@@ -105,6 +106,28 @@ func FindPaths(env environment.Environment) (WorkspacePaths, error) {
 		YarnWorkspaces: yarnWorkspaces.Workspaces,
 		GoModules:      goModules,
 	}, nil
+}
+
+// GenerateSchema runs schemagen for the current workspace
+func GenerateSchema(cwd string, env environment.Environment) error {
+	var (
+		command = "go"
+		args    = []string{"run"}
+	)
+
+	if _, err := os.Stat(filepath.Join(cwd, "cmd", "schemagen")); !errors.Is(err, os.ErrNotExist) && err != nil {
+		return fmt.Errorf("attempted to find cmd/schemagen: %w", err)
+	} else if errors.Is(err, os.ErrNotExist) {
+		args = append(args, "github.com/specterops/bloodhound/schemagen")
+	} else {
+		args = append(args, "git.bloodhound-ad.net/schemagen")
+	}
+
+	if err := cmdrunner.Run(command, args, cwd, env); err != nil {
+		return fmt.Errorf("running schemagen: %w", err)
+	} else {
+		return nil
+	}
 }
 
 // projectDirExists checks if a go.work file exists in the given working directory

@@ -70,6 +70,20 @@ func InstallWorkspaceDeps(cwd string, jsPaths []string, env environment.Environm
 	return nil
 }
 
+// Format runs yarn format on current workspace
+func Format(cwd string, env environment.Environment) error {
+	var (
+		command = "yarn"
+		args    = []string{"format"}
+	)
+
+	if err := cmdrunner.Run(command, args, cwd, env); err != nil {
+		return fmt.Errorf("running yarn format: %w", err)
+	} else {
+		return nil
+	}
+}
+
 // BuildWorkspace runs yarn build for the current working directory
 func BuildWorkspace(cwd string, env environment.Environment) error {
 	var (
