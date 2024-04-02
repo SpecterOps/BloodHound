@@ -70,9 +70,7 @@ func (s *command) Parse(cmdIndex int) error {
 func (s *command) Run() error {
 	if paths, err := workspace.FindPaths(s.env); err != nil {
 		return fmt.Errorf("finding workspace root: %w", err)
-	} else if modPaths, err := golang.ParseModulesAbsPaths(paths.Root); err != nil {
-		return fmt.Errorf("parsing module absolute paths: %w", err)
-	} else if err := golang.WorkspaceGenerate(modPaths, s.env); err != nil {
+	} else if err := golang.WorkspaceGenerate(paths.GoModules, s.env); err != nil {
 		return fmt.Errorf("generating code for workspace: %w", err)
 	} else {
 		return nil

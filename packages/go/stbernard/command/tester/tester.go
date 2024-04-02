@@ -70,9 +70,7 @@ func (s *command) Run() error {
 		return fmt.Errorf("finding workspace root: %w", err)
 	} else if _, err := yarn.ParseWorkspace(paths.Root); err != nil {
 		return fmt.Errorf("parsing yarn workspace absolute paths: %w", err)
-	} else if modPaths, err := golang.ParseModulesAbsPaths(paths.Root); err != nil {
-		return fmt.Errorf("parsing module absolute paths: %w", err)
-	} else if err := s.runTests(paths.Root, paths.Coverage, modPaths); err != nil {
+	} else if err := s.runTests(paths.Root, paths.Coverage, paths.GoModules); err != nil {
 		return fmt.Errorf("running tests: %w", err)
 	} else {
 		return nil

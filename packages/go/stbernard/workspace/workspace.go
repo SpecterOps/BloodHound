@@ -25,6 +25,7 @@ import (
 	"github.com/specterops/bloodhound/packages/go/stbernard/environment"
 	"github.com/specterops/bloodhound/packages/go/stbernard/git"
 	"github.com/specterops/bloodhound/packages/go/stbernard/workspace/golang"
+	"github.com/specterops/bloodhound/packages/go/stbernard/workspace/yarn"
 )
 
 var (
@@ -33,9 +34,12 @@ var (
 
 // WorkspacePaths defines important paths for the current workspace
 type WorkspacePaths struct {
-	Root       string
-	Coverage   string
-	Submodules []string
+	Root           string
+	Coverage       string
+	Assets         string
+	Submodules     []string
+	YarnWorkspaces []string
+	GoModules      []string
 }
 
 // FindPaths will attempt to crawl up the path until it finds a go.work file, then calculate all WorkspacePaths
@@ -81,7 +85,26 @@ func FindPaths(env environment.Environment) (WorkspacePaths, error) {
 		return WorkspacePaths{}, fmt.Errorf("listing submodule paths: %w", err)
 	}
 
-	return WorkspacePaths{Root: cwd, Coverage: path, Submodules: subPaths}, nil
+	// Build Yarn paths
+	yarnWorkspaces, err := yarn.ParseWorkspace(cwd)
+	if err != nil {
+		return WorkspacePaths{}, fmt.Errorf("parsing yarn workspace: %w", err)
+	}
+
+	// Build Go modules paths
+	goModules, err := golang.ParseModulesAbsPaths(cwd)
+	if err != nil {
+		return WorkspacePaths{}, fmt.Errorf("parsing go module paths: %w", err)
+	}
+
+	return WorkspacePaths{
+		Root:           cwd,
+		Coverage:       path,
+		Submodules:     subPaths,
+		Assets:         yarnWorkspaces.AssetsDir,
+		YarnWorkspaces: yarnWorkspaces.Workspaces,
+		GoModules:      goModules,
+	}, nil
 }
 
 // projectDirExists checks if a go.work file exists in the given working directory
