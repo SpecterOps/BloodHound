@@ -77,7 +77,7 @@ func (s *command) Run() error {
 				fmt.Println("CHANGES DETECTED")
 				return fmt.Errorf("changes detected in git repository")
 			} else {
-				fmt.Println("Repository Clean")
+				fmt.Printf("Repository Clean\n\n")
 			}
 		}
 
