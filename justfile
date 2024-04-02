@@ -51,7 +51,7 @@ prepare-for-codereview:
   @just ensure-deps
   @just modsync
   @just generate
-  @just bhce/check-license
+  @just check-license
   @just show
   @just analyze
   @just test -i
