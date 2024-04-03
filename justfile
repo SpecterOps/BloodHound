@@ -48,14 +48,26 @@ build *FLAGS:
 
 # prepare for code review (requires jq)
 prepare-for-codereview:
+  -@just _prep-steps
+  -@cat tmp/test-output.txt
+  -@cat tmp/analysis-report.txt
+  -@cat tmp/repo-status.txt
+
+_prep-steps:
+  @mkdir -p tmp
   @just ensure-deps
   @just modsync
   @just generate
   @just check-license
-  @just show
-  @just analyze
-  @just test -i
+  @just show > tmp/repo-status.txt
+  @just analyze > tmp/analysis-report.txt
+  @just _concurrent_test
   @just build
+
+_concurrent_test:
+  @just test -y > tmp/yarn-test-output.txt &
+  @just test -i -g > tmp/go-test-output.txt &
+  wait
 
 # check license is applied to source files
 check-license:

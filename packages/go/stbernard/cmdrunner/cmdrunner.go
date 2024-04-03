@@ -48,13 +48,16 @@ func Run(command string, args []string, path string, env environment.Environment
 	cmd.Env = env.Slice()
 	cmd.Dir = path
 
+	// Default to mapping stdout directly to stdout
+	cmd.Stdout = os.Stdout
+
 	if debugEnabled {
-		cmd.Stdout = os.Stderr
 		cmd.Stderr = os.Stderr
 		cmdstr = command + " " + strings.Join(args, " ")
 	}
 
 	// If we got any cmdModifiers, apply them in order
+	// This is often used for capturing Stdout and other modifications
 	if len(cmdModifiers) > 0 {
 		for _, modifier := range cmdModifiers {
 			modifier(cmd)
