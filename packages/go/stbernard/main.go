@@ -50,7 +50,7 @@ func main() {
 	} else if err != nil {
 		log.Fatalf("Error while parsing command: %v", err)
 	} else if err := cmd.Run(); err != nil {
-		log.Fatalf("Failed to run command %s: %v", cmd.Name(), err)
+		log.Fatalf("Failed to run command `%s`: %v", cmd.Name(), err)
 	} else {
 		log.Infof("Command `%s` completed successfully", cmd.Name())
 	}

@@ -83,7 +83,7 @@ func CheckClean(cwd string, env environment.Environment) (bool, error) {
 	log.Infof("Checking repository clean for %s", cwd)
 
 	// We need to run git status first to ensure we don't hit a cache issue
-	if err := cmdrunner.Run("git", []string{"status"}, cwd, env, func(c *exec.Cmd) { c.Stdout = os.NewFile(0, os.DevNull) }); err != nil {
+	if err := cmdrunner.Run("git", []string{"status"}, cwd, env, func(c *exec.Cmd) { c.Stdout = nil }); err != nil {
 		return false, fmt.Errorf("git status: %w", err)
 	} else if err := cmd.Run(); err != nil {
 		if exiterr, ok := err.(*exec.ExitError); !ok || exiterr.ExitCode() != 1 {
