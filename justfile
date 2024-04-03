@@ -48,38 +48,21 @@ build *FLAGS:
 
 # prepare for code review (requires jq)
 prepare-for-codereview:
-  -@just _prep-steps
-  @ echo --- Go Test Report ---
-  -@cat tmp/go-test-output.txt
-  @ echo --- Yarn Test Report ---
-  -@cat tmp/yarn-test-output.txt
-  @ echo --- Build Report ---
-  -@cat tmp/build-output.txt
-  @ echo --- Code Analysis ---
-  -@cat tmp/analysis-report.txt
-  @ echo --- Repo Status ---
-  -@cat tmp/repo-status.txt
+  @rm -r tmp
+  @mkdir -p tmp
+  @just _prep-steps
+  @ echo For more details, see output files in absolute_path("./tmp")
 
 _prep-steps:
-  @mkdir -p tmp
   @just ensure-deps
   @just modsync
   @just generate
   @just check-license
   @just show > tmp/repo-status.txt
   @just analyze > tmp/analysis-report.txt
-  @just _concurrent_test
-
-_concurrent_test:
-  #!/usr/bin/env bash
-  trap 'kill $(jobs -p)' EXIT
-  just test -y > tmp/yarn-test-output.txt &
-  just test -g > tmp/go-test-output.txt &
-  just build > tmp/build-output.txt &
-  for job in `jobs -p`
-  do
-    wait $job
-  done
+  @just build > tmp/build-output.txt
+  @just test -y > tmp/yarn-test-output.txt
+  @just test -g -i > tmp/go-test-output.txt
 
 # check license is applied to source files
 check-license:
