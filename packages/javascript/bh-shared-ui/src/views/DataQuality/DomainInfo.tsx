@@ -177,6 +177,12 @@ const Layout: React.FC<{
                             value={dbInfo?.certtemplates || 0}
                             loading={loading}
                         />
+                        <LoadContainer
+                            icon={<NodeIcon nodeType={'IssuancePolicy'} />}
+                            display='IssuancePolicies'
+                            value={dbInfo?.issuancepolicies || 0}
+                            loading={loading}
+                        />
 
                         <LoadContainer
                             icon={<NodeIcon nodeType={'Container'} />}

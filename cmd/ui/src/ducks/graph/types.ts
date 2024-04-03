@@ -48,6 +48,7 @@ export enum GraphNodeTypes {
     EnterpriseCA = 'EnterpriseCA',
     NTAuthStore = 'NTAuthStore',
     CertTemplate = 'CertTemplate',
+    IssuancePolicy = 'IssuancePolicy',
 }
 
 export interface GraphNodeData {
