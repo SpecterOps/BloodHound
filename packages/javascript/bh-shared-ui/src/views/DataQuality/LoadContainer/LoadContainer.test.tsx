@@ -23,7 +23,7 @@ describe('LoadContainer', () => {
         render(
             <Table>
                 <TableBody>
-                    <LoadContainer icon='globe' display='Test' value={1000} />
+                    <LoadContainer icon={<>globe</>} display='Test' value={1000} loading={false} />
                 </TableBody>
             </Table>
         );

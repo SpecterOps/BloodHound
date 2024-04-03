@@ -14,18 +14,16 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import React, { useEffect, useState } from 'react';
-import { Box, Table, TableBody, TableContainer, Paper, TableHead, TableCell, TableRow } from '@mui/material';
-import makeStyles from '@mui/styles/makeStyles';
-import {
-    useAzureDataQualityStatsQuery,
-    useAzurePlatformsDataQualityStatsQuery,
-    AzureDataQualityStat,
-} from '../../hooks';
-import LoadContainer from './LoadContainer';
 import { faUsers } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { Box, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@mui/material';
+import makeStyles from '@mui/styles/makeStyles';
+import { AzureDataQualityStat } from 'js-client-library';
+import React, { useEffect, useState } from 'react';
 import { NodeIcon } from '../../components';
+import { AzureNodeKind } from '../../graphSchema';
+import { useAzureDataQualityStatsQuery, useAzurePlatformsDataQualityStatsQuery } from '../../hooks';
+import LoadContainer from './LoadContainer';
 
 const useStyles = makeStyles({
     print: {
@@ -34,6 +32,39 @@ const useStyles = makeStyles({
         },
     },
 });
+
+export const TenantMap = {
+    users: { displayText: 'Users', kind: AzureNodeKind.User },
+    groups: { displayText: 'Groups', kind: AzureNodeKind.Group },
+    apps: { displayText: 'Apps', kind: AzureNodeKind.App },
+    service_principals: {
+        displayText: 'Service Principals',
+        kind: AzureNodeKind.ServicePrincipal,
+    },
+    devices: { displayText: 'Devices', kind: AzureNodeKind.Device },
+    management_groups: {
+        displayText: 'Management Groups',
+        kind: AzureNodeKind.ManagementGroup,
+    },
+    subscriptions: { displayText: 'Subscriptions', kind: AzureNodeKind.Subscription },
+    resource_groups: { displayText: 'Resource Groups', kind: AzureNodeKind.ResourceGroup },
+    vms: { displayText: 'VMs', kind: AzureNodeKind.VM },
+    key_vaults: { displayText: 'Key Vaults', kind: AzureNodeKind.KeyVault },
+    automation_accounts: {
+        displayText: 'Automation Accounts',
+        kind: AzureNodeKind.AutomationAccount,
+    },
+    container_registries: {
+        displayText: 'Container Registries',
+        kind: AzureNodeKind.ContainerRegistry,
+    },
+    function_apps: { displayText: 'Function Apps', kind: AzureNodeKind.FunctionApp },
+    logic_apps: { displayText: 'Logic Apps', kind: AzureNodeKind.LogicApp },
+    managed_clusters: { displayText: 'Managed Clusters', kind: AzureNodeKind.ManagedCluster },
+    vm_scale_sets: { displayText: 'VM Scale Sets', kind: AzureNodeKind.VMScaleSet },
+    web_apps: { displayText: 'Web Apps', kind: AzureNodeKind.WebApp },
+    tenants: { displayText: 'Tenants', kind: AzureNodeKind.Tenant },
+};
 
 export const TenantInfo: React.FC<{ contextId: string; headers?: boolean; onDataError?: () => void }> = ({
     contextId,
@@ -52,16 +83,16 @@ export const TenantInfo: React.FC<{ contextId: string; headers?: boolean; onData
     }, [isError, onDataError]);
 
     if (isLoading) {
-        return <Layout dbInfo={null} isPlatform={false} headers={headers} loading={true} />;
+        return <Layout stats={null} headers={headers} loading={true} />;
     }
 
     if (isError || !tenantData) {
-        return <Layout dbInfo={null} isPlatform={false} headers={headers} loading={false} />;
+        return <Layout stats={null} headers={headers} loading={false} />;
     }
 
-    const dbInfo = tenantData.data[0] as AzureDataQualityStat;
+    const stats = tenantData.data[0];
 
-    return <Layout dbInfo={dbInfo} headers={headers} loading={false} />;
+    return <Layout stats={stats} headers={headers} loading={false} />;
 };
 
 export const AzurePlatformInfo: React.FC<{ onDataError?: () => void }> = ({ onDataError = () => {} }) => {
@@ -77,24 +108,23 @@ export const AzurePlatformInfo: React.FC<{ onDataError?: () => void }> = ({ onDa
     }, [isError, onDataError]);
 
     if (isLoading || !platformData) {
-        return <Layout dbInfo={null} isPlatform={true} loading={true} />;
+        return <Layout stats={null} loading={true} />;
     }
 
     if (isError) {
-        return <Layout dbInfo={null} isPlatform={true} loading={false} />;
+        return <Layout stats={null} loading={false} />;
     }
 
-    const dbInfo = platformData.data[0] as AzureDataQualityStat;
+    const stats = platformData.data[0];
 
-    return <Layout dbInfo={dbInfo} isPlatform={true} loading={false} />;
+    return <Layout stats={stats} loading={false} />;
 };
 
 const Layout: React.FC<{
-    dbInfo: AzureDataQualityStat | null;
+    stats: AzureDataQualityStat | null;
     loading: boolean;
-    isPlatform?: boolean;
     headers?: boolean;
-}> = ({ dbInfo, loading, isPlatform, headers }) => {
+}> = ({ stats, loading, headers }) => {
     const classes = useStyles();
     return (
         <Box position='relative'>
@@ -109,74 +139,22 @@ const Layout: React.FC<{
                         </TableHead>
                     )}
                     <TableBody>
-                        <LoadContainer
-                            icon={<NodeIcon nodeType={'AZUser'} />}
-                            display='Users'
-                            value={dbInfo?.users || 0}
-                            loading={loading}
-                        />
-                        <LoadContainer
-                            icon={<NodeIcon nodeType={'AZGroup'} />}
-                            display='Groups'
-                            value={dbInfo?.groups || 0}
-                            loading={loading}
-                        />
-                        <LoadContainer
-                            icon={<NodeIcon nodeType={'AZApp'} />}
-                            display='Apps'
-                            value={dbInfo?.apps || 0}
-                            loading={loading}
-                        />
-                        <LoadContainer
-                            icon={<NodeIcon nodeType={'AZServicePrincipal'} />}
-                            display='Service Principals'
-                            value={dbInfo?.service_principals || 0}
-                            loading={loading}
-                        />
-                        <LoadContainer
-                            icon={<NodeIcon nodeType={'AZDevice'} />}
-                            display='Devices'
-                            value={dbInfo?.devices || 0}
-                            loading={loading}
-                        />
-                        <LoadContainer
-                            icon={<NodeIcon nodeType={'AZManagementGroup'} />}
-                            display='Management Groups'
-                            value={dbInfo?.management_groups || 0}
-                            loading={loading}
-                        />
-                        <LoadContainer
-                            icon={<NodeIcon nodeType={'AZSubscription'} />}
-                            display='Subscriptions'
-                            value={dbInfo?.subscriptions || 0}
-                            loading={loading}
-                        />
-                        <LoadContainer
-                            icon={<NodeIcon nodeType={'AZResourceGroup'} />}
-                            display='Resource Groups'
-                            value={dbInfo?.resource_groups || 0}
-                            loading={loading}
-                        />
-                        <LoadContainer
-                            icon={<NodeIcon nodeType={'AZVM'} />}
-                            display='VMs'
-                            value={dbInfo?.vms || 0}
-                            loading={loading}
-                        />
-                        <LoadContainer
-                            icon={<NodeIcon nodeType={'AZKeyVault'} />}
-                            display='Key Vaults'
-                            value={dbInfo?.key_vaults || 0}
-                            loading={loading}
-                        />
-                        {isPlatform && (
-                            <LoadContainer
-                                icon={<NodeIcon nodeType={'AZTenant'} />}
-                                display='Tenants'
-                                value={dbInfo?.tenants || 0}
-                                loading={loading}
-                            />
-                        )}
+                        {Object.keys(TenantMap).map((key) => {
+                            if (key === 'tenants' && stats?.tenants === undefined) return null;
+
+                            const mapValue = TenantMap[key as keyof typeof TenantMap];
+                            const value = stats?.[key as keyof AzureDataQualityStat] as number;
+
+                            return (
+                                <LoadContainer
+                                    key={key}
+                                    icon={<NodeIcon nodeType={mapValue.kind} />}
+                                    display={mapValue.displayText}
+                                    value={value}
+                                    loading={loading}
+                                />
+                            );
+                        })}
                     </TableBody>
                 </Table>
             </TableContainer>
@@ -186,7 +164,7 @@ const Layout: React.FC<{
                         <LoadContainer
                             icon={<FontAwesomeIcon icon={faUsers} />}
                             display='Relationships'
-                            value={dbInfo?.relationships || 0}
+                            value={stats?.relationships}
                             loading={loading}
                         />
                     </TableBody>
