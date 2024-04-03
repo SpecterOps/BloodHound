@@ -141,6 +141,20 @@
             "parameters": [
                 {
                     "$ref": "#/definitions/parameters.PreferHeader"
+                },
+                {
+                    "type": "string",
+                    "description": "Valid values are `true` or `false` and defaults to `true`. When a value of `true` is passed, any domains associated with scheduled and finished jobs for each client will have expanded properties including `name` and `type`. When a value of `false` is passed, these same domains will only return as a list of `objectid`s.",
+                    "name": "hydrate_domains",
+                    "in": "query",
+                    "required": false
+                },
+                {
+                    "type": "string",
+                    "description": "Valid values are `true` or `false` and defaults to `true`. When a value of `true` is passed, any OUs associated with scheduled and finished jobs for each client will have expanded properties including `name` and `type`. When a value of `false` is passed, these same OUs will only return as a list of `objectid`s.",
+                    "name": "hydrate_ous",
+                    "in": "query",
+                    "required": false
                 }
             ],
             "requestBody": {

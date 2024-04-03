@@ -407,7 +407,13 @@ class BHEAPIClient {
     createEvent = (
         event: types.CreateSharpHoundEventRequest | types.CreateAzureHoundEventRequest,
         options?: types.RequestOptions
-    ) => this.baseClient.post('/api/v2/events', event, options);
+    ) => this.baseClient.post('/api/v2/events', event, {
+        params: {
+            hydrate_ous: false,
+            hydrate_domains: false,
+        },
+        ...options
+    });
 
     updateEvent = (
         eventId: string,

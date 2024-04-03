@@ -86,7 +86,7 @@
         "jest-webgl-canvas-mock": "^2.5.0",
         "jsdom": "^20.0.2",
         "lint-staged": "^10.5.4",
-        "msw": "^1.2.1",
+        "msw": "^1.3.3",
         "prettier": "^3.2.5",
         "redux-devtools-extension": "^2.13.9",
         "redux-saga-test-plan": "^4.0.3",
