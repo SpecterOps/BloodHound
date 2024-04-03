@@ -50,7 +50,7 @@ build *FLAGS:
 prepare-for-codereview:
   @rm -r tmp
   @mkdir -p tmp
-  @just _prep-steps
+  -@just _prep-steps
   @ echo For more details, see output files in absolute_path("./tmp")
 
 _prep-steps:
