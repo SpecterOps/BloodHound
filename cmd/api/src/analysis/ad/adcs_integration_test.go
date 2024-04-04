@@ -79,7 +79,7 @@ func TestADCSESC1(t *testing.T) {
 			})); err != nil {
 				t.Fatalf("error fetching esc1 edges in integration test; %v", err)
 			} else {
-				assert.Equal(t, 7, len(results))
+				assert.Equal(t, 8, len(results))
 
 				//Domain 1 ESC1 edges created
 				require.True(t, results.Contains(harness.ADCSESC1Harness.User13))
@@ -95,6 +95,9 @@ func TestADCSESC1(t *testing.T) {
 				//Domain 4 ESC1 edges created
 				require.True(t, results.Contains(harness.ADCSESC1Harness.Group42))
 				require.True(t, results.Contains(harness.ADCSESC1Harness.Group43))
+
+				//Group47 has Enroll on EnterpriseCA1 that has a valid chain to Domain1, a domain that is marked as not collected
+				require.True(t, results.Contains(harness.ADCSESC1Harness.Group47))
 
 			}
 			return nil
