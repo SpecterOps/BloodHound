@@ -75,6 +75,8 @@ func (s Metadata) MatchKind() (graph.Kind, bool) {
 
 	case DataTypeCertTemplate:
 		return ad.CertTemplate, true
+	case DataTypeIssuancePolicy:
+		return ad.IssuancePolicy, true
 	}
 
 	return nil, false
@@ -83,22 +85,23 @@ func (s Metadata) MatchKind() (graph.Kind, bool) {
 type DataType string
 
 const (
-	DataTypeSession      DataType = "sessions"
-	DataTypeUser         DataType = "users"
-	DataTypeGroup        DataType = "groups"
-	DataTypeComputer     DataType = "computers"
-	DataTypeGPO          DataType = "gpos"
-	DataTypeOU           DataType = "ous"
-	DataTypeDomain       DataType = "domains"
-	DataTypeRemoved      DataType = "deleted"
-	DataTypeContainer    DataType = "containers"
-	DataTypeLocalGroups  DataType = "localgroups"
-	DataTypeAIACA        DataType = "aiacas"
-	DataTypeRootCA       DataType = "rootcas"
-	DataTypeEnterpriseCA DataType = "enterprisecas"
-	DataTypeNTAuthStore  DataType = "ntauthstores"
-	DataTypeCertTemplate DataType = "certtemplates"
-	DataTypeAzure        DataType = "azure"
+	DataTypeSession        DataType = "sessions"
+	DataTypeUser           DataType = "users"
+	DataTypeGroup          DataType = "groups"
+	DataTypeComputer       DataType = "computers"
+	DataTypeGPO            DataType = "gpos"
+	DataTypeOU             DataType = "ous"
+	DataTypeDomain         DataType = "domains"
+	DataTypeRemoved        DataType = "deleted"
+	DataTypeContainer      DataType = "containers"
+	DataTypeLocalGroups    DataType = "localgroups"
+	DataTypeAIACA          DataType = "aiacas"
+	DataTypeRootCA         DataType = "rootcas"
+	DataTypeEnterpriseCA   DataType = "enterprisecas"
+	DataTypeNTAuthStore    DataType = "ntauthstores"
+	DataTypeCertTemplate   DataType = "certtemplates"
+	DataTypeAzure          DataType = "azure"
+	DataTypeIssuancePolicy DataType = "issuancepolicies"
 )
 
 func AllIngestDataTypes() []DataType {
@@ -119,6 +122,7 @@ func AllIngestDataTypes() []DataType {
 		DataTypeNTAuthStore,
 		DataTypeCertTemplate,
 		DataTypeAzure,
+		DataTypeIssuancePolicy,
 	}
 }
 

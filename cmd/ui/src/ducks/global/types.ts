@@ -56,7 +56,6 @@ export interface DatapipeStatus {
 }
 
 export interface GlobalOptionsState {
-    baseUrl: string;
     domain: Domain | null;
     assetGroups: any[];
     assetGroupIndex: number | null;
