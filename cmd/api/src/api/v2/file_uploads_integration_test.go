@@ -210,6 +210,7 @@ func Test_FileUploadVersion6AllOptionADCS(t *testing.T) {
 		"v6/all/ous.json",
 		"v6/all/rootcas.json",
 		"v6/all/users.json",
+		"v6/all/issuancepolicies.json",
 	})
 
 	testCtx.AssertIngest(fixtures.IngestADCSAssertions)

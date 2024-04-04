@@ -173,7 +173,7 @@ export const CommonSearches: CommonSearchType[] = [
             },
             {
                 description: 'Enrollment rights on published ESC1 certificate templates',
-                cypher: `MATCH p = ()-[:Enroll|GenericAll|AllExtendedRights]->(ct:CertTemplate)-[:PublishedTo]->(:EnterpriseCA)\nWHERE ct.enrolleesuppliessubject = True\nAND ct.authenticationenabled = True\nAND ct.requiresmanagerapproval = False\nRETURN p`,
+                cypher: `MATCH p = ()-[:Enroll|GenericAll|AllExtendedRights]->(ct:CertTemplate)-[:PublishedTo]->(:EnterpriseCA)\nWHERE ct.enrolleesuppliessubject = True\nAND ct.authenticationenabled = True\nAND ct.requiresmanagerapproval = False\nAND (ct.authorizedsignatures = 0 OR ct.schemaversion = 1)\nRETURN p`,
             },
             {
                 description: 'Enrollment rights on published enrollment agent certificate templates',
@@ -199,6 +199,17 @@ export const CommonSearches: CommonSearchType[] = [
             {
                 description: 'Domain controllers with UPN certificate mapping enabled',
                 cypher: `MATCH p = (dc:Computer)-[:DCFor]->(d)\nWHERE dc.certificatemappingmethodsraw IN [4, 5, 6, 7, 12, 13, 14, 15, 20, 21, 22, 23, 28, 29, 30, 31]\nRETURN p`,
+            },
+            {
+                description: 'Non-Default Permissions on IssuancePolicy Nodes',
+                cypher: `MATCH p = (n)-[:GenericAll|GenericWrite|Owns|WriteOwner|WriteDacl]->(:IssuancePolicy)
+                WHERE NOT n.objectid ENDS WITH "-512" AND NOT n.objectid ENDS WITH "-519"
+                RETURN p`,
+            },
+            {
+                description: 'Enrollment Rights on CertTemplates with OIDGroupLink',
+                cypher: `MATCH p = ()-[:Enroll|GenericAll|AllExtendedRights]->(ct:CertTemplate)-[:ExtendedByPolicy]->(:IssuancePolicy)-[:OIDGroupLink]->(g)
+                RETURN p`,
             },
         ],
     },

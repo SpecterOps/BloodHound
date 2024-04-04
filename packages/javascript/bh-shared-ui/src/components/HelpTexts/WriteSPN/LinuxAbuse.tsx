@@ -18,7 +18,7 @@ import { Link, Typography } from '@mui/material';
 import { FC } from 'react';
 import { EdgeInfoProps } from '../index';
 
-const LinuxAbuse: FC<EdgeInfoProps> = ({ sourceName, sourceType }) => {
+const LinuxAbuse: FC<EdgeInfoProps> = () => {
     return (
         <>
             <Typography variant='body2'>

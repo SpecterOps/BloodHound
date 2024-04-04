@@ -678,6 +678,11 @@ CertTemplate: types.#Kind & {
 	schema: "active_directory"
 }
 
+IssuancePolicy: types.#Kind & {
+	symbol: "IssuancePolicy"
+	schema: "active_directory"
+}
+
 NodeKinds: [
 	Entity,
 	User,
@@ -693,7 +698,8 @@ NodeKinds: [
 	RootCA,
 	EnterpriseCA,
 	NTAuthStore,
-	CertTemplate
+	CertTemplate,
+	IssuancePolicy
 ]
 
 Owns: types.#Kind & {
@@ -972,6 +978,11 @@ EnrollOnBehalfOf: types.#Kind & {
 	schema: "active_directory"
 }
 
+OIDGroupLink: types.#Kind & {
+	symbol: "OIDGroupLink"
+	schema: "active_directory"
+}
+
 ADCSESC1: types.#Kind & {
 	symbol: "ADCSESC1"
 	schema: "active_directory"
@@ -1027,8 +1038,8 @@ ADCSESC10b: types.#Kind & {
 	schema: "active_directory"
 }
 
-ExtendedByPolicy: types.#Kind & {
-	symbol: "ExtendedByPolicy"
+ADCSESC13: types.#Kind & {
+	symbol: "ADCSESC13"
 	schema: "active_directory"
 }
 
@@ -1089,6 +1100,7 @@ RelationshipKinds: [
 	IssuedSignedBy,
 	GoldenCert,
 	EnrollOnBehalfOf,
+	OIDGroupLink,
 	ADCSESC1,
 	ADCSESC3,
 	ADCSESC4,
@@ -1100,7 +1112,7 @@ RelationshipKinds: [
 	ADCSESC9b,
 	ADCSESC10a,
 	ADCSESC10b,
-	ExtendedByPolicy
+	ADCSESC13
 ]
 
 // ACL Relationships
@@ -1177,6 +1189,7 @@ PathfindingRelationships: [
 	ADCSESC9b,
 	ADCSESC10a,
 	ADCSESC10b,
+	ADCSESC13,
 	DCFor
 ]
 

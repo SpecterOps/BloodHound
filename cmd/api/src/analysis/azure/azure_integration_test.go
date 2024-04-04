@@ -21,6 +21,7 @@ package azure_test
 import (
 	"context"
 	schema "github.com/specterops/bloodhound/graphschema"
+	"slices"
 	"testing"
 
 	"github.com/specterops/bloodhound/graphschema/azure"
@@ -645,6 +646,33 @@ func TestRoleEntityDetails(t *testing.T) {
 
 		require.Nil(t, err)
 		assert.NotEqual(t, 0, role.ActiveAssignments)
+	})
+}
+
+func TestRoleAddSecret(t *testing.T) {
+	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
+	testContext.ReadTransactionTestWithSetup(func(harness *integration.HarnessDetails) error {
+		harness.AZAddSecretHarness.Setup(testContext)
+		return nil
+	}, func(harness integration.HarnessDetails, tx graph.Transaction) {
+
+		postProcessingStats, err := azureanalysis.AppRoleAssignments(context.Background(), testContext.Graph.Database)
+		assert.Nil(t, err)
+		assert.NotNil(t, postProcessingStats.RelationshipsCreated[azure.AddSecret])
+		assert.Equal(t, 4, int(*postProcessingStats.RelationshipsCreated[azure.AddSecret]))
+
+		// Validate that the AZAddSecret edges were created
+		addSecretEdges, err := ops.FetchRelationships(tx.Relationships().Filterf(func() graph.Criteria {
+			return query.Kind(query.Relationship(), azure.AddSecret)
+		}))
+		assert.Nil(t, err)
+		assert.Len(t, addSecretEdges, 4)
+
+		for _, edge := range addSecretEdges {
+			assert.Equal(t, azure.AddSecret, edge.Kind)
+			assert.True(t, slices.Contains([]graph.ID{harness.AZAddSecretHarness.AppAdminRole.ID, harness.AZAddSecretHarness.CloudAppAdminRole.ID}, edge.StartID))
+			assert.True(t, slices.Contains([]graph.ID{harness.AZAddSecretHarness.AZApp.ID, harness.AZAddSecretHarness.AZServicePrincipal.ID}, edge.EndID))
+		}
 	})
 }
 

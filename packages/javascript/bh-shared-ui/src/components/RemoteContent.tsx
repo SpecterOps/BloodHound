@@ -71,7 +71,6 @@ const getComponents = (baseURL?: string) => {
         blockquote: ({ node, ...props }: any) => <blockquote style={{ margin: '1rem 0' }} {...props} />,
         code: ({ node, inline, ...props }: any) => (
             <code
-                component='code'
                 style={{
                     backgroundColor: '#e1e1e1',
                     borderRadius: '4px',

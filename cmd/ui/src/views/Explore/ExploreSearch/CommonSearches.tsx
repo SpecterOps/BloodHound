@@ -30,7 +30,7 @@ const AD_TAB = 'Active Directory';
 const AZ_TAB = 'Azure';
 const CUSTOM_TAB = 'Custom Searches';
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles(() => ({
     tabs: {
         height: '35px',
         minHeight: '35px',

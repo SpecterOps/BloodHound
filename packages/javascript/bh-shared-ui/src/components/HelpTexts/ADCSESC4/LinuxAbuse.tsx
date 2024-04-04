@@ -24,7 +24,7 @@ const LinuxAbuse: FC = () => {
     const step0_1 = (
         <>
             <Typography variant='body2'>
-                <b>Step 0.1: </b>Set Obtain ownership (WriteOwner only)
+                <b>Step 0.1: </b>Obtain ownership (WriteOwner only)
                 <br />
                 <br />
                 If you only have WriteOwner on the affected certificate template, then you need to grant your principal

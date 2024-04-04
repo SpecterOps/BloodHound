@@ -43,7 +43,7 @@ const FinishedIngestLog: React.FC<{
 }> = ({ ingestJobs, paginationProps }) => {
     const ingestRows = ingestJobs
         .sort((a, b) => b.id - a.id)
-        .map((job: FileUploadJob, index: number) => [
+        .map((job: FileUploadJob) => [
             job.user_email_address,
             DateTime.fromISO(job.start_time).toFormat(LuxonFormat.DATETIME_WITH_LINEBREAKS),
             job.end_time === ZERO_VALUE_API_DATE

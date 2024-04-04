@@ -22,7 +22,7 @@ on:
   pull_request:
     types: [opened, synchronize]
 
-    
+
 jobs:
   run-analysis:
     runs-on: ubuntu-latest
@@ -39,7 +39,7 @@ jobs:
     - name: Install Node
       uses: actions/setup-node@v4
       with:
-        node-version: 18
+        node-version: 20
 
     - name: Install Yarn
       run: |

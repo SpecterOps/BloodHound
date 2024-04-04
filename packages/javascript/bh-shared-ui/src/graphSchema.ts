@@ -30,6 +30,7 @@ export enum ActiveDirectoryNodeKind {
     EnterpriseCA = 'EnterpriseCA',
     NTAuthStore = 'NTAuthStore',
     CertTemplate = 'CertTemplate',
+    IssuancePolicy = 'IssuancePolicy',
 }
 export function ActiveDirectoryNodeKindToDisplay(value: ActiveDirectoryNodeKind): string | undefined {
     switch (value) {
@@ -63,6 +64,8 @@ export function ActiveDirectoryNodeKindToDisplay(value: ActiveDirectoryNodeKind)
             return 'NTAuthStore';
         case ActiveDirectoryNodeKind.CertTemplate:
             return 'CertTemplate';
+        case ActiveDirectoryNodeKind.IssuancePolicy:
+            return 'IssuancePolicy';
         default:
             return undefined;
     }
@@ -123,6 +126,7 @@ export enum ActiveDirectoryRelationshipKind {
     IssuedSignedBy = 'IssuedSignedBy',
     GoldenCert = 'GoldenCert',
     EnrollOnBehalfOf = 'EnrollOnBehalfOf',
+    OIDGroupLink = 'OIDGroupLink',
     ADCSESC1 = 'ADCSESC1',
     ADCSESC3 = 'ADCSESC3',
     ADCSESC4 = 'ADCSESC4',
@@ -134,7 +138,7 @@ export enum ActiveDirectoryRelationshipKind {
     ADCSESC9b = 'ADCSESC9b',
     ADCSESC10a = 'ADCSESC10a',
     ADCSESC10b = 'ADCSESC10b',
-    ExtendedByPolicy = 'ExtendedByPolicy',
+    ADCSESC13 = 'ADCSESC13',
 }
 export function ActiveDirectoryRelationshipKindToDisplay(value: ActiveDirectoryRelationshipKind): string | undefined {
     switch (value) {
@@ -248,6 +252,8 @@ export function ActiveDirectoryRelationshipKindToDisplay(value: ActiveDirectoryR
             return 'GoldenCert';
         case ActiveDirectoryRelationshipKind.EnrollOnBehalfOf:
             return 'EnrollOnBehalfOf';
+        case ActiveDirectoryRelationshipKind.OIDGroupLink:
+            return 'OIDGroupLink';
         case ActiveDirectoryRelationshipKind.ADCSESC1:
             return 'ADCSESC1';
         case ActiveDirectoryRelationshipKind.ADCSESC3:
@@ -270,8 +276,8 @@ export function ActiveDirectoryRelationshipKindToDisplay(value: ActiveDirectoryR
             return 'ADCSESC10a';
         case ActiveDirectoryRelationshipKind.ADCSESC10b:
             return 'ADCSESC10b';
-        case ActiveDirectoryRelationshipKind.ExtendedByPolicy:
-            return 'ExtendedByPolicy';
+        case ActiveDirectoryRelationshipKind.ADCSESC13:
+            return 'ADCSESC13';
         default:
             return undefined;
     }
@@ -555,6 +561,7 @@ export function ActiveDirectoryPathfindingEdges(): ActiveDirectoryRelationshipKi
         ActiveDirectoryRelationshipKind.ADCSESC9b,
         ActiveDirectoryRelationshipKind.ADCSESC10a,
         ActiveDirectoryRelationshipKind.ADCSESC10b,
+        ActiveDirectoryRelationshipKind.ADCSESC13,
         ActiveDirectoryRelationshipKind.DCFor,
     ];
 }
