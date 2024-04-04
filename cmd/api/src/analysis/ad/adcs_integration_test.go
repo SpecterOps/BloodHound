@@ -62,7 +62,7 @@ func TestADCSESC1(t *testing.T) {
 
 				if cache.DoesCAChainProperlyToDomain(innerEnterpriseCA, innerDomain) {
 					operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
-						if err := ad2.PostADCSESC1(ctx, tx, outC, groupExpansions, enterpriseCA, innerDomain, cache); err != nil {
+						if err := ad2.PostADCSESC1(ctx, tx, outC, groupExpansions, innerEnterpriseCA, innerDomain, cache); err != nil {
 							t.Logf("failed post processing for %s: %v", ad.ADCSESC1.String(), err)
 						}
 						return nil
@@ -122,7 +122,7 @@ func TestGoldenCert(t *testing.T) {
 
 				if cache.DoesCAChainProperlyToDomain(innerEnterpriseCA, innerDomain) {
 					operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
-						if err := ad2.PostGoldenCert(ctx, tx, outC, innerDomain, enterpriseCA); err != nil {
+						if err := ad2.PostGoldenCert(ctx, tx, outC, innerDomain, innerEnterpriseCA); err != nil {
 							t.Logf("failed post processing for %s: %v", ad.GoldenCert.String(), err)
 						}
 						return nil
@@ -470,7 +470,7 @@ func TestADCSESC3(t *testing.T) {
 				if cache.DoesCAChainProperlyToDomain(innerEnterpriseCA, innerDomain) {
 
 					operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
-						if err := ad2.PostADCSESC3(ctx, tx, outC, groupExpansions, enterpriseCA, innerDomain, cache); err != nil {
+						if err := ad2.PostADCSESC3(ctx, tx, outC, groupExpansions, innerEnterpriseCA, innerDomain, cache); err != nil {
 							t.Logf("failed post processing for %s: %v", ad.ADCSESC3.String(), err)
 						}
 						return nil
@@ -516,7 +516,7 @@ func TestADCSESC3(t *testing.T) {
 				if cache.DoesCAChainProperlyToDomain(innerEnterpriseCA, innerDomain) {
 
 					operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
-						if err := ad2.PostADCSESC3(ctx, tx, outC, groupExpansions, enterpriseCA, innerDomain, cache); err != nil {
+						if err := ad2.PostADCSESC3(ctx, tx, outC, groupExpansions, innerEnterpriseCA, innerDomain, cache); err != nil {
 							t.Logf("failed post processing for %s: %v", ad.ADCSESC3.String(), err)
 						}
 						return nil
@@ -574,7 +574,7 @@ func TestADCSESC3(t *testing.T) {
 				if cache.DoesCAChainProperlyToDomain(innerEnterpriseCA, innerDomain) {
 
 					operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
-						if err := ad2.PostADCSESC3(ctx, tx, outC, groupExpansions, enterpriseCA, innerDomain, cache); err != nil {
+						if err := ad2.PostADCSESC3(ctx, tx, outC, groupExpansions, innerEnterpriseCA, innerDomain, cache); err != nil {
 							t.Logf("failed post processing for %s: %v", ad.ADCSESC3.String(), err)
 						}
 						return nil
@@ -632,7 +632,7 @@ func TestADCSESC4(t *testing.T) {
 				if cache.DoesCAChainProperlyToDomain(innerEnterpriseCA, innerDomain) {
 
 					operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
-						if err := ad2.PostADCSESC4(ctx, tx, outC, groupExpansions, enterpriseCA, innerDomain, cache); err != nil {
+						if err := ad2.PostADCSESC4(ctx, tx, outC, groupExpansions, innerEnterpriseCA, innerDomain, cache); err != nil {
 							t.Logf("failed post processing for %s: %v", ad.ADCSESC4.String(), err)
 						}
 						return nil
@@ -693,7 +693,7 @@ func TestADCSESC4(t *testing.T) {
 				if cache.DoesCAChainProperlyToDomain(innerEnterpriseCA, innerDomain) {
 
 					operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
-						if err := ad2.PostADCSESC4(ctx, tx, outC, groupExpansions, enterpriseCA, innerDomain, cache); err != nil {
+						if err := ad2.PostADCSESC4(ctx, tx, outC, groupExpansions, innerEnterpriseCA, innerDomain, cache); err != nil {
 							t.Logf("failed post processing for %s: %v", ad.ADCSESC4.String(), err)
 						}
 						return nil
@@ -759,7 +759,7 @@ func TestADCSESC4(t *testing.T) {
 				if cache.DoesCAChainProperlyToDomain(innerEnterpriseCA, innerDomain) {
 
 					operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
-						if err := ad2.PostADCSESC4(ctx, tx, outC, groupExpansions, enterpriseCA, innerDomain, cache); err != nil {
+						if err := ad2.PostADCSESC4(ctx, tx, outC, groupExpansions, innerEnterpriseCA, innerDomain, cache); err != nil {
 							t.Logf("failed post processing for %s: %v", ad.ADCSESC4.String(), err)
 						}
 						return nil
@@ -806,7 +806,7 @@ func TestADCSESC4(t *testing.T) {
 				if cache.DoesCAChainProperlyToDomain(innerEnterpriseCA, innerDomain) {
 
 					operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
-						if err := ad2.PostADCSESC4(ctx, tx, outC, groupExpansions, enterpriseCA, innerDomain, cache); err != nil {
+						if err := ad2.PostADCSESC4(ctx, tx, outC, groupExpansions, innerEnterpriseCA, innerDomain, cache); err != nil {
 							t.Logf("failed post processing for %s: %v", ad.ADCSESC4.String(), err)
 						}
 						return nil
@@ -860,7 +860,7 @@ func TestADCSESC4Composition(t *testing.T) {
 				if cache.DoesCAChainProperlyToDomain(innerEnterpriseCA, innerDomain) {
 
 					operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
-						if err := ad2.PostADCSESC4(ctx, tx, outC, groupExpansions, enterpriseCA, innerDomain, cache); err != nil {
+						if err := ad2.PostADCSESC4(ctx, tx, outC, groupExpansions, innerEnterpriseCA, innerDomain, cache); err != nil {
 							t.Logf("failed post processing for %s: %v", ad.ADCSESC4.String(), err)
 						}
 						return nil
@@ -1084,7 +1084,7 @@ func TestADCSESC9a(t *testing.T) {
 				if cache.DoesCAChainProperlyToDomain(innerEnterpriseCA, innerDomain) {
 
 					operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
-						if err := ad2.PostADCSESC9a(ctx, tx, outC, groupExpansions, enterpriseCA, innerDomain, cache); err != nil {
+						if err := ad2.PostADCSESC9a(ctx, tx, outC, groupExpansions, innerEnterpriseCA, innerDomain, cache); err != nil {
 							t.Logf("failed post processing for %s: %v", ad.ADCSESC9a.String(), err)
 						}
 						return nil
@@ -1132,7 +1132,7 @@ func TestADCSESC9a(t *testing.T) {
 				if cache.DoesCAChainProperlyToDomain(innerEnterpriseCA, innerDomain) {
 
 					operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
-						if err := ad2.PostADCSESC9a(ctx, tx, outC, groupExpansions, enterpriseCA, innerDomain, cache); err != nil {
+						if err := ad2.PostADCSESC9a(ctx, tx, outC, groupExpansions, innerEnterpriseCA, innerDomain, cache); err != nil {
 							t.Logf("failed post processing for %s: %v", ad.ADCSESC9a.String(), err)
 						}
 						return nil
@@ -1177,7 +1177,7 @@ func TestADCSESC9a(t *testing.T) {
 				if cache.DoesCAChainProperlyToDomain(innerEnterpriseCA, innerDomain) {
 
 					operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
-						if err := ad2.PostADCSESC9a(ctx, tx, outC, groupExpansions, enterpriseCA, innerDomain, cache); err != nil {
+						if err := ad2.PostADCSESC9a(ctx, tx, outC, groupExpansions, innerEnterpriseCA, innerDomain, cache); err != nil {
 							t.Logf("failed post processing for %s: %v", ad.ADCSESC9a.String(), err)
 						}
 						return nil
@@ -1223,7 +1223,7 @@ func TestADCSESC9a(t *testing.T) {
 				if cache.DoesCAChainProperlyToDomain(innerEnterpriseCA, innerDomain) {
 
 					operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
-						if err := ad2.PostADCSESC9a(ctx, tx, outC, groupExpansions, enterpriseCA, innerDomain, cache); err != nil {
+						if err := ad2.PostADCSESC9a(ctx, tx, outC, groupExpansions, innerEnterpriseCA, innerDomain, cache); err != nil {
 							t.Logf("failed post processing for %s: %v", ad.ADCSESC9a.String(), err)
 						}
 						return nil
@@ -1269,7 +1269,7 @@ func TestADCSESC9a(t *testing.T) {
 				if cache.DoesCAChainProperlyToDomain(innerEnterpriseCA, innerDomain) {
 
 					operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
-						if err := ad2.PostADCSESC9a(ctx, tx, outC, groupExpansions, enterpriseCA, innerDomain, cache); err != nil {
+						if err := ad2.PostADCSESC9a(ctx, tx, outC, groupExpansions, innerEnterpriseCA, innerDomain, cache); err != nil {
 							t.Logf("failed post processing for %s: %v", ad.ADCSESC9a.String(), err)
 						}
 						return nil
@@ -1313,7 +1313,7 @@ func TestADCSESC9a(t *testing.T) {
 				if cache.DoesCAChainProperlyToDomain(innerEnterpriseCA, innerDomain) {
 
 					operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
-						if err := ad2.PostADCSESC9a(ctx, tx, outC, groupExpansions, enterpriseCA, innerDomain, cache); err != nil {
+						if err := ad2.PostADCSESC9a(ctx, tx, outC, groupExpansions, innerEnterpriseCA, innerDomain, cache); err != nil {
 							t.Logf("failed post processing for %s: %v", ad.ADCSESC9a.String(), err)
 						}
 						return nil
@@ -1388,7 +1388,7 @@ func TestADCSESC9b(t *testing.T) {
 				if cache.DoesCAChainProperlyToDomain(innerEnterpriseCA, innerDomain) {
 
 					operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
-						if err := ad2.PostADCSESC9b(ctx, tx, outC, groupExpansions, enterpriseCA, innerDomain, cache); err != nil {
+						if err := ad2.PostADCSESC9b(ctx, tx, outC, groupExpansions, innerEnterpriseCA, innerDomain, cache); err != nil {
 							t.Logf("failed post processing for %s: %v", ad.ADCSESC9b.String(), err)
 						}
 						return nil
@@ -1436,7 +1436,7 @@ func TestADCSESC9b(t *testing.T) {
 				if cache.DoesCAChainProperlyToDomain(innerEnterpriseCA, innerDomain) {
 
 					operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
-						if err := ad2.PostADCSESC9b(ctx, tx, outC, groupExpansions, enterpriseCA, innerDomain, cache); err != nil {
+						if err := ad2.PostADCSESC9b(ctx, tx, outC, groupExpansions, innerEnterpriseCA, innerDomain, cache); err != nil {
 							t.Logf("failed post processing for %s: %v", ad.ADCSESC9b.String(), err)
 						}
 						return nil
@@ -1480,7 +1480,7 @@ func TestADCSESC9b(t *testing.T) {
 				if cache.DoesCAChainProperlyToDomain(innerEnterpriseCA, innerDomain) {
 
 					operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
-						if err := ad2.PostADCSESC9b(ctx, tx, outC, groupExpansions, enterpriseCA, innerDomain, cache); err != nil {
+						if err := ad2.PostADCSESC9b(ctx, tx, outC, groupExpansions, innerEnterpriseCA, innerDomain, cache); err != nil {
 							t.Logf("failed post processing for %s: %v", ad.ADCSESC9b.String(), err)
 						}
 						return nil
@@ -1524,7 +1524,7 @@ func TestADCSESC9b(t *testing.T) {
 				if cache.DoesCAChainProperlyToDomain(innerEnterpriseCA, innerDomain) {
 
 					operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
-						if err := ad2.PostADCSESC9b(ctx, tx, outC, groupExpansions, enterpriseCA, innerDomain, cache); err != nil {
+						if err := ad2.PostADCSESC9b(ctx, tx, outC, groupExpansions, innerEnterpriseCA, innerDomain, cache); err != nil {
 							t.Logf("failed post processing for %s: %v", ad.ADCSESC9b.String(), err)
 						}
 						return nil
@@ -1568,7 +1568,7 @@ func TestADCSESC9b(t *testing.T) {
 				if cache.DoesCAChainProperlyToDomain(innerEnterpriseCA, innerDomain) {
 
 					operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
-						if err := ad2.PostADCSESC9b(ctx, tx, outC, groupExpansions, enterpriseCA, innerDomain, cache); err != nil {
+						if err := ad2.PostADCSESC9b(ctx, tx, outC, groupExpansions, innerEnterpriseCA, innerDomain, cache); err != nil {
 							t.Logf("failed post processing for %s: %v", ad.ADCSESC9b.String(), err)
 						}
 						return nil
