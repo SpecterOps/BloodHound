@@ -47,7 +47,7 @@ func NewADCSCache() ADCSCache {
 	}
 }
 
-func (s ADCSCache) BuildCache(ctx context.Context, db graph.Database, enterpriseCAs, certTemplates []*graph.Node) {
+func (s ADCSCache) BuildCache(ctx context.Context, db graph.Database, enterpriseCAs, certTemplates, domains []*graph.Node) {
 	db.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		for _, ct := range certTemplates {
 			// cert template enrollers
@@ -80,18 +80,14 @@ func (s ADCSCache) BuildCache(ctx context.Context, db graph.Database, enterprise
 			}
 		}
 
-		if domains, err := FetchCollectedDomains(tx); err != nil {
-			log.Errorf("error fetching collected domains for esc cache: %v", err)
-		} else {
-			for _, domain := range domains {
-				if rootCaForNodes, err := FetchEnterpriseCAsRootCAForPathToDomain(tx, domain); err != nil {
-					log.Errorf("error getting cas via rootcafor for domain %d: %v", domain.ID, err)
-				} else if authStoreForNodes, err := FetchEnterpriseCAsTrustedForNTAuthToDomain(tx, domain); err != nil {
-					log.Errorf("error getting cas via authstorefor for domain %d: %v", domain.ID, err)
-				} else {
-					s.AuthStoreForChainValid[domain.ID] = cardinality.NodeSetToDuplex(authStoreForNodes)
-					s.RootCAForChainValid[domain.ID] = cardinality.NodeSetToDuplex(rootCaForNodes)
-				}
+		for _, domain := range domains {
+			if rootCaForNodes, err := FetchEnterpriseCAsRootCAForPathToDomain(tx, domain); err != nil {
+				log.Errorf("error getting cas via rootcafor for domain %d: %v", domain.ID, err)
+			} else if authStoreForNodes, err := FetchEnterpriseCAsTrustedForNTAuthToDomain(tx, domain); err != nil {
+				log.Errorf("error getting cas via authstorefor for domain %d: %v", domain.ID, err)
+			} else {
+				s.AuthStoreForChainValid[domain.ID] = cardinality.NodeSetToDuplex(authStoreForNodes)
+				s.RootCAForChainValid[domain.ID] = cardinality.NodeSetToDuplex(rootCaForNodes)
 			}
 		}
 

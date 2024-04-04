@@ -54,7 +54,7 @@ func PostADCS(ctx context.Context, db graph.Database, groupExpansions impact.Pat
 		operation.Stats.Merge(step2Stats)
 
 		var cache = NewADCSCache()
-		cache.BuildCache(ctx, db, enterpriseCertAuthorities, certTemplates)
+		cache.BuildCache(ctx, db, enterpriseCertAuthorities, certTemplates, domains)
 
 		for _, domain := range domains {
 			innerDomain := domain
