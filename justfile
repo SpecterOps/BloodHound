@@ -17,7 +17,6 @@ set positional-arguments
 stbernard *ARGS:
   @go run github.com/specterops/bloodhound/packages/go/stbernard {{ARGS}}
 
-
 # ensure dependencies are up to date
 ensure-deps *FLAGS:
   @just stbernard deps {{FLAGS}}
