@@ -40,6 +40,7 @@ func decodeBasicData[T any](batch graph.Batch, reader io.ReadSeeker, conversionF
 	var (
 		count         = 0
 		convertedData ConvertedData
+		errs          = []error{}
 	)
 
 	for decoder.More() {
@@ -56,17 +57,22 @@ func decodeBasicData[T any](batch graph.Batch, reader io.ReadSeeker, conversionF
 		}
 
 		if count == IngestCountThreshold {
-			IngestBasicData(batch, convertedData)
+			if err = IngestBasicData(batch, convertedData); err != nil {
+				errs = append(errs, err)
+			}
 			convertedData.Clear()
 			count = 0
+
 		}
 	}
 
 	if count > 0 {
-		IngestBasicData(batch, convertedData)
+		if err = IngestBasicData(batch, convertedData); err != nil {
+			errs = append(errs, err)
+		}
 	}
 
-	return nil
+	return errors.Join(errs...)
 }
 
 func decodeGroupData(batch graph.Batch, reader io.ReadSeeker) error {
@@ -78,11 +84,12 @@ func decodeGroupData(batch graph.Batch, reader io.ReadSeeker) error {
 	var (
 		convertedData = ConvertedGroupData{}
 		count         = 0
+		errs          = []error{}
 	)
 
 	for decoder.More() {
 		var group ein.Group
-		if err := decoder.Decode(&group); err != nil {
+		if err = decoder.Decode(&group); err != nil {
 			log.Errorf("Error decoding group object: %v", err)
 			if errors.Is(err, io.EOF) {
 				break
@@ -91,7 +98,10 @@ func decodeGroupData(batch graph.Batch, reader io.ReadSeeker) error {
 			count++
 			convertGroupData(group, &convertedData)
 			if count == IngestCountThreshold {
-				IngestGroupData(batch, convertedData)
+				if err = IngestGroupData(batch, convertedData); err != nil {
+					errs = append(errs, err)
+				}
+
 				convertedData.Clear()
 				count = 0
 			}
@@ -99,10 +109,12 @@ func decodeGroupData(batch graph.Batch, reader io.ReadSeeker) error {
 	}
 
 	if count > 0 {
-		IngestGroupData(batch, convertedData)
+		if err = IngestGroupData(batch, convertedData); err != nil {
+			errs = append(errs, err)
+		}
 	}
 
-	return nil
+	return errors.Join(errs...)
 }
 
 func decodeSessionData(batch graph.Batch, reader io.ReadSeeker) error {
@@ -114,10 +126,11 @@ func decodeSessionData(batch graph.Batch, reader io.ReadSeeker) error {
 	var (
 		convertedData = ConvertedSessionData{}
 		count         = 0
+		errs          = []error{}
 	)
 	for decoder.More() {
 		var session ein.Session
-		if err := decoder.Decode(&session); err != nil {
+		if err = decoder.Decode(&session); err != nil {
 			log.Errorf("Error decoding session object: %v", err)
 			if errors.Is(err, io.EOF) {
 				break
@@ -126,7 +139,9 @@ func decodeSessionData(batch graph.Batch, reader io.ReadSeeker) error {
 			count++
 			convertSessionData(session, &convertedData)
 			if count == IngestCountThreshold {
-				IngestSessions(batch, convertedData.SessionProps)
+				if err = IngestSessions(batch, convertedData.SessionProps); err != nil {
+					errs = append(errs, err)
+				}
 				convertedData.Clear()
 				count = 0
 			}
@@ -134,10 +149,12 @@ func decodeSessionData(batch graph.Batch, reader io.ReadSeeker) error {
 	}
 
 	if count > 0 {
-		IngestSessions(batch, convertedData.SessionProps)
+		if err = IngestSessions(batch, convertedData.SessionProps); err != nil {
+			errs = append(errs, err)
+		}
 	}
 
-	return nil
+	return errors.Join(errs...)
 }
 
 func decodeAzureData(batch graph.Batch, reader io.ReadSeeker) error {
@@ -149,11 +166,12 @@ func decodeAzureData(batch graph.Batch, reader io.ReadSeeker) error {
 	var (
 		convertedData = ConvertedAzureData{}
 		count         = 0
+		errs          = []error{}
 	)
 
 	for decoder.More() {
 		var data AzureBase
-		if err := decoder.Decode(&data); err != nil {
+		if err = decoder.Decode(&data); err != nil {
 			log.Errorf("Error decoding azure object: %v", err)
 			if errors.Is(err, io.EOF) {
 				break
@@ -163,7 +181,9 @@ func decodeAzureData(batch graph.Batch, reader io.ReadSeeker) error {
 			convert(data.Data, &convertedData)
 			count++
 			if count == IngestCountThreshold {
-				IngestAzureData(batch, convertedData)
+				if err = IngestAzureData(batch, convertedData); err != nil {
+					errs = append(errs, err)
+				}
 				convertedData.Clear()
 				count = 0
 			}
@@ -171,8 +191,10 @@ func decodeAzureData(batch graph.Batch, reader io.ReadSeeker) error {
 	}
 
 	if count > 0 {
-		IngestAzureData(batch, convertedData)
+		if err = IngestAzureData(batch, convertedData); err != nil {
+			errs = append(errs, err)
+		}
 	}
 
-	return nil
+	return errors.Join(errs...)
 }
