@@ -59,6 +59,7 @@ func PostProcessedRelationships() []graph.Kind {
 		ad.ADCSESC10a,
 		ad.ADCSESC10b,
 		ad.ADCSESC9a,
+		ad.ADCSESC13,
 		ad.EnrollOnBehalfOf,
 	}
 }
