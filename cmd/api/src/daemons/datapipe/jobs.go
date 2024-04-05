@@ -20,6 +20,7 @@ import (
 	"archive/zip"
 	"context"
 	"fmt"
+	"github.com/specterops/bloodhound/src/model/appcfg"
 	"io"
 	"os"
 
@@ -179,17 +180,20 @@ func (s *Daemon) preProcessIngestFile(path string, fileType model.FileType) ([]s
 // processIngestFile reads the files at the path supplied, and returns the total number of files in the
 // archive, the number of files that failed to ingest as JSON, and an error
 func (s *Daemon) processIngestFile(ctx context.Context, path string, fileType model.FileType) (int, int, error) {
-	if paths, err := s.preProcessIngestFile(path, fileType); err != nil {
+	if adcsEnabled, err := s.db.GetFlagByKey(ctx, appcfg.FeatureAdcs); err != nil {
+		return 0, 0, fmt.Errorf("error getting adcs feature flag: %w", err)
+	} else if paths, err := s.preProcessIngestFile(path, fileType); err != nil {
 		return 0, 0, err
 	} else {
 		failed := 0
+
 		return len(paths), failed, s.graphdb.BatchOperation(ctx, func(batch graph.Batch) error {
 			for _, filePath := range paths {
 				file, err := os.Open(filePath)
 				if err != nil {
 					failed++
 					return err
-				} else if err := ReadFileForIngest(batch, file); err != nil {
+				} else if err := ReadFileForIngest(batch, file, adcsEnabled.Enabled); err != nil {
 					failed++
 					log.Errorf("Error reading ingest file %s: %v", filePath, err)
 				}
