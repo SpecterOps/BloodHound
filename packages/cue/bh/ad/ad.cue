@@ -980,6 +980,11 @@ EnrollOnBehalfOf: types.#Kind & {
 
 OIDGroupLink: types.#Kind & {
 	symbol: "OIDGroupLink"
+	schema "active_directory"
+}
+
+ExtendedByPolicy: types.#Kind & {
+	symbol: "ExtendedByPolicy"
 	schema: "active_directory"
 }
 
@@ -1101,6 +1106,7 @@ RelationshipKinds: [
 	GoldenCert,
 	EnrollOnBehalfOf,
 	OIDGroupLink,
+	ExtendedByPolicy,
 	ADCSESC1,
 	ADCSESC3,
 	ADCSESC4,
