@@ -26,7 +26,6 @@ import (
 	"github.com/specterops/bloodhound/dawgs/query"
 	"github.com/specterops/bloodhound/dawgs/util/channels"
 	"github.com/specterops/bloodhound/graphschema/ad"
-	"github.com/specterops/bloodhound/log"
 )
 
 func PostADCSESC13(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob, groupExpansions impact.PathAggregator, enterpriseCA, domain *graph.Node, cache ADCSCache) error {
@@ -37,20 +36,22 @@ func PostADCSESC13(ctx context.Context, tx graph.Transaction, outC chan<- analys
 		return err
 	} else {
 		// Get an O(1) lookup of Issuance Policies keyed by CertificatePolicyOID
-		certPolicyToIssuancePolicyMap := getIssuancePolicyCertOIDMap(allIssuancePolicies)
+		certTemplateOIDToIssuancePolicyMap := getIssuancePolicyCertOIDMap(allIssuancePolicies)
 
 		// For each certTemplate, find all issuance policies within its CertificatePolicy property array
 		// such that IssuancePolicy.CertificatePolicyOID is in CertificateTemplate.CertificatePolicy
 		// and shares its domain
 		for _, certTemplate := range certTemplates {
 			if certPolicies, err := certTemplate.Properties.Get(ad.CertificatePolicy.String()).StringSlice(); err != nil {
-				log.Infof("error fetching CertificatePolicy for Certificate Template: %v", err)
+				continue
 			} else {
 				for _, policy := range certPolicies {
-					for _, issuancePolicy := range certPolicyToIssuancePolicyMap[policy] {
-						if issuancePolicy.Properties.Get(ad.DomainSID.String()) == nil {
+					for _, issuancePolicy := range certTemplateOIDToIssuancePolicyMap[policy] {
+						if policyDomainSid, err := issuancePolicy.Properties.Get(ad.DomainSID.String()).String(); err != nil {
 							continue
-						} else if issuancePolicy.Properties.Get(ad.DomainSID.String()) == certTemplate.Properties.Get(ad.DomainSID.String()) {
+						} else if certTemplateDomainSid, err := certTemplate.Properties.Get(ad.DomainSID.String()).String(); err != nil {
+							continue
+						} else if policyDomainSid != "" && policyDomainSid == certTemplateDomainSid {
 							// Create ExtendedByPolicy edge
 							channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
 								FromID: issuancePolicy.ID,
@@ -87,10 +88,10 @@ func getIssuancePolicyCertOIDMap(issuancePolicies graph.NodeSet) map[string][]gr
 	oidMap := make(map[string][]graph.Node)
 
 	for _, policy := range issuancePolicies {
-		if certPolicyOID, err := policy.Properties.Get(ad.CertTemplateOID.String()).String(); err != nil {
-			log.Infof("error fetching CertificatePolicyOID for Issuance Policy: %v", err)
+		if certTemplateOID, err := policy.Properties.Get(ad.CertTemplateOID.String()).String(); err != nil {
+			continue
 		} else {
-			oidMap[certPolicyOID] = append(oidMap[certPolicyOID], *policy)
+			oidMap[certTemplateOID] = append(oidMap[certTemplateOID], *policy)
 		}
 	}
 
