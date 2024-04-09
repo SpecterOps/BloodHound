@@ -370,6 +370,8 @@ export enum ActiveDirectoryKindProperties {
     ValidityPeriod = 'validityperiod',
     OID = 'oid',
     HomeDirectory = 'homedirectory',
+    CertificatePolicy = 'certificatepolicy',
+    CertificatePolicyOID = 'certificatepolicyoid',
 }
 export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKindProperties): string | undefined {
     switch (value) {
@@ -515,6 +517,10 @@ export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKin
             return 'OID';
         case ActiveDirectoryKindProperties.HomeDirectory:
             return 'Home Directory';
+        case ActiveDirectoryKindProperties.CertificatePolicy:
+            return 'CertificatePolicy';
+        case ActiveDirectoryKindProperties.CertificatePolicyOID:
+            return 'CertificatePolicyOID';
         default:
             return undefined;
     }

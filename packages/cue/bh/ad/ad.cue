@@ -525,6 +525,20 @@ OID: types.#StringEnum & {
 	representation: "oid"
 }
 
+CertificatePolicy: types.#StringEnum & {
+	symbol: "CertificatePolicy"
+	schema: "ad"
+	name: "CertificatePolicy"
+	representation: "certificatepolicy"
+}
+
+CertificatePolicyOID: types.#StringEnum & {
+	symbol: "CertificatePolicyOID"
+	schema: "ad"
+	name: "CertificatePolicyOID"
+	representation: "certificatepolicyoid"
+}
+
 Properties: [
 	AdminCount,
 	CASecurityCollected,
@@ -596,7 +610,9 @@ Properties: [
 	RenewalPeriod,
 	ValidityPeriod,
 	OID,
-	HomeDirectory
+	HomeDirectory,
+	CertificatePolicy,
+	CertificatePolicyOID,
 ]
 
 // Kinds
