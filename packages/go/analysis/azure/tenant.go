@@ -19,6 +19,7 @@ package azure
 import (
 	"context"
 	"fmt"
+	"github.com/specterops/bloodhound/log"
 
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/dawgs/ops"
@@ -79,6 +80,65 @@ func TenantPrincipals(tx graph.Transaction, tenant *graph.Node) (graph.NodeSet, 
 			)
 		}))
 	}
+}
+
+func FetchTenants(ctx context.Context, db graph.Database) (graph.NodeSet, error) {
+	var nodeSet graph.NodeSet
+	if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
+		var err error
+		if nodeSet, err = ops.FetchNodeSet(tx.Nodes().Filterf(func() graph.Criteria {
+			return query.Kind(query.Node(), azure.Tenant)
+		})); err != nil {
+			return err
+		} else {
+			return nil
+		}
+	}); err != nil {
+		return nil, err
+	} else {
+		return nodeSet, nil
+	}
+}
+
+// TenantRoles returns the NodeSet of roles for a given tenant that match one of the given role template IDs. If no role template ID is provided, then all of the tenant role nodes are returned in the NodeSet.
+func TenantRoles(tx graph.Transaction, tenant *graph.Node, roleTemplateIDs ...string) (graph.NodeSet, error) {
+	defer log.LogAndMeasure(log.LevelInfo, "Tenant %d TenantRoles", tenant.ID)()
+
+	if !IsTenantNode(tenant) {
+		return nil, fmt.Errorf("cannot fetch tenant roles - node %d must be of kind %s", tenant.ID, azure.Tenant)
+	}
+
+	conditions := []graph.Criteria{
+		query.Equals(query.StartID(), tenant.ID),
+		query.Kind(query.Relationship(), azure.Contains),
+		query.Kind(query.End(), azure.Role),
+	}
+
+	if len(roleTemplateIDs) > 0 {
+		conditions = append(conditions, query.In(query.EndProperty(azure.RoleTemplateID.String()), roleTemplateIDs))
+	}
+
+	return ops.FetchEndNodes(tx.Relationships().Filterf(func() graph.Criteria {
+		return query.And(conditions...)
+	}))
+}
+
+func fetchAppOwnerRelationships(ctx context.Context, db graph.Database) ([]*graph.Relationship, error) {
+	var appOwnerRels []*graph.Relationship
+	return appOwnerRels, db.ReadTransaction(ctx, func(tx graph.Transaction) error {
+		var err error
+		if appOwnerRels, err = ops.FetchRelationships(tx.Relationships().Filterf(func() graph.Criteria {
+			return query.And(
+				query.Kind(query.Start(), azure.Entity),
+				query.Kind(query.Relationship(), azure.Owns),
+				query.Kind(query.End(), azure.App),
+			)
+		})); err != nil {
+			return err
+		} else {
+			return nil
+		}
+	})
 }
 
 func IsTenantNode(node *graph.Node) bool {
