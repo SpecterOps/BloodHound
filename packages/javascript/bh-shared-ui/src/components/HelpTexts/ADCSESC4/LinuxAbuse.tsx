@@ -38,7 +38,7 @@ const LinuxAbuse: FC = () => {
             </CodeController>
             <Typography variant='body2'>Change the ownership of the object:</Typography>
             <CodeController>
-                {`owneredit.py -action write -owner 'attacker' -target-dn 'template-dn' 'domain'/'attacker':'password'`}
+                {`owneredit.py -action write -new-owner 'attacker' -target-dn 'template-dn' 'domain'/'attacker':'password'`}
             </CodeController>
             <Typography variant='body2'>
                 Confirm that the ownership was changed by running the first command again.
