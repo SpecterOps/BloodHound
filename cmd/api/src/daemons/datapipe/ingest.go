@@ -64,9 +64,13 @@ func IngestGroupData(batch graph.Batch, converted ConvertedGroupData) error {
 
 	if err := IngestNodes(batch, ad.Entity, converted.NodeProps); err != nil {
 		errs.Add(err)
-	} else if err = IngestRelationships(batch, ad.Entity, converted.RelProps); err != nil {
+	}
+
+	if err := IngestRelationships(batch, ad.Entity, converted.RelProps); err != nil {
 		errs.Add(err)
-	} else if err = IngestDNRelationships(batch, converted.DistinguishedNameProps); err != nil {
+	}
+
+	if err := IngestDNRelationships(batch, converted.DistinguishedNameProps); err != nil {
 		errs.Add(err)
 	}
 
@@ -78,9 +82,13 @@ func IngestAzureData(batch graph.Batch, converted ConvertedAzureData) error {
 
 	if err := IngestNodes(batch, azure.Entity, converted.NodeProps); err != nil {
 		errs.Add(err)
-	} else if err = IngestNodes(batch, ad.Entity, converted.OnPremNodes); err != nil {
+	}
+
+	if err := IngestNodes(batch, ad.Entity, converted.OnPremNodes); err != nil {
 		errs.Add(err)
-	} else if err = IngestRelationships(batch, azure.Entity, converted.RelProps); err != nil {
+	}
+
+	if err := IngestRelationships(batch, azure.Entity, converted.RelProps); err != nil {
 		errs.Add(err)
 	}
 
