@@ -371,7 +371,7 @@ export enum ActiveDirectoryKindProperties {
     OID = 'oid',
     HomeDirectory = 'homedirectory',
     CertificatePolicy = 'certificatepolicy',
-    CertificatePolicyOID = 'certificatepolicyoid',
+    CertTemplateOID = 'certtemplateoid',
 }
 export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKindProperties): string | undefined {
     switch (value) {
@@ -518,9 +518,9 @@ export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKin
         case ActiveDirectoryKindProperties.HomeDirectory:
             return 'Home Directory';
         case ActiveDirectoryKindProperties.CertificatePolicy:
-            return 'CertificatePolicy';
-        case ActiveDirectoryKindProperties.CertificatePolicyOID:
-            return 'CertificatePolicyOID';
+            return 'Certificate Policy';
+        case ActiveDirectoryKindProperties.CertTemplateOID:
+            return 'Certificate Template OID';
         default:
             return undefined;
     }

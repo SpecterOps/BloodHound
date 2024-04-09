@@ -44,7 +44,7 @@ func PostADCSESC13(ctx context.Context, tx graph.Transaction, outC chan<- analys
 		// and shares its domain
 		for _, certTemplate := range certTemplates {
 			if certPolicies, err := certTemplate.Properties.Get(ad.CertificatePolicy.String()).StringSlice(); err != nil {
-				log.Warnf("error fetching CertificatePolicy for Certificate Template: %v", err)
+				log.Infof("error fetching CertificatePolicy for Certificate Template: %v", err)
 			} else {
 				for _, policy := range certPolicies {
 					for _, issuancePolicy := range certPolicyToIssuancePolicyMap[policy] {
@@ -71,7 +71,7 @@ func fetchAllIssuancePolicies(tx graph.Transaction) (graph.NodeSet, error) {
 	if nodes, err := ops.FetchNodes(tx.Nodes().Filterf(
 		func() graph.Criteria {
 			return query.And(
-				query.Kind(query.Node(), ad.IssuancePolicies),
+				query.Kind(query.Node(), ad.IssuancePolicy),
 			)
 		},
 	)); err != nil {
@@ -87,8 +87,8 @@ func getIssuancePolicyCertOIDMap(issuancePolicies graph.NodeSet) map[string][]gr
 	oidMap := make(map[string][]graph.Node)
 
 	for _, policy := range issuancePolicies {
-		if certPolicyOID, err := policy.Properties.Get(ad.CertificatePolicyOID.String()).String(); err != nil {
-			log.Warnf("error fetching CertificatePolicyOID for Issuance Policy: %v", err)
+		if certPolicyOID, err := policy.Properties.Get(ad.CertTemplateOID.String()).String(); err != nil {
+			log.Infof("error fetching CertificatePolicyOID for Issuance Policy: %v", err)
 		} else {
 			oidMap[certPolicyOID] = append(oidMap[certPolicyOID], *policy)
 		}

@@ -528,15 +528,15 @@ OID: types.#StringEnum & {
 CertificatePolicy: types.#StringEnum & {
 	symbol: "CertificatePolicy"
 	schema: "ad"
-	name: "CertificatePolicy"
+	name: "Certificate Policy"
 	representation: "certificatepolicy"
 }
 
-CertificatePolicyOID: types.#StringEnum & {
-	symbol: "CertificatePolicyOID"
+CertTemplateOID: types.#StringEnum & {
+	symbol: "CertTemplateOID"
 	schema: "ad"
-	name: "CertificatePolicyOID"
-	representation: "certificatepolicyoid"
+	name: "Certificate Template OID"
+	representation: "certtemplateoid"
 }
 
 Properties: [
@@ -612,7 +612,7 @@ Properties: [
 	OID,
 	HomeDirectory,
 	CertificatePolicy,
-	CertificatePolicyOID,
+	CertTemplateOID,
 ]
 
 // Kinds
