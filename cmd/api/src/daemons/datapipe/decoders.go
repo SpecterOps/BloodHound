@@ -19,6 +19,7 @@ package datapipe
 import (
 	"errors"
 	"github.com/specterops/bloodhound/dawgs/graph"
+	"github.com/specterops/bloodhound/dawgs/util"
 	"github.com/specterops/bloodhound/ein"
 	"github.com/specterops/bloodhound/log"
 	"io"
@@ -40,7 +41,7 @@ func decodeBasicData[T any](batch graph.Batch, reader io.ReadSeeker, conversionF
 	var (
 		count         = 0
 		convertedData ConvertedData
-		errs          = []error{}
+		errs          = util.NewErrorCollector()
 	)
 
 	for decoder.More() {
@@ -58,7 +59,7 @@ func decodeBasicData[T any](batch graph.Batch, reader io.ReadSeeker, conversionF
 
 		if count == IngestCountThreshold {
 			if err = IngestBasicData(batch, convertedData); err != nil {
-				errs = append(errs, err)
+				errs.Add(err)
 			}
 			convertedData.Clear()
 			count = 0
@@ -68,11 +69,11 @@ func decodeBasicData[T any](batch graph.Batch, reader io.ReadSeeker, conversionF
 
 	if count > 0 {
 		if err = IngestBasicData(batch, convertedData); err != nil {
-			errs = append(errs, err)
+			errs.Add(err)
 		}
 	}
 
-	return errors.Join(errs...)
+	return errs.Combined()
 }
 
 func decodeGroupData(batch graph.Batch, reader io.ReadSeeker) error {
@@ -84,7 +85,7 @@ func decodeGroupData(batch graph.Batch, reader io.ReadSeeker) error {
 	var (
 		convertedData = ConvertedGroupData{}
 		count         = 0
-		errs          = []error{}
+		errs          = util.NewErrorCollector()
 	)
 
 	for decoder.More() {
@@ -99,7 +100,7 @@ func decodeGroupData(batch graph.Batch, reader io.ReadSeeker) error {
 			convertGroupData(group, &convertedData)
 			if count == IngestCountThreshold {
 				if err = IngestGroupData(batch, convertedData); err != nil {
-					errs = append(errs, err)
+					errs.Add(err)
 				}
 
 				convertedData.Clear()
@@ -110,11 +111,11 @@ func decodeGroupData(batch graph.Batch, reader io.ReadSeeker) error {
 
 	if count > 0 {
 		if err = IngestGroupData(batch, convertedData); err != nil {
-			errs = append(errs, err)
+			errs.Add(err)
 		}
 	}
 
-	return errors.Join(errs...)
+	return errs.Combined()
 }
 
 func decodeSessionData(batch graph.Batch, reader io.ReadSeeker) error {
@@ -126,7 +127,7 @@ func decodeSessionData(batch graph.Batch, reader io.ReadSeeker) error {
 	var (
 		convertedData = ConvertedSessionData{}
 		count         = 0
-		errs          = []error{}
+		errs          = util.NewErrorCollector()
 	)
 	for decoder.More() {
 		var session ein.Session
@@ -140,7 +141,7 @@ func decodeSessionData(batch graph.Batch, reader io.ReadSeeker) error {
 			convertSessionData(session, &convertedData)
 			if count == IngestCountThreshold {
 				if err = IngestSessions(batch, convertedData.SessionProps); err != nil {
-					errs = append(errs, err)
+					errs.Add(err)
 				}
 				convertedData.Clear()
 				count = 0
@@ -150,11 +151,11 @@ func decodeSessionData(batch graph.Batch, reader io.ReadSeeker) error {
 
 	if count > 0 {
 		if err = IngestSessions(batch, convertedData.SessionProps); err != nil {
-			errs = append(errs, err)
+			errs.Add(err)
 		}
 	}
 
-	return errors.Join(errs...)
+	return errs.Combined()
 }
 
 func decodeAzureData(batch graph.Batch, reader io.ReadSeeker) error {
@@ -166,7 +167,7 @@ func decodeAzureData(batch graph.Batch, reader io.ReadSeeker) error {
 	var (
 		convertedData = ConvertedAzureData{}
 		count         = 0
-		errs          = []error{}
+		errs          = util.NewErrorCollector()
 	)
 
 	for decoder.More() {
@@ -182,7 +183,7 @@ func decodeAzureData(batch graph.Batch, reader io.ReadSeeker) error {
 			count++
 			if count == IngestCountThreshold {
 				if err = IngestAzureData(batch, convertedData); err != nil {
-					errs = append(errs, err)
+					errs.Add(err)
 				}
 				convertedData.Clear()
 				count = 0
@@ -192,9 +193,9 @@ func decodeAzureData(batch graph.Batch, reader io.ReadSeeker) error {
 
 	if count > 0 {
 		if err = IngestAzureData(batch, convertedData); err != nil {
-			errs = append(errs, err)
+			errs.Add(err)
 		}
 	}
 
-	return errors.Join(errs...)
+	return errs.Combined()
 }
