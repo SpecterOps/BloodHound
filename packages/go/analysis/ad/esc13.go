@@ -31,13 +31,6 @@ import (
 
 func PostADCSESC13(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob, groupExpansions impact.PathAggregator, enterpriseCA, domain *graph.Node, cache ADCSCache) error {
 	certTemplates := cache.PublishedTemplateCache[enterpriseCA.ID]
-	certTemplateNodeSet := make(graph.NodeSet)
-	certTemplateNodeSet.Add(certTemplates...)
-
-	// Get certificate policies for cert template nodes
-	if err := ops.FetchNodeProperties(tx, certTemplateNodeSet, []string{ad.CertificatePolicy.String(), ad.DomainSID.String()}); err != nil {
-		return err
-	}
 
 	// Get all issuance policies in the graph
 	if allIssuancePolicies, err := fetchAllIssuancePolicies(tx); err != nil {
@@ -49,13 +42,15 @@ func PostADCSESC13(ctx context.Context, tx graph.Transaction, outC chan<- analys
 		// For each certTemplate, find all issuance policies within its CertificatePolicy property array
 		// such that IssuancePolicy.CertificatePolicyOID is in CertificateTemplate.CertificatePolicy
 		// and shares its domain
-		for _, certTemplate := range certTemplateNodeSet {
-			if certPolicy, err := certTemplate.Properties.Get(ad.CertificatePolicy.String()).StringSlice(); err != nil {
+		for _, certTemplate := range certTemplates {
+			if certPolicies, err := certTemplate.Properties.Get(ad.CertificatePolicy.String()).StringSlice(); err != nil {
 				log.Warnf("error fetching CertificatePolicy for Certificate Template: %v", err)
 			} else {
-				for _, policy := range certPolicy {
+				for _, policy := range certPolicies {
 					for _, issuancePolicy := range certPolicyToIssuancePolicyMap[policy] {
-						if issuancePolicy.Properties.Map[ad.DomainSID.String()] == certTemplate.Properties.Map[ad.DomainSID.String()] {
+						if issuancePolicy.Properties.Get(ad.DomainSID.String()) == nil {
+							continue
+						} else if issuancePolicy.Properties.Get(ad.DomainSID.String()) == certTemplate.Properties.Get(ad.DomainSID.String()) {
 							// Create ExtendedByPolicy edge
 							channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
 								FromID: issuancePolicy.ID,
