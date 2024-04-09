@@ -17,8 +17,8 @@
 package datapipe
 
 import (
-	"errors"
 	"fmt"
+	"github.com/specterops/bloodhound/dawgs/util"
 	"github.com/specterops/bloodhound/src/model/ingest"
 	"github.com/specterops/bloodhound/src/services/fileupload"
 	"io"
@@ -46,43 +46,45 @@ func ReadFileForIngest(batch graph.Batch, reader io.ReadSeeker, adcsEnabled bool
 }
 
 func IngestBasicData(batch graph.Batch, converted ConvertedData) error {
-	errs := []error{}
+	errs := util.NewErrorCollector()
 
 	if err := IngestNodes(batch, ad.Entity, converted.NodeProps); err != nil {
-		errs = append(errs, err)
-	} else if err = IngestRelationships(batch, ad.Entity, converted.RelProps); err != nil {
-		errs = append(errs, err)
+		errs.Add(err)
 	}
 
-	return errors.Join(errs...)
+	if err := IngestRelationships(batch, ad.Entity, converted.RelProps); err != nil {
+		errs.Add(err)
+	}
+
+	return errs.Combined()
 }
 
 func IngestGroupData(batch graph.Batch, converted ConvertedGroupData) error {
-	errs := []error{}
+	errs := util.NewErrorCollector()
 
 	if err := IngestNodes(batch, ad.Entity, converted.NodeProps); err != nil {
-		errs = append(errs, err)
+		errs.Add(err)
 	} else if err = IngestRelationships(batch, ad.Entity, converted.RelProps); err != nil {
-		errs = append(errs, err)
+		errs.Add(err)
 	} else if err = IngestDNRelationships(batch, converted.DistinguishedNameProps); err != nil {
-		errs = append(errs, err)
+		errs.Add(err)
 	}
 
-	return errors.Join(errs...)
+	return errs.Combined()
 }
 
 func IngestAzureData(batch graph.Batch, converted ConvertedAzureData) error {
-	errs := []error{}
+	errs := util.NewErrorCollector()
 
 	if err := IngestNodes(batch, azure.Entity, converted.NodeProps); err != nil {
-		errs = append(errs, err)
+		errs.Add(err)
 	} else if err = IngestNodes(batch, ad.Entity, converted.OnPremNodes); err != nil {
-		errs = append(errs, err)
+		errs.Add(err)
 	} else if err = IngestRelationships(batch, azure.Entity, converted.RelProps); err != nil {
-		errs = append(errs, err)
+		errs.Add(err)
 	}
 
-	return errors.Join(errs...)
+	return errs.Combined()
 }
 
 func IngestWrapper(batch graph.Batch, reader io.ReadSeeker, meta ingest.Metadata, adcsEnabled bool) error {
@@ -168,16 +170,16 @@ func IngestNode(batch graph.Batch, nowUTC time.Time, identityKind graph.Kind, ne
 func IngestNodes(batch graph.Batch, identityKind graph.Kind, nodes []ein.IngestibleNode) error {
 	var (
 		nowUTC = time.Now().UTC()
-		errs   = []error{}
+		errs   = util.NewErrorCollector()
 	)
 
 	for _, next := range nodes {
 		if err := IngestNode(batch, nowUTC, identityKind, next); err != nil {
 			log.Errorf("Error ingesting node ID %s: %v", next.ObjectID, err)
-			errs = append(errs, err)
+			errs.Add(err)
 		}
 	}
-	return errors.Join(errs...)
+	return errs.Combined()
 }
 
 func IngestRelationship(batch graph.Batch, nowUTC time.Time, nodeIDKind graph.Kind, nextRel ein.IngestibleRelationship) error {
@@ -211,16 +213,16 @@ func IngestRelationship(batch graph.Batch, nowUTC time.Time, nodeIDKind graph.Ki
 func IngestRelationships(batch graph.Batch, nodeIDKind graph.Kind, relationships []ein.IngestibleRelationship) error {
 	var (
 		nowUTC = time.Now().UTC()
-		errs   = []error{}
+		errs   = util.NewErrorCollector()
 	)
 
 	for _, next := range relationships {
 		if err := IngestRelationship(batch, nowUTC, nodeIDKind, next); err != nil {
 			log.Errorf("Error ingesting relationship from %s to %s : %v", next.Source, next.Target, err)
-			errs = append(errs, err)
+			errs.Add(err)
 		}
 	}
-	return errors.Join(errs...)
+	return errs.Combined()
 }
 
 func ingestDNRelationship(batch graph.Batch, nowUTC time.Time, nextRel ein.IngestibleRelationship) error {
@@ -254,16 +256,16 @@ func ingestDNRelationship(batch graph.Batch, nowUTC time.Time, nextRel ein.Inges
 func IngestDNRelationships(batch graph.Batch, relationships []ein.IngestibleRelationship) error {
 	var (
 		nowUTC = time.Now().UTC()
-		errs   = []error{}
+		errs   = util.NewErrorCollector()
 	)
 
 	for _, next := range relationships {
 		if err := ingestDNRelationship(batch, nowUTC, next); err != nil {
 			log.Errorf("Error ingesting relationship: %v", err)
-			errs = append(errs, err)
+			errs.Add(err)
 		}
 	}
-	return errors.Join(errs...)
+	return errs.Combined()
 }
 
 func ingestSession(batch graph.Batch, nowUTC time.Time, nextSession ein.IngestibleSession) error {
@@ -299,14 +301,14 @@ func ingestSession(batch graph.Batch, nowUTC time.Time, nextSession ein.Ingestib
 func IngestSessions(batch graph.Batch, sessions []ein.IngestibleSession) error {
 	var (
 		nowUTC = time.Now().UTC()
-		errs   = []error{}
+		errs   = util.NewErrorCollector()
 	)
 
 	for _, next := range sessions {
 		if err := ingestSession(batch, nowUTC, next); err != nil {
 			log.Errorf("Error ingesting sessions: %v", err)
-			errs = append(errs, err)
+			errs.Add(err)
 		}
 	}
-	return errors.Join(errs...)
+	return errs.Combined()
 }
