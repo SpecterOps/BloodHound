@@ -64,13 +64,6 @@ func ResetPasswordRoleIDs() []string {
 	}
 }
 
-func AddSecretRoleIDs() []string {
-	return []string{
-		azure.ApplicationAdministratorRole,
-		azure.CloudApplicationAdministratorRole,
-	}
-}
-
 func HelpdeskAdministratorPasswordResetTargetRoles() []string {
 	return []string{
 		azure.ReportsReaderRole,
@@ -231,11 +224,9 @@ func AppRoleAssignments(ctx context.Context, db graph.Database) (*analysis.Atomi
 					return err
 				} else if err := createAZMGServicePrincipalEndpointReadWriteAllEdges(ctx, db, operation, tenant, tenantContainsServicePrincipalRelationships); err != nil {
 					return err
-				} else if err := addSecret(ctx, db, operation, tenant); err != nil {
-					return err
+				} else {
+					return nil
 				}
-
-				return nil
 			}); err != nil {
 				operation.Done()
 				return &operation.Stats, err
@@ -654,31 +645,68 @@ func createAZMGServicePrincipalEndpointReadWriteAllEdges(ctx context.Context, db
 	}
 }
 
-func addSecret(_ context.Context, _ graph.Database, operation analysis.StatTrackedOperation[analysis.CreatePostRelationshipJob], tenant *graph.Node) error {
-	return operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
-		if addSecretRoles, err := TenantRoles(tx, tenant, AddSecretRoleIDs()...); err != nil {
-			return err
-		} else if tenantAppsAndSPs, err := TenantApplicationsAndServicePrincipals(tx, tenant); err != nil {
-			return err
-		} else {
-			for _, role := range addSecretRoles {
-				for _, target := range tenantAppsAndSPs {
-					log.Debugf("Adding AZAddSecret edge from role %s to %s %d", role.ID.String(), target.Kinds.Strings(), target.ID)
-					nextJob := analysis.CreatePostRelationshipJob{
-						FromID: role.ID,
-						ToID:   target.ID,
-						Kind:   azure.AddSecret,
-					}
+func AddSecret(ctx context.Context, db graph.Database) (*analysis.AtomicPostProcessingStats, error) {
+	if appOwnerRels, err := fetchAppOwnerRelationships(ctx, db); err != nil {
+		return &analysis.AtomicPostProcessingStats{}, err
+	} else if tenants, err := FetchTenants(ctx, db); err != nil {
+		return &analysis.AtomicPostProcessingStats{}, err
+	} else {
+		operation := analysis.NewPostRelationshipOperation(ctx, db, "AZAddSecret Post Processing")
 
-					if !channels.Submit(ctx, outC, nextJob) {
-						return nil
+		operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
+			for _, appOwner := range appOwnerRels {
+				nextJob := analysis.CreatePostRelationshipJob{
+					FromID: appOwner.StartID,
+					ToID:   appOwner.EndID,
+					Kind:   azure.AddSecret,
+				}
+
+				if !channels.Submit(ctx, outC, nextJob) {
+					return nil
+				}
+			}
+
+			return nil
+		})
+
+		if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
+			for _, tenant := range tenants {
+				if tenantContainsAppRelationships, err := fetchTenantContainsRelationships(tx, tenant, azure.App); err != nil {
+					return err
+				} else if len(tenantContainsAppRelationships) == 0 {
+					return nil
+				} else if roleMembers, err := RoleMembers(tx, tenant, azure.ApplicationAdministratorRole, azure.CloudApplicationAdministratorRole); err != nil {
+					return err
+				} else {
+					for _, roleMember := range roleMembers {
+						innerRoleMember := roleMember
+						operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
+							for _, tenantContainsAppsRelationship := range tenantContainsAppRelationships {
+								nextJob := analysis.CreatePostRelationshipJob{
+									FromID: innerRoleMember.ID,
+									ToID:   tenantContainsAppsRelationship.EndID,
+									Kind:   azure.AddSecret,
+								}
+
+								if !channels.Submit(ctx, outC, nextJob) {
+									return nil
+								}
+							}
+
+							return nil
+						})
 					}
 				}
 			}
+			return nil
+		}); err != nil {
+			// Hit done to close out the operation so it doesn't hang in the background
+			operation.Done()
+			return &operation.Stats, err
+		} else {
+			return &operation.Stats, operation.Done()
 		}
-
-		return nil
-	})
+	}
 }
 
 func ExecuteCommand(ctx context.Context, db graph.Database) (*analysis.AtomicPostProcessingStats, error) {

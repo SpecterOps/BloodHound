@@ -6280,30 +6280,6 @@ func (s *ESC4ECA) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.NewRelationship(s.Computer7, s.CertTemplate7, ad.GenericAll)
 }
 
-type AZAddSecretHarness struct {
-	AZApp              *graph.Node
-	AZServicePrincipal *graph.Node
-	AZTenant           *graph.Node
-	AppAdminRole       *graph.Node
-	CloudAppAdminRole  *graph.Node
-}
-
-func (s *AZAddSecretHarness) Setup(graphTestContext *GraphTestContext) {
-	tenantID := RandomObjectID(graphTestContext.testCtx)
-	s.AZTenant = graphTestContext.NewAzureTenant(tenantID)
-
-	s.AZApp = graphTestContext.NewAzureApplication("AZApp", RandomObjectID(graphTestContext.testCtx), tenantID)
-	s.AZServicePrincipal = graphTestContext.NewAzureServicePrincipal("AZServicePrincipal", RandomObjectID(graphTestContext.testCtx), tenantID)
-
-	s.AppAdminRole = graphTestContext.NewAzureRole("AppAdminRole", RandomObjectID(graphTestContext.testCtx), azure.ApplicationAdministratorRole, tenantID)
-	s.CloudAppAdminRole = graphTestContext.NewAzureRole("CloudAppAdminRole", RandomObjectID(graphTestContext.testCtx), azure.CloudApplicationAdministratorRole, tenantID)
-
-	graphTestContext.NewRelationship(s.AZTenant, s.AZApp, azure.Contains)
-	graphTestContext.NewRelationship(s.AZTenant, s.AZServicePrincipal, azure.Contains)
-	graphTestContext.NewRelationship(s.AZTenant, s.AppAdminRole, azure.Contains)
-	graphTestContext.NewRelationship(s.AZTenant, s.CloudAppAdminRole, azure.Contains)
-}
-
 type HarnessDetails struct {
 	RDP                                             RDPHarness
 	RDPB                                            RDPHarness2
@@ -6341,7 +6317,6 @@ type HarnessDetails struct {
 	TrustedForNTAuthHarness                         TrustedForNTAuthHarness
 	NumCollectedActiveDirectoryDomains              int
 	AZInboundControlHarness                         AZInboundControlHarness
-	AZAddSecretHarness                              AZAddSecretHarness
 	ESC3Harness1                                    ESC3Harness1
 	ESC3Harness2                                    ESC3Harness2
 	ESC3Harness3                                    ESC3Harness3
