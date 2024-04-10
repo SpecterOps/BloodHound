@@ -123,19 +123,22 @@ func TenantRoles(tx graph.Transaction, tenant *graph.Node, roleTemplateIDs ...st
 	}))
 }
 
-// TenantApplicationsAndServicePrincipals returns the complete set of application and service principal nodes contained by the given Tenant node
-func TenantApplicationsAndServicePrincipals(tx graph.Transaction, tenant *graph.Node) (graph.NodeSet, error) {
-	if !IsTenantNode(tenant) {
-		return nil, fmt.Errorf("node %d must contain kind %s", tenant.ID, azure.Tenant)
-	} else {
-		return ops.FetchEndNodes(tx.Relationships().Filterf(func() graph.Criteria {
+func fetchAppOwnerRelationships(ctx context.Context, db graph.Database) ([]*graph.Relationship, error) {
+	var appOwnerRels []*graph.Relationship
+	return appOwnerRels, db.ReadTransaction(ctx, func(tx graph.Transaction) error {
+		var err error
+		if appOwnerRels, err = ops.FetchRelationships(tx.Relationships().Filterf(func() graph.Criteria {
 			return query.And(
-				query.Equals(query.StartID(), tenant.ID),
-				query.Kind(query.Relationship(), azure.Contains),
-				query.KindIn(query.End(), azure.App, azure.ServicePrincipal),
+				query.Kind(query.Start(), azure.Entity),
+				query.Kind(query.Relationship(), azure.Owns),
+				query.Kind(query.End(), azure.App),
 			)
-		}))
-	}
+		})); err != nil {
+			return err
+		} else {
+			return nil
+		}
+	})
 }
 
 func IsTenantNode(node *graph.Node) bool {

@@ -6759,7 +6759,6 @@ type HarnessDetails struct {
 	TrustedForNTAuthHarness                         TrustedForNTAuthHarness
 	NumCollectedActiveDirectoryDomains              int
 	AZInboundControlHarness                         AZInboundControlHarness
-	AZAddSecretHarness                              AZAddSecretHarness
 	ESC3Harness1                                    ESC3Harness1
 	ESC3Harness2                                    ESC3Harness2
 	ESC3Harness3                                    ESC3Harness3

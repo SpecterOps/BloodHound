@@ -592,8 +592,8 @@ type CertificateMappingMethod int
 
 const (
 	RegistryValueDoesNotExist                                                 = -1
-	CertificateMappingManytoMany                     CertificateMappingMethod = 1
-	CertificateMappingOneToOne                       CertificateMappingMethod = 1 << 1
+	CertificateMappingOneToOne                       CertificateMappingMethod = 1
+	CertificateMappingManytoMany                     CertificateMappingMethod = 1 << 1
 	CertificateMappingUserPrincipalName              CertificateMappingMethod = 1 << 2
 	CertificateMappingKerberosS4UCertificate         CertificateMappingMethod = 1 << 3
 	CertificateMappingKerberosS4UExplicitCertificate CertificateMappingMethod = 1 << 4
@@ -603,8 +603,8 @@ const (
 const (
 	RegValNotExisting = "Registry value does not exist"
 
-	PrettyCertMappingManyToOne                      = "0x01: Many-to-one (issuer certificate)"
-	PrettyCertMappingOneToOne                       = "0x02: One-to-one (subject/issuer)"
+	PrettyCertMappingOneToOne                       = "0x01: One-to-one (subject/issuer)"
+	PrettyCertMappingManyToOne                      = "0x02: Many-to-one (issuer certificate)"
 	PrettyCertMappingUserPrincipalName              = "0x04: User principal name (UPN/SAN)"
 	PrettyCertMappingKerberosS4UCertificate         = "0x08: Kerberos service-for-user (S4U) certificate"
 	PrettyCertMappingKerberosS4UExplicitCertificate = "0x10: Kerberos service-for-user (S4U) explicit certificate"
@@ -625,11 +625,11 @@ func ParseDCRegistryData(computer Computer) IngestibleNode {
 		if computer.DCRegistryData.CertificateMappingMethods.Value == RegistryValueDoesNotExist {
 			prettyMappings = append(prettyMappings, RegValNotExisting)
 		} else {
-			if computer.DCRegistryData.CertificateMappingMethods.Value&int(CertificateMappingManytoMany) != 0 {
-				prettyMappings = append(prettyMappings, PrettyCertMappingManyToOne)
-			}
 			if computer.DCRegistryData.CertificateMappingMethods.Value&int(CertificateMappingOneToOne) != 0 {
 				prettyMappings = append(prettyMappings, PrettyCertMappingOneToOne)
+			}
+			if computer.DCRegistryData.CertificateMappingMethods.Value&int(CertificateMappingManytoMany) != 0 {
+				prettyMappings = append(prettyMappings, PrettyCertMappingManyToOne)
 			}
 			if computer.DCRegistryData.CertificateMappingMethods.Value&int(CertificateMappingUserPrincipalName) != 0 {
 				prettyMappings = append(prettyMappings, PrettyCertMappingUserPrincipalName)
