@@ -24,7 +24,9 @@ import (
 	"compress/gzip"
 	"fmt"
 	"github.com/specterops/bloodhound/mediatypes"
+	"github.com/specterops/bloodhound/src/model/appcfg"
 	"github.com/specterops/bloodhound/src/services/fileupload"
+	"github.com/stretchr/testify/require"
 	"io"
 	"net/http"
 	"testing"
@@ -214,6 +216,12 @@ func Test_FileUploadVersion6AllOptionADCS(t *testing.T) {
 	})
 
 	testCtx.AssertIngest(fixtures.IngestADCSAssertions)
+	flag, err := testCtx.GetFeatureFlag(appcfg.FeatureAdcs)
+	require.Nil(t, err)
+
+	if flag.Enabled {
+		testCtx.AssertIngest(fixtures.IngestFeatureFlaggedAssertions)
+	}
 }
 
 func Test_FileUploadVersion6AllOptionADCSZip(t *testing.T) {
@@ -222,6 +230,13 @@ func Test_FileUploadVersion6AllOptionADCSZip(t *testing.T) {
 	testCtx.SendZipFileIngest("v6/all/adcs.zip")
 
 	testCtx.AssertIngest(fixtures.IngestADCSAssertions)
+
+	flag, err := testCtx.GetFeatureFlag(appcfg.FeatureAdcs)
+	require.Nil(t, err)
+
+	if flag.Enabled {
+		testCtx.AssertIngest(fixtures.IngestFeatureFlaggedAssertions)
+	}
 }
 
 func Test_CompressedFileUploadWorkFlowVersion5(t *testing.T) {
