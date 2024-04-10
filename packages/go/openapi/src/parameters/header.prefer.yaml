@@ -16,12 +16,10 @@
 
 name: Prefer
 description: Prefer header, used to specify a custom timeout in seconds using the
-  wait parameter as per RFC7240. The default timeout is 30 seconds and maximum timeout
-  is 60 seconds
+  wait parameter as per RFC7240.
 in: header
 required: false
 schema:
   type: integer
   minimum: 0
-  maximum: 60
-  default: 30
+  default: 0
