@@ -2919,8 +2919,12 @@ func TestADCSESC13(t *testing.T) {
 				require.NotNil(t, edge)
 			}
 
+			// CertificatePolicy doesn't match CertTemplateOID
+			edge, _ := analysis.FetchEdgeByStartAndEnd(testContext.Context(), db, harness.ESC13Template1.IssuancePolicy1.ID, harness.ESC13Template1.CertTemplate2.ID, ad.ExtendedByPolicy)
+			require.Nil(t, edge)
+
 			// Different domains, no edge
-			edge, _ := analysis.FetchEdgeByStartAndEnd(testContext.Context(), db, harness.ESC13Template1.IssuancePolicy4.ID, harness.ESC13Template1.CertTemplate4.ID, ad.ExtendedByPolicy)
+			edge, _ = analysis.FetchEdgeByStartAndEnd(testContext.Context(), db, harness.ESC13Template1.IssuancePolicy4.ID, harness.ESC13Template1.CertTemplate4.ID, ad.ExtendedByPolicy)
 			require.Nil(t, edge)
 
 			return nil

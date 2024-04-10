@@ -30,9 +30,9 @@ import (
 
 func PostADCSESC13(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob, groupExpansions impact.PathAggregator, enterpriseCA, domain *graph.Node, cache ADCSCache) error {
 	certTemplates := cache.PublishedTemplateCache[enterpriseCA.ID]
-
-	// Get all issuance policies in the graph
-	if allIssuancePolicies, err := fetchAllIssuancePolicies(tx); err != nil {
+	if domainSid, err := domain.Properties.Get(ad.DomainSID.String()).String(); err != nil {
+		return err
+	} else if allIssuancePolicies, err := fetchAllIssuancePolicies(tx, domainSid); err != nil {
 		return err
 	} else {
 		// Get an O(1) lookup of Issuance Policies keyed by CertificatePolicyOID
@@ -47,18 +47,12 @@ func PostADCSESC13(ctx context.Context, tx graph.Transaction, outC chan<- analys
 			} else {
 				for _, policy := range certPolicies {
 					for _, issuancePolicy := range certTemplateOIDToIssuancePolicyMap[policy] {
-						if policyDomainSid, err := issuancePolicy.Properties.Get(ad.DomainSID.String()).String(); err != nil {
-							continue
-						} else if certTemplateDomainSid, err := certTemplate.Properties.Get(ad.DomainSID.String()).String(); err != nil {
-							continue
-						} else if policyDomainSid != "" && policyDomainSid == certTemplateDomainSid {
-							// Create ExtendedByPolicy edge
-							channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
-								FromID: issuancePolicy.ID,
-								ToID:   certTemplate.ID,
-								Kind:   ad.ExtendedByPolicy,
-							})
-						}
+						// Create ExtendedByPolicy edge
+						channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
+							FromID: issuancePolicy.ID,
+							ToID:   certTemplate.ID,
+							Kind:   ad.ExtendedByPolicy,
+						})
 					}
 				}
 			}
@@ -68,11 +62,12 @@ func PostADCSESC13(ctx context.Context, tx graph.Transaction, outC chan<- analys
 	}
 }
 
-func fetchAllIssuancePolicies(tx graph.Transaction) (graph.NodeSet, error) {
+func fetchAllIssuancePolicies(tx graph.Transaction, domainSid string) (graph.NodeSet, error) {
 	if nodes, err := ops.FetchNodes(tx.Nodes().Filterf(
 		func() graph.Criteria {
 			return query.And(
 				query.Kind(query.Node(), ad.IssuancePolicy),
+				query.Equals(query.NodeProperty(ad.DomainSID.String()), domainSid),
 			)
 		},
 	)); err != nil {
