@@ -44,7 +44,7 @@ import {
     faStore,
     faIdCard,
     faArrowsLeftRightToLine,
-    faBuilding,
+    faBuilding, faClipboardCheck,
 } from '@fortawesome/free-solid-svg-icons';
 import { ActiveDirectoryNodeKind, AzureNodeKind } from '../graphSchema';
 
@@ -117,6 +117,11 @@ export const NODE_ICON: IconDictionary = {
     [ActiveDirectoryNodeKind.CertTemplate]: {
         icon: faIdCard,
         color: '#B153F3',
+    },
+
+    [ActiveDirectoryNodeKind.IssuancePolicy]: {
+        icon: faClipboardCheck,
+        color: '#99B2DD',
     },
 
     [ActiveDirectoryNodeKind.OU]: {

@@ -126,6 +126,34 @@ func GraphStats(ctx context.Context, db graph.Database) (model.AzureDataQualityS
 								case azure.KeyVault:
 									stat.KeyVaults = int(count)
 									aggregation.KeyVaults += int(count)
+
+								case azure.AutomationAccount:
+									stat.AutomationAccounts = int(count)
+									aggregation.AutomationAccounts += int(count)
+
+								case azure.ContainerRegistry:
+									stat.ContainerRegistries = int(count)
+									aggregation.ContainerRegistries += int(count)
+
+								case azure.FunctionApp:
+									stat.FunctionApps = int(count)
+									aggregation.FunctionApps += int(count)
+
+								case azure.LogicApp:
+									stat.LogicApps = int(count)
+									aggregation.LogicApps += int(count)
+
+								case azure.ManagedCluster:
+									stat.ManagedClusters = int(count)
+									aggregation.ManagedClusters += int(count)
+
+								case azure.VMScaleSet:
+									stat.VMScaleSets = int(count)
+									aggregation.VMScaleSets += int(count)
+
+								case azure.WebApp:
+									stat.WebApps = int(count)
+									aggregation.WebApps += int(count)
 								}
 								mutex.Unlock()
 								return nil

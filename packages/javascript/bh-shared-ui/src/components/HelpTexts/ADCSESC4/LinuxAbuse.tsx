@@ -24,7 +24,7 @@ const LinuxAbuse: FC = () => {
     const step0_1 = (
         <>
             <Typography variant='body2'>
-                <b>Step 0.1: </b>Set Obtain ownership (WriteOwner only)
+                <b>Step 0.1: </b>Obtain ownership (WriteOwner only)
                 <br />
                 <br />
                 If you only have WriteOwner on the affected certificate template, then you need to grant your principal
@@ -38,7 +38,7 @@ const LinuxAbuse: FC = () => {
             </CodeController>
             <Typography variant='body2'>Change the ownership of the object:</Typography>
             <CodeController>
-                {`owneredit.py -action write -owner 'attacker' -target-dn 'template-dn' 'domain'/'attacker':'password'`}
+                {`owneredit.py -action write -new-owner 'attacker' -target-dn 'template-dn' 'domain'/'attacker':'password'`}
             </CodeController>
             <Typography variant='body2'>
                 Confirm that the ownership was changed by running the first command again.

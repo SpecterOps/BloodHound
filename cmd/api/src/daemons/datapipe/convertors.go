@@ -185,3 +185,23 @@ func convertCertTemplateData(certtemplate ein.CertTemplate, converted *Converted
 		converted.RelProps = append(converted.RelProps, rel)
 	}
 }
+
+func convertIssuancePolicy(issuancePolicy ein.IssuancePolicy, converted *ConvertedData) {
+	converted.NodeProps = append(converted.NodeProps, ein.ConvertObjectToNode(issuancePolicy.IngestBase, ad.IssuancePolicy))
+	converted.RelProps = append(converted.RelProps, ein.ParseACEData(issuancePolicy.Aces, issuancePolicy.ObjectIdentifier, ad.IssuancePolicy)...)
+
+	if container := ein.ParseObjectContainer(issuancePolicy.IngestBase, ad.CertTemplate); container.IsValid() {
+		converted.RelProps = append(converted.RelProps, container)
+	}
+
+	if issuancePolicy.GroupLink.ObjectIdentifier != "" {
+		converted.RelProps = append(converted.RelProps, ein.IngestibleRelationship{
+			Source:     issuancePolicy.ObjectIdentifier,
+			SourceType: ad.IssuancePolicy,
+			TargetType: issuancePolicy.GroupLink.Kind(),
+			Target:     issuancePolicy.GroupLink.ObjectIdentifier,
+			RelProps:   map[string]any{"isacl": false},
+			RelType:    ad.OIDGroupLink,
+		})
+	}
+}

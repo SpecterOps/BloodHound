@@ -145,6 +145,11 @@ type GPO IngestBase
 
 type AIACA IngestBase
 
+type IssuancePolicy struct {
+	IngestBase
+	GroupLink TypedPrincipal
+}
+
 type RootCA struct {
 	IngestBase
 	DomainSID string

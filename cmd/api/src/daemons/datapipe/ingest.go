@@ -93,6 +93,8 @@ func IngestWrapper(batch graph.Batch, reader io.ReadSeeker, meta ingest.Metadata
 		return decodeBasicData(batch, reader, convertCertTemplateData)
 	case ingest.DataTypeAzure:
 		return decodeAzureData(batch, reader)
+	case ingest.DataTypeIssuancePolicy:
+		return decodeBasicData(batch, reader, convertIssuancePolicy)
 	}
 
 	return nil

@@ -22,6 +22,7 @@ import { useMutation } from 'react-query';
 import { useSelector } from 'react-redux';
 import { selectAllAssetGroupIds, selectTierZeroAssetGroupId } from 'src/ducks/assetgroups/reducer';
 import { ClearDatabaseRequest } from 'js-client-library';
+import FeatureFlag from 'src/components/FeatureFlag';
 
 const initialState: State = {
     deleteCollectedGraphData: false,
@@ -249,13 +250,18 @@ const DatabaseManagement = () => {
                         ) : null}
 
                         <FormGroup sx={{ paddingTop: 1 }}>
-                            <FormControlLabel
-                                label='Collected graph data (all nodes and edges)'
-                                control={
-                                    <Checkbox
-                                        checked={deleteCollectedGraphData}
-                                        onChange={handleCheckbox}
-                                        name='deleteCollectedGraphData'
+                            <FeatureFlag
+                                flagKey='clear_graph_data'
+                                enabled={
+                                    <FormControlLabel
+                                        label='Collected graph data (all nodes and edges)'
+                                        control={
+                                            <Checkbox
+                                                checked={deleteCollectedGraphData}
+                                                onChange={handleCheckbox}
+                                                name='deleteCollectedGraphData'
+                                            />
+                                        }
                                     />
                                 }
                             />
