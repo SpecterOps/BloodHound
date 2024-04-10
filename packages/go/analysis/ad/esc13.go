@@ -29,12 +29,13 @@ import (
 )
 
 func PostADCSESC13(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob, groupExpansions impact.PathAggregator, enterpriseCA, domain *graph.Node, cache ADCSCache) error {
-	certTemplates := cache.PublishedTemplateCache[enterpriseCA.ID]
 	if domainSid, err := domain.Properties.Get(ad.DomainSID.String()).String(); err != nil {
 		return err
 	} else if allIssuancePolicies, err := fetchAllIssuancePolicies(tx, domainSid); err != nil {
 		return err
 	} else {
+		certTemplates := cache.PublishedTemplateCache[enterpriseCA.ID]
+
 		// Get an O(1) lookup of Issuance Policies keyed by CertificatePolicyOID
 		certTemplateOIDToIssuancePolicyMap := getIssuancePolicyCertOIDMap(allIssuancePolicies)
 
