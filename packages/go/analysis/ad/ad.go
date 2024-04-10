@@ -525,57 +525,33 @@ func getCardinalityCount(id uint32, expansions cardinality.Provider[uint32], car
 }
 
 func GetEdgeCompositionPath(ctx context.Context, db graph.Database, edge *graph.Relationship) (graph.PathSet, error) {
-	pathSet := graph.NewPathSet()
-	return pathSet, db.ReadTransaction(ctx, func(tx graph.Transaction) error {
-		if edge.Kind == ad.GoldenCert {
-			if results, err := getGoldenCertEdgeComposition(tx, edge); err != nil {
-				return err
-			} else {
-				pathSet = results
-			}
-		} else if edge.Kind == ad.ADCSESC1 {
-			if results, err := GetADCSESC1EdgeComposition(ctx, db, edge); err != nil {
-				return err
-			} else {
-				pathSet = results
-			}
-		} else if edge.Kind == ad.ADCSESC3 {
-			if results, err := GetADCSESC3EdgeComposition(ctx, db, edge); err != nil {
-				return err
-			} else {
-				pathSet = results
-			}
-		} else if edge.Kind == ad.ADCSESC4 {
-			if results, err := GetADCSESC4EdgeComposition(ctx, db, edge); err != nil {
-				return err
-			} else {
-				pathSet = results
-			}
-		} else if edge.Kind == ad.ADCSESC6a || edge.Kind == ad.ADCSESC6b {
-			if results, err := GetADCSESC6EdgeComposition(ctx, db, edge); err != nil {
-				return err
-			} else {
-				pathSet = results
-			}
-		} else if edge.Kind == ad.ADCSESC9a {
-			if results, err := GetADCSESC9aEdgeComposition(ctx, db, edge); err != nil {
-				return err
-			} else {
-				pathSet = results
-			}
-		} else if edge.Kind == ad.ADCSESC9b {
-			if results, err := GetADCSESC9bEdgeComposition(ctx, db, edge); err != nil {
-				return err
-			} else {
-				pathSet = results
-			}
-		} else if edge.Kind == ad.ADCSESC10a || edge.Kind == ad.ADCSESC10b {
-			if results, err := GetADCSESC10EdgeComposition(ctx, db, edge); err != nil {
-				return err
-			} else {
-				pathSet = results
-			}
+	var (
+		err     error
+		pathSet = graph.NewPathSet()
+	)
+
+	if err = db.ReadTransaction(ctx, func(tx graph.Transaction) error {
+		switch edge.Kind {
+		case ad.GoldenCert:
+			pathSet, err = getGoldenCertEdgeComposition(tx, edge)
+		case ad.ADCSESC1:
+			pathSet, err = GetADCSESC1EdgeComposition(ctx, db, edge)
+		case ad.ADCSESC3:
+			pathSet, err = GetADCSESC3EdgeComposition(ctx, db, edge)
+		case ad.ADCSESC4:
+			pathSet, err = GetADCSESC4EdgeComposition(ctx, db, edge)
+		case ad.ADCSESC6a, ad.ADCSESC6b:
+			pathSet, err = GetADCSESC6EdgeComposition(ctx, db, edge)
+		case ad.ADCSESC9a:
+			pathSet, err = GetADCSESC9aEdgeComposition(ctx, db, edge)
+		case ad.ADCSESC9b:
+			pathSet, err = GetADCSESC9bEdgeComposition(ctx, db, edge)
+		case ad.ADCSESC10a, ad.ADCSESC10b:
+			pathSet, err = GetADCSESC10EdgeComposition(ctx, db, edge)
 		}
-		return nil
-	})
+		return err
+	}); err != nil {
+		return graph.NewPathSet(), err
+	}
+	return pathSet, nil
 }
