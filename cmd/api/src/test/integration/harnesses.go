@@ -6280,7 +6280,7 @@ func (s *ESC4ECA) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.NewRelationship(s.Computer7, s.CertTemplate7, ad.GenericAll)
 }
 
-type ESC13Template1 struct {
+type ExtendedByPolicyHarness struct {
 	IssuancePolicy0 *graph.Node
 	IssuancePolicy1 *graph.Node
 	IssuancePolicy2 *graph.Node
@@ -6292,14 +6292,10 @@ type ESC13Template1 struct {
 	CertTemplate3 *graph.Node
 	CertTemplate4 *graph.Node
 
-	Domain       *graph.Node
-	EnterpriseCA *graph.Node
-
-	NTAuthStore *graph.Node
-	RootCA      *graph.Node
+	Domain *graph.Node
 }
 
-func (s *ESC13Template1) Setup(graphTestContext *GraphTestContext) {
+func (s *ExtendedByPolicyHarness) Setup(graphTestContext *GraphTestContext) {
 	domainSid := RandomDomainSID()
 
 	certTemplateOIDs := []string{}
@@ -6367,19 +6363,6 @@ func (s *ESC13Template1) Setup(graphTestContext *GraphTestContext) {
 	})
 
 	s.Domain = graphTestContext.NewActiveDirectoryDomain("Domain", domainSid, false, true)
-	s.EnterpriseCA = graphTestContext.NewActiveDirectoryEnterpriseCA("EnterpriseCA", domainSid)
-
-	s.NTAuthStore = graphTestContext.NewActiveDirectoryNTAuthStore("NTAuthStore", domainSid)
-	s.RootCA = graphTestContext.NewActiveDirectoryRootCA("RootCA", domainSid)
-
-	graphTestContext.NewRelationship(s.RootCA, s.Domain, ad.RootCAFor)
-	graphTestContext.NewRelationship(s.EnterpriseCA, s.RootCA, ad.IssuedSignedBy)
-	graphTestContext.NewRelationship(s.EnterpriseCA, s.NTAuthStore, ad.TrustedForNTAuth)
-	graphTestContext.NewRelationship(s.CertTemplate1, s.EnterpriseCA, ad.PublishedTo)
-	graphTestContext.NewRelationship(s.NTAuthStore, s.Domain, ad.NTAuthStoreFor)
-	graphTestContext.NewRelationship(s.CertTemplate2, s.EnterpriseCA, ad.PublishedTo)
-	graphTestContext.NewRelationship(s.CertTemplate3, s.EnterpriseCA, ad.PublishedTo)
-	graphTestContext.NewRelationship(s.CertTemplate4, s.EnterpriseCA, ad.PublishedTo)
 }
 
 type HarnessDetails struct {
@@ -6419,6 +6402,7 @@ type HarnessDetails struct {
 	TrustedForNTAuthHarness                         TrustedForNTAuthHarness
 	NumCollectedActiveDirectoryDomains              int
 	AZInboundControlHarness                         AZInboundControlHarness
+	ExtendedByPolicyHarness                         ExtendedByPolicyHarness
 	ESC3Harness1                                    ESC3Harness1
 	ESC3Harness2                                    ESC3Harness2
 	ESC3Harness3                                    ESC3Harness3
@@ -6455,5 +6439,4 @@ type HarnessDetails struct {
 	ESC4Template3                                   ESC4Template3
 	ESC4Template4                                   ESC4Template4
 	ESC4ECA                                         ESC4ECA
-	ESC13Template1                                  ESC13Template1
 }

@@ -156,6 +156,77 @@ func PostGoldenCert(ctx context.Context, tx graph.Transaction, outC chan<- analy
 	return nil
 }
 
+func PostExtendedByPolicyBinding(operation analysis.StatTrackedOperation[analysis.CreatePostRelationshipJob], certTemplates []*graph.Node) error {
+	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
+		if allIssuancePolicies, err := fetchAllIssuancePolicies(tx); err != nil {
+			return err
+		} else {
+			// Get an O(1) lookup of Issuance Policies keyed by CertificatePolicyOID
+			certTemplateOIDToIssuancePolicyMap := getIssuancePolicyCertOIDMap(allIssuancePolicies)
+
+			// For each certTemplate, find all issuance policies within its CertificatePolicy property array
+			// such that IssuancePolicy.CertificatePolicyOID is in CertificateTemplate.CertificatePolicy
+			// and shares its domain
+			for _, certTemplate := range certTemplates {
+				if certPolicies, err := certTemplate.Properties.Get(ad.CertificatePolicy.String()).StringSlice(); err != nil {
+					continue
+				} else {
+					for _, policy := range certPolicies {
+						for _, issuancePolicy := range certTemplateOIDToIssuancePolicyMap[policy] {
+							if certTemplateDomain, err := certTemplate.Properties.Get(ad.DomainSID.String()).String(); err != nil {
+								continue
+							} else if issuancePolicyDomain, err := issuancePolicy.Properties.Get(ad.DomainSID.String()).String(); err != nil {
+								continue
+							} else if certTemplateDomain != "" && certTemplateDomain == issuancePolicyDomain {
+								// Create ExtendedByPolicy edge
+								if !channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
+									FromID: issuancePolicy.ID,
+									ToID:   certTemplate.ID,
+									Kind:   ad.ExtendedByPolicy,
+								}) {
+									return fmt.Errorf("context timed out while creating ExtendedByPolicy edge")
+								}
+							}
+						}
+					}
+				}
+			}
+			return nil
+		}
+	})
+	return nil
+}
+
+func fetchAllIssuancePolicies(tx graph.Transaction) (graph.NodeSet, error) {
+	if nodes, err := ops.FetchNodes(tx.Nodes().Filterf(
+		func() graph.Criteria {
+			return query.And(
+				query.Kind(query.Node(), ad.IssuancePolicy),
+			)
+		},
+	)); err != nil {
+		return nil, err
+	} else {
+		set := make(graph.NodeSet)
+		set.Add(nodes...)
+		return set, nil
+	}
+}
+
+func getIssuancePolicyCertOIDMap(issuancePolicies graph.NodeSet) map[string][]graph.Node {
+	oidMap := make(map[string][]graph.Node)
+
+	for _, policy := range issuancePolicies {
+		if certTemplateOID, err := policy.Properties.Get(ad.CertTemplateOID.String()).String(); err != nil {
+			continue
+		} else {
+			oidMap[certTemplateOID] = append(oidMap[certTemplateOID], *policy)
+		}
+	}
+
+	return oidMap
+}
+
 func processCertChainParent(node *graph.Node, tx graph.Transaction) ([]analysis.CreatePostRelationshipJob, error) {
 	if certChain, err := node.Properties.Get(ad.CertChain.String()).StringSlice(); err != nil {
 		if errors.Is(err, graph.ErrPropertyNotFound) {
