@@ -297,13 +297,13 @@ func (s Configuration) SaveCollectorManifests() (CollectorManifests, error) {
 	manifests := CollectorManifests{}
 
 	if azureHoundManifest, err := generateCollectorManifest(filepath.Join(s.CollectorsDirectory(), azureHoundCollector)); err != nil {
-		log.Errorf("error generating AzureHound manifest file: %s", err)
+		log.Errorf("Error generating AzureHound manifest file: %s", err)
 	} else {
 		manifests[azureHoundCollector] = azureHoundManifest
 	}
 
 	if sharpHoundManifest, err := generateCollectorManifest(filepath.Join(s.CollectorsDirectory(), sharpHoundCollector)); err != nil {
-		log.Errorf("error generating SharpHound manifest file: %s", err)
+		log.Errorf("Error generating SharpHound manifest file: %s", err)
 	} else {
 		manifests[sharpHoundCollector] = sharpHoundManifest
 	}

@@ -295,9 +295,9 @@ func stripCypherQuery(rawQuery string) string {
 	)
 
 	if queryModel, err := frontend.ParseCypher(frontend.DefaultCypherContext(), rawQuery); err != nil {
-		log.Errorf("error occurred parsing cypher query during sanitization: %v", err)
+		log.Errorf("Error occurred parsing cypher query during sanitization: %v", err)
 	} else if err = strippedEmitter.Write(queryModel, buffer); err != nil {
-		log.Errorf("error occurred sanitizing cypher query: %v", err)
+		log.Errorf("Error occurred sanitizing cypher query: %v", err)
 	}
 
 	return buffer.String()
