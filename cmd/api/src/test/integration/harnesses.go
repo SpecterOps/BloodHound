@@ -1163,6 +1163,7 @@ type ADCSESC1Harness struct {
 	Group44        *graph.Node
 	Group45        *graph.Node
 	Group46        *graph.Node
+	Group47        *graph.Node
 	EnterpriseCA4  *graph.Node
 	CertTemplate41 *graph.Node
 	CertTemplate42 *graph.Node
@@ -1175,7 +1176,7 @@ type ADCSESC1Harness struct {
 func (s *ADCSESC1Harness) Setup(graphTestContext *GraphTestContext) {
 	emptyEkus := make([]string, 0)
 	sid := RandomDomainSID()
-	s.Domain1 = graphTestContext.NewActiveDirectoryDomain("domain 1", sid, false, true)
+	s.Domain1 = graphTestContext.NewActiveDirectoryDomain("domain 1", sid, false, false)
 	s.AuthStore1 = graphTestContext.NewActiveDirectoryNTAuthStore("ntauthstore 1", sid)
 	s.EnterpriseCA1 = graphTestContext.NewActiveDirectoryEnterpriseCA("eca 1", sid)
 	s.RootCA1 = graphTestContext.NewActiveDirectoryRootCA("rca 1", sid)
@@ -1295,6 +1296,7 @@ func (s *ADCSESC1Harness) Setup(graphTestContext *GraphTestContext) {
 	s.Group44 = graphTestContext.NewActiveDirectoryGroup("group4-4", sid)
 	s.Group45 = graphTestContext.NewActiveDirectoryGroup("group4-5", sid)
 	s.Group46 = graphTestContext.NewActiveDirectoryGroup("group4-6", sid)
+	s.Group47 = graphTestContext.NewActiveDirectoryGroup("group4-7", sid)
 	s.CertTemplate41 = graphTestContext.NewActiveDirectoryCertTemplate("certtemplate 4-1", sid, CertTemplateData{
 		RequiresManagerApproval: false,
 		AuthenticationEnabled:   true,
@@ -1384,6 +1386,10 @@ func (s *ADCSESC1Harness) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.NewRelationship(s.Group45, s.CertTemplate45, ad.Enroll)
 	graphTestContext.NewRelationship(s.Group46, s.EnterpriseCA4, ad.Enroll)
 	graphTestContext.NewRelationship(s.Group46, s.CertTemplate46, ad.Enroll)
+
+	graphTestContext.NewRelationship(s.Group47, s.EnterpriseCA1, ad.Enroll)
+	graphTestContext.NewRelationship(s.Group47, s.CertTemplate1, ad.Enroll)
+
 	graphTestContext.NewRelationship(s.CertTemplate41, s.EnterpriseCA4, ad.PublishedTo)
 	graphTestContext.NewRelationship(s.CertTemplate42, s.EnterpriseCA4, ad.PublishedTo)
 	graphTestContext.NewRelationship(s.CertTemplate43, s.EnterpriseCA4, ad.PublishedTo)
