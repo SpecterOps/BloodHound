@@ -44,7 +44,8 @@ import {
     faStore,
     faIdCard,
     faArrowsLeftRightToLine,
-    faBuilding, faClipboardCheck,
+    faBuilding,
+    faClipboardCheck,
 } from '@fortawesome/free-solid-svg-icons';
 import { ActiveDirectoryNodeKind, AzureNodeKind } from '../graphSchema';
 

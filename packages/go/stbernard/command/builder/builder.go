@@ -14,23 +14,25 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package analysis
+package builder
 
 import (
-	"errors"
 	"flag"
 	"fmt"
 	"os"
 	"path/filepath"
+	"slices"
 
-	"github.com/specterops/bloodhound/packages/go/stbernard/analyzers"
+	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/packages/go/stbernard/environment"
 	"github.com/specterops/bloodhound/packages/go/stbernard/workspace"
+	"github.com/specterops/bloodhound/packages/go/stbernard/workspace/golang"
+	"github.com/specterops/bloodhound/packages/go/stbernard/workspace/yarn"
 )
 
 const (
-	Name  = "analysis"
-	Usage = "Run static analyzers"
+	Name  = "build"
+	Usage = "Build commands in current workspace"
 )
 
 type command struct {
@@ -72,17 +74,62 @@ func (s *command) Parse(cmdIndex int) error {
 	return nil
 }
 
-// Run analysis command
+// Run build command
 func (s *command) Run() error {
 	if paths, err := workspace.FindPaths(s.env); err != nil {
 		return fmt.Errorf("finding workspace root: %w", err)
-	} else if result, err := analyzers.Run(paths.Root, paths.GoModules, paths.YarnWorkspaces, s.env); errors.Is(err, analyzers.ErrSeverityExit) {
-		fmt.Println(result)
-		return err
-	} else if err != nil {
-		return fmt.Errorf("analyzers incomplete: %w", err)
+	} else if err := filepath.WalkDir(paths.Assets, clearFiles); err != nil {
+		return fmt.Errorf("clearing asset directory: %w", err)
+	} else if err := s.runJSBuild(paths.Root, paths.Assets); err != nil {
+		return fmt.Errorf("building JS artifacts: %w", err)
+	} else if err := s.runGoBuild(paths.Root, paths.GoModules); err != nil {
+		return fmt.Errorf("building Go artifacts: %w", err)
 	} else {
-		fmt.Println(result)
 		return nil
 	}
+}
+
+func (s *command) runJSBuild(cwd string, buildPath string) error {
+	s.env.SetIfEmpty("BUILD_PATH", buildPath)
+
+	if err := yarn.BuildWorkspace(cwd, s.env); err != nil {
+		return fmt.Errorf("building JS workspace: %w", err)
+	} else {
+		return nil
+	}
+}
+
+func (s command) runGoBuild(cwd string, modPaths []string) error {
+	s.env.SetIfEmpty("CGO_ENABLED", "0")
+
+	if err := golang.BuildMainPackages(cwd, modPaths, s.env); err != nil {
+		return fmt.Errorf("building main packages: %w", err)
+	} else {
+		return nil
+	}
+}
+
+func clearFiles(path string, entry os.DirEntry, err error) error {
+	if err != nil {
+		return err
+	}
+
+	if slices.Contains([]string{".keep", "keep", ".gitkeep", "gitkeep"}, entry.Name()) {
+		// Early return
+		return nil
+	}
+
+	log.Debugf("Removing %s", filepath.Join(path, entry.Name()))
+
+	if entry.IsDir() {
+		if err := os.RemoveAll(filepath.Join(path, entry.Name())); err != nil {
+			return err
+		}
+	} else {
+		if err := os.Remove(path); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }

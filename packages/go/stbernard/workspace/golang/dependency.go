@@ -14,22 +14,25 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package codeclimate
+package golang
 
-// Entry represents a simple CodeClimate-like entry
-type Entry struct {
-	Description string   `json:"description"`
-	Severity    string   `json:"severity"`
-	Location    Location `json:"location"`
-}
+import (
+	"fmt"
 
-// Location represents a code path and lines for an entry
-type Location struct {
-	Path  string `json:"path"`
-	Lines Lines  `json:"lines"`
-}
+	"github.com/specterops/bloodhound/packages/go/stbernard/cmdrunner"
+	"github.com/specterops/bloodhound/packages/go/stbernard/environment"
+)
 
-// Lines represents only the beginning line for the location
-type Lines struct {
-	Begin uint64 `json:"begin"`
+// InstallGolangCiLint runs go install for the currently supported golangci-lint version
+func InstallGolangCiLint(path string, env environment.Environment) error {
+	var (
+		command = "go"
+		args    = []string{"install", "github.com/golangci/golangci-lint/cmd/golangci-lint@v1.55.2"}
+	)
+
+	if err := cmdrunner.Run(command, args, path, env); err != nil {
+		return fmt.Errorf("golangci-lint install: %w", err)
+	}
+
+	return nil
 }

@@ -22,7 +22,9 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/specterops/bloodhound/packages/go/stbernard/environment"
 	"github.com/specterops/bloodhound/packages/go/stbernard/workspace"
+	"github.com/specterops/bloodhound/packages/go/stbernard/workspace/golang"
 )
 
 const (
@@ -30,55 +32,54 @@ const (
 	Usage = "Sync all modules in current workspace"
 )
 
-type flags struct {
-	verbose bool
-}
-
-type Config struct {
-	flags       flags
-	Environment []string
-}
-
 type command struct {
-	config Config
+	env environment.Environment
 }
 
-func (s command) Usage() string {
+// Create new instance of command to capture given environment
+func Create(env environment.Environment) *command {
+	return &command{
+		env: env,
+	}
+}
+
+// Usage of command
+func (s *command) Usage() string {
 	return Usage
 }
 
-func (s command) Name() string {
+// Name of command
+func (s *command) Name() string {
 	return Name
 }
 
-func (s command) Run() error {
-	if cwd, err := workspace.FindRoot(); err != nil {
-		return fmt.Errorf("could not find workspace root: %w", err)
-	} else if modPaths, err := workspace.ParseModulesAbsPaths(cwd); err != nil {
-		return fmt.Errorf("could not parse module absolute paths: %w", err)
-	} else if err := workspace.DownloadModules(modPaths, s.config.Environment); err != nil {
-		return fmt.Errorf("could not download modules: %w", err)
-	} else if err := workspace.SyncWorkspace(cwd, s.config.Environment); err != nil {
-		return fmt.Errorf("could not sync workspace: %w", err)
-	} else {
-		return nil
-	}
-}
+// Parse command flags
+func (s *command) Parse(cmdIndex int) error {
+	cmd := flag.NewFlagSet(Name, flag.ExitOnError)
 
-func Create(config Config) (command, error) {
-	modsyncCmd := flag.NewFlagSet(Name, flag.ExitOnError)
-	modsyncCmd.BoolVar(&config.flags.verbose, "v", false, "Print verbose logs")
-
-	modsyncCmd.Usage = func() {
+	cmd.Usage = func() {
 		w := flag.CommandLine.Output()
 		fmt.Fprintf(w, "%s\n\nUsage: %s %s [OPTIONS]\n\nOptions:\n", Usage, filepath.Base(os.Args[0]), Name)
-		modsyncCmd.PrintDefaults()
+		cmd.PrintDefaults()
 	}
 
-	if err := modsyncCmd.Parse(os.Args[2:]); err != nil {
-		modsyncCmd.Usage()
-		return command{}, fmt.Errorf("failed to parse modsync command: %w", err)
+	if err := cmd.Parse(os.Args[cmdIndex+1:]); err != nil {
+		cmd.Usage()
+		return fmt.Errorf("parsing %s command: %w", Name, err)
+	}
+
+	return nil
+}
+
+// Run modsync command
+func (s command) Run() error {
+	if paths, err := workspace.FindPaths(s.env); err != nil {
+		return fmt.Errorf("finding workspace root: %w", err)
+	} else if err := golang.DownloadModules(paths.GoModules, s.env); err != nil {
+		return fmt.Errorf("downloading go modules: %w", err)
+	} else if err := golang.SyncWorkspace(paths.Root, s.env); err != nil {
+		return fmt.Errorf("syncing go workspace: %w", err)
 	} else {
-		return command{config: config}, nil
+		return nil
 	}
 }
