@@ -39,7 +39,7 @@ func PostADCSESC1(ctx context.Context, tx graph.Transaction, outC chan<- analysi
 	} else {
 		for _, certTemplate := range publishedCertTemplates {
 			if valid, err := isCertTemplateValidForEsc1(certTemplate); err != nil {
-				log.Warnf("error validating cert template %d: %v", certTemplate.ID, err)
+				log.Warnf("Error validating cert template %d: %v", certTemplate.ID, err)
 				continue
 			} else if !valid {
 				continue
@@ -256,16 +256,16 @@ func getGoldenCertEdgeComposition(tx graph.Transaction, edge *graph.Relationship
 			query.KindIn(query.End(), ad.EnterpriseCA),
 			query.KindIn(query.Relationship(), ad.HostsCAService),
 		))); err != nil {
-			log.Errorf("error getting hostscaservice edge to enterprise ca for computer %d : %v", startNode.ID, err)
+			log.Errorf("Error getting hostscaservice edge to enterprise ca for computer %d : %v", startNode.ID, err)
 		} else {
 			for _, ecaPath := range ecaPaths {
 				eca := ecaPath.Terminal()
 				if chainToRootCAPaths, err := FetchEnterpriseCAsCertChainPathToDomain(tx, eca, targetDomainNode); err != nil {
-					log.Errorf("error getting eca %d path to domain %d: %v", eca.ID, targetDomainNode.ID, err)
+					log.Errorf("Error getting eca %d path to domain %d: %v", eca.ID, targetDomainNode.ID, err)
 				} else if chainToRootCAPaths.Len() == 0 {
 					continue
 				} else if trustedForAuthPaths, err := FetchEnterpriseCAsTrustedForAuthPathToDomain(tx, eca, targetDomainNode); err != nil {
-					log.Errorf("error getting eca %d path to domain %d via trusted for auth: %v", eca.ID, targetDomainNode.ID, err)
+					log.Errorf("Error getting eca %d path to domain %d via trusted for auth: %v", eca.ID, targetDomainNode.ID, err)
 				} else if trustedForAuthPaths.Len() == 0 {
 					continue
 				} else {

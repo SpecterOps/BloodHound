@@ -52,14 +52,14 @@ func (s ADCSCache) BuildCache(ctx context.Context, db graph.Database, enterprise
 		for _, ct := range certTemplates {
 			// cert template enrollers
 			if firstDegreePrincipals, err := fetchFirstDegreeNodes(tx, ct, ad.Enroll, ad.GenericAll, ad.AllExtendedRights); err != nil {
-				log.Errorf("error fetching enrollers for cert template %d: %v", ct.ID, err)
+				log.Errorf("Error fetching enrollers for cert template %d: %v", ct.ID, err)
 			} else {
 				s.CertTemplateEnrollers[ct.ID] = firstDegreePrincipals.Slice()
 			}
 
 			// cert template controllers
 			if firstDegreePrincipals, err := fetchFirstDegreeNodes(tx, ct, ad.Owns, ad.GenericAll, ad.WriteDACL, ad.WriteOwner); err != nil {
-				log.Errorf("error fetching controllers for cert template %d: %v", ct.ID, err)
+				log.Errorf("Error fetching controllers for cert template %d: %v", ct.ID, err)
 			} else {
 				s.CertTemplateControllers[ct.ID] = firstDegreePrincipals.Slice()
 			}
@@ -68,13 +68,13 @@ func (s ADCSCache) BuildCache(ctx context.Context, db graph.Database, enterprise
 
 		for _, eca := range enterpriseCAs {
 			if firstDegreeEnrollers, err := fetchFirstDegreeNodes(tx, eca, ad.Enroll); err != nil {
-				log.Errorf("error fetching enrollers for enterprise ca %d: %v", eca.ID, err)
+				log.Errorf("Error fetching enrollers for enterprise ca %d: %v", eca.ID, err)
 			} else {
 				s.EnterpriseCAEnrollers[eca.ID] = firstDegreeEnrollers.Slice()
 			}
 
 			if publishedTemplates, err := FetchCertTemplatesPublishedToCA(tx, eca); err != nil {
-				log.Errorf("error fetching published cert templates for enterprise ca %d: %v", eca.ID, err)
+				log.Errorf("Error fetching published cert templates for enterprise ca %d: %v", eca.ID, err)
 			} else {
 				s.PublishedTemplateCache[eca.ID] = publishedTemplates.Slice()
 			}
@@ -82,9 +82,9 @@ func (s ADCSCache) BuildCache(ctx context.Context, db graph.Database, enterprise
 
 		for _, domain := range domains {
 			if rootCaForNodes, err := FetchEnterpriseCAsRootCAForPathToDomain(tx, domain); err != nil {
-				log.Errorf("error getting cas via rootcafor for domain %d: %v", domain.ID, err)
+				log.Errorf("Error getting cas via rootcafor for domain %d: %v", domain.ID, err)
 			} else if authStoreForNodes, err := FetchEnterpriseCAsTrustedForNTAuthToDomain(tx, domain); err != nil {
-				log.Errorf("error getting cas via authstorefor for domain %d: %v", domain.ID, err)
+				log.Errorf("Error getting cas via authstorefor for domain %d: %v", domain.ID, err)
 			} else {
 				s.AuthStoreForChainValid[domain.ID] = cardinality.NodeSetToDuplex(authStoreForNodes)
 				s.RootCAForChainValid[domain.ID] = cardinality.NodeSetToDuplex(rootCaForNodes)

@@ -112,10 +112,10 @@ func ParseACEData(aces []ACE, targetID string, targetType graph.Kind) []Ingestib
 		}
 
 		if rightKind, err := analysis.ParseKind(ace.RightName); err != nil {
-			log.Errorf("error during ParseACEData: %v", err)
+			log.Errorf("Error during ParseACEData: %v", err)
 			continue
 		} else if !ad.IsACLKind(rightKind) {
-			log.Errorf("non-ace edge type given to process aces: %s", ace.RightName)
+			log.Errorf("Non-ace edge type given to process aces: %s", ace.RightName)
 			continue
 		} else {
 			converted = append(converted, IngestibleRelationship{
@@ -137,7 +137,7 @@ func convertSPNData(spns []SPNTarget, sourceID string) []IngestibleRelationship 
 
 	for i, s := range spns {
 		if kind, err := analysis.ParseKind(s.Service); err != nil {
-			log.Errorf("error during processSPNTargets: %v", err)
+			log.Errorf("Error during processSPNTargets: %v", err)
 		} else {
 			converted[i] = IngestibleRelationship{
 				Source:     sourceID,

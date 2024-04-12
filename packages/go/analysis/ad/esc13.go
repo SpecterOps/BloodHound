@@ -18,6 +18,7 @@ package ad
 
 import (
 	"context"
+
 	"github.com/specterops/bloodhound/analysis"
 	"github.com/specterops/bloodhound/analysis/impact"
 	"github.com/specterops/bloodhound/dawgs/graph"
@@ -34,17 +35,17 @@ func PostADCSESC13(ctx context.Context, tx graph.Transaction, outC chan<- analys
 	} else {
 		for _, template := range publishedCertTemplates {
 			if isValid, err := isCertTemplateValidForESC13(template); err != nil {
-				log.Errorf("error checking esc13 cert template: %v", err)
+				log.Errorf("Error checking esc13 cert template: %v", err)
 			} else if !isValid {
 				continue
 			} else if groupNodes, err := getCertTemplateGroupLinks(template, tx); err != nil {
-				log.Errorf("error getting cert template group links: %v", err)
+				log.Errorf("Error getting cert template group links: %v", err)
 			} else if len(groupNodes) == 0 {
 				continue
 			} else {
 				controlBitmap := CalculateCrossProductNodeSets(groupExpansions, cache.CertTemplateEnrollers[template.ID], cache.EnterpriseCAEnrollers[eca.ID])
 				if filtered, err := filterUserDNSResults(tx, controlBitmap, template); err != nil {
-					log.Warnf("error filtering users from victims for esc13: %v", err)
+					log.Warnf("Error filtering users from victims for esc13: %v", err)
 					continue
 				} else {
 					for _, groupID := range groupNodes.IDs() {
