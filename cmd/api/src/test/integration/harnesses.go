@@ -1142,6 +1142,7 @@ type ADCSESC1Harness struct {
 	CertTemplate2  *graph.Node
 	EnterpriseCA21 *graph.Node
 	EnterpriseCA22 *graph.Node
+	EnterpriseCA23 *graph.Node
 	Group21        *graph.Node
 	Group22        *graph.Node
 
@@ -1225,6 +1226,7 @@ func (s *ADCSESC1Harness) Setup(graphTestContext *GraphTestContext) {
 	s.AuthStore2 = graphTestContext.NewActiveDirectoryNTAuthStore("authstore2", sid)
 	s.EnterpriseCA21 = graphTestContext.NewActiveDirectoryEnterpriseCA("eca2-1", sid)
 	s.EnterpriseCA22 = graphTestContext.NewActiveDirectoryEnterpriseCA("eca2-2", sid)
+	s.EnterpriseCA23 = graphTestContext.NewActiveDirectoryEnterpriseCA("eca2-3", sid)
 	s.Group21 = graphTestContext.NewActiveDirectoryGroup("group2-1", sid)
 	s.Group22 = graphTestContext.NewActiveDirectoryGroup("group2-2", sid)
 	s.CertTemplate2 = graphTestContext.NewActiveDirectoryCertTemplate("certtemplate 2", sid, CertTemplateData{
@@ -1242,9 +1244,10 @@ func (s *ADCSESC1Harness) Setup(graphTestContext *GraphTestContext) {
 
 	graphTestContext.NewRelationship(s.RootCA2, s.Domain2, ad.RootCAFor)
 	graphTestContext.NewRelationship(s.AuthStore2, s.Domain2, ad.NTAuthStoreFor)
+	graphTestContext.NewRelationship(s.EnterpriseCA21, s.EnterpriseCA23, ad.IssuedSignedBy)
 	graphTestContext.NewRelationship(s.EnterpriseCA21, s.AuthStore2, ad.TrustedForNTAuth)
-	graphTestContext.NewRelationship(s.EnterpriseCA21, s.RootCA2, ad.EnterpriseCAFor)
 	graphTestContext.NewRelationship(s.EnterpriseCA22, s.RootCA2, ad.IssuedSignedBy)
+	graphTestContext.NewRelationship(s.EnterpriseCA23, s.RootCA2, ad.EnterpriseCAFor)
 	graphTestContext.NewRelationship(s.Group21, s.EnterpriseCA22, ad.Enroll)
 	graphTestContext.NewRelationship(s.Group21, s.CertTemplate2, ad.Enroll)
 	graphTestContext.NewRelationship(s.CertTemplate2, s.EnterpriseCA22, ad.PublishedTo)

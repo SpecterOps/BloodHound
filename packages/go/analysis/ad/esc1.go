@@ -142,6 +142,29 @@ func ADCSESC1Path2Pattern(domainID graph.ID, enterpriseCAs cardinality.Duplex[ui
 }
 
 func GetADCSESC1EdgeComposition(ctx context.Context, db graph.Database, edge *graph.Relationship) (graph.PathSet, error) {
+	/*
+		MATCH (u:User {objectid:'S-1-5-21-2057499049-1289676208-1959431660-238209'})-[:ADCSESC1]->(d:Domain {objectid:'S-1-5-21-1621856376-872934182-3936853371'})
+		MATCH (c:Container)-[:Contains]->(rca:RootCA)
+		WHERE c.name CONTAINS "CERTIFICATION AUTHORITIES" AND c.domain = d.domain
+		MATCH (ca:EnterpriseCA)-[:IssuedSignedBy|EnterpriseCAFor*1..]->(rca)
+		WHERE (ca)-[:TrustedForNTAuth]->(:NTAuthStore)
+		MATCH (ct:CertTemplate)-[:PublishedTo]->(ca)
+		WHERE (ct.requiresmanagerapproval = false
+		AND ct.schemaversion > 1
+		AND ct.authorizedsignatures = 0
+		AND ct.authenticationenabled = true
+		AND ct.enrolleesuppliessubject = true)
+		OR (ct.requiresmanagerapproval = false
+		AND ct.schemaversion = 1
+		AND ct.authenticationenabled = true
+		AND ct.enrolleesuppliessubject = true)
+		OPTIONAL MATCH p1 = (u)-[:GenericAll|Enroll|AllExtendedRights]->(ct)-[:PublishedTo]->(ca)
+		OPTIONAL MATCH p2 = (u)-[:MemberOf*1..]->(:Group)-[:GenericAll|Enroll|AllExtendedRights]->(ct)-[:PublishedTo]->(ca)
+		OPTIONAL MATCH p3 = (u)-[:Enroll]->(ca)-[:IssuedSignedBy|EnterpriseCAFor|RootCAFor*1..]->(d)
+		OPTIONAL MATCH p4 = (u)-[:MemberOf*1..]->(:Group)-[:Enroll]->(ca)-[:IssuedSignedBy|EnterpriseCAFor|RootCAFor*1..]->(d)
+		OPTIONAL MATCH p5 = (ca)-[:TrustedForNTAuth]->(:NTAuthStore)-[:NTAuthStoreFor]->(d)
+		RETURN p1,p2,p3,p4,p5
+	*/
 	var (
 		startNode *graph.Node
 
@@ -167,9 +190,13 @@ func GetADCSESC1EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 	if err := traversalInst.BreadthFirst(ctx, traversal.Plan{
 		Root: startNode,
 		Driver: ADCSESC1Path1Pattern(edge.EndID).Do(func(terminal *graph.PathSegment) error {
-			// Find the CA and track it before stuffing this path into the candidates
-			enterpriseCANode := terminal.Search(func(nextSegment *graph.PathSegment) bool {
-				return nextSegment.Node.Kinds.ContainsOneOf(ad.EnterpriseCA)
+			// Find the first enterprise CA and track it before stuffing this path into the candidates
+			var enterpriseCANode *graph.Node
+			terminal.WalkReverse(func(nextSegment *graph.PathSegment) bool {
+				if nextSegment.Node.Kinds.ContainsOneOf(ad.EnterpriseCA) {
+					enterpriseCANode = nextSegment.Node
+				}
+				return true
 			})
 
 			lock.Lock()

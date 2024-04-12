@@ -21,7 +21,6 @@ package ad_test
 
 import (
 	"context"
-
 	"github.com/specterops/bloodhound/analysis"
 	"github.com/specterops/bloodhound/analysis/impact"
 	"github.com/specterops/bloodhound/graphschema"
@@ -73,7 +72,7 @@ func TestADCSESC1(t *testing.T) {
 		err = operation.Done()
 		require.Nil(t, err)
 
-		db.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
+		err = db.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
 			if results, err := ops.FetchStartNodes(tx.Relationships().Filterf(func() graph.Criteria {
 				return query.Kind(query.Relationship(), ad.ADCSESC1)
 			})); err != nil {
@@ -100,8 +99,57 @@ func TestADCSESC1(t *testing.T) {
 				require.True(t, results.Contains(harness.ADCSESC1Harness.Group47))
 
 			}
+
+			// Domains 1 and 4 have multiple ADCSESC1 edges so we will just test edge comp of Domains 2 and 3
+
+			// Domain 2 Edge Composition
+			if edge, err := tx.Relationships().Filterf(func() graph.Criteria {
+				return query.And(
+					query.Kind(query.Relationship(), ad.ADCSESC1),
+					query.Equals(query.EndID(), harness.ADCSESC1Harness.Domain2.ID),
+				)
+			}).First(); err != nil {
+				t.Fatalf("error fetching esc1 domain 2 edges in integration test; %v", err)
+			} else {
+				comp, err := ad2.GetADCSESC1EdgeComposition(context.Background(), db, edge)
+				assert.Nil(t, err)
+
+				domain2Nodes := comp.AllNodes()
+				assert.Len(t, domain2Nodes, 7)
+				require.True(t, domain2Nodes.Contains(harness.ADCSESC1Harness.Group22))
+				require.True(t, domain2Nodes.Contains(harness.ADCSESC1Harness.CertTemplate2))
+				require.True(t, domain2Nodes.Contains(harness.ADCSESC1Harness.EnterpriseCA21))
+				require.True(t, domain2Nodes.Contains(harness.ADCSESC1Harness.EnterpriseCA23))
+				require.True(t, domain2Nodes.Contains(harness.ADCSESC1Harness.AuthStore2))
+				require.True(t, domain2Nodes.Contains(harness.ADCSESC1Harness.RootCA2))
+				require.True(t, domain2Nodes.Contains(harness.ADCSESC1Harness.Domain2))
+			}
+
+			// Domain 3 Edge Composition
+			if edge, err := tx.Relationships().Filterf(func() graph.Criteria {
+				return query.And(
+					query.Kind(query.Relationship(), ad.ADCSESC1),
+					query.Equals(query.EndID(), harness.ADCSESC1Harness.Domain3.ID),
+				)
+			}).First(); err != nil {
+				t.Fatalf("error fetching esc1 edges in integration test; %v", err)
+			} else {
+				comp, err := ad2.GetADCSESC1EdgeComposition(context.Background(), db, edge)
+				assert.Nil(t, err)
+
+				domain3Nodes := comp.AllNodes()
+				assert.Len(t, domain3Nodes, 6)
+				require.True(t, domain3Nodes.Contains(harness.ADCSESC1Harness.Group32))
+				require.True(t, domain3Nodes.Contains(harness.ADCSESC1Harness.CertTemplate3))
+				require.True(t, domain3Nodes.Contains(harness.ADCSESC1Harness.EnterpriseCA31))
+				require.True(t, domain3Nodes.Contains(harness.ADCSESC1Harness.RootCA3))
+				require.True(t, domain3Nodes.Contains(harness.ADCSESC1Harness.AuthStore3))
+				require.True(t, domain3Nodes.Contains(harness.ADCSESC1Harness.Domain3))
+			}
+
 			return nil
 		})
+		assert.Nil(t, err)
 	})
 }
 
