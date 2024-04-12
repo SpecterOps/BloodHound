@@ -62,4 +62,4 @@ The following environment variables are supported:
 
 St Bernard is a tool for BloodHound devs. If you think of something you want to see added, feel free to create a pull request. New subcommands can be added fairly easily by observing an existing subcommand and changing out the details as needed, then registering the new subcommand in `command/command.go`. Additional packages are used to group useful tools that multiple subcommands could make use of or for better code structuring.
 
-A lot of work into making this tool as approachable as possible, but we will always strive to make it better.
+A lot of work went into making this tool as approachable as possible, but we will always strive to make it better.
