@@ -114,15 +114,15 @@ func TestADCSESC1(t *testing.T) {
 				comp, err := ad2.GetADCSESC1EdgeComposition(context.Background(), db, edge)
 				assert.Nil(t, err)
 
-				esc12nodes := comp.AllNodes()
-				assert.Len(t, esc12nodes, 7)
-				require.True(t, esc12nodes.Contains(harness.ADCSESC1Harness.Group22))
-				require.True(t, esc12nodes.Contains(harness.ADCSESC1Harness.CertTemplate2))
-				require.True(t, esc12nodes.Contains(harness.ADCSESC1Harness.EnterpriseCA21))
-				require.True(t, esc12nodes.Contains(harness.ADCSESC1Harness.EnterpriseCA23))
-				require.True(t, esc12nodes.Contains(harness.ADCSESC1Harness.AuthStore2))
-				require.True(t, esc12nodes.Contains(harness.ADCSESC1Harness.RootCA2))
-				require.True(t, esc12nodes.Contains(harness.ADCSESC1Harness.Domain2))
+				domain2Nodes := comp.AllNodes()
+				assert.Len(t, domain2Nodes, 7)
+				require.True(t, domain2Nodes.Contains(harness.ADCSESC1Harness.Group22))
+				require.True(t, domain2Nodes.Contains(harness.ADCSESC1Harness.CertTemplate2))
+				require.True(t, domain2Nodes.Contains(harness.ADCSESC1Harness.EnterpriseCA21))
+				require.True(t, domain2Nodes.Contains(harness.ADCSESC1Harness.EnterpriseCA23))
+				require.True(t, domain2Nodes.Contains(harness.ADCSESC1Harness.AuthStore2))
+				require.True(t, domain2Nodes.Contains(harness.ADCSESC1Harness.RootCA2))
+				require.True(t, domain2Nodes.Contains(harness.ADCSESC1Harness.Domain2))
 			}
 
 			// Domain 3 Edge Composition
@@ -137,14 +137,14 @@ func TestADCSESC1(t *testing.T) {
 				comp, err := ad2.GetADCSESC1EdgeComposition(context.Background(), db, edge)
 				assert.Nil(t, err)
 
-				esc13nodes := comp.AllNodes()
-				assert.Len(t, esc13nodes, 6)
-				require.True(t, esc13nodes.Contains(harness.ADCSESC1Harness.Group32))
-				require.True(t, esc13nodes.Contains(harness.ADCSESC1Harness.CertTemplate3))
-				require.True(t, esc13nodes.Contains(harness.ADCSESC1Harness.EnterpriseCA31))
-				require.True(t, esc13nodes.Contains(harness.ADCSESC1Harness.RootCA3))
-				require.True(t, esc13nodes.Contains(harness.ADCSESC1Harness.AuthStore3))
-				require.True(t, esc13nodes.Contains(harness.ADCSESC1Harness.Domain3))
+				domain3Nodes := comp.AllNodes()
+				assert.Len(t, domain3Nodes, 6)
+				require.True(t, domain3Nodes.Contains(harness.ADCSESC1Harness.Group32))
+				require.True(t, domain3Nodes.Contains(harness.ADCSESC1Harness.CertTemplate3))
+				require.True(t, domain3Nodes.Contains(harness.ADCSESC1Harness.EnterpriseCA31))
+				require.True(t, domain3Nodes.Contains(harness.ADCSESC1Harness.RootCA3))
+				require.True(t, domain3Nodes.Contains(harness.ADCSESC1Harness.AuthStore3))
+				require.True(t, domain3Nodes.Contains(harness.ADCSESC1Harness.Domain3))
 			}
 
 			return nil
