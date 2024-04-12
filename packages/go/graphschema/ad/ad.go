@@ -97,6 +97,7 @@ var (
 	GoldenCert                      = graph.StringKind("GoldenCert")
 	EnrollOnBehalfOf                = graph.StringKind("EnrollOnBehalfOf")
 	OIDGroupLink                    = graph.StringKind("OIDGroupLink")
+	ExtendedByPolicy                = graph.StringKind("ExtendedByPolicy")
 	ADCSESC1                        = graph.StringKind("ADCSESC1")
 	ADCSESC3                        = graph.StringKind("ADCSESC3")
 	ADCSESC4                        = graph.StringKind("ADCSESC4")
@@ -646,7 +647,7 @@ func Nodes() []graph.Kind {
 	return []graph.Kind{Entity, User, Computer, Group, GPO, OU, Container, Domain, LocalGroup, LocalUser, AIACA, RootCA, EnterpriseCA, NTAuthStore, CertTemplate, IssuancePolicy}
 }
 func Relationships() []graph.Kind {
-	return []graph.Kind{Owns, GenericAll, GenericWrite, WriteOwner, WriteDACL, MemberOf, ForceChangePassword, AllExtendedRights, AddMember, HasSession, Contains, GPLink, AllowedToDelegate, GetChanges, GetChangesAll, GetChangesInFilteredSet, TrustedBy, AllowedToAct, AdminTo, CanPSRemote, CanRDP, ExecuteDCOM, HasSIDHistory, AddSelf, DCSync, ReadLAPSPassword, ReadGMSAPassword, DumpSMSAPassword, SQLAdmin, AddAllowedToAct, WriteSPN, AddKeyCredentialLink, LocalToComputer, MemberOfLocalGroup, RemoteInteractiveLogonPrivilege, SyncLAPSPassword, WriteAccountRestrictions, RootCAFor, DCFor, PublishedTo, ManageCertificates, ManageCA, DelegatedEnrollmentAgent, Enroll, HostsCAService, WritePKIEnrollmentFlag, WritePKINameFlag, NTAuthStoreFor, TrustedForNTAuth, EnterpriseCAFor, CanAbuseUPNCertMapping, CanAbuseWeakCertBinding, IssuedSignedBy, GoldenCert, EnrollOnBehalfOf, OIDGroupLink, ADCSESC1, ADCSESC3, ADCSESC4, ADCSESC5, ADCSESC6a, ADCSESC6b, ADCSESC7, ADCSESC9a, ADCSESC9b, ADCSESC10a, ADCSESC10b, ADCSESC13}
+	return []graph.Kind{Owns, GenericAll, GenericWrite, WriteOwner, WriteDACL, MemberOf, ForceChangePassword, AllExtendedRights, AddMember, HasSession, Contains, GPLink, AllowedToDelegate, GetChanges, GetChangesAll, GetChangesInFilteredSet, TrustedBy, AllowedToAct, AdminTo, CanPSRemote, CanRDP, ExecuteDCOM, HasSIDHistory, AddSelf, DCSync, ReadLAPSPassword, ReadGMSAPassword, DumpSMSAPassword, SQLAdmin, AddAllowedToAct, WriteSPN, AddKeyCredentialLink, LocalToComputer, MemberOfLocalGroup, RemoteInteractiveLogonPrivilege, SyncLAPSPassword, WriteAccountRestrictions, RootCAFor, DCFor, PublishedTo, ManageCertificates, ManageCA, DelegatedEnrollmentAgent, Enroll, HostsCAService, WritePKIEnrollmentFlag, WritePKINameFlag, NTAuthStoreFor, TrustedForNTAuth, EnterpriseCAFor, CanAbuseUPNCertMapping, CanAbuseWeakCertBinding, IssuedSignedBy, GoldenCert, EnrollOnBehalfOf, OIDGroupLink, ExtendedByPolicy, ADCSESC1, ADCSESC3, ADCSESC4, ADCSESC5, ADCSESC6a, ADCSESC6b, ADCSESC7, ADCSESC9a, ADCSESC9b, ADCSESC10a, ADCSESC10b, ADCSESC13}
 }
 func ACLRelationships() []graph.Kind {
 	return []graph.Kind{AllExtendedRights, ForceChangePassword, AddMember, AddAllowedToAct, GenericAll, WriteDACL, WriteOwner, GenericWrite, ReadLAPSPassword, ReadGMSAPassword, Owns, AddSelf, WriteSPN, AddKeyCredentialLink, GetChanges, GetChangesAll, GetChangesInFilteredSet, WriteAccountRestrictions, SyncLAPSPassword, DCSync, ManageCertificates, ManageCA, Enroll, WritePKIEnrollmentFlag, WritePKINameFlag}

@@ -380,6 +380,14 @@ func (s *GraphTestContext) NewActiveDirectoryNTAuthStore(name, domainSID string)
 	}), ad.Entity, ad.NTAuthStore)
 }
 
+func (s *GraphTestContext) NewActiveDirectoryIssuancePolicy(name, domainSID string) *graph.Node {
+	return s.NewNode(graph.AsProperties(graph.PropertyMap{
+		common.Name:     name,
+		common.ObjectID: must.NewUUIDv4().String(),
+		ad.DomainSID:    domainSID,
+	}), ad.Entity, ad.IssuancePolicy)
+}
+
 func (s *GraphTestContext) NewActiveDirectoryEnterpriseCA(name, domainSID string) *graph.Node {
 	return s.NewNode(graph.AsProperties(graph.PropertyMap{
 		common.Name:     name,

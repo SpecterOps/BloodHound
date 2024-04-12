@@ -133,6 +133,10 @@ class CertTemplate(BaseNode):
 
         return b
 
+class IssuancePolicyNode(BaseNode):
+    def create_creation_statement(self):
+        return f's.{self.name} = graphTestContext.NewActiveDirectoryIssuancePolicy("{self.name}", domainSid)'
+
 
 class UnknownNode(BaseNode):
     def create_creation_statement(self):
@@ -156,7 +160,7 @@ for node in j['nodes']:
         nodes[id] = UserNode(name)
     elif 'Group' in name:
         nodes[id] = GroupNode(name)
-    elif 'Computer' or 'DC' in name:
+    elif 'Computer' in name or 'DC' in name:
         nodes[id] = ComputerNode(name)
     elif 'OU' in name:
         nodes[id] = OUNode(name)
@@ -171,6 +175,8 @@ for node in j['nodes']:
     elif 'CertTemplate' in name:
         d = create_certtemplate_data(node)
         nodes[id] = CertTemplate(name, d)
+    elif 'IssuancePolicy' in name:
+        nodes[id] = IssuancePolicyNode(name)
     else:
         print(f'Could not determine type for {name}')
         nodes[id] = UnknownNode(name)
