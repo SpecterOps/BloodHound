@@ -38,8 +38,7 @@ func GraphStats(ctx context.Context, db graph.Database) (model.AzureDataQualityS
 		stats       = model.AzureDataQualityStats{}
 		runID       string
 
-		kinds = graph.Kinds{azure.User, azure.Group, azure.App, azure.ServicePrincipal, azure.Device,
-			azure.ManagementGroup, azure.Subscription, azure.ResourceGroup, azure.VM, azure.KeyVault}
+		kinds = azure.NodeKinds()
 	)
 
 	if newUUID, err := uuid.NewV4(); err != nil {
@@ -154,6 +153,8 @@ func GraphStats(ctx context.Context, db graph.Database) (model.AzureDataQualityS
 								case azure.WebApp:
 									stat.WebApps = int(count)
 									aggregation.WebApps += int(count)
+								case azure.Tenant:
+									// Do nothing. Only AzureDataQualityAggregation stats have tenant stats and the tenants stats are handled in the outer tenant loop
 								}
 								mutex.Unlock()
 								return nil
