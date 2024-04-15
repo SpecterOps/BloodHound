@@ -20,9 +20,10 @@ import (
 	"archive/zip"
 	"context"
 	"fmt"
-	"github.com/specterops/bloodhound/src/model/appcfg"
 	"io"
 	"os"
+
+	"github.com/specterops/bloodhound/src/model/appcfg"
 
 	"github.com/specterops/bloodhound/src/database"
 
@@ -190,6 +191,7 @@ func (s *Daemon) processIngestFile(ctx context.Context, path string, fileType mo
 		return 0, 0, err
 	} else {
 		failed := 0
+
 		return len(paths), failed, s.graphdb.BatchOperation(ctx, func(batch graph.Batch) error {
 			for _, filePath := range paths {
 				file, err := os.Open(filePath)

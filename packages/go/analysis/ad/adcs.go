@@ -54,7 +54,7 @@ func PostADCS(ctx context.Context, db graph.Database, groupExpansions impact.Pat
 		operation.Stats.Merge(step2Stats)
 
 		var cache = NewADCSCache()
-		cache.BuildCache(ctx, db, enterpriseCertAuthorities, certTemplates)
+		cache.BuildCache(ctx, db, enterpriseCertAuthorities, certTemplates, domains)
 
 		for _, domain := range domains {
 			innerDomain := domain
@@ -113,71 +113,81 @@ func processEnterpriseCAWithValidCertChainToDomain(enterpriseCA, domain *graph.N
 
 	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
 		if err := PostGoldenCert(ctx, tx, outC, domain, enterpriseCA); err != nil {
-			log.Errorf("failed post processing for %s: %v", ad.GoldenCert.String(), err)
+			log.Errorf("Failed post processing for %s: %v", ad.GoldenCert.String(), err)
 		}
 		return nil
 	})
 
 	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
 		if err := PostADCSESC1(ctx, tx, outC, groupExpansions, enterpriseCA, domain, cache); err != nil {
-			log.Errorf("failed post processing for %s: %v", ad.ADCSESC1.String(), err)
+			log.Errorf("Failed post processing for %s: %v", ad.ADCSESC1.String(), err)
 		}
 		return nil
 	})
 
 	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
 		if err := PostADCSESC3(ctx, tx, outC, groupExpansions, enterpriseCA, domain, cache); err != nil {
-			log.Errorf("failed post processing for %s: %v", ad.ADCSESC3.String(), err)
+			log.Errorf("Failed post processing for %s: %v", ad.ADCSESC3.String(), err)
 		}
 		return nil
 	})
 
 	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
 		if err := PostADCSESC4(ctx, tx, outC, groupExpansions, enterpriseCA, domain, cache); err != nil {
-			log.Errorf("failed post processing for %s: %v", ad.ADCSESC4.String(), err)
+			log.Errorf("Failed post processing for %s: %v", ad.ADCSESC4.String(), err)
 		}
 		return nil
 	})
 
 	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
 		if err := PostADCSESC6a(ctx, tx, outC, groupExpansions, enterpriseCA, domain, cache); err != nil {
-			log.Errorf("failed post processing for %s: %v", ad.ADCSESC6a.String(), err)
+			log.Errorf("Failed post processing for %s: %v", ad.ADCSESC6a.String(), err)
 		}
 		return nil
 	})
 
 	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
 		if err := PostADCSESC6b(ctx, tx, outC, groupExpansions, enterpriseCA, domain, cache); err != nil {
-			log.Errorf("failed post processing for %s: %v", ad.ADCSESC6b.String(), err)
+			log.Errorf("Failed post processing for %s: %v", ad.ADCSESC6b.String(), err)
 		}
 		return nil
 	})
 
 	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
 		if err := PostADCSESC9a(ctx, tx, outC, groupExpansions, enterpriseCA, domain, cache); err != nil {
-			log.Errorf("failed post processing for %s: %v", ad.ADCSESC9a.String(), err)
+			log.Errorf("Failed post processing for %s: %v", ad.ADCSESC9a.String(), err)
 		}
 		return nil
 	})
 
 	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
 		if err := PostADCSESC9b(ctx, tx, outC, groupExpansions, enterpriseCA, domain, cache); err != nil {
-			log.Errorf("failed post processing for %s: %v", ad.ADCSESC9b.String(), err)
+			log.Errorf("Failed post processing for %s: %v", ad.ADCSESC9b.String(), err)
 		}
 		return nil
 	})
 
 	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
 		if err := PostADCSESC10a(ctx, tx, outC, groupExpansions, enterpriseCA, domain, cache); err != nil {
-			log.Errorf("failed post processing for %s: %v", ad.ADCSESC10a.String(), err)
+			log.Errorf("Failed post processing for %s: %v", ad.ADCSESC10a.String(), err)
 		}
 		return nil
 	})
 
 	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
 		if err := PostADCSESC10b(ctx, tx, outC, groupExpansions, enterpriseCA, domain, cache); err != nil {
-			log.Errorf("failed post processing for %s: %v", ad.ADCSESC10b.String(), err)
+			log.Errorf("Failed post processing for %s: %v", ad.ADCSESC10b.String(), err)
 		}
 		return nil
 	})
+
+	if adcsEnabled {
+		operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
+			if err := PostADCSESC13(ctx, tx, outC, groupExpansions, enterpriseCA, cache); err != nil {
+				log.Errorf("Failed post processing for %s: %v", ad.ADCSESC13.String(), err)
+			}
+			return nil
+		})
+	}
+
 }

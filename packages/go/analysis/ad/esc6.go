@@ -19,9 +19,10 @@ package ad
 import (
 	"context"
 	"fmt"
-	"github.com/specterops/bloodhound/ein"
 	"slices"
 	"sync"
+
+	"github.com/specterops/bloodhound/ein"
 
 	"github.com/specterops/bloodhound/analysis"
 	"github.com/specterops/bloodhound/analysis/impact"
@@ -58,7 +59,7 @@ func PostADCSESC6a(ctx context.Context, tx graph.Transaction, outC chan<- analys
 		)
 		for _, publishedCertTemplate := range publishedCertTemplates {
 			if valid, err := isCertTemplateValidForESC6(publishedCertTemplate, false); err != nil {
-				log.Warnf("error validating cert template %d: %v", publishedCertTemplate.ID, err)
+				log.Warnf("Error validating cert template %d: %v", publishedCertTemplate.ID, err)
 				continue
 			} else if !valid {
 				continue
@@ -105,7 +106,7 @@ func PostADCSESC6b(ctx context.Context, tx graph.Transaction, outC chan<- analys
 		)
 		for _, publishedCertTemplate := range publishedCertTemplates {
 			if valid, err := isCertTemplateValidForESC6(publishedCertTemplate, true); err != nil {
-				log.Warnf("error validating cert template %d: %v", publishedCertTemplate.ID, err)
+				log.Warnf("Error validating cert template %d: %v", publishedCertTemplate.ID, err)
 				continue
 			} else if !valid {
 				continue
@@ -158,7 +159,7 @@ func PostCanAbuseUPNCertMapping(operation analysis.StatTrackedOperation[analysis
 					} else {
 						for _, dcForNode := range dcForNodes {
 							if cmmrProperty, err := dcForNode.Properties.Get(ad.CertificateMappingMethodsRaw.String()).Int(); err != nil {
-								log.Warnf("error in PostCanAbuseUPNCertMapping: unable to fetch %v property for node ID %v: %v", ad.CertificateMappingMethodsRaw.String(), dcForNode.ID, err)
+								log.Warnf("Error in PostCanAbuseUPNCertMapping: unable to fetch %v property for node ID %v: %v", ad.CertificateMappingMethodsRaw.String(), dcForNode.ID, err)
 								continue
 							} else if cmmrProperty == ein.RegistryValueDoesNotExist {
 								continue
@@ -177,7 +178,7 @@ func PostCanAbuseUPNCertMapping(operation analysis.StatTrackedOperation[analysis
 			}
 		}
 		if err := collector.Return(); err != nil {
-			log.Debugf("errors in %s processing: %v", ad.CanAbuseUPNCertMapping.String(), err)
+			log.Debugf("Errors in %s processing: %v", ad.CanAbuseUPNCertMapping.String(), err)
 		}
 		return nil
 	})
@@ -204,7 +205,7 @@ func PostCanAbuseWeakCertBinding(operation analysis.StatTrackedOperation[analysi
 					} else {
 						for _, dcForNode := range dcForNodes {
 							if strongCertBindingEnforcement, err := dcForNode.Properties.Get(ad.StrongCertificateBindingEnforcementRaw.String()).Int(); err != nil {
-								log.Warnf("error in PostCanAbuseWeakCertBinding: unable to fetch %v property for node ID %v: %v", ad.StrongCertificateBindingEnforcementRaw.String(), dcForNode.ID, err)
+								log.Warnf("Error in PostCanAbuseWeakCertBinding: unable to fetch %v property for node ID %v: %v", ad.StrongCertificateBindingEnforcementRaw.String(), dcForNode.ID, err)
 								continue
 							} else if strongCertBindingEnforcement == 0 || strongCertBindingEnforcement == 1 {
 								if !channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
@@ -221,7 +222,7 @@ func PostCanAbuseWeakCertBinding(operation analysis.StatTrackedOperation[analysi
 			}
 		}
 		if err := collector.Return(); err != nil {
-			log.Debugf("errors in %s processing: %v", ad.CanAbuseWeakCertBinding.String(), err)
+			log.Debugf("Errors in %s processing: %v", ad.CanAbuseWeakCertBinding.String(), err)
 		}
 		return nil
 	})

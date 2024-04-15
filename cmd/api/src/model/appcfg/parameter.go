@@ -147,13 +147,13 @@ func GetNeo4jParameters(ctx context.Context, service ParameterService) Neo4jPara
 	var result Neo4jParameters
 
 	if neo4jParametersCfg, err := service.GetConfigurationParameter(ctx, Neo4jConfigs); err != nil {
-		log.Errorf("failed to fetch neo4j configuration; returning default values")
+		log.Errorf("Failed to fetch neo4j configuration; returning default values")
 		result = Neo4jParameters{
 			WriteFlushSize: neo4j.DefaultWriteFlushSize,
 			BatchWriteSize: neo4j.DefaultBatchWriteSize,
 		}
 	} else if err = neo4jParametersCfg.Map(result); err != nil {
-		log.Errorf("invalid neo4j configuration supplied; returning default values")
+		log.Errorf("Invalid neo4j configuration supplied; returning default values")
 		result = Neo4jParameters{
 			WriteFlushSize: neo4j.DefaultWriteFlushSize,
 			BatchWriteSize: neo4j.DefaultBatchWriteSize,
