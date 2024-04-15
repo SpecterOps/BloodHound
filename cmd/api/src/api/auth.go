@@ -143,7 +143,7 @@ func (s authenticator) LoginWithSecret(ctx context.Context, loginRequest LoginRe
 
 	commitID, err = uuid.NewV4()
 	if err != nil {
-		log.Errorf("error generating commit ID for login: %s", err)
+		log.Errorf("Error generating commit ID for login: %s", err)
 		return LoginDetails{}, err
 	}
 

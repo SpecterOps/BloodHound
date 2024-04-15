@@ -584,7 +584,7 @@ func (s *GraphQuery) GetEntityCountResults(ctx context.Context, node *graph.Node
 			defer waitGroup.Done()
 
 			if result, err := runEntityQuery(ctx, s.Graph, delegate, node, 0, 0); err != nil {
-				log.Errorf("error running entity query for key %s: %v", delegateKey, err)
+				log.Errorf("Error running entity query for key %s: %v", delegateKey, err)
 				data.Store(delegateKey, 0)
 			} else {
 				data.Store(delegateKey, result.Len())

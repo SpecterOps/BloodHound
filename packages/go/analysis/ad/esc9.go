@@ -49,7 +49,7 @@ func PostADCSESC9a(ctx context.Context, tx graph.Transaction, outC chan<- analys
 	} else {
 		for _, template := range publishedCertTemplates {
 			if valid, err := isCertTemplateValidForESC9(template, false); err != nil {
-				log.Warnf("error validating cert template %d: %v", template.ID, err)
+				log.Warnf("Error validating cert template %d: %v", template.ID, err)
 				continue
 			} else if !valid {
 				continue
@@ -60,7 +60,7 @@ func PostADCSESC9a(ctx context.Context, tx graph.Transaction, outC chan<- analys
 				victimBitmap := getVictimBitmap(groupExpansions, certTemplateEnrollers, ecaControllers)
 
 				if filteredVictims, err := filterUserDNSResults(tx, victimBitmap, template); err != nil {
-					log.Warnf("error filtering users from victims for esc9a: %v", err)
+					log.Warnf("Error filtering users from victims for esc9a: %v", err)
 					continue
 				} else if attackers, err := FetchAttackersForEscalations9and10(tx, filteredVictims, false); err != nil {
 					log.Warnf("Error getting start nodes for esc9a attacker nodes: %v", err)
@@ -100,7 +100,7 @@ func PostADCSESC9b(ctx context.Context, tx graph.Transaction, outC chan<- analys
 	} else {
 		for _, template := range publishedCertTemplates {
 			if valid, err := isCertTemplateValidForESC9(template, true); err != nil {
-				log.Warnf("error validating cert template %d: %v", template.ID, err)
+				log.Warnf("Error validating cert template %d: %v", template.ID, err)
 				continue
 			} else if !valid {
 				continue

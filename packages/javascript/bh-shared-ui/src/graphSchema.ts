@@ -127,6 +127,7 @@ export enum ActiveDirectoryRelationshipKind {
     GoldenCert = 'GoldenCert',
     EnrollOnBehalfOf = 'EnrollOnBehalfOf',
     OIDGroupLink = 'OIDGroupLink',
+    ExtendedByPolicy = 'ExtendedByPolicy',
     ADCSESC1 = 'ADCSESC1',
     ADCSESC3 = 'ADCSESC3',
     ADCSESC4 = 'ADCSESC4',
@@ -254,6 +255,8 @@ export function ActiveDirectoryRelationshipKindToDisplay(value: ActiveDirectoryR
             return 'EnrollOnBehalfOf';
         case ActiveDirectoryRelationshipKind.OIDGroupLink:
             return 'OIDGroupLink';
+        case ActiveDirectoryRelationshipKind.ExtendedByPolicy:
+            return 'ExtendedByPolicy';
         case ActiveDirectoryRelationshipKind.ADCSESC1:
             return 'ADCSESC1';
         case ActiveDirectoryRelationshipKind.ADCSESC3:

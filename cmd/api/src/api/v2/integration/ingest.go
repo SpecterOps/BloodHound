@@ -18,6 +18,7 @@ package integration
 
 import (
 	"encoding/json"
+	"github.com/specterops/bloodhound/src/model/appcfg"
 	"strings"
 	"time"
 
@@ -41,6 +42,10 @@ func ingestPayload(t test.Controller, loader fixtures.Loader, fixturePath string
 
 func (s *Context) ToggleFeatureFlag(name string) {
 	require.Nil(s.TestCtrl, s.AdminClient().ToggleFeatureFlag(name))
+}
+
+func (s *Context) GetFeatureFlag(flag string) (appcfg.FeatureFlag, error) {
+	return s.AdminClient().GetFeatureFlag(flag)
 }
 
 func (s *Context) SendZipFileIngest(fixture string) {

@@ -77,7 +77,7 @@ func Version_277_Migration(db graph.Database) error {
 				var dirty = false
 
 				if objectId, err := node.Properties.Get(common.ObjectID.String()).String(); err != nil {
-					log.Errorf("error getting objectid for node %d: %v", node.ID, err)
+					log.Errorf("Error getting objectid for node %d: %v", node.ID, err)
 					continue
 				} else if objectId != strings.ToUpper(objectId) {
 					dirty = true
