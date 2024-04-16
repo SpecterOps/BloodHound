@@ -1004,6 +1004,11 @@ ExtendedByPolicy: types.#Kind & {
 	schema: "active_directory"
 }
 
+ExtendedByPolicy: types.#Kind & {
+	symbol: "ExtendedByPolicy"
+	schema: "active_directory"
+}
+
 ADCSESC1: types.#Kind & {
 	symbol: "ADCSESC1"
 	schema: "active_directory"

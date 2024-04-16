@@ -21,72 +21,41 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"os"
 	"os/exec"
 	"path"
 
-	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/packages/go/stbernard/analyzers/codeclimate"
+	"github.com/specterops/bloodhound/packages/go/stbernard/cmdrunner"
+	"github.com/specterops/bloodhound/packages/go/stbernard/environment"
 	"github.com/specterops/bloodhound/slicesext"
 )
 
-var (
-	ErrNonZeroExit = errors.New("non-zero exit status")
-)
-
-func InstallGolangCiLint(env []string) error {
-	cmd := exec.Command("go", "install", "github.com/golangci/golangci-lint/cmd/golangci-lint@v1.55.2")
-	cmd.Env = env
-	if log.GlobalAccepts(log.LevelDebug) {
-		cmd.Stdout = os.Stderr
-		cmd.Stderr = os.Stderr
-	}
-
-	log.Infof("Running golangci-lint install")
-
-	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("install golanci-lint: %w", err)
-	} else {
-		log.Infof("Successfully installed golangci-lint")
-		return nil
-	}
-
-}
-
-func Run(cwd string, modPaths []string, env []string) ([]codeclimate.Entry, error) {
+// Run golangci-lint for all module paths passed to it
+//
+// This is a single runner that accepts the paths for all passed modules, rather than separate runs for each path
+func Run(cwd string, modPaths []string, env environment.Environment) ([]codeclimate.Entry, error) {
 	var (
 		result []codeclimate.Entry
-		args   = []string{"run", "--out-format", "code-climate", "--config", ".golangci.json", "--"}
 		outb   bytes.Buffer
-		errb   bytes.Buffer
+
+		command        = "golangci-lint"
+		args           = []string{"run", "--out-format", "code-climate", "--config", ".golangci.json", "--"}
+		redirectStdout = func(c *exec.Cmd) { c.Stdout = &outb }
 	)
 
 	args = append(args, slicesext.Map(modPaths, func(modPath string) string {
 		return path.Join(modPath, "...")
 	})...)
 
-	cmd := exec.Command("golangci-lint")
-	cmd.Env = env
-	cmd.Dir = cwd
-	cmd.Stderr = &errb
-	cmd.Stdout = &outb
-	cmd.Args = append(cmd.Args, args...)
-
-	log.Infof("Running golangci-lint")
-
-	err := cmd.Run()
-	if _, ok := err.(*exec.ExitError); ok {
-		err = ErrNonZeroExit
-	} else if err != nil {
-		return result, fmt.Errorf("unexpected failure: %w", err)
+	cmdErr := cmdrunner.Run(command, args, cwd, env, redirectStdout)
+	// If the command has a non-zero exit, we're going to return it up the stack, but we want to attempt to process the output anyway
+	if cmdErr != nil && !errors.Is(cmdErr, cmdrunner.ErrNonZeroExit) {
+		return result, fmt.Errorf("unexpected run error: %w", cmdErr)
 	}
-
-	log.Infof("Completed golangci-lint")
 
 	if err := json.NewDecoder(&outb).Decode(&result); err != nil {
-		log.Errorf("Failed to get valid output from golangci-lint. Error output: %s", errb)
-		return result, fmt.Errorf("failed to decode output: %w", err)
+		return result, fmt.Errorf("golangci-lint: decoding output: %w", err)
 	}
 
-	return result, err
+	return result, cmdErr
 }

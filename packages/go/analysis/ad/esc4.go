@@ -39,17 +39,17 @@ func PostADCSESC4(ctx context.Context, tx graph.Transaction, outC chan<- analysi
 	// 2. iterate certtemplates that have an outbound `PublishedTo` edge to eca
 	for _, certTemplate := range cache.PublishedTemplateCache[enterpriseCA.ID] {
 		if principalsWithGenericWrite, err := FetchPrincipalsWithGenericWriteOnCertTemplate(tx, certTemplate); err != nil {
-			log.Warnf("error fetching principals with %s on cert template: %v", ad.GenericWrite, err)
+			log.Warnf("Error fetching principals with %s on cert template: %v", ad.GenericWrite, err)
 		} else if principalsWithEnrollOrAllExtendedRights, err := FetchPrincipalsWithEnrollOrAllExtendedRightsOnCertTemplate(tx, certTemplate); err != nil {
-			log.Warnf("error fetching principals with %s or %s on cert template: %v", ad.Enroll, ad.AllExtendedRights, err)
+			log.Warnf("Error fetching principals with %s or %s on cert template: %v", ad.Enroll, ad.AllExtendedRights, err)
 		} else if principalsWithPKINameFlag, err := FetchPrincipalsWithWritePKINameFlagOnCertTemplate(tx, certTemplate); err != nil {
-			log.Warnf("error fetching principals with %s on cert template: %v", ad.WritePKINameFlag, err)
+			log.Warnf("Error fetching principals with %s on cert template: %v", ad.WritePKINameFlag, err)
 		} else if principalsWithPKIEnrollmentFlag, err := FetchPrincipalsWithWritePKIEnrollmentFlagOnCertTemplate(tx, certTemplate); err != nil {
-			log.Warnf("error fetching principals with %s on cert template: %v", ad.WritePKIEnrollmentFlag, err)
+			log.Warnf("Error fetching principals with %s on cert template: %v", ad.WritePKIEnrollmentFlag, err)
 		} else if enrolleeSuppliesSubject, err := certTemplate.Properties.Get(string(ad.EnrolleeSuppliesSubject)).Bool(); err != nil {
-			log.Warnf("error fetching %s property on cert template: %v", ad.EnrolleeSuppliesSubject, err)
+			log.Warnf("Error fetching %s property on cert template: %v", ad.EnrolleeSuppliesSubject, err)
 		} else if requiresManagerApproval, err := certTemplate.Properties.Get(string(ad.RequiresManagerApproval)).Bool(); err != nil {
-			log.Warnf("error fetching %s property on cert template: %v", ad.RequiresManagerApproval, err)
+			log.Warnf("Error fetching %s property on cert template: %v", ad.RequiresManagerApproval, err)
 		} else {
 
 			// 2a. principals that control the cert template
@@ -72,7 +72,7 @@ func PostADCSESC4(ctx context.Context, tx graph.Transaction, outC chan<- analysi
 
 			// 2c. kick out early if cert template does meet conditions for ESC4
 			if valid, err := isCertTemplateValidForESC4(certTemplate); err != nil {
-				log.Warnf("error validating cert template %d: %v", certTemplate.ID, err)
+				log.Warnf("Error validating cert template %d: %v", certTemplate.ID, err)
 				continue
 			} else if !valid {
 				continue

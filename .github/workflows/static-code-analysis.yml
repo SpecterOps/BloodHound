@@ -22,29 +22,32 @@ on:
   pull_request:
     types: [opened, synchronize]
 
-
 jobs:
   run-analysis:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout source code for this repository
-      uses: actions/checkout@v3
+      - name: Checkout source code for this repository
+        uses: actions/checkout@v3
 
-    - name: Install Go
-      uses: actions/setup-go@v4
-      with:
-        go-version: '^1.21.0'
+      - name: Install Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: "^1.21.0"
 
-    - name: Install Node
-      uses: actions/setup-node@v4
-      with:
-        node-version: 20
+      - name: Install Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
 
-    - name: Install Yarn
-      run: |
-        npm install --global yarn
+      - name: Install Yarn
+        run: |
+          npm install --global yarn
 
-    - name: Run Analysis
-      run: |
-        go run github.com/specterops/bloodhound/packages/go/stbernard analysis
+      - name: Install Deps
+        run: |
+          go run github.com/specterops/bloodhound/packages/go/stbernard deps
+
+      - name: Run Analysis
+        run: |
+          go run github.com/specterops/bloodhound/packages/go/stbernard analysis
