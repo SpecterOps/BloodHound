@@ -20,7 +20,6 @@ import (
 	"context"
 	"fmt"
 	"slices"
-	"strings"
 
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/dawgs/ops"
@@ -240,10 +239,10 @@ func GetLAPSSyncers(tx graph.Transaction, domain *graph.Node) ([]*graph.Node, er
 	}
 }
 
-func GetDCSyncers(tx graph.Transaction, domain *graph.Node, filterTierZero bool) ([]*graph.Node, error) {
+func GetDCSyncers(tx graph.Transaction, domain *graph.Node) ([]*graph.Node, error) {
 	var (
-		getChangesQuery    = fromEntityToEntityWithRelationshipKind(tx, domain, ad.GetChanges, filterTierZero)
-		getChangesAllQuery = fromEntityToEntityWithRelationshipKind(tx, domain, ad.GetChangesAll, filterTierZero)
+		getChangesQuery    = fromEntityToEntityWithRelationshipKind(tx, domain, ad.GetChanges, false)
+		getChangesAllQuery = fromEntityToEntityWithRelationshipKind(tx, domain, ad.GetChangesAll, false)
 	)
 
 	if getChangesNodes, err := ops.FetchStartNodes(getChangesQuery); err != nil {
@@ -258,33 +257,6 @@ func GetDCSyncers(tx graph.Transaction, domain *graph.Node, filterTierZero bool)
 		// Collect and filter the bitmap
 		getChangesNodes.AddSet(getChangesNodeMembers)
 		getChangesAllNodes.AddSet(getChangesAllNodeMembers)
-
-		if filterTierZero {
-			//Do a second pass to filter out T0 nodes that might have ended up through group membership
-			for _, node := range getChangesNodes {
-				if systemTags, err := node.Properties.Get(common.SystemTags.String()).String(); err != nil {
-					if graph.IsErrPropertyNotFound(err) {
-						continue
-					}
-
-					return nil, err
-				} else if strings.Contains(systemTags, ad.AdminTierZero) {
-					getChangesNodes.Remove(node.ID)
-				}
-			}
-
-			for _, node := range getChangesAllNodes {
-				if systemTags, err := node.Properties.Get(common.SystemTags.String()).String(); err != nil {
-					if graph.IsErrPropertyNotFound(err) {
-						continue
-					}
-
-					return nil, err
-				} else if strings.Contains(systemTags, ad.AdminTierZero) {
-					getChangesNodes.Remove(node.ID)
-				}
-			}
-		}
 
 		dcSyncerBitmap := graph.NodeSetToBitmap(getChangesNodes)
 		dcSyncerBitmap.And(graph.NodeSetToBitmap(getChangesAllNodes))

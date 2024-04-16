@@ -21,9 +21,10 @@ package ad_test
 
 import (
 	"context"
+	"testing"
+
 	schema "github.com/specterops/bloodhound/graphschema"
 	"github.com/specterops/bloodhound/src/test"
-	"testing"
 
 	"github.com/specterops/bloodhound/analysis"
 	adAnalysis "github.com/specterops/bloodhound/analysis/ad"
@@ -842,12 +843,11 @@ func TestCreateDomainTrustListDelegate(t *testing.T) {
 func TestGetDCSyncers(t *testing.T) {
 	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
 
-	// XXX: Why does this need a WriteTransaction to run?
-	testContext.WriteTransactionTestWithSetup(func(harness *integration.HarnessDetails) error {
+	testContext.ReadTransactionTestWithSetup(func(harness *integration.HarnessDetails) error {
 		harness.TrustDCSync.Setup(testContext)
 		return nil
 	}, func(harness integration.HarnessDetails, tx graph.Transaction) {
-		dcSyncers, err := analysis.GetDCSyncers(tx, harness.TrustDCSync.DomainA, true)
+		dcSyncers, err := analysis.GetDCSyncers(tx, harness.TrustDCSync.DomainA)
 
 		test.RequireNilErr(t, err)
 		require.Equal(t, 2, len(dcSyncers))
@@ -858,18 +858,19 @@ func TestGetDCSyncers(t *testing.T) {
 		require.Contains(t, ids, harness.TrustDCSync.UserA.ID)
 		require.Contains(t, ids, harness.TrustDCSync.UserB.ID)
 
+		// Verify T0 users are included
 		harness.TrustDCSync.UserA.Properties.Set(common.SystemTags.String(), ad.AdminTierZero)
 		tx.UpdateNode(harness.TrustDCSync.UserA)
 
-		dcSyncers, err = analysis.GetDCSyncers(tx, harness.TrustDCSync.DomainA, true)
+		dcSyncers, err = analysis.GetDCSyncers(tx, harness.TrustDCSync.DomainA)
 
 		test.RequireNilErr(t, err)
-		require.Equal(t, 1, len(dcSyncers))
+		require.Equal(t, 2, len(dcSyncers))
 		ids = make([]graph.ID, len(dcSyncers))
 		for _, node := range dcSyncers {
 			ids = append(ids, node.ID)
 		}
-		require.NotContains(t, ids, harness.TrustDCSync.UserA.ID)
+		require.Contains(t, ids, harness.TrustDCSync.UserA.ID)
 		require.Contains(t, ids, harness.TrustDCSync.UserB.ID)
 	})
 }
