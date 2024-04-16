@@ -18,6 +18,9 @@ package ad
 
 import (
 	"context"
+	"github.com/specterops/bloodhound/dawgs/cardinality"
+	"github.com/specterops/bloodhound/dawgs/traversal"
+	"sync"
 
 	"github.com/specterops/bloodhound/analysis"
 	"github.com/specterops/bloodhound/analysis/impact"
@@ -111,4 +114,230 @@ func getCertTemplateGroupLinks(ct *graph.Node, tx graph.Transaction) (graph.Node
 			return groupNodes, nil
 		}
 	}
+}
+func GetADCSESC13EdgeComposition(ctx context.Context, db graph.Database, edge *graph.Relationship) (graph.PathSet, error) {
+	/*
+		MATCH (n {objectid:'<principal sid>'})-[:ADCSESC13]->(g:Group {objectid:'<group sid>'})
+		MATCH p1 = (n)-[:MemberOf*0..]->()-[:Enroll|GenericAll|AllExtendedRights]->(ct:CertTemplate)-[:PublishedTo]->(ca)-[:IssuedSignedBy|EnterpriseCAFor|RootCAFor*1..]->(d)
+		WHERE ct.authenticationenabled = true
+		  AND (ct.authorizedsignatures = 0 OR ct.schemaversion = 1)
+		  AND ct.requiresmanagerapproval = False
+		  AND (
+		    n:Group
+		    OR n:Computer
+		    OR (
+		      n:User
+		      AND ct.subjectaltrequiredns = false
+		      AND ct.subjectaltrequiredomaindns = false
+		    )
+		  )
+		MATCH p2 = (n)-[:MemberOf*0..]->()-[:Enroll]->(ca)-[:TrustedForNTAuth]->(nt)-[:NTAuthStoreFor]->(d)
+		MATCH p3 = (ct)-[:ExtendedByPolicy]->(:IssuancePolicy)-[:OIDGroupLink]->(g)
+		MATCH p4 = (d)-[:Contains|TrustedBy*..]->(g)
+		RETURN p1,p2,p3,p4
+	*/
+
+	var (
+		startNode *graph.Node
+		endNode   *graph.Node
+
+		traversalInst          = traversal.New(db, analysis.MaximumDatabaseParallelWorkers)
+		paths                  = graph.PathSet{}
+		path1CandidateSegments = map[graph.ID][]*graph.PathSegment{}
+		path1EnterpriseCAs     = cardinality.NewBitmap32()
+		path1DomainNodes       = cardinality.NewBitmap32()
+		path1CertTemplates     = cardinality.NewBitmap32()
+		path2CandidateSegments = map[graph.ID][]*graph.PathSegment{}
+		path3CandidateSegments = map[graph.ID][]*graph.PathSegment{}
+		path2EnterpriseCAs     = cardinality.NewBitmap32()
+		lock                   = &sync.Mutex{}
+	)
+
+	if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
+		var err error
+		if startNode, err = ops.FetchNode(tx, edge.StartID); err != nil {
+			return err
+		} else if endNode, err = ops.FetchNode(tx, edge.EndID); err != nil {
+			return err
+		} else {
+			return nil
+		}
+	}); err != nil {
+		return nil, err
+	}
+
+	//Manifest P1
+	if err := traversalInst.BreadthFirst(ctx, traversal.Plan{
+		Root: startNode,
+		Driver: adcsESC13Path1Pattern().Do(func(terminal *graph.PathSegment) error {
+			domainNode := terminal.Node
+			var enterpriseCANode *graph.Node
+			terminal.WalkReverse(func(nextSegment *graph.PathSegment) bool {
+				if nextSegment.Node.Kinds.ContainsOneOf(ad.EnterpriseCA) {
+					enterpriseCANode = nextSegment.Node
+				}
+				return true
+			})
+
+			certTemplate := terminal.Search(func(nextSegment *graph.PathSegment) bool {
+				return nextSegment.Node.Kinds.ContainsOneOf(ad.CertTemplate)
+			})
+
+			lock.Lock()
+			path1CandidateSegments[enterpriseCANode.ID] = append(path1CandidateSegments[enterpriseCANode.ID], terminal)
+			path1EnterpriseCAs.Add(enterpriseCANode.ID.Uint32())
+			path1DomainNodes.Add(domainNode.ID.Uint32())
+			path1CertTemplates.Add(certTemplate.ID.Uint32())
+			lock.Unlock()
+			return nil
+		}),
+	}); err != nil {
+		return nil, err
+	}
+
+	if err := traversalInst.BreadthFirst(ctx, traversal.Plan{
+		Root: startNode,
+		Driver: adcsESC13Path2Pattern(cardinality.DuplexToGraphIDs(path1EnterpriseCAs), cardinality.DuplexToGraphIDs(path1DomainNodes)).Do(func(terminal *graph.PathSegment) error {
+			var enterpriseCANode *graph.Node
+			terminal.WalkReverse(func(nextSegment *graph.PathSegment) bool {
+				if nextSegment.Node.Kinds.ContainsOneOf(ad.EnterpriseCA) {
+					enterpriseCANode = nextSegment.Node
+				}
+				return true
+			})
+			lock.Lock()
+			path2CandidateSegments[enterpriseCANode.ID] = append(path2CandidateSegments[enterpriseCANode.ID], terminal)
+			path2EnterpriseCAs.Add(enterpriseCANode.ID.Uint32())
+			lock.Unlock()
+
+			return nil
+		}),
+	}); err != nil {
+		return nil, err
+	}
+
+	if err := traversalInst.BreadthFirst(ctx, traversal.Plan{
+		Root: endNode,
+		Driver: adcsESC13Path3Pattern(cardinality.DuplexToGraphIDs(path1CertTemplates)).Do(func(terminal *graph.PathSegment) error {
+			certTemplate := terminal.Search(func(nextSegment *graph.PathSegment) bool {
+				return nextSegment.Node.Kinds.ContainsOneOf(ad.CertTemplate)
+			})
+
+			lock.Lock()
+			path3CandidateSegments[certTemplate.ID] = append(path3CandidateSegments[certTemplate.ID], terminal)
+			lock.Unlock()
+			return nil
+		}),
+	}); err != nil {
+		return nil, err
+	}
+
+	//And the 2 bitmaps together to ensure that only enterprise CAs thats satisfy both paths are valid
+	path1EnterpriseCAs.And(path2EnterpriseCAs)
+
+	for k, v := range path1CandidateSegments {
+		path2segments := path2CandidateSegments[k]
+		for _, p1 := range v {
+			for _, p2 := range path2segments {
+				//Check if our terminal nodes match (should be the same domain node)
+				if p1.Node.ID != p2.Node.ID {
+					continue
+				}
+
+				certTemplate := p1.Search(func(nextSegment *graph.PathSegment) bool {
+					return nextSegment.Node.Kinds.ContainsOneOf(ad.CertTemplate)
+				})
+
+				if p3segments, ok := path3CandidateSegments[certTemplate.ID]; !ok {
+					continue
+				} else {
+					paths.AddPath(p1.Path())
+					paths.AddPath(p2.Path())
+					for _, p3 := range p3segments {
+						paths.AddPath(p3.Path())
+					}
+				}
+			}
+		}
+	}
+
+	return paths, nil
+}
+
+func adcsESC13Path3Pattern(certTemplates []graph.ID) traversal.PatternContinuation {
+	return traversal.NewPattern().
+		Inbound(
+			query.And(
+				query.Kind(query.Relationship(), ad.OIDGroupLink),
+				query.Kind(query.Start(), ad.IssuancePolicy),
+			),
+		).
+		Inbound(
+			query.And(
+				query.Kind(query.Relationship(), ad.ExtendedByPolicy),
+				query.InIDs(query.Start(), certTemplates...),
+			),
+		)
+}
+
+func adcsESC13Path1Pattern() traversal.PatternContinuation {
+	return traversal.NewPattern().
+		OutboundWithDepth(
+			0, 0,
+			query.And(
+				query.Kind(query.Relationship(), ad.MemberOf),
+				query.Kind(query.End(), ad.Group),
+			),
+		).
+		OutboundWithDepth(
+			1, 1,
+			query.And(
+				query.KindIn(query.Relationship(), ad.Enroll, ad.GenericAll, ad.AllExtendedRights),
+				query.KindIn(query.End(), ad.CertTemplate),
+				query.And(
+					query.Equals(query.EndProperty(ad.AuthenticationEnabled.String()), true),
+					query.Or(
+						query.Equals(query.EndProperty(ad.SchemaVersion.String()), 1),
+						query.And(
+							query.GreaterThan(query.EndProperty(ad.SchemaVersion.String()), 1),
+							query.Equals(query.EndProperty(ad.AuthorizedSignatures.String()), 0),
+						),
+					),
+					query.Equals(query.EndProperty(ad.RequiresManagerApproval.String()), false),
+				),
+			),
+		).OutboundWithDepth(
+		1, 1,
+		query.And(
+			query.KindIn(query.Relationship(), ad.PublishedTo),
+			query.Kind(query.End(), ad.EnterpriseCA),
+		)).
+		Outbound(query.And(
+			query.KindIn(query.Relationship(), ad.IssuedSignedBy, ad.EnterpriseCAFor),
+			query.Kind(query.End(), ad.RootCA),
+		)).
+		Outbound(query.And(
+			query.KindIn(query.Relationship(), ad.RootCAFor),
+			query.KindIn(query.End(), ad.Domain),
+		))
+}
+
+func adcsESC13Path2Pattern(caNodes, domains []graph.ID) traversal.PatternContinuation {
+	return traversal.NewPattern().
+		OutboundWithDepth(0, 0, query.And(
+			query.Kind(query.Relationship(), ad.MemberOf),
+			query.Kind(query.End(), ad.Group),
+		)).
+		Outbound(query.And(
+			query.Kind(query.Relationship(), ad.Enroll),
+			query.InIDs(query.End(), caNodes...),
+		)).
+		Outbound(query.And(
+			query.KindIn(query.Relationship(), ad.TrustedForNTAuth),
+			query.Kind(query.End(), ad.NTAuthStore),
+		)).
+		Outbound(query.And(
+			query.KindIn(query.Relationship(), ad.NTAuthStoreFor),
+			query.InIDs(query.End(), domains...),
+		))
 }
