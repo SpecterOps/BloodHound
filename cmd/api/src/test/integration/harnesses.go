@@ -6414,8 +6414,7 @@ func (s *ESC13Harness1) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.NewRelationship(s.CertTemplate3, s.IssuancePolicy, ad.ExtendedByPolicy)
 	graphTestContext.NewRelationship(s.CertTemplate4, s.IssuancePolicy, ad.ExtendedByPolicy)
 	graphTestContext.NewRelationship(s.CertTemplate5, s.IssuancePolicy, ad.ExtendedByPolicy)
-	graphTestContext.NewRelationship(s.Group2, s.Group6, ad.ADCSESC13)
-	graphTestContext.NewRelationship(s.Group1, s.Group6, ad.ADCSESC13)
+	graphTestContext.NewRelationship(s.Domain, s.Group6, ad.Contains)
 }
 
 type ESC13Harness2 struct {
@@ -6438,6 +6437,7 @@ type ESC13Harness2 struct {
 	User1          *graph.Node
 	User2          *graph.Node
 	User3          *graph.Node
+	OU             *graph.Node
 }
 
 func (s *ESC13Harness2) Setup(graphTestContext *GraphTestContext) {
@@ -6503,6 +6503,7 @@ func (s *ESC13Harness2) Setup(graphTestContext *GraphTestContext) {
 	s.User1 = graphTestContext.NewActiveDirectoryUser("User1", domainSid)
 	s.User2 = graphTestContext.NewActiveDirectoryUser("User2", domainSid)
 	s.User3 = graphTestContext.NewActiveDirectoryUser("User3", domainSid)
+	s.OU = graphTestContext.NewActiveDirectoryOU("OU", domainSid, false)
 	graphTestContext.NewRelationship(s.RootCA, s.Domain, ad.RootCAFor)
 	graphTestContext.NewRelationship(s.EnterpriseCA, s.RootCA, ad.IssuedSignedBy)
 	graphTestContext.NewRelationship(s.NTAuthStore, s.Domain, ad.NTAuthStoreFor)
@@ -6533,6 +6534,8 @@ func (s *ESC13Harness2) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.NewRelationship(s.CertTemplate2, s.IssuancePolicy, ad.ExtendedByPolicy)
 	graphTestContext.NewRelationship(s.CertTemplate3, s.IssuancePolicy, ad.ExtendedByPolicy)
 	graphTestContext.NewRelationship(s.IssuancePolicy, s.Group4, ad.OIDGroupLink)
+	graphTestContext.NewRelationship(s.Domain, s.OU, ad.Contains)
+	graphTestContext.NewRelationship(s.OU, s.Group4, ad.Contains)
 }
 
 type ESC13HarnessECA struct {
@@ -6705,6 +6708,11 @@ func (s *ESC13HarnessECA) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.NewRelationship(s.CertTemplate3, s.IssuancePolicy, ad.ExtendedByPolicy)
 	graphTestContext.NewRelationship(s.CertTemplate4, s.IssuancePolicy, ad.ExtendedByPolicy)
 	graphTestContext.NewRelationship(s.CertTemplate5, s.IssuancePolicy, ad.ExtendedByPolicy)
+	graphTestContext.NewRelationship(s.Domain1, s.Group11, ad.Contains)
+	graphTestContext.NewRelationship(s.Domain2, s.Group11, ad.Contains)
+	graphTestContext.NewRelationship(s.Domain3, s.Group11, ad.Contains)
+	graphTestContext.NewRelationship(s.Domain4, s.Group11, ad.Contains)
+	graphTestContext.NewRelationship(s.Domain5, s.Group11, ad.Contains)
 }
 
 type AZAddSecretHarness struct {

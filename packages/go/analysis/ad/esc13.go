@@ -32,7 +32,7 @@ import (
 	"github.com/specterops/bloodhound/log"
 )
 
-func PostADCSESC13(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob, groupExpansions impact.PathAggregator, eca *graph.Node, cache ADCSCache) error {
+func PostADCSESC13(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob, groupExpansions impact.PathAggregator, eca, domain *graph.Node, cache ADCSCache) error {
 	if publishedCertTemplates, ok := cache.PublishedTemplateCache[eca.ID]; !ok {
 		return nil
 	} else {
@@ -51,21 +51,58 @@ func PostADCSESC13(ctx context.Context, tx graph.Transaction, outC chan<- analys
 					log.Warnf("Error filtering users from victims for esc13: %v", err)
 					continue
 				} else {
-					for _, groupID := range groupNodes.IDs() {
-						filtered.Each(func(value uint32) bool {
-							channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
-								FromID: graph.ID(value),
-								ToID:   groupID,
-								Kind:   ad.ADCSESC13,
+					for _, group := range groupNodes.Slice() {
+						if groupIsContainedOrTrusted(tx, group, domain) {
+							filtered.Each(func(value uint32) bool {
+								channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
+									FromID: graph.ID(value),
+									ToID:   group.ID,
+									Kind:   ad.ADCSESC13,
+								})
+								return true
 							})
-							return true
-						})
+						}
 					}
 				}
 			}
 		}
 
 		return nil
+	}
+}
+
+func groupIsContainedOrTrusted(tx graph.Transaction, group, domain *graph.Node) bool {
+	var (
+		matchFound = false
+	)
+	if err := ops.Traversal(tx, ops.TraversalPlan{
+		Root:      group,
+		Direction: graph.DirectionInbound,
+		BranchQuery: func() graph.Criteria {
+			return query.KindIn(query.Relationship(), ad.Contains, ad.TrustedBy)
+		},
+		PathFilter: func(ctx *ops.TraversalContext, segment *graph.PathSegment) bool {
+			return segment.Node.Kinds.ContainsOneOf(ad.Domain)
+		},
+	}, func(ctx *ops.TraversalContext, segment *graph.PathSegment) error {
+		segment.WalkReverse(func(nextSegment *graph.PathSegment) bool {
+			if nextSegment.Node.ID == domain.ID {
+				matchFound = true
+				return false
+			}
+
+			if !nextSegment.Node.Kinds.ContainsOneOf(ad.Domain) {
+				return false
+			}
+
+			return true
+		})
+
+		return nil
+	}); err != nil {
+		return false
+	} else {
+		return matchFound
 	}
 }
 
@@ -149,6 +186,7 @@ func GetADCSESC13EdgeComposition(ctx context.Context, db graph.Database, edge *g
 		path1CertTemplates     = cardinality.NewBitmap32()
 		path2CandidateSegments = map[graph.ID][]*graph.PathSegment{}
 		path3CandidateSegments = map[graph.ID][]*graph.PathSegment{}
+		path4CandidateSegments = map[graph.ID][]*graph.PathSegment{}
 		path2EnterpriseCAs     = cardinality.NewBitmap32()
 		lock                   = &sync.Mutex{}
 	)
@@ -232,6 +270,22 @@ func GetADCSESC13EdgeComposition(ctx context.Context, db graph.Database, edge *g
 		return nil, err
 	}
 
+	if err := traversalInst.BreadthFirst(ctx, traversal.Plan{
+		Root: endNode,
+		Driver: adcsESC13Path4Pattern().Do(func(terminal *graph.PathSegment) error {
+			if terminal.Node.Kinds.ContainsOneOf(ad.Domain) {
+				lock.Lock()
+				path4CandidateSegments[terminal.Node.ID] = append(path4CandidateSegments[terminal.Node.ID], terminal)
+				lock.Unlock()
+			}
+
+			return nil
+
+		}),
+	}); err != nil {
+		return nil, err
+	}
+
 	//And the 2 bitmaps together to ensure that only enterprise CAs thats satisfy both paths are valid
 	path1EnterpriseCAs.And(path2EnterpriseCAs)
 
@@ -250,11 +304,16 @@ func GetADCSESC13EdgeComposition(ctx context.Context, db graph.Database, edge *g
 
 				if p3segments, ok := path3CandidateSegments[certTemplate.ID]; !ok {
 					continue
+				} else if p4segments, ok := path4CandidateSegments[p1.Node.ID]; !ok {
+					continue
 				} else {
 					paths.AddPath(p1.Path())
 					paths.AddPath(p2.Path())
 					for _, p3 := range p3segments {
 						paths.AddPath(p3.Path())
+					}
+					for _, p4 := range p4segments {
+						paths.AddPath(p4.Path())
 					}
 				}
 			}
@@ -262,6 +321,12 @@ func GetADCSESC13EdgeComposition(ctx context.Context, db graph.Database, edge *g
 	}
 
 	return paths, nil
+}
+
+func adcsESC13Path4Pattern() traversal.PatternContinuation {
+	return traversal.NewPattern().
+		Inbound(query.Kind(query.Relationship(), ad.Contains)).
+		InboundWithDepth(0, 0, query.Kind(query.Relationship(), ad.TrustedBy))
 }
 
 func adcsESC13Path3Pattern(certTemplates []graph.ID) traversal.PatternContinuation {

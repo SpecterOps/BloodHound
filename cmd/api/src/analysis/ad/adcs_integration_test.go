@@ -22,10 +22,9 @@ package ad_test
 import (
 	"context"
 	"github.com/specterops/bloodhound/analysis"
+	ad2 "github.com/specterops/bloodhound/analysis/ad"
 	"github.com/specterops/bloodhound/analysis/impact"
 	"github.com/specterops/bloodhound/graphschema"
-
-	ad2 "github.com/specterops/bloodhound/analysis/ad"
 
 	"github.com/specterops/bloodhound/dawgs/ops"
 	"github.com/specterops/bloodhound/dawgs/query"
@@ -2461,7 +2460,7 @@ func TestADCSESC13(t *testing.T) {
 					innerEnterpriseCA := enterpriseCA
 
 					operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
-						if err := ad2.PostADCSESC13(ctx, tx, outC, groupExpansions, innerEnterpriseCA, cache); err != nil {
+						if err := ad2.PostADCSESC13(ctx, tx, outC, groupExpansions, innerEnterpriseCA, innerDomain, cache); err != nil {
 							t.Logf("failed post processing for %s: %v", ad.ADCSESC13.String(), err)
 						} else {
 							return nil
@@ -2521,7 +2520,7 @@ func TestADCSESC13(t *testing.T) {
 					innerEnterpriseCA := enterpriseCA
 
 					operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
-						if err := ad2.PostADCSESC13(ctx, tx, outC, groupExpansions, innerEnterpriseCA, cache); err != nil {
+						if err := ad2.PostADCSESC13(ctx, tx, outC, groupExpansions, innerEnterpriseCA, innerDomain, cache); err != nil {
 							t.Logf("failed post processing for %s: %v", ad.ADCSESC13.String(), err)
 						} else {
 							return nil
@@ -2586,7 +2585,7 @@ func TestADCSESC13(t *testing.T) {
 					innerEnterpriseCA := enterpriseCA
 
 					operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
-						if err := ad2.PostADCSESC13(ctx, tx, outC, groupExpansions, innerEnterpriseCA, cache); err != nil {
+						if err := ad2.PostADCSESC13(ctx, tx, outC, groupExpansions, innerEnterpriseCA, innerDomain, cache); err != nil {
 							t.Logf("failed post processing for %s: %v", ad.ADCSESC13.String(), err)
 						} else {
 							return nil
