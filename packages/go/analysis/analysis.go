@@ -20,7 +20,6 @@ import (
 	"context"
 	"fmt"
 	"slices"
-	"strings"
 
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/dawgs/ops"
@@ -205,8 +204,8 @@ func ExpandGroupMembership(tx graph.Transaction, candidates graph.NodeSet) (grap
 
 func GetLAPSSyncers(tx graph.Transaction, domain *graph.Node) ([]*graph.Node, error) {
 	var (
-		getChangesQuery         = fromEntityToEntityWithRelationshipKind(tx, domain, ad.GetChanges, false)
-		getChangesFilteredQuery = fromEntityToEntityWithRelationshipKind(tx, domain, ad.GetChangesInFilteredSet, false)
+		getChangesQuery         = fromEntityToEntityWithRelationshipKind(tx, domain, ad.GetChanges)
+		getChangesFilteredQuery = fromEntityToEntityWithRelationshipKind(tx, domain, ad.GetChangesInFilteredSet)
 	)
 
 	if getChangesNodes, err := ops.FetchStartNodes(getChangesQuery); err != nil {
@@ -240,10 +239,10 @@ func GetLAPSSyncers(tx graph.Transaction, domain *graph.Node) ([]*graph.Node, er
 	}
 }
 
-func GetDCSyncers(tx graph.Transaction, domain *graph.Node, filterTierZero bool) ([]*graph.Node, error) {
+func GetDCSyncers(tx graph.Transaction, domain *graph.Node) ([]*graph.Node, error) {
 	var (
-		getChangesQuery    = fromEntityToEntityWithRelationshipKind(tx, domain, ad.GetChanges, filterTierZero)
-		getChangesAllQuery = fromEntityToEntityWithRelationshipKind(tx, domain, ad.GetChangesAll, filterTierZero)
+		getChangesQuery    = fromEntityToEntityWithRelationshipKind(tx, domain, ad.GetChanges)
+		getChangesAllQuery = fromEntityToEntityWithRelationshipKind(tx, domain, ad.GetChangesAll)
 	)
 
 	if getChangesNodes, err := ops.FetchStartNodes(getChangesQuery); err != nil {
@@ -258,33 +257,6 @@ func GetDCSyncers(tx graph.Transaction, domain *graph.Node, filterTierZero bool)
 		// Collect and filter the bitmap
 		getChangesNodes.AddSet(getChangesNodeMembers)
 		getChangesAllNodes.AddSet(getChangesAllNodeMembers)
-
-		if filterTierZero {
-			//Do a second pass to filter out T0 nodes that might have ended up through group membership
-			for _, node := range getChangesNodes {
-				if systemTags, err := node.Properties.Get(common.SystemTags.String()).String(); err != nil {
-					if graph.IsErrPropertyNotFound(err) {
-						continue
-					}
-
-					return nil, err
-				} else if strings.Contains(systemTags, ad.AdminTierZero) {
-					getChangesNodes.Remove(node.ID)
-				}
-			}
-
-			for _, node := range getChangesAllNodes {
-				if systemTags, err := node.Properties.Get(common.SystemTags.String()).String(); err != nil {
-					if graph.IsErrPropertyNotFound(err) {
-						continue
-					}
-
-					return nil, err
-				} else if strings.Contains(systemTags, ad.AdminTierZero) {
-					getChangesNodes.Remove(node.ID)
-				}
-			}
-		}
 
 		dcSyncerBitmap := graph.NodeSetToBitmap(getChangesNodes)
 		dcSyncerBitmap.And(graph.NodeSetToBitmap(getChangesAllNodes))
@@ -304,18 +276,12 @@ func GetDCSyncers(tx graph.Transaction, domain *graph.Node, filterTierZero bool)
 	}
 }
 
-func fromEntityToEntityWithRelationshipKind(tx graph.Transaction, target *graph.Node, relKind graph.Kind, filterTierZero bool) graph.RelationshipQuery {
+func fromEntityToEntityWithRelationshipKind(tx graph.Transaction, target *graph.Node, relKind graph.Kind) graph.RelationshipQuery {
 	return tx.Relationships().Filterf(func() graph.Criteria {
 		filters := []graph.Criteria{
 			query.Kind(query.Start(), ad.Entity),
 			query.Kind(query.Relationship(), relKind),
 			query.Equals(query.EndID(), target.ID),
-		}
-
-		if filterTierZero {
-			filters = append(filters, query.Not(
-				query.StringContains(query.StartProperty(common.SystemTags.String()), ad.AdminTierZero),
-			))
 		}
 
 		return query.And(filters...)
