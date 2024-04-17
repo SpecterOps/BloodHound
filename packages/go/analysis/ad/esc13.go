@@ -233,6 +233,7 @@ func GetADCSESC13EdgeComposition(ctx context.Context, db graph.Database, edge *g
 		return nil, err
 	}
 
+	//Manifest P2 and key it to the enterprise CA nodes to cross product
 	if err := traversalInst.BreadthFirst(ctx, traversal.Plan{
 		Root: startNode,
 		Driver: adcsESC13Path2Pattern(cardinality.DuplexToGraphIDs(path1EnterpriseCAs), cardinality.DuplexToGraphIDs(path1DomainNodes)).Do(func(terminal *graph.PathSegment) error {
@@ -254,6 +255,7 @@ func GetADCSESC13EdgeComposition(ctx context.Context, db graph.Database, edge *g
 		return nil, err
 	}
 
+	//Manifest P3 keyed to cert template nodes
 	if err := traversalInst.BreadthFirst(ctx, traversal.Plan{
 		Root: endNode,
 		Driver: adcsESC13Path3Pattern(cardinality.DuplexToGraphIDs(path1CertTemplates)).Do(func(terminal *graph.PathSegment) error {
@@ -270,6 +272,7 @@ func GetADCSESC13EdgeComposition(ctx context.Context, db graph.Database, edge *g
 		return nil, err
 	}
 
+	//Manifest P4, keyed to the domain nodes
 	if err := traversalInst.BreadthFirst(ctx, traversal.Plan{
 		Root: endNode,
 		Driver: adcsESC13Path4Pattern().Do(func(terminal *graph.PathSegment) error {
@@ -298,6 +301,7 @@ func GetADCSESC13EdgeComposition(ctx context.Context, db graph.Database, edge *g
 					continue
 				}
 
+				//Find the cert template in path 1 and use that to find the correct p3 segment
 				certTemplate := p1.Search(func(nextSegment *graph.PathSegment) bool {
 					return nextSegment.Node.Kinds.ContainsOneOf(ad.CertTemplate)
 				})
@@ -305,8 +309,10 @@ func GetADCSESC13EdgeComposition(ctx context.Context, db graph.Database, edge *g
 				if p3segments, ok := path3CandidateSegments[certTemplate.ID]; !ok {
 					continue
 				} else if p4segments, ok := path4CandidateSegments[p1.Node.ID]; !ok {
+					//If we dont have a domain contain relationship, then this is not a valid path
 					continue
 				} else {
+					//Merge all our paths together
 					paths.AddPath(p1.Path())
 					paths.AddPath(p2.Path())
 					for _, p3 := range p3segments {
