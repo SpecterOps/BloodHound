@@ -47,7 +47,7 @@ build *FLAGS:
 
 # prepare for code review (requires jq)
 prepare-for-codereview:
-  @rm -r tmp
+  @(test -e tmp && rm -r tmp) || echo "skip rm tmp"
   @mkdir -p tmp
   -@just _prep-steps
   @ echo "For more details, see output files in {{absolute_path('./tmp')}}"
