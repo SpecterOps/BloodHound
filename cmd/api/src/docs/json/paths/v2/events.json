@@ -67,6 +67,27 @@
                 },
                 {
                     "type": "string",
+                    "description": "Filter results by column value. Valid filter predicates are eq, neq",
+                    "name": "cert_services_collection",
+                    "in": "query",
+                    "required": false
+                },
+                {
+                    "type": "string",
+                    "description": "Filter results by column value. Valid filter predicates are eq, neq",
+                    "name": "ca_registry_collection",
+                    "in": "query",
+                    "required": false
+                },
+                {
+                    "type": "string",
+                    "description": "Filter results by column value. Valid filter predicates are eq, neq",
+                    "name": "dc_registry_collection",
+                    "in": "query",
+                    "required": false
+                },
+                {
+                    "type": "string",
                     "description": "Filter results by column value. Valid filter predicates are eq, neq, gt, gte, lt, lte",
                     "name": "next_scheduled_at",
                     "in": "query",
@@ -231,6 +252,27 @@
                     "type": "string",
                     "description": "Filter results by column value. Valid filter predicates are eq, neq",
                     "name": "ad_structure_collection",
+                    "in": "query",
+                    "required": false
+                },
+                {
+                    "type": "string",
+                    "description": "Filter results by column value. Valid filter predicates are eq, neq",
+                    "name": "cert_services_collection",
+                    "in": "query",
+                    "required": false
+                },
+                {
+                    "type": "string",
+                    "description": "Filter results by column value. Valid filter predicates are eq, neq",
+                    "name": "ca_registry_collection",
+                    "in": "query",
+                    "required": false
+                },
+                {
+                    "type": "string",
+                    "description": "Filter results by column value. Valid filter predicates are eq, neq",
+                    "name": "dc_registry_collection",
                     "in": "query",
                     "required": false
                 },
