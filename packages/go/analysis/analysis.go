@@ -204,8 +204,8 @@ func ExpandGroupMembership(tx graph.Transaction, candidates graph.NodeSet) (grap
 
 func GetLAPSSyncers(tx graph.Transaction, domain *graph.Node) ([]*graph.Node, error) {
 	var (
-		getChangesQuery         = fromEntityToEntityWithRelationshipKind(tx, domain, ad.GetChanges, false)
-		getChangesFilteredQuery = fromEntityToEntityWithRelationshipKind(tx, domain, ad.GetChangesInFilteredSet, false)
+		getChangesQuery         = fromEntityToEntityWithRelationshipKind(tx, domain, ad.GetChanges)
+		getChangesFilteredQuery = fromEntityToEntityWithRelationshipKind(tx, domain, ad.GetChangesInFilteredSet)
 	)
 
 	if getChangesNodes, err := ops.FetchStartNodes(getChangesQuery); err != nil {
@@ -241,8 +241,8 @@ func GetLAPSSyncers(tx graph.Transaction, domain *graph.Node) ([]*graph.Node, er
 
 func GetDCSyncers(tx graph.Transaction, domain *graph.Node) ([]*graph.Node, error) {
 	var (
-		getChangesQuery    = fromEntityToEntityWithRelationshipKind(tx, domain, ad.GetChanges, false)
-		getChangesAllQuery = fromEntityToEntityWithRelationshipKind(tx, domain, ad.GetChangesAll, false)
+		getChangesQuery    = fromEntityToEntityWithRelationshipKind(tx, domain, ad.GetChanges)
+		getChangesAllQuery = fromEntityToEntityWithRelationshipKind(tx, domain, ad.GetChangesAll)
 	)
 
 	if getChangesNodes, err := ops.FetchStartNodes(getChangesQuery); err != nil {
@@ -276,18 +276,12 @@ func GetDCSyncers(tx graph.Transaction, domain *graph.Node) ([]*graph.Node, erro
 	}
 }
 
-func fromEntityToEntityWithRelationshipKind(tx graph.Transaction, target *graph.Node, relKind graph.Kind, filterTierZero bool) graph.RelationshipQuery {
+func fromEntityToEntityWithRelationshipKind(tx graph.Transaction, target *graph.Node, relKind graph.Kind) graph.RelationshipQuery {
 	return tx.Relationships().Filterf(func() graph.Criteria {
 		filters := []graph.Criteria{
 			query.Kind(query.Start(), ad.Entity),
 			query.Kind(query.Relationship(), relKind),
 			query.Equals(query.EndID(), target.ID),
-		}
-
-		if filterTierZero {
-			filters = append(filters, query.Not(
-				query.StringContains(query.StartProperty(common.SystemTags.String()), ad.AdminTierZero),
-			))
 		}
 
 		return query.And(filters...)
