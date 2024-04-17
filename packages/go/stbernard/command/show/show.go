@@ -95,8 +95,8 @@ func (s *command) Run() error {
 			fmt.Printf("Current HEAD: %s\n", repo.sha)
 			fmt.Printf("Detected version: %s\n", repo.version)
 			if !repo.clean {
-				fmt.Println("CHANGES DETECTED")
-				return fmt.Errorf("changes detected in git repository")
+				fmt.Println("CHANGES DETECTED - please commit outstanding changes and run the command again")
+				return fmt.Errorf("changes detected in git repository - please commit outstanding changes and run the command again")
 			} else {
 				fmt.Printf("Repository Clean\n\n")
 			}
