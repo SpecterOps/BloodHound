@@ -6385,7 +6385,7 @@ func (s *ESC13Harness1) Setup(graphTestContext *GraphTestContext) {
 	s.Group4 = graphTestContext.NewActiveDirectoryGroup("Group4", domainSid)
 	s.Group5 = graphTestContext.NewActiveDirectoryGroup("Group5", domainSid)
 	s.Group6 = graphTestContext.NewActiveDirectoryGroup("Group6", domainSid)
-	s.IssuancePolicy = graphTestContext.NewActiveDirectoryIssuancePolicy("IssuancePolicy", domainSid)
+	s.IssuancePolicy = graphTestContext.NewActiveDirectoryIssuancePolicy("IssuancePolicy", domainSid, "")
 	s.NTAuthStore = graphTestContext.NewActiveDirectoryNTAuthStore("NTAuthStore", domainSid)
 	s.RootCA = graphTestContext.NewActiveDirectoryRootCA("RootCA", domainSid)
 	graphTestContext.NewRelationship(s.CertTemplate2, s.EnterpriseCA, ad.PublishedTo)
@@ -6497,7 +6497,7 @@ func (s *ESC13Harness2) Setup(graphTestContext *GraphTestContext) {
 	s.Group2 = graphTestContext.NewActiveDirectoryGroup("Group2", domainSid)
 	s.Group3 = graphTestContext.NewActiveDirectoryGroup("Group3", domainSid)
 	s.Group4 = graphTestContext.NewActiveDirectoryGroup("Group4", domainSid)
-	s.IssuancePolicy = graphTestContext.NewActiveDirectoryIssuancePolicy("IssuancePolicy", domainSid)
+	s.IssuancePolicy = graphTestContext.NewActiveDirectoryIssuancePolicy("IssuancePolicy", domainSid, "")
 	s.NTAuthStore = graphTestContext.NewActiveDirectoryNTAuthStore("NTAuthStore", domainSid)
 	s.RootCA = graphTestContext.NewActiveDirectoryRootCA("RootCA", domainSid)
 	s.User1 = graphTestContext.NewActiveDirectoryUser("User1", domainSid)
@@ -6657,7 +6657,7 @@ func (s *ESC13HarnessECA) Setup(graphTestContext *GraphTestContext) {
 	s.Group3 = graphTestContext.NewActiveDirectoryGroup("Group3", domainSid3)
 	s.Group4 = graphTestContext.NewActiveDirectoryGroup("Group4", domainSid4)
 	s.Group5 = graphTestContext.NewActiveDirectoryGroup("Group5", domainSid5)
-	s.IssuancePolicy = graphTestContext.NewActiveDirectoryIssuancePolicy("IssuancePolicy", domainSid)
+	s.IssuancePolicy = graphTestContext.NewActiveDirectoryIssuancePolicy("IssuancePolicy", domainSid, "")
 	s.NTAuthStore1 = graphTestContext.NewActiveDirectoryNTAuthStore("NTAuthStore1", domainSid)
 	s.NTAuthStore2 = graphTestContext.NewActiveDirectoryNTAuthStore("NTAuthStore2", domainSid2)
 	s.NTAuthStore3 = graphTestContext.NewActiveDirectoryNTAuthStore("NTAuthStore3", domainSid3)
@@ -6731,6 +6731,91 @@ func (s *AZAddSecretHarness) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.NewRelationship(s.AZTenant, s.CloudAppAdminRole, azure.Contains)
 }
 
+type ExtendedByPolicyHarness struct {
+	IssuancePolicy0 *graph.Node
+	IssuancePolicy1 *graph.Node
+	IssuancePolicy2 *graph.Node
+	IssuancePolicy3 *graph.Node
+	IssuancePolicy4 *graph.Node
+
+	CertTemplate1 *graph.Node
+	CertTemplate2 *graph.Node
+	CertTemplate3 *graph.Node
+	CertTemplate4 *graph.Node
+
+	Domain *graph.Node
+}
+
+func (s *ExtendedByPolicyHarness) Setup(graphTestContext *GraphTestContext) {
+	domainSid := RandomDomainSID()
+
+	certTemplateOIDs := []string{}
+	for i := 0; i < 5; i++ {
+		certTemplateOIDs = append(certTemplateOIDs, RandomObjectID(graphTestContext.testCtx))
+	}
+
+	s.IssuancePolicy0 = graphTestContext.NewActiveDirectoryIssuancePolicy("IssuancePolicy0", domainSid, certTemplateOIDs[0])
+	s.IssuancePolicy1 = graphTestContext.NewActiveDirectoryIssuancePolicy("IssuancePolicy1", domainSid, certTemplateOIDs[1])
+	s.IssuancePolicy2 = graphTestContext.NewActiveDirectoryIssuancePolicy("IssuancePolicy2", domainSid, certTemplateOIDs[2])
+	s.IssuancePolicy3 = graphTestContext.NewActiveDirectoryIssuancePolicy("IssuancePolicy3", domainSid, certTemplateOIDs[3])
+	s.IssuancePolicy4 = graphTestContext.NewActiveDirectoryIssuancePolicy("IssuancePolicy4", RandomDomainSID(), certTemplateOIDs[4])
+
+	s.CertTemplate1 = graphTestContext.NewActiveDirectoryCertTemplate("CertTemplate1", domainSid, CertTemplateData{
+		ApplicationPolicies:     []string{},
+		AuthenticationEnabled:   true,
+		AuthorizedSignatures:    1,
+		CertificatePolicy:       []string{certTemplateOIDs[0], certTemplateOIDs[1]},
+		EKUS:                    []string{},
+		EnrolleeSuppliesSubject: true,
+		NoSecurityExtension:     false,
+		RequiresManagerApproval: false,
+		SchemaVersion:           1,
+		SubjectAltRequireSPN:    false,
+		SubjectAltRequireUPN:    false,
+	})
+	s.CertTemplate2 = graphTestContext.NewActiveDirectoryCertTemplate("CertTemplate2", domainSid, CertTemplateData{
+		ApplicationPolicies:     []string{},
+		AuthenticationEnabled:   false,
+		AuthorizedSignatures:    1,
+		CertificatePolicy:       []string{certTemplateOIDs[0], certTemplateOIDs[2]},
+		EKUS:                    []string{},
+		EnrolleeSuppliesSubject: true,
+		NoSecurityExtension:     false,
+		RequiresManagerApproval: false,
+		SchemaVersion:           1,
+		SubjectAltRequireSPN:    false,
+		SubjectAltRequireUPN:    false,
+	})
+	s.CertTemplate3 = graphTestContext.NewActiveDirectoryCertTemplate("CertTemplate3", domainSid, CertTemplateData{
+		ApplicationPolicies:     []string{},
+		AuthenticationEnabled:   true,
+		AuthorizedSignatures:    1,
+		CertificatePolicy:       []string{certTemplateOIDs[3]},
+		EKUS:                    []string{},
+		EnrolleeSuppliesSubject: true,
+		NoSecurityExtension:     false,
+		RequiresManagerApproval: false,
+		SchemaVersion:           2,
+		SubjectAltRequireSPN:    false,
+		SubjectAltRequireUPN:    false,
+	})
+	s.CertTemplate4 = graphTestContext.NewActiveDirectoryCertTemplate("CertTemplate4", domainSid, CertTemplateData{
+		ApplicationPolicies:     []string{},
+		AuthenticationEnabled:   true,
+		AuthorizedSignatures:    0,
+		CertificatePolicy:       []string{certTemplateOIDs[4]},
+		EKUS:                    []string{},
+		EnrolleeSuppliesSubject: true,
+		NoSecurityExtension:     false,
+		RequiresManagerApproval: false,
+		SchemaVersion:           2,
+		SubjectAltRequireSPN:    false,
+		SubjectAltRequireUPN:    false,
+	})
+
+	s.Domain = graphTestContext.NewActiveDirectoryDomain("Domain", domainSid, false, true)
+}
+
 type HarnessDetails struct {
 	RDP                                             RDPHarness
 	RDPB                                            RDPHarness2
@@ -6768,6 +6853,7 @@ type HarnessDetails struct {
 	TrustedForNTAuthHarness                         TrustedForNTAuthHarness
 	NumCollectedActiveDirectoryDomains              int
 	AZInboundControlHarness                         AZInboundControlHarness
+	ExtendedByPolicyHarness                         ExtendedByPolicyHarness
 	ESC3Harness1                                    ESC3Harness1
 	ESC3Harness2                                    ESC3Harness2
 	ESC3Harness3                                    ESC3Harness3

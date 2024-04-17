@@ -525,6 +525,20 @@ OID: types.#StringEnum & {
 	representation: "oid"
 }
 
+CertificatePolicy: types.#StringEnum & {
+	symbol: "CertificatePolicy"
+	schema: "ad"
+	name: "Certificate Policy"
+	representation: "certificatepolicy"
+}
+
+CertTemplateOID: types.#StringEnum & {
+	symbol: "CertTemplateOID"
+	schema: "ad"
+	name: "Certificate Template OID"
+	representation: "certtemplateoid"
+}
+
 Properties: [
 	AdminCount,
 	CASecurityCollected,
@@ -596,7 +610,9 @@ Properties: [
 	RenewalPeriod,
 	ValidityPeriod,
 	OID,
-	HomeDirectory
+	HomeDirectory,
+	CertificatePolicy,
+	CertTemplateOID,
 ]
 
 // Kinds
@@ -980,6 +996,11 @@ EnrollOnBehalfOf: types.#Kind & {
 
 OIDGroupLink: types.#Kind & {
 	symbol: "OIDGroupLink"
+	schema "active_directory"
+}
+
+ExtendedByPolicy: types.#Kind & {
+	symbol: "ExtendedByPolicy"
 	schema: "active_directory"
 }
 
