@@ -21,7 +21,6 @@ package main
 import (
 	"errors"
 	"os"
-	"strings"
 
 	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/packages/go/stbernard/command"
@@ -34,7 +33,7 @@ func main() {
 	log.ConfigureDefaults()
 
 	if rawLvl == "" {
-		rawLvl = "info"
+		rawLvl = "warn"
 	}
 
 	if lvl, err := log.ParseLevel(rawLvl); err != nil {
@@ -43,15 +42,16 @@ func main() {
 		log.SetGlobalLevel(lvl)
 	}
 
-	if cmd, err := command.ParseCLI(); err != nil {
-		if errors.Is(err, command.ErrNoCmd) {
-			log.Fatalf("No command specified")
-		} else {
-			log.Fatalf("Error while parsing command: %v", err)
-		}
+	if cmd, err := command.ParseCLI(); errors.Is(err, command.ErrNoCmd) {
+		log.Fatalf("No valid command specified")
+	} else if errors.Is(err, command.ErrHelpRequested) {
+		// No need to exit 1 if help was requested
+		return
+	} else if err != nil {
+		log.Fatalf("Error while parsing command: %v", err)
 	} else if err := cmd.Run(); err != nil {
-		log.Fatalf("Failed to run command %s: %v", cmd.Name(), err)
+		log.Fatalf("Failed to run command `%s`: %v", cmd.Name(), err)
 	} else {
-		log.Infof("%s completed successfully", strings.ToUpper(cmd.Name()))
+		log.Infof("Command `%s` completed successfully", cmd.Name())
 	}
 }

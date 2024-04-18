@@ -45,8 +45,10 @@ const PathfindingSearch = () => {
     const handleDestinationNodeEdited = (edit: string): DestinationNodeEditedAction =>
         dispatch(searchbarActions.destinationNodeEdited(edit));
 
-    const handleSourceNodeSelected = (selected: SearchValue): SourceNodeSelectedAction =>
-        dispatch(searchbarActions.sourceNodeSelected(selected));
+    const handleSourceNodeSelected = (selected: SearchValue): SourceNodeSelectedAction => {
+        const doPathfindSearch = !!destinationSelectedItem;
+        return dispatch(searchbarActions.sourceNodeSelected(selected, doPathfindSearch));
+    };
 
     const handleDestinationNodeSelected = (selected: SearchValue): DestinationNodeSelectedAction =>
         dispatch(searchbarActions.destinationNodeSelected(selected));

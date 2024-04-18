@@ -25,10 +25,8 @@ import (
 
 	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/packages/go/stbernard/analyzers/codeclimate"
-)
-
-var (
-	ErrNonZeroExit = errors.New("non-zero exit status")
+	"github.com/specterops/bloodhound/packages/go/stbernard/cmdrunner"
+	"github.com/specterops/bloodhound/packages/go/stbernard/environment"
 )
 
 type esLintEntry struct {
@@ -46,20 +44,21 @@ type esLintMessage struct {
 	Line     uint64 `json:"line"`
 }
 
-func Run(jsPaths []string, env []string) ([]codeclimate.Entry, error) {
+// Run eslint for all passed jsPaths and returns a slice of CodeClimate-like entries
+func Run(jsPaths []string, env environment.Environment) ([]codeclimate.Entry, error) {
 	var (
-		exitError error = nil
-		result          = make([]codeclimate.Entry, 0, len(jsPaths))
+		exitError error
+		result    = make([]codeclimate.Entry, 0, len(jsPaths))
 	)
 
 	log.Infof("Running eslint")
 
 	for _, path := range jsPaths {
 		entries, err := runEslint(path, env)
-		if errors.Is(err, ErrNonZeroExit) {
-			exitError = ErrNonZeroExit
+		if errors.Is(err, cmdrunner.ErrNonZeroExit) {
+			exitError = err
 		} else if err != nil {
-			return result, fmt.Errorf("failed to run eslint at %v: %w", path, err)
+			return result, fmt.Errorf("running eslint at %v: %w", path, err)
 		}
 		result = append(result, entries...)
 	}
@@ -69,27 +68,28 @@ func Run(jsPaths []string, env []string) ([]codeclimate.Entry, error) {
 	return result, exitError
 }
 
-func runEslint(cwd string, env []string) ([]codeclimate.Entry, error) {
+// runEslint runs the actual yarn command and processes the raw output to a slice of CodeClimate-like entries
+//
+// This function will return both the results and an error, if the error is cmdrunner.ErrNonZeroExit
+func runEslint(path string, env environment.Environment) ([]codeclimate.Entry, error) {
 	var (
 		result    []codeclimate.Entry
 		rawResult []esLintEntry
 		outb      bytes.Buffer
+
+		command        = "yarn"
+		args           = []string{"run", "lint", "--format", "json"}
+		redirectStdout = func(c *exec.Cmd) { c.Stdout = &outb }
 	)
 
-	cmd := exec.Command("yarn", "run", "lint", "--format", "json")
-	cmd.Env = env
-	cmd.Dir = cwd
-	cmd.Stdout = &outb
-
-	err := cmd.Run()
-	if _, ok := err.(*exec.ExitError); ok {
-		err = ErrNonZeroExit
-	} else if err != nil {
-		return result, fmt.Errorf("unexpected failure: %w", err)
+	cmdErr := cmdrunner.Run(command, args, path, env, redirectStdout)
+	// If the command has a non-zero exit, we're going to return it up the stack, but we want to attempt to process the output anyway
+	if cmdErr != nil && !errors.Is(cmdErr, cmdrunner.ErrNonZeroExit) {
+		return result, fmt.Errorf("unexpected run error: %w", cmdErr)
 	}
 
 	if err := json.NewDecoder(&outb).Decode(&rawResult); err != nil {
-		return result, fmt.Errorf("failed to decode output: %w", err)
+		return result, fmt.Errorf("decoding output: %w", err)
 	}
 
 	for _, entry := range rawResult {
@@ -120,5 +120,5 @@ func runEslint(cwd string, env []string) ([]codeclimate.Entry, error) {
 		}
 	}
 
-	return result, err
+	return result, cmdErr
 }

@@ -16,17 +16,20 @@
 
 package codeclimate
 
+// Entry represents a simple CodeClimate-like entry
 type Entry struct {
 	Description string   `json:"description"`
 	Severity    string   `json:"severity"`
 	Location    Location `json:"location"`
 }
 
+// Location represents a code path and lines for an entry
 type Location struct {
 	Path  string `json:"path"`
 	Lines Lines  `json:"lines"`
 }
 
+// Lines represents only the beginning line for the location
 type Lines struct {
 	Begin uint64 `json:"begin"`
 }
