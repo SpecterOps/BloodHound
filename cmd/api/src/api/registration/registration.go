@@ -60,6 +60,7 @@ func RegisterFossRoutes(
 	collectorManifests config.CollectorManifests,
 	authenticator api.Authenticator,
 	taskNotifier datapipe.Tasker,
+	authorizer auth.Authorizer,
 ) {
 	router.With(middleware.DefaultRateLimitMiddleware,
 		// Health Endpoint
@@ -76,6 +77,6 @@ func RegisterFossRoutes(
 		routerInst.PathPrefix("/ui", static.Handler()),
 	)
 
-	var resources = v2.NewResources(rdms, graphDB, cfg, apiCache, graphQuery, collectorManifests, taskNotifier)
+	var resources = v2.NewResources(rdms, graphDB, cfg, apiCache, graphQuery, collectorManifests, taskNotifier, authorizer)
 	NewV2API(cfg, resources, routerInst, authenticator)
 }
