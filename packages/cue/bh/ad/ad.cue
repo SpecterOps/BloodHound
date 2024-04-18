@@ -996,7 +996,7 @@ EnrollOnBehalfOf: types.#Kind & {
 
 OIDGroupLink: types.#Kind & {
 	symbol: "OIDGroupLink"
-	schema "active_directory"
+	schema: "active_directory"
 }
 
 ExtendedByPolicy: types.#Kind & {
