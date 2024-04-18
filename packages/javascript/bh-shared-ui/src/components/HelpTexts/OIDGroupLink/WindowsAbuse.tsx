@@ -20,7 +20,7 @@ import { Typography } from '@mui/material';
 const Abuse: FC = () => {
     return (
         <Typography variant='body2'>
-            An attacker may perform the ADCS ESC13 abuse which rely on the OID group link. This relationship alone is
+            An attacker may perform the ADCS ESC13 abuse which relies on the OID group link. This relationship alone is
             not enough to escalate rights or impersonate other principals.
         </Typography>
     );

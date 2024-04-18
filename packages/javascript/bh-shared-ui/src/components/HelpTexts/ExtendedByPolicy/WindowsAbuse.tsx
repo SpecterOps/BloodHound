@@ -20,7 +20,7 @@ import { Typography } from '@mui/material';
 const Abuse: FC = () => {
     return (
         <Typography variant='body2'>
-            An attacker may perform the ADCS ESC13 abuse which rely on an issuance policy included in a certificate.
+            An attacker may perform the ADCS ESC13 abuse which relies on an issuance policy included in a certificate.
             This relationship alone is not enough to escalate rights or impersonate other principals.
         </Typography>
     );
