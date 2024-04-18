@@ -83,6 +83,7 @@ func groupIsContainedOrTrusted(tx graph.Transaction, group, domain *graph.Node) 
 			return segment.Node.Kinds.ContainsOneOf(ad.Domain)
 		},
 	}, func(ctx *ops.TraversalContext, segment *graph.PathSegment) error {
+		//Check to make sure that this segment contains our target domain id
 		segment.WalkReverse(func(nextSegment *graph.PathSegment) bool {
 			if nextSegment.Node.ID == domain.ID {
 				matchFound = true
@@ -290,9 +291,14 @@ func GetADCSESC13EdgeComposition(ctx context.Context, db graph.Database, edge *g
 	//And the 2 bitmaps together to ensure that only enterprise CAs thats satisfy both paths are valid
 	path1EnterpriseCAs.And(path2EnterpriseCAs)
 
-	for k, v := range path1CandidateSegments {
-		path2segments := path2CandidateSegments[k]
-		for _, p1 := range v {
+	for path1NodeIndex, path1Segments := range path1CandidateSegments {
+		path2segments := path2CandidateSegments[path1NodeIndex]
+		for _, p1 := range path1Segments {
+			//If we don't have a domain contain relationship, then this is not a valid path and we can kick out early
+			p4segments, ok := path4CandidateSegments[p1.Node.ID]
+			if !ok {
+				continue
+			}
 			for _, p2 := range path2segments {
 				//Check if our terminal nodes match (should be the same domain node)
 				if p1.Node.ID != p2.Node.ID {
@@ -305,9 +311,6 @@ func GetADCSESC13EdgeComposition(ctx context.Context, db graph.Database, edge *g
 				})
 
 				if p3segments, ok := path3CandidateSegments[certTemplate.ID]; !ok {
-					continue
-				} else if p4segments, ok := path4CandidateSegments[p1.Node.ID]; !ok {
-					//If we dont have a domain contain relationship, then this is not a valid path
 					continue
 				} else {
 					//Merge all our paths together
@@ -325,28 +328,6 @@ func GetADCSESC13EdgeComposition(ctx context.Context, db graph.Database, edge *g
 	}
 
 	return paths, nil
-}
-
-func adcsESC13Path4Pattern() traversal.PatternContinuation {
-	return traversal.NewPattern().
-		Inbound(query.Kind(query.Relationship(), ad.Contains)).
-		InboundWithDepth(0, 0, query.Kind(query.Relationship(), ad.TrustedBy))
-}
-
-func adcsESC13Path3Pattern(certTemplates []graph.ID) traversal.PatternContinuation {
-	return traversal.NewPattern().
-		Inbound(
-			query.And(
-				query.Kind(query.Relationship(), ad.OIDGroupLink),
-				query.Kind(query.Start(), ad.IssuancePolicy),
-			),
-		).
-		Inbound(
-			query.And(
-				query.Kind(query.Relationship(), ad.ExtendedByPolicy),
-				query.InIDs(query.Start(), certTemplates...),
-			),
-		)
 }
 
 func adcsESC13Path1Pattern() traversal.PatternContinuation {
@@ -409,4 +390,26 @@ func adcsESC13Path2Pattern(caNodes, domains []graph.ID) traversal.PatternContinu
 			query.KindIn(query.Relationship(), ad.NTAuthStoreFor),
 			query.InIDs(query.End(), domains...),
 		))
+}
+
+func adcsESC13Path3Pattern(certTemplates []graph.ID) traversal.PatternContinuation {
+	return traversal.NewPattern().
+		Inbound(
+			query.And(
+				query.Kind(query.Relationship(), ad.OIDGroupLink),
+				query.Kind(query.Start(), ad.IssuancePolicy),
+			),
+		).
+		Inbound(
+			query.And(
+				query.Kind(query.Relationship(), ad.ExtendedByPolicy),
+				query.InIDs(query.Start(), certTemplates...),
+			),
+		)
+}
+
+func adcsESC13Path4Pattern() traversal.PatternContinuation {
+	return traversal.NewPattern().
+		Inbound(query.Kind(query.Relationship(), ad.Contains)).
+		InboundWithDepth(0, 0, query.Kind(query.Relationship(), ad.TrustedBy))
 }
