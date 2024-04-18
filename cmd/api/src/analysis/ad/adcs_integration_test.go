@@ -22,10 +22,9 @@ package ad_test
 import (
 	"context"
 	"github.com/specterops/bloodhound/analysis"
+	ad2 "github.com/specterops/bloodhound/analysis/ad"
 	"github.com/specterops/bloodhound/analysis/impact"
 	"github.com/specterops/bloodhound/graphschema"
-
-	ad2 "github.com/specterops/bloodhound/analysis/ad"
 
 	"github.com/specterops/bloodhound/dawgs/ops"
 	"github.com/specterops/bloodhound/dawgs/query"
@@ -2461,7 +2460,7 @@ func TestADCSESC13(t *testing.T) {
 					innerEnterpriseCA := enterpriseCA
 
 					operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
-						if err := ad2.PostADCSESC13(ctx, tx, outC, groupExpansions, innerEnterpriseCA, cache); err != nil {
+						if err := ad2.PostADCSESC13(ctx, tx, outC, groupExpansions, innerEnterpriseCA, innerDomain, cache); err != nil {
 							t.Logf("failed post processing for %s: %v", ad.ADCSESC13.String(), err)
 						} else {
 							return nil
@@ -2521,7 +2520,7 @@ func TestADCSESC13(t *testing.T) {
 					innerEnterpriseCA := enterpriseCA
 
 					operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
-						if err := ad2.PostADCSESC13(ctx, tx, outC, groupExpansions, innerEnterpriseCA, cache); err != nil {
+						if err := ad2.PostADCSESC13(ctx, tx, outC, groupExpansions, innerEnterpriseCA, innerDomain, cache); err != nil {
 							t.Logf("failed post processing for %s: %v", ad.ADCSESC13.String(), err)
 						} else {
 							return nil
@@ -2586,7 +2585,7 @@ func TestADCSESC13(t *testing.T) {
 					innerEnterpriseCA := enterpriseCA
 
 					operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
-						if err := ad2.PostADCSESC13(ctx, tx, outC, groupExpansions, innerEnterpriseCA, cache); err != nil {
+						if err := ad2.PostADCSESC13(ctx, tx, outC, groupExpansions, innerEnterpriseCA, innerDomain, cache); err != nil {
 							t.Logf("failed post processing for %s: %v", ad.ADCSESC13.String(), err)
 						} else {
 							return nil
@@ -2624,8 +2623,33 @@ func TestADCSESC13(t *testing.T) {
 				require.Equal(t, 1, len(results))
 
 				require.True(t, results.Contains(harness.ESC13HarnessECA.Group11))
-
 			}
+			return nil
+		})
+
+		db.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
+			if results, err := ops.FetchRelationships(tx.Relationships().Filterf(func() graph.Criteria {
+				return query.Kind(query.Relationship(), ad.ADCSESC13)
+			})); err != nil {
+				t.Fatalf("error fetching esc13 edges in integration test; %v", err)
+			} else {
+				assert.Equal(t, 1, len(results))
+				edge := results[0]
+
+				if edgeComp, err := ad2.GetEdgeCompositionPath(context.Background(), db, edge); err != nil {
+					t.Fatalf("error getting edge composition for esc13: %v", err)
+				} else {
+					nodes := edgeComp.AllNodes().Slice()
+					assert.Contains(t, nodes, harness.ESC13HarnessECA.Group1)
+					assert.Contains(t, nodes, harness.ESC13HarnessECA.Domain1)
+					assert.Contains(t, nodes, harness.ESC13HarnessECA.NTAuthStore1)
+					assert.Contains(t, nodes, harness.ESC13HarnessECA.RootCA1)
+					assert.Contains(t, nodes, harness.ESC13HarnessECA.EnterpriseCA1)
+					assert.Contains(t, nodes, harness.ESC13HarnessECA.CertTemplate1)
+					assert.Contains(t, nodes, harness.ESC13HarnessECA.Group11)
+				}
+			}
+
 			return nil
 		})
 	})
