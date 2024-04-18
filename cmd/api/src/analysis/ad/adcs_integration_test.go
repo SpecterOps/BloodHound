@@ -2884,3 +2884,65 @@ func TestADCSESC10b(t *testing.T) {
 		})
 	})
 }
+
+func TestExtendedByPolicyBinding(t *testing.T) {
+	testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
+
+	testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) error {
+		harness.ExtendedByPolicyHarness.Setup(testContext)
+		return nil
+	}, func(harness integration.HarnessDetails, db graph.Database) {
+		operation := analysis.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - ExtendedByPolicy")
+
+		certTemplates, err := ad2.FetchNodesByKind(context.Background(), db, ad.CertTemplate)
+		require.Nil(t, err)
+
+		if err := ad2.PostExtendedByPolicyBinding(operation, certTemplates); err != nil {
+			t.Fatalf("failed post processing for %s: %v", ad.ExtendedByPolicy.String(), err)
+		}
+
+		operation.Done()
+
+		db.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
+			if edge, err := analysis.FetchEdgeByStartAndEnd(testContext.Context(), db, harness.ExtendedByPolicyHarness.IssuancePolicy0.ID, harness.ExtendedByPolicyHarness.CertTemplate1.ID, ad.ExtendedByPolicy); err != nil {
+				t.Fatalf("error fetching ExtendedByPolicy edge (1) in integration test; %v", err)
+			} else {
+				require.NotNil(t, edge)
+			}
+
+			if edge, err := analysis.FetchEdgeByStartAndEnd(testContext.Context(), db, harness.ExtendedByPolicyHarness.IssuancePolicy1.ID, harness.ExtendedByPolicyHarness.CertTemplate1.ID, ad.ExtendedByPolicy); err != nil {
+				t.Fatalf("error fetching ExtendedByPolicy edge (2) in integration test; %v", err)
+			} else {
+				require.NotNil(t, edge)
+			}
+
+			if edge, err := analysis.FetchEdgeByStartAndEnd(testContext.Context(), db, harness.ExtendedByPolicyHarness.IssuancePolicy0.ID, harness.ExtendedByPolicyHarness.CertTemplate2.ID, ad.ExtendedByPolicy); err != nil {
+				t.Fatalf("error fetching ExtendedByPolicy edge (3) in integration test; %v", err)
+			} else {
+				require.NotNil(t, edge)
+			}
+
+			if edge, err := analysis.FetchEdgeByStartAndEnd(testContext.Context(), db, harness.ExtendedByPolicyHarness.IssuancePolicy2.ID, harness.ExtendedByPolicyHarness.CertTemplate2.ID, ad.ExtendedByPolicy); err != nil {
+				t.Fatalf("error fetching ExtendedByPolicy edge (4) in integration test; %v", err)
+			} else {
+				require.NotNil(t, edge)
+			}
+
+			if edge, err := analysis.FetchEdgeByStartAndEnd(testContext.Context(), db, harness.ExtendedByPolicyHarness.IssuancePolicy3.ID, harness.ExtendedByPolicyHarness.CertTemplate3.ID, ad.ExtendedByPolicy); err != nil {
+				t.Fatalf("error fetching ExtendedByPolicy edge (5) in integration test; %v", err)
+			} else {
+				require.NotNil(t, edge)
+			}
+
+			// CertificatePolicy doesn't match CertTemplateOID
+			edge, _ := analysis.FetchEdgeByStartAndEnd(testContext.Context(), db, harness.ExtendedByPolicyHarness.IssuancePolicy1.ID, harness.ExtendedByPolicyHarness.CertTemplate2.ID, ad.ExtendedByPolicy)
+			require.Nil(t, edge, "ExtendedByPolicy edge exists between IssuancePolicy1 and CertTemplate2 where it shouldn't")
+
+			// Different domains, no edge
+			edge, _ = analysis.FetchEdgeByStartAndEnd(testContext.Context(), db, harness.ExtendedByPolicyHarness.IssuancePolicy4.ID, harness.ExtendedByPolicyHarness.CertTemplate4.ID, ad.ExtendedByPolicy)
+			require.Nil(t, edge, "ExtendedByPolicy edge bridges domains where it shouldn't")
+
+			return nil
+		})
+	})
+}

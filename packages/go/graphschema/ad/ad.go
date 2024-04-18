@@ -186,10 +186,12 @@ const (
 	ValidityPeriod                         Property = "validityperiod"
 	OID                                    Property = "oid"
 	HomeDirectory                          Property = "homedirectory"
+	CertificatePolicy                      Property = "certificatepolicy"
+	CertTemplateOID                        Property = "certtemplateoid"
 )
 
 func AllProperties() []Property {
-	return []Property{AdminCount, CASecurityCollected, CAName, CertChain, CertName, CertThumbprint, CertThumbprints, HasEnrollmentAgentRestrictions, EnrollmentAgentRestrictionsCollected, IsUserSpecifiesSanEnabled, IsUserSpecifiesSanEnabledCollected, HasBasicConstraints, BasicConstraintPathLength, DNSHostname, CrossCertificatePair, DistinguishedName, DomainFQDN, DomainSID, Sensitive, HighValue, BlocksInheritance, IsACL, IsACLProtected, IsDeleted, Enforced, Department, HasCrossCertificatePair, HasSPN, UnconstrainedDelegation, LastLogon, LastLogonTimestamp, IsPrimaryGroup, HasLAPS, DontRequirePreAuth, LogonType, HasURA, PasswordNeverExpires, PasswordNotRequired, FunctionalLevel, TrustType, SidFiltering, TrustedToAuth, SamAccountName, CertificateMappingMethodsRaw, CertificateMappingMethods, StrongCertificateBindingEnforcementRaw, StrongCertificateBindingEnforcement, EKUs, SubjectAltRequireUPN, SubjectAltRequireDNS, SubjectAltRequireDomainDNS, SubjectAltRequireEmail, SubjectAltRequireSPN, SubjectRequireEmail, AuthorizedSignatures, ApplicationPolicies, IssuancePolicies, SchemaVersion, RequiresManagerApproval, AuthenticationEnabled, EnrolleeSuppliesSubject, CertificateApplicationPolicy, CertificateNameFlag, EffectiveEKUs, EnrollmentFlag, Flags, NoSecurityExtension, RenewalPeriod, ValidityPeriod, OID, HomeDirectory}
+	return []Property{AdminCount, CASecurityCollected, CAName, CertChain, CertName, CertThumbprint, CertThumbprints, HasEnrollmentAgentRestrictions, EnrollmentAgentRestrictionsCollected, IsUserSpecifiesSanEnabled, IsUserSpecifiesSanEnabledCollected, HasBasicConstraints, BasicConstraintPathLength, DNSHostname, CrossCertificatePair, DistinguishedName, DomainFQDN, DomainSID, Sensitive, HighValue, BlocksInheritance, IsACL, IsACLProtected, IsDeleted, Enforced, Department, HasCrossCertificatePair, HasSPN, UnconstrainedDelegation, LastLogon, LastLogonTimestamp, IsPrimaryGroup, HasLAPS, DontRequirePreAuth, LogonType, HasURA, PasswordNeverExpires, PasswordNotRequired, FunctionalLevel, TrustType, SidFiltering, TrustedToAuth, SamAccountName, CertificateMappingMethodsRaw, CertificateMappingMethods, StrongCertificateBindingEnforcementRaw, StrongCertificateBindingEnforcement, EKUs, SubjectAltRequireUPN, SubjectAltRequireDNS, SubjectAltRequireDomainDNS, SubjectAltRequireEmail, SubjectAltRequireSPN, SubjectRequireEmail, AuthorizedSignatures, ApplicationPolicies, IssuancePolicies, SchemaVersion, RequiresManagerApproval, AuthenticationEnabled, EnrolleeSuppliesSubject, CertificateApplicationPolicy, CertificateNameFlag, EffectiveEKUs, EnrollmentFlag, Flags, NoSecurityExtension, RenewalPeriod, ValidityPeriod, OID, HomeDirectory, CertificatePolicy, CertTemplateOID}
 }
 func ParseProperty(source string) (Property, error) {
 	switch source {
@@ -335,6 +337,10 @@ func ParseProperty(source string) (Property, error) {
 		return OID, nil
 	case "homedirectory":
 		return HomeDirectory, nil
+	case "certificatepolicy":
+		return CertificatePolicy, nil
+	case "certtemplateoid":
+		return CertTemplateOID, nil
 	default:
 		return "", errors.New("Invalid enumeration value: " + source)
 	}
@@ -483,6 +489,10 @@ func (s Property) String() string {
 		return string(OID)
 	case HomeDirectory:
 		return string(HomeDirectory)
+	case CertificatePolicy:
+		return string(CertificatePolicy)
+	case CertTemplateOID:
+		return string(CertTemplateOID)
 	default:
 		return "Invalid enumeration case: " + string(s)
 	}
@@ -631,6 +641,10 @@ func (s Property) Name() string {
 		return "OID"
 	case HomeDirectory:
 		return "Home Directory"
+	case CertificatePolicy:
+		return "Certificate Policy"
+	case CertTemplateOID:
+		return "Certificate Template OID"
 	default:
 		return "Invalid enumeration case: " + string(s)
 	}

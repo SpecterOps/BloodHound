@@ -504,7 +504,7 @@ func GetADCSESC3EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 						log.Errorf("Error getting hasenrollmentagentrestrictions for ca %d: %v", eca2.ID, err)
 					} else if hasRestrictions {
 						if p6, err := getDelegatedEnrollmentAgentPath(ctx, startNode, ct2, db); err != nil {
-							log.Infof("Error getting p6 for composition: %v", err)
+							log.Warnf("Error getting p6 for composition: %v", err)
 						} else if p6.Len() > 0 {
 							for _, p4 := range enterpriseCASegments[eca1.ID] {
 								paths.AddPath(p4.Path())

@@ -43,7 +43,7 @@ func PostADCS(ctx context.Context, db graph.Database, groupExpansions impact.Pat
 		return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("failed fetching cert template nodes: %w", err)
 	} else if domains, err := FetchNodesByKind(ctx, db, ad.Domain); err != nil {
 		return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("failed fetching domain nodes: %w", err)
-	} else if step1Stats, err := postADCSPreProcessStep1(ctx, db, enterpriseCertAuthorities, rootCertAuthorities); err != nil {
+	} else if step1Stats, err := postADCSPreProcessStep1(ctx, db, enterpriseCertAuthorities, rootCertAuthorities, certTemplates); err != nil {
 		return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("failed adcs pre-processing step 1: %w", err)
 	} else if step2Stats, err := postADCSPreProcessStep2(ctx, db, certTemplates); err != nil {
 		return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("failed adcs pre-processing step 2: %w", err)
@@ -73,7 +73,7 @@ func PostADCS(ctx context.Context, db graph.Database, groupExpansions impact.Pat
 }
 
 // postADCSPreProcessStep1 processes the edges that are not dependent on any other post-processed edges
-func postADCSPreProcessStep1(ctx context.Context, db graph.Database, enterpriseCertAuthorities, rootCertAuthorities []*graph.Node) (*analysis.AtomicPostProcessingStats, error) {
+func postADCSPreProcessStep1(ctx context.Context, db graph.Database, enterpriseCertAuthorities, rootCertAuthorities, certTemplates []*graph.Node) (*analysis.AtomicPostProcessingStats, error) {
 	operation := analysis.NewPostRelationshipOperation(ctx, db, "ADCS Post Processing Step 1")
 	// TODO clean up the operation.Done() calls below
 
@@ -92,6 +92,9 @@ func postADCSPreProcessStep1(ctx context.Context, db graph.Database, enterpriseC
 	} else if err = PostCanAbuseWeakCertBinding(operation, enterpriseCertAuthorities); err != nil {
 		operation.Done()
 		return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("failed post processing for %s: %w", ad.CanAbuseWeakCertBinding.String(), err)
+	} else if err = PostExtendedByPolicyBinding(operation, certTemplates); err != nil {
+		operation.Done()
+		return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("failed post processing for %s: %w", ad.ExtendedByPolicy.String(), err)
 	} else {
 		return &operation.Stats, operation.Done()
 	}

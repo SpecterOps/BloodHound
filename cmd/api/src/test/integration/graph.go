@@ -380,14 +380,6 @@ func (s *GraphTestContext) NewActiveDirectoryNTAuthStore(name, domainSID string)
 	}), ad.Entity, ad.NTAuthStore)
 }
 
-func (s *GraphTestContext) NewActiveDirectoryIssuancePolicy(name, domainSID string) *graph.Node {
-	return s.NewNode(graph.AsProperties(graph.PropertyMap{
-		common.Name:     name,
-		common.ObjectID: must.NewUUIDv4().String(),
-		ad.DomainSID:    domainSID,
-	}), ad.Entity, ad.IssuancePolicy)
-}
-
 func (s *GraphTestContext) NewActiveDirectoryEnterpriseCA(name, domainSID string) *graph.Node {
 	return s.NewNode(graph.AsProperties(graph.PropertyMap{
 		common.Name:     name,
@@ -440,7 +432,17 @@ func (s *GraphTestContext) NewActiveDirectoryCertTemplate(name, domainSID string
 		ad.SubjectAltRequireDNS:       data.SubjectAltRequireDNS,
 		ad.SubjectAltRequireDomainDNS: data.SubjectAltRequireDomainDNS,
 		ad.SubjectAltRequireEmail:     data.SubjectAltRequireEmail,
+		ad.CertificatePolicy:          data.CertificatePolicy,
 	}), ad.Entity, ad.CertTemplate)
+}
+
+func (s *GraphTestContext) NewActiveDirectoryIssuancePolicy(name, domainSID string, certTemplateOID string) *graph.Node {
+	return s.NewNode(graph.AsProperties(graph.PropertyMap{
+		common.Name:        name,
+		common.ObjectID:    must.NewUUIDv4().String(),
+		ad.DomainSID:       domainSID,
+		ad.CertTemplateOID: certTemplateOID,
+	}), ad.Entity, ad.IssuancePolicy)
 }
 
 type CertTemplateData struct {
@@ -457,6 +459,7 @@ type CertTemplateData struct {
 	AuthorizedSignatures       float64
 	EKUS                       []string
 	ApplicationPolicies        []string
+	CertificatePolicy          []string
 }
 
 func (s *GraphTestContext) setupAzure() {
