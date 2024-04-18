@@ -19,7 +19,7 @@ import NoDataAlert from '.';
 
 const dataCollectionLinkText = 'data collection';
 const fileIngestLinkText = 'file ingest';
-const sampleDataLinkText = 'github sample collection'
+const sampleDataLinkText = 'github sample collection';
 
 describe('NoDataAlert', () => {
     it('should render', () => {
