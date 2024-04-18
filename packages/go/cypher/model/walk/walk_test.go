@@ -17,18 +17,17 @@
 package walk_test
 
 import (
+	"testing"
+
 	"github.com/specterops/bloodhound/cypher/model/cypher"
 	"github.com/specterops/bloodhound/cypher/model/walk"
-	"testing"
 
 	"github.com/specterops/bloodhound/cypher/frontend"
 	"github.com/specterops/bloodhound/cypher/test"
 	"github.com/stretchr/testify/require"
 )
 
-type walker struct {
-	walk.HierarchicalVisitor[cypher.Expression]
-}
+type walker walk.HierarchicalVisitor[cypher.Expression]
 
 func TestWalk(t *testing.T) {
 	// Walk through all positive test cases to ensure that the walker can visit the involved types
@@ -45,9 +44,7 @@ func TestWalk(t *testing.T) {
 				t.Fatalf("Parser errors: %s", parseErr.Error())
 			}
 
-			require.Nil(t, walk.Cypher(queryModel, &walker{
-				HierarchicalVisitor: walk.NewComposableHierarchicalVisitor[cypher.Expression](),
-			}))
+			require.Nil(t, walk.Cypher(queryModel, walk.NewComposableHierarchicalVisitor[cypher.SyntaxNode]()))
 		}
 	}
 }
