@@ -432,6 +432,8 @@ func FormatPathSegment(segment *PathSegment) string {
 	segment.WalkReverse(func(nextSegment *PathSegment) bool {
 		formatted.WriteString("(")
 		formatted.WriteString(nextSegment.Node.ID.String())
+		formatted.WriteString(":")
+		formatted.WriteString(strings.Join(nextSegment.Node.Kinds.Strings(), "|"))
 		formatted.WriteString(")")
 
 		if nextSegment.Trunk != nil {

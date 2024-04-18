@@ -186,7 +186,7 @@ func processEnterpriseCAWithValidCertChainToDomain(enterpriseCA, domain *graph.N
 
 	if adcsEnabled {
 		operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
-			if err := PostADCSESC13(ctx, tx, outC, groupExpansions, enterpriseCA, cache); err != nil {
+			if err := PostADCSESC13(ctx, tx, outC, groupExpansions, enterpriseCA, domain, cache); err != nil {
 				log.Errorf("Failed post processing for %s: %v", ad.ADCSESC13.String(), err)
 			}
 			return nil
