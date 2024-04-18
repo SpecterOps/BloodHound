@@ -17,6 +17,8 @@
 package v2
 
 import (
+	"github.com/specterops/bloodhound/src/auth"
+	"github.com/specterops/bloodhound/src/ctx"
 	"net/http"
 
 	"github.com/specterops/bloodhound/dawgs/util"
@@ -32,6 +34,7 @@ type CypherSearch struct {
 func (s Resources) CypherSearch(response http.ResponseWriter, request *http.Request) {
 	var (
 		payload CypherSearch
+		authCtx = ctx.FromRequest(request).AuthCtx
 	)
 
 	if err := api.ReadJSONRequestPayloadLimited(&payload, request); err != nil {
@@ -44,9 +47,8 @@ func (s Resources) CypherSearch(response http.ResponseWriter, request *http.Requ
 			request.Context(),
 			api.BuildErrorResponse(http.StatusBadRequest, "Cypher unsupported", request), response,
 		)
-		// TODO: Check permissions too
-		// TODO: Audit log permissions check failure
-	} else if preparedQuery.HasMutation {
+	} else if preparedQuery.HasMutation && !s.Authorizer.AllowsPermission(authCtx, auth.Permissions().MutateDB) {
+		s.Authorizer.AuditLogUnauthorizedAccess(request)
 		api.WriteErrorResponse(
 			request.Context(),
 			api.BuildErrorResponse(http.StatusForbidden, "Not authorized for graph mutations", request), response,
