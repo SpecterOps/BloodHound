@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { FC } from 'react';
-import { Typography } from '@mui/material';
+import { Link, Typography } from '@mui/material';
 import { EdgeInfoProps } from '../index';
 
 const WindowsAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> = ({
@@ -525,6 +525,32 @@ const WindowsAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> =
                             "$dsEntry.PsBase.Options.SecurityMasks = 'Dacl'\n" +
                             '$dsEntry.PsBase.ObjectSecurity.AddAccessRule($ACE)\n' +
                             '$dsEntry.PsBase.CommitChanges()'}
+                    </Typography>
+
+                    <Typography variant='body1'>Objects with AdminCount=1 property</Typography>
+
+                    <Typography variant='body2'>
+                        It is important to note that the compromise vector described above, relying on ACE inheritance, will not work for protected objects presenting 
+                        the adminCount=1 attribute. Indeed, ACE inheritance is automatically disabled for all objects configured with such an attribute.
+                    </Typography>
+
+                    <Typography variant='body2'>
+                        It may still be possible to exploit GenericAll permissions on an Organizational Unit through an alternative attack vector. Indeed, with GenericAll 
+                        permissions over an Organizational Unit, you may make modifications to the gPLink attribute of the OU. 
+                        The ability to alter the gPLink attribute of an Organizational Unit may allow an attacker to apply a malicious 
+                        Group Policy Object to all of the OU's child items (including the ones included in nested sub-OUs). This can be exploited 
+                        to make said child items execute arbitrary commands through an immediate scheduled task, thus compromising them. 
+                    </Typography>
+
+                    <Typography variant='body2'>
+                        Successful exploitation will require the possibility to add non-existing DNS records to the domain and to 
+                        create machine accounts.
+                        Note that the attack vector implementation is not trivial and will require some setup.
+                    </Typography>
+
+                    <Typography variant='body2'>
+                            From a domain-joined compromised Windows machine, the gPLink manipulation attack vector may be exploited through Powermad, PowerView and native Windows functionalities. 
+                            For a detailed outline of exploit requirements and implementation, you can refer to <Link target='_blank' rel='noopener' href='https://labs.withsecure.com/publications/ou-having-a-laugh'>this article</Link>.
                     </Typography>
                 </>
             );

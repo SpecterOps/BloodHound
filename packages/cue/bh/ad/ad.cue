@@ -883,6 +883,11 @@ WriteAccountRestrictions: types.#Kind & {
 	schema: "active_directory"
 }
 
+ManageGPLink: types.#Kind & {
+	symbol: "ManageGPLink"
+	schema: "active_directory"
+}
+
 GetChangesInFilteredSet: types.#Kind & {
 	symbol: "GetChangesInFilteredSet"
 	schema: "active_directory"
@@ -1082,6 +1087,7 @@ RelationshipKinds: [
 	RemoteInteractiveLogonPrivilege,
 	SyncLAPSPassword,
 	WriteAccountRestrictions,
+	ManageGPLink,
 	RootCAFor,
 	DCFor,
 	PublishedTo,
@@ -1135,6 +1141,7 @@ ACLRelationships: [
 	GetChangesAll,
 	GetChangesInFilteredSet,
 	WriteAccountRestrictions,
+	ManageGPLink,
 	SyncLAPSPassword,
 	DCSync,
 	ManageCertificates,
@@ -1177,6 +1184,7 @@ PathfindingRelationships: [
 	AddKeyCredentialLink,
 	SyncLAPSPassword,
 	WriteAccountRestrictions,
+	ManageGPLink,
 	GoldenCert,
 	ADCSESC1,
 	ADCSESC3,

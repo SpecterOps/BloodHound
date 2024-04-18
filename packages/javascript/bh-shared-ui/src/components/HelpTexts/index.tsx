@@ -102,6 +102,7 @@ import SyncLAPSPassword from './SyncLAPSPassword/SyncLAPSPassword';
 import TrustedBy from './TrustedBy/TrustedBy';
 import TrustedForNTAuth from './TrustedForNTAuth/TrustedForNTAuth';
 import WriteAccountRestrictions from './WriteAccountRestrictions/WriteAccountRestrictions';
+import ManageGPLink from './ManageGPLink/ManageGPLink';
 import WriteDacl from './WriteDacl/WriteDacl';
 import WriteOwner from './WriteOwner/WriteOwner';
 import WritePKIEnrollmentFlag from './WritePKIEnrollmentFlag/WritePKIEnrollmentFlag';
@@ -186,6 +187,7 @@ const EdgeInfoComponents = {
     DCSync: DCSync,
     SyncLAPSPassword: SyncLAPSPassword,
     WriteAccountRestrictions: WriteAccountRestrictions,
+    ManageGPLink: ManageGPLink,
     DumpSMSAPassword: DumpSMSAPassword,
     AZMGAddMember: AZMGAddMember,
     AZMGAddOwner: AZMGAddOwner,
