@@ -29,8 +29,11 @@ The easiest way to get up and running is to use our pre-configured Docker Compos
   3. Locate the randomly generated password in the terminal output of Docker Compose
   4. In a browser, navigate to `http://localhost:8080/ui/login`. Login with a username of `admin` and the randomly generated password from the logs
 
-NOTE: going forward, the default `docker-compose.yml` example binds only to localhost (127.0.0.1). If you want to access BloodHound outside of localhost,
+NOTE: going forward, the default `docker-compose.yml` example binds only to localhost (127.0.0.1). If you want to access BloodHound outside of localhost, 
 you'll need to follow the instructions in [examples/docker-compose/README.md](examples/docker-compose/README.md) to configure the host binding for the container.
+
+### Importing sample data
+The BloodHound team has provided some sample data for testing BloodHound without performing a SharpHound or AzureHound collection. That data may be found [here](examples/sample-data/README.md).
 
 ## Installation Error Handling
 
