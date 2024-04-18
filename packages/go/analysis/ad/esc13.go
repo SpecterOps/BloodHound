@@ -72,9 +72,7 @@ func PostADCSESC13(ctx context.Context, tx graph.Transaction, outC chan<- analys
 }
 
 func groupIsContainedOrTrusted(tx graph.Transaction, group, domain *graph.Node) bool {
-	var (
-		matchFound = false
-	)
+	var matchFound bool
 	if err := ops.Traversal(tx, ops.TraversalPlan{
 		Root:      group,
 		Direction: graph.DirectionInbound,
