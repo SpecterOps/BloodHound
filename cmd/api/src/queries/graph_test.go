@@ -19,11 +19,12 @@ package queries_test
 import (
 	"context"
 	"fmt"
-	"github.com/specterops/bloodhound/src/config"
 	"net/http"
 	"net/url"
 	"testing"
 	"time"
+
+	"github.com/specterops/bloodhound/src/config"
 
 	"github.com/specterops/bloodhound/src/auth"
 	bhCtx "github.com/specterops/bloodhound/src/ctx"
@@ -78,7 +79,10 @@ func TestGraphQuery_RawCypherSearch(t *testing.T) {
 		return nil
 	})
 
-	_, err := gq.RawCypherSearch(outerBHCtxInst.ConstructGoContext(), "match (n) return n;", false)
+	preparedQuery, err := gq.PrepareCypherQuery("match (n) return n;")
+	require.Nil(t, err)
+
+	_, err = gq.RawCypherSearch(outerBHCtxInst.ConstructGoContext(), preparedQuery, false)
 	require.Nil(t, err)
 
 	// Validate that query complexity controls are working
@@ -106,14 +110,19 @@ func TestGraphQuery_RawCypherSearch(t *testing.T) {
 
 	outerBHCtxInst.Timeout = 0
 
-	_, err = gq.RawCypherSearch(outerBHCtxInst.ConstructGoContext(), "match ()-[:HasSession*..]->()-[:MemberOf*..]->() return n;", false)
+	preparedQuery, err = gq.PrepareCypherQuery("match ()-[:HasSession*..]->()-[:MemberOf*..]->() return n;")
+	require.Nil(t, err)
+	_, err = gq.RawCypherSearch(outerBHCtxInst.ConstructGoContext(), preparedQuery, false)
 	require.Nil(t, err)
 
 	// Prove that overriding QC with a user-preference works
 	// This will be directly used as the config timeout, without any reduction factor
 	outerBHCtxInst.Timeout = time.Minute * 5
 
-	_, err = gq.RawCypherSearch(outerBHCtxInst.ConstructGoContext(), "match ()-[:HasSession*..]->()-[:MemberOf*..]->() return n;", false)
+	preparedQuery, err = gq.PrepareCypherQuery("match ()-[:HasSession*..]->()-[:MemberOf*..]->() return n;")
+	require.Nil(t, err)
+
+	_, err = gq.RawCypherSearch(outerBHCtxInst.ConstructGoContext(), preparedQuery, false)
 	require.Nil(t, err)
 }
 

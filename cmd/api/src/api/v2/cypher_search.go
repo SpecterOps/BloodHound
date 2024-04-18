@@ -30,14 +30,28 @@ type CypherSearch struct {
 }
 
 func (s Resources) CypherSearch(response http.ResponseWriter, request *http.Request) {
-	var payload CypherSearch
+	var (
+		payload CypherSearch
+	)
 
 	if err := api.ReadJSONRequestPayloadLimited(&payload, request); err != nil {
 		api.WriteErrorResponse(
 			request.Context(),
 			api.BuildErrorResponse(http.StatusBadRequest, "JSON malformed.", request), response,
 		)
-	} else if graphResponse, err := s.GraphQuery.RawCypherSearch(request.Context(), payload.Query, payload.IncludeProperties); err != nil {
+	} else if preparedQuery, err := s.GraphQuery.PrepareCypherQuery(payload.Query); err != nil {
+		api.WriteErrorResponse(
+			request.Context(),
+			api.BuildErrorResponse(http.StatusBadRequest, "Cypher unsupported", request), response,
+		)
+		// TODO: Check permissions too
+		// TODO: Audit log permissions check failure
+	} else if preparedQuery.HasMutation {
+		api.WriteErrorResponse(
+			request.Context(),
+			api.BuildErrorResponse(http.StatusForbidden, "Not authorized for graph mutations", request), response,
+		)
+	} else if graphResponse, err := s.GraphQuery.RawCypherSearch(request.Context(), preparedQuery, payload.IncludeProperties); err != nil {
 		if queries.IsQueryError(err) {
 			api.WriteErrorResponse(
 				request.Context(),
