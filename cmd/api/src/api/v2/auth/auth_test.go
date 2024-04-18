@@ -244,7 +244,7 @@ func TestManagementResource_ListPermissions_SortingError(t *testing.T) {
 	require.Nilf(t, err, "Failed to create default configuration: %v", err)
 	config.Crypto.Argon2.NumIterations = 1
 	config.Crypto.Argon2.NumThreads = 1
-	resources := auth.NewManagementResource(config, mockDB, authz.NewAuthorizer(mockDB))
+	resources := auth.NewManagementResource(config, mockDB, authz.NewAuthorizer(mockDB, nil))
 
 	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
 	if req, err := http.NewRequestWithContext(ctx, "GET", endpoint, nil); err != nil {
@@ -277,7 +277,7 @@ func TestManagementResource_ListPermissions_InvalidFilterPredicate(t *testing.T)
 	require.Nilf(t, err, "Failed to create default configuration: %v", err)
 	config.Crypto.Argon2.NumIterations = 1
 	config.Crypto.Argon2.NumThreads = 1
-	resources := auth.NewManagementResource(config, mockDB, authz.NewAuthorizer(mockDB))
+	resources := auth.NewManagementResource(config, mockDB, authz.NewAuthorizer(mockDB, nil))
 
 	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
 	if req, err := http.NewRequestWithContext(ctx, "GET", endpoint, nil); err != nil {
@@ -310,7 +310,7 @@ func TestManagementResource_ListPermissions_PredicateMismatchWithColumn(t *testi
 	require.Nilf(t, err, "Failed to create default configuration: %v", err)
 	config.Crypto.Argon2.NumIterations = 1
 	config.Crypto.Argon2.NumThreads = 1
-	resources := auth.NewManagementResource(config, mockDB, authz.NewAuthorizer(mockDB))
+	resources := auth.NewManagementResource(config, mockDB, authz.NewAuthorizer(mockDB, nil))
 
 	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
 	if req, err := http.NewRequestWithContext(ctx, "GET", endpoint, nil); err != nil {
@@ -344,7 +344,7 @@ func TestManagementResource_ListPermissions_DBError(t *testing.T) {
 	require.Nilf(t, err, "Failed to create default configuration: %v", err)
 	config.Crypto.Argon2.NumIterations = 1
 	config.Crypto.Argon2.NumThreads = 1
-	resources := auth.NewManagementResource(config, mockDB, authz.NewAuthorizer(mockDB))
+	resources := auth.NewManagementResource(config, mockDB, authz.NewAuthorizer(mockDB, nil))
 
 	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
 	if req, err := http.NewRequestWithContext(ctx, "GET", endpoint, nil); err != nil {
@@ -436,7 +436,7 @@ func TestManagementResource_ListRoles_SortingError(t *testing.T) {
 	require.Nilf(t, err, "Failed to create default configuration: %v", err)
 	config.Crypto.Argon2.NumIterations = 1
 	config.Crypto.Argon2.NumThreads = 1
-	resources := auth.NewManagementResource(config, mockDB, authz.NewAuthorizer(mockDB))
+	resources := auth.NewManagementResource(config, mockDB, authz.NewAuthorizer(mockDB, nil))
 
 	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
 	if req, err := http.NewRequestWithContext(ctx, "GET", endpoint, nil); err != nil {
@@ -469,7 +469,7 @@ func TestManagementResource_ListRoles_InvalidColumn(t *testing.T) {
 	require.Nilf(t, err, "Failed to create default configuration: %v", err)
 	config.Crypto.Argon2.NumIterations = 1
 	config.Crypto.Argon2.NumThreads = 1
-	resources := auth.NewManagementResource(config, mockDB, authz.NewAuthorizer(mockDB))
+	resources := auth.NewManagementResource(config, mockDB, authz.NewAuthorizer(mockDB, nil))
 
 	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
 	if req, err := http.NewRequestWithContext(ctx, "GET", endpoint, nil); err != nil {
@@ -502,7 +502,7 @@ func TestManagementResource_ListRoles_InvalidFilterPredicate(t *testing.T) {
 	require.Nilf(t, err, "Failed to create default configuration: %v", err)
 	config.Crypto.Argon2.NumIterations = 1
 	config.Crypto.Argon2.NumThreads = 1
-	resources := auth.NewManagementResource(config, mockDB, authz.NewAuthorizer(mockDB))
+	resources := auth.NewManagementResource(config, mockDB, authz.NewAuthorizer(mockDB, nil))
 
 	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
 	if req, err := http.NewRequestWithContext(ctx, "GET", endpoint, nil); err != nil {
@@ -535,7 +535,7 @@ func TestManagementResource_ListRoles_PredicateMismatchWithColumn(t *testing.T) 
 	require.Nilf(t, err, "Failed to create default configuration: %v", err)
 	config.Crypto.Argon2.NumIterations = 1
 	config.Crypto.Argon2.NumThreads = 1
-	resources := auth.NewManagementResource(config, mockDB, authz.NewAuthorizer(mockDB))
+	resources := auth.NewManagementResource(config, mockDB, authz.NewAuthorizer(mockDB, nil))
 
 	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
 	if req, err := http.NewRequestWithContext(ctx, "GET", endpoint, nil); err != nil {
@@ -569,7 +569,7 @@ func TestManagementResource_ListRoles_DBError(t *testing.T) {
 	require.Nilf(t, err, "Failed to create default configuration: %v", err)
 	config.Crypto.Argon2.NumIterations = 1
 	config.Crypto.Argon2.NumThreads = 1
-	resources := auth.NewManagementResource(config, mockDB, authz.NewAuthorizer(mockDB))
+	resources := auth.NewManagementResource(config, mockDB, authz.NewAuthorizer(mockDB, nil))
 
 	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
 	if req, err := http.NewRequestWithContext(ctx, "GET", endpoint, nil); err != nil {
@@ -784,7 +784,7 @@ func TestManagementResource_ListUsers_SortingError(t *testing.T) {
 	require.Nilf(t, err, "Failed to create default configuration: %v", err)
 	config.Crypto.Argon2.NumIterations = 1
 	config.Crypto.Argon2.NumThreads = 1
-	resources := auth.NewManagementResource(config, mockDB, authz.NewAuthorizer(mockDB))
+	resources := auth.NewManagementResource(config, mockDB, authz.NewAuthorizer(mockDB, nil))
 
 	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
 	if req, err := http.NewRequestWithContext(ctx, "GET", endpoint, nil); err != nil {
@@ -817,7 +817,7 @@ func TestManagementResource_ListUsers_InvalidColumn(t *testing.T) {
 	require.Nilf(t, err, "Failed to create default configuration: %v", err)
 	config.Crypto.Argon2.NumIterations = 1
 	config.Crypto.Argon2.NumThreads = 1
-	resources := auth.NewManagementResource(config, mockDB, authz.NewAuthorizer(mockDB))
+	resources := auth.NewManagementResource(config, mockDB, authz.NewAuthorizer(mockDB, nil))
 
 	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
 	if req, err := http.NewRequestWithContext(ctx, "GET", endpoint, nil); err != nil {
@@ -850,7 +850,7 @@ func TestManagementResource_ListUsers_InvalidFilterPredicate(t *testing.T) {
 	require.Nilf(t, err, "Failed to create default configuration: %v", err)
 	config.Crypto.Argon2.NumIterations = 1
 	config.Crypto.Argon2.NumThreads = 1
-	resources := auth.NewManagementResource(config, mockDB, authz.NewAuthorizer(mockDB))
+	resources := auth.NewManagementResource(config, mockDB, authz.NewAuthorizer(mockDB, nil))
 
 	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
 	if req, err := http.NewRequestWithContext(ctx, "GET", endpoint, nil); err != nil {
@@ -883,7 +883,7 @@ func TestManagementResource_ListUsers_PredicateMismatchWithColumn(t *testing.T) 
 	require.Nilf(t, err, "Failed to create default configuration: %v", err)
 	config.Crypto.Argon2.NumIterations = 1
 	config.Crypto.Argon2.NumThreads = 1
-	resources := auth.NewManagementResource(config, mockDB, authz.NewAuthorizer(mockDB))
+	resources := auth.NewManagementResource(config, mockDB, authz.NewAuthorizer(mockDB, nil))
 
 	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
 	if req, err := http.NewRequestWithContext(ctx, "GET", endpoint, nil); err != nil {
@@ -917,7 +917,7 @@ func TestManagementResource_ListUsers_DBError(t *testing.T) {
 	require.Nilf(t, err, "Failed to create default configuration: %v", err)
 	config.Crypto.Argon2.NumIterations = 1
 	config.Crypto.Argon2.NumThreads = 1
-	resources := auth.NewManagementResource(config, mockDB, authz.NewAuthorizer(mockDB))
+	resources := auth.NewManagementResource(config, mockDB, authz.NewAuthorizer(mockDB, nil))
 
 	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
 	if req, err := http.NewRequestWithContext(ctx, "GET", endpoint, nil); err != nil {
@@ -1993,7 +1993,7 @@ func TestManagementResource_ListAuthTokens_SortingError(t *testing.T) {
 	require.Nilf(t, err, "Failed to create default configuration: %v", err)
 	config.Crypto.Argon2.NumIterations = 1
 	config.Crypto.Argon2.NumThreads = 1
-	resources := auth.NewManagementResource(config, mockDB, authz.NewAuthorizer(mockDB))
+	resources := auth.NewManagementResource(config, mockDB, authz.NewAuthorizer(mockDB, nil))
 
 	endpoint := "/api/v2/auth/tokens"
 	if req, err := http.NewRequestWithContext(c, "GET", endpoint, nil); err != nil {
@@ -2026,7 +2026,7 @@ func TestManagementResource_ListAuthTokens_InvalidColumn(t *testing.T) {
 	require.Nilf(t, err, "Failed to create default configuration: %v", err)
 	config.Crypto.Argon2.NumIterations = 1
 	config.Crypto.Argon2.NumThreads = 1
-	resources := auth.NewManagementResource(config, mockDB, authz.NewAuthorizer(mockDB))
+	resources := auth.NewManagementResource(config, mockDB, authz.NewAuthorizer(mockDB, nil))
 
 	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
 	if req, err := http.NewRequestWithContext(ctx, "GET", endpoint, nil); err != nil {
@@ -2059,7 +2059,7 @@ func TestManagementResource_ListAuthTokens_InvalidFilterPredicate(t *testing.T) 
 	require.Nilf(t, err, "Failed to create default configuration: %v", err)
 	config.Crypto.Argon2.NumIterations = 1
 	config.Crypto.Argon2.NumThreads = 1
-	resources := auth.NewManagementResource(config, mockDB, authz.NewAuthorizer(mockDB))
+	resources := auth.NewManagementResource(config, mockDB, authz.NewAuthorizer(mockDB, nil))
 
 	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
 	if req, err := http.NewRequestWithContext(ctx, "GET", endpoint, nil); err != nil {
@@ -2092,7 +2092,7 @@ func TestManagementResource_ListAuthTokens_PredicateMismatchWithColumn(t *testin
 	require.Nilf(t, err, "Failed to create default configuration: %v", err)
 	config.Crypto.Argon2.NumIterations = 1
 	config.Crypto.Argon2.NumThreads = 1
-	resources := auth.NewManagementResource(config, mockDB, authz.NewAuthorizer(mockDB))
+	resources := auth.NewManagementResource(config, mockDB, authz.NewAuthorizer(mockDB, nil))
 
 	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
 	if req, err := http.NewRequestWithContext(ctx, "GET", endpoint, nil); err != nil {
@@ -2141,7 +2141,7 @@ func TestManagementResource_ListAuthTokens_DBError(t *testing.T) {
 	require.Nilf(t, err, "Failed to create default configuration: %v", err)
 	config.Crypto.Argon2.NumIterations = 1
 	config.Crypto.Argon2.NumThreads = 1
-	resources := auth.NewManagementResource(config, mockDB, authz.NewAuthorizer(mockDB))
+	resources := auth.NewManagementResource(config, mockDB, authz.NewAuthorizer(mockDB, nil))
 
 	endpoint := "/api/v2/auth/tokens"
 	if req, err := http.NewRequestWithContext(c, "GET", endpoint, nil); err != nil {

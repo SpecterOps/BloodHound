@@ -91,22 +91,35 @@ type AuditLogger interface {
 }
 
 type Authorizer interface {
-	HasPermission(ctx Context, requiredPermission model.Permission, grantedPermissions model.Permissions) bool
+	AuditLogUnauthorizedAccess(request *http.Request)
 	AllowsPermission(ctx Context, requiredPermission model.Permission) bool
 	AllowsAllPermissions(ctx Context, requiredPermissions model.Permissions) bool
 	AllowsAtLeastOnePermission(ctx Context, requiredPermissions model.Permissions) bool
-	AuditLogUnauthorizedAccess(request *http.Request)
 }
 
 type authorizer struct {
-	auditLogger AuditLogger
+	auditLogger    AuditLogger
+	getPermissions GetPermissionsFunc
 }
 
-func NewAuthorizer(auditLogger AuditLogger) Authorizer {
-	return authorizer{auditLogger: auditLogger}
+func NewAuthorizer(auditLogger AuditLogger, getPermissionsFn GetPermissionsFunc) Authorizer {
+	if getPermissionsFn == nil {
+		getPermissionsFn = getPermissions
+	}
+	return authorizer{auditLogger: auditLogger, getPermissions: getPermissionsFn}
 }
 
-func (s authorizer) HasPermission(ctx Context, requiredPermission model.Permission, grantedPermissions model.Permissions) bool {
+type GetPermissionsFunc func(context Context) (model.Permissions, bool)
+
+func getPermissions(ctx Context) (model.Permissions, bool) {
+	if user, isUser := GetUserFromAuthCtx(ctx); isUser {
+		return user.Roles.Permissions(), true
+	}
+
+	return model.Permissions{}, false
+}
+
+func hasPermission(ctx Context, requiredPermission model.Permission, grantedPermissions model.Permissions) bool {
 	if ctx.PermissionOverrides.Enabled {
 		return ctx.PermissionOverrides.Permissions.Has(requiredPermission)
 	}
@@ -115,18 +128,17 @@ func (s authorizer) HasPermission(ctx Context, requiredPermission model.Permissi
 }
 
 func (s authorizer) AllowsPermission(ctx Context, requiredPermission model.Permission) bool {
-	if user, isUser := GetUserFromAuthCtx(ctx); isUser {
-		return s.HasPermission(ctx, requiredPermission, user.Roles.Permissions())
+	if grantedPermissions, isAuthed := s.getPermissions(ctx); isAuthed {
+		return hasPermission(ctx, requiredPermission, grantedPermissions)
 	}
 
 	return false
 }
 
 func (s authorizer) AllowsAllPermissions(ctx Context, requiredPermissions model.Permissions) bool {
-	if user, isUser := GetUserFromAuthCtx(ctx); isUser {
-		grantedPermissions := user.Roles.Permissions()
+	if grantedPermissions, isAuthed := s.getPermissions(ctx); isAuthed {
 		for _, permission := range requiredPermissions {
-			if !s.HasPermission(ctx, permission, grantedPermissions) {
+			if !hasPermission(ctx, permission, grantedPermissions) {
 				return false
 			}
 		}
@@ -136,10 +148,9 @@ func (s authorizer) AllowsAllPermissions(ctx Context, requiredPermissions model.
 }
 
 func (s authorizer) AllowsAtLeastOnePermission(ctx Context, requiredPermissions model.Permissions) bool {
-	if user, isUser := GetUserFromAuthCtx(ctx); isUser {
-		grantedPermissions := user.Roles.Permissions()
+	if grantedPermissions, isAuthed := s.getPermissions(ctx); isAuthed {
 		for _, permission := range requiredPermissions {
-			if s.HasPermission(ctx, permission, grantedPermissions) {
+			if hasPermission(ctx, permission, grantedPermissions) {
 				return true
 			}
 		}

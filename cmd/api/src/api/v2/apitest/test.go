@@ -36,7 +36,7 @@ func NewAuthManagementResource(mockCtrl *gomock.Controller) (auth.ManagementReso
 	cfg.Crypto.Argon2.NumThreads = 1
 
 	mockDB := mocks.NewMockDatabase(mockCtrl)
-	resources := auth.NewManagementResource(cfg, mockDB, authPkg.NewAuthorizer(mockDB))
+	resources := auth.NewManagementResource(cfg, mockDB, authPkg.NewAuthorizer(mockDB, nil))
 
 	return resources, mockDB
 }
