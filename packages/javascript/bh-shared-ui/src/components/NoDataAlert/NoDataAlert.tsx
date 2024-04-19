@@ -30,24 +30,28 @@ export const NoDataAlert: FC<NoDataAlertProps> = ({ dataCollectionLink, fileInge
         <Box display={'flex'} justifyContent={'center'} mt={theme.spacing(8)} mx={theme.spacing(4)}>
             <Alert severity={'info'}>
                 <AlertTitle>No Data Available</AlertTitle>
-                It appears that no data has been uploaded yet. See our {dataCollectionLink} documentation to learn how
-                to start collecting data.
-                <br />
-                <br />
-                {fileIngestLink && (
-                    <>
-                        If you have files available from a SharpHound or AzureHound collection, please visit the{' '}
-                        {fileIngestLink} page to begin uploading your data.
-                    </>
-                )}
-                <br />
-                <br />
-                {sampleDataLink && (
-                    <>
-                        If you want to test BloodHound with sample data, you may download some from our {sampleDataLink}{' '}
-                        GitHub page.
-                    </>
-                )}
+                <p>
+                    It appears that no data has been uploaded yet. See our {dataCollectionLink} documentation to learn
+                    how to start collecting data.
+                </p>
+
+                <p>
+                    {fileIngestLink && (
+                        <>
+                            If you have files available from a SharpHound or AzureHound collection, please visit the{' '}
+                            {fileIngestLink} page to begin uploading your data.
+                        </>
+                    )}
+                </p>
+
+                <p>
+                    {sampleDataLink && (
+                        <>
+                            If you want to test BloodHound with sample data, you may download some from our{' '}
+                            {sampleDataLink} GitHub page.
+                        </>
+                    )}
+                </p>
             </Alert>
         </Box>
     );
