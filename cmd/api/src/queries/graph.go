@@ -377,7 +377,11 @@ type PreparedQuery struct {
 // TODO: PrepareCypherQuery needs tests
 func (s *GraphQuery) PrepareCypherQuery(rawCypher string) (PreparedQuery, error) {
 	var (
-		parseCtx   = frontend.DefaultCypherContext()
+		parseCtx = frontend.NewContext(
+			&frontend.ExplicitProcedureInvocationFilter{},
+			&frontend.ImplicitProcedureInvocationFilter{},
+			&frontend.SpecifiedParametersFilter{},
+		)
 		queryBuffer         = &bytes.Buffer{}
 		strippedQueryBuffer = &bytes.Buffer{}
 		graphQuery PreparedQuery
