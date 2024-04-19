@@ -41,7 +41,7 @@ func parseCypher(ctx *Context, input string) (*model.RegularQuery, error) {
 		parseTreeWalker = antlr.NewParseTreeWalker()
 		queryVisitor    = &QueryVisitor{}
 	)
-	
+
 	// Set up the lexer and parser to report errors to the context
 	lexer.RemoveErrorListeners()
 	lexer.AddErrorListener(ctx)

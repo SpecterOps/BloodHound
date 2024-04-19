@@ -383,9 +383,15 @@ func (s *GraphQuery) PrepareCypherQuery(rawCypher string) (PreparedQuery, error)
 		graphQuery PreparedQuery
 	)
 
-	if queryModel, err := frontend.ParseCypher(parseCtx, rawCypher); err != nil {
+	queryModel, err := frontend.ParseCypher(parseCtx, rawCypher)
+	if err != nil {
 		return graphQuery, newQueryError(err)
-	} else if complexityMeasure, err := analyzer.QueryComplexity(queryModel); err != nil {
+	}
+
+	graphQuery.HasMutation = queryModel.HasMutation()
+
+	complexityMeasure, err := analyzer.QueryComplexity(queryModel)
+	if err != nil {
 		return graphQuery, newQueryError(err)
 	} else if err = s.strippedCypherEmitter.Write(queryModel, strippedQueryBuffer); err != nil {
 		return graphQuery, newQueryError(err)
@@ -396,7 +402,9 @@ func (s *GraphQuery) PrepareCypherQuery(rawCypher string) (PreparedQuery, error)
 		highComplexityLog.Msg(fmt.Sprintf("Query rejected. Query weight: %.2f. Maximum allowed weight: %d", complexityMeasure.Weight, MaxQueryComplexityWeightAllowed))
 
 		return graphQuery, newQueryError(ErrCypherQueryToComplex)
-	} else if pgDB, isPG := s.Graph.(*pg.Driver); isPG {
+	}
+
+	if pgDB, isPG := s.Graph.(*pg.Driver); isPG {
 		if _, err := pgsql.Translate(queryModel, pgDB.KindMapper()); err != nil {
 			return graphQuery, newQueryError(err)
 		}
