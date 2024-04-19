@@ -148,7 +148,6 @@ func (s *errorContext) Errors() []error {
 
 type RegularQuery struct {
 	SingleQuery *SingleQuery
-	HasMutation bool
 }
 
 func NewRegularQuery() *RegularQuery {

@@ -388,7 +388,7 @@ func (s *GraphQuery) PrepareCypherQuery(rawCypher string) (PreparedQuery, error)
 		return graphQuery, newQueryError(err)
 	}
 
-	graphQuery.HasMutation = queryModel.HasMutation
+	graphQuery.HasMutation = parseCtx.HasMutation
 
 	complexityMeasure, err := analyzer.QueryComplexity(queryModel)
 	if err != nil {
