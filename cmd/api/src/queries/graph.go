@@ -424,16 +424,13 @@ func (s *GraphQuery) PrepareCypherQuery(rawCypher string) (PreparedQuery, error)
 
 func (s *GraphQuery) RawCypherSearch(ctx context.Context, pQuery PreparedQuery, includeProperties bool) (model.UnifiedGraph, error) {
 	var (
+		err error
+
 		graphResponse = model.NewUnifiedGraph()
 		bhCtxInst     = bhCtx.Get(ctx)
 	)
 
-	logEvent := log.WithLevel(log.LevelInfo)
-	logEvent.Str("query", pQuery.strippedQuery)
-	logEvent.Str("query cost", fmt.Sprintf("%.2f", pQuery.complexity.Weight))
-	logEvent.Msg("Executing user cypher query")
-
-	transactionErr := s.Graph.ReadTransaction(ctx, func(tx graph.Transaction) error {
+	txDelegate := func(tx graph.Transaction) error {
 		if pathSet, err := ops.FetchPathSetByQuery(tx, pQuery.query); err != nil {
 			return err
 		} else {
@@ -441,9 +438,11 @@ func (s *GraphQuery) RawCypherSearch(ctx context.Context, pQuery PreparedQuery, 
 		}
 
 		return nil
-	}, func(config *graph.TransactionConfig) {
+	}
+
+	txOptions := func(config *graph.TransactionConfig) {
 		// The upperbound for this query must be either the custom request timeout (capped at maxRuntime
-		// below), or if it isn't supplied then 15 minutes- since longer timeouts may call OOM kills.
+		// below), or if it isn't supplied then 15 minutes - since longer timeouts may call OOM kills.
 		var (
 			maxTimeout     = 30 * time.Minute
 			defaultTimeout = 15 * time.Minute
@@ -473,15 +472,33 @@ func (s *GraphQuery) RawCypherSearch(ctx context.Context, pQuery PreparedQuery, 
 
 		// Set the timeout for this DB interaction
 		config.Timeout = availableRuntime
-	})
-	// Log query details if neo4j times out
-	if util.IsNeoTimeoutError(transactionErr) {
-		timeoutLog := log.WithLevel(log.LevelError)
-		timeoutLog.Str("query", pQuery.strippedQuery)
-		timeoutLog.Str("query cost", fmt.Sprintf("%.2f", pQuery.complexity.Weight))
-		timeoutLog.Msg("Neo4j timed out while executing cypher query")
 	}
-	return graphResponse, transactionErr
+
+	logEvent := log.WithLevel(log.LevelInfo)
+	logEvent.Str("query", pQuery.strippedQuery)
+	logEvent.Str("query cost", fmt.Sprintf("%.2f", pQuery.complexity.Weight))
+	logEvent.Msg("Executing user cypher query")
+
+	if pQuery.HasMutation {
+		err = s.Graph.WriteTransaction(ctx, txDelegate, txOptions)
+	} else {
+		err = s.Graph.ReadTransaction(ctx, txDelegate, txOptions)
+	}
+
+	if err != nil {
+		// Log query details if neo4j times out
+		if util.IsNeoTimeoutError(err) {
+			timeoutLog := log.WithLevel(log.LevelError)
+			timeoutLog.Str("query", pQuery.strippedQuery)
+			timeoutLog.Str("query cost", fmt.Sprintf("%.2f", pQuery.complexity.Weight))
+			timeoutLog.Msg("Neo4j timed out while executing cypher query")
+		} else {
+			log.Errorf("RawCypherSearch failed: %v", err)
+		}
+		return graphResponse, err
+	}
+
+	return graphResponse, nil
 }
 
 func nodeToSearchResult(node *graph.Node) model.SearchResult {
