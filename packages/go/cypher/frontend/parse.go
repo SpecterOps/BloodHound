@@ -55,6 +55,9 @@ func parseCypher(ctx *Context, input string) (*model.RegularQuery, error) {
 	// Hand off to ANTLR
 	parseTreeWalker.Walk(ctx, parserInst.OC_Cypher())
 
+	// If we encountered a mutation anywhere we want to flag this entire query as having a mutation
+	queryVisitor.Query.HasMutation = ctx.HasMutation
+
 	// Collect errors
 	return queryVisitor.Query, errors.Join(ctx.Errors...)
 }

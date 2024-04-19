@@ -363,6 +363,7 @@ func (s *SinglePartQueryVisitor) EnterOC_UpdatingClause(ctx *parser.OC_UpdatingC
 }
 
 func (s *SinglePartQueryVisitor) ExitOC_UpdatingClause(ctx *parser.OC_UpdatingClauseContext) {
+	s.ctx.HasMutation = true
 	s.Query.AddUpdatingClause(s.ctx.Exit().(*UpdatingClauseVisitor).UpdatingClause)
 }
 
@@ -400,6 +401,7 @@ func (s *MultiPartQueryVisitor) EnterOC_UpdatingClause(ctx *parser.OC_UpdatingCl
 
 func (s *MultiPartQueryVisitor) ExitOC_UpdatingClause(ctx *parser.OC_UpdatingClauseContext) {
 	if s.currentPart != nil {
+		s.ctx.HasMutation = true
 		s.currentPart.AddUpdatingClause(s.ctx.Exit().(*UpdatingClauseVisitor).UpdatingClause)
 	} else {
 		s.ctx.AddErrors(ErrInvalidInput)

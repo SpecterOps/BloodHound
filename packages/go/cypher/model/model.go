@@ -148,34 +148,11 @@ func (s *errorContext) Errors() []error {
 
 type RegularQuery struct {
 	SingleQuery *SingleQuery
+	HasMutation bool
 }
 
 func NewRegularQuery() *RegularQuery {
 	return &RegularQuery{}
-}
-
-func (s *RegularQuery) HasMutation() bool {
-	if s.SingleQuery == nil {
-		return false
-	}
-
-	if s.SingleQuery.SinglePartQuery != nil && len(s.SingleQuery.SinglePartQuery.UpdatingClauses) > 0 {
-		return true
-	}
-
-	if s.SingleQuery.MultiPartQuery != nil {
-		if s.SingleQuery.MultiPartQuery.SinglePartQuery != nil && len(s.SingleQuery.MultiPartQuery.SinglePartQuery.UpdatingClauses) > 0 {
-			return true
-		}
-
-		for _, part := range s.SingleQuery.MultiPartQuery.Parts {
-			if len(part.UpdatingClauses) > 0 {
-				return true
-			}
-		}
-	}
-
-	return false
 }
 
 func (s *RegularQuery) copy() *RegularQuery {
