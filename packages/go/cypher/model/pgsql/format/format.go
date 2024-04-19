@@ -2,10 +2,11 @@ package format
 
 import (
 	"fmt"
-	"github.com/specterops/bloodhound/cypher/model/pgsql"
-	"github.com/specterops/bloodhound/dawgs/graph"
 	"strconv"
 	"strings"
+
+	"github.com/specterops/bloodhound/cypher/model/pgsql"
+	"github.com/specterops/bloodhound/dawgs/graph"
 )
 
 type FormattedOutput struct {
@@ -82,7 +83,7 @@ func formatLiteral(builder OutputBuilder, literal pgsql.Literal) error {
 	return nil
 }
 
-func formatExpression(builder OutputBuilder, rootExpr pgsql.Expression) error {
+func formatExpression(builder OutputBuilder, rootExpr pgsql.SyntaxNode) error {
 	exprStack := []pgsql.SyntaxNode{
 		rootExpr,
 	}
@@ -289,7 +290,7 @@ func formatExpression(builder OutputBuilder, rootExpr pgsql.Expression) error {
 	return nil
 }
 
-func Expression(expression pgsql.Expression) (FormattedOutput, error) {
+func Expression(expression pgsql.SyntaxNode) (FormattedOutput, error) {
 	var (
 		builder = NewOutputBuilder()
 		err     = formatExpression(builder, expression)

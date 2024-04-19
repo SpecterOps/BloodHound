@@ -1,20 +1,22 @@
 package format
 
 import (
-	"github.com/stretchr/testify/require"
 	"testing"
+
+	"github.com/specterops/bloodhound/cypher/model/pgsql"
+	"github.com/stretchr/testify/require"
 )
 
 func TestFormat_Delete(t *testing.T) {
-	formattedQuery, err := Statement(Delete{
-		Table: TableReference{
-			Name:    CompoundIdentifier{"table"},
-			Binding: AsOptionalIdentifier("t"),
+	formattedQuery, err := Statement(pgsql.Delete{
+		Table: pgsql.TableReference{
+			Name:    pgsql.CompoundIdentifier{"table"},
+			Binding: pgsql.AsOptionalIdentifier("t"),
 		},
-		Where: BinaryExpression{
-			LeftOperand:  CompoundIdentifier{"t", "col1"},
-			Operator:     Operator("<"),
-			RightOperand: AsLiteral(4),
+		Where: pgsql.BinaryExpression{
+			LOperand: pgsql.CompoundIdentifier{"t", "col1"},
+			Operator: pgsql.Operator("<"),
+			ROperand: pgsql.AsLiteral(4),
 		},
 	})
 
@@ -23,22 +25,22 @@ func TestFormat_Delete(t *testing.T) {
 }
 
 func TestFormat_Update(t *testing.T) {
-	formattedQuery, err := Statement(Update{
-		Table: TableReference{
-			Name:    CompoundIdentifier{"table"},
-			Binding: AsOptionalIdentifier("t"),
+	formattedQuery, err := Statement(pgsql.Update{
+		Table: pgsql.TableReference{
+			Name:    pgsql.CompoundIdentifier{"table"},
+			Binding: pgsql.AsOptionalIdentifier("t"),
 		},
-		Assignments: []Assignment{{
+		Assignments: []pgsql.Assignment{{
 			Identifier: "col1",
-			Value:      AsLiteral(1),
+			Value:      pgsql.AsLiteral(1),
 		}, {
 			Identifier: "col2",
-			Value:      AsLiteral("12345"),
+			Value:      pgsql.AsLiteral("12345"),
 		}},
-		Where: BinaryExpression{
-			LeftOperand:  CompoundIdentifier{"t", "col1"},
-			Operator:     Operator("<"),
-			RightOperand: AsLiteral(4),
+		Where: pgsql.BinaryExpression{
+			LOperand: pgsql.CompoundIdentifier{"t", "col1"},
+			Operator: pgsql.Operator("<"),
+			ROperand: pgsql.AsLiteral(4),
 		},
 	})
 
@@ -47,12 +49,12 @@ func TestFormat_Update(t *testing.T) {
 }
 
 func TestFormat_Insert(t *testing.T) {
-	formattedQuery, err := Statement(Insert{
-		Table:   CompoundIdentifier{"table"},
-		Columns: []Identifier{"col1", "col2", "col3"},
-		Source: &Query{
-			Body: Values{
-				Values: []Expression{AsLiteral("1"), AsLiteral(1), AsLiteral(false)},
+	formattedQuery, err := Statement(pgsql.Insert{
+		Table:   pgsql.CompoundIdentifier{"table"},
+		Columns: []pgsql.Identifier{"col1", "col2", "col3"},
+		Source: &pgsql.Query{
+			Body: pgsql.Values{
+				Values: []pgsql.Expression{pgsql.AsLiteral("1"), pgsql.AsLiteral(1), pgsql.AsLiteral(false)},
 			},
 		},
 	})
@@ -60,23 +62,23 @@ func TestFormat_Insert(t *testing.T) {
 	require.Nil(t, err)
 	require.Equal(t, "insert into table (col1, col2, col3) values ('1', 1, false)", formattedQuery.Value)
 
-	formattedQuery, err = Statement(Insert{
-		Table:   CompoundIdentifier{"table"},
-		Columns: []Identifier{"col1", "col2", "col3"},
-		Source: &Query{
-			Body: Select{
-				Projection: []Projection{
-					Wildcard{},
+	formattedQuery, err = Statement(pgsql.Insert{
+		Table:   pgsql.CompoundIdentifier{"table"},
+		Columns: []pgsql.Identifier{"col1", "col2", "col3"},
+		Source: &pgsql.Query{
+			Body: pgsql.Select{
+				Projection: []pgsql.Projection{
+					pgsql.Wildcard{},
 				},
-				From: []FromClause{{
-					Relation: TableReference{
-						Name: CompoundIdentifier{"other"},
+				From: []pgsql.FromClause{{
+					Relation: pgsql.TableReference{
+						Name: pgsql.CompoundIdentifier{"other"},
 					},
 				}},
-				Where: BinaryExpression{
-					LeftOperand:  CompoundIdentifier{"other", "col1"},
-					Operator:     Operator("="),
-					RightOperand: AsLiteral("1234"),
+				Where: pgsql.BinaryExpression{
+					LOperand: pgsql.CompoundIdentifier{"other", "col1"},
+					Operator: pgsql.Operator("="),
+					ROperand: pgsql.AsLiteral("1234"),
 				},
 			},
 		},
@@ -85,117 +87,117 @@ func TestFormat_Insert(t *testing.T) {
 	require.Nil(t, err)
 	require.Equal(t, "insert into table (col1, col2, col3) select * from other where other.col1 = '1234'", formattedQuery.Value)
 
-	formattedQuery, err = Statement(Insert{
-		Table:   CompoundIdentifier{"table"},
-		Columns: []Identifier{"col1", "col2", "col3"},
-		Source: &Query{
-			Body: Select{
-				Projection: []Projection{
-					Wildcard{},
+	formattedQuery, err = Statement(pgsql.Insert{
+		Table:   pgsql.CompoundIdentifier{"table"},
+		Columns: []pgsql.Identifier{"col1", "col2", "col3"},
+		Source: &pgsql.Query{
+			Body: pgsql.Select{
+				Projection: []pgsql.Projection{
+					pgsql.Wildcard{},
 				},
-				From: []FromClause{{
-					Relation: TableReference{
-						Name: CompoundIdentifier{"other"},
+				From: []pgsql.FromClause{{
+					Relation: pgsql.TableReference{
+						Name: pgsql.CompoundIdentifier{"other"},
 					},
 				}},
-				Where: BinaryExpression{
-					LeftOperand:  CompoundIdentifier{"other", "col1"},
-					Operator:     Operator("="),
-					RightOperand: AsLiteral("1234"),
+				Where: pgsql.BinaryExpression{
+					LOperand: pgsql.CompoundIdentifier{"other", "col1"},
+					Operator: pgsql.Operator("="),
+					ROperand: pgsql.AsLiteral("1234"),
 				},
 			},
 		},
-		Returning: []Projection{
-			Identifier("id"),
+		Returning: []pgsql.Projection{
+			pgsql.Identifier("id"),
 		},
 	})
 
 	require.Nil(t, err)
 	require.Equal(t, "insert into table (col1, col2, col3) select * from other where other.col1 = '1234' returning id", formattedQuery.Value)
 
-	formattedQuery, err = Statement(Insert{
-		Table:   CompoundIdentifier{"table"},
-		Columns: []Identifier{"col1", "col2", "col3"},
-		Source: &Query{
-			Body: Select{
-				Projection: []Projection{
-					Wildcard{},
+	formattedQuery, err = Statement(pgsql.Insert{
+		Table:   pgsql.CompoundIdentifier{"table"},
+		Columns: []pgsql.Identifier{"col1", "col2", "col3"},
+		Source: &pgsql.Query{
+			Body: pgsql.Select{
+				Projection: []pgsql.Projection{
+					pgsql.Wildcard{},
 				},
-				From: []FromClause{{
-					Relation: TableReference{
-						Name: CompoundIdentifier{"other"},
+				From: []pgsql.FromClause{{
+					Relation: pgsql.TableReference{
+						Name: pgsql.CompoundIdentifier{"other"},
 					},
 				}},
-				Where: BinaryExpression{
-					LeftOperand:  CompoundIdentifier{"other", "col1"},
-					Operator:     Operator("="),
-					RightOperand: AsLiteral("1234"),
+				Where: pgsql.BinaryExpression{
+					LOperand: pgsql.CompoundIdentifier{"other", "col1"},
+					Operator: pgsql.Operator("="),
+					ROperand: pgsql.AsLiteral("1234"),
 				},
 			},
 		},
-		OnConflict: &OnConflict{
-			Target: &ConflictTarget{
-				Constraint: CompoundIdentifier{"other.hash_constraint"},
+		OnConflict: &pgsql.OnConflict{
+			Target: &pgsql.ConflictTarget{
+				Constraint: pgsql.CompoundIdentifier{"other.hash_constraint"},
 			},
-			Action: DoUpdate{
-				Assignments: []Assignment{{
+			Action: pgsql.DoUpdate{
+				Assignments: []pgsql.Assignment{{
 					Identifier: "hit_count",
-					Value: BinaryExpression{
-						LeftOperand:  Identifier("hit_count"),
-						Operator:     Operator("+"),
-						RightOperand: AsLiteral(1),
+					Value: pgsql.BinaryExpression{
+						LOperand: pgsql.Identifier("hit_count"),
+						Operator: pgsql.Operator("+"),
+						ROperand: pgsql.AsLiteral(1),
 					},
 				}},
-				Where: BinaryExpression{
-					LeftOperand:  Identifier("hit_count"),
-					Operator:     Operator("<"),
-					RightOperand: AsLiteral(9999),
+				Where: pgsql.BinaryExpression{
+					LOperand: pgsql.Identifier("hit_count"),
+					Operator: pgsql.Operator("<"),
+					ROperand: pgsql.AsLiteral(9999),
 				},
 			},
 		},
-		Returning: []Projection{Identifier("id"), Identifier("hit_count")},
+		Returning: []pgsql.Projection{pgsql.Identifier("id"), pgsql.Identifier("hit_count")},
 	})
 
 	require.Nil(t, err)
 	require.Equal(t, "insert into table (col1, col2, col3) select * from other where other.col1 = '1234' on conflict on constraint other.hash_constraint do update set hit_count = hit_count + 1 where hit_count < 9999 returning id, hit_count", formattedQuery.Value)
 
-	formattedQuery, err = Statement(Insert{
-		Table:   CompoundIdentifier{"table"},
-		Columns: []Identifier{"col1", "col2", "col3"},
-		Source: &Query{
-			Body: Select{
-				Projection: []Projection{
-					Wildcard{},
+	formattedQuery, err = Statement(pgsql.Insert{
+		Table:   pgsql.CompoundIdentifier{"table"},
+		Columns: []pgsql.Identifier{"col1", "col2", "col3"},
+		Source: &pgsql.Query{
+			Body: pgsql.Select{
+				Projection: []pgsql.Projection{
+					pgsql.Wildcard{},
 				},
-				From: []FromClause{{
-					Relation: TableReference{
-						Name: CompoundIdentifier{"other"},
+				From: []pgsql.FromClause{{
+					Relation: pgsql.TableReference{
+						Name: pgsql.CompoundIdentifier{"other"},
 					},
 				}},
-				Where: BinaryExpression{
-					LeftOperand:  CompoundIdentifier{"other", "col1"},
-					Operator:     Operator("="),
-					RightOperand: AsLiteral("1234"),
+				Where: pgsql.BinaryExpression{
+					LOperand: pgsql.CompoundIdentifier{"other", "col1"},
+					Operator: pgsql.Operator("="),
+					ROperand: pgsql.AsLiteral("1234"),
 				},
 			},
 		},
-		OnConflict: &OnConflict{
-			Target: &ConflictTarget{
-				Columns: CompoundIdentifier{"hash"},
+		OnConflict: &pgsql.OnConflict{
+			Target: &pgsql.ConflictTarget{
+				Columns: pgsql.CompoundIdentifier{"hash"},
 			},
-			Action: DoUpdate{
-				Assignments: []Assignment{{
+			Action: pgsql.DoUpdate{
+				Assignments: []pgsql.Assignment{{
 					Identifier: "hit_count",
-					Value: BinaryExpression{
-						LeftOperand:  Identifier("hit_count"),
-						Operator:     Operator("+"),
-						RightOperand: AsLiteral(1),
+					Value: pgsql.BinaryExpression{
+						LOperand: pgsql.Identifier("hit_count"),
+						Operator: pgsql.Operator("+"),
+						ROperand: pgsql.AsLiteral(1),
 					},
 				}},
-				Where: BinaryExpression{
-					LeftOperand:  Identifier("hit_count"),
-					Operator:     Operator("<"),
-					RightOperand: AsLiteral(9999),
+				Where: pgsql.BinaryExpression{
+					LOperand: pgsql.Identifier("hit_count"),
+					Operator: pgsql.Operator("<"),
+					ROperand: pgsql.AsLiteral(9999),
 				},
 			},
 		},
@@ -206,22 +208,22 @@ func TestFormat_Insert(t *testing.T) {
 }
 
 func TestFormat_Query(t *testing.T) {
-	query := Query{
-		Body: Select{
+	query := pgsql.Query{
+		Body: pgsql.Select{
 			Distinct: false,
-			Projection: []Projection{
-				Wildcard{},
+			Projection: []pgsql.Projection{
+				pgsql.Wildcard{},
 			},
-			From: []FromClause{{
-				Relation: TableReference{
-					Name:    CompoundIdentifier{"table"},
-					Binding: AsOptionalIdentifier("t"),
+			From: []pgsql.FromClause{{
+				Relation: pgsql.TableReference{
+					Name:    pgsql.CompoundIdentifier{"table"},
+					Binding: pgsql.AsOptionalIdentifier("t"),
 				},
 			}},
-			Where: BinaryExpression{
-				LeftOperand: CompoundIdentifier{"t", "col1"},
-				Operator:    Operator(">"),
-				RightOperand: Literal{
+			Where: pgsql.BinaryExpression{
+				LOperand: pgsql.CompoundIdentifier{"t", "col1"},
+				Operator: pgsql.Operator(">"),
+				ROperand: pgsql.Literal{
 					Value: 1,
 				},
 			},
@@ -234,67 +236,67 @@ func TestFormat_Query(t *testing.T) {
 }
 
 func TestFormat_Merge(t *testing.T) {
-	formattedQuery, err := Statement(Merge{
+	formattedQuery, err := Statement(pgsql.Merge{
 		Into: true,
-		Table: TableReference{
-			Name:    CompoundIdentifier{"table"},
-			Binding: AsOptionalIdentifier("t"),
+		Table: pgsql.TableReference{
+			Name:    pgsql.CompoundIdentifier{"table"},
+			Binding: pgsql.AsOptionalIdentifier("t"),
 		},
-		Source: TableReference{
-			Name:    CompoundIdentifier{"source"},
-			Binding: AsOptionalIdentifier("s"),
+		Source: pgsql.TableReference{
+			Name:    pgsql.CompoundIdentifier{"source"},
+			Binding: pgsql.AsOptionalIdentifier("s"),
 		},
-		JoinTarget: BinaryExpression{
-			LeftOperand:  CompoundIdentifier{"t", "source_id"},
-			Operator:     Operator("="),
-			RightOperand: CompoundIdentifier{"s", "id"},
+		JoinTarget: pgsql.BinaryExpression{
+			LOperand: pgsql.CompoundIdentifier{"t", "source_id"},
+			Operator: pgsql.Operator("="),
+			ROperand: pgsql.CompoundIdentifier{"s", "id"},
 		},
-		Actions: []MergeAction{
-			MatchedUpdate{
-				Predicate: BinaryExpression{
-					LeftOperand:  CompoundIdentifier{"t", "value"},
-					Operator:     Operator(">"),
-					RightOperand: CompoundIdentifier{"s", "value"},
+		Actions: []pgsql.MergeAction{
+			pgsql.MatchedUpdate{
+				Predicate: pgsql.BinaryExpression{
+					LOperand: pgsql.CompoundIdentifier{"t", "value"},
+					Operator: pgsql.Operator(">"),
+					ROperand: pgsql.CompoundIdentifier{"s", "value"},
 				},
-				Assignments: []Assignment{{
+				Assignments: []pgsql.Assignment{{
 					Identifier: "updated_at",
-					Value: FunctionCall{
+					Value: pgsql.FunctionCall{
 						Function: "now",
 					},
 				}},
 			},
-			MatchedUpdate{
-				Predicate: BinaryExpression{
-					LeftOperand:  CompoundIdentifier{"t", "value"},
-					Operator:     Operator("<="),
-					RightOperand: CompoundIdentifier{"s", "value"},
+			pgsql.MatchedUpdate{
+				Predicate: pgsql.BinaryExpression{
+					LOperand: pgsql.CompoundIdentifier{"t", "value"},
+					Operator: pgsql.Operator("<="),
+					ROperand: pgsql.CompoundIdentifier{"s", "value"},
 				},
-				Assignments: []Assignment{{
+				Assignments: []pgsql.Assignment{{
 					Identifier: "value",
-					Value:      CompoundIdentifier{"s", "value"},
+					Value:      pgsql.CompoundIdentifier{"s", "value"},
 				}, {
 					Identifier: "t.updated_at",
-					Value: FunctionCall{
+					Value: pgsql.FunctionCall{
 						Function: "now",
 					},
 				}},
 			},
-			MatchedDelete{
-				Predicate: BinaryExpression{
-					LeftOperand:  CompoundIdentifier{"t", "value"},
-					Operator:     Operator("="),
-					RightOperand: CompoundIdentifier{"s", "value"},
+			pgsql.MatchedDelete{
+				Predicate: pgsql.BinaryExpression{
+					LOperand: pgsql.CompoundIdentifier{"t", "value"},
+					Operator: pgsql.Operator("="),
+					ROperand: pgsql.CompoundIdentifier{"s", "value"},
 				},
 			},
-			UnmatchedAction{
-				Predicate: BinaryExpression{
-					LeftOperand:  CompoundIdentifier{"t", "value"},
-					Operator:     Operator("="),
-					RightOperand: AsLiteral(0),
+			pgsql.UnmatchedAction{
+				Predicate: pgsql.BinaryExpression{
+					LOperand: pgsql.CompoundIdentifier{"t", "value"},
+					Operator: pgsql.Operator("="),
+					ROperand: pgsql.AsLiteral(0),
 				},
-				Columns: []Identifier{"hit_count"},
-				Values: Values{
-					Values: []Expression{AsLiteral(0)},
+				Columns: []pgsql.Identifier{"hit_count"},
+				Values: pgsql.Values{
+					Values: []pgsql.Expression{pgsql.AsLiteral(0)},
 				},
 			},
 		},
@@ -305,16 +307,16 @@ func TestFormat_Merge(t *testing.T) {
 }
 
 func TestFormat_CTEs(t *testing.T) {
-	formattedQuery, err := Statement(Query{
-		CommonTableExpressions: &With{
+	formattedQuery, err := Statement(pgsql.Query{
+		CommonTableExpressions: &pgsql.With{
 			Recursive: true,
-			Expressions: []CommonTableExpression{{
-				Materialized: &Materialized{
+			Expressions: []pgsql.CommonTableExpression{{
+				Materialized: &pgsql.Materialized{
 					Materialized: true,
 				},
-				Alias: TableAlias{
+				Alias: pgsql.TableAlias{
 					Name: "expansion_1",
-					Columns: []Identifier{
+					Columns: []pgsql.Identifier{
 						"root_id",
 						"next_id",
 						"depth",
@@ -323,157 +325,157 @@ func TestFormat_CTEs(t *testing.T) {
 						"path",
 					},
 				},
-				Query: Query{
-					Body: SetOperation{
+				Query: pgsql.Query{
+					Body: pgsql.SetOperation{
 						Operator: "union",
 						All:      true,
-						LeftOperand: Select{
-							Projection: []Projection{
-								CompoundIdentifier{"r", "start_id"},
-								CompoundIdentifier{"r", "end_id"},
-								Literal{
+						LeftOperand: pgsql.Select{
+							Projection: []pgsql.Projection{
+								pgsql.CompoundIdentifier{"r", "start_id"},
+								pgsql.CompoundIdentifier{"r", "end_id"},
+								pgsql.Literal{
 									Value: 1,
 								},
-								Literal{
+								pgsql.Literal{
 									Value: false,
 								},
-								BinaryExpression{
-									LeftOperand:  CompoundIdentifier{"r", "start_id"},
-									Operator:     Operator("="),
-									RightOperand: CompoundIdentifier{"r", "end_id"},
+								pgsql.BinaryExpression{
+									LOperand: pgsql.CompoundIdentifier{"r", "start_id"},
+									Operator: pgsql.Operator("="),
+									ROperand: pgsql.CompoundIdentifier{"r", "end_id"},
 								},
-								ArrayLiteral{
-									Values: []Expression{
-										CompoundIdentifier{"r", "id"},
+								pgsql.ArrayLiteral{
+									Values: []pgsql.Expression{
+										pgsql.CompoundIdentifier{"r", "id"},
 									},
 								},
 							},
 
-							From: []FromClause{{
-								Relation: TableReference{
-									Name:    CompoundIdentifier{"edge"},
-									Binding: AsOptionalIdentifier("r"),
+							From: []pgsql.FromClause{{
+								Relation: pgsql.TableReference{
+									Name:    pgsql.CompoundIdentifier{"edge"},
+									Binding: pgsql.AsOptionalIdentifier("r"),
 								},
 
-								Joins: []Join{{
-									Table: TableReference{
-										Name:    CompoundIdentifier{"node"},
-										Binding: AsOptionalIdentifier("a"),
+								Joins: []pgsql.Join{{
+									Table: pgsql.TableReference{
+										Name:    pgsql.CompoundIdentifier{"node"},
+										Binding: pgsql.AsOptionalIdentifier("a"),
 									},
-									JoinOperator: JoinOperator{
-										JoinType: JoinTypeInner,
-										Constraint: BinaryExpression{
-											LeftOperand:  CompoundIdentifier{"a", "id"},
-											Operator:     Operator("="),
-											RightOperand: CompoundIdentifier{"r", "start_id"},
+									JoinOperator: pgsql.JoinOperator{
+										JoinType: pgsql.JoinTypeInner,
+										Constraint: pgsql.BinaryExpression{
+											LOperand: pgsql.CompoundIdentifier{"a", "id"},
+											Operator: pgsql.Operator("="),
+											ROperand: pgsql.CompoundIdentifier{"r", "start_id"},
 										},
 									},
 								}},
 							}},
 
-							Where: BinaryExpression{
-								LeftOperand: CompoundIdentifier{"a", "kind_ids"},
-								Operator: FunctionCall{
+							Where: pgsql.BinaryExpression{
+								LOperand: pgsql.CompoundIdentifier{"a", "kind_ids"},
+								Operator: pgsql.FunctionCall{
 									Function: "operator",
-									Parameters: []Expression{
-										CompoundIdentifier{"pg_catalog", "&&"},
+									Parameters: []pgsql.Expression{
+										pgsql.CompoundIdentifier{"pg_catalog", "&&"},
 									},
 								},
-								RightOperand: ArrayLiteral{
-									Values: []Expression{
-										Literal{
+								ROperand: pgsql.ArrayLiteral{
+									Values: []pgsql.Expression{
+										pgsql.Literal{
 											Value: 23,
 										},
 									},
-									TypeHint: Int2Array,
+									TypeHint: pgsql.Int2Array,
 								},
 							},
 						},
-						RightOperand: Select{
-							Projection: []Projection{
-								CompoundIdentifier{"expansion_1", "root_id"},
-								CompoundIdentifier{"r", "end_id"},
-								BinaryExpression{
-									LeftOperand: CompoundIdentifier{"expansion_1", "depth"},
-									Operator:    Operator("+"),
-									RightOperand: Literal{
+						RightOperand: pgsql.Select{
+							Projection: []pgsql.Projection{
+								pgsql.CompoundIdentifier{"expansion_1", "root_id"},
+								pgsql.CompoundIdentifier{"r", "end_id"},
+								pgsql.BinaryExpression{
+									LOperand: pgsql.CompoundIdentifier{"expansion_1", "depth"},
+									Operator: pgsql.Operator("+"),
+									ROperand: pgsql.Literal{
 										Value: 1,
 									},
 								},
-								BinaryExpression{
-									LeftOperand: CompoundIdentifier{"b", "kind_ids"},
-									Operator: FunctionCall{
+								pgsql.BinaryExpression{
+									LOperand: pgsql.CompoundIdentifier{"b", "kind_ids"},
+									Operator: pgsql.FunctionCall{
 										Function: "operator",
-										Parameters: []Expression{
-											CompoundIdentifier{"pg_catalog", "&&"},
+										Parameters: []pgsql.Expression{
+											pgsql.CompoundIdentifier{"pg_catalog", "&&"},
 										},
 									},
-									RightOperand: ArrayLiteral{
-										Values: []Expression{
-											Literal{
+									ROperand: pgsql.ArrayLiteral{
+										Values: []pgsql.Expression{
+											pgsql.Literal{
 												Value: 24,
 											},
 										},
-										TypeHint: Int2Array,
+										TypeHint: pgsql.Int2Array,
 									},
 								},
-								BinaryExpression{
-									LeftOperand: CompoundIdentifier{"r", "id"},
-									Operator:    Operator("="),
-									RightOperand: FunctionCall{
+								pgsql.BinaryExpression{
+									LOperand: pgsql.CompoundIdentifier{"r", "id"},
+									Operator: pgsql.Operator("="),
+									ROperand: pgsql.FunctionCall{
 										Function: "any",
-										Parameters: []Expression{
-											CompoundIdentifier{"expansion_1", "path"},
+										Parameters: []pgsql.Expression{
+											pgsql.CompoundIdentifier{"expansion_1", "path"},
 										},
 									},
 								},
-								BinaryExpression{
-									LeftOperand:  CompoundIdentifier{"expansion_1", "path"},
-									Operator:     Operator("||"),
-									RightOperand: CompoundIdentifier{"r", "id"},
+								pgsql.BinaryExpression{
+									LOperand: pgsql.CompoundIdentifier{"expansion_1", "path"},
+									Operator: pgsql.Operator("||"),
+									ROperand: pgsql.CompoundIdentifier{"r", "id"},
 								},
 							},
-							From: []FromClause{{
-								Relation: TableReference{
-									Name: CompoundIdentifier{"expansion_1"},
+							From: []pgsql.FromClause{{
+								Relation: pgsql.TableReference{
+									Name: pgsql.CompoundIdentifier{"expansion_1"},
 								},
-								Joins: []Join{{
-									Table: TableReference{
-										Name:    CompoundIdentifier{"edge"},
-										Binding: AsOptionalIdentifier("r"),
+								Joins: []pgsql.Join{{
+									Table: pgsql.TableReference{
+										Name:    pgsql.CompoundIdentifier{"edge"},
+										Binding: pgsql.AsOptionalIdentifier("r"),
 									},
-									JoinOperator: JoinOperator{
-										JoinType: JoinTypeInner,
-										Constraint: BinaryExpression{
-											LeftOperand:  CompoundIdentifier{"r", "start_id"},
-											Operator:     Operator("="),
-											RightOperand: CompoundIdentifier{"expansion_1", "next_id"},
+									JoinOperator: pgsql.JoinOperator{
+										JoinType: pgsql.JoinTypeInner,
+										Constraint: pgsql.BinaryExpression{
+											LOperand: pgsql.CompoundIdentifier{"r", "start_id"},
+											Operator: pgsql.Operator("="),
+											ROperand: pgsql.CompoundIdentifier{"expansion_1", "next_id"},
 										},
 									},
 								}, {
-									Table: TableReference{
-										Name:    CompoundIdentifier{"node"},
-										Binding: AsOptionalIdentifier("b"),
+									Table: pgsql.TableReference{
+										Name:    pgsql.CompoundIdentifier{"node"},
+										Binding: pgsql.AsOptionalIdentifier("b"),
 									},
-									JoinOperator: JoinOperator{
-										JoinType: JoinTypeInner,
-										Constraint: BinaryExpression{
-											LeftOperand:  CompoundIdentifier{"b", "id"},
-											Operator:     Operator("="),
-											RightOperand: CompoundIdentifier{"r", "end_id"},
+									JoinOperator: pgsql.JoinOperator{
+										JoinType: pgsql.JoinTypeInner,
+										Constraint: pgsql.BinaryExpression{
+											LOperand: pgsql.CompoundIdentifier{"b", "id"},
+											Operator: pgsql.Operator("="),
+											ROperand: pgsql.CompoundIdentifier{"r", "end_id"},
 										},
 									},
 								}},
 							}},
-							Where: BinaryExpression{
-								LeftOperand: UnaryExpression{
-									Operator: Operator("not"),
-									Operand:  CompoundIdentifier{"expansion_1", "is_cycle"},
+							Where: pgsql.BinaryExpression{
+								LOperand: pgsql.UnaryExpression{
+									Operator: pgsql.Operator("not"),
+									Operand:  pgsql.CompoundIdentifier{"expansion_1", "is_cycle"},
 								},
-								Operator: Operator("and"),
-								RightOperand: UnaryExpression{
-									Operator: Operator("not"),
-									Operand:  CompoundIdentifier{"expansion_1", "stop"},
+								Operator: pgsql.Operator("and"),
+								ROperand: pgsql.UnaryExpression{
+									Operator: pgsql.Operator("not"),
+									Operand:  pgsql.CompoundIdentifier{"expansion_1", "stop"},
 								},
 							},
 						},
@@ -481,51 +483,51 @@ func TestFormat_CTEs(t *testing.T) {
 				},
 			}},
 		},
-		Body: Select{
-			Projection: []Projection{
-				CompoundIdentifier{"a", "properties"},
-				CompoundIdentifier{"b", "properties"},
+		Body: pgsql.Select{
+			Projection: []pgsql.Projection{
+				pgsql.CompoundIdentifier{"a", "properties"},
+				pgsql.CompoundIdentifier{"b", "properties"},
 			},
-			From: []FromClause{{
-				Relation: TableReference{
-					Name: CompoundIdentifier{"expansion_1"},
+			From: []pgsql.FromClause{{
+				Relation: pgsql.TableReference{
+					Name: pgsql.CompoundIdentifier{"expansion_1"},
 				},
-				Joins: []Join{{
-					Table: TableReference{
-						Name:    CompoundIdentifier{"node"},
-						Binding: AsOptionalIdentifier("a"),
+				Joins: []pgsql.Join{{
+					Table: pgsql.TableReference{
+						Name:    pgsql.CompoundIdentifier{"node"},
+						Binding: pgsql.AsOptionalIdentifier("a"),
 					},
-					JoinOperator: JoinOperator{
-						JoinType: JoinTypeInner,
-						Constraint: BinaryExpression{
-							LeftOperand:  CompoundIdentifier{"a", "id"},
-							Operator:     Operator("="),
-							RightOperand: CompoundIdentifier{"expansion_1", "root_id"},
+					JoinOperator: pgsql.JoinOperator{
+						JoinType: pgsql.JoinTypeInner,
+						Constraint: pgsql.BinaryExpression{
+							LOperand: pgsql.CompoundIdentifier{"a", "id"},
+							Operator: pgsql.Operator("="),
+							ROperand: pgsql.CompoundIdentifier{"expansion_1", "root_id"},
 						},
 					},
 				}, {
-					Table: TableReference{
-						Name:    CompoundIdentifier{"node"},
-						Binding: AsOptionalIdentifier("b"),
+					Table: pgsql.TableReference{
+						Name:    pgsql.CompoundIdentifier{"node"},
+						Binding: pgsql.AsOptionalIdentifier("b"),
 					},
-					JoinOperator: JoinOperator{
-						JoinType: JoinTypeInner,
-						Constraint: BinaryExpression{
-							LeftOperand:  CompoundIdentifier{"b", "id"},
-							Operator:     Operator("="),
-							RightOperand: CompoundIdentifier{"expansion_1", "next_id"},
+					JoinOperator: pgsql.JoinOperator{
+						JoinType: pgsql.JoinTypeInner,
+						Constraint: pgsql.BinaryExpression{
+							LOperand: pgsql.CompoundIdentifier{"b", "id"},
+							Operator: pgsql.Operator("="),
+							ROperand: pgsql.CompoundIdentifier{"expansion_1", "next_id"},
 						},
 					},
 				}},
 			}},
 
-			Where: BinaryExpression{
-				LeftOperand: UnaryExpression{
-					Operator: Operator("not"),
-					Operand:  CompoundIdentifier{"expansion_1", "is_cycle"},
+			Where: pgsql.BinaryExpression{
+				LOperand: pgsql.UnaryExpression{
+					Operator: pgsql.Operator("not"),
+					Operand:  pgsql.CompoundIdentifier{"expansion_1", "is_cycle"},
 				},
-				Operator:     Operator("and"),
-				RightOperand: CompoundIdentifier{"expansion_1", "stop"},
+				Operator: pgsql.Operator("and"),
+				ROperand: pgsql.CompoundIdentifier{"expansion_1", "stop"},
 			},
 		},
 	})

@@ -2,15 +2,16 @@ package visualization
 
 import (
 	"fmt"
+	"strconv"
+	"strings"
+
 	"github.com/specterops/bloodhound/cypher/model/pgsql"
 	"github.com/specterops/bloodhound/cypher/model/pgsql/format"
 	"github.com/specterops/bloodhound/cypher/model/walk"
-	"strconv"
-	"strings"
 )
 
 type SQLVisualizer struct {
-	walk.HierarchicalVisitor[pgsql.Expression]
+	walk.HierarchicalVisitor[pgsql.SyntaxNode]
 
 	Graph  Graph
 	stack  []Node
@@ -24,7 +25,7 @@ func (s *SQLVisualizer) getNextID(prefix string) string {
 	return prefix + strconv.Itoa(nextID)
 }
 
-func (s *SQLVisualizer) Enter(expression pgsql.Expression) {
+func (s *SQLVisualizer) Enter(expression pgsql.SyntaxNode) {
 	nextNode := Node{
 		ID:         s.getNextID("n"),
 		Labels:     []string{expression.NodeType()},
@@ -58,15 +59,15 @@ func (s *SQLVisualizer) Enter(expression pgsql.Expression) {
 	s.stack = append(s.stack, nextNode)
 }
 
-func (s *SQLVisualizer) Visit(expression pgsql.Expression) {}
+func (s *SQLVisualizer) Visit(expression pgsql.SyntaxNode) {}
 
-func (s *SQLVisualizer) Exit(expression pgsql.Expression) {
+func (s *SQLVisualizer) Exit(expression pgsql.SyntaxNode) {
 	s.stack = s.stack[0 : len(s.stack)-1]
 }
 
 func SQLToDigraph(expression pgsql.SyntaxNode) (Graph, error) {
 	visualizer := &SQLVisualizer{
-		HierarchicalVisitor: walk.NewComposableHierarchicalVisitor[pgsql.Expression](),
+		HierarchicalVisitor: walk.NewComposableHierarchicalVisitor[pgsql.SyntaxNode](),
 	}
 
 	if title, err := format.Expression(expression); err != nil {

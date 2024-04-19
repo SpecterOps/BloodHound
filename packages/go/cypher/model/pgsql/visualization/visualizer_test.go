@@ -1,11 +1,13 @@
 package visualization
 
 import (
+	"os"
+	"path/filepath"
+	"testing"
+
 	"github.com/specterops/bloodhound/cypher/frontend"
 	"github.com/specterops/bloodhound/cypher/model/pgsql/translate"
 	"github.com/stretchr/testify/require"
-	"os"
-	"testing"
 )
 
 func TestGraphToPUMLDigraph(t *testing.T) {
@@ -18,7 +20,10 @@ func TestGraphToPUMLDigraph(t *testing.T) {
 	graph, err := SQLToDigraph(sqlAST)
 	require.Nil(t, err)
 
-	fout, err := os.OpenFile("/home/zinic/graph.puml", os.O_TRUNC|os.O_CREATE|os.O_WRONLY, 0644)
+	home, err := os.UserHomeDir()
+	require.Nil(t, err)
+
+	fout, err := os.OpenFile(filepath.Join(home, "graph.puml"), os.O_TRUNC|os.O_CREATE|os.O_WRONLY, 0644)
 	defer fout.Close()
 
 	require.Nil(t, err)

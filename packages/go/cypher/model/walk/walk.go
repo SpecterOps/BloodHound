@@ -3,6 +3,7 @@ package walk
 import (
 	"errors"
 	"fmt"
+
 	"github.com/specterops/bloodhound/cypher/model/cypher"
 	"github.com/specterops/bloodhound/cypher/model/pgsql"
 )
