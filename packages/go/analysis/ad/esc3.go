@@ -468,23 +468,42 @@ func GetADCSESC3EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 		p2paths := path2CandidateSegments[ct2.ID]
 
 		/*
-			MATCH p1 = (x)-[:GenericAll|Enroll|AllExtendedRights]->(ct1:CertTemplate)-[PublishedTo]->(eca1:EnterpriseCA)-[:IssuedSignedBy|EnterpriseCAFor*1..]->(rca:RootCA)-[:RootCAFor]->(d:Domain)
-			WHERE x.objectid = "<principal objectid>"
-			WHERE d.objectid = "<domain objectid>"
+			MATCH p1 = (x)-[:MemberOf*0..]->()-[:GenericAll|Enroll|AllExtendedRights]->(ct1:CertTemplate)-[:PublishedTo]->(eca1:EnterpriseCA)-[:IssuedSignedBy|EnterpriseCAFor*1..]->(rca:RootCA)-[:RootCAFor]->(d:Domain)
+			WHERE x.objectid = "S-1-5-21-83094068-830424655-2031507174-500"
+			AND d.objectid = "S-1-5-21-83094068-830424655-2031507174"
 			AND ct1.requiresmanagerapproval = false
-			AND ct1.schemaversion = 1 OR (ct1.schemaversion > 1 AND ct1.authorizedsignatures = 0)
+			AND (ct1.schemaversion = 1 OR ct1.authorizedsignatures = 0)
+			AND (
+				x:Group
+				OR x:Computer
+				OR (
+				x:User
+				AND ct1.subjectaltrequiredns = false
+				AND ct1.subjectaltrequiredomaindns = false
+				)
+			)
 
-			MATCH p2 = (x)-[:GenericAll|Enroll|AllExtendedRights]->(ct2:CertTemplate)-[PublishedTo]->(eca2:EnterpriseCA)-[:TrustedForNTAuth]->(:NTAuthStore)-[:NTAuthStoreFor]->(d)
+			MATCH p2 = (x)-[:MemberOf*0..]->()-[:GenericAll|Enroll|AllExtendedRights]->(ct2:CertTemplate)-[:PublishedTo]->(eca2:EnterpriseCA)-[:TrustedForNTAuth]->(:NTAuthStore)-[:NTAuthStoreFor]->(d)
 			WHERE ct2.authenticationenabled = true
 			AND ct2.requiresmanagerapproval = false
 
 			MATCH p3 = (ct1)-[:EnrollOnBehalfOf]->(ct2)
 
-			MATCH p4 = (x)-[:Enroll]->(eca1)
+			MATCH p4 = (x)-[:MemberOf*0..]->()-[:Enroll]->(eca1)
 
-			MATCH p5 = (x)-[:Enroll]->(eca2)
+			MATCH p5 = (x)-[:MemberOf*0..]->()-[:Enroll]->(eca2)
 
-			RETURN p1,p2,p3,p4,p5
+			MATCH p6 = (eca2)-[:IssuedSignedBy|EnterpriseCAFor*1..]->(:RootCA)-[:RootCAFor]->(d)
+
+			OPTIONAL MATCH p7 = (x)-[:MemberOf*0..]->()-[:DelegatedEnrollmentAgent]->(ct2)
+
+			WITH *
+			WHERE (
+				NOT eca2.hasenrollmentagentrestrictions = True
+				OR p7 IS NOT NULL
+			)
+
+			RETURN p1,p2,p3,p4,p5,p6,p7
 		*/
 
 		for _, p1 := range p1paths {
@@ -519,21 +538,21 @@ func GetADCSESC3EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 							paths.AddPath(p2.Path())
 							paths.AddPathSet(p6)
 						}
+						continue
 					}
-				} else {
-					for _, p4 := range enterpriseCASegments[eca1.ID] {
-						paths.AddPath(p4.Path())
-					}
-
-					for _, p5 := range enterpriseCASegments[eca2.ID] {
-						paths.AddPath(p5.Path())
-					}
-
-					paths.AddPath(p3)
-					paths.AddPath(p1.Path())
-					paths.AddPath(p2.Path())
 				}
 
+				for _, p4 := range enterpriseCASegments[eca1.ID] {
+					paths.AddPath(p4.Path())
+				}
+
+				for _, p5 := range enterpriseCASegments[eca2.ID] {
+					paths.AddPath(p5.Path())
+				}
+
+				paths.AddPath(p3)
+				paths.AddPath(p1.Path())
+				paths.AddPath(p2.Path())
 			}
 		}
 	}
