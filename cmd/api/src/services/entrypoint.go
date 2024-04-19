@@ -89,7 +89,7 @@ func Entrypoint(ctx context.Context, cfg config.Configuration, connections boots
 	} else {
 		var (
 			graphQuery     = queries.NewGraphQuery(connections.Graph, graphQueryCache, cfg)
-			authorizer     = auth.NewAuthorizer(connections.RDMS, nil)
+			authorizer     = auth.NewAuthorizer(connections.RDMS)
 			datapipeDaemon = datapipe.NewDaemon(ctx, cfg, connections, graphQueryCache, time.Duration(cfg.DatapipeInterval)*time.Second)
 			routerInst     = router.NewRouter(cfg, authorizer, bootstrap.ContentSecurityPolicy)
 			ctxInitializer = database.NewContextInitializer(connections.RDMS)

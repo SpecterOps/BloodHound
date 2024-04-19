@@ -90,23 +90,20 @@ type AuditLogger interface {
 	AppendAuditLog(ctx context.Context, entry model.AuditEntry) error
 }
 
-type Authorizer interface {
-	AuditLogUnauthorizedAccess(request *http.Request)
-	AllowsPermission(ctx Context, requiredPermission model.Permission) bool
-	AllowsAllPermissions(ctx Context, requiredPermissions model.Permissions) bool
-	AllowsAtLeastOnePermission(ctx Context, requiredPermissions model.Permissions) bool
-}
-
-type authorizer struct {
+type Authorizer struct {
 	auditLogger    AuditLogger
 	getPermissions GetPermissionsFunc
 }
 
-func NewAuthorizer(auditLogger AuditLogger, getPermissionsFn GetPermissionsFunc) Authorizer {
+func NewCustomAuthorizer(auditLogger AuditLogger, getPermissionsFn GetPermissionsFunc) Authorizer {
 	if getPermissionsFn == nil {
 		getPermissionsFn = getPermissions
 	}
-	return authorizer{auditLogger: auditLogger, getPermissions: getPermissionsFn}
+	return Authorizer{auditLogger: auditLogger, getPermissions: getPermissionsFn}
+}
+
+func NewAuthorizer(auditLogger AuditLogger) Authorizer {
+	return Authorizer{auditLogger: auditLogger, getPermissions: getPermissions}
 }
 
 type GetPermissionsFunc func(context Context) (model.Permissions, bool)
@@ -127,7 +124,7 @@ func hasPermission(ctx Context, requiredPermission model.Permission, grantedPerm
 	return grantedPermissions.Has(requiredPermission)
 }
 
-func (s authorizer) AllowsPermission(ctx Context, requiredPermission model.Permission) bool {
+func (s Authorizer) AllowsPermission(ctx Context, requiredPermission model.Permission) bool {
 	if grantedPermissions, isAuthed := s.getPermissions(ctx); isAuthed {
 		return hasPermission(ctx, requiredPermission, grantedPermissions)
 	}
@@ -135,7 +132,7 @@ func (s authorizer) AllowsPermission(ctx Context, requiredPermission model.Permi
 	return false
 }
 
-func (s authorizer) AllowsAllPermissions(ctx Context, requiredPermissions model.Permissions) bool {
+func (s Authorizer) AllowsAllPermissions(ctx Context, requiredPermissions model.Permissions) bool {
 	if grantedPermissions, isAuthed := s.getPermissions(ctx); isAuthed {
 		for _, permission := range requiredPermissions {
 			if !hasPermission(ctx, permission, grantedPermissions) {
@@ -147,7 +144,7 @@ func (s authorizer) AllowsAllPermissions(ctx Context, requiredPermissions model.
 	return true
 }
 
-func (s authorizer) AllowsAtLeastOnePermission(ctx Context, requiredPermissions model.Permissions) bool {
+func (s Authorizer) AllowsAtLeastOnePermission(ctx Context, requiredPermissions model.Permissions) bool {
 	if grantedPermissions, isAuthed := s.getPermissions(ctx); isAuthed {
 		for _, permission := range requiredPermissions {
 			if hasPermission(ctx, permission, grantedPermissions) {
@@ -159,7 +156,7 @@ func (s authorizer) AllowsAtLeastOnePermission(ctx Context, requiredPermissions 
 	return false
 }
 
-func (s authorizer) AuditLogUnauthorizedAccess(request *http.Request) {
+func (s Authorizer) AuditLogUnauthorizedAccess(request *http.Request) {
 	commitId, err := uuid.NewV4()
 	if err != nil {
 		log.Errorf("Error generating commit ID for unauthorized access: %s", err.Error())

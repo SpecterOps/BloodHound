@@ -37,11 +37,11 @@ import (
 )
 
 func permissionsCheckAllHandler(db *dbmocks.MockDatabase, internalHandler http.HandlerFunc, permissions ...model.Permission) http.Handler {
-	return PermissionsCheckAll(auth.NewAuthorizer(db, nil), permissions...)(internalHandler)
+	return PermissionsCheckAll(auth.NewAuthorizer(db), permissions...)(internalHandler)
 }
 
 func permissionsCheckAtLeastOneHandler(db *dbmocks.MockDatabase, internalHandler http.HandlerFunc, permissions ...model.Permission) http.Handler {
-	return PermissionsCheckAtLeastOne(auth.NewAuthorizer(db, nil), permissions...)(internalHandler)
+	return PermissionsCheckAtLeastOne(auth.NewAuthorizer(db), permissions...)(internalHandler)
 }
 
 func auditEntryAndContext(bhCtx ctx.Context, action model.AuditLogAction, fields model.AuditData, status model.AuditLogEntryStatus) (context.Context, model.AuditEntry) {
