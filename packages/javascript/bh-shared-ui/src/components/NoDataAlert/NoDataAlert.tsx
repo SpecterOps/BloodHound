@@ -35,23 +35,19 @@ export const NoDataAlert: FC<NoDataAlertProps> = ({ dataCollectionLink, fileInge
                     how to start collecting data.
                 </p>
 
-                <p>
-                    {fileIngestLink && (
-                        <>
-                            If you have files available from a SharpHound or AzureHound collection, please visit the{' '}
-                            {fileIngestLink} page to begin uploading your data.
-                        </>
-                    )}
-                </p>
+                {fileIngestLink && (
+                    <p>
+                        If you have files available from a SharpHound or AzureHound collection, please visit the{' '}
+                        {fileIngestLink} page to begin uploading your data.
+                    </p>
+                )}
 
-                <p>
-                    {sampleDataLink && (
-                        <>
-                            If you want to test BloodHound with sample data, you may download some from our{' '}
-                            {sampleDataLink} GitHub page.
-                        </>
-                    )}
-                </p>
+                {sampleDataLink && (
+                    <p>
+                        If you want to test BloodHound with sample data, you may download some from our {sampleDataLink}{' '}
+                        GitHub page.
+                    </p>
+                )}
             </Alert>
         </Box>
     );
