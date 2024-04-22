@@ -17,9 +17,10 @@
 package v2
 
 import (
+	"net/http"
+
 	"github.com/specterops/bloodhound/src/auth"
 	"github.com/specterops/bloodhound/src/ctx"
-	"net/http"
 
 	"github.com/specterops/bloodhound/dawgs/util"
 	"github.com/specterops/bloodhound/src/api"
@@ -47,7 +48,7 @@ func (s Resources) CypherSearch(response http.ResponseWriter, request *http.Requ
 			request.Context(),
 			api.BuildErrorResponse(http.StatusBadRequest, "Cypher unsupported", request), response,
 		)
-	} else if preparedQuery.HasMutation && !s.Authorizer.AllowsPermission(authCtx, auth.Permissions().MutateDB) {
+	} else if preparedQuery.HasMutation && !s.Authorizer.AllowsPermission(authCtx, auth.Permissions().GraphDBMutate) {
 		s.Authorizer.AuditLogUnauthorizedAccess(request)
 		api.WriteErrorResponse(
 			request.Context(),

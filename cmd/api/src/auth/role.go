@@ -118,7 +118,7 @@ func Roles() map[string]RoleTemplate {
 				permissions.GraphDBRead,
 				permissions.SavedQueriesRead,
 				permissions.SavedQueriesWrite,
-				permissions.MutateDB,
+				permissions.GraphDBMutate,
 			},
 		},
 		RoleAdministrator: {
