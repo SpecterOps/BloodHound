@@ -140,7 +140,8 @@ export const entityInformationEndpoints: Partial<
     [ActiveDirectoryNodeKind.RootCA]: (id: string, options?: RequestOptions) =>
         apiClient.getRootCAV2(id, false, options),
     [ActiveDirectoryNodeKind.User]: (id: string, options?: RequestOptions) => apiClient.getUserV2(id, false, options),
-    [ActiveDirectoryNodeKind.IssuancePolicy]: (id: string, options?: RequestOptions) => apiClient.getIssuancePolicyV2(id, false, options),
+    [ActiveDirectoryNodeKind.IssuancePolicy]: (id: string, options?: RequestOptions) =>
+        apiClient.getIssuancePolicyV2(id, false, options),
     Meta: apiClient.getMetaV2,
 };
 
