@@ -51,7 +51,7 @@ func (s Resources) CypherSearch(response http.ResponseWriter, request *http.Requ
 		s.Authorizer.AuditLogUnauthorizedAccess(request)
 		api.WriteErrorResponse(
 			request.Context(),
-			api.BuildErrorResponse(http.StatusForbidden, "Not authorized for graph mutations", request), response,
+			api.BuildErrorResponse(http.StatusForbidden, "Permission denied: User may not modify the graph.", request), response,
 		)
 	} else if graphResponse, err := s.GraphQuery.RawCypherSearch(request.Context(), preparedQuery, payload.IncludeProperties); err != nil {
 		if queries.IsQueryError(err) {
@@ -70,5 +70,4 @@ func (s Resources) CypherSearch(response http.ResponseWriter, request *http.Requ
 	} else {
 		api.WriteBasicResponse(request.Context(), graphResponse, http.StatusOK, response)
 	}
-
 }
