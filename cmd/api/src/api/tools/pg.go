@@ -229,8 +229,8 @@ func (s *PGMigrator) advanceState(next MigratorState, validTransitions ...Migrat
 
 func (s *PGMigrator) SwitchPostgreSQL(response http.ResponseWriter, request *http.Request) {
 	if pgDB, err := dawgs.Open(s.serverCtx, pg.DriverName, dawgs.Config{
-		TraversalMemoryLimit: size.Gibibyte,
-		DriverCfg:            s.cfg.Database.PostgreSQLConnectionString(),
+		GraphQueryMemoryLimit: size.Gibibyte,
+		DriverCfg:             s.cfg.Database.PostgreSQLConnectionString(),
 	}); err != nil {
 		api.WriteJSONResponse(request.Context(), map[string]any{
 			"error": fmt.Errorf("failed connecting to PostgreSQL: %w", err),
@@ -249,8 +249,8 @@ func (s *PGMigrator) SwitchPostgreSQL(response http.ResponseWriter, request *htt
 
 func (s *PGMigrator) SwitchNeo4j(response http.ResponseWriter, request *http.Request) {
 	if neo4jDB, err := dawgs.Open(s.serverCtx, neo4j.DriverName, dawgs.Config{
-		TraversalMemoryLimit: size.Gibibyte,
-		DriverCfg:            s.cfg.Neo4J.Neo4jConnectionString(),
+		GraphQueryMemoryLimit: size.Gibibyte,
+		DriverCfg:             s.cfg.Neo4J.Neo4jConnectionString(),
 	}); err != nil {
 		api.WriteJSONResponse(request.Context(), map[string]any{
 			"error": fmt.Errorf("failed connecting to Neo4j: %w", err),
@@ -271,13 +271,13 @@ func (s *PGMigrator) startMigration() error {
 	if err := s.advanceState(stateMigrating, stateIdle); err != nil {
 		return fmt.Errorf("database migration state error: %w", err)
 	} else if neo4jDB, err := dawgs.Open(s.serverCtx, neo4j.DriverName, dawgs.Config{
-		TraversalMemoryLimit: size.Gibibyte,
-		DriverCfg:            s.cfg.Neo4J.Neo4jConnectionString(),
+		GraphQueryMemoryLimit: size.Gibibyte,
+		DriverCfg:             s.cfg.Neo4J.Neo4jConnectionString(),
 	}); err != nil {
 		return fmt.Errorf("failed connecting to Neo4j: %w", err)
 	} else if pgDB, err := dawgs.Open(s.serverCtx, pg.DriverName, dawgs.Config{
-		TraversalMemoryLimit: size.Gibibyte,
-		DriverCfg:            s.cfg.Database.PostgreSQLConnectionString(),
+		GraphQueryMemoryLimit: size.Gibibyte,
+		DriverCfg:             s.cfg.Database.PostgreSQLConnectionString(),
 	}); err != nil {
 		return fmt.Errorf("failed connecting to PostgreSQL: %w", err)
 	} else {

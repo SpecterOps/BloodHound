@@ -167,7 +167,7 @@ type Configuration struct {
 	DisableCypherQC         bool                      `json:"disable_cypher_qc"`
 	DisableIngest           bool                      `json:"disable_ingest"`
 	DisableMigrations       bool                      `json:"disable_migrations"`
-	TraversalMemoryLimit    uint16                    `json:"traversal_memory_limit"`
+	GraphQueryMemoryLimit   uint16                    `json:"graph_query_memory_limit"`
 	AuthSessionTTLHours     int                       `json:"auth_session_ttl_hours"`
 }
 

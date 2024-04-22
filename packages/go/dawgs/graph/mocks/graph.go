@@ -601,18 +601,18 @@ func (mr *MockTransactionMockRecorder) Relationships() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Relationships", reflect.TypeOf((*MockTransaction)(nil).Relationships))
 }
 
-// TraversalMemoryLimit mocks base method.
-func (m *MockTransaction) TraversalMemoryLimit() size.Size {
+// GraphQueryMemoryLimit mocks base method.
+func (m *MockTransaction) GraphQueryMemoryLimit() size.Size {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "TraversalMemoryLimit")
+	ret := m.ctrl.Call(m, "GraphQueryMemoryLimit")
 	ret0, _ := ret[0].(size.Size)
 	return ret0
 }
 
-// TraversalMemoryLimit indicates an expected call of TraversalMemoryLimit.
-func (mr *MockTransactionMockRecorder) TraversalMemoryLimit() *gomock.Call {
+// GraphQueryMemoryLimit indicates an expected call of GraphQueryMemoryLimit.
+func (mr *MockTransactionMockRecorder) GraphQueryMemoryLimit() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TraversalMemoryLimit", reflect.TypeOf((*MockTransaction)(nil).TraversalMemoryLimit))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GraphQueryMemoryLimit", reflect.TypeOf((*MockTransaction)(nil).GraphQueryMemoryLimit))
 }
 
 // UpdateNode mocks base method.

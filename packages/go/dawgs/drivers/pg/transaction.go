@@ -96,7 +96,7 @@ func (s *transaction) driver() driver {
 	}
 }
 
-func (s *transaction) TraversalMemoryLimit() size.Size {
+func (s *transaction) GraphQueryMemoryLimit() size.Size {
 	return size.Gibibyte
 }
 

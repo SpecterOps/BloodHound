@@ -368,8 +368,8 @@ type Transaction interface {
 	// Commit calls to commit this transaction right away.
 	Commit() error
 
-	// TraversalMemoryLimit returns the traversal memory limit of
-	TraversalMemoryLimit() size.Size
+	// GraphQueryMemoryLimit returns the graph query memory limit of
+	GraphQueryMemoryLimit() size.Size
 }
 
 // TransactionDelegate represents a transactional database context actor. Errors returned from a TransactionDelegate

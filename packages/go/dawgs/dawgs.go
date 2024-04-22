@@ -37,8 +37,8 @@ func Register(driverName string, constructor DriverConstructor) {
 }
 
 type Config struct {
-	TraversalMemoryLimit size.Size
-	DriverCfg            any
+	GraphQueryMemoryLimit size.Size
+	DriverCfg             any
 }
 
 func Open(ctx context.Context, driverName string, config Config) (graph.Database, error) {
