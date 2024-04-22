@@ -19,12 +19,11 @@ package ops
 import (
 	"errors"
 	"fmt"
-	"github.com/specterops/bloodhound/log"
 
 	"github.com/RoaringBitmap/roaring/roaring64"
-
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/dawgs/query"
+	"github.com/specterops/bloodhound/log"
 )
 
 type LimitSkipTracker struct {
