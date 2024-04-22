@@ -539,6 +539,13 @@ CertTemplateOID: types.#StringEnum & {
 	representation: "certtemplateoid"
 }
 
+GroupLinkID: types.#StringEnum & {
+	symbol: "GroupLinkID"
+	schema: "ad"
+	name: "Group Link ID"
+	representation: "grouplinkid"
+}
+
 Properties: [
 	AdminCount,
 	CASecurityCollected,
@@ -613,6 +620,7 @@ Properties: [
 	HomeDirectory,
 	CertificatePolicy,
 	CertTemplateOID,
+	GroupLinkID
 ]
 
 // Kinds
@@ -996,7 +1004,7 @@ EnrollOnBehalfOf: types.#Kind & {
 
 OIDGroupLink: types.#Kind & {
 	symbol: "OIDGroupLink"
-	schema "active_directory"
+	schema: "active_directory"
 }
 
 ExtendedByPolicy: types.#Kind & {

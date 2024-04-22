@@ -1,19 +1,3 @@
-// Copyright 2024 Specter Ops, Inc.
-//
-// Licensed under the Apache License, Version 2.0
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-//
-// SPDX-License-Identifier: Apache-2.0
-
 export enum ActiveDirectoryNodeKind {
     Entity = 'Base',
     User = 'User',
@@ -297,7 +281,6 @@ export const EdgeCompositionRelationships = [
     'ADCSESC9b',
     'ADCSESC10a',
     'ADCSESC10b',
-    'ADCSESC13',
 ];
 export enum ActiveDirectoryKindProperties {
     AdminCount = 'admincount',
@@ -373,6 +356,7 @@ export enum ActiveDirectoryKindProperties {
     HomeDirectory = 'homedirectory',
     CertificatePolicy = 'certificatepolicy',
     CertTemplateOID = 'certtemplateoid',
+    GroupLinkID = 'grouplinkid',
 }
 export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKindProperties): string | undefined {
     switch (value) {
@@ -522,6 +506,8 @@ export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKin
             return 'Certificate Policy';
         case ActiveDirectoryKindProperties.CertTemplateOID:
             return 'Certificate Template OID';
+        case ActiveDirectoryKindProperties.GroupLinkID:
+            return 'Group Link ID';
         default:
             return undefined;
     }
