@@ -150,24 +150,24 @@ type Graph interface {
 }
 
 type GraphQuery struct {
-	Graph                 graph.Database
-	Cache                 cache.Cache
-	SlowQueryThreshold    int64 // Threshold in milliseconds
-	DisableCypherQC       bool
-	EnableCypherMutations bool
-	cypherEmitter         cypher.Emitter
-	strippedCypherEmitter cypher.Emitter
+	Graph                        graph.Database
+	Cache                        cache.Cache
+	SlowQueryThreshold           int64 // Threshold in milliseconds
+	DisableCypherComplexityLimit bool
+	EnableCypherMutations        bool
+	cypherEmitter                cypher.Emitter
+	strippedCypherEmitter        cypher.Emitter
 }
 
 func NewGraphQuery(graphDB graph.Database, cache cache.Cache, cfg config.Configuration) *GraphQuery {
 	return &GraphQuery{
-		Graph:                 graphDB,
-		Cache:                 cache,
-		SlowQueryThreshold:    cfg.SlowQueryThreshold,
-		DisableCypherQC:       cfg.DisableCypherQC,
-		EnableCypherMutations: cfg.EnableCypherMutations,
-		cypherEmitter:         cypher.NewCypherEmitter(false),
-		strippedCypherEmitter: cypher.NewCypherEmitter(true),
+		Graph:                        graphDB,
+		Cache:                        cache,
+		SlowQueryThreshold:           cfg.SlowQueryThreshold,
+		DisableCypherComplexityLimit: cfg.DisableCypherComplexityLimit,
+		EnableCypherMutations:        cfg.EnableCypherMutations,
+		cypherEmitter:                cypher.NewCypherEmitter(false),
+		strippedCypherEmitter:        cypher.NewCypherEmitter(true),
 	}
 }
 
@@ -408,7 +408,7 @@ func (s *GraphQuery) PrepareCypherQuery(rawCypher string) (PreparedQuery, error)
 		return graphQuery, newQueryError(err)
 	} else if err = s.strippedCypherEmitter.Write(queryModel, strippedQueryBuffer); err != nil {
 		return graphQuery, newQueryError(err)
-	} else if !s.DisableCypherQC && complexityMeasure.Weight > MaxQueryComplexityWeightAllowed {
+	} else if !s.DisableCypherComplexityLimit && complexityMeasure.Weight > MaxQueryComplexityWeightAllowed {
 		// log query details if it is rejected due to high complexity
 		highComplexityLog := log.WithLevel(log.LevelError)
 		highComplexityLog.Str("query", strippedQueryBuffer.String())
@@ -480,7 +480,7 @@ func (s *GraphQuery) RawCypherSearch(ctx context.Context, pQuery PreparedQuery, 
 		} else {
 			availableRuntime = defaultTimeout
 
-			if !s.DisableCypherQC {
+			if !s.DisableCypherComplexityLimit {
 				// The weight of the query is divided by 5 to get a runtime reduction factor. This means that query weights
 				// of 5 or less will get the full runtime duration.
 				if reductionFactor := time.Duration(pQuery.complexity.Weight) / 5; reductionFactor > 0 {
