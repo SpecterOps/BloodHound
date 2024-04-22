@@ -46,7 +46,7 @@ func (s Resources) CypherSearch(response http.ResponseWriter, request *http.Requ
 	} else if preparedQuery, err := s.GraphQuery.PrepareCypherQuery(payload.Query); err != nil {
 		api.WriteErrorResponse(
 			request.Context(),
-			api.BuildErrorResponse(http.StatusBadRequest, "Cypher unsupported", request), response,
+			api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response,
 		)
 	} else if preparedQuery.HasMutation && !s.Authorizer.AllowsPermission(authCtx, auth.Permissions().GraphDBMutate) {
 		s.Authorizer.AuditLogUnauthorizedAccess(request)
