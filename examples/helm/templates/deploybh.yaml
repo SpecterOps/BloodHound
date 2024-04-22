@@ -45,6 +45,10 @@ spec:
         env:
         - name: bhe_disable_cypher_complexity_limit
           value: "{{ .Values.bloodhound.container.env.bhe_disable_cypher_complexity_limit }}"
+        - name: bhe_enable_cypher_mutations
+          value: "{{ .Values.bloodhound.container.env.bhe_enable_cypher_mutations }}"
+        - name: bhe_graph_query_memory_limit
+          value: "{{ .Values.bloodhound.container.env.bhe_graph_query_memory_limit}}"
         ports:
         - containerPort: {{ (index .Values.bloodhound.container.ports 0).containerPort }}
         {{- if .Values.bloodhound.configMap.enabled }}
