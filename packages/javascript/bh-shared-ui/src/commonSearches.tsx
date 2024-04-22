@@ -176,6 +176,10 @@ export const CommonSearches: CommonSearchType[] = [
                 cypher: `MATCH p = ()-[:Enroll|GenericAll|AllExtendedRights]->(ct:CertTemplate)-[:PublishedTo]->(:EnterpriseCA)\nWHERE ct.enrolleesuppliessubject = True\nAND ct.authenticationenabled = True\nAND ct.requiresmanagerapproval = False\nAND (ct.authorizedsignatures = 0 OR ct.schemaversion = 1)\nRETURN p`,
             },
             {
+                description: 'Enrollment rights on published ESC2 certificate templates',
+                cypher: `MATCH p = ()-[:Enroll|GenericAll|AllExtendedRights]->(ct:CertTemplate)-[:PublishedTo]->(:EnterpriseCA)\nWHERE ct.requiresmanagerapproval = False\nAND (ct.effectiveekus = [] OR ct.effectiveekus CONTAINS "2.5.29.37.0")\nAND (ct.authorizedsignatures = 0 OR ct.schemaversion = 1)\nRETURN p`,
+            },
+            {
                 description: 'Enrollment rights on published enrollment agent certificate templates',
                 cypher: `MATCH p = ()-[:Enroll|GenericAll|AllExtendedRights]->(ct:CertTemplate)-[:PublishedTo]->(:EnterpriseCA)\nWHERE ct.effectiveekus CONTAINS "1.3.6.1.4.1.311.20.2.1"\nOR ct.effectiveekus CONTAINS "2.5.29.37.0"\nOR SIZE(ct.effectiveekus) = 0\nRETURN p`,
             },
