@@ -20,24 +20,33 @@ import { FC } from 'react';
 type NoDataAlertProps = {
     dataCollectionLink: JSX.Element;
     fileIngestLink?: JSX.Element;
+    sampleDataLink?: JSX.Element;
 };
 
-export const NoDataAlert: FC<NoDataAlertProps> = ({ dataCollectionLink, fileIngestLink }) => {
+export const NoDataAlert: FC<NoDataAlertProps> = ({ dataCollectionLink, fileIngestLink, sampleDataLink }) => {
     const theme = useTheme();
 
     return (
         <Box display={'flex'} justifyContent={'center'} mt={theme.spacing(8)} mx={theme.spacing(4)}>
             <Alert severity={'info'}>
                 <AlertTitle>No Data Available</AlertTitle>
-                It appears that no data has been uploaded yet.
-                <br />
-                See our {dataCollectionLink} documentation to learn how to start collecting data.
-                <br />
+                <p>
+                    It appears that no data has been uploaded yet. See our {dataCollectionLink} documentation to learn
+                    how to start collecting data.
+                </p>
+
                 {fileIngestLink && (
-                    <>
+                    <p>
                         If you have files available from a SharpHound or AzureHound collection, please visit the{' '}
                         {fileIngestLink} page to begin uploading your data.
-                    </>
+                    </p>
+                )}
+
+                {sampleDataLink && (
+                    <p>
+                        If you want to test BloodHound with sample data, you may download some from our {sampleDataLink}{' '}
+                        GitHub page.
+                    </p>
                 )}
             </Alert>
         </Box>
