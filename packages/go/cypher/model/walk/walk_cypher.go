@@ -2,6 +2,7 @@ package walk
 
 import (
 	"fmt"
+
 	"github.com/specterops/bloodhound/cypher/model/cypher"
 	"github.com/specterops/bloodhound/cypher/model/pgsql"
 	"github.com/specterops/bloodhound/dawgs/graph"
@@ -268,6 +269,7 @@ func newCypherWalkCursor(expression cypher.SyntaxNode) (*Cursor[cypher.SyntaxNod
 
 		return nextCursor, nil
 
+		// pattern parts are delinated by commas.  ie: `match (s), (e) return s` has 2 "PattenParts"
 	case *cypher.PatternPart:
 		nextCursor := &Cursor[cypher.SyntaxNode]{
 			Expression: expression,

@@ -1,6 +1,7 @@
 package format
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/specterops/bloodhound/cypher/model/pgsql"
@@ -233,6 +234,72 @@ func TestFormat_Query(t *testing.T) {
 	formattedQuery, err := Statement(query)
 	require.Nil(t, err)
 	require.Equal(t, "select * from table t where t.col1 > 1", formattedQuery.Value)
+}
+
+func TestStuff(t *testing.T) {
+
+	simpleNodeSelectQuery := pgsql.Query{
+		// with n1 as (select n1.* from node n1)
+		CommonTableExpressions: &pgsql.With{
+			Expressions: []pgsql.CommonTableExpression{
+				{
+					Alias: pgsql.TableAlias{
+						Name: "n1",
+					},
+					Query: pgsql.Query{
+						Body: pgsql.Select{
+							Projection: []pgsql.Projection{
+								pgsql.CompoundIdentifier{"n1", pgsql.WildcardIdentifier},
+							},
+							From: []pgsql.FromClause{
+								{
+									Relation: pgsql.TableReference{
+										Name:    pgsql.CompoundIdentifier{"node"},
+										Binding: pgsql.AsOptionalIdentifier("n1"),
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		// select (n1.id, n1.kind_ids, n1.properties)::nodecomposite as s from n1;
+		Body: pgsql.Select{
+			Projection: []pgsql.Projection{
+				pgsql.AliasedExpression{
+					Alias: "s",
+					Expression: pgsql.CompositeValue{
+						DataType: "nodecomposite",
+						Values: []pgsql.Expression{
+							pgsql.CompoundIdentifier{"n1", "id"},
+							pgsql.CompoundIdentifier{"n1", "kind_ids"},
+							pgsql.CompoundIdentifier{"n1", "properties"},
+						},
+					},
+				},
+			},
+			From: []pgsql.FromClause{
+				{
+					Relation: pgsql.TableReference{
+						Name: pgsql.CompoundIdentifier{"n1"},
+					},
+				},
+			},
+		},
+	}
+
+	formattedQuery, err := Statement(simpleNodeSelectQuery)
+	require.Nil(t, err)
+
+	expected := `with n1 as (select n1.* from node n1) 
+		select (n1.id, n1.kind_ids, n1.properties)::nodecomposite as s 
+		from n1;`
+
+	expected = strings.ReplaceAll(expected, "\t", "")
+	expected = strings.ReplaceAll(expected, "\n", "")
+
+	require.Equal(t, expected, formattedQuery.Value)
 }
 
 func TestFormat_Merge(t *testing.T) {
