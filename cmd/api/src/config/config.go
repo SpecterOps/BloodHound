@@ -163,6 +163,7 @@ type Configuration struct {
 	DatapipeInterval        int                       `json:"datapipe_interval"`
 	EnableStartupWaitPeriod bool                      `json:"enable_startup_wait_period"`
 	EnableAPILogging        bool                      `json:"enable_api_logging"`
+	EnableCypherMutations   bool                      `json:"enable_cypher_mutations"`
 	DisableAnalysis         bool                      `json:"disable_analysis"`
 	DisableCypherQC         bool                      `json:"disable_cypher_qc"`
 	DisableIngest           bool                      `json:"disable_ingest"`

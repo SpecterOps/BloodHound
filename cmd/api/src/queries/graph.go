@@ -154,6 +154,7 @@ type GraphQuery struct {
 	Cache                 cache.Cache
 	SlowQueryThreshold    int64 // Threshold in milliseconds
 	DisableCypherQC       bool
+	EnableCypherMutations bool
 	cypherEmitter         cypher.Emitter
 	strippedCypherEmitter cypher.Emitter
 }
@@ -164,6 +165,7 @@ func NewGraphQuery(graphDB graph.Database, cache cache.Cache, cfg config.Configu
 		Cache:                 cache,
 		SlowQueryThreshold:    cfg.SlowQueryThreshold,
 		DisableCypherQC:       cfg.DisableCypherQC,
+		EnableCypherMutations: cfg.EnableCypherMutations,
 		cypherEmitter:         cypher.NewCypherEmitter(false),
 		strippedCypherEmitter: cypher.NewCypherEmitter(true),
 	}
@@ -377,15 +379,22 @@ type PreparedQuery struct {
 // TODO: PrepareCypherQuery needs tests
 func (s *GraphQuery) PrepareCypherQuery(rawCypher string) (PreparedQuery, error) {
 	var (
-		parseCtx = frontend.NewContext(
+		cypherFilters = []frontend.Visitor{
 			&frontend.ExplicitProcedureInvocationFilter{},
 			&frontend.ImplicitProcedureInvocationFilter{},
 			&frontend.SpecifiedParametersFilter{},
-		)
+		}
 		queryBuffer         = &bytes.Buffer{}
 		strippedQueryBuffer = &bytes.Buffer{}
 		graphQuery PreparedQuery
 	)
+
+	// If cypher mutations are disabled, we want to add the updating clause filter to properly error as unsupported query
+	if !s.EnableCypherMutations {
+		cypherFilters = append(cypherFilters, &frontend.UpdatingClauseFilter{})
+	}
+
+	parseCtx := frontend.NewContext(cypherFilters...)
 
 	queryModel, err := frontend.ParseCypher(parseCtx, rawCypher)
 	if err != nil {
