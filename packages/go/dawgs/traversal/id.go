@@ -19,11 +19,11 @@ package traversal
 import (
 	"context"
 	"fmt"
+	"github.com/specterops/bloodhound/dawgs/ops"
 	"sync"
 	"sync/atomic"
 
 	"github.com/specterops/bloodhound/dawgs/graph"
-	"github.com/specterops/bloodhound/dawgs/ops"
 	"github.com/specterops/bloodhound/dawgs/util"
 	"github.com/specterops/bloodhound/dawgs/util/channels"
 )
@@ -85,7 +85,11 @@ func (s IDTraversal) BreadthFirst(ctx context.Context, plan IDPlan) error {
 				for {
 					if nextDescent, ok := channels.Receive(traversalCtx, segmentReaderC); !ok {
 						return nil
-					} else if pathTreeSize := pathTree.SizeOf(); pathTreeSize < tx.GraphQueryMemoryLimit() {
+					} else if tx.GraphQueryMemoryLimit() > 0 {
+						if pathTreeSize := pathTree.SizeOf(); pathTreeSize > tx.GraphQueryMemoryLimit() {
+							errors.Add(fmt.Errorf("%w - Limit: %.2f MB - Memory In-Use: %.2f MB", ops.ErrGraphQueryMemoryLimit, tx.GraphQueryMemoryLimit().Mebibytes(), pathTree.SizeOf().Mebibytes()))
+						}
+					} else {
 						// Traverse the descending relationships of the current segment
 						if descendingSegments, err := plan.Delegate(traversalCtx, tx, nextDescent); err != nil {
 							return err
@@ -96,9 +100,6 @@ func (s IDTraversal) BreadthFirst(ctx context.Context, plan IDPlan) error {
 								channels.Submit(traversalCtx, segmentWriterC, descendingSegment)
 							}
 						}
-					} else {
-						// Did we encounter a memory limit?
-						errors.Add(fmt.Errorf("%w - Limit: %.2f MB - Memory In-Use: %.2f MB", ops.ErrGraphQueryMemoryLimit, tx.GraphQueryMemoryLimit().Mebibytes(), pathTree.SizeOf().Mebibytes()))
 					}
 
 					// Mark descent for this segment as complete

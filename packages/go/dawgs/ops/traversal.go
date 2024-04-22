@@ -171,8 +171,10 @@ func Traversal(tx graph.Transaction, plan TraversalPlan, pathVisitors ...PathVis
 		next := stack[len(stack)-1]
 		stack = stack[:len(stack)-1]
 
-		if pathTreeSize := rootSegment.SizeOf(); pathTreeSize > tx.GraphQueryMemoryLimit() {
-			return fmt.Errorf("%w - Limit: %.2f MB - Memory In-Use: %.2f MB", ErrGraphQueryMemoryLimit, tx.GraphQueryMemoryLimit().Mebibytes(), pathTreeSize.Mebibytes())
+		if tx.GraphQueryMemoryLimit() > 0 {
+			if pathTreeSize := rootSegment.SizeOf(); pathTreeSize > tx.GraphQueryMemoryLimit() {
+				return fmt.Errorf("%w - Limit: %.2f MB - Memory In-Use: %.2f MB", ErrGraphQueryMemoryLimit, tx.GraphQueryMemoryLimit().Mebibytes(), pathTreeSize.Mebibytes())
+			}
 		}
 
 		if descendents, err := nextTraversal(tx, next, plan.Direction, plan.BranchQuery, requireTraversalOrder, plan.expansionFilter); err != nil {
