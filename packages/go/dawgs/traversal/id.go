@@ -86,7 +86,7 @@ func (s IDTraversal) BreadthFirst(ctx context.Context, plan IDPlan) error {
 					if nextDescent, ok := channels.Receive(traversalCtx, segmentReaderC); !ok {
 						return nil
 					} else if tx.GraphQueryMemoryLimit() > 0 && pathTree.SizeOf() > tx.GraphQueryMemoryLimit() {
-						errors.Add(fmt.Errorf("%w - Limit: %.2f MB - Memory In-Use: %.2f MB", ops.ErrGraphQueryMemoryLimit, tx.GraphQueryMemoryLimit().Mebibytes(), pathTree.SizeOf().Mebibytes()))
+						return fmt.Errorf("%w - Limit: %.2f MB - Memory In-Use: %.2f MB", ops.ErrGraphQueryMemoryLimit, tx.GraphQueryMemoryLimit().Mebibytes(), pathTree.SizeOf().Mebibytes())
 					} else if descendingSegments, err := plan.Delegate(traversalCtx, tx, nextDescent); err != nil {
 						return err
 					} else if len(descendingSegments) > 0 {
