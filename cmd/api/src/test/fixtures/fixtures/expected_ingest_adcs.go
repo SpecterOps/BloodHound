@@ -482,8 +482,7 @@ var (
 		query.And(query.Kind(query.Start(), ad.Group), query.Equals(query.StartProperty(common.ObjectID.String()), "S-1-5-21-909015691-3030120388-2582151266-512"), query.Kind(query.Relationship(), ad.WriteOwner), query.Kind(query.End(), ad.RootCA), query.Equals(query.EndProperty(common.ObjectID.String()), "4B5183E1-DB57-4A57-8159-3E9649F3B01C")),
 
 		//IssuancePolicy
-		//TODO: Uncomment once esc13 is ready
-		//query.And(query.Kind(query.Start(), ad.IssuancePolicy), query.Equals(query.StartProperty(common.ObjectID.String()), "8A0CF606-AED8-44B1-A336-1A3A9E37D10B"), query.Kind(query.Relationship(), ad.OIDGroupLink), query.Kind(query.End(), ad.Group), query.Equals(query.EndProperty(common.ObjectID.String()), "S-1-5-21-909015691-3030120388-2582151266-513")),
+		query.And(query.Kind(query.Start(), ad.IssuancePolicy), query.Equals(query.StartProperty(common.ObjectID.String()), "8A0CF606-AED8-44B1-A336-1A3A9E37D10B"), query.Kind(query.Relationship(), ad.OIDGroupLink), query.Kind(query.End(), ad.Group), query.Equals(query.EndProperty(common.ObjectID.String()), "S-1-5-21-909015691-3030120388-2582151266-513")),
 	}
 
 	nodeAssertionCriteria = []graph.Criteria{
@@ -543,8 +542,7 @@ var (
 		//cat bhce/cmd/api/src/test/fixtures/fixtures/v6/all/rootcas.json | jq -r '.data | map(.)[] | "query.And(query.Kind(query.Node(), ad.RootCA), query.Equals(query.NodeProperty(common.ObjectID.String()), \"\(.ObjectIdentifier)\"), query.Equals(query.NodeProperty(common.Name.String()), \"\(.Properties.name)\"), query.Equals(query.NodeProperty(ad.DomainSID.String()), \"\(.Properties.domainsid)\"), query.Equals(query.NodeProperty(ad.DistinguishedName.String()), \"\(.Properties.distinguishedname)\"), query.Equals(query.NodeProperty(ad.CertThumbprint.String()), \"\(.Properties.certthumbprint)\"), query.Equals(query.NodeProperty(ad.CertName.String()), \"\(.Properties.certname)\"), query.Equals(query.NodeProperty(ad.CertChain.String()), []string{\(.Properties.certchain | @csv)}), query.Equals(query.NodeProperty(ad.HasBasicConstraints.String()), \(.Properties.hasbasicconstraints)), query.Equals(query.NodeProperty(ad.BasicConstraintPathLength.String()), \(.Properties.basicconstraintpathlength))),"'
 
 		query.And(query.Kind(query.Node(), ad.RootCA), query.Equals(query.NodeProperty(common.ObjectID.String()), "4B5183E1-DB57-4A57-8159-3E9649F3B01C"), query.Equals(query.NodeProperty(common.Name.String()), "ESC1-ESC1-DC-CA@ESC1.LOCAL"), query.Equals(query.NodeProperty(ad.DomainSID.String()), "S-1-5-21-909015691-3030120388-2582151266"), query.Equals(query.NodeProperty(ad.DistinguishedName.String()), "CN=ESC1-ESC1-DC-CA,CN=CERTIFICATION AUTHORITIES,CN=PUBLIC KEY SERVICES,CN=SERVICES,CN=CONFIGURATION,DC=ESC1,DC=LOCAL"), query.Equals(query.NodeProperty(ad.CertThumbprint.String()), "5F0143662A7EA16E8DB90E44D0F1F1FC87B1E703"), query.Equals(query.NodeProperty(ad.CertName.String()), "5F0143662A7EA16E8DB90E44D0F1F1FC87B1E703"), query.Equals(query.NodeProperty(ad.CertChain.String()), []string{"5F0143662A7EA16E8DB90E44D0F1F1FC87B1E703"}), query.Equals(query.NodeProperty(ad.HasBasicConstraints.String()), false), query.Equals(query.NodeProperty(ad.BasicConstraintPathLength.String()), 0)),
-		//TODO: Reenable once ESC13 is feature ready
-		//query.And(query.Kind(query.Node(), ad.IssuancePolicy), query.Equals(query.NodeProperty(common.ObjectID.String()), "8A0CF606-AED8-44B1-A336-1A3A9E37D10B"), query.Equals(query.NodeProperty(common.Name.String()), "LOW ASSURANCE@TESTLAB.LOCAL")),
+		query.And(query.Kind(query.Node(), ad.IssuancePolicy), query.Equals(query.NodeProperty(common.ObjectID.String()), "8A0CF606-AED8-44B1-A336-1A3A9E37D10B"), query.Equals(query.NodeProperty(common.Name.String()), "LOW ASSURANCE@TESTLAB.LOCAL")),
 	}
 )
 
