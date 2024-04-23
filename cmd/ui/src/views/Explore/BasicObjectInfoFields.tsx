@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Box } from '@mui/material';
-import { AzureNodeKind, EntityKinds, Field, NodeIcon, searchbarActions } from 'bh-shared-ui';
+import { ActiveDirectoryNodeKind, AzureNodeKind, EntityKinds, Field, NodeIcon, searchbarActions } from 'bh-shared-ui';
 import { TIER_ZERO_TAG } from 'src/constants';
 import { useAppDispatch } from 'src/store';
 
@@ -25,6 +25,7 @@ interface BasicObjectInfoFieldsProps {
     system_tags?: string;
     service_principal_id?: string;
     noderesourcegroupid?: string;
+    grouplinkid?: string;
     name?: string;
 }
 
@@ -72,6 +73,8 @@ export const BasicObjectInfoFields: React.FC<BasicObjectInfoFieldsProps> = (prop
                     props.service_principal_id,
                     props.name
                 )}
+            {props.grouplinkid &&
+                RelatedKindField('Linked Group ID:', ActiveDirectoryNodeKind.Group, props.grouplinkid, props.name)}
             {props.noderesourcegroupid &&
                 RelatedKindField(
                     'Node Resource Group ID:',

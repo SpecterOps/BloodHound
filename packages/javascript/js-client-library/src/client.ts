@@ -2216,6 +2216,61 @@ class BHEAPIClient {
             )
         );
 
+    getIssuancePolicyV2 = (id: string, counts?: boolean, options?: types.RequestOptions) =>
+        this.baseClient.get(
+            `/api/v2/issuancepolicies/${id}`,
+            Object.assign(
+                {
+                    params: {
+                        counts,
+                    },
+                },
+                options
+            )
+        );
+
+    getIssuancePolicyControllersV2 = (
+        id: string,
+        skip?: number,
+        limit?: number,
+        type?: string,
+        options?: types.RequestOptions
+    ) =>
+        this.baseClient.get(
+            `/api/v2/issuancepolicies/${id}/controllers`,
+            Object.assign(
+                {
+                    params: {
+                        skip,
+                        limit,
+                        type,
+                    },
+                },
+                options
+            )
+        );
+
+    getIssuancePolicyLinkedTemplatesV2 = (
+        id: string,
+        skip?: number,
+        limit?: number,
+        type?: string,
+        options?: types.RequestOptions
+    ) =>
+        this.baseClient.get(
+            `/api/v2/issuancepolicies/${id}/linkedtemplates`,
+            Object.assign(
+                {
+                    params: {
+                        skip,
+                        limit,
+                        type,
+                    },
+                },
+                options
+            )
+        );
+
     getMetaV2 = (id: string, options?: types.RequestOptions) => this.baseClient.get(`/api/v2/meta/${id}`, options);
 
     getShortestPathV2 = (

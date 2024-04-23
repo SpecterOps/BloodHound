@@ -212,3 +212,7 @@ func (s *Resources) ListADGPOAffectedComputers(response http.ResponseWriter, req
 func (s *Resources) ListADGPOAffectedTierZero(response http.ResponseWriter, request *http.Request) {
 	s.handleAdRelatedEntityQuery(response, request, "ListADGPOAffectedTierZero", adAnalysis.FetchGPOAffectedTierZeroPathDelegate, adAnalysis.CreateGPOAffectedIntermediariesListDelegate(adAnalysis.SelectGPOTierZeroCandidateFilter))
 }
+
+func (s *Resources) ListADIssuancePolicyLinkedCertTemplates(response http.ResponseWriter, request *http.Request) {
+	s.handleAdRelatedEntityQuery(response, request, "ListADIssuancePolicyLinkedCertTemplates", adAnalysis.FetchPolicyLinkedCertTemplatePaths, adAnalysis.FetchPolicyLinkedCertTemplates)
+}

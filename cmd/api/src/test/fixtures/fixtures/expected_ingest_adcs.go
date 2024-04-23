@@ -480,6 +480,10 @@ var (
 		query.And(query.Kind(query.Start(), ad.Group), query.Equals(query.StartProperty(common.ObjectID.String()), "S-1-5-21-909015691-3030120388-2582151266-519"), query.Kind(query.Relationship(), ad.GenericAll), query.Kind(query.End(), ad.RootCA), query.Equals(query.EndProperty(common.ObjectID.String()), "4B5183E1-DB57-4A57-8159-3E9649F3B01C")),
 		query.And(query.Kind(query.Start(), ad.Group), query.Equals(query.StartProperty(common.ObjectID.String()), "S-1-5-21-909015691-3030120388-2582151266-512"), query.Kind(query.Relationship(), ad.WriteDACL), query.Kind(query.End(), ad.RootCA), query.Equals(query.EndProperty(common.ObjectID.String()), "4B5183E1-DB57-4A57-8159-3E9649F3B01C")),
 		query.And(query.Kind(query.Start(), ad.Group), query.Equals(query.StartProperty(common.ObjectID.String()), "S-1-5-21-909015691-3030120388-2582151266-512"), query.Kind(query.Relationship(), ad.WriteOwner), query.Kind(query.End(), ad.RootCA), query.Equals(query.EndProperty(common.ObjectID.String()), "4B5183E1-DB57-4A57-8159-3E9649F3B01C")),
+
+		//IssuancePolicy
+		//TODO: Uncomment once esc13 is ready
+		//query.And(query.Kind(query.Start(), ad.IssuancePolicy), query.Equals(query.StartProperty(common.ObjectID.String()), "8A0CF606-AED8-44B1-A336-1A3A9E37D10B"), query.Kind(query.Relationship(), ad.OIDGroupLink), query.Kind(query.End(), ad.Group), query.Equals(query.EndProperty(common.ObjectID.String()), "S-1-5-21-909015691-3030120388-2582151266-513")),
 	}
 
 	nodeAssertionCriteria = []graph.Criteria{

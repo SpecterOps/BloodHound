@@ -187,13 +187,7 @@ func convertCertTemplateData(certtemplate ein.CertTemplate, converted *Converted
 }
 
 func convertIssuancePolicy(issuancePolicy ein.IssuancePolicy, converted *ConvertedData) {
-	converted.NodeProps = append(converted.NodeProps, ein.ConvertObjectToNode(issuancePolicy.IngestBase, ad.IssuancePolicy))
-	converted.RelProps = append(converted.RelProps, ein.ParseACEData(issuancePolicy.Aces, issuancePolicy.ObjectIdentifier, ad.IssuancePolicy)...)
-
-	if container := ein.ParseObjectContainer(issuancePolicy.IngestBase, ad.CertTemplate); container.IsValid() {
-		converted.RelProps = append(converted.RelProps, container)
-	}
-
+	props := ein.ConvertObjectToNode(issuancePolicy.IngestBase, ad.IssuancePolicy)
 	if issuancePolicy.GroupLink.ObjectIdentifier != "" {
 		converted.RelProps = append(converted.RelProps, ein.IngestibleRelationship{
 			Source:     issuancePolicy.ObjectIdentifier,
@@ -203,5 +197,13 @@ func convertIssuancePolicy(issuancePolicy ein.IssuancePolicy, converted *Convert
 			RelProps:   map[string]any{"isacl": false},
 			RelType:    ad.OIDGroupLink,
 		})
+		props.PropertyMap[ad.GroupLinkID.String()] = issuancePolicy.GroupLink.ObjectIdentifier
 	}
+	converted.NodeProps = append(converted.NodeProps, props)
+	converted.RelProps = append(converted.RelProps, ein.ParseACEData(issuancePolicy.Aces, issuancePolicy.ObjectIdentifier, ad.IssuancePolicy)...)
+
+	if container := ein.ParseObjectContainer(issuancePolicy.IngestBase, ad.CertTemplate); container.IsValid() {
+		converted.RelProps = append(converted.RelProps, container)
+	}
+
 }
