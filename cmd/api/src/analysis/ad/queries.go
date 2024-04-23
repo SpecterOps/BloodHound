@@ -69,7 +69,7 @@ func GraphStats(ctx context.Context, db graph.Database) (model.ADDataQualityStat
 		adStats     = model.ADDataQualityStats{}
 		runID       string
 
-		kinds = graph.Kinds{ad.User, ad.Group, ad.Computer, ad.Container, ad.OU, ad.GPO, ad.AIACA, ad.RootCA, ad.EnterpriseCA, ad.NTAuthStore, ad.CertTemplate}
+		kinds = ad.NodeKinds()
 	)
 
 	if newUUID, err := uuid.NewV4(); err != nil {
@@ -106,6 +106,11 @@ func GraphStats(ctx context.Context, db graph.Database) (model.ADDataQualityStat
 
 					for _, kind := range kinds {
 						innerKind := kind
+
+						if innerKind == ad.Entity {
+							continue
+						}
+
 						if err := operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, _ chan<- any) error {
 							if count, err := tx.Nodes().Filterf(func() graph.Criteria {
 								return query.And(
@@ -164,6 +169,9 @@ func GraphStats(ctx context.Context, db graph.Database) (model.ADDataQualityStat
 								case ad.IssuancePolicy:
 									stat.IssuancePolicies = int(count)
 									aggregation.IssuancePolicies += int(count)
+
+								case ad.Domain:
+									// Do nothing. Only ADDataQualityAggregation stats have domain stats and the domain stats are handled in the outer domain loop
 								}
 
 								mutex.Unlock()
