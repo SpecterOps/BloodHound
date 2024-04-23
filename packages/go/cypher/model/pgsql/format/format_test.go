@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/specterops/bloodhound/cypher/model/pgsql"
+	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/stretchr/testify/require"
 )
 
@@ -238,7 +239,7 @@ func TestFormat_Query(t *testing.T) {
 
 func TestStuff(t *testing.T) {
 
-	// 1. source cypher > match (s) return s
+	// 1. source cypher >>> match (s) return s
 	simpleNodeSelectQuery := pgsql.Query{
 		// with n1 as (select n1.* from node n1)
 		CommonTableExpressions: &pgsql.With{
@@ -302,7 +303,7 @@ func TestStuff(t *testing.T) {
 
 	require.Equal(t, expected, formattedQuery.Value)
 
-	// 2. source cypher > match (s) where s.name = '1234' return s
+	// 2. source cypher >>> match (s) where s.name = '1234' return s
 	nodeSelectWithWhereClause := pgsql.Query{
 		// with n1 as (select n1.* from node n1 where n1.properties -> 'name' = '1234')
 		CommonTableExpressions: &pgsql.With{
@@ -375,7 +376,7 @@ func TestStuff(t *testing.T) {
 
 	require.Equal(t, expected, formattedQuery.Value)
 
-	// 3. source cypher > match (s), (e) where s.name = '1234' return s
+	// 3. source cypher >>> match (s), (e) where s.name = '1234' return s
 	multipleNodeSelectsWithWhereClause := pgsql.Query{
 		CommonTableExpressions: &pgsql.With{
 			Expressions: []pgsql.CommonTableExpression{
@@ -464,6 +465,125 @@ func TestStuff(t *testing.T) {
 		n2 as (select n2.* from node n2) 
 		select (n1.id, n1.kind_ids, n1.properties)::nodecomposite as s 
 		from n1;`
+
+	expected = strings.ReplaceAll(expected, "\t", "")
+	expected = strings.ReplaceAll(expected, "\n", "")
+
+	require.Equal(t, expected, formattedQuery.Value)
+
+	kindA, _ := graph.AsKinds("A")
+	kindB, _ := graph.AsKinds("B")
+
+	// 4. source cypher >>> match (s:A), (e:B) where s.name = e.name return s, e
+	multipleNodeSelectsWithKindFilterAndWhereClause := pgsql.Query{
+		CommonTableExpressions: &pgsql.With{
+			Expressions: []pgsql.CommonTableExpression{
+				// with n1 as (select n1.* from node n1 where n1.kind_ids operator (pg_catalog.&&) array []::int2[]),
+				{
+					Alias: pgsql.TableAlias{
+						Name: pgsql.Identifier("n1"),
+					},
+					Query: pgsql.Query{
+						Body: pgsql.Select{
+							Projection: []pgsql.Projection{
+								pgsql.CompoundIdentifier{"n1", pgsql.WildcardIdentifier},
+							},
+							From: []pgsql.FromClause{
+								{
+									Relation: pgsql.TableReference{
+										Name:    pgsql.CompoundIdentifier{"node"},
+										Binding: pgsql.AsOptionalIdentifier("n1"),
+									},
+								},
+							},
+							Where: pgsql.NewBinaryExpression(
+								pgsql.CompoundIdentifier{"n1", "kind_ids"},
+								pgsql.OperatorPGArrayOverlap,
+								pgsql.AsLiteral(kindA),
+							),
+						},
+					},
+				},
+				// n2 as (select n2.* from node n2 where n2.kind_ids operator (pg_catalog.&&) array []::int2[]),
+				{
+					Alias: pgsql.TableAlias{
+						Name: pgsql.Identifier("n2"),
+					},
+					Query: pgsql.Query{
+						Body: pgsql.Select{
+							Projection: []pgsql.Projection{
+								pgsql.CompoundIdentifier{"n2", pgsql.WildcardIdentifier},
+							},
+							From: []pgsql.FromClause{
+								{
+									Relation: pgsql.TableReference{
+										Name:    pgsql.CompoundIdentifier{"node"},
+										Binding: pgsql.AsOptionalIdentifier("n2"),
+									},
+								},
+							},
+							Where: pgsql.NewBinaryExpression(
+								pgsql.CompoundIdentifier{"n2", "kind_ids"},
+								pgsql.OperatorPGArrayOverlap,
+								pgsql.AsLiteral(kindB),
+							),
+						},
+					},
+				},
+			},
+		},
+		/* select (n1.id, n1.kind_ids, n1.properties)::nodecomposite as s,
+		          (n2.id, n2.kind_ids, n2.properties)::nodecomposite as e
+		   from n1,
+		        n2;*/
+		Body: pgsql.Select{
+			Projection: []pgsql.Projection{
+				pgsql.AliasedExpression{
+					Alias: "s",
+					Expression: pgsql.CompositeValue{
+						DataType: "nodecomposite",
+						Values: []pgsql.Expression{
+							pgsql.CompoundIdentifier{"n1", "id"},
+							pgsql.CompoundIdentifier{"n1", "kind_ids"},
+							pgsql.CompoundIdentifier{"n1", "properties"},
+						},
+					},
+				},
+				pgsql.AliasedExpression{
+					Alias: "e",
+					Expression: pgsql.CompositeValue{
+						DataType: "nodecomposite",
+						Values: []pgsql.Expression{
+							pgsql.CompoundIdentifier{"n2", "id"},
+							pgsql.CompoundIdentifier{"n2", "kind_ids"},
+							pgsql.CompoundIdentifier{"n2", "properties"},
+						},
+					},
+				},
+			},
+			From: []pgsql.FromClause{
+				{
+					Relation: pgsql.TableReference{
+						Name: pgsql.CompoundIdentifier{"n1"},
+					},
+				},
+				{
+					Relation: pgsql.TableReference{
+						Name: pgsql.CompoundIdentifier{"n2"},
+					},
+				},
+			},
+		},
+	}
+
+	formattedQuery, err = Statement(multipleNodeSelectsWithKindFilterAndWhereClause)
+	require.Nil(t, err)
+
+	expected = `with n1 as (select n1.* from node n1 where n1.kind_ids operator (pg_catalog.&&) array []::int2[]), 
+		n2 as (select n2.* from node n2 where n2.kind_ids operator (pg_catalog.&&) array []::int2[]) 
+		select (n1.id, n1.kind_ids, n1.properties)::nodecomposite as s, 
+				(n2.id, n2.kind_ids, n2.properties)::nodecomposite as e 
+		from n1, n2;`
 
 	expected = strings.ReplaceAll(expected, "\t", "")
 	expected = strings.ReplaceAll(expected, "\n", "")
