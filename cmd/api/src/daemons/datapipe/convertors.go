@@ -199,10 +199,11 @@ func convertIssuancePolicy(issuancePolicy ein.IssuancePolicy, converted *Convert
 		})
 		props.PropertyMap[ad.GroupLinkID.String()] = issuancePolicy.GroupLink.ObjectIdentifier
 	}
+
 	converted.NodeProps = append(converted.NodeProps, props)
 	converted.RelProps = append(converted.RelProps, ein.ParseACEData(issuancePolicy.Aces, issuancePolicy.ObjectIdentifier, ad.IssuancePolicy)...)
 
-	if container := ein.ParseObjectContainer(issuancePolicy.IngestBase, ad.CertTemplate); container.IsValid() {
+	if container := ein.ParseObjectContainer(issuancePolicy.IngestBase, ad.IssuancePolicy); container.IsValid() {
 		converted.RelProps = append(converted.RelProps, container)
 	}
 

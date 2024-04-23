@@ -546,6 +546,13 @@ GroupLinkID: types.#StringEnum & {
 	representation: "grouplinkid"
 }
 
+ObjectGUID: types.#StringEnum & {
+	symbol: "ObjectGUID"
+	schema: "ad"
+	name: "Object GUID"
+	representation: "objectguid"
+}
+
 Properties: [
 	AdminCount,
 	CASecurityCollected,
@@ -620,7 +627,8 @@ Properties: [
 	HomeDirectory,
 	CertificatePolicy,
 	CertTemplateOID,
-	GroupLinkID
+	GroupLinkID,
+	ObjectGUID
 ]
 
 // Kinds
