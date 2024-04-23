@@ -15,6 +15,9 @@ func (s Operator) NodeType() string {
 }
 
 const (
+	OperatorUnion        Operator = "union"
+	OperatorConcatenate  Operator = "||"
+	OperatorArrayOverlap Operator = "&&"
 	OperatorEquals         Operator = "="
 	OperatorPGArrayOverlap Operator = "operator (pg_catalog.&&)"
 	OperatorAnd            Operator = "and"
@@ -22,4 +25,5 @@ const (
 	OperatorNot            Operator = "not"
 	OperatorJSONField      Operator = "->"
 	OperatorJSONTextField  Operator = "->>"
+	OperatorAdd            Operator = "+"
 )

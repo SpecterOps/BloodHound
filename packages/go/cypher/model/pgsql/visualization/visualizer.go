@@ -25,16 +25,16 @@ func (s *SQLVisualizer) getNextID(prefix string) string {
 	return prefix + strconv.Itoa(nextID)
 }
 
-func (s *SQLVisualizer) Enter(expression pgsql.SyntaxNode) {
+func (s *SQLVisualizer) Enter(node pgsql.SyntaxNode) {
 	nextNode := Node{
 		ID:         s.getNextID("n"),
-		Labels:     []string{expression.NodeType()},
+		Labels:     []string{node.NodeType()},
 		Properties: map[string]any{},
 	}
 
-	switch typedExpression := expression.(type) {
-	case pgsql.Operator:
-		nextNode.Properties["value"] = typedExpression
+	switch typedExpression := node.(type) {
+	case pgsql.BinaryExpression:
+		nextNode.Properties["value"] = typedExpression.Operator
 
 	case pgsql.Identifier:
 		nextNode.Properties["value"] = typedExpression
@@ -59,22 +59,20 @@ func (s *SQLVisualizer) Enter(expression pgsql.SyntaxNode) {
 	s.stack = append(s.stack, nextNode)
 }
 
-func (s *SQLVisualizer) Visit(expression pgsql.SyntaxNode) {}
-
-func (s *SQLVisualizer) Exit(expression pgsql.SyntaxNode) {
+func (s *SQLVisualizer) Exit(node pgsql.SyntaxNode) {
 	s.stack = s.stack[0 : len(s.stack)-1]
 }
 
-func SQLToDigraph(expression pgsql.SyntaxNode) (Graph, error) {
+func SQLToDigraph(node pgsql.SyntaxNode) (Graph, error) {
 	visualizer := &SQLVisualizer{
 		HierarchicalVisitor: walk.NewComposableHierarchicalVisitor[pgsql.SyntaxNode](),
 	}
 
-	if title, err := format.Expression(expression); err != nil {
+	if title, err := format.SyntaxNode(node); err != nil {
 		return Graph{}, err
 	} else {
 		visualizer.Graph.Title = title.Value
 	}
 
-	return visualizer.Graph, walk.PgSQL(expression, visualizer)
+	return visualizer.Graph, walk.PgSQL(node, visualizer)
 }

@@ -65,37 +65,37 @@ func NewComposableHierarchicalVisitor[E any]() HierarchicalVisitor[E] {
 	}
 }
 
-type HierarchicalVisitor[E any] interface {
+type HierarchicalVisitor[N any] interface {
 	CancelableErrorHandler
 
-	Enter(expression E)
-	Visit(expression E)
-	Exit(expression E)
+	Enter(node N)
+	Visit(node N)
+	Exit(node N)
 }
 
-type Cursor[E any] struct {
-	Expression  E
-	Branches    []E
+type Cursor[N any] struct {
+	Node        N
+	Branches    []N
 	BranchIndex int
 }
 
-func (s *Cursor[E]) AddBranches(branches ...E) {
+func (s *Cursor[N]) AddBranches(branches ...N) {
 	s.Branches = append(s.Branches, branches...)
 }
 
-func (s *Cursor[E]) NumBranchesRemaining() int {
+func (s *Cursor[N]) NumBranchesRemaining() int {
 	return len(s.Branches) - s.BranchIndex
 }
 
-func (s *Cursor[E]) IsFirstVisit() bool {
+func (s *Cursor[N]) IsFirstVisit() bool {
 	return s.BranchIndex == 0
 }
 
-func (s *Cursor[E]) HasNext() bool {
+func (s *Cursor[N]) HasNext() bool {
 	return s.BranchIndex < len(s.Branches)
 }
 
-func (s *Cursor[E]) NextBranch() E {
+func (s *Cursor[N]) NextBranch() N {
 	nextBranch := s.Branches[s.BranchIndex]
 	s.BranchIndex += 1
 
@@ -220,7 +220,7 @@ func Generic[E any](expression E, visitor HierarchicalVisitor[E], cursorConstruc
 		)
 
 		if isFirstVisit {
-			visitor.Enter(nextExpressionNode.Expression)
+			visitor.Enter(nextExpressionNode.Node)
 
 			if err := visitor.Error(); err != nil {
 				return err
@@ -229,7 +229,7 @@ func Generic[E any](expression E, visitor HierarchicalVisitor[E], cursorConstruc
 
 		if nextExpressionNode.HasNext() {
 			if !isFirstVisit {
-				visitor.Visit(nextExpressionNode.Expression)
+				visitor.Visit(nextExpressionNode.Node)
 
 				if err := visitor.Error(); err != nil {
 					return err
@@ -242,7 +242,7 @@ func Generic[E any](expression E, visitor HierarchicalVisitor[E], cursorConstruc
 				stack = append(stack, cursor)
 			}
 		} else {
-			visitor.Exit(nextExpressionNode.Expression)
+			visitor.Exit(nextExpressionNode.Node)
 
 			if err := visitor.Error(); err != nil {
 				return err

@@ -7,362 +7,362 @@ import (
 	"github.com/specterops/bloodhound/dawgs/graph"
 )
 
-func newCypherWalkCursor(expression cypher.SyntaxNode) (*Cursor[cypher.SyntaxNode], error) {
+func newCypherWalkCursor(node cypher.SyntaxNode) (*Cursor[cypher.SyntaxNode], error) {
 	cursor := &Cursor[cypher.SyntaxNode]{
-		Expression: expression,
+		Node: node,
 	}
 
-	switch typedExpression := expression.(type) {
+	switch typedNode := node.(type) {
 	// Types with no AST branches
 	case *cypher.RangeQuantifier, *cypher.PropertyLookup, *cypher.Literal, cypher.Operator, *cypher.Properties, *cypher.KindMatcher, *cypher.Limit, *cypher.Skip, graph.Kinds:
 		return cursor, nil
 
 	case *cypher.Create:
 		return &Cursor[cypher.SyntaxNode]{
-			Expression: expression,
-			Branches:   pgsql.MustSliceAs[cypher.SyntaxNode](typedExpression.Pattern),
+			Node:     node,
+			Branches: pgsql.MustSliceTypeConvert[cypher.SyntaxNode](typedNode.Pattern),
 		}, nil
 
 	case *cypher.Unwind:
 		return &Cursor[cypher.SyntaxNode]{
-			Expression: expression,
-			Branches:   []cypher.SyntaxNode{typedExpression.Expression, typedExpression.Binding},
+			Node:     node,
+			Branches: []cypher.SyntaxNode{typedNode.Expression, typedNode.Binding},
 		}, nil
 
 	case *cypher.RemoveItem:
 		nextCursor := &Cursor[cypher.SyntaxNode]{
-			Expression: expression,
+			Node: node,
 		}
 
-		if typedExpression.KindMatcher != nil {
-			nextCursor.AddBranches(typedExpression.KindMatcher)
+		if typedNode.KindMatcher != nil {
+			nextCursor.AddBranches(typedNode.KindMatcher)
 		}
 
-		nextCursor.AddBranches(typedExpression.Property)
+		nextCursor.AddBranches(typedNode.Property)
 		return nextCursor, nil
 
 	case *cypher.Remove:
 		return &Cursor[cypher.SyntaxNode]{
-			Expression: expression,
-			Branches:   pgsql.MustSliceAs[cypher.SyntaxNode](typedExpression.Items),
+			Node:     node,
+			Branches: pgsql.MustSliceTypeConvert[cypher.SyntaxNode](typedNode.Items),
 		}, nil
 
 	case *cypher.Delete:
 		return &Cursor[cypher.SyntaxNode]{
-			Expression: expression,
-			Branches:   pgsql.MustSliceAs[cypher.SyntaxNode](typedExpression.Expressions),
+			Node:     node,
+			Branches: pgsql.MustSliceTypeConvert[cypher.SyntaxNode](typedNode.Expressions),
 		}, nil
 
 	case *cypher.SetItem:
 		return &Cursor[cypher.SyntaxNode]{
-			Expression: expression,
-			Branches:   []cypher.SyntaxNode{typedExpression.Left, typedExpression.Right},
+			Node:     node,
+			Branches: []cypher.SyntaxNode{typedNode.Left, typedNode.Right},
 		}, nil
 
 	case *cypher.Set:
 		return &Cursor[cypher.SyntaxNode]{
-			Expression: expression,
-			Branches:   pgsql.MustSliceAs[cypher.SyntaxNode](typedExpression.Items),
+			Node:     node,
+			Branches: pgsql.MustSliceTypeConvert[cypher.SyntaxNode](typedNode.Items),
 		}, nil
 
 	case *cypher.UpdatingClause:
 		return &Cursor[cypher.SyntaxNode]{
-			Expression: expression,
-			Branches:   []cypher.SyntaxNode{typedExpression.Clause},
+			Node:     node,
+			Branches: []cypher.SyntaxNode{typedNode.Clause},
 		}, nil
 
 	case *cypher.PatternPredicate:
 		return &Cursor[cypher.SyntaxNode]{
-			Expression: expression,
-			Branches:   pgsql.MustSliceAs[cypher.SyntaxNode](typedExpression.PatternElements),
+			Node:     node,
+			Branches: pgsql.MustSliceTypeConvert[cypher.SyntaxNode](typedNode.PatternElements),
 		}, nil
 
 	case *cypher.Order:
 		return &Cursor[cypher.SyntaxNode]{
-			Expression: expression,
-			Branches:   pgsql.MustSliceAs[cypher.SyntaxNode](typedExpression.Items),
+			Node:     node,
+			Branches: pgsql.MustSliceTypeConvert[cypher.SyntaxNode](typedNode.Items),
 		}, nil
 
 	case *cypher.SortItem:
 		return &Cursor[cypher.SyntaxNode]{
-			Expression: expression,
-			Branches:   []cypher.SyntaxNode{typedExpression.Expression},
+			Node:     node,
+			Branches: []cypher.SyntaxNode{typedNode.Expression},
 		}, nil
 
 	case *cypher.MultiPartQuery:
 		return &Cursor[cypher.SyntaxNode]{
-			Expression: expression,
-			Branches:   append(pgsql.MustSliceAs[cypher.SyntaxNode](typedExpression.Parts), typedExpression.SinglePartQuery),
+			Node:     node,
+			Branches: append(pgsql.MustSliceTypeConvert[cypher.SyntaxNode](typedNode.Parts), typedNode.SinglePartQuery),
 		}, nil
 
 	case *cypher.MultiPartQueryPart:
 		nextCursor := &Cursor[cypher.SyntaxNode]{
-			Expression: expression,
+			Node: node,
 		}
 
-		if len(typedExpression.ReadingClauses) > 0 {
-			nextCursor.AddBranches(pgsql.MustSliceAs[cypher.SyntaxNode](typedExpression.ReadingClauses)...)
+		if len(typedNode.ReadingClauses) > 0 {
+			nextCursor.AddBranches(pgsql.MustSliceTypeConvert[cypher.SyntaxNode](typedNode.ReadingClauses)...)
 		}
 
-		if len(typedExpression.UpdatingClauses) > 0 {
-			nextCursor.AddBranches(pgsql.MustSliceAs[cypher.SyntaxNode](typedExpression.UpdatingClauses)...)
+		if len(typedNode.UpdatingClauses) > 0 {
+			nextCursor.AddBranches(pgsql.MustSliceTypeConvert[cypher.SyntaxNode](typedNode.UpdatingClauses)...)
 		}
 
-		if typedExpression.With != nil {
-			nextCursor.AddBranches(typedExpression.With)
+		if typedNode.With != nil {
+			nextCursor.AddBranches(typedNode.With)
 		}
 
 		return nextCursor, nil
 
 	case *cypher.With:
 		nextCursor := &Cursor[cypher.SyntaxNode]{
-			Expression: expression,
+			Node: node,
 		}
 
-		if typedExpression.Where != nil {
-			nextCursor.AddBranches(typedExpression.Where)
+		if typedNode.Where != nil {
+			nextCursor.AddBranches(typedNode.Where)
 		}
 
-		if typedExpression.Projection != nil {
-			nextCursor.AddBranches(typedExpression.Projection)
+		if typedNode.Projection != nil {
+			nextCursor.AddBranches(typedNode.Projection)
 		}
 
 		return nextCursor, nil
 
 	case *cypher.Quantifier:
 		return &Cursor[cypher.SyntaxNode]{
-			Expression: expression,
-			Branches:   []cypher.SyntaxNode{typedExpression.Filter},
+			Node:     node,
+			Branches: []cypher.SyntaxNode{typedNode.Filter},
 		}, nil
 
 	case *cypher.FilterExpression:
 		nextCursor := &Cursor[cypher.SyntaxNode]{
-			Expression: expression,
-			Branches:   []cypher.SyntaxNode{typedExpression.Specifier},
+			Node:     node,
+			Branches: []cypher.SyntaxNode{typedNode.Specifier},
 		}
 
-		if typedExpression.Where != nil {
-			nextCursor.AddBranches(typedExpression.Where)
+		if typedNode.Where != nil {
+			nextCursor.AddBranches(typedNode.Where)
 		}
 
 		return nextCursor, nil
 
 	case *cypher.IDInCollection:
 		return &Cursor[cypher.SyntaxNode]{
-			Expression: expression,
-			Branches:   []cypher.SyntaxNode{typedExpression.Expression},
+			Node:     node,
+			Branches: []cypher.SyntaxNode{typedNode.Expression},
 		}, nil
 
 	case *cypher.FunctionInvocation:
 		return &Cursor[cypher.SyntaxNode]{
-			Expression: expression,
-			Branches:   pgsql.MustSliceAs[cypher.SyntaxNode](typedExpression.Arguments),
+			Node:     node,
+			Branches: pgsql.MustSliceTypeConvert[cypher.SyntaxNode](typedNode.Arguments),
 		}, nil
 
 	case *cypher.Parenthetical:
 		return &Cursor[cypher.SyntaxNode]{
-			Expression: expression,
-			Branches:   []cypher.SyntaxNode{typedExpression.Expression},
+			Node:     node,
+			Branches: []cypher.SyntaxNode{typedNode.Expression},
 		}, nil
 
 	case *cypher.RegularQuery:
 		return &Cursor[cypher.SyntaxNode]{
-			Expression: expression,
-			Branches:   []cypher.SyntaxNode{typedExpression.SingleQuery},
+			Node:     node,
+			Branches: []cypher.SyntaxNode{typedNode.SingleQuery},
 		}, nil
 
 	case *cypher.SingleQuery:
-		if typedExpression.SinglePartQuery != nil {
+		if typedNode.SinglePartQuery != nil {
 			return &Cursor[cypher.SyntaxNode]{
-				Expression: expression,
-				Branches:   []cypher.SyntaxNode{typedExpression.SinglePartQuery},
+				Node:     node,
+				Branches: []cypher.SyntaxNode{typedNode.SinglePartQuery},
 			}, nil
 		}
 
 		return &Cursor[cypher.SyntaxNode]{
-			Expression: expression,
-			Branches:   []cypher.SyntaxNode{typedExpression.MultiPartQuery},
+			Node:     node,
+			Branches: []cypher.SyntaxNode{typedNode.MultiPartQuery},
 		}, nil
 
 	case *cypher.SinglePartQuery:
 		nextCursor := &Cursor[cypher.SyntaxNode]{
-			Expression: expression,
+			Node: node,
 		}
 
-		if len(typedExpression.ReadingClauses) > 0 {
-			nextCursor.AddBranches(pgsql.MustSliceAs[cypher.SyntaxNode](typedExpression.ReadingClauses)...)
+		if len(typedNode.ReadingClauses) > 0 {
+			nextCursor.AddBranches(pgsql.MustSliceTypeConvert[cypher.SyntaxNode](typedNode.ReadingClauses)...)
 		}
 
-		if len(typedExpression.UpdatingClauses) > 0 {
-			nextCursor.AddBranches(pgsql.MustSliceAs[cypher.SyntaxNode](typedExpression.UpdatingClauses)...)
+		if len(typedNode.UpdatingClauses) > 0 {
+			nextCursor.AddBranches(pgsql.MustSliceTypeConvert[cypher.SyntaxNode](typedNode.UpdatingClauses)...)
 		}
 
-		if typedExpression.Return != nil {
-			nextCursor.AddBranches(typedExpression.Return)
+		if typedNode.Return != nil {
+			nextCursor.AddBranches(typedNode.Return)
 		}
 
 		return nextCursor, nil
 
 	case *cypher.Return:
 		return &Cursor[cypher.SyntaxNode]{
-			Expression: expression,
-			Branches:   []cypher.SyntaxNode{typedExpression.Projection},
+			Node:     node,
+			Branches: []cypher.SyntaxNode{typedNode.Projection},
 		}, nil
 
 	case *cypher.Projection:
 		nextCursor := &Cursor[cypher.SyntaxNode]{
-			Expression: expression,
-			Branches:   pgsql.MustSliceAs[cypher.SyntaxNode](typedExpression.Items),
+			Node:     node,
+			Branches: pgsql.MustSliceTypeConvert[cypher.SyntaxNode](typedNode.Items),
 		}
 
-		if typedExpression.Order != nil {
-			nextCursor.AddBranches(typedExpression.Order)
+		if typedNode.Order != nil {
+			nextCursor.AddBranches(typedNode.Order)
 		}
 
-		if typedExpression.Skip != nil {
-			nextCursor.AddBranches(typedExpression.Skip)
+		if typedNode.Skip != nil {
+			nextCursor.AddBranches(typedNode.Skip)
 		}
 
-		if typedExpression.Limit != nil {
-			nextCursor.AddBranches(typedExpression.Limit)
+		if typedNode.Limit != nil {
+			nextCursor.AddBranches(typedNode.Limit)
 		}
 
 		return nextCursor, nil
 
 	case *cypher.ProjectionItem:
 		nextCursor := &Cursor[cypher.SyntaxNode]{
-			Expression: expression,
-			Branches:   []cypher.SyntaxNode{typedExpression.Expression},
+			Node:     node,
+			Branches: []cypher.SyntaxNode{typedNode.Expression},
 		}
 
-		if typedExpression.Binding != nil {
-			nextCursor.AddBranches(typedExpression.Binding)
+		if typedNode.Binding != nil {
+			nextCursor.AddBranches(typedNode.Binding)
 		}
 
 		return nextCursor, nil
 
 	case *cypher.ReadingClause:
 		nextCursor := &Cursor[cypher.SyntaxNode]{
-			Expression: expression,
+			Node: node,
 		}
 
-		if typedExpression.Match != nil {
-			nextCursor.AddBranches(typedExpression.Match)
+		if typedNode.Match != nil {
+			nextCursor.AddBranches(typedNode.Match)
 		}
 
-		if typedExpression.Unwind != nil {
-			nextCursor.AddBranches(typedExpression.Unwind)
+		if typedNode.Unwind != nil {
+			nextCursor.AddBranches(typedNode.Unwind)
 		}
 
 		return nextCursor, nil
 
 	case *cypher.Match:
 		nextCursor := &Cursor[cypher.SyntaxNode]{
-			Expression: expression,
-			Branches:   pgsql.MustSliceAs[cypher.SyntaxNode](typedExpression.Pattern),
+			Node:     node,
+			Branches: pgsql.MustSliceTypeConvert[cypher.SyntaxNode](typedNode.Pattern),
 		}
 
-		if typedExpression.Where != nil {
-			nextCursor.AddBranches(typedExpression.Where)
+		if typedNode.Where != nil {
+			nextCursor.AddBranches(typedNode.Where)
 		}
 
 		return nextCursor, nil
 
 	case *cypher.PatternPart:
 		nextCursor := &Cursor[cypher.SyntaxNode]{
-			Expression: expression,
+			Node: node,
 		}
 
-		if typedExpression.Binding != nil {
-			nextCursor.AddBranches(typedExpression.Binding)
+		if typedNode.Binding != nil {
+			nextCursor.AddBranches(typedNode.Binding)
 		}
 
-		nextCursor.AddBranches(pgsql.MustSliceAs[cypher.SyntaxNode](typedExpression.PatternElements)...)
+		nextCursor.AddBranches(pgsql.MustSliceTypeConvert[cypher.SyntaxNode](typedNode.PatternElements)...)
 		return nextCursor, nil
 
 	case *cypher.PatternElement:
 		return &Cursor[cypher.SyntaxNode]{
-			Expression: expression,
-			Branches:   []cypher.SyntaxNode{typedExpression.Element},
+			Node:     node,
+			Branches: []cypher.SyntaxNode{typedNode.Element},
 		}, nil
 
 	case *cypher.RelationshipPattern:
 		nextCursor := &Cursor[cypher.SyntaxNode]{
-			Expression: expression,
+			Node: node,
 		}
 
-		if typedExpression.Binding != nil {
-			nextCursor.AddBranches(typedExpression.Binding)
+		if typedNode.Binding != nil {
+			nextCursor.AddBranches(typedNode.Binding)
 		}
 
-		if typedExpression.Properties != nil {
-			nextCursor.AddBranches(typedExpression.Properties)
+		if typedNode.Properties != nil {
+			nextCursor.AddBranches(typedNode.Properties)
 		}
 
 		return nextCursor, nil
 
 	case *cypher.NodePattern:
 		nextCursor := &Cursor[cypher.SyntaxNode]{
-			Expression: expression,
+			Node: node,
 		}
 
-		if typedExpression.Binding != nil {
-			nextCursor.AddBranches(typedExpression.Binding)
+		if typedNode.Binding != nil {
+			nextCursor.AddBranches(typedNode.Binding)
 		}
 
-		if typedExpression.Properties != nil {
-			nextCursor.AddBranches(typedExpression.Properties)
+		if typedNode.Properties != nil {
+			nextCursor.AddBranches(typedNode.Properties)
 		}
 
 		return nextCursor, nil
 
 	case *cypher.Where:
 		return &Cursor[cypher.SyntaxNode]{
-			Expression: expression,
-			Branches:   pgsql.MustSliceAs[cypher.SyntaxNode](typedExpression.Expressions),
+			Node:     node,
+			Branches: pgsql.MustSliceTypeConvert[cypher.SyntaxNode](typedNode.Expressions),
 		}, nil
 
 	case *cypher.Variable:
 		return &Cursor[cypher.SyntaxNode]{
-			Expression: expression,
+			Node: node,
 		}, nil
 
 	case *cypher.ArithmeticExpression:
 		return &Cursor[cypher.SyntaxNode]{
-			Expression: expression,
-			Branches:   append([]cypher.SyntaxNode{typedExpression.Left}, pgsql.MustSliceAs[cypher.SyntaxNode](typedExpression.Partials)...),
+			Node:     node,
+			Branches: append([]cypher.SyntaxNode{typedNode.Left}, pgsql.MustSliceTypeConvert[cypher.SyntaxNode](typedNode.Partials)...),
 		}, nil
 
 	case *cypher.PartialArithmeticExpression:
 		return &Cursor[cypher.SyntaxNode]{
-			Expression:  expression,
-			Branches:    []cypher.SyntaxNode{typedExpression.Operator, typedExpression.Right},
+			Node:        node,
+			Branches:    []cypher.SyntaxNode{typedNode.Operator, typedNode.Right},
 			BranchIndex: 0,
 		}, nil
 
 	case *cypher.PartialComparison:
 		return &Cursor[cypher.SyntaxNode]{
-			Expression:  expression,
-			Branches:    []cypher.SyntaxNode{typedExpression.Operator, typedExpression.Right},
+			Node:        node,
+			Branches:    []cypher.SyntaxNode{typedNode.Operator, typedNode.Right},
 			BranchIndex: 0,
 		}, nil
 
 	case *cypher.Negation:
-		return cursor, SetBranches(cursor, typedExpression.Expression)
+		return cursor, SetBranches(cursor, typedNode.Expression)
 
 	case *cypher.Conjunction:
-		return cursor, SetBranches(cursor, typedExpression.Expressions...)
+		return cursor, SetBranches(cursor, typedNode.Expressions...)
 
 	case *cypher.Disjunction:
-		return cursor, SetBranches(cursor, typedExpression.Expressions...)
+		return cursor, SetBranches(cursor, typedNode.Expressions...)
 
 	case *cypher.Comparison:
 		return &Cursor[cypher.SyntaxNode]{
-			Expression: expression,
-			Branches:   append([]cypher.SyntaxNode{typedExpression.Left}, pgsql.MustSliceAs[cypher.SyntaxNode](typedExpression.Partials)...),
+			Node:     node,
+			Branches: append([]cypher.SyntaxNode{typedNode.Left}, pgsql.MustSliceTypeConvert[cypher.SyntaxNode](typedNode.Partials)...),
 		}, nil
 
 	default:
-		return nil, fmt.Errorf("unable to negotiate cypher model type %T into a translation cursor", expression)
+		return nil, fmt.Errorf("unable to negotiate cypher model type %T into a translation cursor", node)
 	}
 }
