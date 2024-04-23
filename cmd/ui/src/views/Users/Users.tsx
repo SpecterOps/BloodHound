@@ -30,7 +30,7 @@ import {
     apiClient,
     Disable2FADialog,
 } from 'bh-shared-ui';
-import { NewUser, UpdatedUser } from 'src/ducks/auth/types';
+import { NewUser, UpdateUserRequest } from 'src/ducks/auth/types';
 import { addSnackbar } from 'src/ducks/global/actions';
 import useToggle from 'src/hooks/useToggle';
 import { User } from 'src/hooks/useUsers';
@@ -38,6 +38,8 @@ import { useAppDispatch, useAppSelector } from 'src/store';
 import CreateUserDialog from 'src/views/Users/CreateUserDialog';
 import UpdateUserDialog from 'src/views/Users/UpdateUserDialog';
 import UserActionsMenu from 'src/views/Users/UserActionsMenu';
+import find from 'lodash/find';
+import isEmpty from 'lodash/isEmpty';
 
 const Users = () => {
     const dispatch = useAppDispatch();
@@ -49,6 +51,7 @@ const Users = () => {
     const [deleteUserDialogOpen, toggleDeleteUserDialog] = useToggle(false);
     const [expireUserPasswordDialogOpen, toggleExpireUserPasswordDialog] = useToggle(false);
     const [resetUserPasswordDialogOpen, toggleResetUserPasswordDialog] = useToggle(false);
+    const [needsPasswordReset, setNeedsPasswordReset] = useState(false);
     const [manageUserTokensDialogOpen, toggleManageUserTokensDialog] = useToggle(false);
     const [disable2FADialogOpen, setDisable2FADialogOpen] = useState(false);
     const [disable2FAError, setDisable2FAError] = useState('');
@@ -76,10 +79,17 @@ const Users = () => {
     });
 
     const updateUserMutation = useMutation(
-        (updatedUser: UpdatedUser) => apiClient.updateUser(selectedUserId!, updatedUser),
+        (updatedUser: UpdateUserRequest) => apiClient.updateUser(selectedUserId!, updatedUser),
         {
-            onSuccess: () => {
+            onSuccess: (response, updatedUser) => {
                 dispatch(addSnackbar('User updated successfully!', 'updateUserSuccess'));
+                const selectedUser = find(listUsersQuery.data, (user) => user.id === selectedUserId);
+                // if the user previously had a SAML Provider ID but does not have one after the update then show the
+                // password reset dialog with the "Force Password Reset?" input defaulted to checked
+                if (selectedUser?.saml_provider_id !== null && isEmpty(updatedUser.SAMLProviderId)) {
+                    setNeedsPasswordReset(true);
+                    toggleResetUserPasswordDialog();
+                }
                 listUsersQuery.refetch();
             },
         }
@@ -158,6 +168,9 @@ const Users = () => {
             onSuccess: () => {
                 dispatch(addSnackbar('User password updated successfully!', 'updateUserPasswordSuccess'));
                 toggleResetUserPasswordDialog();
+            },
+            onSettled: () => {
+                setNeedsPasswordReset(false);
             },
         }
     );
@@ -353,10 +366,14 @@ const Users = () => {
             />
             <PasswordDialog
                 open={resetUserPasswordDialogOpen}
-                onClose={toggleResetUserPasswordDialog}
+                onClose={() => {
+                    toggleResetUserPasswordDialog();
+                    setNeedsPasswordReset(false);
+                }}
                 userId={selectedUserId!}
                 onSave={updateUserPasswordMutation.mutate}
                 showNeedsPasswordReset={true}
+                initialNeedsPasswordReset={needsPasswordReset}
             />
             <UserTokenManagementDialog
                 open={manageUserTokensDialogOpen}
