@@ -238,6 +238,7 @@ func TestFormat_Query(t *testing.T) {
 
 func TestStuff(t *testing.T) {
 
+	// 1. source cypher > match (s) return s
 	simpleNodeSelectQuery := pgsql.Query{
 		// with n1 as (select n1.* from node n1)
 		CommonTableExpressions: &pgsql.With{
@@ -300,6 +301,175 @@ func TestStuff(t *testing.T) {
 	expected = strings.ReplaceAll(expected, "\n", "")
 
 	require.Equal(t, expected, formattedQuery.Value)
+
+	// 2. source cypher > match (s) where s.name = '1234' return s
+	nodeSelectWithWhereClause := pgsql.Query{
+		// with n1 as (select n1.* from node n1 where n1.properties -> 'name' = '1234')
+		CommonTableExpressions: &pgsql.With{
+			Expressions: []pgsql.CommonTableExpression{
+				{
+					Alias: pgsql.TableAlias{
+						Name: "n1",
+					},
+					Query: pgsql.Query{
+						Body: pgsql.Select{
+							Projection: []pgsql.Projection{
+								pgsql.CompoundIdentifier{"n1", pgsql.WildcardIdentifier},
+							},
+							From: []pgsql.FromClause{
+								{
+									Relation: pgsql.TableReference{
+										Name:    pgsql.CompoundIdentifier{"node"},
+										Binding: pgsql.AsOptionalIdentifier("n1"),
+									},
+								},
+							},
+							Where: pgsql.NewBinaryExpression(
+								pgsql.NewBinaryExpression(
+									pgsql.CompoundIdentifier{"n1", "properties"},
+									pgsql.OperatorJSONField,
+									pgsql.AsLiteral("name"),
+								),
+								pgsql.OperatorEquals,
+								pgsql.AsLiteral("1234"),
+							),
+						},
+					},
+				},
+			},
+		},
+		// select (n1.id, n1.kind_ids, n1.properties)::nodecomposite as s from n1;
+		Body: pgsql.Select{
+			Projection: []pgsql.Projection{
+				pgsql.AliasedExpression{
+					Alias: "s",
+					Expression: pgsql.CompositeValue{
+						DataType: "nodecomposite",
+						Values: []pgsql.Expression{
+							pgsql.CompoundIdentifier{"n1", "id"},
+							pgsql.CompoundIdentifier{"n1", "kind_ids"},
+							pgsql.CompoundIdentifier{"n1", "properties"},
+						},
+					},
+				},
+			},
+			From: []pgsql.FromClause{
+				{
+					Relation: pgsql.TableReference{
+						Name: pgsql.CompoundIdentifier{"n1"},
+					},
+				},
+			},
+		},
+	}
+
+	formattedQuery, err = Statement(nodeSelectWithWhereClause)
+	require.Nil(t, err)
+
+	expected = `with n1 as (select n1.* from node n1 where n1.properties -> 'name' = '1234') 
+		select (n1.id, n1.kind_ids, n1.properties)::nodecomposite as s 
+		from n1;`
+
+	expected = strings.ReplaceAll(expected, "\t", "")
+	expected = strings.ReplaceAll(expected, "\n", "")
+
+	require.Equal(t, expected, formattedQuery.Value)
+
+	// 3. source cypher > match (s), (e) where s.name = '1234' return s
+	multipleNodeSelectsWithWhereClause := pgsql.Query{
+		CommonTableExpressions: &pgsql.With{
+			Expressions: []pgsql.CommonTableExpression{
+				// with n1 as (select n1.* from node n1 where n1.properties -> 'name' = '1234')
+				{
+					Alias: pgsql.TableAlias{
+						Name: pgsql.Identifier("n1"),
+					},
+					Query: pgsql.Query{
+						Body: pgsql.Select{
+							Projection: []pgsql.Projection{
+								pgsql.CompoundIdentifier{"n1", pgsql.WildcardIdentifier},
+							},
+							From: []pgsql.FromClause{
+								{
+									Relation: pgsql.TableReference{
+										Name:    pgsql.CompoundIdentifier{"node"},
+										Binding: pgsql.AsOptionalIdentifier("n1"),
+									},
+								},
+							},
+							Where: pgsql.NewBinaryExpression(
+								pgsql.NewBinaryExpression(
+									pgsql.CompoundIdentifier{"n1", "properties"},
+									pgsql.OperatorJSONField,
+									pgsql.AsLiteral("name"),
+								),
+								pgsql.OperatorEquals,
+								pgsql.AsLiteral("1234"),
+							),
+						},
+					},
+				},
+				// with n2 as (select n2.* from node n2)
+				{
+					Alias: pgsql.TableAlias{
+						Name: pgsql.Identifier("n2"),
+					},
+					Query: pgsql.Query{
+						Body: pgsql.Select{
+							Projection: []pgsql.Projection{
+								pgsql.CompoundIdentifier{"n2", pgsql.WildcardIdentifier},
+							},
+							From: []pgsql.FromClause{
+								{
+									Relation: pgsql.TableReference{
+										Name:    pgsql.CompoundIdentifier{"node"},
+										Binding: pgsql.AsOptionalIdentifier("n2"),
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		// select (n1.id, n1.kind_ids, n1.properties)::nodecomposite as s from n1;
+		Body: pgsql.Select{
+			Projection: []pgsql.Projection{
+				pgsql.AliasedExpression{
+					Alias: "s",
+					Expression: pgsql.CompositeValue{
+						DataType: "nodecomposite",
+						Values: []pgsql.Expression{
+							pgsql.CompoundIdentifier{"n1", "id"},
+							pgsql.CompoundIdentifier{"n1", "kind_ids"},
+							pgsql.CompoundIdentifier{"n1", "properties"},
+						},
+					},
+				},
+			},
+			From: []pgsql.FromClause{
+				{
+					Relation: pgsql.TableReference{
+						Name: pgsql.CompoundIdentifier{"n1"},
+					},
+				},
+			},
+		},
+	}
+
+	formattedQuery, err = Statement(multipleNodeSelectsWithWhereClause)
+	require.Nil(t, err)
+
+	expected = `with n1 as (select n1.* from node n1 where n1.properties -> 'name' = '1234'), 
+		n2 as (select n2.* from node n2) 
+		select (n1.id, n1.kind_ids, n1.properties)::nodecomposite as s 
+		from n1;`
+
+	expected = strings.ReplaceAll(expected, "\t", "")
+	expected = strings.ReplaceAll(expected, "\n", "")
+
+	require.Equal(t, expected, formattedQuery.Value)
+
 }
 
 func TestFormat_Merge(t *testing.T) {
