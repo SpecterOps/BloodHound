@@ -29,9 +29,6 @@ data:
       "work_dir": "/opt/bloodhound/work",
       "log_level": "INFO",
       "log_path": "bloodhound.log",
-      "features": {
-        "enable_auth": true
-      },
       "database": {
         "connection": "user={{ .Values.appdb.container.env.POSTGRES_USER }} password={{ .Values.appdb.container.env.POSTGRES_PASSWORD }} dbname={{ .Values.appdb.container.env.POSTGRES_DB }} host={{ .Values.appdb.service.name }}"
       },
