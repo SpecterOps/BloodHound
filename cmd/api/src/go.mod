@@ -68,6 +68,7 @@ require (
 	github.com/go-openapi/swag v0.22.4 // indirect
 	github.com/go-pkgz/expirable-cache v1.0.0 // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
+	github.com/google/go-cmp v0.5.9 // indirect
 	github.com/jackc/chunkreader/v2 v2.0.1 // indirect
 	github.com/jackc/pgconn v1.14.3 // indirect
 	github.com/jackc/pgio v1.0.0 // indirect

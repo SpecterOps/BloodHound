@@ -24,21 +24,19 @@ import (
 	"testing"
 	"time"
 
-	"github.com/specterops/bloodhound/src/config"
-	"gotest.tools/assert"
-
-	"github.com/specterops/bloodhound/src/auth"
-	bhCtx "github.com/specterops/bloodhound/src/ctx"
-	"github.com/specterops/bloodhound/src/test/must"
-
 	"github.com/gorilla/mux"
 	"github.com/specterops/bloodhound/cache"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	graphMocks "github.com/specterops/bloodhound/dawgs/graph/mocks"
 	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/graphschema/common"
+	"github.com/specterops/bloodhound/src/auth"
+	"github.com/specterops/bloodhound/src/config"
+	bhCtx "github.com/specterops/bloodhound/src/ctx"
 	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/queries"
+	"github.com/specterops/bloodhound/src/test/must"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 )
@@ -57,12 +55,12 @@ func TestGraphQuery_PrepareCypherQuery(t *testing.T) {
 
 	t.Run("invalid cypher", func(t *testing.T) {
 		_, err := gq.PrepareCypherQuery(rawCypherInvalid)
-		assert.ErrorType(t, err, queries.QueryError{})
+		assert.ErrorAs(t, err, queries.QueryError{})
 	})
 
 	t.Run("valid cypher with mutation while mutations disabled", func(t *testing.T) {
 		_, err := gqMutDisable.PrepareCypherQuery(rawCypherMutation)
-		assert.ErrorType(t, err, queries.QueryError{})
+		assert.ErrorAs(t, err, queries.QueryError{})
 	})
 
 	t.Run("valid cypher without mutation", func(t *testing.T) {
