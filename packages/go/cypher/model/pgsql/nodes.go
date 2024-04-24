@@ -1,8 +1,6 @@
 package pgsql
 
-type StringLike interface {
-	String() string
-}
+import "fmt"
 
 type SyntaxNode interface {
 	NodeType() string
@@ -21,6 +19,20 @@ type Expression interface {
 type Projection interface {
 	Expression
 	AsProjection() Projection
+}
+
+func ExpressionAs[T any](expression Expression) (T, error) {
+	var emptyT T
+
+	if expression == nil {
+		return emptyT, nil
+	}
+
+	if projection, isT := expression.(T); isT {
+		return projection, nil
+	}
+
+	return emptyT, fmt.Errorf("type %T is not a projection", expression)
 }
 
 type MergeAction interface {

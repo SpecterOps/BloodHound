@@ -22,12 +22,12 @@ const (
 type DataType string
 
 func (s DataType) NodeType() string {
-	return "sql_data_type"
+	return "data_type"
 }
 
 const (
-	UnsetDataType            DataType = ""
-	UnknownDataType          DataType = "UNKNOWN"
+	UnsetDataType   DataType = ""
+	UnknownDataType DataType = "UNKNOWN"
 	Reference                DataType = "REFERENCE"
 	Null                     DataType = "NULL"
 	NodeComposite            DataType = "nodecomposite"
@@ -55,6 +55,13 @@ const (
 	Interval                 DataType = "interval"
 	TimestampWithTimeZone    DataType = "timestamp with time zone"
 	TimestampWithoutTimeZone DataType = "timestamp without time zone"
+
+
+	// Not sure how I feel about overloading this usage of this type. All of the above constants
+	// are legal pgsql types while the below are not but instead are related to them.
+	ExpansionRootNode     DataType = "expansion_root_node"
+	ExpansionEdge         DataType = "expansion_edge"
+	ExpansionTerminalNode DataType = "expansion_terminal_node"
 )
 
 func (s DataType) IsArrayType() bool {

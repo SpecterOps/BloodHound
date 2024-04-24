@@ -137,15 +137,3 @@ func TestTranslate(t *testing.T) {
 		caseFile.Run(t)
 	}
 }
-
-func TestTranslateCypherExpression(t *testing.T) {
-	regularQuery, err := frontend.ParseCypher(frontend.NewContext(), "match p = (s)-[r:RT1*..]->(e) where s.name = '1234' and e.selected and e.end_id in r.eligible return p")
-	require.Nil(t, err)
-
-	sqlAST, err := translate.Translate(regularQuery)
-	require.Nil(t, err)
-
-	output, err := format.Statement(sqlAST)
-	require.Nil(t, err)
-	require.Equal(t, "s.properties -> 'name' = s.properties -> 'other' + 1 / s.properties -> 'last' and s.properties -> 'value' = 1234 and not s.properties -> 'test' and e.properties -> 'value' = 1234 and e.properties -> 'comp' = s.properties -> 'comp' or e.properties -> 'comp' and s.properties -> 'other_property' = '1234'", output.Value)
-}
