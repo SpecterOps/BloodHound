@@ -59,13 +59,13 @@ func Test_CypherSearch(t *testing.T) {
 			apiClient, ok := lab.Unpack(harness, fixtures.BHAdminApiClientFixture)
 			assert.True(ok)
 
-			queryWithUpdateClause := "match (b) where b.name = 'test' remove b.prop return b"
+			queryWithUserSpecifiedParameters := "match (n:Guardian {name: $name}) return n"
 			_, err := apiClient.CypherSearch(v2.CypherSearch{
-				Query: queryWithUpdateClause,
+				Query: queryWithUserSpecifiedParameters,
 			})
-			assert.ErrorContains(err, frontend.ErrUpdateClauseNotSupported.Error())
+			assert.ErrorContains(err, frontend.ErrUserSpecifiedParametersNotSupported.Error())
 		}),
-		lab.TestCase("succesfully runs cypher query", func(assert *require.Assertions, harness *lab.Harness) {
+		lab.TestCase("successfully runs cypher query", func(assert *require.Assertions, harness *lab.Harness) {
 			apiClient, ok := lab.Unpack(harness, fixtures.BHAdminApiClientFixture)
 			assert.True(ok)
 
