@@ -98,12 +98,14 @@ func TestGraphQuery_RawCypherSearch(t *testing.T) {
 	}).Times(2)
 
 	// Unset the user-set timeout in the BH context to validate QC runtime reduction of a complex query
-	// This will be set to a default of 30 min, with a reduction factor of 3, so we should have a 10 min config timeout
-	outerBHCtxInst.Timeout = 0
+	// This will be set to a default of 15 min, with a reduction factor of 3, so we should have a 5 min config timeout
 
 	// availableRuntime = 15min (default), query cost = 15
 	// Then reductionFactor = 15/5 = 3
 	// Therefore actual timeout = availableRuntime/reductionFactor : 15/3 = 5min
+
+	outerBHCtxInst.Timeout = 0
+
 	_, err = gq.RawCypherSearch(outerBHCtxInst.ConstructGoContext(), "match ()-[:HasSession*..]->()-[:MemberOf*..]->() return n;", false)
 	require.Nil(t, err)
 

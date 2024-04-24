@@ -385,9 +385,9 @@ func (s *GraphQuery) prepareGraphQuery(rawCypher string, disableCypherQC bool) (
 		return graphQuery, newQueryError(err)
 	} else if !disableCypherQC && complexityMeasure.Weight > MaxQueryComplexityWeightAllowed {
 		// log query details if it is rejected due to high complexity
-		timeoutEvent := log.WithLevel(log.LevelError)
-		timeoutEvent.Str("query", graphQuery.strippedQuery)
-		timeoutEvent.Msg(fmt.Sprintf("Query rejected. Query weight: %.2f. Maximum allowed weight: %d", graphQuery.complexity.Weight, MaxQueryComplexityWeightAllowed))
+		highComplexityLog := log.WithLevel(log.LevelError)
+		highComplexityLog.Str("query", graphQuery.strippedQuery)
+		highComplexityLog.Msg(fmt.Sprintf("Query rejected. Query weight: %.2f. Maximum allowed weight: %d", graphQuery.complexity.Weight, MaxQueryComplexityWeightAllowed))
 
 		return graphQuery, newQueryError(ErrCypherQueryToComplex)
 	} else if pgDB, isPG := s.Graph.(*pg.Driver); isPG {
@@ -481,10 +481,10 @@ func (s *GraphQuery) RawCypherSearch(ctx context.Context, rawCypher string, incl
 
 		// Log query details if neo4j times out
 		if util.IsNeoTimeoutError(transactionErr) {
-			timeoutEvent := log.WithLevel(log.LevelError)
-			timeoutEvent.Str("query", graphQuery.strippedQuery)
-			timeoutEvent.Str("query cost", fmt.Sprintf("%.2f", graphQuery.complexity.Weight))
-			timeoutEvent.Msg("Neo4j timed out while executing cypher query")
+			timeoutLog := log.WithLevel(log.LevelError)
+			timeoutLog.Str("query", graphQuery.strippedQuery)
+			timeoutLog.Str("query cost", fmt.Sprintf("%.2f", graphQuery.complexity.Weight))
+			timeoutLog.Msg("Neo4j timed out while executing cypher query")
 		}
 
 		return graphResponse, transactionErr
