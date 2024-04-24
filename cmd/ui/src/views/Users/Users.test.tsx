@@ -61,7 +61,7 @@ const testMarshallLaw = {
             deleted_at: { Time: '0001-01-01T00:00:00Z', Valid: false },
         },
     ],
-    first_name: 'Marshal',
+    first_name: 'Marshall',
     last_name: 'Law',
     email_address: 'mlaw@specterops.io',
     principal_name: 'mlaw',

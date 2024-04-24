@@ -18,7 +18,6 @@ import { Box, Button, Paper } from '@mui/material';
 import { DateTime } from 'luxon';
 import { useState } from 'react';
 import { useMutation, useQuery } from 'react-query';
-
 import {
     ConfirmationDialog,
     DataTable,
@@ -30,7 +29,10 @@ import {
     apiClient,
     Disable2FADialog,
 } from 'bh-shared-ui';
-import { NewUser, UpdateUserRequest } from 'src/ducks/auth/types';
+import { UpdateUserRequest } from 'js-client-library';
+import find from 'lodash/find';
+import isEmpty from 'lodash/isEmpty';
+import { NewUser } from 'src/ducks/auth/types';
 import { addSnackbar } from 'src/ducks/global/actions';
 import useToggle from 'src/hooks/useToggle';
 import { User } from 'src/hooks/useUsers';
@@ -38,8 +40,6 @@ import { useAppDispatch, useAppSelector } from 'src/store';
 import CreateUserDialog from 'src/views/Users/CreateUserDialog';
 import UpdateUserDialog from 'src/views/Users/UpdateUserDialog';
 import UserActionsMenu from 'src/views/Users/UserActionsMenu';
-import find from 'lodash/find';
-import isEmpty from 'lodash/isEmpty';
 
 const Users = () => {
     const dispatch = useAppDispatch();

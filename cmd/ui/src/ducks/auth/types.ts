@@ -91,16 +91,6 @@ export interface UpdatedUser {
     roles: number[];
 }
 
-export interface UpdateUserRequest {
-    firstName: string;
-    lastName: string;
-    emailAddress: string;
-    principal: string;
-    roles: number[];
-    SAMLProviderId?: string;
-    is_disabled?: boolean;
-}
-
 export interface SharpHoundUserType extends Auditable {
     AuthSecret: string;
     roles: SharpHoundRoleType[] | null;
