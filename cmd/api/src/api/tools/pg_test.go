@@ -93,13 +93,13 @@ func TestPGMigrator(t *testing.T) {
 		return nil
 	}, func(harness integration.HarnessDetails, neo4jDB graph.Database) {
 		var (
-			migrator     = setupTestMigrator(t, testContext.Context(), neo4jDB)
-			testID       = harness.DBMigrateHarness.TestID.String()
-			sourceNodes  []*graph.Node
-			sourceRels   []*graph.Relationship
-			neoNodeKinds graph.Kinds
-			neoEdgeKinds graph.Kinds
-			err          error
+			migrator        = setupTestMigrator(t, testContext.Context(), neo4jDB)
+			testID          = harness.DBMigrateHarness.TestID.String()
+			sourceNodes     []*graph.Node
+			sourceRels      []*graph.Relationship
+			sourceNodeKinds graph.Kinds
+			sourceEdgeKinds graph.Kinds
+			err             error
 		)
 
 		migrator.StartMigration()
@@ -123,10 +123,10 @@ func TestPGMigrator(t *testing.T) {
 			sourceRels, err = ops.FetchRelationships(tx.Relationships())
 			require.Nil(t, err)
 
-			neoNodeKinds, err = tools.GetNeo4jNodeKinds(testContext.Context(), tx)
+			sourceNodeKinds, err = tools.GetNeo4jNodeKinds(testContext.Context(), tx)
 			require.Nil(t, err)
 
-			neoEdgeKinds, err = tools.GetNeo4jEdgeKinds(testContext.Context(), tx)
+			sourceEdgeKinds, err = tools.GetNeo4jEdgeKinds(testContext.Context(), tx)
 			require.Nil(t, err)
 
 			return nil
@@ -173,7 +173,7 @@ func TestPGMigrator(t *testing.T) {
 			targetKinds, err := pg_query.On(tx).SelectKinds()
 			require.Nil(t, err)
 
-			for _, kind := range append(neoNodeKinds, neoEdgeKinds...) {
+			for _, kind := range append(sourceNodeKinds, sourceEdgeKinds...) {
 				require.NotNil(t, targetKinds[kind])
 			}
 
