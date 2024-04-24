@@ -25,6 +25,7 @@ import (
 	"time"
 
 	"github.com/specterops/bloodhound/src/config"
+	"gotest.tools/assert"
 
 	"github.com/specterops/bloodhound/src/auth"
 	bhCtx "github.com/specterops/bloodhound/src/ctx"
@@ -41,6 +42,47 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 )
+
+func TestGraphQuery_PrepareCypherQuery(t *testing.T) {
+	var (
+		mockCtrl     = gomock.NewController(t)
+		mockGraphDB  = graphMocks.NewMockDatabase(mockCtrl)
+		gq           = queries.NewGraphQuery(mockGraphDB, cache.Cache{}, config.Configuration{EnableCypherMutations: true})
+		gqMutDisable = queries.NewGraphQuery(mockGraphDB, cache.Cache{}, config.Configuration{EnableCypherMutations: false})
+
+		rawCypherRead     = "MATCH (n) return n"
+		rawCypherMutation = "DETACH DELETE (n)"
+		rawCypherInvalid  = "derp"
+	)
+
+	t.Run("invalid cypher", func(t *testing.T) {
+		_, err := gq.PrepareCypherQuery(rawCypherInvalid)
+		assert.ErrorType(t, err, queries.QueryError{})
+	})
+
+	t.Run("valid cypher with mutation while mutations disabled", func(t *testing.T) {
+		_, err := gqMutDisable.PrepareCypherQuery(rawCypherMutation)
+		assert.ErrorType(t, err, queries.QueryError{})
+	})
+
+	t.Run("valid cypher without mutation", func(t *testing.T) {
+		preparedQuery, err := gq.PrepareCypherQuery(rawCypherRead)
+		require.Nil(t, err)
+		assert.Equal(t, preparedQuery.HasMutation, false)
+	})
+
+	t.Run("valid cypher with mutation", func(t *testing.T) {
+		preparedQuery, err := gq.PrepareCypherQuery(rawCypherMutation)
+		require.Nil(t, err)
+		assert.Equal(t, preparedQuery.HasMutation, true)
+	})
+
+	t.Run("valid cypher without mutation while mutations disabled", func(t *testing.T) {
+		preparedQuery, err := gq.PrepareCypherQuery(rawCypherRead)
+		require.Nil(t, err)
+		assert.Equal(t, preparedQuery.HasMutation, false)
+	})
+}
 
 func TestGraphQuery_RawCypherSearch(t *testing.T) {
 	var (
