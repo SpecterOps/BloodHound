@@ -244,10 +244,15 @@ func (s *Translator) patternToEdgeIR(pattern *Pattern, identifier pgsql.Identifi
 
 	// Look for any relationship pattern ranges. These indicate some kind of variable expansion of the path pattern.
 	if relationshipPattern.Range != nil {
-		expansionOptional = model.ValueOptional(Expansion{
-			MinDepth: model.PointerOptional(relationshipPattern.Range.StartIndex),
-			MaxDepth: model.PointerOptional(relationshipPattern.Range.EndIndex),
-		})
+		if expansionIdentifier, err := s.identifierGenerator.NewIdentifier(pgsql.EdgeExpansion); err != nil {
+			s.SetError(err)
+		} else {
+			expansionOptional = model.ValueOptional(Expansion{
+				Identifier: expansionIdentifier,
+				MinDepth:   model.PointerOptional(relationshipPattern.Range.StartIndex),
+				MaxDepth:   model.PointerOptional(relationshipPattern.Range.EndIndex),
+			})
+		}
 
 		// If there's a pattern range then we modify the data type for the left and right nodes
 		// of the pattern to signify that they must be extracted from the path array of the
