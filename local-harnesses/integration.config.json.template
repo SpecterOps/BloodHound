@@ -15,7 +15,6 @@
     "neo4j": {
         "connection": "neo4j://neo4j:bloodhoundcommunityedition@localhost:37687/"
     },
-    "enable_cypher_mutations": true,
     "default_admin": {
         "principal_name": "admin",
         "password": "admin",
