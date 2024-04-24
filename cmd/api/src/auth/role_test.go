@@ -162,6 +162,19 @@ func testRoleAccess(t *testing.T, roleName string) {
 			}
 		}),
 
+		lab.TestCase(fmt.Sprintf("%s be able to access GraphDBMutate endpoints", testCondition(role, auth.Permissions().GraphDBMutate)), func(assert *require.Assertions, harness *lab.Harness) {
+			userClient, ok := lab.Unpack(harness, userClientFixture)
+			assert.True(ok)
+
+			queryWithUpdateClause := "match (b) where b.name = 'test' remove b.prop return b"
+			_, err := userClient.CypherSearch(v2.CypherSearch{Query: queryWithUpdateClause})
+			if role.Permissions.Has(auth.Permissions().GraphDBMutate) {
+				assert.Nil(err)
+			} else {
+				requireForbidden(assert, err)
+			}
+		}),
+
 		lab.TestCase(fmt.Sprintf("%s be able to access GraphDBWrite endpoints", testCondition(role, auth.Permissions().GraphDBWrite)), func(assert *require.Assertions, harness *lab.Harness) {
 			userClient, ok := lab.Unpack(harness, userClientFixture)
 			assert.True(ok)
