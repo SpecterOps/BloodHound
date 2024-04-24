@@ -67,6 +67,27 @@
                 },
                 {
                     "type": "string",
+                    "description": "Filter results by column value. Valid filter predicates are eq, neq",
+                    "name": "cert_services_collection",
+                    "in": "query",
+                    "required": false
+                },
+                {
+                    "type": "string",
+                    "description": "Filter results by column value. Valid filter predicates are eq, neq",
+                    "name": "ca_registry_collection",
+                    "in": "query",
+                    "required": false
+                },
+                {
+                    "type": "string",
+                    "description": "Filter results by column value. Valid filter predicates are eq, neq",
+                    "name": "dc_registry_collection",
+                    "in": "query",
+                    "required": false
+                },
+                {
+                    "type": "string",
                     "description": "Filter results by column value. Valid filter predicates are eq, neq, gt, gte, lt, lte",
                     "name": "next_scheduled_at",
                     "in": "query",
@@ -141,6 +162,20 @@
             "parameters": [
                 {
                     "$ref": "#/definitions/parameters.PreferHeader"
+                },
+                {
+                    "type": "string",
+                    "description": "Valid values are `true` or `false` and defaults to `true`. When a value of `true` is passed, any domains associated with scheduled and finished jobs for each client will have expanded properties including `name` and `type`. When a value of `false` is passed, these same domains will only return as a list of `objectid`s.",
+                    "name": "hydrate_domains",
+                    "in": "query",
+                    "required": false
+                },
+                {
+                    "type": "string",
+                    "description": "Valid values are `true` or `false` and defaults to `true`. When a value of `true` is passed, any OUs associated with scheduled and finished jobs for each client will have expanded properties including `name` and `type`. When a value of `false` is passed, these same OUs will only return as a list of `objectid`s.",
+                    "name": "hydrate_ous",
+                    "in": "query",
+                    "required": false
                 }
             ],
             "requestBody": {
@@ -217,6 +252,27 @@
                     "type": "string",
                     "description": "Filter results by column value. Valid filter predicates are eq, neq",
                     "name": "ad_structure_collection",
+                    "in": "query",
+                    "required": false
+                },
+                {
+                    "type": "string",
+                    "description": "Filter results by column value. Valid filter predicates are eq, neq",
+                    "name": "cert_services_collection",
+                    "in": "query",
+                    "required": false
+                },
+                {
+                    "type": "string",
+                    "description": "Filter results by column value. Valid filter predicates are eq, neq",
+                    "name": "ca_registry_collection",
+                    "in": "query",
+                    "required": false
+                },
+                {
+                    "type": "string",
+                    "description": "Filter results by column value. Valid filter predicates are eq, neq",
+                    "name": "dc_registry_collection",
                     "in": "query",
                     "required": false
                 },

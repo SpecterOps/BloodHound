@@ -59,6 +59,7 @@ func PostProcessedRelationships() []graph.Kind {
 		ad.ADCSESC10a,
 		ad.ADCSESC10b,
 		ad.ADCSESC9a,
+		ad.ADCSESC13,
 		ad.EnrollOnBehalfOf,
 	}
 }
@@ -110,7 +111,7 @@ func PostDCSync(ctx context.Context, db graph.Database) (*analysis.AtomicPostPro
 		for _, domain := range domainNodes {
 			innerDomain := domain
 			operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
-				if dcSyncers, err := analysis.GetDCSyncers(tx, innerDomain, true); err != nil {
+				if dcSyncers, err := analysis.GetDCSyncers(tx, innerDomain); err != nil {
 					return err
 				} else if len(dcSyncers) == 0 {
 					return nil

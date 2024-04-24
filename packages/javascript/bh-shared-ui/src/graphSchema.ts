@@ -30,6 +30,7 @@ export enum ActiveDirectoryNodeKind {
     EnterpriseCA = 'EnterpriseCA',
     NTAuthStore = 'NTAuthStore',
     CertTemplate = 'CertTemplate',
+    IssuancePolicy = 'IssuancePolicy',
 }
 export function ActiveDirectoryNodeKindToDisplay(value: ActiveDirectoryNodeKind): string | undefined {
     switch (value) {
@@ -63,6 +64,8 @@ export function ActiveDirectoryNodeKindToDisplay(value: ActiveDirectoryNodeKind)
             return 'NTAuthStore';
         case ActiveDirectoryNodeKind.CertTemplate:
             return 'CertTemplate';
+        case ActiveDirectoryNodeKind.IssuancePolicy:
+            return 'IssuancePolicy';
         default:
             return undefined;
     }
@@ -123,6 +126,8 @@ export enum ActiveDirectoryRelationshipKind {
     IssuedSignedBy = 'IssuedSignedBy',
     GoldenCert = 'GoldenCert',
     EnrollOnBehalfOf = 'EnrollOnBehalfOf',
+    OIDGroupLink = 'OIDGroupLink',
+    ExtendedByPolicy = 'ExtendedByPolicy',
     ADCSESC1 = 'ADCSESC1',
     ADCSESC3 = 'ADCSESC3',
     ADCSESC4 = 'ADCSESC4',
@@ -248,6 +253,10 @@ export function ActiveDirectoryRelationshipKindToDisplay(value: ActiveDirectoryR
             return 'GoldenCert';
         case ActiveDirectoryRelationshipKind.EnrollOnBehalfOf:
             return 'EnrollOnBehalfOf';
+        case ActiveDirectoryRelationshipKind.OIDGroupLink:
+            return 'OIDGroupLink';
+        case ActiveDirectoryRelationshipKind.ExtendedByPolicy:
+            return 'ExtendedByPolicy';
         case ActiveDirectoryRelationshipKind.ADCSESC1:
             return 'ADCSESC1';
         case ActiveDirectoryRelationshipKind.ADCSESC3:
@@ -288,6 +297,7 @@ export const EdgeCompositionRelationships = [
     'ADCSESC9b',
     'ADCSESC10a',
     'ADCSESC10b',
+    'ADCSESC13',
 ];
 export enum ActiveDirectoryKindProperties {
     AdminCount = 'admincount',
@@ -361,6 +371,10 @@ export enum ActiveDirectoryKindProperties {
     ValidityPeriod = 'validityperiod',
     OID = 'oid',
     HomeDirectory = 'homedirectory',
+    CertificatePolicy = 'certificatepolicy',
+    CertTemplateOID = 'certtemplateoid',
+    GroupLinkID = 'grouplinkid',
+    ObjectGUID = 'objectguid',
 }
 export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKindProperties): string | undefined {
     switch (value) {
@@ -506,6 +520,14 @@ export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKin
             return 'OID';
         case ActiveDirectoryKindProperties.HomeDirectory:
             return 'Home Directory';
+        case ActiveDirectoryKindProperties.CertificatePolicy:
+            return 'Certificate Policy';
+        case ActiveDirectoryKindProperties.CertTemplateOID:
+            return 'Certificate Template OID';
+        case ActiveDirectoryKindProperties.GroupLinkID:
+            return 'Group Link ID';
+        case ActiveDirectoryKindProperties.ObjectGUID:
+            return 'Object GUID';
         default:
             return undefined;
     }

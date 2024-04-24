@@ -21,7 +21,8 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
+
+	"github.com/specterops/bloodhound/packages/go/stbernard/environment"
 )
 
 const (
@@ -29,45 +30,52 @@ const (
 	Usage = "Dump your environment variables"
 )
 
-type Config struct {
-	Environment []string
-}
-
 type command struct {
-	config Config
+	env environment.Environment
 }
 
-func (s command) Name() string {
-	return Name
+// Create new instance of command to capture given environment
+func Create(env environment.Environment) *command {
+	return &command{
+		env: env,
+	}
 }
 
-func (s command) Usage() string {
+// Usage of command
+func (s *command) Usage() string {
 	return Usage
 }
 
-func (s command) Run() error {
-	fmt.Print("Environment:\n\n")
-	for _, env := range s.config.Environment {
-		envTuple := strings.SplitN(env, "=", 2)
-		fmt.Printf("%s: %s\n", envTuple[0], envTuple[1])
+// Name of command
+func (s *command) Name() string {
+	return Name
+}
+
+// Parse command flags
+func (s *command) Parse(cmdIndex int) error {
+	cmd := flag.NewFlagSet(Name, flag.ExitOnError)
+
+	cmd.Usage = func() {
+		w := flag.CommandLine.Output()
+		fmt.Fprintf(w, "%s\n\nUsage: %s %s [OPTIONS]\n\nOptions:\n", Usage, filepath.Base(os.Args[0]), Name)
+		cmd.PrintDefaults()
 	}
-	fmt.Print("\n")
+
+	if err := cmd.Parse(os.Args[cmdIndex+1:]); err != nil {
+		cmd.Usage()
+		return fmt.Errorf("parsing %s command: %w", Name, err)
+	}
 
 	return nil
 }
 
-func Create(config Config) (command, error) {
-	envdumpCmd := flag.NewFlagSet(Name, flag.ExitOnError)
-
-	envdumpCmd.Usage = func() {
-		w := flag.CommandLine.Output()
-		fmt.Fprintf(w, "%s\n\nUsage: %s %s [OPTIONS]\n", Usage, filepath.Base(os.Args[0]), Name)
+// Run envdump command
+func (s *command) Run() error {
+	fmt.Print("Environment:\n\n")
+	for key, val := range s.env {
+		fmt.Printf("%s: %s\n", key, val)
 	}
+	fmt.Print("\n")
 
-	if err := envdumpCmd.Parse(os.Args[2:]); err != nil {
-		envdumpCmd.Usage()
-		return command{}, fmt.Errorf("failed to parse %s command: %w", Name, err)
-	} else {
-		return command{config: config}, nil
-	}
+	return nil
 }

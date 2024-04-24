@@ -23,24 +23,48 @@ import (
 	"os"
 	"strings"
 
+	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/packages/go/stbernard/command/analysis"
+	"github.com/specterops/bloodhound/packages/go/stbernard/command/builder"
+	"github.com/specterops/bloodhound/packages/go/stbernard/command/cover"
+	"github.com/specterops/bloodhound/packages/go/stbernard/command/deps"
 	"github.com/specterops/bloodhound/packages/go/stbernard/command/envdump"
+	"github.com/specterops/bloodhound/packages/go/stbernard/command/generate"
 	"github.com/specterops/bloodhound/packages/go/stbernard/command/modsync"
+	"github.com/specterops/bloodhound/packages/go/stbernard/command/show"
+	"github.com/specterops/bloodhound/packages/go/stbernard/command/tester"
+	"github.com/specterops/bloodhound/packages/go/stbernard/environment"
 )
 
-// Commander is an interface for commands, allowing commands to implement the minimum
+// CommandRunner is an interface for commands, allowing commands to implement the minimum
 // set of requirements to observe and run the command from above. It is used as a return
 // type to allow passing a usable command to the caller after parsing and creating
 // the command implementation
-type Commander interface {
+type CommandRunner interface {
+	// Name gets the name of the Command
 	Name() string
+	// Usage gets the usage string for the Command
 	Usage() string
+	// Run will run the command and return any errors
 	Run() error
 }
 
-var ErrNoCmd = errors.New("no command specified")
-var ErrInvalidCmd = errors.New("invalid command specified")
-var ErrFailedCreateCmd = errors.New("failed to create command")
+type command interface {
+	CommandRunner
+
+	// Parse parses flags for the command using the command index as the starting point
+	Parse(cmdIdx int) error
+}
+
+var (
+	ErrNoCmd           = errors.New("no command specified")
+	ErrInvalidCmd      = errors.New("invalid command specified")
+	ErrFailedCreateCmd = errors.New("command creation failed")
+	ErrMultipleCmd     = errors.New("multiple commands specified")
+	ErrHelpRequested   = errors.New("help requested")
+)
+
+type usageFunc func()
 
 // ParseCLI parses for a subcommand as the first argument to the calling binary,
 // and initializes the command (if it exists). It also provides the default usage
@@ -48,84 +72,107 @@ var ErrFailedCreateCmd = errors.New("failed to create command")
 //
 // It does not support flags of its own, each subcommand is responsible for parsing
 // their flags.
-func ParseCLI() (Commander, error) {
-	// Generate a nice usage message
-	flag.Usage = usage
+func ParseCLI() (CommandRunner, error) {
+	var (
+		verboseEnabled *bool
+		debugEnabled   *bool
+		cmdStartIdx    int
+		currentCmd     command
+		helpRequested  bool
 
-	// Default usage if no arguments provided
-	if len(os.Args) < 2 {
-		flag.Usage()
+		env      = environment.NewEnvironment()
+		commands = []command{
+			envdump.Create(env),
+			deps.Create(env),
+			modsync.Create(env),
+			generate.Create(env),
+			show.Create(env),
+			analysis.Create(env),
+			tester.Create(env),
+			builder.Create(env),
+			cover.Create(env),
+		}
+	)
+
+	mainCmd := flag.NewFlagSet("main", flag.ExitOnError)
+
+	verboseEnabled = mainCmd.Bool("v", false, "Verbose output")
+	debugEnabled = mainCmd.Bool("vv", false, "Debug output")
+
+	for idx, arg := range os.Args {
+		if idx == 0 {
+			// Skip main command name
+			continue
+		}
+
+		if cmdStartIdx > 0 {
+			break
+		}
+
+		if strings.HasPrefix(arg, "-") {
+			continue
+		}
+
+		if arg == "help" {
+			helpRequested = true
+			break
+		}
+
+		for _, cmd := range commands {
+			if arg == cmd.Name() {
+				cmdStartIdx = idx
+				currentCmd = cmd
+				break
+			}
+		}
+	}
+
+	mainCmd.Usage = usageGenerator(mainCmd, commands)
+
+	if err := mainCmd.Parse(os.Args[1:]); errors.Is(err, flag.ErrHelp) || helpRequested {
+		mainCmd.Usage()
+		return nil, ErrHelpRequested
+	}
+
+	if cmdStartIdx == 0 {
+		mainCmd.Usage()
 		return nil, ErrNoCmd
 	}
 
-	switch os.Args[1] {
-	case ModSync.String():
-		config := modsync.Config{Environment: environment()}
-		if cmd, err := modsync.Create(config); err != nil {
-			return nil, fmt.Errorf("%w: %w", ErrFailedCreateCmd, err)
-		} else {
-			return cmd, nil
-		}
-
-	case EnvDump.String():
-		config := envdump.Config{Environment: environment()}
-		if cmd, err := envdump.Create(config); err != nil {
-			return nil, fmt.Errorf("%w: %w", ErrFailedCreateCmd, err)
-		} else {
-			return cmd, nil
-		}
-
-	case Analysis.String():
-		config := analysis.Config{Environment: environment()}
-		if cmd, err := analysis.Create(config); err != nil {
-			return nil, fmt.Errorf("%w: %w", ErrFailedCreateCmd, err)
-		} else {
-			return cmd, nil
-		}
-
-	default:
-		flag.Parse()
-		flag.Usage()
-		return nil, ErrInvalidCmd
+	if *verboseEnabled {
+		log.SetGlobalLevel(log.LevelInfo)
 	}
+
+	if *debugEnabled {
+		log.SetGlobalLevel(log.LevelDebug)
+	}
+
+	return currentCmd, currentCmd.Parse(cmdStartIdx)
 }
 
-// usage creates a pretty usage message for our main command
-func usage() {
-	var longestCmdLen int
+func usageGenerator(flagset *flag.FlagSet, commands []command) usageFunc {
+	return func() {
+		var longestCmdLen int
 
-	w := flag.CommandLine.Output()
-	fmt.Fprint(w, "A BloodHound Swiss Army Knife\n\nUsage:  stbernard COMMAND\n\nCommands:\n")
+		for _, cmd := range commands {
+			if len(cmd.Name()) > longestCmdLen {
+				longestCmdLen = len(cmd.Name())
+			}
+		}
 
-	for _, cmd := range Commands() {
-		if len(cmd.String()) > longestCmdLen {
-			longestCmdLen = len(cmd.String())
+		w := flag.CommandLine.Output()
+		fmt.Fprint(w, "A BloodHound Swiss Army Knife\n\nUsage:  stbernard [OPTIONS] COMMAND\n\nOptions:\n")
+
+		flagset.VisitAll(func(f *flag.Flag) {
+			padding := strings.Repeat(" ", longestCmdLen-len(f.Name)-1)
+			fmt.Fprintf(w, "  -%s%s    %v\n", f.Name, padding, f.Usage)
+		})
+
+		fmt.Fprintf(w, "\nCommands:\n")
+
+		for _, cmd := range commands {
+			padding := strings.Repeat(" ", longestCmdLen-len(cmd.Name()))
+			fmt.Fprintf(w, "  %s%s    %s\n", cmd.Name(), padding, cmd.Usage())
 		}
 	}
-
-	for cmd, usage := range CommandsUsage() {
-		cmdStr := Command(cmd).String()
-		padding := strings.Repeat(" ", longestCmdLen-len(cmdStr))
-		fmt.Fprintf(w, "  %s%s    %s\n", cmdStr, padding, usage)
-	}
-}
-
-// environment is used to add default env vars as needed to the existing environment variables
-func environment() []string {
-	var envMap = make(map[string]string)
-
-	for _, env := range os.Environ() {
-		envTuple := strings.SplitN(env, "=", 2)
-		envMap[envTuple[0]] = envTuple[1]
-	}
-
-	// Make any changes here
-	envMap["FOO"] = "foo" // For illustrative purposes only
-
-	var envSlice = make([]string, 0, len(envMap))
-	for key, val := range envMap {
-		envSlice = append(envSlice, strings.Join([]string{key, val}, "="))
-	}
-
-	return envSlice
 }

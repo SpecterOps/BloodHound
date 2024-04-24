@@ -143,7 +143,7 @@ func (s authenticator) LoginWithSecret(ctx context.Context, loginRequest LoginRe
 
 	commitID, err = uuid.NewV4()
 	if err != nil {
-		log.Errorf("error generating commit ID for login: %s", err)
+		log.Errorf("Error generating commit ID for login: %s", err)
 		return LoginDetails{}, err
 	}
 
@@ -375,7 +375,10 @@ func (s authenticator) ValidateSession(ctx context.Context, jwtTokenString strin
 			Session: session,
 		}
 
-		if session.AuthProviderType == model.SessionAuthProviderSecret && session.User.AuthSecret.Expired() {
+		if session.AuthProviderType == model.SessionAuthProviderSecret && session.User.AuthSecret == nil {
+			log.Infof("No auth secret found for user ID %s", session.UserID.String())
+			return auth.Context{}, ErrNoUserSecret
+		} else if session.AuthProviderType == model.SessionAuthProviderSecret && session.User.AuthSecret.Expired() {
 			var (
 				authManageSelfPermission = auth.Permissions().AuthManageSelf
 				permissions              model.Permissions
@@ -389,6 +392,7 @@ func (s authenticator) ValidateSession(ctx context.Context, jwtTokenString strin
 				Enabled:     true,
 				Permissions: permissions,
 			}
+
 			// EULA Acceptance does not pertain to Bloodhound Community Edition; this flag is used for Bloodhound Enterprise users.
 			// This value is automatically set to true for Bloodhound Community Edition in the patchEULAAcceptance and CreateUser functions.
 		} else if !session.User.EULAAccepted {

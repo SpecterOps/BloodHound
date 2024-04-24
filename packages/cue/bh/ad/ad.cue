@@ -525,6 +525,34 @@ OID: types.#StringEnum & {
 	representation: "oid"
 }
 
+CertificatePolicy: types.#StringEnum & {
+	symbol: "CertificatePolicy"
+	schema: "ad"
+	name: "Certificate Policy"
+	representation: "certificatepolicy"
+}
+
+CertTemplateOID: types.#StringEnum & {
+	symbol: "CertTemplateOID"
+	schema: "ad"
+	name: "Certificate Template OID"
+	representation: "certtemplateoid"
+}
+
+GroupLinkID: types.#StringEnum & {
+	symbol: "GroupLinkID"
+	schema: "ad"
+	name: "Group Link ID"
+	representation: "grouplinkid"
+}
+
+ObjectGUID: types.#StringEnum & {
+	symbol: "ObjectGUID"
+	schema: "ad"
+	name: "Object GUID"
+	representation: "objectguid"
+}
+
 Properties: [
 	AdminCount,
 	CASecurityCollected,
@@ -596,7 +624,11 @@ Properties: [
 	RenewalPeriod,
 	ValidityPeriod,
 	OID,
-	HomeDirectory
+	HomeDirectory,
+	CertificatePolicy,
+	CertTemplateOID,
+	GroupLinkID,
+	ObjectGUID
 ]
 
 // Kinds
@@ -678,6 +710,11 @@ CertTemplate: types.#Kind & {
 	schema: "active_directory"
 }
 
+IssuancePolicy: types.#Kind & {
+	symbol: "IssuancePolicy"
+	schema: "active_directory"
+}
+
 NodeKinds: [
 	Entity,
 	User,
@@ -693,7 +730,8 @@ NodeKinds: [
 	RootCA,
 	EnterpriseCA,
 	NTAuthStore,
-	CertTemplate
+	CertTemplate,
+	IssuancePolicy
 ]
 
 Owns: types.#Kind & {
@@ -972,6 +1010,21 @@ EnrollOnBehalfOf: types.#Kind & {
 	schema: "active_directory"
 }
 
+OIDGroupLink: types.#Kind & {
+	symbol: "OIDGroupLink"
+	schema: "active_directory"
+}
+
+ExtendedByPolicy: types.#Kind & {
+	symbol: "ExtendedByPolicy"
+	schema: "active_directory"
+}
+
+ExtendedByPolicy: types.#Kind & {
+	symbol: "ExtendedByPolicy"
+	schema: "active_directory"
+}
+
 ADCSESC1: types.#Kind & {
 	symbol: "ADCSESC1"
 	schema: "active_directory"
@@ -1089,6 +1142,8 @@ RelationshipKinds: [
 	IssuedSignedBy,
 	GoldenCert,
 	EnrollOnBehalfOf,
+	OIDGroupLink,
+	ExtendedByPolicy,
 	ADCSESC1,
 	ADCSESC3,
 	ADCSESC4,
@@ -1192,4 +1247,5 @@ EdgeCompositionRelationships: [
 	ADCSESC9b,
 	ADCSESC10a,
 	ADCSESC10b,
+	ADCSESC13
 ]

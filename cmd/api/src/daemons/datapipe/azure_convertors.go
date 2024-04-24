@@ -149,7 +149,7 @@ func getKindConverter(kind enums.Kind) func(json.RawMessage, *ConvertedAzureData
 func convertAzureApp(raw json.RawMessage, converted *ConvertedAzureData) {
 	var data models.App
 	if err := json.Unmarshal(raw, &data); err != nil {
-		log.Errorf("error deserializing azure application: %v", err)
+		log.Errorf("Error deserializing azure application: %v", err)
 	} else {
 		converted.NodeProps = append(converted.NodeProps, ein.ConvertAZAppToNode(data))
 		converted.RelProps = append(converted.RelProps, ein.ConvertAZAppRelationships(data)...)

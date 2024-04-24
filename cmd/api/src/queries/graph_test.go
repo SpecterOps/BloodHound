@@ -92,13 +92,18 @@ func TestGraphQuery_RawCypherSearch(t *testing.T) {
 		config := &graph.TransactionConfig{}
 		options[0](config)
 
-		require.Equal(t, time.Minute*10, config.Timeout)
+		require.Equal(t, time.Minute*5, config.Timeout)
 
 		return nil
 	}).Times(2)
 
 	// Unset the user-set timeout in the BH context to validate QC runtime reduction of a complex query
-	// This will be set to a default of 30 min, with a reduction factor of 3, so we should have a 10 min config timeout
+	// This will be set to a default of 15 min, with a reduction factor of 3, so we should have a 5 min config timeout
+
+	// availableRuntime = 15min (default), query cost = 15
+	// Then reductionFactor = 15/5 = 3
+	// Therefore actual timeout = availableRuntime/reductionFactor : 15/3 = 5min
+
 	outerBHCtxInst.Timeout = 0
 
 	_, err = gq.RawCypherSearch(outerBHCtxInst.ConstructGoContext(), "match ()-[:HasSession*..]->()-[:MemberOf*..]->() return n;", false)
@@ -106,7 +111,7 @@ func TestGraphQuery_RawCypherSearch(t *testing.T) {
 
 	// Prove that overriding QC with a user-preference works
 	// This will be directly used as the config timeout, without any reduction factor
-	outerBHCtxInst.Timeout = time.Minute * 10
+	outerBHCtxInst.Timeout = time.Minute * 5
 
 	_, err = gq.RawCypherSearch(outerBHCtxInst.ConstructGoContext(), "match ()-[:HasSession*..]->()-[:MemberOf*..]->() return n;", false)
 	require.Nil(t, err)

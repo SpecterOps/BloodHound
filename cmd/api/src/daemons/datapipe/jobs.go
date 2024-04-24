@@ -23,6 +23,8 @@ import (
 	"io"
 	"os"
 
+	"github.com/specterops/bloodhound/src/model/appcfg"
+
 	"github.com/specterops/bloodhound/src/database"
 
 	"github.com/specterops/bloodhound/dawgs/graph"
@@ -179,17 +181,24 @@ func (s *Daemon) preProcessIngestFile(path string, fileType model.FileType) ([]s
 // processIngestFile reads the files at the path supplied, and returns the total number of files in the
 // archive, the number of files that failed to ingest as JSON, and an error
 func (s *Daemon) processIngestFile(ctx context.Context, path string, fileType model.FileType) (int, int, error) {
+	adcsEnabled := false
+	if adcsFlag, err := s.db.GetFlagByKey(ctx, appcfg.FeatureAdcs); err != nil {
+		log.Errorf("Error getting ADCS flag: %v", err)
+	} else {
+		adcsEnabled = adcsFlag.Enabled
+	}
 	if paths, err := s.preProcessIngestFile(path, fileType); err != nil {
 		return 0, 0, err
 	} else {
 		failed := 0
+
 		return len(paths), failed, s.graphdb.BatchOperation(ctx, func(batch graph.Batch) error {
 			for _, filePath := range paths {
 				file, err := os.Open(filePath)
 				if err != nil {
 					failed++
 					return err
-				} else if err := ReadFileForIngest(batch, file); err != nil {
+				} else if err := ReadFileForIngest(batch, file, adcsEnabled); err != nil {
 					failed++
 					log.Errorf("Error reading ingest file %s: %v", filePath, err)
 				}

@@ -135,12 +135,22 @@ const GraphView: FC = () => {
         </Link>
     );
 
+    const sampleDataLink = (
+        <Link target='_blank' href={'https://github.com/SpecterOps/BloodHound/tree/main/examples/sample-data'}>
+            GitHub Sample Collection
+        </Link>
+    );
+
     if (isError) throw new Error();
 
     if (!data.length)
         return (
             <Box position={'relative'} height={'100%'} width={'100%'} overflow={'hidden'}>
-                <NoDataAlert dataCollectionLink={dataCollectionLink} fileIngestLink={fileIngestLink} />
+                <NoDataAlert
+                    dataCollectionLink={dataCollectionLink}
+                    fileIngestLink={fileIngestLink}
+                    sampleDataLink={sampleDataLink}
+                />
             </Box>
         );
 
