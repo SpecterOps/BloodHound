@@ -41,7 +41,9 @@ RUN apk add --update --no-cache git go
 >>>>>>> 6b8694bb (chore: modify dockerfile to build with stbernard)
 
 COPY . /bloodhound
-RUN go run github.com/specterops/bloodhound/packages/go/stbernard deps
+
+RUN go build -o /stbernard github.com/specterops/bloodhound/packages/go/stbernard
+RUN /stbernard deps
 
 ########
 # Build
@@ -54,7 +56,7 @@ ENV GOARCH=${TARGETARCH}
 ENV CGO_ENABLED=0
 WORKDIR /bloodhound
 
-RUN go run github.com/specterops/bloodhound/packages/go/stbernard build
+RUN /stbernard build
 
 ########
 # Package other assets
