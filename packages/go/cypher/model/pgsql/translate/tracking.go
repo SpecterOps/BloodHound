@@ -19,6 +19,8 @@ func (s IdentifierGenerator) NewIdentifier(dataType pgsql.DataType) (pgsql.Ident
 	s[dataType] = nextID + 1
 
 	switch dataType {
+	case pgsql.EdgeExpansion:
+		return pgsql.Identifier("ex" + nextIDStr), nil
 	case pgsql.PathComposite:
 		return pgsql.Identifier("p" + nextIDStr), nil
 	case pgsql.NodeComposite:
