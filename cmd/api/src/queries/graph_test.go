@@ -55,12 +55,12 @@ func TestGraphQuery_PrepareCypherQuery(t *testing.T) {
 
 	t.Run("invalid cypher", func(t *testing.T) {
 		_, err := gq.PrepareCypherQuery(rawCypherInvalid)
-		assert.ErrorAs(t, err, queries.QueryError{})
+		assert.ErrorContains(t, err, "mismatched input 'derp'")
 	})
 
 	t.Run("valid cypher with mutation while mutations disabled", func(t *testing.T) {
 		_, err := gqMutDisable.PrepareCypherQuery(rawCypherMutation)
-		assert.ErrorAs(t, err, queries.QueryError{})
+		assert.ErrorContains(t, err, "not supported")
 	})
 
 	t.Run("valid cypher without mutation", func(t *testing.T) {
