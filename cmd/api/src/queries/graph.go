@@ -500,7 +500,8 @@ func (s *GraphQuery) RawCypherSearch(ctx context.Context, pQuery PreparedQuery, 
 	logEvent.Str("query cost", fmt.Sprintf("%.2f", pQuery.complexity.Weight))
 	logEvent.Msg("Executing user cypher query")
 
-	if pQuery.HasMutation && s.EnableCypherMutations {
+	// TODO: verify write vs read tx need differentiation after PG migration
+	if pQuery.HasMutation {
 		err = s.Graph.WriteTransaction(ctx, txDelegate, txOptions)
 	} else {
 		err = s.Graph.ReadTransaction(ctx, txDelegate, txOptions)
