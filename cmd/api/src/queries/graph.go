@@ -22,7 +22,6 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"github.com/specterops/bloodhound/dawgs/util"
 	"net/http"
 	"net/url"
 	"sort"
@@ -30,6 +29,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/specterops/bloodhound/dawgs/util"
 
 	"github.com/specterops/bloodhound/cypher/backend/cypher"
 	"github.com/specterops/bloodhound/cypher/backend/pgsql"
@@ -376,7 +377,6 @@ type PreparedQuery struct {
 	HasMutation   bool
 }
 
-// TODO: PrepareCypherQuery needs tests
 func (s *GraphQuery) PrepareCypherQuery(rawCypher string) (PreparedQuery, error) {
 	var (
 		cypherFilters = []frontend.Visitor{
