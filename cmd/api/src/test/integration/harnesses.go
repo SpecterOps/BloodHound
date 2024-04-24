@@ -6280,21 +6280,47 @@ func (s *ESC4ECA) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.NewRelationship(s.Computer7, s.CertTemplate7, ad.GenericAll)
 }
 
+// Use this alias to set our custom test property in the harness
+type Property string
+
+func (p Property) String() string {
+	return string(p)
+}
+
 type DBMigrateHarness struct {
-	Group1    *graph.Node
-	Computer1 *graph.Node
-	User1     *graph.Node
+	Group1      *graph.Node
+	Computer1   *graph.Node
+	User1       *graph.Node
+	GenericAll1 *graph.Relationship
+	HasSession1 *graph.Relationship
+	MemberOf1   *graph.Relationship
+	TestID      Property
 }
 
 func (s *DBMigrateHarness) Setup(graphTestContext *GraphTestContext) {
 	sid := RandomDomainSID()
-	s.Group1 = graphTestContext.NewActiveDirectoryGroup("GROUP ONE", sid)
-	s.Computer1 = graphTestContext.NewActiveDirectoryComputer("COMPUTER ONE", sid)
-	s.User1 = graphTestContext.NewActiveDirectoryUser("USER ONE", sid, false)
+	s.TestID = "testing_id"
 
-	graphTestContext.NewRelationship(s.Group1, s.Computer1, ad.GenericAll)
-	graphTestContext.NewRelationship(s.Computer1, s.User1, ad.HasSession)
-	graphTestContext.NewRelationship(s.User1, s.Group1, ad.MemberOf)
+	s.Group1 = graphTestContext.NewActiveDirectoryGroup("Group1", sid)
+	s.Computer1 = graphTestContext.NewActiveDirectoryComputer("Computer1", sid)
+	s.User1 = graphTestContext.NewActiveDirectoryUser("User1", sid, false)
+	s.Group1.Properties.Set(s.TestID.String(), RandomObjectID(graphTestContext.testCtx))
+	s.Computer1.Properties.Set(s.TestID.String(), RandomObjectID(graphTestContext.testCtx))
+	s.User1.Properties.Set(s.TestID.String(), RandomObjectID(graphTestContext.testCtx))
+	// Log our property values next
+	graphTestContext.UpdateNode(s.Group1)
+	graphTestContext.UpdateNode(s.Computer1)
+	graphTestContext.UpdateNode(s.User1)
+
+	s.GenericAll1 = graphTestContext.NewRelationship(s.Group1, s.Computer1, ad.GenericAll, graph.AsProperties(graph.PropertyMap{
+		s.TestID: RandomObjectID(graphTestContext.testCtx),
+	}))
+	s.HasSession1 = graphTestContext.NewRelationship(s.Computer1, s.User1, ad.HasSession, graph.AsProperties(graph.PropertyMap{
+		s.TestID: RandomObjectID(graphTestContext.testCtx),
+	}))
+	s.MemberOf1 = graphTestContext.NewRelationship(s.User1, s.Group1, ad.MemberOf, graph.AsProperties(graph.PropertyMap{
+		s.TestID: RandomObjectID(graphTestContext.testCtx),
+	}))
 }
 
 type HarnessDetails struct {
