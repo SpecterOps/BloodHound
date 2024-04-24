@@ -18,7 +18,7 @@ name: Publish Edge Build
 
 on:
   push:
-    branches: [main]
+    branches: [main, stbernard-dockerfile]
 
 env:
   REVISION: v5.0.0-edge
@@ -69,4 +69,3 @@ jobs:
             checkout_hash=$GITHUB_SHA
           provenance: false
           push: true
-
