@@ -374,20 +374,23 @@ type preparedQuery struct {
 
 func (s *GraphQuery) prepareGraphQuery(rawCypher string, disableCypherQC bool) (preparedQuery, error) {
 	var (
-		parseCtx   = frontend.DefaultCypherContext()
-		buffer     = &bytes.Buffer{}
-		graphQuery preparedQuery
+		parseCtx            = frontend.DefaultCypherContext()
+		queryBuffer         = &bytes.Buffer{}
+		strippedQueryBuffer = &bytes.Buffer{}
+		graphQuery          preparedQuery
 	)
 
 	if queryModel, err := frontend.ParseCypher(parseCtx, rawCypher); err != nil {
 		return graphQuery, newQueryError(err)
 	} else if complexityMeasure, err := analyzer.QueryComplexity(queryModel); err != nil {
 		return graphQuery, newQueryError(err)
+	} else if err = s.strippedCypherEmitter.Write(queryModel, strippedQueryBuffer); err != nil {
+		return graphQuery, newQueryError(err)
 	} else if !disableCypherQC && complexityMeasure.Weight > MaxQueryComplexityWeightAllowed {
 		// log query details if it is rejected due to high complexity
 		highComplexityLog := log.WithLevel(log.LevelError)
-		highComplexityLog.Str("query", graphQuery.strippedQuery)
-		highComplexityLog.Msg(fmt.Sprintf("Query rejected. Query weight: %.2f. Maximum allowed weight: %d", graphQuery.complexity.Weight, MaxQueryComplexityWeightAllowed))
+		highComplexityLog.Str("query", strippedQueryBuffer.String())
+		highComplexityLog.Msg(fmt.Sprintf("Query rejected. Query weight: %.2f. Maximum allowed weight: %d", complexityMeasure.Weight, MaxQueryComplexityWeightAllowed))
 
 		return graphQuery, newQueryError(ErrCypherQueryToComplex)
 	} else if pgDB, isPG := s.Graph.(*pg.Driver); isPG {
@@ -395,28 +398,21 @@ func (s *GraphQuery) prepareGraphQuery(rawCypher string, disableCypherQC bool) (
 			return graphQuery, newQueryError(err)
 		}
 
-		if err := pgsql.NewEmitter(false, pgDB.KindMapper()).Write(queryModel, buffer); err != nil {
+		if err := pgsql.NewEmitter(false, pgDB.KindMapper()).Write(queryModel, queryBuffer); err != nil {
 			return graphQuery, err
 		} else {
-			graphQuery.query = buffer.String()
+			graphQuery.query = queryBuffer.String()
 		}
 
 		return graphQuery, nil
 	} else {
+		graphQuery.strippedQuery = strippedQueryBuffer.String()
 		graphQuery.complexity = complexityMeasure
 
-		if err := s.cypherEmitter.Write(queryModel, buffer); err != nil {
+		if err = s.cypherEmitter.Write(queryModel, queryBuffer); err != nil {
 			return graphQuery, newQueryError(err)
 		} else {
-			graphQuery.query = buffer.String()
-		}
-
-		buffer.Reset()
-
-		if err := s.strippedCypherEmitter.Write(queryModel, buffer); err != nil {
-			return graphQuery, newQueryError(err)
-		} else {
-			graphQuery.strippedQuery = buffer.String()
+			graphQuery.query = queryBuffer.String()
 		}
 	}
 
