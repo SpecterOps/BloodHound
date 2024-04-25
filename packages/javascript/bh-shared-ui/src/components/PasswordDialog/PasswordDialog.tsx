@@ -43,6 +43,7 @@ const PasswordDialog: React.FC<{
     onClose: () => void;
     userId: string;
     showNeedsPasswordReset?: boolean;
+    initialNeedsPasswordReset?: boolean;
     onSave: ({
         userId,
         secret,
@@ -52,11 +53,13 @@ const PasswordDialog: React.FC<{
         secret: string;
         needsPasswordReset: boolean;
     }) => void;
-}> = ({ open, userId, onClose, showNeedsPasswordReset = false, onSave }) => {
+}> = ({ open, userId, onClose, showNeedsPasswordReset = false, initialNeedsPasswordReset = false, onSave }) => {
     const {
         control,
         handleSubmit,
         getValues,
+        setValue,
+        watch,
         formState: { errors },
         reset,
     } = useForm<ChangePasswordFormInputs>({
@@ -68,8 +71,11 @@ const PasswordDialog: React.FC<{
     });
 
     React.useEffect(() => {
-        if (open) reset();
-    }, [open, reset]);
+        if (open) {
+            reset();
+            setValue('needsPasswordReset', initialNeedsPasswordReset);
+        }
+    }, [open, reset, initialNeedsPasswordReset, setValue]);
 
     const handleOnSave = (data: { password: string; confirmPassword: string; needsPasswordReset: boolean }) => {
         return onSave({
@@ -160,6 +166,7 @@ const PasswordDialog: React.FC<{
                                             control={
                                                 <Checkbox
                                                     {...field}
+                                                    checked={watch('needsPasswordReset').valueOf()}
                                                     onChange={(e) => field.onChange(e.target.checked)}
                                                     color='primary'
                                                     data-testid='password-dialog_checkbox-needs-password-reset'
