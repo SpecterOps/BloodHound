@@ -32,7 +32,7 @@ func (s OutputBuilder) Write(values ...any) {
 		case string:
 			s.builder.WriteString(typedValue)
 
-		case pgsql.StringLike:
+		case fmt.Stringer:
 			s.builder.WriteString(typedValue.String())
 
 		default:
@@ -168,8 +168,8 @@ func formatExpression(builder OutputBuilder, rootExpr pgsql.SyntaxNode) error {
 			)
 
 		case pgsql.TableReference:
-			if typedNextExpr.Binding != nil {
-				exprStack = append(exprStack, *typedNextExpr.Binding, pgsql.FormattingLiteral(" "))
+			if typedNextExpr.Binding.Set {
+				exprStack = append(exprStack, typedNextExpr.Binding.Value, pgsql.FormattingLiteral(" "))
 			}
 
 			exprStack = append(exprStack, typedNextExpr.Name)
@@ -282,6 +282,16 @@ func formatExpression(builder OutputBuilder, rootExpr pgsql.SyntaxNode) error {
 				exprStack = append(exprStack, typedNextExpr.Expression)
 			}
 
+		case pgsql.AnyExpression:
+			exprStack = append(exprStack, pgsql.FormattingLiteral(")"))
+			exprStack = append(exprStack, typedNextExpr.Expression)
+			exprStack = append(exprStack, pgsql.FormattingLiteral("any ("))
+
+		case pgsql.AllExpression:
+			exprStack = append(exprStack, pgsql.FormattingLiteral(")"))
+			exprStack = append(exprStack, typedNextExpr.Expression)
+			exprStack = append(exprStack, pgsql.FormattingLiteral("all ("))
+
 		default:
 			return fmt.Errorf("unsupported expression type: %T", nextExpr)
 		}
@@ -381,10 +391,10 @@ func formatSelect(builder OutputBuilder, selectStmt pgsql.Select) error {
 func formatTableAlias(builder OutputBuilder, tableAlias pgsql.TableAlias) error {
 	builder.Write(tableAlias.Name)
 
-	if len(tableAlias.Columns) > 0 {
+	if tableAlias.Shape.Set {
 		builder.Write("(")
 
-		for idx, column := range tableAlias.Columns {
+		for idx, column := range tableAlias.Shape.Value.Columns {
 			if idx > 0 {
 				builder.Write(", ")
 			}
@@ -460,7 +470,7 @@ func formatSetExpression(builder OutputBuilder, expression pgsql.SetExpression) 
 			return fmt.Errorf("set operation for query may not be both ALL and DISTINCT")
 		}
 
-		if err := formatSetExpression(builder, typedSetExpression.LeftOperand); err != nil {
+		if err := formatSetExpression(builder, typedSetExpression.LOperand); err != nil {
 			return err
 		}
 
@@ -480,7 +490,7 @@ func formatSetExpression(builder OutputBuilder, expression pgsql.SetExpression) 
 			builder.Write("distinct ")
 		}
 
-		if err := formatSetExpression(builder, typedSetExpression.RightOperand); err != nil {
+		if err := formatSetExpression(builder, typedSetExpression.ROperand); err != nil {
 			return err
 		}
 

@@ -1,16 +1,17 @@
-package format
+package format_test
 
 import (
 	"strings"
 	"testing"
 
 	"github.com/specterops/bloodhound/cypher/model/pgsql"
+	"github.com/specterops/bloodhound/cypher/model/pgsql/format"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/stretchr/testify/require"
 )
 
 func TestFormat_Delete(t *testing.T) {
-	formattedQuery, err := Statement(pgsql.Delete{
+	formattedQuery, err := format.Statement(pgsql.Delete{
 		Table: pgsql.TableReference{
 			Name:    pgsql.CompoundIdentifier{"table"},
 			Binding: pgsql.AsOptionalIdentifier("t"),
@@ -27,7 +28,7 @@ func TestFormat_Delete(t *testing.T) {
 }
 
 func TestFormat_Update(t *testing.T) {
-	formattedQuery, err := Statement(pgsql.Update{
+	formattedQuery, err := format.Statement(pgsql.Update{
 		Table: pgsql.TableReference{
 			Name:    pgsql.CompoundIdentifier{"table"},
 			Binding: pgsql.AsOptionalIdentifier("t"),
@@ -51,7 +52,7 @@ func TestFormat_Update(t *testing.T) {
 }
 
 func TestFormat_Insert(t *testing.T) {
-	formattedQuery, err := Statement(pgsql.Insert{
+	formattedQuery, err := format.Statement(pgsql.Insert{
 		Table:   pgsql.CompoundIdentifier{"table"},
 		Columns: []pgsql.Identifier{"col1", "col2", "col3"},
 		Source: &pgsql.Query{
@@ -64,7 +65,7 @@ func TestFormat_Insert(t *testing.T) {
 	require.Nil(t, err)
 	require.Equal(t, "insert into table (col1, col2, col3) values ('1', 1, false)", formattedQuery.Value)
 
-	formattedQuery, err = Statement(pgsql.Insert{
+	formattedQuery, err = format.Statement(pgsql.Insert{
 		Table:   pgsql.CompoundIdentifier{"table"},
 		Columns: []pgsql.Identifier{"col1", "col2", "col3"},
 		Source: &pgsql.Query{
@@ -89,7 +90,7 @@ func TestFormat_Insert(t *testing.T) {
 	require.Nil(t, err)
 	require.Equal(t, "insert into table (col1, col2, col3) select * from other where other.col1 = '1234'", formattedQuery.Value)
 
-	formattedQuery, err = Statement(pgsql.Insert{
+	formattedQuery, err = format.Statement(pgsql.Insert{
 		Table:   pgsql.CompoundIdentifier{"table"},
 		Columns: []pgsql.Identifier{"col1", "col2", "col3"},
 		Source: &pgsql.Query{
@@ -117,7 +118,7 @@ func TestFormat_Insert(t *testing.T) {
 	require.Nil(t, err)
 	require.Equal(t, "insert into table (col1, col2, col3) select * from other where other.col1 = '1234' returning id", formattedQuery.Value)
 
-	formattedQuery, err = Statement(pgsql.Insert{
+	formattedQuery, err = format.Statement(pgsql.Insert{
 		Table:   pgsql.CompoundIdentifier{"table"},
 		Columns: []pgsql.Identifier{"col1", "col2", "col3"},
 		Source: &pgsql.Query{
@@ -163,7 +164,7 @@ func TestFormat_Insert(t *testing.T) {
 	require.Nil(t, err)
 	require.Equal(t, "insert into table (col1, col2, col3) select * from other where other.col1 = '1234' on conflict on constraint other.hash_constraint do update set hit_count = hit_count + 1 where hit_count < 9999 returning id, hit_count", formattedQuery.Value)
 
-	formattedQuery, err = Statement(pgsql.Insert{
+	formattedQuery, err = format.Statement(pgsql.Insert{
 		Table:   pgsql.CompoundIdentifier{"table"},
 		Columns: []pgsql.Identifier{"col1", "col2", "col3"},
 		Source: &pgsql.Query{
@@ -232,7 +233,7 @@ func TestFormat_Query(t *testing.T) {
 		},
 	}
 
-	formattedQuery, err := Statement(query)
+	formattedQuery, err := format.Statement(query)
 	require.Nil(t, err)
 	require.Equal(t, "select * from table t where t.col1 > 1", formattedQuery.Value)
 }
@@ -291,7 +292,7 @@ func TestStuff(t *testing.T) {
 		},
 	}
 
-	formattedQuery, err := Statement(simpleNodeSelectQuery)
+	formattedQuery, err := format.Statement(simpleNodeSelectQuery)
 	require.Nil(t, err)
 
 	expected := `with n1 as (select n1.* from node n1) 
@@ -364,7 +365,7 @@ func TestStuff(t *testing.T) {
 		},
 	}
 
-	formattedQuery, err = Statement(nodeSelectWithWhereClause)
+	formattedQuery, err = format.Statement(nodeSelectWithWhereClause)
 	require.Nil(t, err)
 
 	expected = `with n1 as (select n1.* from node n1 where n1.properties -> 'name' = '1234') 
@@ -458,7 +459,7 @@ func TestStuff(t *testing.T) {
 		},
 	}
 
-	formattedQuery, err = Statement(multipleNodeSelectsWithWhereClause)
+	formattedQuery, err = format.Statement(multipleNodeSelectsWithWhereClause)
 	require.Nil(t, err)
 
 	expected = `with n1 as (select n1.* from node n1 where n1.properties -> 'name' = '1234'), 
@@ -576,7 +577,7 @@ func TestStuff(t *testing.T) {
 		},
 	}
 
-	formattedQuery, err = Statement(multipleNodeSelectsWithKindFilterAndWhereClause)
+	formattedQuery, err = format.Statement(multipleNodeSelectsWithKindFilterAndWhereClause)
 	require.Nil(t, err)
 
 	expected = `with n1 as (select n1.* from node n1 where n1.kind_ids operator (pg_catalog.&&) array []::int2[]), 
@@ -593,7 +594,7 @@ func TestStuff(t *testing.T) {
 }
 
 func TestFormat_Merge(t *testing.T) {
-	formattedQuery, err := Statement(pgsql.Merge{
+	formattedQuery, err := format.Statement(pgsql.Merge{
 		Into: true,
 		Table: pgsql.TableReference{
 			Name:    pgsql.CompoundIdentifier{"table"},
@@ -664,7 +665,7 @@ func TestFormat_Merge(t *testing.T) {
 }
 
 func TestFormat_CTEs(t *testing.T) {
-	formattedQuery, err := Statement(pgsql.Query{
+	formattedQuery, err := format.Statement(pgsql.Query{
 		CommonTableExpressions: &pgsql.With{
 			Recursive: true,
 			Expressions: []pgsql.CommonTableExpression{{
@@ -673,7 +674,7 @@ func TestFormat_CTEs(t *testing.T) {
 				},
 				Alias: pgsql.TableAlias{
 					Name: "expansion_1",
-					Columns: []pgsql.Identifier{
+					Shape: []pgsql.Identifier{
 						"root_id",
 						"next_id",
 						"depth",
@@ -686,7 +687,7 @@ func TestFormat_CTEs(t *testing.T) {
 					Body: pgsql.SetOperation{
 						Operator: "union",
 						All:      true,
-						LeftOperand: pgsql.Select{
+						LOperand: pgsql.Select{
 							Projection: []pgsql.Projection{
 								pgsql.CompoundIdentifier{"r", "start_id"},
 								pgsql.CompoundIdentifier{"r", "end_id"},
@@ -748,7 +749,7 @@ func TestFormat_CTEs(t *testing.T) {
 								},
 							},
 						},
-						RightOperand: pgsql.Select{
+						ROperand: pgsql.Select{
 							Projection: []pgsql.Projection{
 								pgsql.CompoundIdentifier{"expansion_1", "root_id"},
 								pgsql.CompoundIdentifier{"r", "end_id"},

@@ -1,6 +1,7 @@
 package pgsql
 
 import (
+	"github.com/specterops/bloodhound/cypher/model"
 	"slices"
 	"strings"
 )
@@ -19,9 +20,22 @@ func (s FormattingLiteral) String() string {
 	return string(s)
 }
 
-type TableAlias struct {
-	Name    Identifier
+// TODO: Not super happy with this syntax node name but had trouble coming up with something more appropriate
+type RowShape struct {
 	Columns []Identifier
+}
+
+func (s RowShape) NodeType() string {
+	return "row_shape"
+}
+
+type TableAlias struct {
+	Name  Identifier
+	Shape model.Optional[RowShape]
+}
+
+func (s TableAlias) NodeType() string {
+	return "table_alias"
 }
 
 type Values struct {
@@ -244,6 +258,26 @@ type Window struct {
 	WindowFrame *WindowFrame
 }
 
+type AllExpression struct {
+	Expression
+}
+
+func NewAllExpression(inner Expression) AllExpression {
+	return AllExpression{
+		Expression: inner,
+	}
+}
+
+type AnyExpression struct {
+	Expression
+}
+
+func NewAnyExpression(inner Expression) AnyExpression {
+	return AnyExpression{
+		Expression: inner,
+	}
+}
+
 type FunctionCall struct {
 	Distinct   bool
 	Function   Identifier
@@ -284,6 +318,10 @@ func (s Identifier) NodeType() string {
 
 func (s Identifier) String() string {
 	return string(s)
+}
+
+func AsOptionalIdentifier(identifier Identifier) model.Optional[Identifier] {
+	return model.ValueOptional(identifier)
 }
 
 type IdentifierSet map[Identifier]struct{}
@@ -352,13 +390,15 @@ func (s IdentifierSet) Matches(other IdentifierSet) bool {
 	return len(s) == len(other) && s.Satisfies(other)
 }
 
-type OptionalIdentifier *Identifier
-
-func AsOptionalIdentifier(val Identifier) OptionalIdentifier {
-	return &val
-}
-
 type CompoundIdentifier []Identifier
+
+func (s CompoundIdentifier) Replace(old, new Identifier) {
+	for idx, identifier := range s {
+		if identifier == old {
+			s[idx] = new
+		}
+	}
+}
 
 func (s CompoundIdentifier) Root() Identifier {
 	return s[0]
@@ -403,7 +443,7 @@ func (s CompoundIdentifier) NodeType() string {
 
 type TableReference struct {
 	Name    CompoundIdentifier
-	Binding OptionalIdentifier
+	Binding model.Optional[Identifier]
 }
 
 func (s TableReference) AsExpression() Expression {
@@ -417,6 +457,10 @@ func (s TableReference) NodeType() string {
 type FromClause struct {
 	Relation TableReference
 	Joins    []Join
+}
+
+func (s FromClause) NodeType() string {
+	return "from"
 }
 
 type AliasedExpression struct {
@@ -661,12 +705,13 @@ func (s Select) NodeType() string {
 	return "select"
 }
 
+// TODO: Should this embed/compose a BinaryExpression struct?
 type SetOperation struct {
-	Operator     Operator
-	LeftOperand  SetExpression
-	RightOperand SetExpression
-	All          bool
-	Distinct     bool
+	Operator Operator
+	LOperand SetExpression
+	ROperand SetExpression
+	All      bool
+	Distinct bool
 }
 
 func (s SetOperation) AsExpression() Expression {
@@ -685,6 +730,10 @@ type CommonTableExpression struct {
 	Alias        TableAlias
 	Materialized *Materialized
 	Query        Query
+}
+
+func (s CommonTableExpression) NodeType() string {
+	return "common_table_expression"
 }
 
 type Materialized struct {
@@ -706,6 +755,10 @@ func (s Materialized) NodeType() string {
 type With struct {
 	Recursive   bool
 	Expressions []CommonTableExpression
+}
+
+func (s With) NodeType() string {
+	return "with"
 }
 
 // [with <CTE>] select * from table;

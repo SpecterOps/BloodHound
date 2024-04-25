@@ -2,43 +2,38 @@ package translate
 
 import (
 	"fmt"
+	"github.com/specterops/bloodhound/cypher/model"
 	"github.com/specterops/bloodhound/cypher/model/pgsql"
 	"strconv"
 )
 
-type IdentifierGenerator struct {
-	patternBindingID int
-	nodeBindingID    int
-	edgeBindingID    int
-}
+type IdentifierGenerator map[pgsql.DataType]int
 
-func (s *IdentifierGenerator) PatternBinding() pgsql.Identifier {
-	bindingID := s.patternBindingID
-	s.patternBindingID += 1
+func (s IdentifierGenerator) NewIdentifier(dataType pgsql.DataType) (pgsql.Identifier, error) {
+	var (
+		nextID    = s[dataType]
+		nextIDStr = strconv.Itoa(nextID)
+	)
 
-	return pgsql.Identifier("p" + strconv.Itoa(bindingID))
-}
+	// Increment the ID
+	s[dataType] = nextID + 1
 
-func (s *IdentifierGenerator) NodeBinding() pgsql.Identifier {
-	bindingID := s.nodeBindingID
-	s.nodeBindingID += 1
-
-	return pgsql.Identifier("n" + strconv.Itoa(bindingID))
-}
-
-func (s *IdentifierGenerator) EdgeBinding() pgsql.Identifier {
-	bindingID := s.edgeBindingID
-	s.edgeBindingID += 1
-
-	return pgsql.Identifier("e" + strconv.Itoa(bindingID))
-}
-
-func NewIdentifierGenerator() *IdentifierGenerator {
-	return &IdentifierGenerator{
-		patternBindingID: 1,
-		nodeBindingID:    1,
-		edgeBindingID:    1,
+	switch dataType {
+	case pgsql.EdgeExpansion:
+		return pgsql.Identifier("ex" + nextIDStr), nil
+	case pgsql.PathComposite:
+		return pgsql.Identifier("p" + nextIDStr), nil
+	case pgsql.NodeComposite:
+		return pgsql.Identifier("n" + nextIDStr), nil
+	case pgsql.EdgeComposite:
+		return pgsql.Identifier("e" + nextIDStr), nil
+	default:
+		return "", fmt.Errorf("identifier with data type %s does not have a prefix case", dataType)
 	}
+}
+
+func NewIdentifierGenerator() IdentifierGenerator {
+	return IdentifierGenerator{}
 }
 
 type Constraint struct {
@@ -108,7 +103,7 @@ func (s *ConstraintTracker) Constrain(dependencies pgsql.IdentifierSet, constrai
 
 type TrackedIdentifier struct {
 	Identifier   pgsql.Identifier
-	Alias        pgsql.Identifier
+	Alias        model.Optional[pgsql.Identifier]
 	Dependencies []*TrackedIdentifier
 	DataType     pgsql.DataType
 }
@@ -131,6 +126,18 @@ func (s *TrackedIdentifier) BuildFromClauses() ([]pgsql.FromClause, error) {
 				},
 			})
 		}
+
+	case pgsql.ExpansionRootNode:
+		return nil, nil
+
+	case pgsql.ExpansionEdge:
+		return nil, nil
+
+	case pgsql.ExpansionTerminalNode:
+		return nil, nil
+
+	default:
+		return nil, fmt.Errorf("unknown data type for from clause construction: %s", s.DataType)
 	}
 
 	return fromClauses, nil
@@ -138,17 +145,17 @@ func (s *TrackedIdentifier) BuildFromClauses() ([]pgsql.FromClause, error) {
 
 func (s *TrackedIdentifier) BuildCompositeValue() (pgsql.CompositeValue, error) {
 	switch s.DataType {
-	case pgsql.NodeComposite:
+	case pgsql.NodeComposite, pgsql.ExpansionTerminalNode, pgsql.ExpansionRootNode:
 		return pgsql.CompositeValue{
 			Values: []pgsql.Expression{
 				pgsql.CompoundIdentifier{s.Identifier, pgsql.ColumnID},
 				pgsql.CompoundIdentifier{s.Identifier, pgsql.ColumnKindIDs},
 				pgsql.CompoundIdentifier{s.Identifier, pgsql.ColumnProperties},
 			},
-			DataType: s.DataType,
+			DataType: pgsql.NodeComposite,
 		}, nil
 
-	case pgsql.EdgeComposite:
+	case pgsql.EdgeComposite, pgsql.ExpansionEdge:
 		return pgsql.CompositeValue{
 			Values: []pgsql.Expression{
 				pgsql.CompoundIdentifier{s.Identifier, pgsql.ColumnID},
@@ -157,7 +164,7 @@ func (s *TrackedIdentifier) BuildCompositeValue() (pgsql.CompositeValue, error) 
 				pgsql.CompoundIdentifier{s.Identifier, pgsql.ColumnKindID},
 				pgsql.CompoundIdentifier{s.Identifier, pgsql.ColumnProperties},
 			},
-			DataType: s.DataType,
+			DataType: pgsql.EdgeComposite,
 		}, nil
 
 	case pgsql.PathComposite:
@@ -188,7 +195,7 @@ func (s *TrackedIdentifier) BuildCompositeValue() (pgsql.CompositeValue, error) 
 				nodeReferences,
 				edgeReferences,
 			},
-			DataType: s.DataType,
+			DataType: pgsql.PathComposite,
 		}, nil
 
 	default:
@@ -205,10 +212,10 @@ func (s *TrackedIdentifier) BuildProjection() (pgsql.Projection, error) {
 }
 
 func (s *TrackedIdentifier) AliasExpression(expression pgsql.Expression) pgsql.Expression {
-	if s.Alias != "" {
+	if s.Alias.Set {
 		return pgsql.AliasedExpression{
 			Expression: expression,
-			Alias:      s.Alias,
+			Alias:      s.Alias.Value,
 		}
 	}
 
@@ -216,10 +223,10 @@ func (s *TrackedIdentifier) AliasExpression(expression pgsql.Expression) pgsql.E
 }
 
 func (s *TrackedIdentifier) AliasProjection(projection pgsql.Projection) pgsql.Projection {
-	if s.Alias != "" {
+	if s.Alias.Set {
 		return pgsql.AliasedExpression{
 			Expression: projection,
-			Alias:      s.Alias,
+			Alias:      s.Alias.Value,
 		}
 	}
 
@@ -235,6 +242,15 @@ func NewIdentifierTracker() *IdentifierTracker {
 	return &IdentifierTracker{
 		aliases:            map[string]pgsql.Identifier{},
 		trackedIdentifiers: map[pgsql.Identifier]*TrackedIdentifier{},
+	}
+}
+
+func (s *IdentifierTracker) SetType(identifier pgsql.Identifier, dataType pgsql.DataType) error {
+	if trackedIdentifier, isTracked := s.trackedIdentifiers[identifier]; !isTracked {
+		return fmt.Errorf("unknown identifier: '%s'", identifier)
+	} else {
+		trackedIdentifier.DataType = dataType
+		return nil
 	}
 }
 
@@ -270,7 +286,7 @@ func (s *IdentifierTracker) Alias(oldIdentifier string, identifier pgsql.Identif
 	s.aliases[oldIdentifier] = identifier
 
 	newTrackedIdentifier := s.Track(identifier, dataType)
-	newTrackedIdentifier.Alias = pgsql.Identifier(oldIdentifier)
+	newTrackedIdentifier.Alias = model.ValueOptional(pgsql.Identifier(oldIdentifier))
 }
 
 func (s *IdentifierTracker) TrackString(identifier string, dataType pgsql.DataType) {
