@@ -14,19 +14,58 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { Alert, Skeleton } from '@mui/material';
+import { EntityField, FieldsContainer, ObjectInfoFields, entityInformationEndpoints, apiClient } from 'bh-shared-ui';
 import React from 'react';
-import EntityInfoCollapsibleSection from './EntityInfoCollapsibleSection';
-import { EntityField, FieldsContainer, ObjectInfoFields } from 'bh-shared-ui';
+import { useQuery } from 'react-query';
 import { formatObjectInfoFields } from 'src/views/Explore/utils';
 import { BasicObjectInfoFields } from '../BasicObjectInfoFields';
+import EntityInfoCollapsibleSection from './EntityInfoCollapsibleSection';
+import { EntityInfoContentProps } from './EntityInfoContent';
 
-const EntityObjectInformation: React.FC<{ props: any }> = ({ props }) => {
-    const formattedObjectFields: EntityField[] = formatObjectInfoFields(props);
+const whoPutThisNodeInHereCypherQuery = (id: string): string => `MATCH (n) WHERE ID(n) = ${id} RETURN n LIMIT 1`;
+
+const EntityObjectInformation: React.FC<EntityInfoContentProps> = ({ id, nodeType, databaseId }) => {
+    let endpoint: Promise<any>;
+    const hasDefinedEndpoint = entityInformationEndpoints[nodeType];
+
+    if (hasDefinedEndpoint) endpoint = entityInformationEndpoints[nodeType]!(id);
+    else endpoint = apiClient.cypherSearch(whoPutThisNodeInHereCypherQuery(databaseId), true);
+
+    const {
+        data: objectInformation,
+        isLoading,
+        isError,
+    } = useQuery(
+        ['entity', nodeType, id],
+        ({ signal }) =>
+            endpoint.then((res) => {
+                if (hasDefinedEndpoint) return res.data.data.props;
+                else return Object.values(res.data.data.nodes as Record<string, any>)[0].properties;
+            }),
+        {
+            refetchOnWindowFocus: false,
+            retry: false,
+        }
+    );
+
+    if (isLoading) return <Skeleton variant='text' />;
+
+    if (isError)
+        return (
+            <EntityInfoCollapsibleSection label='Object Information'>
+                <FieldsContainer>
+                    <Alert severity='error'>Unable to load object information for this node.</Alert>
+                </FieldsContainer>
+            </EntityInfoCollapsibleSection>
+        );
+
+    const formattedObjectFields: EntityField[] = formatObjectInfoFields(objectInformation);
 
     return (
         <EntityInfoCollapsibleSection label='Object Information'>
             <FieldsContainer>
-                <BasicObjectInfoFields {...props} />
+                <BasicObjectInfoFields {...objectInformation} />
                 <ObjectInfoFields fields={formattedObjectFields} />
             </FieldsContainer>
         </EntityInfoCollapsibleSection>

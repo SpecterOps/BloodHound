@@ -93,7 +93,7 @@ export const SubHeader: React.FC<{ label: string; count?: number; isLoading?: bo
 
 export const FieldsContainer: React.FC<PropsWithChildren> = ({ children }) => {
     const styles = useCollapsibleSectionStyles();
-    return <div className={styles.fieldsContainer}>{children}</div>;
+    return <Box className={styles.fieldsContainer}>{children}</Box>;
 };
 
 export const Field: React.FC<EntityField> = (entityField) => {

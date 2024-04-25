@@ -462,7 +462,7 @@ export type SelectedNode = {
     id: string;
     type: EntityKinds;
     name: string;
-    graphId?: string;
+    graphId: string;
 };
 
 interface SetSelectedNodeAction {

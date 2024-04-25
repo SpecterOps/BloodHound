@@ -43,7 +43,7 @@ const EdgeObjectInformation: FC<{ selectedEdge: NonNullable<SelectedEdge> }> = (
     });
 
     if (isLoading) {
-        return <Skeleton variant='rectangular' sx={{}} />;
+        return <Skeleton variant='rectangular' />;
     }
 
     const sourceNodeField: EntityField = {
