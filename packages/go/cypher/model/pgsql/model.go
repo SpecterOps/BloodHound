@@ -1,9 +1,10 @@
 package pgsql
 
 import (
-	"github.com/specterops/bloodhound/cypher/model"
 	"slices"
 	"strings"
+
+	"github.com/specterops/bloodhound/cypher/model"
 )
 
 type FormattingLiteral string
@@ -376,6 +377,7 @@ func (s IdentifierSet) CombinedKey() Identifier {
 	return Identifier(strings.Join(identifierStrings, ""))
 }
 
+// todo: `s` is said to satisfy `other` if every identifier in s is present in other.
 func (s IdentifierSet) Satisfies(other IdentifierSet) bool {
 	for identifier := range other {
 		if _, satisfied := s[identifier]; !satisfied {

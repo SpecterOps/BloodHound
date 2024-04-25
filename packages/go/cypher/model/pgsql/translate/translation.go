@@ -2,6 +2,7 @@ package translate
 
 import (
 	"fmt"
+
 	"github.com/specterops/bloodhound/cypher/model"
 	"github.com/specterops/bloodhound/cypher/model/cypher"
 	"github.com/specterops/bloodhound/dawgs/graph"
