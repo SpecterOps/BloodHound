@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
+	"slices"
 	"testing"
 	"time"
 
@@ -85,8 +86,11 @@ func TestSwitchNeo4j(t *testing.T) {
 }
 
 func TestPGMigrator(t *testing.T) {
-	testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
-	integration.SetupDB(t)
+	var (
+		schema      = graphschema.DefaultGraphSchema()
+		testContext = integration.NewGraphTestContext(t, schema)
+		_           = integration.SetupDB(t)
+	)
 
 	testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) error {
 		harness.DBMigrateHarness.Setup(testContext)
@@ -95,10 +99,10 @@ func TestPGMigrator(t *testing.T) {
 		var (
 			migrator        = setupTestMigrator(t, testContext.Context(), neo4jDB)
 			testID          = harness.DBMigrateHarness.TestID.String()
-			sourceNodes     []*graph.Node
-			sourceRels      []*graph.Relationship
 			sourceNodeKinds graph.Kinds
 			sourceEdgeKinds graph.Kinds
+			sourceNodes     []*graph.Node
+			sourceEdges     []*graph.Relationship
 			err             error
 		)
 
@@ -115,22 +119,27 @@ func TestPGMigrator(t *testing.T) {
 			}
 		}
 
-		// query nodes/relationships/types in neo4j
+		// query nodes/relationships in neo4j
 		neo4jDB.ReadTransaction(testContext.Context(), func(tx graph.Transaction) error {
 			sourceNodes, err = ops.FetchNodes(tx.Nodes())
 			require.Nil(t, err)
 
-			sourceRels, err = ops.FetchRelationships(tx.Relationships())
-			require.Nil(t, err)
-
-			sourceNodeKinds, err = tools.GetNeo4jNodeKinds(testContext.Context(), tx)
-			require.Nil(t, err)
-
-			sourceEdgeKinds, err = tools.GetNeo4jEdgeKinds(testContext.Context(), tx)
+			sourceEdges, err = ops.FetchRelationships(tx.Relationships())
 			require.Nil(t, err)
 
 			return nil
 		})
+
+		// grab source kinds
+		// NOTE: the call to db.labels() in our migrator returns all possible node kinds in neo4j, while db.relationshipTypes()
+		// returns just those edge kinds that have an associated edge in the db, so that is the behavior we are testing here
+		sourceNodeKinds = schema.DefaultGraph.Nodes
+
+		for _, edge := range sourceEdges {
+			if !slices.Contains(sourceEdgeKinds, edge.Kind) {
+				sourceEdgeKinds = append(sourceEdgeKinds, edge.Kind)
+			}
+		}
 
 		// get reference to pg graph db
 		pgDB, err := migrator.OpenPostgresGraphConnection()
@@ -156,8 +165,8 @@ func TestPGMigrator(t *testing.T) {
 			}
 
 			// check edges
-			for _, sourceRel := range sourceRels {
-				id, err := sourceRel.Properties.Get(testID).String()
+			for _, sourceEdge := range sourceEdges {
+				id, err := sourceEdge.Properties.Get(testID).String()
 				require.Nil(t, err)
 
 				if targetRel, err := tx.Relationships().Filterf(func() graph.Criteria {
@@ -165,7 +174,7 @@ func TestPGMigrator(t *testing.T) {
 				}).First(); err != nil {
 					t.Fatalf("Could not find migrated relationship with '%s' == %s", testID, id)
 				} else {
-					require.Equal(t, sourceRel.Kind, targetRel.Kind)
+					require.Equal(t, sourceEdge.Kind, targetRel.Kind)
 				}
 			}
 

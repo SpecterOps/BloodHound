@@ -6289,11 +6289,11 @@ func (s *ESC4ECA) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.NewRelationship(s.Computer7, s.CertTemplate7, ad.GenericAll)
 }
 
-// Use this alias to set our custom test property in the harness
+// Use this to set our custom test property in the migration harness
 type Property string
 
-func (p Property) String() string {
-	return string(p)
+func (s Property) String() string {
+	return string(s)
 }
 
 type DBMigrateHarness struct {
@@ -6316,7 +6316,6 @@ func (s *DBMigrateHarness) Setup(graphTestContext *GraphTestContext) {
 	s.Group1.Properties.Set(s.TestID.String(), RandomObjectID(graphTestContext.testCtx))
 	s.Computer1.Properties.Set(s.TestID.String(), RandomObjectID(graphTestContext.testCtx))
 	s.User1.Properties.Set(s.TestID.String(), RandomObjectID(graphTestContext.testCtx))
-	// Log our property values next
 	graphTestContext.UpdateNode(s.Group1)
 	graphTestContext.UpdateNode(s.Computer1)
 	graphTestContext.UpdateNode(s.User1)

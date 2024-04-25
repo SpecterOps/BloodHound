@@ -50,15 +50,34 @@ func migrateTypes(ctx context.Context, neoDB, pgDB graph.Database) error {
 	)
 
 	if err := neoDB.ReadTransaction(ctx, func(tx graph.Transaction) error {
-		if nodeKinds, err := GetNeo4jNodeKinds(ctx, tx); err != nil {
-			return err
-		} else if edgeKinds, err := GetNeo4jEdgeKinds(ctx, tx); err != nil {
-			return err
-		} else {
-			neoNodeKinds = nodeKinds
-			neoEdgeKinds = edgeKinds
-			return nil
+		var (
+			nextKindStr string
+			result      = tx.Raw("call db.labels();", nil)
+		)
+
+		for result.Next() {
+			if err := result.Scan(&nextKindStr); err != nil {
+				return err
+			}
+
+			neoNodeKinds = append(neoNodeKinds, graph.StringKind(nextKindStr))
 		}
+
+		if err := result.Error(); err != nil {
+			return err
+		}
+
+		result = tx.Raw("call db.relationshipTypes();", nil)
+
+		for result.Next() {
+			if err := result.Scan(&nextKindStr); err != nil {
+				return err
+			}
+
+			neoEdgeKinds = append(neoEdgeKinds, graph.StringKind(nextKindStr))
+		}
+
+		return nil
 	}); err != nil {
 		return err
 	}
@@ -67,42 +86,6 @@ func migrateTypes(ctx context.Context, neoDB, pgDB graph.Database) error {
 		_, err := pgDB.(*pg.Driver).KindMapper().AssertKinds(tx, append(neoNodeKinds, neoEdgeKinds...))
 		return err
 	})
-}
-
-func GetNeo4jNodeKinds(ctx context.Context, tx graph.Transaction) (graph.Kinds, error) {
-	var (
-		nextKindStr string
-		kinds       graph.Kinds
-		result      = tx.Raw("call db.labels();", nil)
-	)
-
-	for result.Next() {
-		if err := result.Scan(&nextKindStr); err != nil {
-			return nil, err
-		}
-
-		kinds = append(kinds, graph.StringKind(nextKindStr))
-	}
-
-	return kinds, result.Error()
-}
-
-func GetNeo4jEdgeKinds(ctx context.Context, tx graph.Transaction) (graph.Kinds, error) {
-	var (
-		nextKindStr string
-		kinds       graph.Kinds
-		result      = tx.Raw("call db.relationshipTypes();", nil)
-	)
-
-	for result.Next() {
-		if err := result.Scan(&nextKindStr); err != nil {
-			return nil, err
-		}
-
-		kinds = append(kinds, graph.StringKind(nextKindStr))
-	}
-
-	return kinds, result.Error()
 }
 
 func convertNeo4jProperties(properties *graph.Properties) error {
