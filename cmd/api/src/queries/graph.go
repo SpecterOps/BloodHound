@@ -412,7 +412,7 @@ func (s *GraphQuery) PrepareCypherQuery(rawCypher string) (PreparedQuery, error)
 		// log query details if it is rejected due to high complexity
 		highComplexityLog := log.WithLevel(log.LevelError)
 		highComplexityLog.Str("query", strippedQueryBuffer.String())
-		highComplexityLog.Msg(fmt.Sprintf("Query rejected. Query weight: %.2f. Maximum allowed weight: %d", complexityMeasure.Weight, MaxQueryComplexityWeightAllowed))
+		highComplexityLog.Msg(fmt.Sprintf("Query rejected. Query weight: %d. Maximum allowed weight: %d", complexityMeasure.Weight, MaxQueryComplexityWeightAllowed))
 
 		return graphQuery, newQueryError(ErrCypherQueryTooComplex)
 	}
