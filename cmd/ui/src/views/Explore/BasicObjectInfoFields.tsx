@@ -15,8 +15,15 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Box } from '@mui/material';
-import { ActiveDirectoryNodeKind, AzureNodeKind, EntityKinds, Field, NodeIcon, searchbarActions } from 'bh-shared-ui';
-import { TIER_ZERO_TAG } from 'src/constants';
+import {
+    ActiveDirectoryNodeKind,
+    AzureNodeKind,
+    EntityKinds,
+    Field,
+    NodeIcon,
+    searchbarActions,
+    TIER_ZERO_TAG,
+} from 'bh-shared-ui';
 import { useAppDispatch } from 'src/store';
 
 interface BasicObjectInfoFieldsProps {

@@ -22,8 +22,8 @@ import EntityObjectInformation from './EntityObjectInformation';
 
 export interface EntityInfoContentProps {
     id: string;
-    nodeType: EntityKinds;
-    databaseId: string;
+    nodeType: EntityKinds | string;
+    databaseId?: string;
 }
 
 const EntityInfoContent: React.FC<EntityInfoContentProps> = (props) => {

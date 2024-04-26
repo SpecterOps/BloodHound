@@ -70,7 +70,7 @@ class BHEAPIClient {
         );
     };
 
-    cypherSearch = (query: string, includeProperties?: boolean, options?: types.RequestOptions) => {
+    cypherSearch = (query: string, options?: types.RequestOptions, includeProperties?: boolean) => {
         return this.baseClient.post('/api/v2/graphs/cypher', { query, include_properties: includeProperties }, options);
     };
 

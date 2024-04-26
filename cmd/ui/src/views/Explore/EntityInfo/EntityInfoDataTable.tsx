@@ -19,10 +19,10 @@ import {
     InfiniteScrollingTable,
     abortEntitySectionRequest,
     searchbarActions,
+    NODE_GRAPH_RENDER_LIMIT,
 } from 'bh-shared-ui';
 import { useQuery } from 'react-query';
 import { useDispatch } from 'react-redux';
-import { NODE_GRAPH_RENDER_LIMIT } from 'src/constants';
 import { putGraphData, putGraphError, saveResponseForExport, setGraphLoading } from 'src/ducks/explore/actions';
 import { addSnackbar } from 'src/ducks/global/actions';
 import { transformFlatGraphResponse } from 'src/utils';

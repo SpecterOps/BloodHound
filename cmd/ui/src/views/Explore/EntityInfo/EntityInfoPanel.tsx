@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Box, Paper, SxProps, Typography } from '@mui/material';
-import { usePaneStyles } from 'bh-shared-ui';
+import { usePaneStyles, NoEntitySelectedHeader, NoEntitySelectedMessage } from 'bh-shared-ui';
 import React, { useEffect, useState } from 'react';
 import { SelectedNode } from 'src/ducks/entityinfo/types';
 import usePreviousValue from 'src/hooks/usePreviousValue';
@@ -45,7 +45,7 @@ const EntityInfoPanel: React.FC<EntityInfoPanelProps> = ({ selectedNode, sx }) =
         <Box sx={sx} className={styles.container} data-testid='explore_entity-information-panel'>
             <Paper elevation={0} classes={{ root: styles.headerPaperRoot }}>
                 <Header
-                    name={selectedNode?.name || 'None Selected'}
+                    name={selectedNode?.name || NoEntitySelectedHeader}
                     nodeType={selectedNode?.type}
                     expanded={expanded}
                     onToggleExpanded={(expanded) => {
@@ -66,7 +66,7 @@ const EntityInfoPanel: React.FC<EntityInfoPanelProps> = ({ selectedNode, sx }) =
                         databaseId={selectedNode.graphId}
                     />
                 ) : (
-                    <Typography variant='body2'>Select a node to view the associated information</Typography>
+                    <Typography variant='body2'>{NoEntitySelectedMessage}</Typography>
                 )}
             </Paper>
         </Box>

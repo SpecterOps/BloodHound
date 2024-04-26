@@ -122,8 +122,10 @@ export const entityInformationEndpoints: Partial<
         ),
     [ActiveDirectoryNodeKind.Entity]: (id: string, options?: RequestOptions) => apiClient.getBaseV2(id, false, options),
     // LocalGroups and LocalUsers are entities that we handle directly and add the `Base` kind to so using getBaseV2 is an assumption but should work
-    [ActiveDirectoryNodeKind.LocalGroup]: (id: string, options?: RequestOptions) => apiClient.getBaseV2(id, false, options),
-    [ActiveDirectoryNodeKind.LocalUser]: (id: string, options?: RequestOptions) => apiClient.getBaseV2(id, false, options),
+    [ActiveDirectoryNodeKind.LocalGroup]: (id: string, options?: RequestOptions) =>
+        apiClient.getBaseV2(id, false, options),
+    [ActiveDirectoryNodeKind.LocalUser]: (id: string, options?: RequestOptions) =>
+        apiClient.getBaseV2(id, false, options),
 
     [ActiveDirectoryNodeKind.AIACA]: (id: string, options?: RequestOptions) => apiClient.getAIACAV2(id, false, options),
     [ActiveDirectoryNodeKind.CertTemplate]: (id: string, options?: RequestOptions) =>

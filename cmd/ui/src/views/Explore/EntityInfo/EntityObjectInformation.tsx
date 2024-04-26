@@ -15,22 +15,43 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Alert, Skeleton } from '@mui/material';
-import { EntityField, FieldsContainer, ObjectInfoFields, entityInformationEndpoints, apiClient } from 'bh-shared-ui';
+import {
+    EntityField,
+    EntityKinds,
+    FieldsContainer,
+    ObjectInfoFields,
+    apiClient,
+    entityInformationEndpoints,
+    formatObjectInfoFields,
+    getNodeByDatabaseIdCypher,
+} from 'bh-shared-ui';
+import { RequestOptions } from 'js-client-library';
 import React from 'react';
 import { useQuery } from 'react-query';
-import { formatObjectInfoFields } from 'src/views/Explore/utils';
 import { BasicObjectInfoFields } from '../BasicObjectInfoFields';
 import EntityInfoCollapsibleSection from './EntityInfoCollapsibleSection';
 import { EntityInfoContentProps } from './EntityInfoContent';
 
-const whoPutThisNodeInHereCypherQuery = (id: string): string => `MATCH (n) WHERE ID(n) = ${id} RETURN n LIMIT 1`;
-
 const EntityObjectInformation: React.FC<EntityInfoContentProps> = ({ id, nodeType, databaseId }) => {
-    let endpoint: Promise<any>;
-    const hasDefinedEndpoint = entityInformationEndpoints[nodeType];
+    const requestDetails: {
+        endpoint: (params: string, options?: RequestOptions, includeProperties?: boolean) => Promise<any>;
+        param: string;
+    } = {
+        endpoint: async function () {},
+        param: '',
+    };
 
-    if (hasDefinedEndpoint) endpoint = entityInformationEndpoints[nodeType]!(id);
-    else endpoint = apiClient.cypherSearch(whoPutThisNodeInHereCypherQuery(databaseId), true);
+    const hasDefinedEndpoint = !!entityInformationEndpoints[nodeType as EntityKinds];
+
+    if (hasDefinedEndpoint) {
+        requestDetails.endpoint = entityInformationEndpoints[nodeType as EntityKinds]!;
+        requestDetails.param = id;
+    } else if (databaseId) {
+        requestDetails.endpoint = apiClient.cypherSearch;
+        requestDetails.param = getNodeByDatabaseIdCypher(databaseId);
+    }
+
+    const informationAvailable = hasDefinedEndpoint || !!databaseId;
 
     const {
         data: objectInformation,
@@ -39,19 +60,21 @@ const EntityObjectInformation: React.FC<EntityInfoContentProps> = ({ id, nodeTyp
     } = useQuery(
         ['entity', nodeType, id],
         ({ signal }) =>
-            endpoint.then((res) => {
+            requestDetails.endpoint(requestDetails.param, { signal }, true).then((res) => {
                 if (hasDefinedEndpoint) return res.data.data.props;
-                else return Object.values(res.data.data.nodes as Record<string, any>)[0].properties;
+                else if (databaseId) return Object.values(res.data.data.nodes as Record<string, any>)[0].properties;
+                else return {};
             }),
         {
             refetchOnWindowFocus: false,
             retry: false,
+            enabled: informationAvailable,
         }
     );
 
-    if (isLoading) return <Skeleton variant='text' />;
+    if (isLoading) return <Skeleton data-testid='entity-object-information-skeleton' variant='text' />;
 
-    if (isError)
+    if (isError || !informationAvailable)
         return (
             <EntityInfoCollapsibleSection label='Object Information'>
                 <FieldsContainer>
