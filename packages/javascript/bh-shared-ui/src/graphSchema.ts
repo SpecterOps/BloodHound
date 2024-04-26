@@ -311,6 +311,8 @@ export enum ActiveDirectoryKindProperties {
     EnrollmentAgentRestrictionsCollected = 'enrollmentagentrestrictionscollected',
     IsUserSpecifiesSanEnabled = 'isuserspecifiessanenabled',
     IsUserSpecifiesSanEnabledCollected = 'isuserspecifiessanenabledcollected',
+    RoleSeparationEnabled = 'roleseparationenabled',
+    RoleSeparationEnabledCollected = 'roleseparationenabledcollected',
     HasBasicConstraints = 'hasbasicconstraints',
     BasicConstraintPathLength = 'basicconstraintpathlength',
     DNSHostname = 'dnshostname',
@@ -400,6 +402,10 @@ export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKin
             return 'Is User Specifies San Enabled';
         case ActiveDirectoryKindProperties.IsUserSpecifiesSanEnabledCollected:
             return 'Is User Specifies San Enabled Collected';
+        case ActiveDirectoryKindProperties.RoleSeparationEnabled:
+            return 'Role Separation Enabled';
+        case ActiveDirectoryKindProperties.RoleSeparationEnabledCollected:
+            return 'Role Separation Enabled Collected';
         case ActiveDirectoryKindProperties.HasBasicConstraints:
             return 'Has Basic Constraints';
         case ActiveDirectoryKindProperties.BasicConstraintPathLength:
