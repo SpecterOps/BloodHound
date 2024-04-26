@@ -6862,6 +6862,7 @@ type HarnessDetails struct {
 	NumCollectedActiveDirectoryDomains              int
 	AZInboundControlHarness                         AZInboundControlHarness
 	ExtendedByPolicyHarness                         ExtendedByPolicyHarness
+	AZAddSecretHarness                              AZAddSecretHarness
 	ESC3Harness1                                    ESC3Harness1
 	ESC3Harness2                                    ESC3Harness2
 	ESC3Harness3                                    ESC3Harness3
