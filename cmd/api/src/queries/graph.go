@@ -68,9 +68,9 @@ const (
 )
 
 var (
-	ErrUnsupportedDataType  = errors.New("unsupported result type for this query")
-	ErrGraphUnsupported     = errors.New("type 'graph' is not supported for this endpoint")
-	ErrCypherQueryToComplex = errors.New("cypher query is too complex and is likely to result in poor or unstable database performance")
+	ErrUnsupportedDataType   = errors.New("unsupported result type for this query")
+	ErrGraphUnsupported      = errors.New("type 'graph' is not supported for this endpoint")
+	ErrCypherQueryTooComplex = errors.New("cypher query is too complex and is likely to result in poor or unstable database performance")
 )
 
 type EntityQueryParameters struct {
@@ -386,7 +386,7 @@ func (s *GraphQuery) PrepareCypherQuery(rawCypher string) (PreparedQuery, error)
 		}
 		queryBuffer         = &bytes.Buffer{}
 		strippedQueryBuffer = &bytes.Buffer{}
-		graphQuery PreparedQuery
+		graphQuery          PreparedQuery
 	)
 
 	// If cypher mutations are disabled, we want to add the updating clause filter to properly error as unsupported query
@@ -414,7 +414,7 @@ func (s *GraphQuery) PrepareCypherQuery(rawCypher string) (PreparedQuery, error)
 		highComplexityLog.Str("query", strippedQueryBuffer.String())
 		highComplexityLog.Msg(fmt.Sprintf("Query rejected. Query weight: %.2f. Maximum allowed weight: %d", complexityMeasure.Weight, MaxQueryComplexityWeightAllowed))
 
-		return graphQuery, newQueryError(ErrCypherQueryToComplex)
+		return graphQuery, newQueryError(ErrCypherQueryTooComplex)
 	}
 
 	if pgDB, isPG := s.Graph.(*pg.Driver); isPG {
