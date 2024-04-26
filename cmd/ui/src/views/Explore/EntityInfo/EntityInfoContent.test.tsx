@@ -89,6 +89,7 @@ describe('EntityObjectInformation', () => {
                 <EntityInfoContent id={testId} nodeType={ActiveDirectoryNodeKind.LocalGroup} />
             </EntityInfoPanelContextProvider>
         );
+
         await waitForElementToBeRemoved(() => screen.getByTestId('entity-object-information-skeleton'));
 
         await user.click(screen.getByText('Object Information'));
@@ -105,8 +106,11 @@ describe('EntityObjectInformation', () => {
                 <EntityInfoContent id={testId} nodeType={ActiveDirectoryNodeKind.LocalUser} />
             </EntityInfoPanelContextProvider>
         );
+
         await waitForElementToBeRemoved(() => screen.getByTestId('entity-object-information-skeleton'));
+
         await user.click(screen.getByText('Object Information'));
+
         expect(await screen.findByText('test')).toBeInTheDocument();
     });
 
@@ -119,9 +123,11 @@ describe('EntityObjectInformation', () => {
                 <EntityInfoContent id={testId} nodeType={'Unknown'} databaseId='42' />
             </EntityInfoPanelContextProvider>
         );
+
         await waitForElementToBeRemoved(() => screen.getByTestId('entity-object-information-skeleton'));
 
         await user.click(screen.getByText('Object Information'));
+
         expect(await screen.findByText('unknown kind')).toBeInTheDocument();
     });
 });
