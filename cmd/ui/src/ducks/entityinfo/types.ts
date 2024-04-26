@@ -138,6 +138,8 @@ export interface EnterpriseCAInfo extends EntityInfo {
         hasenrollmentagentrestrictions?: boolean;
         isuserspecifiessanenabled?: boolean;
         isuserspecifiessanenabledcollected: boolean;
+        roleseparationenabled?: boolean;
+        roleseparationenabledcollected: boolean;
         description?: string;
     };
     controllables: number;

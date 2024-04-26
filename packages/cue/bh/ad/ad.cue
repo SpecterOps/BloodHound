@@ -98,6 +98,20 @@ IsUserSpecifiesSanEnabledCollected: types.#StringEnum & {
 	representation: "isuserspecifiessanenabledcollected"
 }
 
+RoleSeparationEnabled: types.#StringEnum & {
+	symbol: 		"RoleSeparationEnabled"
+	schema: 		"ad"
+	name:           "Role Separation Enabled"
+	representation: "roleseparationenabled"
+}
+
+RoleSeparationEnabledCollected: types.#StringEnum & {
+	symbol: 		"RoleSeparationEnabledCollected"
+	schema: 		"ad"
+	name:           "Role Separation Enabled Collected"
+	representation: "roleseparationenabledcollected"
+}
+
 HasBasicConstraints: types.#StringEnum & {
 	symbol: 		"HasBasicConstraints"
 	schema: 		"ad"
@@ -565,6 +579,8 @@ Properties: [
 	EnrollmentAgentRestrictionsCollected,
 	IsUserSpecifiesSanEnabled,
 	IsUserSpecifiesSanEnabledCollected,
+	RoleSeparationEnabled,
+	RoleSeparationEnabledCollected,
 	HasBasicConstraints,
 	BasicConstraintPathLength,
 	DNSHostname,
