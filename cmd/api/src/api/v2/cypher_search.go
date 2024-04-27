@@ -17,6 +17,8 @@
 package v2
 
 import (
+	"github.com/specterops/bloodhound/log"
+	"github.com/specterops/bloodhound/src/model"
 	"net/http"
 
 	"github.com/specterops/bloodhound/src/auth"
@@ -34,8 +36,11 @@ type CypherSearch struct {
 
 func (s Resources) CypherSearch(response http.ResponseWriter, request *http.Request) {
 	var (
-		payload CypherSearch
-		authCtx = ctx.FromRequest(request).AuthCtx
+		payload       CypherSearch
+		authCtx       = ctx.FromRequest(request).AuthCtx
+		auditLogEntry model.AuditEntry
+		preparedQuery queries.PreparedQuery
+		err           error
 	)
 
 	if err := api.ReadJSONRequestPayloadLimited(&payload, request); err != nil {
@@ -43,18 +48,56 @@ func (s Resources) CypherSearch(response http.ResponseWriter, request *http.Requ
 			request.Context(),
 			api.BuildErrorResponse(http.StatusBadRequest, "JSON malformed.", request), response,
 		)
-	} else if preparedQuery, err := s.GraphQuery.PrepareCypherQuery(payload.Query); err != nil {
+		return
+	}
+
+	if preparedQuery, err = s.GraphQuery.PrepareCypherQuery(payload.Query); err != nil {
 		api.WriteErrorResponse(
 			request.Context(),
 			api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response,
 		)
-	} else if preparedQuery.HasMutation && !s.Authorizer.AllowsPermission(authCtx, auth.Permissions().GraphDBMutate) {
-		s.Authorizer.AuditLogUnauthorizedAccess(request)
-		api.WriteErrorResponse(
-			request.Context(),
-			api.BuildErrorResponse(http.StatusForbidden, "Permission denied: User may not modify the graph.", request), response,
-		)
-	} else if graphResponse, err := s.GraphQuery.RawCypherSearch(request.Context(), preparedQuery, payload.IncludeProperties); err != nil {
+		return
+	}
+
+	if preparedQuery.HasMutation {
+		if !s.Authorizer.AllowsPermission(authCtx, auth.Permissions().GraphDBMutate) {
+			s.Authorizer.AuditLogUnauthorizedAccess(request)
+			api.WriteErrorResponse(
+				request.Context(),
+				api.BuildErrorResponse(http.StatusForbidden, "Permission denied: User may not modify the graph.", request), response,
+			)
+			return
+		}
+
+		// All mutation attempts must be audit logged even when failed
+		if auditLogEntry, err = model.NewAuditEntry(
+			model.AuditLogActionMutateGraph,
+			model.AuditLogStatusIntent,
+			model.AuditData{"query": preparedQuery.StrippedQuery}); err != nil {
+			api.WriteErrorResponse(
+				request.Context(),
+				api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request),
+				response,
+			)
+			return
+		}
+
+		// create an intent audit log
+		if err := s.DB.AppendAuditLog(request.Context(), auditLogEntry); err != nil {
+			api.WriteErrorResponse(
+				request.Context(),
+				api.BuildErrorResponse(http.StatusInternalServerError, "failure creating an intent audit log", request),
+				response,
+			)
+			return
+		}
+	}
+
+	if graphResponse, err := s.GraphQuery.RawCypherSearch(request.Context(), preparedQuery, payload.IncludeProperties); err != nil {
+		// audit log needs to be marked as failed if a mutation is present
+		if preparedQuery.HasMutation {
+			auditLogEntry.Status = model.AuditLogStatusFailure
+		}
 		if queries.IsQueryError(err) {
 			api.WriteErrorResponse(
 				request.Context(),
@@ -69,6 +112,17 @@ func (s Resources) CypherSearch(response http.ResponseWriter, request *http.Requ
 			)
 		}
 	} else {
+		// audit log needs to be marked as success if a mutation is present
+		if preparedQuery.HasMutation {
+			auditLogEntry.Status = model.AuditLogStatusSuccess
+		}
 		api.WriteBasicResponse(request.Context(), graphResponse, http.StatusOK, response)
+	}
+
+	if preparedQuery.HasMutation {
+		if err := s.DB.AppendAuditLog(request.Context(), auditLogEntry); err != nil {
+			// We don't want to update response as failed because having info on the mutation response trumps this error
+			log.Errorf("failure to create mutation audit log %s", err.Error())
+		}
 	}
 }

@@ -157,22 +157,13 @@ func (s Authorizer) AllowsAtLeastOnePermission(ctx Context, requiredPermissions 
 }
 
 func (s Authorizer) AuditLogUnauthorizedAccess(request *http.Request) {
-	commitId, err := uuid.NewV4()
-	if err != nil {
-		log.Errorf("Error generating commit ID for unauthorized access: %s", err.Error())
-	}
-
 	// Ignore generating logs for GET operations to reduce noise
 	if request.Method != "GET" {
-		if err := s.auditLogger.AppendAuditLog(
-			request.Context(),
-			model.AuditEntry{
-				Action:   model.AuditLogActionUnauthorizedAccessAttempt,
-				Model:    model.AuditData{"endpoint": request.Method + " " + request.URL.Path},
-				Status:   model.AuditLogStatusFailure,
-				CommitID: commitId,
-			},
-		); err != nil {
+		data := model.AuditData{"endpoint": request.Method + " " + request.URL.Path}
+		if auditEntry, err := model.NewAuditEntry(model.AuditLogActionUnauthorizedAccessAttempt, model.AuditLogStatusFailure, data); err != nil {
+			log.Errorf("Error creating audit log for unauthorized access: %s", err.Error())
+			return
+		} else if err = s.auditLogger.AppendAuditLog(request.Context(), auditEntry); err != nil {
 			log.Errorf("Error creating audit log for unauthorized access: %s", err.Error())
 		}
 	}

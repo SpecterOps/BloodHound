@@ -372,7 +372,7 @@ func (s *GraphQuery) SearchNodesByName(ctx context.Context, nodeKinds graph.Kind
 
 type PreparedQuery struct {
 	query         string
-	strippedQuery string
+	StrippedQuery string
 	complexity    *analyzer.ComplexityMeasure
 	HasMutation   bool
 }
@@ -430,7 +430,7 @@ func (s *GraphQuery) PrepareCypherQuery(rawCypher string) (PreparedQuery, error)
 
 		return graphQuery, nil
 	} else {
-		graphQuery.strippedQuery = strippedQueryBuffer.String()
+		graphQuery.StrippedQuery = strippedQueryBuffer.String()
 		graphQuery.complexity = complexityMeasure
 
 		if err = s.cypherEmitter.Write(queryModel, queryBuffer); err != nil {
@@ -484,7 +484,7 @@ func (s *GraphQuery) RawCypherSearch(ctx context.Context, pQuery PreparedQuery, 
 				availableRuntime, reductionFactor = applyTimeoutReduction(pQuery.complexity.Weight, availableRuntime)
 
 				logEvent := log.WithLevel(log.LevelInfo)
-				logEvent.Str("query", pQuery.strippedQuery)
+				logEvent.Str("query", pQuery.StrippedQuery)
 				logEvent.Str("query cost", fmt.Sprintf("%d", pQuery.complexity.Weight))
 				logEvent.Str("reduction factor", strconv.FormatInt(reductionFactor, 10))
 				logEvent.Msg(fmt.Sprintf("Available timeout for query is set to: %.2f seconds", availableRuntime.Seconds()))
@@ -507,7 +507,7 @@ func (s *GraphQuery) RawCypherSearch(ctx context.Context, pQuery PreparedQuery, 
 	runtime := time.Since(start)
 
 	logEvent := log.WithLevel(log.LevelInfo)
-	logEvent.Str("query", pQuery.strippedQuery)
+	logEvent.Str("query", pQuery.StrippedQuery)
 	logEvent.Str("query cost", fmt.Sprintf("%d", pQuery.complexity.Weight))
 	logEvent.Msg(fmt.Sprintf("Executed user cypher query with cost %d in %.2f seconds", pQuery.complexity.Weight, runtime.Seconds()))
 
@@ -515,7 +515,7 @@ func (s *GraphQuery) RawCypherSearch(ctx context.Context, pQuery PreparedQuery, 
 		// Log query details if neo4j times out
 		if util.IsNeoTimeoutError(err) {
 			timeoutLog := log.WithLevel(log.LevelError)
-			timeoutLog.Str("query", pQuery.strippedQuery)
+			timeoutLog.Str("query", pQuery.StrippedQuery)
 			timeoutLog.Str("query cost", fmt.Sprintf("%d", pQuery.complexity.Weight))
 			timeoutLog.Msg("Neo4j timed out while executing cypher query")
 		} else {
