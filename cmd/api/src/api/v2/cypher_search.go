@@ -19,6 +19,9 @@ package v2
 import (
 	"net/http"
 
+	"github.com/specterops/bloodhound/src/auth"
+	"github.com/specterops/bloodhound/src/ctx"
+
 	"github.com/specterops/bloodhound/dawgs/util"
 	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/src/queries"
@@ -30,14 +33,28 @@ type CypherSearch struct {
 }
 
 func (s Resources) CypherSearch(response http.ResponseWriter, request *http.Request) {
-	var payload CypherSearch
+	var (
+		payload CypherSearch
+		authCtx = ctx.FromRequest(request).AuthCtx
+	)
 
 	if err := api.ReadJSONRequestPayloadLimited(&payload, request); err != nil {
 		api.WriteErrorResponse(
 			request.Context(),
 			api.BuildErrorResponse(http.StatusBadRequest, "JSON malformed.", request), response,
 		)
-	} else if graphResponse, err := s.GraphQuery.RawCypherSearch(request.Context(), payload.Query, payload.IncludeProperties); err != nil {
+	} else if preparedQuery, err := s.GraphQuery.PrepareCypherQuery(payload.Query); err != nil {
+		api.WriteErrorResponse(
+			request.Context(),
+			api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response,
+		)
+	} else if preparedQuery.HasMutation && !s.Authorizer.AllowsPermission(authCtx, auth.Permissions().GraphDBMutate) {
+		s.Authorizer.AuditLogUnauthorizedAccess(request)
+		api.WriteErrorResponse(
+			request.Context(),
+			api.BuildErrorResponse(http.StatusForbidden, "Permission denied: User may not modify the graph.", request), response,
+		)
+	} else if graphResponse, err := s.GraphQuery.RawCypherSearch(request.Context(), preparedQuery, payload.IncludeProperties); err != nil {
 		if queries.IsQueryError(err) {
 			api.WriteErrorResponse(
 				request.Context(),
@@ -54,5 +71,4 @@ func (s Resources) CypherSearch(response http.ResponseWriter, request *http.Requ
 	} else {
 		api.WriteBasicResponse(request.Context(), graphResponse, http.StatusOK, response)
 	}
-
 }

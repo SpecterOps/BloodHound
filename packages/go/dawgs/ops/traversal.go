@@ -19,12 +19,11 @@ package ops
 import (
 	"errors"
 	"fmt"
-	"github.com/specterops/bloodhound/log"
 
 	"github.com/RoaringBitmap/roaring/roaring64"
-
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/dawgs/query"
+	"github.com/specterops/bloodhound/log"
 )
 
 type LimitSkipTracker struct {
@@ -55,8 +54,8 @@ func (s *LimitSkipTracker) ShouldCollect() bool {
 }
 
 var (
-	ErrHaltTraversal        = errors.New("halt traversal")
-	ErrTraversalMemoryLimit = errors.New("traversal required more memory than allowed")
+	ErrHaltTraversal         = errors.New("halt traversal")
+	ErrGraphQueryMemoryLimit = errors.New("graph query required more memory than allowed")
 )
 
 // PathFilter is invoked on completed paths identified during a graph traversal. It may return a boolean value
@@ -171,8 +170,10 @@ func Traversal(tx graph.Transaction, plan TraversalPlan, pathVisitors ...PathVis
 		next := stack[len(stack)-1]
 		stack = stack[:len(stack)-1]
 
-		if pathTreeSize := rootSegment.SizeOf(); pathTreeSize > tx.TraversalMemoryLimit() {
-			return fmt.Errorf("%w - Limit: %.2f MB - Memory In-Use: %.2f MB", ErrTraversalMemoryLimit, tx.TraversalMemoryLimit().Mebibytes(), pathTreeSize.Mebibytes())
+		if tx.GraphQueryMemoryLimit() > 0 {
+			if pathTreeSize := rootSegment.SizeOf(); pathTreeSize > tx.GraphQueryMemoryLimit() {
+				return fmt.Errorf("%w - Limit: %.2f MB - Memory In-Use: %.2f MB", ErrGraphQueryMemoryLimit, tx.GraphQueryMemoryLimit().Mebibytes(), pathTreeSize.Mebibytes())
+			}
 		}
 
 		if descendents, err := nextTraversal(tx, next, plan.Direction, plan.BranchQuery, requireTraversalOrder, plan.expansionFilter); err != nil {

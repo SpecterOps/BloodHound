@@ -40,8 +40,9 @@ type PermissionSet struct {
 
 	CollectionManageJobs model.Permission
 
-	GraphDBRead  model.Permission
-	GraphDBWrite model.Permission
+	GraphDBMutate model.Permission
+	GraphDBRead   model.Permission
+	GraphDBWrite  model.Permission
 
 	SavedQueriesRead  model.Permission
 	SavedQueriesWrite model.Permission
@@ -64,6 +65,7 @@ func (s PermissionSet) All() model.Permissions {
 		s.ClientsRead,
 		s.ClientsTasking,
 		s.CollectionManageJobs,
+		s.GraphDBMutate,
 		s.GraphDBRead,
 		s.GraphDBWrite,
 		s.SavedQueriesRead,
@@ -93,8 +95,9 @@ func Permissions() PermissionSet {
 
 		CollectionManageJobs: model.NewPermission("collection", "ManageJobs"),
 
-		GraphDBRead:  model.NewPermission("graphdb", "Read"),
-		GraphDBWrite: model.NewPermission("graphdb", "Write"),
+		GraphDBMutate: model.NewPermission("graphdb", "Mutate"),
+		GraphDBRead:   model.NewPermission("graphdb", "Read"),
+		GraphDBWrite:  model.NewPermission("graphdb", "Write"),
 
 		SavedQueriesRead:  model.NewPermission("saved_queries", "Read"),
 		SavedQueriesWrite: model.NewPermission("saved_queries", "Write"),

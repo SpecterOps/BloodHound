@@ -327,7 +327,9 @@ func (s Traversal) BreadthFirst(ctx context.Context, plan Plan) error {
 				for {
 					if nextDescent, ok := channels.Receive(traversalCtx, segmentReaderC); !ok {
 						return nil
-					} else if pathTreeSize := pathTree.SizeOf(); pathTreeSize < tx.TraversalMemoryLimit() {
+					} else if tx.GraphQueryMemoryLimit() > 0 && pathTree.SizeOf() > tx.GraphQueryMemoryLimit() {
+						return fmt.Errorf("%w - Limit: %.2f MB - Memory In-Use: %.2f MB", ops.ErrGraphQueryMemoryLimit, tx.GraphQueryMemoryLimit().Mebibytes(), pathTree.SizeOf().Mebibytes())
+					} else {
 						// Traverse the descending relationships of the current segment
 						if descendingSegments, err := plan.Driver(traversalCtx, tx, nextDescent); err != nil {
 							return err
@@ -338,9 +340,6 @@ func (s Traversal) BreadthFirst(ctx context.Context, plan Plan) error {
 								channels.Submit(traversalCtx, segmentWriterC, descendingSegment)
 							}
 						}
-					} else {
-						// Did we encounter a memory limit?
-						errors.Add(fmt.Errorf("%w - Limit: %.2f MB - Memory In-Use: %.2f MB", ops.ErrTraversalMemoryLimit, tx.TraversalMemoryLimit().Mebibytes(), pathTree.SizeOf().Mebibytes()))
 					}
 
 					// Mark descent for this segment as complete

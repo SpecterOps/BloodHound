@@ -171,7 +171,7 @@ func TestRoleMembers(t *testing.T) {
 	)
 	defer ctrl.Finish()
 
-	mockTx.EXPECT().TraversalMemoryLimit().Return(1 * size.Gibibyte).AnyTimes()
+	mockTx.EXPECT().GraphQueryMemoryLimit().Return(1 * size.Gibibyte).AnyTimes()
 
 	mockRelQuery1 := graph_mocks.NewMockRelationshipQuery(ctrl)
 	mockRelQuery2 := graph_mocks.NewMockRelationshipQuery(ctrl)

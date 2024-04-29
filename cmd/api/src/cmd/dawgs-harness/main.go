@@ -46,8 +46,8 @@ func fatalf(format string, args ...any) {
 
 func RunTestSuite(ctx context.Context, connectionStr, driverName string) tests.TestSuite {
 	if connection, err := dawgs.Open(context.TODO(), driverName, dawgs.Config{
-		TraversalMemoryLimit: size.Gibibyte,
-		DriverCfg:            connectionStr,
+		GraphQueryMemoryLimit: size.Gibibyte,
+		DriverCfg:             connectionStr,
 	}); err != nil {
 		fatalf("Failed opening %s database: %v", driverName, err)
 	} else {

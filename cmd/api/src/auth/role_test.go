@@ -33,6 +33,7 @@ import (
 	"github.com/specterops/bloodhound/src/auth"
 	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/model/appcfg"
+	"github.com/specterops/bloodhound/src/test/integration/utils"
 	"github.com/specterops/bloodhound/src/test/lab/fixtures"
 	"github.com/stretchr/testify/require"
 )
@@ -59,10 +60,20 @@ func testRoleAccess(t *testing.T, roleName string) {
 	role, ok := auth.Roles()[roleName]
 	require.Truef(t, ok, "invalid role name")
 
+	customCfg, err := utils.LoadIntegrationTestConfig()
+	require.Nil(t, err)
+
+	// In order to role test access, enable_cypher_mutations must be true
+	customCfg.EnableCypherMutations = true
+
 	harness := lab.NewHarness()
-	adminApiClientFixture := fixtures.NewAdminApiClientFixture(fixtures.NewApiFixture())
+	customCfgFixture := fixtures.NewCustomConfigFixture(customCfg)
+	lab.Pack(harness, customCfgFixture)
+	customApiFixture := fixtures.NewCustomApiFixture(customCfgFixture)
+	lab.Pack(harness, customApiFixture)
+	adminApiClientFixture := fixtures.NewAdminApiClientFixture(customCfgFixture, customApiFixture)
 	lab.Pack(harness, adminApiClientFixture)
-	userClientFixture := fixtures.NewUserApiClientFixture(adminApiClientFixture, role.Name)
+	userClientFixture := fixtures.NewUserApiClientFixture(fixtures.ConfigFixture, adminApiClientFixture, role.Name)
 	lab.Pack(harness, userClientFixture)
 
 	lab.NewSpec(t, harness).Run(
@@ -156,6 +167,18 @@ func testRoleAccess(t *testing.T, roleName string) {
 
 			_, err := userClient.ListAuditLogs(time.Now(), time.Now(), 0, 0)
 			if role.Permissions.Has(auth.Permissions().AuthManageUsers) {
+				assert.Nil(err)
+			} else {
+				requireForbidden(assert, err)
+			}
+		}),
+
+		lab.TestCase(fmt.Sprintf("%s be able to access GraphDBMutate endpoints", testCondition(role, auth.Permissions().GraphDBMutate)), func(assert *require.Assertions, harness *lab.Harness) {
+			userClient, ok := lab.Unpack(harness, userClientFixture)
+			assert.True(ok)
+
+			_, err := userClient.CypherSearch(v2.CypherSearch{Query: "match (w) where w.name = 'voldemort' remove w.name return w"})
+			if role.Permissions.Has(auth.Permissions().GraphDBMutate) {
 				assert.Nil(err)
 			} else {
 				requireForbidden(assert, err)

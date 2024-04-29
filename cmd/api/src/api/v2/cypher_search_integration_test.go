@@ -26,6 +26,7 @@ import (
 	"github.com/specterops/bloodhound/graphschema/common"
 	"github.com/specterops/bloodhound/lab"
 	v2 "github.com/specterops/bloodhound/src/api/v2"
+	"github.com/specterops/bloodhound/src/test/integration/utils"
 	"github.com/specterops/bloodhound/src/test/lab/fixtures"
 	"github.com/specterops/bloodhound/src/test/lab/harnesses"
 	"github.com/stretchr/testify/require"
@@ -59,13 +60,13 @@ func Test_CypherSearch(t *testing.T) {
 			apiClient, ok := lab.Unpack(harness, fixtures.BHAdminApiClientFixture)
 			assert.True(ok)
 
-			queryWithUpdateClause := "match (b) where b.name = 'test' remove b.prop return b"
+			queryWithUserSpecifiedParameters := "match (n:Guardian {name: $name}) return n"
 			_, err := apiClient.CypherSearch(v2.CypherSearch{
-				Query: queryWithUpdateClause,
+				Query: queryWithUserSpecifiedParameters,
 			})
-			assert.ErrorContains(err, frontend.ErrUpdateClauseNotSupported.Error())
+			assert.ErrorContains(err, frontend.ErrUserSpecifiedParametersNotSupported.Error())
 		}),
-		lab.TestCase("succesfully runs cypher query", func(assert *require.Assertions, harness *lab.Harness) {
+		lab.TestCase("successfully runs cypher query", func(assert *require.Assertions, harness *lab.Harness) {
 			apiClient, ok := lab.Unpack(harness, fixtures.BHAdminApiClientFixture)
 			assert.True(ok)
 
@@ -82,6 +83,50 @@ func Test_CypherSearch(t *testing.T) {
 			expectedComputerId, _ := expectedComputer.Properties.Get(common.ObjectID.String()).String()
 			actualComputerId := graphResponse.Nodes[expectedComputer.ID.String()].ObjectId
 			assert.Equal(expectedComputerId, actualComputerId)
+		}),
+	)
+}
+
+func Test_CypherSearch_WithoutCypherMutationsEnabled(t *testing.T) {
+	harness := lab.NewHarness()
+
+	// Default ConfigFixture does not have cypher mutations enabled
+	adminApiClientFixture := fixtures.NewAdminApiClientFixture(fixtures.ConfigFixture, fixtures.NewApiFixture())
+	lab.Pack(harness, adminApiClientFixture)
+
+	lab.NewSpec(t, harness).Run(
+		lab.TestCase("errors on mutations with enable cypher_mutations false", func(assert *require.Assertions, harness *lab.Harness) {
+			apiClient, ok := lab.Unpack(harness, adminApiClientFixture)
+			assert.True(ok)
+
+			_, err := apiClient.CypherSearch(v2.CypherSearch{Query: "match (w) where w.name = 'voldemort' remove w.name return w"})
+			assert.ErrorContains(err, frontend.ErrUpdateClauseNotSupported.Error())
+		}),
+	)
+}
+
+func Test_CypherSearch_WithCypherMutationsEnabled(t *testing.T) {
+	customCfg, err := utils.LoadIntegrationTestConfig()
+	require.Nil(t, err)
+
+	// Enable cypher mutations in API
+	customCfg.EnableCypherMutations = true
+
+	harness := lab.NewHarness()
+	customCfgFixture := fixtures.NewCustomConfigFixture(customCfg)
+	lab.Pack(harness, customCfgFixture)
+	customApiFixture := fixtures.NewCustomApiFixture(customCfgFixture)
+	lab.Pack(harness, customApiFixture)
+	adminApiClientFixture := fixtures.NewAdminApiClientFixture(customCfgFixture, customApiFixture)
+	lab.Pack(harness, adminApiClientFixture)
+
+	lab.NewSpec(t, harness).Run(
+		lab.TestCase("allows mutations with enable cypher_mutations true", func(assert *require.Assertions, harness *lab.Harness) {
+			apiClient, ok := lab.Unpack(harness, adminApiClientFixture)
+			assert.True(ok)
+
+			_, err := apiClient.CypherSearch(v2.CypherSearch{Query: "match (w) where w.name = 'voldemort' remove w.name return w"})
+			assert.Nil(err)
 		}),
 	)
 }

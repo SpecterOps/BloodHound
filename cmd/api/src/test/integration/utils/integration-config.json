@@ -6,9 +6,6 @@
     "work_dir": "work",
     "log_level": "INFO",
     "log_path": "bheapi.log",
-    "features": {
-        "enable_auth": true
-    },
     "tls": {
         "cert_file": "",
         "key_file": ""

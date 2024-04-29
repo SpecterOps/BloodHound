@@ -258,9 +258,9 @@ func (s *batchTransaction) flushNodeDeletions() error {
 	return s.innerTx.DeleteNodesBySlice(buffer)
 }
 
-func newBatchOperation(ctx context.Context, session neo4j.Session, cfg graph.TransactionConfig, writeFlushSize int, batchWriteSize int, traversalMemoryLimit size.Size) *batchTransaction {
+func newBatchOperation(ctx context.Context, session neo4j.Session, cfg graph.TransactionConfig, writeFlushSize int, batchWriteSize int, graphQueryMemoryLimit size.Size) *batchTransaction {
 	return &batchTransaction{
-		innerTx:                    newTransaction(ctx, session, cfg, writeFlushSize, batchWriteSize, traversalMemoryLimit),
+		innerTx:                    newTransaction(ctx, session, cfg, writeFlushSize, batchWriteSize, graphQueryMemoryLimit),
 		batchWriteSize:             batchWriteSize,
 		nodeDeletionBuffer:         make([]graph.ID, 0, batchWriteSize),
 		relationshipDeletionBuffer: make([]graph.ID, 0, batchWriteSize),
