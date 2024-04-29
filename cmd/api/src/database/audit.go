@@ -43,7 +43,7 @@ func newAuditLog(context context.Context, entry model.AuditEntry, idResolver aut
 		Fields:          types.JSONUntypedObject(entry.Model.AuditData()),
 		RequestID:       bheCtx.RequestID,
 		SourceIpAddress: bheCtx.RequestIP,
-		Status:          string(entry.Status),
+		Status:          entry.Status,
 		CommitID:        entry.CommitID,
 	}
 

@@ -85,7 +85,7 @@ type AuditLog struct {
 	Fields          types.JSONUntypedObject `json:"fields"`
 	RequestID       string                  `json:"request_id"`
 	SourceIpAddress string                  `json:"source_ip_address"`
-	Status          string                  `json:"status"`
+	Status          AuditLogEntryStatus     `json:"status"`
 	CommitID        uuid.UUID               `json:"commit_id" gorm:"type:text"`
 }
 
