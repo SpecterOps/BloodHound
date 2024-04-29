@@ -121,7 +121,7 @@ func Test_CypherSearch_WithCypherMutationsEnabled(t *testing.T) {
 	lab.Pack(harness, adminApiClientFixture)
 
 	lab.NewSpec(t, harness).Run(
-		lab.TestCase("errors on mutations with enable cypher_mutations true", func(assert *require.Assertions, harness *lab.Harness) {
+		lab.TestCase("allows mutations with enable cypher_mutations true", func(assert *require.Assertions, harness *lab.Harness) {
 			apiClient, ok := lab.Unpack(harness, adminApiClientFixture)
 			assert.True(ok)
 
