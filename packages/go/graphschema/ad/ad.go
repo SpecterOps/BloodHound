@@ -130,6 +130,7 @@ const (
 	RoleSeparationEnabledCollected         Property = "roleseparationenabledcollected"
 	HasBasicConstraints                    Property = "hasbasicconstraints"
 	BasicConstraintPathLength              Property = "basicconstraintpathlength"
+	UnresolvedPublishedTemplates           Property = "unresolvedpublishedtemplates"
 	DNSHostname                            Property = "dnshostname"
 	CrossCertificatePair                   Property = "crosscertificatepair"
 	DistinguishedName                      Property = "distinguishedname"
@@ -195,7 +196,7 @@ const (
 )
 
 func AllProperties() []Property {
-	return []Property{AdminCount, CASecurityCollected, CAName, CertChain, CertName, CertThumbprint, CertThumbprints, HasEnrollmentAgentRestrictions, EnrollmentAgentRestrictionsCollected, IsUserSpecifiesSanEnabled, IsUserSpecifiesSanEnabledCollected, RoleSeparationEnabled, RoleSeparationEnabledCollected, HasBasicConstraints, BasicConstraintPathLength, DNSHostname, CrossCertificatePair, DistinguishedName, DomainFQDN, DomainSID, Sensitive, HighValue, BlocksInheritance, IsACL, IsACLProtected, IsDeleted, Enforced, Department, HasCrossCertificatePair, HasSPN, UnconstrainedDelegation, LastLogon, LastLogonTimestamp, IsPrimaryGroup, HasLAPS, DontRequirePreAuth, LogonType, HasURA, PasswordNeverExpires, PasswordNotRequired, FunctionalLevel, TrustType, SidFiltering, TrustedToAuth, SamAccountName, CertificateMappingMethodsRaw, CertificateMappingMethods, StrongCertificateBindingEnforcementRaw, StrongCertificateBindingEnforcement, EKUs, SubjectAltRequireUPN, SubjectAltRequireDNS, SubjectAltRequireDomainDNS, SubjectAltRequireEmail, SubjectAltRequireSPN, SubjectRequireEmail, AuthorizedSignatures, ApplicationPolicies, IssuancePolicies, SchemaVersion, RequiresManagerApproval, AuthenticationEnabled, EnrolleeSuppliesSubject, CertificateApplicationPolicy, CertificateNameFlag, EffectiveEKUs, EnrollmentFlag, Flags, NoSecurityExtension, RenewalPeriod, ValidityPeriod, OID, HomeDirectory, CertificatePolicy, CertTemplateOID, GroupLinkID, ObjectGUID}
+	return []Property{AdminCount, CASecurityCollected, CAName, CertChain, CertName, CertThumbprint, CertThumbprints, HasEnrollmentAgentRestrictions, EnrollmentAgentRestrictionsCollected, IsUserSpecifiesSanEnabled, IsUserSpecifiesSanEnabledCollected, RoleSeparationEnabled, RoleSeparationEnabledCollected, HasBasicConstraints, BasicConstraintPathLength, UnresolvedPublishedTemplates, DNSHostname, CrossCertificatePair, DistinguishedName, DomainFQDN, DomainSID, Sensitive, HighValue, BlocksInheritance, IsACL, IsACLProtected, IsDeleted, Enforced, Department, HasCrossCertificatePair, HasSPN, UnconstrainedDelegation, LastLogon, LastLogonTimestamp, IsPrimaryGroup, HasLAPS, DontRequirePreAuth, LogonType, HasURA, PasswordNeverExpires, PasswordNotRequired, FunctionalLevel, TrustType, SidFiltering, TrustedToAuth, SamAccountName, CertificateMappingMethodsRaw, CertificateMappingMethods, StrongCertificateBindingEnforcementRaw, StrongCertificateBindingEnforcement, EKUs, SubjectAltRequireUPN, SubjectAltRequireDNS, SubjectAltRequireDomainDNS, SubjectAltRequireEmail, SubjectAltRequireSPN, SubjectRequireEmail, AuthorizedSignatures, ApplicationPolicies, IssuancePolicies, SchemaVersion, RequiresManagerApproval, AuthenticationEnabled, EnrolleeSuppliesSubject, CertificateApplicationPolicy, CertificateNameFlag, EffectiveEKUs, EnrollmentFlag, Flags, NoSecurityExtension, RenewalPeriod, ValidityPeriod, OID, HomeDirectory, CertificatePolicy, CertTemplateOID, GroupLinkID, ObjectGUID}
 }
 func ParseProperty(source string) (Property, error) {
 	switch source {
@@ -229,6 +230,8 @@ func ParseProperty(source string) (Property, error) {
 		return HasBasicConstraints, nil
 	case "basicconstraintpathlength":
 		return BasicConstraintPathLength, nil
+	case "unresolvedpublishedtemplates":
+		return UnresolvedPublishedTemplates, nil
 	case "dnshostname":
 		return DNSHostname, nil
 	case "crosscertificatepair":
@@ -389,6 +392,8 @@ func (s Property) String() string {
 		return string(HasBasicConstraints)
 	case BasicConstraintPathLength:
 		return string(BasicConstraintPathLength)
+	case UnresolvedPublishedTemplates:
+		return string(UnresolvedPublishedTemplates)
 	case DNSHostname:
 		return string(DNSHostname)
 	case CrossCertificatePair:
@@ -549,6 +554,8 @@ func (s Property) Name() string {
 		return "Has Basic Constraints"
 	case BasicConstraintPathLength:
 		return "Basic Constraint Path Length"
+	case UnresolvedPublishedTemplates:
+		return "Unresolved Published Certificate Templates"
 	case DNSHostname:
 		return "DNS Hostname"
 	case CrossCertificatePair:

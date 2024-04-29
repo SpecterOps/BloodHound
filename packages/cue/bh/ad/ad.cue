@@ -126,6 +126,13 @@ BasicConstraintPathLength: types.#StringEnum & {
 	representation: "basicconstraintpathlength"
 }
 
+UnresolvedPublishedTemplates: types.#StringEnum & {
+	symbol: 		"UnresolvedPublishedTemplates"
+	schema: 		"ad"
+	name:           "Unresolved Published Certificate Templates"
+	representation: "unresolvedpublishedtemplates"
+}
+
 DNSHostname: types.#StringEnum & {
 	symbol: 		"DNSHostname"
 	schema: 		"ad"
@@ -583,6 +590,7 @@ Properties: [
 	RoleSeparationEnabledCollected,
 	HasBasicConstraints,
 	BasicConstraintPathLength,
+	UnresolvedPublishedTemplates,
 	DNSHostname,
 	CrossCertificatePair,
 	DistinguishedName,
