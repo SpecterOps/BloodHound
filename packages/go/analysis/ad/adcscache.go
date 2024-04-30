@@ -22,6 +22,7 @@ import (
 	"github.com/specterops/bloodhound/dawgs/cardinality"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/graphschema/ad"
+	"github.com/specterops/bloodhound/graphschema/common"
 	"github.com/specterops/bloodhound/log"
 )
 
@@ -33,6 +34,7 @@ type ADCSCache struct {
 	CertTemplateControllers         map[graph.ID][]*graph.Node // principals that have privileges on a cert template via `owner`, `generic all`, `write dacl`, `write owner` edges
 	EnterpriseCAEnrollers           map[graph.ID][]*graph.Node // principals that have enrollment rights on an enterprise ca via `enroll` edge
 	PublishedTemplateCache          map[graph.ID][]*graph.Node // cert templates that are published to an enterprise ca
+	DomainCertTemplates             map[graph.ID][]*graph.Node // cert templates that exist in under a domain
 }
 
 func NewADCSCache() ADCSCache {
@@ -44,6 +46,7 @@ func NewADCSCache() ADCSCache {
 		CertTemplateControllers:         make(map[graph.ID][]*graph.Node),
 		EnterpriseCAEnrollers:           make(map[graph.ID][]*graph.Node),
 		PublishedTemplateCache:          make(map[graph.ID][]*graph.Node),
+		DomainCertTemplates:             make(map[graph.ID][]*graph.Node),
 	}
 }
 
@@ -89,6 +92,21 @@ func (s ADCSCache) BuildCache(ctx context.Context, db graph.Database, enterprise
 				s.AuthStoreForChainValid[domain.ID] = cardinality.NodeSetToDuplex(authStoreForNodes)
 				s.RootCAForChainValid[domain.ID] = cardinality.NodeSetToDuplex(rootCaForNodes)
 			}
+
+			var DomainCertTemplates = []*graph.Node{}
+			if dDomainSID, err := domain.Properties.Get(common.ObjectID.String()).String(); err != nil {
+				log.Errorf("Error fetching objectid for domain %d: %v", domain.ID, err)
+			} else {
+				for _, ct := range certTemplates {
+					if ctDomainSID, err := ct.Properties.Get(ad.DomainSID.String()).String(); err != nil {
+						log.Errorf("Error fetching domainsid for cert template %d: %v", ct.ID, err)
+					} else if ctDomainSID == dDomainSID {
+						DomainCertTemplates = append(DomainCertTemplates, ct)
+					}
+				}
+			} 
+
+			s.DomainCertTemplates[domain.ID] = DomainCertTemplates
 		}
 
 		return nil

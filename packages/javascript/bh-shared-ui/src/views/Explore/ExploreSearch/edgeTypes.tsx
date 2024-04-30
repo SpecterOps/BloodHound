@@ -102,6 +102,7 @@ export const AllEdgeTypes: Category[] = [
                     ActiveDirectoryRelationshipKind.ADCSESC4,
                     ActiveDirectoryRelationshipKind.ADCSESC6a,
                     ActiveDirectoryRelationshipKind.ADCSESC6b,
+                    ActiveDirectoryRelationshipKind.ADCSESC7,
                     ActiveDirectoryRelationshipKind.ADCSESC9a,
                     ActiveDirectoryRelationshipKind.ADCSESC9b,
                     ActiveDirectoryRelationshipKind.ADCSESC10a,
