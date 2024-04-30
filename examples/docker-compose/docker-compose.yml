@@ -14,7 +14,6 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-version: '3'
 services:
   app-db:
     image: docker.io/library/postgres:13.2
