@@ -19,6 +19,9 @@ package bootstrap
 import (
 	"context"
 	"fmt"
+	"net/http"
+
+	"github.com/Unleash/unleash-client-go/v4"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/src/config"
@@ -69,6 +72,14 @@ func (s Initializer[DBType, GraphType]) Launch(parentCtx context.Context, handle
 
 		daemonManager.Start(ctx, daemonInstances...)
 	}
+
+	unleash.Initialize(
+		unleash.WithListener(&unleash.DebugListener{}),
+		unleash.WithAppName(s.Configuration.FeatureFlag.AppName),
+		unleash.WithUrl(s.Configuration.FeatureFlag.Url),
+		unleash.WithCustomHeaders(http.Header{"Authorization": {s.Configuration.FeatureFlag.ApiKey}}),
+	)
+	unleash.WaitForReady()
 
 	// Log successful start and wait for a signal to exit
 	log.Infof("Server started successfully")

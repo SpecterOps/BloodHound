@@ -139,6 +139,12 @@ type DefaultAdminConfiguration struct {
 	ExpireNow     bool   `json:"expire_now"`
 }
 
+type FeatureFlagConfiguration struct {
+	AppName string `json:"app_name"`
+	Url     string `json:"url"`
+	ApiKey  string `json:"api_key"`
+}
+
 type Configuration struct {
 	Version                 int                       `json:"version"`
 	BindAddress             string                    `json:"bind_addr"`
@@ -169,6 +175,7 @@ type Configuration struct {
 	DisableMigrations       bool                      `json:"disable_migrations"`
 	TraversalMemoryLimit    uint16                    `json:"traversal_memory_limit"`
 	AuthSessionTTLHours     int                       `json:"auth_session_ttl_hours"`
+	FeatureFlag             FeatureFlagConfiguration  `json:"feature_flag"`
 }
 
 func (s Configuration) AuthSessionTTL() time.Duration {
