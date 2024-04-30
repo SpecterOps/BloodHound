@@ -24,5 +24,9 @@
         "all-contributors-cli": "^6.26.1",
         "prettier": "^3.2.5",
         "typescript": "^5.1.6"
+    },
+    "dependencies": {
+        "@unleash/proxy-client-react": "^4.2.2",
+        "unleash-proxy-client": "^3.3.2"
     }
 }

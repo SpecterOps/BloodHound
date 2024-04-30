@@ -2844,6 +2844,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@unleash/proxy-client-react@npm:^4.2.2":
+  version: 4.2.2
+  resolution: "@unleash/proxy-client-react@npm:4.2.2"
+  peerDependencies:
+    unleash-proxy-client: ^3.2.0
+  checksum: d81cba0d86cdd28d2969664c09807b8ed28b5acd9a80fdbec9a4ac21b06347fcd90a85d136c3b45cb8bec8f33dfbff837c9240db0ce4ec1381ad605711541f07
+  languageName: node
+  linkType: hard
+
 "@vitejs/plugin-react@npm:^4.2.1":
   version: 4.2.1
   resolution: "@vitejs/plugin-react@npm:4.2.1"
@@ -3527,9 +3536,11 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "bloodhound-ce@workspace:."
   dependencies:
+    "@unleash/proxy-client-react": ^4.2.2
     all-contributors-cli: ^6.26.1
     prettier: ^3.2.5
     typescript: ^5.1.6
+    unleash-proxy-client: ^3.3.2
   languageName: unknown
   linkType: soft
 
@@ -10816,6 +10827,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"tiny-emitter@npm:^2.1.0":
+  version: 2.1.0
+  resolution: "tiny-emitter@npm:2.1.0"
+  checksum: fbcfb5145751a0e3b109507a828eb6d6d4501352ab7bb33eccef46e22e9d9ad3953158870a6966a59e57ab7c3f9cfac7cab8521db4de6a5e757012f4677df2dd
+  languageName: node
+  linkType: hard
+
 "tiny-warning@npm:^1.0.2":
   version: 1.0.3
   resolution: "tiny-warning@npm:1.0.3"
@@ -11276,6 +11294,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"unleash-proxy-client@npm:^3.3.2":
+  version: 3.3.2
+  resolution: "unleash-proxy-client@npm:3.3.2"
+  dependencies:
+    tiny-emitter: ^2.1.0
+    uuid: ^9.0.1
+  checksum: 312526b6c6415c6f7124392f17965c6d6017c7bd3699a25778568229b4629f09833c78b91b9ab755b8626042c22022bb84eb38483287bdd018aa6eac914f7603
+  languageName: node
+  linkType: hard
+
 "unload@npm:2.2.0":
   version: 2.2.0
   resolution: "unload@npm:2.2.0"
@@ -11352,6 +11380,15 @@ __metadata:
     is-typed-array: ^1.1.3
     which-typed-array: ^1.1.2
   checksum: 705e51f0de5b446f4edec10739752ac25856541e0254ea1e7e45e5b9f9b0cb105bc4bd415736a6210edc68245a7f903bf085ffb08dd7deb8a0e847f60538a38a
+  languageName: node
+  linkType: hard
+
+"uuid@npm:^9.0.1":
+  version: 9.0.1
+  resolution: "uuid@npm:9.0.1"
+  bin:
+    uuid: dist/bin/uuid
+  checksum: 39931f6da74e307f51c0fb463dc2462807531dc80760a9bff1e35af4316131b4fc3203d16da60ae33f07fdca5b56f3f1dd662da0c99fea9aaeab2004780cc5f4
   languageName: node
   linkType: hard
 

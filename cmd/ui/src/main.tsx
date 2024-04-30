@@ -29,6 +29,7 @@ import { QueryClient, QueryClientProvider } from 'react-query';
 import { ReactQueryDevtools } from 'react-query/devtools';
 import { Provider } from 'react-redux';
 import { unstable_HistoryRouter as BrowserRouter } from 'react-router-dom';
+import { FlagProvider } from '@unleash/proxy-client-react';
 import App from './App';
 import { store } from './store';
 import './styles/index.scss';
@@ -177,22 +178,31 @@ const main = async () => {
         });
     }
 
+    const config = {
+        url: 'http://featureflag.localhost/api/frontend', // Your front-end API URL or the Unleash proxy's URL (https://<proxy-url>/proxy)
+        clientKey: 'default:development.4b72659db6e8d242bd34ee2ec64ed1974237e9d0175c7fe16e21aeb1', // A client-side API token OR one of your proxy's designated client keys (previously known as proxy secrets)
+        refreshInterval: 15, // How often (in seconds) the client should poll the proxy for updates
+        appName: 'BHCEUI-dev', // The name of your application. It's only used for identifying your application
+    };
+
     root.render(
         <Provider store={store}>
             <QueryClientProvider client={queryClient}>
                 <ReactQueryDevtools />
-                <StyledEngineProvider injectFirst>
-                    <ThemeProvider theme={theme}>
-                        <CssBaseline />
-                        <BrowserRouter basename='/ui' history={createBrowserHistory()}>
-                            <NotificationsProvider>
-                                <ErrorBoundary fallbackRender={GenericErrorBoundaryFallback}>
-                                    <App />
-                                </ErrorBoundary>
-                            </NotificationsProvider>
-                        </BrowserRouter>
-                    </ThemeProvider>
-                </StyledEngineProvider>
+                <FlagProvider config={config}>
+                    <StyledEngineProvider injectFirst>
+                        <ThemeProvider theme={theme}>
+                            <CssBaseline />
+                            <BrowserRouter basename='/ui' history={createBrowserHistory()}>
+                                <NotificationsProvider>
+                                    <ErrorBoundary fallbackRender={GenericErrorBoundaryFallback}>
+                                        <App />
+                                    </ErrorBoundary>
+                                </NotificationsProvider>
+                            </BrowserRouter>
+                        </ThemeProvider>
+                    </StyledEngineProvider>
+                </FlagProvider>
             </QueryClientProvider>
         </Provider>
     );

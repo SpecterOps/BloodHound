@@ -21,6 +21,7 @@ import {
     faUser,
     faUserShield,
     faCompass,
+    faCloudSun,
 } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Box, Divider } from '@mui/material';
@@ -35,6 +36,7 @@ import { logout } from 'src/ducks/auth/authSlice';
 import * as routes from 'src/ducks/global/routes';
 import { useAppDispatch } from 'src/store';
 import { EnterpriseIcon } from 'bh-shared-ui';
+import { useFlag } from '@unleash/proxy-client-react';
 
 interface Props {
     anchorEl: null | HTMLElement;
@@ -77,6 +79,8 @@ const SettingsMenu: React.FC<Props> = ({ anchorEl, handleClose }) => {
     const openInNewTab = (url: string) => {
         window.open(url, '_blank', 'noreferrer');
     };
+
+    const darkModeEnabled = useFlag("ui.darkMode");
 
     return (
         <div>
@@ -143,6 +147,16 @@ const SettingsMenu: React.FC<Props> = ({ anchorEl, handleClose }) => {
                     </ListItemIcon>
                     <ListItemText primary='BloodHound Enterprise' />
                 </MenuItem>
+
+                {darkModeEnabled && (
+                    <MenuItem
+                        data-testid='global_header_settings-menu_nav-dark-mode'>
+                        <ListItemIcon>
+                            <FontAwesomeIcon icon={faCloudSun} />
+                        </ListItemIcon>
+                        <ListItemText primary='Dark Mode' />
+                    </MenuItem>
+                )}
 
                 <Box my={1}>
                     <Divider />
