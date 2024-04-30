@@ -86,7 +86,7 @@ func (s Resources) CypherSearch(response http.ResponseWriter, request *http.Requ
 		if err := s.DB.AppendAuditLog(request.Context(), auditLogEntry); err != nil {
 			api.WriteErrorResponse(
 				request.Context(),
-				api.BuildErrorResponse(http.StatusInternalServerError, "failure creating an intent audit log", request),
+				api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request),
 				response,
 			)
 			return
