@@ -177,7 +177,7 @@ func testRoleAccess(t *testing.T, roleName string) {
 			userClient, ok := lab.Unpack(harness, userClientFixture)
 			assert.True(ok)
 
-			_, err := userClient.CypherSearch(v2.CypherSearch{Query: "match (w) where w.name = 'voldemort' remove w.name return w"})
+			_, err := userClient.CypherQuery(v2.CypherQueryPayload{Query: "match (w) where w.name = 'voldemort' remove w.name return w"})
 			if role.Permissions.Has(auth.Permissions().GraphDBMutate) {
 				assert.Nil(err)
 			} else {

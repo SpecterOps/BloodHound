@@ -51,14 +51,14 @@ func Test_CypherSearch(t *testing.T) {
 			apiClient, ok := lab.Unpack(harness, fixtures.BHAdminApiClientFixture)
 			assert.True(ok)
 
-			_, err := apiClient.CypherSearch(v2.CypherSearch{})
+			_, err := apiClient.CypherQuery(v2.CypherQueryPayload{})
 			assert.ErrorContains(err, frontend.ErrInvalidInput.Error())
 		}),
 		lab.TestCase("errors on syntax mistake", func(assert *require.Assertions, harness *lab.Harness) {
 			apiClient, ok := lab.Unpack(harness, fixtures.BHAdminApiClientFixture)
 			assert.True(ok)
 
-			_, err := apiClient.CypherSearch(v2.CypherSearch{
+			_, err := apiClient.CypherQuery(v2.CypherQueryPayload{
 				Query: "my syntax stinks",
 			})
 			assert.ErrorContains(err, "extraneous input")
@@ -68,7 +68,7 @@ func Test_CypherSearch(t *testing.T) {
 			assert.True(ok)
 
 			queryWithUserSpecifiedParameters := "match (n:Guardian {name: $name}) return n"
-			_, err := apiClient.CypherSearch(v2.CypherSearch{
+			_, err := apiClient.CypherQuery(v2.CypherQueryPayload{
 				Query: queryWithUserSpecifiedParameters,
 			})
 			assert.ErrorContains(err, frontend.ErrUserSpecifiedParametersNotSupported.Error())
@@ -77,7 +77,7 @@ func Test_CypherSearch(t *testing.T) {
 			apiClient, ok := lab.Unpack(harness, fixtures.BHAdminApiClientFixture)
 			assert.True(ok)
 
-			graphResponse, err := apiClient.CypherSearch(v2.CypherSearch{
+			graphResponse, err := apiClient.CypherQuery(v2.CypherQueryPayload{
 				Query: "match (n:Computer) where n.objectid = '" + fixtures.BasicComputerSID.String() + "' return n",
 			})
 			assert.NoError(err)
@@ -106,7 +106,7 @@ func Test_CypherSearch_WithoutCypherMutationsEnabled(t *testing.T) {
 			apiClient, ok := lab.Unpack(harness, adminApiClientFixture)
 			assert.True(ok)
 
-			_, err := apiClient.CypherSearch(v2.CypherSearch{Query: "match (w) where w.name = 'voldemort' remove w.name return w"})
+			_, err := apiClient.CypherQuery(v2.CypherQueryPayload{Query: "match (w) where w.name = 'voldemort' remove w.name return w"})
 			assert.ErrorContains(err, frontend.ErrUpdateClauseNotSupported.Error())
 		}),
 	)
@@ -152,7 +152,7 @@ func Test_CypherSearch_WithCypherMutationsEnabled(t *testing.T) {
 			err = stripper.Write(parsedQuery, strippedQuery)
 			require.Nil(t, err)
 
-			_, err = apiClient.CypherSearch(v2.CypherSearch{Query: query})
+			_, err = apiClient.CypherQuery(v2.CypherQueryPayload{Query: query})
 			assert.Nil(err)
 
 			auditLogs, err := apiClient.GetLatestAuditLogs()
@@ -177,7 +177,7 @@ func Test_CypherSearch_WithCypherMutationsEnabled(t *testing.T) {
 			err = stripper.Write(parsedQuery, strippedQuery)
 			require.Nil(t, err)
 
-			_, err = userApiClient.CypherSearch(v2.CypherSearch{Query: query})
+			_, err = userApiClient.CypherQuery(v2.CypherQueryPayload{Query: query})
 			assert.ErrorContains(err, "Permission denied: User may not modify the graph")
 
 			auditLogs, err := adminApiClient.GetLatestAuditLogs()
@@ -206,7 +206,7 @@ func Test_CypherSearch_WithCypherMutationsEnabled(t *testing.T) {
 			err = stripper.Write(parsedQuery, strippedQuery)
 			require.Nil(t, err)
 
-			_, err = apiClient.CypherSearch(v2.CypherSearch{Query: query})
+			_, err = apiClient.CypherQuery(v2.CypherQueryPayload{Query: query})
 			assert.ErrorContains(err, fmt.Sprintf("%d", http.StatusInternalServerError))
 
 			auditLogs, err := apiClient.GetLatestAuditLogs()

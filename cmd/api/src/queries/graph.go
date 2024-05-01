@@ -145,7 +145,7 @@ type Graph interface {
 	FetchNodesByObjectIDs(ctx context.Context, objectIDs ...string) (graph.NodeSet, error)
 	ValidateOUs(ctx context.Context, ous []string) ([]string, error)
 	BatchNodeUpdate(ctx context.Context, nodeUpdate graph.NodeUpdate) error
-	RawCypherSearch(ctx context.Context, pQuery PreparedQuery, includeProperties bool) (model.UnifiedGraph, error)
+	RawCypherQuery(ctx context.Context, pQuery PreparedQuery, includeProperties bool) (model.UnifiedGraph, error)
 	PrepareCypherQuery(rawCypher string) (PreparedQuery, error)
 	UpdateSelectorTags(ctx context.Context, db agi.AgiData, selectors model.UpdatedAssetGroupSelectors) error
 }
@@ -443,7 +443,7 @@ func (s *GraphQuery) PrepareCypherQuery(rawCypher string) (PreparedQuery, error)
 	return graphQuery, nil
 }
 
-func (s *GraphQuery) RawCypherSearch(ctx context.Context, pQuery PreparedQuery, includeProperties bool) (model.UnifiedGraph, error) {
+func (s *GraphQuery) RawCypherQuery(ctx context.Context, pQuery PreparedQuery, includeProperties bool) (model.UnifiedGraph, error) {
 	var (
 		err error
 
@@ -519,7 +519,7 @@ func (s *GraphQuery) RawCypherSearch(ctx context.Context, pQuery PreparedQuery, 
 			timeoutLog.Str("query cost", fmt.Sprintf("%d", pQuery.complexity.Weight))
 			timeoutLog.Msg("Neo4j timed out while executing cypher query")
 		} else {
-			log.Errorf("RawCypherSearch failed: %v", err)
+			log.Errorf("RawCypherQuery failed: %v", err)
 		}
 		return graphResponse, err
 	}

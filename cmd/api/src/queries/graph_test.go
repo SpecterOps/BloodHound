@@ -82,7 +82,7 @@ func TestGraphQuery_PrepareCypherQuery(t *testing.T) {
 	})
 }
 
-func TestGraphQuery_RawCypherSearch(t *testing.T) {
+func TestGraphQuery_RawCypherQuery(t *testing.T) {
 	var (
 		mockCtrl       = gomock.NewController(t)
 		mockGraphDB    = graphMocks.NewMockDatabase(mockCtrl)
@@ -99,7 +99,7 @@ func TestGraphQuery_RawCypherSearch(t *testing.T) {
 		}
 	)
 
-	t.Run("RawCypherSearch user set timeouts successfully", func(t *testing.T) {
+	t.Run("RawCypherQuery user set timeouts successfully", func(t *testing.T) {
 
 		// First validate that user set timeouts work
 		mockGraphDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, txDelegate graph.TransactionDelegate, options ...graph.TransactionOption) error {
@@ -109,7 +109,7 @@ func TestGraphQuery_RawCypherSearch(t *testing.T) {
 
 			// Validate that the options are being set correctly
 			if len(options) != 1 {
-				t.Fatalf("Expected only one transaction option for RawCypherSearch but saw: %d", len(options))
+				t.Fatalf("Expected only one transaction option for RawCypherQuery but saw: %d", len(options))
 			}
 
 			// Create a new transaction config to capture the query timeout logic
@@ -124,18 +124,18 @@ func TestGraphQuery_RawCypherSearch(t *testing.T) {
 		preparedQuery, err := gq.PrepareCypherQuery("match (n) return n;")
 		require.Nil(t, err)
 
-		_, err = gq.RawCypherSearch(outerBHCtxInst.ConstructGoContext(), preparedQuery, false)
+		_, err = gq.RawCypherQuery(outerBHCtxInst.ConstructGoContext(), preparedQuery, false)
 		require.Nil(t, err)
 
 	})
 
-	t.Run("RawCypherSearch query complexity controls", func(t *testing.T) {
+	t.Run("RawCypherQuery query complexity controls", func(t *testing.T) {
 		// Validate that query complexity controls are working
 		// Scenario 1:
 		mockGraphDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, txDelegate graph.TransactionDelegate, options ...graph.TransactionOption) error {
 			// Validate that the options are being set correctly
 			if len(options) != 1 {
-				t.Fatalf("Expected only one transaction option for RawCypherSearch but saw: %d", len(options))
+				t.Fatalf("Expected only one transaction option for RawCypherQuery but saw: %d", len(options))
 			}
 
 			// Create a new transaction config to capture the query timeout logic
@@ -173,7 +173,7 @@ func TestGraphQuery_RawCypherSearch(t *testing.T) {
 		outerBHCtxInst.Timeout = 0
 		preparedQuery, err := gq.PrepareCypherQuery("match ()-[:HasSession*..]->()-[:MemberOf*..]->() return n;")
 		require.Nil(t, err)
-		_, err = gq.RawCypherSearch(outerBHCtxInst.ConstructGoContext(), preparedQuery, false)
+		_, err = gq.RawCypherQuery(outerBHCtxInst.ConstructGoContext(), preparedQuery, false)
 		require.Nil(t, err)
 
 		// Scenario 2:
@@ -184,22 +184,22 @@ func TestGraphQuery_RawCypherSearch(t *testing.T) {
 		preparedQuery, err = gq.PrepareCypherQuery("match ()-[:HasSession*..]->()-[:MemberOf*..]->() return n;")
 		require.Nil(t, err)
 
-		_, err = gq.RawCypherSearch(outerBHCtxInst.ConstructGoContext(), preparedQuery, false)
+		_, err = gq.RawCypherQuery(outerBHCtxInst.ConstructGoContext(), preparedQuery, false)
 		require.Nil(t, err)
 	})
 
-	t.Run("RawCypherSearch read query leverages read tx", func(t *testing.T) {
+	t.Run("RawCypherQuery read query leverages read tx", func(t *testing.T) {
 		mockGraphDB.EXPECT().WriteTransaction(gomock.Any(), gomock.Any(), gomock.Any()).Times(0)
 		mockGraphDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any(), gomock.Any()).Times(1)
 
 		preparedQuery, err := gq.PrepareCypherQuery("match (b) where b.name = 'harley' return b;")
 		require.Nil(t, err)
 
-		_, err = gq.RawCypherSearch(outerBHCtxInst.ConstructGoContext(), preparedQuery, false)
+		_, err = gq.RawCypherQuery(outerBHCtxInst.ConstructGoContext(), preparedQuery, false)
 		require.Nil(t, err)
 	})
 
-	t.Run("RawCypherSearch mutation query leverages write tx if enable_cypher_mutations is true", func(t *testing.T) {
+	t.Run("RawCypherQuery mutation query leverages write tx if enable_cypher_mutations is true", func(t *testing.T) {
 		mockGraphDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any(), gomock.Any()).Times(0)
 		mockGraphDB.EXPECT().WriteTransaction(gomock.Any(), gomock.Any(), gomock.Any()).Times(1)
 
@@ -207,7 +207,7 @@ func TestGraphQuery_RawCypherSearch(t *testing.T) {
 		preparedQuery, err := qgWMut.PrepareCypherQuery("match (b) where b.name = 'bruce' remove b.prop return b;")
 		require.Nil(t, err)
 
-		_, err = qgWMut.RawCypherSearch(outerBHCtxInst.ConstructGoContext(), preparedQuery, false)
+		_, err = qgWMut.RawCypherQuery(outerBHCtxInst.ConstructGoContext(), preparedQuery, false)
 		require.Nil(t, err)
 	})
 }
