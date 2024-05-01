@@ -269,7 +269,10 @@ func cypherModelCollect(nextCursor *WalkCursor, expression Expression) bool {
 
 	case *Merge:
 		Collect(nextCursor, typedExpr.PatternPart)
-		CollectExpression(nextCursor, typedExpr.MergeActions)
+		CollectSlice(nextCursor, typedExpr.MergeActions)
+
+	case *MergeAction:
+		Collect(nextCursor, typedExpr.Set)
 
 	case *Delete:
 		CollectExpressions(nextCursor, typedExpr.Expressions)

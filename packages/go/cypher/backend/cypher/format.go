@@ -951,6 +951,10 @@ func (s Emitter) formatMerge(output io.Writer, merge *model.Merge) error {
 
 func (s Emitter) formatMergeActions(output io.Writer, mergeActions []*model.MergeAction) error {
 	for _, mergeAction := range mergeActions {
+		if _, err := io.WriteString(output, " "); err != nil {
+			return err
+		}
+
 		if mergeAction.OnCreate {
 			if _, err := io.WriteString(output, "on create "); err != nil {
 				return err

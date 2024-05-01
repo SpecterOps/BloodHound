@@ -545,6 +545,35 @@ func (s *MergeVisitor) ExitOC_PatternPart(ctx *parser.OC_PatternPartContext) {
 	s.Merge.PatternPart = s.ctx.Exit().(*PatternPartVisitor).PatternPart
 }
 
+func (s *MergeVisitor) EnterOC_MergeAction(ctx *parser.OC_MergeActionContext) {
+	s.ctx.Enter(&MergeActionVisitor{
+		MergeAction: &model.MergeAction{
+			OnCreate: HasTokens(ctx, parser.CypherLexerON, parser.CypherLexerCREATE),
+			OnMatch:  HasTokens(ctx, parser.CypherLexerON, parser.CypherLexerMATCH),
+		},
+	})
+}
+
+func (s *MergeVisitor) ExitOC_MergeAction(ctx *parser.OC_MergeActionContext) {
+	s.Merge.MergeActions = append(s.Merge.MergeActions, s.ctx.Exit().(*MergeActionVisitor).MergeAction)
+}
+
+type MergeActionVisitor struct {
+	BaseVisitor
+
+	MergeAction *model.MergeAction
+}
+
+func (s *MergeActionVisitor) EnterOC_Set(ctx *parser.OC_SetContext) {
+	s.ctx.Enter(&SetVisitor{
+		Set: &model.Set{},
+	})
+}
+
+func (s *MergeActionVisitor) ExitOC_Set(ctx *parser.OC_SetContext) {
+	s.MergeAction.Set = s.ctx.Exit().(*SetVisitor).Set
+}
+
 type UpdatingClauseVisitor struct {
 	BaseVisitor
 
