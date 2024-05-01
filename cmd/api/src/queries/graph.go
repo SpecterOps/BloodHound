@@ -488,10 +488,7 @@ func (s *GraphQuery) RawCypherSearch(ctx context.Context, pQuery PreparedQuery, 
 		config.Timeout = availableRuntime
 	}
 
-	logEvent := log.WithLevel(log.LevelInfo)
-	logEvent.Str("query", pQuery.strippedQuery)
-	logEvent.Str("query cost", fmt.Sprintf("%d", pQuery.complexity.Weight))
-	logEvent.Msg("Executing user cypher query")
+	start := time.Now()
 
 	// TODO: verify write vs read tx need differentiation after PG migration
 	if pQuery.HasMutation {
@@ -499,6 +496,13 @@ func (s *GraphQuery) RawCypherSearch(ctx context.Context, pQuery PreparedQuery, 
 	} else {
 		err = s.Graph.ReadTransaction(ctx, txDelegate, txOptions)
 	}
+
+	runtime := time.Now().Sub(start)
+
+	logEvent := log.WithLevel(log.LevelInfo)
+	logEvent.Str("query", pQuery.strippedQuery)
+	logEvent.Str("query cost", fmt.Sprintf("%d", pQuery.complexity.Weight))
+	logEvent.Msg(fmt.Sprintf("Executed user cypher query with cost %d in %.2f seconds", pQuery.complexity.Weight, runtime.Seconds()))
 
 	if err != nil {
 		// Log query details if neo4j times out
