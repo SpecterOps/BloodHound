@@ -18,11 +18,12 @@ package frontend
 
 import (
 	"fmt"
+	"strconv"
+
 	"github.com/antlr4-go/antlr/v4"
 	"github.com/specterops/bloodhound/cypher/model"
 	"github.com/specterops/bloodhound/cypher/parser"
 	"github.com/specterops/bloodhound/dawgs/graph"
-	"strconv"
 )
 
 type WhereVisitor struct {
@@ -319,3 +320,75 @@ func (s *PatternVisitor) EnterOC_RelationshipPattern(ctx *parser.OC_Relationship
 func (s *PatternVisitor) ExitOC_RelationshipPattern(ctx *parser.OC_RelationshipPatternContext) {
 	s.currentPart.AddPatternElements(s.ctx.Exit().(*RelationshipPatternVisitor).RelationshipPattern)
 }
+
+// type PatternPartVisitor struct {
+// 	BaseVisitor
+
+// 	PatternPart *model.PatternPart
+// }
+
+// func (s *PatternPartVisitor) EnterOC_AnonymousPatternPart(ctx *parser.OC_AnonymousPatternPartContext) {
+// }
+
+// func (s *PatternPartVisitor) ExitOC_AnonymousPatternPart(ctx *parser.OC_AnonymousPatternPartContext) {
+// }
+
+// func (s *PatternPartVisitor) EnterOC_PatternElementChain(ctx *parser.OC_PatternElementChainContext) {
+// }
+
+// func (s *PatternPartVisitor) ExitOC_PatternElementChain(ctx *parser.OC_PatternElementChainContext) {
+// }
+
+// func (s *PatternPartVisitor) EnterOC_PatternElement(ctx *parser.OC_PatternElementContext) {
+// }
+
+// func (s *PatternPartVisitor) ExitOC_PatternElement(ctx *parser.OC_PatternElementContext) {
+// }
+
+// func (s *PatternPartVisitor) EnterOC_PatternPart(ctx *parser.OC_PatternPartContext) {
+// 	s.PatternPart = &model.PatternPart{}
+// }
+
+// func (s *PatternPartVisitor) ExitOC_PatternPart(ctx *parser.OC_PatternPartContext) {
+// }
+
+// func (s *PatternPartVisitor) EnterOC_ShortestPathPattern(ctx *parser.OC_ShortestPathPatternContext) {
+// 	if HasTokens(ctx, parser.CypherLexerSHORTESTPATH) {
+// 		s.PatternPart.ShortestPathPattern = true
+// 	} else if HasTokens(ctx, parser.CypherLexerALLSHORTESTPATHS) {
+// 		s.PatternPart.AllShortestPathsPattern = true
+// 	}
+// }
+
+// func (s *PatternPartVisitor) ExitOC_ShortestPathPattern(ctx *parser.OC_ShortestPathPatternContext) {
+// }
+
+// func (s *PatternPartVisitor) EnterOC_Variable(ctx *parser.OC_VariableContext) {
+// 	s.ctx.Enter(NewVariableVisitor())
+// }
+
+// func (s *PatternPartVisitor) ExitOC_Variable(ctx *parser.OC_VariableContext) {
+// 	s.PatternPart.Binding = s.ctx.Exit().(*VariableVisitor).Variable
+// }
+
+// func (s *PatternPartVisitor) EnterOC_NodePattern(ctx *parser.OC_NodePatternContext) {
+// 	s.ctx.Enter(&NodePatternVisitor{
+// 		NodePattern: &model.NodePattern{},
+// 	})
+// }
+
+// func (s *PatternPartVisitor) ExitOC_NodePattern(ctx *parser.OC_NodePatternContext) {
+// 	s.PatternPart.AddPatternElements(s.ctx.Exit().(*NodePatternVisitor).NodePattern)
+// }
+
+// func (s *PatternPartVisitor) EnterOC_RelationshipPattern(ctx *parser.OC_RelationshipPatternContext) {
+// 	s.ctx.Enter(&RelationshipPatternVisitor{
+// 		RelationshipPattern: &model.RelationshipPattern{
+// 			Direction: graph.DirectionBoth,
+// 		},
+// 	})
+// }
+
+// func (s *PatternPartVisitor) ExitOC_RelationshipPattern(ctx *parser.OC_RelationshipPatternContext) {
+// 	s.PatternPart.AddPatternElements(s.ctx.Exit().(*RelationshipPatternVisitor).RelationshipPattern)
+// }

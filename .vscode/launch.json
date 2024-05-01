@@ -5,6 +5,14 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "type": "antlr-debug",
+            "request": "launch",
+            "name": "Debug Cypher Grammar",
+            "input": "${file}",
+            "grammar": "${workspaceFolder}/packages/go/cypher/grammar/Cypher.g4",
+            "visualParseTree": true
+        },
+        {
             "name": "Launch Go file",
             "type": "go",
             "request": "launch",

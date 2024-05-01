@@ -18,6 +18,7 @@ package model
 
 import (
 	"fmt"
+
 	"github.com/specterops/bloodhound/dawgs/graph"
 )
 
@@ -137,6 +138,9 @@ func Copy[T any](value T, extensions ...CopyExtension[T]) T {
 	case *Create:
 		return any(typedValue.copy()).(T)
 
+	case *Merge:
+		return any(typedValue.copy()).(T)
+
 	case *KindMatcher:
 		return any(typedValue.copy()).(T)
 
@@ -219,6 +223,9 @@ func Copy[T any](value T, extensions ...CopyExtension[T]) T {
 		return any(copySlice(typedValue)).(T)
 
 	case []*ReadingClause:
+		return any(copySlice(typedValue)).(T)
+
+	case []*MergeAction:
 		return any(copySlice(typedValue)).(T)
 
 	case []Expression:

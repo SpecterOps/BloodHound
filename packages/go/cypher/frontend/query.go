@@ -559,6 +559,20 @@ func (s *CreateVisitor) ExitOC_Pattern(ctx *parser.OC_PatternContext) {
 	s.Create.Pattern = s.ctx.Exit().(*PatternVisitor).PatternParts
 }
 
+// type MergeVisitor struct {
+// 	BaseVisitor
+
+// 	Merge *model.Merge
+// }
+
+// func (s *MergeVisitor) EnterOC_PatternPart(ctx *parser.OC_PatternPartContext) {
+// 	s.ctx.Enter(&PatternVisitor{})
+// }
+
+// func (s *MergeVisitor) ExitOC_PatternPart(ctx *parser.OC_PatternPartContext) {
+// 	s.Merge.PatternPart = s.ctx.Exit().(*PatternPartVisitor).PatternPart
+// }
+
 type UpdatingClauseVisitor struct {
 	BaseVisitor
 
@@ -614,6 +628,16 @@ func (s *UpdatingClauseVisitor) EnterOC_Set(ctx *parser.OC_SetContext) {
 func (s *UpdatingClauseVisitor) ExitOC_Set(ctx *parser.OC_SetContext) {
 	s.UpdatingClause.Clause = s.ctx.Exit().(*SetVisitor).Set
 }
+
+// func (s *UpdatingClauseVisitor) EnterOC_Merge(ctx *parser.OC_MergeContext) {
+// 	s.ctx.Enter(&MergeVisitor{
+// 		Merge: &model.Merge{},
+// 	})
+// }
+
+// func (s *UpdatingClauseVisitor) ExitOC_Merge(ctx *parser.OC_MergeContext) {
+// 	s.UpdatingClause.Clause = s.ctx.Exit().(*MergeVisitor).Merge
+// }
 
 type NodeLabelsVisitor struct {
 	BaseVisitor
