@@ -161,9 +161,6 @@ func (s *RelationshipPatternVisitor) EnterOC_RangeLiteral(ctx *parser.OC_RangeLi
 	}
 }
 
-func (s *RelationshipPatternVisitor) ExitOC_RangeLiteral(ctx *parser.OC_RangeLiteralContext) {
-}
-
 func (s *RelationshipPatternVisitor) EnterOC_Properties(ctx *parser.OC_PropertiesContext) {
 	s.ctx.Enter(NewPropertiesVisitor())
 }

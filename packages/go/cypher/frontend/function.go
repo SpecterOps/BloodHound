@@ -31,9 +31,6 @@ func (s *NamespaceVisitor) EnterOC_SymbolicName(ctx *parser.OC_SymbolicNameConte
 	s.Namespace = append(s.Namespace, ctx.GetText())
 }
 
-func (s *NamespaceVisitor) ExitOC_SymbolicName(ctx *parser.OC_SymbolicNameContext) {
-}
-
 type FunctionInvocationVisitor struct {
 	BaseVisitor
 
@@ -48,12 +45,6 @@ func NewFunctionInvocationVisitor(ctx *parser.OC_FunctionInvocationContext) *Fun
 	}
 }
 
-func (s *FunctionInvocationVisitor) EnterOC_FunctionName(ctx *parser.OC_FunctionNameContext) {
-}
-
-func (s *FunctionInvocationVisitor) ExitOC_FunctionName(ctx *parser.OC_FunctionNameContext) {
-}
-
 func (s *FunctionInvocationVisitor) EnterOC_Namespace(ctx *parser.OC_NamespaceContext) {
 	s.ctx.Enter(&NamespaceVisitor{})
 }
@@ -64,9 +55,6 @@ func (s *FunctionInvocationVisitor) ExitOC_Namespace(ctx *parser.OC_NamespaceCon
 
 func (s *FunctionInvocationVisitor) EnterOC_SymbolicName(ctx *parser.OC_SymbolicNameContext) {
 	s.FunctionInvocation.Name = ctx.GetText()
-}
-
-func (s *FunctionInvocationVisitor) ExitOC_SymbolicName(ctx *parser.OC_SymbolicNameContext) {
 }
 
 func (s *FunctionInvocationVisitor) EnterOC_Expression(ctx *parser.OC_ExpressionContext) {

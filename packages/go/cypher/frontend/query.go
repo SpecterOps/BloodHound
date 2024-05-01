@@ -41,9 +41,6 @@ func (s *VariableVisitor) EnterOC_SymbolicName(ctx *parser.OC_SymbolicNameContex
 	s.Variable.Symbol = ctx.GetText()
 }
 
-func (s *VariableVisitor) ExitOC_SymbolicName(ctx *parser.OC_SymbolicNameContext) {
-}
-
 type ProjectionVisitor struct {
 	BaseVisitor
 
@@ -61,9 +58,6 @@ func NewProjectionVisitor(ctx *parser.OC_ProjectionBodyContext) *ProjectionVisit
 	return &ProjectionVisitor{
 		Projection: model.NewProjection(distinct),
 	}
-}
-
-func (s *ProjectionVisitor) EnterOC_ProjectionBody(ctx *parser.OC_ProjectionBodyContext) {
 }
 
 func (s *ProjectionVisitor) ExitOC_ProjectionBody(ctx *parser.OC_ProjectionBodyContext) {
@@ -86,9 +80,6 @@ func (s *ProjectionVisitor) EnterOC_ProjectionItems(ctx *parser.OC_ProjectionIte
 	}
 }
 
-func (s *ProjectionVisitor) ExitOC_ProjectionItems(ctx *parser.OC_ProjectionItemsContext) {
-}
-
 func (s *ProjectionVisitor) EnterOC_ProjectionItem(ctx *parser.OC_ProjectionItemContext) {
 	s.currentItem = model.NewProjectionItem()
 }
@@ -107,9 +98,6 @@ func (s *ProjectionVisitor) ExitOC_Variable(ctx *parser.OC_VariableContext) {
 
 func (s *ProjectionVisitor) EnterOC_Order(ctx *parser.OC_OrderContext) {
 	s.Projection.Order = &model.Order{}
-}
-
-func (s *ProjectionVisitor) ExitOC_Order(ctx *parser.OC_OrderContext) {
 }
 
 func (s ProjectionVisitor) EnterOC_SortItem(ctx *parser.OC_SortItemContext) {
@@ -200,9 +188,6 @@ func (s *RangeLiteralVisitor) EnterOC_IntegerLiteral(ctx *parser.OC_IntegerLiter
 	} else {
 		s.PatternRange.EndIndex = &value
 	}
-}
-
-func (s *RangeLiteralVisitor) ExitOC_IntegerLiteral(ctx *parser.OC_IntegerLiteralContext) {
 }
 
 type WithVisitor struct {
@@ -337,9 +322,6 @@ func NewSinglePartQueryVisitor() *SinglePartQueryVisitor {
 
 func (s *SinglePartQueryVisitor) EnterOC_Return(ctx *parser.OC_ReturnContext) {
 	s.Query.Return = &model.Return{}
-}
-
-func (s *SinglePartQueryVisitor) ExitOC_Return(ctx *parser.OC_ReturnContext) {
 }
 
 func (s *SinglePartQueryVisitor) EnterOC_ProjectionBody(ctx *parser.OC_ProjectionBodyContext) {
@@ -730,12 +712,6 @@ func (s *PropertyExpressionVisitor) EnterOC_Atom(ctx *parser.OC_AtomContext) {
 
 func (s *PropertyExpressionVisitor) ExitOC_Atom(ctx *parser.OC_AtomContext) {
 	s.PropertyLookup.Atom = s.ctx.Exit().(*AtomVisitor).Atom
-}
-
-func (s *PropertyExpressionVisitor) EnterOC_PropertyLookup(ctx *parser.OC_PropertyLookupContext) {
-}
-
-func (s *PropertyExpressionVisitor) ExitOC_PropertyLookup(ctx *parser.OC_PropertyLookupContext) {
 }
 
 func (s *PropertyExpressionVisitor) EnterOC_PropertyKeyName(ctx *parser.OC_PropertyKeyNameContext) {
