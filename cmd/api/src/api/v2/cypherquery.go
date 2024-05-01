@@ -26,7 +26,10 @@ import (
 	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/queries"
 	"net/http"
-	"strings"
+)
+
+const (
+	errUnauthorizedGraphMutation = errors.Error("unauthorized graph mutation")
 )
 
 type CypherQueryPayload struct {
@@ -43,18 +46,12 @@ func (s Resources) CypherQuery(response http.ResponseWriter, request *http.Reque
 	)
 
 	if err := api.ReadJSONRequestPayloadLimited(&payload, request); err != nil {
-		api.WriteErrorResponse(
-			request.Context(),
-			api.BuildErrorResponse(http.StatusBadRequest, "JSON malformed.", request), response,
-		)
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "JSON malformed.", request), response)
 		return
 	}
 
 	if preparedQuery, err = s.GraphQuery.PrepareCypherQuery(payload.Query); err != nil {
-		api.WriteErrorResponse(
-			request.Context(),
-			api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response,
-		)
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
 		return
 	}
 
@@ -65,24 +62,12 @@ func (s Resources) CypherQuery(response http.ResponseWriter, request *http.Reque
 	}
 
 	if err != nil {
-		switch true {
-		case strings.Contains(err.Error(), "Permission denied: User may not modify the graph."):
-			api.WriteErrorResponse(
-				request.Context(),
-				api.BuildErrorResponse(http.StatusForbidden, err.Error(), request), response,
-			)
-		case queries.IsQueryError(err):
-			api.WriteErrorResponse(
-				request.Context(),
-				api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response,
-			)
-		case util.IsNeoTimeoutError(err):
+		if errors.Is(err, errUnauthorizedGraphMutation) {
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusForbidden, "Permission denied: User may not modify the graph.", request), response)
+		} else if util.IsNeoTimeoutError(err) {
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "transaction timed out, reduce query complexity or try again later", request), response)
-		default:
-			api.WriteErrorResponse(
-				request.Context(),
-				api.BuildErrorResponse(http.StatusInternalServerError, err.Error(), request), response,
-			)
+		} else {
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, err.Error(), request), response)
 		}
 	} else {
 		api.WriteBasicResponse(request.Context(), graphResponse, http.StatusOK, response)
@@ -98,7 +83,7 @@ func (s Resources) cypherMutation(request *http.Request, preparedQuery queries.P
 
 	if !s.Authorizer.AllowsPermission(ctx.FromRequest(request).AuthCtx, auth.Permissions().GraphDBMutate) {
 		s.Authorizer.AuditLogUnauthorizedAccess(request)
-		return model.UnifiedGraph{}, errors.New("Permission denied: User may not modify the graph.")
+		return model.UnifiedGraph{}, errUnauthorizedGraphMutation
 	}
 
 	// All mutation attempts must be audit logged even when failed

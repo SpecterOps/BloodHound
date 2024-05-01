@@ -398,31 +398,31 @@ func (s *GraphQuery) PrepareCypherQuery(rawCypher string) (PreparedQuery, error)
 
 	queryModel, err := frontend.ParseCypher(parseCtx, rawCypher)
 	if err != nil {
-		return graphQuery, newQueryError(err)
+		return graphQuery, err
 	}
 
 	graphQuery.HasMutation = parseCtx.HasMutation
 
 	complexityMeasure, err := analyzer.QueryComplexity(queryModel)
 	if err != nil {
-		return graphQuery, newQueryError(err)
+		return graphQuery, err
 	} else if err = s.strippedCypherEmitter.Write(queryModel, strippedQueryBuffer); err != nil {
-		return graphQuery, newQueryError(err)
+		return graphQuery, err
 	} else if !s.DisableCypherComplexityLimit && complexityMeasure.Weight > MaxQueryComplexityWeightAllowed {
 		// log query details if it is rejected due to high complexity
 		highComplexityLog := log.WithLevel(log.LevelError)
 		highComplexityLog.Str("query", strippedQueryBuffer.String())
 		highComplexityLog.Msg(fmt.Sprintf("Query rejected. Query weight: %d. Maximum allowed weight: %d", complexityMeasure.Weight, MaxQueryComplexityWeightAllowed))
 
-		return graphQuery, newQueryError(ErrCypherQueryTooComplex)
+		return graphQuery, ErrCypherQueryTooComplex
 	}
 
 	if pgDB, isPG := s.Graph.(*pg.Driver); isPG {
-		if _, err := pgsql.Translate(queryModel, pgDB.KindMapper()); err != nil {
-			return graphQuery, newQueryError(err)
+		if _, err = pgsql.Translate(queryModel, pgDB.KindMapper()); err != nil {
+			return graphQuery, err
 		}
 
-		if err := pgsql.NewEmitter(false, pgDB.KindMapper()).Write(queryModel, queryBuffer); err != nil {
+		if err = pgsql.NewEmitter(false, pgDB.KindMapper()).Write(queryModel, queryBuffer); err != nil {
 			return graphQuery, err
 		} else {
 			graphQuery.query = queryBuffer.String()
@@ -434,7 +434,7 @@ func (s *GraphQuery) PrepareCypherQuery(rawCypher string) (PreparedQuery, error)
 		graphQuery.complexity = complexityMeasure
 
 		if err = s.cypherEmitter.Write(queryModel, queryBuffer); err != nil {
-			return graphQuery, newQueryError(err)
+			return graphQuery, err
 		} else {
 			graphQuery.query = queryBuffer.String()
 		}

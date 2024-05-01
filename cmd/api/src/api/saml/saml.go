@@ -60,9 +60,6 @@ const (
 	ErrorUserNotFound                 = errors.Error("User not found")
 	ErrorSAMLAssertion                = errors.Error("SAML assertion error")
 	ErrorUserNotAuthorizedForProvider = errors.Error("User not authorized for this provider")
-
-	APIVersion1 = 1
-	APIVersion2 = 2
 )
 
 type WriteAPIErrorResponse func(request *http.Request, response http.ResponseWriter, statusCode int, message string)
@@ -276,17 +273,17 @@ func (s ProviderResource) createSessionFromAssertion(request *http.Request, resp
 	if user, err := s.lookupSAMLUser(request.Context(), assertion); err != nil {
 		log.Errorf("[SAML] Failed to lookup user for SAML provider %s: %v", s.serviceProvider.Config.Name, err)
 
-		switch err {
-		case ErrorSAMLAssertion:
+		switch {
+		case errors.Is(err, ErrorSAMLAssertion):
 			s.writeAPIErrorResponse(request, response, http.StatusBadRequest, "session assertion does not meet the requirements for user lookup")
-		case ErrorUserNotFound, ErrorUserNotAuthorizedForProvider:
+		case errors.Is(err, ErrorUserNotFound), errors.Is(err, ErrorUserNotAuthorizedForProvider):
 			// This is a tiny bit more descriptive for the end user without leaking any sensitive information
 			s.writeAPIErrorResponse(request, response, http.StatusForbidden, "user is not allowed")
 		default:
 			s.writeAPIErrorResponse(request, response, http.StatusInternalServerError, "session creation failure")
 		}
 	} else if sessionJWT, err := s.authenticator.CreateSession(request.Context(), user, s.serviceProvider.Config); err != nil {
-		if locationURL := api.URLJoinPath(hostURL, api.UserDisabledPath); err == ErrorUserDisabled {
+		if locationURL := api.URLJoinPath(hostURL, api.UserDisabledPath); errors.Is(err, ErrorUserDisabled) {
 			response.Header().Add(headers.Location.String(), locationURL.String())
 			response.WriteHeader(http.StatusFound)
 		} else {
