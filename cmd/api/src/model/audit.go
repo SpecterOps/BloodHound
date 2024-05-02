@@ -18,6 +18,7 @@ package model
 
 import (
 	"fmt"
+	"github.com/specterops/bloodhound/log"
 	"reflect"
 	"time"
 
@@ -69,6 +70,8 @@ const (
 	AuditLogActionExportListRisks         AuditLogAction = "ExportListRisks"
 
 	AuditLogActionDeleteBloodhoundData AuditLogAction = "DeleteBloodhoundData"
+
+	AuditLogActionMutateGraph AuditLogAction = "MutateGraph"
 )
 
 // TODO embed Basic into this struct instead of declaring the ID and CreatedAt fields. This will require a migration
@@ -82,7 +85,7 @@ type AuditLog struct {
 	Fields          types.JSONUntypedObject `json:"fields"`
 	RequestID       string                  `json:"request_id"`
 	SourceIpAddress string                  `json:"source_ip_address"`
-	Status          string                  `json:"status"`
+	Status          AuditLogEntryStatus     `json:"status"`
 	CommitID        uuid.UUID               `json:"commit_id" gorm:"type:text"`
 }
 
@@ -212,6 +215,15 @@ func (s AuditEntry) Matches(x any) bool {
 
 func (s AuditEntry) String() string {
 	return fmt.Sprintf("%#v", s)
+}
+
+func NewAuditEntry(action AuditLogAction, status AuditLogEntryStatus, data AuditData) (AuditEntry, error) {
+	if commitId, err := uuid.NewV4(); err != nil {
+		log.Errorf("Error generating commit ID for audit entry: %s", err.Error())
+		return AuditEntry{}, err
+	} else {
+		return AuditEntry{Action: action, Model: data, Status: status, CommitID: commitId}, nil
+	}
 }
 
 type AuditableURL string

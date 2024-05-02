@@ -20,6 +20,13 @@
 package v2_test
 
 import (
+	"bytes"
+	"fmt"
+	"github.com/specterops/bloodhound/cypher/backend/cypher"
+	"github.com/specterops/bloodhound/src/auth"
+	"github.com/specterops/bloodhound/src/model"
+	"github.com/specterops/bloodhound/src/utils/test"
+	"net/http"
 	"testing"
 
 	"github.com/specterops/bloodhound/cypher/frontend"
@@ -44,14 +51,14 @@ func Test_CypherSearch(t *testing.T) {
 			apiClient, ok := lab.Unpack(harness, fixtures.BHAdminApiClientFixture)
 			assert.True(ok)
 
-			_, err := apiClient.CypherSearch(v2.CypherSearch{})
+			_, err := apiClient.CypherQuery(v2.CypherQueryPayload{})
 			assert.ErrorContains(err, frontend.ErrInvalidInput.Error())
 		}),
 		lab.TestCase("errors on syntax mistake", func(assert *require.Assertions, harness *lab.Harness) {
 			apiClient, ok := lab.Unpack(harness, fixtures.BHAdminApiClientFixture)
 			assert.True(ok)
 
-			_, err := apiClient.CypherSearch(v2.CypherSearch{
+			_, err := apiClient.CypherQuery(v2.CypherQueryPayload{
 				Query: "my syntax stinks",
 			})
 			assert.ErrorContains(err, "extraneous input")
@@ -61,7 +68,7 @@ func Test_CypherSearch(t *testing.T) {
 			assert.True(ok)
 
 			queryWithUserSpecifiedParameters := "match (n:Guardian {name: $name}) return n"
-			_, err := apiClient.CypherSearch(v2.CypherSearch{
+			_, err := apiClient.CypherQuery(v2.CypherQueryPayload{
 				Query: queryWithUserSpecifiedParameters,
 			})
 			assert.ErrorContains(err, frontend.ErrUserSpecifiedParametersNotSupported.Error())
@@ -70,7 +77,7 @@ func Test_CypherSearch(t *testing.T) {
 			apiClient, ok := lab.Unpack(harness, fixtures.BHAdminApiClientFixture)
 			assert.True(ok)
 
-			graphResponse, err := apiClient.CypherSearch(v2.CypherSearch{
+			graphResponse, err := apiClient.CypherQuery(v2.CypherQueryPayload{
 				Query: "match (n:Computer) where n.objectid = '" + fixtures.BasicComputerSID.String() + "' return n",
 			})
 			assert.NoError(err)
@@ -99,7 +106,7 @@ func Test_CypherSearch_WithoutCypherMutationsEnabled(t *testing.T) {
 			apiClient, ok := lab.Unpack(harness, adminApiClientFixture)
 			assert.True(ok)
 
-			_, err := apiClient.CypherSearch(v2.CypherSearch{Query: "match (w) where w.name = 'voldemort' remove w.name return w"})
+			_, err := apiClient.CypherQuery(v2.CypherQueryPayload{Query: "match (w) where w.name = 'voldemort' remove w.name return w"})
 			assert.ErrorContains(err, frontend.ErrUpdateClauseNotSupported.Error())
 		}),
 	)
@@ -119,13 +126,93 @@ func Test_CypherSearch_WithCypherMutationsEnabled(t *testing.T) {
 	lab.Pack(harness, customApiFixture)
 	adminApiClientFixture := fixtures.NewAdminApiClientFixture(customCfgFixture, customApiFixture)
 	lab.Pack(harness, adminApiClientFixture)
+	userApiClientFixture := fixtures.NewUserApiClientFixture(customCfgFixture, adminApiClientFixture, auth.RoleUser)
+	lab.Pack(harness, userApiClientFixture)
+
+	var (
+		parseCtx = frontend.NewContext(
+			&frontend.ExplicitProcedureInvocationFilter{},
+			&frontend.ImplicitProcedureInvocationFilter{},
+			&frontend.SpecifiedParametersFilter{},
+		)
+		stripper = cypher.NewCypherEmitter(true)
+	)
 
 	lab.NewSpec(t, harness).Run(
 		lab.TestCase("allows mutations with enable cypher_mutations true", func(assert *require.Assertions, harness *lab.Harness) {
 			apiClient, ok := lab.Unpack(harness, adminApiClientFixture)
 			assert.True(ok)
 
-			_, err := apiClient.CypherSearch(v2.CypherSearch{Query: "match (w) where w.name = 'voldemort' remove w.name return w"})
+			var (
+				query         = "match (w) where w.name = 'vldmrt' remove w.name return w"
+				strippedQuery = &bytes.Buffer{}
+			)
+			parsedQuery, err := frontend.ParseCypher(parseCtx, query)
+			require.Nil(t, err)
+			err = stripper.Write(parsedQuery, strippedQuery)
+			require.Nil(t, err)
+
+			_, err = apiClient.CypherQuery(v2.CypherQueryPayload{Query: query})
+			assert.Nil(err)
+
+			auditLogs, err := apiClient.GetLatestAuditLogs()
+			assert.Nil(err)
+
+			err = test.AssertAuditLogs(auditLogs.Logs, model.AuditLogActionMutateGraph, model.AuditLogStatusSuccess, model.AuditData{"query": strippedQuery.String()})
+			assert.Nil(err)
+		}),
+
+		lab.TestCase("fails unauthorized mutation attempts and adds it to audit log", func(assert *require.Assertions, harness *lab.Harness) {
+			adminApiClient, ok := lab.Unpack(harness, adminApiClientFixture)
+			assert.True(ok)
+			userApiClient, ok := lab.Unpack(harness, userApiClientFixture)
+			assert.True(ok)
+
+			var (
+				query         = "match (w) where w.name = 'harryp' delete w"
+				strippedQuery = &bytes.Buffer{}
+			)
+			parsedQuery, err := frontend.ParseCypher(parseCtx, query)
+			require.Nil(t, err)
+			err = stripper.Write(parsedQuery, strippedQuery)
+			require.Nil(t, err)
+
+			_, err = userApiClient.CypherQuery(v2.CypherQueryPayload{Query: query})
+			assert.ErrorContains(err, "Permission denied: User may not modify the graph")
+
+			auditLogs, err := adminApiClient.GetLatestAuditLogs()
+			assert.Nil(err)
+
+			found := false
+			for _, al := range auditLogs.Logs {
+				if al.Action == model.AuditLogActionUnauthorizedAccessAttempt {
+					found = true
+				}
+			}
+			assert.True(found)
+		}),
+
+		lab.TestCase("adds failed mutation attempts to audit log", func(assert *require.Assertions, harness *lab.Harness) {
+			apiClient, ok := lab.Unpack(harness, adminApiClientFixture)
+			assert.True(ok)
+
+			var (
+				query         = "match (w) set w.wizard = true return w.wizard"
+				strippedQuery = &bytes.Buffer{}
+			)
+
+			parsedQuery, err := frontend.ParseCypher(parseCtx, query)
+			require.Nil(t, err)
+			err = stripper.Write(parsedQuery, strippedQuery)
+			require.Nil(t, err)
+
+			_, err = apiClient.CypherQuery(v2.CypherQueryPayload{Query: query})
+			assert.ErrorContains(err, fmt.Sprintf("%d", http.StatusInternalServerError))
+
+			auditLogs, err := apiClient.GetLatestAuditLogs()
+			assert.Nil(err)
+
+			err = test.AssertAuditLogs(auditLogs.Logs, model.AuditLogActionMutateGraph, model.AuditLogStatusFailure, model.AuditData{"query": strippedQuery.String()})
 			assert.Nil(err)
 		}),
 	)

@@ -82,7 +82,7 @@ func TestNewAuditLog(t *testing.T) {
 	require.Equal(t, fmt.Sprintf("%s", auditData), fmt.Sprintf("%s", auditLog.Fields))
 	require.Equal(t, requestID, auditLog.RequestID)
 	require.Equal(t, requestIP, auditLog.SourceIpAddress)
-	require.Equal(t, string(model.AuditLogStatusSuccess), auditLog.Status)
+	require.Equal(t, model.AuditLogStatusSuccess, auditLog.Status)
 }
 
 func TestNewAuditLog_Error(t *testing.T) {
@@ -96,7 +96,7 @@ func TestNewAuditLog_Error(t *testing.T) {
 		t.Errorf("error creating audit log: %s", err.Error())
 	}
 
-	require.Equal(t, string(model.AuditLogStatusFailure), auditLog.Status)
+	require.Equal(t, model.AuditLogStatusFailure, auditLog.Status)
 	require.Equal(t, auditLog.Fields, types.JSONUntypedObject{"error": "this is a test error message", "test": "message"})
 }
 

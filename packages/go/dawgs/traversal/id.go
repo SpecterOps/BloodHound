@@ -26,6 +26,7 @@ import (
 	"github.com/specterops/bloodhound/dawgs/ops"
 	"github.com/specterops/bloodhound/dawgs/util"
 	"github.com/specterops/bloodhound/dawgs/util/channels"
+	"github.com/specterops/bloodhound/errors"
 )
 
 // IDDriver is a function that drives sending queries to the graph and retrieving vertexes and edges. Traversal
@@ -62,7 +63,7 @@ func (s IDTraversal) BreadthFirst(ctx context.Context, plan IDPlan) error {
 		completionC  = make(chan struct{}, s.numWorkers*2)
 		descentCount = &atomic.Int64{}
 
-		errors                         = util.NewErrorCollector()
+		errorCollector                 = util.NewErrorCollector()
 		pathTree                       = graph.NewRootIDSegment(plan.Root)
 		traversalCtx, doneFunc         = context.WithCancel(ctx)
 		segmentWriterC, segmentReaderC = channels.BufferedPipe[*graph.IDSegment](traversalCtx)
@@ -104,11 +105,11 @@ func (s IDTraversal) BreadthFirst(ctx context.Context, plan IDPlan) error {
 						return nil
 					}
 				}
-			}); err != nil && err != graph.ErrContextTimedOut {
+			}); err != nil && !errors.Is(err, graph.ErrContextTimedOut) {
 				// A worker encountered a fatal error, kill the traversal context
 				doneFunc()
 
-				errors.Add(fmt.Errorf("reader %d failed: %w", workerID, err))
+				errorCollector.Add(fmt.Errorf("reader %d failed: %w", workerID, err))
 			}
 		}(workerID)
 	}
@@ -129,5 +130,5 @@ func (s IDTraversal) BreadthFirst(ctx context.Context, plan IDPlan) error {
 	// Wait for all workers to exit
 	workerWG.Wait()
 
-	return errors.Combined()
+	return errorCollector.Combined()
 }
