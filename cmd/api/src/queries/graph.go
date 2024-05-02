@@ -480,7 +480,14 @@ func (s *GraphQuery) RawCypherSearch(ctx context.Context, pQuery PreparedQuery, 
 		} else {
 			availableRuntime = defaultTimeout
 			if !s.DisableCypherComplexityLimit {
-				availableRuntime = applyTimeoutReduction(pQuery.complexity.Weight, availableRuntime)
+				var reductionFactor int64
+				availableRuntime, reductionFactor = applyTimeoutReduction(pQuery.complexity.Weight, availableRuntime)
+
+				logEvent := log.WithLevel(log.LevelInfo)
+				logEvent.Str("query", pQuery.strippedQuery)
+				logEvent.Str("query cost", fmt.Sprintf("%d", pQuery.complexity.Weight))
+				logEvent.Str("reduction factor", strconv.FormatInt(reductionFactor, 10))
+				logEvent.Msg(fmt.Sprintf("Available timeout for query is set to: %.2f seconds", availableRuntime.Seconds()))
 			}
 		}
 
@@ -497,7 +504,7 @@ func (s *GraphQuery) RawCypherSearch(ctx context.Context, pQuery PreparedQuery, 
 		err = s.Graph.ReadTransaction(ctx, txDelegate, txOptions)
 	}
 
-	runtime := time.Now().Sub(start)
+	runtime := time.Since(start)
 
 	logEvent := log.WithLevel(log.LevelInfo)
 	logEvent.Str("query", pQuery.strippedQuery)
@@ -520,22 +527,20 @@ func (s *GraphQuery) RawCypherSearch(ctx context.Context, pQuery PreparedQuery, 
 	return graphResponse, nil
 }
 
-func applyTimeoutReduction(queryWeight int64, availableRuntime time.Duration) time.Duration {
-	availableRuntimeInt := int64(availableRuntime.Seconds())
+func applyTimeoutReduction(queryWeight int64, availableRuntime time.Duration) (time.Duration, int64) {
 	// The weight of the query is divided by 5 to get a runtime reduction factor, in a way that:
 	// weights of 4 or less get the full runtime duration
 	// weights of 5-9 will get 1/2 the runtime duration
 	// weights of 10-15 will get 1/3 the runtime duration
 	// and so on until the max weight of 50 gets 1/11 the runtime duration
-
-	// NOTE reductionFactor will be the math.Floor() of the result of the division below
 	reductionFactor := 1 + (queryWeight / 5)
+
+	availableRuntimeInt := int64(availableRuntime.Seconds())
+	// reductionFactor will be the math.Floor() of the result of the division below
 	availableRuntimeInt /= reductionFactor
 	availableRuntime = time.Duration(availableRuntimeInt) * time.Second
 
-	log.Infof("Cypher query cost is: %d. Reduction factor for query is: %d. Available timeout for query is now set to: %d seconds", queryWeight, reductionFactor, availableRuntime)
-
-	return availableRuntime
+	return availableRuntime, reductionFactor
 }
 
 func nodeToSearchResult(node *graph.Node) model.SearchResult {
