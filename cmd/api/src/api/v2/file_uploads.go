@@ -131,7 +131,7 @@ func (s Resources) ProcessFileUpload(response http.ResponseWriter, request *http
 	}
 
 	if !IsValidContentTypeForUpload(request.Header) {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "Content type must be application/json or application/zip", request), response)
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("Content type must be application/json or application/zip"), request), response)
 	} else if fileUploadJobID, err := strconv.Atoi(fileUploadJobIdString); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsIDMalformed, request), response)
 	} else if fileUploadJob, err := fileupload.GetFileUploadJobByID(request.Context(), s.DB, int64(fileUploadJobID)); err != nil {
