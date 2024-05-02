@@ -108,7 +108,7 @@ func GetADCSESC7EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 		WHERE ct.authenticationenabled = true
 			AND (ct.authorizedsignatures = 0 OR ct.schemaversion = 1)
 			AND ct.enrolleesuppliessubject = true
-		MATCH p2 = (eca)-[:TrustedForNTAuth|NTAuthStoreFor*1..]->(d)
+		MATCH p2 = (:Computer)-[:HostsCAService]->(eca)-[:TrustedForNTAuth|NTAuthStoreFor*1..]->(d)
 
 		OPTIONAL MATCH p3 = (n)-[:MemberOf*0..]->()-[:Enroll|GenericAll|AllExtendedRights]->(ct)
 
@@ -304,6 +304,10 @@ func adcsESC7Path2Pattern(enterpriseCAs []graph.ID) traversal.PatternContinuatio
 		Inbound(query.And(
 			query.KindIn(query.Relationship(), ad.TrustedForNTAuth),
 			query.InIDs(query.Start(), enterpriseCAs...),
+		)).
+		Inbound(query.And(
+			query.KindIn(query.Relationship(), ad.HostsCAService),
+			query.Kind(query.Start(), ad.Computer),
 		))
 }
 
