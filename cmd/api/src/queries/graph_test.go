@@ -168,7 +168,7 @@ func TestGraphQuery_RawCypherSearch(t *testing.T) {
 		// This will be set to a default of 15 min or 900 sec
 		// availableRuntime = 900 sec, query cost = 15
 		// reductionFactor = 1 + (15/5) = 4
-		// Therefore actual timeout = availableRuntime/reductionFactor : 900/3 = 225sec
+		// Therefore actual timeout = availableRuntime/reductionFactor : 900/4 = 225sec
 
 		outerBHCtxInst.Timeout = 0
 		preparedQuery, err := gq.PrepareCypherQuery("match ()-[:HasSession*..]->()-[:MemberOf*..]->() return n;")
