@@ -26,10 +26,12 @@ import (
 	"strings"
 	"time"
 
+	"gorm.io/gorm"
+
 	"github.com/gofrs/uuid"
+	"github.com/specterops/bloodhound/errors"
 	"github.com/specterops/bloodhound/src/auth"
 	"github.com/specterops/bloodhound/src/model"
-	"gorm.io/gorm"
 )
 
 // NewClientAuthToken creates a new Client AuthToken row using the details provided
@@ -232,7 +234,7 @@ func (s *BloodhoundDB) GetInstallation(ctx context.Context) (model.Installation,
 // SELECT CASE WHEN EXISTS (SELECT 1 FROM installations) THEN true ELSE false END
 func (s *BloodhoundDB) HasInstallation(ctx context.Context) (bool, error) {
 	if _, err := s.GetInstallation(ctx); err != nil {
-		if err == ErrNotFound {
+		if errors.Is(err, ErrNotFound) {
 			return false, nil
 		}
 

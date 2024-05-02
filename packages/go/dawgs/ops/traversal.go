@@ -17,12 +17,12 @@
 package ops
 
 import (
-	"errors"
 	"fmt"
 
 	"github.com/RoaringBitmap/roaring/roaring64"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/dawgs/query"
+	"github.com/specterops/bloodhound/errors"
 	"github.com/specterops/bloodhound/log"
 )
 
@@ -178,7 +178,7 @@ func Traversal(tx graph.Transaction, plan TraversalPlan, pathVisitors ...PathVis
 
 		if descendents, err := nextTraversal(tx, next, plan.Direction, plan.BranchQuery, requireTraversalOrder, plan.expansionFilter); err != nil {
 			// If the error value is the halt traversal sentinel then don't relay any error upstream
-			if err == ErrHaltTraversal {
+			if errors.Is(err, ErrHaltTraversal) {
 				break
 			}
 

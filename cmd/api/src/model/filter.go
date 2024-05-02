@@ -26,7 +26,6 @@ import (
 
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/dawgs/query"
-
 	"github.com/specterops/bloodhound/errors"
 )
 
@@ -304,7 +303,7 @@ func (s QueryParameterFilterParser) ParseQueryParameterFilters(request *http.Req
 
 		for _, value := range values {
 			if filter, err := s.ParseQueryParameterFilter(name, value); err != nil {
-				if err != ErrNotFiltered {
+				if !errors.Is(err, ErrNotFiltered) {
 					return nil, err
 				}
 			} else {

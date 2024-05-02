@@ -352,7 +352,7 @@ func (s authenticator) ValidateSession(ctx context.Context, jwtTokenString strin
 	claims := auth.SessionData{}
 
 	if token, err := jwt.ParseWithClaims(jwtTokenString, &claims, s.jwtSigningKey); err != nil {
-		if err == jwt.ErrSignatureInvalid {
+		if errors.Is(err, jwt.ErrSignatureInvalid) {
 			return auth.Context{}, ErrInvalidAuth
 		}
 
