@@ -41,9 +41,6 @@ func (s *VariableVisitor) EnterOC_SymbolicName(ctx *parser.OC_SymbolicNameContex
 	s.Variable.Symbol = ctx.GetText()
 }
 
-func (s *VariableVisitor) ExitOC_SymbolicName(ctx *parser.OC_SymbolicNameContext) {
-}
-
 type ProjectionVisitor struct {
 	BaseVisitor
 
@@ -61,9 +58,6 @@ func NewProjectionVisitor(ctx *parser.OC_ProjectionBodyContext) *ProjectionVisit
 	return &ProjectionVisitor{
 		Projection: model.NewProjection(distinct),
 	}
-}
-
-func (s *ProjectionVisitor) EnterOC_ProjectionBody(ctx *parser.OC_ProjectionBodyContext) {
 }
 
 func (s *ProjectionVisitor) ExitOC_ProjectionBody(ctx *parser.OC_ProjectionBodyContext) {
@@ -86,9 +80,6 @@ func (s *ProjectionVisitor) EnterOC_ProjectionItems(ctx *parser.OC_ProjectionIte
 	}
 }
 
-func (s *ProjectionVisitor) ExitOC_ProjectionItems(ctx *parser.OC_ProjectionItemsContext) {
-}
-
 func (s *ProjectionVisitor) EnterOC_ProjectionItem(ctx *parser.OC_ProjectionItemContext) {
 	s.currentItem = model.NewProjectionItem()
 }
@@ -107,9 +98,6 @@ func (s *ProjectionVisitor) ExitOC_Variable(ctx *parser.OC_VariableContext) {
 
 func (s *ProjectionVisitor) EnterOC_Order(ctx *parser.OC_OrderContext) {
 	s.Projection.Order = &model.Order{}
-}
-
-func (s *ProjectionVisitor) ExitOC_Order(ctx *parser.OC_OrderContext) {
 }
 
 func (s ProjectionVisitor) EnterOC_SortItem(ctx *parser.OC_SortItemContext) {
@@ -200,9 +188,6 @@ func (s *RangeLiteralVisitor) EnterOC_IntegerLiteral(ctx *parser.OC_IntegerLiter
 	} else {
 		s.PatternRange.EndIndex = &value
 	}
-}
-
-func (s *RangeLiteralVisitor) ExitOC_IntegerLiteral(ctx *parser.OC_IntegerLiteralContext) {
 }
 
 type WithVisitor struct {
@@ -339,9 +324,6 @@ func (s *SinglePartQueryVisitor) EnterOC_Return(ctx *parser.OC_ReturnContext) {
 	s.Query.Return = &model.Return{}
 }
 
-func (s *SinglePartQueryVisitor) ExitOC_Return(ctx *parser.OC_ReturnContext) {
-}
-
 func (s *SinglePartQueryVisitor) EnterOC_ProjectionBody(ctx *parser.OC_ProjectionBodyContext) {
 	s.ctx.Enter(NewProjectionVisitor(ctx))
 }
@@ -434,42 +416,12 @@ type QueryVisitor struct {
 	Query *model.RegularQuery
 }
 
-func (s *QueryVisitor) EnterOC_Cypher(ctx *parser.OC_CypherContext) {
-}
-
-func (s *QueryVisitor) ExitOC_Cypher(ctx *parser.OC_CypherContext) {
-}
-
-func (s *QueryVisitor) EnterOC_Query(ctx *parser.OC_QueryContext) {
-}
-
-func (s *QueryVisitor) ExitOC_Query(ctx *parser.OC_QueryContext) {
-}
-
-func (s *QueryVisitor) EnterOC_Statement(ctx *parser.OC_StatementContext) {
-}
-
-func (s *QueryVisitor) ExitOC_Statement(ctx *parser.OC_StatementContext) {
-}
-
-func (s *QueryVisitor) EnterOC_QueryOptions(ctx *parser.OC_QueryOptionsContext) {
-}
-
-func (s *QueryVisitor) ExitOC_QueryOptions(ctx *parser.OC_QueryOptionsContext) {
-}
-
 func (s *QueryVisitor) EnterOC_RegularQuery(ctx *parser.OC_RegularQueryContext) {
 	s.Query = model.NewRegularQuery()
 }
 
-func (s *QueryVisitor) ExitOC_RegularQuery(ctx *parser.OC_RegularQueryContext) {
-}
-
 func (s *QueryVisitor) EnterOC_SingleQuery(ctx *parser.OC_SingleQueryContext) {
 	s.Query.SingleQuery = model.NewSingleQuery()
-}
-
-func (s *QueryVisitor) ExitOC_SingleQuery(ctx *parser.OC_SingleQueryContext) {
 }
 
 func (s *QueryVisitor) EnterOC_MultiPartQuery(ctx *parser.OC_MultiPartQueryContext) {
@@ -559,6 +511,51 @@ func (s *CreateVisitor) ExitOC_Pattern(ctx *parser.OC_PatternContext) {
 	s.Create.Pattern = s.ctx.Exit().(*PatternVisitor).PatternParts
 }
 
+type MergeVisitor struct {
+	BaseVisitor
+
+	Merge *model.Merge
+}
+
+func (s *MergeVisitor) EnterOC_PatternPart(ctx *parser.OC_PatternPartContext) {
+	s.ctx.Enter(&PatternPartVisitor{
+		PatternPart: &model.PatternPart{},
+	})
+}
+
+func (s *MergeVisitor) ExitOC_PatternPart(ctx *parser.OC_PatternPartContext) {
+	s.Merge.PatternPart = s.ctx.Exit().(*PatternPartVisitor).PatternPart
+}
+
+func (s *MergeVisitor) EnterOC_MergeAction(ctx *parser.OC_MergeActionContext) {
+	s.ctx.Enter(&MergeActionVisitor{
+		MergeAction: &model.MergeAction{
+			OnCreate: HasTokens(ctx, parser.CypherLexerON, parser.CypherLexerCREATE),
+			OnMatch:  HasTokens(ctx, parser.CypherLexerON, parser.CypherLexerMATCH),
+		},
+	})
+}
+
+func (s *MergeVisitor) ExitOC_MergeAction(ctx *parser.OC_MergeActionContext) {
+	s.Merge.MergeActions = append(s.Merge.MergeActions, s.ctx.Exit().(*MergeActionVisitor).MergeAction)
+}
+
+type MergeActionVisitor struct {
+	BaseVisitor
+
+	MergeAction *model.MergeAction
+}
+
+func (s *MergeActionVisitor) EnterOC_Set(ctx *parser.OC_SetContext) {
+	s.ctx.Enter(&SetVisitor{
+		Set: &model.Set{},
+	})
+}
+
+func (s *MergeActionVisitor) ExitOC_Set(ctx *parser.OC_SetContext) {
+	s.MergeAction.Set = s.ctx.Exit().(*SetVisitor).Set
+}
+
 type UpdatingClauseVisitor struct {
 	BaseVisitor
 
@@ -615,16 +612,20 @@ func (s *UpdatingClauseVisitor) ExitOC_Set(ctx *parser.OC_SetContext) {
 	s.UpdatingClause.Clause = s.ctx.Exit().(*SetVisitor).Set
 }
 
+func (s *UpdatingClauseVisitor) EnterOC_Merge(ctx *parser.OC_MergeContext) {
+	s.ctx.Enter(&MergeVisitor{
+		Merge: &model.Merge{},
+	})
+}
+
+func (s *UpdatingClauseVisitor) ExitOC_Merge(ctx *parser.OC_MergeContext) {
+	s.UpdatingClause.Clause = s.ctx.Exit().(*MergeVisitor).Merge
+}
+
 type NodeLabelsVisitor struct {
 	BaseVisitor
 
 	Kinds graph.Kinds
-}
-
-func (s *NodeLabelsVisitor) EnterOC_NodeLabel(ctx *parser.OC_NodeLabelContext) {
-}
-
-func (s *NodeLabelsVisitor) ExitOC_NodeLabel(ctx *parser.OC_NodeLabelContext) {
 }
 
 func (s *NodeLabelsVisitor) EnterOC_LabelName(ctx *parser.OC_LabelNameContext) {
@@ -711,12 +712,6 @@ func (s *PropertyExpressionVisitor) EnterOC_Atom(ctx *parser.OC_AtomContext) {
 
 func (s *PropertyExpressionVisitor) ExitOC_Atom(ctx *parser.OC_AtomContext) {
 	s.PropertyLookup.Atom = s.ctx.Exit().(*AtomVisitor).Atom
-}
-
-func (s *PropertyExpressionVisitor) EnterOC_PropertyLookup(ctx *parser.OC_PropertyLookupContext) {
-}
-
-func (s *PropertyExpressionVisitor) ExitOC_PropertyLookup(ctx *parser.OC_PropertyLookupContext) {
 }
 
 func (s *PropertyExpressionVisitor) EnterOC_PropertyKeyName(ctx *parser.OC_PropertyKeyNameContext) {

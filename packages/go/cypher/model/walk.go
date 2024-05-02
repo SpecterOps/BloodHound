@@ -18,6 +18,7 @@ package model
 
 import (
 	"fmt"
+
 	"github.com/specterops/bloodhound/dawgs/graph"
 )
 
@@ -265,6 +266,13 @@ func cypherModelCollect(nextCursor *WalkCursor, expression Expression) bool {
 
 	case *PartialArithmeticExpression:
 		CollectExpression(nextCursor, typedExpr.Right)
+
+	case *Merge:
+		Collect(nextCursor, typedExpr.PatternPart)
+		CollectSlice(nextCursor, typedExpr.MergeActions)
+
+	case *MergeAction:
+		Collect(nextCursor, typedExpr.Set)
 
 	case *Delete:
 		CollectExpressions(nextCursor, typedExpr.Expressions)

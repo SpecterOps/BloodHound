@@ -17,7 +17,6 @@
         "golang.go",
         "bierner.markdown-checkbox",
         "ryu1kn.partial-diff",
-        "jebbs.plantuml",
         "ms-ossdata.vscode-postgresql",
         "ms-python.vscode-pylance",
         "ms-python.python",
@@ -32,6 +31,7 @@
         "esbenp.prettier-vscode",
         "prisma.prisma",
         "kokakiwi.vscode-just",
-        "github.vscode-github-actions"
+        "github.vscode-github-actions",
+        "mike-lischke.vscode-antlr4"
     ]
 }
