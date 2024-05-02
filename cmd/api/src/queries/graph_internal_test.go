@@ -31,6 +31,41 @@ import (
 	"go.uber.org/mock/gomock"
 )
 
+func Test_ApplyTimeoutReduction(t *testing.T) {
+	// Query Weight			Reduction Factor 		  Runtime
+	// 	0-4						1						x
+	// 	5-9						2						x/2
+	//	10-14					3						x/3
+	//	15-19					4						x/4
+	//	20-24					5						x/5
+	//	25-29					6						x/6
+	//	30-34					7						x/7
+	//	35-39					8						x/8
+	//	40-44					9						x/9
+	//	45-49					10						x/10
+	// 	50						11						x/11
+	//	>50						Too complex
+
+	var (
+		inputRuntime      = 15 * time.Minute
+		expectedReduction int64
+	)
+
+	// Start with weight of 2, increase by 5 in each iteration until reduction factor = 11
+	// This will run the function and assess the results for each range of permissible query
+	// weights, against their respective expected reduction factor and runtime.
+	weight := int64(2)
+	for expectedReduction = 1; expectedReduction < 12; expectedReduction++ {
+		expectedRuntime := int64(inputRuntime.Seconds()) / expectedReduction
+		reducedRuntime, reduction := applyTimeoutReduction(weight, inputRuntime)
+
+		require.Equal(t, expectedReduction, reduction)
+		require.Equal(t, expectedRuntime, int64(reducedRuntime.Seconds()))
+
+		weight += 5
+	}
+}
+
 const cacheKey = "ad-entity-query_queryName_objectID_1"
 
 func Test_runMaybeCachedEntityQuery(t *testing.T) {

@@ -412,7 +412,7 @@ func (s *GraphQuery) PrepareCypherQuery(rawCypher string) (PreparedQuery, error)
 		// log query details if it is rejected due to high complexity
 		highComplexityLog := log.WithLevel(log.LevelError)
 		highComplexityLog.Str("query", strippedQueryBuffer.String())
-		highComplexityLog.Msg(fmt.Sprintf("Query rejected. Query weight: %.2f. Maximum allowed weight: %d", complexityMeasure.Weight, MaxQueryComplexityWeightAllowed))
+		highComplexityLog.Msg(fmt.Sprintf("Query rejected. Query weight: %d. Maximum allowed weight: %d", complexityMeasure.Weight, MaxQueryComplexityWeightAllowed))
 
 		return graphQuery, newQueryError(ErrCypherQueryTooComplex)
 	}
@@ -470,24 +470,24 @@ func (s *GraphQuery) RawCypherSearch(ctx context.Context, pQuery PreparedQuery, 
 		)
 
 		if bhCtxInst.Timeout > maxTimeout {
-			log.Debugf("Custom timeout is too large, using the maximum allowable timeout of %.2f seconds instead", maxTimeout.Seconds())
+			log.Debugf("Custom timeout is too large, using the maximum allowable timeout of %d minutes instead", maxTimeout.Minutes())
 			bhCtxInst.Timeout = maxTimeout
 		}
 
 		availableRuntime := bhCtxInst.Timeout
 		if availableRuntime > 0 {
-			log.Debugf("Available timeout for query is set to: %.2f seconds", availableRuntime.Seconds())
+			log.Debugf("Available timeout for query is set to: %d seconds", availableRuntime.Seconds())
 		} else {
 			availableRuntime = defaultTimeout
-
 			if !s.DisableCypherComplexityLimit {
-				// The weight of the query is divided by 5 to get a runtime reduction factor. This means that query weights
-				// of 5 or less will get the full runtime duration.
-				if reductionFactor := time.Duration(pQuery.complexity.Weight) / 5; reductionFactor > 0 {
-					availableRuntime /= reductionFactor
+				var reductionFactor int64
+				availableRuntime, reductionFactor = applyTimeoutReduction(pQuery.complexity.Weight, availableRuntime)
 
-					log.Infof("Cypher query cost is: %.2f. Reduction factor for query is: %d. Available timeout for query is now set to: %.2f minutes", pQuery.complexity.Weight, reductionFactor, availableRuntime.Minutes())
-				}
+				logEvent := log.WithLevel(log.LevelInfo)
+				logEvent.Str("query", pQuery.strippedQuery)
+				logEvent.Str("query cost", fmt.Sprintf("%d", pQuery.complexity.Weight))
+				logEvent.Str("reduction factor", strconv.FormatInt(reductionFactor, 10))
+				logEvent.Msg(fmt.Sprintf("Available timeout for query is set to: %.2f seconds", availableRuntime.Seconds()))
 			}
 		}
 
@@ -495,10 +495,7 @@ func (s *GraphQuery) RawCypherSearch(ctx context.Context, pQuery PreparedQuery, 
 		config.Timeout = availableRuntime
 	}
 
-	logEvent := log.WithLevel(log.LevelInfo)
-	logEvent.Str("query", pQuery.strippedQuery)
-	logEvent.Str("query cost", fmt.Sprintf("%.2f", pQuery.complexity.Weight))
-	logEvent.Msg("Executing user cypher query")
+	start := time.Now()
 
 	// TODO: verify write vs read tx need differentiation after PG migration
 	if pQuery.HasMutation {
@@ -507,12 +504,19 @@ func (s *GraphQuery) RawCypherSearch(ctx context.Context, pQuery PreparedQuery, 
 		err = s.Graph.ReadTransaction(ctx, txDelegate, txOptions)
 	}
 
+	runtime := time.Since(start)
+
+	logEvent := log.WithLevel(log.LevelInfo)
+	logEvent.Str("query", pQuery.strippedQuery)
+	logEvent.Str("query cost", fmt.Sprintf("%d", pQuery.complexity.Weight))
+	logEvent.Msg(fmt.Sprintf("Executed user cypher query with cost %d in %.2f seconds", pQuery.complexity.Weight, runtime.Seconds()))
+
 	if err != nil {
 		// Log query details if neo4j times out
 		if util.IsNeoTimeoutError(err) {
 			timeoutLog := log.WithLevel(log.LevelError)
 			timeoutLog.Str("query", pQuery.strippedQuery)
-			timeoutLog.Str("query cost", fmt.Sprintf("%.2f", pQuery.complexity.Weight))
+			timeoutLog.Str("query cost", fmt.Sprintf("%d", pQuery.complexity.Weight))
 			timeoutLog.Msg("Neo4j timed out while executing cypher query")
 		} else {
 			log.Errorf("RawCypherSearch failed: %v", err)
@@ -521,6 +525,22 @@ func (s *GraphQuery) RawCypherSearch(ctx context.Context, pQuery PreparedQuery, 
 	}
 
 	return graphResponse, nil
+}
+
+func applyTimeoutReduction(queryWeight int64, availableRuntime time.Duration) (time.Duration, int64) {
+	// The weight of the query is divided by 5 to get a runtime reduction factor, in a way that:
+	// weights of 4 or less get the full runtime duration
+	// weights of 5-9 will get 1/2 the runtime duration
+	// weights of 10-15 will get 1/3 the runtime duration
+	// and so on until the max weight of 50 gets 1/11 the runtime duration
+	reductionFactor := 1 + (queryWeight / 5)
+
+	availableRuntimeInt := int64(availableRuntime.Seconds())
+	// reductionFactor will be the math.Floor() of the result of the division below
+	availableRuntimeInt /= reductionFactor
+	availableRuntime = time.Duration(availableRuntimeInt) * time.Second
+
+	return availableRuntime, reductionFactor
 }
 
 func nodeToSearchResult(node *graph.Node) model.SearchResult {

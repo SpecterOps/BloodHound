@@ -131,6 +131,7 @@ func TestGraphQuery_RawCypherSearch(t *testing.T) {
 
 	t.Run("RawCypherSearch query complexity controls", func(t *testing.T) {
 		// Validate that query complexity controls are working
+		// Scenario 1:
 		mockGraphDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, txDelegate graph.TransactionDelegate, options ...graph.TransactionOption) error {
 			// Validate that the options are being set correctly
 			if len(options) != 1 {
@@ -141,28 +142,44 @@ func TestGraphQuery_RawCypherSearch(t *testing.T) {
 			txConfig := &graph.TransactionConfig{}
 			options[0](txConfig)
 
-			require.Equal(t, time.Minute*5, txConfig.Timeout)
+			require.Equal(t, time.Second*225, txConfig.Timeout)
 
 			return nil
-		}).Times(2)
+		}).Times(1)
 
+		// Scenario 2:
+		mockGraphDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, txDelegate graph.TransactionDelegate, options ...graph.TransactionOption) error {
+			// Validate that the options are being set correctly
+			if len(options) != 1 {
+				t.Fatalf("Expected only one transaction option for RawCypherSearch but saw: %d", len(options))
+			}
+
+			// Create a new transaction config to capture the query timeout logic
+			txConfig := &graph.TransactionConfig{}
+			options[0](txConfig)
+
+			require.Equal(t, time.Second*5, txConfig.Timeout)
+
+			return nil
+		}).Times(1)
+
+		// Scenario 1:
 		// Unset the user-set timeout in the BH context to validate QC runtime reduction of a complex query
-		// This will be set to a default of 15 min, with a reduction factor of 3, so we should have a 5 min config timeout
-
-		// availableRuntime = 15min (default), query cost = 15
-		// Then reductionFactor = 15/5 = 3
-		// Therefore actual timeout = availableRuntime/reductionFactor : 15/3 = 5min
+		// This will be set to a default of 15 min or 900 sec
+		// availableRuntime = 900 sec, query cost = 15
+		// reductionFactor = 1 + (15/5) = 4
+		// Therefore actual timeout = availableRuntime/reductionFactor : 900/4 = 225sec
 
 		outerBHCtxInst.Timeout = 0
-
 		preparedQuery, err := gq.PrepareCypherQuery("match ()-[:HasSession*..]->()-[:MemberOf*..]->() return n;")
 		require.Nil(t, err)
 		_, err = gq.RawCypherSearch(outerBHCtxInst.ConstructGoContext(), preparedQuery, false)
 		require.Nil(t, err)
 
+		// Scenario 2:
 		// Prove that overriding QC with a user-preference works
 		// This will be directly used as the config timeout, without any reduction factor
-		outerBHCtxInst.Timeout = time.Minute * 5
+		outerBHCtxInst.Timeout = time.Second * 5
 
 		preparedQuery, err = gq.PrepareCypherQuery("match ()-[:HasSession*..]->()-[:MemberOf*..]->() return n;")
 		require.Nil(t, err)
