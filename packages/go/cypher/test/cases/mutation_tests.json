@@ -1,0 +1,44 @@
+{
+    "test_cases": [
+        {
+            "name": "Remove",
+            "type": "string_match",
+            "details": {
+                "query": "match (a:Agent {name: Smith}) remove a.trapped return a",
+                "complexity": 2
+            }
+        },
+        {
+            "name": "Set",
+            "type": "string_match",
+            "details": {
+                "query": "match (n:Human {name: Neo}) set n.one = true return n",
+                "complexity": 2
+            }
+        },
+        {
+            "name": "Merge",
+            "type": "string_match",
+            "details": {
+                "query": "merge (p:Program) ON MATCH set p.name = 'Smith' return p",
+                "complexity": 2
+            }
+        },
+        {
+            "name": "Delete",
+            "type": "string_match",
+            "details": {
+                "query": "match (u:Human {name: Dozer}) delete u",
+                "complexity": 2
+            }
+        },
+        {
+            "name": "Create",
+            "type": "string_match",
+            "details": {
+                "query": "create (u:Human {name: Neo}) return u",
+                "complexity": 2
+            }
+        }
+    ]
+}
