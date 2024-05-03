@@ -65,18 +65,20 @@ export const getKeywordAndTypeValues = (inputValue = ''): { keyword: string; typ
 };
 
 export const validateNodeType = (type: string): EntityKinds | undefined => {
-    if (type.toLowerCase() === 'meta') return 'Meta';
+    let result = undefined;
+
+    if (type.toLowerCase() === 'meta') result = 'Meta' as EntityKinds;
 
     Object.values(ActiveDirectoryNodeKind).forEach((activeDirectoryType) => {
         if (activeDirectoryType.localeCompare(type, undefined, { sensitivity: 'base' }) === 0)
-            return activeDirectoryType;
+            result = activeDirectoryType;
     });
 
     Object.values(AzureNodeKind).forEach((azureType) => {
-        if (azureType.localeCompare(type, undefined, { sensitivity: 'base' }) === 0) return azureType;
+        if (azureType.localeCompare(type, undefined, { sensitivity: 'base' }) === 0) result = azureType;
     });
 
-    return undefined;
+    return result;
 };
 
 const getErrorText = (error: any): string => {
