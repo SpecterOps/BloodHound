@@ -82,6 +82,7 @@ func QueryComplexity(query *model.RegularQuery) (*ComplexityMeasure, error) {
 	WithVisitor(analyzer, measure.onSortItem)
 	WithVisitor(analyzer, measure.onPartialComparison)
 	WithVisitor(analyzer, measure.onWhere)
+	WithVisitor(analyzer, measure.onLimit)
 
 	// Mutations
 	WithVisitor(analyzer, measure.onCreate)

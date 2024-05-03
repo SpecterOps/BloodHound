@@ -10,10 +10,9 @@ import (
 // Weight constants aren't well named for right now. These are just dumb values to assign heuristic weight to certain
 // query elements
 const (
-	weight1 int64 = iota + 1
-	weight2
-	weight3
-
+	weight1             int64 = 1
+	weight2             int64 = 2
+	weight3             int64 = 3
 	weightHeavy         int64 = 7
 	weightMaxComplexity int64 = 50
 )
@@ -21,9 +20,12 @@ const (
 type ComplexityMeasure struct {
 	Weight int64
 
-	numPatterns     int64
-	numProjections  int64
-	nodeLookupKinds map[string]graph.Kinds
+	hasWhere             bool
+	hasPatternProperties bool
+	hasLimit             bool
+	numPatterns          int64
+	numProjections       int64
+	nodeLookupKinds      map[string]graph.Kinds
 }
 
 func (s *ComplexityMeasure) onCreate(_ *model.WalkStack, _ *model.Create) error {
@@ -49,11 +51,23 @@ func (s *ComplexityMeasure) onDelete(_ *model.WalkStack, node *model.Delete) err
 }
 
 func (s *ComplexityMeasure) onExit() {
+	var hasKindMatcher bool
+
 	for _, kindMatchers := range s.nodeLookupKinds {
 		if len(kindMatchers) == 0 {
 			// Unlabeled nodes will incur a lookup of all nodes in the graph
 			s.Weight += weight2
+		} else {
+			hasKindMatcher = true
 		}
+	}
+
+	// TODO: This is a little gross and needs to be refactored
+	// Additionally, while this is what we want for most query types, it does have the side effect of
+	// disallowing creating a naked node (CREATE (n) RETURN n). Probably fine even if this is the behavior we keep
+	// after refactor because it's kinda useless cypher, but it also isn't particularly complex, it's just a side effect
+	if !hasKindMatcher && !s.hasPatternProperties && !s.hasWhere && !s.hasLimit {
+		s.Weight += weightMaxComplexity
 	}
 }
 
@@ -107,6 +121,10 @@ func (s *ComplexityMeasure) onNodePattern(_ *model.WalkStack, node *model.NodePa
 
 		// Track this node pattern to see if any subsequent expressions will narrow its kind matchers
 		s.nodeLookupKinds[nodePatternBinding.Symbol] = nodeLookupKinds
+	}
+
+	if node.Properties != nil {
+		s.hasPatternProperties = true
 	}
 
 	return nil
@@ -198,6 +216,14 @@ func (s *ComplexityMeasure) onRelationshipPattern(_ *model.WalkStack, node *mode
 		}
 	}
 
+	if node.Properties != nil {
+		s.hasPatternProperties = true
+	}
+
+	if len(node.Kinds) != 0 {
+		s.hasPatternProperties = true
+	}
+
 	return nil
 }
 
@@ -215,6 +241,11 @@ func (s *ComplexityMeasure) onSet(_ *model.WalkStack, node *model.Set) error {
 	return nil
 }
 
+func (s *ComplexityMeasure) onLimit(_ *model.WalkStack, node *model.Limit) error {
+	s.hasLimit = true
+	return nil
+}
+
 func (s *ComplexityMeasure) onSortItem(_ *model.WalkStack, _ *model.SortItem) error {
 	// Sorting incurs a weight since it will change how the projection is materialized
 	s.Weight += weight1
@@ -222,8 +253,8 @@ func (s *ComplexityMeasure) onSortItem(_ *model.WalkStack, _ *model.SortItem) er
 }
 
 func (s *ComplexityMeasure) onWhere(_ *model.WalkStack, _ *model.Where) error {
-	// Filters in the query plan which may or may not take advantage
-	// of indexes and should be weighted accordingly
+	// Filters in the query plan may or may not take advantage of indexes and should be weighted accordingly
 	s.Weight += weight1
+	s.hasWhere = true
 	return nil
 }
