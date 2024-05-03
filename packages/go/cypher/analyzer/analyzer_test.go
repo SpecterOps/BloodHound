@@ -17,7 +17,6 @@
 package analyzer_test
 
 import (
-	"github.com/specterops/bloodhound/log"
 	"testing"
 
 	"github.com/specterops/bloodhound/cypher/analyzer"
@@ -28,7 +27,7 @@ import (
 
 func TestQueryComplexity(t *testing.T) {
 	// Walk through all positive test cases to ensure that the walker can handle all supported types
-	for _, caseLoad := range []string{test.MutationTestCases} {
+	for _, caseLoad := range []string{test.PositiveTestCases, test.MutationTestCases} {
 		for _, testCase := range test.LoadFixture(t, caseLoad).RunnableCases() {
 			t.Run(testCase.Name, func(t *testing.T) {
 				// Only bother with the string match tests
@@ -46,7 +45,6 @@ func TestQueryComplexity(t *testing.T) {
 					if details.Complexity != nil {
 						complexity, analyzerErr := analyzer.QueryComplexity(queryModel)
 						require.Nil(t, analyzerErr)
-						log.Infof("query is %s complexity is %d", details.Query, *details.Complexity)
 
 						require.Equal(t, *details.Complexity, complexity.Weight)
 					}

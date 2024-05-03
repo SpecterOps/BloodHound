@@ -13,7 +13,7 @@
             "type": "string_match",
             "details": {
                 "query": "merge (p:Program) on match set p.name = 'Smith' return p",
-                "complexity": 2
+                "complexity": 3
             }
         },
         {
@@ -21,7 +21,7 @@
             "type": "string_match",
             "details": {
                 "query": "create (u:Human {name: Neo}) return u",
-                "complexity": 1
+                "complexity": 2
             }
         },
         {
@@ -29,7 +29,7 @@
             "type": "string_match",
             "details": {
                 "query": "create (a:Label $1) return a",
-                "complexity": 1
+                "complexity": 2
             }
         },
         {
@@ -37,7 +37,7 @@
             "type": "string_match",
             "details": {
                 "query": "create (a:Label $named) return a",
-                "complexity": 1
+                "complexity": 2
             }
         },
         {
@@ -45,7 +45,7 @@
             "type": "string_match",
             "details": {
                 "query": "create (a:Label {p: '1234'}), (b:Other) return a, b",
-                "complexity": 3
+                "complexity": 4
             }
         },
         {
@@ -53,7 +53,7 @@
             "type": "string_match",
             "details": {
                 "query": "create p = (:Label {p: '1234'})-[:Link {r: 1234}]->(b {p: '4321'}) return p",
-                "complexity": 4
+                "complexity": 5
             }
         },
         {
@@ -61,7 +61,7 @@
             "type": "string_match",
             "details": {
                 "query": "create p = (:Label {p: '1234'})-[:Link $1]->(b {p: '4321'}) return p",
-                "complexity": 4
+                "complexity": 5
             }
         },
         {
@@ -69,7 +69,7 @@
             "type": "string_match",
             "details": {
                 "query": "create p = (:Label {p: '1234'})-[:Link $named]->(b {p: '4321'}) return p",
-                "complexity": 4
+                "complexity": 5
             }
         },
         {
@@ -77,7 +77,7 @@
             "type": "string_match",
             "details": {
                 "query": "match (a), (b) where a.name = 'a' and b.linked = id(a) create p = (a)-[:Linked]->(b) return p",
-                "complexity": 11
+                "complexity": 12
             }
         },
         {
@@ -94,7 +94,7 @@
             "details": {
                 "query": "match (b) set b += {prop1: '123', lprop: [1, [2, 3, 4], {a: 1234}]} return b",
                 "matcher": "match \\(b\\) set b \\+= \\{(prop1: '123', lprop: \\[1, \\[2, 3, 4\\], \\{a: 1234}]|lprop: \\[1, \\[2, 3, 4\\], \\{a: 1234}], prop1: '123')} return b",
-                "complexity": 3
+                "complexity": 4
             }
         },
         {
@@ -102,7 +102,7 @@
             "type": "string_match",
             "details": {
                 "query": "match (b) set b.prop = null return b",
-                "complexity": 3
+                "complexity": 4
             }
         },
         {
@@ -110,7 +110,7 @@
             "type": "string_match",
             "details": {
                 "query": "match (a), (b) set a.prop = b.prop",
-                "complexity": 7
+                "complexity": 8
             }
         },
         {
@@ -118,7 +118,7 @@
             "type": "string_match",
             "details": {
                 "query": "match (b) set b:Other return b",
-                "complexity": 3
+                "complexity": 4
             }
         },
         {
@@ -126,7 +126,7 @@
             "type": "string_match",
             "details": {
                 "query": "match (b) set b.name = '123', b.other = '123' return b",
-                "complexity": 3
+                "complexity": 4
             }
         },
         {
@@ -134,7 +134,7 @@
             "type": "string_match",
             "details": {
                 "query": "match (b) set b.name = '123' set b:Label return b",
-                "complexity": 3
+                "complexity": 5
             }
         },
         {
@@ -142,7 +142,7 @@
             "type": "string_match",
             "details": {
                 "query": "match (b) remove b.name return b",
-                "complexity": 3
+                "complexity": 4
             }
         },
         {
@@ -150,7 +150,7 @@
             "type": "string_match",
             "details": {
                 "query": "match (b) remove b.name, b.other return b",
-                "complexity": 3
+                "complexity": 4
             }
         },
         {
@@ -158,7 +158,7 @@
             "type": "string_match",
             "details": {
                 "query": "match (b) remove b.name remove b:Label return b",
-                "complexity": 1
+                "complexity": 3
             }
         },
         {
@@ -174,7 +174,7 @@
             "type": "string_match",
             "details": {
                 "query": "match (b) delete b return b",
-                "complexity": 3
+                "complexity": 6
             }
         },
         {
@@ -182,7 +182,7 @@
             "type": "string_match",
             "details": {
                 "query": "match (u:Human {name: Dozer}) delete u",
-                "complexity": 2
+                "complexity": 4
             }
         },
         {
@@ -190,7 +190,7 @@
             "type": "string_match",
             "details": {
                 "query": "match (b) detach delete b return b",
-                "complexity": 3
+                "complexity": 13
             }
         },
         {
@@ -198,7 +198,7 @@
             "type": "string_match",
             "details": {
                 "query": "match (a), (b) detach delete a, b return b",
-                "complexity": 7
+                "complexity": 17
             }
         }
     ]
