@@ -66,5 +66,7 @@ export default {
         'react-immutable-proptypes',
         'lodash/toString',
         'lodash/cloneDeep',
+        'lodash/isEmpty',
+        'lodash/startCase',
     ],
 };

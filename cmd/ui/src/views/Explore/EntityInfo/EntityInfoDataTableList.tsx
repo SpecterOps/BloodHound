@@ -15,14 +15,17 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Box, Divider } from '@mui/material';
-import { EntityInfoDataTableProps } from 'bh-shared-ui';
+import { ActiveDirectoryNodeKind, EntityKinds, allSections } from 'bh-shared-ui';
 import React from 'react';
+import { EntityInfoContentProps } from './EntityInfoContent';
 import EntityInfoDataTable from './EntityInfoDataTable';
-export interface EntityInfoDataTableListProps {
-    tables: EntityInfoDataTableProps[];
-}
 
-const EntityInfoDataTableList: React.FC<EntityInfoDataTableListProps> = ({ tables }) => {
+const EntityInfoDataTableList: React.FC<EntityInfoContentProps> = ({ id, nodeType }) => {
+    let type = nodeType as EntityKinds;
+    if (nodeType === ActiveDirectoryNodeKind.LocalGroup || nodeType === ActiveDirectoryNodeKind.LocalUser)
+        type = ActiveDirectoryNodeKind.Entity;
+    const tables = allSections[type]?.(id) || [];
+
     return (
         <>
             {tables.map((table, index) => (

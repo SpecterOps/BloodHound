@@ -16,25 +16,24 @@
 
 import { faAngleDoubleUp, faMinus, faPlus } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Typography } from '@mui/material';
-import { Icon, NodeIcon, EntityKinds } from 'bh-shared-ui';
+import { Box, Typography } from '@mui/material';
+import { EntityKinds, Icon, NodeIcon, useHeaderStyles } from 'bh-shared-ui';
 import React from 'react';
 import { useEntityInfoPanelContext } from 'src/views/Explore/EntityInfo/EntityInfoPanelContext';
-import { useHeaderStyles } from 'bh-shared-ui';
 
 interface HeaderProps {
-    name?: string;
-    nodeType?: EntityKinds;
-    onToggleExpanded: (expanded: boolean) => void;
     expanded: boolean;
+    name: string;
+    onToggleExpanded: (expanded: boolean) => void;
+    nodeType?: EntityKinds;
 }
 
-const Header: React.FC<HeaderProps> = ({ name = 'None Selected', nodeType, onToggleExpanded, expanded }) => {
+const Header: React.FC<HeaderProps> = ({ name, nodeType, onToggleExpanded, expanded }) => {
     const styles = useHeaderStyles();
     const entityInfoPanelContext = useEntityInfoPanelContext();
 
     return (
-        <div className={styles.header}>
+        <Box className={styles.header}>
             <Icon
                 className={styles.icon}
                 click={() => {
@@ -60,7 +59,7 @@ const Header: React.FC<HeaderProps> = ({ name = 'None Selected', nodeType, onTog
                 data-testid='explore_entity-information-panel_button-collapse-all'>
                 <FontAwesomeIcon icon={faAngleDoubleUp} />
             </Icon>
-        </div>
+        </Box>
     );
 };
 
