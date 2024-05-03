@@ -41,9 +41,7 @@ export const abortEntitySectionRequest = () => {
 
 export type EntityKinds = ActiveDirectoryNodeKind | AzureNodeKind | 'Meta';
 
-export const entityInformationEndpoints: Partial<
-    Record<EntityKinds, (id: string, options?: RequestOptions) => Promise<any>>
-> = {
+export const entityInformationEndpoints: Record<EntityKinds, (id: string, options?: RequestOptions) => Promise<any>> = {
     [AzureNodeKind.Entity]: (id: string, options?: RequestOptions) =>
         apiClient.getAZEntityInfoV2('az-base', id, undefined, false, undefined, undefined, undefined, options),
     [AzureNodeKind.App]: (id: string, options?: RequestOptions) =>

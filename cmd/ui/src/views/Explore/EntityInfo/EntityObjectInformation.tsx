@@ -17,13 +17,13 @@
 import { Alert, Skeleton } from '@mui/material';
 import {
     EntityField,
-    EntityKinds,
     FieldsContainer,
     ObjectInfoFields,
     apiClient,
     entityInformationEndpoints,
     formatObjectInfoFields,
     getNodeByDatabaseIdCypher,
+    validateNodeType,
 } from 'bh-shared-ui';
 import { RequestOptions } from 'js-client-library';
 import React from 'react';
@@ -34,24 +34,30 @@ import { EntityInfoContentProps } from './EntityInfoContent';
 
 const EntityObjectInformation: React.FC<EntityInfoContentProps> = ({ id, nodeType, databaseId }) => {
     const requestDetails: {
-        endpoint: (params: string, options?: RequestOptions, includeProperties?: boolean) => Promise<any>;
+        endpoint: (
+            params: string,
+            options?: RequestOptions,
+            includeProperties?: boolean
+        ) => Promise<Record<string, any>>;
         param: string;
     } = {
-        endpoint: async function () {},
+        endpoint: async function () {
+            return {};
+        },
         param: '',
     };
 
-    const hasDefinedEndpoint = !!entityInformationEndpoints[nodeType as EntityKinds];
+    const validatedKind = validateNodeType(nodeType);
 
-    if (hasDefinedEndpoint) {
-        requestDetails.endpoint = entityInformationEndpoints[nodeType as EntityKinds]!;
+    if (validatedKind) {
+        requestDetails.endpoint = entityInformationEndpoints[validatedKind];
         requestDetails.param = id;
     } else if (databaseId) {
         requestDetails.endpoint = apiClient.cypherSearch;
         requestDetails.param = getNodeByDatabaseIdCypher(databaseId);
     }
 
-    const informationAvailable = hasDefinedEndpoint || !!databaseId;
+    const informationAvailable = !!validatedKind || !!databaseId;
 
     const {
         data: objectInformation,
@@ -61,7 +67,7 @@ const EntityObjectInformation: React.FC<EntityInfoContentProps> = ({ id, nodeTyp
         ['entity', nodeType, id],
         ({ signal }) =>
             requestDetails.endpoint(requestDetails.param, { signal }, true).then((res) => {
-                if (hasDefinedEndpoint) return res.data.data.props;
+                if (validatedKind) return res.data.data.props;
                 else if (databaseId) return Object.values(res.data.data.nodes as Record<string, any>)[0].properties;
                 else return {};
             }),
