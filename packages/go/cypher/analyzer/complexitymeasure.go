@@ -2,6 +2,7 @@ package analyzer
 
 import (
 	"fmt"
+
 	"github.com/specterops/bloodhound/cypher/model"
 	"github.com/specterops/bloodhound/dawgs/graph"
 )
@@ -54,13 +55,6 @@ func (s *ComplexityMeasure) onExit() {
 			s.Weight += weight2
 		}
 	}
-}
-
-func (s *ComplexityMeasure) onFilterExpression(_ *model.WalkStack, _ *model.FilterExpression) error {
-	// Filter expressions convert directly into a filter in the query plan which may or may not take advantage
-	// of indexes and should be weighted accordingly
-	s.Weight += weight1
-	return nil
 }
 
 func (s *ComplexityMeasure) onFunctionInvocation(_ *model.WalkStack, node *model.FunctionInvocation) error {
@@ -223,6 +217,13 @@ func (s *ComplexityMeasure) onSet(_ *model.WalkStack, node *model.Set) error {
 
 func (s *ComplexityMeasure) onSortItem(_ *model.WalkStack, _ *model.SortItem) error {
 	// Sorting incurs a weight since it will change how the projection is materialized
+	s.Weight += weight1
+	return nil
+}
+
+func (s *ComplexityMeasure) onWhere(_ *model.WalkStack, _ *model.Where) error {
+	// Filters in the query plan which may or may not take advantage
+	// of indexes and should be weighted accordingly
 	s.Weight += weight1
 	return nil
 }

@@ -77,7 +77,7 @@
             "type": "string_match",
             "details": {
                 "query": "match (a), (b) where a.name = 'a' and b.linked = id(a) create p = (a)-[:Linked]->(b) return p",
-                "complexity": 12
+                "complexity": 13
             }
         },
         {

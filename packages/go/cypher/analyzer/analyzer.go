@@ -18,6 +18,7 @@ package analyzer
 
 import (
 	"errors"
+
 	"github.com/specterops/bloodhound/cypher/model"
 	"github.com/specterops/bloodhound/dawgs/graph"
 )
@@ -78,9 +79,9 @@ func QueryComplexity(query *model.RegularQuery) (*ComplexityMeasure, error) {
 	WithVisitor(analyzer, measure.onFunctionInvocation)
 	WithVisitor(analyzer, measure.onKindMatcher)
 	WithVisitor(analyzer, measure.onQuantifier)
-	WithVisitor(analyzer, measure.onFilterExpression)
 	WithVisitor(analyzer, measure.onSortItem)
 	WithVisitor(analyzer, measure.onPartialComparison)
+	WithVisitor(analyzer, measure.onWhere)
 
 	// Mutations
 	WithVisitor(analyzer, measure.onCreate)
