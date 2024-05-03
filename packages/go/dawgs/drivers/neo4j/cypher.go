@@ -21,8 +21,8 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/specterops/bloodhound/cypher/backend/cypher"
 	"github.com/specterops/bloodhound/cypher/frontend"
+	"github.com/specterops/bloodhound/cypher/models/cypher/format"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/log"
 )
@@ -303,7 +303,7 @@ func cypherBuildNodeUpdateQueryBatch(updates []graph.NodeUpdate) ([]string, []ma
 
 func stripCypherQuery(rawQuery string) string {
 	var (
-		strippedEmitter = cypher.NewCypherEmitter(true)
+		strippedEmitter = format.NewCypherEmitter(true)
 		buffer          = &bytes.Buffer{}
 	)
 

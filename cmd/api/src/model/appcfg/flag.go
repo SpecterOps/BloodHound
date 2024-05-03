@@ -30,6 +30,7 @@ const (
 	FeatureReconciliation             = "reconciliation"
 	FeatureEntityPanelCaching         = "entity_panel_cache"
 	FeatureAdcs                       = "adcs"
+	FeaturePGMigrationDualIngest      = "pg_migration_dual_ingest"
 	FeatureClearGraphData             = "clear_graph_data"
 	FeatureRiskExposureNewCalculation = "risk_exposure_new_calculation"
 	FeatureFedRAMPEULA                = "fedramp_eula"
@@ -44,6 +45,13 @@ func AvailableFlags() FeatureFlagSet {
 			Key:           FeatureButterflyAnalysis,
 			Name:          "Enhanced Asset Inbound-Outbound Exposure Analysis",
 			Description:   "Enables more extensive analysis of attack path findings that allows BloodHound to help the user prioritize remediation of the most exposed assets.",
+			Enabled:       false,
+			UserUpdatable: false,
+		},
+		FeaturePGMigrationDualIngest: {
+			Key:           FeaturePGMigrationDualIngest,
+			Name:          "PostgreSQL Migration Dual Ingest",
+			Description:   "Enables dual ingest pathing for both Neo4j and PostgreSQL.",
 			Enabled:       false,
 			UserUpdatable: false,
 		},
