@@ -20,7 +20,7 @@
             "name": "Merge",
             "type": "string_match",
             "details": {
-                "query": "merge (p:Program) ON MATCH set p.name = 'Smith' return p",
+                "query": "merge (p:Program) on match set p.name = 'Smith' return p",
                 "complexity": 2
             }
         },
