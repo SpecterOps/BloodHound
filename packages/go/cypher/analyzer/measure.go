@@ -2,7 +2,6 @@ package analyzer
 
 import (
 	"fmt"
-
 	"github.com/specterops/bloodhound/cypher/model"
 	"github.com/specterops/bloodhound/dawgs/graph"
 )
@@ -170,6 +169,10 @@ func (s *ComplexityMeasure) onProjection(_ *model.WalkStack, node *model.Project
 		s.Weight += weight1
 	}
 
+	if node.Limit != nil {
+		s.hasLimit = true
+	}
+
 	return nil
 }
 
@@ -238,11 +241,6 @@ func (s *ComplexityMeasure) onSet(_ *model.WalkStack, node *model.Set) error {
 	// Let's add 1 per set
 	s.Weight += weight1
 
-	return nil
-}
-
-func (s *ComplexityMeasure) onLimit(_ *model.WalkStack, node *model.Limit) error {
-	s.hasLimit = true
 	return nil
 }
 

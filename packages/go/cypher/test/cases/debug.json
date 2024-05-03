@@ -1,0 +1,12 @@
+{
+    "test_cases": [
+        {
+            "name": "Limit results",
+            "type": "string_match",
+            "details": {
+                "query": "match (p) return p limit 100",
+                "complexity": 1
+            }
+        }
+        ]
+}
