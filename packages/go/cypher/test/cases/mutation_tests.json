@@ -17,7 +17,31 @@
             }
         },
         {
+            "name": "Merge labelled node(s) and if created set a property",
+            "type": "string_match",
+            "details": {
+                "query": "merge (p:Human) on create set p.born = 'now' return p",
+                "complexity": 3
+            }
+        },
+        {
+            "name": "Merge labelled node(s) and do multiple merge actions and set a property",
+            "type": "string_match",
+            "details": {
+                "query": "merge (p:Sentinel) on create set p.emp = 'active' on match set p.emp = 'charged' set p.hunting = true return p",
+                "complexity": 6
+            }
+        },
+        {
             "name": "Create node",
+            "type": "string_match",
+            "details": {
+                "query": "create (u) return u",
+                "complexity": 4
+            }
+        },
+        {
+            "name": "Create node with label",
             "type": "string_match",
             "details": {
                 "query": "create (u:Human {name: Neo}) return u",

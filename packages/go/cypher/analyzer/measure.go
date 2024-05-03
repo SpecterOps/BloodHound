@@ -22,14 +22,17 @@ type ComplexityMeasure struct {
 	hasWhere             bool
 	hasPatternProperties bool
 	hasLimit             bool
-	numPatterns          int64
-	numProjections       int64
-	nodeLookupKinds      map[string]graph.Kinds
+	isCreate             bool
+
+	numPatterns     int64
+	numProjections  int64
+	nodeLookupKinds map[string]graph.Kinds
 }
 
 func (s *ComplexityMeasure) onCreate(_ *model.WalkStack, _ *model.Create) error {
 	// Let's add 1 per create
 	s.Weight += weight1
+	s.isCreate = true
 
 	return nil
 }
@@ -65,7 +68,7 @@ func (s *ComplexityMeasure) onExit() {
 	// Additionally, while this is what we want for most query types, it does have the side effect of
 	// disallowing creating a naked node (CREATE (n) RETURN n). Probably fine even if this is the behavior we keep
 	// after refactor because it's kinda useless cypher, but it also isn't particularly complex, it's just a side effect
-	if !hasKindMatcher && !s.hasPatternProperties && !s.hasWhere && !s.hasLimit {
+	if !hasKindMatcher && !s.hasPatternProperties && !s.hasWhere && !s.hasLimit && !s.isCreate {
 		s.Weight += weightMaxComplexity
 	}
 }
