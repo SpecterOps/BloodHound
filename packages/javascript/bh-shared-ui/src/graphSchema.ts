@@ -527,7 +527,7 @@ export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKin
         case ActiveDirectoryKindProperties.HomeDirectory:
             return 'Home Directory';
         case ActiveDirectoryKindProperties.CertificatePolicy:
-            return 'Certificate Policy';
+            return 'Issuance Policy Extensions';
         case ActiveDirectoryKindProperties.CertTemplateOID:
             return 'Certificate Template OID';
         case ActiveDirectoryKindProperties.GroupLinkID:
