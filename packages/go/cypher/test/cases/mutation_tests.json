@@ -1,11 +1,11 @@
 {
     "test_cases": [
         {
-            "name": "Merge with WITH multipart query",
+            "name": "Multipart query with mutation",
             "type": "string_match",
             "details": {
-                "query": "MATCH (n:Person {name: 'Neo'}) WITH n as TheOne MERGE (c:Crew {ship: 'Nebuchadnezzar'}) SET c.crewMembers = + c.crewMembers + 1 RETURN c",
-                "complexity": 5
+                "query": "MATCH (s:Ship {name: 'Nebuchadnezzar'}) WITH s as ship MERGE p=(c:Crew {name: 'Neo'})-[:CrewOf]-(ship) SET c.title = 'The One' RETURN p",
+                "complexity": 9
             }
         },
         {
