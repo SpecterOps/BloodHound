@@ -1,6 +1,14 @@
 {
     "test_cases": [
         {
+            "name": "Merge with WITH multipart query",
+            "type": "string_match",
+            "details": {
+                "query": "MATCH (n:Person {name: 'Neo'}) WITH n as TheOne MERGE (c:Crew {ship: 'Nebuchadnezzar'}) SET c.crewMembers = + c.crewMembers + 1 RETURN c",
+                "complexity": 5
+            }
+        },
+        {
             "name": "Merge labelled node(s) to set a property",
             "type": "string_match",
             "details": {
