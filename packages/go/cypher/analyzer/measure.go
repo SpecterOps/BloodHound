@@ -2,6 +2,7 @@ package analyzer
 
 import (
 	"fmt"
+
 	"github.com/specterops/bloodhound/cypher/model"
 	"github.com/specterops/bloodhound/dawgs/graph"
 )
@@ -65,9 +66,6 @@ func (s *ComplexityMeasure) onExit() {
 	}
 
 	// TODO: This is a little gross and needs to be refactored
-	// Additionally, while this is what we want for most query types, it does have the side effect of
-	// disallowing creating a naked node (CREATE (n) RETURN n). Probably fine even if this is the behavior we keep
-	// after refactor because it's kinda useless cypher, but it also isn't particularly complex, it's just a side effect
 	if !hasKindMatcher && !s.hasPatternProperties && !s.hasWhere && !s.hasLimit && !s.isCreate {
 		s.Weight += weightMaxComplexity
 	}
