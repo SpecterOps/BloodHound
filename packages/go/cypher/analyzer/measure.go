@@ -39,12 +39,8 @@ func (s *ComplexityMeasure) onCreate(_ *model.WalkStack, _ *model.Create) error 
 }
 
 func (s *ComplexityMeasure) onDelete(_ *model.WalkStack, node *model.Delete) error {
-	// Deletes must have pattern or else we kick out
-	if len(s.nodeLookupKinds) == 0 {
-		s.Weight += weightMaxComplexity
-		return nil
-	}
-
+	// Base weight for delete is 3, if detach is specified, we give a heavy weight on top to account
+	// for the extra complexity of deleting relationships
 	s.Weight += weight3
 	if node.Detach {
 		s.Weight += weightHeavy

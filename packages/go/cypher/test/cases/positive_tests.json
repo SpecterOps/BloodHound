@@ -4,7 +4,7 @@
             "name": "Match all nodes in the graph",
             "type": "string_match",
             "details": {
-                "query": "match (a) return a",
+                "query": "match (a) return a LIMIT 5",
                 "complexity": 3
             }
         },
@@ -309,8 +309,8 @@
             "name": "Specify alias in return clause with `AS`",
             "type": "string_match",
             "details": {
-                "query": "match (n) return n.property as renamedProperty",
-                "complexity": 3
+                "query": "match (n:Person) return n.property as renamedProperty",
+                "complexity": 1
             }
         },
         {
@@ -466,15 +466,15 @@
             }
         },
         {
-            "name": "Single nodes",
+            "name": "Single node pattern",
             "type": "string_match",
             "details": {
-                "query": "match (b) return b",
+                "query": "match (b) return b LIMIT 5",
                 "complexity": 3
             }
         },
         {
-            "name": "Multiple nodes",
+            "name": "Multiple node patterns",
             "type": "string_match",
             "details": {
                 "query": "match (a), (b {prop: a.name}) return a, b",
@@ -589,8 +589,8 @@
             "name": "Match distinct",
             "type": "string_match",
             "details": {
-                "query": "match (n) return distinct n",
-                "complexity": 4
+                "query": "match (n:Person) return distinct n",
+                "complexity": 2
             }
         },
         {
@@ -605,8 +605,8 @@
             "name": "Match order by",
             "type": "string_match",
             "details": {
-                "query": "match (n) return n order by n.name asc, n.other desc",
-                "complexity": 5
+                "query": "match (n:Person) return n order by n.name asc, n.other desc",
+                "complexity": 3
             }
         },
         {
@@ -717,64 +717,64 @@
             "name": "Support add expressions",
             "type": "string_match",
             "details": {
-                "query": "match (n) return n.value + n.other_value as combined",
-                "complexity": 3
+                "query": "match (n:Product) return n.value + n.other_value as combined",
+                "complexity": 1
             }
         },
         {
             "name": "Support subtract expressions",
             "type": "string_match",
             "details": {
-                "query": "match (n) return n.value - n.other_value as combined",
-                "complexity": 3
+                "query": "match (n:Product) return n.value - n.other_value as combined",
+                "complexity": 1
             }
         },
         {
             "name": "Support multiply expressions",
             "type": "string_match",
             "details": {
-                "query": "match (n) return n.value * n.other_value as combined",
-                "complexity": 3
+                "query": "match (n:Product) return n.value * n.other_value as combined",
+                "complexity": 1
             }
         },
         {
             "name": "Support divide expressions",
             "type": "string_match",
             "details": {
-                "query": "match (n) return n.value / n.other_value as combined",
-                "complexity": 3
+                "query": "match (n:Product) return n.value / n.other_value as combined",
+                "complexity": 1
             }
         },
         {
             "name": "Support modulo expressions",
             "type": "string_match",
             "details": {
-                "query": "match (n) return n.value % n.other_value as combined",
-                "complexity": 3
+                "query": "match (n:Product) return n.value % n.other_value as combined",
+                "complexity": 1
             }
         },
         {
             "name": "Support power of expressions",
             "type": "string_match",
             "details": {
-                "query": "match (n) return n.value ^ n.other_value as combined",
-                "complexity": 3
+                "query": "match (n:Product) return n.value ^ n.other_value as combined",
+                "complexity": 1
             }
         },
         {
             "name": "Support complex unary expressions",
             "type": "string_match",
             "details": {
-                "query": "match (n) return 1 - 2 / 2 * 100 as combined",
-                "complexity": 3
+                "query": "match (n:Product) return 1 - 2 / 2 * 100 as combined",
+                "complexity": 1
             }
         },
         {
             "name": "Support complex arithmetic expressions",
             "type": "string_match",
             "details": {
-                "query": "match (n) return 1 + 2 % 3 + n.prop_1 ^ n.prop_2 - 300.124 / 2 * 100 as combined",
-                "complexity": 3
+                "query": "match (n:Product) return 1 + 2 % 3 + n.prop_1 ^ n.prop_2 - 300.124 / 2 * 100 as combined",
+                "complexity": 1
             }
         },
         {
