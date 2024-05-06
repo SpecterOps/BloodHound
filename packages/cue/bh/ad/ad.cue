@@ -542,7 +542,7 @@ OID: types.#StringEnum & {
 CertificatePolicy: types.#StringEnum & {
 	symbol: "CertificatePolicy"
 	schema: "ad"
-	name: "Certificate Policy"
+	name: "Issuance Policy Extensions"
 	representation: "certificatepolicy"
 }
 
