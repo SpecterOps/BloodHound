@@ -144,7 +144,7 @@ func Test_CypherSearch_WithCypherMutationsEnabled(t *testing.T) {
 			assert.True(ok)
 
 			var (
-				query         = "match (w) where w.name = 'vldmrt' remove w.name return w"
+				query         = "match (w: Wizard) where w.name = 'vldmrt' remove w.name return w"
 				strippedQuery = &bytes.Buffer{}
 			)
 			parsedQuery, err := frontend.ParseCypher(parseCtx, query)
@@ -169,7 +169,7 @@ func Test_CypherSearch_WithCypherMutationsEnabled(t *testing.T) {
 			assert.True(ok)
 
 			var (
-				query         = "match (w) where w.name = 'harryp' delete w"
+				query         = "match (w: Wizard) where w.name = 'harryp' delete w"
 				strippedQuery = &bytes.Buffer{}
 			)
 			parsedQuery, err := frontend.ParseCypher(parseCtx, query)
@@ -197,7 +197,7 @@ func Test_CypherSearch_WithCypherMutationsEnabled(t *testing.T) {
 			assert.True(ok)
 
 			var (
-				query         = "match (w) set w.wizard = true return w.wizard"
+				query         = "match (w: Wizard) set w.wizard = true return w.wizard"
 				strippedQuery = &bytes.Buffer{}
 			)
 
