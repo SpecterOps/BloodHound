@@ -20,8 +20,6 @@ import (
 	"errors"
 	"github.com/specterops/bloodhound/cypher/model"
 	"github.com/specterops/bloodhound/dawgs/graph"
-	"github.com/specterops/bloodhound/log"
-	"reflect"
 )
 
 type Analyzer struct {
@@ -56,7 +54,6 @@ type typedVisitor[T model.Expression] func(stack *model.WalkStack, node T) error
 func WithVisitor[T model.Expression](analyzer *Analyzer, visitorFunc typedVisitor[T]) {
 	analyzer.handlers = append(analyzer.handlers, func(walkStack *model.WalkStack, node model.Expression) error {
 		if typedNode, typeOK := node.(T); typeOK {
-			log.Debugf("typed node visited is %s", reflect.TypeOf(typedNode))
 			if err := visitorFunc(walkStack, typedNode); err != nil {
 				return err
 			}
