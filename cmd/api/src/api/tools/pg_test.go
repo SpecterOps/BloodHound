@@ -108,7 +108,6 @@ func TestPGMigrator(t *testing.T) {
 	var (
 		schema      = graphschema.DefaultGraphSchema()
 		testContext = integration.NewGraphTestContext(t, schema)
-		_           = integration.SetupDB(t)
 	)
 
 	testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) error {

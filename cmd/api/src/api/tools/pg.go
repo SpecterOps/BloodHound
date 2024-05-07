@@ -22,10 +22,12 @@ import (
 	"net/http"
 	"sync"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/specterops/bloodhound/dawgs"
 	"github.com/specterops/bloodhound/dawgs/drivers/neo4j"
 	"github.com/specterops/bloodhound/dawgs/drivers/pg"
+	"github.com/specterops/bloodhound/dawgs/drivers/pg/query"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/dawgs/util/size"
 	"github.com/specterops/bloodhound/log"
@@ -280,7 +282,9 @@ func (s *PGMigrator) StartMigration() error {
 
 			log.Infof("Starting live migration from Neo4j to PostgreSQL")
 
-			if err := pgDB.AssertSchema(ctx, s.graphSchema); err != nil {
+			if err := dropCurrentGraphSchema(ctx, pgDB); err != nil {
+				log.Errorf("Unable to drop graph schema in PostgreSQL: %v", err)
+			} else if err := pgDB.AssertSchema(ctx, s.graphSchema); err != nil {
 				log.Errorf("Unable to assert graph schema in PostgreSQL: %v", err)
 			} else if err := migrateTypes(ctx, neo4jDB, pgDB); err != nil {
 				log.Errorf("Unable to migrate Neo4j kinds to PostgreSQL: %v", err)
@@ -349,4 +353,10 @@ func (s *PGMigrator) OpenNeo4jGraphConnection() (graph.Database, error) {
 		GraphQueryMemoryLimit: size.Gibibyte,
 		DriverCfg:             s.Cfg.Neo4J.Neo4jConnectionString(),
 	})
+}
+
+func dropCurrentGraphSchema(ctx context.Context, db graph.Database) error {
+	return db.WriteTransaction(ctx, func(tx graph.Transaction) error {
+		return query.On(tx).DropSchema()
+	}, pg.OptionSetQueryExecMode(pgx.QueryExecModeSimpleProtocol))
 }
