@@ -289,12 +289,20 @@ func (s *PathSegment) SizeOf() size.Size {
 func (s *PathSegment) computeAndSetSize() {
 	s.size = 0
 
-	s.size += size.Of(s) +
-		s.Node.SizeOf() +
-		size.Of(s.Trunk) +
-		s.Edge.SizeOf() +
-		size.Of(s.Branches)*size.Size(cap(s.Branches)) +
-		size.Size(unsafe.Sizeof(s.size))
+	s.size += size.Of(s) + size.Size(unsafe.Sizeof(s.size))
+
+	if s.Node != nil {
+		s.size += s.Node.SizeOf()
+	}
+	if s.Edge != nil {
+		s.size += s.Edge.SizeOf()
+	}
+	if s.Trunk != nil {
+		s.size += size.Of(s.Trunk)
+	}
+	if s.Branches != nil {
+		s.size += size.Of(s.Branches) * size.Size(cap(s.Branches))
+	}
 
 	// recursively add sizes of all branches
 	for _, branch := range s.Branches {

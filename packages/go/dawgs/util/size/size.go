@@ -27,7 +27,9 @@ type Sizable interface {
 
 // Of returns the size of an object. When the input is a pointer
 // to an object, the size of the pointer itself is returned,
-// as opposed to the size of the memory referenced.
+// as opposed to the size of the memory referenced. This function
+// cannot infer the data type of nil, so nil checks need to be
+// performed before calling this function.
 func Of[T any](raw T) Size {
 	return Size(unsafe.Sizeof(raw))
 }
