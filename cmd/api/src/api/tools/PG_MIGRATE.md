@@ -1,4 +1,4 @@
-## Migrating Graph Data to Postgres
+## Migrating Graph Data from Neo4j to Postgres 
 
 ### Endpoints
 | Endpoint | HTTP Request | Usage | Expected Response |
