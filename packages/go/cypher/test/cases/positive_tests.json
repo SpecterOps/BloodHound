@@ -888,14 +888,6 @@
                 "query": "match (u:User {dontreqpreauth: true}) return u",
                 "complexity": 1
             }
-        },
-        {
-            "name": "JD's Favorite Metric (without DISTINCT)",
-            "type": "string_match",
-            "details": {
-                "query": "match p = shortestPath((x:User)<-[*1..]->(y:Computer {highvalue:true})) with collect(p) as allPath unwind allPath as thisPath unwind tail(nodes(thisPath)) AS pathNode with pathNode AS n, count(pathNode) as Count, size(allPath) as TotalCount, [lbl in labels(pathNode) where lbl<>'Base'][0] AS Label return Label, n.name as Name, n.objectid as ObjectID, Count, TotalCount, round(Count/tofloat(TotalCount)*100,1) as Pct order by Count descending limit 100",
-                "complexity": 15
-            }
         }
     ]
 }
