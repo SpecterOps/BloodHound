@@ -4,7 +4,7 @@
             "name": "Match all nodes in the graph",
             "type": "string_match",
             "details": {
-                "query": "match (a) return a",
+                "query": "match (a) return a limit 5",
                 "complexity": 3
             }
         },
@@ -29,7 +29,7 @@
             "type": "string_match",
             "details": {
                 "query": "match (p:Person) where p.details.name = 'Tom Hanks' return p",
-                "complexity": 1
+                "complexity": 2
             }
         },
         {
@@ -45,7 +45,7 @@
             "type": "string_match",
             "details": {
                 "query": "match (g:GPO) optional match (g)-[r1:GPLink {enforced: false}]->(container1) with g, container1 optional match (g)-[r2:GPLink {enforced: true}]->(container2) with g, container1, container2 optional match p1 = (g)-[r1:GPLink]->(container1)-[r2:Contains*1..]->(n1:Computer) where none(x in nodes(p1) where x.blocksinheritance = true and labels(x) = 'OU') with g, p1, container2, n1 optional match p2 = (g)-[r1:GPLink]->(container2)-[r2:Contains*1..]->(n2:Computer) return p1, p2",
-                "complexity": 39
+                "complexity": 40
             }
         },
         {
@@ -86,7 +86,7 @@
             "type": "string_match",
             "details": {
                 "query": "match (p:Person) where p.name = 'Tom Hanks' return p",
-                "complexity": 1
+                "complexity": 2
             }
         },
         {
@@ -94,7 +94,7 @@
             "type": "string_match",
             "details": {
                 "query": "match (p:Person) where p.age < 50 return p",
-                "complexity": 1
+                "complexity": 2
             }
         },
         {
@@ -102,7 +102,7 @@
             "type": "string_match",
             "details": {
                 "query": "match (p:Person) where p.age > 50 return p",
-                "complexity": 1
+                "complexity": 2
             }
         },
         {
@@ -110,7 +110,7 @@
             "type": "string_match",
             "details": {
                 "query": "match (p:Person) where p.age <= 50 return p",
-                "complexity": 1
+                "complexity": 2
             }
         },
         {
@@ -118,7 +118,7 @@
             "type": "string_match",
             "details": {
                 "query": "match (p:Person) where p.age >= 50 return p",
-                "complexity": 1
+                "complexity": 2
             }
         },
         {
@@ -126,7 +126,7 @@
             "type": "string_match",
             "details": {
                 "query": "match (p:Person) where p.name <> 'Tom Hanks' return p",
-                "complexity": 1
+                "complexity": 2
             }
         },
         {
@@ -134,7 +134,7 @@
             "type": "string_match",
             "details": {
                 "query": "match (p:Person) where (p.fname = 'Tom' or p.fname = 'Brad') return p",
-                "complexity": 1
+                "complexity": 2
             }
         },
         {
@@ -142,7 +142,7 @@
             "type": "string_match",
             "details": {
                 "query": "match (p:Person) where p.fname = 'Tom' and p.lname = 'Hanks' return p",
-                "complexity": 1
+                "complexity": 2
             }
         },
         {
@@ -150,7 +150,7 @@
             "type": "string_match",
             "details": {
                 "query": "match (p:Person)-[:ACTED_IN]->(m:Movie) where p.name = 'Tom Hanks' return m",
-                "complexity": 2
+                "complexity": 3
             }
         },
         {
@@ -198,7 +198,7 @@
             "type": "string_match",
             "details": {
                 "query": "match (p)-[:ACTED_IN]->(m) where p:Person and m:Movie and m.title = 'The Matrix' return p.name",
-                "complexity": 2
+                "complexity": 3
             }
         },
         {
@@ -206,7 +206,7 @@
             "type": "string_match",
             "details": {
                 "query": "match (p:Person)-[:ACTED_IN]->(m:Movie) where 2000 < m.released < 2003 and 100 > m.last < 200 return p.name",
-                "complexity": 2
+                "complexity": 3
             }
         },
         {
@@ -222,7 +222,7 @@
             "type": "string_match",
             "details": {
                 "query": "match (n) where n.doesThisPropertyExist is not null return n",
-                "complexity": 3
+                "complexity": 4
             }
         },
         {
@@ -230,7 +230,7 @@
             "type": "string_match",
             "details": {
                 "query": "match (p:Person) where p.name starts with 'tom' return p",
-                "complexity": 1
+                "complexity": 2
             }
         },
         {
@@ -238,7 +238,7 @@
             "type": "string_match",
             "details": {
                 "query": "match (p:Person) where p.name ends with 'hanks' return p",
-                "complexity": 1
+                "complexity": 2
             }
         },
         {
@@ -246,7 +246,7 @@
             "type": "string_match",
             "details": {
                 "query": "match (p:Person) where p.name contains 'tom h' return p",
-                "complexity": 1
+                "complexity": 2
             }
         },
         {
@@ -254,7 +254,7 @@
             "type": "string_match",
             "details": {
                 "query": "match (p:Person) where toLower(p.name) starts with 'tom' return p",
-                "complexity": 1
+                "complexity": 2
             }
         },
         {
@@ -262,7 +262,7 @@
             "type": "string_match",
             "details": {
                 "query": "match (p:Person) where toUpper(p.name) starts with 'tom' return p",
-                "complexity": 1
+                "complexity": 2
             }
         },
         {
@@ -270,7 +270,7 @@
             "type": "string_match",
             "details": {
                 "query": "match (p:Person) where p.born in [1965, 1970, 1975] return p.name, p.born",
-                "complexity": 1
+                "complexity": 2
             }
         },
         {
@@ -278,7 +278,7 @@
             "type": "string_match",
             "details": {
                 "query": "match (p:Person) where p.name in [\"tom\", \"tommy\", \"thomas\"] return p.name, p.born",
-                "complexity": 1
+                "complexity": 2
             }
         },
         {
@@ -286,7 +286,7 @@
             "type": "string_match",
             "details": {
                 "query": "match (p:Person)-[r:ACTED_IN]->(m:Movie) where 'Neo' in r.roles return p.name",
-                "complexity": 2
+                "complexity": 3
             }
         },
         {
@@ -309,8 +309,8 @@
             "name": "Specify alias in return clause with `AS`",
             "type": "string_match",
             "details": {
-                "query": "match (n) return n.property as renamedProperty",
-                "complexity": 3
+                "query": "match (n:Person) return n.property as renamedProperty",
+                "complexity": 1
             }
         },
         {
@@ -410,7 +410,7 @@
             }
         },
         {
-            "name": "Aggregation using collect() to create a list",
+            "name": "Aggregation using collect() to return a list",
             "type": "string_match",
             "details": {
                 "query": "match (p:Person)-[:ACTED_IN]->(m:Movie) return p.name, collect(m.title)",
@@ -422,7 +422,7 @@
             "type": "string_match",
             "details": {
                 "query": "match (p:Person)-[:ACTED_IN]->(m:Movie) where m.year = 1920 return collect(distinct (m.title))",
-                "complexity": 4
+                "complexity": 5
             }
         },
         {
@@ -430,7 +430,7 @@
             "type": "string_match",
             "details": {
                 "query": "match (p:Person)-[:ACTED_IN]->(m:Movie) where p.name = 'tom cruise' return collect(m) as tomCruiseMovies",
-                "complexity": 4
+                "complexity": 5
             }
         },
         {
@@ -438,7 +438,7 @@
             "type": "string_match",
             "details": {
                 "query": "match p = shortestPath((p1:Person)<-[*]->(p2:Person)) where p1.name = 'tom' and p2.name = 'jerry' return p",
-                "complexity": 9
+                "complexity": 10
             }
         },
         {
@@ -446,15 +446,7 @@
             "type": "string_match",
             "details": {
                 "query": "match (b) where b.name is not null return b",
-                "complexity": 3
-            }
-        },
-        {
-            "name": "Find nodes with property",
-            "type": "string_match",
-            "details": {
-                "query": "match (b) where b.name is not null return b",
-                "complexity": 3
+                "complexity": 4
             }
         },
         {
@@ -462,7 +454,7 @@
             "type": "string_match",
             "details": {
                 "query": "match (b) where (b)<-[]->() return b",
-                "complexity": 9
+                "complexity": 10
             }
         },
         {
@@ -470,188 +462,19 @@
             "type": "string_match",
             "details": {
                 "query": "match (b) where not ((b)<-[]->()) return b",
-                "complexity": 9
+                "complexity": 10
             }
         },
         {
-            "name": "Set node properties",
+            "name": "Single node pattern",
             "type": "string_match",
             "details": {
-                "query": "match (b) set b.name = '123' return b",
+                "query": "match (b) return b limit 5",
                 "complexity": 3
             }
         },
         {
-            "name": "Set node properties with map",
-            "type": "string_match",
-            "details": {
-                "query": "match (b) set b += {prop1: '123', lprop: [1, [2, 3, 4], {a: 1234}]} return b",
-                "matcher": "match \\(b\\) set b \\+= \\{(prop1: '123', lprop: \\[1, \\[2, 3, 4\\], \\{a: 1234}]|lprop: \\[1, \\[2, 3, 4\\], \\{a: 1234}], prop1: '123')} return b",
-                "complexity": 3
-            }
-        },
-        {
-            "name": "Set node property to null",
-            "type": "string_match",
-            "details": {
-                "query": "match (b) set b.prop = null return b",
-                "complexity": 3
-            }
-        },
-        {
-            "name": "Set node property to other node property",
-            "type": "string_match",
-            "details": {
-                "query": "match (a), (b) set a.prop = b.prop",
-                "complexity": 7
-            }
-        },
-        {
-            "name": "Set node labels",
-            "type": "string_match",
-            "details": {
-                "query": "match (b) set b:Other return b",
-                "complexity": 3
-            }
-        },
-        {
-            "name": "Set multiple node properties",
-            "type": "string_match",
-            "details": {
-                "query": "match (b) set b.name = '123', b.other = '123' return b",
-                "complexity": 3
-            }
-        },
-        {
-            "name": "Set multiple node properties with multiple updating clauses",
-            "type": "string_match",
-            "details": {
-                "query": "match (b) set b.name = '123' set b:Label return b",
-                "complexity": 3
-            }
-        },
-        {
-            "name": "Delete node",
-            "type": "string_match",
-            "details": {
-                "query": "match (b) delete b return b",
-                "complexity": 3
-            }
-        },
-        {
-            "name": "Delete detach node",
-            "type": "string_match",
-            "details": {
-                "query": "match (b) detach delete b return b",
-                "complexity": 3
-            }
-        },
-        {
-            "name": "Delete detach nodes",
-            "type": "string_match",
-            "details": {
-                "query": "match (a), (b) detach delete a, b return b",
-                "complexity": 7
-            }
-        },
-        {
-            "name": "Create node",
-            "type": "string_match",
-            "details": {
-                "query": "create (a:Label {p: '1234'}) return a",
-                "complexity": 1
-            }
-        },
-        {
-            "name": "Create node with decimal properties parameter",
-            "type": "string_match",
-            "details": {
-                "query": "create (a:Label $1) return a",
-                "complexity": 1
-            }
-        },
-        {
-            "name": "Create node with named properties parameter",
-            "type": "string_match",
-            "details": {
-                "query": "create (a:Label $named) return a",
-                "complexity": 1
-            }
-        },
-        {
-            "name": "Create multiple nodes",
-            "type": "string_match",
-            "details": {
-                "query": "create (a:Label {p: '1234'}), (b:Other) return a, b",
-                "complexity": 3
-            }
-        },
-        {
-            "name": "Create relationship",
-            "type": "string_match",
-            "details": {
-                "query": "create p = (:Label {p: '1234'})-[:Link {r: 1234}]->(b {p: '4321'}) return p",
-                "complexity": 4
-            }
-        },
-        {
-            "name": "Create relationship with decimal properties parameter",
-            "type": "string_match",
-            "details": {
-                "query": "create p = (:Label {p: '1234'})-[:Link $1]->(b {p: '4321'}) return p",
-                "complexity": 4
-            }
-        },
-        {
-            "name": "Create relationship with named properties parameter",
-            "type": "string_match",
-            "details": {
-                "query": "create p = (:Label {p: '1234'})-[:Link $named]->(b {p: '4321'}) return p",
-                "complexity": 4
-            }
-        },
-        {
-            "name": "Create relationship with matching",
-            "type": "string_match",
-            "details": {
-                "query": "match (a), (b) where a.name = 'a' and b.linked = id(a) create p = (a)-[:Linked]->(b) return p",
-                "complexity": 11
-            }
-        },
-        {
-            "name": "Remove node properties",
-            "type": "string_match",
-            "details": {
-                "query": "match (b) remove b.name return b",
-                "complexity": 3
-            }
-        },
-        {
-            "name": "Remove multiple node properties",
-            "type": "string_match",
-            "details": {
-                "query": "match (b) remove b.name, b.other return b",
-                "complexity": 3
-            }
-        },
-        {
-            "name": "Remove multiple node properties with multiple updating clauses",
-            "type": "string_match",
-            "details": {
-                "query": "match (b) remove b.name remove b:Label return b",
-                "complexity": 1
-            }
-        },
-        {
-            "name": "Single nodes",
-            "type": "string_match",
-            "details": {
-                "query": "match (b) return b",
-                "complexity": 3
-            }
-        },
-        {
-            "name": "Multiple nodes",
+            "name": "Multiple node patterns",
             "type": "string_match",
             "details": {
                 "query": "match (a), (b {prop: a.name}) return a, b",
@@ -663,7 +486,7 @@
             "type": "string_match",
             "details": {
                 "query": "match (n) where n.indexed >= 1 and n.other_1 = 2 return n",
-                "complexity": 3
+                "complexity": 4
             }
         },
         {
@@ -671,7 +494,7 @@
             "type": "string_match",
             "details": {
                 "query": "match (n) where n.indexed >= 1 and n.other_1 = 2 and n.other_2 = 3 return n",
-                "complexity": 3
+                "complexity": 4
             }
         },
         {
@@ -679,7 +502,7 @@
             "type": "string_match",
             "details": {
                 "query": "match (n) where n.indexed >= 1 and (n.other_1 = 2 or n.other_2 = 3) return n",
-                "complexity": 3
+                "complexity": 4
             }
         },
         {
@@ -687,7 +510,7 @@
             "type": "string_match",
             "details": {
                 "query": "match (n) where (n.indexed >= 1 or n.other_1 = 2) return n",
-                "complexity": 3
+                "complexity": 4
             }
         },
         {
@@ -695,7 +518,7 @@
             "type": "string_match",
             "details": {
                 "query": "match (n) where (n.indexed >= 1 or n.other_1 = 2 or n.other_2 = 3) return n",
-                "complexity": 3
+                "complexity": 4
             }
         },
         {
@@ -703,7 +526,7 @@
             "type": "string_match",
             "details": {
                 "query": "match (n) where n.name starts with '123' return n",
-                "complexity": 3
+                "complexity": 4
             }
         },
         {
@@ -711,7 +534,7 @@
             "type": "string_match",
             "details": {
                 "query": "match (n) where n.name contains '123' return n",
-                "complexity": 3
+                "complexity": 4
             }
         },
         {
@@ -719,7 +542,7 @@
             "type": "string_match",
             "details": {
                 "query": "match (n) where n.name ends with '123' return n",
-                "complexity": 3
+                "complexity": 4
             }
         },
         {
@@ -727,7 +550,7 @@
             "type": "string_match",
             "details": {
                 "query": "match (n) where id(n) = 1 return n",
-                "complexity": 3
+                "complexity": 4
             }
         },
         {
@@ -735,23 +558,23 @@
             "type": "string_match",
             "details": {
                 "query": "match (n)-[:NestedEdge*]->() where id(n) = 1 return n",
-                "complexity": 9
+                "complexity": 10
             }
         },
         {
-            "name": "Match patterns with range literal",
+            "name": "Match patterns with range literal with at least one edge",
             "type": "string_match",
             "details": {
                 "query": "match (n)-[:NestedEdge*1..]->() where id(n) = 1 return n",
-                "complexity": 9
+                "complexity": 10
             }
         },
         {
-            "name": "Match patterns with range literal",
+            "name": "Match patterns with range literal with 1 to 2 edges",
             "type": "string_match",
             "details": {
                 "query": "match (n)-[:NestedEdge*1..2]->() where id(n) = 1 return n",
-                "complexity": 7
+                "complexity": 8
             }
         },
         {
@@ -759,15 +582,15 @@
             "type": "string_match",
             "details": {
                 "query": "match (n {property: true})<-[r {property: n.name}]-(s)-[v]->() where n.indexed = false return n, r.other",
-                "complexity": 13
+                "complexity": 14
             }
         },
         {
             "name": "Match distinct",
             "type": "string_match",
             "details": {
-                "query": "match (n) return distinct n",
-                "complexity": 4
+                "query": "match (n:Person) return distinct n",
+                "complexity": 2
             }
         },
         {
@@ -782,8 +605,8 @@
             "name": "Match order by",
             "type": "string_match",
             "details": {
-                "query": "match (n) return n order by n.name asc, n.other desc",
-                "complexity": 5
+                "query": "match (n:Person) return n order by n.name asc, n.other desc",
+                "complexity": 3
             }
         },
         {
@@ -791,7 +614,7 @@
             "type": "string_match",
             "details": {
                 "query": "match p = (n:Group)<-[:MemberOf*1..]-(m) where n.objectid =~ '(?i)S-1-5-.*-512' return p",
-                "complexity": 8
+                "complexity": 9
             }
         },
         {
@@ -815,7 +638,7 @@
             "type": "string_match",
             "details": {
                 "query": "match p = (n:User)-[:MemberOf]->(m:Group) where n.domain = 'DOMAIN.PAIN' and m.domain <> n.domain return p",
-                "complexity": 2
+                "complexity": 3
             }
         },
         {
@@ -823,7 +646,7 @@
             "type": "string_match",
             "details": {
                 "query": "match p = (n:Group {domain: 'DOMAIN.PAIN'})-[:MemberOf]->(m:Group) where m.domain <> n.domain and n.name <> m.name return p",
-                "complexity": 2
+                "complexity": 3
             }
         },
         {
@@ -847,7 +670,7 @@
             "type": "string_match",
             "details": {
                 "query": "match p = shortestPath((g:Group {name: 'DOMAIN USERS@DOMAIN.PAIN'})-[*1..]->(n {highvalue: true})) where g <> n return p",
-                "complexity": 10
+                "complexity": 11
             }
         },
         {
@@ -855,7 +678,7 @@
             "type": "string_match",
             "details": {
                 "query": "match p = allShortestPaths((g:Group {name: 'DOMAIN USERS@DOMAIN.PAIN'})-[:CanRDP]->(c:Computer)) where not (c.operatingsystem contains 'Server') return p",
-                "complexity": 4
+                "complexity": 5
             }
         },
         {
@@ -863,7 +686,7 @@
             "type": "string_match",
             "details": {
                 "query": "match p = (g:Group {name: 'DOMAIN USERS@DOMAIN.PAIN'})-[:CanRDP]->(c:Computer) where not (c.operatingsystem contains 'Server') return p",
-                "complexity": 2
+                "complexity": 3
             }
         },
         {
@@ -871,7 +694,7 @@
             "type": "string_match",
             "details": {
                 "query": "match p = (g:Group {name: 'DOMAIN USERS@DOMAIN.PAIN'})-[:CanRDP]->(c:Computer) where c.operatingsystem contains 'Server' return p",
-                "complexity": 2
+                "complexity": 3
             }
         },
         {
@@ -879,7 +702,7 @@
             "type": "string_match",
             "details": {
                 "query": "match p = (m:Group)-[:Owns|WriteDacl|GenericAll|WriteOwner|ExecuteDCOM|GenericWrite|AllowedToDelegate|ForceChangePassword]->(n:Computer) where m.objectid ends with '-513' return p",
-                "complexity": 2
+                "complexity": 3
             }
         },
         {
@@ -887,71 +710,71 @@
             "type": "string_match",
             "details": {
                 "query": "match (dc)-[r:MemberOf*0..]->(g:Group) where g.objectid ends with '-516' with collect(dc) as exclude match p = (c:Computer)-[n:HasSession]->(u:User)-[r2:MemberOf*1..]->(g:Group) where g.objectid ends with '-512' and not (c in exclude) return p",
-                "complexity": 17
+                "complexity": 19
             }
         },
         {
             "name": "Support add expressions",
             "type": "string_match",
             "details": {
-                "query": "match (n) return n.value + n.other_value as combined",
-                "complexity": 3
+                "query": "match (n:Product) return n.value + n.other_value as combined",
+                "complexity": 1
             }
         },
         {
             "name": "Support subtract expressions",
             "type": "string_match",
             "details": {
-                "query": "match (n) return n.value - n.other_value as combined",
-                "complexity": 3
+                "query": "match (n:Product) return n.value - n.other_value as combined",
+                "complexity": 1
             }
         },
         {
             "name": "Support multiply expressions",
             "type": "string_match",
             "details": {
-                "query": "match (n) return n.value * n.other_value as combined",
-                "complexity": 3
+                "query": "match (n:Product) return n.value * n.other_value as combined",
+                "complexity": 1
             }
         },
         {
             "name": "Support divide expressions",
             "type": "string_match",
             "details": {
-                "query": "match (n) return n.value / n.other_value as combined",
-                "complexity": 3
+                "query": "match (n:Product) return n.value / n.other_value as combined",
+                "complexity": 1
             }
         },
         {
             "name": "Support modulo expressions",
             "type": "string_match",
             "details": {
-                "query": "match (n) return n.value % n.other_value as combined",
-                "complexity": 3
+                "query": "match (n:Product) return n.value % n.other_value as combined",
+                "complexity": 1
             }
         },
         {
             "name": "Support power of expressions",
             "type": "string_match",
             "details": {
-                "query": "match (n) return n.value ^ n.other_value as combined",
-                "complexity": 3
+                "query": "match (n:Product) return n.value ^ n.other_value as combined",
+                "complexity": 1
             }
         },
         {
             "name": "Support complex unary expressions",
             "type": "string_match",
             "details": {
-                "query": "match (n) return 1 - 2 / 2 * 100 as combined",
-                "complexity": 3
+                "query": "match (n:Product) return 1 - 2 / 2 * 100 as combined",
+                "complexity": 1
             }
         },
         {
             "name": "Support complex arithmetic expressions",
             "type": "string_match",
             "details": {
-                "query": "match (n) return 1 + 2 % 3 + n.prop_1 ^ n.prop_2 - 300.124 / 2 * 100 as combined",
-                "complexity": 3
+                "query": "match (n:Product) return 1 + 2 % 3 + n.prop_1 ^ n.prop_2 - 300.124 / 2 * 100 as combined",
+                "complexity": 1
             }
         },
         {
@@ -967,7 +790,7 @@
             "type": "string_match",
             "details": {
                 "query": "match p = shortestPath((n:User)-[:MemberOf]->(g:Group)) where g.highvalue = true and n.hasspn = true return p",
-                "complexity": 3
+                "complexity": 4
             }
         },
         {
@@ -975,7 +798,7 @@
             "type": "string_match",
             "details": {
                 "query": "match p = shortestPath((n)-[:HasSession|AdminTo|Contains|AZLogicAppContributor*1..]->(m:Computer {unconstraineddelegation: true})) where not (n = m) return p",
-                "complexity": 9
+                "complexity": 10
             }
         },
         {
@@ -983,7 +806,7 @@
             "type": "string_match",
             "details": {
                 "query": "match p = shortestPath((n)-[:HasSession|AdminTo|Contains|AZLogicAppContributor*1..]->(m:Computer {unconstraineddelegation: true})) where not (n = m) return p",
-                "complexity": 9
+                "complexity": 10
             }
         },
         {
@@ -1007,7 +830,7 @@
             "type": "string_match",
             "details": {
                 "query": "match p = shortestPath((n)-[*1..]->(m {highvalue: true})) where m.domain = 'DOMAIN.PAIN' and m <> n return p",
-                "complexity": 12
+                "complexity": 13
             }
         },
         {
@@ -1023,7 +846,7 @@
             "type": "string_match",
             "details": {
                 "query": "match p = shortestPath((g:Group {name: 'DOMAIN USERS@DOMAIN.PAIN'})-[*1..]->(n {highvalue: true})) where g.objectid ends with '-513' and g <> n return p",
-                "complexity": 10
+                "complexity": 11
             }
         },
         {
@@ -1031,7 +854,7 @@
             "type": "string_match",
             "details": {
                 "query": "match p = shortestPath((n)-[:HasSession|AdminTo|Contains|AZLogicAppContributor*1..]->(m:Group {name: 'DOMAIN ADMINS@DOMAIN.PAIN'})) where not (n = m) return p",
-                "complexity": 9
+                "complexity": 10
             }
         },
         {
@@ -1039,7 +862,7 @@
             "type": "string_match",
             "details": {
                 "query": "match p = shortestPath((n)-[:HasSession|AdminTo|Contains|AZLogicAppContributor*5..1]->(m:Group {name: 'DOMAIN ADMINS@DOMAIN.PAIN'})) where not (n = m) return p",
-                "complexity": 7
+                "complexity": 8
             }
         },
         {
@@ -1047,7 +870,7 @@
             "type": "string_match",
             "details": {
                 "query": "match (n:Computer) where n.operatingsystem =~ '(?i).*(2000|2003|2008|xp|vista|7|me).*' return n",
-                "complexity": 2
+                "complexity": 3
             }
         },
         {
@@ -1055,7 +878,7 @@
             "type": "string_match",
             "details": {
                 "query": "match (n:User) where n.hasspn = true return n",
-                "complexity": 1
+                "complexity": 2
             }
         },
         {

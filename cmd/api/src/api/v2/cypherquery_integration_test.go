@@ -21,13 +21,12 @@ package v2_test
 
 import (
 	"bytes"
-	"fmt"
+	"testing"
+
 	"github.com/specterops/bloodhound/cypher/backend/cypher"
 	"github.com/specterops/bloodhound/src/auth"
 	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/utils/test"
-	"net/http"
-	"testing"
 
 	"github.com/specterops/bloodhound/cypher/frontend"
 	"github.com/specterops/bloodhound/graphschema/common"
@@ -144,7 +143,7 @@ func Test_CypherSearch_WithCypherMutationsEnabled(t *testing.T) {
 			assert.True(ok)
 
 			var (
-				query         = "match (w) where w.name = 'vldmrt' remove w.name return w"
+				query         = "match (w: Wizard) where w.name = 'vldmrt' remove w.name return w"
 				strippedQuery = &bytes.Buffer{}
 			)
 			parsedQuery, err := frontend.ParseCypher(parseCtx, query)
@@ -169,7 +168,7 @@ func Test_CypherSearch_WithCypherMutationsEnabled(t *testing.T) {
 			assert.True(ok)
 
 			var (
-				query         = "match (w) where w.name = 'harryp' delete w"
+				query         = "match (w: Wizard) where w.name = 'harryp' delete w"
 				strippedQuery = &bytes.Buffer{}
 			)
 			parsedQuery, err := frontend.ParseCypher(parseCtx, query)
@@ -192,12 +191,12 @@ func Test_CypherSearch_WithCypherMutationsEnabled(t *testing.T) {
 			assert.True(found)
 		}),
 
-		lab.TestCase("adds failed mutation attempts to audit log", func(assert *require.Assertions, harness *lab.Harness) {
+		lab.TestCase("adds mutation attempts to audit log", func(assert *require.Assertions, harness *lab.Harness) {
 			apiClient, ok := lab.Unpack(harness, adminApiClientFixture)
 			assert.True(ok)
 
 			var (
-				query         = "match (w) set w.wizard = true return w.wizard"
+				query         = "match (w: Wizard) set w.wizard = true return w.wizard"
 				strippedQuery = &bytes.Buffer{}
 			)
 
@@ -207,12 +206,12 @@ func Test_CypherSearch_WithCypherMutationsEnabled(t *testing.T) {
 			require.Nil(t, err)
 
 			_, err = apiClient.CypherQuery(v2.CypherQueryPayload{Query: query})
-			assert.ErrorContains(err, fmt.Sprintf("%d", http.StatusInternalServerError))
+			require.Nil(t, err)
 
 			auditLogs, err := apiClient.GetLatestAuditLogs()
 			assert.Nil(err)
 
-			err = test.AssertAuditLogs(auditLogs.Logs, model.AuditLogActionMutateGraph, model.AuditLogStatusFailure, model.AuditData{"query": strippedQuery.String()})
+			err = test.AssertAuditLogs(auditLogs.Logs, model.AuditLogActionMutateGraph, model.AuditLogStatusSuccess, model.AuditData{"query": strippedQuery.String()})
 			assert.Nil(err)
 		}),
 	)

@@ -18,7 +18,6 @@ package analyzer
 
 import (
 	"errors"
-	"fmt"
 	"github.com/specterops/bloodhound/cypher/model"
 	"github.com/specterops/bloodhound/dawgs/graph"
 )
@@ -39,7 +38,7 @@ func (s *Analyzer) walkFunc(stack *model.WalkStack, expression model.Expression)
 	return errors.Join(errs...)
 }
 
-func (s *Analyzer) Analyze(query any, extensions ...model.CollectorFunc) error {
+func (s *Analyzer) analyze(query any, extensions ...model.CollectorFunc) error {
 	return model.Walk(query, model.NewVisitor(s.walkFunc, nil), extensions...)
 }
 
@@ -47,12 +46,12 @@ func Analyze(query any, registrationFunc func(analyzerInst *Analyzer), extension
 	analyzer := &Analyzer{}
 	registrationFunc(analyzer)
 
-	return analyzer.Analyze(query, extensions...)
+	return analyzer.analyze(query, extensions...)
 }
 
-type TypedVisitor[T model.Expression] func(stack *model.WalkStack, node T) error
+type typedVisitor[T model.Expression] func(stack *model.WalkStack, node T) error
 
-func WithVisitor[T model.Expression](analyzer *Analyzer, visitorFunc TypedVisitor[T]) {
+func WithVisitor[T model.Expression](analyzer *Analyzer, visitorFunc typedVisitor[T]) {
 	analyzer.handlers = append(analyzer.handlers, func(walkStack *model.WalkStack, node model.Expression) error {
 		if typedNode, typeOK := node.(T); typeOK {
 			if err := visitorFunc(walkStack, typedNode); err != nil {
@@ -62,181 +61,6 @@ func WithVisitor[T model.Expression](analyzer *Analyzer, visitorFunc TypedVisito
 
 		return nil
 	})
-}
-
-// Weight constants aren't well named for right now. These are just dumb values to assign heuristic weight to certain
-// query elements
-const (
-	Weight1 int64 = iota + 1
-	Weight2
-	Weight3
-)
-
-type ComplexityMeasure struct {
-	Weight int64
-
-	numPatterns     int64
-	numProjections  int64
-	nodeLookupKinds map[string]graph.Kinds
-}
-
-func (s *ComplexityMeasure) onFunctionInvocation(_ *model.WalkStack, node *model.FunctionInvocation) error {
-	switch node.Name {
-	case "collect":
-		// Collect will force an eager aggregation
-		s.Weight += Weight2
-
-	case "type":
-		// Calling for a relationship's type is highly likely to be inefficient and should add weight
-		s.Weight += Weight2
-	}
-
-	return nil
-}
-
-func (s *ComplexityMeasure) onQuantifier(_ *model.WalkStack, _ *model.Quantifier) error {
-	// Quantifier expressions may increase the size of an inline projection to apply its contained filter and should
-	// be weighted
-	s.Weight += Weight1
-	return nil
-}
-
-func (s *ComplexityMeasure) onFilterExpression(_ *model.WalkStack, _ *model.FilterExpression) error {
-	// Filter expressions convert directly into a filter in the query plan which may or may not take advantage
-	// of indexes and should be weighted accordingly
-	s.Weight += Weight1
-	return nil
-}
-
-func (s *ComplexityMeasure) onKindMatcher(_ *model.WalkStack, node *model.KindMatcher) error {
-	switch typedReference := node.Reference.(type) {
-	case *model.Variable:
-		// This kind matcher narrows a node reference's kind and will result in an indexed lookup
-		s.nodeLookupKinds[typedReference.Symbol] = s.nodeLookupKinds[typedReference.Symbol].Add(node.Kinds...)
-	}
-
-	return nil
-}
-
-func (s *ComplexityMeasure) onPatternPart(_ *model.WalkStack, node *model.PatternPart) error {
-	// All pattern parts incur a compounding weight
-	s.numPatterns += 1
-	s.Weight += s.numPatterns
-
-	if node.ShortestPathPattern {
-		// Rendering the shortest path, while cheaper than rendering all shortest paths, still could incur a large
-		// search cost
-		s.Weight += Weight1
-	}
-
-	if node.AllShortestPathsPattern {
-		// Rendering all shortest paths could result in a large search
-		s.Weight += Weight2
-	}
-
-	return nil
-}
-
-func (s *ComplexityMeasure) onSortItem(_ *model.WalkStack, _ *model.SortItem) error {
-	// Sorting incurs a weight since it will change how the projection is materialized
-	s.Weight += Weight1
-	return nil
-}
-
-func (s *ComplexityMeasure) onProjection(_ *model.WalkStack, node *model.Projection) error {
-	// We want to capture the cost of additional inline projections so ignore the first projection
-	s.Weight += s.numProjections
-	s.numProjections += 1
-
-	if node.Distinct {
-		// Distinct incurs a weight since it will change how the projection is materialized
-		s.Weight += Weight1
-	}
-
-	return nil
-}
-
-func (s *ComplexityMeasure) onPartialComparison(_ *model.WalkStack, node *model.PartialComparison) error {
-	switch node.Operator {
-	case model.OperatorRegexMatch:
-		// Regular expression matching incurs a weight since it can be far more involved than any of the other
-		// string operators
-		s.Weight += Weight1
-	}
-
-	return nil
-}
-
-func (s *ComplexityMeasure) onNodePattern(_ *model.WalkStack, node *model.NodePattern) error {
-	if node.Binding == nil {
-		if len(node.Kinds) == 0 {
-			// Unlabeled, unbound nodes will incur a lookup of all nodes in the graph
-			s.Weight += Weight2
-		}
-	} else if nodePatternBinding, typeOK := node.Binding.(*model.Variable); !typeOK {
-		return fmt.Errorf("expected variable for node pattern binding but got: %T", node.Binding)
-	} else {
-		nodeLookupKinds, hasBinding := s.nodeLookupKinds[nodePatternBinding.Symbol]
-
-		if !hasBinding {
-			nodeLookupKinds = node.Kinds
-		} else {
-			nodeLookupKinds = nodeLookupKinds.Add(node.Kinds...)
-		}
-
-		// Track this node pattern to see if any subsequent expressions will narrow its kind matchers
-		s.nodeLookupKinds[nodePatternBinding.Symbol] = nodeLookupKinds
-	}
-
-	return nil
-}
-
-func (s *ComplexityMeasure) onRelationshipPattern(_ *model.WalkStack, node *model.RelationshipPattern) error {
-	numKindMatchers := len(node.Kinds)
-
-	// All relationship lookups incur a weight
-	s.Weight += Weight1
-
-	if node.Direction == graph.DirectionBoth {
-		// Bidirectional searches add weight
-		s.Weight += Weight1
-	}
-
-	if numKindMatchers == 0 {
-		// If user is expanding all relationship types add weight
-		s.Weight += Weight2
-	}
-
-	if node.Range != nil {
-		if numKindMatchers > 2 {
-			// If we're matching on more than two relationship types add weight
-			s.Weight += Weight1
-		}
-
-		if node.Range.StartIndex != nil && *node.Range.StartIndex > 1 {
-			// Patterns that must have a floor greater than 1 may result in large expansions
-			s.Weight += Weight1
-		}
-
-		if node.Range.EndIndex == nil {
-			// Unbounded range literals are likely to result in large expansions
-			s.Weight += Weight3
-		} else if *node.Range.EndIndex > 1 {
-			// Patterns that must have a ceiling greater than 1 may result in large expansions
-			s.Weight += Weight1
-		}
-	}
-
-	return nil
-}
-
-func (s *ComplexityMeasure) onExit() {
-	for _, kindMatchers := range s.nodeLookupKinds {
-		if len(kindMatchers) == 0 {
-			// Unlabeled nodes will incur a lookup of all nodes in the graph
-			s.Weight += Weight2
-		}
-	}
 }
 
 func QueryComplexity(query *model.RegularQuery) (*ComplexityMeasure, error) {
@@ -254,11 +78,18 @@ func QueryComplexity(query *model.RegularQuery) (*ComplexityMeasure, error) {
 	WithVisitor(analyzer, measure.onFunctionInvocation)
 	WithVisitor(analyzer, measure.onKindMatcher)
 	WithVisitor(analyzer, measure.onQuantifier)
-	WithVisitor(analyzer, measure.onFilterExpression)
 	WithVisitor(analyzer, measure.onSortItem)
 	WithVisitor(analyzer, measure.onPartialComparison)
+	WithVisitor(analyzer, measure.onWhere)
 
-	if err := analyzer.Analyze(query); err != nil {
+	// Mutations
+	WithVisitor(analyzer, measure.onCreate)
+	WithVisitor(analyzer, measure.onDelete)
+	WithVisitor(analyzer, measure.onMerge)
+	WithVisitor(analyzer, measure.onRemove)
+	WithVisitor(analyzer, measure.onSet)
+
+	if err := analyzer.analyze(query); err != nil {
 		return nil, err
 	}
 

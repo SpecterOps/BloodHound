@@ -19,10 +19,10 @@ package test
 import (
 	"embed"
 	"encoding/json"
-	"github.com/specterops/bloodhound/cypher/backend"
 	"regexp"
 	"testing"
 
+	"github.com/specterops/bloodhound/cypher/backend"
 	"github.com/specterops/bloodhound/cypher/frontend"
 	"github.com/stretchr/testify/require"
 )

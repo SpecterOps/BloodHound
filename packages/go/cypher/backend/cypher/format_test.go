@@ -18,10 +18,11 @@ package cypher_test
 
 import (
 	"bytes"
+	"testing"
+
 	"github.com/specterops/bloodhound/cypher/backend/cypher"
 	"github.com/specterops/bloodhound/cypher/frontend"
 	"github.com/stretchr/testify/require"
-	"testing"
 
 	"github.com/specterops/bloodhound/cypher/test"
 )
@@ -41,6 +42,7 @@ func TestCypherEmitter_StripLiterals(t *testing.T) {
 }
 
 func TestCypherEmitter_HappyPath(t *testing.T) {
+	test.LoadFixture(t, test.MutationTestCases).Run(t)
 	test.LoadFixture(t, test.PositiveTestCases).Run(t)
 }
 

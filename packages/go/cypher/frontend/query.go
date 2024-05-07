@@ -352,8 +352,7 @@ func (s *SinglePartQueryVisitor) ExitOC_UpdatingClause(ctx *parser.OC_UpdatingCl
 type MultiPartQueryVisitor struct {
 	BaseVisitor
 
-	currentPart *model.MultiPartQueryPart
-	Query       *model.MultiPartQuery
+	Query *model.MultiPartQuery
 }
 
 func NewMultiPartQueryVisitor() *MultiPartQueryVisitor {
@@ -363,18 +362,13 @@ func NewMultiPartQueryVisitor() *MultiPartQueryVisitor {
 }
 
 func (s *MultiPartQueryVisitor) EnterOC_ReadingClause(ctx *parser.OC_ReadingClauseContext) {
-	s.currentPart = model.NewMultiPartQueryPart()
-	s.Query.Parts = append(s.Query.Parts, s.currentPart)
-
 	s.ctx.Enter(NewReadingClauseVisitor())
 }
 
 func (s *MultiPartQueryVisitor) ExitOC_ReadingClause(ctx *parser.OC_ReadingClauseContext) {
-	if s.currentPart != nil {
-		s.currentPart.AddReadingClause(s.ctx.Exit().(*ReadingClauseVisitor).ReadingClause)
-	} else {
-		s.ctx.AddErrors(ErrInvalidInput)
-	}
+	part := model.NewMultiPartQueryPart()
+	part.AddReadingClause(s.ctx.Exit().(*ReadingClauseVisitor).ReadingClause)
+	s.Query.Parts = append(s.Query.Parts, part)
 }
 
 func (s *MultiPartQueryVisitor) EnterOC_UpdatingClause(ctx *parser.OC_UpdatingClauseContext) {
@@ -382,12 +376,10 @@ func (s *MultiPartQueryVisitor) EnterOC_UpdatingClause(ctx *parser.OC_UpdatingCl
 }
 
 func (s *MultiPartQueryVisitor) ExitOC_UpdatingClause(ctx *parser.OC_UpdatingClauseContext) {
-	if s.currentPart != nil {
-		s.ctx.HasMutation = true
-		s.currentPart.AddUpdatingClause(s.ctx.Exit().(*UpdatingClauseVisitor).UpdatingClause)
-	} else {
-		s.ctx.AddErrors(ErrInvalidInput)
-	}
+	s.ctx.HasMutation = true
+	part := model.NewMultiPartQueryPart()
+	part.AddUpdatingClause(s.ctx.Exit().(*UpdatingClauseVisitor).UpdatingClause)
+	s.Query.Parts = append(s.Query.Parts, part)
 }
 
 func (s *MultiPartQueryVisitor) EnterOC_With(ctx *parser.OC_WithContext) {
@@ -395,11 +387,9 @@ func (s *MultiPartQueryVisitor) EnterOC_With(ctx *parser.OC_WithContext) {
 }
 
 func (s *MultiPartQueryVisitor) ExitOC_With(ctx *parser.OC_WithContext) {
-	if s.currentPart != nil {
-		s.currentPart.With = s.ctx.Exit().(*WithVisitor).With
-	} else {
-		s.ctx.AddErrors(ErrInvalidInput)
-	}
+	part := model.NewMultiPartQueryPart()
+	part.With = s.ctx.Exit().(*WithVisitor).With
+	s.Query.Parts = append(s.Query.Parts, part)
 }
 
 func (s *MultiPartQueryVisitor) EnterOC_SinglePartQuery(ctx *parser.OC_SinglePartQueryContext) {
