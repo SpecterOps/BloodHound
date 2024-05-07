@@ -18,6 +18,7 @@ package graph
 
 import (
 	"strings"
+	"unsafe"
 
 	"github.com/RoaringBitmap/roaring/roaring64"
 	"github.com/specterops/bloodhound/dawgs/util/size"
@@ -264,16 +265,12 @@ type PathSegment struct {
 	size     size.Size
 }
 
-func sizeOfPathSegment(segment *PathSegment) size.Size {
-	return size.Of(*segment) + segment.Node.SizeOf() + size.Of(segment.Branches)*size.Size(cap(segment.Branches))
-}
-
 func NewRootPathSegment(root *Node) *PathSegment {
 	newSegment := &PathSegment{
 		Node: root,
 	}
 
-	newSegment.size = sizeOfPathSegment(newSegment)
+	newSegment.computeAndSetSize()
 	return newSegment
 }
 
@@ -287,6 +284,23 @@ func (s *PathSegment) GetTrunkSegment() *PathSegment {
 
 func (s *PathSegment) SizeOf() size.Size {
 	return s.size
+}
+
+func (s *PathSegment) computeAndSetSize() {
+	s.size = 0
+
+	s.size += size.Of(s) +
+		s.Node.SizeOf() +
+		size.Of(s.Trunk) +
+		s.Edge.SizeOf() +
+		size.Of(s.Branches)*size.Size(cap(s.Branches)) +
+		size.Size(unsafe.Sizeof(s.size))
+
+	// recursively add sizes of all branches
+	for _, branch := range s.Branches {
+		branch.computeAndSetSize()
+		s.size += branch.size
+	}
 }
 
 func (s *PathSegment) IsCycle() bool {
@@ -395,15 +409,14 @@ func (s *PathSegment) Detach() {
 }
 
 func (s *PathSegment) Descend(node *Node, relationship *Relationship) *PathSegment {
-	var (
-		nextSegment = &PathSegment{
-			Node:  node,
-			Trunk: s,
-			Edge:  relationship,
-		}
-		sizeAdded         = sizeOfPathSegment(nextSegment)
-		oldBranchCapacity = cap(s.Branches)
-	)
+	nextSegment := &PathSegment{
+		Node:  node,
+		Trunk: s,
+		Edge:  relationship,
+	}
+	nextSegment.computeAndSetSize()
+	sizeAdded := nextSegment.size
+	oldBranchCapacity := cap(s.Branches)
 
 	// Track the size of the segment
 	nextSegment.size = sizeAdded
