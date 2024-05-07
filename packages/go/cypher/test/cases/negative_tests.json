@@ -5,7 +5,7 @@
             "type": "negative_case",
             "details": {
                 "queries": [
-                    "MERGE () WITH * RETURN DISTINCT * UNION RETURN * UNION RETURN *",
+                    "MERGE () WITH * RETURN DISTINCT * UNION RETURN * UNION RETURN * MATCH",
                     "WITH * SKIP 0 RETURN DISTINCT *"
                 ],
                 "error_matchers": [

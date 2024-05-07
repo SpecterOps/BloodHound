@@ -4,7 +4,7 @@
             "name": "Match all nodes in the graph",
             "type": "string_match",
             "details": {
-                "query": "match (a) return a LIMIT 5",
+                "query": "match (a) return a limit 5",
                 "complexity": 3
             }
         },
@@ -469,7 +469,7 @@
             "name": "Single node pattern",
             "type": "string_match",
             "details": {
-                "query": "match (b) return b LIMIT 5",
+                "query": "match (b) return b limit 5",
                 "complexity": 3
             }
         },

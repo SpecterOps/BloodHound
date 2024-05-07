@@ -4,7 +4,7 @@
             "name": "Multipart query with mutation",
             "type": "string_match",
             "details": {
-                "query": "MATCH (s:Ship {name: 'Nebuchadnezzar'}) WITH s as ship MERGE p=(c:Crew {name: 'Neo'})-[:CrewOf]-(ship) SET c.title = 'The One' RETURN p",
+                "query": "match (s:Ship {name: 'Nebuchadnezzar'}) with s as ship merge p=(c:Crew {name: 'Neo'})-[:CrewOf]-(ship) set c.title = 'The One' return p",
                 "complexity": 9
             }
         },
