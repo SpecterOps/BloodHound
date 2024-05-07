@@ -67,16 +67,16 @@ func WithVisitor[T model.Expression](analyzer *Analyzer, visitorFunc TypedVisito
 // Weight constants aren't well named for right now. These are just dumb values to assign heuristic weight to certain
 // query elements
 const (
-	Weight1 float64 = iota + 1
+	Weight1 int64 = iota + 1
 	Weight2
 	Weight3
 )
 
 type ComplexityMeasure struct {
-	Weight float64
+	Weight int64
 
-	numPatterns     float64
-	numProjections  float64
+	numPatterns     int64
+	numProjections  int64
 	nodeLookupKinds map[string]graph.Kinds
 }
 

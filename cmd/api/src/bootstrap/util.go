@@ -94,8 +94,8 @@ func ConnectGraph(ctx context.Context, cfg config.Configuration) (*graph.Databas
 		if connectionString == "" {
 			return nil, fmt.Errorf("graph connection requires a connection url to be set")
 		} else if graphDatabase, err := dawgs.Open(ctx, driverName, dawgs.Config{
-			TraversalMemoryLimit: size.Size(cfg.TraversalMemoryLimit) * size.Gibibyte,
-			DriverCfg:            connectionString,
+			GraphQueryMemoryLimit: size.Size(cfg.GraphQueryMemoryLimit) * size.Gibibyte,
+			DriverCfg:             connectionString,
 		}); err != nil {
 			return nil, err
 		} else {

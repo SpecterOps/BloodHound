@@ -4,7 +4,7 @@ The BloodHound team has provide some sample data for testing the tool without pe
 
 ## AD Example Data
 
-File: [ad_example_data.zip](examples/sample-data/ad_example_data.zip)
+File: [ad_example_data.zip](ad_example_data.zip)
 
 This example environment includes:
 

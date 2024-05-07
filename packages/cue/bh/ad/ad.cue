@@ -98,6 +98,20 @@ IsUserSpecifiesSanEnabledCollected: types.#StringEnum & {
 	representation: "isuserspecifiessanenabledcollected"
 }
 
+RoleSeparationEnabled: types.#StringEnum & {
+	symbol: 		"RoleSeparationEnabled"
+	schema: 		"ad"
+	name:           "Role Separation Enabled"
+	representation: "roleseparationenabled"
+}
+
+RoleSeparationEnabledCollected: types.#StringEnum & {
+	symbol: 		"RoleSeparationEnabledCollected"
+	schema: 		"ad"
+	name:           "Role Separation Enabled Collected"
+	representation: "roleseparationenabledcollected"
+}
+
 HasBasicConstraints: types.#StringEnum & {
 	symbol: 		"HasBasicConstraints"
 	schema: 		"ad"
@@ -110,6 +124,13 @@ BasicConstraintPathLength: types.#StringEnum & {
 	schema: 		"ad"
 	name:           "Basic Constraint Path Length"
 	representation: "basicconstraintpathlength"
+}
+
+UnresolvedPublishedTemplates: types.#StringEnum & {
+	symbol: 		"UnresolvedPublishedTemplates"
+	schema: 		"ad"
+	name:           "Unresolved Published Certificate Templates"
+	representation: "unresolvedpublishedtemplates"
 }
 
 DNSHostname: types.#StringEnum & {
@@ -565,8 +586,11 @@ Properties: [
 	EnrollmentAgentRestrictionsCollected,
 	IsUserSpecifiesSanEnabled,
 	IsUserSpecifiesSanEnabledCollected,
+	RoleSeparationEnabled,
+	RoleSeparationEnabledCollected,
 	HasBasicConstraints,
 	BasicConstraintPathLength,
+	UnresolvedPublishedTemplates,
 	DNSHostname,
 	CrossCertificatePair,
 	DistinguishedName,

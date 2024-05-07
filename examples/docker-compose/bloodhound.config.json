@@ -6,9 +6,6 @@
   "work_dir": "/opt/bloodhound/work",
   "log_level": "INFO",
   "log_path": "bloodhound.log",
-  "features": {
-    "enable_auth": true
-  },
   "tls": {
     "cert_file": "",
     "key_file": ""

@@ -14,111 +14,12 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import {
-    ActiveDirectoryKindProperties,
-    ActiveDirectoryKindPropertiesToDisplay,
-    AzureKindProperties,
-    AzureKindPropertiesToDisplay,
-    CommonKindProperties,
-    CommonKindPropertiesToDisplay,
-    EntityField,
-    EntityPropertyKind,
-} from 'bh-shared-ui';
+import { GlyphKind } from 'bh-shared-ui';
 import { MultiDirectedGraph } from 'graphology';
 import { GraphEdges, GraphNodes } from 'js-client-library';
-import isEmpty from 'lodash/isEmpty';
-import startCase from 'lodash/startCase';
-import { ZERO_VALUE_API_DATE } from 'src/constants';
-import { GlyphKind } from 'bh-shared-ui';
 import { GlyphLocation } from 'src/rendering/programs/node.glyphs';
 import { EdgeDirection, EdgeParams, NodeParams } from 'src/utils';
-import { NODE_ICON, GLYPHS, UNKNOWN_ICON } from './svgIcons';
-
-export const formatObjectInfoFields = (props: any): EntityField[] => {
-    let mappedFields: EntityField[] = [];
-    const propKeys = Object.keys(props || {});
-
-    for (let i = 0; i < propKeys.length; i++) {
-        const value = props[propKeys[i]];
-        // Don't display empty fields or fields with zero date values
-        if (
-            value === undefined ||
-            value === '' ||
-            value === ZERO_VALUE_API_DATE ||
-            (typeof value === 'object' && isEmpty(value))
-        )
-            continue;
-
-        const { kind, isKnownProperty } = validateProperty(propKeys[i]);
-
-        if (isKnownProperty) {
-            mappedFields.push({
-                kind: kind,
-                label: getFieldLabel(kind!, propKeys[i]),
-                value: value,
-                keyprop: propKeys[i],
-            });
-        } else {
-            mappedFields.push({
-                kind: kind,
-                label: `${startCase(propKeys[i])}:`,
-                value: value,
-                keyprop: propKeys[i],
-            });
-        }
-    }
-
-    mappedFields = mappedFields.sort((a, b) => {
-        return a.label!.localeCompare(b.label!);
-    });
-
-    return mappedFields;
-};
-
-const isActiveDirectoryProperty = (enumValue: ActiveDirectoryKindProperties): boolean => {
-    return Object.values(ActiveDirectoryKindProperties).includes(enumValue);
-};
-
-const isAzureProperty = (enumValue: AzureKindProperties): boolean => {
-    return Object.values(AzureKindProperties).includes(enumValue);
-};
-
-const isCommonProperty = (enumValue: CommonKindProperties): boolean => {
-    return Object.values(CommonKindProperties).includes(enumValue);
-};
-
-export type ValidatedProperty = {
-    isKnownProperty: boolean;
-    kind: EntityPropertyKind;
-};
-
-export const validateProperty = (enumValue: string): ValidatedProperty => {
-    if (isActiveDirectoryProperty(enumValue as ActiveDirectoryKindProperties))
-        return { isKnownProperty: true, kind: 'ad' };
-    if (isAzureProperty(enumValue as AzureKindProperties)) return { isKnownProperty: true, kind: 'az' };
-    if (isCommonProperty(enumValue as CommonKindProperties)) return { isKnownProperty: true, kind: 'cm' };
-    return { isKnownProperty: false, kind: null };
-};
-
-const getFieldLabel = (kind: string, key: string): string => {
-    let label: string;
-
-    switch (kind) {
-        case 'ad':
-            label = ActiveDirectoryKindPropertiesToDisplay(key as ActiveDirectoryKindProperties)!;
-            break;
-        case 'az':
-            label = AzureKindPropertiesToDisplay(key as AzureKindProperties)!;
-            break;
-        case 'cm':
-            label = CommonKindPropertiesToDisplay(key as CommonKindProperties)!;
-            break;
-        default:
-            label = key;
-    }
-
-    return `${label}:`;
-};
+import { GLYPHS, NODE_ICON, UNKNOWN_ICON } from './svgIcons';
 
 export const initGraphNodes = (graph: MultiDirectedGraph, nodes: GraphNodes, nodeSize: number) => {
     Object.keys(nodes).forEach((key: string) => {

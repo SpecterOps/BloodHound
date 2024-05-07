@@ -14,19 +14,87 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { Alert, Skeleton } from '@mui/material';
+import {
+    EntityField,
+    FieldsContainer,
+    ObjectInfoFields,
+    apiClient,
+    entityInformationEndpoints,
+    formatObjectInfoFields,
+    getNodeByDatabaseIdCypher,
+    validateNodeType,
+} from 'bh-shared-ui';
+import { RequestOptions } from 'js-client-library';
 import React from 'react';
-import EntityInfoCollapsibleSection from './EntityInfoCollapsibleSection';
-import { EntityField, FieldsContainer, ObjectInfoFields } from 'bh-shared-ui';
-import { formatObjectInfoFields } from 'src/views/Explore/utils';
+import { useQuery } from 'react-query';
 import { BasicObjectInfoFields } from '../BasicObjectInfoFields';
+import EntityInfoCollapsibleSection from './EntityInfoCollapsibleSection';
+import { EntityInfoContentProps } from './EntityInfoContent';
 
-const EntityObjectInformation: React.FC<{ props: any }> = ({ props }) => {
-    const formattedObjectFields: EntityField[] = formatObjectInfoFields(props);
+const EntityObjectInformation: React.FC<EntityInfoContentProps> = ({ id, nodeType, databaseId }) => {
+    const requestDetails: {
+        endpoint: (
+            params: string,
+            options?: RequestOptions,
+            includeProperties?: boolean
+        ) => Promise<Record<string, any>>;
+        param: string;
+    } = {
+        endpoint: async function () {
+            return {};
+        },
+        param: '',
+    };
+
+    const validatedKind = validateNodeType(nodeType);
+
+    if (validatedKind) {
+        requestDetails.endpoint = entityInformationEndpoints[validatedKind];
+        requestDetails.param = id;
+    } else if (databaseId) {
+        requestDetails.endpoint = apiClient.cypherSearch;
+        requestDetails.param = getNodeByDatabaseIdCypher(databaseId);
+    }
+
+    const informationAvailable = !!validatedKind || !!databaseId;
+
+    const {
+        data: objectInformation,
+        isLoading,
+        isError,
+    } = useQuery(
+        ['entity', nodeType, id],
+        ({ signal }) =>
+            requestDetails.endpoint(requestDetails.param, { signal }, true).then((res) => {
+                if (validatedKind) return res.data.data.props;
+                else if (databaseId) return Object.values(res.data.data.nodes as Record<string, any>)[0].properties;
+                else return {};
+            }),
+        {
+            refetchOnWindowFocus: false,
+            retry: false,
+            enabled: informationAvailable,
+        }
+    );
+
+    if (isLoading) return <Skeleton data-testid='entity-object-information-skeleton' variant='text' />;
+
+    if (isError || !informationAvailable)
+        return (
+            <EntityInfoCollapsibleSection label='Object Information'>
+                <FieldsContainer>
+                    <Alert severity='error'>Unable to load object information for this node.</Alert>
+                </FieldsContainer>
+            </EntityInfoCollapsibleSection>
+        );
+
+    const formattedObjectFields: EntityField[] = formatObjectInfoFields(objectInformation);
 
     return (
         <EntityInfoCollapsibleSection label='Object Information'>
             <FieldsContainer>
-                <BasicObjectInfoFields {...props} />
+                <BasicObjectInfoFields {...objectInformation} />
                 <ObjectInfoFields fields={formattedObjectFields} />
             </FieldsContainer>
         </EntityInfoCollapsibleSection>

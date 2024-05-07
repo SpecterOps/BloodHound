@@ -30,31 +30,16 @@ type SymbolicNameOrReservedWordVisitor struct {
 	Name string
 }
 
-func (s *SymbolicNameOrReservedWordVisitor) EnterOC_LabelName(ctx *parser.OC_LabelNameContext) {
-}
-
-func (s *SymbolicNameOrReservedWordVisitor) ExitOC_LabelName(ctx *parser.OC_LabelNameContext) {
-}
-
 func (s *SymbolicNameOrReservedWordVisitor) EnterOC_SchemaName(ctx *parser.OC_SchemaNameContext) {
 	s.Name = ctx.GetText()
-}
-
-func (s *SymbolicNameOrReservedWordVisitor) ExitOC_SchemaName(ctx *parser.OC_SchemaNameContext) {
 }
 
 func (s *SymbolicNameOrReservedWordVisitor) EnterOC_SymbolicName(ctx *parser.OC_SymbolicNameContext) {
 	s.Name = ctx.GetText()
 }
 
-func (s *SymbolicNameOrReservedWordVisitor) ExitOC_SymbolicName(ctx *parser.OC_SymbolicNameContext) {
-}
-
 func (s *SymbolicNameOrReservedWordVisitor) EnterOC_ReservedWord(ctx *parser.OC_ReservedWordContext) {
 	s.Name = ctx.GetText()
-}
-
-func (s *SymbolicNameOrReservedWordVisitor) ExitOC_ReservedWord(ctx *parser.OC_ReservedWordContext) {
 }
 
 type MapLiteralVisitor struct {
@@ -118,12 +103,6 @@ func NewLiteralVisitor() *LiteralVisitor {
 	}
 }
 
-func (s *LiteralVisitor) EnterOC_NumberLiteral(ctx *parser.OC_NumberLiteralContext) {
-}
-
-func (s *LiteralVisitor) ExitOC_NumberLiteral(ctx *parser.OC_NumberLiteralContext) {
-}
-
 func (s *LiteralVisitor) EnterOC_IntegerLiteral(ctx *parser.OC_IntegerLiteralContext) {
 	text := ctx.GetText()
 
@@ -132,9 +111,6 @@ func (s *LiteralVisitor) EnterOC_IntegerLiteral(ctx *parser.OC_IntegerLiteralCon
 	} else {
 		s.Literal.Set(parsedInt64)
 	}
-}
-
-func (s *LiteralVisitor) ExitOC_IntegerLiteral(ctx *parser.OC_IntegerLiteralContext) {
 }
 
 func (s *LiteralVisitor) EnterOC_BooleanLiteral(ctx *parser.OC_BooleanLiteralContext) {
@@ -147,9 +123,6 @@ func (s *LiteralVisitor) EnterOC_BooleanLiteral(ctx *parser.OC_BooleanLiteralCon
 	}
 }
 
-func (s *LiteralVisitor) ExitOC_BooleanLiteral(ctx *parser.OC_BooleanLiteralContext) {
-}
-
 func (s *LiteralVisitor) EnterOC_DoubleLiteral(ctx *parser.OC_DoubleLiteralContext) {
 	text := ctx.GetText()
 
@@ -158,9 +131,6 @@ func (s *LiteralVisitor) EnterOC_DoubleLiteral(ctx *parser.OC_DoubleLiteralConte
 	} else {
 		s.Literal.Set(parsedFloat64)
 	}
-}
-
-func (s *LiteralVisitor) ExitOC_DoubleLiteral(ctx *parser.OC_DoubleLiteralContext) {
 }
 
 func (s *LiteralVisitor) EnterOC_MapLiteral(ctx *parser.OC_MapLiteralContext) {

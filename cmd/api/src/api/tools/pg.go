@@ -339,14 +339,14 @@ func (s *PGMigrator) MigrationStatus(response http.ResponseWriter, request *http
 
 func (s *PGMigrator) OpenPostgresGraphConnection() (graph.Database, error) {
 	return dawgs.Open(s.ServerCtx, pg.DriverName, dawgs.Config{
-		TraversalMemoryLimit: size.Gibibyte,
-		DriverCfg:            s.Cfg.Database.PostgreSQLConnectionString(),
+		GraphQueryMemoryLimit: size.Gibibyte,
+		DriverCfg:             s.Cfg.Database.PostgreSQLConnectionString(),
 	})
 }
 
 func (s *PGMigrator) OpenNeo4jGraphConnection() (graph.Database, error) {
 	return dawgs.Open(s.ServerCtx, neo4j.DriverName, dawgs.Config{
-		TraversalMemoryLimit: size.Gibibyte,
-		DriverCfg:            s.Cfg.Neo4J.Neo4jConnectionString(),
+		GraphQueryMemoryLimit: size.Gibibyte,
+		DriverCfg:             s.Cfg.Neo4J.Neo4jConnectionString(),
 	})
 }

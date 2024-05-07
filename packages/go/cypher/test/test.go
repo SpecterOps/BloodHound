@@ -91,9 +91,9 @@ func (s NegativeTest) Run(t *testing.T, testCase Case) {
 }
 
 type StringMatchTest struct {
-	Query      string   `json:"query"`
-	Matcher    string   `json:"matcher"`
-	Complexity *float64 `json:"complexity"`
+	Query      string `json:"query"`
+	Matcher    string `json:"matcher"`
+	Complexity *int64 `json:"complexity"`
 }
 
 func (s StringMatchTest) Run(t *testing.T, testCase Case) {

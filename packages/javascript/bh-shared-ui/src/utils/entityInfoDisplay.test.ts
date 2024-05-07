@@ -14,14 +14,16 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { ActiveDirectoryKindProperties, AzureKindProperties, CommonKindProperties } from '../graphSchema';
 import {
     ADSpecificTimeProperties,
-    formatADSpecificTime,
-    formatNumber,
-    formatBoolean,
-    formatString,
-    formatList,
     EntityField,
+    formatADSpecificTime,
+    formatBoolean,
+    formatList,
+    formatNumber,
+    formatString,
+    validateProperty,
 } from './entityInfoDisplay';
 
 describe('Handling value formatting for Active Directory entity properties lastlogon, lastlogontimestamp, whencreated, and pwdlastset', () => {
@@ -109,5 +111,26 @@ describe('Formatting list properties', () => {
             label: 'test',
         };
         expect(formatList(testEntityField)).toEqual(['test', '5', 'FALSE']);
+    });
+});
+
+describe('validating a node property against the shared generated schema', () => {
+    it('should recognize active directory properties', () => {
+        Object.values(ActiveDirectoryKindProperties).forEach((property: ActiveDirectoryKindProperties) => {
+            expect(validateProperty(property)).toEqual({ isKnownProperty: true, kind: 'ad' });
+        });
+    });
+    it('should recognize azure properties', () => {
+        Object.values(AzureKindProperties).forEach((property: AzureKindProperties) => {
+            expect(validateProperty(property)).toEqual({ isKnownProperty: true, kind: 'az' });
+        });
+    });
+    it('should recognize a common properties', () => {
+        Object.values(CommonKindProperties).forEach((property: CommonKindProperties) => {
+            expect(validateProperty(property)).toEqual({ isKnownProperty: true, kind: 'cm' });
+        });
+    });
+    it('should return an object denoting that the property is not in the schema when it is unrecognized', () => {
+        expect(validateProperty('notInSchema')).toEqual({ isKnownProperty: false, kind: null });
     });
 });

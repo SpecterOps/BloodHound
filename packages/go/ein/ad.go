@@ -441,6 +441,11 @@ func ParseCARegistryProperties(enterpriseCA EnterpriseCA) IngestibleNode {
 		propMap[ad.IsUserSpecifiesSanEnabled.String()] = enterpriseCA.CARegistryData.IsUserSpecifiesSanEnabled.Value
 	}
 
+	// RoleSeparationEnabled
+	if enterpriseCA.CARegistryData.RoleSeparationEnabled.Collected {
+		propMap[ad.RoleSeparationEnabled.String()] = enterpriseCA.CARegistryData.RoleSeparationEnabled.Value
+	}
+
 	return IngestibleNode{
 		ObjectID:    enterpriseCA.ObjectIdentifier,
 		PropertyMap: propMap,

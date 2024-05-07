@@ -30,6 +30,7 @@ import (
 	"github.com/specterops/bloodhound/dawgs/util"
 	"github.com/specterops/bloodhound/dawgs/util/atomics"
 	"github.com/specterops/bloodhound/dawgs/util/channels"
+	"github.com/specterops/bloodhound/errors"
 	"github.com/specterops/bloodhound/log"
 )
 
@@ -294,7 +295,7 @@ func (s Traversal) BreadthFirst(ctx context.Context, plan Plan) error {
 		// is considered complete.
 		completionC                    = make(chan struct{}, s.numWorkers*2)
 		descentCount                   = &atomic.Int64{}
-		errors                         = util.NewErrorCollector()
+		errorCollector                 = util.NewErrorCollector()
 		traversalCtx, doneFunc         = context.WithCancel(ctx)
 		segmentWriterC, segmentReaderC = channels.BufferedPipe[*graph.PathSegment](traversalCtx)
 		pathTree                       graph.Tree
@@ -327,7 +328,9 @@ func (s Traversal) BreadthFirst(ctx context.Context, plan Plan) error {
 				for {
 					if nextDescent, ok := channels.Receive(traversalCtx, segmentReaderC); !ok {
 						return nil
-					} else if pathTreeSize := pathTree.SizeOf(); pathTreeSize < tx.TraversalMemoryLimit() {
+					} else if tx.GraphQueryMemoryLimit() > 0 && pathTree.SizeOf() > tx.GraphQueryMemoryLimit() {
+						return fmt.Errorf("%w - Limit: %.2f MB - Memory In-Use: %.2f MB", ops.ErrGraphQueryMemoryLimit, tx.GraphQueryMemoryLimit().Mebibytes(), pathTree.SizeOf().Mebibytes())
+					} else {
 						// Traverse the descending relationships of the current segment
 						if descendingSegments, err := plan.Driver(traversalCtx, tx, nextDescent); err != nil {
 							return err
@@ -338,9 +341,6 @@ func (s Traversal) BreadthFirst(ctx context.Context, plan Plan) error {
 								channels.Submit(traversalCtx, segmentWriterC, descendingSegment)
 							}
 						}
-					} else {
-						// Did we encounter a memory limit?
-						errors.Add(fmt.Errorf("%w - Limit: %.2f MB - Memory In-Use: %.2f MB", ops.ErrTraversalMemoryLimit, tx.TraversalMemoryLimit().Mebibytes(), pathTree.SizeOf().Mebibytes()))
 					}
 
 					// Mark descent for this segment as complete
@@ -350,11 +350,11 @@ func (s Traversal) BreadthFirst(ctx context.Context, plan Plan) error {
 						return nil
 					}
 				}
-			}); err != nil && err != graph.ErrContextTimedOut {
+			}); err != nil && !errors.Is(err, graph.ErrContextTimedOut) {
 				// A worker encountered a fatal error, kill the traversal context
 				doneFunc()
 
-				errors.Add(fmt.Errorf("reader %d failed: %w", workerID, err))
+				errorCollector.Add(fmt.Errorf("reader %d failed: %w", workerID, err))
 			}
 		}(workerID)
 	}
@@ -375,7 +375,7 @@ func (s Traversal) BreadthFirst(ctx context.Context, plan Plan) error {
 	// Wait for all workers to exit
 	workerWG.Wait()
 
-	return errors.Combined()
+	return errorCollector.Combined()
 }
 
 func newVisitorFilter(direction graph.Direction, userFilter graph.Criteria) func(segment *graph.PathSegment) graph.Criteria {

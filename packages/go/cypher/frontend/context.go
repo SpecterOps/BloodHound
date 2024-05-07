@@ -34,7 +34,8 @@ type Context struct {
 	visitorStack []*descentEntry
 	filters      []Visitor
 
-	Errors []error
+	Errors      []error
+	HasMutation bool
 }
 
 func NewContext(filters ...Visitor) *Context {

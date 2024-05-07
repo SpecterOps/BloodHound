@@ -195,11 +195,12 @@ func FetchPathSetByQuery(tx graph.Transaction, query string) (graph.PathSet, err
 					pathSet = append(pathSet, *typedMapped)
 				}
 
-				currentPathSize := size.OfSlice(currentPath.Edges) + size.OfSlice(currentPath.Nodes)
-				pathSetSize := size.Of(pathSet)
-
-				if currentPathSize > tx.TraversalMemoryLimit() || pathSetSize > tx.TraversalMemoryLimit() {
-					return pathSet, fmt.Errorf("%s - Limit: %.2f MB", "query required more memory than allowed", tx.TraversalMemoryLimit().Mebibytes())
+				if tx.GraphQueryMemoryLimit() > 0 {
+					currentPathSize := size.OfSlice(currentPath.Edges) + size.OfSlice(currentPath.Nodes)
+					pathSetSize := size.Of(pathSet)
+					if currentPathSize > tx.GraphQueryMemoryLimit() || pathSetSize > tx.GraphQueryMemoryLimit() {
+						return pathSet, fmt.Errorf("%s - Limit: %.2f MB", "query required more memory than allowed", tx.GraphQueryMemoryLimit().Mebibytes())
+					}
 				}
 			}
 		}

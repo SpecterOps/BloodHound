@@ -26,12 +26,6 @@ import (
 	"github.com/specterops/bloodhound/cypher/parser"
 )
 
-func DefaultCypherContext() *Context {
-	return NewContext(
-		NewUnsupportedOperationFilter(),
-	)
-}
-
 func parseCypher(ctx *Context, input string) (*model.RegularQuery, error) {
 	var (
 		queryBuffer     = bytes.NewBufferString(input)
@@ -41,7 +35,7 @@ func parseCypher(ctx *Context, input string) (*model.RegularQuery, error) {
 		parseTreeWalker = antlr.NewParseTreeWalker()
 		queryVisitor    = &QueryVisitor{}
 	)
-	
+
 	// Set up the lexer and parser to report errors to the context
 	lexer.RemoveErrorListeners()
 	lexer.AddErrorListener(ctx)

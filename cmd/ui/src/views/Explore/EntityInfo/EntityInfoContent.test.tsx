@@ -19,7 +19,8 @@ import { EntityInfoPanelContextProvider } from './EntityInfoPanelContextProvider
 import { render, screen, waitForElementToBeRemoved } from 'src/test-utils';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
-import { AzureNodeKind } from 'bh-shared-ui';
+import { AzureNodeKind, ActiveDirectoryNodeKind } from 'bh-shared-ui';
+import userEvent from '@testing-library/user-event';
 
 const server = setupServer(
     rest.get('/api/v2/azure/roles', (req, res, ctx) => {
@@ -30,6 +31,30 @@ const server = setupServer(
                     props: {},
                     active_assignments: 0,
                     pim_assignments: 0,
+                },
+            })
+        );
+    }),
+    rest.get('/api/v2/base/*', (req, res, ctx) => {
+        return res(
+            ctx.json({
+                data: {
+                    kind: ActiveDirectoryNodeKind.Entity,
+                    props: { objectid: 'test' },
+                },
+            })
+        );
+    }),
+    rest.post('/api/v2/graphs/cypher', (req, res, ctx) => {
+        return res(
+            ctx.json({
+                data: {
+                    nodes: {
+                        '42': {
+                            kind: 'Unknown',
+                            properties: { objectid: 'unknown kind' },
+                        },
+                    },
                 },
             })
         );
@@ -49,7 +74,60 @@ describe('EntityInfoContent', () => {
                 <EntityInfoContent id={testId} nodeType={AzureNodeKind.Role} />
             </EntityInfoPanelContextProvider>
         );
-        await waitForElementToBeRemoved(() => screen.getByText('Loading...'));
+        await waitForElementToBeRemoved(() => screen.getByTestId('entity-object-information-skeleton'));
         expect(screen.queryByText('PIM Assignments')).not.toBeInTheDocument();
+    });
+});
+
+describe('EntityObjectInformation', () => {
+    it('Calls the `Base` endpoint for a LocalGroup type node', async () => {
+        const testId = '1';
+        const user = userEvent.setup();
+
+        render(
+            <EntityInfoPanelContextProvider>
+                <EntityInfoContent id={testId} nodeType={ActiveDirectoryNodeKind.LocalGroup} />
+            </EntityInfoPanelContextProvider>
+        );
+
+        await waitForElementToBeRemoved(() => screen.getByTestId('entity-object-information-skeleton'));
+
+        await user.click(screen.getByText('Object Information'));
+
+        expect(await screen.findByText('test')).toBeInTheDocument();
+    });
+
+    it('Calls the `Base` endpoint for a LocalUser type node', async () => {
+        const testId = '1';
+        const user = userEvent.setup();
+
+        render(
+            <EntityInfoPanelContextProvider>
+                <EntityInfoContent id={testId} nodeType={ActiveDirectoryNodeKind.LocalUser} />
+            </EntityInfoPanelContextProvider>
+        );
+
+        await waitForElementToBeRemoved(() => screen.getByTestId('entity-object-information-skeleton'));
+
+        await user.click(screen.getByText('Object Information'));
+
+        expect(await screen.findByText('test')).toBeInTheDocument();
+    });
+
+    it('Calls the cypher search endpoint for a node with a type that is not in our schema', async () => {
+        const testId = '1';
+        const user = userEvent.setup();
+
+        render(
+            <EntityInfoPanelContextProvider>
+                <EntityInfoContent id={testId} nodeType={'Unknown'} databaseId='42' />
+            </EntityInfoPanelContextProvider>
+        );
+
+        await waitForElementToBeRemoved(() => screen.getByTestId('entity-object-information-skeleton'));
+
+        await user.click(screen.getByText('Object Information'));
+
+        expect(await screen.findByText('unknown kind')).toBeInTheDocument();
     });
 });

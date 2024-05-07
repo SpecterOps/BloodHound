@@ -15,36 +15,22 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Box } from '@mui/material';
-import { allSections, entityInformationEndpoints, EntityKinds } from 'bh-shared-ui';
+import { EntityKinds } from 'bh-shared-ui';
 import React from 'react';
-import { useQuery } from 'react-query';
 import EntityInfoDataTableList from './EntityInfoDataTableList';
 import EntityObjectInformation from './EntityObjectInformation';
 
 export interface EntityInfoContentProps {
     id: string;
-    nodeType: EntityKinds;
+    nodeType: EntityKinds | string;
+    databaseId?: string;
 }
 
-const EntityInfoContent: React.FC<EntityInfoContentProps> = ({ id, nodeType }) => {
-    const { data, isLoading, isError } = useQuery(
-        ['entity', nodeType, id],
-        ({ signal }) => entityInformationEndpoints[nodeType]?.(id, { signal }).then((res) => res.data.data),
-        { refetchOnWindowFocus: false, retry: false }
-    );
-
-    const sections = allSections[nodeType]?.(id);
-
+const EntityInfoContent: React.FC<EntityInfoContentProps> = (props) => {
     return (
         <Box>
-            {isLoading ? (
-                <div>Loading...</div>
-            ) : isError || data === undefined || sections === undefined ? (
-                <div>Unable to load node information.</div>
-            ) : (
-                <EntityObjectInformation {...data} />
-            )}
-            <EntityInfoDataTableList tables={sections || []} />
+            <EntityObjectInformation {...props} />
+            <EntityInfoDataTableList {...props} />
         </Box>
     );
 };

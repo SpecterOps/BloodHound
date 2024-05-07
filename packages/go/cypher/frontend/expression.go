@@ -74,12 +74,6 @@ func NewExpressionVisitor() Visitor {
 	return &ExpressionVisitor{}
 }
 
-func (s *ExpressionVisitor) EnterOC_Expression(ctx *parser.OC_ExpressionContext) {
-}
-
-func (s *ExpressionVisitor) ExitOC_Expression(ctx *parser.OC_ExpressionContext) {
-}
-
 func (s *ExpressionVisitor) EnterOC_NonArithmeticOperatorExpression(ctx *parser.OC_NonArithmeticOperatorExpressionContext) {
 	s.ctx.Enter(&NonArithmeticOperatorExpressionVisitor{})
 }
@@ -327,9 +321,6 @@ func (s *StringListNullPredicateExpressionVisitor) EnterOC_RegularExpression(ctx
 	}
 }
 
-func (s *StringListNullPredicateExpressionVisitor) ExitOC_RegularExpression(ctx *parser.OC_RegularExpressionContext) {
-}
-
 func (s *StringListNullPredicateExpressionVisitor) EnterOC_ListPredicateExpression(ctx *parser.OC_ListPredicateExpressionContext) {
 	if ctx.GetToken(parser.CypherLexerIN, 0) != nil {
 		s.Expression = &model.Comparison{
@@ -339,9 +330,6 @@ func (s *StringListNullPredicateExpressionVisitor) EnterOC_ListPredicateExpressi
 			}},
 		}
 	}
-}
-
-func (s *StringListNullPredicateExpressionVisitor) ExitOC_ListPredicateExpression(ctx *parser.OC_ListPredicateExpressionContext) {
 }
 
 func (s *StringListNullPredicateExpressionVisitor) EnterOC_NullPredicateExpression(ctx *parser.OC_NullPredicateExpressionContext) {
@@ -370,9 +358,6 @@ func (s *StringListNullPredicateExpressionVisitor) EnterOC_NullPredicateExpressi
 	}
 }
 
-func (s *StringListNullPredicateExpressionVisitor) ExitOC_NullPredicateExpression(ctx *parser.OC_NullPredicateExpressionContext) {
-}
-
 func (s *StringListNullPredicateExpressionVisitor) EnterOC_StringPredicateExpression(ctx *parser.OC_StringPredicateExpressionContext) {
 	if HasTokens(ctx, parser.CypherLexerSTARTS, parser.CypherLexerWITH) {
 		s.Expression = &model.Comparison{
@@ -398,9 +383,6 @@ func (s *StringListNullPredicateExpressionVisitor) EnterOC_StringPredicateExpres
 	}
 }
 
-func (s *StringListNullPredicateExpressionVisitor) ExitOC_StringPredicateExpression(ctx *parser.OC_StringPredicateExpressionContext) {
-}
-
 // oC_Atom ( ( SP? oC_ListOperatorExpression ) | ( SP? oC_PropertyLookup ) )* ( SP? oC_NodeLabels )?
 type NonArithmeticOperatorExpressionVisitor struct {
 	BaseVisitor
@@ -413,9 +395,6 @@ func (s *NonArithmeticOperatorExpressionVisitor) EnterOC_NodeLabels(ctx *parser.
 	s.Expression = &model.KindMatcher{
 		Reference: s.Expression,
 	}
-}
-
-func (s *NonArithmeticOperatorExpressionVisitor) ExitOC_NodeLabels(ctx *parser.OC_NodeLabelsContext) {
 }
 
 func (s *NonArithmeticOperatorExpressionVisitor) EnterOC_NodeLabel(ctx *parser.OC_NodeLabelContext) {

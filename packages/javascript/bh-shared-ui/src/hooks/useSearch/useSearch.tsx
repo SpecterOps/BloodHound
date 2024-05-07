@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { useQuery } from 'react-query';
-import { apiClient } from '../../utils';
+import { EntityKinds, apiClient } from '../../utils';
 import { ActiveDirectoryNodeKind, AzureNodeKind } from '../../graphSchema';
 
 export type SearchResult = {
@@ -30,11 +30,10 @@ export type SearchResults = SearchResult[];
 
 export const searchKeys = {
     all: ['search'] as const,
-    detail: (keyword: string, type: ActiveDirectoryNodeKind | AzureNodeKind | undefined) =>
-        [...searchKeys.all, keyword, type] as const,
+    detail: (keyword: string, type: EntityKinds | undefined) => [...searchKeys.all, keyword, type] as const,
 };
 
-export const useSearch = (keyword: string, type: ActiveDirectoryNodeKind | AzureNodeKind | undefined) => {
+export const useSearch = (keyword: string, type: EntityKinds | undefined) => {
     return useQuery<SearchResults, any>(
         searchKeys.detail(keyword, type),
         ({ signal }) => {
@@ -51,13 +50,11 @@ export const useSearch = (keyword: string, type: ActiveDirectoryNodeKind | Azure
     );
 };
 
-export const getKeywordAndTypeValues = (
-    inputValue = ''
-): { keyword: string; type: ActiveDirectoryNodeKind | AzureNodeKind | undefined } => {
+export const getKeywordAndTypeValues = (inputValue = ''): { keyword: string; type: EntityKinds | undefined } => {
     const splitValue = inputValue.split(':');
 
     let keyword = '';
-    let type: ActiveDirectoryNodeKind | AzureNodeKind | undefined = undefined;
+    let type: EntityKinds | undefined = undefined;
 
     if (splitValue.length > 1) {
         type = validateNodeType(splitValue[0]);
@@ -67,16 +64,18 @@ export const getKeywordAndTypeValues = (
     return { keyword: keyword, type: type };
 };
 
-const validateNodeType = (type: string): ActiveDirectoryNodeKind | AzureNodeKind | undefined => {
+export const validateNodeType = (type: string): EntityKinds | undefined => {
     let result = undefined;
-    Object.values(ActiveDirectoryNodeKind).forEach((activeDirectoryType: string) => {
+
+    if (type.toLowerCase() === 'meta') result = 'Meta' as EntityKinds;
+
+    Object.values(ActiveDirectoryNodeKind).forEach((activeDirectoryType) => {
         if (activeDirectoryType.localeCompare(type, undefined, { sensitivity: 'base' }) === 0)
-            result = activeDirectoryType as ActiveDirectoryNodeKind;
+            result = activeDirectoryType;
     });
 
-    Object.values(AzureNodeKind).forEach((azureType: string) => {
-        if (azureType.localeCompare(type, undefined, { sensitivity: 'base' }) === 0)
-            result = azureType as AzureNodeKind;
+    Object.values(AzureNodeKind).forEach((azureType) => {
+        if (azureType.localeCompare(type, undefined, { sensitivity: 'base' }) === 0) result = azureType;
     });
 
     return result;
@@ -87,11 +86,7 @@ const getErrorText = (error: any): string => {
     else return 'An error has occurred. Please try again.';
 };
 
-const getNoDataText = (
-    debouncedInputValue: string,
-    type: ActiveDirectoryNodeKind | AzureNodeKind | undefined,
-    keyword: string
-): string => {
+const getNoDataText = (debouncedInputValue: string, type: EntityKinds | undefined, keyword: string): string => {
     if (debouncedInputValue === '' && type === undefined)
         return 'Begin typing to search. Prepend a type followed by a colon to search by type, e.g., user:bob';
     else if (debouncedInputValue === '' && type !== undefined)
@@ -107,7 +102,7 @@ export const getEmptyResultsText = (
     isError: boolean,
     error: any,
     debouncedInputValue: string,
-    type: ActiveDirectoryNodeKind | AzureNodeKind | undefined,
+    type: EntityKinds | undefined,
     keyword: string,
     data: SearchResults | undefined
 ): string => {
