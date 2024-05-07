@@ -41,6 +41,22 @@
             }
         },
         {
+            "name": "JD's Create User Example",
+            "type": "string_match",
+            "details": {
+                "query": "merge (x:Base {objectid:'<objId>'}) set x:User,x.name='BOB@TEST.LAB' set x += {arr: ['abc','def','ghi']} return x",
+                "complexity": 3
+            }
+        },
+        {
+            "name": "JD's Create Edges Example",
+            "type": "string_match",
+            "details": {
+                "query": "match (x) match (y) merge (x)-[:Edge]->(y)",
+                "complexity": 11
+            }
+        },
+        {
             "name": "Create node",
             "type": "string_match",
             "details": {
