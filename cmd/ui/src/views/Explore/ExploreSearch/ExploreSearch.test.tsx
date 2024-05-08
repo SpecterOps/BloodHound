@@ -62,10 +62,10 @@ describe('ExploreSearch rendering per tab', async () => {
 
         await user.click(cypherTab);
 
-        expect(screen.getByText(/cypher search/i)).toBeInTheDocument();
+        expect(screen.getByText(/cypher query/i)).toBeInTheDocument();
 
         expect(screen.getByRole('link', { name: /help/i })).toBeInTheDocument();
-        expect(screen.getByRole('button', { name: /search/i })).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: /run/i })).toBeInTheDocument();
     });
 
     it('should hide/expand search widget when user clicks minus/plus button', async () => {
