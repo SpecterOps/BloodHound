@@ -20,7 +20,7 @@ import LinuxAbuse from './LinuxAbuse';
 import Opsec from './Opsec';
 import References from './References';
 
-const ManageGPLink = {
+const WriteGPLink = {
     general: General,
     windowsAbuse: WindowsAbuse,
     linuxAbuse: LinuxAbuse,
@@ -28,4 +28,4 @@ const ManageGPLink = {
     references: References,
 };
 
-export default ManageGPLink;
+export default WriteGPLink;

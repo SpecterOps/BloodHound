@@ -90,7 +90,7 @@ export const AllEdgeTypes: Category[] = [
                     ActiveDirectoryRelationshipKind.AddAllowedToAct,
                     ActiveDirectoryRelationshipKind.AddKeyCredentialLink,
                     ActiveDirectoryRelationshipKind.WriteAccountRestrictions,
-                    ActiveDirectoryRelationshipKind.ManageGPLink,
+                    ActiveDirectoryRelationshipKind.WriteGPLink,
                     ActiveDirectoryRelationshipKind.WriteSPN,
                 ],
             },

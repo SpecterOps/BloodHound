@@ -108,7 +108,7 @@ export enum ActiveDirectoryRelationshipKind {
     RemoteInteractiveLogonPrivilege = 'RemoteInteractiveLogonPrivilege',
     SyncLAPSPassword = 'SyncLAPSPassword',
     WriteAccountRestrictions = 'WriteAccountRestrictions',
-    ManageGPLink = 'ManageGPLink',
+    WriteGPLink = 'WriteGPLink',
     RootCAFor = 'RootCAFor',
     DCFor = 'DCFor',
     PublishedTo = 'PublishedTo',
@@ -218,8 +218,8 @@ export function ActiveDirectoryRelationshipKindToDisplay(value: ActiveDirectoryR
             return 'SyncLAPSPassword';
         case ActiveDirectoryRelationshipKind.WriteAccountRestrictions:
             return 'WriteAccountRestrictions';
-        case ActiveDirectoryRelationshipKind.ManageGPLink:
-            return 'ManageGPLink';
+        case ActiveDirectoryRelationshipKind.WriteGPLink:
+            return 'WriteGPLink';
         case ActiveDirectoryRelationshipKind.RootCAFor:
             return 'RootCAFor';
         case ActiveDirectoryRelationshipKind.DCFor:
@@ -562,7 +562,7 @@ export function ActiveDirectoryPathfindingEdges(): ActiveDirectoryRelationshipKi
         ActiveDirectoryRelationshipKind.AddKeyCredentialLink,
         ActiveDirectoryRelationshipKind.SyncLAPSPassword,
         ActiveDirectoryRelationshipKind.WriteAccountRestrictions,
-        ActiveDirectoryRelationshipKind.ManageGPLink,
+        ActiveDirectoryRelationshipKind.WriteGPLink,
         ActiveDirectoryRelationshipKind.GoldenCert,
         ActiveDirectoryRelationshipKind.ADCSESC1,
         ActiveDirectoryRelationshipKind.ADCSESC3,
