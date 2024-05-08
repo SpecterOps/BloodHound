@@ -16,13 +16,12 @@
 name: Jira Issue Transfer
 
 on:
-  label:
-    types: 
-      - edited
+  issues:
+    types:
+      - labeled
 jobs:
   build:
     runs-on: self-hosted
-    if: github.event.label.name == 'bug' && github.event.label.name == 'Ticketed'
     steps:
         - name: Login
           uses: atlassian/gajira-login@v3
@@ -30,6 +29,7 @@ jobs:
                 JIRA_BASE_URL: ${{ secrets.JIRA_BASE_URL }}
                 JIRA_USER_EMAIL: ${{ secrets.JIRA_USER_EMAIL }}
                 JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
+    if: contains(github.event.pull_request.labels.*.name, 'Ticketed', 'bug')
         - name: Jira Create
           uses: atlassian/gajira-create@v3
           with:
@@ -40,15 +40,7 @@ jobs:
                 fields: '{"labels":["GitHubReport"]}'
           env:
                 GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-                
-    if: github.event.label.name == 'enhancement' && github.event.label.name == 'Ticketed'
-    steps:
-        - name: Login
-          uses: atlassian/gajira-login@v3
-          env:
-                JIRA_BASE_URL: ${{ secrets.JIRA_BASE_URL }}
-                JIRA_USER_EMAIL: ${{ secrets.JIRA_USER_EMAIL }}
-                JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
+    if: contains(github.event.pull_request.labels.*.name, 'Ticketed', 'enhancement')
         - name: Jira Create
           uses: atlassian/gajira-create@v3
           with:
@@ -59,3 +51,4 @@ jobs:
                 fields: '{"labels":["GitHubReport"]}'
           env:
                 GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                
