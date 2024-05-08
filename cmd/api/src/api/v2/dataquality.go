@@ -19,13 +19,16 @@ package v2
 import (
 	"fmt"
 	"net/http"
+	"strconv"
 	"strings"
 
+	"github.com/Unleash/unleash-client-go/v4"
 	"github.com/gorilla/mux"
 	"github.com/specterops/bloodhound/analysis/ad"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/src/api"
+	"github.com/specterops/bloodhound/src/database/types/nan"
 	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/utils"
 )
@@ -102,6 +105,21 @@ func (s *Resources) GetADDataQualityStats(response http.ResponseWriter, request 
 	} else if stats, count, err := s.DB.GetADDataQualityStats(request.Context(), id, start, end, strings.Join(order, ", "), limit, skip); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
+		// TODO: Cleanup POC code
+		flag := unleash.GetVariant("api.newLocalGroupCompleteness")
+
+		if flag.Enabled {
+			for i, stat := range stats {
+				floatValue, err := strconv.ParseFloat(flag.Payload.Value, 64)
+				if err != nil {
+					log.Warnf("Unable to convert feature flag value to float64: %v", err)
+				} else {
+					log.Infof("Adding multiplier of %v to LocalGroupCompleteness", floatValue)
+					stats[i].LocalGroupCompleteness = stat.LocalGroupCompleteness * nan.Float64(floatValue)
+				}
+			}
+		}
+
 		api.WriteResponseWrapperWithTimeWindowAndPagination(request.Context(), stats, start, end, limit, skip, count, http.StatusOK, response)
 	}
 }
