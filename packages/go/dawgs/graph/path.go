@@ -416,6 +416,8 @@ func (s *PathSegment) Detach() {
 	}
 }
 
+// Descend returns a PathSegment with an added edge supplied as input, to the node supplied as input.
+// All required updates to slices, pointers, and sizes are included in this operation.
 func (s *PathSegment) Descend(node *Node, relationship *Relationship) *PathSegment {
 	nextSegment := &PathSegment{
 		Node:  node,
@@ -423,7 +425,7 @@ func (s *PathSegment) Descend(node *Node, relationship *Relationship) *PathSegme
 		Edge:  relationship,
 	}
 	nextSegment.computeAndSetSize()
-	sizeAdded := nextSegment.size
+	sizeAdded := nextSegment.SizeOf()
 	oldBranchCapacity := cap(s.Branches)
 
 	// Track the size of the segment
