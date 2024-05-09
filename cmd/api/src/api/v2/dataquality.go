@@ -23,6 +23,7 @@ import (
 	"strings"
 
 	"github.com/Unleash/unleash-client-go/v4"
+	"github.com/Unleash/unleash-client-go/v4/context"
 	"github.com/gorilla/mux"
 	"github.com/specterops/bloodhound/analysis/ad"
 	"github.com/specterops/bloodhound/dawgs/graph"
@@ -105,8 +106,20 @@ func (s *Resources) GetADDataQualityStats(response http.ResponseWriter, request 
 	} else if stats, count, err := s.DB.GetADDataQualityStats(request.Context(), id, start, end, strings.Join(order, ", "), limit, skip); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
+		canary := "true"
+		if s.Config.FeatureFlag.AppName == "BHCE-test" {
+			canary = "false"
+		}
 		// TODO: Cleanup POC code
-		flag := unleash.GetVariant("api.newLocalGroupCompleteness")
+		unleashCtx := context.Context{
+			UserId:        "12345",
+			SessionId:     "11111",
+			RemoteAddress: "127.0.0.1",
+			Properties:    map[string]string{"prop1": "value1", "prop2": "value2", "Canary": canary},
+		}
+
+		opt := unleash.WithVariantContext(unleashCtx)
+		flag := unleash.GetVariant("api.newLocalGroupCompleteness", opt)
 
 		if flag.Enabled {
 			for i, stat := range stats {
@@ -114,7 +127,6 @@ func (s *Resources) GetADDataQualityStats(response http.ResponseWriter, request 
 				if err != nil {
 					log.Warnf("Unable to convert feature flag value to float64: %v", err)
 				} else {
-					log.Infof("Adding multiplier of %v to LocalGroupCompleteness", floatValue)
 					stats[i].LocalGroupCompleteness = stat.LocalGroupCompleteness * nan.Float64(floatValue)
 				}
 			}
