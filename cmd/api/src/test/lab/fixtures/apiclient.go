@@ -26,19 +26,19 @@ import (
 	"github.com/specterops/bloodhound/src/api/v2/integration"
 )
 
-var BHAdminApiClientFixture = NewAdminApiClientFixture(BHApiFixture)
+var BHAdminApiClientFixture = NewAdminApiClientFixture(ConfigFixture, BHApiFixture)
 
-func NewAdminApiClientFixture(apiFixture *lab.Fixture[bool]) *lab.Fixture[apiclient.Client] {
+func NewAdminApiClientFixture(cfgFixture *lab.Fixture[config.Configuration], apiFixture *lab.Fixture[bool]) *lab.Fixture[apiclient.Client] {
 	fixture := lab.NewFixture(func(harness *lab.Harness) (apiclient.Client, error) {
-		if config, ok := lab.Unpack(harness, ConfigFixture); !ok {
-			return apiclient.Client{}, fmt.Errorf("unable to unpack ConfigFixture")
+		if cfg, ok := lab.Unpack(harness, cfgFixture); !ok {
+			return apiclient.Client{}, fmt.Errorf("unable to unpack cfgFixture")
 		} else {
 			credentials := &apiclient.SecretCredentialsHandler{
 				Username: integration.AdminPrincipal,
 				Secret:   integration.AdminInitialSecret,
 			}
 
-			client, err := apiclient.NewClient(config.RootURL.String())
+			client, err := apiclient.NewClient(cfg.RootURL.String())
 			if err != nil {
 				return apiclient.Client{}, fmt.Errorf("unable to initialize api client: %w", err)
 			}
@@ -55,16 +55,21 @@ func NewAdminApiClientFixture(apiFixture *lab.Fixture[bool]) *lab.Fixture[apicli
 			return client, nil
 		}
 	}, nil)
+
+	if err := lab.SetDependency(fixture, cfgFixture); err != nil {
+		log.Fatalln(err)
+	}
 	if err := lab.SetDependency(fixture, apiFixture); err != nil {
 		log.Fatalln(err)
 	}
+
 	return fixture
 }
 
-func NewUserApiClientFixture(adminApiFixture *lab.Fixture[apiclient.Client], roleNames ...string) *lab.Fixture[apiclient.Client] {
+func NewUserApiClientFixture(cfgFixture *lab.Fixture[config.Configuration], adminApiFixture *lab.Fixture[apiclient.Client], roleNames ...string) *lab.Fixture[apiclient.Client] {
 	fixture := lab.NewFixture(func(harness *lab.Harness) (apiclient.Client, error) {
-		if configFixture, ok := lab.Unpack(harness, ConfigFixture); !ok {
-			return apiclient.Client{}, fmt.Errorf("unable to unpack ConfigFixture")
+		if cfg, ok := lab.Unpack(harness, cfgFixture); !ok {
+			return apiclient.Client{}, fmt.Errorf("unable to unpack cfgFixture")
 		} else if adminClient, ok := lab.Unpack(harness, adminApiFixture); !ok {
 			return apiclient.Client{}, fmt.Errorf("unable to unpack adminApiFixture")
 		} else if username, err := config.GenerateSecureRandomString(7); err != nil {
@@ -92,7 +97,7 @@ func NewUserApiClientFixture(adminApiFixture *lab.Fixture[apiclient.Client], rol
 				}
 			}
 			// Get api client for user
-			client, err := apiclient.NewClient(configFixture.RootURL.String())
+			client, err := apiclient.NewClient(cfg.RootURL.String())
 			if err != nil {
 				return apiclient.Client{}, fmt.Errorf("unable to initialize api client: %w", err)
 			}
@@ -111,8 +116,13 @@ func NewUserApiClientFixture(adminApiFixture *lab.Fixture[apiclient.Client], rol
 			return client, nil
 		}
 	}, nil)
+
+	if err := lab.SetDependency(fixture, cfgFixture); err != nil {
+		log.Fatalln(err)
+	}
 	if err := lab.SetDependency(fixture, adminApiFixture); err != nil {
 		log.Fatalln(err)
 	}
+
 	return fixture
 }

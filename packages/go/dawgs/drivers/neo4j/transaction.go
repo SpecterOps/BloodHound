@@ -47,14 +47,14 @@ type innerTransaction interface {
 }
 
 type neo4jTransaction struct {
-	cfg                  graph.TransactionConfig
-	ctx                  context.Context
-	session              neo4j_core.Session
-	innerTx              neo4j_core.Transaction
-	writes               int
-	writeFlushSize       int
-	batchWriteSize       int
-	traversalMemoryLimit size.Size
+	cfg                   graph.TransactionConfig
+	ctx                   context.Context
+	session               neo4j_core.Session
+	innerTx               neo4j_core.Transaction
+	writes                int
+	writeFlushSize        int
+	batchWriteSize        int
+	graphQueryMemoryLimit size.Size
 }
 
 func (s *neo4jTransaction) WithGraph(graphSchema graph.Graph) graph.Transaction {
@@ -129,18 +129,14 @@ func (s *neo4jTransaction) UpdateNodeBy(update graph.NodeUpdate) error {
 	return s.updateNodesBy(update)
 }
 
-func newTransaction(ctx context.Context, session neo4j_core.Session, cfg graph.TransactionConfig, writeFlushSize int, batchWriteSize int, traversalMemoryLimit size.Size) *neo4jTransaction {
-	if traversalMemoryLimit == 0 {
-		traversalMemoryLimit = 2 * size.Gibibyte
-	}
-
+func newTransaction(ctx context.Context, session neo4j_core.Session, cfg graph.TransactionConfig, writeFlushSize int, batchWriteSize int, graphQueryMemoryLimit size.Size) *neo4jTransaction {
 	return &neo4jTransaction{
-		cfg:                  cfg,
-		ctx:                  ctx,
-		session:              session,
-		writeFlushSize:       writeFlushSize,
-		batchWriteSize:       batchWriteSize,
-		traversalMemoryLimit: traversalMemoryLimit,
+		cfg:                   cfg,
+		ctx:                   ctx,
+		session:               session,
+		writeFlushSize:        writeFlushSize,
+		batchWriteSize:        batchWriteSize,
+		graphQueryMemoryLimit: graphQueryMemoryLimit,
 	}
 }
 
@@ -463,6 +459,6 @@ func (s *neo4jTransaction) UpdateRelationship(relationship *graph.Relationship) 
 	}
 }
 
-func (s *neo4jTransaction) TraversalMemoryLimit() size.Size {
-	return s.traversalMemoryLimit
+func (s *neo4jTransaction) GraphQueryMemoryLimit() size.Size {
+	return s.graphQueryMemoryLimit
 }

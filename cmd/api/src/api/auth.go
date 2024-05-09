@@ -89,7 +89,7 @@ func NewAuthenticator(cfg config.Configuration, db database.Database, ctxInitial
 	}
 }
 
-func (s authenticator) auditLogin(requestContext context.Context, commitID uuid.UUID, user model.User, loginRequest LoginRequest, status string, loginError error) {
+func (s authenticator) auditLogin(requestContext context.Context, commitID uuid.UUID, user model.User, loginRequest LoginRequest, status model.AuditLogEntryStatus, loginError error) {
 	bhCtx := ctx.Get(requestContext)
 	auditLog := model.AuditLog{
 		Action:          model.AuditLogActionLoginAttempt,
@@ -106,7 +106,7 @@ func (s authenticator) auditLogin(requestContext context.Context, commitID uuid.
 		auditLog.ActorEmail = user.EmailAddress.ValueOrZero()
 	}
 
-	if status == string(model.AuditLogStatusFailure) {
+	if status == model.AuditLogStatusFailure {
 		auditLog.Fields["error"] = loginError
 	}
 
@@ -147,15 +147,15 @@ func (s authenticator) LoginWithSecret(ctx context.Context, loginRequest LoginRe
 		return LoginDetails{}, err
 	}
 
-	s.auditLogin(ctx, commitID, user, loginRequest, string(model.AuditLogStatusIntent), err)
+	s.auditLogin(ctx, commitID, user, loginRequest, model.AuditLogStatusIntent, err)
 
 	user, sessionToken, err = s.validateSecretLogin(ctx, loginRequest)
 
 	if err != nil {
-		s.auditLogin(ctx, commitID, user, loginRequest, string(model.AuditLogStatusFailure), err)
+		s.auditLogin(ctx, commitID, user, loginRequest, model.AuditLogStatusFailure, err)
 		return LoginDetails{}, err
 	} else {
-		s.auditLogin(ctx, commitID, user, loginRequest, string(model.AuditLogStatusSuccess), err)
+		s.auditLogin(ctx, commitID, user, loginRequest, model.AuditLogStatusSuccess, err)
 		return LoginDetails{
 			User:         user,
 			SessionToken: sessionToken,
@@ -352,7 +352,7 @@ func (s authenticator) ValidateSession(ctx context.Context, jwtTokenString strin
 	claims := auth.SessionData{}
 
 	if token, err := jwt.ParseWithClaims(jwtTokenString, &claims, s.jwtSigningKey); err != nil {
-		if err == jwt.ErrSignatureInvalid {
+		if errors.Is(err, jwt.ErrSignatureInvalid) {
 			return auth.Context{}, ErrInvalidAuth
 		}
 

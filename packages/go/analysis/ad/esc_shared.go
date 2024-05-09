@@ -119,6 +119,9 @@ func PostEnterpriseCAFor(operation analysis.StatTrackedOperation[analysis.Create
 	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
 		for _, ecaNode := range enterpriseCertAuthorities {
 			if thumbprint, err := ecaNode.Properties.Get(ad.CertThumbprint.String()).String(); err != nil {
+				if graph.IsErrPropertyNotFound(err) {
+					continue
+				}
 				return err
 			} else if thumbprint != "" {
 				if rootCAIDs, err := findNodesByCertThumbprint(thumbprint, tx, ad.RootCA); err != nil {

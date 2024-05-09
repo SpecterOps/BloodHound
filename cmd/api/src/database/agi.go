@@ -22,6 +22,7 @@ import (
 
 	"gorm.io/gorm"
 
+	"github.com/specterops/bloodhound/errors"
 	"github.com/specterops/bloodhound/src/database/types"
 	"github.com/specterops/bloodhound/src/model"
 )
@@ -105,7 +106,7 @@ func (s *BloodhoundDB) GetAllAssetGroups(ctx context.Context, order string, filt
 
 	for idx, assetGroup := range assetGroups {
 		if latestCollection, err := s.GetLatestAssetGroupCollection(ctx, assetGroup.ID); err != nil {
-			if err == ErrNotFound {
+			if errors.Is(err, ErrNotFound) {
 				assetGroup.MemberCount = 0
 			} else {
 				return assetGroups, err

@@ -13,8 +13,8 @@
                 "oid": "1.3.6.1.4.1.311.21.8.13791726.4349508.5000099.2617275.11656885.78.1.400"
             },
             "GroupLink": {
-                "ObjectIdentifier": null,
-                "ObjectType": "Base"
+                "ObjectIdentifier": "S-1-5-21-909015691-3030120388-2582151266-513",
+                "ObjectType": "Group"
             },
             "Aces": [
                 {

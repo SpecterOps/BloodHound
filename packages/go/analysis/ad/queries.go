@@ -1196,6 +1196,58 @@ func FetchOutboundADEntityControl(ctx context.Context, db graph.Database, node *
 	return collector.Nodes, collector.PopulateProperties(ctx, db, common.Name.String(), common.ObjectID.String(), common.SystemTags.String())
 }
 
+func FetchPolicyLinkedCertTemplatePaths(tx graph.Transaction, root *graph.Node) (graph.PathSet, error) {
+	return ops.TraversePaths(tx, ops.TraversalPlan{
+		Root:      root,
+		Direction: graph.DirectionInbound,
+		BranchQuery: func() graph.Criteria {
+			return query.And(
+				query.Kind(query.Start(), ad.CertTemplate),
+				query.Kind(query.Relationship(), ad.ExtendedByPolicy),
+			)
+		},
+	})
+}
+
+func FetchPolicyLinkedCertTemplates(tx graph.Transaction, root *graph.Node, skip, limit int) (graph.NodeSet, error) {
+	return ops.AcyclicTraverseNodes(tx, ops.TraversalPlan{
+		Root:      root,
+		Direction: graph.DirectionInbound,
+		BranchQuery: func() graph.Criteria {
+			return query.And(
+				query.Kind(query.Start(), ad.CertTemplate),
+				query.Kind(query.Relationship(), ad.ExtendedByPolicy),
+			)
+		},
+		Skip:  skip,
+		Limit: limit,
+	}, func(node *graph.Node) bool {
+		return node.ID != root.ID
+	})
+}
+
+func FetchLinkedGroup(ctx context.Context, db graph.Database, node *graph.Node) (*graph.Node, error) {
+	var linkedNode *graph.Node
+	return linkedNode, db.ReadTransaction(ctx, func(tx graph.Transaction) error {
+		if endNodes, err := ops.FetchEndNodes(tx.Relationships().Filterf(func() graph.Criteria {
+			return query.And(
+				query.InIDs(query.StartID(), node.ID),
+				query.Kind(query.Relationship(), ad.OIDGroupLink),
+				query.Kind(query.End(), ad.Group),
+			)
+		})); err != nil {
+			if graph.IsErrNotFound(err) {
+				return nil
+			}
+			return err
+		} else {
+			//Pick is safe because there should only ever be one node here
+			linkedNode = endNodes.Pick()
+			return nil
+		}
+	})
+}
+
 func FetchGroupMemberPaths(tx graph.Transaction, node *graph.Node) (graph.PathSet, error) {
 	return ops.TraversePaths(tx, ops.TraversalPlan{
 		Root:        node,

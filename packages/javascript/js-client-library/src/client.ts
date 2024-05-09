@@ -70,7 +70,7 @@ class BHEAPIClient {
         );
     };
 
-    cypherSearch = (query: string, includeProperties?: boolean, options?: types.RequestOptions) => {
+    cypherSearch = (query: string, options?: types.RequestOptions, includeProperties?: boolean) => {
         return this.baseClient.post('/api/v2/graphs/cypher', { query, include_properties: includeProperties }, options);
     };
 
@@ -717,19 +717,7 @@ class BHEAPIClient {
             options
         );
 
-    updateUser = (
-        userId: string,
-        user: {
-            firstName: string;
-            lastName: string;
-            emailAddress: string;
-            principal: string;
-            roles: number[];
-            SAMLProviderId?: string;
-            is_disabled?: boolean;
-        },
-        options?: types.RequestOptions
-    ) =>
+    updateUser = (userId: string, user: types.UpdateUserRequest, options?: types.RequestOptions) =>
         this.baseClient.patch(
             `/api/v2/bloodhound-users/${userId}`,
             {
@@ -2204,6 +2192,61 @@ class BHEAPIClient {
     ) =>
         this.baseClient.get(
             `/api/v2/certtemplates/${id}/controllers`,
+            Object.assign(
+                {
+                    params: {
+                        skip,
+                        limit,
+                        type,
+                    },
+                },
+                options
+            )
+        );
+
+    getIssuancePolicyV2 = (id: string, counts?: boolean, options?: types.RequestOptions) =>
+        this.baseClient.get(
+            `/api/v2/issuancepolicies/${id}`,
+            Object.assign(
+                {
+                    params: {
+                        counts,
+                    },
+                },
+                options
+            )
+        );
+
+    getIssuancePolicyControllersV2 = (
+        id: string,
+        skip?: number,
+        limit?: number,
+        type?: string,
+        options?: types.RequestOptions
+    ) =>
+        this.baseClient.get(
+            `/api/v2/issuancepolicies/${id}/controllers`,
+            Object.assign(
+                {
+                    params: {
+                        skip,
+                        limit,
+                        type,
+                    },
+                },
+                options
+            )
+        );
+
+    getIssuancePolicyLinkedTemplatesV2 = (
+        id: string,
+        skip?: number,
+        limit?: number,
+        type?: string,
+        options?: types.RequestOptions
+    ) =>
+        this.baseClient.get(
+            `/api/v2/issuancepolicies/${id}/linkedtemplates`,
             Object.assign(
                 {
                     params: {

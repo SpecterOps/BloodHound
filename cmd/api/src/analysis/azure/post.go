@@ -31,8 +31,6 @@ func Post(ctx context.Context, db graph.Database) (*analysis.AtomicPostProcessin
 		return &aggregateStats, err
 	} else if userRoleStats, err := azureAnalysis.UserRoleAssignments(ctx, db); err != nil {
 		return &aggregateStats, err
-	} else if addSecretStats, err := azureAnalysis.AddSecret(ctx, db); err != nil {
-		return &aggregateStats, err
 	} else if executeCommandStats, err := azureAnalysis.ExecuteCommand(ctx, db); err != nil {
 		return &aggregateStats, err
 	} else if appRoleAssignmentStats, err := azureAnalysis.AppRoleAssignments(ctx, db); err != nil {
@@ -40,7 +38,6 @@ func Post(ctx context.Context, db graph.Database) (*analysis.AtomicPostProcessin
 	} else {
 		aggregateStats.Merge(stats)
 		aggregateStats.Merge(userRoleStats)
-		aggregateStats.Merge(addSecretStats)
 		aggregateStats.Merge(executeCommandStats)
 		aggregateStats.Merge(appRoleAssignmentStats)
 		return &aggregateStats, nil

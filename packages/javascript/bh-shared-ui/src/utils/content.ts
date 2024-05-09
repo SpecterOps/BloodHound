@@ -41,9 +41,7 @@ export const abortEntitySectionRequest = () => {
 
 export type EntityKinds = ActiveDirectoryNodeKind | AzureNodeKind | 'Meta';
 
-export const entityInformationEndpoints: Partial<
-    Record<EntityKinds, (id: string, options?: RequestOptions) => Promise<any>>
-> = {
+export const entityInformationEndpoints: Record<EntityKinds, (id: string, options?: RequestOptions) => Promise<any>> = {
     [AzureNodeKind.Entity]: (id: string, options?: RequestOptions) =>
         apiClient.getAZEntityInfoV2('az-base', id, undefined, false, undefined, undefined, undefined, options),
     [AzureNodeKind.App]: (id: string, options?: RequestOptions) =>
@@ -121,6 +119,12 @@ export const entityInformationEndpoints: Partial<
             options
         ),
     [ActiveDirectoryNodeKind.Entity]: (id: string, options?: RequestOptions) => apiClient.getBaseV2(id, false, options),
+    // LocalGroups and LocalUsers are entities that we handle directly and add the `Base` kind to so using getBaseV2 is an assumption but should work
+    [ActiveDirectoryNodeKind.LocalGroup]: (id: string, options?: RequestOptions) =>
+        apiClient.getBaseV2(id, false, options),
+    [ActiveDirectoryNodeKind.LocalUser]: (id: string, options?: RequestOptions) =>
+        apiClient.getBaseV2(id, false, options),
+
     [ActiveDirectoryNodeKind.AIACA]: (id: string, options?: RequestOptions) => apiClient.getAIACAV2(id, false, options),
     [ActiveDirectoryNodeKind.CertTemplate]: (id: string, options?: RequestOptions) =>
         apiClient.getCertTemplateV2(id, false, options),
@@ -140,6 +144,8 @@ export const entityInformationEndpoints: Partial<
     [ActiveDirectoryNodeKind.RootCA]: (id: string, options?: RequestOptions) =>
         apiClient.getRootCAV2(id, false, options),
     [ActiveDirectoryNodeKind.User]: (id: string, options?: RequestOptions) => apiClient.getUserV2(id, false, options),
+    [ActiveDirectoryNodeKind.IssuancePolicy]: (id: string, options?: RequestOptions) =>
+        apiClient.getIssuancePolicyV2(id, false, options),
     Meta: apiClient.getMetaV2,
 };
 
@@ -1857,6 +1863,24 @@ export const allSections: Partial<Record<EntityKinds, (id: string) => EntityInfo
             endpoint: ({ skip, limit, type }) =>
                 apiClient
                     .getRootCAControllersV2(id, skip, limit, type, { signal: controller.signal })
+                    .then((res) => res.data),
+        },
+    ],
+    [ActiveDirectoryNodeKind.IssuancePolicy]: (id: string) => [
+        {
+            id,
+            label: 'Inbound Object Control',
+            endpoint: ({ skip, limit, type }) =>
+                apiClient
+                    .getIssuancePolicyControllersV2(id, skip, limit, type, { signal: controller.signal })
+                    .then((res) => res.data),
+        },
+        {
+            id,
+            label: 'Linked Certificate Templates',
+            endpoint: ({ skip, limit, type }) =>
+                apiClient
+                    .getIssuancePolicyLinkedTemplatesV2(id, skip, limit, type, { signal: controller.signal })
                     .then((res) => res.data),
         },
     ],

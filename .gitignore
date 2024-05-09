@@ -445,3 +445,6 @@ local-harnesses/*
 !local-harnesses/README.md
 !local-harnesses/collectors
 !local-harnesses/*.template
+
+# folder used by antlr4 VSCode extension
+.antlr

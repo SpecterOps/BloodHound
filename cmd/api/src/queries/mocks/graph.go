@@ -218,19 +218,34 @@ func (mr *MockGraphMockRecorder) GetNodesByKind(arg0 interface{}, arg1 ...interf
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetNodesByKind", reflect.TypeOf((*MockGraph)(nil).GetNodesByKind), varargs...)
 }
 
-// RawCypherSearch mocks base method.
-func (m *MockGraph) RawCypherSearch(arg0 context.Context, arg1 string, arg2 bool) (model.UnifiedGraph, error) {
+// PrepareCypherQuery mocks base method.
+func (m *MockGraph) PrepareCypherQuery(arg0 string) (queries.PreparedQuery, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "RawCypherSearch", arg0, arg1, arg2)
+	ret := m.ctrl.Call(m, "PrepareCypherQuery", arg0)
+	ret0, _ := ret[0].(queries.PreparedQuery)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// PrepareCypherQuery indicates an expected call of PrepareCypherQuery.
+func (mr *MockGraphMockRecorder) PrepareCypherQuery(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PrepareCypherQuery", reflect.TypeOf((*MockGraph)(nil).PrepareCypherQuery), arg0)
+}
+
+// RawCypherQuery mocks base method.
+func (m *MockGraph) RawCypherQuery(arg0 context.Context, arg1 queries.PreparedQuery, arg2 bool) (model.UnifiedGraph, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "RawCypherQuery", arg0, arg1, arg2)
 	ret0, _ := ret[0].(model.UnifiedGraph)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// RawCypherSearch indicates an expected call of RawCypherSearch.
-func (mr *MockGraphMockRecorder) RawCypherSearch(arg0, arg1, arg2 interface{}) *gomock.Call {
+// RawCypherQuery indicates an expected call of RawCypherQuery.
+func (mr *MockGraphMockRecorder) RawCypherQuery(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RawCypherSearch", reflect.TypeOf((*MockGraph)(nil).RawCypherSearch), arg0, arg1, arg2)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RawCypherQuery", reflect.TypeOf((*MockGraph)(nil).RawCypherQuery), arg0, arg1, arg2)
 }
 
 // SearchByNameOrObjectID mocks base method.

@@ -77,6 +77,7 @@ import Enroll from './Enroll/Enroll';
 import EnrollOnBehalfOf from './EnrollOnBehalfOf/EnrollOnBehalfOf';
 import EnterpriseCAFor from './EnterpriseCAFor/EnterpriseCAFor';
 import ExecuteDCOM from './ExecuteDCOM/ExecuteDCOM';
+import ExtendedByPolicy from './ExtendedByPolicy/ExtendedByPolicy';
 import ForceChangePassword from './ForceChangePassword/ForceChangePassword';
 import GPLink from './GPLink/GPLink';
 import GenericAll from './GenericAll/GenericAll';
@@ -92,6 +93,7 @@ import ManageCA from './ManageCA/ManageCA';
 import ManageCertificates from './ManageCertificates/ManageCertificates';
 import MemberOf from './MemberOf/MemberOf';
 import NTAuthStoreFor from './NTAuthStoreFor/NTAuthStoreFor';
+import OIDGroupLink from './OIDGroupLink/OIDGroupLink';
 import Owns from './Owns/Owns';
 import PublishedTo from './PublishedTo/PublishedTo';
 import ReadGMSAPassword from './ReadGMSAPassword/ReadGMSAPassword';
@@ -232,6 +234,8 @@ const EdgeInfoComponents = {
     WritePKIEnrollmentFlag: WritePKIEnrollmentFlag,
     WritePKINameFlag: WritePKINameFlag,
     DCFor: DCFor,
+    OIDGroupLink: OIDGroupLink,
+    ExtendedByPolicy: ExtendedByPolicy,
 };
 
 export default EdgeInfoComponents;

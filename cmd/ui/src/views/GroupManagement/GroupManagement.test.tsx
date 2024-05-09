@@ -19,7 +19,13 @@ import { act, render, waitFor } from '../../test-utils';
 import GroupManagement from './GroupManagement';
 import { rest } from 'msw';
 import { createMockDomain } from 'src/mocks/factories';
-import { createMockAssetGroup, createMockAssetGroupMembers, createMockMemberCounts } from 'bh-shared-ui';
+import {
+    createMockAssetGroup,
+    createMockAssetGroupMembers,
+    createMockMemberCounts,
+    NoEntitySelectedHeader,
+    NoEntitySelectedMessage,
+} from 'bh-shared-ui';
 import userEvent from '@testing-library/user-event';
 
 const domain = createMockDomain();
@@ -102,8 +108,8 @@ describe('GroupManagement', () => {
     it('renders an empty message for the entity panel before a node is selected', async () => {
         const { screen } = await setup();
 
-        expect(screen.getByText('None Selected')).toBeInTheDocument();
-        expect(screen.getByText('No information to display.')).toBeInTheDocument();
+        expect(screen.getByText(NoEntitySelectedHeader)).toBeInTheDocument();
+        expect(screen.getByText(NoEntitySelectedMessage)).toBeInTheDocument();
     });
 
     it('renders the node in the entity panel when member is clicked', async () => {

@@ -43,8 +43,8 @@ func TestSetValue(t *testing.T) {
 	})
 
 	t.Run("key with two underscores", func(t *testing.T) {
-		require.Nil(t, config.SetValue(&cfg, "disable_cypher_qc", "true"))
-		assert.Equal(t, true, cfg.DisableCypherQC)
+		require.Nil(t, config.SetValue(&cfg, "enable_cypher_mutations", "true"))
+		assert.Equal(t, true, cfg.EnableCypherMutations)
 	})
 
 	t.Run("key with three underscores", func(t *testing.T) {

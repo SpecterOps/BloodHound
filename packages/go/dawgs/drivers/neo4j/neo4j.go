@@ -55,7 +55,7 @@ func newNeo4jDB(ctx context.Context, cfg dawgs.Config) (graph.Database, error) {
 				limiter:                   channels.NewConcurrencyLimiter(DefaultConcurrentConnections),
 				writeFlushSize:            DefaultWriteFlushSize,
 				batchWriteSize:            DefaultBatchWriteSize,
-				traversalMemoryLimit:      cfg.TraversalMemoryLimit,
+				graphQueryMemoryLimit:     cfg.GraphQueryMemoryLimit,
 			}, nil
 		}
 	}

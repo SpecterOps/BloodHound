@@ -260,3 +260,14 @@ func (s *Resources) GetGroupEntityInfo(response http.ResponseWriter, request *ht
 
 	s.handleAdEntityInfoQuery(response, request, ad.Group, countQueries)
 }
+
+func (s *Resources) GetIssuancePolicyEntityInfo(response http.ResponseWriter, request *http.Request) {
+	var (
+		countQueries = map[string]any{
+			"controllers":     adAnalysis.FetchInboundADEntityControllers,
+			"linkedTemplates": adAnalysis.FetchPolicyLinkedCertTemplates,
+		}
+	)
+
+	s.handleAdEntityInfoQuery(response, request, ad.IssuancePolicy, countQueries)
+}

@@ -19,6 +19,7 @@ import NoDataAlert from '.';
 
 const dataCollectionLinkText = 'data collection';
 const fileIngestLinkText = 'file ingest';
+const sampleDataLinkText = 'github sample collection';
 
 describe('NoDataAlert', () => {
     it('should render', () => {
@@ -30,6 +31,9 @@ describe('NoDataAlert', () => {
 
         //This text only displays if file ingest link prop is passed
         expect(screen.queryByText(/file ingest/)).toBeNull();
+
+        //This text only displays if sample data link prop is passed
+        expect(screen.queryByText(/github sample collection/)).toBeNull();
     });
 
     it('should show the file ingest text if the prop is passed', () => {
@@ -37,6 +41,7 @@ describe('NoDataAlert', () => {
             <NoDataAlert
                 dataCollectionLink={<>{dataCollectionLinkText}</>}
                 fileIngestLink={<>{fileIngestLinkText}</>}
+                sampleDataLink={<>{sampleDataLinkText}</>}
             />
         );
 
@@ -44,5 +49,6 @@ describe('NoDataAlert', () => {
         expect(screen.getByText(/It appears that no data has been uploaded yet./)).toBeInTheDocument();
         expect(screen.getByText(/data collection/)).toBeInTheDocument();
         expect(screen.getByText(/file ingest/)).toBeInTheDocument();
+        expect(screen.getByText(/github sample collection/)).toBeInTheDocument();
     });
 });

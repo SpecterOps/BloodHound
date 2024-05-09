@@ -128,9 +128,7 @@ func IngestWrapper(batch graph.Batch, reader io.ReadSeeker, meta ingest.Metadata
 	case ingest.DataTypeAzure:
 		return decodeAzureData(batch, reader)
 	case ingest.DataTypeIssuancePolicy:
-		if adcsEnabled {
-			return decodeBasicData(batch, reader, convertIssuancePolicy)
-		}
+		return decodeBasicData(batch, reader, convertIssuancePolicy)
 	}
 
 	return nil

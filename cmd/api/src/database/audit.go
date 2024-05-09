@@ -43,7 +43,7 @@ func newAuditLog(context context.Context, entry model.AuditEntry, idResolver aut
 		Fields:          types.JSONUntypedObject(entry.Model.AuditData()),
 		RequestID:       bheCtx.RequestID,
 		SourceIpAddress: bheCtx.RequestIP,
-		Status:          string(entry.Status),
+		Status:          entry.Status,
 		CommitID:        entry.CommitID,
 	}
 
@@ -66,7 +66,7 @@ func newAuditLog(context context.Context, entry model.AuditEntry, idResolver aut
 }
 
 func (s *BloodhoundDB) AppendAuditLog(ctx context.Context, entry model.AuditEntry) error {
-	if auditLog, err := newAuditLog(ctx, entry, s.idResolver); err != nil && err != ErrAuthContextInvalid {
+	if auditLog, err := newAuditLog(ctx, entry, s.idResolver); err != nil && !errors.Is(err, ErrAuthContextInvalid) {
 		return fmt.Errorf("audit log append: %w", err)
 	} else {
 		return s.CreateAuditLog(ctx, auditLog)
