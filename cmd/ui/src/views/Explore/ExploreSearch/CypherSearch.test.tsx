@@ -27,10 +27,10 @@ describe('CypherSearch', () => {
     const user = userEvent.setup();
 
     it('should render', () => {
-        expect(screen.getByText(/cypher search/i)).toBeInTheDocument();
+        expect(screen.getByText(/cypher query/i)).toBeInTheDocument();
 
         expect(screen.getByRole('link', { name: /help/i })).toBeInTheDocument();
-        expect(screen.getByRole('button', { name: /search/i })).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: /run/i })).toBeInTheDocument();
     });
 
     it('should show common cypher searches when user clicks on folder button', async () => {

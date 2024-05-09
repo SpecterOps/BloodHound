@@ -69,6 +69,8 @@ func (s Resources) CypherQuery(response http.ResponseWriter, request *http.Reque
 		} else {
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, err.Error(), request), response)
 		}
+	} else if !preparedQuery.HasMutation && len(graphResponse.Nodes)+len(graphResponse.Edges) == 0 {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, "resource not found", request), response)
 	} else {
 		api.WriteBasicResponse(request.Context(), graphResponse, http.StatusOK, response)
 	}

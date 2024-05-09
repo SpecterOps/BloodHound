@@ -175,7 +175,7 @@ const CypherSearch = () => {
                         schema={schema}
                         lineWrapping
                         lint
-                        placeholder='Cypher Search'
+                        placeholder='Cypher Query'
                     />
                 </div>
             </Box>
@@ -218,7 +218,7 @@ const CypherSearch = () => {
                             <FontAwesomeIcon icon={faPlay} />
                         </SvgIcon>
                     }>
-                    Search
+                    Run
                 </Button>
             </Box>
 

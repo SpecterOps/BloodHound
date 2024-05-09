@@ -195,15 +195,10 @@ function* runCypherSearchQuery(payload: CypherQueryRequest): SagaIterator {
 
         if (resultNodesAreEmpty && !resultEdgesAreEmpty) {
             yield put(putGraphData({}));
-            yield put(
-                addSnackbar(
-                    'The results are not rendered since only edges were returned',
-                    'cypherSearchOnlyContainsEdges'
-                )
-            );
+            yield put(addSnackbar('The results are not rendered since only edges were returned', 'cypherSearchOnlyContainsEdges'));
         } else if (resultNodesAreEmpty && resultEdgesAreEmpty) {
             yield put(putGraphData({}));
-            yield put(addSnackbar('No results match your criteria', 'cypherSearchEmptyResponse'));
+            yield put(addSnackbar('Command completed successfully', 'cypherSuccessResponse'));
         } else {
             yield put(saveResponseForExport(data));
 
@@ -215,6 +210,9 @@ function* runCypherSearchQuery(payload: CypherQueryRequest): SagaIterator {
 
         if (error?.response?.status === 400) {
             yield put(addSnackbar(apiErrorMessage, 'cypherSearchBadRequest'));
+        } else if (error?.response?.status === 404) {
+            yield put(putGraphData({}));
+            yield put(addSnackbar('No results match your criteria', 'cypherSearchEmptyResponse'));
         } else {
             if (apiErrorMessage) {
                 yield put(addSnackbar(`${apiErrorMessage}`, 'cypherSearch'));
