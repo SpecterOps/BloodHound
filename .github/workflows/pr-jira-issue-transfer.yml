@@ -17,7 +17,7 @@ name: PR-Ticket-OoOrg
 
 on:
   pull_request:
-    types: [opened, reopened]
+    types: [opened, synchronize]
 
 jobs:
   check_pr_origin:
@@ -27,21 +27,12 @@ jobs:
     - name: Check if PR is from within the organization
       id: check_org
       run: 
-        ORG_NAME="SpecterOps"
         PR_URL=$(jq -r .pull_request.url "$GITHUB_EVENT_PATH")
-        PR_DATA=$(curl -s -H "Authorization: Bearer ${{ secrets.JIRA_API_TOKEN }}" -H "Accept: application/vnd.github.v3+json" $PR_URL)
-        PR_AUTHOR_LOGIN=$(echo $PR_DATA | jq -r .user.login)
-        PR_AUTHOR_ORG=$(curl -s -H "Authorization: Bearer $GITHUB_TOKEN" -H "Accept: application/vnd.github.v3+json" https://api.github.com/users/$PR_AUTHOR_LOGIN/orgs | jq -r ".[] | .login")
-        if [[ "$ORG_NAME" == "$PR_AUTHOR_ORG" ]]; then
-          echo "PR is from within the organization"
-          echo "::set-output name=is_org::true"
-        else
-          echo "PR is not from within the organization"
-          echo "::set-output name=is_org::false"
-        fi
+        PR_NUMBER=$(jq -r .pull_request.number "$GITHUB_EVENT_PATH")
+        PR_ORG=$(jq -r .pull_request.head.repo.organization.login "$GITHUB_EVENT_PATH")
+        REPO_ORG=$(jq -r .repository.owner.login "$GITHUB_EVENT_PATH")
 
-
-      if: steps.check_org.outputs.is_org == 'false'
+      if [ "$PR_ORG" != "$REPO_ORG" ];
     - name: Login
       uses: atlassian/gajira-login@v3
       env:
