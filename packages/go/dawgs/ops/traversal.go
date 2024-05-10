@@ -142,11 +142,10 @@ type TraversalContext struct {
 	LimitSkipTracker LimitSkipTracker
 }
 
-func Traversal(tx graph.Transaction, plan TraversalPlan, pathVisitors ...PathVisitor) error {
+func Traversal(tx graph.Transaction, plan TraversalPlan, pathVisitor PathVisitor) error {
 	defer log.Measure(log.LevelInfo, "Node %d Traversal", plan.Root.ID)()
 
 	var (
-		pathVisitor           PathVisitor
 		requireTraversalOrder = plan.Limit > 0 || plan.Skip > 0
 		rootSegment           = graph.NewRootPathSegment(plan.Root)
 		stack                 = []*graph.PathSegment{rootSegment}
@@ -158,12 +157,6 @@ func Traversal(tx graph.Transaction, plan TraversalPlan, pathVisitors ...PathVis
 			Limit: plan.Limit,
 			Skip:  plan.Skip,
 		},
-	}
-
-	if pvLen := len(pathVisitors); pvLen > 1 {
-		return fmt.Errorf("specifying more than 1 path visitor is not supported")
-	} else if pvLen == 1 {
-		pathVisitor = pathVisitors[0]
 	}
 
 	for len(stack) > 0 {
