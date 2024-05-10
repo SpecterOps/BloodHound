@@ -21,6 +21,7 @@ package ad_test
 
 import (
 	"context"
+
 	"github.com/specterops/bloodhound/analysis"
 	ad2 "github.com/specterops/bloodhound/analysis/ad"
 	"github.com/specterops/bloodhound/analysis/impact"
@@ -2928,42 +2929,42 @@ func TestExtendedByPolicyBinding(t *testing.T) {
 		operation.Done()
 
 		db.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
-			if edge, err := analysis.FetchEdgeByStartAndEnd(testContext.Context(), db, harness.ExtendedByPolicyHarness.IssuancePolicy0.ID, harness.ExtendedByPolicyHarness.CertTemplate1.ID, ad.ExtendedByPolicy); err != nil {
+			if edge, err := analysis.FetchEdgeByStartAndEnd(testContext.Context(), db, harness.ExtendedByPolicyHarness.CertTemplate1.ID, harness.ExtendedByPolicyHarness.IssuancePolicy0.ID, ad.ExtendedByPolicy); err != nil {
 				t.Fatalf("error fetching ExtendedByPolicy edge (1) in integration test; %v", err)
 			} else {
 				require.NotNil(t, edge)
 			}
 
-			if edge, err := analysis.FetchEdgeByStartAndEnd(testContext.Context(), db, harness.ExtendedByPolicyHarness.IssuancePolicy1.ID, harness.ExtendedByPolicyHarness.CertTemplate1.ID, ad.ExtendedByPolicy); err != nil {
+			if edge, err := analysis.FetchEdgeByStartAndEnd(testContext.Context(), db, harness.ExtendedByPolicyHarness.CertTemplate1.ID, harness.ExtendedByPolicyHarness.IssuancePolicy1.ID, ad.ExtendedByPolicy); err != nil {
 				t.Fatalf("error fetching ExtendedByPolicy edge (2) in integration test; %v", err)
 			} else {
 				require.NotNil(t, edge)
 			}
 
-			if edge, err := analysis.FetchEdgeByStartAndEnd(testContext.Context(), db, harness.ExtendedByPolicyHarness.IssuancePolicy0.ID, harness.ExtendedByPolicyHarness.CertTemplate2.ID, ad.ExtendedByPolicy); err != nil {
+			if edge, err := analysis.FetchEdgeByStartAndEnd(testContext.Context(), db, harness.ExtendedByPolicyHarness.CertTemplate2.ID, harness.ExtendedByPolicyHarness.IssuancePolicy0.ID, ad.ExtendedByPolicy); err != nil {
 				t.Fatalf("error fetching ExtendedByPolicy edge (3) in integration test; %v", err)
 			} else {
 				require.NotNil(t, edge)
 			}
 
-			if edge, err := analysis.FetchEdgeByStartAndEnd(testContext.Context(), db, harness.ExtendedByPolicyHarness.IssuancePolicy2.ID, harness.ExtendedByPolicyHarness.CertTemplate2.ID, ad.ExtendedByPolicy); err != nil {
+			if edge, err := analysis.FetchEdgeByStartAndEnd(testContext.Context(), db, harness.ExtendedByPolicyHarness.CertTemplate2.ID, harness.ExtendedByPolicyHarness.IssuancePolicy2.ID, ad.ExtendedByPolicy); err != nil {
 				t.Fatalf("error fetching ExtendedByPolicy edge (4) in integration test; %v", err)
 			} else {
 				require.NotNil(t, edge)
 			}
 
-			if edge, err := analysis.FetchEdgeByStartAndEnd(testContext.Context(), db, harness.ExtendedByPolicyHarness.IssuancePolicy3.ID, harness.ExtendedByPolicyHarness.CertTemplate3.ID, ad.ExtendedByPolicy); err != nil {
+			if edge, err := analysis.FetchEdgeByStartAndEnd(testContext.Context(), db, harness.ExtendedByPolicyHarness.CertTemplate3.ID, harness.ExtendedByPolicyHarness.IssuancePolicy3.ID, ad.ExtendedByPolicy); err != nil {
 				t.Fatalf("error fetching ExtendedByPolicy edge (5) in integration test; %v", err)
 			} else {
 				require.NotNil(t, edge)
 			}
 
 			// CertificatePolicy doesn't match CertTemplateOID
-			edge, _ := analysis.FetchEdgeByStartAndEnd(testContext.Context(), db, harness.ExtendedByPolicyHarness.IssuancePolicy1.ID, harness.ExtendedByPolicyHarness.CertTemplate2.ID, ad.ExtendedByPolicy)
+			edge, _ := analysis.FetchEdgeByStartAndEnd(testContext.Context(), db, harness.ExtendedByPolicyHarness.CertTemplate2.ID, harness.ExtendedByPolicyHarness.IssuancePolicy1.ID, ad.ExtendedByPolicy)
 			require.Nil(t, edge, "ExtendedByPolicy edge exists between IssuancePolicy1 and CertTemplate2 where it shouldn't")
 
 			// Different domains, no edge
-			edge, _ = analysis.FetchEdgeByStartAndEnd(testContext.Context(), db, harness.ExtendedByPolicyHarness.IssuancePolicy4.ID, harness.ExtendedByPolicyHarness.CertTemplate4.ID, ad.ExtendedByPolicy)
+			edge, _ = analysis.FetchEdgeByStartAndEnd(testContext.Context(), db, harness.ExtendedByPolicyHarness.CertTemplate4.ID, harness.ExtendedByPolicyHarness.IssuancePolicy4.ID, ad.ExtendedByPolicy)
 			require.Nil(t, edge, "ExtendedByPolicy edge bridges domains where it shouldn't")
 
 			return nil
