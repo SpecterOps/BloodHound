@@ -29,7 +29,8 @@ jobs:
                 JIRA_BASE_URL: ${{ secrets.JIRA_BASE_URL }}
                 JIRA_USER_EMAIL: ${{ secrets.JIRA_USER_EMAIL }}
                 JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
-    if: contains(github.event.pull_request.labels.*.name, 'Ticketed', 'bug')
+    if: github.event.label.name == 'ticketed' && !contains(github.event.issue.labels.*.name, 'ticketed')
+    if: contains(github.event.issue.labels.*.name, 'bug')
         - name: Jira Create
           uses: atlassian/gajira-create@v3
           with:
@@ -40,7 +41,7 @@ jobs:
                 fields: '{"labels":["GitHubReport"]}'
           env:
                 GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    if: contains(github.event.pull_request.labels.*.name, 'Ticketed', 'enhancement')
+        if: contains(github.event.issue.labels.*.name, 'enhancement')
         - name: Jira Create
           uses: atlassian/gajira-create@v3
           with:
