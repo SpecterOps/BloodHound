@@ -74,6 +74,22 @@
             }
         },
         {
+            "name": "Run query with parameters",
+            "type": "string_match",
+            "details": {
+                "query": "match (p:Person) where p.name = $name return p.born.year",
+                "complexity": 2
+            }
+        },
+        {
+            "name": "Run query with complex parameters",
+            "type": "string_match",
+            "details": {
+                "query": "match (p:Person {value: $test}) where p.name = $1 and p.other in $array return p.name, p.born.year",
+                "complexity": 2
+            }
+        },
+        {
             "name": "Retrieve multiple node properties",
             "type": "string_match",
             "details": {
