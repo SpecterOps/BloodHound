@@ -19,6 +19,7 @@ package frontend
 import (
 	"github.com/specterops/bloodhound/cypher/model"
 	"github.com/specterops/bloodhound/cypher/parser"
+	"strings"
 )
 
 type IDInCollectionVisitor struct {
@@ -134,6 +135,30 @@ type AtomVisitor struct {
 
 func NewAtomVisitor() Visitor {
 	return &AtomVisitor{}
+}
+
+func (s *AtomVisitor) EnterOC_Parameter(ctx *parser.OC_ParameterContext) {
+	s.ctx.Enter(&SymbolicNameOrReservedWordVisitor{})
+}
+
+// extractParameterSymbol attempts to extract the symbolic representation of the parameter from the given
+// OC_ParameterContext. This function expects a SymbolicNameOrReservedWordVisitor to be on the context stack.
+//
+// Reasoning for this is that oC_Parameter can either be oC_SymbolicName or a DecimalInteger (which is
+// either a Decimal or an Integer). In the latter case the symbolic representation is stored as a token
+// on the OC_ParameterContext struct.
+func extractParameterSymbol(ctx *Context, cypherCtx *parser.OC_ParameterContext) string {
+	if symbolicName := ctx.Exit().(*SymbolicNameOrReservedWordVisitor).Name; len(symbolicName) > 0 {
+		return symbolicName
+	}
+
+	return strings.TrimPrefix(cypherCtx.GetText(), "$")
+}
+
+func (s *AtomVisitor) ExitOC_Parameter(ctx *parser.OC_ParameterContext) {
+	s.Atom = &model.Parameter{
+		Symbol: extractParameterSymbol(s.ctx, ctx),
+	}
 }
 
 func (s *AtomVisitor) EnterOC_ParenthesizedExpression(ctx *parser.OC_ParenthesizedExpressionContext) {
