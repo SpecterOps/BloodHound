@@ -72,6 +72,7 @@ func (s *Resources) GetADDataQualityStats(response http.ResponseWriter, request 
 		adDataQualityStats       model.ADDataQualityStats
 		queryParams              = request.URL.Query()
 		defaultEnd, defaultStart = DefaultTimeRange()
+		canary                   = "true"
 	)
 
 	for _, column := range queryParams[api.QueryParameterSortBy] {
@@ -106,7 +107,6 @@ func (s *Resources) GetADDataQualityStats(response http.ResponseWriter, request 
 	} else if stats, count, err := s.DB.GetADDataQualityStats(request.Context(), id, start, end, strings.Join(order, ", "), limit, skip); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
-		canary := "true"
 		if s.Config.FeatureFlag.AppName == "BHCE-test" {
 			canary = "false"
 		}

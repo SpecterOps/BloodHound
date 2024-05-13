@@ -20,6 +20,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"os"
 
 	"github.com/Unleash/unleash-client-go/v4"
 	"github.com/specterops/bloodhound/dawgs/graph"
@@ -73,11 +74,17 @@ func (s Initializer[DBType, GraphType]) Launch(parentCtx context.Context, handle
 		daemonManager.Start(ctx, daemonInstances...)
 	}
 
+	log.Infof("Attempting to open feature flag bootstrap file from %s", s.Configuration.FeatureFlag.BootstrapFile)
+	unleashBootstrap, err := os.Open(s.Configuration.FeatureFlag.BootstrapFile)
+	if err != nil {
+		log.Warnf("Error loading unleash bootstrap file: %v", err)
+	}
 	unleash.Initialize(
 		unleash.WithListener(&unleash.DebugListener{}),
 		unleash.WithAppName(s.Configuration.FeatureFlag.AppName),
 		unleash.WithUrl(s.Configuration.FeatureFlag.Url),
 		unleash.WithCustomHeaders(http.Header{"Authorization": {s.Configuration.FeatureFlag.ApiKey}}),
+		unleash.WithStorage(&unleash.BootstrapStorage{Reader: unleashBootstrap}),
 	)
 	unleash.WaitForReady()
 

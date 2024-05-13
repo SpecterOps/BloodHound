@@ -107,6 +107,8 @@ services:
       context: tools/docker-compose
       dockerfile: api.Dockerfile
     command: "-c .air.toml ${AIR_FLAGS:-''}"
+    environment:
+      - BH_FEATURE_FLAG_BOOTSTRAP_FILE=feature_flags.json
     ports:
       - ${BH_API_PORT:-127.0.0.1:8080}:8080
     labels:
@@ -117,6 +119,7 @@ services:
     volumes:
       - .:/bloodhound:ro
       - ./local-harnesses/${BH_CONFIG_FILE:-build.config.json}:/build.config.json:ro
+      - ./local-harnesses/${BH_FEATURE_FLAG_BOOTSTRAP_FILE:-feature_flags.json}:/feature_flags.json:ro
       - go-pkg-mod:/go/pkg/mod
     depends_on:
       app-db:

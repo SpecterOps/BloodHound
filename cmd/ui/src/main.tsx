@@ -183,6 +183,7 @@ const main = async () => {
         clientKey: 'default:development.4b72659db6e8d242bd34ee2ec64ed1974237e9d0175c7fe16e21aeb1', // A client-side API token OR one of your proxy's designated client keys (previously known as proxy secrets)
         refreshInterval: 15, // How often (in seconds) the client should poll the proxy for updates
         appName: 'BHCEUI-dev', // The name of your application. It's only used for identifying your application
+        bootstrap: ['/feature_flags.json']
     };
 
     root.render(

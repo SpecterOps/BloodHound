@@ -140,9 +140,10 @@ type DefaultAdminConfiguration struct {
 }
 
 type FeatureFlagConfiguration struct {
-	AppName string `json:"app_name"`
-	Url     string `json:"url"`
-	ApiKey  string `json:"api_key"`
+	AppName       string `json:"app_name"`
+	Url           string `json:"url"`
+	ApiKey        string `json:"api_key"`
+	BootstrapFile string `json:"bootstrap_file"`
 }
 
 type Configuration struct {
