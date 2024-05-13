@@ -20,14 +20,14 @@ import { Link, Box } from '@mui/material';
 const References: FC = () => {
     return (
         <Box sx={{ overflowX: 'auto' }}>
+            <Link target='_blank' rel='noopener' href='https://labs.withsecure.com/publications/ou-having-a-laugh'>
+                https://labs.withsecure.com/publications/ou-having-a-laugh
+            </Link>
+            <br />
             <Link
                 target='_blank'
                 rel='noopener'
-                href='https://labs.withsecure.com/publications/ou-having-a-laugh'>
-                https://labs.withsecure.com/publications/ou-having-a-laugh 
-            </Link>
-            <br />
-            <Link target='_blank' rel='noopener' href='https://www.synacktiv.com/publications/ounedpy-exploiting-hidden-organizational-units-acl-attack-vectors-in-active-directory'>
+                href='https://www.synacktiv.com/publications/ounedpy-exploiting-hidden-organizational-units-acl-attack-vectors-in-active-directory'>
                 https://www.synacktiv.com/publications/ounedpy-exploiting-hidden-organizational-units-acl-attack-vectors-in-active-directory
             </Link>
         </Box>

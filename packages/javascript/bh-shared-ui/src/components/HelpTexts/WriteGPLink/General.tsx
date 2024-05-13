@@ -19,31 +19,33 @@ import { groupSpecialFormat } from '../utils';
 import { EdgeInfoProps } from '../index';
 import { Typography } from '@mui/material';
 
-const General: FC<EdgeInfoProps> = ({ sourceName, sourceType, targetName }) => {
+const General: FC<EdgeInfoProps> = ({ sourceName, sourceType, targetType, targetName }) => {
     return (
         <>
             <Typography variant='body2'>
-                {groupSpecialFormat(sourceType, sourceName)} has the permissions to modify the gPLink attribute of the 
-                Organizational Unit {targetName}.
+                {groupSpecialFormat(sourceType, sourceName)} has the permissions to modify the gPLink attribute of{' '}
+                {targetType} {targetName}.
             </Typography>
 
             <Typography variant='body2'>
-                The ability to alter the gPLink attribute of an Organizational Unit may allow an attacker to apply a malicious 
-                Group Policy Object to all of the OU's child items (including the ones located in nested sub-OUs). This can be exploited 
-                to make said child items execute arbitrary commands through an immediate scheduled task, thus compromising them.
+                The ability to alter the gPLink attribute may allow an attacker to apply a malicious Group Policy Object
+                (GPO) to all child user and computer objects (including the ones located in nested OUs). This can be
+                exploited to make said child objects execute arbitrary commands through an immediate scheduled task,
+                thus compromising them.
             </Typography>
 
             <Typography variant='body2'>
-                Successful exploitation will require the possibility to add non-existing DNS records to the domain and to 
-                create machine accounts. Alternatively, an already compromised domain-joined machine may be used to perform the attack.
-                Note that the attack vector implementation is not trivial and will require some setup.
+                Successful exploitation will require the possibility to add non-existing DNS records to the domain and
+                to create machine accounts. Alternatively, an already compromised domain-joined machine may be used to
+                perform the attack. Note that the attack vector implementation is not trivial and will require some
+                setup.
             </Typography>
 
             <Typography variant='body2'>
-                It can also be mentioned that the ability to modify the gPLink attribute of an Organizational Unit can be exploited in 
-                conjunction with write permissions on a GPO. Indeed, in such a situation, an attacker could first inject a malicious scheduled 
-                task in the controlled GPO, and then link the GPO to the target OU through its gPLink attribute, making all child objects apply the 
-                malicious GPO and execute arbitrary commands.
+                Alternatively, the ability to modify the gPLink attribute can be exploited in conjunction with write
+                permissions on a GPO. In such a situation, an attacker could first inject a malicious scheduled task in
+                the controlled GPO, and then link the GPO to the target through its gPLink attribute, making all child
+                users and computers apply the malicious GPO and execute arbitrary commands.
             </Typography>
         </>
     );
