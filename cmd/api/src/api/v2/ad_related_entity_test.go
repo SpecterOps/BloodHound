@@ -94,7 +94,7 @@ func setupCases(mockGraph *graphMocks.MockGraph, mockDB *dbMocks.MockDatabase) [
 			Setup: func() {
 				mockGraph.EXPECT().
 					GetADEntityQueryResult(gomock.Any(), gomock.Any(), gomock.Any()).
-					Return(nil, 0, ops.ErrTraversalMemoryLimit)
+					Return(nil, 0, ops.ErrGraphQueryMemoryLimit)
 				mockDB.EXPECT().
 					GetFlagByKey(gomock.Any(), "entity_panel_cache").
 					Return(appcfg.FeatureFlag{Enabled: true}, nil)

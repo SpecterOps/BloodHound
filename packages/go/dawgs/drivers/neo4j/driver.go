@@ -48,7 +48,7 @@ type driver struct {
 	defaultTransactionTimeout time.Duration
 	batchWriteSize            int
 	writeFlushSize            int
-	traversalMemoryLimit      size.Size
+	graphQueryMemoryLimit     size.Size
 }
 
 func (s *driver) SetBatchWriteSize(size int) {
@@ -73,7 +73,7 @@ func (s *driver) BatchOperation(ctx context.Context, batchDelegate graph.BatchDe
 		}
 
 		session = s.driver.NewSession(writeCfg())
-		batch   = newBatchOperation(ctx, session, cfg, s.writeFlushSize, s.batchWriteSize, s.traversalMemoryLimit)
+		batch   = newBatchOperation(ctx, session, cfg, s.writeFlushSize, s.batchWriteSize, s.graphQueryMemoryLimit)
 	)
 
 	defer session.Close()
@@ -107,7 +107,7 @@ func (s *driver) transaction(ctx context.Context, txDelegate graph.TransactionDe
 		option(&cfg)
 	}
 
-	tx := newTransaction(ctx, session, cfg, s.writeFlushSize, s.batchWriteSize, s.traversalMemoryLimit)
+	tx := newTransaction(ctx, session, cfg, s.writeFlushSize, s.batchWriteSize, s.graphQueryMemoryLimit)
 	defer tx.Close()
 
 	if err := txDelegate(tx); err != nil {

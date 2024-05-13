@@ -23,6 +23,7 @@ import (
 	"time"
 
 	"github.com/specterops/bloodhound/dawgs/graph"
+	"github.com/specterops/bloodhound/errors"
 	"github.com/specterops/bloodhound/src/bootstrap"
 	"github.com/specterops/bloodhound/src/database"
 
@@ -100,13 +101,13 @@ func (s Daemon) Name() string {
 func (s Daemon) Start(ctx context.Context) {
 	if s.cfg.TLS.Enabled() {
 		if err := s.server.ListenAndServeTLS(s.cfg.TLS.CertFile, s.cfg.TLS.KeyFile); err != nil {
-			if err != http.ErrServerClosed {
+			if !errors.Is(err, http.ErrServerClosed) {
 				log.Errorf("HTTP server listen error: %v", err)
 			}
 		}
 	} else {
 		if err := s.server.ListenAndServe(); err != nil {
-			if err != http.ErrServerClosed {
+			if !errors.Is(err, http.ErrServerClosed) {
 				log.Errorf("HTTP server listen error: %v", err)
 			}
 		}

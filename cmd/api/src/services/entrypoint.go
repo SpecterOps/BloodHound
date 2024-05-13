@@ -89,14 +89,15 @@ func Entrypoint(ctx context.Context, cfg config.Configuration, connections boots
 	} else {
 		var (
 			graphQuery     = queries.NewGraphQuery(connections.Graph, graphQueryCache, cfg)
+			authorizer     = auth.NewAuthorizer(connections.RDMS)
 			datapipeDaemon = datapipe.NewDaemon(ctx, cfg, connections, graphQueryCache, time.Duration(cfg.DatapipeInterval)*time.Second)
-			routerInst     = router.NewRouter(cfg, auth.NewAuthorizer(connections.RDMS), bootstrap.ContentSecurityPolicy)
+			routerInst     = router.NewRouter(cfg, authorizer, bootstrap.ContentSecurityPolicy)
 			ctxInitializer = database.NewContextInitializer(connections.RDMS)
 			authenticator  = api.NewAuthenticator(cfg, connections.RDMS, ctxInitializer)
 		)
 
 		registration.RegisterFossGlobalMiddleware(&routerInst, cfg, connections.RDMS, auth.NewIdentityResolver(), authenticator)
-		registration.RegisterFossRoutes(&routerInst, cfg, connections.RDMS, connections.Graph, graphQuery, apiCache, collectorManifests, authenticator, datapipeDaemon)
+		registration.RegisterFossRoutes(&routerInst, cfg, connections.RDMS, connections.Graph, graphQuery, apiCache, collectorManifests, authenticator, datapipeDaemon, authorizer)
 
 		// Set neo4j batch and flush sizes
 		neo4jParameters := appcfg.GetNeo4jParameters(ctx, connections.RDMS)

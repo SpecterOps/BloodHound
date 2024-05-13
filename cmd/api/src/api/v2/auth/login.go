@@ -22,15 +22,13 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/specterops/bloodhound/src/ctx"
-	"github.com/specterops/bloodhound/src/database"
-
+	"github.com/specterops/bloodhound/errors"
 	"github.com/specterops/bloodhound/log"
-
 	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/src/auth"
-
 	"github.com/specterops/bloodhound/src/config"
+	"github.com/specterops/bloodhound/src/ctx"
+	"github.com/specterops/bloodhound/src/database"
 )
 
 type LoginResource struct {
@@ -50,11 +48,11 @@ func NewLoginResource(cfg config.Configuration, authenticator api.Authenticator,
 
 func (s LoginResource) loginSecret(loginRequest api.LoginRequest, response http.ResponseWriter, request *http.Request) {
 	if loginDetails, err := s.authenticator.LoginWithSecret(request.Context(), loginRequest); err != nil {
-		if err == api.ErrInvalidAuth || err == api.ErrNoUserSecret {
+		if errors.Is(err, api.ErrInvalidAuth) || errors.Is(err, api.ErrNoUserSecret) {
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusUnauthorized, api.ErrorResponseDetailsAuthenticationInvalid, request), response)
-		} else if err == auth.ErrorInvalidOTP {
+		} else if errors.Is(err, auth.ErrorInvalidOTP) {
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsOTPInvalid, request), response)
-		} else if err == api.ErrUserDisabled {
+		} else if errors.Is(err, api.ErrUserDisabled) {
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusForbidden, err.Error(), request), response)
 		} else {
 			log.Errorf("Error during authentication for request ID %s: %v", ctx.RequestID(request), err)

@@ -37,53 +37,57 @@ import (
 var BHApiFixture = NewApiFixture()
 
 func NewApiFixture() *lab.Fixture[bool] {
+	return NewCustomApiFixture(ConfigFixture)
+}
+
+func NewCustomApiFixture(cfgFixture *lab.Fixture[config.Configuration]) *lab.Fixture[bool] {
 	var (
 		ctx, cancel = context.WithCancel(context.Background())
 		wg          = &sync.WaitGroup{}
 		serverErr   error
-
-		fixture = lab.NewFixture(func(harness *lab.Harness) (bool, error) {
-			if cfg, ok := lab.Unpack(harness, ConfigFixture); !ok {
-				return false, fmt.Errorf("unable to unpack ConfigFixture")
-			} else {
-				// Start the server
-				wg.Add(1)
-
-				go func() {
-					defer wg.Done()
-
-					initializer := bootstrap.Initializer[*database.BloodhoundDB, *graph.DatabaseSwitch]{
-						Configuration: cfg,
-						DBConnector:   services.ConnectDatabases,
-						Entrypoint: func(ctx context.Context, cfg config.Configuration, databaseConnections bootstrap.DatabaseConnections[*database.BloodhoundDB, *graph.DatabaseSwitch]) ([]daemons.Daemon, error) {
-							if err := databaseConnections.RDMS.Wipe(ctx); err != nil {
-								return nil, err
-							}
-
-							return services.Entrypoint(ctx, cfg, databaseConnections)
-						},
-					}
-
-					if err := initializer.Launch(ctx, false); err != nil {
-						serverErr = err
-					}
-				}()
-
-				if err := waitForAPI(30*time.Second, cfg.RootURL.String()); err != nil {
-					return false, err
-				} else {
-					return true, nil
-				}
-			}
-		}, func(harness *lab.Harness, started bool) error {
-			cancel()
-			wg.Wait()
-
-			return serverErr
-		})
 	)
 
-	if err := lab.SetDependency(fixture, ConfigFixture); err != nil {
+	fixture := lab.NewFixture(func(harness *lab.Harness) (bool, error) {
+		if cfg, ok := lab.Unpack(harness, cfgFixture); !ok {
+			return false, fmt.Errorf("unable to unpack cfgFixture")
+		} else {
+			// Start the server
+			wg.Add(1)
+
+			go func() {
+				defer wg.Done()
+
+				initializer := bootstrap.Initializer[*database.BloodhoundDB, *graph.DatabaseSwitch]{
+					Configuration: cfg,
+					DBConnector:   services.ConnectDatabases,
+					Entrypoint: func(ctx context.Context, cfg config.Configuration, databaseConnections bootstrap.DatabaseConnections[*database.BloodhoundDB, *graph.DatabaseSwitch]) ([]daemons.Daemon, error) {
+						if err := databaseConnections.RDMS.Wipe(ctx); err != nil {
+							return nil, err
+						}
+
+						return services.Entrypoint(ctx, cfg, databaseConnections)
+					},
+				}
+
+				if err := initializer.Launch(ctx, false); err != nil {
+					serverErr = err
+				}
+			}()
+
+			if err := waitForAPI(30*time.Second, cfg.RootURL.String()); err != nil {
+				return false, err
+			} else {
+				return true, nil
+			}
+		}
+	}, func(harness *lab.Harness, started bool) error {
+		cancel()
+		wg.Wait()
+
+		return serverErr
+	})
+
+	if err := lab.SetDependency(fixture, cfgFixture); err != nil {
 		log.Fatalf("BHApiFixture dependency error: %v", err)
 	}
 

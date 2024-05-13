@@ -19,15 +19,16 @@ import (
 	"text/template"
 	"time"
 
-	"github.com/specterops/bloodhound/src/auth/bhsaml"
 	"github.com/beevik/etree"
 	"github.com/crewjam/saml"
 	"github.com/crewjam/saml/logger"
 	"github.com/crewjam/saml/xmlenc"
 	xrv "github.com/mattermost/xml-roundtrip-validator"
 	dsig "github.com/russellhaering/goxmldsig"
+	"github.com/specterops/bloodhound/errors"
 	"github.com/specterops/bloodhound/headers"
 	"github.com/specterops/bloodhound/mediatypes"
+	"github.com/specterops/bloodhound/src/auth/bhsaml"
 )
 
 // Session represents a user session. It is returned by the
@@ -283,7 +284,7 @@ func (s *IdentityProvider) ServeIDPInitiated(w http.ResponseWriter, r *http.Requ
 
 	var err error
 	req.ServiceProviderMetadata, err = s.ServiceProviderProvider.GetServiceProvider(r, serviceProviderID)
-	if err == os.ErrNotExist {
+	if errors.Is(err, os.ErrNotExist) {
 		s.Logger.Printf("cannot find service provider: %s", serviceProviderID)
 		http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
 		return
@@ -437,7 +438,7 @@ func (s *IdpAuthnRequest) Validate() error {
 	// find the service provider
 	serviceProviderID := s.Request.Issuer.Value + "/metadata"
 	serviceProvider, err := s.IDP.ServiceProviderProvider.GetServiceProvider(s.HTTPRequest, serviceProviderID)
-	if err == os.ErrNotExist {
+	if errors.Is(err, os.ErrNotExist) {
 		if s.IDP.AllowUntrustedSP {
 			if metadata, err := bhsaml.FetchSAMLMetadata(http.DefaultClient, context.Background(), serviceProviderID); err != nil {
 				return fmt.Errorf("cannot fetch metadata from issuer: %s %w", serviceProviderID, err)
@@ -801,7 +802,7 @@ func (s *IdpAuthnRequest) MakeAssertionEl() error {
 	signedAssertionEl = s.Assertion.Element()
 
 	certBuf, err := s.getSPEncryptionCert()
-	if err == os.ErrNotExist {
+	if errors.Is(err, os.ErrNotExist) {
 		s.AssertionEl = signedAssertionEl
 		return nil
 	} else if err != nil {

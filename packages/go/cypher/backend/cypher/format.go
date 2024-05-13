@@ -933,6 +933,48 @@ func (s Emitter) formatCreate(output io.Writer, create *model.Create) error {
 	return s.formatPattern(output, create.Pattern)
 }
 
+func (s Emitter) formatMerge(output io.Writer, merge *model.Merge) error {
+	if _, err := io.WriteString(output, "merge "); err != nil {
+		return err
+	}
+
+	if err := s.formatPatternPart(output, merge.PatternPart); err != nil {
+		return err
+	}
+
+	if err := s.formatMergeActions(output, merge.MergeActions); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s Emitter) formatMergeActions(output io.Writer, mergeActions []*model.MergeAction) error {
+	for _, mergeAction := range mergeActions {
+		if _, err := io.WriteString(output, " "); err != nil {
+			return err
+		}
+
+		if mergeAction.OnCreate {
+			if _, err := io.WriteString(output, "on create "); err != nil {
+				return err
+			}
+		}
+
+		if mergeAction.OnMatch {
+			if _, err := io.WriteString(output, "on match "); err != nil {
+				return err
+			}
+		}
+
+		if err := s.formatSet(output, mergeAction.Set); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 func (s Emitter) formatUpdatingClause(output io.Writer, updatingClause *model.UpdatingClause) error {
 	switch typedClause := updatingClause.Clause.(type) {
 	case *model.Create:
@@ -946,6 +988,9 @@ func (s Emitter) formatUpdatingClause(output io.Writer, updatingClause *model.Up
 
 	case *model.Delete:
 		return s.formatDelete(output, typedClause)
+
+	case *model.Merge:
+		return s.formatMerge(output, typedClause)
 
 	default:
 		return fmt.Errorf("unsupported updating clause type: %T", updatingClause)

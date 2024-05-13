@@ -25,6 +25,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"unsafe"
 
 	"github.com/specterops/bloodhound/dawgs/util/size"
 )
@@ -124,6 +125,10 @@ func (s ID) Uint32() uint32 {
 // Int64 returns the ID typed as an int64 and is shorthand for int64(id).
 func (s ID) Int64() int64 {
 	return int64(s)
+}
+
+func (s ID) Sizeof() size.Size {
+	return size.Size(unsafe.Sizeof(s.Uint32()))
 }
 
 // String formats the int64 value of the ID as a string.
@@ -368,8 +373,8 @@ type Transaction interface {
 	// Commit calls to commit this transaction right away.
 	Commit() error
 
-	// TraversalMemoryLimit returns the traversal memory limit of
-	TraversalMemoryLimit() size.Size
+	// GraphQueryMemoryLimit returns the graph query memory limit of
+	GraphQueryMemoryLimit() size.Size
 }
 
 // TransactionDelegate represents a transactional database context actor. Errors returned from a TransactionDelegate

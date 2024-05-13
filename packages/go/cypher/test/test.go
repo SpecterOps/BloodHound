@@ -19,10 +19,10 @@ package test
 import (
 	"embed"
 	"encoding/json"
-	"github.com/specterops/bloodhound/cypher/backend"
 	"regexp"
 	"testing"
 
+	"github.com/specterops/bloodhound/cypher/backend"
 	"github.com/specterops/bloodhound/cypher/frontend"
 	"github.com/stretchr/testify/require"
 )
@@ -91,9 +91,9 @@ func (s NegativeTest) Run(t *testing.T, testCase Case) {
 }
 
 type StringMatchTest struct {
-	Query      string   `json:"query"`
-	Matcher    string   `json:"matcher"`
-	Complexity *float64 `json:"complexity"`
+	Query      string `json:"query"`
+	Matcher    string `json:"matcher"`
+	Complexity *int64 `json:"complexity"`
 }
 
 func (s StringMatchTest) Run(t *testing.T, testCase Case) {

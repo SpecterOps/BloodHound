@@ -1,0 +1,146 @@
+{
+    "/api/v2/issuancepolicies/{object_id}": {
+        "parameters": [
+            {
+                "type": "string",
+                "description": "Issuance Policy Object ID",
+                "name": "object_id",
+                "in": "path",
+                "required": true
+            }
+        ],
+        "get": {
+            "description": "Get properties and counts for this issuance policy",
+            "tags": [
+                "Issuance Policy Entity API",
+                "Community",
+                "Enterprise"
+            ],
+            "summary": "Get issuance policy entity info",
+            "parameters": [
+                {
+                    "$ref": "#/definitions/parameters.PreferHeader"
+                }
+            ],
+            "responses": {
+                "200": {
+                    "description": "OK",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/definitions/api.BasicResponse"
+                            }
+                        }
+                    }
+                },
+                "Error": {
+                    "$ref": "#/components/responses/defaultError"
+                }
+            }
+        }
+    },
+    "/api/v2/issuancepolicies/{object_id}/controllers": {
+        "parameters": [
+            {
+                "type": "string",
+                "description": "Issuance Policy Object ID",
+                "name": "object_id",
+                "in": "path",
+                "required": true
+            }
+        ],
+        "get": {
+            "description": "List the direct controllers for this issuance policy",
+            "tags": [
+                "Issuance Policy Entity API",
+                "Community",
+                "Enterprise"
+            ],
+            "summary": "List issuance policy direct controllers",
+            "parameters": [
+                {
+                    "$ref": "#/definitions/parameters.PreferHeader"
+                },
+                {
+                    "type": "integer",
+                    "description": "Paging Skip",
+                    "name": "skip",
+                    "in": "query"
+                },
+                {
+                    "type": "integer",
+                    "description": "Paging Limit",
+                    "name": "limit",
+                    "in": "query"
+                }
+            ],
+            "responses": {
+                "200": {
+                    "description": "OK",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/definitions/api.ResponseWrapper"
+                            }
+                        }
+                    }
+                },
+                "Error": {
+                    "$ref": "#/components/responses/defaultError"
+                }
+            }
+        }
+    },
+    "/api/v2/issuancepolicies/{object_id}/linkedtemplates": {
+        "parameters": [
+            {
+                "type": "string",
+                "description": "Issuance Policy Object ID",
+                "name": "object_id",
+                "in": "path",
+                "required": true
+            }
+        ],
+        "get": {
+            "description": "List the linked certificate templates for this issuance policy",
+            "tags": [
+                "Issuance Policy Entity API",
+                "Community",
+                "Enterprise"
+            ],
+            "summary": "List issuance policy direct controllers",
+            "parameters": [
+                {
+                    "$ref": "#/definitions/parameters.PreferHeader"
+                },
+                {
+                    "type": "integer",
+                    "description": "Paging Skip",
+                    "name": "skip",
+                    "in": "query"
+                },
+                {
+                    "type": "integer",
+                    "description": "Paging Limit",
+                    "name": "limit",
+                    "in": "query"
+                }
+            ],
+            "responses": {
+                "200": {
+                    "description": "OK",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/definitions/api.ResponseWrapper"
+                            }
+                        }
+                    }
+                },
+                "Error": {
+                    "$ref": "#/components/responses/defaultError"
+                }
+            }
+        }
+    }
+}

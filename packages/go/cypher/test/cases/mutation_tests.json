@@ -1,0 +1,253 @@
+{
+    "test_cases": [
+        {
+            "name": "Multipart query with mutation",
+            "type": "string_match",
+            "details": {
+                "query": "match (s:Ship {name: 'Nebuchadnezzar'}) with s as ship merge p = (c:Crew {name: 'Neo'})<-[:CrewOf]->(ship) set c.title = 'The One' return p",
+                "complexity": 9
+            }
+        },
+        {
+            "name": "Merge labelled node(s) to set a property",
+            "type": "string_match",
+            "details": {
+                "query": "merge (p:Program) set p.name = 'Smith' return p",
+                "complexity": 2
+            }
+        },
+        {
+            "name": "Merge labelled node(s) and if not created set a property",
+            "type": "string_match",
+            "details": {
+                "query": "merge (p:Program) on match set p.name = 'Smith' return p",
+                "complexity": 3
+            }
+        },
+        {
+            "name": "Merge labelled node(s) and if created set a property",
+            "type": "string_match",
+            "details": {
+                "query": "merge (p:Human) on create set p.born = 'now' return p",
+                "complexity": 3
+            }
+        },
+        {
+            "name": "Merge labelled node(s) and do multiple merge actions and set a property",
+            "type": "string_match",
+            "details": {
+                "query": "merge (p:Sentinel) on create set p.emp = 'active' on match set p.emp = 'charged' set p.hunting = true return p",
+                "complexity": 6
+            }
+        },
+        {
+            "name": "JD's Create User Example",
+            "type": "string_match",
+            "details": {
+                "query": "merge (x:Base {objectid: '<objId>'}) set x:User, x.name = 'BOB@TEST.LAB' set x += {arr: ['abc', 'def', 'ghi']} return x",
+                "complexity": 3
+            }
+        },
+        {
+            "name": "JD's Create Edges Example",
+            "type": "string_match",
+            "details": {
+                "query": "match (x) match (y) merge (x)-[:Edge]->(y)",
+                "complexity": 11
+            }
+        },
+        {
+            "name": "Create node",
+            "type": "string_match",
+            "details": {
+                "query": "create (u) return u",
+                "complexity": 4
+            }
+        },
+        {
+            "name": "Create node with label",
+            "type": "string_match",
+            "details": {
+                "query": "create (u:Human {name: Neo}) return u",
+                "complexity": 2
+            }
+        },
+        {
+            "name": "Create node with decimal properties parameter",
+            "type": "string_match",
+            "details": {
+                "query": "create (a:Label $1) return a",
+                "complexity": 2
+            }
+        },
+        {
+            "name": "Create node with named properties parameter",
+            "type": "string_match",
+            "details": {
+                "query": "create (a:Label $named) return a",
+                "complexity": 2
+            }
+        },
+        {
+            "name": "Create multiple nodes",
+            "type": "string_match",
+            "details": {
+                "query": "create (a:Label {p: '1234'}), (b:Other) return a, b",
+                "complexity": 4
+            }
+        },
+        {
+            "name": "Create relationship",
+            "type": "string_match",
+            "details": {
+                "query": "create p = (:Label {p: '1234'})-[:Link {r: 1234}]->(b {p: '4321'}) return p",
+                "complexity": 5
+            }
+        },
+        {
+            "name": "Create relationship with decimal properties parameter",
+            "type": "string_match",
+            "details": {
+                "query": "create p = (:Label {p: '1234'})-[:Link $1]->(b {p: '4321'}) return p",
+                "complexity": 5
+            }
+        },
+        {
+            "name": "Create relationship with named properties parameter",
+            "type": "string_match",
+            "details": {
+                "query": "create p = (:Label {p: '1234'})-[:Link $named]->(b {p: '4321'}) return p",
+                "complexity": 5
+            }
+        },
+        {
+            "name": "Create relationship with matching",
+            "type": "string_match",
+            "details": {
+                "query": "match (a), (b) where a.name = 'a' and b.linked = id(a) create p = (a)-[:Linked]->(b) return p",
+                "complexity": 13
+            }
+        },
+        {
+            "name": "Set node properties",
+            "type": "string_match",
+            "details": {
+                "query": "match (n:Human {name: Neo}) set n.one = true return n",
+                "complexity": 2
+            }
+        },
+        {
+            "name": "Set node properties with map",
+            "type": "string_match",
+            "details": {
+                "query": "match (b:Thing) set b += {prop1: '123', lprop: [1, [2, 3, 4], {a: 1234}]} return b",
+                "matcher": "match \\(b:Thing\\) set b \\+= \\{(prop1: '123', lprop: \\[1, \\[2, 3, 4\\], \\{a: 1234}]|lprop: \\[1, \\[2, 3, 4\\], \\{a: 1234}], prop1: '123')} return b",
+                "complexity": 2
+            }
+        },
+        {
+            "name": "Set node property to null",
+            "type": "string_match",
+            "details": {
+                "query": "match (b:Thing) set b.prop = null return b",
+                "complexity": 2
+            }
+        },
+        {
+            "name": "Set node property to other node property",
+            "type": "string_match",
+            "details": {
+                "query": "match (a:User), (b:Admin) set a.prop = b.prop",
+                "complexity": 4
+            }
+        },
+        {
+            "name": "Set node labels",
+            "type": "string_match",
+            "details": {
+                "query": "match (b:Thing) set b:Other return b",
+                "complexity": 2
+            }
+        },
+        {
+            "name": "Set multiple node properties",
+            "type": "string_match",
+            "details": {
+                "query": "match (b:Thing) set b.name = '123', b.other = '123' return b",
+                "complexity": 2
+            }
+        },
+        {
+            "name": "Set multiple node properties with multiple updating clauses",
+            "type": "string_match",
+            "details": {
+                "query": "match (b:Thing) set b.name = '123' set b:Label return b",
+                "complexity": 3
+            }
+        },
+        {
+            "name": "Remove node properties",
+            "type": "string_match",
+            "details": {
+                "query": "match (b:Thing) remove b.name return b",
+                "complexity": 2
+            }
+        },
+        {
+            "name": "Remove multiple node properties",
+            "type": "string_match",
+            "details": {
+                "query": "match (b:Thing) remove b.name, b.other return b",
+                "complexity": 2
+            }
+        },
+        {
+            "name": "Remove multiple node properties with multiple updating clauses",
+            "type": "string_match",
+            "details": {
+                "query": "match (b:Thing) remove b.name remove b:Label return b",
+                "complexity": 3
+            }
+        },
+        {
+            "name": "Remove node properties from node pattern",
+            "type": "string_match",
+            "details": {
+                "query": "match (a:Agent {name: Smith}) remove a.trapped return a",
+                "complexity": 2
+            }
+        },
+        {
+            "name": "Delete node",
+            "type": "string_match",
+            "details": {
+                "query": "match (b:Thing) delete b return b",
+                "complexity": 4
+            }
+        },
+        {
+            "name": "Delete node with node pattern",
+            "type": "string_match",
+            "details": {
+                "query": "match (u:Human {name: Dozer}) delete u",
+                "complexity": 4
+            }
+        },
+        {
+            "name": "Delete detach node",
+            "type": "string_match",
+            "details": {
+                "query": "match (b:Thing) detach delete b return b",
+                "complexity": 11
+            }
+        },
+        {
+            "name": "Delete detach nodes",
+            "type": "string_match",
+            "details": {
+                "query": "match (a:Thing1), (b:Thing2) detach delete a, b return b",
+                "complexity": 13
+            }
+        }
+    ]
+}

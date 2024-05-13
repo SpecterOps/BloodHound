@@ -34,7 +34,11 @@ func (s *Relationship) Merge(other *Relationship) {
 }
 
 func (s *Relationship) SizeOf() size.Size {
-	relSize := size.Of(s) + size.Of(s.Kind)
+	relSize := size.Of(s) +
+		s.ID.Sizeof() +
+		s.StartID.Sizeof() +
+		s.EndID.Sizeof() +
+		Kinds{s.Kind}.SizeOf()
 
 	if s.Properties != nil {
 		relSize += s.Properties.SizeOf()

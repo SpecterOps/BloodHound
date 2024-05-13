@@ -28,6 +28,7 @@ modsync *FLAGS:
 # run code generation
 generate *FLAGS:
   @just stbernard generate {{FLAGS}}
+  @just check-license
 
 # Show repository status
 show *FLAGS:
@@ -56,7 +57,6 @@ _prep-steps:
   @just ensure-deps
   @just modsync
   @just generate
-  @just check-license
   @just show > tmp/repo-status.txt
   @just analyze > tmp/analysis-report.txt
   @just build > tmp/build-output.txt

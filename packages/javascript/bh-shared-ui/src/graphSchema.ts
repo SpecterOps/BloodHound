@@ -314,8 +314,11 @@ export enum ActiveDirectoryKindProperties {
     EnrollmentAgentRestrictionsCollected = 'enrollmentagentrestrictionscollected',
     IsUserSpecifiesSanEnabled = 'isuserspecifiessanenabled',
     IsUserSpecifiesSanEnabledCollected = 'isuserspecifiessanenabledcollected',
+    RoleSeparationEnabled = 'roleseparationenabled',
+    RoleSeparationEnabledCollected = 'roleseparationenabledcollected',
     HasBasicConstraints = 'hasbasicconstraints',
     BasicConstraintPathLength = 'basicconstraintpathlength',
+    UnresolvedPublishedTemplates = 'unresolvedpublishedtemplates',
     DNSHostname = 'dnshostname',
     CrossCertificatePair = 'crosscertificatepair',
     DistinguishedName = 'distinguishedname',
@@ -376,6 +379,8 @@ export enum ActiveDirectoryKindProperties {
     HomeDirectory = 'homedirectory',
     CertificatePolicy = 'certificatepolicy',
     CertTemplateOID = 'certtemplateoid',
+    GroupLinkID = 'grouplinkid',
+    ObjectGUID = 'objectguid',
 }
 export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKindProperties): string | undefined {
     switch (value) {
@@ -401,10 +406,16 @@ export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKin
             return 'Is User Specifies San Enabled';
         case ActiveDirectoryKindProperties.IsUserSpecifiesSanEnabledCollected:
             return 'Is User Specifies San Enabled Collected';
+        case ActiveDirectoryKindProperties.RoleSeparationEnabled:
+            return 'Role Separation Enabled';
+        case ActiveDirectoryKindProperties.RoleSeparationEnabledCollected:
+            return 'Role Separation Enabled Collected';
         case ActiveDirectoryKindProperties.HasBasicConstraints:
             return 'Has Basic Constraints';
         case ActiveDirectoryKindProperties.BasicConstraintPathLength:
             return 'Basic Constraint Path Length';
+        case ActiveDirectoryKindProperties.UnresolvedPublishedTemplates:
+            return 'Unresolved Published Certificate Templates';
         case ActiveDirectoryKindProperties.DNSHostname:
             return 'DNS Hostname';
         case ActiveDirectoryKindProperties.CrossCertificatePair:
@@ -525,6 +536,10 @@ export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKin
             return 'Certificate Policy';
         case ActiveDirectoryKindProperties.CertTemplateOID:
             return 'Certificate Template OID';
+        case ActiveDirectoryKindProperties.GroupLinkID:
+            return 'Group Link ID';
+        case ActiveDirectoryKindProperties.ObjectGUID:
+            return 'Object GUID';
         default:
             return undefined;
     }

@@ -78,7 +78,7 @@
       },
       "responses": {
         "200": {
-          "description": "Returns graph data related to the cypher query sent in the response body that contains a collection of nodes and edges",
+          "description": "Returns graph data related to the cypher query sent in the response body that contains a collection of nodes and edges. Supports mutation if EnableCypherMutations config flag is true.",
           "content": {
             "application/json": {
               "schema": {
@@ -86,6 +86,12 @@
               }
             }
           }
+        },
+        "404": {
+          "description": "Not Found, returned when no nodes or edges are returned during read (non-mutation) queries.",
+          "schema": {
+            "$ref": "#/definitions/api.ErrorWrapper"
+            }
         },
         "Error": {
           "$ref": "#/components/responses/defaultError"

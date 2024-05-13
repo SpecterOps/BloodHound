@@ -410,7 +410,7 @@ type UpdatingClause struct {
 	Clause Expression
 }
 
-func NewUpdatingClause[T *Delete | *Remove | *Set | *Create](clause T) *UpdatingClause {
+func NewUpdatingClause[T *Delete | *Remove | *Set | *Create | *Merge](clause T) *UpdatingClause {
 	return &UpdatingClause{
 		Clause: clause,
 	}
@@ -427,6 +427,40 @@ func (s *UpdatingClause) copy() *UpdatingClause {
 		},
 
 		Clause: Copy(s.Clause),
+	}
+}
+
+type MergeAction struct {
+	OnCreate bool
+	OnMatch  bool
+	Set      *Set
+}
+
+func (s *MergeAction) copy() *MergeAction {
+	if s == nil {
+		return nil
+	}
+
+	return &MergeAction{
+		OnCreate: s.OnCreate,
+		OnMatch:  s.OnMatch,
+		Set:      Copy(s.Set),
+	}
+}
+
+type Merge struct {
+	PatternPart  *PatternPart
+	MergeActions []*MergeAction
+}
+
+func (s *Merge) copy() *Merge {
+	if s == nil {
+		return nil
+	}
+
+	return &Merge{
+		PatternPart:  Copy(s.PatternPart),
+		MergeActions: Copy(s.MergeActions),
 	}
 }
 

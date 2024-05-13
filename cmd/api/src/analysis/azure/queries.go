@@ -75,6 +75,11 @@ func GraphStats(ctx context.Context, db graph.Database) (model.AzureDataQualityS
 
 					for _, kind := range kinds {
 						innerKind := kind
+
+						if innerKind == azure.Entity {
+							continue
+						}
+
 						if err := operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, _ chan<- any) error {
 							if count, err := tx.Nodes().Filterf(func() graph.Criteria {
 								return query.And(
@@ -153,9 +158,11 @@ func GraphStats(ctx context.Context, db graph.Database) (model.AzureDataQualityS
 								case azure.WebApp:
 									stat.WebApps = int(count)
 									aggregation.WebApps += int(count)
+
 								case azure.Tenant:
 									// Do nothing. Only AzureDataQualityAggregation stats have tenant stats and the tenants stats are handled in the outer tenant loop
 								}
+
 								mutex.Unlock()
 								return nil
 							}

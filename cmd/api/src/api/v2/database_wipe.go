@@ -22,7 +22,6 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/gofrs/uuid"
 	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/src/model"
@@ -40,10 +39,12 @@ func (s Resources) HandleDatabaseWipe(response http.ResponseWriter, request *htt
 
 	var (
 		payload DatabaseWipe
+		err     error
 		// use this struct to flag any fields that failed to delete
 		errors []string
 		// deleting collected graph data OR high value selectors starts analsyis
 		kickoffAnalysis bool
+		auditEntry      model.AuditEntry
 	)
 
 	if err := api.ReadJSONRequestPayloadLimited(&payload, request); err != nil {
@@ -65,27 +66,23 @@ func (s Resources) HandleDatabaseWipe(response http.ResponseWriter, request *htt
 		return
 	}
 
-	commitID, err := uuid.NewV4()
-	if err != nil {
+	if auditEntry, err = model.NewAuditEntry(
+		model.AuditLogActionDeleteBloodhoundData,
+		model.AuditLogStatusIntent,
+		model.AuditData{
+			"options": payload,
+		},
+	); err != nil {
 		api.WriteErrorResponse(
 			request.Context(),
-			api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("failure generating uuid: %v", err.Error()), request),
+			api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request),
 			response,
 		)
 		return
 	}
 
-	auditEntry := &model.AuditEntry{
-		Action: model.AuditLogActionDeleteBloodhoundData,
-		Model: &model.AuditData{
-			"options": payload,
-		},
-		Status:   model.AuditLogStatusIntent,
-		CommitID: commitID,
-	}
-
 	// create an intent audit log
-	if err := s.DB.AppendAuditLog(request.Context(), *auditEntry); err != nil {
+	if err := s.DB.AppendAuditLog(request.Context(), auditEntry); err != nil {
 		api.WriteErrorResponse(
 			request.Context(),
 			api.BuildErrorResponse(http.StatusInternalServerError, "failure creating an intent audit log", request),
@@ -112,14 +109,14 @@ func (s Resources) HandleDatabaseWipe(response http.ResponseWriter, request *htt
 			return
 		} else {
 			s.TaskNotifier.RequestDeletion()
-			s.handleAuditLogForDatabaseWipe(request.Context(), auditEntry, true, "collected graph data")
+			s.handleAuditLogForDatabaseWipe(request.Context(), &auditEntry, true, "collected graph data")
 		}
 
 	}
 
 	// delete asset group selectors
 	if len(payload.DeleteAssetGroupSelectors) > 0 {
-		if failed := s.deleteHighValueSelectors(request.Context(), auditEntry, payload.DeleteAssetGroupSelectors); failed {
+		if failed := s.deleteHighValueSelectors(request.Context(), &auditEntry, payload.DeleteAssetGroupSelectors); failed {
 			errors = append(errors, "custom high value selectors")
 		} else {
 			kickoffAnalysis = true
@@ -133,14 +130,14 @@ func (s Resources) HandleDatabaseWipe(response http.ResponseWriter, request *htt
 
 	// delete file ingest history
 	if payload.DeleteFileIngestHistory {
-		if failure := s.deleteFileIngestHistory(request.Context(), auditEntry); failure {
+		if failure := s.deleteFileIngestHistory(request.Context(), &auditEntry); failure {
 			errors = append(errors, "file ingest history")
 		}
 	}
 
 	// delete data quality history
 	if payload.DeleteDataQualityHistory {
-		if failure := s.deleteDataQualityHistory(request.Context(), auditEntry); failure {
+		if failure := s.deleteDataQualityHistory(request.Context(), &auditEntry); failure {
 			errors = append(errors, "data quality history")
 		}
 	}

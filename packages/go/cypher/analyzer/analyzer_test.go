@@ -27,30 +27,28 @@ import (
 
 func TestQueryComplexity(t *testing.T) {
 	// Walk through all positive test cases to ensure that the walker can handle all supported types
-	for _, testCase := range test.LoadFixture(t, test.PositiveTestCases).RunnableCases() {
-		t.Run(testCase.Name, func(t *testing.T) {
-			// Only bother with the string match tests
-			if testCase.Type == test.TypeStringMatch {
-				var (
-					details              = test.UnmarshallTestCaseDetails[test.StringMatchTest](t, testCase)
-					parseContext         = frontend.NewContext()
-					queryModel, parseErr = frontend.ParseCypher(parseContext, details.Query)
-				)
+	for _, caseLoad := range []string{test.PositiveTestCases, test.MutationTestCases} {
+		for _, testCase := range test.LoadFixture(t, caseLoad).RunnableCases() {
+			t.Run(testCase.Name, func(t *testing.T) {
+				// Only bother with the string match tests
+				if testCase.Type == test.TypeStringMatch {
+					var (
+						details              = test.UnmarshallTestCaseDetails[test.StringMatchTest](t, testCase)
+						parseContext         = frontend.NewContext()
+						queryModel, parseErr = frontend.ParseCypher(parseContext, details.Query)
+					)
 
-				if parseErr != nil {
-					t.Fatalf("Parser errors: %s", parseErr.Error())
-				}
-
-				if details.Complexity != nil {
-					complexity, analyzerErr := analyzer.QueryComplexity(queryModel)
-
-					if analyzerErr != nil {
-						t.Fatalf("Analyzer errors: %s", parseErr.Error())
+					if parseErr != nil {
+						t.Fatalf("Parser errors: %s", parseErr.Error())
 					}
 
-					require.Equal(t, *details.Complexity, complexity.Weight)
+					if details.Complexity != nil {
+						complexity, analyzerErr := analyzer.QueryComplexity(queryModel)
+						require.Nil(t, analyzerErr)
+						require.Equal(t, *details.Complexity, complexity.Weight)
+					}
 				}
-			}
-		})
+			})
+		}
 	}
 }

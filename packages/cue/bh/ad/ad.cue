@@ -98,6 +98,20 @@ IsUserSpecifiesSanEnabledCollected: types.#StringEnum & {
 	representation: "isuserspecifiessanenabledcollected"
 }
 
+RoleSeparationEnabled: types.#StringEnum & {
+	symbol: 		"RoleSeparationEnabled"
+	schema: 		"ad"
+	name:           "Role Separation Enabled"
+	representation: "roleseparationenabled"
+}
+
+RoleSeparationEnabledCollected: types.#StringEnum & {
+	symbol: 		"RoleSeparationEnabledCollected"
+	schema: 		"ad"
+	name:           "Role Separation Enabled Collected"
+	representation: "roleseparationenabledcollected"
+}
+
 HasBasicConstraints: types.#StringEnum & {
 	symbol: 		"HasBasicConstraints"
 	schema: 		"ad"
@@ -110,6 +124,13 @@ BasicConstraintPathLength: types.#StringEnum & {
 	schema: 		"ad"
 	name:           "Basic Constraint Path Length"
 	representation: "basicconstraintpathlength"
+}
+
+UnresolvedPublishedTemplates: types.#StringEnum & {
+	symbol: 		"UnresolvedPublishedTemplates"
+	schema: 		"ad"
+	name:           "Unresolved Published Certificate Templates"
+	representation: "unresolvedpublishedtemplates"
 }
 
 DNSHostname: types.#StringEnum & {
@@ -539,6 +560,20 @@ CertTemplateOID: types.#StringEnum & {
 	representation: "certtemplateoid"
 }
 
+GroupLinkID: types.#StringEnum & {
+	symbol: "GroupLinkID"
+	schema: "ad"
+	name: "Group Link ID"
+	representation: "grouplinkid"
+}
+
+ObjectGUID: types.#StringEnum & {
+	symbol: "ObjectGUID"
+	schema: "ad"
+	name: "Object GUID"
+	representation: "objectguid"
+}
+
 Properties: [
 	AdminCount,
 	CASecurityCollected,
@@ -551,8 +586,11 @@ Properties: [
 	EnrollmentAgentRestrictionsCollected,
 	IsUserSpecifiesSanEnabled,
 	IsUserSpecifiesSanEnabledCollected,
+	RoleSeparationEnabled,
+	RoleSeparationEnabledCollected,
 	HasBasicConstraints,
 	BasicConstraintPathLength,
+	UnresolvedPublishedTemplates,
 	DNSHostname,
 	CrossCertificatePair,
 	DistinguishedName,
@@ -613,6 +651,8 @@ Properties: [
 	HomeDirectory,
 	CertificatePolicy,
 	CertTemplateOID,
+	GroupLinkID,
+	ObjectGUID
 ]
 
 // Kinds
@@ -1239,4 +1279,5 @@ EdgeCompositionRelationships: [
 	ADCSESC9b,
 	ADCSESC10a,
 	ADCSESC10b,
+	ADCSESC13
 ]

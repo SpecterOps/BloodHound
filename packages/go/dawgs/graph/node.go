@@ -19,11 +19,10 @@ package graph
 import (
 	"encoding/json"
 	"github.com/RoaringBitmap/roaring"
-	"math"
-	"sync"
-
 	"github.com/RoaringBitmap/roaring/roaring64"
 	"github.com/specterops/bloodhound/dawgs/util/size"
+	"math"
+	"sync"
 )
 
 const (
@@ -77,7 +76,11 @@ func (s *Node) Merge(other *Node) {
 }
 
 func (s *Node) SizeOf() size.Size {
-	nodeSize := size.Of(s) + s.Kinds.SizeOf()
+	nodeSize := size.Of(s) +
+		s.ID.Sizeof() +
+		s.Kinds.SizeOf() +
+		s.AddedKinds.SizeOf() +
+		s.DeletedKinds.SizeOf()
 
 	if s.Properties != nil {
 		nodeSize += s.Properties.SizeOf()

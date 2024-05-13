@@ -15,11 +15,17 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Skeleton } from '@mui/material';
-import { SelectedEdge, apiClient, EntityField, FieldsContainer, ObjectInfoFields } from 'bh-shared-ui';
+import {
+    EntityField,
+    FieldsContainer,
+    ObjectInfoFields,
+    SelectedEdge,
+    apiClient,
+    formatObjectInfoFields,
+} from 'bh-shared-ui';
 import { FC } from 'react';
 import { useQuery } from 'react-query';
 import EdgeInfoCollapsibleSection from 'src/views/Explore/EdgeInfo/EdgeInfoCollapsibleSection';
-import { formatObjectInfoFields } from 'src/views/Explore/utils';
 
 const selectedEdgeCypherQuery = (sourceId: string | number, targetId: string | number, edgeKind: string): string =>
     `MATCH (s)-[r:${edgeKind}]-(t) WHERE ID(s) = ${sourceId} AND ID(t) = ${targetId} RETURN r LIMIT 1`;
@@ -33,8 +39,8 @@ const EdgeObjectInformation: FC<{ selectedEdge: NonNullable<SelectedEdge> }> = (
         return apiClient
             .cypherSearch(
                 selectedEdgeCypherQuery(selectedEdge.sourceNode.id, selectedEdge.targetNode.id, selectedEdge.name),
-                true,
-                { signal }
+                { signal },
+                true
             )
             .then((result) => {
                 if (!result.data.data) return { nodes: {}, edges: [] };
@@ -43,7 +49,7 @@ const EdgeObjectInformation: FC<{ selectedEdge: NonNullable<SelectedEdge> }> = (
     });
 
     if (isLoading) {
-        return <Skeleton variant='rectangular' sx={{}} />;
+        return <Skeleton variant='rectangular' />;
     }
 
     const sourceNodeField: EntityField = {

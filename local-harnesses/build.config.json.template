@@ -9,9 +9,6 @@
     "log_path": "bhapi.log",
     "enable_startup_wait_period": false,
     "datapipe_interval": 1,
-    "features": {
-        "enable_auth": true
-    },
     "database": {
         "connection": "user=bloodhound password=bloodhoundcommunityedition dbname=bloodhound host=app-db port=5432"
     },

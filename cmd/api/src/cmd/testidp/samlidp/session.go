@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/crewjam/saml"
+	"github.com/specterops/bloodhound/errors"
 	"github.com/zenazn/goji/web"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -78,7 +79,7 @@ func (s *Server) GetSession(w http.ResponseWriter, r *http.Request, req *IdpAuth
 	if sessionCookie, err := r.Cookie("session"); err == nil {
 		session := &Session{}
 		if err := s.Store.Get(fmt.Sprintf("/sessions/%s", sessionCookie.Value), session); err != nil {
-			if err == ErrNotFound {
+			if errors.Is(err, ErrNotFound) {
 				s.sendLoginForm(w, r, req, "")
 				return nil
 			}

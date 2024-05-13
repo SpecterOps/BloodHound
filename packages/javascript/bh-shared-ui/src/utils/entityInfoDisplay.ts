@@ -14,9 +14,105 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import isEmpty from 'lodash/isEmpty';
+import startCase from 'lodash/startCase';
 import { DateTime } from 'luxon';
+import { ZERO_VALUE_API_DATE } from '../constants';
+import {
+    ActiveDirectoryKindProperties,
+    ActiveDirectoryKindPropertiesToDisplay,
+    AzureKindProperties,
+    AzureKindPropertiesToDisplay,
+    CommonKindProperties,
+    CommonKindPropertiesToDisplay,
+} from '../graphSchema';
 import { LuxonFormat } from './datetime';
-import { ActiveDirectoryKindProperties } from '..';
+
+export const formatObjectInfoFields = (props: any): EntityField[] => {
+    let mappedFields: EntityField[] = [];
+    const propKeys = Object.keys(props || {});
+
+    for (let i = 0; i < propKeys.length; i++) {
+        const value = props[propKeys[i]];
+        // Don't display empty fields or fields with zero date values
+        if (
+            value === undefined ||
+            value === '' ||
+            value === ZERO_VALUE_API_DATE ||
+            (typeof value === 'object' && isEmpty(value))
+        )
+            continue;
+
+        const { kind, isKnownProperty } = validateProperty(propKeys[i]);
+
+        if (isKnownProperty) {
+            mappedFields.push({
+                kind: kind,
+                label: getFieldLabel(kind!, propKeys[i]),
+                value: value,
+                keyprop: propKeys[i],
+            });
+        } else {
+            mappedFields.push({
+                kind: kind,
+                label: `${startCase(propKeys[i])}:`,
+                value: value,
+                keyprop: propKeys[i],
+            });
+        }
+    }
+
+    mappedFields = mappedFields.sort((a, b) => {
+        return a.label!.localeCompare(b.label!);
+    });
+
+    return mappedFields;
+};
+
+const isActiveDirectoryProperty = (enumValue: ActiveDirectoryKindProperties): boolean => {
+    return Object.values(ActiveDirectoryKindProperties).includes(enumValue);
+};
+
+const isAzureProperty = (enumValue: AzureKindProperties): boolean => {
+    return Object.values(AzureKindProperties).includes(enumValue);
+};
+
+const isCommonProperty = (enumValue: CommonKindProperties): boolean => {
+    return Object.values(CommonKindProperties).includes(enumValue);
+};
+
+export type ValidatedProperty = {
+    isKnownProperty: boolean;
+    kind: EntityPropertyKind;
+};
+
+export const validateProperty = (enumValue: string): ValidatedProperty => {
+    if (isActiveDirectoryProperty(enumValue as ActiveDirectoryKindProperties))
+        return { isKnownProperty: true, kind: 'ad' };
+    if (isAzureProperty(enumValue as AzureKindProperties)) return { isKnownProperty: true, kind: 'az' };
+    if (isCommonProperty(enumValue as CommonKindProperties)) return { isKnownProperty: true, kind: 'cm' };
+    return { isKnownProperty: false, kind: null };
+};
+
+const getFieldLabel = (kind: string, key: string): string => {
+    let label: string;
+
+    switch (kind) {
+        case 'ad':
+            label = ActiveDirectoryKindPropertiesToDisplay(key as ActiveDirectoryKindProperties)!;
+            break;
+        case 'az':
+            label = AzureKindPropertiesToDisplay(key as AzureKindProperties)!;
+            break;
+        case 'cm':
+            label = CommonKindPropertiesToDisplay(key as CommonKindProperties)!;
+            break;
+        default:
+            label = key;
+    }
+
+    return `${label}:`;
+};
 
 export type EntityPropertyKind = 'ad' | 'az' | 'cm' | null;
 
@@ -33,6 +129,11 @@ export enum ADSpecificTimeProperties {
     LAST_LOGON_TIMESTAMP = 'lastlogontimestamp',
     PASSWORD_LAST_SET = 'pwdlastset',
 }
+
+export const NoEntitySelectedMessage = 'Select a node to view the associated information';
+export const NoEntitySelectedHeader = 'None Selected';
+
+export const getNodeByDatabaseIdCypher = (id: string): string => `MATCH (n) WHERE ID(n) = ${id} RETURN n LIMIT 1`;
 
 // Map containing all properties that should display as bitwise integers in the entity panel.
 // The key is the property string, the value is the amount of significant digits the hex value should display with.
