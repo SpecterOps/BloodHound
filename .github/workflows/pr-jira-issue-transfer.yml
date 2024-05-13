@@ -20,40 +20,36 @@ on:
     types: [opened, synchronize]
 
 jobs:
-  check_pr_origin:
+  build:
     runs-on: self-hosted
-
     steps:
-    - name: Check if PR is from within the organization
-      id: check_org
-      run: 
+        - name: Check if PR is from within the organization
+        id: check_org
+        run: 
         PR_URL=$(jq -r .pull_request.url "$GITHUB_EVENT_PATH")
-          PR_NUMBER=$(jq -r .pull_request.number "$GITHUB_EVENT_PATH")
-          TEAM_SLUG="bloodhound-engineering"  # Replace with your team's slug
-          GITHUB_TOKEN="${{ secrets.GITHUB_TOKEN }}"
-
-          # Get PR information
-          PR_ORG=$(jq -r .pull_request.head.repo.organization.login "$GITHUB_EVENT_PATH")
-          PR_USER=$(jq -r .pull_request.user.login "$GITHUB_EVENT_PATH")
-
-          # Check if PR author is a member of the team
-          TEAM_MEMBERSHIP=$(curl -s -X GET -H "Authorization: token $GITHUB_TOKEN" \
+        PR_NUMBER=$(jq -r .pull_request.number "$GITHUB_EVENT_PATH")
+        TEAM_SLUG="bloodhound-engineering"  # Replace with your team's slug
+        GITHUB_TOKEN="${{ secrets.GITHUB_TOKEN }}"
+        PR_ORG=$(jq -r .pull_request.head.repo.organization.login "$GITHUB_EVENT_PATH")
+        PR_USER=$(jq -r .pull_request.user.login "$GITHUB_EVENT_PATH")
+        TEAM_MEMBERSHIP=$(curl -s -X GET -H "Authorization: token $GITHUB_TOKEN" \
               "https://api.github.com/orgs/$PR_ORG/teams/$TEAM_SLUG/memberships/$PR_USER")
 
-          if [ -z "$TEAM_MEMBERSHIP" ]; then
-    - name: Login
-      uses: atlassian/gajira-login@v3
-      env:
+        env:
             JIRA_BASE_URL: ${{ secrets.JIRA_BASE_URL }}
             JIRA_USER_EMAIL: ${{ secrets.JIRA_USER_EMAIL }}
             JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
-    - name: Jira Create
-      uses: atlassian/gajira-create@v3
-      with:
-            project: BP
-            issuetype: 'Product Feature'
-            summary: ${{ github.event.pulls.title }}
-            description: "Github Pull Request Link: ${{ github.event.pulls.html_url}} \r\n ${{ github.event.pulls.body }}"
-            fields: '{"labels":["GitHubReport"]}'
-       env:
-             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            
+    if [ -z "$TEAM_MEMBERSHIP" ]; then
+        - name: Login
+            uses: atlassian/gajira-login@v3        
+        - name: Jira Create
+            uses: atlassian/gajira-create@v3
+            with:
+                project: BP
+                issuetype: 'Product Feature'
+                summary: ${{ github.event.pulls.title }}
+                description: "Github Pull Request Link: ${{ github.event.pulls.html_url}} \r\n ${{ github.event.pulls.body }}"
+                fields: '{"labels":["GitHubReport"]}'
+                 
