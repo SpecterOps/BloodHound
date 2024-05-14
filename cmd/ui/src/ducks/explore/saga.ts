@@ -195,7 +195,12 @@ function* runCypherSearchQuery(payload: CypherQueryRequest): SagaIterator {
 
         if (resultNodesAreEmpty && !resultEdgesAreEmpty) {
             yield put(putGraphData({}));
-            yield put(addSnackbar('The results are not rendered since only edges were returned', 'cypherSearchOnlyContainsEdges'));
+            yield put(
+                addSnackbar(
+                    'The results are not rendered since only edges were returned',
+                    'cypherSearchOnlyContainsEdges'
+                )
+            );
         } else if (resultNodesAreEmpty && resultEdgesAreEmpty) {
             yield put(putGraphData({}));
             yield put(addSnackbar('Command completed successfully', 'cypherSuccessResponse'));
