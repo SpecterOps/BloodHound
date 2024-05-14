@@ -35,6 +35,7 @@ const (
 	FeatureRiskExposureNewCalculation = "risk_exposure_new_calculation"
 	FeatureFedRAMPEULA                = "fedramp_eula"
 	FeatureDarkMode                   = "dark_mode"
+	FeatureAutoTagT0ParentObjects     = "auto_tag_t0_parent_objects"
 )
 
 // AvailableFlags returns a FeatureFlagSet of expected feature flags. Feature flag defaults introduced here will become the initial
@@ -123,6 +124,13 @@ func AvailableFlags() FeatureFlagSet {
 			Name:          "Dark Mode",
 			Description:   "Allows users to enable or disable dark mode via a toggle in the settings menu",
 			Enabled:       false,
+			UserUpdatable: true,
+		},
+		FeatureAutoTagT0ParentObjects: {
+			Key:           FeatureAutoTagT0ParentObjects,
+			Name:          "Automatically add parent OUs and containers of Tier Zero AD objects to Tier Zero",
+			Description:   "Parent OUs and containers of Tier Zero AD objects are automatically added to Tier Zero during analysis. Containers are only added if they have a Tier Zero child object with ACL inheritance enabled.",
+			Enabled:       true,
 			UserUpdatable: true,
 		},
 	}
