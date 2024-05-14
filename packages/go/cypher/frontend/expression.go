@@ -1,22 +1,23 @@
 // Copyright 2023 Specter Ops, Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// 
+//
 // SPDX-License-Identifier: Apache-2.0
 
 package frontend
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/antlr4-go/antlr/v4"
@@ -252,6 +253,8 @@ func (s *ArithmeticExpressionVisitor) enterSubArithmeticExpression(astNode Token
 
 func (s *ArithmeticExpressionVisitor) exitSubArithmeticExpression(astNode TokenProvider) {
 	if operators := newTokenLiteralIterator(astNode); operators.HasTokens() {
+		// b := operators
+		// fmt.Println(b)
 		s.assignExpression(s.ctx.Exit().(*ArithmeticExpressionVisitor).Expression)
 	}
 }
@@ -273,10 +276,18 @@ func (s *ArithmeticExpressionVisitor) ExitOC_PowerOfExpression(ctx *parser.OC_Po
 }
 
 func (s *ArithmeticExpressionVisitor) EnterOC_UnaryAddOrSubtractExpression(ctx *parser.OC_UnaryAddOrSubtractExpressionContext) {
+	// text := ctx.GetText()
+	// count := ctx.GetChildCount()
+	// children := ctx.GetChildren()
+
+	// fmt.Println(text, count, children)
+	fmt.Println(">>> enter called!", ctx.GetText())
 	s.enterSubArithmeticExpression(ctx)
 }
 
 func (s *ArithmeticExpressionVisitor) ExitOC_UnaryAddOrSubtractExpression(ctx *parser.OC_UnaryAddOrSubtractExpressionContext) {
+	fmt.Println(">>> exit called!", ctx.GetText())
+
 	s.exitSubArithmeticExpression(ctx)
 }
 

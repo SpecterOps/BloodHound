@@ -1,6 +1,14 @@
 {
     "test_cases": [
         {
+            "name": "query contains a where constraint with a unary negation",
+            "type": "string_match",
+            "details": {
+                "query": "match (a) where a.val = -1 return a",
+                "complexity": 3
+            }
+        },
+        {
             "name": "Match all nodes in the graph",
             "type": "string_match",
             "details": {
