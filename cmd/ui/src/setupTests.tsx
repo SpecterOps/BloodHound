@@ -42,7 +42,7 @@ if (typeof window.URL.createObjectURL === 'undefined') {
 
 vi.mock('@neo4j-cypher/react-codemirror', async () => {
     return {
-        CypherEditor: () => 'cypher search',
+        CypherEditor: () => 'cypher query',
     };
 });
 

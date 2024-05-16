@@ -18,6 +18,7 @@ package graph
 
 import (
 	"strings"
+	"unsafe"
 
 	"github.com/RoaringBitmap/roaring/roaring64"
 	"github.com/specterops/bloodhound/dawgs/util/size"
@@ -264,16 +265,12 @@ type PathSegment struct {
 	size     size.Size
 }
 
-func sizeOfPathSegment(segment *PathSegment) size.Size {
-	return size.Of(*segment) + segment.Node.SizeOf() + size.Of(segment.Branches)*size.Size(cap(segment.Branches))
-}
-
 func NewRootPathSegment(root *Node) *PathSegment {
 	newSegment := &PathSegment{
 		Node: root,
 	}
 
-	newSegment.size = sizeOfPathSegment(newSegment)
+	newSegment.computeAndSetSize()
 	return newSegment
 }
 
@@ -287,6 +284,31 @@ func (s *PathSegment) GetTrunkSegment() *PathSegment {
 
 func (s *PathSegment) SizeOf() size.Size {
 	return s.size
+}
+
+func (s *PathSegment) computeAndSetSize() {
+	s.size = 0
+
+	s.size += size.Of(s) + size.Size(unsafe.Sizeof(s.size))
+
+	if s.Node != nil {
+		s.size += s.Node.SizeOf()
+	}
+	if s.Edge != nil {
+		s.size += s.Edge.SizeOf()
+	}
+	if s.Trunk != nil {
+		s.size += size.Of(s.Trunk)
+	}
+	if s.Branches != nil {
+		s.size += size.Of(s.Branches) * size.Size(cap(s.Branches))
+	}
+
+	// recursively add sizes of all branches
+	for _, branch := range s.Branches {
+		branch.computeAndSetSize()
+		s.size += branch.size
+	}
 }
 
 func (s *PathSegment) IsCycle() bool {
@@ -394,16 +416,17 @@ func (s *PathSegment) Detach() {
 	}
 }
 
+// Descend returns a PathSegment with an added edge supplied as input, to the node supplied as input.
+// All required updates to slices, pointers, and sizes are included in this operation.
 func (s *PathSegment) Descend(node *Node, relationship *Relationship) *PathSegment {
-	var (
-		nextSegment = &PathSegment{
-			Node:  node,
-			Trunk: s,
-			Edge:  relationship,
-		}
-		sizeAdded         = sizeOfPathSegment(nextSegment)
-		oldBranchCapacity = cap(s.Branches)
-	)
+	nextSegment := &PathSegment{
+		Node:  node,
+		Trunk: s,
+		Edge:  relationship,
+	}
+	nextSegment.computeAndSetSize()
+	sizeAdded := nextSegment.SizeOf()
+	oldBranchCapacity := cap(s.Branches)
 
 	// Track the size of the segment
 	nextSegment.size = sizeAdded

@@ -5,11 +5,12 @@
             "type": "negative_case",
             "details": {
                 "queries": [
-                    "MERGE () WITH * RETURN DISTINCT * UNION RETURN * UNION RETURN *",
-                    "WITH * SKIP 0 RETURN DISTINCT *"
+                    "MATCH MERGE",
+                    "MERGE MATCH"
                 ],
                 "error_matchers": [
-                    "invalid input"
+                    "line 1:6 no viable alternative at input 'MATCH MERGE'",
+                    "line 1:6 no viable alternative at input 'MERGE MATCH'"
                 ]
             }
         },

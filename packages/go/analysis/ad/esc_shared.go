@@ -183,8 +183,8 @@ func PostExtendedByPolicyBinding(operation analysis.StatTrackedOperation[analysi
 							} else if certTemplateDomain != "" && certTemplateDomain == issuancePolicyDomain {
 								// Create ExtendedByPolicy edge
 								if !channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
-									FromID: issuancePolicy.ID,
-									ToID:   certTemplate.ID,
+									FromID: certTemplate.ID,
+									ToID:   issuancePolicy.ID,
 									Kind:   ad.ExtendedByPolicy,
 								}) {
 									return fmt.Errorf("context timed out while creating ExtendedByPolicy edge")

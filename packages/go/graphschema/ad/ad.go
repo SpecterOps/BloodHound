@@ -673,7 +673,7 @@ func (s Property) Name() string {
 	case HomeDirectory:
 		return "Home Directory"
 	case CertificatePolicy:
-		return "Certificate Policy"
+		return "Issuance Policy Extensions"
 	case CertTemplateOID:
 		return "Certificate Template OID"
 	case GroupLinkID:

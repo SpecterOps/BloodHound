@@ -208,3 +208,16 @@ func SignRequestAtTime(hasher func() hash.Hash, id string, token string, datetim
 func SignRequest(tokenID, token string, request *http.Request) error {
 	return SignRequestAtTime(sha256.New, tokenID, token, time.Now(), request)
 }
+
+type readerDelegatedCloser struct {
+	source io.Reader
+	closer io.Closer
+}
+
+func (s readerDelegatedCloser) Read(p []byte) (n int, err error) {
+	return s.source.Read(p)
+}
+
+func (s readerDelegatedCloser) Close() error {
+	return s.closer.Close()
+}

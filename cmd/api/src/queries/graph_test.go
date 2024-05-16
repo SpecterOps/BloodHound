@@ -48,8 +48,8 @@ func TestGraphQuery_PrepareCypherQuery(t *testing.T) {
 		gq           = queries.NewGraphQuery(mockGraphDB, cache.Cache{}, config.Configuration{EnableCypherMutations: true})
 		gqMutDisable = queries.NewGraphQuery(mockGraphDB, cache.Cache{}, config.Configuration{EnableCypherMutations: false})
 
-		rawCypherRead     = "MATCH (n) return n"
-		rawCypherMutation = "DETACH DELETE (n)"
+		rawCypherRead     = "MATCH (n:Label) return n"
+		rawCypherMutation = "DETACH DELETE (n:Label)"
 		rawCypherInvalid  = "derp"
 	)
 
@@ -121,7 +121,7 @@ func TestGraphQuery_RawCypherQuery(t *testing.T) {
 			return nil
 		})
 
-		preparedQuery, err := gq.PrepareCypherQuery("match (n) return n;")
+		preparedQuery, err := gq.PrepareCypherQuery("match (n:Label) return n;")
 		require.Nil(t, err)
 
 		_, err = gq.RawCypherQuery(outerBHCtxInst.ConstructGoContext(), preparedQuery, false)
