@@ -287,6 +287,27 @@ func TestGetAssetGroupComboNode(t *testing.T) {
 	})
 }
 
+func TestGetAssetGroupNodes(t *testing.T) {
+	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
+	testContext.DatabaseTest(func(harness integration.HarnessDetails, db graph.Database) {
+		graphQuery := queries.NewGraphQuery(db, cache.Cache{}, config.Configuration{})
+
+		tierZeroNodes, err := graphQuery.GetAssetGroupNodes(context.Background(), ad.AdminTierZero)
+		require.Nil(t, err)
+
+		customGroupNodes, err := graphQuery.GetAssetGroupNodes(context.Background(), "custom_tag")
+		require.Nil(t, err)
+
+		require.True(t, tierZeroNodes.Contains(harness.AssetGroupNodesHarness.GroupB))
+		require.True(t, tierZeroNodes.Contains(harness.AssetGroupNodesHarness.GroupC))
+		require.Equal(t, 2, len(tierZeroNodes))
+
+		require.Contains(t, customGroupNodes, harness.AssetGroupNodesHarness.GroupD)
+		require.Contains(t, customGroupNodes, harness.AssetGroupNodesHarness.GroupE)
+		require.Equal(t, 2, len(customGroupNodes))
+	})
+}
+
 func TestGraphQuery_GetAllShortestPaths(t *testing.T) {
 	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
 	testContext.DatabaseTestWithSetup(

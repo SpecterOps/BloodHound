@@ -179,7 +179,10 @@ func (s *GraphQuery) GetAssetGroupComboNode(ctx context.Context, owningObjectID 
 		if assetGroupNodes, err := ops.FetchNodeSet(tx.Nodes().Filterf(func() graph.Criteria {
 			filters := []graph.Criteria{
 				query.KindIn(query.Node(), azure.Entity, ad.Entity),
-				query.StringContains(query.NodeProperty(common.SystemTags.String()), assetGroupTag),
+				query.Or(
+					query.StringContains(query.NodeProperty(common.SystemTags.String()), assetGroupTag),
+					query.StringContains(query.NodeProperty(common.UserTags.String()), assetGroupTag),
+				),
 			}
 
 			if owningObjectID != "" {
@@ -233,7 +236,10 @@ func (s *GraphQuery) GetAssetGroupNodes(ctx context.Context, assetGroupTag strin
 		if assetGroupNodes, err = ops.FetchNodeSet(tx.Nodes().Filterf(func() graph.Criteria {
 			filters := []graph.Criteria{
 				query.KindIn(query.Node(), azure.Entity, ad.Entity),
-				query.StringContains(query.NodeProperty(common.SystemTags.String()), assetGroupTag),
+				query.Or(
+					query.StringContains(query.NodeProperty(common.SystemTags.String()), assetGroupTag),
+					query.StringContains(query.NodeProperty(common.UserTags.String()), assetGroupTag),
+				),
 			}
 
 			return query.And(filters...)

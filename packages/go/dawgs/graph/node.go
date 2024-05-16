@@ -18,11 +18,13 @@ package graph
 
 import (
 	"encoding/json"
+	"fmt"
+	"math"
+	"sync"
+
 	"github.com/RoaringBitmap/roaring"
 	"github.com/RoaringBitmap/roaring/roaring64"
 	"github.com/specterops/bloodhound/dawgs/util/size"
-	"math"
-	"sync"
 )
 
 const (
@@ -183,6 +185,7 @@ func (s NodeSet) KindSet() NodeKindSet {
 
 // Contains returns true if the ID of the given Node is stored within this NodeSet.
 func (s NodeSet) Contains(node *Node) bool {
+	fmt.Printf("THIS IS THE NODE %+v", node)
 	return s.ContainsID(node.ID)
 }
 

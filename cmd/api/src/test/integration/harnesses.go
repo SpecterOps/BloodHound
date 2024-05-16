@@ -330,6 +330,29 @@ func (s *AssetGroupComboNodeHarness) Setup(testCtx *GraphTestContext) {
 	testCtx.NewRelationship(s.GroupA, s.GroupB, ad.MemberOf)
 }
 
+type AssetGroupNodesHarness struct {
+	GroupA *graph.Node
+	GroupB *graph.Node
+	GroupC *graph.Node
+	GroupD *graph.Node
+	GroupE *graph.Node
+}
+
+func (s *AssetGroupNodesHarness) Setup(testCtx *GraphTestContext) {
+	domainSID := RandomDomainSID()
+
+	s.GroupA = testCtx.NewActiveDirectoryGroup("GroupA", domainSID)
+	s.GroupB = testCtx.NewActiveDirectoryGroup("GroupB", domainSID)
+	s.GroupC = testCtx.NewActiveDirectoryGroup("GroupC", domainSID)
+	s.GroupD = testCtx.NewActiveDirectoryGroup("GroupD", domainSID)
+	s.GroupE = testCtx.NewActiveDirectoryGroup("GroupD", domainSID)
+
+	s.GroupB.Properties.Set(common.SystemTags.String(), ad.AdminTierZero)
+	s.GroupC.Properties.Set(common.SystemTags.String(), ad.AdminTierZero)
+	s.GroupD.Properties.Set(common.UserTags.String(), "custom_tag")
+	s.GroupE.Properties.Set(common.UserTags.String(), "custom_tag another_tag")
+}
+
 type InboundControlHarness struct {
 	ControlledUser  *graph.Node
 	ControlledGroup *graph.Node
@@ -6833,6 +6856,7 @@ type HarnessDetails struct {
 	OutboundControl                                 OutboundControlHarness
 	InboundControl                                  InboundControlHarness
 	AssetGroupComboNodeHarness                      AssetGroupComboNodeHarness
+	AssetGroupNodesHarness                          AssetGroupNodesHarness
 	OUHarness                                       OUContainedHarness
 	MembershipHarness                               MembershipHarness
 	ForeignHarness                                  ForeignDomainHarness
