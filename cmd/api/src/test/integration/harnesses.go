@@ -351,6 +351,11 @@ func (s *AssetGroupNodesHarness) Setup(testCtx *GraphTestContext) {
 	s.GroupC.Properties.Set(common.SystemTags.String(), ad.AdminTierZero)
 	s.GroupD.Properties.Set(common.UserTags.String(), "custom_tag")
 	s.GroupE.Properties.Set(common.UserTags.String(), "custom_tag another_tag")
+
+	testCtx.UpdateNode(s.GroupB)
+	testCtx.UpdateNode(s.GroupC)
+	testCtx.UpdateNode(s.GroupD)
+	testCtx.UpdateNode(s.GroupE)
 }
 
 type InboundControlHarness struct {

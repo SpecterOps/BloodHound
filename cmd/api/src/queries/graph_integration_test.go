@@ -289,7 +289,10 @@ func TestGetAssetGroupComboNode(t *testing.T) {
 
 func TestGetAssetGroupNodes(t *testing.T) {
 	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
-	testContext.DatabaseTest(func(harness integration.HarnessDetails, db graph.Database) {
+	testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) error {
+		harness.AssetGroupNodesHarness.Setup(testContext)
+		return nil
+	}, func(harness integration.HarnessDetails, db graph.Database) {
 		graphQuery := queries.NewGraphQuery(db, cache.Cache{}, config.Configuration{})
 
 		tierZeroNodes, err := graphQuery.GetAssetGroupNodes(context.Background(), ad.AdminTierZero)
@@ -302,8 +305,8 @@ func TestGetAssetGroupNodes(t *testing.T) {
 		require.True(t, tierZeroNodes.Contains(harness.AssetGroupNodesHarness.GroupC))
 		require.Equal(t, 2, len(tierZeroNodes))
 
-		require.Contains(t, customGroupNodes, harness.AssetGroupNodesHarness.GroupD)
-		require.Contains(t, customGroupNodes, harness.AssetGroupNodesHarness.GroupE)
+		require.True(t, customGroupNodes.Contains(harness.AssetGroupNodesHarness.GroupD))
+		require.True(t, customGroupNodes.Contains(harness.AssetGroupNodesHarness.GroupE))
 		require.Equal(t, 2, len(customGroupNodes))
 	})
 }
