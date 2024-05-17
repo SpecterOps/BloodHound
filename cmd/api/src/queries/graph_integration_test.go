@@ -295,19 +295,24 @@ func TestGetAssetGroupNodes(t *testing.T) {
 	}, func(harness integration.HarnessDetails, db graph.Database) {
 		graphQuery := queries.NewGraphQuery(db, cache.Cache{}, config.Configuration{})
 
-		tierZeroNodes, err := graphQuery.GetAssetGroupNodes(context.Background(), ad.AdminTierZero)
+		tierZeroNodes, err := graphQuery.GetAssetGroupNodes(context.Background(), harness.AssetGroupNodesHarness.TierZeroTag)
 		require.Nil(t, err)
 
-		customGroupNodes, err := graphQuery.GetAssetGroupNodes(context.Background(), "custom_tag")
+		customGroup1Nodes, err := graphQuery.GetAssetGroupNodes(context.Background(), harness.AssetGroupNodesHarness.CustomTag1)
+		require.Nil(t, err)
+
+		customGroup2Nodes, err := graphQuery.GetAssetGroupNodes(context.Background(), harness.AssetGroupNodesHarness.CustomTag2)
 		require.Nil(t, err)
 
 		require.True(t, tierZeroNodes.Contains(harness.AssetGroupNodesHarness.GroupB))
 		require.True(t, tierZeroNodes.Contains(harness.AssetGroupNodesHarness.GroupC))
 		require.Equal(t, 2, len(tierZeroNodes))
 
-		require.True(t, customGroupNodes.Contains(harness.AssetGroupNodesHarness.GroupD))
-		require.True(t, customGroupNodes.Contains(harness.AssetGroupNodesHarness.GroupE))
-		require.Equal(t, 2, len(customGroupNodes))
+		require.True(t, customGroup1Nodes.Contains(harness.AssetGroupNodesHarness.GroupD))
+		require.Equal(t, 1, len(customGroup1Nodes))
+
+		require.True(t, customGroup2Nodes.Contains(harness.AssetGroupNodesHarness.GroupE))
+		require.Equal(t, 1, len(customGroup2Nodes))
 	})
 }
 

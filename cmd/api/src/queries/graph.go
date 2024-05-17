@@ -24,6 +24,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -244,7 +245,18 @@ func (s *GraphQuery) GetAssetGroupNodes(ctx context.Context, assetGroupTag strin
 			return err
 		} else {
 			for _, node := range assetGroupNodes {
-				node.Properties.Set("type", analysis.GetNodeKindDisplayLabel(node))
+				// We need to filter out nodes that do not contain an exact tag match
+				var (
+					systemTags, _ = node.Properties.Get(common.SystemTags.String()).String()
+					userTags, _   = node.Properties.Get(common.UserTags.String()).String()
+					allTags       = append(strings.Split(systemTags, " "), strings.Split(userTags, " ")...)
+				)
+
+				if !slices.Contains(allTags, assetGroupTag) {
+					assetGroupNodes.Remove(node.ID)
+				} else {
+					node.Properties.Set("type", analysis.GetNodeKindDisplayLabel(node))
+				}
 			}
 			return nil
 		}
