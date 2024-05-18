@@ -32,6 +32,7 @@ const (
 	FeatureAdcs                       = "adcs"
 	FeatureClearGraphData             = "clear_graph_data"
 	FeatureRiskExposureNewCalculation = "risk_exposure_new_calculation"
+	FeatureAutoTagT0ParentObjects     = "auto_tag_t0_parent_objects"
 )
 
 // AvailableFlags returns a FeatureFlagSet of expected feature flags. Feature flag defaults introduced here will become the initial
@@ -100,6 +101,13 @@ func AvailableFlags() FeatureFlagSet {
 			Description:   "Enables the use of new tier zero risk exposure metatree metrics.",
 			Enabled:       false,
 			UserUpdatable: false,
+		},
+		FeatureAutoTagT0ParentObjects: {
+			Key:           FeatureAutoTagT0ParentObjects,
+			Name:          "Automatically add parent OUs and containers of Tier Zero AD objects to Tier Zero",
+			Description:   "Parent OUs and containers of Tier Zero AD objects are automatically added to Tier Zero during analysis. Containers are only added if they have a Tier Zero child object with ACL inheritance enabled.",
+			Enabled:       true,
+			UserUpdatable: true,
 		},
 	}
 }

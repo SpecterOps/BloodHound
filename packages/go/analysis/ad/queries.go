@@ -74,6 +74,24 @@ func FetchAllEnforcedGPOs(ctx context.Context, db graph.Database, targets graph.
 	})
 }
 
+func FetchOUContainers(ctx context.Context, db graph.Database, targets graph.NodeSet) (graph.NodeSet, error) {
+	defer log.Measure(log.LevelInfo, "FetchOUContainers")()
+
+	oUs := graph.NewNodeSet()
+
+	return oUs, db.ReadTransaction(ctx, func(tx graph.Transaction) error {
+		for _, attackPathRoot := range targets {
+			if ou, err := FetchOUContainersOfNode(tx, attackPathRoot); err != nil {
+				return err
+			} else if ou != nil {
+				oUs.AddSet(ou)
+			}
+		}
+
+		return nil
+	})
+}
+
 func FetchAllDomains(ctx context.Context, db graph.Database) ([]*graph.Node, error) {
 	var (
 		nodes []*graph.Node
@@ -91,7 +109,7 @@ func FetchAllDomains(ctx context.Context, db graph.Database) ([]*graph.Node, err
 	})
 }
 
-func FetchActiveDirectoryTierZeroRoots(ctx context.Context, db graph.Database, domain *graph.Node) (graph.NodeSet, error) {
+func FetchActiveDirectoryTierZeroRoots(ctx context.Context, db graph.Database, domain *graph.Node, autoTagT0ParentObjectsFlag bool) (graph.NodeSet, error) {
 	defer log.LogAndMeasure(log.LevelInfo, "FetchActiveDirectoryTierZeroRoots")()
 
 	if domainSID, err := domain.Properties.Get(common.ObjectID.String()).String(); err != nil {
@@ -128,6 +146,32 @@ func FetchActiveDirectoryTierZeroRoots(ctx context.Context, db graph.Database, d
 			return nil, err
 		} else {
 			attackPathRoots.AddSet(enforcedGPOs)
+		}
+
+		if (autoTagT0ParentObjectsFlag) {
+			// Add the OUs to the attack path roots
+			if ous, err := FetchOUContainers(ctx, db, attackPathRoots); err != nil {
+				return nil, err
+			} else {
+				attackPathRoots.AddSet(ous)
+			}
+
+			// Add the containers to the attack path roots
+			db.ReadTransaction(ctx, func(tx graph.Transaction) error {
+				for _, attackPathRoot := range attackPathRoots {
+
+					// Do not add container if ACL inheritance is disabled
+					isACLProtected, err := attackPathRoot.Properties.Get(ad.IsACLProtected.String()).Bool()
+					if err != nil || !isACLProtected {
+						if containers, err := FetchContainersOfNode(tx, attackPathRoot); err != nil {
+							return err
+						} else if containers != nil {
+							attackPathRoots.AddSet(containers)
+						}
+					}
+				}
+				return nil
+			})
 		}
 
 		// Find all next-tier assets
@@ -443,6 +487,44 @@ func FetchEnforcedGPOs(tx graph.Transaction, target *graph.Node, skip, limit int
 	} else {
 		return enforcedGPOs, nil
 	}
+}
+
+func FetchOUContainersOfNode(tx graph.Transaction, target *graph.Node) (graph.NodeSet, error) {
+	oUContainers := graph.NewNodeSet()
+	if paths, err := ops.TraversePaths(tx, ops.TraversalPlan{
+		Root:      target,
+		Direction: graph.DirectionInbound,
+		BranchQuery: func() graph.Criteria {
+			return query.And(
+				query.Kind(query.Start(), ad.OU),
+				query.Kind(query.Relationship(), ad.Contains),
+			)
+		},
+	}); err != nil {
+		return nil, err
+	} else {
+		oUContainers.AddSet(paths.AllNodes())
+	}
+	return oUContainers, nil
+}
+
+func FetchContainersOfNode(tx graph.Transaction, target *graph.Node) (graph.NodeSet, error) {
+	containers := graph.NewNodeSet()
+	if paths, err := ops.TraversePaths(tx, ops.TraversalPlan{
+		Root:      target,
+		Direction: graph.DirectionInbound,
+		BranchQuery: func() graph.Criteria {
+			return query.And(
+				query.Kind(query.Start(), ad.Container),
+				query.Kind(query.Relationship(), ad.Contains),
+			)
+		},
+	}); err != nil {
+		return nil, err
+	} else {
+		containers.AddSet(paths.AllNodes())
+	}
+	return containers, nil
 }
 
 func CreateOUContainedListDelegate(kind graph.Kind) analysis.ListDelegate {
