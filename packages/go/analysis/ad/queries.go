@@ -91,7 +91,7 @@ func FetchAllDomains(ctx context.Context, db graph.Database) ([]*graph.Node, err
 	})
 }
 
-func FetchActiveDirectoryTierZeroRoots(ctx context.Context, db graph.Database, domain *graph.Node) (graph.NodeSet, error) {
+func FetchActiveDirectoryTierZeroRoots(ctx context.Context, db graph.Database, domain *graph.Node, autoTagMembersFlag bool) (graph.NodeSet, error) {
 	defer log.LogAndMeasure(log.LevelInfo, "FetchActiveDirectoryTierZeroRoots")()
 
 	if domainSID, err := domain.Properties.Get(common.ObjectID.String()).String(); err != nil {
@@ -116,11 +116,13 @@ func FetchActiveDirectoryTierZeroRoots(ctx context.Context, db graph.Database, d
 			attackPathRoots.AddSet(wellKnownTierZeroNodes)
 		}
 
-		// Pull in all group members of attack path roots
-		if allGroupMembers, err := FetchAllGroupMembers(ctx, db, attackPathRoots); err != nil {
-			return nil, err
-		} else {
-			attackPathRoots.AddSet(allGroupMembers)
+		if (autoTagMembersFlag) {
+			// Pull in all group members of attack path roots
+			if allGroupMembers, err := FetchAllGroupMembers(ctx, db, attackPathRoots); err != nil {
+				return nil, err
+			} else {
+				attackPathRoots.AddSet(allGroupMembers)
+			}
 		}
 
 		// Add all enforced GPO nodes to the attack path roots

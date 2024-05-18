@@ -32,6 +32,7 @@ const (
 	FeatureAdcs                       = "adcs"
 	FeatureClearGraphData             = "clear_graph_data"
 	FeatureRiskExposureNewCalculation = "risk_exposure_new_calculation"
+	FeatureAutoTagT0ADMembers         = "auto_tag_t0_ad_members"
 )
 
 // AvailableFlags returns a FeatureFlagSet of expected feature flags. Feature flag defaults introduced here will become the initial
@@ -100,6 +101,13 @@ func AvailableFlags() FeatureFlagSet {
 			Description:   "Enables the use of new tier zero risk exposure metatree metrics.",
 			Enabled:       false,
 			UserUpdatable: false,
+		},
+		FeatureAutoTagT0ADMembers: {
+			Key:           FeatureAutoTagT0ADMembers,
+			Name:          "Automatically add members of Tier Zero AD groups to Tier Zero",
+			Description:   "Members incl. nested members of AD Tier Zero groups are automatically added to Tier Zero during analysis.",
+			Enabled:       true,
+			UserUpdatable: true,
 		},
 	}
 }
