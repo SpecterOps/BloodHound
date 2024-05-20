@@ -29,6 +29,13 @@ import {
     UserTokenManagementDialog,
 } from '../../components';
 
+export type UpdateUserPasswordMutationPayload = {
+    userId: string;
+    currentSecret: string;
+    secret: string;
+    needsPasswordReset: boolean;
+}
+
 const UserProfile = () => {
     const { addNotification } = useNotifications();
     const [changePasswordDialogOpen, setChangePasswordDialogOpen] = useState(false);
@@ -46,8 +53,9 @@ const UserProfile = () => {
     );
 
     const updateUserPasswordMutation = useMutation(
-        ({ userId, secret, needsPasswordReset }: { userId: string; secret: string; needsPasswordReset: boolean }) =>
+        ({ userId, secret, needsPasswordReset, currentSecret }: UpdateUserPasswordMutationPayload) =>
             apiClient.putUserAuthSecret(userId, {
+                current_secret: currentSecret,
                 needs_password_reset: needsPasswordReset,
                 secret: secret,
             }),
@@ -55,6 +63,13 @@ const UserProfile = () => {
             onSuccess: () => {
                 addNotification('Password updated successfully!', 'updateUserPasswordSuccess');
                 setChangePasswordDialogOpen(false);
+            },
+            onError: (error: any) => {
+                if (error.response?.status == 401) {
+                    addNotification('Current password invalid. Password update failed.', 'UpdateUserPasswordCurrentPasswordInvalidError');
+                } else {
+                    addNotification('Password failed to update.', 'UpdateUserPasswordError');
+                }
             },
         }
     );
