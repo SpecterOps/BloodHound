@@ -649,6 +649,8 @@ func (s ManagementResource) PutUserAuthSecret(response http.ResponseWriter, requ
 		api.HandleDatabaseError(request, response, err)
 	} else if targetUser.SAMLProviderID.Valid {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "Invalid operation, user is SSO", request), response)
+	} else if targetUser.AuthSecret == nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrNoUserSecret.Error(), request), response)
 	} else if err := s.authenticator.ValidateSecret(request.Context(), setUserSecretRequest.CurrentSecret, *targetUser.AuthSecret); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusUnauthorized, "Invalid current password", request), response)
 	} else if passwordExpiration, err := appcfg.GetPasswordExpiration(request.Context(), s.db); err != nil {
