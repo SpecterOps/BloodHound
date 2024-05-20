@@ -61,16 +61,18 @@ type ManagementResource struct {
 	secretDigester             crypto.SecretDigester
 	db                         database.Database
 	QueryParameterFilterParser model.QueryParameterFilterParser
-	authorizer                 auth.Authorizer
+	authorizer                 auth.Authorizer   // Used for Permissions
+	authenticator              api.Authenticator // Used for secrets
 }
 
-func NewManagementResource(authConfig config.Configuration, db database.Database, authorizer auth.Authorizer) ManagementResource {
+func NewManagementResource(authConfig config.Configuration, db database.Database, authorizer auth.Authorizer, authenticator api.Authenticator) ManagementResource {
 	return ManagementResource{
 		config:                     authConfig,
 		secretDigester:             authConfig.Crypto.Argon2.NewDigester(),
 		db:                         db,
 		QueryParameterFilterParser: model.NewQueryParameterFilterParser(),
 		authorizer:                 authorizer,
+		authenticator:              authenticator,
 	}
 }
 
@@ -647,6 +649,8 @@ func (s ManagementResource) PutUserAuthSecret(response http.ResponseWriter, requ
 		api.HandleDatabaseError(request, response, err)
 	} else if targetUser.SAMLProviderID.Valid {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "Invalid operation, user is SSO", request), response)
+	} else if err := s.authenticator.ValidateSecret(request.Context(), setUserSecretRequest.CurrentSecret, *targetUser.AuthSecret); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusUnauthorized, "Invalid current password", request), response)
 	} else if passwordExpiration, err := appcfg.GetPasswordExpiration(request.Context(), s.db); err != nil {
 		log.Errorf("Error while attempting to fetch password expiration window: %v", err)
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseCodeInternalServerError, request), response)
