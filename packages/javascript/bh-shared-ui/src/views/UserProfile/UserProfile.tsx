@@ -29,13 +29,6 @@ import {
     UserTokenManagementDialog,
 } from '../../components';
 
-export type UpdateUserPasswordMutationPayload = {
-    userId: string;
-    currentSecret: string;
-    secret: string;
-    needsPasswordReset: boolean;
-}
-
 const UserProfile = () => {
     const { addNotification } = useNotifications();
     const [changePasswordDialogOpen, setChangePasswordDialogOpen] = useState(false);
@@ -53,9 +46,14 @@ const UserProfile = () => {
     );
 
     const updateUserPasswordMutation = useMutation(
-        ({ userId, secret, needsPasswordReset, currentSecret }: UpdateUserPasswordMutationPayload) =>
+        ({ userId, secret, needsPasswordReset, currentSecret }: {
+            userId: string;
+            currentSecret?: string;
+            secret: string;
+            needsPasswordReset: boolean;
+        }) =>
             apiClient.putUserAuthSecret(userId, {
-                current_secret: currentSecret,
+                ...(currentSecret && {current_secret: currentSecret}),
                 needs_password_reset: needsPasswordReset,
                 secret: secret,
             }),
@@ -208,6 +206,7 @@ const UserProfile = () => {
                 open={changePasswordDialogOpen}
                 onClose={() => setChangePasswordDialogOpen(false)}
                 userId={user.id}
+                requireCurrentPassword={true}
                 showNeedsPasswordReset={false}
                 onSave={updateUserPasswordMutation.mutate}
             />

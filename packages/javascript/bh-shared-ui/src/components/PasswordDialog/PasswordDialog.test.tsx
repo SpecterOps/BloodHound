@@ -23,12 +23,28 @@ const testCurrentPassword = 'aA1!aaaaaaaa';
 const testValidPassword = 'bB1!bbbbbbbb';
 
 describe('PasswordDialog', () => {
-    it('renders correctly', () => {
+    it('renders correctly with requiresCurrentPassword false', () => {
         const testOnClose = vi.fn();
         const testOnSave = vi.fn();
         const testUserId = '1';
 
-        render(<PasswordDialog open={true} onSave={testOnSave} onClose={testOnClose} userId={testUserId} />);
+        render(<PasswordDialog open={true} onSave={testOnSave} onClose={testOnClose} userId={testUserId}/>);
+
+        expect(screen.getByText('Change Password')).toBeInTheDocument();
+        expect(screen.queryByText('Current Password')).not.toBeInTheDocument();
+        expect(screen.getByLabelText('New Password')).toBeInTheDocument();
+        expect(screen.getByLabelText('New Password Confirmation')).toBeInTheDocument();
+        expect(screen.queryByLabelText('Force Password Reset?')).not.toBeInTheDocument();
+        expect(screen.getByRole('button', { name: 'Save' })).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: 'Cancel' })).toBeInTheDocument();
+    });
+
+    it('renders correctly with requiresCurrentPassword true', () => {
+        const testOnClose = vi.fn();
+        const testOnSave = vi.fn();
+        const testUserId = '1';
+
+        render(<PasswordDialog open={true} onSave={testOnSave} onClose={testOnClose} requireCurrentPassword={true} userId={testUserId}/>);
 
         expect(screen.getByText('Change Password')).toBeInTheDocument();
         expect(screen.getByLabelText('Current Password')).toBeInTheDocument();
@@ -49,6 +65,7 @@ describe('PasswordDialog', () => {
                 open={true}
                 onSave={testOnSave}
                 onClose={testOnClose}
+                requireCurrentPassword={true}
                 userId={testUserId}
                 showNeedsPasswordReset
             />
@@ -63,7 +80,7 @@ describe('PasswordDialog', () => {
         const testOnSave = vi.fn();
         const testUserId = '1';
 
-        render(<PasswordDialog open={true} onSave={testOnSave} onClose={testOnClose} userId={testUserId} />);
+        render(<PasswordDialog open={true} onSave={testOnSave} onClose={testOnClose} requireCurrentPassword={true} userId={testUserId} />);
 
         await user.click(screen.getByRole('button', { name: 'Cancel' }));
 
@@ -76,7 +93,7 @@ describe('PasswordDialog', () => {
         const testOnSave = vi.fn();
         const testUserId = '1';
 
-        render(<PasswordDialog open={true} onSave={testOnSave} onClose={testOnClose} userId={testUserId} />);
+        render(<PasswordDialog open={true} onSave={testOnSave} onClose={testOnClose} requireCurrentPassword={true} userId={testUserId} />);
 
         await user.click(screen.getByRole('button', { name: 'Save' }));
 
@@ -98,7 +115,7 @@ describe('PasswordDialog', () => {
         const testOnSave = vi.fn();
         const testUserId = '1';
 
-        render(<PasswordDialog open={true} onSave={testOnSave} onClose={testOnClose} userId={testUserId} />);
+        render(<PasswordDialog open={true} onSave={testOnSave} onClose={testOnClose} requireCurrentPassword={true} userId={testUserId} />);
 
         await user.click(screen.getByRole('button', { name: 'Save' }));
 
@@ -121,7 +138,7 @@ describe('PasswordDialog', () => {
         const testOnSave = vi.fn();
         const testUserId = '1';
 
-        render(<PasswordDialog open={true} onSave={testOnSave} onClose={testOnClose} userId={testUserId} />);
+        render(<PasswordDialog open={true} onSave={testOnSave} onClose={testOnClose} requireCurrentPassword={true} userId={testUserId} />);
 
         await user.type(screen.getByLabelText('Current Password'), testCurrentPassword);
 
@@ -142,7 +159,7 @@ describe('PasswordDialog', () => {
         const testOnSave = vi.fn();
         const testUserId = '1';
 
-        render(<PasswordDialog open={true} onSave={testOnSave} onClose={testOnClose} userId={testUserId} />);
+        render(<PasswordDialog open={true} onSave={testOnSave} onClose={testOnClose} requireCurrentPassword={true} userId={testUserId} />);
 
         await user.type(screen.getByLabelText('New Password'), testValidPassword);
 
@@ -162,7 +179,7 @@ describe('PasswordDialog', () => {
         const testOnSave = vi.fn();
         const testUserId = '1';
 
-        render(<PasswordDialog open={true} onSave={testOnSave} onClose={testOnClose} userId={testUserId} />);
+        render(<PasswordDialog open={true} onSave={testOnSave} onClose={testOnClose} requireCurrentPassword={true} userId={testUserId} />);
 
         await user.type(screen.getByLabelText('Current Password'), testCurrentPassword);
 
@@ -177,13 +194,35 @@ describe('PasswordDialog', () => {
         expect(testOnSave).not.toHaveBeenCalled();
     });
 
-    it('calls onSave when valid form inputs are provided', async () => {
+    it('does not display must be new password error messages when current password is not required', async () => {
         const user = userEvent.setup();
         const testOnClose = vi.fn();
         const testOnSave = vi.fn();
         const testUserId = '1';
 
         render(<PasswordDialog open={true} onSave={testOnSave} onClose={testOnClose} userId={testUserId} />);
+        expect(screen.queryByText('Current Password')).not.toBeInTheDocument();
+
+        await user.type(screen.getByLabelText('New Password'), testValidPassword);
+        await user.type(screen.getByLabelText('New Password Confirmation'), testValidPassword);
+
+        await user.click(screen.getByRole('button', { name: 'Save' }));
+
+        expect(testOnSave).toHaveBeenCalledWith({
+            currentSecret: undefined,
+            needsPasswordReset: false,
+            secret: testValidPassword,
+            userId: testUserId,
+        });
+    });
+
+    it('calls onSave when valid form inputs are provided', async () => {
+        const user = userEvent.setup();
+        const testOnClose = vi.fn();
+        const testOnSave = vi.fn();
+        const testUserId = '1';
+
+        render(<PasswordDialog open={true} onSave={testOnSave} onClose={testOnClose} requireCurrentPassword={true} userId={testUserId} />);
 
         await user.type(screen.getByLabelText('Current Password'), testCurrentPassword);
 
@@ -197,6 +236,30 @@ describe('PasswordDialog', () => {
 
         expect(testOnSave).toHaveBeenCalledWith({
             currentSecret: testCurrentPassword,
+            needsPasswordReset: false,
+            secret: testValidPassword,
+            userId: testUserId,
+        });
+    });
+
+    it('calls onSave without current password when requireCurrentPassword is false', async () => {
+        const user = userEvent.setup();
+        const testOnClose = vi.fn();
+        const testOnSave = vi.fn();
+        const testUserId = '1';
+
+        render(<PasswordDialog open={true} onSave={testOnSave} onClose={testOnClose} requireCurrentPassword={false} userId={testUserId} />);
+
+        await user.type(screen.getByLabelText('New Password'), testValidPassword);
+
+        await user.type(screen.getByLabelText('New Password Confirmation'), testValidPassword);
+
+        await user.click(screen.getByRole('button', { name: 'Save' }));
+
+        await waitFor(() => expect(testOnSave).toHaveBeenCalled());
+
+        expect(testOnSave).toHaveBeenCalledWith({
+            currentSecret: undefined,
             needsPasswordReset: false,
             secret: testValidPassword,
             userId: testUserId,

@@ -29,7 +29,6 @@ import { DialogActions, DialogContent } from '@mui/material';
 import React, { useCallback } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { PASSWD_REQS, passwordRegex } from '../../utils';
-import { UpdateUserPasswordMutationPayload } from '../../views/UserProfile/UserProfile';
 
 const passwdReqsList = PASSWD_REQS.map((req, i) => <li key={i}>{req}</li>);
 
@@ -44,10 +43,15 @@ const PasswordDialog: React.FC<{
     open: boolean;
     onClose: () => void;
     userId: string;
+    requireCurrentPassword?: boolean;
     showNeedsPasswordReset?: boolean;
     initialNeedsPasswordReset?: boolean;
-    onSave: (payload: UpdateUserPasswordMutationPayload) => void;
-}> = ({ open, userId, onClose, showNeedsPasswordReset = false, initialNeedsPasswordReset = false, onSave }) => {
+    onSave: (payload: {userId: string;
+        currentSecret?: string;
+        secret: string;
+        needsPasswordReset: boolean;
+    }) => void;
+}> = ({ open, userId, onClose, showNeedsPasswordReset = false, initialNeedsPasswordReset = false, requireCurrentPassword = false, onSave }) => {
     const {
         control,
         handleSubmit,
@@ -75,7 +79,7 @@ const PasswordDialog: React.FC<{
     const handleOnSave = useCallback((data: ChangePasswordFormInputs) => {
         return onSave({
             userId: userId,
-            currentSecret: data.currentPassword,
+            ...(data.currentPassword && { currentSecret: data.currentPassword }),
             secret: data.password,
             needsPasswordReset: Boolean(data.needsPasswordReset),
         });
@@ -107,7 +111,7 @@ const PasswordDialog: React.FC<{
                                 </Alert>
                             </Grid>
                         )}
-                        <Grid item xs={12}>
+                        {requireCurrentPassword && (<Grid item xs={12}>
                             <Controller
                                 name='currentPassword'
                                 control={control}
@@ -128,7 +132,8 @@ const PasswordDialog: React.FC<{
                                     />
                                 )}
                             />
-                        </Grid>
+                        </Grid>)
+                        }
                         <Grid item xs={12}>
                             <Controller
                                 name='password'
