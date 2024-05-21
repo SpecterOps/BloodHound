@@ -142,7 +142,6 @@ type DefaultAdminConfiguration struct {
 type Configuration struct {
 	Version                      int                       `json:"version"`
 	BindAddress                  string                    `json:"bind_addr"`
-	NetTimeoutSeconds            int                       `json:"net_timeout_seconds"`
 	SlowQueryThreshold           int64                     `json:"slow_query_threshold"`
 	MaxGraphQueryCacheSize       int                       `json:"max_graphdb_cache_size"`
 	MaxAPICacheSize              int                       `json:"max_api_cache_size"`

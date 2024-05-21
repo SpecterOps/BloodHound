@@ -18,14 +18,12 @@ package toolapi
 
 import (
 	"context"
-	"net/http"
-	"net/http/pprof"
-	"time"
-
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/errors"
 	"github.com/specterops/bloodhound/src/bootstrap"
 	"github.com/specterops/bloodhound/src/database"
+	"net/http"
+	"net/http/pprof"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -42,10 +40,9 @@ type Daemon struct {
 
 func NewDaemon[DBType database.Database](ctx context.Context, connections bootstrap.DatabaseConnections[DBType, *graph.DatabaseSwitch], cfg config.Configuration, graphSchema graph.Schema, extensions ...func(router *chi.Mux)) Daemon {
 	var (
-		networkTimeout = time.Duration(cfg.NetTimeoutSeconds) * time.Second
-		pgMigrator     = tools.NewPGMigrator(ctx, cfg, graphSchema, connections.Graph)
-		router         = chi.NewRouter()
-		toolContainer  = tools.NewToolContainer(connections.RDMS)
+		pgMigrator    = tools.NewPGMigrator(ctx, cfg, graphSchema, connections.Graph)
+		router        = chi.NewRouter()
+		toolContainer = tools.NewToolContainer(connections.RDMS)
 	)
 
 	router.Mount("/metrics", promhttp.Handler())
@@ -82,12 +79,9 @@ func NewDaemon[DBType database.Database](ctx context.Context, connections bootst
 	return Daemon{
 		cfg: cfg,
 		server: &http.Server{
-			Addr:         cfg.MetricsPort,
-			Handler:      router,
-			WriteTimeout: networkTimeout,
-			ReadTimeout:  networkTimeout,
-			IdleTimeout:  networkTimeout,
-			ErrorLog:     log.Adapter(log.LevelError, "ToolAPI", 0),
+			Addr:     cfg.MetricsPort,
+			Handler:  router,
+			ErrorLog: log.Adapter(log.LevelError, "ToolAPI", 0),
 		},
 	}
 }
