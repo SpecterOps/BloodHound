@@ -18,6 +18,7 @@ package fixtures
 
 import (
 	"fmt"
+	v2 "github.com/specterops/bloodhound/src/api/v2"
 	"github.com/specterops/bloodhound/src/config"
 	"log"
 
@@ -48,7 +49,10 @@ func NewAdminApiClientFixture(cfgFixture *lab.Fixture[config.Configuration], api
 
 			if user, err := client.GetSelf(); err != nil {
 				return apiclient.Client{}, fmt.Errorf("failed looking up user details: %w", err)
-			} else if err := client.SetUserSecret(user.ID, integration.AdminUpdatedSecret, false); err != nil {
+			} else if err := client.SetUserSecretWithCurrentPassword(user.ID, v2.SetUserSecretRequest{
+				CurrentSecret: integration.AdminInitialSecret,
+				Secret:        integration.AdminUpdatedSecret,
+			}); err != nil {
 				return apiclient.Client{}, fmt.Errorf("failed resetting expired user password: %w", err)
 			}
 
