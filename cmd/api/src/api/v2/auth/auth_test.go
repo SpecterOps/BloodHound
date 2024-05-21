@@ -64,34 +64,55 @@ const (
 
 func TestManagementResource_PutUserAuthSecret(t *testing.T) {
 	var (
-		goodUserID        = must.NewUUIDv4()
-		badUserID         = must.NewUUIDv4()
+		currentPassword   = "currentPassword"
+		goodUser          = model.User{AuthSecret: defaultDigestAuthSecret(t, currentPassword), Unique: model.Unique{ID: must.NewUUIDv4()}}
+		otherUser         = model.User{Unique: model.Unique{ID: must.NewUUIDv4()}}
+		badUser           = model.User{SAMLProviderID: null.Int32From(1), Unique: model.Unique{ID: must.NewUUIDv4()}}
 		mockCtrl          = gomock.NewController(t)
 		resources, mockDB = apitest.NewAuthManagementResource(mockCtrl)
 	)
-
 	defer mockCtrl.Finish()
+	bhCtx := ctx.Get(context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{}))
+	bhCtx.AuthCtx.Owner = goodUser
+	_, isUser := authz.GetUserFromAuthCtx(bhCtx.AuthCtx)
+	require.True(t, isUser)
 
-	mockDB.EXPECT().GetUser(gomock.Any(), badUserID).Return(model.User{SAMLProviderID: null.Int32From(1)}, nil)
-	mockDB.EXPECT().GetUser(gomock.Any(), goodUserID).Return(model.User{AuthSecret: defaultDigestAuthSecret(t, "currentPassword")}, nil).Times(2)
+	// Happy paths
+	mockDB.EXPECT().GetUser(gomock.Any(), goodUser.ID).Return(goodUser, nil).Times(2)
 	mockDB.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.PasswordExpirationWindow).Return(appcfg.Parameter{
 		Key: appcfg.PasswordExpirationWindow,
 		Value: must.NewJSONBObject(appcfg.PasswordExpiration{
 			Duration: appcfg.DefaultPasswordExpirationWindow,
 		}),
-	}, nil).Times(1)
-	mockDB.EXPECT().UpdateAuthSecret(gomock.Any(), gomock.Any()).Return(nil).Times(1)
+	}, nil).Times(2)
 
-	// Happy path
+	// Change own user secret requires current password
+	mockDB.EXPECT().UpdateAuthSecret(gomock.Any(), gomock.Any()).Return(nil).Times(1)
 	test.Request(t).
+		WithContext(bhCtx).
 		WithMethod(http.MethodPut).
 		WithHeader(headers.RequestID.String(), "requestID").
-		WithURL(fmt.Sprintf(updateUserSecretPathFmt, goodUserID.String())).
-		WithURLPathVars(map[string]string{
-			"user_id": goodUserID.String(),
-		}).
+		WithURL(fmt.Sprintf(updateUserSecretPathFmt, goodUser.ID.String())).
+		WithURLPathVars(map[string]string{"user_id": goodUser.ID.String()}).
 		WithBody(v2.SetUserSecretRequest{
-			CurrentSecret:      "currentPassword",
+			CurrentSecret:      currentPassword,
+			Secret:             "tesT12345!@#$",
+			NeedsPasswordReset: false,
+		}).
+		OnHandlerFunc(resources.PutUserAuthSecret).
+		Require().
+		ResponseStatusCode(http.StatusOK)
+
+	// Change another users secret does not require current password
+	mockDB.EXPECT().GetUser(gomock.Any(), otherUser.ID).Return(otherUser, nil)
+	mockDB.EXPECT().CreateAuthSecret(gomock.Any(), gomock.Any()).Return(model.AuthSecret{}, nil).Times(1)
+	test.Request(t).
+		WithContext(bhCtx).
+		WithMethod(http.MethodPut).
+		WithHeader(headers.RequestID.String(), "requestID").
+		WithURL(fmt.Sprintf(updateUserSecretPathFmt, goodUser.ID.String())).
+		WithURLPathVars(map[string]string{"user_id": otherUser.ID.String()}).
+		WithBody(v2.SetUserSecretRequest{
 			Secret:             "tesT12345!@#$",
 			NeedsPasswordReset: false,
 		}).
@@ -100,13 +121,13 @@ func TestManagementResource_PutUserAuthSecret(t *testing.T) {
 		ResponseStatusCode(http.StatusOK)
 
 	// Negative path where a user already has a SAML provider set
+	mockDB.EXPECT().GetUser(gomock.Any(), badUser.ID).Return(badUser, nil)
 	test.Request(t).
+		WithContext(bhCtx).
 		WithMethod(http.MethodPut).
 		WithHeader(headers.RequestID.String(), "requestID").
-		WithURL(fmt.Sprintf(updateUserSecretPathFmt, badUserID.String())).
-		WithURLPathVars(map[string]string{
-			"user_id": badUserID.String(),
-		}).
+		WithURL(fmt.Sprintf(updateUserSecretPathFmt, badUser.ID.String())).
+		WithURLPathVars(map[string]string{"user_id": badUser.ID.String()}).
 		WithBody(v2.SetUserSecretRequest{
 			Secret:             "tesT12345!@#$",
 			NeedsPasswordReset: false,
@@ -116,22 +137,17 @@ func TestManagementResource_PutUserAuthSecret(t *testing.T) {
 		ResponseJSONBody(
 			api.ErrorWrapper{
 				HTTPStatus: http.StatusBadRequest,
-				Errors: []api.ErrorDetails{
-					{
-						Message: "Invalid operation, user is SSO",
-					},
-				},
+				Errors:     []api.ErrorDetails{{Message: "Invalid operation, user is SSO"}},
 			},
 		)
 
 	// Negative path where a user uses invalid current password
 	test.Request(t).
+		WithContext(bhCtx).
 		WithMethod(http.MethodPut).
 		WithHeader(headers.RequestID.String(), "requestID").
-		WithURL(fmt.Sprintf(updateUserSecretPathFmt, goodUserID.String())).
-		WithURLPathVars(map[string]string{
-			"user_id": goodUserID.String(),
-		}).
+		WithURL(fmt.Sprintf(updateUserSecretPathFmt, goodUser.ID.String())).
+		WithURLPathVars(map[string]string{"user_id": goodUser.ID.String()}).
 		WithBody(v2.SetUserSecretRequest{
 			CurrentSecret:      "wrongPassword",
 			Secret:             "tesT12345!@#$",
@@ -142,11 +158,7 @@ func TestManagementResource_PutUserAuthSecret(t *testing.T) {
 		ResponseJSONBody(
 			api.ErrorWrapper{
 				HTTPStatus: http.StatusUnauthorized,
-				Errors: []api.ErrorDetails{
-					{
-						Message: "Invalid current password",
-					},
-				},
+				Errors:     []api.ErrorDetails{{Message: "Invalid current password"}},
 			},
 		)
 }
