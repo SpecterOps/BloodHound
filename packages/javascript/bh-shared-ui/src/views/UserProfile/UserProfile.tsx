@@ -46,14 +46,19 @@ const UserProfile = () => {
     );
 
     const updateUserPasswordMutation = useMutation(
-        ({ userId, secret, needsPasswordReset, currentSecret }: {
+        ({
+            userId,
+            secret,
+            needsPasswordReset,
+            currentSecret,
+        }: {
             userId: string;
             currentSecret?: string;
             secret: string;
             needsPasswordReset: boolean;
         }) =>
             apiClient.putUserAuthSecret(userId, {
-                ...(currentSecret && {current_secret: currentSecret}),
+                ...(currentSecret && { current_secret: currentSecret }),
                 needs_password_reset: needsPasswordReset,
                 secret: secret,
             }),
@@ -64,7 +69,10 @@ const UserProfile = () => {
             },
             onError: (error: any) => {
                 if (error.response?.status == 401) {
-                    addNotification('Current password invalid. Password update failed.', 'UpdateUserPasswordCurrentPasswordInvalidError');
+                    addNotification(
+                        'Current password invalid. Password update failed.',
+                        'UpdateUserPasswordCurrentPasswordInvalidError'
+                    );
                 } else {
                     addNotification('Password failed to update.', 'UpdateUserPasswordError');
                 }

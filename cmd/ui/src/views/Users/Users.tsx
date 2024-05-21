@@ -58,7 +58,7 @@ const Users = () => {
     const [disable2FASecret, setDisable2FASecret] = useState('');
 
     const self = useAppSelector((state) => state.auth.user);
-    const hasSelectedSelf = useMemo(() => self?.id === selectedUserId!, [selectedUserId, self?.id])
+    const hasSelectedSelf = useMemo(() => self?.id === selectedUserId!, [selectedUserId, self?.id]);
 
     const getSelfQuery = useQuery(['getSelf'], ({ signal }) =>
         apiClient.getSelf({ signal }).then((res) => res.data.data)
@@ -160,9 +160,19 @@ const Users = () => {
     });
 
     const updateUserPasswordMutation = useMutation(
-        ({ userId, secret, needsPasswordReset, currentSecret }: { currentSecret?: string, userId: string; secret: string; needsPasswordReset: boolean }) =>
+        ({
+            userId,
+            secret,
+            needsPasswordReset,
+            currentSecret,
+        }: {
+            currentSecret?: string;
+            userId: string;
+            secret: string;
+            needsPasswordReset: boolean;
+        }) =>
             apiClient.putUserAuthSecret(userId, {
-                ...(currentSecret && {current_secret: currentSecret}),
+                ...(currentSecret && { current_secret: currentSecret }),
                 needs_password_reset: needsPasswordReset,
                 secret: secret,
             }),
@@ -174,7 +184,12 @@ const Users = () => {
             onSettled: () => setNeedsPasswordReset(false),
             onError: (error: any) => {
                 if (error.response?.status == 401) {
-                    dispatch(addSnackbar('Current password invalid. Password update failed.', 'UpdateUserPasswordCurrentPasswordInvalidError'));
+                    dispatch(
+                        addSnackbar(
+                            'Current password invalid. Password update failed.',
+                            'UpdateUserPasswordCurrentPasswordInvalidError'
+                        )
+                    );
                 } else {
                     dispatch(addSnackbar('Password failed to update.', 'UpdateUserPasswordError'));
                 }

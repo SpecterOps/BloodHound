@@ -28,7 +28,7 @@ describe('PasswordDialog', () => {
         const testOnSave = vi.fn();
         const testUserId = '1';
 
-        render(<PasswordDialog open={true} onSave={testOnSave} onClose={testOnClose} userId={testUserId}/>);
+        render(<PasswordDialog open={true} onSave={testOnSave} onClose={testOnClose} userId={testUserId} />);
 
         expect(screen.getByText('Change Password')).toBeInTheDocument();
         expect(screen.queryByText('Current Password')).not.toBeInTheDocument();
@@ -44,7 +44,15 @@ describe('PasswordDialog', () => {
         const testOnSave = vi.fn();
         const testUserId = '1';
 
-        render(<PasswordDialog open={true} onSave={testOnSave} onClose={testOnClose} requireCurrentPassword={true} userId={testUserId}/>);
+        render(
+            <PasswordDialog
+                open={true}
+                onSave={testOnSave}
+                onClose={testOnClose}
+                requireCurrentPassword={true}
+                userId={testUserId}
+            />
+        );
 
         expect(screen.getByText('Change Password')).toBeInTheDocument();
         expect(screen.getByLabelText('Current Password')).toBeInTheDocument();
@@ -80,7 +88,15 @@ describe('PasswordDialog', () => {
         const testOnSave = vi.fn();
         const testUserId = '1';
 
-        render(<PasswordDialog open={true} onSave={testOnSave} onClose={testOnClose} requireCurrentPassword={true} userId={testUserId} />);
+        render(
+            <PasswordDialog
+                open={true}
+                onSave={testOnSave}
+                onClose={testOnClose}
+                requireCurrentPassword={true}
+                userId={testUserId}
+            />
+        );
 
         await user.click(screen.getByRole('button', { name: 'Cancel' }));
 
@@ -93,7 +109,15 @@ describe('PasswordDialog', () => {
         const testOnSave = vi.fn();
         const testUserId = '1';
 
-        render(<PasswordDialog open={true} onSave={testOnSave} onClose={testOnClose} requireCurrentPassword={true} userId={testUserId} />);
+        render(
+            <PasswordDialog
+                open={true}
+                onSave={testOnSave}
+                onClose={testOnClose}
+                requireCurrentPassword={true}
+                userId={testUserId}
+            />
+        );
 
         await user.click(screen.getByRole('button', { name: 'Save' }));
 
@@ -115,7 +139,15 @@ describe('PasswordDialog', () => {
         const testOnSave = vi.fn();
         const testUserId = '1';
 
-        render(<PasswordDialog open={true} onSave={testOnSave} onClose={testOnClose} requireCurrentPassword={true} userId={testUserId} />);
+        render(
+            <PasswordDialog
+                open={true}
+                onSave={testOnSave}
+                onClose={testOnClose}
+                requireCurrentPassword={true}
+                userId={testUserId}
+            />
+        );
 
         await user.click(screen.getByRole('button', { name: 'Save' }));
 
@@ -138,7 +170,15 @@ describe('PasswordDialog', () => {
         const testOnSave = vi.fn();
         const testUserId = '1';
 
-        render(<PasswordDialog open={true} onSave={testOnSave} onClose={testOnClose} requireCurrentPassword={true} userId={testUserId} />);
+        render(
+            <PasswordDialog
+                open={true}
+                onSave={testOnSave}
+                onClose={testOnClose}
+                requireCurrentPassword={true}
+                userId={testUserId}
+            />
+        );
 
         await user.type(screen.getByLabelText('Current Password'), testCurrentPassword);
 
@@ -159,7 +199,15 @@ describe('PasswordDialog', () => {
         const testOnSave = vi.fn();
         const testUserId = '1';
 
-        render(<PasswordDialog open={true} onSave={testOnSave} onClose={testOnClose} requireCurrentPassword={true} userId={testUserId} />);
+        render(
+            <PasswordDialog
+                open={true}
+                onSave={testOnSave}
+                onClose={testOnClose}
+                requireCurrentPassword={true}
+                userId={testUserId}
+            />
+        );
 
         await user.type(screen.getByLabelText('New Password'), testValidPassword);
 
@@ -172,14 +220,21 @@ describe('PasswordDialog', () => {
         expect(testOnSave).not.toHaveBeenCalled();
     });
 
-
     it('displays must be new password error messages when current password is the same as new password', async () => {
         const user = userEvent.setup();
         const testOnClose = vi.fn();
         const testOnSave = vi.fn();
         const testUserId = '1';
 
-        render(<PasswordDialog open={true} onSave={testOnSave} onClose={testOnClose} requireCurrentPassword={true} userId={testUserId} />);
+        render(
+            <PasswordDialog
+                open={true}
+                onSave={testOnSave}
+                onClose={testOnClose}
+                requireCurrentPassword={true}
+                userId={testUserId}
+            />
+        );
 
         await user.type(screen.getByLabelText('Current Password'), testCurrentPassword);
 
@@ -222,7 +277,15 @@ describe('PasswordDialog', () => {
         const testOnSave = vi.fn();
         const testUserId = '1';
 
-        render(<PasswordDialog open={true} onSave={testOnSave} onClose={testOnClose} requireCurrentPassword={true} userId={testUserId} />);
+        render(
+            <PasswordDialog
+                open={true}
+                onSave={testOnSave}
+                onClose={testOnClose}
+                requireCurrentPassword={true}
+                userId={testUserId}
+            />
+        );
 
         await user.type(screen.getByLabelText('Current Password'), testCurrentPassword);
 
@@ -248,7 +311,15 @@ describe('PasswordDialog', () => {
         const testOnSave = vi.fn();
         const testUserId = '1';
 
-        render(<PasswordDialog open={true} onSave={testOnSave} onClose={testOnClose} requireCurrentPassword={false} userId={testUserId} />);
+        render(
+            <PasswordDialog
+                open={true}
+                onSave={testOnSave}
+                onClose={testOnClose}
+                requireCurrentPassword={false}
+                userId={testUserId}
+            />
+        );
 
         await user.type(screen.getByLabelText('New Password'), testValidPassword);
 
