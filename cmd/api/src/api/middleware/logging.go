@@ -27,9 +27,7 @@ import (
 	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/src/auth"
-	"github.com/specterops/bloodhound/src/config"
 	"github.com/specterops/bloodhound/src/ctx"
-	"github.com/specterops/bloodhound/src/database"
 )
 
 // PanicHandler is a middleware func that sets up a defer-recovery trap to capture any unhandled panics that bubble
@@ -115,7 +113,7 @@ func setSignedRequestFields(request *http.Request, logEvent log.Event) {
 
 // LoggingMiddleware is a middleware func that outputs a log for each request-response lifecycle. It includes timestamped
 // information organized into fields suitable for searching or parsing.
-func LoggingMiddleware(cfg config.Configuration, idResolver auth.IdentityResolver, db *database.BloodhoundDB) func(http.Handler) http.Handler {
+func LoggingMiddleware(idResolver auth.IdentityResolver) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
 			var (
@@ -135,7 +133,9 @@ func LoggingMiddleware(cfg config.Configuration, idResolver auth.IdentityResolve
 
 			// assign a deadline, but only if a valid timeout has been supplied via the prefer header
 			timeout, err := RequestWaitDuration(request)
-			if err == nil && timeout > 0 {
+			if err != nil {
+				log.Errorf("Error parsing prefer header for timeout: %w", err)
+			} else if err == nil && timeout > 0 {
 				deadline = time.Now().Add(timeout * time.Second)
 			}
 
