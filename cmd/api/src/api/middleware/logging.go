@@ -27,9 +27,7 @@ import (
 	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/src/auth"
-	"github.com/specterops/bloodhound/src/config"
 	"github.com/specterops/bloodhound/src/ctx"
-	"github.com/specterops/bloodhound/src/database"
 )
 
 // PanicHandler is a middleware func that sets up a defer-recovery trap to capture any unhandled panics that bubble
@@ -115,13 +113,13 @@ func setSignedRequestFields(request *http.Request, logEvent log.Event) {
 
 // LoggingMiddleware is a middleware func that outputs a log for each request-response lifecycle. It includes timestamped
 // information organized into fields suitable for searching or parsing.
-func LoggingMiddleware(cfg config.Configuration, idResolver auth.IdentityResolver, db *database.BloodhoundDB) func(http.Handler) http.Handler {
+func LoggingMiddleware(idResolver auth.IdentityResolver) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
 			var (
 				logEvent       = log.WithLevel(log.LevelInfo)
 				requestContext = ctx.FromRequest(request)
-				deadline       = time.Now().Add(time.Duration(cfg.NetTimeoutSeconds) * time.Second)
+				deadline       time.Time
 
 				loggedResponse = &responseRecorder{
 					delegate: response,
@@ -133,6 +131,14 @@ func LoggingMiddleware(cfg config.Configuration, idResolver auth.IdentityResolve
 				}
 			)
 
+			// assign a deadline, but only if a valid timeout has been supplied via the prefer header
+			timeout, err := RequestWaitDuration(request)
+			if err != nil {
+				log.Errorf("Error parsing prefer header for timeout: %w", err)
+			} else if err == nil && timeout > 0 {
+				deadline = time.Now().Add(timeout * time.Second)
+			}
+
 			// Wrap the request body so that we can tell how much was read
 			request.Body = loggedRequestBody
 
@@ -140,10 +146,10 @@ func LoggingMiddleware(cfg config.Configuration, idResolver auth.IdentityResolve
 			defer func() {
 				logEvent.Msgf("%s %s", request.Method, request.URL.RequestURI())
 
-				if time.Now().After(deadline) {
+				if !deadline.IsZero() && time.Now().After(deadline) {
 					log.Warnf(
 						"%s %s took longer than the configured timeout of %d seconds",
-						request.Method, request.URL.RequestURI(), cfg.NetTimeoutSeconds,
+						request.Method, request.URL.RequestURI(), timeout.Seconds(),
 					)
 				}
 			}()

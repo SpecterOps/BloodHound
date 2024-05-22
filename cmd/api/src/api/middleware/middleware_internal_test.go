@@ -60,7 +60,7 @@ func TestRequestWaitDuration_Failure(t *testing.T) {
 	req.Header.Set(headers.Prefer.String(), "wait=1.5")
 	req.URL.RawQuery = q.Encode()
 
-	_, err = requestWaitDuration(req)
+	_, err = RequestWaitDuration(req)
 	require.NotNil(t, err)
 }
 
@@ -74,7 +74,7 @@ func TestRequestWaitDuration(t *testing.T) {
 	req.Header.Set(headers.Prefer.String(), "wait=1")
 	req.URL.RawQuery = q.Encode()
 
-	requestedWaitDuration, err := requestWaitDuration(req)
+	requestedWaitDuration, err := RequestWaitDuration(req)
 	require.Nil(t, err)
 	require.Equal(t, 1*time.Second, requestedWaitDuration)
 }
