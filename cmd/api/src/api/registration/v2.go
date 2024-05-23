@@ -285,7 +285,8 @@ func NewV2API(cfg config.Configuration, resources v2.Resources, routerInst *rout
 
 		// Datapipe API
 		routerInst.GET("/api/v2/datapipe/status", resources.GetDatapipeStatus).RequireAuth(),
-		//TODO: Update the permission on this once we get something more concrete
+		//TODO: Update the permission on these once we get something more related to sql db
+		routerInst.GET("/api/v2/analysis/status", resources.GetAnalysisRequest).RequirePermissions(permissions.GraphDBRead),
 		routerInst.PUT("/api/v2/analysis", resources.RequestAnalysis).RequirePermissions(permissions.GraphDBWrite),
 	)
 }

@@ -374,6 +374,20 @@ func (mr *MockDatabaseMockRecorder) DeleteAllIngestTasks(arg0 interface{}) *gomo
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteAllIngestTasks", reflect.TypeOf((*MockDatabase)(nil).DeleteAllIngestTasks), arg0)
 }
 
+// DeleteAnalysisRequest mocks base method.
+func (m *MockDatabase) DeleteAnalysisRequest(arg0 context.Context) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteAnalysisRequest", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteAnalysisRequest indicates an expected call of DeleteAnalysisRequest.
+func (mr *MockDatabaseMockRecorder) DeleteAnalysisRequest(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteAnalysisRequest", reflect.TypeOf((*MockDatabase)(nil).DeleteAnalysisRequest), arg0)
+}
+
 // DeleteAssetGroup mocks base method.
 func (m *MockDatabase) DeleteAssetGroup(arg0 context.Context, arg1 model.AssetGroup) error {
 	m.ctrl.T.Helper()
@@ -693,6 +707,21 @@ func (m *MockDatabase) GetAllUsers(arg0 context.Context, arg1 string, arg2 model
 func (mr *MockDatabaseMockRecorder) GetAllUsers(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllUsers", reflect.TypeOf((*MockDatabase)(nil).GetAllUsers), arg0, arg1, arg2)
+}
+
+// GetAnalysisRequest mocks base method.
+func (m *MockDatabase) GetAnalysisRequest(arg0 context.Context) (model.AnalysisRequest, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAnalysisRequest", arg0)
+	ret0, _ := ret[0].(model.AnalysisRequest)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetAnalysisRequest indicates an expected call of GetAnalysisRequest.
+func (mr *MockDatabaseMockRecorder) GetAnalysisRequest(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAnalysisRequest", reflect.TypeOf((*MockDatabase)(nil).GetAnalysisRequest), arg0)
 }
 
 // GetAssetGroup mocks base method.
@@ -1057,6 +1086,34 @@ func (mr *MockDatabaseMockRecorder) GetUserToken(arg0, arg1, arg2 interface{}) *
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserToken", reflect.TypeOf((*MockDatabase)(nil).GetUserToken), arg0, arg1, arg2)
 }
 
+// HasAnalysisRequest mocks base method.
+func (m *MockDatabase) HasAnalysisRequest(arg0 context.Context) bool {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "HasAnalysisRequest", arg0)
+	ret0, _ := ret[0].(bool)
+	return ret0
+}
+
+// HasAnalysisRequest indicates an expected call of HasAnalysisRequest.
+func (mr *MockDatabaseMockRecorder) HasAnalysisRequest(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "HasAnalysisRequest", reflect.TypeOf((*MockDatabase)(nil).HasAnalysisRequest), arg0)
+}
+
+// HasCollectedGraphDataDeletionRequest mocks base method.
+func (m *MockDatabase) HasCollectedGraphDataDeletionRequest(arg0 context.Context) bool {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "HasCollectedGraphDataDeletionRequest", arg0)
+	ret0, _ := ret[0].(bool)
+	return ret0
+}
+
+// HasCollectedGraphDataDeletionRequest indicates an expected call of HasCollectedGraphDataDeletionRequest.
+func (mr *MockDatabaseMockRecorder) HasCollectedGraphDataDeletionRequest(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "HasCollectedGraphDataDeletionRequest", reflect.TypeOf((*MockDatabase)(nil).HasCollectedGraphDataDeletionRequest), arg0)
+}
+
 // HasInstallation mocks base method.
 func (m *MockDatabase) HasInstallation(arg0 context.Context) (bool, error) {
 	m.ctrl.T.Helper()
@@ -1176,6 +1233,34 @@ func (m *MockDatabase) Migrate(arg0 context.Context) error {
 func (mr *MockDatabaseMockRecorder) Migrate(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Migrate", reflect.TypeOf((*MockDatabase)(nil).Migrate), arg0)
+}
+
+// RequestAnalysis mocks base method.
+func (m *MockDatabase) RequestAnalysis(arg0 context.Context, arg1 string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "RequestAnalysis", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// RequestAnalysis indicates an expected call of RequestAnalysis.
+func (mr *MockDatabaseMockRecorder) RequestAnalysis(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RequestAnalysis", reflect.TypeOf((*MockDatabase)(nil).RequestAnalysis), arg0, arg1)
+}
+
+// RequestCollectedGraphDataDeletion mocks base method.
+func (m *MockDatabase) RequestCollectedGraphDataDeletion(arg0 context.Context, arg1 string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "RequestCollectedGraphDataDeletion", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// RequestCollectedGraphDataDeletion indicates an expected call of RequestCollectedGraphDataDeletion.
+func (mr *MockDatabaseMockRecorder) RequestCollectedGraphDataDeletion(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RequestCollectedGraphDataDeletion", reflect.TypeOf((*MockDatabase)(nil).RequestCollectedGraphDataDeletion), arg0, arg1)
 }
 
 // RequiresMigration mocks base method.
