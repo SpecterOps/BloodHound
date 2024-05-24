@@ -40,7 +40,7 @@ jobs:
             summary: ${{ github.event.issue.title }}
             description: "Github Issue Link: ${{ github.event.issue.html_url}} \r\n ${{ github.event.issue.body }}"
             fields: '{"labels":["GitHubReport"]}'
-        run: echo "Issue ${{ steps.bug.outputs.issue }} was created"
+          run: echo "Issue ${{ steps.bug.outputs.issue }} was created"
         - name: Jira Create Enhancement
           id: enhancement
           if: contains(github.event.issue.labels.*.name, 'ticketed') && contains(github.event.issue.labels.*.name, 'enhancement') 
