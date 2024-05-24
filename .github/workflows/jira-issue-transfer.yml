@@ -41,7 +41,7 @@ jobs:
             fields: '{"labels":["GitHubReport"]}'
         - name: Jira Create Enhancement        
           if: github.event.label.name == 'ticketed' && !contains(github.event.issue.labels.*.name, 'ticketed') && contains(github.event.issue.labels.*.name, 'enhancement')
-          uses: atlassian/gajira-create@v3
+          uses: atlassian/gajira-create@v3 
           with:
             project: BP
             issuetype: 'Product Feature'
