@@ -183,7 +183,7 @@ const Users = () => {
             },
             onSettled: () => setNeedsPasswordReset(false),
             onError: (error: any) => {
-                if (error.response?.status == 401) {
+                if (error.response?.status == 403) {
                     dispatch(
                         addSnackbar(
                             'Current password invalid. Password update failed.',

@@ -68,7 +68,7 @@ const UserProfile = () => {
                 setChangePasswordDialogOpen(false);
             },
             onError: (error: any) => {
-                if (error.response?.status == 401) {
+                if (error.response?.status == 403) {
                     addNotification(
                         'Current password invalid. Password update failed.',
                         'UpdateUserPasswordCurrentPasswordInvalidError'

@@ -655,9 +655,9 @@ func (s ManagementResource) PutUserAuthSecret(response http.ResponseWriter, requ
 	} else {
 		if loggedInUser.ID == targetUserID {
 			if targetUser.AuthSecret == nil {
-				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrNoUserSecret.Error(), request), response)
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrNoUserSecret.Error(), request), response)
 			} else if err := s.authenticator.ValidateSecret(request.Context(), setUserSecretRequest.CurrentSecret, *targetUser.AuthSecret); err != nil {
-				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusUnauthorized, "Invalid current password", request), response)
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusForbidden, "Invalid current password", request), response)
 				return
 			}
 		}
