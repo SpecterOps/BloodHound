@@ -36,7 +36,6 @@ func NewDefaultConfiguration() (Configuration, error) {
 		return Configuration{
 			Version:                      0,
 			BindAddress:                  "127.0.0.1",
-			NetTimeoutSeconds:            70,  // Default timeout to avoid race conditions with 60 second gateway timeouts
 			SlowQueryThreshold:           100, // Threshold in ms for caching queries
 			MaxGraphQueryCacheSize:       100, // Number of cache items for graph queries
 			MaxAPICacheSize:              200, // Number of cache items for API utilities

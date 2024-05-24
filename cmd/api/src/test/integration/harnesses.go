@@ -330,6 +330,42 @@ func (s *AssetGroupComboNodeHarness) Setup(testCtx *GraphTestContext) {
 	testCtx.NewRelationship(s.GroupA, s.GroupB, ad.MemberOf)
 }
 
+type AssetGroupNodesHarness struct {
+	GroupA      *graph.Node
+	GroupB      *graph.Node
+	GroupC      *graph.Node
+	GroupD      *graph.Node
+	GroupE      *graph.Node
+	TierZeroTag string
+	CustomTag1  string
+	CustomTag2  string
+}
+
+func (s *AssetGroupNodesHarness) Setup(testCtx *GraphTestContext) {
+	domainSID := RandomDomainSID()
+
+	// use one tag value that contains the other as a substring to test that we only match exactly
+	s.TierZeroTag = ad.AdminTierZero
+	s.CustomTag1 = "custom_tag"
+	s.CustomTag2 = "another_custom_tag"
+
+	s.GroupA = testCtx.NewActiveDirectoryGroup("GroupA", domainSID)
+	s.GroupB = testCtx.NewActiveDirectoryGroup("GroupB", domainSID)
+	s.GroupC = testCtx.NewActiveDirectoryGroup("GroupC", domainSID)
+	s.GroupD = testCtx.NewActiveDirectoryGroup("GroupD", domainSID)
+	s.GroupE = testCtx.NewActiveDirectoryGroup("GroupE", domainSID)
+
+	s.GroupB.Properties.Set(common.SystemTags.String(), s.TierZeroTag)
+	s.GroupC.Properties.Set(common.SystemTags.String(), s.TierZeroTag)
+	s.GroupD.Properties.Set(common.UserTags.String(), s.CustomTag1)
+	s.GroupE.Properties.Set(common.UserTags.String(), s.CustomTag2)
+
+	testCtx.UpdateNode(s.GroupB)
+	testCtx.UpdateNode(s.GroupC)
+	testCtx.UpdateNode(s.GroupD)
+	testCtx.UpdateNode(s.GroupE)
+}
+
 type InboundControlHarness struct {
 	ControlledUser  *graph.Node
 	ControlledGroup *graph.Node
@@ -6833,6 +6869,7 @@ type HarnessDetails struct {
 	OutboundControl                                 OutboundControlHarness
 	InboundControl                                  InboundControlHarness
 	AssetGroupComboNodeHarness                      AssetGroupComboNodeHarness
+	AssetGroupNodesHarness                          AssetGroupNodesHarness
 	OUHarness                                       OUContainedHarness
 	MembershipHarness                               MembershipHarness
 	ForeignHarness                                  ForeignDomainHarness

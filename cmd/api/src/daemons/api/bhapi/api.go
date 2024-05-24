@@ -18,12 +18,10 @@ package bhapi
 
 import (
 	"context"
-	"net/http"
-	"time"
-
 	"github.com/specterops/bloodhound/errors"
 	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/src/config"
+	"net/http"
 )
 
 // Daemon holds data relevant to the API daemon
@@ -34,17 +32,12 @@ type Daemon struct {
 
 // NewDaemon creates a new API daemon
 func NewDaemon(cfg config.Configuration, handler http.Handler) Daemon {
-	networkTimeout := time.Duration(cfg.NetTimeoutSeconds) * time.Second
-
 	return Daemon{
 		cfg: cfg,
 		server: &http.Server{
-			Addr:         cfg.BindAddress,
-			Handler:      handler,
-			WriteTimeout: networkTimeout,
-			ReadTimeout:  networkTimeout,
-			IdleTimeout:  networkTimeout,
-			ErrorLog:     log.Adapter(log.LevelError, "BHAPI", 0),
+			Addr:     cfg.BindAddress,
+			Handler:  handler,
+			ErrorLog: log.Adapter(log.LevelError, "BHAPI", 0),
 		},
 	}
 }

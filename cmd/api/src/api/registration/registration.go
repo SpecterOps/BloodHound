@@ -40,7 +40,7 @@ func RegisterFossGlobalMiddleware(routerInst *router.Router, cfg config.Configur
 
 	// Set up logging. This must be done after ContextMiddleware is initialized so the context can be accessed in the log logic
 	if cfg.EnableAPILogging {
-		routerInst.UsePrerouting(middleware.LoggingMiddleware(cfg, identityResolver, db))
+		routerInst.UsePrerouting(middleware.LoggingMiddleware(identityResolver))
 	}
 
 	routerInst.UsePostrouting(
