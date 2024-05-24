@@ -226,7 +226,7 @@ func EnrollOnBehalfOfVersionTwo(tx graph.Transaction, versionTwoCertTemplates, a
 }
 
 func certTemplateHasEku(certTemplate *graph.Node, targetEkus ...string) (bool, error) {
-	if ekus, err := certTemplate.Properties.Get(ad.EKUs.String()).StringSlice(); err != nil {
+	if ekus, err := certTemplate.Properties.Get(ad.EffectiveEKUs.String()).StringSlice(); err != nil {
 		return false, err
 	} else {
 		for _, eku := range ekus {
@@ -315,7 +315,7 @@ func isEndCertTemplateValidESC3(template *graph.Node) bool {
 }
 
 func certTemplateHasEkuOrAll(certTemplate *graph.Node, targetEkus ...string) (bool, error) {
-	if ekus, err := certTemplate.Properties.Get(ad.EKUs.String()).StringSlice(); err != nil {
+	if ekus, err := certTemplate.Properties.Get(ad.EffectiveEKUs.String()).StringSlice(); err != nil {
 		return false, err
 	} else if len(ekus) == 0 {
 		return true, nil
