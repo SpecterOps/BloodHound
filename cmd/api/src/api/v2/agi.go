@@ -18,6 +18,7 @@ package v2
 
 import (
 	"fmt"
+	"github.com/specterops/bloodhound/src/auth"
 	"net/http"
 	"net/url"
 	"regexp"
@@ -265,7 +266,11 @@ func (s Resources) UpdateAssetGroupSelectors(response http.ResponseWriter, reque
 
 			if assetGroup.Tag == model.TierZeroAssetGroupTag {
 				// When T0 asset group selectors are modified, entire analysis must be re-run
-				s.TaskNotifier.RequestAnalysis()
+				if user, isUser := auth.GetUserFromAuthCtx(ctx.FromRequest(request).AuthCtx); !isUser {
+					api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "No associated user found", request), response)
+				} else if err := s.DB.RequestAnalysis(request.Context(), user.ID.String()); err != nil {
+					api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
+				}
 			}
 
 			api.WriteBasicResponse(request.Context(), result, http.StatusCreated, response)

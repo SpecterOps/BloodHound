@@ -20,6 +20,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/gofrs/uuid"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -40,7 +41,6 @@ import (
 	v2 "github.com/specterops/bloodhound/src/api/v2"
 	"github.com/specterops/bloodhound/src/api/v2/apitest"
 	"github.com/specterops/bloodhound/src/ctx"
-	datapipeMocks "github.com/specterops/bloodhound/src/daemons/datapipe/mocks"
 	dbmocks "github.com/specterops/bloodhound/src/database/mocks"
 	"github.com/specterops/bloodhound/src/model"
 	queriesMocks "github.com/specterops/bloodhound/src/queries/mocks"
@@ -592,16 +592,11 @@ func TestResources_UpdateAssetGroupSelectors_SuccessT0(t *testing.T) {
 	mockDB.EXPECT().UpdateAssetGroupSelectors(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(expectedResult, nil)
 	mockGraph.EXPECT().UpdateSelectorTags(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 
-	mockTasker := datapipeMocks.NewMockTasker(mockCtrl)
-	// MockTasker should receive a call to RequestAnalysis() since this is a Tier Zero Asset group.
+	// Should receive a call to RequestAnalysis() since this is a Tier Zero Asset group.
 	// Analysis must be run upon updating a T0 AG
-	mockTasker.EXPECT().RequestAnalysis()
+	mockDB.EXPECT().RequestAnalysis(gomock.Any(), uuid.UUID{}.String())
 
-	handlers := v2.Resources{
-		DB:           mockDB,
-		TaskNotifier: mockTasker,
-		GraphQuery:   mockGraph,
-	}
+	handlers := v2.Resources{DB: mockDB, GraphQuery: mockGraph}
 
 	response := httptest.NewRecorder()
 	handler := http.HandlerFunc(handlers.UpdateAssetGroupSelectors)
@@ -687,15 +682,11 @@ func TestResources_UpdateAssetGroupSelectors_SuccessOwned(t *testing.T) {
 
 	mockGraph.EXPECT().UpdateSelectorTags(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 
-	mockTasker := datapipeMocks.NewMockTasker(mockCtrl)
-	// NOTE MockTasker should NOT receive a call to RequestAnalysis() since this is not a Tier Zero Asset group.
+	// NOTE should NOT receive a call to RequestAnalysis() since this is not a Tier Zero Asset group.
 	// Analysis should not be re-run when a non T0 AG is updated
+	mockDB.EXPECT().RequestAnalysis(gomock.Any(), uuid.UUID{}.String()).Times(0)
 
-	handlers := v2.Resources{
-		DB:           mockDB,
-		TaskNotifier: mockTasker,
-		GraphQuery:   mockGraph,
-	}
+	handlers := v2.Resources{DB: mockDB, GraphQuery: mockGraph}
 
 	response := httptest.NewRecorder()
 	handler := http.HandlerFunc(handlers.UpdateAssetGroupSelectors)

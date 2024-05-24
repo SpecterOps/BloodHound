@@ -29,7 +29,6 @@ import (
 	"github.com/specterops/bloodhound/src/api/v2/apitest"
 	"github.com/specterops/bloodhound/src/auth"
 	"github.com/specterops/bloodhound/src/ctx"
-	taskerMocks "github.com/specterops/bloodhound/src/daemons/datapipe/mocks"
 	dbMocks "github.com/specterops/bloodhound/src/database/mocks"
 	"github.com/specterops/bloodhound/src/database/types/null"
 	"github.com/specterops/bloodhound/src/model"
@@ -58,10 +57,9 @@ func setupUserCtx(user model.User) context.Context {
 
 func TestResources_ListFileUploadJobs(t *testing.T) {
 	var (
-		mockCtrl   = gomock.NewController(t)
-		mockDB     = dbMocks.NewMockDatabase(mockCtrl)
-		mockTasker = taskerMocks.NewMockTasker(mockCtrl)
-		resources  = v2.Resources{DB: mockDB, TaskNotifier: mockTasker}
+		mockCtrl  = gomock.NewController(t)
+		mockDB    = dbMocks.NewMockDatabase(mockCtrl)
+		resources = v2.Resources{DB: mockDB}
 	)
 	defer mockCtrl.Finish()
 
@@ -147,10 +145,9 @@ func TestResources_StartFileUploadJob(t *testing.T) {
 
 func TestResources_EndFileUploadJob(t *testing.T) {
 	var (
-		mockCtrl   = gomock.NewController(t)
-		mockDB     = dbMocks.NewMockDatabase(mockCtrl)
-		mockTasker = taskerMocks.NewMockTasker(mockCtrl)
-		resources  = v2.Resources{DB: mockDB, TaskNotifier: mockTasker}
+		mockCtrl  = gomock.NewController(t)
+		mockDB    = dbMocks.NewMockDatabase(mockCtrl)
+		resources = v2.Resources{DB: mockDB}
 	)
 	defer mockCtrl.Finish()
 

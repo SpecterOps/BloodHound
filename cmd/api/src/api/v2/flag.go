@@ -18,6 +18,8 @@ package v2
 
 import (
 	"fmt"
+	"github.com/specterops/bloodhound/src/auth"
+	"github.com/specterops/bloodhound/src/ctx"
 	"net/http"
 	"strconv"
 
@@ -59,7 +61,11 @@ func (s Resources) ToggleFlag(response http.ResponseWriter, request *http.Reques
 		} else {
 			// TODO: Cleanup #ADCSFeatureFlag after full launch.
 			if featureFlag.Key == appcfg.FeatureAdcs && !featureFlag.Enabled {
-				s.TaskNotifier.RequestAnalysis()
+				if user, isUser := auth.GetUserFromAuthCtx(ctx.FromRequest(request).AuthCtx); !isUser {
+					api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "No associated user found", request), response)
+				} else if err := s.DB.RequestAnalysis(request.Context(), user.ID.String()); err != nil {
+					api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
+				}
 			}
 			api.WriteBasicResponse(request.Context(), ToggleFlagResponse{
 				Enabled: featureFlag.Enabled,

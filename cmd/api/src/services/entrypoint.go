@@ -105,7 +105,9 @@ func Entrypoint(ctx context.Context, cfg config.Configuration, connections boots
 		connections.Graph.SetWriteFlushSize(neo4jParameters.WriteFlushSize)
 
 		// Trigger analysis on first start
-		datapipeDaemon.RequestAnalysis()
+		if err := connections.RDMS.RequestAnalysis(ctx, "init"); err != nil {
+			return nil, fmt.Errorf("failed to request analysis: %w", err)
+		}
 
 		return []daemons.Daemon{
 			bhapi.NewDaemon(cfg, routerInst.Handler()),

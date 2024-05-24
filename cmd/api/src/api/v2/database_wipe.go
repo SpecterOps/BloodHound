@@ -24,6 +24,8 @@ import (
 
 	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/src/api"
+	"github.com/specterops/bloodhound/src/auth"
+	"github.com/specterops/bloodhound/src/ctx"
 	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/model/appcfg"
 )
@@ -108,7 +110,13 @@ func (s Resources) HandleDatabaseWipe(response http.ResponseWriter, request *htt
 			)
 			return
 		} else {
-			s.TaskNotifier.RequestDeletion()
+			if user, isUser := auth.GetUserFromAuthCtx(ctx.FromRequest(request).AuthCtx); !isUser {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "No associated user found", request), response)
+				return
+			} else if err := s.DB.RequestCollectedGraphDataDeletion(request.Context(), user.ID.String()); err != nil {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
+				return
+			}
 			s.handleAuditLogForDatabaseWipe(request.Context(), &auditEntry, true, "collected graph data")
 		}
 
@@ -125,7 +133,11 @@ func (s Resources) HandleDatabaseWipe(response http.ResponseWriter, request *htt
 
 	// if deleting `nodes` or deleting `asset group selectors` is successful, kickoff an analysis
 	if kickoffAnalysis {
-		s.TaskNotifier.RequestAnalysis()
+		if user, isUser := auth.GetUserFromAuthCtx(ctx.FromRequest(request).AuthCtx); !isUser {
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "No associated user found", request), response)
+		} else if err := s.DB.RequestAnalysis(request.Context(), user.ID.String()); err != nil {
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
+		}
 	}
 
 	// delete file ingest history
@@ -142,7 +154,7 @@ func (s Resources) HandleDatabaseWipe(response http.ResponseWriter, request *htt
 		}
 	}
 
-	// return a user friendly error message indicating what operations failed
+	// return a user-friendly error message indicating what operations failed
 	if len(errors) > 0 {
 		api.WriteErrorResponse(
 			request.Context(),
