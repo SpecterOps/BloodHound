@@ -40,10 +40,10 @@ jobs:
             summary: ${{ github.event.issue.title }}
             description: "Github Issue Link: ${{ github.event.issue.html_url}} \r\n ${{ github.event.issue.body }}"
             fields: '{"labels":["GitHubReport"]}'
-          run: echo "Issue ${{ steps.bug.outputs.issue }} was created"
+            JIRA_TICKET: ${{ steps.bug.outputs.issue }}
         - name: Jira Create Enhancement
           id: enhancement
-          if: contains(github.event.issue.labels.*.name, 'ticketed', 'enhancement') && !contains(github.event.issue.labels.*.name, 'ticketed') 
+          if: contains(github.event.issue.labels.*.name, 'ticketed', 'enhancement')
           uses: atlassian/gajira-create@v3 
           with:
             project: BP
@@ -51,6 +51,9 @@ jobs:
             summary: ${{ github.event.issue.title }}
             description: "Github Issue Link: ${{ github.event.issue.html_url}} \r\n ${{ github.event.issue.body }}"
             fields: '{"labels":["GitHubReport"]}'
-          run: echo "Issue ${{ steps.enhancement.outputs.issue }} was created"
-     
-          
+            JIRA_TICKET: ${{ steps.enhancement.outputs.issue }}
+            
+        - name: Read Ticket Number
+          id: Ticket
+          run: echo "$JIRA_TICKET"
+    
