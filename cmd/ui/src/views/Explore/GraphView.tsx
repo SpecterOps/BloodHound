@@ -23,6 +23,8 @@ import {
     setEdgeInfoOpen,
     setSelectedEdge,
     useAvailableDomains,
+    isWebGLEnabled,
+    WebGLDisabledAlert,
 } from 'bh-shared-ui';
 import { MultiDirectedGraph } from 'graphology';
 import { random } from 'graphology-layout';
@@ -142,6 +144,14 @@ const GraphView: FC = () => {
     );
 
     if (isError) throw new Error();
+
+    if (!isWebGLEnabled()) {
+        return (
+            <Box position={'relative'} height={'100%'} width={'100%'} overflow={'hidden'}>
+                <WebGLDisabledAlert />
+            </Box>
+        );
+    }
 
     if (!data.length)
         return (
