@@ -146,11 +146,7 @@ const GraphView: FC = () => {
     if (isError) throw new Error();
 
     if (!isWebGLEnabled()) {
-        return (
-            <Box position={'relative'} height={'100%'} width={'100%'} overflow={'hidden'}>
-                <WebGLDisabledAlert />
-            </Box>
-        );
+        return <WebGLDisabledAlert />;
     }
 
     if (!data.length)

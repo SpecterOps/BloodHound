@@ -27,11 +27,7 @@ const setupMocks = () => {
             if (tagName === 'canvas') {
                 return {
                     getContext: (contextName: string) => {
-                        if (contextName === 'webgl') {
-                            return true;
-                        } else {
-                            return false;
-                        }
+                        return !!(contextName === 'webgl');
                     },
                 };
             } else {
