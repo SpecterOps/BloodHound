@@ -22,6 +22,7 @@ on:
 jobs:
   build:
     runs-on: self-hosted
+    if: github.event.label.name == 'ticketed'
     steps:
         - name: Login
           uses: atlassian/gajira-login@v3
@@ -32,7 +33,7 @@ jobs:
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         - name: Jira Create Bug
           id: bug
-          if: github.event.label.name == 'ticketed'  && contains(github.event.issue.labels.*.name, 'bug') 
+          if: contains(github.event.issue.labels.*.name, 'bug') 
           uses: atlassian/gajira-create@v3
           with:
             project: BP
@@ -43,7 +44,7 @@ jobs:
 
         - name: Jira Create Enhancement
           id: enhancement
-          if: github.event.label.name == 'ticketed'  && contains(github.event.issue.labels.*.name, 'enhancement')
+          if: contains(github.event.issue.labels.*.name, 'enhancement')
           uses: atlassian/gajira-create@v3 
           with:
             project: BP
