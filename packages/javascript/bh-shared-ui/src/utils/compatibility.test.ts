@@ -15,41 +15,14 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { isWebGLEnabled } from '.';
-
-const setupMocks = () => {
-    const originalRenderingContext = window.WebGLRenderingContext;
-    const originalCreateElement = document.createElement;
-
-    const enableWebGLMock = () => {
-        window.WebGLRenderingContext = true as any;
-
-        document.createElement = vi.fn((tagName: string) => {
-            if (tagName === 'canvas') {
-                return {
-                    getContext: (contextName: string) => {
-                        return !!(contextName === 'webgl');
-                    },
-                };
-            } else {
-                return originalCreateElement(tagName);
-            }
-        }) as any;
-    };
-
-    const disableWebGLMock = () => {
-        window.WebGLRenderingContext = originalRenderingContext;
-        document.createElement = originalCreateElement;
-    };
-
-    return { enableWebGLMock, disableWebGLMock };
-};
+import { setupWebGLMocks } from '../mocks';
 
 describe('WebGL compatibility check', () => {
-    const mocks = setupMocks();
-    afterEach(() => mocks.disableWebGLMock());
+    const mocks = setupWebGLMocks();
+    afterEach(() => mocks.disableWebGLMocks());
 
     it('returns true when WebGL is available in the current browser context', () => {
-        mocks.enableWebGLMock();
+        mocks.enableWebGLMocks();
         expect(isWebGLEnabled()).toBe(true);
     });
 
