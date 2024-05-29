@@ -19,12 +19,6 @@ package v2
 import (
 	"errors"
 	"fmt"
-	"mime"
-	"net/http"
-	"slices"
-	"strconv"
-	"strings"
-
 	"github.com/gorilla/mux"
 	"github.com/specterops/bloodhound/headers"
 	"github.com/specterops/bloodhound/log"
@@ -35,6 +29,11 @@ import (
 	ingestModel "github.com/specterops/bloodhound/src/model/ingest"
 	"github.com/specterops/bloodhound/src/services/fileupload"
 	"github.com/specterops/bloodhound/src/services/ingest"
+	"mime"
+	"net/http"
+	"slices"
+	"strconv"
+	"strings"
 )
 
 const FileUploadJobIdPathParameterName = "file_upload_job_id"
