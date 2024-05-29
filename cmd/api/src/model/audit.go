@@ -18,9 +18,10 @@ package model
 
 import (
 	"fmt"
-	"github.com/specterops/bloodhound/log"
 	"reflect"
 	"time"
+
+	"github.com/specterops/bloodhound/log"
 
 	"github.com/gofrs/uuid"
 	"github.com/specterops/bloodhound/src/database/types"
@@ -37,7 +38,8 @@ const (
 type AuditLogAction string
 
 const (
-	AuditLogActionAcceptEULA AuditLogAction = "AcceptEULA"
+	AuditLogActionAcceptEULA    AuditLogAction = "AcceptEULA"
+	AuditLogActionAcceptFedEULA AuditLogAction = "AcceptFedEULA" // Enterprise Only
 
 	AuditLogActionLoginAttempt              AuditLogAction = "LoginAttempt"
 	AuditLogActionUnauthorizedAccessAttempt AuditLogAction = "UnauthorizedAccessAttempt"
