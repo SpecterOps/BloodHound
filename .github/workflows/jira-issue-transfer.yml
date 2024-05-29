@@ -41,7 +41,6 @@ jobs:
             summary: ${{ github.event.issue.title }}
             description: "Github Issue Link: ${{ github.event.issue.html_url}} \r\n ${{ github.event.issue.body }}"
             fields: '{"labels":["GitHubReport"]}'
-            output: '${{ steps.bug.outputs.issue }}'
 
         - name: Jira Create Enhancement
           id: enhancement
@@ -53,4 +52,3 @@ jobs:
             summary: ${{ github.event.issue.title }}
             description: "Github Issue Link: ${{ github.event.issue.html_url}} \r\n ${{ github.event.issue.body }}"
             fields: '{"labels":["GitHubReport"]}'
-            output: '${{ steps.enhancement.outputs.issue }}'
