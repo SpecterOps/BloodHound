@@ -137,6 +137,7 @@ export interface UpdateAzureHoundEventRequest {
 }
 
 export interface PutUserAuthSecretRequest {
+    current_secret?: string;
     secret: string;
     needs_password_reset: boolean;
 }
