@@ -93,6 +93,7 @@ export const searchReducer = (state = initialSearchState, action: types.Searchba
                 draft.primary.searchTerm = action.searchTerm;
                 draft.primary.loading = true;
                 draft.primary.options = [];
+                draft.primary.kind = action.kind;
 
                 // any edits to the source node should clear out the previously saved primary.value
                 draft.primary.value = undefined;
@@ -111,6 +112,7 @@ export const searchReducer = (state = initialSearchState, action: types.Searchba
                 draft.secondary.searchTerm = action.searchTerm;
                 draft.secondary.loading = true;
                 draft.secondary.options = [];
+                draft.secondary.kind = action.kind;
 
                 // any edits to the destination node should clear out the previously saved destination.value
                 draft.secondary.value = undefined;

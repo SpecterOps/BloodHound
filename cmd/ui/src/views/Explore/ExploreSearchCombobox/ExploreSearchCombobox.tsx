@@ -23,6 +23,7 @@ import {
     getEmptyResultsText,
     getKeywordAndTypeValues,
     useSearch,
+    EntityKinds,
 } from 'bh-shared-ui';
 import { useCombobox } from 'downshift';
 
@@ -32,12 +33,15 @@ const ExploreSearchCombobox: React.FC<{
     selectedItem: SearchValue | null;
     handleNodeEdited: (edit: string) => any;
     handleNodeSelected: (selection: SearchValue) => any;
+    nodeKind?: EntityKinds;
     disabled?: boolean;
-}> = ({ labelText, inputValue, selectedItem, handleNodeEdited, handleNodeSelected, disabled = false }) => {
+}> = ({ labelText, inputValue, selectedItem, handleNodeEdited, handleNodeSelected, nodeKind, disabled = false }) => {
     const theme = useTheme();
 
     const { keyword, type } = getKeywordAndTypeValues(inputValue);
     const { data, error, isError, isLoading, isFetching } = useSearch(keyword, type);
+
+    const kind = selectedItem?.type || nodeKind;
 
     const { isOpen, getMenuProps, getInputProps, getComboboxProps, highlightedIndex, getItemProps, openMenu } =
         useCombobox({
@@ -79,7 +83,7 @@ const ExploreSearchCombobox: React.FC<{
                         backgroundColor: disabled ? theme.palette.action.disabled : 'inherit',
                         fontSize: theme.typography.pxToRem(14),
                     },
-                    startAdornment: selectedItem?.type && <NodeIcon nodeType={selectedItem?.type} />,
+                    startAdornment: kind && <NodeIcon nodeType={kind} />,
                 }}
                 {...getInputProps({
                     onFocus: openMenu,

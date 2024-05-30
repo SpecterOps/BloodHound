@@ -62,6 +62,7 @@ const PathfindingSearch = () => {
                     handleNodeEdited={handleSourceNodeEdited}
                     handleNodeSelected={handleSourceNodeSelected}
                     inputValue={sourceInputValue}
+                    nodeKind={primary.kind}
                     selectedItem={sourceSelectedItem || null}
                     labelText='Start Node'
                 />
@@ -69,6 +70,7 @@ const PathfindingSearch = () => {
                     handleNodeEdited={handleDestinationNodeEdited}
                     handleNodeSelected={handleDestinationNodeSelected}
                     inputValue={destinationInputValue}
+                    nodeKind={secondary.kind}
                     selectedItem={destinationSelectedItem || null}
                     labelText='Destination Node'
                 />

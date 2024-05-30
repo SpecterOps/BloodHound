@@ -26,6 +26,7 @@ const NodeSearch = () => {
 
     const handleNodeEdited = (edit: string): SourceNodeEditedAction =>
         dispatch(searchbarActions.sourceNodeEdited(edit));
+
     const handleNodeSelected = (selected?: SearchValue): SourceNodeSelectedAction =>
         dispatch(searchbarActions.sourceNodeSelected(selected));
 
@@ -34,6 +35,7 @@ const NodeSearch = () => {
             labelText={'Search Nodes'}
             inputValue={searchTerm}
             selectedItem={selectedItem || null}
+            nodeKind={primary.kind}
             handleNodeEdited={handleNodeEdited}
             handleNodeSelected={handleNodeSelected}
         />

@@ -65,6 +65,7 @@ export interface SearchBarState {
     //value is set to optional to safeguard against possibly passing undefined when the value
     //is not derived from direct user interaction with the search input
     value?: SearchValue;
+    kind?: EntityKinds;
 }
 
 export interface SearchNodeType {
@@ -120,6 +121,7 @@ export interface SourceNodeSelectedAction {
 export interface SourceNodeEditedAction {
     type: typeof SOURCE_NODE_EDITED;
     searchTerm: string;
+    kind?: EntityKinds;
 }
 
 export interface DestinationNodeSelectedAction {
@@ -130,6 +132,7 @@ export interface DestinationNodeSelectedAction {
 export interface DestinationNodeEditedAction {
     type: typeof DESTINATION_NODE_EDITED;
     searchTerm: string;
+    kind?: EntityKinds;
 }
 
 export enum EndPoints {

@@ -16,6 +16,7 @@
 
 import * as types from './types';
 import { EdgeCheckboxType } from '../../views/Explore/ExploreSearch/edgeTypes';
+import { EntityKinds } from '../../utils';
 
 export const primarySearch = () => {
     return {
@@ -63,10 +64,11 @@ export const tabChanged = (tabName: types.TabNames) => {
     };
 };
 
-export const sourceNodeEdited = (searchTerm: string): types.SourceNodeEditedAction => {
+export const sourceNodeEdited = (searchTerm: string, kind?: EntityKinds): types.SourceNodeEditedAction => {
     return {
         type: types.SOURCE_NODE_EDITED,
         searchTerm,
+        kind,
     };
 };
 
@@ -81,10 +83,11 @@ export const sourceNodeSelected = (
     };
 };
 
-export const destinationNodeEdited = (searchTerm: string): types.DestinationNodeEditedAction => {
+export const destinationNodeEdited = (searchTerm: string, kind?: EntityKinds): types.DestinationNodeEditedAction => {
     return {
         type: types.DESTINATION_NODE_EDITED,
         searchTerm,
+        kind,
     };
 };
 
