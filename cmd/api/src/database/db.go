@@ -156,6 +156,9 @@ type Database interface {
 
 	// Analysis Request
 	AnalysisRequestData
+
+	// Datapipe Status
+	UpdateDatapipeStatus(ctx context.Context, status model.DatapipeStatus, updateAnalysisTime bool) error
 }
 
 type BloodhoundDB struct {

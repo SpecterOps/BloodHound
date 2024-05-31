@@ -1416,6 +1416,20 @@ func (mr *MockDatabaseMockRecorder) UpdateAuthToken(arg0, arg1 interface{}) *gom
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateAuthToken", reflect.TypeOf((*MockDatabase)(nil).UpdateAuthToken), arg0, arg1)
 }
 
+// UpdateDatapipeStatus mocks base method.
+func (m *MockDatabase) UpdateDatapipeStatus(arg0 context.Context, arg1 model.DatapipeStatus, arg2 bool) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateDatapipeStatus", arg0, arg1, arg2)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdateDatapipeStatus indicates an expected call of UpdateDatapipeStatus.
+func (mr *MockDatabaseMockRecorder) UpdateDatapipeStatus(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateDatapipeStatus", reflect.TypeOf((*MockDatabase)(nil).UpdateDatapipeStatus), arg0, arg1, arg2)
+}
+
 // UpdateFileUploadJob mocks base method.
 func (m *MockDatabase) UpdateFileUploadJob(arg0 context.Context, arg1 model.FileUploadJob) error {
 	m.ctrl.T.Helper()
