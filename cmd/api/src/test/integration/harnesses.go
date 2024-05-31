@@ -1469,6 +1469,7 @@ func (s *EnrollOnBehalfOfHarnessTwo) Setup(gt *GraphTestContext) {
 		AuthorizedSignatures:    0,
 		EKUS:                    certRequestAgentEKU,
 		ApplicationPolicies:     emptyAppPolicies,
+		EffectiveEKUs:           certRequestAgentEKU,
 	})
 	s.CertTemplate22 = gt.NewActiveDirectoryCertTemplate("certtemplate2-2", sid, CertTemplateData{
 		RequiresManagerApproval: false,
@@ -1481,6 +1482,7 @@ func (s *EnrollOnBehalfOfHarnessTwo) Setup(gt *GraphTestContext) {
 		AuthorizedSignatures:    0,
 		EKUS:                    []string{adAnalysis.EkuCertRequestAgent, adAnalysis.EkuAnyPurpose},
 		ApplicationPolicies:     emptyAppPolicies,
+		EffectiveEKUs:           []string{adAnalysis.EkuCertRequestAgent, adAnalysis.EkuAnyPurpose},
 	})
 	s.CertTemplate23 = gt.NewActiveDirectoryCertTemplate("certtemplate2-3", sid, CertTemplateData{
 		RequiresManagerApproval: false,
@@ -1493,6 +1495,7 @@ func (s *EnrollOnBehalfOfHarnessTwo) Setup(gt *GraphTestContext) {
 		AuthorizedSignatures:    1,
 		EKUS:                    certRequestAgentEKU,
 		ApplicationPolicies:     []string{adAnalysis.EkuCertRequestAgent},
+		EffectiveEKUs:           []string{adAnalysis.EkuCertRequestAgent},
 	})
 	s.CertTemplate24 = gt.NewActiveDirectoryCertTemplate("certtemplate2-4", sid, CertTemplateData{
 		RequiresManagerApproval: false,
@@ -1505,6 +1508,7 @@ func (s *EnrollOnBehalfOfHarnessTwo) Setup(gt *GraphTestContext) {
 		AuthorizedSignatures:    1,
 		EKUS:                    emptyAppPolicies,
 		ApplicationPolicies:     emptyAppPolicies,
+		EffectiveEKUs:           emptyAppPolicies,
 	})
 	s.CertTemplate25 = gt.NewActiveDirectoryCertTemplate("certtemplate2-5", sid, CertTemplateData{
 		RequiresManagerApproval: false,
@@ -1517,6 +1521,7 @@ func (s *EnrollOnBehalfOfHarnessTwo) Setup(gt *GraphTestContext) {
 		AuthorizedSignatures:    1,
 		EKUS:                    emptyAppPolicies,
 		ApplicationPolicies:     emptyAppPolicies,
+		EffectiveEKUs:           emptyAppPolicies,
 	})
 
 	gt.NewRelationship(s.AuthStore2, s.Domain2, ad.NTAuthStoreFor)
@@ -1560,6 +1565,7 @@ func (s *EnrollOnBehalfOfHarnessOne) Setup(gt *GraphTestContext) {
 		AuthorizedSignatures:    0,
 		EKUS:                    anyPurposeEkus,
 		ApplicationPolicies:     emptyAppPolicies,
+		EffectiveEKUs:           emptyAppPolicies,
 	})
 	s.CertTemplate12 = gt.NewActiveDirectoryCertTemplate("certtemplate1-2", sid, CertTemplateData{
 		RequiresManagerApproval: false,
@@ -1572,6 +1578,7 @@ func (s *EnrollOnBehalfOfHarnessOne) Setup(gt *GraphTestContext) {
 		AuthorizedSignatures:    0,
 		EKUS:                    anyPurposeEkus,
 		ApplicationPolicies:     emptyAppPolicies,
+		EffectiveEKUs:           anyPurposeEkus,
 	})
 	s.CertTemplate13 = gt.NewActiveDirectoryCertTemplate("certtemplate1-3", sid, CertTemplateData{
 		RequiresManagerApproval: false,
@@ -1584,6 +1591,7 @@ func (s *EnrollOnBehalfOfHarnessOne) Setup(gt *GraphTestContext) {
 		AuthorizedSignatures:    0,
 		EKUS:                    anyPurposeEkus,
 		ApplicationPolicies:     emptyAppPolicies,
+		EffectiveEKUs:           emptyAppPolicies,
 	})
 
 	gt.NewRelationship(s.AuthStore1, s.Domain1, ad.NTAuthStoreFor)
