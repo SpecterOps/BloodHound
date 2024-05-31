@@ -672,17 +672,6 @@ func ConvertAzureRoleAssignmentToRels(roleAssignment azure2.UnifiedRoleAssignmen
 		scope = strings.ToUpper(roleAssignment.DirectoryScopeId[1:])
 	}
 
-	relationships = append(relationships, IngestibleRelationship{
-		Source:     strings.ToUpper(roleAssignment.PrincipalId),
-		SourceType: azure.Entity,
-		TargetType: azure.Role,
-		Target:     roleObjectId,
-		RelProps: map[string]any{
-			azure.Scope.String(): scope,
-		},
-		RelType: azure.HasRole,
-	})
-
 	if CanAddSecret(roleAssignment.RoleDefinitionId) && roleAssignment.DirectoryScopeId != "/" {
 		if relType, err := GetAddSecretRoleKind(roleAssignment.RoleDefinitionId); err != nil {
 			log.Errorf("Error processing role assignment for role %s: %v", roleObjectId, err)
@@ -696,6 +685,17 @@ func ConvertAzureRoleAssignmentToRels(roleAssignment azure2.UnifiedRoleAssignmen
 				RelType:    relType,
 			})
 		}
+	} else {
+		relationships = append(relationships, IngestibleRelationship{
+			Source:     strings.ToUpper(roleAssignment.PrincipalId),
+			SourceType: azure.Entity,
+			TargetType: azure.Role,
+			Target:     roleObjectId,
+			RelProps: map[string]any{
+				azure.Scope.String(): scope,
+			},
+			RelType: azure.HasRole,
+		})
 	}
 
 	return relationships
