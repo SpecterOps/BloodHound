@@ -29,6 +29,7 @@ import { DialogActions, DialogContent } from '@mui/material';
 import React, { useCallback } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { PASSWD_REQS, passwordRegex } from '../../utils';
+import { PutUserAuthSecretRequest } from 'js-client-library';
 
 const passwdReqsList = PASSWD_REQS.map((req, i) => <li key={i}>{req}</li>);
 
@@ -46,7 +47,7 @@ const PasswordDialog: React.FC<{
     requireCurrentPassword?: boolean;
     showNeedsPasswordReset?: boolean;
     initialNeedsPasswordReset?: boolean;
-    onSave: (payload: { userId: string; currentSecret?: string; secret: string; needsPasswordReset: boolean }) => void;
+    onSave: (payload: { userId: string } & PutUserAuthSecretRequest) => void;
 }> = ({
     open,
     userId,
@@ -83,7 +84,7 @@ const PasswordDialog: React.FC<{
     const handleOnSave = useCallback(
         (data: ChangePasswordFormInputs) => {
             return onSave({
-                userId: userId,
+                userId,
                 ...(data.currentPassword && { currentSecret: data.currentPassword }),
                 secret: data.password,
                 needsPasswordReset: Boolean(data.needsPasswordReset),

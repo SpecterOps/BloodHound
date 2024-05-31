@@ -29,7 +29,7 @@ import {
     apiClient,
     Disable2FADialog,
 } from 'bh-shared-ui';
-import { UpdateUserRequest } from 'js-client-library';
+import { PutUserAuthSecretRequest, UpdateUserRequest } from 'js-client-library';
 import find from 'lodash/find';
 import isEmpty from 'lodash/isEmpty';
 import { NewUser } from 'src/ducks/auth/types';
@@ -160,22 +160,8 @@ const Users = () => {
     });
 
     const updateUserPasswordMutation = useMutation(
-        ({
-            userId,
-            secret,
-            needsPasswordReset,
-            currentSecret,
-        }: {
-            currentSecret?: string;
-            userId: string;
-            secret: string;
-            needsPasswordReset: boolean;
-        }) =>
-            apiClient.putUserAuthSecret(userId, {
-                ...(currentSecret && { current_secret: currentSecret }),
-                needs_password_reset: needsPasswordReset,
-                secret: secret,
-            }),
+        ({ userId, ...payload }: { userId: string } & PutUserAuthSecretRequest) =>
+            apiClient.putUserAuthSecret(userId, payload),
         {
             onSuccess: () => {
                 dispatch(addSnackbar('User password updated successfully!', 'updateUserPasswordSuccess'));
