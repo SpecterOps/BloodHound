@@ -47,8 +47,8 @@ require (
 	github.com/unrolled/secure v1.13.0
 	github.com/zenazn/goji v1.0.1
 	go.uber.org/mock v0.2.0
-	golang.org/x/crypto v0.20.0
-	golang.org/x/net v0.21.0
+	golang.org/x/crypto v0.23.0
+	golang.org/x/net v0.25.0
 	gorm.io/driver/postgres v1.3.8
 	gorm.io/gorm v1.23.8
 )
@@ -90,8 +90,8 @@ require (
 	github.com/prometheus/procfs v0.11.0 // indirect
 	github.com/rivo/uniseg v0.4.4 // indirect
 	golang.org/x/mod v0.14.0 // indirect
-	golang.org/x/sys v0.17.0 // indirect
-	golang.org/x/text v0.14.0 // indirect
+	golang.org/x/sys v0.20.0 // indirect
+	golang.org/x/text v0.15.0 // indirect
 	golang.org/x/time v0.3.0 // indirect
 	golang.org/x/tools v0.13.0 // indirect
 	google.golang.org/protobuf v1.31.0 // indirect
