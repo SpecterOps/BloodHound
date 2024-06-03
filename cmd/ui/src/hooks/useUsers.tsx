@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { RequestOptions } from 'js-client-library';
+import { PutUserAuthSecretRequest, RequestOptions } from 'js-client-library';
 import { useMutation, useQuery, useQueryClient } from 'react-query';
 import { apiClient } from 'bh-shared-ui';
 import { addSnackbar } from 'src/ducks/global/actions';
@@ -63,11 +63,6 @@ export type UpdateUserRequest = {
     roles: number[];
 };
 
-export type UpdateUserPasswordRequest = {
-    secret: string;
-    needs_password_reset: boolean;
-};
-
 export const userKeys = {
     all: ['users'] as const,
     detail: (userId: number) => [...userKeys.all, userId] as const,
@@ -93,13 +88,13 @@ export const expireUserPassword = ({ userId }: { userId: string }, options?: Req
 export const updateUserPassword = (
     {
         userId,
-        updatedUserPassword,
+        payload,
     }: {
         userId: string;
-        updatedUserPassword: UpdateUserPasswordRequest;
+        payload: PutUserAuthSecretRequest;
     },
     options?: RequestOptions
-) => apiClient.putUserAuthSecret(userId, updatedUserPassword, options).then((res) => res.data);
+) => apiClient.putUserAuthSecret(userId, payload, options).then((res) => res.data);
 
 export const useGetUsers = () => useQuery(userKeys.all, ({ signal }) => getUsers({ signal }));
 

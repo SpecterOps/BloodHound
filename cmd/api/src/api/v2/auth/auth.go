@@ -61,16 +61,18 @@ type ManagementResource struct {
 	secretDigester             crypto.SecretDigester
 	db                         database.Database
 	QueryParameterFilterParser model.QueryParameterFilterParser
-	authorizer                 auth.Authorizer
+	authorizer                 auth.Authorizer   // Used for Permissions
+	authenticator              api.Authenticator // Used for secrets
 }
 
-func NewManagementResource(authConfig config.Configuration, db database.Database, authorizer auth.Authorizer) ManagementResource {
+func NewManagementResource(authConfig config.Configuration, db database.Database, authorizer auth.Authorizer, authenticator api.Authenticator) ManagementResource {
 	return ManagementResource{
 		config:                     authConfig,
 		secretDigester:             authConfig.Crypto.Argon2.NewDigester(),
 		db:                         db,
 		QueryParameterFilterParser: model.NewQueryParameterFilterParser(),
 		authorizer:                 authorizer,
+		authenticator:              authenticator,
 	}
 }
 
@@ -634,39 +636,53 @@ func (s ManagementResource) PutUserAuthSecret(response http.ResponseWriter, requ
 		setUserSecretRequest v2.SetUserSecretRequest
 		pathVars             = mux.Vars(request)
 		rawUserID            = pathVars[api.URIPathVariableUserID]
+		bhCtx                = ctx.FromRequest(request)
 	)
 
-	if userID, err := uuid.FromString(rawUserID); err != nil {
+	if loggedInUser, found := auth.GetUserFromAuthCtx(bhCtx.AuthCtx); !found {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "No associated user found", request), response)
+	} else if targetUserID, err := uuid.FromString(rawUserID); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsIDMalformed, request), response)
 	} else if err := api.ReadJSONRequestPayloadLimited(&setUserSecretRequest, request); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
 	} else if errs := validation.Validate(setUserSecretRequest); errs != nil {
 		msg := strings.Join(utils.Errors(errs).AsStringSlice(), ", ")
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, msg, request), response)
-	} else if targetUser, err := s.db.GetUser(request.Context(), userID); err != nil {
+	} else if targetUser, err := s.db.GetUser(request.Context(), targetUserID); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else if targetUser.SAMLProviderID.Valid {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "Invalid operation, user is SSO", request), response)
-	} else if passwordExpiration, err := appcfg.GetPasswordExpiration(request.Context(), s.db); err != nil {
-		log.Errorf("Error while attempting to fetch password expiration window: %v", err)
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseCodeInternalServerError, request), response)
-	} else if secretDigest, err := s.secretDigester.Digest(setUserSecretRequest.Secret); err != nil {
-		log.Errorf("Error while attempting to digest secret for user: %v", err)
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
 	} else {
-		authSecret.UserID = targetUser.ID
-		authSecret.Digest = secretDigest.String()
-		authSecret.DigestMethod = s.secretDigester.Method()
-		authSecret.ExpiresAt = time.Now().Add(passwordExpiration).UTC()
-
-		if setUserSecretRequest.NeedsPasswordReset {
-			authSecret.ExpiresAt = time.Time{}
+		if loggedInUser.ID == targetUserID {
+			if targetUser.AuthSecret == nil {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrNoUserSecret.Error(), request), response)
+			} else if err := s.authenticator.ValidateSecret(request.Context(), setUserSecretRequest.CurrentSecret, *targetUser.AuthSecret); err != nil {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusForbidden, "Invalid current password", request), response)
+				return
+			}
 		}
 
-		if err := s.setUserSecret(request.Context(), targetUser, authSecret); err != nil {
-			api.HandleDatabaseError(request, response, err)
+		if passwordExpiration, err := appcfg.GetPasswordExpiration(request.Context(), s.db); err != nil {
+			log.Errorf("Error while attempting to fetch password expiration window: %v", err)
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseCodeInternalServerError, request), response)
+		} else if secretDigest, err := s.secretDigester.Digest(setUserSecretRequest.Secret); err != nil {
+			log.Errorf("Error while attempting to digest secret for user: %v", err)
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
 		} else {
-			response.WriteHeader(http.StatusOK)
+			authSecret.UserID = targetUser.ID
+			authSecret.Digest = secretDigest.String()
+			authSecret.DigestMethod = s.secretDigester.Method()
+			authSecret.ExpiresAt = time.Now().Add(passwordExpiration).UTC()
+
+			if setUserSecretRequest.NeedsPasswordReset {
+				authSecret.ExpiresAt = time.Time{}
+			}
+
+			if err := s.setUserSecret(request.Context(), targetUser, authSecret); err != nil {
+				api.HandleDatabaseError(request, response, err)
+			} else {
+				response.WriteHeader(http.StatusOK)
+			}
 		}
 	}
 }

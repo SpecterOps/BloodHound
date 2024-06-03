@@ -26,13 +26,15 @@ import {
     TextField,
 } from '@mui/material';
 import { DialogActions, DialogContent } from '@mui/material';
-import React from 'react';
+import React, { useCallback } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { PASSWD_REQS, passwordRegex } from '../../utils';
+import { PutUserAuthSecretRequest } from 'js-client-library';
 
 const passwdReqsList = PASSWD_REQS.map((req, i) => <li key={i}>{req}</li>);
 
 type ChangePasswordFormInputs = {
+    currentPassword: string;
     password: string;
     confirmPassword: string;
     needsPasswordReset: boolean;
@@ -42,18 +44,19 @@ const PasswordDialog: React.FC<{
     open: boolean;
     onClose: () => void;
     userId: string;
+    requireCurrentPassword?: boolean;
     showNeedsPasswordReset?: boolean;
     initialNeedsPasswordReset?: boolean;
-    onSave: ({
-        userId,
-        secret,
-        needsPasswordReset,
-    }: {
-        userId: string;
-        secret: string;
-        needsPasswordReset: boolean;
-    }) => void;
-}> = ({ open, userId, onClose, showNeedsPasswordReset = false, initialNeedsPasswordReset = false, onSave }) => {
+    onSave: (payload: { userId: string } & PutUserAuthSecretRequest) => void;
+}> = ({
+    open,
+    userId,
+    onClose,
+    showNeedsPasswordReset = false,
+    initialNeedsPasswordReset = false,
+    requireCurrentPassword = false,
+    onSave,
+}) => {
     const {
         control,
         handleSubmit,
@@ -64,6 +67,7 @@ const PasswordDialog: React.FC<{
         reset,
     } = useForm<ChangePasswordFormInputs>({
         defaultValues: {
+            currentPassword: '',
             password: '',
             confirmPassword: '',
             needsPasswordReset: false,
@@ -77,13 +81,17 @@ const PasswordDialog: React.FC<{
         }
     }, [open, reset, initialNeedsPasswordReset, setValue]);
 
-    const handleOnSave = (data: { password: string; confirmPassword: string; needsPasswordReset: boolean }) => {
-        return onSave({
-            userId: userId,
-            secret: data.password,
-            needsPasswordReset: Boolean(data.needsPasswordReset),
-        });
-    };
+    const handleOnSave = useCallback(
+        (data: ChangePasswordFormInputs) => {
+            return onSave({
+                userId,
+                ...(data.currentPassword && { currentSecret: data.currentPassword }),
+                secret: data.password,
+                needsPasswordReset: Boolean(data.needsPasswordReset),
+            });
+        },
+        [userId]
+    );
 
     return (
         <Dialog
@@ -111,6 +119,30 @@ const PasswordDialog: React.FC<{
                                 </Alert>
                             </Grid>
                         )}
+                        {requireCurrentPassword && (
+                            <Grid item xs={12}>
+                                <Controller
+                                    name='currentPassword'
+                                    control={control}
+                                    rules={{
+                                        required: 'Current password is required',
+                                    }}
+                                    render={({ field }) => (
+                                        <TextField
+                                            {...field}
+                                            variant='standard'
+                                            id='currentPassword'
+                                            label='Current Password'
+                                            type='password'
+                                            fullWidth
+                                            error={!!errors.currentPassword}
+                                            helperText={errors.currentPassword?.message}
+                                            data-testid='password-dialog_input-current-password'
+                                        />
+                                    )}
+                                />
+                            </Grid>
+                        )}
                         <Grid item xs={12}>
                             <Controller
                                 name='password'
@@ -118,16 +150,20 @@ const PasswordDialog: React.FC<{
                                 rules={{
                                     required: 'Password is required',
                                     pattern: passwordRegex,
+                                    validate: (value) =>
+                                        getValues('currentPassword') !== value ||
+                                        'New password must not match current password',
                                 }}
                                 render={({ field }) => (
                                     <TextField
                                         {...field}
                                         variant='standard'
                                         id='password'
-                                        label='Password'
+                                        label='New Password'
                                         type='password'
                                         fullWidth
                                         error={!!errors.password}
+                                        helperText={errors.password?.message}
                                         data-testid='password-dialog_input-password'
                                     />
                                 )}
@@ -146,7 +182,7 @@ const PasswordDialog: React.FC<{
                                         {...field}
                                         variant='standard'
                                         id='confirmPassword'
-                                        label='Confirmation Password'
+                                        label='New Password Confirmation'
                                         type='password'
                                         fullWidth
                                         error={!!errors.confirmPassword}
