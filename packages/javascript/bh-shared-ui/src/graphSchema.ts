@@ -498,9 +498,9 @@ export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKin
         case ActiveDirectoryKindProperties.AuthorizedSignatures:
             return 'Authorized Signatures Required';
         case ActiveDirectoryKindProperties.ApplicationPolicies:
-            return 'Application Policies';
+            return 'Application Policies Required';
         case ActiveDirectoryKindProperties.IssuancePolicies:
-            return 'Issuance Policies';
+            return 'Issuance Policies Required';
         case ActiveDirectoryKindProperties.SchemaVersion:
             return 'Schema Version';
         case ActiveDirectoryKindProperties.RequiresManagerApproval:
@@ -510,7 +510,7 @@ export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKin
         case ActiveDirectoryKindProperties.EnrolleeSuppliesSubject:
             return 'Enrollee Supplies Subject';
         case ActiveDirectoryKindProperties.CertificateApplicationPolicy:
-            return 'Certificate Application Policies';
+            return 'Application Policy Extensions';
         case ActiveDirectoryKindProperties.CertificateNameFlag:
             return 'Certificate Name Flags';
         case ActiveDirectoryKindProperties.EffectiveEKUs:

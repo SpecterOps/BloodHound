@@ -444,14 +444,14 @@ AuthorizedSignatures: types.#StringEnum & {
 ApplicationPolicies: types.#StringEnum & {
 	symbol: "ApplicationPolicies"
 	schema: "ad"
-	name: "Application Policies"
+	name: "Application Policies Required"
 	representation: "applicationpolicies"
 }
 
 IssuancePolicies: types.#StringEnum & {
 	symbol: "IssuancePolicies"
 	schema: "ad"
-	name: "Issuance Policies"
+	name: "Issuance Policies Required"
 	representation: "issuancepolicies"
 }
 
@@ -486,7 +486,7 @@ EnrolleeSuppliesSubject: types.#StringEnum & {
 CertificateApplicationPolicy: types.#StringEnum & {
 	symbol: "CertificateApplicationPolicy"
 	schema: "ad"
-	name: "Certificate Application Policies"
+	name: "Application Policy Extensions"
 	representation: "certificateapplicationpolicy"
 }
 
