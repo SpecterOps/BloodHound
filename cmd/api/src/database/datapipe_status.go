@@ -24,31 +24,31 @@ import (
 	"github.com/specterops/bloodhound/src/model"
 )
 
-func (s *BloodhoundDB) SetDatapipeStatus(ctx context.Context, status model.DatapipeStatus, updateAnalysisTime bool) error {
+func (s *BloodhoundDB) SetDatapipeStatus(ctx context.Context, status model.Status, updateAnalysisTime bool) error {
 
-	insertSql := "UPDATE datapipe_status SET status = ?, updated_at = ?"
+	updateSql := "UPDATE datapipe_status SET status = ?, updated_at = ?"
 	now := time.Now().UTC()
 
 	if updateAnalysisTime {
-		insertSql += ", last_complete_analysis_at = ?;"
+		updateSql += ", last_complete_analysis_at = ? where id = 1;"
 
-		tx := s.db.WithContext(ctx).Exec(insertSql, status, now, now)
+		tx := s.db.WithContext(ctx).Exec(updateSql, status, now, now)
 
 		return tx.Error
 	} else {
-		insertSql += ";"
+		updateSql += " where id = 1;"
 		now := time.Now().UTC()
-		tx := s.db.WithContext(ctx).Exec(insertSql, status, now)
+		tx := s.db.WithContext(ctx).Exec(updateSql, status, now)
 
 		return tx.Error
 	}
 
 }
 
-func (s *BloodhoundDB) GetDatapipeStatus(ctx context.Context) (model.DatapipeStatusWrapper, error) {
-	var datapipeStatus model.DatapipeStatusWrapper
+func (s *BloodhoundDB) GetDatapipeStatus(ctx context.Context) (model.DatapipeStatus, error) {
+	var datapipeStatus model.DatapipeStatus
 
-	if tx := s.db.WithContext(ctx).Raw("select * from datapipe_status limit 1;").Scan(&datapipeStatus); tx.RowsAffected == 0 {
+	if tx := s.db.WithContext(ctx).Raw("select * from datapipe_status where id = 1;").Scan(&datapipeStatus); tx.RowsAffected == 0 {
 		return datapipeStatus, sql.ErrNoRows
 	}
 
