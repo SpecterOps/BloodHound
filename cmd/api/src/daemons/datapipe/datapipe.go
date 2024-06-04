@@ -37,12 +37,6 @@ const (
 	pruningInterval = time.Hour * 24
 )
 
-// todo: nuke this
-type Tasker interface {
-	// GetStatus() model.DatapipeStatusWrapper
-	GetDatapipeStatus(ctx context.Context) (model.DatapipeStatusWrapper, error)
-}
-
 type Daemon struct {
 	db                  database.Database
 	graphdb             graph.Database
@@ -51,7 +45,6 @@ type Daemon struct {
 	tickInterval        time.Duration
 	ctx                 context.Context
 	orphanedFileSweeper *OrphanFileSweeper
-	status              model.DatapipeStatusWrapper
 }
 
 func (s *Daemon) Name() string {
@@ -67,16 +60,7 @@ func NewDaemon(ctx context.Context, cfg config.Configuration, connections bootst
 		ctx:                 ctx,
 		orphanedFileSweeper: NewOrphanFileSweeper(NewOSFileOperations(), cfg.TempDirectory()),
 		tickInterval:        tickInterval,
-		// todo: on creation, make sure status is set to idle
-		status: model.DatapipeStatusWrapper{
-			Status:    model.DatapipeStatusIdle,
-			UpdatedAt: time.Now().UTC(),
-		},
 	}
-}
-
-func (s *Daemon) GetStatus() model.DatapipeStatusWrapper {
-	return s.status
 }
 
 func (s *Daemon) analyze() {

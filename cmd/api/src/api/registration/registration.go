@@ -28,7 +28,6 @@ import (
 	v2 "github.com/specterops/bloodhound/src/api/v2"
 	"github.com/specterops/bloodhound/src/auth"
 	"github.com/specterops/bloodhound/src/config"
-	"github.com/specterops/bloodhound/src/daemons/datapipe"
 	"github.com/specterops/bloodhound/src/database"
 	"github.com/specterops/bloodhound/src/queries"
 )
@@ -59,7 +58,6 @@ func RegisterFossRoutes(
 	apiCache cache.Cache,
 	collectorManifests config.CollectorManifests,
 	authenticator api.Authenticator,
-	taskNotifier datapipe.Tasker,
 	authorizer auth.Authorizer,
 ) {
 	router.With(middleware.DefaultRateLimitMiddleware,
@@ -77,6 +75,6 @@ func RegisterFossRoutes(
 		routerInst.PathPrefix("/ui", static.AssetHandler),
 	)
 
-	var resources = v2.NewResources(rdms, graphDB, cfg, apiCache, graphQuery, collectorManifests, taskNotifier, authorizer)
+	var resources = v2.NewResources(rdms, graphDB, cfg, apiCache, graphQuery, collectorManifests, authorizer)
 	NewV2API(cfg, resources, routerInst, authenticator)
 }
