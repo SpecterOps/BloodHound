@@ -21,6 +21,7 @@
 package mocks
 
 import (
+	context "context"
 	reflect "reflect"
 
 	model "github.com/specterops/bloodhound/src/model"
@@ -50,16 +51,17 @@ func (m *MockTasker) EXPECT() *MockTaskerMockRecorder {
 	return m.recorder
 }
 
-// GetStatus mocks base method.
-func (m *MockTasker) GetStatus() model.DatapipeStatusWrapper {
+// GetDatapipeStatus mocks base method.
+func (m *MockTasker) GetDatapipeStatus(arg0 context.Context) (model.DatapipeStatusWrapper, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetStatus")
+	ret := m.ctrl.Call(m, "GetDatapipeStatus", arg0)
 	ret0, _ := ret[0].(model.DatapipeStatusWrapper)
-	return ret0
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
-// GetStatus indicates an expected call of GetStatus.
-func (mr *MockTaskerMockRecorder) GetStatus() *gomock.Call {
+// GetDatapipeStatus indicates an expected call of GetDatapipeStatus.
+func (mr *MockTaskerMockRecorder) GetDatapipeStatus(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetStatus", reflect.TypeOf((*MockTasker)(nil).GetStatus))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDatapipeStatus", reflect.TypeOf((*MockTasker)(nil).GetDatapipeStatus), arg0)
 }

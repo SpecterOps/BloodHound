@@ -97,7 +97,7 @@ func Entrypoint(ctx context.Context, cfg config.Configuration, connections boots
 		)
 
 		registration.RegisterFossGlobalMiddleware(&routerInst, cfg, connections.RDMS, auth.NewIdentityResolver(), authenticator)
-		registration.RegisterFossRoutes(&routerInst, cfg, connections.RDMS, connections.Graph, graphQuery, apiCache, collectorManifests, authenticator, datapipeDaemon, authorizer)
+		registration.RegisterFossRoutes(&routerInst, cfg, connections.RDMS, connections.Graph, graphQuery, apiCache, collectorManifests, authenticator, connections.RDMS, authorizer)
 
 		// Set neo4j batch and flush sizes
 		neo4jParameters := appcfg.GetNeo4jParameters(ctx, connections.RDMS)

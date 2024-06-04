@@ -39,7 +39,8 @@ const (
 
 // todo: nuke this
 type Tasker interface {
-	GetStatus() model.DatapipeStatusWrapper
+	// GetStatus() model.DatapipeStatusWrapper
+	GetDatapipeStatus(ctx context.Context) (model.DatapipeStatusWrapper, error)
 }
 
 type Daemon struct {
@@ -90,7 +91,7 @@ func (s *Daemon) analyze() {
 		return
 	}
 
-	if err := s.db.UpdateDatapipeStatus(s.ctx, model.DatapipeStatusAnalyzing, false); err != nil {
+	if err := s.db.SetDatapipeStatus(s.ctx, model.DatapipeStatusAnalyzing, false); err != nil {
 		log.Errorf("Error setting datapipe status: %v", err)
 		return
 	}
@@ -100,14 +101,14 @@ func (s *Daemon) analyze() {
 	if err := RunAnalysisOperations(s.ctx, s.db, s.graphdb, s.cfg); err != nil {
 		if errors.Is(err, ErrAnalysisFailed) {
 			FailAnalyzedFileUploadJobs(s.ctx, s.db)
-			if err := s.db.UpdateDatapipeStatus(s.ctx, model.DatapipeStatusIdle, false); err != nil {
+			if err := s.db.SetDatapipeStatus(s.ctx, model.DatapipeStatusIdle, false); err != nil {
 				log.Errorf("Error setting datapipe status: %v", err)
 				return
 			}
 
 		} else if errors.Is(err, ErrAnalysisPartiallyCompleted) {
 			PartialCompleteFileUploadJobs(s.ctx, s.db)
-			if err := s.db.UpdateDatapipeStatus(s.ctx, model.DatapipeStatusIdle, true); err != nil {
+			if err := s.db.SetDatapipeStatus(s.ctx, model.DatapipeStatusIdle, true); err != nil {
 				log.Errorf("Error setting datapipe status: %v", err)
 				return
 			}
@@ -121,7 +122,7 @@ func (s *Daemon) analyze() {
 			resetCache(s.cache, entityPanelCachingFlag.Enabled)
 		}
 
-		if err := s.db.UpdateDatapipeStatus(s.ctx, model.DatapipeStatusIdle, true); err != nil {
+		if err := s.db.SetDatapipeStatus(s.ctx, model.DatapipeStatusIdle, true); err != nil {
 			log.Errorf("Error setting datapipe status: %v", err)
 			return
 		}
@@ -191,12 +192,12 @@ func (s *Daemon) Start(ctx context.Context) {
 
 func (s *Daemon) deleteData() {
 	defer func() {
-		_ = s.db.UpdateDatapipeStatus(s.ctx, model.DatapipeStatusIdle, false)
+		_ = s.db.SetDatapipeStatus(s.ctx, model.DatapipeStatusIdle, false)
 		_ = s.db.DeleteAnalysisRequest(s.ctx)
 		_ = s.db.RequestAnalysis(s.ctx, "datapie")
 	}()
 	defer log.Measure(log.LevelInfo, "Purge Graph Data Completed")()
-	s.db.UpdateDatapipeStatus(s.ctx, model.DatapipeStatusPurging, false)
+	s.db.SetDatapipeStatus(s.ctx, model.DatapipeStatusPurging, false)
 	log.Infof("Begin Purge Graph Data")
 
 	if err := s.db.CancelAllFileUploads(s.ctx); err != nil {
