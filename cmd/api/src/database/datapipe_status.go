@@ -24,7 +24,7 @@ import (
 	"github.com/specterops/bloodhound/src/model"
 )
 
-func (s *BloodhoundDB) SetDatapipeStatus(ctx context.Context, status model.Status, updateAnalysisTime bool) error {
+func (s *BloodhoundDB) SetDatapipeStatus(ctx context.Context, status model.DatapipeStatus, updateAnalysisTime bool) error {
 
 	updateSql := "UPDATE datapipe_status SET status = ?, updated_at = ?"
 	now := time.Now().UTC()
@@ -45,8 +45,8 @@ func (s *BloodhoundDB) SetDatapipeStatus(ctx context.Context, status model.Statu
 
 }
 
-func (s *BloodhoundDB) GetDatapipeStatus(ctx context.Context) (model.DatapipeStatus, error) {
-	var datapipeStatus model.DatapipeStatus
+func (s *BloodhoundDB) GetDatapipeStatus(ctx context.Context) (model.DatapipeStatusWrapper, error) {
+	var datapipeStatus model.DatapipeStatusWrapper
 
 	if tx := s.db.WithContext(ctx).Raw("select * from datapipe_status where id = 1;").Scan(&datapipeStatus); tx.RowsAffected == 0 {
 		return datapipeStatus, sql.ErrNoRows
