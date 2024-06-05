@@ -22,6 +22,7 @@ import (
 	"time"
 
 	"github.com/gofrs/uuid"
+	"github.com/specterops/bloodhound/src/database/types"
 	"github.com/specterops/bloodhound/src/database/types/null"
 	"github.com/specterops/bloodhound/src/serde"
 )
@@ -572,6 +573,7 @@ type UserSession struct {
 	AuthProviderType SessionAuthProvider
 	AuthProviderID   int32
 	ExpiresAt        time.Time
+	Data             types.JSONUntypedObject `json:"data"`
 
 	BigSerial
 }
