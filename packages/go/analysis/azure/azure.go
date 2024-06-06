@@ -104,13 +104,3 @@ func AzureNonDescentKinds() graph.Kinds {
 		azure.RunsAs,
 	}
 }
-
-func AzureIgnoredKinds() graph.Kinds {
-	return []graph.Kind{
-		azure.ScopedTo,
-		azure.Contains,
-		azure.GlobalAdmin,
-		azure.PrivilegedRoleAdmin,
-		azure.PrivilegedAuthAdmin,
-	}
-}

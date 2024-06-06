@@ -18,6 +18,8 @@ import { useState } from 'react';
 import { Box, Button, CircularProgress, Grid, Switch, Typography } from '@mui/material';
 import { useMutation, useQuery } from 'react-query';
 import { Alert, AlertTitle } from '@mui/material';
+import { PutUserAuthSecretRequest } from 'js-client-library';
+
 import { useNotifications } from '../../providers';
 import { apiClient, getUsername } from '../../utils';
 import {
@@ -46,15 +48,22 @@ const UserProfile = () => {
     );
 
     const updateUserPasswordMutation = useMutation(
-        ({ userId, secret, needsPasswordReset }: { userId: string; secret: string; needsPasswordReset: boolean }) =>
-            apiClient.putUserAuthSecret(userId, {
-                needs_password_reset: needsPasswordReset,
-                secret: secret,
-            }),
+        ({ userId, ...payload }: { userId: string } & PutUserAuthSecretRequest) =>
+            apiClient.putUserAuthSecret(userId, payload),
         {
             onSuccess: () => {
                 addNotification('Password updated successfully!', 'updateUserPasswordSuccess');
                 setChangePasswordDialogOpen(false);
+            },
+            onError: (error: any) => {
+                if (error.response?.status == 403) {
+                    addNotification(
+                        'Current password invalid. Password update failed.',
+                        'UpdateUserPasswordCurrentPasswordInvalidError'
+                    );
+                } else {
+                    addNotification('Password failed to update.', 'UpdateUserPasswordError');
+                }
             },
         }
     );
@@ -193,6 +202,7 @@ const UserProfile = () => {
                 open={changePasswordDialogOpen}
                 onClose={() => setChangePasswordDialogOpen(false)}
                 userId={user.id}
+                requireCurrentPassword={true}
                 showNeedsPasswordReset={false}
                 onSave={updateUserPasswordMutation.mutate}
             />

@@ -80,7 +80,10 @@ export const initializeBHEClient = () => {
                     error?.response?.config.url !== '/api/v2/logout'
                 ) {
                     throttledLogout();
-                } else if (error?.response?.status === 403) {
+                } else if (
+                    error?.response?.status === 403 &&
+                    !error?.response?.config.url.match('/api/v2/bloodhound-users/[a-z0-9-]+/secret')
+                ) {
                     store.dispatch(addSnackbar('Permission denied!', 'permissionDenied'));
                 }
             }

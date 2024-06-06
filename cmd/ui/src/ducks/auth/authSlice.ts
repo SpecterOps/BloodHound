@@ -17,6 +17,8 @@
 import { createAsyncThunk, createSelector, createSlice } from '@reduxjs/toolkit';
 import { DateTime } from 'luxon';
 import { apiClient } from 'bh-shared-ui';
+import { PutUserAuthSecretRequest } from 'js-client-library';
+
 import type { AppDispatch, AppState } from 'src/store';
 import { addSnackbar } from '../global/actions';
 import * as types from './types';
@@ -107,33 +109,37 @@ export const initialize = createAsyncThunk<
 
 export const updateExpiredPassword = createAsyncThunk<
     types.getSelfResponse,
-    {
-        password: string;
-    },
+    PutUserAuthSecretRequest,
     {
         dispatch: AppDispatch;
         state: AppState;
     }
->('auth/updateExpiredPassword', async ({ password }, { getState, dispatch, rejectWithValue }) => {
+>('auth/updateExpiredPassword', async (payload, { getState, dispatch, rejectWithValue }) => {
     const userId = getState().auth.user?.id;
     if (userId === undefined) {
         throw new Error('Could not find user ID');
     }
 
     try {
-        await apiClient.putUserAuthSecret(userId, {
-            needs_password_reset: false,
-            secret: password,
-        });
+        await apiClient.putUserAuthSecret(userId, payload);
         const response = await apiClient.getSelf();
         return response.data.data;
-    } catch (error) {
-        dispatch(
-            addSnackbar(
-                'An error occurred when attempting to reset your password. Please try again.',
-                'updateUserPasswordError'
-            )
-        );
+    } catch (error: any) {
+        if (error.response?.status == 403) {
+            dispatch(
+                addSnackbar(
+                    'Expired password invalid. Password reset failed.',
+                    'ResetUserPasswordExpiredPasswordInvalidError'
+                )
+            );
+        } else {
+            dispatch(
+                addSnackbar(
+                    'An error occurred when attempting to reset your password. Please try again.',
+                    'ResetUserPasswordError'
+                )
+            );
+        }
         return rejectWithValue(error);
     }
 });

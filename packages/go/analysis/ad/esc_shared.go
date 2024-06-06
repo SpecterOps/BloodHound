@@ -164,7 +164,7 @@ func PostExtendedByPolicyBinding(operation analysis.StatTrackedOperation[analysi
 		if allIssuancePolicies, err := fetchAllIssuancePolicies(tx); err != nil {
 			return err
 		} else {
-			// Get an O(1) lookup of Issuance Policies keyed by CertificatePolicyOID
+			// Get an O(1) lookup of Issuance Policies Required keyed by CertificatePolicyOID
 			certTemplateOIDToIssuancePolicyMap := getIssuancePolicyCertOIDMap(allIssuancePolicies)
 
 			// For each certTemplate, find all issuance policies within its CertificatePolicy property array

@@ -16,7 +16,7 @@
 
 import { Box, Button, Paper } from '@mui/material';
 import { DateTime } from 'luxon';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useMutation, useQuery } from 'react-query';
 import {
     ConfirmationDialog,
@@ -29,7 +29,7 @@ import {
     apiClient,
     Disable2FADialog,
 } from 'bh-shared-ui';
-import { UpdateUserRequest } from 'js-client-library';
+import { PutUserAuthSecretRequest, UpdateUserRequest } from 'js-client-library';
 import find from 'lodash/find';
 import isEmpty from 'lodash/isEmpty';
 import { NewUser } from 'src/ducks/auth/types';
@@ -58,6 +58,7 @@ const Users = () => {
     const [disable2FASecret, setDisable2FASecret] = useState('');
 
     const self = useAppSelector((state) => state.auth.user);
+    const hasSelectedSelf = useMemo(() => self?.id === selectedUserId!, [selectedUserId, self?.id]);
 
     const getSelfQuery = useQuery(['getSelf'], ({ signal }) =>
         apiClient.getSelf({ signal }).then((res) => res.data.data)
@@ -159,18 +160,25 @@ const Users = () => {
     });
 
     const updateUserPasswordMutation = useMutation(
-        ({ userId, secret, needsPasswordReset }: { userId: string; secret: string; needsPasswordReset: boolean }) =>
-            apiClient.putUserAuthSecret(userId, {
-                needs_password_reset: needsPasswordReset,
-                secret: secret,
-            }),
+        ({ userId, ...payload }: { userId: string } & PutUserAuthSecretRequest) =>
+            apiClient.putUserAuthSecret(userId, payload),
         {
             onSuccess: () => {
                 dispatch(addSnackbar('User password updated successfully!', 'updateUserPasswordSuccess'));
                 toggleResetUserPasswordDialog();
             },
-            onSettled: () => {
-                setNeedsPasswordReset(false);
+            onSettled: () => setNeedsPasswordReset(false),
+            onError: (error: any) => {
+                if (error.response?.status == 403) {
+                    dispatch(
+                        addSnackbar(
+                            'Current password invalid. Password update failed.',
+                            'UpdateUserPasswordCurrentPasswordInvalidError'
+                        )
+                    );
+                } else {
+                    dispatch(addSnackbar('Password failed to update.', 'UpdateUserPasswordError'));
+                }
             },
         }
     );
@@ -372,6 +380,7 @@ const Users = () => {
                 }}
                 userId={selectedUserId!}
                 onSave={updateUserPasswordMutation.mutate}
+                requireCurrentPassword={hasSelectedSelf}
                 showNeedsPasswordReset={true}
                 initialNeedsPasswordReset={needsPasswordReset}
             />

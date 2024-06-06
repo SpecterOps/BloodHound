@@ -79,6 +79,7 @@ type DeleteSAMLProviderResponse struct {
 }
 
 type SetUserSecretRequest struct {
+	CurrentSecret      string `json:"current_secret"`
 	Secret             string `json:"secret" validate:"password,length=12,lower=1,upper=1,special=1,numeric=1"`
 	NeedsPasswordReset bool   `json:"needs_password_reset"`
 }
