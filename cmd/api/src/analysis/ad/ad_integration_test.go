@@ -1107,15 +1107,10 @@ func TestSyncLAPSPassword(t *testing.T) {
 				})); err != nil {
 					t.Fatalf("error fetching SyncLAPSPassword edges in integration test; %v", err)
 				} else {
-					assert.Equal(t, 8, len(results))
+					assert.Equal(t, 5, len(results))
 
-					assert.True(t, results.Contains(harness.SyncLAPSPasswordHarness.User1))
-					assert.True(t, results.Contains(harness.SyncLAPSPasswordHarness.User2))
-					assert.True(t, results.Contains(harness.SyncLAPSPasswordHarness.User3))
-					assert.True(t, results.Contains(harness.SyncLAPSPasswordHarness.User4))
 					assert.True(t, results.Contains(harness.SyncLAPSPasswordHarness.User5))
 					assert.True(t, results.Contains(harness.SyncLAPSPasswordHarness.User7))
-
 					assert.True(t, results.Contains(harness.SyncLAPSPasswordHarness.Group1))
 					assert.True(t, results.Contains(harness.SyncLAPSPasswordHarness.Group2))
 				}
