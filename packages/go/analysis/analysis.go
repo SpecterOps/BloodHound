@@ -178,7 +178,13 @@ func ExpandGroupMembershipPaths(tx graph.Transaction, candidates graph.NodeSet) 
 
 	for _, candidate := range candidates {
 		if candidate.Kinds.ContainsOneOf(ad.Group) {
-			if membershipPaths, err := GetMembershipPathsToCandidate(tx, candidate); err != nil {
+			if membershipPaths, err := ops.TraversePaths(tx, ops.TraversalPlan{
+				Root:      candidate,
+				Direction: graph.DirectionInbound,
+				BranchQuery: func() graph.Criteria {
+					return query.Kind(query.Relationship(), ad.MemberOf)
+				},
+			}); err != nil {
 				return nil, err
 			} else {
 				groupMemberPaths.AddPathSet(membershipPaths)
@@ -187,39 +193,6 @@ func ExpandGroupMembershipPaths(tx graph.Transaction, candidates graph.NodeSet) 
 	}
 
 	return groupMemberPaths, nil
-}
-
-func ExpandGroupMembershipPathsFromBitmap(tx graph.Transaction, candidates graph.NodeSet, bitmap *roaring64.Bitmap) (graph.PathSet, error) {
-	groupMemberPaths := graph.NewPathSet()
-	nodeIDs := bitmap.Iterator()
-
-	for nodeIDs.HasNext() {
-		candidate := candidates.Get(graph.ID(nodeIDs.Next()))
-
-		if candidate != nil && candidate.Kinds.ContainsOneOf(ad.Group) {
-			if membershipPaths, err := GetMembershipPathsToCandidate(tx, candidate); err != nil {
-				return nil, err
-			} else {
-				groupMemberPaths.AddPathSet(membershipPaths)
-			}
-		}
-	}
-
-	return groupMemberPaths, nil
-}
-
-func GetMembershipPathsToCandidate(tx graph.Transaction, candidate *graph.Node) (graph.PathSet, error) {
-	if membershipPaths, err := ops.TraversePaths(tx, ops.TraversalPlan{
-		Root:      candidate,
-		Direction: graph.DirectionInbound,
-		BranchQuery: func() graph.Criteria {
-			return query.Kind(query.Relationship(), ad.MemberOf)
-		},
-	}); err != nil {
-		return nil, err
-	} else {
-		return membershipPaths, nil
-	}
 }
 
 func ExpandGroupMembership(tx graph.Transaction, candidates graph.NodeSet) (graph.NodeSet, error) {
@@ -230,12 +203,19 @@ func ExpandGroupMembership(tx graph.Transaction, candidates graph.NodeSet) (grap
 	}
 }
 
-func ExpandGroupMembershipFromBitmap(tx graph.Transaction, candidates graph.NodeSet, bitmap *roaring64.Bitmap) (*roaring64.Bitmap, error) {
-	if paths, err := ExpandGroupMembershipPathsFromBitmap(tx, candidates, bitmap); err != nil {
-		return nil, err
-	} else {
-		return graph.NodeSetToBitmap(paths.AllNodes()), nil
+func FilterNodeSetByBitmap(nodes graph.NodeSet, bitmap *roaring64.Bitmap) graph.NodeSet {
+	var (
+		filteredNodes = graph.NewNodeSet()
+		iterator      = bitmap.Iterator()
+	)
+
+	for iterator.HasNext() {
+		if node := nodes.Get(graph.ID(iterator.Next())); node != nil {
+			filteredNodes.Add(node)
+		}
 	}
+
+	return filteredNodes
 }
 
 func GetLAPSSyncers(tx graph.Transaction, domain *graph.Node) ([]*graph.Node, error) {
@@ -249,10 +229,12 @@ func GetLAPSSyncers(tx graph.Transaction, domain *graph.Node) ([]*graph.Node, er
 	} else if getChangesFilteredNodes, err := ops.FetchStartNodes(getChangesFilteredQuery); err != nil {
 		return nil, err
 	} else {
-		getChangesBitmap := graph.NodeSetToBitmap(getChangesNodes)
-		getChangesFilteredBitmap := graph.NodeSetToBitmap(getChangesFilteredNodes)
+		var (
+			getChangesBitmap         = graph.NodeSetToBitmap(getChangesNodes)
+			getChangesFilteredBitmap = graph.NodeSetToBitmap(getChangesFilteredNodes)
+		)
 
-		// calculate a list of all nodes with both required rights. these will not require any group expansion
+		// create a bitmap of all nodes with both required rights. these will not require any group expansion
 		combinedBitmap := getChangesBitmap.Clone()
 		combinedBitmap.And(getChangesFilteredBitmap)
 
@@ -260,13 +242,23 @@ func GetLAPSSyncers(tx graph.Transaction, domain *graph.Node) ([]*graph.Node, er
 		getChangesBitmap.AndNot(combinedBitmap)
 		getChangesFilteredBitmap.AndNot(combinedBitmap)
 
-		// in those cases, we need to get the members of those groups to see if they have the complimenting right
-		if getChangesMembersBitmap, err := ExpandGroupMembershipFromBitmap(tx, getChangesNodes, getChangesBitmap); err != nil {
+		var (
+			getChangesToExpand         = FilterNodeSetByBitmap(getChangesNodes, getChangesBitmap)
+			getChangesFilteredToExpand = FilterNodeSetByBitmap(getChangesFilteredNodes, getChangesFilteredBitmap)
+		)
+
+		// in these cases, we need to get the members of those groups to see if they have the complimenting right
+		if getChangesMembers, err := ExpandGroupMembership(tx, getChangesToExpand); err != nil {
 			return nil, err
-		} else if getChangesFilteredMembersBitmap, err := ExpandGroupMembershipFromBitmap(tx, getChangesFilteredNodes, getChangesFilteredBitmap); err != nil {
+		} else if getChangesFilteredMembers, err := ExpandGroupMembership(tx, getChangesFilteredToExpand); err != nil {
 			return nil, err
 		} else {
-			// these intersections give us all nodes who have one of the rights, and then the complimenting right is fulfilled via group membership
+			var (
+				getChangesMembersBitmap         = graph.NodeSetToBitmap(getChangesMembers)
+				getChangesFilteredMembersBitmap = graph.NodeSetToBitmap(getChangesFilteredMembers)
+			)
+
+			// these intersections give us all nodes who have one of the rights with the complimenting right fulfilled via group membership
 			getChangesMembersBitmap.And(getChangesFilteredBitmap)
 			getChangesFilteredMembersBitmap.And(getChangesBitmap)
 
@@ -274,6 +266,7 @@ func GetLAPSSyncers(tx graph.Transaction, domain *graph.Node) ([]*graph.Node, er
 			combinedBitmap.Or(getChangesFilteredMembersBitmap)
 		}
 
+		// collect set of all possible nodes to match against our combined bitmap
 		getChangesNodes.AddSet(getChangesFilteredNodes)
 
 		var (
@@ -282,8 +275,6 @@ func GetLAPSSyncers(tx graph.Transaction, domain *graph.Node) ([]*graph.Node, er
 		)
 
 		for idx, rawID := range nodeIDs {
-			// Since the bitmap is an intersection of both node sets each set is guaranteed to have a valid reference
-			// to the node
 			nodes[idx] = getChangesNodes.Get(graph.ID(int64(rawID)))
 		}
 

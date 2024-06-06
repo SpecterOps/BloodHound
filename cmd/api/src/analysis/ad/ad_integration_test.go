@@ -34,7 +34,6 @@ import (
 	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/graphschema/common"
 	"github.com/specterops/bloodhound/src/test/integration"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -1107,12 +1106,12 @@ func TestSyncLAPSPassword(t *testing.T) {
 				})); err != nil {
 					t.Fatalf("error fetching SyncLAPSPassword edges in integration test; %v", err)
 				} else {
-					assert.Equal(t, 5, len(results))
+					require.Equal(t, 4, len(results))
 
-					assert.True(t, results.Contains(harness.SyncLAPSPasswordHarness.User5))
-					assert.True(t, results.Contains(harness.SyncLAPSPasswordHarness.User7))
-					assert.True(t, results.Contains(harness.SyncLAPSPasswordHarness.Group1))
-					assert.True(t, results.Contains(harness.SyncLAPSPasswordHarness.Group2))
+					require.True(t, results.Contains(harness.SyncLAPSPasswordHarness.User5))
+					require.True(t, results.Contains(harness.SyncLAPSPasswordHarness.User7))
+					require.True(t, results.Contains(harness.SyncLAPSPasswordHarness.Group1))
+					require.True(t, results.Contains(harness.SyncLAPSPasswordHarness.Group2))
 				}
 				return nil
 			})
