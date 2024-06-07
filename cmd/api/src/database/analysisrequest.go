@@ -96,10 +96,12 @@ func (s *BloodhoundDB) setAnalysisRequest(ctx context.Context, requestType model
 
 // This will request an analysis be executed, as long as there isn't an existing analysis request or collected graph data deletion request, then it no-ops
 func (s *BloodhoundDB) RequestAnalysis(ctx context.Context, requestedBy string) error {
+	log.Infof("Analysis requested by %s", requestedBy)
 	return s.setAnalysisRequest(ctx, model.AnalysisRequestAnalysis, requestedBy)
 }
 
 // This will request collected graph data be deleted, if an analysis request is present, it will overwrite that.
 func (s *BloodhoundDB) RequestCollectedGraphDataDeletion(ctx context.Context, requestedBy string) error {
+	log.Infof("Collected graph data deletion requested by %s", requestedBy)
 	return s.setAnalysisRequest(ctx, model.AnalysisRequestDeletion, requestedBy)
 }
