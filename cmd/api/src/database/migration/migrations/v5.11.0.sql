@@ -15,13 +15,9 @@
 -- SPDX-License-Identifier: Apache-2.0
 
 CREATE TABLE IF NOT EXISTS analysis_request_switch (
+   there_can_only_be_one bool PRIMARY KEY DEFAULT true,
    request_type text NOT NULL,
    requested_by text NOT NULL,
    requested_at timestamp with time zone NOT NULL
+   CONSTRAINT onerow_uni CHECK (there_can_only_be_one)
 );
-
-ALTER TABLE IF EXISTS ONLY analysis_request_switch
-  DROP CONSTRAINT IF EXISTS analysis_request_switch_pkey;
-
-ALTER TABLE ONLY analysis_request_switch
-  ADD CONSTRAINT analysis_request_switch_pkey PRIMARY KEY (request_type);

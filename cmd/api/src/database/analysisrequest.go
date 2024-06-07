@@ -35,7 +35,7 @@ type AnalysisRequestData interface {
 }
 
 func (s *BloodhoundDB) DeleteAnalysisRequest(ctx context.Context) error {
-	tx := s.db.WithContext(ctx).Exec(`delete from analysis_request_switch;`)
+	tx := s.db.WithContext(ctx).Exec(`truncate analysis_request_switch;`)
 	return tx.Error
 }
 
