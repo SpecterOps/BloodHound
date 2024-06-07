@@ -1,4 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2024 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -14,14 +14,19 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package v2
+package model
 
-import (
-	"net/http"
+import "time"
 
-	"github.com/specterops/bloodhound/src/api"
+type AnalysisRequestType string
+
+const (
+	AnalysisRequestAnalysis AnalysisRequestType = "analysis"
+	AnalysisRequestDeletion AnalysisRequestType = "deletion"
 )
 
-func (s Resources) GetDatapipeStatus(response http.ResponseWriter, request *http.Request) {
-	api.WriteBasicResponse(request.Context(), s.TaskNotifier.GetStatus(), http.StatusOK, response)
+type AnalysisRequest struct {
+	RequestedBy string              `json:"requested_by"`
+	RequestType AnalysisRequestType `json:"request_type"`
+	RequestedAt time.Time           `json:"requested_at"`
 }
