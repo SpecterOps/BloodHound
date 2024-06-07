@@ -21,7 +21,6 @@ import (
 	"fmt"
 	"slices"
 
-	"github.com/RoaringBitmap/roaring/roaring64"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/dawgs/ops"
 	"github.com/specterops/bloodhound/dawgs/query"
@@ -203,89 +202,10 @@ func ExpandGroupMembership(tx graph.Transaction, candidates graph.NodeSet) (grap
 	}
 }
 
-func FilterNodeSetByBitmap(nodes graph.NodeSet, bitmap *roaring64.Bitmap) graph.NodeSet {
-	var (
-		filteredNodes = graph.NewNodeSet()
-		iterator      = bitmap.Iterator()
-	)
-
-	for iterator.HasNext() {
-		if node := nodes.Get(graph.ID(iterator.Next())); node != nil {
-			filteredNodes.Add(node)
-		}
-	}
-
-	return filteredNodes
-}
-
-func GetLAPSSyncers(tx graph.Transaction, domain *graph.Node) ([]*graph.Node, error) {
-	var (
-		getChangesQuery         = fromEntityToEntityWithRelationshipKind(tx, domain, ad.GetChanges)
-		getChangesFilteredQuery = fromEntityToEntityWithRelationshipKind(tx, domain, ad.GetChangesInFilteredSet)
-	)
-
-	if getChangesNodes, err := ops.FetchStartNodes(getChangesQuery); err != nil {
-		return nil, err
-	} else if getChangesFilteredNodes, err := ops.FetchStartNodes(getChangesFilteredQuery); err != nil {
-		return nil, err
-	} else {
-		var (
-			getChangesBitmap         = graph.NodeSetToBitmap(getChangesNodes)
-			getChangesFilteredBitmap = graph.NodeSetToBitmap(getChangesFilteredNodes)
-		)
-
-		// create a bitmap of all nodes with both required rights. these will not require any group expansion
-		combinedBitmap := getChangesBitmap.Clone()
-		combinedBitmap.And(getChangesFilteredBitmap)
-
-		// calculate all nodes with only one of the two required rights
-		getChangesBitmap.AndNot(combinedBitmap)
-		getChangesFilteredBitmap.AndNot(combinedBitmap)
-
-		var (
-			getChangesToExpand         = FilterNodeSetByBitmap(getChangesNodes, getChangesBitmap)
-			getChangesFilteredToExpand = FilterNodeSetByBitmap(getChangesFilteredNodes, getChangesFilteredBitmap)
-		)
-
-		// in these cases, we need to get the members of those groups to see if they have the complimenting right
-		if getChangesMembers, err := ExpandGroupMembership(tx, getChangesToExpand); err != nil {
-			return nil, err
-		} else if getChangesFilteredMembers, err := ExpandGroupMembership(tx, getChangesFilteredToExpand); err != nil {
-			return nil, err
-		} else {
-			var (
-				getChangesMembersBitmap         = graph.NodeSetToBitmap(getChangesMembers)
-				getChangesFilteredMembersBitmap = graph.NodeSetToBitmap(getChangesFilteredMembers)
-			)
-
-			// these intersections give us all nodes who have one of the rights with the complimenting right fulfilled via group membership
-			getChangesMembersBitmap.And(getChangesFilteredBitmap)
-			getChangesFilteredMembersBitmap.And(getChangesBitmap)
-
-			combinedBitmap.Or(getChangesMembersBitmap)
-			combinedBitmap.Or(getChangesFilteredMembersBitmap)
-		}
-
-		// collect set of all possible nodes to match against our combined bitmap
-		getChangesNodes.AddSet(getChangesFilteredNodes)
-
-		var (
-			nodeIDs = combinedBitmap.ToArray()
-			nodes   = make([]*graph.Node, len(nodeIDs))
-		)
-
-		for idx, rawID := range nodeIDs {
-			nodes[idx] = getChangesNodes.Get(graph.ID(int64(rawID)))
-		}
-
-		return nodes, nil
-	}
-}
-
 func GetDCSyncers(tx graph.Transaction, domain *graph.Node) ([]*graph.Node, error) {
 	var (
-		getChangesQuery    = fromEntityToEntityWithRelationshipKind(tx, domain, ad.GetChanges)
-		getChangesAllQuery = fromEntityToEntityWithRelationshipKind(tx, domain, ad.GetChangesAll)
+		getChangesQuery    = FromEntityToEntityWithRelationshipKind(tx, domain, ad.GetChanges)
+		getChangesAllQuery = FromEntityToEntityWithRelationshipKind(tx, domain, ad.GetChangesAll)
 	)
 
 	if getChangesNodes, err := ops.FetchStartNodes(getChangesQuery); err != nil {
@@ -319,7 +239,7 @@ func GetDCSyncers(tx graph.Transaction, domain *graph.Node) ([]*graph.Node, erro
 	}
 }
 
-func fromEntityToEntityWithRelationshipKind(tx graph.Transaction, target *graph.Node, relKind graph.Kind) graph.RelationshipQuery {
+func FromEntityToEntityWithRelationshipKind(tx graph.Transaction, target *graph.Node, relKind graph.Kind) graph.RelationshipQuery {
 	return tx.Relationships().Filterf(func() graph.Criteria {
 		filters := []graph.Criteria{
 			query.Kind(query.Start(), ad.Entity),

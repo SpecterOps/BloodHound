@@ -64,7 +64,7 @@ func PostProcessedRelationships() []graph.Kind {
 	}
 }
 
-func PostSyncLAPSPassword(ctx context.Context, db graph.Database) (*analysis.AtomicPostProcessingStats, error) {
+func PostSyncLAPSPassword(ctx context.Context, db graph.Database, groupExpansions impact.PathAggregator) (*analysis.AtomicPostProcessingStats, error) {
 	if domainNodes, err := fetchCollectedDomainNodes(ctx, db); err != nil {
 		return &analysis.AtomicPostProcessingStats{}, err
 	} else {
@@ -72,25 +72,23 @@ func PostSyncLAPSPassword(ctx context.Context, db graph.Database) (*analysis.Ato
 		for _, domain := range domainNodes {
 			innerDomain := domain
 			operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
-				if lapsSyncers, err := analysis.GetLAPSSyncers(tx, innerDomain); err != nil {
+				if lapsSyncers, err := GetLAPSSyncers(tx, innerDomain, groupExpansions); err != nil {
 					return err
-				} else if len(lapsSyncers) == 0 {
+				} else if lapsSyncers.Cardinality() == 0 {
 					return nil
 				} else if computers, err := getLAPSComputersForDomain(tx, innerDomain); err != nil {
 					return err
 				} else {
 					for _, computer := range computers {
-						for _, lapsSyncer := range lapsSyncers {
+						lapsSyncers.Each(func(value uint32) bool {
 							nextJob := analysis.CreatePostRelationshipJob{
-								FromID: lapsSyncer.ID,
+								FromID: graph.ID(value),
 								ToID:   computer,
 								Kind:   ad.SyncLAPSPassword,
 							}
 
-							if !channels.Submit(ctx, outC, nextJob) {
-								return nil
-							}
-						}
+							return channels.Submit(ctx, outC, nextJob)
+						})
 					}
 
 					return nil
@@ -184,6 +182,23 @@ func fetchCollectedDomainNodes(ctx context.Context, db graph.Database) ([]*graph
 			return nil
 		}
 	})
+}
+
+func GetLAPSSyncers(tx graph.Transaction, domain *graph.Node, groupExpansions impact.PathAggregator) (cardinality.Duplex[uint32], error) {
+	var (
+		getChangesQuery         = analysis.FromEntityToEntityWithRelationshipKind(tx, domain, ad.GetChanges)
+		getChangesFilteredQuery = analysis.FromEntityToEntityWithRelationshipKind(tx, domain, ad.GetChangesInFilteredSet)
+	)
+
+	if getChangesNodes, err := ops.FetchStartNodes(getChangesQuery); err != nil {
+		return nil, err
+	} else if getChangesFilteredNodes, err := ops.FetchStartNodes(getChangesFilteredQuery); err != nil {
+		return nil, err
+	} else {
+		results := CalculateCrossProductNodeSets(groupExpansions, getChangesNodes.Slice(), getChangesFilteredNodes.Slice())
+
+		return results, nil
+	}
 }
 
 func getLAPSComputersForDomain(tx graph.Transaction, domain *graph.Node) ([]graph.ID, error) {

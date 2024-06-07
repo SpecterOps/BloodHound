@@ -1097,7 +1097,9 @@ func TestSyncLAPSPassword(t *testing.T) {
 		harness.SyncLAPSPasswordHarness.Setup(testContext)
 		return nil
 	}, func(harness integration.HarnessDetails, db graph.Database) {
-		if _, err := adAnalysis.PostSyncLAPSPassword(testContext.Context(), db); err != nil {
+		if groupExpansions, err := adAnalysis.ExpandAllRDPLocalGroups(testContext.Context(), db); err != nil {
+			t.Fatalf("error expanding groups in integration test; %v", err)
+		} else if _, err := adAnalysis.PostSyncLAPSPassword(testContext.Context(), db, groupExpansions); err != nil {
 			t.Fatalf("error creating SyncLAPSPassword edges in integration test; %v", err)
 		} else {
 			db.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
