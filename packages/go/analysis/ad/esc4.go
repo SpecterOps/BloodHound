@@ -487,7 +487,6 @@ func findPathToDomainThroughEnterpriseCAsTrustedForNTAuth(
 	cardinality.Duplex[uint32],
 	error,
 ) {
-
 	var (
 		traversalInst = traversal.New(db, analysis.MaximumDatabaseParallelWorkers)
 		lock          = &sync.Mutex{}
@@ -496,65 +495,42 @@ func findPathToDomainThroughEnterpriseCAsTrustedForNTAuth(
 		enrollAndNTAuthECAs        = cardinality.NewBitmap32()
 	)
 
-	// Start by fetching all EnterpriseCA nodes that our user has enrollment rights on via group membership or directly
 	if err := traversalInst.BreadthFirst(ctx,
 		traversal.Plan{
 			Root: startNode,
-			Driver: enterpriseCATraversal().Do(
+			Driver: ntAuthStoreToDomainTraversal(domainID).Do(
 				func(terminal *graph.PathSegment) error {
-
 					enterpriseCA := terminal.Search(
 						func(nextSegment *graph.PathSegment) bool {
 							return nextSegment.Node.Kinds.ContainsOneOf(ad.EnterpriseCA)
-						},
-					)
+						})
 
 					lock.Lock()
 					enrollAndNTAuthECAs.Add(enterpriseCA.ID.Uint32())
+					enrollAndNTAuthECASegments[enterpriseCA.ID] = append(enrollAndNTAuthECASegments[enterpriseCA.ID], terminal)
 					lock.Unlock()
 
 					return nil
 				}),
-		}); err != nil {
-
-		return enrollAndNTAuthECASegments, enrollAndNTAuthECAs, err
-	}
-
-	// every scenario must contain a path from the enterpriseCA nodes found in the previous step to find enterprise CAs that are trusted for NTAuth
-	if err := traversalInst.BreadthFirst(ctx, traversal.Plan{
-		Root: startNode,
-		Driver: ntAuthStoreToDomainTraversal(domainID, enrollAndNTAuthECAs).Do(
-			func(terminal *graph.PathSegment) error {
-
-				enterpriseCA := terminal.Search(
-					func(nextSegment *graph.PathSegment) bool {
-						return nextSegment.Node.Kinds.ContainsOneOf(ad.EnterpriseCA)
-					},
-				)
-
-				lock.Lock()
-				enrollAndNTAuthECASegments[enterpriseCA.ID] = append(enrollAndNTAuthECASegments[enterpriseCA.ID], terminal)
-				lock.Unlock()
-
-				return nil
-			}),
 	}); err != nil {
 		return enrollAndNTAuthECASegments, enrollAndNTAuthECAs, err
 	}
-
 	return enrollAndNTAuthECASegments, enrollAndNTAuthECAs, nil
 
 }
 
 func GetADCSESC4EdgeComposition(ctx context.Context, db graph.Database, edge *graph.Relationship) (graph.PathSet, error) {
 	/*
+		// 2a
 		MATCH p1 = (n1)-[:MemberOf*0..]->()-[:GenericAll|Owns|WriteOwner|WriteDacl]->(ct)-[:PublishedTo]->(ca)-[:IssuedSignedBy|EnterpriseCAFor|RootCAFor*1..]->(d)
 		MATCH p2 = (n1)-[:MemberOf*0..]->()-[:Enroll]->(ca)-[:TrustedForNTAuth]->(nt)-[:NTAuthStoreFor]->(d)
 
+		// 2b
 		MATCH p3 = (n2)-[:MemberOf*0..]->()-[:GenericWrite]->(ct2)-[:PublishedTo]->(ca2)-[:IssuedSignedBy|EnterpriseCAFor|RootCAFor*1..]->(d)
 		MATCH p4 = (n2)-[:MemberOf*0..]->()-[:Enroll|AllExtendedRights]->(ct2)
 		MATCH p5 = (n2)-[:MemberOf*0..]->()-[:Enroll]->(ca2)-[:TrustedForNTAuth]->(nt)-[:NTAuthStoreFor]->(d)
 
+		// 2d
 		MATCH p6 = (n3)-[:MemberOf*0..]->()-[:WritePKINameFlag]->(ct3)-[:PublishedTo]->(ca3)-[:IssuedSignedBy|EnterpriseCAFor|RootCAFor*1..]->(d)
 		MATCH p7 = (n3)-[:MemberOf*0..]->()-[:Enroll|AllExtendedRights]->(ct3)
 		WHERE ct3.requiresmanagerapproval = false
@@ -564,7 +540,7 @@ func GetADCSESC4EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 		  )
 		MATCH p8 = (n3)-[:MemberOf*0..]->()-[:Enroll]->(ca3)-[:TrustedForNTAuth]->(nt)-[:NTAuthStoreFor]->(d)
 
-
+		// 2e
 		MATCH p9 = (n4)-[:MemberOf*0..]->()-[:WritePKIEnrollmentFlag]->(ct4)-[:PublishedTo]->(ca4)-[:IssuedSignedBy|EnterpriseCAFor|RootCAFor*1..]->(d)
 		MATCH p10 = (n4)-[:MemberOf*0..]->()-[:Enroll|AllExtendedRights]->(ct4)
 		WHERE ct4.enrolleesuppliessubject = true
@@ -574,6 +550,7 @@ func GetADCSESC4EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 		  )
 		MATCH p11 = (n4)-[:MemberOf*0..]->()-[:Enroll]->(ca4)-[:TrustedForNTAuth]->(nt)-[:NTAuthStoreFor]->(d)
 
+		// 2f
 		MATCH p12 = (n5)-[:MemberOf*0..]->()-[:WritePKIEnrollmentFlag]->(ct5)-[:PublishedTo]->(ca5)-[:IssuedSignedBy|EnterpriseCAFor|RootCAFor*1..]->(d)
 		MATCH p13 = (n5)-[:MemberOf*0..]->()-[:Enroll|AllExtendedRights]->(ct5)
 		MATCH p14 = (n5)-[:MemberOf*0..]->()-[:WritePKINameFlag]->(ct5)
@@ -582,6 +559,7 @@ func GetADCSESC4EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 		    ct5.authorizedsignatures = 0 OR ct5.schemaversion = 1
 		  )
 		MATCH p15 = (n5)-[:MemberOf*0..]->()-[:Enroll]->(ca5)-[:TrustedForNTAuth]->(nt)-[:NTAuthStoreFor]->(d)
+
 
 		RETURN p1,p2,p3,p4,p5,p6,p7,p8,p9,p10,p11,p12,p13,p14,p15
 	*/
@@ -755,7 +733,7 @@ func GetADCSESC4EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 	return paths, nil
 }
 
-func enterpriseCATraversal() traversal.PatternContinuation {
+func ntAuthStoreToDomainTraversal(domainId graph.ID) traversal.PatternContinuation {
 	return traversal.NewPattern().
 		OutboundWithDepth(0, 0,
 			query.And(
@@ -766,21 +744,6 @@ func enterpriseCATraversal() traversal.PatternContinuation {
 			query.And(
 				query.KindIn(query.Relationship(), ad.Enroll),
 				query.KindIn(query.End(), ad.EnterpriseCA),
-			))
-}
-
-func ntAuthStoreToDomainTraversal(domainId graph.ID, enterpriseCAs cardinality.Duplex[uint32]) traversal.PatternContinuation {
-	return traversal.NewPattern().
-		OutboundWithDepth(0, 0,
-			query.And(
-				query.Kind(query.Relationship(), ad.MemberOf),
-				query.Kind(query.End(), ad.Group),
-			)).
-		Outbound(
-			query.And(
-				query.KindIn(query.Relationship(), ad.Enroll),
-				query.KindIn(query.End(), ad.EnterpriseCA),
-				query.InIDs(query.EndID(), cardinality.DuplexToGraphIDs(enterpriseCAs)...),
 			)).
 		Outbound(
 			query.And(
