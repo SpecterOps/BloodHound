@@ -1,4 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2024 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -14,14 +14,23 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package v2
+package v2_test
 
 import (
-	"net/http"
+	"testing"
 
-	"github.com/specterops/bloodhound/src/api"
+	"github.com/specterops/bloodhound/src/api/v2/integration"
+	"github.com/specterops/bloodhound/src/model"
+	"github.com/stretchr/testify/require"
 )
 
-func (s Resources) GetDatapipeStatus(response http.ResponseWriter, request *http.Request) {
-	api.WriteBasicResponse(request.Context(), s.TaskNotifier.GetStatus(), http.StatusOK, response)
+func TestRequestAnalysis(t *testing.T) {
+	testCtx := integration.NewFOSSContext(t)
+
+	err := testCtx.AdminClient().RequestAnalysis()
+	require.Nil(t, err)
+
+	analReq, err := testCtx.AdminClient().GetAnalysisRequest()
+	require.Nil(t, err)
+	require.Equal(t, analReq.RequestType, model.AnalysisRequestAnalysis)
 }
