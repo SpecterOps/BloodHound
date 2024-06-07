@@ -1110,10 +1110,10 @@ func TestSyncLAPSPassword(t *testing.T) {
 				} else {
 					require.Equal(t, 4, len(results))
 
-					require.True(t, results.Contains(harness.SyncLAPSPasswordHarness.User5))
-					require.True(t, results.Contains(harness.SyncLAPSPasswordHarness.User7))
 					require.True(t, results.Contains(harness.SyncLAPSPasswordHarness.Group1))
-					require.True(t, results.Contains(harness.SyncLAPSPasswordHarness.Group2))
+					require.True(t, results.Contains(harness.SyncLAPSPasswordHarness.Group4))
+					require.True(t, results.Contains(harness.SyncLAPSPasswordHarness.User3))
+					require.True(t, results.Contains(harness.SyncLAPSPasswordHarness.User5))
 				}
 				return nil
 			})

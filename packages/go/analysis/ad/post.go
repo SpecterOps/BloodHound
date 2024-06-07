@@ -81,13 +81,12 @@ func PostSyncLAPSPassword(ctx context.Context, db graph.Database, groupExpansion
 				} else {
 					for _, computer := range computers {
 						lapsSyncers.Each(func(value uint32) bool {
-							nextJob := analysis.CreatePostRelationshipJob{
+							channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
 								FromID: graph.ID(value),
 								ToID:   computer,
 								Kind:   ad.SyncLAPSPassword,
-							}
-
-							return channels.Submit(ctx, outC, nextJob)
+							})
+							return true
 						})
 					}
 

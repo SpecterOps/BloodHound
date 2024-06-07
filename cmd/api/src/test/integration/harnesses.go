@@ -6866,6 +6866,7 @@ type SyncLAPSPasswordHarness struct {
 	Group1 *graph.Node
 	Group2 *graph.Node
 	Group3 *graph.Node
+	Group4 *graph.Node
 
 	User1 *graph.Node
 	User2 *graph.Node
@@ -6873,8 +6874,6 @@ type SyncLAPSPasswordHarness struct {
 	User4 *graph.Node
 	User5 *graph.Node
 	User6 *graph.Node
-	User7 *graph.Node
-	User8 *graph.Node
 
 	Computer1 *graph.Node
 	Computer2 *graph.Node
@@ -6888,6 +6887,7 @@ func (s *SyncLAPSPasswordHarness) Setup(graphTestContext *GraphTestContext) {
 	s.Group1 = graphTestContext.NewActiveDirectoryGroup("Group1", domainSID)
 	s.Group2 = graphTestContext.NewActiveDirectoryGroup("Group2", domainSID)
 	s.Group3 = graphTestContext.NewActiveDirectoryGroup("Group3", domainSID)
+	s.Group4 = graphTestContext.NewActiveDirectoryGroup("Group4", domainSID)
 
 	s.User1 = graphTestContext.NewActiveDirectoryUser("User1", domainSID, false)
 	s.User2 = graphTestContext.NewActiveDirectoryUser("User2", domainSID, false)
@@ -6895,8 +6895,6 @@ func (s *SyncLAPSPasswordHarness) Setup(graphTestContext *GraphTestContext) {
 	s.User4 = graphTestContext.NewActiveDirectoryUser("User4", domainSID, false)
 	s.User5 = graphTestContext.NewActiveDirectoryUser("User5", domainSID, false)
 	s.User6 = graphTestContext.NewActiveDirectoryUser("User6", domainSID, false)
-	s.User7 = graphTestContext.NewActiveDirectoryUser("User7", domainSID, false)
-	s.User8 = graphTestContext.NewActiveDirectoryUser("User8", domainSID, false)
 
 	s.Computer1 = graphTestContext.NewActiveDirectoryComputer("Computer1", domainSID)
 	s.Computer2 = graphTestContext.NewActiveDirectoryComputer("Computer2", domainSID)
@@ -6909,20 +6907,18 @@ func (s *SyncLAPSPasswordHarness) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.NewRelationship(s.User1, s.Group1, ad.MemberOf)
 	graphTestContext.NewRelationship(s.User2, s.Group1, ad.MemberOf)
 
+	graphTestContext.NewRelationship(s.User3, s.Domain1, ad.GetChanges)
+	graphTestContext.NewRelationship(s.User3, s.Domain1, ad.GetChangesInFilteredSet)
+
+	graphTestContext.NewRelationship(s.User4, s.Domain1, ad.GetChangesInFilteredSet)
+
 	graphTestContext.NewRelationship(s.Group2, s.Domain1, ad.GetChanges)
-	graphTestContext.NewRelationship(s.Group2, s.Domain1, ad.GetChangesInFilteredSet)
-	graphTestContext.NewRelationship(s.User3, s.Group2, ad.MemberOf)
-	graphTestContext.NewRelationship(s.User4, s.Group2, ad.MemberOf)
-
-	graphTestContext.NewRelationship(s.User5, s.Domain1, ad.GetChanges)
+	graphTestContext.NewRelationship(s.Group3, s.Group2, ad.MemberOf)
+	graphTestContext.NewRelationship(s.Group4, s.Group3, ad.MemberOf)
+	graphTestContext.NewRelationship(s.Group4, s.Domain1, ad.GetChangesInFilteredSet)
+	graphTestContext.NewRelationship(s.User5, s.Group2, ad.MemberOf)
 	graphTestContext.NewRelationship(s.User5, s.Domain1, ad.GetChangesInFilteredSet)
-
-	graphTestContext.NewRelationship(s.User6, s.Domain1, ad.GetChangesInFilteredSet)
-
-	graphTestContext.NewRelationship(s.Group3, s.Domain1, ad.GetChanges)
-	graphTestContext.NewRelationship(s.User7, s.Group3, ad.MemberOf)
-	graphTestContext.NewRelationship(s.User8, s.Group3, ad.MemberOf)
-	graphTestContext.NewRelationship(s.User7, s.Domain1, ad.GetChangesInFilteredSet)
+	graphTestContext.NewRelationship(s.User6, s.Group4, ad.MemberOf)
 }
 
 type HarnessDetails struct {
