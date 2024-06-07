@@ -102,6 +102,9 @@ export { default as PageWithTitle } from './PageWithTitle';
 export * from './PasswordDialog';
 export { default as PasswordDialog } from './PasswordDialog';
 
+export * from './PasswordResetForm';
+export { default as PasswordResetForm } from './PasswordResetForm';
+
 export * from './PrebuiltSearchList';
 export { default as PrebuiltSearchList } from './PrebuiltSearchList';
 

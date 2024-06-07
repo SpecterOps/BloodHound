@@ -641,9 +641,9 @@ func (s Property) Name() string {
 	case AuthorizedSignatures:
 		return "Authorized Signatures Required"
 	case ApplicationPolicies:
-		return "Application Policies"
+		return "Application Policies Required"
 	case IssuancePolicies:
-		return "Issuance Policies"
+		return "Issuance Policies Required"
 	case SchemaVersion:
 		return "Schema Version"
 	case RequiresManagerApproval:
@@ -653,7 +653,7 @@ func (s Property) Name() string {
 	case EnrolleeSuppliesSubject:
 		return "Enrollee Supplies Subject"
 	case CertificateApplicationPolicy:
-		return "Certificate Application Policies"
+		return "Application Policy Extensions"
 	case CertificateNameFlag:
 		return "Certificate Name Flags"
 	case EffectiveEKUs:

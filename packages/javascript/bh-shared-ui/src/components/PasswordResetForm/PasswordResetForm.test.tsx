@@ -15,9 +15,12 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import userEvent from '@testing-library/user-event';
-import { render, screen } from 'src/test-utils';
+import { render, screen } from '../../test-utils';
 
 import PasswordResetForm from './PasswordResetForm';
+
+const testExpiredPassword = 'hunter2';
+const testPassword = 'hunter7';
 
 describe('PasswordResetForm', () => {
     it('should render', () => {
@@ -28,8 +31,9 @@ describe('PasswordResetForm', () => {
 
         expect(screen.getByText(/your account password has expired/i)).toBeInTheDocument();
         expect(screen.getByText(/please provide a new password for this account to continue/i)).toBeInTheDocument();
-        expect(screen.getByLabelText(/^password/i)).toBeInTheDocument();
-        expect(screen.getByLabelText(/confirm password/i)).toBeInTheDocument();
+        expect(screen.getByLabelText(/expired password/i)).toBeInTheDocument();
+        expect(screen.getByLabelText(/^new password$/i)).toBeInTheDocument();
+        expect(screen.getByLabelText(/^new password confirmation/i)).toBeInTheDocument();
         expect(screen.getByRole('button', { name: /reset password$/i })).toBeInTheDocument();
         expect(screen.getByRole('button', { name: /return to login/i })).toBeInTheDocument();
     });
@@ -38,30 +42,61 @@ describe('PasswordResetForm', () => {
         const user = userEvent.setup();
         const testOnSubmit = vi.fn();
         const testOnCancel = vi.fn();
-        const testPassword = 'password';
-        const testConfirmPassword = 'password';
 
         render(<PasswordResetForm onSubmit={testOnSubmit} onCancel={testOnCancel} />);
 
-        await user.type(screen.getByLabelText(/^password/i), testPassword);
-        await user.type(screen.getByLabelText(/confirm password/i), testConfirmPassword);
+        await user.type(screen.getByLabelText(/^new password$/i), testPassword);
+        await user.type(screen.getByLabelText(/^expired password/i), testExpiredPassword);
+        await user.type(screen.getByLabelText(/^new password confirmation/i), testPassword);
         await user.click(screen.getByRole('button', { name: /reset password$/i }));
-        expect(testOnSubmit).toHaveBeenCalledWith(testPassword);
+        expect(testOnSubmit).toHaveBeenCalledWith({
+            currentSecret: testExpiredPassword,
+            needsPasswordReset: false,
+            secret: testPassword,
+        });
     });
 
     it('should not call onSubmit when password does not match confirmation password when reset password button clicked', async () => {
         const user = userEvent.setup();
         const testOnSubmit = vi.fn();
         const testOnCancel = vi.fn();
-        const testPassword = 'password';
-        const testConfirmPassword = 'drowssap'; // does not match testPassword
 
         render(<PasswordResetForm onSubmit={testOnSubmit} onCancel={testOnCancel} />);
 
-        await user.type(screen.getByLabelText(/^password/i), testPassword);
-        await user.type(screen.getByLabelText(/confirm password/i), testConfirmPassword);
+        await user.type(screen.getByLabelText(/^new password$/i), testPassword);
+        await user.type(screen.getByLabelText(/^new password confirmation/i), testPassword + 'extracharacters');
         await user.click(screen.getByRole('button', { name: /reset password$/i }));
         expect(screen.getByText(/password does not match/i)).toBeInTheDocument();
+        expect(testOnSubmit).not.toHaveBeenCalled();
+    });
+
+    it('should not call onSubmit when expired password is not supplied when reset password button clicked', async () => {
+        const user = userEvent.setup();
+        const testOnSubmit = vi.fn();
+        const testOnCancel = vi.fn();
+        const testConfirmPassword = testPassword;
+
+        render(<PasswordResetForm onSubmit={testOnSubmit} onCancel={testOnCancel} />);
+
+        await user.type(screen.getByLabelText(/^new password$/i), testPassword);
+        await user.type(screen.getByLabelText(/^new password confirmation/i), testConfirmPassword);
+        await user.click(screen.getByRole('button', { name: /reset password$/i }));
+        expect(screen.getByText(/expired password is required/i)).toBeInTheDocument();
+        expect(testOnSubmit).not.toHaveBeenCalled();
+    });
+
+    it('should not call onSubmit when expired password matches current password when reset password button clicked', async () => {
+        const user = userEvent.setup();
+        const testOnSubmit = vi.fn();
+        const testOnCancel = vi.fn();
+
+        render(<PasswordResetForm onSubmit={testOnSubmit} onCancel={testOnCancel} />);
+
+        await user.type(screen.getByLabelText(/^new password$/i), testPassword);
+        await user.type(screen.getByLabelText(/^new password confirmation/i), testPassword);
+        await user.type(screen.getByLabelText(/^expired password/i), testPassword);
+        await user.click(screen.getByRole('button', { name: /reset password$/i }));
+        expect(screen.getByText(/new password must not match expired password/i)).toBeInTheDocument();
         expect(testOnSubmit).not.toHaveBeenCalled();
     });
 

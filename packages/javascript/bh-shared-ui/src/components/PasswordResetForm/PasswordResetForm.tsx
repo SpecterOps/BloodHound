@@ -16,15 +16,18 @@
 
 import { Alert, AlertTitle, Box, Button, Grid, TextField } from '@mui/material';
 import React, { useState } from 'react';
-import { PASSWD_REQS, testPassword } from 'bh-shared-ui';
+import { PASSWD_REQS, testPassword } from '../../utils';
+import { PutUserAuthSecretRequest } from 'js-client-library';
 
 interface PasswordResetFormProps {
-    onSubmit: (password: string) => void;
+    onSubmit: (payload: PutUserAuthSecretRequest) => void;
     onCancel: () => void;
     loading?: boolean;
 }
 
 const PasswordResetForm: React.FC<PasswordResetFormProps> = ({ onSubmit, onCancel, loading = false }) => {
+    const [currentPassword, setCurrentPassword] = useState('');
+    const [currentPasswordTouched, setCurrentPasswordTouched] = useState(false);
     const [password, setPassword] = useState('');
     const [passwordTouched, setPasswordTouched] = useState(false);
     const [confirmPassword, setConfirmPassword] = useState('');
@@ -32,8 +35,8 @@ const PasswordResetForm: React.FC<PasswordResetFormProps> = ({ onSubmit, onCance
 
     const handleSubmit: React.FormEventHandler<HTMLFormElement> = (e) => {
         e.preventDefault();
-        if (password === confirmPassword) {
-            onSubmit(password);
+        if (password === confirmPassword && password !== currentPassword && currentPassword !== '') {
+            onSubmit({ secret: password, needsPasswordReset: false, currentSecret: currentPassword });
             return;
         }
     };
@@ -66,24 +69,46 @@ const PasswordResetForm: React.FC<PasswordResetFormProps> = ({ onSubmit, onCance
                 )}
                 <Grid item xs={12}>
                     <TextField
+                        id='currentPassword'
+                        name='currentPassword'
+                        label='Expired password'
+                        type='password'
+                        fullWidth
+                        variant='outlined'
+                        value={currentPassword}
+                        error={currentPasswordTouched && currentPassword === ''}
+                        onChange={(e) => setCurrentPassword(e.target.value)}
+                        helperText={
+                            currentPasswordTouched && currentPassword === '' ? 'Expired password is required' : null
+                        }
+                        onBlur={() => setCurrentPasswordTouched(true)}
+                        autoFocus
+                    />
+                </Grid>
+                <Grid item xs={12}>
+                    <TextField
                         id='password'
                         name='password'
-                        label='Password'
+                        label='New Password'
                         type='password'
                         fullWidth
                         variant='outlined'
                         value={password}
-                        error={passwordTouched && !testPassword(password)}
+                        error={passwordTouched && (!testPassword(password) || password === currentPassword)}
                         onChange={(e) => setPassword(e.target.value)}
+                        helperText={
+                            passwordTouched && password === currentPassword
+                                ? 'New password must not match expired password'
+                                : null
+                        }
                         onBlur={() => setPasswordTouched(true)}
-                        autoFocus
                     />
                 </Grid>
                 <Grid item xs={12}>
                     <TextField
                         id='confirmPassword'
                         name='confirmPassword'
-                        label='Confirm Password'
+                        label='New Password Confirmation'
                         type='password'
                         fullWidth
                         variant='outlined'
@@ -92,7 +117,9 @@ const PasswordResetForm: React.FC<PasswordResetFormProps> = ({ onSubmit, onCance
                         onBlur={() => setConfirmPasswordTouched(true)}
                         error={confirmPasswordTouched && password !== confirmPassword}
                         helperText={
-                            confirmPasswordTouched && password !== confirmPassword ? 'Password does not match' : null
+                            confirmPasswordTouched && password !== confirmPassword
+                                ? 'New password does not match'
+                                : null
                         }
                     />
                 </Grid>
