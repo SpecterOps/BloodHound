@@ -110,11 +110,16 @@ func (s Resources) HandleDatabaseWipe(response http.ResponseWriter, request *htt
 			)
 			return
 		} else {
+			var userId string
 			if user, isUser := auth.GetUserFromAuthCtx(ctx.FromRequest(request).AuthCtx); !isUser {
-				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "No associated user found", request), response)
-				return
-			} else if err := s.DB.RequestCollectedGraphDataDeletion(request.Context(), user.ID.String()); err != nil {
-				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
+				log.Warnf("encountered request analysis for unknown user, this shouldn't happen")
+				userId = "unknown-user-database-wipe"
+			} else {
+				userId = user.ID.String()
+			}
+
+			if err := s.DB.RequestCollectedGraphDataDeletion(request.Context(), userId); err != nil {
+				api.HandleDatabaseError(request, response, err)
 				return
 			}
 			s.handleAuditLogForDatabaseWipe(request.Context(), &auditEntry, true, "collected graph data")
@@ -133,10 +138,17 @@ func (s Resources) HandleDatabaseWipe(response http.ResponseWriter, request *htt
 
 	// if deleting `nodes` or deleting `asset group selectors` is successful, kickoff an analysis
 	if kickoffAnalysis {
+		var userId string
 		if user, isUser := auth.GetUserFromAuthCtx(ctx.FromRequest(request).AuthCtx); !isUser {
-			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "No associated user found", request), response)
-		} else if err := s.DB.RequestAnalysis(request.Context(), user.ID.String()); err != nil {
-			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
+			log.Warnf("encountered request analysis for unknown user, this shouldn't happen")
+			userId = "unknown-user-database-wipe"
+		} else {
+			userId = user.ID.String()
+		}
+
+		if err := s.DB.RequestAnalysis(request.Context(), userId); err != nil {
+			api.HandleDatabaseError(request, response, err)
+			return
 		}
 	}
 

@@ -18,17 +18,18 @@ package v2
 
 import (
 	"database/sql"
+	"net/http"
+
 	"github.com/specterops/bloodhound/errors"
 	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/src/auth"
 	"github.com/specterops/bloodhound/src/ctx"
-	"net/http"
 )
 
 func (s Resources) GetAnalysisRequest(response http.ResponseWriter, request *http.Request) {
 	if analRequest, err := s.DB.GetAnalysisRequest(request.Context()); err != nil && !errors.Is(err, sql.ErrNoRows) {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
+		api.HandleDatabaseError(request, response, err)
 	} else if errors.Is(err, sql.ErrNoRows) {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, api.ErrorResponseDetailsResourceNotFound, request), response)
 	} else {
@@ -39,10 +40,17 @@ func (s Resources) GetAnalysisRequest(response http.ResponseWriter, request *htt
 func (s Resources) RequestAnalysis(response http.ResponseWriter, request *http.Request) {
 	defer log.Measure(log.LevelDebug, "Requesting analysis")()
 
+	var userId string
 	if user, isUser := auth.GetUserFromAuthCtx(ctx.FromRequest(request).AuthCtx); !isUser {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "No associated user found", request), response)
-	} else if err := s.DB.RequestAnalysis(request.Context(), user.ID.String()); err != nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
+		log.Warnf("encountered request analysis for unknown user, this shouldn't happen")
+		userId = "unknown-user"
+	} else {
+		userId = user.ID.String()
+	}
+
+	if err := s.DB.RequestAnalysis(request.Context(), userId); err != nil {
+		api.HandleDatabaseError(request, response, err)
+		return
 	}
 
 	response.WriteHeader(http.StatusAccepted)

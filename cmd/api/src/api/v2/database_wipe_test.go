@@ -18,10 +18,10 @@ package v2_test
 
 import (
 	"errors"
-	"github.com/gofrs/uuid"
 	"net/http"
 	"testing"
 
+	"github.com/gofrs/uuid"
 	graph_mocks "github.com/specterops/bloodhound/dawgs/graph/mocks"
 	"github.com/specterops/bloodhound/headers"
 	"github.com/specterops/bloodhound/mediatypes"

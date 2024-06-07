@@ -19,10 +19,11 @@ package database_test
 import (
 	"context"
 	"database/sql"
+	"testing"
+
 	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/test/integration"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 func TestAnalysisRequest(t *testing.T) {

@@ -19,10 +19,11 @@ package database
 import (
 	"context"
 	"database/sql"
+	"time"
+
 	"github.com/specterops/bloodhound/errors"
 	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/src/model"
-	"time"
 )
 
 type AnalysisRequestData interface {

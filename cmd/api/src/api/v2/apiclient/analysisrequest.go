@@ -17,9 +17,10 @@
 package apiclient
 
 import (
+	"net/http"
+
 	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/src/model"
-	"net/http"
 )
 
 func (s Client) RequestAnalysis() error {

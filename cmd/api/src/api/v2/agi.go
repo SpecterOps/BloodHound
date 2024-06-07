@@ -18,7 +18,6 @@ package v2
 
 import (
 	"fmt"
-	"github.com/specterops/bloodhound/src/auth"
 	"net/http"
 	"net/url"
 	"regexp"
@@ -35,6 +34,7 @@ import (
 	"github.com/specterops/bloodhound/headers"
 	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/src/api"
+	"github.com/specterops/bloodhound/src/auth"
 	"github.com/specterops/bloodhound/src/ctx"
 	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/utils"
@@ -266,10 +266,17 @@ func (s Resources) UpdateAssetGroupSelectors(response http.ResponseWriter, reque
 
 			if assetGroup.Tag == model.TierZeroAssetGroupTag {
 				// When T0 asset group selectors are modified, entire analysis must be re-run
+				var userId string
 				if user, isUser := auth.GetUserFromAuthCtx(ctx.FromRequest(request).AuthCtx); !isUser {
-					api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "No associated user found", request), response)
-				} else if err := s.DB.RequestAnalysis(request.Context(), user.ID.String()); err != nil {
-					api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
+					log.Warnf("encountered request analysis for unknown user, this shouldn't happen")
+					userId = "unknown-user-update-asset-group-selectors"
+				} else {
+					userId = user.ID.String()
+				}
+
+				if err := s.DB.RequestAnalysis(request.Context(), userId); err != nil {
+					api.HandleDatabaseError(request, response, err)
+					return
 				}
 			}
 
