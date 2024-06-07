@@ -12,3 +12,11 @@ This example environment includes:
 - Additional, visible, trusted domains without collections
 - Coverage for local permissions
 - Multiple ADCS escalation paths
+
+## Azure Example Data
+
+File: [azure_example_data.zip](azure_example_data.zip)
+
+This example environment includes:
+
+- Full collection of an Azure environment
