@@ -460,7 +460,6 @@ type CertTemplateData struct {
 	EKUS                       []string
 	ApplicationPolicies        []string
 	CertificatePolicy          []string
-	EffectiveEKUs              []string
 }
 
 func (s *GraphTestContext) setupAzure() {
