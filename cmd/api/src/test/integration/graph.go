@@ -425,7 +425,7 @@ func (s *GraphTestContext) NewActiveDirectoryCertTemplate(name, domainSID string
 		ad.NoSecurityExtension:        data.NoSecurityExtension,
 		ad.SchemaVersion:              data.SchemaVersion,
 		ad.AuthorizedSignatures:       data.AuthorizedSignatures,
-		ad.EKUs:                       data.EKUS,
+		ad.EffectiveEKUs:              data.EffectiveEKUs,
 		ad.ApplicationPolicies:        data.ApplicationPolicies,
 		ad.SubjectAltRequireUPN:       data.SubjectAltRequireUPN,
 		ad.SubjectAltRequireSPN:       data.SubjectAltRequireSPN,
@@ -457,7 +457,7 @@ type CertTemplateData struct {
 	NoSecurityExtension        bool
 	SchemaVersion              float64
 	AuthorizedSignatures       float64
-	EKUS                       []string
+	EffectiveEKUs              []string
 	ApplicationPolicies        []string
 	CertificatePolicy          []string
 }

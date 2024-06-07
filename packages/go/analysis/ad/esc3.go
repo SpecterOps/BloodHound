@@ -182,11 +182,11 @@ func EnrollOnBehalfOfVersionTwo(tx graph.Transaction, versionTwoCertTemplates, a
 	results := make([]analysis.CreatePostRelationshipJob, 0)
 	for _, certTemplateOne := range allCertTemplates {
 		if hasBadEku, err := certTemplateHasEku(certTemplateOne, EkuAnyPurpose); err != nil {
-			log.Errorf("Error getting ekus for cert template %d: %v", certTemplateOne.ID, err)
+			log.Errorf("Error getting EffectiveEKUs for cert template %d: %v", certTemplateOne.ID, err)
 		} else if hasBadEku {
 			continue
 		} else if hasEku, err := certTemplateHasEku(certTemplateOne, EkuCertRequestAgent); err != nil {
-			log.Errorf("Error getting ekus for cert template %d: %v", certTemplateOne.ID, err)
+			log.Errorf("Error getting EffectiveEKUs for cert template %d: %v", certTemplateOne.ID, err)
 		} else if !hasEku {
 			continue
 		} else if domainNode, err := getDomainForCertTemplate(tx, certTemplateOne); err != nil {
