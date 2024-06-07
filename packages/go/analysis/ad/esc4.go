@@ -566,11 +566,11 @@ func GetADCSESC4EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 
 	var (
 		startNode *graph.Node
+		enrollAndNTAuthECAs cardinality.Duplex[uint32]
 		domainID  = edge.EndID
 		paths     = graph.PathSet{}
 
 		enrollAndNTAuthECASegments = map[graph.ID][]*graph.PathSegment{}
-		enrollAndNTAuthECAs        = cardinality.NewBitmap32()
 		finalECAs                  = cardinality.NewBitmap32()
 	)
 
