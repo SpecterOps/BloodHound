@@ -2305,7 +2305,8 @@ class BHEAPIClient {
         );
 
     /* remote assets */
-    getRemoteAsset = (assetPath: string) => this.baseClient.get(`/api/v2/assets/${assetPath}`);
+    getRemoteAsset = (assetPath: string, options?: types.RequestOptions) =>
+        this.baseClient.get(`/api/v2/assets/${assetPath}`, options);
 }
 
 export default BHEAPIClient;
