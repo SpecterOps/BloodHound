@@ -565,7 +565,15 @@ type SessionAuthProvider int
 const (
 	SessionAuthProviderSecret SessionAuthProvider = 0
 	SessionAuthProviderSAML   SessionAuthProvider = 1
+
+	SessionFlagFedEULAAccepted = "fed_eula_accepted"
 )
+
+type UserSessionFlags types.JSONUntypedObject
+
+func (s UserSessionFlags) AuditData() AuditData {
+	return AuditData{} // TODO: include flag data?
+}
 
 type UserSession struct {
 	User             User `gorm:"constraint:OnDelete:CASCADE;"`
@@ -573,7 +581,7 @@ type UserSession struct {
 	AuthProviderType SessionAuthProvider
 	AuthProviderID   int32
 	ExpiresAt        time.Time
-	Data             types.JSONUntypedObject `json:"data"`
+	Flags            UserSessionFlags `json:"flags"`
 
 	BigSerial
 }
@@ -581,4 +589,11 @@ type UserSession struct {
 // Expired returns true if the user session has expired, false otherwise
 func (s UserSession) Expired() bool {
 	return s.ExpiresAt.Before(time.Now().UTC())
+}
+
+func (s UserSession) GetFlag(key string) bool {
+	if v, ok := s.Flags[key]; ok {
+		return v.(bool) // TODO: type checking for if it's not a bool?
+	}
+	return false
 }

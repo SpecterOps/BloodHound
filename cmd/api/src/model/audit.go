@@ -21,9 +21,8 @@ import (
 	"reflect"
 	"time"
 
-	"github.com/specterops/bloodhound/log"
-
 	"github.com/gofrs/uuid"
+	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/src/database/types"
 )
 
