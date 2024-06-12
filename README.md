@@ -16,6 +16,7 @@ The easiest way to get up and running is to use our pre-configured Docker Compos
   
   1. Install Docker Compose and ensure Docker is running. This should be included with the [Docker Desktop](https://www.docker.com/products/docker-desktop/) installation
   2. Run `curl -L https://ghst.ly/getbhce | docker compose -f - up`
+     > On Windows: Execute the command in CMD, or use `curl.exe` instead of `curl` in PowerShell
   3. Locate the randomly generated password in the terminal output of Docker Compose
   4. In a browser, navigate to `http://localhost:8080/ui/login`. Login with a username of `admin` and the randomly generated password from the logs
 
