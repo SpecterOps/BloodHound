@@ -48,10 +48,6 @@ export const CommonSearches: CommonSearchType[] = [
                 cypher: `MATCH p=(n:Domain)-[]->(m:Domain)\nRETURN p`,
             },
             {
-                description: 'Computers with unsupported operating systems',
-                cypher: `MATCH (n:Computer)\nWHERE n.operatingsystem =~ "(?i).*Windows.* (2000|2003|2008|2012|xp|vista|7|8|me|nt).*"\nRETURN n`,
-            },
-            {
                 description: 'Locations of high value/Tier Zero objects',
                 cypher: `MATCH p = (:Domain)-[:Contains*1..]->(n:Base)\nWHERE "admin_tier_0" IN split(n.system_tags, ' ')\nRETURN p`,
             },
@@ -134,10 +130,6 @@ export const CommonSearches: CommonSearchType[] = [
                 cypher: `MATCH p=shortestPath((n)-[:${adTransitEdgeTypes}*1..]->(m:Computer))\nWHERE m.unconstraineddelegation = true AND n<>m\nRETURN p`,
             },
             {
-                description: 'Shortest paths from Kerberoastable users',
-                cypher: `MATCH p=shortestPath((n:User)-[:${adTransitEdgeTypes}*1..]->(m:Computer))\nWHERE n.hasspn = true AND n<>m\nRETURN p`,
-            },
-            {
                 description: 'Shortest paths to Domain Admins from Kerberoastable users',
                 cypher: `MATCH p=shortestPath((n:User)-[:${adTransitEdgeTypes}*1..]->(m:Group))\nWHERE n.hasspn = true AND m.objectid ENDS WITH "-512"\nRETURN p`,
             },
@@ -218,6 +210,36 @@ export const CommonSearches: CommonSearchType[] = [
         ],
     },
     {
+        subheader: 'Active Directory Hygiene',
+        category: categoryAD,
+        queries: [
+            {
+                description: 'Computers with unsupported operating systems',
+                cypher: `MATCH (n:Computer)\nWHERE n.operatingsystem =~ "(?i).*Windows.* (2000|2003|2008|2012|xp|vista|7|8|me|nt).*"\nRETURN n`,
+            },
+            {
+                description: 'Users which do not require password to authenticate',
+                cypher: `MATCH (u:User)\nWHERE u.passwordnotreqd = true\nRETURN u`,
+            },
+            {
+                description: 'Users with passwords not rotated in over 1 year',
+                cypher: `MATCH (u:User)\nWHERE u.pwdlastset < (datetime().epochseconds - (365 * 86400))\nAND NOT u.pwdlastset IN [-1.0, 0.0]\nRETURN u LIMIT 100`,
+            },
+            {
+                description: 'Nested groups within Tier Zero / High Value',
+                cypher: `MATCH p=(n:Group)-[:MemberOf*..]->(t:Group)\nWHERE n.domainsid <> t.domainsid\nAND coalesce(t.system_tags,"") CONTAINS ('tier_0')\nAND NOT n.objectid ENDS WITH "-512" // Domain Admins\nAND NOT n.objectid ENDS WITH "-519" // Enterprise Admins\nRETURN p`,
+            },
+            {
+                description: 'Disabled Tier Zero / High Value principals',
+                cypher: `MATCH (n)\nWHERE n.system_tags CONTAINS "admin_tier_0"\nAND n.enabled = false\nAND NOT n.objectid ENDS WITH "-502" // Removes false positive, KRBTGT\nAND NOT n.objectid ENDS WITH "-500" // Removes false positive, built-in Administrator\nRETURN n`
+            },
+            {
+                description: 'Tier Zero members with non-expiring passwords',
+                cypher: `MATCH p=((u:User)-[:MemberOf]->(g:Group))\nWHERE  u.enabled=TRUE\nAND u.pwdneverexpires = TRUE\nand g.system_tags CONTAINS "admin_tier_0"\nRETURN p\nLIMIT 100`
+            }
+        ],
+    },
+    {
         subheader: 'General',
         category: categoryAzure,
         queries: [
@@ -264,6 +286,28 @@ export const CommonSearches: CommonSearchType[] = [
             {
                 description: 'All service principals with Microsoft Graph App Role assignments',
                 cypher: 'MATCH p=(m:AZServicePrincipal)-[r:AZMGAppRoleAssignment_ReadWrite_All|AZMGApplication_ReadWrite_All|AZMGDirectory_ReadWrite_All|AZMGGroupMember_ReadWrite_All|AZMGGroup_ReadWrite_All|AZMGRoleManagement_ReadWrite_Directory|AZMGServicePrincipalEndpoint_ReadWrite_All]->(n:AZServicePrincipal)\nRETURN p',
+            },
+        ],
+    },
+    {
+        subheader: 'Azure Hygiene',
+        category: categoryAzure,
+        queries: [
+            {
+                description: 'Foreign principals in Tier Zero / High Value targets',
+                cypher: `MATCH (n:AZServicePrincipal)\nWHERE n.system_tags contains 'admin_tier_0'\nAND NOT toUpper(n.appownerorganizationid) = toUpper(n.tenantid)\nAND n.appownerorganizationid CONTAINS "-"\nRETURN n`,
+            },
+            {
+                description: 'Tier Zero AD principals synchronized with Entra ID',
+                cypher: `MATCH (n)\nWHERE n.system_tags CONTAINS "admin_tier_0"\nAND n.enabled = false\nAND NOT n.objectid ENDS WITH "-502" // Removes false positive, KRBTGT\nAND NOT n.objectid ENDS WITH "-500" // Removes false positive, built-in Administrator\nRETURN n`
+            },
+            {
+                description: 'Tier Zero / High Value external Entra ID users',
+                cypher: `MATCH (n:AZUser)\nWHERE n.system_tags contains 'admin_tier_0'\nAND n.name CONTAINS '#EXT#@'\nRETURN n`
+            },
+            {
+                description: 'Foreign service principals with any abusable MS Graph App Role assignment',
+                cypher: `MATCH p=(n:AZServicePrincipal)-[r]->(m:AZServicePrincipal)\nWHERE NOT toUpper(n.appownerorganizationid) = toUpper(n.tenantid)\nAND n.appownerorganizationid CONTAINS "-"\nAND TYPE(r) CONTAINS "_"\nRETURN p`
             },
         ],
     },
