@@ -234,8 +234,8 @@ export const CommonSearches: CommonSearchType[] = [
                 cypher: `MATCH (n)\nWHERE n.system_tags CONTAINS "admin_tier_0"\nAND n.enabled = false\nAND NOT n.objectid ENDS WITH "-502" // Removes false positive, KRBTGT\nAND NOT n.objectid ENDS WITH "-500" // Removes false positive, built-in Administrator\nRETURN n`
             },
             {
-                description: 'Tier Zero members with non-expiring passwords',
-                cypher: `MATCH p=((u:User)-[:MemberOf]->(g:Group))\nWHERE  u.enabled=TRUE\nAND u.pwdneverexpires = TRUE\nand g.system_tags CONTAINS "admin_tier_0"\nRETURN p\nLIMIT 100`
+                description: 'Tier Zero / High Value users with non-expiring passwords',
+                cypher: `MATCH (u:User)\nWHERE  u.enabled=TRUE\nAND u.pwdneverexpires = TRUE\nand u.system_tags CONTAINS "admin_tier_0"\nRETURN u`
             }
         ],
     },
@@ -299,7 +299,7 @@ export const CommonSearches: CommonSearchType[] = [
             },
             {
                 description: 'Tier Zero AD principals synchronized with Entra ID',
-                cypher: `MATCH (n)\nWHERE n.system_tags CONTAINS "admin_tier_0"\nAND n.enabled = false\nAND NOT n.objectid ENDS WITH "-502" // Removes false positive, KRBTGT\nAND NOT n.objectid ENDS WITH "-500" // Removes false positive, built-in Administrator\nRETURN n`
+                cypher: `MATCH (ENTRA:AZBase)\nMATCH (AD:Base)\nWHERE ENTRA.onpremsyncenabled = true\nAND ENTRA.onpremid = AD.objectid\nAND AD.system_tags CONTAINS "admin_tier_0"\nRETURN ENTRA\n// Replace "RETURN ENTRA" with "RETURN AD" to see the corresponding AD principals`
             },
             {
                 description: 'Tier Zero / High Value external Entra ID users',
