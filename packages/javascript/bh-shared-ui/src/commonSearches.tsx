@@ -48,7 +48,7 @@ export const CommonSearches: CommonSearchType[] = [
                 cypher: `MATCH p=(n:Domain)-[]->(m:Domain)\nRETURN p`,
             },
             {
-                description: 'Locations oftierZero / High Value objects',
+                description: 'Locations of Tier Zero / High Value objects',
                 cypher: `MATCH p = (:Domain)-[:Contains*1..]->(n:Base)\nWHERE "admin_tier_0" IN split(n.system_tags, ' ')\nRETURN p`,
             },
         ],
@@ -78,7 +78,7 @@ export const CommonSearches: CommonSearchType[] = [
                 cypher: `MATCH p=(m:Group)-[:AllExtendedRights|ReadLAPSPassword]->(n:Computer)\nWHERE m.objectid ENDS WITH "-513"\nRETURN p`,
             },
             {
-                description: 'Paths from Domain Users totierZero / High Value targets',
+                description: 'Paths from Domain Users to Tier Zero / High Value targets',
                 cypher: `MATCH p=shortestPath((m:Group)-[:${adTransitEdgeTypes}*1..]->(n))\nWHERE "admin_tier_0" IN split(n.system_tags, ' ') AND m.objectid ENDS WITH "-513" AND m<>n\nRETURN p`,
             },
             {
@@ -104,7 +104,7 @@ export const CommonSearches: CommonSearchType[] = [
         category: categoryAD,
         queries: [
             {
-                description: 'Kerberoastable members oftierZero / High Value groups',
+                description: 'Kerberoastable members of Tier Zero / High Value groups',
                 cypher: `MATCH p=shortestPath((n:User)-[:MemberOf]->(g:Group))\nWHERE "admin_tier_0" IN split(g.system_tags, ' ') AND n.hasspn=true\nRETURN p`,
             },
             {
@@ -134,11 +134,11 @@ export const CommonSearches: CommonSearchType[] = [
                 cypher: `MATCH p=shortestPath((n:User)-[:${adTransitEdgeTypes}*1..]->(m:Group))\nWHERE n.hasspn = true AND m.objectid ENDS WITH "-512"\nRETURN p`,
             },
             {
-                description: 'Shortest paths totierZero / High Value targets',
+                description: 'Shortest paths to Tier Zero / High Value targets',
                 cypher: `MATCH p=shortestPath((n)-[:${adTransitEdgeTypes}*1..]->(m))\nWHERE "admin_tier_0" IN split(m.system_tags, ' ') AND n<>m\nRETURN p`,
             },
             {
-                description: 'Shortest paths from Domain Users totierZero / High Value targets',
+                description: 'Shortest paths from Domain Users to Tier Zero / High Value targets',
                 cypher: `MATCH p=shortestPath((n:Group)-[:${adTransitEdgeTypes}*1..]->(m))\nWHERE "admin_tier_0" IN split(m.system_tags, ' ') AND n.objectid ENDS WITH "-513" AND n<>m\nRETURN p`,
             },
             {
@@ -260,7 +260,7 @@ export const CommonSearches: CommonSearchType[] = [
         category: categoryAzure,
         queries: [
             {
-                description: 'Shortest paths totierZero / High Value targets',
+                description: 'Shortest paths to Tier Zero / High Value targets',
                 cypher: `MATCH p=shortestPath((m:AZUser)-[r:${azureTransitEdgeTypes}*1..]->(n))\nWHERE "admin_tier_0" IN split(n.system_tags, ' ') AND n.name =~ '(?i)${highPrivilegedRoleDisplayNameRegex}' AND m<>n\nRETURN p`,
             },
             {
@@ -268,7 +268,7 @@ export const CommonSearches: CommonSearchType[] = [
                 cypher: `MATCH p=shortestPath((m)-[r:${azureTransitEdgeTypes}*1..]->(n:AZRole))\nWHERE n.name =~ '(?i)${highPrivilegedRoleDisplayNameRegex}' AND m<>n\nRETURN p`,
             },
             {
-                description: 'Shortest paths from Azure Applications totierZero / High Value targets',
+                description: 'Shortest paths from Azure Applications to Tier Zero / High Value targets',
                 cypher: `MATCH p=shortestPath((m:AZApp)-[r:${azureTransitEdgeTypes}*1..]->(n))\nWHERE "admin_tier_0" IN split(n.system_tags, ' ') AND m<>n\nRETURN p`,
             },
             {
