@@ -31,19 +31,10 @@ ENV VERSION=${version}
 ENV CHECKOUT_HASH=${checkout_hash}
 WORKDIR /bloodhound
 
-<<<<<<< HEAD
-RUN apk add --update --no-cache python3 git go
-RUN find /usr/lib -name EXTERNALLY-MANAGED -delete
-RUN python3 -m ensurepip
-RUN pip3 install --no-cache --upgrade pip setuptools
-=======
 RUN apk add --update --no-cache git go
->>>>>>> 6b8694bb (chore: modify dockerfile to build with stbernard)
 
 COPY . /bloodhound
-
-RUN go build -o /stbernard github.com/specterops/bloodhound/packages/go/stbernard
-RUN /stbernard deps
+RUN go run github.com/specterops/bloodhound/packages/go/stbernard deps
 
 ########
 # Build
@@ -56,7 +47,7 @@ ENV GOARCH=${TARGETARCH}
 ENV CGO_ENABLED=0
 WORKDIR /bloodhound
 
-RUN /stbernard build
+RUN go run github.com/specterops/bloodhound/packages/go/stbernard build
 
 ########
 # Package other assets
