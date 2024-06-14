@@ -26,6 +26,10 @@ ARG AZUREHOUND_VERSION=v2.1.9
 FROM --platform=$BUILDPLATFORM docker.io/library/node:20-alpine AS deps
 ARG version=v999.999.999
 ARG checkout_hash=""
+ARG TARGETOS
+ARG TARGETARCH
+ENV GOOS=${TARGETOS}
+ENV GOARCH=${TARGETARCH}
 ENV SB_LOG_LEVEL=debug
 ENV VERSION=${version}
 ENV CHECKOUT_HASH=${checkout_hash}
