@@ -80,7 +80,7 @@ func (s *command) Parse(cmdIndex int) error {
 
 // Run build command
 func (s *command) Run() error {
-	log.Infof("--- In Build.Run()")
+	log.Infof("--- In Build.Run(). s.env is %+v", s.env)
 	if paths, err := workspace.FindPaths(s.env); err != nil {
 		log.Infof("------ In Build.Run(). Error in FindPaths: %v", err)
 		return fmt.Errorf("finding workspace root: %w", err)
@@ -99,6 +99,7 @@ func (s *command) Run() error {
 }
 
 func (s *command) runJSBuild(cwd string, buildPath string) error {
+	log.Infof("-------- In Build.runJSBuild().")
 	s.env.SetIfEmpty("BUILD_PATH", buildPath)
 
 	if err := yarn.BuildWorkspace(cwd, s.env); err != nil {
@@ -109,6 +110,7 @@ func (s *command) runJSBuild(cwd string, buildPath string) error {
 }
 
 func (s command) runGoBuild(cwd string, modPaths []string) error {
+	log.Infof("-------- In Build.runGoBuild().")
 	s.env.SetIfEmpty("CGO_ENABLED", "0")
 
 	if err := golang.BuildMainPackages(cwd, modPaths, s.version, s.env); err != nil {
