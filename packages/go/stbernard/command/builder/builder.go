@@ -76,13 +76,18 @@ func (s *command) Parse(cmdIndex int) error {
 
 // Run build command
 func (s *command) Run() error {
+	log.Infof("--- In Build.Run()")
 	if paths, err := workspace.FindPaths(s.env); err != nil {
+		log.Infof("------ In Build.Run(). Error in FindPaths: %v", err)
 		return fmt.Errorf("finding workspace root: %w", err)
 	} else if err := filepath.WalkDir(paths.Assets, clearFiles); err != nil {
+		log.Infof("------ In Build.Run(). Error in WalkDir: %v", err)
 		return fmt.Errorf("clearing asset directory: %w", err)
 	} else if err := s.runJSBuild(paths.Root, paths.Assets); err != nil {
+		log.Infof("------ In Build.Run(). Error in runJSBuild: %v", err)
 		return fmt.Errorf("building JS artifacts: %w", err)
 	} else if err := s.runGoBuild(paths.Root, paths.GoModules); err != nil {
+		log.Infof("------ In Build.Run(). Error in runGoBuild: %v", err)
 		return fmt.Errorf("building Go artifacts: %w", err)
 	} else {
 		return nil
