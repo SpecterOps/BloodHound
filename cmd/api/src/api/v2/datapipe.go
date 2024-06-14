@@ -20,11 +20,12 @@ import (
 	"net/http"
 
 	"github.com/specterops/bloodhound/src/api"
+	"pkg.specterops.io/bloodhoundad/bhe/api/v1/resources"
 )
 
 func (s Resources) GetDatapipeStatus(response http.ResponseWriter, request *http.Request) {
 	if datapipeStatus, err := s.DB.GetDatapipeStatus(request.Context()); err != nil {
-		api.WriteErrorResponse(request.Context(), "error getting datapipe status", response)
+		resources.HandleDatabaseError(request.Context(), response, err)
 	} else {
 		api.WriteBasicResponse(request.Context(), datapipeStatus, http.StatusOK, response)
 	}

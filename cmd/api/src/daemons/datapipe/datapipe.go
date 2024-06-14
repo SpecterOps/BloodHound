@@ -181,7 +181,12 @@ func (s *Daemon) deleteData() {
 		_ = s.db.RequestAnalysis(s.ctx, "datapie")
 	}()
 	defer log.Measure(log.LevelInfo, "Purge Graph Data Completed")()
-	s.db.SetDatapipeStatus(s.ctx, model.DatapipeStatusPurging, false)
+
+	if err := s.db.SetDatapipeStatus(s.ctx, model.DatapipeStatusPurging, false); err != nil {
+		log.Errorf("Error setting datapipe status: %v", err)
+		return
+	}
+
 	log.Infof("Begin Purge Graph Data")
 
 	if err := s.db.CancelAllFileUploads(s.ctx); err != nil {

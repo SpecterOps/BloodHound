@@ -30,14 +30,12 @@ func (s *BloodhoundDB) SetDatapipeStatus(ctx context.Context, status model.Datap
 	now := time.Now().UTC()
 
 	if updateAnalysisTime {
-		updateSql += ", last_complete_analysis_at = ? where id = 1;"
-
+		updateSql += ", last_complete_analysis_at = ?;"
 		tx := s.db.WithContext(ctx).Exec(updateSql, status, now, now)
 
 		return tx.Error
 	} else {
-		updateSql += " where id = 1;"
-		now := time.Now().UTC()
+		updateSql += ";"
 		tx := s.db.WithContext(ctx).Exec(updateSql, status, now)
 
 		return tx.Error
@@ -48,7 +46,7 @@ func (s *BloodhoundDB) SetDatapipeStatus(ctx context.Context, status model.Datap
 func (s *BloodhoundDB) GetDatapipeStatus(ctx context.Context) (model.DatapipeStatusWrapper, error) {
 	var datapipeStatus model.DatapipeStatusWrapper
 
-	if tx := s.db.WithContext(ctx).Raw("select * from datapipe_status where id = 1;").Scan(&datapipeStatus); tx.RowsAffected == 0 {
+	if tx := s.db.WithContext(ctx).Raw("select * from datapipe_status limit 1;").Scan(&datapipeStatus); tx.RowsAffected == 0 {
 		return datapipeStatus, sql.ErrNoRows
 	}
 
