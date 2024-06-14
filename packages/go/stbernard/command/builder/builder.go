@@ -36,7 +36,8 @@ const (
 )
 
 type command struct {
-	env environment.Environment
+	env     environment.Environment
+	version string
 }
 
 // Create new instance of command to capture given environment
@@ -59,6 +60,7 @@ func (s *command) Name() string {
 // Parse command flags
 func (s *command) Parse(cmdIndex int) error {
 	cmd := flag.NewFlagSet(Name, flag.ExitOnError)
+	version := cmd.String("version", "", "Specify a version number manually. Must be a valid semantic version.")
 
 	cmd.Usage = func() {
 		w := flag.CommandLine.Output()
@@ -69,6 +71,8 @@ func (s *command) Parse(cmdIndex int) error {
 	if err := cmd.Parse(os.Args[cmdIndex+1:]); err != nil {
 		cmd.Usage()
 		return fmt.Errorf("parsing %s command: %w", Name, err)
+	} else if *version != "" {
+		s.version = *version
 	}
 
 	return nil
@@ -107,7 +111,7 @@ func (s *command) runJSBuild(cwd string, buildPath string) error {
 func (s command) runGoBuild(cwd string, modPaths []string) error {
 	s.env.SetIfEmpty("CGO_ENABLED", "0")
 
-	if err := golang.BuildMainPackages(cwd, modPaths, s.env); err != nil {
+	if err := golang.BuildMainPackages(cwd, modPaths, s.version, s.env); err != nil {
 		return fmt.Errorf("building main packages: %w", err)
 	} else {
 		return nil

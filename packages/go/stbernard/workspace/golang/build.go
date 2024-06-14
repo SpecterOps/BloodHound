@@ -31,16 +31,19 @@ import (
 )
 
 // BuildMainPackages builds all main packages for a list of module paths
-func BuildMainPackages(workRoot string, modPaths []string, env environment.Environment) error {
+func BuildMainPackages(workRoot string, modPaths []string, customVersion string, env environment.Environment) error {
 	var (
+		err      error
 		errs     []error
 		wg       sync.WaitGroup
 		mu       sync.Mutex
+		version  semver.Version
 		buildDir = filepath.Join(workRoot, "dist") + string(filepath.Separator)
 	)
 
-	version, err := git.ParseLatestVersionFromTags(workRoot, env)
-	if err != nil {
+	if customVersion != "" {
+		version = *semver.MustParse(customVersion)
+	} else if version, err = git.ParseLatestVersionFromTags(workRoot, env); err != nil {
 		return fmt.Errorf("parse latest version from git tags: %w", err)
 	}
 

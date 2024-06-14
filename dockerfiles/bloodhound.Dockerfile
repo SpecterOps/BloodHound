@@ -47,7 +47,7 @@ ENV GOARCH=${TARGETARCH}
 ENV CGO_ENABLED=0
 WORKDIR /bloodhound
 
-RUN go run github.com/specterops/bloodhound/packages/go/stbernard build
+RUN go run github.com/specterops/bloodhound/packages/go/stbernard build --version ${version}
 
 ########
 # Package other assets
