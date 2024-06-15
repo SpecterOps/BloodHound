@@ -565,14 +565,17 @@ type SessionAuthProvider int
 const (
 	SessionAuthProviderSecret SessionAuthProvider = 0
 	SessionAuthProviderSAML   SessionAuthProvider = 1
-
-	SessionFlagFedEULAAccepted = "fed_eula_accepted"
 )
 
+type SessionFlagKey string
 type UserSessionFlags types.JSONUntypedObject
 
+const (
+	SessionFlagFedEULAAccepted SessionFlagKey = "fed_eula_accepted"
+)
+
 func (s UserSessionFlags) AuditData() AuditData {
-	return AuditData{} // TODO: include flag data?
+	return AuditData{} // this is required to fulfill the auditing interface
 }
 
 type UserSession struct {
@@ -591,9 +594,12 @@ func (s UserSession) Expired() bool {
 	return s.ExpiresAt.Before(time.Now().UTC())
 }
 
-func (s UserSession) GetFlag(key string) bool {
-	if v, ok := s.Flags[key]; ok {
-		return v.(bool) // TODO: type checking for if it's not a bool?
+func (s UserSession) GetFlag(key SessionFlagKey) bool {
+	if v, ok := s.Flags[string(key)]; ok {
+		if v, ok := v.(bool); ok {
+			return v
+		}
+		// else fallthrough to false
 	}
 	return false
 }

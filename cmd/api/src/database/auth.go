@@ -566,18 +566,18 @@ func (s *BloodhoundDB) EndUserSession(ctx context.Context, userSession model.Use
 	s.db.Model(&userSession).WithContext(ctx).Update("expires_at", gorm.Expr("NOW()"))
 }
 
-func (s *BloodhoundDB) SetUserSessionFlag(ctx context.Context, userSession *model.UserSession, key string, state bool) error {
+func (s *BloodhoundDB) SetUserSessionFlag(ctx context.Context, userSession *model.UserSession, key model.SessionFlagKey, state bool) error {
 	var auditEntry = model.AuditEntry{
 		Model: userSession.Flags,
 	}
 	var doAudit = false
-	if key == model.SessionFlagFedEULAAccepted {
-		// TODO: should this only do the audit if the new state is true?
+	// only audit if the new state is true, meaning the EULA is currently being accepted
+	if key == model.SessionFlagFedEULAAccepted && state {
 		doAudit = true
 		auditEntry.Action = model.AuditLogActionAcceptFedEULA
 	}
 	return s.MaybeAuditableTransaction(ctx, !doAudit, auditEntry, func(tx *gorm.DB) error {
-		userSession.Flags[key] = state
+		userSession.Flags[string(key)] = state
 		return CheckError(tx.Model(&userSession).WithContext(ctx).Update("flags", userSession.Flags))
 	})
 }

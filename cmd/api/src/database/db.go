@@ -130,7 +130,7 @@ type Database interface {
 
 	// Sessions
 	CreateUserSession(ctx context.Context, userSession model.UserSession) (model.UserSession, error)
-	SetUserSessionFlag(ctx context.Context, userSession *model.UserSession, key string, state bool) error
+	SetUserSessionFlag(ctx context.Context, userSession *model.UserSession, key model.SessionFlagKey, state bool) error
 	LookupActiveSessionsByUser(ctx context.Context, user model.User) ([]model.UserSession, error)
 	EndUserSession(ctx context.Context, userSession model.UserSession)
 	GetUserSession(ctx context.Context, id int64) (model.UserSession, error)
