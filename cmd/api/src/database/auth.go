@@ -566,6 +566,7 @@ func (s *BloodhoundDB) EndUserSession(ctx context.Context, userSession model.Use
 	s.db.Model(&userSession).WithContext(ctx).Update("expires_at", gorm.Expr("NOW()"))
 }
 
+// corresponding retrival function is model.UserSession.GetFlag()
 func (s *BloodhoundDB) SetUserSessionFlag(ctx context.Context, userSession *model.UserSession, key model.SessionFlagKey, state bool) error {
 	var auditEntry = model.AuditEntry{
 		Model: userSession.Flags,

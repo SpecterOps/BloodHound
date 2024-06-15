@@ -571,11 +571,13 @@ type SessionFlagKey string
 type UserSessionFlags types.JSONUntypedObject
 
 const (
-	SessionFlagFedEULAAccepted SessionFlagKey = "fed_eula_accepted"
+	SessionFlagFedEULAAccepted SessionFlagKey = "fed_eula_accepted" // Enterprise only
 )
 
+// this is required to fulfill the auditing interface
 func (s UserSessionFlags) AuditData() AuditData {
-	return AuditData{} // this is required to fulfill the auditing interface
+	// we don't know what flag is being changed so don't store any extra data for now
+	return AuditData{}
 }
 
 type UserSession struct {
@@ -584,7 +586,7 @@ type UserSession struct {
 	AuthProviderType SessionAuthProvider
 	AuthProviderID   int32
 	ExpiresAt        time.Time
-	Flags            UserSessionFlags `json:"flags"`
+	Flags            UserSessionFlags `json:"flags"` // TODO: figure out how to have Gorm decode as map[string]bool
 
 	BigSerial
 }
@@ -594,6 +596,7 @@ func (s UserSession) Expired() bool {
 	return s.ExpiresAt.Before(time.Now().UTC())
 }
 
+// corresponding set function is cmd/api/src/database/auth.go:SetUserSessionFlag()
 func (s UserSession) GetFlag(key SessionFlagKey) bool {
 	if v, ok := s.Flags[string(key)]; ok {
 		if v, ok := v.(bool); ok {

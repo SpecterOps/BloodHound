@@ -101,6 +101,11 @@ func WriteBasicResponse(ctx context.Context, inputData any, statusCode int, resp
 	}
 }
 
+// intended for 2xx responses such as http.StatusNoContent
+func WriteEmptyResponse(_ context.Context, statusCode int, response http.ResponseWriter) {
+	response.WriteHeader(statusCode)
+}
+
 func WriteResponseWrapperWithPagination(ctx context.Context, data any, limit int, skip, count, statusCode int, response http.ResponseWriter) {
 	wrapper := ResponseWrapper{}
 	wrapper.Data = data
