@@ -68,4 +68,4 @@ jobs:
             version=${{env.REVISION}}
             checkout_hash=$GITHUB_SHA
           provenance: false
-          push: true
+          push: false

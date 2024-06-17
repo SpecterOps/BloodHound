@@ -19,6 +19,8 @@ package environment
 import (
 	"os"
 	"strings"
+
+	"github.com/specterops/bloodhound/log"
 )
 
 // Environment is a string map representation of env vars
@@ -44,6 +46,12 @@ func (s Environment) SetIfEmpty(key string, value string) {
 	if _, ok := s[key]; !ok {
 		s[key] = value
 	}
+}
+
+// Overrides an environment variable with a new value
+func (s Environment) Override(key string, value string) {
+	log.Infof("Overriding environment variable %s with %s", key, value)
+	s[key] = value
 }
 
 // Slice converts the Environment to a slice of strings in the form `KEY=VALUE` to send to external libraries
