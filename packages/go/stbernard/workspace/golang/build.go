@@ -42,7 +42,7 @@ func BuildMainPackages(workRoot string, modPaths []string, env environment.Envir
 	)
 
 	if version, err = git.ParseLatestVersionFromTags(workRoot, env); err != nil {
-		log.Errorf("Failed to parse version from git tags, falling back to environment variable: %w", err)
+		log.Errorf("Failed to parse version from git tags, falling back to environment variable: %v", err)
 		version = *semver.MustParse(env["VERSION"])
 	}
 
