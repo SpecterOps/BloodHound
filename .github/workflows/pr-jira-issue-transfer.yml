@@ -23,26 +23,20 @@ jobs:
   check-author:
     runs-on: self-hosted
     steps:
-      - name: Check if PR is authored by an external contributor
-        run: |
-          # Fetch the author association of the PR
-          AUTHOR_ASSOCIATION=$(jq --raw-output .pull_request.author_association $GITHUB_EVENT_PATH)
-          
-          # Define the list of allowed author associations for team members
-          TEAM_ASSOCIATIONS=("MEMBER")
-          
-          # Check if the author association is not in the team list
-          if [[ ! " ${TEAM_ASSOCIATIONS[@]} " =~ " ${AUTHOR_ASSOCIATION} " ]]; then
-            - name: Login
-              uses: atlassian/gajira-login@v3        
-    
-            - name: Jira Create
-              uses: atlassian/gajira-create@v3
-              with:
-                  project: BP
-                  issuetype: 'Product Feature'
-                  summary: ${{ github.event.pulls.title }}
-                  description: "Github Pull Request Link: ${{ github.event.pulls.html_url}} \r\n ${{ github.event.pulls.body }}"
-                  fields: '{"labels":["GitHubReport"]}'
-            exit 0
-          
+    - name: checkUserMember
+      uses: marcocarvalho/team-membership@v3
+      with:
+        username: ${{ github.actor }}
+        team: 'bloodhound-enterprise'
+            
+    - name: Login
+      uses: atlassian/gajira-login@v3        
+    - name: Jira Create
+      if: steps.checkUserMember.outputs.isTeamMember == 'false'
+      uses: atlassian/gajira-create@v3
+      with:
+        project: BP
+        issuetype: 'Product Feature'
+        summary: ${{ github.event.pulls.title }}
+        description: "Github Pull Request Link: ${{ github.event.pulls.html_url}} \r\n ${{ github.event.pulls.body }}"
+        fields: '{"labels":["GitHubReport"]}'
