@@ -22,7 +22,6 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/packages/go/stbernard/cmdrunner"
 	"github.com/specterops/bloodhound/packages/go/stbernard/environment"
 	"github.com/specterops/bloodhound/packages/go/stbernard/git"
@@ -47,7 +46,6 @@ type WorkspacePaths struct {
 
 // FindPaths will attempt to crawl up the path until it finds a go.work file, then calculate all WorkspacePaths
 func FindPaths(env environment.Environment) (WorkspacePaths, error) {
-	log.Infof("-------- In Workspace.FindPaths().")
 	cwd, err := os.Getwd()
 	if err != nil {
 		return WorkspacePaths{}, fmt.Errorf("getting current working directory: %w", err)

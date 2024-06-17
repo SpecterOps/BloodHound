@@ -36,8 +36,7 @@ const (
 )
 
 type command struct {
-	env     environment.Environment
-	version string
+	env environment.Environment
 }
 
 // Create new instance of command to capture given environment
@@ -60,7 +59,6 @@ func (s *command) Name() string {
 // Parse command flags
 func (s *command) Parse(cmdIndex int) error {
 	cmd := flag.NewFlagSet(Name, flag.ExitOnError)
-	version := cmd.String("version", "", "Specify a version number manually. Must be a valid semantic version.")
 	targetOs := cmd.String("os", "", "Specify the OS to build for. This will override anything in GOOS.")
 	targetArch := cmd.String("arch", "", "Specify the architecture to build for. This will override anything in GOARCH.")
 
@@ -74,9 +72,6 @@ func (s *command) Parse(cmdIndex int) error {
 		cmd.Usage()
 		return fmt.Errorf("parsing %s command: %w", Name, err)
 	} else {
-		if *version != "" {
-			s.version = *version
-		}
 		if *targetOs != "" {
 			s.env.Override("GOOS", *targetOs)
 		}
@@ -90,18 +85,13 @@ func (s *command) Parse(cmdIndex int) error {
 
 // Run build command
 func (s *command) Run() error {
-	log.Infof("--- In Build.Run(). s.env is %+v", s.env)
 	if paths, err := workspace.FindPaths(s.env); err != nil {
-		log.Infof("------ In Build.Run(). Error in FindPaths: %v", err)
 		return fmt.Errorf("finding workspace root: %w", err)
 	} else if err := filepath.WalkDir(paths.Assets, clearFiles); err != nil {
-		log.Infof("------ In Build.Run(). Error in WalkDir: %v", err)
 		return fmt.Errorf("clearing asset directory: %w", err)
 	} else if err := s.runJSBuild(paths.Root, paths.Assets); err != nil {
-		log.Infof("------ In Build.Run(). Error in runJSBuild: %v", err)
 		return fmt.Errorf("building JS artifacts: %w", err)
 	} else if err := s.runGoBuild(paths.Root, paths.GoModules); err != nil {
-		log.Infof("------ In Build.Run(). Error in runGoBuild: %v", err)
 		return fmt.Errorf("building Go artifacts: %w", err)
 	} else {
 		return nil
@@ -109,7 +99,6 @@ func (s *command) Run() error {
 }
 
 func (s *command) runJSBuild(cwd string, buildPath string) error {
-	log.Infof("-------- In Build.runJSBuild().")
 	s.env.SetIfEmpty("BUILD_PATH", buildPath)
 
 	if err := yarn.BuildWorkspace(cwd, s.env); err != nil {
@@ -120,10 +109,9 @@ func (s *command) runJSBuild(cwd string, buildPath string) error {
 }
 
 func (s command) runGoBuild(cwd string, modPaths []string) error {
-	log.Infof("-------- In Build.runGoBuild().")
 	s.env.SetIfEmpty("CGO_ENABLED", "0")
 
-	if err := golang.BuildMainPackages(cwd, modPaths, s.version, s.env); err != nil {
+	if err := golang.BuildMainPackages(cwd, modPaths, s.env); err != nil {
 		return fmt.Errorf("building main packages: %w", err)
 	} else {
 		return nil

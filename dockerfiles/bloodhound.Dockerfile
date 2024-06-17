@@ -43,9 +43,10 @@ FROM deps AS builder
 ARG TARGETOS
 ARG TARGETARCH
 ENV CGO_ENABLED=0
+ENV VERSION=${version}
 WORKDIR /bloodhound
 
-RUN go run github.com/specterops/bloodhound/packages/go/stbernard build --version ${version} --os ${TARGETOS} --arch ${TARGETARCH}
+RUN go run github.com/specterops/bloodhound/packages/go/stbernard build --os ${TARGETOS} --arch ${TARGETARCH}
 
 ########
 # Package other assets
