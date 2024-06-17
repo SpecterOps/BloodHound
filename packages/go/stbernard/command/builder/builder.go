@@ -71,13 +71,13 @@ func (s *command) Parse(cmdIndex int) error {
 	if err := cmd.Parse(os.Args[cmdIndex+1:]); err != nil {
 		cmd.Usage()
 		return fmt.Errorf("parsing %s command: %w", Name, err)
-	} else {
-		if *targetOs != "" {
-			s.env.Override("GOOS", *targetOs)
-		}
-		if *targetArch != "" {
-			s.env.Override("GOARCH", *targetArch)
-		}
+	}
+
+	if *targetOs != "" {
+		s.env.Override("GOOS", *targetOs)
+	}
+	if *targetArch != "" {
+		s.env.Override("GOARCH", *targetArch)
 	}
 
 	return nil
