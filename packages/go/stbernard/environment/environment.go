@@ -23,6 +23,11 @@ import (
 	"github.com/specterops/bloodhound/log"
 )
 
+const (
+	LogLevelVarName = "SB_LOG_LEVEL"
+	VersionVarName  = "SB_VERSION"
+)
+
 // Environment is a string map representation of env vars
 type Environment map[string]string
 

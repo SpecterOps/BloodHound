@@ -27,7 +27,7 @@ FROM --platform=$BUILDPLATFORM docker.io/library/node:20-alpine AS deps
 ARG version=v999.999.999
 ARG checkout_hash=""
 ENV SB_LOG_LEVEL=debug
-ENV VERSION=${version}
+ENV SB_VERSION=${version}
 ENV CHECKOUT_HASH=${checkout_hash}
 WORKDIR /bloodhound
 
@@ -43,7 +43,7 @@ FROM deps AS builder
 ARG TARGETOS
 ARG TARGETARCH
 ENV CGO_ENABLED=0
-ENV VERSION=${version}
+ENV SB_VERSION=${version}
 WORKDIR /bloodhound
 
 RUN go run github.com/specterops/bloodhound/packages/go/stbernard build --os ${TARGETOS} --arch ${TARGETARCH}
