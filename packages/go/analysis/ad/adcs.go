@@ -63,7 +63,7 @@ func PostADCS(ctx context.Context, db graph.Database, groupExpansions impact.Pat
 				innerEnterpriseCA := enterpriseCA
 
 				if cache.DoesCAChainProperlyToDomain(innerEnterpriseCA, innerDomain) {
-					processEnterpriseCAWithValidCertChainToDomain(innerEnterpriseCA, innerDomain, groupExpansions, cache, operation, adcsEnabled)
+					processEnterpriseCAWithValidCertChainToDomain(innerEnterpriseCA, innerDomain, groupExpansions, cache, operation)
 				}
 			}
 		}
@@ -112,7 +112,7 @@ func postADCSPreProcessStep2(ctx context.Context, db graph.Database, certTemplat
 	}
 }
 
-func processEnterpriseCAWithValidCertChainToDomain(enterpriseCA, domain *graph.Node, groupExpansions impact.PathAggregator, cache ADCSCache, operation analysis.StatTrackedOperation[analysis.CreatePostRelationshipJob], adcsEnabled bool) {
+func processEnterpriseCAWithValidCertChainToDomain(enterpriseCA, domain *graph.Node, groupExpansions impact.PathAggregator, cache ADCSCache, operation analysis.StatTrackedOperation[analysis.CreatePostRelationshipJob]) {
 
 	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
 		if err := PostGoldenCert(ctx, tx, outC, domain, enterpriseCA); err != nil {
