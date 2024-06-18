@@ -69,4 +69,3 @@ jobs:
             checkout_hash=$GITHUB_SHA
           provenance: false
           push: true
-
