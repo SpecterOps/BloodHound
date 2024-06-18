@@ -368,6 +368,22 @@ func (s *ArithmeticExpression) AddArithmeticExpressionPart(part *PartialArithmet
 	s.Partials = append(s.Partials, part)
 }
 
+type UnaryArithmeticExpression struct {
+	Operator Operator
+	Right    Expression
+}
+
+func NewUnaryArithmeticExpression() *UnaryArithmeticExpression {
+	return &UnaryArithmeticExpression{}
+}
+
+func (s *UnaryArithmeticExpression) copy() *UnaryArithmeticExpression {
+	return &UnaryArithmeticExpression{
+		Operator: s.Operator,
+		Right:    Copy(s.Right),
+	}
+}
+
 type Match struct {
 	Optional bool
 	Pattern  []*PatternPart

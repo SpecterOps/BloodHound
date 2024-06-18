@@ -267,6 +267,9 @@ func cypherModelCollect(nextCursor *WalkCursor, expression Expression) bool {
 	case *PartialArithmeticExpression:
 		CollectExpression(nextCursor, typedExpr.Right)
 
+	case *UnaryArithmeticExpression:
+		CollectExpression(nextCursor, typedExpr.Right)
+
 	case *Merge:
 		Collect(nextCursor, typedExpr.PatternPart)
 		CollectSlice(nextCursor, typedExpr.MergeActions)

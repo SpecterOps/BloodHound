@@ -808,6 +808,13 @@ func (s Emitter) WriteExpression(writer io.Writer, expression model.Expression) 
 
 		return s.WriteExpression(writer, typedExpression.Right)
 
+	case *model.UnaryArithmeticExpression:
+		if _, err := io.WriteString(writer, typedExpression.Operator.String()); err != nil {
+			return err
+		}
+
+		return s.WriteExpression(writer, typedExpression.Right)
+
 	default:
 		return fmt.Errorf("unexpected expression type for string formatting: %T", expression)
 	}

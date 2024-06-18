@@ -102,6 +102,9 @@ func Copy[T any](value T, extensions ...CopyExtension[T]) T {
 	case *PartialArithmeticExpression:
 		return any(typedValue.copy()).(T)
 
+	case *UnaryArithmeticExpression:
+		return any(typedValue.copy()).(T)
+
 	case *PartialComparison:
 		return any(typedValue.copy()).(T)
 

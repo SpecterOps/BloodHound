@@ -271,7 +271,14 @@ func (s *ArithmeticExpressionVisitor) EnterOC_UnaryAddOrSubtractExpression(ctx *
 }
 
 func (s *ArithmeticExpressionVisitor) ExitOC_UnaryAddOrSubtractExpression(ctx *parser.OC_UnaryAddOrSubtractExpressionContext) {
-	s.exitSubArithmeticExpression(ctx)
+	if operators := newTokenLiteralIterator(ctx); operators.HasTokens() {
+		s.Expression = &model.ArithmeticExpression{
+			Left: &model.UnaryArithmeticExpression{
+				Operator: operators.NextOperator(),
+				Right:    s.ctx.Exit().(*ArithmeticExpressionVisitor).Expression,
+			},
+		}
+	}
 }
 
 func (s *ArithmeticExpressionVisitor) EnterOC_NonArithmeticOperatorExpression(ctx *parser.OC_NonArithmeticOperatorExpressionContext) {
