@@ -156,6 +156,16 @@ func EndNodes(tx graph.Transaction, root *graph.Node, relationship graph.Kind, n
 	}))
 }
 
+func fetchUsersWithOnPrem(tx graph.Transaction) ([]*graph.Node, error) {
+	return ops.FetchNodes(tx.Nodes().Filterf(func() graph.Criteria {
+		return query.And(
+			query.KindIn(query.Node(), azure.User),
+			query.Equals(query.NodeProperty(azure.OnPremSyncEnabled.String()), true),
+			query.StringContains(query.NodeProperty(azure.OnPremID.String()), "-"),
+		)
+	}))
+}
+
 func fetchTenantContainsReadWriteAllGroupRelationships(tx graph.Transaction, tenant *graph.Node) ([]*graph.Relationship, error) {
 	return ops.FetchRelationships(tx.Relationships().Filterf(func() graph.Criteria {
 		return query.And(
