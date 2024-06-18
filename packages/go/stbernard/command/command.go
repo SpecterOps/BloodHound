@@ -72,7 +72,7 @@ type usageFunc func()
 //
 // It does not support flags of its own, each subcommand is responsible for parsing
 // their flags.
-func ParseCLI() (CommandRunner, error) {
+func ParseCLI(env environment.Environment) (CommandRunner, error) {
 	var (
 		verboseEnabled *bool
 		debugEnabled   *bool
@@ -80,7 +80,6 @@ func ParseCLI() (CommandRunner, error) {
 		currentCmd     command
 		helpRequested  bool
 
-		env      = environment.NewEnvironment()
 		commands = []command{
 			envdump.Create(env),
 			deps.Create(env),

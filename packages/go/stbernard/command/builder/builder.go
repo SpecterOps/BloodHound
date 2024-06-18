@@ -59,6 +59,8 @@ func (s *command) Name() string {
 // Parse command flags
 func (s *command) Parse(cmdIndex int) error {
 	cmd := flag.NewFlagSet(Name, flag.ExitOnError)
+	targetOs := cmd.String("os", "", "Specify the OS to build for. This will override anything in GOOS.")
+	targetArch := cmd.String("arch", "", "Specify the architecture to build for. This will override anything in GOARCH.")
 
 	cmd.Usage = func() {
 		w := flag.CommandLine.Output()
@@ -69,6 +71,13 @@ func (s *command) Parse(cmdIndex int) error {
 	if err := cmd.Parse(os.Args[cmdIndex+1:]); err != nil {
 		cmd.Usage()
 		return fmt.Errorf("parsing %s command: %w", Name, err)
+	}
+
+	if *targetOs != "" {
+		s.env.Override("GOOS", *targetOs)
+	}
+	if *targetArch != "" {
+		s.env.Override("GOARCH", *targetArch)
 	}
 
 	return nil
