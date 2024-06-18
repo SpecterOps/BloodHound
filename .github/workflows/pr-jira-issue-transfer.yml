@@ -32,7 +32,7 @@ jobs:
     - name: Login
       uses: atlassian/gajira-login@v3        
     - name: Jira Create
-      if: steps.checkUserMember.outputs.isTeamMember == 'false'
+      if: steps.checkUserMember.outputs.isTeamMember == false
       uses: atlassian/gajira-create@v3
       with:
         project: BP
