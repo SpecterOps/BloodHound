@@ -31,6 +31,7 @@ import (
 	"github.com/gofrs/uuid"
 	"github.com/specterops/bloodhound/errors"
 	"github.com/specterops/bloodhound/src/auth"
+	"github.com/specterops/bloodhound/src/database/types"
 	"github.com/specterops/bloodhound/src/model"
 )
 
@@ -568,9 +569,7 @@ func (s *BloodhoundDB) EndUserSession(ctx context.Context, userSession model.Use
 
 // corresponding retrival function is model.UserSession.GetFlag()
 func (s *BloodhoundDB) SetUserSessionFlag(ctx context.Context, userSession *model.UserSession, key model.SessionFlagKey, state bool) error {
-	var auditEntry = model.AuditEntry{
-		Model: userSession.Flags,
-	}
+	var auditEntry = model.AuditEntry{}
 	var doAudit = false
 	// only audit if the new state is true, meaning the EULA is currently being accepted
 	if key == model.SessionFlagFedEULAAccepted && state {
@@ -578,6 +577,9 @@ func (s *BloodhoundDB) SetUserSessionFlag(ctx context.Context, userSession *mode
 		auditEntry.Action = model.AuditLogActionAcceptFedEULA
 	}
 	return s.MaybeAuditableTransaction(ctx, !doAudit, auditEntry, func(tx *gorm.DB) error {
+		if userSession.Flags == nil {
+			userSession.Flags = types.JSONBBoolObject{}
+		}
 		userSession.Flags[string(key)] = state
 		return CheckError(tx.Model(&userSession).WithContext(ctx).Update("flags", userSession.Flags))
 	})

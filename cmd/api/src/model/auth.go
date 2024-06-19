@@ -568,17 +568,10 @@ const (
 )
 
 type SessionFlagKey string
-type UserSessionFlags types.JSONUntypedObject
 
 const (
 	SessionFlagFedEULAAccepted SessionFlagKey = "fed_eula_accepted" // Enterprise only
 )
-
-// this is required to fulfill the auditing interface
-func (s UserSessionFlags) AuditData() AuditData {
-	// we don't know what flag is being changed so don't store any extra data for now
-	return AuditData{}
-}
 
 type UserSession struct {
 	User             User `gorm:"constraint:OnDelete:CASCADE;"`
@@ -586,7 +579,7 @@ type UserSession struct {
 	AuthProviderType SessionAuthProvider
 	AuthProviderID   int32
 	ExpiresAt        time.Time
-	Flags            UserSessionFlags `json:"flags"` // TODO: figure out how to have Gorm decode as map[string]bool
+	Flags            types.JSONBBoolObject `json:"flags"`
 
 	BigSerial
 }
@@ -598,11 +591,5 @@ func (s UserSession) Expired() bool {
 
 // corresponding set function is cmd/api/src/database/auth.go:SetUserSessionFlag()
 func (s UserSession) GetFlag(key SessionFlagKey) bool {
-	if v, ok := s.Flags[string(key)]; ok {
-		if v, ok := v.(bool); ok {
-			return v
-		}
-		// else fallthrough to false
-	}
-	return false
+	return s.Flags[string(key)]
 }
