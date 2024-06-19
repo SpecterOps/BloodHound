@@ -40,11 +40,16 @@ func newAuditLog(context context.Context, entry model.AuditEntry, idResolver aut
 
 	auditLog := model.AuditLog{
 		Action:          entry.Action,
-		Fields:          types.JSONUntypedObject(entry.Model.AuditData()),
 		RequestID:       bheCtx.RequestID,
 		SourceIpAddress: bheCtx.RequestIP,
 		Status:          entry.Status,
 		CommitID:        entry.CommitID,
+	}
+
+	if entry.Model != nil {
+		auditLog.Fields = types.JSONUntypedObject(entry.Model.AuditData())
+	} else {
+		auditLog.Fields = types.JSONUntypedObject{}
 	}
 
 	if entry.ErrorMsg != "" {
