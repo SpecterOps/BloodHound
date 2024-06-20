@@ -368,17 +368,17 @@ func (s *ArithmeticExpression) AddArithmeticExpressionPart(part *PartialArithmet
 	s.Partials = append(s.Partials, part)
 }
 
-type UnaryArithmeticExpression struct {
+type UnaryAddOrSubtractExpression struct {
 	Operator Operator
 	Right    Expression
 }
 
-func NewUnaryArithmeticExpression() *UnaryArithmeticExpression {
-	return &UnaryArithmeticExpression{}
+func NewUnaryArithmeticExpression() *UnaryAddOrSubtractExpression {
+	return &UnaryAddOrSubtractExpression{}
 }
 
-func (s *UnaryArithmeticExpression) copy() *UnaryArithmeticExpression {
-	return &UnaryArithmeticExpression{
+func (s *UnaryAddOrSubtractExpression) copy() *UnaryAddOrSubtractExpression {
+	return &UnaryAddOrSubtractExpression{
 		Operator: s.Operator,
 		Right:    Copy(s.Right),
 	}

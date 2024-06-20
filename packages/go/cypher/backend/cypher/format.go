@@ -808,7 +808,7 @@ func (s Emitter) WriteExpression(writer io.Writer, expression model.Expression) 
 
 		return s.WriteExpression(writer, typedExpression.Right)
 
-	case *model.UnaryArithmeticExpression:
+	case *model.UnaryAddOrSubtractExpression:
 		if _, err := io.WriteString(writer, typedExpression.Operator.String()); err != nil {
 			return err
 		}

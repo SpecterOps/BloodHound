@@ -794,6 +794,22 @@
             }
         },
         {
+            "name": "Support unary operators in property match",
+            "type": "string_match",
+            "details": {
+                "query": "match (n:Product) where n.prop_1 = -1 return n",
+                "complexity": 2
+            }
+        },
+        {
+            "name": "Support complex arithmetic expressions with unary operators in property match",
+            "type": "string_match",
+            "details": {
+                "query": "match (n:Product) where n.prop_1 = -(1 + 2) * -3 return n",
+                "complexity": 2
+            }
+        },
+        {
             "name": "Find Kerberoastable Users with most privileges",
             "type": "string_match",
             "details": {
