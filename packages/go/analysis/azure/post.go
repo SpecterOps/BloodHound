@@ -156,6 +156,7 @@ func EndNodes(tx graph.Transaction, root *graph.Node, relationship graph.Kind, n
 	}))
 }
 
+// TODO: decide which direction we're going, whether to grab all users with onPrem or iterate over each tenant
 func fetchUsersWithOnPrem(tx graph.Transaction) ([]*graph.Node, error) {
 	return ops.FetchNodes(tx.Nodes().Filterf(func() graph.Criteria {
 		return query.And(
