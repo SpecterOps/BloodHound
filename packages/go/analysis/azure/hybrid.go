@@ -73,11 +73,15 @@ func PostHybrid(ctx context.Context, db graph.Database) (*analysis.AtomicPostPro
 			}
 		}
 
+		if err != nil {
+			return err
+		}
+
 		return tx.Commit()
 	})
 
 	if opErr := operation.Done(); opErr != nil {
-		return &operation.Stats, fmt.Errorf("marking operation as done: %w; transaction error (if any): %w")
+		return &operation.Stats, fmt.Errorf("marking operation as done: %w; transaction error (if any): %w", opErr, err)
 	}
 
 	return &operation.Stats, nil
