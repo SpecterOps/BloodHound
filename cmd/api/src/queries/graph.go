@@ -466,8 +466,6 @@ func (s *GraphQuery) RawCypherQuery(ctx context.Context, pQuery PreparedQuery, i
 		bhCtxInst     = bhCtx.Get(ctx)
 	)
 
-	fmt.Printf("HERE IS THE QUERY: %s", pQuery.query)
-
 	txDelegate := func(tx graph.Transaction) error {
 		if pathSet, err := ops.FetchPathSetByQuery(tx, pQuery.query); err != nil {
 			return err
