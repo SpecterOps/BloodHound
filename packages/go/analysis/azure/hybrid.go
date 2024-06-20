@@ -1,3 +1,19 @@
+// Copyright 2024 Specter Ops, Inc.
+//
+// Licensed under the Apache License, Version 2.0
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// SPDX-License-Identifier: Apache-2.0
+
 package azure
 
 import (
@@ -34,19 +50,18 @@ func PostHybrid(ctx context.Context, db graph.Database) (*analysis.AtomicPostPro
 				return nil
 			} else {
 				for _, tenantUser := range tenantUsers {
+					innerTenantUser := tenantUser
 					if err := operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
-						if onPremUserID, hasOnPremUser, err := HasOnPremUser(tenantUser); err != nil {
+						if onPremUserID, hasOnPremUser, err := HasOnPremUser(innerTenantUser); err != nil {
 							return err
 						} else if hasOnPremUser {
-							if adUser, err := tx.Nodes().Filterf(func() graph.Criteria {
-								return query.Where(query.Equals(query.Property(query.Node, common.ObjectID.String()), onPremUserID))
-							}).First(); err != nil {
+							if adUser, err := tx.Nodes().Filter(query.Equals(query.NodeProperty(common.ObjectID.String()), onPremUserID)).First(); err != nil {
 								return err
 							} else {
 								SyncedToEntraUserRelationship := analysis.CreatePostRelationshipJob{
 									FromID: adUser.ID,
-									ToID:   tenantUser.ID,
-									Kind:   azure.AZMGGrantRole, // TODO: Create the SyncedToEntraUser relationship here
+									ToID:   innerTenantUser.ID,
+									Kind:   ad.SyncedToEntraUser,
 								}
 
 								if !channels.Submit(ctx, outC, SyncedToEntraUserRelationship) {
@@ -54,9 +69,9 @@ func PostHybrid(ctx context.Context, db graph.Database) (*analysis.AtomicPostPro
 								}
 
 								SyncedFromADUserRelationship := analysis.CreatePostRelationshipJob{
-									FromID: tenantUser.ID,
+									FromID: innerTenantUser.ID,
 									ToID:   adUser.ID,
-									Kind:   ad.CanRDP, // TODO: Create the SyncedFromADUser relationship here
+									Kind:   azure.SyncedFromADUser,
 								}
 
 								if !channels.Submit(ctx, outC, SyncedFromADUserRelationship) {
@@ -81,14 +96,14 @@ func PostHybrid(ctx context.Context, db graph.Database) (*analysis.AtomicPostPro
 	})
 
 	if opErr := operation.Done(); opErr != nil {
-		return &operation.Stats, fmt.Errorf("marking operation as done: %w; transaction error (if any): %w", opErr, err)
+		return &operation.Stats, fmt.Errorf("marking operation as done: %w; transaction error (if any): %v", opErr, err)
 	}
 
 	return &operation.Stats, nil
 }
 
 func HasOnPremUser(node *graph.Node) (string, bool, error) {
-	if onPremSyncEnabled, err := node.Properties.Get(azure.OnPremSyncEnabled.String()).String(); errors.Is(err, graph.ErrPropertyNotFound) {
+	if onPremSyncEnabled, err := node.Properties.Get(azure.OnPremSyncEnabled.String()).Bool(); errors.Is(err, graph.ErrPropertyNotFound) {
 		return "", false, nil
 	} else if err != nil {
 		return "", false, err
@@ -97,6 +112,6 @@ func HasOnPremUser(node *graph.Node) (string, bool, error) {
 	} else if err != nil {
 		return onPremID, false, err
 	} else {
-		return onPremID, (onPremSyncEnabled == "true" && len(onPremID) != 0), nil
+		return onPremID, (onPremSyncEnabled && len(onPremID) != 0), nil
 	}
 }
