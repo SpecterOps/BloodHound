@@ -2,85 +2,97 @@ package azure
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/specterops/bloodhound/analysis"
-	"github.com/specterops/bloodhound/analysis/ad"
 	"github.com/specterops/bloodhound/dawgs/graph"
+	"github.com/specterops/bloodhound/dawgs/query"
+	"github.com/specterops/bloodhound/dawgs/util/channels"
+	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/graphschema/azure"
+	"github.com/specterops/bloodhound/graphschema/common"
 )
 
 func PostHybrid(ctx context.Context, db graph.Database) (*analysis.AtomicPostProcessingStats, error) {
-	if syncedToEntraUser, err := SyncedToEntraUser(ctx, db); err != nil {
-		return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("failed hybrid post processing: %w", err)
-	} else {
+	var (
+		err error
+	)
 
+	tenants, err := FetchTenants(ctx, db)
+	if err != nil {
+		return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("hybrid post processing: %w", err)
 	}
 
-	return &operation.Stats, operation.Done()
-}
+	operation := analysis.NewPostRelationshipOperation(ctx, db, "SyncedToEntraUser Post Processing")
 
-func SyncedToEntraUser(ctx context.Context, db graph.Database) (*analysis.AtomicPostProcessingStats, error) {
-	if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
-		if azUsersWithOnPrem, err := fetchUsersWithOnPrem(tx, )
+	err = db.ReadTransaction(ctx, func(tx graph.Transaction) error {
+		for _, tenant := range tenants {
+			if tenantUsers, err := EndNodes(tx, tenant, azure.Contains, azure.User); err != nil {
+				return err
+			} else if len(tenantUsers) == 0 {
+				return nil
+			} else {
+				for _, tenantUser := range tenantUsers {
+					if err := operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
+						if onPremUserID, hasOnPremUser, err := HasOnPremUser(tenantUser); err != nil {
+							return err
+						} else if hasOnPremUser {
+							if adUser, err := tx.Nodes().Filterf(func() graph.Criteria {
+								return query.Where(query.Equals(query.Property(query.Node, common.ObjectID.String()), onPremUserID))
+							}).First(); err != nil {
+								return err
+							} else {
+								SyncedToEntraUserRelationship := analysis.CreatePostRelationshipJob{
+									FromID: adUser.ID,
+									ToID:   tenantUser.ID,
+									Kind:   azure.AZMGGrantRole, // TODO: Create the SyncedToEntraUser relationship here
+								}
+
+								if !channels.Submit(ctx, outC, SyncedToEntraUserRelationship) {
+									return nil
+								}
+
+								SyncedFromADUserRelationship := analysis.CreatePostRelationshipJob{
+									FromID: tenantUser.ID,
+									ToID:   adUser.ID,
+									Kind:   ad.CanRDP, // TODO: Create the SyncedFromADUser relationship here
+								}
+
+								if !channels.Submit(ctx, outC, SyncedFromADUserRelationship) {
+									return nil
+								}
+							}
+						}
+
+						return nil
+					}); err != nil {
+						return err
+					}
+				}
+			}
+		}
+
+		return tx.Commit()
 	})
-	
 
-	// if tenants, err := FetchTenants(ctx, db); err != nil {
-	// 	return &analysis.AtomicPostProcessingStats{}, err
-	// } else {
-	// 	operation := analysis.NewPostRelationshipOperation(ctx, db, "SyncedToEntraUser Post Processing")
-
-	// 	if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
-			
-	// 		for _, tenant := range tenants {
-	// 			if tenantUsers, err := EndNodes(tx, tenant, azure.Contains, azure.User); err != nil {
-	// 				return err
-	// 			} else if tenantUsers.Len() == 0 {
-	// 				return nil
-	// 			} else {
-
-	// 				for _, tenantUser := range tenantUsers {
-	// 					innerTenantUser := tenantUser
-	// 					operation.Operation.SubmitReader(func(ctx context.Context, _ graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
-	// 						if hasOnPrem, err := HasOnPremUser(innerTenantUser); err != nil {
-	// 							return err
-	// 						} else {
-	// 							if hasOnPrem {
-	// 								if adUser, ad.FetchNodesByKind(ctx, db, ad.User)
-	// 							}
-	// 						}
-
-	// 						return nil
-	// 					})
-	// 				}
-
-	// 			}
-	// 		}
-	// 		return nil
-	// 	}); err != nil {
-	// 		operation.Done()
-	// 		return &operation.Stats, err
-	// 	}
-	// 	return &operation.Stats, operation.Done()
+	if opErr := operation.Done(); opErr != nil {
+		return &operation.Stats, fmt.Errorf("marking operation as done: %w; transaction error (if any): %w")
 	}
 
+	return &operation.Stats, nil
 }
 
-func HasOnPremUser(node *graph.Node) (bool, error) {
-	if onPremSyncEnabled, err := node.Properties.Get(azure.OnPremSyncEnabled.String()).String(); err != nil {
-		if graph.IsErrPropertyNotFound(err) {
-			return false, nil
-		}
-
-		return false, err
-	} else if onPremId, err := nodeProperties.Get(azure.OnPremID.String()).String(); err != nil {
-		if graph.IsErrPropertyNotFound(err) {
-			return false, nil
-		}
-
-		return false, err
+func HasOnPremUser(node *graph.Node) (string, bool, error) {
+	if onPremSyncEnabled, err := node.Properties.Get(azure.OnPremSyncEnabled.String()).String(); errors.Is(err, graph.ErrPropertyNotFound) {
+		return "", false, nil
+	} else if err != nil {
+		return "", false, err
+	} else if onPremID, err := node.Properties.Get(azure.OnPremID.String()).String(); errors.Is(err, graph.ErrPropertyNotFound) {
+		return onPremID, false, nil
+	} else if err != nil {
+		return onPremID, false, err
 	} else {
-		return (onPremSyncEnabled == true && len(onPremID) != 0), nil
+		return onPremID, (onPremSyncEnabled == "true" && len(onPremID) != 0), nil
 	}
 }
