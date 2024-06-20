@@ -140,6 +140,7 @@ export enum ActiveDirectoryRelationshipKind {
     ADCSESC10a = 'ADCSESC10a',
     ADCSESC10b = 'ADCSESC10b',
     ADCSESC13 = 'ADCSESC13',
+    SyncedToEntraUser = 'SyncedToEntraUser',
 }
 export function ActiveDirectoryRelationshipKindToDisplay(value: ActiveDirectoryRelationshipKind): string | undefined {
     switch (value) {
@@ -281,6 +282,8 @@ export function ActiveDirectoryRelationshipKindToDisplay(value: ActiveDirectoryR
             return 'ADCSESC10b';
         case ActiveDirectoryRelationshipKind.ADCSESC13:
             return 'ADCSESC13';
+        case ActiveDirectoryRelationshipKind.SyncedToEntraUser:
+            return 'SyncedToEntraUser';
         default:
             return undefined;
     }
@@ -588,6 +591,7 @@ export function ActiveDirectoryPathfindingEdges(): ActiveDirectoryRelationshipKi
         ActiveDirectoryRelationshipKind.ADCSESC10b,
         ActiveDirectoryRelationshipKind.ADCSESC13,
         ActiveDirectoryRelationshipKind.DCFor,
+        ActiveDirectoryRelationshipKind.SyncedToEntraUser,
     ];
 }
 export enum AzureNodeKind {
@@ -705,6 +709,7 @@ export enum AzureRelationshipKind {
     AZMGAddSecret = 'AZMGAddSecret',
     AZMGGrantAppRoles = 'AZMGGrantAppRoles',
     AZMGGrantRole = 'AZMGGrantRole',
+    SyncedFromADUser = 'SyncedFromADUser',
 }
 export function AzureRelationshipKindToDisplay(value: AzureRelationshipKind): string | undefined {
     switch (value) {
@@ -800,6 +805,8 @@ export function AzureRelationshipKindToDisplay(value: AzureRelationshipKind): st
             return 'AZMGGrantAppRoles';
         case AzureRelationshipKind.AZMGGrantRole:
             return 'AZMGGrantRole';
+        case AzureRelationshipKind.SyncedFromADUser:
+            return 'SyncedFromADUser';
         default:
             return undefined;
     }
@@ -946,6 +953,7 @@ export function AzurePathfindingEdges(): AzureRelationshipKind[] {
         AzureRelationshipKind.AZMGAddSecret,
         AzureRelationshipKind.AZMGGrantAppRoles,
         AzureRelationshipKind.AZMGGrantRole,
+        AzureRelationshipKind.SyncedFromADUser,
     ];
 }
 export enum CommonNodeKind {
