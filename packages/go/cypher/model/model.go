@@ -373,7 +373,7 @@ type UnaryAddOrSubtractExpression struct {
 	Right    Expression
 }
 
-func NewUnaryArithmeticExpression() *UnaryAddOrSubtractExpression {
+func NewUnaryAddOrSubtractExpression() *UnaryAddOrSubtractExpression {
 	return &UnaryAddOrSubtractExpression{}
 }
 
