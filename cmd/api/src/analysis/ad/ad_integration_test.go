@@ -29,6 +29,8 @@ import (
 	"github.com/specterops/bloodhound/analysis"
 	adAnalysis "github.com/specterops/bloodhound/analysis/ad"
 	"github.com/specterops/bloodhound/dawgs/graph"
+	"github.com/specterops/bloodhound/dawgs/ops"
+	"github.com/specterops/bloodhound/dawgs/query"
 	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/graphschema/common"
 	"github.com/specterops/bloodhound/src/test/integration"
@@ -1085,5 +1087,36 @@ func TestFetchUserSessionCompleteness(t *testing.T) {
 
 		test.RequireNilErr(t, err)
 		require.Equal(t, .5, completeness)
+	})
+}
+
+func TestSyncLAPSPassword(t *testing.T) {
+	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
+
+	testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) error {
+		harness.SyncLAPSPasswordHarness.Setup(testContext)
+		return nil
+	}, func(harness integration.HarnessDetails, db graph.Database) {
+		if groupExpansions, err := adAnalysis.ExpandAllRDPLocalGroups(testContext.Context(), db); err != nil {
+			t.Fatalf("error expanding groups in integration test; %v", err)
+		} else if _, err := adAnalysis.PostSyncLAPSPassword(testContext.Context(), db, groupExpansions); err != nil {
+			t.Fatalf("error creating SyncLAPSPassword edges in integration test; %v", err)
+		} else {
+			db.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
+				if results, err := ops.FetchStartNodes(tx.Relationships().Filterf(func() graph.Criteria {
+					return query.Kind(query.Relationship(), ad.SyncLAPSPassword)
+				})); err != nil {
+					t.Fatalf("error fetching SyncLAPSPassword edges in integration test; %v", err)
+				} else {
+					require.Equal(t, 4, len(results))
+
+					require.True(t, results.Contains(harness.SyncLAPSPasswordHarness.Group1))
+					require.True(t, results.Contains(harness.SyncLAPSPasswordHarness.Group4))
+					require.True(t, results.Contains(harness.SyncLAPSPasswordHarness.User3))
+					require.True(t, results.Contains(harness.SyncLAPSPasswordHarness.User5))
+				}
+				return nil
+			})
+		}
 	})
 }

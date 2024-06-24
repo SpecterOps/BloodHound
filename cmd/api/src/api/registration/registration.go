@@ -74,7 +74,7 @@ func RegisterFossRoutes(
 		}),
 
 		// Static asset handling for the UI
-		routerInst.PathPrefix("/ui", static.Handler()),
+		routerInst.PathPrefix("/ui", static.AssetHandler),
 	)
 
 	var resources = v2.NewResources(rdms, graphDB, cfg, apiCache, graphQuery, collectorManifests, taskNotifier, authorizer)
