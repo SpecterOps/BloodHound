@@ -569,6 +569,10 @@ func (s *BloodhoundDB) EndUserSession(ctx context.Context, userSession model.Use
 
 // corresponding retrival function is model.UserSession.GetFlag()
 func (s *BloodhoundDB) SetUserSessionFlag(ctx context.Context, userSession *model.UserSession, key model.SessionFlagKey, state bool) error {
+	if userSession.ID == 0 {
+		return errors.Error("invalid session - missing session id")
+	}
+
 	var auditEntry = model.AuditEntry{}
 	var doAudit = false
 	// only audit if the new state is true, meaning the EULA is currently being accepted
