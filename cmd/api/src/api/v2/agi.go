@@ -202,6 +202,8 @@ func (s Resources) CreateAssetGroup(response http.ResponseWriter, request *http.
 
 	if err := api.ReadJSONRequestPayloadLimited(&createRequest, request); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
+	} else if strings.TrimSpace(createRequest.Name) == "" || strings.TrimSpace(createRequest.Tag) == "" {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseAGNameTagEmpty, request), response)
 	} else if hasSpace, err := regexp.MatchString(`\s`, createRequest.Tag); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, err.Error(), request), response)
 	} else if hasSpace {

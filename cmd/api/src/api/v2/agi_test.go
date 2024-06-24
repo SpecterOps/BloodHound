@@ -405,8 +405,34 @@ func TestResources_CreateAssetGroup(t *testing.T) {
 		Require().
 		ResponseStatusCode(http.StatusBadRequest)
 
+	// Empty asset group name
+	jsonBody, err := json.Marshal(v2.CreateAssetGroupRequest{Name: "", Tag: "valid_tag"})
+	require.Nil(t, err)
+
+	requestTemplate.
+		WithContext(&ctx.Context{
+			Host: &url.URL{},
+		}).
+		WithBody(jsonBody).
+		OnHandlerFunc(resources.CreateAssetGroup).
+		Require().
+		ResponseStatusCode(http.StatusBadRequest)
+
+	// Empty asset group tag
+	jsonBody, err = json.Marshal(v2.CreateAssetGroupRequest{Name: "Valid Name", Tag: ""})
+	require.Nil(t, err)
+
+	requestTemplate.
+		WithContext(&ctx.Context{
+			Host: &url.URL{},
+		}).
+		WithBody(jsonBody).
+		OnHandlerFunc(resources.CreateAssetGroup).
+		Require().
+		ResponseStatusCode(http.StatusBadRequest)
+
 	// Whitespace in asset group tag must error
-	jsonBody, err := json.Marshal(v2.CreateAssetGroupRequest{Tag: "one space"})
+	jsonBody, err = json.Marshal(v2.CreateAssetGroupRequest{Tag: "one space"})
 	require.Nil(t, err)
 
 	requestTemplate.
@@ -446,10 +472,28 @@ func TestResources_CreateAssetGroup(t *testing.T) {
 	mockDB.EXPECT().CreateAssetGroup(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(model.AssetGroup{}, fmt.Errorf("exploded"))
 
 	requestTemplate.
-		WithBody(v2.CreateAssetGroupRequest{}).
+		WithBody(v2.CreateAssetGroupRequest{Name: "valid_name", Tag: "valid_tag"}).
 		OnHandlerFunc(resources.CreateAssetGroup).
 		Require().
 		ResponseStatusCode(http.StatusInternalServerError)
+	
+	// Test duplicate name
+	mockDB.EXPECT().CreateAssetGroup(gomock.Any(), "DuplicateName", gomock.Any(), false).Return(model.AssetGroup{}, errors.New("asset group with this name already exists"))
+
+	requestTemplate.
+		WithBody(v2.CreateAssetGroupRequest{Name: "DuplicateName", Tag: "UniqueTag"}).
+		OnHandlerFunc(resources.CreateAssetGroup).
+		Require().
+		ResponseStatusCode(http.StatusConflict)
+
+	// Test duplicate tag
+	mockDB.EXPECT().CreateAssetGroup(gomock.Any(), gomock.Any(), "DuplicateTag", false).Return(model.AssetGroup{}, errors.New("asset group with this tag already exists"))
+
+	requestTemplate.
+		WithBody(v2.CreateAssetGroupRequest{Name: "UniqueName", Tag: "DuplicateTag"}).
+		OnHandlerFunc(resources.CreateAssetGroup).
+		Require().
+		ResponseStatusCode(http.StatusConflict)
 
 	// Success
 	mockDB.EXPECT().CreateAssetGroup(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(model.AssetGroup{}, nil)
@@ -458,7 +502,7 @@ func TestResources_CreateAssetGroup(t *testing.T) {
 		WithContext(&ctx.Context{
 			Host: &url.URL{},
 		}).
-		WithBody(v2.CreateAssetGroupRequest{}).
+		WithBody(v2.CreateAssetGroupRequest{Name: "valid_name", Tag: "valid_tag"}).
 		OnHandlerFunc(resources.CreateAssetGroup).
 		Require().
 		ResponseStatusCode(http.StatusCreated)

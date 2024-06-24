@@ -29,6 +29,7 @@ import (
 
 func (s *BloodhoundDB) CreateAssetGroup(ctx context.Context, name, tag string, systemGroup bool) (model.AssetGroup, error) {
 	var (
+		existingGroup model.AssetGroup
 		assetGroup = model.AssetGroup{
 			Name:        name,
 			Tag:         tag,
@@ -42,6 +43,20 @@ func (s *BloodhoundDB) CreateAssetGroup(ctx context.Context, name, tag string, s
 
 		err error
 	)
+
+	// Check for existing asset group with the same tag
+	if err = s.db.WithContext(ctx).Where("tag = ?", tag).First(&existingGroup).Error; err == nil {
+		return model.AssetGroup{}, errors.New("asset group with this tag already exists")
+	} else if err != gorm.ErrRecordNotFound {
+		return model.AssetGroup{}, err
+	}
+
+	// Check for existing asset group with the same name
+	if err = s.db.WithContext(ctx).Where("name = ?", name).First(&existingGroup).Error; err == nil {
+		return model.AssetGroup{}, errors.New("asset group with this name already exists")
+	} else if err != gorm.ErrRecordNotFound {
+		return model.AssetGroup{}, err
+	}
 
 	err = s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
 		return CheckError(tx.Create(&assetGroup))
