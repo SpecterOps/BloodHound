@@ -25,7 +25,6 @@
         "@fortawesome/react-fontawesome": "^0.2.0",
         "@reduxjs/toolkit": "^1.9.5",
         "clsx": "^1.1.1",
-        "dompurify": "^2.3.0",
         "downshift": "^6.1.7",
         "immutable": "^5.0.0-beta.5",
         "js-client-library": "workspace:*",
@@ -36,11 +35,9 @@
         "prop-types": "^15.8.1",
         "react-hook-form": "^7.45.1",
         "react-immutable-proptypes": "^2.2.0",
-        "react-markdown": "^9.0.0",
         "react-query": "^3.39.3",
         "react-window": "^1.8.9",
         "react-window-infinite-loader": "^1.0.9",
-        "remark-gfm": "^4.0.0",
         "swagger-ui-react": "^4.15.2"
     },
     "devDependencies": {
@@ -54,7 +51,6 @@
         "@testing-library/jest-dom": "^5.16.5",
         "@testing-library/react": "^13.3.0",
         "@testing-library/user-event": "^14.4.3",
-        "@types/dompurify": "^2.4.0",
         "@types/lodash": "^4.14.195",
         "@types/luxon": "^3.3.0",
         "@types/prop-types": "^15",

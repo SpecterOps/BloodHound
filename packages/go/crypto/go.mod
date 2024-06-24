@@ -21,16 +21,17 @@ go 1.21
 require (
 	github.com/shirou/gopsutil/v3 v3.23.5
 	go.uber.org/mock v0.2.0
-	golang.org/x/crypto v0.20.0
+	golang.org/x/crypto v0.24.0
 )
 
 require (
 	github.com/go-ole/go-ole v1.2.6 // indirect
+	github.com/google/go-cmp v0.6.0 // indirect
 	github.com/lufia/plan9stats v0.0.0-20230326075908-cb1d2100619a // indirect
 	github.com/power-devops/perfstat v0.0.0-20221212215047-62379fc7944b // indirect
 	github.com/stretchr/testify v1.8.4 // indirect
 	github.com/tklauser/go-sysconf v0.3.11 // indirect
 	github.com/tklauser/numcpus v0.6.1 // indirect
 	github.com/yusufpapurcu/wmi v1.2.3 // indirect
-	golang.org/x/sys v0.17.0 // indirect
+	golang.org/x/sys v0.21.0 // indirect
 )
