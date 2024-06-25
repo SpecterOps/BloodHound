@@ -1321,6 +1321,20 @@ func (mr *MockDatabaseMockRecorder) SetFlag(arg0, arg1 interface{}) *gomock.Call
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetFlag", reflect.TypeOf((*MockDatabase)(nil).SetFlag), arg0, arg1)
 }
 
+// SetUserSessionFlag mocks base method.
+func (m *MockDatabase) SetUserSessionFlag(arg0 context.Context, arg1 *model.UserSession, arg2 model.SessionFlagKey, arg3 bool) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SetUserSessionFlag", arg0, arg1, arg2, arg3)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SetUserSessionFlag indicates an expected call of SetUserSessionFlag.
+func (mr *MockDatabaseMockRecorder) SetUserSessionFlag(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetUserSessionFlag", reflect.TypeOf((*MockDatabase)(nil).SetUserSessionFlag), arg0, arg1, arg2, arg3)
+}
+
 // SweepAssetGroupCollections mocks base method.
 func (m *MockDatabase) SweepAssetGroupCollections(arg0 context.Context) {
 	m.ctrl.T.Helper()

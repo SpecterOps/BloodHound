@@ -390,3 +390,25 @@ func TestDatabase_CreateUserSession(t *testing.T) {
 		assert.Equal(t, user, newUserSession.User)
 	}
 }
+
+func TestDatabase_SetUserSessionFlag(t *testing.T) {
+	var (
+		testCtx      = context.Background()
+		dbInst, user = initAndCreateUser(t)
+		userSession  = model.UserSession{
+			User:      user,
+			UserID:    user.ID,
+			ExpiresAt: time.Now().UTC().Add(time.Hour),
+		}
+	)
+
+	newUserSession, err := dbInst.CreateUserSession(testCtx, userSession)
+	assert.Nil(t, err)
+
+	err = dbInst.SetUserSessionFlag(testCtx, &newUserSession, model.SessionFlagFedEULAAccepted, true)
+	assert.Nil(t, err)
+
+	dbSess, err := dbInst.GetUserSession(testCtx, newUserSession.ID)
+	assert.Nil(t, err)
+	assert.True(t, dbSess.Flags[string(model.SessionFlagFedEULAAccepted)])
+}
