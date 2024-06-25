@@ -28,19 +28,16 @@ import (
 	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/graphschema/azure"
 	"github.com/specterops/bloodhound/graphschema/common"
+	"github.com/specterops/bloodhound/log"
 )
 
 func PostHybrid(ctx context.Context, db graph.Database) (*analysis.AtomicPostProcessingStats, error) {
-	var (
-		err error
-	)
-
 	tenants, err := FetchTenants(ctx, db)
 	if err != nil {
 		return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("hybrid post processing: %w", err)
 	}
 
-	operation := analysis.NewPostRelationshipOperation(ctx, db, "SyncedToEntraUser Post Processing")
+	operation := analysis.NewPostRelationshipOperation(ctx, db, "Hybrid Attack Paths Post Processing")
 
 	err = db.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		for _, tenant := range tenants {
@@ -52,31 +49,39 @@ func PostHybrid(ctx context.Context, db graph.Database) (*analysis.AtomicPostPro
 				for _, tenantUser := range tenantUsers {
 					innerTenantUser := tenantUser
 					if err := operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
-						if onPremUserID, hasOnPremUser, err := HasOnPremUser(innerTenantUser); err != nil {
+						var adUser *graph.Node
+
+						if onPremUserID, hasOnPremUser, err := hasOnPremUser(innerTenantUser); err != nil {
 							return err
 						} else if hasOnPremUser {
-							if adUser, err := tx.Nodes().Filter(query.Equals(query.NodeProperty(common.ObjectID.String()), onPremUserID)).First(); err != nil {
-								return err
-							} else {
-								SyncedToEntraUserRelationship := analysis.CreatePostRelationshipJob{
-									FromID: adUser.ID,
-									ToID:   innerTenantUser.ID,
-									Kind:   ad.SyncedToEntraUser,
+							if adUser, err = tx.Nodes().Filter(query.Equals(query.NodeProperty(common.ObjectID.String()), onPremUserID)).First(); err != nil {
+								if errors.Is(err, graph.ErrNoResultsFound) {
+									if adUser, err = createMissingAdUser(ctx, db, onPremUserID); err != nil {
+										return fmt.Errorf("error attempting to create missing AD User node: %w", err)
+									}
+								} else {
+									return err
 								}
+							}
 
-								if !channels.Submit(ctx, outC, SyncedToEntraUserRelationship) {
-									return nil
-								}
+							SyncedToEntraUserRelationship := analysis.CreatePostRelationshipJob{
+								FromID: adUser.ID,
+								ToID:   innerTenantUser.ID,
+								Kind:   ad.SyncedToEntraUser,
+							}
 
-								SyncedFromADUserRelationship := analysis.CreatePostRelationshipJob{
-									FromID: innerTenantUser.ID,
-									ToID:   adUser.ID,
-									Kind:   azure.SyncedFromADUser,
-								}
+							if !channels.Submit(ctx, outC, SyncedToEntraUserRelationship) {
+								return nil
+							}
 
-								if !channels.Submit(ctx, outC, SyncedFromADUserRelationship) {
-									return nil
-								}
+							SyncedFromADUserRelationship := analysis.CreatePostRelationshipJob{
+								FromID: innerTenantUser.ID,
+								ToID:   adUser.ID,
+								Kind:   azure.SyncedFromADUser,
+							}
+
+							if !channels.Submit(ctx, outC, SyncedFromADUserRelationship) {
+								return nil
 							}
 						}
 
@@ -102,7 +107,7 @@ func PostHybrid(ctx context.Context, db graph.Database) (*analysis.AtomicPostPro
 	return &operation.Stats, nil
 }
 
-func HasOnPremUser(node *graph.Node) (string, bool, error) {
+func hasOnPremUser(node *graph.Node) (string, bool, error) {
 	if onPremSyncEnabled, err := node.Properties.Get(azure.OnPremSyncEnabled.String()).Bool(); errors.Is(err, graph.ErrPropertyNotFound) {
 		return "", false, nil
 	} else if err != nil {
@@ -114,4 +119,23 @@ func HasOnPremUser(node *graph.Node) (string, bool, error) {
 	} else {
 		return onPremID, (onPremSyncEnabled && len(onPremID) != 0), nil
 	}
+}
+
+func createMissingAdUser(ctx context.Context, db graph.Database, objectID string) (*graph.Node, error) {
+	var (
+		err     error
+		newNode *graph.Node
+	)
+
+	log.Debugf("Matching AD User node with objectID %s not found, creating a new one", objectID)
+	properties := graph.AsProperties(map[string]any{
+		common.ObjectID.String(): objectID,
+	})
+
+	err = db.WriteTransaction(ctx, func(tx graph.Transaction) error {
+		newNode, err = tx.CreateNode(properties, ad.Entity, ad.User)
+		return err
+	})
+
+	return newNode, err
 }
