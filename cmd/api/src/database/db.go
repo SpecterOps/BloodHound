@@ -21,11 +21,12 @@ package database
 import (
 	"context"
 	"fmt"
+	"time"
+
 	"github.com/specterops/bloodhound/src/services/agi"
 	"github.com/specterops/bloodhound/src/services/dataquality"
 	"github.com/specterops/bloodhound/src/services/fileupload"
 	"github.com/specterops/bloodhound/src/services/ingest"
-	"time"
 
 	"github.com/gofrs/uuid"
 	"github.com/specterops/bloodhound/errors"
@@ -129,6 +130,7 @@ type Database interface {
 
 	// Sessions
 	CreateUserSession(ctx context.Context, userSession model.UserSession) (model.UserSession, error)
+	SetUserSessionFlag(ctx context.Context, userSession *model.UserSession, key model.SessionFlagKey, state bool) error
 	LookupActiveSessionsByUser(ctx context.Context, user model.User) ([]model.UserSession, error)
 	EndUserSession(ctx context.Context, userSession model.UserSession)
 	GetUserSession(ctx context.Context, id int64) (model.UserSession, error)

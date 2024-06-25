@@ -31,6 +31,7 @@ import (
 	"github.com/gofrs/uuid"
 	"github.com/specterops/bloodhound/errors"
 	"github.com/specterops/bloodhound/src/auth"
+	"github.com/specterops/bloodhound/src/database/types"
 	"github.com/specterops/bloodhound/src/model"
 )
 
@@ -564,6 +565,29 @@ func (s *BloodhoundDB) CreateUserSession(ctx context.Context, userSession model.
 // UPDATE user_sessions SET expires_at = <now> WHERE user_id = ...
 func (s *BloodhoundDB) EndUserSession(ctx context.Context, userSession model.UserSession) {
 	s.db.Model(&userSession).WithContext(ctx).Update("expires_at", gorm.Expr("NOW()"))
+}
+
+// corresponding retrival function is model.UserSession.GetFlag()
+func (s *BloodhoundDB) SetUserSessionFlag(ctx context.Context, userSession *model.UserSession, key model.SessionFlagKey, state bool) error {
+	if userSession.ID == 0 {
+		return errors.Error("invalid session - missing session id")
+	}
+
+	auditEntry := model.AuditEntry{}
+	doAudit := false
+	// only audit if the new state is true, meaning the EULA is currently being accepted
+	// INFO: The FedEULA is only applicable to select enterprise installations
+	if key == model.SessionFlagFedEULAAccepted && state {
+		doAudit = true
+		auditEntry.Action = model.AuditLogActionAcceptFedEULA
+	}
+	return s.MaybeAuditableTransaction(ctx, !doAudit, auditEntry, func(tx *gorm.DB) error {
+		if userSession.Flags == nil {
+			userSession.Flags = types.JSONBBoolObject{}
+		}
+		userSession.Flags[string(key)] = state
+		return CheckError(tx.Model(&userSession).WithContext(ctx).Update("flags", userSession.Flags))
+	})
 }
 
 func (s *BloodhoundDB) LookupActiveSessionsByUser(ctx context.Context, user model.User) ([]model.UserSession, error) {
