@@ -70,6 +70,7 @@ const DownloadCollectors = () => {
     const sharpHoundCELink = (
         <Link
             target='_blank'
+            data-testid='download-collectors-sharphound-ce-link'
             href={'https://support.bloodhoundenterprise.io/hc/en-us/articles/17481151861019-SharpHound-Community-Edition'}>
             SharpHound Community
         </Link>
@@ -78,6 +79,7 @@ const DownloadCollectors = () => {
     const azureHoundCELink = (
         <Link
             target='_blank'
+            data-testid='download-collectors-azurehound-ce-link'
             href={'https://support.bloodhoundenterprise.io/hc/en-us/articles/17481394564251-AzureHound-Community-Edition'}>
             AzureHound Community
         </Link>

@@ -24,6 +24,7 @@ import FinishedIngestLog from '../FinishedIngestLog';
 const fileIngestLink = (
     <Link
         target='_blank'
+        data-testid='file-upload-gettingstarted-link'
         href={'https://support.bloodhoundenterprise.io/hc/en-us/articles/17715215791899-Getting-started-with-BloodHound-Community-Edition'}>
         Getting Started
     </Link>

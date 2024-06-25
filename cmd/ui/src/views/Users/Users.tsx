@@ -253,6 +253,7 @@ const Users = () => {
     const ManageUsersDocLink = (
         <Link
             target='_blank'
+            data-testid='manage-users-doc-link'
             href={'https://support.bloodhoundenterprise.io/hc/en-us/articles/16372343366939-Administering-users-and-roles'}>
             adding users, changing their roles, or understanding role capabilities
         </Link>

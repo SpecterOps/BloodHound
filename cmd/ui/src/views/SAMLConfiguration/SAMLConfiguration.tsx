@@ -74,6 +74,7 @@ const SAMLConfiguration: React.FC = () => {
     const samlConfigDocLink = (
         <Link
             target='_blank'
+            data-testid='saml-config-doc-link'
             href={'https://support.bloodhoundenterprise.io/hc/en-us/articles/9228122981275-SAML-in-BloodHound'}>
             here
         </Link>
