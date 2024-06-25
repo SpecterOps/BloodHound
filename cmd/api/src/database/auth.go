@@ -573,9 +573,10 @@ func (s *BloodhoundDB) SetUserSessionFlag(ctx context.Context, userSession *mode
 		return errors.Error("invalid session - missing session id")
 	}
 
-	var auditEntry = model.AuditEntry{}
-	var doAudit = false
+	auditEntry := model.AuditEntry{}
+	doAudit := false
 	// only audit if the new state is true, meaning the EULA is currently being accepted
+	// INFO: The FedEULA is only applicable to select enterprise installations
 	if key == model.SessionFlagFedEULAAccepted && state {
 		doAudit = true
 		auditEntry.Action = model.AuditLogActionAcceptFedEULA

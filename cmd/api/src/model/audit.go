@@ -38,7 +38,7 @@ type AuditLogAction string
 
 const (
 	AuditLogActionAcceptEULA    AuditLogAction = "AcceptEULA"
-	AuditLogActionAcceptFedEULA AuditLogAction = "AcceptFedEULA" // Enterprise Only
+	AuditLogActionAcceptFedEULA AuditLogAction = "AcceptFedEULA" // INFO: The FedEULA is only applicable to select enterprise installations
 
 	AuditLogActionLoginAttempt              AuditLogAction = "LoginAttempt"
 	AuditLogActionUnauthorizedAccessAttempt AuditLogAction = "UnauthorizedAccessAttempt"
@@ -141,7 +141,7 @@ func (s AuditLogs) IsString(column string) bool {
 }
 
 func (s AuditLogs) GetFilterableColumns() []string {
-	var columns = make([]string, 0)
+	columns := make([]string, 0)
 	for column := range s.ValidFilters() {
 		columns = append(columns, column)
 	}
@@ -152,7 +152,7 @@ func (s AuditLogs) GetValidFilterPredicatesAsStrings(column string) ([]string, e
 	if predicates, validColumn := s.ValidFilters()[column]; !validColumn {
 		return []string{}, fmt.Errorf("the specified column cannot be filtered")
 	} else {
-		var stringPredicates = make([]string, 0)
+		stringPredicates := make([]string, 0)
 		for _, predicate := range predicates {
 			stringPredicates = append(stringPredicates, string(predicate))
 		}
