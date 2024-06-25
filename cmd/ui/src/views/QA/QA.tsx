@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Alert, AlertTitle, Box, Grid, Link } from '@mui/material';
+import { Alert, AlertTitle, Box, Grid, Link, Typography } from '@mui/material';
 import {
     ActiveDirectoryPlatformInfo,
     AzurePlatformInfo,
@@ -76,6 +76,11 @@ const QualityAssurance: React.FC = () => {
                         }}
                     />
                 }>
+                <Typography variant='body1'>
+                    <p>
+                        Understand the data collected within BloodHound broken down by environment and principal type.
+                    </p>
+                </Typography>
                 <Alert severity='info'>
                     <AlertTitle>No Domain or Tenant Selected</AlertTitle>
                     Select a domain or tenant to view data. If you are unable to select a domain, you may need to run

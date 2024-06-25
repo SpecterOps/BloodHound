@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Box, Button, Paper } from '@mui/material';
+import { Box, Button, Link, Paper, Typography } from '@mui/material';
 import { DateTime } from 'luxon';
 import { useMemo, useState } from 'react';
 import { useMutation, useQuery } from 'react-query';
@@ -250,9 +250,28 @@ const Users = () => {
         /* eslint-enable react/jsx-key */
     ]);
 
+    const ManageUsersDocLink = (
+        <Link
+            target='_blank'
+            data-testid='manage-users-doc-link'
+            href={
+                'https://support.bloodhoundenterprise.io/hc/en-us/articles/16372343366939-Administering-users-and-roles'
+            }>
+            adding users, changing their roles, or understanding role capabilities
+        </Link>
+    );
+
     return (
         <>
             <ContentPage title='Manage Users' data-testid='manage-users'>
+                <Typography variant='body1'>
+                    <p>
+                        Bloodhound offers multiple roles with degrees of permissions, providing greater security and
+                        control of your team.
+                        <br />
+                        Learn more about {ManageUsersDocLink}.
+                    </p>
+                </Typography>
                 <Box display='flex' justifyContent='flex-end' alignItems='center' minHeight='24px' mb={2}>
                     <Button
                         color='primary'

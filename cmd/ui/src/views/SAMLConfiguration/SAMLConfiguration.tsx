@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { useState } from 'react';
-import { Box, Button } from '@mui/material';
+import { Box, Button, Link, Typography } from '@mui/material';
 import { useMutation, useQuery } from 'react-query';
 import { apiClient } from 'bh-shared-ui';
 import {
@@ -71,11 +71,25 @@ const SAMLConfiguration: React.FC = () => {
         }
     };
 
+    const samlConfigDocLink = (
+        <Link
+            target='_blank'
+            data-testid='saml-config-doc-link'
+            href={'https://support.bloodhoundenterprise.io/hc/en-us/articles/9228122981275-SAML-in-BloodHound'}>
+            here
+        </Link>
+    );
+
     /* Implementation */
 
     return (
         <>
             <ContentPage title='SAML Configuration'>
+                <Typography variant='body1'>
+                    <p>
+                        BloodHound supports SAML for single sign-on (SSO). Learn how to deploy SAML {samlConfigDocLink}.
+                    </p>
+                </Typography>
                 <Box>
                     <Box display='flex' justifyContent='space-between' mb={2}>
                         <div />
