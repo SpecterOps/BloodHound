@@ -103,9 +103,7 @@ const QualityAssurance: React.FC = () => {
                 />
             }>
             <Typography variant='body1'>
-                <p>
-                Understand the data collected within BloodHound broken down by environment and principal type.
-                </p>
+                <p>Understand the data collected within BloodHound broken down by environment and principal type.</p>
             </Typography>
             {dataError && (
                 <Box paddingBottom={2}>

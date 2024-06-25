@@ -71,7 +71,9 @@ const DownloadCollectors = () => {
         <Link
             target='_blank'
             data-testid='download-collectors-sharphound-ce-link'
-            href={'https://support.bloodhoundenterprise.io/hc/en-us/articles/17481151861019-SharpHound-Community-Edition'}>
+            href={
+                'https://support.bloodhoundenterprise.io/hc/en-us/articles/17481151861019-SharpHound-Community-Edition'
+            }>
             SharpHound Community
         </Link>
     );
@@ -80,7 +82,9 @@ const DownloadCollectors = () => {
         <Link
             target='_blank'
             data-testid='download-collectors-azurehound-ce-link'
-            href={'https://support.bloodhoundenterprise.io/hc/en-us/articles/17481394564251-AzureHound-Community-Edition'}>
+            href={
+                'https://support.bloodhoundenterprise.io/hc/en-us/articles/17481394564251-AzureHound-Community-Edition'
+            }>
             AzureHound Community
         </Link>
     );
@@ -89,12 +93,10 @@ const DownloadCollectors = () => {
     return (
         <PageWithTitle title='Download Collectors' data-testid='download-collectors'>
             <Typography variant='body1'>
-            <p>
-                To get started, collect data using SharpHound or AzureHound.
-            </p>
-            <p>
-                BloodHound CE supports both {' '}{sharpHoundCELink} or {' '}{azureHoundCELink} collectors.
-            </p>
+                <p>To get started, collect data using SharpHound or AzureHound.</p>
+                <p>
+                    BloodHound CE supports both {sharpHoundCELink} or {azureHoundCELink} collectors.
+                </p>
             </Typography>
 
             <Box display='grid' gap={theme.spacing(4)}>

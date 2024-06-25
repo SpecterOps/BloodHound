@@ -254,7 +254,9 @@ const Users = () => {
         <Link
             target='_blank'
             data-testid='manage-users-doc-link'
-            href={'https://support.bloodhoundenterprise.io/hc/en-us/articles/16372343366939-Administering-users-and-roles'}>
+            href={
+                'https://support.bloodhoundenterprise.io/hc/en-us/articles/16372343366939-Administering-users-and-roles'
+            }>
             adding users, changing their roles, or understanding role capabilities
         </Link>
     );
@@ -263,10 +265,12 @@ const Users = () => {
         <>
             <ContentPage title='Manage Users' data-testid='manage-users'>
                 <Typography variant='body1'>
-                <p>
-                Bloodhound offers multiple roles with degrees of permissions, providing greater security and control of your team.
-                <br/>Learn more about {' '}{ManageUsersDocLink}.
-                </p>
+                    <p>
+                        Bloodhound offers multiple roles with degrees of permissions, providing greater security and
+                        control of your team.
+                        <br />
+                        Learn more about {ManageUsersDocLink}.
+                    </p>
                 </Typography>
                 <Box display='flex' justifyContent='flex-end' alignItems='center' minHeight='24px' mb={2}>
                     <Button
