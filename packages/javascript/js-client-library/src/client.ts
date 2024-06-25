@@ -772,6 +772,14 @@ class BHEAPIClient {
 
     acceptEULA = (options?: types.RequestOptions) => this.baseClient.put('/api/v2/accept-eula', options);
 
+    acceptFedRAMPEULA = (options?: types.RequestOptions) => this.baseClient.put('/api/v2/fed-eula/accept', options);
+
+    getFedRAMPEULAStatus = (options?: types.RequestOptions) =>
+        this.baseClient.get<{ data: { accepted: boolean } }>('/api/v2/fed-eula/status', options);
+
+    getFedRAMPEULAText = (options?: types.RequestOptions) =>
+        this.baseClient.get<{ data: string }>('/api/v2/fed-eula/text', options);
+
     getFeatureFlags = (options?: types.RequestOptions) => this.baseClient.get('/api/v2/features', options);
 
     toggleFeatureFlag = (flagId: string | number, options?: types.RequestOptions) =>
