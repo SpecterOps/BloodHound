@@ -489,7 +489,6 @@ func (s Emitter) formatLiteral(output io.Writer, literal *model.Literal) error {
 }
 
 func (s Emitter) WriteExpression(writer io.Writer, expression model.Expression) error {
-	//log.Infof("------- In WriteExpression, expression is %+v, type is %T", expression, expression)
 	switch typedExpression := expression.(type) {
 	case *model.ProjectionItem:
 		if err := s.WriteExpression(writer, typedExpression.Expression); err != nil {
