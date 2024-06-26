@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Alert, Box, Divider, Link, Paper, Skeleton, Typography, useTheme } from '@mui/material';
+import { Alert, Box, Link, Paper, Skeleton, Typography, useTheme } from '@mui/material';
 import fileDownload from 'js-file-download';
 import { useDispatch } from 'react-redux';
 import { apiClient } from 'bh-shared-ui';
