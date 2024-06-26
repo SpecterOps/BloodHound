@@ -23,7 +23,7 @@ see how your change affects other areas of the code, etc.*
 
 ## Types of changes
 
-<!-- Please remove any items that do no apply. -->
+<!-- Please remove any items that do not apply. -->
 
 - Chore (a change that does not modify the application functionality)
 - Bug fix (non-breaking change which fixes an issue)
