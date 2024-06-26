@@ -19,6 +19,7 @@ properties:
   time:
     type: string
     format: date-time
+    description: An RFC-3339 formatted string
   valid:
     description: Valid is true if `time` is not `null`.
     type: boolean
