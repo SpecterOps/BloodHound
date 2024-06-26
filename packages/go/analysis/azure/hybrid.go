@@ -74,13 +74,13 @@ func PostHybrid(ctx context.Context, db graph.Database) (*analysis.AtomicPostPro
 								return nil
 							}
 
-							SyncedFromADUserRelationship := analysis.CreatePostRelationshipJob{
+							SyncedToADUserRelationship := analysis.CreatePostRelationshipJob{
 								FromID: innerTenantUser.ID,
 								ToID:   adUser.ID,
-								Kind:   azure.SyncedFromADUser,
+								Kind:   azure.SyncedToADUser,
 							}
 
-							if !channels.Submit(ctx, outC, SyncedFromADUserRelationship) {
+							if !channels.Submit(ctx, outC, SyncedToADUserRelationship) {
 								return nil
 							}
 						}
