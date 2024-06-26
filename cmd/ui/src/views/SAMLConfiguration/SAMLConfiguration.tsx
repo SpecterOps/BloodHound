@@ -85,12 +85,12 @@ const SAMLConfiguration: React.FC = () => {
     return (
         <>
             <ContentPage title='SAML Configuration'>
-
+                <Typography variant='body2' paragraph={true}>
+                    BloodHound supports SAML for single sign-on (SSO). Learn how to deploy SAML{' '}
+                    {samlConfigDocLink}.
+                </Typography>
                 <Box>
                     <Box display='flex' justifyContent='space-between' mb={2}>
-                        <Typography variant='body2' paragraph={true}>
-                            BloodHound supports SAML for single sign-on (SSO). Learn how to deploy SAML {samlConfigDocLink}.
-                        </Typography>
                         <div />
                         <Button color='primary' variant='contained' disableElevation onClick={openSAMLProviderDialog}>
                             Create SAML Provider

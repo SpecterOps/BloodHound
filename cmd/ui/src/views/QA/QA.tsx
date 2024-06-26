@@ -60,39 +60,11 @@ const QualityAssurance: React.FC = () => {
 
     if (!contextType || (!contextId && (contextType === 'active-directory' || contextType === 'azure'))) {
         return (
-            <ContentPage
-                title='Data Quality'
-                data-testid='data-quality'
-                actionButton={
-                    <DataSelector
-                        value={{
-                            type: contextType,
-                            id: contextId,
-                        }}
-                        errorMessage={domainErrorMessage}
-                        onChange={({ type, id }) => {
-                            setContextType(type);
-                            setContextId(id);
-                        }}
-                    />
-                }>
+            <ContentPage title='Data Quality' data-testid='data-quality'>
                 <Typography variant='body2' paragraph={true}>
                     Understand the data collected within BloodHound broken down by environment and principal type.
                 </Typography>
-                <Alert severity='info'>
-                    <AlertTitle>No Domain or Tenant Selected</AlertTitle>
-                    Select a domain or tenant to view data. If you are unable to select a domain, you may need to run
-                    data collection first. {dataCollectionMessage}
-                </Alert>
-            </ContentPage>
-        );
-    }
-
-    return (
-        <ContentPage
-            title='Data Quality'
-            data-testid='data-quality'
-            actionButton={
+                <Box display='flex' justifyContent='flex-end' alignItems='center' minHeight='24px' mb={2}>
                 <DataSelector
                     value={{
                         type: contextType,
@@ -104,10 +76,34 @@ const QualityAssurance: React.FC = () => {
                         setContextId(id);
                     }}
                 />
-            }>
+            </Box>
+                <Alert severity='info'>
+                    <AlertTitle>No Domain or Tenant Selected</AlertTitle>
+                    Select a domain or tenant to view data. If you are unable to select a domain, you may need to run
+                    data collection first. {dataCollectionMessage}
+                </Alert>
+            </ContentPage>
+        );
+    }
+
+    return (
+        <ContentPage title='Data Quality' data-testid='data-quality'>
             <Typography variant='body2' paragraph={true}>
                 Understand the data collected within BloodHound broken down by environment and principal type.
             </Typography>
+            <Box display='flex' justifyContent='flex-end' alignItems='center' minHeight='24px' mb={2}>
+                <DataSelector
+                    value={{
+                        type: contextType,
+                        id: contextId,
+                    }}
+                    errorMessage={domainErrorMessage}
+                    onChange={({ type, id }) => {
+                        setContextType(type);
+                        setContextId(id);
+                    }}
+                />
+            </Box>
             {dataError && (
                 <Box paddingBottom={2}>
                     <Alert severity='warning'>

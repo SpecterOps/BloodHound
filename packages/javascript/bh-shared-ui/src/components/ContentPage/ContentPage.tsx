@@ -32,9 +32,6 @@ const ContentPage: React.FC<ContentPageProps> = ({ title, children, actionButton
                         <Typography variant='h1'>{title}</Typography>
                         {actionButton}
                     </Box>
-                    <Box mt={2} mb={4}>
-                        <Divider />
-                    </Box>
                 </>
             )}
             {children}

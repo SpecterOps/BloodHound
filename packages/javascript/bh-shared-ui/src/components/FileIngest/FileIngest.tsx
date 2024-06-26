@@ -58,35 +58,33 @@ const FileIngest = () => {
 
     return (
         <>
-            <ContentPage title='Manual File Ingest' data-testid='manual-file-ingest'>
-                <Box display='flex' justifyContent='space-between' alignItems='center' minHeight='24px' mb={2}>
-                    <Typography variant='body2'>
-                        Upload data from SharpHound or AzureHound offline collectors. Check out our {fileIngestLink}{' '}
-                        documentation for more information.
-                    </Typography>
-                    <Button
-                        color='primary'
-                        variant='contained'
-                        disableElevation
-                        onClick={() => toggleFileUploadDialog()}
-                        data-testid='file-ingest_button-upload-files'>
-                        Upload File(s)
-                    </Button>
-                </Box>
+            <ContentPage title='File Ingest' data-testid='manual-file-ingest'>
+                <Typography variant='body2'>
+                    Upload data from SharpHound or AzureHound offline collectors. Check out our {fileIngestLink}{' '}
+                    documentation for more information.
+                </Typography>
             </ContentPage>
 
-            <ContentPage title='Finished Ingest Log' data-testid='finished-ingest-log'>
-                <FinishedIngestLog
-                    ingestJobs={listFileIngestJobsData?.data || []}
-                    paginationProps={{
-                        page,
-                        rowsPerPage,
-                        count: totalCount,
-                        onPageChange: handlePageChange,
-                        onRowsPerPageChange: handleRowsPerPageChange,
-                    }}
-                />
-            </ContentPage>
+            <Box display='flex' justifyContent='flex-end' alignItems='center' minHeight='24px' mb={2}>
+                <Button
+                    color='primary'
+                    variant='contained'
+                    disableElevation
+                    onClick={() => toggleFileUploadDialog()}
+                    data-testid='file-ingest_button-upload-files'>
+                    Upload File(s)
+                </Button>
+            </Box>
+            <FinishedIngestLog
+                ingestJobs={listFileIngestJobsData?.data || []}
+                paginationProps={{
+                    page,
+                    rowsPerPage,
+                    count: totalCount,
+                    onPageChange: handlePageChange,
+                    onRowsPerPageChange: handleRowsPerPageChange,
+                }}
+            />
 
             <FileUploadDialog open={fileUploadDialogOpen} onClose={toggleFileUploadDialog} />
         </>

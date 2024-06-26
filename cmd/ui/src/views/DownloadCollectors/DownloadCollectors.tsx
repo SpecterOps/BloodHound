@@ -92,12 +92,10 @@ const DownloadCollectors = () => {
     /* Implementation */
     return (
         <PageWithTitle title='Download Collectors' data-testid='download-collectors'>
-            <Box mt={2} mb={4}>
-                <Divider />
-            </Box>
             <Typography variant='body2' paragraph={true}>
                 To get started, collect data using SharpHound or AzureHound.
-                <br/>BloodHound CE supports both {sharpHoundCELink} or {azureHoundCELink} collectors.
+                <br />
+                BloodHound CE supports both {sharpHoundCELink} or {azureHoundCELink} collectors.
             </Typography>
 
             <Box display='grid' gap={theme.spacing(4)}>
