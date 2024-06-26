@@ -117,6 +117,9 @@ const EarlyAccessFeatures: React.FC = () => {
     return (
         <>
             <ContentPage title='Early Access Features' data-testid='early-access-features'>
+                <Typography variant='body2' paragraph={true}>
+                    Enable or disable features available under early access. These features may be unstable, broken, or incomplete, but are available for testing.
+                </Typography>
                 {!showWarningDialog &&
                     (isLoading ? (
                         <Paper elevation={0}>

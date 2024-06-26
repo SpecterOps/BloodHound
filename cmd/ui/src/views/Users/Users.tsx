@@ -264,15 +264,12 @@ const Users = () => {
     return (
         <>
             <ContentPage title='Manage Users' data-testid='manage-users'>
-                <Typography variant='body1'>
-                    <p>
+                <Box display='flex' justifyContent='space-between' alignItems='center' minHeight='24px' mb={2}>
+                    <Typography variant='body2' paragraph={true}>
                         Bloodhound offers multiple roles with degrees of permissions, providing greater security and
                         control of your team.
-                        <br />
-                        Learn more about {ManageUsersDocLink}.
-                    </p>
-                </Typography>
-                <Box display='flex' justifyContent='flex-end' alignItems='center' minHeight='24px' mb={2}>
+                        <br/>Learn more about {ManageUsersDocLink}.
+                    </Typography>
                     <Button
                         color='primary'
                         variant='contained'

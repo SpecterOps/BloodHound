@@ -76,10 +76,8 @@ const QualityAssurance: React.FC = () => {
                         }}
                     />
                 }>
-                <Typography variant='body1'>
-                    <p>
-                        Understand the data collected within BloodHound broken down by environment and principal type.
-                    </p>
+                <Typography variant='body2' paragraph={true}>
+                    Understand the data collected within BloodHound broken down by environment and principal type.
                 </Typography>
                 <Alert severity='info'>
                     <AlertTitle>No Domain or Tenant Selected</AlertTitle>
@@ -107,6 +105,9 @@ const QualityAssurance: React.FC = () => {
                     }}
                 />
             }>
+            <Typography variant='body2' paragraph={true}>
+                Understand the data collected within BloodHound broken down by environment and principal type.
+            </Typography>
             {dataError && (
                 <Box paddingBottom={2}>
                     <Alert severity='warning'>

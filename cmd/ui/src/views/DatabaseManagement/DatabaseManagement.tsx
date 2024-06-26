@@ -222,7 +222,7 @@ const DatabaseManagement = () => {
     return (
         <ContentPage title='Clear BloodHound Data'>
             <Box>
-                <Typography variant='body1'>
+                <Typography variant='body2'>
                     Manage your BloodHound data. Select from the options below which data should be deleted.
                 </Typography>
                 <Alert severity='warning' sx={{ mt: '1rem' }}>

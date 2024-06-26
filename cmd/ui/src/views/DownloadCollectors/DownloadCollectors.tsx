@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Alert, Box, Link, Paper, Skeleton, Typography, useTheme } from '@mui/material';
+import { Alert, Box, Divider, Link, Paper, Skeleton, Typography, useTheme } from '@mui/material';
 import fileDownload from 'js-file-download';
 import { useDispatch } from 'react-redux';
 import { apiClient } from 'bh-shared-ui';
@@ -92,11 +92,12 @@ const DownloadCollectors = () => {
     /* Implementation */
     return (
         <PageWithTitle title='Download Collectors' data-testid='download-collectors'>
-            <Typography variant='body1'>
-                <p>To get started, collect data using SharpHound or AzureHound.</p>
-                <p>
-                    BloodHound CE supports both {sharpHoundCELink} or {azureHoundCELink} collectors.
-                </p>
+            <Box mt={2} mb={4}>
+                <Divider />
+            </Box>
+            <Typography variant='body2' paragraph={true}>
+                To get started, collect data using SharpHound or AzureHound.
+                <br/>BloodHound CE supports both {sharpHoundCELink} or {azureHoundCELink} collectors.
             </Typography>
 
             <Box display='grid' gap={theme.spacing(4)}>

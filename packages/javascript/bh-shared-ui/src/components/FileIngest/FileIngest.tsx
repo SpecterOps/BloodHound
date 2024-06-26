@@ -59,13 +59,11 @@ const FileIngest = () => {
     return (
         <>
             <ContentPage title='Manual File Ingest' data-testid='manual-file-ingest'>
-                <Typography variant='body1'>
-                    <p>
+                <Box display='flex' justifyContent='space-between' alignItems='center' minHeight='24px' mb={2}>
+                    <Typography variant='body2'>
                         Upload data from SharpHound or AzureHound offline collectors. Check out our {fileIngestLink}{' '}
                         documentation for more information.
-                    </p>
-                </Typography>
-                <Box display='flex' justifyContent='flex-end' alignItems='center' minHeight='24px' mb={2}>
+                    </Typography>
                     <Button
                         color='primary'
                         variant='contained'
