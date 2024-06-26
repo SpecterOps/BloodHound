@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Box, Divider, Typography } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 import React, { DataHTMLAttributes } from 'react';
 
 interface ContentPageProps extends DataHTMLAttributes<HTMLDivElement> {
