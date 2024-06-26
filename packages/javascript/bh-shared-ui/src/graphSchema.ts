@@ -709,7 +709,7 @@ export enum AzureRelationshipKind {
     AZMGAddSecret = 'AZMGAddSecret',
     AZMGGrantAppRoles = 'AZMGGrantAppRoles',
     AZMGGrantRole = 'AZMGGrantRole',
-    SyncedFromADUser = 'SyncedFromADUser',
+    SyncedToADUser = 'SyncedToADUser',
 }
 export function AzureRelationshipKindToDisplay(value: AzureRelationshipKind): string | undefined {
     switch (value) {
@@ -805,8 +805,8 @@ export function AzureRelationshipKindToDisplay(value: AzureRelationshipKind): st
             return 'AZMGGrantAppRoles';
         case AzureRelationshipKind.AZMGGrantRole:
             return 'AZMGGrantRole';
-        case AzureRelationshipKind.SyncedFromADUser:
-            return 'SyncedFromADUser';
+        case AzureRelationshipKind.SyncedToADUser:
+            return 'SyncedToADUser';
         default:
             return undefined;
     }
@@ -953,7 +953,7 @@ export function AzurePathfindingEdges(): AzureRelationshipKind[] {
         AzureRelationshipKind.AZMGAddSecret,
         AzureRelationshipKind.AZMGGrantAppRoles,
         AzureRelationshipKind.AZMGGrantRole,
-        AzureRelationshipKind.SyncedFromADUser,
+        AzureRelationshipKind.SyncedToADUser,
     ];
 }
 export enum CommonNodeKind {

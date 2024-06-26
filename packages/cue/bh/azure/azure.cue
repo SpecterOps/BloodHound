@@ -709,10 +709,10 @@ LogicAppContributor: types.#Kind & {
 	representation:	"AZLogicAppContributor"
 }
 
-SyncedFromADUser: types.#Kind & {
-	symbol:			"SyncedFromADUser"
+SyncedToADUser: types.#Kind & {
+	symbol:			"SyncedToADUser"
 	schema:			"azure"
-	representation:	"SyncedFromADUser"
+	representation:	"SyncedToADUser"
 }
 
 RelationshipKinds: [
@@ -762,7 +762,7 @@ RelationshipKinds: [
 	AZMGAddSecret,
 	AZMGGrantAppRoles,
 	AZMGGrantRole,
-	SyncedFromADUser,
+	SyncedToADUser,
 ]
 
 AppRoleTransitRelationshipKinds: [
@@ -862,5 +862,5 @@ PathfindingRelationships: [
 	AZMGAddSecret,
 	AZMGGrantAppRoles,
 	AZMGGrantRole,
-	SyncedFromADUser,
+	SyncedToADUser,
 ]
