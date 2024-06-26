@@ -14,5 +14,18 @@
 --
 -- SPDX-License-Identifier: Apache-2.0
 
+CREATE TABLE IF NOT EXISTS datapipe_status (
+        singleton BOOL PRIMARY KEY DEFAULT true,
+        status TEXT NOT NULL,
+        updated_at TIMESTAMP with time zone NOT NULL,
+        last_complete_analysis_at TIMESTAMP with time zone,
+        CONSTRAINT singleton_uni CHECK (singleton)
+);
+
+INSERT INTO
+    datapipe_status (status, updated_at)
+VALUES
+    ('idle', NOW ());
+
 ALTER TABLE user_sessions
     ADD COLUMN flags jsonb;

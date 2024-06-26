@@ -217,8 +217,11 @@ func (s *Daemon) processIngestFile(ctx context.Context, path string, fileType mo
 
 // processIngestTasks covers the generic file upload case for ingested data.
 func (s *Daemon) processIngestTasks(ctx context.Context, ingestTasks model.IngestTasks) {
-	s.status.Update(model.DatapipeStatusIngesting, false)
-	defer s.status.Update(model.DatapipeStatusIdle, false)
+	if err := s.db.SetDatapipeStatus(s.ctx, model.DatapipeStatusIngesting, false); err != nil {
+		log.Errorf("Error setting datapipe status: %v", err)
+		return
+	}
+	defer s.db.SetDatapipeStatus(s.ctx, model.DatapipeStatusIdle, false)
 
 	for _, ingestTask := range ingestTasks {
 		// Check the context to see if we should continue processing ingest tasks. This has to be explicit since error
