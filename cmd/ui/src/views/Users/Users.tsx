@@ -265,8 +265,8 @@ const Users = () => {
         <>
             <ContentPage title='Manage Users' data-testid='manage-users'>
                 <Typography variant='body2' paragraph={true}>
-                    Bloodhound offers multiple roles with degrees of permissions, providing greater security and
-                    control of your team.
+                    Bloodhound offers multiple roles with degrees of permissions, providing greater security and control
+                    of your team.
                     <br />
                     Learn more about {ManageUsersDocLink}.
                 </Typography>

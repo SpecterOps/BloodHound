@@ -65,18 +65,18 @@ const QualityAssurance: React.FC = () => {
                     Understand the data collected within BloodHound broken down by environment and principal type.
                 </Typography>
                 <Box display='flex' justifyContent='flex-end' alignItems='center' minHeight='24px' mb={2}>
-                <DataSelector
-                    value={{
-                        type: contextType,
-                        id: contextId,
-                    }}
-                    errorMessage={domainErrorMessage}
-                    onChange={({ type, id }) => {
-                        setContextType(type);
-                        setContextId(id);
-                    }}
-                />
-            </Box>
+                    <DataSelector
+                        value={{
+                            type: contextType,
+                            id: contextId,
+                        }}
+                        errorMessage={domainErrorMessage}
+                        onChange={({ type, id }) => {
+                            setContextType(type);
+                            setContextId(id);
+                        }}
+                    />
+                </Box>
                 <Alert severity='info'>
                     <AlertTitle>No Domain or Tenant Selected</AlertTitle>
                     Select a domain or tenant to view data. If you are unable to select a domain, you may need to run
