@@ -1,32 +1,35 @@
 ---
 name: Feature Request
 about: Suggest an idea for this project
-title: ''
+title: 'Feature: '
 labels: enhancement, triage
 assignees: ''
-
 ---
 
-**Feature Description:**
+## Feature Description
 
 *Provide a clear and concise description of the feature you're requesting.*
 
-**Current Behavior:**
+### Are you intending to implement this feature?
+
+*Please indicate "yes" or "no".*
+
+## Current Behavior
 
 *Explain how the software behaves currently in relation to the feature you're requesting.*
 
-**Desired Behavior:**
+## Desired Behavior
 
 *Describe how you envision the software behaving after the proposed feature is implemented.*
 
-**Use Case:**
+## Use Case
 
 *Explain the context in which this feature would be useful. How will it benefit users or contributors?*
 
-**Implementation Suggestions:**
+## Implementation Suggestions
 
 *Optional: If you have any suggestions on how this feature could be implemented, you can provide them here.*
 
-**Additional Information:**
+## Additional Information
 
 *Include any other relevant information that could help in understanding or implementing the feature.*
