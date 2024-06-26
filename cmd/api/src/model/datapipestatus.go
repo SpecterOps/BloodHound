@@ -32,11 +32,3 @@ type DatapipeStatusWrapper struct {
 	UpdatedAt              time.Time      `json:"updated_at"`
 	LastCompleteAnalysisAt time.Time      `json:"last_complete_analysis_at"`
 }
-
-func (s *DatapipeStatusWrapper) Update(status DatapipeStatus, updateAnalysisTime bool) {
-	s.Status = status
-	s.UpdatedAt = time.Now().UTC()
-	if updateAnalysisTime {
-		s.LastCompleteAnalysisAt = time.Now().UTC()
-	}
-}
