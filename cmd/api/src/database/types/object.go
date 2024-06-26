@@ -125,17 +125,44 @@ func (s *JSONUntypedObject) Scan(value any) error {
 	}
 }
 
-func (s JSONUntypedObject) Map(value any) error {
-	return nil
-}
-
 // Value returns the json-marshaled value of the receiver
 func (s JSONUntypedObject) Value() (driver.Value, error) {
 	return json.Marshal(s)
 }
 
 // GormDBDataType returns JSONB if postgres, otherwise panics due to lack of DB type support
-func (s JSONUntypedObject) GormDBDataType(db *gorm.DB, field *schema.Field) string {
+func (s JSONUntypedObject) GormDBDataType(db *gorm.DB, _ *schema.Field) string {
+	switch dbDialect := db.Dialector.Name(); dbDialect {
+	case "postgres":
+		return "JSONB"
+
+	default:
+		panic(fmt.Sprintf("Unsupported database dialect for JSON datatype: %s", dbDialect))
+	}
+}
+
+type JSONBBoolObject map[string]bool
+
+// Scan parses the input value (expected to be JSON) to []byte and then attempts to unmarshal it into the receiver
+func (s *JSONBBoolObject) Scan(value any) error {
+	if bytes, ok := value.([]byte); !ok {
+		return fmt.Errorf("failed to unmarshal JSONB value: %v", value)
+	} else {
+		if err := json.Unmarshal(bytes, s); err != nil {
+			return err
+		}
+
+		return nil
+	}
+}
+
+// Value returns the json-marshaled value of the receiver
+func (s JSONBBoolObject) Value() (driver.Value, error) {
+	return json.Marshal(s)
+}
+
+// GormDBDataType returns JSONB if postgres, otherwise panics due to lack of DB type support
+func (s JSONBBoolObject) GormDBDataType(db *gorm.DB, _ *schema.Field) string {
 	switch dbDialect := db.Dialector.Name(); dbDialect {
 	case "postgres":
 		return "JSONB"

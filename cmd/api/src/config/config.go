@@ -169,6 +169,7 @@ type Configuration struct {
 	DisableMigrations            bool                      `json:"disable_migrations"`
 	GraphQueryMemoryLimit        uint16                    `json:"graph_query_memory_limit"`
 	AuthSessionTTLHours          int                       `json:"auth_session_ttl_hours"`
+	FedRAMPEULAText              string                    `json:"fedramp_eula_text"` // Enterprise only
 }
 
 func (s Configuration) AuthSessionTTL() time.Duration {

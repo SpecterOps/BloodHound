@@ -1,35 +1,42 @@
+<!-- README -->
+<!-- All pull requests require either an associated -->
+<!-- Jira ticket or GitHub issue. PRs opened without -->
+<!-- an associated discussion item will be closed! -->
+
 ## Description
 
-<!--- Describe your changes in detail -->
+*Describe your changes in detail*
 
 ## Motivation and Context
 
-<!--- Why is this change required? What problem does it solve? -->
-<!--- If it fixes an open issue, please link to the issue here. -->
+This PR addresses: [GitHub issue or Jira ticket number]
+
+*Why is this change required? What problem does it solve?*
 
 ## How Has This Been Tested?
 
-<!--- Please describe in detail how you tested your changes. -->
-<!--- Include details of your testing environment, and the tests you ran to -->
-<!--- see how your change affects other areas of the code, etc. -->
+*Please describe in detail how you tested your changes.
+Include details of your testing environment, and the tests you ran to
+see how your change affects other areas of the code, etc.*
 
-## Screenshots (if appropriate):
+## Screenshots (optional):
 
 ## Types of changes
 
-<!--- What types of changes does your code introduce? Put an `x` in all the boxes that apply: -->
+<!-- Please remove any items that do no apply. -->
 
--   [ ] Chore (a change that does not modify the application functionality)
--   [ ] Bug fix (non-breaking change which fixes an issue)
--   [ ] New feature (non-breaking change which adds functionality)
--   [ ] Breaking change (fix or feature that would cause existing functionality to change)
+- Chore (a change that does not modify the application functionality)
+- Bug fix (non-breaking change which fixes an issue)
+- New feature (non-breaking change which adds functionality)
+- Breaking change (fix or feature that would cause existing functionality to change)
+- Database Migrations
 
 ## Checklist:
 
-<!--- Go over all the following points, and put an `x` in all the boxes that apply. -->
-<!--- If you're unsure about any of these, don't hesitate to ask. We're here to help! -->
-
--   [ ] Documentation updates are needed, and have been made accordingly.
--   [ ] I have added and/or updated tests to cover my changes.
--   [ ] All new and existing tests passed.
--   [ ] My changes include a database migration.
+<!-- Please make sure to you have completed all following checks. -->
+- [ ] I have ensured that related documentation is up-to-date
+  - Open API docs
+  - Code comments (GoDocs / JSDocs)
+- [ ] I have followed proper test practices
+  - Added/updated tests to cover my changes
+  - All new and existing tests passed

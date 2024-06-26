@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Alert, Box, Paper, Skeleton, Typography, useTheme } from '@mui/material';
+import { Alert, Box, Link, Paper, Skeleton, Typography, useTheme } from '@mui/material';
 import fileDownload from 'js-file-download';
 import { useDispatch } from 'react-redux';
 import { apiClient } from 'bh-shared-ui';
@@ -67,9 +67,38 @@ const DownloadCollectors = () => {
             });
     };
 
+    const sharpHoundCELink = (
+        <Link
+            target='_blank'
+            data-testid='download-collectors-sharphound-ce-link'
+            href={
+                'https://support.bloodhoundenterprise.io/hc/en-us/articles/17481151861019-SharpHound-Community-Edition'
+            }>
+            SharpHound Community
+        </Link>
+    );
+
+    const azureHoundCELink = (
+        <Link
+            target='_blank'
+            data-testid='download-collectors-azurehound-ce-link'
+            href={
+                'https://support.bloodhoundenterprise.io/hc/en-us/articles/17481394564251-AzureHound-Community-Edition'
+            }>
+            AzureHound Community
+        </Link>
+    );
+
     /* Implementation */
     return (
         <PageWithTitle title='Download Collectors' data-testid='download-collectors'>
+            <Typography variant='body1'>
+                <p>To get started, collect data using SharpHound or AzureHound.</p>
+                <p>
+                    BloodHound CE supports both {sharpHoundCELink} or {azureHoundCELink} collectors.
+                </p>
+            </Typography>
+
             <Box display='grid' gap={theme.spacing(4)}>
                 {(sharpHoundCollectorsQuery.isError ||
                     azureHoundCollectorsQuery.isError ||
