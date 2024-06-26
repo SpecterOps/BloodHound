@@ -14,13 +14,11 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-//go:build serial_integration
-// +build serial_integration
-
 package v2_test
 
 import (
 	"testing"
+	"time"
 
 	"github.com/specterops/bloodhound/src/api/v2/integration"
 	"github.com/specterops/bloodhound/src/model"
@@ -29,6 +27,8 @@ import (
 
 func TestGetDatapipeStatus(t *testing.T) {
 	testCtx := integration.NewFOSSContext(t)
+
+	testCtx.WaitForDatapipeIdle(90 * time.Second)
 
 	datapipeStatus, err := testCtx.AdminClient().GetDatapipeStatus()
 	require.Nil(t, err)
