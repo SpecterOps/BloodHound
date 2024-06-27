@@ -70,7 +70,7 @@ const MenuItem: React.FC<MenuItemProps> = ({ title, active, icon, onClick, class
     return (
         <div className={clsx(classes.container, { active }, className)} onClick={onClick} {...rest}>
             {icon && <Box className={classes.icon}>{icon}</Box>}
-            <Box className={clsx(classes.title, 'noselect title')}>{title}</Box>
+            <Box className={clsx(classes.title, 'noselect menu-item-title')}>{title}</Box>
         </div>
     );
 };
