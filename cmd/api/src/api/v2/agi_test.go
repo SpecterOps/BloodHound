@@ -36,7 +36,6 @@ import (
 	"github.com/specterops/bloodhound/graphschema/common"
 	"github.com/specterops/bloodhound/headers"
 	"github.com/specterops/bloodhound/mediatypes"
-	"github.com/specterops/bloodhound/src/database"
 	"github.com/specterops/bloodhound/src/api"
 	v2 "github.com/specterops/bloodhound/src/api/v2"
 	"github.com/specterops/bloodhound/src/api/v2/apitest"

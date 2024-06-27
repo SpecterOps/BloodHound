@@ -123,8 +123,8 @@ CREATE SEQUENCE IF NOT EXISTS asset_group_selectors_id_seq
 ALTER SEQUENCE asset_group_selectors_id_seq OWNED BY asset_group_selectors.id;
 
 CREATE TABLE IF NOT EXISTS asset_groups (
-    name text UNIQUE NOT NULL,
-    tag text UNIQUE NOT NULL,
+    name text,
+    tag text,
     system_group boolean,
     id integer NOT NULL,
     created_at timestamp with time zone,

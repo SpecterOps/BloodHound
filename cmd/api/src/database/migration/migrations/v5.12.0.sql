@@ -30,3 +30,9 @@ ON CONFLICT DO NOTHING;
 
 ALTER TABLE user_sessions
     ADD COLUMN IF NOT EXISTS flags jsonb;
+
+ALTER TABLE asset_groups
+ALTER COLUMN name SET NOT NULL,
+ALTER COLUMN tag SET NOT NULL,
+ADD CONSTRAINT asset_groups_name_key UNIQUE (name),
+ADD CONSTRAINT asset_groups_tag_key UNIQUE (tag);
