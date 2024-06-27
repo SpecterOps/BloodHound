@@ -26,13 +26,9 @@ content:
       type: object
       properties:
         data:
-          allOf:
-            - type: object
-              properties:
-                props:
-                  type: object
-                  additionalProperties:
-                    type: object
-            - type: object
+          type: object
+          properties:
+            props:
+              type: object
               additionalProperties:
-                type: integer
+                type: object
