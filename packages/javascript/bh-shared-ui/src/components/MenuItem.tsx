@@ -34,6 +34,16 @@ const useStyles = makeStyles((theme) => ({
         '& svg': {
             color: '#a7adb0',
         },
+        '&.active': {
+            color: '#406f8e',
+            borderBottom: `3px solid #6798B9`,
+            '&:hover': {
+                borderBottom: `3px solid #6798B9`,
+            },
+            '& svg': {
+                color: '#6798B9',
+            },
+        },
     },
     icon: {
         marginRight: theme.spacing(1),
@@ -44,16 +54,6 @@ const useStyles = makeStyles((theme) => ({
         lineHeight: 1.5,
         fontWeight: 500,
         letterSpacing: '0.0075em',
-    },
-    active: {
-        color: '#406f8e',
-        borderBottom: `3px solid #6798B9`,
-        '&:hover': {
-            borderBottom: `3px solid #6798B9`,
-        },
-        '& svg': {
-            color: '#6798B9',
-        },
     },
 }));
 
@@ -68,9 +68,9 @@ const MenuItem: React.FC<MenuItemProps> = ({ title, active, icon, onClick, class
     const classes = useStyles();
 
     return (
-        <div className={clsx(classes.container, { [classes.active]: active }, className)} onClick={onClick} {...rest}>
+        <div className={clsx(classes.container, { active }, className)} onClick={onClick} {...rest}>
             {icon && <Box className={classes.icon}>{icon}</Box>}
-            <Box className={clsx(classes.title, 'noselect')}>{title}</Box>
+            <Box className={clsx(classes.title, 'noselect title')}>{title}</Box>
         </div>
     );
 };
