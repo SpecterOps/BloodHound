@@ -95,7 +95,7 @@ const DownloadCollectors = () => {
             <Typography variant='body2' paragraph={true}>
                 To get started, collect data using SharpHound or AzureHound.
                 <br />
-                BloodHound CE supports both {sharpHoundCELink} or {azureHoundCELink} collectors.
+                BloodHound CE supports both {sharpHoundCELink} and {azureHoundCELink} collectors.
             </Typography>
 
             <Box display='grid' gap={theme.spacing(4)}>

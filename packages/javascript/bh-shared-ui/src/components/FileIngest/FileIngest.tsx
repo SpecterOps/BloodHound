@@ -65,7 +65,7 @@ const FileIngest = () => {
                 </Typography>
             </ContentPage>
 
-            <Box display='flex' justifyContent='flex-end' alignItems='center' minHeight='24px' mb={2}>
+            <Box display='flex' justifyContent='flex-end' alignItems='center' minHeight='24px' my={2}>
                 <Button
                     color='primary'
                     variant='contained'
