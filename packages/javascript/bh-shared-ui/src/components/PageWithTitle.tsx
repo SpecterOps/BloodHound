@@ -14,25 +14,26 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import React, { DataHTMLAttributes } from 'react';
-import { Box, Container, Typography } from '@mui/material';
+import { Box, Container, Typography, ContainerProps } from '@mui/material';
+import React from 'react';
 
-interface PageWithTitleProps extends DataHTMLAttributes<HTMLDivElement> {
-    title?: string;
-    children?: React.ReactNode;
-}
+type PageWithTitleProps = ContainerProps<
+    'div',
+    {
+        title?: string;
+        pageDescription?: JSX.Element;
+        children?: React.ReactNode;
+    }
+>;
 
-const PageWithTitle: React.FC<PageWithTitleProps> = ({ title, children, ...rest }) => {
+const PageWithTitle: React.FC<PageWithTitleProps> = ({ title, pageDescription, children, ...rest }) => {
     return (
         <Container maxWidth='xl' {...rest}>
-            <Box py={2}>
-                {title && (
-                    <Box mb={2}>
-                        <Typography variant='h1'>{title}</Typography>
-                    </Box>
-                )}
-                {children}
+            <Box component={'header'} my={2}>
+                {title && <Typography variant='h1'>{title}</Typography>}
+                {pageDescription}
             </Box>
+            {children}
         </Container>
     );
 };
