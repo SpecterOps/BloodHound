@@ -98,6 +98,14 @@ type PostureStat = TimestampFields & {
 
 export type PostureResponse = PaginatedResponse<PostureStat[]>;
 
+type DatapipeStatus = {
+    status: 'idle' | 'ingesting' | 'analyzing' | 'purging';
+    last_complete_analysis_at: string;
+    updated_at: string;
+};
+
+export type DatapipeStatusResponse = BasicResponse<DatapipeStatus>;
+
 export type AuthToken = TimestampFields & {
     hmac_method: string;
     id: string;
