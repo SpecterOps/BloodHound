@@ -18,19 +18,9 @@ import { Box, Button, Link, Typography } from '@mui/material';
 import { useEffect, useState } from 'react';
 import FileUploadDialog from '../FileUploadDialog';
 import { useListFileIngestJobs } from '../../hooks';
-import ContentPage from '../ContentPage';
 import FinishedIngestLog from '../FinishedIngestLog';
-
-const fileIngestLink = (
-    <Link
-        target='_blank'
-        data-testid='file-upload-gettingstarted-link'
-        href={
-            'https://support.bloodhoundenterprise.io/hc/en-us/articles/17715215791899-Getting-started-with-BloodHound-Community-Edition'
-        }>
-        Getting Started
-    </Link>
-);
+import PageWithTitle from '../PageWithTitle';
+import DocumentationLinks from '../DocumentationLinks';
 
 const FileIngest = () => {
     const [fileUploadDialogOpen, setFileUploadDialogOpen] = useState<boolean>(false);
@@ -58,12 +48,15 @@ const FileIngest = () => {
 
     return (
         <>
-            <ContentPage title='File Ingest' data-testid='manual-file-ingest'>
-                <Typography variant='body2'>
-                    Upload data from SharpHound or AzureHound offline collectors. Check out our {fileIngestLink}{' '}
-                    documentation for more information.
-                </Typography>
-            </ContentPage>
+            <PageWithTitle
+                title='File Ingest'
+                data-testid='manual-file-ingest'
+                pageDescription={
+                    <Typography variant='body2'>
+                        Upload data from SharpHound or AzureHound offline collectors. Check out our{' '}
+                        {DocumentationLinks.fileIngestLink} documentation for more information.
+                    </Typography>
+                }></PageWithTitle>
 
             <Box display='flex' justifyContent='flex-end' alignItems='center' minHeight='24px' my={2}>
                 <Button
