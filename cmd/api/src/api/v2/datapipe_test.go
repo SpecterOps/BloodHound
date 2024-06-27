@@ -1,4 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2024 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -14,18 +14,26 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package v2
+//go:build serial_integration
+// +build serial_integration
+
+package v2_test
 
 import (
-	"net/http"
+	"testing"
+	"time"
 
-	"github.com/specterops/bloodhound/src/api"
+	"github.com/specterops/bloodhound/src/api/v2/integration"
+	"github.com/specterops/bloodhound/src/model"
+	"github.com/stretchr/testify/require"
 )
 
-func (s Resources) GetDatapipeStatus(response http.ResponseWriter, request *http.Request) {
-	if datapipeStatus, err := s.DB.GetDatapipeStatus(request.Context()); err != nil {
-		api.HandleDatabaseError(request, response, err)
-	} else {
-		api.WriteBasicResponse(request.Context(), datapipeStatus, http.StatusOK, response)
-	}
+func TestGetDatapipeStatus(t *testing.T) {
+	testCtx := integration.NewFOSSContext(t)
+
+	testCtx.WaitForDatapipeIdle(90 * time.Second)
+
+	datapipeStatus, err := testCtx.AdminClient().GetDatapipeStatus()
+	require.Nil(t, err)
+	require.Equal(t, datapipeStatus.Status, model.DatapipeStatusIdle)
 }
