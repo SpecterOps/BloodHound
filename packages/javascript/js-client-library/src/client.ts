@@ -23,6 +23,7 @@ import {
     AzureDataQualityResponse,
     BasicResponse,
     CreateAuthTokenResponse,
+    DatapipeStatusResponse,
     EndFileIngestResponse,
     ListAuthTokensResponse,
     ListFileIngestJobsResponse,
@@ -49,7 +50,8 @@ class BHEAPIClient {
     version = (options?: types.RequestOptions) => this.baseClient.get('/api/version', options);
 
     /* datapipe status */
-    getDatapipeStatus = (options?: types.RequestOptions) => this.baseClient.get('/api/v2/datapipe/status', options);
+    getDatapipeStatus = (options?: types.RequestOptions) =>
+        this.baseClient.get<DatapipeStatusResponse>('/api/v2/datapipe/status', options);
 
     /* search */
     searchHandler = (keyword: string, type?: string, options?: types.RequestOptions) => {
