@@ -64,11 +64,11 @@ interface MenuItemProps extends DataHTMLAttributes<HTMLDivElement> {
     onClick: () => void;
 }
 
-const MenuItem: React.FC<MenuItemProps> = ({ title, active, icon, onClick, ...rest }) => {
+const MenuItem: React.FC<MenuItemProps> = ({ title, active, icon, onClick, className, ...rest }) => {
     const classes = useStyles();
 
     return (
-        <div className={clsx(classes.container, active ? classes.active : null)} onClick={onClick} {...rest}>
+        <div className={clsx(classes.container, { [classes.active]: active }, className)} onClick={onClick} {...rest}>
             {icon && <Box className={classes.icon}>{icon}</Box>}
             <Box className={clsx(classes.title, 'noselect')}>{title}</Box>
         </div>
