@@ -63,4 +63,15 @@ const fileIngestLink = (
     </Link>
 );
 
-export default { sharpHoundCELink, azureHoundCELink, samlConfigDocLink, ManageUsersDocLink, fileIngestLink };
+const apiUsageLink = (
+    <Link
+        target='_blank'
+        data-testid='file-upload-gettingstarted-link'
+        href={
+            'https://support.bloodhoundenterprise.io/hc/en-us/articles/11311053342619-Working-with-the-BloodHound-API'
+        }>
+        Working with the BloodHound API
+    </Link>
+);
+
+export default { sharpHoundCELink, azureHoundCELink, samlConfigDocLink, ManageUsersDocLink, fileIngestLink, apiUsageLink };
