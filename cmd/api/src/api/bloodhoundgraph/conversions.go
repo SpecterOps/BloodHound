@@ -32,7 +32,7 @@ const (
 func NodeToBloodHoundGraph(node *graph.Node) BloodHoundGraphNode {
 	var (
 		nodeKindLabel       = analysis.GetNodeKindDisplayLabel(node)
-		name, _             = node.Properties.GetWithFallback(common.Name.String(), "NO NAME OR ID", common.ObjectID.String()).String()
+		name, _             = node.Properties.GetWithFallback(common.Name.String(), "NO NAME OR ID", common.DisplayName.String(), common.ObjectID.String()).String()
 		bloodHoundGraphNode = BloodHoundGraphNode{
 			BloodHoundGraphItem: &BloodHoundGraphItem{
 				Data: getNodeDisplayProperties(node),
