@@ -16,7 +16,7 @@
 
 import { Box, Typography, Skeleton, useTheme } from '@mui/material';
 import { PageWithTitle } from '../../../components';
-import DocumentationLinks from "../../../components/DocumentationLinks"
+import DocumentationLinks from '../../../components/DocumentationLinks';
 
 type Props = {
     getComponent: (
@@ -52,7 +52,8 @@ function CustomLayout(props: Props) {
             data-testid='api-explorer'
             pageDescription={
                 <Typography variant='body2' paragraph>
-                    Review and understand the API endpoints available that power BloodHound. To learn how to use the API, see {DocumentationLinks.apiUsageLink}.
+                    Review and understand the API endpoints available that power BloodHound. To learn how to use the
+                    API, see {DocumentationLinks.apiUsageLink}.
                 </Typography>
             }>
             {!isReady() ? (

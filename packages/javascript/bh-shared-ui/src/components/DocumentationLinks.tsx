@@ -74,4 +74,11 @@ const apiUsageLink = (
     </Link>
 );
 
-export default { sharpHoundCELink, azureHoundCELink, samlConfigDocLink, ManageUsersDocLink, fileIngestLink, apiUsageLink };
+export default {
+    sharpHoundCELink,
+    azureHoundCELink,
+    samlConfigDocLink,
+    ManageUsersDocLink,
+    fileIngestLink,
+    apiUsageLink,
+};
