@@ -56,8 +56,8 @@ func (s *BloodhoundDB) CreateAssetGroup(ctx context.Context, name, tag string, s
                 return fmt.Errorf("%w: %v", ErrDuplicateAGTag, err)
             }
         }
-		return err
-	})
+        return err
+    })
 
 	return assetGroup, err
 }

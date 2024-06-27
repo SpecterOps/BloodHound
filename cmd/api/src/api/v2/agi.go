@@ -200,7 +200,7 @@ func (s Resources) UpdateAssetGroup(response http.ResponseWriter, request *http.
 }
 
 func (s Resources) CreateAssetGroup(response http.ResponseWriter, request *http.Request) {
-	var createRequest CreateAssetGroupRequest
+    var createRequest CreateAssetGroupRequest
 
     if err := api.ReadJSONRequestPayloadLimited(&createRequest, request); err != nil {
         api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
