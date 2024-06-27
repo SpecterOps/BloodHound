@@ -34,6 +34,7 @@ import (
 	"github.com/specterops/bloodhound/graphschema/common"
 	"github.com/specterops/bloodhound/headers"
 	"github.com/specterops/bloodhound/mediatypes"
+	"github.com/specterops/bloodhound/src/database"
 	"github.com/specterops/bloodhound/src/api"
 	v2 "github.com/specterops/bloodhound/src/api/v2"
 	"github.com/specterops/bloodhound/src/api/v2/apitest"
@@ -478,7 +479,7 @@ func TestResources_CreateAssetGroup(t *testing.T) {
 		ResponseStatusCode(http.StatusInternalServerError)
 	
 	// Test duplicate name
-	mockDB.EXPECT().CreateAssetGroup(gomock.Any(), "DuplicateName", gomock.Any(), false).Return(model.AssetGroup{}, errors.New("asset group with this name already exists"))
+	mockDB.EXPECT().CreateAssetGroup(gomock.Any(), "DuplicateName", gomock.Any(), false).Return(model.AssetGroup{}, fmt.Errorf("%w: %v", database.ErrDuplicateAGName, errors.New("ERROR: duplicate key value violates unique constraint \"asset_groups_name_key\" (SQLSTATE 23505)")))
 
 	requestTemplate.
 		WithBody(v2.CreateAssetGroupRequest{Name: "DuplicateName", Tag: "UniqueTag"}).
@@ -487,7 +488,7 @@ func TestResources_CreateAssetGroup(t *testing.T) {
 		ResponseStatusCode(http.StatusConflict)
 
 	// Test duplicate tag
-	mockDB.EXPECT().CreateAssetGroup(gomock.Any(), gomock.Any(), "DuplicateTag", false).Return(model.AssetGroup{}, errors.New("asset group with this tag already exists"))
+	mockDB.EXPECT().CreateAssetGroup(gomock.Any(), gomock.Any(), "DuplicateTag", false).Return(model.AssetGroup{}, fmt.Errorf("%w: %v", database.ErrDuplicateAGTag, errors.New("ERROR: duplicate key value violates unique constraint \"asset_groups_tag_key\" (SQLSTATE 23505)")))
 
 	requestTemplate.
 		WithBody(v2.CreateAssetGroupRequest{Name: "UniqueName", Tag: "DuplicateTag"}).

@@ -63,6 +63,7 @@ const (
 	ErrorResponseAGNameTagEmpty						= "asset group name or tag must not be empty"
 	ErrorResponseAGDuplicateName					= "asset group name must be unique"
 	ErrorResponseAGDuplicateTag						= "asset group tag must be unique"
+	ErrorResponseDetailsUniqueViolation 			= "A unique constraint was violated"
 
 	FmtErrorResponseDetailsBadQueryParameters = "there are errors in the query parameters: %v"
 )
@@ -121,10 +122,6 @@ func HandleDatabaseError(request *http.Request, response http.ResponseWriter, er
 		WriteErrorResponse(request.Context(), BuildErrorResponse(http.StatusNotFound, ErrorResponseDetailsResourceNotFound, request), response)
 	} else if errors.Is(err, context.DeadlineExceeded) {
 		WriteErrorResponse(request.Context(), BuildErrorResponse(http.StatusInternalServerError, ErrorResponseRequestTimeout, request), response)
-	} else if err.Error() == "asset group with this name already exists" {
-		WriteErrorResponse(request.Context(), BuildErrorResponse(http.StatusConflict, ErrorResponseAGDuplicateName, request), response)
-	} else if err.Error() == "asset group with this tag already exists" {
-		WriteErrorResponse(request.Context(), BuildErrorResponse(http.StatusConflict, ErrorResponseAGDuplicateTag, request), response)
 	} else {
 		log.Errorf("Unexpected database error: %v", err)
 		WriteErrorResponse(request.Context(), BuildErrorResponse(http.StatusInternalServerError, ErrorResponseDetailsInternalServerError, request), response)

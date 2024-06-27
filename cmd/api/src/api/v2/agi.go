@@ -24,6 +24,7 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+	"errors"
 
 	"github.com/gorilla/mux"
 	"github.com/specterops/bloodhound/analysis"
@@ -38,6 +39,7 @@ import (
 	"github.com/specterops/bloodhound/src/ctx"
 	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/utils"
+	"github.com/specterops/bloodhound/src/database"
 )
 
 // CreateAssetGroupRequest holds data required to create an asset group
@@ -200,23 +202,29 @@ func (s Resources) UpdateAssetGroup(response http.ResponseWriter, request *http.
 func (s Resources) CreateAssetGroup(response http.ResponseWriter, request *http.Request) {
 	var createRequest CreateAssetGroupRequest
 
-	if err := api.ReadJSONRequestPayloadLimited(&createRequest, request); err != nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
-	} else if strings.TrimSpace(createRequest.Name) == "" || strings.TrimSpace(createRequest.Tag) == "" {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseAGNameTagEmpty, request), response)
-	} else if hasSpace, err := regexp.MatchString(`\s`, createRequest.Tag); err != nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, err.Error(), request), response)
-	} else if hasSpace {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseAGTagWhiteSpace, request), response)
-	} else if newAssetGroup, err := s.DB.CreateAssetGroup(request.Context(), createRequest.Name, createRequest.Tag, false); err != nil {
-		api.HandleDatabaseError(request, response, err)
-	} else {
-		assetGroupURL := *ctx.Get(request.Context()).Host
-		assetGroupURL.Path = fmt.Sprintf("/api/v2/asset-groups/%d", newAssetGroup.ID)
-		response.Header().Set(headers.Location.String(), assetGroupURL.String())
+    if err := api.ReadJSONRequestPayloadLimited(&createRequest, request); err != nil {
+        api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
+    } else if strings.TrimSpace(createRequest.Name) == "" || strings.TrimSpace(createRequest.Tag) == "" {
+        api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseAGNameTagEmpty, request), response)
+    } else if hasSpace, err := regexp.MatchString(`\s`, createRequest.Tag); err != nil {
+        api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, err.Error(), request), response)
+    } else if hasSpace {
+        api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseAGTagWhiteSpace, request), response)
+    } else if newAssetGroup, err := s.DB.CreateAssetGroup(request.Context(), createRequest.Name, createRequest.Tag, false); err != nil {
+        if errors.Is(err, database.ErrDuplicateAGName) {
+            api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusConflict, api.ErrorResponseAGDuplicateName, request), response)
+        } else if errors.Is(err, database.ErrDuplicateAGTag) {
+            api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusConflict, api.ErrorResponseAGDuplicateTag, request), response)
+        } else {
+            api.HandleDatabaseError(request, response, err)
+        }
+    } else {
+        assetGroupURL := *ctx.Get(request.Context()).Host
+        assetGroupURL.Path = fmt.Sprintf("/api/v2/asset-groups/%d", newAssetGroup.ID)
+        response.Header().Set(headers.Location.String(), assetGroupURL.String())
 
-		api.WriteBasicResponse(request.Context(), newAssetGroup, http.StatusCreated, response)
-	}
+        api.WriteBasicResponse(request.Context(), newAssetGroup, http.StatusCreated, response)
+    }
 }
 
 func (s Resources) DeleteAssetGroup(response http.ResponseWriter, request *http.Request) {
