@@ -6921,6 +6921,44 @@ func (s *SyncLAPSPasswordHarness) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.NewRelationship(s.User6, s.Group4, ad.MemberOf)
 }
 
+type HybridAttackPaths struct {
+	AZTenant *graph.Node
+	AZUser   *graph.Node
+	AZUserID string
+	ADUser   *graph.Node
+	ADUserID string
+}
+
+func (s *HybridAttackPaths) Setup(graphTestContext *GraphTestContext) {
+	azUserObjectID := RandomObjectID(graphTestContext.testCtx)
+	adUserObjectID := RandomObjectID(graphTestContext.testCtx)
+	tenantID := RandomObjectID(graphTestContext.testCtx)
+	domainSid := RandomDomainSID()
+	azureUserProps := graph.AsProperties(graph.PropertyMap{
+		common.Name:             HarnessUserName,
+		azure.UserPrincipalName: HarnessUserName,
+		common.Description:      HarnessUserDescription,
+		common.ObjectID:         azUserObjectID,
+		azure.Licenses:          HarnessUserLicenses,
+		azure.MFAEnabled:        HarnessUserMFAEnabled,
+		azure.TenantID:          tenantID,
+		azure.OnPremSyncEnabled: true,
+		azure.OnPremID:          adUserObjectID,
+	})
+	adUserProperties := graph.AsProperties(graph.PropertyMap{
+		common.Name:     HarnessUserName,
+		common.ObjectID: adUserObjectID,
+		ad.DomainSID:    domainSid,
+	})
+
+	s.AZTenant = graphTestContext.NewAzureTenant(tenantID)
+	s.AZUser = graphTestContext.NewCustomAzureUser(azureUserProps)
+	s.AZUserID = azUserObjectID
+	s.ADUser = graphTestContext.NewCustomActiveDirectoryUser(adUserProperties)
+	s.ADUserID = adUserObjectID
+	graphTestContext.NewRelationship(s.AZTenant, s.AZUser, azure.Contains)
+}
+
 type HarnessDetails struct {
 	RDP                                             RDPHarness
 	RDPB                                            RDPHarness2
@@ -7001,4 +7039,5 @@ type HarnessDetails struct {
 	ESC13Harness2                                   ESC13Harness2
 	ESC13HarnessECA                                 ESC13HarnessECA
 	SyncLAPSPasswordHarness                         SyncLAPSPasswordHarness
+	HybridAttackPaths                               HybridAttackPaths
 }
