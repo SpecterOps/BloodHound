@@ -20,7 +20,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-
 	"github.com/specterops/bloodhound/log"
 
 	"github.com/specterops/bloodhound/analysis"
@@ -40,7 +39,7 @@ var (
 	ErrAnalysisPartiallyCompleted = errors.New("analysis partially completed")
 )
 
-func RunAnalysisOperations(ctx context.Context, db database.Database, graphDB graph.Database, cfg config.Configuration) error {
+func RunAnalysisOperations(ctx context.Context, db database.Database, graphDB graph.Database, _ config.Configuration) error {
 	var (
 		collectedErrors []error
 	)
@@ -86,7 +85,7 @@ func RunAnalysisOperations(ctx context.Context, db database.Database, graphDB gr
 		stats.LogStats()
 	}
 
-	if stats, err := azure.Post(ctx, graphDB, cfg); err != nil {
+	if stats, err := azure.Post(ctx, graphDB); err != nil {
 		collectedErrors = append(collectedErrors, fmt.Errorf("error during azure post: %w", err))
 		azureFailed = true
 	} else {

@@ -23,10 +23,9 @@ import (
 	azureAnalysis "github.com/specterops/bloodhound/analysis/azure"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/graphschema/azure"
-	"github.com/specterops/bloodhound/src/config"
 )
 
-func Post(ctx context.Context, db graph.Database, cfg config.Configuration) (*analysis.AtomicPostProcessingStats, error) {
+func Post(ctx context.Context, db graph.Database) (*analysis.AtomicPostProcessingStats, error) {
 	aggregateStats := analysis.NewAtomicPostProcessingStats()
 	if stats, err := analysis.DeleteTransitEdges(ctx, db, azure.Entity, azure.Entity, azureAnalysis.AzurePostProcessedRelationships()...); err != nil {
 		return &aggregateStats, err
@@ -36,7 +35,7 @@ func Post(ctx context.Context, db graph.Database, cfg config.Configuration) (*an
 		return &aggregateStats, err
 	} else if appRoleAssignmentStats, err := azureAnalysis.AppRoleAssignments(ctx, db); err != nil {
 		return &aggregateStats, err
-	} else if hybridStats, err := azureAnalysis.PostHybridWithCypher(ctx, db, cfg); err != nil {
+	} else if hybridStats, err := azureAnalysis.PostHybrid(ctx, db); err != nil {
 		return &aggregateStats, err
 	} else {
 		aggregateStats.Merge(stats)

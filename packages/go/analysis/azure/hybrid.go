@@ -22,7 +22,6 @@ import (
 	"fmt"
 
 	"github.com/specterops/bloodhound/analysis"
-	"github.com/specterops/bloodhound/cache"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/dawgs/query"
 	"github.com/specterops/bloodhound/dawgs/util/channels"
@@ -30,37 +29,7 @@ import (
 	"github.com/specterops/bloodhound/graphschema/azure"
 	"github.com/specterops/bloodhound/graphschema/common"
 	"github.com/specterops/bloodhound/log"
-	"github.com/specterops/bloodhound/src/config"
-	"github.com/specterops/bloodhound/src/queries"
 )
-
-func PostHybridWithCypher(ctx context.Context, db graph.Database, cfg config.Configuration) (*analysis.AtomicPostProcessingStats, error) {
-	const edgeCreation = `
-		MATCH (n:AZUser), (m:User)
-		WHERE n.onpremid CONTAINS "-"
-		AND n.onpremsyncenabled = true
-		AND m.objectid = n.onpremid
-		MERGE (m)-[:SyncedToEntraUser]->(n)
-		MERGE (n)-[:SyncedToADUser]->(m)
-	`
-
-	cache, err := cache.NewCache(cache.Config{MaxSize: 1})
-	if err != nil {
-		return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("creating throwaway cache: %w", err)
-	}
-
-	cfg.EnableCypherMutations = true
-	queries := queries.NewGraphQuery(db, cache, cfg)
-
-	if preparedQuery, err := queries.PrepareCypherQuery(edgeCreation); err != nil {
-		return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("preparing query for hybrid edges: %w", err)
-	} else if _, err := queries.RawCypherQuery(ctx, preparedQuery, false); err != nil {
-		return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("creating hybrid edges: %w", err)
-	} else {
-		return &analysis.AtomicPostProcessingStats{}, nil
-	}
-
-}
 
 func PostHybrid(ctx context.Context, db graph.Database) (*analysis.AtomicPostProcessingStats, error) {
 	tenants, err := FetchTenants(ctx, db)
