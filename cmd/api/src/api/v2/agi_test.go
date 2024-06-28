@@ -25,7 +25,6 @@ import (
 	"net/url"
 	"testing"
 
-	
 	"github.com/specterops/bloodhound/src/database"
 	"github.com/gofrs/uuid"
 	"github.com/gorilla/mux"
