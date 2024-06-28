@@ -21,6 +21,7 @@ import (
 
 	"github.com/specterops/bloodhound/analysis"
 	azureAnalysis "github.com/specterops/bloodhound/analysis/azure"
+	"github.com/specterops/bloodhound/analysis/hybrid"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/graphschema/azure"
 )
@@ -35,7 +36,7 @@ func Post(ctx context.Context, db graph.Database) (*analysis.AtomicPostProcessin
 		return &aggregateStats, err
 	} else if appRoleAssignmentStats, err := azureAnalysis.AppRoleAssignments(ctx, db); err != nil {
 		return &aggregateStats, err
-	} else if hybridStats, err := azureAnalysis.PostHybrid(ctx, db); err != nil {
+	} else if hybridStats, err := hybrid.PostHybrid(ctx, db); err != nil {
 		return &aggregateStats, err
 	} else {
 		aggregateStats.Merge(stats)
