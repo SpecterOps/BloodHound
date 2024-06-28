@@ -25,7 +25,6 @@ import (
 	"gorm.io/gorm"
 
 	"github.com/specterops/bloodhound/errors"
-	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/src/database/types"
 	"github.com/specterops/bloodhound/src/model"
 )
@@ -49,7 +48,6 @@ func (s *BloodhoundDB) CreateAssetGroup(ctx context.Context, name, tag string, s
     err = s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
         err := tx.Create(&assetGroup).Error
         if err != nil {
-            log.Infof("Error creating asset group: %v", err)
             if strings.Contains(err.Error(), "duplicate key value violates unique constraint \"asset_groups_name_key\"") {
                 return fmt.Errorf("%w: %v", ErrDuplicateAGName, err)
             } else if strings.Contains(err.Error(), "duplicate key value violates unique constraint \"asset_groups_tag_key\"") {

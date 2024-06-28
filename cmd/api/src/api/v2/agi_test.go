@@ -485,7 +485,13 @@ func TestResources_CreateAssetGroup(t *testing.T) {
 		WithBody(v2.CreateAssetGroupRequest{Name: "DuplicateName", Tag: "UniqueTag"}).
 		OnHandlerFunc(resources.CreateAssetGroup).
 		Require().
-		ResponseStatusCode(http.StatusConflict)
+		ResponseStatusCode(http.StatusConflict).
+		ResponseJSONBody(api.ErrorWrapper{
+			HTTPStatus: http.StatusConflict,
+			Errors: []api.ErrorDetails{{
+				Message: api.ErrorResponseAGDuplicateName,
+			}},
+		})
 
 	// Test duplicate tag
 	mockDB.EXPECT().CreateAssetGroup(gomock.Any(), gomock.Any(), "DuplicateTag", false).Return(model.AssetGroup{}, fmt.Errorf("%w: %v", database.ErrDuplicateAGTag, errors.New("ERROR: duplicate key value violates unique constraint \"asset_groups_tag_key\" (SQLSTATE 23505)")))
@@ -494,7 +500,13 @@ func TestResources_CreateAssetGroup(t *testing.T) {
 		WithBody(v2.CreateAssetGroupRequest{Name: "UniqueName", Tag: "DuplicateTag"}).
 		OnHandlerFunc(resources.CreateAssetGroup).
 		Require().
-		ResponseStatusCode(http.StatusConflict)
+		ResponseStatusCode(http.StatusConflict).
+		ResponseJSONBody(api.ErrorWrapper{
+			HTTPStatus: http.StatusConflict,
+			Errors: []api.ErrorDetails{{
+				Message: api.ErrorResponseAGDuplicateTag,
+			}},
+		})
 
 	// Success
 	mockDB.EXPECT().CreateAssetGroup(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(model.AssetGroup{}, nil)
