@@ -34,6 +34,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	azureanalysis "github.com/specterops/bloodhound/analysis/azure"
+	"github.com/specterops/bloodhound/analysis/hybrid"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/dawgs/ops"
 	"github.com/specterops/bloodhound/dawgs/query"
@@ -859,7 +860,7 @@ func TestHybridAttackPaths(t *testing.T) {
 		func(harness integration.HarnessDetails, db graph.Database) {
 			operation := analysis.NewPostRelationshipOperation(context.Background(), db, "Hybrid Attack Path Post Process Test")
 
-			if _, err := azureanalysis.PostHybrid(context.Background(), db); err != nil {
+			if _, err := hybrid.PostHybrid(context.Background(), db); err != nil {
 				t.Logf("failed post processing for hybrid attack paths: %v", err)
 			}
 

@@ -6925,6 +6925,7 @@ type HybridAttackPaths struct {
 	AZTenant *graph.Node
 	AZUser   *graph.Node
 	AZUserID string
+	ADDomain *graph.Node
 	ADUser   *graph.Node
 	ADUserID string
 }
@@ -6954,9 +6955,11 @@ func (s *HybridAttackPaths) Setup(graphTestContext *GraphTestContext) {
 	s.AZTenant = graphTestContext.NewAzureTenant(tenantID)
 	s.AZUser = graphTestContext.NewCustomAzureUser(azureUserProps)
 	s.AZUserID = azUserObjectID
+	s.ADDomain = graphTestContext.NewActiveDirectoryDomain("Domain A", domainSid, false, true)
 	s.ADUser = graphTestContext.NewCustomActiveDirectoryUser(adUserProperties)
 	s.ADUserID = adUserObjectID
 	graphTestContext.NewRelationship(s.AZTenant, s.AZUser, azure.Contains)
+	graphTestContext.NewRelationship(s.ADDomain, s.ADUser, ad.Contains)
 }
 
 type HarnessDetails struct {
