@@ -133,6 +133,9 @@ func NormalizeToUTF8(input io.Reader) (Normalizer, error) {
 	return NormalizeBytesToUTF8(data, detectedBOMEncoding)
 }
 
+// ErrUnknownEncodingInvalidUTF8 ...
+var ErrUnknownEncodingInvalidUTF8 = errors.New("unknown encoding and not a valid UTF-8")
+
 // NormalizeBytesToUTF8 converts the given bytes to UTF-8 based on the specified encoding.
 // This function is the core of the normalization process, handling different encodings
 // and converting them to UTF-8.
@@ -155,7 +158,7 @@ func NormalizeBytesToUTF8(data []byte, enc Encoding) (Normalizer, error) {
 		if utf8.Valid(data) {
 			content = data
 		} else {
-			return nil, errors.New("unknown encoding and not valid UTF-8")
+			return nil, ErrUnknownEncodingInvalidUTF8
 		}
 	}
 
