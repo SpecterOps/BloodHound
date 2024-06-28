@@ -40,36 +40,13 @@ type normalizer struct {
 }
 
 // NormalizedContent returns the normalized (UTF-8) content.
-func (n normalizer) NormalizedContent() []byte {
-	return n.normalizedContent
+func (s normalizer) NormalizedContent() []byte {
+	return s.normalizedContent
 }
 
 // NormalizedFrom returns the original encoding of the content before normalization.
-func (n normalizer) NormalizedFrom() Encoding {
-	return n.normalizedFrom
-}
-
-func readBOMContent(rd io.Reader) ([]byte, error) {
-	var bom [maxBOMSize]byte // used to read BOM
-	var buf []byte
-	var err error
-
-	// read as many bytes as possible
-	for nEmpty, n := 0, 0; err == nil && len(buf) < maxBOMSize; buf = bom[:len(buf)+n] {
-		if n, err = rd.Read(bom[len(buf):]); n < 0 {
-			return nil, err
-		}
-		if n > 0 {
-			nEmpty = 0
-		} else {
-			nEmpty++
-			if nEmpty >= maxConsecutiveEmptyReads {
-				err = io.ErrNoProgress
-			}
-		}
-	}
-
-	return buf, err
+func (s normalizer) NormalizedFrom() Encoding {
+	return s.normalizedFrom
 }
 
 // DetectBOMEncoding detects the byte order mark in the given bytes and returns the corresponding Encoding.
@@ -140,21 +117,23 @@ var ErrUnknownEncodingInvalidUTF8 = errors.New("unknown encoding and not a valid
 // This function is the core of the normalization process, handling different encodings
 // and converting them to UTF-8.
 func NormalizeBytesToUTF8(data []byte, enc Encoding) (Normalizer, error) {
-	var content []byte
-	var err error
+	var (
+		content []byte
+		err     error
+	)
 
-	switch enc {
-	case UTF8:
+	switch enc.String() {
+	case UTF8.String():
 		content = data[min(len(enc.Sequence()), len(data)):]
-	case UTF16BE:
+	case UTF16BE.String():
 		content, err = utf16ToUTF8(data[min(len(enc.Sequence()), len(data)):], true)
-	case UTF16LE:
+	case UTF16LE.String():
 		content, err = utf16ToUTF8(data[min(len(enc.Sequence()), len(data)):], false)
-	case UTF32BE:
+	case UTF32BE.String():
 		content, err = utf32ToUTF8(data[min(len(enc.Sequence()), len(data)):], true)
-	case UTF32LE:
+	case UTF32LE.String():
 		content, err = utf32ToUTF8(data[min(len(enc.Sequence()), len(data)):], false)
-	case Unknown:
+	case Unknown.String():
 		if utf8.Valid(data) {
 			content = data
 		} else {

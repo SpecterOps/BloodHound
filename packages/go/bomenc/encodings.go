@@ -51,22 +51,22 @@ type bomEncoding struct {
 // String returns the human-readable name of the encoding.
 // This method fulfills the Encoding interface and provides a simple way
 // to get a string representation of the encoding.
-func (b bomEncoding) String() string {
-	return b.encodingType
+func (s bomEncoding) String() string {
+	return s.encodingType
 }
 
 // Sequence returns the BOM sequence for this encoding.
 // This method fulfills the Encoding interface and provides access to the BOM sequence,
 // which is essential for encoding detection and writing files with proper BOMs.
-func (b bomEncoding) Sequence() []byte {
-	return b.sequence
+func (s bomEncoding) Sequence() []byte {
+	return s.sequence
 }
 
 // HasSequence checks if the given data starts with this encoding's BOM sequence.
 // This method fulfills the Encoding interface and provides a way to check for
 // the presence of this encoding's BOM, which is crucial for encoding detection.
-func (b bomEncoding) HasSequence(data []byte) bool {
-	return b.hasSequenceFunc(data)
+func (s bomEncoding) HasSequence(data []byte) bool {
+	return s.hasSequenceFunc(data)
 }
 
 // The following functions are used to check for specific encoding BOMs.
@@ -102,42 +102,42 @@ func isUTF16LE(buf []byte) bool {
 // Unknown represents an unknown or unrecognized encoding.
 // Having an Unknown encoding allows us to handle cases where
 // the encoding cannot be determined, providing a fallback option.
-var Unknown Encoding = &bomEncoding{
+var Unknown Encoding = bomEncoding{
 	encodingType:    "Unknown",
 	sequence:        nil, // Unknown encoding has no BOM sequence
 	hasSequenceFunc: func(data []byte) bool { return false },
 }
 
 // UTF8 represents the UTF-8 encoding.
-var UTF8 Encoding = &bomEncoding{
+var UTF8 Encoding = bomEncoding{
 	encodingType:    "UTF-8",
 	sequence:        []byte{0xEF, 0xBB, 0xBF}, // UTF-8 BOM sequence
 	hasSequenceFunc: isUTF8,
 }
 
 // UTF16BE represents the UTF-16 Big Endian encoding.
-var UTF16BE Encoding = &bomEncoding{
+var UTF16BE Encoding = bomEncoding{
 	encodingType:    "UTF-16 BE",
 	sequence:        []byte{0xFE, 0xFF}, // UTF-16 BE BOM sequence
 	hasSequenceFunc: isUTF16BE,
 }
 
 // UTF16LE represents the UTF-16 Little Endian encoding.
-var UTF16LE Encoding = &bomEncoding{
+var UTF16LE Encoding = bomEncoding{
 	encodingType:    "UTF-16 LE",
 	sequence:        []byte{0xFF, 0xFE}, // UTF-16 LE BOM sequence
 	hasSequenceFunc: isUTF16LE,
 }
 
 // UTF32BE represents the UTF-32 Big Endian encoding.
-var UTF32BE Encoding = &bomEncoding{
+var UTF32BE Encoding = bomEncoding{
 	encodingType:    "UTF-32 BE",
 	sequence:        []byte{0x00, 0x00, 0xFE, 0xFF}, // UTF-32 BE BOM sequence
 	hasSequenceFunc: isUTF32BE,
 }
 
 // UTF32LE represents the UTF-32 Little Endian encoding.
-var UTF32LE Encoding = &bomEncoding{
+var UTF32LE Encoding = bomEncoding{
 	encodingType:    "UTF-32 LE",
 	sequence:        []byte{0xFF, 0xFE, 0x00, 0x00}, // UTF-32 LE BOM sequence
 	hasSequenceFunc: isUTF32LE,

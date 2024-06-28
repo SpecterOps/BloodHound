@@ -84,7 +84,7 @@ func TestDetectBOMEncoding(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			result, err := DetectBOMEncoding(tt.input)
 			require.NoError(t, err)
-			assert.Equal(t, tt.expected, result, "DetectBOMEncoding() should return the correct encoding")
+			assert.Equal(t, tt.expected.String(), result.String(), "DetectBOMEncoding() should return the correct encoding")
 		})
 	}
 }
@@ -167,7 +167,7 @@ func TestNormalizeToUTF8(t *testing.T) {
 
 			require.NoError(t, err, "NormalizeToUTF8() should not return an error for valid input")
 			assert.Equal(t, tt.expected, result.NormalizedContent(), "NormalizedContent() should return the correct normalized content")
-			assert.Equal(t, tt.encFrom, result.NormalizedFrom(), "NormalizedFrom() should return the correct original encoding")
+			assert.Equal(t, tt.encFrom.String(), result.NormalizedFrom().String(), "NormalizedFrom() should return the correct original encoding")
 		})
 	}
 }
@@ -263,7 +263,7 @@ func TestNormalizeBytesToUTF8(t *testing.T) {
 
 			require.NoError(t, err, "NormalizeBytesToUTF8() should not return an error for valid input")
 			assert.Equal(t, tt.expected, result.NormalizedContent(), "NormalizedContent() should return the correct normalized content")
-			assert.Equal(t, tt.enc, result.NormalizedFrom(), "NormalizedFrom() should return the correct original encoding")
+			assert.Equal(t, tt.enc.String(), result.NormalizedFrom().String(), "NormalizedFrom() should return the correct original encoding")
 		})
 	}
 }
@@ -333,7 +333,7 @@ func TestNormalizeToUTF8_LargeInput(t *testing.T) {
 				return
 			}
 
-			assert.Equal(t, tt.encFrom, result.NormalizedFrom(), "NormalizedFrom() should return the correct original encoding")
+			assert.Equal(t, tt.encFrom.String(), result.NormalizedFrom().String(), "NormalizedFrom() should return the correct original encoding")
 
 			if !bytes.Equal(tt.expected, result.NormalizedContent()) {
 				t.Errorf("NormalizedContent() = %v, want %v", result.NormalizedContent(), tt.expected)

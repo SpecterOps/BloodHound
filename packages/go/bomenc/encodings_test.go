@@ -38,11 +38,11 @@ func TestEncodingInterface(t *testing.T) {
 	for _, tt := range encodings {
 		t.Run(tt.name, func(t *testing.T) {
 			assert.NotEmpty(t, tt.encoding.String(), "Encoding String() should not be empty")
-			if tt.encoding != Unknown {
+			if tt.encoding.String() != Unknown.String() {
 				assert.NotEmpty(t, tt.encoding.Sequence(), "Encoding Sequence() should not be empty for non-Unknown encodings")
 			}
 			// Test HasSequence method
-			if tt.encoding != Unknown {
+			if tt.encoding.String() != Unknown.String() {
 				assert.True(t, tt.encoding.HasSequence(tt.encoding.Sequence()), "HasSequence() should return true for its own sequence")
 			}
 		})
@@ -98,7 +98,7 @@ func TestEncodingValues(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			assert.Equal(t, tt.expectedType, tt.encoding.String(), "Encoding type should match")
 			assert.Equal(t, tt.expectedSeq, tt.encoding.Sequence(), "Encoding sequence should match")
-			if tt.encoding != Unknown {
+			if tt.encoding.String() != Unknown.String() {
 				assert.True(t, tt.encoding.HasSequence(tt.expectedSeq), "HasSequence() should return true for the expected sequence")
 			}
 		})
@@ -186,7 +186,7 @@ func TestEncodingEquality(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			assert.Equal(t, tc.expected, tc.enc1 == tc.enc2, "Encoding equality check should be correct")
+			assert.Equal(t, tc.expected, tc.enc1.String() == tc.enc2.String(), "Encoding equality check should be correct")
 		})
 	}
 }
