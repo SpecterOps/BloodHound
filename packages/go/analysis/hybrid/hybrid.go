@@ -22,7 +22,6 @@ import (
 	"fmt"
 
 	"github.com/specterops/bloodhound/analysis"
-	"github.com/specterops/bloodhound/analysis/ad"
 	"github.com/specterops/bloodhound/analysis/azure"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/dawgs/ops"
@@ -35,18 +34,9 @@ import (
 )
 
 func PostHybrid(ctx context.Context, db graph.Database) (*analysis.AtomicPostProcessingStats, error) {
-	defer log.Measure(log.LevelInfo, "Hybrid Post Processing")()
-
-	log.Infof("Running Hybrid Post Processing")
-
 	tenants, err := azure.FetchTenants(ctx, db)
 	if err != nil {
 		return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("fetching Entra tenants: %w", err)
-	}
-
-	domains, err := ad.FetchAllDomains(ctx, db)
-	if err != nil {
-		return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("fetching AD domains: %w", err)
 	}
 
 	operation := analysis.NewPostRelationshipOperation(ctx, db, "Hybrid Attack Paths Post Processing")
@@ -78,21 +68,17 @@ func PostHybrid(ctx context.Context, db graph.Database) (*analysis.AtomicPostPro
 			}
 		}
 
-		for _, domain := range domains {
-			if domainUsers, err := fetchADUsers(tx, domain); err != nil {
-				return err
-			} else if len(domainUsers) == 0 {
-				continue
-			} else {
-				for _, adUser := range domainUsers {
-					if objectID, err := adUser.Properties.Get(common.ObjectID.String()).String(); err != nil {
-						return err
-					} else if azUsers, ok := adObjIDMap[objectID]; !ok {
-						continue
-					} else {
-						for _, azUser := range azUsers {
-							azToADMap[azUser] = adUser.ID
-						}
+		if adUsers, err := fetchADUsers(tx); err != nil {
+			return err
+		} else {
+			for _, adUser := range adUsers {
+				if objectID, err := adUser.Properties.Get(common.ObjectID.String()).String(); err != nil {
+					return err
+				} else if azUsers, ok := adObjIDMap[objectID]; !ok {
+					continue
+				} else {
+					for _, azUser := range azUsers {
+						azToADMap[azUser] = adUser.ID
 					}
 				}
 			}
@@ -190,12 +176,10 @@ func fetchAZUsers(tx graph.Transaction, root *graph.Node) (graph.NodeSet, error)
 	}))
 }
 
-func fetchADUsers(tx graph.Transaction, root *graph.Node) (graph.NodeSet, error) {
-	return ops.FetchEndNodes(tx.Relationships().Filterf(func() graph.Criteria {
+func fetchADUsers(tx graph.Transaction) ([]*graph.Node, error) {
+	return ops.FetchNodes(tx.Nodes().Filterf(func() graph.Criteria {
 		return query.And(
-			query.InIDs(query.StartID(), root.ID),
-			query.Kind(query.Relationship(), adSchema.Contains),
-			query.KindIn(query.End(), adSchema.User),
+			query.Kind(query.Node(), adSchema.User),
 		)
 	}))
 }

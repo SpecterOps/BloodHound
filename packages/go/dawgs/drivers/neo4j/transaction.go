@@ -253,7 +253,7 @@ func (s *neo4jTransaction) createNode(properties *graph.Properties, kinds ...gra
 	} else if result := s.Raw(statement, queryBuilder.Parameters); result.Error() != nil {
 		return nil, result.Error()
 	} else if !result.Next() {
-		return nil, graph.ErrNoResultsFound
+		return nil, result.Error()
 	} else {
 		var node graph.Node
 		return &node, result.Scan(&node)
