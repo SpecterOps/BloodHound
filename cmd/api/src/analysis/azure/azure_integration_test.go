@@ -861,7 +861,7 @@ func TestHybridAttackPaths(t *testing.T) {
 			operation := analysis.NewPostRelationshipOperation(context.Background(), db, "Hybrid Attack Path Post Process Test")
 
 			if _, err := hybrid.PostHybrid(context.Background(), db); err != nil {
-				t.Logf("failed post processing for hybrid attack paths: %v", err)
+				t.Fatalf("failed post processing for hybrid attack paths: %v", err)
 			}
 
 			operation.Done()
