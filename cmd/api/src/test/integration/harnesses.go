@@ -6929,7 +6929,7 @@ type HybridAttackPaths struct {
 	ADUserID string
 }
 
-func (s *HybridAttackPaths) Setup(graphTestContext *GraphTestContext) {
+func (s *HybridAttackPaths) Setup(graphTestContext *GraphTestContext, skipCreateADUser bool) {
 	azUserObjectID := RandomObjectID(graphTestContext.testCtx)
 	adUserObjectID := RandomObjectID(graphTestContext.testCtx)
 	tenantID := RandomObjectID(graphTestContext.testCtx)
@@ -6945,18 +6945,22 @@ func (s *HybridAttackPaths) Setup(graphTestContext *GraphTestContext) {
 		azure.OnPremSyncEnabled: true,
 		azure.OnPremID:          adUserObjectID,
 	})
-	adUserProperties := graph.AsProperties(graph.PropertyMap{
-		common.Name:     HarnessUserName,
-		common.ObjectID: adUserObjectID,
-		ad.DomainSID:    domainSid,
-	})
 
 	s.AZTenant = graphTestContext.NewAzureTenant(tenantID)
 	s.AZUser = graphTestContext.NewCustomAzureUser(azureUserProps)
 	s.AZUserID = azUserObjectID
-	s.ADUser = graphTestContext.NewCustomActiveDirectoryUser(adUserProperties)
 	s.ADUserID = adUserObjectID
 	graphTestContext.NewRelationship(s.AZTenant, s.AZUser, azure.Contains)
+
+	if !skipCreateADUser {
+		adUserProperties := graph.AsProperties(graph.PropertyMap{
+			common.Name:     HarnessUserName,
+			common.ObjectID: adUserObjectID,
+			ad.DomainSID:    domainSid,
+		})
+
+		s.ADUser = graphTestContext.NewCustomActiveDirectoryUser(adUserProperties)
+	}
 }
 
 type HarnessDetails struct {
