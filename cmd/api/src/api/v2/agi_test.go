@@ -417,7 +417,13 @@ func TestResources_CreateAssetGroup(t *testing.T) {
 		WithBody(jsonBody).
 		OnHandlerFunc(resources.CreateAssetGroup).
 		Require().
-		ResponseStatusCode(http.StatusBadRequest)
+		ResponseStatusCode(http.StatusBadRequest).		
+		ResponseJSONBody(api.ErrorWrapper{
+			HTTPStatus: http.StatusBadRequest,
+			Errors: []api.ErrorDetails{{
+				Message: api.ErrorResponseAGNameTagEmpty,
+			}},
+		})
 
 	// Empty asset group tag
 	jsonBody, err = json.Marshal(v2.CreateAssetGroupRequest{Name: "Valid Name", Tag: ""})
@@ -430,7 +436,13 @@ func TestResources_CreateAssetGroup(t *testing.T) {
 		WithBody(jsonBody).
 		OnHandlerFunc(resources.CreateAssetGroup).
 		Require().
-		ResponseStatusCode(http.StatusBadRequest)
+		ResponseStatusCode(http.StatusBadRequest).		
+		ResponseJSONBody(api.ErrorWrapper{
+			HTTPStatus: http.StatusBadRequest,
+			Errors: []api.ErrorDetails{{
+				Message: api.ErrorResponseAGNameTagEmpty,
+			}},
+		})
 
 	// Whitespace in asset group tag must error
 	jsonBody, err = json.Marshal(v2.CreateAssetGroupRequest{Tag: "one space"})
