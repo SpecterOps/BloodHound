@@ -99,7 +99,7 @@ func PostSyncLAPSPassword(ctx context.Context, db graph.Database, groupExpansion
 	}
 }
 
-func PostDCSync(ctx context.Context, db graph.Database) (*analysis.AtomicPostProcessingStats, error) {
+func PostDCSync(ctx context.Context, db graph.Database, groupExpansions impact.PathAggregator) (*analysis.AtomicPostProcessingStats, error) {
 	if domainNodes, err := fetchCollectedDomainNodes(ctx, db); err != nil {
 		return &analysis.AtomicPostProcessingStats{}, err
 	} else {
@@ -108,22 +108,19 @@ func PostDCSync(ctx context.Context, db graph.Database) (*analysis.AtomicPostPro
 		for _, domain := range domainNodes {
 			innerDomain := domain
 			operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
-				if dcSyncers, err := analysis.GetDCSyncers(tx, innerDomain); err != nil {
+				if dcSyncers, err := getDCSyncers(tx, innerDomain, groupExpansions); err != nil {
 					return err
-				} else if len(dcSyncers) == 0 {
+				} else if dcSyncers.Cardinality() == 0 {
 					return nil
 				} else {
-					for _, dcSyncer := range dcSyncers {
-						nextJob := analysis.CreatePostRelationshipJob{
-							FromID: dcSyncer.ID,
+					dcSyncers.Each(func(value uint32) bool {
+						channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
+							FromID: graph.ID(value),
 							ToID:   innerDomain.ID,
 							Kind:   ad.DCSync,
-						}
-
-						if !channels.Submit(ctx, outC, nextJob) {
-							return nil
-						}
-					}
+						})
+						return true
+					})
 
 					return nil
 				}
@@ -195,6 +192,23 @@ func getLAPSSyncers(tx graph.Transaction, domain *graph.Node, groupExpansions im
 		return nil, err
 	} else {
 		results := CalculateCrossProductNodeSets(groupExpansions, getChangesNodes.Slice(), getChangesFilteredNodes.Slice())
+
+		return results, nil
+	}
+}
+
+func getDCSyncers(tx graph.Transaction, domain *graph.Node, groupExpansions impact.PathAggregator) (cardinality.Duplex[uint32], error) {
+	var (
+		getChangesQuery    = analysis.FromEntityToEntityWithRelationshipKind(tx, domain, ad.GetChanges)
+		getChangesAllQuery = analysis.FromEntityToEntityWithRelationshipKind(tx, domain, ad.GetChangesAll)
+	)
+
+	if getChangesNodes, err := ops.FetchStartNodes(getChangesQuery); err != nil {
+		return nil, err
+	} else if getChangesAllNodes, err := ops.FetchStartNodes(getChangesAllQuery); err != nil {
+		return nil, err
+	} else {
+		results := CalculateCrossProductNodeSets(groupExpansions, getChangesNodes.Slice(), getChangesAllNodes.Slice())
 
 		return results, nil
 	}

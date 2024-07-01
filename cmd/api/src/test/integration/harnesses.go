@@ -6921,6 +6921,47 @@ func (s *SyncLAPSPasswordHarness) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.NewRelationship(s.User6, s.Group4, ad.MemberOf)
 }
 
+type DCSyncHarness struct {
+	Domain1 *graph.Node
+
+	Group1 *graph.Node
+	Group2 *graph.Node
+	Group3 *graph.Node
+
+	User1 *graph.Node
+	User2 *graph.Node
+	User3 *graph.Node
+	User4 *graph.Node
+}
+
+func (s *DCSyncHarness) Setup(graphTestContext *GraphTestContext) {
+	domainSID := RandomDomainSID()
+
+	s.Domain1 = graphTestContext.NewActiveDirectoryDomain("Domain1", domainSID, false, true)
+
+	s.Group1 = graphTestContext.NewActiveDirectoryGroup("Group1", domainSID)
+	s.Group2 = graphTestContext.NewActiveDirectoryGroup("Group2", domainSID)
+	s.Group3 = graphTestContext.NewActiveDirectoryGroup("Group3", domainSID)
+
+	s.User1 = graphTestContext.NewActiveDirectoryUser("User1", domainSID, false)
+	s.User2 = graphTestContext.NewActiveDirectoryUser("User2", domainSID, false)
+	s.User3 = graphTestContext.NewActiveDirectoryUser("User3", domainSID, false)
+	s.User4 = graphTestContext.NewActiveDirectoryUser("User4", domainSID, false)
+
+	graphTestContext.NewRelationship(s.User2, s.Group1, ad.MemberOf)
+	graphTestContext.NewRelationship(s.User2, s.Group2, ad.MemberOf)
+	graphTestContext.NewRelationship(s.User3, s.Group2, ad.MemberOf)
+	graphTestContext.NewRelationship(s.User4, s.Group3, ad.MemberOf)
+	graphTestContext.NewRelationship(s.Group3, s.Group2, ad.MemberOf)
+
+	graphTestContext.NewRelationship(s.Group1, s.Domain1, ad.GetChanges)
+	graphTestContext.NewRelationship(s.User1, s.Domain1, ad.GetChanges)
+	graphTestContext.NewRelationship(s.Group3, s.Domain1, ad.GetChanges)
+
+	graphTestContext.NewRelationship(s.User1, s.Domain1, ad.GetChangesAll)
+	graphTestContext.NewRelationship(s.Group2, s.Domain1, ad.GetChangesAll)
+}
+
 type HarnessDetails struct {
 	RDP                                             RDPHarness
 	RDPB                                            RDPHarness2
@@ -7000,5 +7041,6 @@ type HarnessDetails struct {
 	ESC13Harness1                                   ESC13Harness1
 	ESC13Harness2                                   ESC13Harness2
 	ESC13HarnessECA                                 ESC13HarnessECA
+	DCSyncHarness                                   DCSyncHarness
 	SyncLAPSPasswordHarness                         SyncLAPSPasswordHarness
 }
