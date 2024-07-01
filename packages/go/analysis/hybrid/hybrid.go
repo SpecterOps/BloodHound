@@ -43,13 +43,17 @@ func PostHybrid(ctx context.Context, db graph.Database) (*analysis.AtomicPostPro
 
 	err = db.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		var (
-			azObjIDMap = make(map[graph.ID]string, 1024)
+			// entraObjIDMap is used to index AD user objectids by Entra node ids
+			entraObjIDMap = make(map[graph.ID]string, 1024)
+			// adObjIDMap is used as a reverse mapping of a list of Entra node ids indexed by the AD user objectids
 			adObjIDMap = make(map[string][]graph.ID, 1024)
-			azToADMap  = make(map[graph.ID]graph.ID, 1024)
+			// entraToADMap is the final mapping between an Entra user node id to an AD user node id
+			entraToADMap = make(map[graph.ID]graph.ID, 1024)
 		)
 
+		// Work on Entra users by their tenant association
 		for _, tenant := range tenants {
-			if tenantUsers, err := fetchAZUsers(tx, tenant); err != nil {
+			if tenantUsers, err := fetchEntraUsers(tx, tenant); err != nil {
 				return err
 			} else if len(tenantUsers) == 0 {
 				continue
@@ -60,14 +64,19 @@ func PostHybrid(ctx context.Context, db graph.Database) (*analysis.AtomicPostPro
 					} else if err != nil {
 						return err
 					} else {
+						// We know this user has an onPrem counterpart, so add the node id and onPremID to our three maps
 						adObjIDMap[onPremID] = append(adObjIDMap[onPremID], tenantUser.ID)
-						azObjIDMap[tenantUser.ID] = onPremID
-						azToADMap[tenantUser.ID] = 0
+						entraObjIDMap[tenantUser.ID] = onPremID
+						// Initialize the current user id as an index in the entraToADMap, but use 0 as the nodeid for AD since we
+						// currently don't know it and 0 is never going to be a valid user node id
+						entraToADMap[tenantUser.ID] = 0
 					}
 				}
 			}
 		}
 
+		// Because there's a chance for AD users to exist in the graph without having a valid domain node linked to them,
+		// we need to grab all of them directly, unlike Entra
 		if adUsers, err := fetchADUsers(tx); err != nil {
 			return err
 		} else {
@@ -77,19 +86,22 @@ func PostHybrid(ctx context.Context, db graph.Database) (*analysis.AtomicPostPro
 				} else if azUsers, ok := adObjIDMap[objectID]; !ok {
 					continue
 				} else {
+					// Because there could theoretically be more than one Entra user mapped to this objectid, we want to loop through all when adding our current id to the final map
 					for _, azUser := range azUsers {
-						azToADMap[azUser] = adUser.ID
+						entraToADMap[azUser] = adUser.ID
 					}
 				}
 			}
 		}
 
 		if err := operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
-			for azUser, potentialADUser := range azToADMap {
+			for azUser, potentialADUser := range entraToADMap {
 				var adUser = potentialADUser
 
+				// The 0 value should never be a valid id for an AD user node, just by the nature of the graph, so we're cheating
+				// by checking if we set it to 0 as a flag that this node was never actually found, meaning it needs to be created first
 				if potentialADUser == 0 {
-					if adUserNode, err := createMissingAdUser(ctx, db, azObjIDMap[azUser]); err != nil {
+					if adUserNode, err := createMissingADUser(ctx, db, entraObjIDMap[azUser]); err != nil {
 						return err
 					} else {
 						adUser = adUserNode.ID
@@ -125,6 +137,8 @@ func PostHybrid(ctx context.Context, db graph.Database) (*analysis.AtomicPostPro
 		return tx.Commit()
 	})
 
+	// Because we need to close the operation either way at this stage, we attempt to close it and then report either or
+	// both errors in one line
 	if opErr := operation.Done(); opErr != nil || err != nil {
 		return &operation.Stats, fmt.Errorf("marking operation as done: %w; transaction error (if any): %v", opErr, err)
 	}
@@ -132,6 +146,8 @@ func PostHybrid(ctx context.Context, db graph.Database) (*analysis.AtomicPostPro
 	return &operation.Stats, nil
 }
 
+// hasOnPremUser takes a node and returns the OnPremID as a string, whether the node has an onPrem user defined as a bool
+// and any errors in negotiation of the required properties
 func hasOnPremUser(node *graph.Node) (string, bool, error) {
 	if onPremSyncEnabled, err := node.Properties.Get(azureSchema.OnPremSyncEnabled.String()).Bool(); errors.Is(err, graph.ErrPropertyNotFound) {
 		return "", false, nil
@@ -146,7 +162,8 @@ func hasOnPremUser(node *graph.Node) (string, bool, error) {
 	}
 }
 
-func createMissingAdUser(ctx context.Context, db graph.Database, objectID string) (*graph.Node, error) {
+// createMissingADUser will create a new standalone AD User node with the required objectID for displaying in hybrid graphs
+func createMissingADUser(ctx context.Context, db graph.Database, objectID string) (*graph.Node, error) {
 	var (
 		err     error
 		newNode *graph.Node
@@ -165,8 +182,8 @@ func createMissingAdUser(ctx context.Context, db graph.Database, objectID string
 	return newNode, err
 }
 
-// TODO: decide which direction we're going, whether to grab all users with onPrem or iterate over each tenant
-func fetchAZUsers(tx graph.Transaction, root *graph.Node) (graph.NodeSet, error) {
+// fetchEntraUsers fetches all the Entra users for a given root node (generally the tenant node)
+func fetchEntraUsers(tx graph.Transaction, root *graph.Node) (graph.NodeSet, error) {
 	return ops.FetchEndNodes(tx.Relationships().Filterf(func() graph.Criteria {
 		return query.And(
 			query.InIDs(query.StartID(), root.ID),
@@ -176,6 +193,7 @@ func fetchAZUsers(tx graph.Transaction, root *graph.Node) (graph.NodeSet, error)
 	}))
 }
 
+// fetchADUsers gets all AD Users in the graph
 func fetchADUsers(tx graph.Transaction) ([]*graph.Node, error) {
 	return ops.FetchNodes(tx.Nodes().Filterf(func() graph.Criteria {
 		return query.And(
