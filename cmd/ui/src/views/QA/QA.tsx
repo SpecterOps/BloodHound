@@ -18,9 +18,9 @@ import { Alert, AlertTitle, Box, Grid, Link, Typography } from '@mui/material';
 import {
     ActiveDirectoryPlatformInfo,
     AzurePlatformInfo,
-    ContentPage,
     DataSelector,
     DomainInfo,
+    PageWithTitle,
     TenantInfo,
 } from 'bh-shared-ui';
 import { useEffect, useState } from 'react';
@@ -60,10 +60,15 @@ const QualityAssurance: React.FC = () => {
 
     if (!contextType || (!contextId && (contextType === 'active-directory' || contextType === 'azure'))) {
         return (
-            <ContentPage
+            <PageWithTitle
                 title='Data Quality'
                 data-testid='data-quality'
-                actionButton={
+                pageDescription={
+                    <Typography variant='body2' paragraph>
+                        Understand the data collected within BloodHound broken down by environment and principal type.
+                    </Typography>
+                }>
+                <Box display='flex' justifyContent='flex-end' alignItems='center' minHeight='24px' mb={2}>
                     <DataSelector
                         value={{
                             type: contextType,
@@ -75,26 +80,26 @@ const QualityAssurance: React.FC = () => {
                             setContextId(id);
                         }}
                     />
-                }>
-                <Typography variant='body1'>
-                    <p>
-                        Understand the data collected within BloodHound broken down by environment and principal type.
-                    </p>
-                </Typography>
+                </Box>
                 <Alert severity='info'>
                     <AlertTitle>No Domain or Tenant Selected</AlertTitle>
                     Select a domain or tenant to view data. If you are unable to select a domain, you may need to run
                     data collection first. {dataCollectionMessage}
                 </Alert>
-            </ContentPage>
+            </PageWithTitle>
         );
     }
 
     return (
-        <ContentPage
+        <PageWithTitle
             title='Data Quality'
             data-testid='data-quality'
-            actionButton={
+            pageDescription={
+                <Typography variant='body2' paragraph>
+                    Understand the data collected within BloodHound broken down by environment and principal type.
+                </Typography>
+            }>
+            <Box display='flex' justifyContent='flex-end' alignItems='center' minHeight='24px' mb={2}>
                 <DataSelector
                     value={{
                         type: contextType,
@@ -106,7 +111,7 @@ const QualityAssurance: React.FC = () => {
                         setContextId(id);
                     }}
                 />
-            }>
+            </Box>
             {dataError && (
                 <Box paddingBottom={2}>
                     <Alert severity='warning'>
@@ -128,7 +133,7 @@ const QualityAssurance: React.FC = () => {
                     {getStatsComponent()}
                 </Grid>
             </Grid>
-        </ContentPage>
+        </PageWithTitle>
     );
 };
 

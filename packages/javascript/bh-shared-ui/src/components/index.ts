@@ -32,9 +32,6 @@ export { default as CommunityIcon } from './CommunityIcon';
 export * from './ConfirmationDialog';
 export { default as ConfirmationDialog } from './ConfirmationDialog';
 
-export * from './ContentPage';
-export { default as ContentPage } from './ContentPage';
-
 export * from './CreateSAMLProviderDialog';
 export { default as CreateSAMLProviderDialog } from './CreateSAMLProviderDialog';
 
@@ -146,3 +143,6 @@ export { default as FileIngest } from './FileIngest';
 
 export * from './WebGLDisabledAlert';
 export { default as WebGLDisabledAlert } from './WebGLDisabledAlert';
+
+export * from './DocumentationLinks';
+export { default as DocumentationLinks } from './DocumentationLinks';

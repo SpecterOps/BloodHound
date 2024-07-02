@@ -560,7 +560,7 @@ func applyTimeoutReduction(queryWeight int64, availableRuntime time.Duration) (t
 
 func nodeToSearchResult(node *graph.Node) model.SearchResult {
 	var (
-		name, _              = node.Properties.GetOrDefault(common.Name.String(), "NO NAME").String()
+		name, _              = node.Properties.GetWithFallback(common.Name.String(), "NO NAME", common.DisplayName.String(), common.ObjectID.String()).String()
 		objectID, _          = node.Properties.GetOrDefault(common.ObjectID.String(), "NO OBJECT ID").String()
 		distinguishedName, _ = node.Properties.GetOrDefault(ad.DistinguishedName.String(), "").String()
 		systemTags, _        = node.Properties.GetOrDefault(common.SystemTags.String(), "").String()

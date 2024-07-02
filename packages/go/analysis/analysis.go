@@ -194,51 +194,6 @@ func ExpandGroupMembershipPaths(tx graph.Transaction, candidates graph.NodeSet) 
 	return groupMemberPaths, nil
 }
 
-func ExpandGroupMembership(tx graph.Transaction, candidates graph.NodeSet) (graph.NodeSet, error) {
-	if paths, err := ExpandGroupMembershipPaths(tx, candidates); err != nil {
-		return nil, err
-	} else {
-		return paths.AllNodes(), nil
-	}
-}
-
-func GetDCSyncers(tx graph.Transaction, domain *graph.Node) ([]*graph.Node, error) {
-	var (
-		getChangesQuery    = FromEntityToEntityWithRelationshipKind(tx, domain, ad.GetChanges)
-		getChangesAllQuery = FromEntityToEntityWithRelationshipKind(tx, domain, ad.GetChangesAll)
-	)
-
-	if getChangesNodes, err := ops.FetchStartNodes(getChangesQuery); err != nil {
-		return nil, err
-	} else if getChangesNodeMembers, err := ExpandGroupMembership(tx, getChangesNodes); err != nil {
-		return nil, err
-	} else if getChangesAllNodes, err := ops.FetchStartNodes(getChangesAllQuery); err != nil {
-		return nil, err
-	} else if getChangesAllNodeMembers, err := ExpandGroupMembership(tx, getChangesAllNodes); err != nil {
-		return nil, err
-	} else {
-		// Collect and filter the bitmap
-		getChangesNodes.AddSet(getChangesNodeMembers)
-		getChangesAllNodes.AddSet(getChangesAllNodeMembers)
-
-		dcSyncerBitmap := graph.NodeSetToBitmap(getChangesNodes)
-		dcSyncerBitmap.And(graph.NodeSetToBitmap(getChangesAllNodes))
-
-		var (
-			nodeIDs = dcSyncerBitmap.ToArray()
-			nodes   = make([]*graph.Node, len(nodeIDs))
-		)
-
-		for idx, rawID := range dcSyncerBitmap.ToArray() {
-			// Since the bitmap is an intersection of both node sets each set is guaranteed to have a valid reference
-			// to the node
-			nodes[idx] = getChangesNodes.Get(graph.ID(int64(rawID)))
-		}
-
-		return nodes, nil
-	}
-}
-
 func FromEntityToEntityWithRelationshipKind(tx graph.Transaction, target *graph.Node, relKind graph.Kind) graph.RelationshipQuery {
 	return tx.Relationships().Filterf(func() graph.Criteria {
 		filters := []graph.Criteria{

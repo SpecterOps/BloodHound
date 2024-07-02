@@ -70,7 +70,14 @@ const UserProfile = () => {
 
     if (getSelfQuery.isLoading) {
         return (
-            <PageWithTitle title='My Profile' data-testid='my-profile'>
+            <PageWithTitle
+                title='My Profile'
+                data-testid='my-profile'
+                pageDescription={
+                    <Typography variant='body2' paragraph>
+                        Review and manage your user account.
+                    </Typography>
+                }>
                 <Typography variant='h2'>User Information</Typography>
                 <Box p={4} textAlign='center'>
                     <CircularProgress />
@@ -81,7 +88,14 @@ const UserProfile = () => {
 
     if (getSelfQuery.isError) {
         return (
-            <PageWithTitle title='My Profile' data-testid='my-profile'>
+            <PageWithTitle
+                title='My Profile'
+                data-testid='my-profile'
+                pageDescription={
+                    <Typography variant='body2' paragraph>
+                        Review and manage your user account.
+                    </Typography>
+                }>
                 <Typography variant='h2'>User Information</Typography>
 
                 <Alert severity='error'>
@@ -98,7 +112,14 @@ const UserProfile = () => {
 
     return (
         <>
-            <PageWithTitle title='My Profile' data-testid='my-profile'>
+            <PageWithTitle
+                title='My Profile'
+                data-testid='my-profile'
+                pageDescription={
+                    <Typography variant='body2' paragraph>
+                        Review and manage your user account.
+                    </Typography>
+                }>
                 <Typography variant='h2'>User Information</Typography>
 
                 <Grid container spacing={2} alignItems='center'>

@@ -25,7 +25,8 @@ CREATE TABLE IF NOT EXISTS datapipe_status (
 INSERT INTO
     datapipe_status (status, updated_at)
 VALUES
-    ('idle', NOW ());
+    ('idle', NOW ())
+ON CONFLICT DO NOTHING;
 
 ALTER TABLE user_sessions
-    ADD COLUMN flags jsonb;
+    ADD COLUMN IF NOT EXISTS flags jsonb;
