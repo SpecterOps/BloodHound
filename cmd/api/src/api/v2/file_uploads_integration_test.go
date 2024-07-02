@@ -23,11 +23,12 @@ import (
 	"bytes"
 	"compress/gzip"
 	"fmt"
-	"github.com/specterops/bloodhound/mediatypes"
-	"github.com/specterops/bloodhound/src/services/fileupload"
 	"io"
 	"net/http"
 	"testing"
+
+	"github.com/specterops/bloodhound/bomenc"
+	"github.com/specterops/bloodhound/mediatypes"
 
 	"github.com/specterops/bloodhound/headers"
 	"github.com/specterops/bloodhound/src/api/v2/integration"
@@ -169,7 +170,7 @@ func Test_FileUploadWorkFlowVersion5(t *testing.T) {
 		"v5/ingest/sessions.json",
 	})
 
-	//Assert that we created stuff we expected
+	// Assert that we created stuff we expected
 	testCtx.AssertIngest(fixtures.IngestAssertions)
 }
 
@@ -188,7 +189,7 @@ func Test_FileUploadWorkFlowVersion6(t *testing.T) {
 		"v6/ingest/sessions.json",
 	})
 
-	//Assert that we created stuff we expected
+	// Assert that we created stuff we expected
 	testCtx.AssertIngest(fixtures.IngestAssertions)
 	testCtx.AssertIngest(fixtures.IngestAssertionsv6)
 	testCtx.AssertIngest(fixtures.PropertyAssertions)
@@ -239,7 +240,7 @@ func Test_CompressedFileUploadWorkFlowVersion5(t *testing.T) {
 		"v5/ingest/sessions.json",
 	})
 
-	//Assert that we created stuff we expected
+	// Assert that we created stuff we expected
 	testCtx.AssertIngest(fixtures.IngestAssertions)
 	testCtx.AssertIngest(fixtures.PropertyAssertions)
 }
@@ -259,7 +260,7 @@ func Test_CompressedFileUploadWorkFlowVersion6(t *testing.T) {
 		"v6/ingest/sessions.json",
 	})
 
-	//Assert that we created stuff we expected
+	// Assert that we created stuff we expected
 	testCtx.AssertIngest(fixtures.IngestAssertions)
 	testCtx.AssertIngest(fixtures.IngestAssertionsv6)
 	testCtx.AssertIngest(fixtures.PropertyAssertions)
@@ -268,5 +269,5 @@ func Test_CompressedFileUploadWorkFlowVersion6(t *testing.T) {
 func Test_BadFileUploadError(t *testing.T) {
 	testCtx := integration.NewFOSSContext(t)
 
-	testCtx.SendInvalidFileIngest("v6/ingest/jker.jpg", fileupload.ErrInvalidJSON)
+	testCtx.SendInvalidFileIngest("v6/ingest/jker.jpg", bomenc.ErrUnknownEncodingInvalidUTF8)
 }
