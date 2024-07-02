@@ -6922,40 +6922,37 @@ func (s *SyncLAPSPasswordHarness) Setup(graphTestContext *GraphTestContext) {
 }
 
 type HybridAttackPaths struct {
-	AZTenant *graph.Node
-	AZUser   *graph.Node
-	AZUserID string
-	ADUser   *graph.Node
-	ADUserID string
+	AZTenant       *graph.Node
+	ADUser         *graph.Node
+	ADUserObjectID string
+	AZUser         *graph.Node
+	AZUserObjectID string
 }
 
-func (s *HybridAttackPaths) Setup(graphTestContext *GraphTestContext, skipCreateADUser bool) {
-	azUserObjectID := RandomObjectID(graphTestContext.testCtx)
-	adUserObjectID := RandomObjectID(graphTestContext.testCtx)
+func (s *HybridAttackPaths) Setup(graphTestContext *GraphTestContext, adUserObjectID string, azUserOnPremID string, onPremSyncEnabled bool, createADUser bool) {
+	s.ADUserObjectID = adUserObjectID
 	tenantID := RandomObjectID(graphTestContext.testCtx)
 	domainSid := RandomDomainSID()
 	azureUserProps := graph.AsProperties(graph.PropertyMap{
 		common.Name:             HarnessUserName,
 		azure.UserPrincipalName: HarnessUserName,
 		common.Description:      HarnessUserDescription,
-		common.ObjectID:         azUserObjectID,
+		common.ObjectID:         s.AZUserObjectID,
 		azure.Licenses:          HarnessUserLicenses,
 		azure.MFAEnabled:        HarnessUserMFAEnabled,
 		azure.TenantID:          tenantID,
-		azure.OnPremSyncEnabled: true,
-		azure.OnPremID:          adUserObjectID,
+		azure.OnPremSyncEnabled: onPremSyncEnabled,
+		azure.OnPremID:          azUserOnPremID,
 	})
 
 	s.AZTenant = graphTestContext.NewAzureTenant(tenantID)
 	s.AZUser = graphTestContext.NewCustomAzureUser(azureUserProps)
-	s.AZUserID = azUserObjectID
-	s.ADUserID = adUserObjectID
 	graphTestContext.NewRelationship(s.AZTenant, s.AZUser, azure.Contains)
 
-	if !skipCreateADUser {
+	if createADUser {
 		adUserProperties := graph.AsProperties(graph.PropertyMap{
 			common.Name:     HarnessUserName,
-			common.ObjectID: adUserObjectID,
+			common.ObjectID: s.ADUserObjectID,
 			ad.DomainSID:    domainSid,
 		})
 

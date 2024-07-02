@@ -21,9 +21,13 @@ import (
 func TestHybridAttackPaths(t *testing.T) {
 	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
 
+	// ADUser.ObjectID matches AZUser.OnPremID, AZUser.OnPremSyncEnabled is true
+	// SyncedToEntraUser and SyncedToADUser edges should be created and link the two nodes
 	testContext.DatabaseTestWithSetup(
 		func(harness *integration.HarnessDetails) error {
-			harness.HybridAttackPaths.Setup(testContext, false)
+			adUserObjectID := integration.RandomObjectID(t)
+			azUserOnPremID := adUserObjectID
+			harness.HybridAttackPaths.Setup(testContext, adUserObjectID, azUserOnPremID, true, true)
 			return nil
 		},
 		func(harness integration.HarnessDetails, db graph.Database) {
@@ -32,144 +36,194 @@ func TestHybridAttackPaths(t *testing.T) {
 			if _, err := hybrid.PostHybrid(context.Background(), db); err != nil {
 				t.Fatalf("failed post processing for hybrid attack paths: %v", err)
 			}
-
 			operation.Done()
 
-			// Verify the SyncedToADUser edge
-			db.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
-				syncedToADUserEdges, err := ops.FetchRelationships(tx.Relationships().Filterf(func() graph.Criteria {
-					return query.Kind(query.Relationship(), azure.SyncedToADUser)
-				}))
-				assert.Nil(t, err)
-				assert.Len(t, syncedToADUserEdges, 1)
+			verifyHybridPaths(t, db, harness, true)
+		},
+	)
 
-				for _, edge := range syncedToADUserEdges {
-					start, end, err := ops.FetchRelationshipNodes(tx, edge)
-					assert.Nil(t, err)
+	// ADUser.ObjectID do NOT match as AZUser.OnPremID is null, AZUser.OnPremSyncEnabled is false
+	// SyncedToEntraUser and SyncedToADUser edges should NOT be created
+	testContext.DatabaseTestWithSetup(
+		func(harness *integration.HarnessDetails) error {
+			adUserObjectID := integration.RandomObjectID(t)
+			azUserOnPremID := ""
+			harness.HybridAttackPaths.Setup(testContext, adUserObjectID, azUserOnPremID, false, true)
+			return nil
+		},
+		func(harness integration.HarnessDetails, db graph.Database) {
+			operation := analysis.NewPostRelationshipOperation(context.Background(), db, "Hybrid Attack Path Post Process Test")
 
-					startObjectProp := start.Properties.Get(common.ObjectID.String())
-					startObjectID, err := startObjectProp.String()
-					assert.Nil(t, err)
+			if _, err := hybrid.PostHybrid(context.Background(), db); err != nil {
+				t.Fatalf("failed post processing for hybrid attack paths: %v", err)
+			}
+			operation.Done()
 
-					endObjectProp := end.Properties.Get(common.ObjectID.String())
-					endObjectID, err := endObjectProp.String()
-					assert.Nil(t, err)
+			verifyHybridPaths(t, db, harness, false)
+		},
+	)
 
-					assert.Equal(t, azure.SyncedToADUser, edge.Kind)
-					assert.Equal(t, harness.HybridAttackPaths.AZUserID, startObjectID)
-					assert.Equal(t, harness.HybridAttackPaths.ADUserID, endObjectID)
-				}
+	// ADUser.ObjectID matches AZUser.OnPremID, AZUser.OnPremSyncEnabled is false
+	// SyncedToEntraUser and SyncedToADUser edges should NOT be created
+	testContext.DatabaseTestWithSetup(
+		func(harness *integration.HarnessDetails) error {
+			adUserObjectID := integration.RandomObjectID(t)
+			azUserOnPremID := adUserObjectID
+			harness.HybridAttackPaths.Setup(testContext, adUserObjectID, azUserOnPremID, false, true)
+			return nil
+		},
+		func(harness integration.HarnessDetails, db graph.Database) {
+			operation := analysis.NewPostRelationshipOperation(context.Background(), db, "Hybrid Attack Path Post Process Test")
 
-				return nil
-			})
+			if _, err := hybrid.PostHybrid(context.Background(), db); err != nil {
+				t.Fatalf("failed post processing for hybrid attack paths: %v", err)
+			}
+			operation.Done()
 
-			// Verify the SyncedToEntraUser edge
-			db.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
-				syncedToEntraUserEdges, err := ops.FetchRelationships(tx.Relationships().Filterf(func() graph.Criteria {
-					return query.Kind(query.Relationship(), ad.SyncedToEntraUser)
-				}))
-				assert.Nil(t, err)
-				assert.Len(t, syncedToEntraUserEdges, 1)
+			verifyHybridPaths(t, db, harness, false)
+		},
+	)
 
-				for _, edge := range syncedToEntraUserEdges {
-					start, end, err := ops.FetchRelationshipNodes(tx, edge)
-					assert.Nil(t, err)
+	// ADUser does not exist. AZUser has OnPremID and OnPremSyncEnabled=true
+	// A new ADUser node should be created. SyncedToADUser and SyncedToEntraUser edges should be created and linked to new ADUser node.
+	testContext.DatabaseTestWithSetup(
+		func(harness *integration.HarnessDetails) error {
+			adUserObjectID := ""
+			azUserOnPremID := integration.RandomObjectID(t)
+			harness.HybridAttackPaths.Setup(testContext, adUserObjectID, azUserOnPremID, true, false)
+			return nil
+		},
+		func(harness integration.HarnessDetails, db graph.Database) {
+			operation := analysis.NewPostRelationshipOperation(context.Background(), db, "Hybrid Attack Path Post Process Test")
 
-					startObjectProp := start.Properties.Get(common.ObjectID.String())
-					startObjectID, err := startObjectProp.String()
-					assert.Nil(t, err)
+			if _, err := hybrid.PostHybrid(context.Background(), db); err != nil {
+				t.Fatalf("failed post processing for hybrid attack paths: %v", err)
+			}
+			operation.Done()
 
-					endObjectProp := end.Properties.Get(common.ObjectID.String())
-					endObjectID, err := endObjectProp.String()
-					assert.Nil(t, err)
+			verifyHybridPaths(t, db, harness, true)
+		},
+	)
 
-					assert.Equal(t, ad.SyncedToEntraUser, edge.Kind)
-					assert.Equal(t, harness.HybridAttackPaths.ADUserID, startObjectID)
-					assert.Equal(t, harness.HybridAttackPaths.AZUserID, endObjectID)
-				}
+	// ADUser.ObjectID does NOT match AZUser.OnPremID, AZUser.OnPremSyncEnabled is true
+	// SyncedToEntraUser and SyncedToADUser edges should be created, but a new ADUser node should be created with ObjectID that matches AZUser.OnPremID
+	testContext.DatabaseTestWithSetup(
+		func(harness *integration.HarnessDetails) error {
+			adUserObjectID := integration.RandomObjectID(t)
+			azUserOnPremID := integration.RandomObjectID(t)
+			harness.HybridAttackPaths.Setup(testContext, adUserObjectID, azUserOnPremID, true, true)
+			return nil
+		},
+		func(harness integration.HarnessDetails, db graph.Database) {
+			operation := analysis.NewPostRelationshipOperation(context.Background(), db, "Hybrid Attack Path Post Process Test")
 
-				return nil
-			})
+			if _, err := hybrid.PostHybrid(context.Background(), db); err != nil {
+				t.Fatalf("failed post processing for hybrid attack paths: %v", err)
+			}
+			operation.Done()
+
+			verifyHybridPaths(t, db, harness, true)
 		},
 	)
 }
 
-func TestHybridAttackPathsWithNoADUserNode(t *testing.T) {
-	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
+func verifyHybridPaths(t *testing.T, db graph.Database, harness integration.HarnessDetails, shouldHaveEdges bool) {
+	expectedEdgeCount := 1
+	if !shouldHaveEdges {
+		expectedEdgeCount = 0
+	}
 
-	testContext.DatabaseTestWithSetup(
-		func(harness *integration.HarnessDetails) error {
-			harness.HybridAttackPaths.Setup(testContext, true)
-			return nil
-		},
-		func(harness integration.HarnessDetails, db graph.Database) {
-			operation := analysis.NewPostRelationshipOperation(context.Background(), db, "Hybrid Attack Path Post Process Test")
+	// Verify the SyncedToADUser edge
+	db.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
+		// Pull the edges
+		syncedToADUserEdges, err := ops.FetchRelationships(tx.Relationships().Filterf(func() graph.Criteria {
+			return query.Kind(query.Relationship(), azure.SyncedToADUser)
+		}))
+		assert.Nil(t, err)
+		assert.Len(t, syncedToADUserEdges, expectedEdgeCount)
 
-			if _, err := hybrid.PostHybrid(context.Background(), db); err != nil {
-				t.Fatalf("failed post processing for hybrid attack paths: %v", err)
+		for _, edge := range syncedToADUserEdges {
+			// Retrieve the nodes connected to the edge
+			start, end, err := ops.FetchRelationshipNodes(tx, edge)
+			assert.Nil(t, err)
+
+			// Get ObjectID and OnPremID from the AZUser node
+			startObjectProp := start.Properties.Get(common.ObjectID.String())
+			startObjectID, err := startObjectProp.String()
+			assert.Nil(t, err)
+
+			startObjectOnPremIdProp := start.Properties.Get(azure.OnPremID.String())
+			startObjectOnPremId, err := startObjectOnPremIdProp.String()
+			assert.Nil(t, err)
+
+			// Get the ObjectID from the ADUser node
+			endObjectProp := end.Properties.Get(common.ObjectID.String())
+			endObjectID, err := endObjectProp.String()
+			assert.Nil(t, err)
+
+			// Ensure we got the correct node types
+			assert.True(t, start.Kinds.ContainsOneOf(azure.User))
+			assert.True(t, end.Kinds.ContainsOneOf(ad.User))
+
+			// Verify the AZUser is the first node
+			assert.Equal(t, harness.HybridAttackPaths.AZUserObjectID, startObjectID)
+
+			// Verify the ADUser, but we have to handle the case where the ADUser node is created by the post-processing logic
+			if harness.HybridAttackPaths.ADUserObjectID != startObjectOnPremId {
+				// Node was created during post-processing. Pull AZUser.OnPremID from the node itself.
+				assert.Equal(t, startObjectOnPremId, endObjectID)
+			} else {
+				// Node existed prior to post-processing. Use the node configured during setup.
+				assert.Equal(t, harness.HybridAttackPaths.ADUserObjectID, endObjectID)
 			}
+		}
 
-			operation.Done()
+		return nil
+	})
 
-			// Verify the SyncedToADUser edge
-			db.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
-				syncedToADUserEdges, err := ops.FetchRelationships(tx.Relationships().Filterf(func() graph.Criteria {
-					return query.Kind(query.Relationship(), azure.SyncedToADUser)
-				}))
-				assert.Nil(t, err)
-				assert.Len(t, syncedToADUserEdges, 1)
+	// Verify the SyncedToEntraUser edge
+	db.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
+		// Pull the edges
+		syncedToADUserEdges, err := ops.FetchRelationships(tx.Relationships().Filterf(func() graph.Criteria {
+			return query.Kind(query.Relationship(), ad.SyncedToEntraUser)
+		}))
+		assert.Nil(t, err)
+		assert.Len(t, syncedToADUserEdges, expectedEdgeCount)
 
-				for _, edge := range syncedToADUserEdges {
-					start, end, err := ops.FetchRelationshipNodes(tx, edge)
-					assert.Nil(t, err)
+		for _, edge := range syncedToADUserEdges {
+			// Retrieve the nodes connected to the edge
+			start, end, err := ops.FetchRelationshipNodes(tx, edge)
+			assert.Nil(t, err)
 
-					startObjectProp := start.Properties.Get(common.ObjectID.String())
-					startObjectID, err := startObjectProp.String()
-					assert.Nil(t, err)
+			// Get the ObjectID from the ADUser node
+			startObjectProp := start.Properties.Get(common.ObjectID.String())
+			startObjectID, err := startObjectProp.String()
+			assert.Nil(t, err)
 
-					endObjectProp := end.Properties.Get(common.ObjectID.String())
-					endObjectID, err := endObjectProp.String()
-					assert.Nil(t, err)
+			// Get ObjectID and OnPremID from the AZUser node
+			endObjectProp := end.Properties.Get(common.ObjectID.String())
+			endObjectID, err := endObjectProp.String()
+			assert.Nil(t, err)
 
-					assert.Equal(t, azure.SyncedToADUser, edge.Kind)
+			endObjectOnPremIdProp := end.Properties.Get(azure.OnPremID.String())
+			endObjectOnPremId, err := endObjectOnPremIdProp.String()
+			assert.Nil(t, err)
 
-					assert.True(t, end.Kinds.ContainsOneOf(ad.User))
-					assert.Equal(t, harness.HybridAttackPaths.AZUserID, startObjectID)
-					assert.Equal(t, harness.HybridAttackPaths.ADUserID, endObjectID)
-				}
+			// Ensure we got the correct node types
+			assert.True(t, start.Kinds.ContainsOneOf(ad.User))
+			assert.True(t, end.Kinds.ContainsOneOf(azure.User))
 
-				return nil
-			})
+			// Verify the ADUser, but we have to handle the case where the ADUser node is created by the post-processing logic
+			if harness.HybridAttackPaths.ADUserObjectID != endObjectOnPremId {
+				// Node was created during post-processing. Pull AZUser.OnPremID from the node itself.
+				assert.Equal(t, endObjectOnPremId, startObjectID)
+			} else {
+				// Node existed prior to post-processing. Use the node configured during setup.
+				assert.Equal(t, harness.HybridAttackPaths.ADUserObjectID, startObjectID)
+			}
+			assert.Equal(t, harness.HybridAttackPaths.AZUserObjectID, endObjectID)
+		}
 
-			// Verify the SyncedToEntraUser edge
-			db.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
-				syncedToADUserEdges, err := ops.FetchRelationships(tx.Relationships().Filterf(func() graph.Criteria {
-					return query.Kind(query.Relationship(), ad.SyncedToEntraUser)
-				}))
-				assert.Nil(t, err)
-				assert.Len(t, syncedToADUserEdges, 1)
-
-				for _, edge := range syncedToADUserEdges {
-					start, end, err := ops.FetchRelationshipNodes(tx, edge)
-					assert.Nil(t, err)
-
-					startObjectProp := start.Properties.Get(common.ObjectID.String())
-					startObjectID, err := startObjectProp.String()
-					assert.Nil(t, err)
-
-					endObjectProp := end.Properties.Get(common.ObjectID.String())
-					endObjectID, err := endObjectProp.String()
-					assert.Nil(t, err)
-
-					assert.Equal(t, ad.SyncedToEntraUser, edge.Kind)
-
-					assert.True(t, end.Kinds.ContainsOneOf(azure.User))
-					assert.Equal(t, harness.HybridAttackPaths.ADUserID, startObjectID)
-					assert.Equal(t, harness.HybridAttackPaths.AZUserID, endObjectID)
-				}
-
-				return nil
-			})
-		},
-	)
+		return nil
+	})
 }
