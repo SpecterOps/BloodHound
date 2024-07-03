@@ -50,6 +50,7 @@ const (
 	FalseString    = "false"
 	IdString       = "id"
 	ObjectIdString = "objectid"
+	CollectedString = "collected"
 
 	ErrNotFiltered = errors.Error("parameter value is not filtered")
 )
@@ -96,7 +97,45 @@ type QueryParameterFilter struct {
 }
 
 type QueryParameterFilters []QueryParameterFilter
+
+
+func (f QueryParameterFilter) BuildGDBNodeFilter() graph.Criteria {
+    propertyRef := query.NodeProperty(f.Name)
+    value := guessFilterValueType(f.Value)
+
+    switch {
+    case f.Name == CollectedString && f.Operator == Equals:
+        switch f.Value {
+        case FalseString:
+            return query.Or(
+                query.Equals(propertyRef, false),
+                query.Not(query.Exists(propertyRef)),
+            )
+        case TrueString:
+            return query.Equals(propertyRef, true)
+        }
+    }
+
+    switch f.Operator {
+    case GreaterThan:
+        return query.GreaterThan(propertyRef, value)
+    case GreaterThanOrEquals:
+        return query.GreaterThanOrEquals(propertyRef, value)
+    case LessThan:
+        return query.LessThan(propertyRef, value)
+    case LessThanOrEquals:
+        return query.LessThanOrEquals(propertyRef, value)
+    case Equals:
+        return query.Equals(propertyRef, value)
+    case NotEquals:
+        return query.Not(query.Equals(propertyRef, value))
+    default:
+        return nil
+    }
+}
+
 type QueryParameterFilterMap map[string]QueryParameterFilters
+
 
 func (s QueryParameterFilterMap) BuildSQLFilter() (SQLFilter, error) {
 	var (
@@ -162,33 +201,15 @@ func guessFilterValueType(raw string) any {
 }
 
 func (s QueryParameterFilterMap) BuildGDBNodeFilter() graph.Criteria {
-	var criteria []graph.Criteria
+    var criteria []graph.Criteria
 
-	for _, filters := range s {
-		for _, filter := range filters {
-			switch filter.Operator {
-			case GreaterThan:
-				criteria = append(criteria, query.GreaterThan(query.NodeProperty(filter.Name), guessFilterValueType(filter.Value)))
+    for _, filters := range s {
+        for _, filter := range filters {
+            criteria = append(criteria, filter.BuildGDBNodeFilter())
+        }
+    }
 
-			case GreaterThanOrEquals:
-				criteria = append(criteria, query.GreaterThanOrEquals(query.NodeProperty(filter.Name), guessFilterValueType(filter.Value)))
-
-			case LessThan:
-				criteria = append(criteria, query.LessThan(query.NodeProperty(filter.Name), guessFilterValueType(filter.Value)))
-
-			case LessThanOrEquals:
-				criteria = append(criteria, query.LessThanOrEquals(query.NodeProperty(filter.Name), guessFilterValueType(filter.Value)))
-
-			case Equals:
-				criteria = append(criteria, query.Equals(query.NodeProperty(filter.Name), guessFilterValueType(filter.Value)))
-
-			case NotEquals:
-				criteria = append(criteria, query.Not(query.Equals(query.NodeProperty(filter.Name), guessFilterValueType(filter.Value))))
-			}
-		}
-	}
-
-	return query.And(criteria...)
+    return query.And(criteria...)
 }
 
 func (s QueryParameterFilterMap) BuildNeo4jFilter() (string, error) {
