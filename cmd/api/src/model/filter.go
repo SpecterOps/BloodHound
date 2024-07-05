@@ -51,7 +51,6 @@ const (
 	FalseString    = "false"
 	IdString       = "id"
 	ObjectIdString = "objectid"
-	CollectedString = "collected"
 
 	ErrNotFiltered = errors.Error("parameter value is not filtered")
 )
@@ -100,13 +99,15 @@ type QueryParameterFilter struct {
 type QueryParameterFilters []QueryParameterFilter
 
 
-func (f QueryParameterFilter) BuildGDBNodeFilter() graph.Criteria {
-    propertyRef := query.NodeProperty(f.Name)
-    value := guessFilterValueType(f.Value)
+func (s QueryParameterFilter) BuildGDBNodeFilter() graph.Criteria {
+    var (
+        propertyRef = query.NodeProperty(s.Name)
+        value       = guessFilterValueType(s.Value)
+    )
 
     switch {
-    case f.Name == common.Collected.String() && f.Operator == Equals:
-        switch f.Value {
+    case s.Name == common.Collected.String() && s.Operator == Equals:
+        switch s.Value {
         case FalseString:
             return query.Or(
                 query.Equals(propertyRef, false),
@@ -117,7 +118,7 @@ func (f QueryParameterFilter) BuildGDBNodeFilter() graph.Criteria {
         }
     }
 
-    switch f.Operator {
+    switch s.Operator {
     case GreaterThan:
         return query.GreaterThan(propertyRef, value)
     case GreaterThanOrEquals:
