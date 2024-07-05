@@ -105,6 +105,7 @@ func (s QueryParameterFilter) BuildGDBNodeFilter() graph.Criteria {
         value       = guessFilterValueType(s.Value)
     )
 
+	// TODO: Investigate whether we can set the collected property for domains that originate from trusts in ParseDomainTrusts
     switch {
     case s.Name == common.Collected.String() && s.Operator == Equals:
         switch s.Value {
