@@ -27,6 +27,7 @@ import (
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/dawgs/query"
 	"github.com/specterops/bloodhound/errors"
+	"github.com/specterops/bloodhound/graphschema/common"
 )
 
 type FilterOperator string
@@ -104,7 +105,7 @@ func (f QueryParameterFilter) BuildGDBNodeFilter() graph.Criteria {
     value := guessFilterValueType(f.Value)
 
     switch {
-    case f.Name == CollectedString && f.Operator == Equals:
+    case f.Name == common.Collected.String() && f.Operator == Equals:
         switch f.Value {
         case FalseString:
             return query.Or(
