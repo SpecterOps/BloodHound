@@ -14,20 +14,21 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Box, Button, Paper } from '@mui/material';
+import { Box, Button, Paper, Typography } from '@mui/material';
 import { DateTime } from 'luxon';
 import { useMemo, useState } from 'react';
 import { useMutation, useQuery } from 'react-query';
 import {
     ConfirmationDialog,
     DataTable,
+    DocumentationLinks,
     Header,
-    ContentPage,
     PasswordDialog,
     LuxonFormat,
     UserTokenManagementDialog,
     apiClient,
     Disable2FADialog,
+    PageWithTitle,
 } from 'bh-shared-ui';
 import { PutUserAuthSecretRequest, UpdateUserRequest } from 'js-client-library';
 import find from 'lodash/find';
@@ -252,7 +253,17 @@ const Users = () => {
 
     return (
         <>
-            <ContentPage title='Manage Users' data-testid='manage-users'>
+            <PageWithTitle
+                title='Manage Users'
+                data-testid='manage-users'
+                pageDescription={
+                    <Typography variant='body2' paragraph>
+                        BloodHound offers multiple roles with degrees of permissions, providing greater security and
+                        control of your team.
+                        <br />
+                        Learn more about {DocumentationLinks.ManageUsersDocLink}.
+                    </Typography>
+                }>
                 <Box display='flex' justifyContent='flex-end' alignItems='center' minHeight='24px' mb={2}>
                     <Button
                         color='primary'
@@ -274,7 +285,7 @@ const Users = () => {
                         showPaginationControls={false}
                     />
                 </Paper>
-            </ContentPage>
+            </PageWithTitle>
 
             <CreateUserDialog
                 open={createUserDialogOpen}

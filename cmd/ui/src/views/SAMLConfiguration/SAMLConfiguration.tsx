@@ -15,14 +15,14 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { useState } from 'react';
-import { Box, Button } from '@mui/material';
+import { Box, Button, Typography } from '@mui/material';
 import { useMutation, useQuery } from 'react-query';
-import { apiClient } from 'bh-shared-ui';
+import { PageWithTitle, apiClient } from 'bh-shared-ui';
 import {
     CreateSAMLProviderDialog,
     CreateSAMLProviderFormInputs,
-    ContentPage,
     ConfirmationDialog,
+    DocumentationLinks,
     SAMLProviderTable,
 } from 'bh-shared-ui';
 import useToggle from 'src/hooks/useToggle';
@@ -75,7 +75,15 @@ const SAMLConfiguration: React.FC = () => {
 
     return (
         <>
-            <ContentPage title='SAML Configuration'>
+            <PageWithTitle
+                title='SAML Configuration'
+                data-testid='saml-configuration'
+                pageDescription={
+                    <Typography variant='body2' paragraph>
+                        BloodHound supports SAML for single sign-on (SSO). Learn how to deploy SAML{' '}
+                        {DocumentationLinks.samlConfigDocLink}.
+                    </Typography>
+                }>
                 <Box>
                     <Box display='flex' justifyContent='space-between' mb={2}>
                         <div />
@@ -92,7 +100,7 @@ const SAMLConfiguration: React.FC = () => {
                         }}
                     />
                 </Box>
-            </ContentPage>
+            </PageWithTitle>
             <CreateSAMLProviderDialog
                 open={SAMLProviderDialogOpen}
                 error={createSAMLProviderError}

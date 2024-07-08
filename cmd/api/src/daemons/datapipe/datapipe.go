@@ -14,7 +14,6 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-//go:generate go run go.uber.org/mock/mockgen -copyright_file=../../../../../LICENSE.header -destination=./mocks/tasker.go -package=mocks . Tasker
 package datapipe
 
 import (
@@ -37,17 +36,12 @@ const (
 	pruningInterval = time.Hour * 24
 )
 
-type Tasker interface {
-	GetStatus() model.DatapipeStatusWrapper
-}
-
 type Daemon struct {
 	db                  database.Database
 	graphdb             graph.Database
 	cache               cache.Cache
 	cfg                 config.Configuration
 	tickInterval        time.Duration
-	status              model.DatapipeStatusWrapper
 	ctx                 context.Context
 	orphanedFileSweeper *OrphanFileSweeper
 }
@@ -65,15 +59,7 @@ func NewDaemon(ctx context.Context, cfg config.Configuration, connections bootst
 		ctx:                 ctx,
 		orphanedFileSweeper: NewOrphanFileSweeper(NewOSFileOperations(), cfg.TempDirectory()),
 		tickInterval:        tickInterval,
-		status: model.DatapipeStatusWrapper{
-			Status:    model.DatapipeStatusIdle,
-			UpdatedAt: time.Now().UTC(),
-		},
 	}
-}
-
-func (s *Daemon) GetStatus() model.DatapipeStatusWrapper {
-	return s.status
 }
 
 func (s *Daemon) analyze() {
@@ -88,16 +74,27 @@ func (s *Daemon) analyze() {
 		return
 	}
 
-	s.status.Update(model.DatapipeStatusAnalyzing, false)
+	if err := s.db.SetDatapipeStatus(s.ctx, model.DatapipeStatusAnalyzing, false); err != nil {
+		log.Errorf("Error setting datapipe status: %v", err)
+		return
+	}
+
 	defer log.LogAndMeasure(log.LevelInfo, "Graph Analysis")()
 
 	if err := RunAnalysisOperations(s.ctx, s.db, s.graphdb, s.cfg); err != nil {
 		if errors.Is(err, ErrAnalysisFailed) {
 			FailAnalyzedFileUploadJobs(s.ctx, s.db)
-			s.status.Update(model.DatapipeStatusIdle, false)
+			if err := s.db.SetDatapipeStatus(s.ctx, model.DatapipeStatusIdle, false); err != nil {
+				log.Errorf("Error setting datapipe status: %v", err)
+				return
+			}
+
 		} else if errors.Is(err, ErrAnalysisPartiallyCompleted) {
 			PartialCompleteFileUploadJobs(s.ctx, s.db)
-			s.status.Update(model.DatapipeStatusIdle, true)
+			if err := s.db.SetDatapipeStatus(s.ctx, model.DatapipeStatusIdle, true); err != nil {
+				log.Errorf("Error setting datapipe status: %v", err)
+				return
+			}
 		}
 	} else {
 		CompleteAnalyzedFileUploadJobs(s.ctx, s.db)
@@ -108,7 +105,10 @@ func (s *Daemon) analyze() {
 			resetCache(s.cache, entityPanelCachingFlag.Enabled)
 		}
 
-		s.status.Update(model.DatapipeStatusIdle, true)
+		if err := s.db.SetDatapipeStatus(s.ctx, model.DatapipeStatusIdle, true); err != nil {
+			log.Errorf("Error setting datapipe status: %v", err)
+			return
+		}
 	}
 }
 
@@ -175,12 +175,17 @@ func (s *Daemon) Start(ctx context.Context) {
 
 func (s *Daemon) deleteData() {
 	defer func() {
-		s.status.Update(model.DatapipeStatusIdle, false)
+		_ = s.db.SetDatapipeStatus(s.ctx, model.DatapipeStatusIdle, false)
 		_ = s.db.DeleteAnalysisRequest(s.ctx)
 		_ = s.db.RequestAnalysis(s.ctx, "datapie")
 	}()
 	defer log.Measure(log.LevelInfo, "Purge Graph Data Completed")()
-	s.status.Update(model.DatapipeStatusPurging, false)
+
+	if err := s.db.SetDatapipeStatus(s.ctx, model.DatapipeStatusPurging, false); err != nil {
+		log.Errorf("Error setting datapipe status: %v", err)
+		return
+	}
+
 	log.Infof("Begin Purge Graph Data")
 
 	if err := s.db.CancelAllFileUploads(s.ctx); err != nil {

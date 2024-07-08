@@ -33,7 +33,7 @@ import {
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Flag, useFeatureFlags, useToggleFeatureFlag } from 'src/hooks/useFeatureFlags';
-import { ContentPage } from 'bh-shared-ui';
+import { PageWithTitle } from 'bh-shared-ui';
 
 export const EarlyAccessFeatureToggle: React.FC<{
     flag: Flag;
@@ -116,7 +116,15 @@ const EarlyAccessFeatures: React.FC = () => {
 
     return (
         <>
-            <ContentPage title='Early Access Features' data-testid='early-access-features'>
+            <PageWithTitle
+                title='Early Access Features'
+                data-testid='early-access-features'
+                pageDescription={
+                    <Typography variant='body2' paragraph>
+                        Enable or disable features available under early access. These features may be unstable, broken,
+                        or incomplete, but are available for testing.
+                    </Typography>
+                }>
                 {!showWarningDialog &&
                     (isLoading ? (
                         <Paper elevation={0}>
@@ -162,7 +170,7 @@ const EarlyAccessFeatures: React.FC = () => {
                                 </Box>
                             ))
                     ))}
-            </ContentPage>
+            </PageWithTitle>
             <EarlyAccessFeaturesWarningDialog
                 open={showWarningDialog}
                 onCancel={() => navigate(-1)}

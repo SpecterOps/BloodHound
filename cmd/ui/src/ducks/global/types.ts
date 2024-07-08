@@ -49,12 +49,6 @@ export interface Notification {
     options: any;
 }
 
-export interface DatapipeStatus {
-    status: 'idle' | 'ingesting' | 'analyzing';
-    updated_at: string;
-    last_complete_analysis_at: string;
-}
-
 export interface GlobalOptionsState {
     domain: Domain | null;
     assetGroups: any[];

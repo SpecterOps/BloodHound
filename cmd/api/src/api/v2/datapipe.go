@@ -23,5 +23,9 @@ import (
 )
 
 func (s Resources) GetDatapipeStatus(response http.ResponseWriter, request *http.Request) {
-	api.WriteBasicResponse(request.Context(), s.TaskNotifier.GetStatus(), http.StatusOK, response)
+	if datapipeStatus, err := s.DB.GetDatapipeStatus(request.Context()); err != nil {
+		api.HandleDatabaseError(request, response, err)
+	} else {
+		api.WriteBasicResponse(request.Context(), datapipeStatus, http.StatusOK, response)
+	}
 }

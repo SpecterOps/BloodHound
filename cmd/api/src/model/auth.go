@@ -22,6 +22,7 @@ import (
 	"time"
 
 	"github.com/gofrs/uuid"
+	"github.com/specterops/bloodhound/src/database/types"
 	"github.com/specterops/bloodhound/src/database/types/null"
 	"github.com/specterops/bloodhound/src/serde"
 )
@@ -94,7 +95,7 @@ func (s Permissions) IsString(column string) bool {
 }
 
 func (s Permissions) GetFilterableColumns() []string {
-	var columns = make([]string, 0)
+	columns := make([]string, 0)
 	for column := range s.ValidFilters() {
 		columns = append(columns, column)
 	}
@@ -105,7 +106,7 @@ func (s Permissions) GetValidFilterPredicatesAsStrings(column string) ([]string,
 	if predicates, validColumn := s.ValidFilters()[column]; !validColumn {
 		return []string{}, fmt.Errorf("the specified column cannot be filtered")
 	} else {
-		var stringPredicates = make([]string, 0)
+		stringPredicates := make([]string, 0)
 		for _, predicate := range predicates {
 			stringPredicates = append(stringPredicates, string(predicate))
 		}
@@ -211,7 +212,7 @@ func (s AuthTokens) IsString(column string) bool {
 }
 
 func (s AuthTokens) GetFilterableColumns() []string {
-	var columns = make([]string, 0)
+	columns := make([]string, 0)
 	for column := range s.ValidFilters() {
 		columns = append(columns, column)
 	}
@@ -222,7 +223,7 @@ func (s AuthTokens) GetValidFilterPredicatesAsStrings(column string) ([]string, 
 	if predicates, validColumn := s.ValidFilters()[column]; !validColumn {
 		return []string{}, fmt.Errorf("the specified column cannot be filtered")
 	} else {
-		var stringPredicates = make([]string, 0)
+		stringPredicates := make([]string, 0)
 		for _, predicate := range predicates {
 			stringPredicates = append(stringPredicates, string(predicate))
 		}
@@ -361,7 +362,7 @@ func (s Roles) IsString(column string) bool {
 }
 
 func (s Roles) GetFilterableColumns() []string {
-	var columns = make([]string, 0)
+	columns := make([]string, 0)
 	for column := range s.ValidFilters() {
 		columns = append(columns, column)
 	}
@@ -372,7 +373,7 @@ func (s Roles) GetValidFilterPredicatesAsStrings(column string) ([]string, error
 	if predicates, validColumn := s.ValidFilters()[column]; !validColumn {
 		return []string{}, fmt.Errorf("the specified column cannot be filtered")
 	} else {
-		var stringPredicates = make([]string, 0)
+		stringPredicates := make([]string, 0)
 		for _, predicate := range predicates {
 			stringPredicates = append(stringPredicates, string(predicate))
 		}
@@ -531,7 +532,7 @@ func (s Users) IsString(column string) bool {
 }
 
 func (s Users) GetFilterableColumns() []string {
-	var columns = make([]string, 0)
+	columns := make([]string, 0)
 	for column := range s.ValidFilters() {
 		columns = append(columns, column)
 	}
@@ -542,7 +543,7 @@ func (s Users) GetValidFilterPredicatesAsStrings(column string) ([]string, error
 	if predicates, validColumn := s.ValidFilters()[column]; !validColumn {
 		return []string{}, fmt.Errorf("the specified column cannot be filtered")
 	} else {
-		var stringPredicates = make([]string, 0)
+		stringPredicates := make([]string, 0)
 		for _, predicate := range predicates {
 			stringPredicates = append(stringPredicates, string(predicate))
 		}
@@ -566,12 +567,19 @@ const (
 	SessionAuthProviderSAML   SessionAuthProvider = 1
 )
 
+type SessionFlagKey string
+
+const (
+	SessionFlagFedEULAAccepted SessionFlagKey = "fed_eula_accepted" // INFO: The FedEULA is only applicable to select enterprise installations
+)
+
 type UserSession struct {
 	User             User `gorm:"constraint:OnDelete:CASCADE;"`
 	UserID           uuid.UUID
 	AuthProviderType SessionAuthProvider
 	AuthProviderID   int32
 	ExpiresAt        time.Time
+	Flags            types.JSONBBoolObject `json:"flags"`
 
 	BigSerial
 }
@@ -579,4 +587,9 @@ type UserSession struct {
 // Expired returns true if the user session has expired, false otherwise
 func (s UserSession) Expired() bool {
 	return s.ExpiresAt.Before(time.Now().UTC())
+}
+
+// corresponding set function is cmd/api/src/database/auth.go:SetUserSessionFlag()
+func (s UserSession) GetFlag(key SessionFlagKey) bool {
+	return s.Flags[string(key)]
 }

@@ -846,6 +846,21 @@ func (mr *MockDatabaseMockRecorder) GetConfigurationParameter(arg0, arg1 interfa
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetConfigurationParameter", reflect.TypeOf((*MockDatabase)(nil).GetConfigurationParameter), arg0, arg1)
 }
 
+// GetDatapipeStatus mocks base method.
+func (m *MockDatabase) GetDatapipeStatus(arg0 context.Context) (model.DatapipeStatusWrapper, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetDatapipeStatus", arg0)
+	ret0, _ := ret[0].(model.DatapipeStatusWrapper)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetDatapipeStatus indicates an expected call of GetDatapipeStatus.
+func (mr *MockDatabaseMockRecorder) GetDatapipeStatus(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDatapipeStatus", reflect.TypeOf((*MockDatabase)(nil).GetDatapipeStatus), arg0)
+}
+
 // GetFileUploadJob mocks base method.
 func (m *MockDatabase) GetFileUploadJob(arg0 context.Context, arg1 int64) (model.FileUploadJob, error) {
 	m.ctrl.T.Helper()
@@ -1307,6 +1322,20 @@ func (mr *MockDatabaseMockRecorder) SetConfigurationParameter(arg0, arg1 interfa
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetConfigurationParameter", reflect.TypeOf((*MockDatabase)(nil).SetConfigurationParameter), arg0, arg1)
 }
 
+// SetDatapipeStatus mocks base method.
+func (m *MockDatabase) SetDatapipeStatus(arg0 context.Context, arg1 model.DatapipeStatus, arg2 bool) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SetDatapipeStatus", arg0, arg1, arg2)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SetDatapipeStatus indicates an expected call of SetDatapipeStatus.
+func (mr *MockDatabaseMockRecorder) SetDatapipeStatus(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetDatapipeStatus", reflect.TypeOf((*MockDatabase)(nil).SetDatapipeStatus), arg0, arg1, arg2)
+}
+
 // SetFlag mocks base method.
 func (m *MockDatabase) SetFlag(arg0 context.Context, arg1 appcfg.FeatureFlag) error {
 	m.ctrl.T.Helper()
@@ -1319,6 +1348,20 @@ func (m *MockDatabase) SetFlag(arg0 context.Context, arg1 appcfg.FeatureFlag) er
 func (mr *MockDatabaseMockRecorder) SetFlag(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetFlag", reflect.TypeOf((*MockDatabase)(nil).SetFlag), arg0, arg1)
+}
+
+// SetUserSessionFlag mocks base method.
+func (m *MockDatabase) SetUserSessionFlag(arg0 context.Context, arg1 *model.UserSession, arg2 model.SessionFlagKey, arg3 bool) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SetUserSessionFlag", arg0, arg1, arg2, arg3)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SetUserSessionFlag indicates an expected call of SetUserSessionFlag.
+func (mr *MockDatabaseMockRecorder) SetUserSessionFlag(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetUserSessionFlag", reflect.TypeOf((*MockDatabase)(nil).SetUserSessionFlag), arg0, arg1, arg2, arg3)
 }
 
 // SweepAssetGroupCollections mocks base method.

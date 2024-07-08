@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Alert, Box, Button, Checkbox, FormControl, FormControlLabel, FormGroup, Typography } from '@mui/material';
-import { ContentPage, apiClient } from 'bh-shared-ui';
+import { PageWithTitle, apiClient } from 'bh-shared-ui';
 import { useReducer } from 'react';
 import ConfirmationDialog from './ConfirmationDialog';
 import { useMutation } from 'react-query';
@@ -220,11 +220,15 @@ const DatabaseManagement = () => {
     };
 
     return (
-        <ContentPage title='Clear BloodHound Data'>
-            <Box>
-                <Typography variant='body1'>
+        <PageWithTitle
+            title='Database Management'
+            data-testid='database-management'
+            pageDescription={
+                <Typography variant='body2' paragraph>
                     Manage your BloodHound data. Select from the options below which data should be deleted.
                 </Typography>
+            }>
+            <Box>
                 <Alert severity='warning' sx={{ mt: '1rem' }}>
                     <strong>Caution: </strong> This change is irreversible and will delete data from your environment.
                 </Alert>
@@ -324,7 +328,7 @@ const DatabaseManagement = () => {
                 handleClose={() => dispatch({ type: 'close_dialog' })}
                 handleDelete={() => handleMutation()}
             />
-        </ContentPage>
+        </PageWithTitle>
     );
 };
 

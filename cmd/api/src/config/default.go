@@ -53,8 +53,9 @@ func NewDefaultConfiguration() (Configuration, error) {
 			DisableIngest:                false,
 			DisableMigrations:            false,
 			EnableCypherMutations:        false,
-			AuthSessionTTLHours:          8, // Default to a logged in auth session time to live of 8 hours
-			GraphQueryMemoryLimit:        2, // 2 GiB by default
+			AuthSessionTTLHours:          8,  // Default to a logged in auth session time to live of 8 hours
+			GraphQueryMemoryLimit:        2,  // 2 GiB by default
+			FedRAMPEULAText:              "", // Enterprise only
 			TLS:                          TLSConfiguration{},
 			SAML:                         SAMLConfiguration{},
 			GraphDriver:                  neo4j.DriverName, // Default to Neo4j as the graph driver

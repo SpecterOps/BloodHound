@@ -90,7 +90,7 @@ const PasswordDialog: React.FC<{
                 needsPasswordReset: Boolean(data.needsPasswordReset),
             });
         },
-        [userId]
+        [userId, onSave]
     );
 
     return (
