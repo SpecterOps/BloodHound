@@ -95,6 +95,15 @@ func AuthenticationAdministratorPasswordResetTargetRoles() []string {
 	}
 }
 
+func AddOwnerTargetRoles() []string {
+	return []string{
+		azure.DirectorySynchronizationAccountsRole,
+		azure.PartnerTier2SupportRole,
+		azure.PartnerTier1SupportRole,
+		azure.HybridIdentityAdministratorRole,
+	}
+}
+
 func UserAdministratorPasswordResetTargetRoles() []string {
 	return []string{
 		azure.UserAccountAdministratorRole,
@@ -131,6 +140,7 @@ func AzurePostProcessedRelationships() []graph.Kind {
 		azure.AZMGAddSecret,
 		azure.AZMGGrantAppRoles,
 		azure.AZMGGrantRole,
+		azure.AddOwner,
 	}
 }
 
@@ -809,6 +819,34 @@ func globalAdmins(roleAssignments RoleAssignments, tenant *graph.Node, operation
 	})
 }
 
+func addOwners(roleAssignments RoleAssignments, tenant *graph.Node, operation analysis.StatTrackedOperation[analysis.CreatePostRelationshipJob]) {
+	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
+
+		if tenantContainsServicePrincipalRelationships, err := fetchTenantContainsRelationships(tx, tenant, azure.ServicePrincipal); err != nil {
+			return err
+		} else if tenantContainsAppRelationships, err := fetchTenantContainsRelationships(tx, tenant, azure.App); err != nil {
+			return err
+		} else {
+			targetRelationships := append(tenantContainsServicePrincipalRelationships, tenantContainsAppRelationships...)
+			iter := roleAssignments.UsersWithRole(AddOwnerTargetRoles()...).Iterator()
+			for iter.HasNext() {
+				startNode := iter.Next()
+				for _, targetRelationship := range targetRelationships {
+					nextJob := analysis.CreatePostRelationshipJob{
+						FromID: graph.ID(startNode),
+						ToID:   targetRelationship.EndID,
+						Kind:   azure.AddOwner,
+					}
+					if !channels.Submit(ctx, outC, nextJob) {
+						return nil
+					}
+				}
+			}
+			return nil
+		}
+	})
+}
+
 func privilegedRoleAdmins(roleAssignments RoleAssignments, tenant *graph.Node, operation analysis.StatTrackedOperation[analysis.CreatePostRelationshipJob]) {
 	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
 		iter := roleAssignments.PrincipalsWithRole(azure.PrivilegedRoleAdministratorRole).Iterator()
@@ -917,6 +955,7 @@ func UserRoleAssignments(ctx context.Context, db graph.Database) (*analysis.Atom
 					privilegedRoleAdmins(roleAssignments, tenant, operation)
 					privilegedAuthAdmins(roleAssignments, tenant, operation)
 					addMembers(roleAssignments, operation)
+					addOwners(roleAssignments, tenant, operation)
 				}
 			}
 		}
