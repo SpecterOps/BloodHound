@@ -28,7 +28,7 @@ const useStyles = makeStyles((theme) => ({
         boxSizing: 'initial',
         borderRadius: theme.shape.borderRadius,
         backgroundColor: theme.palette.background.paper,
-        color: theme.palette.common.black,
+        color: theme.palette.primary.main,
         textTransform: 'capitalize',
         minWidth: 'initial',
         '&:hover': {
