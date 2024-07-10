@@ -149,7 +149,7 @@ type Database interface {
 
 	// Saved Queries
 	ListSavedQueries(ctx context.Context, userID uuid.UUID, order string, filter model.SQLFilter, skip, limit int) (model.SavedQueries, int, error)
-	CreateSavedQuery(ctx context.Context, userID uuid.UUID, name string, query string) (model.SavedQuery, error)
+	CreateSavedQuery(ctx context.Context, userID uuid.UUID, name string, query string, description string) (model.SavedQuery, error)
 	DeleteSavedQuery(ctx context.Context, id int) error
 	SavedQueryBelongsToUser(ctx context.Context, userID uuid.UUID, savedQueryID int) (bool, error)
 	DeleteAssetGroupSelectorsForAssetGroups(ctx context.Context, assetGroupIds []int) error
