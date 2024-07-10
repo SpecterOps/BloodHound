@@ -74,3 +74,13 @@ func (s *BloodhoundDB) SavedQueryBelongsToUser(ctx context.Context, userID uuid.
 		return false, nil
 	}
 }
+
+func (s *BloodhoundDB) SearchSavedQuery(ctx context.Context, userID uuid.UUID, name string, query string) (model.SavedQuery, error) {
+	savedQuery := model.SavedQuery{
+		UserID: userID.String(),
+		Name:   name,
+		Query:  query,
+	}
+
+	return savedQuery, CheckError(s.db.WithContext(ctx).Create(&savedQuery))
+}

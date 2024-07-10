@@ -151,3 +151,30 @@ func (s Resources) DeleteSavedQuery(response http.ResponseWriter, request *http.
 		response.WriteHeader(http.StatusNoContent)
 	}
 }
+
+type SearchSavedQueriesRequest struct {
+	Description string `json:"description"`
+}
+
+func (s Resources) SearchSavedQueries(response http.ResponseWriter, request *http.Request) {
+	var (
+		searchRequest SearchSavedQueriesRequest
+	)
+
+	if user, isUser := auth.GetUserFromAuthCtx(ctx2.FromRequest(request).AuthCtx); !isUser {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "No associated user found", request), response)
+	} else if err := api.ReadJSONRequestPayloadLimited(&searchRequest, request); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
+	} else if searchRequest.Description == "" {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "the description field is empty", request), response)
+	} else if savedQuery, err := s.DB.CreateSavedQuery(request.Context(), user.ID, createRequest.Name, createRequest.Query); err != nil {
+		if strings.Contains(err.Error(), "duplicate key value violates unique constraint") {
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "duplicate name for saved query: please choose a different name", request), response)
+		} else {
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, err.Error(), request), response)
+		}
+	} else {
+		api.WriteBasicResponse(request.Context(), savedQuery, http.StatusCreated, response)
+	}
+
+}
