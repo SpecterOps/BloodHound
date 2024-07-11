@@ -16,7 +16,7 @@
 
 import { faCode, faDirections, faMinus, faPlus, faSearch } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Box, Collapse, Paper, Tab, Tabs, Theme, useMediaQuery, useTheme } from '@mui/material';
+import { Box, Collapse, Paper, Tab, Tabs, useMediaQuery, useTheme } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
 import { CYPHER_SEARCH, Icon, PATHFINDING_SEARCH, PRIMARY_SEARCH, searchbarActions } from 'bh-shared-ui';
 import React, { useState } from 'react';
@@ -39,6 +39,15 @@ const useStyles = makeStyles((theme) => ({
         fontSize: theme.typography.fontSize,
         color: theme.palette.common.black,
     },
+    tab: {
+        height: '40px',
+        minHeight: '40px',
+        color: theme.palette.primary.main,
+        opacity: 1,
+        padding: 0,
+        flexGrow: 1,
+        minWidth: theme.spacing(2),
+    }
 }));
 
 const tabNameMap = {
@@ -107,7 +116,7 @@ const ExploreSearch = ({ handleColumns }: ExploreSearchProps) => {
                     TabIndicatorProps={{
                         sx: { height: 3, backgroundColor: '#6798B9' },
                     }}>
-                    {getTabsContent(theme, matches)}
+                    {getTabsContent(classes.tab, matches)}
                 </Tabs>
             </Paper>
 
@@ -130,7 +139,7 @@ const ExploreSearch = ({ handleColumns }: ExploreSearchProps) => {
     );
 };
 
-const getTabsContent = (theme: Theme, matches: boolean) => {
+const getTabsContent = (className: string, matches: boolean) => {
     const tabs = [
         {
             label: 'Search',
@@ -153,15 +162,7 @@ const getTabsContent = (theme: Theme, matches: boolean) => {
             icon={<FontAwesomeIcon icon={icon} />}
             iconPosition='start'
             title={label}
-            sx={{
-                height: '40px',
-                minHeight: '40px',
-                color: 'black',
-                opacity: 1,
-                padding: 0,
-                flexGrow: 1,
-                minWidth: theme.spacing(2),
-            }}
+            className={className}
         />
     ));
 };
