@@ -53,11 +53,13 @@ import ExploreSearch from 'src/views/Explore/ExploreSearch';
 import usePrompt from 'src/views/Explore/NavigationAlert';
 import { initGraphEdges, initGraphNodes } from 'src/views/Explore/utils';
 import ContextMenu from './ContextMenu/ContextMenu';
+import { useNotifications } from 'bh-shared-ui';
 
 const GraphView: FC = () => {
     /* Hooks */
     const theme = useTheme();
     const dispatch = useAppDispatch();
+    const { addNotification } = useNotifications();
 
     const graphState: GraphState = useAppSelector((state) => state.explore);
     const opts: GlobalOptionsState = useAppSelector((state) => state.global.options);
@@ -162,11 +164,32 @@ const GraphView: FC = () => {
 
     const options: GraphButtonOptions = { standard: true, sequential: true };
 
+    // To do: confirm best place to put this
+    const setShareUrlParams = (): void => {
+        const urlPayload = {
+            q1: 'something',
+            q2: 'something2',
+            q3: 'something'
+        }
+        const encryptedObject = btoa(JSON.stringify(urlPayload));
+        const formattedUrl = `${window.location.href}?q=${encryptedObject}` 
+        // FOR TESTING
+        // const decoded = JSON.parse(atob(encryptedObject));
+        // console.log('decoded', decoded);
+        // END TESTING
+        navigator.clipboard.writeText(formattedUrl);    
+        addNotification('Current URL copied to clipboard. Share away!');
+    }
+
     const nonLayoutButtons: GraphButtonProps[] = [
         {
             displayText: 'Search Current Results',
             onClick: toggleCurrentSearch,
             disabled: currentSearchOpen,
+        },
+        {
+            displayText: 'Share Graph',
+            onClick: setShareUrlParams,
         },
     ];
 
@@ -184,6 +207,7 @@ const GraphView: FC = () => {
             );
         }
     };
+
 
     /* Event Handlers */
     const onClickNode = (id: string) => {
