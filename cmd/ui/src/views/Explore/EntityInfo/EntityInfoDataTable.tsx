@@ -17,19 +17,31 @@
 import {
     EntityInfoDataTableProps,
     InfiniteScrollingTable,
-    abortEntitySectionRequest,
     searchbarActions,
     NODE_GRAPH_RENDER_LIMIT,
+    EntityKinds,
+    abortEntitySectionRequest,
 } from 'bh-shared-ui';
 import { useQuery } from 'react-query';
 import { useDispatch } from 'react-redux';
-import { putGraphData, putGraphError, saveResponseForExport, setGraphLoading } from 'src/ducks/explore/actions';
-import { addSnackbar } from 'src/ducks/global/actions';
-import { transformFlatGraphResponse } from 'src/utils';
+import {
+    putGraphData,
+    putGraphError,
+    saveResponseForExport,
+    setGraphLoading,
+    startNodeRelationshipQuery,
+} from 'src/ducks/explore/actions';
 import EntityInfoCollapsibleSection from './EntityInfoCollapsibleSection';
 import { addExpandedRelationship, removeExpandedRelationship } from 'src/ducks/entityinfo/actions';
+import { addSnackbar } from 'src/ducks/global/actions';
+import { transformFlatGraphResponse } from 'src/utils';
 
-const EntityInfoDataTable: React.FC<EntityInfoDataTableProps> = ({ id, label, endpoint, sections }) => {
+interface Props extends EntityInfoDataTableProps {
+    nodeType: EntityKinds;
+}
+
+const EntityInfoDataTable: React.FC<Props> = (props) => {
+    const { id, label, endpoint, sections, nodeType } = props;
     const dispatch = useDispatch();
 
     const countQuery = useQuery(
@@ -55,24 +67,25 @@ const EntityInfoDataTable: React.FC<EntityInfoDataTableProps> = ({ id, label, en
         if (isOpen && countQuery.data?.count < NODE_GRAPH_RENDER_LIMIT) {
             abortEntitySectionRequest();
 
-            dispatch(setGraphLoading(true));
+            dispatch(startNodeRelationshipQuery({ label, kind: nodeType, objectId: id }));
+            // dispatch(setGraphLoading(true));
 
-            await endpoint({ type: 'graph' })
-                .then((result) => {
-                    const formattedData = transformFlatGraphResponse(result);
-                    dispatch(saveResponseForExport(formattedData));
-                    dispatch(putGraphData(result));
-                })
-                .catch((err) => {
-                    if (err?.code === 'ERR_CANCELED') {
-                        return;
-                    }
-                    dispatch(putGraphError(err));
-                    dispatch(addSnackbar('Query failed. Please try again.', 'nodeRelationshipGraphQuery', {}));
-                })
-                .finally(() => {
-                    dispatch(setGraphLoading(false));
-                });
+            // await endpoint({ type: 'graph' })
+            //     .then((result) => {
+            //         const formattedData = transformFlatGraphResponse(result);
+            //         dispatch(saveResponseForExport(formattedData));
+            //         dispatch(putGraphData(result));
+            //     })
+            //     .catch((err) => {
+            //         if (err?.code === 'ERR_CANCELED') {
+            //             return;
+            //         }
+            //         dispatch(putGraphError(err));
+            //         dispatch(addSnackbar('Query failed. Please try again.', 'nodeRelationshipGraphQuery', {}));
+            //     })
+            //     .finally(() => {
+            //         dispatch(setGraphLoading(false));
+            //     });
         }
     };
 
@@ -107,7 +120,10 @@ const EntityInfoDataTable: React.FC<EntityInfoDataTableProps> = ({ id, label, en
             {endpoint && (
                 <InfiniteScrollingTable itemCount={count} fetchDataCallback={endpoint} onClick={handleOnClick} />
             )}
-            {sections && sections.map((nestedSection, index) => <EntityInfoDataTable key={index} {...nestedSection} />)}
+            {sections &&
+                sections.map((nestedSection, index) => (
+                    <EntityInfoDataTable key={index} {...nestedSection} nodeType={nodeType} />
+                ))}
         </EntityInfoCollapsibleSection>
     );
 };

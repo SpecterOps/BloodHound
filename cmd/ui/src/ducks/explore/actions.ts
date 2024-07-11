@@ -16,6 +16,7 @@
 
 import { Items } from 'src/utils';
 import * as types from './types';
+import { NodeRelationshipRequest } from './types';
 
 export const setGraphLoading = (isLoading: boolean): types.GraphActionTypes => {
     return {
@@ -76,6 +77,13 @@ export const startAssetGroupQuery = (
         domainType,
     };
 };
+
+export const startNodeRelationshipQuery = (payload: Omit<NodeRelationshipRequest, 'type'>): types.GraphRequestType => {
+    return {
+        type: types.GRAPH_START,
+        ...payload
+    }
+}
 
 export const putGraphData = (payload: Items): types.GraphActionTypes => {
     return {
