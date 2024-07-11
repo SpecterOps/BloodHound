@@ -37,7 +37,7 @@ describe('EntityInfoCollapsibleSection', () => {
                     onChange={testOnChange}
                     isLoading={testIsLoading}
                     isError={testIsError}
-                    isOpen // TODO: determine this from redux entityInfo.expandedRelationships
+                    isOpen // TODO: determine this from redux entityInfo.expandedRelationshipsq
                     error={error}
                 />
             </EntityInfoPanelContextProvider>
