@@ -18,14 +18,17 @@
 
 package database
 
-import "testing"
-
-func TestSavedQueryPermi(t *testing.T) {
-
-}
+import (
+	"context"
+	"github.com/specterops/bloodhound/src/test/integration"
+	"testing"
+)
 
 func TestBloodhoundDB_GetSavedQueriesSharedWithUser(t *testing.T) {
-
+	var (
+		testCtx = context.Background()
+		dbInst  = integration.SetupDB(t)
+	)
 }
 
 func TestBloodhoundDB_CheckUserHasPermissionToSavedQuery(t *testing.T) {

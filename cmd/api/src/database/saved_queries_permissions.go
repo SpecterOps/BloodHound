@@ -47,14 +47,14 @@ func (s *BloodhoundDB) CreateSavedQueryPermissionToGlobal(ctx context.Context, q
 func (s *BloodhoundDB) GetSavedQueriesSharedWithUser(ctx context.Context, userID int64) (model.SavedQueries, error) {
 	savedQueries := model.SavedQueries{}
 
-	result := s.db.WithContext(ctx).Find(&savedQueries, "shared_to_user_id = ?", userID)
+	result := s.db.WithContext(ctx).Where("shared_to_user_id = ?", userID).Or("global = true").Find(&savedQueries)
 
 	return savedQueries, CheckError(result)
 }
 
 func (s *BloodhoundDB) CheckUserHasPermissionToSavedQuery(ctx context.Context, queryID int64, userID uuid.UUID) (bool, error) {
 	userHasPermission := false
-	result := s.db.WithContext(ctx).First(&userHasPermission, "user_id = ?", userID)
+	result := s.db.WithContext(ctx).First(&userHasPermission, "user_id = ? AND query_id = ?", userID, queryID)
 
 	return userHasPermission, CheckError(result)
 }
