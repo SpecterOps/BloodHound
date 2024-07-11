@@ -43,10 +43,10 @@ export const lightPalette = {
     },
     neutral: {
         primary: '#FFFFFF',
-        secondary: '#F9F9F9',
-        tertiary: '#EEF0F2',
-        quaternary: '#E3E7EA',
-        quinary: '#DADEE1',
+        secondary: '#F4F4F4',
+        tertiary: '#E3E7EA',
+        quaternary: '#DADEE1',
+        quinary: '#CACFD3',
     },
     background: {
         paper: '#fafafa',

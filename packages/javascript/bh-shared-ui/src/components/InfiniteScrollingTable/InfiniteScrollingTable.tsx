@@ -20,8 +20,22 @@ import React, { memo, useState } from 'react';
 import { areEqual, FixedSizeList, ListChildComponentProps } from 'react-window';
 import InfiniteLoader from 'react-window-infinite-loader';
 import NodeIcon from '../NodeIcon';
+import makeStyles from "@mui/styles/makeStyles";
 
 const ITEM_SIZE = 32;
+
+const useStyles = makeStyles((theme) => ({
+    table: {
+        '& ul': {
+            '& > :nth-child(odd)': {
+                backgroundColor: theme.palette.neutral.tertiary,
+            },
+            '& > :nth-child(even)': {
+                backgroundColor: theme.palette.neutral.secondary,
+            },
+        }
+    }
+}));
 
 const InnerElement = ({ style, ...rest }: any) => (
     <List
@@ -29,6 +43,7 @@ const InnerElement = ({ style, ...rest }: any) => (
         data-testid='infinite-scroll-table'
         disablePadding
         style={{ ...style, overflowX: 'hidden' }}
+        className={style.table}
         {...rest}
     />
 );
@@ -102,6 +117,7 @@ const InfiniteScrollingTable: React.FC<InfiniteScrollingTableProps> = ({
     const [items, setItems] = useState<Record<number, any>>({});
     const itemData = createItemData(items, onClick);
     const isItemLoaded = (index: number) => !!items[index];
+    const style = useStyles()
 
     const loadMoreItems = async (startIndex: number, stopIndex: number) => {
         if (isFetching) return;
@@ -139,6 +155,7 @@ const InfiniteScrollingTable: React.FC<InfiniteScrollingTableProps> = ({
                     ref={ref}
                     width={'100%'}
                     initialScrollOffset={0}
+                    className={style.table}
                     style={{ borderRadius: 4 }}>
                     {Row}
                 </FixedSizeList>

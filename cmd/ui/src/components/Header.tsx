@@ -31,7 +31,7 @@ const useStyles = makeStyles((theme) => ({
             easing: theme.transitions.easing.sharp,
             duration: theme.transitions.duration.leavingScreen,
         }),
-        backgroundColor: theme.palette.background.paper,
+        backgroundColor: theme.palette.neutral.secondary,
         color: theme.palette.text.primary,
     },
     menu: {

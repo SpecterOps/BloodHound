@@ -61,7 +61,7 @@ const Inner: React.FC = () => {
             zIndex: theme.zIndex.drawer + 1,
         },
         applicationContent: {
-            backgroundColor: theme.palette.background.default,
+            backgroundColor: theme.palette.neutral.primary,
             flexGrow: 1,
             overflowY: 'auto',
             overflowX: 'hidden',

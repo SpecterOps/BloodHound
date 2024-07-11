@@ -25,13 +25,16 @@ import { ActiveDirectoryNodeKind } from '../../graphSchema';
 import { useActiveDirectoryDataQualityStatsQuery, useActiveDirectoryPlatformsDataQualityStatsQuery } from '../../hooks';
 import LoadContainer from './LoadContainer';
 
-const useStyles = makeStyles({
+const useStyles = makeStyles((theme) => ({
     print: {
         '@media print': {
             display: 'none',
         },
     },
-});
+    container: {
+        backgroundColor: theme.palette.neutral.secondary
+    }
+}));
 
 export const DomainMap = {
     users: { displayText: 'Users', kind: ActiveDirectoryNodeKind.User },
@@ -76,6 +79,7 @@ export const DomainInfo: React.FC<{ contextId: string; headers?: boolean; onData
     useEffect(() => {
         if (isError) onDataError();
     }, [isError, onDataError]);
+
 
     if (isLoading || !domainData) {
         return <Layout stats={null} headers={headers} loading={true} />;
@@ -123,7 +127,7 @@ const Layout: React.FC<{
     const classes = useStyles();
     return (
         <Box position='relative'>
-            <TableContainer component={Paper}>
+            <TableContainer component={Paper} className={classes.container}>
                 <Table>
                     {headers && (
                         <TableHead className={classes.print}>
