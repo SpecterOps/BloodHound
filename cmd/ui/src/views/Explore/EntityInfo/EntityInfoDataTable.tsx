@@ -50,13 +50,9 @@ const EntityInfoDataTable: React.FC<Props> = (props) => {
         { refetchOnWindowFocus: false, retry: false }
     );
 
-    // TODO:
-    // move this to the graph update action thing
-    // push this change to last action field
     const handleOnChange = async (label: string, isOpen: boolean) => {
-        if (!endpoint) return;
-
         dispatch(isOpen ? addExpandedRelationship(id + label) : removeExpandedRelationship(id + label));
+        if (!endpoint) return;
 
         if (isOpen && countQuery.data?.count < NODE_GRAPH_RENDER_LIMIT) {
             abortEntitySectionRequest();
