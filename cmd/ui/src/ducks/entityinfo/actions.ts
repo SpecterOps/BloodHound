@@ -33,23 +33,18 @@ export const setSelectedNode = (selectedNode: types.SelectedNode): types.EntityI
 export const addExpandedRelationship = (payload: string) => {
     return {
         type: types.ADD_EXPANDED_RELATIONSHIP,
-        payload
-    }
-}
+        payload,
+    };
+};
 export const removeExpandedRelationship = (payload: string) => {
     return {
         type: types.REMOVE_EXPANDED_RELATIONSHIP,
-        payload
-    }
-}
+        payload,
+    };
+};
 export const setExpandedRelationship = (payload: string[]) => {
     return {
         type: types.SET_EXPANDED_RELATIONSHIP,
-        payload
-    }
-}
-export const clearExpandedRelationship = () => {
-    return {
-        type: types.CLEAR_EXPANDED_RELATIONSHIP
-    }
-}
+        payload,
+    };
+};
