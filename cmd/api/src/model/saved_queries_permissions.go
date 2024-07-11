@@ -21,10 +21,10 @@ package model
 import "github.com/gofrs/uuid"
 
 type SavedQueriesPermissions struct {
-	ID             int64 `json:"id" gorm:"index,unique,composite,compositeIndex"`
-	SharedToUserID uuid.UUID
-	QueryID        int64
-	Global         bool
+	ID             int64     `json:"id" gorm:"index,unique,composite,compositeIndex"`
+	SharedToUserID uuid.UUID `json:"shared_to_user_id" gorm:"index,unique,composite"`
+	QueryID        int64     `json:"query_id" gorm:"index,unique,composite"`
+	Global         bool      `json:"global" gorm:"default:false"`
 
 	Basic
 }
