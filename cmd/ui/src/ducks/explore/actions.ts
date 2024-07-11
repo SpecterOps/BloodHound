@@ -77,6 +77,13 @@ export const startAssetGroupQuery = (
     };
 };
 
+export const startGenericQuery = (args: any): types.GraphRequestType => {
+    return {
+        type: types.GRAPH_START,
+        ...args,
+    };
+};
+
 export const putGraphData = (payload: Items): types.GraphActionTypes => {
     return {
         type: types.GRAPH_SUCCESS,
