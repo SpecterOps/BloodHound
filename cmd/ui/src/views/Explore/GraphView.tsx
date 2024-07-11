@@ -34,11 +34,11 @@ import { Attributes } from 'graphology-types';
 import { GraphNodes } from 'js-client-library';
 import isEmpty from 'lodash/isEmpty';
 import { FC, useEffect, useState } from 'react';
-import { Link as RouterLink, useSearchParams } from 'react-router-dom';
+import { Link as RouterLink } from 'react-router-dom';
 import { SigmaNodeEventPayload } from 'sigma/sigma';
 import { GraphButtonOptions } from 'src/components/GraphButtons/GraphButtons';
 import SigmaChart from 'src/components/SigmaChart';
-import { setEntityInfoOpen, setSelectedNode } from 'src/ducks/entityinfo/actions';
+import { setEntityInfoOpen, setExpandedRelationship, setSelectedNode } from 'src/ducks/entityinfo/actions';
 import { GraphState } from 'src/ducks/explore/types';
 import { setAssetGroupEdit } from 'src/ducks/global/actions';
 import { ROUTE_ADMINISTRATION_FILE_INGEST } from 'src/ducks/global/routes';
@@ -80,6 +80,7 @@ const GraphView: FC = () => {
         cypherQuery?: string;
         activeGraph?: any;
         selected?: string;
+        expandedRelationships?: string[];
     };
 
     const test = {
@@ -92,6 +93,12 @@ const GraphView: FC = () => {
             objectId: 'S-1-5-21-570004220-2248230615-4072641716-1002',
         },
         selected: '260',
+        expandedRelationships: [
+            'S-1-5-21-570004220-2248230615-4072641716-1000Inbound Execution Privileges',
+            'S-1-5-21-570004220-2248230615-4072641716-1000Local Admins',
+            'S-1-5-21-570004220-2248230615-4072641716-1000Member Of',
+            'S-1-5-21-570004220-2248230615-4072641716-1002Member Of',
+        ],
     };
 
     console.log(btoa(JSON.stringify(test)));
@@ -120,6 +127,9 @@ const GraphView: FC = () => {
                 }
                 if (initialView.selected) {
                     setInitialSelectedEntityId(initialView.selected);
+                }
+                if (initialView.expandedRelationships) {
+                    dispatch(setExpandedRelationship(initialView.expandedRelationships));
                 }
             } catch (error) {
                 console.error('Failed to parse initial explore view from query param: ', error);
