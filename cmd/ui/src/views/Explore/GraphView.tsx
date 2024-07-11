@@ -25,6 +25,7 @@ import {
     useAvailableDomains,
     isWebGLEnabled,
     WebGLDisabledAlert,
+    searchbarActions,
 } from 'bh-shared-ui';
 import { MultiDirectedGraph } from 'graphology';
 import { random } from 'graphology-layout';
@@ -33,7 +34,7 @@ import { Attributes } from 'graphology-types';
 import { GraphNodes } from 'js-client-library';
 import isEmpty from 'lodash/isEmpty';
 import { FC, useEffect, useState } from 'react';
-import { Link as RouterLink } from 'react-router-dom';
+import { Link as RouterLink, useSearchParams } from 'react-router-dom';
 import { SigmaNodeEventPayload } from 'sigma/sigma';
 import { GraphButtonOptions } from 'src/components/GraphButtons/GraphButtons';
 import SigmaChart from 'src/components/SigmaChart';
@@ -51,8 +52,10 @@ import EdgeInfoPane from 'src/views/Explore/EdgeInfo/EdgeInfoPane';
 import EntityInfoPanel from 'src/views/Explore/EntityInfo/EntityInfoPanel';
 import ExploreSearch from 'src/views/Explore/ExploreSearch';
 import usePrompt from 'src/views/Explore/NavigationAlert';
-import { initGraphEdges, initGraphNodes } from 'src/views/Explore/utils';
+import { extractSelectedEdge, extractSelectedNode, initGraphEdges, initGraphNodes } from 'src/views/Explore/utils';
 import ContextMenu from './ContextMenu/ContextMenu';
+import useQueryParams from 'src/hooks/useQueryParams';
+import { startGenericQuery } from 'src/ducks/explore/actions';
 
 const GraphView: FC = () => {
     /* Hooks */
@@ -71,7 +74,65 @@ const GraphView: FC = () => {
 
     const [contextMenu, setContextMenu] = useState<{ mouseX: number; mouseY: number } | null>(null);
 
+    type ExploreViewState = {
+        primaryQuery: string;
+        secondaryQuery: string;
+        cypherQuery: string;
+        activeGraph: any;
+        selected: string;
+    };
+
+    const test = {
+        primaryQuery: 'test1',
+        secondaryQuery: 'test2',
+        cypherQuery: 'test3',
+    };
+
+    console.log(btoa(JSON.stringify(test)));
+
+    const { queryParams, deleteQueryParam } = useQueryParams();
+    const [initialSelectedEntityId, setInitialSelectedEntityId] = useState<string | null>(null);
+
     useEffect(() => {
+        const query = queryParams.get('view');
+
+        if (query) {
+            const initialView = JSON.parse(atob(query)) as ExploreViewState;
+
+            dispatch(searchbarActions.sourceNodeEdited(initialView.primaryQuery));
+            dispatch(searchbarActions.destinationNodeEdited(initialView.secondaryQuery));
+            dispatch(searchbarActions.cypherQueryEdited(initialView.cypherQuery));
+
+            dispatch(startGenericQuery(initialView.activeGraph));
+
+            setInitialSelectedEntityId(initialView.selected);
+
+            deleteQueryParam('view');
+        }
+    }, []);
+
+    useEffect(() => {
+        initGraphology();
+        selectEntityFromInitialState();
+    }, [graphState.chartProps.items]);
+
+    const selectEntityFromInitialState = () => {
+        if (initialSelectedEntityId) {
+            const selectedEntity = graphState.chartProps.items?.[initialSelectedEntityId];
+
+            if (initialSelectedEntityId.startsWith('rel_')) {
+                const currentlySelectedEdge = extractSelectedEdge(graphState, initialSelectedEntityId, selectedEntity);
+                dispatch(setSelectedEdge(currentlySelectedEdge));
+            } else {
+                const currentlySelectedNode = extractSelectedNode(initialSelectedEntityId, selectedEntity);
+                dispatch(setSelectedNode(currentlySelectedNode));
+            }
+
+            setInitialSelectedEntityId(null);
+        }
+    };
+
+    const initGraphology = () => {
         let items: any = graphState.chartProps.items;
         if (!items) return;
         // `items` may be empty, or it may contain an empty `nodes` object
@@ -95,7 +156,7 @@ const GraphView: FC = () => {
             },
         });
         setGraphologyGraph(graph);
-    }, [graphState.chartProps.items]);
+    };
 
     useEffect(() => {
         if (opts.assetGroupEdit !== null) {
@@ -173,15 +234,9 @@ const GraphView: FC = () => {
     const findNodeAndSelect = (id: string) => {
         const selectedItem = graphState.chartProps.items?.[id];
         if (selectedItem?.data?.nodetype) {
+            const currentlySelectedNode = extractSelectedNode(id, selectedItem);
             dispatch(setSelectedEdge(null));
-            dispatch(
-                setSelectedNode({
-                    id: selectedItem.data.objectid,
-                    type: selectedItem.data.nodetype,
-                    name: selectedItem.data.name,
-                    graphId: id,
-                })
-            );
+            dispatch(setSelectedNode(currentlySelectedNode));
         }
     };
 
