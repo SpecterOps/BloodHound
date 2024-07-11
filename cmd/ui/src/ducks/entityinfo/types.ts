@@ -421,8 +421,9 @@ const SET_SELECTED_NODE = 'app/entityinfo/SELECTED_NODE';
 const ADD_EXPANDED_RELATIONSHIP = 'app/entityinfo/ADD_EXPANDED_RELATIONSHIP';
 const REMOVE_EXPANDED_RELATIONSHIP = 'app/entityinfo/REMOVE_EXPANDED_RELATIONSHIP';
 const SET_EXPANDED_RELATIONSHIP = 'app/entityinfo/SET_EXPANDED_RELATIONSHIP';
+const CLEAR_EXPANDED_RELATIONSHIP = 'app/entityinfo/CLEAR_EXPANDED_RELATIONSHIP';
 
-export { ENTITY_INFO_OPEN, SET_SELECTED_NODE, ADD_EXPANDED_RELATIONSHIP, REMOVE_EXPANDED_RELATIONSHIP, SET_EXPANDED_RELATIONSHIP };
+export { ENTITY_INFO_OPEN, SET_SELECTED_NODE, ADD_EXPANDED_RELATIONSHIP, REMOVE_EXPANDED_RELATIONSHIP, SET_EXPANDED_RELATIONSHIP, CLEAR_EXPANDED_RELATIONSHIP };
 
 export interface EntityInfo {
     props: BasicInfo;
@@ -489,4 +490,8 @@ interface SetExpandedRelationship {
     payload: string[]
 }
 
-export type EntityInfoActionTypes = SetEntityInfoOpenAction | SetSelectedNodeAction | AddExpandedRelationship | RemoveExpandedRelationship | SetExpandedRelationship;
+interface ClearExpandedRelationship {
+    type: typeof CLEAR_EXPANDED_RELATIONSHIP;
+}
+
+export type EntityInfoActionTypes = SetEntityInfoOpenAction | SetSelectedNodeAction | AddExpandedRelationship | RemoveExpandedRelationship | SetExpandedRelationship | ClearExpandedRelationship;

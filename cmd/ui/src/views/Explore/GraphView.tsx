@@ -38,7 +38,12 @@ import { Link as RouterLink } from 'react-router-dom';
 import { SigmaNodeEventPayload } from 'sigma/sigma';
 import { GraphButtonOptions } from 'src/components/GraphButtons/GraphButtons';
 import SigmaChart from 'src/components/SigmaChart';
-import { setEntityInfoOpen, setExpandedRelationship, setSelectedNode } from 'src/ducks/entityinfo/actions';
+import {
+    clearExpandedRelationship,
+    setEntityInfoOpen,
+    setExpandedRelationship,
+    setSelectedNode,
+} from 'src/ducks/entityinfo/actions';
 import { GraphState } from 'src/ducks/explore/types';
 import { setAssetGroupEdit } from 'src/ducks/global/actions';
 import { ROUTE_ADMINISTRATION_FILE_INGEST } from 'src/ducks/global/routes';
@@ -272,6 +277,7 @@ const GraphView: FC = () => {
     const onClickNode = (id: string) => {
         dispatch(setEdgeInfoOpen(false));
         dispatch(setEntityInfoOpen(true));
+        dispatch(clearExpandedRelationship());
 
         findNodeAndSelect(id);
     };
