@@ -1,9 +1,6 @@
 package scoobydoo
 
 import (
-	"context"
-	"time"
-
 	amqp "github.com/rabbitmq/amqp091-go"
 	"github.com/specterops/bloodhound/log"
 )
@@ -18,11 +15,16 @@ type ScoobyServiceInterface interface {
 type ScoobyService struct {
 	Scooby     *amqp.Connection
 	ScoobyChan *amqp.Channel
-	Snacks     map[string]*amqp.Queue
+	SnackMap     map[string]*amqp.Queue
+}
+
+type ScoobySnack struct {
+	ContentType string
+	Body []byte
 }
 
 func NewScoobyService() ScoobyService {
-	return ScoobyService{Snacks: map[string]*amqp.Queue{}}
+	return ScoobyService{SnackMap: map[string]*amqp.Queue{}}
 }
 
 func (s *ScoobyService) ensureScoobyChan() error {
@@ -47,7 +49,7 @@ func (s *ScoobyService) ensureQueue(queueName string) error {
 		return err
 	}
 
-	if _, ok := s.Snacks[queueName]; !ok {
+	if _, ok := s.SnackMap[queueName]; !ok {
 		q, err := s.ScoobyChan.QueueDeclare(
 			queueName, // name
 			true,      // durable
@@ -62,7 +64,7 @@ func (s *ScoobyService) ensureQueue(queueName string) error {
 			return err
 		}
 
-		s.Snacks[queueName] = &q
+		s.SnackMap[queueName] = &q
 	}
 	return nil
 }
@@ -79,7 +81,7 @@ func (s *ScoobyService) ensureScoob() error {
 	return nil
 }
 
-func (s *ScoobyService) EnqueueJob(queueName string, payload []byte) error {
+func (s *ScoobyService) EnqueueJob(queueName string, snack ScoobySnack) error {
 	err := s.ensureScoob()
 	if err != nil {
 		log.Warnf("Failed to connect in enqueue job %v", err)
@@ -93,17 +95,14 @@ func (s *ScoobyService) EnqueueJob(queueName string, payload []byte) error {
 		return err
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
-	err = s.ScoobyChan.PublishWithContext(ctx,
+	err = s.ScoobyChan.Publish(
 		"",        // exchange
 		queueName, // routing key
 		false,     // mandatory
 		false,     // immediate
 		amqp.Publishing{
-			ContentType: "text/plain",
-			Body:        payload,
+			ContentType: snack.ContentType,
+			Body:        snack.Body,
 		})
 
 	if err != nil {

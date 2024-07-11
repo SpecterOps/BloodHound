@@ -17,6 +17,7 @@
 package v2
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"mime"
@@ -28,11 +29,13 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/specterops/bloodhound/headers"
 	"github.com/specterops/bloodhound/log"
+	"github.com/specterops/bloodhound/mediatypes"
 	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/src/auth"
 	"github.com/specterops/bloodhound/src/ctx"
 	"github.com/specterops/bloodhound/src/model"
 	ingestModel "github.com/specterops/bloodhound/src/model/ingest"
+	"github.com/specterops/bloodhound/src/scoobydoo"
 	"github.com/specterops/bloodhound/src/services/fileupload"
 	"github.com/specterops/bloodhound/src/services/ingest"
 )
@@ -162,8 +165,10 @@ func (s Resources) EndFileUploadJob(response http.ResponseWriter, request *http.
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "job must be in running status to end", request), response)
 	} else if err := fileupload.EndFileUploadJob(request.Context(), s.DB, fileUploadJob); err != nil {
 		api.HandleDatabaseError(request, response, err)
-	} else if err := s.ScoobyService.EnqueueJob("ingest", []byte("Hello world")); err != nil {
-		api.WriteErrorResponse(request.Context(), api.ErrorResponseCodeInternalServerError, response)
+	} else if enqueuePayloadBytes, err := json.Marshal(fileUploadJob); err != nil {
+		api.WriteErrorResponse(request.Context(), err, response)
+	} else if err := s.ScoobyService.EnqueueJob("ingest", scoobydoo.ScoobySnack{ContentType: mediatypes.ApplicationJson.String(), Body: enqueuePayloadBytes}); err != nil {
+		api.WriteErrorResponse(request.Context(), err, response)
 	} else {
 		response.WriteHeader(http.StatusOK)
 	}
