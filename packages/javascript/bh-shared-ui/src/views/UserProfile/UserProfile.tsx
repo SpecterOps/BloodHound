@@ -51,6 +51,8 @@ const UserProfile = () => {
         apiClient.version({ signal }).then((res) => res.data.data)
     );
 
+    const version = getVersionQuery;
+
     const updateUserPasswordMutation = useMutation(
         ({ userId, ...payload }: { userId: string } & PutUserAuthSecretRequest) =>
             apiClient.putUserAuthSecret(userId, payload),
@@ -108,12 +110,16 @@ const UserProfile = () => {
                     <br />
                     Please try refreshing the page or logging in again.
                 </Alert>
+                <Box sx={{ flexGrow: 1, alignContent: 'flex-end' }}>
+                    <Typography variant='body2'>
+                        API Version: <TextWithFallback text={version.data.server_version} fallback='Unknown' />
+                    </Typography>
+                </Box>
             </PageWithTitle>
         );
     }
 
     const user = getSelfQuery.data;
-    const version = getVersionQuery;
 
     return (
         <>
