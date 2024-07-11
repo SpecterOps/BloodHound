@@ -16,7 +16,7 @@
 
 import { SagaIterator } from 'redux-saga';
 import { all, call, fork, put, takeLatest } from 'redux-saga/effects';
-import { apiClient } from 'bh-shared-ui';
+import { EntityInfoDataTableProps, allSections, apiClient } from 'bh-shared-ui';
 import { putGraphData, putGraphError, putGraphVars, saveResponseForExport } from 'src/ducks/explore/actions';
 import {
     AssetGroupRequest,
@@ -28,6 +28,7 @@ import {
     SearchRequest,
     ShortestPathRequest,
     CypherQueryRequest,
+    NodeRelationshipRequest,
 } from 'src/ducks/explore/types';
 import { addSnackbar } from 'src/ducks/global/actions';
 import { getLinksIndex, getNodesIndex } from 'src/ducks/graph/graphutils';
@@ -62,6 +63,13 @@ function isCypherQueryRequest(request: GraphRequestType): request is CypherQuery
     return (request as CypherQueryRequest).cypherQuery !== undefined;
 }
 
+function isNodeRelationshipRequest(request: GraphRequestType): request is NodeRelationshipRequest {
+    const hasLabel = (request as NodeRelationshipRequest).label !== undefined
+    const hasKind = (request as NodeRelationshipRequest).kind !== undefined
+    const hasObjectId = (request as NodeRelationshipRequest).objectId !== undefined
+    return hasLabel && hasKind && hasObjectId
+}
+
 function* graphQueryWorker(payload: GraphRequestType) {
     if (isPathfindingRequest(payload)) {
         yield call(runPathfindingQuery, payload);
@@ -75,6 +83,8 @@ function* graphQueryWorker(payload: GraphRequestType) {
         yield call(runAssetGroupQuery, payload);
     } else if (isCypherQueryRequest(payload)) {
         yield call(runCypherSearchQuery, payload);
+    } else if (isNodeRelationshipRequest(payload)) {
+        yield call(runNodeRelationshipQuery, payload)
     } else {
         yield call(runApiQuery, payload.endpoint);
     }
@@ -275,6 +285,36 @@ function* runApiQuery(endpoint: GraphEndpoints, ext?: string): SagaIterator {
     } catch (e) {
         yield put(putGraphError(e));
         return;
+    }
+}
+
+function* runNodeRelationshipQuery(payload: NodeRelationshipRequest): SagaIterator {
+    const { label, kind, objectId } = payload
+
+    const getEndpoint = (sections: EntityInfoDataTableProps[] | undefined): EntityInfoDataTableProps['endpoint'] | undefined => {
+        const section = sections?.find(section => {
+            if (section.label === label && section.endpoint) {
+                return section
+            }
+
+            return getEndpoint(section.sections)
+        })
+
+        return section?.endpoint
+    }
+
+    const endpoint = getEndpoint(allSections[kind]?.(objectId))
+    if (!endpoint) return
+
+    try {
+        const res = yield call(endpoint, { type: 'graph' })
+
+        const formattedData = transformFlatGraphResponse(res);
+        yield put(saveResponseForExport(formattedData));
+        yield put(putGraphData(res));
+    } catch (e) {
+        yield put(putGraphError(e));
+        yield put(addSnackbar('Query failed. Please try again.', 'nodeRelationshipGraphQuery', {}));
     }
 }
 

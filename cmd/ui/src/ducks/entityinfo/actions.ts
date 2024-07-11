@@ -29,3 +29,16 @@ export const setSelectedNode = (selectedNode: types.SelectedNode): types.EntityI
         selectedNode,
     };
 };
+
+export const addExpandedRelationship = (payload: string) => {
+    return {
+        type: types.ADD_EXPANDED_RELATIONSHIP,
+        payload
+    }
+}
+export const removeExpandedRelationship = (payload: string) => {
+    return {
+        type: types.REMOVE_EXPANDED_RELATIONSHIP,
+        payload
+    }
+}

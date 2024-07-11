@@ -14,12 +14,13 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { GlyphKind } from 'bh-shared-ui';
+import { GlyphKind, SelectedEdge } from 'bh-shared-ui';
 import { MultiDirectedGraph } from 'graphology';
 import { GraphEdges, GraphNodes } from 'js-client-library';
 import { GlyphLocation } from 'src/rendering/programs/node.glyphs';
 import { EdgeDirection, EdgeParams, NodeParams } from 'src/utils';
 import { GLYPHS, NODE_ICON, UNKNOWN_ICON } from './svgIcons';
+import { GraphState } from 'src/ducks/explore/types';
 
 export const initGraphNodes = (graph: MultiDirectedGraph, nodes: GraphNodes, nodeSize: number) => {
     Object.keys(nodes).forEach((key: string) => {
@@ -114,4 +115,33 @@ export const initGraphEdges = (graph: MultiDirectedGraph, edges: GraphEdges) => 
             graph.addEdgeWithKey(key, edge.source, edge.target, edgeParams);
         }
     }
+};
+
+export const extractSelectedNode = (id: string, selected: any) => {
+    return {
+        id: selected.data.objectid,
+        type: selected.data.nodetype,
+        name: selected.data.name,
+        graphId: id,
+    };
+};
+
+export const extractSelectedEdge = (graphState: GraphState, id: string, selected: any): SelectedEdge => {
+    return {
+        id: id,
+        name: selected.label?.text || '',
+        data: selected.data || {},
+        sourceNode: {
+            name: graphState.chartProps.items?.[selected.id1].data.name,
+            id: selected.id1,
+            objectId: graphState.chartProps.items?.[selected.id1].data.objectid,
+            type: graphState.chartProps.items?.[selected.id1].data.nodetype,
+        },
+        targetNode: {
+            name: graphState.chartProps.items?.[selected.id2].data.name,
+            id: selected.id2,
+            objectId: graphState.chartProps.items?.[selected.id2].data.objectid,
+            type: graphState.chartProps.items?.[selected.id2].data.nodetype,
+        },
+    };
 };

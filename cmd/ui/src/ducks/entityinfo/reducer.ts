@@ -20,6 +20,7 @@ import * as types from './types';
 const initialEntityInfoState: types.EntityInfoState = {
     open: false,
     selectedNode: null,
+    expandedRelationships: [],
 };
 
 const entityInfoReducer = (state = initialEntityInfoState, action: types.EntityInfoActionTypes) => {
@@ -29,6 +30,10 @@ const entityInfoReducer = (state = initialEntityInfoState, action: types.EntityI
         } else if (action.type === types.SET_SELECTED_NODE) {
             draft.open = true;
             draft.selectedNode = action.selectedNode;
+        } else if (action.type === types.ADD_EXPANDED_RELATIONSHIP) {
+            draft.expandedRelationships = [...draft.expandedRelationships, action.payload]
+        } else if (action.type === types.REMOVE_EXPANDED_RELATIONSHIP) {
+            draft.expandedRelationships = draft.expandedRelationships.filter(rel => rel !== action.payload)
         }
     });
 };

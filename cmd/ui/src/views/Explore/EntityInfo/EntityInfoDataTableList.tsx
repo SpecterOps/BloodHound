@@ -33,7 +33,7 @@ const EntityInfoDataTableList: React.FC<EntityInfoContentProps> = ({ id, nodeTyp
                     <Box padding={1}>
                         <Divider />
                     </Box>
-                    <EntityInfoDataTable {...table} />
+                    <EntityInfoDataTable {...table} nodeType={type} />
                 </React.Fragment>
             ))}
         </>
