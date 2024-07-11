@@ -574,6 +574,104 @@ ObjectGUID: types.#StringEnum & {
 	representation: "objectguid"
 }
 
+ExpirePasswordsOnSmartCardOnlyAccounts: types.#StringEnum & {
+	symbol: "ExpirePasswordsOnSmartCardOnlyAccounts"
+	schema: "ad"
+	name: "Expire Passwords on Smart Card only Accounts"
+	representation: "expirepasswordsonsmartcardonlyaccounts"
+}
+
+MachineAccountQuota: types.#StringEnum & {
+	symbol: "MachineAccountQuota"
+	schema: "ad"
+	name: "Machine Account Quota"
+	representation: "machineaccountquota"
+}
+
+SupportedKerberosEncryptionTypes: types.#StringEnum & {
+	symbol: "SupportedKerberosEncryptionTypes"
+	schema: "ad"
+	name: "Supported Kerberos Encryption Types"
+	representation: "supportedencryptiontypes"
+}
+
+TGTDelegationEnabled: types.#StringEnum & {
+	symbol: "TGTDelegationEnabled"
+	schema: "ad"
+	name: "TGT Delegation Enabled"
+	representation: "tgtdelegationenabled"
+}
+
+PasswordStoredUsingReversibleEncryption: types.#StringEnum & {
+	symbol: "PasswordStoredUsingReversibleEncryption"
+	schema: "ad"
+	name: "Password Stored Using Reversible Encryption"
+	representation: "encryptedtextpwdallowed"
+}
+
+SmartcardRequired: types.#StringEnum & {
+	symbol: "SmartcardRequired"
+	schema: "ad"
+	name: "Smartcard Required"
+	representation: "smartcardrequired"
+}
+
+UseDESKeyOnly: types.#StringEnum & {
+	symbol: "UseDESKeyOnly"
+	schema: "ad"
+	name: "Use DES Key Only"
+	representation: "usedeskeyonly"
+}
+
+LogonScriptEnabled: types.#StringEnum & {
+	symbol: "LogonScriptEnabled"
+	schema: "ad"
+	name: "Logon Script Enabled"
+	representation: "logonscriptenabled"
+}
+
+LockedOut: types.#StringEnum & {
+	symbol: "LockedOut"
+	schema: "ad"
+	name: "Locked Out"
+	representation: "lockedout"
+}
+
+UserCannotChangePassword: types.#StringEnum & {
+	symbol: "UserCannotChangePassword"
+	schema: "ad"
+	name: "User Cannot Change Password"
+	representation: "passwordcantchange"
+}
+
+PasswordExpired: types.#StringEnum & {
+	symbol: "PasswordExpired"
+	schema: "ad"
+	name: "Password Expired"
+	representation: "passwordexpired"
+}
+
+DSHeuristics: types.#StringEnum & {
+	symbol: "DSHeuristics"
+	schema: "ad"
+	name: "DSHeuristics"
+	representation: "dsheuristics"
+}
+
+UserAccountControl: types.#StringEnum & {
+	symbol: "UserAccountControl"
+	schema: "ad"
+	name: "User Account Control"
+	representation: "useraccountcontrol"
+}
+
+TrustAttributes: types.#StringEnum & {
+	symbol: "TrustAttributes"
+	schema: "ad"
+	name: "Trust Attributes"
+	representation: "trustattributes"
+}
+
 Properties: [
 	AdminCount,
 	CASecurityCollected,
@@ -652,7 +750,21 @@ Properties: [
 	CertificatePolicy,
 	CertTemplateOID,
 	GroupLinkID,
-	ObjectGUID
+	ObjectGUID,
+	ExpirePasswordsOnSmartCardOnlyAccounts,
+	MachineAccountQuota,
+	SupportedKerberosEncryptionTypes,
+	TGTDelegationEnabled,
+	PasswordStoredUsingReversibleEncryption,
+	SmartcardRequired,
+	UseDESKeyOnly,
+	LogonScriptEnabled,
+	LockedOut,
+	UserCannotChangePassword,
+	PasswordExpired,
+	DSHeuristics,
+	UserAccountControl,
+	TrustAttributes
 ]
 
 // Kinds

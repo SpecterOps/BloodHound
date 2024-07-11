@@ -234,10 +234,12 @@ func ParseDomainTrusts(domain Domain) ParsedDomainTrustData {
 				Target:     trust.TargetDomainSid,
 				TargetType: ad.Domain,
 				RelProps: map[string]any{
-					"isacl":        false,
-					"sidfiltering": trust.SidFilteringEnabled,
-					"trusttype":    trust.TrustType,
-					"transitive":   trust.IsTransitive},
+					"isacl":                false,
+					"sidfiltering":         trust.SidFilteringEnabled,
+					"tgtdelegationenabled": trust.TGTDelegationEnabled,
+					"trustattributes":      trust.TrustAttributes,
+					"trusttype":            trust.TrustType,
+					"transitive":           trust.IsTransitive},
 				RelType: ad.TrustedBy,
 			})
 		}
@@ -249,10 +251,12 @@ func ParseDomainTrusts(domain Domain) ParsedDomainTrustData {
 				Target:     domain.ObjectIdentifier,
 				TargetType: ad.Domain,
 				RelProps: map[string]any{
-					"isacl":        false,
-					"sidfiltering": trust.SidFilteringEnabled,
-					"trusttype":    trust.TrustType,
-					"transitive":   trust.IsTransitive},
+					"isacl":                false,
+					"sidfiltering":         trust.SidFilteringEnabled,
+					"tgtdelegationenabled": trust.TGTDelegationEnabled,
+					"trustattributes":      trust.TrustAttributes,
+					"trusttype":            trust.TrustType,
+					"transitive":           trust.IsTransitive},
 				RelType: ad.TrustedBy,
 			})
 		}

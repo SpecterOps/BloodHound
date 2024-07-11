@@ -378,6 +378,20 @@ export enum ActiveDirectoryKindProperties {
     CertTemplateOID = 'certtemplateoid',
     GroupLinkID = 'grouplinkid',
     ObjectGUID = 'objectguid',
+    ExpirePasswordsOnSmartCardOnlyAccounts = 'expirepasswordsonsmartcardonlyaccounts',
+    MachineAccountQuota = 'machineaccountquota',
+    SupportedKerberosEncryptionTypes = 'supportedencryptiontypes',
+    TGTDelegationEnabled = 'tgtdelegationenabled',
+    PasswordStoredUsingReversibleEncryption = 'encryptedtextpwdallowed',
+    SmartcardRequired = 'smartcardrequired',
+    UseDESKeyOnly = 'usedeskeyonly',
+    LogonScriptEnabled = 'logonscriptenabled',
+    LockedOut = 'lockedout',
+    UserCannotChangePassword = 'passwordcantchange',
+    PasswordExpired = 'passwordexpired',
+    DSHeuristics = 'dsheuristics',
+    UserAccountControl = 'useraccountcontrol',
+    TrustAttributes = 'trustattributes',
 }
 export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKindProperties): string | undefined {
     switch (value) {
@@ -537,6 +551,34 @@ export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKin
             return 'Group Link ID';
         case ActiveDirectoryKindProperties.ObjectGUID:
             return 'Object GUID';
+        case ActiveDirectoryKindProperties.ExpirePasswordsOnSmartCardOnlyAccounts:
+            return 'Expire Passwords on Smart Card only Accounts';
+        case ActiveDirectoryKindProperties.MachineAccountQuota:
+            return 'Machine Account Quota';
+        case ActiveDirectoryKindProperties.SupportedKerberosEncryptionTypes:
+            return 'Supported Kerberos Encryption Types';
+        case ActiveDirectoryKindProperties.TGTDelegationEnabled:
+            return 'TGT Delegation Enabled';
+        case ActiveDirectoryKindProperties.PasswordStoredUsingReversibleEncryption:
+            return 'Password Stored Using Reversible Encryption';
+        case ActiveDirectoryKindProperties.SmartcardRequired:
+            return 'Smartcard Required';
+        case ActiveDirectoryKindProperties.UseDESKeyOnly:
+            return 'Use DES Key Only';
+        case ActiveDirectoryKindProperties.LogonScriptEnabled:
+            return 'Logon Script Enabled';
+        case ActiveDirectoryKindProperties.LockedOut:
+            return 'Locked Out';
+        case ActiveDirectoryKindProperties.UserCannotChangePassword:
+            return 'User Cannot Change Password';
+        case ActiveDirectoryKindProperties.PasswordExpired:
+            return 'Password Expired';
+        case ActiveDirectoryKindProperties.DSHeuristics:
+            return 'DSHeuristics';
+        case ActiveDirectoryKindProperties.UserAccountControl:
+            return 'User Account Control';
+        case ActiveDirectoryKindProperties.TrustAttributes:
+            return 'Trust Attributes';
         default:
             return undefined;
     }
