@@ -83,6 +83,56 @@ func (s *BloodhoundDB) SavedQueryBelongsToUser(ctx context.Context, userID uuid.
 	}
 }
 
+func (s *BloodhoundDB) SearchSavedQueries(ctx context.Context, userID uuid.UUID, filter model.SQLFilter, skip, limit int, order string, name string, query string, description string) (model.SavedQueries, int, error) {
+	var (
+		queries model.SavedQueries
+		result  *gorm.DB
+		count   int64
+		cursor  = s.Scope(Paginate(skip, limit)).WithContext(ctx).Where("user_id = ?", userID)
+	)
+
+	// if filter.SQLString != "" {
+	// 	cursor = cursor.Where(filter.SQLString, filter.Params)
+	// 	result = s.db.Joins("JOIN saved_queries_permissions sqp ON sqp.query_id = saved_queries.id AND (sqp.global OR saved_queries.user_id = ?)", userID).
+	// 		Model(&queries).
+	// 		WithContext(ctx).
+	// 		Where("user_id = ?", userID).
+	// 		Where(filter.SQLString, filter.Params).
+	// 		Count(&count)
+	// } else {
+	result = s.db.Joins("JOIN saved_queries_permissions sqp ON sqp.query_id = saved_queries.id", userID).
+		Model(&queries).
+		WithContext(ctx).
+		Where("user_id = ?", userID).
+		Where("sqp.global = ? OR sqp.shared_to_user_id = ?", true, userID).
+		Count(&count)
+	//}
+
+	if result.Error != nil {
+		return queries, 0, result.Error
+	}
+
+	if order != "" {
+		cursor = cursor.Order(order)
+	}
+
+	if description != "" {
+		cursor = cursor.Where("description = ?", description)
+	}
+
+	if query != "" {
+		cursor = cursor.Where("query = ?", query)
+	}
+
+	if name != "" {
+		cursor = cursor.Where("name = ?", name)
+	}
+
+	result = cursor.Find(&queries)
+
+	return queries, int(count), CheckError(result)
+}
+
 func (s *BloodhoundDB) GetSavedQueryPermissions(ctx context.Context, queryID int64) model.SavedQueriesPermissions {
 	sqp := model.SavedQueriesPermissions{QueryID: queryID}
 	s.db.WithContext(ctx).Where("query_id = ?", queryID).Find(&sqp)

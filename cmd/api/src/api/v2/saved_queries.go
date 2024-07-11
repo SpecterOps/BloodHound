@@ -219,3 +219,82 @@ func (s Resources) DeleteSavedQuery(response http.ResponseWriter, request *http.
 		response.WriteHeader(http.StatusNoContent)
 	}
 }
+
+func (s Resources) SearchSavedQueries(response http.ResponseWriter, request *http.Request) {
+	var (
+		order         []string
+		queryParams   = request.URL.Query()
+		sortByColumns = queryParams[api.QueryParameterSortBy]
+		savedQueries  model.SavedQueries
+	)
+
+	for _, column := range sortByColumns {
+		var descending bool
+		if string(column[0]) == "-" {
+			descending = true
+			column = column[1:]
+		}
+
+		if !savedQueries.IsSortable(column) {
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsNotSortable, request), response)
+			return
+		}
+
+		if descending {
+			order = append(order, column+" desc")
+		} else {
+			order = append(order, column)
+		}
+
+	}
+
+	queryParameterFilterParser := model.NewQueryParameterFilterParser()
+	if queryFilters, err := queryParameterFilterParser.ParseQueryParameterFilters(request); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsBadQueryParameterFilters, request), response)
+		return
+	} else {
+		for name, filters := range queryFilters {
+			if validPredicates, err := savedQueries.GetValidFilterPredicatesAsStrings(name); err != nil {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("%s: %s", api.ErrorResponseDetailsColumnNotFilterable, name), request), response)
+				return
+			} else {
+				for i, filter := range filters {
+					if !utils.Contains(validPredicates, string(filter.Operator)) {
+						api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("%s: %s %s", api.ErrorResponseDetailsFilterPredicateNotSupported, filter.Name, filter.Operator), request), response)
+						return
+					}
+
+					queryFilters[name][i].IsStringData = savedQueries.IsString(filter.Name)
+				}
+			}
+		}
+
+		searchParams := CreateSavedQueryRequest{
+			Name:        getQueryParam(queryParams, "name"),
+			Query:       getQueryParam(queryParams, "query"),
+			Description: getQueryParam(queryParams, "description"),
+		}
+
+		if user, isUser := auth.GetUserFromAuthCtx(ctx2.FromRequest(request).AuthCtx); !isUser {
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "No associated user found", request), response)
+		} else if sqlFilter, err := queryFilters.BuildSQLFilter(); err != nil {
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "error building SQL for filter", request), response)
+		} else if skip, err := ParseSkipQueryParameter(queryParams, 0); err != nil {
+			api.WriteErrorResponse(request.Context(), ErrBadQueryParameter(request, model.PaginationQueryParameterSkip, err), response)
+		} else if limit, err := ParseLimitQueryParameter(queryParams, 10000); err != nil {
+			api.WriteErrorResponse(request.Context(), ErrBadQueryParameter(request, model.PaginationQueryParameterLimit, err), response)
+		} else if queries, count, err := s.DB.SearchSavedQueries(request.Context(), user.ID, sqlFilter, skip, limit, strings.Join(order, ", "), searchParams.Name, searchParams.Query, searchParams.Description); err != nil {
+			api.HandleDatabaseError(request, response, err)
+		} else {
+			api.WriteResponseWrapperWithPagination(request.Context(), queries, limit, skip, count, http.StatusOK, response)
+		}
+	}
+
+}
+
+func getQueryParam(queryParams map[string][]string, key string) string {
+	if val, ok := queryParams[key]; ok && len(val) > 0 {
+		return val[0]
+	}
+	return ""
+}

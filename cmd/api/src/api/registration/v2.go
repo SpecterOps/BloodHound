@@ -163,6 +163,7 @@ func NewV2API(cfg config.Configuration, resources v2.Resources, routerInst *rout
 		routerInst.POST("/api/v2/graphs/cypher", resources.CypherQuery).RequirePermissions(permissions.GraphDBRead),
 		routerInst.GET("/api/v2/saved-queries", resources.ListSavedQueries).RequirePermissions(permissions.SavedQueriesRead),
 		routerInst.POST("/api/v2/saved-queries", resources.CreateSavedQuery).RequirePermissions(permissions.SavedQueriesWrite),
+		routerInst.GET("/api/v2/saved-queries/search", resources.SearchSavedQueries).RequirePermissions(permissions.SavedQueriesRead),
 		routerInst.DELETE(fmt.Sprintf("/api/v2/saved-queries/{%s}", api.URIPathVariableSavedQueryID), resources.DeleteSavedQuery).RequirePermissions(permissions.SavedQueriesWrite),
 
 		// Share Endpoint
