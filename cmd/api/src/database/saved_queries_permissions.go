@@ -44,6 +44,7 @@ func (s *BloodhoundDB) CreateSavedQueryPermissionToGlobal(ctx context.Context, q
 	return permission, CheckError(s.db.WithContext(ctx).Create(&permission))
 }
 
+// GetSavedQueriesSharedWithUser returns all of the saved queries that the given userID has access to, including global queries
 func (s *BloodhoundDB) GetSavedQueriesSharedWithUser(ctx context.Context, userID int64) (model.SavedQueries, error) {
 	savedQueries := model.SavedQueries{}
 
@@ -52,6 +53,7 @@ func (s *BloodhoundDB) GetSavedQueriesSharedWithUser(ctx context.Context, userID
 	return savedQueries, CheckError(result)
 }
 
+// CheckUserHasPermissionToSavedQuery returns true or false depending on if the given userID has permission to read the given queryID
 func (s *BloodhoundDB) CheckUserHasPermissionToSavedQuery(ctx context.Context, queryID int64, userID uuid.UUID) (bool, error) {
 	userHasPermission := false
 	result := s.db.WithContext(ctx).First(&userHasPermission, "user_id = ? AND query_id = ?", userID, queryID)
