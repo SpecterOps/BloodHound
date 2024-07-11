@@ -22,6 +22,13 @@ import (
 	"github.com/specterops/bloodhound/src/model"
 )
 
+type SavedQueriesPermissionsData interface {
+	CreateSavedQueryPermissionToUser(ctx context.Context, queryID int64, userID uuid.UUID) (model.SavedQueriesPermissions, error)
+	CreateSavedQueryPermissionToGlobal(ctx context.Context, queryID int64) (model.SavedQueriesPermissions, error)
+	GetSavedQueriesSharedWithUser(ctx context.Context, userID int64) (model.SavedQueries, error)
+	CheckUserHasPermissionToSavedQuery(ctx context.Context, queryID int64, userID uuid.UUID) (bool, error)
+}
+
 // CreateSavedQueryPermissionToUser creates a new entry to the SavedQueriesPermissions table granting a provided user id to access a provided query
 func (s *BloodhoundDB) CreateSavedQueryPermissionToUser(ctx context.Context, queryID int64, userID uuid.UUID) (model.SavedQueriesPermissions, error) {
 	permission := model.SavedQueriesPermissions{
@@ -31,7 +38,6 @@ func (s *BloodhoundDB) CreateSavedQueryPermissionToUser(ctx context.Context, que
 	}
 
 	return permission, CheckError(s.db.WithContext(ctx).Create(&permission))
-
 }
 
 // CreateSavedQueryPermissionToGlobal creates a new entry to the SavedQueriesPermissions table granting global read permissions to all users
