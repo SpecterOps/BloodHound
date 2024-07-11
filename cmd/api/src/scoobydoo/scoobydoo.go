@@ -43,7 +43,7 @@ func (s *ScoobyService) ensureScoobyChan() error {
 	return nil
 }
 
-func (s *ScoobyService) ensureQueue(queueName string) error {
+func (s *ScoobyService) EnsureQueue(queueName string) error {
 	err := s.ensureScoobyChan()
 	if err != nil {
 		return err
@@ -89,7 +89,7 @@ func (s *ScoobyService) EnqueueJob(queueName string, snack ScoobySnack) error {
 	}
 
 	// This calls ensure channel every time
-	err = s.ensureQueue(queueName)
+	err = s.EnsureQueue(queueName)
 	if err != nil {
 		log.Warnf("Failed to ensure queue for %s %v", queueName, err)
 		return err
