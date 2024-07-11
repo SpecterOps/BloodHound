@@ -216,7 +216,7 @@ func (s Resources) SearchSavedQueries(response http.ResponseWriter, request *htt
 			api.WriteErrorResponse(request.Context(), ErrBadQueryParameter(request, model.PaginationQueryParameterSkip, err), response)
 		} else if limit, err := ParseLimitQueryParameter(queryParams, 10000); err != nil {
 			api.WriteErrorResponse(request.Context(), ErrBadQueryParameter(request, model.PaginationQueryParameterLimit, err), response)
-		} else if queries, count, err := s.DB.SearchSavedQueries(request.Context(), user.ID, sqlFilter, skip, limit, strings.Join(order, ", "), searchParams.Name, searchParameterQuery, searchParams.Description); err != nil {
+		} else if queries, count, err := s.DB.SearchSavedQueries(request.Context(), user.ID, sqlFilter, skip, limit, strings.Join(order, ", "), searchParams.Name, searchParams.Query, searchParams.Description); err != nil {
 			api.HandleDatabaseError(request, response, err)
 		} else {
 			api.WriteResponseWrapperWithPagination(request.Context(), queries, limit, skip, count, http.StatusOK, response)
