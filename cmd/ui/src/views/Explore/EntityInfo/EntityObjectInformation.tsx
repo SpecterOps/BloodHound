@@ -31,8 +31,12 @@ import { useQuery } from 'react-query';
 import { BasicObjectInfoFields } from '../BasicObjectInfoFields';
 import EntityInfoCollapsibleSection from './EntityInfoCollapsibleSection';
 import { EntityInfoContentProps } from './EntityInfoContent';
+import { useAppDispatch, useAppSelector } from 'src/store';
+import { addExpandedRelationship, removeExpandedRelationship } from 'src/ducks/entityinfo/actions';
 
 const EntityObjectInformation: React.FC<EntityInfoContentProps> = ({ id, nodeType, databaseId }) => {
+    const dispatch = useAppDispatch();
+    const expandedRelationships = useAppSelector((state) => state.entityinfo.expandedRelationships);
     const requestDetails: {
         endpoint: (
             params: string,
@@ -91,8 +95,15 @@ const EntityObjectInformation: React.FC<EntityInfoContentProps> = ({ id, nodeTyp
 
     const formattedObjectFields: EntityField[] = formatObjectInfoFields(objectInformation);
 
+    const handleOnChange = (label: string, isOpen: boolean) => {
+        dispatch(isOpen ? addExpandedRelationship(label) : removeExpandedRelationship(label));
+    };
+
     return (
-        <EntityInfoCollapsibleSection label='Object Information'>
+        <EntityInfoCollapsibleSection
+            isOpen={expandedRelationships.includes('Object Information')}
+            onChange={handleOnChange}
+            label='Object Information'>
             <FieldsContainer>
                 <BasicObjectInfoFields {...objectInformation} />
                 <ObjectInfoFields fields={formattedObjectFields} />

@@ -315,7 +315,7 @@ const GraphView: FC = () => {
     const onClickNode = (id: string) => {
         dispatch(setEdgeInfoOpen(false));
         dispatch(setEntityInfoOpen(true));
-        dispatch(clearExpandedRelationship());
+        dispatch(setExpandedRelationship(['Object Information']));
 
         findNodeAndSelect(id);
     };
