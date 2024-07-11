@@ -21,6 +21,7 @@ import (
 	"net/http"
 
 	"github.com/specterops/bloodhound/openapi"
+	"github.com/specterops/bloodhound/packages/go/apitoy/presentation/v2/handler"
 	"github.com/specterops/bloodhound/params"
 	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/src/api/middleware"
@@ -99,7 +100,7 @@ func registerV2Auth(resources v2.Resources, routerInst *router.Router, permissio
 }
 
 // NewV2API sets up dependencies, authorization and a router, and then defines the BloodHound V2 API endpoints on said router
-func NewV2API(resources v2.Resources, routerInst *router.Router) {
+func NewV2API(resources v2.Resources, routerInst *router.Router, handlers handler.Handler) {
 	var permissions = auth.Permissions()
 
 	// Register the auth API endpoints
@@ -114,7 +115,7 @@ func NewV2API(resources v2.Resources, routerInst *router.Router) {
 	routerInst.GET("/api/v2/file-upload", resources.ListFileUploadJobs).RequireAuth()
 	routerInst.GET("/api/v2/file-upload/accepted-types", resources.ListAcceptedFileUploadTypes).RequireAuth()
 	routerInst.POST("/api/v2/file-upload/start", resources.StartFileUploadJob).RequirePermissions(permissions.GraphDBIngest)
-	routerInst.POST(fmt.Sprintf("/api/v2/file-upload/{%s}", v2.FileUploadJobIdPathParameterName), resources.ProcessFileUpload).RequirePermissions(permissions.GraphDBIngest)
+	routerInst.POST(fmt.Sprintf("/api/v2/file-upload/{%s}", v2.FileUploadJobIdPathParameterName), handlers.ProcessFileUpload).RequirePermissions(permissions.GraphDBIngest)
 	routerInst.POST(fmt.Sprintf("/api/v2/file-upload/{%s}/end", v2.FileUploadJobIdPathParameterName), resources.EndFileUploadJob).RequirePermissions(permissions.GraphDBIngest)
 
 	router.With(middleware.DefaultRateLimitMiddleware,

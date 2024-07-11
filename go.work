@@ -19,6 +19,7 @@ go 1.23
 use (
 	./cmd/api/src
 	./packages/go/analysis
+	./packages/go/apitoy
 	./packages/go/bomenc
 	./packages/go/cache
 	./packages/go/conftool

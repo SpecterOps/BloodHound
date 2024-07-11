@@ -34,6 +34,7 @@ type IngestTasks []IngestTask
 type FileType int
 
 const (
-	FileTypeJson FileType = iota
+	FileTypeInvalid FileType = iota
+	FileTypeJson
 	FileTypeZip
 )

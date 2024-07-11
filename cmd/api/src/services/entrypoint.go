@@ -25,6 +25,7 @@ import (
 	"github.com/specterops/bloodhound/dawgs/graph"
 	schema "github.com/specterops/bloodhound/graphschema"
 	"github.com/specterops/bloodhound/log"
+	"github.com/specterops/bloodhound/packages/go/apitoy/app"
 	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/src/api/registration"
 	"github.com/specterops/bloodhound/src/api/router"
@@ -100,10 +101,13 @@ func Entrypoint(ctx context.Context, cfg config.Configuration, connections boots
 			routerInst     = router.NewRouter(cfg, authorizer, bootstrap.ContentSecurityPolicy)
 			ctxInitializer = database.NewContextInitializer(connections.RDMS)
 			authenticator  = api.NewAuthenticator(cfg, connections.RDMS, ctxInitializer)
+			bhApp          = app.NewBHApp(connections.RDMS, cfg)
 		)
 
+		// new app
+
 		registration.RegisterFossGlobalMiddleware(&routerInst, cfg, auth.NewIdentityResolver(), authenticator)
-		registration.RegisterFossRoutes(&routerInst, cfg, connections.RDMS, connections.Graph, graphQuery, apiCache, collectorManifests, authenticator, authorizer)
+		registration.RegisterFossRoutes(&routerInst, cfg, connections.RDMS, connections.Graph, graphQuery, apiCache, collectorManifests, authenticator, authorizer, bhApp)
 
 		// Set neo4j batch and flush sizes
 		neo4jParameters := appcfg.GetNeo4jParameters(ctx, connections.RDMS)

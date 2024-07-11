@@ -21,6 +21,8 @@ import (
 
 	"github.com/specterops/bloodhound/cache"
 	"github.com/specterops/bloodhound/dawgs/graph"
+	"github.com/specterops/bloodhound/packages/go/apitoy/app"
+	"github.com/specterops/bloodhound/packages/go/apitoy/presentation/v2/handler"
 	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/src/api/middleware"
 	"github.com/specterops/bloodhound/src/api/router"
@@ -59,6 +61,7 @@ func RegisterFossRoutes(
 	collectorManifests config.CollectorManifests,
 	authenticator api.Authenticator,
 	authorizer auth.Authorizer,
+	bhApp app.BHApp,
 ) {
 	router.With(middleware.DefaultRateLimitMiddleware,
 		// Health Endpoint
@@ -75,6 +78,10 @@ func RegisterFossRoutes(
 		routerInst.PathPrefix("/ui", static.AssetHandler),
 	)
 
-	var resources = v2.NewResources(rdms, graphDB, cfg, apiCache, graphQuery, collectorManifests, authorizer, authenticator)
-	NewV2API(resources, routerInst)
+	var (
+		resources = v2.NewResources(rdms, graphDB, cfg, apiCache, graphQuery, collectorManifests, authorizer, authenticator)
+		handlers  = handler.NewHandler(bhApp)
+	)
+
+	NewV2API(resources, routerInst, handlers)
 }
