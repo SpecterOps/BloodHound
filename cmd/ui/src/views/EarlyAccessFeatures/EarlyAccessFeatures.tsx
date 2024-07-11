@@ -14,13 +14,13 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { Button } from '@bloodhoundenterprise/doodleui';
 import { faCheckCircle } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
     Alert,
     AlertTitle,
     Box,
-    Button,
     Dialog,
     DialogActions,
     DialogContent,
@@ -30,10 +30,10 @@ import {
     Skeleton,
     Typography,
 } from '@mui/material';
+import { PageWithTitle } from 'bh-shared-ui';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Flag, useFeatureFlags, useToggleFeatureFlag } from 'src/hooks/useFeatureFlags';
-import { PageWithTitle } from 'bh-shared-ui';
 
 export const EarlyAccessFeatureToggle: React.FC<{
     flag: Flag;
@@ -52,18 +52,16 @@ export const EarlyAccessFeatureToggle: React.FC<{
                     <Typography variant='body1'>{flag.description}</Typography>
                 </Box>
                 <Box>
-                    <Button
-                        disabled={disabled}
-                        variant='outlined'
-                        color={flag.enabled ? 'primary' : 'inherit'}
-                        sx={{
-                            borderColor: () => {
-                                if (!flag.enabled) return 'rgba(0,0,0,0.23)';
-                            },
-                        }}
-                        onClick={handleOnClick}
-                        startIcon={flag.enabled ? <FontAwesomeIcon icon={faCheckCircle} fixedWidth /> : null}>
-                        {flag.enabled ? 'Enabled' : 'Disabled'}
+                    <Button disabled={disabled} onClick={handleOnClick}>
+                        <FontAwesomeIcon icon={faCheckCircle} fixedWidth />
+                        {flag.enabled ? (
+                            <>
+                                <FontAwesomeIcon icon={faCheckCircle} fixedWidth />
+                                <Typography>Enabled</Typography>
+                            </>
+                        ) : (
+                            'Disabled'
+                        )}
                     </Button>
                 </Box>
             </Box>
@@ -92,13 +90,13 @@ export const EarlyAccessFeaturesWarningDialog: React.FC<{
             </DialogContent>
             <DialogActions>
                 <Button
-                    color='inherit'
+                    variant='tertiary'
                     onClick={onCancel}
                     data-testid='early-access-features-warning-dialog_button-close'>
                     {'Take me back'}
                 </Button>
                 <Button
-                    color='primary'
+                    variant='primary'
                     onClick={onConfirm}
                     data-testid='early-access-features-warning-dialog_button-confirm'>
                     {'I understand, show me the new stuff!'}

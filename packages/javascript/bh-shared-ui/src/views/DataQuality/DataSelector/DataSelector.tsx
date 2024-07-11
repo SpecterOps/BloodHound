@@ -16,20 +16,10 @@
 
 import { faGlobe, faCloud } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import {
-    Alert,
-    Box,
-    Button,
-    Divider,
-    MenuItem,
-    Popover,
-    Skeleton,
-    TextField,
-    Tooltip,
-    Typography,
-} from '@mui/material';
+import { Alert, Box, Divider, MenuItem, Popover, Skeleton, TextField, Tooltip, Typography } from '@mui/material';
 import { useAvailableDomains, Domain } from '../../../hooks';
 import React, { ReactNode, useState } from 'react';
+import { Button } from '@bloodhoundenterprise/doodleui';
 
 const DataSelector: React.FC<{
     value: { type: string | null; id: string | null };
@@ -75,16 +65,14 @@ const DataSelector: React.FC<{
     return (
         <Box data-testid='data-selector' p={1}>
             <Button
-                sx={{
+                style={{
                     whiteSpace: 'nowrap',
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',
                     display: 'block',
+                    width: fullWidth ? '100%' : '',
+                    textTransform: 'uppercase',
                 }}
-                fullWidth={fullWidth}
-                variant='contained'
-                disableElevation
-                color='primary'
                 onClick={handleClick}
                 data-testid='data-quality_context-selector'>
                 {selectedDomainName !== null ? selectedDomainName : 'Select Context'}

@@ -312,12 +312,7 @@ const DatabaseManagement = () => {
                         </FormGroup>
                     </FormControl>
 
-                    <Button
-                        color='primary'
-                        variant='contained'
-                        disableElevation
-                        sx={{ width: '150px' }}
-                        onClick={() => dispatch({ type: 'open_dialog' })}>
+                    <Button color='primary' onClick={() => dispatch({ type: 'open_dialog' })}>
                         Proceed
                     </Button>
                 </Box>

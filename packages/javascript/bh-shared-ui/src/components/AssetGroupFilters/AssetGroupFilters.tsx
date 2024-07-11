@@ -18,7 +18,6 @@ import { AssetGroupMemberParams } from 'js-client-library/dist/types';
 import { FC, useState } from 'react';
 import {
     Box,
-    Button,
     Checkbox,
     Collapse,
     FormControl,
@@ -33,6 +32,7 @@ import makeStyles from '@mui/styles/makeStyles';
 import { Theme } from '@mui/material/styles';
 import NodeIcon from '../NodeIcon';
 import { AssetGroupMemberCounts } from 'js-client-library';
+import { Button } from '@bloodhoundenterprise/doodleui';
 
 export const FILTERABLE_PARAMS: Array<keyof Pick<AssetGroupMemberParams, 'primary_kind' | 'custom_member'>> = [
     'primary_kind',
@@ -90,11 +90,10 @@ const AssetGroupFilters: FC<Props> = ({ filterParams, handleFilterChange, member
             marginBottom={1}
             data-testid='asset-group-filters-container'>
             <Button
-                className='expand-filters'
-                fullWidth
                 onClick={() => setDisplayFilters((prev) => !prev)}
-                data-testid='display-filters-button'>
-                Filters
+                data-testid='display-filters-button'
+                style={{ width: '100%', marginBottom: '12px' }}>
+                FILTERS
                 <span className={classes.activeFiltersDot} />
             </Button>
             <Collapse in={displayFilters} data-testid='asset-group-filter-collapsible-section'>
