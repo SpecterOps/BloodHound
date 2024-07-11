@@ -83,22 +83,22 @@ func (s *BloodhoundDB) SearchSavedQueries(ctx context.Context, userID uuid.UUID,
 		cursor  = s.Scope(Paginate(skip, limit)).WithContext(ctx).Where("user_id = ?", userID)
 	)
 
-	if filter.SQLString != "" {
-		cursor = cursor.Where(filter.SQLString, filter.Params)
-		result = s.db.Joins("JOIN saved_queries_permissions sqp ON sqp.query_id = saved_queries.id AND (sqp.global OR saved_queries.user_id = ?)", userID).
-			Model(&queries).
-			WithContext(ctx).
-			Where("user_id = ?", userID).
-			Where(filter.SQLString, filter.Params).
-			Count(&count)
-	} else {
-		result = s.db.Joins("JOIN saved_queries_permissions sqp ON sqp.query_id = saved_queries.id AND (sqp.global OR saved_queries.user_id = ?)", userID).
-			Model(&queries).
-			WithContext(ctx).
-			Where("user_id = ?", userID).
-			Where(filter.SQLString, filter.Params).
-			Count(&count)
-	}
+	// if filter.SQLString != "" {
+	// 	cursor = cursor.Where(filter.SQLString, filter.Params)
+	// 	result = s.db.Joins("JOIN saved_queries_permissions sqp ON sqp.query_id = saved_queries.id AND (sqp.global OR saved_queries.user_id = ?)", userID).
+	// 		Model(&queries).
+	// 		WithContext(ctx).
+	// 		Where("user_id = ?", userID).
+	// 		Where(filter.SQLString, filter.Params).
+	// 		Count(&count)
+	// } else {
+	result = s.db.Joins("JOIN saved_queries_permissions sqp ON sqp.query_id = saved_queries.id", userID).
+		Model(&queries).
+		WithContext(ctx).
+		Where("user_id = ?", userID).
+		Where("sqp.global = ? OR sqp.shared_to_user_id = ?", true, userID).
+		Count(&count)
+	//}
 
 	if result.Error != nil {
 		return queries, 0, result.Error

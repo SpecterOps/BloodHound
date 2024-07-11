@@ -203,9 +203,9 @@ func (s Resources) SearchSavedQueries(response http.ResponseWriter, request *htt
 		}
 
 		searchParams := CreateSavedQueryRequest{
-			Query:       queryParams["query"][0],
-			Name:        queryParams["name"][0],
-			Description: queryParams["description"][0],
+			Name:        getQueryParam(queryParams, "name"),
+			Query:       getQueryParam(queryParams, "query"),
+			Description: getQueryParam(queryParams, "description"),
 		}
 
 		if user, isUser := auth.GetUserFromAuthCtx(ctx2.FromRequest(request).AuthCtx); !isUser {
@@ -223,4 +223,11 @@ func (s Resources) SearchSavedQueries(response http.ResponseWriter, request *htt
 		}
 	}
 
+}
+
+func getQueryParam(queryParams map[string][]string, key string) string {
+	if val, ok := queryParams[key]; ok && len(val) > 0 {
+		return val[0]
+	}
+	return ""
 }
