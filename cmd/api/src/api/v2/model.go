@@ -26,6 +26,7 @@ import (
 	"github.com/specterops/bloodhound/src/database"
 	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/queries"
+	"github.com/specterops/bloodhound/src/scoobydoo"
 	"github.com/specterops/bloodhound/src/serde"
 )
 
@@ -142,6 +143,7 @@ type Resources struct {
 	Cache                      cache.Cache
 	CollectorManifests         config.CollectorManifests
 	Authorizer                 auth.Authorizer
+	ScoobyService              scoobydoo.ScoobyService
 }
 
 func NewResources(
@@ -163,5 +165,6 @@ func NewResources(
 		Cache:                      apiCache,
 		CollectorManifests:         collectorManifests,
 		Authorizer:                 authorizer,
+		ScoobyService:              scoobydoo.NewScoobyService(),
 	}
 }
