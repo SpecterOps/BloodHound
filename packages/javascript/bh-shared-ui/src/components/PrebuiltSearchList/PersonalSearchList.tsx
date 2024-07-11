@@ -50,7 +50,7 @@ export const PersonalSearchList: FC<{ clickHandler: (query: string) => void }> =
         );
     }
 
-    const lineItems: LineItem[] =
+    const personalQueries: LineItem[] =
         userQueries.data?.map((query) => ({
             description: query.name,
             cypher: query.query,
@@ -58,14 +58,14 @@ export const PersonalSearchList: FC<{ clickHandler: (query: string) => void }> =
             id: query.id,
         })) || [];
 
-    return lineItems.length > 0 ? (
+    return personalQueries.length > 0 ? (
         <>
             <TextField id='standard-basic' label='Search' variant='standard' />
             <PrebuiltSearchList
                 listSections={[
                     {
                         subheader: 'Personal ',
-                        lineItems,
+                        lineItems: personalQueries,
                     },
                     {
                         subheader: 'Shared ',
