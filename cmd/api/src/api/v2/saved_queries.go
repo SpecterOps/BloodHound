@@ -153,29 +153,74 @@ func (s Resources) DeleteSavedQuery(response http.ResponseWriter, request *http.
 	}
 }
 
-type SearchSavedQueriesRequest struct {
-	Description string `json:"description"`
-}
-
 func (s Resources) SearchSavedQueries(response http.ResponseWriter, request *http.Request) {
 	var (
-		searchRequest SearchSavedQueriesRequest
+		order         []string
+		queryParams   = request.URL.Query()
+		sortByColumns = queryParams[api.QueryParameterSortBy]
+		savedQueries  model.SavedQueries
 	)
 
-	if user, isUser := auth.GetUserFromAuthCtx(ctx2.FromRequest(request).AuthCtx); !isUser {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "No associated user found", request), response)
-	} else if err := api.ReadJSONRequestPayloadLimited(&searchRequest, request); err != nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
-	} else if searchRequest.Description == "" {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "the description field is empty", request), response)
-	} else if savedQuery, err := s.DB.CreateSavedQuery(request.Context(), user.ID, createRequest.Name, createRequest.Query); err != nil {
-		if strings.Contains(err.Error(), "duplicate key value violates unique constraint") {
-			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "duplicate name for saved query: please choose a different name", request), response)
-		} else {
-			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, err.Error(), request), response)
+	for _, column := range sortByColumns {
+		var descending bool
+		if string(column[0]) == "-" {
+			descending = true
+			column = column[1:]
 		}
+
+		if !savedQueries.IsSortable(column) {
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsNotSortable, request), response)
+			return
+		}
+
+		if descending {
+			order = append(order, column+" desc")
+		} else {
+			order = append(order, column)
+		}
+
+	}
+
+	queryParameterFilterParser := model.NewQueryParameterFilterParser()
+	if queryFilters, err := queryParameterFilterParser.ParseQueryParameterFilters(request); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsBadQueryParameterFilters, request), response)
+		return
 	} else {
-		api.WriteBasicResponse(request.Context(), savedQuery, http.StatusCreated, response)
+		for name, filters := range queryFilters {
+			if validPredicates, err := savedQueries.GetValidFilterPredicatesAsStrings(name); err != nil {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("%s: %s", api.ErrorResponseDetailsColumnNotFilterable, name), request), response)
+				return
+			} else {
+				for i, filter := range filters {
+					if !utils.Contains(validPredicates, string(filter.Operator)) {
+						api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("%s: %s %s", api.ErrorResponseDetailsFilterPredicateNotSupported, filter.Name, filter.Operator), request), response)
+						return
+					}
+
+					queryFilters[name][i].IsStringData = savedQueries.IsString(filter.Name)
+				}
+			}
+		}
+
+		searchParams := CreateSavedQueryRequest{
+			Query:       queryParams["query"][0],
+			Name:        queryParams["name"][0],
+			Description: queryParams["description"][0],
+		}
+
+		if user, isUser := auth.GetUserFromAuthCtx(ctx2.FromRequest(request).AuthCtx); !isUser {
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "No associated user found", request), response)
+		} else if sqlFilter, err := queryFilters.BuildSQLFilter(); err != nil {
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "error building SQL for filter", request), response)
+		} else if skip, err := ParseSkipQueryParameter(queryParams, 0); err != nil {
+			api.WriteErrorResponse(request.Context(), ErrBadQueryParameter(request, model.PaginationQueryParameterSkip, err), response)
+		} else if limit, err := ParseLimitQueryParameter(queryParams, 10000); err != nil {
+			api.WriteErrorResponse(request.Context(), ErrBadQueryParameter(request, model.PaginationQueryParameterLimit, err), response)
+		} else if queries, count, err := s.DB.SearchSavedQueries(request.Context(), user.ID, sqlFilter, skip, limit, strings.Join(order, ", "), searchParams.Name, searchParameterQuery, searchParams.Description); err != nil {
+			api.HandleDatabaseError(request, response, err)
+		} else {
+			api.WriteResponseWrapperWithPagination(request.Context(), queries, limit, skip, count, http.StatusOK, response)
+		}
 	}
 
 }
