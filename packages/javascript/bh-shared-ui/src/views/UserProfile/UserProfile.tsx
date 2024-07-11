@@ -47,6 +47,10 @@ const UserProfile = () => {
         apiClient.getSelf({ signal }).then((res) => res.data.data)
     );
 
+    const getVersionQuery = useQuery(['Version'], ({ signal }) =>
+        apiClient.version({ signal }).then((res) => res.data.data)
+    );
+
     const updateUserPasswordMutation = useMutation(
         ({ userId, ...payload }: { userId: string } & PutUserAuthSecretRequest) =>
             apiClient.putUserAuthSecret(userId, payload),
@@ -109,6 +113,7 @@ const UserProfile = () => {
     }
 
     const user = getSelfQuery.data;
+    const version = getVersionQuery;
 
     return (
         <>
@@ -120,61 +125,49 @@ const UserProfile = () => {
                         Review and manage your user account.
                     </Typography>
                 }>
-                <Typography variant='h2'>User Information</Typography>
+                <Box
+                    display={'flex'}
+                    flexDirection={'column'}
+                    justifyContent={'space-between'}
+                    height={'80vh'}
+                    margin={'0'}
+                    padding={'0'}>
+                    <Typography variant='h2'>User Information</Typography>
+                    <Box>
+                        <Grid container spacing={2} alignItems='center'>
+                            <Grid item xs={3}>
+                                <Typography variant='body1'>Email</Typography>
+                            </Grid>
+                            <Grid item xs={9}>
+                                <Typography variant='body1'>{user?.email_address}</Typography>
+                            </Grid>
 
-                <Grid container spacing={2} alignItems='center'>
-                    <Grid item xs={3}>
-                        <Typography variant='body1'>Email</Typography>
-                    </Grid>
-                    <Grid item xs={9}>
-                        <Typography variant='body1'>{user?.email_address}</Typography>
-                    </Grid>
+                            <Grid item xs={3}>
+                                <Typography variant='body1'>Name</Typography>
+                            </Grid>
+                            <Grid item xs={9}>
+                                <Typography variant='body1'>
+                                    <TextWithFallback text={getUsername(user)} fallback='Unknown' />
+                                </Typography>
+                            </Grid>
 
-                    <Grid item xs={3}>
-                        <Typography variant='body1'>Name</Typography>
-                    </Grid>
-                    <Grid item xs={9}>
-                        <Typography variant='body1'>
-                            <TextWithFallback text={getUsername(user)} fallback='Unknown' />
-                        </Typography>
-                    </Grid>
-
-                    <Grid item xs={3}>
-                        <Typography variant='body1'>Role</Typography>
-                    </Grid>
-                    <Grid item xs={9}>
-                        <Typography variant='body1'>
-                            <TextWithFallback text={user?.roles?.[0]?.name} fallback='Unknown' />
-                        </Typography>
-                    </Grid>
-                </Grid>
-
-                <Box mt={2}>
-                    <Typography variant='h2'>Authentication</Typography>
-                </Box>
-                <Grid container spacing={2} alignItems='center'>
-                    <Grid container item>
-                        <Grid item xs={3}>
-                            <Typography variant='body1'>API Key Management</Typography>
+                            <Grid item xs={3}>
+                                <Typography variant='body1'>Role</Typography>
+                            </Grid>
+                            <Grid item xs={9}>
+                                <Typography variant='body1'>
+                                    <TextWithFallback text={user?.roles?.[0]?.name} fallback='Unknown' />
+                                </Typography>
+                            </Grid>
                         </Grid>
-                        <Grid item xs={2}>
-                            <Button
-                                variant='contained'
-                                color='primary'
-                                size='small'
-                                disableElevation
-                                fullWidth
-                                onClick={() => setUserTokenManagementDialogOpen(true)}
-                                data-testid='my-profile_button-api-key-management'>
-                                API Key Management
-                            </Button>
-                        </Grid>
-                    </Grid>
-                    {user.saml_provider_id === null && (
-                        <>
+
+                        <Box mt={2}>
+                            <Typography variant='h2'>Authentication</Typography>
+                        </Box>
+                        <Grid container spacing={2} alignItems='center'>
                             <Grid container item>
                                 <Grid item xs={3}>
-                                    <Typography variant='body1'>Password</Typography>
+                                    <Typography variant='body1'>API Key Management</Typography>
                                 </Grid>
                                 <Grid item xs={2}>
                                     <Button
@@ -183,40 +176,67 @@ const UserProfile = () => {
                                         size='small'
                                         disableElevation
                                         fullWidth
-                                        onClick={() => setChangePasswordDialogOpen(true)}
-                                        data-testid='my-profile_button-reset-password'>
-                                        Reset Password
+                                        onClick={() => setUserTokenManagementDialogOpen(true)}
+                                        data-testid='my-profile_button-api-key-management'>
+                                        API Key Management
                                     </Button>
                                 </Grid>
                             </Grid>
+                            {user.saml_provider_id === null && (
+                                <>
+                                    <Grid container item>
+                                        <Grid item xs={3}>
+                                            <Typography variant='body1'>Password</Typography>
+                                        </Grid>
+                                        <Grid item xs={2}>
+                                            <Button
+                                                variant='contained'
+                                                color='primary'
+                                                size='small'
+                                                disableElevation
+                                                fullWidth
+                                                onClick={() => setChangePasswordDialogOpen(true)}
+                                                data-testid='my-profile_button-reset-password'>
+                                                Reset Password
+                                            </Button>
+                                        </Grid>
+                                    </Grid>
 
-                            <Grid container item>
-                                <Grid item xs={3}>
-                                    <Typography variant='body1'>Multi-Factor Authentication</Typography>
-                                </Grid>
-                                <Grid item xs={9}>
-                                    <Box display='flex' alignItems='center'>
-                                        <Switch
-                                            inputProps={{
-                                                'aria-label': 'Multi-Factor Authentication Enabled',
-                                            }}
-                                            checked={user.AuthSecret?.totp_activated}
-                                            onChange={() => {
-                                                if (!user.AuthSecret?.totp_activated) setEnable2FADialogOpen(true);
-                                                else setDisable2FADialogOpen(true);
-                                            }}
-                                            color='primary'
-                                            data-testid='my-profile_switch-multi-factor-authentication'
-                                        />
-                                        {user.AuthSecret?.totp_activated && (
-                                            <Typography variant='body1'>Enabled</Typography>
-                                        )}
-                                    </Box>
-                                </Grid>
-                            </Grid>
-                        </>
-                    )}
-                </Grid>
+                                    <Grid container item>
+                                        <Grid item xs={3}>
+                                            <Typography variant='body1'>Multi-Factor Authentication</Typography>
+                                        </Grid>
+                                        <Grid item xs={9}>
+                                            <Box display='flex' alignItems='center'>
+                                                <Switch
+                                                    inputProps={{
+                                                        'aria-label': 'Multi-Factor Authentication Enabled',
+                                                    }}
+                                                    checked={user.AuthSecret?.totp_activated}
+                                                    onChange={() => {
+                                                        if (!user.AuthSecret?.totp_activated)
+                                                            setEnable2FADialogOpen(true);
+                                                        else setDisable2FADialogOpen(true);
+                                                    }}
+                                                    color='primary'
+                                                    data-testid='my-profile_switch-multi-factor-authentication'
+                                                />
+                                                {user.AuthSecret?.totp_activated && (
+                                                    <Typography variant='body1'>Enabled</Typography>
+                                                )}
+                                            </Box>
+                                        </Grid>
+                                    </Grid>
+                                </>
+                            )}
+                        </Grid>
+                    </Box>
+                    <Box sx={{ flexGrow: 1, alignContent: 'flex-end' }}>
+                        <Typography variant='body2'>
+                            API Version: <TextWithFallback text={version.data.server_version} fallback='Unknown' />
+                        </Typography>
+                    </Box>
+                </Box>
             </PageWithTitle>
 
             <PasswordDialog
