@@ -45,7 +45,8 @@ func (s *BloodhoundDB) ListSavedQueries(ctx context.Context, userID uuid.UUID, o
 	if order != "" {
 		cursor = cursor.Order(order)
 	}
-	result = cursor.Find(&queries)
+
+	result = cursor.Joins("JOIN saved_queries_permissions sqp ON sqp.query_id = saved_queries.id AND (sqp.global OR saved_queries.user_id = ?)", userID).Find(&queries)
 
 	return queries, int(count), CheckError(result)
 }
@@ -58,7 +59,13 @@ func (s *BloodhoundDB) CreateSavedQuery(ctx context.Context, userID uuid.UUID, n
 		Query:       query,
 	}
 
-	return savedQuery, CheckError(s.db.WithContext(ctx).Create(&savedQuery))
+	// TODO make this a transaction
+	if result := s.db.WithContext(ctx).Create(&savedQuery); result.Error != nil {
+		return model.SavedQuery{}, result.Error
+	} else if _, err := s.CreateSavedQueryPermissionToUser(ctx, savedQuery.ID, userID); err != nil {
+		return savedQuery, err
+	}
+	return savedQuery, nil
 }
 
 func (s *BloodhoundDB) DeleteSavedQuery(ctx context.Context, id int) error {
