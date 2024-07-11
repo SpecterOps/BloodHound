@@ -27,6 +27,7 @@ import { putGraphData, putGraphError, saveResponseForExport, setGraphLoading } f
 import { addSnackbar } from 'src/ducks/global/actions';
 import { transformFlatGraphResponse } from 'src/utils';
 import EntityInfoCollapsibleSection from './EntityInfoCollapsibleSection';
+import { addExpandedRelationship, removeExpandedRelationship } from 'src/ducks/entityinfo/actions';
 
 const EntityInfoDataTable: React.FC<EntityInfoDataTableProps> = ({ id, label, endpoint, sections }) => {
     const dispatch = useDispatch();
@@ -43,8 +44,13 @@ const EntityInfoDataTable: React.FC<EntityInfoDataTableProps> = ({ id, label, en
         { refetchOnWindowFocus: false, retry: false }
     );
 
+    // TODO:
+    // move this to the graph update action thing
+    // push this change to last action field
     const handleOnChange = async (label: string, isOpen: boolean) => {
         if (!endpoint) return;
+
+        dispatch(isOpen ? addExpandedRelationship(id + label) : removeExpandedRelationship(id + label));
 
         if (isOpen && countQuery.data?.count < NODE_GRAPH_RENDER_LIMIT) {
             abortEntitySectionRequest();
@@ -54,7 +60,6 @@ const EntityInfoDataTable: React.FC<EntityInfoDataTableProps> = ({ id, label, en
             await endpoint({ type: 'graph' })
                 .then((result) => {
                     const formattedData = transformFlatGraphResponse(result);
-
                     dispatch(saveResponseForExport(formattedData));
                     dispatch(putGraphData(result));
                 })

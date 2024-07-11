@@ -14,6 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { EntityKinds } from 'bh-shared-ui';
 import { Items } from 'src/utils';
 
 const SET_GRAPH_LOADING = 'app/explore/SET_GRAPH_LOADING';
@@ -43,7 +44,7 @@ export {
     TOGGLE_TIER_ZERO_NODE,
 };
 
-export enum GraphEndpoints {}
+export enum GraphEndpoints { }
 
 export interface GraphState {
     chartProps: any;
@@ -157,6 +158,13 @@ export interface ShortestPathRequest extends APIRequest {
     edges: string[];
 }
 
+export interface NodeRelationshipRequest {
+    type: typeof GRAPH_START;
+    label: string;
+    kind: EntityKinds;
+    objectId: string;
+}
+
 export type GraphRequestType =
     | APIRequest
     | PathfindingRequest
@@ -164,7 +172,8 @@ export type GraphRequestType =
     | NodeInfoRequest
     | SearchRequest
     | AssetGroupRequest
-    | CypherQueryRequest;
+    | CypherQueryRequest
+    | NodeRelationshipRequest;
 
 export enum GraphNodeTypes {
     User = 'User',
