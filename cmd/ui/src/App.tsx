@@ -14,46 +14,54 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Box } from '@mui/material';
+import { Box, CssBaseline, ThemeProvider } from '@mui/material';
+import { createTheme } from '@mui/material/styles';
 import makeStyles from '@mui/styles/makeStyles';
+import { AppNotifications, GenericErrorBoundaryFallback, NotificationsProvider } from 'bh-shared-ui';
+import clsx from 'clsx';
+import { createBrowserHistory } from 'history';
 import React, { useEffect } from 'react';
+import { ErrorBoundary } from 'react-error-boundary';
 import { useQueryClient } from 'react-query';
-import { useLocation } from 'react-router-dom';
-import { AppNotifications } from 'bh-shared-ui';
-import Notifier from 'src/components/Notifier';
+import { unstable_HistoryRouter as BrowserRouter, useLocation } from 'react-router-dom';
+import Header from 'src/components/Header';
 import { initialize } from 'src/ducks/auth/authSlice';
 import { ROUTE_EXPIRED_PASSWORD, ROUTE_LOGIN, ROUTE_USER_DISABLED } from 'src/ducks/global/routes';
 import { featureFlagKeys, getFeatureFlags } from 'src/hooks/useFeatureFlags';
 import { useAppDispatch, useAppSelector } from 'src/store';
 import { initializeBHEClient } from 'src/utils';
 import Content from 'src/views/Content';
-import Header from 'src/components/Header';
+import Notifier from './components/Notifier';
+import { lightPalette, darkPalette, sharedMUITheme } from 'bh-shared-ui';
 
-const useStyles = makeStyles((theme) => ({
-    applicationContainer: {
-        display: 'flex',
-        position: 'relative',
-        flexDirection: 'column',
-        height: '100%',
-        overflow: 'hidden',
-    },
-    applicationHeader: {
-        flexGrow: 0,
-        zIndex: theme.zIndex.drawer + 1,
-    },
-    applicationContent: {
-        flexGrow: 1,
-        overflowY: 'auto',
-        overflowX: 'hidden',
-    },
-}));
-
-const App: React.FC = () => {
-    const classes = useStyles();
+const Inner: React.FC = () => {
+    const dispatch = useAppDispatch();
+    const darkMode = useAppSelector((state) => state.global.view.darkMode);
     const authState = useAppSelector((state) => state.auth);
     const queryClient = useQueryClient();
-    const dispatch = useAppDispatch();
     const location = useLocation();
+
+    const useStyles = makeStyles((theme) => ({
+        applicationContainer: {
+            display: 'flex',
+            position: 'relative',
+            flexDirection: 'column',
+            height: '100%',
+            overflow: 'hidden',
+        },
+        applicationHeader: {
+            flexGrow: 0,
+            zIndex: theme.zIndex.drawer + 1,
+        },
+        applicationContent: {
+            backgroundColor: theme.palette.background.default,
+            flexGrow: 1,
+            overflowY: 'auto',
+            overflowX: 'hidden',
+        },
+    }));
+
+    const classes = useStyles();
 
     // initialize authentication state and BHE client request/response handlers
     useEffect(() => {
@@ -77,7 +85,7 @@ const App: React.FC = () => {
 
     return (
         <>
-            <Box className={classes.applicationContainer}>
+            <Box className={clsx(classes.applicationContainer, darkMode && 'dark')}>
                 {showHeader && (
                     <Box className={classes.applicationHeader}>
                         <Header />
@@ -90,6 +98,34 @@ const App: React.FC = () => {
                 <Notifier />
             </Box>
         </>
+    );
+};
+
+const App: React.FC = () => {
+    const darkMode = useAppSelector((state) => state.global.view.darkMode);
+    const mode = darkMode ? 'dark' : 'light';
+    const { typography, components } = sharedMUITheme;
+
+    const theme = createTheme({
+        palette: {
+            mode,
+            ...(!darkMode ? lightPalette : darkPalette),
+        },
+        ...typography,
+        ...components,
+    });
+
+    return (
+        <ThemeProvider theme={theme}>
+            <CssBaseline />
+            <BrowserRouter basename='/ui' history={createBrowserHistory()}>
+                <NotificationsProvider>
+                    <ErrorBoundary fallbackRender={GenericErrorBoundaryFallback}>
+                        <Inner />
+                    </ErrorBoundary>
+                </NotificationsProvider>
+            </BrowserRouter>
+        </ThemeProvider>
     );
 };
 
