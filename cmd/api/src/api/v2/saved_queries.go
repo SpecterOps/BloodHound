@@ -23,6 +23,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/gofrs/uuid"
 	"github.com/gorilla/mux"
 	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/src/auth"
@@ -123,6 +124,44 @@ func (s Resources) CreateSavedQuery(response http.ResponseWriter, request *http.
 		}
 	} else {
 		api.WriteBasicResponse(request.Context(), savedQuery, http.StatusCreated, response)
+	}
+}
+
+type CreateSavedQueryPermissionRequest struct {
+	UserID uuid.UUID `json:"user_id"`
+	Global bool      `json:"global"`
+}
+
+func (s Resources) ShareSavedQueries(response http.ResponseWriter, request *http.Request) {
+	var (
+		rawSavedQueryID = mux.Vars(request)[api.URIPathVariableSavedQueryID]
+		createRequest   CreateSavedQueryPermissionRequest
+	)
+
+	if user, isUser := auth.GetUserFromAuthCtx(ctx2.FromRequest(request).AuthCtx); !isUser {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "No associated user found", request), response)
+	} else if savedQueryID, err := strconv.ParseInt(rawSavedQueryID, 10, 64); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsIDMalformed, request), response)
+	} else if savedQueryBelongsToUser, err := s.DB.SavedQueryBelongsToUser(request.Context(), user.ID, int(savedQueryID)); errors.Is(err, database.ErrNotFound) {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, "query does not exist", request), response)
+	} else if err := api.ReadJSONRequestPayloadLimited(&createRequest, request); errors.Is(err, database.ErrNotFound) {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
+	} else if err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
+	} else if !savedQueryBelongsToUser {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "invalid saved_query_id supplied", request), response)
+	} else if createRequest.Global {
+		savedPermission, err := s.DB.CreateSavedQueryPermissionToGlobal(request.Context(), savedQueryID)
+		if err != nil {
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "error saving query global permission", request), response)
+		}
+		api.WriteBasicResponse(request.Context(), savedPermission, http.StatusCreated, response)
+	} else if createRequest.Global == false {
+		savedPermission, err := s.DB.CreateSavedQueryPermissionToUser(request.Context(), savedQueryID, createRequest.UserID)
+		if err != nil {
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "error saving query permission to user", request), response)
+		}
+		api.WriteBasicResponse(request.Context(), savedPermission, http.StatusCreated, response)
 	}
 }
 
