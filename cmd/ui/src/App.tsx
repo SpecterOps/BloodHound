@@ -17,7 +17,15 @@
 import { Box, CssBaseline, ThemeProvider } from '@mui/material';
 import { createTheme } from '@mui/material/styles';
 import makeStyles from '@mui/styles/makeStyles';
-import { AppNotifications, GenericErrorBoundaryFallback, NotificationsProvider } from 'bh-shared-ui';
+import {
+    AppNotifications,
+    GenericErrorBoundaryFallback,
+    NotificationsProvider,
+    lightPalette,
+    darkPalette,
+    typography,
+    components,
+} from 'bh-shared-ui';
 import clsx from 'clsx';
 import { createBrowserHistory } from 'history';
 import React, { useEffect } from 'react';
@@ -32,7 +40,6 @@ import { useAppDispatch, useAppSelector } from 'src/store';
 import { initializeBHEClient } from 'src/utils';
 import Content from 'src/views/Content';
 import Notifier from './components/Notifier';
-import { lightPalette, darkPalette, sharedMUITheme } from 'bh-shared-ui';
 
 const Inner: React.FC = () => {
     const dispatch = useAppDispatch();
@@ -104,15 +111,14 @@ const Inner: React.FC = () => {
 const App: React.FC = () => {
     const darkMode = useAppSelector((state) => state.global.view.darkMode);
     const mode = darkMode ? 'dark' : 'light';
-    const { typography, components } = sharedMUITheme;
 
     const theme = createTheme({
         palette: {
             mode,
             ...(!darkMode ? lightPalette : darkPalette),
         },
-        ...typography,
-        ...components,
+        typography: { ...typography },
+        components: { ...components },
     });
 
     return (

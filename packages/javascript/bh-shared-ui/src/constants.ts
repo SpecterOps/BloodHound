@@ -14,6 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { Theme } from '@mui/material';
+
 export const NODE_GRAPH_RENDER_LIMIT = 1000;
 
 export const ZERO_VALUE_API_DATE = '0001-01-01T00:00:00Z';
@@ -91,61 +93,60 @@ export const darkPalette = {
     critical: 'rgb(76, 29, 143)',
 };
 
-export const sharedMUITheme = {
-    typography: {
-        h1: {
-            fontWeight: 400,
-            fontSize: '1.8rem',
-            lineHeight: 2,
-            letterSpacing: 0,
-        },
-        h2: {
-            fontWeight: 500,
-            fontSize: '1.5rem',
-            lineHeight: 1.5,
-            letterSpacing: 0,
-        },
-        h3: {
-            fontWeight: 500,
-            fontSize: '1.2rem',
-            lineHeight: 1.25,
-            letterSpacing: 0,
-        },
-        h4: {
-            fontWeight: 500,
-            fontSize: '1.25rem',
-            lineHeight: 1.5,
-            letterSpacing: 0,
-        },
-        h5: {
-            fontWeight: 700,
-            fontSize: '1.125rem',
-            lineHeight: 1.5,
-            letterSpacing: 0.25,
-        },
-        h6: {
-            fontWeight: 700,
-            fontSize: '1.0rem',
-            lineHeight: 1.5,
-            letterSpacing: 0.25,
-        },
+export const typography: Partial<Theme['typography']> = {
+    h1: {
+        fontWeight: 400,
+        fontSize: '1.8rem',
+        lineHeight: 2,
+        letterSpacing: 0,
     },
-    components: {
-        MuiButton: {
-            styleOverrides: {
-                root: {
-                    borderRadius: 999, // capsule-shaped buttons
-                },
+    h2: {
+        fontWeight: 500,
+        fontSize: '1.5rem',
+        lineHeight: 1.5,
+        letterSpacing: 0,
+    },
+    h3: {
+        fontWeight: 500,
+        fontSize: '1.2rem',
+        lineHeight: 1.25,
+        letterSpacing: 0,
+    },
+    h4: {
+        fontWeight: 500,
+        fontSize: '1.25rem',
+        lineHeight: 1.5,
+        letterSpacing: 0,
+    },
+    h5: {
+        fontWeight: 700,
+        fontSize: '1.125rem',
+        lineHeight: 1.5,
+        letterSpacing: 0.25,
+    },
+    h6: {
+        fontWeight: 700,
+        fontSize: '1.0rem',
+        lineHeight: 1.5,
+        letterSpacing: 0.25,
+    },
+};
+
+export const components: Partial<Theme['components']> = {
+    MuiButton: {
+        styleOverrides: {
+            root: {
+                borderRadius: 999, // capsule-shaped buttons
             },
         },
-        MuiAccordionSummary: {
-            styleOverrides: {
-                root: {
-                    flexDirection: 'row-reverse',
-                },
-                content: {
-                    marginRight: '4px',
-                },
+    },
+    MuiAccordionSummary: {
+        styleOverrides: {
+            root: {
+                flexDirection: 'row-reverse',
+            },
+            content: {
+                marginRight: '4px',
             },
         },
     },
