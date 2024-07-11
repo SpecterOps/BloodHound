@@ -75,17 +75,23 @@ const GraphView: FC = () => {
     const [contextMenu, setContextMenu] = useState<{ mouseX: number; mouseY: number } | null>(null);
 
     type ExploreViewState = {
-        primaryQuery: string;
-        secondaryQuery: string;
-        cypherQuery: string;
-        activeGraph: any;
-        selected: string;
+        primaryQuery?: string;
+        secondaryQuery?: string;
+        cypherQuery?: string;
+        activeGraph?: any;
+        selected?: string;
     };
 
     const test = {
         primaryQuery: 'test1',
         secondaryQuery: 'test2',
         cypherQuery: 'test3',
+        activeGraph: {
+            label: 'Member Of',
+            kind: 'Computer',
+            objectId: 'S-1-5-21-570004220-2248230615-4072641716-1002',
+        },
+        selected: '260',
     };
 
     console.log(btoa(JSON.stringify(test)));
@@ -97,15 +103,27 @@ const GraphView: FC = () => {
         const query = queryParams.get('view');
 
         if (query) {
-            const initialView = JSON.parse(atob(query)) as ExploreViewState;
+            try {
+                const initialView = JSON.parse(atob(query)) as ExploreViewState;
 
-            dispatch(searchbarActions.sourceNodeEdited(initialView.primaryQuery));
-            dispatch(searchbarActions.destinationNodeEdited(initialView.secondaryQuery));
-            dispatch(searchbarActions.cypherQueryEdited(initialView.cypherQuery));
-
-            dispatch(startGenericQuery(initialView.activeGraph));
-
-            setInitialSelectedEntityId(initialView.selected);
+                if (initialView.primaryQuery) {
+                    dispatch(searchbarActions.sourceNodeEdited(initialView.primaryQuery));
+                }
+                if (initialView.secondaryQuery) {
+                    dispatch(searchbarActions.destinationNodeEdited(initialView.secondaryQuery));
+                }
+                if (initialView.cypherQuery) {
+                    dispatch(searchbarActions.cypherQueryEdited(initialView.cypherQuery));
+                }
+                if (initialView.activeGraph) {
+                    dispatch(startGenericQuery(initialView.activeGraph));
+                }
+                if (initialView.selected) {
+                    setInitialSelectedEntityId(initialView.selected);
+                }
+            } catch (error) {
+                console.error('Failed to parse initial explore view from query param: ', error);
+            }
 
             deleteQueryParam('view');
         }
