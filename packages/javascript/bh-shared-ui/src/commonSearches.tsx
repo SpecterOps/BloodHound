@@ -212,8 +212,36 @@ export const CommonSearches: CommonSearchType[] = [
         category: categoryAD,
         queries: [
             {
-                description: 'Inactive enabled Tier Zero principals',
+                description: 'Inactive enabled Tier Zero / High Value principals',
                 cypher: `MATCH (n)\nWHERE n.system_tags CONTAINS "admin_tier_0"\nAND n.enabled = true\nAND n.lastlogontimestamp < (datetime().epochseconds - (60 * 86400)) // Replicated value\nAND n.lastlogon < (datetime().epochseconds - (60 * 86400)) // Non-replicated value\nAND n.whencreated < (datetime().epochseconds - (60 * 86400)) // Exclude recently created principals\nAND NOT n.name STARTS WITH "AZUREADKERBEROS." // Removes false positive, Azure KRBTGT\nAND NOT n.objectid ENDS WITH "-500" // Removes false positive, built-in Administrator\nAND NOT n.name STARTS WITH "AZUREADSSOACC." // Removes false positive, Entra Seamless SSO\nRETURN n`,
+            },
+            {
+                description: 'Disabled Tier Zero / High Value principals',
+                cypher: `MATCH (n)\nWHERE n.system_tags CONTAINS "admin_tier_0"\nAND n.enabled = false\nAND NOT n.objectid ENDS WITH "-502" // Removes false positive, KRBTGT\nAND NOT n.objectid ENDS WITH "-500" // Removes false positive, built-in Administrator\nRETURN n`,
+            },
+            {
+                description: 'Tier Zero / High Value users with non-expiring passwords',
+                cypher: `MATCH (u:User)\nWHERE  u.enabled=TRUE\nAND u.pwdneverexpires = TRUE\nand u.system_tags CONTAINS "admin_tier_0"\nRETURN u`,
+            },
+            {
+                description: 'Nested groups within Tier Zero / High Value',
+                cypher: `MATCH p=(n:Group)-[:MemberOf*..]->(t:Group)\nWHERE n.domainsid <> t.domainsid\nAND coalesce(t.system_tags,"") CONTAINS ('tier_0')\nAND NOT n.objectid ENDS WITH "-512" // Domain Admins\nAND NOT n.objectid ENDS WITH "-519" // Enterprise Admins\nRETURN p`,
+            },
+            {
+                description: 'Tier Zero / High Value enabled users not requiring smart card authentication',
+                cypher: `MATCH (n:User)\nWHERE "admin_tier_0" IN split(n.system_tags, ' ')\nAND n.enabled = true\nAND n.smartcardrequired = false\nAND NOT n.name STARTS WITH "MSOL_" // Removes false positive, Entra sync\nAND NOT n.name STARTS WITH "PROVAGENTGMSA" // Removes false positive, Entra sync\nAND NOT n.name STARTS WITH "ADSYNCMSA_" // Removes false positive, Entra sync\nRETURN n`,
+            },
+            {
+                description: 'Domains where any user can join a computer to the domain',
+                cypher: `MATCH (n:Domain)\nWHERE n.machineaccountquota > 0\nRETURN n`,
+            },
+            {
+                description: 'Domains with smart card accounts where smart account passwords do not expire',
+                cypher: `MATCH (n:Domain)-[:Contains*1..]->(m:Base)\nWHERE n.expirepasswordsonsmartcardonlyaccounts = false\nAND m.enabled = true\nAND m.smartcardrequired = true\nRETURN n`,
+            },
+            {
+                description: 'Two-way forest trusts enabled for delegation',
+                cypher: `MATCH p=(n:Domain)-[r:TrustedBy]->(m:Domain)\nWHERE (n)<-[:TrustedBy]-(m)\nAND r.trusttype = 'Forest'\nAND r.tgtdelegationenabled = true\nRETURN p`,
             },
             {
                 description: 'Computers with unsupported operating systems',
@@ -224,21 +252,17 @@ export const CommonSearches: CommonSearchType[] = [
                 cypher: `MATCH (u:User)\nWHERE u.passwordnotreqd = true\nRETURN u`,
             },
             {
-                description: 'Users with passwords not rotated in over 1 year',
+                description: 'Users with passwords not rotated within 1 year',
                 cypher: `MATCH (u:User)\nWHERE u.pwdlastset < (datetime().epochseconds - (365 * 86400))\nAND NOT u.pwdlastset IN [-1.0, 0.0]\nRETURN u LIMIT 100`,
             },
             {
-                description: 'Nested groups within Tier Zero / High Value',
-                cypher: `MATCH p=(n:Group)-[:MemberOf*..]->(t:Group)\nWHERE n.domainsid <> t.domainsid\nAND coalesce(t.system_tags,"") CONTAINS ('tier_0')\nAND NOT n.objectid ENDS WITH "-512" // Domain Admins\nAND NOT n.objectid ENDS WITH "-519" // Enterprise Admins\nRETURN p`,
+                description: 'Accounts with passwords stored using reversible encryption',
+                cypher: `MATCH (n:Base)\nWHERE n.encryptedtextpwdallowed = true\nRETURN n`,
             },
             {
-                description: 'Disabled Tier Zero / High Value principals',
-                cypher: `MATCH (n)\nWHERE n.system_tags CONTAINS "admin_tier_0"\nAND n.enabled = false\nAND NOT n.objectid ENDS WITH "-502" // Removes false positive, KRBTGT\nAND NOT n.objectid ENDS WITH "-500" // Removes false positive, built-in Administrator\nRETURN n`,
-            },
-            {
-                description: 'Tier Zero / High Value users with non-expiring passwords',
-                cypher: `MATCH (u:User)\nWHERE  u.enabled=TRUE\nAND u.pwdneverexpires = TRUE\nand u.system_tags CONTAINS "admin_tier_0"\nRETURN u`,
-            },
+                description: 'Accounts with DES-only Kerberos authentication',
+                cypher: `MATCH (n:Base)\nWHERE n.enabled = true\nAND n.usedeskeyonly = true\nRETURN n`,
+            }
         ],
     },
     {
