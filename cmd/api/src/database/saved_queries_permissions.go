@@ -33,7 +33,7 @@ type SavedQueriesPermissionsData interface {
 func (s *BloodhoundDB) CreateSavedQueryPermissionToUser(ctx context.Context, queryID int64, userID uuid.UUID) (model.SavedQueriesPermissions, error) {
 	permission := model.SavedQueriesPermissions{
 		QueryID:        queryID,
-		SharedToUserID: userID,
+		SharedToUserID: NullUUID(userID),
 		Global:         false,
 	}
 

@@ -179,13 +179,15 @@ func (s Resources) ShareSavedQueries(response http.ResponseWriter, request *http
 	} else if createRequest.Global {
 		savedPermission, err := s.DB.CreateSavedQueryPermissionToGlobal(request.Context(), savedQueryID)
 		if err != nil {
-			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "error saving query global permission", request), response)
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Errorf("error saving query global permission: %w", err).Error(), request), response)
+			return
 		}
 		api.WriteBasicResponse(request.Context(), savedPermission, http.StatusCreated, response)
 	} else if createRequest.Global == false {
 		savedPermission, err := s.DB.CreateSavedQueryPermissionToUser(request.Context(), savedQueryID, createRequest.UserID)
 		if err != nil {
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "error saving query permission to user", request), response)
+			return
 		}
 		api.WriteBasicResponse(request.Context(), savedPermission, http.StatusCreated, response)
 	}
