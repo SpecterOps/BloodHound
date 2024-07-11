@@ -82,6 +82,9 @@ export { default as InfiniteScrollingTable } from './InfiniteScrollingTable';
 export * from './LoadingOverlay';
 export { default as LoadingOverlay } from './LoadingOverlay';
 
+// export * from './CustomSearchesTable';
+// export { default as CustomSearchesTable } from './CustomSearchesTable';
+
 export * from './MenuItem';
 export { default as MenuItem } from './MenuItem';
 

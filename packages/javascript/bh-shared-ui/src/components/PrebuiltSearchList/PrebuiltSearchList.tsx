@@ -31,6 +31,7 @@ import {
     ListItemText,
     ListSubheader,
     SvgIcon,
+    useTheme,
 } from '@mui/material';
 import { FC, useState } from 'react';
 
@@ -55,6 +56,7 @@ export type LineItem = {
 const PrebuiltSearchList: FC<PrebuiltSearchListProps> = ({ listSections, clickHandler, deleteHandler }) => {
     const [open, setOpen] = useState(false);
     const [queryId, setQueryId] = useState<number>();
+    const theme = useTheme();
 
     const handleOpen = () => {
         setOpen(true);
@@ -82,6 +84,9 @@ const PrebuiltSearchList: FC<PrebuiltSearchListProps> = ({ listSections, clickHa
                                     return (
                                         <ListItem
                                             disablePadding
+                                            sx={{
+                                                background: idx % 2 === 0 ? theme.palette.background.paper : '#EEF0F2',
+                                            }}
                                             key={`${id}-${idx}`}
                                             secondaryAction={
                                                 canEdit && (

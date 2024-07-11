@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Box, Skeleton, Typography } from '@mui/material';
+import { Box, Skeleton, TextField, Typography } from '@mui/material';
 import { FC } from 'react';
 import { useNotifications } from '../../providers';
 import PrebuiltSearchList, { LineItem } from './PrebuiltSearchList';
@@ -59,16 +59,27 @@ export const PersonalSearchList: FC<{ clickHandler: (query: string) => void }> =
         })) || [];
 
     return lineItems.length > 0 ? (
-        <PrebuiltSearchList
-            listSections={[
-                {
-                    subheader: 'User Saved Searches: ',
-                    lineItems,
-                },
-            ]}
-            clickHandler={clickHandler}
-            deleteHandler={handleDeleteQuery}
-        />
+        <>
+            <TextField id='standard-basic' label='Search' variant='standard' />
+            <PrebuiltSearchList
+                listSections={[
+                    {
+                        subheader: 'Personal ',
+                        lineItems,
+                    },
+                    {
+                        subheader: 'Shared ',
+                        lineItems: [],
+                    },
+                    {
+                        subheader: 'Global ',
+                        lineItems: [],
+                    },
+                ]}
+                clickHandler={clickHandler}
+                deleteHandler={handleDeleteQuery}
+            />
+        </>
     ) : (
         <Box my={2} ml={2}>
             <Typography variant='body2'>No queries have been saved yet.</Typography>
