@@ -39,14 +39,16 @@ declare module '@mui/styles/defaultTheme' {
 
 declare module '@mui/material/styles' {
     interface Palette {
-        neutral: Palette['primary'];
+        neutral: { 'primary': string; 'secondary': string; 'tertiary': string; 'quaternary': string; 'quinary': string };
+        color: {'primary': string; 'links': string; 'error': string};
         low: string;
         moderate: string;
         high: string;
         critical: string;
     }
     interface PaletteOptions {
-        neutral?: PaletteOptions['primary'];
+        neutral?: { 'primary': string; 'secondary': string; 'tertiary': string; 'quaternary': string; 'quinary': string };
+        color: {'primary': string; 'links': string; 'error': string};
         low: string;
         moderate: string;
         high: string;

@@ -24,5 +24,8 @@
         "all-contributors-cli": "^6.26.1",
         "prettier": "^3.2.5",
         "typescript": "^5.1.6"
+    },
+    "dependencies": {
+        "@bloodhoundenterprise/doodleui": "^1.0.0-alpha.3"
     }
 }

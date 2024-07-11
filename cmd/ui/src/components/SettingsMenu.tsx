@@ -20,7 +20,7 @@ import {
     faSignOutAlt,
     faUser,
     faUserShield,
-    faCompass,
+    faCompass, faCircleHalfStroke,
 } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Box, Divider } from '@mui/material';
@@ -33,8 +33,10 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { logout } from 'src/ducks/auth/authSlice';
 import * as routes from 'src/ducks/global/routes';
-import { useAppDispatch } from 'src/store';
+import {useAppDispatch, useAppSelector} from 'src/store';
 import { EnterpriseIcon } from 'bh-shared-ui';
+import {Switch} from "@bloodhoundenterprise/doodleui";
+import {setDarkMode} from "src/ducks/global/actions.ts";
 
 interface Props {
     anchorEl: null | HTMLElement;
@@ -60,9 +62,11 @@ const StyledMenu = withStyles({
     />
 ));
 
+
 const SettingsMenu: React.FC<Props> = ({ anchorEl, handleClose }) => {
     const dispatch = useAppDispatch();
     const navigate = useNavigate();
+    const darkMode = useAppSelector(state => state.global.view.darkMode);
 
     const navigateTo = (route: string) => {
         handleClose();
@@ -73,6 +77,10 @@ const SettingsMenu: React.FC<Props> = ({ anchorEl, handleClose }) => {
         handleClose();
         dispatch(logout());
     };
+
+    const toggleDarkMode: React.MouseEventHandler<HTMLLIElement> = () => {
+        dispatch(setDarkMode(!darkMode))
+    }
 
     const openInNewTab = (url: string) => {
         window.open(url, '_blank', 'noreferrer');
@@ -142,6 +150,16 @@ const SettingsMenu: React.FC<Props> = ({ anchorEl, handleClose }) => {
                         <EnterpriseIcon fill={'#000000'} width='1rem' height='1rem' />
                     </ListItemIcon>
                     <ListItemText primary='BloodHound Enterprise' />
+                </MenuItem>
+
+                <MenuItem onClick={toggleDarkMode} data-testid={'global_header_settings-menu_nav-logout'}>
+                    <ListItemIcon>
+                        <FontAwesomeIcon icon={faCircleHalfStroke} />
+                    </ListItemIcon>
+                    <ListItemText primary={'Dark Mode'} />
+                    <Switch checked={darkMode}>
+                        Dark Mode
+                    </Switch>
                 </MenuItem>
 
                 <Box my={1}>
