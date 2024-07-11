@@ -406,25 +406,34 @@ interface Data {
     name: string;
     description: string;
     permissions: boolean;
+    query: string;
 }
 
-function createData(id: number, scope: string, name: string, description: string, permissions: boolean): Data {
+function createData(
+    id: number,
+    scope: string,
+    name: string,
+    description: string,
+    permissions: boolean,
+    query: string
+): Data {
     return {
         id,
         name,
         scope,
         description,
         permissions,
+        query,
     };
 }
 
 const rows = [
-    createData(1, 'global', 'custom query 1', 'description 1', false),
-    createData(2, 'global', 'custom query 2', 'description 2', false),
-    createData(3, 'global', 'custom query 3', 'description 3', false),
-    createData(4, 'shared', 'custom query 4', 'description 4', true),
-    createData(5, 'shared', 'custom query 5', 'description 5', true),
-    createData(6, 'personal', 'custom query 6', 'description 6', true),
+    createData(1, 'global', 'custom query 1', 'description 1', false, 'match (x) return x'),
+    createData(2, 'global', 'custom query 2', 'description 2', false, 'match (x) return x'),
+    createData(3, 'global', 'custom query 3', 'description 3', false, 'match (x) return x'),
+    createData(4, 'shared', 'custom query 4', 'description 4', true, 'match (x) return x'),
+    createData(5, 'shared', 'custom query 5', 'description 5', true, 'match (x) return x'),
+    createData(6, 'personal', 'custom query 6', 'description 6', true, 'match (x) return x'),
 ];
 
 function descendingComparator<T>(a: T, b: T, orderBy: keyof T) {
@@ -747,62 +756,69 @@ export function EnhancedTable() {
                 />
             </Paper>
 
-            <Dialog open={openDialog} maxWidth={'md'} fullWidth>
-                <DialogTitle>Edit Custom Search</DialogTitle>
-                <DialogContent>
-                    <ul>
-                        <li>
-                            <TextField
-                                id='standard-basic'
-                                label='Search Name'
-                                variant='standard'
-                                sx={{ width: '500px' }}
-                            />
-                        </li>
-                        <li>
-                            <TextField
-                                id='standard-basic'
-                                label='Search Description'
-                                variant='standard'
-                                sx={{ width: '500px' }}
-                            />
-                        </li>
-                        <li>
-                            <TextField
-                                id='standard-basic'
-                                label='Share With'
-                                variant='standard'
-                                sx={{ width: '500px' }}
-                            />
-                        </li>
-                        <li>
-                            <TextField
-                                id='standard-multiline-static'
-                                label='Cypher Query'
-                                multiline
-                                rows={4}
-                                variant='standard'
-                                sx={{ width: '500px' }}
-                            />
-                        </li>
-                    </ul>
-                </DialogContent>
-                <DialogActions>
-                    <Box display={'flex'} justifyContent={'space-between'} width={'100%'}>
-                        <div>
-                            <Button autoFocus onClick={handleClose}>
-                                delete
-                            </Button>
-                        </div>
-                        <div>
-                            <Button autoFocus onClick={handleClose}>
-                                close
-                            </Button>
-                            <Button onClick={handleSaveEdits}>Ok</Button>
-                        </div>
-                    </Box>
-                </DialogActions>
-            </Dialog>
+            {selected.length === 1 && (
+                <Dialog open={openDialog} maxWidth={'md'} fullWidth>
+                    <DialogTitle>Edit Custom Search</DialogTitle>
+                    <DialogContent>
+                        <ul>
+                            <li>
+                                <TextField
+                                    id='standard-basic'
+                                    label='Search Name'
+                                    variant='standard'
+                                    defaultValue={visibleRows.find((row) => row.id === selected[0]).name || undefined}
+                                    sx={{ width: '500px' }}
+                                />
+                            </li>
+                            <li>
+                                <TextField
+                                    id='standard-basic'
+                                    label='Search Description'
+                                    variant='standard'
+                                    defaultValue={
+                                        visibleRows.find((row) => row.id === selected[0])?.description || undefined
+                                    }
+                                    sx={{ width: '500px' }}
+                                />
+                            </li>
+                            <li>
+                                <TextField
+                                    id='standard-basic'
+                                    label='Share With'
+                                    variant='standard'
+                                    sx={{ width: '500px' }}
+                                />
+                            </li>
+                            <li>
+                                <TextField
+                                    id='standard-multiline-static'
+                                    label='Cypher Query'
+                                    multiline
+                                    rows={4}
+                                    variant='standard'
+                                    defaultValue={visibleRows.find((row) => row.id === selected[0]).query || undefined}
+                                    sx={{ width: '500px' }}
+                                />
+                            </li>
+                        </ul>
+                    </DialogContent>
+                    <DialogActions>
+                        <Box display={'flex'} justifyContent={'space-between'} width={'100%'}>
+                            <div>
+                                <Button autoFocus onClick={handleClose}>
+                                    delete
+                                </Button>
+                            </div>
+                            <div>
+                                <Button autoFocus onClick={handleClose}>
+                                    close
+                                </Button>
+                                <Button onClick={handleSaveEdits}>Ok</Button>
+                            </div>
+                        </Box>
+                    </DialogActions>
+                </Dialog>
+            )}
         </Box>
     );
 }
