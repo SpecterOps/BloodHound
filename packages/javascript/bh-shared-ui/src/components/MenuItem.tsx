@@ -31,17 +31,17 @@ const useStyles = makeStyles((theme) => ({
         '&:hover': {
             borderBottom: `3px solid #a7adb0`,
         },
-        '& svg': {
-            color: '#a7adb0',
-        },
+        // '& svg': {
+        //     color: '#a7adb0',
+        // },
         '&.active': {
-            color: '#406f8e',
-            borderBottom: `3px solid #6798B9`,
+            color: theme.palette.color.links,
+            borderBottom: `3px solid ${theme.palette.color.links}`,
             '&:hover': {
-                borderBottom: `3px solid #6798B9`,
+                borderBottom: `3px solid ${theme.palette.color.links}`,
             },
             '& svg': {
-                color: '#6798B9',
+                color: theme.palette.color.links,
             },
         },
     },
