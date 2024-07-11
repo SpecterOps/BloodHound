@@ -23,6 +23,7 @@ const initialGraphDataState: types.GraphState = {
     error: null,
     init: false,
     export: {},
+    latestPayload: {},
 };
 
 const graphDataReducer = (state = initialGraphDataState, action: types.GraphActionTypes) => {
@@ -32,6 +33,7 @@ const graphDataReducer = (state = initialGraphDataState, action: types.GraphActi
         } else if (action.type === types.GRAPH_START) {
             draft.loading = true;
             draft.error = null;
+            draft.latestPayload = action;
         } else if (action.type === types.GRAPH_SUCCESS) {
             draft.chartProps = { items: action.payload };
             draft.loading = false;
