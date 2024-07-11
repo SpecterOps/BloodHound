@@ -418,8 +418,10 @@ export interface AZVMInfo extends AZEntityInfo {
 
 const ENTITY_INFO_OPEN = 'app/entityinfo/OPEN';
 const SET_SELECTED_NODE = 'app/entityinfo/SELECTED_NODE';
+const ADD_EXPANDED_RELATIONSHIP = 'app/entityinfo/ADD_EXPANDED_RELATIONSHIP';
+const REMOVE_EXPANDED_RELATIONSHIP = 'app/entityinfo/REMOVE_EXPANDED_RELATIONSHIP';
 
-export { ENTITY_INFO_OPEN, SET_SELECTED_NODE };
+export { ENTITY_INFO_OPEN, SET_SELECTED_NODE, ADD_EXPANDED_RELATIONSHIP, REMOVE_EXPANDED_RELATIONSHIP };
 
 export interface EntityInfo {
     props: BasicInfo;
@@ -451,6 +453,7 @@ export interface GraphInfo extends BasicInfo {
 export type EntityInfoState = {
     open: boolean;
     selectedNode: SelectedNode | null;
+    expandedRelationships: Array<string>;
 };
 
 interface SetEntityInfoOpenAction {
@@ -470,4 +473,14 @@ interface SetSelectedNodeAction {
     selectedNode: SelectedNode;
 }
 
-export type EntityInfoActionTypes = SetEntityInfoOpenAction | SetSelectedNodeAction;
+interface AddExpandedRelationship {
+    type: typeof ADD_EXPANDED_RELATIONSHIP;
+    payload: string;
+}
+
+interface RemoveExpandedRelationship {
+    type: typeof REMOVE_EXPANDED_RELATIONSHIP;
+    payload: string;
+}
+
+export type EntityInfoActionTypes = SetEntityInfoOpenAction | SetSelectedNodeAction | AddExpandedRelationship | RemoveExpandedRelationship;
