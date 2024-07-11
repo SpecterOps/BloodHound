@@ -54,6 +54,7 @@ export interface GraphState {
     // we save the raw API response in the export field so that a user can export
     // their canvas to a target format, e.g. JSON, CSV
     export: any;
+    latestPayload: any;
 }
 
 interface SetGraphLoadingAction {
