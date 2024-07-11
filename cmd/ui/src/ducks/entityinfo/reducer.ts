@@ -34,6 +34,10 @@ const entityInfoReducer = (state = initialEntityInfoState, action: types.EntityI
             draft.expandedRelationships = [...draft.expandedRelationships, action.payload]
         } else if (action.type === types.REMOVE_EXPANDED_RELATIONSHIP) {
             draft.expandedRelationships = draft.expandedRelationships.filter(rel => rel !== action.payload)
+        } else if (action.type === types.SET_EXPANDED_RELATIONSHIP) {
+            draft.expandedRelationships = action.payload
+        } else if (action.type === types.CLEAR_EXPANDED_RELATIONSHIP) {
+            draft.expandedRelationships = []
         }
     });
 };

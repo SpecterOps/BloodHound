@@ -42,3 +42,14 @@ export const removeExpandedRelationship = (payload: string) => {
         payload
     }
 }
+export const setExpandedRelationship = (payload: string[]) => {
+    return {
+        type: types.SET_EXPANDED_RELATIONSHIP,
+        payload
+    }
+}
+export const clearExpandedRelationship = () => {
+    return {
+        type: types.CLEAR_EXPANDED_RELATIONSHIP
+    }
+}

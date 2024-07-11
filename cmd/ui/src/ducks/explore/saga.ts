@@ -291,19 +291,23 @@ function* runApiQuery(endpoint: GraphEndpoints, ext?: string): SagaIterator {
 function* runNodeRelationshipQuery(payload: NodeRelationshipRequest): SagaIterator {
     const { label, kind, objectId } = payload
 
-    const getEndpoint = (sections: EntityInfoDataTableProps[] | undefined): EntityInfoDataTableProps['endpoint'] | undefined => {
-        const section = sections?.find(section => {
-            if (section.label === label && section.endpoint) {
-                return section
+
+    let nestedSection: EntityInfoDataTableProps | undefined
+    const getSection = (sections: EntityInfoDataTableProps[] | undefined) => {
+        sections?.forEach(section => {
+            if (section.sections) {
+                getSection(section.sections)
             }
-
-            return getEndpoint(section.sections)
+            if (section.label === label && section.endpoint) {
+                nestedSection = section
+            }
         })
-
-        return section?.endpoint
     }
 
-    const endpoint = getEndpoint(allSections[kind]?.(objectId))
+    getSection(allSections[kind]?.(objectId))
+
+    const endpoint = nestedSection?.endpoint
+
     if (!endpoint) return
 
     try {

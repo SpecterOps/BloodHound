@@ -48,12 +48,22 @@ export const EntityInfoCollapsibleSection: React.FC<
         onChange?: (label: string, isOpen: boolean) => void;
         isLoading?: boolean;
         isError?: boolean;
+        isOpen?: boolean;
         error?: any;
     }>
-> = ({ children, label = '', count, onChange = () => {}, isLoading = false, isError = false, error = null }) => {
+> = ({
+    children,
+    label = '',
+    count,
+    onChange = () => {},
+    isLoading = false,
+    isError = false,
+    isOpen = false,
+    error = null,
+}) => {
     const styles = useCollapsibleSectionStyles();
     const entityInfoPanelContext = useEntityInfoPanelContext();
-    const expanded = !!entityInfoPanelContext.expandedSections[label];
+    const expanded = isOpen;
     const disabled = isLoading || (count === 0 && !isError);
 
     return (
