@@ -17,6 +17,7 @@
 package v2
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"net/http"
@@ -34,11 +35,18 @@ import (
 )
 
 func (s Resources) ListSavedQueries(response http.ResponseWriter, request *http.Request) {
+	type queryAsAResponse struct {
+		Global bool
+		Shared bool
+		model.SavedQuery
+	}
+
 	var (
-		order         []string
-		queryParams   = request.URL.Query()
-		sortByColumns = queryParams[api.QueryParameterSortBy]
-		savedQueries  model.SavedQueries
+		order           []string
+		queryParams     = request.URL.Query()
+		sortByColumns   = queryParams[api.QueryParameterSortBy]
+		savedQueries    model.SavedQueries
+		queriesResponse []queryAsAResponse
 	)
 
 	for _, column := range sortByColumns {
@@ -93,10 +101,28 @@ func (s Resources) ListSavedQueries(response http.ResponseWriter, request *http.
 		} else if queries, count, err := s.DB.ListSavedQueries(request.Context(), user.ID, strings.Join(order, ", "), sqlFilter, skip, limit); err != nil {
 			api.HandleDatabaseError(request, response, err)
 		} else {
-			api.WriteResponseWrapperWithPagination(request.Context(), queries, limit, skip, count, http.StatusOK, response)
+			for _, query := range queries {
+				responseElement := queryAsAResponse{
+					SavedQuery: query,
+					Global:     isSavedQueryGlobal(request.Context(), s.DB, query),
+				}
+
+				if !responseElement.Global && query.UserID != user.ID.String() {
+					responseElement.Shared = true
+				}
+				queriesResponse = append(queriesResponse, responseElement)
+			}
+
+			// THIS IS A BREAKING CHANGE FOR SHARED QUERIES: WE ARE GOING FROM RETURNING queries TO queriesResponse
+			api.WriteResponseWrapperWithPagination(request.Context(), queriesResponse, limit, skip, count, http.StatusOK, response)
 		}
 	}
 
+}
+
+func isSavedQueryGlobal(ctx context.Context, db database.Database, query model.SavedQuery) bool {
+	sqp := db.GetSavedQueryPermissions(ctx, query.ID)
+	return sqp.Global
 }
 
 type CreateSavedQueryRequest struct {

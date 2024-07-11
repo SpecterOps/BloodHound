@@ -1101,6 +1101,20 @@ func (mr *MockDatabaseMockRecorder) GetSavedQueriesSharedWithUser(arg0, arg1 int
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSavedQueriesSharedWithUser", reflect.TypeOf((*MockDatabase)(nil).GetSavedQueriesSharedWithUser), arg0, arg1)
 }
 
+// GetSavedQueryPermissions mocks base method.
+func (m *MockDatabase) GetSavedQueryPermissions(arg0 context.Context, arg1 int64) model.SavedQueriesPermissions {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetSavedQueryPermissions", arg0, arg1)
+	ret0, _ := ret[0].(model.SavedQueriesPermissions)
+	return ret0
+}
+
+// GetSavedQueryPermissions indicates an expected call of GetSavedQueryPermissions.
+func (mr *MockDatabaseMockRecorder) GetSavedQueryPermissions(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSavedQueryPermissions", reflect.TypeOf((*MockDatabase)(nil).GetSavedQueryPermissions), arg0, arg1)
+}
+
 // GetTimeRangedAssetGroupCollections mocks base method.
 func (m *MockDatabase) GetTimeRangedAssetGroupCollections(arg0 context.Context, arg1 int32, arg2, arg3 int64, arg4 string) (model.AssetGroupCollections, error) {
 	m.ctrl.T.Helper()

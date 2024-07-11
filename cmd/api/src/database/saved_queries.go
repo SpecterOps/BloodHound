@@ -82,3 +82,9 @@ func (s *BloodhoundDB) SavedQueryBelongsToUser(ctx context.Context, userID uuid.
 		return false, nil
 	}
 }
+
+func (s *BloodhoundDB) GetSavedQueryPermissions(ctx context.Context, queryID int64) model.SavedQueriesPermissions {
+	sqp := model.SavedQueriesPermissions{QueryID: queryID}
+	s.db.WithContext(ctx).Where("query_id = ?", queryID).Find(&sqp)
+	return sqp
+}
