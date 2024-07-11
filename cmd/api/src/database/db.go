@@ -154,6 +154,9 @@ type Database interface {
 	SavedQueryBelongsToUser(ctx context.Context, userID uuid.UUID, savedQueryID int) (bool, error)
 	DeleteAssetGroupSelectorsForAssetGroups(ctx context.Context, assetGroupIds []int) error
 
+	// Saved Queries Permissions
+	SavedQueriesPermissionsData
+
 	// Analysis Request
 	AnalysisRequestData
 
