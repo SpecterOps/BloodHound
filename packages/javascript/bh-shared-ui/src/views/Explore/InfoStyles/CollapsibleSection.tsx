@@ -36,6 +36,7 @@ const useCollapsibleSectionStyles = makeStyles((theme: Theme) => ({
         '&:hover': {
             backgroundColor: theme.palette.action.hover,
         },
+        backgroundColor: theme.palette.neutral.secondary
     },
     accordionDetails: {
         padding: theme.spacing(1, 0),
@@ -46,12 +47,13 @@ const useCollapsibleSectionStyles = makeStyles((theme: Theme) => ({
         alignItems: 'center',
         fontWeight: 'bold',
         fontSize: '0.9rem',
-        backgroundColor: '#d7dee3',
+        backgroundColor: theme.palette.neutral.quinary,
         minWidth: '3rem',
         height: '1.6rem',
         lineHeight: '1.6em',
         paddingX: '0.5rem',
         borderRadius: theme.shape.borderRadius,
+        color: theme.palette.color.primary
     },
     edgeAccordionDetails: {
         padding: theme.spacing(0, 0, 0, 1),
@@ -101,7 +103,7 @@ const useCollapsibleSectionStyles = makeStyles((theme: Theme) => ({
         },
     },
     expandIcon: {
-        color: theme.palette.common.black,
+        color: theme.palette.color.primary,
     },
     title: {
         marginLeft: theme.spacing(2),
@@ -111,7 +113,10 @@ const useCollapsibleSectionStyles = makeStyles((theme: Theme) => ({
     fieldsContainer: {
         fontSize: '0.75rem',
         '& > :nth-child(odd)': {
-            backgroundColor: theme.palette.grey[200],
+            backgroundColor: theme.palette.neutral.tertiary,
+        },
+        '& > :nth-child(even)': {
+            backgroundColor: theme.palette.neutral.secondary,
         },
         borderRadius: theme.shape.borderRadius,
     },

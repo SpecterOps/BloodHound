@@ -33,6 +33,7 @@ import {
     SvgIcon,
 } from '@mui/material';
 import { FC, useState } from 'react';
+import makeStyles from "@mui/styles/makeStyles";
 
 interface PrebuiltSearchListProps {
     listSections: ListSection[];
@@ -52,9 +53,17 @@ export type LineItem = {
     canEdit?: boolean;
 };
 
+const useStyles = makeStyles((theme) => ({
+    subheader: {
+        color: theme.palette.color.primary,
+        fontWeight: 'bold'
+    }
+}));
+
 const PrebuiltSearchList: FC<PrebuiltSearchListProps> = ({ listSections, clickHandler, deleteHandler }) => {
     const [open, setOpen] = useState(false);
     const [queryId, setQueryId] = useState<number>();
+    const styles = useStyles()
 
     const handleOpen = () => {
         setOpen(true);
@@ -74,7 +83,7 @@ const PrebuiltSearchList: FC<PrebuiltSearchListProps> = ({ listSections, clickHa
 
                         return (
                             <Box key={subheader}>
-                                <ListSubheader sx={{ fontWeight: 'bold' }}>{subheader} </ListSubheader>
+                                <ListSubheader className={styles.subheader}>{subheader} </ListSubheader>
 
                                 {lineItems?.map((lineItem, idx) => {
                                     const { id, description, cypher, canEdit = false } = lineItem;
