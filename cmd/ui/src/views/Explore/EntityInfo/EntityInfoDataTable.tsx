@@ -24,17 +24,10 @@ import {
 } from 'bh-shared-ui';
 import { useQuery } from 'react-query';
 import { useDispatch } from 'react-redux';
-import {
-    putGraphData,
-    putGraphError,
-    saveResponseForExport,
-    setGraphLoading,
-    startNodeRelationshipQuery,
-} from 'src/ducks/explore/actions';
+import { startNodeRelationshipQuery } from 'src/ducks/explore/actions';
 import EntityInfoCollapsibleSection from './EntityInfoCollapsibleSection';
 import { addExpandedRelationship, removeExpandedRelationship } from 'src/ducks/entityinfo/actions';
-import { addSnackbar } from 'src/ducks/global/actions';
-import { transformFlatGraphResponse } from 'src/utils';
+import { useAppSelector } from 'src/store';
 
 interface Props extends EntityInfoDataTableProps {
     nodeType: EntityKinds;
@@ -42,6 +35,7 @@ interface Props extends EntityInfoDataTableProps {
 
 const EntityInfoDataTable: React.FC<Props> = (props) => {
     const { id, label, endpoint, sections, nodeType } = props;
+    const expandedRelationships = useAppSelector((state) => state.entityinfo.expandedRelationships);
     const dispatch = useDispatch();
 
     const countQuery = useQuery(
@@ -68,24 +62,6 @@ const EntityInfoDataTable: React.FC<Props> = (props) => {
             abortEntitySectionRequest();
 
             dispatch(startNodeRelationshipQuery({ label, kind: nodeType, objectId: id }));
-            // dispatch(setGraphLoading(true));
-
-            // await endpoint({ type: 'graph' })
-            //     .then((result) => {
-            //         const formattedData = transformFlatGraphResponse(result);
-            //         dispatch(saveResponseForExport(formattedData));
-            //         dispatch(putGraphData(result));
-            //     })
-            //     .catch((err) => {
-            //         if (err?.code === 'ERR_CANCELED') {
-            //             return;
-            //         }
-            //         dispatch(putGraphError(err));
-            //         dispatch(addSnackbar('Query failed. Please try again.', 'nodeRelationshipGraphQuery', {}));
-            //     })
-            //     .finally(() => {
-            //         dispatch(setGraphLoading(false));
-            //     });
         }
     };
 
@@ -108,6 +84,7 @@ const EntityInfoDataTable: React.FC<Props> = (props) => {
     } else if (countQuery.data) {
         count = countQuery.data.count ?? 0;
     }
+    const isOpen = expandedRelationships.includes(id + label);
 
     return (
         <EntityInfoCollapsibleSection
@@ -115,6 +92,7 @@ const EntityInfoDataTable: React.FC<Props> = (props) => {
             count={count}
             isLoading={countQuery.isLoading}
             isError={countQuery.isError}
+            isOpen={isOpen}
             error={countQuery.error}
             onChange={handleOnChange}>
             {endpoint && (
