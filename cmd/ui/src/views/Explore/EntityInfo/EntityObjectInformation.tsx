@@ -96,8 +96,6 @@ const EntityObjectInformation: React.FC<EntityInfoContentProps> = ({ id, nodeTyp
     const formattedObjectFields: EntityField[] = formatObjectInfoFields(objectInformation);
 
     const handleOnChange = (label: string, isOpen: boolean) => {
-        console.log('label', label);
-        console.log('isOpen', isOpen);
         dispatch(isOpen ? addExpandedRelationship(label) : removeExpandedRelationship(label));
     };
 
