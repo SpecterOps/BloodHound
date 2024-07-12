@@ -112,7 +112,7 @@ const UserProfile = () => {
                 </Alert>
                 <Box sx={{ flexGrow: 1, alignContent: 'flex-end' }}>
                     <Typography variant='body2'>
-                        API Version: <TextWithFallback text={version.data.server_version} fallback='Unknown' />
+                        API Version: <TextWithFallback text={version.data?.server_version} fallback='Unknown' />
                     </Typography>
                 </Box>
             </PageWithTitle>
@@ -239,7 +239,7 @@ const UserProfile = () => {
                     </Box>
                     <Box sx={{ flexGrow: 1, alignContent: 'flex-end' }}>
                         <Typography variant='body2'>
-                            API Version: <TextWithFallback text={version.data.server_version} fallback='Unknown' />
+                            API Version: <TextWithFallback text={version.data?.server_version} fallback='Unknown' />
                         </Typography>
                     </Box>
                 </Box>
