@@ -14,8 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { Button } from '@bloodhoundenterprise/doodleui';
 import {
-    Button,
     Dialog,
     DialogActions,
     DialogContent,
@@ -196,14 +196,12 @@ const UserTokenManagementDialog: React.FC<{
                 </DialogContent>
                 <DialogActions>
                     <Button
-                        autoFocus
-                        color='inherit'
+                        variant='tertiary'
                         onClick={onClose}
                         data-testid='user-token-management-dialog_button-close'>
                         Close
                     </Button>
                     <Button
-                        color='primary'
                         type='submit'
                         onClick={() => setNewTokenDialogOpen(true)}
                         data-testid='user-token-management-dialog_button-save'>

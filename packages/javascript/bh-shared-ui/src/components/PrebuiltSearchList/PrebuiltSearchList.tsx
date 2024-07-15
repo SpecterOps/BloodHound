@@ -14,26 +14,24 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { Button } from '@bloodhoundenterprise/doodleui';
 import { faTrash } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
     Box,
-    Button,
     Dialog,
     DialogActions,
     DialogContent,
     DialogContentText,
     DialogTitle,
-    IconButton,
     List,
     ListItem,
     ListItemButton,
     ListItemText,
     ListSubheader,
-    SvgIcon,
 } from '@mui/material';
 import { FC, useState } from 'react';
-import makeStyles from "@mui/styles/makeStyles";
+import makeStyles from '@mui/styles/makeStyles';
 
 interface PrebuiltSearchListProps {
     listSections: ListSection[];
@@ -56,14 +54,16 @@ export type LineItem = {
 const useStyles = makeStyles((theme) => ({
     subheader: {
         color: theme.palette.color.primary,
-        fontWeight: 'bold'
-    }
+        backgroundColor: theme.palette.neutral.tertiary,
+        borderRadius: '8px',
+        fontWeight: 'bold',
+    },
 }));
 
 const PrebuiltSearchList: FC<PrebuiltSearchListProps> = ({ listSections, clickHandler, deleteHandler }) => {
     const [open, setOpen] = useState(false);
     const [queryId, setQueryId] = useState<number>();
-    const styles = useStyles()
+    const styles = useStyles();
 
     const handleOpen = () => {
         setOpen(true);
@@ -77,7 +77,7 @@ const PrebuiltSearchList: FC<PrebuiltSearchListProps> = ({ listSections, clickHa
     return (
         <>
             <Box maxHeight={'300px'} overflow={'auto'}>
-                <List dense disablePadding>
+                <List dense disablePadding sx={{ mt: '8px' }}>
                     {listSections.map((section) => {
                         const { subheader, lineItems } = section;
 
@@ -92,19 +92,18 @@ const PrebuiltSearchList: FC<PrebuiltSearchListProps> = ({ listSections, clickHa
                                         <ListItem
                                             disablePadding
                                             key={`${id}-${idx}`}
+                                            sx={{ borderRadius: '8px', py: '4px' }}
                                             secondaryAction={
                                                 canEdit && (
-                                                    <IconButton
+                                                    <Button
                                                         aria-label='Delete Query'
                                                         size='small'
                                                         onClick={() => {
                                                             setQueryId(id);
                                                             handleOpen();
                                                         }}>
-                                                        <SvgIcon fontSize='small'>
-                                                            <FontAwesomeIcon icon={faTrash} />
-                                                        </SvgIcon>
-                                                    </IconButton>
+                                                        <FontAwesomeIcon icon={faTrash} />
+                                                    </Button>
                                                 )
                                             }>
                                             <ListItemButton onClick={() => clickHandler(cypher)}>
@@ -125,7 +124,7 @@ const PrebuiltSearchList: FC<PrebuiltSearchListProps> = ({ listSections, clickHa
                     <DialogContentText>Are you sure you want to delete this query?</DialogContentText>
                 </DialogContent>
                 <DialogActions>
-                    <Button color='inherit' onClick={handleClose}>
+                    <Button variant='tertiary' onClick={handleClose}>
                         Cancel
                     </Button>
                     <Button

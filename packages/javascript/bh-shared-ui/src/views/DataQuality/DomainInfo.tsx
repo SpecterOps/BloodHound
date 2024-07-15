@@ -32,8 +32,8 @@ const useStyles = makeStyles((theme) => ({
         },
     },
     container: {
-        backgroundColor: theme.palette.neutral.secondary
-    }
+        backgroundColor: theme.palette.neutral.secondary,
+    },
 }));
 
 export const DomainMap = {
@@ -79,7 +79,6 @@ export const DomainInfo: React.FC<{ contextId: string; headers?: boolean; onData
     useEffect(() => {
         if (isError) onDataError();
     }, [isError, onDataError]);
-
 
     if (isLoading || !domainData) {
         return <Layout stats={null} headers={headers} loading={true} />;
@@ -157,7 +156,7 @@ const Layout: React.FC<{
                     </TableBody>
                 </Table>
             </TableContainer>
-            <TableContainer style={{ marginTop: '16px' }} component={Paper}>
+            <TableContainer style={{ marginTop: '16px' }} component={Paper} className={classes.container}>
                 <Table>
                     <TableBody>
                         <LoadContainer
@@ -183,7 +182,7 @@ const Layout: React.FC<{
                     </TableBody>
                 </Table>
             </TableContainer>
-            <TableContainer style={{ marginTop: '16px' }} component={Paper}>
+            <TableContainer style={{ marginTop: '16px' }} component={Paper} className={classes.container}>
                 <Table>
                     <TableBody>
                         <LoadContainer

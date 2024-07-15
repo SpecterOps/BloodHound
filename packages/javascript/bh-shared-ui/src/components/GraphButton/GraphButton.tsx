@@ -27,14 +27,14 @@ const useStyles = makeStyles((theme) => ({
         border: 'none',
         boxSizing: 'initial',
         borderRadius: theme.shape.borderRadius,
-        backgroundColor: theme.palette.background.paper,
+        backgroundColor: theme.palette.neutral.secondary,
         color: theme.palette.color.primary,
         textTransform: 'capitalize',
         minWidth: 'initial',
         '&:hover': {
-            backgroundColor: theme.palette.background.default,
+            backgroundColor: theme.palette.neutral.tertiary,
             '@media (hover: none)': {
-                backgroundColor: theme.palette.background.default,
+                backgroundColor: theme.palette.neutral.tertiary,
             },
         },
     },

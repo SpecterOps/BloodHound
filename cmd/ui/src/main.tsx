@@ -14,6 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import '@bloodhoundenterprise/doodleui/dist/style.css';
 import '@fontsource/roboto-mono';
 import '@fontsource/roboto/300.css';
 import '@fontsource/roboto/400.css';

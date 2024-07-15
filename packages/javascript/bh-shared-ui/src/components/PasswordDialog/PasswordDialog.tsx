@@ -14,17 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import {
-    Alert,
-    AlertTitle,
-    Button,
-    Checkbox,
-    Dialog,
-    DialogTitle,
-    FormControlLabel,
-    Grid,
-    TextField,
-} from '@mui/material';
+import { Button } from '@bloodhoundenterprise/doodleui';
+import { Alert, AlertTitle, Checkbox, Dialog, DialogTitle, FormControlLabel, Grid, TextField } from '@mui/material';
 import { DialogActions, DialogContent } from '@mui/material';
 import React, { useCallback } from 'react';
 import { Controller, useForm } from 'react-hook-form';
@@ -218,14 +209,10 @@ const PasswordDialog: React.FC<{
                 </DialogContent>
 
                 <DialogActions>
-                    <Button
-                        autoFocus={true}
-                        color='inherit'
-                        onClick={onClose}
-                        data-testid='password-dialog_button-close'>
+                    <Button variant='tertiary' onClick={onClose} data-testid='password-dialog_button-close'>
                         Cancel
                     </Button>
-                    <Button autoFocus={false} color='primary' type='submit' data-testid='password-dialog_button-save'>
+                    <Button type='submit' data-testid='password-dialog_button-save'>
                         Save
                     </Button>
                 </DialogActions>

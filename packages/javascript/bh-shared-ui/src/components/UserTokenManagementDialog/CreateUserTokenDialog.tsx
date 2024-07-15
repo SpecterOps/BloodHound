@@ -14,7 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button, Dialog, DialogActions, DialogContent, DialogTitle, Grid, TextField } from '@mui/material';
+import { Button } from '@bloodhoundenterprise/doodleui';
+import { Dialog, DialogActions, DialogContent, DialogTitle, Grid, TextField } from '@mui/material';
 import React from 'react';
 import { Controller, useForm } from 'react-hook-form';
 
@@ -74,13 +75,12 @@ const CreateUserTokenDialog: React.FC<{
                 </DialogContent>
                 <DialogActions>
                     <Button
-                        autoFocus
-                        color='inherit'
+                        variant='tertiary'
                         onClick={handleCancel}
                         data-testid='create-user-token-dialog_button-close'>
                         Cancel
                     </Button>
-                    <Button color='primary' type='submit' data-testid='create-user-token-dialog_button-save'>
+                    <Button type='submit' data-testid='create-user-token-dialog_button-save'>
                         Save
                     </Button>
                 </DialogActions>

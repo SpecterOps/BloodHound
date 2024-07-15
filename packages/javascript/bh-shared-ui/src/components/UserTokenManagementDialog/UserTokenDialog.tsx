@@ -14,7 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from '@mui/material';
+import { Button } from '@bloodhoundenterprise/doodleui';
+import { Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from '@mui/material';
 import { NewAuthToken } from 'js-client-library';
 import React from 'react';
 
@@ -44,7 +45,7 @@ const UserTokenDialog: React.FC<{
                 </DialogContentText>
             </DialogContent>
             <DialogActions>
-                <Button color='inherit' onClick={onClose} data-testid='user-token-dialog_button-close'>
+                <Button variant='tertiary' onClick={onClose} data-testid='user-token-dialog_button-close'>
                     Close
                 </Button>
             </DialogActions>
