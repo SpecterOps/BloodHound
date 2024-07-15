@@ -6921,6 +6921,45 @@ func (s *SyncLAPSPasswordHarness) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.NewRelationship(s.User6, s.Group4, ad.MemberOf)
 }
 
+type HybridAttackPaths struct {
+	AZTenant       *graph.Node
+	ADUser         *graph.Node
+	ADUserObjectID string
+	AZUser         *graph.Node
+	AZUserObjectID string
+}
+
+func (s *HybridAttackPaths) Setup(graphTestContext *GraphTestContext, adUserObjectID string, azUserOnPremID string, onPremSyncEnabled bool, createADUser bool) {
+	s.ADUserObjectID = adUserObjectID
+	tenantID := RandomObjectID(graphTestContext.testCtx)
+	domainSid := RandomDomainSID()
+	azureUserProps := graph.AsProperties(graph.PropertyMap{
+		common.Name:             HarnessUserName,
+		azure.UserPrincipalName: HarnessUserName,
+		common.Description:      HarnessUserDescription,
+		common.ObjectID:         s.AZUserObjectID,
+		azure.Licenses:          HarnessUserLicenses,
+		azure.MFAEnabled:        HarnessUserMFAEnabled,
+		azure.TenantID:          tenantID,
+		azure.OnPremSyncEnabled: onPremSyncEnabled,
+		azure.OnPremID:          azUserOnPremID,
+	})
+
+	s.AZTenant = graphTestContext.NewAzureTenant(tenantID)
+	s.AZUser = graphTestContext.NewCustomAzureUser(azureUserProps)
+	graphTestContext.NewRelationship(s.AZTenant, s.AZUser, azure.Contains)
+
+	if createADUser {
+		adUserProperties := graph.AsProperties(graph.PropertyMap{
+			common.Name:     HarnessUserName,
+			common.ObjectID: s.ADUserObjectID,
+			ad.DomainSID:    domainSid,
+		})
+
+		s.ADUser = graphTestContext.NewCustomActiveDirectoryUser(adUserProperties)
+	}
+}
+
 type DCSyncHarness struct {
 	Domain1 *graph.Node
 
@@ -7043,4 +7082,5 @@ type HarnessDetails struct {
 	ESC13HarnessECA                                 ESC13HarnessECA
 	DCSyncHarness                                   DCSyncHarness
 	SyncLAPSPasswordHarness                         SyncLAPSPasswordHarness
+	HybridAttackPaths                               HybridAttackPaths
 }
