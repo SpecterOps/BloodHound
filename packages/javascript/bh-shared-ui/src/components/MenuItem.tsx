@@ -31,9 +31,6 @@ const useStyles = makeStyles((theme) => ({
         '&:hover': {
             borderBottom: `3px solid #a7adb0`,
         },
-        // '& svg': {
-        //     color: '#a7adb0',
-        // },
         '&.active': {
             color: theme.palette.color.links,
             borderBottom: `3px solid ${theme.palette.color.links}`,

@@ -77,11 +77,11 @@ export const darkPalette = {
         error: '#E9827C',
     },
     neutral: {
-        primary: '#1D1B20',
-        secondary: '#211F26',
-        tertiary: '#2B2930',
-        quaternary: '#38434F',
-        quinary: '#38434F',
+        primary: '#121212',
+        secondary: '#222222',
+        tertiary: '#272727',
+        quaternary: '#2C2C2C',
+        quinary: '#2E2E2E',
     },
     background: {
         paper: '#211F26',
