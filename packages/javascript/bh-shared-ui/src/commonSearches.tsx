@@ -314,6 +314,10 @@ export const CommonSearches: CommonSearchType[] = [
         category: categoryAzure,
         queries: [
             {
+                description: 'Entra Users synced from On-Prem Users added to Domain Admins group',
+                cypher: "Please Find Me Some Cypher Stephen, You're My Only Hope",
+            },
+            {
                 description: 'On-Prem Users synced to Entra Users with Entra Admin Roles (direct)',
                 cypher: 'MATCH p = (:User)-[:SyncedToEntraUser]->(:AZUser)-[:AZHasRole]->(:AZRole)\nRETURN p',
             },
