@@ -315,7 +315,7 @@ export const CommonSearches: CommonSearchType[] = [
         queries: [
             {
                 description: 'Entra Users synced from On-Prem Users added to Domain Admins group',
-                cypher: "Please Find Me Some Cypher Stephen, You're My Only Hope",
+                cypher: 'MATCH p = (:AZUser)-[:SyncedToADUser]->(:User)-[:MemberOf]->(g:Group)\nWHERE g.objectid ENDS WITH "-512"\nRETURN p',
             },
             {
                 description: 'On-Prem Users synced to Entra Users with Entra Admin Roles (direct)',
