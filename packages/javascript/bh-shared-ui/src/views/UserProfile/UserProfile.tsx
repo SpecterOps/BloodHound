@@ -23,6 +23,7 @@ import { PutUserAuthSecretRequest } from 'js-client-library';
 import { useNotifications } from '../../providers';
 import { apiClient, getUsername } from '../../utils';
 import {
+    ApiVersion,
     Disable2FADialog,
     Enable2FADialog,
     PageWithTitle,
@@ -46,12 +47,6 @@ const UserProfile = () => {
     const getSelfQuery = useQuery(['getSelf'], ({ signal }) =>
         apiClient.getSelf({ signal }).then((res) => res.data.data)
     );
-
-    const getVersionQuery = useQuery(['Version'], ({ signal }) =>
-        apiClient.version({ signal }).then((res) => res.data.data)
-    );
-
-    const version = getVersionQuery;
 
     const updateUserPasswordMutation = useMutation(
         ({ userId, ...payload }: { userId: string } & PutUserAuthSecretRequest) =>
@@ -111,9 +106,7 @@ const UserProfile = () => {
                     Please try refreshing the page or logging in again.
                 </Alert>
                 <Box sx={{ flexGrow: 1, alignContent: 'flex-end' }}>
-                    <Typography variant='body2'>
-                        API Version: <TextWithFallback text={version.data?.server_version} fallback='Unknown' />
-                    </Typography>
+                    <ApiVersion></ApiVersion>
                 </Box>
             </PageWithTitle>
         );
@@ -238,9 +231,7 @@ const UserProfile = () => {
                         </Grid>
                     </Box>
                     <Box sx={{ flexGrow: 1, alignContent: 'flex-end' }}>
-                        <Typography variant='body2'>
-                            API Version: <TextWithFallback text={version.data?.server_version} fallback='Unknown' />
-                        </Typography>
+                        <ApiVersion></ApiVersion>
                     </Box>
                 </Box>
             </PageWithTitle>
