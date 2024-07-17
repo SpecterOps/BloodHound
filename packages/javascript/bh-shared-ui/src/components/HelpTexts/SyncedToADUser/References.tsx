@@ -14,18 +14,28 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { FC } from 'react';
+import React, { FC } from 'react';
 import { Link, Box } from '@mui/material';
 
 const References: FC = () => {
+    const references = [
+        {
+            label: 'Concept SSPR WriteBack',
+            link: 'https://learn.microsoft.com/en-us/entra/identity/authentication/concept-sspr-writeback',
+        },
+    ];
     return (
         <Box sx={{ overflowX: 'auto' }}>
-            <Link
-                target='_blank'
-                rel='noopener'
-                href='https://learn.microsoft.com/en-us/entra/identity/authentication/concept-sspr-writeback'>
-                Concept SSPR WriteBack
-            </Link>
+            {references.map((reference) => {
+                return (
+                    <React.Fragment key={reference.link}>
+                        <Link target='_blank' rel='noopener' href={reference.link}>
+                            {reference.label}
+                        </Link>
+                        <br />
+                    </React.Fragment>
+                );
+            })}
         </Box>
     );
 };
