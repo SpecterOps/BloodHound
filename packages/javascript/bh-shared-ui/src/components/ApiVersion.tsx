@@ -19,7 +19,7 @@ import { apiClient } from '../utils';
 import React from 'react';
 import { useQuery } from 'react-query';
 
-const ApiVersion: React.FC<{}> = ({}) => {
+const ApiVersion: React.FC = () => {
     const getVersionQuery = useQuery(['Version'], ({ signal }) =>
         apiClient.version({ signal }).then((res) => res.data.data)
     );
@@ -36,7 +36,7 @@ const ApiVersion: React.FC<{}> = ({}) => {
     if (getVersionQuery.isError)
         return <Typography variant='body2'>API Version: Unknown, please refresh the page or report a bug.</Typography>;
 
-    return <Typography variant='body2'>API Version: {version.data?.server_version}</Typography>;
+    return <Typography variant='body2'>API Version: {version.data.server_version}</Typography>;
 };
 
 export default ApiVersion;
