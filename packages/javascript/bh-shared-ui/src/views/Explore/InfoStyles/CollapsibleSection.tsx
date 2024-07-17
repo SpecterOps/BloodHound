@@ -20,6 +20,7 @@ import { Theme } from '@mui/material';
 const useCollapsibleSectionStyles = makeStyles((theme: Theme) => ({
     accordionRoot: {
         backgroundColor: 'inherit',
+        backgroundImage: 'unset',
         margin: 0,
         '&.Mui-disabled': {
             backgroundColor: 'inherit',
@@ -36,7 +37,6 @@ const useCollapsibleSectionStyles = makeStyles((theme: Theme) => ({
         '&:hover': {
             backgroundColor: theme.palette.action.hover,
         },
-        backgroundColor: theme.palette.neutral.secondary
     },
     accordionDetails: {
         padding: theme.spacing(1, 0),
@@ -53,7 +53,7 @@ const useCollapsibleSectionStyles = makeStyles((theme: Theme) => ({
         lineHeight: '1.6em',
         paddingX: '0.5rem',
         borderRadius: theme.shape.borderRadius,
-        color: theme.palette.color.primary
+        color: theme.palette.color.primary,
     },
     edgeAccordionDetails: {
         padding: theme.spacing(0, 0, 0, 1),
