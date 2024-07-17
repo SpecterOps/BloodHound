@@ -33,6 +33,7 @@ const (
 	FeatureClearGraphData             = "clear_graph_data"
 	FeatureRiskExposureNewCalculation = "risk_exposure_new_calculation"
 	FeatureFedRAMPEULA                = "fedramp_eula"
+	FeatureDarkMode                   = "dark_mode"
 )
 
 // AvailableFlags returns a FeatureFlagSet of expected feature flags. Feature flag defaults introduced here will become the initial
@@ -108,6 +109,13 @@ func AvailableFlags() FeatureFlagSet {
 			Description:   "Enables showing the FedRAMP EULA on every login. (Enterprise only)",
 			Enabled:       false,
 			UserUpdatable: false,
+		},
+		FeatureDarkMode: {
+			Key:           FeatureDarkMode,
+			Name:          "Dark Mode",
+			Description:   "Reveals a toggle in the settings menu that can be used to toggle dark mode on and off",
+			Enabled:       false,
+			UserUpdatable: true,
 		},
 	}
 }

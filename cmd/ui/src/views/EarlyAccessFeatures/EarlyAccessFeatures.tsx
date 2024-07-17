@@ -33,7 +33,9 @@ import {
 import { PageWithTitle } from 'bh-shared-ui';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { setDarkMode } from 'src/ducks/global/actions';
 import { Flag, useFeatureFlags, useToggleFeatureFlag } from 'src/hooks/useFeatureFlags';
+import { useAppDispatch } from 'src/store';
 
 export const EarlyAccessFeatureToggle: React.FC<{
     flag: Flag;
@@ -110,6 +112,7 @@ const EarlyAccessFeatures: React.FC = () => {
     const { data, isLoading, isError } = useFeatureFlags();
     const toggleFeatureFlag = useToggleFeatureFlag();
     const [showWarningDialog, setShowWarningDialog] = useState(true);
+    const dispatch = useAppDispatch();
 
     return (
         <>
@@ -160,6 +163,11 @@ const EarlyAccessFeatures: React.FC = () => {
                                     <EarlyAccessFeatureToggle
                                         flag={flag}
                                         onClick={(flagId) => {
+                                            if (flag.key === 'dark_mode') {
+                                                const body = document.getElementsByTagName('body')[0];
+                                                body.setAttribute('class', 'light');
+                                                dispatch(setDarkMode(false));
+                                            }
                                             toggleFeatureFlag.mutate(flagId);
                                         }}
                                         disabled={showWarningDialog}

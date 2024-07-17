@@ -38,6 +38,7 @@ import { logout } from 'src/ducks/auth/authSlice';
 import { setDarkMode } from 'src/ducks/global/actions.ts';
 import * as routes from 'src/ducks/global/routes';
 import { useAppDispatch, useAppSelector } from 'src/store';
+import FeatureFlag from './FeatureFlag';
 
 interface Props {
     anchorEl: null | HTMLElement;
@@ -155,13 +156,19 @@ const SettingsMenu: React.FC<Props> = ({ anchorEl, handleClose }) => {
                     <ListItemText primary='BloodHound Enterprise' />
                 </MenuItem>
 
-                <MenuItem onClick={toggleDarkMode} data-testid={'global_header_settings-menu_nav-logout'}>
-                    <ListItemIcon>
-                        <FontAwesomeIcon icon={faCircleHalfStroke} />
-                    </ListItemIcon>
-                    <ListItemText primary={'Dark Mode'} />
-                    <Switch checked={darkMode}>Dark Mode</Switch>
-                </MenuItem>
+                <FeatureFlag
+                    flagKey='dark_mode'
+                    enabled={
+                        <MenuItem onClick={toggleDarkMode} data-testid={'global_header_settings-menu_nav-logout'}>
+                            <ListItemIcon>
+                                <FontAwesomeIcon icon={faCircleHalfStroke} />
+                            </ListItemIcon>
+                            <ListItemText primary={'Dark Mode'} />
+                            <Switch checked={darkMode}>Dark Mode</Switch>
+                        </MenuItem>
+                    }
+                    disabled={null}
+                />
 
                 <Box my={1}>
                     <Divider />
