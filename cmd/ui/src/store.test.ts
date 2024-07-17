@@ -40,6 +40,24 @@ describe('redux store', () => {
         expect(newState).toEqual(defaultState);
     });
 
+    test('dark mode should persist between logging in and out', async () => {
+        const { rootReducer } = await import('src/store');
+        const defaultState = rootReducer({ global: { view: { darkMode: true } } }, {});
+
+        const newState = rootReducer(defaultState, {
+            type: 'auth/logout/fulfilled',
+        });
+
+        expect(newState.global.view.darkMode).toEqual(true);
+
+        const loginState = rootReducer(defaultState, {
+            type: 'auth/login/fulfilled',
+            payload: { sessionToken: '', user: '' },
+        });
+
+        expect(loginState.global.view.darkMode).toEqual(true);
+    });
+
     test('app does not crash if "token" cookie exists and "persistedState" localstorage key does not exist', async () => {
         // See https://specterops.atlassian.net/browse/BED-2224 for details
         vi.mock('js-cookie', () => ({

@@ -53,7 +53,6 @@ export const EarlyAccessFeatureToggle: React.FC<{
                 </Box>
                 <Box>
                     <Button disabled={disabled} onClick={handleOnClick}>
-                        <FontAwesomeIcon icon={faCheckCircle} fixedWidth />
                         {flag.enabled ? (
                             <>
                                 <FontAwesomeIcon icon={faCheckCircle} fixedWidth />

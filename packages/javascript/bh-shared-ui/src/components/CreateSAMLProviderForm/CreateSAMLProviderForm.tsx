@@ -103,18 +103,21 @@ const CreateSAMLProviderForm: React.FC<{
                                 <Box p={1} borderRadius={4} bgcolor={theme.palette.neutral.tertiary}>
                                     <Box display='flex' flexDirection='row' alignItems='center'>
                                         <Button variant='secondary'>
-                                            Choose File
-                                            <input
-                                                hidden
-                                                type='file'
-                                                accept='.xml'
-                                                value={fileValue}
-                                                onChange={(e) => {
-                                                    setFileValue(e.target.value);
-                                                    field.onChange(e.target.files as FileList);
-                                                }}
-                                                onBlur={field.onBlur}
-                                            />
+                                            <>
+                                                <label htmlFor='saml-provider-input'>Choose File</label>
+                                                <input
+                                                    id='saml-provider-input'
+                                                    hidden
+                                                    type='file'
+                                                    accept='.xml'
+                                                    value={fileValue}
+                                                    onChange={(e) => {
+                                                        setFileValue(e.target.value);
+                                                        field.onChange(e.target.files as FileList);
+                                                    }}
+                                                    onBlur={field.onBlur}
+                                                />
+                                            </>
                                         </Button>
                                         <Box ml={1}>
                                             <Typography variant='body1'>

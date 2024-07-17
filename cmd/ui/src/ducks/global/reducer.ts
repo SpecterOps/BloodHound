@@ -20,8 +20,6 @@ import * as types from './types';
 import assign from 'lodash/assign';
 
 const initialGlobalState: types.GlobalViewState = {
-    drawerOpen: false,
-    pageTitle: 'Home',
     notifications: [],
     darkMode: false,
 };
@@ -39,7 +37,7 @@ const globalViewReducer = (state = initialGlobalState, action: types.GlobalViewA
         } else if (action.type === types.GLOBAL_REMOVE_SNACKBAR) {
             draft.notifications = draft.notifications.filter((notification) => notification.key !== action.key);
         } else if (action.type === types.GLOBAL_SET_DARK_MODE) {
-            draft.darkMode = action.darkMode
+            draft.darkMode = action.darkMode;
         }
     });
 };

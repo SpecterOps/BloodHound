@@ -35,12 +35,10 @@ export {
     GLOBAL_SET_ASSET_GROUPS,
     GLOBAL_SET_ASSET_GROUP_INDEX,
     GLOBAL_SET_ASSET_GROUP_EDIT,
-    GLOBAL_SET_DARK_MODE
+    GLOBAL_SET_DARK_MODE,
 };
 
 export interface GlobalViewState {
-    drawerOpen: boolean;
-    pageTitle: string;
     notifications: Notification[];
     darkMode: boolean;
 }
@@ -80,9 +78,8 @@ interface CloseSnackbarAction {
 
 export interface SetDarkModeAction {
     type: typeof GLOBAL_SET_DARK_MODE;
-    darkMode: boolean
+    darkMode: boolean;
 }
-
 
 export type GlobalViewActionTypes = AddSnackbarAction | RemoveSnackbarAction | CloseSnackbarAction | SetDarkModeAction;
 
