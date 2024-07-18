@@ -60,7 +60,7 @@ func ParseObjectContainer(item IngestBase, itemType graph.Kind) IngestibleRelati
 		}
 	}
 
-	return IngestibleRelationship{}
+	return NewIngestibleRelationship()
 }
 
 func ParsePrimaryGroup(item IngestBase, itemType graph.Kind, primaryGroupSid string) IngestibleRelationship {
@@ -75,7 +75,7 @@ func ParsePrimaryGroup(item IngestBase, itemType graph.Kind, primaryGroupSid str
 		}
 	}
 
-	return IngestibleRelationship{}
+	return NewIngestibleRelationship()
 }
 
 func ParseGroupMembershipData(group Group) ParsedGroupMembershipData {
@@ -133,7 +133,7 @@ func ParseACEData(aces []ACE, targetID string, targetType graph.Kind) []Ingestib
 }
 
 func convertSPNData(spns []SPNTarget, sourceID string) []IngestibleRelationship {
-	converted := make([]IngestibleRelationship, len(spns))
+	converted := make([]IngestibleRelationship, 0, len(spns))
 
 	for i, s := range spns {
 		if kind, err := analysis.ParseKind(s.Service); err != nil {
@@ -187,7 +187,7 @@ func ParseUserMiscData(user User) []IngestibleRelationship {
 }
 
 func ParseChildObjects(data []TypedPrincipal, containerId string, containerType graph.Kind) []IngestibleRelationship {
-	relationships := make([]IngestibleRelationship, len(data))
+	relationships := make([]IngestibleRelationship, 0, len(data))
 	for i, childObject := range data {
 		relationships[i] = IngestibleRelationship{
 			Source:     containerId,
@@ -202,7 +202,7 @@ func ParseChildObjects(data []TypedPrincipal, containerId string, containerType 
 	return relationships
 }
 func ParseGpLinks(links []GPLink, itemIdentifier string, itemType graph.Kind) []IngestibleRelationship {
-	relationships := make([]IngestibleRelationship, len(links))
+	relationships := make([]IngestibleRelationship, 0, len(links))
 	for i, gpLink := range links {
 		relationships[i] = IngestibleRelationship{
 			Source:     gpLink.Guid,
