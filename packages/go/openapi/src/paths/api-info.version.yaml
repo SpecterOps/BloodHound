@@ -17,21 +17,35 @@
 parameters:
   - $ref: './../parameters/header.prefer.yaml'
 get:
-  operationId: AcceptEula
-  summary: Accept EULA
-  description: Accept BloodHound Enterprise EULA for logged in user (EULA applies to BHE customers only).
+  operationId: GetApiVersion
+  summary: Get API version
+  description: Returns the supported API versions.
   tags:
-    - EULA
+    - API Info
+    - Community
     - Enterprise
   responses:
-    202:
-      $ref: './../responses/no-content.yaml'
-    400:
-      $ref: './../responses/bad-request.yaml'
+    200:
+      description: OK
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                type: object
+                properties:
+                  API:
+                    type: object
+                    properties:
+                      current_version:
+                        type: string
+                      deprecated_version:
+                        type: string
+                  server_version:
+                    type: string
     401:
       $ref: './../responses/unauthorized.yaml'
-    403:
-      $ref: './../responses/forbidden.yaml'
     429:
       $ref: './../responses/too-many-requests.yaml'
     500:

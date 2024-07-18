@@ -17,17 +17,25 @@
 parameters:
   - $ref: './../parameters/header.prefer.yaml'
 get:
-  operationId: AcceptEula
-  summary: Accept EULA
-  description: Accept BloodHound Enterprise EULA for logged in user (EULA applies to BHE customers only).
+  operationId: ListFeatureFlags
+  summary: List feature flags
+  description: Lists all feature flags for this instance
   tags:
-    - EULA
+    - Config
+    - Community
     - Enterprise
   responses:
-    202:
-      $ref: './../responses/no-content.yaml'
-    400:
-      $ref: './../responses/bad-request.yaml'
+    200:
+      description: OK
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                type: array
+                items:
+                  $ref: './../schemas/model.feature-flag.yaml'
     401:
       $ref: './../responses/unauthorized.yaml'
     403:
