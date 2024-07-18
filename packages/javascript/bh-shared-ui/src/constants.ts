@@ -132,7 +132,7 @@ export const typography: Partial<Theme['typography']> = {
     },
 };
 
-export const components: Partial<Theme['components']> = {
+export const components = (palette: typeof darkPalette): Partial<Theme['components']> => ({
     MuiButton: {
         styleOverrides: {
             root: {
@@ -150,4 +150,77 @@ export const components: Partial<Theme['components']> = {
             },
         },
     },
-};
+    MuiLink: {
+        styleOverrides: {
+            root: {
+                color: palette.color.links,
+            },
+        },
+    },
+    MuiInputLabel: {
+        styleOverrides: {
+            root: {
+                '&.Mui-focused': {
+                    color: palette.color.links,
+                },
+            },
+        },
+    },
+    MuiInput: {
+        styleOverrides: {
+            underline: {
+                '&:after': {
+                    borderBottom: `2px solid ${palette.color.links}`,
+                },
+                '&:hover:not($disabled):not($focused):not($error):before': {
+                    borderBottom: `2px solid ${palette.color.links}`,
+                },
+            },
+        },
+    },
+    MuiDialog: {
+        styleOverrides: {
+            root: {
+                '& .MuiPaper-root': {
+                    backgroundImage: 'unset',
+                },
+            },
+        },
+    },
+    MuiPopover: {
+        styleOverrides: {
+            root: {
+                '& .MuiPaper-root': {
+                    backgroundImage: 'unset',
+                },
+            },
+        },
+    },
+    MuiCheckbox: {
+        styleOverrides: {
+            root: {
+                '& svg': {
+                    color: palette.color.links,
+                },
+            },
+        },
+    },
+    MuiTabs: {
+        styleOverrides: {
+            root: {
+                '& .MuiTab-labelIcon': {
+                    color: palette.color.links,
+                },
+                '& .MuiTab-labelIcon.Mui-selected': {
+                    color: palette.color.links,
+                },
+                '& .MuiTab-labelIcon:not(.Mui-selected)': {
+                    color: palette.color.primary,
+                },
+                '& .MuiTabs-indicator': {
+                    backgroundColor: palette.color.links,
+                },
+            },
+        },
+    },
+});

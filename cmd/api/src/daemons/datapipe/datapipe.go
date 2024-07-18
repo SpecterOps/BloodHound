@@ -112,7 +112,7 @@ func (s *Daemon) analyze() {
 	}
 }
 
-func resetCache(cacher cache.Cache, cacheEnabled bool) {
+func resetCache(cacher cache.Cache, _ bool) {
 	if err := cacher.Reset(); err != nil {
 		log.Errorf("Error while resetting the cache: %v", err)
 	} else {

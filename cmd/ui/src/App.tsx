@@ -53,6 +53,38 @@ const Inner: React.FC = () => {
             flexDirection: 'column',
             height: '100%',
             overflow: 'hidden',
+            '@global': {
+                '.api-explorer .swagger-ui': {
+                    [`& a.nostyle,
+                        & div.renderedMarkdown > p,
+                        & .response-col_status,
+                        & .col_header,
+                        & div.parameter__name,
+                        & .parameter__in,
+                        & div.opblock-summary-description,
+                        & div > small,
+                        & li.tabitem,
+                        & .response-col_links,
+                        & .opblock-description-wrapper > p,
+                        & .btn-group > button,
+                        `]: {
+                        color: theme.palette.color.primary,
+                    },
+                    '& .responses-inner': {
+                        [`& h4, & h5`]: {
+                            color: theme.palette.color.primary,
+                        },
+                    },
+                    '& svg.arrow': {
+                        fill: theme.palette.color.primary,
+                    },
+                    '& .opblock-deprecated': {
+                        '& .opblock-title_normal': {
+                            color: theme.palette.color.primary,
+                        },
+                    },
+                },
+            },
         },
         applicationHeader: {
             flexGrow: 0,
@@ -109,14 +141,15 @@ const Inner: React.FC = () => {
 const App: React.FC = () => {
     const darkMode = useAppSelector((state) => state.global.view.darkMode);
     const mode = darkMode ? 'dark' : 'light';
+    const palette = darkMode ? darkPalette : lightPalette;
 
     const theme = createTheme({
         palette: {
             mode,
-            ...(!darkMode ? lightPalette : darkPalette),
+            ...palette,
         },
         typography: { ...typography },
-        components: { ...components },
+        components: { ...components(palette) },
     });
 
     return (

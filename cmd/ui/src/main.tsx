@@ -97,7 +97,7 @@ const main = async () => {
     root.render(
         <Provider store={store}>
             <QueryClientProvider client={queryClient}>
-                <ReactQueryDevtools />
+                <ReactQueryDevtools position='bottom-right' />
                 <StyledEngineProvider injectFirst>
                     <App />
                 </StyledEngineProvider>

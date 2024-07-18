@@ -20,6 +20,7 @@ import { Theme } from '@mui/material';
 const useCollapsibleSectionStyles = makeStyles((theme: Theme) => ({
     accordionRoot: {
         backgroundColor: 'inherit',
+        backgroundImage: 'unset',
         margin: 0,
         '&.Mui-disabled': {
             backgroundColor: 'inherit',
@@ -31,12 +32,10 @@ const useCollapsibleSectionStyles = makeStyles((theme: Theme) => ({
     accordionSummary: {
         padding: theme.spacing(0, 2),
         margin: theme.spacing(0, -2),
-        color: 'common.black',
         fontSize: '0.75rem',
         '&:hover': {
             backgroundColor: theme.palette.action.hover,
         },
-        backgroundColor: theme.palette.neutral.secondary
     },
     accordionDetails: {
         padding: theme.spacing(1, 0),
@@ -53,7 +52,7 @@ const useCollapsibleSectionStyles = makeStyles((theme: Theme) => ({
         lineHeight: '1.6em',
         paddingX: '0.5rem',
         borderRadius: theme.shape.borderRadius,
-        color: theme.palette.color.primary
+        color: theme.palette.color.primary,
     },
     edgeAccordionDetails: {
         padding: theme.spacing(0, 0, 0, 1),
@@ -67,7 +66,7 @@ const useCollapsibleSectionStyles = makeStyles((theme: Theme) => ({
         '& p.MuiTypography-body2': {
             marginTop: '8px',
             fontSize: '0.75rem',
-            backgroundColor: '#eee',
+            backgroundColor: theme.palette.neutral.tertiary,
             padding: theme.spacing(0.5, 1),
             borderRadius: theme.shape.borderRadius,
         },
@@ -83,13 +82,13 @@ const useCollapsibleSectionStyles = makeStyles((theme: Theme) => ({
             wordBreak: 'break-all',
             margin: theme.spacing(1, 0.5),
             padding: theme.spacing(0.5),
-            backgroundColor: 'rgba(0,0,0,0.75)',
+            backgroundColor: theme.palette.neutral.quinary,
             borderRadius: theme.shape.borderRadius,
-            color: '#eee',
+            color: theme.palette.color.primary,
         },
         '& ul': {
             marginTop: '8px',
-            backgroundColor: '#eee',
+            backgroundColor: theme.palette.neutral.tertiary,
             borderRadius: theme.shape.borderRadius,
             listStyle: 'disc',
             padding: theme.spacing(0.5, 3),
