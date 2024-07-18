@@ -18,11 +18,35 @@ package ein
 
 import "github.com/specterops/bloodhound/dawgs/graph"
 
-// Initialize an empty IngestibleRelationship to ensure the map isn't nil
-func NewIngestibleRelationship() IngestibleRelationship {
-	return IngestibleRelationship{
-		RelProps: make(map[string]any),
+// Initialize IngestibleRelationship to ensure the RelProps map can't be nil
+func NewIngestibleRelationship(source IngestibleSource, target IngestibleTarget, rel IngestibleRel) IngestibleRelationship {
+	if rel.RelProps == nil {
+		rel.RelProps = make(map[string]any)
 	}
+
+	return IngestibleRelationship{
+		Source:     source.Source,
+		Target:     target.Target,
+		SourceType: source.SourceType,
+		TargetType: target.TargetType,
+		RelProps:   rel.RelProps,
+		RelType:    rel.RelType,
+	}
+}
+
+type IngestibleSource struct {
+	Source     string
+	SourceType graph.Kind
+}
+
+type IngestibleTarget struct {
+	Target     string
+	TargetType graph.Kind
+}
+
+type IngestibleRel struct {
+	RelProps map[string]any
+	RelType  graph.Kind
 }
 
 type IngestibleRelationship struct {
@@ -35,7 +59,7 @@ type IngestibleRelationship struct {
 }
 
 func (s IngestibleRelationship) IsValid() bool {
-	return s.Target != "" && s.Source != ""
+	return s.Target != "" && s.Source != "" && s.RelProps != nil
 }
 
 type IngestibleSession struct {
