@@ -138,7 +138,7 @@ const GraphView: FC = () => {
     );
 
     const sampleDataLink = (
-        <Link target='_blank' href={'https://github.com/SpecterOps/BloodHound/tree/main/examples/sample-data'}>
+        <Link target='_blank' href={'https://github.com/SpecterOps/BloodHound/wiki/Example-Data'}>
             GitHub Sample Collection
         </Link>
     );
