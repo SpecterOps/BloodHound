@@ -39,7 +39,10 @@ const useStyles = makeStyles((theme) => ({
     tab: {
         height: '35px',
         minHeight: '35px',
-        color: theme.palette.primary.main,
+        color: theme.palette.color.primary,
+        '&.Mui-selected': {
+            color: theme.palette.color.links,
+        },
     },
     list: {
         position: 'relative',

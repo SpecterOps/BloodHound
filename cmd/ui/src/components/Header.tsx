@@ -16,7 +16,7 @@
 
 import { faCog, faUsersRectangle, faProjectDiagram } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { AppBar, Box, IconButton, Link, Toolbar } from '@mui/material';
+import { AppBar, Box, IconButton, Link, Toolbar, useTheme } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
 import React from 'react';
 import { Link as RouterLink, useLocation, useNavigate } from 'react-router-dom';
@@ -75,6 +75,7 @@ const useStyles = makeStyles((theme) => ({
 const Header: React.FC = () => {
     const navigate = useNavigate();
     const classes = useStyles();
+    const theme = useTheme();
 
     const location = useLocation();
     const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
@@ -111,7 +112,7 @@ const Header: React.FC = () => {
                 <IconButton
                     onClick={showMenu}
                     className={'settings'}
-                    style={{ color: '#1C222E' }}
+                    style={{ color: theme.palette.color.primary }}
                     size='small'
                     data-testid='global_header_settings-menu'
                     aria-label='Settings Menu'>

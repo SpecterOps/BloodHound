@@ -20,15 +20,17 @@ import { GraphEdges, GraphNodes } from 'js-client-library';
 import { GlyphLocation } from 'src/rendering/programs/node.glyphs';
 import { EdgeDirection, EdgeParams, NodeParams } from 'src/utils';
 import { GLYPHS, NODE_ICON, UNKNOWN_ICON } from './svgIcons';
+import { Theme } from '@mui/material';
 
-export const initGraphNodes = (graph: MultiDirectedGraph, nodes: GraphNodes, nodeSize: number) => {
+export const initGraphNodes = (graph: MultiDirectedGraph, nodes: GraphNodes, nodeSize: number, theme: Theme) => {
     Object.keys(nodes).forEach((key: string) => {
         const node = nodes[key];
         // Set default node parameters
         const nodeParams: Partial<NodeParams> = {
-            color: '#FFFFFF',
+            color: theme.palette.color.primary,
             type: 'combined',
             label: node.label,
+            labelColor: theme.palette.color.primary,
             forceLabel: true,
         };
 
@@ -38,26 +40,30 @@ export const initGraphNodes = (graph: MultiDirectedGraph, nodes: GraphNodes, nod
 
         // Tier zero nodes should be marked with a gem glyph
         if (node.isTierZero) {
-            const glyph = GLYPHS[GlyphKind.TIER_ZERO];
+            const glyph =
+                theme.palette.color.primary === '#1D1B20'
+                    ? GLYPHS[GlyphKind.TIER_ZERO]
+                    : GLYPHS[GlyphKind.TIER_ZERO_DARK];
             nodeParams.type = 'glyphs';
             nodeParams.glyphs = [
                 {
                     location: GlyphLocation.TOP_RIGHT,
                     image: glyph.url || '',
-                    backgroundColor: glyph.color,
+                    backgroundColor: theme.palette.color.primary,
+                    color: theme.palette.neutral.primary, //border
                 },
             ];
         }
 
         graph.addNode(key, {
             size: nodeSize,
-            borderColor: '#000000',
+            borderColor: theme.palette.color.primary,
             ...nodeParams,
         });
     });
 };
 
-export const initGraphEdges = (graph: MultiDirectedGraph, edges: GraphEdges) => {
+export const initGraphEdges = (graph: MultiDirectedGraph, edges: GraphEdges, theme: Theme) => {
     // Group edges with the same start and end nodes into arrays. Should be grouped regardless of direction
     const groupedEdges = edges.reduce<Record<string, GraphEdges>>((groups, edge) => {
         const identifiers = [edge.source, edge.target].sort();
@@ -83,7 +89,8 @@ export const initGraphEdges = (graph: MultiDirectedGraph, edges: GraphEdges) => 
                 size: 3,
                 type: 'arrow',
                 label: edge.label,
-                color: '#000000C0',
+                color: theme.palette.color.primary,
+                backgroundColor: theme.palette.neutral.secondary,
                 groupPosition: 0,
                 groupSize: 1,
                 exploreGraphId: edge.exploreGraphId || key,

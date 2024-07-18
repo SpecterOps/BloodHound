@@ -80,8 +80,8 @@ const GraphView: FC = () => {
         const graph = new MultiDirectedGraph();
         const nodeSize = 25;
 
-        initGraphNodes(graph, items.nodes, nodeSize);
-        initGraphEdges(graph, items.edges);
+        initGraphNodes(graph, items.nodes, nodeSize, theme);
+        initGraphEdges(graph, items.edges, theme);
 
         setCurrentNodes(items.nodes);
 
@@ -95,7 +95,7 @@ const GraphView: FC = () => {
             },
         });
         setGraphologyGraph(graph);
-    }, [graphState.chartProps.items]);
+    }, [graphState.chartProps.items, theme]);
 
     useEffect(() => {
         if (opts.assetGroupEdit !== null) {

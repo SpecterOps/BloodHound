@@ -51,7 +51,7 @@ const drawBackground = (
         context.fillStyle = HIGHLIGHTED_LABEL_BACKGROUND_COLOR;
         context.globalAlpha = fadeAlphaFromZoom;
     } else {
-        context.fillStyle = '#FFF';
+        context.fillStyle = edgeData.backgroundColor;
         context.globalAlpha = fadeAlphaFromZoom * 0.8;
     }
 
@@ -91,7 +91,7 @@ const drawText = (
 
     // Text should always be completely opaque, before factoring in fade from zoom level
     context.globalAlpha = fadeAlphaFromZoom;
-    context.fillStyle = edgeData.selected ? HIGHLIGHTED_LABEL_FONT_COLOR : edgeData.color || '#000';
+    context.fillStyle = edgeData.selected ? HIGHLIGHTED_LABEL_FONT_COLOR : edgeData.color;
 
     context.fillText(label, -textLength / 2, (edgeData.size / 2) * (edgeData.inverseSqrtZoomRatio || 1));
 };
