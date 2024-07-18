@@ -25,7 +25,7 @@ import {
     faUserShield,
 } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Box, Divider } from '@mui/material';
+import { Box, Divider, useTheme } from '@mui/material';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
 import Menu, { MenuProps } from '@mui/material/Menu';
@@ -69,6 +69,7 @@ const SettingsMenu: React.FC<Props> = ({ anchorEl, handleClose }) => {
     const navigate = useNavigate();
     const darkMode = useAppSelector((state) => state.global.view.darkMode);
     const body = document.getElementsByTagName('body')[0];
+    const theme = useTheme();
 
     const navigateTo = (route: string) => {
         handleClose();
@@ -151,7 +152,7 @@ const SettingsMenu: React.FC<Props> = ({ anchorEl, handleClose }) => {
                     onClick={() => openInNewTab('https://bloodhoundenterprise.io/our-solution/')}
                     data-testid='global_header_settings-menu_nav-checkout-BHE'>
                     <ListItemIcon>
-                        <EnterpriseIcon fill={'#000000'} width='1rem' height='1rem' />
+                        <EnterpriseIcon fill={theme.palette.color.primary} width='1rem' height='1rem' />
                     </ListItemIcon>
                     <ListItemText primary='BloodHound Enterprise' />
                 </MenuItem>
