@@ -445,9 +445,9 @@ paths:
 
   # nt auth stores
   /api/v2/ntauthstores/{object_id}:
-    $ref: './paths/ntauthstores/ntauthstores.id.yaml'
+    $ref: './paths/ntauthstores.ntauthstores.id.yaml'
   /api/v2/ntauthstores/{object_id}/controllers:
-    $ref: './paths/ntauthstores/ntauthstores.id.controllers.yaml'
+    $ref: './paths/ntauthstores.ntauthstores.id.controllers.yaml'
 
   # cert templates
   /api/v2/certtemplates/{object_id}:
