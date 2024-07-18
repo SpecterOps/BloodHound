@@ -37,7 +37,7 @@ const useStyles = makeStyles((theme) => ({
         boxSizing: 'border-box',
         padding: theme.spacing(2),
         fontSize: theme.typography.fontSize,
-        color: theme.palette.common.black,
+        color: theme.palette.color.primary,
     },
     tab: {
         height: '40px',
@@ -47,7 +47,7 @@ const useStyles = makeStyles((theme) => ({
         padding: 0,
         flexGrow: 1,
         minWidth: theme.spacing(2),
-    }
+    },
 }));
 
 const tabNameMap = {
@@ -93,7 +93,14 @@ const ExploreSearch = ({ handleColumns }: ExploreSearchProps) => {
 
     return (
         <Box sx={{ pointerEvents: 'auto' }}>
-            <Paper sx={{ height: '40px', display: 'flex', flexShrink: 4, gap: 1 }} elevation={0}>
+            <Paper
+                sx={{
+                    height: '40px',
+                    display: 'flex',
+                    flexShrink: 4,
+                    gap: 1,
+                }}
+                elevation={0}>
                 <Icon
                     className={classes.icon}
                     click={() => {
