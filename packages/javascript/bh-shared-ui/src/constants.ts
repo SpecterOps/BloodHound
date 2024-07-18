@@ -166,6 +166,18 @@ export const components = (palette: typeof darkPalette): Partial<Theme['componen
             },
         },
     },
+    MuiTextField: {
+        styleOverrides: {
+            root: {
+                '&:hover .MuiInputBase-root .MuiOutlinedInput-notchedOutline': {
+                    borderColor: palette.color.links,
+                },
+                '& .MuiInputBase-root.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                    borderColor: palette.color.links,
+                }
+            },
+        }
+    },
     MuiInput: {
         styleOverrides: {
             underline: {
