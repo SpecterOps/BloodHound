@@ -127,34 +127,31 @@ func (s DomainSelectors) GetOrderCriteria(params url.Values) (OrderCriteria, err
 }
 
 func (s DomainSelectors) GetFilterCriteria(request *http.Request) (graph.Criteria, error) {
-	var (
-		queryParameterFilterParser = NewQueryParameterFilterParser()
-		criteria                   graph.Criteria
-	)
+    var (
+        queryParameterFilterParser = NewQueryParameterFilterParser()
+        criteria                   graph.Criteria
+    )
 
-	if queryFilters, err := queryParameterFilterParser.ParseQueryParameterFilters(request); err != nil {
-		return nil, fmt.Errorf(ErrorResponseDetailsBadQueryParameterFilters)
-	} else {
-		for name, filters := range queryFilters {
-			if valid := slices.Contains(s.GetFilterableColumns(), name); !valid {
-				return nil, fmt.Errorf(ErrorResponseDetailsColumnNotFilterable)
-			}
-
-			if validPredicates, err := s.GetValidFilterPredicatesAsStrings(name); err != nil {
-				return nil, fmt.Errorf(ErrorResponseDetailsColumnNotFilterable)
-			} else {
-				for i, filter := range filters {
-					if !slices.Contains(validPredicates, string(filter.Operator)) {
-						return nil, fmt.Errorf(ErrorResponseDetailsFilterPredicateNotSupported)
-					}
-
-					queryFilters[name][i].IsStringData = s.IsString(filter.Name)
-				}
-			}
-		}
+    if queryFilters, err := queryParameterFilterParser.ParseQueryParameterFilters(request); err != nil {
+        return nil, fmt.Errorf(ErrorResponseDetailsBadQueryParameterFilters)
+    } else {
+        for name, filters := range queryFilters {
+            if valid := slices.Contains(s.GetFilterableColumns(), name); !valid {
+                return nil, fmt.Errorf(ErrorResponseDetailsColumnNotFilterable)
+            }
+            if validPredicates, err := s.GetValidFilterPredicatesAsStrings(name); err != nil {
+                return nil, fmt.Errorf(ErrorResponseDetailsColumnNotFilterable)
+            } else {
+                for i, filter := range filters {
+                    if !slices.Contains(validPredicates, string(filter.Operator)) {
+                        return nil, fmt.Errorf(ErrorResponseDetailsFilterPredicateNotSupported)
+                    }
+                    queryFilters[name][i].IsStringData = s.IsString(filter.Name)
+                }
+            }
+        }
 		// ignoring the error here as this would've failed at ParseQueryParameterFilters before getting here
-		criteria = query.And(queryFilters.BuildGDBNodeFilter(), query.KindIn(query.Node(), ad.Domain, azure.Tenant))
-
-		return criteria, nil
-	}
+        criteria = query.And(queryFilters.BuildGDBNodeFilter(), query.KindIn(query.Node(), ad.Domain, azure.Tenant))
+        return criteria, nil
+    }
 }
