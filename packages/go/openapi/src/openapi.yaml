@@ -427,9 +427,9 @@ paths:
 
   # aiacas
   /api/v2/aiacas/{object_id}:
-    $ref: './paths/aiacas/aiaca.id.yaml'
+    $ref: './paths/aiacas.aiaca.id.yaml'
   /api/v2/aiacas/{object_id}/controllers:
-    $ref: './paths/aiacas/aiaca.id.controllers.yaml'
+    $ref: './paths/aiacas.aiaca.id.controllers.yaml'
 
   # root cas
   /api/v2/rootcas/{object_id}:
