@@ -14,9 +14,10 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { Button } from '@bloodhoundenterprise/doodleui';
 import { faFolderOpen, faPlay, faQuestion, faSave } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Box, Button, Collapse, SvgIcon } from '@mui/material';
+import { Box, Collapse, Link, Typography } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
 import '@neo4j-cypher/codemirror/css/cypher-codemirror.css';
 import { CypherEditor } from '@neo4j-cypher/react-codemirror';
@@ -153,7 +154,6 @@ const CypherSearch = () => {
                     onClick={() => {
                         setShowCommonQueries((v) => !v);
                     }}
-                    variant='outlined'
                     aria-label='Show/Hide Saved Queries'>
                     <FontAwesomeIcon icon={faFolderOpen} />
                 </Button>
@@ -182,43 +182,32 @@ const CypherSearch = () => {
 
             <Box display={'flex'} gap={1} mt={1} justifyContent={'end'}>
                 <Button
-                    className={classes.button}
                     onClick={() => {
                         setShowSaveQueryDialog(true);
                     }}
-                    variant='outlined'
-                    startIcon={
-                        <SvgIcon>
-                            <FontAwesomeIcon icon={faSave} />
-                        </SvgIcon>
-                    }>
-                    Save Query
+                    size={'small'}>
+                    <Box display={'flex'} alignItems={'center'}>
+                        <FontAwesomeIcon icon={faSave} />
+                        <Typography ml='8px'>Save Query</Typography>
+                    </Box>
                 </Button>
 
-                <Button
-                    href='https://support.bloodhoundenterprise.io/hc/en-us/articles/16721164740251'
-                    target='_blank'
-                    rel='noreferrer'
-                    variant='outlined'
-                    className={classes.button}
-                    startIcon={
-                        <SvgIcon>
+                <Button asChild rel='noreferrer' size={'small'}>
+                    <Link
+                        href='https://support.bloodhoundenterprise.io/hc/en-us/articles/16721164740251'
+                        target='_blank'>
+                        <Box display={'flex'} alignItems={'center'}>
                             <FontAwesomeIcon icon={faQuestion} />
-                        </SvgIcon>
-                    }>
-                    Help
+                            <Typography ml='8px'>Help</Typography>
+                        </Box>
+                    </Link>
                 </Button>
 
-                <Button
-                    className={classes.button}
-                    onClick={() => handleCypherSearch()}
-                    variant='outlined'
-                    startIcon={
-                        <SvgIcon>
-                            <FontAwesomeIcon icon={faPlay} />
-                        </SvgIcon>
-                    }>
-                    Run
+                <Button onClick={() => handleCypherSearch()} size={'small'}>
+                    <Box display={'flex'} alignItems={'center'}>
+                        <FontAwesomeIcon icon={faPlay} />
+                        <Typography ml='8px'>Run</Typography>
+                    </Box>
                 </Button>
             </Box>
 

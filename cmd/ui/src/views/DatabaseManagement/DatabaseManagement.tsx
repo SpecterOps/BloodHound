@@ -14,7 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Alert, Box, Button, Checkbox, FormControl, FormControlLabel, FormGroup, Typography } from '@mui/material';
+import { Button } from '@bloodhoundenterprise/doodleui';
+import { Alert, Box, Checkbox, FormControl, FormControlLabel, FormGroup, Typography } from '@mui/material';
 import { PageWithTitle, apiClient } from 'bh-shared-ui';
 import { useReducer } from 'react';
 import ConfirmationDialog from './ConfirmationDialog';
@@ -312,9 +313,7 @@ const DatabaseManagement = () => {
                         </FormGroup>
                     </FormControl>
 
-                    <Button color='primary' onClick={() => dispatch({ type: 'open_dialog' })}>
-                        Proceed
-                    </Button>
+                    <Button onClick={() => dispatch({ type: 'open_dialog' })}>Proceed</Button>
                 </Box>
             </Box>
 

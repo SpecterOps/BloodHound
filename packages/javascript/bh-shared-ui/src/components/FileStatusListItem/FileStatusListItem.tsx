@@ -16,7 +16,7 @@
 
 import { faTimes } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Grid, IconButton } from '@mui/material';
+import { Grid, IconButton, useTheme } from '@mui/material';
 import { FileForIngest, FileStatus } from '../FileUploadDialog/types';
 import FileValidationStatus from '../FileValidationStatus';
 
@@ -24,16 +24,9 @@ const FileStatusListItem: React.FC<{
     file: FileForIngest;
     onRemove: () => void;
 }> = ({ file, onRemove }) => {
+    const theme = useTheme();
     return (
-        <Grid
-            container
-            width='100%'
-            minHeight={32}
-            fontSize={12}
-            borderLeft={1}
-            borderRight={1}
-            borderBottom={1}
-            borderColor='lightgray'>
+        <Grid container width='100%' minHeight={32} fontSize={12} border={1} borderColor={theme.palette.color.primary}>
             <Grid item xs={6} sx={{ display: 'flex', alignItems: 'center', paddingLeft: '4px' }}>
                 {file.file.name}
             </Grid>
@@ -46,7 +39,7 @@ const FileStatusListItem: React.FC<{
                         onClick={onRemove}
                         sx={{
                             '&:hover': {
-                                backgroundColor: 'lightgray',
+                                backgroundColor: theme.palette.neutral.quinary,
                             },
                             borderRadius: '2px',
                             width: 28,

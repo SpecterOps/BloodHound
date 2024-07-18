@@ -14,14 +14,12 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { useState } from 'react';
-import { Box, Button, CircularProgress, Grid, Switch, Typography } from '@mui/material';
-import { useMutation, useQuery } from 'react-query';
-import { Alert, AlertTitle } from '@mui/material';
+import { Button } from '@bloodhoundenterprise/doodleui';
+import { Alert, AlertTitle, Box, CircularProgress, Grid, Switch, Typography } from '@mui/material';
 import { PutUserAuthSecretRequest } from 'js-client-library';
+import { useState } from 'react';
+import { useMutation, useQuery } from 'react-query';
 
-import { useNotifications } from '../../providers';
-import { apiClient, getUsername } from '../../utils';
 import {
     ApiVersion,
     Disable2FADialog,
@@ -31,6 +29,8 @@ import {
     TextWithFallback,
     UserTokenManagementDialog,
 } from '../../components';
+import { useNotifications } from '../../providers';
+import { apiClient, getUsername } from '../../utils';
 
 const UserProfile = () => {
     const { addNotification } = useNotifications();
@@ -170,11 +170,7 @@ const UserProfile = () => {
                                 </Grid>
                                 <Grid item xs={2}>
                                     <Button
-                                        variant='contained'
-                                        color='primary'
-                                        size='small'
-                                        disableElevation
-                                        fullWidth
+                                        style={{ width: '100%' }}
                                         onClick={() => setUserTokenManagementDialogOpen(true)}
                                         data-testid='my-profile_button-api-key-management'>
                                         API Key Management
@@ -189,11 +185,7 @@ const UserProfile = () => {
                                         </Grid>
                                         <Grid item xs={2}>
                                             <Button
-                                                variant='contained'
-                                                color='primary'
-                                                size='small'
-                                                disableElevation
-                                                fullWidth
+                                                style={{ width: '100%' }}
                                                 onClick={() => setChangePasswordDialogOpen(true)}
                                                 data-testid='my-profile_button-reset-password'>
                                                 Reset Password

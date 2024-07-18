@@ -14,11 +14,11 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { Button } from '@bloodhoundenterprise/doodleui';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Box, MenuItem, Popover, Tooltip, Typography } from '@mui/material';
 import { FC, useState } from 'react';
 import { DropdownOption } from './types';
-import { Button } from '@bloodhoundenterprise/doodleui';
 
 const DropdownSelector: FC<{
     options: DropdownOption[];

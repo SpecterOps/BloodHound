@@ -14,9 +14,9 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { Button } from '@bloodhoundenterprise/doodleui';
 import { faExchangeAlt } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Button } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
 import { searchbarActions } from 'bh-shared-ui';
 import { useCallback } from 'react';
@@ -29,7 +29,7 @@ const useStyles = makeStyles((theme) => ({
         minWidth: '25px',
         borderRadius: theme.shape.borderRadius,
         borderColor: 'rgba(0,0,0,0.23)',
-        color: 'black',
+        color: theme.palette.common.white,
         padding: 0,
     },
 }));
@@ -51,7 +51,6 @@ const PathfindingSwapButton = () => {
     return (
         <Button
             className={classes.swapButton}
-            variant='outlined'
             disabled={!primary?.value || !secondary?.value}
             onClick={swapPathfindingInputs}>
             <FontAwesomeIcon icon={faExchangeAlt} className='fa-rotate-90' />

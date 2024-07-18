@@ -14,11 +14,11 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { Button } from '@bloodhoundenterprise/doodleui';
 import { faChevronDown, faChevronUp } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
     Box,
-    Button,
     Checkbox,
     Collapse,
     Dialog,
@@ -75,7 +75,9 @@ const EdgeFilteringDialog = ({ isOpen, handleCancel, handleApply }: EdgeFilterin
             </DialogContent>
 
             <DialogActions>
-                <Button onClick={onCancel}>Cancel</Button>
+                <Button variant='tertiary' onClick={onCancel}>
+                    Cancel
+                </Button>
                 <Button onClick={onApply}>Apply</Button>
             </DialogActions>
         </Dialog>

@@ -14,8 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { Button } from '@bloodhoundenterprise/doodleui';
 import {
-    Button,
     DialogActions,
     DialogContent,
     DialogContentText,
@@ -68,11 +68,7 @@ const UpdateUserForm: React.FC<{
                 </DialogContent>
                 <DialogActions>
                     <DialogActions>
-                        <Button
-                            autoFocus
-                            color='inherit'
-                            onClick={onCancel}
-                            data-testid='update-user-dialog_button-close'>
+                        <Button variant='tertiary' onClick={onCancel} data-testid='update-user-dialog_button-close'>
                             Close
                         </Button>
                     </DialogActions>
@@ -89,11 +85,7 @@ const UpdateUserForm: React.FC<{
                 </DialogContent>
                 <DialogActions>
                     <DialogActions>
-                        <Button
-                            autoFocus
-                            color='inherit'
-                            onClick={onCancel}
-                            data-testid='update-user-dialog_button-close'>
+                        <Button variant='tertiary' onClick={onCancel} data-testid='update-user-dialog_button-close'>
                             Close
                         </Button>
                     </DialogActions>
@@ -355,14 +347,13 @@ const UpdateUserFormInner: React.FC<{
                     </FormHelperText>
                 )}
                 <Button
-                    autoFocus
-                    color='inherit'
+                    variant={'tertiary'}
                     onClick={onCancel}
                     disabled={isLoading}
                     data-testid='update-user-dialog_button-close'>
                     Cancel
                 </Button>
-                <Button color='primary' type='submit' disabled={isLoading} data-testid='update-user-dialog_button-save'>
+                <Button type='submit' disabled={isLoading} data-testid='update-user-dialog_button-save'>
                     Save
                 </Button>
             </DialogActions>

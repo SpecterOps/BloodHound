@@ -14,8 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { AssetGroupMemberParams } from 'js-client-library/dist/types';
-import { FC, useState } from 'react';
+import { Button } from '@bloodhoundenterprise/doodleui';
 import {
     Box,
     Checkbox,
@@ -28,11 +27,12 @@ import {
     Paper,
     Select,
 } from '@mui/material';
-import makeStyles from '@mui/styles/makeStyles';
 import { Theme } from '@mui/material/styles';
-import NodeIcon from '../NodeIcon';
+import makeStyles from '@mui/styles/makeStyles';
 import { AssetGroupMemberCounts } from 'js-client-library';
-import { Button } from '@bloodhoundenterprise/doodleui';
+import { AssetGroupMemberParams } from 'js-client-library/dist/types';
+import { FC, useState } from 'react';
+import NodeIcon from '../NodeIcon';
 
 export const FILTERABLE_PARAMS: Array<keyof Pick<AssetGroupMemberParams, 'primary_kind' | 'custom_member'>> = [
     'primary_kind',

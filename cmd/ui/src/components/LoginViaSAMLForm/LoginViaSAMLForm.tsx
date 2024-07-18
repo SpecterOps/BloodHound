@@ -14,7 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Box, Button, FormControl, Grid, InputLabel, MenuItem, Select } from '@mui/material';
+import { Button } from '@bloodhoundenterprise/doodleui';
+import { Box, FormControl, Grid, InputLabel, MenuItem, Select } from '@mui/material';
 import React from 'react';
 
 interface LoginViaSAMLFormProps {
@@ -61,25 +62,11 @@ const LoginViaSAMLForm: React.FC<LoginViaSAMLFormProps> = ({ providers, onSubmit
                     </FormControl>
                 </Grid>
                 <Grid item xs={8}>
-                    <Button
-                        variant='contained'
-                        color='primary'
-                        size='large'
-                        type='submit'
-                        fullWidth
-                        disableElevation
-                        disabled={redirectURL === ''}>
+                    <Button size='large' type='submit' disabled={redirectURL === ''}>
                         CONTINUE
                     </Button>
                     <Box mt={2}>
-                        <Button
-                            color='inherit'
-                            onClick={onCancel}
-                            variant='contained'
-                            size='large'
-                            type='button'
-                            fullWidth
-                            disableElevation>
+                        <Button size='large' type='submit' disabled={redirectURL === ''} onClick={onCancel}>
                             CANCEL
                         </Button>
                     </Box>

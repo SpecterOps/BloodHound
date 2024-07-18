@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Box, Link, Paper, Typography, useTheme } from '@mui/material';
+import { Box, Link, Paper, Typography } from '@mui/material';
 import { Button } from '@bloodhoundenterprise/doodleui';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faDownload } from '@fortawesome/free-solid-svg-icons';
@@ -43,8 +43,6 @@ const CollectorCard: React.FC<CollectorCardProps> = ({
     isLatest = false,
     isDeprecated = false,
 }) => {
-    const theme = useTheme();
-
     const handleOnClickDownload = () => {
         onClickDownload(collectorType, version);
     };
@@ -76,7 +74,6 @@ const CollectorCard: React.FC<CollectorCardProps> = ({
                     <Button
                         aria-label={`Download ${COLLECTOR_TYPE[collectorType]} ${version} (.zip)`}
                         variant='tertiary'
-                        color={theme.palette.color.primary}
                         onClick={handleOnClickDownload}>
                         <FontAwesomeIcon
                             aria-hidden='true'

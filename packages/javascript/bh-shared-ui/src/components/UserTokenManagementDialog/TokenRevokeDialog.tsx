@@ -14,7 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from '@mui/material';
+import { Button } from '@bloodhoundenterprise/doodleui';
+import { Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from '@mui/material';
 import { AuthToken } from 'js-client-library';
 import React from 'react';
 
@@ -40,7 +41,7 @@ const TokenRevokeDialog: React.FC<{
                     contact the API.
                 </DialogContentText>
                 <DialogActions>
-                    <Button color='inherit' onClick={onCancel} data-testid='token-revoke-dialog_button-close'>
+                    <Button variant='tertiary' onClick={onCancel} data-testid='token-revoke-dialog_button-close'>
                         Cancel
                     </Button>
                     <Button onClick={onConfirm} data-testid='token-revoke-dialog_button-save'>
