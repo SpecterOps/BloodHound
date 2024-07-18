@@ -269,9 +269,9 @@ paths:
 
   # api info
   /api/version:
-    $ref: './paths/api-info/version.yaml'
+    $ref: './paths/api-info.version.yaml'
   /api/v2/spec/openapi.yaml:
-    $ref: './paths/api-info/spec.yaml'
+    $ref: './paths/api-info.spec.yaml'
 
   # search
   /api/v2/search:
@@ -281,15 +281,15 @@ paths:
 
   # audit
   /api/v2/audit:
-    $ref: './paths/audit/audit.yaml'
+    $ref: './paths/audit.audit.yaml'
 
   # config
   /api/v2/config:
-    $ref: './paths/config/config.yaml'
+    $ref: './paths/config.config.yaml'
   /api/v2/features:
-    $ref: './paths/config/features.yaml'
+    $ref: './paths/config.features.yaml'
   /api/v2/features/{feature_id}/toggle:
-    $ref: './paths/config/features.id.toggle.yaml'
+    $ref: './paths/config.features.id.toggle.yaml'
 
   # asset isolation
   /api/v2/asset-groups:
