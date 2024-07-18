@@ -26,8 +26,8 @@ func NewIngestibleRelationship(source IngestibleSource, target IngestibleTarget,
 
 	return IngestibleRelationship{
 		Source:     source.Source,
-		Target:     target.Target,
 		SourceType: source.SourceType,
+		Target:     target.Target,
 		TargetType: target.TargetType,
 		RelProps:   rel.RelProps,
 		RelType:    rel.RelType,
