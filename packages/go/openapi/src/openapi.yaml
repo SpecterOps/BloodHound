@@ -439,9 +439,9 @@ paths:
 
   # enterprise cas
   /api/v2/enterprisecas/{object_id}:
-    $ref: './paths/enterprisecas/enterprisecas.id.controllers.yaml'
+    $ref: './paths/enterprisecas.enterprisecas.id.controllers.yaml'
   /api/v2/enterprisecas/{object_id}/controllers:
-    $ref: './paths/enterprisecas/enterprisecas.id.yaml'
+    $ref: './paths/enterprisecas.enterprisecas.id.yaml'
 
   # nt auth stores
   /api/v2/ntauthstores/{object_id}:
