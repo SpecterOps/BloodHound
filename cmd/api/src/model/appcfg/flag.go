@@ -113,7 +113,7 @@ func AvailableFlags() FeatureFlagSet {
 		FeatureDarkMode: {
 			Key:           FeatureDarkMode,
 			Name:          "Dark Mode",
-			Description:   "Reveals a toggle in the settings menu that can be used to toggle dark mode on and off",
+			Description:   "Allows users to enable or disable dark mode via a toggle in the settings menu",
 			Enabled:       false,
 			UserUpdatable: true,
 		},
