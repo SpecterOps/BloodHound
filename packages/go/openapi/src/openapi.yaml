@@ -375,9 +375,9 @@ paths:
 
   # containers
   /api/v2/containers/{object_id}:
-    $ref: './paths/containers/containers.id.yaml'
+    $ref: './paths/containers.containers.id.yaml'
   /api/v2/containers/{object_id}/controllers:
-    $ref: './paths/containers/containers.id.controllers.yaml'
+    $ref: './paths/containers.containers.id.controllers.yaml'
 
   # domains
   /api/v2/domains/{object_id}:
