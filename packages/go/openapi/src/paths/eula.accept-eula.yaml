@@ -24,7 +24,7 @@ get:
     - EULA
     - Enterprise
   responses:
-    '202':
+    202:
       $ref: './../responses/no-content.yaml'
     400:
       $ref: './../responses/bad-request.yaml'
