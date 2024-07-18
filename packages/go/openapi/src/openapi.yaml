@@ -457,15 +457,15 @@ paths:
 
   # ous
   /api/v2/ous/{object_id}:
-    $ref: './paths/ous/ous.id.yaml'
+    $ref: './paths/ous.ous.id.yaml'
   /api/v2/ous/{object_id}/computers:
-    $ref: './paths/ous/ous.id.computers.yaml'
+    $ref: './paths/ous.ous.id.computers.yaml'
   /api/v2/ous/{object_id}/gpos:
-    $ref: './paths/ous/ous.id.gpos.yaml'
+    $ref: './paths/ous.ous.id.gpos.yaml'
   /api/v2/ous/{object_id}/groups:
-    $ref: './paths/ous/ous.id.groups.yaml'
+    $ref: './paths/ous.ous.id.groups.yaml'
   /api/v2/ous/{object_id}/users:
-    $ref: './paths/ous/ous.id.users.yaml'
+    $ref: './paths/ous.ous.id.users.yaml'
 
   # ad users
   /api/v2/users/{object_id}:
