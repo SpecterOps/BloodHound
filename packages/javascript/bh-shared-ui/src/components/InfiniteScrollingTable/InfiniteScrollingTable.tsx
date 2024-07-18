@@ -20,7 +20,7 @@ import React, { memo, useState } from 'react';
 import { areEqual, FixedSizeList, ListChildComponentProps } from 'react-window';
 import InfiniteLoader from 'react-window-infinite-loader';
 import NodeIcon from '../NodeIcon';
-import makeStyles from "@mui/styles/makeStyles";
+import makeStyles from '@mui/styles/makeStyles';
 
 const ITEM_SIZE = 32;
 
@@ -29,12 +29,18 @@ const useStyles = makeStyles((theme) => ({
         '& ul': {
             '& > :nth-child(odd)': {
                 backgroundColor: theme.palette.neutral.tertiary,
+                '&:hover': {
+                    backgroundColor: theme.palette.neutral.quaternary,
+                },
             },
             '& > :nth-child(even)': {
                 backgroundColor: theme.palette.neutral.secondary,
+                '&:hover': {
+                    backgroundColor: theme.palette.neutral.quaternary,
+                },
             },
-        }
-    }
+        },
+    },
 }));
 
 const InnerElement = ({ style, ...rest }: any) => (
@@ -117,7 +123,7 @@ const InfiniteScrollingTable: React.FC<InfiniteScrollingTableProps> = ({
     const [items, setItems] = useState<Record<number, any>>({});
     const itemData = createItemData(items, onClick);
     const isItemLoaded = (index: number) => !!items[index];
-    const style = useStyles()
+    const style = useStyles();
 
     const loadMoreItems = async (startIndex: number, stopIndex: number) => {
         if (isFetching) return;
