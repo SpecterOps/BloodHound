@@ -375,9 +375,9 @@ paths:
 
   # containers
   /api/v2/containers/{object_id}:
-    $ref: './paths/containers/containers.id.yaml'
+    $ref: './paths/containers.containers.id.yaml'
   /api/v2/containers/{object_id}/controllers:
-    $ref: './paths/containers/containers.id.controllers.yaml'
+    $ref: './paths/containers.containers.id.controllers.yaml'
 
   # domains
   /api/v2/domains/{object_id}:
@@ -427,33 +427,33 @@ paths:
 
   # aiacas
   /api/v2/aiacas/{object_id}:
-    $ref: './paths/aiacas/aiaca.id.yaml'
+    $ref: './paths/aiacas.aiaca.id.yaml'
   /api/v2/aiacas/{object_id}/controllers:
-    $ref: './paths/aiacas/aiaca.id.controllers.yaml'
+    $ref: './paths/aiacas.aiaca.id.controllers.yaml'
 
   # root cas
   /api/v2/rootcas/{object_id}:
-    $ref: './paths/rootcas/rootcas.id.yaml'
+    $ref: './paths/rootcas.rootcas.id.yaml'
   /api/v2/rootcas/{object_id}/controllers:
-    $ref: './paths/rootcas/rootcas.id.controllers.yaml'
+    $ref: './paths/rootcas.rootcas.id.controllers.yaml'
 
   # enterprise cas
   /api/v2/enterprisecas/{object_id}:
-    $ref: './paths/enterprisecas/enterprisecas.id.controllers.yaml'
+    $ref: './paths/enterprisecas.enterprisecas.id.controllers.yaml'
   /api/v2/enterprisecas/{object_id}/controllers:
-    $ref: './paths/enterprisecas/enterprisecas.id.yaml'
+    $ref: './paths/enterprisecas.enterprisecas.id.yaml'
 
   # nt auth stores
   /api/v2/ntauthstores/{object_id}:
-    $ref: './paths/ntauthstores/ntauthstores.id.yaml'
+    $ref: './paths/ntauthstores.ntauthstores.id.yaml'
   /api/v2/ntauthstores/{object_id}/controllers:
-    $ref: './paths/ntauthstores/ntauthstores.id.controllers.yaml'
+    $ref: './paths/ntauthstores.ntauthstores.id.controllers.yaml'
 
   # cert templates
   /api/v2/certtemplates/{object_id}:
-    $ref: './paths/certtemplate/certtemplates.id.yaml'
+    $ref: './paths/certtemplate.certtemplates.id.yaml'
   /api/v2/certtemplates/{object_id}/controllers:
-    $ref: './paths/certtemplate/certtemplates.id.controllers.yaml'
+    $ref: './paths/certtemplate.certtemplates.id.controllers.yaml'
 
   # ous
   /api/v2/ous/{object_id}:
