@@ -433,9 +433,9 @@ paths:
 
   # root cas
   /api/v2/rootcas/{object_id}:
-    $ref: './paths/rootcas/rootcas.id.yaml'
+    $ref: './paths/rootcas.rootcas.id.yaml'
   /api/v2/rootcas/{object_id}/controllers:
-    $ref: './paths/rootcas/rootcas.id.controllers.yaml'
+    $ref: './paths/rootcas.rootcas.id.controllers.yaml'
 
   # enterprise cas
   /api/v2/enterprisecas/{object_id}:
