@@ -61,6 +61,21 @@ const useStyles = makeStyles((theme) => ({
         maxHeight: '500px',
         overflow: 'auto',
     },
+    cypherEditorDark: {
+        display: 'flex',
+        flexGrow: 1,
+        flexDirection: 'column',
+        border: '1px solid',
+        borderColor: 'rgba(0,0,0,.23)',
+        borderRadius: theme.shape.borderRadius,
+        backgroundColor: '#002b36',
+        paddingTop: '5px',
+        minHeight: '120px',
+        // enables drag n drop resizing of editor
+        resize: 'vertical',
+        maxHeight: '500px',
+        overflow: 'auto',
+    },
 }));
 
 const schema = {
@@ -105,6 +120,7 @@ const CypherSearch = () => {
     const [showEgg, setShowEgg] = useState(false);
     const [showSaveQueryDialog, setShowSaveQueryDialog] = useState(false);
     const dispatch = useAppDispatch();
+    const darkMode = useAppSelector((state) => state.global.view.darkMode);
 
     const handleCypherSearch = () => {
         if (cypherQuery) {
@@ -157,11 +173,12 @@ const CypherSearch = () => {
 
                 <div onClick={setFocusOnCypherEditor} style={{ flex: 1 }} role='textbox'>
                     <CypherEditor
-                        className={classes.cypherEditor}
+                        className={darkMode ? classes.cypherEditorDark : classes.cypherEditor}
                         value={cypherQuery}
                         onValueChanged={(val: string) => {
                             setCypherQuery(val);
                         }}
+                        theme={darkMode ? 'dark' : 'light'}
                         onKeyDown={(e: any) => {
                             // if enter and shift key is pressed, execute cypher search
                             if (e.key === 'Enter' && e.shiftKey) {
@@ -179,6 +196,7 @@ const CypherSearch = () => {
 
             <Box display={'flex'} gap={1} mt={1} justifyContent={'end'}>
                 <Button
+                    variant='secondary'
                     onClick={() => {
                         setShowSaveQueryDialog(true);
                     }}
@@ -189,7 +207,7 @@ const CypherSearch = () => {
                     </Box>
                 </Button>
 
-                <Button asChild rel='noreferrer' size={'small'}>
+                <Button asChild variant='secondary' rel='noreferrer' size={'small'}>
                     <Link
                         href='https://support.bloodhoundenterprise.io/hc/en-us/articles/16721164740251'
                         target='_blank'>
