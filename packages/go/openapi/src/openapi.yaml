@@ -341,37 +341,37 @@ paths:
 
   # computers
   /api/v2/computers/{object_id}:
-    $ref: './paths/computers/computers.id.yaml'
+    $ref: './paths/computers.computers.id.yaml'
   /api/v2/computers/{object_id}/admin-rights:
-    $ref: './paths/computers/computers.id.admin-rights.yaml'
+    $ref: './paths/computers.computers.id.admin-rights.yaml'
   /api/v2/computers/{object_id}/admin-users:
-    $ref: './paths/computers/computers.id.admin-users.yaml'
+    $ref: './paths/computers.computers.id.admin-users.yaml'
   /api/v2/computers/{object_id}/constrained-delegation-rights:
-    $ref: './paths/computers/computers.id.constrained-delegation-rights.yaml'
+    $ref: './paths/computers.computers.id.constrained-delegation-rights.yaml'
   /api/v2/computers/{object_id}/constrained-users:
-    $ref: './paths/computers/computers.id.constrained-users.yaml'
+    $ref: './paths/computers.computers.id.constrained-users.yaml'
   /api/v2/computers/{object_id}/controllables:
-    $ref: './paths/computers/computers.id.controllables.yaml'
+    $ref: './paths/computers.computers.id.controllables.yaml'
   /api/v2/computers/{object_id}/controllers:
-    $ref: './paths/computers/computers.id.controllers.yaml'
+    $ref: './paths/computers.computers.id.controllers.yaml'
   /api/v2/computers/{object_id}/dcom-rights:
-    $ref: './paths/computers/computers.id.dcom-rights.yaml'
+    $ref: './paths/computers.computers.id.dcom-rights.yaml'
   /api/v2/computers/{object_id}/dcom-users:
-    $ref: './paths/computers/computers.id.dcom-users.yaml'
+    $ref: './paths/computers.computers.id.dcom-users.yaml'
   /api/v2/computers/{object_id}/group-membership:
-    $ref: './paths/computers/computer.id.group-membership.yaml'
+    $ref: './paths/computers.computers.id.group-membership.yaml'
   /api/v2/computers/{object_id}/ps-remote-rights:
-    $ref: './paths/computers/computers.id.ps-remote-rights.yaml'
+    $ref: './paths/computers.computers.id.ps-remote-rights.yaml'
   /api/v2/computers/{object_id}/ps-remote-users:
-    $ref: './paths/computers/computers.id.ps-remote-users.yaml'
+    $ref: './paths/computers.computers.id.ps-remote-users.yaml'
   /api/v2/computers/{object_id}/rdp-rights:
-    $ref: './paths/computers/computers.id.rdp-rights.yaml'
+    $ref: './paths/computers.computers.id.rdp-rights.yaml'
   /api/v2/computers/{object_id}/rdp-users:
-    $ref: './paths/computers/computers.id.rdp-users.yaml'
+    $ref: './paths/computers.computers.id.rdp-users.yaml'
   /api/v2/computers/{object_id}/sessions:
-    $ref: './paths/computers/computers.id.sessions.yaml'
+    $ref: './paths/computers.computers.id.sessions.yaml'
   /api/v2/computers/{object_id}/sql-admins:
-    $ref: './paths/computers/computers.id.sql-admins.yaml'
+    $ref: './paths/computers.computers.id.sql-admins.yaml'
 
   # containers
   /api/v2/containers/{object_id}:
