@@ -55,6 +55,38 @@ const Inner: React.FC = () => {
             flexDirection: 'column',
             height: '100%',
             overflow: 'hidden',
+            '@global': {
+                '.api-explorer .swagger-ui': {
+                    [`& a.nostyle,
+                        & div.renderedMarkdown > p,
+                        & .response-col_status,
+                        & .col_header,
+                        & div.parameter__name,
+                        & .parameter__in,
+                        & div.opblock-summary-description,
+                        & div > small,
+                        & li.tabitem,
+                        & .response-col_links,
+                        & .opblock-description-wrapper > p,
+                        & .btn-group > button,
+                        `]: {
+                        color: theme.palette.color.primary,
+                    },
+                    '& .responses-inner': {
+                        [`& h4, & h5`]: {
+                            color: theme.palette.color.primary,
+                        },
+                    },
+                    '& svg.arrow': {
+                        fill: theme.palette.color.primary,
+                    },
+                    '& .opblock-deprecated': {
+                        '& .opblock-title_normal': {
+                            color: theme.palette.color.primary,
+                        },
+                    },
+                },
+            },
         },
         applicationHeader: {
             flexGrow: 0,
