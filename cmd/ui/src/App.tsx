@@ -26,7 +26,6 @@ import {
     typography,
     components,
 } from 'bh-shared-ui';
-import clsx from 'clsx';
 import { createBrowserHistory } from 'history';
 import React, { useEffect } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
@@ -43,7 +42,6 @@ import Notifier from './components/Notifier';
 
 const Inner: React.FC = () => {
     const dispatch = useAppDispatch();
-    const darkMode = useAppSelector((state) => state.global.view.darkMode);
     const authState = useAppSelector((state) => state.auth);
     const queryClient = useQueryClient();
     const location = useLocation();
@@ -124,7 +122,7 @@ const Inner: React.FC = () => {
 
     return (
         <>
-            <Box className={clsx(classes.applicationContainer, darkMode && 'dark')}>
+            <Box className={classes.applicationContainer}>
                 {showHeader && (
                     <Box className={classes.applicationHeader}>
                         <Header />

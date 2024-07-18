@@ -103,8 +103,9 @@ const CreateSAMLProviderForm: React.FC<{
                                 <Box p={1} borderRadius={4} bgcolor={theme.palette.neutral.tertiary}>
                                     <Box display='flex' flexDirection='row' alignItems='center'>
                                         <Button variant='secondary'>
-                                            Choose File
+                                            <label htmlFor='saml-provider-input'>Choose File</label>
                                             <input
+                                                id='saml-provider-input'
                                                 hidden
                                                 type='file'
                                                 accept='.xml'
