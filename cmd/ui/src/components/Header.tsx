@@ -23,6 +23,7 @@ import { Link as RouterLink, useLocation, useNavigate } from 'react-router-dom';
 import { MenuItem } from 'bh-shared-ui';
 import * as routes from 'src/ducks/global/routes';
 import SettingsMenu from 'src/components/SettingsMenu';
+import { useAppSelector } from 'src/store';
 
 const useStyles = makeStyles((theme) => ({
     appBar: {
@@ -77,6 +78,8 @@ const Header: React.FC = () => {
 
     const location = useLocation();
     const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+    const darkMode = useAppSelector((state) => state.global.view.darkMode);
+    const imageUrl = darkMode ? '/img/logo-secondary-transparent-banner.svg' : '/img/logo-transparent-banner.svg';
 
     const showMenu = (e: React.MouseEvent<Element, MouseEvent>): boolean => {
         setAnchorEl(e.currentTarget as HTMLElement);
@@ -131,7 +134,7 @@ const Header: React.FC = () => {
                 <Box height='100%' paddingY='6px' boxSizing='border-box'>
                     <Link component={RouterLink} to={routes.ROUTE_HOME} data-testid='global_header_nav-home'>
                         <img
-                            src={`${import.meta.env.BASE_URL}/img/logo-transparent-banner.svg`}
+                            src={`${import.meta.env.BASE_URL}${imageUrl}`}
                             alt='BloodHound CE Home'
                             style={{
                                 height: '100%',
