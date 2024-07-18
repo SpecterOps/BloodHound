@@ -80,8 +80,9 @@ const useCollapsibleSectionStyles = makeStyles((theme: Theme) => ({
             whiteSpace: 'pre-line',
             fontSize: '0.75rem',
             wordBreak: 'break-all',
-            margin: theme.spacing(1, 0.5),
-            padding: theme.spacing(0.5),
+
+            margin: theme.spacing(1, 0),
+            padding: theme.spacing(0.5, 1),
             backgroundColor: theme.palette.neutral.quinary,
             borderRadius: theme.shape.borderRadius,
             color: theme.palette.color.primary,
