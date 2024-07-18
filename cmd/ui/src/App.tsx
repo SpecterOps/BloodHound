@@ -111,14 +111,15 @@ const Inner: React.FC = () => {
 const App: React.FC = () => {
     const darkMode = useAppSelector((state) => state.global.view.darkMode);
     const mode = darkMode ? 'dark' : 'light';
+    const palette = darkMode ? darkPalette : lightPalette;
 
     const theme = createTheme({
         palette: {
             mode,
-            ...(!darkMode ? lightPalette : darkPalette),
+            ...palette,
         },
         typography: { ...typography },
-        components: { ...components },
+        components: { ...components(palette) },
     });
 
     return (
