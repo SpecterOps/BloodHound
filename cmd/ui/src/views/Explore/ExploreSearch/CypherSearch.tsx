@@ -42,9 +42,6 @@ const useStyles = makeStyles((theme) => ({
     button: {
         minWidth: '35px',
         height: '35px',
-        borderRadius: theme.shape.borderRadius,
-        borderColor: 'rgba(0,0,0,0.23)',
-        color: 'black',
     },
     iconButton: {
         padding: 0,
