@@ -451,9 +451,9 @@ paths:
 
   # cert templates
   /api/v2/certtemplates/{object_id}:
-    $ref: './paths/certtemplate/certtemplates.id.yaml'
+    $ref: './paths/certtemplate.certtemplates.id.yaml'
   /api/v2/certtemplates/{object_id}/controllers:
-    $ref: './paths/certtemplate/certtemplates.id.controllers.yaml'
+    $ref: './paths/certtemplate.certtemplates.id.controllers.yaml'
 
   # ous
   /api/v2/ous/{object_id}:
