@@ -45,7 +45,6 @@ const useStyles = makeStyles((theme: Theme) => ({
     },
     activeFilters: {
         '& button.expand-filters': {
-            color: `${theme.palette.color.primary} !important`,
             fontWeight: 'bolder',
             '& span': {
                 visibility: 'visible',
