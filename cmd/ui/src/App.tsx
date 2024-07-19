@@ -34,17 +34,19 @@ import { unstable_HistoryRouter as BrowserRouter, useLocation } from 'react-rout
 import Header from 'src/components/Header';
 import { initialize } from 'src/ducks/auth/authSlice';
 import { ROUTE_EXPIRED_PASSWORD, ROUTE_LOGIN, ROUTE_USER_DISABLED } from 'src/ducks/global/routes';
-import { featureFlagKeys, getFeatureFlags } from 'src/hooks/useFeatureFlags';
+import { useFeatureFlags } from 'src/hooks/useFeatureFlags';
 import { useAppDispatch, useAppSelector } from 'src/store';
 import { initializeBHEClient } from 'src/utils';
 import Content from 'src/views/Content';
 import Notifier from './components/Notifier';
+import { setDarkMode } from './ducks/global/actions';
 
 const Inner: React.FC = () => {
     const dispatch = useAppDispatch();
     const authState = useAppSelector((state) => state.auth);
     const queryClient = useQueryClient();
     const location = useLocation();
+    const featureFlagsRes = useFeatureFlags();
 
     const darkMode = useAppSelector((state) => state.global.view.darkMode);
 
@@ -110,10 +112,16 @@ const Inner: React.FC = () => {
         }
     }, [dispatch, authState.isInitialized]);
 
-    // prefetch feature flags
+    // remove dark_mode if feature flag is disabled
     useEffect(() => {
-        queryClient.prefetchQuery(featureFlagKeys.all, getFeatureFlags);
-    }, [queryClient]);
+        // TODO: Consider adding more flexibility/composability to side effects for toggling feature flags on and off
+        if (!featureFlagsRes.data) return;
+        const darkModeFeatureFlag = featureFlagsRes.data.find((flag) => flag.key === 'dark_mode');
+
+        if (!darkModeFeatureFlag?.enabled) {
+            dispatch(setDarkMode(false));
+        }
+    }, [dispatch, queryClient, featureFlagsRes.data, darkMode]);
 
     // block rendering until authentication initialization is complete
     if (!authState.isInitialized) {
