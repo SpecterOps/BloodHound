@@ -114,7 +114,7 @@ const Inner: React.FC = () => {
 
     // remove dark_mode if feature flag is disabled
     useEffect(() => {
-        // TODO: Consider adding flag keys to cue files so we don't use random strings. Consider adding more flexibility/composability to side effects for toggling feature flags on and off
+        // TODO: Consider adding more flexibility/composability to side effects for toggling feature flags on and off
         if (!featureFlagsRes.data) return;
         const darkModeFeatureFlag = featureFlagsRes.data.find((flag) => flag.key === 'dark_mode');
 
