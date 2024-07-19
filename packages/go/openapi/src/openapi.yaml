@@ -381,49 +381,49 @@ paths:
 
   # domains
   /api/v2/domains/{object_id}:
-    $ref: './paths/domains/domains.id.yaml'
+    $ref: './paths/domains.domains.id.yaml'
   /api/v2/domains/{object_id}/computers:
-    $ref: './paths/domains/domains.id.computers.yaml'
+    $ref: './paths/domains.domains.id.computers.yaml'
   /api/v2/domains/{object_id}/controllers:
-    $ref: './paths/domains/domains.id.controllers.yaml'
+    $ref: './paths/domains.domains.id.controllers.yaml'
   /api/v2/domains/{object_id}/dc-syncers:
-    $ref: './paths/domains/domains.id.dc-syncers.yaml'
+    $ref: './paths/domains.domains.id.dc-syncers.yaml'
   /api/v2/domains/{object_id}/foreign-admins:
-    $ref: './paths/domains/domains.id.foreign-admins.yaml'
+    $ref: './paths/domains.domains.id.foreign-admins.yaml'
   /api/v2/domains/{object_id}/foreign-gpo-controllers:
-    $ref: './paths/domains/domains.id.foreign-gpo-controllers.yaml'
+    $ref: './paths/domains.domains.id.foreign-gpo-controllers.yaml'
   /api/v2/domains/{object_id}/foreign-groups:
-    $ref: './paths/domains/domains.id.foreign-groups.yaml'
+    $ref: './paths/domains.domains.id.foreign-groups.yaml'
   /api/v2/domains/{object_id}/foreign-users:
-    $ref: './paths/domains/domains.id.foreign-users.yaml'
+    $ref: './paths/domains.domains.id.foreign-users.yaml'
   /api/v2/domains/{object_id}/gpos:
-    $ref: './paths/domains/domains.id.gpos.yaml'
+    $ref: './paths/domains.domains.id.gpos.yaml'
   /api/v2/domains/{object_id}/groups:
-    $ref: './paths/domains/domains.id.groups.yaml'
+    $ref: './paths/domains.domains.id.groups.yaml'
   /api/v2/domains/{object_id}/inbound-trusts:
-    $ref: './paths/domains/domains.id.inbound-trusts.yaml'
+    $ref: './paths/domains.domains.id.inbound-trusts.yaml'
   /api/v2/domains/{object_id}/linked-gpos:
-    $ref: './paths/domains/domains.id.linked-gpos.yaml'
+    $ref: './paths/domains.domains.id.linked-gpos.yaml'
   /api/v2/domains/{object_id}/ous:
-    $ref: './paths/domains/domains.id.ous.yaml'
+    $ref: './paths/domains.domains.id.ous.yaml'
   /api/v2/domains/{object_id}/outbound-trusts:
-    $ref: './paths/domains/domains.id.outbound-trusts.yaml'
+    $ref: './paths/domains.domains.id.outbound-trusts.yaml'
   /api/v2/domains/{object_id}/users:
-    $ref: './paths/domains/domains.id.users.yaml'
+    $ref: './paths/domains.domains.id.users.yaml'
 
   # gpos
   /api/v2/gpos/{object_id}:
-    $ref: './paths/gpos/gpos.id.yaml'
+    $ref: './paths/gpos.gpos.id.yaml'
   /api/v2/gpos/{object_id}/computers:
-    $ref: './paths/gpos/gpos.id.computers.yaml'
+    $ref: './paths/gpos.gpos.id.computers.yaml'
   /api/v2/gpos/{object_id}/controllers:
-    $ref: './paths/gpos/gpos.id.controllers.yaml'
+    $ref: './paths/gpos.gpos.id.controllers.yaml'
   /api/v2/gpos/{object_id}/ous:
-    $ref: './paths/gpos/gpos.id.ous.yaml'
+    $ref: './paths/gpos.gpos.id.ous.yaml'
   /api/v2/gpos/{object_id}/tier-zero:
-    $ref: './paths/gpos/gpos.id.tier-zero.yaml'
+    $ref: './paths/gpos.gpos.id.tier-zero.yaml'
   /api/v2/gpos/{object_id}/users:
-    $ref: './paths/gpos/gpos.id.users.yaml'
+    $ref: './paths/gpos.gpos.id.users.yaml'
 
   # aiacas
   /api/v2/aiacas/{object_id}:
@@ -457,15 +457,15 @@ paths:
 
   # ous
   /api/v2/ous/{object_id}:
-    $ref: './paths/ous/ous.id.yaml'
+    $ref: './paths/ous.ous.id.yaml'
   /api/v2/ous/{object_id}/computers:
-    $ref: './paths/ous/ous.id.computers.yaml'
+    $ref: './paths/ous.ous.id.computers.yaml'
   /api/v2/ous/{object_id}/gpos:
-    $ref: './paths/ous/ous.id.gpos.yaml'
+    $ref: './paths/ous.ous.id.gpos.yaml'
   /api/v2/ous/{object_id}/groups:
-    $ref: './paths/ous/ous.id.groups.yaml'
+    $ref: './paths/ous.ous.id.groups.yaml'
   /api/v2/ous/{object_id}/users:
-    $ref: './paths/ous/ous.id.users.yaml'
+    $ref: './paths/ous.ous.id.users.yaml'
 
   # ad users
   /api/v2/users/{object_id}:

@@ -26,6 +26,7 @@ const (
 	AdminPrincipal     = "admin"
 	AdminInitialSecret = "admin"
 	AdminUpdatedSecret = "adminAdmin123***"
+	UserInitialSecret  = "userUser123***"
 )
 
 func (s *Context) newAPIClient() apiclient.Client {
