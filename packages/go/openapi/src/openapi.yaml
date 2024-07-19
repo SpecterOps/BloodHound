@@ -200,52 +200,52 @@ paths:
 
   # auth
   /api/v2/login:
-    $ref: './paths/auth/login.yaml'
+    $ref: './paths/auth.login.yaml'
   /api/v2/logout:
-    $ref: './paths/auth/logout.yaml'
+    $ref: './paths/auth.logout.yaml'
   /api/v2/self:
-    $ref: './paths/auth/self.yaml'
+    $ref: './paths/auth.self.yaml'
   /api/v2/saml:
-    $ref: './paths/auth/saml.yaml'
+    $ref: './paths/auth.saml.yaml'
   /api/v2/saml/sso:
-    $ref: './paths/auth/saml.sso.yaml'
+    $ref: './paths/auth.saml.sso.yaml'
   /api/v2/saml/providers:
-    $ref: './paths/auth/saml.providers.yaml'
+    $ref: './paths/auth.saml.providers.yaml'
   /api/v2/saml/providers/{saml_provider_id}:
-    $ref: './paths/auth/saml.providers.id.yaml'
+    $ref: './paths/auth.saml.providers.id.yaml'
 
   # Undocumented, not sure how this endpoint actually works.
   #/api/v2/login/saml/{saml_provider_name}:
 
   # permissions
   /api/v2/permissions:
-    $ref: './paths/permissions/permissions.yaml'
+    $ref: './paths/permissions.permissions.yaml'
   /api/v2/permissions/{permission_id}:
-    $ref: './paths/permissions/permissions.id.yaml'
+    $ref: './paths/permissions.permissions.id.yaml'
 
   # roles
   /api/v2/roles:
-    $ref: './paths/roles/roles.yaml'
+    $ref: './paths/roles.roles.yaml'
   /api/v2/roles/{role_id}:
-    $ref: './paths/roles/roles.id.yaml'
+    $ref: './paths/roles.roles.id.yaml'
 
   # api tokens
   /api/v2/tokens:
-    $ref: './paths/tokens/tokens.yaml'
+    $ref: './paths/tokens.tokens.yaml'
   /api/v2/tokens/{token_id}:
-    $ref: './paths/tokens/tokens.id.yaml'
+    $ref: './paths/tokens.tokens.id.yaml'
 
   # user management
   /api/v2/bloodhound-users:
-    $ref: './paths/bh-users/bloodhound-users.yaml'
+    $ref: './paths/bh-users.bloodhound-users.yaml'
   /api/v2/bloodhound-users/{user_id}:
-    $ref: './paths/bh-users/bloodhound-users.id.yaml'
+    $ref: './paths/bh-users.bloodhound-users.id.yaml'
   /api/v2/bloodhound-users/{user_id}/secret:
-    $ref: './paths/bh-users/bloodhound-users.id.secret.yaml'
+    $ref: './paths/bh-users.bloodhound-users.id.secret.yaml'
   /api/v2/bloodhound-users/{user_id}/mfa:
-    $ref: './paths/bh-users/bloodhound-users.id.mfa.yaml'
+    $ref: './paths/bh-users.bloodhound-users.id.mfa.yaml'
   /api/v2/bloodhound-users/{user_id}/mfa-activation:
-    $ref: './paths/bh-users/bloodhound-users.id.mfa-activation.yaml'
+    $ref: './paths/bh-users.bloodhound-users.id.mfa-activation.yaml'
 
   # collectors
   /api/v2/collectors/{collector_type}:
