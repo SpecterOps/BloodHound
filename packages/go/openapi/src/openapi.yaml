@@ -329,7 +329,7 @@ paths:
 
   # azure entities
   /api/v2/azure/{entity_type}:
-    $ref: './paths/azure/entity.yaml'
+    $ref: './paths/azure.entity.yaml'
 
   # ad base entities
   /api/v2/base/{object_id}:
