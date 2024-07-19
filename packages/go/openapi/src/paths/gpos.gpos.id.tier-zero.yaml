@@ -15,8 +15,8 @@
 # SPDX-License-Identifier: Apache-2.0
 
 parameters:
-  - $ref: '../parameters/header.prefer.yaml'
-  - $ref: '../parameters/path.object-id.yaml'
+  - $ref: './../parameters/header.prefer.yaml'
+  - $ref: './../parameters/path.object-id.yaml'
 get:
   operationId: GetGpoEntityTierZero
   summary: Get GPO entity tier-zero
@@ -26,20 +26,20 @@ get:
     - Community
     - Enterprise
   parameters:
-    - $ref: '../parameters/query.entity.skip.yaml'
-    - $ref: '../parameters/query.entity.limit.yaml'
-    - $ref: '../parameters/query.entity.type.yaml'
-    - $ref: '../parameters/query.entity.sort-by.yaml'
+    - $ref: './../parameters/query.entity.skip.yaml'
+    - $ref: './../parameters/query.entity.limit.yaml'
+    - $ref: './../parameters/query.entity.type.yaml'
+    - $ref: './../parameters/query.entity.sort-by.yaml'
   responses:
     200:
-      $ref: '../responses/related-entity-query-results.yaml'
+      $ref: './../responses/related-entity-query-results.yaml'
     400:
-      $ref: '../responses/bad-request.yaml'
+      $ref: './../responses/bad-request.yaml'
     401:
-      $ref: '../responses/unauthorized.yaml'
+      $ref: './../responses/unauthorized.yaml'
     403:
-      $ref: '../responses/forbidden.yaml'
+      $ref: './../responses/forbidden.yaml'
     429:
-      $ref: '../responses/too-many-requests.yaml'
+      $ref: './../responses/too-many-requests.yaml'
     500:
-      $ref: '../responses/internal-server-error.yaml'
+      $ref: './../responses/internal-server-error.yaml'
