@@ -143,13 +143,16 @@ const App: React.FC = () => {
     const mode = darkMode ? 'dark' : 'light';
     const palette = darkMode ? darkPalette : lightPalette;
 
-    const theme = createTheme({
+    let theme = createTheme({
         palette: {
             mode,
             ...palette,
         },
         typography: { ...typography },
-        components: { ...components(palette) },
+    });
+    // suggested by MUI for defining theme options based on other options
+    theme = createTheme(theme, {
+        components: components(theme),
     });
 
     return (

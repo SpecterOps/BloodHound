@@ -15,7 +15,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Alert, AlertTitle, Box, useTheme } from '@mui/material';
-import { addOpacityToHex } from '../../utils';
 
 type NoDataAlertProps = {
     dataCollectionLink: JSX.Element;
@@ -28,7 +27,7 @@ export const NoDataAlert: React.FC<NoDataAlertProps> = ({ dataCollectionLink, fi
 
     return (
         <Box display={'flex'} justifyContent={'center'} mt={theme.spacing(8)} mx={theme.spacing(4)}>
-            <Alert severity={'info'} sx={{ backgroundColor: addOpacityToHex(theme.palette.info.main, 20) }}>
+            <Alert severity={'info'}>
                 <AlertTitle>No Data Available</AlertTitle>
                 <p>
                     It appears that no data has been uploaded yet. See our {dataCollectionLink} documentation to learn

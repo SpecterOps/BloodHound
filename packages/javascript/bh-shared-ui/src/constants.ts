@@ -15,6 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Theme } from '@mui/material';
+import { addOpacityToHex } from './utils';
 
 export const NODE_GRAPH_RENDER_LIMIT = 1000;
 
@@ -132,7 +133,7 @@ export const typography: Partial<Theme['typography']> = {
     },
 };
 
-export const components = (palette: typeof darkPalette): Partial<Theme['components']> => ({
+export const components = (theme: Theme): Partial<Theme['components']> => ({
     MuiButton: {
         styleOverrides: {
             root: {
@@ -153,7 +154,7 @@ export const components = (palette: typeof darkPalette): Partial<Theme['componen
     MuiLink: {
         styleOverrides: {
             root: {
-                color: palette.color.links,
+                color: theme.palette.color.links,
             },
         },
     },
@@ -161,7 +162,7 @@ export const components = (palette: typeof darkPalette): Partial<Theme['componen
         styleOverrides: {
             root: {
                 '&.Mui-focused': {
-                    color: palette.color.links,
+                    color: theme.palette.color.links,
                 },
             },
         },
@@ -170,10 +171,10 @@ export const components = (palette: typeof darkPalette): Partial<Theme['componen
         styleOverrides: {
             root: {
                 '&:hover .MuiInputBase-root .MuiOutlinedInput-notchedOutline': {
-                    borderColor: palette.color.links,
+                    borderColor: theme.palette.color.links,
                 },
                 '& .MuiInputBase-root.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                    borderColor: palette.color.links,
+                    borderColor: theme.palette.color.links,
                 }
             },
         }
@@ -182,10 +183,10 @@ export const components = (palette: typeof darkPalette): Partial<Theme['componen
         styleOverrides: {
             underline: {
                 '&:after': {
-                    borderBottom: `2px solid ${palette.color.links}`,
+                    borderBottom: `2px solid ${theme.palette.color.links}`,
                 },
                 '&:hover:not($disabled):not($focused):not($error):before': {
-                    borderBottom: `2px solid ${palette.color.links}`,
+                    borderBottom: `2px solid ${theme.palette.color.links}`,
                 },
             },
         },
@@ -212,7 +213,7 @@ export const components = (palette: typeof darkPalette): Partial<Theme['componen
         styleOverrides: {
             root: {
                 '& svg': {
-                    color: palette.color.links,
+                    color: theme.palette.color.links,
                 },
             },
         },
@@ -221,18 +222,34 @@ export const components = (palette: typeof darkPalette): Partial<Theme['componen
         styleOverrides: {
             root: {
                 '& .MuiTab-labelIcon': {
-                    color: palette.color.links,
+                    color: theme.palette.color.links,
                 },
                 '& .MuiTab-labelIcon.Mui-selected': {
-                    color: palette.color.links,
+                    color: theme.palette.color.links,
                 },
                 '& .MuiTab-labelIcon:not(.Mui-selected)': {
-                    color: palette.color.primary,
+                    color: theme.palette.color.primary,
                 },
                 '& .MuiTabs-indicator': {
-                    backgroundColor: palette.color.links,
+                    backgroundColor: theme.palette.color.links,
                 },
             },
         },
     },
+    MuiAlert: {
+        styleOverrides: {
+            root: {
+                '&.MuiAlert-standardWarning': {
+                    backgroundColor: addOpacityToHex(theme.palette.warning.main, 20)
+                },
+                '&.MuiAlert-standardInfo': {
+                    backgroundColor: addOpacityToHex(theme.palette.info.main, 20)
+                },
+                '&.MuiAlert-standardError': {
+                    color: theme.palette.error.contrastText,
+                    backgroundColor: addOpacityToHex(theme.palette.error.main, 20)
+                }
+            }
+        }
+    }
 });
