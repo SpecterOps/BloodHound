@@ -651,7 +651,7 @@ paths:
 
   # meta entity
   /api/v2/meta/{object_id}:
-    $ref: './paths/meta-entity/meta.id.yaml'
+    $ref: './paths/meta-entity.meta.id.yaml'
 
 components:
   ##
