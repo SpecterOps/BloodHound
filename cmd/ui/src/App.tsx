@@ -150,7 +150,7 @@ const App: React.FC = () => {
         },
         typography: { ...typography },
     });
-    // suggested by MUI for defining theme options based on other options
+    // suggested by MUI for defining theme options based on other options. https://mui.com/material-ui/customization/theming/#api
     theme = createTheme(theme, {
         components: components(theme),
     });
