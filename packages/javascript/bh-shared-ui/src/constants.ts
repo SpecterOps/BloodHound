@@ -212,7 +212,7 @@ export const components = (palette: typeof darkPalette): Partial<Theme['componen
         styleOverrides: {
             root: {
                 '& svg': {
-                    color: palette.color.links,
+                    color: palette.color.primary,
                 },
             },
         },
