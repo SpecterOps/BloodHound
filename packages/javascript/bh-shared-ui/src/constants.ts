@@ -175,9 +175,9 @@ export const components = (theme: Theme): Partial<Theme['components']> => ({
                 },
                 '& .MuiInputBase-root.Mui-focused .MuiOutlinedInput-notchedOutline': {
                     borderColor: theme.palette.color.links,
-                }
+                },
             },
-        }
+        },
     },
     MuiInput: {
         styleOverrides: {
@@ -233,6 +233,12 @@ export const components = (theme: Theme): Partial<Theme['components']> => ({
                 '& .MuiTabs-indicator': {
                     backgroundColor: theme.palette.color.links,
                 },
+                '& .Mui-selected > svg': {
+                    color: theme.palette.color.links,
+                },
+                '& :not(.Mui-selected) > svg': {
+                    color: theme.palette.color.primary,
+                },
             },
         },
     },
@@ -240,16 +246,16 @@ export const components = (theme: Theme): Partial<Theme['components']> => ({
         styleOverrides: {
             root: {
                 '&.MuiAlert-standardWarning': {
-                    backgroundColor: addOpacityToHex(theme.palette.warning.main, 20)
+                    backgroundColor: addOpacityToHex(theme.palette.warning.main, 20),
                 },
                 '&.MuiAlert-standardInfo': {
-                    backgroundColor: addOpacityToHex(theme.palette.info.main, 20)
+                    backgroundColor: addOpacityToHex(theme.palette.info.main, 20),
                 },
                 '&.MuiAlert-standardError': {
                     color: theme.palette.error.contrastText,
-                    backgroundColor: addOpacityToHex(theme.palette.error.main, 20)
-                }
-            }
-        }
-    }
+                    backgroundColor: addOpacityToHex(theme.palette.error.main, 20),
+                },
+            },
+        },
+    },
 });
