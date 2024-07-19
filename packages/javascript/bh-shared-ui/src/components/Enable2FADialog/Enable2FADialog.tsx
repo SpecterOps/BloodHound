@@ -212,6 +212,7 @@ const Enable2FADialog: React.FC<{
                         {!(secretAccepted && OTPAccepted) ? (
                             <>
                                 <Button
+                                    type='button'
                                     variant='tertiary'
                                     onClick={onCancel}
                                     data-testid='enable-2fa-dialog_button-close'>
@@ -224,6 +225,7 @@ const Enable2FADialog: React.FC<{
                         ) : (
                             <>
                                 <Button
+                                    type='button'
                                     variant='tertiary'
                                     onClick={handleOnClose}
                                     data-testid='enable-2fa-dialog_button-close'>

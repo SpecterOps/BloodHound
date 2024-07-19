@@ -140,7 +140,11 @@ const CreateSAMLProviderForm: React.FC<{
                 </Grid>
             </DialogContent>
             <DialogActions>
-                <Button variant='tertiary' onClick={handleClose} data-testid='create-saml-provider-dialog_button-close'>
+                <Button
+                    type='button'
+                    variant='tertiary'
+                    onClick={handleClose}
+                    data-testid='create-saml-provider-dialog_button-close'>
                     Cancel
                 </Button>
                 <Button data-testid='create-saml-provider-dialog_button-save'>Submit</Button>

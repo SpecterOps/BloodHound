@@ -344,6 +344,7 @@ const CreateUserForm: React.FC<{
                             </FormHelperText>
                         )}
                         <Button
+                            type='button'
                             variant={'tertiary'}
                             onClick={handleCancel}
                             disabled={isLoading}

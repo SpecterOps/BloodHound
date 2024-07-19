@@ -75,6 +75,7 @@ const CreateUserTokenDialog: React.FC<{
                 </DialogContent>
                 <DialogActions>
                     <Button
+                        type='button'
                         variant='tertiary'
                         onClick={handleCancel}
                         data-testid='create-user-token-dialog_button-close'>

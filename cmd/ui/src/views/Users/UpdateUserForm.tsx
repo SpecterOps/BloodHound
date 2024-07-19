@@ -68,7 +68,11 @@ const UpdateUserForm: React.FC<{
                 </DialogContent>
                 <DialogActions>
                     <DialogActions>
-                        <Button variant='tertiary' onClick={onCancel} data-testid='update-user-dialog_button-close'>
+                        <Button
+                            type='button'
+                            variant='tertiary'
+                            onClick={onCancel}
+                            data-testid='update-user-dialog_button-close'>
                             Close
                         </Button>
                     </DialogActions>
@@ -85,7 +89,11 @@ const UpdateUserForm: React.FC<{
                 </DialogContent>
                 <DialogActions>
                     <DialogActions>
-                        <Button variant='tertiary' onClick={onCancel} data-testid='update-user-dialog_button-close'>
+                        <Button
+                            type='button'
+                            variant='tertiary'
+                            onClick={onCancel}
+                            data-testid='update-user-dialog_button-close'>
                             Close
                         </Button>
                     </DialogActions>
@@ -347,6 +355,7 @@ const UpdateUserFormInner: React.FC<{
                     </FormHelperText>
                 )}
                 <Button
+                    type='button'
                     variant={'tertiary'}
                     onClick={onCancel}
                     disabled={isLoading}
