@@ -22,7 +22,13 @@ import { EdgeDirection, EdgeParams, NodeParams } from 'src/utils';
 import { GLYPHS, NODE_ICON, UNKNOWN_ICON } from './svgIcons';
 import { Theme } from '@mui/material';
 
-export const initGraphNodes = (graph: MultiDirectedGraph, nodes: GraphNodes, nodeSize: number, theme: Theme) => {
+export const initGraphNodes = (
+    graph: MultiDirectedGraph,
+    nodes: GraphNodes,
+    nodeSize: number,
+    theme: Theme,
+    darkMode: boolean
+) => {
     Object.keys(nodes).forEach((key: string) => {
         const node = nodes[key];
         // Set default node parameters
@@ -40,10 +46,7 @@ export const initGraphNodes = (graph: MultiDirectedGraph, nodes: GraphNodes, nod
 
         // Tier zero nodes should be marked with a gem glyph
         if (node.isTierZero) {
-            const glyph =
-                theme.palette.color.primary === '#1D1B20'
-                    ? GLYPHS[GlyphKind.TIER_ZERO]
-                    : GLYPHS[GlyphKind.TIER_ZERO_DARK];
+            const glyph = darkMode ? GLYPHS[GlyphKind.TIER_ZERO_DARK] : GLYPHS[GlyphKind.TIER_ZERO];
             nodeParams.type = 'glyphs';
             nodeParams.glyphs = [
                 {

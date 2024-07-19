@@ -59,7 +59,6 @@ const useStyles = makeStyles((theme) => ({
         // enables drag n drop resizing of editor
         resize: 'vertical',
         maxHeight: '500px',
-        overflow: 'auto',
     },
     cypherEditorDark: {
         display: 'flex',
@@ -74,7 +73,6 @@ const useStyles = makeStyles((theme) => ({
         // enables drag n drop resizing of editor
         resize: 'vertical',
         maxHeight: '500px',
-        overflow: 'auto',
     },
 }));
 

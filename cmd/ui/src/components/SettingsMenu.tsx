@@ -168,7 +168,6 @@ const SettingsMenu: React.FC<Props> = ({ anchorEl, handleClose }) => {
                             <Switch checked={darkMode}>Dark Mode</Switch>
                         </MenuItem>
                     }
-                    disabled={null}
                 />
 
                 <Box my={1}>

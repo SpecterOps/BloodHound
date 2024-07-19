@@ -62,6 +62,7 @@ const GraphView: FC = () => {
     const graphState: GraphState = useAppSelector((state) => state.explore);
     const opts: GlobalOptionsState = useAppSelector((state) => state.global.options);
     const formIsDirty = Object.keys(useAppSelector((state) => state.tierzero).changelog).length > 0;
+    const darkMode = useAppSelector((state) => state.global.view.darkMode);
 
     const [graphologyGraph, setGraphologyGraph] = useState<MultiDirectedGraph<Attributes, Attributes, Attributes>>();
     const [currentNodes, setCurrentNodes] = useState<GraphNodes>({});
@@ -80,7 +81,7 @@ const GraphView: FC = () => {
         const graph = new MultiDirectedGraph();
         const nodeSize = 25;
 
-        initGraphNodes(graph, items.nodes, nodeSize, theme);
+        initGraphNodes(graph, items.nodes, nodeSize, theme, darkMode);
         initGraphEdges(graph, items.edges, theme);
 
         setCurrentNodes(items.nodes);
