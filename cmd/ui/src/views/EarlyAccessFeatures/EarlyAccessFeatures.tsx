@@ -159,7 +159,7 @@ const EarlyAccessFeatures: React.FC = () => {
                                     <EarlyAccessFeatureToggle
                                         flag={flag}
                                         onClick={(flagId) => {
-                                            // TODO: Consider adding flag keys to cue files so we don't use random strings. Consider adding more flexibility/composability to side effects for toggling feature flags on and off
+                                            // TODO: Consider adding more flexibility/composability to side effects for toggling feature flags on and off
                                             if (flag.key === 'dark_mode') {
                                                 dispatch(setDarkMode(false));
                                             }
