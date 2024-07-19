@@ -28,6 +28,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/specterops/bloodhound/log"
+	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/src/api/tools"
 	"github.com/specterops/bloodhound/src/config"
 )
@@ -65,6 +66,15 @@ func NewDaemon[DBType database.Database](ctx context.Context, connections bootst
 	router.Put("/pg-migration/start", pgMigrator.MigrationStart)
 	router.Get("/pg-migration/status", pgMigrator.MigrationStatus)
 	router.Put("/pg-migration/cancel", pgMigrator.MigrationCancel)
+
+	// Allow query of datapipe status for infrastructure tooling
+	router.Get("/datapipe/status", func(w http.ResponseWriter, r *http.Request) {
+		if dpStatus, err := connections.RDMS.GetDatapipeStatus(ctx); err != nil {
+			api.HandleDatabaseError(r, w, err)
+		} else {
+			api.WriteJSONResponse(r.Context(), dpStatus, http.StatusOK, w)
+		}
+	})
 
 	router.Get("/logging", tools.GetLoggingDetails)
 	router.Put("/logging", tools.PutLoggingDetails)

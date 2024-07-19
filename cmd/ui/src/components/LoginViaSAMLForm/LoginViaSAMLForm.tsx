@@ -66,7 +66,7 @@ const LoginViaSAMLForm: React.FC<LoginViaSAMLFormProps> = ({ providers, onSubmit
                         CONTINUE
                     </Button>
                     <Box mt={2}>
-                        <Button size='large' type='submit' disabled={redirectURL === ''} onClick={onCancel}>
+                        <Button size='large' type='button' onClick={onCancel}>
                             CANCEL
                         </Button>
                     </Box>

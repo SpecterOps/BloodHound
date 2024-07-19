@@ -98,6 +98,7 @@ const PrebuiltSearchList: FC<PrebuiltSearchListProps> = ({ listSections, clickHa
                                                     <Button
                                                         aria-label='Delete Query'
                                                         size='small'
+                                                        variant='secondary'
                                                         onClick={() => {
                                                             setQueryId(id);
                                                             handleOpen();
