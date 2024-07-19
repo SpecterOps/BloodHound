@@ -68,7 +68,6 @@ const SettingsMenu: React.FC<Props> = ({ anchorEl, handleClose }) => {
     const dispatch = useAppDispatch();
     const navigate = useNavigate();
     const darkMode = useAppSelector((state) => state.global.view.darkMode);
-    const body = document.getElementsByTagName('body')[0];
     const theme = useTheme();
 
     const navigateTo = (route: string) => {
@@ -82,8 +81,6 @@ const SettingsMenu: React.FC<Props> = ({ anchorEl, handleClose }) => {
     };
 
     const toggleDarkMode: React.MouseEventHandler<HTMLLIElement> = () => {
-        const theme = darkMode ? 'light' : 'dark';
-        body.setAttribute('class', theme);
         dispatch(setDarkMode(!darkMode));
     };
 
