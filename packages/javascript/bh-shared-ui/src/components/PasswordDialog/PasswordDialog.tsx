@@ -209,7 +209,11 @@ const PasswordDialog: React.FC<{
                 </DialogContent>
 
                 <DialogActions>
-                    <Button variant='tertiary' onClick={onClose} data-testid='password-dialog_button-close'>
+                    <Button
+                        type='button'
+                        variant='tertiary'
+                        onClick={onClose}
+                        data-testid='password-dialog_button-close'>
                         Cancel
                     </Button>
                     <Button type='submit' data-testid='password-dialog_button-save'>

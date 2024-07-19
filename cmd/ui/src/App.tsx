@@ -46,6 +46,8 @@ const Inner: React.FC = () => {
     const queryClient = useQueryClient();
     const location = useLocation();
 
+    const darkMode = useAppSelector((state) => state.global.view.darkMode);
+
     const useStyles = makeStyles((theme) => ({
         applicationContainer: {
             display: 'flex',
@@ -122,7 +124,7 @@ const Inner: React.FC = () => {
 
     return (
         <>
-            <Box className={classes.applicationContainer}>
+            <Box className={`${classes.applicationContainer} ${darkMode ? 'dark' : 'light'}`}>
                 {showHeader && (
                     <Box className={classes.applicationHeader}>
                         <Header />

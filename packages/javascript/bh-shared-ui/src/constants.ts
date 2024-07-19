@@ -192,6 +192,12 @@ export const components = (theme: Theme): Partial<Theme['components']> => ({
         },
     },
     MuiDialog: {
+        defaultProps: {
+            // Forces all MUI dialogs to render within the part of the component tree which recieves a "dark" class.
+            // If not for this, any tailwind based components inside a dialog will not respect the current theme.
+            // https://tailwindcss.com/docs/dark-mode#toggling-dark-mode-manually
+            disablePortal: true,
+        },
         styleOverrides: {
             root: {
                 '& .MuiPaper-root': {

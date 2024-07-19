@@ -23,7 +23,6 @@ export const removeSnackbar = (key: string): types.GlobalViewActionTypes => {
     };
 };
 
-
 export const addSnackbar = (notification: string, key: string, options: any = {}): types.GlobalViewActionTypes => {
     return {
         type: types.GLOBAL_ADD_SNACKBAR,
@@ -49,9 +48,9 @@ export const closeSnackbar = (key: string): types.GlobalViewActionTypes => {
 export const setDarkMode = (darkMode: boolean): types.GlobalViewActionTypes => {
     return {
         type: types.GLOBAL_SET_DARK_MODE,
-        darkMode
-    }
-}
+        darkMode,
+    };
+};
 
 export const setExpanded = (expanded: { [key: string]: symbol[] }): types.GlobalAccordionsActionTypes => {
     return {

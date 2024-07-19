@@ -26,14 +26,14 @@ import {
 import { useEffect, useState } from 'react';
 import { dataCollectionMessage } from './utils';
 import { useAppSelector } from 'src/store';
-import makeStyles from "@mui/styles/makeStyles";
+import makeStyles from '@mui/styles/makeStyles';
 
 const useStyles = makeStyles((theme) => ({
     container: {
         '& div:first-child': {
-            backgroundColor: theme.palette.neutral.tertiary
-        }
-    }
+            backgroundColor: theme.palette.neutral.tertiary,
+        },
+    },
 }));
 
 const QualityAssurance: React.FC = () => {
@@ -41,7 +41,7 @@ const QualityAssurance: React.FC = () => {
     const [contextType, setContextType] = useState(domain?.type || null);
     const [contextId, setContextId] = useState(domain?.id || null);
     const [dataError, setDataError] = useState(false);
-    const classes = useStyles()
+    const classes = useStyles();
 
     useEffect(() => {
         setDataError(false);
