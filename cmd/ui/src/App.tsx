@@ -112,7 +112,7 @@ const Inner: React.FC = () => {
         }
     }, [dispatch, authState.isInitialized]);
 
-    // initialize theme
+    // remove dark_mode if feature flag is disabled
     useEffect(() => {
         // TODO: Consider adding flag keys to cue files so we don't use random strings. Consider adding more flexibility/composability to side effects for toggling feature flags on and off
         if (!featureFlagsRes.data) return;
