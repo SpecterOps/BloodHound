@@ -194,7 +194,7 @@ const EdgesView = ({ edgeTypes, checked, setChecked }: EdgesViewProps) => {
     };
 
     return (
-        <Box bgcolor={theme.palette.grey[200]} p={1} borderRadius={1}>
+        <Box bgcolor={theme.palette.neutral.tertiary} p={1} borderRadius={1}>
             <Grid container spacing={2}>
                 {edgeTypes.map((edgeType, index) => {
                     return (
