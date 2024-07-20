@@ -230,7 +230,7 @@ export const components = (theme: Theme): Partial<Theme['components']> => ({
                 '& .MuiTab-labelIcon': {
                     color: theme.palette.color.links,
                 },
-                '& .MuiTab-labelIcon.Mui-selected': {
+                '& .MuiButtonBase-root.Mui-selected': {
                     color: theme.palette.color.links,
                 },
                 '& .MuiTab-labelIcon:not(.Mui-selected)': {
@@ -245,6 +245,7 @@ export const components = (theme: Theme): Partial<Theme['components']> => ({
                 '& :not(.Mui-selected) > svg': {
                     color: theme.palette.color.primary,
                 },
+
             },
         },
     },

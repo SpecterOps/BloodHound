@@ -40,9 +40,6 @@ const useStyles = makeStyles((theme) => ({
         height: '35px',
         minHeight: '35px',
         color: theme.palette.color.primary,
-        '&.Mui-selected': {
-            color: theme.palette.color.links,
-        },
     },
     list: {
         position: 'relative',
