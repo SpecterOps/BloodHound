@@ -329,15 +329,15 @@ paths:
 
   # azure entities
   /api/v2/azure/{entity_type}:
-    $ref: './paths/azure/entity.yaml'
+    $ref: './paths/azure.entity.yaml'
 
   # ad base entities
   /api/v2/base/{object_id}:
-    $ref: './paths/base/base.id.yaml'
+    $ref: './paths/base.base.id.yaml'
   /api/v2/base/{object_id}/controllables:
-    $ref: './paths/base/base.id.controllables.yaml'
+    $ref: './paths/base.base.id.controllables.yaml'
   /api/v2/base/{object_id}/controllers:
-    $ref: './paths/base/base.id.controllers.yaml'
+    $ref: './paths/base.base.id.controllers.yaml'
 
   # computers
   /api/v2/computers/{object_id}:
@@ -651,7 +651,7 @@ paths:
 
   # meta entity
   /api/v2/meta/{object_id}:
-    $ref: './paths/meta-entity/meta.id.yaml'
+    $ref: './paths/meta-entity.meta.id.yaml'
 
 components:
   ##
