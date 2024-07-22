@@ -182,11 +182,11 @@ func EnrollOnBehalfOfVersionTwo(tx graph.Transaction, versionTwoCertTemplates, a
 	results := make([]analysis.CreatePostRelationshipJob, 0)
 	for _, certTemplateOne := range allCertTemplates {
 		if hasBadEku, err := certTemplateHasEku(certTemplateOne, EkuAnyPurpose); err != nil {
-			log.Errorf("Error getting ekus for cert template %d: %v", certTemplateOne.ID, err)
+			log.Errorf("Error getting EffectiveEKUs for cert template %d: %v", certTemplateOne.ID, err)
 		} else if hasBadEku {
 			continue
 		} else if hasEku, err := certTemplateHasEku(certTemplateOne, EkuCertRequestAgent); err != nil {
-			log.Errorf("Error getting ekus for cert template %d: %v", certTemplateOne.ID, err)
+			log.Errorf("Error getting EffectiveEKUs for cert template %d: %v", certTemplateOne.ID, err)
 		} else if !hasEku {
 			continue
 		} else if domainNode, err := getDomainForCertTemplate(tx, certTemplateOne); err != nil {
@@ -226,7 +226,7 @@ func EnrollOnBehalfOfVersionTwo(tx graph.Transaction, versionTwoCertTemplates, a
 }
 
 func certTemplateHasEku(certTemplate *graph.Node, targetEkus ...string) (bool, error) {
-	if ekus, err := certTemplate.Properties.Get(ad.EKUs.String()).StringSlice(); err != nil {
+	if ekus, err := certTemplate.Properties.Get(ad.EffectiveEKUs.String()).StringSlice(); err != nil {
 		return false, err
 	} else {
 		for _, eku := range ekus {
@@ -315,7 +315,7 @@ func isEndCertTemplateValidESC3(template *graph.Node) bool {
 }
 
 func certTemplateHasEkuOrAll(certTemplate *graph.Node, targetEkus ...string) (bool, error) {
-	if ekus, err := certTemplate.Properties.Get(ad.EKUs.String()).StringSlice(); err != nil {
+	if ekus, err := certTemplate.Properties.Get(ad.EffectiveEKUs.String()).StringSlice(); err != nil {
 		return false, err
 	} else if len(ekus) == 0 {
 		return true, nil

@@ -76,7 +76,7 @@
       "labels": [],
       "properties": {
         "schemaversion": "2",
-        "ekus": "[\"2.5.29.37.0\"]"
+        "effectiveekus": "[\"2.5.29.37.0\"]"
       },
       "style": {
         "node-color": "#fda1ff"
@@ -118,7 +118,7 @@
       "labels": [],
       "properties": {
         "schemaversion": "1",
-        "ekus": "[\"2.5.29.37.0\"]"
+        "effectiveekus": "[\"2.5.29.37.0\"]"
       },
       "style": {
         "node-color": "#fda1ff"
@@ -134,7 +134,7 @@
       "labels": [],
       "properties": {
         "schemaversion": "2",
-        "ekus": "[\"2.5.29.37.0\"]"
+        "effectiveekus": "[\"2.5.29.37.0\"]"
       },
       "style": {
         "node-color": "#fda1ff"
