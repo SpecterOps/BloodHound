@@ -96,7 +96,7 @@ const GraphView: FC = () => {
             },
         });
         setGraphologyGraph(graph);
-    }, [graphState.chartProps.items, theme]);
+    }, [graphState.chartProps.items, theme, darkMode]);
 
     useEffect(() => {
         if (opts.assetGroupEdit !== null) {
