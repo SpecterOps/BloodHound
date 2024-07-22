@@ -20,9 +20,9 @@ import { Typography } from '@mui/material';
 const Opsec: FC = () => {
     return (
         <Typography variant='body2'>
-            The attacker may create artifacts of abusing this relationship in both on-prem AD and in Entra. 
-            A password write-back operation against the on-prem user may create a 4724 Windows event, along 
-            with a corresponding Entra activity log entry indicating the Entra user’s password was changed.
+            The attacker may create artifacts of abusing this relationship in both on-prem AD and in Entra. A password
+            write-back operation against the on-prem user may create a 4724 Windows event, along with a corresponding
+            Entra activity log entry indicating the Entra user’s password was changed.
         </Typography>
     );
 };
