@@ -20,13 +20,11 @@ import { Typography } from '@mui/material';
 const General: FC = () => {
     return (
         <>
+            <Typography variant='body2'>The Entra user is synchronized to the on-prem AD user.</Typography>
             <Typography variant='body2'>
-                The Entra user is synchronized to the on-prem AD user.
-            </Typography>
-            <Typography variant='body2'>
-                The Entra user may be able to authenticate as the on-prem AD user with its own password if password 
-                write-back is enabled. The Entra user may already have the same password as the on-prem user if 
-                password hash synchronization is enabled.
+                The Entra user may be able to authenticate as the on-prem AD user with its own password if password
+                write-back is enabled. The Entra user may already have the same password as the on-prem user if password
+                hash synchronization is enabled.
             </Typography>
         </>
     );

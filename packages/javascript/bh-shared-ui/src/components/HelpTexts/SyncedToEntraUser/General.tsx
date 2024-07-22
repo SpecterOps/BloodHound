@@ -20,12 +20,10 @@ import { Typography } from '@mui/material';
 const General: FC = () => {
     return (
         <>
+            <Typography variant='body2'>The on-prem AD user is synchronized to the Entra ID user.</Typography>
             <Typography variant='body2'>
-                The on-prem AD user is synchronized to the Entra ID user.
-            </Typography>
-            <Typography variant='body2'>
-                The on-prem user may be able to authenticate as the Entra user with its own password 
-                if password hash synchronization, pass-through authentication, or seamless single sign-on is enabled.
+                The on-prem user may be able to authenticate as the Entra user with its own password if password hash
+                synchronization, pass-through authentication, or seamless single sign-on is enabled.
             </Typography>
         </>
     );
