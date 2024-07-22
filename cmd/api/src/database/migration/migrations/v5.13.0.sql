@@ -14,6 +14,6 @@
 --
 -- SPDX-License-Identifier: Apache-2.0
 
-insert into feature_flags (key, name, description, enabled, user_updatable)
-values ('dark_mode', 'Dark Mode', 'Allows users to enable or disable dark mode via a toggle in the settings menu', false, true)
-on conflict(key) do nothing;
+insert into feature_flags (key, name, description, enabled, user_updatable, created_at, updated_at)
+values ('dark_mode', 'Dark Mode', 'Allows users to enable or disable dark mode via a toggle in the settings menu', false, true, now(), now())
+on conflict (key) do nothing;
