@@ -1,0 +1,153 @@
+# Copyright 2024 Specter Ops, Inc.
+#
+# Licensed under the Apache License, Version 2.0
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# SPDX-License-Identifier: Apache-2.0
+
+parameters:
+  - $ref: './../parameters/header.prefer.yaml'
+get:
+  operationId: ListClients
+  summary: List Clients
+  description: Lists available clients for processing collection events.
+  tags:
+    - Clients
+    - Enterprise
+  parameters:
+    - $ref: './../parameters/query.created-at.yaml'
+    - $ref: './../parameters/query.updated-at.yaml'
+    - $ref: './../parameters/query.deleted-at.yaml'
+    - $ref: './../parameters/query.clients.hydrate-domains.yaml'
+    - $ref: './../parameters/query.clients.hydrate-ous.yaml'
+    - $ref: './../parameters/query.skip.yaml'
+    - $ref: './../parameters/query.limit.yaml'
+    - name: sort_by
+      description: Sortable columns are `name`, `ip_address`, `hostname`, `configured_user`,
+        `last_checkin`, `completed_job_count`, `created_at`, `updated_at`, `deleted_at`.
+      in: query
+      schema:
+        $ref: './../schemas/api.params.query.sort-by.yaml'
+    - name: name
+      in: query
+      schema:
+        $ref: './../schemas/api.params.predicate.filter.string.yaml'
+    - name: ip_address
+      in: query
+      schema:
+        $ref: './../schemas/api.params.predicate.filter.string.yaml'
+    - name: hostname
+      in: query
+      schema:
+        $ref: './../schemas/api.params.predicate.filter.string.yaml'
+    - name: configured_user
+      in: query
+      schema:
+        $ref: './../schemas/api.params.predicate.filter.string.yaml'
+    - name: version
+      in: query
+      schema:
+        $ref: './../schemas/api.params.predicate.filter.string.yaml'
+    - name: user_sid
+      in: query
+      schema:
+        $ref: './../schemas/api.params.predicate.filter.string.yaml'
+    - name: last_checkin
+      in: query
+      schema:
+        $ref: './../schemas/api.params.predicate.filter.string.yaml'
+    - name: current_job_id
+      in: query
+      schema:
+        $ref: './../schemas/api.params.predicate.filter.integer.yaml'
+    - name: completed_job_count
+      in: query
+      schema:
+        $ref: './../schemas/api.params.predicate.filter.integer.yaml'
+    - name: domain_controller
+      in: query
+      schema:
+        $ref: './../schemas/api.params.predicate.filter.string.yaml'
+    - name: id
+      in: query
+      schema:
+        $ref: './../schemas/api.params.predicate.filter.uuid.yaml'
+  responses:
+    200:
+      description: OK
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: './../schemas/api.response.pagination.yaml'
+              - type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: './../schemas/model.client-display.yaml'
+    400:
+      $ref: './../responses/bad-request.yaml'
+    401:
+      $ref: './../responses/unauthorized.yaml'
+    403:
+      $ref: './../responses/forbidden.yaml'
+    429:
+      $ref: './../responses/too-many-requests.yaml'
+    500:
+      $ref: './../responses/internal-server-error.yaml'
+
+post:
+  operationId: CreateClient
+  summary: Create Client
+  description: Creates a client for collection events
+  tags:
+    - Clients
+    - Enterprise
+  requestBody:
+    description: The request body for creating a client
+    required: true
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            name:
+              type: string
+            domain_controller:
+              type: string
+            type:
+              $ref: './../schemas/enum.client-type.yaml'
+            events:
+              type: array
+              items:
+                $ref: './../schemas/model.client-schedule.yaml'
+  responses:
+    200:
+      description: OK
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                $ref: './../schemas/model.client.yaml'
+    400:
+      $ref: './../responses/bad-request.yaml'
+    401:
+      $ref: './../responses/unauthorized.yaml'
+    403:
+      $ref: './../responses/forbidden.yaml'
+    429:
+      $ref: './../responses/too-many-requests.yaml'
+    500:
+      $ref: './../responses/internal-server-error.yaml'

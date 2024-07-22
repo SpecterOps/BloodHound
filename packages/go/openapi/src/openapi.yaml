@@ -249,23 +249,23 @@ paths:
 
   # collectors
   /api/v2/collectors/{collector_type}:
-    $ref: './paths/collectors/collectors.type.yaml'
+    $ref: './paths/collectors.collectors.type.yaml'
   /api/v2/collectors/{collector_type}/{release_tag}:
-    $ref: './paths/collectors/collectors.type.tag.yaml'
+    $ref: './paths/collectors.collectors.type.tag.yaml'
   /api/v2/collectors/{collector_type}/{release_tag}/checksum:
-    $ref: './paths/collectors/collectors.type.tag.checksum.yaml'
+    $ref: './paths/collectors.collectors.type.tag.checksum.yaml'
 
   # collection uploads
   /api/v2/file-upload:
-    $ref: './paths/collection-uploads/file-upload.yaml'
+    $ref: './paths/collection-uploads.file-upload.yaml'
   /api/v2/file-upload/start:
-    $ref: './paths/collection-uploads/file-upload.start.yaml'
+    $ref: './paths/collection-uploads.file-upload.start.yaml'
   /api/v2/file-upload/{file_upload_job_id}:
-    $ref: './paths/collection-uploads/file-upload.id.yaml'
+    $ref: './paths/collection-uploads.file-upload.id.yaml'
   /api/v2/file-upload/{file_upload_job_id}/end:
-    $ref: './paths/collection-uploads/file-upload.id.end.yaml'
+    $ref: './paths/collection-uploads.file-upload.id.end.yaml'
   /api/v2/file-upload/accepted-types:
-    $ref: './paths/collection-uploads/file-upload.accepted-types.yaml'
+    $ref: './paths/collection-uploads.file-upload.accepted-types.yaml'
 
   # api info
   /api/version:
@@ -561,47 +561,47 @@ paths:
 
   # client ingest
   /api/v2/ingest:
-    $ref: './paths/client-ingest/ingest.yaml'
+    $ref: './paths/client-ingest.ingest.yaml'
 
   # clients
   /api/v2/clients:
-    $ref: './paths/clients/clients.yaml'
+    $ref: './paths/clients.clients.yaml'
   /api/v2/clients/error:
-    $ref: './paths/clients/clients.error.yaml'
+    $ref: './paths/clients.clients.error.yaml'
   /api/v2/clients/update:
-    $ref: './paths/clients/clients.update.yaml'
+    $ref: './paths/clients.clients.update.yaml'
   /api/v2/clients/{client_id}:
-    $ref: './paths/clients/clients.id.yaml'
+    $ref: './paths/clients.clients.id.yaml'
   /api/v2/clients/{client_id}/token:
-    $ref: './paths/clients/clients.id.token.yaml'
+    $ref: './paths/clients.clients.id.token.yaml'
   /api/v2/clients/{client_id}/completed-tasks:
-    $ref: './paths/clients/clients.id.completed-tasks.yaml'
+    $ref: './paths/clients.clients.id.completed-tasks.yaml'
   /api/v2/clients/{client_id}/completed-jobs:
-    $ref: './paths/clients/clients.id.completed-jobs.yaml'
+    $ref: './paths/clients.clients.id.completed-jobs.yaml'
   /api/v2/clients/{client_id}/tasks:
-    $ref: './paths/clients/clients.id.tasks.yaml'
+    $ref: './paths/clients.clients.id.tasks.yaml'
   /api/v2/clients/{client_id}/jobs:
-    $ref: './paths/clients/clients.id.jobs.yaml'
+    $ref: './paths/clients.clients.id.jobs.yaml'
 
   # jobs
   /api/v2/jobs/available:
-    $ref: './paths/jobs/jobs.available.yaml'
+    $ref: './paths/jobs.jobs.available.yaml'
   /api/v2/jobs/finished:
-    $ref: './paths/jobs/jobs.finished.yaml'
+    $ref: './paths/jobs.jobs.finished.yaml'
   /api/v2/jobs:
-    $ref: './paths/jobs/jobs.yaml'
+    $ref: './paths/jobs.jobs.yaml'
   /api/v2/jobs/current:
-    $ref: './paths/jobs/jobs.current.yaml'
+    $ref: './paths/jobs.jobs.current.yaml'
   /api/v2/jobs/start:
-    $ref: './paths/jobs/jobs.start.yaml'
+    $ref: './paths/jobs.jobs.start.yaml'
   /api/v2/jobs/end:
-    $ref: './paths/jobs/jobs.end.yaml'
+    $ref: './paths/jobs.jobs.end.yaml'
   /api/v2/jobs/{job_id}:
-    $ref: './paths/jobs/jobs.id.yaml'
+    $ref: './paths/jobs.jobs.id.yaml'
   /api/v2/jobs/{job_id}/cancel:
-    $ref: './paths/jobs/jobs.id.cancel.yaml'
+    $ref: './paths/jobs.jobs.id.cancel.yaml'
   /api/v2/jobs/{job_id}/log:
-    $ref: './paths/jobs/jobs.id.log.yaml'
+    $ref: './paths/jobs.jobs.id.log.yaml'
 
   #  # tasks (deprecated)
   #  /api/v2/tasks/available:
@@ -625,9 +625,9 @@ paths:
 
   # events
   /api/v2/events:
-    $ref: './paths/events/events.yaml'
+    $ref: './paths/events.events.yaml'
   /api/v2/events/{event_id}:
-    $ref: './paths/events/events.id.yaml'
+    $ref: './paths/events.events.id.yaml'
 
   # attack paths
   /api/v2/domains/{domain_id}/attack-path-findings:
