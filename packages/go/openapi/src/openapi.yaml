@@ -293,21 +293,21 @@ paths:
 
   # asset isolation
   /api/v2/asset-groups:
-    $ref: './paths/asset-isolation/asset-groups.yaml'
+    $ref: './paths/asset-isolation.asset-groups.yaml'
   /api/v2/asset-groups/{asset_group_id}:
-    $ref: './paths/asset-isolation/asset-groups.id.yaml'
+    $ref: './paths/asset-isolation.asset-groups.id.yaml'
   /api/v2/asset-groups/{asset_group_id}/collections:
-    $ref: './paths/asset-isolation/asset-groups.id.collections.yaml'
+    $ref: './paths/asset-isolation.asset-groups.id.collections.yaml'
   /api/v2/asset-groups/{asset_group_id}/selectors:
-    $ref: './paths/asset-isolation/asset-groups.id.selectors.yaml'
+    $ref: './paths/asset-isolation.asset-groups.id.selectors.yaml'
   /api/v2/asset-groups/{asset_group_id}/selectors/{asset_group_selector_id}:
-    $ref: './paths/asset-isolation/asset-groups.id.selectors.id.yaml'
+    $ref: './paths/asset-isolation.asset-groups.id.selectors.id.yaml'
   /api/v2/asset-groups/{asset_group_id}/custom-selectors:
-    $ref: './paths/asset-isolation/asset-groups.id.custom-selectors.yaml'
+    $ref: './paths/asset-isolation.asset-groups.id.custom-selectors.yaml'
   /api/v2/asset-groups/{asset_group_id}/members:
-    $ref: './paths/asset-isolation/asset-groups.id.members.yaml'
+    $ref: './paths/asset-isolation.asset-groups.id.members.yaml'
   /api/v2/asset-groups/{asset_group_id}/members/counts:
-    $ref: './paths/asset-isolation/asset-groups.id.members.counts.yaml'
+    $ref: './paths/asset-isolation.asset-groups.id.members.counts.yaml'
 
   # graph
   /api/v2/pathfinding:
@@ -553,11 +553,11 @@ paths:
 
   # analysis
   /api/v2/meta-nodes/{domain_id}:
-    $ref: './paths/analysis/meta-nodes.id.yaml'
+    $ref: './paths/analysis.meta-nodes.id.yaml'
   /api/v2/meta-trees/{domain_id}:
-    $ref: './paths/analysis/meta-trees.id.yaml'
+    $ref: './paths/analysis.meta-trees.id.yaml'
   /api/v2/asset-groups/{asset_group_id}/combo-node:
-    $ref: './paths/analysis/asset-groups.id.combo-node.yaml'
+    $ref: './paths/analysis.asset-groups.id.combo-node.yaml'
 
   # client ingest
   /api/v2/ingest:
@@ -631,23 +631,23 @@ paths:
 
   # attack paths
   /api/v2/domains/{domain_id}/attack-path-findings:
-    $ref: './paths/attack-paths/domains.id.attack-path-findings.yaml'
+    $ref: './paths/attack-paths.domains.id.attack-path-findings.yaml'
   /api/v2/attack-path-types:
-    $ref: './paths/attack-paths/attack-path-types.yaml'
+    $ref: './paths/attack-paths.attack-path-types.yaml'
   /api/v2/attack-paths:
-    $ref: './paths/attack-paths/attack-paths.yaml'
+    $ref: './paths/attack-paths.attack-paths.yaml'
   /api/v2/domains/{domain_id}/available-types:
-    $ref: './paths/attack-paths/domains.id.available-types.yaml'
+    $ref: './paths/attack-paths.domains.id.available-types.yaml'
   /api/v2/domains/{domain_id}/details:
-    $ref: './paths/attack-paths/domains.id.details.yaml'
+    $ref: './paths/attack-paths.domains.id.details.yaml'
   /api/v2/domains/{domain_id}/sparkline:
-    $ref: './paths/attack-paths/domains.id.sparkline.yaml'
+    $ref: './paths/attack-paths.domains.id.sparkline.yaml'
   /api/v2/attack-paths/{attack_path_id}/acceptance:
-    $ref: './paths/attack-paths/attack-paths.id.acceptance.yaml'
+    $ref: './paths/attack-paths.attack-paths.id.acceptance.yaml'
 
   # risk posture
   /api/v2/posture-stats:
-    $ref: './paths/risk-posture/posture-stats.yaml'
+    $ref: './paths/risk-posture.posture-stats.yaml'
 
   # meta entity
   /api/v2/meta/{object_id}:
