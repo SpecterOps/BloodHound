@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Theme } from '@mui/material';
-import { addOpacityToHex } from './utils';
+import { addOpacityToHex } from './utils/colors';
 
 export const NODE_GRAPH_RENDER_LIMIT = 1000;
 
@@ -245,7 +245,6 @@ export const components = (theme: Theme): Partial<Theme['components']> => ({
                 '& :not(.Mui-selected) > svg': {
                     color: theme.palette.color.primary,
                 },
-
             },
         },
     },
