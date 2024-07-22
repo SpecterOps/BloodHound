@@ -515,21 +515,21 @@ paths:
 
   # data quality
   /api/v2/completeness:
-    $ref: './paths/data-quality/completeness.yaml'
+    $ref: './paths/data-quality.completeness.yaml'
   /api/v2/ad-domains/{domain_id}/data-quality-stats:
-    $ref: './paths/data-quality/ad-domains.id.data-quality-stats.yaml'
+    $ref: './paths/data-quality.ad-domains.id.data-quality-stats.yaml'
   /api/v2/azure-tenants/{tenant_id}/data-quality-stats:
-    $ref: './paths/data-quality/azure-tenants.id.data-quality-stats.yaml'
+    $ref: './paths/data-quality.azure-tenants.id.data-quality-stats.yaml'
   /api/v2/platform/{platform_id}/data-quality-stats:
-    $ref: './paths/data-quality/platform.id.data-quality-stats.yaml'
+    $ref: './paths/data-quality.platform.id.data-quality-stats.yaml'
   /api/v2/clear-database:
-    $ref: './paths/data-quality//clear-database.yaml'
+    $ref: './paths/data-quality.clear-database.yaml'
 
   # datapipe
   /api/v2/datapipe/status:
-    $ref: './paths/datapipe/datapipe.status.yaml'
+    $ref: './paths/datapipe.datapipe.status.yaml'
   /api/v2/analysis:
-    $ref: './paths/datapipe/analysis.yaml'
+    $ref: './paths/datapipe.analysis.yaml'
 
   ##
   # Enterprise Endpoints
