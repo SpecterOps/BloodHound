@@ -275,9 +275,9 @@ paths:
 
   # search
   /api/v2/search:
-    $ref: './paths/search/search.yaml'
+    $ref: './paths/search.search.yaml'
   /api/v2/available-domains:
-    $ref: './paths/search/available-domains.yaml'
+    $ref: './paths/search.available-domains.yaml'
 
   # audit
   /api/v2/audit:
@@ -311,21 +311,21 @@ paths:
 
   # graph
   /api/v2/pathfinding:
-    $ref: './paths/graph/pathfinding.yaml'
+    $ref: './paths/graph.pathfinding.yaml'
   /api/v2/graph-search:
-    $ref: './paths/graph/graph-search.yaml'
+    $ref: './paths/graph.graph-search.yaml'
   /api/v2/graphs/shortest-path:
-    $ref: './paths/graph/graphs.shortest-path.yaml'
+    $ref: './paths/graph.graphs.shortest-path.yaml'
   /api/v2/graphs/edge-composition:
-    $ref: './paths/graph/graphs.edge-composition.yaml'
+    $ref: './paths/graph.graphs.edge-composition.yaml'
 
   # cypher
   /api/v2/saved-queries:
-    $ref: './paths/cypher/saved-queries.yaml'
+    $ref: './paths/cypher.saved-queries.yaml'
   /api/v2/saved-queries/{saved_query_id}:
-    $ref: './paths/cypher/saved-queries.id.yaml'
+    $ref: './paths/cypher.saved-queries.id.yaml'
   /api/v2/graphs/cypher:
-    $ref: './paths/cypher/graphs.cypher.yaml'
+    $ref: './paths/cypher.graphs.cypher.yaml'
 
   # azure entities
   /api/v2/azure/{entity_type}:
