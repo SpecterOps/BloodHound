@@ -265,4 +265,14 @@ export const components = (theme: Theme): Partial<Theme['components']> => ({
             },
         },
     },
+    MuiLinearProgress: {
+        styleOverrides: {
+            root: {
+                backgroundColor: theme.palette.secondary.light,
+                '& .MuiLinearProgress-barColorPrimary': {
+                    backgroundColor: theme.palette.primary.dark,
+                },
+            }
+        }
+    }
 });
