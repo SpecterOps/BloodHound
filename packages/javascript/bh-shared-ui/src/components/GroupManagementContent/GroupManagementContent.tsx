@@ -14,10 +14,11 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { Button } from '@bloodhoundenterprise/doodleui';
 import { AssetGroup, AssetGroupMember, AssetGroupMemberParams } from 'js-client-library';
 import { FC, ReactNode, useEffect, useState } from 'react';
 import DropdownSelector, { DropdownOption } from '../DropdownSelector';
-import { Box, Button, Grid, Paper, Typography, useTheme } from '@mui/material';
+import { Box, Grid, Paper, Typography, useTheme } from '@mui/material';
 import { useQuery } from 'react-query';
 import { apiClient } from '../../utils';
 import { faExternalLink } from '@fortawesome/free-solid-svg-icons';
@@ -187,13 +188,10 @@ const GroupManagementContent: FC<{
                     {showExplorePageLink && (
                         <Button
                             data-testid='group-management_explore-link'
-                            variant='contained'
-                            disableElevation
-                            fullWidth
-                            sx={{ borderRadius: '4px', marginTop: '8px' }}
-                            onClick={onShowNodeInExplore}
-                            startIcon={<FontAwesomeIcon icon={faExternalLink} />}>
-                            Open in Explore
+                            style={{ borderRadius: '4px', marginTop: '8px', width: '100%' }}
+                            onClick={onShowNodeInExplore}>
+                            <FontAwesomeIcon icon={faExternalLink} />
+                            <Typography ml='8px'>Open in Explore</Typography>
                         </Button>
                     )}
                 </Grid>

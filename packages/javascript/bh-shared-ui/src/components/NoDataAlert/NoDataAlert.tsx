@@ -15,7 +15,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Alert, AlertTitle, Box, useTheme } from '@mui/material';
-import { FC } from 'react';
 
 type NoDataAlertProps = {
     dataCollectionLink: JSX.Element;
@@ -23,7 +22,7 @@ type NoDataAlertProps = {
     sampleDataLink?: JSX.Element;
 };
 
-export const NoDataAlert: FC<NoDataAlertProps> = ({ dataCollectionLink, fileIngestLink, sampleDataLink }) => {
+export const NoDataAlert: React.FC<NoDataAlertProps> = ({ dataCollectionLink, fileIngestLink, sampleDataLink }) => {
     const theme = useTheme();
 
     return (

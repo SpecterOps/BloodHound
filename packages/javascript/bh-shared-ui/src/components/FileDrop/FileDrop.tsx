@@ -69,9 +69,9 @@ const FileDrop: React.FC<{
             flexDirection='column'
             alignItems='center'
             justifyContent='center'
-            bgcolor={isHoverActive || isDragActive ? theme.palette.grey[300] : theme.palette.grey[200]}
-            color={theme.palette.grey[600]}
-            borderColor={theme.palette.grey[400]}
+            bgcolor={isHoverActive || isDragActive ? theme.palette.neutral.tertiary : theme.palette.neutral.secondary}
+            color={theme.palette.color.primary}
+            borderColor={theme.palette.neutral.tertiary}
             fontWeight='bold'
             textAlign='center'>
             <input

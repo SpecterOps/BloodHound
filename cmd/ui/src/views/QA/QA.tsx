@@ -26,12 +26,22 @@ import {
 import { useEffect, useState } from 'react';
 import { dataCollectionMessage } from './utils';
 import { useAppSelector } from 'src/store';
+import makeStyles from '@mui/styles/makeStyles';
+
+const useStyles = makeStyles((theme) => ({
+    container: {
+        '& div:first-child': {
+            backgroundColor: theme.palette.neutral.tertiary,
+        },
+    },
+}));
 
 const QualityAssurance: React.FC = () => {
     const domain = useAppSelector((state) => state.global.options.domain);
     const [contextType, setContextType] = useState(domain?.type || null);
     const [contextId, setContextId] = useState(domain?.id || null);
     const [dataError, setDataError] = useState(false);
+    const classes = useStyles();
 
     useEffect(() => {
         setDataError(false);
@@ -129,7 +139,7 @@ const QualityAssurance: React.FC = () => {
                 </Box>
             )}
             <Grid container spacing={2}>
-                <Grid item xs={12} data-testid='data-quality_statistics'>
+                <Grid item xs={12} data-testid='data-quality_statistics' classes={classes.container}>
                     {getStatsComponent()}
                 </Grid>
             </Grid>

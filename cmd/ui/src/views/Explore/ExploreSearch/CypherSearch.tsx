@@ -14,9 +14,10 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { Button } from '@bloodhoundenterprise/doodleui';
 import { faFolderOpen, faPlay, faQuestion, faSave } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Box, Button, Collapse, SvgIcon } from '@mui/material';
+import { Box, Collapse, Link, Typography } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
 import '@neo4j-cypher/codemirror/css/cypher-codemirror.css';
 import { CypherEditor } from '@neo4j-cypher/react-codemirror';
@@ -41,9 +42,6 @@ const useStyles = makeStyles((theme) => ({
     button: {
         minWidth: '35px',
         height: '35px',
-        borderRadius: theme.shape.borderRadius,
-        borderColor: 'rgba(0,0,0,0.23)',
-        color: 'black',
     },
     iconButton: {
         padding: 0,
@@ -61,7 +59,20 @@ const useStyles = makeStyles((theme) => ({
         // enables drag n drop resizing of editor
         resize: 'vertical',
         maxHeight: '500px',
-        overflow: 'auto',
+    },
+    cypherEditorDark: {
+        display: 'flex',
+        flexGrow: 1,
+        flexDirection: 'column',
+        border: '1px solid',
+        borderColor: 'rgba(0,0,0,.23)',
+        borderRadius: theme.shape.borderRadius,
+        backgroundColor: '#002b36',
+        paddingTop: '5px',
+        minHeight: '120px',
+        // enables drag n drop resizing of editor
+        resize: 'vertical',
+        maxHeight: '500px',
     },
 }));
 
@@ -107,6 +118,7 @@ const CypherSearch = () => {
     const [showEgg, setShowEgg] = useState(false);
     const [showSaveQueryDialog, setShowSaveQueryDialog] = useState(false);
     const dispatch = useAppDispatch();
+    const darkMode = useAppSelector((state) => state.global.view.darkMode);
 
     const handleCypherSearch = () => {
         if (cypherQuery) {
@@ -153,18 +165,18 @@ const CypherSearch = () => {
                     onClick={() => {
                         setShowCommonQueries((v) => !v);
                     }}
-                    variant='outlined'
                     aria-label='Show/Hide Saved Queries'>
                     <FontAwesomeIcon icon={faFolderOpen} />
                 </Button>
 
                 <div onClick={setFocusOnCypherEditor} style={{ flex: 1 }} role='textbox'>
                     <CypherEditor
-                        className={classes.cypherEditor}
+                        className={darkMode ? classes.cypherEditorDark : classes.cypherEditor}
                         value={cypherQuery}
                         onValueChanged={(val: string) => {
                             setCypherQuery(val);
                         }}
+                        theme={darkMode ? 'dark' : 'light'}
                         onKeyDown={(e: any) => {
                             // if enter and shift key is pressed, execute cypher search
                             if (e.key === 'Enter' && e.shiftKey) {
@@ -182,43 +194,33 @@ const CypherSearch = () => {
 
             <Box display={'flex'} gap={1} mt={1} justifyContent={'end'}>
                 <Button
-                    className={classes.button}
+                    variant='secondary'
                     onClick={() => {
                         setShowSaveQueryDialog(true);
                     }}
-                    variant='outlined'
-                    startIcon={
-                        <SvgIcon>
-                            <FontAwesomeIcon icon={faSave} />
-                        </SvgIcon>
-                    }>
-                    Save Query
+                    size={'small'}>
+                    <Box display={'flex'} alignItems={'center'}>
+                        <FontAwesomeIcon icon={faSave} />
+                        <Typography ml='8px'>Save Query</Typography>
+                    </Box>
                 </Button>
 
-                <Button
-                    href='https://support.bloodhoundenterprise.io/hc/en-us/articles/16721164740251'
-                    target='_blank'
-                    rel='noreferrer'
-                    variant='outlined'
-                    className={classes.button}
-                    startIcon={
-                        <SvgIcon>
+                <Button asChild variant='secondary' rel='noreferrer' size={'small'}>
+                    <Link
+                        href='https://support.bloodhoundenterprise.io/hc/en-us/articles/16721164740251'
+                        target='_blank'>
+                        <Box display={'flex'} alignItems={'center'}>
                             <FontAwesomeIcon icon={faQuestion} />
-                        </SvgIcon>
-                    }>
-                    Help
+                            <Typography ml='8px'>Help</Typography>
+                        </Box>
+                    </Link>
                 </Button>
 
-                <Button
-                    className={classes.button}
-                    onClick={() => handleCypherSearch()}
-                    variant='outlined'
-                    startIcon={
-                        <SvgIcon>
-                            <FontAwesomeIcon icon={faPlay} />
-                        </SvgIcon>
-                    }>
-                    Run
+                <Button onClick={() => handleCypherSearch()} size={'small'}>
+                    <Box display={'flex'} alignItems={'center'}>
+                        <FontAwesomeIcon icon={faPlay} />
+                        <Typography ml='8px'>Run</Typography>
+                    </Box>
                 </Button>
             </Box>
 

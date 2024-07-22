@@ -14,7 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField, FormHelperText } from '@mui/material';
+import { Button } from '@bloodhoundenterprise/doodleui';
+import { Dialog, DialogActions, DialogContent, DialogTitle, FormHelperText, TextField } from '@mui/material';
 import { useState } from 'react';
 
 const SaveQueryDialog: React.FC<{
@@ -63,10 +64,10 @@ const SaveQueryDialog: React.FC<{
                 ) : null}
             </DialogContent>
             <DialogActions>
-                <Button type='button' color='inherit' autoFocus onClick={onClose} disabled={isLoading}>
+                <Button type='button' variant={'tertiary'} onClick={onClose} disabled={isLoading}>
                     Cancel
                 </Button>
-                <Button type='button' color='primary' onClick={handleSave} disabled={saveDisabled || isLoading}>
+                <Button type='button' onClick={handleSave} disabled={saveDisabled || isLoading}>
                     Save
                 </Button>
             </DialogActions>

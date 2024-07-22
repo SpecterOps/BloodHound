@@ -16,13 +16,14 @@
 
 import { faCog, faUsersRectangle, faProjectDiagram } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { AppBar, Box, IconButton, Link, Toolbar } from '@mui/material';
+import { AppBar, Box, IconButton, Link, Toolbar, useTheme } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
 import React from 'react';
 import { Link as RouterLink, useLocation, useNavigate } from 'react-router-dom';
 import { MenuItem } from 'bh-shared-ui';
 import * as routes from 'src/ducks/global/routes';
 import SettingsMenu from 'src/components/SettingsMenu';
+import { useAppSelector } from 'src/store';
 
 const useStyles = makeStyles((theme) => ({
     appBar: {
@@ -31,7 +32,7 @@ const useStyles = makeStyles((theme) => ({
             easing: theme.transitions.easing.sharp,
             duration: theme.transitions.duration.leavingScreen,
         }),
-        backgroundColor: theme.palette.background.paper,
+        backgroundColor: theme.palette.neutral.secondary,
         color: theme.palette.text.primary,
     },
     menu: {
@@ -74,9 +75,12 @@ const useStyles = makeStyles((theme) => ({
 const Header: React.FC = () => {
     const navigate = useNavigate();
     const classes = useStyles();
+    const theme = useTheme();
 
     const location = useLocation();
     const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+    const darkMode = useAppSelector((state) => state.global.view.darkMode);
+    const imageUrl = darkMode ? '/img/logo-secondary-transparent-banner.svg' : '/img/logo-transparent-banner.svg';
 
     const showMenu = (e: React.MouseEvent<Element, MouseEvent>): boolean => {
         setAnchorEl(e.currentTarget as HTMLElement);
@@ -108,7 +112,7 @@ const Header: React.FC = () => {
                 <IconButton
                     onClick={showMenu}
                     className={'settings'}
-                    style={{ color: '#1C222E' }}
+                    style={{ color: theme.palette.color.primary }}
                     size='small'
                     data-testid='global_header_settings-menu'
                     aria-label='Settings Menu'>
@@ -131,7 +135,7 @@ const Header: React.FC = () => {
                 <Box height='100%' paddingY='6px' boxSizing='border-box'>
                     <Link component={RouterLink} to={routes.ROUTE_HOME} data-testid='global_header_nav-home'>
                         <img
-                            src={`${import.meta.env.BASE_URL}/img/logo-transparent-banner.svg`}
+                            src={`${import.meta.env.BASE_URL}${imageUrl}`}
                             alt='BloodHound CE Home'
                             style={{
                                 height: '100%',

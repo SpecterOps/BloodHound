@@ -14,8 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { Button } from '@bloodhoundenterprise/doodleui';
 import {
-    Button,
     DialogActions,
     DialogContent,
     DialogContentText,
@@ -69,8 +69,8 @@ const UpdateUserForm: React.FC<{
                 <DialogActions>
                     <DialogActions>
                         <Button
-                            autoFocus
-                            color='inherit'
+                            type='button'
+                            variant='tertiary'
                             onClick={onCancel}
                             data-testid='update-user-dialog_button-close'>
                             Close
@@ -90,8 +90,8 @@ const UpdateUserForm: React.FC<{
                 <DialogActions>
                     <DialogActions>
                         <Button
-                            autoFocus
-                            color='inherit'
+                            type='button'
+                            variant='tertiary'
                             onClick={onCancel}
                             data-testid='update-user-dialog_button-close'>
                             Close
@@ -355,14 +355,14 @@ const UpdateUserFormInner: React.FC<{
                     </FormHelperText>
                 )}
                 <Button
-                    autoFocus
-                    color='inherit'
+                    type='button'
+                    variant={'tertiary'}
                     onClick={onCancel}
                     disabled={isLoading}
                     data-testid='update-user-dialog_button-close'>
                     Cancel
                 </Button>
-                <Button color='primary' type='submit' disabled={isLoading} data-testid='update-user-dialog_button-save'>
+                <Button type='submit' disabled={isLoading} data-testid='update-user-dialog_button-save'>
                     Save
                 </Button>
             </DialogActions>

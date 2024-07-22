@@ -14,8 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { Button } from '@bloodhoundenterprise/doodleui';
 import {
-    Button,
     Dialog,
     DialogActions,
     DialogContent,
@@ -29,26 +29,15 @@ import {
     TableRow,
     Typography,
 } from '@mui/material';
-import makeStyles from '@mui/styles/makeStyles';
+import { AuthToken, NewAuthToken } from 'js-client-library';
 import { DateTime } from 'luxon';
 import React, { useState } from 'react';
 import { useQuery } from 'react-query';
-import { AuthToken, NewAuthToken } from 'js-client-library';
-import { LuxonFormat, apiClient } from '../../utils';
 import { useNotifications } from '../../providers';
+import { LuxonFormat, apiClient } from '../../utils';
 import CreateUserTokenDialog from './CreateUserTokenDialog';
-import UserTokenDialog from './UserTokenDialog';
 import TokenRevokeDialog from './TokenRevokeDialog';
-
-const useStyles = makeStyles({
-    revokeButton: {
-        padding: '0',
-        '& .MuiButton-label': {
-            padding: 0,
-            justifyContent: 'left',
-        },
-    },
-});
+import UserTokenDialog from './UserTokenDialog';
 
 const UserTokenManagementDialog: React.FC<{
     open: boolean;
@@ -64,8 +53,6 @@ const UserTokenManagementDialog: React.FC<{
     );
 
     const { addNotification } = useNotifications();
-
-    const styles = useStyles();
 
     const [newTokenDialogOpen, setNewTokenDialogOpen] = useState<boolean>(false);
     const [tokenDialogOpen, setTokenDialogOpen] = useState<boolean>(false);
@@ -148,11 +135,7 @@ const UserTokenManagementDialog: React.FC<{
                         <TableCell>{DateTime.fromISO(row.created_at).toFormat(LuxonFormat.DATETIME)}</TableCell>
                         <TableCell>{DateTime.fromISO(row.last_access).toFormat(LuxonFormat.DATETIME)}</TableCell>
                         <TableCell>
-                            <Button
-                                variant={'text'}
-                                color={'secondary'}
-                                className={styles.revokeButton}
-                                onClick={() => openRevokeTokenDialog(row)}>
+                            <Button variant={'text'} size='small' onClick={() => openRevokeTokenDialog(row)}>
                                 Revoke
                             </Button>
                         </TableCell>
@@ -196,14 +179,12 @@ const UserTokenManagementDialog: React.FC<{
                 </DialogContent>
                 <DialogActions>
                     <Button
-                        autoFocus
-                        color='inherit'
+                        variant='tertiary'
                         onClick={onClose}
                         data-testid='user-token-management-dialog_button-close'>
                         Close
                     </Button>
                     <Button
-                        color='primary'
                         type='submit'
                         onClick={() => setNewTokenDialogOpen(true)}
                         data-testid='user-token-management-dialog_button-save'>

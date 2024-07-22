@@ -14,8 +14,9 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { Button } from '@bloodhoundenterprise/doodleui';
 import { useState } from 'react';
-import { Box, Button, Typography } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 import { useMutation, useQuery } from 'react-query';
 import { PageWithTitle, apiClient } from 'bh-shared-ui';
 import {
@@ -87,9 +88,7 @@ const SAMLConfiguration: React.FC = () => {
                 <Box>
                     <Box display='flex' justifyContent='space-between' mb={2}>
                         <div />
-                        <Button color='primary' variant='contained' disableElevation onClick={openSAMLProviderDialog}>
-                            Create SAML Provider
-                        </Button>
+                        <Button onClick={openSAMLProviderDialog}>Create SAML Provider</Button>
                     </Box>
                     <SAMLProviderTable
                         SAMLProviders={listSAMLProvidersQuery.data || []}

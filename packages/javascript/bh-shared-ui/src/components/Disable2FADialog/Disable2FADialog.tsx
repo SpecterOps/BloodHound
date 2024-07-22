@@ -14,16 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import {
-    Alert,
-    Button,
-    Dialog,
-    DialogActions,
-    DialogContent,
-    DialogContentText,
-    DialogTitle,
-    TextField,
-} from '@mui/material';
+import { Button } from '@bloodhoundenterprise/doodleui';
+import { Alert, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, TextField } from '@mui/material';
 import React from 'react';
 
 const Disable2FADialog: React.FC<{
@@ -68,12 +60,10 @@ const Disable2FADialog: React.FC<{
                     />
                 </DialogContent>
                 <DialogActions>
-                    <Button color='inherit' onClick={onCancel}>
+                    <Button type='button' variant='tertiary' onClick={onCancel}>
                         Cancel
                     </Button>
-                    <Button color='primary' type='submit'>
-                        Disable Multi-Factor Authentication
-                    </Button>
+                    <Button type='submit'>Disable Multi-Factor Authentication</Button>
                 </DialogActions>
             </form>
         </Dialog>
