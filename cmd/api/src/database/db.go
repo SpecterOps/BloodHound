@@ -21,11 +21,12 @@ package database
 import (
 	"context"
 	"fmt"
+	"time"
+
 	"github.com/specterops/bloodhound/src/services/agi"
 	"github.com/specterops/bloodhound/src/services/dataquality"
 	"github.com/specterops/bloodhound/src/services/fileupload"
 	"github.com/specterops/bloodhound/src/services/ingest"
-	"time"
 
 	"github.com/gofrs/uuid"
 	"github.com/specterops/bloodhound/errors"
@@ -40,6 +41,11 @@ import (
 
 const (
 	ErrNotFound = errors.Error("entity not found")
+)
+
+var (
+    ErrDuplicateAGName = errors.New("duplicate asset group name")
+    ErrDuplicateAGTag  = errors.New("duplicate asset group tag")
 )
 
 func IsUnexpectedDatabaseError(err error) bool {
@@ -129,6 +135,7 @@ type Database interface {
 
 	// Sessions
 	CreateUserSession(ctx context.Context, userSession model.UserSession) (model.UserSession, error)
+	SetUserSessionFlag(ctx context.Context, userSession *model.UserSession, key model.SessionFlagKey, state bool) error
 	LookupActiveSessionsByUser(ctx context.Context, user model.User) ([]model.UserSession, error)
 	EndUserSession(ctx context.Context, userSession model.UserSession)
 	GetUserSession(ctx context.Context, id int64) (model.UserSession, error)
@@ -151,6 +158,13 @@ type Database interface {
 	DeleteSavedQuery(ctx context.Context, id int) error
 	SavedQueryBelongsToUser(ctx context.Context, userID uuid.UUID, savedQueryID int) (bool, error)
 	DeleteAssetGroupSelectorsForAssetGroups(ctx context.Context, assetGroupIds []int) error
+
+	// Analysis Request
+	AnalysisRequestData
+
+	// Datapipe Status
+	SetDatapipeStatus(ctx context.Context, status model.DatapipeStatus, updateAnalysisTime bool) error
+	GetDatapipeStatus(ctx context.Context) (model.DatapipeStatusWrapper, error)
 }
 
 type BloodhoundDB struct {

@@ -19,21 +19,24 @@ package v2
 import (
 	"errors"
 	"fmt"
+	"mime"
+	"net/http"
+	"slices"
+	"strconv"
+	"strings"
+
 	"github.com/gorilla/mux"
+	"github.com/specterops/bloodhound/bomenc"
 	"github.com/specterops/bloodhound/headers"
 	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/src/auth"
 	"github.com/specterops/bloodhound/src/ctx"
 	"github.com/specterops/bloodhound/src/model"
-	ingestModel "github.com/specterops/bloodhound/src/model/ingest"
 	"github.com/specterops/bloodhound/src/services/fileupload"
 	"github.com/specterops/bloodhound/src/services/ingest"
-	"mime"
-	"net/http"
-	"slices"
-	"strconv"
-	"strings"
+
+	ingestModel "github.com/specterops/bloodhound/src/model/ingest"
 )
 
 const FileUploadJobIdPathParameterName = "file_upload_job_id"
@@ -130,12 +133,12 @@ func (s Resources) ProcessFileUpload(response http.ResponseWriter, request *http
 	}
 
 	if !IsValidContentTypeForUpload(request.Header) {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("Content type must be application/json or application/zip"), request), response)
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "Content type must be application/json or application/zip", request), response)
 	} else if fileUploadJobID, err := strconv.Atoi(fileUploadJobIdString); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsIDMalformed, request), response)
 	} else if fileUploadJob, err := fileupload.GetFileUploadJobByID(request.Context(), s.DB, int64(fileUploadJobID)); err != nil {
 		api.HandleDatabaseError(request, response, err)
-	} else if fileName, fileType, err := fileupload.SaveIngestFile(s.Config.TempDirectory(), request); errors.Is(err, fileupload.ErrInvalidJSON) {
+	} else if fileName, fileType, err := fileupload.SaveIngestFile(s.Config.TempDirectory(), request); errors.Is(err, bomenc.ErrUnknownEncodingInvalidUTF8) {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("Error saving ingest file: %v", err), request), response)
 	} else if err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("Error saving ingest file: %v", err), request), response)

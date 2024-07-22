@@ -1904,12 +1904,9 @@ func TestADCSESC6a(t *testing.T) {
 					name, _ := result.Properties.Get(common.Name.String()).String()
 					names = append(names, name)
 				}
-				require.Equal(t, 14, len(results))
+				require.Equal(t, 7, len(results))
 				require.NotContains(t, names, "User2")
 				require.NotContains(t, names, "User3")
-				require.NotContains(t, names, "User5")
-				require.NotContains(t, names, "User7")
-				require.NotContains(t, names, "Computer6")
 			}
 			return nil
 		})
@@ -2142,9 +2139,9 @@ func TestADCSESC6b(t *testing.T) {
 			if results, err := ops.FetchStartNodes(tx.Relationships().Filterf(func() graph.Criteria {
 				return query.Kind(query.Relationship(), ad.ADCSESC6b)
 			})); err != nil {
-				t.Fatalf("error fetching esc6a edges in integration test; %v", err)
+				t.Fatalf("error fetching esc6b edges in integration test; %v", err)
 			} else {
-				require.True(t, len(results) == 12)
+				require.Equal(t, 7, len(results))
 
 				require.True(t, results.Contains(harness.ESC6bTemplate2Harness.User1))
 				require.True(t, results.Contains(harness.ESC6bTemplate2Harness.Computer1))
@@ -2155,15 +2152,6 @@ func TestADCSESC6b(t *testing.T) {
 
 				require.True(t, results.Contains(harness.ESC6bTemplate2Harness.Computer3))
 				require.True(t, results.Contains(harness.ESC6bTemplate2Harness.Group3))
-
-				require.True(t, results.Contains(harness.ESC6bTemplate2Harness.User4))
-				require.True(t, results.Contains(harness.ESC6bTemplate2Harness.Computer4))
-				require.True(t, results.Contains(harness.ESC6bTemplate2Harness.Group4))
-
-				require.True(t, results.Contains(harness.ESC6bTemplate2Harness.Group5))
-
-				require.True(t, results.Contains(harness.ESC6bTemplate2Harness.Group6))
-
 			}
 			return nil
 		})

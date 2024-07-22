@@ -1109,6 +1109,11 @@ ADCSESC13: types.#Kind & {
 	schema: "active_directory"
 }
 
+SyncedToEntraUser: types.#Kind & {
+	symbol: "SyncedToEntraUser"
+	schema: "active_directory"
+}
+
 // Relationship Kinds
 RelationshipKinds: [
 	Owns,
@@ -1179,7 +1184,8 @@ RelationshipKinds: [
 	ADCSESC9b,
 	ADCSESC10a,
 	ADCSESC10b,
-	ADCSESC13
+	ADCSESC13,
+	SyncedToEntraUser,
 ]
 
 // ACL Relationships
@@ -1257,7 +1263,8 @@ PathfindingRelationships: [
 	ADCSESC10a,
 	ADCSESC10b,
 	ADCSESC13,
-	DCFor
+	DCFor,
+	SyncedToEntraUser,
 ]
 
 EdgeCompositionRelationships: [

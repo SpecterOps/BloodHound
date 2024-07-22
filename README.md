@@ -16,13 +16,14 @@ The easiest way to get up and running is to use our pre-configured Docker Compos
   
   1. Install Docker Compose and ensure Docker is running. This should be included with the [Docker Desktop](https://www.docker.com/products/docker-desktop/) installation
   2. Run `curl -L https://ghst.ly/getbhce | docker compose -f - up`
+     > On Windows: Execute the command in CMD, or use `curl.exe` instead of `curl` in PowerShell
   3. Locate the randomly generated password in the terminal output of Docker Compose
   4. In a browser, navigate to `http://localhost:8080/ui/login`. Login with a username of `admin` and the randomly generated password from the logs
 
 NOTE: Going forward, the default `docker-compose.yml` example binds only to localhost (127.0.0.1). If you want to access BloodHound outside of localhost, you'll need to follow the instructions in [examples/docker-compose/README.md](examples/docker-compose/README.md) to configure the host binding for the container.
 
 ### Importing sample data
-The BloodHound team has provided some sample data for testing BloodHound without performing a SharpHound or AzureHound collection. That data may be found [here](examples/sample-data/README.md).
+The BloodHound team has provided some sample data for testing BloodHound without performing a SharpHound or AzureHound collection. That data may be found [here](https://github.com/SpecterOps/BloodHound/wiki/Example-Data).
 
 ## Installation Error Handling
 

@@ -97,7 +97,7 @@ func Entrypoint(ctx context.Context, cfg config.Configuration, connections boots
 		)
 
 		registration.RegisterFossGlobalMiddleware(&routerInst, cfg, connections.RDMS, auth.NewIdentityResolver(), authenticator)
-		registration.RegisterFossRoutes(&routerInst, cfg, connections.RDMS, connections.Graph, graphQuery, apiCache, collectorManifests, authenticator, datapipeDaemon, authorizer)
+		registration.RegisterFossRoutes(&routerInst, cfg, connections.RDMS, connections.Graph, graphQuery, apiCache, collectorManifests, authenticator, authorizer)
 
 		// Set neo4j batch and flush sizes
 		neo4jParameters := appcfg.GetNeo4jParameters(ctx, connections.RDMS)
@@ -105,7 +105,9 @@ func Entrypoint(ctx context.Context, cfg config.Configuration, connections boots
 		connections.Graph.SetWriteFlushSize(neo4jParameters.WriteFlushSize)
 
 		// Trigger analysis on first start
-		datapipeDaemon.RequestAnalysis()
+		if err := connections.RDMS.RequestAnalysis(ctx, "init"); err != nil {
+			return nil, fmt.Errorf("failed to request analysis: %w", err)
+		}
 
 		return []daemons.Daemon{
 			bhapi.NewDaemon(cfg, routerInst.Handler()),

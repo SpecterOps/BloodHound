@@ -20,9 +20,10 @@ package azure_test
 
 import (
 	"context"
-	schema "github.com/specterops/bloodhound/graphschema"
 	"slices"
 	"testing"
+
+	schema "github.com/specterops/bloodhound/graphschema"
 
 	"github.com/specterops/bloodhound/graphschema/azure"
 	"github.com/specterops/bloodhound/graphschema/common"

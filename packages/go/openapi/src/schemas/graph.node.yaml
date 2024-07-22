@@ -1,0 +1,40 @@
+# Copyright 2024 Specter Ops, Inc.
+#
+# Licensed under the Apache License, Version 2.0
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# SPDX-License-Identifier: Apache-2.0
+
+type: object
+properties:
+  label:
+    type: string
+    description: The human-readable text that identifies the node
+  kind:
+    $ref: './graph.props.node-kind.yaml'
+  objectId:
+    $ref: './graph.props.object-id.yaml'
+  isTierZero:
+    type: boolean
+    description: Indicates if the node has been classified as a tier zero asset
+  lastSeen:
+    $ref: './graph.props.last-seen.yaml'
+  properties:
+    $ref: './graph.props.properties.yaml'
+example:
+  label: DOMAIN USERS@TESTLAB.LOCAL
+  kind: Group
+  objectId: xyz789
+  isTierZero: false
+  lastSeen: 2022-12-07T15:09:51.474Z
+  properties:
+    lastseen: 2023-02-03T22:54:21.728Z

@@ -23,6 +23,7 @@ import {
     AzureDataQualityResponse,
     BasicResponse,
     CreateAuthTokenResponse,
+    DatapipeStatusResponse,
     EndFileIngestResponse,
     ListAuthTokensResponse,
     ListFileIngestJobsResponse,
@@ -49,7 +50,8 @@ class BHEAPIClient {
     version = (options?: types.RequestOptions) => this.baseClient.get('/api/version', options);
 
     /* datapipe status */
-    getDatapipeStatus = (options?: types.RequestOptions) => this.baseClient.get('/api/v2/datapipe/status', options);
+    getDatapipeStatus = (options?: types.RequestOptions) =>
+        this.baseClient.get<DatapipeStatusResponse>('/api/v2/datapipe/status', options);
 
     /* search */
     searchHandler = (keyword: string, type?: string, options?: types.RequestOptions) => {
@@ -771,6 +773,14 @@ class BHEAPIClient {
         this.baseClient.post(`/api/v2/bloodhound-users/${userId}/mfa-activation`, data, options);
 
     acceptEULA = (options?: types.RequestOptions) => this.baseClient.put('/api/v2/accept-eula', options);
+
+    acceptFedRAMPEULA = (options?: types.RequestOptions) => this.baseClient.put('/api/v2/fed-eula/accept', options);
+
+    getFedRAMPEULAStatus = (options?: types.RequestOptions) =>
+        this.baseClient.get<{ data: { accepted: boolean } }>('/api/v2/fed-eula/status', options);
+
+    getFedRAMPEULAText = (options?: types.RequestOptions) =>
+        this.baseClient.get<{ data: string }>('/api/v2/fed-eula/text', options);
 
     getFeatureFlags = (options?: types.RequestOptions) => this.baseClient.get('/api/v2/features', options);
 
@@ -2303,6 +2313,10 @@ class BHEAPIClient {
                 options
             )
         );
+
+    /* remote assets */
+    getRemoteAsset = (assetPath: string, options?: types.RequestOptions) =>
+        this.baseClient.get(`/api/v2/assets/${assetPath}`, options);
 }
 
 export default BHEAPIClient;
