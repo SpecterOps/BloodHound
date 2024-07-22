@@ -156,6 +156,8 @@ const SettingsMenu: React.FC<Props> = ({ anchorEl, handleClose }) => {
 
                 <FeatureFlag
                     flagKey='dark_mode'
+                    errorFallback={null}
+                    loadingFallback={null}
                     enabled={
                         <MenuItem onClick={toggleDarkMode} data-testid={'global_header_settings-menu_nav-logout'}>
                             <ListItemIcon>
