@@ -207,6 +207,13 @@ export const components = (theme: Theme): Partial<Theme['components']> => ({
             },
         },
     },
+    MuiDialogActions: {
+        styleOverrides: {
+            root: {
+                padding: theme.spacing(2, 3)
+            }
+        }
+    },
     MuiPopover: {
         styleOverrides: {
             root: {
