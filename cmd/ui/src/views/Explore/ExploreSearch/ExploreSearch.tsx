@@ -99,6 +99,8 @@ const ExploreSearch = ({ handleColumns }: ExploreSearchProps) => {
                     display: 'flex',
                     flexShrink: 4,
                     gap: 1,
+                    backgroundColor: theme.palette.neutral.secondary,
+                    borderRadius: '8px',
                 }}
                 elevation={0}>
                 <Icon
@@ -128,7 +130,14 @@ const ExploreSearch = ({ handleColumns }: ExploreSearchProps) => {
             </Paper>
 
             <Collapse in={showSearchWidget}>
-                <Paper sx={{ mt: 1, p: 1 }} elevation={0}>
+                <Paper
+                    sx={{
+                        mt: 1,
+                        p: 1,
+                        backgroundColor: theme.palette.neutral.secondary,
+                        borderRadius: '8px',
+                    }}
+                    elevation={0}>
                     <TabPanels
                         tabs={[
                             // This linting rule is disabled because the elements in this array do not require a key prop.

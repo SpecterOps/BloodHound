@@ -202,6 +202,7 @@ export const components = (theme: Theme): Partial<Theme['components']> => ({
             root: {
                 '& .MuiPaper-root': {
                     backgroundImage: 'unset',
+                    backgroundColor: theme.palette.neutral.secondary,
                 },
             },
         },
