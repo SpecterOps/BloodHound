@@ -469,27 +469,27 @@ paths:
 
   # ad users
   /api/v2/users/{object_id}:
-    $ref: './paths/users/users.id.yaml'
+    $ref: './paths/users.users.id.yaml'
   /api/v2/users/{object_id}/admin-rights:
-    $ref: './paths/users/users.id.admin-rights.yaml'
+    $ref: './paths/users.users.id.admin-rights.yaml'
   /api/v2/users/{object_id}/constrained-delegation-rights:
-    $ref: './paths/users/users.id.constrained-delegation-rights.yaml'
+    $ref: './paths/users.users.id.constrained-delegation-rights.yaml'
   /api/v2/users/{object_id}/controllables:
-    $ref: './paths/users/users.id.controllables.yaml'
+    $ref: './paths/users.users.id.controllables.yaml'
   /api/v2/users/{object_id}/controllers:
-    $ref: './paths/users/users.id.controllers.yaml'
+    $ref: './paths/users.users.id.controllers.yaml'
   /api/v2/users/{object_id}/dcom-rights:
-    $ref: './paths/users/users.id.dcom-rights.yaml'
+    $ref: './paths/users.users.id.dcom-rights.yaml'
   /api/v2/users/{object_id}/memberships:
-    $ref: './paths/users/users.id.memberships.yaml'
+    $ref: './paths/users.users.id.memberships.yaml'
   /api/v2/users/{object_id}/ps-remote-rights:
-    $ref: './paths/users/users.id.ps-remote-rights.yaml'
+    $ref: './paths/users.users.id.ps-remote-rights.yaml'
   /api/v2/users/{object_id}/rdp-rights:
-    $ref: './paths/users/users.id.rdp-rights.yaml'
+    $ref: './paths/users.users.id.rdp-rights.yaml'
   /api/v2/users/{object_id}/sessions:
-    $ref: './paths/users/users.id.sessions.yaml'
+    $ref: './paths/users.users.id.sessions.yaml'
   /api/v2/users/{object_id}/sql-admin-rights:
-    $ref: './paths/users/users.id.sql-admin-rights.yaml'
+    $ref: './paths/users.users.id.sql-admin-rights.yaml'
 
   # groups
   /api/v2/groups/{object_id}:
