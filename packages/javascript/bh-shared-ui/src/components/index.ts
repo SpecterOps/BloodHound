@@ -146,3 +146,5 @@ export { default as WebGLDisabledAlert } from './WebGLDisabledAlert';
 
 export * from './DocumentationLinks';
 export { default as DocumentationLinks } from './DocumentationLinks';
+
+export { default as ApiVersion } from './ApiVersion';

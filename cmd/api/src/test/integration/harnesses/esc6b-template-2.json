@@ -57,7 +57,7 @@
       "id": "n0",
       "position": {
         "x": 75,
-        "y": 257.1802421969478
+        "y": 1075.2624056811162
       },
       "caption": "Domain",
       "labels": [],
@@ -70,7 +70,7 @@
       "id": "n1",
       "position": {
         "x": 2573.1710649298893,
-        "y": 464.3604843938956
+        "y": 1282.4426478780638
       },
       "caption": "NTAuthStore",
       "labels": [],
@@ -84,7 +84,7 @@
       "id": "n2",
       "position": {
         "x": 2573.1710649298893,
-        "y": 257.1802421969478
+        "y": 1075.2624056811162
       },
       "caption": "RootCA",
       "labels": [],
@@ -114,7 +114,7 @@
       "id": "n4",
       "position": {
         "x": 2573.1710649298893,
-        "y": 50
+        "y": 868.0821634841684
       },
       "caption": "DC",
       "labels": [],
@@ -199,30 +199,6 @@
       }
     },
     {
-      "id": "n9",
-      "position": {
-        "x": 1868.8112082366765,
-        "y": 834.711510335344
-      },
-      "caption": "CertTemplate5",
-      "labels": [],
-      "properties": {
-        "AuthenticationEnabled": "True",
-        "RequireManagerApproval": "False",
-        "SchemaVersion": "2",
-        "AuthorizedSignatures": "0",
-        "SubjectAltRequireDNS": "False",
-        "SubjectAltRequireDomainDNS": "False",
-        "SubjectAltRequireEmail": "True",
-        "SubjectRequireEmail": "False"
-      },
-      "style": {
-        "node-color": "#fda1ff",
-        "outside-position": "left",
-        "node-margin": 50
-      }
-    },
-    {
       "id": "n10",
       "position": {
         "x": 1868.8112082366765,
@@ -238,53 +214,6 @@
         "SubjectAltRequireDomainDNS": "True",
         "SubjectAltRequireEmail": "False",
         "SubjectRequireEmail": "False"
-      },
-      "style": {
-        "node-color": "#fda1ff",
-        "outside-position": "left",
-        "node-margin": 50
-      }
-    },
-    {
-      "id": "n11",
-      "position": {
-        "x": 1868.8112082366765,
-        "y": 1127.0573450335569
-      },
-      "caption": "CertTemplate4",
-      "labels": [],
-      "properties": {
-        "AuthenticationEnabled": "True",
-        "RequireManagerApproval": "False",
-        "SchemaVersion": "1",
-        "SubjectAltRequireDNS": "False",
-        "SubjectAltRequireDomainDNS": "False",
-        "SubjectAltRequireEmail": "True",
-        "SubjectRequireEmail": "True"
-      },
-      "style": {
-        "node-color": "#fda1ff",
-        "outside-position": "left",
-        "node-margin": 50
-      }
-    },
-    {
-      "id": "n12",
-      "position": {
-        "x": 1868.8112082366765,
-        "y": 542.365675637131
-      },
-      "caption": "CertTemplate6",
-      "labels": [],
-      "properties": {
-        "AuthenticationEnabled": "True",
-        "RequireManagerApproval": "False",
-        "SchemaVersion": "2",
-        "AuthorizedSignatures": "0",
-        "SubjectAltRequireDNS": "False",
-        "SubjectAltRequireDomainDNS": "False",
-        "SubjectAltRequireEmail": "False",
-        "SubjectRequireEmail": "True"
       },
       "style": {
         "node-color": "#fda1ff",
@@ -397,143 +326,6 @@
         "node-color": "#a4dd00",
         "border-color": "#73d8ff"
       }
-    },
-    {
-      "id": "n21",
-      "position": {
-        "x": 986.9652328869672,
-        "y": 1205.06253627679
-      },
-      "caption": "Group4",
-      "labels": [],
-      "properties": {},
-      "style": {
-        "node-color": "#fcc400"
-      }
-    },
-    {
-      "id": "n22",
-      "position": {
-        "x": 896.7434236266986,
-        "y": 1127.0573450335569
-      },
-      "caption": "Computer4",
-      "labels": [],
-      "properties": {
-        "email": "null"
-      },
-      "style": {
-        "node-color": "#f44e3b",
-        "outside-position": "left"
-      }
-    },
-    {
-      "id": "n23",
-      "position": {
-        "x": 986.9652328869672,
-        "y": 1049.0521537903237
-      },
-      "caption": "User4",
-      "labels": [],
-      "properties": {
-        "email": "null"
-      },
-      "style": {
-        "node-color": "#a4dd00",
-        "outside-position": "left"
-      }
-    },
-    {
-      "id": "n24",
-      "position": {
-        "x": 986.9652328869672,
-        "y": 911.1894193978566
-      },
-      "caption": "Group5",
-      "labels": [],
-      "properties": {},
-      "style": {
-        "node-color": "#fcc400"
-      }
-    },
-    {
-      "id": "n25",
-      "position": {
-        "x": 896.7434236266986,
-        "y": 833.1842281546233
-      },
-      "caption": "Computer5",
-      "labels": [],
-      "properties": {
-        "email": "test@lol.io"
-      },
-      "style": {
-        "node-color": "#f44e3b",
-        "outside-position": "left"
-      }
-    },
-    {
-      "id": "n26",
-      "position": {
-        "x": 986.9652328869672,
-        "y": 755.1790369113901
-      },
-      "caption": "User5",
-      "labels": [],
-      "properties": {
-        "email": "null"
-      },
-      "style": {
-        "node-color": "#a4dd00",
-        "outside-position": "left",
-        "border-color": "#73d8ff"
-      }
-    },
-    {
-      "id": "n27",
-      "position": {
-        "x": 986.9652328869672,
-        "y": 620.3708668803641
-      },
-      "caption": "Group6",
-      "labels": [],
-      "properties": {},
-      "style": {
-        "node-color": "#fcc400"
-      }
-    },
-    {
-      "id": "n28",
-      "position": {
-        "x": 896.7434236266986,
-        "y": 542.365675637131
-      },
-      "caption": "Computer6",
-      "labels": [],
-      "properties": {
-        "email": "null"
-      },
-      "style": {
-        "node-color": "#f44e3b",
-        "outside-position": "left",
-        "border-color": "#73d8ff"
-      }
-    },
-    {
-      "id": "n29",
-      "position": {
-        "x": 986.9652328869672,
-        "y": 464.36048439389776
-      },
-      "caption": "User6",
-      "labels": [],
-      "properties": {
-        "email": "test@lol.io"
-      },
-      "style": {
-        "node-color": "#a4dd00",
-        "outside-position": "left"
-      }
     }
   ],
   "relationships": [
@@ -641,30 +433,6 @@
     {
       "id": "n11",
       "fromId": "n10",
-      "toId": "n3",
-      "type": "PublishedTo",
-      "properties": {},
-      "style": {}
-    },
-    {
-      "id": "n12",
-      "fromId": "n11",
-      "toId": "n3",
-      "type": "PublishedTo",
-      "properties": {},
-      "style": {}
-    },
-    {
-      "id": "n13",
-      "fromId": "n9",
-      "toId": "n3",
-      "type": "PublishedTo",
-      "properties": {},
-      "style": {}
-    },
-    {
-      "id": "n14",
-      "fromId": "n12",
       "toId": "n3",
       "type": "PublishedTo",
       "properties": {},
@@ -795,206 +563,6 @@
       "fromId": "n20",
       "toId": "n10",
       "type": "Enroll",
-      "properties": {},
-      "style": {}
-    },
-    {
-      "id": "n31",
-      "fromId": "n21",
-      "toId": "n5",
-      "type": "MemberOf",
-      "properties": {},
-      "style": {}
-    },
-    {
-      "id": "n32",
-      "fromId": "n22",
-      "toId": "n5",
-      "type": "MemberOf",
-      "properties": {},
-      "style": {}
-    },
-    {
-      "id": "n33",
-      "fromId": "n23",
-      "toId": "n5",
-      "type": "MemberOf",
-      "properties": {},
-      "style": {}
-    },
-    {
-      "id": "n34",
-      "fromId": "n23",
-      "toId": "n11",
-      "type": "Enroll",
-      "properties": {},
-      "style": {}
-    },
-    {
-      "id": "n35",
-      "fromId": "n22",
-      "toId": "n11",
-      "type": "Enroll",
-      "properties": {},
-      "style": {}
-    },
-    {
-      "id": "n36",
-      "fromId": "n21",
-      "toId": "n11",
-      "type": "Enroll",
-      "properties": {},
-      "style": {}
-    },
-    {
-      "id": "n37",
-      "fromId": "n24",
-      "toId": "n5",
-      "type": "MemberOf",
-      "properties": {},
-      "style": {}
-    },
-    {
-      "id": "n38",
-      "fromId": "n25",
-      "toId": "n5",
-      "type": "MemberOf",
-      "properties": {},
-      "style": {}
-    },
-    {
-      "id": "n39",
-      "fromId": "n26",
-      "toId": "n5",
-      "type": "MemberOf",
-      "properties": {},
-      "style": {}
-    },
-    {
-      "id": "n40",
-      "fromId": "n27",
-      "toId": "n5",
-      "type": "MemberOf",
-      "properties": {},
-      "style": {}
-    },
-    {
-      "id": "n41",
-      "fromId": "n28",
-      "toId": "n5",
-      "type": "MemberOf",
-      "properties": {},
-      "style": {}
-    },
-    {
-      "id": "n42",
-      "fromId": "n29",
-      "toId": "n5",
-      "type": "MemberOf",
-      "properties": {},
-      "style": {}
-    },
-    {
-      "id": "n43",
-      "fromId": "n29",
-      "toId": "n12",
-      "type": "Enroll",
-      "properties": {},
-      "style": {}
-    },
-    {
-      "id": "n44",
-      "fromId": "n28",
-      "toId": "n12",
-      "type": "Enroll",
-      "properties": {},
-      "style": {}
-    },
-    {
-      "id": "n45",
-      "fromId": "n27",
-      "toId": "n12",
-      "type": "Enroll",
-      "properties": {},
-      "style": {}
-    },
-    {
-      "id": "n46",
-      "fromId": "n26",
-      "toId": "n9",
-      "type": "Enroll",
-      "properties": {},
-      "style": {}
-    },
-    {
-      "id": "n47",
-      "fromId": "n25",
-      "toId": "n9",
-      "type": "Enroll",
-      "properties": {},
-      "style": {}
-    },
-    {
-      "id": "n48",
-      "fromId": "n24",
-      "toId": "n9",
-      "type": "Enroll",
-      "properties": {},
-      "style": {}
-    },
-    {
-      "id": "n49",
-      "fromId": "n29",
-      "toId": "n0",
-      "type": "ADCSESC6b",
-      "properties": {},
-      "style": {}
-    },
-    {
-      "id": "n50",
-      "fromId": "n27",
-      "toId": "n0",
-      "type": "ADCSESC6b",
-      "properties": {},
-      "style": {}
-    },
-    {
-      "id": "n51",
-      "fromId": "n25",
-      "toId": "n0",
-      "type": "ADCSESC6b",
-      "properties": {},
-      "style": {}
-    },
-    {
-      "id": "n52",
-      "fromId": "n24",
-      "toId": "n0",
-      "type": "ADCSESC6b",
-      "properties": {},
-      "style": {}
-    },
-    {
-      "id": "n53",
-      "fromId": "n23",
-      "toId": "n0",
-      "type": "ADCSESC6b",
-      "properties": {},
-      "style": {}
-    },
-    {
-      "id": "n54",
-      "fromId": "n22",
-      "toId": "n0",
-      "type": "ADCSESC6b",
-      "properties": {},
-      "style": {}
-    },
-    {
-      "id": "n55",
-      "fromId": "n21",
-      "toId": "n0",
-      "type": "ADCSESC6b",
       "properties": {},
       "style": {}
     },

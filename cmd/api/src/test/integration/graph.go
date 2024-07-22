@@ -197,6 +197,10 @@ func (s *GraphTestContext) NewAzureUser(name, principalName, description, object
 	}), azure.Entity, azure.User)
 }
 
+func (s *GraphTestContext) NewCustomAzureUser(properties *graph.Properties) *graph.Node {
+	return s.NewNode(properties, azure.Entity, azure.User)
+}
+
 func (s *GraphTestContext) NewAzureGroup(name, objectID, tenantID string) *graph.Node {
 	return s.NewNode(graph.AsProperties(graph.PropertyMap{
 		common.Name:              name,
@@ -338,6 +342,10 @@ func (s *GraphTestContext) NewActiveDirectoryUser(name, domainSID string, isTier
 	}), ad.Entity, ad.User)
 }
 
+func (s *GraphTestContext) NewCustomActiveDirectoryUser(properties *graph.Properties) *graph.Node {
+	return s.NewNode(properties, ad.Entity, ad.User)
+}
+
 func (s *GraphTestContext) NewActiveDirectoryGroup(name, domainSID string) *graph.Node {
 	return s.NewNode(graph.AsProperties(graph.PropertyMap{
 		common.Name:     name,
@@ -425,7 +433,7 @@ func (s *GraphTestContext) NewActiveDirectoryCertTemplate(name, domainSID string
 		ad.NoSecurityExtension:        data.NoSecurityExtension,
 		ad.SchemaVersion:              data.SchemaVersion,
 		ad.AuthorizedSignatures:       data.AuthorizedSignatures,
-		ad.EKUs:                       data.EKUS,
+		ad.EffectiveEKUs:              data.EffectiveEKUs,
 		ad.ApplicationPolicies:        data.ApplicationPolicies,
 		ad.SubjectAltRequireUPN:       data.SubjectAltRequireUPN,
 		ad.SubjectAltRequireSPN:       data.SubjectAltRequireSPN,
@@ -457,7 +465,7 @@ type CertTemplateData struct {
 	NoSecurityExtension        bool
 	SchemaVersion              float64
 	AuthorizedSignatures       float64
-	EKUS                       []string
+	EffectiveEKUs              []string
 	ApplicationPolicies        []string
 	CertificatePolicy          []string
 }

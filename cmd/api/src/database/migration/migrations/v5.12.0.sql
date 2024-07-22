@@ -28,5 +28,23 @@ VALUES
     ('idle', NOW ())
 ON CONFLICT DO NOTHING;
 
-ALTER TABLE user_sessions
+ALTER TABLE IF EXISTS user_sessions
     ADD COLUMN IF NOT EXISTS flags jsonb;
+
+-- Set 'name' and 'tag' columns to not allow null values
+ALTER TABLE IF EXISTS asset_groups
+    ALTER COLUMN name SET NOT NULL,
+    ALTER COLUMN tag SET NOT NULL;
+
+-- Ensure unique values for 'name' and 'tag' in asset_groups
+ALTER TABLE IF EXISTS asset_groups
+    DROP CONSTRAINT IF EXISTS asset_groups_name_key;
+
+ALTER TABLE IF EXISTS asset_groups
+    ADD CONSTRAINT asset_groups_name_key UNIQUE (name);
+
+ALTER TABLE IF EXISTS asset_groups
+    DROP CONSTRAINT IF EXISTS asset_groups_tag_key;
+
+ALTER TABLE IF EXISTS asset_groups
+    ADD CONSTRAINT asset_groups_tag_key UNIQUE (tag);

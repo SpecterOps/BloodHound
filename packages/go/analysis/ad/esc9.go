@@ -177,7 +177,7 @@ func isCertTemplateValidForESC9(ct *graph.Node, scenarioB bool) (bool, error) {
 func GetADCSESC9aEdgeComposition(ctx context.Context, db graph.Database, edge *graph.Relationship) (graph.PathSet, error) {
 	/*
 		MATCH (n {objectid:'S-1-5-21-3933516454-2894985453-2515407000-500'})-[:ADCSESC9a]->(d:Domain {objectid:'S-1-5-21-3933516454-2894985453-2515407000'})
-		OPTIONAL MATCH p1 = (n)-[:GenericAll|GenericWrite|Owns|WriteOwner|WriteDacl]->(m)-[:MemberOf*0..]->()-[:GenericAll|Enroll|AllExtendedRights]->(ct)-[:PublishedTo]->(ca)-[:IssuedSignedBy|EnterpriseCAFor|RootCAFor*1..]->(d)
+		MATCH p1 = (n)-[:GenericAll|GenericWrite|Owns|WriteOwner|WriteDacl]->(m)-[:MemberOf*0..]->()-[:GenericAll|Enroll|AllExtendedRights]->(ct)-[:PublishedTo]->(ca)-[:IssuedSignedBy|EnterpriseCAFor|RootCAFor*1..]->(d)
 		WHERE ct.requiresmanagerapproval = false
 		AND ct.authenticationenabled = true
 		AND ct.nosecurityextension = true
@@ -191,8 +191,8 @@ func GetADCSESC9aEdgeComposition(ctx context.Context, db graph.Database, edge *g
 		m:Computer
 		OR (m:User AND ct.subjectaltrequiredns = false AND ct.subjectaltrequiredomaindns = false)
 		)
-		OPTIONAL MATCH p2 = (m)-[:MemberOf*0..]->()-[:Enroll]->(ca)-[:TrustedForNTAuth]->(nt)-[:NTAuthStoreFor]->(d)
-		OPTIONAL MATCH p3 = (ca)-[:CanAbuseWeakCertBinding|DCFor|TrustedBy*1..]->(d)
+		MATCH p2 = (m)-[:MemberOf*0..]->()-[:Enroll]->(ca)-[:TrustedForNTAuth]->(nt)-[:NTAuthStoreFor]->(d)
+		MATCH p3 = (ca)-[:CanAbuseWeakCertBinding|DCFor|TrustedBy*1..]->(d)
 		RETURN p1,p2,p3
 	*/
 
@@ -242,8 +242,14 @@ func GetADCSESC9aEdgeComposition(ctx context.Context, db graph.Database, edge *g
 				}
 			}
 
-			caNode := terminal.Search(func(nextSegment *graph.PathSegment) bool {
-				return nextSegment.Node.Kinds.ContainsOneOf(ad.EnterpriseCA)
+			// First ECA in the path
+			var caNode *graph.Node
+			terminal.Path().Walk(func(start, end *graph.Node, relationship *graph.Relationship) bool {
+				if end.Kinds.ContainsOneOf(ad.EnterpriseCA) {
+					caNode = end
+					return false
+				}	
+				return true
 			})
 
 			lock.Lock()
@@ -298,8 +304,14 @@ func GetADCSESC9aEdgeComposition(ctx context.Context, db graph.Database, edge *g
 
 	for _, p1paths := range path1CandidateSegments {
 		for _, p1path := range p1paths {
-			caNode := p1path.Search(func(nextSegment *graph.PathSegment) bool {
-				return nextSegment.Node.Kinds.ContainsOneOf(ad.EnterpriseCA)
+			// First ECA in the path
+			var caNode *graph.Node
+			p1path.Path().Walk(func(start, end *graph.Node, relationship *graph.Relationship) bool {
+				if end.Kinds.ContainsOneOf(ad.EnterpriseCA) {
+					caNode = end
+					return false
+				}
+				return true
 			})
 
 			if p2segments, ok := path2CandidateSegments[caNode.ID]; !ok {
@@ -486,7 +498,7 @@ func adcsESC9bPath3Pattern(caIDs []graph.ID) traversal.PatternContinuation {
 func GetADCSESC9bEdgeComposition(ctx context.Context, db graph.Database, edge *graph.Relationship) (graph.PathSet, error) {
 	/*
 		MATCH (n {objectid:'S-1-5-21-3933516454-2894985453-2515407000-500'})-[:ADCSESC9b]->(d:Domain {objectid:'S-1-5-21-3933516454-2894985453-2515407000'})
-		OPTIONAL MATCH p1 = (n)-[:GenericAll|GenericWrite|Owns|WriteOwner|WriteDacl]->(m:Computer)-[:MemberOf*0..]->()-[:GenericAll|Enroll|AllExtendedRights]->(ct)-[:PublishedTo]->(ca)-[:IssuedSignedBy|EnterpriseCAFor|RootCAFor*1..]->(d)
+		MATCH p1 = (n)-[:GenericAll|GenericWrite|Owns|WriteOwner|WriteDacl]->(m:Computer)-[:MemberOf*0..]->()-[:GenericAll|Enroll|AllExtendedRights]->(ct)-[:PublishedTo]->(ca)-[:IssuedSignedBy|EnterpriseCAFor|RootCAFor*1..]->(d)
 		WHERE ct.requiresmanagerapproval = false
 		AND ct.authenticationenabled = true
 		AND ct.nosecurityextension = true
@@ -496,8 +508,8 @@ func GetADCSESC9bEdgeComposition(ctx context.Context, db graph.Database, edge *g
 			(ct.schemaversion > 1 AND ct.authorizedsignatures = 0)
 			OR ct.schemaversion = 1
 		)
-		OPTIONAL MATCH p2 = (m)-[:MemberOf*0..]->()-[:Enroll]->(ca)-[:TrustedForNTAuth]->(nt)-[:NTAuthStoreFor]->(d)
-		OPTIONAL MATCH p3 = (ca)-[:CanAbuseWeakCertBinding|DCFor|TrustedBy*1..]->(d)
+		MATCH p2 = (m)-[:MemberOf*0..]->()-[:Enroll]->(ca)-[:TrustedForNTAuth]->(nt)-[:NTAuthStoreFor]->(d)
+		MATCH p3 = (ca)-[:CanAbuseWeakCertBinding|DCFor|TrustedBy*1..]->(d)
 		RETURN p1,p2,p3
 	*/
 
@@ -536,8 +548,14 @@ func GetADCSESC9bEdgeComposition(ctx context.Context, db graph.Database, edge *g
 				return nextSegment.Depth() == 1
 			})
 
-			caNode := terminal.Search(func(nextSegment *graph.PathSegment) bool {
-				return nextSegment.Node.Kinds.ContainsOneOf(ad.EnterpriseCA)
+			// First ECA in the path
+			var caNode *graph.Node
+			terminal.Path().Walk(func(start, end *graph.Node, relationship *graph.Relationship) bool {
+				if end.Kinds.ContainsOneOf(ad.EnterpriseCA) {
+					caNode = end
+					return false
+				}
+				return true
 			})
 
 			lock.Lock()
@@ -592,8 +610,14 @@ func GetADCSESC9bEdgeComposition(ctx context.Context, db graph.Database, edge *g
 
 	for _, p1paths := range path1CandidateSegments {
 		for _, p1path := range p1paths {
-			caNode := p1path.Search(func(nextSegment *graph.PathSegment) bool {
-				return nextSegment.Node.Kinds.ContainsOneOf(ad.EnterpriseCA)
+			// First ECA in the path
+			var caNode *graph.Node
+			p1path.Path().Walk(func(start, end *graph.Node, relationship *graph.Relationship) bool {
+				if end.Kinds.ContainsOneOf(ad.EnterpriseCA) {
+					caNode = end
+					return false
+				}
+				return true
 			})
 
 			if p2segments, ok := path2CandidateSegments[caNode.ID]; !ok {

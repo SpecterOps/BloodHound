@@ -43,6 +43,11 @@ const (
 	ErrNotFound = errors.Error("entity not found")
 )
 
+var (
+    ErrDuplicateAGName = errors.New("duplicate asset group name")
+    ErrDuplicateAGTag  = errors.New("duplicate asset group tag")
+)
+
 func IsUnexpectedDatabaseError(err error) bool {
 	return err != nil && err != ErrNotFound
 }

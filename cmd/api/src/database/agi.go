@@ -19,6 +19,8 @@ package database
 import (
 	"context"
 	"time"
+	"strings"
+	"fmt"
 
 	"gorm.io/gorm"
 
@@ -43,9 +45,17 @@ func (s *BloodhoundDB) CreateAssetGroup(ctx context.Context, name, tag string, s
 		err error
 	)
 
-	err = s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
-		return CheckError(tx.Create(&assetGroup))
-	})
+    err = s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
+        err := tx.Create(&assetGroup).Error
+        if err != nil {
+            if strings.Contains(err.Error(), "duplicate key value violates unique constraint \"asset_groups_name_key\"") {
+                return fmt.Errorf("%w: %v", ErrDuplicateAGName, err)
+            } else if strings.Contains(err.Error(), "duplicate key value violates unique constraint \"asset_groups_tag_key\"") {
+                return fmt.Errorf("%w: %v", ErrDuplicateAGTag, err)
+            }
+        }
+        return err
+    })
 
 	return assetGroup, err
 }
