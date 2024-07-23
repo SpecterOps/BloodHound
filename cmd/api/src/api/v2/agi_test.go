@@ -1423,6 +1423,44 @@ func TestResources_ListAssetGroupMembers(t *testing.T) {
 				},
 			},
 			{
+				Name: "SuccessFiltered",
+				Input: func(input *apitest.Input) {
+					apitest.AddQueryParam(input, "object_id", "eq:a")
+					apitest.SetURLVar(input, api.URIPathVariableAssetGroupID, "1")
+				},
+				Setup: func() {
+					mockDB.EXPECT().
+						GetAssetGroup(gomock.Any(), gomock.Any()).
+						Return(assetGroup, nil)
+					mockGraph.EXPECT().
+						GetAssetGroupNodes(gomock.Any(), gomock.Any()).
+						Return(graph.NodeSet{
+							1: &graph.Node{
+								ID:    1,
+								Kinds: graph.Kinds{ad.Entity, ad.Domain},
+								Properties: &graph.Properties{
+									Map: map[string]any{common.ObjectID.String(): "a", common.Name.String(): "a", ad.DomainSID.String(): "a"},
+								},
+							},
+							2: &graph.Node{
+								ID:    2,
+								Kinds: graph.Kinds{ad.Entity, ad.Domain},
+								Properties: &graph.Properties{
+									Map: map[string]any{common.ObjectID.String(): "b", common.Name.String(): "b", ad.DomainSID.String(): "b"},
+								},
+							}}, nil)
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusOK)
+
+					result := api.ListAssetGroupMembersResponse{}
+					apitest.UnmarshalData(output, &result)
+
+					require.Equal(t, 1, len(result.Members))
+					require.Equal(t, "a", result.Members[0].ObjectID)
+				},
+			},
+			{
 				Name: "Parse Query Param Filters Error",
 				Input: func(input *apitest.Input) {
 					apitest.AddQueryParam(input, "object_id", "invalidPredicate:foo")
