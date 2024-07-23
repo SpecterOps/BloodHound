@@ -15,7 +15,7 @@
 -- SPDX-License-Identifier: Apache-2.0
 
 ALTER TABLE IF EXISTS saved_queries
-  ADD COLUMN IF NOT EXISTS description TEXT DEFAULT '';
+  ADD COLUMN IF NOT EXISTS description VARCHAR(500) DEFAULT '';
 
 CREATE TABLE IF NOT EXISTS saved_queries_permissions
 (
