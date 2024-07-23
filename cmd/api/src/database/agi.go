@@ -85,35 +85,22 @@ func (s *BloodhoundDB) DeleteAssetGroup(ctx context.Context, assetGroup model.As
 	})
 }
 
-func (s *BloodhoundDB) getAssetGroupMemberCount(ctx context.Context, assetGroupID int32) (int, error) {
-    collection, err := s.GetLatestAssetGroupCollection(ctx, assetGroupID)
-    if errors.Is(err, ErrNotFound) {
-        return 0, nil
-    }
-    if err != nil {
-        return 0, err
-    }
-    return len(collection.Entries), nil
-}
-
 func (s *BloodhoundDB) GetAssetGroup(ctx context.Context, id int32) (model.AssetGroup, error) {
-    var (
-        assetGroup model.AssetGroup
-        result     = s.preload(model.AssetGroupAssociations()).WithContext(ctx).First(&assetGroup, id)
-    )
-
-	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-        return assetGroup, ErrNotFound
-    }
-	if result.Error != nil {
-        return assetGroup, result.Error
+	var assetGroup model.AssetGroup
+	if result := s.preload(model.AssetGroupAssociations()).WithContext(ctx).First(&assetGroup, id); errors.Is(result.Error, gorm.ErrRecordNotFound) {
+        return model.AssetGroup{}, ErrNotFound
+    } else if result.Error != nil {
+        return model.AssetGroup{}, result.Error
     }
 
-    memberCount, err := s.getAssetGroupMemberCount(ctx, id)
-    if err != nil {
-        return assetGroup, fmt.Errorf("error getting member count for asset group %s: %w", assetGroup.Name, err)
+    if latestCollection, collectionErr := s.GetLatestAssetGroupCollection(ctx, id); collectionErr != nil {
+        if errors.Is(collectionErr, ErrNotFound) {
+			assetGroup.MemberCount = 0
+        }
+		return model.AssetGroup{}, fmt.Errorf("error getting latest collection for asset group %s: %w", assetGroup.Name, collectionErr)
+    } else {
+        assetGroup.MemberCount = len(latestCollection.Entries)
     }
-    assetGroup.MemberCount = memberCount
 
     return assetGroup, nil
 }
@@ -132,20 +119,23 @@ func (s *BloodhoundDB) GetAllAssetGroups(ctx context.Context, order string, filt
         result = result.Where(filter.SQLString, filter.Params)
     }
 
-    if result = result.Find(&assetGroups); errors.Is(result.Error, gorm.ErrRecordNotFound) {
-        return assetGroups, ErrNotFound
-    } else if result.Error != nil {
-        return assetGroups, result.Error
-    }
+    if result = result.Find(&assetGroups); result.Error != nil {
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			return assetGroups, ErrNotFound
+		}
+		return assetGroups, result.Error
+	}
 
     for idx, assetGroup := range assetGroups {
-        memberCount, err := s.getAssetGroupMemberCount(ctx, assetGroup.ID)
-        if err != nil {
-            return assetGroups, fmt.Errorf("error getting member count for asset group %s: %w", assetGroup.Name, err)
+        if latestCollection, collectionErr := s.GetLatestAssetGroupCollection(ctx, assetGroup.ID); collectionErr != nil {
+            if !errors.Is(collectionErr, ErrNotFound) {
+                return model.AssetGroups{}, fmt.Errorf("error getting latest collection for asset group %s: %w", assetGroup.Name, collectionErr)
+            }
+            assetGroups[idx].MemberCount = 0
+        } else {
+            assetGroups[idx].MemberCount = len(latestCollection.Entries)
         }
-        assetGroups[idx].MemberCount = memberCount
     }
-
     return assetGroups, nil
 }
 

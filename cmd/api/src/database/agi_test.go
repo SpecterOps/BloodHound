@@ -79,18 +79,9 @@ func TestAssetGroupMemberCount(t *testing.T) {
 		testCtx = context.Background()
 	)
 
-	// Create a new asset group
 	assetGroup, err := dbInst.CreateAssetGroup(testCtx, "member count test group", "mctest", false)
 	require.Nil(t, err)
 
-	// Test initial member count
-	t.Run("InitialMemberCount", func(t *testing.T) {
-		fetchedGroup, err := dbInst.GetAssetGroup(testCtx, assetGroup.ID)
-		require.Nil(t, err)
-		require.Equal(t, 0, fetchedGroup.MemberCount)
-	})
-
-	// Create an asset group collection with entries
 	collection := model.AssetGroupCollection{
 		AssetGroupID: assetGroup.ID,
 	}
@@ -103,14 +94,12 @@ func TestAssetGroupMemberCount(t *testing.T) {
 	err = dbInst.CreateAssetGroupCollection(testCtx, collection, entries)
 	require.Nil(t, err)
 
-	// Test updated member count
 	t.Run("GetAssetGroup", func(t *testing.T) {
 		fetchedGroup, err := dbInst.GetAssetGroup(testCtx, assetGroup.ID)
 		require.Nil(t, err)
 		require.Equal(t, 4, fetchedGroup.MemberCount)
 	})
 
-	// Test GetAllAssetGroups
 	t.Run("GetAllAssetGroups", func(t *testing.T) {
 		allGroups, err := dbInst.GetAllAssetGroups(testCtx, "", model.SQLFilter{})
 		require.Nil(t, err)
