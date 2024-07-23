@@ -33,7 +33,7 @@ export interface CertTemplateInfo extends EntityInfo {
         applicationpolicies: string;
         authorizedsignatures: number;
         certificateapplicationpolicy: string[];
-        ekus: string[];
+        EffectiveEKUs: string[];
         enrolleesuppliessubject: boolean;
         issuancepolicies: string;
         oid: string;

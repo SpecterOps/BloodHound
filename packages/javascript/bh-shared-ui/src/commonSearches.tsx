@@ -309,4 +309,38 @@ export const CommonSearches: CommonSearchType[] = [
             },
         ],
     },
+    {
+        subheader: 'Cross Platform Attack Paths',
+        category: categoryAzure,
+        queries: [
+            {
+                description: 'Entra Users synced from On-Prem Users added to Domain Admins group',
+                cypher: 'MATCH p = (:AZUser)-[:SyncedToADUser]->(:User)-[:MemberOf]->(g:Group)\nWHERE g.objectid ENDS WITH "-512"\nRETURN p',
+            },
+            {
+                description: 'On-Prem Users synced to Entra Users with Entra Admin Roles (direct)',
+                cypher: 'MATCH p = (:User)-[:SyncedToEntraUser]->(:AZUser)-[:AZHasRole]->(:AZRole)\nRETURN p',
+            },
+            {
+                description: 'On-Prem Users synced to Entra Users with Entra Admin Roles (group delegated)',
+                cypher: 'MATCH p = (:User)-[:SyncedToEntraUser]->(:AZUser)-[:AZMemberOf]->(:AZGroup)-[:AZHasRole]->(:AZRole)\nRETURN p',
+            },
+            {
+                description: 'On-Prem Users synced to Entra Users with Azure RM Roles (direct)',
+                cypher: 'MATCH p = (:User)-[:SyncedToEntraUser]->(:AZUser)-[:AZOwner|AZUserAccessAdministrator|AZGetCertificates|AZGetKeys|AZGetSecrets|AZAvereContributor|AZKeyVaultContributor|AZContributor|AZVMAdminLogin|AZVMContributor|AZAKSContributor|AZAutmomationContributor|AZLogicAppContributor|AZWebsiteContributor]->(:AZBase)\nRETURN p',
+            },
+            {
+                description: 'On-Prem Users synced to Entra Users with Azure RM Roles (group delegated)',
+                cypher: 'MATCH p = (:User)-[:SyncedToEntraUser]->(:AZUser)-[:AZMemberOf]->(:AZGroup)-[:AZOwner|AZUserAccessAdministrator|AZGetCertificates|AZGetKeys|AZGetSecrets|AZAvereContributor|AZKeyVaultContributor|AZContributor|AZVMAdminLogin|AZVMContributor|AZAKSContributor|AZAutmomationContributor|AZLogicAppContributor|AZWebsiteContributor]->(:AZBase)\nRETURN p',
+            },
+            {
+                description: 'On-Prem Users synced to Entra Users that Own Entra Objects',
+                cypher: 'MATCH p = (:User)-[:SyncedToEntraUser]->(:AZUser)-[:AZOwns]->(:AZBase)\nRETURN p',
+            },
+            {
+                description: 'On-Prem Users synced to Entra Users with Entra Group Membership',
+                cypher: 'MATCH p = (:User)-[:SyncedToEntraUser]->(:AZUser)-[:AZMemberOf]->(:AZGroup)\nRETURN p',
+            },
+        ],
+    },
 ];

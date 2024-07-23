@@ -98,6 +98,7 @@ export type NodeParams = {
     size?: number;
     color?: string;
     borderColor?: string;
+    labelColor: string;
     type?: string;
     highlighted?: boolean;
     image?: string;
@@ -122,6 +123,7 @@ export type EdgeParams = {
     type: string;
     label: string;
     color: string;
+    backgroundColor: string;
     exploreGraphId: string;
     groupPosition?: number;
     groupSize?: number;

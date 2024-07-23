@@ -14,7 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button, Grid, TextField } from '@mui/material';
+import { Button } from '@bloodhoundenterprise/doodleui';
+import { Box, Grid, TextField } from '@mui/material';
 import React, { useState } from 'react';
 
 interface LoginFormProps {
@@ -62,33 +63,20 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSubmit, onLoginViaSAML, loading
                         onChange={(e) => setPassword(e.target.value)}
                     />
                 </Grid>
-                <Grid item xs={8}>
-                    <Button
-                        variant='contained'
-                        color='primary'
-                        size='large'
-                        type='submit'
-                        fullWidth
-                        disableElevation
-                        disabled={loading}>
-                        {loading ? 'LOGGING IN' : 'LOGIN'}
-                    </Button>
-                </Grid>
-                {onLoginViaSAML !== undefined && (
+                <Box display={'flex'} justifyContent={'center'} mt={'16px'} gap={'24px'}>
                     <Grid item xs={8}>
-                        <Button
-                            variant='contained'
-                            color='neutral'
-                            size='large'
-                            type='button'
-                            fullWidth
-                            disableElevation
-                            onClick={onLoginViaSAML}
-                            disabled={loading}>
-                            LOGIN VIA SSO
+                        <Button size='large' type='submit' disabled={loading}>
+                            {loading ? 'LOGGING IN' : 'LOGIN'}
                         </Button>
                     </Grid>
-                )}
+                    {onLoginViaSAML !== undefined && (
+                        <Grid item xs={8}>
+                            <Button size='large' type='button' onClick={onLoginViaSAML} disabled={loading}>
+                                LOGIN VIA SSO
+                            </Button>
+                        </Grid>
+                    )}
+                </Box>
             </Grid>
         </form>
     );

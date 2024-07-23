@@ -1,0 +1,90 @@
+# Copyright 2024 Specter Ops, Inc.
+#
+# Licensed under the Apache License, Version 2.0
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# SPDX-License-Identifier: Apache-2.0
+
+parameters:
+  - $ref: './../parameters/header.prefer.yaml'
+post:
+  operationId: Login
+  summary: Login to BloodHound
+  description: Login to BloodHound with user credentials or a one time password.
+  tags:
+    - Auth
+    - Community
+    - Enterprise
+  security: []
+  requestBody:
+    description: >
+      The request body for logging into the application. `secret` *or* `otp` is required, but not both.
+    required: true
+    content:
+      application/json:
+        schema:
+          type: object
+          required:
+            - login_method
+            - username
+          properties:
+            login_method:
+              description: The type of login. Currently only `secret` is supported.
+              type: string
+              enum:
+                - secret
+            username:
+              type: string
+            secret:
+              description: The password for the user. This field can be used instead of `otp`.
+              type: string
+            otp:
+              description: The One Time Password for a single login. This field can be used instead of `secret`
+              type: string
+        example:
+          login_method: secret
+          username: cool_user@bloodhoundenterprise.io
+          secret: MySup3rS3cr3tPassw0rd!!!
+  responses:
+    200:
+      description: OK
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                type: object
+                properties:
+                  user_id:
+                    type: string
+                    format: uuid
+                  auth_expired:
+                    type: boolean
+                  session_token:
+                    type: string
+                    format: jwt
+          example:
+            data:
+              user_id: 54623566-213a-4490-9c68-ac44c39b6590
+              auth_expired: false
+              session_token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiNTQ2MjM1NjYtMjEzYS00NDkwLTljNjgtYWM0NGMzOWI2NTkwIiwidXNlciI6ImNvb2xfdXNlckBibG9vZGhvdW5kZW50ZXJwcmlzZS5pbyIsImlhdCI6MTUxNjIzOTAyMn0.1WWo7XpE9a-v6MQ9tHC8ikxmvmS3PuD7bJyNi4hPr_Y
+    400:
+      $ref: './../responses/bad-request.yaml'
+    401:
+      $ref: './../responses/unauthorized.yaml'
+    403:
+      $ref: './../responses/forbidden.yaml'
+    429:
+      $ref: './../responses/too-many-requests.yaml'
+    500:
+      $ref: './../responses/internal-server-error.yaml'

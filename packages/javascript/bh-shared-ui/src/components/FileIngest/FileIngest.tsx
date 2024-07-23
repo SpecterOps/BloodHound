@@ -14,7 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Box, Button, Typography } from '@mui/material';
+import { Button } from '@bloodhoundenterprise/doodleui';
+import { Box, Typography } from '@mui/material';
 import { useEffect, useState } from 'react';
 import FileUploadDialog from '../FileUploadDialog';
 import { useListFileIngestJobs } from '../../hooks';
@@ -59,12 +60,7 @@ const FileIngest = () => {
                 }></PageWithTitle>
 
             <Box display='flex' justifyContent='flex-end' alignItems='center' minHeight='24px' my={2}>
-                <Button
-                    color='primary'
-                    variant='contained'
-                    disableElevation
-                    onClick={() => toggleFileUploadDialog()}
-                    data-testid='file-ingest_button-upload-files'>
+                <Button onClick={() => toggleFileUploadDialog()} data-testid='file-ingest_button-upload-files'>
                     Upload File(s)
                 </Button>
             </Box>

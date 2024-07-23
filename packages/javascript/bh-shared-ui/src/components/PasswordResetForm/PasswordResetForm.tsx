@@ -14,7 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Alert, AlertTitle, Box, Button, Grid, TextField } from '@mui/material';
+import { Button } from '@bloodhoundenterprise/doodleui';
+import { Alert, AlertTitle, Box, Grid, TextField } from '@mui/material';
 import React, { useState } from 'react';
 import { PASSWD_REQS, testPassword } from '../../utils';
 import { PutUserAuthSecretRequest } from 'js-client-library';
@@ -124,25 +125,16 @@ const PasswordResetForm: React.FC<PasswordResetFormProps> = ({ onSubmit, onCance
                     />
                 </Grid>
                 <Grid item xs={8}>
-                    <Button
-                        variant='contained'
-                        color='primary'
-                        size='large'
-                        type='submit'
-                        fullWidth
-                        disableElevation
-                        disabled={loading}>
+                    <Button size='large' type='submit' style={{ width: '100%' }} disabled={loading}>
                         {loading ? 'Resetting Password' : 'Reset Password'}
                     </Button>
                     <Box mt={2}>
                         <Button
-                            variant='contained'
-                            color='inherit'
+                            variant='tertiary'
                             size='large'
                             type='button'
                             onClick={handleCancel}
-                            fullWidth
-                            disableElevation
+                            style={{ width: '100%' }}
                             disabled={loading}>
                             Return to Login
                         </Button>

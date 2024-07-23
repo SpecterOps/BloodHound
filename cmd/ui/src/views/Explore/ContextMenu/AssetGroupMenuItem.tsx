@@ -14,13 +14,14 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button, Dialog, DialogActions, DialogContent, DialogTitle, MenuItem } from '@mui/material';
+import { Dialog, DialogActions, DialogContent, DialogTitle, MenuItem } from '@mui/material';
 import { apiClient, useNotifications } from 'bh-shared-ui';
 import { FC, useState } from 'react';
 import { useMutation, useQuery } from 'react-query';
 import { selectTierZeroAssetGroupId } from 'src/ducks/assetgroups/reducer';
 import { toggleTierZeroNode } from 'src/ducks/explore/actions';
 import { useAppDispatch, useAppSelector } from 'src/store';
+import { Button } from '@bloodhoundenterprise/doodleui';
 
 const AssetGroupMenuItem: FC<{ assetGroupId: number; assetGroupName: string }> = ({ assetGroupId, assetGroupName }) => {
     const { addNotification } = useNotifications();
@@ -142,10 +143,12 @@ const ConfirmationDialog: FC<{
             <DialogTitle>Confirm Selection</DialogTitle>
             <DialogContent>{dialogContent}</DialogContent>
             <DialogActions>
-                <Button autoFocus onClick={handleCancel}>
+                <Button variant='tertiary' onClick={handleCancel}>
                     Cancel
                 </Button>
-                <Button onClick={handleApply}>Ok</Button>
+                <Button variant='primary' onClick={handleApply}>
+                    Ok
+                </Button>
             </DialogActions>
         </Dialog>
     );

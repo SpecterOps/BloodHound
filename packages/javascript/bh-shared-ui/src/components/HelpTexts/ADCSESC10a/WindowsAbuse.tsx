@@ -90,11 +90,7 @@ const WindowsAbuse: FC = () => {
     );
 
     const step4 = (
-        <Box
-            sx={{
-                borderRadius: '4px',
-                backgroundColor: '#eee',
-            }}>
+        <Box>
             <Typography variant='body2'>
                 <b>Step 4: </b>Obtain a session as victim.
                 <br />
