@@ -20,9 +20,9 @@ ALTER TABLE IF EXISTS saved_queries
 CREATE TABLE IF NOT EXISTS saved_queries_permissions
 (
   id                BIGSERIAL PRIMARY KEY,
-  shared_to_user_id TEXT REFERENCES users (id),
-  query_id          BIGSERIAL REFERENCES saved_queries (id) NOT NULL,
-  global            BOOL                     DEFAULT FALSE  NOT NULL,
-  created_at        TIMESTAMP WITH TIME ZONE DEFAULT now(),
-  updated_at        TIMESTAMP WITH TIME ZONE DEFAULT now()
+  shared_to_user_id TEXT REFERENCES users (id) ON DELETE CASCADE DEFAULT NULL,
+  query_id          BIGSERIAL REFERENCES saved_queries (id) ON DELETE CASCADE  NOT NULL,
+  global            BOOL                                         DEFAULT FALSE NOT NULL,
+  created_at        TIMESTAMP WITH TIME ZONE                     DEFAULT now(),
+  updated_at        TIMESTAMP WITH TIME ZONE                     DEFAULT now()
 );
