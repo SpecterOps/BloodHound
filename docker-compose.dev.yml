@@ -21,6 +21,7 @@ services:
       - --api.insecure=true
       - --providers.docker
       - --providers.docker.exposedbydefault=false
+      - --entrypoints.web.address=:80
     ports:
       - ${WEB_PORT:-127.0.0.1:80}:80
       - ${TRAEFIK_PORT:-127.0.0.1:8000}:8080
@@ -119,7 +120,7 @@ services:
       graph-db:
         condition: service_healthy
 
-  test-idp:
+  testidp:
     profiles:
       - dev
       - api-only
@@ -129,12 +130,11 @@ services:
       dockerfile: testidp.Dockerfile
     command: "-c .air.testidp.toml ${AIR_FLAGS:-''}"
     ports:
-      - "${TEST_IDP_PORT:-127.0.0.1:8081}:8080"
+      - ${TEST_IDP_PORT:-127.0.0.1:8081}:8081
     labels:
       - traefik.enable=true
-      - traefik.http.routers.testidp.rule=Host(`${TEST_IDP_HOSTNAME:-testidp.localhost}`)
-      - traefik.http.routers.testidp.service=testidp
-      - traefik.http.services.testidp.loadbalancer.server.port=8081
+      - traefik.http.routers.testidp.rule=Host(`testidp.localhost`)
+      - traefik.http.routers.testidp.entrypoints=web
     volumes:
       - .:/bloodhound:routers
       - go-pkg-mod:/go/pkg/mod
