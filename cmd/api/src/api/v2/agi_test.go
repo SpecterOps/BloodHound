@@ -25,7 +25,6 @@ import (
 	"net/url"
 	"testing"
 
-	"github.com/specterops/bloodhound/src/database"
 	"github.com/gofrs/uuid"
 	"github.com/gorilla/mux"
 	"github.com/specterops/bloodhound/dawgs/graph"
@@ -40,6 +39,7 @@ import (
 	"github.com/specterops/bloodhound/src/api/v2/apitest"
 	"github.com/specterops/bloodhound/src/auth"
 	"github.com/specterops/bloodhound/src/ctx"
+	"github.com/specterops/bloodhound/src/database"
 	dbmocks "github.com/specterops/bloodhound/src/database/mocks"
 	"github.com/specterops/bloodhound/src/model"
 	queriesMocks "github.com/specterops/bloodhound/src/queries/mocks"
@@ -417,7 +417,7 @@ func TestResources_CreateAssetGroup(t *testing.T) {
 		WithBody(jsonBody).
 		OnHandlerFunc(resources.CreateAssetGroup).
 		Require().
-		ResponseStatusCode(http.StatusBadRequest).		
+		ResponseStatusCode(http.StatusBadRequest).
 		ResponseJSONBody(api.ErrorWrapper{
 			HTTPStatus: http.StatusBadRequest,
 			Errors: []api.ErrorDetails{{
@@ -436,7 +436,7 @@ func TestResources_CreateAssetGroup(t *testing.T) {
 		WithBody(jsonBody).
 		OnHandlerFunc(resources.CreateAssetGroup).
 		Require().
-		ResponseStatusCode(http.StatusBadRequest).		
+		ResponseStatusCode(http.StatusBadRequest).
 		ResponseJSONBody(api.ErrorWrapper{
 			HTTPStatus: http.StatusBadRequest,
 			Errors: []api.ErrorDetails{{
@@ -489,7 +489,7 @@ func TestResources_CreateAssetGroup(t *testing.T) {
 		OnHandlerFunc(resources.CreateAssetGroup).
 		Require().
 		ResponseStatusCode(http.StatusInternalServerError)
-	
+
 	// Test duplicate name
 	mockDB.EXPECT().CreateAssetGroup(gomock.Any(), "DuplicateName", gomock.Any(), false).Return(model.AssetGroup{}, fmt.Errorf("%w: %v", database.ErrDuplicateAGName, errors.New("ERROR: duplicate key value violates unique constraint \"asset_groups_name_key\" (SQLSTATE 23505)")))
 
@@ -1097,6 +1097,40 @@ func TestResources_ListAssetGroupCollections(t *testing.T) {
 					apitest.StatusCode(output, http.StatusOK)
 				},
 			},
+			{
+				Name: "Parse Query Param Filters Error",
+				Input: func(input *apitest.Input) {
+					apitest.AddQueryParam(input, "object_id", "invalidPredicate:foo")
+					apitest.SetURLVar(input, api.URIPathVariableAssetGroupID, "1")
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusBadRequest)
+					apitest.BodyContains(output, "there are errors in the query parameter filters specified")
+				},
+			},
+			{
+				Name: "Invalid Filter Predicates",
+				Input: func(input *apitest.Input) {
+					apitest.AddQueryParam(input, "invalidFilter", "eq:foo")
+					apitest.SetURLVar(input, api.URIPathVariableAssetGroupID, "1")
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusBadRequest)
+					apitest.BodyContains(output, "the specified column cannot be filtered")
+				},
+			},
+			{
+				Name: "Invalid Operator",
+				Input: func(input *apitest.Input) {
+					apitest.AddQueryParam(input, "object_id", "eq:foo")
+					apitest.AddQueryParam(input, "name", "lte:name")
+					apitest.SetURLVar(input, api.URIPathVariableAssetGroupID, "1")
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusBadRequest)
+					apitest.BodyContains(output, "the specified column cannot be filtered")
+				},
+			},
 		})
 }
 
@@ -1389,41 +1423,37 @@ func TestResources_ListAssetGroupMembers(t *testing.T) {
 				},
 			},
 			{
-				Name: "SuccessFiltered",
+				Name: "Parse Query Param Filters Error",
 				Input: func(input *apitest.Input) {
-					apitest.AddQueryParam(input, "object_id", "eq:a")
+					apitest.AddQueryParam(input, "object_id", "invalidPredicate:foo")
 					apitest.SetURLVar(input, api.URIPathVariableAssetGroupID, "1")
 				},
-				Setup: func() {
-					mockDB.EXPECT().
-						GetAssetGroup(gomock.Any(), gomock.Any()).
-						Return(assetGroup, nil)
-					mockGraph.EXPECT().
-						GetAssetGroupNodes(gomock.Any(), gomock.Any()).
-						Return(graph.NodeSet{
-							1: &graph.Node{
-								ID:    1,
-								Kinds: graph.Kinds{ad.Entity, ad.Domain},
-								Properties: &graph.Properties{
-									Map: map[string]any{common.ObjectID.String(): "a", common.Name.String(): "a", ad.DomainSID.String(): "a"},
-								},
-							},
-							2: &graph.Node{
-								ID:    2,
-								Kinds: graph.Kinds{ad.Entity, ad.Domain},
-								Properties: &graph.Properties{
-									Map: map[string]any{common.ObjectID.String(): "b", common.Name.String(): "b", ad.DomainSID.String(): "b"},
-								},
-							}}, nil)
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusBadRequest)
+					apitest.BodyContains(output, "there are errors in the query parameter filters specified")
+				},
+			},
+			{
+				Name: "Invalid Filter Predicates",
+				Input: func(input *apitest.Input) {
+					apitest.AddQueryParam(input, "invalidFilter", "eq:foo")
+					apitest.SetURLVar(input, api.URIPathVariableAssetGroupID, "1")
 				},
 				Test: func(output apitest.Output) {
-					apitest.StatusCode(output, http.StatusOK)
-
-					result := api.ListAssetGroupMembersResponse{}
-					apitest.UnmarshalData(output, &result)
-
-					require.Equal(t, 1, len(result.Members))
-					require.Equal(t, "a", result.Members[0].ObjectID)
+					apitest.StatusCode(output, http.StatusBadRequest)
+					apitest.BodyContains(output, "the specified column cannot be filtered")
+				},
+			},
+			{
+				Name: "Invalid Operator",
+				Input: func(input *apitest.Input) {
+					apitest.AddQueryParam(input, "object_id", "eq:foo")
+					apitest.AddQueryParam(input, "name", "lte:name")
+					apitest.SetURLVar(input, api.URIPathVariableAssetGroupID, "1")
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusBadRequest)
+					apitest.BodyContains(output, "the specified filter predicate is not supported for this column")
 				},
 			},
 		})
