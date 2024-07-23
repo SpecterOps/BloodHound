@@ -23,6 +23,16 @@ import (
 	"gorm.io/gorm"
 )
 
+type SavedQueries interface {
+	ListSavedQueries(ctx context.Context, userID uuid.UUID, order string, filter model.SQLFilter, skip, limit int) (model.SavedQueries, int, error)
+	CreateSavedQuery(ctx context.Context, userID uuid.UUID, name string, query string, description string) (model.SavedQuery, error)
+	DeleteSavedQuery(ctx context.Context, id int) error
+	SavedQueryBelongsToUser(ctx context.Context, userID uuid.UUID, savedQueryID int) (bool, error)
+	DeleteAssetGroupSelectorsForAssetGroups(ctx context.Context, assetGroupIds []int) error
+	SearchSavedQueries(ctx context.Context, userID uuid.UUID, filter model.SQLFilter, skip, limit int, order string, name string, query string, description string) (model.SavedQueries, int, error)
+	GetSavedQueryPermissions(ctx context.Context, queryID int64) model.SavedQueriesPermissions
+}
+
 func (s *BloodhoundDB) ListSavedQueries(ctx context.Context, userID uuid.UUID, order string, filter model.SQLFilter, skip, limit int) (model.SavedQueries, int, error) {
 	var (
 		queries model.SavedQueries
@@ -50,14 +60,21 @@ func (s *BloodhoundDB) ListSavedQueries(ctx context.Context, userID uuid.UUID, o
 	return queries, int(count), CheckError(result)
 }
 
-func (s *BloodhoundDB) CreateSavedQuery(ctx context.Context, userID uuid.UUID, name string, query string) (model.SavedQuery, error) {
+func (s *BloodhoundDB) CreateSavedQuery(ctx context.Context, userID uuid.UUID, name string, query string, description string) (model.SavedQuery, error) {
 	savedQuery := model.SavedQuery{
-		UserID: userID.String(),
-		Name:   name,
-		Query:  query,
+		UserID:      userID.String(),
+		Name:        name,
+		Query:       query,
+		Description: description,
 	}
 
-	return savedQuery, CheckError(s.db.WithContext(ctx).Create(&savedQuery))
+	// Create the saved query as well as add the permission for the creator
+	if result := s.db.WithContext(ctx).Create(&savedQuery); result.Error != nil {
+		return model.SavedQuery{}, result.Error
+	} else if _, err := s.CreateSavedQueryPermissionToUser(ctx, savedQuery.ID, userID); err != nil {
+		return savedQuery, err
+	}
+	return savedQuery, nil
 }
 
 func (s *BloodhoundDB) DeleteSavedQuery(ctx context.Context, id int) error {

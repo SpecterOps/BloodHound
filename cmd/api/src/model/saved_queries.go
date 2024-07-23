@@ -19,9 +19,10 @@ package model
 import "fmt"
 
 type SavedQuery struct {
-	UserID string `json:"user_id" gorm:"index:,unique,composite:compositeIndex"`
-	Name   string `json:"name" gorm:"index:,unique,composite:compositeIndex"`
-	Query  string `json:"query"`
+	UserID      string `json:"user_id" gorm:"index:,unique,composite:compositeIndex"`
+	Name        string `json:"name" gorm:"index:,unique,composite:compositeIndex"`
+	Query       string `json:"query"`
+	Description string `json:"description"`
 
 	BigSerial
 }
@@ -45,9 +46,10 @@ func (s SavedQueries) IsSortable(column string) bool {
 
 func (s SavedQueries) ValidFilters() map[string][]FilterOperator {
 	return map[string][]FilterOperator{
-		"user_id": {Equals, NotEquals},
-		"name":    {Equals, NotEquals},
-		"query":   {Equals, NotEquals},
+		"user_id":     {Equals, NotEquals},
+		"name":        {Equals, NotEquals},
+		"query":       {Equals, NotEquals},
+		"description": {Equals, NotEquals},
 	}
 }
 
@@ -74,7 +76,8 @@ func (s SavedQueries) GetValidFilterPredicatesAsStrings(column string) ([]string
 func (s SavedQueries) IsString(column string) bool {
 	switch column {
 	case "name",
-		"query":
+		"query",
+		"descriptions":
 		return true
 	default:
 		return false
