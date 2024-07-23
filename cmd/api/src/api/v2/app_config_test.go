@@ -17,7 +17,11 @@
 package v2_test
 
 import (
+	"bytes"
+	"encoding/json"
+	"fmt"
 	"net/http"
+	"net/http/httptest"
 	"testing"
 
 	"go.uber.org/mock/gomock"
@@ -125,4 +129,89 @@ func Test_GetApplicationConfigurations(t *testing.T) {
 		ResponseJSONBody(v2.ListAppConfigParametersResponse{
 			Data: expectedAppConfigs,
 		})
+}
+
+func Test_SetApplicationConfiguration(t *testing.T) {
+	var (
+		mockCtrl  = gomock.NewController(t)
+		mockDB    = mocks.NewMockDatabase(mockCtrl)
+		resources = v2.Resources{DB: mockDB}
+
+		appConfigRequest = v2.AppConfigUpdateRequest{
+			Key: appcfg.PasswordExpirationWindow,
+			Value: map[string]any{
+				"setting": "setting",
+			},
+		}
+	)
+	defer mockCtrl.Finish()
+
+	t.Run("No payload", func(t *testing.T) {
+		req := httptest.NewRequest(http.MethodPost, "/api/v2/config", nil)
+		req.Header.Set("Content-Type", "application/json")
+		rec := httptest.NewRecorder()
+
+		resources.SetApplicationConfiguration(rec, req)
+
+		if status := rec.Code; status != http.StatusBadRequest {
+			t.Errorf("handler returned wrong status code: got %v want %v",
+				status, http.StatusBadRequest)
+		}
+	})
+
+	t.Run("Invalid Parameters", func(t *testing.T) {
+		invalidRequest := v2.AppConfigUpdateRequest{
+			Key: "invalidKey",
+			Value: map[string]any{
+				"someKey": "someValue",
+			},
+		}
+		reqBody, _ := json.Marshal(invalidRequest)
+		req := httptest.NewRequest(http.MethodPost, "/api/v2/config", bytes.NewBuffer(reqBody))
+		req.Header.Set("Content-Type", "application/json")
+		rec := httptest.NewRecorder()
+
+		resources.SetApplicationConfiguration(rec, req)
+
+		if status := rec.Code; status != http.StatusBadRequest {
+			t.Errorf("handler returned wrong status code: got %v want %v",
+				status, http.StatusBadRequest)
+		}
+	})
+
+	t.Run("Error from DB", func(t *testing.T) {
+		mockDB.EXPECT().
+			SetConfigurationParameter(gomock.Any(), gomock.Any()).
+			Return(fmt.Errorf("database error"))
+
+		reqBody, _ := json.Marshal(appConfigRequest)
+		req := httptest.NewRequest(http.MethodPost, "/api/v2/config", bytes.NewBuffer(reqBody))
+		req.Header.Set("Content-Type", "application/json")
+		rec := httptest.NewRecorder()
+
+		resources.SetApplicationConfiguration(rec, req)
+
+		if status := rec.Code; status != http.StatusInternalServerError {
+			t.Errorf("handler returned wrong status code: got %v want %v",
+				status, http.StatusInternalServerError)
+		}
+	})
+
+	t.Run("Success", func(t *testing.T) {
+		mockDB.EXPECT().
+			SetConfigurationParameter(gomock.Any(), gomock.Any()).
+			Return(nil)
+
+		reqBody, _ := json.Marshal(appConfigRequest)
+		req := httptest.NewRequest(http.MethodPost, "/api/v2/config", bytes.NewBuffer(reqBody))
+		req.Header.Set("Content-Type", "application/json")
+		rec := httptest.NewRecorder()
+
+		resources.SetApplicationConfiguration(rec, req)
+
+		if status := rec.Code; status != http.StatusOK {
+			t.Errorf("handler returned wrong status code: got %v want %v",
+				status, http.StatusOK)
+		}
+	})
 }
