@@ -41,7 +41,7 @@ services:
       test:
         [
           "CMD-SHELL",
-          "pg_isready -U ${BH_POSTGRES_USER:-bloodhound} -d 'dbname=${BH_POSTGRES_DB:-bloodhound}' -h 127.0.0.1 -p 5432"
+          "pg_isready -U ${BH_POSTGRES_USER:-bloodhound} -d 'dbname=${BH_POSTGRES_DB:-bloodhound}' -h 127.0.0.1 -p 5432",
         ]
       interval: 10s
       timeout: 5s
@@ -88,10 +88,7 @@ services:
       - traefik.http.services.neo4jbrowser.loadbalancer.server.port=7474
     healthcheck:
       test:
-        [
-          "CMD-SHELL",
-          "wget -O /dev/null -q http://localhost:7474 || exit 1"
-        ]
+        ["CMD-SHELL", "wget -O /dev/null -q http://localhost:7474 || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -121,6 +118,29 @@ services:
         condition: service_healthy
       graph-db:
         condition: service_healthy
+
+  test-idp:
+    profiles:
+      - dev
+      - api-only
+      - debug-api
+    build:
+      context: tools/docker-compose
+      dockerfile: testidp.Dockerfile
+    command: "-c .air.testidp.toml ${AIR_FLAGS:-''}"
+    ports:
+      - "${TEST_IDP_PORT:-127.0.0.1:8081}:8080"
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.testidp.rule=Host(`${TEST_IDP_HOSTNAME:-testidp.localhost}`)
+      - traefik.http.routers.testidp.service=testidp
+      - traefik.http.services.testidp.loadbalancer.server.port=8081
+    volumes:
+      - .:/bloodhound:routers
+      - go-pkg-mod:/go/pkg/mod
+    secrets:
+      - tls.crt
+      - tls.key
 
   bh-ui:
     profiles:
@@ -173,3 +193,9 @@ volumes:
   postgres-data:
   go-pkg-mod:
   ui-cache:
+
+secrets:
+  tls.crt:
+    file: ./tools/docker-compose/configs/tls.crt
+  tls.key:
+    file: ./tools/docker-compose/configs/tls.key
