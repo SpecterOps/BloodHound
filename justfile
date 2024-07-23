@@ -100,9 +100,9 @@ update-favicon:
 imagemagick *ARGS:
   @docker run -it --rm -v {{justfile_directory()}}:/workdir -w /workdir --entrypoint magick cblunt/imagemagick {{ARGS}}
 
-# generates the openapi json doc from the yaml source (requires redocly to be installed)
+# generates the openapi json doc from the yaml source
 gen-spec:
-  @cd packages/go/openapi && redocly bundle src/openapi.yaml --output doc/openapi.json
+  @npx @redocly/cli@1.18.1 bundle {{absolute_path('./packages/go/openapi/src/openapi.yaml')}} --output {{absolute_path('packages/go/openapi/doc/openapi.json')}}
 
 # run git pruning on merged branches to clean up local workspace (run with `nuclear` to clean up orphaned branches)
 prune-my-branches nuclear='no':
