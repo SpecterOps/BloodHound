@@ -18,9 +18,9 @@ package database
 
 import (
 	"context"
-	"time"
-	"strings"
 	"fmt"
+	"strings"
+	"time"
 
 	"gorm.io/gorm"
 
@@ -86,47 +86,74 @@ func (s *BloodhoundDB) DeleteAssetGroup(ctx context.Context, assetGroup model.As
 	})
 }
 
+func (s *BloodhoundDB) getAssetGroupMemberCount(ctx context.Context, assetGroupID int32) (int, error) {
+    var (
+        latestCollection model.AssetGroupCollection
+        result           = s.preload(model.AssetGroupCollectionAssociations()).
+                             WithContext(ctx).
+                             Where("asset_group_id = ?", assetGroupID).
+                             Order("created_at DESC").
+                             First(&latestCollection)
+    )
+
+    if result.Error != nil {
+        if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+            return 0, nil
+        }
+        return 0, fmt.Errorf("error getting latest collection for asset group ID %d: %w", assetGroupID, result.Error)
+    }
+
+    return len(latestCollection.Entries), nil
+}
+
 func (s *BloodhoundDB) GetAssetGroup(ctx context.Context, id int32) (model.AssetGroup, error) {
-	var (
-		assetGroup model.AssetGroup
-		result     = s.preload(model.AssetGroupAssociations()).WithContext(ctx).First(&assetGroup, id)
-	)
-	return assetGroup, CheckError(result)
+    var (
+        assetGroup model.AssetGroup
+        result     = s.preload(model.AssetGroupAssociations()).WithContext(ctx).First(&assetGroup, id)
+    )
+
+    if result.Error != nil {
+        return assetGroup, CheckError(result)
+    }
+
+    if memberCount, err := s.getAssetGroupMemberCount(ctx, id); err != nil {
+        return assetGroup, err
+    } else {
+        assetGroup.MemberCount = memberCount
+    }
+
+    return assetGroup, nil
 }
 
 func (s *BloodhoundDB) GetAllAssetGroups(ctx context.Context, order string, filter model.SQLFilter) (model.AssetGroups, error) {
-	var (
-		assetGroups model.AssetGroups
-		result      *gorm.DB
-	)
+    var (
+        assetGroups model.AssetGroups
+        result      *gorm.DB
+    )
 
-	if order != "" && filter.SQLString == "" {
-		result = s.preload(model.AssetGroupAssociations()).WithContext(ctx).Order(order).Find(&assetGroups)
-	} else if order != "" && filter.SQLString != "" {
-		result = s.preload(model.AssetGroupAssociations()).WithContext(ctx).Where(filter.SQLString, filter.Params).Order(order).Find(&assetGroups)
-	} else if order == "" && filter.SQLString != "" {
-		result = s.preload(model.AssetGroupAssociations()).WithContext(ctx).Where(filter.SQLString, filter.Params).Find(&assetGroups)
-	} else {
-		result = s.preload(model.AssetGroupAssociations()).WithContext(ctx).Find(&assetGroups)
-	}
+    if order != "" && filter.SQLString == "" {
+        result = s.preload(model.AssetGroupAssociations()).WithContext(ctx).Order(order).Find(&assetGroups)
+    } else if order != "" && filter.SQLString != "" {
+        result = s.preload(model.AssetGroupAssociations()).WithContext(ctx).Where(filter.SQLString, filter.Params).Order(order).Find(&assetGroups)
+    } else if order == "" && filter.SQLString != "" {
+        result = s.preload(model.AssetGroupAssociations()).WithContext(ctx).Where(filter.SQLString, filter.Params).Find(&assetGroups)
+    } else {
+        result = s.preload(model.AssetGroupAssociations()).WithContext(ctx).Find(&assetGroups)
+    }
 
-	if result.Error != nil {
-		return assetGroups, CheckError(result)
-	}
+    if result.Error != nil {
+        return assetGroups, CheckError(result)
+    }
 
-	for idx, assetGroup := range assetGroups {
-		if latestCollection, err := s.GetLatestAssetGroupCollection(ctx, assetGroup.ID); err != nil {
-			if errors.Is(err, ErrNotFound) {
-				assetGroup.MemberCount = 0
-			} else {
-				return assetGroups, err
-			}
-		} else {
-			assetGroups[idx].MemberCount = len(latestCollection.Entries)
-		}
-	}
+    for idx, assetGroup := range assetGroups {
+        if memberCount, err := s.getAssetGroupMemberCount(ctx, assetGroup.ID); err != nil {
+            return assetGroups, fmt.Errorf("error getting member count for asset group %s: %w", assetGroup.Name, err)
+        } else {
+            assetGroups[idx].MemberCount = memberCount
+        }
+    }
 
-	return assetGroups, nil
+    return assetGroups, nil
 }
 
 func (s *BloodhoundDB) SweepAssetGroupCollections(ctx context.Context) {
