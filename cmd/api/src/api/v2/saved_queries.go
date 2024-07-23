@@ -101,7 +101,7 @@ func (s Resources) ListSavedQueries(response http.ResponseWriter, request *http.
 type CreateSavedQueryRequest struct {
 	Query       string `json:"query"`
 	Name        string `json:"name"`
-	Description string `json:"description"`
+	Description string `json:"description,omitempty"`
 }
 
 func (s Resources) CreateSavedQuery(response http.ResponseWriter, request *http.Request) {
