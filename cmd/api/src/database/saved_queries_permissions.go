@@ -28,6 +28,7 @@ type SavedQueriesPermissionsData interface {
 	CreateSavedQueryPermissionToGlobal(ctx context.Context, queryID int64) (model.SavedQueriesPermissions, error)
 	GetSavedQueriesSharedWithUser(ctx context.Context, userID int64) (model.SavedQueries, error)
 	CheckUserHasPermissionToSavedQuery(ctx context.Context, queryID int64, userID uuid.UUID) (bool, error)
+	GetPermissionsForSavedQuery(ctx context.Context, queryID int64) (model.SavedQueriesPermissions, error)
 }
 
 // CreateSavedQueryPermissionToUser creates a new entry to the SavedQueriesPermissions table granting a provided user id to access a provided query
@@ -66,4 +67,11 @@ func (s *BloodhoundDB) CheckUserHasPermissionToSavedQuery(ctx context.Context, q
 	result := s.db.WithContext(ctx).First(&userHasPermission, "user_id = ? AND query_id = ?", userID, queryID)
 
 	return userHasPermission, CheckError(result)
+}
+
+// GetPermissionsForSavedQuery gets all permissions associated with the provided query ID
+func (s *BloodhoundDB) GetPermissionsForSavedQuery(ctx context.Context, queryID int64) (model.SavedQueriesPermissions, error) {
+	queryPermissions := model.SavedQueriesPermissions{QueryID: queryID}
+	result := s.db.WithContext(ctx).Where("query_id = ?", queryID).Find(&queryPermissions)
+	return queryPermissions, CheckError(result)
 }

@@ -29,8 +29,6 @@ type SavedQueriesData interface {
 	DeleteSavedQuery(ctx context.Context, id int) error
 	SavedQueryBelongsToUser(ctx context.Context, userID uuid.UUID, savedQueryID int) (bool, error)
 	DeleteAssetGroupSelectorsForAssetGroups(ctx context.Context, assetGroupIds []int) error
-	SearchSavedQueries(ctx context.Context, userID uuid.UUID, filter model.SQLFilter, skip, limit int, order string, name string, query string, description string) (model.SavedQueries, int, error)
-	GetSavedQueryPermissions(ctx context.Context, queryID int64) model.SavedQueriesPermissions
 }
 
 func (s *BloodhoundDB) ListSavedQueries(ctx context.Context, userID uuid.UUID, order string, filter model.SQLFilter, skip, limit int) (model.SavedQueries, int, error) {

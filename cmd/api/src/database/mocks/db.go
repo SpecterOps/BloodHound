@@ -1026,6 +1026,21 @@ func (mr *MockDatabaseMockRecorder) GetPermission(arg0, arg1 interface{}) *gomoc
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPermission", reflect.TypeOf((*MockDatabase)(nil).GetPermission), arg0, arg1)
 }
 
+// GetPermissionsForSavedQuery mocks base method.
+func (m *MockDatabase) GetPermissionsForSavedQuery(arg0 context.Context, arg1 int64) (model.SavedQueriesPermissions, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetPermissionsForSavedQuery", arg0, arg1)
+	ret0, _ := ret[0].(model.SavedQueriesPermissions)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetPermissionsForSavedQuery indicates an expected call of GetPermissionsForSavedQuery.
+func (mr *MockDatabaseMockRecorder) GetPermissionsForSavedQuery(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPermissionsForSavedQuery", reflect.TypeOf((*MockDatabase)(nil).GetPermissionsForSavedQuery), arg0, arg1)
+}
+
 // GetRole mocks base method.
 func (m *MockDatabase) GetRole(arg0 context.Context, arg1 int32) (model.Role, error) {
 	m.ctrl.T.Helper()
@@ -1099,20 +1114,6 @@ func (m *MockDatabase) GetSavedQueriesSharedWithUser(arg0 context.Context, arg1 
 func (mr *MockDatabaseMockRecorder) GetSavedQueriesSharedWithUser(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSavedQueriesSharedWithUser", reflect.TypeOf((*MockDatabase)(nil).GetSavedQueriesSharedWithUser), arg0, arg1)
-}
-
-// GetSavedQueryPermissions mocks base method.
-func (m *MockDatabase) GetSavedQueryPermissions(arg0 context.Context, arg1 int64) model.SavedQueriesPermissions {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetSavedQueryPermissions", arg0, arg1)
-	ret0, _ := ret[0].(model.SavedQueriesPermissions)
-	return ret0
-}
-
-// GetSavedQueryPermissions indicates an expected call of GetSavedQueryPermissions.
-func (mr *MockDatabaseMockRecorder) GetSavedQueryPermissions(arg0, arg1 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSavedQueryPermissions", reflect.TypeOf((*MockDatabase)(nil).GetSavedQueryPermissions), arg0, arg1)
 }
 
 // GetTimeRangedAssetGroupCollections mocks base method.
@@ -1380,22 +1381,6 @@ func (m *MockDatabase) SavedQueryBelongsToUser(arg0 context.Context, arg1 uuid.U
 func (mr *MockDatabaseMockRecorder) SavedQueryBelongsToUser(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SavedQueryBelongsToUser", reflect.TypeOf((*MockDatabase)(nil).SavedQueryBelongsToUser), arg0, arg1, arg2)
-}
-
-// SearchSavedQueries mocks base method.
-func (m *MockDatabase) SearchSavedQueries(arg0 context.Context, arg1 uuid.UUID, arg2 model.SQLFilter, arg3, arg4 int, arg5, arg6, arg7, arg8 string) (model.SavedQueries, int, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SearchSavedQueries", arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8)
-	ret0, _ := ret[0].(model.SavedQueries)
-	ret1, _ := ret[1].(int)
-	ret2, _ := ret[2].(error)
-	return ret0, ret1, ret2
-}
-
-// SearchSavedQueries indicates an expected call of SearchSavedQueries.
-func (mr *MockDatabaseMockRecorder) SearchSavedQueries(arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SearchSavedQueries", reflect.TypeOf((*MockDatabase)(nil).SearchSavedQueries), arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8)
 }
 
 // SetConfigurationParameter mocks base method.
