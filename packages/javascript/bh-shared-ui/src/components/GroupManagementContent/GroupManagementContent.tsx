@@ -136,7 +136,7 @@ const GroupManagementContent: FC<{
             <Grid container height={'100%'} spacing={2}>
                 <Grid item xs={3} md={3}>
                     <Box component={Paper} elevation={0} marginBottom={1}>
-                        <Grid container>
+                        <Grid container sx={{ bgcolor: theme.palette.neutral.secondary }}>
                             <Grid item sm={4} sx={selectorLabelStyles} alignItems={'center'} paddingLeft={3}>
                                 <Typography variant='button'>Group:</Typography>
                             </Grid>

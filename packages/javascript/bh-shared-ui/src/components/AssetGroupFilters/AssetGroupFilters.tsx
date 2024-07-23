@@ -27,7 +27,7 @@ import {
     Paper,
     Select,
 } from '@mui/material';
-import { Theme } from '@mui/material/styles';
+import { Theme, useTheme } from '@mui/material/styles';
 import makeStyles from '@mui/styles/makeStyles';
 import { AssetGroupMemberCounts } from 'js-client-library';
 import { AssetGroupMemberParams } from 'js-client-library/dist/types';
@@ -70,6 +70,7 @@ interface Props {
 const AssetGroupFilters: FC<Props> = ({ filterParams, handleFilterChange, memberCounts = { counts: {} } }) => {
     const [displayFilters, setDisplayFilters] = useState(false);
 
+    const theme = useTheme();
     const classes = useStyles();
 
     const handleClearFilters = () => {
@@ -85,6 +86,7 @@ const AssetGroupFilters: FC<Props> = ({ filterParams, handleFilterChange, member
         <Box
             p={1}
             className={activeStyles}
+            bgcolor={theme.palette.neutral.secondary}
             component={Paper}
             elevation={0}
             marginBottom={1}
