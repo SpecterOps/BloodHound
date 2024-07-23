@@ -18,11 +18,11 @@ package datapipe_test
 
 import (
 	"encoding/json"
-	"github.com/specterops/bloodhound/src/model/ingest"
 	"strings"
 	"testing"
 
 	"github.com/specterops/bloodhound/src/daemons/datapipe"
+	"github.com/specterops/bloodhound/src/model/ingest"
 	"github.com/stretchr/testify/assert"
 )
 

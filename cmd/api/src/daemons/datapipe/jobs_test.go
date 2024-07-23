@@ -18,12 +18,13 @@ package datapipe_test
 
 import (
 	"context"
+	"testing"
+
 	"github.com/specterops/bloodhound/src/daemons/datapipe"
 	"github.com/specterops/bloodhound/src/database/mocks"
 	"github.com/specterops/bloodhound/src/model"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
-	"testing"
 )
 
 func TestHasJobsWaitingForAnalysis(t *testing.T) {

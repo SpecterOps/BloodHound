@@ -25,7 +25,6 @@ import (
 	"net/url"
 	"testing"
 
-	"github.com/specterops/bloodhound/src/database"
 	"github.com/gofrs/uuid"
 	"github.com/gorilla/mux"
 	"github.com/specterops/bloodhound/dawgs/graph"
@@ -40,6 +39,7 @@ import (
 	"github.com/specterops/bloodhound/src/api/v2/apitest"
 	"github.com/specterops/bloodhound/src/auth"
 	"github.com/specterops/bloodhound/src/ctx"
+	"github.com/specterops/bloodhound/src/database"
 	dbmocks "github.com/specterops/bloodhound/src/database/mocks"
 	"github.com/specterops/bloodhound/src/model"
 	queriesMocks "github.com/specterops/bloodhound/src/queries/mocks"
@@ -417,7 +417,7 @@ func TestResources_CreateAssetGroup(t *testing.T) {
 		WithBody(jsonBody).
 		OnHandlerFunc(resources.CreateAssetGroup).
 		Require().
-		ResponseStatusCode(http.StatusBadRequest).		
+		ResponseStatusCode(http.StatusBadRequest).
 		ResponseJSONBody(api.ErrorWrapper{
 			HTTPStatus: http.StatusBadRequest,
 			Errors: []api.ErrorDetails{{
@@ -436,7 +436,7 @@ func TestResources_CreateAssetGroup(t *testing.T) {
 		WithBody(jsonBody).
 		OnHandlerFunc(resources.CreateAssetGroup).
 		Require().
-		ResponseStatusCode(http.StatusBadRequest).		
+		ResponseStatusCode(http.StatusBadRequest).
 		ResponseJSONBody(api.ErrorWrapper{
 			HTTPStatus: http.StatusBadRequest,
 			Errors: []api.ErrorDetails{{
@@ -489,7 +489,7 @@ func TestResources_CreateAssetGroup(t *testing.T) {
 		OnHandlerFunc(resources.CreateAssetGroup).
 		Require().
 		ResponseStatusCode(http.StatusInternalServerError)
-	
+
 	// Test duplicate name
 	mockDB.EXPECT().CreateAssetGroup(gomock.Any(), "DuplicateName", gomock.Any(), false).Return(model.AssetGroup{}, fmt.Errorf("%w: %v", database.ErrDuplicateAGName, errors.New("ERROR: duplicate key value violates unique constraint \"asset_groups_name_key\" (SQLSTATE 23505)")))
 

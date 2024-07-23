@@ -19,6 +19,7 @@ package pgtransition
 import (
 	"bytes"
 	"fmt"
+
 	"github.com/specterops/bloodhound/cypher/analyzer"
 	"github.com/specterops/bloodhound/cypher/backend/pgsql"
 	"github.com/specterops/bloodhound/cypher/model"

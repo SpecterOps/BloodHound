@@ -17,10 +17,11 @@
 package model_test
 
 import (
+	"testing"
+
 	"github.com/specterops/bloodhound/src/model"
 	"github.com/stretchr/testify/require"
 	"gorm.io/gorm/utils"
-	"testing"
 )
 
 func TestSavedQueries_IsSortable(t *testing.T) {

@@ -17,10 +17,11 @@
 package pg
 
 import (
-	"github.com/specterops/bloodhound/dawgs/drivers"
-	"github.com/specterops/bloodhound/log"
 	"regexp"
 	"sync"
+
+	"github.com/specterops/bloodhound/dawgs/drivers"
+	"github.com/specterops/bloodhound/log"
 )
 
 type IterationOptions interface {

@@ -18,19 +18,19 @@ package toolapi
 
 import (
 	"context"
-	"github.com/specterops/bloodhound/dawgs/graph"
-	"github.com/specterops/bloodhound/errors"
-	"github.com/specterops/bloodhound/src/bootstrap"
-	"github.com/specterops/bloodhound/src/database"
 	"net/http"
 	"net/http/pprof"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/specterops/bloodhound/dawgs/graph"
+	"github.com/specterops/bloodhound/errors"
 	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/src/api/tools"
+	"github.com/specterops/bloodhound/src/bootstrap"
 	"github.com/specterops/bloodhound/src/config"
+	"github.com/specterops/bloodhound/src/database"
 )
 
 // Daemon holds data relevant to the tools API daemon

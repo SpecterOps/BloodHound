@@ -20,6 +20,8 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"os"
+
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/src/bootstrap"
@@ -27,7 +29,6 @@ import (
 	"github.com/specterops/bloodhound/src/database"
 	"github.com/specterops/bloodhound/src/services"
 	"github.com/specterops/bloodhound/src/version"
-	"os"
 
 	// This import is required by swaggo
 	_ "github.com/specterops/bloodhound/src/docs"

@@ -343,45 +343,45 @@ func getDomainForCertTemplate(tx graph.Transaction, certTemplate *graph.Node) (*
 }
 
 func GetADCSESC3EdgeComposition(ctx context.Context, db graph.Database, edge *graph.Relationship) (graph.PathSet, error) {
-/*
-	MATCH p1 = (x)-[:MemberOf*0..]->()-[:GenericAll|Enroll|AllExtendedRights]->(ct1:CertTemplate)-[:PublishedTo]->(eca1:EnterpriseCA)
-	WHERE x.objectid = "S-1-5-21-83094068-830424655-2031507174-500"
-	AND d.objectid = "S-1-5-21-83094068-830424655-2031507174"
-	AND ct1.requiresmanagerapproval = false
-	AND (ct1.schemaversion = 1 OR ct1.authorizedsignatures = 0)
-	AND (
-		x:Group
-		OR x:Computer
-		OR (
-		x:User
-		AND ct1.subjectaltrequiredns = false
-		AND ct1.subjectaltrequiredomaindns = false
+	/*
+		MATCH p1 = (x)-[:MemberOf*0..]->()-[:GenericAll|Enroll|AllExtendedRights]->(ct1:CertTemplate)-[:PublishedTo]->(eca1:EnterpriseCA)
+		WHERE x.objectid = "S-1-5-21-83094068-830424655-2031507174-500"
+		AND d.objectid = "S-1-5-21-83094068-830424655-2031507174"
+		AND ct1.requiresmanagerapproval = false
+		AND (ct1.schemaversion = 1 OR ct1.authorizedsignatures = 0)
+		AND (
+			x:Group
+			OR x:Computer
+			OR (
+			x:User
+			AND ct1.subjectaltrequiredns = false
+			AND ct1.subjectaltrequiredomaindns = false
+			)
 		)
-	)
 
-	MATCH p2 = (x)-[:MemberOf*0..]->()-[:GenericAll|Enroll|AllExtendedRights]->(ct2:CertTemplate)-[:PublishedTo]->(eca2:EnterpriseCA)-[:TrustedForNTAuth]->(:NTAuthStore)-[:NTAuthStoreFor]->(d)
-	WHERE ct2.authenticationenabled = true
-	AND ct2.requiresmanagerapproval = false
+		MATCH p2 = (x)-[:MemberOf*0..]->()-[:GenericAll|Enroll|AllExtendedRights]->(ct2:CertTemplate)-[:PublishedTo]->(eca2:EnterpriseCA)-[:TrustedForNTAuth]->(:NTAuthStore)-[:NTAuthStoreFor]->(d)
+		WHERE ct2.authenticationenabled = true
+		AND ct2.requiresmanagerapproval = false
 
-	MATCH p3 = (ct1)-[:EnrollOnBehalfOf]->(ct2)
+		MATCH p3 = (ct1)-[:EnrollOnBehalfOf]->(ct2)
 
-	MATCH p4 = (x)-[:MemberOf*0..]->()-[:Enroll]->(eca1)
+		MATCH p4 = (x)-[:MemberOf*0..]->()-[:Enroll]->(eca1)
 
-	MATCH p5 = (x)-[:MemberOf*0..]->()-[:Enroll]->(eca2)
+		MATCH p5 = (x)-[:MemberOf*0..]->()-[:Enroll]->(eca2)
 
-	MATCH p6 = (eca1)-[:IssuedSignedBy|EnterpriseCAFor*1..]->(:RootCA)-[:RootCAFor]->(d)
-	MATCH p7 = (eca2)-[:IssuedSignedBy|EnterpriseCAFor*1..]->(:RootCA)-[:RootCAFor]->(d)
+		MATCH p6 = (eca1)-[:IssuedSignedBy|EnterpriseCAFor*1..]->(:RootCA)-[:RootCAFor]->(d)
+		MATCH p7 = (eca2)-[:IssuedSignedBy|EnterpriseCAFor*1..]->(:RootCA)-[:RootCAFor]->(d)
 
-	OPTIONAL MATCH p8 = (x)-[:MemberOf*0..]->()-[:DelegatedEnrollmentAgent]->(ct2)
+		OPTIONAL MATCH p8 = (x)-[:MemberOf*0..]->()-[:DelegatedEnrollmentAgent]->(ct2)
 
-	WITH *
-	WHERE (
-		NOT eca2.hasenrollmentagentrestrictions = True
-		OR p8 IS NOT NULL
-	)
+		WITH *
+		WHERE (
+			NOT eca2.hasenrollmentagentrestrictions = True
+			OR p8 IS NOT NULL
+		)
 
-	RETURN p1,p2,p3,p4,p5,p6,p7,p8
-*/
+		RETURN p1,p2,p3,p4,p5,p6,p7,p8
+	*/
 	var (
 		startNode *graph.Node
 
@@ -511,7 +511,7 @@ func GetADCSESC3EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 					}),
 				}); err != nil {
 					return err
-				}		
+				}
 			}
 			return nil
 		}); err != nil {
@@ -581,14 +581,14 @@ func GetADCSESC3EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 					} else if hasRestrictions {
 
 						// Verify p8 path exist
-						p8segments, ok := path8CandidateSegments[ct2.ID] 
+						p8segments, ok := path8CandidateSegments[ct2.ID]
 						if !ok {
 							continue
 						}
 
 						for _, p8 := range p8segments {
 							paths.AddPath(p8.Path())
-						}				
+						}
 					}
 				}
 
@@ -702,8 +702,8 @@ func ADCSESC3Path8Pattern(candidateTemplates cardinality.Duplex[uint32]) travers
 		query.Kind(query.Relationship(), ad.MemberOf),
 		query.Kind(query.End(), ad.Group),
 	)).
-	Outbound(query.And(
-		query.KindIn(query.Relationship(), ad.DelegatedEnrollmentAgent),
-		query.InIDs(query.EndID(), cardinality.DuplexToGraphIDs(candidateTemplates)...),
-	))
+		Outbound(query.And(
+			query.KindIn(query.Relationship(), ad.DelegatedEnrollmentAgent),
+			query.InIDs(query.EndID(), cardinality.DuplexToGraphIDs(candidateTemplates)...),
+		))
 }
