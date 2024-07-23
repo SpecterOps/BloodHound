@@ -71,3 +71,83 @@ func TestCreateGetUpdateDeleteAssetGroup(t *testing.T) {
 		t.Fatalf("Error veriying DeleteAssetGroup audit logs:\n%v", err)
 	}
 }
+
+func TestAssetGroupMemberCount(t *testing.T) {
+	var (
+		dbInst  = integration.SetupDB(t)
+		testCtx = context.Background()
+	)
+
+	// Create a new asset group
+	assetGroup, err := dbInst.CreateAssetGroup(testCtx, "member count test group", "mctest", false)
+	if err != nil {
+		t.Fatalf("Error creating asset group: %v", err)
+	}
+
+	// Test initial member count
+	t.Run("InitialMemberCount", func(t *testing.T) {
+		fetchedGroup, err := dbInst.GetAssetGroup(testCtx, assetGroup.ID)
+		if err != nil {
+			t.Fatalf("Error fetching asset group: %v", err)
+		}
+		if fetchedGroup.MemberCount != 0 {
+			t.Errorf("Expected initial member count to be 0, got %d", fetchedGroup.MemberCount)
+		}
+	})
+
+	// Create an asset group collection with entries
+	collection := model.AssetGroupCollection{
+		AssetGroupID: assetGroup.ID,
+		Entries: model.AssetGroupCollectionEntries{
+			{ObjectID: "obj1", NodeLabel: "TestNode1"},
+			{ObjectID: "obj2", NodeLabel: "TestNode2"},
+			{ObjectID: "obj3", NodeLabel: "TestNode3"},
+			{ObjectID: "obj4", NodeLabel: "TestNode4"},
+		},
+	}
+	err = dbInst.CreateAssetGroupCollection(testCtx, collection, collection.Entries)
+	if err != nil {
+		t.Fatalf("Error creating asset group collection: %v", err)
+	}
+
+	// Test updated member count
+	t.Run("UpdatedMemberCount", func(t *testing.T) {
+		fetchedGroup, err := dbInst.GetAssetGroup(testCtx, assetGroup.ID)
+		if err != nil {
+			t.Fatalf("Error fetching asset group: %v", err)
+		}
+		// each entry in both sys_group and user_group
+		if fetchedGroup.MemberCount != 3 {
+			t.Errorf("Expected member count to be 3, got %d", fetchedGroup.MemberCount)
+		}
+	})
+
+	// Test GetAllAssetGroups
+	t.Run("GetAllAssetGroups", func(t *testing.T) {
+		allGroups, err := dbInst.GetAllAssetGroups(testCtx, "", model.SQLFilter{})
+		if err != nil {
+			t.Fatalf("Error fetching all asset groups: %v", err)
+		}
+		found := false
+		for _, g := range allGroups {
+			if g.ID == assetGroup.ID {
+				found = true
+				if g.MemberCount != 3 {
+					t.Errorf("Expected member count in GetAllAssetGroups to be 3, got %d", g.MemberCount)
+				}
+				break
+			}
+		}
+		if !found {
+			t.Errorf("Asset group not found in GetAllAssetGroups result")
+		}
+	})
+
+	// Clean up
+	t.Cleanup(func() {
+		err := dbInst.DeleteAssetGroup(testCtx, assetGroup)
+		if err != nil {
+			t.Fatalf("Error deleting asset group: %v", err)
+		}
+	})
+}
