@@ -153,7 +153,7 @@ type Database interface {
 	fileupload.FileUploadData
 
 	// Saved Queries
-	SavedQueries
+	SavedQueriesData
 
 	// Saved Queries Permissions
 	SavedQueriesPermissionsData

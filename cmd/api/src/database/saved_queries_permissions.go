@@ -22,6 +22,7 @@ import (
 	"github.com/specterops/bloodhound/src/model"
 )
 
+// SavedQueriesPermissionsData methods representing the database interactions pertaining to the saved_queries_permissions model
 type SavedQueriesPermissionsData interface {
 	CreateSavedQueryPermissionToUser(ctx context.Context, queryID int64, userID uuid.UUID) (model.SavedQueriesPermissions, error)
 	CreateSavedQueryPermissionToGlobal(ctx context.Context, queryID int64) (model.SavedQueriesPermissions, error)

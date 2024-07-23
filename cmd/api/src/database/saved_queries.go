@@ -23,7 +23,7 @@ import (
 	"gorm.io/gorm"
 )
 
-type SavedQueries interface {
+type SavedQueriesData interface {
 	ListSavedQueries(ctx context.Context, userID uuid.UUID, order string, filter model.SQLFilter, skip, limit int) (model.SavedQueries, int, error)
 	CreateSavedQuery(ctx context.Context, userID uuid.UUID, name string, query string, description string) (model.SavedQuery, error)
 	DeleteSavedQuery(ctx context.Context, id int) error
