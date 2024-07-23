@@ -210,9 +210,9 @@ export const components = (theme: Theme): Partial<Theme['components']> => ({
     MuiDialogActions: {
         styleOverrides: {
             root: {
-                padding: theme.spacing(2, 3)
-            }
-        }
+                padding: theme.spacing(2, 3),
+            },
+        },
     },
     MuiPopover: {
         styleOverrides: {
@@ -275,11 +275,11 @@ export const components = (theme: Theme): Partial<Theme['components']> => ({
     MuiLinearProgress: {
         styleOverrides: {
             root: {
-                backgroundColor: theme.palette.secondary.light,
+                backgroundColor: addOpacityToHex(theme.palette.primary.main, 40),
                 '& .MuiLinearProgress-barColorPrimary': {
-                    backgroundColor: theme.palette.primary.dark,
+                    backgroundColor: theme.palette.primary.main,
                 },
-            }
-        }
-    }
+            },
+        },
+    },
 });
