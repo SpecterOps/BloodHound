@@ -16,7 +16,7 @@
 
 # OpenAPI Spec: https://learn.openapis.org/specification/
 
-openapi: 3.0.3
+openapi: 3.1.0
 servers:
   - url: /
     description: This is the base path for all endpoints, relative to the domain where the API is being hosted.
