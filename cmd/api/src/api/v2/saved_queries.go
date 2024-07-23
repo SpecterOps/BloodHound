@@ -99,8 +99,9 @@ func (s Resources) ListSavedQueries(response http.ResponseWriter, request *http.
 }
 
 type CreateSavedQueryRequest struct {
-	Query string `json:"query"`
-	Name  string `json:"name"`
+	Query       string `json:"query"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
 }
 
 func (s Resources) CreateSavedQuery(response http.ResponseWriter, request *http.Request) {
@@ -114,7 +115,7 @@ func (s Resources) CreateSavedQuery(response http.ResponseWriter, request *http.
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
 	} else if createRequest.Name == "" || createRequest.Query == "" {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "the name and/or query field is empty", request), response)
-	} else if savedQuery, err := s.DB.CreateSavedQuery(request.Context(), user.ID, createRequest.Name, createRequest.Query); err != nil {
+	} else if savedQuery, err := s.DB.CreateSavedQuery(request.Context(), user.ID, createRequest.Name, createRequest.Query, createRequest.Description); err != nil {
 		if strings.Contains(err.Error(), "duplicate key value violates unique constraint") {
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "duplicate name for saved query: please choose a different name", request), response)
 		} else {
