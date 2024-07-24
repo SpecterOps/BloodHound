@@ -26,9 +26,10 @@ import {
     MenuItem,
     Paper,
     Select,
+    Typography,
+    useTheme,
 } from '@mui/material';
-import { Theme, useTheme } from '@mui/material/styles';
-import makeStyles from '@mui/styles/makeStyles';
+import clsx from 'clsx';
 import { AssetGroupMemberCounts } from 'js-client-library';
 import { AssetGroupMemberParams } from 'js-client-library/dist/types';
 import { FC, useState } from 'react';
@@ -39,28 +40,6 @@ export const FILTERABLE_PARAMS: Array<keyof Pick<AssetGroupMemberParams, 'primar
     'custom_member',
 ];
 
-const useStyles = makeStyles((theme: Theme) => ({
-    formControl: {
-        display: 'block',
-    },
-    activeFilters: {
-        '& button.expand-filters': {
-            fontWeight: 'bolder',
-            '& span': {
-                visibility: 'visible',
-            },
-        },
-    },
-    activeFiltersDot: {
-        width: '6px',
-        height: '6px',
-        borderRadius: '100%',
-        backgroundColor: theme.palette.primary.main,
-        alignSelf: 'baseline',
-        visibility: 'hidden',
-    },
-}));
-
 interface Props {
     filterParams: AssetGroupMemberParams;
     handleFilterChange: (key: (typeof FILTERABLE_PARAMS)[number], value: string) => void;
@@ -69,9 +48,7 @@ interface Props {
 
 const AssetGroupFilters: FC<Props> = ({ filterParams, handleFilterChange, memberCounts = { counts: {} } }) => {
     const [displayFilters, setDisplayFilters] = useState(false);
-
     const theme = useTheme();
-    const classes = useStyles();
 
     const handleClearFilters = () => {
         for (const filter of FILTERABLE_PARAMS) {
@@ -80,28 +57,38 @@ const AssetGroupFilters: FC<Props> = ({ filterParams, handleFilterChange, member
     };
 
     const active = !!filterParams.primary_kind || !!filterParams.custom_member;
-    const activeStyles = active ? classes.activeFilters : '';
 
     return (
         <Box
             p={1}
-            className={activeStyles}
-            bgcolor={theme.palette.neutral.secondary}
             component={Paper}
+            bgcolor={theme.palette.neutral.secondary}
             elevation={0}
             marginBottom={1}
             data-testid='asset-group-filters-container'>
             <Button
                 onClick={() => setDisplayFilters((prev) => !prev)}
                 data-testid='display-filters-button'
-                style={{ width: '100%', marginBottom: '12px' }}>
+                className={clsx('w-full', active && 'font-bold')}>
                 FILTERS
-                <span className={classes.activeFiltersDot} />
+                <Typography
+                    component={'span'}
+                    data-testid={'active-filters-dot'}
+                    style={active ? { visibility: 'visible' } : {}}
+                    sx={{
+                        width: '6px',
+                        height: '6px',
+                        borderRadius: '100%',
+                        backgroundColor: 'white',
+                        alignSelf: 'baseline',
+                        visibility: 'hidden',
+                    }}
+                />
             </Button>
-            <Collapse in={displayFilters} data-testid='asset-group-filter-collapsible-section'>
+            <Collapse in={displayFilters} data-testid='asset-group-filter-collapsible-section' sx={{ mt: '12px' }}>
                 <Grid container spacing={2}>
                     <Grid item xs={12}>
-                        <FormControl className={classes.formControl}>
+                        <FormControl sx={{ display: 'block' }}>
                             <InputLabel id='nodeTypeFilter-label'>Node Type</InputLabel>
                             <Select
                                 id='nodeType'

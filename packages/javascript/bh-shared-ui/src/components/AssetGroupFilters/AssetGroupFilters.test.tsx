@@ -62,17 +62,17 @@ describe('AssetGroupEdit', () => {
     it('indicates that filters are active', async () => {
         const { screen } = await setup({ filterParams, memberCounts });
 
-        const filtersContainer = screen.getByTestId('asset-group-filters-container');
+        const activeFiltersDot = screen.getByTestId('active-filters-dot');
 
-        expect(filtersContainer.className.includes('activeFilters')).toBeTruthy();
+        expect(activeFiltersDot).toHaveStyle({ visibility: 'visible' });
     });
 
     it('indicates that filters are inactive', async () => {
         const { screen } = await setup();
 
-        const filtersContainer = screen.getByTestId('asset-group-filters-container');
+        const activeFiltersDot = screen.getByTestId('active-filters-dot');
 
-        expect(filtersContainer.className.includes('activeFilters')).toBeFalsy();
+        expect(activeFiltersDot).not.toHaveStyle({ visibility: 'visible' });
     });
 
     describe('Node Type dropdown filter', () => {
