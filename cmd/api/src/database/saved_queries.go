@@ -66,13 +66,7 @@ func (s *BloodhoundDB) CreateSavedQuery(ctx context.Context, userID uuid.UUID, n
 		Description: description,
 	}
 
-	// Create the saved query as well as add the permission for the creator
-	if result := s.db.WithContext(ctx).Create(&savedQuery); result.Error != nil {
-		return model.SavedQuery{}, result.Error
-	} else if _, err := s.CreateSavedQueryPermissionToUser(ctx, savedQuery.ID, userID); err != nil {
-		return savedQuery, err
-	}
-	return savedQuery, nil
+	return savedQuery, CheckError(s.db.WithContext(ctx).Create(&savedQuery))
 }
 
 func (s *BloodhoundDB) DeleteSavedQuery(ctx context.Context, id int) error {
