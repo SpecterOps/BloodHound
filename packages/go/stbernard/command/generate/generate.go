@@ -77,12 +77,12 @@ func (s *command) Parse(cmdIndex int) error {
 func (s *command) Run() error {
 	if paths, err := workspace.FindPaths(s.env); err != nil {
 		return fmt.Errorf("finding workspace root: %w", err)
-		} else if err := golang.WorkspaceGenerate(paths.GoModules, s.env); err != nil {
-			return fmt.Errorf("generating code for workspace: %w", err)
-		} else if err := workspace.GenerateSchema(paths.Root, s.env); err != nil {
-			return fmt.Errorf("generating schema for workspace: %w", err)
-		} else if err := yarn.Format(paths.Root, s.env); err != nil {
-			return fmt.Errorf("formatting javascript: %w", err)
+	} else if err := golang.WorkspaceGenerate(paths.GoModules, s.env); err != nil {
+		return fmt.Errorf("generating code for workspace: %w", err)
+	} else if err := workspace.GenerateSchema(paths.Root, s.env); err != nil {
+		return fmt.Errorf("generating schema for workspace: %w", err)
+	} else if err := yarn.Format(paths.Root, s.env); err != nil {
+		return fmt.Errorf("formatting javascript: %w", err)
 	} else if err := redoc.GenerateOpenAPIDoc(paths.Root, paths.Submodules, s.env); err != nil {
 		return fmt.Errorf("generating openapi documentation: %w", err)
 	} else {
