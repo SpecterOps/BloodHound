@@ -74,6 +74,17 @@ const Inner: React.FC = () => {
                         `]: {
                         color: theme.palette.color.primary,
                     },
+                    '& .filter-container .operation-filter-input': {
+                        backgroundColor: 'inherit',
+                        border: `1px solid ${theme.palette.grey[700]}`,
+
+                        '&:hover': {
+                            borderColor: theme.palette.color.links,
+                        },
+                        '&:focus': {
+                            outline: `1px solid ${theme.palette.color.links}`,
+                        },
+                    },
                     '& .responses-inner': {
                         [`& h4, & h5`]: {
                             color: theme.palette.color.primary,
