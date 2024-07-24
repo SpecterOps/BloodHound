@@ -259,7 +259,7 @@ export const components = (theme: Theme): Partial<Theme['components']> => ({
     MuiAlert: {
         styleOverrides: {
             root: {
-                '&.MuiAlert-standardWarning, &.MuiAlert-standardInfo': {
+                '&.MuiAlert-standardWarning': {
                     backgroundColor: addOpacityToHex(theme.palette.warning.main, 20),
                 },
                 '&.MuiAlert-standardInfo': {
