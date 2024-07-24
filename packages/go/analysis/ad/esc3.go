@@ -688,8 +688,8 @@ func ADCSESC3Path6_7Pattern(ecaId graph.ID, domainId graph.ID) traversal.Pattern
 			query.KindIn(query.Relationship(), ad.IssuedSignedBy, ad.EnterpriseCAFor),
 		)).
 		OutboundWithDepth(0, 0, query.And(
-			query.Kind(query.Start(), ad.EnterpriseCA),
 			query.KindIn(query.Relationship(), ad.IssuedSignedBy, ad.EnterpriseCAFor),
+			query.KindIn(query.End(), ad.EnterpriseCA, ad.AIACA, ad.RootCA),
 		)).
 		Outbound(query.And(
 			query.KindIn(query.Relationship(), ad.RootCAFor),

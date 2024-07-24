@@ -56,30 +56,14 @@
     {
       "id": "n0",
       "position": {
-        "x": 377.2907441872262,
-        "y": 275.3171258073137
+        "x": 208.60715335172696,
+        "y": 329.76696185657073
       },
       "caption": "EnterpriseCA2",
       "labels": [],
       "properties": {
-        "CertChain": "[d,c,b,a]"
-      },
-      "style": {
-        "node-color": "#f44e3b",
-        "border-color": "#000000",
-        "radius": 35
-      }
-    },
-    {
-      "id": "n1",
-      "position": {
-        "x": 184.40236148448412,
-        "y": -134.2190514795972
-      },
-      "caption": "EnterpriseCA3",
-      "labels": [],
-      "properties": {
-        "CertChain": "[e]"
+        "CertChain": "[c,a]",
+        "CertThumbprint": "c"
       },
       "style": {
         "node-color": "#f44e3b",
@@ -90,13 +74,14 @@
     {
       "id": "n2",
       "position": {
-        "x": 552,
-        "y": 51.484829094809754
+        "x": 208.60715335172696,
+        "y": 50
       },
       "caption": "EnterpriseCA1",
       "labels": [],
       "properties": {
-        "CertChain": "[c,b,a]"
+        "CertChain": "[a]",
+        "CertThumbprint": "a"
       },
       "style": {
         "node-color": "#f44e3b",
@@ -107,13 +92,14 @@
     {
       "id": "n3",
       "position": {
-        "x": 726.7092558127738,
-        "y": -172.3474676176942
+        "x": -119.32856726884833,
+        "y": 189.88348092828534
       },
       "caption": "RootCA2",
       "labels": [],
       "properties": {
-        "CertChain": "[b,a]"
+        "CertChain": "[b]",
+        "CertThumbprint": "b"
       },
       "style": {
         "radius": 35,
@@ -123,13 +109,14 @@
     {
       "id": "n4",
       "position": {
-        "x": 726.7092558127738,
-        "y": -474.5607264014693
+        "x": -119.32856726884833,
+        "y": 50
       },
       "caption": "RootCA1",
       "labels": [],
       "properties": {
-        "CertChain": "[a]"
+        "CertChain": "[a]",
+        "CertThumbprint": "a"
       },
       "style": {
         "radius": 35,
@@ -137,49 +124,16 @@
       }
     },
     {
-      "id": "n5",
-      "position": {
-        "x": 843.0975421638292,
-        "y": 275.3171258073137
-      },
-      "caption": "AIACA2_2",
-      "labels": [],
-      "properties": {
-        "CertChain": "[d,c,b,a]"
-      },
-      "style": {
-        "node-color": "#aea1ff",
-        "border-color": "#000000",
-        "radius": 35
-      }
-    },
-    {
-      "id": "n6",
-      "position": {
-        "x": 184.40236148448412,
-        "y": -284.7965347965783
-      },
-      "caption": "AIACA2_3",
-      "labels": [],
-      "properties": {
-        "CertChain": "[e]"
-      },
-      "style": {
-        "node-color": "#aea1ff",
-        "border-color": "#000000",
-        "radius": 35
-      }
-    },
-    {
       "id": "n7",
       "position": {
-        "x": 1017.8067979766029,
-        "y": 51.48482909480981
+        "x": 536.5428739723022,
+        "y": 329.76696185657073
       },
       "caption": "AIACA2_1",
       "labels": [],
       "properties": {
-        "CertChain": "[c,b,a]"
+        "CertChain": "[c,a]",
+        "CertThumbprint": "c"
       },
       "style": {
         "node-color": "#aea1ff",
@@ -190,13 +144,14 @@
     {
       "id": "n8",
       "position": {
-        "x": 1192.5160537893767,
-        "y": -172.34746761769418
+        "x": 536.5428739723022,
+        "y": 189.88348092828534
       },
       "caption": "AIACA1_2",
       "labels": [],
       "properties": {
-        "CertChain": "[b,a]"
+        "CertChain": "[b]",
+        "CertThumbprint": "b"
       },
       "style": {
         "radius": 35,
@@ -207,13 +162,14 @@
     {
       "id": "n9",
       "position": {
-        "x": 1192.5160537893767,
-        "y": -474.5607264014693
+        "x": 536.5428739723022,
+        "y": 49.999999999999964
       },
       "caption": "AIACA1_1",
       "labels": [],
       "properties": {
-        "CertChain": "[a]"
+        "CertChain": "[a]",
+        "CertThumbprint": "a"
       },
       "style": {
         "radius": 35,
@@ -225,99 +181,27 @@
   "relationships": [
     {
       "id": "n0",
-      "fromId": "n0",
-      "toId": "n2",
-      "type": "IssuedSignedBy",
+      "type": "EnterpriseCAFor",
+      "style": {},
       "properties": {},
-      "style": {}
+      "fromId": "n2",
+      "toId": "n4"
     },
     {
       "id": "n1",
-      "fromId": "n2",
-      "toId": "n3",
-      "type": "IssuedSignedBy",
+      "type": "EnterpriseCAFor",
+      "style": {},
       "properties": {},
-      "style": {}
+      "fromId": "n2",
+      "toId": "n9"
     },
     {
       "id": "n2",
-      "fromId": "n3",
-      "toId": "n4",
-      "type": "IssuedSignedBy",
-      "properties": {},
-      "style": {}
-    },
-    {
-      "id": "n3",
-      "fromId": "n5",
-      "toId": "n7",
-      "type": "IssuedSignedBy",
-      "properties": {},
-      "style": {}
-    },
-    {
-      "id": "n4",
-      "fromId": "n7",
-      "toId": "n8",
-      "type": "IssuedSignedBy",
-      "properties": {},
-      "style": {}
-    },
-    {
-      "id": "n5",
-      "fromId": "n8",
-      "toId": "n9",
-      "type": "IssuedSignedBy",
-      "properties": {},
-      "style": {}
-    },
-    {
-      "id": "n6",
-      "type": "IssuedSignedBy",
+      "type": "EnterpriseCAFor",
       "style": {},
       "properties": {},
       "fromId": "n0",
       "toId": "n7"
-    },
-    {
-      "id": "n7",
-      "type": "IssuedSignedBy",
-      "style": {},
-      "properties": {},
-      "fromId": "n5",
-      "toId": "n2"
-    },
-    {
-      "id": "n8",
-      "type": "IssuedSignedBy",
-      "style": {},
-      "properties": {},
-      "fromId": "n2",
-      "toId": "n8"
-    },
-    {
-      "id": "n9",
-      "type": "IssuedSignedBy",
-      "style": {},
-      "properties": {},
-      "fromId": "n7",
-      "toId": "n3"
-    },
-    {
-      "id": "n10",
-      "type": "IssuedSignedBy",
-      "style": {},
-      "properties": {},
-      "fromId": "n8",
-      "toId": "n4"
-    },
-    {
-      "id": "n11",
-      "type": "IssuedSignedBy",
-      "style": {},
-      "properties": {},
-      "fromId": "n3",
-      "toId": "n9"
     }
   ]
 }
