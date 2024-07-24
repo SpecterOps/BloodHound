@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { apiClient } from 'bh-shared-ui';
+import { GlyphIconInfo, apiClient } from 'bh-shared-ui';
 import { FlatGraphResponse, GraphData, GraphResponse, StyledGraphEdge, StyledGraphNode } from 'js-client-library';
 import identity from 'lodash/identity';
 import throttle from 'lodash/throttle';
@@ -92,20 +92,40 @@ export const initializeBHEClient = () => {
     );
 };
 
+type ThemedLabels = {
+    labelColor: string;
+    backgroundColor: string;
+    highlightedBackground: string;
+    highlightedText: string;
+};
+
+type ThemedGlyph = {
+    colors: {
+        backgroundColor: string;
+        color: string;
+    };
+    tierZeroGlyph: GlyphIconInfo;
+};
+
+export type ThemedOptions = {
+    labels: ThemedLabels;
+    nodeBorderColor: string;
+    glyph: ThemedGlyph;
+};
+
 export type NodeParams = {
     x: number;
     y: number;
     size?: number;
     color?: string;
     borderColor?: string;
-    labelColor: string;
     type?: string;
     highlighted?: boolean;
     image?: string;
     label?: string;
     glyphs?: Glyph[];
     forceLabel?: boolean;
-};
+} & ThemedLabels;
 
 export interface Index<T> {
     [id: string]: T;
@@ -122,8 +142,6 @@ export type EdgeParams = {
     size: number;
     type: string;
     label: string;
-    color: string;
-    backgroundColor: string;
     exploreGraphId: string;
     groupPosition?: number;
     groupSize?: number;
@@ -131,7 +149,7 @@ export type EdgeParams = {
     control?: Coordinates;
     controlInViewport?: Coordinates;
     forceLabel?: boolean;
-};
+} & ThemedLabels;
 
 const getLastSeenValue = (object: any): string => {
     if (object.lastSeen) return object.lastSeen;
