@@ -29,8 +29,9 @@ func GenerateOpenAPIDoc(projectPath string, submodules []string, env environment
 	// Either we are in the `bhce` submodule or we must find it
 	var basePath = projectPath
 	for _, submodule := range submodules {
-		if len(submodule) >= 4 && submodule[len(submodule)-4:] == "bhce" {
+		if filepath.Base(submodule) == "bhce" {
 			basePath = submodule
+			break
 		}
 	}
 
