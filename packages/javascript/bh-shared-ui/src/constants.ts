@@ -266,7 +266,6 @@ export const components = (theme: Theme): Partial<Theme['components']> => ({
                     backgroundColor: addOpacityToHex(theme.palette.info.main, 20),
                 },
                 '&.MuiAlert-standardError': {
-                    color: theme.palette.error.contrastText,
                     backgroundColor: addOpacityToHex(theme.palette.error.main, 20),
                 },
             },
