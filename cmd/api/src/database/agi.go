@@ -86,21 +86,22 @@ func (s *BloodhoundDB) DeleteAssetGroup(ctx context.Context, assetGroup model.As
 }
 
 func (s *BloodhoundDB) GetAssetGroup(ctx context.Context, id int32) (model.AssetGroup, error) {
-	var assetGroup model.AssetGroup
-	if result := s.preload(model.AssetGroupAssociations()).WithContext(ctx).First(&assetGroup, id); errors.Is(result.Error, gorm.ErrRecordNotFound) {
+    var assetGroup model.AssetGroup
+    if result := s.preload(model.AssetGroupAssociations()).WithContext(ctx).First(&assetGroup, id); errors.Is(result.Error, gorm.ErrRecordNotFound) {
         return assetGroup, ErrNotFound
     } else if result.Error != nil {
         return assetGroup, result.Error
     }
 
-    if latestCollection, collectionErr := s.GetLatestAssetGroupCollection(ctx, id); collectionErr != nil {
+    latestCollection, collectionErr := s.GetLatestAssetGroupCollection(ctx, id)
+    if collectionErr != nil {
         if errors.Is(collectionErr, ErrNotFound) {
-			assetGroup.MemberCount = 0
+            assetGroup.MemberCount = 0
+            return assetGroup, nil
         }
-		return assetGroup, fmt.Errorf("error getting latest collection for asset group %s: %w", assetGroup.Name, collectionErr)
-    } else {
-        assetGroup.MemberCount = len(latestCollection.Entries)
+        return assetGroup, fmt.Errorf("error getting latest collection for asset group %s: %w", assetGroup.Name, collectionErr)
     }
+    assetGroup.MemberCount = len(latestCollection.Entries)
 
     return assetGroup, nil
 }
