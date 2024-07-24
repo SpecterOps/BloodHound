@@ -38,7 +38,6 @@ const usePaneStyles = makeStyles((theme: Theme) => ({
         '& > div.node:nth-child(odd)': {
             background: theme.palette.neutral.tertiary,
         },
-        scrollbarGutter: 'stable',
     },
     breadcrumbs: {
         margin: '6px 10px 6px 10px',
