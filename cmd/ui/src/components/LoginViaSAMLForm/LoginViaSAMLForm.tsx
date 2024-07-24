@@ -62,11 +62,11 @@ const LoginViaSAMLForm: React.FC<LoginViaSAMLFormProps> = ({ providers, onSubmit
                     </FormControl>
                 </Grid>
                 <Grid item xs={8}>
-                    <Button size='large' type='submit' disabled={redirectURL === ''}>
+                    <Button size='large' type='submit' className='w-full' disabled={redirectURL === ''}>
                         CONTINUE
                     </Button>
                     <Box mt={2}>
-                        <Button size='large' type='button' onClick={onCancel}>
+                        <Button size='large' type='button' onClick={onCancel} variant={'tertiary'} className='w-full'>
                             CANCEL
                         </Button>
                     </Box>
