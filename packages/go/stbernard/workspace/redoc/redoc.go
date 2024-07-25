@@ -39,8 +39,8 @@ func GenerateOpenAPIDoc(projectPath string, submodules []string, env environment
 		srcPath    = filepath.Join(basePath, "packages", "go", "openapi")
 		inputPath  = filepath.Join(srcPath, "src/openapi.yaml")
 		outputPath = filepath.Join(srcPath, "doc/openapi.json")
-		command    = "redocly"
-		args       = []string{"bundle", inputPath, "--output", outputPath}
+		command    = "npx"
+		args       = []string{"@redocly/cli@1.18.1", "bundle", inputPath, "--output", outputPath}
 	)
 
 	if err := cmdrunner.Run(command, args, srcPath, env); err != nil {

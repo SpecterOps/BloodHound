@@ -27,3 +27,5 @@ properties:
     type: string
   query:
     type: string
+  description:
+    type: string
