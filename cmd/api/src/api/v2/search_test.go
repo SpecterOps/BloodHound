@@ -28,6 +28,7 @@ import (
 	"github.com/specterops/bloodhound/errors"
 	v2 "github.com/specterops/bloodhound/src/api/v2"
 	"github.com/specterops/bloodhound/src/api/v2/apitest"
+
 	graphMocks "github.com/specterops/bloodhound/src/queries/mocks"
 )
 

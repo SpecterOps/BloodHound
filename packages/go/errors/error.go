@@ -36,6 +36,7 @@ func New(value string) error {
 	return Error(value)
 }
 
+// Deprecated: Use stdlib errors.Is(...) instead.
 // Is reports whether any error in err's chain matches target.
 func Is(err error, target error) bool {
 	return goerrors.Is(err, target)

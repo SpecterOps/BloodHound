@@ -48,7 +48,7 @@ func TestSavedQueries_ListSavedQueries(t *testing.T) {
 	require.Nil(t, err)
 
 	for i := 0; i < 7; i++ {
-		if _, err := dbInst.CreateSavedQuery(testCtx, userUUID, fmt.Sprintf("saved_query_%d", i), ""); err != nil {
+		if _, err := dbInst.CreateSavedQuery(testCtx, userUUID, fmt.Sprintf("saved_query_%d", i), "", ""); err != nil {
 			t.Fatalf("Error creating audit log: %v", err)
 		}
 	}
