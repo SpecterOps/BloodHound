@@ -29,9 +29,6 @@ import (
 	"github.com/specterops/bloodhound/src/database"
 	"github.com/specterops/bloodhound/src/services"
 	"github.com/specterops/bloodhound/src/version"
-
-	// This import is required by swaggo
-	_ "github.com/specterops/bloodhound/src/docs"
 )
 
 func printVersion() {
