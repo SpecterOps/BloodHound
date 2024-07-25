@@ -14,9 +14,6 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-export const HIGHLIGHTED_LABEL_BACKGROUND_COLOR = '#FF6D66';
-export const HIGHLIGHTED_LABEL_FONT_COLOR = '#FFF';
-
 export const STARTING_ZOOM_FADE_RATIO = 0.5;
 export const ENDING_ZOOM_FADE_RATIO = 0.3;
 
