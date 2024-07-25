@@ -17,14 +17,13 @@
 import { Settings } from 'sigma/settings';
 import { NodeDisplayData, PartialButFor } from 'sigma/types';
 import { calculateLabelOpacity } from '../utils/utils';
-import { HIGHLIGHTED_LABEL_FONT_COLOR } from '../utils/utils';
 
 export default function drawLabel(
     context: CanvasRenderingContext2D,
     data: PartialButFor<NodeDisplayData & { inverseSqrtZoomRatio: number }, 'x' | 'y' | 'size' | 'label' | 'color'>,
     settings: Settings
 ): void {
-    if (!data.label) return;
+    if (!data.label || !settings.labelColor.color) return;
     const inverseSqrtZoomRatio = data.inverseSqrtZoomRatio || 1;
 
     const size = settings.labelSize * inverseSqrtZoomRatio,
@@ -33,7 +32,7 @@ export default function drawLabel(
 
     context.globalAlpha = calculateLabelOpacity(inverseSqrtZoomRatio);
 
-    context.fillStyle = data.highlighted ? HIGHLIGHTED_LABEL_FONT_COLOR : data.labelColor;
+    context.fillStyle = settings.labelColor.color;
     context.font = `${weight} ${size}px ${font}`;
 
     context.fillText(

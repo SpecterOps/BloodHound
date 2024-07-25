@@ -59,8 +59,10 @@ export type IconDictionary = {
     [index: string]: IconInfo;
 };
 
+export type GlyphIconInfo = IconInfo & { iconColor: string };
+
 export type GlyphDictionary = {
-    [index: string]: IconInfo & { iconColor: string };
+    [index: string]: GlyphIconInfo;
 };
 
 export enum GlyphKind {

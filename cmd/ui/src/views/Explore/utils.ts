@@ -14,30 +14,47 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { Theme } from '@mui/material';
 import { GlyphKind } from 'bh-shared-ui';
 import { MultiDirectedGraph } from 'graphology';
-import { GraphEdges, GraphNodes } from 'js-client-library';
+import { GraphData, GraphEdges, GraphNodes } from 'js-client-library';
 import { GlyphLocation } from 'src/rendering/programs/node.glyphs';
-import { EdgeDirection, EdgeParams, NodeParams } from 'src/utils';
+import { EdgeDirection, EdgeParams, NodeParams, ThemedOptions } from 'src/utils';
 import { GLYPHS, NODE_ICON, UNKNOWN_ICON } from './svgIcons';
-import { Theme } from '@mui/material';
 
-export const initGraphNodes = (
-    graph: MultiDirectedGraph,
-    nodes: GraphNodes,
-    nodeSize: number,
-    theme: Theme,
-    darkMode: boolean
-) => {
+export const initGraph = (graph: MultiDirectedGraph, items: GraphData, theme: Theme, darkMode: boolean) => {
+    const { nodes, edges } = items;
+
+    const themedOptions = {
+        labels: {
+            labelColor: theme.palette.color.primary,
+            backgroundColor: theme.palette.neutral.secondary,
+            highlightedBackground: theme.palette.color.links,
+            highlightedText: darkMode ? theme.palette.common.black : theme.palette.common.white,
+        },
+        nodeBorderColor: theme.palette.color.primary,
+        glyph: {
+            colors: {
+                backgroundColor: theme.palette.color.primary,
+                color: theme.palette.neutral.primary, //border
+            },
+            tierZeroGlyph: darkMode ? GLYPHS[GlyphKind.TIER_ZERO_DARK] : GLYPHS[GlyphKind.TIER_ZERO],
+        },
+    };
+
+    initGraphNodes(graph, nodes, themedOptions);
+    initGraphEdges(graph, edges, themedOptions);
+};
+
+const initGraphNodes = (graph: MultiDirectedGraph, nodes: GraphNodes, themedOptions: ThemedOptions) => {
     Object.keys(nodes).forEach((key: string) => {
         const node = nodes[key];
         // Set default node parameters
         const nodeParams: Partial<NodeParams> = {
-            color: theme.palette.color.primary,
             type: 'combined',
             label: node.label,
-            labelColor: theme.palette.color.primary,
             forceLabel: true,
+            ...themedOptions.labels,
         };
 
         const icon = NODE_ICON[node.kind] || UNKNOWN_ICON;
@@ -46,27 +63,25 @@ export const initGraphNodes = (
 
         // Tier zero nodes should be marked with a gem glyph
         if (node.isTierZero) {
-            const glyph = darkMode ? GLYPHS[GlyphKind.TIER_ZERO_DARK] : GLYPHS[GlyphKind.TIER_ZERO];
             nodeParams.type = 'glyphs';
             nodeParams.glyphs = [
                 {
                     location: GlyphLocation.TOP_RIGHT,
-                    image: glyph.url || '',
-                    backgroundColor: theme.palette.color.primary,
-                    color: theme.palette.neutral.primary, //border
+                    image: themedOptions.glyph.tierZeroGlyph.url || '',
+                    ...themedOptions.glyph.colors,
                 },
             ];
         }
 
         graph.addNode(key, {
-            size: nodeSize,
-            borderColor: theme.palette.color.primary,
+            size: 25,
+            borderColor: themedOptions.nodeBorderColor,
             ...nodeParams,
         });
     });
 };
 
-export const initGraphEdges = (graph: MultiDirectedGraph, edges: GraphEdges, theme: Theme) => {
+const initGraphEdges = (graph: MultiDirectedGraph, edges: GraphEdges, themedOptions: ThemedOptions) => {
     // Group edges with the same start and end nodes into arrays. Should be grouped regardless of direction
     const groupedEdges = edges.reduce<Record<string, GraphEdges>>((groups, edge) => {
         const identifiers = [edge.source, edge.target].sort();
@@ -92,12 +107,11 @@ export const initGraphEdges = (graph: MultiDirectedGraph, edges: GraphEdges, the
                 size: 3,
                 type: 'arrow',
                 label: edge.label,
-                color: theme.palette.color.primary,
-                backgroundColor: theme.palette.neutral.secondary,
                 groupPosition: 0,
                 groupSize: 1,
                 exploreGraphId: edge.exploreGraphId || key,
                 forceLabel: true,
+                ...themedOptions.labels,
             };
 
             // Groups with odd-numbered totals should have a straight edge first, then curve the rest
