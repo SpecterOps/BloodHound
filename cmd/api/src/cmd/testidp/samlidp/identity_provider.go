@@ -463,6 +463,7 @@ func (s *IdpAuthnRequest) Validate() error {
 }
 
 func (s *IdpAuthnRequest) getACSEndpoint() error {
+	fmt.Printf(">>>getACSEndpoint()\n ACS Index: %+v \n metadata: %+v \n", s.Request.AssertionConsumerServiceIndex, s.ServiceProviderMetadata)
 	if s.Request.AssertionConsumerServiceIndex != "" {
 		for _, spssoDescriptor := range s.ServiceProviderMetadata.SPSSODescriptors {
 			for _, spAssertionConsumerService := range spssoDescriptor.AssertionConsumerServices {
@@ -517,6 +518,7 @@ func (s *IdpAuthnRequest) getACSEndpoint() error {
 		}
 	}
 
+	fmt.Println(">>> no acs url found")
 	return os.ErrNotExist // no ACS url found or specified
 }
 

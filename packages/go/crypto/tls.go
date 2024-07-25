@@ -1,17 +1,17 @@
 // Copyright 2023 Specter Ops, Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// 
+//
 // SPDX-License-Identifier: Apache-2.0
 
 package crypto
@@ -38,7 +38,17 @@ const (
 )
 
 func tryParsePrivateKey(key string) (*rsa.PrivateKey, error) {
-	keyBlock, _ := pem.Decode([]byte(key))
+	formattedKey := key
+
+	if !strings.HasPrefix("-----BEGIN PRIVATE KEY-----", formattedKey) {
+		formattedKey = "-----BEGIN PRIVATE KEY-----\n" + formattedKey
+	}
+
+	if !strings.HasSuffix("-----END PRIVATE KEY-----", formattedKey) {
+		formattedKey = formattedKey + "\n-----END PRIVATE KEY-----"
+	}
+
+	keyBlock, _ := pem.Decode([]byte(formattedKey))
 
 	if pkcs8PrivateKey, err := x509.ParsePKCS8PrivateKey(keyBlock.Bytes); err == nil {
 		if rsaPrivateKey, ok := pkcs8PrivateKey.(*rsa.PrivateKey); !ok {
