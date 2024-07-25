@@ -14551,6 +14551,9 @@
           },
           "query": {
             "type": "string"
+          },
+          "description": {
+            "type": "string"
           }
         }
       },
