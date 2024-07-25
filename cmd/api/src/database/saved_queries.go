@@ -29,6 +29,8 @@ type SavedQueriesData interface {
 	DeleteSavedQuery(ctx context.Context, id int) error
 	SavedQueryBelongsToUser(ctx context.Context, userID uuid.UUID, savedQueryID int) (bool, error)
 	DeleteAssetGroupSelectorsForAssetGroups(ctx context.Context, assetGroupIds []int) error
+	GetSavedQueriesSharedWithUser(ctx context.Context, userID int64) (model.SavedQueries, error)
+	GetSavedQueriesSharedGlobally(ctx context.Context) (model.SavedQueries, error)
 }
 
 func (s *BloodhoundDB) ListSavedQueries(ctx context.Context, userID uuid.UUID, order string, filter model.SQLFilter, skip, limit int) (model.SavedQueries, int, error) {
@@ -82,4 +84,21 @@ func (s *BloodhoundDB) SavedQueryBelongsToUser(ctx context.Context, userID uuid.
 	} else {
 		return false, nil
 	}
+}
+
+// GetSavedQueriesSharedWithUser returns all the saved queries that the given userID has access to, including global queries
+func (s *BloodhoundDB) GetSavedQueriesSharedWithUser(ctx context.Context, userID int64) (model.SavedQueries, error) {
+	savedQueries := model.SavedQueries{}
+
+	result := s.db.WithContext(ctx).Where("shared_to_user_id = ?", userID).Find(&savedQueries)
+
+	return savedQueries, CheckError(result)
+}
+
+// GetSavedQueriesSharedGlobally returns all the queries that were shared globally
+func (s *BloodhoundDB) GetSavedQueriesSharedGlobally(ctx context.Context) (model.SavedQueries, error) {
+	savedQueries := model.SavedQueries{}
+
+	result := s.db.WithContext(ctx).Where("global = true").Find(&savedQueries)
+	return savedQueries, CheckError(result)
 }
