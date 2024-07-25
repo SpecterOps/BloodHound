@@ -23,6 +23,15 @@ import (
 	"gorm.io/gorm"
 )
 
+type SavedQueriesData interface {
+	ListSavedQueries(ctx context.Context, userID uuid.UUID, order string, filter model.SQLFilter, skip, limit int) (model.SavedQueries, int, error)
+	CreateSavedQuery(ctx context.Context, userID uuid.UUID, name string, query string, description string) (model.SavedQuery, error)
+	DeleteSavedQuery(ctx context.Context, id int) error
+	SavedQueryBelongsToUser(ctx context.Context, userID uuid.UUID, savedQueryID int) (bool, error)
+	GetSharedSavedQueries(ctx context.Context, userID int64) (model.SavedQueries, error)
+	GetPublicSavedQueries(ctx context.Context) (model.SavedQueries, error)
+}
+
 func (s *BloodhoundDB) ListSavedQueries(ctx context.Context, userID uuid.UUID, order string, filter model.SQLFilter, skip, limit int) (model.SavedQueries, int, error) {
 	var (
 		queries model.SavedQueries
@@ -50,11 +59,12 @@ func (s *BloodhoundDB) ListSavedQueries(ctx context.Context, userID uuid.UUID, o
 	return queries, int(count), CheckError(result)
 }
 
-func (s *BloodhoundDB) CreateSavedQuery(ctx context.Context, userID uuid.UUID, name string, query string) (model.SavedQuery, error) {
+func (s *BloodhoundDB) CreateSavedQuery(ctx context.Context, userID uuid.UUID, name string, query string, description string) (model.SavedQuery, error) {
 	savedQuery := model.SavedQuery{
-		UserID: userID.String(),
-		Name:   name,
-		Query:  query,
+		UserID:      userID.String(),
+		Name:        name,
+		Query:       query,
+		Description: description,
 	}
 
 	return savedQuery, CheckError(s.db.WithContext(ctx).Create(&savedQuery))
@@ -73,4 +83,21 @@ func (s *BloodhoundDB) SavedQueryBelongsToUser(ctx context.Context, userID uuid.
 	} else {
 		return false, nil
 	}
+}
+
+// GetSharedSavedQueries returns all the saved queries that the given userID has access to, including global queries
+func (s *BloodhoundDB) GetSharedSavedQueries(ctx context.Context, userID int64) (model.SavedQueries, error) {
+	savedQueries := model.SavedQueries{}
+
+	result := s.db.WithContext(ctx).Where("shared_to_user_id = ?", userID).Find(&savedQueries)
+
+	return savedQueries, CheckError(result)
+}
+
+// GetPublicSavedQueries returns all the queries that were shared publicly
+func (s *BloodhoundDB) GetPublicSavedQueries(ctx context.Context) (model.SavedQueries, error) {
+	savedQueries := model.SavedQueries{}
+
+	result := s.db.WithContext(ctx).Where("public = true").Find(&savedQueries)
+	return savedQueries, CheckError(result)
 }
