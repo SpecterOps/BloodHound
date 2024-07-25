@@ -25,7 +25,7 @@ import (
 // SavedQueriesPermissionsData methods representing the database interactions pertaining to the saved_queries_permissions model
 type SavedQueriesPermissionsData interface {
 	CreateSavedQueryPermissionToUser(ctx context.Context, queryID int64, userID uuid.UUID) (model.SavedQueriesPermissions, error)
-	CreateSavedQueryPermissionToGlobal(ctx context.Context, queryID int64) (model.SavedQueriesPermissions, error)
+	CreateSavedQueryPermissionToPublic(ctx context.Context, queryID int64) (model.SavedQueriesPermissions, error)
 	CheckUserHasPermissionToSavedQuery(ctx context.Context, queryID int64, userID uuid.UUID) (bool, error)
 	GetPermissionsForSavedQuery(ctx context.Context, queryID int64) (model.SavedQueriesPermissions, error)
 }
@@ -35,17 +35,17 @@ func (s *BloodhoundDB) CreateSavedQueryPermissionToUser(ctx context.Context, que
 	permission := model.SavedQueriesPermissions{
 		QueryID:        queryID,
 		SharedToUserID: NullUUID(userID),
-		Global:         false,
+		Public:         false,
 	}
 
 	return permission, CheckError(s.db.WithContext(ctx).Create(&permission))
 }
 
-// CreateSavedQueryPermissionToGlobal creates a new entry to the SavedQueriesPermissions table granting global read permissions to all users
-func (s *BloodhoundDB) CreateSavedQueryPermissionToGlobal(ctx context.Context, queryID int64) (model.SavedQueriesPermissions, error) {
+// CreateSavedQueryPermissionToPublic creates a new entry to the SavedQueriesPermissions table granting global read permissions to all users
+func (s *BloodhoundDB) CreateSavedQueryPermissionToPublic(ctx context.Context, queryID int64) (model.SavedQueriesPermissions, error) {
 	permission := model.SavedQueriesPermissions{
 		QueryID: queryID,
-		Global:  true,
+		Public:  true,
 	}
 
 	return permission, CheckError(s.db.WithContext(ctx).Create(&permission))
@@ -53,10 +53,9 @@ func (s *BloodhoundDB) CreateSavedQueryPermissionToGlobal(ctx context.Context, q
 
 // CheckUserHasPermissionToSavedQuery returns true or false depending on if the given userID has permission to read the given queryID
 func (s *BloodhoundDB) CheckUserHasPermissionToSavedQuery(ctx context.Context, queryID int64, userID uuid.UUID) (bool, error) {
-	userHasPermission := false
-	result := s.db.WithContext(ctx).First(&userHasPermission, "user_id = ? AND query_id = ?", userID, queryID)
+	result := s.db.WithContext(ctx).Where("query_id = ? AND user_id = ?", queryID, userID).Or("query_id = ? AND public = true", queryID).Limit(1)
 
-	return userHasPermission, CheckError(result)
+	return result.RowsAffected > 0, CheckError(result)
 }
 
 // GetPermissionsForSavedQuery gets all permissions associated with the provided query ID

@@ -52,7 +52,7 @@ func TestSavedQueriesPermissions_SharingToUser(t *testing.T) {
 	require.NoError(t, err)
 
 	assert.Equal(t, database.NullUUID(user2.ID), permissions.SharedToUserID)
-	assert.Equal(t, false, permissions.Global)
+	assert.Equal(t, false, permissions.Public)
 	assert.Equal(t, query.ID, permissions.QueryID)
 }
 
@@ -70,9 +70,9 @@ func TestSavedQueriesPermissions_SharingToGlobal(t *testing.T) {
 	query, err := dbInst.CreateSavedQuery(testCtx, user.ID, "Test Query", "MATCH(n) RETURN n", "An example Query")
 	require.NoError(t, err)
 
-	permissions, err := dbInst.CreateSavedQueryPermissionToGlobal(testCtx, query.ID)
+	permissions, err := dbInst.CreateSavedQueryPermissionToPublic(testCtx, query.ID)
 	require.NoError(t, err)
 
-	assert.Equal(t, true, permissions.Global)
+	assert.Equal(t, true, permissions.Public)
 	assert.Equal(t, query.ID, permissions.QueryID)
 }

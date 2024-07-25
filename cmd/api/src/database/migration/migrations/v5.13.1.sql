@@ -22,7 +22,7 @@ CREATE TABLE IF NOT EXISTS saved_queries_permissions
   id                BIGSERIAL PRIMARY KEY,
   shared_to_user_id TEXT REFERENCES users (id) ON DELETE CASCADE DEFAULT NULL,
   query_id          BIGSERIAL REFERENCES saved_queries (id) ON DELETE CASCADE  NOT NULL,
-  global            BOOL                                         DEFAULT FALSE NOT NULL,
+  public            BOOL                                         DEFAULT FALSE NOT NULL,
   created_at        TIMESTAMP WITH TIME ZONE                     DEFAULT now(),
   updated_at        TIMESTAMP WITH TIME ZONE                     DEFAULT now(),
   UNIQUE (shared_to_user_id, query_id)

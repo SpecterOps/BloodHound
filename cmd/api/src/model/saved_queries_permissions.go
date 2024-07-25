@@ -26,7 +26,7 @@ type SavedQueriesPermissions struct {
 	ID             int64         `json:"id"`
 	SharedToUserID uuid.NullUUID `json:"shared_to_user_id"`
 	QueryID        int64         `json:"query_id"`
-	Global         bool          `json:"global"`
+	Public         bool          `json:"public"`
 
 	Basic
 }
