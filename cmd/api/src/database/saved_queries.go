@@ -28,7 +28,6 @@ type SavedQueriesData interface {
 	CreateSavedQuery(ctx context.Context, userID uuid.UUID, name string, query string, description string) (model.SavedQuery, error)
 	DeleteSavedQuery(ctx context.Context, id int) error
 	SavedQueryBelongsToUser(ctx context.Context, userID uuid.UUID, savedQueryID int) (bool, error)
-	DeleteAssetGroupSelectorsForAssetGroups(ctx context.Context, assetGroupIds []int) error
 	GetSavedQueriesSharedWithUser(ctx context.Context, userID int64) (model.SavedQueries, error)
 	GetSavedQueriesSharedGlobally(ctx context.Context) (model.SavedQueries, error)
 }

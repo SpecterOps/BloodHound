@@ -81,6 +81,7 @@ type Database interface {
 	GetAssetGroupSelector(ctx context.Context, id int32) (model.AssetGroupSelector, error)
 	DeleteAssetGroupSelector(ctx context.Context, selector model.AssetGroupSelector) error
 	UpdateAssetGroupSelectors(ctx context.Context, assetGroup model.AssetGroup, selectorSpecs []model.AssetGroupSelectorSpec, systemSelector bool) (model.UpdatedAssetGroupSelectors, error)
+	DeleteAssetGroupSelectorsForAssetGroups(ctx context.Context, assetGroupIds []int) error
 
 	Wipe(ctx context.Context) error
 	Migrate(ctx context.Context) error
