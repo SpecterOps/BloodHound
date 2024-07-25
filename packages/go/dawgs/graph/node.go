@@ -18,11 +18,12 @@ package graph
 
 import (
 	"encoding/json"
+	"math"
+	"sync"
+
 	"github.com/RoaringBitmap/roaring"
 	"github.com/RoaringBitmap/roaring/roaring64"
 	"github.com/specterops/bloodhound/dawgs/util/size"
-	"math"
-	"sync"
 )
 
 const (

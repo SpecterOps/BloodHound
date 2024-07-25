@@ -18,9 +18,6 @@ package integration
 
 import (
 	"context"
-	"github.com/specterops/bloodhound/src/config"
-	"github.com/specterops/bloodhound/src/daemons"
-	"github.com/specterops/bloodhound/src/services"
 	"net/http"
 	"time"
 
@@ -28,7 +25,10 @@ import (
 	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/src/bootstrap"
+	"github.com/specterops/bloodhound/src/config"
+	"github.com/specterops/bloodhound/src/daemons"
 	"github.com/specterops/bloodhound/src/database"
+	"github.com/specterops/bloodhound/src/services"
 	"github.com/specterops/bloodhound/src/test/integration/utils"
 )
 

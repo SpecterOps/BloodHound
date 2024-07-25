@@ -248,7 +248,7 @@ func GetADCSESC9aEdgeComposition(ctx context.Context, db graph.Database, edge *g
 				if end.Kinds.ContainsOneOf(ad.EnterpriseCA) {
 					caNode = end
 					return false
-				}	
+				}
 				return true
 			})
 

@@ -19,6 +19,7 @@ package pg
 import (
 	"bytes"
 	"context"
+
 	"github.com/specterops/bloodhound/cypher/backend/pgsql"
 	"github.com/specterops/bloodhound/cypher/backend/pgsql/pgtransition"
 	"github.com/specterops/bloodhound/dawgs/graph"

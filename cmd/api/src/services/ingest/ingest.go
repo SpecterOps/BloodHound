@@ -18,6 +18,7 @@ package ingest
 
 import (
 	"context"
+
 	"github.com/specterops/bloodhound/src/database/types/null"
 	"github.com/specterops/bloodhound/src/model"
 )
@@ -26,7 +27,7 @@ type IngestData interface {
 	CreateIngestTask(ctx context.Context, task model.IngestTask) (model.IngestTask, error)
 }
 
-func CreateIngestTask(ctx context.Context, db IngestData, filename string,fileType model.FileType, requestID string, jobID int64) (model.IngestTask, error) {
+func CreateIngestTask(ctx context.Context, db IngestData, filename string, fileType model.FileType, requestID string, jobID int64) (model.IngestTask, error) {
 	newIngestTask := model.IngestTask{
 		FileName:    filename,
 		RequestGUID: requestID,

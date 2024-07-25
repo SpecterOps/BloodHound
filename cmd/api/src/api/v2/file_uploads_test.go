@@ -20,7 +20,6 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
-	"github.com/specterops/bloodhound/src/model/ingest"
 	"net/http"
 	"testing"
 
@@ -32,6 +31,7 @@ import (
 	dbMocks "github.com/specterops/bloodhound/src/database/mocks"
 	"github.com/specterops/bloodhound/src/database/types/null"
 	"github.com/specterops/bloodhound/src/model"
+	"github.com/specterops/bloodhound/src/model/ingest"
 	"go.uber.org/mock/gomock"
 )
 

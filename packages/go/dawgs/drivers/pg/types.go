@@ -18,6 +18,7 @@ package pg
 
 import (
 	"fmt"
+
 	"github.com/specterops/bloodhound/dawgs/graph"
 )
 

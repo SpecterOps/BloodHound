@@ -60,10 +60,10 @@ const (
 	ErrorResponseRequestTimeout                     = "request timed out"
 	ErrorResponseUserSelfDisable                    = "user attempted to disable themselves"
 	ErrorResponseAGTagWhiteSpace                    = "asset group tags must not contain whitespace"
-	ErrorResponseAGNameTagEmpty						= "asset group name or tag must not be empty"
-	ErrorResponseAGDuplicateName					= "asset group name must be unique"
-	ErrorResponseAGDuplicateTag						= "asset group tag must be unique"
-	ErrorResponseDetailsUniqueViolation 			= "unique constraint was violated"
+	ErrorResponseAGNameTagEmpty                     = "asset group name or tag must not be empty"
+	ErrorResponseAGDuplicateName                    = "asset group name must be unique"
+	ErrorResponseAGDuplicateTag                     = "asset group tag must be unique"
+	ErrorResponseDetailsUniqueViolation             = "unique constraint was violated"
 
 	FmtErrorResponseDetailsBadQueryParameters = "there are errors in the query parameters: %v"
 )

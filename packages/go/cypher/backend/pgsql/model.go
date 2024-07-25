@@ -18,9 +18,9 @@ package pgsql
 
 import (
 	"fmt"
+
 	cypherModel "github.com/specterops/bloodhound/cypher/model"
 	"github.com/specterops/bloodhound/cypher/model/pg"
-
 	"github.com/specterops/bloodhound/dawgs/graph"
 )
 

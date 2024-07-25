@@ -18,6 +18,7 @@ package fixtures
 
 import (
 	"bytes"
+
 	"github.com/specterops/bloodhound/cypher/backend/cypher"
 	"github.com/specterops/bloodhound/cypher/model"
 	"github.com/specterops/bloodhound/dawgs/graph"

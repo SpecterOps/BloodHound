@@ -22,11 +22,12 @@ package database_test
 import (
 	"context"
 	"fmt"
+	"testing"
+
 	"github.com/gofrs/uuid"
 	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/test/integration"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 func TestSavedQueries_ListSavedQueries(t *testing.T) {

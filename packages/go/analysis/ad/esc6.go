@@ -339,41 +339,41 @@ func isCertTemplateValidForESC6(ct *graph.Node, scenarioB bool) (bool, error) {
 
 func GetADCSESC6EdgeComposition(ctx context.Context, db graph.Database, edge *graph.Relationship) (graph.PathSet, error) {
 	/*
-	MATCH p1 = (n {objectid:'S-1-5-21-2697957641-2271029196-387917394-2227'})-[:MemberOf*0..]->()-[:Enroll]->(ca)-[:TrustedForNTAuth]->(nt)-[:NTAuthStoreFor]->(d {objectid:'S-1-5-21-2697957641-2271029196-387917394'})
-	WHERE ca.isuserspecifiessanenabled = true
-	
-	MATCH p2 = (ca)-[:CanAbuseWeakCertBinding|DCFor|TrustedBy*1..]->(d)                  <- ESC6a only
-	MATCH p2 = (ca)-[:CanAbuseUPNCertMapping|DCFor|TrustedBy*1..]->(d)                   <- ESC6b only
-	
-	MATCH p3 = (n)-[:MemberOf*0..]->()-[:GenericAll|Enroll|AllExtendedRights]->(ct)-[:PublishedTo]->(ca)-[:IssuedSignedBy|EnterpriseCAFor|RootCAFor*1..]->(d:Domain)
-	WHERE ct.nosecurityextension = true                                                  <- ESC6a only
-		AND ct.authenticationenabled = true
-        AND ct.requiresmanagerapproval = false
-		AND (ct.schemaversion = 1 OR ct.authorizedsignatures = 0)
-		AND (
-			n:Group
-			OR n:Computer
-			OR (
-				n:User
-				AND ct.subjectaltrequiredns = false
-				AND ct.subjectaltrequiredomaindns = false
-			)
-		)
+			MATCH p1 = (n {objectid:'S-1-5-21-2697957641-2271029196-387917394-2227'})-[:MemberOf*0..]->()-[:Enroll]->(ca)-[:TrustedForNTAuth]->(nt)-[:NTAuthStoreFor]->(d {objectid:'S-1-5-21-2697957641-2271029196-387917394'})
+			WHERE ca.isuserspecifiessanenabled = true
 
-	RETURN p1,p2,p3
+			MATCH p2 = (ca)-[:CanAbuseWeakCertBinding|DCFor|TrustedBy*1..]->(d)                  <- ESC6a only
+			MATCH p2 = (ca)-[:CanAbuseUPNCertMapping|DCFor|TrustedBy*1..]->(d)                   <- ESC6b only
+
+			MATCH p3 = (n)-[:MemberOf*0..]->()-[:GenericAll|Enroll|AllExtendedRights]->(ct)-[:PublishedTo]->(ca)-[:IssuedSignedBy|EnterpriseCAFor|RootCAFor*1..]->(d:Domain)
+			WHERE ct.nosecurityextension = true                                                  <- ESC6a only
+				AND ct.authenticationenabled = true
+		        AND ct.requiresmanagerapproval = false
+				AND (ct.schemaversion = 1 OR ct.authorizedsignatures = 0)
+				AND (
+					n:Group
+					OR n:Computer
+					OR (
+						n:User
+						AND ct.subjectaltrequiredns = false
+						AND ct.subjectaltrequiredomaindns = false
+					)
+				)
+
+			RETURN p1,p2,p3
 	*/
 
 	var (
-		startNode            *graph.Node
-		endNode              *graph.Node
-		traversalInst        = traversal.New(db, analysis.MaximumDatabaseParallelWorkers)
-		lock                 = &sync.Mutex{}
-		paths                = graph.PathSet{}
-		path1Segments        = map[graph.ID][]*graph.PathSegment{}
-		path2Segments        = map[graph.ID][]*graph.PathSegment{}
-		path1EnterpriseCAs   = cardinality.NewBitmap32()
-		path2EnterpriseCAs   = cardinality.NewBitmap32()
-		finalEnterpriseCAs   = cardinality.NewBitmap32()
+		startNode          *graph.Node
+		endNode            *graph.Node
+		traversalInst      = traversal.New(db, analysis.MaximumDatabaseParallelWorkers)
+		lock               = &sync.Mutex{}
+		paths              = graph.PathSet{}
+		path1Segments      = map[graph.ID][]*graph.PathSegment{}
+		path2Segments      = map[graph.ID][]*graph.PathSegment{}
+		path1EnterpriseCAs = cardinality.NewBitmap32()
+		path2EnterpriseCAs = cardinality.NewBitmap32()
+		finalEnterpriseCAs = cardinality.NewBitmap32()
 	)
 
 	if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
@@ -430,7 +430,6 @@ func GetADCSESC6EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 		return nil, err
 	}
 
-
 	// P3
 	if err := traversalInst.BreadthFirst(ctx, traversal.Plan{
 		Root: startNode,
@@ -444,11 +443,11 @@ func GetADCSESC6EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 					paths.AddPath(terminal.Path())
 
 					// add the ECA where the template is published (first ECA in the path in case of multi-tier hierarchy) to final list of ECAs
-					terminal.Path().Walk(func(start, end *graph.Node, relationship *graph.Relationship) bool {						
+					terminal.Path().Walk(func(start, end *graph.Node, relationship *graph.Relationship) bool {
 						if end.Kinds.ContainsOneOf(ad.EnterpriseCA) {
 							finalEnterpriseCAs.Add(end.ID.Uint32())
 							return false
-						}	
+						}
 						return true
 					})
 				}

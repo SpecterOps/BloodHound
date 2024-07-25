@@ -18,19 +18,19 @@ package datapipe
 
 import (
 	"fmt"
-	"github.com/specterops/bloodhound/dawgs/util"
-	"github.com/specterops/bloodhound/src/model/ingest"
-	"github.com/specterops/bloodhound/src/services/fileupload"
 	"io"
 	"strings"
 	"time"
 
 	"github.com/specterops/bloodhound/dawgs/graph"
+	"github.com/specterops/bloodhound/dawgs/util"
 	"github.com/specterops/bloodhound/ein"
 	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/graphschema/azure"
 	"github.com/specterops/bloodhound/graphschema/common"
 	"github.com/specterops/bloodhound/log"
+	"github.com/specterops/bloodhound/src/model/ingest"
+	"github.com/specterops/bloodhound/src/services/fileupload"
 )
 
 const (

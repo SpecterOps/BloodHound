@@ -21,8 +21,6 @@ package database_test
 
 import (
 	"context"
-	"github.com/specterops/bloodhound/src/test/integration"
-	"github.com/specterops/bloodhound/src/utils/test"
 	"testing"
 	"time"
 
@@ -30,6 +28,8 @@ import (
 	"github.com/specterops/bloodhound/src/database"
 	"github.com/specterops/bloodhound/src/database/types/null"
 	"github.com/specterops/bloodhound/src/model"
+	"github.com/specterops/bloodhound/src/test/integration"
+	"github.com/specterops/bloodhound/src/utils/test"
 	"github.com/stretchr/testify/assert"
 )
 

@@ -18,9 +18,10 @@ package neo4j
 
 import (
 	"fmt"
+	"time"
+
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/specterops/bloodhound/dawgs/graph"
-	"time"
 )
 
 func AsTime(value any) (time.Time, error) {
