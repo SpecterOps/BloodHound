@@ -34,7 +34,8 @@ const AssetGroupEdit: FC<{
     assetGroup: AssetGroup;
     filter: AssetGroupMemberParams;
     memberCounts: AssetGroupMemberCounts | undefined;
-}> = ({ assetGroup, filter, memberCounts }) => {
+    userHasGraphWritePermissions: boolean;
+}> = ({ assetGroup, filter, memberCounts, userHasGraphWritePermissions }) => {
     const [changelog, setChangelog] = useState<AssetGroupChangelog>([]);
     const addRows = changelog.filter((entry) => entry.action === ChangelogAction.ADD);
     const removeRows = changelog.filter((entry) => entry.action === ChangelogAction.REMOVE);
@@ -93,19 +94,23 @@ const AssetGroupEdit: FC<{
     return (
         <Box component={Paper} elevation={0} padding={1}>
             <SubHeader label='Total Count' count={memberCounts?.total_count} />
-            <AssetGroupAutocomplete
-                assetGroup={assetGroup}
-                changelog={changelog}
-                onChange={handleUpdateAssetGroupChangelog}
-            />
-            {changelog.length > 0 && (
-                <AssetGroupChangelogTable
-                    addRows={addRows}
-                    removeRows={removeRows}
-                    onRemove={handleRemoveEntryFromChangelog}
-                    onCancel={() => setChangelog([])}
-                    onSubmit={() => mutation.mutate()}
-                />
+            {userHasGraphWritePermissions && (
+                <>
+                    <AssetGroupAutocomplete
+                        assetGroup={assetGroup}
+                        changelog={changelog}
+                        onChange={handleUpdateAssetGroupChangelog}
+                    />
+                    {changelog.length > 0 && (
+                        <AssetGroupChangelogTable
+                            addRows={addRows}
+                            removeRows={removeRows}
+                            onRemove={handleRemoveEntryFromChangelog}
+                            onCancel={() => setChangelog([])}
+                            onSubmit={() => mutation.mutate()}
+                        />
+                    )}
+                </>
             )}
             {Object.entries(memberCounts?.counts ?? {}).map(([kind, count]) => {
                 return <SubHeader key={kind} label={kind} count={count} />;
