@@ -77,12 +77,12 @@ get:
           schema:
             allOf:
               - $ref: './../schemas/api.response.pagination.yaml'
-            type: object
-            properties:
-              data:
-                type: array
-                items:
-                  $ref: './../schemas/model.file-upload-job.yaml'
+              - type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: './../schemas/model.file-upload-job.yaml'
     400:
       $ref: './../responses/bad-request.yaml'
     401:

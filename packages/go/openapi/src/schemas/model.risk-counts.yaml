@@ -17,16 +17,16 @@
 allOf:
   - $ref: './model.components.int64.id.yaml'
   - $ref: './model.components.timestamps.yaml'
-type: object
-properties:
-  CompositeRisk:
-    type: number
-    format: double
-  FindingCount:
-    type: integer
-  ImpactedAssetCount:
-    type: integer
-  DomainSID:
-    type: string
-  Finding:
-    type: string
+  - type: object
+    properties:
+      CompositeRisk:
+        type: number
+        format: double
+      FindingCount:
+        type: integer
+      ImpactedAssetCount:
+        type: integer
+      DomainSID:
+        type: string
+      Finding:
+        type: string

@@ -16,9 +16,9 @@
 
 allOf:
   - $ref: './model.components.base-ad-entity.yaml'
-type: object
-properties:
-  distinguishedname:
-    type: string
-  type:
-    type: string
+  - type: object
+    properties:
+      distinguishedname:
+        type: string
+      type:
+        type: string

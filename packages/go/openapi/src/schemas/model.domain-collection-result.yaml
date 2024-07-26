@@ -17,53 +17,53 @@
 allOf:
   - $ref: './model.components.int64.id.yaml'
   - $ref: './model.components.timestamps.yaml'
-type: object
-properties:
-  job_id:
-    type: integer
-    format: int64
-  domain_name:
-    description: Name of the domain that was enumerated
-    type: string
-  success:
-    description: A boolean value indicating whether the domain enumeration succeeded
-    type: boolean
-  message:
-    description: A status message for a domain enumeration result
-    type: string
-  user_count:
-    description: A count of users enumerated
-    type: integer
-  group_count:
-    description: A count of groups enumerated
-    type: integer
-  computer_count:
-    description: A count of computers enumerated
-    type: integer
-  gpo_count:
-    description: A count of gpos enumerated
-    type: integer
-  ou_count:
-    description: A count of ous enumerated
-    type: integer
-  container_count:
-    description: A count of containers enumerated
-    type: integer
-  aiaca_count:
-    description: A count of aiacas enumerated
-    type: integer
-  rootca_count:
-    description: A count of rootcas enumerated
-    type: integer
-  enterpriseca_count:
-    description: A count of enterprisecas enumerated
-    type: integer
-  ntauthstore_count:
-    description: A count of ntauthstores enumerated
-    type: integer
-  certtemplate_count:
-    description: A count of certtemplates enumerated
-    type: integer
-  deleted_count:
-    description: A count of deleted objects enumerated
-    type: integer
+  - type: object
+    properties:
+      job_id:
+        type: integer
+        format: int64
+      domain_name:
+        description: Name of the domain that was enumerated
+        type: string
+      success:
+        description: A boolean value indicating whether the domain enumeration succeeded
+        type: boolean
+      message:
+        description: A status message for a domain enumeration result
+        type: string
+      user_count:
+        description: A count of users enumerated
+        type: integer
+      group_count:
+        description: A count of groups enumerated
+        type: integer
+      computer_count:
+        description: A count of computers enumerated
+        type: integer
+      gpo_count:
+        description: A count of gpos enumerated
+        type: integer
+      ou_count:
+        description: A count of ous enumerated
+        type: integer
+      container_count:
+        description: A count of containers enumerated
+        type: integer
+      aiaca_count:
+        description: A count of aiacas enumerated
+        type: integer
+      rootca_count:
+        description: A count of rootcas enumerated
+        type: integer
+      enterpriseca_count:
+        description: A count of enterprisecas enumerated
+        type: integer
+      ntauthstore_count:
+        description: A count of ntauthstores enumerated
+        type: integer
+      certtemplate_count:
+        description: A count of certtemplates enumerated
+        type: integer
+      deleted_count:
+        description: A count of deleted objects enumerated
+        type: integer
