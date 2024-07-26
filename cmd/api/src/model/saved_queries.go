@@ -23,8 +23,17 @@ type SavedQuery struct {
 	Name        string `json:"name" gorm:"index:,unique,composite:compositeIndex"`
 	Query       string `json:"query"`
 	Description string `json:"description"`
+	Scope       string `json:"scope"`
 
 	BigSerial
+
+	SavedQueriesResponse
+}
+
+type SavedQueriesResponse struct {
+	SharedQueries SavedQueries `json:"omitempty"`
+	PublicQueries SavedQueries `json:"omitempty"`
+	OwnedQueries  SavedQueries `json:"omitempty"`
 }
 
 type SavedQueries []SavedQuery
@@ -51,6 +60,7 @@ func (s SavedQueries) ValidFilters() map[string][]FilterOperator {
 		"name":        {Equals, NotEquals},
 		"query":       {Equals, NotEquals},
 		"description": {Equals, NotEquals},
+		"scope":       {Equals, NotEquals},
 	}
 }
 
@@ -74,11 +84,13 @@ func (s SavedQueries) GetValidFilterPredicatesAsStrings(column string) ([]string
 	}
 }
 
+// scope added here
 func (s SavedQueries) IsString(column string) bool {
 	switch column {
 	case "name",
 		"query",
-		"description":
+		"description",
+		"scope":
 		return true
 	default:
 		return false

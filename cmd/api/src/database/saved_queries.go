@@ -39,7 +39,7 @@ func (s *BloodhoundDB) ListSavedQueries(ctx context.Context, userID uuid.UUID, o
 		count   int64
 		cursor  = s.Scope(Paginate(skip, limit)).WithContext(ctx).Where("user_id = ?", userID)
 	)
-
+	// change result to query permissions. check if one from hackathon fufills the requirements. probably need to add scope?
 	if filter.SQLString != "" {
 		cursor = cursor.Where(filter.SQLString, filter.Params)
 		result = s.db.Model(&queries).WithContext(ctx).Where("user_id = ?", userID).Where(filter.SQLString, filter.Params).Count(&count)
@@ -54,7 +54,27 @@ func (s *BloodhoundDB) ListSavedQueries(ctx context.Context, userID uuid.UUID, o
 	if order != "" {
 		cursor = cursor.Order(order)
 	}
-	result = cursor.Find(&queries)
+
+	// if name != "" {
+	// 	cursor = cursor.Order(order)
+	// }
+
+	// if description != "" {
+	// 	cursor = cursor.Where("description = ?", description)
+	// }
+
+	// if query != "" {
+	// 	cursor = cursor.Order(order)
+	// }
+
+	// if scope != "" {
+	// this needs to account for multiple
+	// 	cursor = cursor.Order(order)
+	// }
+
+	// result = cursor.Find(&queries)
+
+	result = cursor.Joins("JOIN saved_queries_permissions sqp ON sqp.query_id = saved_queries.id AND (sqp.global OR saved_queries.user_id = ?)", userID).Find(&queries)
 
 	return queries, int(count), CheckError(result)
 }

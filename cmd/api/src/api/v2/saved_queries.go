@@ -66,6 +66,7 @@ func (s Resources) ListSavedQueries(response http.ResponseWriter, request *http.
 		return
 	} else {
 		for name, filters := range queryFilters {
+			//   add scope to query filters
 			if validPredicates, err := savedQueries.GetValidFilterPredicatesAsStrings(name); err != nil {
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("%s: %s", api.ErrorResponseDetailsColumnNotFilterable, name), request), response)
 				return
