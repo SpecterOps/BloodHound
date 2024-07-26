@@ -41,7 +41,7 @@ describe('ContextMenu', async () => {
     afterAll(() => server.close());
 
     const setup = async (permissions?: Permission[]) => {
-        let initialState: {} = {
+        let initialState: object = {
             entityinfo: {
                 selectedNode: {
                     name: 'foo',

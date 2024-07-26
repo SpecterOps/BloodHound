@@ -67,7 +67,7 @@ describe('GroupManagement', () => {
         await act(async () => {
             const user = userEvent.setup();
 
-            let initialState: {} = {
+            let initialState: object = {
                 global: {
                     options: { domain: null },
                 },
