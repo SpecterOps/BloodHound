@@ -20,7 +20,8 @@ import { setupServer } from 'msw/node';
 import { act } from 'react-dom/test-utils';
 import { render, screen, waitFor } from 'src/test-utils';
 import ContextMenu from './ContextMenu';
-import { searchbarActions as actions } from 'bh-shared-ui';
+import { Permission, searchbarActions as actions } from 'bh-shared-ui';
+import { getAuthStateWithPermissions } from 'src/hooks/usePermissions/utils';
 
 describe('ContextMenu', async () => {
     const server = setupServer(
@@ -36,33 +37,40 @@ describe('ContextMenu', async () => {
     );
 
     beforeAll(() => server.listen());
-    beforeEach(async () => {
-        await act(async () => {
-            render(<ContextMenu contextMenu={{ mouseX: 0, mouseY: 0 }} handleClose={vi.fn()} />, {
-                initialState: {
-                    entityinfo: {
-                        selectedNode: {
-                            name: 'foo',
-                            id: '1234',
-                            type: 'User',
-                        },
-                    },
-                    assetgroups: {
-                        assetGroups: [
-                            { tag: 'owned', id: 1 },
-                            { tag: 'admin_tier_0', id: 2 },
-                        ],
-                    },
-                },
-            });
-        });
-    });
-    afterEach(() => {
-        server.resetHandlers();
-    });
+    afterEach(() => server.resetHandlers());
     afterAll(() => server.close());
 
-    it('renders', () => {
+    const setup = async (permissions?: Permission[]) => {
+        let initialState: {} = {
+            entityinfo: {
+                selectedNode: {
+                    name: 'foo',
+                    id: '1234',
+                    type: 'User',
+                },
+            },
+            assetgroups: {
+                assetGroups: [
+                    { tag: 'owned', id: 1 },
+                    { tag: 'admin_tier_0', id: 2 },
+                ],
+            },
+        };
+
+        if (permissions) {
+            initialState = { ...initialState, auth: getAuthStateWithPermissions(permissions) };
+        }
+
+        return await act(async () => {
+            render(<ContextMenu contextMenu={{ mouseX: 0, mouseY: 0 }} handleClose={vi.fn()} />, {
+                initialState,
+            });
+        });
+    };
+
+    it('renders asset group edit options with graph write permissions', async () => {
+        await setup([Permission.GRAPH_DB_WRITE]);
+
         const startNodeOption = screen.getByRole('menuitem', { name: /set as starting node/i });
         const endNodeOption = screen.getByRole('menuitem', { name: /set as ending node/i });
         const addToHighValueOption = screen.getByRole('menuitem', { name: /add to high value/i });
@@ -74,7 +82,21 @@ describe('ContextMenu', async () => {
         expect(addToOwnedOption).toBeInTheDocument();
     });
 
+    it('renders no asset group edit options without graph write permissions', async () => {
+        await setup();
+
+        const startNodeOption = screen.getByRole('menuitem', { name: /set as starting node/i });
+        const endNodeOption = screen.getByRole('menuitem', { name: /set as ending node/i });
+        const addToHighValueOption = screen.queryByText(/add to tier zero/i);
+
+        expect(startNodeOption).toBeInTheDocument();
+        expect(endNodeOption).toBeInTheDocument();
+        expect(addToHighValueOption).toBeNull();
+    });
+
     it('handles setting a start node', async () => {
+        await setup();
+
         const user = userEvent.setup();
         const sourceNodeSelectedSpy = vi.spyOn(actions, 'sourceNodeSelected');
 
@@ -93,6 +115,8 @@ describe('ContextMenu', async () => {
     });
 
     it('handles setting an end node', async () => {
+        await setup();
+
         const user = userEvent.setup();
         const destinationNodeSelectedSpy = vi.spyOn(actions, 'destinationNodeSelected');
 
@@ -108,6 +132,8 @@ describe('ContextMenu', async () => {
     });
 
     it('opens a submenu when user hovers over `Copy`', async () => {
+        await setup();
+
         const user = userEvent.setup();
 
         const copyOption = screen.getByRole('menuitem', { name: /copy/i });

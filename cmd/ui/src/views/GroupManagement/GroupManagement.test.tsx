@@ -25,8 +25,10 @@ import {
     createMockMemberCounts,
     NoEntitySelectedHeader,
     NoEntitySelectedMessage,
+    Permission,
 } from 'bh-shared-ui';
 import userEvent from '@testing-library/user-event';
+import { getAuthStateWithPermissions } from 'src/hooks/usePermissions/utils';
 
 const domain = createMockDomain();
 const assetGroup = createMockAssetGroup();
@@ -61,16 +63,21 @@ afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
 
 describe('GroupManagement', () => {
-    const setup = async () =>
+    const setup = async (permissions?: Permission[]) =>
         await act(async () => {
             const user = userEvent.setup();
-            const screen = render(<GroupManagement />, {
-                initialState: {
-                    global: {
-                        options: { domain: null },
-                    },
+
+            let initialState: {} = {
+                global: {
+                    options: { domain: null },
                 },
-            });
+            };
+
+            if (permissions) {
+                initialState = { ...initialState, auth: getAuthStateWithPermissions(permissions) };
+            }
+
+            const screen = render(<GroupManagement />, { initialState });
             return { user, screen };
         });
 
@@ -91,10 +98,16 @@ describe('GroupManagement', () => {
         expect(screen.getByTestId('data-selector')).toBeInTheDocument();
     });
 
-    it('renders an edit form for the selected asset group', async () => {
-        const { screen } = await setup();
+    it('renders an edit form for the selected asset group when a user has graph write permissions', async () => {
+        const { screen } = await setup([Permission.GRAPH_DB_WRITE]);
         const input = screen.getByRole('combobox');
         expect(input).toBeInTheDocument();
+    });
+
+    it('does not render an edit form for the selected asset group when a user does not have graph write permissions', async () => {
+        const { screen } = await setup();
+        const input = screen.queryByRole('combobox');
+        expect(input).toBeNull();
     });
 
     it('renders a list of asset group members', async () => {
