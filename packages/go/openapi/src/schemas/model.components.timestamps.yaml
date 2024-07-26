@@ -27,4 +27,4 @@ properties:
   deleted_at:
     allOf:
       - $ref: './null.time.yaml'
-    readOnly: true
+      - readOnly: true

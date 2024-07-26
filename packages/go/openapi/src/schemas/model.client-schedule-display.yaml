@@ -16,32 +16,32 @@
 
 allOf:
   - $ref: './model.components.int32.id.yaml'
-type: object
-properties:
-  client_id:
-    type: string
-    format: uuid
-  rrule:
-    type: string
-  session_collection:
-    type: boolean
-  local_group_collection:
-    type: boolean
-  ad_structure_collection:
-    type: boolean
-  cert_services_collection:
-    type: boolean
-  ca_registry_collection:
-    type: boolean
-  dc_registry_collection:
-    type: boolean
-  all_trusted_domains:
-    type: boolean
-  ous:
-    type: array
-    items:
-      $ref: './model.ou-details.yaml'
-  domains:
-    type: array
-    items:
-      $ref: './model.domain-details.yaml'
+  - type: object
+    properties:
+      client_id:
+        type: string
+        format: uuid
+      rrule:
+        type: string
+      session_collection:
+        type: boolean
+      local_group_collection:
+        type: boolean
+      ad_structure_collection:
+        type: boolean
+      cert_services_collection:
+        type: boolean
+      ca_registry_collection:
+        type: boolean
+      dc_registry_collection:
+        type: boolean
+      all_trusted_domains:
+        type: boolean
+      ous:
+        type: array
+        items:
+          $ref: './model.ou-details.yaml'
+      domains:
+        type: array
+        items:
+          $ref: './model.domain-details.yaml'

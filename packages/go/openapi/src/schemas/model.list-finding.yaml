@@ -17,20 +17,20 @@
 allOf:
   - $ref: './model.components.int32.id.yaml'
   - $ref: './model.components.timestamps.yaml'
-type: object
-properties:
-  Principal:
-    type: string
-  PrincipalKind:
-    type: string
-  Finding:
-    type: string
-  DomainSID:
-    type: string
-  Props:
-    type: object
-    additionalProperties:
-      type: object
-  accepted_until:
-    type: string
-    format: date-time
+  - type: object
+    properties:
+      Principal:
+        type: string
+      PrincipalKind:
+        type: string
+      Finding:
+        type: string
+      DomainSID:
+        type: string
+      Props:
+        type: object
+        additionalProperties:
+          type: object
+      accepted_until:
+        type: string
+        format: date-time

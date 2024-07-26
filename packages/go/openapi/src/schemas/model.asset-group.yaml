@@ -17,20 +17,20 @@
 allOf:
   - $ref: './model.components.int32.id.yaml'
   - $ref: './model.components.timestamps.yaml'
-type: object
-properties:
-  name:
-    type: string
-  tag:
-    type: string
-  system_group:
-    type: boolean
-    readOnly: true
-  selectors:
-    type: array
-    readOnly: true
-    items:
-      $ref: './model.asset-group-selector.yaml'
-  member_count:
-    type: integer
-    readOnly: true
+  - type: object
+    properties:
+      name:
+        type: string
+      tag:
+        type: string
+      system_group:
+        type: boolean
+        readOnly: true
+      selectors:
+        type: array
+        readOnly: true
+        items:
+          $ref: './model.asset-group-selector.yaml'
+      member_count:
+        type: integer
+        readOnly: true
