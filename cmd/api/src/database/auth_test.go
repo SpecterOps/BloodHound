@@ -239,8 +239,6 @@ func TestDatabase_CreateGetDeleteAuthToken(t *testing.T) {
 		t.Fatalf("Expected auth token to have name %s but saw %v", expectedName, newToken.Name.String)
 	} else if err = dbInst.DeleteAuthToken(ctx, newToken); err != nil {
 		t.Fatalf("Failed to delete auth token: %v", err)
-	} else if err = test.VerifyAuditLogs(dbInst, model.AuditLogActionDeleteAuthToken, "id", newToken.ID.String()); err != nil {
-		t.Fatalf("Failed to validate DeleteAuthToken audit logs:\n%v", err)
 	}
 
 	if updatedUser, err := dbInst.GetUser(ctx, user.ID); err != nil {

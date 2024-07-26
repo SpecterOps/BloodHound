@@ -829,10 +829,17 @@ func verifyUserID(createUserTokenRequest *v2.CreateUserToken, user model.User, b
 
 func (s ManagementResource) DeleteAuthToken(response http.ResponseWriter, request *http.Request) {
 	var (
-		pathVars   = mux.Vars(request)
-		rawTokenID = pathVars[api.URIPathVariableTokenID]
-		bhCtx      = ctx.FromRequest(request)
+		pathVars      = mux.Vars(request)
+		rawTokenID    = pathVars[api.URIPathVariableTokenID]
+		bhCtx         = ctx.FromRequest(request)
+		auditLogEntry model.AuditEntry
+		err           error
 	)
+
+	if auditLogEntry, err = model.NewAuditEntry(model.AuditLogActionDeleteAuthToken, model.AuditLogStatusIntent, model.AuditData{}); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
+		return
+	}
 
 	if user, isUser := auth.GetUserFromAuthCtx(bhCtx.AuthCtx); !isUser {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
@@ -840,13 +847,29 @@ func (s ManagementResource) DeleteAuthToken(response http.ResponseWriter, reques
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsIDMalformed, request), response)
 	} else if token, err := s.db.GetAuthToken(request.Context(), tokenID); err != nil {
 		api.HandleDatabaseError(request, response, err)
-	} else if token.UserID.Valid && token.UserID.UUID != user.ID && !s.authorizer.AllowsPermission(bhCtx.AuthCtx, auth.Permissions().AuthManageUsers) {
-		log.Errorf("Bad user ID: %s != %s", token.UserID.UUID.String(), user.ID.String())
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, api.ErrorResponseDetailsResourceNotFound, request), response)
-	} else if err := s.db.DeleteAuthToken(request.Context(), token); err != nil {
-		api.HandleDatabaseError(request, response, err)
 	} else {
-		response.WriteHeader(http.StatusOK)
+		// Log Intent to delete auth token for target user
+		auditLogEntry.Model = auditLogEntry.Model.AuditData().MergeLeft(model.AuditData{"target_user_id": token.UserID.UUID, "id": token.ID.String()})
+		if err = s.db.AppendAuditLog(request.Context(), auditLogEntry); err != nil {
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
+			return
+		}
+
+		if token.UserID.Valid && token.UserID.UUID != user.ID && !s.authorizer.AllowsPermission(bhCtx.AuthCtx, auth.Permissions().AuthManageUsers) {
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusForbidden, api.ErrorResponseDetailsForbidden, request), response)
+			auditLogEntry.Status = model.AuditLogStatusFailure
+		} else if err := s.db.DeleteAuthToken(request.Context(), token); err != nil {
+			auditLogEntry.Status = model.AuditLogStatusFailure
+			api.HandleDatabaseError(request, response, err)
+		} else {
+			auditLogEntry.Status = model.AuditLogStatusSuccess
+			response.WriteHeader(http.StatusOK)
+		}
+
+		if err := s.db.AppendAuditLog(request.Context(), auditLogEntry); err != nil {
+			// We want to keep err scoped because response trumps this error
+			log.Errorf("failure to create mutation audit log %s", err.Error())
+		}
 	}
 }
 
