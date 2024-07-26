@@ -76,8 +76,12 @@ const ContextMenu: FC<{ contextMenu: { mouseX: number; mouseY: number } | null; 
             <MenuItem onClick={handleSetEndingNode}>Set as ending node</MenuItem>
 
             {checkPermission(Permission.GRAPH_DB_WRITE) && [
-                <AssetGroupMenuItem assetGroupId={tierZeroAssetGroupId} assetGroupName='High Value' />,
-                <AssetGroupMenuItem assetGroupId={ownedAssetGroupId} assetGroupName='Owned' />,
+                <AssetGroupMenuItem
+                    key={tierZeroAssetGroupId}
+                    assetGroupId={tierZeroAssetGroupId}
+                    assetGroupName='High Value'
+                />,
+                <AssetGroupMenuItem key={ownedAssetGroupId} assetGroupId={ownedAssetGroupId} assetGroupName='Owned' />,
             ]}
             <CopyMenuItem />
         </Menu>
