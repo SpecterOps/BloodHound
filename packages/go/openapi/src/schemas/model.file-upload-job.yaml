@@ -17,24 +17,24 @@
 allOf:
   - $ref: './model.components.int64.id.yaml'
   - $ref: './model.components.timestamps.yaml'
-type: object
-properties:
-  user_id:
-    type: string
-    format: uuid
-  user_email_address:
-    type: string
-    format: email
-  status:
-    $ref: './enum.job-status.yaml'
-  status_message:
-    type: string
-  start_time:
-    type: string
-    format: date-time
-  end_time:
-    type: string
-    format: date-time
-  last_ingest:
-    type: string
-    format: date-time
+  - type: object
+    properties:
+      user_id:
+        type: string
+        format: uuid
+      user_email_address:
+        type: string
+        format: email
+      status:
+        $ref: './enum.job-status.yaml'
+      status_message:
+        type: string
+      start_time:
+        type: string
+        format: date-time
+      end_time:
+        type: string
+        format: date-time
+      last_ingest:
+        type: string
+        format: date-time

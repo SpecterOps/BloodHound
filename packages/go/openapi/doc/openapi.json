@@ -2010,17 +2010,19 @@
                   "allOf": [
                     {
                       "$ref": "#/components/schemas/api.response.pagination"
-                    }
-                  ],
-                  "type": "object",
-                  "properties": {
-                    "data": {
-                      "type": "array",
-                      "items": {
-                        "$ref": "#/components/schemas/model.file-upload-job"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/model.file-upload-job"
+                          }
+                        }
                       }
                     }
-                  }
+                  ]
                 }
               }
             }
@@ -3710,22 +3712,24 @@
                   "allOf": [
                     {
                       "$ref": "#/components/schemas/api.response.pagination"
-                    }
-                  ],
-                  "type": "object",
-                  "properties": {
-                    "data": {
+                    },
+                    {
                       "type": "object",
                       "properties": {
-                        "members": {
-                          "type": "array",
-                          "items": {
-                            "$ref": "#/components/schemas/model.asset-group-member"
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "members": {
+                              "type": "array",
+                              "items": {
+                                "$ref": "#/components/schemas/model.asset-group-member"
+                              }
+                            }
                           }
                         }
                       }
                     }
-                  }
+                  ]
                 }
               }
             }
@@ -4232,17 +4236,19 @@
                   "allOf": [
                     {
                       "$ref": "#/components/schemas/api.response.pagination"
-                    }
-                  ],
-                  "type": "object",
-                  "properties": {
-                    "data": {
-                      "type": "array",
-                      "items": {
-                        "$ref": "#/components/schemas/model.saved-query"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/model.saved-query"
+                          }
+                        }
                       }
                     }
-                  }
+                  ]
                 }
               }
             }
@@ -12946,9 +12952,11 @@
             "allOf": [
               {
                 "$ref": "#/components/schemas/null.time"
+              },
+              {
+                "readOnly": true
               }
-            ],
-            "readOnly": true
+            ]
           }
         }
       },
@@ -12983,21 +12991,23 @@
           },
           {
             "$ref": "#/components/schemas/model.components.timestamps"
-          }
-        ],
-        "type": "object",
-        "properties": {
-          "digest_method": {
-            "type": "string"
           },
-          "expires_at": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "totp_activated": {
-            "type": "boolean"
+          {
+            "type": "object",
+            "properties": {
+              "digest_method": {
+                "type": "string"
+              },
+              "expires_at": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "totp_activated": {
+                "type": "boolean"
+              }
+            }
           }
-        }
+        ]
       },
       "model.permission": {
         "allOf": [
@@ -13006,19 +13016,21 @@
           },
           {
             "$ref": "#/components/schemas/model.components.timestamps"
-          }
-        ],
-        "type": "object",
-        "properties": {
-          "authority": {
-            "type": "string",
-            "readOnly": true
           },
-          "name": {
-            "type": "string",
-            "readOnly": true
+          {
+            "type": "object",
+            "properties": {
+              "authority": {
+                "type": "string",
+                "readOnly": true
+              },
+              "name": {
+                "type": "string",
+                "readOnly": true
+              }
+            }
           }
-        }
+        ]
       },
       "model.role": {
         "allOf": [
@@ -13027,26 +13039,28 @@
           },
           {
             "$ref": "#/components/schemas/model.components.timestamps"
-          }
-        ],
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string",
-            "readOnly": true
           },
-          "description": {
-            "type": "string",
-            "readOnly": true
-          },
-          "permissions": {
-            "type": "array",
-            "readOnly": true,
-            "items": {
-              "$ref": "#/components/schemas/model.permission"
+          {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "readOnly": true
+              },
+              "description": {
+                "type": "string",
+                "readOnly": true
+              },
+              "permissions": {
+                "type": "array",
+                "readOnly": true,
+                "items": {
+                  "$ref": "#/components/schemas/model.permission"
+                }
+              }
             }
           }
-        }
+        ]
       },
       "null.string": {
         "type": "object",
@@ -13067,85 +13081,87 @@
           },
           {
             "$ref": "#/components/schemas/model.components.timestamps"
-          }
-        ],
-        "type": "object",
-        "properties": {
-          "saml_provider_id": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/null.int32"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "saml_provider_id": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/null.int32"
+                  },
+                  {
+                    "readOnly": true
+                  }
+                ]
               },
-              {
+              "AuthSecret": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/model.auth-secret"
+                  },
+                  {
+                    "readOnly": true
+                  }
+                ]
+              },
+              "roles": {
+                "type": "array",
+                "readOnly": true,
+                "items": {
+                  "$ref": "#/components/schemas/model.role"
+                }
+              },
+              "first_name": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/null.string"
+                  },
+                  {
+                    "readOnly": true
+                  }
+                ]
+              },
+              "last_name": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/null.string"
+                  },
+                  {
+                    "readOnly": false
+                  }
+                ]
+              },
+              "email_address": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/null.string"
+                  },
+                  {
+                    "readOnly": true
+                  }
+                ]
+              },
+              "principal_name": {
+                "type": "string",
+                "readOnly": true
+              },
+              "last_login": {
+                "type": "string",
+                "readOnly": true,
+                "format": "date-time"
+              },
+              "is_disabled": {
+                "type": "boolean",
+                "readOnly": true
+              },
+              "eula_accepted": {
+                "type": "boolean",
                 "readOnly": true
               }
-            ]
-          },
-          "AuthSecret": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/model.auth-secret"
-              },
-              {
-                "readOnly": true
-              }
-            ]
-          },
-          "roles": {
-            "type": "array",
-            "readOnly": true,
-            "items": {
-              "$ref": "#/components/schemas/model.role"
             }
-          },
-          "first_name": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/null.string"
-              },
-              {
-                "readOnly": true
-              }
-            ]
-          },
-          "last_name": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/null.string"
-              },
-              {
-                "readOnly": false
-              }
-            ]
-          },
-          "email_address": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/null.string"
-              },
-              {
-                "readOnly": true
-              }
-            ]
-          },
-          "principal_name": {
-            "type": "string",
-            "readOnly": true
-          },
-          "last_login": {
-            "type": "string",
-            "readOnly": true,
-            "format": "date-time"
-          },
-          "is_disabled": {
-            "type": "boolean",
-            "readOnly": true
-          },
-          "eula_accepted": {
-            "type": "boolean",
-            "readOnly": true
           }
-        }
+        ]
       },
       "model.client-schedule": {
         "allOf": [
@@ -13154,57 +13170,59 @@
           },
           {
             "$ref": "#/components/schemas/model.components.timestamps"
-          }
-        ],
-        "type": "object",
-        "properties": {
-          "client_id": {
-            "type": "string",
-            "format": "uuid",
-            "readOnly": true
           },
-          "rrule": {
-            "type": "string"
-          },
-          "session_collection": {
-            "type": "boolean"
-          },
-          "local_group_collection": {
-            "type": "boolean"
-          },
-          "ad_structure_collection": {
-            "type": "boolean"
-          },
-          "cert_services_collection": {
-            "type": "boolean"
-          },
-          "ca_registry_collection": {
-            "type": "boolean"
-          },
-          "dc_registry_collection": {
-            "type": "boolean"
-          },
-          "all_trusted_domains": {
-            "type": "boolean"
-          },
-          "next_scheduled_at": {
-            "type": "string",
-            "format": "date-time",
-            "readOnly": true
-          },
-          "ous": {
-            "type": "array",
-            "items": {
-              "type": "string"
+          {
+            "type": "object",
+            "properties": {
+              "client_id": {
+                "type": "string",
+                "format": "uuid",
+                "readOnly": true
+              },
+              "rrule": {
+                "type": "string"
+              },
+              "session_collection": {
+                "type": "boolean"
+              },
+              "local_group_collection": {
+                "type": "boolean"
+              },
+              "ad_structure_collection": {
+                "type": "boolean"
+              },
+              "cert_services_collection": {
+                "type": "boolean"
+              },
+              "ca_registry_collection": {
+                "type": "boolean"
+              },
+              "dc_registry_collection": {
+                "type": "boolean"
+              },
+              "all_trusted_domains": {
+                "type": "boolean"
+              },
+              "next_scheduled_at": {
+                "type": "string",
+                "format": "date-time",
+                "readOnly": true
+              },
+              "ous": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "domains": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
             }
-          },
-          "domains": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
           }
-        }
+        ]
       },
       "null.uuid": {
         "type": "object",
@@ -13226,44 +13244,46 @@
           },
           {
             "$ref": "#/components/schemas/model.components.timestamps"
-          }
-        ],
-        "type": "object",
-        "properties": {
-          "user_id": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/null.uuid"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "user_id": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/null.uuid"
+                  },
+                  {
+                    "readOnly": true
+                  }
+                ]
               },
-              {
+              "name": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/null.string"
+                  },
+                  {
+                    "readOnly": true
+                  }
+                ]
+              },
+              "key": {
+                "type": "string",
+                "readOnly": true
+              },
+              "hmac_method": {
+                "type": "string",
+                "readOnly": true
+              },
+              "last_access": {
+                "type": "string",
+                "format": "date-time",
                 "readOnly": true
               }
-            ]
-          },
-          "name": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/null.string"
-              },
-              {
-                "readOnly": true
-              }
-            ]
-          },
-          "key": {
-            "type": "string",
-            "readOnly": true
-          },
-          "hmac_method": {
-            "type": "string",
-            "readOnly": true
-          },
-          "last_access": {
-            "type": "string",
-            "format": "date-time",
-            "readOnly": true
+            }
           }
-        }
+        ]
       },
       "null.int64": {
         "type": "object",
@@ -13312,75 +13332,77 @@
           },
           {
             "$ref": "#/components/schemas/model.components.timestamps"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "job_id": {
+                "type": "integer",
+                "format": "int64"
+              },
+              "domain_name": {
+                "description": "Name of the domain that was enumerated",
+                "type": "string"
+              },
+              "success": {
+                "description": "A boolean value indicating whether the domain enumeration succeeded",
+                "type": "boolean"
+              },
+              "message": {
+                "description": "A status message for a domain enumeration result",
+                "type": "string"
+              },
+              "user_count": {
+                "description": "A count of users enumerated",
+                "type": "integer"
+              },
+              "group_count": {
+                "description": "A count of groups enumerated",
+                "type": "integer"
+              },
+              "computer_count": {
+                "description": "A count of computers enumerated",
+                "type": "integer"
+              },
+              "gpo_count": {
+                "description": "A count of gpos enumerated",
+                "type": "integer"
+              },
+              "ou_count": {
+                "description": "A count of ous enumerated",
+                "type": "integer"
+              },
+              "container_count": {
+                "description": "A count of containers enumerated",
+                "type": "integer"
+              },
+              "aiaca_count": {
+                "description": "A count of aiacas enumerated",
+                "type": "integer"
+              },
+              "rootca_count": {
+                "description": "A count of rootcas enumerated",
+                "type": "integer"
+              },
+              "enterpriseca_count": {
+                "description": "A count of enterprisecas enumerated",
+                "type": "integer"
+              },
+              "ntauthstore_count": {
+                "description": "A count of ntauthstores enumerated",
+                "type": "integer"
+              },
+              "certtemplate_count": {
+                "description": "A count of certtemplates enumerated",
+                "type": "integer"
+              },
+              "deleted_count": {
+                "description": "A count of deleted objects enumerated",
+                "type": "integer"
+              }
+            }
           }
-        ],
-        "type": "object",
-        "properties": {
-          "job_id": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "domain_name": {
-            "description": "Name of the domain that was enumerated",
-            "type": "string"
-          },
-          "success": {
-            "description": "A boolean value indicating whether the domain enumeration succeeded",
-            "type": "boolean"
-          },
-          "message": {
-            "description": "A status message for a domain enumeration result",
-            "type": "string"
-          },
-          "user_count": {
-            "description": "A count of users enumerated",
-            "type": "integer"
-          },
-          "group_count": {
-            "description": "A count of groups enumerated",
-            "type": "integer"
-          },
-          "computer_count": {
-            "description": "A count of computers enumerated",
-            "type": "integer"
-          },
-          "gpo_count": {
-            "description": "A count of gpos enumerated",
-            "type": "integer"
-          },
-          "ou_count": {
-            "description": "A count of ous enumerated",
-            "type": "integer"
-          },
-          "container_count": {
-            "description": "A count of containers enumerated",
-            "type": "integer"
-          },
-          "aiaca_count": {
-            "description": "A count of aiacas enumerated",
-            "type": "integer"
-          },
-          "rootca_count": {
-            "description": "A count of rootcas enumerated",
-            "type": "integer"
-          },
-          "enterpriseca_count": {
-            "description": "A count of enterprisecas enumerated",
-            "type": "integer"
-          },
-          "ntauthstore_count": {
-            "description": "A count of ntauthstores enumerated",
-            "type": "integer"
-          },
-          "certtemplate_count": {
-            "description": "A count of certtemplates enumerated",
-            "type": "integer"
-          },
-          "deleted_count": {
-            "description": "A count of deleted objects enumerated",
-            "type": "integer"
-          }
-        }
+        ]
       },
       "model.client-scheduled-job": {
         "allOf": [
@@ -13389,118 +13411,120 @@
           },
           {
             "$ref": "#/components/schemas/model.components.timestamps"
-          }
-        ],
-        "type": "object",
-        "properties": {
-          "client_id": {
-            "type": "string",
-            "format": "uuid",
-            "readOnly": true
           },
-          "client_name": {
-            "type": "string",
-            "readOnly": true
-          },
-          "event_id": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/null.int32"
-              },
-              {
+          {
+            "type": "object",
+            "properties": {
+              "client_id": {
+                "type": "string",
+                "format": "uuid",
                 "readOnly": true
-              }
-            ]
-          },
-          "status": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/enum.job-status"
               },
-              {
+              "client_name": {
+                "type": "string",
                 "readOnly": true
-              }
-            ]
-          },
-          "statusMessage": {
-            "type": "string",
-            "readOnly": true
-          },
-          "start_time": {
-            "type": "string",
-            "format": "date-time",
-            "readOnly": true
-          },
-          "end_time": {
-            "type": "string",
-            "format": "date-time",
-            "readOnly": true
-          },
-          "log_path": {
-            "allOf": [
-              {
+              },
+              "event_id": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/null.int32"
+                  },
+                  {
+                    "readOnly": true
+                  }
+                ]
+              },
+              "status": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/enum.job-status"
+                  },
+                  {
+                    "readOnly": true
+                  }
+                ]
+              },
+              "statusMessage": {
+                "type": "string",
+                "readOnly": true
+              },
+              "start_time": {
+                "type": "string",
+                "format": "date-time",
+                "readOnly": true
+              },
+              "end_time": {
+                "type": "string",
+                "format": "date-time",
+                "readOnly": true
+              },
+              "log_path": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/null.string"
+                  },
+                  {
+                    "readOnly": true
+                  }
+                ]
+              },
+              "session_collection": {
+                "type": "boolean"
+              },
+              "local_group_collection": {
+                "type": "boolean"
+              },
+              "ad_structure_collection": {
+                "type": "boolean"
+              },
+              "cert_services_collection": {
+                "type": "boolean"
+              },
+              "ca_registry_collection": {
+                "type": "boolean"
+              },
+              "dc_registry_collection": {
+                "type": "boolean"
+              },
+              "all_trusted_domains": {
+                "type": "boolean"
+              },
+              "domain_controller": {
                 "$ref": "#/components/schemas/null.string"
               },
-              {
+              "event_title": {
+                "type": "string",
                 "readOnly": true
+              },
+              "last_ingest": {
+                "type": "string",
+                "format": "date-time",
+                "readOnly": true
+              },
+              "ous": {
+                "type": "array",
+                "readOnly": true,
+                "items": {
+                  "type": "string"
+                }
+              },
+              "domains": {
+                "type": "array",
+                "readOnly": true,
+                "items": {
+                  "type": "string"
+                }
+              },
+              "domain_results": {
+                "type": "array",
+                "readOnly": true,
+                "items": {
+                  "$ref": "#/components/schemas/model.domain-collection-result"
+                }
               }
-            ]
-          },
-          "session_collection": {
-            "type": "boolean"
-          },
-          "local_group_collection": {
-            "type": "boolean"
-          },
-          "ad_structure_collection": {
-            "type": "boolean"
-          },
-          "cert_services_collection": {
-            "type": "boolean"
-          },
-          "ca_registry_collection": {
-            "type": "boolean"
-          },
-          "dc_registry_collection": {
-            "type": "boolean"
-          },
-          "all_trusted_domains": {
-            "type": "boolean"
-          },
-          "domain_controller": {
-            "$ref": "#/components/schemas/null.string"
-          },
-          "event_title": {
-            "type": "string",
-            "readOnly": true
-          },
-          "last_ingest": {
-            "type": "string",
-            "format": "date-time",
-            "readOnly": true
-          },
-          "ous": {
-            "type": "array",
-            "readOnly": true,
-            "items": {
-              "type": "string"
-            }
-          },
-          "domains": {
-            "type": "array",
-            "readOnly": true,
-            "items": {
-              "type": "string"
-            }
-          },
-          "domain_results": {
-            "type": "array",
-            "readOnly": true,
-            "items": {
-              "$ref": "#/components/schemas/model.domain-collection-result"
             }
           }
-        }
+        ]
       },
       "enum.client-type": {
         "type": "string",
@@ -13517,110 +13541,112 @@
           },
           {
             "$ref": "#/components/schemas/model.components.timestamps"
-          }
-        ],
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string",
-            "readOnly": true
           },
-          "ip_address": {
-            "type": "string",
-            "format": "ipv4",
-            "readOnly": true
-          },
-          "hostname": {
-            "type": "string",
-            "format": "hostname",
-            "readOnly": true
-          },
-          "configured_user": {
-            "type": "string",
-            "readOnly": true
-          },
-          "last_checkin": {
-            "type": "string",
-            "format": "date-time",
-            "readOnly": true
-          },
-          "events": {
-            "type": "array",
-            "readOnly": true,
-            "items": {
-              "$ref": "#/components/schemas/model.client-schedule"
+          {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "readOnly": true
+              },
+              "ip_address": {
+                "type": "string",
+                "format": "ipv4",
+                "readOnly": true
+              },
+              "hostname": {
+                "type": "string",
+                "format": "hostname",
+                "readOnly": true
+              },
+              "configured_user": {
+                "type": "string",
+                "readOnly": true
+              },
+              "last_checkin": {
+                "type": "string",
+                "format": "date-time",
+                "readOnly": true
+              },
+              "events": {
+                "type": "array",
+                "readOnly": true,
+                "items": {
+                  "$ref": "#/components/schemas/model.client-schedule"
+                }
+              },
+              "token": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/model.auth-token"
+                  },
+                  {
+                    "readOnly": true
+                  }
+                ]
+              },
+              "current_job_id": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/null.int64"
+                  },
+                  {
+                    "readOnly": true
+                  }
+                ]
+              },
+              "current_job": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/model.client-scheduled-job"
+                  },
+                  {
+                    "readOnly": true
+                  }
+                ]
+              },
+              "completed_job_count": {
+                "type": "integer",
+                "format": "int32",
+                "readOnly": true
+              },
+              "domain_controller": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/null.string"
+                  },
+                  {
+                    "readOnly": true
+                  }
+                ]
+              },
+              "version": {
+                "type": "string",
+                "readOnly": true
+              },
+              "user_sid": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/null.string"
+                  },
+                  {
+                    "readOnly": true
+                  }
+                ]
+              },
+              "type": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/enum.client-type"
+                  },
+                  {
+                    "readOnly": true
+                  }
+                ]
+              }
             }
-          },
-          "token": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/model.auth-token"
-              },
-              {
-                "readOnly": true
-              }
-            ]
-          },
-          "current_job_id": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/null.int64"
-              },
-              {
-                "readOnly": true
-              }
-            ]
-          },
-          "current_job": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/model.client-scheduled-job"
-              },
-              {
-                "readOnly": true
-              }
-            ]
-          },
-          "completed_job_count": {
-            "type": "integer",
-            "format": "int32",
-            "readOnly": true
-          },
-          "domain_controller": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/null.string"
-              },
-              {
-                "readOnly": true
-              }
-            ]
-          },
-          "version": {
-            "type": "string",
-            "readOnly": true
-          },
-          "user_sid": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/null.string"
-              },
-              {
-                "readOnly": true
-              }
-            ]
-          },
-          "type": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/enum.client-type"
-              },
-              {
-                "readOnly": true
-              }
-            ]
           }
-        }
+        ]
       },
       "model.saml-provider": {
         "allOf": [
@@ -13629,50 +13655,52 @@
           },
           {
             "$ref": "#/components/schemas/model.components.timestamps"
-          }
-        ],
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string",
-            "readOnly": true
           },
-          "display_name": {
-            "type": "string",
-            "readOnly": true
-          },
-          "idp_issuer_uri": {
-            "type": "string",
-            "readOnly": true
-          },
-          "idp_sso_uri": {
-            "type": "string",
-            "readOnly": true
-          },
-          "principal_attribute_mappings": {
-            "type": "array",
-            "readOnly": true,
-            "items": {
-              "type": "string"
+          {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "readOnly": true
+              },
+              "display_name": {
+                "type": "string",
+                "readOnly": true
+              },
+              "idp_issuer_uri": {
+                "type": "string",
+                "readOnly": true
+              },
+              "idp_sso_uri": {
+                "type": "string",
+                "readOnly": true
+              },
+              "principal_attribute_mappings": {
+                "type": "array",
+                "readOnly": true,
+                "items": {
+                  "type": "string"
+                }
+              },
+              "sp_issuer_uri": {
+                "type": "string",
+                "readOnly": true
+              },
+              "sp_sso_uri": {
+                "type": "string",
+                "readOnly": true
+              },
+              "sp_metadata_uri": {
+                "type": "string",
+                "readOnly": true
+              },
+              "sp_acs_uri": {
+                "type": "string",
+                "readOnly": true
+              }
             }
-          },
-          "sp_issuer_uri": {
-            "type": "string",
-            "readOnly": true
-          },
-          "sp_sso_uri": {
-            "type": "string",
-            "readOnly": true
-          },
-          "sp_metadata_uri": {
-            "type": "string",
-            "readOnly": true
-          },
-          "sp_acs_uri": {
-            "type": "string",
-            "readOnly": true
           }
-        }
+        ]
       },
       "model.saml-sign-on-endpoint": {
         "type": "object",
@@ -13821,37 +13849,39 @@
           },
           {
             "$ref": "#/components/schemas/model.components.timestamps"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "user_id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "user_email_address": {
+                "type": "string",
+                "format": "email"
+              },
+              "status": {
+                "$ref": "#/components/schemas/enum.job-status"
+              },
+              "status_message": {
+                "type": "string"
+              },
+              "start_time": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "end_time": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "last_ingest": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
           }
-        ],
-        "type": "object",
-        "properties": {
-          "user_id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "user_email_address": {
-            "type": "string",
-            "format": "email"
-          },
-          "status": {
-            "$ref": "#/components/schemas/enum.job-status"
-          },
-          "status_message": {
-            "type": "string"
-          },
-          "start_time": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "end_time": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "last_ingest": {
-            "type": "string",
-            "format": "date-time"
-          }
-        }
+        ]
       },
       "model.search-result": {
         "type": "object",
@@ -13911,63 +13941,65 @@
         "allOf": [
           {
             "$ref": "#/components/schemas/model.components.int64.id"
-          }
-        ],
-        "type": "object",
-        "properties": {
-          "created_at": {
-            "type": "string",
-            "format": "date-time",
-            "readOnly": true
           },
-          "actor_id": {
-            "type": "string",
-            "format": "uuid",
-            "readOnly": true
-          },
-          "actor_name": {
-            "type": "string",
-            "readOnly": true
-          },
-          "actor_email": {
-            "type": "string",
-            "format": "email",
-            "readOnly": true
-          },
-          "action": {
-            "type": "string",
-            "readOnly": true
-          },
-          "fields": {
+          {
             "type": "object",
-            "readOnly": true
-          },
-          "request_id": {
-            "type": "string",
-            "format": "uuid",
-            "readOnly": true
-          },
-          "source_ip_address": {
-            "type": "string",
-            "format": "ipv4",
-            "readOnly": true
-          },
-          "commit_id": {
-            "type": "string",
-            "format": "uuid",
-            "readOnly": true
-          },
-          "status": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/enum.audit-log-status"
-              },
-              {
+            "properties": {
+              "created_at": {
+                "type": "string",
+                "format": "date-time",
                 "readOnly": true
+              },
+              "actor_id": {
+                "type": "string",
+                "format": "uuid",
+                "readOnly": true
+              },
+              "actor_name": {
+                "type": "string",
+                "readOnly": true
+              },
+              "actor_email": {
+                "type": "string",
+                "format": "email",
+                "readOnly": true
+              },
+              "action": {
+                "type": "string",
+                "readOnly": true
+              },
+              "fields": {
+                "type": "object",
+                "readOnly": true
+              },
+              "request_id": {
+                "type": "string",
+                "format": "uuid",
+                "readOnly": true
+              },
+              "source_ip_address": {
+                "type": "string",
+                "format": "ipv4",
+                "readOnly": true
+              },
+              "commit_id": {
+                "type": "string",
+                "format": "uuid",
+                "readOnly": true
+              },
+              "status": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/enum.audit-log-status"
+                  },
+                  {
+                    "readOnly": true
+                  }
+                ]
               }
-            ]
+            }
           }
-        }
+        ]
       },
       "model.app-config-param": {
         "allOf": [
@@ -13976,25 +14008,27 @@
           },
           {
             "$ref": "#/components/schemas/model.components.timestamps"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "key": {
+                "type": "string"
+              },
+              "value": {
+                "type": "object"
+              },
+              "name": {
+                "type": "string",
+                "readOnly": true
+              },
+              "description": {
+                "type": "string",
+                "readOnly": true
+              }
+            }
           }
-        ],
-        "type": "object",
-        "properties": {
-          "key": {
-            "type": "string"
-          },
-          "value": {
-            "type": "object"
-          },
-          "name": {
-            "type": "string",
-            "readOnly": true
-          },
-          "description": {
-            "type": "string",
-            "readOnly": true
-          }
-        }
+        ]
       },
       "model.feature-flag": {
         "allOf": [
@@ -14003,31 +14037,33 @@
           },
           {
             "$ref": "#/components/schemas/model.components.timestamps"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "key": {
+                "type": "string",
+                "readOnly": true
+              },
+              "name": {
+                "type": "string",
+                "readOnly": true
+              },
+              "description": {
+                "type": "string",
+                "readOnly": true
+              },
+              "enabled": {
+                "type": "boolean",
+                "readOnly": true
+              },
+              "user_updatable": {
+                "type": "boolean",
+                "readOnly": true
+              }
+            }
           }
-        ],
-        "type": "object",
-        "properties": {
-          "key": {
-            "type": "string",
-            "readOnly": true
-          },
-          "name": {
-            "type": "string",
-            "readOnly": true
-          },
-          "description": {
-            "type": "string",
-            "readOnly": true
-          },
-          "enabled": {
-            "type": "boolean",
-            "readOnly": true
-          },
-          "user_updatable": {
-            "type": "boolean",
-            "readOnly": true
-          }
-        }
+        ]
       },
       "model.asset-group-selector": {
         "allOf": [
@@ -14036,24 +14072,26 @@
           },
           {
             "$ref": "#/components/schemas/model.components.timestamps"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "asset_group_id": {
+                "type": "integer",
+                "format": "int32"
+              },
+              "name": {
+                "type": "string"
+              },
+              "selector": {
+                "type": "string"
+              },
+              "system_selector": {
+                "type": "boolean"
+              }
+            }
           }
-        ],
-        "type": "object",
-        "properties": {
-          "asset_group_id": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "name": {
-            "type": "string"
-          },
-          "selector": {
-            "type": "string"
-          },
-          "system_selector": {
-            "type": "boolean"
-          }
-        }
+        ]
       },
       "model.asset-group": {
         "allOf": [
@@ -14062,32 +14100,34 @@
           },
           {
             "$ref": "#/components/schemas/model.components.timestamps"
-          }
-        ],
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string"
           },
-          "tag": {
-            "type": "string"
-          },
-          "system_group": {
-            "type": "boolean",
-            "readOnly": true
-          },
-          "selectors": {
-            "type": "array",
-            "readOnly": true,
-            "items": {
-              "$ref": "#/components/schemas/model.asset-group-selector"
+          {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "tag": {
+                "type": "string"
+              },
+              "system_group": {
+                "type": "boolean",
+                "readOnly": true
+              },
+              "selectors": {
+                "type": "array",
+                "readOnly": true,
+                "items": {
+                  "$ref": "#/components/schemas/model.asset-group-selector"
+                }
+              },
+              "member_count": {
+                "type": "integer",
+                "readOnly": true
+              }
             }
-          },
-          "member_count": {
-            "type": "integer",
-            "readOnly": true
           }
-        }
+        ]
       },
       "model.asset-group-collection-entry": {
         "allOf": [
@@ -14096,28 +14136,30 @@
           },
           {
             "$ref": "#/components/schemas/model.components.timestamps"
-          }
-        ],
-        "type": "object",
-        "properties": {
-          "asset_group_collection_id": {
-            "type": "integer",
-            "format": "int64",
-            "writeOnly": true
           },
-          "object_id": {
-            "type": "string",
-            "readOnly": true
-          },
-          "node_label": {
-            "type": "string",
-            "readOnly": true
-          },
-          "properties": {
+          {
             "type": "object",
-            "readOnly": true
+            "properties": {
+              "asset_group_collection_id": {
+                "type": "integer",
+                "format": "int64",
+                "writeOnly": true
+              },
+              "object_id": {
+                "type": "string",
+                "readOnly": true
+              },
+              "node_label": {
+                "type": "string",
+                "readOnly": true
+              },
+              "properties": {
+                "type": "object",
+                "readOnly": true
+              }
+            }
           }
-        }
+        ]
       },
       "model.asset-group-collection": {
         "allOf": [
@@ -14126,18 +14168,20 @@
           },
           {
             "$ref": "#/components/schemas/model.components.timestamps"
-          }
-        ],
-        "type": "object",
-        "properties": {
-          "entries": {
-            "type": "array",
-            "readOnly": true,
-            "items": {
-              "$ref": "#/components/schemas/model.asset-group-collection-entry"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "entries": {
+                "type": "array",
+                "readOnly": true,
+                "items": {
+                  "$ref": "#/components/schemas/model.asset-group-collection-entry"
+                }
+              }
             }
           }
-        }
+        ]
       },
       "model.asset-group-selector-spec": {
         "type": "object",
@@ -14290,94 +14334,96 @@
         "allOf": [
           {
             "$ref": "#/components/schemas/model.bh-graph.item"
-          }
-        ],
-        "type": "object",
-        "properties": {
-          "border": {
+          },
+          {
             "type": "object",
             "properties": {
-              "color": {
-                "type": "string"
-              },
-              "lineStyle": {
-                "type": "string"
-              },
-              "width": {
-                "type": "integer"
-              }
-            }
-          },
-          "coordinates": {
-            "type": "object",
-            "properties": {
-              "lat": {
-                "type": "integer"
-              },
-              "lng": {
-                "type": "integer"
-              }
-            }
-          },
-          "cutout": {
-            "type": "boolean"
-          },
-          "fontIcon": {
-            "$ref": "#/components/schemas/model.bh-graph.font-icon"
-          },
-          "halos": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "properties": {
-                "color": {
-                  "type": "string"
-                },
-                "radius": {
-                  "type": "integer"
-                },
-                "width": {
-                  "type": "integer"
+              "border": {
+                "type": "object",
+                "properties": {
+                  "color": {
+                    "type": "string"
+                  },
+                  "lineStyle": {
+                    "type": "string"
+                  },
+                  "width": {
+                    "type": "integer"
+                  }
                 }
-              }
-            }
-          },
-          "image": {
-            "type": "string"
-          },
-          "label": {
-            "type": "object",
-            "properties": {
-              "backgroundColor": {
-                "type": "string"
               },
-              "bold": {
+              "coordinates": {
+                "type": "object",
+                "properties": {
+                  "lat": {
+                    "type": "integer"
+                  },
+                  "lng": {
+                    "type": "integer"
+                  }
+                }
+              },
+              "cutout": {
                 "type": "boolean"
               },
-              "center": {
-                "type": "boolean"
+              "fontIcon": {
+                "$ref": "#/components/schemas/model.bh-graph.font-icon"
               },
-              "color": {
+              "halos": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "color": {
+                      "type": "string"
+                    },
+                    "radius": {
+                      "type": "integer"
+                    },
+                    "width": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              },
+              "image": {
                 "type": "string"
               },
-              "fontFamily": {
+              "label": {
+                "type": "object",
+                "properties": {
+                  "backgroundColor": {
+                    "type": "string"
+                  },
+                  "bold": {
+                    "type": "boolean"
+                  },
+                  "center": {
+                    "type": "boolean"
+                  },
+                  "color": {
+                    "type": "string"
+                  },
+                  "fontFamily": {
+                    "type": "string"
+                  },
+                  "fontSize": {
+                    "type": "integer"
+                  },
+                  "text": {
+                    "type": "string"
+                  }
+                }
+              },
+              "shape": {
                 "type": "string"
               },
-              "fontSize": {
+              "size": {
                 "type": "integer"
-              },
-              "text": {
-                "type": "string"
               }
             }
-          },
-          "shape": {
-            "type": "string"
-          },
-          "size": {
-            "type": "integer"
           }
-        }
+        ]
       },
       "model.bh-graph.link-end": {
         "type": "object",
@@ -14406,40 +14452,42 @@
         "allOf": [
           {
             "$ref": "#/components/schemas/model.bh-graph.item"
-          }
-        ],
-        "type": "object",
-        "properties": {
-          "end1": {
-            "$ref": "#/components/schemas/model.bh-graph.link-end"
           },
-          "end2": {
-            "$ref": "#/components/schemas/model.bh-graph.link-end"
-          },
-          "flow": {
+          {
             "type": "object",
             "properties": {
-              "velocity": {
+              "end1": {
+                "$ref": "#/components/schemas/model.bh-graph.link-end"
+              },
+              "end2": {
+                "$ref": "#/components/schemas/model.bh-graph.link-end"
+              },
+              "flow": {
+                "type": "object",
+                "properties": {
+                  "velocity": {
+                    "type": "integer"
+                  }
+                }
+              },
+              "id1": {
+                "type": "string"
+              },
+              "id2": {
+                "type": "string"
+              },
+              "label": {
+                "$ref": "#/components/schemas/model.bh-graph.label"
+              },
+              "lineStyle": {
+                "type": "string"
+              },
+              "width": {
                 "type": "integer"
               }
             }
-          },
-          "id1": {
-            "type": "string"
-          },
-          "id2": {
-            "type": "string"
-          },
-          "label": {
-            "$ref": "#/components/schemas/model.bh-graph.label"
-          },
-          "lineStyle": {
-            "type": "string"
-          },
-          "width": {
-            "type": "integer"
           }
-        }
+        ]
       },
       "model.bh-graph.graph": {
         "type": "object",
@@ -14537,25 +14585,27 @@
           },
           {
             "$ref": "#/components/schemas/model.components.timestamps"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "user_id": {
+                "type": "string",
+                "format": "uuid",
+                "readOnly": true
+              },
+              "name": {
+                "type": "string"
+              },
+              "query": {
+                "type": "string"
+              },
+              "description": {
+                "type": "string"
+              }
+            }
           }
-        ],
-        "type": "object",
-        "properties": {
-          "user_id": {
-            "type": "string",
-            "format": "uuid",
-            "readOnly": true
-          },
-          "name": {
-            "type": "string"
-          },
-          "query": {
-            "type": "string"
-          },
-          "description": {
-            "type": "string"
-          }
-        }
+        ]
       },
       "api.response.time-window": {
         "type": "object",
@@ -14579,68 +14629,70 @@
           },
           {
             "$ref": "#/components/schemas/model.components.timestamps"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "domain_sid": {
+                "type": "string"
+              },
+              "users": {
+                "type": "integer"
+              },
+              "groups": {
+                "type": "integer"
+              },
+              "computers": {
+                "type": "integer"
+              },
+              "ous": {
+                "type": "integer"
+              },
+              "containers": {
+                "type": "integer"
+              },
+              "gpos": {
+                "type": "integer"
+              },
+              "aiacas": {
+                "type": "integer"
+              },
+              "rootcas": {
+                "type": "integer"
+              },
+              "enterprisecas": {
+                "type": "integer"
+              },
+              "ntauthstores": {
+                "type": "integer"
+              },
+              "certtemplates": {
+                "type": "integer"
+              },
+              "acls": {
+                "type": "integer"
+              },
+              "sessions": {
+                "type": "integer"
+              },
+              "relationships": {
+                "type": "integer"
+              },
+              "session_completeness": {
+                "type": "number",
+                "format": "double"
+              },
+              "local_group_completeness": {
+                "type": "number",
+                "format": "double"
+              },
+              "run_id": {
+                "type": "string",
+                "format": "uuid"
+              }
+            }
           }
-        ],
-        "type": "object",
-        "properties": {
-          "domain_sid": {
-            "type": "string"
-          },
-          "users": {
-            "type": "integer"
-          },
-          "groups": {
-            "type": "integer"
-          },
-          "computers": {
-            "type": "integer"
-          },
-          "ous": {
-            "type": "integer"
-          },
-          "containers": {
-            "type": "integer"
-          },
-          "gpos": {
-            "type": "integer"
-          },
-          "aiacas": {
-            "type": "integer"
-          },
-          "rootcas": {
-            "type": "integer"
-          },
-          "enterprisecas": {
-            "type": "integer"
-          },
-          "ntauthstores": {
-            "type": "integer"
-          },
-          "certtemplates": {
-            "type": "integer"
-          },
-          "acls": {
-            "type": "integer"
-          },
-          "sessions": {
-            "type": "integer"
-          },
-          "relationships": {
-            "type": "integer"
-          },
-          "session_completeness": {
-            "type": "number",
-            "format": "double"
-          },
-          "local_group_completeness": {
-            "type": "number",
-            "format": "double"
-          },
-          "run_id": {
-            "type": "string",
-            "format": "uuid"
-          }
-        }
+        ]
       },
       "model.azure-data-quality-stat": {
         "allOf": [
@@ -14649,52 +14701,54 @@
           },
           {
             "$ref": "#/components/schemas/model.components.timestamps"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "tenantid": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "users": {
+                "type": "integer"
+              },
+              "groups": {
+                "type": "integer"
+              },
+              "apps": {
+                "type": "integer"
+              },
+              "service_principals": {
+                "type": "integer"
+              },
+              "devices": {
+                "type": "integer"
+              },
+              "management_groups": {
+                "type": "integer"
+              },
+              "subscriptions": {
+                "type": "integer"
+              },
+              "resource_groups": {
+                "type": "integer"
+              },
+              "vms": {
+                "type": "integer"
+              },
+              "key_vaults": {
+                "type": "integer"
+              },
+              "relationships": {
+                "type": "integer"
+              },
+              "run_id": {
+                "type": "string",
+                "format": "uuid"
+              }
+            }
           }
-        ],
-        "type": "object",
-        "properties": {
-          "tenantid": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "users": {
-            "type": "integer"
-          },
-          "groups": {
-            "type": "integer"
-          },
-          "apps": {
-            "type": "integer"
-          },
-          "service_principals": {
-            "type": "integer"
-          },
-          "devices": {
-            "type": "integer"
-          },
-          "management_groups": {
-            "type": "integer"
-          },
-          "subscriptions": {
-            "type": "integer"
-          },
-          "resource_groups": {
-            "type": "integer"
-          },
-          "vms": {
-            "type": "integer"
-          },
-          "key_vaults": {
-            "type": "integer"
-          },
-          "relationships": {
-            "type": "integer"
-          },
-          "run_id": {
-            "type": "string",
-            "format": "uuid"
-          }
-        }
+        ]
       },
       "model.ad-data-quality-aggregation": {
         "allOf": [
@@ -14703,68 +14757,70 @@
           },
           {
             "$ref": "#/components/schemas/model.components.timestamps"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "domains": {
+                "type": "integer"
+              },
+              "users": {
+                "type": "integer"
+              },
+              "groups": {
+                "type": "integer"
+              },
+              "computers": {
+                "type": "integer"
+              },
+              "ous": {
+                "type": "integer"
+              },
+              "containers": {
+                "type": "integer"
+              },
+              "gpos": {
+                "type": "integer"
+              },
+              "aiacas": {
+                "type": "integer"
+              },
+              "rootcas": {
+                "type": "integer"
+              },
+              "enterprisecas": {
+                "type": "integer"
+              },
+              "ntauthstores": {
+                "type": "integer"
+              },
+              "certtemplates": {
+                "type": "integer"
+              },
+              "acls": {
+                "type": "integer"
+              },
+              "sessions": {
+                "type": "integer"
+              },
+              "relationships": {
+                "type": "integer"
+              },
+              "session_completeness": {
+                "type": "number",
+                "format": "float"
+              },
+              "local_group_completeness": {
+                "type": "number",
+                "format": "float"
+              },
+              "run_id": {
+                "type": "string",
+                "format": "uuid"
+              }
+            }
           }
-        ],
-        "type": "object",
-        "properties": {
-          "domains": {
-            "type": "integer"
-          },
-          "users": {
-            "type": "integer"
-          },
-          "groups": {
-            "type": "integer"
-          },
-          "computers": {
-            "type": "integer"
-          },
-          "ous": {
-            "type": "integer"
-          },
-          "containers": {
-            "type": "integer"
-          },
-          "gpos": {
-            "type": "integer"
-          },
-          "aiacas": {
-            "type": "integer"
-          },
-          "rootcas": {
-            "type": "integer"
-          },
-          "enterprisecas": {
-            "type": "integer"
-          },
-          "ntauthstores": {
-            "type": "integer"
-          },
-          "certtemplates": {
-            "type": "integer"
-          },
-          "acls": {
-            "type": "integer"
-          },
-          "sessions": {
-            "type": "integer"
-          },
-          "relationships": {
-            "type": "integer"
-          },
-          "session_completeness": {
-            "type": "number",
-            "format": "float"
-          },
-          "local_group_completeness": {
-            "type": "number",
-            "format": "float"
-          },
-          "run_id": {
-            "type": "string",
-            "format": "uuid"
-          }
-        }
+        ]
       },
       "model.azure-data-quality-aggregation": {
         "allOf": [
@@ -14773,51 +14829,53 @@
           },
           {
             "$ref": "#/components/schemas/model.components.timestamps"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "tenants": {
+                "type": "integer"
+              },
+              "users": {
+                "type": "integer"
+              },
+              "groups": {
+                "type": "integer"
+              },
+              "apps": {
+                "type": "integer"
+              },
+              "service_principals": {
+                "type": "integer"
+              },
+              "devices": {
+                "type": "integer"
+              },
+              "management_groups": {
+                "type": "integer"
+              },
+              "subscriptions": {
+                "type": "integer"
+              },
+              "resource_groups": {
+                "type": "integer"
+              },
+              "vms": {
+                "type": "integer"
+              },
+              "key_vaults": {
+                "type": "integer"
+              },
+              "relationships": {
+                "type": "integer"
+              },
+              "run_id": {
+                "type": "string",
+                "format": "uuid"
+              }
+            }
           }
-        ],
-        "type": "object",
-        "properties": {
-          "tenants": {
-            "type": "integer"
-          },
-          "users": {
-            "type": "integer"
-          },
-          "groups": {
-            "type": "integer"
-          },
-          "apps": {
-            "type": "integer"
-          },
-          "service_principals": {
-            "type": "integer"
-          },
-          "devices": {
-            "type": "integer"
-          },
-          "management_groups": {
-            "type": "integer"
-          },
-          "subscriptions": {
-            "type": "integer"
-          },
-          "resource_groups": {
-            "type": "integer"
-          },
-          "vms": {
-            "type": "integer"
-          },
-          "key_vaults": {
-            "type": "integer"
-          },
-          "relationships": {
-            "type": "integer"
-          },
-          "run_id": {
-            "type": "string",
-            "format": "uuid"
-          }
-        }
+        ]
       },
       "enum.datapipe-status": {
         "type": "string",
@@ -14845,228 +14903,238 @@
         "allOf": [
           {
             "$ref": "#/components/schemas/model.components.base-ad-entity"
-          }
-        ],
-        "type": "object",
-        "properties": {
-          "distinguishedname": {
-            "type": "string"
           },
-          "type": {
-            "type": "string"
+          {
+            "type": "object",
+            "properties": {
+              "distinguishedname": {
+                "type": "string"
+              },
+              "type": {
+                "type": "string"
+              }
+            }
           }
-        }
+        ]
       },
       "model.domain-details": {
         "allOf": [
           {
             "$ref": "#/components/schemas/model.components.base-ad-entity"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string"
+              }
+            }
           }
-        ],
-        "type": "object",
-        "properties": {
-          "type": {
-            "type": "string"
-          }
-        }
+        ]
       },
       "model.client-schedule-display": {
         "allOf": [
           {
             "$ref": "#/components/schemas/model.components.int32.id"
-          }
-        ],
-        "type": "object",
-        "properties": {
-          "client_id": {
-            "type": "string",
-            "format": "uuid"
           },
-          "rrule": {
-            "type": "string"
-          },
-          "session_collection": {
-            "type": "boolean"
-          },
-          "local_group_collection": {
-            "type": "boolean"
-          },
-          "ad_structure_collection": {
-            "type": "boolean"
-          },
-          "cert_services_collection": {
-            "type": "boolean"
-          },
-          "ca_registry_collection": {
-            "type": "boolean"
-          },
-          "dc_registry_collection": {
-            "type": "boolean"
-          },
-          "all_trusted_domains": {
-            "type": "boolean"
-          },
-          "ous": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/model.ou-details"
+          {
+            "type": "object",
+            "properties": {
+              "client_id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "rrule": {
+                "type": "string"
+              },
+              "session_collection": {
+                "type": "boolean"
+              },
+              "local_group_collection": {
+                "type": "boolean"
+              },
+              "ad_structure_collection": {
+                "type": "boolean"
+              },
+              "cert_services_collection": {
+                "type": "boolean"
+              },
+              "ca_registry_collection": {
+                "type": "boolean"
+              },
+              "dc_registry_collection": {
+                "type": "boolean"
+              },
+              "all_trusted_domains": {
+                "type": "boolean"
+              },
+              "ous": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/model.ou-details"
+                }
+              },
+              "domains": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/model.domain-details"
+                }
+              }
             }
-          },
-          "domains": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/model.domain-details"
-            }
           }
-        }
+        ]
       },
       "model.client-scheduled-job-display": {
         "allOf": [
           {
             "$ref": "#/components/schemas/model.components.int64.id"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "client_id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "client_name": {
+                "type": "string"
+              },
+              "event_id": {
+                "$ref": "#/components/schemas/null.int32"
+              },
+              "execution_time": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "start_time": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "end_time": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "status": {
+                "$ref": "#/components/schemas/enum.job-status"
+              },
+              "status_message": {
+                "type": "string"
+              },
+              "session_collection": {
+                "type": "boolean"
+              },
+              "local_group_collection": {
+                "type": "boolean"
+              },
+              "ad_structure_collection": {
+                "type": "boolean"
+              },
+              "cert_services_collection": {
+                "type": "boolean"
+              },
+              "ca_registry_collection": {
+                "type": "boolean"
+              },
+              "dc_registry_collection": {
+                "type": "boolean"
+              },
+              "all_trusted_domains": {
+                "type": "boolean"
+              },
+              "domain_controller": {
+                "type": "string"
+              },
+              "ous": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/model.ou-details"
+                }
+              },
+              "domains": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/model.domain-details"
+                }
+              },
+              "domain_results": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/model.domain-collection-result"
+                }
+              }
+            }
           }
-        ],
-        "type": "object",
-        "properties": {
-          "client_id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "client_name": {
-            "type": "string"
-          },
-          "event_id": {
-            "$ref": "#/components/schemas/null.int32"
-          },
-          "execution_time": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "start_time": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "end_time": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "status": {
-            "$ref": "#/components/schemas/enum.job-status"
-          },
-          "status_message": {
-            "type": "string"
-          },
-          "session_collection": {
-            "type": "boolean"
-          },
-          "local_group_collection": {
-            "type": "boolean"
-          },
-          "ad_structure_collection": {
-            "type": "boolean"
-          },
-          "cert_services_collection": {
-            "type": "boolean"
-          },
-          "ca_registry_collection": {
-            "type": "boolean"
-          },
-          "dc_registry_collection": {
-            "type": "boolean"
-          },
-          "all_trusted_domains": {
-            "type": "boolean"
-          },
-          "domain_controller": {
-            "type": "string"
-          },
-          "ous": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/model.ou-details"
-            }
-          },
-          "domains": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/model.domain-details"
-            }
-          },
-          "domain_results": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/model.domain-collection-result"
-            }
-          }
-        }
+        ]
       },
       "model.client-display": {
         "allOf": [
           {
             "$ref": "#/components/schemas/model.components.uuid"
-          }
-        ],
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string"
           },
-          "ip_address": {
-            "type": "string",
-            "format": "ipv4"
-          },
-          "hostname": {
-            "type": "string"
-          },
-          "configured_user": {
-            "type": "string"
-          },
-          "last_checkin": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "events": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/model.client-schedule-display"
+          {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "ip_address": {
+                "type": "string",
+                "format": "ipv4"
+              },
+              "hostname": {
+                "type": "string"
+              },
+              "configured_user": {
+                "type": "string"
+              },
+              "last_checkin": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "events": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/model.client-schedule-display"
+                }
+              },
+              "token": {
+                "$ref": "#/components/schemas/model.auth-token"
+              },
+              "current_job_id": {
+                "$ref": "#/components/schemas/null.int64"
+              },
+              "current_task_id": {
+                "$ref": "#/components/schemas/null.int64"
+              },
+              "current_job": {
+                "$ref": "#/components/schemas/model.client-scheduled-job-display"
+              },
+              "current_task": {
+                "$ref": "#/components/schemas/model.client-scheduled-job-display"
+              },
+              "completed_job_count": {
+                "type": "integer",
+                "format": "int32"
+              },
+              "completed_task_count": {
+                "type": "integer",
+                "format": "int32"
+              },
+              "domain_controller": {
+                "$ref": "#/components/schemas/null.string"
+              },
+              "version": {
+                "type": "string"
+              },
+              "user_sid": {
+                "$ref": "#/components/schemas/null.string"
+              },
+              "type": {
+                "$ref": "#/components/schemas/enum.client-type"
+              }
             }
-          },
-          "token": {
-            "$ref": "#/components/schemas/model.auth-token"
-          },
-          "current_job_id": {
-            "$ref": "#/components/schemas/null.int64"
-          },
-          "current_task_id": {
-            "$ref": "#/components/schemas/null.int64"
-          },
-          "current_job": {
-            "$ref": "#/components/schemas/model.client-scheduled-job-display"
-          },
-          "current_task": {
-            "$ref": "#/components/schemas/model.client-scheduled-job-display"
-          },
-          "completed_job_count": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "completed_task_count": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "domain_controller": {
-            "$ref": "#/components/schemas/null.string"
-          },
-          "version": {
-            "type": "string"
-          },
-          "user_sid": {
-            "$ref": "#/components/schemas/null.string"
-          },
-          "type": {
-            "$ref": "#/components/schemas/enum.client-type"
           }
-        }
+        ]
       },
       "api.params.predicate.filter.boolean": {
         "type": "boolean",
@@ -15088,57 +15156,59 @@
           },
           {
             "$ref": "#/components/schemas/model.components.timestamps"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "FromPrincipal": {
+                "type": "string"
+              },
+              "ToPrincipal": {
+                "type": "string"
+              },
+              "FromPrincipalProps": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "object"
+                }
+              },
+              "FromPrincipalKind": {
+                "type": "string"
+              },
+              "ToPrincipalProps": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "object"
+                }
+              },
+              "ToPrincipalKind": {
+                "type": "string"
+              },
+              "RelProps": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "object"
+                }
+              },
+              "ComboGraphRelationID": {
+                "$ref": "#/components/schemas/null.int64"
+              },
+              "Finding": {
+                "type": "string"
+              },
+              "DomainSID": {
+                "type": "string"
+              },
+              "PrincipalHash": {
+                "type": "string"
+              },
+              "AcceptedUntil": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
           }
-        ],
-        "type": "object",
-        "properties": {
-          "FromPrincipal": {
-            "type": "string"
-          },
-          "ToPrincipal": {
-            "type": "string"
-          },
-          "FromPrincipalProps": {
-            "type": "object",
-            "additionalProperties": {
-              "type": "object"
-            }
-          },
-          "FromPrincipalKind": {
-            "type": "string"
-          },
-          "ToPrincipalProps": {
-            "type": "object",
-            "additionalProperties": {
-              "type": "object"
-            }
-          },
-          "ToPrincipalKind": {
-            "type": "string"
-          },
-          "RelProps": {
-            "type": "object",
-            "additionalProperties": {
-              "type": "object"
-            }
-          },
-          "ComboGraphRelationID": {
-            "$ref": "#/components/schemas/null.int64"
-          },
-          "Finding": {
-            "type": "string"
-          },
-          "DomainSID": {
-            "type": "string"
-          },
-          "PrincipalHash": {
-            "type": "string"
-          },
-          "AcceptedUntil": {
-            "type": "string",
-            "format": "date-time"
-          }
-        }
+        ]
       },
       "model.list-finding": {
         "allOf": [
@@ -15147,33 +15217,35 @@
           },
           {
             "$ref": "#/components/schemas/model.components.timestamps"
-          }
-        ],
-        "type": "object",
-        "properties": {
-          "Principal": {
-            "type": "string"
           },
-          "PrincipalKind": {
-            "type": "string"
-          },
-          "Finding": {
-            "type": "string"
-          },
-          "DomainSID": {
-            "type": "string"
-          },
-          "Props": {
+          {
             "type": "object",
-            "additionalProperties": {
-              "type": "object"
+            "properties": {
+              "Principal": {
+                "type": "string"
+              },
+              "PrincipalKind": {
+                "type": "string"
+              },
+              "Finding": {
+                "type": "string"
+              },
+              "DomainSID": {
+                "type": "string"
+              },
+              "Props": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "object"
+                }
+              },
+              "accepted_until": {
+                "type": "string",
+                "format": "date-time"
+              }
             }
-          },
-          "accepted_until": {
-            "type": "string",
-            "format": "date-time"
           }
-        }
+        ]
       },
       "model.risk-counts": {
         "allOf": [
@@ -15182,27 +15254,29 @@
           },
           {
             "$ref": "#/components/schemas/model.components.timestamps"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "CompositeRisk": {
+                "type": "number",
+                "format": "double"
+              },
+              "FindingCount": {
+                "type": "integer"
+              },
+              "ImpactedAssetCount": {
+                "type": "integer"
+              },
+              "DomainSID": {
+                "type": "string"
+              },
+              "Finding": {
+                "type": "string"
+              }
+            }
           }
-        ],
-        "type": "object",
-        "properties": {
-          "CompositeRisk": {
-            "type": "number",
-            "format": "double"
-          },
-          "FindingCount": {
-            "type": "integer"
-          },
-          "ImpactedAssetCount": {
-            "type": "integer"
-          },
-          "DomainSID": {
-            "type": "string"
-          },
-          "Finding": {
-            "type": "string"
-          }
-        }
+        ]
       },
       "model.risk-posture-stat": {
         "allOf": [
@@ -15211,25 +15285,27 @@
           },
           {
             "$ref": "#/components/schemas/model.components.timestamps"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "domain_sid": {
+                "type": "string"
+              },
+              "exposure_index": {
+                "type": "number",
+                "format": "double"
+              },
+              "tier_zero_count": {
+                "type": "integer",
+                "format": "int64"
+              },
+              "critical_risk_count": {
+                "type": "integer"
+              }
+            }
           }
-        ],
-        "type": "object",
-        "properties": {
-          "domain_sid": {
-            "type": "string"
-          },
-          "exposure_index": {
-            "type": "number",
-            "format": "double"
-          },
-          "tier_zero_count": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "critical_risk_count": {
-            "type": "integer"
-          }
-        }
+        ]
       }
     },
     "responses": {

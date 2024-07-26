@@ -17,59 +17,59 @@
 allOf:
   - $ref: './model.components.uuid.yaml'
   - $ref: './model.components.timestamps.yaml'
-type: object
-properties:
-  name:
-    type: string
-    readOnly: true
-  ip_address:
-    type: string
-    format: ipv4
-    readOnly: true
-  hostname:
-    type: string
-    format: hostname
-    readOnly: true
-  configured_user:
-    type: string
-    readOnly: true
-  last_checkin:
-    type: string
-    format: date-time
-    readOnly: true
-  events:
-    type: array
-    readOnly: true
-    items:
-      $ref: './model.client-schedule.yaml'
-  token:
-    allOf:
-      - $ref: './model.auth-token.yaml'
-      - readOnly: true
-  current_job_id:
-    allOf:
-      - $ref: './null.int64.yaml'
-      - readOnly: true
-  current_job:
-    allOf:
-      - $ref: './model.client-scheduled-job.yaml'
-      - readOnly: true
-  completed_job_count:
-    type: integer
-    format: int32
-    readOnly: true
-  domain_controller:
-    allOf:
-      - $ref: './null.string.yaml'
-      - readOnly: true
-  version:
-    type: string
-    readOnly: true
-  user_sid:
-    allOf:
-      - $ref: './null.string.yaml'
-      - readOnly: true
-  type:
-    allOf:
-      - $ref: './enum.client-type.yaml'
-      - readOnly: true
+  - type: object
+    properties:
+      name:
+        type: string
+        readOnly: true
+      ip_address:
+        type: string
+        format: ipv4
+        readOnly: true
+      hostname:
+        type: string
+        format: hostname
+        readOnly: true
+      configured_user:
+        type: string
+        readOnly: true
+      last_checkin:
+        type: string
+        format: date-time
+        readOnly: true
+      events:
+        type: array
+        readOnly: true
+        items:
+          $ref: './model.client-schedule.yaml'
+      token:
+        allOf:
+          - $ref: './model.auth-token.yaml'
+          - readOnly: true
+      current_job_id:
+        allOf:
+          - $ref: './null.int64.yaml'
+          - readOnly: true
+      current_job:
+        allOf:
+          - $ref: './model.client-scheduled-job.yaml'
+          - readOnly: true
+      completed_job_count:
+        type: integer
+        format: int32
+        readOnly: true
+      domain_controller:
+        allOf:
+          - $ref: './null.string.yaml'
+          - readOnly: true
+      version:
+        type: string
+        readOnly: true
+      user_sid:
+        allOf:
+          - $ref: './null.string.yaml'
+          - readOnly: true
+      type:
+        allOf:
+          - $ref: './enum.client-type.yaml'
+          - readOnly: true

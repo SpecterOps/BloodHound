@@ -17,15 +17,15 @@
 allOf:
   - $ref: './model.components.int64.id.yaml'
   - $ref: './model.components.timestamps.yaml'
-type: object
-properties:
-  domain_sid:
-    type: string
-  exposure_index:
-    type: number
-    format: double
-  tier_zero_count:
-    type: integer
-    format: int64
-  critical_risk_count:
-    type: integer
+  - type: object
+    properties:
+      domain_sid:
+        type: string
+      exposure_index:
+        type: number
+        format: double
+      tier_zero_count:
+        type: integer
+        format: int64
+      critical_risk_count:
+        type: integer
