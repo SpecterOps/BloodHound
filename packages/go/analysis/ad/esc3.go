@@ -500,7 +500,7 @@ func GetADCSESC3EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 			} else {
 				if err := traversalInst.BreadthFirst(ctx, traversal.Plan{
 					Root: ecaNode,
-					Driver: ADCSESC3Path6_7Pattern(ecaID, edge.EndID).Do(func(terminal *graph.PathSegment) error {
+					Driver: ADCSESC3Path6_7Pattern(edge.EndID).Do(func(terminal *graph.PathSegment) error {
 						eca := terminal.Path().Root()
 						if eca.ID == ecaID {
 							lock.Lock()
@@ -681,15 +681,15 @@ func ADCSESC3Path3Pattern() traversal.PatternContinuation {
 		))
 }
 
-func ADCSESC3Path6_7Pattern(ecaId graph.ID, domainId graph.ID) traversal.PatternContinuation {
+func ADCSESC3Path6_7Pattern(domainId graph.ID) traversal.PatternContinuation {
 	return traversal.NewPattern().
-		Outbound(query.And(
-			query.Equals(query.StartID(), ecaId),
-			query.KindIn(query.Relationship(), ad.IssuedSignedBy, ad.EnterpriseCAFor),
-		)).
 		OutboundWithDepth(0, 0, query.And(
 			query.KindIn(query.Relationship(), ad.IssuedSignedBy, ad.EnterpriseCAFor),
-			query.KindIn(query.End(), ad.EnterpriseCA, ad.AIACA, ad.RootCA),
+			query.KindIn(query.End(), ad.EnterpriseCA, ad.AIACA),
+		)).
+		Outbound(query.And(
+			query.KindIn(query.Relationship(), ad.IssuedSignedBy, ad.EnterpriseCAFor),
+			query.Kind(query.End(), ad.RootCA),
 		)).
 		Outbound(query.And(
 			query.KindIn(query.Relationship(), ad.RootCAFor),
