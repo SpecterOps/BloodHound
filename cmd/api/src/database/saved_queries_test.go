@@ -22,11 +22,12 @@ package database_test
 import (
 	"context"
 	"fmt"
+	"testing"
+
 	"github.com/gofrs/uuid"
 	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/test/integration"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 func TestSavedQueries_ListSavedQueries(t *testing.T) {
@@ -47,7 +48,7 @@ func TestSavedQueries_ListSavedQueries(t *testing.T) {
 	require.Nil(t, err)
 
 	for i := 0; i < 7; i++ {
-		if _, err := dbInst.CreateSavedQuery(testCtx, userUUID, fmt.Sprintf("saved_query_%d", i), ""); err != nil {
+		if _, err := dbInst.CreateSavedQuery(testCtx, userUUID, fmt.Sprintf("saved_query_%d", i), "", ""); err != nil {
 			t.Fatalf("Error creating audit log: %v", err)
 		}
 	}

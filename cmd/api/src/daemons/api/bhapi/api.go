@@ -18,10 +18,11 @@ package bhapi
 
 import (
 	"context"
+	"net/http"
+
 	"github.com/specterops/bloodhound/errors"
 	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/src/config"
-	"net/http"
 )
 
 // Daemon holds data relevant to the API daemon

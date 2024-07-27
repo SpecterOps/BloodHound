@@ -18,12 +18,13 @@ package pgsql
 
 import (
 	"fmt"
+	"strconv"
+	"strings"
+
 	"github.com/jackc/pgtype"
 	"github.com/specterops/bloodhound/cypher/analyzer"
 	"github.com/specterops/bloodhound/cypher/model"
 	"github.com/specterops/bloodhound/cypher/model/pg"
-	"strconv"
-	"strings"
 )
 
 func GetSymbol(expression model.Expression) (string, error) {

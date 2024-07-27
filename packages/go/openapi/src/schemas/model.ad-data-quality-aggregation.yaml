@@ -17,44 +17,44 @@
 allOf:
   - $ref: './model.components.int32.id.yaml'
   - $ref: './model.components.timestamps.yaml'
-type: object
-properties:
-  domains:
-    type: integer
-  users:
-    type: integer
-  groups:
-    type: integer
-  computers:
-    type: integer
-  ous:
-    type: integer
-  containers:
-    type: integer
-  gpos:
-    type: integer
-  aiacas:
-    type: integer
-  rootcas:
-    type: integer
-  enterprisecas:
-    type: integer
-  ntauthstores:
-    type: integer
-  certtemplates:
-    type: integer
-  acls:
-    type: integer
-  sessions:
-    type: integer
-  relationships:
-    type: integer
-  session_completeness:
-    type: number
-    format: float
-  local_group_completeness:
-    type: number
-    format: float
-  run_id:
-    type: string
-    format: uuid
+  - type: object
+    properties:
+      domains:
+        type: integer
+      users:
+        type: integer
+      groups:
+        type: integer
+      computers:
+        type: integer
+      ous:
+        type: integer
+      containers:
+        type: integer
+      gpos:
+        type: integer
+      aiacas:
+        type: integer
+      rootcas:
+        type: integer
+      enterprisecas:
+        type: integer
+      ntauthstores:
+        type: integer
+      certtemplates:
+        type: integer
+      acls:
+        type: integer
+      sessions:
+        type: integer
+      relationships:
+        type: integer
+      session_completeness:
+        type: number
+        format: float
+      local_group_completeness:
+        type: number
+        format: float
+      run_id:
+        type: string
+        format: uuid

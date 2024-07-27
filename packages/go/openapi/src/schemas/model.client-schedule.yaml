@@ -17,37 +17,37 @@
 allOf:
   - $ref: './model.components.int32.id.yaml'
   - $ref: './model.components.timestamps.yaml'
-type: object
-properties:
-  client_id:
-    type: string
-    format: uuid
-    readOnly: true
-  rrule:
-    type: string
-  session_collection:
-    type: boolean
-  local_group_collection:
-    type: boolean
-  ad_structure_collection:
-    type: boolean
-  cert_services_collection:
-    type: boolean
-  ca_registry_collection:
-    type: boolean
-  dc_registry_collection:
-    type: boolean
-  all_trusted_domains:
-    type: boolean
-  next_scheduled_at:
-    type: string
-    format: date-time
-    readOnly: true
-  ous:
-    type: array
-    items:
-      type: string
-  domains:
-    type: array
-    items:
-      type: string
+  - type: object
+    properties:
+      client_id:
+        type: string
+        format: uuid
+        readOnly: true
+      rrule:
+        type: string
+      session_collection:
+        type: boolean
+      local_group_collection:
+        type: boolean
+      ad_structure_collection:
+        type: boolean
+      cert_services_collection:
+        type: boolean
+      ca_registry_collection:
+        type: boolean
+      dc_registry_collection:
+        type: boolean
+      all_trusted_domains:
+        type: boolean
+      next_scheduled_at:
+        type: string
+        format: date-time
+        readOnly: true
+      ous:
+        type: array
+        items:
+          type: string
+      domains:
+        type: array
+        items:
+          type: string

@@ -20,6 +20,10 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"strconv"
+	"strings"
+	"sync/atomic"
+
 	"github.com/jackc/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/specterops/bloodhound/cypher/backend/pgsql"
@@ -27,9 +31,6 @@ import (
 	sql "github.com/specterops/bloodhound/dawgs/drivers/pg/query"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/log"
-	"strconv"
-	"strings"
-	"sync/atomic"
 )
 
 type Int2ArrayEncoder struct {

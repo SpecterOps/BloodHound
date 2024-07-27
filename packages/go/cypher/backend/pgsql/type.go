@@ -19,6 +19,7 @@ package pgsql
 import (
 	"bytes"
 	"encoding/json"
+
 	"github.com/jackc/pgtype"
 	"github.com/specterops/bloodhound/dawgs/graph"
 )

@@ -20,10 +20,11 @@ package datapipe
 
 import (
 	"context"
-	"github.com/specterops/bloodhound/log"
 	"os"
 	"path/filepath"
 	"sync"
+
+	"github.com/specterops/bloodhound/log"
 )
 
 // FileOperations is an interface for describing filesystem actions. This implementation exists due to deficiencies in

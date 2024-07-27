@@ -19,6 +19,7 @@ package tools
 import (
 	"context"
 	"errors"
+
 	"github.com/jackc/pgx/v5"
 	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/src/config"

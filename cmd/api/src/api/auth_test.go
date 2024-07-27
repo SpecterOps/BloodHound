@@ -19,13 +19,14 @@ package api_test
 import (
 	"context"
 	"crypto/sha256"
+	"net/http"
+	"testing"
+	"time"
+
 	"github.com/specterops/bloodhound/headers"
 	"github.com/specterops/bloodhound/src/api"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
-	"net/http"
-	"testing"
-	"time"
 )
 
 func Test_NewRequestSignature(t *testing.T) {

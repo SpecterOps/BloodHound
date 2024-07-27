@@ -21,14 +21,14 @@ package analysis_test
 
 import (
 	"context"
-	ad2 "github.com/specterops/bloodhound/analysis/ad"
-	schema "github.com/specterops/bloodhound/graphschema"
-	"github.com/specterops/bloodhound/src/test"
 	"testing"
 
 	"github.com/specterops/bloodhound/analysis"
+	ad2 "github.com/specterops/bloodhound/analysis/ad"
 	"github.com/specterops/bloodhound/dawgs/graph"
+	schema "github.com/specterops/bloodhound/graphschema"
 	"github.com/specterops/bloodhound/graphschema/ad"
+	"github.com/specterops/bloodhound/src/test"
 	"github.com/specterops/bloodhound/src/test/integration"
 	"github.com/stretchr/testify/require"
 )
