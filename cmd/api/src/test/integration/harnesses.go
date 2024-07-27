@@ -1775,11 +1775,6 @@ func (s *IssuedSignedByHarness) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.UpdateNode(s.EnterpriseCA1)
 	graphTestContext.UpdateNode(s.EnterpriseCA2)
 	graphTestContext.UpdateNode(s.EnterpriseCA3)
-	graphTestContext.UpdateNode(s.AIACA1_1)
-	graphTestContext.UpdateNode(s.AIACA1_2)
-	graphTestContext.UpdateNode(s.AIACA2_1)
-	graphTestContext.UpdateNode(s.AIACA2_2)
-	graphTestContext.UpdateNode(s.AIACA2_3)
 }
 
 type EnterpriseCAForHarness struct {
@@ -1811,9 +1806,6 @@ func (s *EnterpriseCAForHarness) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.UpdateNode(s.RootCA2)
 	graphTestContext.UpdateNode(s.EnterpriseCA1)
 	graphTestContext.UpdateNode(s.EnterpriseCA2)
-	graphTestContext.UpdateNode(s.AIACA1_1)
-	graphTestContext.UpdateNode(s.AIACA1_2)
-	graphTestContext.UpdateNode(s.AIACA2_1)
 }
 
 type TrustedForNTAuthHarness struct {
