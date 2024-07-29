@@ -27,7 +27,7 @@ import (
 	"github.com/specterops/bloodhound/log"
 )
 
-func updateKey(identityKind graph.Kind, identityProperties []string, updateKinds graph.Kinds) string {
+func newUpdateKey(identityKind graph.Kind, identityProperties []string, updateKinds graph.Kinds) string {
 	keys := []string{
 		identityKind.String(),
 	}
@@ -42,12 +42,10 @@ func updateKey(identityKind graph.Kind, identityProperties []string, updateKinds
 
 func relUpdateKey(update graph.RelationshipUpdate) string {
 	keys := []string{
-		updateKey(update.Relationship.Kind, update.IdentityProperties, nil),
-		updateKey(update.StartIdentityKind, update.StartIdentityProperties, update.Start.Kinds),
-		updateKey(update.EndIdentityKind, update.EndIdentityProperties, update.End.Kinds),
+		newUpdateKey(update.StartIdentityKind, update.StartIdentityProperties, update.Start.Kinds),
+		newUpdateKey(update.Relationship.Kind, update.IdentityProperties, nil),
+		newUpdateKey(update.EndIdentityKind, update.EndIdentityProperties, update.End.Kinds),
 	}
-
-	sort.Strings(keys)
 
 	return strings.Join(keys, "")
 }
@@ -213,7 +211,7 @@ type nodeUpdates struct {
 type nodeUpdateByMap map[string]*nodeUpdates
 
 func (s nodeUpdateByMap) add(update graph.NodeUpdate) {
-	updateKey := updateKey(update.IdentityKind, update.IdentityProperties, update.Node.Kinds)
+	updateKey := newUpdateKey(update.IdentityKind, update.IdentityProperties, update.Node.Kinds)
 
 	if updates, hasUpdates := s[updateKey]; hasUpdates {
 		updates.properties = append(updates.properties, update.Node.Properties.Map)
