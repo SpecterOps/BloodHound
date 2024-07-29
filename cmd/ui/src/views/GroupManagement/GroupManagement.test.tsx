@@ -69,7 +69,7 @@ describe('GroupManagement', () => {
         await act(async () => {
             const user = userEvent.setup();
 
-            let initialState: DeepPartial<AppState> = {
+            const initialState: DeepPartial<AppState> = {
                 global: {
                     options: { domain: null },
                 },

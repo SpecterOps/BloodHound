@@ -47,7 +47,7 @@ describe('ContextMenu', async () => {
     afterAll(() => server.close());
 
     const setup = async (permissions?: Permission[]) => {
-        let initialState: DeepPartial<AppState> = {
+        const initialState: DeepPartial<AppState> = {
             entityinfo: {
                 selectedNode: {
                     name: 'foo',
