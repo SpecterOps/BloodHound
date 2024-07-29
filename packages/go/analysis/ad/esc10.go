@@ -222,8 +222,12 @@ func adcsESC10Path1Pattern(domainID graph.ID, edgeKind graph.Kind) traversal.Pat
 			),
 		).
 		Outbound(query.And(
-			query.KindIn(query.Relationship(), ad.PublishedTo, ad.IssuedSignedBy),
+			query.KindIn(query.Relationship(), ad.PublishedTo),
 			query.Kind(query.End(), ad.EnterpriseCA),
+		)).
+		OutboundWithDepth(0, 0, query.And(
+			query.KindIn(query.Relationship(), ad.IssuedSignedBy, ad.EnterpriseCAFor),
+			query.KindIn(query.End(), ad.EnterpriseCA, ad.AIACA),
 		)).
 		Outbound(query.And(
 			query.KindIn(query.Relationship(), ad.IssuedSignedBy, ad.EnterpriseCAFor),

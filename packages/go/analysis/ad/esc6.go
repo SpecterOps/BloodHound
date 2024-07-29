@@ -554,8 +554,8 @@ func ADCSESC6Path3Pattern(domainId graph.ID, enterpriseCAs cardinality.Duplex[ui
 			query.Kind(query.End(), ad.EnterpriseCA),
 		)).
 		OutboundWithDepth(0, 0, query.And(
-			query.Kind(query.Relationship(), ad.IssuedSignedBy),
-			query.Kind(query.End(), ad.EnterpriseCA),
+			query.KindIn(query.Relationship(), ad.IssuedSignedBy, ad.EnterpriseCAFor),
+			query.KindIn(query.End(), ad.EnterpriseCA, ad.AIACA),
 		)).
 		Outbound(query.And(
 			query.KindIn(query.Relationship(), ad.IssuedSignedBy, ad.EnterpriseCAFor),

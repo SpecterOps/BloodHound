@@ -777,13 +777,12 @@ func certTemplateWithPrivelegesToDomainTraversal(priveleges graph.Kinds, domainI
 			query.Kind(query.End(), ad.EnterpriseCA),
 		)).
 		OutboundWithDepth(0, 0, query.And(
-			query.Kind(query.Relationship(), ad.IssuedSignedBy),
-			query.Kind(query.End(), ad.EnterpriseCA),
-		)).
-		Outbound(
-			query.And(
-				query.KindIn(query.Relationship(), ad.IssuedSignedBy, ad.EnterpriseCAFor),
-				query.Kind(query.End(), ad.RootCA),
+			query.KindIn(query.Relationship(), ad.IssuedSignedBy, ad.EnterpriseCAFor),
+			query.KindIn(query.End(), ad.EnterpriseCA, ad.AIACA),
+			)).
+		Outbound(query.And(
+			query.KindIn(query.Relationship(), ad.IssuedSignedBy, ad.EnterpriseCAFor),
+			query.Kind(query.End(), ad.RootCA),
 			)).
 		Outbound(
 			query.And(
