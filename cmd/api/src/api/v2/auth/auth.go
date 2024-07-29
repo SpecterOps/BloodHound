@@ -829,19 +829,14 @@ func verifyUserID(createUserTokenRequest *v2.CreateUserToken, user model.User, b
 
 func (s ManagementResource) DeleteAuthToken(response http.ResponseWriter, request *http.Request) {
 	var (
-		pathVars      = mux.Vars(request)
-		rawTokenID    = pathVars[api.URIPathVariableTokenID]
-		bhCtx         = ctx.FromRequest(request)
-		auditLogEntry model.AuditEntry
-		err           error
+		pathVars   = mux.Vars(request)
+		rawTokenID = pathVars[api.URIPathVariableTokenID]
+		bhCtx      = ctx.FromRequest(request)
 	)
 
-	if auditLogEntry, err = model.NewAuditEntry(model.AuditLogActionDeleteAuthToken, model.AuditLogStatusIntent, model.AuditData{}); err != nil {
+	if auditLogEntry, err := model.NewAuditEntry(model.AuditLogActionDeleteAuthToken, model.AuditLogStatusIntent, model.AuditData{}); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
-		return
-	}
-
-	if user, isUser := auth.GetUserFromAuthCtx(bhCtx.AuthCtx); !isUser {
+	} else if user, isUser := auth.GetUserFromAuthCtx(bhCtx.AuthCtx); !isUser {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
 	} else if tokenID, err := uuid.FromString(rawTokenID); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsIDMalformed, request), response)
@@ -853,9 +848,7 @@ func (s ManagementResource) DeleteAuthToken(response http.ResponseWriter, reques
 		if err = s.db.AppendAuditLog(request.Context(), auditLogEntry); err != nil {
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
 			return
-		}
-
-		if token.UserID.Valid && token.UserID.UUID != user.ID && !s.authorizer.AllowsPermission(bhCtx.AuthCtx, auth.Permissions().AuthManageUsers) {
+		} else if token.UserID.Valid && token.UserID.UUID != user.ID && !s.authorizer.AllowsPermission(bhCtx.AuthCtx, auth.Permissions().AuthManageUsers) {
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusForbidden, api.ErrorResponseDetailsForbidden, request), response)
 			auditLogEntry.Status = model.AuditLogStatusFailure
 		} else if err := s.db.DeleteAuthToken(request.Context(), token); err != nil {
