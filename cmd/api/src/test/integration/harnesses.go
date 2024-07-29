@@ -1744,6 +1744,11 @@ type IssuedSignedByHarness struct {
 	EnterpriseCA1 *graph.Node
 	EnterpriseCA2 *graph.Node
 	EnterpriseCA3 *graph.Node
+	AIACA1_1      *graph.Node
+	AIACA1_2      *graph.Node
+	AIACA2_1      *graph.Node
+	AIACA2_2      *graph.Node
+	AIACA2_3      *graph.Node
 }
 
 func (s *IssuedSignedByHarness) Setup(graphTestContext *GraphTestContext) {
@@ -1753,6 +1758,11 @@ func (s *IssuedSignedByHarness) Setup(graphTestContext *GraphTestContext) {
 	s.EnterpriseCA1 = graphTestContext.NewActiveDirectoryEnterpriseCAWithThumbprint("eca1", sid, "c")
 	s.EnterpriseCA2 = graphTestContext.NewActiveDirectoryEnterpriseCAWithThumbprint("eca2", sid, "d")
 	s.EnterpriseCA3 = graphTestContext.NewActiveDirectoryEnterpriseCAWithThumbprint("eca2", sid, "e")
+	s.AIACA1_1 = graphTestContext.NewActiveDirectoryAIACA("aiaca1_1", sid, "a", []string{"a"})
+	s.AIACA1_2 = graphTestContext.NewActiveDirectoryAIACA("aiaca1_2", sid, "b", []string{"b", "a"})
+	s.AIACA2_1 = graphTestContext.NewActiveDirectoryAIACA("aiaca2_1", sid, "c", []string{"c", "b", "a"})
+	s.AIACA2_2 = graphTestContext.NewActiveDirectoryAIACA("aiaca2_2", sid, "d", []string{"d", "c", "b", "a"})
+	s.AIACA2_3 = graphTestContext.NewActiveDirectoryAIACA("aiaca2_3", sid, "e", []string{"e"})
 
 	s.RootCA1.Properties.Set(ad.CertChain.String(), []string{"a"})
 	s.RootCA2.Properties.Set(ad.CertChain.String(), []string{"b", "a"})
@@ -1765,6 +1775,37 @@ func (s *IssuedSignedByHarness) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.UpdateNode(s.EnterpriseCA1)
 	graphTestContext.UpdateNode(s.EnterpriseCA2)
 	graphTestContext.UpdateNode(s.EnterpriseCA3)
+}
+
+type EnterpriseCAForHarness struct {
+	RootCA1       *graph.Node
+	RootCA2       *graph.Node
+	EnterpriseCA1 *graph.Node
+	EnterpriseCA2 *graph.Node
+	AIACA1_1      *graph.Node
+	AIACA1_2      *graph.Node
+	AIACA2_1      *graph.Node
+}
+
+func (s *EnterpriseCAForHarness) Setup(graphTestContext *GraphTestContext) {
+	sid := RandomDomainSID()
+	s.RootCA1 = graphTestContext.NewActiveDirectoryRootCAWithThumbprint("rca1", sid, "a")
+	s.RootCA2 = graphTestContext.NewActiveDirectoryRootCAWithThumbprint("rca2", sid, "b")
+	s.EnterpriseCA1 = graphTestContext.NewActiveDirectoryEnterpriseCAWithThumbprint("eca1", sid, "a")
+	s.EnterpriseCA2 = graphTestContext.NewActiveDirectoryEnterpriseCAWithThumbprint("eca2", sid, "c")
+	s.AIACA1_1 = graphTestContext.NewActiveDirectoryAIACA("aiaca1_1", sid, "a", []string{"a"})
+	s.AIACA1_2 = graphTestContext.NewActiveDirectoryAIACA("aiaca1_2", sid, "b", []string{"b"})
+	s.AIACA2_1 = graphTestContext.NewActiveDirectoryAIACA("aiaca2_1", sid, "c", []string{"c", "a"})
+
+	s.RootCA1.Properties.Set(ad.CertChain.String(), []string{"a"})
+	s.RootCA2.Properties.Set(ad.CertChain.String(), []string{"b"})
+	s.EnterpriseCA1.Properties.Set(ad.CertChain.String(), []string{"a"})
+	s.EnterpriseCA2.Properties.Set(ad.CertChain.String(), []string{"c", "a"})
+
+	graphTestContext.UpdateNode(s.RootCA1)
+	graphTestContext.UpdateNode(s.RootCA2)
+	graphTestContext.UpdateNode(s.EnterpriseCA1)
+	graphTestContext.UpdateNode(s.EnterpriseCA2)
 }
 
 type TrustedForNTAuthHarness struct {
@@ -6938,6 +6979,7 @@ type HarnessDetails struct {
 	EnrollOnBehalfOfHarnessTwo                      EnrollOnBehalfOfHarnessTwo
 	ADCSGoldenCertHarness                           ADCSGoldenCertHarness
 	IssuedSignedByHarness                           IssuedSignedByHarness
+	EnterpriseCAForHarness                          EnterpriseCAForHarness
 	WeakCertBindingAndUPNCertMappingHarness         WeakCertBindingAndUPNCertMappingHarness
 	TrustedForNTAuthHarness                         TrustedForNTAuthHarness
 	NumCollectedActiveDirectoryDomains              int
