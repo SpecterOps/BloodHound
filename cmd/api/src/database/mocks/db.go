@@ -22,6 +22,7 @@ package mocks
 
 import (
 	context "context"
+	json "encoding/json"
 	reflect "reflect"
 	time "time"
 
@@ -240,6 +241,21 @@ func (m *MockDatabase) CreateAzureDataQualityStats(arg0 context.Context, arg1 mo
 func (mr *MockDatabaseMockRecorder) CreateAzureDataQualityStats(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateAzureDataQualityStats", reflect.TypeOf((*MockDatabase)(nil).CreateAzureDataQualityStats), arg0, arg1)
+}
+
+// CreateEnvironmentConfiguration mocks base method.
+func (m *MockDatabase) CreateEnvironmentConfiguration(arg0 context.Context, arg1 string, arg2 json.RawMessage) (model.EnvironmentConfiguration, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateEnvironmentConfiguration", arg0, arg1, arg2)
+	ret0, _ := ret[0].(model.EnvironmentConfiguration)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreateEnvironmentConfiguration indicates an expected call of CreateEnvironmentConfiguration.
+func (mr *MockDatabaseMockRecorder) CreateEnvironmentConfiguration(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateEnvironmentConfiguration", reflect.TypeOf((*MockDatabase)(nil).CreateEnvironmentConfiguration), arg0, arg1, arg2)
 }
 
 // CreateFileUploadJob mocks base method.
@@ -906,6 +922,21 @@ func (mr *MockDatabaseMockRecorder) GetDatapipeStatus(arg0 interface{}) *gomock.
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDatapipeStatus", reflect.TypeOf((*MockDatabase)(nil).GetDatapipeStatus), arg0)
 }
 
+// GetEnvironmentConfiguration mocks base method.
+func (m *MockDatabase) GetEnvironmentConfiguration(arg0 context.Context, arg1 string) (model.EnvironmentConfiguration, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetEnvironmentConfiguration", arg0, arg1)
+	ret0, _ := ret[0].(model.EnvironmentConfiguration)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetEnvironmentConfiguration indicates an expected call of GetEnvironmentConfiguration.
+func (mr *MockDatabaseMockRecorder) GetEnvironmentConfiguration(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetEnvironmentConfiguration", reflect.TypeOf((*MockDatabase)(nil).GetEnvironmentConfiguration), arg0, arg1)
+}
+
 // GetFileUploadJob mocks base method.
 func (m *MockDatabase) GetFileUploadJob(arg0 context.Context, arg1 int64) (model.FileUploadJob, error) {
 	m.ctrl.T.Helper()
@@ -1263,6 +1294,22 @@ func (m *MockDatabase) ListAuditLogs(arg0 context.Context, arg1, arg2 time.Time,
 func (mr *MockDatabaseMockRecorder) ListAuditLogs(arg0, arg1, arg2, arg3, arg4, arg5, arg6 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListAuditLogs", reflect.TypeOf((*MockDatabase)(nil).ListAuditLogs), arg0, arg1, arg2, arg3, arg4, arg5, arg6)
+}
+
+// ListEnvironmentConfigurations mocks base method.
+func (m *MockDatabase) ListEnvironmentConfigurations(arg0 context.Context, arg1 string, arg2 model.SQLFilter, arg3, arg4 int) (model.EnvironmentConfigurations, int, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListEnvironmentConfigurations", arg0, arg1, arg2, arg3, arg4)
+	ret0, _ := ret[0].(model.EnvironmentConfigurations)
+	ret1, _ := ret[1].(int)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// ListEnvironmentConfigurations indicates an expected call of ListEnvironmentConfigurations.
+func (mr *MockDatabaseMockRecorder) ListEnvironmentConfigurations(arg0, arg1, arg2, arg3, arg4 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListEnvironmentConfigurations", reflect.TypeOf((*MockDatabase)(nil).ListEnvironmentConfigurations), arg0, arg1, arg2, arg3, arg4)
 }
 
 // ListSavedQueries mocks base method.

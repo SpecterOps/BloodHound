@@ -288,5 +288,7 @@ func NewV2API(cfg config.Configuration, resources v2.Resources, routerInst *rout
 		//TODO: Update the permission on this once we get something more concrete
 		routerInst.GET("/api/v2/analysis/status", resources.GetAnalysisRequest).RequirePermissions(permissions.GraphDBRead),
 		routerInst.PUT("/api/v2/analysis", resources.RequestAnalysis).RequirePermissions(permissions.GraphDBWrite),
+
+		routerInst.POST("/api/v2/environment-configuration", resources.CreateEnvironmentConfiguration).RequirePermissions(permissions.GraphDBWrite),
 	)
 }
