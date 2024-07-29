@@ -92,7 +92,7 @@ const GroupManagement = () => {
             onShowNodeInExplore={handleShowNodeInExplore}
             onClickMember={handleClickMember}
             mapAssetGroups={mapAssetGroups}
-            userHasGraphWritePermissions={checkPermission(Permission.GRAPH_DB_WRITE)}
+            userHasEditPermissions={checkPermission(Permission.GRAPH_DB_WRITE)}
         />
     );
 };

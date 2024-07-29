@@ -20,8 +20,14 @@ import { setupServer } from 'msw/node';
 import { act } from 'react-dom/test-utils';
 import { render, screen, waitFor } from 'src/test-utils';
 import ContextMenu from './ContextMenu';
-import { Permission, searchbarActions as actions } from 'bh-shared-ui';
-import { getAuthStateWithPermissions } from 'src/hooks/usePermissions/utils';
+import {
+    DeepPartial,
+    EntityKinds,
+    Permission,
+    searchbarActions as actions,
+    createAuthStateWithPermissions,
+} from 'bh-shared-ui';
+import { AppState } from 'src/store';
 
 describe('ContextMenu', async () => {
     const server = setupServer(
@@ -41,12 +47,12 @@ describe('ContextMenu', async () => {
     afterAll(() => server.close());
 
     const setup = async (permissions?: Permission[]) => {
-        let initialState: object = {
+        let initialState: DeepPartial<AppState> = {
             entityinfo: {
                 selectedNode: {
                     name: 'foo',
                     id: '1234',
-                    type: 'User',
+                    type: 'User' as EntityKinds,
                 },
             },
             assetgroups: {
@@ -58,7 +64,7 @@ describe('ContextMenu', async () => {
         };
 
         if (permissions) {
-            initialState = { ...initialState, auth: getAuthStateWithPermissions(permissions) };
+            initialState.auth = createAuthStateWithPermissions(permissions);
         }
 
         return await act(async () => {

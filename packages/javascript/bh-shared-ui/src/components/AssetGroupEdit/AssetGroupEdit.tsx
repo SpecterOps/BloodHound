@@ -34,8 +34,8 @@ const AssetGroupEdit: FC<{
     assetGroup: AssetGroup;
     filter: AssetGroupMemberParams;
     memberCounts: AssetGroupMemberCounts | undefined;
-    userHasGraphWritePermissions: boolean;
-}> = ({ assetGroup, filter, memberCounts, userHasGraphWritePermissions }) => {
+    isEditable: boolean;
+}> = ({ assetGroup, filter, memberCounts, isEditable }) => {
     const [changelog, setChangelog] = useState<AssetGroupChangelog>([]);
     const addRows = changelog.filter((entry) => entry.action === ChangelogAction.ADD);
     const removeRows = changelog.filter((entry) => entry.action === ChangelogAction.REMOVE);
@@ -94,7 +94,7 @@ const AssetGroupEdit: FC<{
     return (
         <Box component={Paper} elevation={0} padding={1}>
             <SubHeader label='Total Count' count={memberCounts?.total_count} />
-            {userHasGraphWritePermissions && (
+            {isEditable && (
                 <>
                     <AssetGroupAutocomplete
                         assetGroup={assetGroup}

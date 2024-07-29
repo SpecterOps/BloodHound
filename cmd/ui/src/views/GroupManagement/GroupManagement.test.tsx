@@ -20,15 +20,17 @@ import GroupManagement from './GroupManagement';
 import { rest } from 'msw';
 import { createMockDomain } from 'src/mocks/factories';
 import {
+    createAuthStateWithPermissions,
     createMockAssetGroup,
     createMockAssetGroupMembers,
     createMockMemberCounts,
+    DeepPartial,
     NoEntitySelectedHeader,
     NoEntitySelectedMessage,
     Permission,
 } from 'bh-shared-ui';
 import userEvent from '@testing-library/user-event';
-import { getAuthStateWithPermissions } from 'src/hooks/usePermissions/utils';
+import { AppState } from 'src/store';
 
 const domain = createMockDomain();
 const assetGroup = createMockAssetGroup();
@@ -67,14 +69,14 @@ describe('GroupManagement', () => {
         await act(async () => {
             const user = userEvent.setup();
 
-            let initialState: object = {
+            let initialState: DeepPartial<AppState> = {
                 global: {
                     options: { domain: null },
                 },
             };
 
             if (permissions) {
-                initialState = { ...initialState, auth: getAuthStateWithPermissions(permissions) };
+                initialState.auth = createAuthStateWithPermissions(permissions);
             }
 
             const screen = render(<GroupManagement />, { initialState });

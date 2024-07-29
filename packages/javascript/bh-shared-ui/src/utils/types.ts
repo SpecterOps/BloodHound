@@ -14,17 +14,9 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { PERMISSIONS, Permission } from 'bh-shared-ui';
-
-// Helper function for initializing tests with a certain set of permissions. Can be passed into initialState in the render function
-export const getAuthStateWithPermissions = (permissions: Permission[]) => {
-    return {
-        user: {
-            roles: [
-                {
-                    permissions: permissions.map((p) => PERMISSIONS[p]),
-                },
-            ],
-        },
-    };
-};
+// recursively applies Partial<T> to nested object types
+export type DeepPartial<T> = T extends object
+    ? {
+          [P in keyof T]?: DeepPartial<T[P]>;
+      }
+    : T;
