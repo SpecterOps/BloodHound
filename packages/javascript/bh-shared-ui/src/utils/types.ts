@@ -1,4 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2024 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -14,16 +14,9 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-export * from './api';
-export * from './colors';
-export * from './compatibility';
-export * from './content';
-export * from './datetime';
-export * from './exportGraphData';
-export * from './entityInfoDisplay';
-export * from './passwd';
-export * from './user';
-export * from './icons';
-export * from './permissions';
-export * from './copyToClipboard';
-export * from './types';
+// recursively applies Partial<T> to nested object types
+export type DeepPartial<T> = T extends object
+    ? {
+          [P in keyof T]?: DeepPartial<T[P]>;
+      }
+    : T;
