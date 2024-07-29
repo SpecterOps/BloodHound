@@ -153,7 +153,7 @@ export const CommonSearches: CommonSearchType[] = [
         queries: [
             {
                 description: 'PKI hierarchy',
-                cypher: `MATCH p=()-[:HostsCAService|IssuedSignedBy|EnterpriseCAFor|RootCAFor|TrustedForNTAuth|NTAuthStoreFor*..]->()\nRETURN p`,
+                cypher: `MATCH p=(:Domain)<-[:HostsCAService|IssuedSignedBy|EnterpriseCAFor|RootCAFor|TrustedForNTAuth|NTAuthStoreFor*..]-()\nRETURN p`,
             },
             {
                 description: 'Public Key Services container',
