@@ -18,6 +18,7 @@ package database
 
 import (
 	"context"
+
 	"github.com/gofrs/uuid"
 	"github.com/specterops/bloodhound/src/model"
 	"gorm.io/gorm"
@@ -28,7 +29,7 @@ type SavedQueriesData interface {
 	CreateSavedQuery(ctx context.Context, userID uuid.UUID, name string, query string, description string) (model.SavedQuery, error)
 	DeleteSavedQuery(ctx context.Context, id int) error
 	SavedQueryBelongsToUser(ctx context.Context, userID uuid.UUID, savedQueryID int) (bool, error)
-	GetSharedSavedQueries(ctx context.Context, userID int64) (model.SavedQueries, error)
+	GetSharedSavedQueries(ctx context.Context, userID uuid.UUID) (model.SavedQueries, error)
 	GetPublicSavedQueries(ctx context.Context) (model.SavedQueries, error)
 }
 
@@ -106,7 +107,7 @@ func (s *BloodhoundDB) SavedQueryBelongsToUser(ctx context.Context, userID uuid.
 }
 
 // GetSharedSavedQueries returns all the saved queries that the given userID has access to, including global queries
-func (s *BloodhoundDB) GetSharedSavedQueries(ctx context.Context, userID int64) (model.SavedQueries, error) {
+func (s *BloodhoundDB) GetSharedSavedQueries(ctx context.Context, userID uuid.UUID) (model.SavedQueries, error) {
 	savedQueries := model.SavedQueries{}
 
 	result := s.db.WithContext(ctx).Where("shared_to_user_id = ?", userID).Find(&savedQueries)

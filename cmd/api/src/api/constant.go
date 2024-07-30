@@ -36,6 +36,7 @@ const (
 	QueryParameterHydrateCounts  = "counts"
 	QueryParameterHydrateDomains = "hydrate_domains"
 	QueryParameterHydrateOUs     = "hydrate_ous"
+	QueryParameterScope          = "scope"
 
 	// URI path parameters
 	URIPathVariableApplicationConfigurationParameter = "parameter"

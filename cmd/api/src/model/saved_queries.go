@@ -23,17 +23,8 @@ type SavedQuery struct {
 	Name        string `json:"name" gorm:"index:,unique,composite:compositeIndex"`
 	Query       string `json:"query"`
 	Description string `json:"description"`
-	Scope       string `json:"scope"`
 
 	BigSerial
-
-	SavedQueriesResponse
-}
-
-type SavedQueriesResponse struct {
-	SharedQueries SavedQueries `json:"omitempty"`
-	PublicQueries SavedQueries `json:"omitempty"`
-	OwnedQueries  SavedQueries `json:"omitempty"`
 }
 
 type SavedQueries []SavedQuery

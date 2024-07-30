@@ -32,12 +32,18 @@ import (
 	"gorm.io/gorm/utils"
 )
 
+type SavedQueryResponse struct {
+	model.SavedQuery
+	Scope string `json:"scope"`
+}
+
 func (s Resources) ListSavedQueries(response http.ResponseWriter, request *http.Request) {
 	var (
 		order         []string
 		queryParams   = request.URL.Query()
 		sortByColumns = queryParams[api.QueryParameterSortBy]
 		savedQueries  model.SavedQueries
+		scopes        = queryParams[api.QueryParameterScope]
 	)
 
 	for _, column := range sortByColumns {
@@ -66,7 +72,6 @@ func (s Resources) ListSavedQueries(response http.ResponseWriter, request *http.
 		return
 	} else {
 		for name, filters := range queryFilters {
-			//   add scope to query filters
 			if validPredicates, err := savedQueries.GetValidFilterPredicatesAsStrings(name); err != nil {
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("%s: %s", api.ErrorResponseDetailsColumnNotFilterable, name), request), response)
 				return
@@ -76,10 +81,14 @@ func (s Resources) ListSavedQueries(response http.ResponseWriter, request *http.
 						api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("%s: %s %s", api.ErrorResponseDetailsFilterPredicateNotSupported, filter.Name, filter.Operator), request), response)
 						return
 					}
-
 					queryFilters[name][i].IsStringData = savedQueries.IsString(filter.Name)
 				}
 			}
+		}
+
+		description := queryParams.Get("description")
+		if description != "" {
+			queryFilters["description"] = []model.QueryParameterFilter{{Operator: "=", Value: description}}
 		}
 
 		if user, isUser := auth.GetUserFromAuthCtx(ctx2.FromRequest(request).AuthCtx); !isUser {
@@ -92,7 +101,33 @@ func (s Resources) ListSavedQueries(response http.ResponseWriter, request *http.
 			api.WriteErrorResponse(request.Context(), ErrBadQueryParameter(request, model.PaginationQueryParameterLimit, err), response)
 		} else if queries, count, err := s.DB.ListSavedQueries(request.Context(), user.ID, strings.Join(order, ", "), sqlFilter, skip, limit); err != nil {
 			api.HandleDatabaseError(request, response, err)
+		} else if len(scopes) == 0 {
+			// return owned queries if no scope is given
+			api.WriteResponseWrapperWithPagination(request.Context(), queries, limit, skip, count, http.StatusOK, response)
 		} else {
+			for _, scope := range scopes {
+				var scopedQueries model.SavedQueries
+				var scopedCount int
+
+				switch scope {
+				case "public":
+					scopedQueries, err = s.DB.GetPublicSavedQueries(request.Context())
+					scopedCount = len(scopedQueries)
+				case "shared":
+					scopedQueries, err = s.DB.GetSharedSavedQueries(request.Context(), user.ID)
+					scopedCount = len(scopedQueries)
+				case "owned":
+					scopedQueries, scopedCount, err = s.DB.ListSavedQueries(request.Context(), user.ID, strings.Join(order, ", "), sqlFilter, skip, limit)
+				}
+
+				if err != nil {
+					api.HandleDatabaseError(request, response, err)
+					return
+				}
+
+				queries = append(queries, scopedQueries...)
+				count += scopedCount
+			}
 			api.WriteResponseWrapperWithPagination(request.Context(), queries, limit, skip, count, http.StatusOK, response)
 		}
 	}
