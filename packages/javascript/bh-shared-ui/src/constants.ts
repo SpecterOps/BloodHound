@@ -281,4 +281,18 @@ export const components = (theme: Theme): Partial<Theme['components']> => ({
             },
         },
     },
+    MuiTableContainer: {
+        styleOverrides: {
+            root: {
+                backgroundImage: 'unset'
+            }
+        }
+    },
+    MuiPaper: {
+        styleOverrides: {
+            root: {
+                backgroundImage: 'unset'
+            }
+        }
+    }
 });
