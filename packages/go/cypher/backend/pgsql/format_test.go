@@ -19,6 +19,9 @@ package pgsql_test
 import (
 	"bytes"
 	"fmt"
+	"testing"
+	"time"
+
 	"github.com/jackc/pgtype"
 	"github.com/specterops/bloodhound/cypher/backend/pgsql"
 	"github.com/specterops/bloodhound/cypher/frontend"
@@ -28,8 +31,6 @@ import (
 	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/graphschema/common"
 	"github.com/stretchr/testify/require"
-	"testing"
-	"time"
 )
 
 func MustMarshalToJSONB(value any) *pgtype.JSONB {

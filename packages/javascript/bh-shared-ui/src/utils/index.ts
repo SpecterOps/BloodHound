@@ -26,3 +26,4 @@ export * from './user';
 export * from './icons';
 export * from './permissions';
 export * from './copyToClipboard';
+export * from './types';

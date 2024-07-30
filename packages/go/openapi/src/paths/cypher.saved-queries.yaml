@@ -53,12 +53,12 @@ get:
           schema:
             allOf:
               - $ref: './../schemas/api.response.pagination.yaml'
-            type: object
-            properties:
-              data:
-                type: array
-                items:
-                  $ref: './../schemas/model.saved-query.yaml'
+              - type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: './../schemas/model.saved-query.yaml'
     400:
       $ref: './../responses/bad-request.yaml'
     401:

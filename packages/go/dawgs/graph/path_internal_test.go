@@ -17,9 +17,10 @@
 package graph
 
 import (
-	"github.com/stretchr/testify/require"
 	"sync/atomic"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 var (

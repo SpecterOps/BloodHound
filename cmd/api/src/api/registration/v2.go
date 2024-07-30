@@ -114,7 +114,7 @@ func NewV2API(cfg config.Configuration, resources v2.Resources, routerInst *rout
 		routerInst.GET("/api/version", v2.GetVersion).RequireAuth(),
 
 		// API Spec
-		routerInst.PathPrefix("/api/v2/swagger", v2.SwaggerHandler()),
+		routerInst.PathPrefix("/api/v2/swagger", http.HandlerFunc(openapi.HttpHandler)),
 		routerInst.GET("/api/v2/spec", openapi.HttpHandler),
 
 		// Search API

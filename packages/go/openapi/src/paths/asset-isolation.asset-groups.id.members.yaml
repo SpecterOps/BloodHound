@@ -74,15 +74,15 @@ get:
           schema:
             allOf:
               - $ref: './../schemas/api.response.pagination.yaml'
-            type: object
-            properties:
-              data:
-                type: object
+              - type: object
                 properties:
-                  members:
-                    type: array
-                    items:
-                      $ref: './../schemas/model.asset-group-member.yaml'
+                  data:
+                    type: object
+                    properties:
+                      members:
+                        type: array
+                        items:
+                          $ref: './../schemas/model.asset-group-member.yaml'
     400:
       $ref: './../responses/bad-request.yaml'
     401:

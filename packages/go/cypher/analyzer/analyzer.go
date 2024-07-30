@@ -18,6 +18,7 @@ package analyzer
 
 import (
 	"errors"
+
 	"github.com/specterops/bloodhound/cypher/model"
 	"github.com/specterops/bloodhound/dawgs/graph"
 )

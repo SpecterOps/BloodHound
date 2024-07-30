@@ -18,6 +18,7 @@ package tests
 
 import (
 	"context"
+
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/graphschema/common"
 )

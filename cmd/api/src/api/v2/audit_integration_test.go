@@ -20,12 +20,12 @@
 package v2_test
 
 import (
-	"github.com/specterops/bloodhound/src/model"
-	"github.com/specterops/bloodhound/src/utils/test"
 	"testing"
 	"time"
 
 	"github.com/specterops/bloodhound/src/api/v2/integration"
+	"github.com/specterops/bloodhound/src/model"
+	"github.com/specterops/bloodhound/src/utils/test"
 	"github.com/stretchr/testify/require"
 )
 

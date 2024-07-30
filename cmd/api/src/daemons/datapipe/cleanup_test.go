@@ -18,14 +18,15 @@ package datapipe_test
 
 import (
 	"context"
-	"github.com/specterops/bloodhound/src/daemons/datapipe"
-	"github.com/specterops/bloodhound/src/daemons/datapipe/mocks"
-	"go.uber.org/mock/gomock"
 	"io/fs"
 	"os"
 	"path/filepath"
 	"sync"
 	"testing"
+
+	"github.com/specterops/bloodhound/src/daemons/datapipe"
+	"github.com/specterops/bloodhound/src/daemons/datapipe/mocks"
+	"go.uber.org/mock/gomock"
 )
 
 type dirEntry struct {

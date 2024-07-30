@@ -18,10 +18,11 @@ package backend
 
 import (
 	"bytes"
+	"io"
+
 	"github.com/specterops/bloodhound/cypher/backend/cypher"
 	"github.com/specterops/bloodhound/cypher/frontend"
 	"github.com/specterops/bloodhound/cypher/model"
-	"io"
 )
 
 type Emitter interface {

@@ -18,11 +18,12 @@ package datapipe
 
 import (
 	"errors"
+	"io"
+
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/dawgs/util"
 	"github.com/specterops/bloodhound/ein"
 	"github.com/specterops/bloodhound/log"
-	"io"
 )
 
 /*

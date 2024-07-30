@@ -18,6 +18,7 @@ package pgsql
 
 import (
 	"fmt"
+
 	"github.com/specterops/bloodhound/cypher/model"
 )
 
@@ -36,7 +37,7 @@ func rewrite(stack *model.WalkStack, original, rewritten model.Expression) error
 				typedTrunk.Arguments[idx] = rewritten
 			}
 		}
-		
+
 	case *model.ProjectionItem:
 		typedTrunk.Expression = rewritten
 

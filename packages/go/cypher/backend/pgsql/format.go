@@ -18,12 +18,13 @@ package pgsql
 
 import (
 	"fmt"
+	"io"
+	"strconv"
+
 	"github.com/specterops/bloodhound/cypher/model"
 	pgModel "github.com/specterops/bloodhound/cypher/model/pg"
 	pgDriverModel "github.com/specterops/bloodhound/dawgs/drivers/pg/model"
 	"github.com/specterops/bloodhound/dawgs/graph"
-	"io"
-	"strconv"
 )
 
 const strippedLiteral = "$STRIPPED"

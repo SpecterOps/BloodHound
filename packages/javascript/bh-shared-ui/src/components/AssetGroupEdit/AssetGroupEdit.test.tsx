@@ -44,7 +44,9 @@ describe('AssetGroupEdit', () => {
     const setup = async () => {
         const user = userEvent.setup();
         const screen = await act(async () => {
-            return render(<AssetGroupEdit assetGroup={assetGroup} filter={{}} memberCounts={memberCounts} />);
+            return render(
+                <AssetGroupEdit assetGroup={assetGroup} filter={{}} memberCounts={memberCounts} isEditable={true} />
+            );
         });
         return { user, screen };
     };

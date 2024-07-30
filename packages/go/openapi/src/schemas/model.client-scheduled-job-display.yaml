@@ -16,53 +16,53 @@
 
 allOf:
   - $ref: './model.components.int64.id.yaml'
-type: object
-properties:
-  client_id:
-    type: string
-    format: uuid
-  client_name:
-    type: string
-  event_id:
-    $ref: './null.int32.yaml'
-  execution_time:
-    type: string
-    format: date-time
-  start_time:
-    type: string
-    format: date-time
-  end_time:
-    type: string
-    format: date-time
-  status:
-    $ref: './enum.job-status.yaml'
-  status_message:
-    type: string
-  session_collection:
-    type: boolean
-  local_group_collection:
-    type: boolean
-  ad_structure_collection:
-    type: boolean
-  cert_services_collection:
-    type: boolean
-  ca_registry_collection:
-    type: boolean
-  dc_registry_collection:
-    type: boolean
-  all_trusted_domains:
-    type: boolean
-  domain_controller:
-    type: string
-  ous:
-    type: array
-    items:
-      $ref: './model.ou-details.yaml'
-  domains:
-    type: array
-    items:
-      $ref: './model.domain-details.yaml'
-  domain_results:
-    type: array
-    items:
-      $ref: './model.domain-collection-result.yaml'
+  - type: object
+    properties:
+      client_id:
+        type: string
+        format: uuid
+      client_name:
+        type: string
+      event_id:
+        $ref: './null.int32.yaml'
+      execution_time:
+        type: string
+        format: date-time
+      start_time:
+        type: string
+        format: date-time
+      end_time:
+        type: string
+        format: date-time
+      status:
+        $ref: './enum.job-status.yaml'
+      status_message:
+        type: string
+      session_collection:
+        type: boolean
+      local_group_collection:
+        type: boolean
+      ad_structure_collection:
+        type: boolean
+      cert_services_collection:
+        type: boolean
+      ca_registry_collection:
+        type: boolean
+      dc_registry_collection:
+        type: boolean
+      all_trusted_domains:
+        type: boolean
+      domain_controller:
+        type: string
+      ous:
+        type: array
+        items:
+          $ref: './model.ou-details.yaml'
+      domains:
+        type: array
+        items:
+          $ref: './model.domain-details.yaml'
+      domain_results:
+        type: array
+        items:
+          $ref: './model.domain-collection-result.yaml'
