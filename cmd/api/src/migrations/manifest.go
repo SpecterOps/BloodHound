@@ -18,6 +18,8 @@ package migrations
 
 import (
 	"context"
+	"fmt"
+	"github.com/specterops/bloodhound/analysis"
 	"strings"
 	"time"
 
@@ -31,6 +33,84 @@ import (
 	"github.com/specterops/bloodhound/src/version"
 )
 
+func RequiresMigration(ctx context.Context, db graph.Database) (bool, error) {
+	if currentMigration, err := GetMigrationData(ctx, db); err != nil {
+		if graph.IsErrNotFound(err) {
+			return true, nil
+		} else {
+			return false, fmt.Errorf("unable to get graph db migration data: %w", err)
+		}
+	} else {
+		return LatestGraphMigrationVersion().GreaterThan(currentMigration), nil
+	}
+}
+
+// Version_513_Migration covers a bug discovered in ingest that would result in nodes containing more than one valid
+// kind. For example, the following query should return no results: (n:Base) where (n:User and n:Computer) return n
+// but, at time of writing, due to the ingest defect several environments will return results for this query.
+//
+// For instances where nodes are discovered that contain more than one valid kind assignment, the node's kinds are
+// reset to the matching base entity kind such that:
+//
+// node.Kinds = Kinds{ad.Entity, ad.User, ad.Computer} must be reset to:
+// node.Kinds = Kinds{ad.Entity}
+func Version_513_Migration(db graph.Database) error {
+	defer log.LogAndMeasure(log.LevelInfo, "Migration to remove incorrectly ingested labels")()
+
+	// Cypher for the below filter is: size(labels(n)) > 2 and not (n:Group and n:ADLocalGroup) or size(labels(n)) > 3 and (n:Group and n:ADLocalGroup)
+	targetCriteria := query.Or(
+		query.And(
+			query.GreaterThan(query.Size(query.KindsOf(query.Node())), 2),
+			query.Not(query.Kind(query.Node(), ad.Entity, ad.Group, ad.LocalGroup)),
+		),
+		query.And(
+			query.GreaterThan(query.Size(query.KindsOf(query.Node())), 3),
+			query.Kind(query.Node(), ad.Entity, ad.Group, ad.LocalGroup),
+		),
+	)
+
+	if nodes, err := ops.ParallelFetchNodes(context.Background(), db, targetCriteria, analysis.MaximumDatabaseParallelWorkers); err != nil {
+		return err
+	} else if err := db.BatchOperation(context.Background(), func(batch graph.Batch) error {
+		for _, node := range nodes {
+			if node.Kinds.ContainsOneOf(ad.Entity) {
+				// Nodes are designed to track additions and deletions. By making this assignment, the update logic
+				// will append removals for all kinds not the base kind such that only the base kind remains on the
+				// node in the database.
+				node.DeletedKinds = node.Kinds.Remove(ad.Entity)
+
+				if err := batch.UpdateNodeBy(graph.NodeUpdate{
+					Node:               node,
+					IdentityKind:       ad.Entity,
+					IdentityProperties: []string{common.ObjectID.String()},
+				}); err != nil {
+					return err
+				}
+			} else if node.Kinds.ContainsOneOf(azure.Entity) {
+				// Nodes are designed to track additions and deletions. By making this assignment, the update logic
+				// will append removals for all kinds not the base kind such that only the base kind remains on the
+				// node in the database.
+				node.DeletedKinds = node.Kinds.Remove(azure.Entity)
+
+				if err := batch.UpdateNodeBy(graph.NodeUpdate{
+					Node:               node,
+					IdentityKind:       azure.Entity,
+					IdentityProperties: []string{common.ObjectID.String()},
+				}); err != nil {
+					return err
+				}
+			}
+		}
+
+		log.Infof("Migration removed all non-entity kinds from %d incorrectly labeled nodes", nodes.Len())
+		return nil
+	}); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func Version_508_Migration(db graph.Database) error {
 	defer log.Measure(log.LevelInfo, "Migrating Azure Owns to Owner")()
 
@@ -38,7 +118,7 @@ func Version_508_Migration(db graph.Database) error {
 		return batch.Relationships().Filterf(func() graph.Criteria {
 			return query.And(
 				query.Kind(query.Start(), azure.Entity),
-				// Not all of these node types are being changed, but theres no harm in adding them to the migration
+				// Not all of these node types are being changed, but there's no harm in adding them to the migration
 				query.KindIn(query.End(), azure.ManagementGroup, azure.ResourceGroup, azure.Subscription, azure.KeyVault, azure.AutomationAccount, azure.ContainerRegistry, azure.LogicApp, azure.VMScaleSet, azure.WebApp, azure.FunctionApp, azure.ManagedCluster, azure.VM),
 				query.Kind(query.Relationship(), azure.Owns),
 			)
@@ -199,4 +279,20 @@ var Manifest = []Migration{
 		Version: version.Version{Major: 5, Minor: 0, Patch: 8},
 		Execute: Version_508_Migration,
 	},
+	{
+		Version: version.Version{Major: 5, Minor: 13, Patch: 0},
+		Execute: Version_513_Migration,
+	},
+}
+
+func LatestGraphMigrationVersion() version.Version {
+	var latestVersion version.Version
+
+	for _, migration := range Manifest {
+		if migration.Version.GreaterThan(latestVersion) {
+			latestVersion = migration.Version
+		}
+	}
+
+	return latestVersion
 }

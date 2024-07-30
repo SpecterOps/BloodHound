@@ -207,6 +207,7 @@ type nodeUpdates struct {
 	identityKind       graph.Kind
 	identityProperties []string
 	nodeKindsToAdd     graph.Kinds
+	nodeKindsToRemove  graph.Kinds
 	properties         []map[string]any
 }
 
@@ -222,6 +223,7 @@ func (s nodeUpdateByMap) add(update graph.NodeUpdate) {
 			identityKind:       update.IdentityKind,
 			identityProperties: update.IdentityProperties,
 			nodeKindsToAdd:     update.Node.Kinds,
+			nodeKindsToRemove:  update.Node.DeletedKinds,
 			properties: []map[string]any{
 				update.Node.Properties.Map,
 			},
@@ -271,6 +273,19 @@ func cypherBuildNodeUpdateQueryBatch(updates []graph.NodeUpdate) ([]string, []ma
 			for _, kindToAdd := range batch.nodeKindsToAdd {
 				output.WriteString(", n:")
 				output.WriteString(kindToAdd.String())
+			}
+		}
+
+		if len(batch.nodeKindsToRemove) > 0 {
+			output.WriteString(" remove ")
+
+			for idx, kindToRemove := range batch.nodeKindsToRemove {
+				if idx > 0 {
+					output.WriteString(",")
+				}
+
+				output.WriteString("n:")
+				output.WriteString(kindToRemove.String())
 			}
 		}
 
