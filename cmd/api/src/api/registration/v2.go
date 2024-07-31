@@ -289,6 +289,9 @@ func NewV2API(cfg config.Configuration, resources v2.Resources, routerInst *rout
 		routerInst.GET("/api/v2/analysis/status", resources.GetAnalysisRequest).RequirePermissions(permissions.GraphDBRead),
 		routerInst.PUT("/api/v2/analysis", resources.RequestAnalysis).RequirePermissions(permissions.GraphDBWrite),
 
+		// generic ingest API
 		routerInst.POST("/api/v2/environment-configuration", resources.CreateEnvironmentConfiguration).RequirePermissions(permissions.GraphDBWrite),
+		routerInst.GET("/api/v2/environment-configuration/{name}", resources.GetEnvironmentConfiguration).RequirePermissions(permissions.GraphDBRead),
+		routerInst.POST("/api/v2/environment-configuration/{name}/upload", resources.UploadEnvironmentData).RequirePermissions(permissions.GraphDBWrite),
 	)
 }
