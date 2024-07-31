@@ -178,7 +178,7 @@ HighValue: types.#StringEnum & {
 BlocksInheritance: types.#StringEnum & {
 	symbol:         "BlocksInheritance"
 	schema:         "ad"
-	name:           "Blocks Inheritance"
+	name:           "Blocks GPO Inheritance"
 	representation: "blocksinheritance"
 }
 
