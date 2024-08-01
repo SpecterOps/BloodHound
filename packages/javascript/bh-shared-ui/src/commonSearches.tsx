@@ -190,7 +190,7 @@ export const CommonSearches: CommonSearchType[] = [
             },
             {
                 description: 'Domain controllers with weak certificate binding enabled',
-                cypher: `MATCH p = (dc:Computer)-[:DCFor]->(d)\nWHERE dc.strongcertificatebindingenforcementraw = 0 OR dc.strongcertificatebindingenforcementraw = 1\nRETURN p`,
+                cypher: `MATCH p = (dc:Computer)-[:DCFor]->(d:Domain)\nWHERE dc.strongcertificatebindingenforcementraw = 0 OR dc.strongcertificatebindingenforcementraw = 1\nRETURN p`,
             },
             {
                 description: 'Domain controllers with UPN certificate mapping enabled',
