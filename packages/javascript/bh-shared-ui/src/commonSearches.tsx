@@ -228,7 +228,7 @@ export const CommonSearches: CommonSearchType[] = [
             },
             {
                 description: 'Nested groups within Tier Zero / High Value',
-                cypher: `MATCH p=(n:Group)-[:MemberOf*..]->(t:Group)\nWHERE n.domainsid <> t.domainsid\nAND coalesce(t.system_tags,"") CONTAINS ('tier_0')\nAND NOT n.objectid ENDS WITH "-512" // Domain Admins\nAND NOT n.objectid ENDS WITH "-519" // Enterprise Admins\nRETURN p`,
+                cypher: `MATCH p=(n:Group)-[:MemberOf*..]->(t:Group)\nWHERE coalesce(t.system_tags,"") CONTAINS ('tier_0')\nAND NOT n.objectid ENDS WITH "-512" // Domain Admins\nAND NOT n.objectid ENDS WITH "-519" // Enterprise Admins\nRETURN p`,
             },
             {
                 description: 'Disabled Tier Zero / High Value principals',
