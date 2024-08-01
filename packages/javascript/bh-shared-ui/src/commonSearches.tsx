@@ -282,7 +282,7 @@ export const CommonSearches: CommonSearchType[] = [
         queries: [
             {
                 description: 'All service principals with Microsoft Graph privilege to grant arbitrary App Roles',
-                cypher: 'MATCH p=(n)-[r:AZMGGrantAppRoles]->(o:AZTenant)\nRETURN p',
+                cypher: 'MATCH p=(n:AZServicePrincipal)-[r:AZMGGrantAppRoles]->(o:AZTenant)\nRETURN p',
             },
             {
                 description: 'All service principals with Microsoft Graph App Role assignments',
