@@ -211,8 +211,8 @@ export const CommonSearches: CommonSearchType[] = [
         category: categoryAD,
         queries: [
             {
-                description: 'Inactive enabled Tier Zero principals',
-                cypher: `MATCH (n)\nWHERE n.system_tags CONTAINS "admin_tier_0"\nAND n.enabled = true\nAND n.lastlogontimestamp < (datetime().epochseconds - (60 * 86400)) // Replicated value\nAND n.lastlogon < (datetime().epochseconds - (60 * 86400)) // Non-replicated value\nAND n.whencreated < (datetime().epochseconds - (60 * 86400)) // Exclude recently created principals\nAND NOT n.name STARTS WITH "AZUREADKERBEROS." // Removes false positive, Azure KRBTGT\nAND NOT n.objectid ENDS WITH "-500" // Removes false positive, built-in Administrator\nAND NOT n.name STARTS WITH "AZUREADSSOACC." // Removes false positive, Entra Seamless SSO\nRETURN n`,
+                description: 'Enabled Tier Zero / High Value principals inactive for 60 days',
+                cypher: `WITH 60 as inactive_days\nMATCH (n)\nWHERE n.system_tags CONTAINS "admin_tier_0"\nAND n.enabled = true\nAND n.lastlogontimestamp < (datetime().epochseconds - (inactive_days * 86400)) // Replicated value\nAND n.lastlogon < (datetime().epochseconds - (inactive_days * 86400)) // Non-replicated value\nAND n.whencreated < (datetime().epochseconds - (inactive_days * 86400)) // Exclude recently created principals\nAND NOT n.name STARTS WITH "AZUREADKERBEROS." // Removes false positive, Azure KRBTGT\nAND NOT n.objectid ENDS WITH "-500" // Removes false positive, built-in Administrator\nAND NOT n.name STARTS WITH "AZUREADSSOACC." // Removes false positive, Entra Seamless SSO\nRETURN n`,
             },
             {
                 description: 'Computers with unsupported operating systems',
