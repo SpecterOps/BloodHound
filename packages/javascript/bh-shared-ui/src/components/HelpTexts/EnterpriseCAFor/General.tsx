@@ -26,7 +26,7 @@ const General: FC<EdgeInfoProps> = ({ sourceName, sourceType, targetName }) => {
                 The {typeFormat(sourceType)} {sourceName} is an enterprise certification authority for {targetName}.
             </Typography>
             <Typography variant='body2'>
-                The Enterprise Certification Authority node is the enrollment service LDAP object for the target 
+                The Enterprise Certification Authority node is the enrollment service LDAP object for the target
                 AIACA/Root Certification Authority node.
             </Typography>
         </>

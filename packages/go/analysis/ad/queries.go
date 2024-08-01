@@ -29,6 +29,7 @@ import (
 	"github.com/specterops/bloodhound/dawgs/ops"
 	"github.com/specterops/bloodhound/dawgs/query"
 	"github.com/specterops/bloodhound/dawgs/traversal"
+	"github.com/specterops/bloodhound/ein"
 	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/graphschema/common"
 	"github.com/specterops/bloodhound/log"
@@ -1471,32 +1472,89 @@ func FetchCertTemplatesPublishedToCA(tx graph.Transaction, ca *graph.Node) (grap
 	}))
 }
 
-func FetchCanAbuseWeakCertBindingRels(tx graph.Transaction, node *graph.Node) ([]*graph.Relationship, error) {
-	if rels, err := ops.FetchRelationships(tx.Relationships().Filterf(func() graph.Criteria {
-		return query.And(
-			query.Equals(query.StartID(), node.ID),
-			query.Kind(query.Relationship(), ad.CanAbuseWeakCertBinding),
-			query.Kind(query.End(), ad.Entity),
-		)
-	})); err != nil {
+func HasUPNCertMappingInForest(tx graph.Transaction, domain *graph.Node) (bool, error) {
+	if trustedByNodes, err := FetchNodesWithTrustedByParentChildRelationship(tx, domain); err != nil {
+		log.Errorf("error in HasUPNCertMappingInForest: unable to fetch TrustedBy nodes: %v", err)
+		return false, err
+	} else {
+		for _, trustedByDomain := range trustedByNodes {
+			if dcForNodes, err := FetchNodesWithDCForEdge(tx, trustedByDomain); err != nil {
+				log.Errorf("error in HasUPNCertMappingInForest: unable to fetch DCFor nodes: %v", err)
+				continue
+			} else {
+				for _, dcForNode := range dcForNodes {
+					if cmmrProperty, err := dcForNode.Properties.Get(ad.CertificateMappingMethodsRaw.String()).Int(); err != nil {
+						// We do not want to throw an error here as this property only exists if privileged collection has been performed
+						continue
+					} else if cmmrProperty == ein.RegistryValueDoesNotExist {
+						continue
+					} else if cmmrProperty&int(ein.CertificateMappingUserPrincipalName) == int(ein.CertificateMappingUserPrincipalName) {
+						return true, nil
+					}
+				}
+			}
+		}
+	}
+	return false, nil
+}
+
+func HasWeakCertBindingInForest(tx graph.Transaction, domain *graph.Node) (bool, error) {
+	if trustedByNodes, err := FetchNodesWithTrustedByParentChildRelationship(tx, domain); err != nil {
+		log.Errorf("error in HasWeakCertBindingInForest: unable to fetch TrustedBy nodes: %v", err)
+		return false, err
+	} else {
+		for _, trustedByDomain := range trustedByNodes {
+			if dcForNodes, err := FetchNodesWithDCForEdge(tx, trustedByDomain); err != nil {
+				log.Errorf("error in HasWeakCertBindingInForest: unable to fetch DCFor nodes: %v", err)
+				continue
+			} else {
+				for _, dcForNode := range dcForNodes {
+					if strongCertBindingEnforcement, err := dcForNode.Properties.Get(ad.StrongCertificateBindingEnforcementRaw.String()).Int(); err != nil {
+						// We do not want to throw an error here as this property only exists if privileged collection has been performed
+						continue
+					} else if strongCertBindingEnforcement == 0 || strongCertBindingEnforcement == 1 {
+						return true, nil
+					}
+				}
+			}
+		}
+	}
+	return false, nil
+}
+
+func FetchNodesWithTrustedByParentChildRelationship(tx graph.Transaction, root *graph.Node) (graph.NodeSet, error) {
+	if pathSet, err := ops.TraversePaths(tx, ops.TraversalPlan{
+		Root:      root,
+		Direction: graph.DirectionInbound,
+		BranchQuery: func() graph.Criteria {
+			return query.And(
+				query.KindIn(query.Start(), ad.Domain),
+				query.KindIn(query.Relationship(), ad.TrustedBy),
+				query.Equals(query.RelationshipProperty(ad.TrustType.String()), "ParentChild"),
+			)
+		},
+	}); err != nil {
 		return nil, err
 	} else {
-		return rels, nil
+		alldomains := pathSet.AllNodes()
+		if alldomains.Len() == 0 {
+			alldomains.Add(root)
+		}
+		return alldomains, nil
 	}
 }
 
-func FetchCanAbuseUPNCertMappingRels(tx graph.Transaction, node *graph.Node) ([]*graph.Relationship, error) {
-	if rels, err := ops.FetchRelationships(tx.Relationships().Filterf(func() graph.Criteria {
-		return query.And(
-			query.Equals(query.StartID(), node.ID),
-			query.Kind(query.Relationship(), ad.CanAbuseUPNCertMapping),
-			query.Kind(query.End(), ad.Entity),
-		)
-	})); err != nil {
-		return nil, err
-	} else {
-		return rels, nil
-	}
+func FetchNodesWithDCForEdge(tx graph.Transaction, rootNode *graph.Node) (graph.NodeSet, error) {
+	return ops.AcyclicTraverseTerminals(tx, ops.TraversalPlan{
+		Root:      rootNode,
+		Direction: graph.DirectionInbound,
+		BranchQuery: func() graph.Criteria {
+			return query.And(
+				query.KindIn(query.Start(), ad.Computer),
+				query.KindIn(query.Relationship(), ad.DCFor),
+			)
+		},
+	})
 }
 
 func FetchEnterpriseCAsCertChainPathToDomain(tx graph.Transaction, enterpriseCA, domain *graph.Node) (graph.PathSet, error) {
