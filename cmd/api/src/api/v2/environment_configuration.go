@@ -111,15 +111,15 @@ type UploadEnvironmentDataRequest struct {
 }
 
 type NodeData struct {
-	ID         int64                  `json:"id"`
+	ID         string                  `json:"id"`
 	Type       string                 `json:"type"`
 	Properties map[string]interface{} `json:"properties"`
 }
 
 type RelationshipData struct {
 	Type        string `json:"type"`
-	StartNodeID int64  `json:"startNodeID"`
-	EndNodeID   int64  `json:"endNodeID"`
+	StartNodeID string  `json:"startNodeID"`
+	EndNodeID   string  `json:"endNodeID"`
 }
 
 func (s Resources) UploadEnvironmentData(response http.ResponseWriter, request *http.Request) {
