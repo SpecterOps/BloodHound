@@ -157,7 +157,7 @@ export const CommonSearches: CommonSearchType[] = [
             },
             {
                 description: 'Public Key Services container',
-                cypher: `MATCH p = (c:Container)-[:Contains*..]->()\nWHERE c.distinguishedname starts with "CN=PUBLIC KEY SERVICES,CN=SERVICES,CN=CONFIGURATION,DC="\nRETURN p`,
+                cypher: `MATCH p = (c:Container)-[:Contains*..]->(:Base)\nWHERE c.distinguishedname starts with "CN=PUBLIC KEY SERVICES,CN=SERVICES,CN=CONFIGURATION,DC="\nRETURN p`,
             },
             {
                 description: 'Enrollment rights on published certificate templates',
