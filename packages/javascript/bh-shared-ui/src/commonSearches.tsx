@@ -202,8 +202,7 @@ export const CommonSearches: CommonSearchType[] = [
             },
             {
                 description: 'Enrollment rights on CertTemplates with OIDGroupLink',
-                cypher: `MATCH p = ()-[:Enroll|GenericAll|AllExtendedRights]->(ct:CertTemplate)-[:ExtendedByPolicy]->(:IssuancePolicy)-[:OIDGroupLink]->(g)
-                RETURN p`,
+                cypher: `MATCH p = (:Base)-[:Enroll|GenericAll|AllExtendedRights]->(ct:CertTemplate)-[:ExtendedByPolicy]->(:IssuancePolicy)-[:OIDGroupLink]->(g:Group)\nRETURN p`,
             },
         ],
     },
