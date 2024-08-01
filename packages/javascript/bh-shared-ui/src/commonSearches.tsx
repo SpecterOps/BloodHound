@@ -59,7 +59,7 @@ export const CommonSearches: CommonSearchType[] = [
         queries: [
             {
                 description: 'Principals with DCSync privileges',
-                cypher: `MATCH p=()-[:DCSync|AllExtendedRights|GenericAll]->(:Domain)\nRETURN p`,
+                cypher: `MATCH p=(:Base)-[:DCSync|AllExtendedRights|GenericAll]->(:Domain)\nRETURN p`,
             },
             {
                 description: 'Users with foreign domain group membership',
