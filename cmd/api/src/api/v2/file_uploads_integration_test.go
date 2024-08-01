@@ -32,6 +32,7 @@ import (
 
 	"github.com/specterops/bloodhound/headers"
 	"github.com/specterops/bloodhound/src/api/v2/integration"
+	"github.com/specterops/bloodhound/src/services/fileupload"
 	"github.com/specterops/bloodhound/src/test/fixtures/fixtures"
 	"github.com/stretchr/testify/assert"
 )
