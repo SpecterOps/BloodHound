@@ -250,7 +250,7 @@ export const CommonSearches: CommonSearchType[] = [
             },
             {
                 description: 'All members of high privileged roles',
-                cypher: `MATCH p=(n)-[:AZHasRole|AZMemberOf*1..2]->(r:AZRole)\nWHERE r.name =~ '(?i)${highPrivilegedRoleDisplayNameRegex}'\nRETURN p`,
+                cypher: `MATCH p=(n:AZBase)-[:AZHasRole|AZMemberOf*1..2]->(r:AZRole)\nWHERE r.name =~ '(?i)${highPrivilegedRoleDisplayNameRegex}'\nRETURN p`,
             },
         ],
     },
