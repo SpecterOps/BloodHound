@@ -266,7 +266,6 @@ export const components = (theme: Theme): Partial<Theme['components']> => ({
                     backgroundColor: addOpacityToHex(theme.palette.info.main, 20),
                 },
                 '&.MuiAlert-standardError': {
-                    color: theme.palette.error.contrastText,
                     backgroundColor: addOpacityToHex(theme.palette.error.main, 20),
                 },
             },
@@ -275,11 +274,25 @@ export const components = (theme: Theme): Partial<Theme['components']> => ({
     MuiLinearProgress: {
         styleOverrides: {
             root: {
-                backgroundColor: theme.palette.secondary.light,
+                backgroundColor: addOpacityToHex(theme.palette.primary.main, 40),
                 '& .MuiLinearProgress-barColorPrimary': {
-                    backgroundColor: theme.palette.primary.dark,
+                    backgroundColor: theme.palette.primary.main,
                 },
             },
         },
     },
+    MuiTableContainer: {
+        styleOverrides: {
+            root: {
+                backgroundImage: 'unset'
+            }
+        }
+    },
+    MuiPaper: {
+        styleOverrides: {
+            root: {
+                backgroundImage: 'unset'
+            }
+        }
+    }
 });

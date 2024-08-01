@@ -145,10 +145,10 @@ func DeleteProperties(reference graph.Criteria, propertyNames ...string) *cypher
 	return cypherModel.NewUpdatingClause(removeClause)
 }
 
-func Kind(reference graph.Criteria, kind graph.Kind) *cypherModel.KindMatcher {
+func Kind(reference graph.Criteria, kinds ...graph.Kind) *cypherModel.KindMatcher {
 	return &cypherModel.KindMatcher{
 		Reference: reference,
-		Kinds:     graph.Kinds{kind},
+		Kinds:     kinds,
 	}
 }
 
@@ -526,6 +526,10 @@ func Returning(elements ...graph.Criteria) *cypherModel.Return {
 	return &cypherModel.Return{
 		Projection: projection,
 	}
+}
+
+func Size(expression graph.Criteria) *cypherModel.FunctionInvocation {
+	return cypherModel.NewSimpleFunctionInvocation("size", expression)
 }
 
 func Not(expression graph.Criteria) *cypherModel.Negation {

@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Box, Paper } from '@mui/material';
+import { Box, Paper, useTheme } from '@mui/material';
 import {
     AssetGroup,
     AssetGroupMemberParams,
@@ -40,6 +40,7 @@ const AssetGroupEdit: FC<{
     const addRows = changelog.filter((entry) => entry.action === ChangelogAction.ADD);
     const removeRows = changelog.filter((entry) => entry.action === ChangelogAction.REMOVE);
     const { addNotification } = useNotifications();
+    const theme = useTheme();
     const queryClient = useQueryClient();
 
     const handleUpdateAssetGroupChangelog = (_event: any, changelogEntry: AssetGroupChangelogEntry) => {
@@ -92,7 +93,7 @@ const AssetGroupEdit: FC<{
     };
 
     return (
-        <Box component={Paper} elevation={0} padding={1}>
+        <Box component={Paper} elevation={0} padding={1} bgcolor={theme.palette.neutral.secondary}>
             <SubHeader label='Total Count' count={memberCounts?.total_count} />
             {isEditable && (
                 <>
