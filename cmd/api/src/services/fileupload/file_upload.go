@@ -18,8 +18,6 @@
 package fileupload
 
 import (
-	"bufio"
-	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -116,15 +114,12 @@ func WriteAndValidateZip(src io.Reader, dst io.Writer) error {
 }
 
 func WriteAndValidateJSON(src io.Reader, dst io.Writer) error {
-	tr := io.TeeReader(src, dst)
-	normalizedContent, err := bomenc.NormalizeToUTF8(bufio.NewReader(tr))
+	normalizedContent, err := bomenc.NormalizeToUTF8(src)
 	if err != nil {
 		return err
 	}
-	_, err = ValidateMetaTag(
-		bytes.NewReader(normalizedContent.NormalizedContent()),
-		true,
-	)
+	tr := io.TeeReader(normalizedContent, dst)
+	_, err = ValidateMetaTag(tr, true)
 	return err
 }
 
