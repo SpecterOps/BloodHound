@@ -26,7 +26,6 @@ import (
 	"strings"
 
 	"github.com/gorilla/mux"
-	"github.com/specterops/bloodhound/bomenc"
 	"github.com/specterops/bloodhound/headers"
 	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/src/api"
@@ -138,7 +137,7 @@ func (s Resources) ProcessFileUpload(response http.ResponseWriter, request *http
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsIDMalformed, request), response)
 	} else if fileUploadJob, err := fileupload.GetFileUploadJobByID(request.Context(), s.DB, int64(fileUploadJobID)); err != nil {
 		api.HandleDatabaseError(request, response, err)
-	} else if fileName, fileType, err := fileupload.SaveIngestFile(s.Config.TempDirectory(), request); errors.Is(err, bomenc.ErrUnknownEncodingInvalidUTF8) {
+	} else if fileName, fileType, err := fileupload.SaveIngestFile(s.Config.TempDirectory(), request); errors.Is(err, fileupload.ErrInvalidJSON) {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("Error saving ingest file: %v", err), request), response)
 	} else if err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("Error saving ingest file: %v", err), request), response)
