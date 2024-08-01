@@ -46,7 +46,7 @@ const Inner: React.FC = () => {
     const authState = useAppSelector((state) => state.auth);
     const queryClient = useQueryClient();
     const location = useLocation();
-    const featureFlagsRes = useFeatureFlags();
+    const featureFlagsRes = useFeatureFlags({ retry: false });
 
     const darkMode = useAppSelector((state) => state.global.view.darkMode);
 
