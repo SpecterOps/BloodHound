@@ -186,7 +186,7 @@ export const CommonSearches: CommonSearchType[] = [
             },
             {
                 description: 'CA administrators and CA managers',
-                cypher: `MATCH p = ()-[:ManageCertificates|ManageCA]->(:EnterpriseCA)\nRETURN p`,
+                cypher: `MATCH p = (:Base)-[:ManageCertificates|ManageCA]->(:EnterpriseCA)\nRETURN p`,
             },
             {
                 description: 'Domain controllers with weak certificate binding enabled',
