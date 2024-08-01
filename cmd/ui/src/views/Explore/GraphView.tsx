@@ -14,12 +14,11 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Box, Grid, Link, useTheme } from '@mui/material';
+import { Box, Grid, useTheme } from '@mui/material';
 import {
     EdgeInfoState,
     GraphButtonProps,
     GraphProgress,
-    NoDataAlert,
     setEdgeInfoOpen,
     setSelectedEdge,
     useAvailableDomains,
@@ -33,14 +32,12 @@ import { Attributes } from 'graphology-types';
 import { GraphNodes } from 'js-client-library';
 import isEmpty from 'lodash/isEmpty';
 import { FC, useEffect, useState } from 'react';
-import { Link as RouterLink } from 'react-router-dom';
 import { SigmaNodeEventPayload } from 'sigma/sigma';
 import { GraphButtonOptions } from 'src/components/GraphButtons/GraphButtons';
 import SigmaChart from 'src/components/SigmaChart';
 import { setEntityInfoOpen, setSelectedNode } from 'src/ducks/entityinfo/actions';
 import { GraphState } from 'src/ducks/explore/types';
 import { setAssetGroupEdit } from 'src/ducks/global/actions';
-import { ROUTE_ADMINISTRATION_FILE_INGEST } from 'src/ducks/global/routes';
 import { GlobalOptionsState } from 'src/ducks/global/types';
 import { discardChanges } from 'src/ducks/tierzero/actions';
 import { RankDirection } from 'src/hooks/useLayoutDagre/useLayoutDagre';
@@ -68,7 +65,7 @@ const GraphView: FC = () => {
     const [currentNodes, setCurrentNodes] = useState<GraphNodes>({});
 
     const [currentSearchOpen, toggleCurrentSearch] = useToggle(false);
-    const { data, isLoading, isError } = useAvailableDomains();
+    const { isLoading, isError } = useAvailableDomains();
 
     const [contextMenu, setContextMenu] = useState<{ mouseX: number; mouseY: number } | null>(null);
 
@@ -124,25 +121,25 @@ const GraphView: FC = () => {
         );
     }
 
-    const dataCollectionLink = (
-        <Link
-            target='_blank'
-            href={'https://support.bloodhoundenterprise.io/hc/en-us/sections/17274904083483-BloodHound-CE-Collection'}>
-            Data Collection
-        </Link>
-    );
+    // const dataCollectionLink = (
+    //     <Link
+    //         target='_blank'
+    //         href={'https://support.bloodhoundenterprise.io/hc/en-us/sections/17274904083483-BloodHound-CE-Collection'}>
+    //         Data Collection
+    //     </Link>
+    // );
 
-    const fileIngestLink = (
-        <Link component={RouterLink} to={ROUTE_ADMINISTRATION_FILE_INGEST}>
-            File Ingest
-        </Link>
-    );
+    // const fileIngestLink = (
+    //     <Link component={RouterLink} to={ROUTE_ADMINISTRATION_FILE_INGEST}>
+    //         File Ingest
+    //     </Link>
+    // );
 
-    const sampleDataLink = (
-        <Link target='_blank' href={'https://github.com/SpecterOps/BloodHound/wiki/Example-Data'}>
-            GitHub Sample Collection
-        </Link>
-    );
+    // const sampleDataLink = (
+    //     <Link target='_blank' href={'https://github.com/SpecterOps/BloodHound/wiki/Example-Data'}>
+    //         GitHub Sample Collection
+    //     </Link>
+    // );
 
     if (isError) throw new Error();
 
@@ -150,16 +147,16 @@ const GraphView: FC = () => {
         return <WebGLDisabledAlert />;
     }
 
-    if (!data.length)
-        return (
-            <Box position={'relative'} height={'100%'} width={'100%'} overflow={'hidden'}>
-                <NoDataAlert
-                    dataCollectionLink={dataCollectionLink}
-                    fileIngestLink={fileIngestLink}
-                    sampleDataLink={sampleDataLink}
-                />
-            </Box>
-        );
+    // if (!data.length)
+    //     return (
+    //         <Box position={'relative'} height={'100%'} width={'100%'} overflow={'hidden'}>
+    //             <NoDataAlert
+    //                 dataCollectionLink={dataCollectionLink}
+    //                 fileIngestLink={fileIngestLink}
+    //                 sampleDataLink={sampleDataLink}
+    //             />
+    //         </Box>
+    //     );
 
     const options: GraphButtonOptions = { standard: true, sequential: true };
 
