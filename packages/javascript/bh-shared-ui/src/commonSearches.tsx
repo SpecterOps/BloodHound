@@ -259,12 +259,12 @@ export const CommonSearches: CommonSearchType[] = [
         category: categoryAzure,
         queries: [
             {
-                description: 'Shortest paths to Tier Zero / High Value targets',
-                cypher: `MATCH p=shortestPath((m:AZUser)-[r:${azureTransitEdgeTypes}*1..]->(n))\nWHERE "admin_tier_0" IN split(n.system_tags, ' ') AND n.name =~ '(?i)${highPrivilegedRoleDisplayNameRegex}' AND m<>n\nRETURN p`,
+                description: 'Shortest paths from Entra Users to Tier Zero / High Value targets',
+                cypher: `MATCH p=shortestPath((m:AZUser)-[r:${azureTransitEdgeTypes}*1..]->(n:AZBase))\nWHERE "admin_tier_0" IN split(n.system_tags, ' ') AND n.name =~ '(?i)${highPrivilegedRoleDisplayNameRegex}' AND m<>n\nRETURN p`,
             },
             {
                 description: 'Shortest paths to privileged roles',
-                cypher: `MATCH p=shortestPath((m)-[r:${azureTransitEdgeTypes}*1..]->(n:AZRole))\nWHERE n.name =~ '(?i)${highPrivilegedRoleDisplayNameRegex}' AND m<>n\nRETURN p`,
+                cypher: `MATCH p=shortestPath((m:AZBase)-[r:${azureTransitEdgeTypes}*1..]->(n:AZRole))\nWHERE n.name =~ '(?i)${highPrivilegedRoleDisplayNameRegex}' AND m<>n\nRETURN p`,
             },
             {
                 description: 'Shortest paths from Azure Applications to Tier Zero / High Value targets',
