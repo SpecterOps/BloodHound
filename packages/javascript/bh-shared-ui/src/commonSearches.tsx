@@ -219,8 +219,8 @@ export const CommonSearches: CommonSearchType[] = [
                 cypher: `MATCH (u:User)\nWHERE u.passwordnotreqd = true\nRETURN u`,
             },
             {
-                description: 'Users with passwords not rotated in over 1 year',
-                cypher: `MATCH (u:User)\nWHERE u.pwdlastset < (datetime().epochseconds - (365 * 86400))\nAND NOT u.pwdlastset IN [-1.0, 0.0]\nRETURN u LIMIT 100`,
+                description: 'Users with passwords not rotated in over 1 year (limited to 100 results)',
+                cypher: `WITH 365 as days_since_change\nMATCH (u:User)\nWHERE u.pwdlastset < (datetime().epochseconds - (days_since_change * 86400))\nAND NOT u.pwdlastset IN [-1.0, 0.0]\nRETURN u LIMIT 100`,
             },
             {
                 description: 'Nested groups within Tier Zero / High Value',
