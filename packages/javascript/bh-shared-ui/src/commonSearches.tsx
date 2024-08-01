@@ -182,7 +182,7 @@ export const CommonSearches: CommonSearchType[] = [
             {
                 description:
                     'Enrollment rights on certificate templates published to Enterprise CA with User Specified SAN enabled',
-                cypher: `MATCH p = ()-[:Enroll|GenericAll|AllExtendedRights]->(ct:CertTemplate)-[:PublishedTo]->(eca:EnterpriseCA)\nWHERE eca.isuserspecifiessanenabled = True\nRETURN p`,
+                cypher: `MATCH p = (:Base)-[:Enroll|GenericAll|AllExtendedRights]->(ct:CertTemplate)-[:PublishedTo]->(eca:EnterpriseCA)\nWHERE eca.isuserspecifiessanenabled = True\nRETURN p`,
             },
             {
                 description: 'CA administrators and CA managers',
