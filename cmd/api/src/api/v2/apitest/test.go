@@ -17,9 +17,9 @@
 package apitest
 
 import (
-	"github.com/specterops/bloodhound/src/api"
 	"log"
 
+	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/src/api/v2/auth"
 	authPkg "github.com/specterops/bloodhound/src/auth"
 	"github.com/specterops/bloodhound/src/config"

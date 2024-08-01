@@ -20,17 +20,15 @@ import (
 	"archive/zip"
 	"context"
 	"fmt"
-	"github.com/specterops/bloodhound/dawgs/util"
 	"io"
 	"os"
 
-	"github.com/specterops/bloodhound/src/model/appcfg"
-
-	"github.com/specterops/bloodhound/src/database"
-
 	"github.com/specterops/bloodhound/dawgs/graph"
+	"github.com/specterops/bloodhound/dawgs/util"
 	"github.com/specterops/bloodhound/log"
+	"github.com/specterops/bloodhound/src/database"
 	"github.com/specterops/bloodhound/src/model"
+	"github.com/specterops/bloodhound/src/model/appcfg"
 	"github.com/specterops/bloodhound/src/services/fileupload"
 )
 

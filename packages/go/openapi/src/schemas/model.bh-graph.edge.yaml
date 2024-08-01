@@ -16,24 +16,24 @@
 
 allOf:
   - $ref: './model.bh-graph.item.yaml'
-type: object
-properties:
-  end1:
-    $ref: './model.bh-graph.link-end.yaml'
-  end2:
-    $ref: './model.bh-graph.link-end.yaml'
-  flow:
-    type: object # link-flow
+  - type: object
     properties:
-      velocity:
+      end1:
+        $ref: './model.bh-graph.link-end.yaml'
+      end2:
+        $ref: './model.bh-graph.link-end.yaml'
+      flow:
+        type: object # link-flow
+        properties:
+          velocity:
+            type: integer
+      id1:
+        type: string
+      id2:
+        type: string
+      label:
+        $ref: './model.bh-graph.label.yaml'
+      lineStyle:
+        type: string
+      width:
         type: integer
-  id1:
-    type: string
-  id2:
-    type: string
-  label:
-    $ref: './model.bh-graph.label.yaml'
-  lineStyle:
-    type: string
-  width:
-    type: integer

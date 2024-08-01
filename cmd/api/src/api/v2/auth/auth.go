@@ -829,9 +829,10 @@ func verifyUserID(createUserTokenRequest *v2.CreateUserToken, user model.User, b
 
 func (s ManagementResource) DeleteAuthToken(response http.ResponseWriter, request *http.Request) {
 	var (
-		pathVars   = mux.Vars(request)
-		rawTokenID = pathVars[api.URIPathVariableTokenID]
-		bhCtx      = ctx.FromRequest(request)
+		pathVars      = mux.Vars(request)
+		rawTokenID    = pathVars[api.URIPathVariableTokenID]
+		bhCtx         = ctx.FromRequest(request)
+		auditLogEntry model.AuditEntry
 	)
 
 	if user, isUser := auth.GetUserFromAuthCtx(bhCtx.AuthCtx); !isUser {
@@ -840,13 +841,36 @@ func (s ManagementResource) DeleteAuthToken(response http.ResponseWriter, reques
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsIDMalformed, request), response)
 	} else if token, err := s.db.GetAuthToken(request.Context(), tokenID); err != nil {
 		api.HandleDatabaseError(request, response, err)
-	} else if token.UserID.Valid && token.UserID.UUID != user.ID && !s.authorizer.AllowsPermission(bhCtx.AuthCtx, auth.Permissions().AuthManageUsers) {
-		log.Errorf("Bad user ID: %s != %s", token.UserID.UUID.String(), user.ID.String())
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, api.ErrorResponseDetailsResourceNotFound, request), response)
-	} else if err := s.db.DeleteAuthToken(request.Context(), token); err != nil {
-		api.HandleDatabaseError(request, response, err)
 	} else {
-		response.WriteHeader(http.StatusOK)
+		// Log Intent to delete auth token for target user
+		if auditLogEntry, err = model.NewAuditEntry(model.AuditLogActionDeleteAuthToken, model.AuditLogStatusIntent, model.AuditData{"target_user_id": token.UserID.UUID, "id": token.ID.String()}); err != nil {
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
+			return
+		} else if err = s.db.AppendAuditLog(request.Context(), auditLogEntry); err != nil {
+			api.HandleDatabaseError(request, response, err)
+			return
+		} else if token.UserID.Valid && token.UserID.UUID != user.ID && !s.authorizer.AllowsPermission(bhCtx.AuthCtx, auth.Permissions().AuthManageUsers) {
+			auditLogEntry.Status = model.AuditLogStatusFailure
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusForbidden, api.ErrorResponseDetailsForbidden, request), response)
+		} else if err := s.db.DeleteAuthToken(request.Context(), token); err != nil {
+			auditLogEntry.Status = model.AuditLogStatusFailure
+			api.HandleDatabaseError(request, response, err)
+		} else {
+			auditLogEntry.Status = model.AuditLogStatusSuccess
+			response.WriteHeader(http.StatusOK)
+		}
+
+		// Audit Log Result to delete auth token for target user
+		if err := s.db.AppendAuditLog(request.Context(), auditLogEntry); err != nil {
+			// We want to keep err scoped because response trumps this error
+			if errors.Is(err, database.ErrNotFound) {
+				log.Errorf("resource not found: %v", err)
+			} else if errors.Is(err, context.DeadlineExceeded) {
+				log.Errorf("context deadline exceeded: %v", err)
+			} else {
+				log.Errorf("unexpected database error: %v", err)
+			}
+		}
 	}
 }
 

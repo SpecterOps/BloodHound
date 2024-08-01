@@ -512,7 +512,8 @@ func findPathToDomainThroughEnterpriseCAsTrustedForNTAuth(
 
 					return nil
 				}),
-	}); err != nil {
+		},
+	); err != nil {
 		return enrollAndNTAuthECASegments, enrollAndNTAuthECAs, err
 	}
 	return enrollAndNTAuthECASegments, enrollAndNTAuthECAs, nil
@@ -565,10 +566,10 @@ func GetADCSESC4EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 	*/
 
 	var (
-		startNode *graph.Node
+		startNode           *graph.Node
 		enrollAndNTAuthECAs cardinality.Duplex[uint32]
-		domainID  = edge.EndID
-		paths     = graph.PathSet{}
+		domainID            = edge.EndID
+		paths               = graph.PathSet{}
 
 		enrollAndNTAuthECASegments = map[graph.ID][]*graph.PathSegment{}
 		finalECAs                  = cardinality.NewBitmap32()
@@ -605,11 +606,11 @@ func GetADCSESC4EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 					paths.AddPath(segment.Path())
 
 					// add the ECA where the template is published (first ECA in the path in case of multi-tier hierarchy) to final list of ECAs
-					segment.Path().Walk(func(start, end *graph.Node, relationship *graph.Relationship) bool {						
+					segment.Path().Walk(func(start, end *graph.Node, relationship *graph.Relationship) bool {
 						if end.Kinds.ContainsOneOf(ad.EnterpriseCA) {
 							finalECAs.Add(end.ID.Uint32())
 							return false
-						}	
+						}
 						return true
 					})
 				}
@@ -630,11 +631,11 @@ func GetADCSESC4EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 					paths.AddPath(segment.Path())
 
 					// add the ECA where the template is published (first ECA in the path in case of multi-tier hierarchy) to final list of ECAs
-					segment.Path().Walk(func(start, end *graph.Node, relationship *graph.Relationship) bool {						
+					segment.Path().Walk(func(start, end *graph.Node, relationship *graph.Relationship) bool {
 						if end.Kinds.ContainsOneOf(ad.EnterpriseCA) {
 							finalECAs.Add(end.ID.Uint32())
 							return false
-						}	
+						}
 						return true
 					})
 				}
@@ -655,13 +656,13 @@ func GetADCSESC4EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 					paths.AddPath(segment.Path())
 
 					// add the ECA where the template is published (first ECA in the path in case of multi-tier hierarchy) to final list of ECAs
-					segment.Path().Walk(func(start, end *graph.Node, relationship *graph.Relationship) bool {						
+					segment.Path().Walk(func(start, end *graph.Node, relationship *graph.Relationship) bool {
 						if end.Kinds.ContainsOneOf(ad.EnterpriseCA) {
 							finalECAs.Add(end.ID.Uint32())
 							return false
-						}	
+						}
 						return true
-					})					
+					})
 				}
 
 				return true
@@ -680,13 +681,13 @@ func GetADCSESC4EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 					paths.AddPath(segment.Path())
 
 					// add the ECA where the template is published (first ECA in the path in case of multi-tier hierarchy) to final list of ECAs
-					segment.Path().Walk(func(start, end *graph.Node, relationship *graph.Relationship) bool {						
+					segment.Path().Walk(func(start, end *graph.Node, relationship *graph.Relationship) bool {
 						if end.Kinds.ContainsOneOf(ad.EnterpriseCA) {
 							finalECAs.Add(end.ID.Uint32())
 							return false
-						}	
+						}
 						return true
-					})					
+					})
 				}
 
 				return true
@@ -705,13 +706,13 @@ func GetADCSESC4EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 					paths.AddPath(segment.Path())
 
 					// add the ECA where the template is published (first ECA in the path in case of multi-tier hierarchy) to final list of ECAs
-					segment.Path().Walk(func(start, end *graph.Node, relationship *graph.Relationship) bool {						
+					segment.Path().Walk(func(start, end *graph.Node, relationship *graph.Relationship) bool {
 						if end.Kinds.ContainsOneOf(ad.EnterpriseCA) {
 							finalECAs.Add(end.ID.Uint32())
 							return false
-						}	
+						}
 						return true
-					})					
+					})
 				}
 
 				return true
@@ -774,15 +775,14 @@ func certTemplateWithPrivelegesToDomainTraversal(priveleges graph.Kinds, domainI
 			query.KindIn(query.Relationship(), ad.PublishedTo),
 			query.InIDs(query.End(), cardinality.DuplexToGraphIDs(enrollAndNTAuthECAs)...),
 			query.Kind(query.End(), ad.EnterpriseCA),
-			)).
+		)).
 		OutboundWithDepth(0, 0, query.And(
-			query.Kind(query.Relationship(), ad.IssuedSignedBy),
-			query.Kind(query.End(), ad.EnterpriseCA),
-			)).	
-		Outbound(
-			query.And(
-				query.KindIn(query.Relationship(), ad.IssuedSignedBy, ad.EnterpriseCAFor),
-				query.Kind(query.End(), ad.RootCA),
+			query.KindIn(query.Relationship(), ad.IssuedSignedBy, ad.EnterpriseCAFor),
+			query.KindIn(query.End(), ad.EnterpriseCA, ad.AIACA),
+			)).
+		Outbound(query.And(
+			query.KindIn(query.Relationship(), ad.IssuedSignedBy, ad.EnterpriseCAFor),
+			query.Kind(query.End(), ad.RootCA),
 			)).
 		Outbound(
 			query.And(

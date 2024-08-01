@@ -18,6 +18,7 @@ package pg
 
 import (
 	"fmt"
+
 	"github.com/jackc/pgx/v5"
 	"github.com/specterops/bloodhound/dawgs/graph"
 )

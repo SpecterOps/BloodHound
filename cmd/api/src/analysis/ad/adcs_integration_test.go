@@ -322,55 +322,141 @@ func TestIssuedSignedBy(t *testing.T) {
 			t.Logf("failed fetching rootCA nodes: %v", err)
 		} else if enterpriseCertAuthorities, err := ad2.FetchNodesByKind(context.Background(), db, ad.EnterpriseCA); err != nil {
 			t.Logf("failed fetching enterpriseCA nodes: %v", err)
-		} else if err := ad2.PostIssuedSignedBy(operation, enterpriseCertAuthorities, rootCertAuthorities); err != nil {
+		} else if aiaCertAuthorities, err := ad2.FetchNodesByKind(context.Background(), db, ad.AIACA); err != nil {
+			t.Logf("failed fetching AIACA nodes: %v", err)
+		} else if err := ad2.PostIssuedSignedBy(operation, enterpriseCertAuthorities, rootCertAuthorities, aiaCertAuthorities); err != nil {
 			t.Logf("failed post processing for %s: %v", ad.IssuedSignedBy.String(), err)
 		}
 
 		operation.Done()
 
 		db.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
-			if results1, err := ops.FetchStartNodes(tx.Relationships().Filterf(func() graph.Criteria {
-				return query.And(
-					query.Kind(query.Relationship(), ad.IssuedSignedBy),
-					query.KindIn(query.Start(), ad.EnterpriseCA),
-					query.KindIn(query.End(), ad.EnterpriseCA),
-				)
+			if results, err := ops.FetchRelationships(tx.Relationships().Filterf(func() graph.Criteria {
+				return query.Kind(query.Relationship(), ad.IssuedSignedBy)
 			})); err != nil {
-				t.Fatalf("error fetching ECA to ECA IssuedSignedBy relationships; %v", err)
-			} else if results2, err := ops.FetchStartNodes(tx.Relationships().Filterf(func() graph.Criteria {
-				return query.And(
-					query.Kind(query.Relationship(), ad.IssuedSignedBy),
-					query.KindIn(query.Start(), ad.EnterpriseCA),
-					query.KindIn(query.End(), ad.RootCA),
-				)
-			})); err != nil {
-				t.Fatalf("error fetching ECA to RootCA IssuedSignedBy relationships; %v", err)
-			} else if results3, err := ops.FetchStartNodes(tx.Relationships().Filterf(func() graph.Criteria {
-				return query.And(
-					query.Kind(query.Relationship(), ad.IssuedSignedBy),
-					query.KindIn(query.Start(), ad.RootCA),
-					query.KindIn(query.End(), ad.RootCA),
-				)
-			})); err != nil {
-				t.Fatalf("error fetching RootCA to RootCA IssuedSignedBy relationships; %v", err)
+				t.Fatalf("error fetching IssuedSignedBy edges in integration test; %v", err)
 			} else {
-				assert.True(t, len(results1) == 1)
-				assert.True(t, len(results2) == 1)
-				assert.True(t, len(results3) == 1)
+				assert.Equal(t, 12, len(results))
+			}
 
-				// Positive Cases
-				assert.True(t, results3.Contains(harness.IssuedSignedByHarness.RootCA2))
-				assert.True(t, results2.Contains(harness.IssuedSignedByHarness.EnterpriseCA1))
-				assert.True(t, results1.Contains(harness.IssuedSignedByHarness.EnterpriseCA2))
+			if edge, err := analysis.FetchEdgeByStartAndEnd(testContext.Context(), db, harness.IssuedSignedByHarness.EnterpriseCA2.ID, harness.IssuedSignedByHarness.EnterpriseCA1.ID, ad.IssuedSignedBy); err != nil {
+				t.Fatalf("error fetching IssuedSignedBy edge (1) in integration test; %v", err)
+			} else {
+				require.NotNil(t, edge)
+			}
 
-				// Negative Cases
-				assert.False(t, results1.Contains(harness.IssuedSignedByHarness.RootCA1))
-				assert.False(t, results2.Contains(harness.IssuedSignedByHarness.RootCA1))
-				assert.False(t, results3.Contains(harness.IssuedSignedByHarness.RootCA1))
+			if edge, err := analysis.FetchEdgeByStartAndEnd(testContext.Context(), db, harness.IssuedSignedByHarness.EnterpriseCA2.ID, harness.IssuedSignedByHarness.AIACA2_1.ID, ad.IssuedSignedBy); err != nil {
+				t.Fatalf("error fetching IssuedSignedBy edge (2) in integration test; %v", err)
+			} else {
+				require.NotNil(t, edge)
+			}
 
-				assert.False(t, results1.Contains(harness.IssuedSignedByHarness.EnterpriseCA3))
-				assert.False(t, results2.Contains(harness.IssuedSignedByHarness.EnterpriseCA3))
-				assert.False(t, results3.Contains(harness.IssuedSignedByHarness.EnterpriseCA3))
+			if edge, err := analysis.FetchEdgeByStartAndEnd(testContext.Context(), db, harness.IssuedSignedByHarness.EnterpriseCA1.ID, harness.IssuedSignedByHarness.RootCA2.ID, ad.IssuedSignedBy); err != nil {
+				t.Fatalf("error fetching IssuedSignedBy edge (3) in integration test; %v", err)
+			} else {
+				require.NotNil(t, edge)
+			}
+
+			if edge, err := analysis.FetchEdgeByStartAndEnd(testContext.Context(), db, harness.IssuedSignedByHarness.EnterpriseCA1.ID, harness.IssuedSignedByHarness.AIACA1_2.ID, ad.IssuedSignedBy); err != nil {
+				t.Fatalf("error fetching IssuedSignedBy edge (4) in integration test; %v", err)
+			} else {
+				require.NotNil(t, edge)
+			}
+
+			if edge, err := analysis.FetchEdgeByStartAndEnd(testContext.Context(), db, harness.IssuedSignedByHarness.RootCA2.ID, harness.IssuedSignedByHarness.RootCA1.ID, ad.IssuedSignedBy); err != nil {
+				t.Fatalf("error fetching IssuedSignedBy edge (5) in integration test; %v", err)
+			} else {
+				require.NotNil(t, edge)
+			}
+
+			if edge, err := analysis.FetchEdgeByStartAndEnd(testContext.Context(), db, harness.IssuedSignedByHarness.RootCA2.ID, harness.IssuedSignedByHarness.AIACA1_1.ID, ad.IssuedSignedBy); err != nil {
+				t.Fatalf("error fetching IssuedSignedBy edge (6) in integration test; %v", err)
+			} else {
+				require.NotNil(t, edge)
+			}
+
+			if edge, err := analysis.FetchEdgeByStartAndEnd(testContext.Context(), db, harness.IssuedSignedByHarness.AIACA2_2.ID, harness.IssuedSignedByHarness.EnterpriseCA1.ID, ad.IssuedSignedBy); err != nil {
+				t.Fatalf("error fetching IssuedSignedBy edge (7) in integration test; %v", err)
+			} else {
+				require.NotNil(t, edge)
+			}
+
+			if edge, err := analysis.FetchEdgeByStartAndEnd(testContext.Context(), db, harness.IssuedSignedByHarness.AIACA2_2.ID, harness.IssuedSignedByHarness.AIACA2_1.ID, ad.IssuedSignedBy); err != nil {
+				t.Fatalf("error fetching IssuedSignedBy edge (8) in integration test; %v", err)
+			} else {
+				require.NotNil(t, edge)
+			}
+
+			if edge, err := analysis.FetchEdgeByStartAndEnd(testContext.Context(), db, harness.IssuedSignedByHarness.AIACA2_1.ID, harness.IssuedSignedByHarness.RootCA2.ID, ad.IssuedSignedBy); err != nil {
+				t.Fatalf("error fetching IssuedSignedBy edge (9) in integration test; %v", err)
+			} else {
+				require.NotNil(t, edge)
+			}
+
+			if edge, err := analysis.FetchEdgeByStartAndEnd(testContext.Context(), db, harness.IssuedSignedByHarness.AIACA2_1.ID, harness.IssuedSignedByHarness.AIACA1_2.ID, ad.IssuedSignedBy); err != nil {
+				t.Fatalf("error fetching IssuedSignedBy edge (10) in integration test; %v", err)
+			} else {
+				require.NotNil(t, edge)
+			}
+
+			if edge, err := analysis.FetchEdgeByStartAndEnd(testContext.Context(), db, harness.IssuedSignedByHarness.AIACA1_2.ID, harness.IssuedSignedByHarness.RootCA1.ID, ad.IssuedSignedBy); err != nil {
+				t.Fatalf("error fetching IssuedSignedBy edge (11) in integration test; %v", err)
+			} else {
+				require.NotNil(t, edge)
+			}
+
+			if edge, err := analysis.FetchEdgeByStartAndEnd(testContext.Context(), db, harness.IssuedSignedByHarness.AIACA1_2.ID, harness.IssuedSignedByHarness.AIACA1_1.ID, ad.IssuedSignedBy); err != nil {
+				t.Fatalf("error fetching IssuedSignedBy edge (12) in integration test; %v", err)
+			} else {
+				require.NotNil(t, edge)
+			}
+
+			return nil
+		})
+	})
+}
+
+func TestEnterpriseCAFor(t *testing.T) {
+	testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
+	testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) error {
+		harness.EnterpriseCAForHarness.Setup(testContext)
+		return nil
+	}, func(harness integration.HarnessDetails, db graph.Database) {
+		operation := analysis.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - EnterpriseCAFor")
+
+		if enterpriseCertAuthorities, err := ad2.FetchNodesByKind(context.Background(), db, ad.EnterpriseCA); err != nil {
+			t.Logf("failed fetching enterpriseCA nodes: %v", err)
+		} else if err := ad2.PostEnterpriseCAFor(operation, enterpriseCertAuthorities); err != nil {
+			t.Logf("failed post processing for %s: %v", ad.EnterpriseCAFor.String(), err)
+		}
+
+		operation.Done()
+		
+		db.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
+			if results, err := ops.FetchRelationships(tx.Relationships().Filterf(func() graph.Criteria {
+				return query.Kind(query.Relationship(), ad.EnterpriseCAFor)
+			})); err != nil {
+				t.Fatalf("error fetching EnterpriseCAFor edges in integration test; %v", err)
+			} else {
+				assert.Equal(t, 3, len(results))
+			}
+
+			if edge, err := analysis.FetchEdgeByStartAndEnd(testContext.Context(), db, harness.EnterpriseCAForHarness.EnterpriseCA1.ID, harness.EnterpriseCAForHarness.RootCA1.ID, ad.EnterpriseCAFor); err != nil {
+				t.Fatalf("error fetching EnterpriseCAFor edge (1) in integration test; %v", err)
+			} else {
+				require.NotNil(t, edge)
+			}
+
+			if edge, err := analysis.FetchEdgeByStartAndEnd(testContext.Context(), db, harness.EnterpriseCAForHarness.EnterpriseCA1.ID, harness.EnterpriseCAForHarness.AIACA1_1.ID, ad.EnterpriseCAFor); err != nil {
+				t.Fatalf("error fetching EnterpriseCAFor edge (1) in integration test; %v", err)
+			} else {
+				require.NotNil(t, edge)
+			}
+
+			if edge, err := analysis.FetchEdgeByStartAndEnd(testContext.Context(), db, harness.EnterpriseCAForHarness.EnterpriseCA2.ID, harness.EnterpriseCAForHarness.AIACA2_1.ID, ad.EnterpriseCAFor); err != nil {
+				t.Fatalf("error fetching EnterpriseCAFor edge (1) in integration test; %v", err)
+			} else {
+				require.NotNil(t, edge)
 			}
 
 			return nil

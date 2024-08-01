@@ -248,7 +248,7 @@ func GetADCSESC9aEdgeComposition(ctx context.Context, db graph.Database, edge *g
 				if end.Kinds.ContainsOneOf(ad.EnterpriseCA) {
 					caNode = end
 					return false
-				}	
+				}
 				return true
 			})
 
@@ -372,8 +372,12 @@ func adcsESC9aPath1Pattern(domainID graph.ID) traversal.PatternContinuation {
 			),
 		).
 		Outbound(query.And(
-			query.KindIn(query.Relationship(), ad.PublishedTo, ad.IssuedSignedBy),
+			query.KindIn(query.Relationship(), ad.PublishedTo),
 			query.Kind(query.End(), ad.EnterpriseCA),
+		)).
+		OutboundWithDepth(0, 0, query.And(
+			query.KindIn(query.Relationship(), ad.IssuedSignedBy, ad.EnterpriseCAFor),
+			query.KindIn(query.End(), ad.EnterpriseCA, ad.AIACA),
 		)).
 		Outbound(query.And(
 			query.KindIn(query.Relationship(), ad.IssuedSignedBy, ad.EnterpriseCAFor),
@@ -451,8 +455,12 @@ func adcsESC9bPath1Pattern(domainID graph.ID) traversal.PatternContinuation {
 			),
 		).
 		Outbound(query.And(
-			query.KindIn(query.Relationship(), ad.PublishedTo, ad.IssuedSignedBy),
+			query.KindIn(query.Relationship(), ad.PublishedTo),
 			query.Kind(query.End(), ad.EnterpriseCA),
+		)).
+		OutboundWithDepth(0, 0, query.And(
+			query.KindIn(query.Relationship(), ad.IssuedSignedBy, ad.EnterpriseCAFor),
+			query.KindIn(query.End(), ad.EnterpriseCA, ad.AIACA),
 		)).
 		Outbound(query.And(
 			query.KindIn(query.Relationship(), ad.IssuedSignedBy, ad.EnterpriseCAFor),

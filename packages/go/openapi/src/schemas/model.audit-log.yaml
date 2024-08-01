@@ -16,42 +16,42 @@
 
 allOf:
   - $ref: './model.components.int64.id.yaml'
-type: object
-properties:
-  created_at:
-    type: string
-    format: date-time
-    readOnly: true
-  actor_id:
-    type: string
-    format: uuid
-    readOnly: true
-  actor_name:
-    type: string
-    readOnly: true
-  actor_email:
-    type: string
-    format: email
-    readOnly: true
-  action:
-    type: string
-    readOnly: true
-  fields:
-    type: object
-    readOnly: true
-  request_id:
-    type: string
-    format: uuid
-    readOnly: true
-  source_ip_address:
-    type: string
-    format: ipv4
-    readOnly: true
-  commit_id:
-    type: string
-    format: uuid
-    readOnly: true
-  status:
-    allOf:
-      - $ref: './enum.audit-log-status.yaml'
-      - readOnly: true
+  - type: object
+    properties:
+      created_at:
+        type: string
+        format: date-time
+        readOnly: true
+      actor_id:
+        type: string
+        format: uuid
+        readOnly: true
+      actor_name:
+        type: string
+        readOnly: true
+      actor_email:
+        type: string
+        format: email
+        readOnly: true
+      action:
+        type: string
+        readOnly: true
+      fields:
+        type: object
+        readOnly: true
+      request_id:
+        type: string
+        format: uuid
+        readOnly: true
+      source_ip_address:
+        type: string
+        format: ipv4
+        readOnly: true
+      commit_id:
+        type: string
+        format: uuid
+        readOnly: true
+      status:
+        allOf:
+          - $ref: './enum.audit-log-status.yaml'
+          - readOnly: true

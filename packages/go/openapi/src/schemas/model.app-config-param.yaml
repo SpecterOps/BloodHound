@@ -17,15 +17,15 @@
 allOf:
   - $ref: './model.components.int32.id.yaml'
   - $ref: './model.components.timestamps.yaml'
-type: object
-properties:
-  key:
-    type: string
-  value:
-    type: object
-  name:
-    type: string
-    readOnly: true
-  description:
-    type: string
-    readOnly: true
+  - type: object
+    properties:
+      key:
+        type: string
+      value:
+        type: object
+      name:
+        type: string
+        readOnly: true
+      description:
+        type: string
+        readOnly: true

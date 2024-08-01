@@ -19,6 +19,9 @@ package tools
 import (
 	"context"
 	"fmt"
+	"net/http"
+	"sync"
+
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/specterops/bloodhound/dawgs"
 	"github.com/specterops/bloodhound/dawgs/drivers/neo4j"
@@ -28,8 +31,6 @@ import (
 	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/src/config"
-	"net/http"
-	"sync"
 )
 
 type MigratorState string

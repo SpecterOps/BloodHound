@@ -60,20 +60,24 @@ const FileDrop: React.FC<{
 
     return (
         <Box
-            height={300}
-            borderRadius={1}
-            border={2}
-            px={20}
-            position='relative'
-            display='flex'
-            flexDirection='column'
-            alignItems='center'
-            justifyContent='center'
-            bgcolor={isHoverActive || isDragActive ? theme.palette.neutral.tertiary : theme.palette.neutral.secondary}
-            color={theme.palette.color.primary}
-            borderColor={theme.palette.neutral.tertiary}
-            fontWeight='bold'
-            textAlign='center'>
+            sx={{
+                cursor: 'pointer',
+                height: 300,
+                borderRadius: 1,
+                border: 2,
+                px: 20,
+                position: 'relative',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                bgcolor:
+                    isHoverActive || isDragActive ? theme.palette.neutral.tertiary : theme.palette.neutral.secondary,
+                color: theme.palette.color.primary,
+                borderColor: theme.palette.color.primary,
+                fontWeight: 'bold',
+                textAlign: 'center',
+            }}>
             <input
                 data-testid='ingest-file-upload'
                 disabled={disabled}
