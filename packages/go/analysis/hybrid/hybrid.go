@@ -176,10 +176,15 @@ func createMissingADUser(ctx context.Context, db graph.Database, objectID string
 
 	err = db.WriteTransaction(ctx, func(tx graph.Transaction) error {
 		newNode, err = analysis.FetchNodeByObjectID(tx, objectID)
-		if !errors.Is(err, graph.ErrNoResultsFound) {
+		if !errors.Is(err, graph.ErrNoResultsFound) && err != nil {
 			return fmt.Errorf("create missing ad user precheck: %w", err)
 		} else if err == nil {
-			return nil
+			newNode.AddKinds(adSchema.User)
+			if err := tx.UpdateNode(newNode); err != nil {
+				return fmt.Errorf("update missing ad user label: %w", err)
+			} else {
+				return nil
+			}
 		}
 
 		newNode, err = tx.CreateNode(properties, adSchema.Entity, adSchema.User)
