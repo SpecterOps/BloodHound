@@ -246,7 +246,7 @@ export const CommonSearches: CommonSearchType[] = [
         queries: [
             {
                 description: 'All Global Administrators',
-                cypher: 'MATCH p = (n)-[r:AZGlobalAdmin*1..]->(m)\nRETURN p',
+                cypher: 'MATCH p = (n:AZBase)-[r:AZGlobalAdmin*1..]->(m:AZTenant)\nRETURN p',
             },
             {
                 description: 'All members of high privileged roles',
