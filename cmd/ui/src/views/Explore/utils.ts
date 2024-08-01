@@ -19,8 +19,26 @@ import { MultiDirectedGraph } from 'graphology';
 import { GraphEdges, GraphNodes } from 'js-client-library';
 import { GlyphLocation } from 'src/rendering/programs/node.glyphs';
 import { EdgeDirection, EdgeParams, NodeParams } from 'src/utils';
-import { GLYPHS, NODE_ICON, UNKNOWN_ICON } from './svgIcons';
+import { GLYPHS, NODE_ICON } from './svgIcons';
 import { Theme } from '@mui/material';
+import { faCircle } from '@fortawesome/free-solid-svg-icons';
+
+// hashes a string to a lightly shaded hex color
+export const stringToLightHexColor = (str: string) => {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+        hash = str.charCodeAt(i) + ((hash << 5) - hash);
+    }
+
+    let color = '#';
+    for (let i = 0; i < 3; i++) {
+        let value = (hash >> (i * 8)) & 0xff;
+        value = Math.floor((value + 255) / 2);
+        color += ('00' + value.toString(16)).substr(-2);
+    }
+
+    return color;
+};
 
 export const initGraphNodes = (
     graph: MultiDirectedGraph,
@@ -40,7 +58,10 @@ export const initGraphNodes = (
             forceLabel: true,
         };
 
-        const icon = NODE_ICON[node.kind] || UNKNOWN_ICON;
+        const icon = NODE_ICON[node.kind] || {
+            icon: faCircle,
+            color: stringToLightHexColor(node.kind),
+        };
         nodeParams.color = icon.color;
         nodeParams.image = icon.url || '';
 

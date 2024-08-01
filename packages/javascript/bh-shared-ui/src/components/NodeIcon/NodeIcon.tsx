@@ -14,7 +14,6 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { faQuestion } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Box, Tooltip } from '@mui/material';
 import { Theme } from '@mui/material/styles';
@@ -26,6 +25,23 @@ interface NodeIconProps {
     nodeType: EntityKinds | string;
 }
 
+// hashes a string to a lightly shaded hex color
+export const stringToLightHexColor = (str: string) => {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+        hash = str.charCodeAt(i) + ((hash << 5) - hash);
+    }
+
+    let color = '#';
+    for (let i = 0; i < 3; i++) {
+        let value = (hash >> (i * 8)) & 0xff;
+        value = Math.floor((value + 255) / 2);
+        color += ('00' + value.toString(16)).substr(-2);
+    }
+
+    return color;
+};
+
 const useStyles = makeStyles<Theme, NodeIconProps, string>({
     root: {
         display: 'inline-block',
@@ -33,7 +49,7 @@ const useStyles = makeStyles<Theme, NodeIconProps, string>({
         position: 'relative',
     },
     container: {
-        backgroundColor: (props) => NODE_ICON[props.nodeType]?.color || '#FFFFFF',
+        backgroundColor: (props) => NODE_ICON[props.nodeType]?.color || stringToLightHexColor(props.nodeType),
         border: '1px solid #000000',
         padding: '2px',
         borderRadius: '50%',
@@ -54,7 +70,11 @@ const NodeIcon: React.FC<NodeIconProps> = ({ nodeType }) => {
         <Tooltip title={nodeType || ''} describeChild={true}>
             <Box className={classes.root}>
                 <Box className={classes.container}>
-                    <FontAwesomeIcon icon={NODE_ICON[nodeType]?.icon || faQuestion} transform='shrink-2' />
+                    {NODE_ICON[nodeType]?.icon ? (
+                        <FontAwesomeIcon icon={NODE_ICON[nodeType].icon} transform='shrink-2' />
+                    ) : (
+                        nodeType.at(0)?.toUpperCase()
+                    )}
                 </Box>
             </Box>
         </Tooltip>

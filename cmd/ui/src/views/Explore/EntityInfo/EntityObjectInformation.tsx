@@ -17,6 +17,7 @@
 import { Alert, Skeleton } from '@mui/material';
 import {
     EntityField,
+    Field,
     FieldsContainer,
     ObjectInfoFields,
     apiClient,
@@ -94,6 +95,7 @@ const EntityObjectInformation: React.FC<EntityInfoContentProps> = ({ id, nodeTyp
     return (
         <EntityInfoCollapsibleSection label='Object Information'>
             <FieldsContainer>
+                <Field label='Node Kind:' value={nodeType || 'Unknown'} />
                 <BasicObjectInfoFields {...objectInformation} />
                 <ObjectInfoFields fields={formattedObjectFields} />
             </FieldsContainer>
