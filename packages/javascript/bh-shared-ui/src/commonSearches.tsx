@@ -91,7 +91,7 @@ export const CommonSearches: CommonSearchType[] = [
             },
             {
                 description: 'Dangerous privileges for Domain Users groups',
-                cypher: `MATCH p=(m:Group)-[:Owns|WriteDacl|GenericAll|WriteOwner|ExecuteDCOM|GenericWrite|AllowedToDelegate|ForceChangePassword]->(n:Computer)\nWHERE m.objectid ENDS WITH "-513"\nRETURN p`,
+                cypher: `MATCH p=(m:Group)-[:${adTransitEdgeTypes}]->(n:Base)\nWHERE m.objectid ENDS WITH "-513"\nRETURN p`,
             },
             {
                 description: 'Domain Admins logons to non-Domain Controllers',
