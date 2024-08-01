@@ -194,7 +194,7 @@ export const CommonSearches: CommonSearchType[] = [
             },
             {
                 description: 'Domain controllers with UPN certificate mapping enabled',
-                cypher: `MATCH p = (dc:Computer)-[:DCFor]->(d)\nWHERE dc.certificatemappingmethodsraw IN [4, 5, 6, 7, 12, 13, 14, 15, 20, 21, 22, 23, 28, 29, 30, 31]\nRETURN p`,
+                cypher: `MATCH p = (dc:Computer)-[:DCFor]->(d:Domain)\nWHERE dc.certificatemappingmethodsraw IN [4, 5, 6, 7, 12, 13, 14, 15, 20, 21, 22, 23, 28, 29, 30, 31]\nRETURN p`,
             },
             {
                 description: 'Non-default permissions on IssuancePolicy nodes',
