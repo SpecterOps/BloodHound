@@ -228,7 +228,7 @@ export const CommonSearches: CommonSearchType[] = [
             },
             {
                 description: 'Disabled Tier Zero / High Value principals',
-                cypher: `MATCH (n)\nWHERE n.system_tags CONTAINS "admin_tier_0"\nAND n.enabled = false\nAND NOT n.objectid ENDS WITH "-502" // Removes false positive, KRBTGT\nAND NOT n.objectid ENDS WITH "-500" // Removes false positive, built-in Administrator\nRETURN n`,
+                cypher: `MATCH (n:Base)\nWHERE n.system_tags CONTAINS "admin_tier_0"\nAND n.enabled = false\nAND NOT n.objectid ENDS WITH "-502" // Removes false positive, KRBTGT\nAND NOT n.objectid ENDS WITH "-500" // Removes false positive, built-in Administrator\nRETURN n`,
             },
             {
                 description: 'Tier Zero / High Value users with non-expiring passwords',
@@ -301,6 +301,10 @@ export const CommonSearches: CommonSearchType[] = [
             {
                 description: 'Tier Zero / High Value external Entra ID users',
                 cypher: `MATCH (n:AZUser)\nWHERE n.system_tags contains 'admin_tier_0'\nAND n.name CONTAINS '#EXT#@'\nRETURN n`,
+            },
+            {
+                description: 'Disabled Tier Zero / High Value principals',
+                cypher: `MATCH (n:AZBase)\nWHERE n.system_tags CONTAINS "admin_tier_0"\nAND n.enabled = false\nRETURN n`,
             },
         ],
     },
