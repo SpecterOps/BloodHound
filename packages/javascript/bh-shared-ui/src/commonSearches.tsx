@@ -268,7 +268,7 @@ export const CommonSearches: CommonSearchType[] = [
             },
             {
                 description: 'Shortest paths from Azure Applications to Tier Zero / High Value targets',
-                cypher: `MATCH p=shortestPath((m:AZApp)-[r:${azureTransitEdgeTypes}*1..]->(n))\nWHERE "admin_tier_0" IN split(n.system_tags, ' ') AND m<>n\nRETURN p`,
+                cypher: `MATCH p=shortestPath((m:AZApp)-[r:${azureTransitEdgeTypes}*1..]->(n:AZBase))\nWHERE "admin_tier_0" IN split(n.system_tags, ' ') AND m<>n\nRETURN p`,
             },
             {
                 description: 'Shortest paths to Azure Subscriptions',
