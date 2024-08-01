@@ -41,7 +41,7 @@ export const CommonSearches: CommonSearchType[] = [
         queries: [
             {
                 description: 'All Domain Admins',
-                cypher: `MATCH p=(n:Group)<-[:MemberOf*1..]-(m)\nWHERE n.objectid ENDS WITH "-512"\nRETURN p`,
+                cypher: `MATCH p=(n:Group)<-[:MemberOf*1..]-(m:Base)\nWHERE n.objectid ENDS WITH "-512"\nRETURN p`,
             },
             {
                 description: 'Map domain trusts',
