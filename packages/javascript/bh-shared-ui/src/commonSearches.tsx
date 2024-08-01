@@ -198,7 +198,7 @@ export const CommonSearches: CommonSearchType[] = [
             },
             {
                 description: 'Non-default permissions on IssuancePolicy nodes',
-                cypher: `MATCH p = (n)-[:GenericAll|GenericWrite|Owns|WriteOwner|WriteDacl]->(:IssuancePolicy)\nWHERE NOT n.objectid ENDS WITH "-512" AND NOT n.objectid ENDS WITH "-519"\nRETURN p`,
+                cypher: `MATCH p = (n:Base)-[:GenericAll|GenericWrite|Owns|WriteOwner|WriteDacl]->(:IssuancePolicy)\nWHERE NOT n.objectid ENDS WITH "-512" AND NOT n.objectid ENDS WITH "-519"\nRETURN p`,
             },
             {
                 description: 'Enrollment rights on CertTemplates with OIDGroupLink',
