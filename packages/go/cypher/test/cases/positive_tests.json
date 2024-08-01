@@ -650,18 +650,10 @@
             }
         },
         {
-            "name": "Users with Foreign Domain Group Membership",
+            "name": "Principals with Foreign Domain Group Membership",
             "type": "string_match",
             "details": {
-                "query": "match p = (n:User)-[:MemberOf]->(m:Group) where n.domain = 'DOMAIN.PAIN' and m.domain <> n.domain return p",
-                "complexity": 3
-            }
-        },
-        {
-            "name": "Groups with Foreign Domain Group Membership",
-            "type": "string_match",
-            "details": {
-                "query": "match p = (n:Group {domain: 'DOMAIN.PAIN'})-[:MemberOf]->(m:Group) where m.domain <> n.domain and n.name <> m.name return p",
+                "query": "match p = (n:Base)-[:MemberOf]->(m:Group) where n.domain = 'DOMAIN.PAIN' and m.domain <> n.domain return p",
                 "complexity": 3
             }
         },

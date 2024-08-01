@@ -62,12 +62,8 @@ export const CommonSearches: CommonSearchType[] = [
                 cypher: `MATCH p=(:Base)-[:DCSync|AllExtendedRights|GenericAll]->(:Domain)\nRETURN p`,
             },
             {
-                description: 'Users with foreign domain group membership',
-                cypher: `MATCH p=(n:User)-[:MemberOf]->(m:Group)\nWHERE m.domainsid<>n.domainsid\nRETURN p`,
-            },
-            {
-                description: 'Groups with foreign domain group membership',
-                cypher: `MATCH p=(n:Group)-[:MemberOf]->(m:Group)\nWHERE m.domainsid<>n.domainsid AND n.name<>m.name\nRETURN p`,
+                description: 'Principals with foreign domain group membership',
+                cypher: `MATCH p=(n:Base)-[:MemberOf]->(m:Group)\nWHERE m.domainsid<>n.domainsid\nRETURN p`,
             },
             {
                 description: 'Computers where Domain Users are local administrators',
