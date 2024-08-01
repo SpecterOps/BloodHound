@@ -161,7 +161,7 @@ export const CommonSearches: CommonSearchType[] = [
             },
             {
                 description: 'Enrollment rights on published certificate templates',
-                cypher: `MATCH p = ()-[:Enroll|GenericAll|AllExtendedRights]->(ct:CertTemplate)-[:PublishedTo]->(:EnterpriseCA)\nRETURN p`,
+                cypher: `MATCH p = (:Base)-[:Enroll|GenericAll|AllExtendedRights]->(ct:CertTemplate)-[:PublishedTo]->(:EnterpriseCA)\nRETURN p`,
             },
             {
                 description: 'Enrollment rights on published ESC1 certificate templates',
