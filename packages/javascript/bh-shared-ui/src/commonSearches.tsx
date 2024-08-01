@@ -173,7 +173,7 @@ export const CommonSearches: CommonSearchType[] = [
             },
             {
                 description: 'Enrollment rights on published enrollment agent certificate templates',
-                cypher: `MATCH p = ()-[:Enroll|GenericAll|AllExtendedRights]->(ct:CertTemplate)-[:PublishedTo]->(:EnterpriseCA)\nWHERE "1.3.6.1.4.1.311.20.2.1" IN ct.effectiveekus\nOR "2.5.29.37.0" IN ct.effectiveekus\nOR SIZE(ct.effectiveekus) = 0\nRETURN p`,
+                cypher: `MATCH p = (:Base)-[:Enroll|GenericAll|AllExtendedRights]->(ct:CertTemplate)-[:PublishedTo]->(:EnterpriseCA)\nWHERE "1.3.6.1.4.1.311.20.2.1" IN ct.effectiveekus\nOR "2.5.29.37.0" IN ct.effectiveekus\nOR SIZE(ct.effectiveekus) = 0\nRETURN p`,
             },
             {
                 description: 'Enrollment rights on published certificate templates with no security extension',
