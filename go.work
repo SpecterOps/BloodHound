@@ -19,7 +19,6 @@ go 1.21
 use (
 	./cmd/api/src
 	./packages/go/analysis
-	./packages/go/bomenc
 	./packages/go/cache
 	./packages/go/conftool
 	./packages/go/crypto

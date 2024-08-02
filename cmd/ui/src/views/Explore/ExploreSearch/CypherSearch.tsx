@@ -162,6 +162,7 @@ const CypherSearch = () => {
             <Box display={'flex'} gap={1}>
                 <Button
                     className={`${classes.button} ${classes.iconButton}`}
+                    variant={'secondary'}
                     onClick={() => {
                         setShowCommonQueries((v) => !v);
                     }}
