@@ -176,18 +176,20 @@ func (s QueryParameterFilterMap) BuildSQLFilter() (SQLFilter, error) {
 				return SQLFilter{}, fmt.Errorf("invalid filter predicate specified")
 			}
 
-			if predicate == ContainsSymbol {
+			switch predicate {
+			case ContainsSymbol:
 				result.WriteString("lower(")
 				result.WriteString(filter.Name)
 				result.WriteString(") ")
 				result.WriteString(predicate)
-				result.WriteString(" lower('%?%')")
-			} else {
+				result.WriteString(" lower(%?%)")
+			default:
 				result.WriteString(filter.Name)
 				result.WriteString(" ")
 				result.WriteString(predicate)
 				result.WriteString(" ?")
 			}
+
 			params = append(params, filter.Value)
 			firstFilter = false
 		}
