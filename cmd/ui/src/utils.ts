@@ -77,7 +77,7 @@ export const initializeBHEClient = () => {
         (error) => {
             if (error?.response) {
                 if (error?.response?.status === 401) {
-                    if (!IGNORE_401_LOGOUT.includes(error?.response?.config.url)) {
+                    if (IGNORE_401_LOGOUT.includes(error?.response?.config.url) === false) {
                         throttledLogout();
                     }
                 } else if (
