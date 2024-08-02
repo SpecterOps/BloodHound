@@ -174,24 +174,28 @@ func createMissingADUser(ctx context.Context, db graph.Database, objectID string
 		common.ObjectID.String(): objectID,
 	})
 
+	// Using a switch to make the complex error handling logic more clear
 	err = db.WriteTransaction(ctx, func(tx graph.Transaction) error {
 		newNode, err = analysis.FetchNodeByObjectID(tx, objectID)
-		if !errors.Is(err, graph.ErrNoResultsFound) && err != nil {
-			return fmt.Errorf("create missing ad user precheck: %w", err)
-		} else if err == nil {
+		switch {
+		// No node found, so it's safe to create a new AD User
+		case errors.Is(err, graph.ErrNoResultsFound):
+			if newNode, err = tx.CreateNode(properties, adSchema.Entity, adSchema.User); err != nil {
+				return fmt.Errorf("create missing ad user: %w", err)
+			} else {
+				return nil
+			}
+		// Node was found, so we need to update it to an AD User
+		case err == nil:
 			newNode.AddKinds(adSchema.User)
 			if err := tx.UpdateNode(newNode); err != nil {
 				return fmt.Errorf("update missing ad user label: %w", err)
 			} else {
 				return nil
 			}
-		}
-
-		newNode, err = tx.CreateNode(properties, adSchema.Entity, adSchema.User)
-		if err != nil {
-			return fmt.Errorf("create missing ad user: %w", err)
-		} else {
-			return nil
+		// Database error while checking for node
+		default:
+			return fmt.Errorf("create missing ad user precheck: %w", err)
 		}
 	})
 
