@@ -178,9 +178,8 @@ func (s QueryParameterFilterMap) BuildSQLFilter() (SQLFilter, error) {
 
 			switch predicate {
 			case ContainsSymbol:
-				result.WriteString("lower(")
 				result.WriteString(filter.Name)
-				result.WriteString(") ")
+				result.WriteString(" ")
 				result.WriteString(predicate)
 				filter.Value = fmt.Sprintf("%%%s%%", filter.Value)
 				result.WriteString(" lower(?)")

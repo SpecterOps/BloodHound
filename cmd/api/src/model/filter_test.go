@@ -89,7 +89,7 @@ func TestModel_BuildSQLFilter_Success(t *testing.T) {
 		"stringValue":    {SQLString: fmt.Sprintf("%s = ?", stringValue.Name), Params: []any{stringValue.Value}},
 		"boolEquals":     {SQLString: fmt.Sprintf("%s = ?", boolEquals.Name), Params: []any{boolEquals.Value}},
 		"boolNotEquals":  {SQLString: fmt.Sprintf("%s <> ?", boolNotEquals.Name), Params: []any{boolNotEquals.Value}},
-		"stringContains": {SQLString: fmt.Sprintf("lower(%s) like lower(?)", stringContains.Name), Params: []any{stringContains.Value}},
+		"stringContains": {SQLString: fmt.Sprintf("%s like lower(?)", stringContains.Name), Params: []any{stringContains.Value}},
 	}
 
 	queryParameterFilterMap := model.QueryParameterFilterMap{
