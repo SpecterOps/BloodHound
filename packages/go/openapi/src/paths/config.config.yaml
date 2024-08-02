@@ -60,7 +60,7 @@ put:
   summary: Write application configuration parameters
   description: Writes application configuration parameters for this instance
   tags:
-    - Config API
+    - Config
     - Community
     - Enterprise
   requestBody:

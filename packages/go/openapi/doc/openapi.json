@@ -458,7 +458,7 @@
         "summary": "Delete a SAML Provider",
         "description": "Deletes an existing BloodHound SAML provider.",
         "tags": [
-          "Auth API",
+          "Auth",
           "Community",
           "Enterprise"
         ],
@@ -836,7 +836,7 @@
         "summary": "List Auth Tokens",
         "description": "Get all auth tokens.",
         "tags": [
-          "Tokens",
+          "API Tokens",
           "Community",
           "Enterprise"
         ],
@@ -2709,7 +2709,7 @@
         "summary": "Write application configuration parameters",
         "description": "Writes application configuration parameters for this instance",
         "tags": [
-          "Config API",
+          "Config",
           "Community",
           "Enterprise"
         ],
