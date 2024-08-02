@@ -77,8 +77,9 @@ export const initializeBHEClient = () => {
         (error) => {
             if (error?.response) {
                 if (error?.response?.status === 401) {
-                    if (IGNORE_401_LOGOUT.includes(error?.response?.config.url)) return
-                    throttledLogout();
+                    if (!IGNORE_401_LOGOUT.includes(error?.response?.config.url)) {
+                        throttledLogout();
+                    }
                 } else if (
                     error?.response?.status === 403 &&
                     !error?.response?.config.url.match('/api/v2/bloodhound-users/[a-z0-9-]+/secret')
