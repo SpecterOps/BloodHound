@@ -16,7 +16,9 @@
 
 package model
 
-import "fmt"
+import (
+	"fmt"
+)
 
 type SavedQuery struct {
 	UserID      string `json:"user_id" gorm:"index:,unique,composite:compositeIndex"`
@@ -50,7 +52,7 @@ func (s SavedQueries) ValidFilters() map[string][]FilterOperator {
 		"user_id":     {Equals, NotEquals},
 		"name":        {Equals, NotEquals},
 		"query":       {Equals, NotEquals},
-		"description": {Equals, NotEquals},
+		"description": {Equals, NotEquals, Contains},
 	}
 }
 
