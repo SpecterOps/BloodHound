@@ -182,7 +182,8 @@ func (s QueryParameterFilterMap) BuildSQLFilter() (SQLFilter, error) {
 				result.WriteString(filter.Name)
 				result.WriteString(") ")
 				result.WriteString(predicate)
-				result.WriteString(" lower('%?%')")
+				filter.Value = fmt.Sprintf("%%%s%%", filter.Value)
+				result.WriteString(" lower(?)")
 			default:
 				result.WriteString(filter.Name)
 				result.WriteString(" ")
