@@ -25,6 +25,8 @@ import { isLink, isNode } from 'src/ducks/graph/utils';
 import { Glyph } from 'src/rendering/programs/node.glyphs';
 import { store } from 'src/store';
 
+const IGNORE_401_LOGOUT = ['/api/v2/login', '/api/v2/logout', '/api/v2/features']
+
 export const getDatesInRange = (startDate: Date, endDate: Date) => {
     const date = new Date(startDate.getTime());
 
@@ -74,11 +76,8 @@ export const initializeBHEClient = () => {
 
         (error) => {
             if (error?.response) {
-                if (
-                    error?.response?.status === 401 &&
-                    error?.response?.config.url !== '/api/v2/login' &&
-                    error?.response?.config.url !== '/api/v2/logout'
-                ) {
+                if (error?.response?.status === 401) {
+                    if (IGNORE_401_LOGOUT.includes(error?.response?.config.url)) return
                     throttledLogout();
                 } else if (
                     error?.response?.status === 403 &&
