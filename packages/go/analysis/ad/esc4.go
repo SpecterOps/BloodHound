@@ -36,6 +36,12 @@ func PostADCSESC4(ctx context.Context, tx graph.Transaction, outC chan<- analysi
 	// 1.
 	principals := cardinality.NewBitmap32()
 	publishedTemplates := cache.GetPublishedTemplateCache(enterpriseCA.ID)
+	domainsid, err := domain.Properties.Get(ad.DomainSID.String()).String()
+	if err != nil {
+		log.Warnf("Error getting domain SID for domain %d: %v", domain.ID, err)
+		return nil
+	}
+
 	// 2. iterate certtemplates that have an outbound `PublishedTo` edge to eca
 	for _, certTemplate := range publishedTemplates {
 		if principalsWithGenericWrite, err := FetchPrincipalsWithGenericWriteOnCertTemplate(tx, certTemplate); err != nil {
@@ -53,13 +59,14 @@ func PostADCSESC4(ctx context.Context, tx graph.Transaction, outC chan<- analysi
 		} else {
 
 			var (
-				enterpriseCAEnrollers = cache.GetEnterpriseCAEnrollers(enterpriseCA.ID)
+				enterpriseCAEnrollers   = cache.GetEnterpriseCAEnrollers(enterpriseCA.ID)
 				certTemplateControllers = cache.GetCertTemplateControllers(certTemplate.ID)
 			)
 
 			// 2a. principals that control the cert template
 			principals.Or(
-				CalculateCrossProductNodeSets(
+				CalculateCrossProductNodeSets(tx,
+					domainsid,
 					groupExpansions,
 					enterpriseCAEnrollers,
 					certTemplateControllers,
@@ -67,7 +74,8 @@ func PostADCSESC4(ctx context.Context, tx graph.Transaction, outC chan<- analysi
 
 			// 2b. principals with `Enroll/AllExtendedRights` + `Generic Write` combination on the cert template
 			principals.Or(
-				CalculateCrossProductNodeSets(
+				CalculateCrossProductNodeSets(tx,
+					domainsid,
 					groupExpansions,
 					enterpriseCAEnrollers,
 					principalsWithGenericWrite.Slice(),
@@ -84,20 +92,20 @@ func PostADCSESC4(ctx context.Context, tx graph.Transaction, outC chan<- analysi
 			}
 
 			// 2d. principals with `Enroll/AllExtendedRights` + `WritePKINameFlag` + `WritePKIEnrollmentFlag` on the cert template
-			principals.Or(
-				CalculateCrossProductNodeSets(
-					groupExpansions,
-					enterpriseCAEnrollers,
-					principalsWithEnrollOrAllExtendedRights.Slice(),
-					principalsWithPKINameFlag.Slice(),
-					principalsWithPKIEnrollmentFlag.Slice(),
-				),
-			)
+			principals.Or(CalculateCrossProductNodeSets(tx,
+				domainsid,
+				groupExpansions,
+				enterpriseCAEnrollers,
+				principalsWithEnrollOrAllExtendedRights.Slice(),
+				principalsWithPKINameFlag.Slice(),
+				principalsWithPKIEnrollmentFlag.Slice(),
+			))
 
 			// 2e.
 			if enrolleeSuppliesSubject {
 				principals.Or(
-					CalculateCrossProductNodeSets(
+					CalculateCrossProductNodeSets(tx,
+						domainsid,
 						groupExpansions,
 						enterpriseCAEnrollers,
 						principalsWithEnrollOrAllExtendedRights.Slice(),
@@ -109,7 +117,8 @@ func PostADCSESC4(ctx context.Context, tx graph.Transaction, outC chan<- analysi
 			// 2f.
 			if !requiresManagerApproval {
 				principals.Or(
-					CalculateCrossProductNodeSets(
+					CalculateCrossProductNodeSets(tx,
+						domainsid,
 						groupExpansions,
 						enterpriseCAEnrollers,
 						principalsWithEnrollOrAllExtendedRights.Slice(),

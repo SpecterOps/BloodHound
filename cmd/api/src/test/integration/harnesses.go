@@ -5405,6 +5405,56 @@ func (s *ShortcutHarness) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.NewRelationship(s.User1, s.Group3, ad.MemberOf)
 }
 
+type ShortcutHarnessAuthUsers struct {
+	Group1    *graph.Node
+	Group2    *graph.Node
+	Group3    *graph.Node
+	AuthUsers *graph.Node
+	User1     *graph.Node
+}
+
+func (s *ShortcutHarnessAuthUsers) Setup(graphTestContext *GraphTestContext) {
+	sid := RandomDomainSID()
+	s.Group1 = graphTestContext.NewActiveDirectoryGroup("GROUP ONE", sid)
+	s.Group2 = graphTestContext.NewActiveDirectoryGroup("GROUP TWO", sid)
+	s.Group3 = graphTestContext.NewActiveDirectoryGroup("GROUP THREE", sid)
+	s.AuthUsers = graphTestContext.NewActiveDirectoryGroup("AuthenticatedUsers", sid)
+	s.User1 = graphTestContext.NewActiveDirectoryUser("USER ONE", sid)
+
+	graphTestContext.NewRelationship(s.AuthUsers, s.Group1, ad.MemberOf)
+	graphTestContext.NewRelationship(s.Group3, s.Group2, ad.MemberOf)
+	graphTestContext.NewRelationship(s.User1, s.AuthUsers, ad.MemberOf)
+	graphTestContext.NewRelationship(s.User1, s.Group3, ad.MemberOf)
+
+	s.AuthUsers.Properties.Set(common.ObjectID.String(), "TEST.LOCAL-S-1-5-11")
+	graphTestContext.UpdateNode(s.AuthUsers)
+}
+
+type ShortcutHarnessEveryone struct {
+	Group1   *graph.Node
+	Group2   *graph.Node
+	Group3   *graph.Node
+	Everyone *graph.Node
+	User1    *graph.Node
+}
+
+func (s *ShortcutHarnessEveryone) Setup(graphTestContext *GraphTestContext) {
+	sid := RandomDomainSID()
+	s.Group1 = graphTestContext.NewActiveDirectoryGroup("GROUP ONE", sid)
+	s.Group2 = graphTestContext.NewActiveDirectoryGroup("GROUP TWO", sid)
+	s.Group3 = graphTestContext.NewActiveDirectoryGroup("GROUP THREE", sid)
+	s.Everyone = graphTestContext.NewActiveDirectoryGroup("Everyone", sid)
+	s.User1 = graphTestContext.NewActiveDirectoryUser("USER ONE", sid)
+
+	graphTestContext.NewRelationship(s.Everyone, s.Group1, ad.MemberOf)
+	graphTestContext.NewRelationship(s.Group3, s.Group2, ad.MemberOf)
+	graphTestContext.NewRelationship(s.User1, s.Everyone, ad.MemberOf)
+	graphTestContext.NewRelationship(s.User1, s.Group3, ad.MemberOf)
+
+	s.Everyone.Properties.Set(common.ObjectID.String(), "TEST.LOCAL-S-1-1-0")
+	graphTestContext.UpdateNode(s.Everyone)
+}
+
 type RootADHarness struct {
 	ActiveDirectoryDomainSID                string
 	ActiveDirectoryDomain                   *graph.Node
@@ -8166,6 +8216,8 @@ type HarnessDetails struct {
 	RootADHarness                                   RootADHarness
 	SearchHarness                                   SearchHarness
 	ShortcutHarness                                 ShortcutHarness
+	ShortcutHarnessAuthUsers                        ShortcutHarnessAuthUsers
+	ShortcutHarnessEveryone                         ShortcutHarnessEveryone
 	ADCSESC1Harness                                 ADCSESC1Harness
 	EnrollOnBehalfOfHarnessOne                      EnrollOnBehalfOfHarnessOne
 	EnrollOnBehalfOfHarnessTwo                      EnrollOnBehalfOfHarnessTwo

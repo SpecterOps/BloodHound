@@ -79,15 +79,48 @@ func TestClearOrphanedNodes(t *testing.T) {
 
 func TestCrossProduct(t *testing.T) {
 	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
-	testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) error {
+	testContext.DatabaseTransactionTestWithSetup(func(harness *integration.HarnessDetails) error {
 		harness.ShortcutHarness.Setup(testContext)
 		return nil
-	}, func(harness integration.HarnessDetails, db graph.Database) {
+	}, func(harness integration.HarnessDetails, db graph.Database, tx graph.Transaction) {
 		firstSet := []*graph.Node{testContext.Harness.ShortcutHarness.Group1}
 		secondSet := []*graph.Node{testContext.Harness.ShortcutHarness.Group2}
 		groupExpansions, err := ad2.ExpandAllRDPLocalGroups(context.Background(), db)
 		require.Nil(t, err)
-		results := ad2.CalculateCrossProductNodeSets(groupExpansions, firstSet, secondSet)
+		domainsid, _ := harness.ShortcutHarness.Group3.Properties.Get(ad.DomainSID.String()).String()
+		results := ad2.CalculateCrossProductNodeSets(tx, domainsid, groupExpansions, firstSet, secondSet)
 		require.True(t, results.Contains(harness.ShortcutHarness.Group3.ID.Uint32()))
+	})
+}
+
+func TestCrossProductAuthUsers(t *testing.T) {
+	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
+	testContext.DatabaseTransactionTestWithSetup(func(harness *integration.HarnessDetails) error {
+		harness.ShortcutHarnessAuthUsers.Setup(testContext)
+		return nil
+	}, func(harness integration.HarnessDetails, db graph.Database, tx graph.Transaction) {
+		firstSet := []*graph.Node{testContext.Harness.ShortcutHarnessAuthUsers.Group1}
+		secondSet := []*graph.Node{testContext.Harness.ShortcutHarnessAuthUsers.Group2}
+		groupExpansions, err := ad2.ExpandAllRDPLocalGroups(context.Background(), db)
+		require.Nil(t, err)
+		domainsid, _ := harness.ShortcutHarnessAuthUsers.Group3.Properties.Get(ad.DomainSID.String()).String()
+		results := ad2.CalculateCrossProductNodeSets(tx, domainsid, groupExpansions, firstSet, secondSet)
+		require.True(t, results.Contains(harness.ShortcutHarnessAuthUsers.Group2.ID.Uint32()))
+	})
+}
+
+func TestCrossProductEveryone(t *testing.T) {
+	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
+	testContext.DatabaseTransactionTestWithSetup(func(harness *integration.HarnessDetails) error {
+		harness.ShortcutHarnessEveryone.Setup(testContext)
+		return nil
+	}, func(harness integration.HarnessDetails, db graph.Database, tx graph.Transaction) {
+		firstSet := []*graph.Node{testContext.Harness.ShortcutHarnessEveryone.Group1}
+		secondSet := []*graph.Node{testContext.Harness.ShortcutHarnessEveryone.Group2}
+		groupExpansions, err := ad2.ExpandAllRDPLocalGroups(context.Background(), db)
+		require.Nil(t, err)
+		domainsid, _ := harness.ShortcutHarnessEveryone.Group3.Properties.Get(ad.DomainSID.String()).String()
+		results := ad2.CalculateCrossProductNodeSets(tx, domainsid, groupExpansions, firstSet, secondSet)
+		require.True(t, results.Contains(harness.ShortcutHarnessEveryone.Group2.ID.Uint32()))
 	})
 }
