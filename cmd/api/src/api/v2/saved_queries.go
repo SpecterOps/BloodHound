@@ -164,6 +164,27 @@ func (s Resources) CreateSavedQuery(response http.ResponseWriter, request *http.
 	}
 }
 
+func (s Resources) UpdateSavedQuery(response http.ResponseWriter, request *http.Request) {
+	var (
+		rawSavedQueryID = mux.Vars(request)[api.URIPathVariableSavedQueryID]
+		updateRequest   CreateSavedQueryRequest
+	)
+
+	if user, isUser := auth.GetUserFromAuthCtx(ctx2.FromRequest(request).AuthCtx); !isUser {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "No associated user found", request), response)
+	} else if err := api.ReadJSONRequestPayloadLimited(&updateRequest, request); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
+	} else if savedQueryID, err := strconv.Atoi(rawSavedQueryID); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsIDMalformed, request), response)
+	} else if savedQuery, err := s.DB.GetSavedQuery(request.Context(), savedQueryID); err != nil || savedQuery.UserID != user.ID.String() {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "saved query not found for the given ID", request), response)
+	} else if savedQuery, err = s.DB.UpdateSavedQuery(request.Context(), savedQueryID, updateRequest.Name, updateRequest.Query, updateRequest.Description); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, err.Error(), request), response)
+	} else {
+		api.WriteBasicResponse(request.Context(), savedQuery, http.StatusOK, response)
+	}
+}
+
 func (s Resources) DeleteSavedQuery(response http.ResponseWriter, request *http.Request) {
 	var (
 		rawSavedQueryID = mux.Vars(request)[api.URIPathVariableSavedQueryID]
