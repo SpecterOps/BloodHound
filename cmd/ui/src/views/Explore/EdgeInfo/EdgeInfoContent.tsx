@@ -22,6 +22,7 @@ import {
     SelectedEdge,
     apiClient,
     useFetchGraphItem,
+    GraphItemQueryCacheId,
 } from 'bh-shared-ui';
 import isEmpty from 'lodash/isEmpty';
 import { Dispatch, FC, Fragment } from 'react';
@@ -69,7 +70,11 @@ const EdgeInfoContent: FC<{ selectedEdge: NonNullable<SelectedEdge> }> = ({ sele
     const sections = EdgeInfoComponents[selectedEdge.name as keyof typeof EdgeInfoComponents];
     const { sourceNode, targetNode } = selectedEdge;
     const { objectId, type } = targetNode;
-    const { graphItemProperties } = useFetchGraphItem({ cacheId: 'edge-properties', objectId, nodeType: type });
+    const { graphItemProperties } = useFetchGraphItem({
+        cacheId: GraphItemQueryCacheId.Edge,
+        objectId,
+        nodeType: type,
+    });
 
     return (
         <Box>
