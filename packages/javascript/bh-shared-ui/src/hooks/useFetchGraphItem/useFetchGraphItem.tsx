@@ -27,8 +27,14 @@ export type GraphItemData = {
     nodeType: string;
     databaseId?: string;
 };
+
+export type GraphItemProperties = {
+    [k: string]: any;
+    objectid: string;
+};
+
 type GraphItemExport = {
-    graphItemProperties: { objectid: string; [k: string]: any };
+    graphItemProperties: GraphItemProperties;
     informationAvailable: boolean;
     isLoading: boolean;
     isError: boolean;
