@@ -21,6 +21,7 @@ import {
     ObjectInfoFields,
     formatObjectInfoFields,
     useFetchGraphItem,
+    GraphItemQueryCacheId,
 } from 'bh-shared-ui';
 import React from 'react';
 import { BasicObjectInfoFields } from '../BasicObjectInfoFields';
@@ -29,7 +30,7 @@ import { EntityInfoContentProps } from './EntityInfoContent';
 
 const EntityObjectInformation: React.FC<EntityInfoContentProps> = ({ id, nodeType, databaseId }) => {
     const { graphItemProperties, informationAvailable, isLoading, isError } = useFetchGraphItem({
-        cacheId: 'entity-properties',
+        cacheId: GraphItemQueryCacheId.Node,
         objectId: id,
         nodeType,
         databaseId,
