@@ -1,4 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2024 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -15,19 +15,31 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { RequestOptions } from 'js-client-library';
-import { entityInformationEndpoints } from '../utils/content';
-import { apiClient } from '../utils/api';
-import { getNodeByDatabaseIdCypher } from '../utils/entityInfoDisplay';
-import { validateNodeType } from '../hooks/useSearch/useSearch';
+import { entityInformationEndpoints } from '../../utils/content';
+import { apiClient } from '../../utils/api';
+import { getNodeByDatabaseIdCypher } from '../../utils/entityInfoDisplay';
+import { validateNodeType } from '../useSearch/useSearch';
 import { useQuery } from 'react-query';
 
-type GraphItemData = { cacheId: string; objectId: string; nodeType: string; databaseId?: string };
+export type GraphItemData = {
+    cacheId: GraphItemQueryCacheId;
+    objectId: string;
+    nodeType: string;
+    databaseId?: string;
+};
 type GraphItemExport = {
     graphItemProperties: { objectid: string; [k: string]: any };
     informationAvailable: boolean;
     isLoading: boolean;
     isError: boolean;
+    isSuccess: boolean;
 };
+
+// To do: Add these enums to the use of this hook in the other components
+export enum GraphItemQueryCacheId {
+    Edge = 'edge-properties',
+    Node = 'node-properties',
+}
 
 export const useFetchGraphItem: (param: GraphItemData) => GraphItemExport = ({
     cacheId,
@@ -65,6 +77,7 @@ export const useFetchGraphItem: (param: GraphItemData) => GraphItemExport = ({
         data: graphItemProperties,
         isLoading,
         isError,
+        isSuccess,
     } = useQuery(
         [cacheId, nodeType, objectId],
         ({ signal }) =>
@@ -79,10 +92,12 @@ export const useFetchGraphItem: (param: GraphItemData) => GraphItemExport = ({
             enabled: informationAvailable,
         }
     );
+
     return {
         graphItemProperties,
         informationAvailable,
         isLoading,
         isError,
+        isSuccess,
     };
 };
