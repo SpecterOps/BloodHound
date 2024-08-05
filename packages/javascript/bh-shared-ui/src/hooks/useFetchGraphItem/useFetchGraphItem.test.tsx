@@ -19,7 +19,7 @@ import { renderHook, waitFor, queryClientProvider } from '../../test-utils';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 
-const graphItemApiCall = (apiItemPath: string, expectedPropsResponse: GraphItemProperties) => {
+const graphItemRequest = (apiItemPath: string, expectedPropsResponse: GraphItemProperties) => {
     return rest.get(`/api/v2/${apiItemPath}/:id`, async (_req, res, ctx) => {
         return res(
             ctx.json({
@@ -31,12 +31,21 @@ const graphItemApiCall = (apiItemPath: string, expectedPropsResponse: GraphItemP
     });
 };
 
-describe('useFetchGraphItem', () => {
-    const server = setupServer(
-        graphItemApiCall('computers', {
+const graphItemRequestData = {
+    // Todo: better name for property keys
+    validateKind: {
+        type: 'Computer',
+        endpoint: 'computers',
+        properties: {
             haslaps: true,
             objectid: 'testing-id-3456',
-        })
+        },
+    },
+};
+
+describe('useFetchGraphItem', () => {
+    const server = setupServer(
+        graphItemRequest(graphItemRequestData.validateKind.endpoint, graphItemRequestData.validateKind.properties)
     );
 
     beforeAll(() => server.listen());
@@ -46,8 +55,8 @@ describe('useFetchGraphItem', () => {
     it('Search for Node without databaseId returns Node properties', async () => {
         const hookInitialProps = {
             cacheId: GraphItemQueryCacheId.Node,
-            objectId: 'testing-id-3456',
-            nodeType: 'Computer',
+            objectId: graphItemRequestData.validateKind.properties.objectid,
+            nodeType: graphItemRequestData.validateKind.type,
         };
 
         const { result } = renderHook((nodeItemParams: GraphItemData) => useFetchGraphItem(nodeItemParams), {
@@ -59,10 +68,7 @@ describe('useFetchGraphItem', () => {
             expect(result.current.isSuccess).toBe(true);
         });
 
-        expect(result.current.graphItemProperties).toEqual({
-            haslaps: true,
-            objectid: 'testing-id-3456',
-        });
+        expect(result.current.graphItemProperties).toEqual(graphItemRequestData.validateKind.properties);
     });
     it.todo('Search for Node with databaseId returns Node properties', () => {});
     it.todo('Search for Edge returns Edge properties', () => {});
