@@ -60,7 +60,13 @@ const customRender = (
     return render(ui, { wrapper: AllTheProviders, ...renderOptions });
 };
 
+const queryClientProvider = () => {
+    const queryClient = new QueryClient();
+    const wrapper = ({ children }) => <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
+    return wrapper;
+}
+
 // re-export everything
 export * from '@testing-library/react';
 // override render method
-export { customRender as render };
+export { customRender as render, queryClientProvider };
