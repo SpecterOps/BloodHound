@@ -306,6 +306,10 @@ export const CommonSearches: CommonSearchType[] = [
                 description: 'Disabled Tier Zero / High Value principals',
                 cypher: `MATCH (n:AZBase)\nWHERE n.system_tags CONTAINS "admin_tier_0"\nAND n.enabled = false\nRETURN n`,
             },
+            {
+                description: 'Devices with unsupported operating systems',
+                cypher: `MATCH (n:AZDevice)\nWHERE n.operatingsystem CONTAINS 'WINDOWS'\nAND n.operatingsystemversion =~ '(10.0.19044|10.0.22000|10.0.19043|10.0.19042|10.0.19041|10.0.18363|10.0.18362|10.0.17763|10.0.17134|10.0.16299|10.0.15063|10.0.14393|10.0.10586|10.0.10240|6.3.9600|6.2.9200|6.1.7601|6.0.6200|5.1.2600|6.0.6003|5.2.3790|5.0.2195).?.*'\nRETURN n`,
+            },
         ],
     },
     {

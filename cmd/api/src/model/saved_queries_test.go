@@ -41,7 +41,12 @@ func TestSavedQueries_ValidFilters(t *testing.T) {
 	for _, column := range []string{"user_id", "name", "query", "description"} {
 		operators, ok := validFilters[column]
 		require.True(t, ok)
-		require.Equal(t, 2, len(operators))
+		switch column {
+		case "description":
+			require.Equal(t, 3, len(operators))
+		default:
+			require.Equal(t, 2, len(operators))
+		}
 	}
 }
 
