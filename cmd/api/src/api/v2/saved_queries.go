@@ -86,11 +86,6 @@ func (s Resources) ListSavedQueries(response http.ResponseWriter, request *http.
 			}
 		}
 
-		description := queryParams.Get("description")
-		if description != "" {
-			queryFilters["description"] = []model.QueryParameterFilter{{Operator: "=", Value: description}}
-		}
-
 		if user, isUser := auth.GetUserFromAuthCtx(ctx2.FromRequest(request).AuthCtx); !isUser {
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "No associated user found", request), response)
 		} else if sqlFilter, err := queryFilters.BuildSQLFilter(); err != nil {
@@ -99,12 +94,15 @@ func (s Resources) ListSavedQueries(response http.ResponseWriter, request *http.
 			api.WriteErrorResponse(request.Context(), ErrBadQueryParameter(request, model.PaginationQueryParameterSkip, err), response)
 		} else if limit, err := ParseLimitQueryParameter(queryParams, 10000); err != nil {
 			api.WriteErrorResponse(request.Context(), ErrBadQueryParameter(request, model.PaginationQueryParameterLimit, err), response)
-		} else if queries, count, err := s.DB.ListSavedQueries(request.Context(), user.ID, strings.Join(order, ", "), sqlFilter, skip, limit); err != nil {
-			api.HandleDatabaseError(request, response, err)
 		} else if len(scopes) == 0 {
-			// return owned queries if no scope is given
-			api.WriteResponseWrapperWithPagination(request.Context(), queries, limit, skip, count, http.StatusOK, response)
+			if queries, count, err := s.DB.ListSavedQueries(request.Context(), user.ID, strings.Join(order, ", "), sqlFilter, skip, limit); err != nil {
+				api.HandleDatabaseError(request, response, err)
+			} else {
+				api.WriteResponseWrapperWithPagination(request.Context(), queries, limit, skip, count, http.StatusOK, response)
+			}
 		} else {
+			var queries model.SavedQueries
+			var count int
 			for _, scope := range scopes {
 				var scopedQueries model.SavedQueries
 				var scopedCount int
@@ -127,6 +125,7 @@ func (s Resources) ListSavedQueries(response http.ResponseWriter, request *http.
 
 				queries = append(queries, scopedQueries...)
 				count += scopedCount
+
 			}
 			api.WriteResponseWrapperWithPagination(request.Context(), queries, limit, skip, count, http.StatusOK, response)
 		}

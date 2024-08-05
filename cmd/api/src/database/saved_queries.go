@@ -56,26 +56,7 @@ func (s *BloodhoundDB) ListSavedQueries(ctx context.Context, userID uuid.UUID, o
 		cursor = cursor.Order(order)
 	}
 
-	// if name != "" {
-	// 	cursor = cursor.Order(order)
-	// }
-
-	// if description != "" {
-	// 	cursor = cursor.Where("description = ?", description)
-	// }
-
-	// if query != "" {
-	// 	cursor = cursor.Order(order)
-	// }
-
-	// if scope != "" {
-	// this needs to account for multiple
-	// 	cursor = cursor.Order(order)
-	// }
-
-	// result = cursor.Find(&queries)
-
-	result = cursor.Joins("JOIN saved_queries_permissions sqp ON sqp.query_id = saved_queries.id AND (sqp.global OR saved_queries.user_id = ?)", userID).Find(&queries)
+	result = cursor.Find(&queries)
 
 	return queries, int(count), CheckError(result)
 }
@@ -110,7 +91,7 @@ func (s *BloodhoundDB) SavedQueryBelongsToUser(ctx context.Context, userID uuid.
 func (s *BloodhoundDB) GetSharedSavedQueries(ctx context.Context, userID uuid.UUID) (model.SavedQueries, error) {
 	savedQueries := model.SavedQueries{}
 
-	result := s.db.WithContext(ctx).Where("shared_to_user_id = ?", userID).Find(&savedQueries)
+	result := s.db.WithContext(ctx).Select("saved_queries.*").Joins("JOIN saved_queries_permissions sqp ON sqp.query_id = saved_queries.id").Where("sqp.shared_to_user_id = ? ", userID).Find(&savedQueries)
 
 	return savedQueries, CheckError(result)
 }
@@ -119,6 +100,7 @@ func (s *BloodhoundDB) GetSharedSavedQueries(ctx context.Context, userID uuid.UU
 func (s *BloodhoundDB) GetPublicSavedQueries(ctx context.Context) (model.SavedQueries, error) {
 	savedQueries := model.SavedQueries{}
 
-	result := s.db.WithContext(ctx).Where("public = true").Find(&savedQueries)
+	result := s.db.WithContext(ctx).Select("sqp.*").Joins("JOIN saved_queries_permissions sqp ON sqp.query_id = saved_queries.id").Where("sqp.public = true").Find(&savedQueries)
+	// result := s.db.WithContext(ctx).Where("public = true").Find(&savedQueries)
 	return savedQueries, CheckError(result)
 }

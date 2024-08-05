@@ -16,7 +16,10 @@
 
 package model
 
-import "fmt"
+import (
+	"fmt"
+	"slices"
+)
 
 type SavedQuery struct {
 	UserID      string `json:"user_id" gorm:"index:,unique,composite:compositeIndex"`
@@ -51,7 +54,6 @@ func (s SavedQueries) ValidFilters() map[string][]FilterOperator {
 		"name":        {Equals, NotEquals},
 		"query":       {Equals, NotEquals},
 		"description": {Equals, NotEquals},
-		"scope":       {Equals, NotEquals},
 	}
 }
 
@@ -64,6 +66,9 @@ func (s SavedQueries) GetFilterableColumns() []string {
 }
 
 func (s SavedQueries) GetValidFilterPredicatesAsStrings(column string) ([]string, error) {
+	if !slices.Contains(s.GetFilterableColumns(), column) {
+		return []string{}, nil
+	}
 	if predicates, validColumn := s.ValidFilters()[column]; !validColumn {
 		return []string{}, fmt.Errorf(ErrorResponseDetailsColumnNotFilterable)
 	} else {
