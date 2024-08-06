@@ -44,7 +44,8 @@ const DisabledUser: React.FC = () => {
                             }}
                             data-testid='disabled-user-back-to-login'
                             size='large'
-                            type='button'>
+                            type='button'
+                            className='w-full'>
                             Back to Login
                         </Button>
                     </Box>

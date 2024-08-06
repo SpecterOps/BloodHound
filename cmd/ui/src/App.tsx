@@ -46,7 +46,7 @@ const Inner: React.FC = () => {
     const authState = useAppSelector((state) => state.auth);
     const queryClient = useQueryClient();
     const location = useLocation();
-    const featureFlagsRes = useFeatureFlags();
+    const featureFlagsRes = useFeatureFlags({ retry: false });
 
     const darkMode = useAppSelector((state) => state.global.view.darkMode);
 
@@ -73,6 +73,17 @@ const Inner: React.FC = () => {
                         & .btn-group > button,
                         `]: {
                         color: theme.palette.color.primary,
+                    },
+                    '& .filter-container .operation-filter-input': {
+                        backgroundColor: 'inherit',
+                        border: `1px solid ${theme.palette.grey[700]}`,
+
+                        '&:hover': {
+                            borderColor: theme.palette.color.links,
+                        },
+                        '&:focus': {
+                            outline: `1px solid ${theme.palette.color.links}`,
+                        },
                     },
                     '& .responses-inner': {
                         [`& h4, & h5`]: {

@@ -20,9 +20,9 @@ import { Typography } from '@mui/material';
 const Abuse: FC = () => {
     return (
         <Typography variant='body2'>
-            An attacker may authenticate as the on-prem AD user using the Entra user’s credentials, for example by
-            key-logging the user’s password, or by changing the Entra user’s password and waiting for the password
-            write-back operation to complete.
+            An attacker may authenticate as the synchronized Entra user using the on-prem user’s credentials, for
+            example by dumping the user’s plain-text credential from memory, key-logging the user’s password, or by
+            changing the on-prem user’s password and authenticating with that new password.
         </Typography>
     );
 };

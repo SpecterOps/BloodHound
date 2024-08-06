@@ -572,7 +572,7 @@ func (s Property) Name() string {
 	case HighValue:
 		return "High Value"
 	case BlocksInheritance:
-		return "Blocks Inheritance"
+		return "Blocks GPO Inheritance"
 	case IsACL:
 		return "Is ACL"
 	case IsACLProtected:
