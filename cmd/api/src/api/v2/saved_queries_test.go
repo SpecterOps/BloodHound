@@ -670,14 +670,10 @@ func TestResources_ShareSavedQueries_Success(t *testing.T) {
 	}
 
 	mockDB.EXPECT().SavedQueryBelongsToUser(gomock.Any(), gomock.Any(), gomock.Any()).Return(true, nil)
-	mockDB.EXPECT().GetPermissionsForSavedQuery(gomock.Any(), int64(1)).Return(model.SavedQueriesPermissions{
-		ID:      1,
-		QueryID: 1,
-		SharedToUserID: uuid2.NullUUID{
-			UUID:  uuid2.UUID{},
-			Valid: false,
-		},
-		Public: false,
+	mockDB.EXPECT().GetScopeForSavedQuery(gomock.Any(), gomock.Any(), gomock.Any()).Return(database.SavedQueryScopeMap{
+		database.SavedQueryScopeOwned:  false,
+		database.SavedQueryScopePublic: false,
+		database.SavedQueryScopeShared: false,
 	}, nil)
 	mockDB.EXPECT().CheckUserHasPermissionToSavedQuery(gomock.Any(), gomock.Any(), gomock.Any()).Return(false, nil).Times(2)
 	mockDB.EXPECT().CreateSavedQueryPermissionToUser(gomock.Any(), int64(1), gomock.Any()).Return(model.SavedQueriesPermissions{
@@ -768,14 +764,10 @@ func TestResources_ShareSavedQueries_PublicSuccess(t *testing.T) {
 	}
 
 	mockDB.EXPECT().SavedQueryBelongsToUser(gomock.Any(), gomock.Any(), gomock.Any()).Return(true, nil)
-	mockDB.EXPECT().GetPermissionsForSavedQuery(gomock.Any(), int64(1)).Return(model.SavedQueriesPermissions{
-		ID:      1,
-		QueryID: 1,
-		SharedToUserID: uuid2.NullUUID{
-			UUID:  uuid2.UUID{},
-			Valid: false,
-		},
-		Public: false,
+	mockDB.EXPECT().GetScopeForSavedQuery(gomock.Any(), gomock.Any(), gomock.Any()).Return(database.SavedQueryScopeMap{
+		database.SavedQueryScopeOwned:  false,
+		database.SavedQueryScopePublic: false,
+		database.SavedQueryScopeShared: false,
 	}, nil)
 	mockDB.EXPECT().CreateSavedQueryPermissionToPublic(gomock.Any(), int64(1)).Return(model.SavedQueriesPermissions{
 		ID:      1,
@@ -853,11 +845,10 @@ func TestResources_ShareSavedQueries_PublicAndUserIDsBothSetError(t *testing.T) 
 	}
 
 	mockDB.EXPECT().SavedQueryBelongsToUser(gomock.Any(), gomock.Any(), gomock.Any()).Return(true, nil)
-	mockDB.EXPECT().GetPermissionsForSavedQuery(gomock.Any(), int64(1)).Return(model.SavedQueriesPermissions{
-		ID:             1,
-		QueryID:        1,
-		SharedToUserID: database.NullUUID(userId2),
-		Public:         false,
+	mockDB.EXPECT().GetScopeForSavedQuery(gomock.Any(), gomock.Any(), gomock.Any()).Return(database.SavedQueryScopeMap{
+		database.SavedQueryScopeOwned:  false,
+		database.SavedQueryScopePublic: false,
+		database.SavedQueryScopeShared: false,
 	}, nil)
 
 	req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), "PUT", fmt.Sprintf(endpoint, savedQueryId), must.MarshalJSONReader(payload))
@@ -871,7 +862,7 @@ func TestResources_ShareSavedQueries_PublicAndUserIDsBothSetError(t *testing.T) 
 	response := httptest.NewRecorder()
 	router.ServeHTTP(response, req)
 	require.Equal(t, http.StatusBadRequest, response.Code)
-	require.Contains(t, response.Body.String(), "Public cannot be true while user_ids is populated")
+	require.Contains(t, response.Body.String(), "SavedQueryScopePublic cannot be true while user_ids is populated")
 }
 
 func TestResources_ShareSavedQueries_IsAlreadyPublicError(t *testing.T) {
@@ -893,14 +884,10 @@ func TestResources_ShareSavedQueries_IsAlreadyPublicError(t *testing.T) {
 	}
 
 	mockDB.EXPECT().SavedQueryBelongsToUser(gomock.Any(), gomock.Any(), gomock.Any()).Return(true, nil)
-	mockDB.EXPECT().GetPermissionsForSavedQuery(gomock.Any(), int64(1)).Return(model.SavedQueriesPermissions{
-		ID:      1,
-		QueryID: 1,
-		SharedToUserID: uuid2.NullUUID{
-			UUID:  uuid2.UUID{},
-			Valid: false,
-		},
-		Public: true,
+	mockDB.EXPECT().GetScopeForSavedQuery(gomock.Any(), gomock.Any(), gomock.Any()).Return(database.SavedQueryScopeMap{
+		database.SavedQueryScopeOwned:  false,
+		database.SavedQueryScopePublic: true,
+		database.SavedQueryScopeShared: false,
 	}, nil)
 
 	req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), "PUT", fmt.Sprintf(endpoint, savedQueryId), must.MarshalJSONReader(payload))
@@ -940,11 +927,10 @@ func TestResources_ShareSavedQueries_UserAlreadySharedTo(t *testing.T) {
 	}
 
 	mockDB.EXPECT().SavedQueryBelongsToUser(gomock.Any(), gomock.Any(), gomock.Any()).Return(true, nil)
-	mockDB.EXPECT().GetPermissionsForSavedQuery(gomock.Any(), int64(1)).Return(model.SavedQueriesPermissions{
-		ID:             1,
-		QueryID:        1,
-		SharedToUserID: database.NullUUID(userId2),
-		Public:         false,
+	mockDB.EXPECT().GetScopeForSavedQuery(gomock.Any(), gomock.Any(), gomock.Any()).Return(database.SavedQueryScopeMap{
+		database.SavedQueryScopeOwned:  false,
+		database.SavedQueryScopePublic: false,
+		database.SavedQueryScopeShared: false,
 	}, nil)
 	mockDB.EXPECT().CheckUserHasPermissionToSavedQuery(gomock.Any(), gomock.Any(), gomock.Any()).Return(true, nil)
 	mockDB.EXPECT().CheckUserHasPermissionToSavedQuery(gomock.Any(), gomock.Any(), gomock.Any()).Return(false, nil)
@@ -1016,11 +1002,10 @@ func TestResources_ShareSavedQueries_UserSharesToSelfError(t *testing.T) {
 	}
 
 	mockDB.EXPECT().SavedQueryBelongsToUser(gomock.Any(), gomock.Any(), gomock.Any()).Return(true, nil)
-	mockDB.EXPECT().GetPermissionsForSavedQuery(gomock.Any(), int64(1)).Return(model.SavedQueriesPermissions{
-		ID:             1,
-		QueryID:        1,
-		SharedToUserID: database.NullUUID(userId),
-		Public:         false,
+	mockDB.EXPECT().GetScopeForSavedQuery(gomock.Any(), gomock.Any(), gomock.Any()).Return(database.SavedQueryScopeMap{
+		database.SavedQueryScopeOwned:  false,
+		database.SavedQueryScopePublic: false,
+		database.SavedQueryScopeShared: false,
 	}, nil)
 
 	req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), "PUT", fmt.Sprintf(endpoint, savedQueryId), must.MarshalJSONReader(payload))
@@ -1060,11 +1045,10 @@ func TestResources_ShareSavedQueries_SavingPermissionsErrors(t *testing.T) {
 	}
 
 	mockDB.EXPECT().SavedQueryBelongsToUser(gomock.Any(), gomock.Any(), gomock.Any()).Return(true, nil)
-	mockDB.EXPECT().GetPermissionsForSavedQuery(gomock.Any(), int64(1)).Return(model.SavedQueriesPermissions{
-		ID:             1,
-		QueryID:        1,
-		SharedToUserID: database.NullUUID(userId2),
-		Public:         false,
+	mockDB.EXPECT().GetScopeForSavedQuery(gomock.Any(), gomock.Any(), gomock.Any()).Return(database.SavedQueryScopeMap{
+		database.SavedQueryScopeOwned:  false,
+		database.SavedQueryScopePublic: false,
+		database.SavedQueryScopeShared: false,
 	}, nil)
 	mockDB.EXPECT().CheckUserHasPermissionToSavedQuery(gomock.Any(), gomock.Any(), gomock.Any()).Return(false, nil)
 	mockDB.EXPECT().CheckUserHasPermissionToSavedQuery(gomock.Any(), gomock.Any(), gomock.Any()).Return(false, nil)

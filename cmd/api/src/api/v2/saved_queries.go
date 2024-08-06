@@ -185,16 +185,16 @@ func (s Resources) ShareSavedQueries(response http.ResponseWriter, request *http
 		api.HandleDatabaseError(request, response, err)
 	} else if !savedQueryBelongsToUser {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "Invalid saved_query_id supplied", request), response)
-	} else if permissionsForSavedQuery, err := s.DB.GetPermissionsForSavedQuery(request.Context(), int64(savedQueryID)); err != nil {
+	} else if scopeForSavedQuery, err := s.DB.GetScopeForSavedQuery(request.Context(), int64(savedQueryID), user.ID); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
 		// Sharing a query as public
 		if createRequest.Public {
 			if len(createRequest.UserIDs) > 0 {
-				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "Public cannot be true while user_ids is populated", request), response)
-			} else if permissionsForSavedQuery.Public {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "SavedQueryScopePublic cannot be true while user_ids is populated", request), response)
+			} else if scopeForSavedQuery[database.SavedQueryScopePublic] == true {
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "User cannot make a query public that's already public", request), response)
-			} else if savedPermission, err := s.DB.CreateSavedQueryPermissionToPublic(request.Context(), permissionsForSavedQuery.QueryID); err != nil {
+			} else if savedPermission, err := s.DB.CreateSavedQueryPermissionToPublic(request.Context(), int64(savedQueryID)); err != nil {
 				api.HandleDatabaseError(request, response, err)
 			} else {
 				api.WriteBasicResponse(request.Context(), ShareSavedQueriesResponse{savedPermission}, http.StatusCreated, response)
@@ -219,7 +219,7 @@ func (s Resources) ShareSavedQueries(response http.ResponseWriter, request *http
 
 			// Saving query permission to one or more users
 			for _, sharedUserID := range newlySharedUserIDs {
-				if savedPermission, err := s.DB.CreateSavedQueryPermissionToUser(request.Context(), permissionsForSavedQuery.QueryID, sharedUserID); err != nil {
+				if savedPermission, err := s.DB.CreateSavedQueryPermissionToUser(request.Context(), int64(savedQueryID), sharedUserID); err != nil {
 					errCollector.Collect(err)
 				} else {
 					apiResponse = append(apiResponse, savedPermission)
