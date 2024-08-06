@@ -19,35 +19,56 @@ import { renderHook, waitFor, queryClientProvider } from '../../test-utils';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 
-const entityRequest = (apiItemPath: string, expectedResponse: EntityProperties) => {
-    return rest.get(`/api/v2/${apiItemPath}/:id`, async (_req, res, ctx) => {
+const entityObjectIdRequest = () => {
+    return rest.get(`/api/v2/${EntityApiPathType}/:id`, async (_req, res, ctx) => {
         return res(
             ctx.json({
                 data: {
-                    props: expectedResponse,
+                    props: EntityProperties,
                 },
             })
         );
     });
 };
 
-const entityRequestData = {
-    // To do: confirm name for property keys
-    objectIdNode: {
-        type: 'Computer',
-        endpoint: 'computers',
-        properties: {
-            haslaps: true,
-            objectid: 'testing-id-3456',
-        },
-    },
-    graphIdNode: {},
+const entityGraphIdRequest = () => {
+    return rest.post(`/api/v2/graphs/cypher`, async (_req, res, ctx) => {
+        return res(
+            ctx.json({
+                data: {
+                    edges: [],
+                    nodes: [
+                        {
+                            properties: EntityProperties,
+                        },
+                    ],
+                },
+            })
+        );
+    });
+};
+
+const EntityNodeType = 'User' as const;
+const EntityApiPathType = 'users' as const;
+const EntityGraphId = '5223' as const;
+const EntityUnmatchedType = '' as const;
+const EntityProperties: EntityProperties = {
+    displayname: 'Steve Draper',
+    domain: 'TESTLAB.LOCAL',
+    domainsid: 'S-1-5-21-570004220-2248230615-4072641716',
+    enabled: true,
+    hasspn: true,
+    lastlogon: '2019-03-05T16:45:48.253268Z',
+    lastlogontimestamp: '2019-03-05T16:45:48.253268Z',
+    lastseen: '2024-07-18T17:45:50.805475Z',
+    name: 'SteveDraper01962@TESTLAB.LOCAL',
+    objectid: 'S-1-5-21-570004220-2248230615-4072641716-5965',
+    pwdlastset: '2026-05-17T13:30:00Z',
+    system_tags: 'admin_tier_0',
 };
 
 describe('useFetchEntity', () => {
-    const server = setupServer(
-        entityRequest(entityRequestData.objectIdNode.endpoint, entityRequestData.objectIdNode.properties)
-    );
+    const server = setupServer(entityObjectIdRequest(), entityGraphIdRequest());
 
     beforeAll(() => server.listen());
     afterEach(() => server.resetHandlers());
@@ -56,8 +77,8 @@ describe('useFetchEntity', () => {
     it('Search for Node without databaseId returns Node properties', async () => {
         const initialProps = {
             cacheId: FetchEntityCacheId,
-            objectId: entityRequestData.objectIdNode.properties.objectid,
-            nodeType: entityRequestData.objectIdNode.type,
+            objectId: EntityProperties.objectid,
+            nodeType: EntityNodeType,
         };
 
         const { result } = renderHook((nodeItemParams: FetchEntityParams) => useFetchEntity(nodeItemParams), {
@@ -69,8 +90,25 @@ describe('useFetchEntity', () => {
             expect(result.current.isSuccess).toBe(true);
         });
 
-        expect(result.current.entityProperties).toEqual(entityRequestData.objectIdNode.properties);
+        expect(result.current.entityProperties).toEqual(EntityProperties);
     });
-    it.todo('Search for Node with databaseId returns Node properties', () => {});
-    it.todo('Search for Node with no Id returns error', () => {});
+    it('Search for Node with no matching node type and databaseId returns Node properties', async () => {
+        const initialProps = {
+            cacheId: FetchEntityCacheId,
+            objectId: EntityProperties.objectid,
+            nodeType: EntityUnmatchedType,
+            databaseId: EntityGraphId,
+        };
+
+        const { result } = renderHook((nodeItemParams: FetchEntityParams) => useFetchEntity(nodeItemParams), {
+            wrapper: queryClientProvider(),
+            initialProps,
+        });
+
+        await waitFor(() => {
+            expect(result.current.isSuccess).toBe(true);
+        });
+
+        expect(result.current.entityProperties).toEqual(EntityProperties);
+    });
 });
