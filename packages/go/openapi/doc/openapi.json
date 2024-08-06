@@ -4227,6 +4227,13 @@
             }
           },
           {
+            "name": "description",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.string"
+            }
+          },
+          {
             "name": "scope",
             "in": "query",
             "schema": {
