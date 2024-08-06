@@ -821,8 +821,8 @@ func TestResources_UpdateSavedQuery_NoUserMatch(t *testing.T) {
 	handler := http.HandlerFunc(resources.UpdateSavedQuery)
 
 	handler.ServeHTTP(response, req)
-	require.Equal(t, http.StatusBadRequest, response.Code)
-	require.Contains(t, response.Body.String(), "not found for the given ID")
+	require.Equal(t, http.StatusNotFound, response.Code)
+	require.Contains(t, response.Body.String(), "query does not exist")
 }
 
 func TestResources_UpdateSavedQuery_NoQueryMatch(t *testing.T) {
@@ -853,8 +853,8 @@ func TestResources_UpdateSavedQuery_NoQueryMatch(t *testing.T) {
 	handler := http.HandlerFunc(resources.UpdateSavedQuery)
 
 	handler.ServeHTTP(response, req)
-	require.Equal(t, http.StatusBadRequest, response.Code)
-	require.Contains(t, response.Body.String(), "not found for the given ID")
+	require.Equal(t, http.StatusNotFound, response.Code)
+	require.Contains(t, response.Body.String(), "query does not exist")
 }
 
 func TestResources_UpdateSavedQuery_UpdateFailed(t *testing.T) {

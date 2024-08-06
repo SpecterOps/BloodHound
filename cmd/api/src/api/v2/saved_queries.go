@@ -177,7 +177,7 @@ func (s Resources) UpdateSavedQuery(response http.ResponseWriter, request *http.
 	} else if savedQueryID, err := strconv.Atoi(rawSavedQueryID); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsIDMalformed, request), response)
 	} else if savedQuery, err := s.DB.GetSavedQuery(request.Context(), savedQueryID); err != nil || savedQuery.UserID != user.ID.String() {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "saved query not found for the given ID", request), response)
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, "query does not exist", request), response)
 	} else if savedQuery, err = s.DB.UpdateSavedQuery(request.Context(), savedQueryID, updateRequest.Name, updateRequest.Query, updateRequest.Description); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, err.Error(), request), response)
 	} else {
