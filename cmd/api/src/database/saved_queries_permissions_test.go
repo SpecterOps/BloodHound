@@ -146,6 +146,7 @@ func TestSavedQueriesPermissions_CreateSavedQueryPermissionsBatch(t *testing.T) 
 	require.NoError(t, err)
 
 	permissions, err = dbInst.GetPermissionsForSavedQuery(testCtx, query.ID)
+	require.NoError(t, err)
 	assert.Len(t, permissions, 5)
 }
 
